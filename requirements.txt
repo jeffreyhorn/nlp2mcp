@@ -1,0 +1,5 @@
+# Core parser dependency
+lark==1.1.9
+
+# Test runner
+pytest==7.4.4

@@ -1,0 +1,214 @@
+// Minimal, practical GAMS NLP subset grammar for nlp2mcp
+// Notes:
+// - Case-insensitive keywords handled via inline (?i: ...) blocks.
+// - Identifiers allow quoted GAMS names: 'x.i', "cost%", etc.
+// - Indexing like x(i,j) and sum(i, expr) supported.
+// - Equations with =e=, =l=, =g=; bounds via x.lo(i) = ...; x.up(i) = ...;
+// - One Solve statement: "Solve <name> using NLP [minimizing|maximizing] <objvar>;"
+//
+// You’ll still implement semantic checks in Python (dimensions, undefined symbols, etc).
+
+start: stmt*  -> program
+
+?stmt: sets_block
+     | aliases_block
+     | params_block
+     | scalars_block
+     | variables_block
+     | equations_block
+     | model_stmt
+     | assignment_stmt
+     | equation_def
+     | solve_stmt
+     | SEMI
+
+// ---------------------------
+// Blocks
+// ---------------------------
+
+sets_block: "Sets"i set_decl+ SEMI
+
+aliases_block: "Aliases"i alias_decl+ SEMI
+
+params_block: ("Parameters"i | "Parameter"i | "Table"i) param_decl+ SEMI
+
+scalars_block: ("Scalars"i | "Scalar"i) scalar_decl+ SEMI
+
+variables_block: ("Variables"i | "Variable"i) var_decl+ SEMI
+
+equations_block: ("Equations"i | "Equation"i) eqn_head_decl+ SEMI
+
+// ---------------------------
+// Declarations
+// ---------------------------
+
+set_decl: ID "/" set_members "/"                            -> set_simple
+        | ID alias_opt "/" set_members "/"                   -> set_aliased
+        | ID "(" id_list ")"                                 -> set_domain
+        | ID                                                 -> set_empty
+
+alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_universe
+          | ID "," ID                                        -> alias_plain
+
+param_decl: ID "(" id_list ")" "/" param_data_items "/" param_default? -> param_domain_data
+          | ID "(" id_list ")" param_default?                          -> param_domain
+          | ID "/" param_data_items "/" param_default?                 -> param_plain_data
+          | ID param_default?                                          -> param_plain
+scalar_decl: ID scalar_data? (ASSIGN expr)?                   -> scalar_plain
+scalar_data: "/" scalar_data_items "/"
+scalar_data_items: scalar_data_item ("," scalar_data_item)*
+scalar_data_item: NUMBER
+
+param_default: ASSIGN expr
+param_data_items: param_data_item ("," param_data_item)*
+param_data_item: data_indices NUMBER                       -> param_data_scalar
+                 | data_matrix_row                         -> param_data_matrix_row
+
+data_indices: ID ("." ID)*
+data_matrix_row: data_indices data_matrix_values
+data_matrix_values: NUMBER (NUMBER)*
+
+var_decl: var_kind? ID "(" id_list ")"                       -> var_indexed
+        | var_kind? ID                                       -> var_scalar
+
+var_kind: POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K
+
+POSITIVE_K: /(?i:positive)\b/
+NEGATIVE_K: /(?i:negative)\b/
+BINARY_K  : /(?i:binary)\b/
+INTEGER_K : /(?i:integer)\b/
+
+eqn_head_decl: ID "(" id_list ")"                            -> eqn_head_domain
+             | ID                                            -> eqn_head_scalar
+
+alias_opt : "(" id_list ")"                                  -> alias_domain
+id_list: ID ("," ID)*
+
+set_members: set_member ("," set_member)*
+?set_member: ID | STRING
+
+// ---------------------------
+// Assignments & Bounds
+// ---------------------------
+
+assignment_stmt: lvalue ASSIGN expr SEMI                    -> assign
+
+// lvalue supports: x.lo(i), x.up(i), x.fx(i), parameter(i), scalar
+lvalue: ref_bound | ref_indexed | ID
+
+ref_bound: ID "." BOUND_K "(" id_list ")"   -> bound_indexed
+         | ID "." BOUND_K                      -> bound_scalar
+
+BOUND_K: /(lo|up|fx)/i
+
+ref_indexed.2: ID "(" id_list ")"             -> symbol_indexed
+
+// ---------------------------
+// Equations
+// ---------------------------
+
+equation_def: ID "(" id_list ")" ".." expr REL_K expr SEMI    -> eqn_def_domain
+            | ID ".." expr REL_K expr SEMI                     -> eqn_def_scalar
+
+REL_K: /=e=|=l=|=g=/i
+
+// ---------------------------
+// Solve
+// ---------------------------
+
+solve_stmt: "Solve"i ID "using"i "NLP"i (obj_sense ID)? SEMI  -> solve
+obj_sense: MINIMIZING_K | MAXIMIZING_K
+MINIMIZING_K: /(?i:minimizing|min)\b/
+MAXIMIZING_K: /(?i:maximizing|max)\b/
+
+model_stmt: "Model"i ID "/" "all"i "/" SEMI               -> model_all
+          | "Model"i ID "/" model_ref_list "/" SEMI       -> model_with_list
+          | "Model"i ID SEMI                              -> model_decl
+
+model_ref_list: ID ("," ID)*
+
+// ---------------------------
+// Expressions
+// ---------------------------
+
+?expr: sum_expr
+
+sum_expr: SUM_K "(" id_list "," expr ")" -> sum
+        | or_expr
+
+SUM_K: "sum"i
+
+?or_expr: and_expr
+        | or_expr OR and_expr          -> binop
+?and_expr: comp_expr
+         | and_expr AND comp_expr      -> binop
+
+?comp_expr: arith_expr
+          | arith_expr comp_op arith_expr -> binop
+
+comp_op: ASSIGN | LE | GE | LT | GT | NE
+
+?arith_expr: term
+           | arith_expr PLUS term        -> binop
+           | arith_expr MINUS term       -> binop
+
+?term: factor
+     | term TIMES factor                 -> binop
+     | term DIV factor                   -> binop
+
+?factor: power
+       | PLUS factor                     -> unaryop
+       | MINUS factor                    -> unaryop
+
+?power: atom
+      | atom POW factor                  -> binop
+
+symbol_plain.1: ID
+
+?atom: NUMBER                             -> number
+     | func_call                          -> funccall
+     | ref_indexed
+     | symbol_plain
+     | "(" expr ")"
+
+func_call: FUNCNAME "(" arg_list? ")"
+arg_list: expr ("," expr)*
+
+// ---------------------------
+// Tokens & basics
+// ---------------------------
+
+FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan)\b/
+ID: ESCAPED | CNAME
+ESCAPED: /'[^']*'|\"[^\"]*\"/
+STRING: /"[^"]*"|'[^']*'/
+
+NUMBER: SIGNED_NUMBER
+
+LE: "<="
+GE: ">="
+NE: "<>"
+LT: "<"
+GT: ">"
+ASSIGN: "="
+SEMI: ";"
+COMMA: ","
+DOT: "."
+PLUS: /\+/
+MINUS: /-/
+TIMES: /\*/
+DIV: /\//
+POW: /\^/
+AND: /(?i:and)\b/
+OR: /(?i:or)\b/
+
+%import common.SIGNED_NUMBER
+%import common.CNAME
+%import common.WS_INLINE
+%import common.NEWLINE
+
+%ignore WS_INLINE
+%ignore /(?m)^\s*\*.*$/      // GAMS inline comments: * comment
+%ignore /\/\/.*?$/m      // // comment
+%ignore /(?s)\$ontext.*?\$offtext/ // block comments
+%ignore NEWLINE
