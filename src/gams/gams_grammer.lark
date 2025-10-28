@@ -54,8 +54,9 @@ param_decl: ID "(" id_list ")" "/" param_data_items "/" param_default? -> param_
           | ID "(" id_list ")" param_default?                          -> param_domain
           | ID "/" param_data_items "/" param_default?                 -> param_plain_data
           | ID param_default?                                          -> param_plain
-scalar_decl: ID scalar_data? (ASSIGN expr)?                   -> scalar_plain
-scalar_data: "/" scalar_data_items "/"
+scalar_decl: ID "/" scalar_data_items "/" (ASSIGN expr)?      -> scalar_with_data
+           | ID ASSIGN expr                                       -> scalar_with_assign
+           | ID                                                   -> scalar_plain
 scalar_data_items: scalar_data_item ("," scalar_data_item)*
 scalar_data_item: NUMBER
 

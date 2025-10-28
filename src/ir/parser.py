@@ -85,21 +85,43 @@ def _build_lark() -> Lark:
     )
 
 
-def _tree_size(node: Tree | Token) -> int:
+def _tree_size(node: Tree | Token, memo: dict[int, int] | None = None) -> int:
+    """Calculate tree size with memoization to avoid recomputation."""
+    if memo is None:
+        memo = {}
+
+    node_id = id(node)
+    if node_id in memo:
+        return memo[node_id]
+
     if isinstance(node, Token):
-        return 1
-    return 1 + sum(_tree_size(child) for child in node.children)
+        size = 1
+    else:
+        size = 1 + sum(_tree_size(child, memo) for child in node.children)
+
+    memo[node_id] = size
+    return size
 
 
-def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
-    """Collapse Earley ambiguity nodes by picking the minimal sized subtree."""
+def _resolve_ambiguities(node: Tree | Token, memo: dict[int, int] | None = None) -> Tree | Token:
+    """Collapse Earley ambiguity nodes by picking the minimal sized subtree.
+
+    Uses memoization to avoid exponential recomputation of tree sizes.
+    """
     if isinstance(node, Token):
         return node
+
     if node.data == "_ambig":
-        candidates = [_resolve_ambiguities(child) for child in node.children]
-        best = min(candidates, key=_tree_size)
-        return best
-    resolved_children = [_resolve_ambiguities(child) for child in node.children]
+        if not node.children:
+            return node
+        # Use shared memo dict for all size computations
+        if memo is None:
+            memo = {}
+        # Pick the candidate with minimum tree size
+        best = min(node.children, key=lambda c: _tree_size(c, memo))
+        return _resolve_ambiguities(best, memo)
+
+    resolved_children = [_resolve_ambiguities(child, memo) for child in node.children]
     return Tree(node.data, resolved_children)
 
 
@@ -228,14 +250,13 @@ class _ModelBuilder:
             name_token = child.children[0]
             name = _token_text(name_token)
             param = ParameterDef(name=name)
-            idx = 1
-            if (
-                idx < len(child.children)
-                and isinstance(child.children[idx], Tree)
-                and child.children[idx].data == "scalar_data"
-            ):
-                data_node = child.children[idx]
-                idx += 1
+
+            if child.data == "scalar_with_data":
+                # Format: ID "/" scalar_data_items "/" (ASSIGN expr)?
+                # child.children[0] = ID
+                # child.children[1] = scalar_data_items tree
+                # child.children[2] = optional expr
+                data_node = child.children[1]
                 values = [
                     float(_token_text(tok))
                     for tok in data_node.scan_values(
@@ -244,11 +265,22 @@ class _ModelBuilder:
                 ]
                 if values:
                     param.values[()] = values[-1]
-            if idx < len(child.children) and isinstance(child.children[idx], Tree):
+                # Check for optional assignment after the data
+                if len(child.children) > 2 and isinstance(child.children[2], Tree):
+                    value_expr = self._expr_with_context(
+                        child.children[2], f"scalar '{name}' assignment", ()
+                    )
+                    param.values[()] = self._extract_constant(
+                        value_expr, f"scalar '{name}' assignment"
+                    )
+            elif child.data == "scalar_with_assign":
+                # Format: ID ASSIGN expr
                 value_expr = self._expr_with_context(
-                    child.children[idx], f"scalar '{name}' assignment", ()
+                    child.children[1], f"scalar '{name}' assignment", ()
                 )
                 param.values[()] = self._extract_constant(value_expr, f"scalar '{name}' assignment")
+            # else: scalar_plain, just declare without value
+
             self.model.add_param(param)
 
     def _parse_var_decl(self, node: Tree) -> tuple[VarKind, str, tuple[str, ...]]:
