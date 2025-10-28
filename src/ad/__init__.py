@@ -33,5 +33,6 @@ Sprint 2 Development Schedule:
 """
 
 from .ad_core import differentiate, simplify
+from .evaluator import EvaluationError, evaluate
 
-__all__ = ["differentiate", "simplify"]
+__all__ = ["differentiate", "simplify", "evaluate", "EvaluationError"]

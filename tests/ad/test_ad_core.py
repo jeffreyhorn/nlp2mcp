@@ -15,7 +15,7 @@ Test Coverage:
 import pytest
 
 from src.ad import differentiate
-from src.ir.ast import Binary, Const, ParamRef, SymbolRef, VarRef
+from src.ir.ast import Const, ParamRef, SymbolRef, VarRef
 
 
 class TestConstantDifferentiation:
@@ -141,15 +141,17 @@ class TestParameterReferenceDifferentiation:
 class TestUnsupportedExpressions:
     """Test that unsupported expression types raise appropriate errors."""
 
-    def test_binary_not_yet_supported(self):
-        """Binary expressions should raise TypeError with helpful message"""
-        expr = Binary("+", VarRef("x"), VarRef("y"))
+    def test_call_not_yet_supported(self):
+        """Call expressions should raise TypeError with helpful message (Day 3+)"""
+        from src.ir.ast import Call
+
+        expr = Call("exp", (VarRef("x"),))
 
         with pytest.raises(TypeError) as exc_info:
             differentiate(expr, "x")
 
         assert "not yet implemented" in str(exc_info.value).lower()
-        assert "Binary" in str(exc_info.value)
+        assert "Call" in str(exc_info.value)
         assert "subsequent days" in str(exc_info.value).lower()
 
 
