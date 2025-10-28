@@ -82,7 +82,7 @@ def differentiate_expr(expr: Expr, wrt_var: str) -> Expr:
 # ============================================================================
 
 
-def _diff_const(expr: Const, wrt_var: str) -> Const:
+def _diff_const(expr: Const, _wrt_var: str) -> Const:
     """
     Derivative of a constant.
 
@@ -90,7 +90,7 @@ def _diff_const(expr: Const, wrt_var: str) -> Const:
 
     Args:
         expr: Constant expression
-        wrt_var: Variable name (unused, derivative is always zero)
+        _wrt_var: Variable name (unused, derivative is always zero)
 
     Returns:
         Const(0.0)
@@ -167,7 +167,7 @@ def _diff_symbolref(expr: SymbolRef, wrt_var: str) -> Const:
         return Const(0.0)
 
 
-def _diff_paramref(expr: ParamRef, wrt_var: str) -> Const:
+def _diff_paramref(expr: ParamRef, _wrt_var: str) -> Const:
     """
     Derivative of a parameter reference.
 
@@ -177,7 +177,7 @@ def _diff_paramref(expr: ParamRef, wrt_var: str) -> Const:
 
     Args:
         expr: Parameter reference
-        wrt_var: Variable name (unused, derivative is always zero)
+        _wrt_var: Variable name (unused, derivative is always zero)
 
     Returns:
         Const(0.0)
