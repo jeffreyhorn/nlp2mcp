@@ -24,7 +24,7 @@ The standard recipe for NLP → MCP transformation is:
    - Equations for stationarity and equality constraints
    - Complementarity pairs for inequalities and bounds
 
-For more details, see [docs/concepts/IDEA.md](IDEA.md) and [docs/concepts/NLP2MCP_HIGH_LEVEL.md](NLP2MCP_HIGH_LEVEL.md).
+For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/concepts/NLP2MCP_HIGH_LEVEL.md](docs/concepts/NLP2MCP_HIGH_LEVEL.md).
 
 ## Features
 
@@ -36,7 +36,7 @@ For more details, see [docs/concepts/IDEA.md](IDEA.md) and [docs/concepts/NLP2MC
 - ✅ Expression AST with automatic differentiation capabilities
 - ✅ Comprehensive test coverage
 
-### Planned (See [docs/planning/PROJECT_PLAN.md](PROJECT_PLAN.md))
+### Planned (See [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md))
 
 - 🔄 Sprint 2: Automatic differentiation engine for gradients/Jacobians
 - 📋 Sprint 3: KKT synthesis and GAMS MCP code generation
@@ -212,9 +212,9 @@ The `examples/` directory contains sample GAMS NLP models:
 
 ## Documentation
 
-- [docs/concepts/IDEA.md](IDEA.md) - Original concept: How KKT conditions transform NLP to MCP
-- [docs/concepts/NLP2MCP_HIGH_LEVEL.md](NLP2MCP_HIGH_LEVEL.md) - Feasibility study and implementation blueprint
-- [docs/planning/PROJECT_PLAN.md](PROJECT_PLAN.md) - Detailed 5-sprint development plan
+- [docs/concepts/IDEA.md](docs/concepts/IDEA.md) - Original concept: How KKT conditions transform NLP to MCP
+- [docs/concepts/NLP2MCP_HIGH_LEVEL.md](docs/concepts/NLP2MCP_HIGH_LEVEL.md) - Feasibility study and implementation blueprint
+- [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md) - Detailed 5-sprint development plan
 - [AGENTS.md](AGENTS.md) - Agent-based development notes
 
 ## Contributing
