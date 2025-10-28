@@ -82,14 +82,14 @@ def differentiate_expr(expr: Expr, wrt_var: str) -> Expr:
 # ============================================================================
 
 
-def _diff_const(expr: Const, _wrt_var: str) -> Const:
+def _diff_const(_expr: Const, _wrt_var: str) -> Const:
     """
     Derivative of a constant.
 
     Mathematical rule: d(c)/dx = 0
 
     Args:
-        expr: Constant expression
+        _expr: Constant expression (unused, derivative is always zero)
         _wrt_var: Variable name (unused, derivative is always zero)
 
     Returns:
@@ -167,7 +167,7 @@ def _diff_symbolref(expr: SymbolRef, wrt_var: str) -> Const:
         return Const(0.0)
 
 
-def _diff_paramref(expr: ParamRef, _wrt_var: str) -> Const:
+def _diff_paramref(_expr: ParamRef, _wrt_var: str) -> Const:
     """
     Derivative of a parameter reference.
 
@@ -176,7 +176,7 @@ def _diff_paramref(expr: ParamRef, _wrt_var: str) -> Const:
     Parameters are constant with respect to variables in the NLP.
 
     Args:
-        expr: Parameter reference
+        _expr: Parameter reference (unused, derivative is always zero)
         _wrt_var: Variable name (unused, derivative is always zero)
 
     Returns:
