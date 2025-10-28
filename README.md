@@ -1,5 +1,8 @@
 # NLP2MCP: Convert GAMS NLP to MCP via KKT Conditions
 
+![CI](https://github.com/jeffreyhorn/nlp2mcp/workflows/CI/badge.svg)
+![Lint](https://github.com/jeffreyhorn/nlp2mcp/workflows/Lint/badge.svg)
+
 A Python tool that transforms Nonlinear Programming (NLP) models written in GAMS into equivalent Mixed Complementarity Problems (MCP) by generating the Karush-Kuhn-Tucker (KKT) conditions.
 
 ## Overview
