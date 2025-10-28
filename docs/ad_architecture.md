@@ -66,7 +66,7 @@ We chose **symbolic differentiation** (AST → AST transformations) over traditi
 | Memory | O(expression size) | O(n) for n variables |
 | Complexity | Simple rules | Adjoint tape management |
 | Debugging | Easy (symbolic) | Harder (numerical) |
-| For KKT | ✅ Perfect fit | ❌ Extra conversion needed |
+| For KKT | Yes - Perfect fit | No - Extra conversion needed |
 
 ---
 
