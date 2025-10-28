@@ -15,7 +15,7 @@ Test Coverage:
 import pytest
 
 from src.ad import differentiate
-from src.ir.ast import Const, ParamRef, SymbolRef, VarRef, Binary
+from src.ir.ast import Binary, Const, ParamRef, SymbolRef, VarRef
 
 
 class TestConstantDifferentiation:
