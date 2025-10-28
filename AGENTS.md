@@ -194,9 +194,10 @@ Refs: #12
    - Test results (`make test` output)
 3. **Before submitting**:
    ```bash
-   make format  # Auto-format
-   make lint    # Check style
-   make test    # Run tests
+   make typecheck # Check type safety
+   make format    # Auto-format
+   make lint      # Check style
+   make test      # Run tests
    ```
 4. **Review requirements**:
    - All tests passing
