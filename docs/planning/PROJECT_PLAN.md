@@ -62,13 +62,13 @@ Here’s a concrete five-sprint (2 weeks each) plan to build **nlp2mcp**, a Pyth
 
 # Sprint 2 (Weeks 3–4): Differentiation engine (AD) + Jacobians
 
-**Goal:** Build gradients/Jacobians on the IR to support KKT stationarity and constraint Jacobians.
+**Goal:** Build gradients/Jacobians on the IR to support KKT stationarity and constraint Jacobians using a purely symbolic differentiation pipeline.
 
 ### Components
 
 1. **AD core**
 
-   * Implement **reverse-mode** AD over the AST with operator overloads at the node level.
+   * Implement **symbolic** AD over the AST, generating derivative ASTs via operator-specific rules (replaces the earlier reverse-mode assumption).
    * Support all v1 functions (add, mul, div, pow, exp, log, trig). Provide derivative rules and numeric guards (e.g., `log(x)` domain).
 2. **Index & aggregation handling**
 
@@ -93,7 +93,7 @@ Here’s a concrete five-sprint (2 weeks each) plan to build **nlp2mcp**, a Pyth
 
 ### Deliverables
 
-* `ad.py` (reverse-mode engine)
+* `ad.py` (symbolic differentiation engine)
 * `jacobian.py` (equation/variable indexing, sparsity extraction)
 * Tests: ~30 derivative rule tests; ~20 Jacobian sparsity tests; ~10 numeric FD validations.
 
@@ -320,4 +320,3 @@ pyproject.toml
 * Clear CLI UX, docs, and examples; reproducible builds/tests.
 
 If you want, I can also draft the initial `gams_grammar.lark` and the IR class stubs so Sprint 1 can start with copy-pasteable code.
-
