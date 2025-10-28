@@ -320,3 +320,4 @@ pyproject.toml
 * Clear CLI UX, docs, and examples; reproducible builds/tests.
 
 If you want, I can also draft the initial `gams_grammar.lark` and the IR class stubs so Sprint 1 can start with copy-pasteable code.
+
