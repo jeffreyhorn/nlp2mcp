@@ -27,23 +27,26 @@ Objective Expression Retrieval:
    - Extract expression from RHS (or LHS if RHS is objvar)
 3. If no defining equation found: Raise error
 
-Index-Aware Differentiation (Limitation):
------------------------------------------
-Current implementation differentiates with respect to variable names only, not
-specific indices. For indexed variables x(i), all instances share the same
-symbolic derivative. This means:
+Index-Aware Differentiation (Implemented):
+------------------------------------------
+The gradient computation now uses index-aware differentiation to properly
+distinguish between different instances of indexed variables. Each variable
+instance gets its own specific derivative:
 
-Example: ∂(sum(i, x(i)))/∂x produces sum(i, 1) for ALL x instances
-Correct: ∂(sum(i, x(i)))/∂x(i1) should be 1 (only i1 term contributes)
+Example: For objective sum(i, x(i)^2) where i ∈ {i1, i2}:
+- ∂f/∂x(i1) = 2*x(i1)  (only the i1 term contributes)
+- ∂f/∂x(i2) = 2*x(i2)  (only the i2 term contributes)
 
-Future enhancement: Extend differentiate_expr() to accept indices parameter
-and implement index-aware matching in VarRef differentiation logic. This will
-enable proper sparse Jacobian construction where each variable instance has
-a distinct derivative.
+This is achieved by passing the indices tuple to differentiate_expr():
+    derivative = differentiate_expr(obj_expr, var_name, indices)
 
-For Day 7, this limitation is acceptable as we focus on establishing the
-gradient computation infrastructure. Full index-aware differentiation will
-be addressed in future sprint work.
+The differentiation engine (src/ad/derivative_rules.py) matches VarRef nodes
+based on both name and exact index tuple, enabling correct sparse Jacobian
+construction where each variable instance has its own distinct derivative.
+
+Implementation:
+- Phase 1: Enhanced differentiate_expr() API with wrt_indices parameter
+- Phase 2: Updated gradient computation to use index-aware differentiation
 """
 
 from __future__ import annotations
@@ -200,12 +203,9 @@ def compute_objective_gradient(model_ir: ModelIR) -> GradientVector:
             if col_id is None:
                 continue
 
-            # Differentiate objective w.r.t. this variable
-            # TODO: Index-aware differentiation needed here
-            # Currently differentiates w.r.t. variable name only (all instances treated identically)
-            # For correct indexed differentiation, should pass indices to distinguish x(i1) from x(i2)
-            # This will require extending differentiate_expr signature and VarRef matching logic
-            derivative = differentiate_expr(obj_expr, var_name)
+            # Differentiate objective w.r.t. this specific variable instance
+            # Index-aware differentiation: pass indices to distinguish x(i1) from x(i2)
+            derivative = differentiate_expr(obj_expr, var_name, indices)
 
             # Apply objective sense
             if sense == ObjSense.MAX:
@@ -259,12 +259,9 @@ def compute_gradient_for_expression(
             if col_id is None:
                 continue
 
-            # Differentiate
-            # TODO: Index-aware differentiation needed here
-            # Currently differentiates w.r.t. variable name only (all instances treated identically)
-            # For correct indexed differentiation, should pass indices to distinguish x(i1) from x(i2)
-            # This will require extending differentiate_expr signature and VarRef matching logic
-            derivative = differentiate_expr(expr, var_name)
+            # Differentiate w.r.t. this specific variable instance
+            # Index-aware differentiation: pass indices to distinguish x(i1) from x(i2)
+            derivative = differentiate_expr(expr, var_name, indices)
 
             # Apply negation if requested
             if negate:

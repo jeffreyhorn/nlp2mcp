@@ -316,8 +316,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ##### Notes
 - Phase 1 complete: Core differentiation API now supports index-aware differentiation
 - Backward compatibility verified: All 267 original tests still pass
-- New functionality verified: All 36 index-aware tests pass
+- New functionality verified: All 40 index-aware tests pass
 - Next phases: Update gradient.py and jacobian.py to use index-aware API (Phase 2-5)
+- See docs/planning/SPRINT_2_7_5_PLAN.md for complete implementation roadmap
+
+#### Day 7.5 - Phase 2: Gradient Computation with Index-Aware Differentiation (2025-10-28)
+
+##### Changed
+- Updated `compute_objective_gradient()` in `src/ad/gradient.py` to use index-aware differentiation
+  - Changed from: `derivative = differentiate_expr(obj_expr, var_name)`
+  - Changed to: `derivative = differentiate_expr(obj_expr, var_name, indices)`
+  - Each variable instance (e.g., x(i1), x(i2)) now gets its own specific derivative
+  - Enables correct sparse Jacobian construction
+- Updated `compute_gradient_for_expression()` to use index-aware differentiation
+  - Similar change: pass `indices` parameter to `differentiate_expr()`
+  - Ensures all gradient computations respect index-specific derivatives
+- Updated module docstring in `src/ad/gradient.py`
+  - Removed "Index-Aware Differentiation (Limitation)" section
+  - Added "Index-Aware Differentiation (Implemented)" section
+  - Documents the correct behavior with examples
+  - References Phase 1 API enhancement
+
+##### Fixed
+- Gradient computation now correctly distinguishes between indexed variable instances
+  - Previous: ∂(sum(i, x(i)^2))/∂x produced sum(i, 2*x(i)) for ALL x instances
+  - Correct: ∂(sum(i, x(i)^2))/∂x(i1) produces 2*x(i1) (only i1 term contributes)
+  - Correct: ∂(sum(i, x(i)^2))/∂x(i2) produces 2*x(i2) (only i2 term contributes)
+- Removed TODO comments from gradient computation functions
+- Sparse derivatives now computed correctly for indexed variables
+
+##### Notes
+- Phase 2 complete: Gradient computation now uses index-aware differentiation
+- All 307 tests pass (no regressions)
+- Builds on Phase 1 API enhancement (PR #11)
+- Next phases: Update Jacobian computation (Phase 3), add integration tests (Phase 4)
 - See docs/planning/SPRINT_2_7_5_PLAN.md for complete implementation roadmap
 
 ---
