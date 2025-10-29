@@ -15,10 +15,16 @@ Test Coverage:
 
 from __future__ import annotations
 
+import pytest
+
 from src.ad.derivative_rules import differentiate_expr
 from src.ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, Unary, VarRef
 
 
+pytestmark = pytest.mark.unit
+
+
+@pytest.mark.unit
 class TestBasicIndexAwareDifferentiation:
     """Test basic index-aware differentiation with VarRef."""
 
@@ -69,6 +75,7 @@ class TestBasicIndexAwareDifferentiation:
         assert result.value == 1.0
 
 
+@pytest.mark.unit
 class TestSymbolRefIndexAwareness:
     """Test that SymbolRef (scalar symbols) correctly handles wrt_indices."""
 
@@ -101,6 +108,7 @@ class TestSymbolRefIndexAwareness:
         assert result.value == 0.0
 
 
+@pytest.mark.unit
 class TestMultiDimensionalIndexMatching:
     """Test index-aware differentiation with multi-dimensional indices."""
 
@@ -147,6 +155,7 @@ class TestMultiDimensionalIndexMatching:
         assert result.value == 0.0
 
 
+@pytest.mark.unit
 class TestIndexAwareArithmetic:
     """Test index-aware differentiation through arithmetic operations."""
 
@@ -203,6 +212,7 @@ class TestIndexAwareArithmetic:
         assert isinstance(result.right, Const) and result.right.value == 0.0
 
 
+@pytest.mark.unit
 class TestIndexAwareUnary:
     """Test index-aware differentiation through unary operations."""
 
@@ -225,6 +235,7 @@ class TestIndexAwareUnary:
         assert result.child.value == 0.0
 
 
+@pytest.mark.unit
 class TestIndexAwarePower:
     """Test index-aware differentiation through power function."""
 
@@ -262,6 +273,7 @@ class TestIndexAwarePower:
         assert result.op == "*"
 
 
+@pytest.mark.unit
 class TestIndexAwareTranscendental:
     """Test index-aware differentiation through transcendental functions."""
 
@@ -306,6 +318,7 @@ class TestIndexAwareTranscendental:
         assert result.right.value == 0.0
 
 
+@pytest.mark.unit
 class TestIndexAwareTrigonometric:
     """Test index-aware differentiation through trigonometric functions."""
 
@@ -340,6 +353,7 @@ class TestIndexAwareTrigonometric:
         assert result.right.value == 1.0
 
 
+@pytest.mark.unit
 class TestIndexAwareSum:
     """Test index-aware differentiation through sum aggregations."""
 
@@ -409,6 +423,7 @@ class TestIndexAwareSum:
             assert result.value == 0.0
 
 
+@pytest.mark.unit
 class TestComplexIndexAwareExpressions:
     """Test index-aware differentiation in complex expressions."""
 

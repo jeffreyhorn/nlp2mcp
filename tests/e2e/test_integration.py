@@ -83,6 +83,9 @@ from src.ad.api import compute_derivatives
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
 
+
+pytestmark = pytest.mark.e2e
+
 # Skip marker for tests failing due to API mismatch (Issue #22)
 skip_api_mismatch = pytest.mark.skip(
     reason="API mismatch (Issue #22): Tests expect gradient.mapping but implementation provides "
@@ -106,6 +109,7 @@ def parse_and_normalize(filename: str):
     return model_ir
 
 
+@pytest.mark.e2e
 class TestScalarModels:
     """Test integration on scalar (non-indexed) models."""
 
@@ -145,6 +149,7 @@ class TestScalarModels:
         assert J_g.num_nonzeros() > 0
 
 
+@pytest.mark.e2e
 class TestIndexedModels:
     """Test integration on indexed models with sum aggregations."""
 
@@ -187,6 +192,7 @@ class TestIndexedModels:
         assert J_h.num_nonzeros() > 0
 
 
+@pytest.mark.e2e
 class TestNonlinearFunctions:
     """Test integration with nonlinear functions."""
 
@@ -204,6 +210,7 @@ class TestNonlinearFunctions:
             assert deriv is not None
 
 
+@pytest.mark.e2e
 class TestJacobianStructure:
     """Test Jacobian structure and sparsity patterns."""
 
@@ -240,6 +247,7 @@ class TestJacobianStructure:
             assert deriv is not None
 
 
+@pytest.mark.e2e
 class TestGradientStructure:
     """Test gradient structure and access patterns."""
 
@@ -267,6 +275,7 @@ class TestGradientStructure:
             assert 0 <= col_id < gradient.num_cols
 
 
+@pytest.mark.e2e
 class TestAPIErrorHandling:
     """Test that API handles errors gracefully."""
 
@@ -283,6 +292,7 @@ class TestAPIErrorHandling:
         pass
 
 
+@pytest.mark.e2e
 class TestConsistency:
     """Test consistency across different access patterns."""
 
@@ -314,6 +324,7 @@ class TestConsistency:
         assert gradient_entries == num_vars
 
 
+@pytest.mark.e2e
 class TestEndToEndWorkflow:
     """Test complete workflow from file to derivatives."""
 

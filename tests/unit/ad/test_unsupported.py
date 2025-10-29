@@ -9,11 +9,15 @@ import pytest
 from src.ad.derivative_rules import differentiate_expr
 from src.ir.ast import Call, VarRef
 
+
+pytestmark = pytest.mark.unit
+
 # ============================================================================
 # abs() Rejection Tests
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestAbsRejection:
     """Tests for abs() rejection with helpful error messages."""
 
@@ -98,6 +102,7 @@ class TestAbsRejection:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestOtherUnsupportedFunctions:
     """Tests for other unsupported functions with clear error messages."""
 

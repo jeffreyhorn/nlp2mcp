@@ -13,6 +13,8 @@ Test Coverage:
 8. Cross-product generation
 """
 
+import pytest
+
 from src.ad.index_mapping import (
     build_index_mapping,
     enumerate_equation_instances,
@@ -22,11 +24,15 @@ from src.ad.index_mapping import (
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel, SetDef, VariableDef
 
+
+pytestmark = pytest.mark.unit
+
 # ============================================================================
 # Test Set Member Resolution
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestSetMemberResolution:
     """Test resolving set and alias names to concrete members."""
 
@@ -57,6 +63,7 @@ class TestSetMemberResolution:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestVariableEnumeration:
     """Test enumeration of variable instances."""
 
@@ -137,6 +144,7 @@ class TestVariableEnumeration:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestEquationEnumeration:
     """Test enumeration of equation instances."""
 
@@ -179,6 +187,7 @@ class TestEquationEnumeration:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestIndexMapping:
     """Test building complete index mappings."""
 

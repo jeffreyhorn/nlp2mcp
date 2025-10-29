@@ -7,6 +7,8 @@ Note: Derivatives are symbolic AST expressions that may not be simplified.
 Tests evaluate derivatives to check correctness rather than checking exact AST structure.
 """
 
+import pytest
+
 from src.ad.constraint_jacobian import compute_constraint_jacobian
 from src.ad.evaluator import evaluate
 from src.ir.ast import Binary, Const, ParamRef, VarRef
@@ -20,6 +22,9 @@ from src.ir.model_ir import (
 from src.ir.symbols import Rel
 
 
+
+pytestmark = pytest.mark.integration
+
 def eval_derivative(deriv):
     """Evaluate a derivative expression (assuming no variables/params needed)."""
     if deriv is None:
@@ -27,6 +32,7 @@ def eval_derivative(deriv):
     return evaluate(deriv, {}, {})
 
 
+@pytest.mark.integration
 class TestEqualityJacobian:
     """Tests for equality constraint Jacobian (J_h)."""
 
@@ -137,6 +143,7 @@ class TestEqualityJacobian:
         assert eval_derivative(deriv_eq2_y) == -1.0
 
 
+@pytest.mark.integration
 class TestInequalityJacobian:
     """Tests for inequality constraint Jacobian (J_g)."""
 
@@ -198,6 +205,7 @@ class TestInequalityJacobian:
         assert isinstance(deriv_y, Binary)
 
 
+@pytest.mark.integration
 class TestIndexedConstraints:
     """Tests for indexed constraint Jacobians."""
 
@@ -283,6 +291,7 @@ class TestIndexedConstraints:
         assert eval_derivative(deriv_cross) == 0.0
 
 
+@pytest.mark.integration
 class TestMixedConstraints:
     """Tests for models with both equalities and inequalities."""
 
@@ -325,6 +334,7 @@ class TestMixedConstraints:
         assert eval_derivative(ineq_deriv_y) == -1.0
 
 
+@pytest.mark.integration
 class TestSparsityPattern:
     """Tests for Jacobian sparsity patterns."""
 

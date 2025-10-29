@@ -184,16 +184,55 @@ make clean        # Remove build artifacts
 
 ### Running Tests
 
+The test suite is organized into four layers for fast feedback:
+
 ```bash
-# Run all tests
-make test
+# Run fast unit tests only (~10 seconds)
+./scripts/test_fast.sh
+# Or: pytest tests/unit/ -v
+
+# Run unit + integration tests (~30 seconds)
+./scripts/test_integration.sh
+# Or: pytest tests/unit/ tests/integration/ -v
+
+# Run complete test suite (~60 seconds)
+./scripts/test_all.sh
+# Or: pytest tests/ -v
+
+# Run specific test category
+pytest -m unit          # Only unit tests
+pytest -m integration   # Only integration tests
+pytest -m e2e          # Only end-to-end tests
+pytest -m validation   # Only validation tests
 
 # Run specific test file
-pytest tests/ir/test_normalize.py -v
+pytest tests/unit/ad/test_arithmetic.py -v
 
 # Run with coverage
 pytest --cov=src tests/
 ```
+
+### Test Organization
+
+```
+tests/
+├── unit/              # Fast tests, no file I/O (~10 tests/sec)
+│   ├── ad/           # AD engine unit tests
+│   ├── gams/         # Parser unit tests
+│   └── ir/           # IR unit tests
+├── integration/       # Cross-module tests (~5 tests/sec)
+│   └── ad/           # Gradient and Jacobian integration
+├── e2e/              # Full pipeline tests (~2 tests/sec)
+│   └── test_integration.py
+└── validation/        # Mathematical correctness (~1 test/sec)
+    └── test_finite_difference.py
+```
+
+**Test Pyramid Strategy:**
+- **Unit tests** (157 tests): Test individual functions/modules in isolation
+- **Integration tests** (45 tests): Test cross-module interactions
+- **E2E tests** (15 tests): Test full GAMS → derivatives pipeline
+- **Validation tests** (169 tests): Finite-difference validation of derivatives
 
 ### Code Style
 

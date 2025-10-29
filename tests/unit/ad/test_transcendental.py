@@ -9,11 +9,15 @@ import pytest
 from src.ad.derivative_rules import differentiate_expr
 from src.ir.ast import Binary, Call, Const, VarRef
 
+
+pytestmark = pytest.mark.unit
+
 # ============================================================================
 # Power Function Tests
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestPowerDifferentiation:
     """Tests for power(base, exponent) differentiation."""
 
@@ -107,6 +111,7 @@ class TestPowerDifferentiation:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestExpDifferentiation:
     """Tests for exp(x) differentiation."""
 
@@ -172,6 +177,7 @@ class TestExpDifferentiation:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestLogDifferentiation:
     """Tests for log(x) differentiation."""
 
@@ -238,6 +244,7 @@ class TestLogDifferentiation:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestSqrtDifferentiation:
     """Tests for sqrt(x) differentiation."""
 
@@ -311,6 +318,7 @@ class TestSqrtDifferentiation:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestTranscendentalErrors:
     """Tests for error handling in transcendental functions."""
 

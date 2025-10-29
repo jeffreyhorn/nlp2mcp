@@ -19,6 +19,10 @@ from src.ad import differentiate
 from src.ir.ast import Binary, Const, Unary, VarRef
 
 
+
+pytestmark = pytest.mark.unit
+
+@pytest.mark.unit
 class TestAdditionDifferentiation:
     """Test differentiation of addition operations."""
 
@@ -50,6 +54,7 @@ class TestAdditionDifferentiation:
         assert result.right.value == 0.0
 
 
+@pytest.mark.unit
 class TestSubtractionDifferentiation:
     """Test differentiation of subtraction operations."""
 
@@ -78,6 +83,7 @@ class TestSubtractionDifferentiation:
         assert result.right.value == 0.0
 
 
+@pytest.mark.unit
 class TestMultiplicationDifferentiation:
     """Test differentiation of multiplication (product rule)."""
 
@@ -124,6 +130,7 @@ class TestMultiplicationDifferentiation:
         assert term1.left.value == 5.0
 
 
+@pytest.mark.unit
 class TestDivisionDifferentiation:
     """Test differentiation of division (quotient rule)."""
 
@@ -169,6 +176,7 @@ class TestDivisionDifferentiation:
         assert denominator.op == "*"
 
 
+@pytest.mark.unit
 class TestUnaryOperators:
     """Test differentiation of unary operators."""
 
@@ -203,6 +211,7 @@ class TestUnaryOperators:
         assert result.child.op == "-"
 
 
+@pytest.mark.unit
 class TestChainRule:
     """Test chain rule through combinations of operations."""
 
@@ -233,6 +242,7 @@ class TestChainRule:
         assert result.op == "/"
 
 
+@pytest.mark.unit
 class TestUnsupportedOperations:
     """Test that unsupported operations raise appropriate errors."""
 
