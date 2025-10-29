@@ -1,13 +1,24 @@
 # Issue: Bounds Constraint KeyError in Integration Tests
 
+## ✅ RESOLVED (2025-10-29)
+
+**Resolution**: Fixed by adding bounds check in `_compute_inequality_jacobian()`
+- Added check to skip bounds when processing inequalities in `src/ad/constraint_jacobian.py`
+- Bounds (e.g., 'x_lo', 'x_up') are in `model_ir.inequalities` but not in `model_ir.equations`
+- They are properly handled by `_compute_bound_jacobian()` which was already implemented
+- Simple 3-line fix: check `if eq_name in model_ir.normalized_bounds: continue`
+- **Result**: `test_bounds_nlp_basic` now passes, 14/15 integration tests passing (93%)
+
+**Branch**: `fix/issue-24-bounds-constraint-keyerror`
+
 ## Summary
 
-Integration test `test_bounds_nlp_basic` fails with a `KeyError: 'x_lo'` when trying to compute derivatives for a model with variable bounds. The constraint Jacobian computation code attempts to look up bound constraints (e.g., `'x_lo'`, `'x_up'`) as equation names in the equations dictionary, but bounds are not equations and don't exist in that dictionary.
+Integration test `test_bounds_nlp_basic` was failing with a `KeyError: 'x_lo'` when trying to compute derivatives for a model with variable bounds. The constraint Jacobian computation code attempted to look up bound constraints (e.g., `'x_lo'`, `'x_up'`) as equation names in the equations dictionary, but bounds are not equations and don't exist in that dictionary.
 
 ## Severity
 
-- **Status**: OPEN 🔴
-- **Severity**: Medium - Bounds handling broken, blocks 1 integration test
+- **Status**: RESOLVED ✅
+- **Severity**: Medium - Bounds handling broken, blocked 1 integration test
 - **Component**: Sprint 2 (AD / Automatic Differentiation)
 - **Affects**: Models with variable bounds, constraint Jacobian computation
 - **Discovered**: Sprint 2 Day 10 (2025-10-29) while fixing Issue #22

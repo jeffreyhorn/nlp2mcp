@@ -186,6 +186,9 @@ def _compute_inequality_jacobian(model_ir: ModelIR, index_mapping, J_g: Jacobian
     Processes all equations in ModelIR.inequalities. Each equation is in normalized
     form (lhs - rhs ≤ 0), representing g_i(x) ≤ 0.
 
+    Note: Bounds (e.g., 'x_lo', 'x_up') are in inequalities but not in equations.
+    They are handled separately by _compute_bound_jacobian(), so we skip them here.
+
     Args:
         model_ir: Model IR with inequality constraints
         index_mapping: Index mapping for variables and equations
@@ -194,6 +197,10 @@ def _compute_inequality_jacobian(model_ir: ModelIR, index_mapping, J_g: Jacobian
     from .index_mapping import enumerate_equation_instances
 
     for eq_name in model_ir.inequalities:
+        # Skip bounds - they're handled by _compute_bound_jacobian()
+        if eq_name in model_ir.normalized_bounds:
+            continue
+
         eq_def = model_ir.equations[eq_name]
 
         # Get all instances of this equation (handles indexed constraints)
