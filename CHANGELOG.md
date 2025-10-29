@@ -260,6 +260,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed incorrect mathematical comment in test_gradient.py for ∂(sum(i, x(i)))/∂x(i1)
   - Future work: Extend differentiate_expr() to accept indices for proper sparse derivatives
 
+#### Day 7.5 - Phase 1: Core Differentiation API Enhancement (2025-10-28)
+
+##### Added
+- Enhanced `differentiate_expr()` signature in `src/ad/derivative_rules.py` with index-aware differentiation support
+  - Added optional `wrt_indices: tuple[str, ...] | None = None` parameter
+  - When None: Matches any indices (backward compatible behavior)
+  - When provided: Only matches VarRef with exact index tuple
+  - Example: `differentiate_expr(VarRef("x", ("i1",)), "x", ("i1",))` returns Const(1.0)
+  - Example: `differentiate_expr(VarRef("x", ("i2",)), "x", ("i1",))` returns Const(0.0)
+- Implemented index matching logic in `_diff_varref()`
+  - Exact index tuple comparison for indexed variables
+  - Name must match: expr.name == wrt_var
+  - If wrt_indices is None: Match any indices (backward compatible)
+  - If wrt_indices provided: Must match exactly (expr.indices == wrt_indices)
+  - Returns Const(1.0) if matches, Const(0.0) otherwise
+- Updated all derivative rule function signatures to accept `wrt_indices` parameter
+  - Updated: `_diff_const()`, `_diff_varref()`, `_diff_symbolref()`, `_diff_paramref()`
+  - Updated: `_diff_binary()`, `_diff_unary()`
+  - Updated: `_diff_call()`, `_diff_power()`, `_diff_exp()`, `_diff_log()`, `_diff_sqrt()`
+  - Updated: `_diff_sin()`, `_diff_cos()`, `_diff_tan()`
+  - Updated: `_diff_sum()`
+- Threaded `wrt_indices` parameter through all recursive differentiation calls
+  - Binary operations (+, -, *, /): Pass wrt_indices to recursive calls
+  - Unary operations (+, -): Pass wrt_indices to child differentiation
+  - Function calls (power, exp, log, sqrt, sin, cos, tan): Pass wrt_indices to argument differentiation
+  - Sum aggregations: Pass wrt_indices through to body differentiation
+- Enhanced documentation with comprehensive examples
+  - Added backward compatibility examples showing None case
+  - Added index-aware examples showing exact matching
+  - Added multi-dimensional index examples
+  - Updated all function docstrings with wrt_indices parameter documentation
+
+##### Changed
+- All derivative rule functions now accept optional `wrt_indices` parameter
+- Default parameter value (None) ensures backward compatibility with existing code
+- No changes to public API behavior when wrt_indices is not specified
+
+##### Fixed
+- N/A
+
+##### Notes
+- All 267 existing tests pass, confirming backward compatibility
+- Phase 1 complete: Core differentiation API now supports index-aware differentiation
+- Next phases: Update gradient.py and jacobian.py to use index-aware API (Phase 2-5)
+- See docs/planning/SPRINT_2_7_5_PLAN.md for complete implementation roadmap
+
 ---
 
 ## [0.1.0] - Sprint 1 Complete
