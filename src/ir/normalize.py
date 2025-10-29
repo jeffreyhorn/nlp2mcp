@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from .ast import Binary, Const, Expr, VarRef
+from .ast import Binary, Const, Expr, SymbolRef, VarRef
 from .model_ir import ModelIR
 from .symbols import EquationDef, Rel
 
@@ -24,6 +24,58 @@ class NormalizedEquation:
 def subtract(lhs: Expr, rhs: Expr) -> Expr:
     """Build lhs - rhs as a Binary node."""
     return Binary("-", lhs, rhs)
+
+
+def _extract_objective_expression(equations: dict[str, EquationDef], objvar: str) -> Expr:
+    """
+    Extract objective expression from equations before normalization.
+
+    This function searches through equations to find one that defines the objective
+    variable and extracts the expression. It should be called BEFORE normalization
+    to avoid issues with restructured equations.
+
+    Args:
+        equations: Dictionary of equation definitions
+        objvar: Name of the objective variable to find
+
+    Returns:
+        Expression that defines the objective
+
+    Raises:
+        ValueError: If objective variable is not defined by any equation
+
+    Examples:
+        >>> # Equation: obj =e= x^2 + y
+        >>> equations = {"obj_def": EquationDef(...)}
+        >>> expr = _extract_objective_expression(equations, "obj")
+        >>> # Returns: Binary("+", Call("power", ...), VarRef("y"))
+    """
+    for _eq_name, eq_def in equations.items():
+        # Skip indexed equations (objective must be scalar)
+        if eq_def.domain:
+            continue
+
+        # Check if this equation defines the objective variable
+        lhs, rhs = eq_def.lhs_rhs
+
+        # Check if lhs is the objvar (then use rhs as expression)
+        # Can be either SymbolRef or VarRef (scalar, with no indices)
+        if (isinstance(lhs, SymbolRef) and lhs.name == objvar) or (
+            isinstance(lhs, VarRef) and lhs.name == objvar and not lhs.indices
+        ):
+            return rhs
+
+        # Check if rhs is the objvar (then use lhs as expression)
+        if (isinstance(rhs, SymbolRef) and rhs.name == objvar) or (
+            isinstance(rhs, VarRef) and rhs.name == objvar and not rhs.indices
+        ):
+            return lhs
+
+    # No defining equation found
+    raise ValueError(
+        f"Objective variable '{objvar}' is not defined by any equation. "
+        f"Available equations: {list(equations.keys())}"
+    )
 
 
 def normalize_equation(eq: EquationDef) -> NormalizedEquation:
@@ -54,7 +106,30 @@ def normalize_model(
     - Partition equalities vs inequalities; leave direction tags to later pass.
     - Emit additional normalized inequalities/equalities for variable bounds.
     - Return maps: (equations, bounds).
+
+    Note: This function extracts and stores the objective expression BEFORE
+    normalization to avoid issues with finding it after equations are restructured.
+    See GitHub Issue #19 for details.
     """
+    # IMPORTANT: Extract objective expression BEFORE normalization
+    # After normalization, equations are restructured and the objective
+    # variable may not be easily found. Extract it now while equations
+    # are in their original form.
+    #
+    # Only attempt extraction if:
+    # 1. An objective exists
+    # 2. The objective expression is not already set (ObjectiveIR.expr is None)
+    # 3. There might be a defining equation to extract from
+    if ir.objective and not ir.objective.expr and ir.equations:
+        objvar = ir.objective.objvar
+        try:
+            ir.objective.expr = _extract_objective_expression(ir.equations, objvar)
+        except ValueError:
+            # If no defining equation is found, that's OK - the objective might be
+            # just a simple variable reference. The AD code will handle this case.
+            # Only models with obj =e= expr pattern need extraction.
+            pass
+
     norm: dict[str, NormalizedEquation] = {}
     bounds: dict[str, NormalizedEquation] = {}
     ir.equalities.clear()

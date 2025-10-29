@@ -6,10 +6,13 @@ The `find_objective_expression()` function in `src/ad/gradient.py` fails to loca
 
 ## Status
 
+- **RESOLVED** ✅
 - **Severity**: High - Blocks integration testing and end-to-end workflows
 - **Component**: Sprint 1 (Parser & IR)
 - **Affects**: Sprint 2 integration tests
 - **Discovered**: Sprint 2 Day 10 (2025-10-29)
+- **Fixed**: PR #XX (Branch: fix/issue-19-objective-after-normalization)
+- **Solution**: Implemented Option 4 - Extract objective expression in normalize_model() before normalization
 
 ## Problem Description
 
@@ -427,3 +430,78 @@ None yet - this is the first documented instance of this problem.
 - `normalization`
 - `priority: high`
 - `blocked: integration-tests`
+
+---
+
+## Resolution
+
+### Implementation
+
+**Date**: 2025-10-29  
+**Branch**: `fix/issue-19-objective-after-normalization`  
+**Approach**: Option 4 - Extract objective expression in normalize_model() before normalization
+
+### Changes Made
+
+1. **Added helper function** in `src/ir/normalize.py`:
+   - `_extract_objective_expression()`: Searches equations for objective variable definition
+   - Handles both SymbolRef and VarRef (scalar) variable references
+   - Skips indexed equations (objective must be scalar)
+   - Returns the expression that defines the objective
+
+2. **Updated normalize_model()** in `src/ir/normalize.py`:
+   - Extracts objective expression BEFORE normalization begins
+   - Only attempts extraction if: objective exists, expr is None, and equations exist
+   - Gracefully handles cases where no defining equation exists (e.g., `minimize x`)
+   - Sets `model_ir.objective.expr` before equations are restructured
+
+3. **Added comprehensive unit tests** in `tests/ir/test_normalize.py`:
+   - 6 new tests covering all edge cases
+   - Tests LHS and RHS objective definitions
+   - Tests complex expressions
+   - Tests preservation of existing expressions
+   - Tests graceful handling of missing definitions
+   - Tests indexed equation skipping
+
+4. **Enabled integration tests** in `tests/ad/test_integration.py`:
+   - Removed pytestmark skip decorator
+   - Updated documentation to reflect fix
+   - 15 integration tests now ready to run (pending parse_model_file fix)
+
+### Test Results
+
+- ✅ All 16 normalize tests pass
+- ✅ All 47 IR + AD tests pass
+- ✅ Lint and type checks pass (ruff, mypy)
+- ⚠️  Integration tests cannot run due to separate pre-existing parse_model_file hang issue
+
+### Known Limitations
+
+The integration tests reveal a **separate pre-existing bug**: `parse_model_file()` hangs when parsing example files like `scalar_nlp.gms`. This issue exists on main branch and is unrelated to this fix. The hang occurs during parsing, before normalization is even called.
+
+This parsing issue should be investigated separately as it prevents end-to-end testing with file-based examples. However, all unit tests with inline model text pass successfully.
+
+### Verification
+
+The fix was verified to work correctly for:
+- ✅ Models with objective defined by equation (`obj =e= expr`)
+- ✅ Models with objective on LHS or RHS of equation
+- ✅ Models with complex objective expressions
+- ✅ Models without objective defining equations (direct variable minimization)
+- ✅ Models that already have objective.expr set
+- ✅ Models with indexed and scalar equations
+
+### Files Changed
+
+- `src/ir/normalize.py`: Added extraction logic (47 lines)
+- `tests/ir/test_normalize.py`: Added 6 unit tests (188 lines)
+- `tests/ad/test_integration.py`: Removed skip marker, updated docs
+- `docs/issues/objective_not_found_after_normalization.md`: Updated status
+
+### Impact
+
+- **Fixes**: GitHub Issue #19
+- **Enables**: Integration testing (pending parse_model_file fix)
+- **Maintains**: Backward compatibility with all existing models
+- **No Breaking Changes**: Existing functionality preserved
+
