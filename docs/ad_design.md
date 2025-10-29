@@ -189,9 +189,14 @@ Evaluates symbolic expressions at concrete points:
 **Usage**:
 ```python
 from src.ad.evaluator import evaluate
+from src.ir.ast import Binary, Call, VarRef, Const
 
 # Symbolic expression: x^2 + y
-expr = Binary("+", Call("power", (VarRef("x"), Const(2.0))), VarRef("y"))
+expr = Binary(
+    op="+",
+    left=Call(func="power", args=(VarRef(name="x"), Const(value=2.0))),
+    right=VarRef(name="y")
+)
 
 # Evaluate at point
 var_values = {("x", ()): 3.0, ("y", ()): 5.0}

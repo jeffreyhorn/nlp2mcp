@@ -464,10 +464,11 @@ Symbolic derivatives can be evaluated at specific points:
 
 ```python
 from src.ad import differentiate, evaluate
+from src.ir.ast import Binary, VarRef, Const
 
 # Symbolic differentiation
-expr = BinaryOp(op='+', left=Var('x'), right=Literal(2))  # x + 2
-deriv = differentiate(expr, 'x')  # Result: Literal(1)
+expr = Binary(op='+', left=VarRef('x'), right=Const(2))  # x + 2
+deriv = differentiate(expr, 'x')  # Result: Const(1)
 
 # Evaluation
 result = evaluate(deriv, {'x': 5.0})  # Result: 1.0

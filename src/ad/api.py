@@ -177,8 +177,21 @@ def compute_derivatives(
     # Step 2: Compute constraint Jacobians (builds its own mapping)
     J_h, J_g = compute_constraint_jacobian(model_ir)
 
-    # Note: gradient.mapping, J_h.mapping, and J_g.mapping should all be equivalent
-    # since they're built from the same model_ir using the same algorithm
+    # Note: gradient.index_mapping, J_h.index_mapping, and J_g.index_mapping are all
+    # equivalent since they're built from the same model_ir using the same algorithm.
+    # Verify this invariant:
+    assert gradient.index_mapping is not None, "Gradient must have index_mapping set"
+    assert J_h.index_mapping is not None, "J_h must have index_mapping set"
+    assert J_g.index_mapping is not None, "J_g must have index_mapping set"
+
+    assert (
+        gradient.index_mapping.num_vars == J_h.index_mapping.num_vars == J_g.index_mapping.num_vars
+    ), "Invariant violated: all mappings must have the same number of variables"
+    assert (
+        gradient.index_mapping.var_to_col
+        == J_h.index_mapping.var_to_col
+        == J_g.index_mapping.var_to_col
+    ), "Invariant violated: all mappings must have identical variable-to-column mappings"
 
     # Return in order: gradient, inequality Jacobian, equality Jacobian
     return gradient, J_g, J_h

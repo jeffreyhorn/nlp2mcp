@@ -26,7 +26,10 @@ Each test validates:
 NOTE: These tests are currently SKIPPED due to a pre-existing Sprint 1 issue.
 The find_objective_expression() function cannot locate objectives after
 normalize_model() is called. This needs to be fixed in Sprint 1 code before
-these integration tests can run. See issue tracked in CHANGELOG.md Day 10 notes.
+these integration tests can run.
+
+See: GitHub Issue #19 "Objective Expressions Not Found After Model Normalization"
+https://github.com/jeffreyhorn/nlp2mcp/issues/19
 """
 
 import os
@@ -42,7 +45,7 @@ pytestmark = pytest.mark.skip(
     reason="Pre-existing Sprint 1 issue: find_objective_expression() fails after "
     "normalize_model(). Objective variables defined by equations cannot be found "
     "after normalization. This needs to be fixed before integration tests can run. "
-    "See CHANGELOG.md Day 10 notes for details."
+    "See GitHub Issue #19: https://github.com/jeffreyhorn/nlp2mcp/issues/19"
 )
 
 
