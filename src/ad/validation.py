@@ -125,14 +125,17 @@ def generate_test_point(
             lo, up = DEFAULT_UNBOUNDED_RANGE
         elif lo is None:
             # Only upper bound: use [up - 20, up - 0.1]
+            assert up is not None  # Type narrowing for mypy
             lo = up - 20.0
             up = up - 0.1  # Stay away from boundary
         elif up is None:
             # Only lower bound: use [lo + 0.1, lo + 20]
+            assert lo is not None  # Type narrowing for mypy
             lo = lo + 0.1  # Stay away from boundary
             up = lo + 20.0
         else:
             # Both bounds: use [lo + ε, up - ε] to avoid boundaries
+            assert lo is not None and up is not None  # Type narrowing for mypy
             range_width = up - lo
             if range_width > 0.2:
                 lo = lo + 0.1
