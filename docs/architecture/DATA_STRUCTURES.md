@@ -836,11 +836,12 @@ J_g = JacobianStructure(
 
 ```gams
 Set I /i1, i2/;
+Parameter bound(i) /i1 5, i2 10/;
 Variables x(i), obj;
 Equations obj_eq, con(i);
 
 obj_eq.. obj =e= sum(i, x(i)^2);
-con(i).. x(i) =l= i.ord;
+con(i).. x(i) =l= bound(i);
 
 Solve mymodel using NLP minimizing obj;
 ```
@@ -872,12 +873,15 @@ ModelIR(
             relation="=l=",
             expression=Binary("-",
                 VarRef("x", ("i",)),
-                ParamRef("i.ord", ("i",))
+                ParamRef("bound", ("i",))
             )
         ),
     },
     equalities=["obj_eq"],
     inequalities=["con"],  # 2 instances: con(i1), con(i2)
+    params={
+        "bound": ParameterDef("bound", ("I",)),
+    },
 )
 ```
 
