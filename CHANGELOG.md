@@ -300,9 +300,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ##### Fixed
 - N/A
 
+##### Tests
+- Created `tests/ad/test_index_aware_diff.py` with 36 comprehensive tests
+  - Basic index matching (5 tests): exact match, mismatch, different variables, scalar with indices, backward compatibility
+  - Multi-dimensional indices (6 tests): 2D exact match, 2D first/second/both differ, 3D exact match, 3D middle differs
+  - Arithmetic operations (5 tests): addition with matching/mismatched indices, product with matching/mismatched, subtraction with mixed
+  - Unary operations (2 tests): unary minus with matching/mismatched indices
+  - Power function (3 tests): matching/mismatched index, base matches with different exponent
+  - Transcendental functions (4 tests): exp/log matching, exp/sqrt mismatched
+  - Trigonometric functions (3 tests): sin/tan matching, cos mismatched
+  - Sum aggregations (3 tests): matching/mismatched index in body, sum over same index as wrt
+  - Complex expressions (5 tests): nested functions, mixed indices, parameters, sum of products
+- All 303 tests pass (267 original + 36 new)
+
 ##### Notes
-- All 267 existing tests pass, confirming backward compatibility
 - Phase 1 complete: Core differentiation API now supports index-aware differentiation
+- Backward compatibility verified: All 267 original tests still pass
+- New functionality verified: All 36 index-aware tests pass
 - Next phases: Update gradient.py and jacobian.py to use index-aware API (Phase 2-5)
 - See docs/planning/SPRINT_2_7_5_PLAN.md for complete implementation roadmap
 
