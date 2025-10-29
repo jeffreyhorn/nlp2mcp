@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..ir.ast import Expr
 
-from ..ir.ast import Const, ParamRef, SymbolRef, VarRef
+from ..ir.ast import Binary, Const, ParamRef, SymbolRef, Unary, VarRef
 
 
 def differentiate_expr(expr: Expr, wrt_var: str) -> Expr:
@@ -61,11 +61,13 @@ def differentiate_expr(expr: Expr, wrt_var: str) -> Expr:
     elif isinstance(expr, ParamRef):
         return _diff_paramref(expr, wrt_var)
 
-    # Day 2+: Other node types (to be implemented)
-    # elif isinstance(expr, Binary):
-    #     return _diff_binary(expr, wrt_var)
-    # elif isinstance(expr, Unary):
-    #     return _diff_unary(expr, wrt_var)
+    # Day 2: Binary and Unary operations
+    elif isinstance(expr, Binary):
+        return _diff_binary(expr, wrt_var)
+    elif isinstance(expr, Unary):
+        return _diff_unary(expr, wrt_var)
+
+    # Day 3+: Other node types (to be implemented)
     # elif isinstance(expr, Call):
     #     return _diff_call(expr, wrt_var)
     # elif isinstance(expr, Sum):
@@ -192,18 +194,140 @@ def _diff_paramref(_expr: ParamRef, _wrt_var: str) -> Const:
 
 
 # ============================================================================
-# Day 2+: Additional Rules (Placeholders)
+# Day 2: Binary and Unary Operations
 # ============================================================================
 
-# def _diff_binary(expr: Binary, wrt_var: str) -> Expr:
-#     """Derivative of binary operations (+, -, *, /, ^)"""
-#     # To be implemented on Day 2
-#     pass
 
-# def _diff_unary(expr: Unary, wrt_var: str) -> Expr:
-#     """Derivative of unary operations (+, -)"""
-#     # To be implemented on Day 2
-#     pass
+def _diff_binary(expr: Binary, wrt_var: str) -> Expr:
+    """
+    Derivative of binary operations.
+
+    Supports: +, -, *, /
+
+    Mathematical rules:
+    - Sum Rule: d(a+b)/dx = da/dx + db/dx
+    - Difference Rule: d(a-b)/dx = da/dx - db/dx
+    - Product Rule: d(a*b)/dx = b*(da/dx) + a*(db/dx)
+    - Quotient Rule: d(a/b)/dx = (b*(da/dx) - a*(db/dx))/b²
+
+    Args:
+        expr: Binary expression
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Derivative expression (new AST)
+
+    Raises:
+        ValueError: If operation is not supported
+
+    Examples:
+        >>> # d(x+y)/dx = 1 + 0 = 1
+        >>> _diff_binary(Binary("+", VarRef("x"), VarRef("y")), "x")
+        Binary("+", Const(1.0), Const(0.0))
+
+        >>> # d(x*y)/dx = y*1 + x*0 = y
+        >>> _diff_binary(Binary("*", VarRef("x"), VarRef("y")), "x")
+        Binary("+", Binary("*", VarRef("y"), Const(1.0)), Binary("*", VarRef("x"), Const(0.0)))
+    """
+    op = expr.op
+
+    if op == "+":
+        # Sum rule: d(a+b)/dx = da/dx + db/dx
+        left_deriv = differentiate_expr(expr.left, wrt_var)
+        right_deriv = differentiate_expr(expr.right, wrt_var)
+        return Binary("+", left_deriv, right_deriv)
+
+    elif op == "-":
+        # Difference rule: d(a-b)/dx = da/dx - db/dx
+        left_deriv = differentiate_expr(expr.left, wrt_var)
+        right_deriv = differentiate_expr(expr.right, wrt_var)
+        return Binary("-", left_deriv, right_deriv)
+
+    elif op == "*":
+        # Product rule: d(a*b)/dx = b*(da/dx) + a*(db/dx)
+        a = expr.left
+        b = expr.right
+        da_dx = differentiate_expr(a, wrt_var)
+        db_dx = differentiate_expr(b, wrt_var)
+        # b * da/dx
+        term1 = Binary("*", b, da_dx)
+        # a * db/dx
+        term2 = Binary("*", a, db_dx)
+        return Binary("+", term1, term2)
+
+    elif op == "/":
+        # Quotient rule: d(a/b)/dx = (b*(da/dx) - a*(db/dx))/b²
+        a = expr.left
+        b = expr.right
+        da_dx = differentiate_expr(a, wrt_var)
+        db_dx = differentiate_expr(b, wrt_var)
+        # b * da/dx
+        term1 = Binary("*", b, da_dx)
+        # a * db/dx
+        term2 = Binary("*", a, db_dx)
+        # numerator: b*da/dx - a*db/dx
+        numerator = Binary("-", term1, term2)
+        # denominator: b²
+        denominator = Binary("*", b, b)
+        return Binary("/", numerator, denominator)
+
+    else:
+        raise ValueError(
+            f"Unsupported binary operation '{op}' for differentiation. "
+            f"Supported operations: +, -, *, /. "
+            f"Power (^) will be implemented on Day 3."
+        )
+
+
+def _diff_unary(expr: Unary, wrt_var: str) -> Expr:
+    """
+    Derivative of unary operations.
+
+    Supports: +, -
+
+    Mathematical rules:
+    - Unary plus: d(+a)/dx = da/dx
+    - Unary minus: d(-a)/dx = -da/dx
+
+    Args:
+        expr: Unary expression
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Derivative expression (new AST)
+
+    Raises:
+        ValueError: If operation is not supported
+
+    Examples:
+        >>> # d(+x)/dx = dx/dx = 1
+        >>> _diff_unary(Unary("+", VarRef("x")), "x")
+        Const(1.0)
+
+        >>> # d(-x)/dx = -dx/dx = -1
+        >>> _diff_unary(Unary("-", VarRef("x")), "x")
+        Unary("-", Const(1.0))
+    """
+    op = expr.op
+
+    if op == "+":
+        # Unary plus: d(+a)/dx = da/dx
+        return differentiate_expr(expr.child, wrt_var)
+
+    elif op == "-":
+        # Unary minus: d(-a)/dx = -da/dx
+        child_deriv = differentiate_expr(expr.child, wrt_var)
+        return Unary("-", child_deriv)
+
+    else:
+        raise ValueError(
+            f"Unsupported unary operation '{op}' for differentiation. Supported operations: +, -"
+        )
+
+
+# ============================================================================
+# Day 3+: Additional Rules (Placeholders)
+# ============================================================================
 
 # def _diff_call(expr: Call, wrt_var: str) -> Expr:
 #     """Derivative of function calls (exp, log, sin, etc.)"""

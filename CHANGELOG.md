@@ -24,6 +24,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ##### Fixed
 - N/A
 
+#### Day 2 (2025-10-28) - Arithmetic Operations & AST Evaluator
+
+##### Added
+- Implemented symbolic differentiation for Binary operations (+, -, *, /) in `src/ad/derivative_rules.py`
+  - Addition and subtraction using sum/difference rules
+  - Multiplication using product rule: d(a*b)/dx = b*(da/dx) + a*(db/dx)
+  - Division using quotient rule: d(a/b)/dx = (b*(da/dx) - a*(db/dx))/b²
+- Implemented symbolic differentiation for Unary operators (+, -)
+- Created AST evaluator in `src/ad/evaluator.py`
+  - Evaluate expressions with concrete variable/parameter values
+  - Support for all v1 expression types (constants, variables, binary, unary, functions)
+  - Handle indexed variables and parameters
+- Implemented comprehensive NaN/Inf detection
+  - Check for NaN in all arithmetic operations
+  - Check for Inf in all operations
+  - Domain violation checks (division by zero, log of negative, sqrt of negative)
+  - Clear, actionable error messages with context
+- Created `tests/ad/test_arithmetic.py` with 15 tests for differentiation
+- Created `tests/ad/test_evaluator.py` with 19 tests for evaluation and safety
+- Exported `evaluate` and `EvaluationError` from `src/ad/__init__.py`
+
+##### Changed
+- Updated `src/ad/derivative_rules.py` to include Binary and Unary in dispatcher
+
+##### Fixed
+- N/A
+
 ---
 
 ## [0.1.0] - Sprint 1 Complete
