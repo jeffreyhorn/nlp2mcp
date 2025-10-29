@@ -549,6 +549,81 @@ Phase 4 primarily involved **verification and documentation** rather than new te
 
 ---
 
+#### Day 8 (Wednesday): Constraint Jacobian Computation (2025-10-29)
+
+##### Added
+- **Constraint Jacobian computation** in `src/ad/constraint_jacobian.py`
+  - `compute_constraint_jacobian()`: Computes J_h (equality) and J_g (inequality) Jacobians
+  - Full support for equality constraints (h(x) = 0)
+  - Full support for inequality constraints (g(x) ≤ 0)
+  - **Bound-derived equations included in J_g** (critical for KKT conditions)
+  - Handles indexed constraints correctly with index substitution
+  - Uses index-aware differentiation from Phase 1-5
+
+- **Index substitution for indexed constraints**
+  - `_substitute_indices()`: Substitutes symbolic indices with concrete values
+  - Enables correct differentiation of indexed constraints
+  - Example: balance(i): x(i) + y(i) = demand(i) becomes:
+    - balance(i1): x(i1) + y(i1) = demand(i1)
+    - balance(i2): x(i2) + y(i2) = demand(i2)
+  - Each instance differentiated separately with correct indices
+
+- **Equality constraints Jacobian (J_h)**
+  - Processes all equations in ModelIR.equalities
+  - Normalized form: lhs - rhs = 0
+  - Differentiates w.r.t. all variable instances
+  - Returns sparse JacobianStructure
+
+- **Inequality constraints Jacobian (J_g)**
+  - Processes all equations in ModelIR.inequalities
+  - Normalized form: lhs - rhs ≤ 0
+  - Includes bound-derived equations from ModelIR.normalized_bounds
+  - Bound equations contribute simple rows: ∂(x(i) - lo(i))/∂x(i) = 1
+
+- **Helper functions**
+  - `_count_equation_instances()`: Counts total equation rows
+  - `_substitute_indices()`: Substitutes indices in expressions
+  - Handles all expression types: VarRef, ParamRef, Binary, Unary, Call, Sum
+
+- **Comprehensive test coverage**
+  - Created `tests/ad/test_constraint_jacobian.py` with 11 tests:
+    - Empty model, single/multiple equalities and inequalities
+    - Quadratic constraints, indexed constraints
+    - Mixed constraints, sparsity patterns
+  - Created `tests/ad/test_bound_jacobian.py` with 8 tests:
+    - Simple bounds (lower, upper, both)
+    - Indexed variable bounds, parametric bounds
+    - Bounds combined with other constraints
+
+##### Changed
+- Exported `compute_constraint_jacobian` from `src/ad/__init__.py`
+- Tests use evaluated derivatives rather than checking AST structure
+  - Added `eval_derivative()` helper to handle unsimplified expressions
+  - Ensures correctness without requiring algebraic simplification
+
+##### Implementation Notes
+- Derivatives are symbolic AST expressions (not simplified)
+  - Example: ∂(x+y-5)/∂x returns Binary(-, Binary(+, Const(1.0), Const(0.0)), Const(0.0))
+    - This is the actual output from the current implementation and demonstrates the need for future work on algebraic simplification
+  - Evaluates to 1.0 but not simplified to Const(1.0)
+  - Algebraic simplification deferred to future work
+- All derivatives stored in Jacobian (including zeros)
+  - Sparsity optimization happens during evaluation/code generation
+  - Correctness verified by evaluating derivatives
+
+##### Tests
+- All 321 tests pass (19 new tests added: 11 constraint + 8 bound)
+- All quality checks pass (mypy, ruff, black)
+
+##### Acceptance Criteria Met
+- ✅ Correct Jacobians for equality and inequality constraints
+- ✅ Bound-derived rows appear in J_g with correct derivatives
+- ✅ Handles indexed constraints (multiple equation instances)
+- ✅ Uses index-aware differentiation for proper sparse structure
+- ✅ All tests pass including new constraint/bound tests
+
+---
+
 ## [0.1.0] - Sprint 1 Complete
 
 ### Added
