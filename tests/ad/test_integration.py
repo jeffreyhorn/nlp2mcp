@@ -23,25 +23,34 @@ Each test validates:
 - Jacobians have expected sparsity patterns
 - Derivatives are non-trivial (not all zeros)
 
-NOTE: These tests are TEMPORARILY SKIPPED due to a pre-existing parse_model_file() bug
-that causes hanging when reading example files. This is a separate issue from GitHub
-Issue #19 (which has been FIXED).
+Status:
+-------
+Integration tests are now enabled after fixing GitHub Issue #20 (parse hang).
+However, 10 out of 15 tests currently fail due to API mismatches (GitHub Issue #22).
 
 GitHub Issue #19 Status: ✅ RESOLVED
 - The objective extraction issue has been fixed in normalize_model()
 - Fix verified by 6 new unit tests in tests/ir/test_normalize.py
 - All normalization tests pass successfully
 
-Current Blocker: Separate pre-existing parsing bug (GitHub Issue #20)
-- parse_model_file() hangs when reading examples/*.gms files
-- This bug exists on main branch, unrelated to Issue #19
-- Once this parsing bug is fixed, these integration tests should pass
+GitHub Issue #20 Status: ✅ RESOLVED
+- parse_model_file() hang fixed by switching to standard lexer
+- All example files now parse successfully
+
+Current Issue: GitHub Issue #22 (API Mismatch) - 10/15 tests fail
+- Tests expect gradient.mapping.num_vars but implementation provides gradient.num_cols
+- Tests expect J_g.mapping but implementation provides J_g.index_mapping
+- Bounds test expects specific constraint names that don't match implementation
+- Power operator test fails (not yet implemented, planned for Day 3)
+- See docs/issues/integration_test_api_mismatch.md for details
 
 See:
 - GitHub Issue #19: "Objective Expressions Not Found After Model Normalization"
   https://github.com/jeffreyhorn/nlp2mcp/issues/19
 - GitHub Issue #20: "Issue: parse_model_file() Hangs on Example Files"
   https://github.com/jeffreyhorn/nlp2mcp/issues/20
+- GitHub Issue #22: "Integration Tests API Mismatch"
+  https://github.com/jeffreyhorn/nlp2mcp/issues/22
 """
 
 import os
