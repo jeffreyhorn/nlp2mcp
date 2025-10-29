@@ -30,7 +30,7 @@ flowchart TD
     
     PARSED["ParsedModel<br/>• Raw AST<br/>• Symbol definitions<br/>• Unparsed relations"]
     
-    NORMALIZER["Normalizer (Sprint 1)<br/>src/ir/normalize.py<br/>• Convert =l=/=g= to ≤0<br/>• Extract bounds<br/>• Normalize equations"]
+    NORMALIZER["Normalizer (Sprint 1)<br/>src/ir/normalize.py<br/>• Convert =l=/=g= to ≤ 0<br/>• Extract bounds<br/>• Normalize equations"]
     
     MODELIR["ModelIR (Sprint 1 Output)<br/>src/ir/model_ir.py<br/>• sets, variables, equations<br/>• equalities, inequalities<br/>• normalized_bounds<br/>• objective"]
     
