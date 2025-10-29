@@ -89,13 +89,6 @@ skip_not_implemented = pytest.mark.skip(
     "See GitHub Issue #25: https://github.com/jeffreyhorn/nlp2mcp/issues/25"
 )
 
-# Skip marker for bounds handling bug
-skip_bounds_bug = pytest.mark.skip(
-    reason="Bounds handling bug: Code tries to look up bounds (e.g., 'x_lo') as equations, "
-    "causing KeyError. Bounds should be handled separately from equations. "
-    "See GitHub Issue #24: https://github.com/jeffreyhorn/nlp2mcp/issues/24"
-)
-
 
 # Helper to get example file path
 def get_example_path(filename: str) -> str:
