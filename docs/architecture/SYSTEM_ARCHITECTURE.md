@@ -42,7 +42,7 @@ flowchart TD
     
     JACOBIAN["Jacobian Computer<br/>(Sprint 2)<br/>src/ad/constraint_jacobian.py<br/>• Diff equalities<br/>• Diff inequalities<br/>• Diff bounds"]
     
-    GRADVEC["GradientVector<br/>• num_cols<br/>• values: dict[int, Expr]<br/>• mapping<br/><br/>⚠️ NOT mapping.num_vars!"]
+    GRADVEC["GradientVector<br/>• num_cols<br/>• entries: dict[int, Expr]<br/>• index_mapping<br/><br/>✓ Use num_cols or index_mapping.num_vars"]
     
     JACSTRUCT["JacobianStructure<br/>• num_rows, num_cols<br/>• entries: dict[dict]<br/>• index_mapping"]
     
@@ -190,10 +190,10 @@ This diagram shows the complete pipeline from GAMS input to MCP output (Sprint 3
 │  │ src/ad/jacobian.py  ││    │  │ src/ad/jacobian.py       ││
 │  │                     ││    │  │                          ││
 │  │ • num_cols          ││    │  │ • num_rows               ││
-│  │ • values: dict[int, Expr] ││    │  │ • num_cols               ││
-│  │ • mapping: IndexMapping   ││    │  │ • entries: dict[int, dict[int, Expr]] ││
+│  │ • entries: dict[int, Expr] ││    │  │ • num_cols               ││
+│  │ • index_mapping     ││    │  │ • entries: dict[int, dict[int, Expr]] ││
 │  │                     ││    │  │ • index_mapping          ││
-│  │ ⚠️  NOT mapping.num_vars ││    │  └──────────────────────────┘│
+│  │ ✓ Use num_cols      ││    │  └──────────────────────────┘│
 │  └─────────────────────┘│    │                              │
 └─────────────────────────┘    └──────────────────────────────┘
             │                             │
@@ -339,21 +339,27 @@ If `name` in `inequalities`, then either:
 # From src/ad/jacobian.py
 class GradientVector:
     num_cols: int  # ✅ Number of variable columns
-    values: dict[int, Expr]  # col_id → derivative expression
-    mapping: IndexMapping  # Variable instance mapping
+    entries: dict[int, Expr]  # col_id → derivative expression
+    index_mapping: IndexMapping  # Variable instance mapping
+    
+    # Access methods
+    def get_derivative(self, col_id: int) -> Expr | None
+    def get_derivative_by_name(self, var_name: str, indices: tuple) -> Expr | None
 ```
 
-**API Pitfall (Issue #22):**
+**API Contract (Validated by test_api_contracts.py):**
 
 ```python
-# ❌ WRONG - This doesn't exist!
-gradient.mapping.num_vars
+# ✅ CORRECT - These all exist
+gradient.num_cols  # Number of variables
+gradient.entries  # Sparse derivatives dict
+gradient.index_mapping  # IndexMapping with num_vars, var_to_col, col_to_var
 
-# ✅ CORRECT
-gradient.num_cols
+# Consistency guarantee (Issue #22 regression test)
+assert gradient.num_cols == gradient.index_mapping.num_vars
 ```
 
-**Issue #22:** Integration tests used `gradient.mapping.num_vars` which was never part of the API. The correct attribute is `gradient.num_cols`.
+**Issue #22:** Integration tests used `gradient.mapping.num_vars` (wrong attribute name). The correct API is `gradient.index_mapping.num_vars` or just `gradient.num_cols`.
 
 **Why This Happened:** API designed without integration test validation. Unit tests didn't catch the mismatch.
 
