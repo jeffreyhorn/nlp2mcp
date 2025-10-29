@@ -253,7 +253,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - N/A
 
 ##### Fixed
-- N/A
+- Added TODO comments and documentation for index-aware differentiation limitation
+  - Current implementation differentiates w.r.t. variable names only, not specific indices
+  - All instances of indexed variables (e.g., x(i1), x(i2)) share the same symbolic derivative
+  - Documented in module docstring and at differentiation call sites
+  - Fixed incorrect mathematical comment in test_gradient.py for ∂(sum(i, x(i)))/∂x(i1)
+  - Future work: Extend differentiate_expr() to accept indices for proper sparse derivatives
 
 ---
 

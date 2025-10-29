@@ -26,6 +26,24 @@ Objective Expression Retrieval:
    - Equation form: objvar =e= expression
    - Extract expression from RHS (or LHS if RHS is objvar)
 3. If no defining equation found: Raise error
+
+Index-Aware Differentiation (Limitation):
+-----------------------------------------
+Current implementation differentiates with respect to variable names only, not
+specific indices. For indexed variables x(i), all instances share the same
+symbolic derivative. This means:
+
+Example: ∂(sum(i, x(i)))/∂x produces sum(i, 1) for ALL x instances
+Correct: ∂(sum(i, x(i)))/∂x(i1) should be 1 (only i1 term contributes)
+
+Future enhancement: Extend differentiate_expr() to accept indices parameter
+and implement index-aware matching in VarRef differentiation logic. This will
+enable proper sparse Jacobian construction where each variable instance has
+a distinct derivative.
+
+For Day 7, this limitation is acceptable as we focus on establishing the
+gradient computation infrastructure. Full index-aware differentiation will
+be addressed in future sprint work.
 """
 
 from __future__ import annotations
@@ -183,6 +201,10 @@ def compute_objective_gradient(model_ir: ModelIR) -> GradientVector:
                 continue
 
             # Differentiate objective w.r.t. this variable
+            # TODO: Index-aware differentiation needed here
+            # Currently differentiates w.r.t. variable name only (all instances treated identically)
+            # For correct indexed differentiation, should pass indices to distinguish x(i1) from x(i2)
+            # This will require extending differentiate_expr signature and VarRef matching logic
             derivative = differentiate_expr(obj_expr, var_name)
 
             # Apply objective sense
@@ -238,6 +260,10 @@ def compute_gradient_for_expression(
                 continue
 
             # Differentiate
+            # TODO: Index-aware differentiation needed here
+            # Currently differentiates w.r.t. variable name only (all instances treated identically)
+            # For correct indexed differentiation, should pass indices to distinguish x(i1) from x(i2)
+            # This will require extending differentiate_expr signature and VarRef matching logic
             derivative = differentiate_expr(expr, var_name)
 
             # Apply negation if requested

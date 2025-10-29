@@ -290,7 +290,10 @@ class TestGradientIndexedVariables:
         deriv_y = gradient.get_derivative_by_name("y")
         assert deriv_y is not None
 
-        # ∂(y + sum(i, x(i)))/∂x(i1) = sum(i, ∂x(i)/∂x) = sum(i, 1)
+        # ∂(y + sum(i, x(i)))/∂x(i1) = 1 (only the x(i1) term contributes)
+        # Note: Current implementation treats all x instances the same symbolically,
+        # producing sum(i, 1) for all x instances. Full index-aware differentiation
+        # will be implemented in a future update.
         deriv_x_i1 = gradient.get_derivative_by_name("x", ("i1",))
         assert deriv_x_i1 is not None
 
