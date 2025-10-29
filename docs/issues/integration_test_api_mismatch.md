@@ -8,9 +8,9 @@
 - Changed `J_g.mapping.num_equations` → `J_g.num_rows`
 - Changed `gradient.mapping` → `gradient.index_mapping`
 - Updated test expectations to account for objective variable (obj)
-- Added proper skip marker for bounds test (separate bug, not API mismatch)
+- Added proper skip marker for bounds test (separate bug, not API mismatch - see Issue #24)
 - **Result**: 13 out of 15 tests passing (87% pass rate)
-  - 2 skipped: bounds handling bug (KeyError) and power operator (not implemented)
+  - 2 skipped: bounds handling bug (Issue #24) and power operator (Issue #25)
 
 **Branch**: `fix/issue-22-integration-test-api-mismatch`
 
@@ -84,6 +84,8 @@ AttributeError: 'GradientVector' object has no attribute 'mapping'
 KeyError: 'x_lo'
 ```
 
+**Status**: Separate issue created - See **GitHub Issue #24**: https://github.com/jeffreyhorn/nlp2mcp/issues/24
+
 #### 3. Unimplemented Power Operation (1 test fails)
 
 **Test Expectation**: Power operator `^` should be supported for differentiation
@@ -98,6 +100,8 @@ KeyError: 'x_lo'
 ValueError: Unsupported binary operation '^' for differentiation. 
 Supported operations: +, -, *, /. Power (^) will be implemented on Day 3.
 ```
+
+**Status**: Separate issue created - See **GitHub Issue #25**: https://github.com/jeffreyhorn/nlp2mcp/issues/25
 
 ## API Structure Comparison
 
@@ -207,6 +211,8 @@ assert gradient.index_mapping.num_vars == 1
 
 **File**: `tests/ad/test_integration.py:98`
 
+**Status**: Separate issue - See **GitHub Issue #24**: https://github.com/jeffreyhorn/nlp2mcp/issues/24
+
 **Test Code**:
 ```python
 def test_bounds_nlp_basic(self):
@@ -229,14 +235,13 @@ KeyError: 'x_lo'
 
 **Root Cause**: Tests assume bounds are represented as named inequality constraints (e.g., `'x_lo'`, `'x_up'`), but the actual normalization creates bound constraints with different naming or structure.
 
-**Investigation Needed**:
-- How are bounds actually represented in `normalize_model()`?
-- What names/keys are used for bound constraints?
-- Should bounds have explicit names or use a different access pattern?
+**See GitHub Issue #24 for detailed investigation and proposed solutions.**
 
 ### 3. test_nonlinear_mix_model
 
 **File**: `tests/ad/test_integration.py:140`
+
+**Status**: Separate issue - See **GitHub Issue #25**: https://github.com/jeffreyhorn/nlp2mcp/issues/25
 
 **Test Code**:
 ```python
@@ -254,7 +259,7 @@ Supported operations: +, -, *, /. Power (^) will be implemented on Day 3.
 
 **Root Cause**: The `nonlinear_mix.gms` file contains power operations (e.g., `x^2`) which are not yet implemented in the differentiation engine.
 
-**Status**: Known limitation - power operations planned for Day 3 implementation.
+**See GitHub Issue #25 for detailed implementation requirements and proposed solutions.**
 
 ## Proposed Solutions
 

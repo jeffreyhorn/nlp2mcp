@@ -11,6 +11,7 @@ Integration test `test_bounds_nlp_basic` fails with a `KeyError: 'x_lo'` when tr
 - **Component**: Sprint 2 (AD / Automatic Differentiation)
 - **Affects**: Models with variable bounds, constraint Jacobian computation
 - **Discovered**: Sprint 2 Day 10 (2025-10-29) while fixing Issue #22
+- **GitHub Issue**: #24 - https://github.com/jeffreyhorn/nlp2mcp/issues/24
 - **Related Issue**: Issue #22 (Integration Tests API Mismatch) - RESOLVED
 - **Type**: Implementation bug (incorrect handling of bounds)
 

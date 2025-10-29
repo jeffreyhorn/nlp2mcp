@@ -11,6 +11,7 @@ The automatic differentiation (AD) module does not yet support the power operato
 - **Component**: Sprint 2 (AD / Automatic Differentiation)
 - **Affects**: Models with power operations, nonlinear functions
 - **Discovered**: Sprint 2 Day 10 (2025-10-29) while fixing Issue #22
+- **GitHub Issue**: #25 - https://github.com/jeffreyhorn/nlp2mcp/issues/25
 - **Planned Implementation**: Day 3 (per error message)
 - **Type**: Feature not implemented (planned enhancement)
 
