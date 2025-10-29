@@ -28,17 +28,27 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 
 ## Features
 
-### Current (Sprint 1 - Parser & IR)
+### Current (Sprint 1-2 Complete)
 
+**Sprint 1: Parser & IR**
 - ✅ Parse GAMS NLP subset (sets, parameters, variables, equations, bounds)
 - ✅ Build intermediate representation (IR) with normalized constraints
 - ✅ Support for indexed variables and equations
-- ✅ Expression AST with automatic differentiation capabilities
+- ✅ Expression AST with symbolic differentiation capabilities
 - ✅ Comprehensive test coverage
+
+**Sprint 2: Symbolic Differentiation**
+- ✅ Symbolic differentiation engine for computing derivatives
+- ✅ Index-aware differentiation (distinguishes scalar vs indexed variables)
+- ✅ Objective gradient computation with sparse structure
+- ✅ Constraint Jacobian computation (equality and inequality)
+- ✅ Support for all standard functions (arithmetic, power, exp, log, sqrt, trig)
+- ✅ Sum aggregation handling with index matching
+- ✅ Finite-difference validation for derivative correctness
+- ✅ High-level API: `compute_derivatives(model_ir)` → (gradient, J_g, J_h)
 
 ### Planned (See [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md))
 
-- 🔄 Sprint 2: Automatic differentiation engine for gradients/Jacobians
 - 📋 Sprint 3: KKT synthesis and GAMS MCP code generation
 - 📋 Sprint 4: Extended language features and robustness
 - 📋 Sprint 5: Packaging, documentation, and ecosystem integration
@@ -86,19 +96,38 @@ nlp2mcp model.gms --sense=min --output=kkt_model.gms
 ### Python API (Current)
 
 ```python
-from src.ir import parser
+from src.ir.parser import parse_model_file
 from src.ir.normalize import normalize_model
+from src.ad import compute_derivatives
 
 # Parse a GAMS NLP file
-model = parser.parse_model_file("examples/simple_nlp.gms")
+model = parse_model_file("examples/simple_nlp.gms")
 
 # Normalize equations to canonical form
-equations, bounds = normalize_model(model)
+normalize_model(model)
 
-# Access the IR
-print(f"Variables: {list(model.variables.keys())}")
-print(f"Equations: {list(model.equations.keys())}")
-print(f"Objective: {model.objective.sense} {model.objective.objvar}")
+# Compute all derivatives: gradient and Jacobians
+gradient, J_g, J_h = compute_derivatives(model)
+
+# Access gradient for a variable by name
+grad_x_i = gradient.get_derivative_by_name("x", ("i",))  # Get ∂f/∂x(i)
+
+# Access Jacobian entries by iterating over nonzero entries
+for row_id, col_id in J_g.get_nonzero_entries():
+    # Get the derivative expression
+    deriv_expr = J_g.get_derivative(row_id, col_id)
+    
+    # Get equation and variable names from the index mapping
+    eq_info = J_g.index_mapping.get_eq_instance(row_id)
+    var_info = J_g.index_mapping.get_var_instance(col_id)
+    
+    if eq_info and var_info:
+        eq_name, eq_indices = eq_info
+        var_name, var_indices = var_info
+        print(f"∂{eq_name}{eq_indices}/∂{var_name}{var_indices} = {deriv_expr}")
+
+# Or access specific Jacobian entry by names
+deriv = J_g.get_derivative_by_names("constraint", ("i1",), "x", ("i1",))
 ```
 
 ## Project Structure
@@ -106,22 +135,34 @@ print(f"Objective: {model.objective.sense} {model.objective.objvar}")
 ```
 nlp2mcp/
 ├── src/
-│   ├── ad/           # Automatic differentiation engine (planned)
+│   ├── ad/           # Symbolic differentiation engine
+│   │   ├── api.py              # High-level API
+│   │   ├── differentiate.py    # Core differentiation rules
+│   │   ├── simplify.py         # Expression simplification
+│   │   ├── evaluate.py         # AST evaluation
+│   │   ├── gradient.py         # Gradient computation
+│   │   ├── jacobian.py         # Jacobian computation
+│   │   ├── mapping.py          # Index mapping utilities
+│   │   └── validation.py       # Finite-difference validation
 │   ├── emit/         # Code generation for GAMS MCP (planned)
 │   ├── gams/         # GAMS grammar and parsing utilities
 │   ├── ir/           # Intermediate representation
-│   │   ├── ast.py           # Expression AST nodes
-│   │   ├── model_ir.py      # Model IR data structures
-│   │   ├── normalize.py     # Constraint normalization
-│   │   ├── parser.py        # GAMS parser
-│   │   └── symbols.py       # Symbol table definitions
+│   │   ├── ast.py              # Expression AST nodes
+│   │   ├── model_ir.py         # Model IR data structures
+│   │   ├── normalize.py        # Constraint normalization
+│   │   ├── parser.py           # GAMS parser
+│   │   └── symbols.py          # Symbol table definitions
 │   ├── kkt/          # KKT system assembly (planned)
 │   └── utils/        # Utility functions
 ├── tests/
+│   ├── ad/           # Differentiation tests
 │   ├── gams/         # Parser tests
 │   └── ir/           # IR and normalization tests
 ├── examples/         # Example GAMS models
 ├── docs/             # Additional documentation
+│   ├── ad_design.md          # AD architecture and design
+│   ├── derivative_rules.md   # Mathematical reference
+│   └── planning/             # Sprint plans
 ├── pyproject.toml    # Project configuration
 ├── Makefile          # Development commands
 └── README.md         # This file
@@ -212,14 +253,19 @@ The `examples/` directory contains sample GAMS NLP models:
 
 ## Documentation
 
+### Concepts & Planning
 - [docs/concepts/IDEA.md](docs/concepts/IDEA.md) - Original concept: How KKT conditions transform NLP to MCP
 - [docs/concepts/NLP2MCP_HIGH_LEVEL.md](docs/concepts/NLP2MCP_HIGH_LEVEL.md) - Feasibility study and implementation blueprint
 - [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md) - Detailed 5-sprint development plan
 - [AGENTS.md](AGENTS.md) - Agent-based development notes
 
+### Technical Documentation
+- [docs/ad_design.md](docs/ad_design.md) - Symbolic differentiation architecture and design decisions
+- [docs/derivative_rules.md](docs/derivative_rules.md) - Mathematical reference for all derivative rules
+
 ## Contributing
 
-This project is in active development (Sprint 1 complete). Contributions are welcome!
+This project is in active development (Sprint 1-2 complete). Contributions are welcome!
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -243,7 +289,7 @@ MIT License - See LICENSE file for details
 ## Roadmap
 
 - **v0.1.0** (Sprint 1): ✅ Parser and IR - COMPLETE
-- **v0.2.0** (Sprint 2): Automatic differentiation
+- **v0.2.0** (Sprint 2): ✅ Symbolic differentiation - COMPLETE
 - **v0.3.0** (Sprint 3): KKT synthesis and MCP code generation
 - **v0.4.0** (Sprint 4): Extended features and robustness
 - **v1.0.0** (Sprint 5): Production-ready with docs and PyPI release

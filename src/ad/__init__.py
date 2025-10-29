@@ -33,6 +33,7 @@ Sprint 2 Development Schedule:
 """
 
 from .ad_core import differentiate, simplify
+from .api import compute_derivatives
 from .constraint_jacobian import compute_constraint_jacobian
 from .evaluator import EvaluationError, evaluate
 from .gradient import compute_objective_gradient
@@ -44,4 +45,5 @@ __all__ = [
     "EvaluationError",
     "compute_objective_gradient",
     "compute_constraint_jacobian",
+    "compute_derivatives",  # High-level API (recommended)
 ]

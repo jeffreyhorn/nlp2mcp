@@ -68,7 +68,7 @@ Here’s a concrete five-sprint (2 weeks each) plan to build **nlp2mcp**, a Pyth
 
 1. **AD core**
 
-   * Implement **symbolic** AD over the AST, generating derivative ASTs via operator-specific rules (replaces the earlier reverse-mode assumption).
+   * Implement **symbolic differentiation** over the AST, generating derivative ASTs via operator-specific rules.
    * Support all v1 functions (add, mul, div, pow, exp, log, trig). Provide derivative rules and numeric guards (e.g., `log(x)` domain).
 2. **Index & aggregation handling**
 
