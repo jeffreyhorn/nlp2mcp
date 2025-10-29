@@ -128,3 +128,9 @@ addopts = [
     "--strict-markers",
     "--tb=short",
 ]
+markers = [
+    "unit: Fast unit tests with no I/O (deselect with '-m \"not unit\"')",
+    "integration: Cross-module integration tests (deselect with '-m \"not integration\"')",
+    "e2e: End-to-end pipeline tests (deselect with '-m \"not e2e\"')",
+    "validation: Mathematical validation tests (slower) (deselect with '-m \"not validation\"')",
+]

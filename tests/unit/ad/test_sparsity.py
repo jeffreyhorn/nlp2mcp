@@ -11,6 +11,8 @@ Test Coverage:
 6. Density computation
 """
 
+import pytest
+
 from src.ad.sparsity import (
     SparsityPattern,
     analyze_expression_sparsity,
@@ -18,11 +20,14 @@ from src.ad.sparsity import (
 )
 from src.ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, Unary, VarRef
 
+pytestmark = pytest.mark.unit
+
 # ============================================================================
 # Test Variable Finding in Expressions
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestFindVariables:
     """Test finding variable names in expressions."""
 
@@ -143,6 +148,7 @@ class TestFindVariables:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestExpressionSparsityAnalysis:
     """Test analyzing which columns an expression depends on."""
 
@@ -208,6 +214,7 @@ class TestExpressionSparsityAnalysis:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestSparsityPattern:
     """Test sparsity pattern data structure."""
 

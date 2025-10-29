@@ -12,6 +12,8 @@ Test Coverage:
 7. Equations using aliased sets
 """
 
+import pytest
+
 from src.ad.index_mapping import (
     build_index_mapping,
     enumerate_variable_instances,
@@ -20,11 +22,14 @@ from src.ad.index_mapping import (
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import AliasDef, EquationDef, Rel, SetDef, VariableDef
 
+pytestmark = pytest.mark.unit
+
 # ============================================================================
 # Test Basic Alias Resolution
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestBasicAliasResolution:
     """Test basic alias resolution to direct sets."""
 
@@ -68,6 +73,7 @@ class TestBasicAliasResolution:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestChainedAliases:
     """Test resolution of alias chains (alias to alias)."""
 
@@ -125,6 +131,7 @@ class TestChainedAliases:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestUniverseConstraints:
     """Test alias resolution with universe constraints."""
 
@@ -199,6 +206,7 @@ class TestUniverseConstraints:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestVariablesWithAliases:
     """Test variable enumeration when domain uses aliases."""
 
@@ -250,6 +258,7 @@ class TestVariablesWithAliases:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestMappingWithAliases:
     """Test building complete index mapping with aliases."""
 

@@ -13,6 +13,8 @@ Test Coverage:
 8. Sum aggregation in objectives
 """
 
+import pytest
+
 from src.ad.gradient import (
     compute_gradient_for_expression,
     compute_objective_gradient,
@@ -22,11 +24,14 @@ from src.ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
 from src.ir.symbols import EquationDef, ObjSense, Rel, SetDef, VariableDef
 
+pytestmark = pytest.mark.integration
+
 # ============================================================================
 # Test Finding Objective Expression
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestFindObjectiveExpression:
     """Test finding objective expression from ModelIR."""
 
@@ -116,6 +121,7 @@ class TestFindObjectiveExpression:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGradientMinimization:
     """Test gradient computation for minimization objectives."""
 
@@ -202,6 +208,7 @@ class TestGradientMinimization:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGradientMaximization:
     """Test gradient computation for maximization objectives (negated)."""
 
@@ -246,6 +253,7 @@ class TestGradientMaximization:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGradientIndexedVariables:
     """Test gradient with indexed variables."""
 
@@ -374,6 +382,7 @@ class TestGradientIndexedVariables:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGradientForExpression:
     """Test computing gradient for arbitrary expressions."""
 
@@ -412,6 +421,7 @@ class TestGradientForExpression:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestObjectiveFromDefiningEquation:
     """Test complete gradient computation when objective is defined by equation."""
 

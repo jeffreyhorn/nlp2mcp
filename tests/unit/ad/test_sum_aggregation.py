@@ -4,14 +4,19 @@ Tests for sum aggregation differentiation.
 Day 5: Tests for sum(indices, expr) derivatives.
 """
 
+import pytest
+
 from src.ad.derivative_rules import differentiate_expr
 from src.ir.ast import Binary, Call, Const, ParamRef, Sum, VarRef
+
+pytestmark = pytest.mark.unit
 
 # ============================================================================
 # Basic Sum Differentiation Tests
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestBasicSumDifferentiation:
     """Tests for basic sum aggregation differentiation."""
 
@@ -69,6 +74,7 @@ class TestBasicSumDifferentiation:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestSumWithArithmetic:
     """Tests for sum aggregation with arithmetic expressions."""
 
@@ -138,6 +144,7 @@ class TestSumWithArithmetic:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestMultipleIndices:
     """Tests for sum with multiple index variables."""
 
@@ -190,6 +197,7 @@ class TestMultipleIndices:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestNestedSums:
     """Tests for nested sum aggregations."""
 
@@ -229,6 +237,7 @@ class TestNestedSums:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestComplexSumExpressions:
     """Tests for complex expressions within sums."""
 

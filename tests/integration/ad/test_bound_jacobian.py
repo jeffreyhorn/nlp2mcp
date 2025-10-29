@@ -7,6 +7,8 @@ Note: Derivatives are symbolic AST expressions that may not be simplified.
 Tests evaluate derivatives to check correctness rather than checking exact AST structure.
 """
 
+import pytest
+
 from src.ad.constraint_jacobian import compute_constraint_jacobian
 from src.ad.evaluator import evaluate
 from src.ir.ast import Binary, Const, ParamRef, VarRef
@@ -19,6 +21,8 @@ from src.ir.model_ir import (
 from src.ir.normalize import NormalizedEquation
 from src.ir.symbols import Rel
 
+pytestmark = pytest.mark.integration
+
 
 def eval_derivative(deriv):
     """Evaluate a derivative expression (assuming no variables/params needed)."""
@@ -27,6 +31,7 @@ def eval_derivative(deriv):
     return evaluate(deriv, {}, {})
 
 
+@pytest.mark.integration
 class TestBoundJacobianSimple:
     """Tests for simple bound-derived Jacobian rows."""
 
@@ -146,6 +151,7 @@ class TestBoundJacobianSimple:
             assert eval_derivative(deriv) == 1.0
 
 
+@pytest.mark.integration
 class TestBoundJacobianIndexed:
     """Tests for indexed variable bounds."""
 
@@ -244,6 +250,7 @@ class TestBoundJacobianIndexed:
         assert len(row_entries) >= 1  # At least one nonzero (x(i1))
 
 
+@pytest.mark.integration
 class TestBoundJacobianWithConstraints:
     """Tests for bounds combined with other constraints."""
 

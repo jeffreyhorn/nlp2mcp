@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 3 Prep: Architecture Documentation & Test Organization
+
+#### 2025-10-29 - Test Suite Reorganization (Sprint 3 Prep Task 3)
+
+##### Added
+- Reorganized test suite into test pyramid structure for fast feedback
+  - `tests/unit/`: Fast unit tests with no file I/O (157 tests, ~10 tests/sec)
+    - `tests/unit/ad/`: AD engine unit tests (10 files)
+    - `tests/unit/gams/`: Parser unit tests (test_parser.py)
+    - `tests/unit/ir/`: IR normalization unit tests (test_normalize.py)
+  - `tests/integration/`: Cross-module integration tests (45 tests, ~5 tests/sec)
+    - `tests/integration/ad/`: Gradient and Jacobian integration tests (5 files)
+  - `tests/e2e/`: End-to-end pipeline tests (15 tests, ~2 tests/sec)
+    - `tests/e2e/test_integration.py`: Full GAMS → derivatives pipeline
+  - `tests/validation/`: Mathematical validation tests (169 tests, ~1 test/sec)
+    - `tests/validation/test_finite_difference.py`: FD validation of all derivative rules
+- Added pytest markers to `pyproject.toml`:
+  - `@pytest.mark.unit`: Fast unit tests
+  - `@pytest.mark.integration`: Cross-module tests
+  - `@pytest.mark.e2e`: End-to-end tests
+  - `@pytest.mark.validation`: Mathematical validation (slower)
+- Added `pytestmark` module-level markers to all test files for automatic categorization
+- Created test runner scripts in `scripts/`:
+  - `test_fast.sh`: Run unit tests only (~10 seconds)
+  - `test_integration.sh`: Run unit + integration tests (~30 seconds)
+  - `test_all.sh`: Run complete test suite (~60 seconds)
+- Made all test scripts executable
+
+##### Changed
+- Updated CI/CD workflow (`.github/workflows/ci.yml`):
+  - Separated test execution by category (unit, integration, e2e, validation)
+  - Shows clear test progression in CI logs
+  - Maintains coverage reporting across all tests
+- Updated `README.md` with new test organization:
+  - Test pyramid explanation with test counts per layer
+  - Examples of running specific test categories
+  - Documentation of directory structure
+  - Usage examples for pytest markers
+- Fixed file path references in moved tests:
+  - Changed `Path(__file__).resolve().parents[2]` to `parents[3]` in test_parser.py
+  - Updated 3 instances to account for new directory depth
+
+##### Purpose
+- Enable fast feedback loop for developers (unit tests in ~10 seconds)
+- Clear separation of concerns: unit → integration → e2e → validation
+- Easy to run subset of tests based on what you're working on
+- Prepare for Sprint 3 with better test organization
+- Match industry best practices (test pyramid)
+
+##### Test Organization Benefits
+- **Fast unit tests**: Developers get feedback in seconds, not minutes
+- **Selective testing**: Run only integration tests with `pytest -m integration`
+- **CI optimization**: Can parallelize test categories in future
+- **Clear intent**: Easy to understand test scope from directory structure
+
+##### Migration Notes
+- All 386 tests still pass after reorganization
+- No test code changes except file paths and marker additions
+- Backward compatible: `pytest tests/` still runs all tests
+
+##### Fixed
+- N/A
+
 ### Sprint 3 Prep: Architecture Documentation & Parser Reference
 
 #### 2025-10-29 - Parser Output Reference

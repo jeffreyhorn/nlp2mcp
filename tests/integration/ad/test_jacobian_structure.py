@@ -12,14 +12,19 @@ Test Coverage:
 7. Gradient component queries
 """
 
+import pytest
+
 from src.ad.jacobian import GradientVector, JacobianStructure
 from src.ir.ast import Binary, Const, VarRef
+
+pytestmark = pytest.mark.integration
 
 # ============================================================================
 # Test JacobianStructure
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestJacobianStructureBasics:
     """Test basic Jacobian structure operations."""
 
@@ -77,6 +82,7 @@ class TestJacobianStructureBasics:
         assert jac.num_nonzeros() == 1  # Still just one entry
 
 
+@pytest.mark.integration
 class TestJacobianRowColumn:
     """Test row and column queries."""
 
@@ -123,6 +129,7 @@ class TestJacobianRowColumn:
         assert len(col0) == 0
 
 
+@pytest.mark.integration
 class TestJacobianSparsity:
     """Test sparsity tracking and computation."""
 
@@ -167,6 +174,7 @@ class TestJacobianSparsity:
         assert jac.density() == 1.0
 
 
+@pytest.mark.integration
 class TestJacobianWithIndexMapping:
     """Test Jacobian with IndexMapping integration."""
 
@@ -231,6 +239,7 @@ class TestJacobianWithIndexMapping:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGradientVectorBasics:
     """Test basic gradient vector operations."""
 
@@ -285,6 +294,7 @@ class TestGradientVectorBasics:
         assert 1 not in all_derivs
 
 
+@pytest.mark.integration
 class TestGradientWithIndexMapping:
     """Test gradient vector with IndexMapping integration."""
 

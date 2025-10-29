@@ -13,10 +13,15 @@ Test Coverage:
 8. Unsupported expression types (other than Sum) raise appropriate errors
 """
 
+import pytest
+
 from src.ad import differentiate
 from src.ir.ast import Const, ParamRef, SymbolRef, VarRef
 
+pytestmark = pytest.mark.unit
 
+
+@pytest.mark.unit
 class TestConstantDifferentiation:
     """Test differentiation of constants."""
 
@@ -45,6 +50,7 @@ class TestConstantDifferentiation:
         assert result.value == 0.0
 
 
+@pytest.mark.unit
 class TestVariableReferenceDifferentiation:
     """Test differentiation of variable references."""
 
@@ -89,6 +95,7 @@ class TestVariableReferenceDifferentiation:
         assert result.value == 0.0
 
 
+@pytest.mark.unit
 class TestSymbolReferenceDifferentiation:
     """Test differentiation of scalar symbol references."""
 
@@ -109,6 +116,7 @@ class TestSymbolReferenceDifferentiation:
         assert result.value == 0.0
 
 
+@pytest.mark.unit
 class TestParameterReferenceDifferentiation:
     """Test differentiation of parameter references."""
 
@@ -137,6 +145,7 @@ class TestParameterReferenceDifferentiation:
         assert result.value == 0.0
 
 
+@pytest.mark.unit
 class TestSumSupport:
     """Test that Sum expressions are now supported (Day 5)."""
 
@@ -155,6 +164,7 @@ class TestSumSupport:
         assert result.index_sets == ("i", "j")
 
 
+@pytest.mark.unit
 class TestDifferentiationInvariance:
     """Test that differentiation doesn't modify original expressions."""
 

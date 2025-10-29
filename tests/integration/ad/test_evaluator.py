@@ -21,7 +21,10 @@ import pytest
 from src.ad import EvaluationError, evaluate
 from src.ir.ast import Binary, Call, Const, ParamRef, Unary, VarRef
 
+pytestmark = pytest.mark.integration
 
+
+@pytest.mark.integration
 class TestBasicEvaluation:
     """Test basic expression evaluation."""
 
@@ -56,6 +59,7 @@ class TestBasicEvaluation:
         assert result == 10.0
 
 
+@pytest.mark.integration
 class TestBinaryOperations:
     """Test binary operation evaluation."""
 
@@ -90,6 +94,7 @@ class TestBinaryOperations:
         assert result == 8.0
 
 
+@pytest.mark.integration
 class TestUnaryOperations:
     """Test unary operation evaluation."""
 
@@ -112,6 +117,7 @@ class TestUnaryOperations:
         assert result == 5.0
 
 
+@pytest.mark.integration
 class TestFunctionCalls:
     """Test function call evaluation."""
 
@@ -158,6 +164,7 @@ class TestFunctionCalls:
         assert result == 1024.0
 
 
+@pytest.mark.integration
 class TestDivisionByZero:
     """Test division by zero detection."""
 
@@ -181,6 +188,7 @@ class TestDivisionByZero:
         assert "Division by zero" in str(exc_info.value)
 
 
+@pytest.mark.integration
 class TestDomainViolations:
     """Test domain violation detection."""
 
@@ -214,6 +222,7 @@ class TestDomainViolations:
         assert "non-negative" in str(exc_info.value)
 
 
+@pytest.mark.integration
 class TestNaNDetection:
     """Test NaN detection."""
 
@@ -248,6 +257,7 @@ class TestNaNDetection:
         assert "nan detected" in error_msg or "infinity detected" in error_msg
 
 
+@pytest.mark.integration
 class TestInfDetection:
     """Test infinity detection."""
 
@@ -281,6 +291,7 @@ class TestInfDetection:
         assert "overflow" in str(exc_info.value).lower()
 
 
+@pytest.mark.integration
 class TestComplexExpressions:
     """Test evaluation of complex expressions."""
 
@@ -318,6 +329,7 @@ class TestComplexExpressions:
         assert abs(result - 5.0) < 1e-10
 
 
+@pytest.mark.integration
 class TestMissingValues:
     """Test error handling for missing variable/parameter values."""
 

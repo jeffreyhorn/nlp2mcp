@@ -9,11 +9,14 @@ import pytest
 from src.ad.derivative_rules import differentiate_expr
 from src.ir.ast import Binary, Call, Const, Unary, VarRef
 
+pytestmark = pytest.mark.unit
+
 # ============================================================================
 # Sine Function Tests
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestSinDifferentiation:
     """Tests for sin(x) differentiation."""
 
@@ -86,6 +89,7 @@ class TestSinDifferentiation:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestCosDifferentiation:
     """Tests for cos(x) differentiation."""
 
@@ -160,6 +164,7 @@ class TestCosDifferentiation:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestTanDifferentiation:
     """Tests for tan(x) differentiation."""
 
@@ -238,6 +243,7 @@ class TestTanDifferentiation:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestTrigonometricErrors:
     """Tests for error handling in trigonometric functions."""
 

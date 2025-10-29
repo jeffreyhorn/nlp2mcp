@@ -12,14 +12,14 @@ from src.ir.symbols import ObjSense, Rel
 
 
 def test_simple_nlp_parses_into_program_tree():
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[3]
     tree = parser.parse_file(repo_root / "examples" / "simple_nlp.gms")
     assert tree.data == "program"
     assert not list(tree.find_data("_ambig"))
 
 
 def test_parse_model_file_populates_model_ir():
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[3]
     model = parser.parse_model_file(repo_root / "examples" / "simple_nlp.gms")
 
     assert model.sets["i"].members == ["i1", "i2", "i3"]
@@ -372,7 +372,7 @@ def test_sum_metadata_preserves_indices():
 
 
 def test_example_files_parse():
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[3]
     # Note: Some files cause performance issues with Earley parser ambiguity resolution.
     # This is due to having multiple declarations in blocks without explicit separators,
     # which creates exponentially many parse trees. The files parse correctly but slowly.
