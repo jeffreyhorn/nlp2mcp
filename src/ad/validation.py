@@ -131,8 +131,8 @@ def generate_test_point(
         elif up is None:
             # Only lower bound: use [lo + 0.1, lo + 20]
             assert lo is not None  # Type narrowing for mypy
-            lo = lo + 0.1  # Stay away from boundary
             up = lo + 20.0
+            lo = lo + 0.1  # Stay away from boundary
         else:
             # Both bounds: use [lo + ε, up - ε] to avoid boundaries
             assert lo is not None and up is not None  # Type narrowing for mypy
