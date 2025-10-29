@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..ir.ast import Expr
 
-from ..ir.ast import Binary, Call, Const, ParamRef, SymbolRef, Unary, VarRef
+from ..ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, Unary, VarRef
 
 
 def differentiate_expr(expr: Expr, wrt_var: str) -> Expr:
@@ -71,9 +71,9 @@ def differentiate_expr(expr: Expr, wrt_var: str) -> Expr:
     elif isinstance(expr, Call):
         return _diff_call(expr, wrt_var)
 
-    # Day 5+: Other node types (to be implemented)
-    # elif isinstance(expr, Sum):
-    #     return _diff_sum(expr, wrt_var)
+    # Day 5: Sum aggregations
+    elif isinstance(expr, Sum):
+        return _diff_sum(expr, wrt_var)
 
     raise TypeError(
         f"Differentiation not yet implemented for {type(expr).__name__}. "
@@ -694,10 +694,60 @@ def _diff_tan(expr: Call, wrt_var: str) -> Expr:
 
 
 # ============================================================================
-# Day 5+: Additional Rules (Placeholders)
+# Day 5: Sum Aggregations
 # ============================================================================
 
-# def _diff_sum(expr: Sum, wrt_var: str) -> Expr:
-#     """Derivative of sum aggregations"""
-#     # To be implemented on Day 5
-#     pass
+
+def _diff_sum(expr: Sum, wrt_var: str) -> Expr:
+    """
+    Derivative of sum aggregation: sum(indices, body_expr).
+
+    Mathematical rule (linearity of differentiation):
+    d/dx sum(i, f(x,i)) = sum(i, df(x,i)/dx)
+
+    The derivative of a sum is the sum of the derivatives.
+
+    Strategy:
+    1. Differentiate the body expression with respect to wrt_var
+    2. Wrap the derivative in a new Sum with the same index variables
+    3. The Sum structure is preserved in the derivative
+
+    Index Matching (Day 5 - Basic):
+    - For now, we treat all indexed variables with the same base name as the same
+    - Full index-aware differentiation will be completed in Day 6
+    - Example: d/dx sum(i, x(i)) where x is our variable
+      - Differentiating x(i) w.r.t. x gives 1 (same base variable)
+      - Result: sum(i, 1)
+
+    Args:
+        expr: Sum expression with index_sets (tuple of index names) and body (expression)
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Sum expression with differentiated body and same index sets
+
+    Examples:
+        >>> # d/dx sum(i, x(i)) = sum(i, 1)
+        >>> expr = Sum(("i",), VarRef("x", ("i",)))
+        >>> result = _diff_sum(expr, "x")
+        >>> # result is Sum(("i",), Const(1.0))
+
+        >>> # d/dx sum(i, x(i)^2) = sum(i, 2*x(i))
+        >>> expr = Sum(("i",), Call("power", (VarRef("x", ("i",)), Const(2.0))))
+        >>> result = _diff_sum(expr, "x")
+        >>> # result is Sum(("i",), Binary("*", Const(2.0), ...))
+
+        >>> # d/dx sum(i, c*x(i)) where c is a parameter = sum(i, c*1) = sum(i, c)
+        >>> expr = Sum(("i",), Binary("*", ParamRef("c"), VarRef("x", ("i",))))
+        >>> result = _diff_sum(expr, "x")
+        >>> # result is Sum(("i",), Binary("*", ParamRef("c"), Const(1.0)))
+
+    Note:
+        Full index-aware differentiation (distinguishing x(i) from x(j)) will be
+        implemented in Day 6 when we build the complete index mapping infrastructure.
+    """
+    # Differentiate the body expression
+    body_derivative = differentiate_expr(expr.body, wrt_var)
+
+    # Return a new Sum with the same index sets and the differentiated body
+    return Sum(expr.index_sets, body_derivative)

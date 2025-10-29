@@ -116,6 +116,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ##### Fixed
 - N/A
 
+#### Day 5 (2025-10-28) - Sum Aggregation & Indexing (Part 1)
+
+##### Added
+- Implemented symbolic differentiation for Sum aggregations in `src/ad/derivative_rules.py`
+  - Mathematical rule (linearity): d/dx sum(i, f(x,i)) = sum(i, df(x,i)/dx)
+  - Derivative of sum is sum of derivatives
+  - Sum structure preserved in derivative AST
+  - Basic index-aware differentiation (same base variable name)
+- Added `_diff_sum` function with comprehensive documentation
+  - Differentiates body expression
+  - Wraps result in new Sum with same index variables
+  - Handles single and multiple indices: sum(i, ...) and sum((i,j), ...)
+  - Supports nested sums: sum(i, sum(j, ...))
+- Added Sum import to `src/ad/derivative_rules.py`
+- Updated dispatcher in `differentiate_expr` to route Sum expressions
+- Created `tests/ad/test_sum_aggregation.py` with 14 comprehensive tests
+  - 4 basic sum tests: indexed variable, constant, parameter, different variable
+  - 3 arithmetic tests: product with parameter, addition, power
+  - 2 multiple indices tests: two indices, product with indexed parameter
+  - 2 nested sum tests: simple nested, nested with constant
+  - 2 complex expression tests: exp, log
+  - All tests verify Sum structure preservation and correct body differentiation
+- Documented index matching strategy in docstrings
+  - Day 5: Basic matching on variable base name
+  - Day 6: Full index-aware matching (distinguishing x(i) from x(j))
+
+##### Changed
+- Updated Day 5+ placeholder section header to "Day 5: Sum Aggregations"
+- Updated test_ad_core.py's test_sum_not_yet_supported (now Sum is supported)
+
+##### Fixed
+- N/A
+
 ---
 
 ## [0.1.0] - Sprint 1 Complete
