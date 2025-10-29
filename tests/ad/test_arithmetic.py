@@ -236,16 +236,17 @@ class TestChainRule:
 class TestUnsupportedOperations:
     """Test that unsupported operations raise appropriate errors."""
 
-    def test_power_not_yet_supported(self):
-        """Power operation should raise ValueError (implemented Day 3)"""
+    def test_power_operator_supported(self):
+        """Power operation (^) should work correctly."""
+        # d/dx (x^2) = 2*x^1
         expr = Binary("^", VarRef("x"), Const(2.0))
+        result = differentiate(expr, "x")
 
-        with pytest.raises(ValueError) as exc_info:
-            differentiate(expr, "x")
-
-        assert "Unsupported binary operation" in str(exc_info.value)
-        assert "^" in str(exc_info.value)
-        assert "Day 3" in str(exc_info.value)
+        # Result should be: 2.0 * x^1.0 * 1
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+        # The derivative exists and is well-formed
+        assert result is not None
 
     def test_unknown_binary_operation(self):
         """Unknown binary operation should raise ValueError"""
