@@ -35,45 +35,69 @@ if TYPE_CHECKING:
 from ..ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, Unary, VarRef
 
 
-def differentiate_expr(expr: Expr, wrt_var: str) -> Expr:
+def differentiate_expr(
+    expr: Expr, wrt_var: str, wrt_indices: tuple[str, ...] | None = None
+) -> Expr:
     """
-    Main dispatcher for symbolic differentiation.
+    Main dispatcher for symbolic differentiation with index-aware matching.
 
     Routes to the appropriate differentiation rule based on expression type.
+    Supports differentiation with respect to specific variable instances by
+    providing optional index tuple.
 
     Args:
         expr: Expression to differentiate
-        wrt_var: Variable to differentiate with respect to
+        wrt_var: Variable name to differentiate with respect to (e.g., "x")
+        wrt_indices: Optional variable indices (e.g., ("i1",) or ("i1", "j2"))
+                     If None, matches any variable with name wrt_var (backward compatible)
+                     If provided, only matches VarRef with exact indices
 
     Returns:
         Derivative expression (new AST)
 
     Raises:
         TypeError: If expression type is not supported (yet)
+
+    Examples:
+        >>> # Scalar variable (backward compatible)
+        >>> differentiate_expr(VarRef("x"), "x")
+        Const(1.0)
+
+        >>> # Indexed variable without indices specified (matches any)
+        >>> differentiate_expr(VarRef("x", ("i1",)), "x")
+        Const(1.0)
+
+        >>> # Index-aware differentiation (exact match)
+        >>> differentiate_expr(VarRef("x", ("i1",)), "x", ("i1",))
+        Const(1.0)
+
+        >>> # Index-aware differentiation (mismatch)
+        >>> differentiate_expr(VarRef("x", ("i2",)), "x", ("i1",))
+        Const(0.0)
     """
     # Day 1: Constants and variable references
     if isinstance(expr, Const):
-        return _diff_const(expr, wrt_var)
+        return _diff_const(expr, wrt_var, wrt_indices)
     elif isinstance(expr, VarRef):
-        return _diff_varref(expr, wrt_var)
+        return _diff_varref(expr, wrt_var, wrt_indices)
     elif isinstance(expr, SymbolRef):
-        return _diff_symbolref(expr, wrt_var)
+        return _diff_symbolref(expr, wrt_var, wrt_indices)
     elif isinstance(expr, ParamRef):
-        return _diff_paramref(expr, wrt_var)
+        return _diff_paramref(expr, wrt_var, wrt_indices)
 
     # Day 2: Binary and Unary operations
     elif isinstance(expr, Binary):
-        return _diff_binary(expr, wrt_var)
+        return _diff_binary(expr, wrt_var, wrt_indices)
     elif isinstance(expr, Unary):
-        return _diff_unary(expr, wrt_var)
+        return _diff_unary(expr, wrt_var, wrt_indices)
 
     # Day 3: Function calls (power, exp, log, sqrt, trig)
     elif isinstance(expr, Call):
-        return _diff_call(expr, wrt_var)
+        return _diff_call(expr, wrt_var, wrt_indices)
 
     # Day 5: Sum aggregations
     elif isinstance(expr, Sum):
-        return _diff_sum(expr, wrt_var)
+        return _diff_sum(expr, wrt_var, wrt_indices)
 
     raise TypeError(
         f"Differentiation not yet implemented for {type(expr).__name__}. "
@@ -86,92 +110,143 @@ def differentiate_expr(expr: Expr, wrt_var: str) -> Expr:
 # ============================================================================
 
 
-def _diff_const(_expr: Const, _wrt_var: str) -> Const:
+def _diff_const(expr: Const, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Const:
     """
     Derivative of a constant.
 
     Mathematical rule: d(c)/dx = 0
 
     Args:
-        _expr: Constant expression (unused, derivative is always zero)
-        _wrt_var: Variable name (unused, derivative is always zero)
+        expr: Constant expression (unused, derivative is always zero)
+        wrt_var: Variable name (unused, derivative is always zero)
+        wrt_indices: Optional index tuple (unused, derivative is always zero)
 
     Returns:
         Const(0.0)
 
     Example:
-        >>> _diff_const(Const(5.0), "x")
+        >>> _diff_const(Const(5.0), "x", None)
         Const(0.0)
     """
     return Const(0.0)
 
 
-def _diff_varref(expr: VarRef, wrt_var: str) -> Const:
+def _diff_varref(expr: VarRef, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Const:
     """
-    Derivative of a variable reference.
+    Derivative of a variable reference with index-aware matching.
 
     Mathematical rules:
     - d(x)/dx = 1   (same variable)
     - d(y)/dx = 0   (different variable)
 
-    For indexed variables, we compare the base variable name.
-    Index matching will be handled in Day 5-6 for proper sparsity.
+    Index-aware matching:
+    - If wrt_indices is None: Match any indices (backward compatible behavior)
+      - d/dx x = 1, d/dx x(i) = 1 (all instances match)
+    - If wrt_indices is provided: Exact index tuple matching required
+      - d/dx(i1) x(i1) = 1 (exact match)
+      - d/dx(i1) x(i2) = 0 (index mismatch)
 
     Args:
         expr: Variable reference
         wrt_var: Variable name to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance.
+                     None means match any indices (backward compatible).
 
     Returns:
-        Const(1.0) if same variable name, Const(0.0) otherwise
+        Const(1.0) if variable matches (name and indices), Const(0.0) otherwise
 
     Examples:
-        >>> _diff_varref(VarRef("x"), "x")
+        >>> # Scalar variables (backward compatible)
+        >>> _diff_varref(VarRef("x"), "x", None)
         Const(1.0)
-        >>> _diff_varref(VarRef("y"), "x")
-        Const(0.0)
-        >>> _diff_varref(VarRef("x", ("i",)), "x")  # Indexed, same var
-        Const(1.0)
-        >>> _diff_varref(VarRef("y", ("i",)), "x")  # Indexed, different var
+        >>> _diff_varref(VarRef("y"), "x", None)
         Const(0.0)
 
-    Note:
-        Full index-aware differentiation (distinguishing x(i) from x(j))
-        will be implemented in Days 5-6 when we handle Sum aggregations.
+        >>> # Indexed variables without wrt_indices (match any)
+        >>> _diff_varref(VarRef("x", ("i",)), "x", None)
+        Const(1.0)
+        >>> _diff_varref(VarRef("x", ("j",)), "x", None)
+        Const(1.0)
+
+        >>> # Index-aware differentiation (exact match)
+        >>> _diff_varref(VarRef("x", ("i1",)), "x", ("i1",))
+        Const(1.0)
+        >>> _diff_varref(VarRef("x", ("i2",)), "x", ("i1",))
+        Const(0.0)
+
+        >>> # Multi-dimensional indices
+        >>> _diff_varref(VarRef("x", ("i1", "j2")), "x", ("i1", "j2"))
+        Const(1.0)
+        >>> _diff_varref(VarRef("x", ("i1", "j3")), "x", ("i1", "j2"))
+        Const(0.0)
     """
-    if expr.name == wrt_var:
+    # Name must match
+    if expr.name != wrt_var:
+        return Const(0.0)
+
+    # Index matching
+    if wrt_indices is None:
+        # No indices specified: match any (backward compatible)
+        return Const(1.0)
+
+    # Indices specified: must match exactly
+    if expr.indices == wrt_indices:
         return Const(1.0)
     else:
         return Const(0.0)
 
 
-def _diff_symbolref(expr: SymbolRef, wrt_var: str) -> Const:
+def _diff_symbolref(
+    expr: SymbolRef, wrt_var: str, wrt_indices: tuple[str, ...] | None = None
+) -> Const:
     """
     Derivative of a scalar symbol reference.
 
     Mathematical rules:
-    - d(x)/dx = 1   (same variable)
+    - d(x)/dx = 1   (same variable, scalar differentiation)
     - d(y)/dx = 0   (different variable)
+
+    Note: SymbolRef is used for scalar (non-indexed) symbols. If wrt_indices
+    is provided (requesting differentiation w.r.t. an indexed variable), the
+    derivative is always zero since SymbolRef represents a scalar that doesn't
+    match any indexed variable instance.
 
     Args:
         expr: Symbol reference
         wrt_var: Variable name to differentiate with respect to
+        wrt_indices: Optional index tuple. If provided, always returns 0 since
+                     SymbolRef represents scalars, not indexed variables.
 
     Returns:
-        Const(1.0) if same variable name, Const(0.0) otherwise
+        Const(1.0) if same variable name and wrt_indices is None
+        Const(0.0) otherwise
 
     Examples:
-        >>> _diff_symbolref(SymbolRef("x"), "x")
+        >>> # Scalar differentiation (wrt_indices is None)
+        >>> _diff_symbolref(SymbolRef("x"), "x", None)
         Const(1.0)
-        >>> _diff_symbolref(SymbolRef("y"), "x")
+        >>> _diff_symbolref(SymbolRef("y"), "x", None)
+        Const(0.0)
+
+        >>> # Index-aware differentiation (scalar doesn't match indexed variable)
+        >>> _diff_symbolref(SymbolRef("x"), "x", ("i1",))
         Const(0.0)
     """
-    if expr.name == wrt_var:
-        return Const(1.0)
-    else:
+    # Name must match
+    if expr.name != wrt_var:
         return Const(0.0)
 
+    # If indices are specified, scalar symbol doesn't match indexed variable
+    if wrt_indices is not None:
+        return Const(0.0)
 
-def _diff_paramref(_expr: ParamRef, _wrt_var: str) -> Const:
+    # Scalar differentiation: d(x)/dx = 1
+    return Const(1.0)
+
+
+def _diff_paramref(
+    expr: ParamRef, wrt_var: str, wrt_indices: tuple[str, ...] | None = None
+) -> Const:
     """
     Derivative of a parameter reference.
 
@@ -180,16 +255,17 @@ def _diff_paramref(_expr: ParamRef, _wrt_var: str) -> Const:
     Parameters are constant with respect to variables in the NLP.
 
     Args:
-        _expr: Parameter reference (unused, derivative is always zero)
-        _wrt_var: Variable name (unused, derivative is always zero)
+        expr: Parameter reference (unused, derivative is always zero)
+        wrt_var: Variable name (unused, derivative is always zero)
+        wrt_indices: Optional index tuple (unused, derivative is always zero)
 
     Returns:
         Const(0.0)
 
     Example:
-        >>> _diff_paramref(ParamRef("c"), "x")
+        >>> _diff_paramref(ParamRef("c"), "x", None)
         Const(0.0)
-        >>> _diff_paramref(ParamRef("demand", ("i",)), "x")
+        >>> _diff_paramref(ParamRef("demand", ("i",)), "x", None)
         Const(0.0)
     """
     return Const(0.0)
@@ -200,7 +276,7 @@ def _diff_paramref(_expr: ParamRef, _wrt_var: str) -> Const:
 # ============================================================================
 
 
-def _diff_binary(expr: Binary, wrt_var: str) -> Expr:
+def _diff_binary(expr: Binary, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of binary operations.
 
@@ -215,6 +291,7 @@ def _diff_binary(expr: Binary, wrt_var: str) -> Expr:
     Args:
         expr: Binary expression
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Derivative expression (new AST)
@@ -224,33 +301,33 @@ def _diff_binary(expr: Binary, wrt_var: str) -> Expr:
 
     Examples:
         >>> # d(x+y)/dx = 1 + 0 = 1
-        >>> _diff_binary(Binary("+", VarRef("x"), VarRef("y")), "x")
+        >>> _diff_binary(Binary("+", VarRef("x"), VarRef("y")), "x", None)
         Binary("+", Const(1.0), Const(0.0))
 
         >>> # d(x*y)/dx = y*1 + x*0 = y
-        >>> _diff_binary(Binary("*", VarRef("x"), VarRef("y")), "x")
+        >>> _diff_binary(Binary("*", VarRef("x"), VarRef("y")), "x", None)
         Binary("+", Binary("*", VarRef("y"), Const(1.0)), Binary("*", VarRef("x"), Const(0.0)))
     """
     op = expr.op
 
     if op == "+":
         # Sum rule: d(a+b)/dx = da/dx + db/dx
-        left_deriv = differentiate_expr(expr.left, wrt_var)
-        right_deriv = differentiate_expr(expr.right, wrt_var)
+        left_deriv = differentiate_expr(expr.left, wrt_var, wrt_indices)
+        right_deriv = differentiate_expr(expr.right, wrt_var, wrt_indices)
         return Binary("+", left_deriv, right_deriv)
 
     elif op == "-":
         # Difference rule: d(a-b)/dx = da/dx - db/dx
-        left_deriv = differentiate_expr(expr.left, wrt_var)
-        right_deriv = differentiate_expr(expr.right, wrt_var)
+        left_deriv = differentiate_expr(expr.left, wrt_var, wrt_indices)
+        right_deriv = differentiate_expr(expr.right, wrt_var, wrt_indices)
         return Binary("-", left_deriv, right_deriv)
 
     elif op == "*":
         # Product rule: d(a*b)/dx = b*(da/dx) + a*(db/dx)
         a = expr.left
         b = expr.right
-        da_dx = differentiate_expr(a, wrt_var)
-        db_dx = differentiate_expr(b, wrt_var)
+        da_dx = differentiate_expr(a, wrt_var, wrt_indices)
+        db_dx = differentiate_expr(b, wrt_var, wrt_indices)
         # b * da/dx
         term1 = Binary("*", b, da_dx)
         # a * db/dx
@@ -261,8 +338,8 @@ def _diff_binary(expr: Binary, wrt_var: str) -> Expr:
         # Quotient rule: d(a/b)/dx = (b*(da/dx) - a*(db/dx))/b²
         a = expr.left
         b = expr.right
-        da_dx = differentiate_expr(a, wrt_var)
-        db_dx = differentiate_expr(b, wrt_var)
+        da_dx = differentiate_expr(a, wrt_var, wrt_indices)
+        db_dx = differentiate_expr(b, wrt_var, wrt_indices)
         # b * da/dx
         term1 = Binary("*", b, da_dx)
         # a * db/dx
@@ -281,7 +358,7 @@ def _diff_binary(expr: Binary, wrt_var: str) -> Expr:
         )
 
 
-def _diff_unary(expr: Unary, wrt_var: str) -> Expr:
+def _diff_unary(expr: Unary, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of unary operations.
 
@@ -294,6 +371,7 @@ def _diff_unary(expr: Unary, wrt_var: str) -> Expr:
     Args:
         expr: Unary expression
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Derivative expression (new AST)
@@ -303,22 +381,22 @@ def _diff_unary(expr: Unary, wrt_var: str) -> Expr:
 
     Examples:
         >>> # d(+x)/dx = dx/dx = 1
-        >>> _diff_unary(Unary("+", VarRef("x")), "x")
+        >>> _diff_unary(Unary("+", VarRef("x")), "x", None)
         Const(1.0)
 
         >>> # d(-x)/dx = -dx/dx = -1
-        >>> _diff_unary(Unary("-", VarRef("x")), "x")
+        >>> _diff_unary(Unary("-", VarRef("x")), "x", None)
         Unary("-", Const(1.0))
     """
     op = expr.op
 
     if op == "+":
         # Unary plus: d(+a)/dx = da/dx
-        return differentiate_expr(expr.child, wrt_var)
+        return differentiate_expr(expr.child, wrt_var, wrt_indices)
 
     elif op == "-":
         # Unary minus: d(-a)/dx = -da/dx
-        child_deriv = differentiate_expr(expr.child, wrt_var)
+        child_deriv = differentiate_expr(expr.child, wrt_var, wrt_indices)
         return Unary("-", child_deriv)
 
     else:
@@ -332,7 +410,7 @@ def _diff_unary(expr: Unary, wrt_var: str) -> Expr:
 # ============================================================================
 
 
-def _diff_call(expr: Call, wrt_var: str) -> Expr:
+def _diff_call(expr: Call, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of function calls using chain rule.
 
@@ -344,6 +422,7 @@ def _diff_call(expr: Call, wrt_var: str) -> Expr:
     Args:
         expr: Call expression
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Derivative expression (new AST)
@@ -353,29 +432,29 @@ def _diff_call(expr: Call, wrt_var: str) -> Expr:
 
     Examples:
         >>> # d(exp(x))/dx = exp(x) * 1 = exp(x)
-        >>> _diff_call(Call("exp", [VarRef("x")]), "x")
+        >>> _diff_call(Call("exp", [VarRef("x")]), "x", None)
         Binary("*", Call("exp", [VarRef("x")]), Const(1.0))
 
         >>> # d(log(x))/dx = (1/x) * 1 = 1/x
-        >>> _diff_call(Call("log", [VarRef("x")]), "x")
+        >>> _diff_call(Call("log", [VarRef("x")]), "x", None)
         Binary("*", Binary("/", Const(1.0), VarRef("x")), Const(1.0))
     """
     func = expr.func
 
     if func == "power":
-        return _diff_power(expr, wrt_var)
+        return _diff_power(expr, wrt_var, wrt_indices)
     elif func == "exp":
-        return _diff_exp(expr, wrt_var)
+        return _diff_exp(expr, wrt_var, wrt_indices)
     elif func == "log":
-        return _diff_log(expr, wrt_var)
+        return _diff_log(expr, wrt_var, wrt_indices)
     elif func == "sqrt":
-        return _diff_sqrt(expr, wrt_var)
+        return _diff_sqrt(expr, wrt_var, wrt_indices)
     elif func == "sin":
-        return _diff_sin(expr, wrt_var)
+        return _diff_sin(expr, wrt_var, wrt_indices)
     elif func == "cos":
-        return _diff_cos(expr, wrt_var)
+        return _diff_cos(expr, wrt_var, wrt_indices)
     elif func == "tan":
-        return _diff_tan(expr, wrt_var)
+        return _diff_tan(expr, wrt_var, wrt_indices)
     elif func == "abs":
         # abs() is not differentiable everywhere (non-differentiable at x=0)
         raise ValueError(
@@ -394,7 +473,7 @@ def _diff_call(expr: Call, wrt_var: str) -> Expr:
         )
 
 
-def _diff_power(expr: Call, wrt_var: str) -> Expr:
+def _diff_power(expr: Call, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of power function: power(base, exponent).
 
@@ -406,17 +485,18 @@ def _diff_power(expr: Call, wrt_var: str) -> Expr:
     Args:
         expr: Call("power", [base, exponent])
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Derivative expression (new AST)
 
     Examples:
         >>> # d(power(x, 2))/dx = 2 * x^1 * 1 = 2*x
-        >>> _diff_power(Call("power", [VarRef("x"), Const(2.0)]), "x")
+        >>> _diff_power(Call("power", [VarRef("x"), Const(2.0)]), "x", None)
         Binary("*", Binary("*", Const(2.0), Call("power", [VarRef("x"), Const(1.0)])), Const(1.0))
 
         >>> # d(power(x, y))/dx uses general formula
-        >>> _diff_power(Call("power", [VarRef("x"), VarRef("y")]), "x")
+        >>> _diff_power(Call("power", [VarRef("x"), VarRef("y")]), "x", None)
         # Returns: x^y * (y/x * 1 + ln(x) * 0)
     """
     if len(expr.args) != 2:
@@ -429,7 +509,7 @@ def _diff_power(expr: Call, wrt_var: str) -> Expr:
     if isinstance(exponent, Const):
         # Power rule: d(a^n)/dx = n * a^(n-1) * da/dx
         n = exponent.value
-        da_dx = differentiate_expr(base, wrt_var)
+        da_dx = differentiate_expr(base, wrt_var, wrt_indices)
 
         # n * a^(n-1)
         n_minus_1 = Const(n - 1.0)
@@ -441,8 +521,8 @@ def _diff_power(expr: Call, wrt_var: str) -> Expr:
 
     else:
         # General case: d(a^b)/dx = a^b * (b/a * da/dx + ln(a) * db/dx)
-        da_dx = differentiate_expr(base, wrt_var)
-        db_dx = differentiate_expr(exponent, wrt_var)
+        da_dx = differentiate_expr(base, wrt_var, wrt_indices)
+        db_dx = differentiate_expr(exponent, wrt_var, wrt_indices)
 
         # a^b
         a_pow_b = Call("power", (base, exponent))
@@ -466,7 +546,7 @@ def _diff_power(expr: Call, wrt_var: str) -> Expr:
         return Binary("*", a_pow_b, sum_terms)
 
 
-def _diff_exp(expr: Call, wrt_var: str) -> Expr:
+def _diff_exp(expr: Call, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of exponential function: exp(x).
 
@@ -475,30 +555,31 @@ def _diff_exp(expr: Call, wrt_var: str) -> Expr:
     Args:
         expr: Call("exp", [arg])
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Derivative expression (new AST)
 
     Example:
         >>> # d(exp(x))/dx = exp(x) * 1 = exp(x)
-        >>> _diff_exp(Call("exp", [VarRef("x")]), "x")
+        >>> _diff_exp(Call("exp", [VarRef("x")]), "x", None)
         Binary("*", Call("exp", [VarRef("x")]), Const(1.0))
 
         >>> # d(exp(x^2))/dx = exp(x^2) * 2x (chain rule)
-        >>> _diff_exp(Call("exp", [Call("power", [VarRef("x"), Const(2.0)])]), "x")
+        >>> _diff_exp(Call("exp", [Call("power", [VarRef("x"), Const(2.0)])]), "x", None)
         # Returns: exp(x^2) * d(x^2)/dx
     """
     if len(expr.args) != 1:
         raise ValueError(f"exp() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices)
 
     # exp(arg) * darg/dx
     return Binary("*", Call("exp", (arg,)), darg_dx)
 
 
-def _diff_log(expr: Call, wrt_var: str) -> Expr:
+def _diff_log(expr: Call, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of natural logarithm: log(x).
 
@@ -507,24 +588,25 @@ def _diff_log(expr: Call, wrt_var: str) -> Expr:
     Args:
         expr: Call("log", [arg])
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Derivative expression (new AST)
 
     Example:
         >>> # d(log(x))/dx = (1/x) * 1 = 1/x
-        >>> _diff_log(Call("log", [VarRef("x")]), "x")
+        >>> _diff_log(Call("log", [VarRef("x")]), "x", None)
         Binary("*", Binary("/", Const(1.0), VarRef("x")), Const(1.0))
 
         >>> # d(log(x^2))/dx = (1/(x^2)) * 2x (chain rule)
-        >>> _diff_log(Call("log", [Call("power", [VarRef("x"), Const(2.0)])]), "x")
+        >>> _diff_log(Call("log", [Call("power", [VarRef("x"), Const(2.0)])]), "x", None)
         # Returns: (1/(x^2)) * d(x^2)/dx
     """
     if len(expr.args) != 1:
         raise ValueError(f"log() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices)
 
     # 1/arg
     one_over_arg = Binary("/", Const(1.0), arg)
@@ -533,7 +615,7 @@ def _diff_log(expr: Call, wrt_var: str) -> Expr:
     return Binary("*", one_over_arg, darg_dx)
 
 
-def _diff_sqrt(expr: Call, wrt_var: str) -> Expr:
+def _diff_sqrt(expr: Call, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of square root: sqrt(x).
 
@@ -543,24 +625,25 @@ def _diff_sqrt(expr: Call, wrt_var: str) -> Expr:
     Args:
         expr: Call("sqrt", [arg])
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Derivative expression (new AST)
 
     Example:
         >>> # d(sqrt(x))/dx = 1/(2*sqrt(x)) * 1 = 1/(2*sqrt(x))
-        >>> _diff_sqrt(Call("sqrt", [VarRef("x")]), "x")
+        >>> _diff_sqrt(Call("sqrt", [VarRef("x")]), "x", None)
         Binary("*", Binary("/", Const(1.0), Binary("*", Const(2.0), Call("sqrt", [VarRef("x")]))), Const(1.0))
 
         >>> # d(sqrt(x^2))/dx = (1/(2*sqrt(x^2))) * 2x (chain rule)
-        >>> _diff_sqrt(Call("sqrt", [Call("power", [VarRef("x"), Const(2.0)])]), "x")
+        >>> _diff_sqrt(Call("sqrt", [Call("power", [VarRef("x"), Const(2.0)])]), "x", None)
         # Returns: (1/(2*sqrt(x^2))) * d(x^2)/dx
     """
     if len(expr.args) != 1:
         raise ValueError(f"sqrt() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices)
 
     # sqrt(arg)
     sqrt_arg = Call("sqrt", (arg,))
@@ -580,7 +663,7 @@ def _diff_sqrt(expr: Call, wrt_var: str) -> Expr:
 # ============================================================================
 
 
-def _diff_sin(expr: Call, wrt_var: str) -> Expr:
+def _diff_sin(expr: Call, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of sine function: sin(x).
 
@@ -589,30 +672,31 @@ def _diff_sin(expr: Call, wrt_var: str) -> Expr:
     Args:
         expr: Call("sin", [arg])
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Derivative expression (new AST)
 
     Example:
         >>> # d(sin(x))/dx = cos(x) * 1 = cos(x)
-        >>> _diff_sin(Call("sin", (VarRef("x"),)), "x")
+        >>> _diff_sin(Call("sin", (VarRef("x"),)), "x", None)
         Binary("*", Call("cos", (VarRef("x"),)), Const(1.0))
 
         >>> # d(sin(x^2))/dx = cos(x^2) * 2x (chain rule)
-        >>> _diff_sin(Call("sin", (Call("power", (VarRef("x"), Const(2.0))),)), "x")
+        >>> _diff_sin(Call("sin", (Call("power", (VarRef("x"), Const(2.0))),)), "x", None)
         # Returns: cos(x^2) * d(x^2)/dx
     """
     if len(expr.args) != 1:
         raise ValueError(f"sin() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices)
 
     # cos(arg) * darg/dx
     return Binary("*", Call("cos", (arg,)), darg_dx)
 
 
-def _diff_cos(expr: Call, wrt_var: str) -> Expr:
+def _diff_cos(expr: Call, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of cosine function: cos(x).
 
@@ -621,24 +705,25 @@ def _diff_cos(expr: Call, wrt_var: str) -> Expr:
     Args:
         expr: Call("cos", [arg])
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Derivative expression (new AST)
 
     Example:
         >>> # d(cos(x))/dx = -sin(x) * 1 = -sin(x)
-        >>> _diff_cos(Call("cos", (VarRef("x"),)), "x")
+        >>> _diff_cos(Call("cos", (VarRef("x"),)), "x", None)
         Binary("*", Unary("-", Call("sin", (VarRef("x"),))), Const(1.0))
 
         >>> # d(cos(x^2))/dx = -sin(x^2) * 2x (chain rule)
-        >>> _diff_cos(Call("cos", (Call("power", (VarRef("x"), Const(2.0))),)), "x")
+        >>> _diff_cos(Call("cos", (Call("power", (VarRef("x"), Const(2.0))),)), "x", None)
         # Returns: -sin(x^2) * d(x^2)/dx
     """
     if len(expr.args) != 1:
         raise ValueError(f"cos() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices)
 
     # -sin(arg)
     neg_sin_arg = Unary("-", Call("sin", (arg,)))
@@ -647,7 +732,7 @@ def _diff_cos(expr: Call, wrt_var: str) -> Expr:
     return Binary("*", neg_sin_arg, darg_dx)
 
 
-def _diff_tan(expr: Call, wrt_var: str) -> Expr:
+def _diff_tan(expr: Call, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of tangent function: tan(x).
 
@@ -661,24 +746,25 @@ def _diff_tan(expr: Call, wrt_var: str) -> Expr:
     Args:
         expr: Call("tan", [arg])
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Derivative expression (new AST)
 
     Example:
         >>> # d(tan(x))/dx = (1/cos²(x)) * 1 = 1/cos²(x)
-        >>> _diff_tan(Call("tan", (VarRef("x"),)), "x")
+        >>> _diff_tan(Call("tan", (VarRef("x"),)), "x", None)
         Binary("*", Binary("/", Const(1.0), Binary("*", Call("cos", (VarRef("x"),)), Call("cos", (VarRef("x"),)))), Const(1.0))
 
         >>> # d(tan(x^2))/dx = (1/cos²(x^2)) * 2x (chain rule)
-        >>> _diff_tan(Call("tan", (Call("power", (VarRef("x"), Const(2.0))),)), "x")
+        >>> _diff_tan(Call("tan", (Call("power", (VarRef("x"), Const(2.0))),)), "x", None)
         # Returns: (1/cos²(x^2)) * d(x^2)/dx
     """
     if len(expr.args) != 1:
         raise ValueError(f"tan() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices)
 
     # cos(arg)
     cos_arg = Call("cos", (arg,))
@@ -698,7 +784,7 @@ def _diff_tan(expr: Call, wrt_var: str) -> Expr:
 # ============================================================================
 
 
-def _diff_sum(expr: Sum, wrt_var: str) -> Expr:
+def _diff_sum(expr: Sum, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Expr:
     """
     Derivative of sum aggregation: sum(indices, body_expr).
 
@@ -708,46 +794,44 @@ def _diff_sum(expr: Sum, wrt_var: str) -> Expr:
     The derivative of a sum is the sum of the derivatives.
 
     Strategy:
-    1. Differentiate the body expression with respect to wrt_var
+    1. Differentiate the body expression with respect to wrt_var (and wrt_indices if provided)
     2. Wrap the derivative in a new Sum with the same index variables
     3. The Sum structure is preserved in the derivative
 
-    Index Matching (Day 5 - Basic):
-    - For now, we treat all indexed variables with the same base name as the same
-    - Full index-aware differentiation will be completed in Day 6
-    - Example: d/dx sum(i, x(i)) where x is our variable
-      - Differentiating x(i) w.r.t. x gives 1 (same base variable)
-      - Result: sum(i, 1)
+    Index-aware differentiation:
+    - When wrt_indices is None: Matches all indexed instances (backward compatible)
+    - When wrt_indices is provided: Only matches exact index tuple
+    - Example: d/dx(i1) sum(i, x(i))
+      - Each x(i) is tested for exact match with wrt_indices
+      - Only x(i1) contributes 1, others contribute 0
+      - Result: sum(i, [1 if i==i1 else 0])
 
     Args:
         expr: Sum expression with index_sets (tuple of index names) and body (expression)
         wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
 
     Returns:
         Sum expression with differentiated body and same index sets
 
     Examples:
-        >>> # d/dx sum(i, x(i)) = sum(i, 1)
+        >>> # d/dx sum(i, x(i)) = sum(i, 1) (backward compatible, no indices specified)
         >>> expr = Sum(("i",), VarRef("x", ("i",)))
-        >>> result = _diff_sum(expr, "x")
+        >>> result = _diff_sum(expr, "x", None)
         >>> # result is Sum(("i",), Const(1.0))
 
         >>> # d/dx sum(i, x(i)^2) = sum(i, 2*x(i))
         >>> expr = Sum(("i",), Call("power", (VarRef("x", ("i",)), Const(2.0))))
-        >>> result = _diff_sum(expr, "x")
+        >>> result = _diff_sum(expr, "x", None)
         >>> # result is Sum(("i",), Binary("*", Const(2.0), ...))
 
         >>> # d/dx sum(i, c*x(i)) where c is a parameter = sum(i, c*1) = sum(i, c)
         >>> expr = Sum(("i",), Binary("*", ParamRef("c"), VarRef("x", ("i",))))
-        >>> result = _diff_sum(expr, "x")
+        >>> result = _diff_sum(expr, "x", None)
         >>> # result is Sum(("i",), Binary("*", ParamRef("c"), Const(1.0)))
-
-    Note:
-        Full index-aware differentiation (distinguishing x(i) from x(j)) will be
-        implemented in Day 6 when we build the complete index mapping infrastructure.
     """
-    # Differentiate the body expression
-    body_derivative = differentiate_expr(expr.body, wrt_var)
+    # Differentiate the body expression, passing wrt_indices through
+    body_derivative = differentiate_expr(expr.body, wrt_var, wrt_indices)
 
     # Return a new Sum with the same index sets and the differentiated body
     return Sum(expr.index_sets, body_derivative)
