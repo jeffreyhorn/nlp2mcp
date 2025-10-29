@@ -109,14 +109,25 @@ normalize_model(model)
 # Compute all derivatives: gradient and Jacobians
 gradient, J_g, J_h = compute_derivatives(model)
 
-# Access gradient for a variable
-grad_x = gradient.get_gradient("x", ("i",))  # Get ∂f/∂x(i)
+# Access gradient for a variable by name
+grad_x_i = gradient.get_derivative_by_name("x", ("i",))  # Get ∂f/∂x(i)
 
-# Access Jacobian entries
-for (eq_name, eq_indices), row in J_g.rows.items():
-    for var_name, entries in row.items():
-        # entries: dict mapping variable indices to derivative expressions
-        print(f"∂{eq_name}{eq_indices}/∂{var_name}")
+# Access Jacobian entries by iterating over nonzero entries
+for row_id, col_id in J_g.get_nonzero_entries():
+    # Get the derivative expression
+    deriv_expr = J_g.get_derivative(row_id, col_id)
+    
+    # Get equation and variable names from the index mapping
+    eq_info = J_g.index_mapping.get_eq_instance(row_id)
+    var_info = J_g.index_mapping.get_var_instance(col_id)
+    
+    if eq_info and var_info:
+        eq_name, eq_indices = eq_info
+        var_name, var_indices = var_info
+        print(f"∂{eq_name}{eq_indices}/∂{var_name}{var_indices} = {deriv_expr}")
+
+# Or access specific Jacobian entry by names
+deriv = J_g.get_derivative_by_names("constraint", ("i1",), "x", ("i1",))
 ```
 
 ## Project Structure
