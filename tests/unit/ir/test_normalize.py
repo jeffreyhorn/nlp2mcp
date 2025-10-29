@@ -1,6 +1,5 @@
 """Normalization tests covering canonical equations and bounds."""
 
-
 import importlib
 from textwrap import dedent
 
