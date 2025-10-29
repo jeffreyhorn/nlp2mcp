@@ -331,18 +331,27 @@ var_name, indices = mapping.col_to_var[2]  # Returns ("y", ("i2",))
 @dataclass
 class GradientVector:
     num_cols: int  # ✅ Total number of variables
-    values: dict[int, Expr]  # col_id → derivative expression (AST)
-    mapping: IndexMapping  # For variable instance lookups
+    entries: dict[int, Expr]  # col_id → derivative expression (AST)
+    index_mapping: IndexMapping  # For variable instance lookups
+    
+    # Access methods
+    def get_derivative(self, col_id: int) -> Expr | None:
+        """Get derivative at col_id. Returns None if zero."""
+    
+    def get_derivative_by_name(self, var_name: str, indices: tuple) -> Expr | None:
+        """Get derivative using variable name and indices."""
 ```
 
-**API Contract (Issue #22):**
+**API Contract (Validated by tests/integration/test_api_contracts.py):**
 
 ```python
-# ✅ CORRECT
+# ✅ CORRECT - All these exist
 gradient.num_cols  # Number of variable columns
+gradient.entries  # Sparse derivatives dict (col_id → Expr)
+gradient.index_mapping  # IndexMapping with num_vars, var_to_col, col_to_var
 
-# ❌ WRONG - Does not exist!
-gradient.mapping.num_vars
+# Consistency guarantee (Issue #22 regression test)
+assert gradient.num_cols == gradient.index_mapping.num_vars
 ```
 
 **Example:**
@@ -353,18 +362,18 @@ gradient.mapping.num_vars
 
 gradient = GradientVector(
     num_cols=3,
-    values={
+    entries={
         0: Binary("*", Const(2.0), VarRef("x", ())),  # ∂f/∂x = 2*x
         1: Binary("*", Const(2.0), VarRef("y", ("i1",))),  # ∂f/∂y(i1) = 2*y(i1)
         2: Binary("*", Const(2.0), VarRef("y", ("i2",))),  # ∂f/∂y(i2) = 2*y(i2)
     },
-    mapping=IndexMapping(...)
+    index_mapping=IndexMapping(...)
 )
 ```
 
 **Sparsity:**
 
-Only nonzero derivatives are stored in `values` dict. If `col_id` not in `values`, derivative is implicitly zero.
+Only nonzero derivatives are stored in `entries` dict. If `col_id` not in `entries`, derivative is implicitly zero.
 
 ---
 
