@@ -16,16 +16,16 @@ class TestBasicSumDifferentiation:
     """Tests for basic sum aggregation differentiation."""
 
     def test_sum_of_indexed_variable(self):
-        """Test d/dx sum(i, x(i)) = sum(i, 1)"""
+        """Test d/dx sum(i, x(i)) = sum(i, 0) when differentiating w.r.t. scalar x"""
         # sum(i, x(i))
         expr = Sum(("i",), VarRef("x", ("i",)))
         result = differentiate_expr(expr, "x")
 
-        # Should be: sum(i, 1)
+        # Should be: sum(i, 0) because x(i) doesn't match scalar x
         assert isinstance(result, Sum)
         assert result.index_sets == ("i",)
         assert isinstance(result.body, Const)
-        assert result.body.value == 1.0
+        assert result.body.value == 0.0
 
     def test_sum_of_constant(self):
         """Test d/dx sum(i, 5) = sum(i, 0)"""
@@ -93,29 +93,29 @@ class TestSumWithArithmetic:
         assert isinstance(result.body.left.right, Const)
         assert result.body.left.right.value == 0.0
 
-        # Right term should be c * 1 (from c * dx/dx)
+        # Right term should be c * 0 (from c * dx(i)/dx where x(i) != x)
         assert isinstance(result.body.right, Binary)
         assert result.body.right.op == "*"
         assert isinstance(result.body.right.left, ParamRef)
         assert result.body.right.left.name == "c"
         assert isinstance(result.body.right.right, Const)
-        assert result.body.right.right.value == 1.0
+        assert result.body.right.right.value == 0.0
 
     def test_sum_of_addition(self):
-        """Test d/dx sum(i, x(i) + y(i)) = sum(i, 1 + 0)"""
+        """Test d/dx sum(i, x(i) + y(i)) = sum(i, 0 + 0) when x is scalar"""
         # sum(i, x(i) + y(i))
         expr = Sum(("i",), Binary("+", VarRef("x", ("i",)), VarRef("y", ("i",))))
         result = differentiate_expr(expr, "x")
 
-        # Should be: sum(i, 1 + 0)
+        # Should be: sum(i, 0 + 0) because x(i) and y(i) don't match scalar x
         assert isinstance(result, Sum)
         assert result.index_sets == ("i",)
         assert isinstance(result.body, Binary)
         assert result.body.op == "+"
 
-        # Left should be 1, right should be 0
+        # Both should be 0 (x(i) and y(i) don't match scalar x)
         assert isinstance(result.body.left, Const)
-        assert result.body.left.value == 1.0
+        assert result.body.left.value == 0.0
         assert isinstance(result.body.right, Const)
         assert result.body.right.value == 0.0
 
@@ -142,16 +142,16 @@ class TestMultipleIndices:
     """Tests for sum with multiple index variables."""
 
     def test_sum_two_indices(self):
-        """Test d/dx sum((i,j), x(i,j)) = sum((i,j), 1)"""
+        """Test d/dx sum((i,j), x(i,j)) = sum((i,j), 0) when x is scalar"""
         # sum((i,j), x(i,j))
         expr = Sum(("i", "j"), VarRef("x", ("i", "j")))
         result = differentiate_expr(expr, "x")
 
-        # Should be: sum((i,j), 1)
+        # Should be: sum((i,j), 0) because x(i,j) doesn't match scalar x
         assert isinstance(result, Sum)
         assert result.index_sets == ("i", "j")
         assert isinstance(result.body, Const)
-        assert result.body.value == 1.0
+        assert result.body.value == 0.0
 
     def test_sum_two_indices_with_product(self):
         """Test d/dx sum((i,j), a(i)*x(i,j)) = sum((i,j), a(i)*1 + x(i,j)*0)"""
@@ -175,14 +175,14 @@ class TestMultipleIndices:
         assert isinstance(result.body.left.right, Const)
         assert result.body.left.right.value == 0.0
 
-        # Right term should be a(i) * 1 (from a * dx/dx)
+        # Right term should be a(i) * 0 (from a * dx(i,j)/dx where x(i,j) != x)
         assert isinstance(result.body.right, Binary)
         assert result.body.right.op == "*"
         assert isinstance(result.body.right.left, ParamRef)
         assert result.body.right.left.name == "a"
         assert result.body.right.left.indices == ("i",)
         assert isinstance(result.body.right.right, Const)
-        assert result.body.right.right.value == 1.0
+        assert result.body.right.right.value == 0.0
 
 
 # ============================================================================
@@ -194,19 +194,19 @@ class TestNestedSums:
     """Tests for nested sum aggregations."""
 
     def test_nested_sum_simple(self):
-        """Test d/dx sum(i, sum(j, x(i,j))) = sum(i, sum(j, 1))"""
+        """Test d/dx sum(i, sum(j, x(i,j))) = sum(i, sum(j, 0)) when x is scalar"""
         # sum(i, sum(j, x(i,j)))
         inner_sum = Sum(("j",), VarRef("x", ("i", "j")))
         expr = Sum(("i",), inner_sum)
         result = differentiate_expr(expr, "x")
 
-        # Should be: sum(i, sum(j, 1))
+        # Should be: sum(i, sum(j, 0)) because x(i,j) doesn't match scalar x
         assert isinstance(result, Sum)
         assert result.index_sets == ("i",)
         assert isinstance(result.body, Sum)
         assert result.body.index_sets == ("j",)
         assert isinstance(result.body.body, Const)
-        assert result.body.body.value == 1.0
+        assert result.body.body.value == 0.0
 
     def test_nested_sum_with_constant(self):
         """Test d/dx sum(i, sum(j, c)) = sum(i, sum(j, 0))"""

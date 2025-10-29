@@ -409,6 +409,100 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+#### Day 7.6 - Phase 4: Testing and Verification (2025-10-29)
+
+##### Analysis
+Reviewed Phase 4 testing requirements from `docs/planning/SPRINT_2_7_5_PLAN.md` and found that **most tests were already implemented** during Phases 1-3. The comprehensive test suite built incrementally already covers all required scenarios.
+
+##### Changed
+- **Updated `SPRINT_2_7_5_PLAN.md`** with corrected Task 4.2 description
+  - Clarified that `d/dx sum(i, x(i))` with no indices returns 0 (not sum(i, 1))
+  - Added Task 4.1 bullet: Test no indices but variable has index case
+
+##### Added
+- **New test**: `test_sum_differentiation_no_wrt_indices` in `tests/ad/test_index_aware_diff.py`
+  - Tests backward-compatible behavior: `d/dx sum(i, x(i))` with `wrt_indices=None`
+  - Verifies result is `Sum(i, 1)` (all terms match in backward-compatible mode)
+  - Documents difference between backward-compatible and index-aware modes
+
+##### Verification
+**Task 4.1 Coverage** (Index-aware VarRef differentiation) - ✅ Complete:
+- Exact index match: `test_exact_index_match_returns_one` ✓
+- Index mismatch: `test_index_mismatch_returns_zero` ✓
+- Backward compat: `test_backward_compatible_none_indices_matches_any` ✓
+- Multi-dimensional: `test_two_indices_exact_match`, `test_three_indices_exact_match` ✓
+- No indices w/ indexed var: `test_scalar_variable_with_indices_specified_returns_zero` ✓
+
+**Task 4.2 Coverage** (Sum with index-aware differentiation) - ✅ Complete:
+- `d/dx(i1) sum(i, x(i))` → 1: `test_sum_over_same_index_as_wrt` ✓
+- `d/dx(i2) sum(i, x(i))` → 1: Covered by `test_sum_collapse_simple_sum` ✓
+- `d/dx sum(i, x(i))`: `test_sum_differentiation_no_wrt_indices` ✓ (NEW)
+
+**Task 4.3 Coverage** (Gradient computation) - ✅ Complete:
+- Objective `min sum(i, x(i)^2)`: `test_indexed_variable_objective` ✓
+- Verify collapsed gradients: `test_sum_collapse_simple_sum`, `test_sum_collapse_with_parameter` ✓
+- Edge cases: `test_sum_no_collapse_different_indices` ✓
+
+**Task 4.4 Coverage** (Existing test updates) - ✅ Complete:
+- Updated in Phase 3: `test_indexed_variable_objective` expects collapsed results ✓
+- Updated in Phase 3: `test_sum_over_same_index_as_wrt` expects Const(1.0) ✓
+- All `test_gradient.py` tests passing with correct behavior ✓
+
+##### Tests
+- All 311 tests pass ✓ (1 new test added)
+- All quality checks pass (mypy, ruff, black) ✓
+
+##### Summary
+Phase 4 primarily involved **verification and documentation** rather than new test implementation. The incremental approach of Phases 1-3 resulted in comprehensive test coverage that already satisfied all Phase 4 requirements. Added one missing test for backward-compatible sum differentiation to complete coverage.
+
+---
+
+#### Day 7.7 - Semantic Fix: Correct wrt_indices=None Behavior (2025-10-29)
+
+##### Fixed
+- **Corrected `_diff_varref()` semantics for `wrt_indices=None`**
+  - Previous (incorrect): `d/dx x(i) = 1` when `wrt_indices=None` (matched any indices)
+  - Correct (now): `d/dx x(i) = 0` when `wrt_indices=None` (only matches scalars)
+  - Rationale: When `wrt_indices=None`, we're differentiating w.r.t. **scalar** variable x
+  - Indexed variable `x(i)` is different from scalar `x`, so derivative is 0
+
+- **Fixed sum collapse logic in `_diff_sum()`**
+  - Changed from `differentiate_expr(expr.body, wrt_var, None)` 
+  - To: `differentiate_expr(expr.body, wrt_var, expr.index_sets)`
+  - Uses sum's symbolic indices (e.g., `("i",)`) instead of `None`
+  - Ensures `x(i)` matches when differentiating w.r.t. `x` with indices `("i",)`
+
+##### Changed
+- **Updated docstring in `_diff_varref()`** (src/ad/derivative_rules.py:141-171)
+  - Clarified: `wrt_indices=None` means differentiating w.r.t. scalar variable
+  - Updated examples to show `d/dx x(i) = 0` (not 1)
+  - Documented: Only scalar-to-scalar matching when `wrt_indices=None`
+
+##### Tests Updated
+- **test_ad_core.py**: Updated 2 tests
+  - `test_indexed_var_same_name`: Now expects 0 (not 1)
+  - `test_multi_indexed_var_same_name`: Now expects 0 (not 1)
+
+- **test_index_aware_diff.py**: Updated/added 2 tests
+  - Renamed `test_backward_compatible_none_indices_matches_any` → `test_backward_compatible_none_indices_scalar_only`
+  - Added `test_backward_compatible_scalar_matches_scalar`: Verifies `d/dx x = 1`
+  - Updated `test_sum_differentiation_no_wrt_indices`: Now expects `Sum(i, 0)`
+
+- **test_sum_aggregation.py**: Updated 6 tests
+  - `test_sum_of_indexed_variable`: Now expects `sum(i, 0)`
+  - `test_sum_of_product`: Now expects `sum(i, c*0 + x(i)*0)`
+  - `test_sum_of_addition`: Now expects `sum(i, 0 + 0)`
+  - `test_sum_two_indices`: Now expects `sum((i,j), 0)`
+  - `test_sum_two_indices_with_product`: Now expects `a(i)*0`
+  - `test_nested_sum_simple`: Now expects `sum(i, sum(j, 0))`
+
+##### Results
+- All 312 tests pass ✓ (1 more test than before)
+- All quality checks pass (mypy, ruff, black) ✓
+- Semantically correct behavior: scalar/indexed distinction now enforced
+
+---
+
 ## [0.1.0] - Sprint 1 Complete
 
 ### Added

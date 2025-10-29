@@ -65,12 +65,12 @@ class TestVariableReferenceDifferentiation:
         assert result.value == 0.0
 
     def test_indexed_var_same_name(self):
-        """d(x(i))/dx = 1 (base name matches)"""
+        """d(x(i))/dx = 0 (indexed variable doesn't match scalar)"""
         expr = VarRef("x", ("i",))
         result = differentiate(expr, "x")
 
         assert isinstance(result, Const)
-        assert result.value == 1.0
+        assert result.value == 0.0
 
     def test_indexed_var_different_name(self):
         """d(y(i))/dx = 0 (base name differs)"""
@@ -81,12 +81,12 @@ class TestVariableReferenceDifferentiation:
         assert result.value == 0.0
 
     def test_multi_indexed_var_same_name(self):
-        """d(x(i,j))/dx = 1"""
+        """d(x(i,j))/dx = 0 (indexed variable doesn't match scalar)"""
         expr = VarRef("x", ("i", "j"))
         result = differentiate(expr, "x")
 
         assert isinstance(result, Const)
-        assert result.value == 1.0
+        assert result.value == 0.0
 
 
 class TestSymbolReferenceDifferentiation:
