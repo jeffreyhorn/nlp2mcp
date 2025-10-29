@@ -26,8 +26,6 @@ Each test validates:
 
 import os
 
-import pytest
-
 from src.ad.api import compute_derivatives
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
