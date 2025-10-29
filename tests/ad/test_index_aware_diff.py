@@ -50,9 +50,20 @@ class TestBasicIndexAwareDifferentiation:
         assert isinstance(result, Const)
         assert result.value == 0.0
 
-    def test_backward_compatible_none_indices_matches_any(self):
-        """d/dx x(i1) = 1 (backward compatible, no indices specified)"""
+    def test_backward_compatible_none_indices_scalar_only(self):
+        """d/dx x(i1) = 0 when wrt_indices=None (differentiating w.r.t. scalar x)
+
+        When wrt_indices=None, we're differentiating w.r.t. scalar variable x.
+        Indexed variable x(i1) is different from scalar x, so derivative is 0.
+        """
         expr = VarRef("x", ("i1",))
+        result = differentiate_expr(expr, "x", None)
+        assert isinstance(result, Const)
+        assert result.value == 0.0
+
+    def test_backward_compatible_scalar_matches_scalar(self):
+        """d/dx x = 1 when both are scalar (backward compatible)"""
+        expr = VarRef("x", ())
         result = differentiate_expr(expr, "x", None)
         assert isinstance(result, Const)
         assert result.value == 1.0
@@ -374,26 +385,28 @@ class TestIndexAwareSum:
         assert result.value == 1.0
 
     def test_sum_differentiation_no_wrt_indices(self):
-        """d/dx [sum(i, x(i))] with no wrt_indices specified (backward compatible)
+        """d/dx [sum(i, x(i))] with no wrt_indices specified
 
-        When wrt_indices=None (backward compatible mode), x(i) matches any
-        reference to variable x, regardless of indices. This maintains
-        backward compatibility with code that doesn't use index-aware diff.
+        When wrt_indices=None, we're differentiating w.r.t. scalar x.
+        Since x(i) is indexed (not scalar), dx(i)/dx = 0 for all i.
 
-        Result: sum(i, 1) - all terms contribute
+        Result: sum(i, 0) = 0
 
         Note: This is DIFFERENT from d/dx(i1) sum(i, x(i)) which collapses to 1.
-        Here we're differentiating w.r.t. "x" in general, not a specific instance.
+        Here we're differentiating w.r.t. scalar "x", not a specific instance x(i1).
         """
         expr = Sum(("i",), VarRef("x", ("i",)))
         result = differentiate_expr(expr, "x", None)
 
-        # Backward compatible: wrt_indices=None matches all instances
-        # Result: Sum(i, 1) - does NOT collapse because no concrete index
-        assert isinstance(result, Sum)
-        assert result.index_sets == ("i",)
-        assert isinstance(result.body, Const)
-        assert result.body.value == 1.0
+        # Scalar x doesn't match indexed x(i), so derivative is 0
+        # Result: Sum(i, 0) or collapsed to Const(0)
+        if isinstance(result, Sum):
+            assert result.index_sets == ("i",)
+            assert isinstance(result.body, Const)
+            assert result.body.value == 0.0
+        else:
+            assert isinstance(result, Const)
+            assert result.value == 0.0
 
 
 class TestComplexIndexAwareExpressions:

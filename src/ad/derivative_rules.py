@@ -140,8 +140,10 @@ def _diff_varref(expr: VarRef, wrt_var: str, wrt_indices: tuple[str, ...] | None
     - d(y)/dx = 0   (different variable)
 
     Index-aware matching:
-    - If wrt_indices is None: Match any indices (backward compatible behavior)
-      - d/dx x = 1, d/dx x(i) = 1 (all instances match)
+    - If wrt_indices is None and variable has no indices: Match (backward compatible)
+      - d/dx x = 1 (scalar variable matches)
+    - If wrt_indices is None and variable has indices: No match
+      - d/dx x(i) = 0 (indexed variable doesn't match scalar reference)
     - If wrt_indices is provided: Exact index tuple matching required
       - d/dx(i1) x(i1) = 1 (exact match)
       - d/dx(i1) x(i2) = 0 (index mismatch)
@@ -150,7 +152,7 @@ def _diff_varref(expr: VarRef, wrt_var: str, wrt_indices: tuple[str, ...] | None
         expr: Variable reference
         wrt_var: Variable name to differentiate with respect to
         wrt_indices: Optional index tuple for specific variable instance.
-                     None means match any indices (backward compatible).
+                     None means differentiating w.r.t. scalar variable (no indices).
 
     Returns:
         Const(1.0) if variable matches (name and indices), Const(0.0) otherwise
@@ -162,11 +164,11 @@ def _diff_varref(expr: VarRef, wrt_var: str, wrt_indices: tuple[str, ...] | None
         >>> _diff_varref(VarRef("y"), "x", None)
         Const(0.0)
 
-        >>> # Indexed variables without wrt_indices (match any)
+        >>> # Indexed variables without wrt_indices (no match - different from scalar)
         >>> _diff_varref(VarRef("x", ("i",)), "x", None)
-        Const(1.0)
+        Const(0.0)
         >>> _diff_varref(VarRef("x", ("j",)), "x", None)
-        Const(1.0)
+        Const(0.0)
 
         >>> # Index-aware differentiation (exact match)
         >>> _diff_varref(VarRef("x", ("i1",)), "x", ("i1",))
@@ -186,8 +188,13 @@ def _diff_varref(expr: VarRef, wrt_var: str, wrt_indices: tuple[str, ...] | None
 
     # Index matching
     if wrt_indices is None:
-        # No indices specified: match any (backward compatible)
-        return Const(1.0)
+        # No indices specified: only match if expr is also scalar (no indices)
+        # d/dx x = 1 (scalar matches scalar)
+        # d/dx x(i) = 0 (indexed doesn't match scalar)
+        if expr.indices == ():
+            return Const(1.0)
+        else:
+            return Const(0.0)
 
     # Indices specified: must match exactly
     if expr.indices == wrt_indices:
@@ -834,8 +841,9 @@ def _diff_sum(expr: Sum, wrt_var: str, wrt_indices: tuple[str, ...] | None = Non
     # When differentiating sum(i, x(i)) w.r.t. x(i1), the sum collapses because
     # only the term where i=i1 contributes, so result is just the collapsed expression
     if wrt_indices is not None and _sum_should_collapse(expr.index_sets, wrt_indices):
-        # Differentiate symbolically (without concrete indices to match x(i))
-        body_derivative = differentiate_expr(expr.body, wrt_var, None)
+        # Differentiate symbolically using sum's index variables (e.g., ("i",))
+        # This makes x(i) match when we differentiate w.r.t. x with indices ("i",)
+        body_derivative = differentiate_expr(expr.body, wrt_var, expr.index_sets)
         # Substitute sum indices with concrete indices in result
         return _substitute_sum_indices(body_derivative, expr.index_sets, wrt_indices)
 
