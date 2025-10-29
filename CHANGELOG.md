@@ -9,6 +9,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3 Prep: Architecture Documentation & Test Organization
 
+#### 2025-10-29 - API Contract Tests (Sprint 3 Prep Task 4)
+
+##### Added
+- Created comprehensive API contract test suite in `tests/integration/test_api_contracts.py`
+  - 17 contract tests validating API stability across module boundaries
+  - Prevents Issue #22-style API mismatches (e.g., `gradient.mapping.num_vars` → `gradient.num_cols`)
+  - Prevents Issue #24-style data structure confusion (bounds storage location)
+  - Tests fail fast when APIs change, catching breaking changes in CI immediately
+
+##### Test Categories
+- **GradientVector Contract** (5 tests):
+  - `test_sparse_gradient_has_num_cols`: Validates num_cols attribute exists
+  - `test_sparse_gradient_has_entries`: Validates entries dict structure (col_id → Expr)
+  - `test_sparse_gradient_has_index_mapping`: Validates IndexMapping with num_vars, var_to_col, col_to_var
+  - `test_num_cols_matches_mapping_num_vars`: Regression test for Issue #22 consistency
+  - `test_sparse_gradient_has_get_derivative_methods`: Validates get_derivative(), get_derivative_by_name()
+
+- **JacobianStructure Contract** (4 tests):
+  - `test_jacobian_structure_has_dimensions`: Validates num_rows, num_cols attributes
+  - `test_jacobian_structure_has_entries`: Validates entries dict structure (row_id → {col_id → Expr})
+  - `test_jacobian_structure_has_index_mapping`: Validates IndexMapping with get_eq_instance(), get_var_instance()
+  - `test_jacobian_structure_has_get_derivative_methods`: Validates get_derivative(), get_derivative_by_names()
+
+- **ModelIR Contract** (4 tests):
+  - `test_model_ir_has_required_fields`: Validates equations, normalized_bounds, inequalities, sets, variables
+  - `test_bounds_not_in_equations`: Regression test for Issue #24 (bounds separate from equations)
+  - `test_bounds_in_inequalities_list`: Validates bounds appear in inequalities list
+  - `test_model_ir_has_objective`: Validates objective with objvar, sense, expr fields
+
+- **Differentiation API Contract** (3 tests):
+  - `test_differentiate_accepts_wrt_indices`: Validates wrt_indices parameter exists (Sprint 2 Day 7.5 feature)
+  - `test_differentiate_returns_zero_for_index_mismatch`: Validates index-aware differentiation behavior
+  - `test_differentiate_wrt_indices_must_be_tuple`: Validates wrt_indices type requirement
+
+- **High-Level API Contract** (1 test):
+  - `test_compute_derivatives_returns_triple`: Validates compute_derivatives() returns (gradient, J_eq, J_ineq)
+
+##### Purpose
+- Catch API breaking changes immediately in CI (fail fast)
+- Prevent regression of Issues #22, #24, #25
+- Document expected API contracts for future developers
+- Enable safe refactoring by detecting API violations
+
+##### Benefits
+- **Early Detection**: API mismatches caught in CI before code review
+- **Clear Error Messages**: Test names clearly indicate which contract was violated
+- **Regression Prevention**: Issues #22, #24 cannot happen again
+- **Living Documentation**: Tests serve as executable API documentation
+
+##### Changed
+- N/A
+
+##### Fixed
+- N/A
+
 #### 2025-10-29 - Test Suite Reorganization (Sprint 3 Prep Task 3)
 
 ##### Added
