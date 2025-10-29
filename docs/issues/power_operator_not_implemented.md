@@ -1,13 +1,24 @@
 # Issue: Power Operator (^) Not Implemented in AD Module
 
+## ✅ RESOLVED (2025-10-29)
+
+**Resolution**: Added power operator support to `_diff_binary()` in derivative_rules.py
+- Added case for `^` operator in binary differentiation
+- Converts `Binary('^', base, exp)` to `Call('power', ...)` and uses existing `_diff_power()` logic
+- Simple 7-line addition leverages existing power rule implementation
+- Fixed API mismatch in test (gradient.mapping.num_vars → gradient.num_cols)
+- **Result**: `test_nonlinear_mix_model` now passes, 15/15 integration tests passing (100%)
+
+**Branch**: `fix/issue-25-power-operator`
+
 ## Summary
 
-The automatic differentiation (AD) module does not yet support the power operator (`^`) for differentiation. Integration test `test_nonlinear_mix_model` fails because the test model contains power operations (e.g., `x^2`, `y^3`) which cannot be differentiated with the current implementation.
+The automatic differentiation (AD) module did not support the power operator (`^`) for differentiation. Integration test `test_nonlinear_mix_model` was failing because the test model contains power operations (e.g., `x^2`, `y^2`) which could not be differentiated with the implementation.
 
 ## Severity
 
-- **Status**: OPEN 🔴
-- **Severity**: Medium - Missing feature, blocks 1 integration test
+- **Status**: RESOLVED ✅
+- **Severity**: Medium - Missing feature, blocked 1 integration test
 - **Component**: Sprint 2 (AD / Automatic Differentiation)
 - **Affects**: Models with power operations, nonlinear functions
 - **Discovered**: Sprint 2 Day 10 (2025-10-29) while fixing Issue #22

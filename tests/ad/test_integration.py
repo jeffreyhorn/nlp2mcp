@@ -49,9 +49,15 @@ GitHub Issue #24 Status: ✅ RESOLVED
 - Bounds are now properly handled by _compute_bound_jacobian()
 - test_bounds_nlp_basic now passes
 
+GitHub Issue #25 Status: ✅ RESOLVED
+- Power operator (^) now supported in AD module
+- Added differentiation support for Binary('^', base, exponent)
+- Uses existing _diff_power() logic from Call("power", ...)
+- test_nonlinear_mix_model now passes
+
 Current Status:
-- 14 out of 15 tests passing (93% pass rate)
-- 1 test skipped: power operator (Issue #25 - not implemented)
+- ✅ All 15 out of 15 tests passing (100% pass rate!)
+- ✅ Full integration test coverage achieved
 
 See:
 - GitHub Issue #19: "Objective Expressions Not Found After Model Normalization"
@@ -81,12 +87,6 @@ from src.ir.parser import parse_model_file
 skip_api_mismatch = pytest.mark.skip(
     reason="API mismatch (Issue #22): Tests expect gradient.mapping but implementation provides "
     "gradient.index_mapping. See https://github.com/jeffreyhorn/nlp2mcp/issues/22"
-)
-
-# Skip marker for tests with unimplemented features
-skip_not_implemented = pytest.mark.skip(
-    reason="Feature not yet implemented (power operator planned for Day 3). "
-    "See GitHub Issue #25: https://github.com/jeffreyhorn/nlp2mcp/issues/25"
 )
 
 
@@ -190,7 +190,6 @@ class TestIndexedModels:
 class TestNonlinearFunctions:
     """Test integration with nonlinear functions."""
 
-    @skip_not_implemented
     def test_nonlinear_mix_model(self):
         """Test model with mix of nonlinear functions."""
         model_ir = parse_and_normalize("nonlinear_mix.gms")
@@ -200,7 +199,7 @@ class TestNonlinearFunctions:
         assert gradient.num_nonzeros() > 0
 
         # All gradient components should be non-None
-        for col_id in range(gradient.mapping.num_vars):
+        for col_id in range(gradient.num_cols):
             deriv = gradient.get_derivative(col_id)
             assert deriv is not None
 

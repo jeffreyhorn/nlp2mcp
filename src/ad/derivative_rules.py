@@ -326,13 +326,15 @@ def _diff_binary(expr: Binary, wrt_var: str, wrt_indices: tuple[str, ...] | None
     """
     Derivative of binary operations.
 
-    Supports: +, -, *, /
+    Supports: +, -, *, /, ^
 
     Mathematical rules:
     - Sum Rule: d(a+b)/dx = da/dx + db/dx
     - Difference Rule: d(a-b)/dx = da/dx - db/dx
     - Product Rule: d(a*b)/dx = b*(da/dx) + a*(db/dx)
     - Quotient Rule: d(a/b)/dx = (b*(da/dx) - a*(db/dx))/b²
+    - Power Rule: d(a^b)/dx = a^b * (b/a * da/dx + ln(a) * db/dx)
+      - Optimized for constant exponent: d(a^n)/dx = n * a^(n-1) * da/dx
 
     Args:
         expr: Binary expression
@@ -396,11 +398,18 @@ def _diff_binary(expr: Binary, wrt_var: str, wrt_indices: tuple[str, ...] | None
         denominator = Binary("*", b, b)
         return Binary("/", numerator, denominator)
 
+    elif op == "^":
+        # Power rule: d(a^b)/dx
+        # Convert to Call("power", ...) and use existing _diff_power logic
+        base = expr.left
+        exponent = expr.right
+        power_call = Call("power", (base, exponent))
+        return _diff_power(power_call, wrt_var, wrt_indices)
+
     else:
         raise ValueError(
             f"Unsupported binary operation '{op}' for differentiation. "
-            f"Supported operations: +, -, *, /. "
-            f"Power (^) will be implemented on Day 3."
+            f"Supported operations: +, -, *, /, ^."
         )
 
 
