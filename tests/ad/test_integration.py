@@ -42,8 +42,16 @@ GitHub Issue #22 Status: ✅ RESOLVED
 - Changed J_g.mapping.num_equations → J_g.num_rows
 - Changed gradient.mapping → gradient.index_mapping
 - Updated test expectations to account for objective variable (obj)
-- 13 out of 15 tests now passing
-- 2 tests skipped: bounds test (separate bug) and power operator (not implemented)
+
+GitHub Issue #24 Status: ✅ RESOLVED
+- Bounds handling bug fixed in constraint_jacobian.py
+- Added check to skip bounds in _compute_inequality_jacobian()
+- Bounds are now properly handled by _compute_bound_jacobian()
+- test_bounds_nlp_basic now passes
+
+Current Status:
+- 14 out of 15 tests passing (93% pass rate)
+- 1 test skipped: power operator (Issue #25 - not implemented)
 
 See:
 - GitHub Issue #19: "Objective Expressions Not Found After Model Normalization"
@@ -131,7 +139,6 @@ class TestScalarModels:
         # Should have no inequality constraints
         assert J_g.num_nonzeros() == 0
 
-    @skip_bounds_bug
     def test_bounds_nlp_basic(self):
         """Test scalar model with bounds."""
         model_ir = parse_and_normalize("bounds_nlp.gms")
