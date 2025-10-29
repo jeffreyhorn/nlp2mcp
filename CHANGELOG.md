@@ -316,7 +316,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ##### Notes
 - Phase 1 complete: Core differentiation API now supports index-aware differentiation
 - Backward compatibility verified: All 267 original tests still pass
-- New functionality verified: All 40 index-aware tests pass
+- New functionality verified: All 36 index-aware tests pass
 - Next phases: Update gradient.py and jacobian.py to use index-aware API (Phase 2-5)
 - See docs/planning/SPRINT_2_7_5_PLAN.md for complete implementation roadmap
 
