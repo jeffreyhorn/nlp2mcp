@@ -24,6 +24,7 @@ classifiers = [
 
 dependencies = [
     "lark>=1.1.9",
+    "numpy>=1.24.0",  # For finite-difference validation and numeric operations
 ]
 
 [project.optional-dependencies]
@@ -101,6 +102,10 @@ no_implicit_reexport = false
 
 [[tool.mypy.overrides]]
 module = "lark.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "numpy.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
