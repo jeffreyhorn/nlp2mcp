@@ -301,10 +301,10 @@ def _check_numeric(value: float, context: str) -> float:
         )
 
     if math.isinf(value):
-        sign = "positive" if value > 0 else "negative"
+        infinity_type = "positive" if value > 0 else "negative"
         raise EvaluationError(
-            f"{sign.capitalize()} infinity detected in expression evaluation at {context}. "
-            f"This typically indicates numerical overflow or division by zero."
+            f"{infinity_type.capitalize()} infinity detected in expression evaluation at {context}. "
+            f"This typically indicates numerical overflow."
         )
 
     return value
