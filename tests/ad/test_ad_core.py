@@ -9,7 +9,8 @@ Test Coverage:
 4. Parameter reference differentiation
 5. Symbol reference differentiation
 6. Indexed variable differentiation
-7. Unsupported expression types raise appropriate errors
+7. Sum expressions are now supported and tested for correct differentiation behavior
+8. Unsupported expression types (other than Sum) raise appropriate errors
 """
 
 from src.ad import differentiate
