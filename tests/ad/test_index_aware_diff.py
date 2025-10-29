@@ -16,7 +16,7 @@ Test Coverage:
 from __future__ import annotations
 
 from src.ad.derivative_rules import differentiate_expr
-from src.ir.ast import Binary, Call, Const, ParamRef, Sum, Unary, VarRef
+from src.ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, Unary, VarRef
 
 
 class TestBasicIndexAwareDifferentiation:
@@ -56,6 +56,38 @@ class TestBasicIndexAwareDifferentiation:
         result = differentiate_expr(expr, "x", None)
         assert isinstance(result, Const)
         assert result.value == 1.0
+
+
+class TestSymbolRefIndexAwareness:
+    """Test that SymbolRef (scalar symbols) correctly handles wrt_indices."""
+
+    def test_symbolref_scalar_differentiation(self):
+        """d/dx x = 1 (scalar symbol, no indices)"""
+        expr = SymbolRef("x")
+        result = differentiate_expr(expr, "x", None)
+        assert isinstance(result, Const)
+        assert result.value == 1.0
+
+    def test_symbolref_with_indices_returns_zero(self):
+        """d/dx(i1) x = 0 (scalar symbol doesn't match indexed variable)"""
+        expr = SymbolRef("x")
+        result = differentiate_expr(expr, "x", ("i1",))
+        assert isinstance(result, Const)
+        assert result.value == 0.0
+
+    def test_symbolref_different_variable_with_indices(self):
+        """d/dx(i1) y = 0 (different variable)"""
+        expr = SymbolRef("y")
+        result = differentiate_expr(expr, "x", ("i1",))
+        assert isinstance(result, Const)
+        assert result.value == 0.0
+
+    def test_symbolref_multidimensional_indices(self):
+        """d/dx(i1,j2) x = 0 (scalar symbol doesn't match multi-indexed variable)"""
+        expr = SymbolRef("x")
+        result = differentiate_expr(expr, "x", ("i1", "j2"))
+        assert isinstance(result, Const)
+        assert result.value == 0.0
 
 
 class TestMultiDimensionalIndexMatching:

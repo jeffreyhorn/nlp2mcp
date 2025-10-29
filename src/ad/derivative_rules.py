@@ -110,16 +110,16 @@ def differentiate_expr(
 # ============================================================================
 
 
-def _diff_const(_expr: Const, _wrt_var: str, _wrt_indices: tuple[str, ...] | None = None) -> Const:
+def _diff_const(expr: Const, wrt_var: str, wrt_indices: tuple[str, ...] | None = None) -> Const:
     """
     Derivative of a constant.
 
     Mathematical rule: d(c)/dx = 0
 
     Args:
-        _expr: Constant expression (unused, derivative is always zero)
-        _wrt_var: Variable name (unused, derivative is always zero)
-        _wrt_indices: Optional index tuple (unused, derivative is always zero)
+        expr: Constant expression (unused, derivative is always zero)
+        wrt_var: Variable name (unused, derivative is always zero)
+        wrt_indices: Optional index tuple (unused, derivative is always zero)
 
     Returns:
         Const(0.0)
@@ -203,35 +203,49 @@ def _diff_symbolref(
     Derivative of a scalar symbol reference.
 
     Mathematical rules:
-    - d(x)/dx = 1   (same variable)
+    - d(x)/dx = 1   (same variable, scalar differentiation)
     - d(y)/dx = 0   (different variable)
 
-    Note: SymbolRef is used for scalar (non-indexed) symbols, so wrt_indices
-    should typically be None. This parameter is included for API consistency
-    with other differentiation functions.
+    Note: SymbolRef is used for scalar (non-indexed) symbols. If wrt_indices
+    is provided (requesting differentiation w.r.t. an indexed variable), the
+    derivative is always zero since SymbolRef represents a scalar that doesn't
+    match any indexed variable instance.
 
     Args:
         expr: Symbol reference
         wrt_var: Variable name to differentiate with respect to
-        wrt_indices: Optional index tuple (typically None for scalar symbols)
+        wrt_indices: Optional index tuple. If provided, always returns 0 since
+                     SymbolRef represents scalars, not indexed variables.
 
     Returns:
-        Const(1.0) if same variable name, Const(0.0) otherwise
+        Const(1.0) if same variable name and wrt_indices is None
+        Const(0.0) otherwise
 
     Examples:
+        >>> # Scalar differentiation (wrt_indices is None)
         >>> _diff_symbolref(SymbolRef("x"), "x", None)
         Const(1.0)
         >>> _diff_symbolref(SymbolRef("y"), "x", None)
         Const(0.0)
+
+        >>> # Index-aware differentiation (scalar doesn't match indexed variable)
+        >>> _diff_symbolref(SymbolRef("x"), "x", ("i1",))
+        Const(0.0)
     """
-    if expr.name == wrt_var:
-        return Const(1.0)
-    else:
+    # Name must match
+    if expr.name != wrt_var:
         return Const(0.0)
+
+    # If indices are specified, scalar symbol doesn't match indexed variable
+    if wrt_indices is not None:
+        return Const(0.0)
+
+    # Scalar differentiation: d(x)/dx = 1
+    return Const(1.0)
 
 
 def _diff_paramref(
-    _expr: ParamRef, _wrt_var: str, _wrt_indices: tuple[str, ...] | None = None
+    expr: ParamRef, wrt_var: str, wrt_indices: tuple[str, ...] | None = None
 ) -> Const:
     """
     Derivative of a parameter reference.
@@ -241,9 +255,9 @@ def _diff_paramref(
     Parameters are constant with respect to variables in the NLP.
 
     Args:
-        _expr: Parameter reference (unused, derivative is always zero)
-        _wrt_var: Variable name (unused, derivative is always zero)
-        _wrt_indices: Optional index tuple (unused, derivative is always zero)
+        expr: Parameter reference (unused, derivative is always zero)
+        wrt_var: Variable name (unused, derivative is always zero)
+        wrt_indices: Optional index tuple (unused, derivative is always zero)
 
     Returns:
         Const(0.0)
