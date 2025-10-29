@@ -473,13 +473,16 @@ None yet - this is the first documented instance of this problem.
 - ✅ All 16 normalize tests pass
 - ✅ All 47 IR + AD tests pass
 - ✅ Lint and type checks pass (ruff, mypy)
-- ⚠️  Integration tests cannot run due to separate pre-existing parse_model_file hang issue
+- ⚠️  Integration tests cannot run due to separate pre-existing parse_model_file hang issue (GitHub Issue #20)
 
 ### Known Limitations
 
-The integration tests reveal a **separate pre-existing bug**: `parse_model_file()` hangs when parsing example files like `scalar_nlp.gms`. This issue exists on main branch and is unrelated to this fix. The hang occurs during parsing, before normalization is even called.
+The integration tests reveal a **separate pre-existing bug** (GitHub Issue #20): `parse_model_file()` hangs when parsing example files like `scalar_nlp.gms`. This issue exists on main branch and is unrelated to this fix. The hang occurs during parsing, before normalization is even called.
 
 This parsing issue should be investigated separately as it prevents end-to-end testing with file-based examples. However, all unit tests with inline model text pass successfully.
+
+See: GitHub Issue #20 - "Issue: parse_model_file() Hangs on Example Files"
+https://github.com/jeffreyhorn/nlp2mcp/issues/20
 
 ### Verification
 

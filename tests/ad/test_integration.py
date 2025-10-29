@@ -32,13 +32,16 @@ GitHub Issue #19 Status: ✅ RESOLVED
 - Fix verified by 6 new unit tests in tests/ir/test_normalize.py
 - All normalization tests pass successfully
 
-Current Blocker: Separate pre-existing parsing bug
+Current Blocker: Separate pre-existing parsing bug (GitHub Issue #20)
 - parse_model_file() hangs when reading examples/*.gms files
 - This bug exists on main branch, unrelated to Issue #19
 - Once this parsing bug is fixed, these integration tests should pass
 
-See: GitHub Issue #19 "Objective Expressions Not Found After Model Normalization"
-https://github.com/jeffreyhorn/nlp2mcp/issues/19
+See:
+- GitHub Issue #19: "Objective Expressions Not Found After Model Normalization"
+  https://github.com/jeffreyhorn/nlp2mcp/issues/19
+- GitHub Issue #20: "Issue: parse_model_file() Hangs on Example Files"
+  https://github.com/jeffreyhorn/nlp2mcp/issues/20
 """
 
 import os
@@ -49,18 +52,21 @@ from src.ir.parser import parse_model_file
 
 # NOTE: These tests are TEMPORARILY SKIPPED due to a pre-existing parse_model_file() bug.
 # GitHub Issue #19 (objective extraction) has been FIXED, but a separate parsing bug
-# causes parse_model_file() to hang on example files. This parsing issue exists on main
-# branch and is unrelated to Issue #19. Once the parsing bug is fixed, these tests will pass.
+# (GitHub Issue #20) causes parse_model_file() to hang on example files. This parsing
+# issue exists on main branch and is unrelated to Issue #19. Once Issue #20 is fixed,
+# these tests will pass.
 #
-# See: Separate parsing bug - parse_model_file() hangs on examples/*.gms files
-# The normalization fix (Issue #19) is verified by unit tests in tests/ir/test_normalize.py
+# See:
+# - GitHub Issue #19 (RESOLVED): Objective extraction in normalization
+# - GitHub Issue #20 (OPEN): parse_model_file() hangs on examples/*.gms files
+#   https://github.com/jeffreyhorn/nlp2mcp/issues/20
 
 import pytest
 
 pytestmark = pytest.mark.skip(
-    reason="Pre-existing bug: parse_model_file() hangs on example files. "
+    reason="Pre-existing bug (Issue #20): parse_model_file() hangs on example files. "
     "Issue #19 (objective extraction) is FIXED and verified by unit tests. "
-    "This skip is temporary until the parse_model_file hang is resolved."
+    "This skip is temporary until Issue #20 is resolved."
 )
 
 
