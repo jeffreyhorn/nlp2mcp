@@ -149,6 +149,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ##### Fixed
 - N/A
 
+#### Day 6 (2025-10-28) - Sum Aggregation, Indexing & Alias Resolution (Part 2)
+
+##### Added
+- Created `src/ad/index_mapping.py` module for index instance mapping
+  - `IndexMapping` class: Bijective mapping between variable/equation instances and dense IDs
+  - `build_index_mapping()`: Constructs complete mapping for all variables and equations
+  - `enumerate_variable_instances()`: Enumerates all instances of indexed variables
+  - `enumerate_equation_instances()`: Enumerates all instances of indexed equations
+  - Deterministic ordering: Sorted by name and indices for reproducibility
+  - Support for scalar, single-index, and multi-index variables/equations
+- Implemented comprehensive alias resolution system
+  - `resolve_set_members()`: Resolves set or alias names to concrete members
+  - Handles simple aliases (alias to direct set)
+  - Handles chained aliases (alias to alias to set)
+  - Supports universe constraints (AliasDef.universe)
+  - Circular alias detection with clear error messages
+  - Intersection logic for universe-constrained aliases
+- Created `src/ad/sparsity.py` module for sparsity tracking
+  - `SparsityPattern` class: Tracks nonzero entries in Jacobian
+  - `find_variables_in_expr()`: Finds all variable names in expression AST
+  - `analyze_expression_sparsity()`: Maps expression to column IDs
+  - Row/column dependency queries
+  - Density computation for sparsity analysis
+  - Support for indexed variables in sparsity pattern
+- Added index instance mapping with cross-product enumeration
+  - Variables: (var_name, index_tuple) → column_id
+  - Equations: (eq_name, index_tuple) → row_id
+  - Reverse mappings: col_id → (var_name, index_tuple)
+  - Handles multi-dimensional indexing: x(i,j,k)
+- Created `tests/ad/test_index_mapping.py` with 19 comprehensive tests
+  - Set member resolution tests (2 tests)
+  - Variable enumeration tests (5 tests): scalar, single-index, two-index, three-index, empty set error
+  - Equation enumeration tests (3 tests)
+  - Complete index mapping tests (9 tests): empty model, scalar variables, indexed variables, mixed, bijective mapping, deterministic ordering
+- Created `tests/ad/test_alias_resolution.py` with 17 comprehensive tests
+  - Basic alias resolution (3 tests)
+  - Chained aliases (4 tests): two-level, three-level, circular detection, self-referential
+  - Universe constraints (5 tests): basic constraint, disjoint universe, superset, chained with universe, universe not found
+  - Variables with aliases (3 tests)
+  - Complete mapping with aliases (2 tests)
+- Created `tests/ad/test_sparsity.py` with 33 comprehensive tests
+  - Finding variables in expressions (17 tests): constants, variables, indexed variables, symbols, parameters, binary ops, unary ops, function calls, sums, nested sums, complex expressions
+  - Expression sparsity analysis (6 tests)
+  - Sparsity pattern data structure (10 tests): empty pattern, adding dependencies, density calculation, row/column queries
+
+##### Changed
+- N/A
+
+##### Fixed
+- N/A
+
 ---
 
 ## [0.1.0] - Sprint 1 Complete
