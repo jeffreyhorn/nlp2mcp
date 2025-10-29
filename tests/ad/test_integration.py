@@ -46,10 +46,6 @@ See:
 
 import os
 
-from src.ad.api import compute_derivatives
-from src.ir.normalize import normalize_model
-from src.ir.parser import parse_model_file
-
 # NOTE: These tests are TEMPORARILY SKIPPED due to a pre-existing parse_model_file() bug.
 # GitHub Issue #19 (objective extraction) has been FIXED, but a separate parsing bug
 # (GitHub Issue #20) causes parse_model_file() to hang on example files. This parsing
@@ -60,8 +56,11 @@ from src.ir.parser import parse_model_file
 # - GitHub Issue #19 (RESOLVED): Objective extraction in normalization
 # - GitHub Issue #20 (OPEN): parse_model_file() hangs on examples/*.gms files
 #   https://github.com/jeffreyhorn/nlp2mcp/issues/20
-
 import pytest
+
+from src.ad.api import compute_derivatives
+from src.ir.normalize import normalize_model
+from src.ir.parser import parse_model_file
 
 pytestmark = pytest.mark.skip(
     reason="Pre-existing bug (Issue #20): parse_model_file() hangs on example files. "
