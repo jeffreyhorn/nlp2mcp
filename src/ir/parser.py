@@ -88,30 +88,12 @@ def _build_lark() -> Lark:
     )
 
 
-def _tree_size(node: Tree | Token, memo: dict[int, int] | None = None) -> int:
-    """Calculate tree size with memoization to avoid recomputation."""
-    if memo is None:
-        memo = {}
+def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
+    """Collapse Earley ambiguity nodes by picking the first alternative.
 
-    node_id = id(node)
-    if node_id in memo:
-        return memo[node_id]
-
-    if isinstance(node, Token):
-        size = 1
-    else:
-        size = 1 + sum(_tree_size(child, memo) for child in node.children)
-
-    memo[node_id] = size
-    return size
-
-
-def _resolve_ambiguities(node: Tree | Token, memo: dict[int, int] | None = None) -> Tree | Token:
-    """Collapse Earley ambiguity nodes by picking the minimal sized subtree.
-
-    Uses memoization to avoid exponential recomputation of tree sizes.
-    For nodes with too many ambiguous alternatives, just picks the first one
-    to avoid exponential blowup.
+    With ambiguity="resolve" in the parser, ambiguity nodes are rare, but this
+    function handles any that do appear by consistently picking the first alternative.
+    This avoids exponential blowup in pathological grammar cases.
     """
     if isinstance(node, Token):
         return node
@@ -119,13 +101,10 @@ def _resolve_ambiguities(node: Tree | Token, memo: dict[int, int] | None = None)
     if node.data == "_ambig":
         if not node.children:
             return node
-        # OPTIMIZATION: For ambiguous nodes, just pick the first alternative.
-        # This avoids exponential blowup in pathological grammar cases.
-        # The grammar should be designed to make the first alternative
-        # the correct one (using rule priority if needed).
-        return _resolve_ambiguities(node.children[0], memo)
+        # Pick the first alternative to resolve ambiguity
+        return _resolve_ambiguities(node.children[0])
 
-    resolved_children = [_resolve_ambiguities(child, memo) for child in node.children]
+    resolved_children = [_resolve_ambiguities(child) for child in node.children]
     return Tree(node.data, resolved_children)
 
 
