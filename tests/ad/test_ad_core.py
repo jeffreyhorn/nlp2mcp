@@ -9,10 +9,9 @@ Test Coverage:
 4. Parameter reference differentiation
 5. Symbol reference differentiation
 6. Indexed variable differentiation
-7. Unsupported expression types raise appropriate errors
+7. Sum expressions are now supported and tested for correct differentiation behavior
+8. Unsupported expression types (other than Sum) raise appropriate errors
 """
-
-import pytest
 
 from src.ad import differentiate
 from src.ir.ast import Const, ParamRef, SymbolRef, VarRef
@@ -138,21 +137,22 @@ class TestParameterReferenceDifferentiation:
         assert result.value == 0.0
 
 
-class TestUnsupportedExpressions:
-    """Test that unsupported expression types raise appropriate errors."""
+class TestSumSupport:
+    """Test that Sum expressions are now supported (Day 5)."""
 
-    def test_sum_not_yet_supported(self):
-        """Sum expressions should raise TypeError with helpful message (Day 5+)"""
+    def test_sum_now_supported(self):
+        """Sum expressions should now differentiate successfully (implemented Day 5)"""
         from src.ir.ast import Sum
 
-        # sum((i,j), x(i,j)) - to be implemented in Day 5
+        # sum((i,j), x(i,j)) - implemented in Day 5
         expr = Sum(("i", "j"), VarRef("x", ("i", "j")))
 
-        with pytest.raises(TypeError) as exc_info:
-            differentiate(expr, "x")
+        # Should successfully differentiate without raising TypeError
+        result = differentiate(expr, "x")
 
-        assert "not yet implemented" in str(exc_info.value).lower()
-        assert "subsequent days" in str(exc_info.value).lower()
+        # Result should be a Sum with the same index vars
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("i", "j")
 
 
 class TestDifferentiationInvariance:
