@@ -624,6 +624,83 @@ Phase 4 primarily involved **verification and documentation** rather than new te
 
 ---
 
+#### Day 9 (Thursday): Numeric Validation, Testing & Dependencies (2025-10-29)
+
+##### Added
+- **Finite-difference validation module** in `src/ad/validation.py`
+  - `generate_test_point()`: Deterministic seed point generation (seed=42)
+    - Respects variable bounds: bounded, unbounded, mixed cases
+    - Avoids domain boundaries (log, sqrt) with ε=0.1 buffer
+    - Reproducible results for CI/CD and regression testing
+  - `finite_difference()`: Central difference FD computation
+    - Formula: f'(x) ≈ (f(x+h) - f(x-h))/(2h)
+    - Step size: h = 1e-6
+    - Handles indexed and scalar variables
+  - `validate_derivative()`: Compares symbolic vs FD derivatives
+    - Tolerance: 1e-6 absolute error
+    - Returns (is_valid, symbolic_value, fd_value, error)
+    - Useful for debugging derivative rules
+  - `validate_gradient()`: Validates all gradient components
+    - Validates each partial derivative independently
+    - Returns dict mapping var_name → validation result
+  - `_convert_to_evaluator_format()`: Helper for dict format conversion
+    - Converts simple dict {"x": 3.0} to evaluator format {("x", ()): 3.0}
+    - Handles indexed variables correctly
+
+- **Comprehensive test suite** in `tests/ad/test_finite_difference.py` (34 tests)
+  - **Day 1-4 coverage** (22 tests): Constants, variables, parameters, binary operations (+, -, *, /), unary operations (+, -), power function, exponential, logarithm, square root, trigonometric functions (sin, cos, tan)
+  - **Chain rule validation** (3 tests): exp(x²), log(x²), sin(x*y)
+  - **Gradient validation** (1 test): f(x,y) = x² + y²
+  - **Edge cases** (5 tests): Constant expressions, missing variables, near-zero values, large values, domain boundaries (log/sqrt near zero)
+  - **Error detection** (3 tests): Domain errors (log negative, division by zero, sqrt negative)
+    - Verifies evaluator raises EvaluationError (better than NaN/Inf)
+    - Confirms error messages are clear and actionable
+  - **Seed generation** (3 tests): Deterministic generation, bounds handling, boundary avoidance
+
+- **Dependency management**
+  - Added numpy >= 1.24.0 to `pyproject.toml`
+  - Configured mypy to ignore numpy imports
+  - Documented version rationale: Required for random number generation and numeric operations
+
+##### Changed
+- Updated test tolerances for large values
+  - Use relative error for exp(10) test to handle floating-point precision
+
+##### Tests
+- All 345 tests pass (34 new FD validation tests)
+- All quality checks pass (mypy, ruff, black)
+- FD validation confirms correctness of all derivative rules from Days 1-4
+- Deterministic test points enable reproducible CI/CD runs
+
+##### Implementation Notes
+- **Central difference method** preferred over forward/backward difference
+  - More accurate: O(h²) error vs O(h) error
+  - Symmetric around evaluation point
+  - Same computational cost as forward difference
+- **Tolerance selection**: 1e-6 balances accuracy and numerical stability
+  - Symbolic derivatives are exact (within floating-point precision)
+  - FD approximation has O(h²) ≈ O(10⁻¹²) error for h=10⁻⁶
+  - Tolerance accounts for: round-off errors, function evaluation errors, step size limitations
+- **Error detection**: Evaluator raises EvaluationError instead of returning NaN/Inf
+  - Better for debugging: Clear error messages with context
+  - Better for users: Prevents silent failures
+  - Better for optimization: Helps identify infeasible regions
+- **Dict format conversion**: Validation functions use simple dict format for user convenience
+  - Users provide: `{"x": 3.0, "y": 5.0}`
+  - Internally converted to evaluator format: `{("x", ()): 3.0, ("y", ()): 5.0}`
+  - Seamless integration between user-facing and internal APIs
+
+##### Acceptance Criteria Met
+- ✅ Finite-difference checker validates all derivative rules
+- ✅ Deterministic seed generation (seed=42) for reproducible tests
+- ✅ Domain boundary handling (log/sqrt near zero)
+- ✅ Error detection tests confirm NaN/Inf handling (via EvaluationError)
+- ✅ 34 validation tests cover all operations from Days 1-4
+- ✅ numpy dependency added to pyproject.toml
+- ✅ All tests pass with comprehensive coverage
+
+---
+
 ## [0.1.0] - Sprint 1 Complete
 
 ### Added
