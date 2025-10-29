@@ -830,8 +830,160 @@ def _diff_sum(expr: Sum, wrt_var: str, wrt_indices: tuple[str, ...] | None = Non
         >>> result = _diff_sum(expr, "x", None)
         >>> # result is Sum(("i",), Binary("*", ParamRef("c"), Const(1.0)))
     """
-    # Differentiate the body expression, passing wrt_indices through
+    # Check if sum should collapse (special case for index-aware differentiation)
+    # When differentiating sum(i, x(i)) w.r.t. x(i1), the sum collapses because
+    # only the term where i=i1 contributes, so result is just the collapsed expression
+    if wrt_indices is not None and _sum_should_collapse(expr.index_sets, wrt_indices):
+        # Differentiate symbolically (without concrete indices to match x(i))
+        body_derivative = differentiate_expr(expr.body, wrt_var, None)
+        # Substitute sum indices with concrete indices in result
+        return _substitute_sum_indices(body_derivative, expr.index_sets, wrt_indices)
+
+    # Normal case: differentiate the body expression, passing wrt_indices through
     body_derivative = differentiate_expr(expr.body, wrt_var, wrt_indices)
 
     # Return a new Sum with the same index sets and the differentiated body
     return Sum(expr.index_sets, body_derivative)
+
+
+def _sum_should_collapse(sum_index_sets: tuple[str, ...], wrt_indices: tuple[str, ...]) -> bool:
+    """
+    Check if a sum should collapse when differentiating w.r.t. concrete indices.
+
+    A sum should collapse when:
+    1. The sum has symbolic bound variables (e.g., "i", "j")
+    2. We're differentiating w.r.t. concrete instances (e.g., "i1", "i2")
+    3. The concrete indices are instances of the symbolic variables
+
+    This implements the mathematical rule:
+    ∂(sum(i, x(i)))/∂x(i1) = sum(i, ∂x(i)/∂x(i1)) = sum(i, [1 if i=i1 else 0]) = 1
+
+    Args:
+        sum_index_sets: Tuple of index names from Sum (e.g., ("i",) or ("i", "j"))
+        wrt_indices: Tuple of concrete index names (e.g., ("i1",) or ("i1", "j2"))
+
+    Returns:
+        True if sum should collapse, False otherwise
+
+    Examples:
+        >>> _sum_should_collapse(("i",), ("i1",))
+        True
+        >>> _sum_should_collapse(("i", "j"), ("i1", "j2"))
+        True
+        >>> _sum_should_collapse(("i",), ("j1",))
+        False
+        >>> _sum_should_collapse(("i",), ("k",))
+        False
+    """
+    if len(sum_index_sets) != len(wrt_indices):
+        return False
+
+    for sum_idx, wrt_idx in zip(sum_index_sets, wrt_indices, strict=True):
+        if not _is_concrete_instance_of(wrt_idx, sum_idx):
+            return False
+
+    return True
+
+
+def _is_concrete_instance_of(concrete: str, symbolic: str) -> bool:
+    """
+    Check if a concrete index is an instance of a symbolic index.
+
+    Uses heuristic: concrete index should start with symbolic index name
+    followed by digits (e.g., "i1" is instance of "i", "j23" is instance of "j").
+
+    Args:
+        concrete: Concrete index name (e.g., "i1", "j2")
+        symbolic: Symbolic index name (e.g., "i", "j")
+
+    Returns:
+        True if concrete is an instance of symbolic, False otherwise
+
+    Examples:
+        >>> _is_concrete_instance_of("i1", "i")
+        True
+        >>> _is_concrete_instance_of("j23", "j")
+        True
+        >>> _is_concrete_instance_of("i", "i")
+        False
+        >>> _is_concrete_instance_of("j1", "i")
+        False
+    """
+    return (
+        concrete.startswith(symbolic)
+        and len(concrete) > len(symbolic)
+        and concrete[len(symbolic) :].isdigit()
+    )
+
+
+def _substitute_sum_indices(
+    expr: Expr, sum_indices: tuple[str, ...], concrete_indices: tuple[str, ...]
+) -> Expr:
+    """
+    Replace symbolic sum indices with concrete indices in an expression.
+
+    This is used after differentiating symbolically to collapse a sum.
+    For example, after differentiating sum(i, x(i)^2) w.r.t. x symbolically,
+    we get 2*x(i), then substitute i->i1 to get 2*x(i1).
+
+    Args:
+        expr: Expression to substitute in
+        sum_indices: Symbolic index names to replace (e.g., ("i",))
+        concrete_indices: Concrete index names to use (e.g., ("i1",))
+
+    Returns:
+        Expression with substituted indices
+
+    Examples:
+        >>> # 2*x(i) with i->i1 becomes 2*x(i1)
+        >>> expr = Binary("*", Const(2.0), VarRef("x", ("i",)))
+        >>> result = _substitute_sum_indices(expr, ("i",), ("i1",))
+        >>> # result is Binary("*", Const(2.0), VarRef("x", ("i1",)))
+    """
+    substitution = dict(zip(sum_indices, concrete_indices, strict=True))
+    return _apply_index_substitution(expr, substitution)
+
+
+def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
+    """
+    Recursively apply index substitution to an expression.
+
+    Args:
+        expr: Expression to substitute in
+        substitution: Mapping from symbolic to concrete indices (e.g., {"i": "i1"})
+
+    Returns:
+        Expression with substituted indices
+    """
+    if isinstance(expr, Const):
+        return expr
+    elif isinstance(expr, VarRef):
+        # Substitute indices in VarRef
+        new_indices = tuple(substitution.get(idx, idx) for idx in expr.indices)
+        return VarRef(expr.name, new_indices)
+    elif isinstance(expr, ParamRef):
+        # Substitute indices in ParamRef
+        new_indices = tuple(substitution.get(idx, idx) for idx in expr.indices)
+        return ParamRef(expr.name, new_indices)
+    elif isinstance(expr, Binary):
+        # Recursively substitute in both operands
+        new_left = _apply_index_substitution(expr.left, substitution)
+        new_right = _apply_index_substitution(expr.right, substitution)
+        return Binary(expr.op, new_left, new_right)
+    elif isinstance(expr, Unary):
+        # Recursively substitute in child
+        new_child = _apply_index_substitution(expr.child, substitution)
+        return Unary(expr.op, new_child)
+    elif isinstance(expr, Call):
+        # Recursively substitute in all arguments
+        new_args = tuple(_apply_index_substitution(arg, substitution) for arg in expr.args)
+        return Call(expr.func, new_args)
+    elif isinstance(expr, Sum):
+        # Don't substitute sum's own bound variables, but substitute in body
+        # Filter out sum's bound variables from substitution
+        filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
+        new_body = _apply_index_substitution(expr.body, filtered_sub)
+        return Sum(expr.index_sets, new_body)
+    else:
+        # Unknown expression type, return as-is
+        return expr
