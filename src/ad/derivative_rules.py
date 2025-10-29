@@ -957,6 +957,9 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
     """
     if isinstance(expr, Const):
         return expr
+    elif isinstance(expr, SymbolRef):
+        # SymbolRef represents scalar symbols without indices, no substitution needed
+        return expr
     elif isinstance(expr, VarRef):
         # Substitute indices in VarRef
         new_indices = tuple(substitution.get(idx, idx) for idx in expr.indices)
