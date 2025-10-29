@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 3 Prep: Architecture Documentation
+
+#### 2025-10-29 - System Architecture & Data Structures
+
+##### Added
+- Created comprehensive architecture documentation in `docs/architecture/`
+  - `SYSTEM_ARCHITECTURE.md`: Complete data flow from GAMS input to MCP output
+    - High-level pipeline diagram showing all Sprint 1, 2, and 3 components
+    - Module boundaries for Parser, Normalizer, AD Engine, KKT Assembler (planned)
+    - Critical API contracts for ModelIR, GradientVector, JacobianStructure
+    - Sprint integration map showing data flow between sprints
+    - Root cause analysis for Issues #22, #24, #25 with architectural context
+    - Architecture Decision Records (ADRs) for key design choices
+  - `DATA_STRUCTURES.md`: Detailed reference for all IR types
+    - Complete field documentation for ModelIR, ObjectiveIR, EquationDef, VariableDef
+    - Sprint 2 structures: IndexMapping, GradientVector, JacobianStructure
+    - AST expression types: Const, VarRef, ParamRef, Binary, Unary, Call, Sum
+    - Invariants and contracts for each data structure
+    - Two complete worked examples (scalar NLP and indexed variables)
+    - Issue #22, #24, #25 pitfalls documented with correct patterns
+- Task completed as part of Sprint 3 Prep Plan Task 1
+
+##### Purpose
+- Prevent integration issues like those in Sprint 2 (Issues #22, #24, #25)
+- Provide clear reference for Sprint 3 KKT assembler and GAMS emitter development
+- Document API boundaries to catch mismatches early
+- Establish architectural context for all future development
+
+##### Changed
+- N/A
+
+##### Fixed
+- N/A
+
 ### Sprint 2: Differentiation Engine (AD) + Jacobians
 
 #### Day 1 (2025-10-28) - AD Foundation & Design
