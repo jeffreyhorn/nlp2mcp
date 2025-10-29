@@ -344,9 +344,9 @@ class TestTranscendentalErrors:
 
     def test_unsupported_function(self):
         """Test unsupported function raises clear error"""
-        # sin(x) - not yet implemented (Day 4)
-        expr = Call("sin", (VarRef("x"),))
+        # asin(x) - not yet implemented
+        expr = Call("asin", (VarRef("x"),))
         with pytest.raises(
-            ValueError, match="Differentiation not yet implemented for function 'sin'"
+            ValueError, match="Differentiation not yet implemented for function 'asin'"
         ):
             differentiate_expr(expr, "x")
