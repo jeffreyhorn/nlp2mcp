@@ -17,7 +17,6 @@ import pytest
 from src.ad.jacobian import GradientVector, JacobianStructure
 from src.ir.ast import Binary, Const, VarRef
 
-
 pytestmark = pytest.mark.integration
 
 # ============================================================================

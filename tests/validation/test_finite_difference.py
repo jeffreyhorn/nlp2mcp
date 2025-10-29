@@ -44,7 +44,6 @@ from src.ad.validation import (
 )
 from src.ir.ast import Binary, Call, Const, ParamRef, Unary, VarRef
 
-
 pytestmark = pytest.mark.validation
 
 # ============================================================================

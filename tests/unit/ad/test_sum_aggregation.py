@@ -9,7 +9,6 @@ import pytest
 from src.ad.derivative_rules import differentiate_expr
 from src.ir.ast import Binary, Call, Const, ParamRef, Sum, VarRef
 
-
 pytestmark = pytest.mark.unit
 
 # ============================================================================

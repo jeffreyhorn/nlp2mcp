@@ -18,9 +18,8 @@ import pytest
 from src.ad import differentiate
 from src.ir.ast import Const, ParamRef, SymbolRef, VarRef
 
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 class TestConstantDifferentiation:

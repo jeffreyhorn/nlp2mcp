@@ -22,7 +22,6 @@ from src.ad.index_mapping import (
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import AliasDef, EquationDef, Rel, SetDef, VariableDef
 
-
 pytestmark = pytest.mark.unit
 
 # ============================================================================

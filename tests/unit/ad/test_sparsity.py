@@ -20,7 +20,6 @@ from src.ad.sparsity import (
 )
 from src.ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, Unary, VarRef
 
-
 pytestmark = pytest.mark.unit
 
 # ============================================================================

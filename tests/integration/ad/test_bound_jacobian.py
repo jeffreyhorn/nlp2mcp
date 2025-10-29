@@ -21,9 +21,8 @@ from src.ir.model_ir import (
 from src.ir.normalize import NormalizedEquation
 from src.ir.symbols import Rel
 
-
-
 pytestmark = pytest.mark.integration
+
 
 def eval_derivative(deriv):
     """Evaluate a derivative expression (assuming no variables/params needed)."""

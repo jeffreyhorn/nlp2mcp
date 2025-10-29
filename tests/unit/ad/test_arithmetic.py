@@ -18,9 +18,8 @@ import pytest
 from src.ad import differentiate
 from src.ir.ast import Binary, Const, Unary, VarRef
 
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 class TestAdditionDifferentiation:

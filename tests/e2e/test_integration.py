@@ -83,7 +83,6 @@ from src.ad.api import compute_derivatives
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
 
-
 pytestmark = pytest.mark.e2e
 
 # Skip marker for tests failing due to API mismatch (Issue #22)

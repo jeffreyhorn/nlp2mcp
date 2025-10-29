@@ -21,9 +21,8 @@ import pytest
 from src.ad import EvaluationError, evaluate
 from src.ir.ast import Binary, Call, Const, ParamRef, Unary, VarRef
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.integration
 class TestBasicEvaluation:
