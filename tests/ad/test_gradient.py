@@ -18,7 +18,7 @@ from src.ad.gradient import (
     compute_objective_gradient,
     find_objective_expression,
 )
-from src.ir.ast import Binary, Call, Const, Sum, SymbolRef, VarRef
+from src.ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
 from src.ir.symbols import EquationDef, ObjSense, Rel, SetDef, VariableDef
 
@@ -269,9 +269,24 @@ class TestGradientIndexedVariables:
         deriv_i2 = gradient.get_derivative_by_name("x", ("i2",))
         assert deriv_i2 is not None
 
-        # Result should be: sum(i, 2*x(i))
-        assert isinstance(deriv_i1, Sum)
-        assert isinstance(deriv_i2, Sum)
+        # With sum collapse: ∂(sum(i, x(i)^2))/∂x(i1) = 2*x(i1)
+        # The sum collapses because only the i=i1 term contributes
+        # Result is no longer a Sum (which would be wrong), but a Binary expression
+        assert isinstance(deriv_i1, Binary), "Derivative should collapse to Binary, not Sum"
+        assert isinstance(deriv_i2, Binary), "Derivative should collapse to Binary, not Sum"
+
+        # The derivative should reference the correct concrete index (i1, i2)
+        # Structure may be (2*x(i1)^1)*1 due to power and chain rules, which is fine
+        # Key test: verify it contains VarRef with correct index
+        deriv_i1_str = repr(deriv_i1)
+        assert (
+            "VarRef(x(i1))" in deriv_i1_str
+        ), f"Derivative should contain x(i1), got: {deriv_i1_str}"
+
+        deriv_i2_str = repr(deriv_i2)
+        assert (
+            "VarRef(x(i2))" in deriv_i2_str
+        ), f"Derivative should contain x(i2), got: {deriv_i2_str}"
 
     def test_mixed_scalar_and_indexed(self):
         """Test gradient with mix of scalar and indexed variables."""
@@ -296,6 +311,62 @@ class TestGradientIndexedVariables:
         # will be implemented in a future update.
         deriv_x_i1 = gradient.get_derivative_by_name("x", ("i1",))
         assert deriv_x_i1 is not None
+
+    def test_sum_collapse_simple_sum(self):
+        """Test that sum(i, x(i)) collapses correctly when differentiated."""
+        model_ir = ModelIR()
+        model_ir.add_set(SetDef("i", ["i1", "i2", "i3"]))
+        model_ir.add_var(VariableDef("x", ("i",)))
+        # min sum(i, x(i))
+        obj_expr = Sum(("i",), VarRef("x", ("i",)))
+        model_ir.objective = ObjectiveIR(ObjSense.MIN, "obj", expr=obj_expr)
+
+        gradient = compute_objective_gradient(model_ir)
+
+        # ∂(sum(i, x(i)))/∂x(i1) = 1 (not Sum(i, 1))
+        deriv_i1 = gradient.get_derivative_by_name("x", ("i1",))
+        assert deriv_i1 is not None
+        assert isinstance(deriv_i1, Const), f"Expected Const(1.0), got {deriv_i1}"
+        assert deriv_i1.value == 1.0
+
+    def test_sum_collapse_with_parameter(self):
+        """Test sum collapse with parameters: sum(i, c(i)*x(i))."""
+        model_ir = ModelIR()
+        model_ir.add_set(SetDef("i", ["i1", "i2"]))
+        model_ir.add_var(VariableDef("x", ("i",)))
+        # min sum(i, c(i)*x(i)) where c is a parameter
+        # ∂(sum(i, c(i)*x(i)))/∂x(i1) = c(i1) (before simplification)
+        cx = Binary("*", ParamRef("c", ("i",)), VarRef("x", ("i",)))
+        obj_expr = Sum(("i",), cx)
+        model_ir.objective = ObjectiveIR(ObjSense.MIN, "obj", expr=obj_expr)
+
+        gradient = compute_objective_gradient(model_ir)
+
+        deriv_i1 = gradient.get_derivative_by_name("x", ("i1",))
+        assert deriv_i1 is not None
+        # Should not be a Sum (collapse occurred)
+        assert not isinstance(deriv_i1, Sum), f"Should collapse, not remain as Sum: {deriv_i1}"
+        # Should contain ParamRef("c", ("i1",)) with correct index
+        deriv_str = repr(deriv_i1)
+        assert "ParamRef(c(i1))" in deriv_str, f"Should contain c(i1), got: {deriv_str}"
+
+    def test_sum_no_collapse_different_indices(self):
+        """Test that sum does NOT collapse when indices don't match pattern."""
+        model_ir = ModelIR()
+        model_ir.add_set(SetDef("i", ["i1", "i2"]))
+        model_ir.add_set(SetDef("k", ["k1", "k2"]))
+        model_ir.add_var(VariableDef("x", ("k",)))
+        # min sum(i, x(k1)) - sum over i, but x is indexed by k (different dimension)
+        # This should NOT collapse
+        obj_expr = Sum(("i",), VarRef("x", ("k1",)))
+        model_ir.objective = ObjectiveIR(ObjSense.MIN, "obj", expr=obj_expr)
+
+        gradient = compute_objective_gradient(model_ir)
+
+        deriv_k1 = gradient.get_derivative_by_name("x", ("k1",))
+        assert deriv_k1 is not None
+        # Should remain as Sum because indices don't match pattern
+        assert isinstance(deriv_k1, Sum), f"Expected Sum (no collapse), got {deriv_k1}"
 
 
 # ============================================================================

@@ -352,6 +352,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Next phases: Update Jacobian computation (Phase 3), add integration tests (Phase 4)
 - See docs/planning/SPRINT_2_7_5_PLAN.md for complete implementation roadmap
 
+#### Day 7.5 - Phase 3: Sum Differentiation with Index-Aware Collapse (2025-10-28)
+
+##### Changed
+- **Updated `_diff_sum()` in `src/ad/derivative_rules.py`** to implement sum collapse logic
+  - When differentiating w.r.t. concrete indices (e.g., `x(i1)`)
+  - And sum uses symbolic bound variables (e.g., `sum(i, ...)`)
+  - Recognizes when symbolic indices match concrete indices via naming pattern
+  - Returns collapsed result instead of Sum expression
+  - Example: `∂(sum(i, x(i)^2))/∂x(i1)` now returns `2*x(i1)` instead of `Sum(i, 2*x(i))`
+
+##### Added
+- **`_sum_should_collapse()`**: Detects when sum collapse logic should apply
+  - Checks if sum indices (e.g., `("i",)`) match pattern with wrt_indices (e.g., `("i1",)`)
+  - Returns True when collapse should occur, False otherwise
+- **`_is_concrete_instance_of()`**: Heuristic to match concrete vs symbolic indices
+  - Uses naming pattern: "i1" is instance of "i", "j2" is instance of "j"
+  - Checks if concrete starts with symbolic and has trailing digits
+- **`_substitute_sum_indices()`**: Replaces symbolic indices with concrete values
+  - Used after symbolic differentiation to produce collapsed result
+  - Example: `2*x(i)` with `i→i1` becomes `2*x(i1)`
+- **`_apply_index_substitution()`**: Recursive index substitution in expressions
+  - Handles all expression types: VarRef, ParamRef, Binary, Unary, Call, Sum
+  - Preserves structure while substituting indices
+  - Respects nested sum bound variables (doesn't substitute their indices)
+
+##### Fixed
+- **Corrected sum differentiation behavior for indexed variables**
+  - Previous (WRONG): `∂(sum(i, x(i)^2))/∂x(i1) = Sum(i, 2*x(i))` ✗
+  - Correct (NOW): `∂(sum(i, x(i)^2))/∂x(i1) = 2*x(i1)` ✓
+  - Mathematical justification: `∂(sum(i, x(i)))/∂x(i1) = sum(i, ∂x(i)/∂x(i1)) = sum(i, [1 if i=i1 else 0]) = 1`
+- **Updated test expectations in `test_indexed_variable_objective`**
+  - Now expects Binary expression (collapsed), not Sum
+  - Verifies correct concrete index in result (`x(i1)` not `x(i)`)
+
+##### Tests
+- **Updated existing test**: `test_indexed_variable_objective`
+  - Now verifies sum collapses to Binary expression with correct indices
+- **Added new tests for sum collapse edge cases**:
+  - `test_sum_collapse_simple_sum`: Verifies `∂(sum(i, x(i)))/∂x(i1) = 1`
+  - `test_sum_collapse_with_parameter`: Tests `∂(sum(i, c(i)*x(i)))/∂x(i1)` contains `c(i1)`
+  - `test_sum_no_collapse_different_indices`: Verifies sum doesn't collapse when indices don't match pattern
+- All 20 gradient tests pass ✓
+
+##### Implementation Notes
+**Approach**: Pragmatic solution in `_diff_sum` without threading parameters through entire codebase
+- Detects collapse condition locally using heuristic (naming pattern)
+- Differentiates symbolically (with `wrt_indices=None`) to match bound variables
+- Substitutes indices in result to produce collapsed expression
+- Falls back to normal behavior when collapse doesn't apply
+
+**Heuristic**: Matches "i1", "i2", "j1" as concrete instances of "i", "j" symbolic indices
+- Simple pattern: concrete starts with symbolic + has trailing digits
+- Works for common GAMS naming conventions
+- Can be enhanced with more sophisticated detection if needed
+
 ---
 
 ## [0.1.0] - Sprint 1 Complete

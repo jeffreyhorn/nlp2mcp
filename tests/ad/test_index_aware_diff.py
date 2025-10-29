@@ -362,17 +362,16 @@ class TestIndexAwareSum:
 
         When i=i1: derivative is 1
         When i≠i1: derivative is 0
-        Result: sum(i, [1 if i==i1 else 0])
+        Result: sum(i, [1 if i==i1 else 0]) = 1
+
+        After Phase 3: Sum collapses correctly to Const(1.0)
         """
         expr = Sum(("i",), VarRef("x", ("i",)))
         result = differentiate_expr(expr, "x", ("i1",))
 
-        assert isinstance(result, Sum)
-        assert result.index_sets == ("i",)
-        # Body is derivative of x(i) w.r.t. x(i1)
-        # This will be 0 for all i ≠ i1, and 1 for i = i1
-        # But at this symbolic level, we just verify structure
-        assert isinstance(result.body, Const)
+        # Phase 3 correctly collapses the sum: only i=i1 term contributes
+        assert isinstance(result, Const)
+        assert result.value == 1.0
 
 
 class TestComplexIndexAwareExpressions:
