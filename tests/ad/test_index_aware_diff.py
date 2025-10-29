@@ -373,6 +373,28 @@ class TestIndexAwareSum:
         assert isinstance(result, Const)
         assert result.value == 1.0
 
+    def test_sum_differentiation_no_wrt_indices(self):
+        """d/dx [sum(i, x(i))] with no wrt_indices specified (backward compatible)
+
+        When wrt_indices=None (backward compatible mode), x(i) matches any
+        reference to variable x, regardless of indices. This maintains
+        backward compatibility with code that doesn't use index-aware diff.
+
+        Result: sum(i, 1) - all terms contribute
+
+        Note: This is DIFFERENT from d/dx(i1) sum(i, x(i)) which collapses to 1.
+        Here we're differentiating w.r.t. "x" in general, not a specific instance.
+        """
+        expr = Sum(("i",), VarRef("x", ("i",)))
+        result = differentiate_expr(expr, "x", None)
+
+        # Backward compatible: wrt_indices=None matches all instances
+        # Result: Sum(i, 1) - does NOT collapse because no concrete index
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("i",)
+        assert isinstance(result.body, Const)
+        assert result.body.value == 1.0
+
 
 class TestComplexIndexAwareExpressions:
     """Test index-aware differentiation in complex expressions."""

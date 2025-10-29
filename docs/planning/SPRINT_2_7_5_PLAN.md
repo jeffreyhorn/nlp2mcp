@@ -193,11 +193,12 @@ def _diff_varref(expr: VarRef, wrt_var: str, wrt_indices: tuple[str, ...] | None
 - Test index mismatch: `d/dx(i1) VarRef("x", ("i2",))` → 0
 - Test no indices (backward compat): `d/dx VarRef("x")` → 1
 - Test multi-dimensional: `d/dx(i1,j2) VarRef("x", ("i1","j2"))` → 1
+- Test no indices (but variable has index): `d/dx VarRef("x", ("i1",))` → 0
 
 **Task 4.2: Add tests for sum with index-aware differentiation**
 - Test `d/dx(i1) sum(i, x(i))` → 1 (only i1 term contributes)
 - Test `d/dx(i2) sum(i, x(i))` → 1 (only i2 term contributes)
-- Test `d/dx sum(i, x(i))` (no indices) → sum(i, 1) (all terms)
+- Test `d/dx sum(i, x(i))` (no indices) → 0 (none of the terms in the sum match just x and so dx(i)/dx = 0 for all i)
 
 **Task 4.3: Add gradient computation tests**
 - Test objective: `min sum(i, x(i)^2)` with i={i1,i2}
