@@ -223,3 +223,199 @@ def test_normalized_bounds_metadata():
         assert eq.domain_sets == ("i",)
         assert eq.expr_domain == ("i",)
         assert eq.rank == 1
+
+
+# Tests for Issue #19: Objective Expression Extraction Before Normalization
+
+
+def test_normalize_extracts_objective_expression_lhs():
+    """Test that normalize_model() populates ObjectiveIR.expr when objvar is on LHS."""
+    text = dedent(
+        """
+        Variables
+            x
+            obj ;
+
+        Equations
+            objective ;
+
+        objective.. obj =e= x;
+
+        Model test /all/;
+        Solve test using NLP minimizing obj;
+        """
+    )
+    model = parser.parse_model_text(text)
+
+    # Before normalization: expr should be None
+    assert model.objective is not None
+    assert model.objective.expr is None
+    assert model.objective.objvar == "obj"
+
+    # After normalization: expr should be populated
+    normalize_model(model)
+    assert model.objective.expr is not None
+
+    # Expression should be x (from RHS of: obj =e= x)
+    assert isinstance(model.objective.expr, VarRef)
+    assert model.objective.expr.name == "x"
+
+
+def test_normalize_extracts_objective_expression_rhs():
+    """Test that normalize_model() populates ObjectiveIR.expr when objvar is on RHS."""
+    text = dedent(
+        """
+        Variables
+            x
+            obj ;
+
+        Equations
+            objective ;
+
+        objective.. x =e= obj;
+
+        Model test /all/;
+        Solve test using NLP minimizing obj;
+        """
+    )
+    model = parser.parse_model_text(text)
+
+    # Before normalization: expr should be None
+    assert model.objective.expr is None
+
+    # After normalization: expr should be populated
+    normalize_model(model)
+    assert model.objective.expr is not None
+
+    # Expression should be x (from LHS of: x =e= obj)
+    assert isinstance(model.objective.expr, VarRef)
+    assert model.objective.expr.name == "x"
+
+
+def test_normalize_extracts_complex_objective_expression():
+    """Test objective extraction with complex expressions."""
+    text = dedent(
+        """
+        Variables
+            x
+            y
+            obj ;
+
+        Equations
+            objective ;
+
+        objective.. obj =e= x * x + y;
+
+        Model test /all/;
+        Solve test using NLP minimizing obj;
+        """
+    )
+    model = parser.parse_model_text(text)
+
+    # Before normalization: expr should be None
+    assert model.objective.expr is None
+
+    # After normalization: expr should be populated
+    normalize_model(model)
+    assert model.objective.expr is not None
+
+    # Expression should be x*x + y (Binary addition)
+    assert isinstance(model.objective.expr, Binary)
+    assert model.objective.expr.op == "+"
+
+
+def test_normalize_preserves_existing_objective_expr():
+    """Test that normalize_model() doesn't overwrite existing ObjectiveIR.expr."""
+    text = dedent(
+        """
+        Variables
+            x
+            obj ;
+
+        Equations
+            objective ;
+
+        objective.. obj =e= x;
+
+        Model test /all/;
+        Solve test using NLP minimizing obj;
+        """
+    )
+    model = parser.parse_model_text(text)
+
+    # Manually set objective.expr before normalization
+    existing_expr = Const(42.0)
+    model.objective.expr = existing_expr
+
+    # After normalization: expr should remain unchanged
+    normalize_model(model)
+    assert model.objective.expr is existing_expr
+
+
+def test_normalize_handles_objective_without_defining_equation():
+    """Test that normalize_model() gracefully handles objectives without defining equations.
+
+    Some models minimize a simple variable (e.g., 'minimize obj') without an equation
+    like 'obj =e= expr'. This is valid - the objective expression remains None and
+    will be handled by the AD code as a simple variable reference.
+    """
+    text = dedent(
+        """
+        Variables
+            x
+            obj ;
+
+        Equations
+            some_equation ;
+
+        some_equation.. x =e= 5;
+
+        Model test /all/;
+        Solve test using NLP minimizing obj;
+        """
+    )
+    model = parser.parse_model_text(text)
+
+    # Before normalization: objective.expr should be None
+    assert model.objective.expr is None
+
+    # Normalization should succeed without raising an error
+    normalize_model(model)
+
+    # After normalization: objective.expr is still None (no defining equation found)
+    # This is OK - the objective is just the variable 'obj' itself
+    assert model.objective.expr is None
+    assert model.objective.objvar == "obj"
+
+
+def test_normalize_skips_indexed_objective_equations():
+    """Test that objective extraction skips indexed equations."""
+    text = dedent(
+        """
+        Sets
+            i /i1, i2/ ;
+
+        Variables
+            x(i)
+            obj ;
+
+        Equations
+            indexed_eq(i)
+            scalar_eq ;
+
+        indexed_eq(i).. obj =e= x(i);
+        scalar_eq.. obj =e= 5;
+
+        Model test /all/;
+        Solve test using NLP minimizing obj;
+        """
+    )
+    model = parser.parse_model_text(text)
+
+    # After normalization: should use scalar_eq, not indexed_eq
+    normalize_model(model)
+    assert model.objective.expr is not None
+
+    # Expression should be Const(5) from scalar_eq
+    assert isinstance(model.objective.expr, Const)
+    assert model.objective.expr.value == 5.0
