@@ -200,6 +200,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ##### Fixed
 - N/A
 
+#### Day 7 (2025-10-28) - Jacobian Structure & Objective Gradient
+
+##### Added
+- Created `src/ad/jacobian.py` module for sparse Jacobian storage
+  - `JacobianStructure` class: Sparse dict-based storage for derivative expressions
+  - Storage format: J[row_id][col_id] = derivative_expr (AST)
+  - `set_derivative()` and `get_derivative()` for entry management
+  - `get_derivative_by_names()`: Query using equation/variable names
+  - `get_row()` and `get_col()`: Retrieve all nonzero entries in row/column
+  - `get_nonzero_entries()`: List all (row, col) pairs with derivatives
+  - `num_nonzeros()` and `density()`: Sparsity metrics
+  - Integration with IndexMapping from Day 6
+- Created `GradientVector` class for objective gradient storage
+  - Dict-based storage: col_id → derivative_expr
+  - `set_derivative()` and `get_derivative()` for component management
+  - `get_derivative_by_name()`: Query using variable names
+  - `get_all_derivatives()`: Retrieve all gradient components
+  - `num_nonzeros()`: Count nonzero gradient entries
+- Created `src/ad/gradient.py` module for objective gradient computation
+  - `find_objective_expression()`: Retrieve objective from ModelIR
+    - Handles explicit ObjectiveIR.expr
+    - Handles None case by finding defining equation
+    - Searches for equation defining ObjectiveIR.objvar
+    - Extracts expression from equation LHS or RHS
+    - Clear error if no objective expression found
+  - `compute_objective_gradient()`: Compute ∇f for objective function
+    - Differentiates objective w.r.t. all variables
+    - Handles ObjSense.MIN (use gradient as-is)
+    - Handles ObjSense.MAX (negate gradient: max f = min -f)
+    - Works with scalar and indexed variables
+    - Returns GradientVector with all components
+  - `compute_gradient_for_expression()`: Gradient of arbitrary expression
+    - Useful for constraint gradients or sub-expressions
+    - Optional negation flag
+- Created `tests/ad/test_jacobian_structure.py` with 24 comprehensive tests
+  - JacobianStructure basics (5 tests): empty, set/get, multiple entries, overwrite
+  - Row/column queries (4 tests): get_row, get_col, empty row/col
+  - Sparsity tracking (5 tests): nonzero entries, density, empty, fully dense
+  - Integration with IndexMapping (3 tests): query by names, not found, error handling
+  - GradientVector basics (5 tests): empty, set/get, multiple components, get_all
+  - GradientVector with IndexMapping (2 tests): query by name, error handling
+- Created `tests/ad/test_gradient.py` with 17 comprehensive tests
+  - Finding objective expression (6 tests): explicit expr, objvar-defined LHS/RHS, no objective, objvar not defined, ignores indexed equations
+  - Gradient minimization (4 tests): scalar quadratic, two variables, constant, linear
+  - Gradient maximization (2 tests): max linear (negated), max two variables
+  - Indexed variables (2 tests): indexed objective, mixed scalar/indexed
+  - Gradient for expression (2 tests): simple expression, with negation
+  - Objective from defining equation (1 test): complete flow
+
+##### Changed
+- N/A
+
+##### Fixed
+- N/A
+
 ---
 
 ## [0.1.0] - Sprint 1 Complete
