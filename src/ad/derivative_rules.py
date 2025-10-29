@@ -380,9 +380,9 @@ def _diff_call(expr: Call, wrt_var: str) -> Expr:
         # abs() is not differentiable everywhere (non-differentiable at x=0)
         raise ValueError(
             "abs() is not differentiable everywhere (undefined at x=0). "
-            "For optimization problems, consider using smooth approximations in Sprint 4. "
+            "For optimization problems, consider using smooth approximations. "
             "Planned feature: --smooth-abs flag to replace abs(x) with sqrt(x^2 + ε). "
-            "See PROJECT_PLAN.md Sprint 4 for details on smoothing techniques."
+            "See PROJECT_PLAN.md for details on smoothing techniques."
         )
     else:
         # Future: Other functions
@@ -390,7 +390,7 @@ def _diff_call(expr: Call, wrt_var: str) -> Expr:
             f"Differentiation not yet implemented for function '{func}'. "
             f"Supported functions: power, exp, log, sqrt, sin, cos, tan. "
             f"Note: abs() is intentionally not supported (non-differentiable at x=0). "
-            f"Use smooth approximations instead (Sprint 4 feature)."
+            f"Use smooth approximations instead (planned feature)."
         )
 
 

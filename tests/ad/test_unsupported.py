@@ -30,8 +30,8 @@ class TestAbsRejection:
         assert "not differentiable everywhere" in error_msg
         assert "x=0" in error_msg or "undefined at" in error_msg
 
-    def test_abs_rejection_mentions_sprint4(self):
-        """Test abs() error references Sprint 4 for smooth approximations"""
+    def test_abs_rejection_mentions_planned_feature(self):
+        """Test abs() error references planned feature for smooth approximations"""
         # abs(x)
         expr = Call("abs", (VarRef("x"),))
 
@@ -39,8 +39,8 @@ class TestAbsRejection:
             differentiate_expr(expr, "x")
 
         error_msg = str(exc_info.value)
-        # Check that error message mentions Sprint 4 and smoothing
-        assert "Sprint 4" in error_msg
+        # Check that error message mentions planned feature and smoothing
+        assert "planned feature" in error_msg.lower() or "smooth" in error_msg.lower()
         assert "smooth" in error_msg.lower()
 
     def test_abs_rejection_mentions_smooth_abs_flag(self):

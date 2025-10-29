@@ -94,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Documented tan domain limitations (poles at π/2 + nπ)
 - Implemented abs() rejection with helpful, actionable error message
   - Clear explanation: "abs() is not differentiable everywhere (undefined at x=0)"
-  - References Sprint 4 smooth approximation feature
+  - References planned smooth approximation feature
   - Mentions planned --smooth-abs flag for sqrt(x² + ε) approximation
   - Points to PROJECT_PLAN.md for details on smoothing techniques
 - Added `_diff_sin`, `_diff_cos`, `_diff_tan` functions
@@ -106,7 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created `tests/ad/test_unsupported.py` with 9 tests
   - 6 abs() rejection tests verifying error message quality
   - 2 tests for other unsupported functions with clear messages
-  - Validates references to Sprint 4, smooth-abs flag, PROJECT_PLAN.md
+  - Validates references to planned features, smooth-abs flag, PROJECT_PLAN.md
 
 ##### Changed
 - Updated `_diff_call` dispatcher to route sin, cos, tan, and abs
