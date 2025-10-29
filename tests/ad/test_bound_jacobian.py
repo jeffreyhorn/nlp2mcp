@@ -187,7 +187,7 @@ class TestBoundJacobianIndexed:
         J_h, J_g = compute_constraint_jacobian(model_ir)
 
         # J_g should have entries for 2 bounds × 2 variables
-        # Derivatives stored symbolically (may include zeros)
+        # All derivatives (including zeros) are stored symbolically; not sparsity-optimized.
         # x(i1) bound: ∂(x(i1)-0)/∂x(i1) = 1, ∂/∂x(i2) = 0
         # x(i2) bound: ∂(x(i2)-0)/∂x(i1) = 0, ∂/∂x(i2) = 1
         assert J_g.num_nonzeros() == 4  # All derivatives stored (including zeros)
@@ -228,10 +228,10 @@ class TestBoundJacobianIndexed:
         # Compute Jacobian
         J_h, J_g = compute_constraint_jacobian(model_ir)
 
-        # J_g should have 1 row
+        # J_g should have 1 row with 2 entries (one for each variable)
         # ∂(x(i1) - lo(i1))/∂x(i1) = 1
         # ∂(x(i1) - lo(i1))/∂x(i2) = 0
-        assert J_g.num_nonzeros() == 2  # One nonzero for x(i1), one zero for x(i2)
+        assert J_g.num_nonzeros() == 2  # One for x(i1) and one for x(i2); both entries are stored
 
         row_entries = list(J_g.get_row(0).items())
         # Should have entry for x(i1) = 1, and entry for x(i2) = 0

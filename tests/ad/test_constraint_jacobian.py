@@ -92,7 +92,7 @@ class TestEqualityJacobian:
         deriv_x = J_h.get_derivative_by_names("circle", (), "x", ())
         deriv_y = J_h.get_derivative_by_names("circle", (), "y", ())
 
-        # Derivatives should be non-null Binary expressions (2*x and 2*y)
+        # Derivatives should be non-None Binary expressions (2*x and 2*y)
         # Full evaluation is complex due to nested Call structures
         assert deriv_x is not None
         assert deriv_y is not None
@@ -191,7 +191,7 @@ class TestInequalityJacobian:
         deriv_x = J_g.get_derivative_by_names("circle_bound", (), "x", ())
         deriv_y = J_g.get_derivative_by_names("circle_bound", (), "y", ())
 
-        # Derivatives should be non-null Binary expressions (2*x and 2*y)
+        # Derivatives should be non-None Binary expressions (2*x and 2*y)
         assert deriv_x is not None
         assert deriv_y is not None
         assert isinstance(deriv_x, Binary)

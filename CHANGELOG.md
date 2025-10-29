@@ -604,6 +604,7 @@ Phase 4 primarily involved **verification and documentation** rather than new te
 ##### Implementation Notes
 - Derivatives are symbolic AST expressions (not simplified)
   - Example: ∂(x+y-5)/∂x returns Binary(-, Binary(+, Const(1.0), Const(0.0)), Const(0.0))
+    - This is the actual output from the current implementation and demonstrates the need for future work on algebraic simplification
   - Evaluates to 1.0 but not simplified to Const(1.0)
   - Algebraic simplification deferred to future work
 - All derivatives stored in Jacobian (including zeros)
