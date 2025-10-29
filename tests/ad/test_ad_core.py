@@ -141,17 +141,17 @@ class TestParameterReferenceDifferentiation:
 class TestUnsupportedExpressions:
     """Test that unsupported expression types raise appropriate errors."""
 
-    def test_call_not_yet_supported(self):
-        """Call expressions should raise TypeError with helpful message (Day 3+)"""
-        from src.ir.ast import Call
+    def test_sum_not_yet_supported(self):
+        """Sum expressions should raise TypeError with helpful message (Day 5+)"""
+        from src.ir.ast import Sum
 
-        expr = Call("exp", (VarRef("x"),))
+        # sum((i,j), x(i,j)) - to be implemented in Day 5
+        expr = Sum(("i", "j"), VarRef("x", ("i", "j")))
 
         with pytest.raises(TypeError) as exc_info:
             differentiate(expr, "x")
 
         assert "not yet implemented" in str(exc_info.value).lower()
-        assert "Call" in str(exc_info.value)
         assert "subsequent days" in str(exc_info.value).lower()
 
 
