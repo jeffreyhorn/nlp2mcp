@@ -51,6 +51,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ##### Fixed
 - N/A
 
+#### Day 3 (2025-10-28) - Power & Transcendental Functions
+
+##### Added
+- Implemented symbolic differentiation for power function in `src/ad/derivative_rules.py`
+  - General formula: d(a^b)/dx = a^b * (b/a * da/dx + ln(a) * db/dx)
+  - Optimized constant exponent case: d(a^n)/dx = n * a^(n-1) * da/dx
+  - Supports power(base, exponent) function calls
+- Implemented symbolic differentiation for exponential function
+  - Formula: d(exp(a))/dx = exp(a) * da/dx
+  - Chain rule support for composite expressions
+- Implemented symbolic differentiation for logarithm function
+  - Formula: d(log(a))/dx = (1/a) * da/dx
+  - Chain rule support for composite expressions
+- Implemented symbolic differentiation for square root function
+  - Formula: d(sqrt(a))/dx = (1/(2*sqrt(a))) * da/dx
+  - Chain rule support for composite expressions
+- Created `tests/ad/test_transcendental.py` with 26 comprehensive tests
+  - Power function tests (6 tests): constant exponent, constant base, both variables, negative exponent, fractional exponent, chain rule
+  - Exponential tests (4 tests): variable, constant, different variable, chain rule
+  - Logarithm tests (4 tests): variable, constant, different variable, chain rule
+  - Square root tests (4 tests): variable, constant, different variable, chain rule
+  - Error handling tests (5 tests): wrong argument counts, unsupported functions
+- Added Call import to `src/ad/derivative_rules.py`
+- Added `_diff_call`, `_diff_power`, `_diff_exp`, `_diff_log`, `_diff_sqrt` functions
+
+##### Changed
+- Updated dispatcher in `differentiate_expr` to route Call expressions to `_diff_call`
+- Updated documentation comments to reflect Day 3 implementation
+
+##### Fixed
+- N/A
+
 ---
 
 ## [0.1.0] - Sprint 1 Complete

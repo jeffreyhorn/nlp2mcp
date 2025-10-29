@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..ir.ast import Expr
 
-from ..ir.ast import Binary, Const, ParamRef, SymbolRef, Unary, VarRef
+from ..ir.ast import Binary, Call, Const, ParamRef, SymbolRef, Unary, VarRef
 
 
 def differentiate_expr(expr: Expr, wrt_var: str) -> Expr:
@@ -67,9 +67,11 @@ def differentiate_expr(expr: Expr, wrt_var: str) -> Expr:
     elif isinstance(expr, Unary):
         return _diff_unary(expr, wrt_var)
 
-    # Day 3+: Other node types (to be implemented)
-    # elif isinstance(expr, Call):
-    #     return _diff_call(expr, wrt_var)
+    # Day 3: Function calls (power, exp, log, sqrt, trig)
+    elif isinstance(expr, Call):
+        return _diff_call(expr, wrt_var)
+
+    # Day 5+: Other node types (to be implemented)
     # elif isinstance(expr, Sum):
     #     return _diff_sum(expr, wrt_var)
 
@@ -326,13 +328,242 @@ def _diff_unary(expr: Unary, wrt_var: str) -> Expr:
 
 
 # ============================================================================
-# Day 3+: Additional Rules (Placeholders)
+# Day 3: Function Calls (Power, Exp, Log, Sqrt)
 # ============================================================================
 
-# def _diff_call(expr: Call, wrt_var: str) -> Expr:
-#     """Derivative of function calls (exp, log, sin, etc.)"""
-#     # To be implemented on Days 3-4
-#     pass
+
+def _diff_call(expr: Call, wrt_var: str) -> Expr:
+    """
+    Derivative of function calls using chain rule.
+
+    Supports (Day 3): power, exp, log, sqrt
+    Future (Day 4): sin, cos, tan
+
+    General chain rule: d(f(g(x)))/dx = f'(g(x)) * dg/dx
+
+    Args:
+        expr: Call expression
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Derivative expression (new AST)
+
+    Raises:
+        ValueError: If function is not supported
+
+    Examples:
+        >>> # d(exp(x))/dx = exp(x) * 1 = exp(x)
+        >>> _diff_call(Call("exp", [VarRef("x")]), "x")
+        Binary("*", Call("exp", [VarRef("x")]), Const(1.0))
+
+        >>> # d(log(x))/dx = (1/x) * 1 = 1/x
+        >>> _diff_call(Call("log", [VarRef("x")]), "x")
+        Binary("*", Binary("/", Const(1.0), VarRef("x")), Const(1.0))
+    """
+    func = expr.func
+
+    if func == "power":
+        return _diff_power(expr, wrt_var)
+    elif func == "exp":
+        return _diff_exp(expr, wrt_var)
+    elif func == "log":
+        return _diff_log(expr, wrt_var)
+    elif func == "sqrt":
+        return _diff_sqrt(expr, wrt_var)
+    else:
+        # Day 4: sin, cos, tan
+        # Future: Other functions
+        raise ValueError(
+            f"Differentiation not yet implemented for function '{func}'. "
+            f"Day 3 supports: power, exp, log, sqrt. "
+            f"Day 4 will add: sin, cos, tan."
+        )
+
+
+def _diff_power(expr: Call, wrt_var: str) -> Expr:
+    """
+    Derivative of power function: power(base, exponent).
+
+    General formula: d(a^b)/dx = a^b * (b/a * da/dx + ln(a) * db/dx)
+
+    Optimization: If exponent is constant, use simpler power rule:
+    d(a^n)/dx = n * a^(n-1) * da/dx
+
+    Args:
+        expr: Call("power", [base, exponent])
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Derivative expression (new AST)
+
+    Examples:
+        >>> # d(power(x, 2))/dx = 2 * x^1 * 1 = 2*x
+        >>> _diff_power(Call("power", [VarRef("x"), Const(2.0)]), "x")
+        Binary("*", Binary("*", Const(2.0), Call("power", [VarRef("x"), Const(1.0)])), Const(1.0))
+
+        >>> # d(power(x, y))/dx uses general formula
+        >>> _diff_power(Call("power", [VarRef("x"), VarRef("y")]), "x")
+        # Returns: x^y * (y/x * 1 + ln(x) * 0)
+    """
+    if len(expr.args) != 2:
+        raise ValueError(f"power() expects 2 arguments, got {len(expr.args)}")
+
+    base = expr.args[0]
+    exponent = expr.args[1]
+
+    # Check if exponent is constant (optimization case)
+    if isinstance(exponent, Const):
+        # Power rule: d(a^n)/dx = n * a^(n-1) * da/dx
+        n = exponent.value
+        da_dx = differentiate_expr(base, wrt_var)
+
+        # n * a^(n-1)
+        n_minus_1 = Const(n - 1.0)
+        a_pow_n_minus_1 = Call("power", (base, n_minus_1))
+        n_times_power = Binary("*", exponent, a_pow_n_minus_1)
+
+        # (n * a^(n-1)) * da/dx
+        return Binary("*", n_times_power, da_dx)
+
+    else:
+        # General case: d(a^b)/dx = a^b * (b/a * da/dx + ln(a) * db/dx)
+        da_dx = differentiate_expr(base, wrt_var)
+        db_dx = differentiate_expr(exponent, wrt_var)
+
+        # a^b
+        a_pow_b = Call("power", (base, exponent))
+
+        # b/a
+        b_over_a = Binary("/", exponent, base)
+
+        # b/a * da/dx
+        term1 = Binary("*", b_over_a, da_dx)
+
+        # ln(a)
+        ln_a = Call("log", (base,))
+
+        # ln(a) * db/dx
+        term2 = Binary("*", ln_a, db_dx)
+
+        # b/a * da/dx + ln(a) * db/dx
+        sum_terms = Binary("+", term1, term2)
+
+        # a^b * (...)
+        return Binary("*", a_pow_b, sum_terms)
+
+
+def _diff_exp(expr: Call, wrt_var: str) -> Expr:
+    """
+    Derivative of exponential function: exp(x).
+
+    Formula: d(exp(a))/dx = exp(a) * da/dx
+
+    Args:
+        expr: Call("exp", [arg])
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(exp(x))/dx = exp(x) * 1 = exp(x)
+        >>> _diff_exp(Call("exp", [VarRef("x")]), "x")
+        Binary("*", Call("exp", [VarRef("x")]), Const(1.0))
+
+        >>> # d(exp(x^2))/dx = exp(x^2) * 2x (chain rule)
+        >>> _diff_exp(Call("exp", [Call("power", [VarRef("x"), Const(2.0)])]), "x")
+        # Returns: exp(x^2) * d(x^2)/dx
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"exp() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var)
+
+    # exp(arg) * darg/dx
+    return Binary("*", Call("exp", (arg,)), darg_dx)
+
+
+def _diff_log(expr: Call, wrt_var: str) -> Expr:
+    """
+    Derivative of natural logarithm: log(x).
+
+    Formula: d(log(a))/dx = (1/a) * da/dx
+
+    Args:
+        expr: Call("log", [arg])
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(log(x))/dx = (1/x) * 1 = 1/x
+        >>> _diff_log(Call("log", [VarRef("x")]), "x")
+        Binary("*", Binary("/", Const(1.0), VarRef("x")), Const(1.0))
+
+        >>> # d(log(x^2))/dx = (1/(x^2)) * 2x (chain rule)
+        >>> _diff_log(Call("log", [Call("power", [VarRef("x"), Const(2.0)])]), "x")
+        # Returns: (1/(x^2)) * d(x^2)/dx
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"log() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var)
+
+    # 1/arg
+    one_over_arg = Binary("/", Const(1.0), arg)
+
+    # (1/arg) * darg/dx
+    return Binary("*", one_over_arg, darg_dx)
+
+
+def _diff_sqrt(expr: Call, wrt_var: str) -> Expr:
+    """
+    Derivative of square root: sqrt(x).
+
+    Formula: d(sqrt(a))/dx = (1/(2*sqrt(a))) * da/dx
+    Alternative: sqrt(x) = x^(1/2), so d/dx = (1/2)*x^(-1/2) = 1/(2*sqrt(x))
+
+    Args:
+        expr: Call("sqrt", [arg])
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(sqrt(x))/dx = 1/(2*sqrt(x)) * 1 = 1/(2*sqrt(x))
+        >>> _diff_sqrt(Call("sqrt", [VarRef("x")]), "x")
+        Binary("*", Binary("/", Const(1.0), Binary("*", Const(2.0), Call("sqrt", [VarRef("x")]))), Const(1.0))
+
+        >>> # d(sqrt(x^2))/dx = (1/(2*sqrt(x^2))) * 2x (chain rule)
+        >>> _diff_sqrt(Call("sqrt", [Call("power", [VarRef("x"), Const(2.0)])]), "x")
+        # Returns: (1/(2*sqrt(x^2))) * d(x^2)/dx
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"sqrt() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var)
+
+    # sqrt(arg)
+    sqrt_arg = Call("sqrt", (arg,))
+
+    # 2 * sqrt(arg)
+    two_sqrt_arg = Binary("*", Const(2.0), sqrt_arg)
+
+    # 1 / (2 * sqrt(arg))
+    one_over_two_sqrt = Binary("/", Const(1.0), two_sqrt_arg)
+
+    # (1/(2*sqrt(arg))) * darg/dx
+    return Binary("*", one_over_two_sqrt, darg_dx)
+
+
+# ============================================================================
+# Day 5+: Additional Rules (Placeholders)
+# ============================================================================
 
 # def _diff_sum(expr: Sum, wrt_var: str) -> Expr:
 #     """Derivative of sum aggregations"""
