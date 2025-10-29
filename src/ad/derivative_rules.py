@@ -370,13 +370,27 @@ def _diff_call(expr: Call, wrt_var: str) -> Expr:
         return _diff_log(expr, wrt_var)
     elif func == "sqrt":
         return _diff_sqrt(expr, wrt_var)
+    elif func == "sin":
+        return _diff_sin(expr, wrt_var)
+    elif func == "cos":
+        return _diff_cos(expr, wrt_var)
+    elif func == "tan":
+        return _diff_tan(expr, wrt_var)
+    elif func == "abs":
+        # abs() is not differentiable everywhere (non-differentiable at x=0)
+        raise ValueError(
+            "abs() is not differentiable everywhere (undefined at x=0). "
+            "For optimization problems, consider using smooth approximations. "
+            "Planned feature: --smooth-abs flag to replace abs(x) with sqrt(x^2 + ε). "
+            "See PROJECT_PLAN.md for details on smoothing techniques."
+        )
     else:
-        # Day 4: sin, cos, tan
         # Future: Other functions
         raise ValueError(
             f"Differentiation not yet implemented for function '{func}'. "
-            f"Day 3 supports: power, exp, log, sqrt. "
-            f"Day 4 will add: sin, cos, tan."
+            f"Supported functions: power, exp, log, sqrt, sin, cos, tan. "
+            f"Note: abs() is intentionally not supported (non-differentiable at x=0). "
+            f"Use smooth approximations instead (planned feature)."
         )
 
 
@@ -559,6 +573,124 @@ def _diff_sqrt(expr: Call, wrt_var: str) -> Expr:
 
     # (1/(2*sqrt(arg))) * darg/dx
     return Binary("*", one_over_two_sqrt, darg_dx)
+
+
+# ============================================================================
+# Day 4: Trigonometric Functions
+# ============================================================================
+
+
+def _diff_sin(expr: Call, wrt_var: str) -> Expr:
+    """
+    Derivative of sine function: sin(x).
+
+    Formula: d(sin(a))/dx = cos(a) * da/dx
+
+    Args:
+        expr: Call("sin", [arg])
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(sin(x))/dx = cos(x) * 1 = cos(x)
+        >>> _diff_sin(Call("sin", (VarRef("x"),)), "x")
+        Binary("*", Call("cos", (VarRef("x"),)), Const(1.0))
+
+        >>> # d(sin(x^2))/dx = cos(x^2) * 2x (chain rule)
+        >>> _diff_sin(Call("sin", (Call("power", (VarRef("x"), Const(2.0))),)), "x")
+        # Returns: cos(x^2) * d(x^2)/dx
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"sin() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var)
+
+    # cos(arg) * darg/dx
+    return Binary("*", Call("cos", (arg,)), darg_dx)
+
+
+def _diff_cos(expr: Call, wrt_var: str) -> Expr:
+    """
+    Derivative of cosine function: cos(x).
+
+    Formula: d(cos(a))/dx = -sin(a) * da/dx
+
+    Args:
+        expr: Call("cos", [arg])
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(cos(x))/dx = -sin(x) * 1 = -sin(x)
+        >>> _diff_cos(Call("cos", (VarRef("x"),)), "x")
+        Binary("*", Unary("-", Call("sin", (VarRef("x"),))), Const(1.0))
+
+        >>> # d(cos(x^2))/dx = -sin(x^2) * 2x (chain rule)
+        >>> _diff_cos(Call("cos", (Call("power", (VarRef("x"), Const(2.0))),)), "x")
+        # Returns: -sin(x^2) * d(x^2)/dx
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"cos() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var)
+
+    # -sin(arg)
+    neg_sin_arg = Unary("-", Call("sin", (arg,)))
+
+    # -sin(arg) * darg/dx
+    return Binary("*", neg_sin_arg, darg_dx)
+
+
+def _diff_tan(expr: Call, wrt_var: str) -> Expr:
+    """
+    Derivative of tangent function: tan(x).
+
+    Formula: d(tan(a))/dx = sec²(a) * da/dx = (1/cos²(a)) * da/dx
+
+    Note: tan(x) has poles (undefined values) at x = π/2 + nπ where n is any integer.
+    The derivative is also undefined at these points. This implementation does not
+    check for these domain issues at differentiation time - they will surface during
+    evaluation if the input violates the domain.
+
+    Args:
+        expr: Call("tan", [arg])
+        wrt_var: Variable to differentiate with respect to
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(tan(x))/dx = (1/cos²(x)) * 1 = 1/cos²(x)
+        >>> _diff_tan(Call("tan", (VarRef("x"),)), "x")
+        Binary("*", Binary("/", Const(1.0), Binary("*", Call("cos", (VarRef("x"),)), Call("cos", (VarRef("x"),)))), Const(1.0))
+
+        >>> # d(tan(x^2))/dx = (1/cos²(x^2)) * 2x (chain rule)
+        >>> _diff_tan(Call("tan", (Call("power", (VarRef("x"), Const(2.0))),)), "x")
+        # Returns: (1/cos²(x^2)) * d(x^2)/dx
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"tan() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var)
+
+    # cos(arg)
+    cos_arg = Call("cos", (arg,))
+
+    # cos²(arg) = cos(arg) * cos(arg)
+    cos_squared = Binary("*", cos_arg, cos_arg)
+
+    # 1 / cos²(arg) = sec²(arg)
+    sec_squared = Binary("/", Const(1.0), cos_squared)
+
+    # sec²(arg) * darg/dx
+    return Binary("*", sec_squared, darg_dx)
 
 
 # ============================================================================

@@ -83,6 +83,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ##### Fixed
 - N/A
 
+#### Day 4 (2025-10-28) - Trigonometric Functions & abs() Rejection
+
+##### Added
+- Implemented symbolic differentiation for trigonometric functions in `src/ad/derivative_rules.py`
+  - Sine function: d(sin(a))/dx = cos(a) * da/dx
+  - Cosine function: d(cos(a))/dx = -sin(a) * da/dx
+  - Tangent function: d(tan(a))/dx = sec²(a) * da/dx = (1/cos²(a)) * da/dx
+  - Full chain rule support for all trig functions
+  - Documented tan domain limitations (poles at π/2 + nπ)
+- Implemented abs() rejection with helpful, actionable error message
+  - Clear explanation: "abs() is not differentiable everywhere (undefined at x=0)"
+  - References planned smooth approximation feature
+  - Mentions planned --smooth-abs flag for sqrt(x² + ε) approximation
+  - Points to PROJECT_PLAN.md for details on smoothing techniques
+- Added `_diff_sin`, `_diff_cos`, `_diff_tan` functions
+- Created `tests/ad/test_trigonometric.py` with 12 comprehensive tests
+  - 4 sin tests: variable, constant, different variable, chain rule
+  - 4 cos tests: variable, constant, different variable, chain rule
+  - 4 tan tests: variable, constant, different variable, chain rule
+  - 3 error handling tests for wrong argument counts
+- Created `tests/ad/test_unsupported.py` with 9 tests
+  - 6 abs() rejection tests verifying error message quality
+  - 2 tests for other unsupported functions with clear messages
+  - Validates references to planned features, smooth-abs flag, PROJECT_PLAN.md
+
+##### Changed
+- Updated `_diff_call` dispatcher to route sin, cos, tan, and abs
+- Enhanced error messages for unsupported functions to list all supported functions
+- Error messages now explicitly mention abs() is intentionally excluded
+
+##### Fixed
+- N/A
+
 ---
 
 ## [0.1.0] - Sprint 1 Complete
