@@ -20,6 +20,76 @@
 
 ## High-Level Data Flow
 
+### Mermaid Flowchart (Interactive)
+
+```mermaid
+flowchart TD
+    GAMS[("GAMS File (.gms)<br/>Sets, Variables,<br/>Equations, Solve NLP")]
+    
+    PARSER["Parser (Sprint 1)<br/>src/gams/parser.py<br/>• Lark grammar parsing<br/>• Build AST expressions<br/>• Create symbol tables"]
+    
+    PARSED["ParsedModel<br/>• Raw AST<br/>• Symbol definitions<br/>• Unparsed relations"]
+    
+    NORMALIZER["Normalizer (Sprint 1)<br/>src/ir/normalize.py<br/>• Convert =l=/=g= to ≤0<br/>• Extract bounds<br/>• Normalize equations"]
+    
+    MODELIR["ModelIR (Sprint 1 Output)<br/>src/ir/model_ir.py<br/>• sets, variables, equations<br/>• equalities, inequalities<br/>• normalized_bounds<br/>• objective"]
+    
+    INDEXMAP["Variable Instance Mapper<br/>(Sprint 2)<br/>src/ad/index_mapping.py<br/>• Enumerate var instances<br/>• Map (var, indices) → col_id<br/>• Map (eq, indices) → row_id"]
+    
+    MAPPING["IndexMapping<br/>• instances<br/>• var_to_col<br/>• eq_to_row"]
+    
+    GRADIENT["Gradient Computer<br/>(Sprint 2)<br/>src/ad/gradient.py<br/>• Find objective expr<br/>• Differentiate w.r.t. vars<br/>• Index-aware matching"]
+    
+    JACOBIAN["Jacobian Computer<br/>(Sprint 2)<br/>src/ad/constraint_jacobian.py<br/>• Diff equalities<br/>• Diff inequalities<br/>• Diff bounds"]
+    
+    GRADVEC["GradientVector<br/>• num_cols<br/>• values: dict[int, Expr]<br/>• mapping<br/><br/>⚠️ NOT mapping.num_vars!"]
+    
+    JACSTRUCT["JacobianStructure<br/>• num_rows, num_cols<br/>• entries: dict[dict]<br/>• index_mapping"]
+    
+    KKT["KKT Assembler<br/>(Sprint 3 - PLANNED)<br/>src/kkt/assemble.py<br/>• Build stationarity eqs<br/>• Build complementarity eqs<br/>• Create multiplier vars"]
+    
+    KKTSYS["KKTSystem<br/>• stationarity_eqs<br/>• complementarity_eqs<br/>• multiplier_vars"]
+    
+    EMITTER["GAMS Emitter<br/>(Sprint 3 - PLANNED)<br/>src/emit/emit_gams.py<br/>• Generate var decls<br/>• Generate eq defs<br/>• Generate Model stmt"]
+    
+    MCP[("MCP File (.gms)<br/>Variables, Equations,<br/>Model MCP, Solve MCP")]
+    
+    GAMS --> PARSER
+    PARSER --> PARSED
+    PARSED --> NORMALIZER
+    NORMALIZER --> MODELIR
+    MODELIR --> INDEXMAP
+    INDEXMAP --> MAPPING
+    MAPPING --> GRADIENT
+    MAPPING --> JACOBIAN
+    GRADIENT --> GRADVEC
+    JACOBIAN --> JACSTRUCT
+    GRADVEC --> KKT
+    JACSTRUCT --> KKT
+    MODELIR --> KKT
+    KKT --> KKTSYS
+    KKTSYS --> EMITTER
+    EMITTER --> MCP
+    
+    classDef sprint1 fill:#e1f5e1,stroke:#4caf50,stroke-width:2px
+    classDef sprint2 fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    classDef sprint3 fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    classDef data fill:#f5f5f5,stroke:#666,stroke-width:1px
+    
+    class PARSER,NORMALIZER sprint1
+    class INDEXMAP,GRADIENT,JACOBIAN sprint2
+    class KKT,EMITTER sprint3
+    class GAMS,PARSED,MODELIR,MAPPING,GRADVEC,JACSTRUCT,KKTSYS,MCP data
+```
+
+**Legend:**
+- 🟢 **Green boxes**: Sprint 1 components (Parser, Normalizer)
+- 🔵 **Blue boxes**: Sprint 2 components (Index Mapper, Gradient Computer, Jacobian Computer)
+- 🟠 **Orange boxes**: Sprint 3 planned components (KKT Assembler, GAMS Emitter)
+- ⚪ **Gray boxes**: Data structures (inputs, outputs, intermediate representations)
+
+### ASCII Diagram (Detailed)
+
 This diagram shows the complete pipeline from GAMS input to MCP output (Sprint 3 planned):
 
 ```
