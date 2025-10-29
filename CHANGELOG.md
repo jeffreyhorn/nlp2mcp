@@ -503,6 +503,52 @@ Phase 4 primarily involved **verification and documentation** rather than new te
 
 ---
 
+#### Day 7.7 - Phase 5: Documentation (2025-10-29)
+
+##### Added
+- **Comprehensive docstring updates for index-aware differentiation**
+  - Updated `src/ad/derivative_rules.py` module docstring
+    - Added "Index-Aware Differentiation" section with key semantics
+    - Documented all matching rules: d/dx x = 1, d/dx x(i) = 0, d/dx(i) x = 0, d/dx(i) x(i) = 1
+    - Added "Special Cases" section explaining sum collapse behavior
+    - Added "Backward Compatibility" section
+  - Updated `differentiate_expr()` function docstring
+    - Added "Index-Aware Matching Semantics" section
+    - Updated examples to show correct semantics (d/dx x(i) = 0, not 1.0)
+    - Added comprehensive examples for all matching scenarios
+    - Enhanced Args documentation for wrt_indices parameter
+    - Added backward compatibility note
+  - Updated `src/ad/gradient.py` module docstring
+    - Enhanced "Index-Aware Differentiation (Implemented)" section
+    - Added key semantics: d/dx x = 1, d/dx x(i) = 0, d/dx(i) x = 0, d/dx(i) x(i) = 1
+    - Added implementation details explaining enumerate_variable_instances()
+    - Documented how wrt_indices parameter enables sparse Jacobian construction
+    - Added backward compatibility section
+
+- **Migration guide for index-aware differentiation**
+  - Created `docs/migration/index_aware_differentiation.md`
+  - Complete guide for transitioning to index-aware differentiation
+  - Sections: Overview, What Changed, Migration Steps, Examples, FAQ
+  - Before/After code examples showing scalar vs indexed differentiation
+  - Detailed explanation of when to use wrt_indices parameter
+  - Common pitfalls and how to avoid them
+  - Backward compatibility guarantees
+
+##### Changed
+- Enhanced documentation throughout to reflect correct semantics
+- All docstrings now consistently use the established notation:
+  - d/dx for scalar differentiation
+  - d/dx(i) for indexed differentiation
+  - Consistent examples across all modules
+
+##### Notes
+- Phase 5 complete: All documentation tasks finished
+- Migration guide provides clear path for users
+- All docstrings accurate and comprehensive
+- Ready for review and merge
+
+---
+
 ## [0.1.0] - Sprint 1 Complete
 
 ### Added

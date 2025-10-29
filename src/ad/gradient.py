@@ -29,24 +29,36 @@ Objective Expression Retrieval:
 
 Index-Aware Differentiation (Implemented):
 ------------------------------------------
-The gradient computation now uses index-aware differentiation to properly
-distinguish between different instances of indexed variables. Each variable
-instance gets its own specific derivative:
+The gradient computation uses index-aware differentiation to properly
+distinguish between scalar and indexed variable instances. This ensures
+correct sparse Jacobian construction for optimization models.
+
+Key Semantics:
+- d/dx x = 1        (scalar matches scalar)
+- d/dx x(i) = 0     (indexed doesn't match scalar)
+- d/dx(i) x = 0     (scalar doesn't match indexed)
+- d/dx(i) x(i) = 1  (exact index match)
 
 Example: For objective sum(i, x(i)^2) where i ∈ {i1, i2}:
 - ∂f/∂x(i1) = 2*x(i1)  (only the i1 term contributes)
 - ∂f/∂x(i2) = 2*x(i2)  (only the i2 term contributes)
-
-This is achieved by passing the indices tuple to differentiate_expr():
-    derivative = differentiate_expr(obj_expr, var_name, indices)
-
-The differentiation engine (src/ad/derivative_rules.py) matches VarRef nodes
-based on both name and exact index tuple, enabling correct sparse Jacobian
-construction where each variable instance has its own distinct derivative.
+- ∂f/∂x = 0            (scalar x doesn't match any x(i))
 
 Implementation:
-- Phase 1: Enhanced differentiate_expr() API with wrt_indices parameter
-- Phase 2: Updated gradient computation to use index-aware differentiation
+1. enumerate_variable_instances() identifies all variable instances:
+   - Scalar variables: (var_name, ())
+   - Indexed variables: (var_name, (i1,)), (var_name, (i2,)), etc.
+
+2. For each instance, differentiate_expr() is called with wrt_indices:
+   derivative = differentiate_expr(obj_expr, var_name, indices)
+
+3. The differentiation engine (src/ad/derivative_rules.py) matches VarRef nodes
+   based on both name and exact index tuple, ensuring each variable instance
+   has its own distinct derivative.
+
+Backward Compatibility:
+- When wrt_indices=None (default), differentiates w.r.t. scalar variable
+- Existing code without indexed variables continues to work unchanged
 """
 
 from __future__ import annotations

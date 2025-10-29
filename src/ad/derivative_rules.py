@@ -9,20 +9,36 @@ Each function implements a specific derivative rule:
 
 1. Constant Rule: d(c)/dx = 0
 2. Variable Rule: d(x)/dx = 1, d(y)/dx = 0
-3. Sum Rule: d(f+g)/dx = df/dx + dg/dx (Day 2)
-4. Product Rule: d(fg)/dx = f(dg/dx) + g(df/dx) (Day 2)
-5. Quotient Rule: d(f/g)/dx = (g(df/dx) - f(dg/dx))/g² (Day 2)
-6. Chain Rule: d(f(g))/dx = f'(g) * dg/dx (Days 3-4)
-7. Power Rule: d(x^n)/dx = n*x^(n-1) (Day 3)
-8. Exponential: d(exp(x))/dx = exp(x) (Day 3)
-9. Logarithm: d(log(x))/dx = 1/x (Day 3)
-10. Trigonometric: d(sin(x))/dx = cos(x), etc. (Day 4)
+3. Sum Rule: d(f+g)/dx = df/dx + dg/dx
+4. Product Rule: d(fg)/dx = f(dg/dx) + g(df/dx)
+5. Quotient Rule: d(f/g)/dx = (g(df/dx) - f(dg/dx))/g²
+6. Chain Rule: d(f(g))/dx = f'(g) * dg/dx
+7. Power Rule: d(x^n)/dx = n*x^(n-1)
+8. Exponential: d(exp(x))/dx = exp(x)
+9. Logarithm: d(log(x))/dx = 1/x
+10. Trigonometric: d(sin(x))/dx = cos(x), etc.
 
-Day 1 Scope:
------------
-- Const: Always returns Const(0)
-- VarRef/SymbolRef: Returns Const(1) if same variable, Const(0) otherwise
-- ParamRef: Always returns Const(0) (parameters are constant w.r.t. variables)
+Index-Aware Differentiation:
+----------------------------
+Supports differentiation with respect to specific variable instances using
+the `wrt_indices` parameter. This enables proper handling of indexed variables
+in optimization models.
+
+Key Semantics:
+- d/dx x = 1          (scalar matches scalar)
+- d/dx x(i) = 0       (indexed doesn't match scalar)
+- d/dx(i) x = 0       (scalar doesn't match indexed)
+- d/dx(i1) x(i1) = 1  (exact index match)
+- d/dx(i1) x(i2) = 0  (index mismatch)
+
+Special Cases:
+- Sum collapse: When differentiating sum(i, x(i)) w.r.t. x(i1), the sum
+  collapses to just the i=i1 term since other terms have zero derivative.
+  Result: differentiated expression with i replaced by i1.
+
+Backward Compatibility:
+- When wrt_indices=None (default), differentiates w.r.t. scalar variable
+- Existing code without indices continues to work unchanged
 """
 
 from __future__ import annotations
@@ -45,35 +61,58 @@ def differentiate_expr(
     Supports differentiation with respect to specific variable instances by
     providing optional index tuple.
 
+    Index-Aware Matching Semantics:
+    -------------------------------
+    The wrt_indices parameter determines which variable instance to differentiate
+    with respect to, following these rules:
+
+    1. Scalar differentiation (wrt_indices=None):
+       - d/dx x = 1        (scalar matches scalar)
+       - d/dx x(i) = 0     (indexed doesn't match scalar)
+
+    2. Indexed differentiation (wrt_indices provided):
+       - d/dx(i) x = 0     (scalar doesn't match indexed)
+       - d/dx(i) x(i) = 1  (exact index match)
+       - d/dx(i) x(j) = 0  (index mismatch)
+
     Args:
         expr: Expression to differentiate
         wrt_var: Variable name to differentiate with respect to (e.g., "x")
-        wrt_indices: Optional variable indices (e.g., ("i1",) or ("i1", "j2"))
-                     If None, matches any variable with name wrt_var (backward compatible)
-                     If provided, only matches VarRef with exact indices
+        wrt_indices: Optional variable indices (e.g., ("i",) or ("i", "j"))
+                     - If None: differentiates w.r.t. scalar variable (wrt_var)
+                     - If provided: differentiates w.r.t. indexed variable (wrt_var(wrt_indices))
 
     Returns:
         Derivative expression (new AST)
 
     Raises:
-        TypeError: If expression type is not supported (yet)
+        TypeError: If expression type is not supported
 
     Examples:
-        >>> # Scalar variable (backward compatible)
+        >>> # Scalar differentiation: d/dx x = 1
         >>> differentiate_expr(VarRef("x"), "x")
         Const(1.0)
 
-        >>> # Indexed variable without indices specified (matches any)
-        >>> differentiate_expr(VarRef("x", ("i1",)), "x")
-        Const(1.0)
-
-        >>> # Index-aware differentiation (exact match)
-        >>> differentiate_expr(VarRef("x", ("i1",)), "x", ("i1",))
-        Const(1.0)
-
-        >>> # Index-aware differentiation (mismatch)
-        >>> differentiate_expr(VarRef("x", ("i2",)), "x", ("i1",))
+        >>> # Scalar differentiation: d/dx x(i) = 0
+        >>> differentiate_expr(VarRef("x", ("i",)), "x")
         Const(0.0)
+
+        >>> # Indexed differentiation: d/dx(i) x = 0
+        >>> differentiate_expr(VarRef("x"), "x", ("i",))
+        Const(0.0)
+
+        >>> # Indexed differentiation: d/dx(i) x(i) = 1
+        >>> differentiate_expr(VarRef("x", ("i",)), "x", ("i",))
+        Const(1.0)
+
+        >>> # Indexed differentiation: d/dx(i) x(j) = 0
+        >>> differentiate_expr(VarRef("x", ("j",)), "x", ("i",))
+        Const(0.0)
+
+    Backward Compatibility:
+        Existing code that doesn't use indices continues to work unchanged.
+        When wrt_indices=None (default), the function differentiates with respect
+        to the scalar variable, returning 1 only for scalar VarRefs.
     """
     # Day 1: Constants and variable references
     if isinstance(expr, Const):
