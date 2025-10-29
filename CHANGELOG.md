@@ -9,6 +9,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-29 - Sprint 3 Revised Plan (Post-Review)
+
+##### Added
+- Created revised Sprint 3 plan in `docs/planning/SPRINT_3/PLAN_REVISED.md`
+  - Addresses all 4 gaps identified in `docs/planning/SPRINT_3/PLAN_REVIEW.md`
+  - Enhanced day-by-day plan with review adjustments integrated
+  - Detailed implementation strategies for each gap
+  - Updated test counts and acceptance criteria
+  - Complete appendix documenting how each gap was addressed
+
+##### Review Gaps Addressed
+1. **Missing data/alias emission (Gap #1)**
+   - Added original symbols emission tasks to Day 4
+   - Created `src/emit/original_symbols.py` module (planned)
+   - Functions: `emit_original_sets()`, `emit_original_aliases()`, `emit_original_parameters()`
+   - Main emitter modified to include original symbols before KKT blocks
+   - Ensures generated MCP compiles with all symbol references
+
+2. **Bounds vs. explicit constraints not addressed (Gap #2)**
+   - Enhanced constraint partitioning in Day 1
+   - Added duplicate bounds detection logic
+   - New field: `KKTSystem.duplicate_bounds_warnings`
+   - New CLI option: `--warn-duplicates` (planned)
+   - Prevents duplicate complementarity pairs for user-authored bounds
+
+3. **Infinite bounds handling absent (Gap #3)**
+   - Added infinite bounds filtering to Day 1 partition logic
+   - Modified stationarity builder (Day 2) to skip π terms for ±INF bounds
+   - Modified complementarity builder (Day 3) to skip infinite bound pairs
+   - New field: `KKTSystem.skipped_infinite_bounds`
+   - Ensures no meaningless complementarity rows for ±INF bounds
+
+4. **Objective variable/equation flow undefined (Gap #4)**
+   - Created `src/kkt/objective.py` module in Day 1 (planned)
+   - Function: `extract_objective_info()` to identify objective variable and defining equation
+   - Modified stationarity builder (Day 2) to skip objective variable
+   - Modified complementarity builder (Day 3) to include objective defining equation
+   - Modified Model MCP emission (Day 6) to pair objective equation with objvar
+   - Ensures objective variable handled correctly (no stationarity, defines objvar)
+
+##### Changes from PLAN_ORIGINAL.md
+- **Day 1**: +1.5 hours (objective handling, enhanced partition logic with infinite bounds)
+- **Day 2**: +0.5 hours (skip objvar in stationarity)
+- **Day 3**: +0.5 hours (include objective equation)
+- **Day 4**: +1.5 hours (original symbols emission)
+- **Day 5**: No change (added MultiplierRef handling)
+- **Day 6**: +1 hour (objective equation pairing, original symbols in main emitter)
+- **Day 7**: +0.5 hours (new CLI options for warnings)
+- **Day 8**: +0.5 hours (verify new features in golden tests)
+- **Day 9**: +1 hour (document new features: bounds, objective)
+- **Day 10**: +0.5 hours (test new features, verify all adjustments)
+- **Total**: ~7 hours added across sprint (manageable within buffer time)
+
+##### Updated Metrics
+- **Test counts**: 260+ total (was 220+)
+  - Unit tests: 180 (was 150, +30)
+  - Integration tests: 60 (was 50, +10)
+  - E2E tests: 20 (unchanged but more assertions)
+- **New files**: 4 planned modules
+  - `src/kkt/objective.py` (NEW)
+  - `src/emit/original_symbols.py` (NEW)
+  - Enhanced `src/kkt/partition.py`
+  - Enhanced `src/kkt/stationarity.py`
+- **Documentation**: 2 additional sections
+  - Bounds handling strategy (Gap #2, #3)
+  - Objective variable handling (Gap #4)
+
+##### Success Criteria Enhanced
+- All 5 v1 examples convert successfully ✅
+- Generated MCP files compile in GAMS ✅
+- **NEW**: Generated MCP includes all original symbols ✅
+- **NEW**: No duplicate complementarity pairs for user-authored bounds ✅
+- **NEW**: Infinite bounds are skipped correctly ✅
+- **NEW**: Objective variable handled correctly ✅
+- Golden tests pass ✅
+- CLI works with all options ✅
+
+##### Purpose
+- Address critical gaps identified during plan review
+- Ensure generated MCP files are complete and compile
+- Prevent mathematical errors (infinite bounds, objective variable)
+- Improve user experience (warnings for duplicate bounds)
+- Maintain project quality standards
+
 #### 2025-10-29 - Sprint 3 Detailed Plan
 
 ##### Added
