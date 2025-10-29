@@ -7,7 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Sprint 3 Prep: Architecture Documentation
+### Sprint 3 Prep: Architecture Documentation & Parser Reference
+
+#### 2025-10-29 - Parser Output Reference
+
+##### Added
+- Created comprehensive parser output reference in `docs/ir/parser_output_reference.md`
+  - Complete documentation of how parser represents all GAMS constructs as AST nodes
+  - Quick reference card for most common operations
+  - Binary operators: +, -, *, /, ^ (power)
+  - Unary operators: +, - (negation)
+  - Function calls: exp, log, sqrt, sin, cos, tan
+  - Variable references: scalar and indexed patterns
+  - Parameter references: scalar and indexed patterns
+  - Constants: numeric literals
+  - Aggregations: sum operations with index sets
+  - Equation relations: =e=, =l=, =g=
+  - Common pitfalls section with Issues #24, #25 documented
+  - Real examples from actual GAMS files (nonlinear_mix.gms, simple_nlp.gms, indexed_balance.gms)
+  - AST node type hierarchy and testing guidance
+- Task completed as part of Sprint 3 Prep Plan Task 2
+
+##### Critical Documentation
+- **Issue #25 Prevention**: Documents that `x^2` parses as `Binary("^", ...)` NOT `Call("power", ...)`
+- **Index Tuple Rules**: VarRef indices are ALWAYS tuples, even for scalars: `VarRef("x", ())`
+- **Set Names vs Index Variables**: Sum uses SET NAMES ("I") in index_sets, INDEX VARIABLES ("i") in body
+- **Function Call Arguments**: Always tuples even for single arg: `Call("exp", (VarRef("x"),))`
+
+##### Purpose
+- Prevent Issue #25-style confusion about AST representation
+- Provide definitive reference for Sprint 3 code generation
+- Document actual parser output vs assumptions
+- Enable developers to verify AST structure for any GAMS construct
+
+##### Changed
+- N/A
+
+##### Fixed
+- N/A
 
 #### 2025-10-29 - System Architecture & Data Structures
 
