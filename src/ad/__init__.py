@@ -33,6 +33,15 @@ Sprint 2 Development Schedule:
 """
 
 from .ad_core import differentiate, simplify
+from .constraint_jacobian import compute_constraint_jacobian
 from .evaluator import EvaluationError, evaluate
+from .gradient import compute_objective_gradient
 
-__all__ = ["differentiate", "simplify", "evaluate", "EvaluationError"]
+__all__ = [
+    "differentiate",
+    "simplify",
+    "evaluate",
+    "EvaluationError",
+    "compute_objective_gradient",
+    "compute_constraint_jacobian",
+]
