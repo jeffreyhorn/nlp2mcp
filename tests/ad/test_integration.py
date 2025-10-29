@@ -62,7 +62,6 @@ import os
 # - GitHub Issue #20 (RESOLVED): parse_model_file() hang fixed by switching from
 #   dynamic_complete lexer to standard lexer with ambiguity="resolve"
 #   https://github.com/jeffreyhorn/nlp2mcp/issues/20
-
 from src.ad.api import compute_derivatives
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
