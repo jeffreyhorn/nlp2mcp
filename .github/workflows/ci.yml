@@ -44,3 +44,13 @@ jobs:
         run: |
           pip install pytest-cov
           pytest tests/ --cov=src --cov-report=term-missing
+
+      - name: Generate test pyramid visualization
+        run: |
+          python scripts/test_pyramid.py
+
+      - name: Upload test pyramid
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-pyramid
+          path: docs/testing/TEST_PYRAMID.md

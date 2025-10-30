@@ -184,7 +184,9 @@ make clean        # Remove build artifacts
 
 ### Running Tests
 
-The test suite is organized into four layers for fast feedback:
+The test suite is organized into four layers for fast feedback.
+
+📊 **[View Test Pyramid Visualization](docs/testing/TEST_PYRAMID.md)** - See test coverage breakdown by module and type.
 
 ```bash
 # Run fast unit tests only (~10 seconds)
