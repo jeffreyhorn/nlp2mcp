@@ -87,8 +87,8 @@ def emit_variables(kkt: KKTSystem) -> str:
             lines.append(block_name)
             for var_name, domain in var_groups[kind]:
                 if domain:
-                    domain_str = ",".join(domain)
-                    lines.append(f"    {var_name}({domain_str})")
+                    domain_indices = ",".join(domain)
+                    lines.append(f"    {var_name}({domain_indices})")
                 else:
                     lines.append(f"    {var_name}")
             lines.append(";")
@@ -170,8 +170,8 @@ def emit_equations(kkt: KKTSystem) -> str:
         eq_def = kkt.model_ir.equations[eq_name]
         # Check if it has domain (indexed)
         if eq_def.domain:
-            domain_str = ",".join(eq_def.domain)
-            lines.append(f"    {eq_name}({domain_str})")
+            domain_indices = ",".join(eq_def.domain)
+            lines.append(f"    {eq_name}({domain_indices})")
         else:
             lines.append(f"    {eq_name}")
 
