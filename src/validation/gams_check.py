@@ -6,14 +6,9 @@ in compile-only mode to check for syntax errors.
 GAMS validation is optional and only runs if GAMS is available on the system.
 """
 
+import shutil
 import subprocess
 from pathlib import Path
-
-
-class GAMSValidationError(Exception):
-    """Raised when GAMS syntax validation fails."""
-
-    pass
 
 
 def find_gams_executable() -> str | None:
@@ -42,15 +37,10 @@ def find_gams_executable() -> str | None:
                     if gams_exe.exists() and gams_exe.is_file():
                         return str(gams_exe)
 
-    # Check if gams is in PATH
-    try:
-        result = subprocess.run(["which", "gams"], capture_output=True, text=True, timeout=5)
-        if result.returncode == 0:
-            gams_path = result.stdout.strip()
-            if gams_path and Path(gams_path).exists():
-                return gams_path
-    except (subprocess.TimeoutExpired, subprocess.SubprocessError):
-        pass
+    # Check if gams is in PATH (cross-platform using shutil.which)
+    gams_path = shutil.which("gams")
+    if gams_path and Path(gams_path).exists():
+        return gams_path
 
     return None
 
@@ -71,7 +61,6 @@ def validate_gams_syntax(gams_file: str, gams_executable: str | None = None) -> 
 
     Raises:
         FileNotFoundError: If gams_file does not exist
-        GAMSValidationError: If GAMS validation fails
 
     Example:
         >>> success, msg = validate_gams_syntax("model.gms")

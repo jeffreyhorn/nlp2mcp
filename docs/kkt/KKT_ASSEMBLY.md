@@ -202,7 +202,7 @@ This handles cases where different instances have different bound values.
 nlp2mcp uses consistent naming conventions for multipliers:
 
 | Multiplier Type | Prefix | Sign | Example |
-|----------------|--------|------|---------|
+|-------------------|--------|------|---------|
 | Equality constraints | `nu_` | Free (unrestricted) | `nu_balance` |
 | Inequality constraints | `lam_` | Positive (≥ 0) | `lam_capacity` |
 | Lower bounds | `piL_` | Positive (≥ 0) | `piL_x` |
