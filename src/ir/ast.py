@@ -60,6 +60,18 @@ class ParamRef(Expr):
 
 
 @dataclass(frozen=True)
+class MultiplierRef(Expr):
+    """Reference to a KKT multiplier variable (λ, ν, π)."""
+
+    name: str
+    indices: tuple[str, ...] = ()
+
+    def __repr__(self) -> str:
+        idx = ",".join(self.indices)
+        return f"MultiplierRef({self.name}({idx}))" if idx else f"MultiplierRef({self.name})"
+
+
+@dataclass(frozen=True)
 class Unary(Expr):
     op: str  # "+", "-", maybe functions map elsewhere
     child: Expr
