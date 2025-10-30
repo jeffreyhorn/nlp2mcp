@@ -70,7 +70,8 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                     # For element-specific stationarity equations (stat_x_i1, stat_x_i2, etc.)
                     # GAMS Model MCP syntax doesn't support quoted indices in variable references
                     # We reference just the base variable name
-                    # GAMS will match equation to variable based on the element-specific equation name
+                    # NOTE: This is a known issue for indexed variables - see GitHub #47
+                    # TODO: Refactor to use indexed equations with domains instead
                     pairs.append(f"    {eq_name}.{var_name}")
 
     # 2. Inequality complementarities

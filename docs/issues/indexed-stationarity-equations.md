@@ -1,7 +1,8 @@
 # Indexed Stationarity Equations: GAMS MCP Syntax Incompatibility
 
+**GitHub Issue**: #47  
 **Status**: Open  
-**Related to**: GitHub Issue #46 (GAMS Code Generator Syntax Errors)  
+**Related to**: GitHub Issue #46 (GAMS Code Generator Syntax Errors - parent issue)  
 **Severity**: High  
 **Affects**: Models with indexed variables (2 out of 5 test cases failing)
 

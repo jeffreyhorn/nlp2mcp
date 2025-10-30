@@ -49,7 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Solution required**: Refactor stationarity equation generation to create indexed equations with domains: `stat_x(i).. <expr with i> =E= 0`
   - This requires rebuilding expressions to use set indices instead of element labels
   - Tests remain marked with xfail until complete refactoring is implemented
-  - See GitHub issue #46 for details
+  - See GitHub issue #47 for detailed technical analysis and implementation roadmap
+  - Related: GitHub issue #46 (parent issue for GAMS syntax errors)
 
 ##### Impact
 - 2 out of 4 failing golden file tests now pass (50% improvement)
