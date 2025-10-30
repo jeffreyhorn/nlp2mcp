@@ -149,7 +149,6 @@ def _build_inequality_index_mapping(base_mapping, model_ir: ModelIR, num_inequal
     Returns:
         Extended index mapping with bound rows added to row_to_eq
     """
-    from copy import copy
     from .index_mapping import IndexMapping
 
     # Create a new mapping with the same variable mappings

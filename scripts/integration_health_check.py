@@ -13,12 +13,12 @@ Tests all 5 example models through the full pipeline and verifies:
 import sys
 from pathlib import Path
 
-from src.ir.parser import parse_model_file
-from src.ir.normalize import normalize_model
-from src.ad.gradient import compute_objective_gradient
 from src.ad.constraint_jacobian import compute_constraint_jacobian
-from src.kkt.assemble import assemble_kkt_system
+from src.ad.gradient import compute_objective_gradient
 from src.emit.emit_gams import emit_gams_mcp
+from src.ir.normalize import normalize_model
+from src.ir.parser import parse_model_file
+from src.kkt.assemble import assemble_kkt_system
 
 
 def check_example(example_path: Path) -> dict:
@@ -90,7 +90,7 @@ def check_example(example_path: Path) -> dict:
         if results["checks"]["no_infinite_multipliers"]:
             print(f"      ✅ No multipliers for {infinite_count} infinite bounds")
         else:
-            print(f"      ❌ Found multipliers for infinite bounds!")
+            print("      ❌ Found multipliers for infinite bounds!")
             results["issues"].append("Infinite bound multipliers created")
 
         # Check 3: Objective variable handling
@@ -105,7 +105,7 @@ def check_example(example_path: Path) -> dict:
             print(f"         - No stationarity equation for objvar: {not has_stat_for_objvar}")
             print(f"         - Objvar appears in Model MCP: {objvar_in_model}")
         else:
-            print(f"      ❌ Objective variable handling incorrect!")
+            print("      ❌ Objective variable handling incorrect!")
             results["issues"].append(f"Objective variable '{objvar}' not handled correctly")
 
         # Check 4: Duplicate bounds excluded (Finding #1)
@@ -122,7 +122,7 @@ def check_example(example_path: Path) -> dict:
         if results["checks"]["duplicates_excluded"]:
             print(f"      ✅ {excluded_count} duplicate bounds excluded from inequalities")
         else:
-            print(f"      ❌ Excluded bounds found in complementarity!")
+            print("      ❌ Excluded bounds found in complementarity!")
             results["issues"].append("Duplicate bounds not properly excluded")
 
         # Check 5: Indexed bounds handled (Finding #2)
@@ -142,10 +142,10 @@ def check_example(example_path: Path) -> dict:
         if total_indexed > 0:
             print(f"      ✅ Indexed bounds handled: {indexed_lo} lower, {indexed_up} upper")
         elif model_has_indexed_bounds:
-            print(f"      ⚠️  Model has indexed bounds but none found in KKT")
+            print("      ⚠️  Model has indexed bounds but none found in KKT")
             results["issues"].append("Indexed bounds may not be handled correctly")
         else:
-            print(f"      ℹ️  No indexed bounds in this model")
+            print("      ℹ️  No indexed bounds in this model")
 
         # Check 6: Variable kinds preserved (Finding #4)
         print("    ✓ Checking variable kinds...")
@@ -170,12 +170,12 @@ def check_example(example_path: Path) -> dict:
 
         results["checks"]["variable_kinds"] = kinds_match
         if kinds_match:
-            print(f"      ✅ Variable kinds preserved")
+            print("      ✅ Variable kinds preserved")
             print(f"         - Positive: {model_has_positive} → {has_positive_vars}")
             print(f"         - Binary: {model_has_binary} → {has_binary_vars}")
             print(f"         - Integer: {model_has_integer} → {has_integer_vars}")
         else:
-            print(f"      ❌ Variable kinds not preserved!")
+            print("      ❌ Variable kinds not preserved!")
             results["issues"].append("Variable kinds not preserved in output")
 
         # Overall success

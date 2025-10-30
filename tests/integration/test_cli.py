@@ -1,6 +1,5 @@
 """Integration tests for CLI."""
 
-
 import pytest
 from click.testing import CliRunner
 
