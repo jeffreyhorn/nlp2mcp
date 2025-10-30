@@ -203,20 +203,20 @@ def _extract_var_name_from_stat_eq(eq_def, kkt: KKTSystem) -> str | None:
 
     var_part = eq_name[5:]  # Remove "stat_" prefix
 
-    # Check if this matches a variable in the model
-    for var_name in kkt.model_ir.variables:
-        if var_part.startswith(var_name):
+    # First check for exact match (scalar variable)
+    if var_part in kkt.model_ir.variables:
+        return var_part
+
+    # For indexed variables: stat_x_i1 -> x
+    # Sort variable names by descending length to match longest first
+    # This prevents prefix issues (e.g., 'x' matching when looking for 'xy')
+    for var_name in sorted(kkt.model_ir.variables, key=len, reverse=True):
+        # Check for exact match
+        if var_part == var_name:
+            return var_name
+        # Check for delimiter (underscore) after variable name
+        # This ensures we match 'xy' in 'stat_xy_i1', not 'x'
+        if var_part.startswith(var_name + "_"):
             return var_name
 
-    # Fallback: return the part after "stat_"
-    # Handle indexed case: stat_x_i1 -> x
-    if "_" in var_part:
-        # Could be stat_x_i1 or stat_my_var_i1
-        # Try each possibility
-        parts = var_part.split("_")
-        for i in range(len(parts), 0, -1):
-            candidate = "_".join(parts[:i])
-            if candidate in kkt.model_ir.variables:
-                return candidate
-
-    return var_part if var_part in kkt.model_ir.variables else None
+    return None

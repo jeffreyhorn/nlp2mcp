@@ -268,3 +268,53 @@ class TestFullGAMSEmission:
         # Should use custom model name
         assert "Model my_model" in output
         assert "Solve my_model using MCP" in output
+
+    def test_emit_with_prefix_variable_names(self, manual_index_mapping):
+        """Test emission with variables that are prefixes of each other.
+
+        Regression test for issue where 'x' would incorrectly match when
+        looking for 'xy' in stationarity equation names.
+        """
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("obj", ()),
+                Binary(
+                    "+",
+                    VarRef("x", ()),
+                    VarRef("xy", ()),
+                ),
+            ),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=())
+        model.variables["xy"] = VariableDef(name="xy", domain=())
+
+        model.equalities = ["objdef"]
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ()), ("xy", ())])
+
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        gradient.set_derivative(1, Const(1.0))
+        gradient.set_derivative(2, Const(1.0))
+
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+
+        output = emit_gams_mcp(kkt)
+
+        # Should have stationarity for both x and xy
+        assert "stat_x" in output
+        assert "stat_xy" in output
+
+        # Should pair correctly: stat_x.x and stat_xy.xy
+        assert "stat_x.x" in output
+        assert "stat_xy.xy" in output
