@@ -287,14 +287,14 @@ class TestGradientIndexedVariables:
         # Structure may be (2*x(i1)^1)*1 due to power and chain rules, which is fine
         # Key test: verify it contains VarRef with correct index
         deriv_i1_str = repr(deriv_i1)
-        assert "VarRef(x(i1))" in deriv_i1_str, (
-            f"Derivative should contain x(i1), got: {deriv_i1_str}"
-        )
+        assert (
+            "VarRef(x(i1))" in deriv_i1_str
+        ), f"Derivative should contain x(i1), got: {deriv_i1_str}"
 
         deriv_i2_str = repr(deriv_i2)
-        assert "VarRef(x(i2))" in deriv_i2_str, (
-            f"Derivative should contain x(i2), got: {deriv_i2_str}"
-        )
+        assert (
+            "VarRef(x(i2))" in deriv_i2_str
+        ), f"Derivative should contain x(i2), got: {deriv_i2_str}"
 
     def test_mixed_scalar_and_indexed(self):
         """Test gradient with mix of scalar and indexed variables."""
