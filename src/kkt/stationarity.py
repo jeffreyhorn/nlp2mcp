@@ -241,16 +241,16 @@ def _replace_indices_in_expr(expr: Expr, domain: tuple[str, ...]) -> Expr:
         case Const(_):
             return expr
         case VarRef(name, indices):
-            if indices and domain:
+            if indices and domain and len(indices) == len(domain):
                 # Replace element labels with domain indices
                 return VarRef(name, domain)
             return expr
         case ParamRef(name, indices):
-            if indices and domain:
+            if indices and domain and len(indices) == len(domain):
                 return ParamRef(name, domain)
             return expr
         case MultiplierRef(name, indices):
-            if indices and domain:
+            if indices and domain and len(indices) == len(domain):
                 return MultiplierRef(name, domain)
             return expr
         case Binary(op, left, right):
@@ -264,7 +264,10 @@ def _replace_indices_in_expr(expr: Expr, domain: tuple[str, ...]) -> Expr:
             new_args = tuple(_replace_indices_in_expr(arg, domain) for arg in args)
             return Call(func, new_args)
         case Sum(_index_sets, _body):
-            # Keep sum as is - it already has proper structure
+            # Recursively process body to replace any element-specific indices
+            new_body = _replace_indices_in_expr(_body, domain)
+            if new_body is not _body:
+                return Sum(_index_sets, new_body)
             return expr
         case _:
             return expr
@@ -318,7 +321,6 @@ def _add_indexed_jacobian_terms(
         # Determine if constraint is indexed
         if eq_indices:
             # Indexed constraint: use sum
-            mult_name = name_func(eq_name_base, eq_indices)
             mult_domain = _get_constraint_domain(kkt, eq_name_base)
 
             if mult_domain:
@@ -332,8 +334,19 @@ def _add_indexed_jacobian_terms(
 
                 # Only use sum if constraint domain is different from variable domain
                 # If domains match, it's a direct term: deriv(i) * mult(i)
-                # If domains differ, we need sum: sum(j, deriv * mult(j))
+                # If domains differ and compatible, we need sum: sum(j, deriv * mult(j))
                 if mult_domain != var_domain and len(mult_domain) > 0:
+                    # Check domain compatibility: mult_domain should be subset of var_domain
+                    # or they should be disjoint (independent indexing)
+                    if not set(mult_domain).issubset(set(var_domain)) and set(
+                        mult_domain
+                    ).intersection(set(var_domain)):
+                        # Domains overlap but aren't compatible for summation
+                        raise ValueError(
+                            f"Incompatible domains for summation: variable domain {var_domain}, "
+                            f"multiplier domain {mult_domain}. Multiplier domain must be either "
+                            f"a subset of variable domain or completely disjoint."
+                        )
                     term = Sum(mult_domain, term)
 
                 expr = Binary("+", expr, term)

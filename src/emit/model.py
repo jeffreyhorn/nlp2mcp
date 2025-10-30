@@ -58,7 +58,7 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
     # 1. Stationarity equations paired with primal variables
     if kkt.stationarity:
         pairs.append("    * Stationarity conditions")
-        for eq_name, _eq_def in sorted(kkt.stationarity.items()):
+        for eq_name in sorted(kkt.stationarity.keys()):
             # Extract variable name from stationarity equation name
             # stat_x -> x (scalar or indexed)
             if eq_name.startswith("stat_"):
