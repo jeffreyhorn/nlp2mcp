@@ -1412,6 +1412,10 @@ Output: simple_nlp_mcp.gms (GAMS MCP model with KKT conditions)
    - Run each example 5 times
    - Verify output is identical each time
    - Fix any non-determinism (sort dict keys, etc.)
+   - **NOTE FROM MID-SPRINT CHECKPOINT**: Pay special attention to:
+     - Dict iteration order in `emit_model_mcp()` (use `sorted()`)
+     - Multiplier ordering in complementarity pairs
+     - Variable/equation ordering in template generation
    - Verify infinite bounds consistently skipped
    - Verify duplicate exclusions deterministic
    - Verify indexed bounds deterministic
