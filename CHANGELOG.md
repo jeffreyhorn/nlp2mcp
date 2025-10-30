@@ -9,6 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-30 - Sprint 3 Day 8: Golden Test Suite
+
+##### Added
+- **Golden Reference Files** (`tests/golden/`)
+  - 5 manually verified golden reference files:
+    - `simple_nlp_mcp.gms` - Indexed variables with inequality constraints
+    - `bounds_nlp_mcp.gms` - Scalar variables with finite bounds
+    - `indexed_balance_mcp.gms` - Indexed variables with equality constraints
+    - `nonlinear_mix_mcp.gms` - Multiple nonlinear equality constraints with bounds
+    - `scalar_nlp_mcp.gms` - Simple scalar model with parameters
+  - Each file manually verified for:
+    - Correct KKT equations (stationarity + complementarity)
+    - Original symbols preservation (Sets, Parameters, etc.)
+    - Proper bound handling (no infinite bound multipliers)
+    - Objective variable handling
+    - Variable kind preservation
+
+- **Golden Test Framework** (`tests/e2e/test_golden.py`)
+  - End-to-end regression tests comparing pipeline output against golden files
+  - 5 comprehensive golden tests (one per example)
+  - Features:
+    - Whitespace normalization for robust comparison
+    - Detailed diff output on failure
+    - Clear error messages pointing to golden files
+  - Uses full pipeline: Parse → Normalize → AD → KKT → Emit
+
+##### Verified
+- **Deterministic Output**
+  - All 5 examples tested with 5 runs each (25 total runs)
+  - 100% deterministic: identical output every time
+  - Verified areas:
+    - Dict iteration order in Model MCP section
+    - Multiplier ordering in complementarity pairs
+    - Variable/equation ordering
+    - Set/Parameter ordering
+
+- **Test Coverage**
+  - Total tests: 593 (up from 588)
+  - New golden tests: 5
+  - All tests passing: 593/593 ✅
+  - No regressions
+
+##### Technical Details
+- Golden files generated via CLI: `nlp2mcp examples/*.gms -o tests/golden/*_mcp.gms`
+- Test framework uses `emit_gams_mcp()` for full file emission (not just Model MCP section)
+- Normalization handles whitespace differences but preserves semantic content
+- Determinism verified via SHA-256 hashing of outputs
+
 #### 2025-10-30 - Sprint 3 Day 7: Mid-Sprint Checkpoint & CLI
 
 ##### Added
