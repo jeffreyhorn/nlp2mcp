@@ -35,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Clear error messages pointing to golden files
   - Uses full pipeline: Parse → Normalize → AD → KKT → Emit
 
+- **Git Ignore Updates** (`.gitignore`)
+  - Added `*.lst` to ignore GAMS output files
+  - GAMS listing files should not be tracked in repository
+
 ##### Verified
 - **Deterministic Output**
   - All 5 examples tested with 5 runs each (25 total runs)
@@ -51,11 +55,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All tests passing: 593/593 ✅
   - No regressions
 
+##### Fixed
+- **Missing Equation Declarations in Equations Block** (`src/emit/templates.py`)
+  - **Issue**: Generated GAMS files were missing equation declarations for original equality equations
+  - **Root Cause**: `emit_equations()` only declared KKT equations (stationarity, complementarity, bounds), not original equality equations
+  - **Fix**: Added loop through `kkt.model_ir.equalities` to declare all equality equations
+  - **Impact**: All 5 golden files regenerated with correct GAMS syntax
+  - **Verification**: All 593 tests passing after fix
+  - **Details**:
+    - Handles both scalar equations (e.g., `objective`) and indexed equations (e.g., `balance(i)`)
+    - Proper domain formatting with parentheses for indexed equations
+    - Equations must be declared before they can be defined or used in Model block
+
+- **Missing Commas in Model MCP Block** (`src/emit/model.py`)
+  - **Issue**: Model MCP declaration missing commas between equation-variable pairs
+  - **GAMS Error**: "Closing '/' missing" and "Empty model list" errors
+  - **Root Cause**: `emit_model_mcp()` built pairs list but didn't add comma separators
+  - **Fix**: Modified function to add commas after each equation-variable pair (except the last one)
+  - **Impact**: All 5 golden files regenerated with correct comma-separated syntax
+  - **Verification**: All 593 tests passing after fix
+  - **Details**:
+    - GAMS requires comma-separated pairs: `stat_x.x, objective.obj, ...`
+    - Skipped commas for comment lines and empty lines initially (see next fix)
+    - Last actual pair gets no comma before the closing `/;`
+
+- **Inline Comments in Model MCP Block** (`src/emit/model.py`)
+  - **Issue**: GAMS does not allow inline comments within `Model / ... /` block delimiters
+  - **GAMS Error**: Parser kept scanning for closing `/` and raised "Closing '/' missing"
+  - **Root Cause**: `emit_model_mcp()` included comment lines like `* Stationarity conditions` inside Model block
+  - **Fix**: Modified function to filter out all comment lines and empty lines from within Model block
+  - **Impact**: All 5 golden files regenerated with clean Model block syntax
+  - **Verification**: All 593 tests passing after fix
+  - **Details**:
+    - Only actual equation-variable pairs are included in the Model block
+    - Comment lines (starting with `*`) are completely removed from Model block
+    - Empty lines removed from Model block
+    - Updated docstring example to show correct syntax without inline comments
+    - Model block now follows strict GAMS syntax: only comma-separated pairs
+
 ##### Technical Details
 - Golden files generated via CLI: `nlp2mcp examples/*.gms -o tests/golden/*_mcp.gms`
 - Test framework uses `emit_gams_mcp()` for full file emission (not just Model MCP section)
 - Normalization handles whitespace differences but preserves semantic content
 - Determinism verified via SHA-256 hashing of outputs
+- All three syntax fixes applied at generator level to ensure future generated files are correct
 
 #### 2025-10-30 - Sprint 3 Day 7: Mid-Sprint Checkpoint & CLI
 
