@@ -1,0 +1,14 @@
+--- Job scalar_nlp_mcp.gms Start 10/30/25 13:20:11 51.3.0 38407a9b DEX-DEG x86 64bit/macOS
+*** Unable to open input file (RC=2) tests/golden/scalar_nlp_mcp.gms
+*** SysMsg: No such file or directory
+--- Applying:
+    /Library/Frameworks/GAMS.framework/Versions/51/Resources/gmsprmun.txt
+--- GAMS Parameters defined
+    Input tests/golden/scalar_nlp_mcp.gms
+    ScrDir /Users/jeff/experiments/nlp2mcp/tests/golden/225a/
+    SysDir /Library/Frameworks/GAMS.framework/Versions/51/Resources/
+    LogOption 2
+    LogFile /Users/jeff/experiments/nlp2mcp/tests/golden/scalar_nlp_mcp.log
+    AppendLog 1
+*** Status: Terminated due to parameter errors
+--- Job scalar_nlp_mcp.gms Stop 10/30/25 13:20:11 elapsed 0:00:00.001
