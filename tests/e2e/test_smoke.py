@@ -20,7 +20,6 @@ from src.kkt.stationarity import build_stationarity_equations
 
 def _manual_index_mapping(vars: list[tuple[str, tuple]], eqs: list[tuple[str, tuple]] = None):
     """Helper to manually create IndexMapping for tests."""
-    from src.ad.index_mapping import IndexMapping
 
     mapping = IndexMapping()
 

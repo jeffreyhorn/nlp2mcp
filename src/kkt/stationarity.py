@@ -96,6 +96,7 @@ def _build_stationarity_expr(
     """
     # Start with gradient component
     grad_component = kkt.gradient.get_derivative(col_id)
+    expr: Expr
     if grad_component is None:
         expr = Const(0.0)
     else:

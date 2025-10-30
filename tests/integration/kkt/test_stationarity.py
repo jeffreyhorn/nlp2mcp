@@ -3,9 +3,9 @@
 import pytest
 
 from src.ad.gradient import GradientVector
-from src.ad.index_mapping import IndexMapping, build_index_mapping
+from src.ad.index_mapping import IndexMapping
 from src.ad.jacobian import JacobianStructure
-from src.ir.ast import Binary, Const, MultiplierRef, VarRef
+from src.ir.ast import Binary, Const, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
 from src.ir.symbols import EquationDef, ObjSense, Rel, VariableDef
 from src.kkt.kkt_system import KKTSystem, MultiplierDef
@@ -350,9 +350,8 @@ class TestStationarityIndexed:
         assert "stat_x_i1" in stationarity
         assert "stat_x_i2" in stationarity
 
-        # Check that each contains a MultiplierRef for π^L
-        stat_x_i1 = stationarity["stat_x_i1"]
-        # The expression should contain MultiplierRef terms
+        # Stationarity equations should be generated with correct structure
+        # (Expression checking would require AST traversal, omitted for brevity)
 
 
 @pytest.mark.integration
