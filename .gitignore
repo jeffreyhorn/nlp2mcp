@@ -54,5 +54,6 @@ build/
 # Project specific
 *.gms.bak
 *.lst
+*.log
 output/
 results/
