@@ -99,19 +99,34 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
 
         case VarRef(name, indices):
             if indices:
-                indices_str = ",".join(indices)
+                # Quote element labels (identifiers with digits) for GAMS syntax
+                # Element labels like "i1", "j2" need quotes: x("i1")
+                # Set indices like "i", "j" don't: x(i)
+                quoted_indices = [
+                    f'"{idx}"' if any(c.isdigit() for c in idx) else idx for idx in indices
+                ]
+                indices_str = ",".join(quoted_indices)
                 return f"{name}({indices_str})"
             return name
 
         case ParamRef(name, indices):
             if indices:
-                indices_str = ",".join(indices)
+                # Quote element labels (identifiers with digits) for GAMS syntax
+                # Element labels like "i1", "j2" need quotes: a("i1")
+                # Set indices like "i", "j" don't: a(i)
+                quoted_indices = [
+                    f'"{idx}"' if any(c.isdigit() for c in idx) else idx for idx in indices
+                ]
+                indices_str = ",".join(quoted_indices)
                 return f"{name}({indices_str})"
             return name
 
         case MultiplierRef(name, indices):
             if indices:
-                indices_str = ",".join(indices)
+                # Quote element labels for GAMS syntax
+                # e.g., nu_balance(i1) -> nu_balance("i1")
+                quoted_indices = [f'"{idx}"' for idx in indices]
+                indices_str = ",".join(quoted_indices)
                 return f"{name}({indices_str})"
             return name
 
@@ -120,8 +135,14 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
             # GAMS unary operators: +, -
             # Add parentheses if child is a binary expression to preserve correctness
             # e.g., -(x - 10) not -x - 10
+            # Also parenthesize negative expressions to avoid double operators
+            # e.g., (+ -sin(y)) becomes (+ (-sin(y)))
             if isinstance(child, Binary):
                 return f"{op}({child_str})"
+            # Parenthesize negative unary to avoid double operator issues
+            # e.g., x + -sin(y) becomes x + (-sin(y))
+            if op == "-":
+                return f"({op}{child_str})"
             return f"{op}{child_str}"
 
         case Binary(op, left, right):
@@ -134,6 +155,21 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
                 # Determine if we need parentheses for the whole expression
                 needs_parens = _needs_parens(parent_op, op, is_right)
                 result = f"{left_str} ** {right_str}"
+                return f"({result})" if needs_parens else result
+
+            # Special handling for subtraction of negative constants
+            # Convert "x - (-5)" to "x + 5" to avoid double operators
+            if op == "-" and isinstance(right, Const) and right.value < 0:
+                left_str = expr_to_gams(left, parent_op="+", is_right=False)
+                # Negate the negative value to get positive
+                right_val = -right.value
+                if isinstance(right_val, (int, float)) and right_val == int(right_val):
+                    right_str = str(int(right_val))
+                else:
+                    right_str = str(right_val)
+                # Use addition instead
+                needs_parens = _needs_parens(parent_op, "+", is_right)
+                result = f"{left_str} + {right_str}"
                 return f"({result})" if needs_parens else result
 
             # Other binary operators

@@ -50,7 +50,9 @@ class TestGAMSValidation:
     https://github.com/jeffreyhorn/nlp2mcp/issues/46
     """
 
-    @pytest.mark.xfail(reason="Known issue (GitHub #46): Domain violations in generated GAMS code")
+    @pytest.mark.xfail(
+        reason="Known issue (GitHub #46): Element-specific stationarity equations incompatible with GAMS MCP Model syntax for indexed variables"
+    )
     def test_validate_simple_nlp_golden(self):
         """Test GAMS validation of simple_nlp_mcp.gms."""
         golden_file = Path("tests/golden/simple_nlp_mcp.gms")
@@ -60,9 +62,6 @@ class TestGAMSValidation:
         if error:
             pytest.fail(f"GAMS validation failed: {error}")
 
-    @pytest.mark.xfail(
-        reason="Known issue (GitHub #46): Double operator errors in generated GAMS code"
-    )
     def test_validate_bounds_nlp_golden(self):
         """Test GAMS validation of bounds_nlp_mcp.gms."""
         golden_file = Path("tests/golden/bounds_nlp_mcp.gms")
@@ -72,7 +71,9 @@ class TestGAMSValidation:
         if error:
             pytest.fail(f"GAMS validation failed: {error}")
 
-    @pytest.mark.xfail(reason="Known issue (GitHub #46): Domain violations in generated GAMS code")
+    @pytest.mark.xfail(
+        reason="Known issue (GitHub #46): Element-specific stationarity equations incompatible with GAMS MCP Model syntax for indexed variables"
+    )
     def test_validate_indexed_balance_golden(self):
         """Test GAMS validation of indexed_balance_mcp.gms."""
         golden_file = Path("tests/golden/indexed_balance_mcp.gms")
@@ -82,9 +83,6 @@ class TestGAMSValidation:
         if error:
             pytest.fail(f"GAMS validation failed: {error}")
 
-    @pytest.mark.xfail(
-        reason="Known issue (GitHub #46): Double operator errors in generated GAMS code"
-    )
     def test_validate_nonlinear_mix_golden(self):
         """Test GAMS validation of nonlinear_mix_mcp.gms."""
         golden_file = Path("tests/golden/nonlinear_mix_mcp.gms")

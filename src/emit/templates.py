@@ -122,6 +122,7 @@ def emit_equations(kkt: KKTSystem) -> str:
     """Emit Equations block declarations.
 
     Declares all equation names (stationarity, complementarity, equality).
+    For indexed equations, includes domain in declaration.
 
     Args:
         kkt: KKT system
@@ -134,29 +135,53 @@ def emit_equations(kkt: KKTSystem) -> str:
             stat_x
             stat_y
             comp_g1
+            comp_balance(i)
             comp_lo_x
-            eq_balance
+            eq_balance(i)
         ;
     """
     lines = ["Equations"]
 
     # Stationarity equations
-    for eq_name in sorted(kkt.stationarity.keys()):
-        lines.append(f"    {eq_name}")
+    for eq_name, eq_def in sorted(kkt.stationarity.items()):
+        # Include domain if present
+        if eq_def.domain:
+            domain_indices = ",".join(eq_def.domain)
+            lines.append(f"    {eq_name}({domain_indices})")
+        else:
+            lines.append(f"    {eq_name}")
 
     # Inequality complementarity equations
     for eq_name in sorted(kkt.complementarity_ineq.keys()):
-        comp_eq_name = kkt.complementarity_ineq[eq_name].equation.name
-        lines.append(f"    {comp_eq_name}")
+        comp_pair = kkt.complementarity_ineq[eq_name]
+        eq_def = comp_pair.equation
+        # Include domain if present
+        if eq_def.domain:
+            domain_indices = ",".join(eq_def.domain)
+            lines.append(f"    {eq_def.name}({domain_indices})")
+        else:
+            lines.append(f"    {eq_def.name}")
 
     # Bound complementarity equations
     for key in sorted(kkt.complementarity_bounds_lo.keys()):
         comp_pair = kkt.complementarity_bounds_lo[key]
-        lines.append(f"    {comp_pair.equation.name}")
+        eq_def = comp_pair.equation
+        # Include domain if present
+        if eq_def.domain:
+            domain_indices = ",".join(eq_def.domain)
+            lines.append(f"    {eq_def.name}({domain_indices})")
+        else:
+            lines.append(f"    {eq_def.name}")
 
     for key in sorted(kkt.complementarity_bounds_up.keys()):
         comp_pair = kkt.complementarity_bounds_up[key]
-        lines.append(f"    {comp_pair.equation.name}")
+        eq_def = comp_pair.equation
+        # Include domain if present
+        if eq_def.domain:
+            domain_indices = ",".join(eq_def.domain)
+            lines.append(f"    {eq_def.name}({domain_indices})")
+        else:
+            lines.append(f"    {eq_def.name}")
 
     # Original equality equations (declared here, also used in Model MCP section)
     for eq_name in sorted(kkt.model_ir.equalities):

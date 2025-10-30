@@ -67,12 +67,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x.. 1 + 0 + (2 * power(x, 1) * 1 + 2 * power(y, 1) * 0 - 0) * nu_poly_balance + (cos(x) * 1 + -sin(y) * 0 - 0) * nu_trig_balance - piL_x + piU_x =E= 0;
-stat_y.. 0 + 1 + (2 * power(x, 1) * 0 + 2 * power(y, 1) * 1 - 0) * nu_poly_balance + (cos(x) * 0 + -sin(y) * 1 - 0) * nu_trig_balance - piL_y + piU_y =E= 0;
+stat_x.. 1 + 0 + (2 * power(x, 1) * 1 + 2 * power(y, 1) * 0 - 0) * nu_poly_balance + (cos(x) * 1 + (-sin(y)) * 0 - 0) * nu_trig_balance - piL_x + piU_x =E= 0;
+stat_y.. 0 + 1 + (2 * power(x, 1) * 0 + 2 * power(y, 1) * 1 - 0) * nu_poly_balance + (cos(x) * 0 + (-sin(y)) * 1 - 0) * nu_trig_balance - piL_y + piU_y =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_x.. x - -2 =G= 0;
-comp_lo_y.. y - -2 =G= 0;
+comp_lo_x.. x + 2 =G= 0;
+comp_lo_y.. y + 2 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_x.. 2 - x =G= 0;
