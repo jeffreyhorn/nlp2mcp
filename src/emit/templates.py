@@ -158,7 +158,7 @@ def emit_equations(kkt: KKTSystem) -> str:
         comp_pair = kkt.complementarity_bounds_up[key]
         lines.append(f"    {comp_pair.equation.name}")
 
-    # Original equality equations (these go in Model MCP section)
+    # Original equality equations (declared here, also used in Model MCP section)
     for eq_name in sorted(kkt.model_ir.equalities):
         if eq_name in kkt.model_ir.equations:
             eq_def = kkt.model_ir.equations[eq_name]
