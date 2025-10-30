@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
+
+#### 2025-10-29 - Day 1: Foundation & Data Structures
+
+##### Added
+- Created KKT system data structures in `src/kkt/`
+  - `kkt_system.py`: Core data structures (KKTSystem, MultiplierDef, ComplementarityPair)
+  - `partition.py`: Constraint partitioning with duplicate exclusion and indexed bounds support
+  - `objective.py`: Objective variable detection and defining equation identification
+  - `naming.py`: Multiplier naming conventions with collision detection
+- Implemented constraint partitioning with critical fixes:
+  - **Finding #1 Fix**: Duplicate bounds now EXCLUDED from inequality list (not just warned)
+  - **Finding #2 Fix**: Indexed bounds supported via lo_map/up_map/fx_map iteration
+  - Infinite bounds (±INF) filtered to avoid meaningless multipliers
+  - Bounds dict keys use (var_name, indices) tuples for indexed instances
+- Created comprehensive unit test suite:
+  - `tests/unit/kkt/test_partition.py`: 22 tests for constraint partitioning
+  - `tests/unit/kkt/test_objective.py`: 9 tests for objective variable detection
+  - `tests/unit/kkt/test_naming.py`: 15 tests for multiplier naming conventions
+  - Total: 46 new unit tests
+
+##### Implementation Details
+**KKTSystem Data Structure:**
+- Stores complete KKT conditions for NLP → MCP transformation
+- Includes gradient, Jacobians (J_eq, J_ineq), multipliers, and KKT equations
+- Tracks skipped infinite bounds and excluded duplicate bounds
+- Foundation for Day 2-3 stationarity and complementarity builders
+
+**Constraint Partitioning:**
+- Partitions constraints into equalities, inequalities, and bounds
+- Duplicate bound exclusion: User-authored bounds that duplicate variable bounds are excluded
+- Indexed bounds: Processes lo_map/up_map/fx_map for per-instance bounds
+- Infinite filtering: Skips ±INF bounds (both scalar and indexed)
+- Returns PartitionResult with all partitioned components
+
+**Objective Variable Detection:**
+- Identifies objective variable (e.g., "obj", "z", "cost")
+- Finds defining equation (e.g., "objdef.. obj =E= f(x);")
+- Determines if stationarity equation needed (no for standard NLP→MCP)
+- Handles objvar on LHS or RHS of defining equation
+
+**Multiplier Naming:**
+- Consistent naming: nu_<eq>, lam_<ineq>, piL_<var>, piU_<var>
+- Collision detection with existing variable names
+- Collision resolution with numeric suffixes
+
+##### Acceptance Criteria Met
+- [x] All data structures defined with complete type hints
+- [x] Partition correctly separates equalities, inequalities, bounds
+- [x] Duplicate bounds EXCLUDED from inequality list (Finding #1)
+- [x] Indexed bounds processed via lo_map/up_map/fx_map (Finding #2)
+- [x] Infinite bounds filtered for both scalar and indexed variables
+- [x] Objective variable and defining equation extracted
+- [x] Naming convention handles all test cases
+- [x] Unit tests pass (46/46)
+- [x] Type checking passes
+- [x] Code formatted and linted
+
+##### Next Steps
+- Day 2: Implement stationarity equation builder
+- Day 2: Handle multiplier references in AST
+- Day 2: Early integration smoke tests
+
 ### Sprint 3 Prep: Architecture Documentation & Test Organization
 
 #### 2025-10-29 - API Contract Tests (Sprint 3 Prep Task 4)
