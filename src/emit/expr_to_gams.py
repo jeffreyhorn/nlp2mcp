@@ -118,6 +118,10 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
         case Unary(op, child):
             child_str = expr_to_gams(child, parent_op=op)
             # GAMS unary operators: +, -
+            # Add parentheses if child is a binary expression to preserve correctness
+            # e.g., -(x - 10) not -x - 10
+            if isinstance(child, Binary):
+                return f"{op}({child_str})"
             return f"{op}{child_str}"
 
         case Binary(op, left, right):

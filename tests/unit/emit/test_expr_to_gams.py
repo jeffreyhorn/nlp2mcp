@@ -301,5 +301,6 @@ class TestComplexExpressions:
         """Test complementarity slack: -g(x) where g(x) = x - 10."""
         expr = Unary("-", Binary("-", VarRef("x", ()), Const(10)))
         result = expr_to_gams(expr)
-        # GAMS doesn't require parens here - unary minus distributes
-        assert result == "-x - 10"
+        # Parentheses required to preserve mathematical correctness
+        # -(x - 10) = -x + 10, not -x - 10
+        assert result == "-(x - 10)"
