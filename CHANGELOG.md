@@ -70,13 +70,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated roadmap: v0.3.0 marked as COMPLETE
   - Test count updated to 593 passing tests
 
+##### Changed
+- **GAMS Validation Improvements** (post-initial implementation)
+  - Added pytest cleanup fixture to automatically remove `.lst` and `.log` files
+  - Fixture runs after each validation test to keep repository clean
+  - Added `*.log` to `.gitignore` (in addition to `*.lst`)
+  - Improved documentation with detailed comments explaining exit code handling
+  - Capture GAMS exit code for diagnostics (but don't use for validation logic)
+  - Include exit code in error messages for unexpected failure cases
+  - Clarifies validation strategy: `.lst` file is authoritative, not exit codes
+
 ##### Technical Details
 - GAMS validation parses `.lst` files instead of relying on return codes
-- GAMS return code 6 is normal for compile-only mode (no solver available)
+- GAMS exit codes documented in code:
+  - Code 0: Normal completion (rare in compile-only mode)
+  - Code 2: Compilation error (actual syntax error)
+  - Code 6: Parameter error (common in compile-only, but NOT a compilation error)
 - Validation looks for "COMPILATION TIME" to confirm successful compilation
 - Validation extracts errors from lines containing "****" in `.lst` files
 - Documentation emphasizes critical findings from Sprint 3 planning review
 - All 5 golden files validated against actual GAMS compiler ✅
+- Cleanup fixture prevents `.lst` and `.log` files from accumulating in tests/golden/
+- `.gitignore` updated to prevent accidental commits of GAMS output files
 
 #### 2025-10-30 - Sprint 3 Day 8: Golden Test Suite
 
