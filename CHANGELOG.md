@@ -9,6 +9,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-29 - Sprint 3 Day 3: KKT Assembler - Complementarity
+
+##### Added
+- **Complementarity Equation Builder** (`src/kkt/complementarity.py`)
+  - Function: `build_complementarity_pairs(kkt: KKTSystem) -> tuple[dict, dict, dict, dict]`
+  - Builds complementarity conditions for inequalities and bounds
+  - Inequality complementarity: -g(x) ≥ 0 ⊥ λ ≥ 0 (negated to positive slack form)
+  - Lower bound complementarity: (x - lo) ≥ 0 ⊥ π^L ≥ 0
+  - Upper bound complementarity: (up - x) ≥ 0 ⊥ π^U ≥ 0
+  - Equality equations: h(x) = 0 with ν free (no complementarity)
+  - Includes objective defining equation in equality equations
+  - Handles indexed bounds correctly (per-instance complementarity pairs)
+  - Keys: inequalities by equation name, bounds by `(var_name, indices)` tuple
+
+- **Main KKT Assembler** (`src/kkt/assemble.py`)
+  - Function: `assemble_kkt_system(model_ir, gradient, J_eq, J_ineq) -> KKTSystem`
+  - Complete KKT system assembly orchestrating all components
+  - Step 1: Partition constraints (equalities, inequalities, bounds)
+  - Step 2: Extract objective information (objvar, defining equation)
+  - Step 3: Create multiplier definitions (ν, λ, π^L, π^U)
+  - Step 4: Initialize KKTSystem with multipliers
+  - Step 5: Build stationarity equations (from Day 2)
+  - Step 6: Build complementarity pairs (from Day 3)
+  - Helper functions: `_create_eq_multipliers()`, `_create_ineq_multipliers()`, `_create_bound_lo_multipliers()`, `_create_bound_up_multipliers()`
+  - Comprehensive logging for assembly process
+
+- **Integration Tests** (`tests/integration/kkt/test_kkt_full.py`)
+  - 6 comprehensive end-to-end KKT assembly tests
+  - `test_simple_nlp_full_assembly`: Basic NLP with equality constraint
+  - `test_nlp_with_bounds_assembly`: Scalar bounds (lower and upper)
+  - `test_nlp_with_inequality_assembly`: Inequality constraints
+  - `test_indexed_bounds_assembly`: Per-instance indexed bounds
+  - `test_infinite_bounds_filtered`: Verifies ±INF bounds are skipped
+  - `test_objective_defining_equation_included`: Verifies objdef in system
+
+- **Enhanced Smoke Tests** (`tests/e2e/test_smoke.py`)
+  - Added `test_full_kkt_assembler`: Complete end-to-end smoke test
+  - Verifies stationarity, inequality complementarity, bound complementarity
+  - Tests full problem: min x^2 + y^2 s.t. x + y ≤ 10, x ≥ 0, 0 ≤ y ≤ 5
+
+##### Changed
+- **Updated KKTSystem dataclass** (`src/kkt/kkt_system.py`)
+  - Changed `multipliers_bounds_lo` type from `dict[str, MultiplierDef]` to `dict[tuple, MultiplierDef]`
+  - Changed `multipliers_bounds_up` type from `dict[str, MultiplierDef]` to `dict[tuple, MultiplierDef]`
+  - Changed `complementarity_bounds_lo` type from `dict[str, ComplementarityPair]` to `dict[tuple, ComplementarityPair]`
+  - Changed `complementarity_bounds_up` type from `dict[str, ComplementarityPair]` to `dict[tuple, ComplementarityPair]`
+  - Enables per-instance tracking of indexed bounds with keys `(var_name, indices)`
+
+- **Updated exports** (`src/kkt/__init__.py`)
+  - Added `assemble_kkt_system` and `build_complementarity_pairs`
+
+##### Implementation Details
+- Inequality complementarity keyed by equation name (string)
+- Bound complementarity keyed by `(var_name, indices)` tuple for indexed tracking
+- Multiplier creation functions return dicts with appropriate key types
+- ComplementarityPair stores equation, variable name, and variable indices
+- Objective defining equation included in equality equations (no complementarity)
+- Infinite bounds already filtered by partition (from Day 1)
+- Duplicate bounds already excluded by partition (Finding #1 from planning)
+
+##### Test Summary
+- **New Tests**: 7 total (6 integration + 1 smoke test)
+- **Total Tests**: 466 (459 existing + 7 new)
+- **All Tests Passing**: ✅ 466/466
+- **Type Checking**: ✅ mypy clean (resolved tuple vs string key type issues)
+- **Linting/Formatting**: ✅ ruff and black clean
+
+##### Acceptance Criteria Met
+- [x] Complementarity pairs generated for inequalities (keyed by equation name)
+- [x] Complementarity pairs generated for bounds (keyed by tuple for indexed support)
+- [x] Equality equations included (objective defining equation present)
+- [x] Indexed bounds handled correctly (per-instance pairs with different bound values)
+- [x] Main assembler orchestrates all components correctly
+- [x] Integration tests pass (6/6)
+- [x] Smoke tests pass (7/7)
+- [x] No Sprint 1/2/3 test regressions
+
+##### Files Modified
+- `src/kkt/complementarity.py`: New complementarity builder module (~160 lines)
+- `src/kkt/assemble.py`: New main KKT assembler module (~210 lines)
+- `src/kkt/__init__.py`: Exported new functions
+- `src/kkt/kkt_system.py`: Updated bound dict types to support tuple keys
+- `tests/integration/kkt/test_kkt_full.py`: New integration tests (~370 lines)
+- `tests/e2e/test_smoke.py`: Added full assembler smoke test
+
 #### 2025-10-29 - Sprint 3 Day 2: KKT Assembler - Stationarity
 
 ##### Added

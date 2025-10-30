@@ -110,14 +110,14 @@ class KKTSystem:
     # Multipliers (filtered for infinite bounds, including indexed)
     multipliers_eq: dict[str, MultiplierDef] = field(default_factory=dict)
     multipliers_ineq: dict[str, MultiplierDef] = field(default_factory=dict)
-    multipliers_bounds_lo: dict[str, MultiplierDef] = field(default_factory=dict)
-    multipliers_bounds_up: dict[str, MultiplierDef] = field(default_factory=dict)
+    multipliers_bounds_lo: dict[tuple, MultiplierDef] = field(default_factory=dict)
+    multipliers_bounds_up: dict[tuple, MultiplierDef] = field(default_factory=dict)
 
     # KKT equations
     stationarity: dict[str, EquationDef] = field(default_factory=dict)
     complementarity_ineq: dict[str, ComplementarityPair] = field(default_factory=dict)
-    complementarity_bounds_lo: dict[str, ComplementarityPair] = field(default_factory=dict)
-    complementarity_bounds_up: dict[str, ComplementarityPair] = field(default_factory=dict)
+    complementarity_bounds_lo: dict[tuple, ComplementarityPair] = field(default_factory=dict)
+    complementarity_bounds_up: dict[tuple, ComplementarityPair] = field(default_factory=dict)
 
     # Metadata
     skipped_infinite_bounds: list[tuple[str, tuple, str]] = field(default_factory=list)

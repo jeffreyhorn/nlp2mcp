@@ -12,6 +12,7 @@ from src.ad.jacobian import JacobianStructure
 from src.ir.ast import Binary, Const, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
 from src.ir.symbols import EquationDef, ObjSense, Rel, VariableDef
+from src.kkt.assemble import assemble_kkt_system
 from src.kkt.kkt_system import KKTSystem, MultiplierDef
 from src.kkt.objective import extract_objective_info
 from src.kkt.partition import partition_constraints
@@ -387,3 +388,84 @@ class TestKKTAssemblerSmoke:
         assert len(stationarity) == 1
         assert "stat_x" in stationarity
         assert "stat_cost" not in stationarity
+
+    def test_full_kkt_assembler(self):
+        """Full end-to-end smoke test for KKT assembler.
+
+        Problem:
+            min x^2 + y^2
+            s.t. x + y ≤ 10
+                 x ≥ 0
+                 0 ≤ y ≤ 5
+
+        Verifies complete KKT assembly including:
+        - Stationarity equations
+        - Inequality complementarity
+        - Bound complementarity
+        - Equality equations
+        """
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("obj", ()),
+                Binary(
+                    "+",
+                    Binary("^", VarRef("x", ()), Const(2.0)),
+                    Binary("^", VarRef("y", ()), Const(2.0)),
+                ),
+            ),
+        )
+
+        model.equations["constraint"] = EquationDef(
+            name="constraint",
+            domain=(),
+            relation=Rel.LE,
+            lhs_rhs=(Binary("+", VarRef("x", ()), VarRef("y", ())), Const(10.0)),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=(), lo=0.0)
+        model.variables["y"] = VariableDef(name="y", domain=(), lo=0.0, up=5.0)
+
+        model.equalities = ["objdef"]
+        model.inequalities = ["constraint"]
+
+        # Set up derivatives
+        index_mapping = _manual_index_mapping(
+            [("obj", ()), ("x", ()), ("y", ())], [("constraint", ())]
+        )
+
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        gradient.set_derivative(1, Binary("*", Const(2.0), VarRef("x", ())))
+        gradient.set_derivative(2, Binary("*", Const(2.0), VarRef("y", ())))
+
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        J_ineq = JacobianStructure(num_rows=1, num_cols=3, index_mapping=index_mapping)
+        J_ineq.set_derivative(0, 1, Const(1.0))
+        J_ineq.set_derivative(0, 2, Const(1.0))
+
+        # Assemble full KKT system
+        kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+
+        # Verify stationarity equations
+        assert len(kkt.stationarity) == 2
+        assert "stat_x" in kkt.stationarity
+        assert "stat_y" in kkt.stationarity
+
+        # Verify inequality complementarity
+        assert len(kkt.complementarity_ineq) == 1
+        assert "constraint" in kkt.complementarity_ineq
+
+        # Verify bound complementarity
+        assert len(kkt.complementarity_bounds_lo) == 2
+        assert ("x", ()) in kkt.complementarity_bounds_lo
+        assert ("y", ()) in kkt.complementarity_bounds_lo
+
+        assert len(kkt.complementarity_bounds_up) == 1
+        assert ("y", ()) in kkt.complementarity_bounds_up
