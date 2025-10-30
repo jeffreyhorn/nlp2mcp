@@ -21,7 +21,6 @@ from src.kkt.kkt_system import ComplementarityPair, KKTSystem
 from src.kkt.naming import (
     create_bound_lo_multiplier_name,
     create_bound_up_multiplier_name,
-    create_eq_multiplier_name,
     create_ineq_multiplier_name,
 )
 from src.kkt.partition import partition_constraints

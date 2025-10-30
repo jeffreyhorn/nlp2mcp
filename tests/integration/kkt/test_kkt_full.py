@@ -378,13 +378,6 @@ class TestKKTFullAssembly:
 
         # Objective defining equation should be in equalities
         # (This is built by complementarity builder)
-        comp_ineq, comp_lo, comp_up, eq_eqs = (
-            kkt.complementarity_ineq,
-            kkt.complementarity_bounds_lo,
-            kkt.complementarity_bounds_up,
-            {},
-        )
-
         # Note: equality_eqs are built in complementarity but not stored directly
         # We verify objdef has a multiplier
         assert "nu_objdef" in kkt.multipliers_eq
