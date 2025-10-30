@@ -1,9 +1,14 @@
 # GAMS Code Generator Syntax Errors
 
-**Status**: Open  
+**Status**: Partially Fixed (2 of 4 test cases now passing)  
 **Priority**: High  
 **Component**: Code Generator (KKT Assembly / GAMS Emission)  
-**Discovered**: Sprint 3 Day 9 (GAMS Validation)
+**Discovered**: Sprint 3 Day 9 (GAMS Validation)  
+**GitHub Issue**: #46  
+**Related Issues**: #47 (Indexed Stationarity Equations - remaining work)
+
+> **Note**: Problem 2 (Double Operators) has been fixed. Problem 1 (Domain Violations) 
+> requires more extensive refactoring and is tracked separately in GitHub issue #47.
 
 ## Summary
 

@@ -59,28 +59,19 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
     if kkt.stationarity:
         pairs.append("    * Stationarity conditions")
         for eq_name, eq_def in sorted(kkt.stationarity.items()):
-            # Extract variable name from stationarity equation name
-            # stat_x -> x, stat_x_i1 -> x(i1)
+            # Extract variable name and indices from stationarity equation name
+            # stat_x -> x (scalar), stat_x_i1 -> x(i1) (indexed)
             if eq_name.startswith("stat_"):
-                var_part = eq_name[5:]  # Remove "stat_" prefix
+                # Extract base variable name and indices
+                var_name = _extract_var_name_from_stat_eq(eq_def, kkt)
 
-                # Handle indexed variables: stat_x_i1 -> x.x(i1)
-                # This is tricky - we need to extract the base variable name
-                # For now, use the equation domain to reconstruct indices
-                if eq_def.domain:
-                    # Extract base variable name (everything before first index)
-                    # This assumes naming like stat_x_i1 where x is var, i1 is index
-                    # We'll need the actual variable name from the equation
-                    # For simplicity, extract from first VarRef in equation
-                    var_name = _extract_var_name_from_stat_eq(eq_def, kkt)
-                    if var_name and var_name != obj_info.objvar:
-                        indices_str = ",".join(eq_def.domain)
-                        pairs.append(f"    {eq_name}.{var_name}({indices_str})")
-                else:
-                    # Scalar variable
-                    var_name = var_part
-                    if var_name != obj_info.objvar:
-                        pairs.append(f"    {eq_name}.{var_name}")
+                if var_name and var_name != obj_info.objvar:
+                    # For element-specific stationarity equations (stat_x_i1, stat_x_i2, etc.)
+                    # GAMS Model MCP syntax doesn't support quoted indices in variable references
+                    # We reference just the base variable name
+                    # NOTE: This is a known issue for indexed variables - see GitHub #47
+                    # TODO: Refactor to use indexed equations with domains instead
+                    pairs.append(f"    {eq_name}.{var_name}")
 
     # 2. Inequality complementarities
     if kkt.complementarity_ineq:
@@ -89,11 +80,22 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            if comp_pair.variable_indices:
-                indices_str = ",".join(comp_pair.variable_indices)
-                pairs.append(f"    {eq_def.name}.{var_name}({indices_str})")
+            # Include equation domain if present
+            if eq_def.domain:
+                eq_indices_str = ",".join(eq_def.domain)
+                if comp_pair.variable_indices:
+                    var_indices_str = ",".join(comp_pair.variable_indices)
+                    pairs.append(
+                        f"    {eq_def.name}({eq_indices_str}).{var_name}({var_indices_str})"
+                    )
+                else:
+                    pairs.append(f"    {eq_def.name}({eq_indices_str}).{var_name}")
             else:
-                pairs.append(f"    {eq_def.name}.{var_name}")
+                if comp_pair.variable_indices:
+                    var_indices_str = ",".join(comp_pair.variable_indices)
+                    pairs.append(f"    {eq_def.name}.{var_name}({var_indices_str})")
+                else:
+                    pairs.append(f"    {eq_def.name}.{var_name}")
 
     # 3. Equality constraints paired with free multipliers
     # Include objective defining equation here
@@ -104,21 +106,44 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
             # Find the corresponding equation name
             eq_name = mult_def.associated_constraint
 
+            # Get the equation definition to check its domain
+            constraint_eq = kkt.model_ir.equations.get(eq_name) if eq_name else None
+
             # Check if this is the objective defining equation
             if eq_name == obj_info.defining_equation:
                 # Pair with objvar, not the multiplier
-                if mult_def.domain:
-                    indices_str = ",".join(mult_def.domain)
-                    pairs.append(f"    {eq_name}.{obj_info.objvar}({indices_str})")
+                if constraint_eq and constraint_eq.domain:
+                    eq_indices_str = ",".join(constraint_eq.domain)
+                    if mult_def.domain:
+                        var_indices_str = ",".join(mult_def.domain)
+                        pairs.append(
+                            f"    {eq_name}({eq_indices_str}).{obj_info.objvar}({var_indices_str})"
+                        )
+                    else:
+                        pairs.append(f"    {eq_name}({eq_indices_str}).{obj_info.objvar}")
                 else:
-                    pairs.append(f"    {eq_name}.{obj_info.objvar}")
+                    if mult_def.domain:
+                        var_indices_str = ",".join(mult_def.domain)
+                        pairs.append(f"    {eq_name}.{obj_info.objvar}({var_indices_str})")
+                    else:
+                        pairs.append(f"    {eq_name}.{obj_info.objvar}")
             else:
                 # Regular equality: pair with multiplier
-                if mult_def.domain:
-                    indices_str = ",".join(mult_def.domain)
-                    pairs.append(f"    {eq_name}.{mult_name}({indices_str})")
+                if constraint_eq and constraint_eq.domain:
+                    eq_indices_str = ",".join(constraint_eq.domain)
+                    if mult_def.domain:
+                        var_indices_str = ",".join(mult_def.domain)
+                        pairs.append(
+                            f"    {eq_name}({eq_indices_str}).{mult_name}({var_indices_str})"
+                        )
+                    else:
+                        pairs.append(f"    {eq_name}({eq_indices_str}).{mult_name}")
                 else:
-                    pairs.append(f"    {eq_name}.{mult_name}")
+                    if mult_def.domain:
+                        var_indices_str = ",".join(mult_def.domain)
+                        pairs.append(f"    {eq_name}.{mult_name}({var_indices_str})")
+                    else:
+                        pairs.append(f"    {eq_name}.{mult_name}")
 
     # 4. Lower bound complementarities
     if kkt.complementarity_bounds_lo:
@@ -127,11 +152,22 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         for _key, comp_pair in sorted(kkt.complementarity_bounds_lo.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            if comp_pair.variable_indices:
-                indices_str = ",".join(comp_pair.variable_indices)
-                pairs.append(f"    {eq_def.name}.{var_name}({indices_str})")
+            # Include equation domain if present
+            if eq_def.domain:
+                eq_indices_str = ",".join(eq_def.domain)
+                if comp_pair.variable_indices:
+                    var_indices_str = ",".join(comp_pair.variable_indices)
+                    pairs.append(
+                        f"    {eq_def.name}({eq_indices_str}).{var_name}({var_indices_str})"
+                    )
+                else:
+                    pairs.append(f"    {eq_def.name}({eq_indices_str}).{var_name}")
             else:
-                pairs.append(f"    {eq_def.name}.{var_name}")
+                if comp_pair.variable_indices:
+                    var_indices_str = ",".join(comp_pair.variable_indices)
+                    pairs.append(f"    {eq_def.name}.{var_name}({var_indices_str})")
+                else:
+                    pairs.append(f"    {eq_def.name}.{var_name}")
 
     # 5. Upper bound complementarities
     if kkt.complementarity_bounds_up:
@@ -140,11 +176,22 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         for _key, comp_pair in sorted(kkt.complementarity_bounds_up.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            if comp_pair.variable_indices:
-                indices_str = ",".join(comp_pair.variable_indices)
-                pairs.append(f"    {eq_def.name}.{var_name}({indices_str})")
+            # Include equation domain if present
+            if eq_def.domain:
+                eq_indices_str = ",".join(eq_def.domain)
+                if comp_pair.variable_indices:
+                    var_indices_str = ",".join(comp_pair.variable_indices)
+                    pairs.append(
+                        f"    {eq_def.name}({eq_indices_str}).{var_name}({var_indices_str})"
+                    )
+                else:
+                    pairs.append(f"    {eq_def.name}({eq_indices_str}).{var_name}")
             else:
-                pairs.append(f"    {eq_def.name}.{var_name}")
+                if comp_pair.variable_indices:
+                    var_indices_str = ",".join(comp_pair.variable_indices)
+                    pairs.append(f"    {eq_def.name}.{var_name}({var_indices_str})")
+                else:
+                    pairs.append(f"    {eq_def.name}.{var_name}")
 
     # Build the model declaration
     # GAMS does not allow comments inside the Model / ... / block

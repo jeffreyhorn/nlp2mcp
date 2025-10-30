@@ -70,12 +70,16 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
         )
 
         # Create equation name
+        # For indexed variables, include element in name but NOT in domain
+        # This creates element-specific equations: stat_x_i1, stat_x_i2, etc.
         stat_name = _create_stationarity_name(var_name, var_indices)
 
         # Create stationarity equation: stat_expr = 0
+        # IMPORTANT: Use empty domain() for element-specific equations
+        # GAMS syntax: stat_x_i1.. <expr> =E= 0; (no indices in declaration)
         stationarity[stat_name] = EquationDef(
             name=stat_name,
-            domain=var_indices,
+            domain=(),  # Empty domain for element-specific equations
             relation=Rel.EQ,
             lhs_rhs=(stat_expr, Const(0.0)),
         )

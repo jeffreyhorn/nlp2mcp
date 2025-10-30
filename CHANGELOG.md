@@ -9,6 +9,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-30 - Partial Fix for GitHub Issue #46: GAMS Syntax Errors
+
+##### Fixed
+- **Double Operator Errors** (Issue #46, Problem 2)
+  - Fixed unparenthesized negative unary expressions: `+ -sin(y)` → `+ (-sin(y))`
+  - Fixed subtraction of negative constants: `x - -1` → `x + 1`
+  - Implementation: `src/emit/expr_to_gams.py`
+  - Tests now passing: `bounds_nlp_mcp.gms`, `nonlinear_mix_mcp.gms`
+  - Removed xfail markers from 2 validation tests
+
+- **Equation Declaration Domains**
+  - Fixed equation declarations to include domains for indexed equations
+  - Before: `Equations comp_balance;` (missing domain)
+  - After: `Equations comp_balance(i);` (domain included)
+  - Implementation: `src/emit/templates.py:emit_equations()`
+  - Ensures consistency between equation declarations and definitions
+
+- **Model MCP Complementarity Pairs**
+  - Fixed Model MCP pairs to include equation domains when present
+  - Before: `comp_balance.lam_balance(i)` (equation domain missing)
+  - After: `comp_balance(i).lam_balance(i)` (equation domain included)
+  - Implementation: `src/emit/model.py`
+  - Applies to inequality, equality, and bound complementarity pairs
+
+- **Element Label Quoting in Expressions**
+  - Fixed element labels in expressions to use GAMS quoted syntax
+  - Element labels (e.g., `i1`, `i2`, `j3`) now quoted: `lam_balance("i1")`
+  - Set indices (e.g., `i`, `j`, `k`) remain unquoted: `lam_balance(i)`
+  - Implementation: `src/emit/expr_to_gams.py` for `VarRef`, `ParamRef`, `MultiplierRef`
+  - Uses heuristic: identifiers containing digits are element labels
+
+##### Known Issues
+- **Element-Specific Stationarity Equations** (Issue #46, Problem 1 - Partially addressed)
+  - Still failing: `simple_nlp_mcp.gms`, `indexed_balance_mcp.gms`
+  - Root cause: Element-specific equations (e.g., `stat_x_i1`) incompatible with GAMS MCP Model syntax for indexed variables
+  - Current approach creates element-specific equations: `stat_x_i1.. <expr> =E= 0`
+  - GAMS MCP requires matching domains: cannot pair `stat_x_i1.x` when `x` is declared as `x(i)`
+  - **Solution required**: Refactor stationarity equation generation to create indexed equations with domains: `stat_x(i).. <expr with i> =E= 0`
+  - This requires rebuilding expressions to use set indices instead of element labels
+  - Tests remain marked with xfail until complete refactoring is implemented
+  - See GitHub issue #47 for detailed technical analysis and implementation roadmap
+  - Related: GitHub issue #46 (parent issue for GAMS syntax errors)
+
+##### Impact
+- 2 out of 4 failing golden file tests now pass (50% improvement)
+- Passing: `bounds_nlp_mcp.gms`, `nonlinear_mix_mcp.gms`, `scalar_nlp_mcp.gms`
+- Still failing: `simple_nlp_mcp.gms`, `indexed_balance_mcp.gms`
+- All fixes maintain backward compatibility with existing code
+
+### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
+
 #### 2025-10-30 - Sprint 3 Day 9: GAMS Validation & Documentation
 
 ##### Added
