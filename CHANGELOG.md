@@ -93,12 +93,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Updated docstring example to show correct syntax without inline comments
     - Model block now follows strict GAMS syntax: only comma-separated pairs
 
+##### Changed
+- **Code Quality Improvements from Reviewer Feedback**
+  - **Misleading Comment in `emit_equations()`** (`src/emit/templates.py:161`)
+    - Changed comment from "these go in Model MCP section" to "declared here, also used in Model MCP section"
+    - Clarifies that original equality equations must be declared in Equations block before use
+    - Previous comment incorrectly implied they only appear in Model MCP section
+  
+  - **Data Consistency Check in `emit_equations()`** (`src/emit/templates.py:162-168`)
+    - Changed silent skip to explicit `ValueError` for missing equations
+    - If equation in `equalities` list but not in `equations` dict, raise error with clear message
+    - Prevents silent data inconsistencies in ModelIR
+    - Fails fast rather than producing incorrect output
+  
+  - **Indentation Preservation Documentation in `emit_model_mcp()`** (`src/emit/model.py:156-158`)
+    - Added explicit comment explaining why original `pair` is appended, not `stripped`
+    - Clarifies that GAMS expects indentation for readability
+    - Uses "Do NOT" to emphasize this is intentional design, not a bug
+    - Improves code maintainability for future developers
+
 ##### Technical Details
 - Golden files generated via CLI: `nlp2mcp examples/*.gms -o tests/golden/*_mcp.gms`
 - Test framework uses `emit_gams_mcp()` for full file emission (not just Model MCP section)
 - Normalization handles whitespace differences but preserves semantic content
 - Determinism verified via SHA-256 hashing of outputs
 - All three syntax fixes applied at generator level to ensure future generated files are correct
+- Code quality improvements ensure robust error handling and clear code intent
 
 #### 2025-10-30 - Sprint 3 Day 7: Mid-Sprint Checkpoint & CLI
 
