@@ -7,6 +7,288 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
+
+#### 2025-10-29 - Sprint 3 Final Plan (Post-Final Review)
+
+##### Added
+- Created final Sprint 3 plan in `docs/planning/SPRINT_3/PLAN.md`
+  - Addresses all 4 findings from `docs/planning/SPRINT_3/PLAN_REVIEW_FINAL.md`
+  - Critical fixes to PLAN_REVISED.md based on actual IR structure inspection
+  - Enhanced implementation with correct data structure usage
+  - Updated test counts and time estimates
+  - Complete appendices documenting both review rounds
+
+##### Final Review Findings Addressed
+1. **Duplicate bounds only warned, not excluded (Finding #1)**
+   - **CRITICAL FIX**: Changed partition logic to EXCLUDE duplicates from inequality list
+   - Changed from appending with warning to skipping entirely
+   - Renamed field: `duplicate_bounds_warnings` → `duplicate_bounds_excluded`
+   - CLI option changed: `--warn-duplicates` → `--show-excluded`
+   - Ensures no duplicate complementarity pairs are generated
+
+2. **Indexed bounds ignored (Finding #2)**
+   - **CRITICAL FIX**: Extended bounds processing to iterate over lo_map/up_map/fx_map
+   - Changed bounds dict keys from `str` to `(str, tuple)` for indexed instances
+   - Applied finite/infinite filtering per indexed instance
+   - Skipped infinite bounds tracking now includes indices: `(var_name, indices, bound_type)`
+   - Indexed bounds now correctly produce π multipliers per instance
+
+3. **Original symbol emission uses non-existent IR fields (Finding #3)**
+   - **CRITICAL FIX**: Aligned with actual IR dataclass fields by inspecting src/ir/symbols.py
+   - SetDef.members (not .elements)
+   - ParameterDef.values dict[tuple[str,...], float] (not .data or .is_scalar)
+   - Scalars: empty domain (), accessed via values[()] = value
+   - Multi-dimensional keys: tuple → "i1.j2" GAMS index syntax
+   - Added comprehensive tests for actual IR structures
+
+4. **Variable kinds not preserved (Finding #4)**
+   - **CRITICAL FIX**: Added VariableDef.kind consultation during emission
+   - emit_variables() now groups by kind (VarKind.POSITIVE, .BINARY, .INTEGER, etc.)
+   - Separate GAMS blocks for each kind (Positive Variables, Binary Variables, etc.)
+   - Primal variable semantics now match source model
+   - Added new test file: tests/unit/emit/test_variable_kinds.py
+
+##### Changes from PLAN_REVISED.md
+- **Day 1**: +1 hour (indexed bounds tuple keys, duplicate exclusion not append)
+- **Day 2**: +0.5 hours (indexed bounds in stationarity checks)
+- **Day 3**: +1 hour (indexed bounds in complementarity, dict key changes)
+- **Day 4**: +2 hours (actual IR field usage, variable kind grouping logic)
+- **Day 5**: No change
+- **Day 6**: No change
+- **Day 7**: +0.5 hours (CLI exclusion reporting with indices)
+- **Day 8**: +0.5 hours (verify all 4 findings in golden tests)
+- **Day 9**: +1 hour (document all 4 findings with emphasis on actual IR)
+- **Day 10**: +0.5 hours (comprehensive edge case testing)
+- **Total**: ~7 hours added across sprint (critical correctness fixes)
+
+##### Updated Metrics
+- **Test counts**: 300+ total (was 260+)
+  - Unit tests: 210 (was 180, +30)
+  - Integration tests: 72 (was 60, +12)
+  - E2E tests: 22 (was 20, +2)
+- **New test files**: 3 additional
+  - `tests/unit/emit/test_original_symbols.py` (actual IR tests)
+  - `tests/unit/emit/test_variable_kinds.py` (kind preservation)
+  - Enhanced `tests/unit/kkt/test_partition.py` (indexed bounds)
+
+##### Success Criteria Enhanced
+- All 5 v1 examples convert successfully ✅
+- Generated MCP files compile in GAMS ✅
+- Generated MCP includes all original symbols (actual IR fields) ✅
+- **CRITICAL**: Duplicate bounds EXCLUDED from inequalities (not just warned) ✅
+- **CRITICAL**: Indexed bounds handled via lo_map/up_map/fx_map ✅
+- Infinite bounds skipped correctly (scalar + indexed) ✅
+- Objective variable handled correctly ✅
+- **CRITICAL**: Variable kinds preserved (Positive/Binary/Integer/etc.) ✅
+- Golden tests pass ✅
+- CLI works with all options ✅
+
+##### Implementation Details
+**Finding #1 - Duplicate Exclusion:**
+```python
+# WRONG (PLAN_REVISED):
+if _duplicates_variable_bound(model_ir, name):
+    duplicate_warnings.append(name)
+inequalities.append(name)  # Still appended!
+
+# CORRECT (PLAN.md):
+if _duplicates_variable_bound(model_ir, name):
+    duplicate_excluded.append(name)
+    continue  # Skip, do NOT append
+```
+
+**Finding #2 - Indexed Bounds:**
+```python
+# WRONG (PLAN_REVISED):
+bounds_lo = {var_name: BoundDef('lo', var_def.lo, ...)}
+
+# CORRECT (PLAN.md):
+bounds_lo = {(var_name, ()): BoundDef('lo', var_def.lo, ...)}
+for indices, lo_val in var_def.lo_map.items():
+    bounds_lo[(var_name, indices)] = BoundDef('lo', lo_val, ...)
+```
+
+**Finding #3 - Actual IR Fields:**
+```python
+# WRONG (PLAN_REVISED):
+elements = ', '.join(set_def.elements)  # No such field!
+if param_def.is_scalar:  # No such field!
+    value = param_def.value  # No such field!
+
+# CORRECT (PLAN.md):
+members = ', '.join(set_def.members)  # Actual field
+if len(param_def.domain) == 0:  # Detect scalars
+    value = param_def.values[()]  # Actual access
+```
+
+**Finding #4 - Variable Kinds:**
+```python
+# WRONG (PLAN_REVISED):
+lines.append("Variables")
+for var_name, var_def in variables.items():
+    lines.append(f"    {var_name}")
+lines.append("Positive Variables")  # Only multipliers
+
+# CORRECT (PLAN.md):
+var_groups = {kind: [] for kind in VarKind}
+for var_name, var_def in variables.items():
+    var_groups[var_def.kind].append(var_name)
+# Emit separate blocks for each kind
+```
+
+##### Purpose
+- Fix critical implementation errors identified in final review
+- Ensure code aligns with actual IR dataclass structure
+- Prevent compilation failures from wrong field access
+- Ensure mathematical correctness (no duplicate complementarity)
+- Preserve source model semantics (variable kinds)
+
+#### 2025-10-29 - Sprint 3 Revised Plan (Post-Review)
+
+##### Added
+- Created revised Sprint 3 plan in `docs/planning/SPRINT_3/PLAN_REVISED.md`
+  - Addresses all 4 gaps identified in `docs/planning/SPRINT_3/PLAN_REVIEW.md`
+  - Enhanced day-by-day plan with review adjustments integrated
+  - Detailed implementation strategies for each gap
+  - Updated test counts and acceptance criteria
+  - Complete appendix documenting how each gap was addressed
+
+##### Review Gaps Addressed
+1. **Missing data/alias emission (Gap #1)**
+   - Added original symbols emission tasks to Day 4
+   - Created `src/emit/original_symbols.py` module (planned)
+   - Functions: `emit_original_sets()`, `emit_original_aliases()`, `emit_original_parameters()`
+   - Main emitter modified to include original symbols before KKT blocks
+   - Ensures generated MCP compiles with all symbol references
+
+2. **Bounds vs. explicit constraints not addressed (Gap #2)**
+   - Enhanced constraint partitioning in Day 1
+   - Added duplicate bounds detection logic
+   - New field: `KKTSystem.duplicate_bounds_warnings`
+   - New CLI option: `--warn-duplicates` (planned)
+   - Prevents duplicate complementarity pairs for user-authored bounds
+
+3. **Infinite bounds handling absent (Gap #3)**
+   - Added infinite bounds filtering to Day 1 partition logic
+   - Modified stationarity builder (Day 2) to skip π terms for ±INF bounds
+   - Modified complementarity builder (Day 3) to skip infinite bound pairs
+   - New field: `KKTSystem.skipped_infinite_bounds`
+   - Ensures no meaningless complementarity rows for ±INF bounds
+
+4. **Objective variable/equation flow undefined (Gap #4)**
+   - Created `src/kkt/objective.py` module in Day 1 (planned)
+   - Function: `extract_objective_info()` to identify objective variable and defining equation
+   - Modified stationarity builder (Day 2) to skip objective variable
+   - Modified complementarity builder (Day 3) to include objective defining equation
+   - Modified Model MCP emission (Day 6) to pair objective equation with objvar
+   - Ensures objective variable handled correctly (no stationarity, defines objvar)
+
+##### Changes from PLAN_ORIGINAL.md
+- **Day 1**: +1.5 hours (objective handling, enhanced partition logic with infinite bounds)
+- **Day 2**: +0.5 hours (skip objvar in stationarity)
+- **Day 3**: +0.5 hours (include objective equation)
+- **Day 4**: +1.5 hours (original symbols emission)
+- **Day 5**: No change (added MultiplierRef handling)
+- **Day 6**: +1 hour (objective equation pairing, original symbols in main emitter)
+- **Day 7**: +0.5 hours (new CLI options for warnings)
+- **Day 8**: +0.5 hours (verify new features in golden tests)
+- **Day 9**: +1 hour (document new features: bounds, objective)
+- **Day 10**: +0.5 hours (test new features, verify all adjustments)
+- **Total**: ~7 hours added across sprint (manageable within buffer time)
+
+##### Updated Metrics
+- **Test counts**: 260+ total (was 220+)
+  - Unit tests: 180 (was 150, +30)
+  - Integration tests: 60 (was 50, +10)
+  - E2E tests: 20 (unchanged but more assertions)
+- **New files**: 4 planned modules
+  - `src/kkt/objective.py` (NEW)
+  - `src/emit/original_symbols.py` (NEW)
+  - Enhanced `src/kkt/partition.py`
+  - Enhanced `src/kkt/stationarity.py`
+- **Documentation**: 2 additional sections
+  - Bounds handling strategy (Gap #2, #3)
+  - Objective variable handling (Gap #4)
+
+##### Success Criteria Enhanced
+- All 5 v1 examples convert successfully ✅
+- Generated MCP files compile in GAMS ✅
+- **NEW**: Generated MCP includes all original symbols ✅
+- **NEW**: No duplicate complementarity pairs for user-authored bounds ✅
+- **NEW**: Infinite bounds are skipped correctly ✅
+- **NEW**: Objective variable handled correctly ✅
+- Golden tests pass ✅
+- CLI works with all options ✅
+
+##### Purpose
+- Address critical gaps identified during plan review
+- Ensure generated MCP files are complete and compile
+- Prevent mathematical errors (infinite bounds, objective variable)
+- Improve user experience (warnings for duplicate bounds)
+- Maintain project quality standards
+
+#### 2025-10-29 - Sprint 3 Detailed Plan
+
+##### Added
+- Created comprehensive Sprint 3 plan in `docs/planning/SPRINT_3/PLAN_ORIGINAL.md`
+  - Complete day-by-day plan for 10 working days
+  - Detailed goals, tasks, deliverables, and acceptance criteria for each day
+  - Integration of PREP_PLAN Tasks 5-10 into appropriate days
+  - Risk management and integration risk sections
+  - Success metrics and sprint health indicators
+
+##### Sprint 3 Overview
+- **Goal:** Transform NLP models to runnable GAMS MCP files via KKT conditions
+- **Duration:** 2 weeks (10 working days)
+- **Components:** KKT assembler, GAMS emitter, CLI, golden test suite
+- **Expected Output:** 220+ total tests, 5 golden reference examples
+
+##### Day-by-Day Breakdown
+- **Day 1:** KKT data structures and constraint partitioning
+- **Day 2:** Stationarity equations + Early smoke tests (PREP Task 5)
+- **Day 3:** Complementarity conditions + Integration risks (PREP Task 7)
+- **Day 4:** GAMS template structure
+- **Day 5:** Equation emission + Test pyramid visualization (PREP Task 6)
+- **Day 6:** Model MCP and Solve statements
+- **Day 7:** Mid-sprint checkpoint + CLI (PREP Task 8)
+- **Day 8:** Golden test suite
+- **Day 9:** GAMS validation + Documentation (PREP Tasks 9, 10)
+- **Day 10:** Polish, testing, sprint wrap-up
+
+##### Success Metrics Defined
+- **Functional:** All 5 v1 examples convert, generated MCP compiles, CLI works
+- **Quality:** 220+ tests pass, >90% coverage, type/lint/format checks pass
+- **Integration:** No regressions, smoke tests catch issues within 1 day
+- **Documentation:** KKT assembly, GAMS emission, README updated
+
+##### Risk Management
+- Identified 6 key risks with mitigation strategies
+- Integration risk sections for each day
+- Contingency plans for high-impact risks
+- Daily checkpoint process
+
+##### PREP_PLAN Integration
+- Task 5 (Early Smoke Test): Integrated into Day 2
+- Task 6 (Test Pyramid): Integrated into Day 5 evening
+- Task 7 (Integration Risks): Integrated into Day 3 evening
+- Task 8 (Mid-Sprint Checkpoint): Integrated into Day 7
+- Task 9 (Complexity Estimation): Integrated into Day 9 evening
+- Task 10 (Known Unknowns): Integrated into Day 9 evening
+
+##### Purpose
+- Provide clear roadmap for Sprint 3 execution
+- Learn from Sprint 2 issues (late integration problems)
+- Enable daily progress tracking against plan
+- Support distributed team coordination
+- Document assumptions and risks upfront
+
+##### Changed
+- N/A
+
+##### Fixed
+- N/A
+
 ### Sprint 3 Prep: Architecture Documentation & Test Organization
 
 #### 2025-10-29 - API Contract Tests (Sprint 3 Prep Task 4)
