@@ -30,8 +30,18 @@ def find_gams_executable() -> str | None:
             # Get all version directories (skip Current symlink)
             versions = [v for v in versions_dir.iterdir() if v.is_dir() and v.name != "Current"]
             if versions:
-                # Sort by version number (assumes numeric versions)
-                versions.sort(reverse=True)
+                # Sort by version number using numeric comparison
+                # This handles version numbers like 10, 51, 9 correctly
+                # (lexicographic would incorrectly sort 10 < 9)
+                def version_key(path: Path) -> int:
+                    """Extract numeric version for sorting."""
+                    try:
+                        return int(path.name)
+                    except ValueError:
+                        # If version is not a simple integer, fall back to 0
+                        return 0
+
+                versions.sort(key=version_key, reverse=True)
                 for version_dir in versions:
                     gams_exe = version_dir / "Resources" / "gams"
                     if gams_exe.exists() and gams_exe.is_file():
@@ -113,20 +123,32 @@ def validate_gams_syntax(gams_file: str, gams_executable: str | None = None) -> 
         lst_content = lst_file.read_text()
 
         # Look for compilation errors (marked with **** in GAMS output)
+        # Real GAMS errors have patterns like:
+        #   **** 120  Unknown identifier entered as set
+        #   **** $171,340  (column references)
+        # Section headers like "**** FILE SUMMARY" are not errors
         error_lines = []
         in_error_section = False
         for line in lst_content.splitlines():
-            # GAMS errors appear as lines with ****
-            if "****" in line:
-                error_lines.append(line.strip())
-                in_error_section = True
-            elif in_error_section and line.strip().startswith("****"):
-                error_lines.append(line.strip())
-            elif in_error_section and not line.strip():
+            stripped = line.strip()
+            # GAMS errors: "**** <number>" or "**** $<numbers>"
+            # NOT headers like "**** FILE SUMMARY"
+            if stripped.startswith("****"):
+                # Check if it's an actual error (has number/$ after ****)
+                after_stars = stripped[4:].lstrip()
+                if after_stars and (after_stars[0].isdigit() or after_stars[0] == "$"):
+                    error_lines.append(stripped)
+                    in_error_section = True
+                else:
+                    in_error_section = False
+            elif in_error_section and stripped.startswith("****"):
+                error_lines.append(stripped)
+            elif in_error_section and not stripped:
                 in_error_section = False
 
-        # Check for "Error" or "Syntax error" in compilation summary
-        if "Error" in lst_content or any("Error" in line for line in error_lines):
+        # Check for GAMS-specific error markers in error_lines or summary section
+        # Use specific error markers to avoid false positives from user comments/variable names
+        if error_lines or ("SYNTAX ERROR" in lst_content or "COMPILATION ERROR" in lst_content):
             error_msg = (
                 "\n".join(error_lines[:10]) if error_lines else "GAMS compilation errors found"
             )
