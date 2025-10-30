@@ -9,6 +9,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-29 - Sprint 3 Day 4: GAMS Emitter - Original Symbols & Structure
+
+##### Added
+- **GAMS Code Emission Module** (`src/emit/`)
+  - New module for converting IR structures to GAMS code
+  - Implements Finding #3 (use actual IR fields) and Finding #4 (preserve variable kinds)
+
+- **Original Symbols Emitter** (`src/emit/original_symbols.py`)
+  - Function: `emit_original_sets(model_ir) -> str`
+    - Emits Sets block using `SetDef.members` (Finding #3: actual IR field)
+    - Formats as `Sets\n    set_name /member1, member2/\n;`
+  - Function: `emit_original_aliases(model_ir) -> str`
+    - Emits Alias declarations using `AliasDef.target` and `.universe`
+    - Formats as `Alias (alias_name, target_set);`
+  - Function: `emit_original_parameters(model_ir) -> str`
+    - Emits Parameters and Scalars using `ParameterDef.domain` and `.values`
+    - Scalars: empty domain `()` with `values[()] = value`
+    - Multi-dimensional keys: `("i1", "j2")` → `"i1.j2"` in GAMS syntax
+    - Separates scalars and parameters into distinct blocks
+
+- **Template Emitter** (`src/emit/templates.py`)
+  - Function: `emit_variables(kkt) -> str`
+    - **CRITICAL (Finding #4)**: Preserves variable kinds from source model
+    - Groups primal variables by `VarKind` (CONTINUOUS, POSITIVE, BINARY, INTEGER, NEGATIVE)
+    - Free multipliers (ν for equalities) → CONTINUOUS group
+    - Positive multipliers (λ, π^L, π^U) → POSITIVE group
+    - Emits separate GAMS blocks for each variable kind
+    - Bound multipliers use tuple keys: `(var_name, indices)`
+  - Function: `emit_equations(kkt) -> str`
+    - Emits Equations block declarations
+    - Declares stationarity, complementarity (ineq/bounds), and equality equations
+  - Function: `emit_kkt_sets(kkt) -> str`
+    - Placeholder for KKT-specific sets (currently returns empty)
+  - Placeholder functions for Days 5-6:
+    - `emit_equation_definitions()`: AST → GAMS conversion (Day 5)
+    - `emit_model()`: Model MCP block (Day 6)
+    - `emit_solve()`: Solve statement (Day 6)
+
+- **Comprehensive Unit Tests** (~42 tests total)
+  - `tests/unit/emit/test_original_symbols.py`:
+    - 16 tests for sets, aliases, and parameters emission
+    - Tests scalar vs multi-dimensional parameters
+    - Tests empty domain handling for scalars
+    - Tests multi-dimensional key formatting
+  - `tests/unit/emit/test_templates.py`:
+    - 17 tests for template emission functions
+    - Tests variable kind grouping (Finding #4)
+    - Tests multiplier grouping (equality → CONTINUOUS, ineq/bounds → POSITIVE)
+    - Tests indexed variables with domains
+    - Tests equation declarations
+  - `tests/unit/emit/test_variable_kinds.py`:
+    - 9 tests specifically for variable kind preservation
+    - Tests each VarKind (CONTINUOUS, POSITIVE, BINARY, INTEGER)
+    - Tests mixed variable kinds
+    - Tests multiplier integration with variable kinds
+
+##### Technical Details
+- **Finding #3 Compliance**: Uses actual IR fields, not invented ones
+  - `SetDef.members` (list of strings)
+  - `ParameterDef.domain` and `.values`
+  - `AliasDef.target` and `.universe`
+  - Scalars: `domain = ()`, `values[()] = value`
+- **Finding #4 Compliance**: Variable kind preservation
+  - Primal variables grouped by their original kind
+  - Multipliers added to appropriate kind groups
+  - Separate GAMS blocks per kind (Variables, Positive Variables, etc.)
+- **Type Safety**: Full mypy compliance with type annotations
+- **Code Quality**: Passes black formatting and ruff linting
+
 #### 2025-10-29 - Sprint 3 Day 3: KKT Assembler - Complementarity
 
 ##### Added
