@@ -9,6 +9,7 @@ from .naming import (
 )
 from .objective import ObjectiveInfo, extract_objective_info
 from .partition import BoundDef, PartitionResult, partition_constraints
+from .stationarity import build_stationarity_equations
 
 __all__ = [
     # Data structures
@@ -21,6 +22,7 @@ __all__ = [
     # Functions
     "partition_constraints",
     "extract_objective_info",
+    "build_stationarity_equations",
     "create_eq_multiplier_name",
     "create_ineq_multiplier_name",
     "create_bound_lo_multiplier_name",

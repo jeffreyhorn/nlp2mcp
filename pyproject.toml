@@ -127,6 +127,7 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+    "--import-mode=importlib",
 ]
 markers = [
     "unit: Fast unit tests with no I/O (deselect with '-m \"not unit\"')",

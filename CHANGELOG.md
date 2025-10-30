@@ -9,6 +9,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-29 - Sprint 3 Day 2: KKT Assembler - Stationarity
+
+##### Added
+- **MultiplierRef AST Node** (`src/ir/ast.py`)
+  - New frozen dataclass for referencing KKT multiplier variables (λ, ν, π)
+  - Supports indexed multipliers with symbolic indices
+  - Integrated into expression AST hierarchy
+
+- **Stationarity Equation Builder** (`src/kkt/stationarity.py`)
+  - Function: `build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]`
+  - Builds stationarity conditions: ∇f + J_h^T ν + J_g^T λ - π^L + π^U = 0
+  - Skips objective variable (no stationarity equation for objvar)
+  - Handles indexed bounds correctly (π terms per instance)
+  - No π terms for infinite bounds (both scalar and indexed)
+  - Properly excludes objective defining equation from Jacobian transpose terms
+
+- **Integration Tests** (`tests/integration/kkt/test_stationarity.py`)
+  - 10 comprehensive integration tests for stationarity builder
+  - TestStationarityScalar: Basic structure, equality constraints, inequality constraints
+  - TestStationarityIndexed: Indexed variables, indexed bounds
+  - TestStationarityBounds: Infinite bounds filtering, both bounds present
+  - TestStationarityObjectiveVariable: Objective variable skipping, defining equation exclusion
+
+- **Early Smoke Tests** (`tests/e2e/test_smoke.py`)
+  - 6 end-to-end smoke tests for complete pipeline
+  - TestMinimalPipeline: Scalar NLP, indexed NLP, bounds handling
+  - TestKKTAssemblerSmoke: KKT assembly, indexed bounds, objective variable handling
+  - Validates Parse → Normalize → AD → KKT pipeline
+
+##### Implementation Details
+- Stationarity builder iterates over all variable instances via index mapping
+- Gradient components combined with Jacobian transpose terms
+- MultiplierRef nodes created with correct indices for indexed constraints
+- Bound multiplier terms (π^L, π^U) only added for finite bounds
+- Helper function `_manual_index_mapping()` added to tests for manual mapping construction
+
+##### Test Summary
+- **New Tests**: 16 total (10 integration + 6 e2e smoke tests)
+- **Total Tests**: 459 (443 existing + 16 new)
+- **All Tests Passing**: ✅ 459/459
+- **Type Checking**: ✅ mypy clean
+- **Linting**: ✅ ruff clean
+
+##### Acceptance Criteria Met
+- [x] Stationarity equations generated for all variable instances except objvar
+- [x] Objective variable skipped in stationarity
+- [x] Indexed bounds handled correctly (π terms per instance)
+- [x] No π terms for infinite bounds (both scalar and indexed)
+- [x] Multiplier references correctly indexed
+- [x] Integration tests pass (10/10)
+- [x] Early smoke tests pass (6/6)
+- [x] No Sprint 1/2 test regressions
+
+##### Files Modified
+- `src/ir/ast.py`: Added MultiplierRef class
+- `src/kkt/__init__.py`: Exported build_stationarity_equations
+- `src/kkt/stationarity.py`: New stationarity builder module
+- `tests/integration/kkt/__init__.py`: New integration test package
+- `tests/integration/kkt/test_stationarity.py`: New integration tests
+- `tests/e2e/test_smoke.py`: New smoke tests
+
 #### 2025-10-29 - Sprint 3 Final Plan (Post-Final Review)
 
 ##### Added
