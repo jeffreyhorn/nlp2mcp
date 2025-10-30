@@ -160,14 +160,20 @@ def emit_equations(kkt: KKTSystem) -> str:
 
     # Original equality equations (declared here, also used in Model MCP section)
     for eq_name in sorted(kkt.model_ir.equalities):
-        if eq_name in kkt.model_ir.equations:
-            eq_def = kkt.model_ir.equations[eq_name]
-            # Check if it has domain (indexed)
-            if eq_def.domain:
-                domain_str = ",".join(eq_def.domain)
-                lines.append(f"    {eq_name}({domain_str})")
-            else:
-                lines.append(f"    {eq_name}")
+        # Verify equation exists in equations dict to catch data inconsistencies
+        if eq_name not in kkt.model_ir.equations:
+            raise ValueError(
+                f"Equation '{eq_name}' is in equalities list but not in equations dict. "
+                f"This indicates a data inconsistency in the ModelIR."
+            )
+
+        eq_def = kkt.model_ir.equations[eq_name]
+        # Check if it has domain (indexed)
+        if eq_def.domain:
+            domain_str = ",".join(eq_def.domain)
+            lines.append(f"    {eq_name}({domain_str})")
+        else:
+            lines.append(f"    {eq_name}")
 
     lines.append(";")
 

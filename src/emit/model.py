@@ -154,6 +154,8 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         stripped = pair.strip()
         # Keep only non-empty, non-comment lines
         if stripped and not stripped.startswith("*"):
+            # Append the original (indented) line to preserve GAMS formatting
+            # Do NOT use 'stripped' here, as GAMS expects indentation for readability
             actual_pairs.append(pair)
 
     # Build the model declaration with commas
