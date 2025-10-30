@@ -1212,6 +1212,33 @@ Output: simple_nlp_mcp.gms (GAMS MCP model with KKT conditions)
 
 **Goal:** Review progress, address integration issues, implement CLI
 
+**Integration Risks:**
+
+**Sprint 1 Dependencies:**
+- Assumption: Parser captures all original symbols needed for emission
+- Risk: Some symbols (aliases, parameters) missing or incomplete
+- Mitigation: Integration health check validates symbols present in generated output
+
+**Sprint 2 Dependencies:**
+- Assumption: All derivative computations from Days 1-6 are correct
+- Risk: Accumulated errors from previous sprints
+- Mitigation: Run full Sprint 1/2 test suites as part of checkpoint
+
+**Days 4-6 Dependencies:**
+- Assumption: GAMS emission from Days 4-6 is syntactically correct
+- Risk: Generated GAMS files don't compile or have syntax errors
+- Mitigation: Test all 5 examples through full pipeline; validate syntax if GAMS available
+
+**Cross-Sprint Integration:**
+- Assumption: Full pipeline (Parse → Normalize → AD → KKT → Emit) works end-to-end
+- Risk: Integration issues between sprint boundaries
+- Mitigation: Mid-sprint checkpoint explicitly tests cross-sprint integration points
+
+**CLI Integration:**
+- Assumption: CLI can orchestrate all pipeline stages correctly
+- Risk: Pipeline stages have incompatible interfaces
+- Mitigation: API contract tests should catch interface mismatches early
+
 **Mid-Sprint Checkpoint Activities:**
 
 1. **Status Review** (1 hour)
@@ -1412,6 +1439,33 @@ Output: simple_nlp_mcp.gms (GAMS MCP model with KKT conditions)
 
 **Goal:** Add optional GAMS validation and complete documentation
 
+**Integration Risks:**
+
+**Sprint 1 Dependencies:**
+- Assumption: All original model constructs are documented correctly
+- Risk: Documentation doesn't match actual parser/IR behavior
+- Mitigation: Review documentation against actual code; test examples validate docs
+
+**Sprint 2 Dependencies:**
+- Assumption: Derivative computation is well-understood for documentation
+- Risk: Documentation oversimplifies or misrepresents AD behavior
+- Mitigation: Include concrete examples from test suite in documentation
+
+**Days 1-8 Dependencies:**
+- Assumption: All features implemented Days 1-8 are stable and ready to document
+- Risk: Documentation written before features fully stabilized
+- Mitigation: Document after Day 8 golden tests pass; update docs if bugs found Day 10
+
+**GAMS Availability:**
+- Assumption: GAMS validation is optional and not required for success
+- Risk: Can't validate syntax without GAMS installation
+- Mitigation: Make validation feature optional; use golden test comparisons as alternative
+
+**Documentation Completeness:**
+- Assumption: All 4 critical findings (duplicate exclusion, indexed bounds, IR fields, variable kinds) are documented
+- Risk: Missing documentation for critical features
+- Mitigation: Checklist of all findings to ensure documentation coverage
+
 **Tasks:**
 
 1. **Optional GAMS Syntax Validation** (2 hours)
@@ -1496,6 +1550,37 @@ Output: simple_nlp_mcp.gms (GAMS MCP model with KKT conditions)
 ### Day 10: Polish, Testing, & Sprint Wrap-Up
 
 **Goal:** Final testing, bug fixes, and Sprint 3 completion
+
+**Integration Risks:**
+
+**Full Pipeline Integration:**
+- Assumption: All pipeline stages work together correctly
+- Risk: Edge cases expose integration bugs between stages
+- Mitigation: Comprehensive edge case testing (listed below); fix bugs immediately
+
+**Sprint 1/2 Regression:**
+- Assumption: Sprint 3 changes don't break Sprint 1/2 functionality
+- Risk: Subtle regressions in parser or AD engine
+- Mitigation: Run full Sprint 1/2 test suites; all must still pass
+
+**Test Coverage:**
+- Assumption: >90% coverage means code is well-tested
+- Risk: High coverage but critical paths untested
+- Mitigation: Focus on testing all 4 critical findings explicitly
+
+**Critical Findings Verification:**
+- Assumption: All 4 findings from final review are fixed and tested
+- Risk: Fixes incomplete or not validated end-to-end
+- Mitigation: Explicit test cases for each finding:
+  - Finding #1: Test duplicate bounds exclusion with CLI output
+  - Finding #2: Test indexed bounds in golden tests
+  - Finding #3: Test actual IR fields in emission tests  
+  - Finding #4: Test variable kinds in generated GAMS
+
+**Time Risk:**
+- Assumption: 10 hours is enough for polish and wrap-up
+- Risk: Bug fixes take longer than expected
+- Mitigation: Prioritize critical bugs; defer nice-to-have fixes to Sprint 4
 
 **Tasks:**
 
