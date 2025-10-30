@@ -25,11 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **GAMS Validation Tests** (`tests/validation/test_gams_check.py`)
   - 8 comprehensive validation tests
-  - Tests all 5 golden reference files for valid GAMS syntax
+  - Tests all 5 golden reference files for GAMS syntax
   - Tests executable detection
   - Tests error handling (nonexistent files)
   - Tests explicit GAMS path specification
-  - All tests pass (8/8) - confirms all golden files have valid GAMS syntax ✅
+  - Test results: 4 passed, 4 xfailed (expected failures)
+  - **Known Issue**: 4 golden files have GAMS syntax errors (GitHub issue #46)
+    - Domain violations in `simple_nlp_mcp.gms` and `indexed_balance_mcp.gms`
+    - Double operator errors in `bounds_nlp_mcp.gms` and `nonlinear_mix_mcp.gms`
+    - These are bugs in the code generator that need separate fixes
+    - Tests marked with `@pytest.mark.xfail` until generator is fixed
 
 - **KKT Assembly Documentation** (`docs/kkt/KKT_ASSEMBLY.md`)
   - Comprehensive 400+ line documentation of KKT system assembly

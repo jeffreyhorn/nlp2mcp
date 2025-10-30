@@ -43,11 +43,14 @@ class TestGAMSExecutableDetection:
 
 @pytest.mark.validation
 class TestGAMSValidation:
-    """Test GAMS syntax validation on golden files."""
+    """Test GAMS syntax validation on golden files.
 
-    @pytest.mark.xfail(
-        reason="Known issue: Generated GAMS code has syntax errors (domain violations)"
-    )
+    Note: 4 tests are marked as xfail due to known GAMS syntax errors in the
+    generated code. See GitHub issue #46 for details:
+    https://github.com/jeffreyhorn/nlp2mcp/issues/46
+    """
+
+    @pytest.mark.xfail(reason="Known issue (GitHub #46): Domain violations in generated GAMS code")
     def test_validate_simple_nlp_golden(self):
         """Test GAMS validation of simple_nlp_mcp.gms."""
         golden_file = Path("tests/golden/simple_nlp_mcp.gms")
@@ -58,7 +61,7 @@ class TestGAMSValidation:
             pytest.fail(f"GAMS validation failed: {error}")
 
     @pytest.mark.xfail(
-        reason="Known issue: Generated GAMS code has syntax errors (double operators)"
+        reason="Known issue (GitHub #46): Double operator errors in generated GAMS code"
     )
     def test_validate_bounds_nlp_golden(self):
         """Test GAMS validation of bounds_nlp_mcp.gms."""
@@ -69,9 +72,7 @@ class TestGAMSValidation:
         if error:
             pytest.fail(f"GAMS validation failed: {error}")
 
-    @pytest.mark.xfail(
-        reason="Known issue: Generated GAMS code has syntax errors (domain violations)"
-    )
+    @pytest.mark.xfail(reason="Known issue (GitHub #46): Domain violations in generated GAMS code")
     def test_validate_indexed_balance_golden(self):
         """Test GAMS validation of indexed_balance_mcp.gms."""
         golden_file = Path("tests/golden/indexed_balance_mcp.gms")
@@ -82,7 +83,7 @@ class TestGAMSValidation:
             pytest.fail(f"GAMS validation failed: {error}")
 
     @pytest.mark.xfail(
-        reason="Known issue: Generated GAMS code has syntax errors (double operators)"
+        reason="Known issue (GitHub #46): Double operator errors in generated GAMS code"
     )
     def test_validate_nonlinear_mix_golden(self):
         """Test GAMS validation of nonlinear_mix_mcp.gms."""
