@@ -3,7 +3,6 @@
 This module generates the Model MCP declaration with complementarity pairs.
 """
 
-from src.ir.symbols import EquationDef
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.objective import extract_objective_info
 
@@ -108,15 +107,13 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
             eq_name = mult_def.associated_constraint
 
             # Get the equation definition to check its domain
-            eq_definition: EquationDef | None = (
-                kkt.model_ir.equations.get(eq_name) if eq_name else None
-            )
+            constraint_eq = kkt.model_ir.equations.get(eq_name) if eq_name else None
 
             # Check if this is the objective defining equation
             if eq_name == obj_info.defining_equation:
                 # Pair with objvar, not the multiplier
-                if eq_definition and eq_definition.domain:
-                    eq_indices_str = ",".join(eq_definition.domain)
+                if constraint_eq and constraint_eq.domain:
+                    eq_indices_str = ",".join(constraint_eq.domain)
                     if mult_def.domain:
                         var_indices_str = ",".join(mult_def.domain)
                         pairs.append(
@@ -132,8 +129,8 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                         pairs.append(f"    {eq_name}.{obj_info.objvar}")
             else:
                 # Regular equality: pair with multiplier
-                if eq_definition and eq_definition.domain:
-                    eq_indices_str = ",".join(eq_definition.domain)
+                if constraint_eq and constraint_eq.domain:
+                    eq_indices_str = ",".join(constraint_eq.domain)
                     if mult_def.domain:
                         var_indices_str = ",".join(mult_def.domain)
                         pairs.append(

@@ -35,6 +35,63 @@ PRECEDENCE = {
 }
 
 
+def _format_numeric(value: int | float) -> str:
+    """Format numeric value for GAMS, avoiding unnecessary decimals.
+
+    Args:
+        value: Numeric value to format
+
+    Returns:
+        Formatted string representation
+
+    Examples:
+        >>> _format_numeric(3.0)
+        '3'
+        >>> _format_numeric(3.14)
+        '3.14'
+        >>> _format_numeric(5)
+        '5'
+    """
+    if isinstance(value, (int, float)) and value == int(value):
+        return str(int(value))
+    return str(value)
+
+
+def _quote_indices(indices: tuple[str, ...]) -> list[str]:
+    """Quote element labels in index tuples for GAMS syntax.
+
+    This function distinguishes between set indices and element labels using
+    a heuristic: identifiers containing digits are assumed to be element labels
+    and are quoted, while identifiers without digits are assumed to be set indices
+    and are left unquoted.
+
+    **Limitation**: This heuristic may fail if set indices legitimately contain
+    digits (e.g., 'i2' as a set name, not an element). In such cases, the set
+    index would be incorrectly quoted. A more robust solution would require
+    access to the symbol table to determine the actual type.
+
+    Args:
+        indices: Tuple of index identifiers
+
+    Returns:
+        List of appropriately quoted indices
+
+    Examples:
+        >>> _quote_indices(("i",))
+        ['i']
+        >>> _quote_indices(("i1",))
+        ['"i1"']
+        >>> _quote_indices(("i", "j"))
+        ['i', 'j']
+        >>> _quote_indices(("i1", "j2"))
+        ['"i1"', '"j2"']
+        >>> # LIMITATION: This would fail for a set named "i2"
+        >>> _quote_indices(("i2",))  # Incorrectly quotes if i2 is a set index
+        ['"i2"']
+    """
+    return [f'"{idx}"' if any(c.isdigit() for c in idx) else idx for idx in indices]
+
+
 def _needs_parens(parent_op: str | None, child_op: str | None, is_right: bool = False) -> bool:
     """Determine if child expression needs parentheses.
 
@@ -89,46 +146,28 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
     """
     match expr:
         case Const(value):
-            # Format floats nicely (avoid unnecessary decimals for integers)
-            if isinstance(value, (int, float)) and value == int(value):
-                return str(int(value))
-            return str(value)
+            return _format_numeric(value)
 
         case SymbolRef(name):
             return name
 
         case VarRef(name, indices):
             if indices:
-                # Quote element labels (identifiers with digits) for GAMS syntax
-                # Element labels like "i1", "j2" need quotes: x("i1")
-                # Set indices like "i", "j" don't: x(i)
-                quoted_indices = [
-                    f'"{idx}"' if any(c.isdigit() for c in idx) else idx for idx in indices
-                ]
+                quoted_indices = _quote_indices(indices)
                 indices_str = ",".join(quoted_indices)
                 return f"{name}({indices_str})"
             return name
 
         case ParamRef(name, indices):
             if indices:
-                # Quote element labels (identifiers with digits) for GAMS syntax
-                # Element labels like "i1", "j2" need quotes: a("i1")
-                # Set indices like "i", "j" don't: a(i)
-                quoted_indices = [
-                    f'"{idx}"' if any(c.isdigit() for c in idx) else idx for idx in indices
-                ]
+                quoted_indices = _quote_indices(indices)
                 indices_str = ",".join(quoted_indices)
                 return f"{name}({indices_str})"
             return name
 
         case MultiplierRef(name, indices):
             if indices:
-                # Quote element labels (identifiers with digits) for GAMS syntax
-                # Element labels like "i1", "j2" need quotes: nu_balance("i1")
-                # Set indices like "i", "j" don't: nu_balance(i)
-                quoted_indices = [
-                    f'"{idx}"' if any(c.isdigit() for c in idx) else idx for idx in indices
-                ]
+                quoted_indices = _quote_indices(indices)
                 indices_str = ",".join(quoted_indices)
                 return f"{name}({indices_str})"
             return name
@@ -165,10 +204,7 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
                 left_str = expr_to_gams(left, parent_op="+", is_right=False)
                 # Negate the negative value to get positive
                 right_val = -right.value
-                if isinstance(right_val, (int, float)) and right_val == int(right_val):
-                    right_str = str(int(right_val))
-                else:
-                    right_str = str(right_val)
+                right_str = _format_numeric(right_val)
                 # Use addition instead
                 needs_parens = _needs_parens(parent_op, "+", is_right)
                 result = f"{left_str} + {right_str}"
