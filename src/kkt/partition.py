@@ -95,6 +95,9 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 
         # Check if this inequality duplicates a bound (Finding #1)
         # Only check if the equation actually exists in the model
+        # TODO: Currently non-functional - placeholder functions below always return False
+        # TODO: Implement _is_user_authored_bound() to detect single-variable constraints
+        # TODO: Implement _duplicates_variable_bound() to check against var bounds
         if name in model_ir.equations:
             if _is_user_authored_bound(model_ir.equations[name]) and _duplicates_variable_bound(
                 model_ir, name

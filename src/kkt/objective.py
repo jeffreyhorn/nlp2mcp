@@ -129,15 +129,15 @@ def _is_objective_defining_equation(eq_def: EquationDef, objvar: str) -> bool:
 
 
 def _is_var_ref(expr: Expr, var_name: str) -> bool:
-    """Check if expression is a simple variable reference.
+    """Check if expression is a variable reference to var_name (any indices).
 
     Args:
         expr: AST expression
         var_name: Variable name to check
 
     Returns:
-        True if expr is VarRef(var_name, ())
+        True if expr is VarRef(var_name, ...) with any indices
     """
     if isinstance(expr, VarRef):
-        return expr.name == var_name and expr.indices == ()
+        return expr.name == var_name
     return False
