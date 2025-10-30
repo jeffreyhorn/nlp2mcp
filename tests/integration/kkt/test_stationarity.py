@@ -3,7 +3,6 @@
 import pytest
 
 from src.ad.gradient import GradientVector
-from src.ad.index_mapping import IndexMapping
 from src.ad.jacobian import JacobianStructure
 from src.ir.ast import Binary, Const, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
@@ -12,31 +11,11 @@ from src.kkt.kkt_system import KKTSystem, MultiplierDef
 from src.kkt.stationarity import build_stationarity_equations
 
 
-def _manual_index_mapping(
-    vars: list[tuple[str, tuple]], eqs: list[tuple[str, tuple]] = None
-) -> IndexMapping:
-    """Helper to manually create IndexMapping for tests."""
-    mapping = IndexMapping()
-
-    for col_id, (var_name, indices) in enumerate(vars):
-        mapping.var_to_col[(var_name, indices)] = col_id
-        mapping.col_to_var[col_id] = (var_name, indices)
-    mapping.num_vars = len(vars)
-
-    if eqs:
-        for row_id, (eq_name, indices) in enumerate(eqs):
-            mapping.eq_to_row[(eq_name, indices)] = row_id
-            mapping.row_to_eq[row_id] = (eq_name, indices)
-        mapping.num_eqs = len(eqs)
-
-    return mapping
-
-
 @pytest.mark.integration
 class TestStationarityScalar:
     """Test stationarity for scalar NLP problems."""
 
-    def test_scalar_nlp_basic_structure(self):
+    def test_scalar_nlp_basic_structure(self, manual_index_mapping):
         """Test basic stationarity structure for scalar problem.
 
         Problem:
@@ -65,7 +44,7 @@ class TestStationarityScalar:
         model.equalities = ["objdef"]
 
         # Set up KKT system
-        index_mapping = _manual_index_mapping([("obj", ()), ("x", ())])
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
 
         gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
         gradient.set_derivative(0, Const(1.0))  # ∂obj/∂obj = 1
@@ -93,7 +72,7 @@ class TestStationarityScalar:
         assert isinstance(stat_eq.lhs_rhs[1], Const)
         assert stat_eq.lhs_rhs[1].value == 0.0
 
-    def test_scalar_nlp_with_equality_constraint(self):
+    def test_scalar_nlp_with_equality_constraint(self, manual_index_mapping):
         """Test stationarity with equality constraint.
 
         Problem:
@@ -131,7 +110,7 @@ class TestStationarityScalar:
         model.equalities = ["objdef", "balance"]
 
         # Set up KKT system
-        index_mapping = _manual_index_mapping(
+        index_mapping = manual_index_mapping(
             [("obj", ()), ("x", ()), ("y", ())], [("objdef", ()), ("balance", ())]
         )
 
@@ -166,7 +145,7 @@ class TestStationarityScalar:
         assert "stat_x" in stationarity
         assert "stat_y" in stationarity
 
-    def test_scalar_nlp_with_inequality_constraint(self):
+    def test_scalar_nlp_with_inequality_constraint(self, manual_index_mapping):
         """Test stationarity with inequality constraint.
 
         Problem:
@@ -199,7 +178,7 @@ class TestStationarityScalar:
         model.inequalities = ["capacity"]
 
         # Set up KKT system
-        index_mapping = _manual_index_mapping(
+        index_mapping = manual_index_mapping(
             [("obj", ()), ("x", ())], [("objdef", ()), ("capacity", ())]
         )
 
@@ -230,7 +209,7 @@ class TestStationarityScalar:
 class TestStationarityIndexed:
     """Test stationarity for indexed NLP problems."""
 
-    def test_indexed_variable_stationarity(self):
+    def test_indexed_variable_stationarity(self, manual_index_mapping):
         """Test stationarity for indexed variables.
 
         Problem:
@@ -264,7 +243,7 @@ class TestStationarityIndexed:
         model.sets["i"] = ["i1", "i2", "i3"]
 
         # Set up KKT system
-        index_mapping = _manual_index_mapping(
+        index_mapping = manual_index_mapping(
             [("obj", ()), ("x", ("i1",)), ("x", ("i2",)), ("x", ("i3",))],
             [("objdef", ()), ("balance", ())],
         )
@@ -298,7 +277,7 @@ class TestStationarityIndexed:
         assert "stat_x_i2" in stationarity
         assert "stat_x_i3" in stationarity
 
-    def test_indexed_bounds_stationarity(self):
+    def test_indexed_bounds_stationarity(self, manual_index_mapping):
         """Test stationarity with indexed bounds.
 
         Each x(i) with a finite lower bound should have π^L term in stationarity.
@@ -321,7 +300,7 @@ class TestStationarityIndexed:
         model.sets["i"] = ["i1", "i2"]
 
         # Set up KKT system
-        index_mapping = _manual_index_mapping([("obj", ()), ("x", ("i1",)), ("x", ("i2",))])
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ("i1",)), ("x", ("i2",))])
 
         gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
         gradient.set_derivative(0, Const(1.0))
@@ -358,7 +337,7 @@ class TestStationarityIndexed:
 class TestStationarityBounds:
     """Test stationarity with various bound configurations."""
 
-    def test_no_pi_term_for_infinite_lower_bound(self):
+    def test_no_pi_term_for_infinite_lower_bound(self, manual_index_mapping):
         """Variables with -INF lower bound should not have π^L term."""
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -375,7 +354,7 @@ class TestStationarityBounds:
 
         model.equalities = ["objdef"]
 
-        index_mapping = _manual_index_mapping([("obj", ()), ("x", ())])
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
 
         gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
         gradient.set_derivative(0, Const(1.0))
@@ -396,7 +375,7 @@ class TestStationarityBounds:
         assert len(stationarity) == 1
         assert "stat_x" in stationarity
 
-    def test_no_pi_term_for_infinite_upper_bound(self):
+    def test_no_pi_term_for_infinite_upper_bound(self, manual_index_mapping):
         """Variables with +INF upper bound should not have π^U term."""
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -413,7 +392,7 @@ class TestStationarityBounds:
 
         model.equalities = ["objdef"]
 
-        index_mapping = _manual_index_mapping([("obj", ()), ("x", ())])
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
 
         gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
         gradient.set_derivative(0, Const(1.0))
@@ -432,7 +411,7 @@ class TestStationarityBounds:
         assert len(stationarity) == 1
         assert "stat_x" in stationarity
 
-    def test_both_bounds_present(self):
+    def test_both_bounds_present(self, manual_index_mapping):
         """Variable with both finite bounds should have both π^L and π^U terms."""
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -449,7 +428,7 @@ class TestStationarityBounds:
 
         model.equalities = ["objdef"]
 
-        index_mapping = _manual_index_mapping([("obj", ()), ("x", ())])
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
 
         gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
         gradient.set_derivative(0, Const(1.0))
@@ -480,7 +459,7 @@ class TestStationarityBounds:
 class TestStationarityObjectiveVariable:
     """Test that objective variable is skipped in stationarity."""
 
-    def test_objective_variable_skipped(self):
+    def test_objective_variable_skipped(self, manual_index_mapping):
         """Objective variable should not have a stationarity equation."""
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -497,7 +476,7 @@ class TestStationarityObjectiveVariable:
 
         model.equalities = ["objdef"]
 
-        index_mapping = _manual_index_mapping([("obj", ()), ("x", ())])
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
 
         gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
         gradient.set_derivative(0, Const(1.0))
@@ -518,7 +497,7 @@ class TestStationarityObjectiveVariable:
         assert "stat_x" in stationarity
         assert "stat_obj" not in stationarity
 
-    def test_objective_defining_equation_skipped_in_jacobian_terms(self):
+    def test_objective_defining_equation_skipped_in_jacobian_terms(self, manual_index_mapping):
         """Objective defining equation should not contribute to stationarity."""
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -542,7 +521,7 @@ class TestStationarityObjectiveVariable:
 
         model.equalities = ["objdef", "constraint"]
 
-        index_mapping = _manual_index_mapping(
+        index_mapping = manual_index_mapping(
             [("obj", ()), ("x", ())], [("objdef", ()), ("constraint", ())]
         )
 

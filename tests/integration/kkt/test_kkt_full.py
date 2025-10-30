@@ -3,7 +3,6 @@
 import pytest
 
 from src.ad.gradient import GradientVector
-from src.ad.index_mapping import IndexMapping
 from src.ad.jacobian import JacobianStructure
 from src.ir.ast import Binary, Const, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
@@ -11,31 +10,11 @@ from src.ir.symbols import EquationDef, ObjSense, Rel, VariableDef
 from src.kkt.assemble import assemble_kkt_system
 
 
-def _manual_index_mapping(
-    vars: list[tuple[str, tuple]], eqs: list[tuple[str, tuple]] = None
-) -> IndexMapping:
-    """Helper to manually create IndexMapping for tests."""
-    mapping = IndexMapping()
-
-    for col_id, (var_name, indices) in enumerate(vars):
-        mapping.var_to_col[(var_name, indices)] = col_id
-        mapping.col_to_var[col_id] = (var_name, indices)
-    mapping.num_vars = len(vars)
-
-    if eqs:
-        for row_id, (eq_name, indices) in enumerate(eqs):
-            mapping.eq_to_row[(eq_name, indices)] = row_id
-            mapping.row_to_eq[row_id] = (eq_name, indices)
-        mapping.num_eqs = len(eqs)
-
-    return mapping
-
-
 @pytest.mark.integration
 class TestKKTFullAssembly:
     """Test full KKT system assembly."""
 
-    def test_simple_nlp_full_assembly(self):
+    def test_simple_nlp_full_assembly(self, manual_index_mapping):
         """Test complete KKT assembly for simple NLP.
 
         Problem:
@@ -81,7 +60,7 @@ class TestKKTFullAssembly:
         model.equalities = ["objdef", "balance"]
 
         # Set up derivatives
-        index_mapping = _manual_index_mapping(
+        index_mapping = manual_index_mapping(
             [("obj", ()), ("x", ()), ("y", ())], [("objdef", ()), ("balance", ())]
         )
 
@@ -115,7 +94,7 @@ class TestKKTFullAssembly:
         assert len(kkt.complementarity_bounds_lo) == 0
         assert len(kkt.complementarity_bounds_up) == 0
 
-    def test_nlp_with_bounds_assembly(self):
+    def test_nlp_with_bounds_assembly(self, manual_index_mapping):
         """Test KKT assembly with variable bounds.
 
         Problem:
@@ -143,7 +122,7 @@ class TestKKTFullAssembly:
         model.equalities = ["objdef"]
 
         # Set up derivatives
-        index_mapping = _manual_index_mapping([("obj", ()), ("x", ())], [("objdef", ())])
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())], [("objdef", ())])
 
         gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
         gradient.set_derivative(0, Const(1.0))
@@ -173,7 +152,7 @@ class TestKKTFullAssembly:
         assert len(kkt.complementarity_bounds_up) == 1
         assert ("x", ()) in kkt.complementarity_bounds_up
 
-    def test_nlp_with_inequality_assembly(self):
+    def test_nlp_with_inequality_assembly(self, manual_index_mapping):
         """Test KKT assembly with inequality constraints.
 
         Problem:
@@ -210,7 +189,7 @@ class TestKKTFullAssembly:
         model.inequalities = ["capacity"]
 
         # Set up derivatives
-        index_mapping = _manual_index_mapping(
+        index_mapping = manual_index_mapping(
             [("obj", ()), ("x", ()), ("y", ())], [("objdef", ()), ("capacity", ())]
         )
 
@@ -235,7 +214,7 @@ class TestKKTFullAssembly:
         assert len(kkt.complementarity_ineq) == 1
         assert "capacity" in kkt.complementarity_ineq
 
-    def test_indexed_bounds_assembly(self):
+    def test_indexed_bounds_assembly(self, manual_index_mapping):
         """Test KKT assembly with indexed variable bounds.
 
         Problem:
@@ -266,7 +245,7 @@ class TestKKTFullAssembly:
         model.sets["i"] = ["i1", "i2"]
 
         # Set up derivatives
-        index_mapping = _manual_index_mapping(
+        index_mapping = manual_index_mapping(
             [("obj", ()), ("x", ("i1",)), ("x", ("i2",))], [("objdef", ())]
         )
 
@@ -296,7 +275,7 @@ class TestKKTFullAssembly:
         assert ("x", ("i1",)) in kkt.complementarity_bounds_lo
         assert ("x", ("i2",)) in kkt.complementarity_bounds_lo
 
-    def test_infinite_bounds_filtered(self):
+    def test_infinite_bounds_filtered(self, manual_index_mapping):
         """Test that infinite bounds are filtered out.
 
         Variables with ±INF bounds should not have multipliers or complementarity.
@@ -317,7 +296,7 @@ class TestKKTFullAssembly:
         model.equalities = ["objdef"]
 
         # Set up derivatives
-        index_mapping = _manual_index_mapping([("obj", ()), ("x", ())], [("objdef", ())])
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())], [("objdef", ())])
 
         gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
         gradient.set_derivative(0, Const(1.0))
@@ -344,7 +323,7 @@ class TestKKTFullAssembly:
         # Should have logged skipped bounds
         assert len(kkt.skipped_infinite_bounds) == 2  # lo and up
 
-    def test_objective_defining_equation_included(self):
+    def test_objective_defining_equation_included(self, manual_index_mapping):
         """Test that objective defining equation is included in the system."""
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -362,7 +341,7 @@ class TestKKTFullAssembly:
         model.equalities = ["objdef"]
 
         # Set up derivatives
-        index_mapping = _manual_index_mapping([("obj", ()), ("x", ())], [("objdef", ())])
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())], [("objdef", ())])
 
         gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
         gradient.set_derivative(0, Const(1.0))
