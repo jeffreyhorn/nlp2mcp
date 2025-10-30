@@ -263,11 +263,11 @@ def _replace_indices_in_expr(expr: Expr, domain: tuple[str, ...]) -> Expr:
         case Call(func, args):
             new_args = tuple(_replace_indices_in_expr(arg, domain) for arg in args)
             return Call(func, new_args)
-        case Sum(_index_sets, _body):
+        case Sum(index_sets, body):
             # Recursively process body to replace any element-specific indices
-            new_body = _replace_indices_in_expr(_body, domain)
-            if new_body is not _body:
-                return Sum(_index_sets, new_body)
+            new_body = _replace_indices_in_expr(body, domain)
+            if new_body is not body:
+                return Sum(index_sets, new_body)
             return expr
         case _:
             return expr
