@@ -271,11 +271,10 @@ class TestStationarityIndexed:
         # Build stationarity
         stationarity = build_stationarity_equations(kkt)
 
-        # Should have three stationarity equations (one per x(i))
-        assert len(stationarity) == 3
-        assert "stat_x_i1" in stationarity
-        assert "stat_x_i2" in stationarity
-        assert "stat_x_i3" in stationarity
+        # Should have one indexed stationarity equation stat_x(i)
+        assert len(stationarity) == 1
+        assert "stat_x" in stationarity
+        assert stationarity["stat_x"].domain == ("i",)
 
     def test_indexed_bounds_stationarity(self, manual_index_mapping):
         """Test stationarity with indexed bounds.
@@ -325,9 +324,10 @@ class TestStationarityIndexed:
         # Build stationarity
         stationarity = build_stationarity_equations(kkt)
 
-        assert len(stationarity) == 2
-        assert "stat_x_i1" in stationarity
-        assert "stat_x_i2" in stationarity
+        # Should have one indexed stationarity equation stat_x(i)
+        assert len(stationarity) == 1
+        assert "stat_x" in stationarity
+        assert stationarity["stat_x"].domain == ("i",)
 
         # Stationarity equations should be generated with correct structure
         # (Expression checking would require AST traversal, omitted for brevity)

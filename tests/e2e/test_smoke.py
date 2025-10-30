@@ -107,10 +107,10 @@ class TestMinimalPipeline:
         # Build stationarity
         stationarity = build_stationarity_equations(kkt)
 
-        # Verify
-        assert len(stationarity) == 2
-        assert "stat_x_i1" in stationarity
-        assert "stat_x_i2" in stationarity
+        # Verify - now generates indexed equations
+        assert len(stationarity) == 1
+        assert "stat_x" in stationarity
+        assert stationarity["stat_x"].domain == ("i",)
 
     def test_bounds_handling_pipeline(self, manual_index_mapping):
         """Test pipeline with bounds (regression test for issue #24).
@@ -313,10 +313,10 @@ class TestKKTAssemblerSmoke:
         # Build stationarity
         stationarity = build_stationarity_equations(kkt)
 
-        # Verify
-        assert len(stationarity) == 2
-        assert "stat_x_i1" in stationarity
-        assert "stat_x_i2" in stationarity
+        # Verify - now generates indexed equations
+        assert len(stationarity) == 1
+        assert "stat_x" in stationarity
+        assert stationarity["stat_x"].domain == ("i",)
 
     def test_objective_variable_handling(self, manual_index_mapping):
         """Test that objective variable is correctly handled in KKT assembly.

@@ -9,6 +9,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-30 - Fix for GitHub Issue #47: Indexed Stationarity Equations
+
+##### Fixed
+- **Indexed Stationarity Equations** (Issue #47 - **FULLY RESOLVED** ✓)
+  - Completely refactored stationarity equation generation to use indexed equations instead of element-specific ones
+  - For indexed variables like `x(i)`, now generates: `stat_x(i).. <expr with i> =E= 0`
+  - Previous approach generated element-specific: `stat_x_i1.. <expr("i1")> =E= 0` (INVALID for GAMS MCP)
+  - Implementation: `src/kkt/stationarity.py` - major refactoring
+    - `build_stationarity_equations()`: Groups variable instances and generates indexed equations
+    - `_group_variables_by_name()`: Groups variable instances by base name
+    - `_build_indexed_stationarity_expr()`: Builds expressions using set indices
+    - `_replace_indices_in_expr()`: Replaces element labels with domain indices
+    - `_add_indexed_jacobian_terms()`: Adds Jacobian transpose terms with proper indexing
+  - Fixed GAMS MCP Model syntax: All equation-variable pairs now list without explicit indices
+    - Correct: `stat_x.x` and `comp_balance.lam_balance` (indexing implicit from equation declaration)
+    - Previous (invalid): `stat_x(i).x(i)` and `comp_balance(i).lam_balance(i)`
+  - Updated: `src/emit/model.py` - Simplified Model MCP emission to not include indices
+  - Removed all xfail markers from validation tests
+  
+- **Jacobian Term Indexing**
+  - Fixed index conflict when building Jacobian transpose terms in indexed equations
+  - When variable domain equals constraint domain, generates direct terms: `deriv(i) * mult(i)`
+  - When domains differ, generates sum over constraint domain: `sum(j, deriv * mult(j))`
+  - Prevents "Set is under control already" GAMS errors
+
+##### Impact  
+- **ALL golden file tests now pass** (5/5 = 100%) ✓
+  - `simple_nlp_mcp.gms` ✓ (WAS FAILING)
+  - `indexed_balance_mcp.gms` ✓ (WAS FAILING)
+  - `bounds_nlp_mcp.gms` ✓
+  - `nonlinear_mix_mcp.gms` ✓
+  - `scalar_nlp_mcp.gms` ✓
+- **All 602 tests passing** (previously 600 passed, 2 xfail)
+- **GAMS syntax validation passes** for all generated MCP files
+- Resolves GitHub Issue #47 completely
+- Partial resolution of parent GitHub Issue #46 (Problem 1 now fixed)
+
+##### Files Modified
+- `src/kkt/stationarity.py` - Complete refactoring to generate indexed equations
+- `src/emit/model.py` - Simplified MCP Model emission (no indices in pairs)
+- `tests/validation/test_gams_check.py` - Removed xfail markers
+- `tests/e2e/test_smoke.py` - Updated test expectations (1 indexed equation vs N element-specific)
+- `tests/integration/kkt/test_kkt_full.py` - Updated test expectations
+- `tests/integration/kkt/test_stationarity.py` - Updated test expectations
+- `tests/golden/*.gms` - Regenerated all golden files with correct indexed syntax
+
 #### 2025-10-30 - Partial Fix for GitHub Issue #46: GAMS Syntax Errors
 
 ##### Fixed

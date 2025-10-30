@@ -50,8 +50,7 @@ Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_supply_i1
-    stat_supply_i2
+    stat_supply(i)
     balance(i)
     objective
 ;
@@ -61,8 +60,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_supply_i1.. 1 + (1 - 0) * nu_balance("i1") + (0 - 0) * nu_balance("i2") =E= 0;
-stat_supply_i2.. 1 + (0 - 0) * nu_balance("i1") + (1 - 0) * nu_balance("i2") =E= 0;
+stat_supply(i).. 1 + (1 - 0) * nu_balance(i) =E= 0;
 
 * Original equality equations
 objective.. obj =E= sum(i, supply(i));
@@ -83,9 +81,8 @@ balance(i).. supply(i) =E= demand(i);
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_supply_i1.supply,
-    stat_supply_i2.supply,
-    balance(i).nu_balance(i),
+    stat_supply.supply,
+    balance.nu_balance,
     objective.obj
 /;
 

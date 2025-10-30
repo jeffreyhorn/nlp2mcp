@@ -262,10 +262,10 @@ class TestKKTFullAssembly:
         # Assemble KKT
         kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
 
-        # Verify indexed bounds
-        assert len(kkt.stationarity) == 2  # x(i1), x(i2)
-        assert "stat_x_i1" in kkt.stationarity
-        assert "stat_x_i2" in kkt.stationarity
+        # Verify indexed bounds - now generates indexed equations
+        assert len(kkt.stationarity) == 1  # stat_x(i)
+        assert "stat_x" in kkt.stationarity
+        assert kkt.stationarity["stat_x"].domain == ("i",)
 
         assert len(kkt.multipliers_bounds_lo) == 2
         assert ("x", ("i1",)) in kkt.multipliers_bounds_lo
