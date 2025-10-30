@@ -87,8 +87,8 @@ def emit_variables(kkt: KKTSystem) -> str:
             lines.append(block_name)
             for var_name, domain in var_groups[kind]:
                 if domain:
-                    domain_str = ",".join(domain)
-                    lines.append(f"    {var_name}({domain_str})")
+                    domain_indices = ",".join(domain)
+                    lines.append(f"    {var_name}({domain_indices})")
                 else:
                     lines.append(f"    {var_name}")
             lines.append(";")
@@ -157,6 +157,23 @@ def emit_equations(kkt: KKTSystem) -> str:
     for key in sorted(kkt.complementarity_bounds_up.keys()):
         comp_pair = kkt.complementarity_bounds_up[key]
         lines.append(f"    {comp_pair.equation.name}")
+
+    # Original equality equations (declared here, also used in Model MCP section)
+    for eq_name in sorted(kkt.model_ir.equalities):
+        # Verify equation exists in equations dict to catch data inconsistencies
+        if eq_name not in kkt.model_ir.equations:
+            raise ValueError(
+                f"Equation '{eq_name}' is in equalities list but not in equations dict. "
+                f"This indicates a data inconsistency in the ModelIR."
+            )
+
+        eq_def = kkt.model_ir.equations[eq_name]
+        # Check if it has domain (indexed)
+        if eq_def.domain:
+            domain_indices = ",".join(eq_def.domain)
+            lines.append(f"    {eq_name}({domain_indices})")
+        else:
+            lines.append(f"    {eq_name}")
 
     lines.append(";")
 

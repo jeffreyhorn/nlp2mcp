@@ -40,19 +40,12 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
     Example:
         ```gams
         Model mcp_model /
-            * Stationarity conditions
-            stat_x.x
-            stat_y.y
-
-            * Inequality complementarities
-            comp_g1.lam_g1
-
-            * Equality constraints
-            eq_h1.nu_h1
-            eq_objdef.obj
-
-            * Bound complementarities
-            bound_lo_x.piL_x
+            stat_x.x,
+            stat_y.y,
+            comp_g1.lam_g1,
+            eq_h1.nu_h1,
+            eq_objdef.obj,
+            bound_lo_x.piL_x,
             bound_up_y.piU_y
         /;
         ```
@@ -154,8 +147,28 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                 pairs.append(f"    {eq_def.name}.{var_name}")
 
     # Build the model declaration
+    # GAMS does not allow comments inside the Model / ... / block
+    # Filter out comment lines and empty lines, keeping only actual pairs
+    actual_pairs = []
+    for pair in pairs:
+        stripped = pair.strip()
+        # Keep only non-empty, non-comment lines
+        if stripped and not stripped.startswith("*"):
+            # Append the original (indented) line to preserve GAMS formatting
+            # Do NOT use 'stripped' here - GAMS formatting conventions expect
+            # consistent indentation for readability within model blocks
+            actual_pairs.append(pair)
+
+    # Build the model declaration with commas
     lines = [f"Model {model_name} /"]
-    lines.extend(pairs)
+
+    for i, pair in enumerate(actual_pairs):
+        # Add comma to all pairs except the last one
+        if i < len(actual_pairs) - 1:
+            lines.append(pair + ",")
+        else:
+            lines.append(pair)
+
     lines.append("/;")
 
     return "\n".join(lines)
