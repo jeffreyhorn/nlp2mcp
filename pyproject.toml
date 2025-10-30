@@ -25,6 +25,7 @@ classifiers = [
 dependencies = [
     "lark>=1.1.9",
     "numpy>=1.24.0",  # For finite-difference validation and numeric operations
+    "click>=8.0.0",  # For command-line interface
 ]
 
 [project.optional-dependencies]

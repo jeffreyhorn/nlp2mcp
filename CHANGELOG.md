@@ -9,6 +9,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-30 - Sprint 3 Day 7: Mid-Sprint Checkpoint & CLI
+
+##### Added
+- **Command-Line Interface** (`src/cli.py`)
+  - Command: `nlp2mcp input.gms -o output.gms`
+  - Full pipeline orchestration: Parse → Normalize → AD → KKT → Emit
+  - Options:
+    - `-o, --output`: Specify output file path
+    - `-v, --verbose`: Increase verbosity (stackable: -v, -vv, -vvv)
+    - `--no-comments`: Disable explanatory comments in output
+    - `--model-name`: Custom model name (default: mcp_model)
+    - `--show-excluded/--no-show-excluded`: Toggle duplicate bounds reporting
+  - Error handling:
+    - File not found errors
+    - Invalid model errors
+    - Unexpected errors with traceback in -vvv mode
+  - Verbose reporting:
+    - Level 1 (-v): Pipeline stages and KKT statistics
+    - Level 2 (-vv): Model component counts, derivative dimensions
+    - Level 3 (-vvv): Full error tracebacks for debugging
+
+- **CLI Tests** (`tests/integration/test_cli.py`)
+  - 14 comprehensive integration tests
+  - Test coverage:
+    - Basic usage (file output and stdout)
+    - Verbose modes (-v, -vv, -vvv)
+    - Comment toggling
+    - Custom model naming
+    - Excluded bounds reporting
+    - Error handling (file not found)
+    - Help documentation
+    - File overwriting
+    - Variable kind preservation
+
+##### Mid-Sprint Checkpoint Results
+- **Status**: All systems green ✅
+- **Tests**: 588 passing (up from 574)
+  - 14 new CLI integration tests
+  - 0 regressions
+- **Integration Health**:
+  - Full pipeline tested end-to-end
+  - All Sprint 1/2 dependencies verified
+  - API contracts still valid
+- **Completed Days**: 1-7 of 10 (70% complete)
+- **Remaining Work**: Days 8-10 (Golden tests, documentation, polish)
+
+##### Technical Details
+- **Click Framework**: Used for robust CLI with automatic help, validation, and error handling
+- **Exit Codes**: 
+  - 0 = Success
+  - 1 = Application error (parsing, validation, etc.)
+  - 2 = Usage error (invalid arguments, missing file)
+- **Verbosity Levels**: Cascading detail levels for different use cases
+  - Production: No flags (quiet)
+  - Development: -v (pipeline stages)
+  - Debugging: -vv or -vvv (full details)
+- **Error Messages**: Clear, actionable messages for all error conditions
+- **Stdout/File Output**: Flexible output to stdout or file
+
+##### Code Quality
+- All 588 tests passing
+- Full mypy compliance
+- All ruff linting checks passing
+- Comprehensive error handling and user-friendly messages
+
 #### 2025-10-30 - Sprint 3 Day 6: GAMS Emitter - Model & Solve
 
 ##### Added
