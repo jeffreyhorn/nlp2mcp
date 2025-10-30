@@ -8,6 +8,7 @@ import pytest
 
 from src.ad.gradient import GradientVector
 from src.ad.jacobian import JacobianStructure
+from src.emit.emit_gams import emit_gams_mcp
 from src.ir.ast import Binary, Const, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
 from src.ir.symbols import EquationDef, ObjSense, Rel, VariableDef
@@ -16,7 +17,6 @@ from src.kkt.kkt_system import KKTSystem, MultiplierDef
 from src.kkt.objective import extract_objective_info
 from src.kkt.partition import partition_constraints
 from src.kkt.stationarity import build_stationarity_equations
-from src.emit.emit_gams import emit_gams_mcp
 
 
 @pytest.mark.e2e

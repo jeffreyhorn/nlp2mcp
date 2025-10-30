@@ -43,7 +43,7 @@ def main():
     print("─" * 80 + "\n")
 
     model_ir = parse_model_file(str(gams_file))
-    print(f"✓ Parsed model successfully")
+    print("✓ Parsed model successfully")
     print(f"  - Sets: {len(model_ir.sets)}")
     print(f"  - Parameters: {len(model_ir.params)}")
     print(f"  - Variables: {len(model_ir.variables)}")
@@ -101,7 +101,7 @@ def main():
     print(";")
     print()
 
-    print(f"* Variable kinds preserved:")
+    print("* Variable kinds preserved:")
     for var_name, var_def in model_ir.variables.items():
         print(f"*   {var_name}: {var_def.kind.name}")
     print()

@@ -7,11 +7,11 @@ import pytest
 
 from src.ad.gradient import GradientVector
 from src.ad.jacobian import JacobianStructure
+from src.emit.emit_gams import emit_gams_mcp
 from src.ir.ast import Binary, Const, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
 from src.ir.symbols import EquationDef, ObjSense, Rel, VariableDef, VarKind
 from src.kkt.assemble import assemble_kkt_system
-from src.emit.emit_gams import emit_gams_mcp
 
 
 @pytest.mark.integration
