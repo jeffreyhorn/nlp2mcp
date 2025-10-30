@@ -15,6 +15,21 @@ from src.validation.gams_check import (
 )
 
 
+@pytest.fixture(autouse=True)
+def cleanup_gams_files():
+    """Clean up GAMS output files after each test."""
+    yield
+    # Clean up .lst and .log files in tests/golden directory
+    golden_dir = Path("tests/golden")
+    if golden_dir.exists():
+        for pattern in ["*.lst", "*.log"]:
+            for file in golden_dir.glob(pattern):
+                try:
+                    file.unlink()
+                except OSError:
+                    pass  # Ignore errors if file doesn't exist or can't be deleted
+
+
 @pytest.mark.validation
 class TestGAMSExecutableDetection:
     """Test GAMS executable detection."""
