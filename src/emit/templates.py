@@ -166,16 +166,18 @@ def emit_equations(kkt: KKTSystem) -> str:
 def emit_equation_definitions(kkt: KKTSystem) -> str:
     """Emit equation definitions (eq_name.. lhs =E= rhs;).
 
-    This is a placeholder for Day 5 implementation.
+    This function is now implemented in src.emit.equations.
+    This wrapper maintained for backwards compatibility.
 
     Args:
         kkt: KKT system
 
     Returns:
-        Empty string (to be implemented Day 5)
+        GAMS equation definitions
     """
-    # Day 5: Will implement AST → GAMS conversion
-    return ""
+    from src.emit.equations import emit_equation_definitions as _emit_eq_defs
+
+    return _emit_eq_defs(kkt)
 
 
 def emit_model(kkt: KKTSystem) -> str:

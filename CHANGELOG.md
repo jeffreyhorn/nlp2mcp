@@ -9,6 +9,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-29 - Sprint 3 Day 5: GAMS Emitter - Equation Emission
+
+##### Added
+- **AST to GAMS Converter** (`src/emit/expr_to_gams.py`)
+  - Function: `expr_to_gams(expr: Expr) -> str`
+    - Converts all AST expression nodes to GAMS syntax
+    - Handles Const, SymbolRef, VarRef, ParamRef, MultiplierRef
+    - Handles Unary, Binary, Call, Sum operations
+    - **Power operator conversion**: `^` → `**` (GAMS syntax)
+  - Operator precedence handling:
+    - Automatic parenthesization based on precedence rules
+    - Correct associativity for subtraction, division, power
+    - Prevents unnecessary parentheses for readable output
+  - Examples:
+    - `x ** 2 + y ** 2` (quadratic)
+    - `sum(i, c(i) * x(i))` (linear objective)
+    - `(a + b) * (c - d)` (complex expression with precedence)
+
+- **Equation Definition Emitter** (`src/emit/equations.py`)
+  - Function: `emit_equation_def(eq_name, eq_def) -> str`
+    - Emits single equation: `eq_name(indices).. lhs =E= rhs;`
+    - Supports all relation types: =E= (EQ), =L= (LE), =G= (GE)
+    - Handles scalar and indexed equations
+  - Function: `emit_equation_definitions(kkt) -> str`
+    - Emits all KKT system equations with comments
+    - Stationarity equations (one per primal variable)
+    - Inequality complementarity equations
+    - Lower/upper bound complementarity equations
+    - Original equality equations (including objective defining equation)
+
+- **Template Integration** (`src/emit/templates.py`)
+  - Updated `emit_equation_definitions()` to delegate to equations module
+  - Maintained backward compatibility with existing wrapper
+
+- **Comprehensive Unit Tests** (55 tests total)
+  - `tests/unit/emit/test_expr_to_gams.py` (41 tests):
+    - Basic nodes: constants, variables, parameters, multipliers (11 tests)
+    - Unary operators (3 tests)
+    - Binary operators including power conversion (8 tests)
+    - Operator precedence and parenthesization (7 tests)
+    - Function calls: exp, log, sqrt, sin, cos (4 tests)
+    - Sum expressions: single/multiple indices, nested (4 tests)
+    - Complex real-world expressions (4 tests)
+  - `tests/unit/emit/test_equations.py` (14 tests):
+    - Single equation emission: scalar, indexed, all relations (7 tests)
+    - Full KKT system emission: all equation types (7 tests)
+
+##### Technical Details
+- **Power Operator Handling**: AST `^` converts to GAMS `**` operator
+- **Precedence Levels**: 
+  - Highest: `^` (power)
+  - High: `*`, `/`
+  - Medium: `+`, `-`
+  - Low: comparisons (`=`, `<`, `>`, etc.)
+  - Lowest: `and`, `or`
+- **Associativity**: Left-associative except power (right-associative)
+- **MultiplierRef Support**: Full support for KKT multiplier variables in expressions
+- **Type Safety**: Full mypy compliance
+- **Code Quality**: Passes black formatting and ruff linting
+
 #### 2025-10-29 - Sprint 3 Day 4: GAMS Emitter - Original Symbols & Structure
 
 ##### Added
