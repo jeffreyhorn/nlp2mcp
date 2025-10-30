@@ -92,16 +92,28 @@ def validate_gams_syntax(gams_file: str, gams_executable: str | None = None) -> 
 
     # Run GAMS in compile-only mode
     # action=c : compile only (syntax check)
-    # We check the .lst file for errors rather than return code
-    # (GAMS may return non-zero even on successful compilation)
+    #
+    # IMPORTANT: We do NOT use the GAMS exit code to determine success/failure.
+    # GAMS return codes are unreliable for compile-only mode:
+    #   - Code 0: Normal completion (rare in compile-only mode)
+    #   - Code 6: Parameter error (common in compile-only, but NOT a compilation error)
+    #   - Code 2: Compilation error (actual syntax error)
+    #
+    # Instead, we parse the .lst file which is the authoritative source:
+    #   - Presence of "COMPILATION TIME" → successful compilation
+    #   - Presence of "****" or "Error" → compilation failed
     try:
-        subprocess.run(
+        result = subprocess.run(
             [gams_executable, str(gams_path), "action=c"],
             capture_output=True,
             text=True,
             timeout=30,
             cwd=gams_path.parent,  # Run in file's directory
         )
+
+        # Note: Exit code is intentionally ignored (see comment above)
+        # But we capture it for diagnostic purposes if needed
+        exit_code = result.returncode
 
         # Check the .lst file for compilation errors
         lst_file = gams_path.parent / (gams_path.stem + ".lst")
@@ -136,7 +148,10 @@ def validate_gams_syntax(gams_file: str, gams_executable: str | None = None) -> 
             return (True, "GAMS syntax valid")
 
         # If we get here, something unexpected happened
-        return (False, "Could not determine compilation status from .lst file")
+        return (
+            False,
+            f"Could not determine compilation status from .lst file (exit code: {exit_code})",
+        )
 
     except subprocess.TimeoutExpired:
         return (False, "GAMS validation timed out (30s limit)")
