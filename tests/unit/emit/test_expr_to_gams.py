@@ -75,9 +75,14 @@ class TestBasicNodes:
         assert result == "lambda_g1"
 
     def test_multiplier_ref_indexed(self):
-        """Test indexed multiplier reference."""
+        """Test indexed multiplier reference with set index."""
         result = expr_to_gams(MultiplierRef("nu_balance", ("i",)))
         assert result == "nu_balance(i)"
+
+    def test_multiplier_ref_element_label(self):
+        """Test multiplier reference with element label (contains digit)."""
+        result = expr_to_gams(MultiplierRef("nu_balance", ("i1",)))
+        assert result == 'nu_balance("i1")'
 
 
 @pytest.mark.unit
@@ -95,9 +100,13 @@ class TestUnaryOperators:
         assert result == "+x"
 
     def test_unary_nested(self):
-        """Test nested unary operators."""
+        """Test nested unary operators.
+
+        Nested negative unary operators are parenthesized to avoid ambiguity.
+        This prevents potential double-operator issues in GAMS.
+        """
         result = expr_to_gams(Unary("-", Unary("-", VarRef("x", ()))))
-        assert result == "--x"
+        assert result == "-(-x)"
 
 
 @pytest.mark.unit

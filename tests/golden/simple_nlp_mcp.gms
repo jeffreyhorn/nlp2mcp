@@ -70,7 +70,7 @@ stat_x_i2.. x("i2") * 0 + a("i2") * 1 + (0 - 0) * lam_balance("i1") + (1 - 0) * 
 stat_x_i3.. x("i3") * 0 + a("i3") * 1 + (0 - 0) * lam_balance("i1") + (0 - 0) * lam_balance("i2") + (1 - 0) * lam_balance("i3") =E= 0;
 
 * Inequality complementarity equations
-comp_balance(i).. (-x(i)) =G= 0;
+comp_balance(i).. -x(i) =G= 0;
 
 * Original equality equations
 objective.. obj =E= sum(i, a(i) * x(i));

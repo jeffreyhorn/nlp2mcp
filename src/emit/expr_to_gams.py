@@ -123,9 +123,12 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
 
         case MultiplierRef(name, indices):
             if indices:
-                # Quote element labels for GAMS syntax
-                # e.g., nu_balance(i1) -> nu_balance("i1")
-                quoted_indices = [f'"{idx}"' for idx in indices]
+                # Quote element labels (identifiers with digits) for GAMS syntax
+                # Element labels like "i1", "j2" need quotes: nu_balance("i1")
+                # Set indices like "i", "j" don't: nu_balance(i)
+                quoted_indices = [
+                    f'"{idx}"' if any(c.isdigit() for c in idx) else idx for idx in indices
+                ]
                 indices_str = ",".join(quoted_indices)
                 return f"{name}({indices_str})"
             return name
@@ -135,13 +138,12 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
             # GAMS unary operators: +, -
             # Add parentheses if child is a binary expression to preserve correctness
             # e.g., -(x - 10) not -x - 10
-            # Also parenthesize negative expressions to avoid double operators
-            # e.g., (+ -sin(y)) becomes (+ (-sin(y)))
             if isinstance(child, Binary):
                 return f"{op}({child_str})"
             # Parenthesize negative unary to avoid double operator issues
-            # e.g., x + -sin(y) becomes x + (-sin(y))
-            if op == "-":
+            # ONLY when there's a parent operator (e.g., x + -sin(y) becomes x + (-sin(y)))
+            # Standalone negative (e.g., -x) doesn't need parentheses
+            if op == "-" and parent_op is not None:
                 return f"({op}{child_str})"
             return f"{op}{child_str}"
 
