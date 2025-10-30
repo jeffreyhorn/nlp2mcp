@@ -99,14 +99,23 @@ def compute_constraint_jacobian(
     num_inequality_rows = _count_equation_instances(model_ir, model_ir.inequalities)
     num_bound_rows = len(model_ir.normalized_bounds)
 
-    # Create Jacobian structures
+    # Create Jacobian structure for equalities (uses standard index mapping)
     J_h = JacobianStructure(
         index_mapping=index_mapping,
         num_rows=num_equality_rows,
         num_cols=index_mapping.num_vars,
     )
+
+    # Create extended index mapping for inequalities that includes bounds
+    # The standard index_mapping only includes equations from model.equations,
+    # but normalized bounds are stored separately in model.normalized_bounds.
+    # We need to add row_to_eq entries for bound rows.
+    ineq_index_mapping = _build_inequality_index_mapping(
+        index_mapping, model_ir, num_inequality_rows
+    )
+
     J_g = JacobianStructure(
-        index_mapping=index_mapping,
+        index_mapping=ineq_index_mapping,
         num_rows=num_inequality_rows + num_bound_rows,
         num_cols=index_mapping.num_vars,
     )
@@ -115,12 +124,62 @@ def compute_constraint_jacobian(
     _compute_equality_jacobian(model_ir, index_mapping, J_h)
 
     # Process inequality constraints
-    _compute_inequality_jacobian(model_ir, index_mapping, J_g)
+    _compute_inequality_jacobian(model_ir, ineq_index_mapping, J_g)
 
     # Include bound-derived equations
-    _compute_bound_jacobian(model_ir, index_mapping, J_g)
+    _compute_bound_jacobian(model_ir, ineq_index_mapping, J_g)
 
     return J_h, J_g
+
+
+def _build_inequality_index_mapping(base_mapping, model_ir: ModelIR, num_inequality_rows: int):
+    """
+    Build an extended index mapping for J_g that includes both inequality equations
+    and normalized bounds.
+
+    The base_mapping only includes equations from model.equations, but J_g needs
+    additional rows for normalized bounds. We create a copy of the base mapping
+    and add entries for bound rows.
+
+    Args:
+        base_mapping: Base index mapping from build_index_mapping()
+        model_ir: Model IR with normalized bounds
+        num_inequality_rows: Number of regular inequality equation rows
+
+    Returns:
+        Extended index mapping with bound rows added to row_to_eq
+    """
+    from copy import copy
+    from .index_mapping import IndexMapping
+
+    # Create a new mapping with the same variable mappings
+    ineq_mapping = IndexMapping()
+    ineq_mapping.var_to_col = base_mapping.var_to_col.copy()
+    ineq_mapping.col_to_var = base_mapping.col_to_var.copy()
+    ineq_mapping.num_vars = base_mapping.num_vars
+
+    # Copy equation mappings from base (these cover ALL equations, not just inequalities)
+    ineq_mapping.eq_to_row = base_mapping.eq_to_row.copy()
+    ineq_mapping.row_to_eq = base_mapping.row_to_eq.copy()
+    ineq_mapping.num_eqs = base_mapping.num_eqs
+
+    # Add entries for bound rows (they come after regular inequality equation rows)
+    # Note: num_inequality_rows counts only the inequality equations in model.equations,
+    # not ALL equations. Bound rows are indexed starting from num_inequality_rows.
+    bound_row_offset = num_inequality_rows
+
+    for bound_idx, (bound_name, _norm_eq) in enumerate(sorted(model_ir.normalized_bounds.items())):
+        row_id = bound_row_offset + bound_idx
+        # Bounds are scalar (no indices), so use empty tuple
+        ineq_mapping.eq_to_row[(bound_name, ())] = row_id
+        ineq_mapping.row_to_eq[row_id] = (bound_name, ())
+
+    # Update total equation count to include bounds
+    # Only increment if we actually added bounds
+    if len(model_ir.normalized_bounds) > 0:
+        ineq_mapping.num_eqs = base_mapping.num_eqs + len(model_ir.normalized_bounds)
+
+    return ineq_mapping
 
 
 def _compute_equality_jacobian(model_ir: ModelIR, index_mapping, J_h: JacobianStructure) -> None:
