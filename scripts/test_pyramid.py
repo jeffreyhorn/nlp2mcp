@@ -13,25 +13,54 @@ from pathlib import Path
 
 def count_tests_by_marker(path: Path, marker: str) -> int:
     """Count tests with specific marker in path."""
-    result = subprocess.run(
-        ["pytest", str(path), "-m", marker, "--collect-only", "-q"],
-        capture_output=True,
-        text=True,
-    )
-    # Parse output like "15 tests collected"
-    match = re.search(r"(\d+) tests? collected", result.stdout)
-    return int(match.group(1)) if match else 0
+    try:
+        result = subprocess.run(
+            ["pytest", str(path), "-m", marker, "--collect-only", "-q"],
+            capture_output=True,
+            text=True,
+            check=False,  # Don't raise on non-zero exit
+        )
+
+        # Check for errors
+        if result.returncode != 0 and result.returncode != 5:  # 5 = no tests collected
+            print(f"Warning: pytest error for {path} with marker {marker}: {result.stderr}")
+            return 0
+
+        # Parse output like "15 tests collected"
+        match = re.search(r"(\d+) tests? collected", result.stdout)
+        return int(match.group(1)) if match else 0
+    except FileNotFoundError:
+        print("Error: pytest not found. Make sure pytest is installed.")
+        return 0
+    except Exception as e:
+        print(f"Error counting tests in {path} with marker {marker}: {e}")
+        return 0
 
 
 def count_total_tests(path: Path) -> int:
     """Count all tests in path."""
-    result = subprocess.run(
-        ["pytest", str(path), "--collect-only", "-q"],
-        capture_output=True,
-        text=True,
-    )
-    match = re.search(r"(\d+) tests? collected", result.stdout)
-    return int(match.group(1)) if match else 0
+    try:
+        result = subprocess.run(
+            ["pytest", str(path), "--collect-only", "-q"],
+            capture_output=True,
+            text=True,
+            check=False,  # Don't raise on non-zero exit
+        )
+
+        # Check for errors
+        if result.returncode != 0 and result.returncode != 5:  # 5 = no tests collected
+            print(f"Warning: pytest error for {path}: {result.stderr}")
+            return 0
+
+        # Parse output like "15 tests collected"
+        match = re.search(r"(\d+) tests? collected", result.stdout)
+        return int(match.group(1)) if match else 0
+    except FileNotFoundError:
+        print("Error: pytest not found. Make sure pytest is installed.")
+        return 0
+    except Exception as e:
+        print(f"Error counting tests in {path}: {e}")
+        return 0
 
 
 def generate_pyramid():
@@ -154,7 +183,8 @@ def generate_pyramid():
                 coverage_levels.append("Integration")
             if counts["e2e"] > 0:
                 coverage_levels.append("E2E")
-            md.append(f"- **{name}**: {', '.join(coverage_levels)} ({counts['total']} tests)")
+            coverage_str = ", ".join(coverage_levels) if coverage_levels else "Untagged"
+            md.append(f"- **{name}**: {coverage_str} ({counts['total']} tests)")
 
     md.append("")
     md.append("---")
