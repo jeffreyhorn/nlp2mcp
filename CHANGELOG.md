@@ -9,6 +9,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-30 - Sprint 3 Day 6: GAMS Emitter - Model & Solve
+
+##### Added
+- **Model MCP Emitter** (`src/emit/model.py`)
+  - Function: `emit_model_mcp(kkt, model_name) -> str`
+    - Generates Model MCP declaration with complementarity pairs
+    - Pairs stationarity equations with primal variables
+    - Pairs inequality equations with multipliers
+    - Pairs equality equations with free multipliers
+    - **Special handling**: Objective defining equation paired with objvar (not a multiplier)
+    - Pairs bound complementarities with bound multipliers
+  - Function: `emit_solve(model_name) -> str`
+    - Generates Solve statement: `Solve model_name using MCP;`
+  - Pairing rules documented in function docstrings
+
+- **Main GAMS MCP Generator** (`src/emit/emit_gams.py`)
+  - Function: `emit_gams_mcp(kkt, model_name, add_comments) -> str`
+    - Orchestrates all emission components
+    - Generates complete, runnable GAMS MCP file
+  - Output structure:
+    1. Header comments with KKT system overview
+    2. Original model declarations (Sets, Aliases, Parameters)
+    3. Variable declarations (primal + multipliers, grouped by kind)
+    4. Equation declarations
+    5. Equation definitions
+    6. Model MCP declaration with complementarity pairs
+    7. Solve statement
+  - Options:
+    - `model_name`: Custom model name (default: "mcp_model")
+    - `add_comments`: Include explanatory comments (default: True)
+
+- **Integration Tests** (`tests/integration/emit/test_emit_full.py`)
+  - 7 integration tests covering full emission pipeline
+  - Tests:
+    - Minimal NLP emission
+    - Variable kind preservation (Positive/Binary/etc.)
+    - Objective equation pairing with objvar
+    - Inequality complementarity
+    - Bound complementarity
+    - Comment toggling
+    - Custom model naming
+
+- **Smoke Tests** (`tests/e2e/test_smoke.py`)
+  - 3 end-to-end smoke tests for GAMS emission
+  - `TestGAMSEmitterSmoke` class with:
+    - Basic emission smoke test
+    - Emission with comments
+    - Emission without comments
+  - Verifies complete pipeline doesn't crash
+  - Validates essential GAMS structure present
+
+##### Technical Details
+- **Objective Handling**: Objective defining equation (e.g., `obj =E= f(x)`) is paired with the objective variable in the Model MCP, not with a multiplier. This is correct because the objective variable is free in MCP formulation.
+- **Variable Kind Preservation**: Primal variables maintain their kinds (Positive, Binary, Integer, etc.) from the original model. Multipliers are added to appropriate groups (free for ν, positive for λ/π).
+- **Complementarity Pairing**: Each equation-variable pair in Model MCP represents: equation ⊥ variable, meaning the equation holds with equality if variable > 0, or equation ≥ 0 if variable = 0.
+- **Stationarity Exclusion**: No stationarity equation is created for the objective variable, as it's defined by the objective defining equation.
+
+##### Code Quality
+- All tests passing (7 integration + 3 e2e)
+- Full mypy compliance
+- Passes ruff linting and formatting
+- Comprehensive docstrings with examples
+
 #### 2025-10-29 - Sprint 3 Day 5: GAMS Emitter - Equation Emission
 
 ##### Added

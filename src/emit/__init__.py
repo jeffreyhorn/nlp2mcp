@@ -10,6 +10,8 @@ from src.emit.original_symbols import (
     emit_original_parameters,
     emit_original_sets,
 )
+from src.emit.model import emit_model_mcp, emit_solve
+from src.emit.emit_gams import emit_gams_mcp
 
 __all__ = [
     "emit_original_sets",
@@ -18,4 +20,7 @@ __all__ = [
     "expr_to_gams",
     "emit_equation_def",
     "emit_equation_definitions",
+    "emit_model_mcp",
+    "emit_solve",
+    "emit_gams_mcp",
 ]
