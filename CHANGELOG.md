@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Formats as `Sets\n    set_name /member1, member2/\n;`
   - Function: `emit_original_aliases(model_ir) -> str`
     - Emits Alias declarations using `AliasDef.target` and `.universe`
-    - Formats as `Alias (alias_name, target_set);`
+    - Formats as `Alias(target_set, alias_name);`
   - Function: `emit_original_parameters(model_ir) -> str`
     - Emits Parameters and Scalars using `ParameterDef.domain` and `.values`
     - Scalars: empty domain `()` with `values[()] = value`
