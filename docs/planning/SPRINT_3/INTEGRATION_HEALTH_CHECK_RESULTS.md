@@ -1,19 +1,28 @@
 # Integration Health Check Results
 **Date:** 2025-10-30  
 **Sprint:** Sprint 3 - Day 7 Mid-Sprint Checkpoint  
-**Status:** ❌ CRITICAL ISSUE FOUND
+**Initial Status:** ❌ CRITICAL ISSUE FOUND  
+**Final Status:** ✅ RESOLVED
 
 ---
 
 ## Executive Summary
 
-Integration health check revealed **1 CRITICAL BLOCKER** affecting 2 of 5 example models.
+Integration health check initially revealed **1 CRITICAL BLOCKER** affecting 2 of 5 example models. The issue was **immediately diagnosed and fixed** during the same checkpoint session.
 
-### Overall Results
+### Initial Results (Before Fix)
 - **Total Examples Tested**: 5
 - **✅ Passed**: 3 (simple_nlp, scalar_nlp, indexed_balance)
 - **❌ Failed**: 2 (bounds_nlp, nonlinear_mix)
 - **Success Rate**: 60%
+
+### Final Results (After Fix)
+- **Total Examples Tested**: 5
+- **✅ Passed**: 5 (ALL)
+- **❌ Failed**: 0
+- **Success Rate**: 100% ✅
+
+**Fix Commit:** `022c992` - "fix: extend J_ineq index mapping to include normalized bounds"
 
 ---
 
@@ -214,32 +223,63 @@ The stationarity builder assumes all `row_id` values in `jacobian.entries` have 
 - ✅ 70% complete
 - ✅ On track
 
-### Revised Assessment
+### Initial Assessment (Before Fix)
 - ❌ **CRITICAL BLOCKER FOUND**
 - ⏸️ **Sprint PAUSED** until blocker resolved
 - ⚠️ **At Risk** of missing Day 10 deadline
 
-### Impact
+### Impact (Before Fix)
 - **Days 8-10**: Cannot proceed until issue fixed
 - **Estimated Fix Time**: 2-4 hours
 - **Risk Level**: HIGH (40% of examples failing)
 
 ---
 
-## Conclusion
+## Resolution
 
-The integration health check successfully identified a critical issue that would have blocked Sprint 3 completion. The issue affects 40% of example models and must be resolved before proceeding with Days 8-10.
+### Fix Implementation
+**Time to Fix**: ~1 hour (faster than estimated)  
+**Commit**: `022c992`  
+**Files Modified**:
+- `src/ad/constraint_jacobian.py` - Added `_build_inequality_index_mapping()` helper
+- Preserved base mapping for equations, extended with bound rows
+- Maintained num_eqs consistency for models without bounds
 
-**Next Steps**:
-1. Fix Jacobian index mapping issue in stationarity builder
-2. Re-run integration health check until all 5 examples pass
-3. Add regression tests for the fixed issue
-4. Only then proceed with Day 8 (Golden Test Suite)
+### Root Cause Analysis
+The `build_index_mapping()` function only processes equations in `model.equations`, but normalized bounds are stored separately in `model.normalized_bounds`. When `_compute_bound_jacobian()` added rows to J_ineq for bounds, those row IDs didn't have corresponding entries in the index mapping's `row_to_eq` dictionary.
 
-**Status**: ❌ INTEGRATION HEALTH CHECK FAILED - BLOCKER IDENTIFIED
+### Solution Details
+Created `_build_inequality_index_mapping()` to extend the base index mapping:
+1. Copies all variable and equation mappings from base
+2. Adds `row_to_eq` entries for each normalized bound
+3. Preserves `num_eqs` for models without bounds
+4. Increments `num_eqs` only when bounds are added
+
+### Verification After Fix
+- ✅ All 588 tests passing (0 regressions)
+- ✅ Integration health check: 5/5 examples (100% success rate)
+- ✅ bounds_nlp.gms: KeyError: 2 → RESOLVED
+- ✅ nonlinear_mix.gms: KeyError: 3 → RESOLVED
+- ✅ Index mapping consistency test: PASSING
+
+---
+
+## Final Conclusion
+
+The integration health check successfully identified a critical issue that would have blocked Sprint 3 completion. **The issue was immediately diagnosed and fixed during the same checkpoint session**, restoring the sprint to green status.
+
+### Final Assessment (After Fix)
+- ✅ **All systems green**
+- ✅ **70% complete**
+- ✅ **On track for Day 10 completion**
+- ✅ **Zero blockers**
+
+**Status**: ✅ INTEGRATION HEALTH CHECK PASSED - BLOCKER RESOLVED
 
 ---
 
 **Report Generated**: 2025-10-30  
-**Blocker Severity**: CRITICAL  
-**Required Action**: Fix before proceeding to Day 8
+**Initial Blocker Severity**: CRITICAL  
+**Final Status**: RESOLVED  
+**Time to Resolution**: ~1 hour  
+**Sprint Status**: ON TRACK
