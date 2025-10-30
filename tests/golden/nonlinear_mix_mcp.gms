@@ -57,6 +57,9 @@ Equations
     comp_lo_y
     comp_up_x
     comp_up_y
+    objective
+    poly_balance
+    trig_balance
 ;
 
 * ============================================

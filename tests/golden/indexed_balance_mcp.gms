@@ -52,6 +52,8 @@ Variables
 Equations
     stat_supply_i1
     stat_supply_i2
+    balance(i)
+    objective
 ;
 
 * ============================================

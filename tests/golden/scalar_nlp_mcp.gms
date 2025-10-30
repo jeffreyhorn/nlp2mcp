@@ -47,6 +47,8 @@ Variables
 
 Equations
     stat_x
+    objective
+    stationarity
 ;
 
 * ============================================

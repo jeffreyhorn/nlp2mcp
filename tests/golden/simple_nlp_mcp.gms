@@ -57,6 +57,7 @@ Equations
     stat_x_i2
     stat_x_i3
     comp_balance
+    objective
 ;
 
 * ============================================

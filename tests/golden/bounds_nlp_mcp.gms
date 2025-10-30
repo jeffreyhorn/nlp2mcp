@@ -54,6 +54,8 @@ Equations
     comp_lo_x
     comp_lo_y
     comp_up_x
+    nonlinear
+    objective
 ;
 
 * ============================================
