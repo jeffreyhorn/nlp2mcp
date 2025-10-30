@@ -78,10 +78,10 @@ stationarity.. x + a =E= 0;
 
 Model mcp_model /
     * Stationarity conditions
-    stat_x.x
+    stat_x.x,
 
     * Equality constraints
-    objective.obj
+    objective.obj,
     stationarity.nu_stationarity
 /;
 

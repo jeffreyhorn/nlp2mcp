@@ -93,16 +93,16 @@ nonlinear.. sin(x) + cos(y) =E= 0;
 
 Model mcp_model /
     * Stationarity conditions
-    stat_x.x
-    stat_y.y
+    stat_x.x,
+    stat_y.y,
 
     * Equality constraints
-    nonlinear.nu_nonlinear
-    objective.obj
+    nonlinear.nu_nonlinear,
+    objective.obj,
 
     * Lower bound complementarities
-    comp_lo_x.piL_x
-    comp_lo_y.piL_y
+    comp_lo_x.piL_x,
+    comp_lo_y.piL_y,
 
     * Upper bound complementarities
     comp_up_x.piU_x

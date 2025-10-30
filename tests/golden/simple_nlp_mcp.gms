@@ -91,12 +91,12 @@ objective.. obj =E= sum(i, a(i) * x(i));
 
 Model mcp_model /
     * Stationarity conditions
-    stat_x_i1.x(i1)
-    stat_x_i2.x(i2)
-    stat_x_i3.x(i3)
+    stat_x_i1.x(i1),
+    stat_x_i2.x(i2),
+    stat_x_i3.x(i3),
 
     * Inequality complementarities
-    comp_balance.lam_balance(i)
+    comp_balance.lam_balance(i),
 
     * Equality constraints
     objective.obj

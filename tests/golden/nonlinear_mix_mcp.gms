@@ -99,20 +99,20 @@ poly_balance.. x ** 2 + y ** 2 =E= 4;
 
 Model mcp_model /
     * Stationarity conditions
-    stat_x.x
-    stat_y.y
+    stat_x.x,
+    stat_y.y,
 
     * Equality constraints
-    objective.obj
-    poly_balance.nu_poly_balance
-    trig_balance.nu_trig_balance
+    objective.obj,
+    poly_balance.nu_poly_balance,
+    trig_balance.nu_trig_balance,
 
     * Lower bound complementarities
-    comp_lo_x.piL_x
-    comp_lo_y.piL_y
+    comp_lo_x.piL_x,
+    comp_lo_y.piL_y,
 
     * Upper bound complementarities
-    comp_up_x.piU_x
+    comp_up_x.piU_x,
     comp_up_y.piU_y
 /;
 

@@ -154,8 +154,31 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                 pairs.append(f"    {eq_def.name}.{var_name}")
 
     # Build the model declaration
+    # Need to add commas between pairs (but not after comments or empty lines)
     lines = [f"Model {model_name} /"]
-    lines.extend(pairs)
+
+    # Process pairs to add commas
+    for i, pair in enumerate(pairs):
+        # Skip adding comma for comment lines, empty lines, and last item
+        if pair.strip() and not pair.strip().startswith("*"):
+            # This is an actual equation-variable pair
+            # Check if there's a next non-comment, non-empty line
+            needs_comma = False
+            for j in range(i + 1, len(pairs)):
+                next_line = pairs[j].strip()
+                if next_line and not next_line.startswith("*"):
+                    # Found another pair after this one
+                    needs_comma = True
+                    break
+
+            if needs_comma:
+                lines.append(pair + ",")
+            else:
+                lines.append(pair)
+        else:
+            # Comment or empty line - no comma
+            lines.append(pair)
+
     lines.append("/;")
 
     return "\n".join(lines)

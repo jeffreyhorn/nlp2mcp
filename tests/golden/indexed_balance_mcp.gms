@@ -84,11 +84,11 @@ balance(i).. supply(i) =E= demand(i);
 
 Model mcp_model /
     * Stationarity conditions
-    stat_supply_i1.supply(i1)
-    stat_supply_i2.supply(i2)
+    stat_supply_i1.supply(i1),
+    stat_supply_i2.supply(i2),
 
     * Equality constraints
-    balance.nu_balance(i)
+    balance.nu_balance(i),
     objective.obj
 /;
 
