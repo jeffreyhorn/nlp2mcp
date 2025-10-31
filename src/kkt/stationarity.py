@@ -338,9 +338,11 @@ def _add_indexed_jacobian_terms(
                 if mult_domain != var_domain and len(mult_domain) > 0:
                     # Check domain compatibility: mult_domain should be subset of var_domain
                     # or they should be disjoint (independent indexing)
-                    if not set(mult_domain).issubset(set(var_domain)) and set(
-                        mult_domain
-                    ).intersection(set(var_domain)):
+                    mult_domain_set = set(mult_domain)
+                    var_domain_set = set(var_domain)
+                    if not mult_domain_set.issubset(
+                        var_domain_set
+                    ) and mult_domain_set.intersection(var_domain_set):
                         # Domains overlap but aren't compatible for summation
                         raise ValueError(
                             f"Incompatible domains for summation: variable domain {var_domain}, "
