@@ -9,6 +9,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
+#### 2025-10-30 - Sprint 3 Retrospective: Known Unknowns List (PREP_PLAN Task 10)
+
+##### Added
+- **Known Unknowns and Assumptions Document** (`docs/planning/SPRINT_3/DAY_10_KNOWN_UNKNOWNS_LIST.md`)
+  - Comprehensive retrospective analysis of Sprint 3 assumptions and unknowns
+  - Cataloged 25+ unknowns across 6 categories (Integration, GAMS, KKT, Codegen, E2E, Process)
+  - Documented confirmed assumptions (20+), incorrect assumptions (3), and discovered unknowns
+  - Detailed analysis of Issue #47 (incorrect GAMS MCP syntax assumption)
+  - Resolution approaches for all critical unknowns
+  - Lessons learned for future sprints
+
+##### Categories Analyzed
+1. **Sprint 1/2 Integration** (4 unknowns) - All confirmed correct ✓
+2. **GAMS Syntax and Semantics** (5 unknowns) - 1 major issue (Issue #47), 4 resolved ✓
+3. **KKT System Construction** (4 unknowns) - All resolved ✓
+4. **Code Generation** (4 unknowns) - All resolved ✓
+5. **End-to-End Integration** (3 unknowns) - Mostly resolved, PATH testing deferred
+6. **Process and Tooling** (2 unknowns) - Working but can improve
+
+##### Key Insights
+- **Total Unknowns Identified:** 25+ across all categories
+- **Critical Unknowns Resolved:** 12 must-resolve items successfully addressed
+- **Incorrect Assumptions:** 3 (Issue #47 being major, 2 minor in final review)
+- **Emergency Discoveries:** 1 (indexed stationarity equations syntax)
+
+##### Major Findings
+
+**Confirmed Assumptions ✅**
+- Bounds storage in ModelIR.normalized_bounds ✓
+- SparseGradient/SparseJacobian API structure ✓
+- Gradient and Jacobian variable ordering match ✓
+- Jacobian values are symbolic Expr nodes ✓
+- KKT mathematical formulation ✓
+- Most GAMS syntax assumptions ✓
+
+**Incorrect Assumptions ❌**
+1. **GAMS MCP Model Syntax** (Issue #47) - HIGH IMPACT
+   - Wrong: Indexed equations listed as `eq(i).var(i)` in Model declaration
+   - Right: Listed as `eq.var` (indices implicit from equation declaration)
+   - Impact: 2 days additional work, complete stationarity refactoring
+   - Lesson: Should have tested with simple MCP example first
+
+2. **Indexed Bounds Handling** (Finding #2) - MEDIUM IMPACT
+   - Wrong: Treated all bounds as scalar initially
+   - Right: Need per-instance multipliers for indexed variables
+   - Impact: 0.5 days, caught in final review
+
+3. **IR Field Names** (Finding #3) - LOW IMPACT
+   - Wrong: Used .elements instead of .members for SetDef
+   - Right: SetDef.members is correct field
+   - Impact: 0.5 days, caught early
+
+##### Lessons Learned
+
+**What Worked Well:**
+- Early API verification prevented Sprint 2 integration issues
+- Incremental testing caught problems early
+- Mathematical foundation was solid (no KKT formulation issues)
+- Golden files provided good validation checkpoints
+
+**What Could Be Improved:**
+- Test syntax with actual compiler early (would have prevented Issue #47)
+- Document assumptions explicitly upfront (not retrospectively)
+- More test-driven development for critical features
+- Set up validation environment (GAMS/PATH) at sprint start
+
+##### Recommendations for Sprint 4
+
+**Process:**
+1. Create known unknowns list BEFORE starting (proactively, not retrospectively)
+2. Set up GAMS/PATH validation environment on Day 1
+3. Implement TDD for critical features
+4. Add mid-sprint checkpoints (Days 3, 6, 8)
+
+**Technical:**
+5. Implement test reorganization (PREP_PLAN Task 3)
+6. Add PATH solver validation tests
+7. Test performance with large models
+8. Improve error messages and diagnostics
+
+##### Unresolved Items (Deferred to Sprint 4)
+- PATH solver validation (no solver available during Sprint 3)
+- Scalability testing with large models
+- Performance optimization opportunities
+- Advanced GAMS features (multi-dimensional sets, conditional sets)
+- Error message improvements
+
+##### Impact Assessment
+- **Time Lost to Incorrect Assumptions:** ~3 days (mostly Issue #47)
+- **Time Saved by Correct Assumptions:** Immeasurable (clean Sprint 1/2 integration)
+- **Net Result:** 602 tests passing, 5/5 golden files working, all critical features complete
+- **Sprint 3 Success:** ✅ Delivered despite unknowns
+
+##### Document Value
+This retrospective analysis provides:
+- Pattern library for resolving similar unknowns in Sprint 4
+- Explicit documentation of what worked vs what didn't
+- Foundation for proactive unknown management in future sprints
+- Prevents repeating Issue #47-style mistakes
+
 #### 2025-10-30 - Sprint 3 Preparation: Complexity Estimation (PREP_PLAN Task 9)
 
 ##### Added
