@@ -53,9 +53,7 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x_i1
-    stat_x_i2
-    stat_x_i3
+    stat_x(i)
     comp_balance(i)
     objective
 ;
@@ -65,9 +63,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x_i1.. x("i1") * 0 + a("i1") * 1 + (1 - 0) * lam_balance("i1") + (0 - 0) * lam_balance("i2") + (0 - 0) * lam_balance("i3") =E= 0;
-stat_x_i2.. x("i2") * 0 + a("i2") * 1 + (0 - 0) * lam_balance("i1") + (1 - 0) * lam_balance("i2") + (0 - 0) * lam_balance("i3") =E= 0;
-stat_x_i3.. x("i3") * 0 + a("i3") * 1 + (0 - 0) * lam_balance("i1") + (0 - 0) * lam_balance("i2") + (1 - 0) * lam_balance("i3") =E= 0;
+stat_x(i).. x(i) * 0 + a(i) * 1 + (1 - 0) * lam_balance(i) =E= 0;
 
 * Inequality complementarity equations
 comp_balance(i).. -x(i) =G= 0;
@@ -90,10 +86,8 @@ objective.. obj =E= sum(i, a(i) * x(i));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x_i1.x,
-    stat_x_i2.x,
-    stat_x_i3.x,
-    comp_balance(i).lam_balance(i),
+    stat_x.x,
+    comp_balance.lam_balance,
     objective.obj
 /;
 

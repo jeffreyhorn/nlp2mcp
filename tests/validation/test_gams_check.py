@@ -45,14 +45,9 @@ class TestGAMSExecutableDetection:
 class TestGAMSValidation:
     """Test GAMS syntax validation on golden files.
 
-    Note: 2 tests are marked as xfail due to a known issue with indexed
-    stationarity equations. See GitHub issue #47 for details:
-    https://github.com/jeffreyhorn/nlp2mcp/issues/47
+    All tests now pass after fixing GitHub issue #47 (Indexed Stationarity Equations).
     """
 
-    @pytest.mark.xfail(
-        reason="Known issue (GitHub #47): Element-specific stationarity equations incompatible with GAMS MCP Model syntax for indexed variables"
-    )
     def test_validate_simple_nlp_golden(self):
         """Test GAMS validation of simple_nlp_mcp.gms."""
         golden_file = Path("tests/golden/simple_nlp_mcp.gms")
@@ -71,9 +66,6 @@ class TestGAMSValidation:
         if error:
             pytest.fail(f"GAMS validation failed: {error}")
 
-    @pytest.mark.xfail(
-        reason="Known issue (GitHub #47): Element-specific stationarity equations incompatible with GAMS MCP Model syntax for indexed variables"
-    )
     def test_validate_indexed_balance_golden(self):
         """Test GAMS validation of indexed_balance_mcp.gms."""
         golden_file = Path("tests/golden/indexed_balance_mcp.gms")
