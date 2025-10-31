@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All success metrics achieved ✅
 
 - **Sprint Wrap-Up** (Task 5)
-  - Created **Sprint 3 Summary** document (`docs/planning/SPRINT_3/SPRINT_3_SUMMARY.md`)
+  - Created **Sprint 3 Summary** document (`docs/planning/SPRINT_3/SUMMARY.md`)
     - Executive summary with key achievements
     - Sprint goals vs actuals comparison
     - Technical accomplishments (KKT assembly, GAMS emission, CLI)
