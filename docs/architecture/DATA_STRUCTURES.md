@@ -3,7 +3,7 @@
 **Purpose:** Document all key IR types, their fields, invariants, and contracts.
 
 **Created:** 2025-10-29  
-**Last Updated:** 2025-10-29  
+**Last Updated:** 2025-10-30  
 **Related:** [System Architecture](SYSTEM_ARCHITECTURE.md)
 
 ---
@@ -12,9 +12,10 @@
 
 1. [Sprint 1 Data Structures](#sprint-1-data-structures)
 2. [Sprint 2 Data Structures](#sprint-2-data-structures)
-3. [AST Expression Types](#ast-expression-types)
-4. [Symbol Definitions](#symbol-definitions)
-5. [Data Flow Examples](#data-flow-examples)
+3. [Sprint 3 Data Structures](#sprint-3-data-structures)
+4. [AST Expression Types](#ast-expression-types)
+5. [Symbol Definitions](#symbol-definitions)
+6. [Data Flow Examples](#data-flow-examples)
 
 ---
 
@@ -454,6 +455,446 @@ h2 [ 1    0     1   ]
 ```
 
 Only nonzero entries are stored.
+
+---
+
+## Sprint 3 Data Structures
+
+### KKTSystem
+
+**Location:** `src/kkt/kkt_system.py`
+
+**Created By:** `assemble_kkt_system()` in `src/kkt/kkt_system.py`
+
+**Consumed By:** `write_kkt_gams()` in `src/codegen/kkt_writer.py`
+
+**Purpose:** Complete representation of the Karush-Kuhn-Tucker (KKT) optimality conditions for an NLP problem. The KKT system transforms the original constrained optimization problem into a system of equations and complementarity conditions that characterize optimal solutions.
+
+**Fields:**
+
+```python
+@dataclass
+class KKTSystem:
+    # Original model data
+    model_ir: ModelIR
+    gradient: GradientVector  # ∇f
+    J_eq: JacobianStructure   # Jacobian of equality constraints
+    J_ineq: JacobianStructure # Jacobian of inequality constraints
+    
+    # Lagrange multipliers for each constraint type
+    multipliers_eq: dict[str, MultiplierDef] = field(default_factory=dict)
+    multipliers_ineq: dict[str, MultiplierDef] = field(default_factory=dict)
+    multipliers_bounds_lo: dict[tuple, MultiplierDef] = field(default_factory=dict)
+    multipliers_bounds_up: dict[tuple, MultiplierDef] = field(default_factory=dict)
+    
+    # KKT conditions
+    stationarity: dict[str, EquationDef] = field(default_factory=dict)
+    complementarity_ineq: dict[str, ComplementarityPair] = field(default_factory=dict)
+    complementarity_bounds_lo: dict[tuple, ComplementarityPair] = field(default_factory=dict)
+    complementarity_bounds_up: dict[tuple, ComplementarityPair] = field(default_factory=dict)
+    
+    # Exclusions and diagnostics
+    skipped_infinite_bounds: list[tuple[str, tuple, str]] = field(default_factory=list)
+    duplicate_bounds_excluded: list[str] = field(default_factory=list)
+```
+
+**KKT System Components:**
+
+1. **Stationarity Equations** (`stationarity`):
+   - One equation per primal variable x(i)
+   - Form: `∇f + J_eq^T·ν + J_ineq^T·λ + bound_multipliers = 0`
+   - Keys: variable instance strings like `"x.i1"` or `"y"` for scalar
+   - Stored as `EquationDef` objects
+
+2. **Multiplier Definitions**:
+   - `multipliers_eq`: For equality constraints (ν)
+   - `multipliers_ineq`: For inequality constraints (λ) 
+   - `multipliers_bounds_lo`: For lower bounds (π_lo)
+   - `multipliers_bounds_up`: For upper bounds (π_up)
+
+3. **Complementarity Conditions**:
+   - `complementarity_ineq`: For inequalities: `g(x) ⊥ λ` (either g=0 or λ=0)
+   - `complementarity_bounds_lo`: For lower bounds: `(x - x_lo) ⊥ π_lo`
+   - `complementarity_bounds_up`: For upper bounds: `(x_up - x) ⊥ π_up`
+   - Stored as `ComplementarityPair` objects
+
+4. **Diagnostics**:
+   - `skipped_infinite_bounds`: Bounds with ±INF values (no multiplier needed)
+   - `duplicate_bounds_excluded`: Variables appearing in both bounds and constraints
+
+**Example:**
+
+```python
+# For problem: minimize x^2 + y^2
+#              subject to: x + y = 1
+#                         x >= 0
+
+kkt_system = KKTSystem(
+    model_ir=ModelIR(...),
+    gradient=GradientVector(...),  # [2*x, 2*y]
+    J_eq=JacobianStructure(...),   # [[1, 1]] for x+y=1
+    J_ineq=JacobianStructure(...), # [[-1, 0]] for -x<=0
+    
+    multipliers_eq={
+        "con_eq": MultiplierDef(
+            name="nu_con_eq",
+            domain=(),
+            kind="eq",
+            associated_constraint="con_eq"
+        ),
+    },
+    
+    multipliers_bounds_lo={
+        ("x", ()): MultiplierDef(
+            name="pi_lo_x",
+            domain=(),
+            kind="bound_lo",
+            associated_constraint="x_lo"
+        ),
+    },
+    
+    stationarity={
+        "x": EquationDef(  # ∇_x L = 2*x + nu_con_eq - pi_lo_x = 0
+            name="stat_x",
+            domain=(),
+            relation="=e=",
+            expression=...
+        ),
+        "y": EquationDef(  # ∇_y L = 2*y + nu_con_eq = 0
+            name="stat_y",
+            domain=(),
+            relation="=e=",
+            expression=...
+        ),
+    },
+    
+    complementarity_bounds_lo={
+        ("x", ()): ComplementarityPair(
+            equation=EquationDef(...),  # x >= 0
+            variable="pi_lo_x",
+            variable_indices=()
+        ),
+    },
+)
+```
+
+---
+
+### MultiplierDef
+
+**Location:** `src/kkt/kkt_system.py`
+
+**Purpose:** Defines a Lagrange multiplier variable for a constraint in the KKT system.
+
+**Fields:**
+
+```python
+@dataclass
+class MultiplierDef:
+    name: str  # Multiplier variable name (e.g., "nu_con1", "lambda_ineq_i1", "pi_lo_x")
+    domain: tuple[str, ...] = ()  # Index sets (empty for scalar)
+    kind: Literal["eq", "ineq", "bound_lo", "bound_up"] = "eq"
+    associated_constraint: str = ""  # Name of the constraint this multiplies
+```
+
+**Naming Conventions:**
+
+- Equality multipliers (ν): `nu_{constraint_name}`
+- Inequality multipliers (λ): `lambda_{constraint_name}`
+- Lower bound multipliers (π_lo): `pi_lo_{var_name}`
+- Upper bound multipliers (π_up): `pi_up_{var_name}`
+
+**Examples:**
+
+```python
+# Equality constraint multiplier
+MultiplierDef(
+    name="nu_obj_eq",
+    domain=(),
+    kind="eq",
+    associated_constraint="obj_eq"
+)
+
+# Indexed inequality constraint multiplier
+MultiplierDef(
+    name="lambda_con",
+    domain=("I",),
+    kind="ineq",
+    associated_constraint="con"
+)
+
+# Lower bound multiplier
+MultiplierDef(
+    name="pi_lo_x",
+    domain=(),
+    kind="bound_lo",
+    associated_constraint="x_lo"
+)
+```
+
+---
+
+### ComplementarityPair
+
+**Location:** `src/kkt/kkt_system.py`
+
+**Purpose:** Represents a complementarity condition `F(x) ⊥ variable` where either F=0 or variable=0 (or both) at optimality.
+
+**Fields:**
+
+```python
+@dataclass
+class ComplementarityPair:
+    equation: EquationDef  # The constraint/bound equation F(x)
+    variable: str          # The multiplier variable name
+    variable_indices: tuple[str, ...] = ()  # Indices if variable is indexed
+```
+
+**Complementarity Types:**
+
+1. **Inequality complementarity**: `g(x) ≤ 0 ⊥ λ ≥ 0`
+   - Either constraint is slack (g < 0, λ = 0) or binding (g = 0, λ > 0)
+
+2. **Lower bound complementarity**: `x - x_lo ≥ 0 ⊥ π_lo ≥ 0`
+   - Either bound is slack (x > x_lo, π_lo = 0) or binding (x = x_lo, π_lo > 0)
+
+3. **Upper bound complementarity**: `x_up - x ≥ 0 ⊥ π_up ≥ 0`
+   - Either bound is slack (x < x_up, π_up = 0) or binding (x = x_up, π_up > 0)
+
+**Examples:**
+
+```python
+# Inequality complementarity: g(x) ≤ 0 ⊥ λ ≥ 0
+ComplementarityPair(
+    equation=EquationDef(
+        name="con1_compl",
+        domain=(),
+        relation="=l=",
+        expression=Binary("-", VarRef("x"), Const(10))  # x - 10 ≤ 0
+    ),
+    variable="lambda_con1",
+    variable_indices=()
+)
+
+# Lower bound complementarity: x(i) ≥ 0 ⊥ π_lo_x(i) ≥ 0
+ComplementarityPair(
+    equation=EquationDef(
+        name="x_lo_i1_compl",
+        domain=(),
+        relation="=g=",
+        expression=VarRef("x", ("i1",))  # x(i1) ≥ 0
+    ),
+    variable="pi_lo_x",
+    variable_indices=("i1",)
+)
+```
+
+**GAMS MCP Format:**
+
+These pairs are written to GAMS as:
+```gams
+equation_name .. expression =N= 0;
+Model mymodel_mcp / equation_name.variable_name /;
+```
+
+---
+
+### BoundDef
+
+**Location:** `src/kkt/partition.py`
+
+**Purpose:** Represents a variable bound during constraint partitioning.
+
+**Fields:**
+
+```python
+@dataclass
+class BoundDef:
+    kind: str  # 'lo' (lower), 'up' (upper), 'fx' (fixed)
+    value: float  # Bound value
+    domain: tuple[str, ...] = ()  # Index sets (empty for scalar)
+```
+
+**Examples:**
+
+```python
+# Scalar lower bound: x.lo = 0
+BoundDef(kind='lo', value=0.0, domain=())
+
+# Indexed upper bound: y(i).up = 100
+BoundDef(kind='up', value=100.0, domain=('I',))
+
+# Fixed bound: z.fx = 5
+BoundDef(kind='fx', value=5.0, domain=())
+```
+
+**Usage in Partitioning:**
+
+Fixed bounds (`kind='fx'`) generate both lower and upper bound constraints, while `'lo'` and `'up'` generate single-sided constraints.
+
+---
+
+### PartitionResult
+
+**Location:** `src/kkt/partition.py`
+
+**Created By:** `partition_constraints()` in `src/kkt/partition.py`
+
+**Consumed By:** `assemble_kkt_system()` in `src/kkt/kkt_system.py`
+
+**Purpose:** Result of categorizing constraints into equalities, inequalities, and variable bounds.
+
+**Fields:**
+
+```python
+@dataclass
+class PartitionResult:
+    equalities: list[str] = field(default_factory=list)
+    inequalities: list[str] = field(default_factory=list)
+    
+    # Key: (var_name, indices_tuple), Value: BoundDef
+    bounds_lo: dict[tuple[str, tuple], BoundDef] = field(default_factory=dict)
+    bounds_up: dict[tuple[str, tuple], BoundDef] = field(default_factory=dict)
+    bounds_fx: dict[tuple[str, tuple], BoundDef] = field(default_factory=dict)
+    
+    # Diagnostics
+    skipped_infinite: list[tuple[str, tuple, str]] = field(default_factory=list)
+    duplicate_excluded: list[str] = field(default_factory=list)
+```
+
+**Partitioning Rules:**
+
+1. **Equalities**: Constraints with `relation="=e="`
+2. **Inequalities**: Constraints with `relation="=l="` or `"=g="` (not bounds)
+3. **Bounds**: Constraints of form `x ≤ c`, `x ≥ c`, or bounds from ModelIR.normalized_bounds
+4. **Infinite Bounds**: Skipped (±INF), recorded in `skipped_infinite`
+5. **Duplicates**: Variables appearing in both explicit bounds and constraints, recorded in `duplicate_excluded`
+
+**Example:**
+
+```python
+# For model with:
+# - Equality: obj =e= x^2 + y^2
+# - Inequality: x + y =l= 10
+# - Bounds: x.lo=0, x.up=100, y.lo=0
+
+partition = PartitionResult(
+    equalities=["obj_eq"],
+    inequalities=["con1"],
+    bounds_lo={
+        ("x", ()): BoundDef(kind='lo', value=0.0, domain=()),
+        ("y", ()): BoundDef(kind='lo', value=0.0, domain=()),
+    },
+    bounds_up={
+        ("x", ()): BoundDef(kind='up', value=100.0, domain=()),
+    },
+    bounds_fx={},
+    skipped_infinite=[],
+    duplicate_excluded=[],
+)
+```
+
+---
+
+### ObjectiveInfo
+
+**Location:** `src/kkt/objective.py`
+
+**Created By:** `find_objective_info()` in `src/kkt/objective.py`
+
+**Consumed By:** `compute_objective_gradient()` in `src/ad/gradient.py` (via KKT assembly)
+
+**Purpose:** Metadata about the objective variable and its defining equation.
+
+**Fields:**
+
+```python
+@dataclass
+class ObjectiveInfo:
+    objvar: str  # Name of objective variable
+    objvar_indices: tuple[str, ...] = ()  # Indices (empty for scalar)
+    defining_equation: str = ""  # Name of equation defining objvar
+    needs_stationarity: bool = False  # Whether stationarity eq needed for objvar
+```
+
+**Two Patterns:**
+
+1. **Objective defined by equation** (most common in GAMS):
+   ```gams
+   obj_eq.. obj =e= x^2 + y^2;
+   Solve mymodel using NLP minimizing obj;
+   ```
+   ```python
+   ObjectiveInfo(
+       objvar="obj",
+       objvar_indices=(),
+       defining_equation="obj_eq",
+       needs_stationarity=True  # Need stationarity eq for obj
+   )
+   ```
+
+2. **Inline objective expression** (less common):
+   ```gams
+   Solve mymodel using NLP minimizing (x^2 + y^2);
+   ```
+   ```python
+   ObjectiveInfo(
+       objvar="anonymous_obj",
+       objvar_indices=(),
+       defining_equation="",
+       needs_stationarity=False  # No separate variable
+   )
+   ```
+
+**Stationarity Decision:**
+
+If objective variable appears in the defining equation (e.g., `obj =e= x^2 + y^2`), then it needs its own stationarity equation in the KKT system. The coefficient from ∂f/∂obj appears in this equation.
+
+---
+
+### MultiplierRef (AST Node)
+
+**Location:** `src/ir/ast.py`
+
+**Purpose:** AST node representing a reference to a KKT multiplier variable (ν, λ, π) in stationarity equations.
+
+**Fields:**
+
+```python
+@dataclass(frozen=True)
+class MultiplierRef(Expr):
+    """Reference to a KKT multiplier variable."""
+    name: str  # Multiplier name (e.g., "nu_obj_eq", "lambda_con1")
+    indices: tuple[str, ...] = ()  # Empty for scalar, filled for indexed
+```
+
+**Usage:**
+
+MultiplierRef nodes appear in stationarity equation expressions to represent Lagrange multiplier terms. They are created during KKT assembly when building the Lagrangian gradient.
+
+**Examples:**
+
+```python
+# Scalar multiplier: nu_obj_eq
+MultiplierRef("nu_obj_eq", ())
+
+# Indexed multiplier: lambda_con(i1)
+MultiplierRef("lambda_con", ("i1",))
+
+# In stationarity equation: 2*x + nu_obj_eq + lambda_con1 = 0
+Binary(
+    "+",
+    Binary("+",
+        Binary("*", Const(2.0), VarRef("x")),
+        MultiplierRef("nu_obj_eq", ())
+    ),
+    MultiplierRef("lambda_con1", ())
+)
+```
+
+**Differentiation:**
+
+MultiplierRef nodes are treated as constants during automatic differentiation (derivative is zero). They represent dual variables, not primal decision variables.
 
 ---
 
@@ -996,6 +1437,237 @@ GradientVector(
 2. **Sparsity**
    - Only nonzero entries stored
    - Missing entry implies zero derivative
+
+---
+
+### Example 3: KKT System Assembly (Sprint 3)
+
+**GAMS Input:**
+
+```gams
+Variables x, y, obj;
+Equations obj_eq, con_ineq;
+
+obj_eq.. obj =e= x^2 + y^2;
+con_ineq.. x + y =l= 10;
+
+x.lo = 0;
+y.lo = 0;
+
+Solve mymodel using NLP minimizing obj;
+```
+
+**After Sprint 1 (ModelIR):**
+
+```python
+ModelIR(
+    variables={"x": ..., "y": ..., "obj": ...},
+    equations={"obj_eq": ..., "con_ineq": ...},
+    equalities=["obj_eq"],
+    inequalities=["con_ineq", "x_lo", "y_lo"],
+    normalized_bounds={
+        "x_lo": NormalizedEquation(...),
+        "y_lo": NormalizedEquation(...),
+    },
+    objective=ObjectiveIR(sense=ObjSense.MIN, objvar="obj", expr=None),
+)
+```
+
+**After Sprint 2 (AD):**
+
+```python
+# Gradient: ∇f = [∂obj/∂x, ∂obj/∂y, ∂obj/∂obj]
+gradient = GradientVector(
+    num_cols=3,
+    entries={
+        0: Binary("*", Const(-2.0), VarRef("x")),  # ∂obj_eq/∂x (from obj - expr = 0)
+        1: Binary("*", Const(-2.0), VarRef("y")),  # ∂obj_eq/∂y
+        2: Const(1.0),  # ∂obj_eq/∂obj = 1
+    },
+)
+
+# Jacobian of equality: obj - (x^2 + y^2) = 0
+J_eq = JacobianStructure(
+    num_rows=1,
+    num_cols=3,
+    entries={
+        0: {  # obj_eq row
+            0: Binary("*", Const(-2.0), VarRef("x")),
+            1: Binary("*", Const(-2.0), VarRef("y")),
+            2: Const(1.0),
+        },
+    },
+)
+
+# Jacobian of inequality: x + y - 10 <= 0, -x <= 0, -y <= 0
+J_ineq = JacobianStructure(
+    num_rows=3,
+    num_cols=3,
+    entries={
+        0: {0: Const(1.0), 1: Const(1.0)},  # ∂con_ineq/∂x=1, ∂con_ineq/∂y=1
+        1: {0: Const(-1.0)},  # ∂x_lo/∂x = -1
+        2: {1: Const(-1.0)},  # ∂y_lo/∂y = -1
+    },
+)
+```
+
+**After Sprint 3 (KKT System):**
+
+```python
+kkt_system = KKTSystem(
+    model_ir=ModelIR(...),
+    gradient=gradient,
+    J_eq=J_eq,
+    J_ineq=J_ineq,
+    
+    # Lagrange multipliers
+    multipliers_eq={
+        "obj_eq": MultiplierDef(
+            name="nu_obj_eq",
+            domain=(),
+            kind="eq",
+            associated_constraint="obj_eq"
+        ),
+    },
+    multipliers_ineq={
+        "con_ineq": MultiplierDef(
+            name="lambda_con_ineq",
+            domain=(),
+            kind="ineq",
+            associated_constraint="con_ineq"
+        ),
+    },
+    multipliers_bounds_lo={
+        ("x", ()): MultiplierDef(
+            name="pi_lo_x",
+            domain=(),
+            kind="bound_lo",
+            associated_constraint="x_lo"
+        ),
+        ("y", ()): MultiplierDef(
+            name="pi_lo_y",
+            domain=(),
+            kind="bound_lo",
+            associated_constraint="y_lo"
+        ),
+    },
+    
+    # Stationarity equations: ∇f + J_eq^T·ν + J_ineq^T·λ = 0
+    stationarity={
+        "x": EquationDef(
+            name="stat_x",
+            domain=(),
+            relation="=e=",
+            # -2*x + (-2*x)*nu_obj_eq + 1*lambda_con_ineq - 1*pi_lo_x = 0
+            expression=Binary("+",
+                Binary("+",
+                    Binary("*", Const(-2.0), VarRef("x")),
+                    Binary("*",
+                        Binary("*", Const(-2.0), VarRef("x")),
+                        MultiplierRef("nu_obj_eq", ())
+                    )
+                ),
+                Binary("-",
+                    MultiplierRef("lambda_con_ineq", ()),
+                    MultiplierRef("pi_lo_x", ())
+                )
+            )
+        ),
+        "y": EquationDef(
+            name="stat_y",
+            domain=(),
+            relation="=e=",
+            # -2*y + (-2*y)*nu_obj_eq + 1*lambda_con_ineq - 1*pi_lo_y = 0
+            expression=...
+        ),
+        "obj": EquationDef(
+            name="stat_obj",
+            domain=(),
+            relation="=e=",
+            # 1 + 1*nu_obj_eq = 0  →  nu_obj_eq = -1
+            expression=Binary("+",
+                Const(1.0),
+                MultiplierRef("nu_obj_eq", ())
+            )
+        ),
+    },
+    
+    # Complementarity conditions
+    complementarity_ineq={
+        "con_ineq": ComplementarityPair(
+            equation=EquationDef(
+                name="con_ineq_compl",
+                domain=(),
+                relation="=l=",
+                expression=Binary("-",
+                    Binary("+", VarRef("x"), VarRef("y")),
+                    Const(10.0)
+                )  # x + y - 10 <= 0
+            ),
+            variable="lambda_con_ineq",
+            variable_indices=()
+        ),
+    },
+    complementarity_bounds_lo={
+        ("x", ()): ComplementarityPair(
+            equation=EquationDef(
+                name="x_lo_compl",
+                domain=(),
+                relation="=g=",
+                expression=VarRef("x")  # x >= 0
+            ),
+            variable="pi_lo_x",
+            variable_indices=()
+        ),
+        ("y", ()): ComplementarityPair(
+            equation=EquationDef(
+                name="y_lo_compl",
+                domain=(),
+                relation="=g=",
+                expression=VarRef("y")  # y >= 0
+            ),
+            variable="pi_lo_y",
+            variable_indices=()
+        ),
+    },
+)
+```
+
+**GAMS MCP Output:**
+
+```gams
+Variables nu_obj_eq, lambda_con_ineq, pi_lo_x, pi_lo_y;
+
+Equations stat_x, stat_y, stat_obj;
+Equations con_ineq_compl, x_lo_compl, y_lo_compl;
+
+stat_x.. -2*x + (-2*x)*nu_obj_eq + lambda_con_ineq - pi_lo_x =E= 0;
+stat_y.. -2*y + (-2*y)*nu_obj_eq + lambda_con_ineq - pi_lo_y =E= 0;
+stat_obj.. 1 + nu_obj_eq =E= 0;
+
+con_ineq_compl.. x + y - 10 =N= 0;
+x_lo_compl.. x =N= 0;
+y_lo_compl.. y =N= 0;
+
+Model mymodel_mcp / stat_x.x, stat_y.y, stat_obj.obj,
+                    con_ineq_compl.lambda_con_ineq,
+                    x_lo_compl.pi_lo_x,
+                    y_lo_compl.pi_lo_y /;
+```
+
+**Data Flow Summary:**
+
+```
+GAMS Source
+    ↓
+ModelIR (Sprint 1)
+    ↓
+GradientVector + JacobianStructure (Sprint 2)
+    ↓
+KKTSystem (Sprint 3)
+    ↓
+GAMS MCP Output (Sprint 3)
+```
 
 ---
 

@@ -3,8 +3,8 @@
 **Purpose:** Document the complete data flow from GAMS input to KKT output, with all key data structures and API boundaries clearly marked.
 
 **Created:** 2025-10-29  
-**Last Updated:** 2025-10-29  
-**Related:** Sprint 3 Prep Plan Task 1
+**Last Updated:** 2025-10-30  
+**Related:** Sprint 3 Prep Plan Task 1, Sprint 3 Summary
 
 ---
 
@@ -46,11 +46,25 @@ flowchart TD
     
     JACSTRUCT["JacobianStructure<br/>• num_rows, num_cols<br/>• entries: dict[dict]<br/>• index_mapping"]
     
-    KKT["KKT Assembler<br/>(Sprint 3 - PLANNED)<br/>src/kkt/assemble.py<br/>• Build stationarity eqs<br/>• Build complementarity eqs<br/>• Create multiplier vars"]
+    PARTITION["Constraint Partitioner<br/>(Sprint 3)<br/>src/kkt/partition.py<br/>• Separate eq/ineq/bounds<br/>• Exclude duplicates<br/>• Skip infinite bounds<br/>• Handle indexed bounds"]
     
-    KKTSYS["KKTSystem<br/>• stationarity_eqs<br/>• complementarity_eqs<br/>• multiplier_vars"]
+    PARTRESULT["PartitionResult<br/>• equalities<br/>• inequalities<br/>• bounds_lo/up/fx<br/>• skipped_infinite<br/>• duplicate_excluded"]
     
-    EMITTER["GAMS Emitter<br/>(Sprint 3 - PLANNED)<br/>src/emit/emit_gams.py<br/>• Generate var decls<br/>• Generate eq defs<br/>• Generate Model stmt"]
+    OBJECTIVE["Objective Extractor<br/>(Sprint 3)<br/>src/kkt/objective.py<br/>• Extract objvar info<br/>• Find defining equation<br/>• Determine stationarity"]
+    
+    OBJINFO["ObjectiveInfo<br/>• objvar<br/>• defining_equation<br/>• needs_stationarity"]
+    
+    NAMING["Multiplier Naming<br/>(Sprint 3)<br/>src/kkt/naming.py<br/>• Generate nu_ names<br/>• Generate lambda_ names<br/>• Generate pi_lo/up_ names"]
+    
+    STATIONARITY["Stationarity Builder<br/>(Sprint 3)<br/>src/kkt/stationarity.py<br/>• ∇f + J^T·multipliers = 0<br/>• Per-variable equations<br/>• Handle indexed vars"]
+    
+    COMPLEMENTARITY["Complementarity Builder<br/>(Sprint 3)<br/>src/kkt/complementarity.py<br/>• F(x) ⊥ λ pairs<br/>• Bound complementarity<br/>• Ineq complementarity"]
+    
+    KKT["KKT Assembler<br/>(Sprint 3)<br/>src/kkt/assemble.py<br/>• Orchestrate partition<br/>• Orchestrate objective<br/>• Orchestrate multipliers<br/>• Orchestrate stationarity<br/>• Orchestrate complementarity"]
+    
+    KKTSYS["KKTSystem<br/>• model_ir<br/>• gradient, J_eq, J_ineq<br/>• multipliers (eq/ineq/bounds)<br/>• stationarity<br/>• complementarity<br/>• diagnostics"]
+    
+    EMITTER["GAMS MCP Emitter<br/>(Sprint 3)<br/>src/emit/emit_gams.py<br/>• Emit sets/params<br/>• Emit variables<br/>• Emit equations<br/>• Emit Model MCP<br/>• Emit Solve MCP"]
     
     MCP[("MCP File (.gms)<br/>Variables, Equations,<br/>Model MCP, Solve MCP")]
     
@@ -64,9 +78,26 @@ flowchart TD
     MAPPING --> JACOBIAN
     GRADIENT --> GRADVEC
     JACOBIAN --> JACSTRUCT
+    MODELIR --> PARTITION
+    PARTITION --> PARTRESULT
+    MODELIR --> OBJECTIVE
+    OBJECTIVE --> OBJINFO
+    PARTRESULT --> NAMING
+    OBJINFO --> NAMING
+    GRADVEC --> STATIONARITY
+    JACSTRUCT --> STATIONARITY
+    PARTRESULT --> STATIONARITY
+    NAMING --> STATIONARITY
+    PARTRESULT --> COMPLEMENTARITY
+    NAMING --> COMPLEMENTARITY
+    MODELIR --> COMPLEMENTARITY
     GRADVEC --> KKT
     JACSTRUCT --> KKT
     MODELIR --> KKT
+    PARTRESULT --> KKT
+    OBJINFO --> KKT
+    STATIONARITY --> KKT
+    COMPLEMENTARITY --> KKT
     KKT --> KKTSYS
     KKTSYS --> EMITTER
     EMITTER --> MCP
@@ -78,19 +109,19 @@ flowchart TD
     
     class PARSER,NORMALIZER sprint1
     class INDEXMAP,GRADIENT,JACOBIAN sprint2
-    class KKT,EMITTER sprint3
-    class GAMS,PARSED,MODELIR,MAPPING,GRADVEC,JACSTRUCT,KKTSYS,MCP data
+    class PARTITION,OBJECTIVE,NAMING,STATIONARITY,COMPLEMENTARITY,KKT,EMITTER sprint3
+    class GAMS,PARSED,MODELIR,MAPPING,GRADVEC,JACSTRUCT,PARTRESULT,OBJINFO,KKTSYS,MCP data
 ```
 
 **Legend:**
 - 🟢 **Green boxes**: Sprint 1 components (Parser, Normalizer)
 - 🔵 **Blue boxes**: Sprint 2 components (Index Mapper, Gradient Computer, Jacobian Computer)
-- 🟠 **Orange boxes**: Sprint 3 planned components (KKT Assembler, GAMS Emitter)
+- 🟠 **Orange boxes**: Sprint 3 components (Constraint Partitioner, Objective Extractor, Multiplier Naming, Stationarity Builder, Complementarity Builder, KKT Assembler, GAMS MCP Emitter)
 - ⚪ **Gray boxes**: Data structures (inputs, outputs, intermediate representations)
 
 ### ASCII Diagram (Detailed)
 
-This diagram shows the complete pipeline from GAMS input to MCP output (Sprint 3 planned):
+This diagram shows the complete pipeline from GAMS input to MCP output (all sprints completed):
 
 ```
 ┌──────────────────┐
@@ -201,38 +232,77 @@ This diagram shows the complete pipeline from GAMS input to MCP output (Sprint 3
                        │
                        ▼
 ┌──────────────────────────────────────────────┐
-│  KKT Assembler (Sprint 3 - PLANNED)          │
+│  Constraint Partitioner (Sprint 3)           │
 │  ┌──────────────────────────────────────────┐│
-│  │ src/kkt/assemble.py (to be created)      ││
-│  │ - Build stationarity equations           ││
-│  │ - Build complementarity equations        ││
-│  │ - Create multiplier variables            ││
+│  │ src/kkt/partition.py                     ││
+│  │ - Separate equalities/inequalities/bounds││
+│  │ - Exclude duplicate bounds               ││
+│  │ - Skip infinite bounds                   ││
+│  │ - Handle indexed bounds                  ││
 │  └──────────────────────────────────────────┘│
 └────────┬─────────────────────────────────────┘
          │
          ▼
 ┌──────────────────────────────────────────────┐
-│  KKTSystem (Sprint 3 - PLANNED)              │
-│  - stationarity_eqs: list[Equation]          │
-│  - complementarity_eqs: list[Equation]       │
-│  - multiplier_vars: dict[str, Variable]      │
+│  PartitionResult                             │
+│  - equalities: list[str]                     │
+│  - inequalities: list[str]                   │
+│  - bounds_lo/up/fx: dict                     │
+│  - skipped_infinite: list                    │
+│  - duplicate_excluded: list                  │
+└────────┬─────────────────────────────────────┘
+         │
+         ├─────────────────────────────────────┐
+         │                                     │
+         │   ┌─────────────────────────────────┤
+         │   │                                 │
+         ▼   ▼                                 │
+┌──────────────────────────────────────────────┐
+│  KKT Assembler (Sprint 3)                    │
+│  ┌──────────────────────────────────────────┐│
+│  │ src/kkt/assemble.py                      ││
+│  │ Main orchestrator:                       ││
+│  │ - Extract objective info (objective.py)  ││
+│  │ - Create multipliers (naming.py)         ││
+│  │ - Build stationarity (stationarity.py)   ││
+│  │ - Build complementarity (complementarity.py) ││
+│  └──────────────────────────────────────────┘│
 └────────┬─────────────────────────────────────┘
          │
          ▼
 ┌──────────────────────────────────────────────┐
-│  GAMS Emitter (Sprint 3 - PLANNED)           │
+│  KKTSystem (Sprint 3)                        │
 │  ┌──────────────────────────────────────────┐│
-│  │ src/emit/emit_gams.py (to be created)    ││
-│  │ - Generate variable declarations         ││
-│  │ - Generate equation definitions          ││
-│  │ - Generate Model statement               ││
-│  │ - Generate Solve statement               ││
+│  │ src/kkt/kkt_system.py                    ││
+│  │                                          ││
+│  │ • model_ir: ModelIR                      ││
+│  │ • gradient: GradientVector               ││
+│  │ • J_eq, J_ineq: JacobianStructure        ││
+│  │ • multipliers_eq/ineq/bounds_lo/up       ││
+│  │ • stationarity: dict[str, EquationDef]   ││
+│  │ • complementarity_ineq/bounds_lo/up      ││
+│  │ • skipped_infinite_bounds                ││
+│  │ • duplicate_bounds_excluded              ││
+│  └──────────────────────────────────────────┘│
+└────────┬─────────────────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────────┐
+│  GAMS MCP Emitter (Sprint 3)                 │
+│  ┌──────────────────────────────────────────┐│
+│  │ src/emit/emit_gams.py                    ││
+│  │ Orchestrator for:                        ││
+│  │ - original_symbols.py (sets/params)      ││
+│  │ - templates.py (vars/eqs/eq_defs)        ││
+│  │ - model.py (Model MCP statement)         ││
+│  │ - expr_to_gams.py (AST → GAMS syntax)    ││
 │  └──────────────────────────────────────────┘│
 └────────┬─────────────────────────────────────┘
          │
          ▼
 ┌──────────────────┐
 │  MCP File (.gms) │
+│  - Sets/Params   │
 │  - Variables     │
 │  - Equations     │
 │  - Model MCP     │
@@ -277,14 +347,33 @@ Variable bounds (x.lo, x.up) → normalized_bounds dict
 - Sparse storage (only nonzero derivatives)
 - Symbolic expressions (AST, not numeric values)
 
-### Sprint 3: KKT Assembly & Code Generation (PLANNED)
+### Sprint 3: KKT Assembly & Code Generation
 
 **Input:** ModelIR, GradientVector, JacobianStructure  
 **Output:** MCP file (.gms)
 
-**Modules (to be created):**
-- `src/kkt/assemble.py` - Build KKT system
-- `src/emit/emit_gams.py` - Generate GAMS code
+**Modules:**
+- `src/kkt/partition.py` - Partition constraints into eq/ineq/bounds
+- `src/kkt/objective.py` - Extract objective variable information
+- `src/kkt/naming.py` - Generate multiplier variable names
+- `src/kkt/stationarity.py` - Build stationarity equations (∇L = 0)
+- `src/kkt/complementarity.py` - Build complementarity pairs (F ⊥ λ)
+- `src/kkt/assemble.py` - Main orchestrator for KKT assembly
+- `src/kkt/kkt_system.py` - KKTSystem data structure
+- `src/emit/emit_gams.py` - Main GAMS MCP code generator
+- `src/emit/original_symbols.py` - Emit sets, aliases, parameters
+- `src/emit/templates.py` - Emit variables, equations, equation definitions
+- `src/emit/model.py` - Emit Model MCP and Solve statements
+- `src/emit/expr_to_gams.py` - Convert AST expressions to GAMS syntax
+- `src/emit/equations.py` - Helper for equation emission
+
+**Key Features:**
+- Duplicate bound exclusion (variables with both .lo/.up and explicit constraints)
+- Infinite bound skipping (±INF bounds don't need multipliers)
+- Indexed bound support (e.g., x(i).lo, x(i).up)
+- Objective variable stationarity handling
+- Multiplier naming conventions (nu_, lambda_, pi_lo_, pi_up_)
+- GAMS MCP format generation with complementarity pairs
 
 ---
 
@@ -428,6 +517,110 @@ mapping.var_to_col = {
 }
 ```
 
+### KKTSystem API (Sprint 3)
+
+**What Code Generator Needs:**
+
+```python
+# From src/kkt/kkt_system.py
+@dataclass
+class KKTSystem:
+    # Original model data
+    model_ir: ModelIR
+    gradient: GradientVector
+    J_eq: JacobianStructure
+    J_ineq: JacobianStructure
+    
+    # Lagrange multipliers
+    multipliers_eq: dict[str, MultiplierDef]
+    multipliers_ineq: dict[str, MultiplierDef]
+    multipliers_bounds_lo: dict[tuple, MultiplierDef]
+    multipliers_bounds_up: dict[tuple, MultiplierDef]
+    
+    # KKT conditions
+    stationarity: dict[str, EquationDef]  # Key: variable instance string
+    complementarity_ineq: dict[str, ComplementarityPair]
+    complementarity_bounds_lo: dict[tuple, ComplementarityPair]
+    complementarity_bounds_up: dict[tuple, ComplementarityPair]
+    
+    # Diagnostics
+    skipped_infinite_bounds: list[tuple[str, tuple, str]]
+    duplicate_bounds_excluded: list[str]
+```
+
+**Usage Example:**
+
+```python
+# Assemble KKT system
+kkt = assemble_kkt_system(model_ir, gradient, J_eq, J_ineq)
+
+# Access stationarity equations
+for var_key, stat_eq in kkt.stationarity.items():
+    print(f"Stationarity for {var_key}: {stat_eq.name}")
+
+# Access complementarity pairs
+for constraint_name, pair in kkt.complementarity_ineq.items():
+    print(f"{pair.equation.name} ⊥ {pair.variable}")
+
+# Check diagnostics
+if kkt.skipped_infinite_bounds:
+    print(f"Skipped {len(kkt.skipped_infinite_bounds)} infinite bounds")
+if kkt.duplicate_bounds_excluded:
+    print(f"Excluded {len(kkt.duplicate_bounds_excluded)} duplicate bounds")
+```
+
+**Key Invariants:**
+
+1. **Stationarity keys**: Variable instance strings like `"x"` (scalar) or `"x.i1"` (indexed)
+2. **Complementarity pairs**: One per inequality constraint or bound (excluding infinite/duplicate)
+3. **Multiplier domains**: Match their associated constraint's domain
+4. **Diagnostics**: Record exclusions for validation/debugging
+
+### PartitionResult API (Sprint 3)
+
+**Constraint Categorization:**
+
+```python
+# From src/kkt/partition.py
+@dataclass
+class PartitionResult:
+    equalities: list[str]  # Constraint names with =e= relation
+    inequalities: list[str]  # Constraint names with ≤ 0 relation (not bounds)
+    
+    # Bounds: Key = (var_name, indices_tuple)
+    bounds_lo: dict[tuple[str, tuple], BoundDef]
+    bounds_up: dict[tuple[str, tuple], BoundDef]
+    bounds_fx: dict[tuple[str, tuple], BoundDef]
+    
+    # Exclusions
+    skipped_infinite: list[tuple[str, tuple, str]]  # (var, indices, kind)
+    duplicate_excluded: list[str]  # Variable names
+```
+
+**Partitioning Rules:**
+
+1. **Equalities**: All constraints with `relation="=e="`
+2. **Inequalities**: Constraints with `relation="=l="` or `"=g="` (excluding bounds)
+3. **Bounds**: Variable bounds from ModelIR.normalized_bounds or bound-like constraints
+4. **Infinite Exclusion**: Bounds with value ±INF are skipped
+5. **Duplicate Exclusion**: If variable has both explicit bounds (.lo/.up) and bound constraints, keep only explicit bounds
+
+**Usage Example:**
+
+```python
+partition = partition_constraints(model_ir)
+
+# Iterate over equalities (get multiplier ν for each)
+for eq_name in partition.equalities:
+    eq_def = model_ir.equations[eq_name]
+    # Create multiplier for this equality...
+
+# Iterate over lower bounds (get multiplier π_lo for each)
+for (var_name, indices), bound_def in partition.bounds_lo.items():
+    # Create lower bound multiplier...
+    # Skip if in skipped_infinite or var_name in duplicate_excluded
+```
+
 ---
 
 ## Sprint Integration Map
@@ -452,38 +645,82 @@ mapping.var_to_col = {
 - **Issue #24:** Bounds not in equations dict
 - **Issue #25:** Power operator representation confusion
 
-### Sprint 2 → Sprint 3 Integration Points (PLANNED)
+### Sprint 2 → Sprint 3 Integration Points
 
 **Data Flow:**
 
 1. `GradientVector` from Sprint 2 → `assemble_kkt_system()` in Sprint 3
-2. `JacobianStructure` from Sprint 2 → `assemble_kkt_system()` in Sprint 3
-3. `ModelIR` from Sprint 1 → `assemble_kkt_system()` in Sprint 3
+2. `JacobianStructure` (J_eq, J_ineq) from Sprint 2 → `assemble_kkt_system()` in Sprint 3
+3. `ModelIR` from Sprint 1 → `partition_constraints()` in Sprint 3
+4. `ModelIR` from Sprint 1 → `assemble_kkt_system()` in Sprint 3
 
-**What Sprint 3 Needs:**
+**Actual Implementation:**
 
 ```python
-# KKT stationarity condition:
-# ∇f + J_g^T λ + J_h^T ν - π^L + π^U = 0
-
+# From src/kkt/assemble.py
 def assemble_kkt_system(
     model_ir: ModelIR,  # Sprint 1
     gradient: GradientVector,  # Sprint 2
-    J_h: JacobianStructure,  # Sprint 2 (equality constraints)
-    J_g: JacobianStructure,  # Sprint 2 (inequality constraints)
+    J_eq: JacobianStructure,  # Sprint 2 (equality constraints)
+    J_ineq: JacobianStructure,  # Sprint 2 (inequality constraints)
 ) -> KKTSystem:
-    # Build stationarity equations
-    # Build complementarity conditions
-    # Create multiplier variables
-    ...
+    # 1. Partition constraints (with duplicate/infinite exclusion)
+    partition = partition_constraints(model_ir)
+    
+    # 2. Extract objective variable info
+    obj_info = extract_objective_info(model_ir)
+    
+    # 3. Create multipliers (with naming conventions)
+    multipliers_eq = {eq: create_eq_multiplier(...) for eq in partition.equalities}
+    multipliers_ineq = {ineq: create_ineq_multiplier(...) for ineq in partition.inequalities}
+    multipliers_bounds_lo = {key: create_bound_lo_multiplier(...) for key in partition.bounds_lo}
+    multipliers_bounds_up = {key: create_bound_up_multiplier(...) for key in partition.bounds_up}
+    
+    # 4. Build stationarity equations (∇f + J_eq^T·ν + J_ineq^T·λ + bound_terms = 0)
+    stationarity = build_stationarity_equations(
+        model_ir, gradient, J_eq, J_ineq, multipliers, obj_info
+    )
+    
+    # 5. Build complementarity pairs (F(x) ⊥ λ)
+    complementarity = build_complementarity_pairs(
+        model_ir, partition, multipliers, obj_info
+    )
+    
+    return KKTSystem(...)
 ```
 
-**Expected Integration Risks:**
+**Integration Challenges Encountered:**
 
-- Gradient and Jacobian column ordering must match
-- Jacobian transpose operations need implementation
-- Multiplier variable naming conventions
-- Handling of INF bounds
+1. **Column Ordering Consistency**: ✅ Resolved by using shared `IndexMapping`
+   - Gradient and Jacobian both use same `IndexMapping` from Sprint 2
+   - Column IDs are consistent across all derivatives
+
+2. **Jacobian Transpose Operations**: ✅ Implemented in `stationarity.py`
+   - Used `J.get_col(col_id)` to get column (transpose of row)
+   - Accumulated contributions from all constraints for each variable
+
+3. **Multiplier Naming Conventions**: ✅ Implemented in `naming.py`
+   - `nu_{eq_name}` for equality constraints
+   - `lambda_{ineq_name}` for inequality constraints
+   - `pi_lo_{var_name}` and `pi_up_{var_name}` for bounds
+
+4. **INF Bounds Handling**: ✅ Implemented in `partition.py`
+   - Skipped bounds with ±INF values
+   - Recorded in `skipped_infinite_bounds` diagnostic
+
+5. **Duplicate Bounds**: ✅ Implemented in `partition.py`
+   - Excluded variables with both explicit bounds (.lo/.up) and bound constraints
+   - Kept only explicit bounds
+   - Recorded in `duplicate_bounds_excluded` diagnostic
+
+6. **Indexed Bounds**: ✅ Implemented throughout Sprint 3
+   - Support for bounds like `x(i).lo`, `x(i).up`
+   - Instance-specific multipliers `pi_lo_x(i)`, `pi_up_x(i)`
+
+7. **Objective Variable Stationarity**: ✅ Implemented in `objective.py` and `stationarity.py`
+   - Detected objective-defining equations
+   - Generated stationarity equation for objective variable
+   - Skipped from complementarity (not a constraint)
 
 ---
 
@@ -663,12 +900,15 @@ Parser uses `Binary("^", ...)` for power operator. AD engine needs to:
 
 ## Future Architecture (Sprint 4+)
 
-### Planned Extensions
+### Completed in Sprint 3
 
-**Code Generation:**
+**Code Generation:** ✅
 - Template-based GAMS emission
-- Naming collision avoidance
+- Naming collision avoidance (via naming.py)
 - Equation indexing syntax
+- Full MCP format support
+
+### Potential Future Extensions
 
 **Optimization:**
 - Expression simplification (constant folding)
@@ -676,11 +916,19 @@ Parser uses `Binary("^", ...)` for power operator. AD engine needs to:
 - Sparsity pattern caching
 
 **Validation:**
-- Numeric gradient checking
-- KKT condition verification
+- Numeric gradient checking against GAMS AD
+- KKT condition verification with PATH solver
 - Model feasibility checks
 
+**Enhanced Features:**
+- Support for additional GAMS model types (CNS, DNLP)
+- Non-square systems (more variables than equations)
+- Parameter sensitivity analysis
+- Multiple objective support
+
 **See Also:**
-- [Data Structures Reference](DATA_STRUCTURES.md) - Detailed field documentation
+- [Data Structures Reference](DATA_STRUCTURES.md) - Detailed field documentation for all sprints
 - [Sprint 2 Retrospective](../planning/SPRINT_2/RETROSPECTIVE.md) - Integration lessons learned
 - [Sprint 3 Prep Plan](../planning/SPRINT_3/PREP_PLAN.md) - Process improvements
+- [Sprint 3 Summary](../planning/SPRINT_3/SUMMARY.md) - Complete Sprint 3 accomplishments
+- [Sprint 3 Retrospective](../planning/SPRINT_3/RETROSPECTIVE.md) - Sprint 3 lessons learned
