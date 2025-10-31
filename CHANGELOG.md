@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Prevents "Set is under control already" GAMS errors
 
 ##### Impact  
-- **ALL golden file tests now pass** (5/5 = 100%) ✓
+- **All golden file tests now pass** (5/5 = 100%) ✓
   - `simple_nlp_mcp.gms` ✓ (WAS FAILING)
   - `indexed_balance_mcp.gms` ✓ (WAS FAILING)
   - `bounds_nlp_mcp.gms` ✓

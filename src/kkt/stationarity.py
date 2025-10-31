@@ -5,7 +5,7 @@ Builds stationarity conditions: ∇f + J_h^T ν + J_g^T λ - π^L + π^U = 0
 For indexed variables x(i), we generate indexed stationarity equations stat_x(i)
 instead of element-specific equations stat_x_i1, stat_x_i2, etc.
 
-This allows proper GAMS MCP Model syntax: stat_x(i).x(i)
+This allows proper GAMS MCP Model syntax: stat_x.x
 
 Special handling:
 - Skip objective variable (it's defined by an equation, not optimized)
