@@ -166,7 +166,7 @@ Sprint 3 successfully delivered the KKT system assembly and GAMS MCP code genera
 **Root Cause:** Cannot pair `stat_x_i1.x` when `x` is declared as `x(i)`  
 **Solution:** Complete refactoring to generate indexed equations: `stat_x(i).. <expr with i> =E= 0`  
 **Impact:** 2 days of work, major stationarity.py refactoring  
-**Result:** All golden tests now pass (was 3/5, now 5/5)
+**Result:** All golden tests now pass (was 2/5 passing, now 5/5)
 
 ### GitHub Issue #46: GAMS Syntax Errors
 **Problems:**
