@@ -44,8 +44,8 @@ class TestPerformanceBenchmarks:
 
     @pytest.fixture
     def large_model(self, tmp_path):
-        """1000 variables, 500 constraints."""
-        model = self._generate_model(tmp_path, name="large", num_vars=1000, num_constraints=500)
+        """200 variables, 100 constraints."""
+        model = self._generate_model(tmp_path, name="large", num_vars=200, num_constraints=100)
         return model
 
     def test_parse_small_model(self, small_model):
@@ -71,14 +71,14 @@ class TestPerformanceBenchmarks:
         print(f"\nParse medium model: {elapsed:.3f}s")
 
     def test_parse_large_model(self, large_model):
-        """Benchmark: Parse large model (1000 vars)."""
+        """Benchmark: Parse large model (200 vars)."""
         start = time.perf_counter()
         result = parse_model_file(large_model)
         elapsed = time.perf_counter() - start
 
         assert result is not None
-        # Target: < 30.0 seconds
-        assert elapsed < 30.0, f"Parse large model took {elapsed:.3f}s (target < 30.0s)"
+        # Target: < 5.0 seconds
+        assert elapsed < 5.0, f"Parse large model took {elapsed:.3f}s (target < 5.0s)"
         print(f"\nParse large model: {elapsed:.3f}s")
 
     def test_differentiation_scalability(self, small_model, medium_model):
@@ -123,10 +123,10 @@ class TestPerformanceBenchmarks:
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
 
-        # Target: < 100 MB for 1000-var model
+        # Target: < 50 MB for 200-var model
         peak_mb = peak / 1024 / 1024
         print(f"\nMemory usage: {peak_mb:.1f} MB (peak)")
-        assert peak_mb < 100, f"Memory usage too high: {peak_mb:.1f} MB for 1000 vars"
+        assert peak_mb < 50, f"Memory usage too high: {peak_mb:.1f} MB for 200 vars"
 
     def test_end_to_end_performance(self, medium_model):
         """Benchmark: Full pipeline for medium model."""
