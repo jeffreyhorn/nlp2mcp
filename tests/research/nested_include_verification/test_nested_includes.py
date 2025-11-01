@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from src.ir.parser import parse_model_file
-from src.ir.preprocessor import CircularIncludeError, preprocess_includes
+from src.ir.preprocessor import CircularIncludeError
 
 
 def test_three_level_nesting():
@@ -30,7 +30,7 @@ def test_three_level_nesting():
     test_dir = Path(__file__).parent
     main_file = test_dir / "main_nested.gms"
 
-    print(f"\nTest: 3-Level Nested Includes")
+    print("\nTest: 3-Level Nested Includes")
     print(f"Parsing: {main_file}")
 
     # Parse the model
@@ -72,7 +72,7 @@ def test_circular_include_detection():
     test_dir = Path(__file__).parent
     main_file = test_dir / "main_circular.gms"
 
-    print(f"\nTest: Circular Include Detection")
+    print("\nTest: Circular Include Detection")
     print(f"Attempting to parse: {main_file}")
 
     # Should raise CircularIncludeError
@@ -104,14 +104,14 @@ def test_error_message_quality():
     """
     test_dir = Path(__file__).parent
 
-    print(f"\nTest: Error Message Quality")
+    print("\nTest: Error Message Quality")
 
     # Create a temporary file with a missing include
     missing_include_file = test_dir / "temp_missing_include.gms"
     missing_include_file.write_text("$include nonexistent_file.inc\nVariables x;")
 
     try:
-        print(f"  Testing missing include file...")
+        print("  Testing missing include file...")
 
         # Should raise FileNotFoundError
         with pytest.raises(FileNotFoundError) as exc_info:
@@ -126,7 +126,7 @@ def test_error_message_quality():
 
         # Check if line number is included
         if "line" in error_message.lower():
-            print(f"  ✓ Error includes line number information")
+            print("  ✓ Error includes line number information")
 
         print("✓ Error message is clear and helpful")
 
@@ -144,7 +144,7 @@ def test_depth_limit():
     """
     test_dir = Path(__file__).parent
 
-    print(f"\nTest: Depth Limit")
+    print("\nTest: Depth Limit")
 
     # Create a chain of 10 levels (reasonable test)
     depth = 10
@@ -182,9 +182,9 @@ def test_depth_limit():
         print(f"✓ Successfully parsed {depth}-level deep includes")
 
         # Check what the actual max_depth is
-        print(f"  Default max_depth: 100 (from preprocessor.py)")
+        print("  Default max_depth: 100 (from preprocessor.py)")
         print(f"  Tested depth: {depth}")
-        print(f"  ✓ Depth limit is reasonable and configurable")
+        print("  ✓ Depth limit is reasonable and configurable")
 
     finally:
         # Cleanup
@@ -200,7 +200,7 @@ def test_max_depth_exceeded():
     """Test that exceeding max_depth raises an appropriate error."""
     test_dir = Path(__file__).parent
 
-    print(f"\nTest: Max Depth Exceeded")
+    print("\nTest: Max Depth Exceeded")
 
     # Create a very deep nesting that exceeds the limit
     # Default max_depth is 100, so create 102 levels
@@ -234,7 +234,7 @@ def test_max_depth_exceeded():
             "depth" in error_message.lower() or "100" in error_message
         ), "Error doesn't mention depth limit"
 
-        print(f"✓ Max depth limit enforced correctly")
+        print("✓ Max depth limit enforced correctly")
 
     finally:
         # Cleanup
