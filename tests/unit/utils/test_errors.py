@@ -307,18 +307,16 @@ class TestErrorCatching:
 
     def test_distinguish_error_types(self):
         """Can distinguish between error types."""
-        # User error is not an internal error
-        try:
-            raise UserError("test")
-        except InternalError:
-            pytest.fail("UserError should not be caught as InternalError")
-        except UserError:
-            pass  # Expected
+        # User error should not be caught as InternalError
+        with pytest.raises(UserError):
+            try:
+                raise UserError("test")
+            except InternalError:
+                pytest.fail("UserError should not be caught as InternalError")
 
-        # Internal error is not a user error
-        try:
-            raise InternalError("test")
-        except UserError:
-            pytest.fail("InternalError should not be caught as UserError")
-        except InternalError:
-            pass  # Expected
+        # Internal error should not be caught as UserError
+        with pytest.raises(InternalError):
+            try:
+                raise InternalError("test")
+            except UserError:
+                pytest.fail("InternalError should not be caught as UserError")

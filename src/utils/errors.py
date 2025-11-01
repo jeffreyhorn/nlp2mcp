@@ -87,10 +87,14 @@ class ParseError(UserError):
 
         Args:
             message: Description of the parse error
-            line: Line number where error occurred
-            column: Column number where error occurred
-            source_line: The source code line with the error
+            line: Line number where error occurred (1-indexed)
+            column: Column number where error occurred (1-indexed, position in original line)
+            source_line: The source code line with the error (should be stripped of leading whitespace)
             suggestion: How to fix the error
+
+        Note:
+            source_line should have leading whitespace removed for proper caret alignment.
+            The column number should refer to the position in the original source line.
         """
         self.line = line
         self.column = column
@@ -107,6 +111,8 @@ class ParseError(UserError):
             if source_line:
                 full_message += f"\n  {source_line}"
                 if column is not None:
+                    # Column is 1-indexed position in original source
+                    # Add 2 spaces to match source_line indent, then (column-1) for position
                     full_message += f"\n  {' ' * (column - 1)}^"
 
         super().__init__(full_message, suggestion)
