@@ -146,29 +146,29 @@ Model test /all/ ;
         model = parse_model_text(gams_code)
         assert model is not None
         assert len(model.equations) >= 2
+
+        # Verify both x and y have bounds as specified in the GAMS code
         var_x = model.variables.get("x")
-        var_y = model.variables.get("y")
+        assert "x" in model.variables
         assert (
-            "x" in model.variables
-            and (
-                var_x.lo is not None
-                or var_x.up is not None
-                or var_x.fx is not None
-                or len(var_x.lo_map) > 0
-                or len(var_x.up_map) > 0
-                or len(var_x.fx_map) > 0
-            )
-        ) or (
-            "y" in model.variables
-            and (
-                var_y.lo is not None
-                or var_y.up is not None
-                or var_y.fx is not None
-                or len(var_y.lo_map) > 0
-                or len(var_y.up_map) > 0
-                or len(var_y.fx_map) > 0
-            )
-        )
+            var_x.lo is not None
+            or var_x.up is not None
+            or var_x.fx is not None
+            or len(var_x.lo_map) > 0
+            or len(var_x.up_map) > 0
+            or len(var_x.fx_map) > 0
+        ), "Variable x should have bounds set (lo and up for indexed)"
+
+        var_y = model.variables.get("y")
+        assert "y" in model.variables
+        assert (
+            var_y.lo is not None
+            or var_y.up is not None
+            or var_y.fx is not None
+            or len(var_y.lo_map) > 0
+            or len(var_y.up_map) > 0
+            or len(var_y.fx_map) > 0
+        ), "Variable y should have bounds set (lo)"
 
     def test_no_constraints(self):
         """EC-1.5: Model with no constraints (only objective)."""
