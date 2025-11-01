@@ -28,7 +28,7 @@ def test_kkt_fixed_variable():
 
     # Normalize
     print("\nNormalizing...")
-    equations, bounds = normalize_model(model)
+    normalize_model(model)
 
     # Partition
     print("\nPartitioning constraints...")

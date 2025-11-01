@@ -215,7 +215,7 @@ def _compute_equality_jacobian(model_ir: ModelIR, index_mapping, J_h: JacobianSt
 
         # Get all instances of this equation (handles indexed constraints)
         # NormalizedEquation uses 'domain_sets', EquationDef uses 'domain'
-        eq_domain = eq_def.domain_sets if hasattr(eq_def, "domain_sets") else eq_def.domain
+        eq_domain = eq_def.domain_sets if isinstance(eq_def, NormalizedEquation) else eq_def.domain
         eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir)
 
         for eq_indices in eq_instances:
@@ -230,11 +230,11 @@ def _compute_equality_jacobian(model_ir: ModelIR, index_mapping, J_h: JacobianSt
             from ..ir.ast import Binary, Expr
 
             constraint_expr: Expr
-            if hasattr(eq_def, "lhs_rhs"):
+            if isinstance(eq_def, EquationDef):
                 lhs, rhs = eq_def.lhs_rhs
                 constraint_expr = Binary("-", lhs, rhs)
             else:
-                # This is a normalized bound - expression is already constructed
+                # This is a NormalizedEquation - expression is already constructed
                 constraint_expr = eq_def.expr
 
             # Substitute symbolic indices with concrete indices for this instance
