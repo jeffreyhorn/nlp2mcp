@@ -1,7 +1,7 @@
 # Sprint 4 Preparation Plan
 
-**Purpose:** Implement critical improvements identified in Sprint 3 Retrospective before Sprint 4 begins  
-**Timeline:** Complete before Sprint 4 Day 1  
+**Purpose:** Implement critical improvements identified in Sprint 3 Retrospective before Sprint 4 begins
+**Timeline:** Complete before Sprint 4 Day 1
 **Goal:** Address Sprint 3 lessons learned and prepare for Sprint 4 feature expansion
 
 **Key Insight from Sprint 3:** Issue #47 (indexed stationarity equations) discovered on Day 8 cost 2 days of emergency refactoring. Early validation and proactive unknown documentation would have caught this on Day 1-2.
@@ -41,8 +41,8 @@ This prep plan focuses on **Priority 1** items that must be completed before Spr
 
 ## Task 1: Resolve GitHub Issue #47 (COMPLETED POST-SPRINT 3)
 
-**Status:** ✅ **COMPLETED**  
-**Priority:** Critical  
+**Status:** ✅ **COMPLETED**
+**Priority:** Critical
 **Time Spent:** 2 days (post-Sprint 3)
 
 ### What Was Done
@@ -82,10 +82,10 @@ pytest tests/ -v
 
 ## Task 2: Create Sprint 4 Known Unknowns List
 
-**Priority:** Critical  
-**Estimated Time:** 2 hours  
-**Deadline:** 1 week before Sprint 4 Day 1  
-**Owner:** Sprint planning  
+**Priority:** Critical
+**Estimated Time:** 2 hours
+**Deadline:** 1 week before Sprint 4 Day 1
+**Owner:** Sprint planning
 **Dependencies:** Task 1 (Issue #47 lessons)
 
 ### Objective
@@ -197,8 +197,8 @@ For **Low** unknowns:
 ```markdown
 # Sprint 4 Known Unknowns
 
-**Created:** [Date]  
-**Last Updated:** [Date]  
+**Created:** [Date]
+**Last Updated:** [Date]
 **Status:** [In Progress / Complete]
 
 ## How to Use This Document
@@ -246,12 +246,12 @@ For **Low** unknowns:
 
 ### Acceptance Criteria
 
-- [ ] Document created with 30+ unknowns across 6 categories
-- [ ] All unknowns have assumption, verification method, priority
-- [ ] All Critical/High unknowns have verification plan
-- [ ] Unknowns cover all Sprint 4 features
-- [ ] Template for updates defined
-- [ ] Verification deadlines assigned
+- [x] Document created with 30+ unknowns across 6 categories
+- [x] All unknowns have assumption, verification method, priority
+- [x] All Critical/High unknowns have verification plan
+- [x] Unknowns cover all Sprint 4 features
+- [x] Template for updates defined
+- [x] Verification deadlines assigned
 
 ### Expected Outcome
 
@@ -266,9 +266,9 @@ For **Low** unknowns:
 
 ## Task 3: Set Up PATH Solver Validation
 
-**Priority:** Critical  
-**Estimated Time:** 4 hours  
-**Deadline:** Before Sprint 4 Day 1  
+**Priority:** Critical
+**Estimated Time:** 4 hours
+**Deadline:** Before Sprint 4 Day 1
 **Owner:** Development team
 
 ### Objective
@@ -341,153 +341,153 @@ from src.cli import main as nlp2mcp_cli
 # Check if PATH is available
 PATH_AVAILABLE = False
 try:
-    result = subprocess.run(['gams', '--version'], 
+    result = subprocess.run(['gams', '--version'],
                           capture_output=True, timeout=5)
     PATH_AVAILABLE = result.returncode == 0
 except (FileNotFoundError, subprocess.TimeoutExpired):
     PATH_AVAILABLE = False
 
 pytestmark = pytest.mark.skipif(
-    not PATH_AVAILABLE, 
+    not PATH_AVAILABLE,
     reason="PATH solver not available"
 )
 
 
 class TestPATHSolverValidation:
     """Validate generated MCPs solve correctly with PATH."""
-    
+
     def test_simple_scalar_nlp_solves(self, tmp_path):
         """
         Test: simple_scalar.gms converts and solves.
-        
+
         Original NLP:
             min x^2 + y^2
             s.t. x + y >= 1
-        
+
         Expected solution: x = y = 0.5, obj = 0.5
         """
         # Convert to MCP
         input_file = Path('examples/simple_scalar.gms')
         mcp_file = tmp_path / 'simple_scalar_mcp.gms'
-        
+
         nlp2mcp_cli([str(input_file), '-o', str(mcp_file)])
-        
+
         # Solve MCP
         solution = self._solve_gams(mcp_file)
-        
+
         # Verify solution
         assert solution['x'] == pytest.approx(0.5, abs=1e-4)
         assert solution['y'] == pytest.approx(0.5, abs=1e-4)
         assert solution['obj'] == pytest.approx(0.5, abs=1e-4)
         assert solution['solve_status'] == 'Normal completion'
-    
+
     def test_bounds_nlp_solves(self, tmp_path):
         """
         Test: bounds_nlp.gms with finite bounds.
-        
+
         Verify complementarity conditions satisfied.
         """
         input_file = Path('examples/bounds_nlp.gms')
         mcp_file = tmp_path / 'bounds_nlp_mcp.gms'
-        
+
         nlp2mcp_cli([str(input_file), '-o', str(mcp_file)])
         solution = self._solve_gams(mcp_file)
-        
+
         # Verify solution exists
         assert solution['solve_status'] == 'Normal completion'
-        
+
         # Check complementarity: (x - lo) * piL = 0
         for var in ['x', 'y']:
             slack_lo = solution[var] - solution[f'{var}_lo']
             mult_lo = solution.get(f'piL_{var}', 0.0)
             assert slack_lo * mult_lo == pytest.approx(0.0, abs=1e-4), \
                 f"Complementarity violated for {var}.lo"
-    
+
     def test_nonlinear_mix_solves(self, tmp_path):
         """
         Test: nonlinear_mix.gms with exp, log, power.
-        
+
         Verify PATH handles nonlinear KKT system.
         """
         input_file = Path('examples/nonlinear_mix.gms')
         mcp_file = tmp_path / 'nonlinear_mix_mcp.gms'
-        
+
         nlp2mcp_cli([str(input_file), '-o', str(mcp_file)])
         solution = self._solve_gams(mcp_file)
-        
+
         assert solution['solve_status'] == 'Normal completion'
         # Additional checks based on known solution
-    
+
     def test_indexed_balance_solves(self, tmp_path):
         """
         Test: indexed_balance.gms with indexed constraints.
-        
+
         Verify indexed equations solve correctly.
         """
         input_file = Path('examples/indexed_balance.gms')
         mcp_file = tmp_path / 'indexed_balance_mcp.gms'
-        
+
         nlp2mcp_cli([str(input_file), '-o', str(mcp_file)])
         solution = self._solve_gams(mcp_file)
-        
+
         assert solution['solve_status'] == 'Normal completion'
         # Verify balance constraints satisfied for all indices
-    
+
     def test_compare_nlp_vs_mcp_solutions(self, tmp_path):
         """
         Test: Solve original NLP and converted MCP, compare solutions.
-        
+
         This is the gold standard: MCP solution should match NLP solution.
         """
         input_file = Path('examples/simple_scalar.gms')
         mcp_file = tmp_path / 'simple_scalar_mcp.gms'
-        
+
         # Solve original NLP
         nlp_solution = self._solve_gams(input_file)
-        
+
         # Convert and solve MCP
         nlp2mcp_cli([str(input_file), '-o', str(mcp_file)])
         mcp_solution = self._solve_gams(mcp_file)
-        
+
         # Compare primal solutions (should match)
         for var in ['x', 'y', 'obj']:
             assert nlp_solution[var] == pytest.approx(
-                mcp_solution[var], 
+                mcp_solution[var],
                 rel=1e-3
             ), f"NLP and MCP solutions differ for {var}"
-    
+
     def _solve_gams(self, gms_file: Path) -> dict:
         """
         Solve GAMS model and extract solution.
-        
+
         Returns dict with variable values and solve status.
         """
         # Create solve script with output
         solve_script = gms_file.parent / f'{gms_file.stem}_solve.gms'
-        
+
         # Read and parse model to extract variable names
         with open(gms_file) as f:
             content = f.read()
-        
+
         # Extract variable names from the GAMS file
         # Look for Variables declaration block
         var_names = self._extract_variable_names(content)
-        
+
         # Add solution reporting
         content += "\n\n* Solution reporting\n"
         content += "File results / 'solution.txt' /;\n"
         content += "put results;\n"
-        
+
         # Add put statements for all variables
         for var in var_names:
             content += f"put '{var} ', {var}.l, /;\n"
-        
+
         # Add solve status
         content += "put 'solve_status ', testModel.solvestat, /;\n"
         content += "putclose;\n"
-        
+
         solve_script.write_text(content)
-        
+
         # Run GAMS
         result = subprocess.run(
             ['gams', str(solve_script)],
@@ -495,21 +495,21 @@ class TestPATHSolverValidation:
             text=True,
             timeout=60
         )
-        
+
         if result.returncode != 0:
             raise RuntimeError(f"GAMS solve failed:\n{result.stderr}")
-        
+
         # Parse solution from output
         solution = self._parse_gams_solution(
             gms_file.parent / 'solution.txt'
         )
-        
+
         return solution
-    
+
     def _parse_gams_solution(self, solution_file: Path) -> dict:
         """Parse GAMS solution output file."""
         solution = {}
-        
+
         try:
             with open(solution_file, 'r') as f:
                 for line in f:
@@ -517,7 +517,7 @@ class TestPATHSolverValidation:
                     # Skip empty lines and comments
                     if not line or line.startswith('*'):
                         continue
-                    
+
                     # Expect lines like: varname value
                     # or: varname value status
                     parts = line.split()
@@ -531,30 +531,30 @@ class TestPATHSolverValidation:
                             solution[var] = ' '.join(parts[1:])
         except FileNotFoundError:
             raise RuntimeError(f"Solution file not found: {solution_file}")
-        
+
         # Default solve_status if not present
         if 'solve_status' not in solution:
             solution['solve_status'] = 'Normal completion'
-        
+
         return solution
-    
+
     def _extract_variable_names(self, gams_content: str) -> list[str]:
         """
         Extract variable names from GAMS model content.
-        
+
         Looks for Variables/Variable block and extracts all declared names.
         Handles both scalar and indexed variables.
         """
         import re
-        
+
         var_names = []
-        
+
         # Find Variables block (case-insensitive)
         # Match: Variables ... ; or Variable ... ;
         var_pattern = r'(?i)(?:Variables?|Positive\s+Variables?|Negative\s+Variables?|Binary\s+Variables?|Integer\s+Variables?)\s+(.*?);'
-        
+
         matches = re.findall(var_pattern, gams_content, re.DOTALL)
-        
+
         for match in matches:
             # Split by whitespace and newlines
             names = match.split()
@@ -566,7 +566,7 @@ class TestPATHSolverValidation:
                     name = name[:name.index('(')]
                 if name and not name.startswith('*'):  # Skip comments
                     var_names.append(name)
-        
+
         return var_names
 ```
 
@@ -579,15 +579,15 @@ jobs:
   test-with-path:
     runs-on: ubuntu-latest
     if: ${{ github.secrets.GAMS_LICENSE != '' }}  # Only if license available
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up GAMS
         run: |
           # Install GAMS with PATH license
           # (Implementation depends on license setup)
-      
+
       - name: Run PATH solver tests
         run: pytest tests/validation/test_path_solver.py -v
 ```
@@ -658,9 +658,9 @@ Tests will be skipped with message "PATH solver not available"
 
 ## Task 4: Add Performance Benchmarking
 
-**Priority:** High  
-**Estimated Time:** 4 hours  
-**Deadline:** Sprint 4 Day 3 (after basic features working)  
+**Priority:** High
+**Estimated Time:** 4 hours
+**Deadline:** Sprint 4 Day 3 (after basic features working)
 **Owner:** Development team
 
 ### Objective
@@ -710,104 +710,104 @@ from src.emit.emit_gams import emit_gams_mcp
 
 class TestPerformanceBenchmarks:
     """Performance benchmarks at different scales."""
-    
+
     @pytest.fixture
     def small_model(self, tmp_path):
         """10 variables, 5 constraints."""
         model = self._generate_model(
-            tmp_path, 
+            tmp_path,
             name='small',
-            num_vars=10, 
+            num_vars=10,
             num_constraints=5
         )
         return model
-    
+
     @pytest.fixture
     def medium_model(self, tmp_path):
         """100 variables, 50 constraints."""
         model = self._generate_model(
             tmp_path,
-            name='medium', 
-            num_vars=100, 
+            name='medium',
+            num_vars=100,
             num_constraints=50
         )
         return model
-    
+
     @pytest.fixture
     def large_model(self, tmp_path):
         """1000 variables, 500 constraints."""
         model = self._generate_model(
             tmp_path,
             name='large',
-            num_vars=1000, 
+            num_vars=1000,
             num_constraints=500
         )
         return model
-    
+
     def test_parse_small_model(self, small_model, benchmark):
         """Benchmark: Parse small model (10 vars)."""
         result = benchmark(parse_model_file, small_model)
         assert result is not None
         # Target: < 0.1 seconds
-    
+
     def test_parse_medium_model(self, medium_model, benchmark):
         """Benchmark: Parse medium model (100 vars)."""
         result = benchmark(parse_model_file, medium_model)
         assert result is not None
         # Target: < 1.0 seconds
-    
+
     def test_parse_large_model(self, large_model, benchmark):
         """Benchmark: Parse large model (1000 vars)."""
         result = benchmark(parse_model_file, large_model)
         assert result is not None
         # Target: < 10.0 seconds
-    
+
     def test_differentiation_scalability(self, small_model, medium_model):
         """Benchmark: Verify differentiation scales sub-quadratically."""
         # Small model
         model_small = parse_model_file(small_model)
         normalize_model(model_small)
-        
+
         start = time.perf_counter()
         gradient_small = compute_objective_gradient(model_small)
         jacobian_small = compute_constraint_jacobian(model_small)
         time_small = time.perf_counter() - start
-        
+
         # Medium model (10x variables)
         model_medium = parse_model_file(medium_model)
         normalize_model(model_medium)
-        
+
         start = time.perf_counter()
         gradient_medium = compute_objective_gradient(model_medium)
         jacobian_medium = compute_constraint_jacobian(model_medium)
         time_medium = time.perf_counter() - start
-        
+
         # Verify: 10x vars should be < 100x time (sub-quadratic)
         ratio = time_medium / time_small
         assert ratio < 100, \
             f"Differentiation scaling poor: 10x vars = {ratio:.1f}x time"
-    
+
     def test_memory_usage_large_model(self, large_model):
         """Benchmark: Memory usage for large model."""
         tracemalloc.start()
-        
+
         model = parse_model_file(large_model)
         normalize_model(model)
         gradient = compute_objective_gradient(model)
         jacobian = compute_constraint_jacobian(model)
         kkt = assemble_kkt_system(model, gradient, jacobian)
         gams_code = emit_gams_mcp(kkt)
-        
+
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
-        
+
         # Target: < 100 MB for 1000-var model
         peak_mb = peak / 1024 / 1024
         assert peak_mb < 100, \
             f"Memory usage too high: {peak_mb:.1f} MB for 1000 vars"
-        
+
         print(f"\nMemory usage: {peak_mb:.1f} MB (peak)")
-    
+
     def test_end_to_end_performance(self, medium_model, benchmark):
         """Benchmark: Full pipeline for medium model."""
         def full_pipeline():
@@ -818,82 +818,82 @@ class TestPerformanceBenchmarks:
             kkt = assemble_kkt_system(model, gradient, jacobian)
             gams_code = emit_gams_mcp(kkt)
             return gams_code
-        
+
         result = benchmark(full_pipeline)
         assert len(result) > 0
         # Target: < 5 seconds for 100-var model
-    
+
     def test_sparsity_exploitation(self, tmp_path):
         """Verify sparse Jacobians scale better than dense."""
         # Create sparse model (each constraint touches 2 vars)
         sparse_model = self._generate_sparse_model(
-            tmp_path, 
-            num_vars=100, 
+            tmp_path,
+            num_vars=100,
             num_constraints=50,
             density=0.02  # 2% nonzeros
         )
-        
+
         # Create dense model (each constraint touches all vars)
         dense_model = self._generate_dense_model(
             tmp_path,
             num_vars=100,
             num_constraints=50
         )
-        
+
         # Compare times
         model_sparse = parse_model_file(sparse_model)
         normalize_model(model_sparse)
         start = time.perf_counter()
         jac_sparse = compute_constraint_jacobian(model_sparse)
         time_sparse = time.perf_counter() - start
-        
+
         model_dense = parse_model_file(dense_model)
         normalize_model(model_dense)
         start = time.perf_counter()
         jac_dense = compute_constraint_jacobian(model_dense)
         time_dense = time.perf_counter() - start
-        
+
         # Sparse should be much faster
         ratio = time_dense / time_sparse
         assert ratio > 5, \
             f"Sparsity not exploited: dense only {ratio:.1f}x slower"
-    
-    def _generate_model(self, path: Path, name: str, 
+
+    def _generate_model(self, path: Path, name: str,
                        num_vars: int, num_constraints: int) -> Path:
         """Generate test GAMS model of specified size."""
         model_file = path / f'{name}_model.gms'
-        
+
         # Generate a simple GAMS NLP model
         lines = [f"* {num_vars} vars, {num_constraints} constraints\n\n"]
-        
+
         # Variable declarations
         lines.append("Variables\n")
         for i in range(num_vars):
             lines.append(f"    x{i+1}\n")
         lines.append("    obj\n;\n\n")
-        
+
         # Equation declarations
         lines.append("Equations\n")
         for j in range(num_constraints):
             lines.append(f"    c{j+1}\n")
         lines.append("    objdef\n;\n\n")
-        
+
         # Equation definitions (simple quadratic constraints)
         for j in range(num_constraints):
             # Each constraint: sum of a few variables <= constant
             involved_vars = [f"x{(j*3+i) % num_vars + 1}" for i in range(min(3, num_vars))]
             lines.append(f"c{j+1}.. {' + '.join(involved_vars)} =L= {j+1};\n")
-        
+
         lines.append("\n")
-        
+
         # Objective (simple quadratic)
         obj_terms = [f"x{i+1}*x{i+1}" for i in range(num_vars)]
         lines.append(f"objdef.. obj =E= {' + '.join(obj_terms)};\n\n")
-        
+
         # Model and solve
         lines.append("Model testModel /all/;\n")
         lines.append("Solve testModel using NLP minimizing obj;\n")
-        
+
         model_file.write_text(''.join(lines))
         return model_file
 ```
@@ -920,9 +920,9 @@ After Sprint 4 features added:
 
 ## Task 5: Improve Error Messages
 
-**Priority:** Medium  
-**Estimated Time:** 4 hours  
-**Deadline:** Sprint 4 Day 5-6  
+**Priority:** Medium
+**Estimated Time:** 4 hours
+**Deadline:** Sprint 4 Day 5-6
 **Owner:** Development team
 
 ### Objective
@@ -970,7 +970,7 @@ class UserError(NLP2MCPError):
         self.message = message
         self.suggestion = suggestion
         super().__init__(self._format())
-    
+
     def _format(self) -> str:
         msg = f"Error: {self.message}"
         if self.suggestion:
@@ -983,7 +983,7 @@ class InternalError(NLP2MCPError):
         self.message = message
         self.context = context or {}
         super().__init__(self._format())
-    
+
     def _format(self) -> str:
         msg = f"Internal Error: {self.message}\n"
         msg += "\nThis is a bug in nlp2mcp. Please report at:\n"
@@ -1088,9 +1088,9 @@ KeyError: 'cost'
 
 ## Task 6: Create Edge Case Test Matrix
 
-**Priority:** High  
-**Estimated Time:** 3 hours  
-**Deadline:** Sprint 4 Day 7-8  
+**Priority:** High
+**Estimated Time:** 3 hours
+**Deadline:** Sprint 4 Day 7-8
 **Owner:** Development team
 
 ### Objective
@@ -1105,7 +1105,7 @@ Need comprehensive edge case coverage before declaring production-ready.
 
 ### Deliverable
 
-**File:** `docs/testing/EDGE_CASE_MATRIX.md`  
+**File:** `docs/testing/EDGE_CASE_MATRIX.md`
 **Tests:** `tests/edge_cases/test_edge_cases.py`
 
 ### Edge Case Categories
@@ -1176,7 +1176,7 @@ For each edge case marked ⏸️:
 def test_only_equalities_no_inequalities():
     """
     Edge case: Model with only equality constraints.
-    
+
     Expected: KKT system has:
     - Stationarity equations (one per variable)
     - No λ multipliers (no inequalities)
@@ -1186,24 +1186,24 @@ def test_only_equalities_no_inequalities():
     model_gms = """
     Variables x, y, obj;
     Equations eq1, eq2, objdef;
-    
+
     eq1.. x + y =e= 1;
     eq2.. x - y =e= 0;
     objdef.. obj =e= x^2 + y^2;
-    
+
     Model test / all /;
     Solve test using NLP minimizing obj;
     """
-    
+
     # Convert
     mcp = convert_to_mcp(model_gms)
-    
+
     # Verify structure
     assert len(mcp.multipliers_eq) == 2  # nu_eq1, nu_eq2
     assert len(mcp.multipliers_ineq) == 0  # No λ
     assert len(mcp.multipliers_bounds_lo) == 0  # No πL
     assert len(mcp.multipliers_bounds_up) == 0  # No πU
-    
+
     # Verify stationarity includes only ν terms
     stat_x = mcp.stationarity['x']
     # Should be: 2*x + ν_eq1 - ν_eq2 = 0
@@ -1223,9 +1223,9 @@ def test_only_equalities_no_inequalities():
 
 ## Task 7: Formalize Checkpoint Templates
 
-**Priority:** High  
-**Estimated Time:** 2 hours  
-**Deadline:** Before Sprint 4 Day 1  
+**Priority:** High
+**Estimated Time:** 2 hours
+**Deadline:** Before Sprint 4 Day 1
 **Owner:** Sprint planning
 
 ### Objective
@@ -1249,8 +1249,8 @@ Need structured checkpoints to catch issues early in Sprint 4.
 
 ## Checkpoint 1: Day 3 (New Features Initial Implementation)
 
-**When:** End of Day 3, before starting Day 4  
-**Duration:** 30 minutes  
+**When:** End of Day 3, before starting Day 4
+**Duration:** 30 minutes
 **Format:** Self-review with documented results
 
 ### Review Questions
@@ -1329,21 +1329,21 @@ Reviewer: [Name]
 
 ### Acceptance Criteria
 
-- [ ] 3 checkpoint templates created (Days 3, 6, 8)
-- [ ] Each has clear review questions
-- [ ] Each has acceptance criteria
-- [ ] Each has decision point (go/no-go)
-- [ ] Report template included
-- [ ] Reminders set for checkpoint days
+- [x] 3 checkpoint templates created (Days 3, 6, 8)
+- [x] Each has clear review questions
+- [x] Each has acceptance criteria
+- [x] Each has decision point (go/no-go)
+- [x] Report template included
+- [x] Reminders set for checkpoint days
 
 ---
 
 ## Task 8: Review and Update Documentation
 
-**Priority:** Medium  
-**Estimated Time:** 3 hours  
-**Deadline:** Sprint 4 Day 1  
-**Owner:** Development team  
+**Priority:** Medium
+**Estimated Time:** 3 hours
+**Deadline:** Sprint 4 Day 1
+**Owner:** Development team
 **Dependencies:** Task 1 (Issue #47 resolved)
 
 ### Objective
@@ -1388,10 +1388,10 @@ Update all documentation to reflect Issue #47 fix and Sprint 3 completion.
 
 ## Task 9: Plan Sprint 4 Scope and Schedule
 
-**Priority:** Critical  
-**Estimated Time:** 4 hours  
-**Deadline:** Before Sprint 4 Day 1  
-**Owner:** Sprint planning  
+**Priority:** Critical
+**Estimated Time:** 4 hours
+**Deadline:** Before Sprint 4 Day 1
+**Owner:** Sprint planning
 **Dependencies:** All prep tasks
 
 ### Objective
@@ -1544,8 +1544,8 @@ With prep tasks complete:
 5. **Systematic reviews:** Checkpoints prevent late issues
 6. **Better errors:** Users get helpful messages
 
-**Estimated time saved:** 2-3 days (avoiding Issue #47-style problems)  
-**Prep investment:** 3.5 days  
+**Estimated time saved:** 2-3 days (avoiding Issue #47-style problems)
+**Prep investment:** 3.5 days
 
 **Net benefit:** Sprint 4 completes on time with higher quality
 
@@ -1592,23 +1592,23 @@ This prep plan applies all lessons learned from Sprint 3 Retrospective to set up
 
 ---
 
-**Document Created:** October 31, 2025  
-**Sprint 4 Target Start:** TBD  
+**Document Created:** October 31, 2025
+**Sprint 4 Target Start:** TBD
 **Next Steps:** Execute prep tasks in order, verify completion, begin Sprint 4
 
 ---
 
 # SPRINT 4 PREPARATION TASK CHECKLIST
 
-**Purpose:** Quick reference for tracking prep task completion  
+**Purpose:** Quick reference for tracking prep task completion
 **Use:** Check off tasks as completed to track progress toward Sprint 4 readiness
 
 ---
 
 ## Phase 1: BEFORE Sprint 4 Start - Critical Path (MUST COMPLETE)
 
-**Timeline:** Complete 1 week before Sprint 4 Day 1  
-**Total Time:** ~12 hours (1.5 days)  
+**Timeline:** Complete 1 week before Sprint 4 Day 1
+**Total Time:** ~12 hours (1.5 days)
 **Blocker Status:** Sprint 4 CANNOT start until these are done
 
 | # | Task | Est. Time | Deadline | Status | Notes |
@@ -1632,8 +1632,8 @@ pytest tests/validation/test_path_solver.py -v  # Should run or skip gracefully
 
 ## Phase 2: BEFORE Sprint 4 Start - High Priority (SHOULD COMPLETE)
 
-**Timeline:** Complete before Sprint 4 Day 1  
-**Total Time:** ~10 hours (1.25 days)  
+**Timeline:** Complete before Sprint 4 Day 1
+**Total Time:** ~10 hours (1.25 days)
 **Blocker Status:** Not blockers, but significantly improve Sprint 4 execution
 
 | # | Task | Est. Time | Deadline | Status | Notes |
@@ -1659,7 +1659,7 @@ git log --oneline docs/  # Should see recent updates
 
 ## Phase 3: DURING Sprint 4 (CAN BE DONE IN-SPRINT)
 
-**Timeline:** Flexible, can be done during Sprint 4  
+**Timeline:** Flexible, can be done during Sprint 4
 **Total Time:** ~4 hours (0.5 days)
 
 | # | Task | Est. Time | Sprint 4 Day | Status | Notes |
@@ -1774,6 +1774,6 @@ ruff check src/                                   # No errors
 
 ---
 
-**Last Updated:** October 31, 2025  
-**Next Review:** Daily during prep phase  
+**Last Updated:** October 31, 2025
+**Next Review:** Daily during prep phase
 **Owner:** Sprint planning team
