@@ -169,8 +169,8 @@ def test_path_relative_to_file_not_cwd():
     original_cwd = os.getcwd()
 
     try:
-        # Change to a different directory (parent of test_dir)
-        os.chdir(test_dir.parent.parent.parent)
+        # Change to a different directory (root directory, guaranteed to exist)
+        os.chdir("/")
 
         print("\nTest: Path Relative to File, Not CWD")
         print(f"CWD: {os.getcwd()}")
