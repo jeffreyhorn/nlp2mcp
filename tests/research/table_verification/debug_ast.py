@@ -2,8 +2,10 @@
 """Debug script to examine the AST structure for sparse tables."""
 
 from pathlib import Path
+
+from lark import Token, Tree
+
 from src.ir.parser import parse_file
-from lark import Tree, Token
 
 
 def print_tree(node, indent=0):

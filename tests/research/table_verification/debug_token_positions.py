@@ -2,8 +2,10 @@
 """Debug script to check if tokens have line/column position info."""
 
 from pathlib import Path
+
+from lark import Token, Tree
+
 from src.ir.parser import parse_file
-from lark import Tree, Token
 
 
 def debug_token_positions():

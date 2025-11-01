@@ -377,7 +377,7 @@ class _ModelBuilder:
 
         # Parse data rows
         values = {}
-        for line_num, line_tokens in sorted_lines[1:]:
+        for _line_num, line_tokens in sorted_lines[1:]:
             if not line_tokens:
                 continue
 
@@ -419,7 +419,7 @@ class _ModelBuilder:
         # Fill in missing cells with 0.0
         # For each combination of row and column that doesn't have a value
         row_headers = set()
-        for line_num, line_tokens in sorted_lines[1:]:
+        for _line_num, line_tokens in sorted_lines[1:]:
             if line_tokens and line_tokens[0].type == "ID":
                 row_headers.add(_token_text(line_tokens[0]))
 

@@ -2,6 +2,7 @@
 """Test script to verify Table block parsing."""
 
 from pathlib import Path
+
 from src.ir.parser import parse_model_file
 
 
