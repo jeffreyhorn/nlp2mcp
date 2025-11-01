@@ -48,6 +48,6 @@ Model test / all /;
 * Just check that it compiles
 display "Long stationarity equations compiled successfully!";
 display "Line lengths:";
-display "  stationarity_short:      ~150 characters";
-display "  stationarity_long:       ~450 characters";
-display "  stationarity_very_long:  ~900 characters";
+display "  stationarity_short:      132 characters";
+display "  stationarity_long:       374 characters";
+display "  stationarity_very_long:  749 characters";

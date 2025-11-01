@@ -5,7 +5,8 @@ This will test what nlp2mcp actually generates for complex models.
 $offtext
 
 Sets
-    i 'items' / i1*i20 /;
+    i 'items' / i1*i20 /
+    j 'index for sums' / i1*i20 /;
 
 Parameters
     a(i) 'coefficients'
@@ -28,11 +29,11 @@ Equations
 
 objdef.. obj =e= sum(i, a(i) * sqr(x(i)));
 
-constraint1(i).. x(i) + sum(i, 0.1 * x(i)) =l= b(i);
-constraint2(i).. x(i) - sum(i, 0.05 * x(i)) =g= 0;
-constraint3(i).. sqr(x(i)) + sum(i, 0.01 * sqr(x(i))) =l= 100;
+constraint1(i).. x(i) + sum(j, 0.1 * x(j)) =l= b(i);
+constraint2(i).. x(i) - sum(j, 0.05 * x(j)) =g= 0;
+constraint3(i).. sqr(x(i)) + sum(j, 0.01 * sqr(x(j))) =l= 100;
 constraint4(i).. exp(x(i) / 10) =l= 5;
-constraint5(i).. x(i) * sum(i, x(i)) =l= 50;
+constraint5(i).. x(i) * sum(j, x(j)) =l= 50;
 
 x.lo(i) = 0;
 x.up(i) = 10;

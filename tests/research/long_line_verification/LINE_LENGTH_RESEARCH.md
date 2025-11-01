@@ -63,7 +63,7 @@ test_simple_break..
         x2 + x3 + x4 +
         x5 + x6 + x7;
 
-* Test 2: Break at various operators  
+* Test 2: Break at various operators
 test_operator_break..
     x1 =e=
         x2 + x3 *
