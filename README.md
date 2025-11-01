@@ -64,9 +64,17 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ 602 tests passing, 100% deterministic output
 
 **Sprint 4: Extended Features & Robustness** 🔄 **IN PROGRESS**
-- 🔄 Preparation phase (see [docs/planning/SPRINT_4/PREP_PLAN.md](docs/planning/SPRINT_4/PREP_PLAN.md))
-- Task 1: ✅ Resolve Issue #47 (indexed equations)
-- Task 2-9: Planned (known unknowns list, PATH validation, performance benchmarks, etc.)
+
+*Preparation Phase* (see [docs/planning/SPRINT_4/PREP_PLAN.md](docs/planning/SPRINT_4/PREP_PLAN.md)):
+- ✅ Task 1: Resolve Issue #47 (indexed stationarity equations)
+- ✅ Task 2: Create Known Unknowns List ([KNOWN_UNKNOWNS.md](docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md))
+- ⏸️ Task 3: Set Up PATH Solver Validation (pending)
+- ✅ Task 4: Add Performance Benchmarking (7 benchmarks, scalability tests)
+- ✅ Task 5: Improve Error Messages (error hierarchy, 6 error classes)
+- ✅ Task 6: Create Edge Case Test Matrix (29 test cases, 6 categories)
+- ✅ Task 7: Formalize Checkpoint Templates ([CHECKPOINT_TEMPLATES.md](docs/process/CHECKPOINT_TEMPLATES.md))
+- ✅ Task 8: Review and Update Documentation (Issue #47 lessons documented)
+- ⏸️ Task 9: Plan Sprint 4 Scope and Schedule (pending)
 
 ### Planned (See [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md))
 

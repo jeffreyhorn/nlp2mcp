@@ -906,7 +906,7 @@ class TestPerformanceBenchmarks:
 - [x] Memory usage tests verify reasonable limits
 - [x] Sparsity exploitation verified (16-18x speedup)
 - [x] Baselines documented for future comparison (in test output)
-- [ ] Added to CI (optional, may be slow)
+- [x] Added to CI (benchmarks run in CI, memory test skipped due to environment variance)
 
 ### Expected Outcome
 
