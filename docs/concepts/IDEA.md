@@ -140,6 +140,3 @@ Solutions satisfy (x\ge 0), (\lambda\ge 0), (x\lambda=0), and (x-3-\lambda=0). T
    * (x,\nu) free (equations (F_x=0,F_\nu=0));
    * (\lambda,\pi^L,\pi^U \ge 0) and **complementary** to (F_\lambda,F_{\pi^L},F_{\pi^U}).
 5. Send ((F,z,\text{bounds})) to your MCP solver.
-
-If you want, tell me your exact NLP (even high-level), and I’ll write the MCP in the syntax of your preferred solver (GAMS/PATH, Pyomo-mpec, JuMP+PATHSolver, etc.).
-

@@ -191,6 +191,3 @@ GAMS has **EMP (Extended Mathematical Programming)** features that can automatic
 * Normalizer: turn each eqn into either equality or normalized `<= 0` inequality; collect bounds.
 * Generator: fill the GAMS MCP template (variables, equations, model/solve).
 * CLI: `nlp2kkt input.gms -o output_kkt.gms --sense=min`.
-
-If you want, share a sample `.gms` and I’ll sketch the exact emitted MCP for that case (we can keep to your favorite operators so the first pass “just works”).
-
