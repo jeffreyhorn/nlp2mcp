@@ -1554,7 +1554,7 @@ Model max_model /
 | Aspect | min(x,y) | max(x,y) |
 |--------|----------|----------|
 | Constraint direction | x - z ≥ 0 (`=g=`) | x - z ≤ 0 (`=l=`) |
-| Stationarity (min obj) | -1 + λ_x + λ_y = 0 | 1 - λ_x + λ_y = 0 |
+| Stationarity (min obj) | -1 + λ_x + λ_y = 0 | 1 - λ_x - λ_y = 0 |
 | Multiplier sum | λ_x + λ_y = 1 | λ_x + λ_y = 1 |
 | Duality | min(x,y) = -max(-x,-y) | max(x,y) = -min(-x,-y) |
 

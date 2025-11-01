@@ -16,7 +16,7 @@ Reformulated as MCP:
   y - z ≤ 0  ⊥  λ_y ≥ 0    (complementarity 2)
   
 Stationarity for z (when maximizing z):
-  -1 + λ_x + λ_y = 0
+  1 - λ_x - λ_y = 0
   
 For maximizing z: λ_x + λ_y = 1
 ```
