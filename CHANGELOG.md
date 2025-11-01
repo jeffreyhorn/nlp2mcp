@@ -7,7 +7,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Sprint 3: KKT Synthesis + GAMS MCP Code Generation
+## [0.3.1] - 2025-10-30 - Sprint 3 Post-Release
+
+### Fixed
+
+**Issue #47: Indexed Stationarity Equations (CRITICAL FIX)**
+
+- **Problem**: System incorrectly generated element-specific stationarity equations instead of indexed equations for indexed variables
+  - Before: `stat_x_i1.. <expr> =E= 0;` (element-specific, no domain)
+  - After: `stat_x(i).. <expr with i> =E= 0;` (indexed with domain)
+
+- **Root Cause**: GAMS MCP syntax requires indexed equations for indexed variables
+  - Cannot pair `stat_x_i1.x` when `x` is declared as `Variables x(i);`
+  - GAMS enforces: "If variable has domain, equation must have matching domain"
+  
+- **Impact**:
+  - Discovered late (Sprint 3 Day 8) requiring 2-day emergency refactoring
+  - All golden file tests failing (2/5) before fix, all passing (5/5) after
+  - ~400 lines rewritten in `src/kkt/stationarity.py`
+
+- **Solution**: Complete refactoring of stationarity equation generation
+  - `build_stationarity_equations()`: Groups variable instances by base name, generates indexed equations
+  - `_build_indexed_stationarity_expr()`: Builds expressions using set indices instead of element labels
+  - `_replace_indices_in_expr()`: AST transformation replacing element labels with domain indices
+  - `_add_indexed_jacobian_terms()`: Adds Jacobian transpose terms with proper index handling
+  - Simplified `src/emit/model.py`: Model MCP pairs listed without explicit indices (GAMS infers)
+
+- **Verification**:
+  - All 602 tests passing (was 600 with 2 xfail before fix)
+  - GAMS syntax validation passing for all 5 golden files
+  - Deterministic output verified across multiple runs
+
+- **Files Modified**:
+  - `src/kkt/stationarity.py` - Complete refactoring (~400 lines)
+  - `src/emit/model.py` - Simplified MCP Model emission
+  - `tests/validation/test_gams_check.py` - Removed xfail markers
+  - `tests/e2e/test_smoke.py` - Updated test expectations
+  - `tests/integration/kkt/test_stationarity.py` - Updated test expectations
+  - All 5 golden files regenerated with correct syntax
+
+**Related Issues**: Resolves GitHub Issue #47, partially resolves parent GitHub Issue #46 (Problem 1)
+
+### Documentation
+
+**Added comprehensive Issue #47 lessons learned**:
+- Added "Issue #47 Lessons Learned" section to `docs/kkt/KKT_ASSEMBLY.md`
+  - Background and problem analysis
+  - Before/after comparison with examples
+  - Implementation changes and lessons for future development
+  - Impact assessment and verification details
+  
+- Added "Index Handling (Issue #47 Fix)" section to `docs/emit/GAMS_EMISSION.md`
+  - Correct vs incorrect approaches with code examples
+  - Set indices vs element labels explanation
+  - Multi-dimensional indexing guidance
+  - Updated Model MCP pairing rules with index handling notes
+
+- Updated `README.md`:
+  - Sprint 3 status marked as ✅ COMPLETE
+  - Sprint 4 status marked as 🔄 IN PROGRESS with preparation phase details
+  - Added Issue #47 fix to Sprint 3 feature list
+  - Updated test count from 593 to 602
+  - Updated roadmap with v0.3.1 (Issue #47 fix)
+
+### Lessons Learned
+
+1. **Validate syntax early**: Should have tested with actual GAMS compiler on Day 1
+2. **Document assumptions proactively**: GAMS MCP syntax assumption was never validated
+3. **Test with indexed examples first**: Started with scalar examples, missed critical domain requirements
+4. **Set up validation environment early**: GAMS/PATH availability from Day 0 would have caught this
+5. **Known unknowns list**: Proactive assumption documentation would have flagged MCP syntax for verification
+
+### Sprint 4 Preparation
+
+Sprint 4 PREP_PLAN includes preventive measures based on Issue #47 lessons:
+- Task 2: Create known unknowns list BEFORE sprint start (proactive, not retrospective)
+- Task 3: Set up PATH solver validation environment early
+- Task 7: Formalize mid-sprint checkpoints to catch issues before Day 8
+
+---
+
+## [0.3.0] - 2025-10-30 - Sprint 3: KKT Synthesis + GAMS MCP Code Generation
 
 #### 2025-10-30 - Sprint 3 Day 10: Polish, Testing, & Sprint Wrap-Up ✅ COMPLETE
 

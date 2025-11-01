@@ -47,9 +47,10 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Finite-difference validation for derivative correctness
 - ✅ High-level API: `compute_derivatives(model_ir)` → (gradient, J_eq, J_ineq)
 
-**Sprint 3: KKT Synthesis & GAMS MCP Generation**
+**Sprint 3: KKT Synthesis & GAMS MCP Generation** ✅ **COMPLETE**
 - ✅ KKT system assembly (stationarity, complementarity, multipliers)
 - ✅ GAMS MCP code generation with proper syntax
+- ✅ **Indexed stationarity equations** (Issue #47 fix - major refactoring)
 - ✅ Original symbols preservation (sets, parameters, aliases)
 - ✅ Variable kind preservation (Positive, Binary, Integer, etc.)
 - ✅ Indexed bounds handling (per-instance complementarity pairs)
@@ -60,11 +61,16 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Golden test suite (end-to-end regression testing)
 - ✅ Optional GAMS syntax validation
 - ✅ Comprehensive documentation (KKT assembly, GAMS emission)
-- ✅ 593 tests passing, 100% deterministic output
+- ✅ 602 tests passing, 100% deterministic output
+
+**Sprint 4: Extended Features & Robustness** 🔄 **IN PROGRESS**
+- 🔄 Preparation phase (see [docs/planning/SPRINT_4/PREP_PLAN.md](docs/planning/SPRINT_4/PREP_PLAN.md))
+- Task 1: ✅ Resolve Issue #47 (indexed equations)
+- Task 2-9: Planned (known unknowns list, PATH validation, performance benchmarks, etc.)
 
 ### Planned (See [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md))
 
-- 📋 Sprint 4: Extended language features and robustness
+- 📋 Sprint 4: Extended language features and robustness (IN PROGRESS)
 - 📋 Sprint 5: Packaging, documentation, and ecosystem integration
 
 ## Installation
@@ -463,7 +469,8 @@ MIT License - See LICENSE file for details
 - **v0.1.0** (Sprint 1): ✅ Parser and IR - COMPLETE
 - **v0.2.0** (Sprint 2): ✅ Symbolic differentiation - COMPLETE
 - **v0.3.0** (Sprint 3): ✅ KKT synthesis and MCP code generation - COMPLETE
-- **v0.4.0** (Sprint 4): Extended features and robustness
+- **v0.3.1** (Post Sprint 3): ✅ Issue #47 fix (indexed equations) - COMPLETE
+- **v0.4.0** (Sprint 4): 🔄 Extended features and robustness - IN PROGRESS
 - **v1.0.0** (Sprint 5): Production-ready with docs and PyPI release
 
 ## Contact
