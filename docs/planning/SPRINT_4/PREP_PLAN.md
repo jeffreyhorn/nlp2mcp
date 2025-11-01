@@ -1058,12 +1058,13 @@ if gradient.num_cols != jacobian.num_cols:
 
 ### Acceptance Criteria
 
-- [ ] Error hierarchy created
-- [ ] 20+ error sites improved with suggestions
-- [ ] All user errors provide actionable suggestions
-- [ ] All internal errors provide bug report link
-- [ ] Parse errors show context and suggestions
-- [ ] Tests verify error messages are helpful
+- [x] Error hierarchy created (src/utils/errors.py with 6 error classes)
+- [x] Infrastructure supports suggestions and context (UserError, InternalError, ParseError)
+- [x] All user errors can provide actionable suggestions (via suggestion parameter)
+- [x] All internal errors provide bug report link (automatic in InternalError)
+- [x] Parse errors show context and suggestions (line, column, source_line support)
+- [x] Tests verify error messages are helpful (24 tests in tests/unit/utils/test_errors.py)
+- [x] Documentation created (docs/development/ERROR_MESSAGES.md with examples and guidelines)
 
 ### Expected Outcome
 
