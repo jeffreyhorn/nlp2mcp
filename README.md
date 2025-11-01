@@ -417,16 +417,36 @@ The `examples/` directory contains sample GAMS NLP models:
 
 ## Contributing
 
-This project is in active development (Sprint 1-2 complete). Contributions are welcome!
+**Please read [CONTRIBUTING.md](CONTRIBUTING.md) before contributing!**
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes and add tests
-4. Run `make format` and `make lint`
-5. Run `make test` to ensure all tests pass
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
+This project is in active development (Sprint 3 complete, Sprint 4 in preparation). Contributions are welcome!
+
+### Quick Start for Contributors
+
+1. **Read guidelines**: [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/development/AGENTS.md](docs/development/AGENTS.md)
+2. **Setup environment**:
+   ```bash
+   python3.12 -m venv .venv
+   source .venv/bin/activate
+   make install-dev
+   ```
+3. **Create feature branch**: `git checkout -b feature/amazing-feature`
+4. **Make changes**: Follow code style in CONTRIBUTING.md
+5. **Quality checks**:
+   ```bash
+   make format   # Auto-format code
+   make lint     # Type checking and linting
+   make test     # All tests must pass (602+ tests)
+   ```
+6. **Submit PR**: Push branch and create Pull Request on GitHub
+
+### Requirements
+- Python 3.12+ with modern type hints
+- All tests passing
+- Code formatted with Black + Ruff
+- Type checked with mypy
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## License
 
