@@ -85,20 +85,20 @@ class TestPerformanceBenchmarks:
         """Benchmark: Verify differentiation scales sub-quadratically."""
         # Small model
         model_small = parse_model_file(small_model)
-        normalize_model(model_small)
+        normalized_eqs_small, normalized_bounds_small = normalize_model(model_small)
 
         start = time.perf_counter()
         compute_objective_gradient(model_small)
-        J_eq_small, J_ineq_small = compute_constraint_jacobian(model_small)
+        _, _ = compute_constraint_jacobian(model_small)
         time_small = time.perf_counter() - start
 
         # Medium model (10x variables)
         model_medium = parse_model_file(medium_model)
-        normalize_model(model_medium)
+        normalized_eqs_medium, normalized_bounds_medium = normalize_model(model_medium)
 
         start = time.perf_counter()
         compute_objective_gradient(model_medium)
-        J_eq_medium, J_ineq_medium = compute_constraint_jacobian(model_medium)
+        _, _ = compute_constraint_jacobian(model_medium)
         time_medium = time.perf_counter() - start
 
         # Verify: 10x vars should be < 200x time (sub-quadratic)
@@ -114,7 +114,7 @@ class TestPerformanceBenchmarks:
         tracemalloc.start()
 
         model = parse_model_file(large_model)
-        normalize_model(model)
+        normalized_eqs, normalized_bounds = normalize_model(model)
         gradient = compute_objective_gradient(model)
         J_eq, J_ineq = compute_constraint_jacobian(model)
         kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
@@ -133,7 +133,7 @@ class TestPerformanceBenchmarks:
 
         def full_pipeline():
             model = parse_model_file(medium_model)
-            normalize_model(model)
+            normalized_eqs, normalized_bounds = normalize_model(model)
             gradient = compute_objective_gradient(model)
             J_eq, J_ineq = compute_constraint_jacobian(model)
             kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
@@ -164,15 +164,15 @@ class TestPerformanceBenchmarks:
 
         # Compare times
         model_sparse = parse_model_file(sparse_model)
-        normalize_model(model_sparse)
+        norm_eq_sparse, norm_bounds_sparse = normalize_model(model_sparse)
         start = time.perf_counter()
-        J_eq_sparse, J_ineq_sparse = compute_constraint_jacobian(model_sparse)
+        _, _ = compute_constraint_jacobian(model_sparse)
         time_sparse = time.perf_counter() - start
 
         model_dense = parse_model_file(dense_model)
-        normalize_model(model_dense)
+        norm_eq_dense, norm_bounds_dense = normalize_model(model_dense)
         start = time.perf_counter()
-        J_eq_dense, J_ineq_dense = compute_constraint_jacobian(model_dense)
+        _, _ = compute_constraint_jacobian(model_dense)
         time_dense = time.perf_counter() - start
 
         # Sparse should be much faster
