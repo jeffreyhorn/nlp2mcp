@@ -35,12 +35,12 @@ z_min = min(x, y)
 
 becomes:
 
-z_min <= x    ... (inequality 1)
-z_min <= y    ... (inequality 2)
+x >= z_min    ... (inequality 1)
+y >= z_min    ... (inequality 2)
 
 with complementarity:
-  (z_min - x) ⊥ λ_x, λ_x >= 0
-  (z_min - y) ⊥ λ_y, λ_y >= 0
+  (x - z_min) ⊥ λ_x, λ_x >= 0
+  (y - z_min) ⊥ λ_y, λ_y >= 0
 ```
 
 ### Step 2: KKT Conditions
@@ -52,22 +52,22 @@ L = z + μ_x*(-x) + μ_y*(-y) + ν*(z - min(x,y))
 
 **After reformulation:**
 ```
-L = z_min + μ_x*(-x) + μ_y*(-y) + λ_x*(z_min-x) + λ_y*(z_min-y)
+L = z_min + μ_x*(-x) + μ_y*(-y) + λ_x*(x-z_min) + λ_y*(y-z_min)
 ```
 
 **Stationarity Conditions:**
 ```
-∂L/∂x = 0:      -μ_x - λ_x = 0  →  λ_x = -μ_x
-∂L/∂y = 0:      -μ_y - λ_y = 0  →  λ_y = -μ_y
-∂L/∂z_min = 0:   1 + λ_x + λ_y = 0
+∂L/∂x = 0:      -μ_x + λ_x = 0  →  λ_x = μ_x
+∂L/∂y = 0:      -μ_y + λ_y = 0  →  λ_y = μ_y
+∂L/∂z_min = 0:   1 - λ_x - λ_y = 0
 ```
 
 **Complementarity Conditions:**
 ```
 x >= 0  ⊥  μ_x >= 0        (bound on x)
 y >= 0  ⊥  μ_y >= 0        (bound on y)
-z_min - x <= 0  ⊥  λ_x >= 0    (min constraint 1)
-z_min - y <= 0  ⊥  λ_y >= 0    (min constraint 2)
+x - z_min >= 0  ⊥  λ_x >= 0    (min constraint 1)
+y - z_min >= 0  ⊥  λ_y >= 0    (min constraint 2)
 ```
 
 ### Step 3: MCP Formulation
@@ -85,13 +85,13 @@ Equations
     objdef;          * Objective definition
 
 * Stationarity conditions
-stat_x.. -lambda_x =e= 0;        * ∂L/∂x = -λ_x = 0 (since x at bound)
-stat_y.. -lambda_y =e= 0;        * ∂L/∂y = -λ_y = 0 (since y at bound)
-stat_z.. 1 + lambda_x + lambda_y =e= 0;  * ∂L/∂z_min = 1 + λ_x + λ_y = 0
+stat_x.. lambda_x =e= 0;         * ∂L/∂x = -μ_x + λ_x = 0 (x at bound, μ_x = 0)
+stat_y.. lambda_y =e= 0;         * ∂L/∂y = -μ_y + λ_y = 0 (y at bound, μ_y = 0)
+stat_z.. 1 - lambda_x - lambda_y =e= 0;  * ∂L/∂z_min = 1 - λ_x - λ_y = 0
 
-* Complementarity constraints
-comp_min_x.. z_min - x =l= 0;    * Paired with lambda_x
-comp_min_y.. z_min - y =l= 0;    * Paired with lambda_y
+* Complementarity constraints (write as g(z) >= 0)
+comp_min_x.. x - z_min =g= 0;    * Paired with lambda_x
+comp_min_y.. y - z_min =g= 0;    * Paired with lambda_y
 
 * Objective
 objdef.. obj =e= z_min;
@@ -120,109 +120,31 @@ Solve mcp_model using MCP;
 
 1. **Bound on x:**
    - x = 0 (at bound)
-   - Can have μ_x > 0 (active)
-   - Complementarity: 0 * μ_x = 0 ✓
+   - Bound handled automatically by GAMS (x.lo = 0)
 
 2. **Bound on y:**
-   - y = 0 (at bound)  
-   - Can have μ_y > 0 (active)
-   - Complementarity: 0 * μ_y = 0 ✓
+   - y = 0 (at bound)
+   - Bound handled automatically by GAMS (y.lo = 0)
 
-3. **Min constraint 1 (z_min <= x):**
-   - z_min - x = 0 - 0 = 0 (tight)
+3. **Min constraint 1 (x >= z_min):**
+   - x - z_min = 0 - 0 = 0 (tight)
    - Can have λ_x > 0 (active)
    - Complementarity: 0 * λ_x = 0 ✓
 
-4. **Min constraint 2 (z_min <= y):**
-   - z_min - y = 0 - 0 = 0 (tight)
+4. **Min constraint 2 (y >= z_min):**
+   - y - z_min = 0 - 0 = 0 (tight)
    - Can have λ_y > 0 (active)
    - Complementarity: 0 * λ_y = 0 ✓
 
 **Check stationarity:**
 
-From stat_z: `1 + λ_x + λ_y = 0`
-Therefore: `λ_x + λ_y = -1`
-
-Since both λ_x and λ_y must be >= 0, and they sum to -1...
-**Wait, this is wrong!** This would require λ_x + λ_y < 0, but they must be positive.
-
-### Correcting the Formulation
-
-The issue is we're minimizing z_min, so the objective gradient ∂obj/∂z_min = +1.
-
-But in the stationarity condition, we need:
-```
-∂obj/∂z_min + (multiplier terms) = 0
-1 - λ_x - λ_y = 0  (note the minus signs!)
-```
-
-Wait, let me reconsider the complementarity direction...
-
-The constraints are `z_min <= x` and `z_min <= y`, which can be written as:
-```
-x - z_min >= 0
-y - z_min >= 0
-```
-
-With multipliers:
-```
-(x - z_min) ⊥ λ_x, λ_x >= 0
-(y - z_min) ⊥ λ_y, λ_y >= 0
-```
-
-Now stationarity for z_min:
-```
-∂obj/∂z_min + ∂(complementarity)/∂z_min = 0
-1 + (-λ_x) + (-λ_y) = 0
-1 = λ_x + λ_y
-```
+From stat_z: `1 - λ_x - λ_y = 0`
+Therefore: `λ_x + λ_y = 1`
 
 This makes sense! At optimum:
-- λ_x + λ_y = 1
-- Both λ_x, λ_y >= 0
-- At least one is positive (enforces the min)
-
----
-
-## Corrected MCP Formulation
-
-```gams
-Variables x, y, z_min, obj;
-Positive Variables lambda_x, lambda_y;
-
-Equations
-    stat_x, stat_y, stat_z,
-    comp_min_x, comp_min_y,
-    objdef;
-
-* Stationarity
-stat_x.. -lambda_x =e= 0;        
-stat_y.. -lambda_y =e= 0;        
-stat_z.. 1 - lambda_x - lambda_y =e= 0;  * CORRECTED
-
-* Complementarity (write as g(z) >= 0)
-comp_min_x.. x - z_min =g= 0;    * CORRECTED direction
-comp_min_y.. y - z_min =g= 0;    * CORRECTED direction
-
-objdef.. obj =e= z_min;
-
-Model mcp_model / 
-    stat_x.x,
-    stat_y.y,
-    stat_z.z_min,
-    comp_min_x.lambda_x,
-    comp_min_y.lambda_y,
-    objdef.obj /;
-
-x.lo = 0;
-y.lo = 0;
-
-Solve mcp_model using MCP;
-```
-
-**At solution (x=0, y=0, z_min=0):**
-- λ_x + λ_y = 1 (from stationarity)
-- Both constraints tight: x - z_min = 0, y - z_min = 0
+- λ_x + λ_y = 1 ✓
+- Both λ_x, λ_y >= 0 ✓
+- Both constraints are tight (degenerate case since x = y)
 - Multiple solutions possible: (λ_x=1, λ_y=0), (λ_x=0, λ_y=1), (λ_x=0.5, λ_y=0.5), etc.
 - All satisfy complementarity ✓
 

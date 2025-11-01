@@ -117,14 +117,14 @@ Equations
     objdef;             * Objective definition
 
 * Stationarity conditions (gradient = 0)
-stationarity_x.. lambda_min_x =e= 0;
-stationarity_y.. lambda_min_y =e= 0;
+stationarity_x.. -lambda_min_x =e= 0;
+stationarity_y.. -lambda_min_y =e= 0;
 stationarity_z.. -1 + lambda_min_x + lambda_min_y =e= 0;
 stationarity_obj.. 1 =e= 0;  * (This would be adjusted for real objective)
 
-* Complementarity constraints (z - x <= 0, z - y <= 0)
-comp_min_x.. z_min - x =l= 0;
-comp_min_y.. z_min - y =l= 0;
+* Complementarity constraints (x - z >= 0, y - z >= 0)
+comp_min_x.. x - z_min =g= 0;
+comp_min_y.. y - z_min =g= 0;
 
 * Original objective definition
 objdef.. obj =e= z_min;

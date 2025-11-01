@@ -1337,12 +1337,16 @@ Created comprehensive research documentation at:
 
 5. **Flattening Algorithm:**
    ```python
+   def is_min_call(expr):
+       """Type-checking function: returns True if expr is a min() function call."""
+       return isinstance(expr, FunctionCall) and expr.name == 'min'
+   
    def flatten_min(expr):
-       if expr is not min_call:
+       if not is_min_call(expr):
            return [expr]
        args = []
        for arg in expr.arguments:
-           if arg is min_call:
+           if is_min_call(arg):
                args.extend(flatten_min(arg))  # Recursive
            else:
                args.append(arg)
