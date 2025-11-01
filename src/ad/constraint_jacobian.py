@@ -52,6 +52,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..ir.model_ir import ModelIR
 
+from ..ir.normalize import NormalizedEquation
+from ..ir.symbols import EquationDef
 from .derivative_rules import differentiate_expr
 from .index_mapping import build_index_mapping, enumerate_variable_instances
 from .jacobian import JacobianStructure
@@ -188,6 +190,10 @@ def _compute_equality_jacobian(model_ir: ModelIR, index_mapping, J_h: JacobianSt
     Processes all equations in ModelIR.equalities. Each equation is in normalized
     form (lhs - rhs), and represents h_i(x) = 0.
 
+    Note: Equality constraints can come from two sources:
+    - model.equations: User-defined equations with Rel.EQ
+    - model.normalized_bounds: Bounds like .fx that create equality constraints
+
     Args:
         model_ir: Model IR with equality constraints
         index_mapping: Index mapping for variables and equations
@@ -196,10 +202,21 @@ def _compute_equality_jacobian(model_ir: ModelIR, index_mapping, J_h: JacobianSt
     from .index_mapping import enumerate_equation_instances
 
     for eq_name in model_ir.equalities:
-        eq_def = model_ir.equations[eq_name]
+        # Check both equations dict and normalized_bounds dict
+        # Fixed variables (.fx) are stored in normalized_bounds, not equations
+        eq_def: EquationDef | NormalizedEquation
+        if eq_name in model_ir.equations:
+            eq_def = model_ir.equations[eq_name]
+        elif eq_name in model_ir.normalized_bounds:
+            eq_def = model_ir.normalized_bounds[eq_name]
+        else:
+            # Skip if not found in either location (shouldn't happen)
+            continue
 
         # Get all instances of this equation (handles indexed constraints)
-        eq_instances = enumerate_equation_instances(eq_name, eq_def.domain, model_ir)
+        # NormalizedEquation uses 'domain_sets', EquationDef uses 'domain'
+        eq_domain = eq_def.domain_sets if isinstance(eq_def, NormalizedEquation) else eq_def.domain
+        eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir)
 
         for eq_indices in eq_instances:
             # Get row ID for this equation instance
@@ -208,14 +225,21 @@ def _compute_equality_jacobian(model_ir: ModelIR, index_mapping, J_h: JacobianSt
                 continue
 
             # Get equation expression (normalized form: lhs - rhs)
-            lhs, rhs = eq_def.lhs_rhs
-            from ..ir.ast import Binary
+            # For user-defined equations, we need to construct lhs - rhs
+            # For normalized bounds, the expression is already in the correct form
+            from ..ir.ast import Binary, Expr
 
-            constraint_expr = Binary("-", lhs, rhs)
+            constraint_expr: Expr
+            if isinstance(eq_def, EquationDef):
+                lhs, rhs = eq_def.lhs_rhs
+                constraint_expr = Binary("-", lhs, rhs)
+            else:
+                # This is a NormalizedEquation - expression is already constructed
+                constraint_expr = eq_def.expr
 
             # Substitute symbolic indices with concrete indices for this instance
-            if eq_def.domain:
-                constraint_expr = _substitute_indices(constraint_expr, eq_def.domain, eq_indices)
+            if eq_domain:
+                constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
 
             # Differentiate w.r.t. each variable
             for var_name in sorted(model_ir.variables.keys()):

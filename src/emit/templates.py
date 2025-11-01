@@ -184,18 +184,31 @@ def emit_equations(kkt: KKTSystem) -> str:
             lines.append(f"    {eq_def.name}")
 
     # Original equality equations (declared here, also used in Model MCP section)
+    # Note: Equalities can be in either equations dict or normalized_bounds dict
+    from ..ir.normalize import NormalizedEquation
+    from ..ir.symbols import EquationDef
+
     for eq_name in sorted(kkt.model_ir.equalities):
-        # Verify equation exists in equations dict to catch data inconsistencies
-        if eq_name not in kkt.model_ir.equations:
+        # Check both equations dict and normalized_bounds dict
+        # Fixed variables (.fx) create equalities stored in normalized_bounds
+        eq_domain: tuple[str, ...]
+        if eq_name in kkt.model_ir.equations:
+            eq_or_norm: EquationDef = kkt.model_ir.equations[eq_name]
+            eq_domain = eq_or_norm.domain
+        elif eq_name in kkt.model_ir.normalized_bounds:
+            eq_or_norm_2: NormalizedEquation = kkt.model_ir.normalized_bounds[eq_name]
+            # NormalizedEquation uses 'domain_sets' instead of 'domain'
+            eq_domain = eq_or_norm_2.domain_sets
+        else:
             raise ValueError(
-                f"Equation '{eq_name}' is in equalities list but not in equations dict. "
+                f"Equation '{eq_name}' is in equalities list but not found in "
+                f"equations dict or normalized_bounds dict. "
                 f"This indicates a data inconsistency in the ModelIR."
             )
 
-        eq_def = kkt.model_ir.equations[eq_name]
         # Check if it has domain (indexed)
-        if eq_def.domain:
-            domain_indices = ",".join(eq_def.domain)
+        if eq_domain:
+            domain_indices = ",".join(eq_domain)
             lines.append(f"    {eq_name}({domain_indices})")
         else:
             lines.append(f"    {eq_name}")

@@ -150,16 +150,27 @@ def assemble_kkt_system(
 
 
 def _create_eq_multipliers(equalities: list[str], model_ir: ModelIR) -> dict[str, MultiplierDef]:
-    """Create multiplier definitions for equality constraints."""
+    """Create multiplier definitions for equality constraints.
+
+    Handles both user-defined equations and normalized bounds (e.g., fixed variables).
+    """
     multipliers = {}
     for eq_name in equalities:
-        if eq_name not in model_ir.equations:
+        # Check both equations dict and normalized_bounds dict
+        # Fixed variables (.fx) create equalities stored in normalized_bounds
+        if eq_name in model_ir.equations:
+            eq_def = model_ir.equations[eq_name]
+            domain = eq_def.domain
+        elif eq_name in model_ir.normalized_bounds:
+            norm_eq = model_ir.normalized_bounds[eq_name]
+            domain = norm_eq.domain_sets
+        else:
             continue
-        eq_def = model_ir.equations[eq_name]
-        mult_name = create_eq_multiplier_name(eq_name, eq_def.domain)
+
+        mult_name = create_eq_multiplier_name(eq_name, domain)
         multipliers[mult_name] = MultiplierDef(
             name=mult_name,
-            domain=eq_def.domain,
+            domain=domain,
             kind="eq",
             associated_constraint=eq_name,
         )

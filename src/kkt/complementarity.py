@@ -95,19 +95,27 @@ def build_complementarity_pairs(
         )
 
     # Build equality equations: h(x) = 0 with ν free
-    # IMPORTANT: Include objective defining equation
+    # IMPORTANT: Include objective defining equation and fixed variable equalities
+    # Note: Equalities can be in either equations dict or normalized_bounds dict
     for eq_name in partition.equalities:
-        if eq_name not in kkt.model_ir.equations:
+        # Check both equations dict and normalized_bounds dict
+        # Fixed variables (.fx) create equalities stored in normalized_bounds
+        if eq_name in kkt.model_ir.equations:
+            eq_def = kkt.model_ir.equations[eq_name]
+            # Equality equations are simply h(x) = 0
+            h_expr = eq_def.lhs_rhs[0]
+            domain = eq_def.domain
+        elif eq_name in kkt.model_ir.normalized_bounds:
+            norm_eq = kkt.model_ir.normalized_bounds[eq_name]
+            # Normalized equations already have expr in form (lhs - rhs)
+            h_expr = norm_eq.expr
+            domain = norm_eq.domain_sets
+        else:
             continue
-
-        eq_def = kkt.model_ir.equations[eq_name]
-
-        # Equality equations are simply h(x) = 0
-        h_expr = eq_def.lhs_rhs[0]
 
         equality_eq = EquationDef(
             name=f"eq_{eq_name}",
-            domain=eq_def.domain,
+            domain=domain,
             relation=Rel.EQ,
             lhs_rhs=(h_expr, Const(0.0)),
         )

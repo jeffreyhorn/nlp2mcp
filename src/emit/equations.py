@@ -5,6 +5,7 @@ Each equation is emitted in the form: eq_name(indices).. lhs =E= rhs;
 """
 
 from src.emit.expr_to_gams import expr_to_gams
+from src.ir.normalize import NormalizedEquation
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
 
@@ -38,6 +39,37 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> str:
         return f"{eq_name}({indices_str}).. {lhs_gams} {rel_gams} {rhs_gams};"
     else:
         return f"{eq_name}.. {lhs_gams} {rel_gams} {rhs_gams};"
+
+
+def emit_normalized_equation_def(eq_name: str, norm_eq: NormalizedEquation) -> str:
+    """Emit a normalized equation definition in GAMS syntax.
+
+    Normalized equations have their expression already in canonical form (expr = 0).
+
+    Args:
+        eq_name: Name of the equation
+        norm_eq: Normalized equation with domain_sets, relation, and expr
+
+    Returns:
+        GAMS equation definition string
+
+    Examples:
+        >>> # x_fx.. x - 10.0 =E= 0;
+        >>> # x_lo.. -(x - 0.0) =L= 0;
+    """
+    # Convert expression to GAMS (already normalized as lhs - rhs)
+    expr_gams = expr_to_gams(norm_eq.expr)
+
+    # Determine relation
+    rel_map = {Rel.EQ: "=E=", Rel.LE: "=L=", Rel.GE: "=G="}
+    rel_gams = rel_map[norm_eq.relation]
+
+    # Build equation string (normalized equations have RHS = 0)
+    if norm_eq.domain_sets:
+        indices_str = ",".join(norm_eq.domain_sets)
+        return f"{eq_name}({indices_str}).. {expr_gams} {rel_gams} 0;"
+    else:
+        return f"{eq_name}.. {expr_gams} {rel_gams} 0;"
 
 
 def emit_equation_definitions(kkt: KKTSystem) -> str:
@@ -104,13 +136,19 @@ def emit_equation_definitions(kkt: KKTSystem) -> str:
         lines.append("")
 
     # Original equality equations (from model_ir)
-    # These include the objective defining equation
+    # These include the objective defining equation and fixed variable equalities
+    # Note: Equalities can be in either equations dict or normalized_bounds dict
     if kkt.model_ir.equalities:
         lines.append("* Original equality equations")
         for eq_name in kkt.model_ir.equalities:
+            # Check both equations dict and normalized_bounds dict
+            # Fixed variables (.fx) create equalities stored in normalized_bounds
             if eq_name in kkt.model_ir.equations:
                 eq_def = kkt.model_ir.equations[eq_name]
                 lines.append(emit_equation_def(eq_name, eq_def))
+            elif eq_name in kkt.model_ir.normalized_bounds:
+                norm_eq = kkt.model_ir.normalized_bounds[eq_name]
+                lines.append(emit_normalized_equation_def(eq_name, norm_eq))
         lines.append("")
 
     return "\n".join(lines)
