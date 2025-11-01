@@ -578,14 +578,14 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 ```
 
 ### Verification Results
-⚠️ **Status:** PARTIALLY VERIFIED - BUG FOUND on 2025-11-01
+✅ **Status:** BUG FIXED on 2025-11-01 - Ready for completion
 
 **Findings:**
 - [x] Confirm .fx = setting both .lo and .up - ✅ VERIFIED (semantically equivalent)
-- [ ] Decide on MCP treatment (Option A/B/C) - ⏸️ BLOCKED (cannot test until bug fixed)
-- [ ] Test with GAMS compilation - ❌ BLOCKED (jacobian bug [#63](https://github.com/jeffreyhorn/nlp2mcp/issues/63) prevents end-to-end)
-- [ ] Verify no dual variables created - ❌ BLOCKED (cannot test KKT assembly)
-- [ ] Test interaction with other constraints - ❌ BLOCKED (jacobian bug [#63](https://github.com/jeffreyhorn/nlp2mcp/issues/63))
+- [ ] Decide on MCP treatment (Option A/B/C) - 🔍 TO BE VERIFIED (bug #63 fixed, ready to test)
+- [ ] Test with GAMS compilation - 🔍 TO BE VERIFIED (bug #63 fixed, ready for end-to-end testing)
+- [x] Verify no dual variables created - ✅ VERIFIED (test_kkt.py confirms no bound multipliers for fixed vars)
+- [ ] Test interaction with other constraints - 🔍 TO BE VERIFIED (bug #63 fixed, ready to test)
 
 **Implementation Status by Phase:**
 
@@ -606,17 +606,17 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
    - Code: `src/kkt/partition.py` lines 126-143
    - Test: Verified in `test_kkt.py` before failure point
 
-4. **Jacobian Computation** ❌ **CRITICAL BUG** ([#63](https://github.com/jeffreyhorn/nlp2mcp/issues/63))
-   - **Bug**: `_compute_equality_jacobian` only searches `model.equations`, not `model.normalized_bounds`
+4. **Jacobian Computation** ✅ **FIXED** ([#63](https://github.com/jeffreyhorn/nlp2mcp/issues/63) - CLOSED)
+   - **Bug**: `_compute_equality_jacobian` only searched `model.equations`, not `model.normalized_bounds`
    - **Location**: `src/ad/constraint_jacobian.py` line 199
    - **Error**: `KeyError: 'x_fx'` when computing derivatives
-   - **Root Cause**: Equality-type bounds are in `normalized_bounds` but code expects them in `equations`
-   - **Fix Required**: Update `_compute_equality_jacobian` to check both dictionaries
-   - **Issue**: See [GitHub Issue #63](https://github.com/jeffreyhorn/nlp2mcp/issues/63) for details
+   - **Root Cause**: Equality-type bounds are in `normalized_bounds` but code expected them in `equations`
+   - **Fix Applied**: Updated `_compute_equality_jacobian` to check both dictionaries
+   - **Status**: Fixed in commit cb2d0d8, all tests passing (609 passed)
 
-5. **KKT/Stationarity** ❓ UNKNOWN (blocked by bug #4)
+5. **KKT/Stationarity** 🔍 TO BE VERIFIED (bug fixed, ready to test)
 
-6. **MCP Emission** ❓ UNKNOWN (blocked by bug #4)
+6. **MCP Emission** 🔍 TO BE VERIFIED (bug fixed, ready to test)
 
 **Test Files Created:**
 - `tests/research/fixed_variable_verification/test_fixed_scalar.gms` - scalar `.fx` test case
@@ -624,16 +624,18 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 - `tests/research/fixed_variable_verification/test_parser.py` - ✅ PASSES
 - `tests/research/fixed_variable_verification/test_normalization.py` - ✅ PASSES
 - `tests/research/fixed_variable_verification/test_indexed.py` - ✅ PASSES
-- `tests/research/fixed_variable_verification/test_kkt.py` - ❌ FAILS at jacobian computation
+- `tests/research/fixed_variable_verification/test_kkt.py` - ✅ PASSES (after bug fix)
 
 **Key Finding**: 
-The `.fx` feature is **80% implemented** - parser, normalization, and partition phases work correctly. However, the automatic differentiation code has a design flaw where `_compute_equality_jacobian` assumes all equalities are in `model.equations`, missing equality-type bounds in `model.normalized_bounds`. See [GitHub Issue #63](https://github.com/jeffreyhorn/nlp2mcp/issues/63) for details.
+The `.fx` feature is now **fully implemented through KKT assembly** - parser, normalization, partition, jacobian computation, and KKT assembly all work correctly. The bug in `_compute_equality_jacobian` has been fixed ([#63](https://github.com/jeffreyhorn/nlp2mcp/issues/63)).
 
-**Recommended Fix:**
+**Applied Fix:**
 ```python
-# In src/ad/constraint_jacobian.py, line 199:
+# In src/ad/constraint_jacobian.py, lines 203-211:
 for eq_name in model_ir.equalities:
     # Check both equations dict and normalized_bounds dict
+    # Fixed variables (.fx) are stored in normalized_bounds, not equations
+    eq_def: EquationDef | NormalizedEquation
     if eq_name in model_ir.equations:
         eq_def = model_ir.equations[eq_name]
     elif eq_name in model_ir.normalized_bounds:
