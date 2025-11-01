@@ -498,14 +498,35 @@ class TestPATHSolverValidation:
     
     def _parse_gams_solution(self, solution_file: Path) -> dict:
         """Parse GAMS solution output file."""
-        # TODO: Implement solution parsing
-        # For now, placeholder
-        return {
-            'x': 0.5,
-            'y': 0.5,
-            'obj': 0.5,
-            'solve_status': 'Normal completion'
-        }
+        solution = {}
+        
+        try:
+            with open(solution_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    # Skip empty lines and comments
+                    if not line or line.startswith('*'):
+                        continue
+                    
+                    # Expect lines like: varname value
+                    # or: varname value status
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        var = parts[0]
+                        try:
+                            # Try to parse as float
+                            solution[var] = float(parts[1])
+                        except ValueError:
+                            # If not a number, treat as string (e.g., solve status)
+                            solution[var] = ' '.join(parts[1:])
+        except FileNotFoundError:
+            raise RuntimeError(f"Solution file not found: {solution_file}")
+        
+        # Default solve_status if not present
+        if 'solve_status' not in solution:
+            solution['solve_status'] = 'Normal completion'
+        
+        return solution
 ```
 
 #### Step 3: Add to CI
