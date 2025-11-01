@@ -4115,9 +4115,10 @@ def parse_model_file(file_path: Path) -> ModelIR:
 
 **Preprocessor:** `src/ir/preprocessor.py`
 ```python
-def preprocess_includes(file_path, included_stack, max_depth=100):
+def preprocess_includes(file_path, included_stack=None, max_depth=100):
     # Returns: flat string with all $include directives expanded
     # Features: Cycle detection, depth limit, error context
+    # included_stack defaults to [] if None (for tracking recursion)
 ```
 
 **Parser Integration:** `src/ir/parser.py:139`
