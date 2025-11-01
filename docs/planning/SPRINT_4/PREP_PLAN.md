@@ -516,7 +516,7 @@ class TestPATHSolverValidation:
 jobs:
   test-with-path:
     runs-on: ubuntu-latest
-    if: ${{ secrets.GAMS_LICENSE != '' }}  # Only if license available
+    if: ${{ github.secrets.GAMS_LICENSE != '' }}  # Only if license available
     
     steps:
       - uses: actions/checkout@v3
@@ -799,10 +799,40 @@ class TestPerformanceBenchmarks:
     def _generate_model(self, path: Path, name: str, 
                        num_vars: int, num_constraints: int) -> Path:
         """Generate test GAMS model of specified size."""
-        # TODO: Implement model generation
-        # For now, placeholder
         model_file = path / f'{name}_model.gms'
-        model_file.write_text(f"* {num_vars} vars, {num_constraints} constraints\n")
+        
+        # Generate a simple GAMS NLP model
+        lines = [f"* {num_vars} vars, {num_constraints} constraints\n\n"]
+        
+        # Variable declarations
+        lines.append("Variables\n")
+        for i in range(num_vars):
+            lines.append(f"    x{i+1}\n")
+        lines.append("    obj\n;\n\n")
+        
+        # Equation declarations
+        lines.append("Equations\n")
+        for j in range(num_constraints):
+            lines.append(f"    c{j+1}\n")
+        lines.append("    objdef\n;\n\n")
+        
+        # Equation definitions (simple quadratic constraints)
+        for j in range(num_constraints):
+            # Each constraint: sum of a few variables <= constant
+            involved_vars = [f"x{(j*3+i) % num_vars + 1}" for i in range(min(3, num_vars))]
+            lines.append(f"c{j+1}.. {' + '.join(involved_vars)} =L= {j+1};\n")
+        
+        lines.append("\n")
+        
+        # Objective (simple quadratic)
+        obj_terms = [f"x{i+1}*x{i+1}" for i in range(num_vars)]
+        lines.append(f"objdef.. obj =E= {' + '.join(obj_terms)};\n\n")
+        
+        # Model and solve
+        lines.append("Model testModel /all/;\n")
+        lines.append("Solve testModel using NLP minimizing obj;\n")
+        
+        model_file.write_text(''.join(lines))
         return model_file
 ```
 
