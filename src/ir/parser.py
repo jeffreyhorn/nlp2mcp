@@ -128,8 +128,16 @@ def parse_model_text(source: str) -> ModelIR:
 
 
 def parse_model_file(path: str | Path) -> ModelIR:
-    """Parse a file path into a populated ModelIR instance."""
-    data = Path(path).read_text()
+    """
+    Parse a file path into a populated ModelIR instance.
+
+    This function automatically handles $include directives by preprocessing
+    the file before parsing.
+    """
+    from src.ir.preprocessor import preprocess_gams_file
+
+    # Preprocess to expand all $include directives
+    data = preprocess_gams_file(Path(path))
     return parse_model_text(data)
 
 
