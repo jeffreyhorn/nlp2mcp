@@ -465,15 +465,25 @@ class TestPATHSolverValidation:
         # Create solve script with output
         solve_script = gms_file.parent / f'{gms_file.stem}_solve.gms'
         
-        # Append solution output to GAMS file
+        # Read and parse model to extract variable names
         with open(gms_file) as f:
             content = f.read()
+        
+        # Extract variable names from the GAMS file
+        # Look for Variables declaration block
+        var_names = self._extract_variable_names(content)
         
         # Add solution reporting
         content += "\n\n* Solution reporting\n"
         content += "File results / 'solution.txt' /;\n"
         content += "put results;\n"
-        # TODO: Add put statements for all variables
+        
+        # Add put statements for all variables
+        for var in var_names:
+            content += f"put '{var} ', {var}.l, /;\n"
+        
+        # Add solve status
+        content += "put 'solve_status ', testModel.solvestat, /;\n"
         content += "putclose;\n"
         
         solve_script.write_text(content)
@@ -527,6 +537,37 @@ class TestPATHSolverValidation:
             solution['solve_status'] = 'Normal completion'
         
         return solution
+    
+    def _extract_variable_names(self, gams_content: str) -> list[str]:
+        """
+        Extract variable names from GAMS model content.
+        
+        Looks for Variables/Variable block and extracts all declared names.
+        Handles both scalar and indexed variables.
+        """
+        import re
+        
+        var_names = []
+        
+        # Find Variables block (case-insensitive)
+        # Match: Variables ... ; or Variable ... ;
+        var_pattern = r'(?i)(?:Variables?|Positive\s+Variables?|Negative\s+Variables?|Binary\s+Variables?|Integer\s+Variables?)\s+(.*?);'
+        
+        matches = re.findall(var_pattern, gams_content, re.DOTALL)
+        
+        for match in matches:
+            # Split by whitespace and newlines
+            names = match.split()
+            for name in names:
+                # Remove any indexing like x(i) -> x
+                # Remove any trailing commas or semicolons
+                name = name.strip(',;')
+                if '(' in name:
+                    name = name[:name.index('(')]
+                if name and not name.startswith('*'):  # Skip comments
+                    var_names.append(name)
+        
+        return var_names
 ```
 
 #### Step 3: Add to CI
