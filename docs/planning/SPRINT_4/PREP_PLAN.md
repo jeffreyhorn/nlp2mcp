@@ -1213,12 +1213,12 @@ def test_only_equalities_no_inequalities():
 
 ### Acceptance Criteria
 
-- [ ] Edge case matrix document created with 25+ cases
-- [ ] All cases categorized and prioritized
-- [ ] High-priority cases have tests implemented
-- [ ] Tests cover all categories
-- [ ] Unexpected behaviors documented
-- [ ] Matrix updated with test status
+- [x] Edge case matrix document created with 25+ cases (29 cases in docs/testing/EDGE_CASE_MATRIX.md)
+- [x] All cases categorized and prioritized (6 categories: Constraint Types, Bounds, Indexing, Expressions, Sparsity, Special Structures)
+- [x] High-priority cases have tests implemented (All 29 cases implemented in tests/edge_cases/test_edge_cases.py)
+- [x] Tests cover all categories (29 tests across 6 test classes, all passing)
+- [x] Unexpected behaviors documented (Duplicate bounds raise error, parser limitations noted)
+- [x] Matrix updated with test status (All 29 cases marked as ✅ Tested)
 
 ---
 
