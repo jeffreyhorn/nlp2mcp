@@ -101,6 +101,39 @@ f'(x) ≈ [f(x + h) - f(x - h)] / (2h)
 3. **Analytical formula is exact** (within numerical precision)
 4. **Derivative is continuous** even at x = 0
 
+### Verification of Key Values
+
+To verify the analytical derivative formula f'(x) = x / √(x² + ε) with ε = 1e-6:
+
+**At x = 0.01:**
+```
+f'(0.01) = 0.01 / √(0.01² + 1e-6)
+         = 0.01 / √(0.0001 + 0.000001)
+         = 0.01 / √0.000101
+         = 0.01 / 0.01004987562
+         = 0.995037190209 ✓
+```
+
+**At x = 0.1:**
+```
+f'(0.1) = 0.1 / √(0.1² + 1e-6)
+        = 0.1 / √(0.01 + 0.000001)
+        = 0.1 / √0.010001
+        = 0.1 / 0.10000499988
+        = 0.999950003749 ✓
+```
+
+**At x = 1.0:**
+```
+f'(1.0) = 1.0 / √(1.0² + 1e-6)
+        = 1.0 / √(1.0 + 0.000001)
+        = 1.0 / √1.000001
+        = 1.0 / 1.0000005
+        = 0.999999500000 ✓
+```
+
+These match the table values, confirming the analytical derivative is correct.
+
 ## Chain Rule Verification
 
 When abs() appears in composite expressions, chain rule must work correctly.
