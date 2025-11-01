@@ -13,6 +13,7 @@ start: stmt*  -> program
 ?stmt: sets_block
      | aliases_block
      | params_block
+     | table_block
      | scalars_block
      | variables_block
      | equations_block
@@ -30,7 +31,9 @@ sets_block: "Sets"i set_decl+ SEMI
 
 aliases_block: "Aliases"i alias_decl+ SEMI
 
-params_block: ("Parameters"i | "Parameter"i | "Table"i) param_decl+ SEMI
+params_block: ("Parameters"i | "Parameter"i) param_decl+ SEMI
+
+table_block: "Table"i ID "(" id_list ")" STRING? table_row+ SEMI
 
 scalars_block: ("Scalars"i | "Scalar"i) scalar_decl+ SEMI
 
@@ -87,6 +90,15 @@ id_list: ID ("," ID)*
 
 set_members: set_member ("," set_member)*
 ?set_member: ID | STRING
+
+// ---------------------------
+// Table rows (for Table blocks)
+// ---------------------------
+
+// table_value will match NUMBER or ID tokens
+// Since WS_INLINE is ignored globally, tokens are automatically separated
+table_row: ID table_value*
+table_value: NUMBER | ID
 
 // ---------------------------
 // Assignments & Bounds

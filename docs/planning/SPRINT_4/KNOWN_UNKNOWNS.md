@@ -362,15 +362,75 @@ def handle_table_block(table_node):
 ```
 
 ### Verification Results
-🔍 **Status:** TO BE VERIFIED before Sprint 4 Day 1
+✅ **Status:** VERIFIED on 2025-11-01
 
 **Findings:**
-- [ ] Test simple 2D table
-- [ ] Test sparse table (empty cells)
-- [ ] Test table with string text
-- [ ] Test multi-dimensional tables (if supported)
-- [ ] Verify zero-filling for empty cells
-- [ ] Confirm syntax terminator (semicolon)
+- [x] Test simple 2D table - ✅ PASSED
+- [x] Test sparse table (empty cells) - ✅ PASSED
+- [x] Test table with string text - ✅ PASSED
+- [x] Test multi-dimensional tables (if supported) - ✅ Confirmed: Table is 2D only
+- [x] Verify zero-filling for empty cells - ✅ CONFIRMED
+- [x] Confirm syntax terminator (semicolon) - ✅ REQUIRED
+
+**Implementation Summary:**
+
+Grammar changes in `src/gams/gams_grammer.lark`:
+- Separated `table_block` from `params_block`
+- Added: `table_block: "Table"i ID "(" id_list ")" STRING? table_row+ SEMI`
+- Added: `table_row: ID table_value*` and `table_value: NUMBER | ID`
+
+Parser changes in `src/ir/parser.py`:
+- Added `_handle_table_block()` method (lines 308-434)
+- **Key innovation:** Uses token line/column position metadata to handle sparse tables
+- Groups tokens by line number to reconstruct row structure
+- Matches values to columns by column position (within ±6 chars tolerance)
+- Automatically zero-fills missing cells
+
+**Test Results:**
+
+All tests in `tests/research/table_verification/test_table_parsing.py` passed:
+
+1. **Simple 2D Table** (`test_table_only.gms`):
+   ```gams
+   Table data(i,j)
+          j1  j2
+   i1     1   2
+   i2     3   4;
+   ```
+   Result: ✅ Correctly parsed as `{('i1','j1'): 1.0, ('i1','j2'): 2.0, ...}`
+
+2. **Sparse Table** (`test_sparse_table.gms`):
+   ```gams
+   Table sparse_data(i,j)
+          j1  j2  j3
+   i1     1       3
+   i2         5
+   i3     7       9;
+   ```
+   Result: ✅ Missing cells correctly filled with 0.0
+
+3. **Table with Descriptive Text** (`test_table_with_text.gms`):
+   ```gams
+   Table data(i,j) "This is a descriptive text for the table"
+          j1  j2  j3
+   i1     10  20  30
+   i2     40  50  60;
+   ```
+   Result: ✅ Descriptive text handled, values parsed correctly
+
+4. **Dimensionality**: Confirmed Table is strictly 2D (one row index, one column index)
+   - Higher-dimensional parameters must use Parameter syntax
+
+5. **Semicolon Terminator**: Verified parser correctly rejects tables without semicolon
+
+**Key Technical Discovery:**
+
+The grammar's `%ignore NEWLINE` directive means newlines are stripped before parsing, causing all table data to merge into a single token stream. The solution uses Lark's token metadata:
+- Each token has `.line` and `.column` attributes preserved from source
+- Parser groups tokens by line number to reconstruct rows
+- Column positions are matched with ±6 char tolerance for alignment flexibility
+
+This approach successfully handles both dense and sparse tables without requiring grammar changes to preserve newlines (which would break other grammar rules).
 
 ---
 
