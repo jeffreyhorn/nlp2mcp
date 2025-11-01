@@ -248,6 +248,18 @@ class ModelIR:
 
 ## Preprocessor Implementation Details
 
+### Debug Comments in Expanded Source
+
+The preprocessor adds debug comments using GAMS line comment syntax (`*` at the start of a line):
+- `* BEGIN $include filename` - marks where included content starts
+- `* END $include filename` - marks where included content ends
+
+These comments:
+- Use valid GAMS syntax (line comments begin with `*`)
+- Are ignored by the parser (treated as comments)
+- Help with debugging by showing include boundaries in expanded source
+- Do NOT affect ModelIR structure (they're just comments)
+
 ### Core Function
 
 **From:** `src/ir/preprocessor.py`
@@ -284,6 +296,8 @@ def preprocess_includes(
     include_pattern = r'\$include\s+(?:(["\'])([^"\']*)\1|([^\s]+))'
     
     result = []
+    last_end = 0  # Track position in source for copying non-include content
+    
     for match in re.finditer(include_pattern, content, re.IGNORECASE):
         # Add content before include
         result.append(content[last_end:match.start()])
@@ -292,7 +306,8 @@ def preprocess_includes(
         included_filename = match.group(2) or match.group(3)
         included_path = file_path.parent / included_filename
         
-        # Add debug comment
+        # Add debug comment (using GAMS line comment syntax: * at start of line)
+        # This is valid GAMS syntax and will be ignored by the parser
         result.append(f"\n* BEGIN $include {included_filename}\n")
         
         # Recursively process
@@ -302,6 +317,8 @@ def preprocess_includes(
             max_depth
         )
         result.append(included_content)
+        
+        # Mark end of included content (also as GAMS comment)
         result.append(f"\n* END $include {included_filename}\n")
     
     result.append(content[last_end:])
