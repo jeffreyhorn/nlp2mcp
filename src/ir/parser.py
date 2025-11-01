@@ -225,6 +225,133 @@ class _ModelBuilder:
                 param = self._parse_param_decl(child)
                 self.model.add_param(param)
 
+    def _handle_table_block(self, node: Tree) -> None:
+        """
+        Handle GAMS Table block.
+
+        Uses token line and column positions to correctly parse sparse tables.
+        Strategy:
+        1. Group tokens by line number
+        2. First line with IDs = column headers (and their column positions)
+        3. Subsequent lines = data rows (match values to columns by position)
+        """
+        # Extract name and domain
+        name = _token_text(node.children[0])
+        domain = _id_list(node.children[1])
+
+        # Find all table_row nodes and collect all tokens
+        table_rows = [
+            child
+            for child in node.children
+            if isinstance(child, Tree) and child.data == "table_row"
+        ]
+
+        if not table_rows:
+            self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
+            return
+
+        # Collect all tokens from all table_row nodes with position info
+        all_tokens = []
+        for row in table_rows:
+            for child in row.children:
+                if isinstance(child, Token):
+                    all_tokens.append(child)
+                elif isinstance(child, Tree) and child.data == "table_value":
+                    for grandchild in child.children:
+                        if isinstance(grandchild, Token):
+                            all_tokens.append(grandchild)
+
+        if not all_tokens:
+            self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
+            return
+
+        # Group tokens by line
+        from collections import defaultdict
+
+        lines = defaultdict(list)
+        for token in all_tokens:
+            if hasattr(token, "line"):
+                lines[token.line].append(token)
+
+        if not lines:
+            self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
+            return
+
+        # Sort lines by line number
+        sorted_lines = sorted(lines.items())
+
+        # First line should be column headers
+        first_line_num, first_line_tokens = sorted_lines[0]
+
+        # Column headers: store name and column position
+        col_headers = []  # List of (col_name, col_position) tuples
+        for token in first_line_tokens:
+            if token.type == "ID":
+                col_name = _token_text(token)
+                col_pos = getattr(token, "column", 0)
+                col_headers.append((col_name, col_pos))
+
+        if not col_headers:
+            self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
+            return
+
+        # Parse data rows
+        values = {}
+        for _line_num, line_tokens in sorted_lines[1:]:
+            if not line_tokens:
+                continue
+
+            # First token in line should be row header (ID)
+            if line_tokens[0].type != "ID":
+                continue
+
+            row_header = _token_text(line_tokens[0])
+
+            # Match remaining tokens to columns by position
+            for token in line_tokens[1:]:
+                if token.type not in ("NUMBER", "ID"):
+                    continue
+
+                token_col = getattr(token, "column", 0)
+
+                # Find the closest column header at or before this position
+                # (to handle slight alignment variations)
+                best_match = None
+                min_dist = float("inf")
+                for col_name, col_pos in col_headers:
+                    # Allow token to be within ~6 chars of column header position
+                    dist = abs(token_col - col_pos)
+                    if dist < min_dist and dist <= 6:
+                        min_dist = dist
+                        best_match = col_name
+
+                if best_match:
+                    # Parse the value
+                    value_text = _token_text(token)
+                    try:
+                        value = float(value_text)
+                    except ValueError:
+                        value = 0.0
+
+                    key = (row_header, best_match)
+                    values[key] = value
+
+        # Fill in missing cells with 0.0
+        # For each combination of row and column that doesn't have a value
+        row_headers = set()
+        for _line_num, line_tokens in sorted_lines[1:]:
+            if line_tokens and line_tokens[0].type == "ID":
+                row_headers.add(_token_text(line_tokens[0]))
+
+        col_names = [name for name, _ in col_headers]
+        for row_header in row_headers:
+            for col_name in col_names:
+                key = (row_header, col_name)
+                if key not in values:
+                    values[key] = 0.0
+
+        self.model.add_param(ParameterDef(name=name, domain=domain, values=values))
+
     def _handle_variables_block(self, node: Tree) -> None:
         for child in node.children:
             if not isinstance(child, Tree):
