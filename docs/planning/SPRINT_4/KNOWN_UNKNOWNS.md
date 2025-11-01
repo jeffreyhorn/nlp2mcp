@@ -578,14 +578,76 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 ```
 
 ### Verification Results
-🔍 **Status:** TO BE VERIFIED before Sprint 4 Day 1
+⚠️ **Status:** PARTIALLY VERIFIED - BUG FOUND on 2025-11-01
 
 **Findings:**
-- [ ] Confirm .fx = setting both .lo and .up
-- [ ] Decide on MCP treatment (Option A/B/C)
-- [ ] Test with GAMS compilation
-- [ ] Verify no dual variables created
-- [ ] Test interaction with other constraints
+- [x] Confirm .fx = setting both .lo and .up - ✅ VERIFIED (semantically equivalent)
+- [ ] Decide on MCP treatment (Option A/B/C) - ⏸️ BLOCKED (cannot test until bug fixed)
+- [ ] Test with GAMS compilation - ❌ BLOCKED (jacobian bug prevents end-to-end)
+- [ ] Verify no dual variables created - ❌ BLOCKED (cannot test KKT assembly)
+- [ ] Test interaction with other constraints - ❌ BLOCKED (jacobian bug)
+
+**Implementation Status by Phase:**
+
+1. **Parser** ✅ COMPLETE
+   - Grammar supports `.fx` syntax (BOUND_K token includes "fx")
+   - Parser extracts `.fx` values correctly into `VariableDef.fx` and `.fx_map`
+   - Test: `test_parser.py` PASSES
+
+2. **Normalization** ✅ COMPLETE
+   - Creates equality constraint `x - fx_value = 0` with `Rel.EQ`
+   - Stores in `model.normalized_bounds` dictionary
+   - Adds to `model.equalities` list
+   - Code: `src/ir/normalize.py` lines 177-179
+   - Test: `test_normalization.py` PASSES
+
+3. **Partition** ✅ COMPLETE  
+   - Extracts `.fx` bounds into `bounds_fx` dictionary
+   - Code: `src/kkt/partition.py` lines 126-143
+   - Test: Verified in `test_kkt.py` before failure point
+
+4. **Jacobian Computation** ❌ **CRITICAL BUG**
+   - **Bug**: `_compute_equality_jacobian` only searches `model.equations`, not `model.normalized_bounds`
+   - **Location**: `src/ad/constraint_jacobian.py` line 199
+   - **Error**: `KeyError: 'x_fx'` when computing derivatives
+   - **Root Cause**: Equality-type bounds are in `normalized_bounds` but code expects them in `equations`
+   - **Fix Required**: Update `_compute_equality_jacobian` to check both dictionaries
+
+5. **KKT/Stationarity** ❓ UNKNOWN (blocked by bug #4)
+
+6. **MCP Emission** ❓ UNKNOWN (blocked by bug #4)
+
+**Test Files Created:**
+- `tests/research/fixed_variable_verification/test_fixed_scalar.gms` - scalar `.fx` test case
+- `tests/research/fixed_variable_verification/test_indexed_fixed.gms` - indexed `.fx` test case  
+- `tests/research/fixed_variable_verification/test_parser.py` - ✅ PASSES
+- `tests/research/fixed_variable_verification/test_normalization.py` - ✅ PASSES
+- `tests/research/fixed_variable_verification/test_indexed.py` - ✅ PASSES
+- `tests/research/fixed_variable_verification/test_kkt.py` - ❌ FAILS at jacobian computation
+
+**Key Finding**: 
+The `.fx` feature is **80% implemented** - parser, normalization, and partition phases work correctly. However, the automatic differentiation code has a design flaw where `_compute_equality_jacobian` assumes all equalities are in `model.equations`, missing equality-type bounds in `model.normalized_bounds`.
+
+**Recommended Fix:**
+```python
+# In src/ad/constraint_jacobian.py, line 199:
+for eq_name in model_ir.equalities:
+    # Check both equations dict and normalized_bounds dict
+    if eq_name in model_ir.equations:
+        eq_def = model_ir.equations[eq_name]
+    elif eq_name in model_ir.normalized_bounds:
+        eq_def = model_ir.normalized_bounds[eq_name]
+    else:
+        continue  # Skip if not found
+```
+
+**MCP Treatment Recommendation:**
+Once bug is fixed, recommend **Option B** (let GAMS handle `.fx`):
+- Don't include fixed variables in MCP complementarity
+- Set `.fx` attribute in emitted GAMS code
+- Simplest approach, relies on GAMS built-in handling
+
+See `RESEARCH_SUMMARY_FIXED_VARIABLES.md` for complete analysis.
 
 ---
 
