@@ -256,9 +256,11 @@ nlp2mcp/
 │   └── ir/           # IR and normalization tests
 ├── examples/         # Example GAMS models
 ├── docs/             # Additional documentation
-│   ├── ad_design.md          # AD architecture and design
-│   ├── derivative_rules.md   # Mathematical reference
-│   └── planning/             # Sprint plans
+│   ├── ad/                   # Automatic differentiation docs
+│   ├── architecture/         # System architecture
+│   ├── emit/                 # GAMS emission docs
+│   ├── kkt/                  # KKT assembly docs
+│   └── planning/             # Sprint plans and retrospectives
 ├── pyproject.toml    # Project configuration
 ├── Makefile          # Development commands
 └── README.md         # This file
@@ -394,15 +396,24 @@ The `examples/` directory contains sample GAMS NLP models:
 - [docs/concepts/IDEA.md](docs/concepts/IDEA.md) - Original concept: How KKT conditions transform NLP to MCP
 - [docs/concepts/NLP2MCP_HIGH_LEVEL.md](docs/concepts/NLP2MCP_HIGH_LEVEL.md) - Feasibility study and implementation blueprint
 - [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md) - Detailed 5-sprint development plan
-- [AGENTS.md](AGENTS.md) - Agent-based development notes
+- [docs/planning/README.md](docs/planning/README.md) - Sprint summaries and retrospectives
+- [docs/development/AGENTS.md](docs/development/AGENTS.md) - Agent-based development notes
 
 ### Technical Documentation
+
+**System Architecture:**
+- [docs/architecture/SYSTEM_ARCHITECTURE.md](docs/architecture/SYSTEM_ARCHITECTURE.md) - Overall system data flow
+- [docs/architecture/DATA_STRUCTURES.md](docs/architecture/DATA_STRUCTURES.md) - IR and KKT data structures
+
+**Automatic Differentiation:**
+- [docs/ad/README.md](docs/ad/README.md) - AD module overview and quick start
+- [docs/ad/ARCHITECTURE.md](docs/ad/ARCHITECTURE.md) - Design decisions and rationale
+- [docs/ad/DESIGN.md](docs/ad/DESIGN.md) - Detailed implementation approach
+- [docs/ad/DERIVATIVE_RULES.md](docs/ad/DERIVATIVE_RULES.md) - Complete derivative rules reference
+
+**KKT Assembly & Code Generation:**
 - [docs/kkt/KKT_ASSEMBLY.md](docs/kkt/KKT_ASSEMBLY.md) - KKT system assembly (mathematical background, implementation)
 - [docs/emit/GAMS_EMISSION.md](docs/emit/GAMS_EMISSION.md) - GAMS MCP code generation (syntax, patterns, examples)
-- [docs/ad_design.md](docs/ad_design.md) - Symbolic differentiation architecture and design decisions
-- [docs/derivative_rules.md](docs/derivative_rules.md) - Mathematical reference for all derivative rules
-- [docs/architecture/SYSTEM_ARCHITECTURE.md](docs/architecture/SYSTEM_ARCHITECTURE.md) - Overall system architecture
-- [docs/architecture/DATA_STRUCTURES.md](docs/architecture/DATA_STRUCTURES.md) - IR and KKT data structures
 
 ## Contributing
 

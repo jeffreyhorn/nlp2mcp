@@ -66,7 +66,7 @@ Sprint 2 focuses on implementing symbolic automatic differentiation (AD) to comp
 - `src/ad/ad_core.py` with symbolic differentiation framework
 - `src/ad/derivative_rules.py` (skeleton with const/var rules)
 - `tests/ad/test_ad_core.py` with 5-8 basic tests
-- `docs/ad_architecture.md` (design notes explaining symbolic approach)
+- `docs/ad/ARCHITECTURE.md` (design notes explaining symbolic approach)
 
 **Acceptance Criteria:**
 - Can differentiate `f(x) = x` and `f(x) = c` (constant)
