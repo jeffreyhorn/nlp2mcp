@@ -789,13 +789,82 @@ def preprocess_includes(
 ```
 
 ### Verification Results
-🔍 **Status:** TO BE VERIFIED before Sprint 4 Day 1
+✅ **Status:** VERIFIED on 2025-11-01
 
 **Findings:**
-- [ ] Test 3-level nesting
-- [ ] Test circular include detection
-- [ ] Verify error message quality
-- [ ] Test depth limit (if any)
+- [x] Test 3-level nesting - **PASSED**
+- [x] Test circular include detection - **PASSED**
+- [x] Verify error message quality - **PASSED**
+- [x] Test depth limit (if any) - **PASSED** (max_depth=100, configurable)
+
+**Summary:**
+The preprocessor at `src/ir/preprocessor.py` (implemented in Unknown 1.1) already handles nested `$include` directives correctly with the following features:
+
+1. **Recursive Preprocessing:** Includes can be nested to arbitrary depth (default limit: 100 levels)
+2. **Circular Include Detection:** Properly detects and reports circular includes with full chain
+3. **Clear Error Messages:** File not found errors include filename, source file, and line number
+4. **Configurable Depth Limit:** The `max_depth` parameter prevents stack overflow (default: 100)
+5. **Path Resolution:** Paths resolved relative to the containing file (as expected)
+
+**Test Results:**
+Created comprehensive test suite at `tests/research/nested_include_verification/test_nested_includes.py` with 5 tests:
+
+1. `test_three_level_nesting()` - ✅ Verified 3-level nesting works correctly
+   - Structure: `main.gms` → `level1.inc` → `level2.inc` → `level3.inc`
+   - All symbols from all levels correctly parsed into ModelIR
+   
+2. `test_circular_include_detection()` - ✅ Circular includes properly detected
+   - Structure: `main.gms` → `circular_a.inc` → `circular_b.inc` → `circular_a.inc` (loop)
+   - Raises `CircularIncludeError` with full include chain shown
+   
+3. `test_error_message_quality()` - ✅ Error messages are clear and helpful
+   - Missing files show: filename, source file, and line number
+   - Example: "In file temp_missing_include.gms, line 1: File not found: nonexistent_file.inc"
+   
+4. `test_depth_limit()` - ✅ Deep nesting (10 levels) works correctly
+   - Successfully parsed and verified all symbols at all levels
+   - Well under the default limit of 100
+   
+5. `test_max_depth_exceeded()` - ✅ Depth limit enforced
+   - 102-level nesting correctly raises `RecursionError`
+   - Error message mentions depth limit and shows include chain
+
+**Implementation Details:**
+```python
+# From src/ir/preprocessor.py
+def preprocess_includes(
+    file_path: Path, 
+    included_stack: list[Path] | None = None, 
+    max_depth: int = 100
+) -> str:
+    """Recursively expand all $include directives in a GAMS file."""
+    if included_stack is None:
+        included_stack = []
+    
+    file_path = file_path.resolve()
+    
+    # Detect circular includes
+    if file_path in included_stack:
+        cycle = " -> ".join(str(f) for f in included_stack + [file_path])
+        raise CircularIncludeError(f"Circular include detected: {cycle}")
+    
+    # Check depth limit
+    if len(included_stack) >= max_depth:
+        raise RecursionError(f"Maximum include depth ({max_depth}) exceeded...")
+```
+
+**Test Files Created:**
+- `tests/research/nested_include_verification/main_nested.gms`
+- `tests/research/nested_include_verification/level1.inc`
+- `tests/research/nested_include_verification/level2.inc`
+- `tests/research/nested_include_verification/level3.inc`
+- `tests/research/nested_include_verification/main_circular.gms`
+- `tests/research/nested_include_verification/circular_a.inc`
+- `tests/research/nested_include_verification/circular_b.inc`
+- `tests/research/nested_include_verification/test_nested_includes.py`
+
+**Conclusion:**
+Nested `$include` directives work correctly with proper error handling. No changes needed to the preprocessor implementation.
 
 ---
 
