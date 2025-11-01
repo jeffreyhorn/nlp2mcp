@@ -119,15 +119,38 @@ stat_y: 2y + ν_eq - π^L_y + π^U_y = 0  (paired with y)
 
 ### Indexed Variables
 
-For indexed variables, nlp2mcp creates one stationarity equation per instance:
+For indexed variables, nlp2mcp generates **indexed equations** using set indices (not element-specific equations):
 
-```
-stat_x_i1: ∂f/∂x(i1) + Σⱼ (∂hⱼ/∂x(i1) · νⱼ) + ... = 0
-stat_x_i2: ∂f/∂x(i2) + Σⱼ (∂hⱼ/∂x(i2) · νⱼ) + ... = 0
-...
+```gams
+* Correct (Issue #47 fix):
+stat_x(i).. ∂f/∂x(i) + Σⱼ (∂hⱼ/∂x(i) · νⱼ) + ... =E= 0;
+
+* Model MCP declaration (indices implicit):
+Model mcp_model /
+    stat_x.x,      * Not stat_x(i).x(i) - GAMS infers indexing
+    ...
+/;
 ```
 
-Each stationarity equation is paired with its corresponding variable instance in the MCP.
+**Why indexed equations, not element-specific?**
+
+Prior to Issue #47 fix, nlp2mcp incorrectly generated element-specific equations:
+```gams
+* Wrong (before Issue #47 fix):
+stat_x_i1.. ∂f/∂x("i1") + ... =E= 0;
+stat_x_i2.. ∂f/∂x("i2") + ... =E= 0;
+
+* Model MCP tried to use:
+Model mcp_model /
+    stat_x_i1.x,   * ERROR: Cannot pair stat_x_i1 with x when x is declared as x(i)
+    stat_x_i2.x,   * GAMS expects indexed pairing
+    ...
+/;
+```
+
+**GAMS MCP requirement:** When a variable is declared with indices (e.g., `Variables x(i);`), equations paired with it in the Model MCP block must also be indexed over the same domain. The Model declaration uses the equation/variable names without explicit indices - GAMS automatically expands the indexed pairs.
+
+Each indexed stationarity equation is paired with the indexed variable in the MCP (indices are implicit in the Model declaration).
 
 ## Complementarity Conditions
 
@@ -460,6 +483,97 @@ complementarity_ineq['capacity'] = ComplementarityPair(...)
 complementarity_bounds_lo[('x', ('i1',))] = ComplementarityPair(...)
 complementarity_bounds_lo[('x', ('i2',))] = ComplementarityPair(...)
 ```
+
+## Issue #47 Lessons Learned
+
+### Background
+
+During Sprint 3, a critical issue was discovered late (Day 8) that required 2 days of emergency refactoring. The system was incorrectly generating element-specific stationarity equations instead of indexed equations for indexed variables.
+
+### The Problem
+
+**Before the fix:**
+- For an indexed variable `x(i)` where `i ∈ {i1, i2, i3}`, the system generated:
+  ```gams
+  stat_x_i1.. 2*x("i1") + lam_balance("i1") =E= 0;
+  stat_x_i2.. 2*x("i2") + lam_balance("i2") =E= 0;
+  stat_x_i3.. 2*x("i3") + lam_balance("i3") =E= 0;
+  ```
+- Model MCP declaration attempted:
+  ```gams
+  Model mcp_model /
+      stat_x_i1.x,    * ERROR!
+      stat_x_i2.x,
+      stat_x_i3.x,
+      ...
+  /;
+  ```
+
+**Why this failed:**
+- Variable `x` was declared as `Variables x(i);` (indexed over set `i`)
+- GAMS cannot pair element-specific equation `stat_x_i1` with indexed variable `x`
+- GAMS expects: "If variable has domain, equation must have matching domain"
+- Error message: "Domain violation: stat_x_i1 has no domain, x has domain (i)"
+
+### The Solution (Issue #47 Fix)
+
+**After the fix:**
+- Generate indexed equations using set indices:
+  ```gams
+  stat_x(i).. 2*x(i) + lam_balance(i) =E= 0;
+  ```
+- Model MCP declaration:
+  ```gams
+  Model mcp_model /
+      stat_x.x,          * Correct! GAMS infers indexing from equation declaration
+      comp_balance.lam_balance,
+      ...
+  /;
+  ```
+
+**Key insight:** In GAMS MCP Model declarations, equation and variable names are listed WITHOUT explicit indices. GAMS automatically expands indexed pairs based on the equation's declared domain.
+
+### Implementation Changes
+
+**Major refactoring** in `src/kkt/stationarity.py`:
+1. **`build_stationarity_equations()`**: Completely rewritten to generate indexed equations
+2. **`_group_variables_by_name()`**: Groups variable instances by base name (e.g., all `x(i1)`, `x(i2)` → group under `x`)
+3. **`_build_indexed_stationarity_expr()`**: Builds expressions using set indices instead of element labels
+4. **`_replace_indices_in_expr()`**: AST transformation replacing element labels with domain indices
+5. **`_add_indexed_jacobian_terms()`**: Adds Jacobian transpose terms with proper index handling
+
+**Simplified** `src/emit/model.py`:
+- Model MCP emission now lists equation-variable pairs without indices
+- Changed from `stat_x(i).x(i)` to `stat_x.x` (GAMS infers indexing)
+
+### Lessons for Future Development
+
+1. **Validate syntax early**: Should have tested with actual GAMS compiler on Day 1
+2. **Document assumptions proactively**: The assumption about GAMS MCP syntax was never explicitly documented or validated
+3. **Test with indexed examples first**: Should have started with indexed variables, not scalar examples
+4. **Set up validation environment early**: Having GAMS/PATH available from Day 0 would have caught this immediately
+5. **Known unknowns list**: Creating a proactive list of assumptions before sprint start would have flagged GAMS MCP syntax as needing verification
+
+### Impact
+
+- **Time cost**: 2 days of unplanned refactoring on Sprint 3 Days 8-9
+- **Code impact**: ~400 lines rewritten in stationarity module
+- **Test impact**: All stationarity tests updated, 2 failing golden tests fixed
+- **Benefit**: All 5 golden files now pass GAMS validation (was 3/5 before fix)
+- **Prevention**: Sprint 4 prep plan includes early validation and known unknowns list
+
+### Verification
+
+The fix was verified by:
+- All 602 tests passing (including 5 golden file tests)
+- GAMS syntax validation passing for all generated MCP files
+- Manual inspection of generated GAMS code for indexed equations
+- Comparison with GAMS MCP documentation and examples
+
+### Related Issues
+
+- **GitHub Issue #47**: Indexed stationarity equations syntax (RESOLVED)
+- **GitHub Issue #46**: Parent issue for GAMS syntax errors (Problem 1 RESOLVED)
 
 ## References
 

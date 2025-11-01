@@ -533,6 +533,87 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> str:
     return f"{eq_name}.. {lhs_str} {rel_str} {rhs_str};"
 ```
 
+## Index Handling (Issue #47 Fix)
+
+### Indexed Equations and Variables
+
+**Critical insight from Issue #47:** GAMS MCP requires indexed equations for indexed variables.
+
+#### Correct Approach (Post Issue #47)
+
+For indexed variables like `x(i)`, generate indexed equations:
+
+```gams
+* Variable declaration
+Variables x(i);
+
+* Equation declaration (includes domain)
+Equations stat_x(i);
+
+* Equation definition (uses set index 'i')
+stat_x(i).. 2*x(i) + lam_balance(i) =E= 0;
+
+* Model MCP declaration (NO explicit indices)
+Model mcp_model /
+    stat_x.x,              * GAMS infers indexing from declarations
+    comp_balance.lam_balance,
+    ...
+/;
+```
+
+**Key principle:** In Model MCP declarations, equation and variable names are listed WITHOUT explicit indices (e.g., `stat_x.x`, not `stat_x(i).x(i)`). GAMS automatically expands indexed pairs based on each equation's declared domain.
+
+#### Incorrect Approach (Before Issue #47 Fix)
+
+**Do NOT generate element-specific equations:**
+
+```gams
+* WRONG - Element-specific equations
+stat_x_i1.. 2*x("i1") + lam_balance("i1") =E= 0;
+stat_x_i2.. 2*x("i2") + lam_balance("i2") =E= 0;
+
+* WRONG - Cannot pair with indexed variable
+Model mcp_model /
+    stat_x_i1.x,    * ERROR: Domain violation
+    stat_x_i2.x,    * stat_x_i1 has no domain, x has domain (i)
+    ...
+/;
+```
+
+**Why this fails:**
+- Variable `x` declared as `Variables x(i);` has domain `(i)`
+- Equation `stat_x_i1` declared as `Equations stat_x_i1;` has no domain
+- GAMS requires: "If variable has domain, paired equation must have matching domain"
+
+### Set Indices vs Element Labels
+
+- **Set indices** (e.g., `i`, `j`, `k`): Used in indexed equation definitions, remain unquoted
+- **Element labels** (e.g., `i1`, `i2`, `j3`): Specific set members, must be quoted when used in expressions
+
+```gams
+* Indexed equation uses set indices (unquoted)
+balance(i).. sum(j, flow(i,j)) =E= demand(i);
+
+* If you need to reference specific element in expression, quote it
+specific_constraint.. x("i1") + x("i2") =E= 10;
+```
+
+### Multi-Dimensional Indexing
+
+For variables with multiple indices:
+
+```gams
+Variables x(i,j);
+Equations stat_x(i,j);
+
+stat_x(i,j).. <expr using i and j> =E= 0;
+
+Model mcp_model /
+    stat_x.x,    * Expands to all (i,j) pairs
+    ...
+/;
+```
+
 ## Model MCP Declaration
 
 ### Syntax
@@ -552,21 +633,27 @@ nlp2mcp follows these pairing rules:
 
 1. **Stationarity**: `stat_x.x`
    - Stationarity equation paired with primal variable
+   - For indexed variables: equation domain must match variable domain
 
 2. **Inequality complementarity**: `comp_g.lam_g`
    - Complementarity equation paired with inequality multiplier
+   - Both equation and multiplier have matching indices
 
 3. **Lower bound complementarity**: `bound_lo_x.piL_x`
    - Lower bound equation paired with lower bound multiplier
+   - For indexed bounds, equation and multiplier share indices
 
 4. **Upper bound complementarity**: `bound_up_y.piU_y`
    - Upper bound equation paired with upper bound multiplier
+   - For indexed bounds, equation and multiplier share indices
 
 5. **Equality constraints**: `balance.nu_balance`
    - Equality equation paired with free multiplier
+   - For indexed equations, multiplier has matching indices
 
 6. **Objective defining equation**: `objective.obj`
    - Special case: Paired with objective variable (NOT a multiplier)
+   - Objective variable is typically scalar (no indices)
 
 ### GAMS Syntax Requirements
 
