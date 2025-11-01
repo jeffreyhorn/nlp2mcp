@@ -583,9 +583,9 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 **Findings:**
 - [x] Confirm .fx = setting both .lo and .up - ✅ VERIFIED (semantically equivalent)
 - [ ] Decide on MCP treatment (Option A/B/C) - ⏸️ BLOCKED (cannot test until bug fixed)
-- [ ] Test with GAMS compilation - ❌ BLOCKED (jacobian bug prevents end-to-end)
+- [ ] Test with GAMS compilation - ❌ BLOCKED (jacobian bug [#63](https://github.com/jeffreyhorn/nlp2mcp/issues/63) prevents end-to-end)
 - [ ] Verify no dual variables created - ❌ BLOCKED (cannot test KKT assembly)
-- [ ] Test interaction with other constraints - ❌ BLOCKED (jacobian bug)
+- [ ] Test interaction with other constraints - ❌ BLOCKED (jacobian bug [#63](https://github.com/jeffreyhorn/nlp2mcp/issues/63))
 
 **Implementation Status by Phase:**
 
@@ -606,12 +606,13 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
    - Code: `src/kkt/partition.py` lines 126-143
    - Test: Verified in `test_kkt.py` before failure point
 
-4. **Jacobian Computation** ❌ **CRITICAL BUG**
+4. **Jacobian Computation** ❌ **CRITICAL BUG** ([#63](https://github.com/jeffreyhorn/nlp2mcp/issues/63))
    - **Bug**: `_compute_equality_jacobian` only searches `model.equations`, not `model.normalized_bounds`
    - **Location**: `src/ad/constraint_jacobian.py` line 199
    - **Error**: `KeyError: 'x_fx'` when computing derivatives
    - **Root Cause**: Equality-type bounds are in `normalized_bounds` but code expects them in `equations`
    - **Fix Required**: Update `_compute_equality_jacobian` to check both dictionaries
+   - **Issue**: See [GitHub Issue #63](https://github.com/jeffreyhorn/nlp2mcp/issues/63) for details
 
 5. **KKT/Stationarity** ❓ UNKNOWN (blocked by bug #4)
 
@@ -626,7 +627,7 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 - `tests/research/fixed_variable_verification/test_kkt.py` - ❌ FAILS at jacobian computation
 
 **Key Finding**: 
-The `.fx` feature is **80% implemented** - parser, normalization, and partition phases work correctly. However, the automatic differentiation code has a design flaw where `_compute_equality_jacobian` assumes all equalities are in `model.equations`, missing equality-type bounds in `model.normalized_bounds`.
+The `.fx` feature is **80% implemented** - parser, normalization, and partition phases work correctly. However, the automatic differentiation code has a design flaw where `_compute_equality_jacobian` assumes all equalities are in `model.equations`, missing equality-type bounds in `model.normalized_bounds`. See [GitHub Issue #63](https://github.com/jeffreyhorn/nlp2mcp/issues/63) for details.
 
 **Recommended Fix:**
 ```python

@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Test KKT treatment of fixed variables."""
+"""Test KKT treatment of fixed variables.
+
+NOTE: This test currently fails due to a known bug in jacobian computation.
+See GitHub Issue #63: https://github.com/jeffreyhorn/nlp2mcp/issues/63
+The bug causes KeyError when computing derivatives for equality-type bounds (.fx).
+"""
 
 from pathlib import Path
 

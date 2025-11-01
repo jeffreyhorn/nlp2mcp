@@ -1,5 +1,9 @@
 # Bug: Jacobian Computation Fails for Equality-Type Bounds (`.fx`)
 
+**GitHub Issue:** [#63](https://github.com/jeffreyhorn/nlp2mcp/issues/63)  
+**Status:** Open  
+**Created:** 2025-11-01
+
 ## Summary
 
 The constraint jacobian computation fails with a `KeyError` when processing fixed variables (`.fx` bounds) because `_compute_equality_jacobian()` only searches `model.equations` dictionary, missing equality-type bounds stored in `model.normalized_bounds`.

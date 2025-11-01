@@ -63,11 +63,12 @@ for indices, value in _iterate_bounds(var.fx_map, var.fx):
   Value: 10.0
 ```
 
-#### 4. Jacobian Computation ❌ **BUG FOUND**
+#### 4. Jacobian Computation ❌ **BUG FOUND** ([GitHub Issue #63](https://github.com/jeffreyhorn/nlp2mcp/issues/63))
 - **Issue**: `_compute_equality_jacobian` only searches `model.equations`, not `model.normalized_bounds`
 - **Location**: `src/ad/constraint_jacobian.py` line 199
 - **Error**: `KeyError: 'x_fx'` when trying to compute derivatives
 - **Root Cause**: Equality-type bounds (`.fx`) are in `normalized_bounds` but code expects them in `equations`
+- **GitHub Issue**: [#63](https://github.com/jeffreyhorn/nlp2mcp/issues/63)
 
 **Bug Code (line 199):**
 ```python
@@ -123,11 +124,12 @@ The normalization phase correctly:
 - Stores them in `normalized_bounds` with proper naming (`var_fx` or `var_fx(indices)`)
 - Adds them to `equalities` list for tracking
 
-#### Finding #3: Jacobian Code Bug
+#### Finding #3: Jacobian Code Bug ([GitHub Issue #63](https://github.com/jeffreyhorn/nlp2mcp/issues/63))
 **Critical Bug**: The constraint jacobian code has a design flaw:
 - `_compute_equality_jacobian` assumes ALL equalities are in `model.equations`
 - But equality-type bounds (`.fx`) are in `model.normalized_bounds`
 - This causes KeyError when processing fixed variables
+- See [GitHub Issue #63](https://github.com/jeffreyhorn/nlp2mcp/issues/63) for complete details
 
 **Fix Required**: Update `_compute_equality_jacobian` to check both:
 1. `model.equations` for user-defined equality constraints
