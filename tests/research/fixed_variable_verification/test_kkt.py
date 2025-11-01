@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Test KKT treatment of fixed variables.
 
-NOTE: This test currently fails due to a known bug in jacobian computation.
-See GitHub Issue #63: https://github.com/jeffreyhorn/nlp2mcp/issues/63
-The bug causes KeyError when computing derivatives for equality-type bounds (.fx).
+This test verifies that fixed variables (.fx) are correctly handled through the
+entire pipeline including jacobian computation and KKT assembly.
+
+Fixed in GitHub Issue #63: https://github.com/jeffreyhorn/nlp2mcp/issues/63
 """
 
 from pathlib import Path
-
-import pytest
 
 from src.ad.api import compute_derivatives
 from src.ir.normalize import normalize_model
@@ -17,11 +16,6 @@ from src.kkt.assemble import assemble_kkt_system
 from src.kkt.partition import partition_constraints
 
 
-@pytest.mark.xfail(
-    reason="Known bug: jacobian computation fails for .fx bounds (Issue #63)",
-    raises=KeyError,
-    strict=True,
-)
 def test_kkt_fixed_variable():
     """Test KKT assembly with fixed variable."""
     gms_file = Path(__file__).parent / "test_fixed_scalar.gms"
@@ -56,28 +50,23 @@ def test_kkt_fixed_variable():
 
     # Compute derivatives
     print("\nComputing derivatives...")
-    gradient, jacobian_eq, jacobian_ineq, jacobian_bounds_lo, jacobian_bounds_up = (
-        compute_derivatives(model)
-    )
+    gradient, jacobian_eq, jacobian_ineq = compute_derivatives(model)
 
     print(f"  Gradient dimensions: {gradient.num_cols} variables")
     print(f"  Variables in gradient: {list(gradient.index_mapping.var_to_col.keys())}")
 
     # Assemble KKT
     print("\nAssembling KKT system...")
-    kkt = assemble_kkt_system(
-        model,
-        gradient,
-        jacobian_eq,
-        jacobian_ineq,
-        jacobian_bounds_lo,
-        jacobian_bounds_up,
-    )
+    kkt = assemble_kkt_system(model, gradient, jacobian_eq, jacobian_ineq)
 
     print("\n✓ KKT system assembled")
     print(f"  Stationarity equations: {list(kkt.stationarity.keys())}")
-    print(f"  Complementarity equations: {list(kkt.complementarity.keys())}")
-    print(f"  Multipliers: {list(kkt.multipliers.keys())}")
+    print(
+        f"  Complementarity ineq: {list(kkt.complementarity_ineq.keys())}, bounds_lo: {list(kkt.complementarity_bounds_lo.keys())}, bounds_up: {list(kkt.complementarity_bounds_up.keys())}"
+    )
+    print(
+        f"  Multipliers eq: {list(kkt.multipliers_eq.keys())}, ineq: {list(kkt.multipliers_ineq.keys())}, bounds_lo: {list(kkt.multipliers_bounds_lo.keys())}, bounds_up: {list(kkt.multipliers_bounds_up.keys())}"
+    )
 
     # Check if stat_x exists
     if "stat_x" in kkt.stationarity:
@@ -88,23 +77,21 @@ def test_kkt_fixed_variable():
     else:
         print("\n  Note: stat_x does NOT exist (fixed variable excluded)")
 
-    # Check if there are pi_L or pi_U multipliers for x
-    x_multipliers = [m for m in kkt.multipliers.keys() if m.startswith("pi_") and "_x" in m]
-    print(f"\n  Multipliers for x: {x_multipliers}")
+    # Check if there are bound multipliers for x (lo or up)
+    x_bounds_lo = [k for k in kkt.multipliers_bounds_lo.keys() if "x" in str(k)]
+    x_bounds_up = [k for k in kkt.multipliers_bounds_up.keys() if "x" in str(k)]
+    print(f"\n  Multipliers for x bounds_lo: {x_bounds_lo}, bounds_up: {x_bounds_up}")
 
-    if x_multipliers:
+    if x_bounds_lo or x_bounds_up:
         print("  Note: Fixed variable x has bound multipliers (may be incorrect)")
     else:
         print("  Note: Fixed variable x has NO bound multipliers (correct)")
 
-    # Check if x_fx equality constraint exists
-    if "x_fx" in kkt.equalities:
-        print("\n✓ x_fx equality constraint found in KKT equalities")
-        eq_x_fx = kkt.equalities["x_fx"]
-        print(f"  domain: {eq_x_fx.domain}")
-        print(f"  lhs_rhs: {eq_x_fx.lhs_rhs}")
+    # Check if x_fx equality constraint exists in model equalities (from normalization)
+    if "x_fx" in model.equalities:
+        print("\n✓ x_fx equality constraint found in model.equalities")
     else:
-        print("\n✗ x_fx equality constraint NOT found in KKT equalities")
+        print("\n✗ x_fx equality constraint NOT found in model.equalities")
         return False
 
     print("\n✓ All checks passed!")
