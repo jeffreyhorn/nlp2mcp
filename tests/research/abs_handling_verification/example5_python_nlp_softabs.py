@@ -148,7 +148,8 @@ print(
 print("\n" + "=" * 70)
 print("ANALYSIS")
 print("=" * 70)
-print("""
+print(
+    """
 The optimizer successfully solved the NLP by:
 
 1. **Smoothness**: The soft-abs function is differentiable everywhere,
@@ -165,6 +166,7 @@ The optimizer successfully solved the NLP by:
 
 This demonstrates that GAMS can effectively solve NLPs using the soft-abs
 approximation, validating our research findings in ABS_HANDLING_RESEARCH.md.
-""")
+"""
+)
 
 print("=" * 70)
