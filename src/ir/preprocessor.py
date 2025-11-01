@@ -12,8 +12,6 @@ from pathlib import Path
 class CircularIncludeError(Exception):
     """Raised when circular $include directives are detected."""
 
-    pass
-
 
 def preprocess_includes(
     file_path: Path, included_stack: list[Path] | None = None, max_depth: int = 100
@@ -64,10 +62,10 @@ def preprocess_includes(
     content = file_path.read_text()
 
     # Pattern matches:
-    # $include filename
-    # $include "filename with spaces"
-    # $include 'filename with spaces'
-    include_pattern = r'\$include\s+(["\']?)([^"\'\s]+)\1'
+    # $include filename (unquoted, no spaces)
+    # $include "filename with spaces" (double quotes)
+    # $include 'filename with spaces' (single quotes)
+    include_pattern = r'\$include\s+(?:(["\'])([^"\']*)\1|([^\s]+))'
 
     # Add current file to stack
     new_stack = included_stack + [file_path]
@@ -80,8 +78,8 @@ def preprocess_includes(
         # Add content before this include
         result.append(content[last_end : match.start()])
 
-        # Get included filename
-        included_filename = match.group(2)
+        # Get included filename (group 2 if quoted, group 3 if unquoted)
+        included_filename = match.group(2) if match.group(2) is not None else match.group(3)
 
         # Resolve path relative to current file's directory
         included_path = file_path.parent / included_filename
@@ -96,7 +94,7 @@ def preprocess_includes(
         except FileNotFoundError as e:
             # Enhance error message with context
             raise FileNotFoundError(
-                f"In file {file_path}, line {content[: match.start()].count(chr(10)) + 1}: {e}"
+                f"In file {file_path}, line {content[: match.start()].count('\n') + 1}: {e}"
             ) from e
 
         result.append(f"\n* END $include {included_filename}\n")

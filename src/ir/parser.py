@@ -13,6 +13,7 @@ from lark import Lark, Token, Tree
 
 from .ast import Binary, Call, Const, Expr, ParamRef, Sum, Unary, VarRef
 from .model_ir import ModelIR, ObjectiveIR
+from .preprocessor import preprocess_gams_file
 from .symbols import (
     AliasDef,
     EquationDef,
@@ -134,8 +135,6 @@ def parse_model_file(path: str | Path) -> ModelIR:
     This function automatically handles $include directives by preprocessing
     the file before parsing.
     """
-    from src.ir.preprocessor import preprocess_gams_file
-
     # Preprocess to expand all $include directives
     data = preprocess_gams_file(Path(path))
     return parse_model_text(data)
