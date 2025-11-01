@@ -1595,3 +1595,185 @@ This prep plan applies all lessons learned from Sprint 3 Retrospective to set up
 **Document Created:** October 31, 2025  
 **Sprint 4 Target Start:** TBD  
 **Next Steps:** Execute prep tasks in order, verify completion, begin Sprint 4
+
+---
+
+# SPRINT 4 PREPARATION TASK CHECKLIST
+
+**Purpose:** Quick reference for tracking prep task completion  
+**Use:** Check off tasks as completed to track progress toward Sprint 4 readiness
+
+---
+
+## Phase 1: BEFORE Sprint 4 Start - Critical Path (MUST COMPLETE)
+
+**Timeline:** Complete 1 week before Sprint 4 Day 1  
+**Total Time:** ~12 hours (1.5 days)  
+**Blocker Status:** Sprint 4 CANNOT start until these are done
+
+| # | Task | Est. Time | Deadline | Status | Notes |
+|---|------|-----------|----------|--------|-------|
+| 1 | Resolve GitHub Issue #47 | 2 days | DONE | ✅ COMPLETED | Post-Sprint 3. All 5 golden tests passing. |
+| 2 | Create Sprint 4 Known Unknowns List | 2 hours | 1 week before Day 1 | ⏸️ TODO | 30+ unknowns across 6 categories. See Task 2 for template. |
+| 3 | Set Up PATH Solver Validation | 4 hours | Before Day 1 | ⏸️ TODO | Install PATH, create 5 solve tests. Can skip locally if unavailable. |
+| 7 | Formalize Checkpoint Templates | 2 hours | Before Day 1 | ⏸️ TODO | Templates for Days 3, 6, 8 checkpoints. |
+| 9 | Plan Sprint 4 Scope and Schedule | 4 hours | Before Day 1 | ⏸️ TODO | Detailed plan with lessons learned applied. Dependencies: Tasks 2, 7. |
+
+**Verification Commands:**
+```bash
+# Task 1 verification
+pytest tests/golden/ -v  # Should see: 5/5 passed
+
+# Task 3 verification
+pytest tests/validation/test_path_solver.py -v  # Should run or skip gracefully
+```
+
+---
+
+## Phase 2: BEFORE Sprint 4 Start - High Priority (SHOULD COMPLETE)
+
+**Timeline:** Complete before Sprint 4 Day 1  
+**Total Time:** ~10 hours (1.25 days)  
+**Blocker Status:** Not blockers, but significantly improve Sprint 4 execution
+
+| # | Task | Est. Time | Deadline | Status | Notes |
+|---|------|-----------|----------|--------|-------|
+| 4 | Add Performance Benchmarking | 4 hours | Day 3 of Sprint 4 (or before) | ⏸️ TODO | Establish baselines for 10/100/1000 var models. |
+| 6 | Create Edge Case Test Matrix | 3 hours | Before Day 1 (or Day 7-8) | ⏸️ TODO | Document 25+ edge cases, implement high-priority tests. |
+| 8 | Review and Update Documentation | 3 hours | Before Day 1 | ⏸️ TODO | Update KKT_ASSEMBLY.md, GAMS_EMISSION.md, README.md, CHANGELOG.md. |
+
+**Verification Commands:**
+```bash
+# Task 4 verification
+pytest tests/benchmarks/ -v --benchmark-only
+
+# Task 6 verification
+ls docs/testing/EDGE_CASE_MATRIX.md
+pytest tests/edge_cases/ -v
+
+# Task 8 verification
+git log --oneline docs/  # Should see recent updates
+```
+
+---
+
+## Phase 3: DURING Sprint 4 (CAN BE DONE IN-SPRINT)
+
+**Timeline:** Flexible, can be done during Sprint 4  
+**Total Time:** ~4 hours (0.5 days)
+
+| # | Task | Est. Time | Sprint 4 Day | Status | Notes |
+|---|------|-----------|--------------|--------|-------|
+| 5 | Improve Error Messages | 4 hours | Day 5-6 (or anytime) | ⏸️ TODO | Create error hierarchy, improve 20+ error sites. Low-priority for prep. |
+
+---
+
+## Quick Status Summary
+
+**Overall Progress:**
+- ✅ Completed: 1/9 tasks (11%)
+- ⏸️ TODO: 8/9 tasks (89%)
+
+**Critical Path (Must Complete Before Sprint 4):**
+- ✅ Completed: 1/5 tasks (20%)
+- ⏸️ TODO: 4/5 tasks (80%)
+- **Estimated Time Remaining:** ~12 hours (1.5 days)
+
+**High Priority (Should Complete Before Sprint 4):**
+- ✅ Completed: 0/3 tasks (0%)
+- ⏸️ TODO: 3/3 tasks (100%)
+- **Estimated Time Remaining:** ~10 hours (1.25 days)
+
+**Total Time to Sprint 4 Readiness:** ~22 hours (2.75 days)
+
+---
+
+## Daily Execution Plan (Suggested)
+
+### Day 1: Known Unknowns + PATH Setup (6 hours)
+- [ ] Task 2: Create Known Unknowns List (2 hours)
+- [ ] Task 3: Set Up PATH Solver (4 hours)
+
+### Day 2: Checkpoints + Performance (6 hours)
+- [ ] Task 7: Formalize Checkpoint Templates (2 hours)
+- [ ] Task 4: Add Performance Benchmarking (4 hours)
+
+### Day 3: Planning + Documentation (7 hours)
+- [ ] Task 8: Review and Update Documentation (3 hours)
+- [ ] Task 9: Plan Sprint 4 Scope and Schedule (4 hours)
+
+### Day 4: Edge Cases (3 hours)
+- [ ] Task 6: Create Edge Case Test Matrix (3 hours)
+
+### Optional (During Sprint 4):
+- [ ] Task 5: Improve Error Messages (4 hours) - Sprint 4 Day 5-6
+
+**Total:** ~22 hours over 4 days = Sprint 4 ready to start
+
+---
+
+## Readiness Gate: GO/NO-GO Decision
+
+**Sprint 4 is ready to begin when:**
+
+### Critical Criteria (ALL must be checked)
+- [x] Task 1: Issue #47 resolved and verified ✅
+- [ ] Task 2: Known Unknowns List created with 30+ items
+- [ ] Task 3: PATH solver installed OR tests skip gracefully
+- [ ] Task 7: Checkpoint templates created for Days 3, 6, 8
+- [ ] Task 9: Sprint 4 plan created with integration risks
+
+### Verification Commands
+```bash
+# Run all verifications
+pytest tests/golden/ -v                           # Should see: 5/5 passed
+pytest tests/validation/test_path_solver.py -v    # Should run or skip
+ls docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md       # Should exist
+ls docs/process/CHECKPOINT_TEMPLATES.md           # Should exist
+ls docs/planning/SPRINT_4/PLAN.md                 # Should exist
+
+# Final gate check
+pytest tests/ -v                                  # All tests passing (650+)
+mypy src/                                         # No errors
+ruff check src/                                   # No errors
+```
+
+### Decision
+- **✅ GO**: All critical criteria checked → Sprint 4 begins
+- **❌ NO-GO**: Any critical criterion unchecked → Complete missing items first
+
+---
+
+## Notes and Tips
+
+### For Task 2 (Known Unknowns List)
+- Review Sprint 4 scope in PROJECT_PLAN.md
+- Focus on: `$include`, `min/max`, `abs()`, `x.fx`, scaling
+- Priority: Critical/High unknowns must be verified by Day 3
+
+### For Task 3 (PATH Solver)
+- If PATH unavailable locally, ensure tests skip gracefully
+- CI can run PATH tests if license available
+- Focus on test framework, not necessarily running locally
+
+### For Task 4 (Performance Benchmarking)
+- Can be done Day 3 of Sprint 4 if time-constrained
+- Use generated models from `_generate_model()` helper
+- Target: < 0.1s (10 vars), < 1s (100 vars), < 10s (1000 vars)
+
+### For Task 6 (Edge Cases)
+- Start with documentation (EDGE_CASE_MATRIX.md)
+- Implement high-priority tests first
+- Low-priority tests can wait until Day 7-8 of Sprint 4
+
+### For Task 9 (Sprint 4 Plan)
+- Reference Sprint 3 PLAN.md as template
+- Include lessons learned from Sprint 3
+- Add integration risks for each day
+- Reference Known Unknowns list (Task 2)
+
+---
+
+**Last Updated:** October 31, 2025  
+**Next Review:** Daily during prep phase  
+**Owner:** Sprint planning team
