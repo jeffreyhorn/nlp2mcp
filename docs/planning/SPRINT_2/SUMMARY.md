@@ -79,7 +79,7 @@
 
 ### Day 10: Documentation & Examples (October 29, 2025)
 - **`docs/ad/README.md`** - Comprehensive AD module documentation
-- **`docs/ad/derivative_rules.md`** - Detailed derivative rule reference
+- **`docs/ad/DERIVATIVE_RULES.md`** - Detailed derivative rule reference
 - **`docs/ad/usage_examples.md`** - Usage examples and patterns
 - **`examples/nonlinear_mix.gms`** - Nonlinear example with x^2 + y^2
 - **`examples/bounds_nlp.gms`** - Example demonstrating bounds handling

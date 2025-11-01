@@ -481,6 +481,6 @@ result = evaluate(deriv, {'x': 5.0})  # Result: 1.0
 
 ## See Also
 
-- [AD Design Document](ad_design.md) - Architecture and implementation details
+- [AD Design Document](DESIGN.md) - Architecture and implementation details
 - [AD Module Documentation](../src/ad/README.md) - API reference
 - [Test Suite](../tests/ad/) - Examples and validation tests

@@ -412,6 +412,6 @@ abs(x)  # ValueError: abs() is not differentiable everywhere
 
 ## See Also
 
-- [Derivative Rules Reference](derivative_rules.md) - Mathematical formulas for all rules
+- [Derivative Rules Reference](DERIVATIVE_RULES.md) - Mathematical formulas for all rules
 - [API Documentation](../src/ad/api.py) - High-level usage guide
 - [Sprint 2 Plan](planning/SPRINT_2_PLAN.md) - Development schedule and acceptance criteria
