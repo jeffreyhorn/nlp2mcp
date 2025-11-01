@@ -2,9 +2,9 @@
 
 ## Overview
 - Total verification effort: **79 hours (~9.9 eight-hour days)** across 23 Known Unknowns.
-- Pre-Sprint critical path (tasks due before Sprint 4 Day 1): **29 hours (~3.6 days)**.
-- Earliest safe Sprint 4 start: **after Prep Day 4**, once Tasks 1.1–2.4 are complete.
-- Remaining tasks are scheduled across Sprint Days 1–6 with Sprint Day 7 kept as buffer.
+- Pre-Sprint critical path (tasks due before Sprint 4 Day 1 while PATH access is pending): **26 hours (~3.3 days)**.
+- Earliest safe Sprint 4 start: **after Prep Day 4**, once Tasks 1.1–2.3 are complete; Task 2.4 now waits on PATH availability.
+- Remaining tasks are scheduled across Sprint Days 1–7, with all PATH-dependent work clustered at the end to accommodate potential licensing delays.
 
 ## Effort Estimates by Task
 | ID | Task | Priority | Deadline | Est. Hours | Est. Days |
@@ -35,11 +35,11 @@
 
 ## Day-by-Day Plan (8-hour capacity per day)
 ### Prep Day 1
-- `1.1` – Kick off $include preprocessing deep dive & prototype harness (2h)
-- `2.1` – Begin min() reformulation research + draft auxiliary constraint plan (6h)
+- `1.1` – $include preprocessing deep dive & prototype harness (4h)
+- `2.1` – Begin min() reformulation research + draft auxiliary constraint plan (4h)
 
 ### Prep Day 2
-- `1.1` – Finish $include verification suite (2h)
+- `2.1` – Complete min() reformulation research (2h)
 - `1.2` – Table parsing behaviors & sparse cases (4h)
 - `1.3` – Fixed-variable semantics analysis (first 2h)
 
@@ -47,50 +47,50 @@
 - `1.3` – Wrap fixed-variable findings (1h)
 - `2.2` – max() reformulation design (3h)
 - `2.3` – abs() handling options and decision matrix (3h)
-- `2.4` – PATH smoke test scaffolding for non-smooth reformulations (1h)
+- `1.4` – Nested $include handling: stack depth checks (1h)
 
 ### Prep Day 4
-- `1.4` – Nested $include depth/loop detection (1.5h)
+- `1.4` – Nested $include loop detection wrap-up (0.5h)
 - `1.5` – Include path resolution & security guardrails (1.5h)
-- `2.4` – Execute PATH compatibility experiments (final 2h)
-- `4.1` – Start GAMS emitter line-breaking strategy (3h)
+- `4.1` – GAMS emitter line-breaking strategy (3h)
+- `6.1` – Confirm preprocessing pipeline leaves ModelIR unchanged; source map plan (3h)
 
 **Sprint 4 can start once Prep Day 4 deliverables are signed off.**
 
 ### Sprint Day 1
 - `3.1` – Evaluate scaling algorithms & select Curtis-Reid baseline (5h)
-- `6.1` – Confirm preprocessing pipeline leaves ModelIR unchanged; source map plan (3h)
+- `3.2` – Decide scaling application point via experiments (3h)
 
 ### Sprint Day 2
-- `3.2` – Decide scaling application point via experiments (3h)
 - `4.2` – Auxiliary variable naming (collision handling, indexing) (4h)
-- `4.3` – Model declaration treatment for new constraints (initial pass, 1h)
+- `4.3` – Model declaration treatment for new constraints (3h)
+- Buffer – Peer review / doc alignment (1h)
 
 ### Sprint Day 3
-- `4.3` – Finish Model declaration verification (2h)
 - `4.4` – MCP emission for fixed variables (4h)
-- `6.2` – Fixed-variable KKT integration (first 2h)
+- `6.2` – Fixed-variable KKT integration (4h)
 
 ### Sprint Day 4
-- `5.1` – Nonlinear PATH benchmarking (first 2h)
-- `6.2` – Complete fixed-variable KKT checks (2h)
 - `6.4` – Auxiliary variables & IndexMapping alignment (4h)
+- `6.3` – Scaling impact regression smoke tests (3h)
+- Buffer – Documentation updates / contingency (1h)
 
 ### Sprint Day 5
-- `5.1` – Finish nonlinear PATH study & document limits (3h)
-- `5.3` – Implement failure reporting & message parsing (4h)
-- `6.3` – Scaling impact regression smoke tests (1h)
+- `5.1` – PATH behavior on nonlinear MCPs (full benchmarking block) (5h)
+- `2.4` – PATH compatibility validation for non-smooth reformulations (3h)
 
 ### Sprint Day 6
+- `5.3` – PATH failure reporting & listing parser (4h)
 - `5.2` – Draft PATH option recommendations & CLI hooks (3h)
-- `5.4` – Initial point guidance experiments (2h)
-- `6.3` – Complete scaling regression suite + CI updates (2h)
+- Buffer – Hold for license-driven follow-ups (1h)
 
 ### Sprint Day 7 (Buffer)
-- Reserved for spillover, peer review, or integration polish (1h spare capacity remaining from earlier days).
+- `5.4` – PATH initial point guidance experiments (2h)
+- Reserved capacity for spillover, peer review, or additional PATH investigations (6h).
 
 ## Assumptions & Notes
 - Schedule presumes 0.5h granularity; tasks split across days continue seamlessly.
+- PATH-dependent activities (Tasks 2.4, 5.1, 5.2, 5.3, 5.4) are intentionally grouped at the end to wait for licensing. If access arrives earlier, these can be pulled forward.
 - PATH solver is available locally. Example macOS path: `/Library/Frameworks/GAMS.framework/Versions/51/Resources/gams`.
   - For Windows, the PATH solver is typically installed at `C:\GAMS\gamsXX.X\gams.exe` (replace `XX.X` with your version).
   - For Linux, check your GAMS installation directory, e.g., `/opt/gams/gamsXX.X/gams` or as configured in your environment.
