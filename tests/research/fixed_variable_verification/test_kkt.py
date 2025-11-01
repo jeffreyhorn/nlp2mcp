@@ -8,6 +8,8 @@ The bug causes KeyError when computing derivatives for equality-type bounds (.fx
 
 from pathlib import Path
 
+import pytest
+
 from src.ad.api import compute_derivatives
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
@@ -15,6 +17,11 @@ from src.kkt.assemble import assemble_kkt_system
 from src.kkt.partition import partition_constraints
 
 
+@pytest.mark.xfail(
+    reason="Known bug: jacobian computation fails for .fx bounds (Issue #63)",
+    raises=KeyError,
+    strict=True,
+)
 def test_kkt_fixed_variable():
     """Test KKT assembly with fixed variable."""
     gms_file = Path(__file__).parent / "test_fixed_scalar.gms"
