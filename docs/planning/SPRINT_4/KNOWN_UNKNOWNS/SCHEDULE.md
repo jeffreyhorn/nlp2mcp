@@ -91,6 +91,9 @@
 
 ## Assumptions & Notes
 - Schedule presumes 0.5h granularity; tasks split across days continue seamlessly.
-- PATH solver is available locally (per GAMS installation at `/Library/Frameworks/GAMS.framework/Versions/51/Resources/gams`).
+- PATH solver is available locally. Example macOS path: `/Library/Frameworks/GAMS.framework/Versions/51/Resources/gams`.
+  - For Windows, the PATH solver is typically installed at `C:\GAMS\gamsXX.X\gams.exe` (replace `XX.X` with your version).
+  - For Linux, check your GAMS installation directory, e.g., `/opt/gams/gamsXX.X/gams` or as configured in your environment.
+  - Please update the solver path in your environment as appropriate for your operating system.
 - Day 7 intentionally left open to absorb overrun or handle newly discovered unknowns.
 - Update `docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md` as items move from 🔍 to ✅ according to this cadence.
