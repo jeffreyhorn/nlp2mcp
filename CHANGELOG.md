@@ -9,6 +9,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - Sprint 4: Feature Expansion + Robustness (IN PROGRESS)
 
+### Planning - 2025-11-01 (FINAL)
+
+#### Sprint 4 Final Plan
+- **Final Plan Review Completed** - Identified 4 additional gaps in revised plan
+- **Final Plan Created** (`docs/planning/SPRINT_4/PLAN.md`)
+  - Addresses all 4 findings from `PLAN_REVIEW_FINAL.md`
+  - Complete rebalancing to ≤8 hours per day including checkpoints
+  - ~1,100 lines with comprehensive unknown summaries
+
+#### Critical Changes from Revised Plan
+
+1. **Added PREP_PLAN Task 3 as Explicit Follow-On Item**
+   - **Location:** Day 7, Follow-On Items section
+   - **Task:** "Set Up PATH Solver Validation" (Est: 2h)
+   - **Details:** Explicitly scheduled AFTER licensing becomes available, BEFORE Day 8 validation
+   - **Includes:** Install PATH, verify availability, create test harness, document setup
+   - **Rationale:** Separates PATH environment setup from core implementation work
+
+2. **Complete Rebalancing to ≤8 Hours Per Day** (Including Checkpoints)
+   - All days rebalanced from 9-10 hours to ≤8 hours maximum
+   
+   | Day | Before | After | Changes |
+   |-----|--------|-------|---------|
+   | Day 1 | 9h | **8h** | Reduced task estimates |
+   | Day 2 | 9h | **8h** | Reduced task estimates |
+   | Day 3 | 9h | **8h** | 7h tasks + 1h checkpoint |
+   | Day 4 | 9h | **8h** | Reduced task estimates |
+   | Day 5 | 10h | **8h** | Reduced task estimates (was highest) |
+   | Day 6 | 9h | **8h** | 7h tasks + 1h checkpoint |
+   | Day 7 | 9.5h | **8h** | Moved PATH setup to Follow-On |
+   | Day 8 | 9h | **7.5h** | 6.5h tasks + 1h checkpoint (critical PATH day) |
+   | Day 9 | 9.5h | **8h** | Added PATH docs from Day 8 |
+   | Day 10 | 10h | **8h** | More realistic buffer estimates |
+   
+   - **Average:** 7.95 hours/day (down from 9.3 hours/day)
+   - **Day 8 Special:** High-risk PATH validation day reduced to 7.5h total
+   - **Method:** Moved lower-risk docs/polish to earlier days, reduced estimates
+   - **Result:** Sustainable workload with slack for overruns
+
+3. **Reintroduced Concise Unknown Summaries Throughout**
+   - **For ALL 23 Unknowns:** Added summaries even for COMPLETE ones
+   - **Format for each unknown:**
+     - Findings (1-2 sentences from KNOWN_UNKNOWNS.md)
+     - Key Architecture (1-2 sentences)
+     - Status (✅ COMPLETE or INCOMPLETE with verification needs)
+   
+   - **Example:**
+     ```
+     *Prerequisites (from KNOWN_UNKNOWNS.md):*
+     - **Unknown 1.1 ($include syntax)**: GAMS uses simple string substitution 
+       without macro expansion. Preprocessor runs before parser, maintains 
+       include stack. ✅ COMPLETE
+     - **Unknown 1.4 (Nested includes)**: Arbitrary nesting allowed, tested 10 
+       levels. Use depth tracking with default 100 limit, circular detection 
+       works. ✅ COMPLETE
+     ```
+   
+   - **Coverage:** All 10 COMPLETE + all 13 INCOMPLETE unknowns summarized
+   - **Benefit:** Complete context for each task without switching documents
+
+4. **Trimmed Day 8 Scope for High-Risk PATH Validation**
+   - **Moved Task:** "Document PATH solver requirements and options" (1.5h)
+   - **From:** Day 8 Task 5
+   - **To:** Day 9 Task 5
+   - **Before:** 8h tasks + 1h checkpoint = 9h total
+   - **After:** 6.5h tasks + 1h checkpoint = 7.5h total
+   - **Rationale:** Day 8 is highest-risk day (PATH validation); lightest workload improves focus
+
+#### Updated Schedule (All Days ≤8 Hours)
+
+- **Day 1**: $include (8h) - Rebalanced from 9h
+- **Day 2**: Table blocks (8h) - Rebalanced from 9h
+- **Day 3**: min/max infrastructure (7h) + Checkpoint 1 (1h) = 8h - Rebalanced from 9h
+- **Day 4**: min/max implementation (8h) - Rebalanced from 9h
+- **Day 5**: abs() + x.fx (8h) - Rebalanced from 10h
+- **Day 6**: Scaling + byvar + Error Phase 1 (7h) + Checkpoint 2 (1h) = 8h - Rebalanced from 9h
+- **Day 7**: Diagnostics + Config + Logging (8h) + PATH Setup Follow-On (2h separate) - Rebalanced from 9.5h
+- **Day 8**: PATH validation (6.5h) + Checkpoint 3 (1h) = 7.5h - Reduced from 9h (CRITICAL)
+- **Day 9**: Integration + Examples + Docs + PATH Docs (8h) - Rebalanced from 9.5h
+- **Day 10**: Polish + Buffer (8h) - Rebalanced from 10h
+
+#### Files Created/Modified
+- `docs/planning/SPRINT_4/PLAN.md` - **Final** 10-day plan (~1,100 lines)
+- `CHANGELOG.md` - This final plan summary
+
+#### Verification - All 4 Final Review Findings Addressed
+- ✅ PREP Task 3 explicitly scheduled as Day 7 Follow-On
+- ✅ All days rebalanced to ≤8 hours including checkpoints
+- ✅ All 23 unknown summaries included (COMPLETE and INCOMPLETE)
+- ✅ Day 8 scope trimmed to 7.5h total (high-risk day has lightest load)
+- ✅ Sustainable workload (avg 7.95h/day with slack for overruns)
+- ✅ Complete context for all tasks (no document switching needed)
+
 ### Planning - 2025-11-01 (REVISED)
 
 #### Sprint 4 Plan Revision
