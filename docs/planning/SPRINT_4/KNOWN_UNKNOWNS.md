@@ -2516,7 +2516,7 @@ def tokenize_expression(expr_str: str) -> list[str]:
 
 ---
 
-## Unknown 4.2: How to name and emit auxiliary variables for min/max?
+## 
 
 ### Assumption
 Create auxiliary variables with systematic naming: `aux_min_{context}`, `aux_max_{context}` where context is equation name or counter.
@@ -3083,7 +3083,8 @@ also generate auxiliary constraints that need the same treatment.
 **Updated Code Location:**
 - File: `src/kkt/reformulation.py`
 - Function: `reformulate_model()`
-- Line: After `model.add_equation(constraint_def)` (around line 707)
+- Location: In the loop that applies reformulations, after `model.add_equation(constraint_def)`
+- Specifically: Within the `for _constraint_name, constraint_def in result.constraints:` loop
 - Change: Add `model.inequalities.append(constraint_def.name)`
 
 ---

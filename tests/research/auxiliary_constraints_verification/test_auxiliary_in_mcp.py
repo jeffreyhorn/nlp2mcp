@@ -1,6 +1,6 @@
 """Research test: Verify auxiliary constraints work in MCP emission.
 
-This test verifies Unknown 4.3: Do auxiliary constraints need special Model
+This test verifies Unknown 4.3: Do auxiliary constraints need special model
 declaration handling?
 
 Test creates a model with min() in a CONSTRAINT (not objective), reformulates it,
@@ -145,9 +145,9 @@ def test_min_reformulation_in_mcp_emission():
     num_variables = len(model.variables)
     num_pairs = len(pairs)
 
-    assert num_pairs == num_variables, (
-        f"Equation-variable count mismatch: {num_pairs} pairs, {num_variables} variables"
-    )
+    assert (
+        num_pairs == num_variables
+    ), f"Equation-variable count mismatch: {num_pairs} pairs, {num_variables} variables"
     print(f"✓ Equation-variable count matches: {num_pairs} pairs = {num_variables} variables")
 
     print("\n" + "=" * 70)
