@@ -58,8 +58,8 @@ class TestAbsRejection:
         # Check that error message mentions the smooth-abs flag
         assert "smooth-abs" in error_msg or "smooth approximation" in error_msg.lower()
 
-    def test_abs_rejection_mentions_project_plan(self):
-        """Test abs() error references PROJECT_PLAN.md"""
+    def test_abs_rejection_suggests_smooth_abs_flag(self):
+        """Test abs() error suggests using --smooth-abs flag"""
         # abs(x)
         expr = Call("abs", (VarRef("x"),))
 
@@ -67,8 +67,9 @@ class TestAbsRejection:
             differentiate_expr(expr, "x")
 
         error_msg = str(exc_info.value)
-        # Check that error message references the project plan
-        assert "PROJECT_PLAN" in error_msg or "project plan" in error_msg.lower()
+        # Check that error message suggests the --smooth-abs flag
+        assert "--smooth-abs" in error_msg or "smooth approximation" in error_msg.lower()
+        assert "sqrt" in error_msg.lower() or "approximation" in error_msg.lower()
 
     def test_abs_composite_expression_rejected(self):
         """Test abs(x^2) also raises clear error"""
@@ -118,8 +119,8 @@ class TestOtherUnsupportedFunctions:
         assert "not yet implemented" in error_msg.lower() or "not implemented" in error_msg.lower()
         assert "power" in error_msg or "exp" in error_msg  # Lists some supported functions
 
-    def test_unsupported_function_mentions_abs_explicitly(self):
-        """Test error for unknown function mentions abs is intentionally excluded"""
+    def test_unsupported_function_mentions_abs_requires_flag(self):
+        """Test error for unknown function mentions abs requires --smooth-abs flag"""
         # unknown_func(x)
         expr = Call("unknown_func", (VarRef("x"),))
 
@@ -127,9 +128,6 @@ class TestOtherUnsupportedFunctions:
             differentiate_expr(expr, "x")
 
         error_msg = str(exc_info.value)
-        # Should mention abs() is intentionally not supported
+        # Should mention abs() requires --smooth-abs flag
         assert "abs" in error_msg.lower()
-        assert (
-            "intentionally not supported" in error_msg.lower()
-            or "not supported" in error_msg.lower()
-        )
+        assert "smooth-abs" in error_msg.lower() or "requires" in error_msg.lower()
