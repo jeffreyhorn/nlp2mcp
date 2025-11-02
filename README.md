@@ -68,17 +68,28 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 *Preparation Phase* (see [docs/planning/SPRINT_4/PREP_PLAN.md](docs/planning/SPRINT_4/PREP_PLAN.md)):
 - ✅ Task 1: Resolve Issue #47 (indexed stationarity equations)
 - ✅ Task 2: Create Known Unknowns List ([KNOWN_UNKNOWNS.md](docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md))
-- ⏸️ Task 3: Set Up PATH Solver Validation (pending)
+- ⏸️ Task 3: Set Up PATH Solver Validation (pending - scheduled Day 7)
 - ✅ Task 4: Add Performance Benchmarking (7 benchmarks, scalability tests)
 - ✅ Task 5: Improve Error Messages (error hierarchy, 6 error classes)
 - ✅ Task 6: Create Edge Case Test Matrix (29 test cases, 6 categories)
 - ✅ Task 7: Formalize Checkpoint Templates ([CHECKPOINT_TEMPLATES.md](docs/process/CHECKPOINT_TEMPLATES.md))
 - ✅ Task 8: Review and Update Documentation (Issue #47 lessons documented)
-- ⏸️ Task 9: Plan Sprint 4 Scope and Schedule (pending)
+- ✅ Task 9: Plan Sprint 4 Scope and Schedule ([PLAN.md](docs/planning/SPRINT_4/PLAN.md))
+
+*Implementation Phase* (see [docs/planning/SPRINT_4/PLAN.md](docs/planning/SPRINT_4/PLAN.md)):
+- [ ] Day 1: `$include` and Preprocessing (8h)
+- [ ] Day 2: `Table` Data Blocks (8h)
+- [ ] Day 3: `min/max` Reformulation - Part 1 (Infrastructure) (8h)
+- [ ] Day 4: `min/max` Reformulation - Part 2 (Implementation) (8h)
+- [ ] Day 5: `abs(x)` Handling and Fixed Variables (`x.fx`) (8h)
+- [ ] Day 6: Scaling Implementation + Developer Ergonomics Part 1 (8h)
+- [ ] Day 7: Diagnostics + Developer Ergonomics Part 2 (8h)
+- [ ] Day 8: PATH Solver Validation and Testing (7.5h)
+- [ ] Day 9: Integration Testing, Documentation, and Examples (8h)
+- [ ] Day 10: Polish, Buffer, and Sprint Wrap-Up (8h)
 
 ### Planned (See [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md))
 
-- 📋 Sprint 4: Extended language features and robustness (IN PROGRESS)
 - 📋 Sprint 5: Packaging, documentation, and ecosystem integration
 
 ## Installation
