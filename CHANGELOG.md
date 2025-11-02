@@ -7,6 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - Sprint 4: Feature Expansion + Robustness (IN PROGRESS)
+
+### Planning - 2025-11-01
+
+#### Added
+- **Sprint 4 Comprehensive Plan** (`docs/planning/SPRINT_4/PLAN_ORIGINAL.md`)
+  - Complete 10-day plan for Sprint 4 feature expansion
+  - Day-by-day breakdown with goals, tasks, deliverables, and acceptance criteria
+  - 7 priority-1 features: `$include`, `Table`, `min/max`, `abs()`, `x.fx`, scaling, diagnostics
+  - Integration risks documented for each day
+  - Known Unknowns schedule integrated (23 unknowns across 6 categories)
+  - Checkpoint schedule (Days 3, 6, 8) with formal review process
+  - PATH solver validation on Days 7-8 (PREP Task 3 dependency)
+  - Success metrics: functional, quality, and integration goals
+  - Risk management with high/medium/low priority risks and mitigations
+  - Lessons applied from Sprint 3 (proactive unknowns, formal checkpoints)
+  
+- **Sprint 4 Features Planned**:
+  1. **`$include` directive support** (Day 1)
+     - Nested includes with circular detection
+     - Relative path resolution
+     - Integration with parser
+  2. **`Table` data blocks** (Day 2)
+     - 2D parameter tables with row/column headers
+     - Sparse table handling (missing cells → 0)
+     - Descriptive text support
+  3. **`min/max` reformulation** (Days 3-4)
+     - Epigraph auxiliary variable reformulation
+     - Multi-argument support
+     - Nested min/max flattening
+     - Complementarity pairs for auxiliary constraints
+  4. **`abs(x)` handling** (Day 5)
+     - Reject by default with clear error
+     - Optional smoothing via `--smooth-abs` flag
+     - Soft-abs approximation: `sqrt(x^2 + ε)`
+  5. **Fixed variables `x.fx`** (Day 5)
+     - Parse `.fx` syntax
+     - Create equality constraints (no bound multipliers)
+     - Integration with KKT and MCP emission
+  6. **Scaling heuristics** (Day 6)
+     - Curtis-Reid row/column scaling
+     - CLI flags: `--scale none|auto`
+     - Transparent application (preserves semantics)
+  7. **Diagnostics** (Day 7)
+     - Model statistics (rows/cols/nonzeros)
+     - Jacobian pattern dump (Matrix Market format)
+     - CLI flags: `--stats`, `--dump-jacobian`
+  
+- **Process Improvements**:
+  - Proactive Known Unknowns list (23 unknowns identified and scheduled)
+  - Formal checkpoint templates (Days 3, 6, 8)
+  - PATH solver validation environment (Days 7-8)
+  - Edge case test matrix for comprehensive coverage
+  - Test-driven development approach
+  - Documentation as you go (daily updates)
+
+#### Sprint 4 Plan Details
+- **Timeline:** 10 days (Days 1-10)
+- **Dependencies:** Sprints 1-3 (no breaking changes)
+- **Checkpoints:** Days 3, 6, 8 with GO/NO-GO decisions
+- **Known Unknowns:** 23 across 6 categories, all scheduled for verification
+- **PATH Validation:** Days 7-8 (after PREP Task 3 complete)
+- **Test Coverage Target:** >= 85% for Sprint 4 code
+- **Success Metrics:** Functional (7 features), Quality (tests/coverage), Integration (no regressions)
+
+#### Risk Management
+- **High-Priority Risks:** PATH availability, min/max complexity, scaling stability, auxiliary var integration
+- **Mitigations:** Research unknowns in prep, checkpoint early detection, incremental testing, buffer time
+- **Contingencies:** Descoping options, sprint extension criteria, fallback plans
+
+#### Next Steps
+1. Complete all PREP_PLAN tasks (Tasks 1-9)
+2. Verify all Critical/High Known Unknowns
+3. Set up PATH solver validation environment
+4. Begin Sprint 4 Day 1: `$include` implementation
+
+---
+
 ## [0.3.1] - 2025-10-30 - Sprint 3 Post-Release
 
 ### Fixed
