@@ -15,6 +15,7 @@ from src.emit.emit_gams import emit_gams_mcp
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
 from src.kkt.assemble import assemble_kkt_system
+from src.kkt.reformulation import reformulate_model
 
 
 @click.command()
@@ -78,6 +79,22 @@ def main(input_file, output, verbose, no_comments, model_name, show_excluded):
         if verbose >= 2:
             click.echo(f"  Equalities: {len(model.equalities)}")
             click.echo(f"  Inequalities: {len(model.inequalities)}")
+
+        # Step 2.5: Reformulate min/max functions (Sprint 4 Day 4)
+        if verbose:
+            click.echo("Reformulating min/max functions...")
+
+        vars_before = len(model.variables)
+        eqs_before = len(model.equations)
+
+        reformulate_model(model)
+
+        vars_added = len(model.variables) - vars_before
+        eqs_added = len(model.equations) - eqs_before
+
+        if verbose >= 2 and (vars_added > 0 or eqs_added > 0):
+            click.echo(f"  Added {vars_added} auxiliary variables")
+            click.echo(f"  Added {eqs_added} complementarity constraints")
 
         # Step 3: Compute derivatives
         if verbose:

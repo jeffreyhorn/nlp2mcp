@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from src.ir.ast import Binary, Call, Const, VarRef
+from src.ir.symbols import Rel
 from src.kkt.reformulation import (
     AuxiliaryVariableManager,
     MinMaxCall,
@@ -363,3 +364,491 @@ class TestIntegrationScenarios:
         aux_name = manager.generate_name("min", "eq_balance_i1")
 
         assert aux_name == "aux_min_eq_balance_i1_0"
+
+
+# =============================================================================
+# Day 4: Reformulation Implementation Tests
+# =============================================================================
+
+
+class TestReformulatMin:
+    """Test reformulate_min() function."""
+
+    def test_reformulate_simple_min_two_args(self):
+        """Test reformulating min(x, y)."""
+        from src.kkt.reformulation import reformulate_min
+
+        min_call = MinMaxCall(
+            func_type="min",
+            args=[VarRef("x", ()), VarRef("y", ())],
+            context="objdef",
+            index=0,
+        )
+
+        manager = AuxiliaryVariableManager()
+        result = reformulate_min(min_call, manager)
+
+        # Check auxiliary variable name
+        assert result.aux_var_name == "aux_min_objdef_0"
+
+        # Check multiplier names (one per argument)
+        assert len(result.multiplier_names) == 2
+        assert result.multiplier_names[0] == "lambda_min_objdef_0_arg0"
+        assert result.multiplier_names[1] == "lambda_min_objdef_0_arg1"
+
+        # Check constraints (one per argument)
+        assert len(result.constraints) == 2
+
+        # First constraint: x - aux_min >= 0
+        name0, eq0 = result.constraints[0]
+        assert name0 == "comp_min_objdef_0_arg0"
+        assert eq0.relation == Rel.GE
+
+        # Second constraint: y - aux_min >= 0
+        name1, eq1 = result.constraints[1]
+        assert name1 == "comp_min_objdef_0_arg1"
+        assert eq1.relation == Rel.GE
+
+        # Check replacement expression
+        assert isinstance(result.replacement_expr, VarRef)
+        assert result.replacement_expr.name == "aux_min_objdef_0"
+
+    def test_reformulate_min_three_args(self):
+        """Test reformulating min(a, b, c)."""
+        from src.kkt.reformulation import reformulate_min
+
+        min_call = MinMaxCall(
+            func_type="min",
+            args=[VarRef("a", ()), VarRef("b", ()), VarRef("c", ())],
+            context="balance",
+            index=0,
+        )
+
+        manager = AuxiliaryVariableManager()
+        result = reformulate_min(min_call, manager)
+
+        # Should have 3 multipliers and 3 constraints
+        assert len(result.multiplier_names) == 3
+        assert len(result.constraints) == 3
+
+        assert result.multiplier_names[0] == "lambda_min_balance_0_arg0"
+        assert result.multiplier_names[1] == "lambda_min_balance_0_arg1"
+        assert result.multiplier_names[2] == "lambda_min_balance_0_arg2"
+
+    def test_reformulate_min_wrong_func_type(self):
+        """Test that reformulate_min rejects max calls."""
+        from src.kkt.reformulation import reformulate_min
+
+        max_call = MinMaxCall(func_type="max", args=[VarRef("x", ())], context="eq1", index=0)
+
+        manager = AuxiliaryVariableManager()
+        with pytest.raises(ValueError, match="Expected func_type='min'"):
+            reformulate_min(max_call, manager)
+
+    def test_reformulate_min_empty_args(self):
+        """Test that empty arguments raise error."""
+        from src.kkt.reformulation import reformulate_min
+
+        min_call = MinMaxCall(func_type="min", args=[], context="eq1", index=0)
+
+        manager = AuxiliaryVariableManager()
+        with pytest.raises(ValueError, match="must have at least one argument"):
+            reformulate_min(min_call, manager)
+
+    def test_reformulate_min_with_expressions(self):
+        """Test reformulating min with complex expressions as arguments."""
+        from src.kkt.reformulation import reformulate_min
+
+        # min(x + 2, y * 3)
+        arg1 = Binary("+", VarRef("x", ()), Const(2.0))
+        arg2 = Binary("*", VarRef("y", ()), Const(3.0))
+
+        min_call = MinMaxCall(func_type="min", args=[arg1, arg2], context="objdef", index=0)
+
+        manager = AuxiliaryVariableManager()
+        result = reformulate_min(min_call, manager)
+
+        # Should still work with complex expressions
+        assert len(result.constraints) == 2
+        assert result.aux_var_name == "aux_min_objdef_0"
+
+
+class TestReformulatMax:
+    """Test reformulate_max() function."""
+
+    def test_reformulate_simple_max_two_args(self):
+        """Test reformulating max(x, y)."""
+        from src.kkt.reformulation import reformulate_max
+
+        max_call = MinMaxCall(
+            func_type="max",
+            args=[VarRef("x", ()), VarRef("y", ())],
+            context="constraint1",
+            index=0,
+        )
+
+        manager = AuxiliaryVariableManager()
+        result = reformulate_max(max_call, manager)
+
+        # Check auxiliary variable name
+        assert result.aux_var_name == "aux_max_constraint1_0"
+
+        # Check multiplier names (using mu instead of lambda)
+        assert len(result.multiplier_names) == 2
+        assert result.multiplier_names[0] == "mu_max_constraint1_0_arg0"
+        assert result.multiplier_names[1] == "mu_max_constraint1_0_arg1"
+
+        # Check constraints (one per argument)
+        assert len(result.constraints) == 2
+
+        # Constraints should be: aux_max - x >= 0, aux_max - y >= 0
+        name0, eq0 = result.constraints[0]
+        assert name0 == "comp_max_constraint1_0_arg0"
+        assert eq0.relation == Rel.GE
+
+        # Check replacement expression
+        assert isinstance(result.replacement_expr, VarRef)
+        assert result.replacement_expr.name == "aux_max_constraint1_0"
+
+    def test_reformulate_max_three_args(self):
+        """Test reformulating max(a, b, c)."""
+        from src.kkt.reformulation import reformulate_max
+
+        max_call = MinMaxCall(
+            func_type="max",
+            args=[VarRef("a", ()), VarRef("b", ()), VarRef("c", ())],
+            context="balance",
+            index=1,
+        )
+
+        manager = AuxiliaryVariableManager()
+        result = reformulate_max(max_call, manager)
+
+        # Should have 3 multipliers and 3 constraints
+        assert len(result.multiplier_names) == 3
+        assert len(result.constraints) == 3
+
+    def test_reformulate_max_wrong_func_type(self):
+        """Test that reformulate_max rejects min calls."""
+        from src.kkt.reformulation import reformulate_max
+
+        min_call = MinMaxCall(func_type="min", args=[VarRef("x", ())], context="eq1", index=0)
+
+        manager = AuxiliaryVariableManager()
+        with pytest.raises(ValueError, match="Expected func_type='max'"):
+            reformulate_max(min_call, manager)
+
+    def test_reformulate_max_empty_args(self):
+        """Test that empty arguments raise error."""
+        from src.kkt.reformulation import reformulate_max
+
+        max_call = MinMaxCall(func_type="max", args=[], context="eq1", index=0)
+
+        manager = AuxiliaryVariableManager()
+        with pytest.raises(ValueError, match="must have at least one argument"):
+            reformulate_max(max_call, manager)
+
+
+class TestReformulateModel:
+    """Test reformulate_model() function - end-to-end reformulation."""
+
+    def test_reformulate_model_no_min_max(self):
+        """Test that model without min/max is unchanged."""
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import EquationDef, Rel, VariableDef, VarKind
+        from src.kkt.reformulation import reformulate_model
+
+        model = ModelIR()
+
+        # Add simple variables
+        model.add_var(VariableDef("x", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("y", (), VarKind.CONTINUOUS))
+
+        # Add simple equation: x + y = 10
+        eq = EquationDef(
+            name="balance",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(Binary("+", VarRef("x", ()), VarRef("y", ())), Const(10.0)),
+        )
+        model.add_equation(eq)
+
+        vars_before = len(model.variables)
+        eqs_before = len(model.equations)
+
+        # Reformulate (should do nothing)
+        reformulate_model(model)
+
+        # No change
+        assert len(model.variables) == vars_before
+        assert len(model.equations) == eqs_before
+
+    def test_reformulate_model_simple_min(self):
+        """Test reformulating model with simple min(x, y)."""
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import EquationDef, Rel, VariableDef, VarKind
+        from src.kkt.reformulation import reformulate_model
+
+        model = ModelIR()
+
+        # Add variables
+        model.add_var(VariableDef("x", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("y", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("z", (), VarKind.CONTINUOUS))
+
+        # Add equation: z = min(x, y)
+        eq = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("z", ()), Call("min", (VarRef("x", ()), VarRef("y", ())))),
+        )
+        model.add_equation(eq)
+
+        # Reformulate
+        reformulate_model(model)
+
+        # Should add:
+        # - 1 auxiliary variable (aux_min_objdef_0)
+        # - 2 multipliers (lambda_min_objdef_0_arg0, lambda_min_objdef_0_arg1)
+        # - 2 complementarity constraints
+        assert len(model.variables) == 3 + 1 + 2  # Original + aux + 2 multipliers
+        assert len(model.equations) == 1 + 2  # Original + 2 constraints
+
+        # Check auxiliary variable exists
+        assert "aux_min_objdef_0" in model.variables
+        assert model.variables["aux_min_objdef_0"].kind == VarKind.CONTINUOUS
+
+        # Check multipliers exist and are positive
+        assert "lambda_min_objdef_0_arg0" in model.variables
+        assert "lambda_min_objdef_0_arg1" in model.variables
+        assert model.variables["lambda_min_objdef_0_arg0"].kind == VarKind.POSITIVE
+        assert model.variables["lambda_min_objdef_0_arg1"].kind == VarKind.POSITIVE
+
+        # Check complementarity constraints exist
+        assert "comp_min_objdef_0_arg0" in model.equations
+        assert "comp_min_objdef_0_arg1" in model.equations
+
+        # Check original equation was modified (min replaced with aux var)
+        modified_eq = model.equations["objdef"]
+        _, rhs = modified_eq.lhs_rhs
+        assert isinstance(rhs, VarRef)
+        assert rhs.name == "aux_min_objdef_0"
+
+    def test_reformulate_model_simple_max(self):
+        """Test reformulating model with simple max(x, y)."""
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import EquationDef, Rel, VariableDef, VarKind
+        from src.kkt.reformulation import reformulate_model
+
+        model = ModelIR()
+
+        # Add variables
+        model.add_var(VariableDef("x", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("y", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("w", (), VarKind.CONTINUOUS))
+
+        # Add equation: w = max(x, y)
+        eq = EquationDef(
+            name="maxdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("w", ()), Call("max", (VarRef("x", ()), VarRef("y", ())))),
+        )
+        model.add_equation(eq)
+
+        # Reformulate
+        reformulate_model(model)
+
+        # Should add auxiliary variable and multipliers
+        assert "aux_max_maxdef_0" in model.variables
+        assert "mu_max_maxdef_0_arg0" in model.variables
+        assert "mu_max_maxdef_0_arg1" in model.variables
+
+        # Check complementarity constraints
+        assert "comp_max_maxdef_0_arg0" in model.equations
+        assert "comp_max_maxdef_0_arg1" in model.equations
+
+    def test_reformulate_model_multiple_min_max(self):
+        """Test reformulating model with both min and max."""
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import EquationDef, Rel, VariableDef, VarKind
+        from src.kkt.reformulation import reformulate_model
+
+        model = ModelIR()
+
+        # Add variables
+        model.add_var(VariableDef("x", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("y", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("z", (), VarKind.CONTINUOUS))
+
+        # Equation 1: z = min(x, y)
+        eq1 = EquationDef(
+            name="eq1",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("z", ()), Call("min", (VarRef("x", ()), VarRef("y", ())))),
+        )
+        model.add_equation(eq1)
+
+        # Equation 2: z = max(x, y)
+        eq2 = EquationDef(
+            name="eq2",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("z", ()), Call("max", (VarRef("x", ()), VarRef("y", ())))),
+        )
+        model.add_equation(eq2)
+
+        # Reformulate
+        reformulate_model(model)
+
+        # Should have both min and max auxiliaries
+        assert "aux_min_eq1_0" in model.variables
+        assert "aux_max_eq2_0" in model.variables
+
+        # Each should have 2 multipliers
+        assert "lambda_min_eq1_0_arg0" in model.variables
+        assert "lambda_min_eq1_0_arg1" in model.variables
+        assert "mu_max_eq2_0_arg0" in model.variables
+        assert "mu_max_eq2_0_arg1" in model.variables
+
+        # Should have 4 complementarity constraints (2 for each)
+        assert "comp_min_eq1_0_arg0" in model.equations
+        assert "comp_min_eq1_0_arg1" in model.equations
+        assert "comp_max_eq2_0_arg0" in model.equations
+        assert "comp_max_eq2_0_arg1" in model.equations
+
+    def test_reformulate_model_three_args(self):
+        """Test reformulating min with three arguments."""
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import EquationDef, Rel, VariableDef, VarKind
+        from src.kkt.reformulation import reformulate_model
+
+        model = ModelIR()
+
+        # Add variables
+        for var_name in ["a", "b", "c", "result"]:
+            model.add_var(VariableDef(var_name, (), VarKind.CONTINUOUS))
+
+        # Equation: result = min(a, b, c)
+        eq = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("result", ()),
+                Call("min", (VarRef("a", ()), VarRef("b", ()), VarRef("c", ()))),
+            ),
+        )
+        model.add_equation(eq)
+
+        # Reformulate
+        reformulate_model(model)
+
+        # Should have 3 multipliers and 3 constraints
+        assert "lambda_min_objdef_0_arg0" in model.variables
+        assert "lambda_min_objdef_0_arg1" in model.variables
+        assert "lambda_min_objdef_0_arg2" in model.variables
+
+        assert "comp_min_objdef_0_arg0" in model.equations
+        assert "comp_min_objdef_0_arg1" in model.equations
+        assert "comp_min_objdef_0_arg2" in model.equations
+
+
+class TestAcceptanceCriteria:
+    """Test Day 4 acceptance criteria."""
+
+    def test_min_two_args_generates_two_constraints(self):
+        """AC: min(x, y) generates 2 auxiliary constraints with multipliers."""
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import EquationDef, Rel, VariableDef, VarKind
+        from src.kkt.reformulation import reformulate_model
+
+        model = ModelIR()
+        model.add_var(VariableDef("x", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("y", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("obj", (), VarKind.CONTINUOUS))
+
+        eq = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), Call("min", (VarRef("x", ()), VarRef("y", ())))),
+        )
+        model.add_equation(eq)
+
+        reformulate_model(model)
+
+        # Should have exactly 2 complementarity constraints
+        comp_constraints = [name for name in model.equations if name.startswith("comp_min")]
+        assert len(comp_constraints) == 2
+
+        # Should have exactly 2 multipliers
+        multipliers = [
+            name
+            for name in model.variables
+            if name.startswith("lambda_min") or name.startswith("mu_")
+        ]
+        assert len(multipliers) == 2
+
+    def test_max_two_args_generates_two_constraints_opposite_direction(self):
+        """AC: max(x, y) generates 2 auxiliary constraints (opposite direction)."""
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import EquationDef, Rel, VariableDef, VarKind
+        from src.kkt.reformulation import reformulate_model
+
+        model = ModelIR()
+        model.add_var(VariableDef("x", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("y", (), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("obj", (), VarKind.CONTINUOUS))
+
+        eq = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), Call("max", (VarRef("x", ()), VarRef("y", ())))),
+        )
+        model.add_equation(eq)
+
+        reformulate_model(model)
+
+        # Should have exactly 2 complementarity constraints
+        comp_constraints = [name for name in model.equations if name.startswith("comp_max")]
+        assert len(comp_constraints) == 2
+
+        # Constraints should be aux_max - x >= 0, aux_max - y >= 0 (opposite of min)
+        for constraint_name in comp_constraints:
+            constraint = model.equations[constraint_name]
+            assert constraint.relation == Rel.GE
+
+    def test_multi_arg_min_generates_n_constraints(self):
+        """AC: Multi-argument min(a, b, c) generates 3 constraints."""
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import EquationDef, Rel, VariableDef, VarKind
+        from src.kkt.reformulation import reformulate_model
+
+        model = ModelIR()
+        for var_name in ["a", "b", "c", "result"]:
+            model.add_var(VariableDef(var_name, (), VarKind.CONTINUOUS))
+
+        eq = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("result", ()),
+                Call("min", (VarRef("a", ()), VarRef("b", ()), VarRef("c", ()))),
+            ),
+        )
+        model.add_equation(eq)
+
+        reformulate_model(model)
+
+        # Should have exactly 3 complementarity constraints
+        comp_constraints = [name for name in model.equations if name.startswith("comp_min")]
+        assert len(comp_constraints) == 3
+
+        # Should have exactly 3 multipliers
+        multipliers = [name for name in model.variables if name.startswith("lambda_min")]
+        assert len(multipliers) == 3

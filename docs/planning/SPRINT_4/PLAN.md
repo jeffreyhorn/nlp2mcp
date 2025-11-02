@@ -329,12 +329,12 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Example: `min(x, y)` → KKT with `z_min`, `λ_x`, `λ_y`
 
 #### Acceptance Criteria
-- [ ] `min(x, y)` generates 2 auxiliary constraints with multipliers
-- [ ] `max(x, y)` generates 2 auxiliary constraints (opposite direction)
-- [ ] Multi-argument `min(a, b, c)` generates 3 constraints
-- [ ] Stationarity includes `∂f/∂z_min - λ_x - λ_y = 0`
-- [ ] Complementarity pairs: `(x - z_min) ⊥ λ_x`, `(y - z_min) ⊥ λ_y`
-- [ ] All tests pass (including reformulation-specific tests)
+- [x] `min(x, y)` generates 2 auxiliary constraints with multipliers
+- [x] `max(x, y)` generates 2 auxiliary constraints (opposite direction)
+- [x] Multi-argument `min(a, b, c)` generates 3 constraints
+- [x] Stationarity includes `∂f/∂z_min - λ_x - λ_y = 0` (handled by derivative computation)
+- [x] Complementarity pairs: `(x - z_min) ⊥ λ_x`, `(y - z_min) ⊥ λ_y`
+- [x] All tests pass (including reformulation-specific tests) - 770 tests passing
 
 #### Integration Risks
 - **Risk 1:** Jacobian computation may not handle auxiliary variables

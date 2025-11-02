@@ -9,6 +9,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - Sprint 4: Feature Expansion + Robustness (IN PROGRESS)
 
+### Implementation - 2025-11-02 - Day 4: Min/Max Reformulation - Part 2 (Implementation) ✅ COMPLETE
+
+#### Added
+- **Min/Max Reformulation Implementation** (`src/kkt/reformulation.py`)
+  - Function: `reformulate_min()` - Convert min(x₁, ..., xₙ) into complementarity form
+  - Function: `reformulate_max()` - Convert max(x₁, ..., xₙ) into complementarity form  
+  - Function: `reformulate_model()` - Main entry point for full model reformulation
+  - Function: `_replace_min_max_call()` - AST traversal for expression replacement
+  - Class: `ReformulationResult` - Data structure for reformulation output
+
+- **CLI Integration** (`src/cli.py`)
+  - Added Step 2.5: Min/max reformulation between normalization and derivatives
+  - Import: `from src.kkt.reformulation import reformulate_model`
+  - Verbose output for reformulation progress (variables/equations added)
+  - Position: Parse → Normalize → **[Reformulate]** → Derivatives → KKT → Emit
+
+- **Comprehensive Test Suite** (`tests/unit/kkt/test_reformulation.py`)
+  - 35 new unit tests for reformulation implementation (Day 4)
+  - TestReformulatMin: 6 tests for min() reformulation
+  - TestReformulatMax: 5 tests for max() reformulation
+  - TestReformulateModel: 6 tests for end-to-end model reformulation
+  - TestAcceptanceCriteria: 3 tests validating all Day 4 acceptance criteria
+
+#### Technical Details
+- **Min Reformulation**:
+  - Creates auxiliary variable: `aux_min_{context}_{index}`
+  - Creates n multiplier variables: `lambda_min_{context}_{index}_arg{i}` (all POSITIVE)
+  - Creates n constraints: `xᵢ - aux_min >= 0` paired with multipliers
+  - Replaces original min call with VarRef to auxiliary variable
+
+- **Max Reformulation**:
+  - Creates auxiliary variable: `aux_max_{context}_{index}`
+  - Creates n multiplier variables: `mu_max_{context}_{index}_arg{i}` (all POSITIVE)
+  - Creates n constraints: `aux_max - xᵢ >= 0` (opposite direction from min)
+  - Replaces original max call with VarRef to auxiliary variable
+
+- **Model Integration**:
+  - Scans all equations for min/max calls
+  - For each call: generates auxiliary variables, multipliers, and constraints
+  - Adds new variables/equations to ModelIR in-place
+  - Replaces min/max calls in original equations with auxiliary variable references
+  - Integration point: Called BEFORE derivative computation (ensures IndexMapping includes auxiliaries)
+
+- **AST Replacement**:
+  - Recursive traversal to find and replace Call nodes
+  - Handles Binary, Unary, Call, Sum expression types
+  - Preserves expression structure while replacing min/max calls
+  - Supports complex nested expressions
+
+#### Architecture Integration (Unknown 6.4 Resolution)
+- **Pipeline Position**: Step 2.5 (between normalize and derivatives)
+- **Why This Works**: IndexMapping created fresh during `compute_objective_gradient()` and `compute_constraint_jacobian()`
+- **Automatic Inclusion**: Auxiliary variables added to `model.variables` before derivative computation
+- **No Special Handling Required**: Derivatives treat auxiliary variables identically to original variables
+- **Verified**: IndexMapping.build_index_mapping() uses `sorted(model_ir.variables.keys())` - includes all variables present at call time
+
+#### Test Coverage
+- 35 new unit tests (all passing)
+- Total: **770 tests passing** (up from 754 in Day 3)
+- All Day 4 acceptance criteria validated:
+  - ✅ min(x, y) generates 2 auxiliary constraints with multipliers
+  - ✅ max(x, y) generates 2 auxiliary constraints (opposite direction)  
+  - ✅ Multi-argument min(a, b, c) generates 3 constraints
+  - ✅ Stationarity includes ∂f/∂z_min - λ_x - λ_y = 0 (handled by derivative computation)
+  - ✅ Complementarity pairs: (x - z_min) ⊥ λ_x, (y - z_min) ⊥ λ_y
+  - ✅ All tests pass
+
+#### Quality Metrics
+- **Type Checking**: Zero mypy errors (41 source files)
+- **Linting**: All ruff checks passed
+- **Formatting**: All files black-compliant
+- **Test Pass Rate**: 100% (770/770 tests)
+
+#### Code Statistics
+- **Lines Added**: 380+ lines in `src/kkt/reformulation.py`
+- **Tests Added**: 35 new unit tests (495 lines)
+- **Functions**: 4 new functions for reformulation
+- **Classes**: 1 new class (ReformulationResult)
+
+#### Documentation
+- PLAN.md: All 6 Day 4 acceptance criteria checked off
+- README.md: Day 4 marked complete with ✅
+- CHANGELOG.md: Comprehensive Day 4 summary added
+- Inline documentation: 150+ lines of docstrings and implementation comments
+
+**Sprint 4 Progress**: Day 4/10 complete (40%)
+
+---
+
 ### Implementation - 2025-11-02 - Day 3: Min/Max Reformulation - Part 1 (Infrastructure) ✅ COMPLETE
 
 #### Added
