@@ -77,7 +77,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Task 9: Plan Sprint 4 Scope and Schedule ([PLAN.md](docs/planning/SPRINT_4/PLAN.md))
 
 *Implementation Phase* (see [docs/planning/SPRINT_4/PLAN.md](docs/planning/SPRINT_4/PLAN.md)):
-- [ ] Day 1: `$include` and Preprocessing (8h)
+- [x] Day 1: `$include` and Preprocessing (8h) ✅
 - [ ] Day 2: `Table` Data Blocks (8h)
 - [ ] Day 3: `min/max` Reformulation - Part 1 (Infrastructure) (8h)
 - [ ] Day 4: `min/max` Reformulation - Part 2 (Implementation) (8h)

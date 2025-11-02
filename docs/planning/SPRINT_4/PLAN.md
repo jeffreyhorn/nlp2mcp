@@ -128,12 +128,12 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Documentation in docstrings
 
 #### Acceptance Criteria
-- [ ] Simple `$include` works (file inserted at directive location)
-- [ ] Nested includes work (3+ levels deep)
-- [ ] Circular includes detected with full chain shown in error
-- [ ] Missing files produce clear error with source location
-- [ ] Relative paths resolve correctly (to containing file, not CWD)
-- [ ] All tests pass (including existing 602 tests)
+- [x] Simple `$include` works (file inserted at directive location)
+- [x] Nested includes work (3+ levels deep)
+- [x] Circular includes detected with full chain shown in error
+- [x] Missing files produce clear error with source location
+- [x] Relative paths resolve correctly (to containing file, not CWD)
+- [x] All tests pass (including existing 602 tests) - **700 tests now passing**
 
 #### Integration Risks
 - **Risk 1:** Parser grammar may need updates if `$include` has special syntax
