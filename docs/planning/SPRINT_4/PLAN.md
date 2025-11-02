@@ -250,8 +250,8 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 #### Integration Risks
 - **Risk 1:** KKT assembly may need refactoring to add auxiliary constraints
   - *Mitigation:* Add new constraint type, keep existing code paths unchanged
-- **Risk 2:** Variable ordering in Jacobian may break with new auxiliary vars
-  - *Mitigation:* Extend IndexMapping to handle auxiliary variables
+- **Risk 2:** ~~Variable ordering in Jacobian may break with new auxiliary vars~~ ✅ **RESOLVED**
+  - *Mitigation:* ~~Extend IndexMapping to handle auxiliary variables~~ **NOT NEEDED** - IndexMapping automatically includes auxiliary variables (Unknown 6.4 verified)
 
 #### Follow-On Research Items
 *Note: These are INCOMPLETE unknowns to be resolved during implementation:*
@@ -269,7 +269,9 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
   - **Integration Point**: Reformulations must be inserted at Step 2.5 (between normalize and derivatives)
   - **Pipeline**: Parse → Normalize → **[Reformulation]** → Derivatives (creates IndexMapping) → KKT → Emit
   - **Key Insight**: `build_index_mapping()` called inside `compute_objective_gradient()` and `compute_constraint_jacobian()`, ensuring auxiliary variables are included
-  - **Action Required**: Add reformulation calls in cli.py BEFORE compute_objective_gradient()
+  - **Action Required**: ~~Add reformulation calls in cli.py BEFORE compute_objective_gradient()~~ ✅ **DONE** - `reformulate_model()` already integrated at Step 2.5
+  - **Test Verification**: Created `tests/research/auxiliary_vars_indexmapping_verification/test_auxiliary_vars_in_indexmapping.py`
+  - **Test Results**: ✅ 7 variables (4 original + 3 auxiliary), IndexMapping includes all, gradient/Jacobian columns aligned
   - **Verification**: Gradient/Jacobian alignment guaranteed by shared build_index_mapping() function
   - **Benefits**: No special handling needed, deterministic ordering, scalable to any number of aux vars
   - See KNOWN_UNKNOWNS.md Unknown 6.4 for complete analysis and integration code example
