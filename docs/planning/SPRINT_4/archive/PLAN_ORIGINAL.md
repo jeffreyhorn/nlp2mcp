@@ -67,8 +67,8 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Build include dependency graph
 
 **Required Unknowns:**
-- **Unknown 1.1: $include syntax and semantics** - COMPLETE
-  - **Findings:** GAMS $include uses simple string substitution without macro expansion. Supports relative and absolute paths with syntax `$include filename.inc` or `$include "filename with spaces.inc"`.
+- **Unknown 1.1: `$include` syntax and semantics** - COMPLETE
+  - **Findings:** GAMS `$include` uses simple string substitution without macro expansion. Supports relative and absolute paths with syntax `$include filename.inc` or `$include "filename with spaces.inc"`.
   - **Key Architecture:** Preprocessor runs before parser, maintains include stack for error reporting, detects circular includes.
   - **Summary:** Simple textual file insertion confirmed via GAMS documentation and test examples.
 
@@ -78,7 +78,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Provide helpful error messages
 
 **Required Unknowns:**
-- **Unknown 1.4: Nested $include handling** - COMPLETE
+- **Unknown 1.4: Nested `$include` handling** - COMPLETE
   - **Findings:** GAMS allows arbitrary nesting depth (limited only by system resources). Best practice is 3-5 levels max. Tested 10-level nesting successfully.
   - **Key Architecture:** Track include depth, configurable limit with default of 10, clear error messages for circular includes with full chain shown.
   - **Summary:** Use depth tracking with configurable limit (default 100 levels), circular detection works correctly.
@@ -149,8 +149,8 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Handle table row and value tokens
 
 **Required Unknowns:**
-- **Unknown 1.2: Table block syntax** - COMPLETE
-  - **Findings:** Table uses multi-line format with row/column headers. First row after declaration contains column headers. Subsequent rows have row header followed by data values. Empty cells default to zero. Strictly 2D (one row index, one column index).
+- **Unknown 1.2: `Table` block syntax** - COMPLETE
+  - **Findings:** `Table` uses multi-line format with row/column headers. First row after declaration contains column headers. Subsequent rows have row header followed by data values. Empty cells default to zero. Strictly 2D (one row index, one column index).
   - **Key Architecture:** Uses token line/column metadata to reconstruct rows (grammar's `%ignore NEWLINE` strips newlines). Groups tokens by line number, matches values to columns by position with ±6 char tolerance.
   - **Summary:** Token metadata approach handles sparse tables without grammar changes.
 
@@ -175,7 +175,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
   - Tables in included files work correctly since preprocessing happens before parsing.
 
 #### Deliverables
-- Grammar extension in `src/gams/gams_grammer.lark`
+- Grammar extension in `src/gams/gams_grammar.lark`
 - Parser handler in `src/ir/parser.py`
 - 20+ tests covering table variations
 - Integration with existing `ParameterDef` structure
@@ -868,10 +868,10 @@ Sprint 4 Known Unknowns are documented in:
 **Verification Status (as of 2025-11-01):**
 
 **COMPLETE (10/23):**
-- ✅ Unknown 1.1: $include syntax and semantics
-- ✅ Unknown 1.2: Table block syntax
+- ✅ Unknown 1.1: `$include` syntax and semantics
+- ✅ Unknown 1.2: `Table` block syntax
 - ✅ Unknown 1.3: Fixed variable semantics
-- ✅ Unknown 1.4: Nested $include handling
+- ✅ Unknown 1.4: Nested `$include` handling
 - ✅ Unknown 1.5: Relative path resolution
 - ✅ Unknown 2.1: min() reformulation
 - ✅ Unknown 2.2: max() reformulation
