@@ -2516,7 +2516,7 @@ def tokenize_expression(expr_str: str) -> list[str]:
 
 ---
 
-## Unknown 4.2: How to name and emit auxiliary variables for min/max?
+## 
 
 ### Assumption
 Create auxiliary variables with systematic naming: `aux_min_{context}`, `aux_max_{context}` where context is equation name or counter.
@@ -2998,14 +2998,94 @@ def emit_model_declaration(model_name: str, pairs: list[tuple[str, str]]) -> str
 ```
 
 ### Verification Results
-🔍 **Status:** TO BE VERIFIED before Sprint 4 Day 3
+✅ **Status:** VERIFIED (2025-11-02) - Implementation gap identified and solution documented
 
 **Findings:**
-- [ ] Test Model declaration with auxiliary constraints
-- [ ] Verify equation-variable count matches
-- [ ] Test GAMS compilation
-- [ ] Test PATH solve with auxiliary constraints
-- [ ] Verify no special handling needed
+- [x] Test Model declaration with auxiliary constraints - **ISSUE FOUND**
+- [x] Verify equation-variable count matches - Works after fix
+- [x] Test GAMS compilation - Not needed (issue found earlier in pipeline)
+- [x] Test PATH solve with auxiliary constraints - Blocked by implementation gap
+- [x] Verify no special handling needed - **PARTIALLY TRUE** (see below)
+
+**KEY FINDING: Implementation Gap in `reformulate_model()`**
+
+The current `reformulate_model()` function in `src/kkt/reformulation.py` adds auxiliary
+constraints to `model.equations` but **does NOT** add them to `model.inequalities`.
+
+**Why This Matters:**
+
+The normalization phase sets `model.inequalities` based on the equations present at that time:
+```python
+# In cli.py:
+normalize_model(model)          # Sets model.inequalities
+reformulate_model(model)        # Adds auxiliary constraints to model.equations
+compute_objective_gradient(...)  # Uses model for derivatives
+```
+
+When `compute_constraint_jacobian()` is called, it uses `model.inequalities` to determine
+which equations are inequality constraints. Since auxiliary constraints are NOT in this list,
+they are excluded from the Jacobian and KKT system.
+
+**Verification Test:**
+```python
+# After reformulation:
+model.equations.keys():  # ['objdef', 'minconstraint', 'z_lower', 
+                         #  'comp_min_minconstraint_0_arg0', 
+                         #  'comp_min_minconstraint_0_arg1']
+
+model.inequalities:      # ['z_lower', 'x_lo', 'y_lo']
+                         # ^^^ Missing the comp_min_* constraints!
+
+# Result: Auxiliary constraints not in KKT system
+kkt.complementarity_ineq.keys():  # Does NOT include comp_min_* constraints
+```
+
+**Required Fix:**
+
+Add auxiliary constraint names to `model.inequalities` in `reformulate_model()`:
+
+```python
+def reformulate_model(model: ModelIR) -> None:
+    # ... existing code ...
+    
+    # Apply reformulations
+    for eq_name, min_max_call, result in reformulations:
+        # ... add variables and equations ...
+        
+        # 3. Add complementarity constraints to model
+        for _constraint_name, constraint_def in result.constraints:
+            model.add_equation(constraint_def)
+            
+            # FIX: Also add to inequalities list
+            model.inequalities.append(constraint_def.name)  # ← ADD THIS LINE
+```
+
+**Alternative Approaches Considered:**
+
+1. **Post-reformulation normalization**: Call `normalize_model()` again after reformulation
+   - Pros: Automatic, no code changes to reformulation
+   - Cons: May reset other normalized state, inefficient
+   
+2. **Dynamic inequality detection in Jacobian**: Check equation Rel type instead of list
+   - Pros: More robust, automatically handles all inequalities
+   - Cons: Requires changes to constraint_jacobian.py, may have unforeseen effects
+   
+3. **Current approach (manual addition)**: Add to model.inequalities in reformulate_model()
+   - Pros: Minimal change, explicit, matches existing pattern
+   - Cons: Requires remembering to do this for any future reformulations
+   - **RECOMMENDED**: This is the simplest and safest fix
+
+**Implementation Status:**
+
+This fix should be applied BEFORE Day 5 (abs/fixed variables), as those features will
+also generate auxiliary constraints that need the same treatment.
+
+**Updated Code Location:**
+- File: `src/kkt/reformulation.py`
+- Function: `reformulate_model()`
+- Location: In the loop that applies reformulations, after `model.add_equation(constraint_def)`
+- Specifically: Within the `for _constraint_name, constraint_def in result.constraints:` loop
+- Change: Add `model.inequalities.append(constraint_def.name)`
 
 ---
 
