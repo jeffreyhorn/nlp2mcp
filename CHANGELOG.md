@@ -174,7 +174,7 @@ Fixed variables (`x.fx = value`) were already fully implemented in Day 1 (Unknow
   numerator = arg
   
   # Denominator: sqrt(x² + ε)
-  arg_squared = Binary("^", arg, Const(2.0))
+  arg_squared = Binary("*", arg, arg)  # x²
   arg_squared_plus_eps = Binary("+", arg_squared, Const(epsilon))
   denominator = Call("sqrt", (arg_squared_plus_eps,))
   
