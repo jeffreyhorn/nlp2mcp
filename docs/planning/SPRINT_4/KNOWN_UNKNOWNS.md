@@ -5123,7 +5123,45 @@ Unknown 6.4 is **RESOLVED**. The current architecture is correct by design:
 - No changes needed to `build_index_mapping()` or derivative computation
 - Integration task for Day 4: Insert reformulation step at Step 2.5 in pipeline
 
-**Action Required**: Update Day 4 implementation to call reformulation functions BEFORE compute_objective_gradient()
+**Action Required**: ~~Update Day 4 implementation to call reformulation functions BEFORE compute_objective_gradient()~~ ✅ **COMPLETE** - `reformulate_model()` already integrated at Step 2.5 in `src/cli.py`
+
+---
+
+**Test Verification** (2025-11-02):
+
+Created comprehensive verification test in `tests/research/auxiliary_vars_indexmapping_verification/test_auxiliary_vars_in_indexmapping.py` that proves the architecture is correct:
+
+**Test Results:**
+```
+✓ Variables before reformulation: 4 (x, y, z, obj)
+✓ Variables after reformulation: 7 (+ aux_min_*, lambda_min_*)
+✓ Auxiliary variables added: 3
+
+✓ IndexMapping has 7 columns (includes auxiliary vars)
+✓ aux_min_minconstraint_0 → column 0
+✓ lambda_min_minconstraint_0_arg0 → column 1
+✓ lambda_min_minconstraint_0_arg1 → column 2
+
+✓ Gradient has 7 columns (includes auxiliary vars)
+✓ Equality Jacobian has 7 columns (includes auxiliary vars)
+✓ Inequality Jacobian has 7 columns (includes auxiliary vars)
+
+✓ Gradient and Jacobian column indices aligned
+  - 'x' maps to column 4 in both
+  - 'aux_min_minconstraint_0' maps to column 0 in both
+
+✓ All 7 variables mapped (no missing variables)
+```
+
+**Verified Implementation:**
+
+1. ✅ **Pipeline Integration**: `src/cli.py` calls `reformulate_model(model)` at Step 2.5 (after normalize, before derivatives)
+2. ✅ **IndexMapping Creation**: `build_index_mapping()` called inside both `compute_objective_gradient()` and `compute_constraint_jacobian()`
+3. ✅ **Automatic Inclusion**: Auxiliary variables automatically included because mapping enumerates `model.variables` at call time
+4. ✅ **Column Alignment**: Gradient and Jacobian use same `build_index_mapping()` function, guaranteeing identical column ordering
+5. ✅ **Deterministic Ordering**: Alphabetical sorting ensures reproducible results
+
+**No Code Changes Needed** - The existing implementation is correct and complete.
 
 ---
 
