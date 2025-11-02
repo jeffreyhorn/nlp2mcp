@@ -200,8 +200,14 @@ References
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from ..ir.ast import Call, Expr
+from ..ir.ast import Call, Const, Expr
+
+if TYPE_CHECKING:
+    from ..ir.ast import VarRef
+    from ..ir.model_ir import ModelIR
+    from ..ir.symbols import EquationDef
 
 
 @dataclass
@@ -388,3 +394,378 @@ def detect_min_max_calls(expr: Expr, context: str) -> list[MinMaxCall]:
 
     traverse(expr)
     return detected
+
+
+# =============================================================================
+# Day 4: Actual Reformulation Implementation
+# =============================================================================
+
+
+@dataclass
+class ReformulationResult:
+    """
+    Result of reformulating a single min/max call.
+
+    Contains all the auxiliary variables, multipliers, and constraints
+    needed to replace the non-smooth min/max with complementarity conditions.
+
+    Attributes:
+        aux_var_name: Name of auxiliary variable (e.g., "aux_min_objdef_0")
+        multiplier_names: Names of multiplier variables (one per argument)
+        constraints: List of (constraint_name, EquationDef) for complementarity
+        replacement_expr: Expression to use in place of original min/max call
+    """
+
+    aux_var_name: str
+    multiplier_names: list[str]
+    constraints: list[tuple[str, EquationDef]]
+    replacement_expr: VarRef
+
+
+def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> ReformulationResult:
+    """
+    Reformulate min(x₁, x₂, ..., xₙ) into MCP complementarity form.
+
+    Creates:
+        - Auxiliary variable z_min
+        - n multiplier variables λ₁, λ₂, ..., λₙ (all >= 0)
+        - n complementarity constraints: (xᵢ - z_min) ⊥ λᵢ
+
+    Mathematical formulation:
+        For each argument xᵢ:
+            xᵢ - z_min >= 0  (with multiplier λᵢ >= 0)
+            Complementarity: (xᵢ - z_min) · λᵢ = 0
+
+    At solution:
+        - z_min = min(x₁, ..., xₙ)
+        - For active argument (xⱼ = z_min): λⱼ can be > 0
+        - For inactive arguments (xᵢ > z_min): λᵢ = 0
+
+    Args:
+        min_call: MinMaxCall object with func_type='min'
+        aux_mgr: Manager for generating unique variable names
+
+    Returns:
+        ReformulationResult with all components for MCP system
+
+    Example:
+        Input: min(x, y) in equation "objdef"
+        Output:
+            aux_var_name: "aux_min_objdef_0"
+            multiplier_names: ["lambda_min_objdef_0_arg0", "lambda_min_objdef_0_arg1"]
+            constraints: [
+                ("comp_min_objdef_0_arg0", x - aux_min_objdef_0 >= 0),
+                ("comp_min_objdef_0_arg1", y - aux_min_objdef_0 >= 0)
+            ]
+            replacement_expr: VarRef("aux_min_objdef_0")
+    """
+    from ..ir.ast import Binary, VarRef
+    from ..ir.symbols import EquationDef, Rel
+
+    if min_call.func_type != "min":
+        raise ValueError(f"Expected func_type='min', got '{min_call.func_type}'")
+
+    if not min_call.args:
+        raise ValueError("min() call must have at least one argument")
+
+    # Generate auxiliary variable name
+    aux_var_name = aux_mgr.generate_name("min", min_call.context)
+
+    # Generate multiplier names (one per argument)
+    multiplier_names = []
+    for i in range(len(min_call.args)):
+        mult_name = f"lambda_min_{min_call.context}_{min_call.index}_arg{i}"
+        multiplier_names.append(mult_name)
+
+    # Create complementarity constraints: xᵢ - z_min >= 0
+    constraints = []
+    aux_var_ref = VarRef(aux_var_name, ())
+
+    for i, arg_expr in enumerate(min_call.args):
+        # Constraint: arg - aux_var >= 0
+        # In GAMS MCP form: arg - aux_var =g= 0 paired with multiplier
+        constraint_name = f"comp_min_{min_call.context}_{min_call.index}_arg{i}"
+
+        # LHS: arg - aux_var
+        # RHS: 0
+        lhs = Binary("-", arg_expr, aux_var_ref)
+        rhs = Const(0.0)
+
+        constraint = EquationDef(
+            name=constraint_name,
+            domain=(),  # Scalar for now; indexed handling in future
+            relation=Rel.GE,  # >= 0
+            lhs_rhs=(lhs, rhs),
+        )
+
+        constraints.append((constraint_name, constraint))
+
+    return ReformulationResult(
+        aux_var_name=aux_var_name,
+        multiplier_names=multiplier_names,
+        constraints=constraints,
+        replacement_expr=aux_var_ref,
+    )
+
+
+def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> ReformulationResult:
+    """
+    Reformulate max(x₁, x₂, ..., xₙ) into MCP complementarity form.
+
+    Creates:
+        - Auxiliary variable w_max
+        - n multiplier variables μ₁, μ₂, ..., μₙ (all >= 0)
+        - n complementarity constraints: (w_max - xᵢ) ⊥ μᵢ
+
+    Mathematical formulation:
+        For each argument xᵢ:
+            w_max - xᵢ >= 0  (with multiplier μᵢ >= 0)
+            Complementarity: (w_max - xᵢ) · μᵢ = 0
+
+    At solution:
+        - w_max = max(x₁, ..., xₙ)
+        - For active argument (xⱼ = w_max): μⱼ can be > 0
+        - For inactive arguments (xᵢ < w_max): μᵢ = 0
+
+    Note: This is symmetric to min but with reversed inequality direction.
+          Constraints are (w_max - xᵢ) >= 0 instead of (xᵢ - z_min) >= 0.
+
+    Args:
+        max_call: MinMaxCall object with func_type='max'
+        aux_mgr: Manager for generating unique variable names
+
+    Returns:
+        ReformulationResult with all components for MCP system
+
+    Example:
+        Input: max(x, y) in equation "balance"
+        Output:
+            aux_var_name: "aux_max_balance_0"
+            multiplier_names: ["mu_max_balance_0_arg0", "mu_max_balance_0_arg1"]
+            constraints: [
+                ("comp_max_balance_0_arg0", aux_max_balance_0 - x >= 0),
+                ("comp_max_balance_0_arg1", aux_max_balance_0 - y >= 0)
+            ]
+            replacement_expr: VarRef("aux_max_balance_0")
+    """
+    from ..ir.ast import Binary, VarRef
+    from ..ir.symbols import EquationDef, Rel
+
+    if max_call.func_type != "max":
+        raise ValueError(f"Expected func_type='max', got '{max_call.func_type}'")
+
+    if not max_call.args:
+        raise ValueError("max() call must have at least one argument")
+
+    # Generate auxiliary variable name
+    aux_var_name = aux_mgr.generate_name("max", max_call.context)
+
+    # Generate multiplier names (one per argument)
+    multiplier_names = []
+    for i in range(len(max_call.args)):
+        mult_name = f"mu_max_{max_call.context}_{max_call.index}_arg{i}"
+        multiplier_names.append(mult_name)
+
+    # Create complementarity constraints: w_max - xᵢ >= 0
+    constraints = []
+    aux_var_ref = VarRef(aux_var_name, ())
+
+    for i, arg_expr in enumerate(max_call.args):
+        # Constraint: aux_var - arg >= 0
+        # In GAMS MCP form: aux_var - arg =g= 0 paired with multiplier
+        constraint_name = f"comp_max_{max_call.context}_{max_call.index}_arg{i}"
+
+        # LHS: aux_var - arg (note: opposite of min)
+        # RHS: 0
+        lhs = Binary("-", aux_var_ref, arg_expr)
+        rhs = Const(0.0)
+
+        constraint = EquationDef(
+            name=constraint_name,
+            domain=(),  # Scalar for now; indexed handling in future
+            relation=Rel.GE,  # >= 0
+            lhs_rhs=(lhs, rhs),
+        )
+
+        constraints.append((constraint_name, constraint))
+
+    return ReformulationResult(
+        aux_var_name=aux_var_name,
+        multiplier_names=multiplier_names,
+        constraints=constraints,
+        replacement_expr=aux_var_ref,
+    )
+
+
+def reformulate_model(model: ModelIR) -> None:
+    """
+    Reformulate all min/max calls in a model into MCP complementarity form.
+
+    This is the main entry point for min/max reformulation (Day 4).
+
+    Process:
+        1. Scan all equations for min/max calls
+        2. For each call, generate auxiliary variables and constraints
+        3. Replace min/max calls with auxiliary variable references
+        4. Add auxiliary variables and multipliers to model
+        5. Add complementarity constraints to model
+
+    The reformulation happens in-place, modifying the model's variables
+    and equations dictionaries.
+
+    Integration Point (from Unknown 6.4):
+        This function should be called in cli.py AFTER normalize_model()
+        and BEFORE compute_objective_gradient(). This ensures:
+        - Auxiliary variables are added to model.variables
+        - Auxiliary constraints are added to model.equations
+        - IndexMapping will include them automatically during derivative computation
+
+    Args:
+        model: ModelIR to reformulate (modified in-place)
+
+    Side Effects:
+        - Adds auxiliary variables to model.variables
+        - Adds multiplier variables to model.variables
+        - Adds complementarity constraints to model.equations
+        - Modifies equation expressions to replace min/max with aux vars
+
+    Example:
+        Before:
+            equations = {"objdef": obj =e= min(x, y)}
+            variables = {"x": ..., "y": ..., "obj": ...}
+
+        After:
+            equations = {
+                "objdef": obj =e= aux_min_objdef_0,
+                "comp_min_objdef_0_arg0": x - aux_min_objdef_0 =g= 0,
+                "comp_min_objdef_0_arg1": y - aux_min_objdef_0 =g= 0
+            }
+            variables = {
+                "x": ..., "y": ..., "obj": ...,
+                "aux_min_objdef_0": VariableDef(...),
+                "lambda_min_objdef_0_arg0": VariableDef(kind=POSITIVE, ...),
+                "lambda_min_objdef_0_arg1": VariableDef(kind=POSITIVE, ...)
+            }
+    """
+    from ..ir.symbols import EquationDef, VariableDef, VarKind
+
+    # Initialize auxiliary variable manager
+    aux_mgr = AuxiliaryVariableManager()
+    aux_mgr.register_user_variables(set(model.variables.keys()))
+
+    # Track all reformulations to apply
+    reformulations: list[tuple[str, MinMaxCall, ReformulationResult]] = []
+
+    # Scan all equations for min/max calls
+    for eq_name, eq_def in model.equations.items():
+        lhs, rhs = eq_def.lhs_rhs
+
+        # Check both sides for min/max calls
+        for expr in [lhs, rhs]:
+            min_max_calls = detect_min_max_calls(expr, eq_name)
+
+            for call in min_max_calls:
+                # Reformulate based on type
+                if call.func_type == "min":
+                    result = reformulate_min(call, aux_mgr)
+                elif call.func_type == "max":
+                    result = reformulate_max(call, aux_mgr)
+                else:
+                    raise ValueError(f"Unknown func_type: {call.func_type}")
+
+                # Find the original Call node to replace
+                # We need to store enough info to do replacement
+                # For now, we'll need to traverse and replace
+                reformulations.append((eq_name, call, result))
+
+    # Apply reformulations
+    for eq_name, min_max_call, result in reformulations:
+        # 1. Add auxiliary variable to model
+        aux_var = VariableDef(
+            name=result.aux_var_name,
+            domain=(),
+            kind=VarKind.CONTINUOUS,
+            lo=None,  # Unbounded
+            up=None,
+        )
+        model.add_var(aux_var)
+
+        # 2. Add multiplier variables to model (all positive)
+        for mult_name in result.multiplier_names:
+            mult_var = VariableDef(
+                name=mult_name,
+                domain=(),
+                kind=VarKind.POSITIVE,  # Multipliers >= 0
+                lo=0.0,
+                up=None,
+            )
+            model.add_var(mult_var)
+
+        # 3. Add complementarity constraints to model
+        for _constraint_name, constraint_def in result.constraints:
+            model.add_equation(constraint_def)
+
+        # 4. Replace min/max call with auxiliary variable in original equation
+        eq_def = model.equations[eq_name]
+        lhs, rhs = eq_def.lhs_rhs
+
+        # Replace min/max calls with aux var reference
+        new_lhs = _replace_min_max_call(lhs, min_max_call, result.replacement_expr)
+        new_rhs = _replace_min_max_call(rhs, min_max_call, result.replacement_expr)
+
+        # Update equation with new expressions
+        model.equations[eq_name] = EquationDef(
+            name=eq_def.name,
+            domain=eq_def.domain,
+            relation=eq_def.relation,
+            lhs_rhs=(new_lhs, new_rhs),
+        )
+
+
+def _replace_min_max_call(expr: Expr, call: MinMaxCall, replacement: Expr) -> Expr:
+    """
+    Recursively replace a min/max call with a replacement expression.
+
+    This traverses the expression tree and replaces the matching Call node
+    with the replacement expression (typically a VarRef to auxiliary variable).
+
+    Args:
+        expr: Expression to search and modify
+        call: MinMaxCall object describing what to replace
+        replacement: Expression to use instead (e.g., VarRef to aux var)
+
+    Returns:
+        New expression with replacements made
+    """
+    from ..ir.ast import Binary, Sum, Unary
+    from ..ir.ast import Call as ASTCall
+
+    # Check if this expression is the call we're looking for
+    if isinstance(expr, ASTCall):
+        if expr.func.lower() == call.func_type:
+            # Check if arguments match (simple equality check)
+            # For exact matching, we'd need to compare ASTs deeply
+            # For now, assume first match is correct (single min/max per equation)
+            if len(expr.args) == len(call.args):
+                return replacement
+
+    # Recursively replace in children
+    if isinstance(expr, Binary):
+        new_left = _replace_min_max_call(expr.left, call, replacement)
+        new_right = _replace_min_max_call(expr.right, call, replacement)
+        return Binary(expr.op, new_left, new_right)
+
+    elif isinstance(expr, Unary):
+        new_child = _replace_min_max_call(expr.child, call, replacement)
+        return Unary(expr.op, new_child)
+
+    elif isinstance(expr, ASTCall):
+        new_args = tuple(_replace_min_max_call(arg, call, replacement) for arg in expr.args)
+        return ASTCall(expr.func, new_args)
+
+    elif isinstance(expr, Sum):
+        new_body = _replace_min_max_call(expr.body, call, replacement)
+        return Sum(expr.index_sets, new_body)
+
+    # Base case: no replacement needed (Const, VarRef, ParamRef, etc.)
+    return expr
