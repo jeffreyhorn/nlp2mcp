@@ -241,11 +241,11 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - 10+ tests for detection and naming
 
 #### Acceptance Criteria
-- [ ] `min(x, y)` calls detected in equation ASTs
-- [ ] Auxiliary variable names generated without collisions
-- [ ] Multi-argument `min(x, y, z)` supported (design level)
-- [ ] Nested `min(min(x, y), z)` flattened to `min(x, y, z)`
-- [ ] All existing tests pass (no regressions)
+- [x] `min(x, y)` calls detected in equation ASTs
+- [x] Auxiliary variable names generated without collisions
+- [x] Multi-argument `min(x, y, z)` supported (design level)
+- [x] Nested `min(min(x, y), z)` flattened to `min(x, y, z)`
+- [x] All existing tests pass (no regressions) - **754 tests now passing**
 
 #### Integration Risks
 - **Risk 1:** KKT assembly may need refactoring to add auxiliary constraints

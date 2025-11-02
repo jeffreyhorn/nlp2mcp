@@ -9,6 +9,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - Sprint 4: Feature Expansion + Robustness (IN PROGRESS)
 
+### Implementation - 2025-11-02 - Day 3: Min/Max Reformulation - Part 1 (Infrastructure) ✅ COMPLETE
+
+#### Added
+- **Min/Max Reformulation Infrastructure** (`src/kkt/reformulation.py`)
+  - Comprehensive design documentation for epigraph reformulation approach
+  - Function: `detect_min_max_calls()` - Traverse AST to find min/max function calls
+  - Function: `flatten_min_max_args()` - Flatten nested min/max calls (e.g., min(min(x,y),z) → min(x,y,z))
+  - Function: `is_min_or_max_call()` - Check if expression is min() or max() call
+  - Class: `AuxiliaryVariableManager` - Generate unique auxiliary variable names with collision detection
+  - Class: `MinMaxCall` - Data structure for detected min/max calls with flattened arguments
+  - Naming scheme: `aux_{min|max}_{context}_{index}` (e.g., aux_min_objdef_0)
+
+- **Comprehensive Test Suite** (`tests/unit/kkt/test_reformulation.py`)
+  - 33 new unit tests for reformulation infrastructure
+  - TestMinMaxDetection: 8 tests for detecting min/max in expressions
+  - TestFlattening: 7 tests for nested call flattening
+  - TestAuxiliaryVariableNaming: 8 tests for name generation and collision detection
+  - TestDetectWithFlattening: 3 tests for integrated detection and flattening
+  - TestMinMaxCallDataclass: 3 tests for data structure
+  - TestIntegrationScenarios: 4 tests for realistic use cases
+
+#### Technical Details
+- **Epigraph Reformulation Design**:
+  - Min: z = min(x, y) becomes (x - z) ⊥ λ_x, (y - z) ⊥ λ_y with stationarity ∂f/∂z - λ_x - λ_y = 0
+  - Max: w = max(x, y) becomes (w - x) ⊥ μ_x, (w - y) ⊥ μ_y with stationarity ∂f/∂w + μ_x + μ_y = 0
+  - Multi-argument support: min(x₁, ..., xₙ) creates n complementarity pairs
+  - Scales linearly: n arguments → n+1 variables, n+1 equations
+
+- **Flattening Algorithm**:
+  - Recursively flattens nested same-type calls: min(min(x, y), z) → min(x, y, z)
+  - Preserves different-type nesting: min(max(x, y), z) keeps max as argument
+  - Reduces auxiliary variables and simplifies MCP structure
+  - Mathematically equivalent to nested form
+
+- **Auxiliary Variable Naming**:
+  - Context-based naming: equation name becomes part of variable name
+  - Separate counters for min and max: aux_min_eq1_0, aux_max_eq1_0
+  - Collision detection with user-declared variables
+  - GAMS-valid names (starts with letter, alphanumeric + underscore)
+
+- **AST Traversal**:
+  - Detects min/max calls at any depth in expression tree
+  - Handles complex expressions: x + min(y, z) * max(a, b)
+  - Supports indexed equations: min(x(i), y(i)) in eq_balance_i1
+  - Case-insensitive detection (min, MIN, Min all recognized)
+
+#### Test Coverage
+- 33 new unit tests (all passing)
+- Total: **754 tests passing** (up from 721)
+
+#### Documentation
+- PLAN.md: All 5 Day 3 acceptance criteria checked off
+- README.md: Day 3 marked complete with ✅
+- CHANGELOG.md: Comprehensive Day 3 summary added
+- Inline documentation: 200+ lines of design documentation in reformulation.py
+
+**Note**: Day 3 implements infrastructure only. Actual reformulation (creating constraints, 
+integration with KKT assembly, derivative computation, MCP emission) will be in Day 4.
+
+**Sprint 4 Progress**: Day 3/10 complete (30%)
+
+---
+
 ### Implementation - 2025-11-02 - Day 2: Table Data Blocks ✅ COMPLETE
 
 #### Added
