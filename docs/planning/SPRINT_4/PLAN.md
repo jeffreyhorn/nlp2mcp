@@ -433,13 +433,13 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - 20+ tests (10 for abs, 10 for fixed vars)
 
 #### Acceptance Criteria
-- [ ] `abs(x)` without flag raises clear error with suggestion
-- [ ] `abs(x)` with `--smooth-abs` uses `sqrt(x^2 + ε)` approximation
-- [ ] Derivative of smooth abs is `x / sqrt(x^2 + ε)`
-- [ ] `x.fx = 10` parsed into `BoundsDef(fx=10.0)`
-- [ ] Fixed vars create equality constraint (no bound multipliers)
-- [ ] MCP emission pairs fixed var equality with free multiplier
-- [ ] All tests pass
+- [x] `abs(x)` without flag raises clear error with suggestion
+- [x] `abs(x)` with `--smooth-abs` uses `sqrt(x^2 + ε)` approximation
+- [x] Derivative of smooth abs is `x / sqrt(x^2 + ε)`
+- [x] `x.fx = 10` parsed into `BoundsDef(fx=10.0)` (Already implemented in Unknown 1.3)
+- [x] Fixed vars create equality constraint (no bound multipliers) (Already implemented in Unknown 1.3)
+- [x] MCP emission pairs fixed var equality with free multiplier (Already implemented in Unknown 1.3)
+- [x] All tests pass (779 passed, 1 skipped, 1 xfailed)
 
 #### Integration Risks
 - **Risk 1:** Smooth abs may cause numerical issues near x=0

@@ -98,6 +98,133 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+### Implementation - 2025-11-02 - Day 5: abs(x) Handling and Fixed Variables (x.fx) ✅ COMPLETE
+
+#### Added
+- **abs() Smooth Approximation** (`src/ad/derivative_rules.py`)
+  - Function: `_diff_abs()` - Differentiate abs() with smooth approximation
+  - Approximation: abs(x) ≈ sqrt(x² + ε) when --smooth-abs enabled
+  - Derivative: d/dx sqrt(x² + ε) = x / sqrt(x² + ε)
+  - Default behavior: Reject abs() with helpful error message suggesting --smooth-abs
+
+- **Configuration System** (`src/config.py`)
+  - Class: `Config` - Dataclass for tool configuration options
+  - Field: `smooth_abs: bool` - Enable/disable abs() smoothing (default: False)
+  - Field: `smooth_abs_epsilon: float` - Epsilon parameter for smoothing (default: 1e-6)
+  - Validation: Epsilon must be positive
+
+- **CLI Flags** (`src/cli.py`)
+  - Flag: `--smooth-abs` - Enable smooth approximation for abs()
+  - Flag: `--smooth-abs-epsilon <value>` - Configure epsilon (default: 1e-6)
+  - Integration: Config created and passed to derivative computation functions
+
+- **Test Suite** (`tests/unit/ad/test_abs_smoothing.py`)
+  - 8 new tests for abs() smoothing functionality
+  - Coverage: rejection without flag, smoothing with flag, derivative structure
+  - Coverage: custom epsilon, composite expressions, different variables
+  - Coverage: config validation
+
+#### Modified
+- **Derivative System** - Config parameter threaded through all functions:
+  - `differentiate_expr()` - Main dispatcher accepts config
+  - `_diff_binary()` - Binary operations pass config to recursive calls
+  - `_diff_call()` - Function calls route to appropriate handler with config
+  - All helper functions (`_diff_power`, `_diff_exp`, etc.) - Accept config parameter
+  - Total: 17 function signatures updated
+
+- **Gradient Computation** (`src/ad/gradient.py`)
+  - `compute_objective_gradient()` - Accepts config parameter
+  - `compute_gradient_for_expression()` - Accepts config parameter
+  - Config passed to all `differentiate_expr()` calls
+
+- **Jacobian Computation** (`src/ad/constraint_jacobian.py`)
+  - `compute_constraint_jacobian()` - Accepts config parameter  
+  - `_compute_equality_jacobian()` - Accepts config parameter
+  - `_compute_inequality_jacobian()` - Accepts config parameter
+  - `_compute_bound_jacobian()` - Accepts config parameter
+  - Config passed to all `differentiate_expr()` calls
+
+- **Error Messages** (`src/ad/derivative_rules.py`)
+  - Updated abs() error to suggest --smooth-abs flag
+  - Updated unsupported function error to mention abs() requires --smooth-abs
+
+- **Existing Tests** (`tests/unit/ad/test_unsupported.py`)
+  - Updated 2 tests for new abs() error messages
+  - Tests validate error messages mention --smooth-abs flag
+
+#### Fixed Variables (Already Implemented)
+Fixed variables (`x.fx = value`) were already fully implemented in Day 1 (Unknown 1.3):
+- ✅ Parser recognizes `.fx` syntax
+- ✅ Normalization creates equality constraints: `x - fx_value = 0`
+- ✅ KKT assembly: No stationarity for fixed vars, equality multipliers instead
+- ✅ MCP emission: Pairs fixed var equality with free multiplier (e.g., `x_fx.nu_x_fx`)
+- ✅ All tests passing (4 tests in `tests/research/fixed_variable_verification/`)
+
+#### Technical Details
+- **Smooth Approximation Math**:
+  - abs(x) ≈ sqrt(x² + ε)
+  - Accuracy at x=0: √ε = 0.001 (for ε=1e-6)
+  - For |x| ≥ 0.1: relative error < 0.1%
+  - For |x| ≥ 1.0: relative error < 0.0001%
+  - Derivative continuous everywhere (unlike true abs)
+
+- **Implementation Pattern**:
+  ```python
+  # Numerator: x
+  numerator = arg
+  
+  # Denominator: sqrt(x² + ε)
+  arg_squared = Binary("^", arg, Const(2.0))
+  arg_squared_plus_eps = Binary("+", arg_squared, Const(epsilon))
+  denominator = Call("sqrt", (arg_squared_plus_eps,))
+  
+  # x / sqrt(x² + ε)
+  derivative = Binary("/", numerator, denominator)
+  
+  # Chain rule
+  darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+  return Binary("*", derivative, darg_dx)
+  ```
+
+#### Test Coverage
+- 8 new tests in `test_abs_smoothing.py` (all passing)
+- 2 updated tests in `test_unsupported.py` (all passing)
+- Fixed variable tests: 4 tests (all passing)
+- Total: **779 tests passing** (up from 770 in Day 4)
+- Pass rate: 100% (779 passed, 1 skipped, 1 xfailed)
+
+#### Quality Metrics
+- **Type Checking**: Zero mypy errors (42 source files, +1 from Day 4)
+- **Linting**: All ruff checks passed
+- **Formatting**: All files black-compliant
+- **Test Pass Rate**: 100% (779/779 tests)
+
+#### Code Statistics
+- **Files Modified**: 7 files
+- **Lines Added**: 432 lines (config system, derivative updates, tests)
+- **Lines Changed**: 91 lines (function signatures, config threading)
+- **New Module**: `src/config.py` (27 lines)
+- **New Tests**: `tests/unit/ad/test_abs_smoothing.py` (142 lines)
+
+#### Acceptance Criteria (All Met)
+- [x] abs() without flag raises clear error with suggestion
+- [x] abs() with --smooth-abs uses sqrt(x² + ε) approximation
+- [x] Derivative of smooth abs is x / sqrt(x² + ε)
+- [x] x.fx = 10 parsed into BoundsDef(fx=10.0) ✅ (Already implemented)
+- [x] Fixed vars create equality constraint (no bound multipliers) ✅ (Already implemented)
+- [x] MCP emission pairs fixed var equality with free multiplier ✅ (Already implemented)
+- [x] All tests pass (779 passed, 1 skipped, 1 xfailed)
+
+#### Documentation
+- PLAN.md: All 7 Day 5 acceptance criteria checked off
+- README.md: Day 5 marked complete with ✅
+- CHANGELOG.md: Comprehensive Day 5 summary added
+- Inline documentation: Comprehensive docstrings for abs() implementation
+
+**Sprint 4 Progress**: Day 5/10 complete (50%)
+
+---
+
 ### Implementation - 2025-11-02 - Day 3: Min/Max Reformulation - Part 1 (Infrastructure) ✅ COMPLETE
 
 #### Added
