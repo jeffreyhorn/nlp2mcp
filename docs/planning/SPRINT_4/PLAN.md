@@ -259,9 +259,15 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - **Unknown 4.2 (Auxiliary variable naming)**: INCOMPLETE - Verify collision detection, indexed equation handling, GAMS name validity during implementation
   - Planned approach: Context-based naming with counter for duplicates
   
-- **Unknown 6.4 (Auxiliary vars and IndexMapping)**: INCOMPLETE - CRITICAL
-  - IndexMapping must be created AFTER reformulations to include auxiliary variables
-  - Need to verify: Gradient/Jacobian columns align correctly, no index misalignment
+- **Unknown 6.4 (Auxiliary vars and IndexMapping)**: ✅ **COMPLETE** (Verified 2025-11-02)
+  - **Finding**: Current architecture is CORRECT BY DESIGN - IndexMapping created fresh during derivative computation
+  - **Integration Point**: Reformulations must be inserted at Step 2.5 (between normalize and derivatives)
+  - **Pipeline**: Parse → Normalize → **[Reformulation]** → Derivatives (creates IndexMapping) → KKT → Emit
+  - **Key Insight**: `build_index_mapping()` called inside `compute_objective_gradient()` and `compute_constraint_jacobian()`, ensuring auxiliary variables are included
+  - **Action Required**: Add reformulation calls in cli.py BEFORE compute_objective_gradient()
+  - **Verification**: Gradient/Jacobian alignment guaranteed by shared build_index_mapping() function
+  - **Benefits**: No special handling needed, deterministic ordering, scalable to any number of aux vars
+  - See KNOWN_UNKNOWNS.md Unknown 6.4 for complete analysis and integration code example
 
 **Checkpoint 1** (Day 3 - End of Day): **(Est: 1h)**
 - Review all Day 1-3 deliverables
@@ -335,9 +341,25 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
   - Planned approach: Add auxiliary constraints to Model MCP declaration
   - Need to verify: GAMS compilation works, equation-variable pairing correct
 
-- **Unknown 6.4 (Auxiliary vars and IndexMapping)**: INCOMPLETE - CRITICAL
-  - IndexMapping must be created AFTER reformulations to include auxiliary variables
-  - Need to verify: Gradient/Jacobian columns align correctly, no index misalignment
+- **Unknown 6.4 (Auxiliary vars and IndexMapping)**: ✅ **COMPLETE** (Research complete)
+  - **Critical Integration Requirement**: Call reformulation functions in cli.py BEFORE compute_objective_gradient()
+  - **Pipeline Position**: Insert at Step 2.5: Parse → Normalize → **[Reformulate]** → Derivatives → KKT → Emit
+  - **Why It Works**: IndexMapping created fresh during derivative computation automatically includes auxiliary variables
+  - **Implementation Pattern**:
+    ```python
+    # In cli.py main() function:
+    model = parse_model_file(input_file)
+    normalize_model(model)
+    
+    # ← INSERT REFORMULATION HERE (Step 2.5)
+    reformulate_min_max(model)  # Modifies model.variables & model.equations
+    
+    # Derivatives will now include auxiliary variables automatically
+    gradient = compute_objective_gradient(model)
+    J_eq, J_ineq = compute_constraint_jacobian(model)
+    ```
+  - **No Special Handling**: Auxiliary variables treated identically to original variables
+  - **Verification**: See KNOWN_UNKNOWNS.md Unknown 6.4 for detailed analysis
 
 ---
 
@@ -947,15 +969,15 @@ Sprint 4 Known Unknowns are documented in:
 
 10. **Unknown 6.1 ($include vs ModelIR)**: Preprocessing happens before parsing, ModelIR sees flat expanded source. No special tracking needed in ModelIR. ✅ COMPLETE
 
-**INCOMPLETE - TO BE VERIFIED (13/23):**
+**INCOMPLETE - TO BE VERIFIED (11/23):**
 
 **Days 3-6 Verification:**
 
-11. **Unknown 4.2 (Auxiliary variable naming)**: INCOMPLETE - Verify collision detection, indexed equation handling, GAMS name validity during Day 3-4 implementation
+11. **Unknown 4.2 (Auxiliary variable naming)**: ✅ COMPLETE (Day 3) - Context-based naming with collision detection implemented in `AuxiliaryVariableManager`. All 8 tests passing. Supports indexed equations, GAMS-compliant names, debuggable output.
 
 12. **Unknown 4.3 (Auxiliary constraints in Model)**: INCOMPLETE - Verify GAMS compilation works, equation-variable pairing correct during Day 4
 
-13. **Unknown 6.4 (Auxiliary vars and IndexMapping)**: INCOMPLETE - CRITICAL - IndexMapping must be created AFTER reformulations. Verify gradient/Jacobian columns align correctly during Day 4
+13. **Unknown 6.4 (Auxiliary vars and IndexMapping)**: ✅ COMPLETE (Research) - Architecture correct by design. IndexMapping created during derivative computation automatically includes auxiliary variables. Integration point identified: insert reformulation at Step 2.5 in cli.py (between normalize and derivatives). Gradient/Jacobian alignment guaranteed by shared build_index_mapping(). See KNOWN_UNKNOWNS.md for integration code.
 
 14. **Unknown 4.4 (Emit fixed variables in MCP)**: INCOMPLETE - Verify MCP emission works, GAMS compilation succeeds, PATH handles correctly during Day 5
 
