@@ -88,6 +88,9 @@ def preprocess_includes(
     if _include_stack is None:
         _include_stack = []
 
+    # Normalize path for consistent comparison (handles relative vs absolute paths)
+    file_path = file_path.resolve()
+
     # Check for circular includes
     if file_path in _include_stack:
         # Circular dependency detected - show full chain
@@ -132,7 +135,8 @@ def preprocess_includes(
         included_filename = match.group(1) or match.group(2)
 
         # Resolve path relative to the file containing the $include
-        included_path = file_path.parent / included_filename
+        # Normalize to handle different forms (./file.inc vs file.inc, etc.)
+        included_path = (file_path.parent / included_filename).resolve()
 
         # Add debug comment showing include boundary
         result_parts.append(f"\n* BEGIN INCLUDE: {included_filename}\n")
