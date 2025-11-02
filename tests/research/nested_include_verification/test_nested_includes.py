@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from src.ir.parser import parse_model_file
-from src.ir.preprocessor import CircularIncludeError
+from src.ir.preprocessor import CircularIncludeError, IncludeDepthExceededError
 
 
 def test_three_level_nesting():
@@ -83,9 +83,9 @@ def test_circular_include_detection():
     print(f"  Error caught: {error_message}")
 
     # Verify error message contains the cycle
-    assert (
-        "Circular include detected" in error_message
-    ), "Error message doesn't mention circular include"
+    assert "Circular include detected" in error_message, (
+        "Error message doesn't mention circular include"
+    )
     assert "circular_a.inc" in error_message, "circular_a.inc not in error message"
     assert "circular_b.inc" in error_message, "circular_b.inc not in error message"
 
@@ -175,9 +175,9 @@ def test_depth_limit():
         for i in range(depth):
             scalar_name = f"p{i}"
             assert scalar_name in model.params, f"Scalar '{scalar_name}' not found"
-            assert model.params[scalar_name].values[()] == float(
-                i + 1
-            ), f"Scalar '{scalar_name}' has wrong value"
+            assert model.params[scalar_name].values[()] == float(i + 1), (
+                f"Scalar '{scalar_name}' has wrong value"
+            )
 
         print(f"✓ Successfully parsed {depth}-level deep includes")
 
@@ -222,17 +222,17 @@ def test_max_depth_exceeded():
     try:
         print(f"  Testing {depth}-level deep nesting (should exceed limit)...")
 
-        # Should raise RecursionError
-        with pytest.raises(RecursionError) as exc_info:
+        # Should raise IncludeDepthExceededError
+        with pytest.raises(IncludeDepthExceededError) as exc_info:
             parse_model_file(str(main_file))
 
         error_message = str(exc_info.value)
         print(f"  Error caught: {error_message}")
 
         # Verify error message mentions depth limit
-        assert (
-            "depth" in error_message.lower() or "100" in error_message
-        ), "Error doesn't mention depth limit"
+        assert "depth" in error_message.lower() or "100" in error_message, (
+            "Error doesn't mention depth limit"
+        )
 
         print("✓ Max depth limit enforced correctly")
 
