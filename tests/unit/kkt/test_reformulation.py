@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from src.ir.ast import Binary, Call, Const, VarRef
+from src.ir.symbols import Rel
 from src.kkt.reformulation import (
     AuxiliaryVariableManager,
     MinMaxCall,
@@ -401,12 +402,12 @@ class TestReformulatMin:
         # First constraint: x - aux_min >= 0
         name0, eq0 = result.constraints[0]
         assert name0 == "comp_min_objdef_0_arg0"
-        assert eq0.relation.value == "=g="
+        assert eq0.relation == Rel.GE
 
         # Second constraint: y - aux_min >= 0
         name1, eq1 = result.constraints[1]
         assert name1 == "comp_min_objdef_0_arg1"
-        assert eq1.relation.value == "=g="
+        assert eq1.relation == Rel.GE
 
         # Check replacement expression
         assert isinstance(result.replacement_expr, VarRef)
@@ -503,7 +504,7 @@ class TestReformulatMax:
         # Constraints should be: aux_max - x >= 0, aux_max - y >= 0
         name0, eq0 = result.constraints[0]
         assert name0 == "comp_max_constraint1_0_arg0"
-        assert eq0.relation.value == "=g="
+        assert eq0.relation == Rel.GE
 
         # Check replacement expression
         assert isinstance(result.replacement_expr, VarRef)
