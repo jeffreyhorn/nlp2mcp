@@ -506,7 +506,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 ---
 
-### Day 7: Diagnostics + Developer Ergonomics (Part 2) (8h total)
+### Day 7: Diagnostics + Developer Ergonomics (Part 2) (6h tasks + 2h follow-on = 8h total)
 
 #### Goals
 - Add model statistics reporting (rows/cols/nonzeros)
@@ -521,27 +521,27 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Break down by type (stationarity, complementarity, bounds)
 - Format for display
 
-**Task 2: Implement Matrix Market Jacobian export** (Est: 2h)
+**Task 2: Implement Matrix Market Jacobian export** (Est: 1.5h)
 - Export Jacobian in Matrix Market format
 - Handle sparse structure
 - Validate format (SciPy/MATLAB compatible)
 
-**Task 3: Add CLI flags for diagnostics** (Est: 1h)
+**Task 3: Add CLI flags for diagnostics** (Est: 0.75h)
 - Add --stats flag for statistics output
 - Add --dump-jacobian <file> flag
 - Integrate into main workflow
 
-**Task 4: Configuration via pyproject.toml** (Est: 1.5h)
+**Task 4: Configuration via pyproject.toml** (Est: 1h)
 - Add pyproject.toml support for default options
 - Support all CLI flags in config file
 - Document configuration options
 
-**Task 5: Structured logging with verbosity control** (Est: 1h)
+**Task 5: Structured logging with verbosity control** (Est: 0.75h)
 - Add logging framework with levels
 - Add --verbose and --quiet flags
 - Log key transformation steps
 
-**Task 6: Enhanced error messages - Phase 2** (Est: 1h)
+**Task 6: Enhanced error messages - Phase 2** (Est: 0.5h)
 - Improve differentiation error messages
 - Improve KKT assembly error messages
 - Add troubleshooting suggestions
@@ -575,12 +575,11 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 #### Follow-On Items
 
 **PREP_PLAN Task 3: Set Up PATH Solver Validation** (Est: 2h - after licensing available)
-*Note: This is scheduled as follow-on work AFTER licensing becomes available, before main PATH validation on Day 8.*
+*Note: This follow-on runs once licensing is available and must finish before Day 8 validation begins.*
 
 - Install PATH solver (requires GAMS license)
-- Verify PATH available in GAMS
-- Create test harness for PATH validation
-- Document setup for team
+- Verify PATH executable availability within GAMS
+- Capture environment setup steps for the team (harness work deferred to Day 8)
 
 *Prerequisites (from PREP_PLAN.md):*
 - GAMS license must be active (may not be available until late sprint)
@@ -599,10 +598,10 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 #### Main Tasks
 
-**Task 1: Set up PATH solver test harness** (Est: 1.5h)
-- Create PATH validation framework
-- Set up test infrastructure
-- Configure solver options
+**Task 1: Smoke-test PATH environment and finalize validation harness** (Est: 1.5h)
+- Reuse the PATH installation from Day 7 follow-on work
+- Run sanity checks to confirm solver invocation works end-to-end
+- Wire the automation harness and baseline configuration files for validation runs
 
 *Prerequisites (from KNOWN_UNKNOWNS.md):*
 - **Unknown 5.2 (PATH options)**: INCOMPLETE - Document default options, test problem-specific tuning. Verify recommended options: convergence_tolerance, iterlim, crash_method, output level.
@@ -686,18 +685,13 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 #### Main Tasks
 
-**Task 1: Run full test suite with all features enabled** (Est: 1.5h)
-- Run all 650+ tests
-- Verify no regressions
-- Check test coverage >= 85%
-
-**Task 2: Create 10 mid-size example models** (Est: 2.5h)
+**Task 1: Create 10 mid-size example models** (Est: 3.5h)
 - Curate or create transport-style models
 - Include indexed constraints and nonlinear costs
 - Cover all Sprint 4 features ($include, Table, min/max, abs, x.fx, scaling)
 - Validate all examples with GAMS and PATH
 
-**Task 3: Update README.md with Sprint 4 features** (Est: 1.5h)
+**Task 2: Update README.md with Sprint 4 features** (Est: 1.5h)
 - Document $include support
 - Document Table support
 - Document min/max reformulation
@@ -706,26 +700,25 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Document scaling (including byvar mode)
 - Document diagnostics and developer ergonomics
 
-**Task 4: Update technical documentation** (Est: 1h)
+**Task 3: Update technical documentation** (Est: 1h)
 - Update KKT_ASSEMBLY.md with reformulation details
 - Update GAMS_EMISSION.md with auxiliary variable handling
 - Document scaling algorithm (all modes)
 - Add troubleshooting guide
 - Document configuration options
 
-**Task 5: Document PATH solver requirements and options** (Est: 1h)
+**Task 4: Document PATH solver requirements and options** (Est: 1h)
 *Note: This task moved from Day 8 to reduce high-risk validation day workload*
 - Document PATH setup instructions
 - Document recommended options for different problem types
 - Create troubleshooting guide for PATH failures
 
-**Task 6: Regenerate all golden files with new features** (Est: 0.5h)
+**Task 5: Regenerate all golden files with new features** (Est: 1h)
 - Update golden files with new capabilities
 - Add new golden files for Sprint 4 features
 - Validate all golden files with GAMS
 
 #### Deliverables
-- All 650+ tests passing
 - 10 mid-size example models with documentation
 - Updated README.md with complete feature list
 - Updated technical docs (KKT_ASSEMBLY.md, GAMS_EMISSION.md)
@@ -734,8 +727,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Configuration and logging documentation
 
 #### Acceptance Criteria
-- [ ] All tests pass (no xfail markers)
-- [ ] Test coverage >= 85% for Sprint 4 code
+- [ ] Examples exercise all Sprint 4 features ($include, Table, min/max, abs, x.fx, scaling)
 - [ ] 10 mid-size examples created and validated
 - [ ] All examples solve with PATH
 - [ ] README.md accurate and complete
@@ -744,6 +736,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - [ ] Golden files validate with GAMS
 - [ ] All acceptance criteria from Days 1-8 met
 - [ ] Configuration and logging documented
+- [ ] Regression suite queued for Day 10 full run
 
 #### Integration Risks
 - **Risk 1:** Documentation may be out of sync with code
@@ -765,34 +758,40 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 #### Main Tasks
 
-**Task 1: Run all quality checks (mypy, ruff, black)** (Est: 1.5h)
+**Task 1: Run full regression test suite** (Est: 1.5h)
+- Execute all 650+ tests with all Sprint 4 features enabled
+- Capture coverage metrics (target ≥ 85%)
+- Log any failures for immediate triage
+
+**Task 2: Run quality checks (mypy, ruff, black)** (Est: 1.5h)
 - Run mypy on all modules
 - Run ruff linter
 - Run black formatter
 - Fix any issues found
 
-**Task 2: Fix any remaining issues or technical debt** (Est: 2.5h)
-- Address any bugs discovered in Days 8-9
+**Task 3: Fix any remaining issues or technical debt** (Est: 2h)
+- Address bugs discovered during regression or quality checks
 - Clean up code comments and TODOs
 - Refactor any messy implementations
 
-**Task 3: Create Sprint 4 retrospective document** (Est: 2h)
+**Task 4: Create Sprint 4 retrospective document** (Est: 1.5h)
 - Document what went well
 - Document what could improve
 - Analyze Known Unknowns process effectiveness
 - Document lessons for Sprint 5
 
-**Task 4: Update CHANGELOG.md with Sprint 4 release** (Est: 1h)
+**Task 5: Update CHANGELOG.md with Sprint 4 release** (Est: 1h)
 - List all new features
 - Document breaking changes (if any)
 - Add upgrade notes
 
-**Task 5: Plan Sprint 5 scope (preliminary)** (Est: 1h)
+**Task 6: Plan Sprint 5 scope (preliminary)** (Est: 0.5h)
 - Review PROJECT_PLAN.md for next priorities
 - Identify dependencies on Sprint 4 learnings
 - Create preliminary Sprint 5 scope document
 
 #### Deliverables
+- Full regression test suite results (coverage ≥ 85%)
 - All quality checks passing
 - Sprint 4 retrospective (docs/planning/SPRINT_4/RETROSPECTIVE.md)
 - Updated CHANGELOG.md
@@ -1055,7 +1054,7 @@ Sprint 4 Known Unknowns are documented in:
 | Day 4 | 8h | - | 8h | ✅ Within limit |
 | Day 5 | 8h | - | 8h | ✅ Within limit |
 | Day 6 | 7h | 1h | 8h | ✅ Within limit |
-| Day 7 | 8h | - | 8h | ✅ Within limit |
+| Day 7 | 6h (+2h follow-on) | - | 8h | ✅ Within limit |
 | Day 8 | 6.5h | 1h | 7.5h | ✅ Within limit (high-risk day) |
 | Day 9 | 8h | - | 8h | ✅ Within limit |
 | Day 10 | 8h | - | 8h | ✅ Within limit |
