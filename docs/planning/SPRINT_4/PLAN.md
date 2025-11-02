@@ -186,12 +186,12 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Integration with existing `ParameterDef` structure
 
 #### Acceptance Criteria
-- [ ] Simple 2D table parses correctly (row/col headers → dict keys)
-- [ ] Sparse tables fill missing cells with 0.0
-- [ ] Descriptive text after table name handled
-- [ ] Multi-dimensional keys formatted correctly: `("i1", "j2")`
-- [ ] Table integrated with existing parameter emission code
-- [ ] All tests pass (including Sprint 1-3 tests)
+- [x] Simple 2D table parses correctly (row/col headers → dict keys)
+- [x] Sparse tables fill missing cells with 0.0
+- [x] Descriptive text after table name handled
+- [x] Multi-dimensional keys formatted correctly: `("i1", "j2")`
+- [x] Table integrated with existing parameter emission code
+- [x] All tests pass (including Sprint 1-3 tests) - **721 tests now passing**
 
 #### Integration Risks
 - **Risk 1:** Grammar `%ignore NEWLINE` may conflict with table row parsing

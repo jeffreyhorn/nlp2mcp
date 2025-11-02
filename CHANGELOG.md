@@ -9,6 +9,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - Sprint 4: Feature Expansion + Robustness (IN PROGRESS)
 
+### Implementation - 2025-11-02 - Day 2: Table Data Blocks ✅ COMPLETE
+
+#### Added
+- **Comprehensive Table Parsing Tests** (`tests/unit/ir/test_table_parsing.py`)
+  - 20 new unit tests for GAMS `Table` block parsing
+  - Tests for simple 2D tables (2x2, 3x3)
+  - Tests for sparse tables with zero-filling
+  - Tests for tables with descriptive text (quoted and unquoted)
+  - Tests for multi-dimensional keys as tuples
+  - Tests for edge cases (empty tables, single row/column, negative values, scientific notation)
+  - Tests for integration with other parameter types
+  - Tests for multiple table declarations
+
+#### Verified
+- **Table Block Implementation** (already present in `src/ir/parser.py` and `src/gams/gams_grammer.lark`)
+  - Grammar rule: `table_block: "Table"i ID "(" id_list ")" STRING? table_row+ SEMI`
+  - Parser handler: `_handle_table_block()` - Parses 2D table layout using token metadata
+  - Token metadata approach: Uses `.line` and `.column` attributes to reconstruct rows
+  - Column position matching with ±6 character tolerance for alignment variations
+  - Sparse cell handling: Missing values automatically filled with 0.0
+  - Descriptive text support: Optional STRING after table name
+  - Integration: Tables stored as `ParameterDef` with 2D domain and dictionary values
+
+#### Technical Details
+- **Table Syntax Parsing**:
+  - First row after declaration = column headers (IDs with position info)
+  - Subsequent rows = row index (first ID) + data values (NUMBERs)
+  - Values matched to columns by position (closest column header within ±6 chars)
+  - Empty cells in sparse tables filled with 0.0
+  - Keys formatted as tuples: `("row_index", "col_index")`
+
+- **Token Metadata Strategy**:
+  - Groups tokens by line number to reconstruct table rows
+  - Uses column positions to match values to correct columns
+  - Handles irregular whitespace and alignment variations
+  - Works despite grammar's `%ignore NEWLINE` directive
+
+#### Test Coverage
+- 20 new unit tests (all passing)
+- 3 existing research tests (all passing)
+- Total: **721 tests passing** (up from 700)
+
+#### Documentation
+- PLAN.md: All 6 Day 2 acceptance criteria checked off
+- README.md: Day 2 marked complete with ✅
+- CHANGELOG.md: Comprehensive Day 2 summary added
+
+**Sprint 4 Progress**: Day 2/10 complete (20%)
+
+---
+
 ### Implementation - 2025-11-02 - Day 1: $include and Preprocessing ✅ COMPLETE
 
 #### Added
