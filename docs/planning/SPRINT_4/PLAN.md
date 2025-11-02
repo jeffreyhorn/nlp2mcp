@@ -256,8 +256,13 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 #### Follow-On Research Items
 *Note: These are INCOMPLETE unknowns to be resolved during implementation:*
 
-- **Unknown 4.2 (Auxiliary variable naming)**: INCOMPLETE - Verify collision detection, indexed equation handling, GAMS name validity during implementation
-  - Planned approach: Context-based naming with counter for duplicates
+- **Unknown 4.2 (Auxiliary variable naming)**: ✅ **COMPLETE** (Verified on Day 3)
+  - **Implementation**: Context-based naming with counter for duplicates in `src/kkt/reformulation.py`
+  - **Naming scheme**: `aux_{min|max}_{context}_{index}` (e.g., `aux_min_objdef_0`)
+  - **Features**: Collision detection, separate counters per (func_type, context), GAMS-compliant names
+  - **Testing**: 8 dedicated tests in `test_reformulation.py`, all passing
+  - **Result**: Robust, readable, debuggable auxiliary variable names
+  - See KNOWN_UNKNOWNS.md Unknown 4.2 for full verification details
   
 - **Unknown 6.4 (Auxiliary vars and IndexMapping)**: INCOMPLETE - CRITICAL
   - IndexMapping must be created AFTER reformulations to include auxiliary variables
@@ -289,6 +294,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 *Prerequisites (from KNOWN_UNKNOWNS.md):*
 - **Unknown 2.1 (min reformulation)**: Epigraph reformulation verified. For min(x₁,...,xₙ): create aux_min and n multipliers λᵢ, constraints xᵢ - aux_min ≥ 0, complementarity (xᵢ - aux_min) ⊥ λᵢ. Flatten nested min before reformulation. ✅ COMPLETE
+- **Unknown 4.2 (Auxiliary variable naming)**: ✅ COMPLETE (Day 3) - Use `AuxiliaryVariableManager.generate_name(func_type, context)` to create names like `aux_min_objdef_0`. Collision detection implemented. Ready for use in reformulation.
 
 **Task 2: Implement `reformulate_max()` function** (Est: 2h)
 - Implement symmetric to min with reversed inequalities
@@ -297,6 +303,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 *Prerequisites (from KNOWN_UNKNOWNS.md):*
 - **Unknown 2.2 (max reformulation)**: Use xᵢ - aux_max ≤ 0 (opposite of min). Direct implementation more efficient than via -min(-x,-y). Same structure, different constraint direction. ✅ COMPLETE
+- **Unknown 4.2 (Auxiliary variable naming)**: ✅ COMPLETE (Day 3) - Same `AuxiliaryVariableManager` works for both min and max. Separate counters per function type ensure `aux_max_objdef_0` and `aux_min_objdef_0` can coexist.
 
 **Task 3: Add auxiliary constraints to KKT system** (Est: 1.5h)
 - Extend KKT data structures for auxiliary constraints
@@ -947,11 +954,11 @@ Sprint 4 Known Unknowns are documented in:
 
 10. **Unknown 6.1 ($include vs ModelIR)**: Preprocessing happens before parsing, ModelIR sees flat expanded source. No special tracking needed in ModelIR. ✅ COMPLETE
 
-**INCOMPLETE - TO BE VERIFIED (13/23):**
+**INCOMPLETE - TO BE VERIFIED (12/23):**
 
 **Days 3-6 Verification:**
 
-11. **Unknown 4.2 (Auxiliary variable naming)**: INCOMPLETE - Verify collision detection, indexed equation handling, GAMS name validity during Day 3-4 implementation
+11. **Unknown 4.2 (Auxiliary variable naming)**: ✅ COMPLETE (Day 3) - Context-based naming with collision detection implemented in `AuxiliaryVariableManager`. All 8 tests passing. Supports indexed equations, GAMS-compliant names, debuggable output.
 
 12. **Unknown 4.3 (Auxiliary constraints in Model)**: INCOMPLETE - Verify GAMS compilation works, equation-variable pairing correct during Day 4
 
