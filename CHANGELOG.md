@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tests for multiple table declarations
 
 #### Verified
-- **Table Block Implementation** (already present in `src/ir/parser.py` and `src/gams/gams_grammer.lark`)
+- **Table Block Implementation** (already present in `src/ir/parser.py` and `src/gams/gams_grammar.lark`)
   - Grammar rule: `table_block: "Table"i ID "(" id_list ")" STRING? table_row+ SEMI`
   - Parser handler: `_handle_table_block()` - Parses 2D table layout using token metadata
   - Token metadata approach: Uses `.line` and `.column` attributes to reconstruct rows
