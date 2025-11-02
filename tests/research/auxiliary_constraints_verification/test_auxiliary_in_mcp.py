@@ -31,7 +31,25 @@ from src.kkt.reformulation import reformulate_model
     "See KNOWN_UNKNOWNS.md Unknown 4.3 for details."
 )
 def test_min_reformulation_in_mcp_emission():
-    """Test that min() reformulation integrates correctly with MCP emission."""
+    """Test that min() reformulation integrates correctly with MCP emission.
+
+    EXPECTED TO FAIL: This test intentionally demonstrates a bug in the current
+    implementation. The test creates a model with min() reformulation and verifies
+    that auxiliary constraints should appear in the final MCP emission. Currently,
+    the test fails at the assertion checking for auxiliary complementarity pairs
+    in the Model declaration, because:
+
+    1. reformulate_model() adds auxiliary constraints to model.equations
+    2. BUT it does NOT add them to model.inequalities
+    3. compute_constraint_jacobian() filters by model.inequalities
+    4. So auxiliary constraints are excluded from the Jacobian
+    5. Which means they never make it into the KKT system
+    6. And therefore never appear in the GAMS MCP Model declaration
+
+    Once the one-line fix is applied (adding model.inequalities.append() in
+    reformulate_model()), this test will pass and demonstrate that auxiliary
+    constraints integrate seamlessly with the existing emission code.
+    """
 
     # Create model: minimize x^2 + y^2 subject to z = min(x, y), z >= 1
     model = ModelIR()
