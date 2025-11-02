@@ -345,9 +345,14 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 #### Follow-On Research Items
 *Note: These are INCOMPLETE unknowns to be resolved during implementation:*
 
-- **Unknown 4.3 (Auxiliary constraints in Model)**: INCOMPLETE
-  - Planned approach: Add auxiliary constraints to Model MCP declaration
-  - Need to verify: GAMS compilation works, equation-variable pairing correct
+- **Unknown 4.3 (Auxiliary constraints in Model)**: ✅ **COMPLETE** (Research complete - Day 4.1)
+  - **Finding**: Implementation gap identified in `reformulate_model()` 
+  - **Issue**: Auxiliary constraints added to `model.equations` but NOT to `model.inequalities`
+  - **Impact**: Constraints excluded from Jacobian and KKT system (not emitted to GAMS)
+  - **Fix Required**: Add `model.inequalities.append(constraint_def.name)` after `model.add_equation()`
+  - **Location**: `src/kkt/reformulation.py`, line ~707 in `reformulate_model()`
+  - **Urgency**: Must fix BEFORE Day 5 (abs/fixed vars will have same issue)
+  - **See**: KNOWN_UNKNOWNS.md Unknown 4.3 for detailed analysis and code fix
 
 - **Unknown 6.4 (Auxiliary vars and IndexMapping)**: ✅ **COMPLETE** (Research complete)
   - **Critical Integration Requirement**: Call reformulation functions in cli.py BEFORE compute_objective_gradient()
@@ -983,7 +988,7 @@ Sprint 4 Known Unknowns are documented in:
 
 11. **Unknown 4.2 (Auxiliary variable naming)**: ✅ COMPLETE (Day 3) - Context-based naming with collision detection implemented in `AuxiliaryVariableManager`. All 8 tests passing. Supports indexed equations, GAMS-compliant names, debuggable output.
 
-12. **Unknown 4.3 (Auxiliary constraints in Model)**: INCOMPLETE - Verify GAMS compilation works, equation-variable pairing correct during Day 4
+12. **Unknown 4.3 (Auxiliary constraints in Model)**: ✅ COMPLETE (Research Day 4.1) - Implementation gap found: `reformulate_model()` doesn't add auxiliary constraints to `model.inequalities`, causing them to be excluded from Jacobian/KKT. Fix: add `model.inequalities.append(constraint_def.name)` after adding equation. Must apply before Day 5. See KNOWN_UNKNOWNS.md for detailed analysis.
 
 13. **Unknown 6.4 (Auxiliary vars and IndexMapping)**: ✅ COMPLETE (Research) - Architecture correct by design. IndexMapping created during derivative computation automatically includes auxiliary variables. Integration point identified: insert reformulation at Step 2.5 in cli.py (between normalize and derivatives). Gradient/Jacobian alignment guaranteed by shared build_index_mapping(). See KNOWN_UNKNOWNS.md for integration code.
 
