@@ -582,7 +582,11 @@ class _ModelBuilder:
                 if name.lower() == "-inf":
                     return self._attach_domain(Const(-math.inf), free_domain)
                 return self._make_symbol(name, (), free_domain, node)
-            raise ValueError(f"Unexpected token in expression: {node!r}")
+            raise self._error(
+                f"Unexpected token in expression: {node!r}. "
+                f"Expected a variable, parameter, number, or function call.",
+                node,
+            )
 
         if node.data in _WRAPPER_NODES:
             for child in node.children:
@@ -590,7 +594,10 @@ class _ModelBuilder:
                     if isinstance(child, Token) and child.type == "SEMI":
                         continue
                     return self._expr(child, free_domain)
-            raise ValueError(f"Empty wrapper node: {node.data}")
+            raise self._error(
+                f"Empty expression node: {node.data}. Expected an expression inside the wrapper.",
+                node,
+            )
 
         if node.data == "symbol_plain":
             name_token = node.children[0]
@@ -657,7 +664,12 @@ class _ModelBuilder:
             expr = Call(func_name, tuple(args))
             return self._attach_domain(expr, self._merge_domains(args, node))
 
-        raise ValueError(f"Unsupported expression node: {node.data}")
+        raise self._error(
+            f"Unsupported expression type: {node.data}. "
+            f"This may be a parser bug or unsupported GAMS syntax. "
+            f"Supported: variables, parameters, numbers, operators (+, -, *, /, ^), functions (sqrt, exp, log, etc.), sum().",
+            node,
+        )
 
     def _expr_with_context(self, node: Tree | Token, context: str, domain: Sequence[str]) -> Expr:
         domain_tuple = tuple(domain)

@@ -122,3 +122,8 @@ class KKTSystem:
     # Metadata
     skipped_infinite_bounds: list[tuple[str, tuple, str]] = field(default_factory=list)
     duplicate_bounds_excluded: list[str] = field(default_factory=list)
+
+    # Scaling factors (optional, computed when --scale is used)
+    scaling_row_factors: list[float] | None = None
+    scaling_col_factors: list[float] | None = None
+    scaling_mode: str = "none"  # none | auto | byvar

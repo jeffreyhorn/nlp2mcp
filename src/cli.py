@@ -17,6 +17,7 @@ from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
 from src.kkt.assemble import assemble_kkt_system
 from src.kkt.reformulation import reformulate_model
+from src.kkt.scaling import byvar_scaling, curtis_reid_scaling
 
 
 @click.command()
@@ -55,6 +56,12 @@ from src.kkt.reformulation import reformulate_model
     default=1e-6,
     help="Epsilon parameter for abs() smoothing approximation (default: 1e-6)",
 )
+@click.option(
+    "--scale",
+    type=click.Choice(["none", "auto", "byvar"], case_sensitive=False),
+    default="none",
+    help="Apply scaling to Jacobian: none (default), auto (Curtis-Reid), byvar (per-variable)",
+)
 def main(
     input_file,
     output,
@@ -64,6 +71,7 @@ def main(
     show_excluded,
     smooth_abs,
     smooth_abs_epsilon,
+    scale,
 ):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
@@ -123,7 +131,11 @@ def main(
             click.echo("Computing derivatives...")
 
         # Create configuration for derivative computation
-        config = Config(smooth_abs=smooth_abs, smooth_abs_epsilon=smooth_abs_epsilon)
+        config = Config(
+            smooth_abs=smooth_abs,
+            smooth_abs_epsilon=smooth_abs_epsilon,
+            scale=scale.lower(),
+        )
 
         gradient = compute_objective_gradient(model, config)
         J_eq, J_ineq = compute_constraint_jacobian(model, config)
@@ -133,11 +145,49 @@ def main(
             click.echo(f"  Equality Jacobian: {J_eq.num_rows} × {J_eq.num_cols}")
             click.echo(f"  Inequality Jacobian: {J_ineq.num_rows} × {J_ineq.num_cols}")
 
-        # Step 4: Assemble KKT system
+        # Step 4: Compute scaling factors (if requested)
+        row_scales = None
+        col_scales = None
+
+        if config.scale != "none":
+            if verbose:
+                click.echo(f"Computing {config.scale} scaling...")
+
+            # Combine equality and inequality Jacobians for scaling
+            # We'll scale based on the full constraint Jacobian
+            if config.scale == "auto":
+                # Curtis-Reid scaling uses both row and column scaling
+                R_eq, C_eq = curtis_reid_scaling(J_eq)
+                R_ineq, C_ineq = curtis_reid_scaling(J_ineq)
+
+                # For now, use inequality Jacobian scaling (larger system)
+                # Future: could combine both Jacobians
+                row_scales, col_scales = R_ineq.tolist(), C_ineq.tolist()
+
+                if verbose >= 2:
+                    click.echo(f"  Computed row scaling for {len(row_scales)} equations")
+                    click.echo(f"  Computed column scaling for {len(col_scales)} variables")
+
+            elif config.scale == "byvar":
+                # Byvar scaling only scales columns (variables)
+                C_ineq = byvar_scaling(J_ineq)
+                row_scales = None
+                col_scales = C_ineq.tolist()
+
+                if verbose >= 2:
+                    click.echo(f"  Computed column scaling for {len(col_scales)} variables")
+
+        # Step 5: Assemble KKT system
         if verbose:
             click.echo("Assembling KKT system...")
 
         kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+
+        # Store scaling factors in KKT system
+        if config.scale != "none":
+            kkt.scaling_row_factors = row_scales
+            kkt.scaling_col_factors = col_scales
+            kkt.scaling_mode = config.scale
 
         # Report excluded duplicate bounds
         if show_excluded and kkt.duplicate_bounds_excluded:
@@ -163,14 +213,14 @@ def main(
                         idx_str = f"({','.join(indices)})" if indices else ""
                         click.echo(f"    {var}{idx_str}.{bound_type} = ±INF")
 
-        # Step 5: Emit GAMS MCP code
+        # Step 6: Emit GAMS MCP code
         if verbose:
             click.echo("Generating GAMS MCP code...")
 
         add_comments = not no_comments
         gams_code = emit_gams_mcp(kkt, model_name=model_name, add_comments=add_comments)
 
-        # Step 6: Write output
+        # Step 7: Write output
         if output:
             output_path = Path(output)
             output_path.write_text(gams_code)

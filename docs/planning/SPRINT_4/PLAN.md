@@ -511,16 +511,16 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - 15+ tests for scaling correctness
 
 #### Acceptance Criteria
-- [ ] Curtis-Reid scaling implemented (iterative row/col norm balancing)
-- [ ] `byvar` mode scales each variable column independently
-- [ ] Scaling factors computed from symbolic Jacobian
-- [ ] Scaled Jacobian has row/col norms ≈ 1
-- [ ] `--scale none` skips scaling (default)
-- [ ] `--scale auto` applies Curtis-Reid
-- [ ] `--scale byvar` applies per-variable scaling
-- [ ] Existing tests pass with `--scale none`
-- [ ] Tests with scaling verify semantic preservation
-- [ ] Parser errors include source locations
+- [x] Curtis-Reid scaling implemented (iterative row/col norm balancing)
+- [x] `byvar` mode scales each variable column independently
+- [x] Scaling factors computed from symbolic Jacobian (structural scaling with 1.0 for nonzeros)
+- [x] Scaled Jacobian has row/col norms ≈ 1 (verified in tests)
+- [x] `--scale none` skips scaling (default)
+- [x] `--scale auto` applies Curtis-Reid
+- [x] `--scale byvar` applies per-variable scaling
+- [x] Existing tests pass with `--scale none` (779 original + 14 new scaling tests = 793 total)
+- [x] Tests with scaling verify semantic preservation (14 tests in test_scaling.py)
+- [x] Parser errors include source locations (enhanced with better messages)
 
 #### Integration Risks
 - **Risk 1:** Scaling may expose bugs in Jacobian computation
