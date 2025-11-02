@@ -4,6 +4,7 @@
 **Priority**: Low  
 **Component**: Parser / Grammar  
 **Discovered**: Sprint 4 Checkpoint 1 PR Review  
+**GitHub Issue**: #85  
 **Type**: Refactoring / Technical Debt  
 
 ## Summary
