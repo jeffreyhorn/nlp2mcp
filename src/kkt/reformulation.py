@@ -237,6 +237,10 @@ class AuxiliaryVariableManager:
         - aux_min_objdef_0      (first min in objective equation)
         - aux_max_balance_1     (second max in balance equation)
         - aux_min_eq_cost_i1_0  (min in indexed equation instance)
+
+    Attributes:
+        user_variables: Set of user-declared variable names to check for collisions
+        generated_names: Counter mapping (func_type, context) pairs to next available index
     """
 
     user_variables: set[str] = field(default_factory=set)
