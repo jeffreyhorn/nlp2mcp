@@ -9,7 +9,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - Sprint 4: Feature Expansion + Robustness (IN PROGRESS)
 
-### Planning - 2025-11-01
+### Planning - 2025-11-01 (REVISED)
+
+#### Sprint 4 Plan Revision
+- **Plan Review Completed** - Identified 7 gaps in original plan
+- **Revised Plan Created** (`docs/planning/SPRINT_4/PLAN_REVISED.md`)
+  - Addresses all 7 findings from `PLAN_REVIEW.md`
+  - Enhanced from 962 lines to ~1100 lines with detailed improvements
+
+#### Key Changes from Original Plan
+1. **Removed Completed Unknown Details from Task Lists**
+   - COMPLETE unknowns (1.1-1.5, 2.1-2.3, 4.1, 6.1) now brief notes only
+   - Main task lists focus on implementation, not research prerequisites
+   - INCOMPLETE unknowns moved to "Follow-On Research Items" sections
+
+2. **Added Developer Ergonomics Features** (Missing from original)
+   - Day 6: Enhanced error messages with source locations (Phase 1)
+   - Day 7: pyproject.toml configuration support
+   - Day 7: Structured logging with verbosity control (--verbose, --quiet)
+   - Day 7: Enhanced error messages for differentiation and KKT (Phase 2)
+   - Spread across Days 6-7 to avoid Day 8 overload
+
+3. **Expanded Scaling to Support `byvar` Mode**
+   - Changed from `--scale none|auto` to `--scale none|auto|byvar`
+   - Day 6: Added Task 2 for per-variable scaling implementation
+   - Acceptance criteria updated to verify all 3 modes
+   - Matches PROJECT_PLAN.md requirement
+
+4. **Added 10 Mid-Size Examples Deliverable**
+   - Day 9: Explicit Task 2 for creating/curating examples (3 hours allocated)
+   - Transport-style models with indexed constraints
+   - All Sprint 4 features covered ($include, Table, min/max, abs, x.fx, scaling)
+   - All examples validated with GAMS and PATH
+   - Addresses PROJECT_PLAN.md deliverable
+
+5. **Fixed Success Metrics - PATH Timing**
+   - Changed "All Known Unknowns resolved by Day 6" to "by Day 8"
+   - Acknowledges PATH solver arrives Day 7, validation happens Day 8
+   - 5 PATH-related unknowns (2.4, 5.1-5.4) explicitly scheduled for Day 8
+   - Eliminates impossible success metric
+
+6. **Reorganized Unknown Tracking**
+   - All INCOMPLETE unknowns moved to "Follow-On Research Items" after daily tasks
+   - Day 3: Unknown 4.2 (auxiliary naming)
+   - Day 4: Unknowns 4.3, 6.4 (auxiliary constraints, IndexMapping)
+   - Day 5: Unknowns 4.4, 6.2 (fixed vars in MCP/KKT)
+   - Day 6: Unknowns 3.1-3.2, 6.3 (scaling algorithm, application, test impact)
+   - Day 8: Unknowns 2.4, 5.1-5.4 (all PATH-related verification)
+   - Clear separation: implementation tasks vs research verification
+
+7. **Re-scoped Day 8 to 8 Hours** (Was ~10 hours)
+   - Moved diagnostics implementation to Day 7 (from Day 8)
+   - Moved configuration/logging to Day 7 (from Day 8)
+   - Moved enhanced error messages Phase 2 to Day 7 (from Day 8)
+   - Day 8 now focuses exclusively on PATH validation (8 hours total)
+   - Checkpoint 3 still at end of Day 8
+
+#### Updated Schedule
+- **Day 1**: $include (9h) - No changes
+- **Day 2**: Table blocks (9h) - No changes
+- **Day 3**: min/max infrastructure (8h) + Checkpoint 1 (1h) - No changes
+- **Day 4**: min/max implementation (9h) - No changes
+- **Day 5**: abs() + x.fx (10h) - No changes
+- **Day 6**: Scaling + byvar + Error messages Phase 1 (8h) + Checkpoint 2 (1h) - Enhanced
+- **Day 7**: Diagnostics + Config + Logging + Error Phase 2 (9.5h) - Enhanced
+- **Day 8**: PATH validation (8h) + Checkpoint 3 (1h) - Reduced from 10h
+- **Day 9**: Integration + Examples + Docs (9.5h) - Enhanced with examples
+- **Day 10**: Polish + Buffer (10h) - No changes
+
+#### Risk Management Updates
+- Added Risk 7: "Creating 10 Mid-Size Examples Takes Longer Than Expected"
+  - Mitigation: Plan realistic examples, reuse existing patterns
+  - Contingency: Can reduce to 7-8 examples or use Day 10 buffer
+
+#### Files Created/Modified
+- `docs/planning/SPRINT_4/PLAN_REVISED.md` - Complete revised 10-day plan
+- `CHANGELOG.md` - This revision summary
+
+#### Verification
+- All 7 review findings addressed ✅
+- All PROJECT_PLAN.md Sprint 4 requirements included ✅
+- Schedule balanced (no days over 10 hours including checkpoints) ✅
+- Unknown tracking clear and actionable ✅
+- Developer ergonomics fully scoped ✅
+
+### Planning - 2025-11-01 (ORIGINAL)
 
 #### Added
 - **Sprint 4 Comprehensive Plan** (`docs/planning/SPRINT_4/PLAN_ORIGINAL.md`)
