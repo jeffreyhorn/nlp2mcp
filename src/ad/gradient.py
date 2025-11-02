@@ -66,6 +66,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ..config import Config
     from ..ir.ast import Expr
     from ..ir.model_ir import ModelIR
 
@@ -159,7 +160,7 @@ def _is_symbol_ref(expr: Expr, name: str) -> bool:
     return isinstance(expr, SymbolRef) and expr.name == name
 
 
-def compute_objective_gradient(model_ir: ModelIR) -> GradientVector:
+def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) -> GradientVector:
     """
     Compute gradient of objective function with respect to all variables.
 
@@ -217,7 +218,7 @@ def compute_objective_gradient(model_ir: ModelIR) -> GradientVector:
 
             # Differentiate objective w.r.t. this specific variable instance
             # Index-aware differentiation: pass indices to distinguish x(i1) from x(i2)
-            derivative = differentiate_expr(obj_expr, var_name, indices)
+            derivative = differentiate_expr(obj_expr, var_name, indices, config)
 
             # Apply objective sense
             if sense == ObjSense.MAX:
@@ -231,7 +232,7 @@ def compute_objective_gradient(model_ir: ModelIR) -> GradientVector:
 
 
 def compute_gradient_for_expression(
-    expr: Expr, model_ir: ModelIR, negate: bool = False
+    expr: Expr, model_ir: ModelIR, negate: bool = False, config: Config | None = None
 ) -> GradientVector:
     """
     Compute gradient of an arbitrary expression with respect to all variables.
@@ -273,7 +274,7 @@ def compute_gradient_for_expression(
 
             # Differentiate w.r.t. this specific variable instance
             # Index-aware differentiation: pass indices to distinguish x(i1) from x(i2)
-            derivative = differentiate_expr(expr, var_name, indices)
+            derivative = differentiate_expr(expr, var_name, indices, config)
 
             # Apply negation if requested
             if negate:

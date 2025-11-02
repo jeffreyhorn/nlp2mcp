@@ -11,6 +11,7 @@ import click
 
 from src.ad.constraint_jacobian import compute_constraint_jacobian
 from src.ad.gradient import compute_objective_gradient
+from src.config import Config
 from src.emit.emit_gams import emit_gams_mcp
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
@@ -42,7 +43,28 @@ from src.kkt.reformulation import reformulate_model
     default=True,
     help="Show duplicate bounds excluded from inequalities (default: show)",
 )
-def main(input_file, output, verbose, no_comments, model_name, show_excluded):
+@click.option(
+    "--smooth-abs",
+    is_flag=True,
+    default=False,
+    help="Enable smooth approximation for abs() using sqrt(x^2 + epsilon) (default: reject abs())",
+)
+@click.option(
+    "--smooth-abs-epsilon",
+    type=float,
+    default=1e-6,
+    help="Epsilon parameter for abs() smoothing approximation (default: 1e-6)",
+)
+def main(
+    input_file,
+    output,
+    verbose,
+    no_comments,
+    model_name,
+    show_excluded,
+    smooth_abs,
+    smooth_abs_epsilon,
+):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
     INPUT_FILE: Path to the GAMS NLP model file (.gms)
@@ -100,8 +122,11 @@ def main(input_file, output, verbose, no_comments, model_name, show_excluded):
         if verbose:
             click.echo("Computing derivatives...")
 
-        gradient = compute_objective_gradient(model)
-        J_eq, J_ineq = compute_constraint_jacobian(model)
+        # Create configuration for derivative computation
+        config = Config(smooth_abs=smooth_abs, smooth_abs_epsilon=smooth_abs_epsilon)
+
+        gradient = compute_objective_gradient(model, config)
+        J_eq, J_ineq = compute_constraint_jacobian(model, config)
 
         if verbose >= 2:
             click.echo(f"  Gradient columns: {gradient.num_cols}")

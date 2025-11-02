@@ -50,6 +50,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ..config import Config
     from ..ir.model_ir import ModelIR
 
 from ..ir.normalize import NormalizedEquation
@@ -60,7 +61,7 @@ from .jacobian import JacobianStructure
 
 
 def compute_constraint_jacobian(
-    model_ir: ModelIR,
+    model_ir: ModelIR, config: Config | None = None
 ) -> tuple[JacobianStructure, JacobianStructure]:
     """
     Compute Jacobians for all constraints (equalities and inequalities).
@@ -123,13 +124,13 @@ def compute_constraint_jacobian(
     )
 
     # Process equality constraints
-    _compute_equality_jacobian(model_ir, index_mapping, J_h)
+    _compute_equality_jacobian(model_ir, index_mapping, J_h, config)
 
     # Process inequality constraints
-    _compute_inequality_jacobian(model_ir, ineq_index_mapping, J_g)
+    _compute_inequality_jacobian(model_ir, ineq_index_mapping, J_g, config)
 
     # Include bound-derived equations
-    _compute_bound_jacobian(model_ir, ineq_index_mapping, J_g)
+    _compute_bound_jacobian(model_ir, ineq_index_mapping, J_g, config)
 
     return J_h, J_g
 
@@ -183,7 +184,9 @@ def _build_inequality_index_mapping(base_mapping, model_ir: ModelIR, num_inequal
     return ineq_mapping
 
 
-def _compute_equality_jacobian(model_ir: ModelIR, index_mapping, J_h: JacobianStructure) -> None:
+def _compute_equality_jacobian(
+    model_ir: ModelIR, index_mapping, J_h: JacobianStructure, config: Config | None = None
+) -> None:
     """
     Compute Jacobian for equality constraints: J_h[i,j] = ∂h_i/∂x_j.
 
@@ -255,13 +258,15 @@ def _compute_equality_jacobian(model_ir: ModelIR, index_mapping, J_h: JacobianSt
 
                     # Differentiate constraint w.r.t. this specific variable instance
                     # Use index-aware differentiation
-                    derivative = differentiate_expr(constraint_expr, var_name, var_indices)
+                    derivative = differentiate_expr(constraint_expr, var_name, var_indices, config)
 
                     # Store in Jacobian (only if non-zero - sparsity optimization happens in simplification)
                     J_h.set_derivative(row_id, col_id, derivative)
 
 
-def _compute_inequality_jacobian(model_ir: ModelIR, index_mapping, J_g: JacobianStructure) -> None:
+def _compute_inequality_jacobian(
+    model_ir: ModelIR, index_mapping, J_g: JacobianStructure, config: Config | None = None
+) -> None:
     """
     Compute Jacobian for inequality constraints: J_g[i,j] = ∂g_i/∂x_j.
 
@@ -317,13 +322,15 @@ def _compute_inequality_jacobian(model_ir: ModelIR, index_mapping, J_g: Jacobian
                         continue
 
                     # Differentiate constraint w.r.t. this specific variable instance
-                    derivative = differentiate_expr(constraint_expr, var_name, var_indices)
+                    derivative = differentiate_expr(constraint_expr, var_name, var_indices, config)
 
                     # Store in Jacobian
                     J_g.set_derivative(row_id, col_id, derivative)
 
 
-def _compute_bound_jacobian(model_ir: ModelIR, index_mapping, J_g: JacobianStructure) -> None:
+def _compute_bound_jacobian(
+    model_ir: ModelIR, index_mapping, J_g: JacobianStructure, config: Config | None = None
+) -> None:
     """
     Compute Jacobian rows for bound-derived inequality constraints.
 
@@ -363,7 +370,7 @@ def _compute_bound_jacobian(model_ir: ModelIR, index_mapping, J_g: JacobianStruc
 
                 # Differentiate bound constraint w.r.t. this variable instance
                 # For bounds, we need to pass the correct indices from the normalized equation
-                derivative = differentiate_expr(bound_expr, var_name, var_indices)
+                derivative = differentiate_expr(bound_expr, var_name, var_indices, config)
 
                 # Store in Jacobian
                 J_g.set_derivative(row_id, col_id, derivative)
