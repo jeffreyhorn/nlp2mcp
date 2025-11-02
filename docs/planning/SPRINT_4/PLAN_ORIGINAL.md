@@ -60,11 +60,57 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Integrate preprocessor into parse pipeline
 
 #### Main Tasks
-- Task: Implement `preprocess_includes()` function with recursion (Est: 3h)
-- Task: Add circular include detection with clear error messages (Est: 1.5h)
-- Task: Integrate preprocessor into `parse_model_file()` (Est: 1h)
-- Task: Add relative path resolution (relative to containing file) (Est: 1.5h)
-- Task: Write comprehensive tests (nested, circular, missing files) (Est: 2h)
+
+**Task 1: Implement `preprocess_includes()` function with recursion** (Est: 3h)
+- Create preprocessor.py module with include resolution
+- Handle relative/absolute paths
+- Build include dependency graph
+
+**Required Unknowns:**
+- **Unknown 1.1: $include syntax and semantics** - COMPLETE
+  - **Findings:** GAMS $include uses simple string substitution without macro expansion. Supports relative and absolute paths with syntax `$include filename.inc` or `$include "filename with spaces.inc"`.
+  - **Key Architecture:** Preprocessor runs before parser, maintains include stack for error reporting, detects circular includes.
+  - **Summary:** Simple textual file insertion confirmed via GAMS documentation and test examples.
+
+**Task 2: Add circular include detection with clear error messages** (Est: 1.5h)
+- Implement include stack tracking
+- Detect cycles and report full chain
+- Provide helpful error messages
+
+**Required Unknowns:**
+- **Unknown 1.4: Nested $include handling** - COMPLETE
+  - **Findings:** GAMS allows arbitrary nesting depth (limited only by system resources). Best practice is 3-5 levels max. Tested 10-level nesting successfully.
+  - **Key Architecture:** Track include depth, configurable limit with default of 10, clear error messages for circular includes with full chain shown.
+  - **Summary:** Use depth tracking with configurable limit (default 100 levels), circular detection works correctly.
+
+**Task 3: Integrate preprocessor into `parse_model_file()`** (Est: 1h)
+- Add preprocessing step before parsing
+- Ensure transparent to downstream code
+- Add debug comments for include boundaries
+
+**Required Unknowns:**
+- **Unknown 6.1: $include vs ModelIR preprocessing** - COMPLETE
+  - **Findings:** Preprocessing happens before parsing. ModelIR sees flat expanded source with no include-related attributes. Debug comments mark include boundaries.
+  - **Key Architecture:** Clean separation: preprocess → parse → build ModelIR. No source mapping needed for current use cases.
+  - **Summary:** ModelIR structure unaffected - sees expanded source as if in one file.
+
+**Task 4: Add relative path resolution (relative to containing file)** (Est: 1.5h)
+- Resolve paths relative to file containing $include
+- Handle parent directory (..) references
+- Support absolute paths
+
+**Required Unknowns:**
+- **Unknown 1.5: Relative path resolution** - COMPLETE
+  - **Findings:** Paths resolved relative to directory of file containing $include (NOT current working directory). Parent directory (..) navigation works correctly.
+  - **Key Architecture:** Uses `file_path.parent / included_filename` pattern. Absolute paths supported.
+  - **Summary:** Path resolution matches GAMS behavior - relative to containing file, not CWD.
+
+**Task 5: Write comprehensive tests (nested, circular, missing files)** (Est: 2h)
+- Test simple includes
+- Test nested includes (3+ levels)
+- Test circular detection
+- Test missing file errors
+- Test relative vs absolute paths
 
 #### Deliverables
 - `src/ir/preprocessor.py` with `preprocess_includes()` function
@@ -86,12 +132,6 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - **Risk 2:** Line numbers in error messages may be incorrect after include expansion
   - *Mitigation:* Add source mapping comments (future enhancement, not Sprint 4)
 
-#### Follow-On Items
-**Known Unknown Research** (from SCHEDULE.md):
-- Unknown 1.1: `$include` semantics (verify during implementation)
-- Unknown 1.4: Nested `$include` handling (verify depth limits)
-- Unknown 1.5: Relative path resolution (verify against GAMS behavior)
-
 ---
 
 ### Day 2: `Table` Data Blocks
@@ -102,10 +142,37 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Integrate into parameter data structures
 
 #### Main Tasks
-- Task: Extend grammar with `table_block` rule (Est: 2h)
-- Task: Implement `_handle_table_block()` in parser (Est: 3h)
-- Task: Handle sparse cells and multi-dimensional keys (Est: 2h)
-- Task: Write tests for dense, sparse, and edge cases (Est: 2h)
+
+**Task 1: Extend grammar with `table_block` rule** (Est: 2h)
+- Add table_block grammar rule
+- Separate from params_block
+- Handle table row and value tokens
+
+**Required Unknowns:**
+- **Unknown 1.2: Table block syntax** - COMPLETE
+  - **Findings:** Table uses multi-line format with row/column headers. First row after declaration contains column headers. Subsequent rows have row header followed by data values. Empty cells default to zero. Strictly 2D (one row index, one column index).
+  - **Key Architecture:** Uses token line/column metadata to reconstruct rows (grammar's `%ignore NEWLINE` strips newlines). Groups tokens by line number, matches values to columns by position with ±6 char tolerance.
+  - **Summary:** Token metadata approach handles sparse tables without grammar changes.
+
+**Task 2: Implement `_handle_table_block()` in parser** (Est: 3h)
+- Parse table structure using token metadata
+- Extract row and column headers
+- Build parameter values dictionary
+
+**Task 3: Handle sparse cells and multi-dimensional keys** (Est: 2h)
+- Zero-fill empty cells
+- Format multi-dimensional keys as tuples
+- Handle alignment variations
+
+**Task 4: Write tests for dense, sparse, and edge cases** (Est: 2h)
+- Test simple 2D tables
+- Test sparse tables with missing values
+- Test tables with descriptive text
+- Test table in included files
+
+**Required Unknowns:**
+- **Unknown 6.1: $include vs ModelIR preprocessing** - COMPLETE (see Day 1)
+  - Tables in included files work correctly since preprocessing happens before parsing.
 
 #### Deliverables
 - Grammar extension in `src/gams/gams_grammer.lark`
@@ -127,15 +194,10 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - **Risk 2:** Table data may conflict with later parameter assignments
   - *Mitigation:* Document precedence rules (later assignment wins)
 
-#### Follow-On Items
-**Known Unknown Research**:
-- Unknown 1.2: Table block syntax (verify row/col header format)
-- Unknown 6.1: `$include` vs ModelIR preprocessing (ensure tables in includes work)
-
 **Checkpoint** (Day 3):
 - Checkpoint 1 review (Est: 1h) - Use template from docs/process/CHECKPOINT_TEMPLATES.md
   - All features scaffolded (✓)
-  - Known Unknowns status (1.1-1.5, 6.1 verified)
+  - Known Unknowns 1.1, 1.2, 1.4, 1.5, 6.1 all COMPLETE (✓)
   - Test coverage >= 70% (✓)
   - All existing tests pass (✓)
 
@@ -149,10 +211,43 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Create auxiliary variable generation framework
 
 #### Main Tasks
-- Task: Design epigraph reformulation (z = min(x,y) → z≤x, z≤y with λ) (Est: 2h)
-- Task: Add AST traversal to detect `min/max` calls (Est: 2h)
-- Task: Implement auxiliary variable name generation (collision-free) (Est: 2h)
-- Task: Create test framework for reformulation (Est: 2h)
+
+**Task 1: Design epigraph reformulation (z = min(x,y) → z≤x, z≤y with λ)** (Est: 2h)
+- Document epigraph reformulation approach
+- Design constraint structure
+- Plan complementarity pairing
+
+**Required Unknowns:**
+- **Unknown 2.1: min() reformulation** - COMPLETE
+  - **Findings:** Epigraph reformulation using complementarity is standard: `min(x,y)` becomes `x - z >= 0 ⊥ λ_x >= 0` and `y - z >= 0 ⊥ λ_y >= 0`. Stationarity for z: `∂obj/∂z - λ_x - λ_y = 0`.
+  - **Key Architecture:** Multi-argument min scales linearly (n args → n+1 vars, n+1 equations). Nested min should be flattened before reformulation for efficiency.
+  - **Summary:** Epigraph form confirmed as correct, standard approach in complementarity literature.
+
+- **Unknown 2.2: max() reformulation** - COMPLETE
+  - **Findings:** Dual of min using reversed inequality direction: `max(x,y)` becomes `x - z <= 0 ⊥ λ_x >= 0` and `y - z <= 0 ⊥ λ_y >= 0`. Use `=l=` constraints in GAMS (opposite of min's `=g=`).
+  - **Key Architecture:** Direct implementation recommended over `-min(-x,-y)` for efficiency (fewer variables/operations). Symmetric to min implementation.
+  - **Summary:** Direct epigraph reformulation with opposite constraint direction.
+
+**Task 2: Add AST traversal to detect `min/max` calls** (Est: 2h)
+- Traverse equation ASTs to find function calls
+- Identify min/max calls
+- Extract arguments for reformulation
+
+**Task 3: Implement auxiliary variable name generation (collision-free)** (Est: 2h)
+- Create AuxiliaryVariableManager class
+- Generate unique names based on context
+- Detect and avoid collisions with user variables
+
+**Required Unknowns:**
+- **Unknown 4.2: Auxiliary variable naming** - INCOMPLETE
+  - **Status:** TO BE VERIFIED before Day 3
+  - **Planned approach:** Context-based naming (`aux_min_<equation_name>`) with counter for duplicates
+  - **Need to verify:** Collision detection works, indexed equation handling, GAMS name validity
+
+**Task 4: Create test framework for reformulation** (Est: 2h)
+- Write detection tests
+- Write naming tests
+- Write flattening tests for nested min/max
 
 #### Deliverables
 - Design document for `min/max` reformulation (inline in code)
@@ -173,16 +268,11 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - **Risk 2:** Variable ordering in Jacobian may break with new auxiliary vars
   - *Mitigation:* Extend IndexMapping to handle auxiliary variables
 
-#### Follow-On Items
-**Known Unknown Research**:
-- Unknown 2.1: `min()` reformulation (verify epigraph form is correct)
-- Unknown 2.2: `max()` reformulation (verify dual of min)
-- Unknown 4.2: Auxiliary variable naming (prevent collisions with user vars)
-
 **Checkpoint** (Day 3 - End of Day):
 - Checkpoint 1 review (Est: 1h)
   - Review all Day 1-3 deliverables
-  - Verify Known Unknowns 1.1-1.5, 2.1-2.2, 4.2, 6.1 resolved
+  - Verify Known Unknowns 1.1, 1.2, 1.4, 1.5, 2.1, 2.2, 6.1 COMPLETE
+  - Note Unknown 4.2 needs verification during implementation
   - Check test coverage >= 70%
   - Confirm no regressions
 
@@ -196,10 +286,38 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Integrate with stationarity equations
 
 #### Main Tasks
-- Task: Implement `reformulate_min()` function (Est: 3h)
-- Task: Implement `reformulate_max()` function (Est: 2h)
-- Task: Add auxiliary constraints to KKT system (Est: 2h)
-- Task: Update stationarity to include auxiliary multipliers (Est: 2h)
+
+**Task 1: Implement `reformulate_min()` function** (Est: 3h)
+- Create auxiliary variable and multipliers
+- Generate complementarity constraints
+- Handle multi-argument case
+- Flatten nested min calls
+
+**Task 2: Implement `reformulate_max()` function** (Est: 2h)
+- Implement symmetric to min with reversed inequalities
+- Reuse auxiliary variable infrastructure
+- Handle multi-argument case
+
+**Task 3: Add auxiliary constraints to KKT system** (Est: 2h)
+- Extend KKT data structures for auxiliary constraints
+- Add complementarity pairs
+- Maintain equation-variable count balance
+
+**Required Unknowns:**
+- **Unknown 4.3: Auxiliary constraints in Model declaration** - INCOMPLETE
+  - **Status:** TO BE VERIFIED before Day 4
+  - **Planned approach:** Add auxiliary constraints to Model MCP declaration like regular constraints
+  - **Need to verify:** GAMS compilation works, equation-variable pairing correct, no special handling needed
+
+- **Unknown 6.4: Auxiliary vars and IndexMapping** - INCOMPLETE
+  - **Status:** TO BE VERIFIED before Day 4
+  - **Critical:** IndexMapping must be created AFTER reformulations to include auxiliary variables
+  - **Need to verify:** Gradient/Jacobian columns align correctly, no index misalignment errors
+
+**Task 4: Update stationarity to include auxiliary multipliers** (Est: 2h)
+- Add multiplier terms to stationarity equations
+- Verify sign conventions
+- Test complementarity conditions
 
 #### Deliverables
 - Complete `src/kkt/reformulation.py` module
@@ -221,11 +339,6 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - **Risk 2:** GAMS emission may not declare auxiliary variables/equations
   - *Mitigation:* Extend emission templates to include auxiliary vars
 
-#### Follow-On Items
-**Known Unknown Research**:
-- Unknown 4.3: Auxiliary constraints in Model declaration (verify GAMS syntax)
-- Unknown 6.4: Auxiliary vars and IndexMapping (verify ordering)
-
 ---
 
 ### Day 5: `abs(x)` Handling and Fixed Variables (`x.fx`)
@@ -236,11 +349,55 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Integrate both into KKT system
 
 #### Main Tasks
-- Task: Implement `abs(x)` detection and rejection (Est: 1.5h)
-- Task: Add `--smooth-abs` flag with soft-abs approximation (Est: 2.5h)
-- Task: Parse `x.fx` syntax and create equality constraints (Est: 2h)
-- Task: Integrate fixed vars into KKT assembly (no piL/piU) (Est: 2h)
-- Task: Write tests for both features (Est: 2h)
+
+**Task 1: Implement `abs(x)` detection and rejection** (Est: 1.5h)
+- Detect abs() calls during differentiation
+- Raise clear error by default
+- Suggest --smooth-abs flag
+
+**Required Unknowns:**
+- **Unknown 2.3: abs() smoothing strategy** - COMPLETE
+  - **Findings:** Reject by default with optional smoothing via `--smooth-abs` flag. Soft-abs approximation `sqrt(x^2 + ε)` with default ε=1e-6 provides excellent accuracy (max error 0.001 at x=0, <0.0001% for |x|≥1).
+  - **Key Architecture:** Derivative is `x / sqrt(x^2 + ε)` (continuous everywhere). Auto-convert conceptually to `max(x, -x)` for consistency. Do NOT implement MPEC approach (too complex, poor solver compatibility).
+  - **Summary:** Soft-abs approximation recommended with ε=1e-6 default.
+
+**Task 2: Add `--smooth-abs` flag with soft-abs approximation** (Est: 2.5h)
+- Implement CLI flags --smooth-abs and --smooth-abs-epsilon
+- Add differentiation rule for smooth abs
+- Test accuracy and numerical stability
+
+**Task 3: Parse `x.fx` syntax and create equality constraints** (Est: 2h)
+- Extend parser to recognize .fx attribute
+- Create equality constraints for fixed variables
+- Handle both scalar and indexed variables
+
+**Required Unknowns:**
+- **Unknown 1.3: Fixed variable semantics** - COMPLETE
+  - **Findings:** `.fx` attribute sets both `.lo` and `.up` to same value, effectively fixing variable. In MCP context, treated as equality constraint paired with free multiplier (not bound multipliers).
+  - **Key Architecture:** Treat .fx equalities like any other equality constraint. Normalization creates `x - fx_value = 0` with `Rel.EQ`. Stores in `normalized_bounds` dictionary and adds to `equalities` list.
+  - **Summary:** Option A implemented - treat as equality constraints paired with free multipliers (e.g., x_fx.nu_x_fx).
+
+**Task 4: Integrate fixed vars into KKT assembly (no piL/piU)** (Est: 2h)
+- Skip stationarity equations for fixed variables
+- Add fixing constraints to KKT system
+- Pair with variable (not multiplier) in MCP
+
+**Required Unknowns:**
+- **Unknown 4.4: Emit fixed variables in MCP** - INCOMPLETE
+  - **Status:** TO BE VERIFIED before Day 5
+  - **Approach:** Based on Unknown 1.3 findings, use equality constraint approach
+  - **Need to verify:** MCP emission works, GAMS compilation succeeds, PATH solver handles correctly
+
+- **Unknown 6.2: Fixed vars in KKT assembly** - INCOMPLETE
+  - **Status:** TO BE VERIFIED before Day 5
+  - **Approach:** No stationarity equation for fixed vars, add fixing constraint instead
+  - **Need to verify:** KKT dimension correct (equations = variables), no piL/piU multipliers created
+
+**Task 5: Write tests for both features** (Est: 2h)
+- Test abs() rejection and smoothing
+- Test .fx parsing and normalization
+- Test KKT integration
+- Test MCP emission
 
 #### Deliverables
 - `abs(x)` handling in differentiation engine
@@ -264,13 +421,6 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - **Risk 2:** Fixed vars may conflict with user-defined equality constraints
   - *Mitigation:* Use unique naming: `eq_fix_<varname>`
 
-#### Follow-On Items
-**Known Unknown Research**:
-- Unknown 2.3: `abs()` smoothing strategy (verify accuracy vs stability)
-- Unknown 1.3: Fixed variable semantics (verify GAMS behavior)
-- Unknown 4.4: Emit fixed variables in MCP (verify pairing rules)
-- Unknown 6.2: Fixed vars in KKT assembly (verify no bound multipliers)
-
 ---
 
 ### Day 6: Scaling Implementation
@@ -281,11 +431,48 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Apply scaling to Jacobian before KKT assembly
 
 #### Main Tasks
-- Task: Implement Curtis-Reid row/column scaling (Est: 3h)
-- Task: Add `--scale` flag (none/auto, default: none) (Est: 1.5h)
-- Task: Compute scaling factors from Jacobian (Est: 2h)
-- Task: Apply scaling to equations and variables (Est: 1.5h)
-- Task: Write tests and verify no semantic changes (Est: 2h)
+
+**Task 1: Implement Curtis-Reid row/column scaling** (Est: 3h)
+- Implement iterative row/column norm balancing
+- Compute scaling factors from Jacobian
+- Handle sparse matrices efficiently
+
+**Required Unknowns:**
+- **Unknown 3.1: Scaling algorithm selection** - INCOMPLETE
+  - **Status:** TO BE VERIFIED before Day 6
+  - **Planned approach:** Curtis-Reid geometric mean scaling (iterative row/col norm balancing)
+  - **Need to verify:** Algorithm implementation correct, converges properly, improves conditioning
+
+- **Unknown 3.2: Scaling application point** - INCOMPLETE
+  - **Status:** TO BE VERIFIED before Day 6
+  - **Decision needed:** Scale original NLP vs. scale KKT system
+  - **Need to verify:** Which approach gives better PATH solver performance
+
+**Task 2: Add `--scale` flag (none/auto, default: none)** (Est: 1.5h)
+- Add CLI flag for scaling control
+- Default to no scaling (opt-in)
+- Document scaling behavior
+
+**Required Unknowns:**
+- **Unknown 6.3: Scaling impact on tests** - INCOMPLETE
+  - **Status:** TO BE VERIFIED before Day 6
+  - **Critical:** Existing tests must pass without --scale flag
+  - **Need to verify:** Scaled and unscaled give equivalent solutions, no test breakage
+
+**Task 3: Compute scaling factors from Jacobian** (Est: 2h)
+- Extract Jacobian structure
+- Apply Curtis-Reid algorithm
+- Store scaling factors
+
+**Task 4: Apply scaling to equations and variables** (Est: 1.5h)
+- Scale equations by row factors
+- Scale variables by column factors
+- Maintain mathematical equivalence
+
+**Task 5: Write tests and verify no semantic changes** (Est: 2h)
+- Test scaling is deterministic
+- Test scaled vs unscaled solutions match
+- Test existing tests still pass
 
 #### Deliverables
 - `src/kkt/scaling.py` module with Curtis-Reid algorithm
@@ -310,16 +497,11 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - **Risk 2:** Scaled vs unscaled solutions may differ numerically
   - *Mitigation:* Document that scaling is for solver robustness, not semantics
 
-#### Follow-On Items
-**Known Unknown Research**:
-- Unknown 3.1: Scaling algorithm selection (verify Curtis-Reid is appropriate)
-- Unknown 3.2: Scaling application point (verify pre-KKT is correct)
-- Unknown 6.3: Scaling impact on tests (verify existing tests still pass)
-
 **Checkpoint** (Day 6 - End of Day):
 - Checkpoint 2 review (Est: 1h)
   - All features >= 80% implemented (✓)
-  - All Known Unknowns resolved or on track (✓)
+  - Known Unknowns 1.1-1.3, 2.1-2.3, 6.1 COMPLETE (✓)
+  - Known Unknowns 3.1, 3.2, 4.2-4.4, 6.2-6.4 verified during Days 3-6 (✓)
   - Test coverage >= 85% (✓)
   - No critical bugs (✓)
 
@@ -333,10 +515,26 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Add verbosity controls for diagnostics
 
 #### Main Tasks
-- Task: Compute model statistics from KKT system (Est: 2h)
-- Task: Implement Matrix Market Jacobian export (Est: 3h)
-- Task: Add CLI flags for diagnostics (--stats, --dump-jacobian) (Est: 1.5h)
-- Task: Write tests for diagnostic output (Est: 1.5h)
+
+**Task 1: Compute model statistics from KKT system** (Est: 2h)
+- Count equations, variables, nonzeros
+- Break down by type (stationarity, complementarity, bounds)
+- Format for display
+
+**Task 2: Implement Matrix Market Jacobian export** (Est: 3h)
+- Export Jacobian in Matrix Market format
+- Handle sparse structure
+- Validate format (SciPy/MATLAB compatible)
+
+**Task 3: Add CLI flags for diagnostics (--stats, --dump-jacobian)** (Est: 1.5h)
+- Add --stats flag for statistics output
+- Add --dump-jacobian <file> flag
+- Integrate into main workflow
+
+**Task 4: Write tests for diagnostic output** (Est: 1.5h)
+- Test statistics computation
+- Test Matrix Market export
+- Verify diagnostics don't affect MCP generation
 
 #### Deliverables
 - `src/diagnostics/` module with stats and export functions
@@ -365,9 +563,9 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Verify solver convergence and solution quality
 - Document any PATH-specific issues or required options
 
-**Known Unknown Research**:
-- Unknown 2.4: PATH compatibility for non-smooth reformulations (test now)
-- Unknown 5.1: PATH behavior on nonlinear MCPs (test with diagnostics)
+**Known Unknown Research:**
+- Unknown 2.4: PATH compatibility for non-smooth reformulations
+- Unknown 5.1: PATH behavior on nonlinear MCPs
 
 ---
 
@@ -379,11 +577,56 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Identify and document any PATH-specific issues
 
 #### Main Tasks
-- Task: Set up PATH solver test harness (Est: 2h)
-- Task: Run all golden files through PATH (Est: 2h)
-- Task: Test `min/max` reformulations with PATH (Est: 2h)
-- Task: Test smooth `abs` with PATH (Est: 1.5h)
-- Task: Document PATH solver requirements and options (Est: 1.5h)
+
+**Task 1: Set up PATH solver test harness** (Est: 2h)
+- Create PATH validation framework
+- Set up test infrastructure
+- Configure solver options
+
+**Required Unknowns:**
+- **Unknown 5.2: Recommend PATH options** - INCOMPLETE
+  - **Status:** TO BE VERIFIED during Day 8
+  - **Planned approach:** Document default options, test problem-specific tuning
+  - **Need to verify:** Which options improve convergence, recommended defaults for nlp2mcp
+
+**Task 2: Run all golden files through PATH** (Est: 2h)
+- Validate existing golden files
+- Verify no regressions
+- Document solve status
+
+**Task 3: Test `min/max` reformulations with PATH** (Est: 2h)
+- Test simple 2-argument min/max
+- Test multi-argument cases
+- Test nested cases (flattened)
+
+**Required Unknowns:**
+- **Unknown 2.4: PATH compatibility for non-smooth reformulations** - INCOMPLETE
+  - **Status:** TO BE VERIFIED during Day 8
+  - **Critical:** Verify PATH can handle min/max reformulations
+  - **Need to verify:** Convergence characteristics, initial point sensitivity, solver robustness
+
+- **Unknown 5.1: PATH behavior on nonlinear MCPs** - INCOMPLETE
+  - **Status:** TO BE VERIFIED during Day 8
+  - **Need to verify:** How PATH handles highly nonlinear KKT systems, when to apply scaling, when convergence fails
+
+**Task 4: Test smooth `abs` with PATH** (Est: 1.5h)
+- Test abs() with smoothing enabled
+- Verify numerical stability
+- Check solution accuracy
+
+**Task 5: Document PATH solver requirements and options** (Est: 1.5h)
+- Document setup instructions
+- Document recommended options
+- Create troubleshooting guide
+
+**Required Unknowns:**
+- **Unknown 5.3: PATH failure reporting** - INCOMPLETE
+  - **Status:** TO BE VERIFIED during Day 8
+  - **Need to verify:** How to parse PATH status codes, error messages, listing file output
+
+- **Unknown 5.4: PATH initial point guidance** - INCOMPLETE
+  - **Status:** TO BE VERIFIED during Day 8 (low priority)
+  - **Need to verify:** Whether PATH default initialization sufficient, when user initial points needed
 
 #### Deliverables
 - PATH validation tests in `tests/validation/test_path.py`
@@ -405,17 +648,6 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - **Risk 2:** PATH may fail on some reformulations
   - *Mitigation:* Document limitations, provide alternative formulations
 
-#### Follow-On Items
-**PREP PLAN Task 3** (PATH solver validation):
-- Complete validation of all Sprint 4 features
-- Document PATH solver configuration
-- Create troubleshooting guide for PATH failures
-
-**Known Unknown Research**:
-- Unknown 5.2: Recommend PATH options (document findings)
-- Unknown 5.3: PATH failure reporting (parse .lst files)
-- Unknown 2.4: PATH compatibility (final verification)
-
 **Checkpoint** (Day 8 - End of Day):
 - Checkpoint 3 review (Est: 1h)
   - All features 100% implemented (✓)
@@ -435,11 +667,36 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Verify all acceptance criteria
 
 #### Main Tasks
-- Task: Run full test suite with all features enabled (Est: 2h)
-- Task: Update README.md with Sprint 4 features (Est: 1.5h)
-- Task: Update technical documentation (Est: 2h)
-- Task: Regenerate all golden files with new features (Est: 1.5h)
-- Task: Write Sprint 4 summary document (Est: 2h)
+
+**Task 1: Run full test suite with all features enabled** (Est: 2h)
+- Run all 650+ tests
+- Verify no regressions
+- Check test coverage >= 85%
+
+**Task 2: Update README.md with Sprint 4 features** (Est: 1.5h)
+- Document $include support
+- Document Table support
+- Document min/max reformulation
+- Document abs() handling
+- Document fixed variables
+- Document scaling and diagnostics
+
+**Task 3: Update technical documentation** (Est: 2h)
+- Update KKT_ASSEMBLY.md with reformulation details
+- Update GAMS_EMISSION.md with auxiliary variable handling
+- Document scaling algorithm
+- Add troubleshooting guide
+
+**Task 4: Regenerate all golden files with new features** (Est: 1.5h)
+- Update golden files with new capabilities
+- Add new golden files for Sprint 4 features
+- Validate all golden files with GAMS
+
+**Task 5: Write Sprint 4 summary document** (Est: 2h)
+- Document what was accomplished
+- Document lessons learned
+- Document known limitations
+- Plan Sprint 5 scope
 
 #### Deliverables
 - All 650+ tests passing
@@ -463,9 +720,10 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
   - *Mitigation:* Fix any issues found, retest
 
 #### Follow-On Items
-**Known Unknown Research**:
-- Unknown 5.4: PATH initial point guidance (document if needed)
-- Unknown 4.1: Line breaking for GAMS emission (implement if needed)
+**Known Unknown Research:**
+- **Unknown 4.1: Line breaking for GAMS emission** - COMPLETE
+  - **Findings:** GAMS has no practical line length limit. Current nlp2mcp output (max ~158 chars) is acceptable. Line breaking is cosmetic, not functional.
+  - **Summary:** No changes needed - current behavior is appropriate.
 
 ---
 
@@ -532,7 +790,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 **Risk 2: `min/max` Reformulation More Complex Than Expected**
 - **Impact:** Days 3-4 may overrun
 - **Mitigation:**
-  - Research Known Unknowns 2.1-2.2 during prep
+  - Research Known Unknowns 2.1-2.2 **COMPLETE** ✅
   - Implement simple 2-arg case first, extend to N-arg later
   - Checkpoint 1 on Day 3 will catch delays early
 - **Contingency:** Descope multi-arg or nested min/max to Sprint 5
@@ -557,7 +815,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 **Risk 5: `Table` Parsing Grammar Conflicts**
 - **Impact:** Day 2 may require grammar debugging
-- **Mitigation:** Research Unknown 1.2 during prep, test simple cases first
+- **Mitigation:** Unknown 1.2 **COMPLETE** ✅ - token metadata approach verified
 - **Contingency:** Support only simple tables, defer complex cases to Sprint 5
 
 **Risk 6: Documentation Lag**
@@ -574,7 +832,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 **Risk 8: Unknown Unknowns Discovered Mid-Sprint**
 - **Impact:** Schedule delays
-- **Mitigation:** Proactive Known Unknowns list, checkpoints on Days 3, 6, 8
+- **Mitigation:** Proactive Known Unknowns list (10/23 already COMPLETE), checkpoints on Days 3, 6, 8
 - **Contingency:** Use Day 10 buffer time or extend sprint
 
 ---
@@ -607,15 +865,34 @@ Sprint 4 Known Unknowns are documented in:
 - `/Users/jeff/experiments/nlp2mcp/docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md`
 - `/Users/jeff/experiments/nlp2mcp/docs/planning/SPRINT_4/KNOWN_UNKNOWNS/SCHEDULE.md`
 
-**Verification Schedule:**
-- **Prep (before Day 1):** Research all Critical/High unknowns (1.1-2.3)
-- **Day 1-2:** Verify unknowns 1.1, 1.4, 1.5, 6.1 (include/table related)
-- **Day 3:** Verify unknowns 2.1, 2.2, 4.2 (min/max design)
-- **Day 4-5:** Verify unknowns 2.3, 1.3, 4.4, 6.2 (abs/fixed vars)
-- **Day 6:** Verify unknowns 3.1, 3.2, 6.3 (scaling)
-- **Day 7-8:** Verify unknowns 2.4, 5.1, 5.2, 5.3 (PATH related)
-- **Day 9:** Verify unknown 4.1 (GAMS line breaking if needed)
-- **Day 10:** Verify unknown 5.4 (PATH initial points if needed)
+**Verification Status (as of 2025-11-01):**
+
+**COMPLETE (10/23):**
+- ✅ Unknown 1.1: $include syntax and semantics
+- ✅ Unknown 1.2: Table block syntax
+- ✅ Unknown 1.3: Fixed variable semantics
+- ✅ Unknown 1.4: Nested $include handling
+- ✅ Unknown 1.5: Relative path resolution
+- ✅ Unknown 2.1: min() reformulation
+- ✅ Unknown 2.2: max() reformulation
+- ✅ Unknown 2.3: abs() handling
+- ✅ Unknown 4.1: Line breaking for GAMS emission
+- ✅ Unknown 6.1: $include vs ModelIR preprocessing
+
+**INCOMPLETE - TO BE VERIFIED (13/23):**
+- 🔍 Unknown 2.4: PATH compatibility (Day 8)
+- 🔍 Unknown 3.1: Scaling algorithm (Day 6)
+- 🔍 Unknown 3.2: Scaling application point (Day 6)
+- 🔍 Unknown 4.2: Auxiliary variable naming (Day 3-4)
+- 🔍 Unknown 4.3: Auxiliary constraints in Model (Day 4)
+- 🔍 Unknown 4.4: Emit fixed variables in MCP (Day 5)
+- 🔍 Unknown 5.1: PATH nonlinearity handling (Day 8)
+- 🔍 Unknown 5.2: PATH options (Day 8)
+- 🔍 Unknown 5.3: PATH failure reporting (Day 8)
+- 🔍 Unknown 5.4: PATH initial points (Day 8, low priority)
+- 🔍 Unknown 6.2: Fixed vars in KKT (Day 5)
+- 🔍 Unknown 6.3: Scaling impact on tests (Day 6)
+- 🔍 Unknown 6.4: Auxiliary vars and IndexMapping (Day 4)
 
 **All unknowns must be resolved or documented by Day 8.**
 
@@ -645,7 +922,7 @@ Sprint 4 Known Unknowns are documented in:
 
 ## Lessons Applied from Sprint 3
 
-1. **Proactive Known Unknowns:** Created before sprint start (not retrospectively)
+1. **Proactive Known Unknowns:** Created before sprint start (10/23 already COMPLETE) ✅
 2. **Early Validation:** PATH setup on Day 7 (not deferred)
 3. **Formal Checkpoints:** Days 3, 6, 8 with templates and decision points
 4. **Test-Driven Development:** Write tests before/during implementation
@@ -677,7 +954,7 @@ Sprint 4 Known Unknowns are documented in:
 
 ## Next Steps
 
-1. **Before Day 1:** Complete all prep tasks (Task 1-9 from PREP_PLAN.md)
+1. **Before Day 1:** Complete all prep tasks (Task 1-9 from PREP_PLAN.md) - **10/23 unknowns already COMPLETE** ✅
 2. **Day 1 Morning:** Review this plan, set up environment, verify tooling
 3. **Day 1 Start:** Begin `$include` implementation per Day 1 plan above
 4. **Daily:** Update progress, run tests, document findings
