@@ -450,9 +450,11 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 #### Follow-On Research Items
 *Note: These are INCOMPLETE unknowns to be resolved during implementation:*
 
-- **Unknown 4.4 (Emit fixed variables in MCP)**: INCOMPLETE
-  - Approach: Use equality constraint approach per Unknown 1.3 findings
-  - Need to verify: MCP emission works, GAMS compilation succeeds, PATH handles correctly
+- **Unknown 4.4 (Emit fixed variables in MCP)**: ✅ COMPLETE (2025-11-02)
+  - **Implementation:** Uses Option B (Equality Constraint) approach
+  - **MCP Emission:** Fixed var `x.fx = value` creates equality `x_fx.. x - value =E= 0` paired with free multiplier `nu_x_fx`
+  - **Verification:** Tested with example models, generates correct MCP code, works with PATH solver
+  - **Details:** See KNOWN_UNKNOWNS.md Unknown 4.4 for full implementation analysis and rationale
 
 ---
 
@@ -994,7 +996,7 @@ Sprint 4 Known Unknowns are documented in:
 
 13. **Unknown 6.4 (Auxiliary vars and IndexMapping)**: ✅ COMPLETE (Research) - Architecture correct by design. IndexMapping created during derivative computation automatically includes auxiliary variables. Integration point identified: insert reformulation at Step 2.5 in cli.py (between normalize and derivatives). Gradient/Jacobian alignment guaranteed by shared build_index_mapping(). See KNOWN_UNKNOWNS.md for integration code.
 
-14. **Unknown 4.4 (Emit fixed variables in MCP)**: INCOMPLETE - Verify MCP emission works, GAMS compilation succeeds, PATH handles correctly during Day 5
+14. **Unknown 4.4 (Emit fixed variables in MCP)**: ✅ COMPLETE (Research 2025-11-02) - Implementation verified: uses Option B (equality constraint) approach. Fixed variables create equality constraints `x_fx.. x - value =E= 0` paired with free multipliers `nu_x_fx` in MCP. Tested with example models, generates correct code. Implementation in: parser (src/ir/parser.py), normalization (src/ir/normalize.py:177-179), KKT assembly, MCP emission (src/emit/equations.py:139-148). See KNOWN_UNKNOWNS.md for detailed analysis.
 
 15. **Unknown 6.2 (Fixed vars in KKT)**: INCOMPLETE - Verify no stationarity equation for fixed vars, KKT dimension correct during Day 5 (bug #63 already fixed)
 
