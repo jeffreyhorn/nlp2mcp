@@ -406,6 +406,8 @@ Options:
   --stats                        Print model statistics
   --dump-jacobian PATH           Export Jacobian to Matrix Market format
   --scale {none,auto,byvar}      Scaling mode (default: none)
+  --simplification {none,basic,advanced}
+                                 Expression simplification (default: advanced)
   --smooth-abs                   Enable abs() smoothing
   --smooth-abs-epsilon FLOAT     Epsilon for abs smoothing (default: 1e-6)
   --help                         Show this message and exit
@@ -593,50 +595,155 @@ make format     # Auto-format code
 
 ### Expression Simplification
 
-nlp2mcp automatically simplifies derivative expressions to produce cleaner, more readable output.
+nlp2mcp automatically simplifies derivative expressions to produce cleaner, more readable output. The level of simplification can be controlled via the `--simplification` flag or configuration file.
 
-**Simplification Rules Applied:**
+#### Simplification Modes
+
+**Advanced (default)** - `--simplification advanced`
+
+Applies all basic simplifications plus algebraic term collection:
+
+1. **Constant Collection:**
+   - `1 + x + 1` → `x + 2`
+   - `3 + a + 5` → `a + 8`
+
+2. **Like-Term Collection:**
+   - `x + y + x + y` → `2*x + 2*y`
+   - `a(i) + b(i) + a(i)` → `2*a(i) + b(i)`
+
+3. **Coefficient Collection:**
+   - `2*x + 3*x` → `5*x`
+   - `4*y - 2*y` → `2*y`
+
+4. **Term Cancellation:**
+   - `x - x` → `0`
+   - `x + y - x` → `y`
+   - `3*a - 3*a` → `0`
+
+5. **Complex Bases:**
+   - `x*y + 2*x*y` → `3*x*y`
+   - `a(i)*b(j) + a(i)*b(j)` → `2*a(i)*b(j)`
+
+Plus all basic simplifications (constant folding, zero/identity elimination).
+
+**Basic** - `--simplification basic`
+
+Applies only fundamental simplification rules:
 
 1. **Constant Folding:**
    - `2 + 3` → `5`
    - `(1 + 1) * x` → `2 * x`
+   - `4 * 5` → `20`
 
 2. **Zero Elimination:**
    - `x + 0` → `x`
    - `x * 0` → `0`
    - `0 / x` → `0`
+   - `0 - x` → `-x`
 
 3. **Identity Elimination:**
    - `x * 1` → `x`
    - `x / 1` → `x`
    - `x ** 1` → `x`
    - `x ** 0` → `1`
+   - `1 ** x` → `1`
 
-4. **Algebraic Simplifications:**
+4. **Algebraic Identities:**
    - `-(-x)` → `x` (double negation)
    - `x - x` → `0`
    - `x / x` → `1`
-   - `x + (-y)` → `x - y`
 
-**Example Impact:**
+**None** - `--simplification none`
 
-Before simplification:
-```gams
-stat_x(i).. x(i) * 0 + a(i) * 1 + (1 - 0) * lam_balance(i) =E= 0;
+No simplification applied. Derivative expressions remain in raw differentiated form.
+
+#### Usage Examples
+
+```bash
+# Default: advanced simplification
+nlp2mcp model.gms -o output.gms
+
+# Explicitly use advanced
+nlp2mcp model.gms -o output.gms --simplification advanced
+
+# Use basic simplification only
+nlp2mcp model.gms -o output.gms --simplification basic
+
+# Disable simplification
+nlp2mcp model.gms -o output.gms --simplification none
 ```
 
-After simplification:
-```gams
-stat_x(i).. a(i) + lam_balance(i) =E= 0;
+#### Configuration File
+
+Set the default simplification mode in `pyproject.toml`:
+
+```toml
+[tool.nlp2mcp]
+simplification = "advanced"  # or "basic" or "none"
+scale = "none"
+smooth_abs = false
 ```
+
+#### Example Impact
+
+**Input derivative (before simplification):**
+```gams
+stat_x(i).. 1 + 0 + x(i) * 0 + a(i) * 1 + (1 - 0) * lam_balance(i) + lam_balance(i) =E= 0;
+```
+
+**With basic simplification:**
+```gams
+stat_x(i).. 1 + a(i) + lam_balance(i) + lam_balance(i) =E= 0;
+```
+
+**With advanced simplification:**
+```gams
+stat_x(i).. a(i) + 2*lam_balance(i) + 1 =E= 0;
+```
+
+Or equivalently:
+```gams
+stat_x(i).. a(i) + 2*lam_balance(i) =E= -1;
+```
+
+#### When to Use Each Mode
+
+- **Advanced** (default): Best for production use
+  - Produces cleanest, most readable output
+  - Reduces redundant terms in expressions
+  - Recommended for all typical use cases
+
+- **Basic**: When you need predictable transformations
+  - Minimal transformation of expressions
+  - Preserves expression structure more closely
+  - Useful if you want to see differentiation pattern
+
+- **None**: For debugging and education
+  - See raw output of differentiation engine
+  - Understand how chain rule is applied
+  - Verify derivative computation manually
+  - **Warning**: May produce very large expressions!
+
+#### Technical Details
+
+**Term-Based Collection (Advanced Mode):**
+
+The advanced simplification uses a term collection algorithm:
+1. Flatten nested additions into lists
+2. Extract each term as (coefficient, base) pairs
+3. Group terms by their base expression
+4. Sum coefficients for like terms
+5. Filter out zero terms
+6. Rebuild optimized expression
+
+This process is applied bottom-up through the expression tree, ensuring nested expressions are also optimized.
 
 **Benefits:**
 - Cleaner, more readable equations
-- Smaller output files
-- Potentially faster solver execution
+- Smaller output files (fewer operators, shorter expressions)
+- Potentially faster solver execution (fewer operations to evaluate)
 - Easier manual verification of KKT conditions
-
-**Note:** Simplification is applied automatically to all derivatives (gradients, Jacobians) and cannot be disabled.
+- Better numerical properties (reduced cancellation errors)
 
 ### KKT System Structure
 
