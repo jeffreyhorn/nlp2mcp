@@ -388,7 +388,8 @@ class TestEdgeCases:
 
     def test_power_negative_base_fractional_exponent(self):
         # (-2) ** 0.5 → Python allows this (returns complex number)
-        # So this will actually simplify to a Const with complex value
+        # This test intentionally verifies that complex number support is present:
+        # the simplification should produce a Const with a complex value.
         expr = Binary("^", Const(-2), Const(0.5))
         result = simplify(expr)
         # Python computes this as complex: (-2)**0.5 = approximately 1.41j
