@@ -116,7 +116,6 @@ def test_indexed_fixed():
         print("\n✓ x(i3) has no bounds (free, as expected)")
 
     print("\n✓ All checks passed!")
-    return True
 
 
 if __name__ == "__main__":

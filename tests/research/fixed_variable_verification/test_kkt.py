@@ -95,7 +95,6 @@ def test_kkt_fixed_variable():
         return False
 
     print("\n✓ All checks passed!")
-    return True
 
 
 if __name__ == "__main__":

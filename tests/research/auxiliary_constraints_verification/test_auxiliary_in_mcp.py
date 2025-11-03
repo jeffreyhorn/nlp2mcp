@@ -186,8 +186,6 @@ def test_min_reformulation_in_mcp_emission():
     print("to user-defined inequalities.")
     print("=" * 70 + "\n")
 
-    return True
-
 
 if __name__ == "__main__":
     test_min_reformulation_in_mcp_emission()
