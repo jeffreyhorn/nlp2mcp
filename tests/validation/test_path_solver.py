@@ -57,6 +57,29 @@ pytestmark = pytest.mark.skipif(
     not PATH_AVAILABLE, reason="PATH solver not available (GAMS not installed or not in PATH)"
 )
 
+# ============================================
+# GAMS Output Format Constants
+# ============================================
+
+# GAMS .lst file header columns for variable solution output
+GAMS_HEADER_COLUMNS = ("LOWER", "LEVEL", "UPPER", "MARGINAL")
+
+# Regex pattern for parsing scalar variable values from GAMS .lst files
+# Scalar variables appear on the same line as ---- VAR varname
+# Format: LOWER_val LEVEL_val UPPER_val MARGINAL_val
+# Values can be: numbers (with optional E notation), ".", "-INF", "+INF", "INF"
+SCALAR_VAR_PATTERN = (
+    r"^\s*([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)"
+)
+
+# Regex pattern for parsing indexed variable values from GAMS .lst files
+# Indexed variables have header row followed by data rows
+# Format: index_name LOWER_val LEVEL_val UPPER_val MARGINAL_val
+# Values follow same format as scalar variables
+INDEXED_VAR_PATTERN = (
+    r"(\w+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)"
+)
+
 
 # ============================================
 # Helper Functions
@@ -199,14 +222,11 @@ def _parse_gams_solution(lst_content: str, gams_file: Path) -> dict[str, float]:
             # Parse scalar variable (single LEVEL value on same line as ---- VAR)
             # Format: ---- VAR varname    LOWER     LEVEL     UPPER    MARGINAL
             # The section starts right after "---- VAR varname", so we look for 4 values
-            scalar_pattern = (
-                r"^\s*([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)"
-            )
-            scalar_match = re.search(scalar_pattern, section, re.MULTILINE)
+            scalar_match = re.search(SCALAR_VAR_PATTERN, section, re.MULTILINE)
             # Make sure this is actually a scalar (no header line with LOWER LEVEL UPPER MARGINAL)
             has_header = re.search(r"LOWER\s+LEVEL\s+UPPER\s+MARGINAL", section)
             if scalar_match and not has_header:
-                # Group 2 is LEVEL (groups are: LOWER, LEVEL, UPPER, MARGINAL)
+                # Capture groups: 1=LOWER, 2=LEVEL, 3=UPPER, 4=MARGINAL
                 level_str = scalar_match.group(2)
                 # Convert GAMS "." to 0.0, skip INF values
                 if level_str == ".":
@@ -218,13 +238,12 @@ def _parse_gams_solution(lst_content: str, gams_file: Path) -> dict[str, float]:
             # Parse indexed variable (multiple rows with index and LEVEL)
             # Format: i1    LOWER_val    LEVEL_val    UPPER_val    MARGINAL_val
             # GAMS uses "." for zero, "-INF"/"INF"/"+INF" for infinity
-            indexed_pattern = r"(\w+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)"
-            for match in re.finditer(indexed_pattern, section):
+            for match in re.finditer(INDEXED_VAR_PATTERN, section):
                 index = match.group(1)
                 # Skip if this is actually the header row
-                if index.upper() in ("LOWER", "LEVEL", "UPPER", "MARGINAL"):
+                if index.upper() in GAMS_HEADER_COLUMNS:
                     continue
-                # Group 2 is LOWER, group 3 is LEVEL
+                # Capture groups: 1=index, 2=LOWER, 3=LEVEL, 4=UPPER, 5=MARGINAL
                 level_str = match.group(3)
                 # Convert GAMS "." to 0.0, skip INF values
                 if level_str == ".":
