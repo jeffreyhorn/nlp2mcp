@@ -214,6 +214,18 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
             left_str = expr_to_gams(left, parent_op=op, is_right=False)
             right_str = expr_to_gams(right, parent_op=op, is_right=True)
 
+            # Special handling: wrap negative constant in parentheses if it's the left operand
+            # of multiplication/division to avoid GAMS "more than one operator in a row" error
+            # e.g., "a + -1 * b" becomes "a + (-1) * b"
+            #
+            # Only multiplication (*) and division (/) require this treatment in GAMS because
+            # GAMS parses "-1 * b" without parentheses as two operators in a row, which is invalid.
+            # Other operators, such as exponentiation (**), do not currently require this fix.
+            # If GAMS syntax changes or other operators are found to have similar issues,
+            # consider extending this handling accordingly.
+            if op in ("*", "/") and isinstance(left, Const) and left.value < 0:
+                left_str = f"({left_str})"
+
             # Determine if we need parentheses
             needs_parens = _needs_parens(parent_op, op, is_right)
             result = f"{left_str} {op} {right_str}"

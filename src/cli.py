@@ -133,7 +133,7 @@ def main(
         if verbose:
             click.echo("Normalizing model...")
 
-        normalize_model(model)
+        normalized_eqs, _ = normalize_model(model)
 
         if verbose >= 2:
             click.echo(f"  Equalities: {len(model.equalities)}")
@@ -155,6 +155,11 @@ def main(
             click.echo(f"  Added {vars_added} auxiliary variables")
             click.echo(f"  Added {eqs_added} complementarity constraints")
 
+        # Re-normalize model after reformulation to capture new equations
+        # and update equations that had min/max replaced with aux vars
+        if vars_added > 0 or eqs_added > 0:
+            normalized_eqs, _ = normalize_model(model)
+
         # Step 3: Compute derivatives
         if verbose:
             click.echo("Computing derivatives...")
@@ -167,7 +172,7 @@ def main(
         )
 
         gradient = compute_objective_gradient(model, config)
-        J_eq, J_ineq = compute_constraint_jacobian(model, config)
+        J_eq, J_ineq = compute_constraint_jacobian(model, normalized_eqs, config)
 
         if verbose >= 2:
             click.echo(f"  Gradient columns: {gradient.num_cols}")

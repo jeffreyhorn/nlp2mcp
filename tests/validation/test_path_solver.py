@@ -57,6 +57,29 @@ pytestmark = pytest.mark.skipif(
     not PATH_AVAILABLE, reason="PATH solver not available (GAMS not installed or not in PATH)"
 )
 
+# ============================================
+# GAMS Output Format Constants
+# ============================================
+
+# GAMS .lst file header columns for variable solution output
+GAMS_HEADER_COLUMNS = ("LOWER", "LEVEL", "UPPER", "MARGINAL")
+
+# Regex pattern for parsing scalar variable values from GAMS .lst files
+# Scalar variables appear on the same line as ---- VAR varname
+# Format: LOWER_val LEVEL_val UPPER_val MARGINAL_val
+# Values can be: numbers (with optional E notation), ".", "-INF", "+INF", "INF"
+SCALAR_VAR_PATTERN = (
+    r"^\s*([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)"
+)
+
+# Regex pattern for parsing indexed variable values from GAMS .lst files
+# Indexed variables have header row followed by data rows
+# Format: index_name LOWER_val LEVEL_val UPPER_val MARGINAL_val
+# Values follow same format as scalar variables
+INDEXED_VAR_PATTERN = (
+    r"(\w+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)"
+)
+
 
 # ============================================
 # Helper Functions
@@ -81,16 +104,18 @@ def _solve_gams(gams_file: Path, gams_executable: str) -> tuple[bool, str, dict[
 
     try:
         # Run GAMS to solve the MCP
+        # Use absolute path for gams_file to avoid path resolution issues
+        abs_gams_file = gams_file.absolute()
         subprocess.run(
-            [gams_executable, str(gams_file)],
+            [gams_executable, str(abs_gams_file)],
             capture_output=True,
             text=True,
             timeout=60,
-            cwd=gams_file.parent,
+            cwd=abs_gams_file.parent,
         )
 
         # Parse the .lst file for solution
-        lst_file = gams_file.parent / (gams_file.stem + ".lst")
+        lst_file = abs_gams_file.parent / (abs_gams_file.stem + ".lst")
         if not lst_file.exists():
             return (False, "GAMS did not create .lst file", {})
 
@@ -187,25 +212,44 @@ def _parse_gams_solution(lst_content: str, gams_file: Path) -> dict[str, float]:
         if var_match:
             # Find the section after the VAR declaration
             section_start = var_match.end()
-            # Get next ~500 characters to capture the variable values
-            section = lst_content[section_start : section_start + 500]
+            # Get section up to next ---- marker or 500 chars, whichever is shorter
+            next_section = lst_content[section_start:].find("\n----")
+            if next_section != -1:
+                section = lst_content[section_start : section_start + next_section]
+            else:
+                section = lst_content[section_start : section_start + 500]
 
-            # Parse scalar variable (single LEVEL value)
-            # Format: LOWER     LEVEL     UPPER    MARGINAL
-            #         value     value     value    value
-            scalar_pattern = r"LOWER\s+LEVEL\s+UPPER\s+MARGINAL\s+([+-]?\d+\.?\d*)"
-            scalar_match = re.search(scalar_pattern, section)
-            if scalar_match:
-                solution[var_name] = float(scalar_match.group(1))
+            # Parse scalar variable (single LEVEL value on same line as ---- VAR)
+            # Format: ---- VAR varname    LOWER     LEVEL     UPPER    MARGINAL
+            # The section starts right after "---- VAR varname", so we look for 4 values
+            scalar_match = re.search(SCALAR_VAR_PATTERN, section, re.MULTILINE)
+            # Make sure this is actually a scalar (no header line with LOWER LEVEL UPPER MARGINAL)
+            has_header = re.search(r"LOWER\s+LEVEL\s+UPPER\s+MARGINAL", section)
+            if scalar_match and not has_header:
+                # Capture groups: 1=LOWER, 2=LEVEL, 3=UPPER, 4=MARGINAL
+                level_str = scalar_match.group(2)
+                # Convert GAMS "." to 0.0, skip INF values
+                if level_str == ".":
+                    solution[var_name] = 0.0
+                elif "INF" not in level_str:
+                    solution[var_name] = float(level_str)
                 continue
 
             # Parse indexed variable (multiple rows with index and LEVEL)
-            # Format: i1    value1    value2    value3    value4
-            indexed_pattern = r"(\w+)\s+([+-]?\d+\.?\d*(?:[eE][+-]?\d+)?)\s+([+-]?\d+\.?\d*(?:[eE][+-]?\d+)?)\s+([+-]?\d+\.?\d*(?:[eE][+-]?\d+)?)\s+([+-]?\d+\.?\d*(?:[eE][+-]?\d+)?)"
-            for match in re.finditer(indexed_pattern, section):
+            # Format: i1    LOWER_val    LEVEL_val    UPPER_val    MARGINAL_val
+            # GAMS uses "." for zero, "-INF"/"INF"/"+INF" for infinity
+            for match in re.finditer(INDEXED_VAR_PATTERN, section):
                 index = match.group(1)
-                level = float(match.group(2))
-                solution[f"{var_name}({index})"] = level
+                # Skip if this is actually the header row
+                if index.upper() in GAMS_HEADER_COLUMNS:
+                    continue
+                # Capture groups: 1=index, 2=LOWER, 3=LEVEL, 4=UPPER, 5=MARGINAL
+                level_str = match.group(3)
+                # Convert GAMS "." to 0.0, skip INF values
+                if level_str == ".":
+                    solution[f"{var_name}({index})"] = 0.0
+                elif "INF" not in level_str:
+                    solution[f"{var_name}({index})"] = float(level_str)
 
     return solution
 
@@ -228,12 +272,14 @@ def _extract_variable_names(gams_file: Path) -> list[str]:
     # Free Variables obj;
 
     # Pattern for variable declarations (case insensitive)
-    var_decl_pattern = r"(?:Positive\s+)?(?:Free\s+)?Variables?\s+([\w\s,()]+)\s*;"
+    # Match across lines with DOTALL flag to handle multi-line declarations
+    var_decl_pattern = r"(?:Positive\s+)?(?:Free\s+)?Variables?\s+([\w\s,()]+?)\s*;"
 
-    for match in re.finditer(var_decl_pattern, content, re.IGNORECASE):
+    for match in re.finditer(var_decl_pattern, content, re.IGNORECASE | re.DOTALL):
         # Split on commas and clean up
         vars_str = match.group(1)
-        for var in vars_str.split(","):
+        # Split by comma and also by whitespace (to handle newlines)
+        for var in re.split(r"[,\s]+", vars_str):
             var = var.strip()
             # Remove index notation if present: x(i) -> x
             var = re.sub(r"\([^)]*\)", "", var).strip()
@@ -312,13 +358,10 @@ class TestPATHSolverValidation:
     2. Solutions satisfy KKT optimality conditions
     3. Solution quality is acceptable
 
-    NOTE: Current golden MCP files have modeling issues (Model Status 4: Infeasible).
-    Tests are marked as expected failures (xfail) until the MCP formulation is corrected.
-    The validation framework itself is working correctly - it successfully detects
-    infeasible models.
+    NOTE: Sign error in stationarity equations was fixed. Golden MCP files regenerated
+    with correct formulation. Tests should now pass with PATH solver.
     """
 
-    @pytest.mark.xfail(reason="Golden MCP file has modeling issues - Model Status 4 (Infeasible)")
     def test_solve_simple_nlp_mcp(self):
         """Test PATH solver on simple_nlp_mcp.gms."""
         golden_file = Path("tests/golden/simple_nlp_mcp.gms")
@@ -340,9 +383,16 @@ class TestPATHSolverValidation:
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
 
-    @pytest.mark.xfail(reason="Golden MCP file has modeling issues - Model Status 4 (Infeasible)")
+    @pytest.mark.xfail(
+        reason="Model Status 5 (Locally Infeasible) - KKT reformulation may create difficult MCP"
+    )
     def test_solve_bounds_nlp_mcp(self):
-        """Test PATH solver on bounds_nlp_mcp.gms."""
+        """Test PATH solver on bounds_nlp_mcp.gms.
+
+        NOTE: This test currently fails with Model Status 5 (Locally Infeasible).
+        The nonlinear KKT system may be difficult for PATH to solve, or there may be
+        an issue with the reformulation. Requires further investigation.
+        """
         golden_file = Path("tests/golden/bounds_nlp_mcp.gms")
         assert golden_file.exists(), f"Golden file not found: {golden_file}"
 
@@ -362,7 +412,6 @@ class TestPATHSolverValidation:
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
 
-    @pytest.mark.xfail(reason="Golden MCP file has modeling issues - Model Status 4 (Infeasible)")
     def test_solve_indexed_balance_mcp(self):
         """Test PATH solver on indexed_balance_mcp.gms."""
         golden_file = Path("tests/golden/indexed_balance_mcp.gms")
@@ -384,9 +433,16 @@ class TestPATHSolverValidation:
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
 
-    @pytest.mark.xfail(reason="Golden MCP file has modeling issues - Model Status 4 (Infeasible)")
+    @pytest.mark.xfail(
+        reason="Model Status 5 (Locally Infeasible) - KKT reformulation may create difficult MCP"
+    )
     def test_solve_nonlinear_mix_mcp(self):
-        """Test PATH solver on nonlinear_mix_mcp.gms."""
+        """Test PATH solver on nonlinear_mix_mcp.gms.
+
+        NOTE: This test currently fails with Model Status 5 (Locally Infeasible).
+        The nonlinear KKT system may be difficult for PATH to solve, or there may be
+        an issue with the reformulation. Requires further investigation.
+        """
         golden_file = Path("tests/golden/nonlinear_mix_mcp.gms")
         assert golden_file.exists(), f"Golden file not found: {golden_file}"
 
@@ -406,7 +462,6 @@ class TestPATHSolverValidation:
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
 
-    @pytest.mark.xfail(reason="Golden MCP file has modeling issues - Model Status 4 (Infeasible)")
     def test_solve_scalar_nlp_mcp(self):
         """Test PATH solver on scalar_nlp_mcp.gms."""
         golden_file = Path("tests/golden/scalar_nlp_mcp.gms")

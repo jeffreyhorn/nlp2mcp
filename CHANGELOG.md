@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2025-11-03 - Sign Error in KKT Stationarity Equations & PATH Solver Validation
+
+#### Fixed
+- **Critical Sign Error in Jacobian Computation** (`src/ad/constraint_jacobian.py`, `src/cli.py`)
+  - Root cause: Jacobian was using original equation definitions instead of normalized forms
+  - For constraint `x(i) >= 0`, original form `x(i) - 0` gave derivative +1, but normalized form `0 - x(i)` should give -1
+  - Updated `compute_constraint_jacobian()` to accept and use `normalized_eqs` parameter
+  - Updated `_compute_equality_jacobian()` and `_compute_inequality_jacobian()` to prefer normalized equations
+  - Fixed CLI to capture and pass normalized equations through the pipeline
+  - Result: Generated MCPs now have correct signs in stationarity equations (e.g., `a(i) + (-1) * lam_balance(i) = 0` instead of `a(i) + 1 * lam_balance(i) = 0`)
+
+- **GAMS Syntax Error with Negative Constants** (`src/emit/expr_to_gams.py`)
+  - GAMS rejects `a + -1 * b` (more than one operator in a row)
+  - Added special handling to wrap negative constants in parentheses when they appear as left operand of multiplication/division
+  - Now generates `a + (-1) * b` which GAMS accepts
+  - Applies to multiplication and division operators
+
+- **PATH Solver Test Infrastructure** (`tests/validation/test_path_solver.py`)
+  - Fixed GAMS subprocess invocation to use absolute paths (avoid path resolution issues)
+  - Fixed solution parsing to handle GAMS output format correctly:
+    - Scalar variables: values on same line as `---- VAR varname`
+    - Indexed variables: header row followed by data rows
+    - Proper handling of GAMS "." notation (represents 0.0)
+    - Section boundary detection to avoid parsing data from wrong variables
+  - Fixed variable name extraction to handle multi-line declarations
+  - All infrastructure tests now pass
+
+- **Test Pipeline Integration** (`tests/e2e/test_golden.py`)
+  - Updated `run_full_pipeline()` to pass normalized equations to Jacobian computation
+  - Ensures test pipeline uses same corrected logic as CLI
+
+#### Added
+- **PATH Solver Validation Framework** (`tests/validation/test_path_solver.py`)
+  - Comprehensive PATH solver validation test suite
+  - Tests successfully solve 3/5 golden MCP files (simple_nlp, indexed_balance, scalar_nlp)
+  - 2 files marked as xfail due to Model Status 5 (Locally Infeasible) - requires investigation
+  - Solution parsing and KKT residual checking
+  - Automatic skip when GAMS/PATH not available
+
+#### Changed
+- **Regenerated All Golden MCP Files** (`tests/golden/*.gms`)
+  - All 5 golden files regenerated with corrected stationarity equation signs
+  - All files now compile successfully in GAMS
+  - Files: simple_nlp_mcp.gms, bounds_nlp_mcp.gms, indexed_balance_mcp.gms, nonlinear_mix_mcp.gms, scalar_nlp_mcp.gms
+
+#### Known Issues
+- **PATH Solver Convergence**: 2 test cases (bounds_nlp, nonlinear_mix) fail with Model Status 5 (Locally Infeasible)
+  - May indicate modeling issues with KKT reformulation for nonlinear problems
+  - Marked as xfail for future investigation
+  - Linear and simple nonlinear problems solve successfully
+
+### Added - 2025-11-03 - Partial Min/Max and Feature Testing
+
+#### Added
+- **Min/Max Function Support in Grammar** (`src/gams/gams_grammar.lark`)
+  - Added `min`, `max`, `smin`, `smax` to FUNCNAME token
+  - Parser now accepts min/max as function calls in equations
+
+- **Test Cases** (`examples/`)
+  - `min_max_test.gms`: Test case for min() reformulation
+  - `abs_test.gms`: Test case for smooth abs() feature
+  - `fixed_var_test.gms`: Test case for fixed variables
+
+#### Fixed
+- **Reformulation Integration** (`src/cli.py`)
+  - Re-normalize model after reformulation to capture new equations
+  - Fixes "Differentiation not implemented for 'min'" error
+  - Ensures normalized_eqs includes equations with min/max replaced by auxiliary variables
+
+#### Known Issues - Min/Max and Fixed Variables
+- **KKT Assembly Bug**: Equality constraint multipliers for dynamically added constraints not included in stationarity equations
+  - Affects: min/max reformulation, fixed variables (.fx)
+  - Symptom: `nu_<constraint>` multiplier declared but not referenced in any equation
+  - GAMS Error: "no ref to var in equ.var"
+  - Root Cause: Gradient computation doesn't account for auxiliary/fixed variable participation in equality constraints
+  - Status: Requires deeper investigation of KKT stationarity assembly logic
+  
+- **Smooth Abs**: Works correctly but test case has initialization issues (sqrt domain error)
+
 ### Added - 2025-11-03 - Advanced Expression Simplification
 
 #### Added

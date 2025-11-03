@@ -62,7 +62,9 @@ from .jacobian import JacobianStructure
 
 
 def compute_constraint_jacobian(
-    model_ir: ModelIR, config: Config | None = None
+    model_ir: ModelIR,
+    normalized_eqs: dict[str, NormalizedEquation] | None = None,
+    config: Config | None = None,
 ) -> tuple[JacobianStructure, JacobianStructure]:
     """
     Compute Jacobians for all constraints (equalities and inequalities).
@@ -79,6 +81,8 @@ def compute_constraint_jacobian(
 
     Args:
         model_ir: Model IR with constraints, variables, and normalized bounds
+        normalized_eqs: Dictionary of normalized equations (optional for backward compatibility)
+        config: Configuration for differentiation
 
     Returns:
         Tuple of (J_h, J_g):
@@ -125,10 +129,10 @@ def compute_constraint_jacobian(
     )
 
     # Process equality constraints
-    _compute_equality_jacobian(model_ir, index_mapping, J_h, config)
+    _compute_equality_jacobian(model_ir, index_mapping, J_h, normalized_eqs, config)
 
     # Process inequality constraints
-    _compute_inequality_jacobian(model_ir, ineq_index_mapping, J_g, config)
+    _compute_inequality_jacobian(model_ir, ineq_index_mapping, J_g, normalized_eqs, config)
 
     # Include bound-derived equations
     _compute_bound_jacobian(model_ir, ineq_index_mapping, J_g, config)
@@ -186,7 +190,11 @@ def _build_inequality_index_mapping(base_mapping, model_ir: ModelIR, num_inequal
 
 
 def _compute_equality_jacobian(
-    model_ir: ModelIR, index_mapping, J_h: JacobianStructure, config: Config | None = None
+    model_ir: ModelIR,
+    index_mapping,
+    J_h: JacobianStructure,
+    normalized_eqs: dict[str, NormalizedEquation] | None = None,
+    config: Config | None = None,
 ) -> None:
     """
     Compute Jacobian for equality constraints: J_h[i,j] = ∂h_i/∂x_j.
@@ -206,10 +214,11 @@ def _compute_equality_jacobian(
     from .index_mapping import enumerate_equation_instances
 
     for eq_name in model_ir.equalities:
-        # Check both equations dict and normalized_bounds dict
-        # Fixed variables (.fx) are stored in normalized_bounds, not equations
+        # Prefer normalized equations if provided, otherwise fall back to original
         eq_def: EquationDef | NormalizedEquation
-        if eq_name in model_ir.equations:
+        if normalized_eqs and eq_name in normalized_eqs:
+            eq_def = normalized_eqs[eq_name]
+        elif eq_name in model_ir.equations:
             eq_def = model_ir.equations[eq_name]
         elif eq_name in model_ir.normalized_bounds:
             eq_def = model_ir.normalized_bounds[eq_name]
@@ -270,7 +279,11 @@ def _compute_equality_jacobian(
 
 
 def _compute_inequality_jacobian(
-    model_ir: ModelIR, index_mapping, J_g: JacobianStructure, config: Config | None = None
+    model_ir: ModelIR,
+    index_mapping,
+    J_g: JacobianStructure,
+    normalized_eqs: dict[str, NormalizedEquation] | None = None,
+    config: Config | None = None,
 ) -> None:
     """
     Compute Jacobian for inequality constraints: J_g[i,j] = ∂g_i/∂x_j.
@@ -293,10 +306,18 @@ def _compute_inequality_jacobian(
         if eq_name in model_ir.normalized_bounds:
             continue
 
-        eq_def = model_ir.equations[eq_name]
+        # Prefer normalized equation if provided, otherwise fall back to original
+        eq_def: EquationDef | NormalizedEquation
+        if normalized_eqs and eq_name in normalized_eqs:
+            eq_def = normalized_eqs[eq_name]
+        elif eq_name in model_ir.equations:
+            eq_def = model_ir.equations[eq_name]
+        else:
+            continue
 
         # Get all instances of this equation (handles indexed constraints)
-        eq_instances = enumerate_equation_instances(eq_name, eq_def.domain, model_ir)
+        eq_domain = eq_def.domain_sets if isinstance(eq_def, NormalizedEquation) else eq_def.domain
+        eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir)
 
         for eq_indices in eq_instances:
             # Get row ID for this equation instance
@@ -304,15 +325,21 @@ def _compute_inequality_jacobian(
             if row_id is None:
                 continue
 
-            # Get equation expression (normalized form: lhs - rhs)
-            lhs, rhs = eq_def.lhs_rhs
-            from ..ir.ast import Binary
+            # Get equation expression (normalized form)
+            from ..ir.ast import Binary, Expr
 
-            constraint_expr = Binary("-", lhs, rhs)
+            constraint_expr: Expr
+            if isinstance(eq_def, EquationDef):
+                # Original equation - build normalized form
+                lhs, rhs = eq_def.lhs_rhs
+                constraint_expr = Binary("-", lhs, rhs)
+            else:
+                # NormalizedEquation - expression already in correct form
+                constraint_expr = eq_def.expr
 
             # Substitute symbolic indices with concrete indices for this instance
-            if eq_def.domain:
-                constraint_expr = _substitute_indices(constraint_expr, eq_def.domain, eq_indices)
+            if eq_domain:
+                constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
 
             # Differentiate w.r.t. each variable
             for var_name in sorted(model_ir.variables.keys()):

@@ -64,11 +64,11 @@ def run_full_pipeline(input_file: str) -> str:
     model = parse_model_file(input_file)
 
     # Normalize
-    normalize_model(model)
+    normalized_eqs, _ = normalize_model(model)
 
     # Compute derivatives
     gradient = compute_objective_gradient(model)
-    J_eq, J_ineq = compute_constraint_jacobian(model)
+    J_eq, J_ineq = compute_constraint_jacobian(model, normalized_eqs)
 
     # Assemble KKT system
     kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
