@@ -1,7 +1,5 @@
 """Tests for multiplicative cancellation simplification."""
 
-import pytest
-
 from src.ad.ad_core import simplify_advanced
 from src.ad.term_collection import simplify_multiplicative_cancellation
 from src.ir.ast import Binary, Const, VarRef

@@ -319,7 +319,7 @@ def simplify_power_rules(expr: Expr) -> Expr:
 
     Handles patterns:
     - x^a * x^b → x^(a+b) when a, b are constants
-    - x^a / x^b → x^(a-b) when a, b are constants  
+    - x^a / x^b → x^(a-b) when a, b are constants
     - (x^a)^b → x^(a*b) when a, b are constants
 
     Args:
@@ -362,14 +362,23 @@ def simplify_power_rules(expr: Expr) -> Expr:
         right = expr.right
 
         # Check if both are power expressions with constant exponents
-        if isinstance(left, Binary) and left.op == "**" and isinstance(right, Binary) and right.op == "**":
+        if (
+            isinstance(left, Binary)
+            and left.op == "**"
+            and isinstance(right, Binary)
+            and right.op == "**"
+        ):
             left_base = left.left
             left_exp = left.right
             right_base = right.left
             right_exp = right.right
 
             # Check if bases match and exponents are constants
-            if left_base == right_base and isinstance(left_exp, Const) and isinstance(right_exp, Const):
+            if (
+                left_base == right_base
+                and isinstance(left_exp, Const)
+                and isinstance(right_exp, Const)
+            ):
                 # x^a * x^b → x^(a+b)
                 new_exp = left_exp.value + right_exp.value
                 if new_exp == 0:
@@ -415,15 +424,23 @@ def simplify_power_rules(expr: Expr) -> Expr:
         denominator = expr.right
 
         # Check if both are power expressions with constant exponents
-        if (isinstance(numerator, Binary) and numerator.op == "**" and 
-            isinstance(denominator, Binary) and denominator.op == "**"):
+        if (
+            isinstance(numerator, Binary)
+            and numerator.op == "**"
+            and isinstance(denominator, Binary)
+            and denominator.op == "**"
+        ):
             num_base = numerator.left
             num_exp = numerator.right
             denom_base = denominator.left
             denom_exp = denominator.right
 
             # Check if bases match and exponents are constants
-            if num_base == denom_base and isinstance(num_exp, Const) and isinstance(denom_exp, Const):
+            if (
+                num_base == denom_base
+                and isinstance(num_exp, Const)
+                and isinstance(denom_exp, Const)
+            ):
                 # x^a / x^b → x^(a-b)
                 new_exp = num_exp.value - denom_exp.value
                 if new_exp == 0:

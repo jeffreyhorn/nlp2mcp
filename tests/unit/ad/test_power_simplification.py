@@ -1,7 +1,5 @@
 """Tests for power simplification rules."""
 
-import pytest
-
 from src.ad.ad_core import simplify_advanced
 from src.ad.term_collection import simplify_power_rules
 from src.ir.ast import Binary, Const, VarRef
