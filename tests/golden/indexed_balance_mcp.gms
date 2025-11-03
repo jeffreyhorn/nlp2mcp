@@ -60,7 +60,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_supply(i).. 1 + (1 - 0) * nu_balance(i) =E= 0;
+stat_supply(i).. 1 + 1 * nu_balance(i) =E= 0;
 
 * Original equality equations
 objective.. obj =E= sum(i, supply(i));

@@ -591,6 +591,53 @@ make format     # Auto-format code
 
 ## Advanced Topics
 
+### Expression Simplification
+
+nlp2mcp automatically simplifies derivative expressions to produce cleaner, more readable output.
+
+**Simplification Rules Applied:**
+
+1. **Constant Folding:**
+   - `2 + 3` → `5`
+   - `(1 + 1) * x` → `2 * x`
+
+2. **Zero Elimination:**
+   - `x + 0` → `x`
+   - `x * 0` → `0`
+   - `0 / x` → `0`
+
+3. **Identity Elimination:**
+   - `x * 1` → `x`
+   - `x / 1` → `x`
+   - `x ** 1` → `x`
+   - `x ** 0` → `1`
+
+4. **Algebraic Simplifications:**
+   - `-(-x)` → `x` (double negation)
+   - `x - x` → `0`
+   - `x / x` → `1`
+   - `x + (-y)` → `x - y`
+
+**Example Impact:**
+
+Before simplification:
+```gams
+stat_x(i).. x(i) * 0 + a(i) * 1 + (1 - 0) * lam_balance(i) =E= 0;
+```
+
+After simplification:
+```gams
+stat_x(i).. a(i) + lam_balance(i) =E= 0;
+```
+
+**Benefits:**
+- Cleaner, more readable equations
+- Smaller output files
+- Potentially faster solver execution
+- Easier manual verification of KKT conditions
+
+**Note:** Simplification is applied automatically to all derivatives (gradients, Jacobians) and cannot be disabled.
+
 ### KKT System Structure
 
 The generated MCP contains:

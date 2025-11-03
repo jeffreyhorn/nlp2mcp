@@ -39,6 +39,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 
 **Sprint 2: Symbolic Differentiation**
 - ✅ Symbolic differentiation engine for computing derivatives
+- ✅ **Expression simplification** (constant folding, zero elimination, identity elimination)
 - ✅ Index-aware differentiation (distinguishes scalar vs indexed variables)
 - ✅ Objective gradient computation with sparse structure
 - ✅ Constraint Jacobian computation (equality and inequality)
