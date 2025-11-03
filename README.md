@@ -39,7 +39,10 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 
 **Sprint 2: Symbolic Differentiation**
 - ✅ Symbolic differentiation engine for computing derivatives
-- ✅ **Expression simplification** (constant folding, zero elimination, identity elimination)
+- ✅ **Expression simplification** with configurable modes:
+  - **Advanced** (default): Term collection, constant/like-term/coefficient collection, cancellation
+  - **Basic**: Constant folding, zero elimination, identity elimination
+  - **None**: No simplification for debugging
 - ✅ Index-aware differentiation (distinguishes scalar vs indexed variables)
 - ✅ Objective gradient computation with sparse structure
 - ✅ Constraint Jacobian computation (equality and inequality)
@@ -173,9 +176,85 @@ nlp2mcp input.gms -o output.gms --show-excluded
 - `--stats`: Print model statistics (equations, variables, nonzeros)
 - `--dump-jacobian FILE`: Export Jacobian structure to Matrix Market format
 - `--scale {none,auto,byvar}`: Apply scaling (default: none)
+- `--simplification {none,basic,advanced}`: Expression simplification mode (default: advanced)
 - `--smooth-abs`: Enable smooth abs() approximation via sqrt(x²+ε)
 - `--smooth-abs-epsilon FLOAT`: Epsilon for abs smoothing (default: 1e-6)
 - `--help`: Show help message
+
+### Expression Simplification
+
+nlp2mcp automatically simplifies derivative expressions to produce more compact and efficient MCP formulations. The simplification mode can be controlled via the `--simplification` flag or configuration file.
+
+#### Simplification Modes
+
+**Advanced (default)** - `--simplification advanced`
+- Applies all basic simplifications plus algebraic term collection
+
+*Additive term collection:*
+- **Constant collection**: `1 + x + 1 → x + 2`
+- **Like-term collection**: `x + y + x + y → 2*x + 2*y`
+- **Coefficient collection**: `2*x + 3*x → 5*x`
+- **Term cancellation**: `x - x → 0`, `x + y - x → y`
+- **Complex bases**: `x*y + 2*x*y → 3*x*y`
+
+*Multiplicative term collection:*
+- **Variable collection**: `x * x → x^2`, `x * x * x → x^3`
+- **Power multiplication**: `x^2 * x^3 → x^5`
+- **Mixed multiplication**: `x^2 * x → x^3`, `x * x^2 → x^3`
+
+*Other algebraic rules:*
+- **Multiplicative cancellation**: `2*x / 2 → x`, `2*x / (1+1) → x`
+- **Power division**: `x^5 / x^2 → x^3`, `x / x^2 → 1/x`
+- **Nested powers**: `(x^2)^3 → x^6`
+
+Recommended for most use cases - produces cleanest output
+
+**Basic** - `--simplification basic`
+- Applies only fundamental simplification rules:
+  - Constant folding: `2 + 3 → 5`, `4 * 5 → 20`
+  - Zero elimination: `x + 0 → x`, `0 * x → 0`
+  - Identity elimination: `x * 1 → x`, `x / 1 → x`, `x^1 → x`
+  - Algebraic identities: `x - x → 0`, `x / x → 1`
+- Use when you want minimal transformation of expressions
+
+**None** - `--simplification none`
+- No simplification applied
+- Derivative expressions remain in raw differentiated form
+- Useful for debugging or understanding the differentiation process
+- May produce very large expressions
+
+#### Examples
+
+```bash
+# Default: advanced simplification
+nlp2mcp model.gms -o output.gms
+
+# Explicitly use advanced
+nlp2mcp model.gms -o output.gms --simplification advanced
+
+# Use basic simplification only
+nlp2mcp model.gms -o output.gms --simplification basic
+
+# Disable simplification
+nlp2mcp model.gms -o output.gms --simplification none
+```
+
+#### Configuration File
+
+You can set the default simplification mode in `pyproject.toml`:
+
+```toml
+[tool.nlp2mcp]
+simplification = "advanced"  # or "basic" or "none"
+scale = "none"
+smooth_abs = false
+```
+
+#### When to Use Each Mode
+
+- **Advanced** (default): Best for production use - produces cleanest, most readable output
+- **Basic**: When you need predictable transformations without aggressive optimization
+- **None**: For debugging, education, or when you need to see raw derivative expressions
 
 ### Complete Example
 

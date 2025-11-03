@@ -7,6 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2025-11-03 - Advanced Expression Simplification
+
+#### Added
+- **Advanced Algebraic Simplification** (`src/ad/term_collection.py`, `src/ad/ad_core.py`)
+  - New `simplify_advanced()` function that extends basic simplification with term collection
+  - Implements constant collection: `1 + x + 1 → x + 2`
+  - Implements like-term collection: `x + y + x + y → 2*x + 2*y`
+  - Implements coefficient collection: `2*x + 3*x → 5*x`
+  - Handles term cancellation: `x + y - x → y` and `x - x → 0`
+  - Works with complex bases: `x*y + 2*x*y → 3*x*y`
+  - **Multiplicative cancellation**: `2*x / 2 → x`, `2*x / (1+1) → x`
+  - **Power simplification**: `x^2 * x^3 → x^5`, `x^5 / x^2 → x^3`, `(x^2)^3 → x^6`, `x * x → x^2`
+  - Supports deeply nested expressions with recursive simplification
+  - Preserves all existing basic simplification rules (constant folding, zero elimination, identity rules)
+
+#### Technical Details
+- **Term-Based Collection Architecture**:
+  - Represents expressions as coefficient × base pairs using `Term` dataclass
+  - Flattens associative operations (+ and *) into lists for easier analysis
+  - Groups terms by base expression using repr() as dictionary key
+  - Sums coefficients for like terms and filters out zero terms
+  - Rebuilds optimized expression tree from collected terms
+- **Bottom-Up Simplification**: Applies basic rules first, then advanced term collection
+- **Idempotent Design**: Can be safely applied multiple times without changing result
+- **Integration**: Works seamlessly with existing frozen dataclass AST structure
+
+#### Tests
+- Added 37 unit tests in `tests/unit/ad/test_term_collection.py`:
+  - TestFlattenAddition (5 tests) - validates associative operation flattening
+  - TestFlattenMultiplication (3 tests) - validates multiplication flattening
+  - TestExtractTerm (7 tests) - validates term extraction as (coeff, base) pairs
+  - TestCollectTerms (5 tests) - validates term grouping and coefficient summing
+  - TestRebuildSum (6 tests) - validates expression reconstruction
+  - TestCollectLikeTerms (7 tests) - validates end-to-end term collection
+  - TestEdgeCases (4 tests) - validates edge cases like cancellation and complex bases
+- Added 14 integration tests in `tests/unit/ad/test_simplify.py::TestAdvancedSimplification`:
+  - Tests for constant collection, like-term collection, coefficient collection
+  - Tests for cancellation (full and partial), complex bases, nested expressions
+  - Tests for indexed variables and combined basic+advanced simplification
+- Added 19 tests in `tests/unit/ad/test_multiplicative_cancellation.py`:
+  - Tests for (c*x)/c → x and (x*c)/c → x patterns
+  - Tests for integration with constant folding and term collection
+  - Tests for edge cases (zero denominators, different constants, nested expressions)
+- Added 31 tests in `tests/unit/ad/test_power_simplification.py`:
+  - Tests for x^a * x^b → x^(a+b) patterns (10 tests)
+  - Tests for x^a / x^b → x^(a-b) patterns (8 tests)
+  - Tests for (x^a)^b → x^(a*b) nested powers (5 tests)
+  - Integration tests with constant folding and term collection (8 tests)
+- All 375 AD tests pass (previously 344, added 31 power tests)
+
+#### Files Modified
+- `src/ad/term_collection.py` (NEW - 258 lines)
+- `src/ad/ad_core.py` (added `simplify_advanced()` function, lines 270-350)
+- `tests/unit/ad/test_term_collection.py` (NEW - 345 lines, 37 tests)
+- `tests/unit/ad/test_simplify.py` (added TestAdvancedSimplification class, 14 tests)
+
+#### Benefits
+- Produces more compact and readable expressions
+- Reduces redundant computation in generated code
+- Provides foundation for future optimization passes
+- Maintains backward compatibility - existing code uses `simplify()`, new code can opt into `simplify_advanced()`
+
+#### Integration - 2025-11-03 - Config-Based Simplification
+
+**Integrated advanced simplification into the nlp2mcp pipeline with configuration control:**
+
+- **Added `simplification` config option** (`src/config.py`):
+  - `"none"`: No simplification applied
+  - `"basic"`: Basic rules only (constant folding, zero elimination, identity)
+  - `"advanced"`: Basic + term collection (default)
+  - Validated in `Config.__post_init__()`
+
+- **Added `apply_simplification()` helper** (`src/ad/ad_core.py`):
+  - Centralized function to apply simplification based on config mode
+  - Used throughout gradient and Jacobian computation
+
+- **Integrated into differentiation pipeline**:
+  - `src/ad/gradient.py`: Updated both gradient computation functions
+  - `src/ad/constraint_jacobian.py`: Updated all three Jacobian computation functions
+  - All now respect `config.simplification` setting
+  - Default to "advanced" when no config provided
+
+- **Added comprehensive tests**:
+  - `tests/unit/test_config.py` (8 tests): Config validation for all modes
+  - `tests/unit/ad/test_apply_simplification.py` (9 tests): Mode-specific behavior verification
+
+**Impact:**
+- By default, all derivative expressions now benefit from advanced simplification
+- Users can disable or use basic simplification via config if needed
+- No breaking changes - all existing tests pass
+
 ### Fix - 2025-11-03 - Performance Test Threshold Adjustment ✅ COMPLETE
 
 #### Fixed
