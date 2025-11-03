@@ -189,14 +189,25 @@ nlp2mcp automatically simplifies derivative expressions to produce more compact 
 
 **Advanced (default)** - `--simplification advanced`
 - Applies all basic simplifications plus algebraic term collection
+
+*Additive term collection:*
 - **Constant collection**: `1 + x + 1 → x + 2`
 - **Like-term collection**: `x + y + x + y → 2*x + 2*y`
 - **Coefficient collection**: `2*x + 3*x → 5*x`
 - **Term cancellation**: `x - x → 0`, `x + y - x → y`
 - **Complex bases**: `x*y + 2*x*y → 3*x*y`
+
+*Multiplicative term collection:*
+- **Variable collection**: `x * x → x^2`, `x * x * x → x^3`
+- **Power multiplication**: `x^2 * x^3 → x^5`
+- **Mixed multiplication**: `x^2 * x → x^3`, `x * x^2 → x^3`
+
+*Other algebraic rules:*
 - **Multiplicative cancellation**: `2*x / 2 → x`, `2*x / (1+1) → x`
-- **Power simplification**: `x^2 * x^3 → x^5`, `x^5 / x^2 → x^3`, `(x^2)^3 → x^6`
-- Recommended for most use cases - produces cleanest output
+- **Power division**: `x^5 / x^2 → x^3`, `x / x^2 → 1/x`
+- **Nested powers**: `(x^2)^3 → x^6`
+
+Recommended for most use cases - produces cleanest output
 
 **Basic** - `--simplification basic`
 - Applies only fundamental simplification rules:

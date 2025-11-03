@@ -603,6 +603,8 @@ nlp2mcp automatically simplifies derivative expressions to produce cleaner, more
 
 Applies all basic simplifications plus algebraic term collection:
 
+**Additive Term Collection** (for addition/subtraction):
+
 1. **Constant Collection:**
    - `1 + x + 1` → `x + 2`
    - `3 + a + 5` → `a + 8`
@@ -624,19 +626,41 @@ Applies all basic simplifications plus algebraic term collection:
    - `x*y + 2*x*y` → `3*x*y`
    - `a(i)*b(j) + a(i)*b(j)` → `2*a(i)*b(j)`
 
-6. **Multiplicative Cancellation:**
+**Multiplicative Term Collection** (for multiplication):
+
+6. **Variable Collection:**
+   - `x * x` → `x^2`
+   - `x * x * x` → `x^3`
+   - Works recursively: `(x * x) * x` → `x^2 * x` → `x^3`
+
+7. **Power Multiplication:**
+   - `x^2 * x^3` → `x^5`
+   - `x(i)^2 * x(i)^3` → `x(i)^5` (indexed variables)
+   - `x^a * x^b` → `x^(a+b)` (general rule)
+
+8. **Mixed Multiplication:**
+   - `x^2 * x` → `x^3`
+   - `x * x^2` → `x^3`
+   - `x^(-2) * x^3` → `x`
+
+**Other Algebraic Rules:**
+
+9. **Multiplicative Cancellation:**
    - `2*x / 2` → `x`
    - `x*3 / 3` → `x`
    - `2*x / (1+1)` → `x` (after constant folding)
    - `3*(x+y) / 3` → `x+y`
 
-7. **Power Simplification:**
-   - `x^2 * x^3` → `x^5` (multiply powers with same base)
-   - `x * x` → `x^2` (implicit exponent)
-   - `x^5 / x^2` → `x^3` (divide powers with same base)
-   - `x / x^2` → `1/x` (negative exponent result)
-   - `(x^2)^3` → `x^6` (nested powers)
-   - `x(i)^2 * x(i)^3` → `x(i)^5` (works with indexed variables)
+10. **Power Division:**
+   - `x^5 / x^2` → `x^3`
+   - `x / x^2` → `1/x`
+   - `x^2 / x^5` → `1/x^3` (negative exponent result)
+   - `x^a / x^b` → `x^(a-b)` (general rule)
+
+11. **Nested Powers:**
+   - `(x^2)^3` → `x^6`
+   - `(x^a)^b` → `x^(a*b)` (general rule)
+   - `(x^0.5)^2` → `x`
 
 Plus all basic simplifications (constant folding, zero/identity elimination).
 
