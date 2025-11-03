@@ -11,8 +11,6 @@ FINDING: Auxiliary constraints are treated as regular inequalities - no special
 handling needed in emit_model_mcp().
 """
 
-import pytest
-
 from src.ad.constraint_jacobian import compute_constraint_jacobian
 from src.ad.gradient import compute_objective_gradient
 from src.emit.emit_gams import emit_gams_mcp
@@ -160,9 +158,9 @@ def test_min_reformulation_in_mcp_emission():
 
     # MCP includes pairs for all variables including auxiliary vars and multipliers
     # Should have more pairs than just the primal variables
-    assert num_pairs > num_primal_vars, (
-        f"Expected more than {num_primal_vars} pairs (for multipliers), got {num_pairs}"
-    )
+    assert (
+        num_pairs > num_primal_vars
+    ), f"Expected more than {num_primal_vars} pairs (for multipliers), got {num_pairs}"
     print(f"✓ Model has {num_pairs} equation-variable pairs (includes multipliers)")
 
     print("\n" + "=" * 70)

@@ -466,8 +466,6 @@ def _compute_bound_jacobian(
         index_mapping: Index mapping for variables and equations
         J_g: Jacobian structure to populate (modified in place)
     """
-    from .index_mapping import enumerate_equation_instances
-
     for bound_name, norm_eq in sorted(model_ir.normalized_bounds.items()):
         # Skip if this bound is already in inequalities (processed by _compute_inequality_jacobian)
         if bound_name in model_ir.inequalities:
