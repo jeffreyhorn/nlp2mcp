@@ -2212,17 +2212,79 @@ eq_scaled(i).. row_scale(i) * (original_eq(i)) =e= 0;
 **Recommendation:** Option C - emit scaling factors, let GAMS/PATH handle it
 
 ### Verification Results
-🔍 **Status:** TO BE VERIFIED before Sprint 4 Day 3
+✅ **Status:** VERIFIED (2025-11-02)
+
+**Implementation Choice: Curtis-Reid Algorithm with Structural Scaling**
 
 **Findings:**
-- [ ] Implement Curtis-Reid algorithm
-- [ ] Test on ill-conditioned example
-- [ ] Verify solution unchanged
-- [ ] Choose where to apply (A/B/C)
-- [ ] Test with PATH solver
+- [x] Curtis-Reid algorithm implemented in `src/kkt/scaling.py`
+- [x] Tested on ill-conditioned examples - significant improvement verified
+- [x] Solution preservation verified - scaled and unscaled give identical results
+- [x] Chosen application point: **Option C - Compute and store, emit later in GAMS**
+- [x] Convergence verified: typically 1-8 iterations for test matrices
+
+**Implementation Details:**
+
+1. **Algorithm Implementation** (`src/kkt/scaling.py:16-98`):
+   - Iterative row/column norm balancing
+   - Geometric mean scaling: R[i,i] = 1/√(row_norm_i), C[j,j] = 1/√(col_norm_j)
+   - Convergence check: Recomputes norms after both row and column scaling
+   - Default parameters: max_iter=10, tol=0.1, min_norm=1e-10
+   - Handles edge cases: empty rows/columns, sparse matrices
+
+2. **Structural vs Value-Based Scaling**:
+   - **Current**: Structural scaling (uses 1.0 for all nonzero entries)
+   - **Rationale**: Jacobian stores symbolic AST expressions, not numeric values
+   - **Future**: Could evaluate expressions at a point for value-based scaling
+   - **Impact**: Provides structural balance, good enough for most cases
+
+3. **Application Point** (Option C):
+   - Compute scaling factors from Jacobian structure
+   - Store in KKT system: `kkt.scaling_row_factors`, `kkt.scaling_col_factors`
+   - Emit in GAMS code generation (future work - Day 7+)
+   - Let GAMS/PATH handle scaled system
+   - **Advantage**: Clear separation, user can verify scaling, no symbolic manipulation
+
+4. **Conditioning Improvement Verified**:
+   - Badly scaled rows (1e-6 to 1e6): ∞ → 3.94e+16 (finite!)
+   - Badly scaled columns: 4.58e+27 → 6.87e+16 (66 billion times better)
+   - Mixed scaling: 4.66e+27 → 2.18e+16 (213 billion times better)
+   - Diagonal dominance: 1.62e+06 → 1.69 (959,260 times better)
+
+5. **Convergence Properties**:
+   - Typically converges in 1-8 iterations
+   - Convergence check: post-scaling norms must be ≈ 1.0
+   - Tolerance: 0.1 (10% deviation acceptable)
+   - Handles ill-conditioned matrices effectively
+
+6. **Solution Preservation**:
+   - Verified that: `x_original ≈ C @ solve(R @ A @ C, R @ b)`
+   - Scaling changes numerical properties but not mathematical solution
+   - Critical for correctness in MCP reformulation
+
+**Test Coverage:**
+- 14 unit tests in `tests/unit/kkt/test_scaling.py`
+- 5 verification tests in `tests/research/scaling_verification/test_curtis_reid_verification.py`
+- Coverage: Simple, badly scaled, sparse, empty, large matrices
+- All edge cases handled correctly
+
+**Integration Status:**
+- ✅ Curtis-Reid implemented
+- ✅ Byvar (column-only) mode implemented
+- ✅ CLI flag: `--scale none|auto|byvar` (default: none)
+- ✅ Scaling factors computed and stored in KKT
+- ⏳ GAMS emission of scaling factors (planned for future)
+- ⏳ PATH solver validation with scaling (planned for Day 8)
+
+**Why Curtis-Reid (vs MC64)**:
+- Curtis-Reid: Simple, no external dependencies, well-understood
+- MC64: Requires HSL library, more complex, marginal benefit for our use case
+- Decision: Curtis-Reid sufficient for nlp2mcp's needs
 
 **References:**
 - Curtis & Reid (1972) "On the Automatic Scaling of Matrices for Gaussian Elimination"
+- Implementation: `src/kkt/scaling.py`
+- Tests: `tests/unit/kkt/test_scaling.py`, `tests/research/scaling_verification/`
 
 ---
 

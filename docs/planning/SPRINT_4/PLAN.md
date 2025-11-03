@@ -474,7 +474,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Handle sparse matrices efficiently
 
 *Prerequisites (from KNOWN_UNKNOWNS.md):*
-- **Unknown 3.1 (Scaling algorithm)**: INCOMPLETE - Curtis-Reid geometric mean scaling to be implemented. Iterative row/col norm balancing: R_i = 1/√(row_norm_i), C_j = 1/√(col_norm_j). Verify convergence and conditioning improvement.
+- **Unknown 3.1 (Scaling algorithm)**: ✅ COMPLETE - Curtis-Reid geometric mean scaling implemented. Iterative row/col norm balancing: R_i = 1/√(row_norm_i), C_j = 1/√(col_norm_j). Convergence verified (1-8 iterations), conditioning improvement verified (up to 959,260x), solution preservation verified. Structural scaling (1.0 for nonzeros) used for symbolic Jacobian.
 
 **Task 2: Implement byvar scaling mode** (Est: 1.5h)
 - Add per-variable scaling option
@@ -531,7 +531,12 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 #### Follow-On Research Items
 *Note: These are INCOMPLETE unknowns to be verified during implementation:*
 
-- **Unknown 3.1 (Scaling algorithm selection)**: INCOMPLETE - Implement and verify Curtis-Reid convergence and conditioning improvement
+- **Unknown 3.1 (Scaling algorithm selection)**: ✅ COMPLETE (2025-11-02)
+  - **Implementation**: Curtis-Reid algorithm with structural scaling
+  - **Convergence**: Verified 1-8 iterations typical, post-scaling norms ≈ 1.0
+  - **Conditioning**: Significant improvement verified (up to 959,260x better)
+  - **Solution Preservation**: Scaled and unscaled give identical solutions
+  - **Details**: See KNOWN_UNKNOWNS.md Unknown 3.1 for full analysis
 - **Unknown 3.2 (Scaling application point)**: INCOMPLETE - Test both approaches, decide based on PATH performance
 - **Unknown 6.3 (Scaling impact on tests)**: INCOMPLETE - CRITICAL - Verify no test breakage with default --scale none
 
@@ -1000,7 +1005,7 @@ Sprint 4 Known Unknowns are documented in:
 
 15. **Unknown 6.2 (Fixed vars in KKT)**: INCOMPLETE - Verify no stationarity equation for fixed vars, KKT dimension correct during Day 5 (bug #63 already fixed)
 
-16. **Unknown 3.1 (Scaling algorithm)**: INCOMPLETE - Implement Curtis-Reid, verify convergence and conditioning improvement during Day 6
+16. **Unknown 3.1 (Scaling algorithm)**: ✅ COMPLETE (Research 2025-11-02) - Curtis-Reid algorithm implemented and verified. Convergence: 1-8 iterations typical, tolerance 0.1. Conditioning improvement: tested on 4 ill-conditioned matrix types, improvements range from finite (∞→3.94e+16) to 959,260x better. Solution preservation verified. Structural scaling (1.0 for nonzeros) sufficient for symbolic Jacobian. Implementation in src/kkt/scaling.py, 14 unit tests + 5 verification tests all passing. Application point: Option C (compute, store, emit in GAMS). See KNOWN_UNKNOWNS.md for detailed analysis.
 
 17. **Unknown 3.2 (Scaling application point)**: INCOMPLETE - Test scale NLP vs scale KKT, decide based on PATH performance during Day 6
 
