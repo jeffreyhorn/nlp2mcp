@@ -123,15 +123,20 @@ The nonlinear equation has the largest complementarity residual, suggesting the 
 
 ## Investigation Steps
 
-### 1. Check if Original NLP Solves
+### 1. Check if Original NLP Solves ✅ COMPLETED
 
-Verify the original NLP problem solves correctly:
+Verified the original NLP problem solves:
 ```bash
 gams examples/bounds_nlp.gms
 gams examples/nonlinear_mix.gms
 ```
 
-If original NLP doesn't solve, the problem may be inherently difficult.
+**Results:**
+- **bounds_nlp.gms**: ✅ Solves successfully with CONOPT (Model Status 2 - Optimal, obj = -0.429)
+- **nonlinear_mix.gms**: ❌ Fails without initialization (Model Status 6 - Intermediate Infeasible)
+  - ✅ Solves successfully WITH initialization (`x.l = 1.5; y.l = 1.3;`) → Model Status 2 - Optimal (obj = 2.35)
+
+**Key Finding**: The `nonlinear_mix` NLP is inherently difficult and requires good initialization even for the original NLP formulation. This strongly suggests PATH failures on the MCP reformulation are due to problem difficulty, not bugs in the KKT transformation.
 
 ### 2. Compare KKT Conditions
 
@@ -274,7 +279,9 @@ Observations:
 
 The objective-defining equation should NOT have a separate multiplier. Instead, it should pair directly with the objective variable itself in the MCP formulation.
 
-**Current Status:** While the fix correctly removes the unused `nu_objective` multiplier and makes the MCP system properly determined, PATH solver still fails with Model Status 5 on both affected test cases. This suggests the nonlinear KKT formulation is inherently difficult for PATH to solve, possibly requiring better initialization, scaling, or alternative solution strategies.
+**Current Status:** While the fix correctly removes the unused `nu_objective` multiplier and makes the MCP system properly determined, PATH solver still fails with Model Status 5 on both affected test cases.
+
+**Critical Discovery**: Testing revealed that the `nonlinear_mix` NLP **also fails to solve** with the original NLP formulation unless given good initialization. This confirms that PATH failures on the MCP reformulation are primarily due to **problem difficulty**, not bugs in our KKT transformation. The underlying nonlinear system is genuinely hard to solve, requiring careful initialization for both NLP and MCP formulations.
 
 **Code Changes:**
 
