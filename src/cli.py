@@ -4,6 +4,7 @@ Converts GAMS NLP models to MCP (Mixed Complementarity Problem) format
 by deriving KKT (Karush-Kuhn-Tucker) conditions.
 """
 
+import logging
 import sys
 from pathlib import Path
 
@@ -239,8 +240,9 @@ def main(
 
         # Step 5.5: Diagnostics (if requested)
         if stats:
+            logger = logging.getLogger("nlp2mcp")
             model_stats = compute_model_statistics(kkt)
-            click.echo("\n" + model_stats.format_report() + "\n", err=True)
+            logger.info("\n" + model_stats.format_report())
 
         if dump_jacobian:
             if verbose:

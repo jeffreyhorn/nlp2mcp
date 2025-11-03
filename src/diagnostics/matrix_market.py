@@ -147,13 +147,47 @@ def export_full_kkt_jacobian_matrix_market(kkt: KKTSystem, output_path: Path | s
             entries.append((row_idx + 1, col_idx + 1, 1.0))
         row_idx += 1
 
-    # Bound complementarity equations (simplified)
-    num_bound_eqns = len(kkt.complementarity_bounds_lo) + len(kkt.complementarity_bounds_up)
-    for _ in range(num_bound_eqns):
-        # Each bound equation touches the primal variable and bound multiplier
-        # Simplified representation: 2 nonzeros per equation
-        entries.append((row_idx + 1, 1, 1.0))  # Placeholder
-        entries.append((row_idx + 1, 2, 1.0))  # Placeholder
+    # Bound complementarity equations
+    # Lower bound equations: (x - lo) ⊥ π^L
+    multiplier_col_offset = num_primal_vars + len(kkt.multipliers_eq) + len(kkt.multipliers_ineq)
+
+    # Track multiplier ordering for bounds
+    bound_lo_keys = sorted(kkt.complementarity_bounds_lo.keys())
+    bound_up_keys = sorted(kkt.complementarity_bounds_up.keys())
+
+    for bound_key in bound_lo_keys:
+        var_name, var_indices = bound_key
+
+        # Get primal variable column index
+        if kkt.gradient.index_mapping:
+            var_col = kkt.gradient.index_mapping.get_col_id(var_name, var_indices)
+            if var_col is not None:
+                entries.append((row_idx + 1, var_col + 1, 1.0))
+
+        # Get multiplier column index
+        multiplier_idx = bound_lo_keys.index(bound_key)
+        multiplier_col = multiplier_col_offset + multiplier_idx
+        entries.append((row_idx + 1, multiplier_col + 1, 1.0))
+
+        row_idx += 1
+
+    # Upper bound equations: (up - x) ⊥ π^U
+    multiplier_col_offset += len(kkt.complementarity_bounds_lo)
+
+    for bound_key in bound_up_keys:
+        var_name, var_indices = bound_key
+
+        # Get primal variable column index
+        if kkt.gradient.index_mapping:
+            var_col = kkt.gradient.index_mapping.get_col_id(var_name, var_indices)
+            if var_col is not None:
+                entries.append((row_idx + 1, var_col + 1, 1.0))
+
+        # Get multiplier column index
+        multiplier_idx = bound_up_keys.index(bound_key)
+        multiplier_col = multiplier_col_offset + multiplier_idx
+        entries.append((row_idx + 1, multiplier_col + 1, 1.0))
+
         row_idx += 1
 
     num_rows = row_idx

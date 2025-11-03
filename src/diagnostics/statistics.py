@@ -131,12 +131,10 @@ def compute_model_statistics(kkt: KKTSystem) -> ModelStatistics:
     num_nonzeros_stationarity += len(kkt.J_ineq.get_nonzero_entries())
 
     # Complementarity equations are simpler (constraint equation + multiplier term)
-    # Each inequality complementarity: constraint equation (already counted in Jacobian)
+    # Each inequality complementarity: constraint equation (already counted in stationarity)
     # Each bound complementarity: simple bound expression (1-2 nonzeros each)
     num_nonzeros_complementarity = (
-        len(kkt.J_eq.get_nonzero_entries())  # Equality constraints
-        + len(kkt.J_ineq.get_nonzero_entries())  # Inequality constraints
-        + num_complementarity_bounds_lo * 2  # Lower bounds: x - lo
+        num_complementarity_bounds_lo * 2  # Lower bounds: x - lo
         + num_complementarity_bounds_up * 2  # Upper bounds: up - x
     )
 
