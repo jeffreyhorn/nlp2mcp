@@ -163,6 +163,10 @@ def simplify(expr: Expr) -> Expr:
                             # Division by zero: return unsimplified expression
                             return Binary(op, simplified_left, simplified_right)
                     case "^":
+                        # Special case: 0 ** 0 is mathematically indeterminate
+                        # Don't simplify even though Python evaluates to 1
+                        if left_val == 0 and right_val == 0:
+                            return Binary("^", simplified_left, simplified_right)
                         # Handle edge cases: negative base with fractional exponent, 0**negative, overflow
                         try:
                             return Const(left_val**right_val)
@@ -223,14 +227,24 @@ def simplify(expr: Expr) -> Expr:
 
             # Power simplifications
             if op == "^":
-                # x ** 0 → 1
-                if isinstance(simplified_right, Const) and simplified_right.value == 0:
+                # x ** 0 → 1 (but NOT for 0 ** 0, which is indeterminate)
+                if (
+                    isinstance(simplified_right, Const)
+                    and simplified_right.value == 0
+                    and not (isinstance(simplified_left, Const) and simplified_left.value == 0)
+                ):
                     return Const(1)
                 # x ** 1 → x
                 if isinstance(simplified_right, Const) and simplified_right.value == 1:
                     return simplified_left
-                # 0 ** x → 0 (assuming x > 0)
-                if isinstance(simplified_left, Const) and simplified_left.value == 0:
+                # 0 ** x → 0 (only if x is constant and x > 0)
+                # Invalid for x ≤ 0: 0**(-1) = 1/0, 0**0 is indeterminate
+                if (
+                    isinstance(simplified_left, Const)
+                    and simplified_left.value == 0
+                    and isinstance(simplified_right, Const)
+                    and simplified_right.value > 0
+                ):
                     return Const(0)
                 # 1 ** x → 1
                 if isinstance(simplified_left, Const) and simplified_left.value == 1:

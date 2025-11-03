@@ -128,11 +128,18 @@ class TestIdentityElimination:
         result = simplify(expr)
         assert result == Const(1)
 
-    def test_zero_power_x(self):
-        # 0 ** x → 0
-        expr = Binary("^", Const(0), VarRef("x", ()))
+    def test_zero_power_positive_constant(self):
+        # 0 ** 2 → 0 (only simplifies when exponent is positive constant)
+        expr = Binary("^", Const(0), Const(2))
         result = simplify(expr)
         assert result == Const(0)
+
+    def test_zero_power_variable_not_simplified(self):
+        # 0 ** x → not simplified (x could be ≤ 0)
+        expr = Binary("^", Const(0), VarRef("x", ()))
+        result = simplify(expr)
+        # Should remain as Binary since we don't know if x > 0
+        assert result == Binary("^", Const(0), VarRef("x", ()))
 
 
 class TestUnarySimplification:
@@ -384,7 +391,7 @@ class TestEdgeCases:
         # So this will actually simplify to a Const with complex value
         expr = Binary("^", Const(-2), Const(0.5))
         result = simplify(expr)
-        # Python computes this as complex: (-2)**0.5 = 1.41...j
+        # Python computes this as complex: (-2)**0.5 = approximately 1.41j
         assert isinstance(result, Const)
         assert isinstance(result.value, complex)
 
@@ -394,6 +401,14 @@ class TestEdgeCases:
         result = simplify(expr)
         # Should return Binary with simplified children, not throw error
         assert result == Binary("^", Const(0), Const(-1))
+
+    def test_power_zero_zero(self):
+        # 0 ** 0 → should remain unchanged (mathematically indeterminate)
+        expr = Binary("^", Const(0), Const(0))
+        result = simplify(expr)
+        # Should NOT simplify (even though Python evaluates to 1)
+        # because 0**0 is mathematically indeterminate
+        assert result == Binary("^", Const(0), Const(0))
 
     def test_power_overflow(self):
         # 10 ** 1000 → should remain unchanged (overflow)
