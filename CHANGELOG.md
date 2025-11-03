@@ -9,6 +9,127 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - Sprint 4: Feature Expansion + Robustness (IN PROGRESS)
 
+### Implementation - 2025-11-02 - Day 6: Scaling Implementation + Developer Ergonomics (Part 1) ✅ COMPLETE
+
+#### Added
+- **Curtis-Reid Scaling Algorithm** (`src/kkt/scaling.py` - 191 lines)
+  - Function: `curtis_reid_scaling()` - Iterative row/column norm balancing for matrix conditioning
+  - Function: `byvar_scaling()` - Per-variable (column-only) scaling mode
+  - Function: `_jacobian_to_dense()` - Convert sparse Jacobian to dense for scaling computation
+  - Function: `apply_scaling_to_jacobian()` - Store scaling factors for GAMS emission
+  - Algorithm: Geometric mean scaling - R[i,i] = 1/√(row_norm_i), C[j,j] = 1/√(col_norm_j)
+  - Implementation: Structural scaling (uses 1.0 for all nonzero entries in symbolic Jacobian)
+
+- **CLI Scaling Flags** (`src/cli.py`)
+  - Flag: `--scale none|auto|byvar` - Control scaling mode (default: none)
+  - Integration: Step 4 - Compute scaling factors after derivatives
+  - Verbose output for scaling computation progress
+  - Mode: `none` - No scaling (default, backward compatible)
+  - Mode: `auto` - Curtis-Reid row and column scaling
+  - Mode: `byvar` - Per-variable column scaling only
+
+- **Configuration System** (`src/config.py`)
+  - Attribute: `scale: str` - Scaling mode configuration
+  - Validation: Must be "none", "auto", or "byvar"
+  - Integration: Passed through entire pipeline
+
+- **KKT System Scaling Storage** (`src/kkt/kkt_system.py`)
+  - Attribute: `scaling_row_factors: list[float] | None` - Row scaling factors
+  - Attribute: `scaling_col_factors: list[float] | None` - Column scaling factors
+  - Attribute: `scaling_mode: str` - Scaling mode used (none/auto/byvar)
+  - Purpose: Store scaling factors for future GAMS code emission
+
+- **Enhanced Parser Error Messages** (`src/ir/parser.py`)
+  - Improved 3 error messages with source location context
+  - Error: Unexpected token - added suggestions for expected types
+  - Error: Empty wrapper node - clarified what's expected
+  - Error: Unsupported expression - lists all supported GAMS syntax
+  - All errors use `ParserSemanticError` with line/column tracking
+
+- **Comprehensive Test Suite** (`tests/unit/kkt/test_scaling.py` - 247 lines, 14 tests)
+  - TestCurtisReidScaling: 6 tests for Curtis-Reid algorithm
+  - TestByvarScaling: 4 tests for per-variable scaling
+  - TestScalingEdgeCases: 4 tests for edge cases (empty rows/cols, large matrices)
+  - Coverage: Simple, badly scaled, sparse, empty, and large Jacobians
+
+#### Technical Details
+
+**Curtis-Reid Algorithm**:
+```python
+# Iterative balancing (max_iter=10, tol=0.1)
+for iteration in range(max_iter):
+    # Row scaling
+    row_norms = ||J[i,:]||₂
+    R[i] = 1 / √(row_norms[i])
+    J = diag(R) @ J
+    
+    # Column scaling
+    col_norms = ||J[:,j]||₂
+    C[j] = 1 / √(col_norms[j])
+    J = J @ diag(C)
+    
+    # Check convergence
+    if max(|row_norms - 1|, |col_norms - 1|) < tol:
+        break
+```
+
+**Byvar Scaling**:
+```python
+# Column-only normalization
+col_norms = ||J[:,j]||₂
+C[j] = 1 / √(col_norms[j])
+# No row scaling (R = Identity)
+```
+
+**Integration Flow**:
+1. Parse model → Normalize → Reformulate
+2. Compute derivatives (gradient, Jacobians)
+3. **[NEW] Compute scaling factors** (if --scale != none)
+4. Assemble KKT system
+5. **[NEW] Store scaling in KKT** (for future emission)
+6. Emit GAMS MCP code
+
+**Structural vs Value-Based Scaling**:
+- Current implementation: Structural scaling (all nonzeros = 1.0)
+- Rationale: Jacobian stores symbolic AST expressions, not numeric values
+- Future: Could evaluate expressions at a point for value-based scaling
+
+#### Acceptance Criteria Met
+- [x] Curtis-Reid scaling implemented with iterative row/col norm balancing
+- [x] `byvar` mode scales each variable column independently
+- [x] Scaling factors computed from symbolic Jacobian (structural, 1.0 for nonzeros)
+- [x] Scaled Jacobian achieves balanced row/col norms (verified in tests)
+- [x] `--scale none` is default (backward compatible, no scaling)
+- [x] `--scale auto` applies Curtis-Reid (row + column scaling)
+- [x] `--scale byvar` applies per-variable scaling (column only)
+- [x] Existing tests pass with default `--scale none` (793 total: 779 original + 14 new)
+- [x] 14 new tests verify scaling semantic preservation and correctness
+- [x] Parser errors enhanced with source locations and helpful suggestions
+
+#### Test Results
+```
+793 passed, 1 skipped, 1 xfailed, 8 warnings in 22.80s
+```
+- All original 779 tests pass with default `--scale none`
+- 14 new scaling tests verify Curtis-Reid and byvar modes
+- No regressions introduced
+
+#### Code Statistics
+- New module: `src/kkt/scaling.py` (191 lines)
+- Modified: `src/cli.py` (+47 lines for scaling integration)
+- Modified: `src/config.py` (+8 lines for scale parameter)
+- Modified: `src/kkt/kkt_system.py` (+5 lines for scaling storage)
+- Modified: `src/ir/parser.py` (+12 lines for enhanced error messages)
+- New tests: `tests/unit/kkt/test_scaling.py` (247 lines, 14 tests)
+
+#### Future Work
+- **Day 7**: Matrix Market export, model statistics, pyproject.toml config, logging
+- **Value-Based Scaling**: Evaluate symbolic expressions at a point for better scaling
+- **GAMS Emission**: Emit scaling factors as GAMS parameters, apply to equations
+- **Scaling Verification**: Verify scaled vs unscaled give equivalent PATH solutions
+
+---
+
 ### Implementation - 2025-11-02 - Day 4: Min/Max Reformulation - Part 2 (Implementation) ✅ COMPLETE
 
 #### Added
