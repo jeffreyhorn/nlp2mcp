@@ -58,6 +58,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Marked as xfail for future investigation
   - Linear and simple nonlinear problems solve successfully
 
+### Added - 2025-11-03 - Partial Min/Max and Feature Testing
+
+#### Added
+- **Min/Max Function Support in Grammar** (`src/gams/gams_grammar.lark`)
+  - Added `min`, `max`, `smin`, `smax` to FUNCNAME token
+  - Parser now accepts min/max as function calls in equations
+
+- **Test Cases** (`examples/`)
+  - `min_max_test.gms`: Test case for min() reformulation
+  - `abs_test.gms`: Test case for smooth abs() feature
+  - `fixed_var_test.gms`: Test case for fixed variables
+
+#### Fixed
+- **Reformulation Integration** (`src/cli.py`)
+  - Re-normalize model after reformulation to capture new equations
+  - Fixes "Differentiation not implemented for 'min'" error
+  - Ensures normalized_eqs includes equations with min/max replaced by auxiliary variables
+
+#### Known Issues - Min/Max and Fixed Variables
+- **KKT Assembly Bug**: Equality constraint multipliers for dynamically added constraints not included in stationarity equations
+  - Affects: min/max reformulation, fixed variables (.fx)
+  - Symptom: `nu_<constraint>` multiplier declared but not referenced in any equation
+  - GAMS Error: "no ref to var in equ.var"
+  - Root Cause: Gradient computation doesn't account for auxiliary/fixed variable participation in equality constraints
+  - Status: Requires deeper investigation of KKT stationarity assembly logic
+  
+- **Smooth Abs**: Works correctly but test case has initialization issues (sqrt domain error)
+
 ### Added - 2025-11-03 - Advanced Expression Simplification
 
 #### Added
