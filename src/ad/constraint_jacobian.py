@@ -152,6 +152,29 @@ def compute_constraint_jacobian(
     return J_h, J_g
 
 
+def _enumerate_equation_or_bound(eq_name: str, model_ir: ModelIR):
+    """
+    Helper to enumerate equation instances from either model.equations or model.normalized_bounds.
+
+    Args:
+        eq_name: Name of the equation or bound
+        model_ir: Model IR with equations and bounds
+
+    Returns:
+        List of tuples representing equation instances (indices)
+    """
+    from .index_mapping import enumerate_equation_instances
+
+    if eq_name in model_ir.equations:
+        eq_def = model_ir.equations[eq_name]
+        return enumerate_equation_instances(eq_name, eq_def.domain, model_ir)
+    elif eq_name in model_ir.normalized_bounds:
+        norm_eq = model_ir.normalized_bounds[eq_name]
+        return enumerate_equation_instances(eq_name, norm_eq.domain_sets, model_ir)
+    else:
+        return []
+
+
 def _build_equality_index_mapping(base_mapping, model_ir: ModelIR):
     """
     Build index mapping for J_h (equality constraints only).
@@ -167,7 +190,7 @@ def _build_equality_index_mapping(base_mapping, model_ir: ModelIR):
     Returns:
         IndexMapping with equality-specific row numbering
     """
-    from .index_mapping import IndexMapping, enumerate_equation_instances
+    from .index_mapping import IndexMapping
 
     # Create new mapping with same variable mappings but new equation mappings
     eq_mapping = IndexMapping()
@@ -178,16 +201,7 @@ def _build_equality_index_mapping(base_mapping, model_ir: ModelIR):
     # Build row mappings for equality constraints only, starting from row 0
     row_id = 0
     for eq_name in model_ir.equalities:
-        # Handle both regular equations and normalized bounds (e.g., .fx)
-        if eq_name in model_ir.equations:
-            eq_def = model_ir.equations[eq_name]
-            eq_instances = enumerate_equation_instances(eq_name, eq_def.domain, model_ir)
-        elif eq_name in model_ir.normalized_bounds:
-            norm_eq = model_ir.normalized_bounds[eq_name]
-            eq_instances = enumerate_equation_instances(eq_name, norm_eq.domain_sets, model_ir)
-        else:
-            continue
-
+        eq_instances = _enumerate_equation_or_bound(eq_name, model_ir)
         for eq_indices in eq_instances:
             eq_mapping.eq_to_row[(eq_name, eq_indices)] = row_id
             eq_mapping.row_to_eq[row_id] = (eq_name, eq_indices)
@@ -215,7 +229,7 @@ def _build_inequality_index_mapping(base_mapping, model_ir: ModelIR):
     Returns:
         IndexMapping with inequality-specific row numbering
     """
-    from .index_mapping import IndexMapping, enumerate_equation_instances
+    from .index_mapping import IndexMapping
 
     # Create a new mapping with the same variable mappings but new equation mappings
     ineq_mapping = IndexMapping()
@@ -226,24 +240,11 @@ def _build_inequality_index_mapping(base_mapping, model_ir: ModelIR):
     # Build row mappings for all inequality constraints, starting from row 0
     row_id = 0
     for eq_name in model_ir.inequalities:
-        # Check in regular equations first
-        if eq_name in model_ir.equations:
-            eq_def = model_ir.equations[eq_name]
-            eq_instances = enumerate_equation_instances(eq_name, eq_def.domain, model_ir)
-
-            for eq_indices in eq_instances:
-                ineq_mapping.eq_to_row[(eq_name, eq_indices)] = row_id
-                ineq_mapping.row_to_eq[row_id] = (eq_name, eq_indices)
-                row_id += 1
-        # Check in normalized bounds (these are also in model.inequalities)
-        elif eq_name in model_ir.normalized_bounds:
-            norm_eq = model_ir.normalized_bounds[eq_name]
-            eq_instances = enumerate_equation_instances(eq_name, norm_eq.domain_sets, model_ir)
-
-            for eq_indices in eq_instances:
-                ineq_mapping.eq_to_row[(eq_name, eq_indices)] = row_id
-                ineq_mapping.row_to_eq[row_id] = (eq_name, eq_indices)
-                row_id += 1
+        eq_instances = _enumerate_equation_or_bound(eq_name, model_ir)
+        for eq_indices in eq_instances:
+            ineq_mapping.eq_to_row[(eq_name, eq_indices)] = row_id
+            ineq_mapping.row_to_eq[row_id] = (eq_name, eq_indices)
+            row_id += 1
 
     # Add any bounds from normalized_bounds that aren't in model.inequalities
     # This handles backward compatibility with tests that manually add bounds
@@ -258,10 +259,8 @@ def _build_inequality_index_mapping(base_mapping, model_ir: ModelIR):
                 ineq_mapping.row_to_eq[row_id] = (bound_name, norm_eq.index_values)
                 row_id += 1
             else:
-                # Enumerate all instances
-                eq_instances = enumerate_equation_instances(
-                    bound_name, norm_eq.domain_sets, model_ir
-                )
+                # Enumerate all instances using helper function
+                eq_instances = _enumerate_equation_or_bound(bound_name, model_ir)
                 for eq_indices in eq_instances:
                     ineq_mapping.eq_to_row[(bound_name, eq_indices)] = row_id
                     ineq_mapping.row_to_eq[row_id] = (bound_name, eq_indices)

@@ -275,11 +275,16 @@ class TestConsistency:
         # so num_eqs will differ between them. The gradient uses a global
         # equation mapping that includes all equations.
 
-        # The number of equation instances (rows) may be greater than the number of
-        # equation names due to indexed equations expanding to multiple instances.
-        # Just verify that the Jacobians have reasonable dimensions.
-        assert J_h.index_mapping.num_eqs >= len(model_ir.equalities)
-        assert J_g.index_mapping.num_eqs >= len(model_ir.inequalities)
+        # The number of equation instances (rows) should equal the total number of
+        # expanded instances (indexed equations expand to multiple rows).
+        # Verify exact counts to catch unexpected dimension inflation.
+        from src.ad.constraint_jacobian import _count_equation_instances
+
+        expected_eq_rows = _count_equation_instances(model_ir, model_ir.equalities)
+        expected_ineq_rows = _count_equation_instances(model_ir, model_ir.inequalities)
+
+        assert J_h.index_mapping.num_eqs == expected_eq_rows
+        assert J_g.index_mapping.num_eqs == expected_ineq_rows
 
         # Mapping should be complete
         assert gradient.index_mapping.num_vars > 0
