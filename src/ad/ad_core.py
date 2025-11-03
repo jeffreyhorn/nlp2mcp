@@ -293,7 +293,7 @@ def simplify_advanced(expr: Expr) -> Expr:
         >>> # Result: Binary("+", VarRef("x", ()), Const(2)) or Const(2) + VarRef("x")
     """
     from ..ir.ast import Binary, Call, Sum, Unary
-    from .term_collection import collect_like_terms
+    from .term_collection import collect_like_terms, simplify_multiplicative_cancellation
 
     # Step 1: Apply basic simplification rules
     basic_simplified = simplify(expr)
@@ -314,6 +314,20 @@ def simplify_advanced(expr: Expr) -> Expr:
             if collected != reconstructed:
                 return simplify(collected)
             return collected
+
+        case Binary("/", left, right):
+            # Division: recursively simplify, then try multiplicative cancellation
+            simplified_left = simplify_advanced(left)
+            simplified_right = simplify_advanced(right)
+            reconstructed = Binary("/", simplified_left, simplified_right)
+
+            # Apply multiplicative cancellation: (c * x) / c → x
+            cancelled = simplify_multiplicative_cancellation(reconstructed)
+
+            # If cancellation made progress, simplify again
+            if cancelled != reconstructed:
+                return simplify(cancelled)
+            return cancelled
 
         case Binary(op, left, right):
             # Recursively process children for other binary operations

@@ -262,3 +262,52 @@ def collect_like_terms(expr: Expr) -> Expr:
     result = _rebuild_sum(collected)
 
     return result
+
+
+def simplify_multiplicative_cancellation(expr: Expr) -> Expr:
+    """
+    Simplify multiplicative cancellation patterns: (c * x) / c → x.
+
+    Handles patterns:
+    - (c * expr) / c → expr
+    - (expr * c) / c → expr
+
+    Args:
+        expr: Expression to simplify
+
+    Returns:
+        Simplified expression
+
+    Examples:
+        >>> # 2 * x / 2 → x
+        >>> simplify_multiplicative_cancellation(Binary("/", Binary("*", Const(2), VarRef("x")), Const(2)))
+        VarRef("x")
+
+        >>> # x * 3 / 3 → x
+        >>> simplify_multiplicative_cancellation(Binary("/", Binary("*", VarRef("x"), Const(3)), Const(3)))
+        VarRef("x")
+    """
+    if not isinstance(expr, Binary) or expr.op != "/":
+        return expr
+
+    numerator = expr.left
+    denominator = expr.right
+
+    # Pattern: (c * expr) / c → expr
+    if isinstance(numerator, Binary) and numerator.op == "*":
+        left_factor = numerator.left
+        right_factor = numerator.right
+
+        # Check if left factor matches denominator
+        if isinstance(left_factor, Const) and isinstance(denominator, Const):
+            if left_factor.value == denominator.value and denominator.value != 0:
+                # (c * expr) / c → expr
+                return right_factor
+
+        # Check if right factor matches denominator
+        if isinstance(right_factor, Const) and isinstance(denominator, Const):
+            if right_factor.value == denominator.value and denominator.value != 0:
+                # (expr * c) / c → expr
+                return left_factor
+
+    return expr

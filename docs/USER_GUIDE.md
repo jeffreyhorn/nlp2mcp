@@ -624,6 +624,12 @@ Applies all basic simplifications plus algebraic term collection:
    - `x*y + 2*x*y` → `3*x*y`
    - `a(i)*b(j) + a(i)*b(j)` → `2*a(i)*b(j)`
 
+6. **Multiplicative Cancellation:**
+   - `2*x / 2` → `x`
+   - `x*3 / 3` → `x`
+   - `2*x / (1+1)` → `x` (after constant folding)
+   - `3*(x+y) / 3` → `x+y`
+
 Plus all basic simplifications (constant folding, zero/identity elimination).
 
 **Basic** - `--simplification basic`

@@ -194,6 +194,7 @@ nlp2mcp automatically simplifies derivative expressions to produce more compact 
 - **Coefficient collection**: `2*x + 3*x → 5*x`
 - **Term cancellation**: `x - x → 0`, `x + y - x → y`
 - **Complex bases**: `x*y + 2*x*y → 3*x*y`
+- **Multiplicative cancellation**: `2*x / 2 → x`, `2*x / (1+1) → x`
 - Recommended for most use cases - produces cleanest output
 
 **Basic** - `--simplification basic`

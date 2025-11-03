@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implements coefficient collection: `2*x + 3*x → 5*x`
   - Handles term cancellation: `x + y - x → y` and `x - x → 0`
   - Works with complex bases: `x*y + 2*x*y → 3*x*y`
+  - **Multiplicative cancellation**: `2*x / 2 → x`, `2*x / (1+1) → x`
   - Supports deeply nested expressions with recursive simplification
   - Preserves all existing basic simplification rules (constant folding, zero elimination, identity rules)
 
@@ -44,7 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tests for constant collection, like-term collection, coefficient collection
   - Tests for cancellation (full and partial), complex bases, nested expressions
   - Tests for indexed variables and combined basic+advanced simplification
-- All 107 tests pass (56 basic + 37 term collection + 14 advanced)
+- Added 19 tests in `tests/unit/ad/test_multiplicative_cancellation.py`:
+  - Tests for (c*x)/c → x and (x*c)/c → x patterns
+  - Tests for integration with constant folding and term collection
+  - Tests for edge cases (zero denominators, different constants, nested expressions)
+- All 145 tests pass (56 basic + 37 term collection + 14 advanced + 19 multiplicative + 8 config + 8 apply + others)
 
 #### Files Modified
 - `src/ad/term_collection.py` (NEW - 258 lines)
