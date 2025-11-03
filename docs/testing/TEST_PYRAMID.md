@@ -20,45 +20,45 @@
 
 | Module | Unit | Integration | E2E | Total |
 |--------|------|-------------|-----|-------|
-| AD (Differentiation) | 202 | 0 | 0 | 202 |
-| Emit | 97 | 0 | 0 | 97 |
-| End-to-End | 0 | 0 | 22 | 22 |
+| AD (Differentiation) | 375 | 0 | 0 | 375 |
+| Emit | 98 | 0 | 0 | 98 |
+| End-to-End | 0 | 0 | 23 | 23 |
 | GAMS Parser | 0 | 0 | 0 | 19 |
-| IR | 0 | 0 | 0 | 16 |
+| IR | 0 | 0 | 0 | 57 |
 | Integration (AD) | 0 | 100 | 0 | 100 |
 | Integration (GAMS-IR) | 0 | 0 | 0 | 0 |
 | Integration (KKT) | 0 | 16 | 0 | 16 |
-| KKT | 40 | 0 | 0 | 40 |
-| **TOTAL** | **339** | **116** | **22** | **512** |
+| KKT | 104 | 0 | 0 | 104 |
+| **TOTAL** | **577** | **116** | **23** | **792** |
 
 ## Pyramid Balance
 
 Ideal test pyramid: Many unit tests, fewer integration, even fewer e2e.
 
-- Unit: 339 (66%)
-- Integration: 116 (22%)
-- E2E: 22 (4%)
+- Unit: 577 (72%)
+- Integration: 116 (14%)
+- E2E: 23 (2%)
 
 ✅ **Good:** Healthy test pyramid with strong unit test base.
 
 ## Test Execution Speed
 
 Expected execution times (estimated):
-- Unit only: ~3.4s (fast feedback)
-- Unit + Integration: ~22.8s (pre-commit)
-- Full suite: ~51.2s (CI)
+- Unit only: ~5.8s (fast feedback)
+- Unit + Integration: ~34.6s (pre-commit)
+- Full suite: ~79.2s (CI)
 
 ## Module Coverage Analysis
 
 Modules with test coverage:
-- **AD (Differentiation)**: Unit (202 tests)
-- **Emit**: Unit (97 tests)
-- **End-to-End**: E2E (22 tests)
+- **AD (Differentiation)**: Unit (375 tests)
+- **Emit**: Unit (98 tests)
+- **End-to-End**: E2E (23 tests)
 - **GAMS Parser**: Untagged (19 tests)
-- **IR**: Untagged (16 tests)
+- **IR**: Untagged (57 tests)
 - **Integration (AD)**: Integration (100 tests)
 - **Integration (KKT)**: Integration (16 tests)
-- **KKT**: Unit (40 tests)
+- **KKT**: Unit (104 tests)
 
 ---
 
