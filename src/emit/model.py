@@ -95,14 +95,7 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
             else:
                 # Regular equality: pair with multiplier
                 # Find the multiplier name for this equation
-                mult_name = create_eq_multiplier_name(
-                    eq_name,
-                    (
-                        kkt.model_ir.equations[eq_name].domain
-                        if eq_name in kkt.model_ir.equations
-                        else kkt.model_ir.normalized_bounds[eq_name].domain_sets
-                    ),
-                )
+                mult_name = create_eq_multiplier_name(eq_name)
                 # GAMS MCP syntax: list without indices - indexing is implicit
                 pairs.append(f"    {eq_name}.{mult_name}")
 

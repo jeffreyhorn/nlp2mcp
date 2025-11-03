@@ -22,8 +22,12 @@ class TestMultiplierNaming:
         assert name == "nu_balance"
 
     def test_eq_multiplier_indexed(self):
-        """Equality multiplier for indexed constraint."""
-        name = create_eq_multiplier_name("balance", ("i",))
+        """Equality multiplier for indexed constraint.
+
+        Note: The function doesn't use indices - they're inherited from the
+        equation domain in GAMS.
+        """
+        name = create_eq_multiplier_name("balance")
         assert name == "nu_balance"
 
     def test_ineq_multiplier_scalar(self):
@@ -32,8 +36,12 @@ class TestMultiplierNaming:
         assert name == "lam_capacity"
 
     def test_ineq_multiplier_indexed(self):
-        """Inequality multiplier for indexed constraint."""
-        name = create_ineq_multiplier_name("capacity", ("i", "j"))
+        """Inequality multiplier for indexed constraint.
+
+        Note: The function doesn't use indices - they're inherited from the
+        equation domain in GAMS.
+        """
+        name = create_ineq_multiplier_name("capacity")
         assert name == "lam_capacity"
 
     def test_bound_lo_multiplier_scalar(self):
@@ -42,8 +50,12 @@ class TestMultiplierNaming:
         assert name == "piL_x"
 
     def test_bound_lo_multiplier_indexed(self):
-        """Lower bound multiplier for indexed variable."""
-        name = create_bound_lo_multiplier_name("x", ("i",))
+        """Lower bound multiplier for indexed variable.
+
+        Note: The function doesn't use indices - they're inherited from the
+        bound constraint domain in GAMS.
+        """
+        name = create_bound_lo_multiplier_name("x")
         assert name == "piL_x"
 
     def test_bound_up_multiplier_scalar(self):
@@ -52,8 +64,12 @@ class TestMultiplierNaming:
         assert name == "piU_x"
 
     def test_bound_up_multiplier_indexed(self):
-        """Upper bound multiplier for indexed variable."""
-        name = create_bound_up_multiplier_name("x", ("i", "j"))
+        """Upper bound multiplier for indexed variable.
+
+        Note: The function doesn't use indices - they're inherited from the
+        bound constraint domain in GAMS.
+        """
+        name = create_bound_up_multiplier_name("x")
         assert name == "piU_x"
 
     def test_different_constraints_different_names(self):
