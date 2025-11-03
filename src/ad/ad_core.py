@@ -36,7 +36,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .term_collection import (
+    collect_like_terms,
+    simplify_multiplicative_cancellation,
+    simplify_power_rules,
+)
+
 if TYPE_CHECKING:
+    from ..config import Config
     from ..ir.ast import Expr
 
 
@@ -293,11 +300,6 @@ def simplify_advanced(expr: Expr) -> Expr:
         >>> # Result: Binary("+", VarRef("x", ()), Const(2)) or Const(2) + VarRef("x")
     """
     from ..ir.ast import Binary, Call, Sum, Unary
-    from .term_collection import (
-        collect_like_terms,
-        simplify_multiplicative_cancellation,
-        simplify_power_rules,
-    )
 
     # Step 1: Apply basic simplification rules
     basic_simplified = simplify(expr)
@@ -397,6 +399,23 @@ def simplify_advanced(expr: Expr) -> Expr:
         case _:
             # Leaf nodes or unknown types - already simplified
             return basic_simplified
+
+
+def get_simplification_mode(config: Config | None) -> str:
+    """
+    Get the simplification mode from config, with a sensible default.
+
+    Args:
+        config: Configuration object (may be None)
+
+    Returns:
+        Simplification mode string: "none", "basic", or "advanced"
+    """
+    if config:
+        return config.simplification
+    else:
+        # Default to advanced simplification if no config provided
+        return "advanced"
 
 
 def apply_simplification(expr: Expr, mode: str) -> Expr:

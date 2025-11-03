@@ -16,7 +16,7 @@ This is integrated as an optional pass in the main simplify() function.
 
 from dataclasses import dataclass
 
-from ..ir.ast import Binary, Const, Expr
+from ..ir.ast import Binary, Const, Expr, Unary
 
 
 @dataclass(frozen=True)
@@ -152,23 +152,22 @@ def _collect_terms(terms: list[Term]) -> list[Term]:
         List of collected terms (terms with same base are combined)
     """
     # Group terms by their base expression
-    # Use repr() as key since Expr is frozen and hashable via dataclass
-    base_to_coeff: dict[str, tuple[float, Expr]] = {}
+    # Use Expr directly as key since Expr is frozen and hashable via dataclass
+    base_to_coeff: dict[Expr, float] = {}
 
     for term in terms:
-        # Use repr of base as dictionary key
-        base_key = repr(term.base)
+        # Use base Expr as dictionary key
+        base_key = term.base
 
         if base_key in base_to_coeff:
             # Add coefficient to existing term
-            existing_coeff, existing_base = base_to_coeff[base_key]
-            base_to_coeff[base_key] = (existing_coeff + term.coeff, existing_base)
+            base_to_coeff[base_key] += term.coeff
         else:
             # New term
-            base_to_coeff[base_key] = (term.coeff, term.base)
+            base_to_coeff[base_key] = term.coeff
 
     # Convert back to list of Terms
-    collected = [Term(coeff=coeff, base=base) for coeff, base in base_to_coeff.values()]
+    collected = [Term(coeff=coeff, base=base) for base, coeff in base_to_coeff.items()]
 
     # Filter out terms with zero coefficient
     collected = [t for t in collected if t.coeff != 0]
@@ -203,8 +202,6 @@ def _rebuild_sum(terms: list[Term]) -> Expr:
             expr_terms.append(term.base)
         # Special case: coefficient is -1
         elif term.coeff == -1:
-            from ..ir.ast import Unary
-
             expr_terms.append(Unary("-", term.base))
         # General case: multiply coefficient by base
         else:

@@ -739,10 +739,7 @@ stat_x(i).. 1 + a(i) + lam_balance(i) + lam_balance(i) =E= 0;
 stat_x(i).. a(i) + 2*lam_balance(i) + 1 =E= 0;
 ```
 
-Or equivalently:
-```gams
-stat_x(i).. a(i) + 2*lam_balance(i) =E= -1;
-```
+Note: The constant terms remain on the left-hand side. GAMS equations are not automatically rearranged to move constants to the right-hand side.
 
 #### When to Use Each Mode
 
