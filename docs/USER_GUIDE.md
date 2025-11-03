@@ -162,6 +162,41 @@ nlp2mcp input.gms -o output.gms --no-comments
 nlp2mcp input.gms -o output.gms --show-excluded
 ```
 
+### Comment Handling
+
+**Your input files can contain comments** - you don't need to strip them!
+
+nlp2mcp supports all three GAMS comment styles:
+
+```gams
+* GAMS inline comment (line starting with asterisk)
+x.lo = 0;  * Lower bound comment
+
+// C-style line comment
+y.up = 100;  // Upper bound
+
+$ontext
+Block comment spanning
+multiple lines - useful for
+documentation sections
+$offtext
+```
+
+**Important notes:**
+- ✅ All comment types are handled correctly during parsing
+- ❌ Input comments are **not** preserved in the output file (they are stripped)
+- ℹ️ Output files can optionally include **generated** explanatory comments about the KKT system structure (use `--no-comments` to disable)
+
+**Example:**
+
+```bash
+# Input file with comments → Output without input comments
+nlp2mcp model_with_comments.gms -o output.gms
+
+# Disable generated explanatory comments in output
+nlp2mcp model_with_comments.gms -o output.gms --no-comments
+```
+
 ---
 
 ## Sprint 4 Features

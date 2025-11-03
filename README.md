@@ -418,6 +418,13 @@ The `examples/` directory contains sample GAMS NLP models:
 ### Preprocessing
 - ✅ `$include` directive (nested, relative paths) *(Sprint 4)*
 
+### Comments
+- ✅ GAMS inline comments (`* comment`)
+- ✅ C-style line comments (`// comment`)
+- ✅ Block comments (`$ontext ... $offtext`)
+
+**Note:** Input file comments are stripped during parsing and do not appear in the output. However, the emitter can add explanatory comments to the output (controlled by `--no-comments` flag).
+
 ### Expressions
 - ✅ Arithmetic: `+`, `-`, `*`, `/`, `^`
 - ✅ Functions: `exp`, `log`, `sqrt`, `sin`, `cos`, `tan`
