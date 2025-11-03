@@ -35,7 +35,7 @@ Equations
 objective..
     obj =E= sum(t, productionCost(t) * production(t)
                  + inventoryCost * inventory(t))
-          + shortagepenalty * maxShortage;
+          + shortagePenalty * maxShortage;
 
 * Inventory balance equation
 balance(t)..
