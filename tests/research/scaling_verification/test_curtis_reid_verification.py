@@ -185,12 +185,19 @@ class TestConditioningImprovement:
     """Test that scaling actually improves conditioning."""
 
     def test_various_ill_conditioned_matrices(self):
-        """Test on various types of ill-conditioned matrices."""
+        """Test on various types of ill-conditioned matrices.
+
+        All test matrices are full-rank to avoid singular matrices after scaling.
+        """
         test_cases = [
-            ("Badly scaled rows", np.array([[1e-6, 1e-6], [1e6, 1e6]])),
-            ("Badly scaled columns", np.array([[1e-6, 1e6], [1e-6, 1e6]])),
+            # Use different values to ensure full rank (not identical rows/cols)
+            ("Badly scaled rows", np.array([[1e-6, 2e-6], [1e6, 2e6]])),
+            ("Badly scaled columns", np.array([[1e-6, 1e6], [2e-6, 2e6]])),
             ("Mixed scaling", np.array([[1.0, 1e6], [1e-6, 1.0]])),
-            ("Diagonal dominance", np.array([[1e6, 1.0, 1.0], [1.0, 1e-6, 1.0], [1.0, 1.0, 1.0]])),
+            (
+                "Diagonal dominance",
+                np.array([[1e6, 1.0, 1.0], [1.0, 1e-6, 1.0], [1.0, 1.0, 1.0]]),
+            ),
         ]
 
         for name, A in test_cases:
