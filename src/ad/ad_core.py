@@ -159,8 +159,16 @@ def simplify(expr: Expr) -> Expr:
                         # Avoid division by zero
                         if right_val != 0:
                             return Const(left_val / right_val)
+                        else:
+                            # Division by zero: return unsimplified expression
+                            return Binary(op, simplified_left, simplified_right)
                     case "^":
-                        return Const(left_val**right_val)
+                        # Handle edge cases: negative base with fractional exponent, 0**negative, overflow
+                        try:
+                            return Const(left_val**right_val)
+                        except (ValueError, ZeroDivisionError, OverflowError):
+                            # Fall back to unsimplified expression if invalid operation
+                            return Binary("^", simplified_left, simplified_right)
 
             # Addition simplifications
             if op == "+":

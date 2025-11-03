@@ -19,18 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Recursive simplification through expression trees
   - Applied automatically to all derivatives (gradients, Jacobians)
 
-- **Unit Tests** (`tests/unit/ad/test_simplify.py` - 50 comprehensive tests)
-  - 6 constant folding tests
-  - 7 zero elimination tests
-  - 7 identity elimination tests
-  - 4 unary simplification tests
-  - 3 algebraic simplification tests
-  - 4 nested simplification tests
-  - 2 function call simplification tests
-  - 2 sum aggregation simplification tests
-  - 8 tests for special node types (multipliers, parameters, indexed vars)
-  - 3 idempotency tests
-  - 4 edge case tests
+- **Unit Tests** (`tests/unit/ad/test_simplify.py` - 50 comprehensive test methods)
+  - 6 constant folding test methods
+  - 7 zero elimination test methods
+  - 7 identity elimination test methods
+  - 4 unary simplification test methods
+  - 3 algebraic simplification test methods
+  - 4 nested simplification test methods
+  - 2 function call simplification test methods
+  - 2 sum aggregation simplification test methods
+  - 8 test methods for special node types (multipliers, parameters, indexed vars)
+  - 3 idempotency test methods
+  - 4 edge case test methods
 
 #### Changed
 - **Integration with AD Pipeline**

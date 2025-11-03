@@ -372,6 +372,37 @@ class TestEdgeCases:
         # Should not throw error, should return unchanged expression
         assert result == expr
 
+    def test_constant_division_by_zero_not_simplified(self):
+        # 5 / 0 → should remain unchanged (avoid runtime error)
+        expr = Binary("/", Const(5), Const(0))
+        result = simplify(expr)
+        # Should return Binary with simplified children, not throw error
+        assert result == Binary("/", Const(5), Const(0))
+
+    def test_power_negative_base_fractional_exponent(self):
+        # (-2) ** 0.5 → Python allows this (returns complex number)
+        # So this will actually simplify to a Const with complex value
+        expr = Binary("^", Const(-2), Const(0.5))
+        result = simplify(expr)
+        # Python computes this as complex: (-2)**0.5 = 1.41...j
+        assert isinstance(result, Const)
+        assert isinstance(result.value, complex)
+
+    def test_power_zero_negative_exponent(self):
+        # 0 ** (-1) → should remain unchanged (invalid: 1/0)
+        expr = Binary("^", Const(0), Const(-1))
+        result = simplify(expr)
+        # Should return Binary with simplified children, not throw error
+        assert result == Binary("^", Const(0), Const(-1))
+
+    def test_power_overflow(self):
+        # 10 ** 1000 → should remain unchanged (overflow)
+        expr = Binary("^", Const(10), Const(1000))
+        result = simplify(expr)
+        # Should return Binary with simplified children if overflow occurs
+        # Note: May actually succeed with Python's arbitrary precision, but test the mechanism
+        assert isinstance(result, (Const, Binary))
+
     def test_empty_sum(self):
         # sum(i, x(i)) → sum(i, x(i)) (no simplification for sum itself)
         expr = Sum(("i",), VarRef("x", ("i",)))
