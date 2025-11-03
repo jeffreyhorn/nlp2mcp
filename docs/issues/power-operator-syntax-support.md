@@ -1,5 +1,7 @@
 # Add Support for Power Operator Syntax (`**` or `^`)
 
+**GitHub Issue:** [#108](https://github.com/jeffreyhorn/nlp2mcp/issues/108)
+
 ## Issue Type
 Enhancement
 

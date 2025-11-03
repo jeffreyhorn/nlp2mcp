@@ -1,5 +1,7 @@
 # KKT Assembly Bug: Equality Multipliers Missing from Stationarity Equations
 
+**GitHub Issue:** [#106](https://github.com/jeffreyhorn/nlp2mcp/issues/106)
+
 ## Issue Type
 Bug - Critical
 

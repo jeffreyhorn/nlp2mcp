@@ -1,5 +1,7 @@
 # Smooth Abs() Feature Has Initialization Issues
 
+**GitHub Issue:** [#109](https://github.com/jeffreyhorn/nlp2mcp/issues/109)
+
 ## Issue Type
 Enhancement / Documentation
 

@@ -1,5 +1,7 @@
 # PATH Solver Fails on Some Nonlinear MCP Models (Model Status 5)
 
+**GitHub Issue:** [#107](https://github.com/jeffreyhorn/nlp2mcp/issues/107)
+
 ## Issue Type
 Investigation Required
 
