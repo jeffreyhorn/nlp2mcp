@@ -155,6 +155,11 @@ def main(
             click.echo(f"  Added {vars_added} auxiliary variables")
             click.echo(f"  Added {eqs_added} complementarity constraints")
 
+        # Re-normalize model after reformulation to capture new equations
+        # and update equations that had min/max replaced with aux vars
+        if vars_added > 0 or eqs_added > 0:
+            normalized_eqs, _ = normalize_model(model)
+
         # Step 3: Compute derivatives
         if verbose:
             click.echo("Computing derivatives...")
