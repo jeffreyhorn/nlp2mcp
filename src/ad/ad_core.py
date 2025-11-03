@@ -348,3 +348,29 @@ def simplify_advanced(expr: Expr) -> Expr:
         case _:
             # Leaf nodes or unknown types - already simplified
             return basic_simplified
+
+
+def apply_simplification(expr: Expr, mode: str) -> Expr:
+    """
+    Apply simplification based on the specified mode.
+
+    Args:
+        expr: Expression to simplify
+        mode: Simplification mode - "none", "basic", or "advanced"
+
+    Returns:
+        Simplified expression (or original if mode is "none")
+
+    Raises:
+        ValueError: If mode is not one of "none", "basic", "advanced"
+    """
+    if mode == "none":
+        return expr
+    elif mode == "basic":
+        return simplify(expr)
+    elif mode == "advanced":
+        return simplify_advanced(expr)
+    else:
+        raise ValueError(
+            f"Invalid simplification mode: {mode}. Must be 'none', 'basic', or 'advanced'"
+        )

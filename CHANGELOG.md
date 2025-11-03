@@ -58,6 +58,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Provides foundation for future optimization passes
 - Maintains backward compatibility - existing code uses `simplify()`, new code can opt into `simplify_advanced()`
 
+#### Integration - 2025-11-03 - Config-Based Simplification
+
+**Integrated advanced simplification into the nlp2mcp pipeline with configuration control:**
+
+- **Added `simplification` config option** (`src/config.py`):
+  - `"none"`: No simplification applied
+  - `"basic"`: Basic rules only (constant folding, zero elimination, identity)
+  - `"advanced"`: Basic + term collection (default)
+  - Validated in `Config.__post_init__()`
+
+- **Added `apply_simplification()` helper** (`src/ad/ad_core.py`):
+  - Centralized function to apply simplification based on config mode
+  - Used throughout gradient and Jacobian computation
+
+- **Integrated into differentiation pipeline**:
+  - `src/ad/gradient.py`: Updated both gradient computation functions
+  - `src/ad/constraint_jacobian.py`: Updated all three Jacobian computation functions
+  - All now respect `config.simplification` setting
+  - Default to "advanced" when no config provided
+
+- **Added comprehensive tests**:
+  - `tests/unit/test_config.py` (8 tests): Config validation for all modes
+  - `tests/unit/ad/test_apply_simplification.py` (9 tests): Mode-specific behavior verification
+
+**Impact:**
+- By default, all derivative expressions now benefit from advanced simplification
+- Users can disable or use basic simplification via config if needed
+- No breaking changes - all existing tests pass
+
 ### Fix - 2025-11-03 - Performance Test Threshold Adjustment ✅ COMPLETE
 
 #### Fixed

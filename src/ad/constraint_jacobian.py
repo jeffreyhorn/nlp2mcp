@@ -55,7 +55,7 @@ if TYPE_CHECKING:
 
 from ..ir.normalize import NormalizedEquation
 from ..ir.symbols import EquationDef
-from .ad_core import simplify
+from .ad_core import apply_simplification
 from .derivative_rules import differentiate_expr
 from .index_mapping import build_index_mapping, enumerate_variable_instances
 from .jacobian import JacobianStructure
@@ -261,8 +261,12 @@ def _compute_equality_jacobian(
                     # Use index-aware differentiation
                     derivative = differentiate_expr(constraint_expr, var_name, var_indices, config)
 
-                    # Simplify derivative expression
-                    derivative = simplify(derivative)
+                    # Simplify derivative expression based on config
+                    if config:
+                        derivative = apply_simplification(derivative, config.simplification)
+                    else:
+                        # Default to advanced simplification if no config provided
+                        derivative = apply_simplification(derivative, "advanced")
 
                     # Store in Jacobian (only if non-zero - sparsity optimization happens in simplification)
                     J_h.set_derivative(row_id, col_id, derivative)
@@ -328,8 +332,12 @@ def _compute_inequality_jacobian(
                     # Differentiate constraint w.r.t. this specific variable instance
                     derivative = differentiate_expr(constraint_expr, var_name, var_indices, config)
 
-                    # Simplify derivative expression
-                    derivative = simplify(derivative)
+                    # Simplify derivative expression based on config
+                    if config:
+                        derivative = apply_simplification(derivative, config.simplification)
+                    else:
+                        # Default to advanced simplification if no config provided
+                        derivative = apply_simplification(derivative, "advanced")
 
                     # Store in Jacobian
                     J_g.set_derivative(row_id, col_id, derivative)
@@ -379,8 +387,12 @@ def _compute_bound_jacobian(
                 # For bounds, we need to pass the correct indices from the normalized equation
                 derivative = differentiate_expr(bound_expr, var_name, var_indices, config)
 
-                # Simplify derivative expression
-                derivative = simplify(derivative)
+                # Simplify derivative expression based on config
+                if config:
+                    derivative = apply_simplification(derivative, config.simplification)
+                else:
+                    # Default to advanced simplification if no config provided
+                    derivative = apply_simplification(derivative, "advanced")
 
                 # Store in Jacobian
                 J_g.set_derivative(row_id, col_id, derivative)
