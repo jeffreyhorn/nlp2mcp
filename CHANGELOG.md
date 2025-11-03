@@ -15,13 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Root cause: First-run Lark grammar compilation (~0.11s) + CI environment slowdown (2.5x)
   - Observed failure: 0.772s in CI (0.20s warm parse + 0.11s Lark build × 2.5x CI slowdown)
   - New threshold provides appropriate safety margin while preserving regression detection
-  - Consistent with other benchmark headroom ratios (test_parse_medium: 4x, test_parse_large: 3.3x)
+  - Consistent with other benchmark headroom ratios (e.g., test_parse_medium: 3.0s threshold / 0.75s warm parse = 4x; test_parse_large: 5.0s threshold / 1.5s warm parse = 3.3x)
 
 #### Analysis
 - Lark grammar compilation is cached per-process with `@lru_cache` (src/ir/parser.py:76)
 - Each fresh pytest run or CI test starts a new process, paying full compilation cost
 - Cold-start overhead breakdown:
-  * Lark grammar build: ~0.11s (227-line grammar, 6.7KB)
+  * Lark grammar build: ~0.11s (227-line grammar, 6.7KB; approximate values as of 2025-11-03, may change as grammar evolves)
   * Module imports: ~0.12s
   * Warm parse time: ~0.20s (consistent across runs)
 - CI environment slowdown factor: ~2.5x typical
