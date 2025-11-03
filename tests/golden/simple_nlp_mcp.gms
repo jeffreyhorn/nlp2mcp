@@ -63,7 +63,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i).. a(i) + 1 * lam_balance(i) =E= 0;
+stat_x(i).. a(i) + (-1) * lam_balance(i) =E= 0;
 
 * Inequality complementarity equations
 comp_balance(i).. -x(i) =G= 0;

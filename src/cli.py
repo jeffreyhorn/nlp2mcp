@@ -133,7 +133,7 @@ def main(
         if verbose:
             click.echo("Normalizing model...")
 
-        normalize_model(model)
+        normalized_eqs, _ = normalize_model(model)
 
         if verbose >= 2:
             click.echo(f"  Equalities: {len(model.equalities)}")
@@ -167,7 +167,7 @@ def main(
         )
 
         gradient = compute_objective_gradient(model, config)
-        J_eq, J_ineq = compute_constraint_jacobian(model, config)
+        J_eq, J_ineq = compute_constraint_jacobian(model, normalized_eqs, config)
 
         if verbose >= 2:
             click.echo(f"  Gradient columns: {gradient.num_cols}")
