@@ -702,8 +702,13 @@ def reformulate_model(model: ModelIR) -> None:
             model.add_var(mult_var)
 
         # 3. Add complementarity constraints to model
-        for _constraint_name, constraint_def in result.constraints:
+        # These are inequality constraints (Rel.GE or Rel.LE), so they need to be
+        # added to both model.equations (for storage) and model.inequalities (for
+        # proper classification in KKT assembly)
+        for constraint_name, constraint_def in result.constraints:
             model.add_equation(constraint_def)
+            # Add to inequalities list so compute_constraint_jacobian includes them in J_ineq
+            model.inequalities.append(constraint_name)
 
         # 4. Replace min/max call with auxiliary variable in original equation
         eq_def = model.equations[eq_name]

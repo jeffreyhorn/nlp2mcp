@@ -263,15 +263,28 @@ class TestConsistency:
     """Test consistency across different access patterns."""
 
     def test_mapping_consistency(self):
-        """Test that same mapping is used for gradient and Jacobians."""
+        """Test that variable mappings are consistent across gradient and Jacobians."""
         model_ir = parse_and_normalize("simple_nlp.gms")
         gradient, J_g, J_h = compute_derivatives(model_ir)
 
-        # All three should have equivalent mappings (same content)
+        # All three should have same variable mappings
         assert gradient.index_mapping.num_vars == J_g.index_mapping.num_vars
         assert gradient.index_mapping.num_vars == J_h.index_mapping.num_vars
-        assert gradient.index_mapping.num_eqs == J_g.index_mapping.num_eqs
-        assert gradient.index_mapping.num_eqs == J_h.index_mapping.num_eqs
+
+        # Note: Equation mappings are now separate for J_eq and J_ineq,
+        # so num_eqs will differ between them. The gradient uses a global
+        # equation mapping that includes all equations.
+
+        # The number of equation instances (rows) should equal the total number of
+        # expanded instances (indexed equations expand to multiple rows).
+        # Verify exact counts to catch unexpected dimension inflation.
+        from src.ad.constraint_jacobian import _count_equation_instances
+
+        expected_eq_rows = _count_equation_instances(model_ir, model_ir.equalities)
+        expected_ineq_rows = _count_equation_instances(model_ir, model_ir.inequalities)
+
+        assert J_h.index_mapping.num_eqs == expected_eq_rows
+        assert J_g.index_mapping.num_eqs == expected_ineq_rows
 
         # Mapping should be complete
         assert gradient.index_mapping.num_vars > 0

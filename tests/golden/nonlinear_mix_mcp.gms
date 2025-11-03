@@ -67,8 +67,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x.. 1 + 2 * power(x, 1) * nu_poly_balance + cos(x) * nu_trig_balance - piL_x + piU_x =E= 0;
-stat_y.. 1 + 2 * power(y, 1) * nu_poly_balance + (-sin(y)) * nu_trig_balance - piL_y + piU_y =E= 0;
+stat_x.. 1 + cos(x) * nu_trig_balance + 2 * power(x, 1) * nu_poly_balance - piL_x + piU_x =E= 0;
+stat_y.. 1 + (-sin(y)) * nu_trig_balance + 2 * power(y, 1) * nu_poly_balance - piL_y + piU_y =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_x.. x + 2 =G= 0;
