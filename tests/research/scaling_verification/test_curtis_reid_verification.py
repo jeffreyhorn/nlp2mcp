@@ -63,7 +63,7 @@ class TestCurtisReidVerification:
 
         Note: This test was modified to use a full-rank ill-conditioned matrix
         for numerical stability. The original example [[1e-6, 2e-6], [1e6, 2e6]]
-        has parallel rows (rank deficient), which can cause the condition number
+        has proportional rows (rank deficient), which can cause the condition number
         to worsen instead of improve due to numerical precision limits when the
         condition number is ~10^16. This is a test improvement, not a behavior change.
         """

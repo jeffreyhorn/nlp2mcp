@@ -196,10 +196,10 @@ class TestCollectTerms:
         ]
         result = _collect_terms(terms)
         assert len(result) == 3
-        coeffs = {repr(t.base): t.coeff for t in result}
-        assert coeffs[repr(VarRef("x", ()))] == 4
-        assert coeffs[repr(VarRef("y", ()))] == 2
-        assert coeffs[repr(Const(1))] == 4
+        coeffs = {t.base: t.coeff for t in result}
+        assert coeffs[VarRef("x", ())] == 4
+        assert coeffs[VarRef("y", ())] == 2
+        assert coeffs[Const(1)] == 4
 
 
 class TestRebuildSum:

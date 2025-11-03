@@ -152,7 +152,9 @@ def _collect_terms(terms: list[Term]) -> list[Term]:
         List of collected terms (terms with same base are combined)
     """
     # Group terms by their base expression
-    # Use Expr directly as key since Expr is frozen and hashable via dataclass
+    # Use Expr directly as key. This requires all Expr subclasses to be defined
+    # with @dataclass(frozen=True) for hashability and immutability.
+    # This is a critical requirement enforced in src/ir/ast.py base definitions.
     base_to_coeff: dict[Expr, float] = {}
 
     for term in terms:
