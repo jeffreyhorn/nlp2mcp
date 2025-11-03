@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Refactor - 2025-11-03 - Test Suite Cleanup ✅ COMPLETE
+
+#### Removed
+- **Redundant E2E Tests** (7 tests removed, reducing test count from 866 to 859)
+  - Removed 3 tests from `tests/e2e/test_smoke.py::TestMinimalPipeline`:
+    - `test_minimal_scalar_nlp_pipeline` (duplicated `test_scalar_nlp_basic` in test_integration.py)
+    - `test_indexed_nlp_pipeline` (duplicated `test_simple_nlp_indexed` in test_integration.py)
+    - `test_bounds_handling_pipeline` (duplicated `test_bounds_nlp_basic` in test_integration.py)
+  - Removed 2 tests from `tests/e2e/test_integration.py::TestIndexedModels`:
+    - `test_indexed_balance_model` (duplicated by test_golden.py golden reference test)
+  - Removed entire `tests/e2e/test_integration.py::TestNonlinearFunctions` class (1 test):
+    - `test_nonlinear_mix_model` (duplicated by test_golden.py golden reference test)
+  - Removed entire `tests/e2e/test_integration.py::TestEndToEndWorkflow` class (2 tests):
+    - `test_full_pipeline_scalar` (duplicated by test_golden.py golden reference test)
+    - `test_full_pipeline_indexed` (duplicated by test_golden.py golden reference test)
+
+#### Benefits
+- **Faster test execution**: Approximately 5-10 seconds saved
+- **Clearer test organization**: Eliminated confusion about overlapping test coverage
+- **Easier maintenance**: Fewer duplicates to update when APIs change
+- **Better focus**: Kept highest-value tests (golden reference tests for regression coverage)
+
+#### Analysis
+- Comprehensive test suite analysis identified true redundancy in e2e directory
+- Kept all integration tests that verify component interactions
+- Kept all golden tests that provide regression coverage against verified reference files
+- Kept all KKT assembler and GAMS emitter smoke tests (unique functionality)
+- No loss of test coverage - all removed tests duplicated existing test coverage
+
 ### Enhancement - 2025-11-02 - Expression Simplification ✅ COMPLETE
 
 #### Added

@@ -175,39 +175,6 @@ class TestIndexedModels:
         # Should have equality constraints (objective definition and balance equations)
         assert J_h.num_nonzeros() >= 1
 
-    def test_indexed_balance_model(self):
-        """Test indexed model with balance constraints."""
-        model_ir = parse_and_normalize("indexed_balance.gms")
-        gradient, J_g, J_h = compute_derivatives(model_ir)
-
-        # Should have multiple variables
-        num_vars = gradient.num_cols
-        assert num_vars > 1
-
-        # Gradient should have components for each variable
-        assert gradient.num_nonzeros() == num_vars
-
-        # Should have equality constraints (balance equations)
-        assert J_h.num_nonzeros() > 0
-
-
-@pytest.mark.e2e
-class TestNonlinearFunctions:
-    """Test integration with nonlinear functions."""
-
-    def test_nonlinear_mix_model(self):
-        """Test model with mix of nonlinear functions."""
-        model_ir = parse_and_normalize("nonlinear_mix.gms")
-        gradient, J_g, J_h = compute_derivatives(model_ir)
-
-        # Should have gradient
-        assert gradient.num_nonzeros() > 0
-
-        # All gradient components should be non-None
-        for col_id in range(gradient.num_cols):
-            deriv = gradient.get_derivative(col_id)
-            assert deriv is not None
-
 
 @pytest.mark.e2e
 class TestJacobianStructure:
@@ -321,43 +288,3 @@ class TestConsistency:
         # In general, we expect gradient for all vars (unless objective is constant)
         # For sum(i, a(i)*x(i)), all variables should have non-zero gradient
         assert gradient_entries == num_vars
-
-
-@pytest.mark.e2e
-class TestEndToEndWorkflow:
-    """Test complete workflow from file to derivatives."""
-
-    def test_full_pipeline_scalar(self):
-        """Test complete pipeline on scalar model."""
-        # Step 1: Parse
-        model_ir = parse_and_normalize("scalar_nlp.gms")
-        assert model_ir is not None
-
-        # Step 2: Compute derivatives
-        gradient, J_g, J_h = compute_derivatives(model_ir)
-
-        # Step 3: Verify results
-        assert gradient is not None
-        assert J_g is not None
-        assert J_h is not None
-
-        # Step 4: Access specific derivatives
-        assert gradient.num_nonzeros() > 0
-
-    def test_full_pipeline_indexed(self):
-        """Test complete pipeline on indexed model."""
-        # Step 1: Parse
-        model_ir = parse_and_normalize("simple_nlp.gms")
-        assert model_ir is not None
-
-        # Step 2: Compute derivatives
-        gradient, J_g, J_h = compute_derivatives(model_ir)
-
-        # Step 3: Verify results
-        assert gradient.num_cols == 4  # obj, x(i1), x(i2), x(i3)
-        assert gradient.num_nonzeros() == 4
-
-        # Step 4: Verify can access all components
-        for col_id in range(4):
-            deriv = gradient.get_derivative(col_id)
-            assert deriv is not None
