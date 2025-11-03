@@ -72,21 +72,174 @@ def differentiate(expr: Expr, wrt_var: str) -> Expr:
 
 def simplify(expr: Expr) -> Expr:
     """
-    Simplify a symbolic expression (basic algebraic simplifications).
+    Simplify a symbolic expression using algebraic simplification rules.
 
-    This is a placeholder for future optimization. Currently returns expr unchanged.
+    This function recursively simplifies expressions by applying these rules:
+
+    **Priority 1 (Basic Algebraic Simplifications):**
+        - Constant folding: Const(2) + Const(3) → Const(5)
+        - Zero elimination: x + 0 → x, 0 + x → x, x * 0 → 0, 0 * x → 0
+        - Identity elimination: x * 1 → x, 1 * x → x
+        - Zero subtraction: x - 0 → x
+        - Division by one: x / 1 → x
+        - Double negation: -(-x) → x
+        - Power simplification: x ** 0 → 1, x ** 1 → x
+
+    **Priority 2 (Structural Simplifications):**
+        - Additive inverse: x + (-y) → x - y
+        - Nested simplification: Recursively simplifies subexpressions
 
     Args:
-        expr: The expression to simplify
+        expr: The expression to simplify (AST node)
 
     Returns:
-        A simplified version of the expression
+        A simplified version of the expression (new AST node)
 
-    Future improvements:
-        - Constant folding: Const(2) + Const(3) → Const(5)
-        - Identity elimination: x + 0 → x, x * 1 → x
-        - Zero multiplication: x * 0 → 0
-        - Algebraic simplification: (x + y) - y → x
+    Examples:
+        >>> from src.ir.ast import Const, VarRef, Binary, Unary
+        >>> simplify(Binary("+", VarRef("x", ()), Const(0)))
+        VarRef("x", ())
+        >>> simplify(Binary("*", Const(2), Const(3)))
+        Const(6)
+        >>> simplify(Binary("*", VarRef("x", ()), Const(0)))
+        Const(0)
+        >>> simplify(Unary("-", Unary("-", VarRef("x", ()))))
+        VarRef("x", ())
+
+    Note:
+        Simplification is applied recursively bottom-up through the expression tree.
+        The function is safe to call multiple times (idempotent for fully simplified expressions).
     """
-    # TODO: Implement simplification in future sprint if needed
-    return expr
+    from ..ir.ast import Binary, Call, Const, MultiplierRef, ParamRef, Sum, SymbolRef, Unary, VarRef
+
+    match expr:
+        # Base cases: already simple
+        case Const(_) | VarRef(_, _) | ParamRef(_, _) | MultiplierRef(_, _) | SymbolRef(_):
+            return expr
+
+        # Unary operations
+        case Unary(op, child):
+            simplified_child = simplify(child)
+
+            # Double negation: -(-x) → x
+            if op == "-" and isinstance(simplified_child, Unary) and simplified_child.op == "-":
+                return simplified_child.child
+
+            # Unary plus: +x → x
+            if op == "+":
+                return simplified_child
+
+            # Constant unary: -(5) → -5
+            if isinstance(simplified_child, Const):
+                if op == "-":
+                    return Const(-simplified_child.value)
+                if op == "+":
+                    return simplified_child
+
+            return Unary(op, simplified_child)
+
+        # Binary operations
+        case Binary(op, left, right):
+            # First, recursively simplify children
+            simplified_left = simplify(left)
+            simplified_right = simplify(right)
+
+            # Constant folding: operate on two constants
+            if isinstance(simplified_left, Const) and isinstance(simplified_right, Const):
+                left_val = simplified_left.value
+                right_val = simplified_right.value
+                match op:
+                    case "+":
+                        return Const(left_val + right_val)
+                    case "-":
+                        return Const(left_val - right_val)
+                    case "*":
+                        return Const(left_val * right_val)
+                    case "/":
+                        # Avoid division by zero
+                        if right_val != 0:
+                            return Const(left_val / right_val)
+                    case "^":
+                        return Const(left_val**right_val)
+
+            # Addition simplifications
+            if op == "+":
+                # x + 0 → x
+                if isinstance(simplified_right, Const) and simplified_right.value == 0:
+                    return simplified_left
+                # 0 + x → x
+                if isinstance(simplified_left, Const) and simplified_left.value == 0:
+                    return simplified_right
+                # x + (-y) → x - y
+                if isinstance(simplified_right, Unary) and simplified_right.op == "-":
+                    return simplify(Binary("-", simplified_left, simplified_right.child))
+
+            # Subtraction simplifications
+            if op == "-":
+                # x - 0 → x
+                if isinstance(simplified_right, Const) and simplified_right.value == 0:
+                    return simplified_left
+                # 0 - x → -x
+                if isinstance(simplified_left, Const) and simplified_left.value == 0:
+                    return simplify(Unary("-", simplified_right))
+                # x - x → 0 (only if same variable reference with same indices)
+                if simplified_left == simplified_right:
+                    return Const(0)
+
+            # Multiplication simplifications
+            if op == "*":
+                # x * 0 → 0
+                if isinstance(simplified_right, Const) and simplified_right.value == 0:
+                    return Const(0)
+                # 0 * x → 0
+                if isinstance(simplified_left, Const) and simplified_left.value == 0:
+                    return Const(0)
+                # x * 1 → x
+                if isinstance(simplified_right, Const) and simplified_right.value == 1:
+                    return simplified_left
+                # 1 * x → x
+                if isinstance(simplified_left, Const) and simplified_left.value == 1:
+                    return simplified_right
+
+            # Division simplifications
+            if op == "/":
+                # x / 1 → x
+                if isinstance(simplified_right, Const) and simplified_right.value == 1:
+                    return simplified_left
+                # 0 / x → 0 (assuming x ≠ 0)
+                if isinstance(simplified_left, Const) and simplified_left.value == 0:
+                    return Const(0)
+                # x / x → 1 (only if same variable reference)
+                if simplified_left == simplified_right:
+                    return Const(1)
+
+            # Power simplifications
+            if op == "^":
+                # x ** 0 → 1
+                if isinstance(simplified_right, Const) and simplified_right.value == 0:
+                    return Const(1)
+                # x ** 1 → x
+                if isinstance(simplified_right, Const) and simplified_right.value == 1:
+                    return simplified_left
+                # 0 ** x → 0 (assuming x > 0)
+                if isinstance(simplified_left, Const) and simplified_left.value == 0:
+                    return Const(0)
+                # 1 ** x → 1
+                if isinstance(simplified_left, Const) and simplified_left.value == 1:
+                    return Const(1)
+
+            return Binary(op, simplified_left, simplified_right)
+
+        # Function calls: recursively simplify arguments
+        case Call(func, args):
+            simplified_args = tuple(simplify(arg) for arg in args)
+            return Call(func, simplified_args)
+
+        # Sum: recursively simplify body
+        case Sum(index_sets, body):
+            simplified_body = simplify(body)
+            return Sum(index_sets, simplified_body)
+
+        case _:
+            # Unknown expression type - return as-is
+            return expr

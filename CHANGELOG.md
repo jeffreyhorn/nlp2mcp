@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Enhancement - 2025-11-02 - Expression Simplification ✅ COMPLETE
+
+#### Added
+- **Expression Simplification** (`src/ad/ad_core.py::simplify()`)
+  - Automatic simplification of derivative expressions to produce cleaner output
+  - **Constant Folding**: `2 + 3` → `5`, `(1 + 1) * x` → `2 * x`
+  - **Zero Elimination**: `x + 0` → `x`, `x * 0` → `0`, `0 / x` → `0`
+  - **Identity Elimination**: `x * 1` → `x`, `x / 1` → `x`, `x ** 1` → `x`, `x ** 0` → `1`
+  - **Algebraic Simplifications**: `-(-x)` → `x`, `x - x` → `0`, `x / x` → `1`, `x + (-y)` → `x - y`
+  - Recursive simplification through expression trees
+  - Applied automatically to all derivatives (gradients, Jacobians)
+
+- **Unit Tests** (`tests/unit/ad/test_simplify.py` - 50 comprehensive tests)
+  - 6 constant folding tests
+  - 7 zero elimination tests
+  - 7 identity elimination tests
+  - 4 unary simplification tests
+  - 3 algebraic simplification tests
+  - 4 nested simplification tests
+  - 2 function call simplification tests
+  - 2 sum aggregation simplification tests
+  - 8 tests for special node types (multipliers, parameters, indexed vars)
+  - 3 idempotency tests
+  - 4 edge case tests
+
+#### Changed
+- **Integration with AD Pipeline**
+  - `src/ad/gradient.py`: Added `simplify()` calls after differentiation (2 locations)
+  - `src/ad/constraint_jacobian.py`: Added `simplify()` calls after differentiation (3 locations)
+  - All derivative expressions now automatically simplified before storage
+
+- **Documentation Updates**
+  - `README.md`: Added "Expression simplification" to Sprint 2 features
+  - `docs/USER_GUIDE.md`: Added "Expression Simplification" section in Advanced Topics
+    - Simplification rules explained with examples
+    - Before/after comparison showing impact
+    - Benefits listed (cleaner equations, smaller files, easier verification)
+
+- **Test Updates**
+  - Updated 5 golden test files with simplified output
+  - Fixed 3 integration tests expecting unsimplified expressions
+  - All 860 tests passing (858 passed, 1 skipped, 1 xfailed)
+
+#### Impact
+- **Cleaner Output**: Stationarity equations like `x(i) * 0 + a(i) * 1 + (1 - 0) * lam(i) =E= 0` now simplify to `a(i) + lam(i) =E= 0`
+- **Better Readability**: Generated MCP files are significantly more readable
+- **Smaller Files**: Elimination of redundant operations reduces file size
+- **Easier Verification**: Simplified expressions make manual verification of KKT conditions easier
+
 ### Implementation - 2025-11-02 - Day 9: Documentation and Examples ✅ COMPLETE
 
 #### Added

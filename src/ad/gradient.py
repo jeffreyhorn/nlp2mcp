@@ -72,6 +72,7 @@ if TYPE_CHECKING:
 
 from ..ir.ast import Unary
 from ..ir.symbols import ObjSense
+from .ad_core import simplify
 from .derivative_rules import differentiate_expr
 from .index_mapping import build_index_mapping, enumerate_variable_instances
 from .jacobian import GradientVector
@@ -225,6 +226,9 @@ def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) 
                 # max f(x) = min -f(x), so gradient is -∇f
                 derivative = Unary("-", derivative)
 
+            # Simplify derivative expression
+            derivative = simplify(derivative)
+
             # Store in gradient vector
             gradient.set_derivative(col_id, derivative)
 
@@ -279,6 +283,9 @@ def compute_gradient_for_expression(
             # Apply negation if requested
             if negate:
                 derivative = Unary("-", derivative)
+
+            # Simplify derivative expression
+            derivative = simplify(derivative)
 
             # Store
             gradient.set_derivative(col_id, derivative)

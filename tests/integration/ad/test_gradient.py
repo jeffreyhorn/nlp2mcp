@@ -189,18 +189,17 @@ class TestGradientMinimization:
 
         gradient = compute_objective_gradient(model_ir)
 
-        # ∂(x + y)/∂x = 1 + 0 (from sum rule)
+        # ∂(x + y)/∂x = 1 + 0 = 1 (simplified)
         deriv_x = gradient.get_derivative_by_name("x")
         assert deriv_x is not None
-        # Result is Binary("+", Const(1.0), Const(0.0)) from sum rule
-        assert isinstance(deriv_x, Binary)
-        assert deriv_x.op == "+"
+        # After simplification: 1 + 0 → 1
+        assert deriv_x == Const(1.0)
 
-        # ∂(x + y)/∂y = 0 + 1 (from sum rule)
+        # ∂(x + y)/∂y = 0 + 1 = 1 (simplified)
         deriv_y = gradient.get_derivative_by_name("y")
         assert deriv_y is not None
-        assert isinstance(deriv_y, Binary)
-        assert deriv_y.op == "+"
+        # After simplification: 0 + 1 → 1
+        assert deriv_y == Const(1.0)
 
 
 # ============================================================================
@@ -222,13 +221,11 @@ class TestGradientMaximization:
 
         gradient = compute_objective_gradient(model_ir)
 
-        # max x → gradient is -(∂x/∂x) = -1
+        # max x → gradient is -(∂x/∂x) = -(1) = -1 (simplified)
         deriv = gradient.get_derivative_by_name("x")
         assert deriv is not None
-        from src.ir.ast import Unary
-
-        assert isinstance(deriv, Unary)
-        assert deriv.op == "-"
+        # After simplification: -(Const(1)) → Const(-1)
+        assert deriv == Const(-1.0)
 
     def test_max_two_variables(self):
         """Test gradient of max x + y (should be -1, -1)."""
@@ -287,14 +284,14 @@ class TestGradientIndexedVariables:
         # Structure may be (2*x(i1)^1)*1 due to power and chain rules, which is fine
         # Key test: verify it contains VarRef with correct index
         deriv_i1_str = repr(deriv_i1)
-        assert (
-            "VarRef(x(i1))" in deriv_i1_str
-        ), f"Derivative should contain x(i1), got: {deriv_i1_str}"
+        assert "VarRef(x(i1))" in deriv_i1_str, (
+            f"Derivative should contain x(i1), got: {deriv_i1_str}"
+        )
 
         deriv_i2_str = repr(deriv_i2)
-        assert (
-            "VarRef(x(i2))" in deriv_i2_str
-        ), f"Derivative should contain x(i2), got: {deriv_i2_str}"
+        assert "VarRef(x(i2))" in deriv_i2_str, (
+            f"Derivative should contain x(i2), got: {deriv_i2_str}"
+        )
 
     def test_mixed_scalar_and_indexed(self):
         """Test gradient with mix of scalar and indexed variables."""
@@ -407,13 +404,11 @@ class TestGradientForExpression:
         expr = VarRef("x")
         gradient = compute_gradient_for_expression(expr, model_ir, negate=True)
 
-        # -∂x/∂x = -1
+        # -∂x/∂x = -(1) = -1 (simplified)
         deriv = gradient.get_derivative_by_name("x")
         assert deriv is not None
-        from src.ir.ast import Unary
-
-        assert isinstance(deriv, Unary)
-        assert deriv.op == "-"
+        # After simplification: -(Const(1)) → Const(-1)
+        assert deriv == Const(-1.0)
 
 
 # ============================================================================
