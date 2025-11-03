@@ -61,7 +61,6 @@ def test_simple_table():
 
     print("✓ Values correct")
     print("\n✓ All checks passed!")
-    return True
 
 
 def test_sparse_table():
@@ -124,7 +123,6 @@ def test_sparse_table():
 
     print("✓ Values correct (zero-filled for missing cells)")
     print("\n✓ All checks passed!")
-    return True
 
 
 def test_table_with_text():
@@ -172,7 +170,6 @@ def test_table_with_text():
 
     print("✓ Values correct (descriptive text handled)")
     print("\n✓ All checks passed!")
-    return True
 
 
 if __name__ == "__main__":

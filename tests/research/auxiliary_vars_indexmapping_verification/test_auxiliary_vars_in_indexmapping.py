@@ -206,8 +206,6 @@ def test_auxiliary_variables_in_index_mapping():
     print("  ✓ Column indices automatically aligned")
     print("=" * 70 + "\n")
 
-    return True
-
 
 if __name__ == "__main__":
     test_auxiliary_variables_in_index_mapping()

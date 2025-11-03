@@ -57,7 +57,6 @@ def test_scalar_fixed_variable():
     print(f"    .up = {y_var.up}")
 
     print("\n✓ All checks passed!")
-    return True
 
 
 if __name__ == "__main__":

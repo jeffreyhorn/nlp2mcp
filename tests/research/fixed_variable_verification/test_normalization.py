@@ -70,7 +70,6 @@ def test_fx_normalization():
     print(f"\n  y bounds: {y_bounds}")
 
     print("\n✓ All checks passed!")
-    return True
 
 
 if __name__ == "__main__":
