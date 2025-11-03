@@ -13,7 +13,7 @@ Sprint 4 Day 7 checkpoint **PASSES** all acceptance criteria for Days 4-7. All p
 
 **Key Achievements:**
 - ✅ 4 major feature groups implemented (min/max, abs/fixed vars, scaling, diagnostics)
-- ✅ 16 of 23 research unknowns resolved (70% - all non-PATH-dependent)
+- ✅ 17 of 23 research unknowns resolved (74% - all non-PATH-dependent)
 - ✅ 810 tests passing (208 new tests added in Days 4-7)
 - ✅ Zero type errors, zero lint errors
 - ✅ All existing tests still pass (no regressions)
@@ -287,19 +287,18 @@ Sprint 4 Day 7 checkpoint **PASSES** all acceptance criteria for Days 4-7. All p
 
 **Total Unknowns:** 23
 
-**COMPLETE (16/23 = 70%):**
+**COMPLETE (17/23 = 74%):**
 - Category 1 (New GAMS Features): 5/5 ✅ (100%)
 - Category 2 (Non-smooth Functions): 3/4 ✅ (75%)
 - Category 3 (Scaling & Numerics): 1/2 ✅ (50%)
 - Category 4 (Code Generation): 4/4 ✅ (100%)
 - Category 5 (PATH Solver): 0/4 ⏸️ (0% - all require PATH)
-- Category 6 (Integration): 3/4 ✅ (75%)
+- Category 6 (Integration): 4/4 ✅ (100%)
 
-**INCOMPLETE (7/23 = 30%):**
+**INCOMPLETE (6/23 = 26%):**
 - 1 from Category 2 (Unknown 2.4)
 - 1 from Category 3 (Unknown 3.2)
 - 4 from Category 5 (Unknowns 5.1-5.4)
-- 1 from Category 6 (Unknown 6.1) - actually complete, not counted
 
 **Note:** All incomplete unknowns require PATH solver. No unknowns are blocked by implementation issues.
 
@@ -702,7 +701,7 @@ def curtis_reid_scaling(
 2. ✅ All acceptance criteria met (100%)
 3. ✅ Zero code quality issues (mypy, ruff, black all pass)
 4. ✅ 810 tests passing, no regressions
-5. ✅ 16/23 unknowns resolved (70% - all non-PATH-dependent)
+5. ✅ 17/23 unknowns resolved (74% - all non-PATH-dependent)
 6. ✅ Implementation phase complete, ready for validation/polish
 7. ✅ Documentation comprehensive and up to date
 8. ⏸️ PATH solver tasks identified and can be deferred
@@ -1001,7 +1000,7 @@ pyproject.toml                      ([tool.nlp2mcp] section, tomli dependency)
 
 ### D. Known Unknowns Status Summary
 
-**COMPLETE (16/23 = 70%):**
+**COMPLETE (17/23 = 74%):**
 
 *Category 1: New GAMS Features (5/5)*
 - ✅ Unknown 1.1 ($include mechanism)
@@ -1032,20 +1031,19 @@ pyproject.toml                      ([tool.nlp2mcp] section, tomli dependency)
 - ⏸️ Unknown 5.3 (Failure reporting) - Requires PATH
 - ⏸️ Unknown 5.4 (Initial points) - Requires PATH
 
-*Category 6: Integration (3/4)*
+*Category 6: Integration (4/4)*
 - ✅ Unknown 6.1 ($include and ModelIR)
 - ✅ Unknown 6.2 (Fixed vars in KKT)
 - ✅ Unknown 6.3 (Scaling test impact)
 - ✅ Unknown 6.4 (Auxiliary vars and IndexMapping)
 
-**INCOMPLETE (7/23 = 30%):**
+**INCOMPLETE (6/23 = 26%):**
 - Unknown 2.4 (PATH non-smooth compatibility)
 - Unknown 3.2 (Scaling NLP vs KKT)
 - Unknown 5.1 (PATH nonlinearity)
 - Unknown 5.2 (PATH options)
 - Unknown 5.3 (PATH failures)
 - Unknown 5.4 (PATH initial points)
-- *Note: Unknown 6.1 counted as complete but listed as 3/4 above (should be 4/4)*
 
 **All incomplete unknowns require PATH solver access.**
 
@@ -1076,7 +1074,7 @@ pyproject.toml                      ([tool.nlp2mcp] section, tomli dependency)
 - Days complete: 7/10 (70%)
 - Features complete: 100% (implementation)
 - Tests passing: 810/810 (100%)
-- Unknowns resolved: 16/23 (70%)
+- Unknowns resolved: 17/23 (74%)
 - Code quality: 100% (zero errors)
 
 ---
