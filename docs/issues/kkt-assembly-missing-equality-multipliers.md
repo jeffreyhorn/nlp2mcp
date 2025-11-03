@@ -2,11 +2,13 @@
 
 **GitHub Issue:** [#106](https://github.com/jeffreyhorn/nlp2mcp/issues/106)
 
+**Status:** ✅ FIXED in PR [#110](https://github.com/jeffreyhorn/nlp2mcp/pull/110)
+
 ## Issue Type
 Bug - Critical
 
 ## Priority
-High
+High (RESOLVED)
 
 ## Affects
 - Min/max reformulation (auxiliary variables)
@@ -228,12 +230,71 @@ Create tests that verify:
 - `tests/unit/kkt/test_reformulation.py` - Unit tests for reformulation
 - `docs/planning/SPRINT_4/PLAN.md` - Sprint 4 planning (Days 3-4 cover min/max)
 
+## Solution
+
+**Fixed in commit 5c7198d on branch feature/fix-kkt-equality-multipliers**
+
+### Root Causes Identified
+
+1. **Missing inequality list update**: `reformulate_model()` added complementarity constraints to `model.equations` but not to `model.inequalities`, excluding them from J_ineq
+
+2. **Shared index mapping with global row numbering**: J_eq and J_ineq used same index mapping with global row IDs, causing mismatches when Jacobians had separate row counts
+
+3. **Bound double-counting**: Bounds in both `model.inequalities` and `model.normalized_bounds` were counted twice when allocating J_ineq rows
+
+### Changes Made
+
+1. **src/kkt/reformulation.py** (line 707-710):
+   ```python
+   for constraint_name, constraint_def in result.constraints:
+       model.add_equation(constraint_def)
+       # NEW: Add to inequalities list so compute_constraint_jacobian includes them in J_ineq
+       model.inequalities.append(constraint_name)
+   ```
+
+2. **src/ad/constraint_jacobian.py**:
+   - Created `_build_equality_index_mapping()` - separate mapping for J_eq with rows 0..num_equalities-1
+   - Updated `_build_inequality_index_mapping()` - separate mapping for J_ineq with rows 0..num_inequalities-1
+   - Fixed `_count_equation_instances()` - check both `model.equations` and `model.normalized_bounds`
+   - Removed bound double-counting - they're already in `model.inequalities`
+   - Removed separate `_compute_bound_jacobian()` call - now handled in `_compute_inequality_jacobian()`
+
+3. **Test updates**:
+   - Updated `test_mapping_consistency()` to reflect separate index mappings
+   - Removed `xfail` from auxiliary constraints research test
+   - Regenerated golden files
+
+### Verification
+
+```bash
+# Min/max reformulation now works
+python -m src.cli examples/min_max_test.gms -o min_mcp.gms
+grep "stat_aux_min" min_mcp.gms
+# Output: stat_aux_min.. 0 + (-1) * nu_min_constraint + ...
+
+# Fixed variables now work
+python -m src.cli examples/fixed_var_test.gms -o fixed_mcp.gms
+grep "stat_y" fixed_mcp.gms
+# Output: stat_y.. 1 + 1 * nu_y_fx =E= 0;
+```
+
+### Test Results
+- ✅ All e2e and unit tests pass (127 tests)
+- ✅ Auxiliary constraints research test passes (was xfail)
+- ✅ Type checking passes
+- ✅ Min/max reformulation test cases pass
+- ✅ Fixed variable test cases pass
+
 ## Workaround
 
-None currently available. The features are non-functional until this bug is fixed.
+~~None currently available. The features are non-functional until this bug is fixed.~~
+
+**FIXED** - Upgrade to version with commit 5c7198d or later.
 
 ## References
 
+- PR: https://github.com/jeffreyhorn/nlp2mcp/pull/110
+- Commit: 5c7198d
 - SPRINT_4/PLAN.md - Day 3-4: Min/max reformulation
 - SPRINT_4/KNOWN_UNKNOWNS.md - Unknown 2.1, 2.2 (min/max reformulation approach)
 - CHANGELOG.md - Documents this issue under "Known Issues - Min/Max and Fixed Variables"
