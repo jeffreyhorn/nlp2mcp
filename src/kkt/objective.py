@@ -67,7 +67,10 @@ def extract_objective_info(model_ir: ModelIR) -> ObjectiveInfo:
         >>> obj_info.needs_stationarity  # False
     """
     if model_ir.objective is None:
-        raise ValueError("Model has no objective function")
+        raise ValueError(
+            "Model has no objective function. "
+            "Ensure your GAMS model includes a SOLVE statement with MINIMIZING or MAXIMIZING."
+        )
 
     obj = model_ir.objective
     objvar = obj.objvar
@@ -83,7 +86,8 @@ def extract_objective_info(model_ir: ModelIR) -> ObjectiveInfo:
     if defining_eq is None:
         raise ValueError(
             f"Could not find defining equation for objective variable '{objvar}'. "
-            f"Expected an equation with '{objvar}' on the LHS."
+            f"Expected an equation with '{objvar}' on the LHS. "
+            f"Example: {objvar}.. {objvar} =E= <objective expression>;"
         )
 
     # For standard NLP → MCP: objvar is free, no stationarity needed
