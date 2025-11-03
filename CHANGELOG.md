@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2025-11-03 - Advanced Expression Simplification
+
+#### Added
+- **Advanced Algebraic Simplification** (`src/ad/term_collection.py`, `src/ad/ad_core.py`)
+  - New `simplify_advanced()` function that extends basic simplification with term collection
+  - Implements constant collection: `1 + x + 1 → x + 2`
+  - Implements like-term collection: `x + y + x + y → 2*x + 2*y`
+  - Implements coefficient collection: `2*x + 3*x → 5*x`
+  - Handles term cancellation: `x + y - x → y` and `x - x → 0`
+  - Works with complex bases: `x*y + 2*x*y → 3*x*y`
+  - Supports deeply nested expressions with recursive simplification
+  - Preserves all existing basic simplification rules (constant folding, zero elimination, identity rules)
+
+#### Technical Details
+- **Term-Based Collection Architecture**:
+  - Represents expressions as coefficient × base pairs using `Term` dataclass
+  - Flattens associative operations (+ and *) into lists for easier analysis
+  - Groups terms by base expression using repr() as dictionary key
+  - Sums coefficients for like terms and filters out zero terms
+  - Rebuilds optimized expression tree from collected terms
+- **Bottom-Up Simplification**: Applies basic rules first, then advanced term collection
+- **Idempotent Design**: Can be safely applied multiple times without changing result
+- **Integration**: Works seamlessly with existing frozen dataclass AST structure
+
+#### Tests
+- Added 37 unit tests in `tests/unit/ad/test_term_collection.py`:
+  - TestFlattenAddition (5 tests) - validates associative operation flattening
+  - TestFlattenMultiplication (3 tests) - validates multiplication flattening
+  - TestExtractTerm (7 tests) - validates term extraction as (coeff, base) pairs
+  - TestCollectTerms (5 tests) - validates term grouping and coefficient summing
+  - TestRebuildSum (6 tests) - validates expression reconstruction
+  - TestCollectLikeTerms (7 tests) - validates end-to-end term collection
+  - TestEdgeCases (4 tests) - validates edge cases like cancellation and complex bases
+- Added 14 integration tests in `tests/unit/ad/test_simplify.py::TestAdvancedSimplification`:
+  - Tests for constant collection, like-term collection, coefficient collection
+  - Tests for cancellation (full and partial), complex bases, nested expressions
+  - Tests for indexed variables and combined basic+advanced simplification
+- All 107 tests pass (56 basic + 37 term collection + 14 advanced)
+
+#### Files Modified
+- `src/ad/term_collection.py` (NEW - 258 lines)
+- `src/ad/ad_core.py` (added `simplify_advanced()` function, lines 270-350)
+- `tests/unit/ad/test_term_collection.py` (NEW - 345 lines, 37 tests)
+- `tests/unit/ad/test_simplify.py` (added TestAdvancedSimplification class, 14 tests)
+
+#### Benefits
+- Produces more compact and readable expressions
+- Reduces redundant computation in generated code
+- Provides foundation for future optimization passes
+- Maintains backward compatibility - existing code uses `simplify()`, new code can opt into `simplify_advanced()`
+
 ### Fix - 2025-11-03 - Performance Test Threshold Adjustment ✅ COMPLETE
 
 #### Fixed

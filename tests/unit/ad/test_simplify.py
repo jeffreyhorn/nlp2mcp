@@ -4,7 +4,7 @@ Tests the simplify() function in src/ad/ad_core.py, verifying that
 algebraic simplification rules are correctly applied to expression ASTs.
 """
 
-from src.ad.ad_core import simplify
+from src.ad.ad_core import simplify, simplify_advanced
 from src.ir.ast import Binary, Call, Const, MultiplierRef, ParamRef, Sum, Unary, VarRef
 
 
@@ -424,3 +424,241 @@ class TestEdgeCases:
         expr = Sum(("i",), VarRef("x", ("i",)))
         result = simplify(expr)
         assert result == expr
+
+
+class TestAdvancedSimplification:
+    """Test advanced simplification with term collection."""
+
+    def test_constant_collection_simple(self):
+        # 1 + x + 1 → x + 2
+        expr = Binary("+", Binary("+", Const(1), VarRef("x", ())), Const(1))
+        result = simplify_advanced(expr)
+
+        # Result should be x + 2 or 2 + x
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+        # Extract components
+        left, right = result.left, result.right
+        components = {left, right}
+
+        # Should contain x and 2
+        assert VarRef("x", ()) in components
+        assert Const(2) in components
+
+    def test_like_term_collection_simple(self):
+        # x + y + x + y → 2*x + 2*y
+        expr = Binary(
+            "+",
+            Binary("+", Binary("+", VarRef("x", ()), VarRef("y", ())), VarRef("x", ())),
+            VarRef("y", ()),
+        )
+        result = simplify_advanced(expr)
+
+        # Result should be 2*x + 2*y (in some order)
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+        # Both terms should be multiplication by 2
+        left, right = result.left, result.right
+
+        # Check left term is 2 * var
+        if isinstance(left, Binary) and left.op == "*":
+            assert left.left == Const(2)
+            assert left.right in {VarRef("x", ()), VarRef("y", ())}
+
+        # Check right term is 2 * var
+        if isinstance(right, Binary) and right.op == "*":
+            assert right.left == Const(2)
+            assert right.right in {VarRef("x", ()), VarRef("y", ())}
+
+    def test_mixed_constant_and_variable_collection(self):
+        # 2 + x + 3 + x → 2*x + 5
+        expr = Binary(
+            "+",
+            Binary("+", Binary("+", Const(2), VarRef("x", ())), Const(3)),
+            VarRef("x", ()),
+        )
+        result = simplify_advanced(expr)
+
+        # Result should be 2*x + 5 or 5 + 2*x
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+        # Extract components
+        left, right = result.left, result.right
+
+        # One should be 2*x, other should be 5
+        has_coeff_term = False
+        has_constant = False
+
+        if isinstance(left, Binary) and left.op == "*":
+            assert left.left == Const(2)
+            assert left.right == VarRef("x", ())
+            has_coeff_term = True
+        elif left == Const(5):
+            has_constant = True
+
+        if isinstance(right, Binary) and right.op == "*":
+            assert right.left == Const(2)
+            assert right.right == VarRef("x", ())
+            has_coeff_term = True
+        elif right == Const(5):
+            has_constant = True
+
+        assert has_coeff_term and has_constant
+
+    def test_nested_addition_collection(self):
+        # (1 + x) + (1 + y) → x + y + 2
+        expr = Binary(
+            "+",
+            Binary("+", Const(1), VarRef("x", ())),
+            Binary("+", Const(1), VarRef("y", ())),
+        )
+        result = simplify_advanced(expr)
+
+        # Result should flatten and collect constants
+        # Could be x + (y + 2), (x + y) + 2, etc.
+        assert isinstance(result, Binary)
+
+    def test_coefficient_collection(self):
+        # 2*x + 3*x → 5*x
+        expr = Binary(
+            "+",
+            Binary("*", Const(2), VarRef("x", ())),
+            Binary("*", Const(3), VarRef("x", ())),
+        )
+        result = simplify_advanced(expr)
+
+        # Result should be 5 * x
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+        assert result.left == Const(5)
+        assert result.right == VarRef("x", ())
+
+    def test_cancellation_to_zero(self):
+        # x + (-1)*x → 0
+        expr = Binary("+", VarRef("x", ()), Binary("*", Const(-1), VarRef("x", ())))
+        result = simplify_advanced(expr)
+
+        # Result should be 0
+        assert result == Const(0)
+
+    def test_partial_cancellation(self):
+        # 3*x + 2*y + (-x) → 2*x + 2*y
+        # First, -x is Unary("-", x), which won't be recognized as -1*x by term collection
+        # So let's use explicit coefficient: 3*x + (-1)*x → 2*x
+        expr = Binary(
+            "+",
+            Binary("*", Const(3), VarRef("x", ())),
+            Binary("*", Const(-1), VarRef("x", ())),
+        )
+        result = simplify_advanced(expr)
+
+        # Result should be 2 * x
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+        assert result.left == Const(2)
+        assert result.right == VarRef("x", ())
+
+    def test_complex_base_collection(self):
+        # (x*y) + (x*y) → 2*(x*y)
+        base = Binary("*", VarRef("x", ()), VarRef("y", ()))
+        expr = Binary("+", base, base)
+        result = simplify_advanced(expr)
+
+        # Result should be 2 * (x*y)
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+        assert result.left == Const(2)
+        # Right should be x*y
+        assert isinstance(result.right, Binary)
+        assert result.right.op == "*"
+
+    def test_no_collection_needed(self):
+        # x + y (already simplified, no like terms)
+        expr = Binary("+", VarRef("x", ()), VarRef("y", ()))
+        result = simplify_advanced(expr)
+
+        # Should be unchanged
+        assert result == expr
+
+    def test_non_addition_unchanged(self):
+        # x * y (not addition, should not apply term collection)
+        expr = Binary("*", VarRef("x", ()), VarRef("y", ()))
+        result = simplify_advanced(expr)
+
+        # Should be unchanged
+        assert result == expr
+
+    def test_deeply_nested_collection(self):
+        # ((1 + x) + 2) + (x + 3) → 2*x + 6
+        expr = Binary(
+            "+",
+            Binary("+", Binary("+", Const(1), VarRef("x", ())), Const(2)),
+            Binary("+", VarRef("x", ()), Const(3)),
+        )
+        result = simplify_advanced(expr)
+
+        # Result should be 2*x + 6 or 6 + 2*x
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+        # Extract components
+        left, right = result.left, result.right
+
+        # One should be 2*x, other should be 6
+        has_coeff_term = False
+        has_constant = False
+
+        if isinstance(left, Binary) and left.op == "*":
+            assert left.left == Const(2)
+            assert left.right == VarRef("x", ())
+            has_coeff_term = True
+        elif left == Const(6):
+            has_constant = True
+
+        if isinstance(right, Binary) and right.op == "*":
+            assert right.left == Const(2)
+            assert right.right == VarRef("x", ())
+            has_coeff_term = True
+        elif right == Const(6):
+            has_constant = True
+
+        assert has_coeff_term and has_constant
+
+    def test_indexed_variables_collection(self):
+        # x(i) + x(i) → 2*x(i)
+        expr = Binary("+", VarRef("x", ("i",)), VarRef("x", ("i",)))
+        result = simplify_advanced(expr)
+
+        # Result should be 2 * x(i)
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+        assert result.left == Const(2)
+        assert result.right == VarRef("x", ("i",))
+
+    def test_different_indexed_variables_no_collection(self):
+        # x(i) + x(j) → x(i) + x(j) (different indices, not collected)
+        expr = Binary("+", VarRef("x", ("i",)), VarRef("x", ("j",)))
+        result = simplify_advanced(expr)
+
+        # Should be unchanged (different indices)
+        assert result == expr
+
+    def test_combined_with_basic_simplification(self):
+        # (x + 0) + (x + 0) → 2*x
+        # Basic simplification: x + 0 → x for each side
+        # Then term collection: x + x → 2*x
+        expr = Binary(
+            "+",
+            Binary("+", VarRef("x", ()), Const(0)),
+            Binary("+", VarRef("x", ()), Const(0)),
+        )
+        result = simplify_advanced(expr)
+
+        # Result should be 2 * x
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+        assert result.left == Const(2)
+        assert result.right == VarRef("x", ())

@@ -266,3 +266,85 @@ def simplify(expr: Expr) -> Expr:
         case _:
             # Unknown expression type - return as-is
             return expr
+
+
+def simplify_advanced(expr: Expr) -> Expr:
+    """
+    Apply advanced simplification including term collection.
+
+    This function extends basic simplification with:
+    - Constant collection: 1 + x + 1 → x + 2
+    - Like-term collection: x + y + x + y → 2*x + 2*y
+
+    The function applies simplification in two passes:
+    1. Basic simplification (existing rules)
+    2. Advanced term collection (for additions)
+
+    Args:
+        expr: The expression to simplify
+
+    Returns:
+        A simplified version of the expression
+
+    Examples:
+        >>> from src.ir.ast import Const, VarRef, Binary
+        >>> expr = Binary("+", Binary("+", Const(1), VarRef("x", ())), Const(1))
+        >>> result = simplify_advanced(expr)
+        >>> # Result: Binary("+", VarRef("x", ()), Const(2)) or Const(2) + VarRef("x")
+    """
+    from ..ir.ast import Binary, Call, Sum, Unary
+    from .term_collection import collect_like_terms
+
+    # Step 1: Apply basic simplification rules
+    basic_simplified = simplify(expr)
+
+    # Step 2: Apply term collection (only for additions)
+    # Recursively process children first, then apply to this node
+    match basic_simplified:
+        case Binary("+", left, right):
+            # Recursively simplify children with advanced rules
+            simplified_left = simplify_advanced(left)
+            simplified_right = simplify_advanced(right)
+            reconstructed = Binary("+", simplified_left, simplified_right)
+
+            # Apply term collection to this level
+            collected = collect_like_terms(reconstructed)
+
+            # If collection made progress, simplify again (may enable more basic rules)
+            if collected != reconstructed:
+                return simplify(collected)
+            return collected
+
+        case Binary(op, left, right):
+            # Recursively process children for other binary operations
+            simplified_left = simplify_advanced(left)
+            simplified_right = simplify_advanced(right)
+            if simplified_left != left or simplified_right != right:
+                # Children changed, rebuild and simplify
+                return simplify(Binary(op, simplified_left, simplified_right))
+            return basic_simplified
+
+        case Unary(op, child):
+            # Recursively process child
+            simplified_child = simplify_advanced(child)
+            if simplified_child != child:
+                return simplify(Unary(op, simplified_child))
+            return basic_simplified
+
+        case Call(func, args):
+            # Recursively process arguments
+            simplified_args = tuple(simplify_advanced(arg) for arg in args)
+            if simplified_args != args:
+                return Call(func, simplified_args)
+            return basic_simplified
+
+        case Sum(index_sets, body):
+            # Recursively process body
+            simplified_body = simplify_advanced(body)
+            if simplified_body != body:
+                return Sum(index_sets, simplified_body)
+            return basic_simplified
+
+        case _:
+            # Leaf nodes or unknown types - already simplified
+            return basic_simplified
