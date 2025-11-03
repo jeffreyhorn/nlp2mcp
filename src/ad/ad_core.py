@@ -219,7 +219,7 @@ def simplify(expr: Expr) -> Expr:
                 # x / 1 → x
                 if isinstance(simplified_right, Const) and simplified_right.value == 1:
                     return simplified_left
-                # 0 / x → 0 (safe to apply unconditionally: if x == 0, original expression is undefined, so simplifying to 0 preserves mathematical behavior)
+                # 0 / x → 0 (note: if x == 0 at runtime, both 0/0 and 0 are invalid/indeterminate)
                 if isinstance(simplified_left, Const) and simplified_left.value == 0:
                     return Const(0)
                 # x / x → 1 (only if same variable reference)
