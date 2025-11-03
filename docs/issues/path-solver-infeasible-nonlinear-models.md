@@ -266,13 +266,15 @@ Observations:
 
 ## Resolution
 
-**Status:** RESOLVED ✓
+**Status:** PARTIALLY RESOLVED ⚠️
 
-**Root Cause:** The MCP system was underdetermined due to a bug in multiplier creation. The objective-defining equation (e.g., `obj =E= x + y`) was incorrectly creating an equality multiplier variable `nu_objective`, resulting in 7 variables but only 6 equation-variable pairs in the MCP system. The variable `nu_objective` was declared but never used in any equation or complementarity pair.
+**Root Cause Identified:** The MCP system was underdetermined due to a bug in multiplier creation. The objective-defining equation (e.g., `obj =E= x + y`) was incorrectly creating an equality multiplier variable `nu_objective`, resulting in 7 variables but only 6 equation-variable pairs in the MCP system. The variable `nu_objective` was declared but never used in any equation or complementarity pair.
 
 **The Fix:**
 
 The objective-defining equation should NOT have a separate multiplier. Instead, it should pair directly with the objective variable itself in the MCP formulation.
+
+**Current Status:** While the fix correctly removes the unused `nu_objective` multiplier and makes the MCP system properly determined, PATH solver still fails with Model Status 5 on both affected test cases. This suggests the nonlinear KKT formulation is inherently difficult for PATH to solve, possibly requiring better initialization, scaling, or alternative solution strategies.
 
 **Code Changes:**
 
@@ -326,25 +328,30 @@ Model mcp_model /
 ```
 
 **Verification:**
-- All 980 tests pass (1 skipped)
+- All unit and integration tests pass (980 passed, 1 skipped)
 - Regenerated all 5 golden files to match new behavior
 - Updated integration tests in `tests/integration/kkt/test_kkt_full.py`:
   - `test_simple_nlp_full_assembly`: Expects 1 multiplier instead of 2
   - `test_objective_defining_equation_included`: Verifies `nu_objective` is NOT created
+- PATH solver validation tests remain marked as `xfail` with updated reason
 
 **Impact:**
-This fix resolves PATH solver failures on both affected test cases:
-- `bounds_nlp_mcp.gms` - Now has properly balanced MCP system
-- `nonlinear_mix_mcp.gms` - Now has properly balanced MCP system
+The fix corrects the MCP system structure on both affected test cases:
+- `bounds_nlp_mcp.gms` - Now has properly balanced MCP system (7→6 variables)
+- `nonlinear_mix_mcp.gms` - Now has properly balanced MCP system (7→6 variables)
 
-The MCP systems are no longer underdetermined and should solve correctly with PATH.
+However, PATH solver still reports Model Status 5 (Locally Infeasible) on both models. The MCP systems are now properly determined, but additional work is needed to make them solvable by PATH. Potential next steps include:
+1. Investigating better initialization strategies
+2. Applying scaling to the KKT formulation
+3. Analyzing whether the KKT reformulation itself introduces numerical difficulties
+4. Testing with alternative MCP solvers to determine if this is PATH-specific
 
 ## Acceptance Criteria
 
-- [x] Understand why PATH fails on these specific models
-- [x] Determine if issue is with reformulation or PATH solver
+- [x] Understand why PATH fails on these specific models *(Partially - unused nu_objective identified and fixed)*
+- [x] Determine if issue is with reformulation or PATH solver *(Partially - reformulation bug fixed, but PATH still fails)*
 - [x] Document workarounds or limitations
-- [x] Implement improvements to increase success rate
+- [ ] Implement improvements to increase success rate *(Partial - structural bug fixed, but PATH still cannot solve)*
 - [x] Update tests with appropriate expectations
 
 ## Workaround

@@ -384,14 +384,15 @@ class TestPATHSolverValidation:
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
 
     @pytest.mark.xfail(
-        reason="Model Status 5 (Locally Infeasible) - KKT reformulation may create difficult MCP"
+        reason="Model Status 5 (Locally Infeasible) - Issue #107 partially fixed (nu_objective removed) but PATH still cannot solve"
     )
     def test_solve_bounds_nlp_mcp(self):
         """Test PATH solver on bounds_nlp_mcp.gms.
 
-        NOTE: This test currently fails with Model Status 5 (Locally Infeasible).
-        The nonlinear KKT system may be difficult for PATH to solve, or there may be
-        an issue with the reformulation. Requires further investigation.
+        NOTE: Issue #107 fixed the unused nu_objective multiplier bug, making the MCP
+        system properly determined. However, PATH still fails with Model Status 5.
+        This may indicate the nonlinear KKT system is inherently difficult for PATH,
+        or requires better initialization/scaling. Requires further investigation.
         """
         golden_file = Path("tests/golden/bounds_nlp_mcp.gms")
         assert golden_file.exists(), f"Golden file not found: {golden_file}"
@@ -434,14 +435,15 @@ class TestPATHSolverValidation:
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
 
     @pytest.mark.xfail(
-        reason="Model Status 5 (Locally Infeasible) - KKT reformulation may create difficult MCP"
+        reason="Model Status 5 (Locally Infeasible) - Issue #107 partially fixed (nu_objective removed) but PATH still cannot solve"
     )
     def test_solve_nonlinear_mix_mcp(self):
         """Test PATH solver on nonlinear_mix_mcp.gms.
 
-        NOTE: This test currently fails with Model Status 5 (Locally Infeasible).
-        The nonlinear KKT system may be difficult for PATH to solve, or there may be
-        an issue with the reformulation. Requires further investigation.
+        NOTE: Issue #107 fixed the unused nu_objective multiplier bug, making the MCP
+        system properly determined. However, PATH still fails with Model Status 5.
+        This may indicate the nonlinear KKT system is inherently difficult for PATH,
+        or requires better initialization/scaling. Requires further investigation.
         """
         golden_file = Path("tests/golden/nonlinear_mix_mcp.gms")
         assert golden_file.exists(), f"Golden file not found: {golden_file}"
