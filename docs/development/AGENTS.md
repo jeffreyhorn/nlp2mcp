@@ -13,7 +13,7 @@ nlp2mcp/
 │   ├── ad/                  # Automatic differentiation (Sprint 2)
 │   ├── emit/                # GAMS MCP code generation (Sprint 3)
 │   ├── gams/                # Grammar and parsing utilities
-│   │   └── gams_grammer.lark  # GAMS NLP subset grammar
+│   │   └── gams_grammar.lark  # GAMS NLP subset grammar
 │   ├── ir/                  # Intermediate representation (Sprint 1 ✅)
 │   │   ├── ast.py           # Expression AST nodes
 │   │   ├── model_ir.py      # Model IR data structures
@@ -207,7 +207,7 @@ Refs: #12
 
 ## Grammar & Parser Changes
 
-- **Grammar file**: `src/gams/gams_grammer.lark`
+- **Grammar file**: `src/gams/gams_grammar.lark`
 - **Update comments**: When changing tokens or precedence
 - **Sync docs**: Update supported subset in `README.md`
 - **Add tests**: Include regression test in `tests/gams/test_parser.py`
@@ -240,7 +240,7 @@ See `PROJECT_PLAN.md` for detailed sprint breakdown.
 4. Update normalization if needed in `src/ir/normalize.py`
 
 ### Adding a new GAMS syntax feature
-1. Update grammar in `src/gams/gams_grammer.lark`
+1. Update grammar in `src/gams/gams_grammar.lark`
 2. Add parser handler in `src/ir/parser.py`
 3. Add example `.gms` file in `examples/`
 4. Add test in `tests/gams/test_parser.py`

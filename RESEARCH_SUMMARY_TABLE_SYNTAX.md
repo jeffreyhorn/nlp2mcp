@@ -25,7 +25,7 @@ All test cases **PASSED**:
 
 ### Implementation Details
 
-**Grammar Changes** (`src/gams/gams_grammer.lark`):
+**Grammar Changes** (`src/gams/gams_grammar.lark`):
 ```lark
 # Separated Table from Parameters
 params_block: ("Parameters"i | "Parameter"i) param_decl+ SEMI
@@ -116,7 +116,7 @@ i3     7       9;
 ## Files Changed
 
 ### Modified:
-1. `src/gams/gams_grammer.lark` - Added table_block grammar
+1. `src/gams/gams_grammar.lark` - Added table_block grammar
 2. `src/ir/parser.py` - Added _handle_table_block() method
 3. `docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md` - Updated verification results
 

@@ -3,7 +3,7 @@
 Sprint 1 (MVP parser + model IR) is complete. The repository now contains the core parsing pipeline, normalization utilities, and regression tests outlined in `PROJECT_PLAN.md`.
 
 ## Delivered Artifacts
-- `src/gams/gams_grammer.lark` – Earley grammar for the targeted GAMS NLP subset with ambiguity resolution helpers in the parser.
+- `src/gams/gams_grammar.lark` – Earley grammar for the targeted GAMS NLP subset with ambiguity resolution helpers in the parser.
 - `src/ir/ast.py`, `src/ir/model_ir.py`, `src/ir/symbols.py`, `src/ir/parser.py`, `src/ir/normalize.py` – Expression AST, symbol table types, Model IR container, semantic actions, and constraint/bound normalization logic.
 - `tests/gams/test_parser.py` (19 tests) and `tests/ir/test_normalize.py` (10 tests) – Cover declaration parsing, IR population, error cases, and canonicalization rules.
 - `examples/` (`simple_nlp.gms`, `scalar_nlp.gms`, `indexed_balance.gms`, `bounds_nlp.gms`, `nonlinear_mix.gms`) – Reference models used in tests and manual validation.

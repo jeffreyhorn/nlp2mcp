@@ -374,7 +374,7 @@ def handle_table_block(table_node):
 
 **Implementation Summary:**
 
-Grammar changes in `src/gams/gams_grammer.lark`:
+Grammar changes in `src/gams/gams_grammar.lark`:
 - Separated `table_block` from `params_block`
 - Added: `table_block: "Table"i ID "(" id_list ")" STRING? table_row+ SEMI`
 - Added: `table_row: ID table_value*` and `table_value: NUMBER | ID`

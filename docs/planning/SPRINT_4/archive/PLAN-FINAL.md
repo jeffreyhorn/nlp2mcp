@@ -180,7 +180,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Test tables in included files
 
 #### Deliverables
-- Grammar extension in `src/gams/gams_grammer.lark`
+- Grammar extension in `src/gams/gams_grammar.lark`
 - Parser handler in `src/ir/parser.py`
 - 20+ tests covering table variations
 - Integration with existing `ParameterDef` structure

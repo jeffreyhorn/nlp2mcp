@@ -367,7 +367,7 @@ The hang was caused by two interacting issues:
    - Changed `ambiguity="explicit"` to `ambiguity="resolve"`
    - This makes Earley pick the first matching alternative instead of exploring all
 
-2. **Grammar Update** (`src/gams/gams_grammer.lark`):
+2. **Grammar Update** (`src/gams/gams_grammar.lark`):
    ```python
    # Before:
    ID: ESCAPED | CNAME
@@ -419,7 +419,7 @@ None. The fix resolves the hang completely without introducing regressions.
 ### Files Changed
 
 - `src/ir/parser.py`: Parser configuration update
-- `src/gams/gams_grammer.lark`: ID token regex update  
+- `src/gams/gams_grammar.lark`: ID token regex update  
 - `tests/ad/test_integration.py`: Enable integration tests
 
 ### Related Issues
