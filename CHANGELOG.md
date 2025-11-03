@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2025-11-02 - GitHub Issue #85: Rename "grammer" to "grammar"
+
+#### Changed
+- **File Rename** (`src/gams/`)
+  - Renamed: `gams_grammer.lark` → `gams_grammar.lark` (using `git mv` to preserve history)
+  - Updated: `src/ir/parser.py` - Changed grammar path reference from `gams_grammer.lark` to `gams_grammar.lark`
+
+- **Documentation Updates** (10 files)
+  - Updated all documentation files to use "grammar" instead of "grammer":
+    - `RESEARCH_SUMMARY_TABLE_SYNTAX.md`
+    - `RESEARCH_SUMMARY_FIXED_VARIABLES.md`
+    - `docs/development/AGENTS.md`
+    - `docs/planning/SPRINT_1/SUMMARY.md`
+    - `docs/planning/SPRINT_4/archive/PLAN-FINAL.md`
+    - `docs/planning/SPRINT_4/archive/PLAN_REVISED.md`
+    - `docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md`
+    - `docs/planning/SPRINT_4/CHECKPOINT1.md`
+    - `docs/planning/SPRINT_4/PLAN.md`
+    - `docs/issues/completed/parse_model_file_hang.md`
+
+- **Issue Documentation**
+  - Moved: `docs/issues/rename-grammer-to-grammar.md` → `docs/issues/completed/rename-grammer-to-grammar.md`
+
+#### Technical Details
+- Typo existed since initial project commit
+- Used `git mv` for file rename to preserve Git history
+- Used `sed` for bulk text replacement across documentation files
+- No code logic changes - purely cosmetic fix
+
+#### Quality Checks
+- Type checking: ✅ Passing (mypy)
+- Linting: ✅ Passing (ruff)
+- Formatting: ✅ Passing (black)
+- Tests: ✅ Running (all 798 tests)
+
+#### Resolves
+- GitHub Issue #85
+- All occurrences of "grammer" replaced with "grammar"
+
+---
+
 ## [0.4.0] - Sprint 4: Feature Expansion + Robustness (IN PROGRESS)
 
 ### Implementation - 2025-11-02 - Day 6: Scaling Implementation + Developer Ergonomics (Part 1) ✅ COMPLETE

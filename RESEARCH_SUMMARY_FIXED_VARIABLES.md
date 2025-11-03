@@ -15,7 +15,7 @@ Research and verify the implementation of GAMS fixed variables (`.fx` attribute)
 ### Implementation Status by Phase
 
 #### 1. Parser Phase ✅ COMPLETE
-- **Grammar Support**: ✅ `BOUND_K: /(lo|up|fx)/i` defined in grammar (line 115 of gams_grammer.lark)
+- **Grammar Support**: ✅ `BOUND_K: /(lo|up|fx)/i` defined in grammar (line 115 of gams_grammar.lark)
 - **Syntax**: ✅ Supports both `x.fx = value` and `x.fx("i1") = value`
 - **Data Structure**: ✅ `VariableDef` has `.fx` (scalar) and `.fx_map` (indexed) fields
 - **Test Result**: Parser correctly extracts `.fx` values into variable definitions

@@ -44,7 +44,7 @@ class ParserSemanticError(ValueError):
 
 
 _ROOT = Path(__file__).resolve().parents[1]
-_GRAMMAR_PATH = _ROOT / "gams" / "gams_grammer.lark"
+_GRAMMAR_PATH = _ROOT / "gams" / "gams_grammar.lark"
 
 _WRAPPER_NODES = {
     "sum_expr",

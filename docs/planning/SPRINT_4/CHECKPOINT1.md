@@ -56,7 +56,7 @@ Sprint 4 Day 3 checkpoint **PASSES** all acceptance criteria. All planned featur
 **Status:** Fully verified and tested
 
 **Deliverables:**
-- [x] Grammar updates (`src/gams/gams_grammer.lark`)
+- [x] Grammar updates (`src/gams/gams_grammar.lark`)
 - [x] Parser handler (`src/ir/parser.py::_handle_table_block()`)
 - [x] Comprehensive test suite (20 tests in `tests/unit/ir/test_table_parsing.py`)
 - [x] Documentation (CHANGELOG.md, README.md)
@@ -424,7 +424,7 @@ def detect_min_max_calls(expr: Expr, context: str) -> list[MinMaxCall]:
 
 - **Files Modified:** ~15
   - `src/ir/parser.py` (preprocessing integration, table parsing)
-  - `src/gams/gams_grammer.lark` (table grammar)
+  - `src/gams/gams_grammar.lark` (table grammar)
   - `src/ir/ast.py` (Call tuple change)
   - `docs/planning/SPRINT_4/*.md` (documentation)
 
