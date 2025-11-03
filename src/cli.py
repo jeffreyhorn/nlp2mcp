@@ -12,12 +12,14 @@ import click
 from src.ad.constraint_jacobian import compute_constraint_jacobian
 from src.ad.gradient import compute_objective_gradient
 from src.config import Config
+from src.diagnostics import compute_model_statistics, export_jacobian_matrix_market
 from src.emit.emit_gams import emit_gams_mcp
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
 from src.kkt.assemble import assemble_kkt_system
 from src.kkt.reformulation import reformulate_model
 from src.kkt.scaling import byvar_scaling, curtis_reid_scaling
+from src.logging_config import setup_logging
 
 
 @click.command()
@@ -62,6 +64,24 @@ from src.kkt.scaling import byvar_scaling, curtis_reid_scaling
     default="none",
     help="Apply scaling to Jacobian: none (default), auto (Curtis-Reid), byvar (per-variable)",
 )
+@click.option(
+    "--stats",
+    is_flag=True,
+    default=False,
+    help="Print model statistics (equations, variables, nonzeros breakdown)",
+)
+@click.option(
+    "--dump-jacobian",
+    type=click.Path(),
+    help="Export Jacobian to Matrix Market format (.mtx file)",
+)
+@click.option(
+    "--quiet",
+    "-q",
+    is_flag=True,
+    default=False,
+    help="Suppress non-error output (overrides --verbose)",
+)
 def main(
     input_file,
     output,
@@ -72,6 +92,9 @@ def main(
     smooth_abs,
     smooth_abs_epsilon,
     scale,
+    stats,
+    dump_jacobian,
+    quiet,
 ):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
@@ -88,6 +111,11 @@ def main(
         nlp2mcp examples/simple_nlp.gms -o output_mcp.gms
     """
     try:
+        # Determine verbosity level (quiet overrides verbose)
+        verbosity_level = 0 if quiet else verbose
+
+        # Set up logging
+        setup_logging(verbosity=verbosity_level)
         # Step 1: Parse model
         if verbose:
             click.echo(f"Parsing model: {input_file}")
@@ -208,6 +236,21 @@ def main(
                     for var, indices, bound_type in kkt.skipped_infinite_bounds:
                         idx_str = f"({','.join(indices)})" if indices else ""
                         click.echo(f"    {var}{idx_str}.{bound_type} = ±INF")
+
+        # Step 5.5: Diagnostics (if requested)
+        if stats:
+            model_stats = compute_model_statistics(kkt)
+            click.echo("\n" + model_stats.format_report() + "\n", err=True)
+
+        if dump_jacobian:
+            if verbose:
+                click.echo(f"Exporting Jacobian to: {dump_jacobian}")
+
+            jacobian_path = Path(dump_jacobian)
+            export_jacobian_matrix_market(kkt, jacobian_path)
+
+            if verbose:
+                click.echo(f"✓ Jacobian exported to {dump_jacobian}")
 
         # Step 6: Emit GAMS MCP code
         if verbose:

@@ -136,3 +136,25 @@ markers = [
     "e2e: End-to-end pipeline tests (deselect with '-m \"not e2e\"')",
     "validation: Mathematical validation tests (slower) (deselect with '-m \"not validation\"')",
 ]
+
+[tool.nlp2mcp]
+# Default configuration for nlp2mcp CLI
+# These settings can be overridden by command-line flags
+
+# Output options
+model_name = "mcp_model"
+add_comments = true
+show_excluded_bounds = true
+
+# Verbosity level (0 = quiet, 1 = normal, 2 = verbose, 3 = very verbose)
+verbosity = 0
+
+# abs() function handling
+smooth_abs = false
+smooth_abs_epsilon = 1e-6
+
+# Scaling options: "none", "auto" (Curtis-Reid), or "byvar" (per-variable)
+scale = "none"
+
+# Diagnostics options
+print_stats = false
