@@ -37,7 +37,6 @@ Parameters
 Variables
     x(i)
     obj
-    nu_objective
 ;
 
 Positive Variables

@@ -94,7 +94,11 @@ def assemble_kkt_system(
 
     # Step 3: Create multiplier definitions
     logger.info("Creating multiplier definitions...")
-    multipliers_eq = _create_eq_multipliers(partition.equalities, model_ir)
+    # Exclude objective-defining equation from equality multipliers
+    # The objective equation pairs with the obj variable, not a multiplier
+    multipliers_eq = _create_eq_multipliers(
+        partition.equalities, model_ir, obj_info.defining_equation
+    )
     multipliers_ineq = _create_ineq_multipliers(partition.inequalities, model_ir)
     multipliers_bounds_lo = _create_bound_lo_multipliers(partition.bounds_lo)
     multipliers_bounds_up = _create_bound_up_multipliers(partition.bounds_up)
@@ -149,13 +153,28 @@ def assemble_kkt_system(
     return kkt
 
 
-def _create_eq_multipliers(equalities: list[str], model_ir: ModelIR) -> dict[str, MultiplierDef]:
+def _create_eq_multipliers(
+    equalities: list[str], model_ir: ModelIR, skip_equation: str | None = None
+) -> dict[str, MultiplierDef]:
     """Create multiplier definitions for equality constraints.
 
     Handles both user-defined equations and normalized bounds (e.g., fixed variables).
+
+    Args:
+        equalities: List of equality constraint names
+        model_ir: Model IR
+        skip_equation: Optional equation name to skip (e.g., objective-defining equation)
+
+    Returns:
+        Dictionary of multiplier definitions
     """
     multipliers = {}
     for eq_name in equalities:
+        # Skip objective-defining equation if specified
+        if skip_equation and eq_name == skip_equation:
+            logger.info(f"Skipping multiplier for objective-defining equation: {eq_name}")
+            continue
+
         # Check both equations dict and normalized_bounds dict
         # Fixed variables (.fx) create equalities stored in normalized_bounds
         if eq_name in model_ir.equations:

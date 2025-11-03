@@ -30,7 +30,6 @@ Variables
     x
     y
     obj
-    nu_objective
     nu_nonlinear
 ;
 

@@ -30,7 +30,6 @@ Variables
     x
     y
     obj
-    nu_objective
     nu_trig_balance
     nu_poly_balance
 ;
