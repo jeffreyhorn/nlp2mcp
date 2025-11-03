@@ -87,8 +87,11 @@ def curtis_reid_scaling(
         C = C_k * C  # Accumulate scaling
 
         # Check convergence
-        max_row_dev = np.abs(row_norms - 1.0).max()
-        max_col_dev = np.abs(col_norms - 1.0).max()
+        # Recompute norms after both row and column scaling to verify balance
+        row_norms_post = np.linalg.norm(dense_jac, axis=1, ord=2)
+        col_norms_post = np.linalg.norm(dense_jac, axis=0, ord=2)
+        max_row_dev = np.abs(row_norms_post - 1.0).max()
+        max_col_dev = np.abs(col_norms_post - 1.0).max()
 
         if max_row_dev < tol and max_col_dev < tol:
             break

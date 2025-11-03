@@ -153,15 +153,11 @@ def main(
             if verbose:
                 click.echo(f"Computing {config.scale} scaling...")
 
-            # Combine equality and inequality Jacobians for scaling
-            # We'll scale based on the full constraint Jacobian
+            # Scale based on the inequality Jacobian (larger system with bounds)
+            # Note: Equality Jacobian could also be scaled separately if needed
             if config.scale == "auto":
                 # Curtis-Reid scaling uses both row and column scaling
-                R_eq, C_eq = curtis_reid_scaling(J_eq)
                 R_ineq, C_ineq = curtis_reid_scaling(J_ineq)
-
-                # For now, use inequality Jacobian scaling (larger system)
-                # Future: could combine both Jacobians
                 row_scales, col_scales = R_ineq.tolist(), C_ineq.tolist()
 
                 if verbose >= 2:
