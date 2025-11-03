@@ -84,8 +84,8 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - [x] Day 5: `abs(x)` Handling and Fixed Variables (`x.fx`) (8h) ✅
 - [x] Day 6: Scaling Implementation + Developer Ergonomics Part 1 (8h) ✅
 - [x] Day 7: Diagnostics + Developer Ergonomics Part 2 (8h) ✅
-- [ ] Day 8: PATH Solver Validation and Testing (7.5h)
-- [ ] Day 9: Integration Testing, Documentation, and Examples (8h)
+- [ ] Day 8: PATH Solver Validation and Testing (7.5h) - Deferred (PATH licensing unavailable)
+- [x] Day 9: Integration Testing, Documentation, and Examples (8h) ✅
 - [ ] Day 10: Polish, Buffer, and Sprint Wrap-Up (8h)
 
 ### Planned (See [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md))
@@ -137,22 +137,43 @@ nlp2mcp input.gms -o output.gms -v
 # Very verbose (show detailed statistics)
 nlp2mcp input.gms -o output.gms -vv
 
-# Show excluded duplicate bounds
-nlp2mcp input.gms -o output.gms --show-excluded
+# Quiet mode (errors only)
+nlp2mcp input.gms -o output.gms --quiet
+
+# Show model statistics
+nlp2mcp input.gms -o output.gms --stats
+
+# Export Jacobian structure for analysis
+nlp2mcp input.gms -o output.gms --dump-jacobian jacobian.mtx
+
+# Apply Curtis-Reid scaling for ill-conditioned systems
+nlp2mcp input.gms -o output.gms --scale auto
+
+# Enable smooth abs() approximation
+nlp2mcp input.gms -o output.gms --smooth-abs
 
 # Customize model name
 nlp2mcp input.gms -o output.gms --model-name my_mcp_model
 
 # Disable explanatory comments
 nlp2mcp input.gms -o output.gms --no-comments
+
+# Show excluded duplicate bounds
+nlp2mcp input.gms -o output.gms --show-excluded
 ```
 
 **CLI Options:**
 - `-o, --output FILE`: Output file path (default: stdout)
 - `-v, --verbose`: Increase verbosity (stackable: -v, -vv, -vvv)
+- `-q, --quiet`: Suppress non-error output
 - `--model-name NAME`: Custom GAMS model name (default: mcp_model)
 - `--show-excluded / --no-show-excluded`: Show duplicate bounds excluded (default: no)
 - `--no-comments`: Disable explanatory comments in output
+- `--stats`: Print model statistics (equations, variables, nonzeros)
+- `--dump-jacobian FILE`: Export Jacobian structure to Matrix Market format
+- `--scale {none,auto,byvar}`: Apply scaling (default: none)
+- `--smooth-abs`: Enable smooth abs() approximation via sqrt(x²+ε)
+- `--smooth-abs-epsilon FLOAT`: Epsilon for abs smoothing (default: 1e-6)
 - `--help`: Show help message
 
 ### Complete Example
@@ -383,7 +404,7 @@ The `examples/` directory contains sample GAMS NLP models:
 - `bounds_nlp.gms` - Demonstrates variable bounds handling
 - `nonlinear_mix.gms` - Mixed nonlinear functions
 
-## Supported GAMS Subset (v1)
+## Supported GAMS Subset
 
 ### Declarations
 - ✅ `Sets` with explicit members
@@ -392,6 +413,10 @@ The `examples/` directory contains sample GAMS NLP models:
 - ✅ `Scalars`
 - ✅ `Variables` (scalar and indexed)
 - ✅ `Equations` (scalar and indexed)
+- ✅ `Table` data blocks *(Sprint 4)*
+
+### Preprocessing
+- ✅ `$include` directive (nested, relative paths) *(Sprint 4)*
 
 ### Expressions
 - ✅ Arithmetic: `+`, `-`, `*`, `/`, `^`
@@ -399,6 +424,8 @@ The `examples/` directory contains sample GAMS NLP models:
 - ✅ Aggregation: `sum(i, expr)`
 - ✅ Comparisons: `=`, `<>`, `<`, `>`, `<=`, `>=`
 - ✅ Logic: `and`, `or`
+- ✅ `min()` and `max()` (reformulated to complementarity) *(Sprint 4)*
+- ✅ `abs()` (smooth approximation with `--smooth-abs`) *(Sprint 4)*
 
 ### Equations
 - ✅ Relations: `=e=` (equality), `=l=` (≤), `=g=` (≥)
@@ -408,12 +435,17 @@ The `examples/` directory contains sample GAMS NLP models:
 - ✅ `Model` declaration with equation lists or `/all/`
 - ✅ `Solve` statement with `using NLP` and objective
 
+### Advanced Features *(Sprint 4)*
+- ✅ **Scaling**: Curtis-Reid and byvar scaling (`--scale auto|byvar`)
+- ✅ **Diagnostics**: Model statistics (`--stats`), Jacobian export (`--dump-jacobian`)
+- ✅ **Configuration**: `pyproject.toml` support for default options
+- ✅ **Logging**: Structured logging with verbosity control (`--verbose`, `--quiet`)
+
 ### Not Yet Supported
 - ❌ Control flow (`Loop`, `If`, `While`)
-- ❌ `$` directives (`$include`, `$if`, etc.)
-- ❌ `Table` data blocks
-- ❌ Non-differentiable functions (`abs`, `min`, `max`)
+- ❌ Other `$` directives (`$if`, `$set`, etc.)
 - ❌ External/user-defined functions
+- ❌ Other non-differentiable functions (floor, ceil, sign, etc.)
 
 ## Documentation
 

@@ -7,6 +7,113 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Implementation - 2025-11-02 - Day 9: Documentation and Examples ✅ COMPLETE
+
+#### Added
+- **Example Models** (5 comprehensive examples in `examples/`)
+  - `sprint4_minmax_production.gms` - Production planning with min/max functions
+  - `sprint4_abs_portfolio.gms` - Portfolio optimization with abs() smoothing
+  - `sprint4_fixed_vars_design.gms` - Engineering design with fixed variables
+  - `sprint4_scaling_illconditioned.gms` - Ill-conditioned system demonstrating scaling
+  - `sprint4_comprehensive.gms` + `sprint4_comprehensive_data.gms` - All Sprint 4 features
+
+- **User Guide** (`docs/USER_GUIDE.md` - comprehensive 400+ line guide)
+  - Introduction and installation
+  - Quick start tutorial
+  - Sprint 4 features documentation (all 7 major features)
+  - Command-line reference
+  - Configuration guide (pyproject.toml)
+  - Troubleshooting section
+  - Advanced topics (KKT structure, scaling algorithms, reformulation details)
+  - Example walkthroughs
+
+- **PATH Requirements Documentation** (`docs/PATH_REQUIREMENTS.md`)
+  - Installation requirements and steps
+  - Validation workflow (for when PATH becomes available)
+  - PATH solver options reference
+  - Known issues requiring PATH verification (Unknowns 2.4, 3.2, 5.1-5.4)
+  - Troubleshooting guide
+  - Status summary of PATH-dependent tasks
+
+#### Changed
+- **README.md** - Updated with Sprint 4 features
+  - CLI options expanded (11 new flags documented)
+  - "Supported GAMS Subset" section updated with Sprint 4 features
+  - Added preprocessing section ($include)
+  - Added min/max and abs() to expressions
+  - Added "Advanced Features" section (scaling, diagnostics, configuration)
+  - Usage examples updated with Sprint 4 flags
+
+- **PLAN.md** - Day 9 acceptance criteria checked off
+  - 5 comprehensive examples created
+  - PATH validation marked N/A (licensing unavailable)
+  - User guide and documentation complete
+  - All non-PATH-dependent criteria met
+
+- **README.md** - Sprint 4 progress tracking
+  - Day 9 marked complete ✅
+  - Day 8 marked as deferred (PATH licensing unavailable)
+
+#### Examples Overview
+
+**1. Production Planning (`sprint4_minmax_production.gms`)**
+- Features: max() in objective, min() in constraints, multi-argument max()
+- Demonstrates: Non-smooth function reformulation
+- Run: `nlp2mcp examples/sprint4_minmax_production.gms -o output.gms --stats`
+
+**2. Portfolio Optimization (`sprint4_abs_portfolio.gms`)**
+- Features: abs() for deviation minimization
+- Demonstrates: Smooth abs approximation
+- Run: `nlp2mcp examples/sprint4_abs_portfolio.gms -o output.gms --smooth-abs`
+
+**3. Engineering Design (`sprint4_fixed_vars_design.gms`)**
+- Features: Fixed variables (x.fx = value)
+- Demonstrates: Mixed fixed/free optimization
+- Run: `nlp2mcp examples/sprint4_fixed_vars_design.gms -o output.gms`
+
+**4. Ill-Conditioned System (`sprint4_scaling_illconditioned.gms`)**
+- Features: Curtis-Reid scaling, byvar scaling
+- Demonstrates: Magnitude differences (1e-6 to 1e6), conditioning improvement
+- Run: `nlp2mcp examples/sprint4_scaling_illconditioned.gms -o output.gms --scale auto`
+
+**5. Comprehensive Features (`sprint4_comprehensive.gms`)**
+- Features: $include, Table, min(), max(), x.fx, scaling recommendation
+- Demonstrates: All Sprint 4 features in one model
+- Run: `nlp2mcp examples/sprint4_comprehensive.gms -o output.gms --scale auto --stats`
+
+#### Documentation Statistics
+- **USER_GUIDE.md**: 400+ lines, 10 major sections, comprehensive feature coverage
+- **PATH_REQUIREMENTS.md**: 200+ lines, installation guide, troubleshooting, unknown status
+- **README.md**: Updated CLI options (19 flags), expanded supported features
+- **Examples**: 5 models covering all Sprint 4 features, well-commented
+
+#### PATH Solver Status
+- **Status**: Licensing not available during Sprint 4
+- **Impact**: Day 8 validation tasks deferred, no impact on implementation
+- **Unknowns Pending**: 6 unknowns require PATH (2.4, 3.2, 5.1-5.4)
+- **Documentation**: Complete PATH requirements and setup guide created
+- **Validation**: Can be performed post-Sprint 4 when licensing available
+
+#### Quality Checks
+- Type checking: ✅ 48 source files passing
+- Linting: ✅ All ruff checks passed
+- Formatting: ✅ 116 files unchanged
+- Tests: ✅ 810 tests passing (no test changes this day)
+
+#### Acceptance Criteria Met
+- [x] Examples exercise all Sprint 4 features ✅
+- [x] Comprehensive examples created (5 models) ✅
+- [N/A] PATH validation (licensing unavailable)
+- [x] README.md updated and complete ✅
+- [x] User guide created ✅
+- [x] PATH documentation complete ✅
+- [x] Configuration and logging documented ✅
+- [x] Examples demonstrate all features ✅
+
+**Day 9 Result**: ✅ **COMPLETE** (all non-PATH-dependent tasks)
+
+---
+
 ### Milestone - 2025-11-02 - Sprint 4 Checkpoint 2: Days 4-7 Implementation Phase Complete ✅
 
 #### Summary
