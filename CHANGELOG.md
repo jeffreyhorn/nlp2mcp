@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Handles term cancellation: `x + y - x → y` and `x - x → 0`
   - Works with complex bases: `x*y + 2*x*y → 3*x*y`
   - **Multiplicative cancellation**: `2*x / 2 → x`, `2*x / (1+1) → x`
+  - **Power simplification**: `x^2 * x^3 → x^5`, `x^5 / x^2 → x^3`, `(x^2)^3 → x^6`, `x * x → x^2`
   - Supports deeply nested expressions with recursive simplification
   - Preserves all existing basic simplification rules (constant folding, zero elimination, identity rules)
 
@@ -49,7 +50,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tests for (c*x)/c → x and (x*c)/c → x patterns
   - Tests for integration with constant folding and term collection
   - Tests for edge cases (zero denominators, different constants, nested expressions)
-- All 145 tests pass (56 basic + 37 term collection + 14 advanced + 19 multiplicative + 8 config + 8 apply + others)
+- Added 31 tests in `tests/unit/ad/test_power_simplification.py`:
+  - Tests for x^a * x^b → x^(a+b) patterns (10 tests)
+  - Tests for x^a / x^b → x^(a-b) patterns (8 tests)
+  - Tests for (x^a)^b → x^(a*b) nested powers (5 tests)
+  - Integration tests with constant folding and term collection (8 tests)
+- All 375 AD tests pass (previously 344, added 31 power tests)
 
 #### Files Modified
 - `src/ad/term_collection.py` (NEW - 258 lines)

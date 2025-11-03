@@ -311,3 +311,167 @@ def simplify_multiplicative_cancellation(expr: Expr) -> Expr:
                 return left_factor
 
     return expr
+
+
+def simplify_power_rules(expr: Expr) -> Expr:
+    """
+    Simplify power expressions using algebraic rules.
+
+    Handles patterns:
+    - x^a * x^b → x^(a+b) when a, b are constants
+    - x^a / x^b → x^(a-b) when a, b are constants  
+    - (x^a)^b → x^(a*b) when a, b are constants
+
+    Args:
+        expr: Expression to simplify
+
+    Returns:
+        Simplified expression
+
+    Examples:
+        >>> # x^2 * x^3 → x^5
+        >>> simplify_power_rules(Binary("*", Binary("**", VarRef("x"), Const(2)), Binary("**", VarRef("x"), Const(3))))
+        Binary("**", VarRef("x"), Const(5))
+
+        >>> # x^5 / x^2 → x^3
+        >>> simplify_power_rules(Binary("/", Binary("**", VarRef("x"), Const(5)), Binary("**", VarRef("x"), Const(2))))
+        Binary("**", VarRef("x"), Const(3))
+
+        >>> # (x^2)^3 → x^6
+        >>> simplify_power_rules(Binary("**", Binary("**", VarRef("x"), Const(2)), Const(3)))
+        Binary("**", VarRef("x"), Const(6))
+    """
+    # Pattern 1: (x^a)^b → x^(a*b) when both exponents are constants
+    if isinstance(expr, Binary) and expr.op == "**":
+        base = expr.left
+        outer_exp = expr.right
+
+        if isinstance(base, Binary) and base.op == "**":
+            inner_base = base.left
+            inner_exp = base.right
+
+            # Check if both exponents are constants
+            if isinstance(inner_exp, Const) and isinstance(outer_exp, Const):
+                # (x^a)^b → x^(a*b)
+                new_exp = inner_exp.value * outer_exp.value
+                return Binary("**", inner_base, Const(new_exp))
+
+    # Pattern 2: x^a * x^b → x^(a+b) when bases match and exponents are constants
+    if isinstance(expr, Binary) and expr.op == "*":
+        left = expr.left
+        right = expr.right
+
+        # Check if both are power expressions with constant exponents
+        if isinstance(left, Binary) and left.op == "**" and isinstance(right, Binary) and right.op == "**":
+            left_base = left.left
+            left_exp = left.right
+            right_base = right.left
+            right_exp = right.right
+
+            # Check if bases match and exponents are constants
+            if left_base == right_base and isinstance(left_exp, Const) and isinstance(right_exp, Const):
+                # x^a * x^b → x^(a+b)
+                new_exp = left_exp.value + right_exp.value
+                if new_exp == 0:
+                    # x^a * x^(-a) → x^0 → 1
+                    return Const(1)
+                elif new_exp == 1:
+                    # x^a * x^(1-a) → x^1 → x
+                    return left_base
+                else:
+                    return Binary("**", left_base, Const(new_exp))
+
+        # Check for x * x^b → x^(1+b)
+        if isinstance(right, Binary) and right.op == "**":
+            right_base = right.left
+            right_exp = right.right
+            if left == right_base and isinstance(right_exp, Const):
+                # x * x^b → x^(1+b)
+                new_exp = 1 + right_exp.value
+                if new_exp == 1:
+                    return left
+                else:
+                    return Binary("**", left, Const(new_exp))
+
+        # Check for x^a * x → x^(a+1)
+        if isinstance(left, Binary) and left.op == "**":
+            left_base = left.left
+            left_exp = left.right
+            if left_base == right and isinstance(left_exp, Const):
+                # x^a * x → x^(a+1)
+                new_exp = left_exp.value + 1
+                if new_exp == 1:
+                    return right
+                else:
+                    return Binary("**", right, Const(new_exp))
+
+        # Check for x * x → x^2
+        if left == right:
+            return Binary("**", left, Const(2))
+
+    # Pattern 3: x^a / x^b → x^(a-b) when bases match and exponents are constants
+    if isinstance(expr, Binary) and expr.op == "/":
+        numerator = expr.left
+        denominator = expr.right
+
+        # Check if both are power expressions with constant exponents
+        if (isinstance(numerator, Binary) and numerator.op == "**" and 
+            isinstance(denominator, Binary) and denominator.op == "**"):
+            num_base = numerator.left
+            num_exp = numerator.right
+            denom_base = denominator.left
+            denom_exp = denominator.right
+
+            # Check if bases match and exponents are constants
+            if num_base == denom_base and isinstance(num_exp, Const) and isinstance(denom_exp, Const):
+                # x^a / x^b → x^(a-b)
+                new_exp = num_exp.value - denom_exp.value
+                if new_exp == 0:
+                    # x^a / x^a → x^0 → 1
+                    return Const(1)
+                elif new_exp == 1:
+                    # x^(b+1) / x^b → x^1 → x
+                    return num_base
+                elif new_exp < 0:
+                    # x^a / x^b where a < b → 1 / x^(b-a)
+                    return Binary("/", Const(1), Binary("**", num_base, Const(-new_exp)))
+                else:
+                    return Binary("**", num_base, Const(new_exp))
+
+        # Check for x^a / x → x^(a-1)
+        if isinstance(numerator, Binary) and numerator.op == "**":
+            num_base = numerator.left
+            num_exp = numerator.right
+            if num_base == denominator and isinstance(num_exp, Const):
+                # x^a / x → x^(a-1)
+                new_exp = num_exp.value - 1
+                if new_exp == 0:
+                    return Const(1)
+                elif new_exp == 1:
+                    return num_base
+                elif new_exp < 0:
+                    return Binary("/", Const(1), Binary("**", num_base, Const(-new_exp)))
+                else:
+                    return Binary("**", num_base, Const(new_exp))
+
+        # Check for x / x^b → x^(1-b)
+        if isinstance(denominator, Binary) and denominator.op == "**":
+            denom_base = denominator.left
+            denom_exp = denominator.right
+            if numerator == denom_base and isinstance(denom_exp, Const):
+                # x / x^b → x^(1-b)
+                new_exp = 1 - denom_exp.value
+                if new_exp == 0:
+                    return Const(1)
+                elif new_exp == 1:
+                    return numerator
+                elif new_exp < 0:
+                    return Binary("/", Const(1), Binary("**", numerator, Const(-new_exp)))
+                else:
+                    return Binary("**", numerator, Const(new_exp))
+
+        # x / x → 1 (already handled by basic simplify, but included for completeness)
+        if numerator == denominator:
+            return Const(1)
+
+    return expr

@@ -630,6 +630,14 @@ Applies all basic simplifications plus algebraic term collection:
    - `2*x / (1+1)` → `x` (after constant folding)
    - `3*(x+y) / 3` → `x+y`
 
+7. **Power Simplification:**
+   - `x^2 * x^3` → `x^5` (multiply powers with same base)
+   - `x * x` → `x^2` (implicit exponent)
+   - `x^5 / x^2` → `x^3` (divide powers with same base)
+   - `x / x^2` → `1/x` (negative exponent result)
+   - `(x^2)^3` → `x^6` (nested powers)
+   - `x(i)^2 * x(i)^3` → `x(i)^5` (works with indexed variables)
+
 Plus all basic simplifications (constant folding, zero/identity elimination).
 
 **Basic** - `--simplification basic`

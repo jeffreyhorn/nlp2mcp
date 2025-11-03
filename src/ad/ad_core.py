@@ -293,7 +293,11 @@ def simplify_advanced(expr: Expr) -> Expr:
         >>> # Result: Binary("+", VarRef("x", ()), Const(2)) or Const(2) + VarRef("x")
     """
     from ..ir.ast import Binary, Call, Sum, Unary
-    from .term_collection import collect_like_terms, simplify_multiplicative_cancellation
+    from .term_collection import (
+        collect_like_terms,
+        simplify_multiplicative_cancellation,
+        simplify_power_rules,
+    )
 
     # Step 1: Apply basic simplification rules
     basic_simplified = simplify(expr)
@@ -316,7 +320,7 @@ def simplify_advanced(expr: Expr) -> Expr:
             return collected
 
         case Binary("/", left, right):
-            # Division: recursively simplify, then try multiplicative cancellation
+            # Division: recursively simplify, then try multiplicative cancellation and power rules
             simplified_left = simplify_advanced(left)
             simplified_right = simplify_advanced(right)
             reconstructed = Binary("/", simplified_left, simplified_right)
@@ -324,10 +328,41 @@ def simplify_advanced(expr: Expr) -> Expr:
             # Apply multiplicative cancellation: (c * x) / c → x
             cancelled = simplify_multiplicative_cancellation(reconstructed)
 
-            # If cancellation made progress, simplify again
-            if cancelled != reconstructed:
-                return simplify(cancelled)
-            return cancelled
+            # Apply power rules: x^a / x^b → x^(a-b)
+            power_simplified = simplify_power_rules(cancelled)
+
+            # If any transformation made progress, simplify again
+            if power_simplified != reconstructed:
+                return simplify(power_simplified)
+            return power_simplified
+
+        case Binary("*", left, right):
+            # Multiplication: recursively simplify, then try power rules
+            simplified_left = simplify_advanced(left)
+            simplified_right = simplify_advanced(right)
+            reconstructed = Binary("*", simplified_left, simplified_right)
+
+            # Apply power rules: x^a * x^b → x^(a+b), x * x → x^2
+            power_simplified = simplify_power_rules(reconstructed)
+
+            # If power rules made progress, simplify again
+            if power_simplified != reconstructed:
+                return simplify(power_simplified)
+            return power_simplified
+
+        case Binary("**", left, right):
+            # Power: recursively simplify, then try nested power rules
+            simplified_left = simplify_advanced(left)
+            simplified_right = simplify_advanced(right)
+            reconstructed = Binary("**", simplified_left, simplified_right)
+
+            # Apply power rules: (x^a)^b → x^(a*b)
+            power_simplified = simplify_power_rules(reconstructed)
+
+            # If power rules made progress, simplify again
+            if power_simplified != reconstructed:
+                return simplify(power_simplified)
+            return power_simplified
 
         case Binary(op, left, right):
             # Recursively process children for other binary operations
