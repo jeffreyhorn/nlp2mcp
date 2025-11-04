@@ -32,6 +32,7 @@ PRECEDENCE = {
     "*": 5,
     "/": 5,
     "^": 6,  # Power operator (highest precedence)
+    "**": 6,  # Alternative power operator syntax (same precedence as ^)
 }
 
 
@@ -188,7 +189,8 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
 
         case Binary(op, left, right):
             # Convert power operator to GAMS syntax
-            if op == "^":
+            # Handle both ^ and ** (term collection may generate **)
+            if op in ("^", "**"):
                 # GAMS uses ** for exponentiation
                 left_str = expr_to_gams(left, parent_op=op, is_right=False)
                 right_str = expr_to_gams(right, parent_op=op, is_right=True)
