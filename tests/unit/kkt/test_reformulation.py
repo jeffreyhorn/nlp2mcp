@@ -391,23 +391,23 @@ class TestReformulatMin:
         # Check auxiliary variable name
         assert result.aux_var_name == "aux_min_objdef_0"
 
-        # Check multiplier names (one per argument)
+        # Check multiplier names (one per argument) - use standard KKT naming
         assert len(result.multiplier_names) == 2
-        assert result.multiplier_names[0] == "lambda_min_objdef_0_arg0"
-        assert result.multiplier_names[1] == "lambda_min_objdef_0_arg1"
+        assert result.multiplier_names[0] == "lam_minmax_min_objdef_0_arg0"
+        assert result.multiplier_names[1] == "lam_minmax_min_objdef_0_arg1"
 
         # Check constraints (one per argument)
         assert len(result.constraints) == 2
 
-        # First constraint: x - aux_min >= 0
+        # First constraint: aux_min - x <= 0 (equivalent to x >= aux_min)
         name0, eq0 = result.constraints[0]
-        assert name0 == "comp_min_objdef_0_arg0"
-        assert eq0.relation == Rel.GE
+        assert name0 == "minmax_min_objdef_0_arg0"
+        assert eq0.relation == Rel.LE
 
-        # Second constraint: y - aux_min >= 0
+        # Second constraint: aux_min - y <= 0 (equivalent to y >= aux_min)
         name1, eq1 = result.constraints[1]
-        assert name1 == "comp_min_objdef_0_arg1"
-        assert eq1.relation == Rel.GE
+        assert name1 == "minmax_min_objdef_0_arg1"
+        assert eq1.relation == Rel.LE
 
         # Check replacement expression
         assert isinstance(result.replacement_expr, VarRef)
@@ -431,9 +431,9 @@ class TestReformulatMin:
         assert len(result.multiplier_names) == 3
         assert len(result.constraints) == 3
 
-        assert result.multiplier_names[0] == "lambda_min_balance_0_arg0"
-        assert result.multiplier_names[1] == "lambda_min_balance_0_arg1"
-        assert result.multiplier_names[2] == "lambda_min_balance_0_arg2"
+        assert result.multiplier_names[0] == "lam_minmax_min_balance_0_arg0"
+        assert result.multiplier_names[1] == "lam_minmax_min_balance_0_arg1"
+        assert result.multiplier_names[2] == "lam_minmax_min_balance_0_arg2"
 
     def test_reformulate_min_wrong_func_type(self):
         """Test that reformulate_min rejects max calls."""
@@ -493,18 +493,18 @@ class TestReformulatMax:
         # Check auxiliary variable name
         assert result.aux_var_name == "aux_max_constraint1_0"
 
-        # Check multiplier names (using mu instead of lambda)
+        # Check multiplier names (using standard KKT naming)
         assert len(result.multiplier_names) == 2
-        assert result.multiplier_names[0] == "mu_max_constraint1_0_arg0"
-        assert result.multiplier_names[1] == "mu_max_constraint1_0_arg1"
+        assert result.multiplier_names[0] == "lam_minmax_max_constraint1_0_arg0"
+        assert result.multiplier_names[1] == "lam_minmax_max_constraint1_0_arg1"
 
         # Check constraints (one per argument)
         assert len(result.constraints) == 2
 
-        # Constraints should be: aux_max - x >= 0, aux_max - y >= 0
+        # Constraints should be: x - aux_max <= 0, y - aux_max <= 0
         name0, eq0 = result.constraints[0]
-        assert name0 == "comp_max_constraint1_0_arg0"
-        assert eq0.relation == Rel.GE
+        assert name0 == "minmax_max_constraint1_0_arg0"
+        assert eq0.relation == Rel.LE
 
         # Check replacement expression
         assert isinstance(result.replacement_expr, VarRef)
@@ -610,24 +610,30 @@ class TestReformulateModel:
 
         # Should add:
         # - 1 auxiliary variable (aux_min_objdef_0)
-        # - 2 multipliers (lambda_min_objdef_0_arg0, lambda_min_objdef_0_arg1)
         # - 2 complementarity constraints
-        assert len(model.variables) == 3 + 1 + 2  # Original + aux + 2 multipliers
+        # NOTE: Multipliers are NOT added as variables (tracked in complementarity_multipliers)
+        assert len(model.variables) == 3 + 1  # Original + aux (no multipliers)
         assert len(model.equations) == 1 + 2  # Original + 2 constraints
 
         # Check auxiliary variable exists
         assert "aux_min_objdef_0" in model.variables
         assert model.variables["aux_min_objdef_0"].kind == VarKind.CONTINUOUS
 
-        # Check multipliers exist and are positive
-        assert "lambda_min_objdef_0_arg0" in model.variables
-        assert "lambda_min_objdef_0_arg1" in model.variables
-        assert model.variables["lambda_min_objdef_0_arg0"].kind == VarKind.POSITIVE
-        assert model.variables["lambda_min_objdef_0_arg1"].kind == VarKind.POSITIVE
+        # Check multipliers are tracked (not added as variables)
+        assert "lam_minmax_min_objdef_0_arg0" in model.complementarity_multipliers
+        assert "lam_minmax_min_objdef_0_arg1" in model.complementarity_multipliers
+        assert (
+            model.complementarity_multipliers["lam_minmax_min_objdef_0_arg0"]
+            == "minmax_min_objdef_0_arg0"
+        )
+        assert (
+            model.complementarity_multipliers["lam_minmax_min_objdef_0_arg1"]
+            == "minmax_min_objdef_0_arg1"
+        )
 
         # Check complementarity constraints exist
-        assert "comp_min_objdef_0_arg0" in model.equations
-        assert "comp_min_objdef_0_arg1" in model.equations
+        assert "minmax_min_objdef_0_arg0" in model.equations
+        assert "minmax_min_objdef_0_arg1" in model.equations
 
         # Check original equation was modified (min replaced with aux var)
         modified_eq = model.equations["objdef"]
@@ -660,14 +666,14 @@ class TestReformulateModel:
         # Reformulate
         reformulate_model(model)
 
-        # Should add auxiliary variable and multipliers
+        # Should add auxiliary variable (multipliers tracked, not added as variables)
         assert "aux_max_maxdef_0" in model.variables
-        assert "mu_max_maxdef_0_arg0" in model.variables
-        assert "mu_max_maxdef_0_arg1" in model.variables
+        assert "lam_minmax_max_maxdef_0_arg0" in model.complementarity_multipliers
+        assert "lam_minmax_max_maxdef_0_arg1" in model.complementarity_multipliers
 
         # Check complementarity constraints
-        assert "comp_max_maxdef_0_arg0" in model.equations
-        assert "comp_max_maxdef_0_arg1" in model.equations
+        assert "minmax_max_maxdef_0_arg0" in model.equations
+        assert "minmax_max_maxdef_0_arg1" in model.equations
 
     def test_reformulate_model_multiple_min_max(self):
         """Test reformulating model with both min and max."""
@@ -708,16 +714,17 @@ class TestReformulateModel:
         assert "aux_max_eq2_0" in model.variables
 
         # Each should have 2 multipliers
-        assert "lambda_min_eq1_0_arg0" in model.variables
-        assert "lambda_min_eq1_0_arg1" in model.variables
-        assert "mu_max_eq2_0_arg0" in model.variables
-        assert "mu_max_eq2_0_arg1" in model.variables
+        # Multipliers should be tracked in complementarity_multipliers (not as variables)
+        assert "lam_minmax_min_eq1_0_arg0" in model.complementarity_multipliers
+        assert "lam_minmax_min_eq1_0_arg1" in model.complementarity_multipliers
+        assert "lam_minmax_max_eq2_0_arg0" in model.complementarity_multipliers
+        assert "lam_minmax_max_eq2_0_arg1" in model.complementarity_multipliers
 
         # Should have 4 complementarity constraints (2 for each)
-        assert "comp_min_eq1_0_arg0" in model.equations
-        assert "comp_min_eq1_0_arg1" in model.equations
-        assert "comp_max_eq2_0_arg0" in model.equations
-        assert "comp_max_eq2_0_arg1" in model.equations
+        assert "minmax_min_eq1_0_arg0" in model.equations
+        assert "minmax_min_eq1_0_arg1" in model.equations
+        assert "minmax_max_eq2_0_arg0" in model.equations
+        assert "minmax_max_eq2_0_arg1" in model.equations
 
     def test_reformulate_model_three_args(self):
         """Test reformulating min with three arguments."""
@@ -747,13 +754,14 @@ class TestReformulateModel:
         reformulate_model(model)
 
         # Should have 3 multipliers and 3 constraints
-        assert "lambda_min_objdef_0_arg0" in model.variables
-        assert "lambda_min_objdef_0_arg1" in model.variables
-        assert "lambda_min_objdef_0_arg2" in model.variables
+        # Multipliers should be tracked in complementarity_multipliers (not as variables)
+        assert "lam_minmax_min_objdef_0_arg0" in model.complementarity_multipliers
+        assert "lam_minmax_min_objdef_0_arg1" in model.complementarity_multipliers
+        assert "lam_minmax_min_objdef_0_arg2" in model.complementarity_multipliers
 
-        assert "comp_min_objdef_0_arg0" in model.equations
-        assert "comp_min_objdef_0_arg1" in model.equations
-        assert "comp_min_objdef_0_arg2" in model.equations
+        assert "minmax_min_objdef_0_arg0" in model.equations
+        assert "minmax_min_objdef_0_arg1" in model.equations
+        assert "minmax_min_objdef_0_arg2" in model.equations
 
 
 class TestAcceptanceCriteria:
@@ -781,14 +789,14 @@ class TestAcceptanceCriteria:
         reformulate_model(model)
 
         # Should have exactly 2 complementarity constraints
-        comp_constraints = [name for name in model.equations if name.startswith("comp_min")]
+        comp_constraints = [name for name in model.equations if name.startswith("minmax_min")]
         assert len(comp_constraints) == 2
 
-        # Should have exactly 2 multipliers
+        # Should have exactly 2 multipliers (tracked in complementarity_multipliers)
         multipliers = [
             name
-            for name in model.variables
-            if name.startswith("lambda_min") or name.startswith("mu_")
+            for name in model.complementarity_multipliers
+            if name.startswith("lam_minmax_min") or name.startswith("lam_minmax_max")
         ]
         assert len(multipliers) == 2
 
@@ -814,13 +822,13 @@ class TestAcceptanceCriteria:
         reformulate_model(model)
 
         # Should have exactly 2 complementarity constraints
-        comp_constraints = [name for name in model.equations if name.startswith("comp_max")]
+        comp_constraints = [name for name in model.equations if name.startswith("minmax_max")]
         assert len(comp_constraints) == 2
 
-        # Constraints should be aux_max - x >= 0, aux_max - y >= 0 (opposite of min)
+        # Constraints should be x - aux_max <= 0, y - aux_max <= 0 (KKT form)
         for constraint_name in comp_constraints:
             constraint = model.equations[constraint_name]
-            assert constraint.relation == Rel.GE
+            assert constraint.relation == Rel.LE
 
     def test_multi_arg_min_generates_n_constraints(self):
         """AC: Multi-argument min(a, b, c) generates 3 constraints."""
@@ -846,9 +854,11 @@ class TestAcceptanceCriteria:
         reformulate_model(model)
 
         # Should have exactly 3 complementarity constraints
-        comp_constraints = [name for name in model.equations if name.startswith("comp_min")]
+        comp_constraints = [name for name in model.equations if name.startswith("minmax_min")]
         assert len(comp_constraints) == 3
 
-        # Should have exactly 3 multipliers
-        multipliers = [name for name in model.variables if name.startswith("lambda_min")]
+        # Should have exactly 3 multipliers (tracked in complementarity_multipliers)
+        multipliers = [
+            name for name in model.complementarity_multipliers if name.startswith("lam_minmax_min")
+        ]
         assert len(multipliers) == 3

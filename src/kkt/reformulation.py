@@ -712,14 +712,11 @@ def reformulate_model(model: ModelIR) -> None:
             model.complementarity_multipliers[mult_name] = constraint_name
 
         # 3. Add complementarity constraints to model
-        # IMPORTANT: Do NOT add these to model.inequalities!
-        # These are special complementarity constraints that will be paired
-        # with their multipliers directly in the MCP model declaration.
-        # They should NOT go through the regular KKT assembly process.
-        for _constraint_name, constraint_def in result.constraints:
+        # Add both to equations dict and inequalities list so they get processed by KKT
+        for constraint_name, constraint_def in result.constraints:
             model.add_equation(constraint_def)
-            # Note: We do NOT add to model.inequalities here because these
-            # constraints are handled specially via complementarity_multipliers
+            # Also add to inequalities list so they get included in KKT assembly
+            model.inequalities.append(constraint_name)
 
         # 4. Replace min/max call with auxiliary variable in original equation
         eq_def = model.equations[eq_name]

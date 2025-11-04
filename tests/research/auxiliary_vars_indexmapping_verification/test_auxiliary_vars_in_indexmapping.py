@@ -2,19 +2,22 @@
 
 This test verifies Unknown 6.4: Do auxiliary variables affect IndexMapping?
 
-The test demonstrates that the current architecture is CORRECT BY DESIGN:
+UPDATED AFTER BUG FIX (2025):
+The test now demonstrates the CORRECTED architecture:
 1. reformulate_model() adds auxiliary variables to model.variables (Step 2.5)
-2. build_index_mapping() is called during derivative computation (Step 3)
-3. Therefore, IndexMapping automatically includes all auxiliary variables
+2. reformulate_model() tracks complementarity multipliers separately (NOT as primal variables)
+3. build_index_mapping() is called during derivative computation (Step 3)
+4. Therefore, IndexMapping includes auxiliary variables but NOT multipliers
 
 This test creates a model with min() reformulation and verifies that:
-- Auxiliary variables (aux_min_*, lambda_min_*) are in model.variables
-- build_index_mapping() includes them in the mapping
-- Gradient and Jacobian have correct dimensions (including auxiliary vars)
+- Auxiliary variables (aux_min_*) are in model.variables and IndexMapping
+- Complementarity multipliers (lam_minmax_min_*) are NOT in model.variables
+- Multipliers are tracked in model.complementarity_multipliers
+- Gradient and Jacobian have correct dimensions (including auxiliary vars, excluding multipliers)
 - Column indices align between gradient and Jacobian
 
-FINDING: No code changes needed - architecture is correct by design.
-The integration point (Step 2.5) ensures auxiliary vars are always included.
+FINDING: Bug was fixed - multipliers were incorrectly added as primal variables.
+Now they're properly tracked separately and added during KKT assembly.
 """
 
 from src.ad.constraint_jacobian import compute_constraint_jacobian
@@ -89,8 +92,13 @@ def test_auxiliary_variables_in_index_mapping():
 
     # Check specific auxiliary variables exist
     assert "aux_min_minconstraint_0" in model.variables, "Auxiliary variable should exist"
-    assert "lambda_min_minconstraint_0_arg0" in model.variables, "Lambda multiplier should exist"
-    assert "lambda_min_minconstraint_0_arg1" in model.variables, "Lambda multiplier should exist"
+    # Multipliers are now tracked in complementarity_multipliers (not as variables)
+    assert "lam_minmax_min_minconstraint_0_arg0" in model.complementarity_multipliers, (
+        "Lambda multiplier should exist"
+    )
+    assert "lam_minmax_min_minconstraint_0_arg1" in model.complementarity_multipliers, (
+        "Lambda multiplier should exist"
+    )
 
     print("\n" + "=" * 70)
     print("UNKNOWN 6.4 VERIFICATION: Auxiliary Variables in IndexMapping")
@@ -103,65 +111,67 @@ def test_auxiliary_variables_in_index_mapping():
     index_mapping = build_index_mapping(model)
 
     # IndexMapping should have entries for ALL variables (including auxiliary)
-    assert (
-        index_mapping.num_vars == vars_after
-    ), f"IndexMapping should have {vars_after} vars, got {index_mapping.num_vars}"
+    assert index_mapping.num_vars == vars_after, (
+        f"IndexMapping should have {vars_after} vars, got {index_mapping.num_vars}"
+    )
 
     # Check that auxiliary variables are mapped
     aux_col = index_mapping.get_col_id("aux_min_minconstraint_0", ())
     assert aux_col is not None, "Auxiliary variable should be in IndexMapping"
 
-    lambda_0_col = index_mapping.get_col_id("lambda_min_minconstraint_0_arg0", ())
-    assert lambda_0_col is not None, "Lambda multiplier should be in IndexMapping"
+    # Multipliers should NOT be in IndexMapping (they're not primal variables)
+    # They're tracked in complementarity_multipliers and added during KKT assembly
+    lambda_0_col = index_mapping.get_col_id("lam_minmax_min_minconstraint_0_arg0", ())
+    assert lambda_0_col is None, "Lambda multiplier should NOT be in primal IndexMapping"
 
-    lambda_1_col = index_mapping.get_col_id("lambda_min_minconstraint_0_arg1", ())
-    assert lambda_1_col is not None, "Lambda multiplier should be in IndexMapping"
+    lambda_1_col = index_mapping.get_col_id("lam_minmax_min_minconstraint_0_arg1", ())
+    assert lambda_1_col is None, "Lambda multiplier should NOT be in primal IndexMapping"
 
     print(f"✓ IndexMapping has {index_mapping.num_vars} columns (includes auxiliary vars)")
     print(f"✓ aux_min_minconstraint_0 → column {aux_col}")
-    print(f"✓ lambda_min_minconstraint_0_arg0 → column {lambda_0_col}")
-    print(f"✓ lambda_min_minconstraint_0_arg1 → column {lambda_1_col}")
+    print(f"✓ lam_minmax_min_minconstraint_0_arg0 NOT in primal IndexMapping (correct)")
+    print(f"✓ lam_minmax_min_minconstraint_0_arg1 NOT in primal IndexMapping (correct)")
 
     # === VERIFICATION 3: Gradient has correct dimensions ===
     gradient = compute_objective_gradient(model)
 
-    assert (
-        gradient.num_cols == vars_after
-    ), f"Gradient should have {vars_after} columns, got {gradient.num_cols}"
+    assert gradient.num_cols == vars_after, (
+        f"Gradient should have {vars_after} columns, got {gradient.num_cols}"
+    )
 
     print(f"✓ Gradient has {gradient.num_cols} columns (includes auxiliary vars)")
 
     # === VERIFICATION 4: Jacobian has correct dimensions ===
     J_eq, J_ineq = compute_constraint_jacobian(model)
 
-    assert (
-        J_eq.num_cols == vars_after
-    ), f"Equality Jacobian should have {vars_after} columns, got {J_eq.num_cols}"
-    assert (
-        J_ineq.num_cols == vars_after
-    ), f"Inequality Jacobian should have {vars_after} columns, got {J_ineq.num_cols}"
+    assert J_eq.num_cols == vars_after, (
+        f"Equality Jacobian should have {vars_after} columns, got {J_eq.num_cols}"
+    )
+    assert J_ineq.num_cols == vars_after, (
+        f"Inequality Jacobian should have {vars_after} columns, got {J_ineq.num_cols}"
+    )
 
     print(f"✓ Equality Jacobian has {J_eq.num_cols} columns (includes auxiliary vars)")
     print(f"✓ Inequality Jacobian has {J_ineq.num_cols} columns (includes auxiliary vars)")
 
     # === VERIFICATION 5: Column alignment between gradient and Jacobian ===
     # Both should use the same IndexMapping (created fresh from same model state)
-    assert (
-        gradient.index_mapping.num_vars == J_eq.index_mapping.num_vars
-    ), "Gradient and Jacobian should have same number of columns"
+    assert gradient.index_mapping.num_vars == J_eq.index_mapping.num_vars, (
+        "Gradient and Jacobian should have same number of columns"
+    )
 
     # Check that specific variables map to same columns
     grad_x_col = gradient.index_mapping.get_col_id("x", ())
     jac_x_col = J_eq.index_mapping.get_col_id("x", ())
-    assert (
-        grad_x_col == jac_x_col
-    ), "Variable 'x' should map to same column in gradient and Jacobian"
+    assert grad_x_col == jac_x_col, (
+        "Variable 'x' should map to same column in gradient and Jacobian"
+    )
 
     grad_aux_col = gradient.index_mapping.get_col_id("aux_min_minconstraint_0", ())
     jac_aux_col = J_eq.index_mapping.get_col_id("aux_min_minconstraint_0", ())
-    assert (
-        grad_aux_col == jac_aux_col
-    ), "Auxiliary variable should map to same column in gradient and Jacobian"
+    assert grad_aux_col == jac_aux_col, (
+        "Auxiliary variable should map to same column in gradient and Jacobian"
+    )
 
     print("✓ Gradient and Jacobian column indices aligned")
     print(f"  - 'x' maps to column {grad_x_col} in both")
@@ -175,9 +185,9 @@ def test_auxiliary_variables_in_index_mapping():
         all_mapped_vars.add(var_name)
 
     all_model_vars = set(model.variables.keys())
-    assert (
-        all_mapped_vars == all_model_vars
-    ), f"All model variables should be mapped. Missing: {all_model_vars - all_mapped_vars}"
+    assert all_mapped_vars == all_model_vars, (
+        f"All model variables should be mapped. Missing: {all_model_vars - all_mapped_vars}"
+    )
 
     print(f"✓ All {len(all_model_vars)} variables mapped (no missing variables)")
 
