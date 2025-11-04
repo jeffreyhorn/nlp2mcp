@@ -36,14 +36,10 @@ Variables
 ;
 
 Positive Variables
-    lambda_min_min_constraint_0_arg0
-    lambda_min_min_constraint_0_arg1
-    lam_comp_min_min_constraint_0_arg0
-    lam_comp_min_min_constraint_0_arg1
+    lam_minmax_min_min_constraint_0_arg0
+    lam_minmax_min_min_constraint_0_arg1
     piL_x
     piL_y
-    piL_lambda_min_min_constraint_0_arg0
-    piL_lambda_min_min_constraint_0_arg1
 ;
 
 * ============================================
@@ -56,15 +52,11 @@ Positive Variables
 
 Equations
     stat_aux_min_min_constraint_0
-    stat_lambda_min_min_constraint_0_arg0
-    stat_lambda_min_min_constraint_0_arg1
     stat_x
     stat_y
     stat_z
-    comp_comp_min_min_constraint_0_arg0
-    comp_comp_min_min_constraint_0_arg1
-    comp_lo_lambda_min_min_constraint_0_arg0
-    comp_lo_lambda_min_min_constraint_0_arg1
+    comp_minmax_min_min_constraint_0_arg0
+    comp_minmax_min_min_constraint_0_arg1
     comp_lo_x
     comp_lo_y
     min_constraint
@@ -76,20 +68,16 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_aux_min_min_constraint_0.. 0 + (-1) * nu_min_constraint + 1 * lam_comp_min_min_constraint_0_arg0 + 1 * lam_comp_min_min_constraint_0_arg1 =E= 0;
-stat_lambda_min_min_constraint_0_arg0.. 0 + 0 * nu_min_constraint + 0 * lam_comp_min_min_constraint_0_arg0 + 0 * lam_comp_min_min_constraint_0_arg1 - piL_lambda_min_min_constraint_0_arg0 =E= 0;
-stat_lambda_min_min_constraint_0_arg1.. 0 + 0 * nu_min_constraint + 0 * lam_comp_min_min_constraint_0_arg0 + 0 * lam_comp_min_min_constraint_0_arg1 - piL_lambda_min_min_constraint_0_arg1 =E= 0;
-stat_x.. 0 + 0 * nu_min_constraint + (-1) * lam_comp_min_min_constraint_0_arg0 + 0 * lam_comp_min_min_constraint_0_arg1 - piL_x =E= 0;
-stat_y.. 0 + 0 * nu_min_constraint + 0 * lam_comp_min_min_constraint_0_arg0 + (-1) * lam_comp_min_min_constraint_0_arg1 - piL_y =E= 0;
-stat_z.. 1 + 1 * nu_min_constraint + 0 * lam_comp_min_min_constraint_0_arg0 + 0 * lam_comp_min_min_constraint_0_arg1 =E= 0;
+stat_aux_min_min_constraint_0.. 0 + (-1) * nu_min_constraint + 1 * lam_minmax_min_min_constraint_0_arg0 + 1 * lam_minmax_min_min_constraint_0_arg1 =E= 0;
+stat_x.. 0 + 0 * nu_min_constraint + (-1) * lam_minmax_min_min_constraint_0_arg0 + 0 * lam_minmax_min_min_constraint_0_arg1 - piL_x =E= 0;
+stat_y.. 0 + 0 * nu_min_constraint + 0 * lam_minmax_min_min_constraint_0_arg0 + (-1) * lam_minmax_min_min_constraint_0_arg1 - piL_y =E= 0;
+stat_z.. 1 + 1 * nu_min_constraint + 0 * lam_minmax_min_min_constraint_0_arg0 + 0 * lam_minmax_min_min_constraint_0_arg1 =E= 0;
 
 * Inequality complementarity equations
-comp_comp_min_min_constraint_0_arg0.. -(x - aux_min_min_constraint_0) =G= 0;
-comp_comp_min_min_constraint_0_arg1.. -(y - aux_min_min_constraint_0) =G= 0;
+comp_minmax_min_min_constraint_0_arg0.. -(aux_min_min_constraint_0 - x) =G= 0;
+comp_minmax_min_min_constraint_0_arg1.. -(aux_min_min_constraint_0 - y) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_lambda_min_min_constraint_0_arg0.. lambda_min_min_constraint_0_arg0 - 0 =G= 0;
-comp_lo_lambda_min_min_constraint_0_arg1.. lambda_min_min_constraint_0_arg1 - 0 =G= 0;
 comp_lo_x.. x - 1 =G= 0;
 comp_lo_y.. y - 2 =G= 0;
 
@@ -113,17 +101,13 @@ min_constraint.. z =E= aux_min_min_constraint_0;
 
 Model mcp_model /
     stat_aux_min_min_constraint_0.aux_min_min_constraint_0,
-    stat_lambda_min_min_constraint_0_arg0.lambda_min_min_constraint_0_arg0,
-    stat_lambda_min_min_constraint_0_arg1.lambda_min_min_constraint_0_arg1,
     stat_x.x,
     stat_y.y,
     stat_z.z,
-    comp_comp_min_min_constraint_0_arg0.lam_comp_min_min_constraint_0_arg0,
-    comp_comp_min_min_constraint_0_arg1.lam_comp_min_min_constraint_0_arg1,
+    comp_minmax_min_min_constraint_0_arg0.lam_minmax_min_min_constraint_0_arg0,
+    comp_minmax_min_min_constraint_0_arg1.lam_minmax_min_min_constraint_0_arg1,
     min_constraint.nu_min_constraint,
     objective.obj,
-    comp_lo_lambda_min_min_constraint_0_arg0.piL_lambda_min_min_constraint_0_arg0,
-    comp_lo_lambda_min_min_constraint_0_arg1.piL_lambda_min_min_constraint_0_arg1,
     comp_lo_x.piL_x,
     comp_lo_y.piL_y
 /;

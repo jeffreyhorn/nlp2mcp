@@ -48,6 +48,7 @@ def find_gams_executable():
         if result.returncode == 0 and result.stdout.strip():
             return Path(result.stdout.strip().split("\n")[0])
     except Exception:
+        # Ignore exceptions when searching for GAMS in PATH; not all systems will have it installed.
         pass
 
     return None
@@ -213,13 +214,13 @@ def test_min_max_mcp_generation():
     # Check for auxiliary variable
     assert "aux_min_min_constraint_0" in content, "Should have auxiliary variable"
 
-    # Check for complementarity conditions
-    assert "comp_comp_min_min_constraint_0_arg0" in content, "Should have comp for arg0"
-    assert "comp_comp_min_min_constraint_0_arg1" in content, "Should have comp for arg1"
+    # Check for complementarity conditions (new naming: comp_minmax_min_*)
+    assert "comp_minmax_min_min_constraint_0_arg0" in content, "Should have comp for arg0"
+    assert "comp_minmax_min_min_constraint_0_arg1" in content, "Should have comp for arg1"
 
-    # Check for lambda variables
-    assert "lam_comp_min_min_constraint_0_arg0" in content, "Should have lambda for arg0"
-    assert "lam_comp_min_min_constraint_0_arg1" in content, "Should have lambda for arg1"
+    # Check for lambda variables (new naming: lam_minmax_min_*)
+    assert "lam_minmax_min_min_constraint_0_arg0" in content, "Should have lambda for arg0"
+    assert "lam_minmax_min_min_constraint_0_arg1" in content, "Should have lambda for arg1"
 
     # Verify structure is correct
     assert "Model mcp_model" in content, "Should have MCP model declaration"

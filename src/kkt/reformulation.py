@@ -472,9 +472,10 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     aux_var_name = aux_mgr.generate_name("min", min_call.context)
 
     # Generate multiplier names (one per argument)
-    # Use standard KKT naming: lam_comp_<constraint_name>
+    # Use standard KKT naming: base constraint name is "minmax_min_*"
     # The complementarity.py will create equations named "comp_<constraint_name>"
-    # and multipliers named "lam_<constraint_name>", so we need to match that
+    # and multipliers named "lam_<constraint_name>", so the final names will be
+    # "comp_minmax_min_*" for equations and "lam_minmax_min_*" for multipliers.
     multiplier_names = []
     for i in range(len(min_call.args)):
         constraint_name = f"minmax_min_{min_call.context}_{min_call.index}_arg{i}"
@@ -567,9 +568,9 @@ def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     aux_var_name = aux_mgr.generate_name("max", max_call.context)
 
     # Generate multiplier names (one per argument)
-    # Use standard KKT naming: lam_<constraint_name>
-    # The complementarity.py will create equations named "comp_<constraint_name>"
-    # and multipliers named "lam_<constraint_name>", so we need to match that
+    # Use standard KKT naming: base constraint name is "minmax_max_*"
+    # The complementarity.py will create equations named "comp_minmax_max_*"
+    # and multipliers named "lam_minmax_max_*", so we need to match that
     multiplier_names = []
     for i in range(len(max_call.args)):
         constraint_name = f"minmax_max_{max_call.context}_{max_call.index}_arg{i}"
