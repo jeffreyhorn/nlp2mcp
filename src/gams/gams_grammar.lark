@@ -211,7 +211,7 @@ PLUS: /\+/
 MINUS: /-/
 TIMES: /\*/
 DIV: /\//
-POW: /\^/
+POW: "**" | "^"
 AND: /(?i:and)\b/
 OR: /(?i:or)\b/
 

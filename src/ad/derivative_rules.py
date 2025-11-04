@@ -423,8 +423,8 @@ def _diff_binary(
         denominator = Binary("*", b, b)
         return Binary("/", numerator, denominator)
 
-    elif op == "^":
-        # Power rule: d(a^b)/dx
+    elif op in ("^", "**"):
+        # Power rule: d(a^b)/dx or d(a**b)/dx
         # Convert to Call("power", ...) and use existing _diff_power logic
         base = expr.left
         exponent = expr.right
@@ -434,7 +434,7 @@ def _diff_binary(
     else:
         raise ValueError(
             f"Unsupported binary operation '{op}' for differentiation. "
-            f"Supported operations: +, -, *, /, ^."
+            f"Supported operations: +, -, *, /, ^, **."
         )
 
 
