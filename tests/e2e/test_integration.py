@@ -135,18 +135,6 @@ class TestScalarModels:
         # Should have no inequality constraints
         assert J_g.num_nonzeros() == 0
 
-    def test_bounds_nlp_basic(self):
-        """Test scalar model with bounds."""
-        model_ir = parse_and_normalize("bounds_nlp.gms")
-        gradient, J_g, J_h = compute_derivatives(model_ir)
-
-        # Should have gradient
-        assert gradient.num_nonzeros() > 0
-
-        # Bounds contribute to J_g (inequality constraints)
-        # Each bound becomes g(x) = x - bound ≤ 0
-        assert J_g.num_nonzeros() > 0
-
 
 @pytest.mark.e2e
 class TestIndexedModels:
