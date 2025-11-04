@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-The `bounds_nlp` model fails to solve with PATH solver (Model Status 5 - Locally Infeasible) when converted to MCP format. **Root cause identified:** The underlying NLP problem is **non-convex**, which means:
+Both `bounds_nlp` and `nonlinear_mix` models fail to solve with PATH solver (Model Status 5 - Locally Infeasible) when converted to MCP format. **Root cause identified:** The underlying NLP problems are **non-convex**, which means:
 
 1. There is no guarantee of a global optimum
 2. KKT conditions are necessary but not sufficient for optimality
@@ -16,9 +16,9 @@ The `bounds_nlp` model fails to solve with PATH solver (Model Status 5 - Locally
 
 This is **not a bug** in the nlp2mcp tool, but rather a **fundamental limitation** of applying KKT-based MCP reformulation to non-convex problems.
 
-## Problem Specification
+## Problem Specifications
 
-### Model: bounds_nlp.gms
+### Model 1: bounds_nlp.gms
 
 ```gams
 Variables x, y, obj;
@@ -38,6 +38,30 @@ Solve bounds_nlp using NLP minimizing obj;
 **Constraint:** `sin(x) + cos(y) = 0`  
 **Bounds:** `x ∈ [-1, 2]`, `y ∈ [0, ∞)`
 
+### Model 2: nonlinear_mix.gms
+
+```gams
+Variables x, y, obj;
+Equations objective, trig_balance, poly_balance;
+
+objective.. obj =e= x + y;
+trig_balance.. sin(x) + cos(y) =e= 0;
+poly_balance.. x^2 + y^2 =e= 4;
+
+x.lo = -2;  x.up = 2;
+y.lo = -2;  y.up = 2;
+
+Model nonlinear_mix / objective, trig_balance, poly_balance /;
+Solve nonlinear_mix using NLP minimizing obj;
+```
+
+**Objective:** Minimize `x + y`  
+**Constraints:** 
+- `sin(x) + cos(y) = 0`
+- `x² + y² = 4` (circle of radius 2)
+
+**Bounds:** `x, y ∈ [-2, 2]`
+
 ## Convexity Analysis
 
 ### Mathematical Background
@@ -48,7 +72,7 @@ For the KKT conditions to guarantee a global optimum, the problem must satisfy:
 
 For an equality constraint `h(x) = 0` to define a convex set, the function `h` must be **affine** (linear). Nonlinear equality constraints generally do NOT define convex sets.
 
-### Analysis of `sin(x) + cos(y) = 0`
+### Analysis 1: Constraint `sin(x) + cos(y) = 0` (both models)
 
 Let `g(x, y) = sin(x) + cos(y)`
 
@@ -74,6 +98,57 @@ H = [ ∂²g/∂x²    ∂²g/∂x∂y ]   [ -sin(x)    0      ]
 - `-cos(y)`: varies from -1 to +1 as y ranges over [0, ∞) (changes sign!)
 
 **Conclusion:** The Hessian is **indefinite** (has both positive and negative eigenvalues). The function `sin(x) + cos(y)` is **neither convex nor concave** over this domain.
+
+### Analysis 2: Constraint `x² + y² = 4` (nonlinear_mix only)
+
+Let `h(x, y) = x² + y²`
+
+**First derivatives:**
+- ∂h/∂x = 2x
+- ∂h/∂y = 2y
+
+**Second derivatives (Hessian):**
+```
+H = [ ∂²h/∂x²    ∂²h/∂x∂y ]   [ 2    0 ]
+    [ ∂²h/∂x∂y   ∂²h/∂y²  ] = [ 0    2 ]
+```
+
+**Eigenvalues of H:**
+- λ₁ = 2
+- λ₂ = 2
+
+**Analysis:** Both eigenvalues are positive, so `x² + y²` is a **convex function**.
+
+**However**, the constraint is an **equality**: `x² + y² = 4`
+
+**Critical Distinction:**
+- The **function** `f(x,y) = x² + y²` is convex
+- The **level set** `{(x,y) : x² + y² = 4}` is a **circle** (non-convex set!)
+
+**Proof that circle is non-convex:**
+Consider two points on the circle: `P₁ = (2, 0)` and `P₂ = (-2, 0)`
+- Both satisfy `x² + y² = 4`: ✓ `2² + 0² = 4` and `(-2)² + 0² = 4`
+- Midpoint: `M = (0, 0)`
+- Check: `0² + 0² = 0 ≠ 4`, so `M` is NOT on the circle
+
+Since the line segment between two feasible points contains infeasible points, the circle is **not a convex set**.
+
+**General Rule:** For a function `h(x)` and a constant `c`:
+- If `h` is convex: the set `{x : h(x) ≤ c}` is convex (sublevel set)
+- If `h` is convex: the set `{x : h(x) = c}` is generally **NOT** convex (unless `h` is affine)
+
+**Conclusion:** The constraint `x² + y² = 4` defines a non-convex feasible set (a circle).
+
+### Summary of Convexity Analysis
+
+**bounds_nlp:**
+- ❌ Constraint `sin(x) + cos(y) = 0` → non-convex (indefinite Hessian)
+- **Overall:** Non-convex problem
+
+**nonlinear_mix:**
+- ❌ Constraint `sin(x) + cos(y) = 0` → non-convex (indefinite Hessian)
+- ❌ Constraint `x² + y² = 4` → non-convex set (circle, not disk)
+- **Overall:** Non-convex problem (intersection of two non-convex constraints)
 
 ### Implications
 
