@@ -2,19 +2,22 @@
 
 This test verifies Unknown 6.4: Do auxiliary variables affect IndexMapping?
 
-The test demonstrates that the current architecture is CORRECT BY DESIGN:
+UPDATED AFTER BUG FIX (2025):
+The test now demonstrates the CORRECTED architecture:
 1. reformulate_model() adds auxiliary variables to model.variables (Step 2.5)
-2. build_index_mapping() is called during derivative computation (Step 3)
-3. Therefore, IndexMapping automatically includes all auxiliary variables
+2. reformulate_model() tracks complementarity multipliers separately (NOT as primal variables)
+3. build_index_mapping() is called during derivative computation (Step 3)
+4. Therefore, IndexMapping includes auxiliary variables but NOT multipliers
 
 This test creates a model with min() reformulation and verifies that:
-- Auxiliary variables (aux_min_*, lambda_min_*) are in model.variables
-- build_index_mapping() includes them in the mapping
-- Gradient and Jacobian have correct dimensions (including auxiliary vars)
+- Auxiliary variables (aux_min_*) are in model.variables and IndexMapping
+- Complementarity multipliers (lam_minmax_min_*) are NOT in model.variables
+- Multipliers are tracked in model.complementarity_multipliers
+- Gradient and Jacobian have correct dimensions (including auxiliary vars, excluding multipliers)
 - Column indices align between gradient and Jacobian
 
-FINDING: No code changes needed - architecture is correct by design.
-The integration point (Step 2.5) ensures auxiliary vars are always included.
+FINDING: Bug was fixed - multipliers were incorrectly added as primal variables.
+Now they're properly tracked separately and added during KKT assembly.
 """
 
 from src.ad.constraint_jacobian import compute_constraint_jacobian
@@ -89,8 +92,13 @@ def test_auxiliary_variables_in_index_mapping():
 
     # Check specific auxiliary variables exist
     assert "aux_min_minconstraint_0" in model.variables, "Auxiliary variable should exist"
-    assert "lambda_min_minconstraint_0_arg0" in model.variables, "Lambda multiplier should exist"
-    assert "lambda_min_minconstraint_0_arg1" in model.variables, "Lambda multiplier should exist"
+    # Multipliers are now tracked in complementarity_multipliers (not as variables)
+    assert (
+        "lam_minmax_min_minconstraint_0_arg0" in model.complementarity_multipliers
+    ), "Lambda multiplier should exist"
+    assert (
+        "lam_minmax_min_minconstraint_0_arg1" in model.complementarity_multipliers
+    ), "Lambda multiplier should exist"
 
     print("\n" + "=" * 70)
     print("UNKNOWN 6.4 VERIFICATION: Auxiliary Variables in IndexMapping")
@@ -111,16 +119,18 @@ def test_auxiliary_variables_in_index_mapping():
     aux_col = index_mapping.get_col_id("aux_min_minconstraint_0", ())
     assert aux_col is not None, "Auxiliary variable should be in IndexMapping"
 
-    lambda_0_col = index_mapping.get_col_id("lambda_min_minconstraint_0_arg0", ())
-    assert lambda_0_col is not None, "Lambda multiplier should be in IndexMapping"
+    # Multipliers should NOT be in IndexMapping (they're not primal variables)
+    # They're tracked in complementarity_multipliers and added during KKT assembly
+    lambda_0_col = index_mapping.get_col_id("lam_minmax_min_minconstraint_0_arg0", ())
+    assert lambda_0_col is None, "Lambda multiplier should NOT be in primal IndexMapping"
 
-    lambda_1_col = index_mapping.get_col_id("lambda_min_minconstraint_0_arg1", ())
-    assert lambda_1_col is not None, "Lambda multiplier should be in IndexMapping"
+    lambda_1_col = index_mapping.get_col_id("lam_minmax_min_minconstraint_0_arg1", ())
+    assert lambda_1_col is None, "Lambda multiplier should NOT be in primal IndexMapping"
 
     print(f"✓ IndexMapping has {index_mapping.num_vars} columns (includes auxiliary vars)")
     print(f"✓ aux_min_minconstraint_0 → column {aux_col}")
-    print(f"✓ lambda_min_minconstraint_0_arg0 → column {lambda_0_col}")
-    print(f"✓ lambda_min_minconstraint_0_arg1 → column {lambda_1_col}")
+    print("✓ lam_minmax_min_minconstraint_0_arg0 NOT in primal IndexMapping (correct)")
+    print("✓ lam_minmax_min_minconstraint_0_arg1 NOT in primal IndexMapping (correct)")
 
     # === VERIFICATION 3: Gradient has correct dimensions ===
     gradient = compute_objective_gradient(model)

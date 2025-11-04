@@ -94,10 +94,11 @@ def test_min_reformulation_in_mcp_emission():
 
     # Verify reformulation worked
     assert "aux_min_minconstraint_0" in model.variables
-    assert "lambda_min_minconstraint_0_arg0" in model.variables
-    assert "lambda_min_minconstraint_0_arg1" in model.variables
-    assert "comp_min_minconstraint_0_arg0" in model.equations
-    assert "comp_min_minconstraint_0_arg1" in model.equations
+    # Multipliers are now tracked in complementarity_multipliers (not as variables)
+    assert "lam_minmax_min_minconstraint_0_arg0" in model.complementarity_multipliers
+    assert "lam_minmax_min_minconstraint_0_arg1" in model.complementarity_multipliers
+    assert "minmax_min_minconstraint_0_arg0" in model.equations
+    assert "minmax_min_minconstraint_0_arg1" in model.equations
 
     # Compute derivatives
     gradient = compute_objective_gradient(model)
@@ -119,24 +120,23 @@ def test_min_reformulation_in_mcp_emission():
     assert "aux_min_minconstraint_0" in gams_code
     print("✓ Auxiliary variable declared: aux_min_minconstraint_0")
 
-    # 2. Multipliers declared as Positive Variables
-    assert "lambda_min_minconstraint_0_arg0" in gams_code
-    assert "lambda_min_minconstraint_0_arg1" in gams_code
-    print("✓ Multipliers declared: lambda_min_minconstraint_0_arg{0,1}")
+    # 2. Multipliers declared as Positive Variables (new naming convention)
+    assert "lam_minmax_min_minconstraint_0_arg0" in gams_code
+    assert "lam_minmax_min_minconstraint_0_arg1" in gams_code
+    print("✓ Multipliers declared: lam_minmax_min_minconstraint_0_arg{0,1}")
 
-    # 3. Auxiliary constraints defined
-    assert "comp_min_minconstraint_0_arg0" in gams_code
-    assert "comp_min_minconstraint_0_arg1" in gams_code
-    print("✓ Auxiliary constraints defined: comp_min_minconstraint_0_arg{0,1}")
+    # 3. Auxiliary constraints defined (new naming with comp_ prefix added by KKT)
+    assert "comp_minmax_min_minconstraint_0_arg0" in gams_code
+    assert "comp_minmax_min_minconstraint_0_arg1" in gams_code
+    print("✓ Auxiliary constraints defined: comp_minmax_min_minconstraint_0_arg{0,1}")
 
     # 4. Model declaration includes auxiliary complementarity pairs
-    # Note: The actual names use 'comp_comp_' prefix and 'lam_comp_' for multipliers
     model_start = gams_code.find("Model test_min_mcp /")
     model_end = gams_code.find("/;", model_start)
     model_block = gams_code[model_start:model_end]
 
-    assert "comp_comp_min_minconstraint_0_arg0.lam_comp_min_minconstraint_0_arg0" in model_block
-    assert "comp_comp_min_minconstraint_0_arg1.lam_comp_min_minconstraint_0_arg1" in model_block
+    assert "comp_minmax_min_minconstraint_0_arg0.lam_minmax_min_minconstraint_0_arg0" in model_block
+    assert "comp_minmax_min_minconstraint_0_arg1.lam_minmax_min_minconstraint_0_arg1" in model_block
     print("✓ Model declaration includes auxiliary complementarity pairs")
 
     # 5. Equation-variable count matches

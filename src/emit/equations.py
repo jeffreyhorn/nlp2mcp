@@ -111,7 +111,7 @@ def emit_equation_definitions(kkt: KKTSystem) -> str:
             lines.append(emit_equation_def(eq_name, eq_def))
         lines.append("")
 
-    # Inequality complementarity equations
+    # Inequality complementarity equations (includes min/max complementarity)
     if kkt.complementarity_ineq:
         lines.append("* Inequality complementarity equations")
         for eq_name in sorted(kkt.complementarity_ineq.keys()):
