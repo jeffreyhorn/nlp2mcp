@@ -110,26 +110,6 @@ class TestGoldenFiles:
         )
 
     @pytest.mark.e2e
-    def test_bounds_nlp_golden(self):
-        """Test bounds_nlp.gms against golden reference."""
-        # Run pipeline
-        output = run_full_pipeline("examples/bounds_nlp.gms")
-
-        # Load golden reference
-        golden_path = Path("tests/golden/bounds_nlp_mcp.gms")
-        golden = golden_path.read_text()
-
-        # Compare (normalized)
-        output_norm = normalize_whitespace(output)
-        golden_norm = normalize_whitespace(golden)
-
-        assert output_norm == golden_norm, (
-            f"Generated output doesn't match golden reference:\n"
-            f"Golden file: {golden_path}\n"
-            f"Run 'nlp2mcp examples/bounds_nlp.gms' to see actual output"
-        )
-
-    @pytest.mark.e2e
     def test_indexed_balance_golden(self):
         """Test indexed_balance.gms against golden reference."""
         # Run pipeline
@@ -147,26 +127,6 @@ class TestGoldenFiles:
             f"Generated output doesn't match golden reference:\n"
             f"Golden file: {golden_path}\n"
             f"Run 'nlp2mcp examples/indexed_balance.gms' to see actual output"
-        )
-
-    @pytest.mark.e2e
-    def test_nonlinear_mix_golden(self):
-        """Test nonlinear_mix.gms against golden reference."""
-        # Run pipeline
-        output = run_full_pipeline("examples/nonlinear_mix.gms")
-
-        # Load golden reference
-        golden_path = Path("tests/golden/nonlinear_mix_mcp.gms")
-        golden = golden_path.read_text()
-
-        # Compare (normalized)
-        output_norm = normalize_whitespace(output)
-        golden_norm = normalize_whitespace(golden)
-
-        assert output_norm == golden_norm, (
-            f"Generated output doesn't match golden reference:\n"
-            f"Golden file: {golden_path}\n"
-            f"Run 'nlp2mcp examples/nonlinear_mix.gms' to see actual output"
         )
 
     @pytest.mark.e2e

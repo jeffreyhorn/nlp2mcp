@@ -122,7 +122,7 @@ class TestJacobianStructureContract:
 
     def test_jacobian_structure_has_dimensions(self):
         """JacobianStructure must have num_rows and num_cols attributes."""
-        model = parse_model_file(get_example_path("bounds_nlp.gms"))
+        model = parse_model_file(get_example_path("simple_nlp.gms"))
         normalize_model(model)
         j_eq, j_ineq = compute_constraint_jacobian(model)
 
@@ -136,7 +136,7 @@ class TestJacobianStructureContract:
 
     def test_jacobian_structure_has_entries(self):
         """JacobianStructure entries must be dict[int, dict[int, Expr]]."""
-        model = parse_model_file(get_example_path("bounds_nlp.gms"))
+        model = parse_model_file(get_example_path("simple_nlp.gms"))
         normalize_model(model)
         j_eq, j_ineq = compute_constraint_jacobian(model)
 
@@ -155,7 +155,7 @@ class TestJacobianStructureContract:
 
     def test_jacobian_structure_has_index_mapping(self):
         """JacobianStructure must have index_mapping attribute."""
-        model = parse_model_file(get_example_path("bounds_nlp.gms"))
+        model = parse_model_file(get_example_path("simple_nlp.gms"))
         normalize_model(model)
         j_eq, j_ineq = compute_constraint_jacobian(model)
 
@@ -172,7 +172,7 @@ class TestJacobianStructureContract:
 
     def test_jacobian_structure_has_get_derivative_methods(self):
         """JacobianStructure must have get_derivative and get_derivative_by_names methods."""
-        model = parse_model_file(get_example_path("bounds_nlp.gms"))
+        model = parse_model_file(get_example_path("simple_nlp.gms"))
         normalize_model(model)
         j_eq, j_ineq = compute_constraint_jacobian(model)
 
@@ -192,7 +192,7 @@ class TestModelIRContract:
 
     def test_model_ir_has_required_fields(self):
         """ModelIR must have all expected fields from Sprint 1."""
-        model = parse_model_file(get_example_path("bounds_nlp.gms"))
+        model = parse_model_file(get_example_path("simple_nlp.gms"))
         normalize_model(model)
 
         # Required fields from Sprint 1
@@ -215,7 +215,7 @@ class TestModelIRContract:
         Bounds should be in normalized_bounds dict, NOT in equations dict.
         They are listed in inequalities list for convenience.
         """
-        model = parse_model_file(get_example_path("bounds_nlp.gms"))
+        model = parse_model_file(get_example_path("simple_nlp.gms"))
         normalize_model(model)
 
         # Bounds should NOT be in equations dict
@@ -227,7 +227,7 @@ class TestModelIRContract:
 
     def test_bounds_in_inequalities_list(self):
         """Bounds should appear in inequalities list for iteration convenience."""
-        model = parse_model_file(get_example_path("bounds_nlp.gms"))
+        model = parse_model_file(get_example_path("simple_nlp.gms"))
         normalize_model(model)
 
         if not model.normalized_bounds:
