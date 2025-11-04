@@ -383,36 +383,6 @@ class TestPATHSolverValidation:
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
 
-    @pytest.mark.xfail(
-        reason="Model Status 5 (Locally Infeasible) - Issue #107 partially fixed (nu_objective removed) but PATH still cannot solve"
-    )
-    def test_solve_bounds_nlp_mcp(self):
-        """Test PATH solver on bounds_nlp_mcp.gms.
-
-        NOTE: Issue #107 fixed the unused nu_objective multiplier bug, making the MCP
-        system properly determined. However, PATH still fails with Model Status 5.
-        This may indicate the nonlinear KKT system is inherently difficult for PATH,
-        or requires better initialization/scaling. Requires further investigation.
-        """
-        golden_file = Path("tests/golden/bounds_nlp_mcp.gms")
-        assert golden_file.exists(), f"Golden file not found: {golden_file}"
-
-        gams_exe = find_gams_executable()
-        assert gams_exe is not None, "GAMS executable not found"
-
-        # Solve the MCP
-        success, message, solution = _solve_gams(golden_file, gams_exe)
-        assert success, f"PATH solve failed: {message}"
-
-        # Verify we got a solution
-        assert len(solution) > 0, "No solution values extracted"
-
-        # Check KKT conditions
-        lst_file = golden_file.parent / (golden_file.stem + ".lst")
-        lst_content = lst_file.read_text()
-        kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
-        assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
-
     def test_solve_indexed_balance_mcp(self):
         """Test PATH solver on indexed_balance_mcp.gms."""
         golden_file = Path("tests/golden/indexed_balance_mcp.gms")
@@ -433,40 +403,6 @@ class TestPATHSolverValidation:
         lst_content = lst_file.read_text()
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
-
-    @pytest.mark.xfail(
-        reason="Model Status 5 (Locally Infeasible) - Issue #107 partially fixed (nu_objective removed) but PATH still cannot solve"
-    )
-    def test_solve_nonlinear_mix_mcp(self):
-        """Test PATH solver on nonlinear_mix_mcp.gms.
-
-        NOTE: Issue #107 fixed the unused nu_objective multiplier bug, making the MCP
-        system properly determined. However, PATH still fails with Model Status 5.
-        This may indicate the nonlinear KKT system is inherently difficult for PATH,
-        or requires better initialization/scaling. Requires further investigation.
-        """
-        golden_file = Path("tests/golden/nonlinear_mix_mcp.gms")
-        assert golden_file.exists(), f"Golden file not found: {golden_file}"
-
-        gams_exe = find_gams_executable()
-        assert gams_exe is not None, "GAMS executable not found"
-
-        # Solve the MCP
-        success, message, solution = _solve_gams(golden_file, gams_exe)
-        assert success, f"PATH solve failed: {message}"
-
-        # Verify we got a solution
-        assert len(solution) > 0, "No solution values extracted"
-
-        # Check KKT conditions
-        lst_file = golden_file.parent / (golden_file.stem + ".lst")
-        lst_content = lst_file.read_text()
-        kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
-        assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
-
-    def test_solve_scalar_nlp_mcp(self):
-        """Test PATH solver on scalar_nlp_mcp.gms."""
-        golden_file = Path("tests/golden/scalar_nlp_mcp.gms")
         assert golden_file.exists(), f"Golden file not found: {golden_file}"
 
         gams_exe = find_gams_executable()

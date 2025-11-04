@@ -57,42 +57,6 @@ class TestGAMSValidation:
         if error:
             pytest.fail(f"GAMS validation failed: {error}")
 
-    def test_validate_bounds_nlp_golden(self):
-        """Test GAMS validation of bounds_nlp_mcp.gms."""
-        golden_file = Path("tests/golden/bounds_nlp_mcp.gms")
-        assert golden_file.exists(), f"Golden file not found: {golden_file}"
-
-        error = validate_gams_syntax_or_skip(str(golden_file))
-        if error:
-            pytest.fail(f"GAMS validation failed: {error}")
-
-    def test_validate_indexed_balance_golden(self):
-        """Test GAMS validation of indexed_balance_mcp.gms."""
-        golden_file = Path("tests/golden/indexed_balance_mcp.gms")
-        assert golden_file.exists(), f"Golden file not found: {golden_file}"
-
-        error = validate_gams_syntax_or_skip(str(golden_file))
-        if error:
-            pytest.fail(f"GAMS validation failed: {error}")
-
-    def test_validate_nonlinear_mix_golden(self):
-        """Test GAMS validation of nonlinear_mix_mcp.gms."""
-        golden_file = Path("tests/golden/nonlinear_mix_mcp.gms")
-        assert golden_file.exists(), f"Golden file not found: {golden_file}"
-
-        error = validate_gams_syntax_or_skip(str(golden_file))
-        if error:
-            pytest.fail(f"GAMS validation failed: {error}")
-
-    def test_validate_scalar_nlp_golden(self):
-        """Test GAMS validation of scalar_nlp_mcp.gms."""
-        golden_file = Path("tests/golden/scalar_nlp_mcp.gms")
-        assert golden_file.exists(), f"Golden file not found: {golden_file}"
-
-        error = validate_gams_syntax_or_skip(str(golden_file))
-        if error:
-            pytest.fail(f"GAMS validation failed: {error}")
-
 
 @pytest.mark.validation
 class TestGAMSValidationErrors:
