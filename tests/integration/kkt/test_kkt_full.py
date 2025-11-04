@@ -85,7 +85,7 @@ class TestKKTFullAssembly:
         assert "stat_y" in kkt.stationarity
         assert "stat_obj" not in kkt.stationarity
 
-        assert len(kkt.multipliers_eq) == 2  # objdef and balance
+        assert len(kkt.multipliers_eq) == 1  # balance only (objdef doesn't need multiplier)
         assert len(kkt.multipliers_ineq) == 0
         assert len(kkt.multipliers_bounds_lo) == 0
         assert len(kkt.multipliers_bounds_up) == 0
@@ -355,8 +355,9 @@ class TestKKTFullAssembly:
         # Assemble KKT
         kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
 
-        # Objective defining equation should be in equalities
-        # (This is built by complementarity builder)
-        # Note: equality_eqs are built in complementarity but not stored directly
-        # We verify objdef has a multiplier
-        assert "nu_objdef" in kkt.multipliers_eq
+        # Objective defining equation should NOT have a multiplier
+        # It pairs with the objvar itself, not a multiplier
+        assert "nu_objdef" not in kkt.multipliers_eq
+
+        # The objective equation should still be in the equalities list
+        assert "objdef" in model.equalities

@@ -4,6 +4,7 @@ This module generates the Model MCP declaration with complementarity pairs.
 """
 
 from src.kkt.kkt_system import KKTSystem
+from src.kkt.naming import create_eq_multiplier_name
 from src.kkt.objective import extract_objective_info
 
 
@@ -80,22 +81,21 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
             # GAMS MCP syntax: list without indices - indexing is implicit
             pairs.append(f"    {eq_def.name}.{var_name}")
 
-    # 3. Equality constraints paired with free multipliers
-    # Include objective defining equation here
-    if kkt.multipliers_eq:
+    # 3. Equality constraints paired with free multipliers or objvar
+    # Iterate through all equalities to ensure objective equation is included
+    if kkt.model_ir.equalities:
         pairs.append("")
         pairs.append("    * Equality constraints")
-        for mult_name, mult_def in sorted(kkt.multipliers_eq.items()):
-            # Find the corresponding equation name
-            eq_name = mult_def.associated_constraint
-
+        for eq_name in sorted(kkt.model_ir.equalities):
             # Check if this is the objective defining equation
             if eq_name == obj_info.defining_equation:
-                # Pair with objvar, not the multiplier
+                # Pair with objvar, not a multiplier
                 # GAMS MCP syntax: list without indices - indexing is implicit
                 pairs.append(f"    {eq_name}.{obj_info.objvar}")
             else:
                 # Regular equality: pair with multiplier
+                # Find the multiplier name for this equation
+                mult_name = create_eq_multiplier_name(eq_name)
                 # GAMS MCP syntax: list without indices - indexing is implicit
                 pairs.append(f"    {eq_name}.{mult_name}")
 

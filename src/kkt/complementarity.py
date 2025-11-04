@@ -80,7 +80,7 @@ def build_complementarity_pairs(
         F_lam = Unary("-", g_expr)
 
         # Create multiplier name
-        lam_name = create_ineq_multiplier_name(eq_name, eq_def.domain)
+        lam_name = create_ineq_multiplier_name(eq_name)
 
         # Create complementarity equation
         comp_eq = EquationDef(
@@ -129,7 +129,7 @@ def build_complementarity_pairs(
         F_piL = Binary("-", VarRef(var_name, indices), Const(bound_def.value))
 
         # Create multiplier name
-        piL_name = create_bound_lo_multiplier_name(var_name, indices)
+        piL_name = create_bound_lo_multiplier_name(var_name)
 
         # Create complementarity equation
         comp_eq = EquationDef(
@@ -150,7 +150,7 @@ def build_complementarity_pairs(
         F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, indices))
 
         # Create multiplier name
-        piU_name = create_bound_up_multiplier_name(var_name, indices)
+        piU_name = create_bound_up_multiplier_name(var_name)
 
         # Create complementarity equation
         comp_eq = EquationDef(

@@ -37,7 +37,6 @@ Parameters
 Variables
     supply(i)
     obj
-    nu_objective
     nu_balance(i)
 ;
 

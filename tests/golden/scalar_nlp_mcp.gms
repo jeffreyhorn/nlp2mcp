@@ -33,7 +33,6 @@ Scalars
 Variables
     x
     obj
-    nu_objective
     nu_stationarity
 ;
 

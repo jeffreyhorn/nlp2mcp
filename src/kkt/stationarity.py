@@ -197,11 +197,11 @@ def _build_indexed_stationarity_expr(
     has_upper = any((var_name, indices) in kkt.multipliers_bounds_up for _, indices in instances)
 
     if has_lower:
-        piL_name = create_bound_lo_multiplier_name(var_name, domain)
+        piL_name = create_bound_lo_multiplier_name(var_name)
         expr = Binary("-", expr, MultiplierRef(piL_name, domain))
 
     if has_upper:
-        piU_name = create_bound_up_multiplier_name(var_name, domain)
+        piU_name = create_bound_up_multiplier_name(var_name)
         expr = Binary("+", expr, MultiplierRef(piU_name, domain))
 
     return expr
@@ -328,7 +328,7 @@ def _add_indexed_jacobian_terms(
                 indexed_deriv = _replace_indices_in_expr(derivative, var_domain)
 
                 # Get base multiplier name (without element suffixes)
-                mult_base_name = name_func(eq_name_base, mult_domain)
+                mult_base_name = name_func(eq_name_base)
                 mult_ref = MultiplierRef(mult_base_name, mult_domain)
                 term: Expr = Binary("*", indexed_deriv, mult_ref)
 
@@ -354,7 +354,7 @@ def _add_indexed_jacobian_terms(
                 expr = Binary("+", expr, term)
         else:
             # Scalar constraint
-            mult_name = name_func(eq_name_base, ())
+            mult_name = name_func(eq_name_base)
 
             if mult_name in multipliers:
                 mult_ref = MultiplierRef(mult_name, ())
@@ -405,12 +405,12 @@ def _build_stationarity_expr(
     # Subtract π^L (lower bound multiplier, if exists)
     key = (var_name, var_indices)
     if key in kkt.multipliers_bounds_lo:
-        piL_name = create_bound_lo_multiplier_name(var_name, var_indices)
+        piL_name = create_bound_lo_multiplier_name(var_name)
         expr = Binary("-", expr, MultiplierRef(piL_name, var_indices))
 
     # Add π^U (upper bound multiplier, if exists)
     if key in kkt.multipliers_bounds_up:
-        piU_name = create_bound_up_multiplier_name(var_name, var_indices)
+        piU_name = create_bound_up_multiplier_name(var_name)
         expr = Binary("+", expr, MultiplierRef(piU_name, var_indices))
 
     return expr
@@ -447,7 +447,7 @@ def _add_jacobian_transpose_terms_scalar(
             continue
 
         # Get multiplier name for this constraint
-        mult_name = name_func(eq_name, eq_indices)
+        mult_name = name_func(eq_name)
 
         # Check if multiplier exists (it should if we built multipliers correctly)
         if mult_name not in multipliers:

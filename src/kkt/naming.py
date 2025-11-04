@@ -18,85 +18,97 @@ For indexed multipliers, the indices are preserved:
 from __future__ import annotations
 
 
-def create_eq_multiplier_name(eq_name: str, indices: tuple[str, ...] = ()) -> str:
+def create_eq_multiplier_name(eq_name: str) -> str:
     """Create multiplier name for an equality constraint.
 
-    Format: nu_<eqname> or nu_<eqname>(i,j) for indexed
+    Format: nu_<eqname>
+
+    Note: Indexed multipliers use the same base name as scalar ones.
+    In GAMS, the multiplier variable inherits the domain from the equation
+    it's paired with, so we don't include indices in the variable name.
 
     Args:
         eq_name: Name of the equality constraint
-        indices: Index tuple for indexed constraints
 
     Returns:
         Multiplier variable name
 
     Example:
-        >>> create_eq_multiplier_name("balance", ("i",))
+        >>> create_eq_multiplier_name("balance")
         'nu_balance'
-        >>> create_eq_multiplier_name("flow", ("i", "j"))
+        >>> create_eq_multiplier_name("flow")
         'nu_flow'
     """
     return f"nu_{eq_name}"
 
 
-def create_ineq_multiplier_name(eq_name: str, indices: tuple[str, ...] = ()) -> str:
+def create_ineq_multiplier_name(eq_name: str) -> str:
     """Create multiplier name for an inequality constraint.
 
-    Format: lam_<eqname> or lam_<eqname>(i,j) for indexed
+    Format: lam_<eqname>
+
+    Note: Indexed multipliers use the same base name as scalar ones.
+    In GAMS, the multiplier variable inherits the domain from the equation
+    it's paired with, so we don't include indices in the variable name.
 
     Args:
         eq_name: Name of the inequality constraint
-        indices: Index tuple for indexed constraints
 
     Returns:
         Multiplier variable name
 
     Example:
-        >>> create_ineq_multiplier_name("capacity", ("i",))
+        >>> create_ineq_multiplier_name("capacity")
         'lam_capacity'
-        >>> create_ineq_multiplier_name("demand", ())
+        >>> create_ineq_multiplier_name("demand")
         'lam_demand'
     """
     return f"lam_{eq_name}"
 
 
-def create_bound_lo_multiplier_name(var_name: str, indices: tuple[str, ...] = ()) -> str:
+def create_bound_lo_multiplier_name(var_name: str) -> str:
     """Create multiplier name for a lower bound constraint.
 
-    Format: piL_<varname> or piL_<varname>(i,j) for indexed
+    Format: piL_<varname>
+
+    Note: Indexed multipliers use the same base name as scalar ones.
+    In GAMS, the multiplier variable inherits the domain from the bound
+    constraint it's paired with, so we don't include indices in the variable name.
 
     Args:
         var_name: Name of the variable
-        indices: Index tuple for indexed variables
 
     Returns:
         Multiplier variable name
 
     Example:
-        >>> create_bound_lo_multiplier_name("x", ("i",))
+        >>> create_bound_lo_multiplier_name("x")
         'piL_x'
-        >>> create_bound_lo_multiplier_name("y", ())
+        >>> create_bound_lo_multiplier_name("y")
         'piL_y'
     """
     return f"piL_{var_name}"
 
 
-def create_bound_up_multiplier_name(var_name: str, indices: tuple[str, ...] = ()) -> str:
+def create_bound_up_multiplier_name(var_name: str) -> str:
     """Create multiplier name for an upper bound constraint.
 
-    Format: piU_<varname> or piU_<varname>(i,j) for indexed
+    Format: piU_<varname>
+
+    Note: Indexed multipliers use the same base name as scalar ones.
+    In GAMS, the multiplier variable inherits the domain from the bound
+    constraint it's paired with, so we don't include indices in the variable name.
 
     Args:
         var_name: Name of the variable
-        indices: Index tuple for indexed variables
 
     Returns:
         Multiplier variable name
 
     Example:
-        >>> create_bound_up_multiplier_name("x", ("i",))
+        >>> create_bound_up_multiplier_name("x")
         'piU_x'
-        >>> create_bound_up_multiplier_name("z", ("i", "j"))
+        >>> create_bound_up_multiplier_name("z")
         'piU_z'
     """
     return f"piU_{var_name}"
