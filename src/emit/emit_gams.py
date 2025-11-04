@@ -4,6 +4,7 @@ This module orchestrates all emission components to generate a complete
 GAMS MCP file from a KKT system.
 """
 
+from src.config import Config
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
     emit_original_aliases,
@@ -14,7 +15,12 @@ from src.emit.templates import emit_equation_definitions, emit_equations, emit_v
 from src.kkt.kkt_system import KKTSystem
 
 
-def emit_gams_mcp(kkt: KKTSystem, model_name: str = "mcp_model", add_comments: bool = True) -> str:
+def emit_gams_mcp(
+    kkt: KKTSystem,
+    model_name: str = "mcp_model",
+    add_comments: bool = True,
+    config: Config | None = None,
+) -> str:
     """Generate complete GAMS MCP code from KKT system.
 
     This function orchestrates all emission components to produce a complete,
@@ -99,6 +105,25 @@ def emit_gams_mcp(kkt: KKTSystem, model_name: str = "mcp_model", add_comments: b
     variables_code = emit_variables(kkt)
     sections.append(variables_code)
     sections.append("")
+
+    # Variable initialization (if smooth_abs is enabled)
+    if config and config.smooth_abs:
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* Variable Initialization")
+            sections.append("* ============================================")
+            sections.append("")
+            sections.append("* Initialize variables to avoid domain errors with smooth abs()")
+            sections.append("* The smooth approximation sqrt(x^2 + ε) can cause GAMS")
+            sections.append("* domain errors during model generation if variables default to")
+            sections.append("* values that make expressions negative under power operations.")
+            sections.append("")
+
+        # Initialize all primal variables to a safe non-zero value
+        for var_name in kkt.model_ir.variables:
+            sections.append(f"{var_name}.l = 1;")
+
+        sections.append("")
 
     # Equations
     if add_comments:

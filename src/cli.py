@@ -264,7 +264,9 @@ def main(
             click.echo("Generating GAMS MCP code...")
 
         add_comments = not no_comments
-        gams_code = emit_gams_mcp(kkt, model_name=model_name, add_comments=add_comments)
+        gams_code = emit_gams_mcp(
+            kkt, model_name=model_name, add_comments=add_comments, config=config
+        )
 
         # Step 7: Write output
         if output:
