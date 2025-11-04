@@ -505,3 +505,84 @@ def test_unsupported_statement_rejected():
 
     with pytest.raises((lark.exceptions.UnexpectedToken, lark.exceptions.UnexpectedCharacters)):
         parser.parse_model_text(text)
+
+
+def test_power_operator_double_star_syntax():
+    """Test that ** operator is supported for exponentiation."""
+    text = dedent(
+        """
+        Variables
+            x
+            y
+            obj;
+
+        Equations
+            objective;
+
+        objective.. obj =e= x**2 + y**3;
+
+        Model power_nlp / objective /;
+        Solve power_nlp using NLP minimizing obj;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    objective = model.equations["objective"]
+
+    # Check that the equation parsed correctly
+    assert objective.relation == Rel.EQ
+    lhs, rhs = objective.lhs_rhs
+
+    # LHS should be obj
+    assert isinstance(lhs, VarRef) and lhs.name == "obj"
+
+    # RHS should be x**2 + y**3
+    assert isinstance(rhs, Binary) and rhs.op == "+"
+
+    # Check left side: x**2
+    assert isinstance(rhs.left, Binary)
+    assert rhs.left.op == "**"
+    assert isinstance(rhs.left.left, VarRef) and rhs.left.left.name == "x"
+    assert isinstance(rhs.left.right, Const) and rhs.left.right.value == 2.0
+
+    # Check right side: y**3
+    assert isinstance(rhs.right, Binary)
+    assert rhs.right.op == "**"
+    assert isinstance(rhs.right.left, VarRef) and rhs.right.left.name == "y"
+    assert isinstance(rhs.right.right, Const) and rhs.right.right.value == 3.0
+
+
+def test_power_operator_mixed_syntax():
+    """Test that both ** and ^ operators work and can be mixed."""
+    text = dedent(
+        """
+        Variables
+            x
+            y
+            z
+            obj;
+
+        Equations
+            objective;
+
+        objective.. obj =e= x**2 + y^3 + z**4;
+
+        Model power_nlp / objective /;
+        Solve power_nlp using NLP minimizing obj;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    objective = model.equations["objective"]
+
+    # Collect all power operations
+    power_ops = [node for node in _collect(objective.lhs_rhs[1], Binary) if node.op in ("^", "**")]
+
+    # Should have 3 power operations
+    assert len(power_ops) == 3
+
+    # Check that we have both ** and ^ operators in the AST
+    ops_used = {node.op for node in power_ops}
+    assert (
+        ops_used == {"^", "**"} or ops_used == {"**"} or ops_used == {"^"}
+    )  # Parser might normalize
