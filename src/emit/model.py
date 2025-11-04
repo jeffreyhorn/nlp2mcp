@@ -71,7 +71,7 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                     # stat_x.x (not stat_x(i).x(i)) - indexing is implicit
                     pairs.append(f"    {eq_name}.{var_name}")
 
-    # 2. Inequality complementarities
+    # 2. Inequality complementarities (includes min/max complementarity)
     if kkt.complementarity_ineq:
         pairs.append("")
         pairs.append("    * Inequality complementarities")

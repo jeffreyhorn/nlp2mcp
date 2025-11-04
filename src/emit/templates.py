@@ -69,6 +69,9 @@ def emit_variables(kkt: KKTSystem) -> str:
     for (_var_name, _indices), mult_def in kkt.multipliers_bounds_up.items():
         var_groups[VarKind.POSITIVE].append((mult_def.name, mult_def.domain))
 
+    # Note: Min/max complementarity multipliers are added automatically as part of
+    # kkt.multipliers_ineq (they're regular inequality multipliers)
+
     # Emit blocks
     lines: list[str] = []
 
@@ -151,7 +154,7 @@ def emit_equations(kkt: KKTSystem) -> str:
         else:
             lines.append(f"    {eq_name}")
 
-    # Inequality complementarity equations
+    # Inequality complementarity equations (includes min/max complementarity)
     for eq_name in sorted(kkt.complementarity_ineq.keys()):
         comp_pair = kkt.complementarity_ineq[eq_name]
         eq_def = comp_pair.equation

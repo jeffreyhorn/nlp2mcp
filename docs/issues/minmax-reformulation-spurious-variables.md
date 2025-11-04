@@ -421,3 +421,77 @@ This allows the multipliers to exist in the variable list (for MCP pairing) but 
 4. ⏳ Test with `min_max_test.gms`
 5. ⏳ Add validation tests
 6. ⏳ Test with other min/max examples (once available)
+
+---
+
+## Update 2025-11-03: Partial Fix and Remaining Issue
+
+### Progress Made
+
+Fixed the spurious lambda variables issue by:
+1. Not adding complementarity multipliers as primal variables
+2. Using standard KKT naming convention (`lam_<constraint>`)
+3. Letting normal KKT assembly create multipliers
+4. Fixed constraint naming to avoid double `comp_` prefix
+
+**Result:** System now has correct structure (10 variables, 10 equations instead of 14/14)
+
+### Remaining Issue: Mathematical Infeasibility
+
+PATH solver now immediately detects infeasibility in three equations:
+- `stat_z`: `1 + ν = 0` → `ν = -1`
+- `min_constraint`: `z = aux`
+- `stat_aux`: `-ν + λ₀ + λ₁ = 0` → `λ₀ + λ₁ = -1`
+
+Since λ₀, λ₁ >= 0, the system `λ₀ + λ₁ = -1` is impossible.
+
+### Root Cause Analysis
+
+The issue is fundamental to how min/max appears in the objective:
+
+**Problem:** minimize z where z = min(x, y)
+
+**Epigraph reformulation:**
+- Replace z = min(x, y) with z = aux
+- Add constraints: aux <= x, aux <= y
+- This creates: minimize z s.t. z = aux, aux <= x, aux <= y
+
+**KKT Stationarity:**
+- ∂L/∂z = 1 + ν = 0 → ν = -1 (negative multiplier!)
+- ∂L/∂aux = -ν + λ₀ + λ₁ = 0 → λ₀ + λ₁ = ν = -1 (infeasible!)
+
+The negative multiplier ν = -1 indicates the constraint z = aux is "pulling in the wrong direction" for a minimization problem.
+
+### Hypothesis
+
+The standard epigraph reformulation may not be correct for min/max that DEFINES the objective variable. The reformulation works for:
+- Constraints containing min/max: `g(x) <= min(a, b)`
+- Objectives directly minimizing min: `minimize min(a, b)` 
+
+But NOT for:
+- Objective variable defined by min: `minimize z` where `z = min(a, b)`
+
+### Possible Solutions
+
+1. **Different reformulation:** Instead of `z = aux` with `aux <= x, aux <= y`, use direct constraints `z <= x, z <= y` without auxiliary variable
+
+2. **Reformulate at objective level:** Transform `minimize obj` where `obj = z, z = min(x,y)` into `minimize aux` with `aux <= x, aux <= y` directly
+
+3. **Accept limitation:** Document that min/max in objective-defining equations requires manual reformulation
+
+### Next Steps
+
+- Research standard approaches for min/max in objective functions
+- Test simpler case: `minimize min(x, y)` directly (no intermediate z variable)
+- Consult MCP/PATH documentation on non-smooth objectives
+- Consider whether this is a valid use case or should be rejected with helpful error
+
+---
+
+## Status
+
+**Current state:** Code structure is correct, but mathematical formulation needs revision for min/max in objective-defining equations.
+
+**Branch:** `test/minmax-path-solver-validation`
+
+**Recommendation:** Merge structural fixes, create new issue for mathematical reformulation.

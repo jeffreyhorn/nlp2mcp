@@ -47,6 +47,13 @@ class ModelIR:
     inequalities: list[str] = field(default_factory=list)  # equation names with <=0 form
     normalized_bounds: dict[str, NormalizedEquation] = field(default_factory=dict)
 
+    # Min/max reformulation tracking
+    # These multipliers are paired with complementarity constraints in MCP
+    # They should NOT have stationarity equations generated for them
+    complementarity_multipliers: dict[str, str] = field(
+        default_factory=dict
+    )  # mult_name -> constraint_name
+
     def add_set(self, s: SetDef) -> None:
         self.sets[s.name] = s
 

@@ -472,9 +472,14 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     aux_var_name = aux_mgr.generate_name("min", min_call.context)
 
     # Generate multiplier names (one per argument)
+    # Use standard KKT naming: lam_comp_<constraint_name>
+    # The complementarity.py will create equations named "comp_<constraint_name>"
+    # and multipliers named "lam_<constraint_name>", so we need to match that
     multiplier_names = []
     for i in range(len(min_call.args)):
-        mult_name = f"lambda_min_{min_call.context}_{min_call.index}_arg{i}"
+        constraint_name = f"minmax_min_{min_call.context}_{min_call.index}_arg{i}"
+        # The multiplier will be named lam_<constraint> by KKT assembly
+        mult_name = f"lam_{constraint_name}"
         multiplier_names.append(mult_name)
 
     # Create complementarity constraints: xᵢ - z_min >= 0
@@ -482,19 +487,20 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     aux_var_ref = VarRef(aux_var_name, ())
 
     for i, arg_expr in enumerate(min_call.args):
-        # Constraint: arg - aux_var >= 0
-        # In GAMS MCP form: arg - aux_var =g= 0 paired with multiplier
-        constraint_name = f"comp_min_{min_call.context}_{min_call.index}_arg{i}"
+        # Constraint: aux_var - arg <= 0  (equivalent to arg >= aux_var)
+        # KKT system expects inequalities in form g(x) <= 0
+        # Note: Don't use "comp_" prefix as complementarity.py adds it
+        constraint_name = f"minmax_min_{min_call.context}_{min_call.index}_arg{i}"
 
-        # LHS: arg - aux_var
+        # LHS: aux_var - arg  (so constraint is aux_var - arg <= 0, i.e., arg >= aux_var)
         # RHS: 0
-        lhs = Binary("-", arg_expr, aux_var_ref)
+        lhs = Binary("-", aux_var_ref, arg_expr)
         rhs = Const(0.0)
 
         constraint = EquationDef(
             name=constraint_name,
             domain=(),  # Scalar for now; indexed handling in future
-            relation=Rel.GE,  # >= 0
+            relation=Rel.LE,  # <= 0
             lhs_rhs=(lhs, rhs),
         )
 
@@ -561,9 +567,14 @@ def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     aux_var_name = aux_mgr.generate_name("max", max_call.context)
 
     # Generate multiplier names (one per argument)
+    # Use standard KKT naming: lam_<constraint_name>
+    # The complementarity.py will create equations named "comp_<constraint_name>"
+    # and multipliers named "lam_<constraint_name>", so we need to match that
     multiplier_names = []
     for i in range(len(max_call.args)):
-        mult_name = f"mu_max_{max_call.context}_{max_call.index}_arg{i}"
+        constraint_name = f"minmax_max_{max_call.context}_{max_call.index}_arg{i}"
+        # The multiplier will be named lam_<constraint> by KKT assembly
+        mult_name = f"lam_{constraint_name}"
         multiplier_names.append(mult_name)
 
     # Create complementarity constraints: w_max - xᵢ >= 0
@@ -571,19 +582,20 @@ def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     aux_var_ref = VarRef(aux_var_name, ())
 
     for i, arg_expr in enumerate(max_call.args):
-        # Constraint: aux_var - arg >= 0
-        # In GAMS MCP form: aux_var - arg =g= 0 paired with multiplier
-        constraint_name = f"comp_max_{max_call.context}_{max_call.index}_arg{i}"
+        # Constraint: arg - aux_var <= 0  (equivalent to aux_var >= arg)
+        # KKT system expects inequalities in form g(x) <= 0
+        # Note: Don't use "comp_" prefix as complementarity.py adds it
+        constraint_name = f"minmax_max_{max_call.context}_{max_call.index}_arg{i}"
 
-        # LHS: aux_var - arg (note: opposite of min)
+        # LHS: arg - aux_var  (so constraint is arg - aux_var <= 0, i.e., aux_var >= arg)
         # RHS: 0
-        lhs = Binary("-", aux_var_ref, arg_expr)
+        lhs = Binary("-", arg_expr, aux_var_ref)
         rhs = Const(0.0)
 
         constraint = EquationDef(
             name=constraint_name,
             domain=(),  # Scalar for now; indexed handling in future
-            relation=Rel.GE,  # >= 0
+            relation=Rel.LE,  # <= 0
             lhs_rhs=(lhs, rhs),
         )
 
@@ -690,25 +702,24 @@ def reformulate_model(model: ModelIR) -> None:
         )
         model.add_var(aux_var)
 
-        # 2. Add multiplier variables to model (all positive)
-        for mult_name in result.multiplier_names:
-            mult_var = VariableDef(
-                name=mult_name,
-                domain=(),
-                kind=VarKind.POSITIVE,  # Multipliers >= 0
-                lo=0.0,
-                up=None,
-            )
-            model.add_var(mult_var)
+        # 2. Track complementarity multipliers (do NOT add as primal variables!)
+        # These multipliers will be paired with constraints in the MCP model.
+        # They should NOT have stationarity equations generated for them.
+        # The MCP emitter will declare them in the Positive Variables section
+        # and pair them with their constraints in the Model declaration.
+        for i, mult_name in enumerate(result.multiplier_names):
+            constraint_name = result.constraints[i][0]
+            model.complementarity_multipliers[mult_name] = constraint_name
 
         # 3. Add complementarity constraints to model
-        # These are inequality constraints (Rel.GE or Rel.LE), so they need to be
-        # added to both model.equations (for storage) and model.inequalities (for
-        # proper classification in KKT assembly)
-        for constraint_name, constraint_def in result.constraints:
+        # IMPORTANT: Do NOT add these to model.inequalities!
+        # These are special complementarity constraints that will be paired
+        # with their multipliers directly in the MCP model declaration.
+        # They should NOT go through the regular KKT assembly process.
+        for _constraint_name, constraint_def in result.constraints:
             model.add_equation(constraint_def)
-            # Add to inequalities list so compute_constraint_jacobian includes them in J_ineq
-            model.inequalities.append(constraint_name)
+            # Note: We do NOT add to model.inequalities here because these
+            # constraints are handled specially via complementarity_multipliers
 
         # 4. Replace min/max call with auxiliary variable in original equation
         eq_def = model.equations[eq_name]
