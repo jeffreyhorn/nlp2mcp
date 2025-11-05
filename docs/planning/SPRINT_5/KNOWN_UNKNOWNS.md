@@ -1,0 +1,1406 @@
+# Sprint 5 Known Unknowns
+
+**Created:** November 5, 2025  
+**Status:** Active - Pre-Sprint 5  
+**Purpose:** Proactive documentation of assumptions and unknowns for Sprint 5 production hardening and release
+
+---
+
+## Overview
+
+This document identifies all assumptions and unknowns for Sprint 5 features **before** implementation begins. This proactive approach continues the highly successful Sprint 4 methodology that prevented all late-stage surprises.
+
+**Sprint 5 Scope:**
+1. Fix min/max reformulation bug
+2. Complete PATH solver validation
+3. Production hardening (large models, error recovery, memory optimization)
+4. PyPI packaging and release automation
+5. Documentation polish (tutorial, FAQ, API reference)
+
+**Lesson from Sprint 4:** The Known Unknowns process achieved ⭐⭐⭐⭐⭐ rating - 23 unknowns identified, 10 resolved proactively, 13 resolved on schedule, **zero late surprises**. Continue this approach for Sprint 5.
+
+---
+
+## How to Use This Document
+
+### Before Sprint 5 Day 1
+1. Research and verify all **Critical** and **High** priority unknowns
+2. Create minimal test cases for validation
+3. Document findings in "Verification Results" sections
+4. Update status: 🔍 INCOMPLETE → ✅ COMPLETE or ❌ WRONG (with correction)
+
+### During Sprint 5
+1. Review daily during standup
+2. Add newly discovered unknowns
+3. Update with implementation findings
+4. Move resolved items to "Confirmed Knowledge"
+
+### Priority Definitions
+- **Critical:** Wrong assumption will break core functionality or require major refactoring (>8 hours)
+- **High:** Wrong assumption will cause significant rework (4-8 hours)
+- **Medium:** Wrong assumption will cause minor issues (2-4 hours)
+- **Low:** Wrong assumption has minimal impact (<2 hours)
+
+---
+
+## Summary Statistics
+
+**Total Unknowns:** 22  
+**By Priority:**
+- Critical: 3 (unknowns that could derail sprint)
+- High: 8 (unknowns requiring upfront research)
+- Medium: 7 (unknowns that can be resolved during implementation)
+- Low: 4 (nice-to-know, low impact)
+
+**By Category:**
+- Category 1 (Min/Max Fix): 5 unknowns
+- Category 2 (PATH Validation): 4 unknowns
+- Category 3 (Production Hardening): 5 unknowns
+- Category 4 (PyPI Packaging): 4 unknowns
+- Category 5 (Documentation): 4 unknowns
+
+**Estimated Research Time:** 12-16 hours (spread across prep phase)
+
+---
+
+## Table of Contents
+
+1. [Category 1: Min/Max Reformulation Fix](#category-1-minmax-reformulation-fix)
+2. [Category 2: PATH Solver Validation](#category-2-path-solver-validation)
+3. [Category 3: Production Hardening](#category-3-production-hardening)
+4. [Category 4: PyPI Packaging](#category-4-pypi-packaging)
+5. [Category 5: Documentation Polish](#category-5-documentation-polish)
+
+---
+
+# Category 1: Min/Max Reformulation Fix
+
+## Unknown 1.1: Does Strategy 2 (Direct Constraints) handle all objective-defining cases?
+
+### Priority
+**Critical** - Core fix for Priority 1
+
+### Assumption
+Strategy 2 from `docs/research/minmax_objective_reformulation.md` (converting `minimize z` where `z = min(x,y)` to direct constraints `z ≤ x, z ≤ y`) works for all cases where min/max defines the objective variable.
+
+### Research Questions
+1. Does it work for `maximize z` where `z = max(x,y)`? (symmetric case)
+2. Does it work for `minimize z` where `z = max(x,y)`? (opposite sense)
+3. Does it work for `maximize z` where `z = min(x,y)`? (opposite sense)
+4. What about chains: `obj = z1`, `z1 = z2`, `z2 = min(x,y)`?
+
+### How to Verify
+
+**Test 1: Maximize with max (should work - symmetric)**
+```gams
+Variables x, y, z, obj;
+x.up = 10; y.up = 20;
+
+objective.. obj =e= z;
+max_constraint.. z =e= max(x, y);
+
+Solve model using NLP maximizing obj;
+```
+Expected: z* = 20 (maximize the maximum)
+
+**Test 2: Minimize with max (problematic - opposite sense)**
+```gams
+Variables x, y, z, obj;
+x.lo = 1; y.lo = 2;
+
+objective.. obj =e= z;
+max_constraint.. z =e= max(x, y);
+
+Solve model using NLP minimizing obj;
+```
+Question: Can we use `z ≥ x, z ≥ y` when minimizing? The objective will push z down, but the constraints push it up. Will it converge to min(x,y) anyway?
+
+**Test 3: Chain of definitions**
+```gams
+objective.. obj =e= z1;
+eq1.. z1 =e= z2;
+eq2.. z2 =e= min(x, y);
+```
+Question: Do we need to trace the full dependency chain?
+
+### Risk if Wrong
+- Strategy 2 may only work for specific sense combinations
+- May need Strategy 1 (objective substitution) for other cases
+- Could require multiple reformulation strategies in codebase
+
+### Estimated Research Time
+3-4 hours (implement and test all 5 test cases from research doc)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Needs verification before Priority 1 implementation
+
+---
+
+## Unknown 1.2: How to detect if min/max defines the objective variable?
+
+### Priority
+**High** - Required for Strategy 2 implementation
+
+### Assumption
+We can detect objective-defining equations by tracing from objective variable through equality constraints to find min/max calls.
+
+### Research Questions
+1. How to build dependency graph from equations?
+2. How many levels deep to trace? (direct only, or transitive closure?)
+3. What if objective variable appears in multiple equations?
+4. What about indexed objective variables: `obj(i) = z(i)` where `z(i) = min(x(i), y(i))`?
+
+### How to Verify
+
+**Algorithm Design:**
+```python
+def is_objective_defining_minmax(model_ir: ModelIR, minmax_call: MinMaxCall) -> bool:
+    """
+    Check if a min/max call defines (directly or indirectly) the objective variable.
+    
+    Returns True if:
+    - objvar = expr1, expr1 = expr2, ..., exprN contains minmax_call
+    """
+    # 1. Get objective variable
+    obj_info = extract_objective_info(model_ir)
+    objvar = obj_info.objvar
+    
+    # 2. Build equation dependency graph
+    dep_graph = build_dependency_graph(model_ir)
+    
+    # 3. Find all variables that (transitively) define objvar
+    defining_vars = transitive_closure(dep_graph, objvar)
+    
+    # 4. Check if minmax_call's context equation defines any of those vars
+    equation_name = minmax_call.context
+    defined_var = get_defined_variable(model_ir.equations[equation_name])
+    
+    return defined_var in defining_vars
+```
+
+**Test Cases:**
+1. Direct: `obj = min(x,y)` → True
+2. One-level: `obj = z`, `z = min(x,y)` → True
+3. Two-level: `obj = z1`, `z1 = z2`, `z2 = min(x,y)` → True
+4. Non-defining: `obj = z`, `w = min(x,y)` → False
+
+### Risk if Wrong
+- May apply wrong reformulation strategy
+- Could miss cases that need Strategy 2
+- Could apply Strategy 2 to cases that should use standard epigraph
+
+### Estimated Research Time
+2-3 hours (implement detection logic and test cases)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Algorithm needs design and testing
+
+---
+
+## Unknown 1.3: How to handle nested min/max in objectives?
+
+### Priority
+**Medium** - Test Case 4 from research doc
+
+### Assumption
+Nested min/max (e.g., `z = max(min(x,y), w)`) can be flattened before applying Strategy 2.
+
+### Research Questions
+1. Can we always flatten nested same-type calls: `min(min(x,y),z)` → `min(x,y,z)`?
+2. What about mixed nesting: `min(max(x,y), z)`? Can't flatten, how to reformulate?
+3. Does PATH solve flattened vs nested differently?
+4. Priority of flattening vs reformulation?
+
+### How to Verify
+
+**Test: Nested same-type (should flatten)**
+```gams
+z = min(min(x, y), w)
+→ Flatten to: z = min(x, y, w)
+→ Apply Strategy 2: z ≤ x, z ≤ y, z ≤ w
+```
+
+**Test: Mixed nesting (can't flatten)**
+```gams
+z = min(max(x, y), w)
+→ Option A: Intermediate aux: aux1 = max(x,y), z = min(aux1, w)
+→ Option B: Direct constraints: z ≤ w, z ≤ max(x,y) but max(x,y) not differentiable
+```
+
+### Risk if Wrong
+- May generate incorrect constraints for nested cases
+- Could create auxiliary variables unnecessarily
+- May not converge with PATH
+
+### Estimated Research Time
+2 hours (implement flattening and test both cases)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Flattening logic exists but needs verification for objective-defining cases
+
+---
+
+## Unknown 1.4: What KKT assembly changes are needed for auxiliary constraint multipliers?
+
+### Priority
+**Critical** - General fix beyond Strategy 2
+
+### Assumption
+The current KKT assembly bug (multipliers not in stationarity equations) can be fixed by updating how we handle dynamically added equality constraints.
+
+### Research Questions
+1. Where in `src/kkt/assemble.py` do we build stationarity equations?
+2. How are equality constraint multipliers currently included?
+3. Why are auxiliary constraint multipliers missing?
+4. What's the general fix that works for all future dynamic constraints?
+
+### How to Verify
+
+**Code Analysis:**
+```python
+# In src/kkt/assemble.py, find where stationarity is built
+# Current (broken) logic probably:
+for var_name in model.variables:
+    terms = [gradient[var_name]]
+    for eq_name in model.equalities:  # ← Only original equalities?
+        if has_derivative(J_eq, eq_name, var_name):
+            terms.append(multiplier[eq_name] * J_eq[eq_name, var_name])
+    stationarity[var_name] = sum(terms)
+
+# Fixed logic should be:
+for var_name in model.variables:
+    terms = [gradient[var_name]]
+    # Include ALL equality constraints, including auxiliary
+    for eq_name in get_all_equality_constraints(model):  # ← Fixed
+        if has_derivative(J_eq, eq_name, var_name):
+            terms.append(multiplier[eq_name] * J_eq[eq_name, var_name])
+    stationarity[var_name] = sum(terms)
+```
+
+**Verification:**
+1. Add auxiliary equality constraint manually
+2. Check if its multiplier appears in stationarity
+3. Verify GAMS MCP compiles without "no ref to var" error
+
+### Risk if Wrong
+- Strategy 2 won't work even if implemented correctly
+- May need extensive refactoring of KKT assembly
+- Could break existing functionality
+
+### Estimated Research Time
+3-4 hours (analyze, fix, test thoroughly)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Critical for Priority 1 success
+
+---
+
+## Unknown 1.5: Do PATH solver options need tuning for reformulated problems?
+
+### Priority
+**Medium** - May affect convergence
+
+### Assumption
+Default PATH options work for Strategy 2 reformulated problems (direct constraints instead of auxiliary variables).
+
+### Research Questions
+1. Does Strategy 2 create ill-conditioned systems requiring different PATH options?
+2. Are there specific options for problems with many inequality constraints?
+3. How sensitive is convergence to initial points?
+4. Should we document recommended PATH options for min/max models?
+
+### How to Verify
+
+**Test with different PATH options:**
+```gams
+$onecho > path.opt
+convergence_tolerance 1e-6
+crash_method none
+$offecho
+
+Model test / ... /;
+test.optfile = 1;
+Solve test using MCP;
+```
+
+**Try:**
+- Default options (no .opt file)
+- Tight tolerance (1e-8)
+- Loose tolerance (1e-4)
+- Different crash methods
+
+### Risk if Wrong
+- Users may experience convergence failures
+- May need to document PATH tuning guidance
+- Could affect acceptance testing
+
+### Estimated Research Time
+1-2 hours (run PATH tests with different options)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Test after Priority 1 implementation
+
+---
+
+# Category 2: PATH Solver Validation
+
+## Unknown 2.1: Why do bounds_nlp and nonlinear_mix fail with Model Status 5?
+
+### Priority
+**High** - Priority 2 blocker
+
+### Assumption
+The Model Status 5 (Locally Infeasible) failures in 2 golden files are due to KKT reformulation issues, not PATH solver problems.
+
+### Research Questions
+1. Is the KKT system actually infeasible, or is PATH just not finding a solution?
+2. Do these models solve correctly in original NLP form with CONOPT/IPOPT?
+3. Are the failures due to:
+   - Incorrect Jacobian signs (like the issue fixed in Sprint 4)?
+   - Missing constraints or variables?
+   - Poorly scaled systems?
+   - Bad initial points?
+
+### How to Verify
+
+**Step 1: Validate original NLP solves**
+```bash
+# Solve bounds_nlp.gms with CONOPT
+gams bounds_nlp.gms solver=conopt
+
+# Check solution quality
+```
+
+**Step 2: Inspect generated MCP**
+```bash
+# Generate MCP
+nlp2mcp bounds_nlp.gms -o bounds_nlp_mcp.gms --stats
+
+# Look for:
+# - Dimension mismatch (equations != variables)?
+# - Suspicious constraint signs?
+# - Missing multipliers?
+```
+
+**Step 3: Try scaling**
+```bash
+# Test with scaling
+nlp2mcp bounds_nlp.gms -o bounds_nlp_mcp.gms --scale auto
+gams bounds_nlp_mcp.gms
+```
+
+**Step 4: Compare KKT conditions manually**
+- Write down KKT by hand for bounds_nlp
+- Compare with generated MCP equations
+- Look for discrepancies
+
+### Risk if Wrong
+- May not be able to validate PATH solver integration
+- Could have systematic KKT reformulation bugs
+- Might need to redesign bound handling
+
+### Estimated Research Time
+3-4 hours (diagnostic work)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Critical for Priority 2
+
+---
+
+## Unknown 2.2: What PATH solver options should be documented?
+
+### Priority
+**Medium** - Documentation task
+
+### Assumption
+There's a standard set of PATH options that users should know about for nlp2mcp-generated MCPs.
+
+### Research Questions
+1. What are the most important PATH options? (tolerance, iteration limit, etc.)
+2. Which options affect convergence for KKT-derived MCPs?
+3. When should users tune options vs accept defaults?
+4. Are there problem-specific recommendations? (convex vs nonconvex, scaled vs unscaled)
+
+### How to Verify
+
+**Research PATH documentation:**
+- Read PATH solver manual
+- Identify top 10 most useful options
+- Test on generated MCPs
+
+**Experiment with options:**
+- convergence_tolerance (default 1e-6, try 1e-4 to 1e-10)
+- iterlim (default 1000, try 100, 10000)
+- crash_method (default pnewton, try none, line)
+- output level (default 1, try 0 for quiet, 2 for verbose)
+
+### Risk if Wrong
+- Users won't know how to tune PATH for convergence
+- Documentation will be incomplete
+- Support burden increases
+
+### Estimated Research Time
+2 hours (read docs, experiment, write guide)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Can do during Priority 2
+
+---
+
+## Unknown 2.3: How to interpret and report PATH solution quality?
+
+### Priority
+**Low** - Nice to have
+
+### Assumption
+Model Status and Solve Status codes from PATH are sufficient to determine solution quality.
+
+### Research Questions
+1. What Model/Solve Status combinations indicate success?
+2. How to extract complementarity residuals from PATH output?
+3. Should nlp2mcp validate solution quality automatically?
+4. What metrics to report: objective value, constraint violations, complementarity residuals?
+
+### How to Verify
+
+**Parse PATH listing file:**
+```python
+def parse_path_solution(listing_file: Path) -> SolutionQuality:
+    """Extract solution quality metrics from PATH listing."""
+    # Model Status: 1=optimal, 4=infeasible, 5=locally infeasible
+    # Solve Status: 1=normal, 2=iteration limit, 3=infeasible
+    # Complementarity error
+    # Constraint violation
+    # Objective value
+    return SolutionQuality(...)
+```
+
+### Risk if Wrong
+- Users may not recognize bad solutions
+- Test suite may not catch failures
+- Quality assurance gaps
+
+### Estimated Research Time
+2 hours (implement parsing and reporting)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Low priority, can defer
+
+---
+
+## Unknown 2.4: Should PATH validation tests be in CI/CD?
+
+### Priority
+**Medium** - Process decision
+
+### Assumption
+PATH tests should run in CI/CD, but only when GAMS/PATH licensing is available (skipped otherwise).
+
+### Research Questions
+1. How to detect GAMS/PATH availability in CI?
+2. Should we use GitHub Actions matrix for optional GAMS tests?
+3. How to handle licensing in CI (secrets, environment variables)?
+4. Should PATH tests be required for merge, or optional?
+
+### How to Verify
+
+**Option A: Required with GAMS license secret**
+```yaml
+# .github/workflows/ci.yml
+- name: PATH Validation Tests
+  if: secrets.GAMS_LICENSE != ''
+  run: pytest tests/validation/test_path_solver*.py
+```
+
+**Option B: Optional separate workflow**
+```yaml
+# .github/workflows/path-tests.yml
+name: PATH Solver Tests (Manual)
+on: workflow_dispatch
+```
+
+**Option C: Skip in CI, manual validation**
+```python
+# tests/validation/test_path_solver.py
+@pytest.mark.skipif(not has_gams(), reason="GAMS/PATH not available")
+```
+
+### Risk if Wrong
+- May not catch PATH-specific regressions
+- CI may fail when GAMS unavailable
+- Manual testing burden increases
+
+### Estimated Research Time
+1-2 hours (configure CI, test)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Process decision needed
+
+---
+
+# Category 3: Production Hardening
+
+## Unknown 3.1: What performance targets define "acceptable" for large models?
+
+### Priority
+**High** - Sets acceptance criteria for Priority 3
+
+### Assumption
+"Large model" means 1000+ variables and 10000+ equations, and processing should complete in reasonable time (under 10 minutes?).
+
+### Research Questions
+1. What's the target processing time for large models?
+   - 1000 vars, 1000 eqs: < 10 seconds?
+   - 1000 vars, 10000 eqs: < 1 minute?
+   - 10000 vars, 10000 eqs: < 10 minutes?
+2. What's acceptable memory usage?
+   - < 1 GB for 1000-scale models?
+   - < 10 GB for 10000-scale models?
+3. What operations are bottlenecks?
+   - Parsing?
+   - Differentiation?
+   - KKT assembly?
+   - GAMS emission?
+
+### How to Verify
+
+**Create benchmark models:**
+```python
+# Generate synthetic large models
+def create_large_nlp(n_vars: int, n_eqs: int) -> str:
+    """Generate GAMS model with n vars and n equations."""
+    # Quadratic objective
+    # Linear constraints with sparse structure
+    # Bounded variables
+    return gams_code
+
+# Benchmark sizes:
+benchmarks = [
+    (100, 100),
+    (1000, 1000),
+    (1000, 10000),
+    (10000, 10000),
+]
+```
+
+**Profile each stage:**
+```python
+import time
+import memory_profiler
+
+@profile
+def benchmark_nlp2mcp(input_file: Path):
+    start = time.time()
+    
+    t1 = time.time()
+    model = parse_model_file(input_file)
+    parse_time = time.time() - t1
+    
+    t2 = time.time()
+    gradient, J_eq, J_ineq = compute_derivatives(model)
+    diff_time = time.time() - t2
+    
+    # ... etc
+```
+
+**Set targets based on baseline:**
+- If current 1000x1000 takes 5 seconds, target < 10 seconds
+- If current uses 500 MB, target < 1 GB
+
+### Risk if Wrong
+- May declare victory prematurely (targets too loose)
+- May over-optimize (targets too aggressive)
+- Can't measure progress objectively
+
+### Estimated Research Time
+3-4 hours (create benchmarks, profile, set targets)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Critical for Priority 3 acceptance criteria
+
+---
+
+## Unknown 3.2: Which edge cases are most critical to test?
+
+### Priority
+**High** - Determines test suite scope
+
+### Assumption
+Empty sets, unbounded variables, degenerate constraints, and circular dependencies are the most important edge cases.
+
+### Research Questions
+1. What edge cases exist in each component?
+   - Parser: empty models, malformed syntax, huge files
+   - Differentiation: constant expressions, zero derivatives, undefined operations
+   - KKT: no constraints, all bounds infinite, duplicate constraints
+   - Emission: name collisions, reserved words, special characters
+2. Which edge cases can cause crashes vs incorrect output?
+3. Which edge cases occur in real user models?
+
+### How to Verify
+
+**Enumerate edge cases by component:**
+
+**Parser edge cases:**
+- Empty GAMS file
+- No equations
+- No variables
+- No objective
+- Sets with no members
+- Circular set references
+
+**Differentiation edge cases:**
+- Constant objective (all derivatives zero)
+- Variable not in any equation
+- Division by zero
+- log(0), sqrt(-1)
+- NaN propagation
+
+**KKT edge cases:**
+- No inequality constraints (only equalities)
+- No equality constraints (only inequalities)
+- All bounds infinite (no complementarity)
+- Fixed variables only (no free variables)
+
+**Prioritize by:**
+- Likelihood (based on Sprint 4 experience)
+- Severity (crash vs wrong answer)
+- Ease of testing
+
+### Risk if Wrong
+- May miss critical bugs in production
+- Test suite may have gaps
+- User-reported issues increase
+
+### Estimated Research Time
+2-3 hours (enumerate, prioritize, create test cases)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Can refine during Priority 3
+
+---
+
+## Unknown 3.3: What memory optimization techniques are available?
+
+### Priority
+**Medium** - Nice to have improvements
+
+### Assumption
+Memory usage can be reduced by optimizing sparse matrix storage and avoiding redundant data structures.
+
+### Research Questions
+1. Where is memory being used currently?
+   - AST nodes?
+   - Jacobian storage?
+   - String duplication?
+   - Temporary objects?
+2. What optimizations are available?
+   - Use __slots__ for dataclasses?
+   - Compress sparse matrices?
+   - String interning?
+   - Generator expressions vs lists?
+3. What's the memory reduction potential?
+4. Do optimizations affect performance (time)?
+
+### How to Verify
+
+**Memory profiling:**
+```python
+from memory_profiler import profile
+
+@profile
+def process_large_model():
+    model = parse_model_file("large.gms")
+    gradient, J_eq, J_ineq = compute_derivatives(model)
+    kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+    # Identify largest memory consumers
+```
+
+**Try optimizations:**
+- Convert dataclasses to __slots__
+- Use scipy.sparse for Jacobians (if not already)
+- Intern repeated strings (variable names, etc.)
+
+**Measure impact:**
+- Memory before/after
+- Performance before/after
+
+### Risk if Wrong
+- May optimize prematurely (wrong bottleneck)
+- Could introduce bugs
+- Time spent may not justify memory savings
+
+### Estimated Research Time
+3-4 hours (profile, implement, measure)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Medium priority optimization
+
+---
+
+## Unknown 3.4: How to gracefully handle numerical issues (NaN, Inf)?
+
+### Priority
+**High** - User experience critical
+
+### Assumption
+We can detect NaN/Inf during processing and provide helpful error messages instead of crashes or silent failures.
+
+### Research Questions
+1. Where can NaN/Inf appear?
+   - User-provided parameter values?
+   - During expression evaluation?
+   - In derivative computation?
+   - In Jacobian assembly?
+2. How to detect early (before PATH failure)?
+3. What error messages to provide?
+4. Should we validate input models before processing?
+
+### How to Verify
+
+**Add validation hooks:**
+```python
+def validate_model_parameters(model_ir: ModelIR) -> None:
+    """Check for NaN/Inf in parameter values."""
+    for param_name, param_def in model_ir.parameters.items():
+        for key, value in param_def.values.items():
+            if math.isnan(value):
+                raise ValueError(
+                    f"Parameter {param_name}{key} has NaN value. "
+                    f"Check input data file."
+                )
+            if math.isinf(value):
+                raise ValueError(
+                    f"Parameter {param_name}{key} has infinite value. "
+                    f"Use GAMS INF or -INF for bounds instead."
+                )
+```
+
+**Add derivative checks:**
+```python
+def check_derivative_validity(expr: Expr) -> None:
+    """Recursively check expression for NaN/Inf."""
+    # After simplification, evaluate at test point
+    # Check for NaN/Inf in result
+```
+
+### Risk if Wrong
+- Users get cryptic errors from PATH
+- Debug time increases
+- Reputation suffers (tool seen as fragile)
+
+### Estimated Research Time
+2-3 hours (add checks, test error messages)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Important for production quality
+
+---
+
+## Unknown 3.5: Should we add a model validation pass before KKT assembly?
+
+### Priority
+**Medium** - Quality improvement
+
+### Assumption
+A pre-processing validation pass can catch common modeling errors and provide better feedback than letting issues surface during KKT assembly or PATH solve.
+
+### Research Questions
+1. What validations are useful?
+   - All variables appear in at least one equation?
+   - All equations reference at least one variable?
+   - Objective well-defined?
+   - No unreachable constraints?
+2. How much validation is too much (nanny vs helpful)?
+3. Should validation be optional (--strict flag)?
+
+### How to Verify
+
+**Design validation checks:**
+```python
+def validate_model(model_ir: ModelIR) -> list[ValidationWarning]:
+    """Run sanity checks on model before processing."""
+    warnings = []
+    
+    # Check 1: Unused variables
+    used_vars = get_variables_in_equations(model_ir)
+    for var_name in model_ir.variables:
+        if var_name not in used_vars:
+            warnings.append(f"Variable {var_name} never used")
+    
+    # Check 2: Constant objective
+    if is_constant_expression(model_ir.objective.expr):
+        warnings.append("Objective is constant (all derivatives zero)")
+    
+    # Check 3: Unbounded variables in nonlinear terms
+    for var in find_unbounded_variables(model_ir):
+        if appears_in_nonlinear_term(var, model_ir):
+            warnings.append(f"Unbounded variable {var} in nonlinear term")
+    
+    return warnings
+```
+
+### Risk if Wrong
+- May be overly strict (reject valid models)
+- May miss important checks
+- May annoy power users
+
+### Estimated Research Time
+2 hours (design and implement checks)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Nice to have feature
+
+---
+
+# Category 4: PyPI Packaging
+
+## Unknown 4.1: setuptools vs hatch vs flit - which build system?
+
+### Priority
+**High** - Foundational decision for Priority 4
+
+### Assumption
+Modern Python packaging uses PEP 517/518 build systems, and we should choose between setuptools (traditional), hatch (modern), or flit (simple).
+
+### Research Questions
+1. Which build system is most compatible with our project structure?
+2. What are the tradeoffs?
+   - setuptools: Most mature, complex configuration
+   - hatch: Modern, opinionated, good for cli tools
+   - flit: Simplest, for pure Python
+3. Do we need compiled extensions? (No - pure Python)
+4. Which has best PyPI publishing workflow?
+
+### How to Verify
+
+**Current state:**
+We have `pyproject.toml` with basic metadata. Need to add build system.
+
+**Test each option:**
+
+**Option A: setuptools**
+```toml
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# ... existing metadata
+```
+
+**Option B: hatch**
+```toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+```
+
+**Option C: flit**
+```toml
+[build-system]
+requires = ["flit_core>=3.2"]
+build-backend = "flit_core.buildapi"
+```
+
+**Test build:**
+```bash
+python -m build
+# Should create dist/*.whl and dist/*.tar.gz
+```
+
+**Recommendation criteria:**
+- Ease of configuration
+- CI/CD integration
+- Publishing workflow
+
+### Risk if Wrong
+- May choose overly complex system
+- Could limit future packaging needs
+- May have compatibility issues
+
+### Estimated Research Time
+2 hours (research, test builds, decide)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Need to decide before Priority 4
+
+---
+
+## Unknown 4.2: What PyPI classifiers and metadata are required?
+
+### Priority
+**Medium** - Quality of PyPI listing
+
+### Assumption
+We need classifiers for Python versions, OS, development status, license, and topic.
+
+### Research Questions
+1. Which classifiers are most important for discoverability?
+2. What Python versions should we officially support?
+   - Minimum: 3.10? 3.11? 3.12?
+   - Test on: 3.10, 3.11, 3.12? (current is 3.12)
+3. What OS platforms? (Linux, macOS, Windows - all pure Python)
+4. What development status? (Beta, Production/Stable)
+
+### How to Verify
+
+**Research PyPI classifiers:**
+https://pypi.org/classifiers/
+
+**Essential classifiers:**
+```toml
+[project]
+classifiers = [
+    "Development Status :: 4 - Beta",  # or 5 - Production/Stable?
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Code Generators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+```
+
+**Test Python version support:**
+```bash
+# Test on different Python versions
+python3.10 -m pytest
+python3.11 -m pytest
+python3.12 -m pytest
+```
+
+### Risk if Wrong
+- Poor PyPI listing visibility
+- User confusion about compatibility
+- Missing target audience
+
+### Estimated Research Time
+1 hour (research, add classifiers)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Easy to add during Priority 4
+
+---
+
+## Unknown 4.3: How to test multi-platform without full CI matrix?
+
+### Priority
+**Medium** - Practical testing limitation
+
+### Assumption
+We can test multi-platform locally or with minimal CI, since the package is pure Python.
+
+### Research Questions
+1. Is pure Python truly platform-independent for our dependencies?
+2. Are there platform-specific issues with:
+   - Path handling (already using pathlib)?
+   - Line endings?
+   - File permissions?
+3. How to test on Windows without Windows CI?
+4. Is TestPyPI test sufficient?
+
+### How to Verify
+
+**Check dependencies for platform issues:**
+```bash
+# Review pyproject.toml dependencies
+cat pyproject.toml | grep dependencies
+
+# Common dependencies: lark, click, etc. - all pure Python
+```
+
+**Manual testing approach:**
+```bash
+# On macOS (current):
+python -m build
+pip install dist/*.whl
+nlp2mcp --help
+
+# On Linux (via Docker):
+docker run -it python:3.12 bash
+pip install dist/*.whl
+nlp2mcp --help
+
+# On Windows (ask collaborator or use GitHub Actions):
+# Manual test or wait for user reports
+```
+
+**CI matrix option (if needed):**
+```yaml
+strategy:
+  matrix:
+    os: [ubuntu-latest, macos-latest, windows-latest]
+    python-version: ['3.10', '3.11', '3.12']
+```
+
+### Risk if Wrong
+- Platform-specific bugs slip through
+- Windows users report issues
+- Manual testing burden
+
+### Estimated Research Time
+1-2 hours (review deps, test in Docker, decide on CI matrix)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Practical decision
+
+---
+
+## Unknown 4.4: What version numbering scheme for 1.0.0 release?
+
+### Priority
+**Low** - Convention decision
+
+### Assumption
+We're at version 0.4.0 (Sprint 4 complete), should bump to 1.0.0 for production release, following semantic versioning.
+
+### Research Questions
+1. Is 1.0.0 appropriate for "production ready"?
+2. Should we do 0.5.0 (Sprint 5) then 1.0.0, or jump to 1.0.0?
+3. What triggers major version bumps vs minor vs patch?
+4. How to handle pre-releases (alpha, beta, rc)?
+
+### How to Verify
+
+**Semantic Versioning:**
+- MAJOR: incompatible API changes
+- MINOR: backwards-compatible functionality
+- PATCH: backwards-compatible bug fixes
+
+**Sprint 4 → Sprint 5:**
+- 0.4.0 (Sprint 4 complete) → 0.5.0 (Sprint 5 pre-release) → 1.0.0 (Sprint 5 final)
+- OR: 0.4.0 → 1.0.0 directly (declares production ready)
+
+**Recommendation:**
+- Sprint 5 Priority 4 completion → 0.5.0-beta
+- After validation and documentation → 1.0.0
+
+### Risk if Wrong
+- Version confusion
+- User expectations mismatch
+- Breaking changes in "stable" version
+
+### Estimated Research Time
+30 minutes (decide convention, document)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Low priority decision
+
+---
+
+# Category 5: Documentation Polish
+
+## Unknown 5.1: Sphinx vs MkDocs for API documentation?
+
+### Priority
+**High** - Foundational decision for Priority 5
+
+### Assumption
+We need auto-generated API documentation from docstrings, and should choose between Sphinx (standard) or MkDocs (modern).
+
+### Research Questions
+1. Which tool is better for Python API docs?
+   - Sphinx: Traditional, powerful, complex
+   - MkDocs: Modern, simple, Markdown-based
+2. Do we want API docs and user docs in same site or separate?
+3. What hosting? (ReadTheDocs, GitHub Pages)
+4. How to integrate with existing markdown docs?
+
+### How to Verify
+
+**Test Sphinx:**
+```bash
+pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
+sphinx-quickstart docs/
+# Configure autodoc
+make html
+```
+
+**Test MkDocs:**
+```bash
+pip install mkdocs mkdocs-material mkdocstrings[python]
+mkdocs new .
+# Configure mkdocstrings
+mkdocs serve
+```
+
+**Compare:**
+- Setup complexity
+- Output quality
+- Customization options
+- Hosting integration
+
+**Recommendation:**
+- Sphinx: If we want traditional Python docs look (like stdlib)
+- MkDocs: If we want modern, searchable, integrated docs
+
+### Risk if Wrong
+- May choose tool that doesn't meet needs
+- Could require migration later
+- Documentation quality suffers
+
+### Estimated Research Time
+2-3 hours (test both, compare, decide)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Need to decide before Priority 5
+
+---
+
+## Unknown 5.2: What topics are most critical for the tutorial?
+
+### Priority
+**Medium** - Content planning
+
+### Assumption
+Tutorial should cover installation → first MCP → understanding output → troubleshooting, in that order.
+
+### Research Questions
+1. What's the learning path for new users?
+2. What prerequisites should we assume? (Python knowledge, GAMS knowledge, optimization knowledge)
+3. How detailed should examples be?
+4. What common mistakes to highlight?
+
+### How to Verify
+
+**Outline potential tutorial structure:**
+
+1. **Introduction** (5 min read)
+   - What is nlp2mcp?
+   - When to use it?
+   - How does NLP → KKT → MCP work?
+
+2. **Installation** (5 min)
+   - `pip install nlp2mcp`
+   - Verify installation
+   - Optional: GAMS/PATH setup
+
+3. **First Conversion** (15 min)
+   - Simple example model
+   - Run `nlp2mcp example.gms -o output.gms`
+   - Examine output
+   - Solve with PATH
+
+4. **Understanding the Output** (15 min)
+   - Stationarity equations
+   - Complementarity pairs
+   - Multiplier variables
+   - Model declaration
+
+5. **Common Patterns** (20 min)
+   - Bounds handling
+   - Inequality constraints
+   - Indexed variables
+   - Parameters
+
+6. **Troubleshooting** (15 min)
+   - Parse errors
+   - Unsupported features
+   - PATH convergence issues
+   - When to use scaling
+
+**User testing:**
+- Ask someone unfamiliar with tool to follow tutorial
+- Note where they get stuck
+- Refine based on feedback
+
+### Risk if Wrong
+- Tutorial too advanced or too basic
+- Users give up early
+- Support burden increases
+
+### Estimated Research Time
+2 hours (outline, draft first version)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Can refine during Priority 5
+
+---
+
+## Unknown 5.3: How detailed should the troubleshooting guide be?
+
+### Priority
+**Medium** - Balance comprehensiveness vs maintainability
+
+### Assumption
+Troubleshooting guide should cover the top 10-15 most common issues with clear diagnostic steps and solutions.
+
+### Research Questions
+1. What are the most common user issues? (Based on Sprint 4 experience)
+2. How much detail per issue? (One paragraph vs full diagnostic procedure)
+3. Should we include:
+   - Error message reference (all possible errors)?
+   - Decision trees (flowcharts)?
+   - Example fixes (code snippets)?
+4. How to keep it updated as tool evolves?
+
+### How to Verify
+
+**Collect common issues:**
+
+From Sprint 4 testing:
+1. "Parse error: unexpected token"
+2. "Variable not found in any equation"
+3. "PATH solver: Model Status 5"
+4. "GAMS error: no ref to var in equ.var"
+5. "Unsupported function: abs()"
+6. "Division by zero in derivative"
+7. "NaN in Jacobian"
+8. "Model too large, runs out of memory"
+
+**For each issue, document:**
+- Symptom (error message or behavior)
+- Cause (what user did wrong)
+- Diagnostic steps (how to confirm cause)
+- Solution (how to fix)
+- Prevention (how to avoid)
+
+**Example format:**
+```markdown
+### Issue: "Parse error: unexpected token"
+
+**Symptom:** Error message during parsing phase
+
+**Common Causes:**
+1. GAMS syntax not supported by nlp2mcp subset
+2. Typo in model file
+3. Missing semicolon
+
+**Diagnostic Steps:**
+1. Check error message for line number
+2. Compare syntax with supported subset (see USER_GUIDE.md)
+3. Try parsing with GAMS directly
+
+**Solution:**
+- If unsupported syntax: Rewrite using supported features
+- If typo: Fix typo
+- If subset limitation: File feature request
+
+**Prevention:** Validate GAMS model compiles before converting
+```
+
+### Risk if Wrong
+- Guide too detailed (overwhelming)
+- Guide too sparse (not helpful)
+- Maintenance burden
+
+### Estimated Research Time
+2-3 hours (draft guide, test usability)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Can refine during Priority 5
+
+---
+
+## Unknown 5.4: Should API reference include internal functions or only public API?
+
+### Priority
+**Low** - Scope decision
+
+### Assumption
+API reference should document public functions (CLI, main pipeline functions) but not internal implementation details.
+
+### Research Questions
+1. What constitutes "public API"?
+   - CLI entry point (`nlp2mcp` command)?
+   - High-level functions (`parse_model_file`, `compute_derivatives`, `emit_gams_mcp`)?
+   - IR data structures?
+   - Everything in `src/`?
+2. Do advanced users need internal docs?
+3. How to mark functions as public vs private? (naming convention, `__all__`)
+
+### How to Verify
+
+**Define API layers:**
+
+**Layer 1: CLI** (end users)
+- `nlp2mcp` command
+- All CLI flags
+
+**Layer 2: High-level API** (Python library users)
+```python
+from nlp2mcp import parse_model_file, compute_derivatives, assemble_kkt_system, emit_gams_mcp
+```
+
+**Layer 3: IR and data structures** (advanced users, extension developers)
+```python
+from nlp2mcp.ir import ModelIR, VariableDef, EquationDef
+from nlp2mcp.ast import Expr, Binary, VarRef
+```
+
+**Layer 4: Internal** (developers only)
+- Everything else with leading underscore
+- Not documented in public API reference
+
+**Recommendation:**
+- Document Layers 1-3 in API reference
+- Provide developer guide separately for Layer 4
+
+### Risk if Wrong
+- Too much documentation (confusing)
+- Too little documentation (frustrating for advanced users)
+
+### Estimated Research Time
+1 hour (decide scope, mark public functions)
+
+### Verification Results
+🔍 **Status:** INCOMPLETE - Low priority decision
+
+---
+
+# Summary and Recommendations
+
+## Critical Path Unknowns (Must Resolve Before Sprint 5 Start)
+
+1. **Unknown 1.1** (Critical): Strategy 2 coverage - 3-4 hours
+2. **Unknown 1.4** (Critical): KKT assembly fix - 3-4 hours
+3. **Unknown 2.1** (High): PATH failures diagnostic - 3-4 hours
+4. **Unknown 3.1** (High): Performance targets - 3-4 hours
+5. **Unknown 4.1** (High): Build system choice - 2 hours
+
+**Total Critical Path Research: 14-18 hours**
+
+## Pre-Sprint 5 Research Schedule
+
+**Week 1 (Pre-Sprint 5):**
+- Days 1-2: Unknowns 1.1, 1.4 (min/max fix research) - 6-8 hours
+- Day 3: Unknown 2.1 (PATH failures) - 3-4 hours
+- Day 4: Unknown 3.1 (performance targets) - 3-4 hours
+- Day 5: Unknown 4.1 (build system) + Unknown 5.1 (docs tool) - 4-5 hours
+
+**Total: ~16-21 hours spread over 1 week**
+
+## Unknowns That Can Be Resolved During Sprint 5
+
+- Unknown 1.2, 1.3, 1.5: During Priority 1 implementation
+- Unknown 2.2, 2.3, 2.4: During Priority 2 implementation
+- Unknown 3.2, 3.3, 3.4, 3.5: During Priority 3 implementation
+- Unknown 4.2, 4.3, 4.4: During Priority 4 implementation
+- Unknown 5.2, 5.3, 5.4: During Priority 5 implementation
+
+## Risk Mitigation
+
+**If Critical Unknowns Take Longer:**
+- Priority 1 (min/max fix) has fallback: detect and error (1-2 hour implementation)
+- Priority 2 (PATH) has fallback: document known issues, defer full validation
+- Priority 3 (hardening) can be scoped down to fewer edge cases
+- Priority 4 (packaging) can use default choices (setuptools, basic metadata)
+- Priority 5 (docs) can use existing USER_GUIDE.md + minimal additions
+
+**Checkpoint Strategy:**
+- Day 3: Check Priority 1 and 2 complete
+- Day 6: Check Priority 3 and 4 on track
+- Day 9: Final integration check
+
+---
+
+**Document Status:** 🔍 DRAFT - Ready for pre-sprint research phase  
+**Next Steps:** Begin resolving Critical Path unknowns (Week 1 schedule above)  
+**Success Metric:** All Critical/High unknowns resolved before Sprint 5 Day 1
