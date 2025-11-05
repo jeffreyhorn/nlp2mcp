@@ -166,7 +166,7 @@ Here’s a concrete five-sprint (2 weeks each) plan to build **nlp2mcp**, a Pyth
 
 * **Includes & parameters:**
 
-  * Support `$include` fo 3e parameter files (string-substitute, no conditionals).
+  * Support `$include` for simple parameter files (string-substitute, no conditionals).
   * Load data blocks for parameters/sets (`Table`, `Parameter` assignments).
 * **More functions:**
 
