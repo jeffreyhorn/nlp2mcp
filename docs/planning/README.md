@@ -26,7 +26,7 @@ This directory contains all sprint planning, execution, and retrospective docume
 ### Sprint Retrospectives
 - **[Sprint 2 Retrospective](SPRINT_2/RETROSPECTIVE.md)** - Lessons learned, metrics, action items
 - **[Sprint 3 Retrospective](SPRINT_3/RETROSPECTIVE.md)** - Issue #47 analysis, process improvements
-- **[Sprint 4 Retrospective](SPRINT_4/RETROSPECTIVE.md)** - Issue #47 analysis, process improvements
+- **[Sprint 4 Retrospective](SPRINT_4/RETROSPECTIVE.md)** - Feature Expansion + Robustness
 
 ### Sprint Plans
 - **[Sprint 2 Plan](SPRINT_2/PLAN.md)** - AD implementation plan (revised after reviews)
