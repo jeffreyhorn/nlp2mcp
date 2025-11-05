@@ -1,6 +1,6 @@
 # Sprint 4 Retrospective: Feature Expansion + Robustness
 
-**Sprint Duration:** November 1-5, 2025 (10 days planned, 5 days actual)
+**Sprint Duration:** November 1-5, 2025 (10 days planned, 10 days actual)
 **Sprint Goal:** Broaden language coverage, improve numerics, and add quality-of-life features
 **Status:** ✅ COMPLETE
 **Completed:** November 5, 2025
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-Sprint 4 successfully delivered 7 major feature categories, expanding nlp2mcp from a research prototype to a production-ready tool. The sprint completed ahead of schedule (Day 10 of 10) with all critical features implemented, 972 tests passing, and comprehensive documentation.
+Sprint 4 successfully delivered 7 major feature categories, expanding nlp2mcp from a research prototype to a production-ready tool. The sprint completed on schedule (Day 10 of 10) with all critical features implemented, 972 tests passing, and comprehensive documentation.
 
 **Key Achievements:**
 - ✅ All 10 functional goals achieved
@@ -101,8 +101,8 @@ Sprint 4 successfully delivered 7 major feature categories, expanding nlp2mcp fr
 
 ### 1. **Proactive Known Unknowns Process** ⭐⭐⭐
 The Known Unknowns list (KNOWN_UNKNOWNS.md) was the single most impactful process improvement:
-- **Before Sprint 4:** 23 unknowns identified, 10 resolved proactively
-- **During Sprint 4:** 13 unknowns resolved on schedule, zero late surprises
+- **Before Sprint 4:** 23 unknowns identified
+- **Resolution:** All 23 resolved (10 proactively before Sprint 4, 13 on schedule during Sprint 4, zero late surprises)
 - **Outcome:** No Issue #47-style emergencies (2-day emergency refactoring in Sprint 3)
 
 **Key Success Factors:**
