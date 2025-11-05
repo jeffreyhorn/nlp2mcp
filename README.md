@@ -67,7 +67,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Comprehensive documentation (KKT assembly, GAMS emission)
 - ✅ 602 tests passing, 100% deterministic output
 
-**Sprint 4: Extended Features & Robustness** 🔄 **IN PROGRESS**
+**Sprint 4: Extended Features & Robustness** ✅ **COMPLETE**
 
 *Preparation Phase* (see [docs/planning/SPRINT_4/PREP_PLAN.md](docs/planning/SPRINT_4/PREP_PLAN.md)):
 - ✅ Task 1: Resolve Issue #47 (indexed stationarity equations)
@@ -81,16 +81,16 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Task 9: Plan Sprint 4 Scope and Schedule ([PLAN.md](docs/planning/SPRINT_4/PLAN.md))
 
 *Implementation Phase* (see [docs/planning/SPRINT_4/PLAN.md](docs/planning/SPRINT_4/PLAN.md)):
-- [x] Day 1: `$include` and Preprocessing (8h) ✅
-- [x] Day 2: `Table` Data Blocks (8h) ✅
-- [x] Day 3: `min/max` Reformulation - Part 1 (Infrastructure) (8h) ✅
-- [x] Day 4: `min/max` Reformulation - Part 2 (Implementation) (8h) ✅
-- [x] Day 5: `abs(x)` Handling and Fixed Variables (`x.fx`) (8h) ✅
-- [x] Day 6: Scaling Implementation + Developer Ergonomics Part 1 (8h) ✅
-- [x] Day 7: Diagnostics + Developer Ergonomics Part 2 (8h) ✅
-- [x] Day 8: PATH Solver Validation and Testing (7.5h) -
-- [x] Day 9: Integration Testing, Documentation, and Examples (8h) ✅
-- [ ] Day 10: Polish, Buffer, and Sprint Wrap-Up (8h)
+- ✅ Day 1: `$include` and Preprocessing (8h)
+- ✅ Day 2: `Table` Data Blocks (8h)
+- ✅ Day 3: `min/max` Reformulation - Part 1 (Infrastructure) (8h)
+- ✅ Day 4: `min/max` Reformulation - Part 2 (Implementation) (8h)
+- ✅ Day 5: `abs(x)` Handling and Fixed Variables (`x.fx`) (8h)
+- ✅ Day 6: Scaling Implementation + Developer Ergonomics Part 1 (8h)
+- ✅ Day 7: Diagnostics + Developer Ergonomics Part 2 (8h)
+- ✅ Day 8: PATH Solver Validation and Testing (7.5h)
+- ✅ Day 9: Integration Testing, Documentation, and Examples (8h)
+- ✅ Day 10: Polish, Buffer, and Sprint Wrap-Up (8h)
 
 ### Planned (See [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md))
 
