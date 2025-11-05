@@ -208,6 +208,195 @@ Here’s a concrete five-sprint (2 weeks each) plan to build **nlp2mcp**, a Pyth
 
 **Goal:** Ship a reliable tool with docs, CI, and optional exporters.
 
+**Status:** 📋 READY TO START (Post Sprint 4 completion)  
+**Duration:** 10 days (similar to Sprint 4)  
+**Based on:** Sprint 4 Retrospective recommendations and remaining PROJECT_PLAN items
+
+---
+
+## Sprint 5 Priorities (from Sprint 4 Retrospective)
+
+### Priority 1: Fix Min/Max Reformulation Bug (1-2 days)
+
+**Issue:** Auxiliary constraint multipliers for dynamically added equality constraints not included in stationarity equations.
+
+**Research:** See `docs/research/minmax_objective_reformulation.md` for comprehensive analysis of the reformulation issue.
+
+**Root Cause:**
+- Min/max reformulation creates auxiliary variables and equality constraints
+- KKT assembly doesn't include these new equality multipliers in stationarity equations
+- Results in "no ref to var in equ.var" GAMS errors
+
+**Solution Approach (Strategy 2 from research doc):**
+- For min/max that defines objective variable: use direct constraints instead of auxiliary variables
+- Example: `minimize z` where `z = min(x, y)` → `minimize z` with `z ≤ x, z ≤ y`
+- Handles simple cases without auxiliary variables
+- Avoids infeasible KKT system
+
+**Implementation Steps:**
+1. Detect min/max in objective-defining equations
+2. Apply Strategy 2 (Direct Constraints) for simple cases:
+   - For `minimize z` where `z = min(x,y)`: convert to `z ≤ x` and `z ≤ y` constraints
+   - For `maximize z` where `z = max(x,y)`: convert to `z ≥ x` and `z ≥ y` constraints
+3. Update KKT assembly to include auxiliary constraint multipliers in stationarity (general fix)
+4. Add comprehensive test cases from research doc (Test Cases 1-5)
+5. Verify PATH solver convergence
+
+**Test Cases (from research doc):**
+- Test Case 1: Simple min in objective (current failure)
+- Test Case 2: Direct min objective  
+- Test Case 3: Min in constraint (should already work)
+- Test Case 4: Nested min/max
+- Test Case 5: Max in maximization
+
+**Acceptance Criteria:**
+- All 5 test cases from research doc pass
+- PATH solver successfully solves reformulated MCPs
+- Remove xfail markers from existing min/max tests
+- Documentation updated with reformulation approach
+
+**Related Files:**
+- `src/kkt/reformulation.py` - Main reformulation logic
+- `src/kkt/assemble.py` - KKT stationarity assembly
+- `tests/validation/test_path_solver_minmax.py` - Currently xfailed test
+
+---
+
+### Priority 2: Complete PATH Solver Validation (1 day)
+
+**Status:** Test framework exists, GAMS/PATH licensing now available
+
+**Implementation Steps:**
+1. Execute existing PATH validation test suite
+2. Run tests in `tests/validation/test_path_solver.py`
+3. Run tests in `tests/validation/test_path_solver_minmax.py` (after Priority 1 fix)
+4. Investigate and resolve any Model Status 5 (Locally Infeasible) failures
+5. Document PATH solver options and troubleshooting
+
+**Test Files:**
+- `tests/validation/test_path_solver.py` - Main PATH validation (5 golden files)
+- `tests/validation/test_path_solver_minmax.py` - Min/max reformulation tests
+- `tests/golden/*.gms` - Golden reference files
+
+**Known Issues to Investigate:**
+- 2 golden files (bounds_nlp, nonlinear_mix) fail with Model Status 5
+- May indicate modeling issues with KKT reformulation for nonlinear problems
+
+**Acceptance Criteria:**
+- All golden files solve successfully with PATH (or documented as expected failures)
+- Min/max reformulation tests pass
+- PATH solver options documented
+- Troubleshooting guide updated
+
+---
+
+### Priority 3: Production Hardening (2-3 days)
+
+**Components:**
+
+**3.1 Error Recovery**
+- Graceful handling of numerical issues (NaN, Inf)
+- Better error messages for common user mistakes
+- Validation of input models before processing
+
+**3.2 Large Model Testing**
+- Test with models containing 1000+ variables
+- Test with models containing 10000+ equations
+- Identify and fix performance bottlenecks
+
+**3.3 Memory Optimization**
+- Profile memory usage on large models
+- Optimize sparse matrix representations
+- Reduce memory footprint where possible
+
+**3.4 Edge Cases**
+- Test with empty sets
+- Test with unbounded variables
+- Test with degenerate constraints
+- Test with circular dependencies
+
+**Deliverables:**
+- Performance benchmarks updated
+- Memory profiling results documented
+- Edge case test suite (20+ additional tests)
+- Optimization improvements applied
+
+---
+
+### Priority 4: PyPI Packaging (1-2 days)
+
+**Components:**
+
+**4.1 Package Configuration**
+- Update `pyproject.toml` with PyPI metadata
+- Configure build system (setuptools/hatch)
+- Add package classifiers and keywords
+- Include README.md and LICENSE in package
+
+**4.2 Wheel Building**
+- Test wheel building: `python -m build`
+- Test installation from wheel: `pip install dist/*.whl`
+- Verify CLI entry point works
+- Test on clean virtual environment
+
+**4.3 Release Automation**
+- GitHub Actions workflow for PyPI publishing
+- Automated version bumping
+- Changelog generation
+- Release notes template
+
+**4.4 Installation Testing**
+- Test `pip install nlp2mcp` (from TestPyPI first)
+- Test on multiple Python versions (3.10, 3.11, 3.12)
+- Test on multiple platforms (Linux, macOS, Windows)
+- Verify dependencies install correctly
+
+**Deliverables:**
+- Package published to TestPyPI
+- Release automation workflow
+- Installation guide in README.md
+- Version 0.4.0 released
+
+---
+
+### Priority 5: Documentation Polish (2 days)
+
+**Components:**
+
+**5.1 Tutorial for Beginners**
+- Step-by-step guide from installation to first MCP
+- Explained examples with visualization
+- Common pitfalls and how to avoid them
+- Integration with existing USER_GUIDE.md
+
+**5.2 FAQ Section**
+- Common questions from user testing
+- Performance optimization tips
+- Troubleshooting common errors
+- Comparison with other tools
+
+**5.3 Troubleshooting Guide**
+- Error message reference
+- Diagnostic procedures
+- When to contact support
+- Known limitations and workarounds
+
+**5.4 API Reference**
+- Comprehensive docstring coverage
+- Auto-generated API docs (Sphinx)
+- Usage examples for each public function
+- Type hints documentation
+
+**Deliverables:**
+- TUTORIAL.md (new file)
+- FAQ.md (new file)
+- TROUBLESHOOTING.md (enhanced)
+- API documentation site (sphinx-based)
+
+---
+
+## Original Sprint 5 Plan (Updated with Priorities Above)
+
 ### Packaging & distribution
 
 * Package as `nlp2mcp` on PyPI.
