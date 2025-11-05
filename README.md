@@ -481,10 +481,10 @@ The `examples/` directory contains sample GAMS NLP models:
 - ✅ `Scalars`
 - ✅ `Variables` (scalar and indexed)
 - ✅ `Equations` (scalar and indexed)
-- ✅ `Table` data blocks *(Sprint 4)*
+- ✅ `Table` data blocks
 
 ### Preprocessing
-- ✅ `$include` directive (nested, relative paths) *(Sprint 4)*
+- ✅ `$include` directive (nested, relative paths)
 
 ### Comments
 - ✅ GAMS inline comments (`* comment`)
@@ -499,8 +499,8 @@ The `examples/` directory contains sample GAMS NLP models:
 - ✅ Aggregation: `sum(i, expr)`
 - ✅ Comparisons: `=`, `<>`, `<`, `>`, `<=`, `>=`
 - ✅ Logic: `and`, `or`
-- ✅ `min()` and `max()` (reformulated to complementarity) *(Sprint 4)*
-- ✅ `abs()` (smooth approximation with `--smooth-abs`) *(Sprint 4)*
+- ✅ `min()` and `max()` (reformulated to complementarity)
+- ✅ `abs()` (smooth approximation with `--smooth-abs`)
 
 ### Equations
 - ✅ Relations: `=e=` (equality), `=l=` (≤), `=g=` (≥)
@@ -510,7 +510,7 @@ The `examples/` directory contains sample GAMS NLP models:
 - ✅ `Model` declaration with equation lists or `/all/`
 - ✅ `Solve` statement with `using NLP` and objective
 
-### Advanced Features *(Sprint 4)*
+### Advanced Features
 - ✅ **Scaling**: Curtis-Reid and byvar scaling (`--scale auto|byvar`)
 - ✅ **Diagnostics**: Model statistics (`--stats`), Jacobian export (`--dump-jacobian`)
 - ✅ **Configuration**: `pyproject.toml` support for default options
@@ -551,7 +551,7 @@ The `examples/` directory contains sample GAMS NLP models:
 
 **Please read [CONTRIBUTING.md](CONTRIBUTING.md) before contributing!**
 
-This project is in active development (Sprint 3 complete, Sprint 4 in preparation). Contributions are welcome!
+This project is in active development (Sprint 4 complete, Sprint 5 in preparation). Contributions are welcome!
 
 ### Quick Start for Contributors
 
@@ -596,8 +596,8 @@ MIT License - See LICENSE file for details
 - **v0.2.0** (Sprint 2): ✅ Symbolic differentiation - COMPLETE
 - **v0.3.0** (Sprint 3): ✅ KKT synthesis and MCP code generation - COMPLETE
 - **v0.3.1** (Post Sprint 3): ✅ Issue #47 fix (indexed equations) - COMPLETE
-- **v0.4.0** (Sprint 4): 🔄 Extended features and robustness - IN PROGRESS
-- **v1.0.0** (Sprint 5): Production-ready with docs and PyPI release
+- **v0.4.0** (Sprint 4):✅ Extended features and robustness - IN PROGRESS
+- **v1.0.0** (Sprint 5): 🔄 Production-ready with docs and PyPI release - IN PROGRESS
 
 ## Contact
 
