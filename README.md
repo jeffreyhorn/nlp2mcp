@@ -65,7 +65,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Golden test suite (end-to-end regression testing)
 - ✅ Optional GAMS syntax validation
 - ✅ Comprehensive documentation (KKT assembly, GAMS emission)
-- ✅ 602 tests passing, 100% deterministic output
+- Tests: a comprehensive test suite is provided. Run `./scripts/test_all.sh` or `pytest` to show current counts; the README avoids hard-coding counts to prevent drift.
 
 **Sprint 4: Extended Features & Robustness** ✅ **COMPLETE**
 
@@ -82,14 +82,14 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 
 ### Planned (See [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md))
 
-- 📋 Sprint 5: Packaging, documentation, and ecosystem integration
+- 📋 Sprint 5: Packaging, documentation, and ecosystem integration (in progress)
 
 ## Installation
 
 ### Requirements
 
-- Python 3.12 or higher
-- pip 21.3 or higher (for pyproject.toml support)
+- Python 3.12 or higher (see `pyproject.toml` for the authoritative requirement)
+- pip 21.3 or higher (recommended for editable installs and modern pyproject support)
 
 ### For Development
 
@@ -108,13 +108,39 @@ make install-dev
 
 ### For Use
 
+If the package is published on PyPI, you can install it with:
+
 ```bash
-pip install nlp2mcp  # (Not yet published to PyPI)
+pip install nlp2mcp
+```
+
+If not published (or to install directly from this repository), use one of the following:
+
+```bash
+# Local editable development install (recommended for contributors)
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+
+# Or install directly from GitHub
+pip install git+https://github.com/jeffreyhorn/nlp2mcp.git
 ```
 
 ## Usage
 
 ### Command Line Interface
+
+Note: the package exposes a console script `nlp2mcp` (defined in `pyproject.toml` as
+`[project.scripts] nlp2mcp = "src.cli:main"`). After installing the package (for example
+with `pip install -e .` or `pip install nlp2mcp`), the `nlp2mcp` command will be available on your PATH
+and will invoke `src.cli:main`.
+
+If you prefer not to install the package, you can run the CLI directly from the repository with:
+
+```bash
+python -m src.cli examples/simple_nlp.gms -o output_mcp.gms
+```
+
 
 ```bash
 # Convert NLP to MCP
@@ -301,13 +327,15 @@ Solve mcp_model using MCP;
 
 ### Python API
 
+After an editable install (`pip install -e .`) the package imports use the package name. Example usage:
+
 ```python
-from src.ir.parser import parse_model_file
-from src.ir.normalize import normalize_model
-from src.ad.gradient import compute_objective_gradient
-from src.ad.constraint_jacobian import compute_constraint_jacobian
-from src.kkt.assemble import assemble_kkt_system
-from src.emit.emit_gams import emit_gams_mcp
+from nlp2mcp.ir.parser import parse_model_file
+from nlp2mcp.ir.normalize import normalize_model
+from nlp2mcp.ad.gradient import compute_objective_gradient
+from nlp2mcp.ad.constraint_jacobian import compute_constraint_jacobian
+from nlp2mcp.kkt.assemble import assemble_kkt_system
+from nlp2mcp.emit.emit_gams import emit_gams_mcp
 
 # Full pipeline
 model = parse_model_file("examples/simple_nlp.gms")
@@ -318,66 +346,432 @@ kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
 gams_code = emit_gams_mcp(kkt, model_name="mcp_model", add_comments=True)
 
 print(gams_code)
-
-# Access gradient for a variable by name
-grad_x_i = gradient.get_derivative_by_name("x", ("i",))  # Get ∂f/∂x(i)
-
-# Access Jacobian entries by iterating over nonzero entries
-for row_id, col_id in J_g.get_nonzero_entries():
-    # Get the derivative expression
-    deriv_expr = J_g.get_derivative(row_id, col_id)
-
-    # Get equation and variable names from the index mapping
-    eq_info = J_g.index_mapping.get_eq_instance(row_id)
-    var_info = J_g.index_mapping.get_var_instance(col_id)
-
-    if eq_info and var_info:
-        eq_name, eq_indices = eq_info
-        var_name, var_indices = var_info
-        print(f"∂{eq_name}{eq_indices}/∂{var_name}{var_indices} = {deriv_expr}")
-
-# Or access specific Jacobian entry by names
-deriv = J_g.get_derivative_by_names("constraint", ("i1",), "x", ("i1",))
 ```
+
+Note: if you prefer running from the repository without installing, either set `PYTHONPATH=.`, or run modules directly (for example `python -m src.cli ...`), but the recommended workflow for development is an editable install so imports use `nlp2mcp.*`.
 
 ## Project Structure
 
+The project layout below is a generated snapshot of the repository root (captured with `find` on Nov 5, 2025). It may still change; use the repository as the single source of truth.
+
 ```
 nlp2mcp/
-├── src/
-│   ├── ad/           # Symbolic differentiation engine
-│   │   ├── api.py              # High-level API
-│   │   ├── differentiate.py    # Core differentiation rules
-│   │   ├── simplify.py         # Expression simplification
-│   │   ├── evaluate.py         # AST evaluation
-│   │   ├── gradient.py         # Gradient computation
-│   │   ├── jacobian.py         # Jacobian computation
-│   │   ├── mapping.py          # Index mapping utilities
-│   │   └── validation.py       # Finite-difference validation
-│   ├── emit/         # Code generation for GAMS MCP (planned)
-│   ├── gams/         # GAMS grammar and parsing utilities
-│   ├── ir/           # Intermediate representation
-│   │   ├── ast.py              # Expression AST nodes
-│   │   ├── model_ir.py         # Model IR data structures
-│   │   ├── normalize.py        # Constraint normalization
-│   │   ├── parser.py           # GAMS parser
-│   │   └── symbols.py          # Symbol table definitions
-│   ├── kkt/          # KKT system assembly (planned)
-│   └── utils/        # Utility functions
-├── tests/
-│   ├── ad/           # Differentiation tests
-│   ├── gams/         # Parser tests
-│   └── ir/           # IR and normalization tests
-├── examples/         # Example GAMS models
-├── docs/             # Additional documentation
-│   ├── ad/                   # Automatic differentiation docs
-│   ├── architecture/         # System architecture
-│   ├── emit/                 # GAMS emission docs
-│   ├── kkt/                  # KKT assembly docs
-│   └── planning/             # Sprint plans and retrospectives
-├── pyproject.toml    # Project configuration
-├── Makefile          # Development commands
-└── README.md         # This file
+src
+src/config_loader.py
+src/config.py
+src/logging_config.py
+src/ad
+src/ad/jacobian.py
+src/ad/ad_core.py
+src/ad/derivative_rules.py
+src/ad/gradient.py
+src/ad/__init__.py
+src/ad/__pycache__
+src/ad/__pycache__/api.cpython-312.pyc
+src/ad/__pycache__/evaluator.cpython-312.pyc
+src/ad/__pycache__/sparsity.cpython-312.pyc
+src/ad/__pycache__/term_collection.cpython-312.pyc
+src/ad/__pycache__/index_mapping.cpython-312.pyc
+src/ad/__pycache__/constraint_jacobian.cpython-312.pyc
+src/ad/__pycache__/jacobian.cpython-312.pyc
+src/ad/__pycache__/validation.cpython-312.pyc
+src/ad/__pycache__/derivative_rules.cpython-312.pyc
+src/ad/__pycache__/gradient.cpython-312.pyc
+src/ad/__pycache__/__init__.cpython-312.pyc
+src/ad/sparsity.py
+src/ad/api.py
+src/ad/index_mapping.py
+src/ad/constraint_jacobian.py
+src/ad/term_collection.py
+src/ad/evaluator.py
+src/ad/validation.py
+src/ir
+src/ir/normalize.py
+src/ir/model_ir.py
+src/ir/__init__.py
+src/ir/preprocessor.py
+src/ir/__pycache__
+src/ir/__pycache__/preprocessor.cpython-312.pyc
+src/ir/__pycache__/symbols.cpython-312.pyc
+src/ir/__pycache__/normalize.cpython-312.pyc
+src/ir/__pycache__/model_ir.cpython-312.pyc
+src/ir/__pycache__/__init__.cpython-312.pyc
+src/ir/__pycache__/ast.cpython-312.pyc
+src/ir/__pycache__/parser.cpython-312.pyc
+src/ir/parser.py
+src/ir/symbols.py
+src/ir/ast.py
+src/__init__.py
+src/utils
+src/utils/__init__.py
+src/utils/__pycache__
+src/utils/__pycache__/errors.cpython-312.pyc
+src/utils/__pycache__/__init__.cpython-312.pyc
+src/utils/errors.py
+src/__pycache__
+src/__pycache__/config.cpython-312.pyc
+src/__pycache__/cli.cpython-312.pyc
+src/__pycache__/__init__.cpython-312.pyc
+src/__pycache__/logging_config.cpython-312.pyc
+src/kkt
+src/kkt/scaling.py
+src/kkt/objective.py
+src/kkt/partition.py
+src/kkt/stationarity.py
+src/kkt/kkt_system.py
+src/kkt/naming.py
+src/kkt/reformulation.py
+src/kkt/__init__.py
+src/kkt/__pycache__
+src/kkt/__pycache__/complementarity.cpython-312.pyc
+src/kkt/__pycache__/assemble.cpython-312.pyc
+src/kkt/__pycache__/stationarity.cpython-312.pyc
+src/kkt/__pycache__/kkt_system.cpython-312.pyc
+src/kkt/__pycache__/scaling.cpython-312.pyc
+src/kkt/__pycache__/objective.cpython-312.pyc
+src/kkt/__pycache__/naming.cpython-312.pyc
+src/kkt/__pycache__/partition.cpython-312.pyc
+src/kkt/__pycache__/__init__.cpython-312.pyc
+src/kkt/__pycache__/reformulation.cpython-312.pyc
+src/kkt/complementarity.py
+src/kkt/assemble.py
+src/cli.py
+src/diagnostics
+src/diagnostics/__init__.py
+src/diagnostics/__pycache__
+src/diagnostics/__pycache__/matrix_market.cpython-312.pyc
+src/diagnostics/__pycache__/statistics.cpython-312.pyc
+src/diagnostics/__pycache__/__init__.cpython-312.pyc
+src/diagnostics/statistics.py
+src/diagnostics/matrix_market.py
+src/emit
+src/emit/expr_to_gams.py
+src/emit/emit_gams.py
+src/emit/__init__.py
+src/emit/original_symbols.py
+src/emit/__pycache__
+src/emit/__pycache__/templates.cpython-312.pyc
+src/emit/__pycache__/equations.cpython-312.pyc
+src/emit/__pycache__/expr_to_gams.cpython-312.pyc
+src/emit/__pycache__/model.cpython-312.pyc
+src/emit/__pycache__/original_symbols.cpython-312.pyc
+src/emit/__pycache__/__init__.cpython-312.pyc
+src/emit/__pycache__/emit_gams.cpython-312.pyc
+src/emit/model.py
+src/emit/templates.py
+src/emit/equations.py
+src/validation
+src/validation/gams_check.py
+src/validation/__init__.py
+src/validation/__pycache__
+src/validation/__pycache__/gams_check.cpython-312.pyc
+src/validation/__pycache__/__init__.cpython-312.pyc
+src/gams
+src/gams/gams_grammar.lark
+src/gams/__init__.py
+src/gams/__pycache__
+src/gams/__pycache__/__init__.cpython-312.pyc
+
+tests
+tests/research
+tests/research/table_verification
+tests/research/table_verification/test_sparse_table.gms
+tests/research/table_verification/debug_ast.py
+tests/research/table_verification/test_no_semicolon.gms
+tests/research/table_verification/test_table_only.gms
+tests/research/table_verification/test_table_2d_only.gms
+tests/research/table_verification/test_table_with_text.gms
+tests/research/table_verification/__pycache__
+tests/research/table_verification/test_simple_table.gms
+tests/research/table_verification/debug_token_positions.py
+tests/research/table_verification/test_table_parsing.py
+tests/research/relative_path_verification
+tests/research/relative_path_verification/main_relative.gms
+tests/research/relative_path_verification/main_nested.gms
+tests/research/relative_path_verification/subdir
+tests/research/relative_path_verification/shared
+tests/research/relative_path_verification/__pycache__
+tests/research/relative_path_verification/test_relative_paths.py
+tests/research/relative_path_verification/main_parent.gms
+tests/research/relative_path_verification/data
+tests/research/abs_handling_verification
+tests/research/abs_handling_verification/ABS_HANDLING_RESEARCH.md
+tests/research/abs_handling_verification/example1_soft_abs_accuracy.md
+tests/research/abs_handling_verification/GAMS_NLP_RESULTS.md
+tests/research/abs_handling_verification/example3_mpec_reformulation.md
+tests/research/abs_handling_verification/example5_python_nlp_softabs.py
+tests/research/abs_handling_verification/example2_derivative_verification.md
+tests/research/abs_handling_verification/example5_gams_nlp_softabs.gms
+tests/research/abs_handling_verification/example4_approach_comparison.md
+tests/research/abs_handling_verification/example5_nlp_demonstration.md
+tests/research/abs_handling_verification/example5_gams_nlp_softabs.lst
+tests/research/auxiliary_vars_indexmapping_verification
+tests/research/auxiliary_vars_indexmapping_verification/test_auxiliary_vars_in_indexmapping.py
+tests/research/auxiliary_vars_indexmapping_verification/__pycache__
+tests/research/include_verification
+tests/research/include_verification/circular_a.inc
+tests/research/include_verification/circular_b.inc
+tests/research/include_verification/test_missing.gms
+tests/research/include_verification/test_quoted.gms
+tests/research/include_verification/level3.inc
+tests/research/include_verification/subdir
+tests/research/include_verification/test_paths.gms
+tests/research/include_verification/level2.inc
+tests/research/include_verification/level1.inc
+tests/research/include_verification/file with spaces.inc
+tests/research/include_verification/test_include.gms
+tests/research/include_verification/data.inc
+tests/research/include_verification/test_circular.gms
+tests/research/include_verification/test_nested.gms
+tests/research/nested_include_verification
+tests/research/nested_include_verification/circular_a.inc
+tests/research/nested_include_verification/circular_b.inc
+tests/research/nested_include_verification/main_nested.gms
+tests/research/nested_include_verification/level3.inc
+tests/research/nested_include_verification/level2.inc
+tests/research/nested_include_verification/test_nested_includes.py
+tests/research/nested_include_verification/main_circular.gms
+tests/research/nested_include_verification/__pycache__
+tests/research/nested_include_verification/level1.inc
+tests/research/scaling_verification
+tests/research/scaling_verification/__pycache__
+tests/research/scaling_verification/test_curtis_reid_verification.py
+tests/research/max_reformulation_verification
+tests/research/max_reformulation_verification/example3_multi_argument.md
+tests/research/max_reformulation_verification/MAX_REFORMULATION_RESEARCH.md
+tests/research/max_reformulation_verification/example4_nested_max.md
+tests/research/max_reformulation_verification/example1_simple_max.md
+tests/research/max_reformulation_verification/example2_max_min_equivalence.md
+tests/research/fixed_variable_verification
+tests/research/fixed_variable_verification/test_parser.py
+tests/research/fixed_variable_verification/test_indexed_fixed.gms
+tests/research/fixed_variable_verification/test_kkt.py
+tests/research/fixed_variable_verification/__pycache__
+tests/research/fixed_variable_verification/test_fixed_scalar.gms
+tests/research/fixed_variable_verification/test_indexed.py
+tests/research/fixed_variable_verification/test_normalization.py
+tests/research/min_reformulation_verification
+tests/research/min_reformulation_verification/example1_simple_min.md
+tests/research/min_reformulation_verification/example3_multi_argument.md
+tests/research/min_reformulation_verification/example2_min_with_constants.md
+tests/research/min_reformulation_verification/MIN_REFORMULATION_RESEARCH.md
+tests/research/min_reformulation_verification/example4_nested_min.md
+tests/research/long_line_verification
+tests/research/long_line_verification/test_line_limits.gms
+tests/research/long_line_verification/many_constraints.gms
+tests/research/long_line_verification/test_long_stationarity.gms
+tests/research/long_line_verification/large_model.gms
+tests/research/long_line_verification/simple_many_constraints.gms
+tests/research/long_line_verification/test_long_stationarity.lst
+tests/research/long_line_verification/225a
+tests/research/long_line_verification/test_line_limits.lst
+tests/research/long_line_verification/large_model_simple.gms
+tests/research/long_line_verification/.gitignore
+tests/research/long_line_verification/test_continuation.lst
+tests/research/long_line_verification/test_continuation.gms
+tests/research/long_line_verification/LINE_LENGTH_RESEARCH.md
+tests/research/long_line_verification/test_continuation.lst
+tests/research/auxiliary_constraints_verification
+tests/research/auxiliary_constraints_verification/__pycache__
+tests/research/auxiliary_constraints_verification/test_auxiliary_in_mcp.py
+tests/research/include_modelir_verification
+tests/research/include_modelir_verification/INCLUDE_PREPROCESSING_RESEARCH.md
+tests/unit
+tests/unit/ad
+tests/unit/ad/test_ad_core.py
+tests/unit/ad/test_simplify.py
+tests/unit/ad/test_term_collection.py
+tests/unit/ad/test_index_aware_diff.py
+tests/unit/ad/test_trigonometric.py
+tests/unit/ad/__pycache__
+tests/unit/ad/test_unsupported.py
+tests/unit/ad/test_abs_smoothing.py
+tests/unit/ad/test_apply_simplification.py
+tests/unit/ad/test_transcendental.py
+tests/unit/ad/test_alias_resolution.py
+tests/unit/ad/test_multiplicative_cancellation.py
+tests/unit/ad/test_index_mapping.py
+tests/unit/ad/test_power_simplification.py
+tests/unit/ad/test_sum_aggregation.py
+tests/unit/ad/test_sparsity.py
+tests/unit/ad/test_arithmetic.py
+tests/unit/ir
+tests/unit/ir/__pycache__
+tests/unit/ir/test_preprocessor.py
+tests/unit/ir/test_table_parsing.py
+tests/unit/ir/test_normalize.py
+tests/unit/utils
+tests/unit/utils/test_errors.py
+tests/unit/utils/__init__.py
+tests/unit/utils/__pycache__
+tests/unit/__pycache__
+tests/unit/__pycache__/test_config.cpython-312-pytest-8.4.2.pyc
+tests/unit/kkt
+tests/unit/kkt/test_scaling.py
+tests/unit/kkt/__init__.py
+tests/unit/kkt/test_reformulation.py
+tests/unit/kkt/__pycache__
+tests/unit/kkt/test_partition.py
+tests/unit/kkt/test_objective.py
+tests/unit/kkt/test_naming.py
+tests/unit/test_config.py
+tests/unit/diagnostics
+tests/unit/diagnostics/test_statistics.py
+tests/unit/diagnostics/__pycache__
+tests/unit/diagnostics/test_matrix_market.py
+tests/unit/emit
+tests/unit/emit/test_templates.py
+tests/unit/emit/__init__.py
+tests/unit/emit/test_equations.py
+tests/unit/emit/__pycache__
+tests/unit/emit/test_expr_to_gams.py
+tests/unit/emit/test_original_symbols.py
+tests/unit/emit/test_variable_kinds.py
+tests/unit/gams
+tests/unit/gams/test_parser.py
+tests/unit/gams/__pycache__
+tests/conftest.py
+tests/ad
+tests/ir
+tests/ir/__init__.py
+tests/integration
+tests/integration/ad
+tests/integration/ad/test_gradient.py
+tests/integration/ad/test_jacobian_structure.py
+tests/integration/ad/test_evaluator.py
+tests/integration/ad/__pycache__
+tests/integration/ad/test_bound_jacobian.py
+tests/integration/ad/test_constraint_jacobian.py
+tests/integration/__pycache__
+tests/integration/__pycache__/test_cli.cpython-312-pytest-8.4.2.pyc
+tests/integration/__pycache__/test_api_contracts.cpython-312-pytest-8.4.2.pyc
+tests/integration/kkt
+tests/integration/kkt/__init__.py
+tests/integration/kkt/__pycache__
+tests/integration/kkt/test_kkt_full.py
+tests/integration/kkt/test_stationarity.py
+tests/integration/test_api_contracts.py
+tests/integration/emit
+tests/integration/emit/test_emit_full.py
+tests/integration/emit/__pycache__
+tests/integration/test_cli.py
+tests/integration/gams_ir
+tests/edge_cases
+tests/edge_cases/__init__.py
+tests/edge_cases/__pycache__
+tests/edge_cases/__pycache__/test_edge_cases.cpython-312-pytest-8.4.2.pyc
+tests/edge_cases/test_edge_cases.py
+tests/golden
+tests/golden/scalar_nlp_mcp.gms
+tests/golden/simple_nlp_mcp.gms
+tests/golden/indexed_balance_mcp.gms
+tests/golden/min_max_test_mcp.gms
+tests/golden/min_max_test_mcp_new.gms
+tests/__init__.py
+tests/__pycache__
+tests/__pycache__/conftest.cpython-312-pytest-8.4.2.pyc
+tests/__pycache__/__init__.cpython-312.pyc
+tests/benchmarks
+tests/benchmarks/__init__.py
+tests/benchmarks/__pycache__
+tests/benchmarks/__pycache__/test_performance.cpython-312-pytest-8.4.2.pyc
+tests/benchmarks/test_performance.py
+tests/e2e
+tests/e2e/__pycache__
+tests/e2e/__pycache__/test_integration.cpython-312-pytest-8.4.2.pyc
+tests/e2e/__pycache__/test_golden.cpython-312-pytest-8.4.2.pyc
+tests/e2e/__pycache__/test_smoke.cpython-312-pytest-8.4.2.pyc
+tests/e2e/test_smoke.py
+tests/e2e/test_integration.py
+tests/e2e/test_golden.py
+tests/validation
+tests/validation/test_path_solver_minmax.py
+tests/validation/test_path_solver.py
+tests/validation/test_finite_difference.py
+tests/validation/__pycache__
+tests/validation/__pycache__/test_gams_check.cpython-312-pytest-8.4.2.pyc
+tests/validation/__pycache__/test_finite_difference.cpython-312-pytest-8.4.2.pyc
+tests/validation/__pycache__/test_path_solver.cpython-312-pytest-8.4.2.pyc
+tests/validation/__pycache__/test_path_solver_minmax.cpython-312-pytest-8.4.2.pyc
+tests/validation/test_gams_check.py
+tests/gams
+tests/gams/__init__.py
+
+examples
+examples/scalar_nlp.lst
+examples/simple_nlp.gms
+examples/min_max_test.gms
+examples/sprint4_abs_portfolio.gms
+examples/sprint4_fixed_vars_design.gms
+examples/sprint4_comprehensive.gms
+examples/scalar_nlp.gms
+examples/fixed_var_test.gms
+examples/sprint4_comprehensive_data.gms
+examples/abs_test.gms
+examples/indexed_balance.gms
+examples/sprint4_minmax_production.gms
+examples/sprint4_scaling_illconditioned.gms
+
+docs
+docs/research
+docs/research/RESEARCH_SUMMARY_TABLE_SYNTAX.md
+docs/research/minmax_objective_reformulation.md
+docs/research/RESEARCH_SUMMARY_FIXED_VARIABLES.md
+docs/research/convexity_detection.md
+docs/USER_GUIDE.md
+docs/ad
+docs/ad/ARCHITECTURE.md
+docs/ad/README.md
+docs/ad/DESIGN.md
+docs/ad/DERIVATIVE_RULES.md
+docs/ir
+docs/ir/parser_output_reference.md
+docs/DAY_8_COMPLETION_SUMMARY.md
+docs/development
+docs/development/ERROR_MESSAGES.md
+docs/development/AGENTS.md
+docs/planning
+docs/planning/SPRINT_1
+docs/planning/PROJECT_PLAN.md
+docs/planning/README.md
+docs/planning/SPRINT_2
+docs/planning/SPRINT_5
+docs/planning/SPRINT_4
+docs/planning/SPRINT_3
+docs/kkt
+docs/kkt/KKT_ASSEMBLY.md
+docs/testing
+docs/testing/TEST_PYRAMID.md
+docs/testing/EDGE_CASE_MATRIX.md
+docs/architecture
+docs/architecture/DATA_STRUCTURES.md
+docs/architecture/SYSTEM_ARCHITECTURE.md
+docs/concepts
+docs/concepts/IDEA.md
+docs/concepts/NLP2MCP_HIGH_LEVEL.md
+docs/emit
+docs/emit/GAMS_EMISSION.md
+docs/issues
+docs/issues/completed
+docs/issues/minmax-reformulation-spurious-variables.md
+docs/PATH_REQUIREMENTS.md
+docs/migration
+docs/migration/index_aware_differentiation.md
+docs/process
+docs/process/CHECKPOINT_TEMPLATES.md
+
+CHANGELOG.md
+CONTRIBUTING.md
+docs
+examples
+Makefile
+pyproject.toml
+README.md
+requirements.txt
+scripts
+setup.py
+src
+tests
 ```
 
 ## Development
@@ -426,27 +820,41 @@ pytest tests/unit/ad/test_arithmetic.py -v
 pytest --cov=src tests/
 ```
 
-### Test Organization
+## Test Organization
+
+The test suite is split into unit, integration, e2e, and validation layers. You can run the different subsets with the scripts in `./scripts/` or via pytest directly. Below are the counts collected locally on Nov 5, 2025 (run in this repository with `python3 -m pytest --collect-only`):
+
+- Total collected tests: **1281**
+- Marker breakdown (may overlap if tests carry multiple markers):
+  - unit: **434**
+  - integration: **223**
+  - e2e: **45**
+  - validation: **66**
+
+Note: marker-based counts can overlap and the total may include tests without markers or additional collected items (fixtures, doctests, etc.). To reproduce these numbers locally run:
+
+```bash
+# Total collected tests
+python3 -m pytest --collect-only -q | wc -l
+
+# Per-marker counts
+python3 -m pytest -m unit --collect-only -q | wc -l
+python3 -m pytest -m integration --collect-only -q | wc -l
+python3 -m pytest -m e2e --collect-only -q | wc -l
+python3 -m pytest -m validation --collect-only -q | wc -l
+```
+
+Typical layout:
 
 ```
 tests/
-├── unit/              # Fast tests, no file I/O (~10 tests/sec)
-│   ├── ad/           # AD engine unit tests
-│   ├── gams/         # Parser unit tests
-│   └── ir/           # IR unit tests
-├── integration/       # Cross-module tests (~5 tests/sec)
-│   └── ad/           # Gradient and Jacobian integration
-├── e2e/              # Full pipeline tests (~2 tests/sec)
-│   └── test_integration.py
-└── validation/        # Mathematical correctness (~1 test/sec)
-    └── test_finite_difference.py
+├── unit/
+├── integration/
+├── e2e/
+└── validation/
 ```
 
-**Test Pyramid Strategy:**
-- **Unit tests** (157 tests): Test individual functions/modules in isolation
-- **Integration tests** (45 tests): Test cross-module interactions
-- **E2E tests** (15 tests): Test full GAMS → derivatives pipeline
-- **Validation tests** (169 tests): Finite-difference validation of derivatives
+Test pyramid guidance: prefer fast unit tests during development, run integration/e2e for cross-module confidence, and run the full validation/validation suite before releases.
 
 ### Code Style
 
@@ -596,7 +1004,7 @@ MIT License - See LICENSE file for details
 - **v0.2.0** (Sprint 2): ✅ Symbolic differentiation - COMPLETE
 - **v0.3.0** (Sprint 3): ✅ KKT synthesis and MCP code generation - COMPLETE
 - **v0.3.1** (Post Sprint 3): ✅ Issue #47 fix (indexed equations) - COMPLETE
-- **v0.4.0** (Sprint 4):✅ Extended features and robustness - IN PROGRESS
+- **v0.4.0** (Sprint 4):✅ Extended features and robustness - COMPLETE
 - **v1.0.0** (Sprint 5): 🔄 Production-ready with docs and PyPI release - IN PROGRESS
 
 ## Contact
