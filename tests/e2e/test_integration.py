@@ -355,6 +355,8 @@ class TestPositiveVariables:
         assert "Solve" in mcp_output
 
         # Verify that positive variables appear in Positive Variables block
+        import re
+
         lines = mcp_output.split("\n")
         in_positive_block = False
         found_x = False
@@ -364,12 +366,11 @@ class TestPositiveVariables:
             if "Positive Variables" in line:
                 in_positive_block = True
             elif in_positive_block:
-                # Check for variables in the block
-                if "x(i)" in line or "x (i)" in line:
+                # Check for variables in the block using word boundaries
+                if re.search(r"\bx\s*\(i\)", line):
                     found_x = True
-                if (
-                    "obj" in line and ";" not in line
-                ):  # Make sure it's variable declaration, not equation
+                # Match 'obj' as a standalone word (not part of 'objective', etc.)
+                if re.search(r"\bobj\b", line):
                     found_obj = True
                 # End of block
                 if ";" in line and (found_x or found_obj):
