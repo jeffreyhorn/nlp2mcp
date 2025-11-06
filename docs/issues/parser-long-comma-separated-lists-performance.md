@@ -1,5 +1,7 @@
 # Parser Performance Issue: Long Comma-Separated Lists Cause Timeouts
 
+**GitHub Issue**: [#138](https://github.com/jeffreyhorn/nlp2mcp/issues/138)
+
 ## Status
 **Open** - Performance limitation  
 **Priority**: Medium  

@@ -22,7 +22,7 @@ This directory contains detailed documentation of parser limitations discovered 
    - **Workaround**: Use explicit comma-separated lists
    - **Affects**: All large-scale models, multiple example files
 
-3. **[Long Comma-Separated Lists Performance](parser-long-comma-separated-lists-performance.md)**
+3. **[Long Comma-Separated Lists Performance](parser-long-comma-separated-lists-performance.md)** ([#138](https://github.com/jeffreyhorn/nlp2mcp/issues/138))
    - **Status**: Open
    - **Impact**: Moderate - Limits practical model size
    - **Summary**: Parser performance degrades significantly with 100+ element lists (24s for 100 elements)
