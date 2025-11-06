@@ -7,6 +7,289 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Update README.md for Sprint 5 Execution - 2025-11-06
+
+**Status:** ✅ COMPLETED - README updated to reflect Sprint 5 active status
+
+#### Summary
+
+Updated README.md to reflect Sprint 5 transition from planning to active execution phase with day-by-day checkboxes for progress tracking.
+
+**Changes Made:**
+
+1. **Sprint 5 Section Expanded:**
+   - Changed from single line "📋 Sprint 5: Packaging, documentation, and ecosystem integration (in progress)"
+   - Added detailed day-by-day breakdown with checkboxes (10 days)
+   - Added goal statement and link to PLAN.md
+   - Changed status from "Planned" to "🔄 IN PROGRESS"
+
+2. **Day-by-Day Checklist:**
+   - [ ] Day 1: Min/Max Bug Fix - Research & Design
+   - [ ] Day 2: Min/Max Bug Fix - Implementation & Testing
+   - [ ] Day 3: PATH Validation + Checkpoint 1
+   - [ ] Day 4: Production Hardening - Error Recovery
+   - [ ] Day 5: Production Hardening - Large Models & Memory
+   - [ ] Day 6: Production Hardening - Edge Cases + Checkpoint 2
+   - [ ] Day 7: PyPI Packaging - Configuration & Build
+   - [ ] Day 8: PyPI Packaging - Release Automation + Checkpoint 3
+   - [ ] Day 9: Documentation - Tutorial, FAQ, and API Reference
+   - [ ] Day 10: Polish & Buffer
+
+3. **Contributing Section Updated:**
+   - Changed: "Sprint 4 complete, Sprint 5 in preparation"
+   - To: "Sprint 5 in progress - hardening, packaging, and documentation"
+
+4. **Roadmap Section Updated:**
+   - Changed: "v1.0.0 (Sprint 5): 🔄 Production-ready with docs and PyPI release - IN PROGRESS"
+   - To: "v1.0.0 (Sprint 5): 🔄 Production-ready with hardening, packaging, and comprehensive documentation - IN PROGRESS"
+   - Added space after Sprint 4 version for consistency
+
+**Rationale:**
+- Provides clear visibility into Sprint 5 progress
+- Allows tracking completion of each day's work
+- Aligns README with PLAN.md structure
+- Signals to contributors that Sprint 5 is actively underway
+
+**Files Modified:**
+- README.md (3 sections: Sprint 5 progress, Contributing, Roadmap)
+
+---
+
+### Archive Sprint 5 Planning Documents - 2025-11-06
+
+**Status:** ✅ COMPLETED - Moved all planning iterations to archive
+
+#### Summary
+
+Archived all Sprint 5 planning documents and reviews to `docs/planning/SPRINT_5/archive/` to keep main directory clean. Final plan now captured in `PLAN.md`.
+
+**Files Archived:**
+1. `PLAN_ORIGINAL.md` - Initial 10-day plan (Task 10)
+2. `PLAN_REVIEW.md` - First review feedback (4 findings)
+3. `PLAN_REVISED.md` - Revised plan addressing first review
+4. `PLAN_REVIEW_FINAL.md` - Final review feedback (3 recommendations)
+5. `PLAN_FINAL.md` - Final plan with all fixes implemented
+6. `PLAN_FINAL_REVIEW.md` - Final review confirmation
+
+**Rationale:**
+- Preserve planning iteration history for retrospective analysis
+- Keep main SPRINT_5 directory focused on active documents
+- Final plan consolidated into `PLAN.md` for execution
+
+**Active Planning Documents:**
+- `PLAN.md` - Production-ready Sprint 5 execution plan (based on PLAN_FINAL.md)
+- `KNOWN_UNKNOWNS.md` - Research ledger (updated with Unknowns 3.1, 5.1 status)
+- `PREP_PLAN.md` - Preparation tasks (completed)
+- `RETROSPECTIVE_ALIGNMENT.md` - Sprint 4 alignment analysis
+- `DOCUMENTATION_AUDIT.md` - Documentation review findings
+
+---
+
+### Sprint 5 PLAN_FINAL.md Creation - 2025-11-06
+
+**Status:** ✅ COMPLETED - Final Sprint 5 plan with all review findings addressed
+
+#### Summary
+
+Created PLAN_FINAL.md implementing all 3 recommendations from final plan review. Final plan maintains comprehensive structure while fixing status inconsistencies, restoring traceability cross-references, and completing Follow-On Research documentation.
+
+**Final Review Findings Addressed:**
+
+**Finding 1: Unknown Status Alignment Inconsistent**
+- **Issue:** PLAN_REVISED.md claimed Unknown 3.1 and 5.1 were synced with KNOWN_UNKNOWNS.md, but the research file still listed them as 🔍 INCOMPLETE
+- **Fix:** Updated KNOWN_UNKNOWNS.md to mark Unknown 3.1 as ✅ COMPLETE with Task 8 findings
+  - Performance baselines: 250 vars, 500 vars, 1K vars (45.9s - well under 90s target)
+  - Targets set: <10s, <30s, <90s respectively
+  - Memory usage acceptable
+- **Fix:** Updated KNOWN_UNKNOWNS.md to mark Unknown 5.1 as ✅ RESOLVED
+  - Decision: Sphinx chosen for API documentation
+  - Rationale: NumPy/SciPy ecosystem compatibility, standard tool, good autodoc
+- **Impact:** Eliminated status inconsistencies, single source of truth
+
+**Finding 2: Task Bullets Lack Unknown Cross-References**
+- **Issue:** Daily task lists no longer included Unknown IDs, key findings, and status (e.g., Day 4 tasks had no Unknown 3.4/3.5 references despite dependency)
+- **Fix:** Restored `**Related Unknown:**` annotations in task bullets across ALL days
+  - Format: `Unknown X.Y (STATUS) - Brief finding`
+  - Added to Days 1, 2, 3, 4, 5, 6, 7, 8, 9 (all tasks with Unknown dependencies)
+  - Examples: Day 1 Task 1.2 → Unknowns 1.2 & 1.4, Day 4 Task 4.1 → Unknown 3.4
+  - Detailed summaries remain in Follow-On Research sections (no duplication)
+- **Impact:** Restored traceability requirement, readers can track Unknown → Task linkage
+
+**Finding 3: Day 6 Missing Follow-On Research Section**
+- **Issue:** Day 6 referenced Unknown 3.2 in task narrative but omitted Follow-On Research Items section entirely
+- **Fix:** Added Follow-On Research Items section to Day 6
+  - Listed Unknown 3.2 (edge case testing)
+  - Status: 🔍 INCOMPLETE (research complete, tests not yet implemented)
+  - Summary: Extreme bounds, degenerate constraints, all-zero Jacobians, circular refs, empty sets
+  - Deadline: End of Day 6
+- **Impact:** Complete Follow-On Research documentation for all days, no missing research items
+
+**Implementation Details:**
+
+1. **KNOWN_UNKNOWNS.md Updates:**
+   - Unknown 3.1: Added ✅ COMPLETE status with full Task 8 findings
+   - Unknown 5.1: Added ✅ RESOLVED status with Sphinx decision rationale
+   - Both now consistent with PLAN_FINAL.md
+
+2. **Unknown Cross-References Restored (18 tasks):**
+   - Day 1: Tasks 1.2, 1.4, 1.5 (Unknowns 1.2, 1.4)
+   - Day 2: Tasks 2.1, 2.3 (Unknowns 1.4, 1.5)
+   - Day 3: Tasks 3.2, 3.3 (Unknowns 2.1, 2.2, 2.3)
+   - Day 4: Tasks 4.1, 4.2 (Unknowns 3.4, 3.5)
+   - Day 5: Task 5.3 (Unknown 3.3)
+   - Day 6: Task 6.1 (Unknown 3.2)
+   - Day 7: Tasks 7.1, 7.2, 7.6 (Unknowns 4.1, 4.2, 4.3)
+   - Day 8: Task 8.1 (Unknown 4.4)
+   - Day 9: Tasks 9.1, 9.4, 9.5 (Unknowns 5.1, 5.2, 5.3, 5.4)
+
+3. **Day 6 Follow-On Research Section:**
+   - Added after Integration Risks section
+   - Format matches other days' research sections
+   - Unknown 3.2 fully documented with status, summary, deadline
+
+**Deliverables:**
+- Created `docs/planning/SPRINT_5/PLAN_FINAL.md` (production-ready final plan)
+- Updated `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md` (Unknowns 3.1, 5.1 marked complete/resolved)
+- All 3 final review findings addressed with concrete fixes
+- Maintained all PLAN_REVISED.md strengths (structure, checkpoints, risk management)
+
+**Outcome:** Sprint 5 has production-ready final plan with consistent status tracking across all documents, complete traceability from tasks to research, and full Follow-On Research documentation for all 10 days.
+
+---
+
+### Sprint 5 PLAN_REVISED.md Creation - 2025-11-06
+
+**Status:** ✅ COMPLETED - Revised Sprint 5 plan addressing all review feedback
+
+#### Summary
+
+Created PLAN_REVISED.md addressing all 4 findings from Sprint 5 Plan Review. Revised plan maintains comprehensive 10-day structure while fixing structural issues, status inconsistencies, and scope gaps identified in peer review.
+
+**Review Findings Addressed:**
+
+**Finding 1: Missing Follow-On Research Items Sections**
+- **Issue:** Days 1, 2, 4, 5, 7, 8, and 10 were weaving Known Unknown note-taking into core execution tasks without separate research sections
+- **Fix:** Added explicit `Follow-On Research Items` sections to all affected days
+- **Fix:** Relocated Known Unknown summaries to research sections, keeping execution tasks clean and actionable
+- **Impact:** Improved plan clarity, separates research work from execution checklists
+
+**Finding 2: Known Unknowns Status Inconsistencies**
+- **Issue:** Days 5-6 labeled Unknowns 3.1 and 3.2 as ✅ COMPLETE while KNOWN_UNKNOWNS.md still listed them as 🔍 INCOMPLETE
+- **Fix:** Corrected Unknown 3.1 status to reflect Task 8 completion (performance baselines established: 1K vars in 45.9s)
+- **Fix:** Corrected Unknown 3.2 to 🔍 INCOMPLETE (research done, but tests not yet implemented)
+- **Fix:** Added note to update KNOWN_UNKNOWNS.md status tracking to match plan
+- **Impact:** Eliminated conflicting status signals, improved research ledger alignment
+
+**Finding 3: Missing Release Automation Scope**
+- **Issue:** Days 7-8 packaging plan omitted automated version bumping, changelog generation, and explicit CHANGELOG.md update requirement
+- **Fix:** Added Task 8.2 for automated version bumping (scripts/bump_version.py)
+- **Fix:** Added Task 8.3 for automated changelog generation (scripts/generate_changelog.py)
+- **Fix:** Added Task 8.9 for explicit CHANGELOG.md update with Sprint 5 deliverables
+- **Fix:** Updated Success Metrics to include "Release automation complete" with all sub-items
+- **Impact:** Fulfills Sprint 5 packaging requirements from PROJECT_PLAN.md, reduces manual release overhead
+
+**Finding 4: Missing API Documentation Deliverable**
+- **Issue:** Day 9 documentation plan covered tutorial, FAQ, and troubleshooting but omitted API reference/site deliverable committed in Sprint 5 goals
+- **Fix:** Added Task 9.5 for API documentation (Sphinx-based)
+- **Fix:** Added API reference site to Day 9 deliverables and acceptance criteria
+- **Fix:** Updated Success Metrics from 8 to 9 functional goals (added "API documentation published")
+- **Fix:** Added Sphinx/ReadTheDocs to external dependencies
+- **Fix:** Added risk mitigation for Sphinx documentation build
+- **Impact:** Delivers promised API reference/site, completes documentation track
+
+**Structural Improvements:**
+
+1. **Follow-On Research Sections (7 days):**
+   - Days 1, 2, 4, 5, 7, 8, 10 now have explicit research sections
+   - Each unknown includes: Priority, Status, Summary, Research Needed, Deadline
+   - Execution tasks no longer interleave research note-taking
+
+2. **Enhanced Day 8 (Release Automation):**
+   - Added 2 new tasks (8.2, 8.3) for automation scripts
+   - Added Task 8.9 for CHANGELOG.md Sprint 5 update
+   - Renumbered subsequent tasks (8.4-8.9)
+   - Checkpoint 3 review questions updated to check automation deliverables
+
+3. **Enhanced Day 9 (Documentation):**
+   - Added Task 9.5 for API documentation (2 hours)
+   - Sphinx setup, autodoc configuration, GitHub Pages deployment
+   - API documentation site added to deliverables and acceptance criteria
+
+4. **Known Unknowns Status Summary:**
+   - New section documenting: 2 complete, 17 to be resolved, 3 deferred
+   - Unknown 3.1 confirmed COMPLETE with note to update source file
+   - Unknown 3.2 clarified as research complete, implementation pending
+
+**Deliverables:**
+- Created `docs/planning/SPRINT_5/PLAN_REVISED.md` (comprehensive revised plan)
+- Addressed all 4 review findings with concrete fixes
+- Maintained all original plan strengths (Known Unknowns integration, checkpoints, risk management)
+- Enhanced release automation and documentation scope
+
+**Outcome:** Sprint 5 has production-ready execution plan with clear separation of execution and research, accurate status tracking, complete automation scope, and full documentation deliverables.
+
+---
+
+### Task 10: Sprint 5 PLAN_ORIGINAL.md Creation - 2025-11-06
+
+**Status:** ✅ COMPLETED - Comprehensive 10-day Sprint 5 execution plan created
+
+#### Summary
+
+Created detailed 10-day Sprint 5 execution plan integrating all preparation work from Tasks 1-9. Plan provides day-by-day structure for hardening, packaging, and documentation sprint with full Known Unknowns integration and checkpoint process.
+
+**Plan Structure:**
+
+1. **Overview Section:**
+   - Sprint 5 purpose and deliverables
+   - Foundation built on Tasks 1-9 preparation
+   - Alignment with Sprint 4 Retrospective recommendations
+
+2. **Success Metrics:**
+   - 8 functional goals (min/max bug fixed, PATH validated, PyPI published, etc.)
+   - 6 quality metrics (test coverage ≥85%, 1000+ tests, 0 type errors, etc.)
+   - 4 integration metrics (ecosystem validation, build automation, etc.)
+
+3. **10-Day Execution Plan:**
+   - **Days 1-2:** Min/max bug fix (Priority 1 - Critical)
+   - **Day 3:** PATH validation + Checkpoint 1 (Priority 2)
+   - **Days 4-6:** Production hardening + Checkpoint 2 (Priority 3)
+   - **Days 7-8:** PyPI packaging + Checkpoint 3 (Priority 4)
+   - **Day 9:** Documentation polish (Priority 5)
+   - **Day 10:** Polish & Buffer
+
+4. **Integration Achievements:**
+   - All 22 Known Unknowns mapped to specific tasks
+   - Unknown 1.1 DISPROVEN finding integrated into Days 1-2
+   - Unknown 3.1 COMPLETE status noted (performance baselines from Task 8)
+   - 20 INCOMPLETE unknowns scheduled for resolution
+   - Checkpoint reviews at Days 3, 6, 8 (1 hour each)
+   - All Sprint 4 Retrospective process improvements confirmed integrated
+
+**Each Day Includes:**
+- Priority level and dependencies
+- Specific goals and time-boxed tasks
+- Related Known Unknowns with status and summaries
+- Concrete deliverables and acceptance criteria
+- Integration risks with mitigations
+- Follow-on research items for deferred unknowns
+
+**Risk Management:**
+- Critical risks: Min/max bug complexity, PATH solver availability
+- Medium risks: Large model performance, PyPI build complexity
+- Low risks: Documentation scope, checkpoint overhead
+- All risks have documented mitigations
+
+**Deliverables:**
+- Created `docs/planning/SPRINT_5/PLAN_ORIGINAL.md` (comprehensive 10-day plan)
+- Integrated all 4 preparation document sources
+- Confirmed alignment with Sprint 4 learnings
+- Ready for Sprint 5 execution
+
+**Outcome:** Sprint 5 has clear, actionable day-by-day plan with Known Unknowns fully integrated and checkpoint process in place.
+
+---
+
 ### Task 9: Sprint 4 Retrospective Alignment Analysis - 2025-11-06
 
 **Status:** ✅ COMPLETED - All Sprint 4 recommendations mapped to Sprint 5 priorities

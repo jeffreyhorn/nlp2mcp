@@ -80,9 +80,22 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Day 9: Integration Testing, Documentation, and Examples
 - ✅ Day 10: Polish, Buffer, and Sprint Wrap-Up
 
-### Planned (See [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md))
+### Sprint 5: Hardening, Packaging, and Documentation (🔄 IN PROGRESS)
 
-- 📋 Sprint 5: Packaging, documentation, and ecosystem integration (in progress)
+**Goal:** Ship a production-ready, packaged tool with comprehensive documentation
+
+**Status:** Ready to execute (see [docs/planning/SPRINT_5/PLAN.md](docs/planning/SPRINT_5/PLAN.md))
+
+- [ ] Day 1: Min/Max Bug Fix - Research & Design
+- [ ] Day 2: Min/Max Bug Fix - Implementation & Testing
+- [ ] Day 3: PATH Validation + Checkpoint 1
+- [ ] Day 4: Production Hardening - Error Recovery
+- [ ] Day 5: Production Hardening - Large Models & Memory
+- [ ] Day 6: Production Hardening - Edge Cases + Checkpoint 2
+- [ ] Day 7: PyPI Packaging - Configuration & Build
+- [ ] Day 8: PyPI Packaging - Release Automation + Checkpoint 3
+- [ ] Day 9: Documentation - Tutorial, FAQ, and API Reference
+- [ ] Day 10: Polish & Buffer
 
 ## Installation
 
@@ -575,7 +588,7 @@ The `examples/` directory contains sample GAMS NLP models:
 
 **Please read [CONTRIBUTING.md](CONTRIBUTING.md) before contributing!**
 
-This project is in active development (Sprint 4 complete, Sprint 5 in preparation). Contributions are welcome!
+This project is in active development (Sprint 5 in progress - hardening, packaging, and documentation). Contributions are welcome!
 
 ### Quick Start for Contributors
 
@@ -620,8 +633,8 @@ MIT License - See LICENSE file for details
 - **v0.2.0** (Sprint 2): ✅ Symbolic differentiation - COMPLETE
 - **v0.3.0** (Sprint 3): ✅ KKT synthesis and MCP code generation - COMPLETE
 - **v0.3.1** (Post Sprint 3): ✅ Issue #47 fix (indexed equations) - COMPLETE
-- **v0.4.0** (Sprint 4):✅ Extended features and robustness - COMPLETE
-- **v1.0.0** (Sprint 5): 🔄 Production-ready with docs and PyPI release - IN PROGRESS
+- **v0.4.0** (Sprint 4): ✅ Extended features and robustness - COMPLETE
+- **v1.0.0** (Sprint 5): 🔄 Production-ready with hardening, packaging, and comprehensive documentation - IN PROGRESS
 
 ## Contact
 
