@@ -110,7 +110,21 @@ def main(
 
     Example:
         nlp2mcp examples/simple_nlp.gms -o output_mcp.gms
+
+    Warning: This function modifies the global Python recursion limit for the entire
+    interpreter process. If nlp2mcp is used as a library in a multi-threaded application,
+    this could affect other threads. The limit is restored on exit, but concurrent calls
+    may experience unexpected behavior.
     """
+    # Increase recursion limit for large models with deeply nested expressions
+    # (e.g., objectives with 1000+ terms create deep left-associative parse trees)
+    # WARNING: sys.setrecursionlimit() affects the entire Python process globally,
+    # not just this function. This could impact multi-threaded applications.
+    original_limit = sys.getrecursionlimit()
+    required_limit = 10000
+    if required_limit > original_limit:
+        sys.setrecursionlimit(required_limit)
+
     try:
         # Determine verbosity level (quiet overrides verbose)
         verbosity_level = 0 if quiet else verbose
@@ -298,6 +312,9 @@ def main(
 
             traceback.print_exc()
         sys.exit(1)
+    finally:
+        # Restore original recursion limit
+        sys.setrecursionlimit(original_limit)
 
 
 if __name__ == "__main__":
