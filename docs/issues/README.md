@@ -6,7 +6,7 @@ This directory contains detailed documentation of parser limitations discovered 
 
 ### High Priority
 
-1. **[Multi-Dimensional Parameter Data Not Supported](parser-multi-dimensional-parameters-not-supported.md)**
+1. **[Multi-Dimensional Parameter Data Not Supported](parser-multi-dimensional-parameters-not-supported.md)** ([#139](https://github.com/jeffreyhorn/nlp2mcp/issues/139))
    - **Status**: Open
    - **Impact**: High - Blocks realistic problem modeling
    - **Summary**: Cannot specify 2D/3D parameter data using dotted notation (e.g., `usage(i,j) / i1.j1 2.0 /`)

@@ -1,5 +1,7 @@
 # Parser Limitation: Multi-Dimensional Parameter Data Not Supported
 
+**GitHub Issue**: [#139](https://github.com/jeffreyhorn/nlp2mcp/issues/139)
+
 ## Status
 **Open** - Parser limitation  
 **Priority**: High  
