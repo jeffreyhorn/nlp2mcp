@@ -132,14 +132,33 @@ Question: Do we need to trace the full dependency chain?
 3-4 hours (implement and test all 5 test cases from research doc)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE - Needs verification before Priority 1 implementation
+❌ **Status:** DISPROVEN - Strategy 2 is INFEASIBLE (Sprint 5 Prep Task 2, Nov 6, 2025)
+
+**Findings:**
+- Test Case 1 (`minimize z` where `z = min(x,y)`) is **MATHEMATICALLY IMPOSSIBLE**
+- KKT stationarity requires: `1 + λ_x + λ_y = 0` → `λ_x + λ_y = -1`
+- But λ_x, λ_y ≥ 0 (inequality multipliers), so equation is INFEASIBLE
+- Proof by contradiction: Cannot satisfy both non-negativity and the stationarity equation
+
+**Conclusion:** Strategy 2 (Direct Constraints) **DOES NOT WORK** for this case.
+
+**Impact:** Sprint 5 Priority 1 MUST use Strategy 1 (Objective Substitution) instead.
+
+**Test Location:** `tests/fixtures/minmax_research/test1_minimize_min_manual_mcp.gms`
+
+**Detailed Analysis:** See `docs/research/minmax_objective_reformulation.md` → Validation Results section
+
+**Remaining Work:**
+- Tests 2-4 not yet validated (may reveal if any sense/function combinations work)
+- If Strategy 2 fails for all cases, abandon entirely
+- Focus all effort on Strategy 1 implementation
 
 ---
 
 ## Unknown 1.2: How to detect if min/max defines the objective variable?
 
 ### Priority
-**High** - Required for Strategy 2 implementation
+**High** - Required for Strategy 1 implementation (changed from Strategy 2)
 
 ### Assumption
 We can detect objective-defining equations by tracing from objective variable through equality constraints to find min/max calls.
