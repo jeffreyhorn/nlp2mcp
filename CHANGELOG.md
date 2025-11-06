@@ -7,6 +7,138 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 5 Prep Task 4: Performance Baselines Established - 2025-11-06
+
+**Status:** ✅ COMPLETE - Quantitative baselines established for Sprint 5 optimization work
+
+#### Task Completed
+
+**Task:** Benchmark Current Performance Baselines (Sprint 5 Prep Task 4)  
+**Duration:** 3 hours (within estimated budget)  
+**Status:** ✅ COMPLETE - Ready for data-driven optimization
+
+#### Benchmarks Executed
+
+**Test Suite:** `tests/benchmarks/test_performance.py`  
+**Total Runtime:** 19.23 seconds  
+**Tests:** 6 passed, 1 skipped (memory benchmark)
+
+**Benchmark Results:**
+
+| Benchmark | Model Size | Result | Status |
+|-----------|------------|--------|--------|
+| Parse Small | 10 vars, 5 constraints | 0.174s | ✅ < 1.0s target |
+| Parse Medium | 100 vars, 50 constraints | 0.667s | ✅ < 3.0s target |
+| Parse Large | 200 vars, 100 constraints | 1.363s | ✅ < 5.0s target |
+| Differentiation Scaling | 10x vars | 98.5x time | ✅ ~O(n²) expected |
+| End-to-End Medium | 100 vars | 1.589s | ⚠️ Above 1.0s goal |
+| Sparsity Exploitation | 2% vs 100% density | 11.1x speedup | ✅ Excellent |
+| Memory Usage | 200 vars | Skipped | ⏸️ Re-enable in Sprint 5 |
+
+#### Profiling Analysis
+
+**Profiled:** Medium model (100 vars, 50 constraints)  
+**Tool:** cProfile  
+**Total Time:** 4.356 seconds  
+**Function Calls:** 5,407,965
+
+**Top 5 Hotspots Identified:**
+
+1. **Simplification (16.5% of time):** 0.720s in `simplify()` - 199K calls, excessive recursive simplification
+2. **Lark Parser (11.7%):** 0.510s in Earley parsing - inherent parser overhead
+3. **Type Checking (5.6%):** 0.243s in `isinstance()` - 1.2M calls for type dispatch
+4. **Lark Equality (6.1%):** 0.268s in grammar/lexer comparisons - 213K calls
+5. **Differentiation (6.3%):** 0.274s in AD operations - 116K differentiation calls
+
+#### Optimization Targets Set
+
+**Sprint 5 Priority 3 (Days 4-6) Targets:**
+
+**Target 1: Large Model Performance (1000 vars, 500 constraints)**
+- Parse: < 10s
+- Differentiation: < 60s (requires optimization)
+- Total: < 80s end-to-end
+- Memory: < 200 MB
+
+**Target 2: Medium Model Optimization (100 vars, 50 constraints)**
+- Current: 1.589s
+- Target: < 1.0s (37% improvement needed)
+- Focus: Simplification (0.720s) and parsing (0.667s)
+
+**Target 3: Memory Optimization**
+- 1000 vars: < 200 MB
+- 10,000 vars: < 1 GB
+
+#### Optimization Priorities
+
+Based on profiling data, Sprint 5 should focus on:
+
+1. **Simplification Caching (16.5% time):** Cache results by expression hash - Expected: 30-50% reduction
+2. **Reduce isinstance() Calls (5.6%):** Targeted type dispatch - Expected: 20-30% reduction  
+3. **Derivative Memoization (6.3%):** Cache derivatives for repeated subexpressions - Expected: 20-40% reduction
+4. **Parser Optimization (11.7%):** Limited (external lib), but could optimize grammar - Expected: 10-20%
+5. **Deferred Simplification:** Only simplify final results - Combine with #1 for 40-60% speedup
+
+**Estimated Impact:** If all successful, medium model: 1.589s → ~1.2s (25% improvement)  
+**Confidence:** Medium-High (40-60% of < 1.0s target achievable)
+
+#### Documentation Created
+
+**File:** `docs/benchmarks/PERFORMANCE_BASELINES.md` (400+ lines)
+
+**Contents:**
+- System configuration (CPU, memory, software versions)
+- Complete benchmark results for all 7 tests
+- Parsing, differentiation, end-to-end performance metrics
+- Scalability analysis (sub-quadratic verified)
+- Sparsity exploitation results (11.1x speedup)
+- Detailed profiling analysis with top 10 hotspots
+- Sprint 5 optimization targets with estimated improvements
+- Optimization priorities ranked by impact
+
+#### Scalability Verified
+
+**Parsing Scalability:**
+- 10x variables (small → medium): 3.8x time ✅ Sub-quadratic
+- 2x variables (medium → large): 2.0x time ✅ Sub-quadratic
+
+**Differentiation Scalability:**
+- 10x variables: 98.5x time
+- Expected: O(n²) for dense Jacobians (100x)
+- **Result:** 98.5x matches theory ✅
+
+**Sparsity Exploitation:**
+- Sparse (2% density): 0.470s
+- Dense (100% density): 5.203s
+- **Speedup:** 11.1x ✅ Highly effective
+
+#### Files Added
+
+- `docs/benchmarks/PERFORMANCE_BASELINES.md` - Comprehensive baseline documentation
+
+#### Files Modified
+
+- `docs/planning/SPRINT_5/PREP_PLAN.md` - Task 4 acceptance criteria checked off
+
+#### Sprint 5 Impact
+
+**Ready for Data-Driven Optimization:**
+- ✅ Baseline metrics established (1.589s medium model)
+- ✅ Quantitative targets defined (< 1.0s goal)
+- ✅ Hotspots identified (simplification: 16.5%, parsing: 11.7%)
+- ✅ Optimization priorities ranked
+- ✅ Expected improvements estimated
+
+**Recommendations:**
+1. Focus on simplification caching (highest impact: 16.5%)
+2. Test 1000+ variable models to validate scaling
+3. Re-enable memory benchmark with consistent methodology
+4. Use baselines for regression testing in CI/CD
+
+**Value:** Provides objective measurement framework for Sprint 5 Priority 3 optimization work, enabling data-driven decisions and quantifiable success criteria.
+
+---
+
 ### Large Model Recursion Fix - 2025-11-06
 
 **Status:** ✅ COMPLETE - Large models (1000+ variables) now supported
