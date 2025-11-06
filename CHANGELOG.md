@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Archive Sprint 5 Planning Documents - 2025-11-06
+
+**Status:** ✅ COMPLETED - Moved all planning iterations to archive
+
+#### Summary
+
+Archived all Sprint 5 planning documents and reviews to `docs/planning/SPRINT_5/archive/` to keep main directory clean. Final plan now captured in `PLAN.md`.
+
+**Files Archived:**
+1. `PLAN_ORIGINAL.md` - Initial 10-day plan (Task 10)
+2. `PLAN_REVIEW.md` - First review feedback (4 findings)
+3. `PLAN_REVISED.md` - Revised plan addressing first review
+4. `PLAN_REVIEW_FINAL.md` - Final review feedback (3 recommendations)
+5. `PLAN_FINAL.md` - Final plan with all fixes implemented
+6. `PLAN_FINAL_REVIEW.md` - Final review confirmation
+
+**Rationale:**
+- Preserve planning iteration history for retrospective analysis
+- Keep main SPRINT_5 directory focused on active documents
+- Final plan consolidated into `PLAN.md` for execution
+
+**Active Planning Documents:**
+- `PLAN.md` - Production-ready Sprint 5 execution plan (based on PLAN_FINAL.md)
+- `KNOWN_UNKNOWNS.md` - Research ledger (updated with Unknowns 3.1, 5.1 status)
+- `PREP_PLAN.md` - Preparation tasks (completed)
+- `RETROSPECTIVE_ALIGNMENT.md` - Sprint 4 alignment analysis
+- `DOCUMENTATION_AUDIT.md` - Documentation review findings
+
+---
+
 ### Sprint 5 PLAN_FINAL.md Creation - 2025-11-06
 
 **Status:** ✅ COMPLETED - Final Sprint 5 plan with all review findings addressed
