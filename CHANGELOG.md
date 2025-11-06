@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Task 8: Regenerate Large Model Test Fixtures - 2025-11-06
+
+**Status:** ✅ COMPLETED - Test fixtures regenerated using asterisk notation and improved parser features
+
+#### Summary
+
+Regenerated Task 8 large model test fixtures to leverage recently added parser features including asterisk notation for sets and improved long comma-separated list support.
+
+**What Was Changed:**
+
+1. **Model Sizes Updated:**
+   - Previous: 10, 50, 100 variable models
+   - New: 250, 500, 1,000 variable models
+   - File sizes: 2.3K, 4.3K, 8.3K respectively
+
+2. **Asterisk Notation:** (`tests/fixtures/generate_large_models.py:28-29`)
+   - Sets now use compact asterisk notation: `i /i1*i1000/`
+   - Previously used explicit comma-separated lists: `i /i1, i2, ..., i1000/`
+
+3. **Long Parameter Lists:**
+   - Parameters now use long comma-separated lists across single lines
+   - Tests parser's ability to handle 1000+ element parameter definitions
+
+4. **Test Suite Updates:** (`tests/production/test_large_models.py`)
+   - Updated test names and timeouts for 250, 500, 1K models
+   - All tests passing with reasonable conversion times (<90s for 1K model)
+
+**Files Modified:**
+- `tests/fixtures/generate_large_models.py` - Generator script updated for asterisk notation
+- `tests/production/test_large_models.py` - Test suite updated for new model sizes
+- `tests/fixtures/large_models/README.md` - Documentation updated
+- `tests/fixtures/large_models/*.gms` - New fixture files generated
+
+**Test Results:**
+- ✅ 250-variable model: Converts successfully
+- ✅ 500-variable model: Converts in <60s
+- ✅ 1K-variable model: Converts in <90s with valid MCP output
+
+---
+
 ### Issue #140: Block-Level Variable Kind Keywords Support - 2025-11-06
 
 **Status:** ✅ FIXED - Parser now supports block-level variable kind keywords

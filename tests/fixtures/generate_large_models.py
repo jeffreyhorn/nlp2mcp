@@ -22,29 +22,29 @@ def generate_resource_allocation(
     s.t. sum_constraint: sum of all vars with coefficients
          var >= 0
 
-    This tests large-scale model handling without unsupported features.
+    This tests large-scale model handling with asterisk notation.
     """
     # Total number of variables = num_tasks (x(i)) + 1 (obj) = num_tasks + 1
     content = [f"* Resource Allocation Problem: {num_tasks} variables\n\n"]
 
-    # Sets - use explicit comma-separated lists (parser doesn't support * notation)
+    # Sets - use asterisk notation (now supported!)
     content.append("Sets\n")
-    content.append("    i /")
-    content.append(", ".join([f"i{idx}" for idx in range(1, num_tasks + 1)]))
-    content.append("/\n")
+    content.append(f"    i /i1*i{num_tasks}/\n")
     content.append(";\n\n")
 
-    # Parameters - 1D only
+    # Parameters - use asterisk notation with comma-separated values
     content.append("Parameters\n")
     content.append("    a(i) / ")
-    content.append(", ".join([f"i{idx} {1 + idx % 10}" for idx in range(1, num_tasks + 1)]))
+    # For large models, use comma-separated list with long line support
+    param_values = [f"i{idx} {1 + idx % 10}" for idx in range(1, num_tasks + 1)]
+    content.append(", ".join(param_values))
     content.append(" /\n")
     content.append(";\n\n")
 
     # Variables
     content.append("Variables\n")
-    content.append("    x(i) decision variables\n")
-    content.append("    obj objective value\n")
+    content.append("    x(i)\n")
+    content.append("    obj\n")
     content.append(";\n\n")
 
     # Equations
@@ -84,19 +84,17 @@ def generate_network_flow(
     s.t. capacity constraint
          flow(arc) >= 0
 
-    Tests large-scale model handling.
+    Tests large-scale model handling with asterisk notation.
     """
     # Total number of variables = num_arcs (flow(j)) + 1 (obj) = num_arcs + 1
     content = [f"* Network Flow Problem: {num_arcs} arcs\n\n"]
 
-    # Sets - use explicit comma-separated lists (parser doesn't support * notation)
+    # Sets - use asterisk notation (now supported!)
     content.append("Sets\n")
-    content.append("    j /")
-    content.append(", ".join([f"j{idx}" for idx in range(1, num_arcs + 1)]))
-    content.append("/\n")
+    content.append(f"    j /j1*j{num_arcs}/\n")
     content.append(";\n\n")
 
-    # Parameters - 1D only
+    # Parameters - use comma-separated list with long line support
     content.append("Parameters\n")
     content.append("    cost(j) /")
     costs = [f"j{idx} {1 + idx % 5}" for idx in range(1, num_arcs + 1)]
@@ -106,8 +104,8 @@ def generate_network_flow(
 
     # Variables
     content.append("Variables\n")
-    content.append("    flow(j) flow on arcs\n")
-    content.append("    obj objective value\n")
+    content.append("    flow(j)\n")
+    content.append("    obj\n")
     content.append(";\n\n")
 
     # Equations
@@ -139,27 +137,26 @@ def generate_all_test_models():
     fixtures_dir = Path(__file__).parent / "large_models"
     fixtures_dir.mkdir(exist_ok=True)
 
-    # NOTE: Parser has limitations with very long comma-separated lists
-    # Keeping models at reasonable sizes that work with current parser
-    # Only generating resource allocation models (network flow had variable indexing issues)
+    # Using asterisk notation and improved comma-separated list support
+    # Generating 250, 500, and 1K variable models for performance testing
     models = [
-        # Small model (baseline - fast conversion)
+        # 250 variable model
         (
-            "resource_allocation_small.gms",
+            "resource_allocation_250.gms",
             "resource_allocation",
-            {"num_resources": 5, "num_tasks": 10},
+            {"num_resources": 15, "num_tasks": 250},
         ),
-        # Medium model (moderate scale testing)
+        # 500 variable model
         (
-            "resource_allocation_medium.gms",
+            "resource_allocation_500.gms",
             "resource_allocation",
-            {"num_resources": 10, "num_tasks": 50},
+            {"num_resources": 25, "num_tasks": 500},
         ),
-        # Large model (stress testing within parser limits)
+        # 1K variable model
         (
-            "resource_allocation_large.gms",
+            "resource_allocation_1k.gms",
             "resource_allocation",
-            {"num_resources": 20, "num_tasks": 100},
+            {"num_resources": 50, "num_tasks": 1000},
         ),
     ]
 
