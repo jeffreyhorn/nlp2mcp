@@ -245,8 +245,13 @@ class _ModelBuilder:
         result = []
         for child in members_node.children:
             if isinstance(child, Token):
-                # Direct token (shouldn't happen with new grammar, but keep for safety)
-                result.append(_token_text(child))
+                # Direct token - this indicates the grammar produced an unexpected token
+                # instead of wrapping it in a set_element node
+                raise self._error(
+                    f"Unexpected direct token in set members: {child!r}. "
+                    f"Expected set_element or set_range node from grammar.",
+                    child,
+                )
             elif isinstance(child, Tree):
                 if child.data == "set_element":
                     # Simple element: ID or STRING
@@ -267,6 +272,12 @@ class _ModelBuilder:
                     start_id, end_id = ids
                     expanded = self._expand_range(start_id, end_id, child)
                     result.extend(expanded)
+                else:
+                    raise self._error(
+                        f"Unexpected set member node type: '{child.data}'. "
+                        f"Expected 'set_element' or 'set_range'.",
+                        child,
+                    )
         return result
 
     def _expand_range(self, start_id: str, end_id: str, node: Tree) -> list[str]:
