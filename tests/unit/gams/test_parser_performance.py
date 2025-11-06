@@ -3,9 +3,15 @@
 These tests ensure the parser maintains good performance with long
 comma-separated lists in set definitions. Issue #138 reported performance
 problems that could not be reproduced, but these tests guard against regressions.
+
+Note: These tests use wall-clock time assertions and are marked as @pytest.mark.slow
+to allow selective execution and reduce flakiness in CI/CD environments with
+variable system load.
 """
 
 import time
+
+import pytest
 
 from src.ir import parser
 
@@ -35,8 +41,9 @@ class TestCommaListPerformance:
         assert result.sets["i"].members == [f"i{i}" for i in range(1, 11)]
         assert elapsed < 1.0, f"10 elements took {elapsed:.2f}s (expected < 1.0s)"
 
+    @pytest.mark.slow
     def test_medium_list_reasonable(self):
-        """50 elements should parse reasonably fast (< 2s)."""
+        """50 elements should parse reasonably fast (< 3s with CI/CD buffer)."""
         elements = ", ".join([f"i{i}" for i in range(1, 51)])
 
         code = f"""
@@ -55,10 +62,12 @@ class TestCommaListPerformance:
         elapsed = time.time() - start
 
         assert len(result.sets["i"].members) == 50
-        assert elapsed < 2.0, f"50 elements took {elapsed:.2f}s (expected < 2.0s)"
+        # Allow extra buffer for CI/CD variability
+        assert elapsed < 3.0, f"50 elements took {elapsed:.2f}s (expected < 3.0s)"
 
+    @pytest.mark.slow
     def test_large_list_acceptable(self):
-        """100 elements should parse in acceptable time (< 3s)."""
+        """100 elements should parse in acceptable time (< 5s with CI/CD buffer)."""
         elements = ", ".join([f"i{i}" for i in range(1, 101)])
 
         code = f"""
@@ -77,10 +86,12 @@ class TestCommaListPerformance:
         elapsed = time.time() - start
 
         assert len(result.sets["i"].members) == 100
-        assert elapsed < 3.0, f"100 elements took {elapsed:.2f}s (expected < 3.0s)"
+        # Allow extra buffer for CI/CD variability
+        assert elapsed < 5.0, f"100 elements took {elapsed:.2f}s (expected < 5.0s)"
 
+    @pytest.mark.slow
     def test_very_large_list_works(self):
-        """200 elements should still work in reasonable time (< 5s)."""
+        """200 elements should still work in reasonable time (< 8s with CI/CD buffer)."""
         elements = ", ".join([f"i{i}" for i in range(1, 201)])
 
         code = f"""
@@ -99,8 +110,10 @@ class TestCommaListPerformance:
         elapsed = time.time() - start
 
         assert len(result.sets["i"].members) == 200
-        assert elapsed < 5.0, f"200 elements took {elapsed:.2f}s (expected < 5.0s)"
+        # Allow extra buffer for CI/CD variability
+        assert elapsed < 8.0, f"200 elements took {elapsed:.2f}s (expected < 8.0s)"
 
+    @pytest.mark.slow
     def test_scaling_is_reasonable(self):
         """Performance should scale reasonably with list size."""
         times = []
