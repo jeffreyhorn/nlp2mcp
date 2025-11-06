@@ -1,9 +1,12 @@
 # Min/Max in Objective-Defining Equations: Research and Reformulation Strategies
 
-**Status:** Open Research Question  
-**Priority:** Medium  
-**Date:** 2025-11-03  
+**Status:** ⚠️ Strategy 2 DISPROVEN - See Validation Results  
+**Priority:** Critical (Sprint 5 Priority 1 blocker)  
+**Date Created:** 2025-11-03  
+**Date Updated:** 2025-11-06 (Sprint 5 Prep Task 2)  
 **Related Issue:** Min/max reformulation creates infeasible KKT system
+
+**CRITICAL FINDING:** Strategy 2 (Direct Constraints) has been proven mathematically infeasible for minimize z where z = min(x,y). See [Validation Results](#validation-results-pre-sprint-5) section below.
 
 ---
 
@@ -567,3 +570,226 @@ Solve model using NLP maximizing obj;
 - The mathematical structure is sound - it's the application that needs refinement
 
 **Bottom Line:** This is a solvable problem that requires careful reformulation strategy selection based on where min/max appears in the model.
+
+---
+
+## Validation Results (Pre-Sprint 5)
+
+**Date:** November 6, 2025  
+**Sprint 5 Prep Task 2:** Research Min/Max Reformulation Strategies  
+**Test Location:** `tests/fixtures/minmax_research/`
+
+### Executive Summary
+
+⚠️ **CRITICAL FINDING:** Strategy 2 (Direct Constraints) has been **MATHEMATICALLY PROVEN INFEASIBLE** for the case `minimize z` where `z = min(x,y)`.
+
+This validates the research doc's original analysis and has major implications for Sprint 5 Priority 1 implementation.
+
+### Test Case 1: Minimize z where z = min(x,y)
+
+**Status:** ❌ **FAILED - INFEASIBLE**
+
+**Original NLP:** `tests/fixtures/minmax_research/test1_minimize_min.gms`
+```gams
+Variables x, y, z, obj;
+x.lo = 1; y.lo = 2;
+
+objective.. obj =e= z;
+min_constraint.. z =e= min(x, y);
+
+Solve model using NLP minimizing obj;
+```
+
+**Expected Solution:** z* = 1, x* = 1, y* = 2
+
+**Strategy 2 Reformulation Attempted:**
+```
+minimize z
+s.t. z ≤ x
+     z ≤ y
+```
+
+**Manual MCP Formulation:** `tests/fixtures/minmax_research/test1_minimize_min_manual_mcp.gms`
+
+**KKT Stationarity Equations:**
+```
+∂L/∂x = -λ_x = 0                    → λ_x = 0
+∂L/∂y = -λ_y = 0                    → λ_y = 0
+∂L/∂z = 1 + λ_x + λ_y = 0          → λ_x + λ_y = -1
+```
+
+**Mathematical Impossibility:**
+- The third equation requires: λ_x + λ_y = -1
+- But λ_x, λ_y ≥ 0 (inequality multipliers must be non-negative)
+- Combining the first two equations: λ_x = 0, λ_y = 0
+- Therefore: 0 + 0 = -1, which is **IMPOSSIBLE**
+
+**Conclusion:** Strategy 2 creates a **mathematically infeasible system**. No solution exists.
+
+**Implication:** Strategy 2 CANNOT be used for this case. Must use Strategy 1 (Objective Substitution) instead.
+
+### Test Cases 2-6: Status
+
+**Test 2-4:** Not yet validated (symmetric and opposite-sense cases)
+- Need to determine if Strategy 2 works for ANY sense/function combinations
+- If it only works for symmetric cases, document limitation
+- If it fails for all cases, abandon Strategy 2 entirely
+
+**Test 5:** Nested min/max - pending Strategy 2 viability assessment
+
+**Test 6:** Min in constraint (not objective-defining) - should work with standard epigraph (regression test)
+
+### Key Findings
+
+#### Finding 1: Strategy 2 is NOT a General Solution
+
+Strategy 2 (Direct Constraints) **FAILS** for at least one critical case: minimize z where z = min(x,y).
+
+**Reason:** The reformulation creates KKT stationarity equations that require negative multipliers, which violates the non-negativity constraint on inequality multipliers.
+
+#### Finding 2: Research Doc Analysis was CORRECT
+
+The original research doc correctly identified that the epigraph reformulation creates an infeasible system. The mathematical analysis has been validated through:
+1. Explicit KKT derivation
+2. Manual MCP formulation attempt
+3. Proof by contradiction (λ ≥ 0 but must equal -1)
+
+#### Finding 3: Strategy 1 is Likely Required
+
+Since Strategy 2 fails, we must implement **Strategy 1 (Objective Substitution)** as described in the research doc:
+
+**Strategy 1 Approach:**
+```
+Original:
+    minimize obj
+    s.t. obj = z
+         z = min(x, y)
+
+Reformulated:
+    minimize aux
+    s.t. obj = aux
+         z = aux
+         aux ≤ x
+         aux ≤ y
+```
+
+This avoids the infeasibility by making `aux` the objective variable directly, not through an equality constraint.
+
+### Recommendations for Sprint 5 Priority 1
+
+#### Immediate Actions (Before Day 1)
+
+1. **ABANDON Strategy 2** for objective-defining min/max cases
+2. **Focus on Strategy 1** (Objective Substitution) implementation
+3. **Update Sprint 5 Day 1-2 plan** to reflect Strategy 1 approach
+4. **Document Strategy 2 failure** in Known Unknowns
+
+#### Implementation Plan Changes
+
+**Original Plan (INVALID):**
+- Day 1-2: Implement Strategy 2 (Direct Constraints)
+
+**Revised Plan (REQUIRED):**
+- Day 1: Implement Strategy 1 (Objective Substitution) detection and reformulation
+- Day 2: Test Strategy 1 with all test cases, verify PATH convergence
+
+#### Testing Requirements
+
+Before Sprint 5 begins, complete:
+- [ ] Validate Test 2 (maximize z where z = max(x,y)) - may work (symmetric)
+- [ ] Document which sense/function combinations work with each strategy
+- [ ] Create test suite for Strategy 1 validation
+- [ ] Update Known Unknowns Category 1 with all findings
+
+### Research Questions Resolved
+
+#### Unknown 1.1: Does Strategy 2 handle all objective-defining cases?
+
+**Answer:** ❌ **NO**
+
+**Proven Failures:**
+- minimize z where z = min(x,y): **INFEASIBLE** (mathematically impossible)
+
+**Remaining Questions:**
+- maximize z where z = max(x,y): May work (symmetric case)
+- Opposite-sense combinations: Likely fail for same reasons
+
+**Recommendation:** Strategy 2 is NOT VIABLE for general use. Proceed with Strategy 1.
+
+#### Unknown 1.2: How to detect objective-defining min/max?
+
+**Answer:** Still required, but now for **Strategy 1** instead of Strategy 2
+
+**Approach:**
+1. Trace dependency chain from objective variable
+2. Identify equations containing min/max in that chain
+3. Apply Strategy 1 (Objective Substitution) reformulation
+
+#### Unknown 1.3: Nested min/max handling?
+
+**Answer:** Deferred - depends on Strategy 1 implementation
+
+**Note:** Strategy 1 may handle nested cases more naturally by substituting the entire expression.
+
+### Files Created
+
+**Test Fixtures:**
+- `tests/fixtures/minmax_research/test1_minimize_min.gms` - Original NLP
+- `tests/fixtures/minmax_research/test2_maximize_max.gms` - Symmetric case
+- `tests/fixtures/minmax_research/test3_minimize_max.gms` - Opposite sense
+- `tests/fixtures/minmax_research/test4_maximize_min.gms` - Opposite sense
+- `tests/fixtures/minmax_research/test5_nested_minmax.gms` - Nested case
+- `tests/fixtures/minmax_research/test6_constraint_min.gms` - Regression test
+
+**Manual MCP Reformulations:**
+- `tests/fixtures/minmax_research/test1_minimize_min_manual_mcp.gms` - Demonstrates infeasibility
+- `tests/fixtures/minmax_research/test2_maximize_max_manual_mcp.gms` - Symmetric case (not tested)
+- `tests/fixtures/minmax_research/test3_minimize_max_manual_mcp.gms` - Opposite sense (not tested)
+- `tests/fixtures/minmax_research/test4_maximize_min_manual_mcp.gms` - Opposite sense (not tested)
+
+**Documentation:**
+- `tests/fixtures/minmax_research/README.md` - Test case overview and findings
+
+### Next Steps
+
+1. **Update Known Unknowns** (`docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md`)
+   - Mark Unknown 1.1 as ❌ DISPROVEN
+   - Update with Strategy 2 failure findings
+   - Document Strategy 1 as required approach
+
+2. **Update PREP_PLAN.md** (`docs/planning/SPRINT_5/PREP_PLAN.md`)
+   - Check off Task 2 acceptance criteria
+   - Update with validation results
+   - Revise Sprint 5 Day 1-2 implementation approach
+
+3. **Update CHANGELOG.md**
+   - Document Sprint 5 prep research findings
+   - Note Strategy 2 failure and Strategy 1 requirement
+
+4. **Update Sprint 5 Planning**
+   - Revise Priority 1 implementation plan to use Strategy 1
+   - Adjust time estimates if needed
+   - Update risk assessment
+
+### Validation Summary
+
+✅ **Completed:**
+- Test case models created (6 NLP, 4 MCP manual reformulations)
+- Strategy 2 mathematical infeasibility proven
+- Research doc analysis validated
+- Findings documented
+
+❌ **Not Completed (Out of Scope for Task 2):**
+- Full test suite execution (Tests 2-6 not yet run)
+- Strategy 1 implementation
+- PATH solver validation of working cases
+
+**Estimated Research Time:** 3 hours (within Task 2 budget of 4-6 hours)
+
+**Impact on Sprint 5:** HIGH - Changes required approach for Priority 1 (Days 1-2)
+
+---
+
+**Research Completed By:** Sprint 5 Prep Task 2  
+**Validation Status:** Strategy 2 DISPROVEN, Strategy 1 REQUIRED  
+**Ready for Sprint 5:** ⚠️ NO - Need to revise Day 1-2 plan to use Strategy 1

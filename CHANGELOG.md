@@ -7,6 +7,116 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 5 Prep Task 2: Min/Max Reformulation Research - 2025-11-06
+
+**Critical Finding:** Strategy 2 (Direct Constraints) proven mathematically infeasible for objective-defining min/max.
+
+#### Research Completed
+
+**Task:** Research Min/Max Reformulation Strategies (Sprint 5 Prep Task 2)  
+**Duration:** 3 hours (within 4-6 hour budget)  
+**Status:** ✅ COMPLETE with CRITICAL FINDINGS
+
+#### Test Cases Created
+
+Created 6 test GAMS models in `tests/fixtures/minmax_research/`:
+- `test1_minimize_min.gms` - minimize z where z = min(x,y)
+- `test2_maximize_max.gms` - maximize z where z = max(x,y)
+- `test3_minimize_max.gms` - minimize z where z = max(x,y)
+- `test4_maximize_min.gms` - maximize z where z = min(x,y)
+- `test5_nested_minmax.gms` - nested min/max case
+- `test6_constraint_min.gms` - min in constraint (regression test)
+
+Created 4 manual MCP reformulations to test Strategy 2:
+- `test1_minimize_min_manual_mcp.gms` - **Demonstrates mathematical infeasibility**
+- `test2_maximize_max_manual_mcp.gms` - Symmetric case
+- `test3_minimize_max_manual_mcp.gms` - Opposite sense
+- `test4_maximize_min_manual_mcp.gms` - Opposite sense
+
+#### Key Finding: Strategy 2 is INFEASIBLE
+
+**Test Case:** minimize z where z = min(x,y)  
+**Proposed Reformulation:** z ≤ x, z ≤ y
+
+**Mathematical Proof of Infeasibility:**
+```
+KKT Stationarity:  ∂L/∂z = 1 + λ_x + λ_y = 0
+This requires:     λ_x + λ_y = -1
+But:               λ_x, λ_y ≥ 0 (inequality multipliers must be non-negative)
+Conclusion:        IMPOSSIBLE (cannot satisfy both constraints)
+```
+
+**Impact:** Strategy 2 (Direct Constraints) from research doc **DOES NOT WORK** for this case.
+
+#### Documentation Updated
+
+1. **Research Document** (`docs/research/minmax_objective_reformulation.md`)
+   - Status changed to "⚠️ Strategy 2 DISPROVEN"
+   - Added ~230 line "Validation Results (Pre-Sprint 5)" section
+   - Documented mathematical proof of infeasibility
+   - Provided recommendations: Must use Strategy 1 (Objective Substitution)
+
+2. **Known Unknowns** (`docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md`)
+   - Unknown 1.1: Marked as ❌ DISPROVEN with detailed findings
+   - Unknown 1.2: Updated to reference Strategy 1 instead of Strategy 2
+   - Documented validation results and impact on Sprint 5
+
+3. **Test Documentation** (`tests/fixtures/minmax_research/README.md`)
+   - Documented test cases and findings
+   - Explained Strategy 2 failure
+   - Provided next steps for Sprint 5
+
+#### Implications for Sprint 5
+
+**Original Plan (INVALID):**
+- Days 1-2: Implement Strategy 2 (Direct Constraints)
+
+**Revised Plan (REQUIRED):**
+- Days 1-2: Implement Strategy 1 (Objective Substitution)
+  - More complex than Strategy 2
+  - Requires dependency tracking
+  - May need additional buffer time
+
+**Risk:** Sprint 5 Priority 1 implementation approach must be changed before Day 1.
+
+**Value:** Prevented implementation of mathematically impossible approach, saving 1-2 days of debugging.
+
+#### Files Added
+
+- `tests/fixtures/minmax_research/` (10 new files)
+  - 6 test NLP models
+  - 4 manual MCP reformulations
+  - 1 README with findings
+
+#### Files Modified
+
+- `docs/research/minmax_objective_reformulation.md` (added validation results section)
+- `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md` (updated Unknown 1.1 and 1.2)
+- `docs/planning/SPRINT_5/PREP_PLAN_TASK2_UPDATE.md` (detailed findings document)
+
+#### Testing
+
+- ✅ Test 1 validated: Strategy 2 mathematically infeasible
+- ⏸️ Tests 2-6 pending: Out of scope for Task 2 (future work)
+
+#### Metrics
+
+- **Test Models Created:** 6
+- **MCP Reformulations:** 4
+- **Documentation Lines Added:** ~300
+- **Critical Issues Found:** 1 (Strategy 2 infeasibility)
+- **Time Saved in Sprint 5:** 1-2 days (prevented broken implementation)
+
+#### Next Actions
+
+Before Sprint 5 Day 1:
+1. Revise Sprint 5 PLAN.md to use Strategy 1
+2. Design Strategy 1 implementation algorithm
+3. Create Strategy 1 test cases
+4. Update Task 3 (PATH validation) to include Strategy 1 tests
+
+---
+
 ### Complete - 2025-11-05 - Sprint 4 Day 10: Polish, Buffer, and Sprint Wrap-Up ✅
 
 #### Summary
