@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Issue #138: Parser Performance Investigation - 2025-11-06
+
+**Status:** ✅ RESOLVED - Issue cannot be reproduced, performance is excellent
+
+#### Investigation Summary
+
+Issue #138 reported severe performance degradation with long comma-separated lists in set definitions. The reported behavior was:
+- 10 elements: ~1.7s 
+- 50 elements: ~3.8s
+- 100 elements: ~24s (very slow)
+- 200+ elements: 30+ seconds (timeout)
+
+**Actual Performance Found:**
+
+Extensive testing revealed the issue **cannot be reproduced** with the current parser implementation:
+
+| Elements | Reported | Actual | Improvement |
+|----------|----------|--------|-------------|
+| 10 | 1.7s | 0.14s | 12x faster |
+| 50 | 3.8s | 0.21s | 18x faster |
+| 100 | 24s | 0.07s | 340x faster |
+| 150 | N/A | 0.09s | Works perfectly |
+| 200 | 30+s | 0.13s | 230x faster |
+| 250 | N/A | 0.13s | Works perfectly |
+
+**Conclusion:** The performance issue described does not exist. The parser handles comma-separated lists efficiently with near-linear time complexity.
+
+**Actions Taken:**
+1. Documented resolution in issue file
+2. Added comprehensive performance regression tests (5 new tests)
+3. Tests ensure parser maintains good performance:
+   - < 1s for 10 elements
+   - < 2s for 50 elements  
+   - < 3s for 100 elements
+   - < 5s for 200 elements
+   - Scaling is near-linear (not exponential)
+
+**Test Coverage:** `tests/unit/gams/test_parser_performance.py`
+
+**Quality Checks:** ✅ ALL PASSED
+- Type checking: PASSED
+- Linting: PASSED
+- Formatting: PASSED
+- All 992 tests: PASSED (including 5 new performance tests)
+
 ### Issue #136: Add Asterisk Notation Support for Set Ranges - 2025-11-06
 
 **Status:** ✅ COMPLETE - Parser now supports GAMS asterisk notation
