@@ -534,13 +534,15 @@ gams /tmp/small_mcp.gms
 
 ### Acceptance Criteria
 
-- [ ] GAMS and PATH verified installed and accessible
-- [ ] PATH availability test passes
-- [ ] Current test status documented (1 pass, 5 xfail)
-- [ ] Golden file issues documented
-- [ ] License limitations tested and documented
-- [ ] PATH_SOLVER_STATUS.md created with all details
-- [ ] No blockers for Sprint 5 Priority 2
+- [x] GAMS and PATH verified installed and accessible
+- [x] PATH availability test passes
+- [x] Current test status documented (3 pass, 1 xfail in minmax)
+- [x] Golden file issues documented (resolved - tests now passing)
+- [x] License limitations tested and documented
+- [x] PATH_SOLVER_STATUS.md created with all details
+- [x] No blockers for Sprint 5 Priority 2
+
+**Note:** Test suite status differs from Sprint 4 notes. Currently 3 tests passing in test_path_solver.py (test_path_available, test_solve_simple_nlp_mcp, test_solve_indexed_balance_mcp). The 5 xfailed tests mentioned in Sprint 4 notes appear to have been resolved. Only 1 xfail remains in test_path_solver_minmax.py (expected due to known min/max bug).
 
 ### Expected Outcome
 
