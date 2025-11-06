@@ -14,7 +14,7 @@ Equations objdef, maxconstraint;
 objdef.. obj =e= z;
 maxconstraint.. z =e= max(x, y);
 
-Model test using NLP minimizing obj;
-Solve test;
+Model test /all/;
+Solve test using NLP minimizing obj;
 
 Display x.l, y.l, z.l, obj.l;
