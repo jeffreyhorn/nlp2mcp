@@ -8,7 +8,7 @@ import pytest
 
 from src.ir import parser
 from src.ir.ast import Binary, Call, Const, Expr, ParamRef, Sum, VarRef
-from src.ir.symbols import ObjSense, Rel
+from src.ir.symbols import ObjSense, Rel, VarKind
 
 
 def test_simple_nlp_parses_into_program_tree():
@@ -762,3 +762,268 @@ def test_asterisk_range_notation_invalid_no_number():
         parser.ParserSemanticError, match="Invalid range.*must be identifier followed by number"
     ):
         parser.parse_model_text(text)
+
+
+def test_positive_variables_block_scalar():
+    """Test block-level Positive Variables keyword with scalar variables."""
+    text = dedent(
+        """
+        Positive Variables
+            x
+            y ;
+
+        Equations
+            eq ;
+
+        eq.. x + y =e= 5;
+
+        Model test / eq / ;
+        Solve test using NLP minimizing x;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.variables["x"].kind == VarKind.POSITIVE
+    assert model.variables["y"].kind == VarKind.POSITIVE
+
+
+def test_positive_variables_block_indexed():
+    """Test block-level Positive Variables keyword with indexed variables."""
+    text = dedent(
+        """
+        Sets
+            i /i1, i2, i3/ ;
+
+        Positive Variables
+            x(i)
+            obj ;
+
+        Equations
+            objective ;
+
+        objective.. obj =e= sum(i, x(i));
+
+        Model test / objective / ;
+        Solve test using NLP minimizing obj;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.variables["x"].kind == VarKind.POSITIVE
+    assert model.variables["obj"].kind == VarKind.POSITIVE
+
+
+def test_negative_variables_block():
+    """Test block-level Negative Variables keyword."""
+    text = dedent(
+        """
+        Negative Variables
+            x
+            y ;
+
+        Equations
+            eq ;
+
+        eq.. x + y =e= -5;
+
+        Model test / eq / ;
+        Solve test using NLP minimizing x;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.variables["x"].kind == VarKind.NEGATIVE
+    assert model.variables["y"].kind == VarKind.NEGATIVE
+
+
+def test_binary_variables_block():
+    """Test block-level Binary Variables keyword."""
+    text = dedent(
+        """
+        Binary Variables
+            x
+            y ;
+
+        Equations
+            eq ;
+
+        eq.. x + y =e= 1;
+
+        Model test / eq / ;
+        Solve test using NLP minimizing x;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.variables["x"].kind == VarKind.BINARY
+    assert model.variables["y"].kind == VarKind.BINARY
+
+
+def test_integer_variables_block():
+    """Test block-level Integer Variables keyword."""
+    text = dedent(
+        """
+        Integer Variables
+            x
+            y ;
+
+        Equations
+            eq ;
+
+        eq.. x + y =e= 10;
+
+        Model test / eq / ;
+        Solve test using NLP minimizing x;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.variables["x"].kind == VarKind.INTEGER
+    assert model.variables["y"].kind == VarKind.INTEGER
+
+
+def test_mixed_variable_blocks():
+    """Test multiple variable blocks with different kinds."""
+    text = dedent(
+        """
+        Variables
+            obj ;
+
+        Positive Variables
+            x
+            y ;
+
+        Binary Variables
+            z ;
+
+        Equations
+            eq ;
+
+        eq.. obj =e= x + y + z;
+
+        Model test / eq / ;
+        Solve test using NLP minimizing obj;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.variables["obj"].kind == VarKind.CONTINUOUS
+    assert model.variables["x"].kind == VarKind.POSITIVE
+    assert model.variables["y"].kind == VarKind.POSITIVE
+    assert model.variables["z"].kind == VarKind.BINARY
+
+
+def test_declaration_level_kind_takes_precedence():
+    """Test that declaration-level kind overrides block-level kind."""
+    text = dedent(
+        """
+        Positive Variables
+            binary x
+            y ;
+
+        Equations
+            eq ;
+
+        eq.. x + y =e= 1;
+
+        Model test / eq / ;
+        Solve test using NLP minimizing x;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    # x should be binary because declaration-level kind takes precedence
+    assert model.variables["x"].kind == VarKind.BINARY
+    # y should be positive from block-level kind
+    assert model.variables["y"].kind == VarKind.POSITIVE
+
+
+def test_positive_variables_case_insensitive():
+    """Test that variable kind keywords are case-insensitive."""
+    text = dedent(
+        """
+        POSITIVE VARIABLES
+            x ;
+
+        positive variables
+            y ;
+
+        PoSiTiVe VaRiAbLeS
+            z ;
+
+        Equations
+            eq ;
+
+        eq.. x + y + z =e= 5;
+
+        Model test / eq / ;
+        Solve test using NLP minimizing x;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.variables["x"].kind == VarKind.POSITIVE
+    assert model.variables["y"].kind == VarKind.POSITIVE
+    assert model.variables["z"].kind == VarKind.POSITIVE
+
+
+def test_positive_variables_with_bounds():
+    """Test Positive Variables with explicit bounds."""
+    text = dedent(
+        """
+        Sets
+            i /i1, i2/ ;
+
+        Positive Variables
+            x(i) ;
+
+        Equations
+            eq(i) ;
+
+        eq(i).. x(i) =e= 0;
+
+        x.lo(i) = 0;
+        x.up(i) = 10;
+
+        Model test / eq / ;
+        Solve test using NLP minimizing x;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.variables["x"].kind == VarKind.POSITIVE
+    assert model.variables["x"].lo_map[("i1",)] == 0.0
+    assert model.variables["x"].lo_map[("i2",)] == 0.0
+    assert model.variables["x"].up_map[("i1",)] == 10.0
+    assert model.variables["x"].up_map[("i2",)] == 10.0
+
+
+def test_issue_140_example():
+    """Test the exact example from Issue #140."""
+    text = dedent(
+        """
+        Sets
+            i /i1*i3/ ;
+
+        Positive Variables
+            x(i)
+            obj ;
+
+        Equations
+            objective
+            balance(i) ;
+
+        objective.. obj =e= sum(i, x(i));
+        balance(i).. x(i) =g= 0;
+
+        Model sample / all / ;
+        Solve sample using NLP minimizing obj;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.sets["i"].members == ["i1", "i2", "i3"]
+    assert model.variables["x"].domain == ("i",)
+    assert model.variables["x"].kind == VarKind.POSITIVE
+    assert model.variables["obj"].domain == ()
+    assert model.variables["obj"].kind == VarKind.POSITIVE
