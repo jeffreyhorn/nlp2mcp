@@ -1015,13 +1015,13 @@ Create packaging preparation document:
 
 ### Acceptance Criteria
 
-- [ ] Current build tested (`python -m build` works or issues documented)
-- [ ] Build backend options researched and decision documented
-- [ ] Dependency management strategy defined
-- [ ] Publishing workflow researched (OIDC vs API token)
-- [ ] Sprint 5 implementation plan created
-- [ ] All 4 Category 4 unknowns addressed
-- [ ] PYPI_PACKAGING_PLAN.md created
+- [x] Current build tested (`python -m build` works or issues documented)
+- [x] Build backend options researched and decision documented
+- [x] Dependency management strategy defined
+- [x] Publishing workflow researched (OIDC vs API token)
+- [x] Sprint 5 implementation plan created
+- [x] All 4 Category 4 unknowns addressed
+- [x] PYPI_PACKAGING_PLAN.md created
 
 ### Expected Outcome
 

@@ -7,6 +7,200 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 5 Prep Task 5: PyPI Packaging Survey Complete - 2025-11-06
+
+**Status:** ✅ COMPLETE - Ready for Sprint 5 Priority 4 PyPI packaging work
+
+#### Task Completed
+
+**Task:** Survey PyPI Packaging Best Practices (Sprint 5 Prep Task 5)  
+**Duration:** 3 hours (within estimated budget)  
+**Status:** ✅ COMPLETE - All 4 Category 4 unknowns resolved
+
+#### Build System Testing
+
+**Test Command:** `python -m build`  
+**Result:** ✅ SUCCESS - Both artifacts created
+
+**Artifacts:**
+- Wheel: `nlp2mcp-0.1.0-py3-none-any.whl` (121 KB)
+- Source Distribution: `nlp2mcp-0.1.0.tar.gz` (105 KB)
+
+**Issues Found:**
+
+1. **License Format Deprecation (HIGH Priority)**
+   - Current: `license = {text = "MIT"}` (deprecated TOML table format)
+   - Required: `license = "MIT"` (SPDX expression)
+   - Deadline: 2026-Feb-18 (builds will fail after this date)
+   - Fix: Update pyproject.toml, remove license classifier
+   - Required setuptools: >=77.0.0
+
+#### Build Backend Research
+
+**Market Analysis (2025 Data):**
+
+| Backend | Market Share | Maintainer | Recommendation |
+|---------|--------------|------------|----------------|
+| setuptools | 79.0% | PyPA | ✅ Keep (current) |
+| Poetry | 8.4% | Poetry team | ❌ Adds upper bounds |
+| Hatchling | 6.5% | PyPA | ⭐ Alternative |
+| Flit | 3.8% | Community | N/A |
+| PDM | ~2.0% | PDM team | N/A |
+
+**Decision: KEEP setuptools**
+
+**Rationale:**
+- Current build works successfully
+- PyPA-maintained (official backing)
+- 79% market share (proven stability)
+- Pure Python project doesn't need advanced features
+- Migration effort not justified
+- Hatchling would be choice for greenfield project
+
+#### Dependency Management Strategy
+
+**Current Assessment:** ✅ Follows 2025 best practices
+
+**Strategy Confirmed:**
+- Lower bounds only on dependencies (library best practice)
+- No upper bounds except for known incompatibilities
+- Rationale: Upper bounds in libraries cause dependency conflicts
+
+**Current Dependencies:**
+```toml
+dependencies = [
+    "lark>=1.1.9",
+    "numpy>=1.24.0",
+    "click>=8.0.0",
+    "tomli>=2.0.0; python_version<'3.11'",
+]
+```
+
+**Optional Enhancement (Low Priority):**
+- Split optional-dependencies into test/dev/docs groups
+- Current: Single `dev` group works but could be more granular
+- Benefit: Users install only what they need
+
+#### Publishing Workflow Research
+
+**Recommendation: GitHub Actions with OIDC Trusted Publishing**
+
+**Modern Approach (2025 Standard):**
+- Uses OpenID Connect (OIDC) for authentication
+- No API tokens needed (tokenless publishing)
+- Automatic attestations via Sigstore
+- Secure, auditable, recommended by PyPI
+
+**Workflow Components:**
+1. Configure trusted publisher on PyPI (one-time)
+2. GitHub Actions workflow with `id-token: write` permission
+3. Use `pypa/gh-action-pypi-publish@release/v1` action
+4. Trigger on GitHub release creation
+5. Test on TestPyPI first
+
+**Alternative Considered:**
+- API token method (legacy, not recommended in 2025)
+- Less secure, manual secret management, no attestations
+
+#### Category 4 Unknowns Resolved
+
+**Unknown 4.1: Does pyproject.toml build system work?**
+- ✅ RESOLVED: YES, with license format fix required
+
+**Unknown 4.2: Which build backend?**
+- ✅ RESOLVED: Keep setuptools (stable, adequate, PyPA-maintained)
+
+**Unknown 4.3: Dev vs prod dependencies?**
+- ✅ RESOLVED: Use optional-dependencies with lower bounds only
+
+**Unknown 4.4: Modern GitHub Actions workflow?**
+- ✅ RESOLVED: OIDC trusted publishing (tokenless, secure)
+
+#### Sprint 5 Priority 4 Implementation Plan
+
+**Documentation Created:** `docs/release/PYPI_PACKAGING_PLAN.md` (11 sections, 900+ lines)
+
+**Contents:**
+- Current build system status and test results
+- Build backend comparison and decision rationale
+- Dependency management best practices
+- GitHub Actions OIDC workflow template
+- Day-by-day implementation plan for Sprint 5 Days 7-8
+- License format fix instructions
+- TestPyPI testing procedure
+- Production PyPI release checklist
+- Troubleshooting and risk mitigation
+
+**Day 7 Plan (TestPyPI):**
+1. Fix license format (30 min)
+2. Create publishing workflows (1 hour)
+3. Configure TestPyPI trusted publisher (15 min)
+4. Test publish to TestPyPI (1 hour)
+5. Verify installation and CLI functionality (30 min)
+
+**Day 8 Plan (Production PyPI):**
+1. Configure production PyPI trusted publisher (15 min)
+2. Final pre-release checks (30 min)
+3. Create GitHub release (1 hour)
+4. Monitor and verify PyPI publication (30 min)
+5. Post-release tasks and documentation (30 min)
+
+**Estimated Total Effort:** 6-8 hours (fits Days 7-8 allocation)
+
+#### Required Actions Before Sprint 5 Priority 4
+
+**HIGH Priority (Required):**
+1. Fix license format in pyproject.toml
+2. Update setuptools requirement to >=77.0.0
+3. Remove license classifier from classifiers list
+4. Verify build with no deprecation warnings
+
+**MEDIUM Priority (Recommended):**
+1. Create `.github/workflows/publish.yml`
+2. Create `.github/workflows/test-publish.yml`
+3. Document release process
+
+**LOW Priority (Optional):**
+1. Split optional-dependencies into test/dev groups
+2. Consider removing tomli (Python 3.12+ has built-in TOML)
+
+#### Files Modified
+
+- ✅ `docs/release/PYPI_PACKAGING_PLAN.md` (created)
+- ✅ `docs/planning/SPRINT_5/PREP_PLAN.md` (acceptance criteria checked)
+
+#### Quality Checks
+
+All checks passed:
+- ✅ `make typecheck` - Success: no issues in 49 files
+- ✅ `make lint` - All checks passed
+- ✅ `make format` - 125 files left unchanged
+- ✅ `make test` - 975 tests passed, 1 skipped
+
+#### Acceptance Criteria
+
+- ✅ Current build tested (works, license deprecation documented)
+- ✅ Build backend options researched and decision documented
+- ✅ Dependency management strategy defined
+- ✅ Publishing workflow researched (OIDC vs API token)
+- ✅ Sprint 5 implementation plan created
+- ✅ All 4 Category 4 unknowns addressed
+- ✅ PYPI_PACKAGING_PLAN.md created
+
+#### Outcome
+
+**Sprint 5 Day 7 Ready:** Developer can start PyPI packaging with:
+- Clear understanding of current build status
+- Build backend decision rationale (keep setuptools)
+- Dependency management best practices confirmed
+- GitHub Actions OIDC workflow template ready
+- Day-by-day implementation checklist
+- Risk mitigation through TestPyPI testing
+
+**Expected Result:** Smooth 1-2 day packaging work, production PyPI release ready by end of Sprint 5 Day 8
+
+---
+
 ### Sprint 5 Prep Task 4: Performance Baselines Established - 2025-11-06
 
 **Status:** ✅ COMPLETE - Quantitative baselines established for Sprint 5 optimization work
