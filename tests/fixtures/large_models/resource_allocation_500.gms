@@ -9,8 +9,8 @@ Parameters
 ;
 
 Variables
-    x(i) decision variables
-    obj objective value
+    x(i)
+    obj
 ;
 
 Equations

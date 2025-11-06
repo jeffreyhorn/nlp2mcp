@@ -43,8 +43,8 @@ def generate_resource_allocation(
 
     # Variables
     content.append("Variables\n")
-    content.append("    x(i) decision variables\n")
-    content.append("    obj objective value\n")
+    content.append("    x(i)\n")
+    content.append("    obj\n")
     content.append(";\n\n")
 
     # Equations
@@ -104,8 +104,8 @@ def generate_network_flow(
 
     # Variables
     content.append("Variables\n")
-    content.append("    flow(j) flow on arcs\n")
-    content.append("    obj objective value\n")
+    content.append("    flow(j)\n")
+    content.append("    obj\n")
     content.append(";\n\n")
 
     # Equations

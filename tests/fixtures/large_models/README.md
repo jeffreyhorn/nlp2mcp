@@ -86,6 +86,15 @@ Performance metrics measured on MacBook Pro (Apple M2 Max, 32GB RAM):
 
 **Memory usage**: All models complete within normal memory limits (<500MB peak)
 
+## Solvability
+
+All test fixtures are verified to solve correctly with GAMS:
+
+- **Original NLP**: Solves with CONOPT (Model Status: Locally Optimal)
+- **Generated MCP**: Solves with PATH (Model Status: Optimal)
+
+This ensures the generated MCP formulations are mathematically correct and can be used for validation testing.
+
 ## Features Tested
 
 These models leverage recently added parser features:
