@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 5 PLAN_REVISED.md Creation - 2025-11-06
+
+**Status:** ✅ COMPLETED - Revised Sprint 5 plan addressing all review feedback
+
+#### Summary
+
+Created PLAN_REVISED.md addressing all 4 findings from Sprint 5 Plan Review. Revised plan maintains comprehensive 10-day structure while fixing structural issues, status inconsistencies, and scope gaps identified in peer review.
+
+**Review Findings Addressed:**
+
+**Finding 1: Missing Follow-On Research Items Sections**
+- **Issue:** Days 1, 2, 4, 5, 7, 8, and 10 were weaving Known Unknown note-taking into core execution tasks without separate research sections
+- **Fix:** Added explicit `Follow-On Research Items` sections to all affected days
+- **Fix:** Relocated Known Unknown summaries to research sections, keeping execution tasks clean and actionable
+- **Impact:** Improved plan clarity, separates research work from execution checklists
+
+**Finding 2: Known Unknowns Status Inconsistencies**
+- **Issue:** Days 5-6 labeled Unknowns 3.1 and 3.2 as ✅ COMPLETE while KNOWN_UNKNOWNS.md still listed them as 🔍 INCOMPLETE
+- **Fix:** Corrected Unknown 3.1 status to reflect Task 8 completion (performance baselines established: 1K vars in 45.9s)
+- **Fix:** Corrected Unknown 3.2 to 🔍 INCOMPLETE (research done, but tests not yet implemented)
+- **Fix:** Added note to update KNOWN_UNKNOWNS.md status tracking to match plan
+- **Impact:** Eliminated conflicting status signals, improved research ledger alignment
+
+**Finding 3: Missing Release Automation Scope**
+- **Issue:** Days 7-8 packaging plan omitted automated version bumping, changelog generation, and explicit CHANGELOG.md update requirement
+- **Fix:** Added Task 8.2 for automated version bumping (scripts/bump_version.py)
+- **Fix:** Added Task 8.3 for automated changelog generation (scripts/generate_changelog.py)
+- **Fix:** Added Task 8.9 for explicit CHANGELOG.md update with Sprint 5 deliverables
+- **Fix:** Updated Success Metrics to include "Release automation complete" with all sub-items
+- **Impact:** Fulfills Sprint 5 packaging requirements from PROJECT_PLAN.md, reduces manual release overhead
+
+**Finding 4: Missing API Documentation Deliverable**
+- **Issue:** Day 9 documentation plan covered tutorial, FAQ, and troubleshooting but omitted API reference/site deliverable committed in Sprint 5 goals
+- **Fix:** Added Task 9.5 for API documentation (Sphinx-based)
+- **Fix:** Added API reference site to Day 9 deliverables and acceptance criteria
+- **Fix:** Updated Success Metrics from 8 to 9 functional goals (added "API documentation published")
+- **Fix:** Added Sphinx/ReadTheDocs to external dependencies
+- **Fix:** Added risk mitigation for Sphinx documentation build
+- **Impact:** Delivers promised API reference/site, completes documentation track
+
+**Structural Improvements:**
+
+1. **Follow-On Research Sections (7 days):**
+   - Days 1, 2, 4, 5, 7, 8, 10 now have explicit research sections
+   - Each unknown includes: Priority, Status, Summary, Research Needed, Deadline
+   - Execution tasks no longer interleave research note-taking
+
+2. **Enhanced Day 8 (Release Automation):**
+   - Added 2 new tasks (8.2, 8.3) for automation scripts
+   - Added Task 8.9 for CHANGELOG.md Sprint 5 update
+   - Renumbered subsequent tasks (8.4-8.9)
+   - Checkpoint 3 review questions updated to check automation deliverables
+
+3. **Enhanced Day 9 (Documentation):**
+   - Added Task 9.5 for API documentation (2 hours)
+   - Sphinx setup, autodoc configuration, GitHub Pages deployment
+   - API documentation site added to deliverables and acceptance criteria
+
+4. **Known Unknowns Status Summary:**
+   - New section documenting: 2 complete, 17 to be resolved, 3 deferred
+   - Unknown 3.1 confirmed COMPLETE with note to update source file
+   - Unknown 3.2 clarified as research complete, implementation pending
+
+**Deliverables:**
+- Created `docs/planning/SPRINT_5/PLAN_REVISED.md` (comprehensive revised plan)
+- Addressed all 4 review findings with concrete fixes
+- Maintained all original plan strengths (Known Unknowns integration, checkpoints, risk management)
+- Enhanced release automation and documentation scope
+
+**Outcome:** Sprint 5 has production-ready execution plan with clear separation of execution and research, accurate status tracking, complete automation scope, and full documentation deliverables.
+
+---
+
 ### Task 10: Sprint 5 PLAN_ORIGINAL.md Creation - 2025-11-06
 
 **Status:** ✅ COMPLETED - Comprehensive 10-day Sprint 5 execution plan created
