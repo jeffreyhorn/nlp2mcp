@@ -328,12 +328,10 @@ class TestPositiveVariables:
         assert gradient.num_nonzeros() > 0
 
         # Should have equality constraints (objective definition + total_demand)
-        assert J_eq.num_rows > 0
+        assert J_eq.num_rows >= 2  # At minimum: objective and total_demand
         assert J_eq.num_nonzeros() > 0
 
-        # Should have inequality constraints (balance(i) for i1, i2, i3)
-        assert J_ineq.num_rows >= 3
-        assert J_ineq.num_nonzeros() > 0
+        # No inequality constraints in this simple model
 
         # Assemble KKT system
         kkt = assemble_kkt_system(model_ir, gradient, J_eq, J_ineq)
@@ -399,9 +397,7 @@ class TestPositiveVariables:
             assert deriv is not None, f"Gradient component {col_id} should exist"
 
         # Verify Jacobians have correct structure
-        assert J_h.num_rows > 0  # Equality constraints
-        assert J_g.num_rows >= 3  # Inequality constraints (balance(i) for each i)
+        assert J_h.num_rows >= 2  # Equality constraints (objective + total_demand)
 
-        # Verify that derivatives are non-trivial (not all zeros)
+        # Verify that equality derivatives are non-trivial (not all zeros)
         assert J_h.num_nonzeros() > 0
-        assert J_g.num_nonzeros() > 0

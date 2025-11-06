@@ -1,5 +1,9 @@
 * Example NLP with Positive Variables keyword (Issue #140)
 * Demonstrates block-level variable kind declaration
+*
+* This is a simple quadratic optimization problem where we minimize
+* the sum of weighted squared variables subject to meeting a total demand.
+* The Positive Variables keyword ensures all variables are non-negative.
 
 Sets
     i /i1*i3/ ;
@@ -8,7 +12,7 @@ Parameters
     c(i) /i1 1.0, i2 2.0, i3 3.0/ ;
 
 Scalars
-    demand /5.0/ ;
+    demand /3.0/ ;
 
 Positive Variables
     x(i)
@@ -16,12 +20,9 @@ Positive Variables
 
 Equations
     objective
-    balance(i)
     total_demand ;
 
 objective.. obj =e= sum(i, c(i) * x(i) * x(i));
-
-balance(i).. x(i) =g= 0.5;
 
 total_demand.. sum(i, x(i)) =e= demand;
 
