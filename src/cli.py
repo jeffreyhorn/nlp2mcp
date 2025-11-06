@@ -111,6 +111,13 @@ def main(
     Example:
         nlp2mcp examples/simple_nlp.gms -o output_mcp.gms
     """
+    # Increase recursion limit for large models with deeply nested expressions
+    # (e.g., objectives with 1000+ terms create deep left-associative parse trees)
+    original_limit = sys.getrecursionlimit()
+    required_limit = 10000
+    if required_limit > original_limit:
+        sys.setrecursionlimit(required_limit)
+
     try:
         # Determine verbosity level (quiet overrides verbose)
         verbosity_level = 0 if quiet else verbose
@@ -298,6 +305,9 @@ def main(
 
             traceback.print_exc()
         sys.exit(1)
+    finally:
+        # Restore original recursion limit
+        sys.setrecursionlimit(original_limit)
 
 
 if __name__ == "__main__":

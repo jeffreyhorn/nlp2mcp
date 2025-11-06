@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -95,18 +96,52 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
     With ambiguity="resolve" in the parser, ambiguity nodes are rare, but this
     function handles any that do appear by consistently picking the first alternative.
     This avoids exponential blowup in pathological grammar cases.
+
+    Uses iterative approach with explicit stack to avoid Python recursion limits
+    for large parse trees (e.g., models with 1000+ variables).
     """
     if isinstance(node, Token):
         return node
 
-    if node.data == "_ambig":
-        if not node.children:
-            return node
-        # Pick the first alternative to resolve ambiguity
-        return _resolve_ambiguities(node.children[0])
+    # Dictionary to memoize resolved nodes by their id
+    resolved = {}
 
-    resolved_children = [_resolve_ambiguities(child) for child in node.children]
-    return Tree(node.data, resolved_children)
+    # Stack for post-order traversal: (node, is_return_visit)
+    stack = [(node, False)]
+
+    while stack:
+        current, is_return = stack.pop()
+
+        if isinstance(current, Token):
+            resolved[id(current)] = current
+            continue
+
+        if is_return:
+            # Returning from children: construct resolved node
+            if current.data == "_ambig":
+                if not current.children:
+                    resolved[id(current)] = current
+                else:
+                    # Pick first alternative
+                    resolved[id(current)] = resolved[id(current.children[0])]
+            else:
+                # Reconstruct tree with resolved children
+                resolved_children = [resolved[id(child)] for child in current.children]
+                resolved[id(current)] = Tree(current.data, resolved_children)
+        else:
+            # First visit: schedule return visit and process children
+            stack.append((current, True))
+
+            # Push children to stack
+            if current.data == "_ambig" and current.children:
+                # Only process first child for ambiguity nodes
+                stack.append((current.children[0], False))
+            else:
+                # Process all children in reverse order (for left-to-right processing)
+                for child in reversed(current.children):
+                    stack.append((child, False))
+
+    return resolved[id(node)]
 
 
 def parse_text(source: str) -> Tree:
@@ -123,9 +158,28 @@ def parse_file(path: str | Path) -> Tree:
 
 
 def parse_model_text(source: str) -> ModelIR:
-    """Parse a source string into a populated ModelIR instance."""
-    tree = parse_text(source)
-    return _ModelBuilder().build(tree)
+    """Parse a source string into a populated ModelIR instance.
+
+    Automatically increases Python recursion limit for large models to handle
+    deeply nested expression trees (e.g., objective with 1000+ terms).
+    """
+    # Save original recursion limit
+    original_limit = sys.getrecursionlimit()
+
+    # Estimate needed recursion depth based on model size
+    # Large models can have expressions with 1000+ terms, creating deep trees
+    # Set to 10000 to handle very large models safely
+    required_limit = 10000
+
+    if required_limit > original_limit:
+        sys.setrecursionlimit(required_limit)
+
+    try:
+        tree = parse_text(source)
+        return _ModelBuilder().build(tree)
+    finally:
+        # Always restore original limit
+        sys.setrecursionlimit(original_limit)
 
 
 def parse_model_file(path: str | Path) -> ModelIR:

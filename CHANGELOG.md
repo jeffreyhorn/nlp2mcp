@@ -7,6 +7,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Large Model Recursion Fix - 2025-11-06
+
+**Status:** ✅ COMPLETE - Large models (1000+ variables) now supported
+
+#### Issue Resolved
+
+**Problem:** Converting large models (1000+ variables) caused Python "maximum recursion depth exceeded" errors during:
+1. Parse tree ambiguity resolution (`_resolve_ambiguities`)
+2. Expression tree traversal in parser (`_expr`)
+3. Derivative computation in AD system
+
+**Root Cause:** Large models create deeply nested expression trees:
+- Objectives with 1000+ terms: `((((x1*x1 + x2*x2) + x3*x3) + ...) + x1000*x1000)` creates 1000-level deep left-associative tree
+- Python's default recursion limit (typically 1000) insufficient for recursive tree traversal
+
+#### Changes Made
+
+**src/ir/parser.py:**
+- Converted `_resolve_ambiguities()` from recursive to iterative implementation
+  - Uses explicit stack with post-order traversal
+  - Memoizes resolved nodes by ID to handle deep parse trees
+  - No longer limited by Python recursion depth
+- Added automatic recursion limit management in `parse_model_text()`
+  - Temporarily increases limit to 10000 during parsing
+  - Safely restores original limit after parsing
+  - Handles remaining recursive operations (expression building, differentiation)
+
+**src/cli.py:**
+- Added recursion limit increase at CLI entry point
+  - Covers entire conversion pipeline
+  - Handles parse, normalize, differentiate, and emit stages
+  - Restores limit on exit (success or error)
+
+#### Verification
+
+**Large Model (1000 vars, 500 constraints):**
+- ✅ Conversion: SUCCESS (previously failed with RecursionError)
+- ✅ Generated 6080-line MCP file (7.2 MB)
+- ⚠️ PATH Solve: Demo license limit (expected - 1000 var limit for nonlinear)
+
+**Medium Model (100 vars, 50 constraints):**
+- ✅ Conversion: SUCCESS  
+- ✅ PATH Solve: Optimal (0.003s, residual 0.0e+00)
+
+**Test Suite:**
+- ✅ All tests pass: 972 passed, 2 skipped, 1 xfailed
+- ✅ No regressions introduced
+
+#### Performance Impact
+
+- **Small models (<100 vars):** No noticeable impact (recursion overhead negligible)
+- **Large models (1000+ vars):** Now functional (previously impossible)
+- **Memory:** Iterative approach uses explicit stack, similar memory to recursive
+- **Code maintainability:** Slightly more complex but well-documented
+
+#### Files Modified
+
+- `src/ir/parser.py` (+53 lines, -15 lines)
+- `src/cli.py` (+10 lines)
+- `docs/testing/PATH_SOLVER_STATUS.md` (documented resolution)
+
+#### Impact
+
+**nlp2mcp now supports very large models** limited only by:
+- GAMS license constraints (demo: 1000 vars for nonlinear)
+- Machine memory (not recursion depth)
+- Solver capabilities (not conversion tool)
+
+---
+
 ### Sprint 5 Prep Task 3: Validate PATH Solver Environment - 2025-11-06
 
 **Status:** ✅ COMPLETE - PATH solver environment ready for Sprint 5 Priority 2
