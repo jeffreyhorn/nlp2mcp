@@ -83,8 +83,6 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 
 **Deliverables:** design memo, xfailed test suite, detection module + tests, assembly prototype.  
 **Acceptance:** tests authored, detection coverage 100 %, build clean, design reviewed.  
-
-**Status:** ✅ COMPLETE (November 6, 2025)
 **Risks:** KKT regression (mitigate via regression suite), detection misses edge cases (mitigate via research test coverage).
 
 **Follow-On Research Items**
