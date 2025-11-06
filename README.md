@@ -589,7 +589,7 @@ MIT License - See LICENSE file for details
 - **v0.2.0** (Sprint 2): ✅ Symbolic differentiation - COMPLETE
 - **v0.3.0** (Sprint 3): ✅ KKT synthesis and MCP code generation - COMPLETE
 - **v0.3.1** (Post Sprint 3): ✅ Issue #47 fix (indexed equations) - COMPLETE
-- **v0.4.0** (Sprint 4):✅ Extended features and robustness - IN PROGRESS
+- **v0.4.0** (Sprint 4):✅ Extended features and robustness - COMPLETE
 - **v1.0.0** (Sprint 5): 🔄 Production-ready with docs and PyPI release - IN PROGRESS
 
 ## Contact
