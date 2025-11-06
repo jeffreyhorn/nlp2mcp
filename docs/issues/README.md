@@ -39,7 +39,7 @@ This directory contains detailed documentation of parser limitations discovered 
    - **Workaround**: Use explicit constraints `x =g= 0` (mathematically equivalent)
    - **Affects**: GAMS compatibility, several example files
 
-5. **[Hyphens in Equation Descriptions](parser-hyphens-in-equation-descriptions.md)**
+5. **[Hyphens in Equation Descriptions](parser-hyphens-in-equation-descriptions.md)** ([#137](https://github.com/jeffreyhorn/nlp2mcp/issues/137))
    - **Status**: Open
    - **Impact**: Very Low - Cosmetic only
    - **Summary**: Equation descriptions cannot contain hyphens (e.g., "non-negativity")

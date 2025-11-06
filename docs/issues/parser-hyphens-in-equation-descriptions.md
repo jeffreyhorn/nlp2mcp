@@ -1,5 +1,7 @@
 # Parser Limitation: Hyphens Not Allowed in Equation Descriptions
 
+**GitHub Issue**: [#137](https://github.com/jeffreyhorn/nlp2mcp/issues/137)
+
 ## Status
 **Open** - Parser limitation  
 **Priority**: Low  
