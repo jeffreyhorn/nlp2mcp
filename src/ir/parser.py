@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -229,9 +230,7 @@ class _ModelBuilder:
                 continue
             if child.data == "set_simple":
                 name = _token_text(child.children[0])
-                members = [
-                    _token_text(tok) for tok in child.children[1].children if isinstance(tok, Token)
-                ]
+                members = self._expand_set_members(child.children[1])
                 self.model.add_set(SetDef(name=name, members=members))
             elif child.data == "set_empty":
                 name = _token_text(child.children[0])
@@ -240,6 +239,75 @@ class _ModelBuilder:
                 name = _token_text(child.children[0])
                 domain = _id_list(child.children[1])
                 self.model.add_set(SetDef(name=name, members=list(domain)))
+
+    def _expand_set_members(self, members_node: Tree) -> list[str]:
+        """Expand set members, handling asterisk range notation (e.g., i1*i100)."""
+        result = []
+        for child in members_node.children:
+            if isinstance(child, Token):
+                # Direct token (shouldn't happen with new grammar, but keep for safety)
+                result.append(_token_text(child))
+            elif isinstance(child, Tree):
+                if child.data == "set_element":
+                    # Simple element: ID or STRING
+                    result.append(_token_text(child.children[0]))
+                elif child.data == "set_range":
+                    # Range notation: ID TIMES ID (e.g., i1*i100)
+                    # Extract non-operator tokens (skip the * token)
+                    ids = [
+                        _token_text(tok)
+                        for tok in child.children
+                        if isinstance(tok, Token) and tok.type == "ID"
+                    ]
+                    if len(ids) != 2:
+                        raise self._error(
+                            f"Range notation requires exactly two identifiers, got {len(ids)}",
+                            child,
+                        )
+                    start_id, end_id = ids
+                    expanded = self._expand_range(start_id, end_id, child)
+                    result.extend(expanded)
+        return result
+
+    def _expand_range(self, start_id: str, end_id: str, node: Tree) -> list[str]:
+        """Expand a range like 'i1' to 'i100' into ['i1', 'i2', ..., 'i100']."""
+        # Parse start identifier
+        match_start = re.match(r"^([a-zA-Z_]+)(\d+)$", start_id)
+        if not match_start:
+            raise self._error(
+                f"Invalid range start '{start_id}': must be identifier followed by number (e.g., i1)",
+                node,
+            )
+
+        # Parse end identifier
+        match_end = re.match(r"^([a-zA-Z_]+)(\d+)$", end_id)
+        if not match_end:
+            raise self._error(
+                f"Invalid range end '{end_id}': must be identifier followed by number (e.g., i100)",
+                node,
+            )
+
+        base_start = match_start.group(1)
+        num_start = int(match_start.group(2))
+
+        base_end = match_end.group(1)
+        num_end = int(match_end.group(2))
+
+        # Validate same base prefix
+        if base_start != base_end:
+            raise self._error(
+                f"Range base mismatch: '{start_id}' and '{end_id}' have different prefixes ('{base_start}' vs '{base_end}')",
+                node,
+            )
+
+        # Validate range direction
+        if num_start > num_end:
+            raise self._error(
+                f"Invalid range: start index {num_start} is greater than end index {num_end}", node
+            )
+
+        # Generate range
+        return [f"{base_start}{i}" for i in range(num_start, num_end + 1)]
 
     def _handle_aliases_block(self, node: Tree) -> None:
         for child in node.children:

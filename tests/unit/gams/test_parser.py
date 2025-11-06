@@ -586,3 +586,179 @@ def test_power_operator_mixed_syntax():
     assert (
         ops_used == {"^", "**"} or ops_used == {"**"} or ops_used == {"^"}
     )  # Parser might normalize
+
+
+def test_asterisk_range_notation_basic():
+    """Test basic asterisk notation for set ranges (e.g., i1*i10)."""
+    text = dedent(
+        """
+        Sets
+            i /i1*i10/ ;
+
+        Variables
+            x(i)
+            obj ;
+
+        Equations
+            objective ;
+
+        objective.. obj =e= sum(i, x(i));
+
+        Model test / objective / ;
+        Solve test using NLP minimizing obj;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.sets["i"].members == [
+        "i1",
+        "i2",
+        "i3",
+        "i4",
+        "i5",
+        "i6",
+        "i7",
+        "i8",
+        "i9",
+        "i10",
+    ]
+
+
+def test_asterisk_range_notation_with_regular_members():
+    """Test asterisk notation mixed with regular set members."""
+    text = dedent(
+        """
+        Sets
+            i /i1*i3, special, i5*i7/ ;
+
+        Variables
+            x(i) ;
+
+        Equations
+            eq(i) ;
+
+        eq(i).. x(i) =e= 0;
+
+        Model test / eq / ;
+        Solve test using NLP minimizing x;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.sets["i"].members == ["i1", "i2", "i3", "special", "i5", "i6", "i7"]
+
+
+def test_asterisk_range_notation_single_element():
+    """Test asterisk notation with start and end being the same."""
+    text = dedent(
+        """
+        Sets
+            i /i5*i5/ ;
+
+        Variables
+            x(i) ;
+
+        Equations
+            eq(i) ;
+
+        eq(i).. x(i) =e= 0;
+
+        Model test / eq / ;
+        Solve test using NLP minimizing x;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.sets["i"].members == ["i5"]
+
+
+def test_asterisk_range_notation_large_range():
+    """Test asterisk notation with a large range (i1*i100)."""
+    text = dedent(
+        """
+        Sets
+            i /i1*i100/ ;
+
+        Variables
+            x(i)
+            obj ;
+
+        Equations
+            objective ;
+
+        objective.. obj =e= sum(i, x(i));
+
+        Model test / objective / ;
+        Solve test using NLP minimizing obj;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    expected_members = [f"i{j}" for j in range(1, 101)]
+    assert model.sets["i"].members == expected_members
+    assert len(model.sets["i"].members) == 100
+
+
+def test_asterisk_range_notation_different_prefix():
+    """Test asterisk notation with different prefixes like node1*node10."""
+    text = dedent(
+        """
+        Sets
+            nodes /node1*node5/ ;
+
+        Variables
+            flow(nodes) ;
+
+        Equations
+            balance(nodes) ;
+
+        balance(nodes).. flow(nodes) =e= 0;
+
+        Model test / balance / ;
+        Solve test using NLP minimizing flow;
+        """
+    )
+
+    model = parser.parse_model_text(text)
+    assert model.sets["nodes"].members == ["node1", "node2", "node3", "node4", "node5"]
+
+
+def test_asterisk_range_notation_invalid_mismatched_prefix():
+    """Test that asterisk notation raises error for mismatched prefixes."""
+    text = dedent(
+        """
+        Sets
+            i /i1*j10/ ;
+        """
+    )
+
+    with pytest.raises(parser.ParserSemanticError, match="Range base mismatch.*different prefixes"):
+        parser.parse_model_text(text)
+
+
+def test_asterisk_range_notation_invalid_reversed_range():
+    """Test that asterisk notation raises error for reversed ranges."""
+    text = dedent(
+        """
+        Sets
+            i /i10*i1/ ;
+        """
+    )
+
+    with pytest.raises(parser.ParserSemanticError, match="Invalid range.*greater than end index"):
+        parser.parse_model_text(text)
+
+
+def test_asterisk_range_notation_invalid_no_number():
+    """Test that asterisk notation raises error when identifier has no number."""
+    text = dedent(
+        """
+        Sets
+            i /abc*def/ ;
+        """
+    )
+
+    with pytest.raises(
+        parser.ParserSemanticError, match="Invalid range.*must be identifier followed by number"
+    ):
+        parser.parse_model_text(text)
