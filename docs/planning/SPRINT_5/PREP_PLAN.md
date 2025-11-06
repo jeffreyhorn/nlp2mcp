@@ -1781,21 +1781,30 @@ class TestLargeModelHandling:
 
 **Files Created:**
 - `tests/fixtures/generate_large_models.py` - Model generators
-- `tests/fixtures/large_models/*.gms` - 5 test models (medium, large, xlarge)
+- `tests/fixtures/large_models/*.gms` - 3 test models (250, 500, 1K variables)
 - `tests/production/test_large_models.py` - Large model test suite
 
 **Documentation:**
-- README in `tests/fixtures/large_models/` explaining each model
+- README in `tests/fixtures/large_models/` explaining each model with performance baselines
+
+**Regeneration (2025-11-06):**
+- Updated to leverage newly added asterisk notation support
+- Increased model sizes from (10, 50, 100) to (250, 500, 1K) variables
+- Added comprehensive performance baselines
 
 ### Acceptance Criteria
 
-- [x] Model generator script created with 2+ model types
-- [x] 3 test models generated (10 vars, 50 vars, 100 vars) - scaled down due to parser limitations
-- [x] Medium model validated (converts successfully in ~1.5s)
-- [x] Large model conversion timed (baseline: ~1.9s for 100 vars)
-- [x] Performance metrics documented in README
+- [x] Model generator script created with resource allocation model type
+- [x] 3 test models generated (250 vars, 500 vars, 1K vars) - updated 2025-11-06
+- [x] Models use asterisk notation for sets (e.g., `i /i1*i1000/`)
+- [x] Models use long comma-separated parameter lists
+- [x] 250-var model validated (converts successfully in ~5.1s)
+- [x] 500-var model conversion timed (baseline: ~13.5s)
+- [x] 1K-var model conversion timed (baseline: ~45.9s)
+- [x] Performance metrics documented in README with scaling analysis
 - [x] Test suite created with 4 large model tests
-- [x] README documenting test models and parser limitations
+- [x] README documenting test models and performance baselines
+- [x] All tests passing with appropriate timeouts
 
 ### Expected Outcome
 
