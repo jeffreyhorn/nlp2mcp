@@ -1,5 +1,7 @@
 # Parser Limitation: Asterisk Notation Not Supported in Set Definitions
 
+**GitHub Issue**: [#136](https://github.com/jeffreyhorn/nlp2mcp/issues/136)
+
 ## Status
 **Open** - Parser limitation  
 **Priority**: Medium  

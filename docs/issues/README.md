@@ -15,7 +15,7 @@ This directory contains detailed documentation of parser limitations discovered 
 
 ### Medium Priority
 
-2. **[Asterisk Notation Not Supported](parser-asterisk-notation-not-supported.md)**
+2. **[Asterisk Notation Not Supported](parser-asterisk-notation-not-supported.md)** ([#136](https://github.com/jeffreyhorn/nlp2mcp/issues/136))
    - **Status**: Open
    - **Impact**: Moderate - Forces manual expansion of large sets
    - **Summary**: Cannot use range notation like `/i1*i100/` for set element definitions
