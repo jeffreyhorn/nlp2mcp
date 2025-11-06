@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-import sys
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -99,11 +98,18 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
 
     Uses iterative approach with explicit stack to avoid Python recursion limits
     for large parse trees (e.g., models with 1000+ variables).
+
+    Memory note: The resolved dictionary uses id() for memoization, holding references
+    to all processed nodes until completion. For extremely large models (10,000+ nodes),
+    this consumes O(n) memory proportional to parse tree size. This is necessary for
+    correctness as child nodes must remain accessible while building parent nodes.
+    The dictionary is freed when the function returns.
     """
     if isinstance(node, Token):
         return node
 
     # Dictionary to memoize resolved nodes by their id
+    # Memory trade-off: Holds references to all nodes during traversal
     resolved = {}
 
     # Stack for post-order traversal: (node, is_return_visit)
@@ -160,26 +166,13 @@ def parse_file(path: str | Path) -> Tree:
 def parse_model_text(source: str) -> ModelIR:
     """Parse a source string into a populated ModelIR instance.
 
-    Automatically increases Python recursion limit for large models to handle
-    deeply nested expression trees (e.g., objective with 1000+ terms).
+    Note: For large models (1000+ variables), this function requires an increased
+    Python recursion limit due to deeply nested expression trees. The CLI automatically
+    manages this, but if calling this function directly from other code, ensure
+    sys.setrecursionlimit() is set appropriately (recommended: 10000).
     """
-    # Save original recursion limit
-    original_limit = sys.getrecursionlimit()
-
-    # Estimate needed recursion depth based on model size
-    # Large models can have expressions with 1000+ terms, creating deep trees
-    # Set to 10000 to handle very large models safely
-    required_limit = 10000
-
-    if required_limit > original_limit:
-        sys.setrecursionlimit(required_limit)
-
-    try:
-        tree = parse_text(source)
-        return _ModelBuilder().build(tree)
-    finally:
-        # Always restore original limit
-        sys.setrecursionlimit(original_limit)
+    tree = parse_text(source)
+    return _ModelBuilder().build(tree)
 
 
 def parse_model_file(path: str | Path) -> ModelIR:
