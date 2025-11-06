@@ -130,6 +130,18 @@ pip install git+https://github.com/jeffreyhorn/nlp2mcp.git
 
 ### Command Line Interface
 
+Note: the package exposes a console script `nlp2mcp` (defined in `pyproject.toml` as
+`[project.scripts] nlp2mcp = "src.cli:main"`). After installing the package (for example
+with `pip install -e .` or `pip install nlp2mcp`), the `nlp2mcp` command will be available on your PATH
+and will invoke `src.cli:main`.
+
+If you prefer not to install the package, you can run the CLI directly from the repository with:
+
+```bash
+python -m src.cli examples/simple_nlp.gms -o output_mcp.gms
+```
+
+
 ```bash
 # Convert NLP to MCP
 nlp2mcp input.gms -o output_mcp.gms
