@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Issue #136: Add Asterisk Notation Support for Set Ranges - 2025-11-06
+
+**Status:** ✅ COMPLETE - Parser now supports GAMS asterisk notation
+
+#### Problem
+
+The GAMS parser did not support the asterisk (`*`) notation for defining ranges
+of set elements. This is standard GAMS syntax used to define sequences like
+`/i1*i100/` to represent elements `i1, i2, i3, ..., i100`.
+
+**Error encountered:**
+```
+Unexpected error - No terminal matches '*' in the current parser context
+```
+
+#### Solution
+
+Implemented full support for asterisk range notation in both the grammar and parser:
+
+**Grammar Changes (src/gams/gams_grammar.lark):**
+- Modified `set_member` rule to recognize range patterns:
+  ```lark
+  ?set_member: ID TIMES ID  -> set_range
+             | ID           -> set_element
+             | STRING       -> set_element
+  ```
+
+**Parser Changes (src/ir/parser.py):**
+- Added `_expand_set_members()` method to process set member lists
+- Added `_expand_range()` method to expand range notation into element lists
+- Validates range notation:
+  - Both identifiers must have same base prefix
+  - Start index must be ≤ end index
+  - Both identifiers must end with numeric suffixes
+
+**Test Coverage (tests/unit/gams/test_parser.py):**
+- Added 8 comprehensive tests covering:
+  - Basic range expansion (i1*i10)
+  - Mixed ranges and regular members
+  - Single element ranges (i5*i5)
+  - Large ranges (i1*i100)
+  - Different prefixes (node1*node5)
+  - Error cases: mismatched prefixes, reversed ranges, non-numeric identifiers
+
+**Examples:**
+```gams
+Sets
+    i /i1*i100/          ! Expands to i1, i2, ..., i100
+    j /j1*j5, special/   ! Expands to j1, j2, j3, j4, j5, special
+    nodes /node1*node10/ ! Expands to node1, node2, ..., node10
+;
+```
+
+**Quality Checks:** ✅ ALL PASSED
+- Type checking: PASSED
+- Linting: PASSED
+- Formatting: PASSED
+- All 704 unit tests: PASSED
+- New asterisk notation tests: 8/8 PASSED
+
 ### Sprint 5 Prep Task 7: Fix Sphinx Module References - 2025-11-06
 
 **Status:** ✅ COMPLETE - All module references corrected

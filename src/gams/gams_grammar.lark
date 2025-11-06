@@ -89,7 +89,9 @@ alias_opt : "(" id_list ")"                                  -> alias_domain
 id_list: ID ("," ID)*
 
 set_members: set_member ("," set_member)*
-?set_member: ID | STRING
+?set_member: ID TIMES ID  -> set_range
+           | ID           -> set_element
+           | STRING       -> set_element
 
 // ---------------------------
 // Table rows (for Table blocks)
