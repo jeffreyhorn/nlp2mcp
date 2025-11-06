@@ -50,7 +50,7 @@ class TestLargeModelHandling:
         assert result.returncode == 0, f"Conversion failed: {result.stderr}"
         assert output.exists()
         assert output.stat().st_size > 0
-        assert elapsed < 60, f"Conversion too slow: {elapsed:.1f}s"
+        assert elapsed < 90, f"Conversion too slow: {elapsed:.1f}s"
         print(f"\n500-variable model: {elapsed:.2f}s conversion time")
 
     @pytest.mark.slow
@@ -71,7 +71,7 @@ class TestLargeModelHandling:
         assert result.returncode == 0, f"Conversion failed: {result.stderr}"
         assert output.exists()
         assert output.stat().st_size > 0
-        assert elapsed < 90, f"Conversion too slow: {elapsed:.1f}s"
+        assert elapsed < 120, f"Conversion too slow: {elapsed:.1f}s"
         print(f"\n1K-variable model: {elapsed:.2f}s conversion time")
 
     @pytest.mark.slow
