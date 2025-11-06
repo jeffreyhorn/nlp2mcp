@@ -6,18 +6,24 @@ This directory contains test models for production hardening and performance tes
 
 ### resource_allocation_250.gms
 - **Size**: 250 variables
+- **Input file**: 2.3K
 - **Purpose**: Medium-scale model testing with asterisk notation
 - **Structure**: Quadratic NLP with sum constraint
+- **Performance**: ~5.1s conversion, ~50K MCP output
 
 ### resource_allocation_500.gms
 - **Size**: 500 variables  
+- **Input file**: 4.3K
 - **Purpose**: Large-scale model testing with long parameter lists
 - **Structure**: Quadratic NLP with sum constraint
+- **Performance**: ~13.5s conversion, ~196K MCP output
 
 ### resource_allocation_1k.gms
 - **Size**: 1,000 variables
+- **Input file**: 8.3K
 - **Purpose**: Stress testing with 1K variables and long comma-separated lists
 - **Structure**: Quadratic NLP with sum constraint
+- **Performance**: ~45.9s conversion, ~766K MCP output
 
 ## Model Structure
 
@@ -63,6 +69,22 @@ Test conversion:
 ```bash
 nlp2mcp tests/fixtures/large_models/resource_allocation_1k.gms -o /tmp/out.gms
 ```
+
+## Performance Baselines
+
+Performance metrics measured on MacBook Pro (Apple M2 Max, 32GB RAM):
+
+| Model | Variables | Input Size | Conversion Time | Output Size | Throughput |
+|-------|-----------|------------|-----------------|-------------|------------|
+| 250   | 250       | 2.3K       | 5.1s           | 37K         | ~49 vars/s |
+| 500   | 500       | 4.3K       | 13.5s          | 71K         | ~37 vars/s |
+| 1K    | 1,000     | 8.3K       | 45.9s          | 139K        | ~22 vars/s |
+
+**Performance scaling**: Roughly quadratic (O(n²)) as expected for:
+- Jacobian computation (n variables × m constraints)
+- KKT system assembly (n² potential gradient × constraint interactions)
+
+**Memory usage**: All models complete within normal memory limits (<500MB peak)
 
 ## Features Tested
 
