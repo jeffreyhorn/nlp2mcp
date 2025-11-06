@@ -32,7 +32,7 @@ This directory contains detailed documentation of parser limitations discovered 
 
 ### Low Priority
 
-4. **[Positive Variables Keyword Not Supported](parser-positive-variables-keyword-not-supported.md)**
+4. **[Positive Variables Keyword Not Supported](parser-positive-variables-keyword-not-supported.md)** ([#140](https://github.com/jeffreyhorn/nlp2mcp/issues/140))
    - **Status**: Open
    - **Impact**: Low - Excellent workaround available
    - **Summary**: Cannot use `Positive Variables` declaration keyword

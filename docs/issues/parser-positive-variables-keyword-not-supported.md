@@ -1,5 +1,7 @@
 # Parser Limitation: Positive Variables Keyword Not Supported
 
+**GitHub Issue**: [#140](https://github.com/jeffreyhorn/nlp2mcp/issues/140)
+
 ## Status
 **Open** - Parser limitation  
 **Priority**: Low  
