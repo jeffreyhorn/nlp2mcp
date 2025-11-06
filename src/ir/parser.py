@@ -479,12 +479,30 @@ class _ModelBuilder:
         self.model.add_param(ParameterDef(name=name, domain=domain, values=values))
 
     def _handle_variables_block(self, node: Tree) -> None:
+        # Check for block-level variable kind (e.g., "Positive Variables")
+        block_kind = None
+        for child in node.children:
+            # var_kind is a Tree node containing a Token
+            if isinstance(child, Tree) and child.data == "var_kind":
+                if child.children and isinstance(child.children[0], Token):
+                    kind_token = child.children[0]
+                    if kind_token.type in _VAR_KIND_MAP:
+                        block_kind = _VAR_KIND_MAP[kind_token.type]
+                        break
+
+        # Process variable declarations
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
             if child.data in {"var_indexed", "var_scalar"}:
-                kind, name, domain = self._parse_var_decl(child)
-                self.model.add_var(VariableDef(name=name, domain=domain, kind=kind))
+                decl_kind, name, domain = self._parse_var_decl(child)
+                # Declaration-level kind takes precedence over block-level kind
+                final_kind = (
+                    decl_kind
+                    if decl_kind != VarKind.CONTINUOUS
+                    else (block_kind or VarKind.CONTINUOUS)
+                )
+                self.model.add_var(VariableDef(name=name, domain=domain, kind=final_kind))
 
     def _handle_scalars_block(self, node: Tree) -> None:
         for child in node.children:
@@ -529,9 +547,16 @@ class _ModelBuilder:
     def _parse_var_decl(self, node: Tree) -> tuple[VarKind, str, tuple[str, ...]]:
         idx = 0
         kind = VarKind.CONTINUOUS
-        if isinstance(node.children[idx], Token) and node.children[idx].type in _VAR_KIND_MAP:
-            kind = _VAR_KIND_MAP[node.children[idx].type]
+        # Check for declaration-level var_kind (wrapped in Tree node)
+        if isinstance(node.children[idx], Tree) and node.children[idx].data == "var_kind":
+            if node.children[idx].children and isinstance(node.children[idx].children[0], Token):
+                kind_token = node.children[idx].children[0]
+                if kind_token.type in _VAR_KIND_MAP:
+                    kind = _VAR_KIND_MAP[kind_token.type]
             idx += 1
+        # Get variable name (must be a Token)
+        if not isinstance(node.children[idx], Token):
+            raise self._error(f"Expected variable name token, got {type(node.children[idx])}", node)
         name = _token_text(node.children[idx])
         idx += 1
         domain: tuple[str, ...] = ()

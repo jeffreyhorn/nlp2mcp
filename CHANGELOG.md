@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Issue #140: Block-Level Variable Kind Keywords Support - 2025-11-06
+
+**Status:** ✅ FIXED - Parser now supports block-level variable kind keywords
+
+#### Summary
+
+Issue #140 reported that the parser did not support GAMS standard syntax for block-level variable kind keywords like "Positive Variables", "Binary Variables", etc. The parser would fail with "No terminal matches 'V'" error.
+
+**What Was Fixed:**
+
+Added full support for block-level variable kind keywords:
+- `Positive Variables` - for non-negative variables
+- `Negative Variables` - for non-positive variables  
+- `Binary Variables` - for binary (0-1) variables
+- `Integer Variables` - for integer-valued variables
+
+**Implementation Details:**
+
+1. **Grammar Changes** (`src/gams/gams_grammar.lark:40`):
+   - Modified `variables_block` rule to accept optional `var_kind` before "Variables" keyword
+   - Syntax: `variables_block: var_kind? ("Variables"i | "Variable"i) var_decl+ SEMI`
+
+2. **Parser Changes** (`src/ir/parser.py:481-505`):
+   - Updated `_handle_variables_block()` to extract block-level variable kind from parse tree
+   - Updated `_parse_var_decl()` to handle var_kind wrapped in Tree nodes
+   - Declaration-level kind takes precedence over block-level kind (e.g., `Positive Variables binary x` → x is BINARY)
+
+3. **Example Usage:**
+   ```gams
+   Positive Variables
+       x
+       y ;
+   
+   Binary Variables
+       z ;
+   ```
+
+**Test Coverage:** 10 new comprehensive tests in `tests/unit/gams/test_parser.py`:
+- Block-level kinds (scalar and indexed variables)
+- All variable kinds (Positive, Negative, Binary, Integer)
+- Mixed variable blocks
+- Declaration-level kind precedence
+- Case-insensitive keywords
+- Integration with bounds
+- Issue #140 exact example
+
+**Quality Checks:** ✅ ALL PASSED
+- Type checking: PASSED
+- Linting: PASSED
+- Formatting: PASSED
+- All 39 parser tests: PASSED
+- Full unit & integration tests: PASSED
+
+---
+
 ### Issue #138: Parser Performance Investigation - 2025-11-06
 
 **Status:** ✅ RESOLVED - Issue cannot be reproduced, performance is excellent

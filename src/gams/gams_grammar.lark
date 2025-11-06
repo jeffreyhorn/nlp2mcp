@@ -37,7 +37,7 @@ table_block: "Table"i ID "(" id_list ")" STRING? table_row+ SEMI
 
 scalars_block: ("Scalars"i | "Scalar"i) scalar_decl+ SEMI
 
-variables_block: ("Variables"i | "Variable"i) var_decl+ SEMI
+variables_block: var_kind? ("Variables"i | "Variable"i) var_decl+ SEMI
 
 equations_block: ("Equations"i | "Equation"i) eqn_head_decl+ SEMI
 
