@@ -4,22 +4,19 @@ This directory contains test models for production hardening and performance tes
 
 ## Models
 
-### resource_allocation_small.gms
-- **Size**: 10 variables
-- **Purpose**: Baseline fast conversion test
-- **Conversion time**: ~1.7 seconds
+### resource_allocation_250.gms
+- **Size**: 250 variables
+- **Purpose**: Medium-scale model testing with asterisk notation
 - **Structure**: Quadratic NLP with sum constraint
 
-### resource_allocation_medium.gms
-- **Size**: 50 variables  
-- **Purpose**: Moderate scale testing
-- **Conversion time**: ~1.5 seconds
+### resource_allocation_500.gms
+- **Size**: 500 variables  
+- **Purpose**: Large-scale model testing with long parameter lists
 - **Structure**: Quadratic NLP with sum constraint
 
-### resource_allocation_large.gms
-- **Size**: 100 variables
-- **Purpose**: Stress testing within parser limits
-- **Conversion time**: ~1.9 seconds
+### resource_allocation_1k.gms
+- **Size**: 1,000 variables
+- **Purpose**: Stress testing with 1K variables and long comma-separated lists
 - **Structure**: Quadratic NLP with sum constraint
 
 ## Model Structure
@@ -29,11 +26,11 @@ All models follow this pattern:
 ```gams
 * Quadratic resource allocation NLP
 Sets
-    i /i1, i2, ..., iN/
+    i /i1*iN/  ; Uses asterisk notation!
 ;
 
 Parameters
-    a(i) / ... /
+    a(i) / i1 2, i2 3, ..., iN 1 /  ; Long comma-separated lists
 ;
 
 Variables
@@ -64,17 +61,13 @@ python tests/fixtures/generate_large_models.py
 
 Test conversion:
 ```bash
-nlp2mcp tests/fixtures/large_models/resource_allocation_medium.gms -o /tmp/out.gms
+nlp2mcp tests/fixtures/large_models/resource_allocation_1k.gms -o /tmp/out.gms
 ```
 
-## Parser Limitations
+## Features Tested
 
-The current GAMS parser has some limitations encountered during test fixture creation:
+These models leverage recently added parser features:
 
-1. **Long comma-separated lists**: Lists with 100+ elements can cause timeouts (30+ seconds)
-2. **Asterisk notation**: Set notation like `/i1*i100/` is not supported; must use explicit comma-separated lists
-3. **Multi-dimensional parameters**: 2D parameter data like `usage(tasks, resources)` is not supported
-4. **Positive Variables declaration**: The `Positive Variables` keyword is not supported; use constraints instead
-5. **Equation description text**: Cannot contain hyphens (e.g., use "nonnegativity" not "non-negativity")
-
-These models are designed to work within these limitations while still providing meaningful performance testing.
+1. **Asterisk notation**: Set notation like `/i1*i1000/` for compact set definitions
+2. **Long comma-separated lists**: Parameters with hundreds/thousands of values across long lines
+3. **Large-scale models**: Testing parser and derivative computation at 250, 500, and 1K variable scales
