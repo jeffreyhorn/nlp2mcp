@@ -407,7 +407,27 @@ pytest --cov=src tests/
 
 ## Test Organization
 
-The test suite is split into unit, integration, e2e, and validation layers. See `./scripts/test_fast.sh`, `./scripts/test_integration.sh`, and `./scripts/test_all.sh` to run the different subsets. Exact counts are reported by pytest at runtime to avoid stale numbers in the README.
+The test suite is split into unit, integration, e2e, and validation layers. You can run the different subsets with the scripts in `./scripts/` or via pytest directly. Below are the counts collected locally on Nov 5, 2025 (run in this repository with `python3 -m pytest --collect-only`):
+
+- Total collected tests: **1281**
+- Marker breakdown (may overlap if tests carry multiple markers):
+  - unit: **434**
+  - integration: **223**
+  - e2e: **45**
+  - validation: **66**
+
+Note: marker-based counts can overlap and the total may include tests without markers or additional collected items (fixtures, doctests, etc.). To reproduce these numbers locally run:
+
+```bash
+# Total collected tests
+python3 -m pytest --collect-only -q | wc -l
+
+# Per-marker counts
+python3 -m pytest -m unit --collect-only -q | wc -l
+python3 -m pytest -m integration --collect-only -q | wc -l
+python3 -m pytest -m e2e --collect-only -q | wc -l
+python3 -m pytest -m validation --collect-only -q | wc -l
+```
 
 Typical layout:
 
@@ -419,7 +439,7 @@ tests/
 └── validation/
 ```
 
-Test pyramid guidance: prefer fast unit tests during development, run integration/e2e for cross-module confidence, and run the full validation suite before releases.
+Test pyramid guidance: prefer fast unit tests during development, run integration/e2e for cross-module confidence, and run the full validation/validation suite before releases.
 
 ### Code Style
 
