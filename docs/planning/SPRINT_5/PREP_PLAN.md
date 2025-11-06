@@ -1316,7 +1316,7 @@ docs = [
 pip install -e ".[docs]"
 ```
 
-#### Step 2: Initialize Sphinx (20 min)
+#### Step 2: Install Sphinx and Extensions (20 min)
 
 ```bash
 # Create docs directory (if not exists)
@@ -1453,13 +1453,13 @@ open build/html/index.html
 
 ### Acceptance Criteria
 
-- [ ] Sphinx installed with required extensions
-- [ ] Sphinx project initialized in `docs/api/`
-- [ ] Configuration complete (autodoc, napoleon, theme)
-- [ ] API reference structure created (ir, ad, kkt, emit, cli)
-- [ ] Documentation builds successfully (`make html`)
-- [ ] HTML output viewable and correctly formatted
-- [ ] Build instructions documented
+- [x] Sphinx installed with required extensions
+- [x] Sphinx project initialized in `docs/api/`
+- [x] Configuration complete (autodoc, napoleon, theme)
+- [x] API reference structure created (ir, ad, kkt, emit, cli)
+- [x] Documentation builds successfully (`make html`)
+- [x] HTML output viewable and correctly formatted
+- [x] Build instructions documented
 
 ### Expected Outcome
 
