@@ -141,6 +141,7 @@ markers = [
     "integration: Cross-module integration tests (deselect with '-m \"not integration\"')",
     "e2e: End-to-end pipeline tests (deselect with '-m \"not e2e\"')",
     "validation: Mathematical validation tests (slower) (deselect with '-m \"not validation\"')",
+    "slow: Slow tests that take significant time (deselect with '-m \"not slow\"')",
 ]
 
 [tool.nlp2mcp]
