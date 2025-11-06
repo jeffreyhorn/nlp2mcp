@@ -65,7 +65,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Golden test suite (end-to-end regression testing)
 - ✅ Optional GAMS syntax validation
 - ✅ Comprehensive documentation (KKT assembly, GAMS emission)
-- ✅ 602 tests passing, 100% deterministic output
+- Tests: a comprehensive test suite is provided. Run `./scripts/test_all.sh` or `pytest` to show current counts; the README avoids hard-coding counts to prevent drift.
 
 **Sprint 4: Extended Features & Robustness** ✅ **COMPLETE**
 
@@ -82,14 +82,14 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 
 ### Planned (See [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md))
 
-- 📋 Sprint 5: Packaging, documentation, and ecosystem integration
+- 📋 Sprint 5: Packaging, documentation, and ecosystem integration (in progress)
 
 ## Installation
 
 ### Requirements
 
-- Python 3.12 or higher
-- pip 21.3 or higher (for pyproject.toml support)
+- Python 3.12 or higher (see `pyproject.toml` for the authoritative requirement)
+- pip 21.3 or higher (recommended for editable installs and modern pyproject support)
 
 ### For Development
 
@@ -108,8 +108,22 @@ make install-dev
 
 ### For Use
 
+If the package is published on PyPI, you can install it with:
+
 ```bash
-pip install nlp2mcp  # (Not yet published to PyPI)
+pip install nlp2mcp
+```
+
+If not published (or to install directly from this repository), use one of the following:
+
+```bash
+# Local editable development install (recommended for contributors)
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+
+# Or install directly from GitHub
+pip install git+https://github.com/jeffreyhorn/nlp2mcp.git
 ```
 
 ## Usage
@@ -301,13 +315,15 @@ Solve mcp_model using MCP;
 
 ### Python API
 
+After an editable install (`pip install -e .`) the package imports use the package name. Example usage:
+
 ```python
-from src.ir.parser import parse_model_file
-from src.ir.normalize import normalize_model
-from src.ad.gradient import compute_objective_gradient
-from src.ad.constraint_jacobian import compute_constraint_jacobian
-from src.kkt.assemble import assemble_kkt_system
-from src.emit.emit_gams import emit_gams_mcp
+from nlp2mcp.ir.parser import parse_model_file
+from nlp2mcp.ir.normalize import normalize_model
+from nlp2mcp.ad.gradient import compute_objective_gradient
+from nlp2mcp.ad.constraint_jacobian import compute_constraint_jacobian
+from nlp2mcp.kkt.assemble import assemble_kkt_system
+from nlp2mcp.emit.emit_gams import emit_gams_mcp
 
 # Full pipeline
 model = parse_model_file("examples/simple_nlp.gms")
@@ -318,66 +334,29 @@ kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
 gams_code = emit_gams_mcp(kkt, model_name="mcp_model", add_comments=True)
 
 print(gams_code)
-
-# Access gradient for a variable by name
-grad_x_i = gradient.get_derivative_by_name("x", ("i",))  # Get ∂f/∂x(i)
-
-# Access Jacobian entries by iterating over nonzero entries
-for row_id, col_id in J_g.get_nonzero_entries():
-    # Get the derivative expression
-    deriv_expr = J_g.get_derivative(row_id, col_id)
-
-    # Get equation and variable names from the index mapping
-    eq_info = J_g.index_mapping.get_eq_instance(row_id)
-    var_info = J_g.index_mapping.get_var_instance(col_id)
-
-    if eq_info and var_info:
-        eq_name, eq_indices = eq_info
-        var_name, var_indices = var_info
-        print(f"∂{eq_name}{eq_indices}/∂{var_name}{var_indices} = {deriv_expr}")
-
-# Or access specific Jacobian entry by names
-deriv = J_g.get_derivative_by_names("constraint", ("i1",), "x", ("i1",))
 ```
+
+Note: if you prefer running from the repository without installing, either set `PYTHONPATH=.`, or run modules directly (for example `python -m src.cli ...`), but the recommended workflow for development is an editable install so imports use `nlp2mcp.*`.
 
 ## Project Structure
 
+The project layout below is a simplified snapshot and may drift over time; refer to the repository for the authoritative layout.
+
 ```
 nlp2mcp/
-├── src/
-│   ├── ad/           # Symbolic differentiation engine
-│   │   ├── api.py              # High-level API
-│   │   ├── differentiate.py    # Core differentiation rules
-│   │   ├── simplify.py         # Expression simplification
-│   │   ├── evaluate.py         # AST evaluation
-│   │   ├── gradient.py         # Gradient computation
-│   │   ├── jacobian.py         # Jacobian computation
-│   │   ├── mapping.py          # Index mapping utilities
-│   │   └── validation.py       # Finite-difference validation
-│   ├── emit/         # Code generation for GAMS MCP (planned)
-│   ├── gams/         # GAMS grammar and parsing utilities
-│   ├── ir/           # Intermediate representation
-│   │   ├── ast.py              # Expression AST nodes
-│   │   ├── model_ir.py         # Model IR data structures
-│   │   ├── normalize.py        # Constraint normalization
-│   │   ├── parser.py           # GAMS parser
-│   │   └── symbols.py          # Symbol table definitions
-│   ├── kkt/          # KKT system assembly (planned)
-│   └── utils/        # Utility functions
-├── tests/
-│   ├── ad/           # Differentiation tests
-│   ├── gams/         # Parser tests
-│   └── ir/           # IR and normalization tests
-├── examples/         # Example GAMS models
-├── docs/             # Additional documentation
-│   ├── ad/                   # Automatic differentiation docs
-│   ├── architecture/         # System architecture
-│   ├── emit/                 # GAMS emission docs
-│   ├── kkt/                  # KKT assembly docs
-│   └── planning/             # Sprint plans and retrospectives
-├── pyproject.toml    # Project configuration
-├── Makefile          # Development commands
-└── README.md         # This file
+├── src/          # Source package
+│   ├── ad/       # Automatic differentiation engine and helpers
+│   ├── emit/     # GAMS MCP emitter and code generation utilities
+│   ├── gams/     # GAMS grammar/parser utilities
+│   ├── ir/       # Intermediate representation (AST, model IR, normalization)
+│   ├── kkt/      # KKT assembly utilities
+│   └── utils/    # Misc utilities
+├── tests/        # Unit, integration, e2e and validation tests
+├── examples/     # Example GAMS models
+├── docs/         # Documentation and design notes
+├── pyproject.toml
+├── Makefile
+└── README.md
 ```
 
 ## Development
@@ -426,27 +405,21 @@ pytest tests/unit/ad/test_arithmetic.py -v
 pytest --cov=src tests/
 ```
 
-### Test Organization
+## Test Organization
+
+The test suite is split into unit, integration, e2e, and validation layers. See `./scripts/test_fast.sh`, `./scripts/test_integration.sh`, and `./scripts/test_all.sh` to run the different subsets. Exact counts are reported by pytest at runtime to avoid stale numbers in the README.
+
+Typical layout:
 
 ```
 tests/
-├── unit/              # Fast tests, no file I/O (~10 tests/sec)
-│   ├── ad/           # AD engine unit tests
-│   ├── gams/         # Parser unit tests
-│   └── ir/           # IR unit tests
-├── integration/       # Cross-module tests (~5 tests/sec)
-│   └── ad/           # Gradient and Jacobian integration
-├── e2e/              # Full pipeline tests (~2 tests/sec)
-│   └── test_integration.py
-└── validation/        # Mathematical correctness (~1 test/sec)
-    └── test_finite_difference.py
+├── unit/
+├── integration/
+├── e2e/
+└── validation/
 ```
 
-**Test Pyramid Strategy:**
-- **Unit tests** (157 tests): Test individual functions/modules in isolation
-- **Integration tests** (45 tests): Test cross-module interactions
-- **E2E tests** (15 tests): Test full GAMS → derivatives pipeline
-- **Validation tests** (169 tests): Finite-difference validation of derivatives
+Test pyramid guidance: prefer fast unit tests during development, run integration/e2e for cross-module confidence, and run the full validation suite before releases.
 
 ### Code Style
 
