@@ -10,7 +10,7 @@ Module Components
 KKT Assembly
 ~~~~~~~~~~~~
 
-.. automodule:: src.kkt.assembler
+.. automodule:: src.kkt.assemble
    :members:
    :undoc-members:
    :show-inheritance:
@@ -27,6 +27,54 @@ Complementarity Conditions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: src.kkt.complementarity
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+KKT System
+~~~~~~~~~~
+
+.. automodule:: src.kkt.kkt_system
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Naming
+~~~~~~
+
+.. automodule:: src.kkt.naming
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Objective Handling
+~~~~~~~~~~~~~~~~~~
+
+.. automodule:: src.kkt.objective
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Partitioning
+~~~~~~~~~~~~
+
+.. automodule:: src.kkt.partition
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Reformulation
+~~~~~~~~~~~~~
+
+.. automodule:: src.kkt.reformulation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Scaling
+~~~~~~~
+
+.. automodule:: src.kkt.scaling
    :members:
    :undoc-members:
    :show-inheritance:

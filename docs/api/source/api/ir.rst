@@ -10,7 +10,7 @@ Module Components
 Model Definition
 ~~~~~~~~~~~~~~~~
 
-.. automodule:: src.ir.model
+.. automodule:: src.ir.model_ir
    :members:
    :undoc-members:
    :show-inheritance:
@@ -27,6 +27,30 @@ Normalization
 ~~~~~~~~~~~~~
 
 .. automodule:: src.ir.normalize
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+AST
+~~~
+
+.. automodule:: src.ir.ast
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Preprocessor
+~~~~~~~~~~~~
+
+.. automodule:: src.ir.preprocessor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Symbols
+~~~~~~~
+
+.. automodule:: src.ir.symbols
    :members:
    :undoc-members:
    :show-inheritance:

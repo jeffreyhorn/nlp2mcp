@@ -1,24 +1,15 @@
-Validation Module (PATH Solver Integration)
-===========================================
+Validation Module
+=================
 
-The Validation module provides integration with the PATH solver for validating
-generated MCP models and ensuring they solve correctly.
+The Validation module provides utilities for checking and validating generated MCP models.
 
 Module Components
 -----------------
 
-PATH Solver Interface
-~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: src.validation.path_solver
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Validation Utilities
+GAMS Check Utilities
 ~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: src.validation.validator
+.. automodule:: src.validation.gams_check
    :members:
    :undoc-members:
    :show-inheritance:
