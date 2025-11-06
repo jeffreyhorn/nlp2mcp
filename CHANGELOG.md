@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | Benchmark | Model Size | Result | Status |
 |-----------|------------|--------|--------|
 | Parse Small | 10 vars, 5 constraints | 0.174s | ✅ < 1.0s target |
-| Parse Medium | 100 vars, 50 constraints | 0.667s | ✅ < 2.0s target |
+| Parse Medium | 100 vars, 50 constraints | 0.667s | ✅ < 3.0s target |
 | Parse Large | 200 vars, 100 constraints | 1.363s | ✅ < 5.0s target |
 | Differentiation Scaling | 10x vars | 98.5x time | ✅ ~O(n²) expected |
 | End-to-End Medium | 100 vars | 1.589s | ⚠️ Above 1.0s goal |

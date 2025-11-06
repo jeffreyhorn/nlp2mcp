@@ -34,7 +34,7 @@
 | Model Size | Variables | Constraints | Parse Time (mean) | Target | Status |
 |------------|-----------|-------------|-------------------|--------|--------|
 | Small      | 10        | 5           | 0.174s            | < 1.0s | ✅ PASS |
-| Medium     | 100       | 50          | 0.667s            | < 2.0s | ✅ PASS |
+| Medium     | 100       | 50          | 0.667s            | < 3.0s | ✅ PASS |
 | Large      | 200       | 100         | 1.363s            | < 5.0s | ✅ PASS |
 
 **Scalability Analysis:**
