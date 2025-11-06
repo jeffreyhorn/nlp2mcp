@@ -289,3 +289,119 @@ class TestConsistency:
         # In general, we expect gradient for all vars (unless objective is constant)
         # For sum(i, a(i)*x(i)), all variables should have non-zero gradient
         assert gradient_entries == num_vars
+
+
+@pytest.mark.e2e
+class TestPositiveVariables:
+    """Test end-to-end pipeline with Positive Variables keyword (Issue #140)."""
+
+    def test_positive_variables_full_pipeline(self):
+        """Test that Positive Variables are parsed and generate correct MCP output."""
+        from src.ad.constraint_jacobian import compute_constraint_jacobian
+        from src.ad.gradient import compute_objective_gradient
+        from src.emit.emit_gams import emit_gams_mcp
+        from src.ir.normalize import normalize_model
+        from src.ir.parser import parse_model_file
+        from src.ir.symbols import VarKind
+        from src.kkt.assemble import assemble_kkt_system
+
+        # Parse model with Positive Variables keyword
+        model_ir = parse_model_file(get_example_path("positive_vars_nlp.gms"))
+
+        # Verify that variables were parsed with correct kind
+        assert "x" in model_ir.variables
+        assert model_ir.variables["x"].kind == VarKind.POSITIVE
+        assert "obj" in model_ir.variables
+        assert model_ir.variables["obj"].kind == VarKind.POSITIVE
+
+        # Normalize model
+        normalized_eqs, _ = normalize_model(model_ir)
+
+        # Compute derivatives
+        gradient = compute_objective_gradient(model_ir)
+        J_eq, J_ineq = compute_constraint_jacobian(model_ir, normalized_eqs)
+
+        # Should have 4 variables: obj, x(i1), x(i2), x(i3)
+        assert gradient.num_cols == 4
+
+        # Gradient should have non-zero components
+        assert gradient.num_nonzeros() > 0
+
+        # Should have equality constraints (objective definition + total_demand)
+        assert J_eq.num_rows > 0
+        assert J_eq.num_nonzeros() > 0
+
+        # Should have inequality constraints (balance(i) for i1, i2, i3)
+        assert J_ineq.num_rows >= 3
+        assert J_ineq.num_nonzeros() > 0
+
+        # Assemble KKT system
+        kkt = assemble_kkt_system(model_ir, gradient, J_eq, J_ineq)
+
+        # Verify KKT system structure
+        assert kkt.model_ir == model_ir
+        assert kkt.gradient == gradient
+        assert kkt.J_eq == J_eq
+        assert kkt.J_ineq == J_ineq
+
+        # Generate MCP output
+        mcp_output = emit_gams_mcp(kkt, model_name="positive_vars_mcp", add_comments=True)
+
+        # Verify MCP output contains expected elements
+        assert "positive_vars_mcp" in mcp_output
+        assert "Positive Variables" in mcp_output  # Should preserve variable kind
+        assert "x(i)" in mcp_output  # Indexed variable
+        assert "obj" in mcp_output  # Scalar variable
+        assert "stationarity" in mcp_output.lower()  # KKT stationarity conditions
+        assert "Model" in mcp_output
+        assert "Solve" in mcp_output
+
+        # Verify that positive variables appear in Positive Variables block
+        lines = mcp_output.split("\n")
+        in_positive_block = False
+        found_x = False
+        found_obj = False
+
+        for line in lines:
+            if "Positive Variables" in line:
+                in_positive_block = True
+            elif in_positive_block:
+                # Check for variables in the block
+                if "x(i)" in line or "x (i)" in line:
+                    found_x = True
+                if (
+                    "obj" in line and ";" not in line
+                ):  # Make sure it's variable declaration, not equation
+                    found_obj = True
+                # End of block
+                if ";" in line and (found_x or found_obj):
+                    break
+
+        assert found_x or found_obj, (
+            "Positive variables should be declared in Positive Variables block"
+        )
+
+    def test_positive_variables_in_derivatives(self):
+        """Test that Positive Variables are handled correctly in derivative computation."""
+        # Parse model
+        model_ir = parse_and_normalize("positive_vars_nlp.gms")
+
+        # Compute derivatives using high-level API
+        gradient, J_g, J_h = compute_derivatives(model_ir)
+
+        # Verify gradient structure
+        assert gradient.num_cols == 4  # obj + x(i1) + x(i2) + x(i3)
+        assert gradient.num_nonzeros() > 0
+
+        # Verify all gradient components exist
+        for col_id in range(gradient.num_cols):
+            deriv = gradient.get_derivative(col_id)
+            assert deriv is not None, f"Gradient component {col_id} should exist"
+
+        # Verify Jacobians have correct structure
+        assert J_h.num_rows > 0  # Equality constraints
+        assert J_g.num_rows >= 3  # Inequality constraints (balance(i) for each i)
+
+        # Verify that derivatives are non-trivial (not all zeros)
+        assert J_h.num_nonzeros() > 0
+        assert J_g.num_nonzeros() > 0
