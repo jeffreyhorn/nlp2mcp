@@ -24,7 +24,7 @@ def generate_resource_allocation(
 
     This tests large-scale model handling without unsupported features.
     """
-    # Total number of variables = num_tasks
+    # Total number of variables = num_tasks (x(i)) + 1 (obj) = num_tasks + 1
     content = [f"* Resource Allocation Problem: {num_tasks} variables\n\n"]
 
     # Sets - use explicit comma-separated lists (parser doesn't support * notation)
@@ -86,7 +86,7 @@ def generate_network_flow(
 
     Tests large-scale model handling.
     """
-    # Use num_arcs as the number of variables
+    # Total number of variables = num_arcs (flow(j)) + 1 (obj) = num_arcs + 1
     content = [f"* Network Flow Problem: {num_arcs} arcs\n\n"]
 
     # Sets - use explicit comma-separated lists (parser doesn't support * notation)

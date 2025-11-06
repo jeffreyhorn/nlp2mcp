@@ -269,8 +269,12 @@ Sets
 ;
 
 Parameters
-    a(i) / i1*i{num_vars} 1 /
+    a(i)
 ;
+
+* NOTE: Asterisk notation for parameter data assignment not supported
+* Must use explicit assignments or loop after sets are defined
+a(i) = 1;
 
 Variables
     x(i)

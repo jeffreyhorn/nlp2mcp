@@ -16,10 +16,10 @@ FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "large_models"
 class TestLargeModelHandling:
     """Test nlp2mcp handles large models correctly."""
 
-    def test_small_model_converts(self):
+    def test_small_model_converts(self, tmp_path):
         """Test: 10-variable model converts successfully."""
         model = FIXTURES_DIR / "resource_allocation_small.gms"
-        output = Path("/tmp/test_small_mcp.gms")
+        output = tmp_path / "test_small_mcp.gms"
 
         result = subprocess.run(
             ["nlp2mcp", str(model), "-o", str(output)],
@@ -32,10 +32,10 @@ class TestLargeModelHandling:
         assert output.exists()
         assert output.stat().st_size > 0
 
-    def test_medium_model_converts(self):
+    def test_medium_model_converts(self, tmp_path):
         """Test: 50-variable model converts successfully."""
         model = FIXTURES_DIR / "resource_allocation_medium.gms"
-        output = Path("/tmp/test_medium_mcp.gms")
+        output = tmp_path / "test_medium_mcp.gms"
 
         result = subprocess.run(
             ["nlp2mcp", str(model), "-o", str(output)],
@@ -49,10 +49,10 @@ class TestLargeModelHandling:
         assert output.stat().st_size > 0
 
     @pytest.mark.slow
-    def test_large_model_converts(self):
+    def test_large_model_converts(self, tmp_path):
         """Test: 100-variable model converts in reasonable time."""
         model = FIXTURES_DIR / "resource_allocation_large.gms"
-        output = Path("/tmp/test_large_mcp.gms")
+        output = tmp_path / "test_large_mcp.gms"
 
         start = time.time()
         result = subprocess.run(
@@ -70,10 +70,10 @@ class TestLargeModelHandling:
         print(f"\n100-variable model: {elapsed:.2f}s conversion time")
 
     @pytest.mark.slow
-    def test_large_model_output_quality(self):
+    def test_large_model_output_quality(self, tmp_path):
         """Test: 100-variable model produces valid MCP output."""
         model = FIXTURES_DIR / "resource_allocation_large.gms"
-        output = Path("/tmp/test_large_quality_mcp.gms")
+        output = tmp_path / "test_large_quality_mcp.gms"
 
         result = subprocess.run(
             ["nlp2mcp", str(model), "-o", str(output)],
