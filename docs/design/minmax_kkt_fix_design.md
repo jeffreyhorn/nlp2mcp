@@ -574,12 +574,12 @@ After Day 2 implementation, remove `@pytest.mark.xfail` and verify:
 ### Day 1 (Design & Scaffolding)
 
 - [x] Design document created (`docs/design/minmax_kkt_fix_design.md`)
-- [ ] Detection module created (`src/ir/minmax_detection.py`)
-- [ ] Detection tests created with 100% coverage (`tests/unit/ir/test_minmax_detection.py`)
-- [ ] Regression test suite created with xfail markers (`tests/unit/kkt/test_minmax_fix.py`)
-- [ ] KKT assembly scaffolded with TODO comments and logging (`src/kkt/assemble.py`)
-- [ ] All tests pass (xfail tests are expected failures)
-- [ ] Build succeeds: `make typecheck && make lint && make format && make test`
+- [x] Detection module created (`src/ir/minmax_detection.py`)
+- [x] Detection tests created with 100% coverage (`tests/unit/ir/test_minmax_detection.py`)
+- [x] Regression test suite created with xfail markers (`tests/unit/kkt/test_minmax_fix.py`)
+- [x] KKT assembly scaffolded with TODO comments and logging (`src/kkt/assemble.py`)
+- [x] All tests pass (xfail tests are expected failures)
+- [x] Build succeeds: `make typecheck && make lint && make format && make test`
 
 ### Day 2 (Implementation)
 

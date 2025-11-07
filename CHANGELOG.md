@@ -42,7 +42,7 @@ Completed Day 1 of Sprint 5: comprehensive research, design, and scaffolding for
 - Test results: 29 passed, 6 xfailed, 3 xpassed
 
 **Task 1.4 - Detection Logic Implementation** (2h)
-- Created `src/ir/minmax_detection.py` (157 lines)
+- Created `src/ir/minmax_detection.py` (238 lines)
 - Implemented 4 functions:
   - `detects_objective_minmax()` - Main detection with dependency tracing
   - `_build_variable_definitions()` - Variable → equation mapping
@@ -80,7 +80,7 @@ Completed Day 1 of Sprint 5: comprehensive research, design, and scaffolding for
    - Integration with existing test fixtures
 
 3. **Detection Module:** `src/ir/minmax_detection.py`
-   - 157 lines of code
+   - 238 lines of code
    - 4 functions implemented
    - 100% unit test coverage
    - Production-ready

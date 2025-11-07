@@ -53,6 +53,7 @@ build/
 
 # Project specific
 *.gms.bak
+*.bak
 *.lst
 *.log
 output/
