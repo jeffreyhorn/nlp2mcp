@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import pytest
 
+from src.ir.ast import VarRef
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
 from src.kkt.reformulation import reformulate_model
@@ -108,8 +109,6 @@ class TestMinMaxInObjectiveRegression:
         min_eq = model_ir.equations["minconstraint"]
         # Check that the RHS now references an auxiliary variable
         aux_var_name = aux_vars[0]
-        from src.ir.ast import VarRef
-
         assert isinstance(min_eq.lhs_rhs[1], VarRef), "RHS should be a variable reference"
         assert min_eq.lhs_rhs[1].name == aux_var_name, f"RHS should reference {aux_var_name}"
 
