@@ -45,10 +45,10 @@ PATH solver validation completed successfully with **100% success rate** for all
 **test_solve_min_max_test_mcp** - ⚠️ XFAILED (Expected)
 - **Model:** Min/max reformulation test case
 - **Description:** Tests min(x, y) reformulation with complementarity
-- **Expected Failure Reason:** Known bug documented in `docs/issues/minmax-reformulation-spurious-variables.md`
-- **Issue:** Spurious lambda variables cause PATH Model Status 5 (Locally Infeasible)
-- **Status:** Documented, will be resolved in future work
-- **Notes:** This is the EXPECTED behavior until min/max bug fix is complete
+- **Expected Failure Reason:** Known issue documented in `docs/issues/minmax-reformulation-spurious-variables.md`
+- **Issue:** This test uses an older golden file that still has reformulation issues
+- **Status:** The Option C sign bug fix (completed in Days 1-2) resolved the sign errors, but this particular golden file test remains xfailed due to pre-existing reformulation issues
+- **Note:** The research test cases (test1_minimize_min, test3_minimize_max, test6_constraint_min) all PASS with the Option C fix. This validation test failure represents a separate, pre-existing issue with the golden file generation that predates the Option C fix.
 
 **test_min_max_mcp_generation** - ✅ PASSED
 - **Model:** Min/max MCP code generation
@@ -78,8 +78,8 @@ simple_nlp_mcp.gms
 ```
 
 **Analysis:**
-1. Unknown 2.1 may have been based on planned test cases that were never created
-2. Or these test cases existed in an earlier version and were removed/renamed
+1. The referenced test cases (`bounds_nlp_mcp.gms`, `nonlinear_mix_mcp.gms`) existed as golden test files in Sprint 3 (see CHANGELOG.md lines 3689, 3713, 3751, 3852), were documented as passing, and later marked as XFAIL with Model Status 5 failures in Sprint 4 (see docs/DAY_8_COMPLETION_SUMMARY.md). They were subsequently removed from the test suite.
+2. **Reason for removal:** `bounds_nlp_mcp.gms` was removed because it wasn't a convex problem and therefore wasn't suitable for transformation via KKT conditions.
 3. All current golden file tests PASS with PATH solver (Model Status 1)
 
 **Conclusion:**
@@ -164,7 +164,7 @@ solve model using MCP;
 **Achievement:**
 - ✅ **100% PATH success** (exceeds 90% target)
 - ✅ **Failures documented** (min/max xfail is documented)
-- ⏳ **PATH guide** (Task 3.3 in progress)
+- ✅ **PATH guide published** (`docs/PATH_SOLVER.md` - 595 lines)
 - ✅ **No blockers** for Checkpoint 1
 
 ---
