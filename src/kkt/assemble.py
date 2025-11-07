@@ -149,6 +149,9 @@ def assemble_kkt_system(
     # Step 5: Build complementarity pairs FIRST (needed by stationarity)
     # Must be done before stationarity: the stationarity builder needs to check the `negated` flag in
     # `kkt.complementarity_ineq` to determine whether to subtract or add Jacobian terms.
+    # NOTE: This ordering (complementarity before stationarity) is a breaking change from previous versions,
+    # which built stationarity equations before complementarity pairs. If you encounter old documentation or
+    # code referencing the previous order, be aware of this update.
     logger.info("Building complementarity pairs...")
     (
         kkt.complementarity_ineq,

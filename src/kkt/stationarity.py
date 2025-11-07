@@ -476,12 +476,12 @@ def _add_jacobian_transpose_terms_scalar(
         # - Inequality constraints: Should be in complementarity_ineq (registered during assembly)
         #   If an inequality is not found, it's added normally (else branch). This is safe because
         #   non-negated inequalities should be added, and any missing registration is a bug elsewhere.
-        if (
-            eq_name in kkt.complementarity_ineq
-            and kkt.complementarity_ineq[eq_name].negated
-            and not kkt.complementarity_ineq[eq_name].is_max_constraint
-        ):
-            expr = Binary("-", expr, term)
+        if eq_name in kkt.complementarity_ineq:
+            comp_pair = kkt.complementarity_ineq[eq_name]
+            if comp_pair.negated and not comp_pair.is_max_constraint:
+                expr = Binary("-", expr, term)
+            else:
+                expr = Binary("+", expr, term)
         else:
             expr = Binary("+", expr, term)
 

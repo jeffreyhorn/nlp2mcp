@@ -487,7 +487,9 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     # "comp_minmax_min_*" for equations and "lam_minmax_min_*" for multipliers.
     multiplier_names = []
     for i in range(len(min_call.args)):
-        constraint_name = f"minmax_min_{min_call.context}_{min_call.index}_arg{i}"
+        constraint_name = (
+            f"{MINMAX_MIN_CONSTRAINT_PREFIX}{min_call.context}_{min_call.index}_arg{i}"
+        )
         # The multiplier will be named lam_<constraint> by KKT assembly
         mult_name = f"lam_{constraint_name}"
         multiplier_names.append(mult_name)
@@ -584,9 +586,13 @@ def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     # Use standard KKT naming: base constraint name is "minmax_max_*"
     # The complementarity.py will create equations named "comp_minmax_max_*"
     # and multipliers named "lam_minmax_max_*", so we need to match that
+    # TODO: Extract constraint naming logic into a helper function to reduce duplication
+    # between reformulate_min() and reformulate_max()
     multiplier_names = []
     for i in range(len(max_call.args)):
-        constraint_name = f"minmax_max_{max_call.context}_{max_call.index}_arg{i}"
+        constraint_name = (
+            f"{MINMAX_MAX_CONSTRAINT_PREFIX}{max_call.context}_{max_call.index}_arg{i}"
+        )
         # The multiplier will be named lam_<constraint> by KKT assembly
         mult_name = f"lam_{constraint_name}"
         multiplier_names.append(mult_name)
@@ -704,7 +710,11 @@ def apply_strategy1_objective_substitution(
                         lhs_rhs=(lhs, VarRef(new_objvar, ())),
                     )
 
-            # Only apply once (first match in chain)
+            # Only apply Strategy 1 once (first match in objective chain)
+            # This is correct behavior: in a chain like obj = z where z = min(...),
+            # we only need to substitute the first min/max encountered. Multiple matches
+            # should not occur in a properly-formed objective chain with a single terminal
+            # min/max operation, so we break after the first match to avoid redundant updates.
             break
 
 

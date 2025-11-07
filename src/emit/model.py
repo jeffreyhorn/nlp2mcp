@@ -5,7 +5,28 @@ This module generates the Model MCP declaration with complementarity pairs.
 
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import create_eq_multiplier_name
-from src.kkt.objective import extract_objective_info
+from src.kkt.objective import ObjectiveInfo, extract_objective_info
+
+
+def _should_pair_with_objvar(
+    eq_name: str, obj_info: ObjectiveInfo, strategy1_applied: bool
+) -> bool:
+    """Determine if an equality equation should be paired with objvar.
+
+    In standard NLP->MCP transformation, the objective-defining equation is paired
+    with the objective variable rather than a multiplier. However, after Strategy 1
+    is applied (when min/max appears in the objective), the objective-defining equation
+    should be paired with a multiplier like any other equality.
+
+    Args:
+        eq_name: Name of the equation to check
+        obj_info: Objective information including defining equation name
+        strategy1_applied: Whether Strategy 1 reformulation was applied
+
+    Returns:
+        True if equation should be paired with objvar, False if with multiplier
+    """
+    return eq_name == obj_info.defining_equation and not strategy1_applied
 
 
 def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
@@ -89,11 +110,10 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         pairs.append("")
         pairs.append("    * Equality constraints")
         for eq_name in sorted(kkt.model_ir.equalities):
-            # Check if this is the objective defining equation
-            # After Strategy 1, objdef should be paired with multiplier, not objvar
+            # Check if this is the objective defining equation that should be paired with objvar
             # Note: The multiplier for objdef is created in build_complementarity_pairs()
             # for all equality constraints, so it's guaranteed to exist.
-            if eq_name == obj_info.defining_equation and not kkt.model_ir.strategy1_applied:
+            if _should_pair_with_objvar(eq_name, obj_info, kkt.model_ir.strategy1_applied):
                 # Pair with objvar, not a multiplier (standard NLP->MCP)
                 # GAMS MCP syntax: list without indices - indexing is implicit
                 pairs.append(f"    {eq_name}.{obj_info.objvar}")
