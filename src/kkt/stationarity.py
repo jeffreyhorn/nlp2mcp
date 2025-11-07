@@ -470,6 +470,12 @@ def _add_jacobian_transpose_terms_scalar(
         # For negated constraints, subtract the term instead of adding it
         # EXCEPTION: Max constraints use arg - aux_max formulation, which already has
         # the correct sign, so negation is not needed. Max constraints should be added, not subtracted.
+        #
+        # Note: This function is called for both equality (J_eq) and inequality (J_ineq) Jacobians.
+        # - Equality constraints: Won't be in complementarity_ineq, so fall through to else (add term)
+        # - Inequality constraints: Should be in complementarity_ineq (registered during assembly)
+        #   If an inequality is not found, it's added normally (else branch). This is safe because
+        #   non-negated inequalities should be added, and any missing registration is a bug elsewhere.
         if eq_name in kkt.complementarity_ineq:
             comp_pair = kkt.complementarity_ineq[eq_name]
             if comp_pair.negated and not comp_pair.is_max_constraint:

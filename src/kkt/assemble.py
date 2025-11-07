@@ -4,8 +4,9 @@ Orchestrates all KKT component builders to create complete KKT system from NLP:
 1. Constraint partitioning (with duplicate exclusion and indexed bounds)
 2. Objective variable extraction
 3. Multiplier definition creation
-4. Stationarity equation building
-5. Complementarity pair building
+4. Jacobian and gradient computation
+5. Complementarity pair building (must come before stationarity)
+6. Stationarity equation building (requires complementarity info for negation tracking)
 
 This is the main entry point for NLP → MCP transformation.
 """

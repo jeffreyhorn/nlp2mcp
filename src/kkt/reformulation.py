@@ -496,7 +496,7 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
         # Create: aux_min - arg <= 0 (meaning aux_min <= arg)
         # Complementarity negates: -(aux_min - arg) >= 0, i.e., arg - aux_min >= 0 ✓
         # Jacobian computes: ∂(aux_min - arg)/∂aux_min = +1
-        # Stationarity negates for negated constraints: -1 * lambda (correct sign!)
+        # Stationarity subtracts the Jacobian term for negated constraints (correct sign!)
         constraint_name = f"minmax_min_{min_call.context}_{min_call.index}_arg{i}"
 
         lhs = Binary("-", aux_var_ref, arg_expr)  # aux_min - arg
