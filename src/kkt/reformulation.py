@@ -209,6 +209,11 @@ if TYPE_CHECKING:
     from ..ir.model_ir import ModelIR
     from ..ir.symbols import EquationDef
 
+# Constraint naming constants for min/max reformulation
+# These prefixes are used to identify constraint types in complementarity and stationarity builders
+MINMAX_MIN_CONSTRAINT_PREFIX = "minmax_min_"
+MINMAX_MAX_CONSTRAINT_PREFIX = "minmax_max_"
+
 
 @dataclass
 class MinMaxCall:
@@ -497,7 +502,9 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
         # Complementarity negates: -(aux_min - arg) >= 0, i.e., arg - aux_min >= 0 ✓
         # Jacobian computes: ∂(aux_min - arg)/∂aux_min = +1
         # Stationarity subtracts the Jacobian term for negated constraints (correct sign!)
-        constraint_name = f"minmax_min_{min_call.context}_{min_call.index}_arg{i}"
+        constraint_name = (
+            f"{MINMAX_MIN_CONSTRAINT_PREFIX}{min_call.context}_{min_call.index}_arg{i}"
+        )
 
         lhs = Binary("-", aux_var_ref, arg_expr)  # aux_min - arg
         rhs = Const(0.0)
@@ -592,10 +599,13 @@ def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
         # Constraint: arg - aux_var <= 0  (equivalent to aux_var >= arg)
         # KKT system expects inequalities in form g(x) <= 0
         # Note: Don't use "comp_" prefix as complementarity.py adds it
-        constraint_name = f"minmax_max_{max_call.context}_{max_call.index}_arg{i}"
+        constraint_name = (
+            f"{MINMAX_MAX_CONSTRAINT_PREFIX}{max_call.context}_{max_call.index}_arg{i}"
+        )
 
         # LHS: arg - aux_var  (so constraint is arg - aux_var <= 0, i.e., aux_var >= arg)
         # RHS: 0
+
         lhs = Binary("-", arg_expr, aux_var_ref)
         rhs = Const(0.0)
 

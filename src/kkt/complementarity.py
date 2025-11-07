@@ -24,6 +24,7 @@ from src.kkt.naming import (
     create_ineq_multiplier_name,
 )
 from src.kkt.partition import partition_constraints
+from src.kkt.reformulation import MINMAX_MAX_CONSTRAINT_PREFIX
 
 
 def build_complementarity_pairs(
@@ -103,7 +104,7 @@ def build_complementarity_pairs(
 
         # Check if this is a max constraint from reformulation
         # Max constraints use pattern: minmax_max_{context}_{index}_arg{i}
-        is_max_constraint = eq_name.startswith("minmax_max_")
+        is_max_constraint = eq_name.startswith(MINMAX_MAX_CONSTRAINT_PREFIX)
 
         comp_ineq[eq_name] = ComplementarityPair(
             equation=comp_eq,
