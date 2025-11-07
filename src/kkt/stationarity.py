@@ -427,7 +427,7 @@ def _add_jacobian_transpose_terms_scalar(
     multipliers: dict,
     name_func,
     skip_eq: str | None,
-    kkt=None,
+    kkt: KKTSystem,
 ) -> Expr:
     """Add J^T multiplier terms to the stationarity expression (scalar version).
 
@@ -468,12 +468,11 @@ def _add_jacobian_transpose_terms_scalar(
 
         # Check if this constraint was negated by complementarity
         # For negated constraints, subtract the term instead of adding it
-        # EXCEPTION: max constraints have negative Jacobian, so negating them
-        # would create wrong sign. Max constraints should be added, not subtracted.
-        if kkt and eq_name in kkt.complementarity_ineq:
+        # EXCEPTION: Max constraints use arg - aux_max formulation, which already has
+        # the correct sign, so negation is not needed. Max constraints should be added, not subtracted.
+        if eq_name in kkt.complementarity_ineq:
             comp_pair = kkt.complementarity_ineq[eq_name]
-            is_max_constraint = "minmax_max_" in eq_name
-            if comp_pair.negated and not is_max_constraint:
+            if comp_pair.negated and not comp_pair.is_max_constraint:
                 expr = Binary("-", expr, term)
             else:
                 expr = Binary("+", expr, term)

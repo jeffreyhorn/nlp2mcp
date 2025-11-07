@@ -101,8 +101,16 @@ def build_complementarity_pairs(
             lhs_rhs=(F_lam, Const(0.0)),
         )
 
+        # Check if this is a max constraint from reformulation
+        # Max constraints use pattern: minmax_max_{context}_{index}_arg{i}
+        is_max_constraint = eq_name.startswith("minmax_max_")
+
         comp_ineq[eq_name] = ComplementarityPair(
-            equation=comp_eq, variable=lam_name, variable_indices=eq_def.domain, negated=negated
+            equation=comp_eq,
+            variable=lam_name,
+            variable_indices=eq_def.domain,
+            negated=negated,
+            is_max_constraint=is_max_constraint,
         )
 
     # Build equality equations: h(x) = 0 with ν free

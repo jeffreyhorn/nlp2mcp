@@ -58,12 +58,14 @@ class ComplementarityPair:
         variable: Name of the complementary variable (e.g., "lam_g1")
         variable_indices: Index tuple for indexed variables
         negated: Whether the constraint was negated (g(x) <= 0 becomes -g(x) >= 0)
+        is_max_constraint: Whether this is from max reformulation (arg - aux_max <= 0)
     """
 
     equation: EquationDef
     variable: str
     variable_indices: tuple[str, ...] = ()
     negated: bool = False
+    is_max_constraint: bool = False
 
 
 @dataclass

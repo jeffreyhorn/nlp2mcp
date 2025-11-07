@@ -667,8 +667,6 @@ def apply_strategy1_objective_substitution(
             # The objective now depends on aux_min instead of the intermediate variable.
             # This ensures the gradient ∂obj/∂(intermediate) = 0.
             # Keep objvar the same so KKT assembly still skips it correctly.
-            from ..ir.model_ir import ObjectiveIR
-
             model.objective = ObjectiveIR(
                 sense=model.objective.sense,
                 objvar=model.objective.objvar,  # Keep same (e.g., 'obj')

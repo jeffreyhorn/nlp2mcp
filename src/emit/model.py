@@ -91,6 +91,8 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         for eq_name in sorted(kkt.model_ir.equalities):
             # Check if this is the objective defining equation
             # After Strategy 1, objdef should be paired with multiplier, not objvar
+            # Note: The multiplier for objdef is created in build_complementarity_pairs()
+            # for all equality constraints, so it's guaranteed to exist.
             if eq_name == obj_info.defining_equation and not kkt.model_ir.strategy1_applied:
                 # Pair with objvar, not a multiplier (standard NLP->MCP)
                 # GAMS MCP syntax: list without indices - indexing is implicit
