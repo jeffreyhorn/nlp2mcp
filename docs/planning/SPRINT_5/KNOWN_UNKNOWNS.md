@@ -340,7 +340,7 @@ if detects_objective_minmax(model_ir):
 
 **Test Location:** `tests/unit/ir/test_minmax_detection.py` (29 tests, all passing)
 
-**Implementation Location:** `src/ir/minmax_detection.py` (238 lines, 100% coverage)
+**Implementation Location:** `src/ir/minmax_detection.py` (271 lines, 100% coverage)
 
 **Completed:** Sprint 5 Day 1 (November 6, 2025)
 

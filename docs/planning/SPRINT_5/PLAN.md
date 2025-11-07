@@ -75,7 +75,7 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 
 - **Task 1.4 – Detection Logic** (2 h)  
   **Related Unknown:** 1.2 (🔍)  
-  **Implementation Notes:** Fully implemented with `detects_objective_minmax()` function using worklist algorithm for transitive dependency tracing. Module location: `src/ir/minmax_detection.py` (238 lines). Test coverage: 100% (29 tests in `tests/unit/ir/test_minmax_detection.py`). Key architectural decision: Pure IR-layer implementation avoiding circular KKT dependency.
+  **Implementation Notes:** Fully implemented with `detects_objective_minmax()` function using worklist algorithm for transitive dependency tracing. Module location: `src/ir/minmax_detection.py` (271 lines). Test coverage: 100% (29 tests in `tests/unit/ir/test_minmax_detection.py`). Key architectural decision: Pure IR-layer implementation avoiding circular KKT dependency.
   Add AST inspection for objective-defining min/max chains with unit tests covering aliasing scenarios.
 
 - **Task 1.5 – Assembly Scaffolding** (2 h)  
