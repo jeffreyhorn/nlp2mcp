@@ -66,7 +66,9 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                 # Extract base variable name
                 var_name = eq_name[5:]  # Remove "stat_" prefix
 
-                if var_name and var_name != obj_info.objvar:
+                # Skip objective variable UNLESS Strategy 1 was applied
+                skip_objvar = not kkt.model_ir.strategy1_applied
+                if var_name and (not skip_objvar or var_name != obj_info.objvar):
                     # GAMS MCP syntax: indexed equations listed without indices
                     # stat_x.x (not stat_x(i).x(i)) - indexing is implicit
                     pairs.append(f"    {eq_name}.{var_name}")
@@ -88,12 +90,14 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         pairs.append("    * Equality constraints")
         for eq_name in sorted(kkt.model_ir.equalities):
             # Check if this is the objective defining equation
-            if eq_name == obj_info.defining_equation:
-                # Pair with objvar, not a multiplier
+            # After Strategy 1, objdef should be paired with multiplier, not objvar
+            if eq_name == obj_info.defining_equation and not kkt.model_ir.strategy1_applied:
+                # Pair with objvar, not a multiplier (standard NLP->MCP)
                 # GAMS MCP syntax: list without indices - indexing is implicit
                 pairs.append(f"    {eq_name}.{obj_info.objvar}")
             else:
                 # Regular equality: pair with multiplier
+                # (or objdef after Strategy 1)
                 # Find the multiplier name for this equation
                 mult_name = create_eq_multiplier_name(eq_name)
                 # GAMS MCP syntax: list without indices - indexing is implicit

@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 5: Min/Max Sign Bug Fix (Option C) - 2025-11-07
+
+**Status:** ✅ COMPLETED - Fix for minimize with min/max in objective-defining equations
+
+#### Summary
+
+Fixed critical sign error in min/max reformulation that caused PATH solver to report infeasibility. The issue was that stationarity equations had incorrect signs for Jacobian terms when constraints were negated by complementarity. Implemented Option C solution which tracks constraint negation and adjusts Jacobian terms accordingly.
+
+**What Was Fixed:**
+- **Problem:** Min/max reformulation created LE constraints (e.g., `aux_min - arg <= 0`) which complementarity negates to GE form. The Jacobian computed derivatives from the pre-negation form, but stationarity equations didn't account for this negation, resulting in wrong signs.
+- **Solution:** Track which constraints are negated via `ComplementarityPair.negated` flag, and subtract (rather than add) Jacobian terms for negated constraints in stationarity equations.
+- **Special Case:** Max constraints have negative Jacobian derivatives, so they are excluded from sign correction to avoid double-negation.
+
+**Changes Made:**
+
+1. **src/kkt/kkt_system.py** - Added `negated: bool = False` field to `ComplementarityPair`
+2. **src/kkt/complementarity.py** - Set negated flag when creating complementarity pairs for LE constraints
+3. **src/kkt/stationarity.py** - Check negated flag and subtract Jacobian terms (except for max constraints)
+4. **src/kkt/reformulation.py** - Simplified min reformulation to basic form with clear documentation
+5. **src/kkt/assemble.py** - Reordered assembly to build complementarity pairs before stationarity (critical fix)
+
+**Test Results:**
+- ✅ test1_minimize_min: PATH solver finds solution (x=1, y=2, z=1, obj=1)
+- ✅ test3_minimize_max: PATH solver finds solution  
+- ✅ test6_constraint_min: PATH solver finds solution
+- ⚠️  test2_maximize_max: Fails (pre-existing maximize bug, not related to this fix)
+- ⚠️  test4_maximize_min: Fails (pre-existing maximize bug, not related to this fix)
+- ❌ test5_nested_minmax: Not supported (nested min/max needs separate implementation)
+
+**Known Limitations:**
+- Maximize objective has separate issues with bound multiplier signs (not addressed in this fix)
+- Nested min/max not yet supported
+- Only tested on scalar (non-indexed) min/max
+
 ### Sprint 5 Day 2: Min/Max Bug Fix - Implementation & Testing - 2025-11-06
 
 **Status:** 🟡 PARTIAL COMPLETION - Critical architectural issue identified

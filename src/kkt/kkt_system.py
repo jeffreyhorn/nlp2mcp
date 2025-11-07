@@ -57,11 +57,13 @@ class ComplementarityPair:
         equation: The equation F(x, λ, ...)
         variable: Name of the complementary variable (e.g., "lam_g1")
         variable_indices: Index tuple for indexed variables
+        negated: Whether the constraint was negated (g(x) <= 0 becomes -g(x) >= 0)
     """
 
     equation: EquationDef
     variable: str
     variable_indices: tuple[str, ...] = ()
+    negated: bool = False
 
 
 @dataclass

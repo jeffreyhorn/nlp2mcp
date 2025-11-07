@@ -74,10 +74,21 @@ def build_complementarity_pairs(
 
         eq_def = kkt.model_ir.equations[eq_name]
 
-        # Get LHS of inequality (already normalized to g(x) ≤ 0 form)
-        # We negate to get -g(x) ≥ 0 for MCP
+        # Handle both <= and >= inequalities
+        # For g(x) <= 0: negate to get -g(x) >= 0 for MCP
+        # For g(x) >= 0: use as-is for MCP
         g_expr = eq_def.lhs_rhs[0]
-        F_lam = Unary("-", g_expr)
+
+        if eq_def.relation == Rel.LE:
+            # g(x) <= 0 becomes -g(x) >= 0
+            F_lam = Unary("-", g_expr)
+            negated = True
+        elif eq_def.relation == Rel.GE:
+            # g(x) >= 0 stays as g(x) >= 0
+            F_lam = g_expr
+            negated = False
+        else:
+            raise ValueError(f"Expected inequality (LE or GE), got {eq_def.relation}")
 
         # Create multiplier name
         lam_name = create_ineq_multiplier_name(eq_name)
@@ -91,7 +102,7 @@ def build_complementarity_pairs(
         )
 
         comp_ineq[eq_name] = ComplementarityPair(
-            equation=comp_eq, variable=lam_name, variable_indices=eq_def.domain
+            equation=comp_eq, variable=lam_name, variable_indices=eq_def.domain, negated=negated
         )
 
     # Build equality equations: h(x) = 0 with ν free
