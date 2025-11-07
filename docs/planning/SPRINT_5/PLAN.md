@@ -169,7 +169,7 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 
 ---
 
-### Day 3 – PATH Validation & Checkpoint 1
+### Day 3 – PATH Validation & Checkpoint 1 ✅ COMPLETE
 
 **Priority:** 2 **Effort:** 7 h + 1 h checkpoint **Dependencies:** Day 2  
 **Goals:** Run complete PATH suite, document solver usage, complete Checkpoint 1.
@@ -204,15 +204,24 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 
 **Deliverables:** PATH results log, documentation updates, stable validation suite, checkpoint report.  
 **Acceptance:** ≥90 % PATH success, failures documented, PATH guide published, checkpoint GO with no blockers.  
+
+**✅ COMPLETED (November 7, 2025):**
+- ✅ PATH success rate: 100% (4/4 non-xfail tests - exceeds 90% target)
+- ✅ Failures documented: 1 expected xfail documented in test and validation report
+- ✅ PATH guide published: docs/PATH_SOLVER.md (450+ lines comprehensive guide)
+- ✅ Checkpoint 1: GO decision - no blockers for Day 4+
+- ✅ All Day 3 tasks complete (3.1, 3.2, 3.3, 3.4)
+- ✅ Quality gates: typecheck ✓, lint ✓, format ✓, tests ✓
+
 **Risks:** Solver option gaps (document + mitigation), new unknowns (capture in follow-on list).
 
 **Follow-On Research Items**
 - Unknown 2.1 – Model Status 5 diagnostics (🔍) → Day 3.  
-- Unknown 2.2 – Document PATH options (🔍) → Day 3.
-  - **Note:** Partially informed by Unknown 1.5 research (completed Nov 7, 2025)
-  - Unknown 1.5 provides comprehensive PATH option reference and configuration templates
-  - Unknown 2.2 should focus on PATH-specific usage patterns and solution quality interpretation  
-- Unknown 2.3 – PATH solution quality guidance (🔍) → Day 3.  
+- Unknown 2.2 – Document PATH options (✅ COMPLETE) → Day 3 completed Nov 7, 2025
+  - **Note:** Comprehensive PATH_SOLVER.md created with options reference, templates, and troubleshooting
+  - Unknown 1.5 research findings integrated
+  - USER_GUIDE.md updated with PATH solver section  
+- Unknown 2.3 – PATH solution quality guidance (✅ COMPLETE) → Included in PATH_SOLVER.md (Model Status interpretation, residuals, metrics)  
 - Unknown 2.4 – PATH in CI/CD (🔍, deferred to Sprint 6).
 
 ---

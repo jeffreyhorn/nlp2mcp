@@ -116,6 +116,26 @@ The generated `simple_mcp.gms` contains:
 - Multiplier variable for the constraint
 - MCP model statement pairing equations with variables
 
+### 4. Solve with PATH
+
+The generated MCP can be solved directly with the PATH solver in GAMS:
+
+```bash
+# Solve the MCP with PATH
+gams simple_mcp.gms
+```
+
+**PATH is the recommended MCP solver** for nlp2mcp-generated models. Default options work well for most cases.
+
+For detailed PATH solver guidance, troubleshooting, and option tuning, see:
+📖 **[PATH Solver Guide](PATH_SOLVER.md)**
+
+The guide covers:
+- PATH solver options reference
+- Configuration templates for different problem types
+- Troubleshooting decision tree
+- Interpreting PATH output and diagnostics
+
 ---
 
 ## Basic Usage
