@@ -86,7 +86,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 
 **Status:** Ready to execute (see [docs/planning/SPRINT_5/PLAN.md](docs/planning/SPRINT_5/PLAN.md))
 
-- [ ] Day 1: Min/Max Bug Fix - Research & Design
+- [x] Day 1: Min/Max Bug Fix - Research & Design
 - [ ] Day 2: Min/Max Bug Fix - Implementation & Testing
 - [ ] Day 3: PATH Validation + Checkpoint 1
 - [ ] Day 4: Production Hardening - Error Recovery

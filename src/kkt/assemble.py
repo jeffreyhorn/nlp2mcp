@@ -94,6 +94,19 @@ def assemble_kkt_system(
 
     # Step 3: Create multiplier definitions
     logger.info("Creating multiplier definitions...")
+
+    # TODO (Sprint 5 Day 2): After min/max reformulation, verify that auxiliary
+    # equality constraints (e.g., z = aux_min) are included in partition.equalities.
+    # These constraints MUST have multipliers for proper KKT assembly.
+    #
+    # Current behavior: partition_constraints() should include all equations from
+    # model_ir.equations that have Rel.EQ. Min/max reformulation adds auxiliary
+    # equality constraints to model_ir.equations before this function is called.
+    #
+    # If auxiliary constraints are missing, add explicit check here:
+    #   auxiliary_eqs = _find_auxiliary_equality_constraints(model_ir)
+    #   all_equalities = partition.equalities + auxiliary_eqs
+
     # Exclude objective-defining equation from equality multipliers
     # The objective equation pairs with the obj variable, not a multiplier
     multipliers_eq = _create_eq_multipliers(
@@ -109,6 +122,14 @@ def assemble_kkt_system(
         f"{len(multipliers_bounds_lo)} lower bound, "
         f"{len(multipliers_bounds_up)} upper bound"
     )
+
+    # TODO (Sprint 5 Day 2): Add debug logging to trace auxiliary constraint multipliers
+    # This helps verify that multipliers for z = aux_min are being created.
+    logger.debug("Equality multipliers created:")
+    for mult_name, mult_def in multipliers_eq.items():
+        logger.debug(f"  {mult_name} for constraint {mult_def.associated_constraint}")
+        if "aux" in mult_def.associated_constraint.lower():
+            logger.info(f"  -> Auxiliary equality constraint multiplier: {mult_name}")
 
     # Step 4: Initialize KKT system
     kkt = KKTSystem(
@@ -160,6 +181,14 @@ def _create_eq_multipliers(
 
     Handles both user-defined equations and normalized bounds (e.g., fixed variables).
 
+    CRITICAL (Sprint 5 Day 2 Fix):
+    After min/max reformulation, auxiliary equality constraints (e.g., z = aux_min)
+    are added to model_ir.equations. These constraints MUST have multipliers created
+    for proper KKT assembly. Without them, the stationarity equations for auxiliary
+    variables will be incomplete, leading to mathematically infeasible systems.
+
+    See: docs/design/minmax_kkt_fix_design.md
+
     Args:
         equalities: List of equality constraint names
         model_ir: Model IR
@@ -169,6 +198,11 @@ def _create_eq_multipliers(
         Dictionary of multiplier definitions
     """
     multipliers = {}
+
+    # TODO (Sprint 5 Day 2): Track auxiliary constraint multipliers separately
+    # for verification and debugging purposes.
+    auxiliary_count = 0
+
     for eq_name in equalities:
         # Skip objective-defining equation if specified
         if skip_equation and eq_name == skip_equation:
@@ -187,12 +221,27 @@ def _create_eq_multipliers(
             continue
 
         mult_name = create_eq_multiplier_name(eq_name)
+
+        # TODO (Sprint 5 Day 2): Enhanced logging for auxiliary constraints
+        # Auxiliary constraints typically have names like "aux_eq_min_*"
+        is_auxiliary = "aux" in eq_name.lower() and "eq" in eq_name.lower()
+        if is_auxiliary:
+            auxiliary_count += 1
+            logger.debug(f"Creating multiplier for AUXILIARY constraint: {eq_name} -> {mult_name}")
+
         multipliers[mult_name] = MultiplierDef(
             name=mult_name,
             domain=domain,
             kind="eq",
             associated_constraint=eq_name,
         )
+
+    # TODO (Sprint 5 Day 2): Log summary of auxiliary multipliers
+    if auxiliary_count > 0:
+        logger.info(
+            f"Created {auxiliary_count} auxiliary equality multipliers (from min/max reformulation)"
+        )
+
     return multipliers
 
 
