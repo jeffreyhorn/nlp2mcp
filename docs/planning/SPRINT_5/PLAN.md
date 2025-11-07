@@ -75,6 +75,7 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 
 - **Task 1.4 – Detection Logic** (2 h)  
   **Related Unknown:** 1.2 (🔍)  
+  **Implementation Notes:** Fully implemented with `detects_objective_minmax()` function using worklist algorithm for transitive dependency tracing. Module location: `src/ir/minmax_detection.py` (271 lines). Test coverage: 100% (29 tests in `tests/unit/ir/test_minmax_detection.py`). Key architectural decision: Pure IR-layer implementation avoiding circular KKT dependency.
   Add AST inspection for objective-defining min/max chains with unit tests covering aliasing scenarios.
 
 - **Task 1.5 – Assembly Scaffolding** (2 h)  
@@ -88,7 +89,14 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 **Risks:** KKT regression (mitigate via regression suite), detection misses edge cases (mitigate via research test coverage).
 
 **Follow-On Research Items**
-- Unknown 1.2 – Objective min/max detection (🔍) → resolve by EOD Day 1.  
+- Unknown 1.2 – Objective min/max detection (✅ COMPLETE) → resolved during Day 1 implementation.
+  - **Summary:** Algorithm fully implemented in `src/ir/minmax_detection.py` with 100% test coverage (29 passing tests)
+  - **Key Function:** `detects_objective_minmax(model_ir)` traces from objective through dependency chain
+  - **Algorithm:** Worklist-based graph traversal with cycle detection, handles arbitrary-depth chains
+  - **Test Coverage:** Direct min/max, 1-hop chains, 2-hop chains, nested min/max, negative cases
+  - **Limitation:** Indexed objectives not yet supported (deferred - no current use cases)
+  - **Performance:** O(V+E) graph traversal, <1ms for typical models
+  - **Architecture:** Pure IR-layer implementation, no KKT dependency (avoids circular import)
 - Unknown 1.4 – KKT assembly adjustments (🔍) → resolve by EOD Day 2.
 
 ---

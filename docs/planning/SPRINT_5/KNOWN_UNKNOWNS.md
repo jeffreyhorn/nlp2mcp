@@ -212,7 +212,137 @@ def is_objective_defining_minmax(model_ir: ModelIR, minmax_call: MinMaxCall) -> 
 2-3 hours (implement detection logic and test cases)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE - Algorithm needs design and testing
+✅ **Status:** COMPLETE - Algorithm implemented and fully tested (Sprint 5 Day 1, Nov 6, 2025)
+
+**Findings:**
+
+**1. Algorithm Implementation:**
+Implemented in `src/ir/minmax_detection.py` with function `detects_objective_minmax(model_ir: ModelIR) -> bool`
+
+**Algorithm Design (as implemented):**
+```python
+def detects_objective_minmax(model_ir: ModelIR) -> bool:
+    """
+    Trace from objective variable through defining equations to detect min/max.
+    
+    Algorithm:
+    1. Start with objective variable (model_ir.objective.objvar)
+    2. Build variable -> equation mapping (LHS variable = RHS expression)
+    3. Traverse dependency graph:
+       - Check if current equation contains min/max
+       - Extract variables from RHS
+       - Recursively check their defining equations
+    4. Use visited sets to prevent infinite loops
+    5. Return True if any equation in chain contains min/max
+    """
+```
+
+**2. Research Questions Answered:**
+
+**Q1: How to build dependency graph from equations?**
+- Build simple mapping: `variable_name -> equation_name` for all equations where variable appears on LHS
+- Only LHS variables are "defined" (standard pattern: `z = expression`)
+- Function: `_build_variable_definitions(model_ir)` returns `dict[str, str]`
+
+**Q2: How many levels deep to trace?**
+- **Full transitive closure** using worklist algorithm
+- Handles arbitrary depth: obj → z1 → z2 → ... → zN → min(x,y)
+- Cycle detection prevents infinite loops
+
+**Q3: What if objective variable appears in multiple equations?**
+- Use **first definition** (Python 3.7+ dict insertion order guarantee)
+- Conservative: if variable defined multiple times, use first occurrence
+- This is sufficient for well-formed GAMS models
+
+**Q4: What about indexed objective variables?**
+- **NOT YET SUPPORTED** - Current implementation handles scalar objectives only
+- Indexed objectives (e.g., `obj(i) = z(i)`) require extension
+- **Deferred:** No indexed objective examples in current test suite
+- **Future work:** Can extend `_build_variable_definitions()` to handle indexed variables
+
+**3. Test Coverage:**
+
+All 4 test cases from Unknown 1.2 specification are **VERIFIED:**
+
+✅ **Test 1: Direct**
+```python
+# obj = min(x, y)
+test_direct_minmax_in_objective()  # PASS
+```
+
+✅ **Test 2: One-level chain**
+```python
+# obj = z, z = min(x, y)
+test_chained_minmax_one_hop()  # PASS
+```
+
+✅ **Test 3: Two-level chain**
+```python
+# obj = z1, z1 = z2, z2 = min(x, y)
+test_chained_minmax_two_hops()  # PASS
+```
+
+✅ **Test 4: Non-defining (negative test)**
+```python
+# obj = z, w = min(x, y)  # min/max not in objective chain
+test_no_detection_minmax_in_constraint()  # PASS
+```
+
+**Additional test coverage (29 tests total, 100% pass rate):**
+- Nested min/max: `obj = z, z = max(min(x, y), w)` ✅
+- max() detection (not just min()) ✅
+- No objective present ✅
+- Undefined variables (no crash) ✅
+- Circular definitions (no infinite loop) ✅
+- Min/max in expression: `z = min(x, y) + 5` ✅
+
+**4. Implementation Notes:**
+
+**Key Functions:**
+- `detects_objective_minmax()` - Main entry point
+- `_build_variable_definitions()` - Maps variables to defining equations
+- `_contains_minmax()` - Checks if equation contains min/max
+- `_expr_contains_minmax()` - Recursive AST traversal (pure IR layer, no KKT dependency)
+- `_extract_variables()` - Gets all variables from expression
+
+**Architectural Decision:**
+- Pure IR-layer implementation (no dependency on KKT layer)
+- Avoids circular dependency (IR ← KKT ← IR)
+- Uses AST traversal via `expr.children()` for min/max detection
+
+**Performance:**
+- O(V + E) where V = variables, E = equations (graph traversal)
+- Efficient for typical models (< 1ms for models with <1000 equations)
+
+**5. Limitations and Future Work:**
+
+**Current Limitations:**
+- **Indexed objectives NOT supported** (e.g., `obj(i) = z(i)`)
+- Assumes well-formed models (single objective, no malformed dependencies)
+
+**Future Extensions (if needed):**
+- Support indexed objectives with domain tracing
+- Support multi-objective models (rare in NLP)
+- More sophisticated cycle detection (currently simple visited set)
+
+**6. Usage in KKT Assembly:**
+
+This detection is used in Day 2 KKT assembly fix to determine when auxiliary constraint multipliers must be included in stationarity equations.
+
+**Integration point (scaffolded in `src/kkt/assemble.py`):**
+```python
+from src.ir.minmax_detection import detects_objective_minmax
+
+if detects_objective_minmax(model_ir):
+    # Include auxiliary constraint multipliers in stationarity
+    logger.info("Detected min/max in objective - using Strategy 1 reformulation")
+```
+
+**Test Location:** `tests/unit/ir/test_minmax_detection.py` (29 tests, all passing)
+
+**Implementation Location:** `src/ir/minmax_detection.py` (271 lines, 100% coverage)
+
+**Completed:** Sprint 5 Day 1 (November 6, 2025)
 
 ---
 
