@@ -657,7 +657,6 @@ def apply_strategy1_objective_substitution(
     for result in reformulation_results:
         if result.original_lhs_var and result.original_lhs_var in obj_chain:
             # This aux variable should become the objective
-            old_objvar = model.objective.objvar
             new_objvar = result.aux_var_name
 
             # DO NOT change model.objective.objvar - keep it as the original

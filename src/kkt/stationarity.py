@@ -149,7 +149,7 @@ def _build_indexed_stationarity_expr(
     var_name: str,
     domain: tuple[str, ...],
     instances: list[tuple[int, tuple[str, ...]]],
-    obj_defining_eq: str,
+    obj_defining_eq: str | None,
 ) -> Expr:
     """Build indexed stationarity expression using set indices.
 
@@ -382,7 +382,7 @@ def _build_stationarity_expr(
     col_id: int,
     var_name: str,
     var_indices: tuple[str, ...],
-    obj_defining_eq: str,
+    obj_defining_eq: str | None,
 ) -> Expr:
     """Build the LHS expression for scalar stationarity equation.
 
