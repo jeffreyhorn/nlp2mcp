@@ -440,7 +440,215 @@ for var_name in model.variables:
 3-4 hours (analyze, fix, test thoroughly)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE - Critical for Priority 1 success
+✅ **Status:** COMPLETE - Architecture analyzed, fix location identified, scaffolding in place (Nov 6, 2025)
+
+**Findings:**
+
+**1. Research Questions Answered:**
+
+**Q1: Where in `src/kkt/assemble.py` do we build stationarity equations?**
+- **Primary location:** `src/kkt/stationarity.py` - `build_stationarity_equations()` function
+- **Entry point:** `src/kkt/assemble.py` - `assemble_kkt_system()` calls stationarity builder (line 177)
+- **Multiplier creation:** `src/kkt/assemble.py` - `_create_eq_multipliers()` function (lines 188-261)
+- **Key insight:** Stationarity building is delegated to a separate module for clean separation of concerns
+
+**Q2: How are equality constraint multipliers currently included?**
+- **Partition-based approach:** `partition_constraints()` returns list of equality constraint names
+- **Multiplier creation:** For each equality in partition, create MultiplierDef with associated constraint name
+- **Stationarity inclusion:** `build_stationarity_equations()` iterates over ALL rows in J_eq Jacobian
+- **Automatic inclusion:** Any constraint with a derivative w.r.t. a variable automatically gets its multiplier term added
+- **Formula:** `∂f/∂x + Σ(∂h_i/∂x · ν_i) + Σ(∂g_j/∂x · λ_j) - π^L + π^U = 0`
+
+**Q3: Why are auxiliary constraint multipliers missing?**
+
+**CRITICAL FINDING:** They are NOT missing! The current architecture ALREADY handles them correctly:
+
+**How it works:**
+1. Min/max reformulation adds auxiliary equalities to `model_ir.equations` (e.g., `z = aux_min`)
+2. `partition_constraints()` processes ALL equations in `model_ir.equations` based on their `Rel` type
+3. Auxiliary equalities (Rel.EQ) are included in `partition.equalities` list
+4. `_create_eq_multipliers()` creates multipliers for ALL equalities in the partition
+5. `build_stationarity_equations()` uses Jacobian to find ALL derivatives, including auxiliary variables
+6. Multiplier terms are added automatically for any constraint with nonzero Jacobian entry
+
+**Code evidence from `src/kkt/stationarity.py:419-462`:**
+```python
+def _add_jacobian_transpose_terms_scalar(
+    expr, jacobian, col_id, multipliers, name_func, skip_eq
+):
+    # Iterate over ALL rows in the Jacobian
+    for row_id in range(jacobian.num_rows):
+        derivative = jacobian.get_derivative(row_id, col_id)
+        if derivative is None:
+            continue
+        
+        eq_name, eq_indices = jacobian.index_mapping.row_to_eq[row_id]
+        
+        # Get multiplier name for this constraint
+        mult_name = name_func(eq_name)
+        
+        # Add term: derivative * multiplier
+        mult_ref = MultiplierRef(mult_name, eq_indices)
+        term = Binary("*", derivative, mult_ref)
+        expr = Binary("+", expr, term)
+```
+
+**The architecture is GENERAL and CORRECT:**
+- It doesn't distinguish between "original" and "auxiliary" equalities
+- It processes whatever is in `model_ir.equations` with `Rel.EQ`
+- As long as reformulation adds constraints properly, they're automatically included
+
+**Q4: What's the general fix that works for all future dynamic constraints?**
+
+**Answer:** NO FIX NEEDED! The current design is already general and extensible:
+
+**Design Principles (already implemented):**
+1. **Single source of truth:** `model_ir.equations` contains ALL equations (original + reformulated)
+2. **Type-based partitioning:** Constraints classified by `Rel` type, not origin
+3. **Jacobian-driven inclusion:** Stationarity terms added based on actual derivatives
+4. **No hardcoding:** No special cases for specific constraint types
+5. **Automatic propagation:** New variables/constraints automatically get multipliers and stationarity terms
+
+**What Day 2 implementation needs to do:**
+- ✅ Reformulation already exists (`src/kkt/reformulation.py`)
+- ✅ KKT assembly already handles auxiliary constraints correctly
+- 🔧 Just need to CALL reformulation before computing derivatives
+- 🔧 Add integration point in pipeline (see design doc)
+
+**2. Scaffolding Already in Place:**
+
+The code in `src/kkt/assemble.py` contains extensive TODO comments and scaffolding prepared for Day 2 implementation:
+
+**Lines 115-124 (Integration verification TODO):**
+```python
+# TODO (Sprint 5 Day 2): After min/max reformulation, verify that auxiliary
+# equality constraints (e.g., z = aux_min) are included in partition.equalities.
+# These constraints MUST have multipliers for proper KKT assembly.
+#
+# Current behavior: partition_constraints() should include all equations from
+# model_ir.equations that have Rel.EQ. Min/max reformulation adds auxiliary
+# equality constraints to model_ir.equations before this function is called.
+```
+
+**Lines 149-154 (Debug logging TODO):**
+```python
+# TODO (Sprint 5 Day 2): Add debug logging to trace auxiliary constraint multipliers
+logger.debug("Equality multipliers created:")
+for mult_name, mult_def in multipliers_eq.items():
+    logger.debug(f"  {mult_name} for constraint {mult_def.associated_constraint}")
+    if "aux" in mult_def.associated_constraint.lower():
+        logger.info(f"  -> Auxiliary equality constraint multiplier: {mult_name}")
+```
+
+**Lines 199-207 (Multiplier creation scaffolding):**
+```python
+# TODO (Sprint 5 Day 2): Track auxiliary constraint multipliers separately
+# for verification and debugging purposes.
+auxiliary_count = 0
+
+# ... in loop:
+is_auxiliary = "aux" in eq_name.lower() and "eq" in eq_name.lower()
+if is_auxiliary:
+    auxiliary_count += 1
+    logger.debug(f"Creating multiplier for AUXILIARY constraint: {eq_name} -> {mult_name}")
+```
+
+**3. Code Locations and Implementation Notes:**
+
+**Files requiring changes:**
+
+**`src/cli.py` or main pipeline (Day 2):**
+- Add reformulation call after `normalize_model()`, before `compute_derivatives()`
+- Import: `from src.kkt.reformulation import reformulate_model`
+- Call: `model_ir = reformulate_model(model_ir)` or similar
+- **Location:** Around line where `normalize_model()` is called
+
+**`src/kkt/assemble.py` (Day 2 - Enable logging):**
+- Uncomment/enable the TODO logging sections
+- Verify auxiliary constraints appear in debug output
+- **No algorithmic changes needed** - architecture is already correct
+
+**`src/kkt/reformulation.py` (Verify - may already be correct):**
+- Ensure `reformulate_model()` adds auxiliary constraints to `model_ir.equations`
+- Verify Rel.EQ for auxiliary equalities, Rel.LE for auxiliary inequalities
+- Check naming convention (e.g., "aux_eq_min_*")
+
+**4. Verification Strategy (Day 2):**
+
+**Step 1: Add reformulation to pipeline**
+```python
+# In src/cli.py or equivalent:
+model_ir = parse_gams_model(input_file)
+model_ir = normalize_model(model_ir)
+model_ir = reformulate_model(model_ir)  # NEW
+gradient = compute_objective_gradient(model_ir)
+J_eq, J_ineq = compute_constraint_jacobians(model_ir)
+kkt = assemble_kkt_system(model_ir, gradient, J_eq, J_ineq)
+```
+
+**Step 2: Enable debug logging**
+```python
+# Set logging level to DEBUG
+import logging
+logging.getLogger("src.kkt.assemble").setLevel(logging.DEBUG)
+```
+
+**Step 3: Run test case**
+```python
+# Use one of the xfailing tests from test_minmax_fix.py
+# Check output for:
+# - "Creating multiplier for AUXILIARY constraint: aux_eq_min_* -> nu_aux_eq_min_*"
+# - "Created N auxiliary equality multipliers"
+```
+
+**Step 4: Verify MCP output**
+```gams
+# Generated MCP should have:
+# - Auxiliary variables (aux_min, etc.)
+# - Auxiliary multipliers (nu_aux_eq_min, etc.)
+# - Stationarity equations including auxiliary multiplier terms
+# - Complementarity pairs for auxiliary inequalities
+```
+
+**5. Architecture Validation:**
+
+**Current design strengths:**
+- ✅ **Separation of concerns:** Partition → Multipliers → Stationarity cleanly separated
+- ✅ **Data-driven:** Uses actual Jacobian structure, not hardcoded logic
+- ✅ **Extensible:** Any new constraint type automatically handled if added to model_ir properly
+- ✅ **Debuggable:** Comprehensive logging framework ready to trace execution
+- ✅ **Testable:** Can verify each stage independently
+
+**No refactoring needed:**
+- Current partition logic handles all Rel.EQ constraints uniformly
+- Current multiplier creation is general (no special cases)
+- Current stationarity builder is Jacobian-driven (fully general)
+- Architecture is sound and ready for min/max reformulation integration
+
+**6. Risk Assessment:**
+
+**Low risk for Day 2 implementation:**
+- ✅ Architecture already supports auxiliary constraints
+- ✅ Scaffolding and logging in place
+- ✅ Design document specifies exact integration points
+- ✅ Test cases ready (5 xfailing tests)
+- ⚠️ Main risk: Ensuring reformulation happens at correct pipeline stage
+- ⚠️ Secondary risk: Verifying reformulation creates constraints with correct Rel types
+
+**Mitigation:**
+- Use debug logging to trace auxiliary constraints through pipeline
+- Run regression tests to ensure existing functionality unchanged
+- Manual inspection of generated MCP for first test case
+
+**Estimated Day 2 effort:** 3-4 hours (as originally estimated)
+- 1h: Add reformulation to pipeline
+- 1h: Enable logging and verify auxiliary constraints
+- 1h: Debug any issues with constraint creation
+- 1h: Run all tests and verify correctness
+
+**Implementation Location:** `src/kkt/assemble.py` (lines 115-261), `src/cli.py` (pipeline integration)
+
+**Completed:** November 6, 2025 (Research phase - Day 1)
 
 ---
 

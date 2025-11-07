@@ -79,8 +79,13 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
   Add AST inspection for objective-defining min/max chains with unit tests covering aliasing scenarios.
 
 - **Task 1.5 – Assembly Scaffolding** (2 h)  
-  **Related Unknown:** 1.4 (🔍)  
+  **Related Unknown:** 1.4 (✅)  
   Implement initial multiplier inclusion plus targeted logging; ensure build succeeds.
+  **Implementation Notes:**
+  - **Scaffolding COMPLETE:** Comprehensive TODO comments and logging framework are already in place in `src/kkt/assemble.py`.
+  - **Architecture Analysis:** No algorithmic changes are needed. KKT assembly is Jacobian-driven and automatically includes ALL equality constraints.
+  - **Day 2 Work:** Simplified to (1) adding the reformulation call to the pipeline, and (2) enabling debug logging.
+  - See lines 115-261 in `assemble.py` for detailed scaffolding.
 
 **Deliverables:** design memo, xfailed test suite, detection module + tests, assembly prototype.  
 **Acceptance:** tests authored, detection coverage 100 %, build clean, design reviewed.  
@@ -96,8 +101,14 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
   - **Test Coverage:** Direct min/max, 1-hop chains, 2-hop chains, nested min/max, negative cases
   - **Limitation:** Indexed objectives not yet supported (deferred - no current use cases)
   - **Performance:** O(V+E) graph traversal, <1ms for typical models
-  - **Architecture:** Pure IR-layer implementation, no KKT dependency (avoids circular import)
-- Unknown 1.4 – KKT assembly adjustments (🔍) → resolve by EOD Day 2.
+- Unknown 1.4 – KKT assembly adjustments (✅ COMPLETE) → resolved during Day 1 research.
+  - **Summary:** KKT assembly architecture already correct - no algorithmic changes needed
+  - **Key Finding:** Current design is Jacobian-driven and automatically includes ALL equality constraints
+  - **Architecture:** Partition → Multipliers → Stationarity separation works for auxiliary constraints
+  - **Scaffolding:** Comprehensive TODO comments and logging framework already in place
+  - **Day 2 Work:** Just add reformulation call to pipeline and enable debug logging
+  - **Risk:** Low - architecture validated, scaffolding ready, test cases prepared
+  - **Location:** `src/kkt/assemble.py` (lines 115-261), `src/cli.py` (pipeline integration)
 
 ---
 
@@ -107,7 +118,12 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 **Goals:** Finish implementation, validate with PATH, clean up tests.
 
 - **Task 2.1 – Finalize Assembly** (3 h)  
-  **Unknown:** 1.4 (🔍)  
+  **Unknown:** 1.4 (✅)  
+  **Implementation Notes:** Research confirms KKT assembly architecture is ALREADY CORRECT. No algorithmic changes needed. Implementation simplified to:
+  - Add `reformulate_model()` call in the pipeline after `normalize_model()` and before `compute_derivatives()`.
+  - Enable debug logging in `assemble.py` to verify auxiliary constraints.
+  - Verify reformulation creates constraints with correct Rel types.
+  Scaffolding at lines 115-261 in `src/kkt/assemble.py` provides comprehensive TODO comments and logging framework.
   Complete multiplier integration, ensure indexed equations handled, add inline docs.
 
 - **Task 2.2 – Debug Research Cases** (2 h)  
