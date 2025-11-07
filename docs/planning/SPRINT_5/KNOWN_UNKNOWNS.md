@@ -471,7 +471,7 @@ for var_name in model.variables:
 5. `build_stationarity_equations()` uses Jacobian to find ALL derivatives, including auxiliary variables
 6. Multiplier terms are added automatically for any constraint with nonzero Jacobian entry
 
-**Code evidence from `src/kkt/stationarity.py:458-478`:**
+**Code evidence from `src/kkt/stationarity.py:419-462`:**
 ```python
 def _add_jacobian_transpose_terms_scalar(
     expr, jacobian, col_id, multipliers, name_func, skip_eq
