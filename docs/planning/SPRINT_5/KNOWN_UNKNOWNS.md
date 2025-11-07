@@ -716,13 +716,13 @@ PATH solver provides extensive options for controlling convergence behavior, alg
 
 **`major_iteration_limit`** (Default: `500`)
 - Maximum major (outer) iterations before termination
-- **Recommendation:** Increase to `1000` or `2000` for complex min/max reformulations with many auxiliary variables
+- **Recommendation:** Increase to 1000 or 2000 for complex min/max reformulations with many auxiliary variables
 - Min/max reformulations add inequality constraints that may require additional iterations
 
 **`cumulative_iteration_limit`** (Default: inherits from GAMS `iterlim`)
 - Total minor iterations (pivots) allowed across all major iterations
 - Set via: `option iterlim = 2000;` or `model.iterlim = 2000;`
-- **Recommendation:** For min/max models with N min/max calls, consider `iterlim >= 1000 * N`
+- **Recommendation:** For min/max models with N min/max calls (where N is the total number of min/max function calls in the model), consider `iterlim >= 1000 * N`
 
 **3. Crash Method Options (Important for Reformulated Problems):**
 
@@ -815,9 +815,9 @@ solve model using MCP;
 ```gams
 $onecho > path.opt
 convergence_tolerance 1e-4
+major_iteration_limit 2000
 crash_method none
 proximal_perturbation 1e-3
-major_iteration_limit 2000
 output_major_iterations 1
 output_final_statistics 1
 $offecho
@@ -844,7 +844,7 @@ solve model using MCP;
 - Increase `major_iteration_limit` proportionally to number of min/max calls
 - Increase `cumulative_iteration_limit` (via GAMS `iterlim`) to allow more pivots
 - Crash method `pnewton` is specifically designed to handle many inequalities efficiently
-- **Recommendation:** For N min/max calls, set `iterlim >= 1000 * N`
+- **Recommendation:** For N min/max calls (where N is the total number of min/max function calls in the model), set `iterlim >= 1000 * N`
 
 **Q3: How sensitive is convergence to initial points?**
 
