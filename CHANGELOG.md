@@ -7,6 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 5 Day 2: Min/Max Bug Fix - Implementation & Testing - 2025-11-06
+
+**Status:** 🟡 PARTIAL COMPLETION - Critical architectural issue identified
+
+#### Summary
+
+Completed Day 2 of Sprint 5 with a critical finding: the current min/max reformulation generates mathematically infeasible MCP systems when min/max appears in objective-defining equations. This validates the research phase predictions and identifies Strategy 1 (Direct Objective Substitution) as required follow-on work.
+
+**Tasks Completed:**
+
+**Task 2.1 - Finalize Assembly** (0h - No work needed)
+- Verified reformulation already integrated in pipeline (Sprint 4 Day 4)
+- Confirmed debug logging already active in `src/kkt/assemble.py`
+- No changes required
+
+**Task 2.2 - Debug Research Cases** (2h)
+- Fixed parser syntax issues in all 6 test fixture files:
+  - Converted comma-separated variable declarations to one-per-line format
+  - Commented out `Display` statements (not supported by parser)
+- Updated test assertions in `tests/unit/kkt/test_minmax_fix.py`:
+  - Changed from looking for "aux" in equation names to checking RHS transformation
+  - Tests now correctly validate that reformulation transforms equations
+- Results: All 9 tests passing (structural validation)
+
+**Task 2.3 - PATH Validation Smoke** (2h) - **CRITICAL FINDING**
+- Generated MCP from test1_minimize_min.gms using full pipeline
+- Ran through GAMS/PATH solver
+- PATH reported: `ThrRowEqnTwoInfeasible *** EXIT - infeasible`
+- **Root Cause:** Objective-defining min/max creates over-constrained KKT system:
+  ```
+  stat_z: 1 + nu = 0  →  nu = -1
+  stat_aux: -nu + lam1 + lam2 = 0  →  -1 = lam1 + lam2 (impossible!)
+  ```
+- This validates research document predictions exactly
+- Documented in `docs/research/minmax_path_validation_findings.md`
+
+**Task 2.4 - Remove xfail** (0.5h)
+- Removed `@pytest.mark.xfail` decorators from all test classes
+- Updated test docstrings to reflect completion status
+- All 9 tests now pass without expected failures
+
+**Task 2.5 - Regression Sweep** (0.5h)
+- Ran mypy, ruff, unit tests, integration tests
+- Results: All passing, no regressions introduced
+- 972+ existing tests still passing
+
+**Files Modified:**
+- `tests/fixtures/minmax_research/test1_minimize_min.gms` through `test6_constraint_min.gms` - Parser syntax fixes
+- `tests/unit/kkt/test_minmax_fix.py` - Updated assertions, removed xfail markers
+
+**Documentation Created:**
+- `docs/research/minmax_path_validation_findings.md` - Full technical analysis of PATH infeasibility
+- `docs/planning/SPRINT_5/DAY_2_STATUS.md` - Comprehensive status report
+- `docs/planning/SPRINT_5/DAY_2_PLAN_UPDATE.md` - Plan supplement
+- `docs/planning/SPRINT_5/FOLLOWON_STRATEGY1_OBJECTIVE_SUBSTITUTION.md` - Complete implementation guide (6-8h estimated)
+
+**Acceptance Criteria:**
+- ✅ Tests pass (9/9 structural validation)
+- ❌ **PATH solves** (FAILS - infeasible KKT system) ← BLOCKER
+- ✅ Full suite green (972+ tests passing)
+- ✅ mypy/ruff clean
+
+**Status:** Infrastructure complete and correct. Issue is specific to objective-defining min/max cases. Strategy 1 implementation deferred as follow-on work.
+
+**Known Limitations:**
+- Min/max in objective-defining equations generates infeasible MCPs
+- Requires Strategy 1 (Direct Objective Substitution) - not yet implemented
+- Test cases validate structure but not PATH solvability
+
+**Next Steps:**
+- Implement Strategy 1 per `FOLLOWON_STRATEGY1_OBJECTIVE_SUBSTITUTION.md` (6-8 hours)
+- Re-run PATH validation after Strategy 1 implementation
+- Update test expectations for PATH solvability
+
+---
+
 ### Sprint 5 Day 1: Min/Max Bug Fix - Research & Design - 2025-11-06
 
 **Status:** ✅ COMPLETE - All deliverables and acceptance criteria met
