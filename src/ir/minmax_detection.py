@@ -183,13 +183,46 @@ def _contains_minmax(eq_def: EquationDef) -> bool:
         >>> # z =e= x + y
         >>> _contains_minmax(eq)  # False
     """
-    from src.kkt.reformulation import detect_min_max_calls
-
     lhs, rhs = eq_def.lhs_rhs
 
     for expr in [lhs, rhs]:
-        calls = detect_min_max_calls(expr, eq_def.name)
-        if calls:
+        if _expr_contains_minmax(expr):
+            return True
+
+    return False
+
+
+def _expr_contains_minmax(expr: Expr) -> bool:
+    """Recursively check if an expression contains a min() or max() call.
+
+    This is a pure IR-layer implementation that doesn't depend on the KKT layer,
+    avoiding circular dependencies.
+
+    Args:
+        expr: Expression to check
+
+    Returns:
+        True if the expression or any sub-expression contains min/max
+
+    Examples:
+        >>> from src.ir.ast import Call, VarRef, Const
+        >>> # min(x, y)
+        >>> expr = Call("min", (VarRef("x"), VarRef("y")))
+        >>> _expr_contains_minmax(expr)  # True
+        >>>
+        >>> # x + y
+        >>> expr = BinOp("+", VarRef("x"), VarRef("y"))
+        >>> _expr_contains_minmax(expr)  # False
+    """
+    from src.ir.ast import Call
+
+    # Direct min/max call
+    if isinstance(expr, Call) and expr.func in {"min", "max"}:
+        return True
+
+    # Recursively check all child expressions
+    for child in expr.children():
+        if _expr_contains_minmax(child):
             return True
 
     return False

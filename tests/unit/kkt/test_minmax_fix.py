@@ -36,7 +36,7 @@ class TestMinMaxInObjectiveRegression:
     Until then, they are expected to fail (xfail).
     """
 
-    def test_minimize_min_xy(self, tmp_path):
+    def test_minimize_min_xy(self):
         """Test Case 1: minimize z where z = min(x, y)
 
         This is the CRITICAL test case that proves Strategy 2 is mathematically
@@ -117,7 +117,7 @@ class TestMinMaxInObjectiveRegression:
         # The full integration with KKT assembly will be tested once derivatives are computed
         # For this scaffolding test, we verify the structure is correct
 
-    def test_maximize_max_xy(self, tmp_path):
+    def test_maximize_max_xy(self):
         """Test Case 2: maximize z where z = max(x, y)
 
         This is the SYMMETRIC case to Test 1. Should work if Test 1 works.
@@ -156,7 +156,7 @@ class TestMinMaxInObjectiveRegression:
         minmax_ineqs = [eq for eq in model_ir.equations.keys() if eq.startswith("minmax_max_")]
         assert len(minmax_ineqs) >= 2, "Two inequality constraints should be created for max(x,y)"
 
-    def test_minimize_max_xy(self, tmp_path):
+    def test_minimize_max_xy(self):
         """Test Case 3: minimize z where z = max(x, y)
 
         This is an OPPOSITE-SENSE combination (minimize a maximum).
@@ -186,7 +186,7 @@ class TestMinMaxInObjectiveRegression:
         aux_vars = [v for v in model_ir.variables.keys() if v.startswith("aux_max_")]
         assert len(aux_vars) >= 1
 
-    def test_maximize_min_xy(self, tmp_path):
+    def test_maximize_min_xy(self):
         """Test Case 4: maximize z where z = min(x, y)
 
         Another OPPOSITE-SENSE combination (maximize a minimum).
@@ -215,7 +215,7 @@ class TestMinMaxInObjectiveRegression:
         aux_vars = [v for v in model_ir.variables.keys() if v.startswith("aux_min_")]
         assert len(aux_vars) >= 1
 
-    def test_nested_minmax(self, tmp_path):
+    def test_nested_minmax(self):
         """Test Case 5: minimize z where z = max(min(x, y), w)
 
         This tests NESTED min/max handling.
@@ -259,7 +259,7 @@ class TestMinMaxInConstraintNoRegression:
     """
 
     @pytest.mark.xfail(reason="Test fixture has GAMS syntax issue - needs fixing")
-    def test_constraint_min_not_objective(self, tmp_path):
+    def test_constraint_min_not_objective(self):
         """Test Case 6: min/max in constraint, NOT defining objective.
 
         GAMS Model:

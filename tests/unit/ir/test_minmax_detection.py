@@ -224,8 +224,9 @@ class TestBuildVariableDefinitions:
         )
 
         defs = _build_variable_definitions(model)
-        # First occurrence should be recorded
-        assert defs["z"] in ["eq1", "eq2"]
+        # When multiple equations define the same variable, the first one (insertion order) is recorded
+        # In Python 3.7+, dict iteration order is guaranteed to be insertion order
+        assert defs["z"] == "eq1"
 
     def test_no_definition_for_complex_lhs(self):
         """Complex expressions on LHS don't define variables."""
