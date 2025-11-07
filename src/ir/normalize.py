@@ -71,11 +71,8 @@ def _extract_objective_expression(equations: dict[str, EquationDef], objvar: str
         ):
             return lhs
 
-    # No defining equation found
-    raise ValueError(
-        f"Objective variable '{objvar}' is not defined by any equation. "
-        f"Available equations: {list(equations.keys())}"
-    )
+    # No defining equation found - return None (validation will catch this later if needed)
+    return None
 
 
 def normalize_equation(eq: EquationDef) -> NormalizedEquation:

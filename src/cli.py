@@ -21,6 +21,8 @@ from src.kkt.assemble import assemble_kkt_system
 from src.kkt.reformulation import reformulate_model
 from src.kkt.scaling import byvar_scaling, curtis_reid_scaling
 from src.logging_config import setup_logging
+from src.validation.model import validate_model_structure
+from src.validation.numerical import validate_jacobian_entries, validate_parameter_values
 
 
 @click.command()
@@ -143,6 +145,18 @@ def main(
             click.echo(f"  Variables: {len(model.variables)}")
             click.echo(f"  Equations: {len(model.equations)}")
 
+        # Step 1.5: Validate model structure (Sprint 5 Day 4 - Task 4.2)
+        if verbose:
+            click.echo("Validating model structure...")
+
+        validate_model_structure(model)
+
+        # Step 1.6: Validate parameters for NaN/Inf (Sprint 5 Day 4 - Task 4.1)
+        if verbose:
+            click.echo("Validating parameters...")
+
+        validate_parameter_values(model)
+
         # Step 2: Normalize model
         if verbose:
             click.echo("Normalizing model...")
@@ -192,6 +206,14 @@ def main(
             click.echo(f"  Gradient columns: {gradient.num_cols}")
             click.echo(f"  Equality Jacobian: {J_eq.num_rows} × {J_eq.num_cols}")
             click.echo(f"  Inequality Jacobian: {J_ineq.num_rows} × {J_ineq.num_cols}")
+
+        # Step 3.5: Validate Jacobians for NaN/Inf (Sprint 5 Day 4)
+        if verbose:
+            click.echo("Validating derivatives...")
+
+        validate_jacobian_entries(gradient, "objective gradient")
+        validate_jacobian_entries(J_eq, "equality constraint Jacobian")
+        validate_jacobian_entries(J_ineq, "inequality constraint Jacobian")
 
         # Step 4: Compute scaling factors (if requested)
         row_scales = None
