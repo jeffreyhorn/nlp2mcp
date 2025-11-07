@@ -65,7 +65,7 @@ Equations
 stat_x(i).. a(i) + (-1) * lam_balance(i) =E= 0;
 
 * Inequality complementarity equations
-comp_balance(i).. -x(i) =G= 0;
+comp_balance(i).. x(i) =G= 0;
 
 * Original equality equations
 objective.. obj =E= sum(i, a(i) * x(i));

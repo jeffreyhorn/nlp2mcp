@@ -228,6 +228,128 @@ def _expr_contains_minmax(expr: Expr) -> bool:
     return False
 
 
+def trace_objective_chain(model_ir: ModelIR) -> set[str]:
+    """Trace all variables involved in defining the objective.
+
+    Returns set of variable names that are part of the objective-defining chain.
+    This is used by Strategy 1 to identify which min/max calls need special handling.
+
+    Args:
+        model_ir: Model IR to analyze
+
+    Returns:
+        Set of variable names in the objective-defining chain
+
+    Example:
+        >>> # minimize obj where obj = z and z = x + y
+        >>> trace_objective_chain(model_ir)  # {'obj', 'z'}
+        >>>
+        >>> # minimize obj where obj = min(x, y) directly
+        >>> trace_objective_chain(model_ir)  # {'obj'}
+    """
+    if not model_ir.objective:
+        return set()
+
+    obj_var = model_ir.objective.objvar
+    chain = {obj_var}
+
+    # Build reverse dependency map: var -> equations that define it
+    definitions = _build_variable_definitions(model_ir)
+
+    # BFS to find all variables in the chain
+    to_visit = [obj_var]
+    visited = set()
+
+    while to_visit:
+        var = to_visit.pop(0)
+        if var in visited:
+            continue
+        visited.add(var)
+
+        # Find equation that defines this variable
+        if var in definitions:
+            eq_name = definitions[var]
+            eq_def = model_ir.equations[eq_name]
+
+            # Extract all variables from the RHS (what defines this var)
+            _, rhs = eq_def.lhs_rhs
+            rhs_vars = _extract_variables(rhs)
+
+            for rhs_var in rhs_vars:
+                if rhs_var not in visited:
+                    chain.add(rhs_var)
+                    to_visit.append(rhs_var)
+
+    return chain
+
+
+def detect_minmax_in_objective_chain(model_ir: ModelIR) -> list[tuple[str, str, str]]:
+    """Detect min/max calls in objective-defining equations.
+
+    Returns list of (equation_name, var_name, func_type) tuples where:
+    - equation_name: The equation containing min/max
+    - var_name: The objective-chain variable being defined
+    - func_type: 'min' or 'max'
+
+    This is used by Strategy 1 to identify which min/max calls need
+    objective substitution treatment.
+
+    Args:
+        model_ir: Model IR to analyze
+
+    Returns:
+        List of (equation_name, var_name, func_type) tuples
+
+    Example:
+        >>> # minimize obj where obj = z and z = min(x, y)
+        >>> detect_minmax_in_objective_chain(model_ir)
+        [('eq_z', 'z', 'min')]
+        >>>
+        >>> # minimize obj where obj = min(x, y) directly
+        >>> detect_minmax_in_objective_chain(model_ir)
+        [('objdef', 'obj', 'min')]
+    """
+    obj_chain = trace_objective_chain(model_ir)
+    results = []
+
+    for eq_name, eq_def in model_ir.equations.items():
+        # Check if LHS is a simple variable in the objective chain
+        lhs, rhs = eq_def.lhs_rhs
+        if isinstance(lhs, VarRef) and lhs.name in obj_chain:
+            # Check if RHS contains min/max
+            if _contains_minmax(eq_def):
+                # Determine which function type (min or max)
+                func_type = _get_minmax_type(rhs)
+                if func_type:
+                    results.append((eq_name, lhs.name, func_type))
+
+    return results
+
+
+def _get_minmax_type(expr: Expr) -> str | None:
+    """Get the min/max function type from an expression.
+
+    Returns 'min', 'max', or None if no min/max found.
+    For nested cases, returns the outermost min/max.
+
+    Args:
+        expr: Expression to check
+
+    Returns:
+        'min', 'max', or None
+    """
+    if isinstance(expr, Call) and expr.func in {"min", "max"}:
+        return expr.func
+
+    # Check children
+    for child in expr.children():
+        result = _get_minmax_type(child)
+        if result:
+            return result
+
+    return None
+
+
 def _extract_variables(expr: Expr) -> list[str]:
     """Extract all variable names from an expression.
 

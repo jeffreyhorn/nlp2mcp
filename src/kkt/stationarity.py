@@ -58,7 +58,9 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
         raise ValueError("Gradient must have index_mapping set")
 
     # Group variable instances by base variable name
-    var_groups = _group_variables_by_name(kkt, obj_info.objvar)
+    # Skip objective variable UNLESS Strategy 1 was applied
+    objvar_to_skip = obj_info.objvar if not kkt.model_ir.strategy1_applied else None
+    var_groups = _group_variables_by_name(kkt, objvar_to_skip)
 
     # For each variable, generate either indexed or scalar stationarity equation
     for var_name, instances in var_groups.items():
@@ -68,11 +70,15 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
 
         var_def = kkt.model_ir.variables[var_name]
 
+        # Determine which equation to skip in stationarity building
+        # Skip objdef equation UNLESS Strategy 1 was applied
+        skip_eq = obj_info.defining_equation if not kkt.model_ir.strategy1_applied else None
+
         if var_def.domain:
             # Indexed variable: generate indexed stationarity equation
             stat_name = f"stat_{var_name}"
             stat_expr = _build_indexed_stationarity_expr(
-                kkt, var_name, var_def.domain, instances, obj_info.defining_equation
+                kkt, var_name, var_def.domain, instances, skip_eq
             )
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
@@ -87,9 +93,7 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
 
             col_id, var_indices = instances[0]
             stat_name = f"stat_{var_name}"
-            stat_expr = _build_stationarity_expr(
-                kkt, col_id, var_name, var_indices, obj_info.defining_equation
-            )
+            stat_expr = _build_stationarity_expr(kkt, col_id, var_name, var_indices, skip_eq)
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
                 domain=(),  # Empty domain for scalar
@@ -101,13 +105,13 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
 
 
 def _group_variables_by_name(
-    kkt: KKTSystem, objvar: str
+    kkt: KKTSystem, objvar: str | None
 ) -> dict[str, list[tuple[int, tuple[str, ...]]]]:
     """Group variable instances by base variable name.
 
     Args:
         kkt: KKT system
-        objvar: Name of objective variable to skip
+        objvar: Name of objective variable to skip (None to include all variables)
 
     Returns:
         Dictionary mapping var_name to list of (col_id, indices) tuples
@@ -128,8 +132,8 @@ def _group_variables_by_name(
     for col_id in range(kkt.gradient.num_cols):
         var_name, var_indices = index_mapping.col_to_var[col_id]
 
-        # Skip objective variable
-        if var_name == objvar:
+        # Skip objective variable (if specified)
+        if objvar and var_name == objvar:
             continue
 
         if var_name not in groups:
@@ -145,7 +149,7 @@ def _build_indexed_stationarity_expr(
     var_name: str,
     domain: tuple[str, ...],
     instances: list[tuple[int, tuple[str, ...]]],
-    obj_defining_eq: str,
+    obj_defining_eq: str | None,
 ) -> Expr:
     """Build indexed stationarity expression using set indices.
 
@@ -378,7 +382,7 @@ def _build_stationarity_expr(
     col_id: int,
     var_name: str,
     var_indices: tuple[str, ...],
-    obj_defining_eq: str,
+    obj_defining_eq: str | None,
 ) -> Expr:
     """Build the LHS expression for scalar stationarity equation.
 
@@ -394,12 +398,12 @@ def _build_stationarity_expr(
 
     # Add J_eq^T ν terms (equality constraint multipliers)
     expr = _add_jacobian_transpose_terms_scalar(
-        expr, kkt.J_eq, col_id, kkt.multipliers_eq, create_eq_multiplier_name, obj_defining_eq
+        expr, kkt.J_eq, col_id, kkt.multipliers_eq, create_eq_multiplier_name, obj_defining_eq, kkt
     )
 
     # Add J_ineq^T λ terms (inequality constraint multipliers)
     expr = _add_jacobian_transpose_terms_scalar(
-        expr, kkt.J_ineq, col_id, kkt.multipliers_ineq, create_ineq_multiplier_name, None
+        expr, kkt.J_ineq, col_id, kkt.multipliers_ineq, create_ineq_multiplier_name, None, kkt
     )
 
     # Subtract π^L (lower bound multiplier, if exists)
@@ -423,11 +427,15 @@ def _add_jacobian_transpose_terms_scalar(
     multipliers: dict,
     name_func,
     skip_eq: str | None,
+    kkt: KKTSystem,
 ) -> Expr:
     """Add J^T multiplier terms to the stationarity expression (scalar version).
 
     For each row in the Jacobian that has a nonzero entry at col_id,
     add: ∂constraint/∂x · multiplier
+
+    For negated constraints (LE inequalities that complementarity negates),
+    negate the Jacobian term to account for the negation.
     """
     if jacobian.index_mapping is None:
         return expr
@@ -457,6 +465,24 @@ def _add_jacobian_transpose_terms_scalar(
         # Add term: derivative * multiplier
         mult_ref = MultiplierRef(mult_name, eq_indices)
         term = Binary("*", derivative, mult_ref)
-        expr = Binary("+", expr, term)
+
+        # Check if this constraint was negated by complementarity
+        # For negated constraints, subtract the term instead of adding it
+        # EXCEPTION: Max constraints use arg - aux_max formulation, which already has
+        # the correct sign, so negation is not needed. Max constraints should be added, not subtracted.
+        #
+        # Note: This function is called for both equality (J_eq) and inequality (J_ineq) Jacobians.
+        # - Equality constraints: Won't be in complementarity_ineq, so fall through to else (add term)
+        # - Inequality constraints: Should be in complementarity_ineq (registered during assembly)
+        #   If an inequality is not found, it's added normally (else branch). This is safe because
+        #   non-negated inequalities should be added, and any missing registration is a bug elsewhere.
+        if eq_name in kkt.complementarity_ineq:
+            comp_pair = kkt.complementarity_ineq[eq_name]
+            if comp_pair.negated and not comp_pair.is_max_constraint:
+                expr = Binary("-", expr, term)
+            else:
+                expr = Binary("+", expr, term)
+        else:
+            expr = Binary("+", expr, term)
 
     return expr

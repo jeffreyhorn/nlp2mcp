@@ -4,8 +4,9 @@ Orchestrates all KKT component builders to create complete KKT system from NLP:
 1. Constraint partitioning (with duplicate exclusion and indexed bounds)
 2. Objective variable extraction
 3. Multiplier definition creation
-4. Stationarity equation building
-5. Complementarity pair building
+4. Jacobian and gradient computation
+5. Complementarity pair building (must come before stationarity)
+6. Stationarity equation building (requires complementarity info for negation tracking)
 
 This is the main entry point for NLP → MCP transformation.
 """
@@ -109,9 +110,9 @@ def assemble_kkt_system(
 
     # Exclude objective-defining equation from equality multipliers
     # The objective equation pairs with the obj variable, not a multiplier
-    multipliers_eq = _create_eq_multipliers(
-        partition.equalities, model_ir, obj_info.defining_equation
-    )
+    # UNLESS Strategy 1 was applied, in which case it should get a multiplier
+    skip_defining_eq = obj_info.defining_equation if not model_ir.strategy1_applied else None
+    multipliers_eq = _create_eq_multipliers(partition.equalities, model_ir, skip_defining_eq)
     multipliers_ineq = _create_ineq_multipliers(partition.inequalities, model_ir)
     multipliers_bounds_lo = _create_bound_lo_multipliers(partition.bounds_lo)
     multipliers_bounds_up = _create_bound_up_multipliers(partition.bounds_up)
@@ -145,12 +146,12 @@ def assemble_kkt_system(
         duplicate_bounds_excluded=partition.duplicate_excluded,
     )
 
-    # Step 5: Build stationarity equations (skips objvar, handles indexed bounds)
-    logger.info("Building stationarity equations...")
-    kkt.stationarity = build_stationarity_equations(kkt)
-    logger.info(f"Built {len(kkt.stationarity)} stationarity equations")
-
-    # Step 6: Build complementarity pairs (includes obj defining eq, indexed bounds)
+    # Step 5: Build complementarity pairs FIRST (needed by stationarity)
+    # Must be done before stationarity: the stationarity builder needs to check the `negated` flag in
+    # `kkt.complementarity_ineq` to determine whether to subtract or add Jacobian terms.
+    # NOTE: This ordering (complementarity before stationarity) is a breaking change from previous versions,
+    # which built stationarity equations before complementarity pairs. If you encounter old documentation or
+    # code referencing the previous order, be aware of this update.
     logger.info("Building complementarity pairs...")
     (
         kkt.complementarity_ineq,
@@ -165,6 +166,12 @@ def assemble_kkt_system(
         f"{len(kkt.complementarity_bounds_up)} upper bound, "
         f"{len(equality_eqs)} equality equations"
     )
+
+    # Step 6: Build stationarity equations (skips objvar, handles indexed bounds)
+    # Now has access to complementarity_ineq for negation checking
+    logger.info("Building stationarity equations...")
+    kkt.stationarity = build_stationarity_equations(kkt)
+    logger.info(f"Built {len(kkt.stationarity)} stationarity equations")
 
     # Store equality equations (these are h(x) = 0 without complementarity)
     # Note: We could store these in a separate field if needed

@@ -48,6 +48,7 @@ class ModelIR:
     normalized_bounds: dict[str, NormalizedEquation] = field(default_factory=dict)
 
     # Min/max reformulation tracking
+    strategy1_applied: bool = False  # True if Strategy 1 (objective substitution) was applied
     # These multipliers are paired with complementarity constraints in MCP
     # They should NOT have stationarity equations generated for them
     complementarity_multipliers: dict[str, str] = field(

@@ -209,6 +209,11 @@ if TYPE_CHECKING:
     from ..ir.model_ir import ModelIR
     from ..ir.symbols import EquationDef
 
+# Constraint naming constants for min/max reformulation
+# These prefixes are used to identify constraint types in complementarity and stationarity builders
+MINMAX_MIN_CONSTRAINT_PREFIX = "minmax_min_"
+MINMAX_MAX_CONSTRAINT_PREFIX = "minmax_max_"
+
 
 @dataclass
 class MinMaxCall:
@@ -414,12 +419,16 @@ class ReformulationResult:
         multiplier_names: Names of multiplier variables (one per argument)
         constraints: List of (constraint_name, EquationDef) for complementarity
         replacement_expr: Expression to use in place of original min/max call
+        original_lhs_var: If this min/max defined a variable, which one (for Strategy 1)
+        context: Equation name where this min/max appeared
     """
 
     aux_var_name: str
     multiplier_names: list[str]
     constraints: list[tuple[str, EquationDef]]
     replacement_expr: VarRef
+    original_lhs_var: str | None = None
+    context: str = ""
 
 
 def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> ReformulationResult:
@@ -478,7 +487,9 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     # "comp_minmax_min_*" for equations and "lam_minmax_min_*" for multipliers.
     multiplier_names = []
     for i in range(len(min_call.args)):
-        constraint_name = f"minmax_min_{min_call.context}_{min_call.index}_arg{i}"
+        constraint_name = (
+            f"{MINMAX_MIN_CONSTRAINT_PREFIX}{min_call.context}_{min_call.index}_arg{i}"
+        )
         # The multiplier will be named lam_<constraint> by KKT assembly
         mult_name = f"lam_{constraint_name}"
         multiplier_names.append(mult_name)
@@ -488,14 +499,16 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     aux_var_ref = VarRef(aux_var_name, ())
 
     for i, arg_expr in enumerate(min_call.args):
-        # Constraint: aux_var - arg <= 0  (equivalent to arg >= aux_var)
-        # KKT system expects inequalities in form g(x) <= 0
-        # Note: Don't use "comp_" prefix as complementarity.py adds it
-        constraint_name = f"minmax_min_{min_call.context}_{min_call.index}_arg{i}"
+        # Constraint: For min(x,y), we want x >= aux_min and y >= aux_min
+        # Create: aux_min - arg <= 0 (meaning aux_min <= arg)
+        # Complementarity negates: -(aux_min - arg) >= 0, i.e., arg - aux_min >= 0 ✓
+        # Jacobian computes: ∂(aux_min - arg)/∂aux_min = +1
+        # Stationarity subtracts the Jacobian term for negated constraints (correct sign!)
+        constraint_name = (
+            f"{MINMAX_MIN_CONSTRAINT_PREFIX}{min_call.context}_{min_call.index}_arg{i}"
+        )
 
-        # LHS: aux_var - arg  (so constraint is aux_var - arg <= 0, i.e., arg >= aux_var)
-        # RHS: 0
-        lhs = Binary("-", aux_var_ref, arg_expr)
+        lhs = Binary("-", aux_var_ref, arg_expr)  # aux_min - arg
         rhs = Const(0.0)
 
         constraint = EquationDef(
@@ -512,6 +525,8 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
         multiplier_names=multiplier_names,
         constraints=constraints,
         replacement_expr=aux_var_ref,
+        original_lhs_var=None,  # Will be set by reformulate_model
+        context=min_call.context,
     )
 
 
@@ -571,9 +586,13 @@ def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     # Use standard KKT naming: base constraint name is "minmax_max_*"
     # The complementarity.py will create equations named "comp_minmax_max_*"
     # and multipliers named "lam_minmax_max_*", so we need to match that
+    # TODO: Extract constraint naming logic into a helper function to reduce duplication
+    # between reformulate_min() and reformulate_max()
     multiplier_names = []
     for i in range(len(max_call.args)):
-        constraint_name = f"minmax_max_{max_call.context}_{max_call.index}_arg{i}"
+        constraint_name = (
+            f"{MINMAX_MAX_CONSTRAINT_PREFIX}{max_call.context}_{max_call.index}_arg{i}"
+        )
         # The multiplier will be named lam_<constraint> by KKT assembly
         mult_name = f"lam_{constraint_name}"
         multiplier_names.append(mult_name)
@@ -586,10 +605,13 @@ def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
         # Constraint: arg - aux_var <= 0  (equivalent to aux_var >= arg)
         # KKT system expects inequalities in form g(x) <= 0
         # Note: Don't use "comp_" prefix as complementarity.py adds it
-        constraint_name = f"minmax_max_{max_call.context}_{max_call.index}_arg{i}"
+        constraint_name = (
+            f"{MINMAX_MAX_CONSTRAINT_PREFIX}{max_call.context}_{max_call.index}_arg{i}"
+        )
 
         # LHS: arg - aux_var  (so constraint is arg - aux_var <= 0, i.e., aux_var >= arg)
         # RHS: 0
+
         lhs = Binary("-", arg_expr, aux_var_ref)
         rhs = Const(0.0)
 
@@ -607,7 +629,93 @@ def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
         multiplier_names=multiplier_names,
         constraints=constraints,
         replacement_expr=aux_var_ref,
+        original_lhs_var=None,  # Will be set by reformulate_model
+        context=max_call.context,
     )
+
+
+def apply_strategy1_objective_substitution(
+    model: ModelIR, reformulation_results: list[ReformulationResult]
+) -> None:
+    """Apply Strategy 1: Direct Objective Substitution.
+
+    For min/max calls that define variables in the objective chain,
+    substitute intermediate variables with auxiliary variables directly
+    in the equations.
+
+    Transformation:
+        minimize obj where obj = z and z = aux_min
+        →
+        minimize obj where obj = aux_min (z bypassed)
+
+    Note: The objective variable (obj) remains unchanged in model.objective.
+    This ensures KKT assembly correctly identifies which variable to skip.
+
+    This resolves the KKT infeasibility that occurs with objective-defining
+    min/max equations by eliminating intermediate variables from the chain.
+
+    Args:
+        model: The model to modify (modified in-place)
+        reformulation_results: Results from min/max reformulation
+    """
+    from ..ir.ast import VarRef
+    from ..ir.minmax_detection import trace_objective_chain
+    from ..ir.model_ir import ObjectiveIR
+    from ..ir.symbols import EquationDef
+
+    if not model.objective:
+        return
+
+    # Detect objective chain
+    obj_chain = trace_objective_chain(model)
+
+    # Find reformulation results for variables in objective chain
+    for result in reformulation_results:
+        if result.original_lhs_var and result.original_lhs_var in obj_chain:
+            # This aux variable should become the objective
+            new_objvar = result.aux_var_name
+
+            # DO NOT change model.objective.objvar - keep it as the original
+            # objective variable (e.g., 'obj'). This ensures the KKT assembly
+            # correctly skips only the true objective variable.
+
+            # Step 1: Update objective expression
+            # The objective now depends on aux_min instead of the intermediate variable.
+            # This ensures the gradient ∂obj/∂(intermediate) = 0.
+            # Keep objvar the same so KKT assembly still skips it correctly.
+            model.objective = ObjectiveIR(
+                sense=model.objective.sense,
+                objvar=model.objective.objvar,  # Keep same (e.g., 'obj')
+                expr=VarRef(new_objvar, ()),  # Change to aux_min
+            )
+
+            # Mark that Strategy 1 was applied
+            # This tells KKT assembly to create multiplier for objdef equation
+            model.strategy1_applied = True
+
+            # Step 2: Find and update objective-defining equations
+            # Replace intermediate variable references with auxiliary variable
+            # Example: obj = z becomes obj = aux_min
+            intermediate_var = result.original_lhs_var
+
+            for eq_name, eq_def in model.equations.items():
+                lhs, rhs = eq_def.lhs_rhs
+                # Check if RHS references the intermediate variable
+                if isinstance(rhs, VarRef) and rhs.name == intermediate_var:
+                    # Update RHS to reference auxiliary variable instead
+                    model.equations[eq_name] = EquationDef(
+                        name=eq_def.name,
+                        domain=eq_def.domain,
+                        relation=eq_def.relation,
+                        lhs_rhs=(lhs, VarRef(new_objvar, ())),
+                    )
+
+            # Only apply Strategy 1 once (first match in objective chain)
+            # This is correct behavior: in a chain like obj = z where z = min(...),
+            # we only need to substitute the first min/max encountered. Multiple matches
+            # should not occur in a properly-formed objective chain with a single terminal
+            # min/max operation, so we break after the first match to avoid redundant updates.
+            break
 
 
 def reformulate_model(model: ModelIR) -> None:
@@ -668,6 +776,7 @@ def reformulate_model(model: ModelIR) -> None:
 
     # Track all reformulations to apply
     reformulations: list[tuple[str, MinMaxCall, ReformulationResult]] = []
+    all_results: list[ReformulationResult] = []  # For Strategy 1
 
     # Scan all equations for min/max calls
     for eq_name, eq_def in model.equations.items():
@@ -686,10 +795,15 @@ def reformulate_model(model: ModelIR) -> None:
                 else:
                     raise ValueError(f"Unknown func_type: {call.func_type}")
 
-                # Find the original Call node to replace
-                # We need to store enough info to do replacement
-                # For now, we'll need to traverse and replace
+                # Track which variable was defined (for Strategy 1)
+                from ..ir.ast import VarRef
+
+                if isinstance(lhs, VarRef):
+                    result.original_lhs_var = lhs.name
+
+                # Store for later use
                 reformulations.append((eq_name, call, result))
+                all_results.append(result)
 
     # Apply reformulations
     for eq_name, min_max_call, result in reformulations:
@@ -734,6 +848,9 @@ def reformulate_model(model: ModelIR) -> None:
             relation=eq_def.relation,
             lhs_rhs=(new_lhs, new_rhs),
         )
+
+    # Apply Strategy 1 for objective-defining cases
+    apply_strategy1_objective_substitution(model, all_results)
 
 
 def _replace_min_max_call(expr: Expr, call: MinMaxCall, replacement: Expr) -> Expr:

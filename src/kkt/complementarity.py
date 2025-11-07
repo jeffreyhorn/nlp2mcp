@@ -24,6 +24,7 @@ from src.kkt.naming import (
     create_ineq_multiplier_name,
 )
 from src.kkt.partition import partition_constraints
+from src.kkt.reformulation import MINMAX_MAX_CONSTRAINT_PREFIX
 
 
 def build_complementarity_pairs(
@@ -74,10 +75,21 @@ def build_complementarity_pairs(
 
         eq_def = kkt.model_ir.equations[eq_name]
 
-        # Get LHS of inequality (already normalized to g(x) ≤ 0 form)
-        # We negate to get -g(x) ≥ 0 for MCP
+        # Handle both <= and >= inequalities
+        # For g(x) <= 0: negate to get -g(x) >= 0 for MCP
+        # For g(x) >= 0: use as-is for MCP
         g_expr = eq_def.lhs_rhs[0]
-        F_lam = Unary("-", g_expr)
+
+        if eq_def.relation == Rel.LE:
+            # g(x) <= 0 becomes -g(x) >= 0
+            F_lam = Unary("-", g_expr)
+            negated = True
+        elif eq_def.relation == Rel.GE:
+            # g(x) >= 0 stays as g(x) >= 0
+            F_lam = g_expr
+            negated = False
+        else:
+            raise ValueError(f"Expected inequality (LE or GE), got {eq_def.relation}")
 
         # Create multiplier name
         lam_name = create_ineq_multiplier_name(eq_name)
@@ -90,8 +102,16 @@ def build_complementarity_pairs(
             lhs_rhs=(F_lam, Const(0.0)),
         )
 
+        # Check if this is a max constraint from reformulation
+        # Max constraints use pattern: minmax_max_{context}_{index}_arg{i}
+        is_max_constraint = eq_name.startswith(MINMAX_MAX_CONSTRAINT_PREFIX)
+
         comp_ineq[eq_name] = ComplementarityPair(
-            equation=comp_eq, variable=lam_name, variable_indices=eq_def.domain
+            equation=comp_eq,
+            variable=lam_name,
+            variable_indices=eq_def.domain,
+            negated=negated,
+            is_max_constraint=is_max_constraint,
         )
 
     # Build equality equations: h(x) = 0 with ν free
