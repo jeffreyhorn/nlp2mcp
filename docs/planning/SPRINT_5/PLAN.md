@@ -130,8 +130,15 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
   Iterate on failing tests until generated MCPs are correct.
 
 - **Task 2.3 – PATH Validation Smoke** (2 h)  
-  **Unknown:** 1.5 (🔍)  
+  **Unknown:** 1.5 (✅ COMPLETE)  
   Run all five min/max MCPs through PATH, experiment with options if convergence issues surface.
+  **Implementation Notes from Research:**
+  - Start with default PATH options (convergence_tolerance 1e-6, crash_method pnewton)
+  - Default options should work for most reformulated min/max MCPs
+  - If convergence fails, try "difficult model" configuration (see Unknown 1.5 findings)
+  - If still failing, try "failing model" configuration with looser tolerance and no crash
+  - Document which test cases (if any) require non-default options and why
+  - PATH's stabilization scheme handles reformulated problems well (low risk)
 
 - **Task 2.4 – Remove xfail** (0.5 h)  
   Drop xfail markers, annotate fixes in tests.
@@ -144,7 +151,21 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 **Risks:** PATH non-convergence (use Unknown 1.5 mitigation), regression outside min/max (full suite).
 
 **Follow-On Research Items**
-- Unknown 1.5 – PATH option tuning (🔍) → resolve by EOD Day 2.
+- Unknown 1.5 – PATH option tuning (✅ COMPLETE) → resolved November 7, 2025.
+  - **Summary:** Comprehensive research completed on PATH solver options for MCP problems
+  - **Key Finding:** Default PATH options (`convergence_tolerance 1e-6`, `crash_method pnewton`) are appropriate for min/max reformulated MCPs
+  - **Recommendations:** Three configuration templates provided (standard/difficult/failing cases)
+  - **Critical Options Identified:**
+    - `convergence_tolerance` (default 1e-6): Adjust to 1e-4 for difficult models or 1e-8 for high precision
+    - `major_iteration_limit` (default 500): Increase to 1000-2000 for complex reformulations
+    - `crash_method` (default pnewton): Try `none` if default convergence fails
+    - `proximal_perturbation` (default 0): Enable 1e-4 to 1e-2 for singular matrix issues
+  - **Implementation Notes:** 
+    - Day 2 Task 2.3: Test with default options first; only tune if convergence fails
+    - Day 3 Task 3.3: Create `docs/PATH_SOLVER.md` with option reference and troubleshooting guide
+    - Include three configuration templates and decision tree for option tuning
+  - **Risk Assessment:** Low - PATH's stabilization scheme handles reformulated problems well
+  - **Documentation Required:** PATH_SOLVER.md with options reference, troubleshooting flowchart, and example configurations
 
 ---
 
@@ -163,6 +184,17 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 - **Task 3.3 – Document PATH Usage** (2 h)  
   **Unknowns:** 2.2 (🔍), 2.3 (🔍)  
   Author `docs/PATH_SOLVER.md`, update user guide with solver options and interpretation.
+  **Implementation Notes from Unknown 1.5 Research:**
+  - Include comprehensive PATH options reference (see Unknown 1.5 findings for complete list)
+  - Document three configuration templates:
+    1. Standard: Default options for most cases (convergence_tolerance 1e-6, crash_method pnewton)
+    2. Difficult: For complex reformulations (major_iteration_limit 1000, proximal_perturbation 1e-4)
+    3. Failing: For problematic models (looser tolerance 1e-4, crash_method none)
+  - Add troubleshooting decision tree: convergence failure → looser tolerance → no crash → proximal perturbation
+  - Document how to create and use PATH option files (path.opt syntax)
+  - Include table of key options with defaults and recommendations
+  - Explain how to interpret PATH output (Model Status codes, residuals, iteration counts)
+  - Note that default options work well for min/max reformulated MCPs (validated by research)
 
 - **Task 3.4 – Test Suite Hygiene** (1 h)  
   Adjust skip/xfail expectations, embed solver option defaults.
@@ -176,7 +208,10 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 
 **Follow-On Research Items**
 - Unknown 2.1 – Model Status 5 diagnostics (🔍) → Day 3.  
-- Unknown 2.2 – Document PATH options (🔍) → Day 3.  
+- Unknown 2.2 – Document PATH options (🔍) → Day 3.
+  - **Note:** Partially informed by Unknown 1.5 research (completed Nov 7, 2025)
+  - Unknown 1.5 provides comprehensive PATH option reference and configuration templates
+  - Unknown 2.2 should focus on PATH-specific usage patterns and solution quality interpretation  
 - Unknown 2.3 – PATH solution quality guidance (🔍) → Day 3.  
 - Unknown 2.4 – PATH in CI/CD (🔍, deferred to Sprint 6).
 
