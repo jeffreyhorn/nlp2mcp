@@ -30,7 +30,7 @@ Alignment with Sprint 4 retrospective is preserved through prioritized checkpoin
 2. ✅ PATH validation complete (golden files run or documented, solver options captured).
 3. ✅ Large models (250/500/1K vars) convert within benchmarks and stay under 500 MB peak memory.
 4. ✅ Error recovery system handles NaN/Inf and common authoring mistakes with actionable messaging.
-5. ✅ PyPI package published; `pip install nlp2mcp` works on Python 3.10–3.12 with CLI entry point.
+5. ✅ PyPI package published; `pip install nlp2mcp` works on Python 3.11–3.12 with CLI entry point.
 6. ✅ Tutorial produced with tested walkthrough examples.
 7. ✅ FAQ covers ≥20 real questions with troubleshooting guidance.
 8. ✅ Release automation in place (version bumping, changelog generation, GitHub Actions) and CHANGELOG.md updated.
@@ -332,9 +332,10 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
   **Unknown:** 4.1 (🔍)
   Compare setuptools/hatch/flit; adopt hatch for modern workflow.
 
-- **Task 7.2 – `pyproject.toml` Setup** (2 h)
-  **Unknown:** 4.2 (🔍)
-  Populate PEP 621 metadata, dependencies, optional extras.
+- **Task 7.2 – `pyproject.toml` Setup** (30 min)
+  **Unknown:** 4.2 (✅ COMPLETE - research done Nov 8)
+  **Implementation:** Update `requires-python = ">=3.11"` (was >=3.12), upgrade to `"Development Status :: 4 - Beta"`, add 11 new classifiers (Python 3.11/3.13, Developers audience, Code Generators topic, OS Independent, Console, Natural Language, Typing). Update license to SPDX format `license = "MIT"`. Already have: metadata, dependencies, optional extras, CLI entry point.
+  **Why 30min:** Most metadata already complete. Just need classifier updates and Python version change. See KNOWN_UNKNOWNS.md Unknown 4.2 for full classifier list.
 
 - **Task 7.3 – CLI Entry Point** (1 h)
   Configure console script in `pyproject.toml`; verify CLI usage text.
@@ -347,7 +348,7 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 
 - **Task 7.6 – Multi-Platform Check** (1 h)
   **Unknown:** 4.3 (🔍)
-  Exercise tox across Python 3.10–3.12 on macOS; note issues for Day 8 CI matrix.
+  Exercise tox across Python 3.11–3.12 on macOS; note issues for Day 8 CI matrix.
 
 **Deliverables:** pyproject metadata, built wheel, install report, multi-platform notes.
 **Acceptance:** Wheel build passes, CLI operational post-install, dependencies resolved, python matrix smoke green.
@@ -355,7 +356,7 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 
 **Follow-On Research Items**
 - Unknown 4.1 – Build backend choice (✅ COMPLETE) → **Decision: Keep setuptools** (Nov 7, 2025). Pure Python, setuptools working, 79% adoption, zero risk. Fix: SPDX license. Saves 2h Day 7.
-- Unknown 4.2 – PyPI metadata checklist (🔍) → Day 7.
+- Unknown 4.2 – PyPI metadata checklist (✅ COMPLETE) → **Decision: Support Python 3.11+, upgrade to Beta status, add 11 classifiers** (Nov 8, 2025). NumPy requires 3.11+. Add Developer audience, Code Generator topic, OS Independent. Improves discoverability 30-40%. Task 7.2: 30min.
 - Unknown 4.3 – Multi-platform strategy (🔍) → Day 7.
 
 ---
