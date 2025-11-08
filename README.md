@@ -2,6 +2,8 @@
 
 ![CI](https://github.com/jeffreyhorn/nlp2mcp/workflows/CI/badge.svg)
 ![Lint](https://github.com/jeffreyhorn/nlp2mcp/workflows/Lint/badge.svg)
+[![PyPI version](https://badge.fury.io/py/nlp2mcp.svg)](https://badge.fury.io/py/nlp2mcp)
+[![Python Support](https://img.shields.io/pypi/pyversions/nlp2mcp.svg)](https://pypi.org/project/nlp2mcp/)
 
 A Python tool that transforms Nonlinear Programming (NLP) models written in GAMS into equivalent Mixed Complementarity Problems (MCP) by generating the Karush-Kuhn-Tucker (KKT) conditions.
 
@@ -93,7 +95,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Day 5: Production Hardening - Large Models & Memory
 - ✅ Day 6: Production Hardening - Edge Cases + Checkpoint 2
 - ✅ Day 7: PyPI Packaging - Configuration & Build
-- [ ] Day 8: PyPI Packaging - Release Automation + Checkpoint 3
+- ✅ Day 8: PyPI Packaging - Release Automation + Checkpoint 3
 - [ ] Day 9: Documentation - Tutorial, FAQ, and API Reference
 - [ ] Day 10: Polish & Buffer
 
@@ -101,39 +103,56 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 
 ### Requirements
 
-- Python 3.11 or higher (see `pyproject.toml` for the authoritative requirement)
-- pip 21.3 or higher (recommended for editable installs and modern pyproject support)
+- Python 3.11 or higher
+- pip 21.3 or higher
 
-### For Development
+### Quick Start
 
-```bash
-# Clone the repository
-git clone <repository-url>
-cd nlp2mcp
-
-# Create a virtual environment with Python 3.12+
-python3.12 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install with development dependencies
-make install-dev
-```
-
-### For Use
-
-If the package is published on PyPI, you can install it with:
+Install from PyPI:
 
 ```bash
 pip install nlp2mcp
 ```
 
-If not published (or to install directly from this repository), use one of the following:
+Verify installation:
 
 ```bash
-# Local editable development install (recommended for contributors)
-python3.12 -m venv .venv
-source .venv/bin/activate
+nlp2mcp --help
+```
+
+### From Source (Development)
+
+For contributing or development:
+
+```bash
+# Clone the repository
+git clone https://github.com/jeffreyhorn/nlp2mcp.git
+cd nlp2mcp
+
+# Create a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install with development dependencies
+make install-dev
+
+# Or manually:
 pip install -e .
+pip install -r requirements.txt
+```
+
+### Beta/Pre-release Versions
+
+To test beta releases:
+
+```bash
+# Install specific version
+pip install nlp2mcp==0.5.0b0
+
+# Or install from TestPyPI
+pip install --index-url https://test.pypi.org/simple/ \
+    --extra-index-url https://pypi.org/simple/ \
+    nlp2mcp
 
 # Or install directly from GitHub
 pip install git+https://github.com/jeffreyhorn/nlp2mcp.git

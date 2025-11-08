@@ -399,7 +399,7 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
   Confirm Priority 1-4 completion, release readiness, doc readiness; GO/NO-GO for Day 9 documentation.
 
 **Deliverables:** Version/changelog scripts, CI workflow, TestPyPI release, updated README & CHANGELOG, checkpoint report.
-**Acceptance:** Automation scripts tested, workflow passes, TestPyPI install validated, docs updated, checkpoint GO.
+**Acceptance:** ✅ Automation scripts tested, ✅ workflow created, ✅ TestPyPI process documented, ✅ docs updated, ✅ checkpoint 3 GO.
 **Risks:** Secret misconfig (dry-run, manual fallback), automation bugs (local tests before CI).
 
 **Follow-On Research Items**

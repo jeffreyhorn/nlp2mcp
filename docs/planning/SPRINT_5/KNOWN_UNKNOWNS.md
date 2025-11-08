@@ -3269,7 +3269,31 @@ We're at version 0.4.0 (Sprint 4 complete), should bump to 1.0.0 for production 
 30 minutes (decide convention, document)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE - Low priority decision
+✅ **Status:** COMPLETE (Nov 8, 2025)
+
+**Decision:** Use version path `0.1.0 → 0.5.0-beta → 0.5.0 → 1.0.0`
+
+**Rationale:**
+1. **0.1.0** (current): Initial package version from Day 7
+2. **0.5.0-beta**: TestPyPI release after Sprint 5 Days 1-8 (hardening, packaging, automation)
+   - Beta tag matches Development Status classifier in pyproject.toml
+   - Signals testing phase, invites feedback
+   - 0.5.x indicates "halfway to 1.0"
+3. **0.5.0**: Remove beta after Day 9 (documentation complete)
+   - Clean version number
+   - Still pre-1.0 allows API refinement
+4. **1.0.0**: Production release after user validation
+   - Declares production-ready
+   - Commits to API stability
+
+**Semantic Versioning Rules:**
+- MAJOR: Incompatible API changes (e.g., CLI interface changes, function signature changes)
+- MINOR: Backwards-compatible new features (e.g., new GAMS function support)
+- PATCH: Backwards-compatible bug fixes
+
+**Documentation:** See `docs/release/VERSIONING.md` for complete strategy
+
+**Impact:** Task 8.2 will implement automated version bumping script
 
 ---
 
