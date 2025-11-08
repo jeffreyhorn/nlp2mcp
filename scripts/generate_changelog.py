@@ -94,7 +94,10 @@ def categorize_commit(commit_msg: str) -> Optional[str]:
 
     for category, keywords in CHANGELOG_CATEGORIES.items():
         for keyword in keywords:
-            if keyword in commit_lower:
+            # Use word boundary matching to avoid false positives
+            # e.g., "add" won't match "address", "fix" won't match "prefix"
+            pattern = r"\b" + re.escape(keyword) + r"\b"
+            if re.search(pattern, commit_lower):
                 return category
 
     return None
@@ -165,7 +168,7 @@ def format_changelog_entry(
             for commit in commits:
                 # Clean up commit message (remove conventional commit prefixes if present)
                 cleaned = re.sub(
-                    r"^(feat|fix|docs|style|refactor|test|chore)(\([^\)]+\))?:\s*", "", commit
+                    r"^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?:\s*", "", commit
                 )
                 lines.append(f"- {cleaned}")
             lines.append("")

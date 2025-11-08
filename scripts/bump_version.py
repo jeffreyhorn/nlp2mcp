@@ -20,7 +20,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 
 
 def parse_version(version: str) -> dict:
@@ -104,14 +104,24 @@ def bump_version(current: str, bump_type: str) -> str:
         v["build"] = None
 
     elif bump_type == "beta":
-        # If already has prerelease, increment minor first
-        if v.get("prerelease"):
-            v["minor"] += 1
-            v["patch"] = 0
+        # If already a beta version, increment the beta number
+        if v.get("prerelease") and v["prerelease"].startswith("beta"):
+            # Extract beta number if present (e.g., "beta.2" -> 2)
+            if "." in v["prerelease"]:
+                try:
+                    num = int(v["prerelease"].split(".")[1])
+                    v["prerelease"] = f"beta.{num + 1}"
+                except (IndexError, ValueError):
+                    # Malformed beta version, default to beta.2
+                    v["prerelease"] = "beta.2"
+            else:
+                # "beta" without number, make it "beta.2"
+                v["prerelease"] = "beta.2"
         else:
+            # Not a beta yet, increment minor and add beta
             v["minor"] += 1
             v["patch"] = 0
-        v["prerelease"] = "beta"
+            v["prerelease"] = "beta"
         v["build"] = None
 
     elif bump_type == "rc":
@@ -122,8 +132,12 @@ def bump_version(current: str, bump_type: str) -> str:
                 v["prerelease"] = "rc.1"
             # If already rc, increment number
             elif v["prerelease"].startswith("rc."):
-                num = int(v["prerelease"].split(".")[1])
-                v["prerelease"] = f"rc.{num + 1}"
+                try:
+                    num = int(v["prerelease"].split(".")[1])
+                    v["prerelease"] = f"rc.{num + 1}"
+                except (IndexError, ValueError):
+                    # Malformed rc version, default to rc.1
+                    v["prerelease"] = "rc.1"
             else:
                 v["prerelease"] = "rc.1"
         else:
