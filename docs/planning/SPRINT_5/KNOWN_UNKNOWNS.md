@@ -2450,10 +2450,10 @@ Analyzed all dependencies for Python version support in 2025:
 
 **numpy >= 1.24.0:**
 - Current requirement specifies numpy >= 1.24.0
-- NumPy 1.24.x: Supports Python 3.11+
+- NumPy 1.24.x: Supports Python 3.8–3.11
 - NumPy 2.x (2025): Requires Python >=3.11
-- ❌ Python 3.10 support **dropped April 2025** per NEP 29
-- ✅ Python 3.11, 3.12, 3.13 fully supported
+- ❌ Python 3.10 support dropped in NumPy 2.x (April 2025) per NEP 29; NumPy 1.24.x still supports Python 3.10
+- ✅ Python 3.11, 3.12, 3.13 fully supported in NumPy 2.x
 
 **click >= 8.0.0:**
 - Version 8.3.0 (released Sept 2025)
@@ -2543,7 +2543,7 @@ requires-python = ">=3.11"
 
 **Not needed:**
 - Framework classifiers (not using Django, Flask, etc.)
-- Typing classifiers (not a typing stub package)
+- Typing stub classifiers (we are not a typing stub package, but since we provide type hints, we SHOULD use 'Typing :: Typed')
 
 **Q2: What Python versions should we officially support?**
 
