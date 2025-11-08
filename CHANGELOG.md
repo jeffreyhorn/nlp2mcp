@@ -7,6 +7,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 5 Day 4: Production Hardening - Error Recovery - 2025-11-07
+
+**Status:** ✅ COMPLETE - Error recovery and validation systems implemented
+
+#### Summary
+
+Implemented comprehensive error recovery system with numerical guardrails, model structure validation, and 26 new integration tests covering failure scenarios with actionable error messages.
+
+**Deliverables:**
+
+1. **Numerical Guardrails (Task 4.1 - Unknown 3.4)**
+   - ✅ Implemented `NumericalError` exception class with contextual information
+   - ✅ Created `src/validation/numerical.py` module with validation functions:
+     - `validate_parameter_values()` - detects NaN/Inf in model parameters
+     - `validate_expression_value()` - validates computed expression results
+     - `validate_jacobian_entries()` - checks Jacobian for invalid values
+     - `validate_bounds()` - validates variable bounds consistency
+   - ✅ Integrated numerical validation into CLI pipeline (after parsing and derivative computation)
+   - ✅ All validations provide helpful suggestions for fixing issues
+
+2. **Model Validation Pass (Task 4.2 - Unknown 3.5)**
+   - ✅ Created `src/validation/model.py` with structure validation functions:
+     - `validate_objective_defined()` - ensures model has valid objective
+     - `validate_equations_reference_variables()` - catches constant equations
+     - `validate_no_circular_definitions()` - detects circular variable dependencies
+     - `validate_variables_used()` - warns about unused variables
+   - ✅ Integrated model validation into CLI pipeline (before processing)
+   - ✅ Validation catches common modeling errors early with clear guidance
+
+3. **Message Improvements (Task 4.3)**
+   - ✅ Enhanced `NumericalError` with location, value, and suggestion fields
+   - ✅ All error messages include:
+     - Clear description of the problem
+     - Location context (parameter name, equation, variable)
+     - Actionable suggestions for resolution
+     - Examples of correct usage
+
+4. **Recovery Test Suite (Task 4.4)**
+   - ✅ Created `tests/integration/test_error_recovery.py` with 26 comprehensive tests:
+     - 10 numerical error tests (NaN/Inf in parameters, expressions, bounds)
+     - 10 model structure error tests (missing objective, circular deps, constant equations)
+     - 5 boundary condition tests (valid cases that should pass)
+     - 1 meta-test verifying ≥20 recovery tests exist
+   - ✅ All 26 tests passing
+   - ✅ Test coverage exceeds Day 4 acceptance criteria (≥20 required)
+
+**Files Added:**
+- `src/validation/numerical.py` - Numerical validation utilities (180 lines)
+- `src/validation/model.py` - Model structure validation (226 lines)
+- `tests/integration/test_error_recovery.py` - Recovery test suite (430+ lines, 26 tests)
+
+**Files Modified:**
+- `src/utils/errors.py` - Added `NumericalError` class
+- `src/validation/__init__.py` - Exported new validation functions
+- `src/cli.py` - Integrated validation steps into pipeline
+- `src/ir/normalize.py` - Kept backward compatible (validation separate)
+
+**Test Results:**
+- Total tests: 783 passing (includes 26 new recovery tests)
+- Test execution time: ~9 seconds
+- Coverage: Maintained ≥85% (acceptance criteria met)
+
+**Quality Metrics:**
+- Type checking: ✅ 0 errors (mypy clean)
+- Linting: ✅ All checks passed (ruff + black)
+- Formatting: ✅ All files formatted
+- Tests: ✅ 783 passing, 0 failures
+
+**Acceptance Criteria Status:**
+- ✅ Validation catches targeted mistakes (objective defined, equations valid, no circular deps)
+- ✅ Error messages actionable (all errors include suggestions and context)
+- ✅ ≥20 new tests passing (26 recovery tests created and passing)
+- ✅ Coverage ≥85% (maintained across codebase)
+
+**Integration:**
+The error recovery system is now active in the main pipeline:
+1. Model structure validation runs after parsing
+2. Parameter validation runs after parsing
+3. Jacobian validation runs after derivative computation
+
+Users now receive helpful, actionable error messages for common mistakes instead of cryptic failures or PATH solver errors.
+
+---
+
 ### Sprint 5 Day 3: PATH Validation & Documentation - 2025-11-07
 
 **Status:** ✅ COMPLETE - PATH solver validation passed, comprehensive documentation published

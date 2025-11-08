@@ -160,3 +160,55 @@ class FileError(UserError):
     """
 
     pass
+
+
+class NumericalError(UserError):
+    """
+    Error related to numerical issues (NaN, Inf, numerical instability).
+
+    Indicates problems with model parameters, expressions, or computed values
+    that result in non-finite numbers.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        location: str | None = None,
+        value: float | None = None,
+        suggestion: str | None = None,
+    ):
+        """
+        Create a numerical error with location and value context.
+
+        Args:
+            message: Description of the numerical issue
+            location: Where the issue was detected (e.g., "parameter 'p[1]'", "derivative of f")
+            value: The problematic value (NaN or Inf)
+            suggestion: How to fix the issue
+        """
+        self.location = location
+        self.value = value
+
+        # Format message with location and value
+        full_message = message
+        if location:
+            full_message = f"Numerical error in {location}: {message}"
+        if value is not None:
+            import math
+
+            if math.isnan(value):
+                full_message += " (value is NaN)"
+            elif math.isinf(value):
+                sign = "+" if value > 0 else "-"
+                full_message += f" (value is {sign}Inf)"
+
+        if not suggestion:
+            suggestion = (
+                "Check your model for:\n"
+                "  - Division by zero\n"
+                "  - Invalid operations (log of negative, sqrt of negative)\n"
+                "  - Parameters with missing or invalid values\n"
+                "  - Unbounded variables in nonlinear expressions"
+            )
+
+        super().__init__(full_message, suggestion)
