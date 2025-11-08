@@ -257,7 +257,7 @@ All benchmarks **PASS** with comfortable margins:
 | Parse small (10 vars) | <1.0s | <1.0s | ✅ |
 | Parse medium (100 vars) | <3.0s | <3.0s | ✅ |
 | Parse large (200 vars) | <5.0s | <5.0s | ✅ |
-| Diff scalability | O(n²) | Sub-quadratic | ✅ |
+| Diff scalability | O(n²) | O(n²) | ✅ |
 | Memory (200 vars) | <500 MB | <500 MB | ✅ |
 | End-to-end | <30s | <30s | ✅ |
 | Sparsity exploitation | >50% sparse | >50% sparse | ✅ |

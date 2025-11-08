@@ -283,7 +283,7 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 **Risks:** ✅ No parser/AD regressions found, ✅ no memory spikes detected.
 
 **Follow-On Research Items**
-- Unknown 3.3 – Memory optimisation tactics (✅ COMPLETE) → Day 5 completed Nov 7, 2025.
+- Unknown 3.3 – Memory optimization tactics (✅ COMPLETE) → Day 5 completed Nov 7, 2025.
   - **Summary:** Current memory usage excellent (59.56 MB for 500 vars, 88% under 500 MB target)
   - **Finding:** No optimization needed - dict-based sparse storage is efficient
   - **Recommendation:** Continue with current architecture, monitor for >2K variable models
