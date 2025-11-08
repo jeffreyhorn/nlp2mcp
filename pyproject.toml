@@ -26,7 +26,6 @@ classifiers = [
     "Topic :: Software Development :: Code Generators",
     "Topic :: Software Development :: Libraries :: Python Modules",
 
-
     # Programming Language
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
