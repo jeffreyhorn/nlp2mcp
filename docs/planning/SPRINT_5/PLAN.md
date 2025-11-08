@@ -257,28 +257,37 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 
 ### Day 5 – Production Hardening: Large Models & Memory
 
-**Priority:** 3.2 & 3.3 **Effort:** 8 h **Dependencies:** Large-model fixtures from prep
+**Priority:** 3.2 & 3.3 **Effort:** 8 h **Dependencies:** Large-model fixtures from prep
+**Status:** ✅ COMPLETE (Nov 7, 2025)
 **Goals:** Benchmark large-model throughput, profile time/memory, codify targets.
 
-- **Task 5.1 – Fixture Runs** (2 h)
+- **Task 5.1 – Fixture Runs** (2 h) ✅ COMPLETE
   Execute 250/500/1000 variable models, record timings and correctness.
+  **Results:** 250 vars (4.18s), 500 vars (10.71s), 1K vars (42.58s) - all within targets
 
-- **Task 5.2 – Time Profiling** (2 h)
+- **Task 5.2 – Time Profiling** (2 h) ✅ COMPLETE
   Break down phase runtimes with cProfile/line-profiler.
+  **Results:** Jacobian 80%, Parsing 15%, Validation 5% - no optimization needed
 
-- **Task 5.3 – Memory Profiling** (2 h)
-  **Unknown:** 3.3 (🔍)
-  Measure peak usage, apply sparse structures or generators if >500 MB.
+- **Task 5.3 – Memory Profiling** (2 h) ✅ COMPLETE
+  **Unknown:** 3.3 (✅ COMPLETE)
+  Measure peak usage, apply sparse structures or generators if >500 MB.
+  **Results:** 59.56 MB peak for 500 vars (88% under 500 MB target) - excellent
 
-- **Task 5.4 – Benchmark Suite** (2 h)
+- **Task 5.4 – Benchmark Suite** (2 h) ✅ COMPLETE
   Add `tests/benchmarks/test_large_models.py`, wire optional slow CI targets.
+  **Results:** All benchmarks pass, infrastructure verified
 
-**Deliverables:** Timing + memory reports, benchmark tests, documented targets.
-**Acceptance:** Fixtures within targets, memory ≤500 MB, benchmarks pass, no regressions vs Sprint 4.
-**Risks:** Parser/AD regressions (progressive testing), memory spikes (apply optimisation).
+**Deliverables:** ✅ Timing + memory reports (docs/performance/DAY5_PERFORMANCE_REPORT.md), benchmark tests passing, targets documented.
+**Acceptance:** ✅ Fixtures within targets, ✅ memory ≤500 MB (59.56 MB), ✅ benchmarks pass (937 tests), ✅ no regressions vs Sprint 4.
+**Risks:** ✅ No parser/AD regressions found, ✅ no memory spikes detected.
 
 **Follow-On Research Items**
-- Unknown 3.3 – Memory optimisation tactics (🔍) → Day 5.
+- Unknown 3.3 – Memory optimisation tactics (✅ COMPLETE) → Day 5 completed Nov 7, 2025.
+  - **Summary:** Current memory usage excellent (59.56 MB for 500 vars, 88% under 500 MB target)
+  - **Finding:** No optimization needed - dict-based sparse storage is efficient
+  - **Recommendation:** Continue with current architecture, monitor for >2K variable models
+  - **Documentation:** See docs/performance/DAY5_PERFORMANCE_REPORT.md for complete analysis
 
 ---
 
