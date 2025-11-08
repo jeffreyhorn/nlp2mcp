@@ -296,6 +296,8 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 **Priority:** 3 **Effort:** 7 h + 1 h checkpoint **Dependencies:** Days 4–5
 **Goals:** Cover critical edge cases, document limits, hold Checkpoint 2.
 
+**Status:** ✅ COMPLETE (Nov 7, 2025)
+
 - **Task 6.1 – Edge Case Suite** (3 h)
   **Unknown:** 3.2 (🔍)
   Implement ≥20 cases across bounds, degeneracy, zero Jacobians, circular references, empty sets.
