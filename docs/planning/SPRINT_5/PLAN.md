@@ -250,8 +250,8 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 **Risks:** False positives from validation (allow opt-out flag), perf hit (profile, optimise).
 
 **Follow-On Research Items**
-- Unknown 3.4 – Numerical handling approach (🔍) → Day 4.
-- Unknown 3.5 – Validation design (🔍) → Day 4.
+- Unknown 3.4 – Numerical handling approach (✅ - COMPLETE) → Day 4.
+- Unknown 3.5 – Validation design (✅ - COMPLETE) → Day 4.
 
 ---
 
