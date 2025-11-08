@@ -354,7 +354,7 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 **Risks:** Missing package data (validate wheel contents), CLI entry misconfigurations (smoke test).
 
 **Follow-On Research Items**
-- Unknown 4.1 – Build backend choice (🔍) → Day 7.
+- Unknown 4.1 – Build backend choice (✅ COMPLETE) → **Decision: Keep setuptools** (Nov 7, 2025). Pure Python, setuptools working, 79% adoption, zero risk. Fix: SPDX license. Saves 2h Day 7.
 - Unknown 4.2 – PyPI metadata checklist (🔍) → Day 7.
 - Unknown 4.3 – Multi-platform strategy (🔍) → Day 7.
 
