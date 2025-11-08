@@ -92,7 +92,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Day 4: Production Hardening - Error Recovery
 - ✅ Day 5: Production Hardening - Large Models & Memory
 - ✅ Day 6: Production Hardening - Edge Cases + Checkpoint 2
-- [ ] Day 7: PyPI Packaging - Configuration & Build
+- ✅ Day 7: PyPI Packaging - Configuration & Build
 - [ ] Day 8: PyPI Packaging - Release Automation + Checkpoint 3
 - [ ] Day 9: Documentation - Tutorial, FAQ, and API Reference
 - [ ] Day 10: Polish & Buffer
@@ -101,7 +101,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 
 ### Requirements
 
-- Python 3.12 or higher (see `pyproject.toml` for the authoritative requirement)
+- Python 3.11 or higher (see `pyproject.toml` for the authoritative requirement)
 - pip 21.3 or higher (recommended for editable installs and modern pyproject support)
 
 ### For Development

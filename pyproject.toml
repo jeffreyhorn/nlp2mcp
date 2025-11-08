@@ -7,19 +7,44 @@ name = "nlp2mcp"
 version = "0.1.0"
 description = "Convert GAMS NLP models to MCP via KKT conditions"
 readme = "README.md"
-requires-python = ">=3.12"
-license = {text = "MIT"}
+requires-python = ">=3.11"
+license = "MIT"
 authors = [
     {name = "Jeffrey Horn", email = "jeffreydhorn@gmail.com"}
 ]
 keywords = ["optimization", "nlp", "mcp", "gams", "kkt"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    # Development Status
+    "Development Status :: 4 - Beta",
+
+    # Intended Audience
+    "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
+
+    # Topic
     "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+
+
+    # Programming Language
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+
+    # Operating System
+    "Operating System :: OS Independent",
+
+    # Environment
+    "Environment :: Console",
+
+    # Natural Language
+    "Natural Language :: English",
+
+    # Typing
+    "Typing :: Typed",
 ]
 
 dependencies = [
@@ -50,9 +75,12 @@ nlp2mcp = "src.cli:main"
 where = ["."]
 include = ["src*"]
 
+[tool.setuptools.package-data]
+"src.gams" = ["*.lark"]
+
 [tool.black]
 line-length = 100
-target-version = ["py312"]
+target-version = ["py311", "py312", "py313"]
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -67,7 +95,7 @@ extend-exclude = '''
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
@@ -90,7 +118,7 @@ ignore = [
 "__init__.py" = ["F401"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.11"
 warn_unused_configs = true
 disallow_untyped_defs = false
 disallow_incomplete_defs = false

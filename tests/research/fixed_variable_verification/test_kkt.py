@@ -24,7 +24,8 @@ def test_kkt_fixed_variable():
     model = parse_model_file(str(gms_file))
 
     print("\n✓ Parsed successfully")
-    print(f"  Variables: {[v for v in model.variables.keys() if not v.startswith('"')]}")
+    vars_list = [v for v in model.variables.keys() if not v.startswith('"')]
+    print(f"  Variables: {vars_list}")
 
     # Normalize
     print("\nNormalizing...")

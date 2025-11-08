@@ -352,7 +352,7 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
   **Why 30min:** Pure Python confirmed (wheel py3-none-any, pathlib, text-mode I/O). No platform-specific code. Just need smoke test for confidence. Full OS matrix optional for Day 8. See KNOWN_UNKNOWNS.md Unknown 4.3 for details.
 
 **Deliverables:** pyproject metadata, built wheel, install report, multi-platform notes.
-**Acceptance:** Wheel build passes, CLI operational post-install, dependencies resolved, python matrix smoke green.
+**Acceptance:** ✅ Wheel build passes, ✅ CLI operational post-install, ✅ dependencies resolved, ✅ python matrix smoke green (Docker Linux test passed).
 **Risks:** Missing package data (validate wheel contents), CLI entry misconfigurations (smoke test).
 
 **Follow-On Research Items**
