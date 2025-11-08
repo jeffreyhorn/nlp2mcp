@@ -2766,11 +2766,11 @@ Changelog = "https://github.com/jeffreyhorn/nlp2mcp/blob/main/CHANGELOG.md"
 **Minimal testing (sufficient for Sprint 5):**
 1. ✅ Run existing test suite on Python 3.12 (passing)
 2. 🔧 Install Python 3.11 locally and run tests (Day 7 verification)
-3. 🔧 Update CI to test 3.11, 3.12 (Day 8)
+3. 🔧 Update CI to test 3.11, 3.12, 3.13 (Day 8)
 4. 🔧 Test wheel installation on Python 3.11 and 3.12 (Day 7)
 
 **Extended testing (defer to post-Sprint 5 if time-limited):**
-- Test on Python 3.13
+- Test on Python 3.13 locally (CI will cover this in Day 8)
 - Multi-OS testing (Linux, macOS, Windows) - pure Python makes this low priority
 - Performance testing across Python versions
 
@@ -2821,7 +2821,7 @@ pip install nlp2mcp[dev]
 2. ✅ **Development status**: Upgrade to Beta after Sprint 5 completion
 3. ✅ **Classifiers**: Add 11 new classifiers for better discoverability
 4. ✅ **requires-python**: Change from ">=3.12" to ">=3.11"
-5. ✅ **Testing**: Add CI matrix for 3.11, 3.12 (Day 8)
+5. ✅ **Testing**: Add CI matrix for 3.11, 3.12, 3.13 (Day 8)
 
 **Day 7 Implementation (Task 7.2 updates):**
 - Update requires-python to ">=3.11"
@@ -3118,7 +3118,7 @@ Add Python version matrix (NO OS matrix initially):
 ```yaml
 strategy:
   matrix:
-    python-version: ['3.11', '3.12']
+    python-version: ['3.11', '3.12', '3.13']
     # Keep single OS for speed
 ```
 
@@ -3222,7 +3222,7 @@ nlp2mcp is a pure Python package and runs on:
 - Document in PLAN.md
 
 **Day 8 (Optional):**
-- Add Python version matrix to CI (`['3.11', '3.12']`)
+- Add Python version matrix to CI (`['3.11', '3.12', '3.13']`)
 - Consider OS matrix as stretch goal
 
 **Risk:** Very low - pure Python packages rarely have platform issues
