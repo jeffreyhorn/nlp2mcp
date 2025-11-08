@@ -2301,7 +2301,7 @@ Successfully built nlp2mcp-0.1.0.tar.gz and nlp2mcp-0.1.0-py3-none-any.whl
 **Task 7.2 - pyproject.toml Setup:**
 - ✅ Most configuration already complete
 - 🔧 **Fix license format:** Change `license = {text = "MIT"}` to `license = "MIT"`
-- 🔧 **Remove license classifier** (deprecated with new license format)
+- ℹ️ **License classifier remains optional (not deprecated):** Keep `License :: OSI Approved :: MIT License` for backward compatibility with older tools, per PEP 639.
 - ✅ All other PEP 621 metadata already compliant
 - ✅ Dependencies already specified correctly
 - ✅ Console script entry point already configured
@@ -2338,9 +2338,9 @@ license = {text = "MIT"}
 license = "MIT"
 ```
 
-**Remove license classifier:**
+**License classifier compatibility:**
 ```toml
-# Remove this line (deprecated with SPDX license):
+# Keep this line for backward compatibility with older tools (per PEP 639):
 "License :: OSI Approved :: MIT License",
 ```
 
