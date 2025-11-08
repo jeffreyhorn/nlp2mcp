@@ -346,9 +346,10 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 - **Task 7.5 – Local Install QA** (2 h)
   Smoke test install/uninstall in fresh venv, run CLI on sample models.
 
-- **Task 7.6 – Multi-Platform Check** (1 h)
-  **Unknown:** 4.3 (🔍)
-  Exercise tox across Python 3.11–3.12 on macOS; note issues for Day 8 CI matrix.
+- **Task 7.6 – Multi-Platform Check** (30 min)
+  **Unknown:** 4.3 (✅ COMPLETE - research done Nov 8)
+  **Implementation:** Quick Docker Linux smoke test (10min): `docker run -it python:3.11-slim` → install wheel → test CLI. Verify wheel metadata shows platform-independent. Update README.md with platform support statement (Linux/macOS/Windows, Python 3.11+).
+  **Why 30min:** Pure Python confirmed (wheel py3-none-any, pathlib, text-mode I/O). No platform-specific code. Just need smoke test for confidence. Full OS matrix optional for Day 8. See KNOWN_UNKNOWNS.md Unknown 4.3 for details.
 
 **Deliverables:** pyproject metadata, built wheel, install report, multi-platform notes.
 **Acceptance:** Wheel build passes, CLI operational post-install, dependencies resolved, python matrix smoke green.
@@ -357,7 +358,7 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 **Follow-On Research Items**
 - Unknown 4.1 – Build backend choice (✅ COMPLETE) → **Decision: Keep setuptools** (Nov 7, 2025). Pure Python, setuptools working, 79% adoption, zero risk. Fix: SPDX license. Saves 2h Day 7.
 - Unknown 4.2 – PyPI metadata checklist (✅ COMPLETE) → **Decision: Support Python 3.11+, upgrade to Beta status, add 11 classifiers** (Nov 8, 2025). NumPy requires 3.11+. Add Developer audience, Code Generator topic, OS Independent. Improves discoverability 30-40%. Task 7.2: 30min.
-- Unknown 4.3 – Multi-platform strategy (🔍) → Day 7.
+- Unknown 4.3 – Multi-platform strategy (✅ COMPLETE) → **Decision: Minimal CI (Python versions only), Docker smoke test** (Nov 8, 2025). Pure Python confirmed. Wheel py3-none-any, pathlib paths, text-mode I/O. Docker test on Day 7 (10min), optional OS matrix Day 8. Task 7.6: 30min.
 
 ---
 
