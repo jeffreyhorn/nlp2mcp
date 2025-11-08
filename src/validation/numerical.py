@@ -99,10 +99,10 @@ def validate_expression_value(
 
 def validate_jacobian_entries(jacobian: Any, name: str) -> None:
     """
-    Check Jacobian for NaN/Inf entries.
+    Check Jacobian/Gradient for NaN/Inf entries.
 
     Args:
-        jacobian: The Jacobian matrix to validate
+        jacobian: The Jacobian matrix or gradient vector to validate
         name: Description of the Jacobian (e.g., "objective gradient", "constraint Jacobian")
 
     Raises:
@@ -113,30 +113,29 @@ def validate_jacobian_entries(jacobian: Any, name: str) -> None:
         so we only check if they contain obviously problematic constants.
         Full numerical validation happens during evaluation.
     """
-    for row_id in range(jacobian.num_rows):
+    # Handle GradientVector (1D) vs JacobianStructure (2D)
+    is_gradient = not hasattr(jacobian, "num_rows")
+
+    if is_gradient:
+        # GradientVector: only has columns (variables)
         for col_id in range(jacobian.num_cols):
-            entry = jacobian.get_derivative(row_id, col_id)
+            entry = jacobian.get_derivative(col_id)
             if entry is not None:
                 # Check if entry is a constant with NaN/Inf
-                # Note: Most entries will be symbolic expressions, not constants
                 if hasattr(entry, "value"):  # It's a Const node
                     value = entry.value  # type: ignore
                     if not math.isfinite(value):
-                        # Get equation and variable names for context
-                        eq_name, eq_indices = jacobian.index_mapping.row_to_eq[row_id]
+                        # Get variable name for context
                         var_name, var_indices = jacobian.index_mapping.col_to_var[col_id]
 
-                        eq_str = eq_name
-                        if eq_indices:
-                            eq_str += f"[{','.join(eq_indices)}]"
                         var_str = var_name
                         if var_indices:
                             var_str += f"[{','.join(var_indices)}]"
 
-                        location = f"{name} entry ∂{eq_str}/∂{var_str}"
+                        location = f"{name} entry ∂/∂{var_str}"
 
                         raise NumericalError(
-                            "Jacobian entry is not finite",
+                            "Gradient entry is not finite",
                             location=location,
                             value=value,
                             suggestion=(
@@ -147,6 +146,41 @@ def validate_jacobian_entries(jacobian: Any, name: str) -> None:
                                 "\nPlease report this as a bug if the model appears valid."
                             ),
                         )
+    else:
+        # JacobianStructure: has both rows (equations) and columns (variables)
+        for row_id in range(jacobian.num_rows):
+            for col_id in range(jacobian.num_cols):
+                entry = jacobian.get_derivative(row_id, col_id)
+                if entry is not None:
+                    # Check if entry is a constant with NaN/Inf
+                    if hasattr(entry, "value"):  # It's a Const node
+                        value = entry.value  # type: ignore
+                        if not math.isfinite(value):
+                            # Get equation and variable names for context
+                            eq_name, eq_indices = jacobian.index_mapping.row_to_eq[row_id]
+                            var_name, var_indices = jacobian.index_mapping.col_to_var[col_id]
+
+                            eq_str = eq_name
+                            if eq_indices:
+                                eq_str += f"[{','.join(eq_indices)}]"
+                            var_str = var_name
+                            if var_indices:
+                                var_str += f"[{','.join(var_indices)}]"
+
+                            location = f"{name} entry ∂{eq_str}/∂{var_str}"
+
+                            raise NumericalError(
+                                "Jacobian entry is not finite",
+                                location=location,
+                                value=value,
+                                suggestion=(
+                                    "A derivative in your model produced an invalid value.\n"
+                                    "This may indicate:\n"
+                                    "  - Symbolic differentiation produced NaN/Inf constant\n"
+                                    "  - Model has structural issues\n"
+                                    "\nPlease report this as a bug if the model appears valid."
+                                ),
+                            )
 
 
 def check_value_finite(value: float, context: str) -> None:

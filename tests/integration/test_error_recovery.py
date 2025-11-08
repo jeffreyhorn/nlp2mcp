@@ -403,9 +403,7 @@ def test_parameters_with_valid_values_pass():
     model = ModelIR()
     model.params["p1"] = ParameterDef(name="p1", domain=(), values={(): 1.0})
     model.params["p2"] = ParameterDef(name="p2", domain=(), values={(): -3.14})
-    model.params["p3"] = ParameterDef(
-        name="p3", domain=(), values={("1",): 0.0, ("2",): 100.0}
-    )
+    model.params["p3"] = ParameterDef(name="p3", domain=(), values={("1",): 0.0, ("2",): 100.0})
 
     # Should not raise
     validate_parameter_values(model)
@@ -443,6 +441,6 @@ def test_recovery_test_count():
     # Exclude this meta-test itself
     test_functions = [name for name in test_functions if name != "test_recovery_test_count"]
 
-    assert len(test_functions) >= 20, (
-        f"Day 4 requires ≥20 recovery tests, found {len(test_functions)}"
-    )
+    assert (
+        len(test_functions) >= 20
+    ), f"Day 4 requires ≥20 recovery tests, found {len(test_functions)}"
