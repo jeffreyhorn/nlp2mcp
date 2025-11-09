@@ -403,7 +403,17 @@ Each day lists goals, task breakdowns with the driving Known Unknowns, deliverab
 **Risks:** Secret misconfig (dry-run, manual fallback), automation bugs (local tests before CI).
 
 **Follow-On Research Items**
-- Unknown 4.4 – Versioning plan (🔍) → Day 8.
+- Unknown 4.4 – Versioning plan (✅ COMPLETE - Nov 8, 2025) → Research complete, documentation exists.
+  - **Summary:** Version path: 0.1.0 → 0.5.0-beta → 0.5.0 → 1.0.0
+  - **Current State:** pyproject.toml already at 0.5.0-beta (matches Beta status)
+  - **Documentation:** VERSIONING.md (209 lines) + RELEASING.md (326 lines) fully document semantic versioning strategy
+  - **Semantic Versioning Rules:** MAJOR for breaking changes, MINOR for new features, PATCH for bug fixes (with examples)
+  - **Pre-release Strategy:** Beta (current) for testing, RC for final validation, clean version for production
+  - **Task 8.1 Impact:** Reduced from 0.5h to 0.25h - just update CHANGELOG.md and verify README badge
+  - **Task 8.2 Scope:** Implement scripts/bump_version.py based on documented version path
+  - **Version History:** 0.1.0 (Day 7) → 0.5.0-beta (Day 8/current) → 0.5.0 (Day 9+) → 1.0.0 (post-validation)
+  - **Automation:** GitHub Actions will read version from pyproject.toml, route pre-releases to TestPyPI
+  - **Risk:** Low - follows industry standard (SemVer 2.0.0), comprehensive documentation prevents confusion
 
 ---
 
