@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.abspath("../../.."))
 
 project = "nlp2mcp"
 copyright = "2025, nlp2mcp contributors"
-author = "nlp2mcp contributors"
-release = "0.4.0"
+author = "Jeffrey Horn"
+release = "0.5.0-beta"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
