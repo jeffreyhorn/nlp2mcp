@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/jeffreyhorn/nlp2mcp/workflows/CI/badge.svg)
 ![Lint](https://github.com/jeffreyhorn/nlp2mcp/workflows/Lint/badge.svg)
-[![PyPI version](https://badge.fury.io/py/nlp2mcp.svg)](https://badge.fury.io/py/nlp2mcp)
+[![PyPI version](https://badge.fury.io/py/nlp2mcp.svg)](https://pypi.org/project/nlp2mcp/)
 [![Python Support](https://img.shields.io/pypi/pyversions/nlp2mcp.svg)](https://pypi.org/project/nlp2mcp/)
 
 A Python tool that transforms Nonlinear Programming (NLP) models written in GAMS into equivalent Mixed Complementarity Problems (MCP) by generating the Karush-Kuhn-Tucker (KKT) conditions.
