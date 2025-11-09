@@ -82,7 +82,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 - ✅ Day 9: Integration Testing, Documentation, and Examples
 - ✅ Day 10: Polish, Buffer, and Sprint Wrap-Up
 
-### Sprint 5: Hardening, Packaging, and Documentation ✅ COMPLETE
+**Sprint 5: Hardening, Packaging, and Documentation** ✅ **COMPLETE**
 
 - ✅ Day 1: Min/Max Bug Fix - Research & Design
 - ✅ Day 2: Min/Max Bug Fix - Implementation & Testing
