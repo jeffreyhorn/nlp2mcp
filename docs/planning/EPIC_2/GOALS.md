@@ -266,11 +266,20 @@ New simplification rules beyond `advanced`:
 - Common subexpression elimination across terms
 - Factor out common multipliers: `2*x*y + 4*x*z → 2*x*(y + 2*z)`
 - Distribute and combine: `x*(a+b) + x*(c+d) → x*(a+b+c+d)`
+- Distribution cancellation: `x*y + x*z → x*(y + z)`
+- Coefficient collection: `2*x + 3*x → (2 + 3)*x → 5*x` (already done via different mechanism)
 
 **Rational Simplification:**
 - Simplify fractions: `(2*x) / (4*y) → x / (2*y)`
-- Combine fractions: `x/y + z/y → (x+z)/y`
+- Combine fractions with same denominator: `a/c + b/c → (a + b)/c`
+- Distribute over division: `(a + b) / c → a/c + b/c` (may increase size, use judiciously)
 - Cancel common factors: `(x*y) / (x*z) → y/z` (if x ≠ 0)
+
+**Nested Operations (Associativity):**
+- Constant reassociation in multiplication: `(x * c1) * c2 → x * (c1 * c2)`
+- Constant reassociation in division: `(x / c1) / c2 → x / (c1 * c2)`
+- Division by product: `x / (y * c) → (x / c) / y` or `x / (y * c) → (x / y) / c`
+  - Useful when it enables further cancellation or constant folding
 
 **Strength Reduction:**
 - Replace expensive operations: `x^2 → x*x` (debatable)
