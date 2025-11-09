@@ -426,7 +426,7 @@ def detect_min_max_calls(expr: Expr, context: str) -> list[MinMaxCall]:
   - `src/ir/parser.py` (preprocessing integration, table parsing)
   - `src/gams/gams_grammar.lark` (table grammar)
   - `src/ir/ast.py` (Call tuple change)
-  - `docs/planning/SPRINT_4/*.md` (documentation)
+  - `docs/planning/EPIC_1/SPRINT_4/*.md` (documentation)
 
 ### Code Statistics (Estimated)
 - **Lines Added:** ~2,000+

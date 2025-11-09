@@ -752,12 +752,12 @@ Before Sprint 5 begins, complete:
 
 ### Next Steps
 
-1. **Update Known Unknowns** (`docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md`)
+1. **Update Known Unknowns** (`docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md`)
    - Mark Unknown 1.1 as ❌ DISPROVEN
    - Update with Strategy 2 failure findings
    - Document Strategy 1 as required approach
 
-2. **Update PREP_PLAN.md** (`docs/planning/SPRINT_5/PREP_PLAN.md`)
+2. **Update PREP_PLAN.md** (`docs/planning/EPIC_1/SPRINT_5/PREP_PLAN.md`)
    - Check off Task 2 acceptance criteria
    - Update with validation results
    - Revise Sprint 5 Day 1-2 implementation approach

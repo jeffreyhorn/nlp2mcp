@@ -393,8 +393,8 @@ Sprint 3 will use differentiated expressions to build:
 ### Project-Specific
 
 - Sprint 1 IR documentation: `src/ir/ast.py`
-- Sprint 2 Plan: `docs/planning/SPRINT_2_PLAN.md`
-- Project Plan: `docs/planning/PROJECT_PLAN.md`
+- Sprint 2 Plan: `docs/planning/EPIC_1/SPRINT_2/PLAN.md`
+- Project Plan: `docs/planning/EPIC_1/PROJECT_PLAN.md`
 
 ---
 

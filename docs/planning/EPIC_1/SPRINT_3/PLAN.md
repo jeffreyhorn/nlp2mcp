@@ -1942,7 +1942,7 @@ Output: simple_nlp_mcp.gms (GAMS MCP model with KKT conditions)
 
 ## Appendix: PREP_PLAN Tasks Integration
 
-The following tasks from `docs/planning/SPRINT_3/PREP_PLAN.md` have been integrated:
+The following tasks from `docs/planning/EPIC_1/SPRINT_3/PREP_PLAN.md` have been integrated:
 
 - **Task 5** (Early Integration Smoke Test): Day 2
 - **Task 6** (Test Pyramid Visualization): Day 5 evening

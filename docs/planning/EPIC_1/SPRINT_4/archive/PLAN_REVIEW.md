@@ -1,7 +1,7 @@
 # Sprint 4 Plan Review – Findings & Recommendations
 
 ## Findings
-- **Completed unknowns still embedded in daily tasks** – Day 1–4 task lists in `docs/planning/SPRINT_4/PLAN_ORIGINAL.md` explicitly call out Unknowns 1.1, 1.2, 1.4, 1.5, 2.1, 2.2, and 6.1 even though they are marked COMPLETE in the Known Unknowns doc (see e.g. lines 69-175 and 215-229). The prep instructions require removing completed unknowns from the schedule.
+- **Completed unknowns still embedded in daily tasks** – Day 1–4 task lists in `docs/planning/EPIC_1/SPRINT_4/PLAN_ORIGINAL.md` explicitly call out Unknowns 1.1, 1.2, 1.4, 1.5, 2.1, 2.2, and 6.1 even though they are marked COMPLETE in the Known Unknowns doc (see e.g. lines 69-175 and 215-229). The prep instructions require removing completed unknowns from the schedule.
 - **Developer ergonomics scope from PROJECT_PLAN.md is missing** – The Sprint 4 project brief expects error message improvements, configuration/flag work (`pyproject` options), and logging/verbosity updates, yet no day contains tasks covering those deliverables (reviewed across lines 55-700 of `PLAN_ORIGINAL.md`).
 - **Scaling flag options incomplete** – Acceptance criteria on lines 479-491 mandate only `--scale none|auto`, but the Sprint 4 plan in `PROJECT_PLAN.md` requires `--scale none|auto|byvar`.
 - **No work allocated for “10 mid-size examples” deliverable** – PROJECT_PLAN.md calls for additional example models in Sprint 4, but the current day-by-day schedule (lines 55-780) never budgets time for creating or curating those examples.

@@ -100,7 +100,7 @@ Issue #47 assumed GAMS MCP syntax without validation. A known unknowns list woul
 
 ### Deliverable
 
-**File:** `docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md`
+**File:** `docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS.md`
 
 ### Sprint 4 Scope Context
 
@@ -1335,7 +1335,7 @@ Need structured checkpoints to catch issues early in Sprint 4.
 ### Artifacts to Review
 
 - Test results: `pytest tests/ -v --tb=short`
-- Known unknowns: `docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md`
+- Known unknowns: `docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS.md`
 - Code coverage: `pytest --cov=src tests/`
 
 ### Acceptance Criteria
@@ -1457,7 +1457,7 @@ Create detailed Sprint 4 plan incorporating lessons learned from Sprint 3.
 
 ### Deliverable
 
-**File:** `docs/planning/SPRINT_4/PLAN.md`
+**File:** `docs/planning/EPIC_1/SPRINT_4/PLAN.md`
 
 ### Required Sections
 
@@ -1785,9 +1785,9 @@ git log --oneline docs/  # Should see recent updates
 # Run all verifications
 pytest tests/golden/ -v                           # Should see: 5/5 passed
 pytest tests/validation/test_path_solver.py -v    # Should run or skip
-ls docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md       # Should exist
+ls docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS.md       # Should exist
 ls docs/process/CHECKPOINT_TEMPLATES.md           # Should exist
-ls docs/planning/SPRINT_4/PLAN.md                 # Should exist
+ls docs/planning/EPIC_1/SPRINT_4/PLAN.md                 # Should exist
 
 # Final gate check
 pytest tests/ -v                                  # All tests passing (650+)

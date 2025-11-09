@@ -862,8 +862,8 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 ## Known Unknowns Schedule
 
 Sprint 4 Known Unknowns are documented in:
-- `/Users/jeff/experiments/nlp2mcp/docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md`
-- `/Users/jeff/experiments/nlp2mcp/docs/planning/SPRINT_4/KNOWN_UNKNOWNS/SCHEDULE.md`
+- `/Users/jeff/experiments/nlp2mcp/docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS.md`
+- `/Users/jeff/experiments/nlp2mcp/docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS/SCHEDULE.md`
 
 **Verification Status (as of 2025-11-01):**
 

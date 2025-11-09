@@ -421,7 +421,7 @@ cd docs/api && make linkcheck
    - 3 deployment options
    - CI/CD integration examples
 
-6. **docs/planning/SPRINT_5/DAY_9_COMPLETION_SUMMARY.md** (this file)
+6. **docs/planning/EPIC_1/SPRINT_5/DAY_9_COMPLETION_SUMMARY.md** (this file)
 
 ### Files Modified (2 files)
 

@@ -5,7 +5,7 @@
 **Created:** 2025-10-30  
 **Sprint:** Sprint 3  
 **Task Reference:** PREP_PLAN Task 9 - Add Complexity Estimation  
-**Related:** `docs/planning/SPRINT_3/PLAN.md` Day 10
+**Related:** `docs/planning/EPIC_1/SPRINT_3/PLAN.md` Day 10
 
 ---
 

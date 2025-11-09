@@ -204,7 +204,7 @@ This project follows a structured sprint planning process:
    - Create action items for next sprint
    - Update metrics and statistics
 
-See [docs/planning/README.md](docs/planning/README.md) for sprint summaries and retrospectives.
+See [docs/planning/EPIC_1/README.md](docs/planning/EPIC_1/README.md) for sprint summaries and retrospectives.
 
 ---
 

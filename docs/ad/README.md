@@ -31,7 +31,7 @@ This directory contains documentation for the AD (Automatic Differentiation) mod
 
 - **Implementation:** See `src/ad/` for the actual code
 - **Tests:** See `tests/unit/ad/` and `tests/integration/ad/` for test coverage
-- **Sprint 2 Planning:** See `docs/planning/SPRINT_2/` for sprint retrospective and planning documents
+- **Sprint 2 Planning:** See `docs/planning/EPIC_1/SPRINT_2/` for sprint retrospective and planning documents
 
 ## Module Overview
 

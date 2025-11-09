@@ -1482,7 +1482,7 @@ If this fails, STOP and fix integration before continuing to Day 4.
 
 ### Deliverable
 
-**Updated:** `docs/planning/SPRINT_3_PLAN.md` with integration risks for all days
+**Updated:** `docs/planning/EPIC_1/SPRINT_3_PLAN.md` with integration risks for all days
 
 ### Acceptance Criteria
 
@@ -1966,7 +1966,7 @@ Create explicit list of assumptions and unknowns for Sprint 3, making risks visi
 Sprint 2 assumed power was represented as `Call("power", ...)` when it was actually `Binary("^", ...)`. Listing this as "known unknown" would have prompted investigation before coding.
 
 ### Deliverable
-**Section in:** `docs/planning/SPRINT_3_PLAN.md`
+**Section in:** `docs/planning/EPIC_1/SPRINT_3_PLAN.md`
 
 ### Implementation
 

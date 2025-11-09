@@ -677,7 +677,7 @@ def curtis_reid_scaling(
   - `src/cli.py` (Days 4-7 - CLI flags, reformulation integration)
   - `pyproject.toml` (Day 7 - configuration section)
   - `src/kkt/kkt_system.py` (Day 6 - scaling factor fields)
-  - `docs/planning/SPRINT_4/*.md` (All days - documentation)
+  - `docs/planning/EPIC_1/SPRINT_4/*.md` (All days - documentation)
 
 ### Code Statistics (Days 4-7)
 - **Lines Added:** ~3,500+

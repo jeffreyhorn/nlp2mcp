@@ -579,8 +579,8 @@ The `examples/` directory contains sample GAMS NLP models:
 ### Concepts & Planning
 - [docs/concepts/IDEA.md](docs/concepts/IDEA.md) - Original concept: How KKT conditions transform NLP to MCP
 - [docs/concepts/NLP2MCP_HIGH_LEVEL.md](docs/concepts/NLP2MCP_HIGH_LEVEL.md) - Feasibility study and implementation blueprint
-- [docs/planning/PROJECT_PLAN.md](docs/planning/PROJECT_PLAN.md) - Detailed 5-sprint development plan
-- [docs/planning/README.md](docs/planning/README.md) - Sprint summaries and retrospectives
+- [docs/planning/EPIC_1/PROJECT_PLAN.md](docs/planning/EPIC_1/PROJECT_PLAN.md) - Detailed 5-sprint development plan
+- [docs/planning/EPIC_1/README.md](docs/planning/EPIC_1/README.md) - Sprint summaries and retrospectives
 - [docs/development/AGENTS.md](docs/development/AGENTS.md) - Agent-based development notes
 
 ### Technical Documentation
