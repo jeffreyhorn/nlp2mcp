@@ -288,7 +288,7 @@ Model constrained_mcp /
 
 ---
 
-##Common Patterns
+## Common Patterns
 
 ### Pattern 1: Box Constraints
 
