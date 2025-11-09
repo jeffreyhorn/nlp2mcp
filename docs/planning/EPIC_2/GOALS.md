@@ -679,29 +679,44 @@ Create short video walkthroughs:
 ### Epic 3 Candidates
 
 1. **Advanced Solver Integration**
-   - Direct PATH solver integration (no intermediate .gms file)
-   - Support for other MCP solvers (MILES, NLPEC)
-   - Warm-start support from previous solutions
+   
+   Eliminate the intermediate GAMS file generation step and solve MCPs directly in memory for faster workflows.
+   
+   - **Direct PATH solver integration** - Call PATH solver API directly from Python without writing .gms files, passing problem data via in-memory structures
+   - **Support for other MCP solvers** - Add support for MILES (mixed inequality constrained solver) and NLPEC (NLP with equilibrium constraints)
+   - **Warm-start support** - Use solutions from previous solves as starting points for iterative workflows, parameter sweeps, or sensitivity analysis
 
 2. **Parallel Processing**
-   - Parallelize gradient/Jacobian computation
-   - Multi-threaded simplification
-   - Batch processing of multiple models
+   
+   Leverage multi-core processors to dramatically speed up derivative computation and simplification for large models.
+   
+   - **Parallelize gradient/Jacobian computation** - Compute partial derivatives for independent variables/equations in parallel threads
+   - **Multi-threaded simplification** - Apply simplification rules to multiple expressions simultaneously
+   - **Batch processing of multiple models** - Process entire directories of .gms files in parallel, generating conversion reports for model libraries
 
 3. **Web Interface**
-   - Browser-based model editor
-   - Visual KKT system inspector
-   - Interactive convexity analysis
+   
+   Provide a browser-based UI for users who prefer graphical tools over command-line interfaces.
+   
+   - **Browser-based model editor** - Edit GAMS models in-browser with syntax highlighting, real-time validation, and conversion preview
+   - **Visual KKT system inspector** - Interactive visualization of stationarity equations, complementarity pairs, and multiplier structure
+   - **Interactive convexity analysis** - Click-through analysis showing which constraints/objectives are flagged as non-convex with explanations
 
 4. **Advanced Reformulations**
-   - Automatic convexification hints
-   - Piecewise linear approximations
-   - Complementarity detection in general NLPs
+   
+   Automatically detect and suggest alternative formulations that may be more suitable for MCP solvers.
+   
+   - **Automatic convexification hints** - Detect nearly-convex problems and suggest variable substitutions or reformulations to achieve convexity
+   - **Piecewise linear approximations** - Offer to approximate non-convex functions with piecewise linear segments for tractability
+   - **Complementarity detection in general NLPs** - Identify hidden complementarity structure in NLP formulations (e.g., economics models with free entry/exit)
 
 5. **GAMS Studio Integration**
-   - Plugin for GAMS IDE
-   - Integrated debugging
-   - Visual diff of NLP vs MCP
+   
+   Integrate nlp2mcp directly into the GAMS IDE for seamless workflow integration.
+   
+   - **Plugin for GAMS IDE** - Add nlp2mcp as a GAMS Studio extension with one-click conversion from the editor
+   - **Integrated debugging** - Step through conversion pipeline stages within GAMS Studio, inspecting IR, derivatives, and KKT system
+   - **Visual diff of NLP vs MCP** - Side-by-side comparison showing original NLP model and generated MCP with highlighting of added multipliers and complementarity constraints
 
 ---
 
