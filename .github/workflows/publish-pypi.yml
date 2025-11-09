@@ -1,0 +1,155 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Publish target"
+        required: true
+        type: choice
+        options:
+          - testpypi
+          - pypi
+          - dry-run
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for trusted publishing to PyPI
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine tomli pytest pytest-cov ruff mypy black
+          pip install -e .
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --tb=short -m "not slow"
+
+      - name: Run linters
+        run: |
+          ruff check src/ tests/
+          mypy src/
+          black --check src/ tests/
+
+      - name: Build distribution packages
+        run: |
+          python -m build
+          ls -lh dist/
+
+      - name: Check distribution packages
+        run: |
+          twine check dist/*
+
+      - name: Show package contents
+        run: |
+          tar -tzf dist/*.tar.gz | head -30
+          unzip -l dist/*.whl | head -30
+
+      # Dry run: Show what would be published
+      - name: Dry run - Show package metadata
+        if: github.event.inputs.target == 'dry-run' || github.event_name == 'push'
+        run: |
+          echo "=== Distribution files ==="
+          ls -lh dist/
+          echo ""
+          echo "=== Package metadata ==="
+          python -c "import tomli; f=open('pyproject.toml','rb'); print(tomli.load(f)['project'])"
+          echo ""
+          echo "=== Wheel contents ==="
+          unzip -l dist/*.whl
+          echo ""
+          echo "[DRY RUN] Would publish to ${{ github.event.inputs.target || 'TestPyPI (on release)' }}"
+
+      # Publish to TestPyPI
+      - name: Publish to TestPyPI
+        if: github.event.inputs.target == 'testpypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          skip-existing: true
+
+      # Publish to production PyPI (only on release)
+      - name: Publish to PyPI
+        if: (github.event_name == 'release' && github.event.action == 'published') || github.event.inputs.target == 'pypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-packages
+          path: dist/
+          retention-days: 90
+
+      # Post-publish verification
+      - name: Wait for package to be available
+        if: github.event.inputs.target == 'testpypi' || github.event.inputs.target == 'pypi'
+        run: |
+          echo "Waiting 60 seconds for package to be indexed..."
+          sleep 60
+
+      - name: Verify TestPyPI installation
+        if: github.event.inputs.target == 'testpypi'
+        run: |
+          # Extract version from pyproject.toml
+          EXPECTED_VERSION=$(python -c "import tomli; f=open('pyproject.toml','rb'); print(tomli.load(f)['project']['version'])")
+          echo "Expected version: $EXPECTED_VERSION"
+
+          # Install from TestPyPI
+          python -m venv test_env
+          test_env/bin/pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ nlp2mcp==$EXPECTED_VERSION
+
+          # Verify version matches
+          INSTALLED_VERSION=$(test_env/bin/python -c "import nlp2mcp; print(nlp2mcp.__version__)")
+          echo "Installed version: $INSTALLED_VERSION"
+
+          if [ "$INSTALLED_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "ERROR: Version mismatch! Expected $EXPECTED_VERSION but got $INSTALLED_VERSION"
+            exit 1
+          fi
+
+          # Verify CLI works
+          test_env/bin/nlp2mcp --help
+          rm -rf test_env
+
+      - name: Verify PyPI installation
+        if: (github.event_name == 'release' && github.event.action == 'published') || github.event.inputs.target == 'pypi'
+        run: |
+          # Extract version from pyproject.toml
+          EXPECTED_VERSION=$(python -c "import tomli; f=open('pyproject.toml','rb'); print(tomli.load(f)['project']['version'])")
+          echo "Expected version: $EXPECTED_VERSION"
+
+          # Install from PyPI
+          python -m venv test_env
+          test_env/bin/pip install nlp2mcp==$EXPECTED_VERSION
+
+          # Verify version matches
+          INSTALLED_VERSION=$(test_env/bin/python -c "import nlp2mcp; print(nlp2mcp.__version__)")
+          echo "Installed version: $INSTALLED_VERSION"
+
+          if [ "$INSTALLED_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "ERROR: Version mismatch! Expected $EXPECTED_VERSION but got $INSTALLED_VERSION"
+            exit 1
+          fi
+
+          # Verify CLI works
+          test_env/bin/nlp2mcp --help
+          rm -rf test_env
