@@ -3273,27 +3273,339 @@ We're at version 0.4.0 (Sprint 4 complete), should bump to 1.0.0 for production 
 
 **Decision:** Use version path `0.1.0 → 0.5.0-beta → 0.5.0 → 1.0.0`
 
+**Findings:**
+
+**1. Current Version State:**
+- **pyproject.toml version**: `0.5.0-beta` (already updated)
+- **Development Status**: `"Development Status :: 4 - Beta"` (matches version tag)
+- **Location**: `pyproject.toml` line 6
+
+**2. Version Evolution Plan:**
+
+**Phase 1: Sprint 5 Completion (Days 1-8)**
+```
+0.1.0 → 0.5.0-beta
+```
+- **Trigger**: Completion of hardening, packaging, and automation (Tasks 1.1-8.9)
+- **Already Complete**: pyproject.toml shows `0.5.0-beta`
+- **Purpose**: TestPyPI publication for external validation
+- **Justification**:
+  - 0.5.x signals "halfway to 1.0" (substantial progress)
+  - Beta tag matches pyproject.toml Development Status
+  - Pre-release tag prevents production use until validated
+
+**Phase 2: Documentation Complete (Day 9)**
+```
+0.5.0-beta → 0.5.0
+```
+- **Trigger**: Completion of tutorial, FAQ, API docs (Tasks 9.1-9.5)
+- **Purpose**: Clean release for broader testing
+- **Justification**:
+  - Remove beta tag after documentation complete
+  - Still pre-1.0 allows API refinement based on feedback
+  - Signals "feature complete, testing encouraged"
+
+**Phase 3: Production Release (Post-Sprint 5)**
+```
+0.5.0 → 1.0.0
+```
+- **Trigger**:
+  - User validation complete (no critical bugs reported)
+  - API stable (no breaking changes planned)
+  - Performance validated on real-world models
+  - Documentation comprehensive
+- **Purpose**: Declare production-ready
+- **Justification**:
+  - 1.0.0 commits to API stability (semantic versioning contract)
+  - Signals confidence to users
+  - Standard for "production ready" in Python ecosystem
+
+**3. Semantic Versioning Rules (Post-1.0):**
+
+**MAJOR version (X.0.0)** - Incompatible API changes:
+- Removing or renaming public functions/classes
+- Changing function signatures (parameters, return types)
+- Modifying CLI interface (removing flags, changing behavior)
+- Changing output format in breaking ways
+- **Example**: 1.5.0 → 2.0.0 (change CLI interface, remove deprecated flags)
+
+**MINOR version (0.X.0)** - Backwards-compatible functionality:
+- New CLI flags or options (additive)
+- New API functions/methods
+- New features (e.g., support for new GAMS constraint types)
+- Performance improvements (non-breaking)
+- Deprecation warnings for future changes
+- **Example**: 1.0.0 → 1.1.0 (add support for new GAMS function like arctan2)
+
+**PATCH version (0.0.X)** - Backwards-compatible bug fixes:
+- Bug fixes that don't change API
+- Documentation corrections
+- Internal refactoring (no public API changes)
+- Dependency updates (no breaking changes)
+- **Example**: 1.0.0 → 1.0.1 (fix bug in gradient computation)
+
+**4. Pre-release Version Conventions:**
+
+**Alpha (`-alpha` or `-alpha.N`):**
+- Early development, API unstable
+- For internal testing only
+- **Not used in nlp2mcp** (already past this stage)
+
+**Beta (`-beta` or `-beta.N`):**
+- Feature complete, API mostly stable
+- External testing encouraged
+- **Current phase** for Sprint 5
+- Example: `0.5.0-beta`, `0.5.0-beta.2`
+
+**Release Candidate (`-rc.N`):**
+- Final testing before release
+- No new features, bug fixes only
+- **Future use** before 1.0.0
+- Example: `0.5.0-rc.1`, `1.0.0-rc.2`
+
+**5. Research Questions Answered:**
+
+**Q1: Is 1.0.0 appropriate for "production ready"?**
+
+**Answer: YES** - 1.0.0 is the standard version for production-ready software
+
+**Justification:**
+- Semantic Versioning 2.0.0 defines 1.0.0 as "public API declaration"
+- Python ecosystem convention: 1.0.0 = stable, production-ready
+- 0.x.x = development, API may change
+- 1.0.0+ = API stability commitment
+
+**Timing:**
+- **Not immediately after Sprint 5** (need user validation first)
+- **After 0.5.0 testing phase** (gather feedback, fix issues)
+- **When API is stable** (no planned breaking changes)
+
+**Q2: Should we do 0.5.0 (Sprint 5) then 1.0.0, or jump to 1.0.0?**
+
+**Answer: 0.5.0-beta → 0.5.0 → 1.0.0** (incremental approach)
+
 **Rationale:**
-1. **0.1.0** (current): Initial package version from Day 7
-2. **0.5.0-beta**: TestPyPI release after Sprint 5 Days 1-8 (hardening, packaging, automation)
-   - Beta tag matches Development Status classifier in pyproject.toml
-   - Signals testing phase, invites feedback
-   - 0.5.x indicates "halfway to 1.0"
-3. **0.5.0**: Remove beta after Day 9 (documentation complete)
-   - Clean version number
-   - Still pre-1.0 allows API refinement
-4. **1.0.0**: Production release after user validation
-   - Declares production-ready
-   - Commits to API stability
+- ✅ **Incremental reduces risk** - validate with beta testers first
+- ✅ **0.5.x signals progress** - midpoint between dev and production
+- ✅ **Pre-release for TestPyPI** - beta tag prevents accidental production use
+- ✅ **Gather feedback before 1.0** - API changes easier in 0.x
+- ❌ **Jumping to 1.0.0 too aggressive** - commits to API before validation
 
-**Semantic Versioning Rules:**
-- MAJOR: Incompatible API changes (e.g., CLI interface changes, function signature changes)
-- MINOR: Backwards-compatible new features (e.g., new GAMS function support)
-- PATCH: Backwards-compatible bug fixes
+**Q3: What triggers major version bumps vs minor vs patch?**
 
-**Documentation:** See `docs/release/VERSIONING.md` for complete strategy
+**Answer: Follow Semantic Versioning 2.0.0 strictly**
 
-**Impact:** Task 8.2 will implement automated version bumping script
+**Examples for nlp2mcp:**
+
+**MAJOR (breaking changes):**
+- Change CLI: `nlp2mcp input.gms output.gms` → `nlp2mcp convert input.gms output.gms`
+- Remove deprecated function: Delete `emit_gams_mcp_legacy()`
+- Change IR structure: Rename `ModelIR.variables` to `ModelIR.vars`
+- Modify output format: Change MCP equation naming scheme
+
+**MINOR (new features):**
+- Add CLI flag: `--export-diagnostics` for debugging
+- Support new GAMS function: `arctan2()`, `sign()`
+- New reformulation strategy: Support for complementarity constraints
+- Performance optimization: 2x faster Jacobian computation
+
+**PATCH (bug fixes):**
+- Fix: Incorrect derivative for `x**2` when x < 0
+- Fix: Memory leak in large model processing
+- Fix: Typo in error message
+- Fix: Documentation example had wrong flag name
+
+**Q4: How to handle pre-releases (alpha, beta, rc)?**
+
+**Answer: Use PEP 440 pre-release versioning**
+
+**Format:** `MAJOR.MINOR.PATCH-{alpha|beta|rc}.N`
+
+**Sprint 5 Pre-release Strategy:**
+```
+0.5.0-beta    # Day 8: TestPyPI upload
+0.5.0-rc.1    # (If needed) Final testing before 0.5.0
+0.5.0         # Day 9+: Clean release
+1.0.0-rc.1    # (Future) Final testing before production
+1.0.0         # (Future) Production release
+```
+
+**Pre-release Rules:**
+- **Beta**: Feature complete, API mostly stable, testing encouraged
+- **RC**: No new features, bug fixes only, final validation
+- **Production**: Remove all pre-release tags
+
+**6. Implementation Notes:**
+
+**Current State (Nov 8, 2025):**
+- ✅ **pyproject.toml**: Already set to `0.5.0-beta`
+- ✅ **Development Status**: Already upgraded to Beta
+- ✅ **VERSIONING.md**: Comprehensive documentation created
+- ✅ **RELEASING.md**: Release process documented
+
+**Day 8 Implementation (Task 8.1 - 0.5h):**
+
+**Task 8.1 already addresses this Unknown:**
+```markdown
+Task 8.1 – Version Strategy (0.5 h)
+Unknown: 4.4 (🔍)
+Document semantic version path (0.4.0 launch → 1.0.0 readiness).
+```
+
+**What Task 8.1 should deliver:**
+1. ✅ **Already done**: Version path documented in VERSIONING.md
+2. ✅ **Already done**: Decision logged in VERSIONING.md (Decision Log section)
+3. 🔧 **Update CHANGELOG.md**: Add entry for 0.5.0-beta with Sprint 5 highlights
+4. 🔧 **Update README.md**: Confirm version badge shows 0.5.0-beta
+
+**Estimated time for remaining work: 15 minutes** (down from 30 min original estimate)
+
+**Day 8 Implementation (Task 8.2 - 1.5h):**
+
+**Create `scripts/bump_version.py`** with semantic versioning support:
+
+```python
+#!/usr/bin/env python3
+"""
+Automated version bumping for nlp2mcp.
+
+Usage:
+    python scripts/bump_version.py [major|minor|patch|beta|rc]
+
+Examples:
+    python scripts/bump_version.py patch   # 0.5.0 → 0.5.1
+    python scripts/bump_version.py minor   # 0.5.0 → 0.6.0
+    python scripts/bump_version.py major   # 0.5.0 → 1.0.0
+    python scripts/bump_version.py beta    # 0.5.0 → 0.6.0-beta
+    python scripts/bump_version.py rc      # 0.5.0-beta → 0.5.0-rc.1
+"""
+```
+
+**Features to implement:**
+- Parse current version from pyproject.toml
+- Validate semantic versioning format
+- Bump version according to type (major/minor/patch)
+- Handle pre-release tags (beta, rc)
+- Update pyproject.toml in-place
+- Git tag creation (optional flag)
+- Dry-run mode for testing
+
+**7. Documentation Deliverables:**
+
+**Created (already complete):**
+- ✅ `docs/release/VERSIONING.md` (209 lines) - Comprehensive versioning strategy
+- ✅ `RELEASING.md` (326 lines) - Complete release process documentation
+- ✅ Decision logged with alternatives considered
+
+**To update (Day 8 Task 8.9):**
+- 🔧 `CHANGELOG.md` - Add 0.5.0-beta entry with Sprint 5 highlights
+- 🔧 `README.md` - Verify version badge (if present)
+
+**8. Version History Table:**
+
+| Version | Date | Type | Purpose | Status |
+|---------|------|------|---------|--------|
+| 0.1.0 | 2025-11-07 | Initial | Day 7: Package configured | Released (internal) |
+| 0.5.0-beta | 2025-11-08 | Beta | Day 8: TestPyPI release | **Current** |
+| 0.5.0 | TBD | Production | Day 9+: Documentation complete | Planned |
+| 1.0.0 | TBD | Production | Post-validation: Production ready | Future |
+
+**9. Automation Integration:**
+
+**GitHub Actions Workflow** (`.github/workflows/publish-pypi.yml`):
+- Triggers on: Release published OR manual workflow dispatch
+- Reads version from pyproject.toml automatically
+- Publishes to PyPI (production) or TestPyPI (based on version tag)
+- Pre-release versions (`-beta`, `-rc`) → TestPyPI
+- Clean versions (no tag) → PyPI
+
+**Version Bumping Workflow:**
+1. Developer runs: `python scripts/bump_version.py [type]`
+2. Script updates pyproject.toml
+3. Developer commits: `git commit -m "Bump version to X.Y.Z"`
+4. Developer tags: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
+5. Developer pushes: `git push origin main && git push origin vX.Y.Z`
+6. GitHub Actions auto-publishes based on tag
+
+**10. Practical Examples:**
+
+**Sprint 5 Version Evolution:**
+```
+0.1.0         # Nov 7: Initial package (Day 7 complete)
+0.5.0-beta    # Nov 8: TestPyPI (Days 1-8 complete) ← CURRENT
+0.5.0         # Nov 9+: Full docs (Day 9 complete)
+1.0.0         # TBD: Production (post-validation)
+```
+
+**Post-1.0 Version Scenarios:**
+```
+1.0.0 → 1.0.1  # Bug fix: Correct sign error in Lagrangian (PATCH)
+1.0.1 → 1.1.0  # Feature: Add support for arctan2() function (MINOR)
+1.1.0 → 1.1.1  # Bug fix: Fix memory leak in large models (PATCH)
+1.1.1 → 2.0.0  # Breaking: Change CLI interface, remove deprecated flags (MAJOR)
+```
+
+**11. Risk Assessment:**
+
+**Low risk for versioning strategy:**
+- ✅ Follows industry standard (Semantic Versioning 2.0.0)
+- ✅ Documented comprehensively (VERSIONING.md, RELEASING.md)
+- ✅ Automated tooling planned (scripts/bump_version.py)
+- ✅ Version path validated (0.5.0-beta → 0.5.0 → 1.0.0)
+- ⚠️ Main risk: Premature 1.0.0 release (mitigated by 0.5.0 testing phase)
+
+**Mitigation:**
+- Require user feedback before 1.0.0
+- Document API stability commitment clearly
+- Use 0.5.x for API refinement based on feedback
+
+**12. Acceptance Criteria (All Met):**
+
+From Unknown 4.4 specification:
+
+✅ **Version numbering scheme decided**: 0.5.0-beta → 0.5.0 → 1.0.0
+
+✅ **Semantic versioning rules documented**: See VERSIONING.md
+
+✅ **Pre-release strategy defined**: Beta for testing, RC for final validation
+
+✅ **Version triggers documented**: MAJOR/MINOR/PATCH with examples
+
+✅ **Automation planned**: Task 8.2 will create bump_version.py script
+
+**13. Integration with PLAN.md:**
+
+**Day 8 Task 8.1** (Version Strategy):
+- ✅ Research complete (this Unknown 4.4)
+- ✅ Documentation complete (VERSIONING.md)
+- 🔧 Remaining: Update CHANGELOG.md (15 min)
+
+**Day 8 Task 8.2** (Version Bump Script):
+- 📋 Implement scripts/bump_version.py (1.5h)
+- Based on version path defined here
+
+**Day 8 Task 8.9** (CHANGELOG Update):
+- 📋 Add 0.5.0-beta entry (0.5h)
+- Use version history from this Unknown
+
+**14. Conclusion:**
+
+**Unknown 4.4 is FULLY RESOLVED.** Comprehensive versioning strategy:
+
+- ✅ Version path: 0.1.0 → 0.5.0-beta → 0.5.0 → 1.0.0
+- ✅ Semantic versioning rules documented with examples
+- ✅ Pre-release strategy (beta, rc) defined
+- ✅ Automation tooling planned (bump_version.py)
+- ✅ Documentation complete (VERSIONING.md, RELEASING.md)
+- ✅ pyproject.toml already at 0.5.0-beta
+
+**User benefit:** Clear version progression with industry-standard conventions
+
+**Developer benefit:** Automated version bumping with comprehensive documentation
+
+**Completed:** November 8, 2025 (Research and documentation phase)
+
+**Implementation Team:** Version path decided, documentation complete, automation planned for Day 8
 
 ---
 
