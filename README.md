@@ -30,70 +30,7 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 
 ## Features
 
-### Current (Sprint 1-4 Complete)
-
-**Sprint 1: Parser & IR**
-- ✅ Parse GAMS NLP subset (sets, parameters, variables, equations, bounds)
-- ✅ Build intermediate representation (IR) with normalized constraints
-- ✅ Support for indexed variables and equations
-- ✅ Expression AST with symbolic differentiation capabilities
-- ✅ Comprehensive test coverage
-
-**Sprint 2: Symbolic Differentiation**
-- ✅ Symbolic differentiation engine for computing derivatives
-- ✅ **Expression simplification** with configurable modes:
-  - **Advanced** (default): Term collection, constant/like-term/coefficient collection, cancellation
-  - **Basic**: Constant folding, zero elimination, identity elimination
-  - **None**: No simplification for debugging
-- ✅ Index-aware differentiation (distinguishes scalar vs indexed variables)
-- ✅ Objective gradient computation with sparse structure
-- ✅ Constraint Jacobian computation (equality and inequality)
-- ✅ Support for all standard functions (arithmetic, power, exp, log, sqrt, trig)
-- ✅ Sum aggregation handling with index matching
-- ✅ Finite-difference validation for derivative correctness
-- ✅ High-level API: `compute_derivatives(model_ir)` → (gradient, J_eq, J_ineq)
-
-**Sprint 3: KKT Synthesis & GAMS MCP Generation** ✅ **COMPLETE**
-- ✅ KKT system assembly (stationarity, complementarity, multipliers)
-- ✅ GAMS MCP code generation with proper syntax
-- ✅ **Indexed stationarity equations** (Issue #47 fix - major refactoring)
-- ✅ Original symbols preservation (sets, parameters, aliases)
-- ✅ Variable kind preservation (Positive, Binary, Integer, etc.)
-- ✅ Indexed bounds handling (per-instance complementarity pairs)
-- ✅ Infinite bounds filtering (skip ±∞ bounds)
-- ✅ Duplicate bounds exclusion (prevent redundant complementarity)
-- ✅ Objective variable special handling
-- ✅ Command-line interface (CLI)
-- ✅ Golden test suite (end-to-end regression testing)
-- ✅ Optional GAMS syntax validation
-- ✅ Comprehensive documentation (KKT assembly, GAMS emission)
-- Tests: a comprehensive test suite is provided. Run `./scripts/test_all.sh` or `pytest` to show current counts; the README avoids hard-coding counts to prevent drift.
-
-**Sprint 4: Extended Features & Robustness** ✅ **COMPLETE**
-
-- ✅ Day 1: `$include` and Preprocessing
-- ✅ Day 2: `Table` Data Blocks
-- ✅ Day 3: `min/max` Reformulation - Part 1 (Infrastructure)
-- ✅ Day 4: `min/max` Reformulation - Part 2 (Implementation)
-- ✅ Day 5: `abs(x)` Handling and Fixed Variables (`x.fx`)
-- ✅ Day 6: Scaling Implementation + Developer Ergonomics Part 1
-- ✅ Day 7: Diagnostics + Developer Ergonomics Part 2
-- ✅ Day 8: PATH Solver Validation and Testing
-- ✅ Day 9: Integration Testing, Documentation, and Examples
-- ✅ Day 10: Polish, Buffer, and Sprint Wrap-Up
-
-**Sprint 5: Hardening, Packaging, and Documentation** ✅ **COMPLETE**
-
-- ✅ Day 1: Min/Max Bug Fix - Research & Design
-- ✅ Day 2: Min/Max Bug Fix - Implementation & Testing
-- ✅ Day 3: PATH Validation + Checkpoint 1
-- ✅ Day 4: Production Hardening - Error Recovery
-- ✅ Day 5: Production Hardening - Large Models & Memory
-- ✅ Day 6: Production Hardening - Edge Cases + Checkpoint 2
-- ✅ Day 7: PyPI Packaging - Configuration & Build
-- ✅ Day 8: PyPI Packaging - Release Automation + Checkpoint 3
-- ✅ Day 9: Documentation - Tutorial, FAQ, and API Reference
-- ✅ Day 10: Polish & Buffer
+Epic 1 (Sprints 1-5) is complete, delivering core NLP to MCP transformation capabilities. For detailed sprint summaries, see [docs/planning/EPIC_1/SUMMARY.md](docs/planning/EPIC_1/SUMMARY.md).
 
 ## Installation
 
@@ -579,6 +516,7 @@ The `examples/` directory contains sample GAMS NLP models:
 ### Concepts & Planning
 - [docs/concepts/IDEA.md](docs/concepts/IDEA.md) - Original concept: How KKT conditions transform NLP to MCP
 - [docs/concepts/NLP2MCP_HIGH_LEVEL.md](docs/concepts/NLP2MCP_HIGH_LEVEL.md) - Feasibility study and implementation blueprint
+- [docs/planning/EPIC_1/SUMMARY.md](docs/planning/EPIC_1/SUMMARY.md) - Epic 1 sprint summary and feature overview
 - [docs/planning/EPIC_1/PROJECT_PLAN.md](docs/planning/EPIC_1/PROJECT_PLAN.md) - Detailed 5-sprint development plan
 - [docs/planning/EPIC_1/README.md](docs/planning/EPIC_1/README.md) - Sprint summaries and retrospectives
 - [docs/development/AGENTS.md](docs/development/AGENTS.md) - Agent-based development notes
