@@ -153,7 +153,7 @@ When creating GitHub issues from these documents:
 
 ## References
 
-- **Sprint 5 Prep Plan**: `docs/planning/SPRINT_5/PREP_PLAN.md`
+- **Sprint 5 Prep Plan**: `docs/planning/EPIC_1/SPRINT_5/PREP_PLAN.md`
 - **Test Models**: `tests/fixtures/large_models/`
 - **Example Files**: `examples/sprint4_*.gms`
 - **CHANGELOG**: Entry for Sprint 5 Prep Task 8

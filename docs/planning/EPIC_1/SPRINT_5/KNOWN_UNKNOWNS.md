@@ -1812,7 +1812,7 @@ From Sprint 5 Day 4 plan:
 **Documentation:**
 - `CHANGELOG.md` - Day 4 comprehensive entry
 - `README.md` - Day 4 checkbox marked complete
-- `docs/planning/SPRINT_5/PLAN.md` - Acceptance criteria checked off
+- `docs/planning/EPIC_1/SPRINT_5/PLAN.md` - Acceptance criteria checked off
 
 **12. Conclusion:**
 

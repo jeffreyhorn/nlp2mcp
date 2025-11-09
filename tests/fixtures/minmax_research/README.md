@@ -74,7 +74,7 @@ The manual MCP file `test1_minimize_min_manual_mcp.gms` demonstrates the mathema
 
 ## Research Questions Status
 
-From `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md`:
+From `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md`:
 
 ### Unknown 1.1: Does Strategy 2 handle all objective-defining cases?
 
@@ -116,5 +116,5 @@ Based on Test 1 results, Strategy 2 is NOT a general solution.
 ## References
 
 - Research doc: `docs/research/minmax_objective_reformulation.md`
-- Known Unknowns: `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md` (Category 1)
-- Prep Plan: `docs/planning/SPRINT_5/PREP_PLAN.md` (Task 2)
+- Known Unknowns: `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md` (Category 1)
+- Prep Plan: `docs/planning/EPIC_1/SPRINT_5/PREP_PLAN.md` (Task 2)

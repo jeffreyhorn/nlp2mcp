@@ -96,4 +96,4 @@
   - For Linux, check your GAMS installation directory, e.g., `/opt/gams/gamsXX.X/gams` or as configured in your environment.
   - Please update the solver path in your environment as appropriate for your operating system.
 - Day 7 intentionally left open to absorb overrun or handle newly discovered unknowns.
-- Update `docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md` as items move from 🔍 to ✅ according to this cadence.
+- Update `docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS.md` as items move from 🔍 to ✅ according to this cadence.

@@ -639,7 +639,7 @@ After Day 2 implementation, remove `@pytest.mark.xfail` and verify:
    - Strategy 2 infeasibility proof
    - Strategy 1 mathematical derivation
 
-2. **Prep Plan Update:** `docs/planning/SPRINT_5/PREP_PLAN_TASK2_UPDATE.md`
+2. **Prep Plan Update:** `docs/planning/EPIC_1/SPRINT_5/PREP_PLAN_TASK2_UPDATE.md`
    - Validation results from manual testing
    - Critical findings summary
 
@@ -647,7 +647,7 @@ After Day 2 implementation, remove `@pytest.mark.xfail` and verify:
    - Test case GAMS models (test1-test6)
    - Manual MCP reformulations demonstrating infeasibility
 
-4. **Sprint 5 Plan:** `docs/planning/SPRINT_5/PLAN.md`
+4. **Sprint 5 Plan:** `docs/planning/EPIC_1/SPRINT_5/PLAN.md`
    - Day 1-2 task breakdown
    - Acceptance criteria
 

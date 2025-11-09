@@ -228,7 +228,7 @@ Create tests that verify:
 - `examples/min_max_test.gms` - Test case that exhibits the bug
 - `examples/fixed_var_test.gms` - Test case that exhibits the bug
 - `tests/unit/kkt/test_reformulation.py` - Unit tests for reformulation
-- `docs/planning/SPRINT_4/PLAN.md` - Sprint 4 planning (Days 3-4 cover min/max)
+- `docs/planning/EPIC_1/SPRINT_4/PLAN.md` - Sprint 4 planning (Days 3-4 cover min/max)
 
 ## Solution
 

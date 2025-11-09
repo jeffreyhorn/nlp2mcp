@@ -540,7 +540,7 @@ Invest the time to properly fix both issues before Sprint 5:
 
 - **Issue Documentation**: `docs/issues/README.md`
 - **GitHub Issues**: #136, #137, #138, #139, #140
-- **Sprint 5 Plan**: `docs/planning/SPRINT_5/PREP_PLAN.md`
+- **Sprint 5 Plan**: `docs/planning/EPIC_1/SPRINT_5/PREP_PLAN.md`
 - **Task 8 Completion**: Lines 1475-1807 of PREP_PLAN.md
 - **Test Fixtures**: `tests/fixtures/large_models/`
 - **Current Limitations**: `tests/fixtures/large_models/README.md`

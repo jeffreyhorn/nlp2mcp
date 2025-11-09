@@ -118,7 +118,7 @@ i3     7       9;
 ### Modified:
 1. `src/gams/gams_grammar.lark` - Added table_block grammar
 2. `src/ir/parser.py` - Added _handle_table_block() method
-3. `docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md` - Updated verification results
+3. `docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS.md` - Updated verification results
 
 ### Created:
 1. `tests/research/table_verification/test_table_parsing.py` - Main test suite

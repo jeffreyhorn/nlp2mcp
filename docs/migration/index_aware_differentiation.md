@@ -331,7 +331,7 @@ A: Fully supported. Use tuples: `wrt_indices=("i1", "j2")` for `x(i1, j2)`.
 
 - **Implementation:** `src/ad/derivative_rules.py`
 - **Tests:** `tests/ad/test_index_aware_diff.py`
-- **Planning Document:** `docs/planning/SPRINT_2_7_5_PLAN.md`
+- **Planning Document:** `docs/planning/EPIC_1/SPRINT_2/SPRINT_2_7_5_PLAN.md`
 - **Architecture:** `docs/ad_architecture.md`
 
 ## Contact

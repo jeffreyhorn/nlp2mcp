@@ -633,7 +633,7 @@ Check spelling and variable declarations."
 **Timeline:** Complete 1 week before Sprint 4 Day 1
 
 **Specific Steps:**
-1. During sprint planning, create `docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md`
+1. During sprint planning, create `docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS.md`
 2. List ALL assumptions about:
    - External system behavior (GAMS, PATH, etc.)
    - API contracts and interfaces

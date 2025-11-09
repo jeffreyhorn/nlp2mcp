@@ -33,7 +33,7 @@ The misspelling appears in:
 
 ## Discovered During
 
-PR review for Sprint 4 Checkpoint 1. A reviewer suggested correcting the spelling in `docs/planning/SPRINT_4/CHECKPOINT1.md` line 59, but the documentation correctly reflects the actual (misspelled) filename.
+PR review for Sprint 4 Checkpoint 1. A reviewer suggested correcting the spelling in `docs/planning/EPIC_1/SPRINT_4/CHECKPOINT1.md` line 59, but the documentation correctly reflects the actual (misspelled) filename.
 
 ## Required Changes
 
@@ -62,8 +62,8 @@ Expected files to update:
 Files likely to reference the grammar file:
 - `README.md`
 - `CHANGELOG.md`
-- `docs/planning/SPRINT_4/CHECKPOINT1.md`
-- `docs/planning/SPRINT_4/PLAN.md`
+- `docs/planning/EPIC_1/SPRINT_4/CHECKPOINT1.md`
+- `docs/planning/EPIC_1/SPRINT_4/PLAN.md`
 - Any other planning or design documents
 
 ### 4. Search for variable/constant names
@@ -140,7 +140,7 @@ Files that definitely reference the grammar file:
 - `src/gams/gams_grammer.lark` (the file itself)
 - `src/ir/parser.py` (likely imports the grammar)
 - `tests/gams/test_parser.py` (likely tests grammar parsing)
-- `docs/planning/SPRINT_4/CHECKPOINT1.md` (line 59)
+- `docs/planning/EPIC_1/SPRINT_4/CHECKPOINT1.md` (line 59)
 
 ## Resolution
 

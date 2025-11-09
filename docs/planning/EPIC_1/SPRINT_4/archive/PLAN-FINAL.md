@@ -128,12 +128,12 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Documentation in docstrings
 
 #### Acceptance Criteria
-- [x] Simple `$include` works (file inserted at directive location)
-- [x] Nested includes work (3+ levels deep)
-- [x] Circular includes detected with full chain shown in error
-- [x] Missing files produce clear error with source location
-- [x] Relative paths resolve correctly (to containing file, not CWD)
-- [x] All tests pass (including existing 602 tests) - **700 tests now passing**
+- [ ] Simple `$include` works (file inserted at directive location)
+- [ ] Nested includes work (3+ levels deep)
+- [ ] Circular includes detected with full chain shown in error
+- [ ] Missing files produce clear error with source location
+- [ ] Relative paths resolve correctly (to containing file, not CWD)
+- [ ] All tests pass (including existing 602 tests)
 
 #### Integration Risks
 - **Risk 1:** Parser grammar may need updates if `$include` has special syntax
@@ -186,12 +186,12 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Integration with existing `ParameterDef` structure
 
 #### Acceptance Criteria
-- [x] Simple 2D table parses correctly (row/col headers → dict keys)
-- [x] Sparse tables fill missing cells with 0.0
-- [x] Descriptive text after table name handled
-- [x] Multi-dimensional keys formatted correctly: `("i1", "j2")`
-- [x] Table integrated with existing parameter emission code
-- [x] All tests pass (including Sprint 1-3 tests) - **721 tests now passing**
+- [ ] Simple 2D table parses correctly (row/col headers → dict keys)
+- [ ] Sparse tables fill missing cells with 0.0
+- [ ] Descriptive text after table name handled
+- [ ] Multi-dimensional keys formatted correctly: `("i1", "j2")`
+- [ ] Table integrated with existing parameter emission code
+- [ ] All tests pass (including Sprint 1-3 tests)
 
 #### Integration Risks
 - **Risk 1:** Grammar `%ignore NEWLINE` may conflict with table row parsing
@@ -241,48 +241,34 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - 10+ tests for detection and naming
 
 #### Acceptance Criteria
-- [x] `min(x, y)` calls detected in equation ASTs
-- [x] Auxiliary variable names generated without collisions
-- [x] Multi-argument `min(x, y, z)` supported (design level)
-- [x] Nested `min(min(x, y), z)` flattened to `min(x, y, z)`
-- [x] All existing tests pass (no regressions) - **754 tests now passing**
+- [ ] `min(x, y)` calls detected in equation ASTs
+- [ ] Auxiliary variable names generated without collisions
+- [ ] Multi-argument `min(x, y, z)` supported (design level)
+- [ ] Nested `min(min(x, y), z)` flattened to `min(x, y, z)`
+- [ ] All existing tests pass (no regressions)
 
 #### Integration Risks
 - **Risk 1:** KKT assembly may need refactoring to add auxiliary constraints
   - *Mitigation:* Add new constraint type, keep existing code paths unchanged
-- **Risk 2:** ~~Variable ordering in Jacobian may break with new auxiliary vars~~ ✅ **RESOLVED**
-  - *Mitigation:* ~~Extend IndexMapping to handle auxiliary variables~~ **NOT NEEDED** - IndexMapping automatically includes auxiliary variables (Unknown 6.4 verified)
+- **Risk 2:** Variable ordering in Jacobian may break with new auxiliary vars
+  - *Mitigation:* Extend IndexMapping to handle auxiliary variables
 
 #### Follow-On Research Items
 *Note: These are INCOMPLETE unknowns to be resolved during implementation:*
 
-- **Unknown 4.2 (Auxiliary variable naming)**: ✅ **COMPLETE** (Verified on Day 3)
-  - **Implementation**: Context-based naming with counter for duplicates in `src/kkt/reformulation.py`
-  - **Naming scheme**: `aux_{min|max}_{context}_{index}` (e.g., `aux_min_objdef_0`)
-  - **Features**: Collision detection, separate counters per (func_type, context), GAMS-compliant names
-  - **Testing**: 8 dedicated tests in `test_reformulation.py`, all passing
-  - **Result**: Robust, readable, debuggable auxiliary variable names
-  - See KNOWN_UNKNOWNS.md Unknown 4.2 for full verification details
+- **Unknown 4.2 (Auxiliary variable naming)**: INCOMPLETE - Verify collision detection, indexed equation handling, GAMS name validity during implementation
+  - Planned approach: Context-based naming with counter for duplicates
   
-- **Unknown 6.4 (Auxiliary vars and IndexMapping)**: ✅ **COMPLETE** (Verified 2025-11-02)
-  - **Finding**: Current architecture is CORRECT BY DESIGN - IndexMapping created fresh during derivative computation
-  - **Integration Point**: Reformulations must be inserted at Step 2.5 (between normalize and derivatives)
-  - **Pipeline**: Parse → Normalize → **[Reformulation]** → Derivatives (creates IndexMapping) → KKT → Emit
-  - **Key Insight**: `build_index_mapping()` called inside `compute_objective_gradient()` and `compute_constraint_jacobian()`, ensuring auxiliary variables are included
-  - **Action Required**: ~~Add reformulation calls in cli.py BEFORE compute_objective_gradient()~~ ✅ **DONE** - `reformulate_model()` already integrated at Step 2.5
-  - **Test Verification**: Created `tests/research/auxiliary_vars_indexmapping_verification/test_auxiliary_vars_in_indexmapping.py`
-  - **Test Results**: ✅ 7 variables (4 original + 3 auxiliary), IndexMapping includes all, gradient/Jacobian columns aligned
-  - **Verification**: Gradient/Jacobian alignment guaranteed by shared build_index_mapping() function
-  - **Benefits**: No special handling needed, deterministic ordering, scalable to any number of aux vars
-  - See KNOWN_UNKNOWNS.md Unknown 6.4 for complete analysis and integration code example
+- **Unknown 6.4 (Auxiliary vars and IndexMapping)**: INCOMPLETE - CRITICAL
+  - IndexMapping must be created AFTER reformulations to include auxiliary variables
+  - Need to verify: Gradient/Jacobian columns align correctly, no index misalignment
 
-**Checkpoint 1** (Day 3 - End of Day): **(Est: 1h)** ✅ **COMPLETED**
+**Checkpoint 1** (Day 3 - End of Day): **(Est: 1h)**
 - Review all Day 1-3 deliverables
 - Verify preprocessing and table features working
 - Check test coverage >= 70%
 - Confirm no regressions
-- **Decision:** ✅ **GO** - All acceptance criteria met, proceed to Days 4-6
-- **Report:** See `docs/planning/SPRINT_4/CHECKPOINT1.md`
+- **Decision:** GO/NO-GO for Days 4-6
 
 ---
 
@@ -303,7 +289,6 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 *Prerequisites (from KNOWN_UNKNOWNS.md):*
 - **Unknown 2.1 (min reformulation)**: Epigraph reformulation verified. For min(x₁,...,xₙ): create aux_min and n multipliers λᵢ, constraints xᵢ - aux_min ≥ 0, complementarity (xᵢ - aux_min) ⊥ λᵢ. Flatten nested min before reformulation. ✅ COMPLETE
-- **Unknown 4.2 (Auxiliary variable naming)**: ✅ COMPLETE (Day 3) - Use `AuxiliaryVariableManager.generate_name(func_type, context)` to create names like `aux_min_objdef_0`. Collision detection implemented. Ready for use in reformulation.
 
 **Task 2: Implement `reformulate_max()` function** (Est: 2h)
 - Implement symmetric to min with reversed inequalities
@@ -312,7 +297,6 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 *Prerequisites (from KNOWN_UNKNOWNS.md):*
 - **Unknown 2.2 (max reformulation)**: Use xᵢ - aux_max ≤ 0 (opposite of min). Direct implementation more efficient than via -min(-x,-y). Same structure, different constraint direction. ✅ COMPLETE
-- **Unknown 4.2 (Auxiliary variable naming)**: ✅ COMPLETE (Day 3) - Same `AuxiliaryVariableManager` works for both min and max. Separate counters per function type ensure `aux_max_objdef_0` and `aux_min_objdef_0` can coexist.
 
 **Task 3: Add auxiliary constraints to KKT system** (Est: 1.5h)
 - Extend KKT data structures for auxiliary constraints
@@ -331,12 +315,12 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Example: `min(x, y)` → KKT with `z_min`, `λ_x`, `λ_y`
 
 #### Acceptance Criteria
-- [x] `min(x, y)` generates 2 auxiliary constraints with multipliers
-- [x] `max(x, y)` generates 2 auxiliary constraints (opposite direction)
-- [x] Multi-argument `min(a, b, c)` generates 3 constraints
-- [x] Stationarity includes `∂f/∂z_min - λ_x - λ_y = 0` (handled by derivative computation)
-- [x] Complementarity pairs: `(x - z_min) ⊥ λ_x`, `(y - z_min) ⊥ λ_y`
-- [x] All tests pass (including reformulation-specific tests) - 770 tests passing
+- [ ] `min(x, y)` generates 2 auxiliary constraints with multipliers
+- [ ] `max(x, y)` generates 2 auxiliary constraints (opposite direction)
+- [ ] Multi-argument `min(a, b, c)` generates 3 constraints
+- [ ] Stationarity includes `∂f/∂z_min - λ_x - λ_y = 0`
+- [ ] Complementarity pairs: `(x - z_min) ⊥ λ_x`, `(y - z_min) ⊥ λ_y`
+- [ ] All tests pass (including reformulation-specific tests)
 
 #### Integration Risks
 - **Risk 1:** Jacobian computation may not handle auxiliary variables
@@ -347,34 +331,13 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 #### Follow-On Research Items
 *Note: These are INCOMPLETE unknowns to be resolved during implementation:*
 
-- **Unknown 4.3 (Auxiliary constraints in Model)**: ✅ **COMPLETE** (Research complete - Day 4.1)
-  - **Finding**: Implementation gap identified in `reformulate_model()` 
-  - **Issue**: Auxiliary constraints added to `model.equations` but NOT to `model.inequalities`
-  - **Impact**: Constraints excluded from Jacobian and KKT system (not emitted to GAMS)
-  - **Fix Required**: Add `model.inequalities.append(constraint_def.name)` after `model.add_equation()`
-  - **Location**: `src/kkt/reformulation.py`, line ~707 in `reformulate_model()`
-  - **Urgency**: Must fix BEFORE Day 5 (abs/fixed vars will have same issue)
-  - **See**: KNOWN_UNKNOWNS.md Unknown 4.3 for detailed analysis and code fix
+- **Unknown 4.3 (Auxiliary constraints in Model)**: INCOMPLETE
+  - Planned approach: Add auxiliary constraints to Model MCP declaration
+  - Need to verify: GAMS compilation works, equation-variable pairing correct
 
-- **Unknown 6.4 (Auxiliary vars and IndexMapping)**: ✅ **COMPLETE** (Research complete)
-  - **Critical Integration Requirement**: Call reformulation functions in cli.py BEFORE compute_objective_gradient()
-  - **Pipeline Position**: Insert at Step 2.5: Parse → Normalize → **[Reformulate]** → Derivatives → KKT → Emit
-  - **Why It Works**: IndexMapping created fresh during derivative computation automatically includes auxiliary variables
-  - **Implementation Pattern**:
-    ```python
-    # In cli.py main() function:
-    model = parse_model_file(input_file)
-    normalize_model(model)
-    
-    # ← INSERT REFORMULATION HERE (Step 2.5)
-    reformulate_min_max(model)  # Modifies model.variables & model.equations
-    
-    # Derivatives will now include auxiliary variables automatically
-    gradient = compute_objective_gradient(model)
-    J_eq, J_ineq = compute_constraint_jacobian(model)
-    ```
-  - **No Special Handling**: Auxiliary variables treated identically to original variables
-  - **Verification**: See KNOWN_UNKNOWNS.md Unknown 6.4 for detailed analysis
+- **Unknown 6.4 (Auxiliary vars and IndexMapping)**: INCOMPLETE - CRITICAL
+  - IndexMapping must be created AFTER reformulations to include auxiliary variables
+  - Need to verify: Gradient/Jacobian columns align correctly, no index misalignment
 
 ---
 
@@ -433,13 +396,13 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - 20+ tests (10 for abs, 10 for fixed vars)
 
 #### Acceptance Criteria
-- [x] `abs(x)` without flag raises clear error with suggestion
-- [x] `abs(x)` with `--smooth-abs` uses `sqrt(x^2 + ε)` approximation
-- [x] Derivative of smooth abs is `x / sqrt(x^2 + ε)`
-- [x] `x.fx = 10` parsed into `BoundsDef(fx=10.0)` (Already implemented in Unknown 1.3)
-- [x] Fixed vars create equality constraint (no bound multipliers) (Already implemented in Unknown 1.3)
-- [x] MCP emission pairs fixed var equality with free multiplier (Already implemented in Unknown 1.3)
-- [x] All tests pass (779 passed, 1 skipped, 1 xfailed)
+- [ ] `abs(x)` without flag raises clear error with suggestion
+- [ ] `abs(x)` with `--smooth-abs` uses `sqrt(x^2 + ε)` approximation
+- [ ] Derivative of smooth abs is `x / sqrt(x^2 + ε)`
+- [ ] `x.fx = 10` parsed into `BoundsDef(fx=10.0)`
+- [ ] Fixed vars create equality constraint (no bound multipliers)
+- [ ] MCP emission pairs fixed var equality with free multiplier
+- [ ] All tests pass
 
 #### Integration Risks
 - **Risk 1:** Smooth abs may cause numerical issues near x=0
@@ -450,11 +413,9 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 #### Follow-On Research Items
 *Note: These are INCOMPLETE unknowns to be resolved during implementation:*
 
-- **Unknown 4.4 (Emit fixed variables in MCP)**: ✅ COMPLETE (2025-11-02)
-  - **Implementation:** Uses Option B (Equality Constraint) approach
-  - **MCP Emission:** Fixed var `x.fx = value` creates equality `x_fx.. x - value =E= 0` paired with free multiplier `nu_x_fx`
-  - **Verification:** Tested with example models, generates correct MCP code, works with PATH solver
-  - **Details:** See KNOWN_UNKNOWNS.md Unknown 4.4 for full implementation analysis and rationale
+- **Unknown 4.4 (Emit fixed variables in MCP)**: INCOMPLETE
+  - Approach: Use equality constraint approach per Unknown 1.3 findings
+  - Need to verify: MCP emission works, GAMS compilation succeeds, PATH handles correctly
 
 ---
 
@@ -474,7 +435,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Handle sparse matrices efficiently
 
 *Prerequisites (from KNOWN_UNKNOWNS.md):*
-- **Unknown 3.1 (Scaling algorithm)**: ✅ COMPLETE - Curtis-Reid geometric mean scaling implemented. Iterative row/col norm balancing: R_i = 1/√(row_norm_i), C_j = 1/√(col_norm_j). Convergence verified (1-8 iterations), conditioning improvement verified (up to 959,260x), solution preservation verified. Structural scaling (1.0 for nonzeros) used for symbolic Jacobian.
+- **Unknown 3.1 (Scaling algorithm)**: INCOMPLETE - Curtis-Reid geometric mean scaling to be implemented. Iterative row/col norm balancing: R_i = 1/√(row_norm_i), C_j = 1/√(col_norm_j). Verify convergence and conditioning improvement.
 
 **Task 2: Implement byvar scaling mode** (Est: 1.5h)
 - Add per-variable scaling option
@@ -511,16 +472,16 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - 15+ tests for scaling correctness
 
 #### Acceptance Criteria
-- [x] Curtis-Reid scaling implemented (iterative row/col norm balancing)
-- [x] `byvar` mode scales each variable column independently
-- [x] Scaling factors computed from symbolic Jacobian (structural scaling with 1.0 for nonzeros)
-- [x] Scaled Jacobian has row/col norms ≈ 1 (verified in tests)
-- [x] `--scale none` skips scaling (default)
-- [x] `--scale auto` applies Curtis-Reid
-- [x] `--scale byvar` applies per-variable scaling
-- [x] Existing tests pass with `--scale none` (779 original + 14 new scaling tests = 793 total)
-- [x] Tests with scaling verify semantic preservation (14 tests in test_scaling.py)
-- [x] Parser errors include source locations (enhanced with better messages)
+- [ ] Curtis-Reid scaling implemented (iterative row/col norm balancing)
+- [ ] `byvar` mode scales each variable column independently
+- [ ] Scaling factors computed from symbolic Jacobian
+- [ ] Scaled Jacobian has row/col norms ≈ 1
+- [ ] `--scale none` skips scaling (default)
+- [ ] `--scale auto` applies Curtis-Reid
+- [ ] `--scale byvar` applies per-variable scaling
+- [ ] Existing tests pass with `--scale none`
+- [ ] Tests with scaling verify semantic preservation
+- [ ] Parser errors include source locations
 
 #### Integration Risks
 - **Risk 1:** Scaling may expose bugs in Jacobian computation
@@ -531,12 +492,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 #### Follow-On Research Items
 *Note: These are INCOMPLETE unknowns to be verified during implementation:*
 
-- **Unknown 3.1 (Scaling algorithm selection)**: ✅ COMPLETE (2025-11-02)
-  - **Implementation**: Curtis-Reid algorithm with structural scaling
-  - **Convergence**: Verified 1-8 iterations typical, post-scaling norms ≈ 1.0
-  - **Conditioning**: Significant improvement verified (up to 959,260x better)
-  - **Solution Preservation**: Scaled and unscaled give identical solutions
-  - **Details**: See KNOWN_UNKNOWNS.md Unknown 3.1 for full analysis
+- **Unknown 3.1 (Scaling algorithm selection)**: INCOMPLETE - Implement and verify Curtis-Reid convergence and conditioning improvement
 - **Unknown 3.2 (Scaling application point)**: INCOMPLETE - Test both approaches, decide based on PATH performance
 - **Unknown 6.3 (Scaling impact on tests)**: INCOMPLETE - CRITICAL - Verify no test breakage with default --scale none
 
@@ -550,7 +506,7 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 ---
 
-### Day 7: Diagnostics + Developer Ergonomics (Part 2) (6h tasks + 2h follow-on = 8h total)
+### Day 7: Diagnostics + Developer Ergonomics (Part 2) (8h total)
 
 #### Goals
 - Add model statistics reporting (rows/cols/nonzeros)
@@ -565,27 +521,27 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Break down by type (stationarity, complementarity, bounds)
 - Format for display
 
-**Task 2: Implement Matrix Market Jacobian export** (Est: 1.5h)
+**Task 2: Implement Matrix Market Jacobian export** (Est: 2h)
 - Export Jacobian in Matrix Market format
 - Handle sparse structure
 - Validate format (SciPy/MATLAB compatible)
 
-**Task 3: Add CLI flags for diagnostics** (Est: 0.75h)
+**Task 3: Add CLI flags for diagnostics** (Est: 1h)
 - Add --stats flag for statistics output
 - Add --dump-jacobian <file> flag
 - Integrate into main workflow
 
-**Task 4: Configuration via pyproject.toml** (Est: 1h)
+**Task 4: Configuration via pyproject.toml** (Est: 1.5h)
 - Add pyproject.toml support for default options
 - Support all CLI flags in config file
 - Document configuration options
 
-**Task 5: Structured logging with verbosity control** (Est: 0.75h)
+**Task 5: Structured logging with verbosity control** (Est: 1h)
 - Add logging framework with levels
 - Add --verbose and --quiet flags
 - Log key transformation steps
 
-**Task 6: Enhanced error messages - Phase 2** (Est: 0.5h)
+**Task 6: Enhanced error messages - Phase 2** (Est: 1h)
 - Improve differentiation error messages
 - Improve KKT assembly error messages
 - Add troubleshooting suggestions
@@ -599,16 +555,16 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - 15+ tests for diagnostic and logging features
 
 #### Acceptance Criteria
-- [x] `--stats` prints: # equations, # variables, # nonzeros
-- [x] Stats include breakdown: stationarity, complementarity, bounds
-- [x] `--dump-jacobian jac.mtx` exports Jacobian in Matrix Market format
-- [x] Matrix Market file valid (can be loaded by SciPy/MATLAB)
-- [x] `pyproject.toml` can set default options for all flags
-- [x] `--verbose` shows detailed transformation steps
-- [x] `--quiet` suppresses non-error output
-- [x] Error messages improved with source locations and suggestions
-- [x] Diagnostics don't affect MCP generation
-- [x] All tests pass - **810 tests total (536+ unit/integration passing)**
+- [ ] `--stats` prints: # equations, # variables, # nonzeros
+- [ ] Stats include breakdown: stationarity, complementarity, bounds
+- [ ] `--dump-jacobian jac.mtx` exports Jacobian in Matrix Market format
+- [ ] Matrix Market file valid (can be loaded by SciPy/MATLAB)
+- [ ] `pyproject.toml` can set default options for all flags
+- [ ] `--verbose` shows detailed transformation steps
+- [ ] `--quiet` suppresses non-error output
+- [ ] Error messages improved with source locations and suggestions
+- [ ] Diagnostics don't affect MCP generation
+- [ ] All tests pass
 
 #### Integration Risks
 - **Risk 1:** Matrix Market export may be slow for large models
@@ -618,25 +574,18 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 #### Follow-On Items
 
-**PREP_PLAN Task 3: Set Up PATH Solver Validation** ✅ **COMPLETE** (Completed: Nov 3, 2025)
+**PREP_PLAN Task 3: Set Up PATH Solver Validation** (Est: 2h - after licensing available)
+*Note: This is scheduled as follow-on work AFTER licensing becomes available, before main PATH validation on Day 8.*
 
-**Status:** PATH solver validation framework fully implemented and functional.
+- Install PATH solver (requires GAMS license)
+- Verify PATH available in GAMS
+- Create test harness for PATH validation
+- Document setup for team
 
-**What Was Completed:**
-- ✅ PATH solver verified accessible (GAMS 51.3.0 + PATH 5.2.01)
-- ✅ Test harness created: `tests/validation/test_path_solver.py` (430+ lines)
-- ✅ 6 tests implemented (5 solve validation + 1 availability check)
-- ✅ Automatic PATH detection with graceful skipping when unavailable
-- ✅ Solution extraction and KKT residual verification
-- ✅ Tests successfully detect modeling issues in current golden MCP files
-
-**Key Finding:** All 5 golden MCP files have infeasibility issues (Model Status 4). Root cause identified: sign error in stationarity equations forcing positive multipliers negative. See PREP_PLAN.md Task 3 Results for details.
-
-**Impact on Day 8:** 
-- PATH validation framework ready to use
-- Golden MCP files need regeneration before Day 8 PATH testing
-- Remove `@pytest.mark.xfail` decorators once golden files corrected
-- Framework successfully validates solver integration works correctly
+*Prerequisites (from PREP_PLAN.md):*
+- GAMS license must be active (may not be available until late sprint)
+- This work happens AFTER core Day 7 tasks complete
+- Enables Day 8 PATH validation work
 
 ---
 
@@ -650,10 +599,10 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 #### Main Tasks
 
-**Task 1: Smoke-test PATH environment and finalize validation harness** (Est: 1.5h)
-- Reuse the PATH installation from Day 7 follow-on work
-- Run sanity checks to confirm solver invocation works end-to-end
-- Wire the automation harness and baseline configuration files for validation runs
+**Task 1: Set up PATH solver test harness** (Est: 1.5h)
+- Create PATH validation framework
+- Set up test infrastructure
+- Configure solver options
 
 *Prerequisites (from KNOWN_UNKNOWNS.md):*
 - **Unknown 5.2 (PATH options)**: INCOMPLETE - Document default options, test problem-specific tuning. Verify recommended options: convergence_tolerance, iterlim, crash_method, output level.
@@ -689,13 +638,13 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - All Unknown verifications complete
 
 #### Acceptance Criteria
-- [x] ~~All golden files solve successfully with PATH~~ **PARTIAL**: 3/5 golden files solve successfully (simple_nlp, indexed_balance, scalar_nlp). 2 files (bounds_nlp, nonlinear_mix) fail with Model Status 5 (Locally Infeasible) - marked as xfail for investigation
-- [ ] Reformulated `min/max` problems solve correctly - **PARTIAL**: Infrastructure exists, parser updated, reformulation works, but KKT assembly has bug where equality multipliers for new constraints aren't included in stationarity equations
-- [x] Smooth `abs` problems solve correctly - **WORKS** (generates valid MCP, initialization issues in test case)
-- [ ] Fixed variable problems solve correctly - **PARTIAL**: Same KKT assembly bug as min/max (nu_y_fx not in stationarity equations)
-- [x] PATH solver options documented (if needed)
-- [x] All tests pass (including PATH validation tests) - **3 PASSED, 2 XFAIL**
-- [x] ~~All Known Unknowns resolved or documented~~ **PARTIAL**: Sign error bug fixed, PATH validation framework complete, identified systematic issue with dynamically added equality constraints in KKT assembly
+- [ ] All golden files solve successfully with PATH
+- [ ] Reformulated `min/max` problems solve correctly
+- [ ] Smooth `abs` problems solve correctly
+- [ ] Fixed variable problems solve correctly
+- [ ] PATH solver options documented (if needed)
+- [ ] All tests pass (including PATH validation tests)
+- [ ] All Known Unknowns resolved or documented
 
 #### Integration Risks
 - **Risk 1:** PATH may not be available on all systems
@@ -737,13 +686,18 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 #### Main Tasks
 
-**Task 1: Create 10 mid-size example models** (Est: 3.5h)
+**Task 1: Run full test suite with all features enabled** (Est: 1.5h)
+- Run all 650+ tests
+- Verify no regressions
+- Check test coverage >= 85%
+
+**Task 2: Create 10 mid-size example models** (Est: 2.5h)
 - Curate or create transport-style models
 - Include indexed constraints and nonlinear costs
 - Cover all Sprint 4 features ($include, Table, min/max, abs, x.fx, scaling)
 - Validate all examples with GAMS and PATH
 
-**Task 2: Update README.md with Sprint 4 features** (Est: 1.5h)
+**Task 3: Update README.md with Sprint 4 features** (Est: 1.5h)
 - Document $include support
 - Document Table support
 - Document min/max reformulation
@@ -752,25 +706,26 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Document scaling (including byvar mode)
 - Document diagnostics and developer ergonomics
 
-**Task 3: Update technical documentation** (Est: 1h)
+**Task 4: Update technical documentation** (Est: 1h)
 - Update KKT_ASSEMBLY.md with reformulation details
 - Update GAMS_EMISSION.md with auxiliary variable handling
 - Document scaling algorithm (all modes)
 - Add troubleshooting guide
 - Document configuration options
 
-**Task 4: Document PATH solver requirements and options** (Est: 1h)
+**Task 5: Document PATH solver requirements and options** (Est: 1h)
 *Note: This task moved from Day 8 to reduce high-risk validation day workload*
 - Document PATH setup instructions
 - Document recommended options for different problem types
 - Create troubleshooting guide for PATH failures
 
-**Task 5: Regenerate all golden files with new features** (Est: 1h)
+**Task 6: Regenerate all golden files with new features** (Est: 0.5h)
 - Update golden files with new capabilities
 - Add new golden files for Sprint 4 features
 - Validate all golden files with GAMS
 
 #### Deliverables
+- All 650+ tests passing
 - 10 mid-size example models with documentation
 - Updated README.md with complete feature list
 - Updated technical docs (KKT_ASSEMBLY.md, GAMS_EMISSION.md)
@@ -779,16 +734,16 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 - Configuration and logging documentation
 
 #### Acceptance Criteria
-- [x] Examples exercise all Sprint 4 features ($include, Table, min/max, abs, x.fx, scaling)
-- [x] 5 comprehensive examples created (PATH validation N/A - licensing unavailable)
-- [N/A] All examples solve with PATH (PATH licensing not available)
-- [x] README.md accurate and complete (Sprint 4 features documented)
-- [x] User guide created (USER_GUIDE.md with comprehensive documentation)
-- [x] PATH documentation complete (requirements, setup, troubleshooting documented)
-- [N/A] Golden files validate with GAMS (GAMS validation deferred - no impact on MCP generation)
-- [x] All acceptance criteria from Days 1-7 met (Day 8 PATH tasks deferred)
-- [x] Configuration and logging documented (in USER_GUIDE.md)
-- [x] Examples demonstrate all features without PATH dependency
+- [ ] All tests pass (no xfail markers)
+- [ ] Test coverage >= 85% for Sprint 4 code
+- [ ] 10 mid-size examples created and validated
+- [ ] All examples solve with PATH
+- [ ] README.md accurate and complete
+- [ ] Technical docs reflect all new features
+- [ ] PATH documentation complete (setup, options, troubleshooting)
+- [ ] Golden files validate with GAMS
+- [ ] All acceptance criteria from Days 1-8 met
+- [ ] Configuration and logging documented
 
 #### Integration Risks
 - **Risk 1:** Documentation may be out of sync with code
@@ -810,55 +765,49 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 
 #### Main Tasks
 
-**Task 1: Run full regression test suite** (Est: 1.5h)
-- Execute all 650+ tests with all Sprint 4 features enabled
-- Capture coverage metrics (target ≥ 85%)
-- Log any failures for immediate triage
-
-**Task 2: Run quality checks (mypy, ruff, black)** (Est: 1.5h)
+**Task 1: Run all quality checks (mypy, ruff, black)** (Est: 1.5h)
 - Run mypy on all modules
 - Run ruff linter
 - Run black formatter
 - Fix any issues found
 
-**Task 3: Fix any remaining issues or technical debt** (Est: 2h)
-- Address bugs discovered during regression or quality checks
+**Task 2: Fix any remaining issues or technical debt** (Est: 2.5h)
+- Address any bugs discovered in Days 8-9
 - Clean up code comments and TODOs
 - Refactor any messy implementations
 
-**Task 4: Create Sprint 4 retrospective document** (Est: 1.5h)
+**Task 3: Create Sprint 4 retrospective document** (Est: 2h)
 - Document what went well
 - Document what could improve
 - Analyze Known Unknowns process effectiveness
 - Document lessons for Sprint 5
 
-**Task 5: Update CHANGELOG.md with Sprint 4 release** (Est: 1h)
+**Task 4: Update CHANGELOG.md with Sprint 4 release** (Est: 1h)
 - List all new features
 - Document breaking changes (if any)
 - Add upgrade notes
 
-**Task 6: Plan Sprint 5 scope (preliminary)** (Est: 0.5h)
+**Task 5: Plan Sprint 5 scope (preliminary)** (Est: 1h)
 - Review PROJECT_PLAN.md for next priorities
 - Identify dependencies on Sprint 4 learnings
 - Create preliminary Sprint 5 scope document
 
 #### Deliverables
-- Full regression test suite results (coverage ≥ 85%)
 - All quality checks passing
-- Sprint 4 retrospective (docs/planning/SPRINT_4/RETROSPECTIVE.md)
+- Sprint 4 retrospective (docs/planning/EPIC_1/SPRINT_4/RETROSPECTIVE.md)
 - Updated CHANGELOG.md
 - Preliminary Sprint 5 plan
 - Clean codebase ready for Sprint 5
 
 #### Acceptance Criteria
-- [x] All 650+ tests passing - ✅ **972 tests passing** (370+ new tests added in Sprint 4)
-- [x] Mypy: 0 errors - ✅ **Zero errors** across 49 source files
-- [x] Ruff: 0 errors - ✅ **All checks passed**
-- [x] Black: 100% formatted - ✅ **100% compliant** (125 files)
-- [x] Test coverage >= 85% - ✅ **Exceeded target** for Sprint 4 code
-- [x] All Sprint 4 success metrics achieved - ✅ **10/10 functional goals, 6/6 quality metrics, 4/4 integration metrics**
-- [x] Retrospective complete - ✅ **docs/planning/SPRINT_4/RETROSPECTIVE.md** (400+ lines)
-- [x] CHANGELOG.md updated - ✅ **Sprint 4 Day 10 entry added**
+- [ ] All 650+ tests passing
+- [ ] Mypy: 0 errors
+- [ ] Ruff: 0 errors
+- [ ] Black: 100% formatted
+- [ ] Test coverage >= 85%
+- [ ] All Sprint 4 success metrics achieved
+- [ ] Retrospective complete
+- [ ] CHANGELOG.md updated
 
 #### Integration Risks
 - **Risk 1:** Last-minute bug discoveries
@@ -972,8 +921,8 @@ Sprint 4 builds on the solid foundation of Sprints 1-3 to add critical GAMS feat
 ## Known Unknowns Schedule
 
 Sprint 4 Known Unknowns are documented in:
-- `/Users/jeff/experiments/nlp2mcp/docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md`
-- `/Users/jeff/experiments/nlp2mcp/docs/planning/SPRINT_4/KNOWN_UNKNOWNS/SCHEDULE.md`
+- `/Users/jeff/experiments/nlp2mcp/docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS.md`
+- `/Users/jeff/experiments/nlp2mcp/docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS/SCHEDULE.md`
 
 **Verification Status (as of 2025-11-01):**
 
@@ -999,21 +948,21 @@ Sprint 4 Known Unknowns are documented in:
 
 10. **Unknown 6.1 ($include vs ModelIR)**: Preprocessing happens before parsing, ModelIR sees flat expanded source. No special tracking needed in ModelIR. ✅ COMPLETE
 
-**INCOMPLETE - TO BE VERIFIED (12/23):**
+**INCOMPLETE - TO BE VERIFIED (13/23):**
 
 **Days 3-6 Verification:**
 
-11. **Unknown 4.2 (Auxiliary variable naming)**: ✅ COMPLETE (Day 3) - Context-based naming with collision detection implemented in `AuxiliaryVariableManager`. All 8 tests passing. Supports indexed equations, GAMS-compliant names, debuggable output.
+11. **Unknown 4.2 (Auxiliary variable naming)**: INCOMPLETE - Verify collision detection, indexed equation handling, GAMS name validity during Day 3-4 implementation
 
-12. **Unknown 4.3 (Auxiliary constraints in Model)**: ✅ COMPLETE (Research Day 4.1) - Implementation gap found: `reformulate_model()` doesn't add auxiliary constraints to `model.inequalities`, causing them to be excluded from Jacobian/KKT. Fix: add `model.inequalities.append(constraint_def.name)` after adding equation. Must apply before Day 5. See KNOWN_UNKNOWNS.md for detailed analysis.
+12. **Unknown 4.3 (Auxiliary constraints in Model)**: INCOMPLETE - Verify GAMS compilation works, equation-variable pairing correct during Day 4
 
-13. **Unknown 6.4 (Auxiliary vars and IndexMapping)**: ✅ COMPLETE (Research) - Architecture correct by design. IndexMapping created during derivative computation automatically includes auxiliary variables. Integration point identified: insert reformulation at Step 2.5 in cli.py (between normalize and derivatives). Gradient/Jacobian alignment guaranteed by shared build_index_mapping(). See KNOWN_UNKNOWNS.md for integration code.
+13. **Unknown 6.4 (Auxiliary vars and IndexMapping)**: INCOMPLETE - CRITICAL - IndexMapping must be created AFTER reformulations. Verify gradient/Jacobian columns align correctly during Day 4
 
-14. **Unknown 4.4 (Emit fixed variables in MCP)**: ✅ COMPLETE (Research 2025-11-02) - Implementation verified: uses Option B (equality constraint) approach. Fixed variables create equality constraints `x_fx.. x - value =E= 0` paired with free multipliers `nu_x_fx` in MCP. Tested with example models, generates correct code. Implementation in: parser (src/ir/parser.py), normalization (src/ir/normalize.py:177-179), KKT assembly, MCP emission (src/emit/equations.py:139-148). See KNOWN_UNKNOWNS.md for detailed analysis.
+14. **Unknown 4.4 (Emit fixed variables in MCP)**: INCOMPLETE - Verify MCP emission works, GAMS compilation succeeds, PATH handles correctly during Day 5
 
 15. **Unknown 6.2 (Fixed vars in KKT)**: INCOMPLETE - Verify no stationarity equation for fixed vars, KKT dimension correct during Day 5 (bug #63 already fixed)
 
-16. **Unknown 3.1 (Scaling algorithm)**: ✅ COMPLETE (Research 2025-11-02) - Curtis-Reid algorithm implemented and verified. Convergence: 1-8 iterations typical, tolerance 0.1. Conditioning improvement: tested on 4 ill-conditioned matrix types, improvements range from finite (∞→3.94e+16) to 959,260x better. Solution preservation verified. Structural scaling (1.0 for nonzeros) sufficient for symbolic Jacobian. Implementation in src/kkt/scaling.py, 14 unit tests + 5 verification tests all passing. Application point: Option C (compute, store, emit in GAMS). See KNOWN_UNKNOWNS.md for detailed analysis.
+16. **Unknown 3.1 (Scaling algorithm)**: INCOMPLETE - Implement Curtis-Reid, verify convergence and conditioning improvement during Day 6
 
 17. **Unknown 3.2 (Scaling application point)**: INCOMPLETE - Test scale NLP vs scale KKT, decide based on PATH performance during Day 6
 
@@ -1106,7 +1055,7 @@ Sprint 4 Known Unknowns are documented in:
 | Day 4 | 8h | - | 8h | ✅ Within limit |
 | Day 5 | 8h | - | 8h | ✅ Within limit |
 | Day 6 | 7h | 1h | 8h | ✅ Within limit |
-| Day 7 | 6h (+2h follow-on) | - | 8h | ✅ Within limit |
+| Day 7 | 8h | - | 8h | ✅ Within limit |
 | Day 8 | 6.5h | 1h | 7.5h | ✅ Within limit (high-risk day) |
 | Day 9 | 8h | - | 8h | ✅ Within limit |
 | Day 10 | 8h | - | 8h | ✅ Within limit |

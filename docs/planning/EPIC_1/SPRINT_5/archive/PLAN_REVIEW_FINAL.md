@@ -1,0 +1,11 @@
+# Sprint 5 Plan Review (Final)
+
+**Findings**
+- Unknown status alignment remains inconsistent: the plan states Unknown 3.1 and the Known Unknown ledger are now in sync, yet the research file still lists Unknown 3.1 as 🔍 INCOMPLETE and Unknown 5.1 likewise remains unresolved while the plan marks it as ✅ RESOLVED (`docs/planning/EPIC_1/SPRINT_5/PLAN_REVISED.md:19-22`, `docs/planning/EPIC_1/SPRINT_5/PLAN_REVISED.md:1125-1129`, `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md:637-639`, `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md:1119-1173`).
+- Daily task lists no longer call out the associated Unknowns, summaries, and completion status as required (for example Day 4 tasks lack any reference to Unknowns 3.4/3.5 despite depending on them), leaving readers without the mandated traceability from tasks to research (`docs/planning/EPIC_1/SPRINT_5/PLAN_REVISED.md:450-519`).
+- Day 6 references Unknown 3.2 in the task narrative but omits a `Follow-On Research Items` section altogether, so the remaining research work is not captured separately as instructed (`docs/planning/EPIC_1/SPRINT_5/PLAN_REVISED.md:623-699`).
+
+**Recommendations**
+- Update `KNOWN_UNKNOWNS.md` to reflect Task 8 decisions (e.g., mark Unknown 3.1 complete) or revise the plan so it no longer claims status corrections that are not yet recorded, and likewise keep Unknown 5.1 consistent across both documents (`docs/planning/EPIC_1/SPRINT_5/PLAN_REVISED.md:19-22`, `docs/planning/EPIC_1/SPRINT_5/PLAN_REVISED.md:1125-1129`, `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md:637-639`, `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md:1119-1173`).
+- Restore the Unknown cross-references (ID, key findings, status) inside the relevant task bullets while keeping the detailed summaries in the follow-on sections, so each day's work satisfies the traceability requirement without mixing concerns (`docs/planning/EPIC_1/SPRINT_5/PLAN_REVISED.md:450-519`).
+- Add a `Follow-On Research Items` block for Day 6 (listing Unknown 3.2 and any others) or explicitly note `None` to keep the plan aligned with the instruction that remaining research lives outside the daily task lists (`docs/planning/EPIC_1/SPRINT_5/PLAN_REVISED.md:623-699`).

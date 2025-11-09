@@ -40,7 +40,7 @@ This prep plan focuses on research and setup tasks that must be completed before
 
 **Critical Path:** Tasks 1 → 2 → 10 (must complete before Sprint 5)
 
-**Note:** Task 1 (Known Unknowns) is already ✅ **COMPLETED** as of November 5, 2025. Document available at `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md` with 22 unknowns identified.
+**Note:** Task 1 (Known Unknowns) is already ✅ **COMPLETED** as of November 5, 2025. Document available at `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md` with 22 unknowns identified.
 
 ---
 
@@ -52,7 +52,7 @@ This prep plan focuses on research and setup tasks that must be completed before
 
 ### What Was Done
 
-Created comprehensive `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md` with 22 unknowns across 5 categories.
+Created comprehensive `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md` with 22 unknowns across 5 categories.
 
 **Statistics:**
 - **Total Unknowns:** 22
@@ -74,7 +74,7 @@ Created comprehensive `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md` with 22 unknown
 
 ### Verification
 
-Document available at: `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md`
+Document available at: `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md`
 
 **Acceptance Criteria:** ✅ All met
 - [x] Document created with 22+ unknowns across 5 categories
@@ -302,7 +302,7 @@ Update `docs/research/minmax_objective_reformulation.md` with:
 
 #### Step 5: Update Known Unknowns (30 min)
 
-Mark all Category 1 unknowns as resolved in `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md`:
+Mark all Category 1 unknowns as resolved in `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md`:
 
 ```markdown
 ## Unknown 1.1: Does Strategy 2 handle all objective-defining cases?
@@ -325,7 +325,7 @@ Mark all Category 1 unknowns as resolved in `docs/planning/SPRINT_5/KNOWN_UNKNOW
 - `tests/fixtures/minmax_test_models.py` - Test case generators
 - `tests/fixtures/minmax_manual_reformulation/*.gms` - Manual MCP files for validation
 - `docs/research/minmax_objective_reformulation.md` - Validation results section
-- `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md` - Category 1 unknowns marked resolved
+- `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md` - Category 1 unknowns marked resolved
 
 **Documentation:**
 - All 5 test cases validated with PATH solver
@@ -1249,7 +1249,7 @@ Ensure consistency across new docs:
 
 ### Deliverable
 
-**File:** `docs/planning/SPRINT_5/DOCUMENTATION_AUDIT.md`
+**File:** `docs/planning/EPIC_1/SPRINT_5/DOCUMENTATION_AUDIT.md`
 
 **Contents:**
 - Inventory of existing documentation
@@ -1836,7 +1836,7 @@ Sprint 4 Retrospective identified improvements and issues to address. Need to ve
 
 #### Step 1: Review Sprint 4 Retrospective (20 min)
 
-Read `docs/planning/SPRINT_4/RETROSPECTIVE.md` and extract:
+Read `docs/planning/EPIC_1/SPRINT_4/RETROSPECTIVE.md` and extract:
 - Action items
 - Technical debt identified
 - Recommendations
@@ -1873,7 +1873,7 @@ If gaps found:
 
 ### Deliverable
 
-**File:** `docs/planning/SPRINT_5/RETROSPECTIVE_ALIGNMENT.md`
+**File:** `docs/planning/EPIC_1/SPRINT_5/RETROSPECTIVE_ALIGNMENT.md`
 
 **Contents:**
 - Mapping of Sprint 4 recommendations to Sprint 5 tasks
@@ -1913,7 +1913,7 @@ Comprehensive plan prevents mid-sprint surprises and ensures all priorities comp
 
 ### Deliverable
 
-**File:** `docs/planning/SPRINT_5/PLAN.md`
+**File:** `docs/planning/EPIC_1/SPRINT_5/PLAN.md`
 
 ### Required Sections
 

@@ -161,7 +161,7 @@ Completed comprehensive documentation push with 3,406 lines of new content acros
 - `docs/DOCUMENTATION_INDEX.md` (282 lines) - NEW
 - `docs/api/DEPLOYMENT.md` (524 lines) - NEW
 - `docs/api/source/conf.py` - MODIFIED (version and author updates)
-- `docs/planning/SPRINT_5/DAY_9_COMPLETION_SUMMARY.md` - NEW
+- `docs/planning/EPIC_1/SPRINT_5/DAY_9_COMPLETION_SUMMARY.md` - NEW
 
 **Total:** 3,406 lines of new/enhanced documentation
 
@@ -264,7 +264,7 @@ Created complete release automation infrastructure including version bumping and
    - ✅ Ready for TestPyPI publication
 
 9. **Checkpoint 3 - Release Readiness Review (1 h)**
-   - ✅ Created `docs/planning/SPRINT_5/CHECKPOINT_3.md`
+   - ✅ Created `docs/planning/EPIC_1/SPRINT_5/CHECKPOINT_3.md`
    - ✅ Confirmed Priority 1-4 completion (Days 1-8)
    - ✅ Verified all 1081 tests passing
    - ✅ Confirmed package build successful
@@ -444,7 +444,7 @@ Implemented comprehensive edge case test suite (29 tests), validated error messa
    - Integrated findings from Days 4-6
 
 5. **Checkpoint 2 (1 hour)**
-   - ✅ Comprehensive checkpoint report (docs/planning/SPRINT_5/CHECKPOINT_2_REPORT.md)
+   - ✅ Comprehensive checkpoint report (docs/planning/EPIC_1/SPRINT_5/CHECKPOINT_2_REPORT.md)
    - Validated:
      - Progress vs plan: All Days 1-6 complete on schedule ✅
      - Quality metrics: 1081 tests passing (100% pass rate) ✅
@@ -469,8 +469,8 @@ Implemented comprehensive edge case test suite (29 tests), validated error messa
 **Documentation Updates:**
 - docs/LIMITATIONS.md (NEW - 385+ lines)
 - docs/testing/ERROR_MESSAGE_VALIDATION.md (NEW - 300+ lines)
-- docs/planning/SPRINT_5/CHECKPOINT_2_REPORT.md (NEW - comprehensive)
-- docs/planning/SPRINT_5/PLAN.md (Day 6 marked complete)
+- docs/planning/EPIC_1/SPRINT_5/CHECKPOINT_2_REPORT.md (NEW - comprehensive)
+- docs/planning/EPIC_1/SPRINT_5/PLAN.md (Day 6 marked complete)
 - README.md (Day 6 checkbox marked)
 
 **Unknown Resolution:**
@@ -532,7 +532,7 @@ Benchmarked large model performance (250/500/1K variables), profiled execution t
 - `docs/performance/DAY5_PERFORMANCE_REPORT.md` - Comprehensive performance and memory analysis
 
 **Files Modified:**
-- `docs/planning/SPRINT_5/PLAN.md` - Day 5 marked complete, acceptance criteria verified
+- `docs/planning/EPIC_1/SPRINT_5/PLAN.md` - Day 5 marked complete, acceptance criteria verified
 - `README.md` - Day 5 checkbox marked complete
 
 **Test Results:**
@@ -698,12 +698,12 @@ Completed PATH solver validation with 100% success rate and published comprehens
 **Files Added:**
 - `docs/PATH_SOLVER.md` - Comprehensive PATH solver guide
 - `docs/validation/PATH_VALIDATION_RESULTS.md` - Detailed validation results
-- `docs/planning/SPRINT_5/CHECKPOINT_1_REPORT.md` - Checkpoint 1 report
+- `docs/planning/EPIC_1/SPRINT_5/CHECKPOINT_1_REPORT.md` - Checkpoint 1 report
 
 **Files Modified:**
 - `docs/USER_GUIDE.md` - Added "Solve with PATH" section in Quick Start
-- `docs/planning/SPRINT_5/PLAN.md` - Updated Day 3 completion status and unknowns
-- `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md` - Updated Unknown 2.1, 2.2, 2.3 status
+- `docs/planning/EPIC_1/SPRINT_5/PLAN.md` - Updated Day 3 completion status and unknowns
+- `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md` - Updated Unknown 2.1, 2.2, 2.3 status
 - `README.md` - Checked off Day 3
 
 **Test Results:**
@@ -823,9 +823,9 @@ Completed Day 2 of Sprint 5 with a critical finding: the current min/max reformu
 
 **Documentation Created:**
 - `docs/research/minmax_path_validation_findings.md` - Full technical analysis of PATH infeasibility
-- `docs/planning/SPRINT_5/DAY_2_STATUS.md` - Comprehensive status report
-- `docs/planning/SPRINT_5/DAY_2_PLAN_UPDATE.md` - Plan supplement
-- `docs/planning/SPRINT_5/FOLLOWON_STRATEGY1_OBJECTIVE_SUBSTITUTION.md` - Complete implementation guide (6-8h estimated)
+- `docs/planning/EPIC_1/SPRINT_5/DAY_2_STATUS.md` - Comprehensive status report
+- `docs/planning/EPIC_1/SPRINT_5/DAY_2_PLAN_UPDATE.md` - Plan supplement
+- `docs/planning/EPIC_1/SPRINT_5/FOLLOWON_STRATEGY1_OBJECTIVE_SUBSTITUTION.md` - Complete implementation guide (6-8h estimated)
 
 **Acceptance Criteria:**
 - ✅ Tests pass (9/9 structural validation)
@@ -859,7 +859,7 @@ Completed Day 1 of Sprint 5: comprehensive research, design, and scaffolding for
 
 **Task 1.1 - Review Research Documents** (1h)
 - Reviewed `docs/research/minmax_objective_reformulation.md`
-- Reviewed `docs/planning/SPRINT_5/PREP_PLAN_TASK2_UPDATE.md`
+- Reviewed `docs/planning/EPIC_1/SPRINT_5/PREP_PLAN_TASK2_UPDATE.md`
 - Confirmed Strategy 2 (Direct Constraints) is mathematically INFEASIBLE
 - Confirmed Strategy 1 (Auxiliary Variables) is REQUIRED
 - Key finding: Bug is in KKT assembly, not reformulation logic
@@ -1040,7 +1040,7 @@ Updated README.md to reflect Sprint 5 transition from planning to active executi
 
 #### Summary
 
-Archived all Sprint 5 planning documents and reviews to `docs/planning/SPRINT_5/archive/` to keep main directory clean. Final plan now captured in `PLAN.md`.
+Archived all Sprint 5 planning documents and reviews to `docs/planning/EPIC_1/SPRINT_5/archive/` to keep main directory clean. Final plan now captured in `PLAN.md`.
 
 **Files Archived:**
 1. `PLAN_ORIGINAL.md` - Initial 10-day plan (Task 10)
@@ -1127,8 +1127,8 @@ Created PLAN_FINAL.md implementing all 3 recommendations from final plan review.
    - Unknown 3.2 fully documented with status, summary, deadline
 
 **Deliverables:**
-- Created `docs/planning/SPRINT_5/PLAN_FINAL.md` (production-ready final plan)
-- Updated `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md` (Unknowns 3.1, 5.1 marked complete/resolved)
+- Created `docs/planning/EPIC_1/SPRINT_5/PLAN_FINAL.md` (production-ready final plan)
+- Updated `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md` (Unknowns 3.1, 5.1 marked complete/resolved)
 - All 3 final review findings addressed with concrete fixes
 - Maintained all PLAN_REVISED.md strengths (structure, checkpoints, risk management)
 
@@ -1200,7 +1200,7 @@ Created PLAN_REVISED.md addressing all 4 findings from Sprint 5 Plan Review. Rev
    - Unknown 3.2 clarified as research complete, implementation pending
 
 **Deliverables:**
-- Created `docs/planning/SPRINT_5/PLAN_REVISED.md` (comprehensive revised plan)
+- Created `docs/planning/EPIC_1/SPRINT_5/PLAN_REVISED.md` (comprehensive revised plan)
 - Addressed all 4 review findings with concrete fixes
 - Maintained all original plan strengths (Known Unknowns integration, checkpoints, risk management)
 - Enhanced release automation and documentation scope
@@ -1260,7 +1260,7 @@ Created detailed 10-day Sprint 5 execution plan integrating all preparation work
 - All risks have documented mitigations
 
 **Deliverables:**
-- Created `docs/planning/SPRINT_5/PLAN_ORIGINAL.md` (comprehensive 10-day plan)
+- Created `docs/planning/EPIC_1/SPRINT_5/PLAN_ORIGINAL.md` (comprehensive 10-day plan)
 - Integrated all 4 preparation document sources
 - Confirmed alignment with Sprint 4 learnings
 - Ready for Sprint 5 execution
@@ -1297,7 +1297,7 @@ Conducted comprehensive review of Sprint 4 Retrospective to ensure all action it
    - GAMS syntax validation → Sprint 6+ (justified: lower priority than PATH validation)
 
 **Deliverables:**
-- Created `docs/planning/SPRINT_5/RETROSPECTIVE_ALIGNMENT.md` (comprehensive analysis)
+- Created `docs/planning/EPIC_1/SPRINT_5/RETROSPECTIVE_ALIGNMENT.md` (comprehensive analysis)
 - Verified Checkpoint 0 (external dependency verification)
 - Confirmed all process improvements from Sprint 4 integrated
 
@@ -1856,8 +1856,8 @@ All checks passed:
 
 #### Files Modified
 
-- ✅ `docs/planning/SPRINT_5/DOCUMENTATION_AUDIT.md` (created, 1400+ lines)
-- ✅ `docs/planning/SPRINT_5/PREP_PLAN.md` (acceptance criteria checked)
+- ✅ `docs/planning/EPIC_1/SPRINT_5/DOCUMENTATION_AUDIT.md` (created, 1400+ lines)
+- ✅ `docs/planning/EPIC_1/SPRINT_5/PREP_PLAN.md` (acceptance criteria checked)
 
 #### Quality Checks
 
@@ -2051,7 +2051,7 @@ dependencies = [
 #### Files Modified
 
 - ✅ `docs/release/PYPI_PACKAGING_PLAN.md` (created)
-- ✅ `docs/planning/SPRINT_5/PREP_PLAN.md` (acceptance criteria checked)
+- ✅ `docs/planning/EPIC_1/SPRINT_5/PREP_PLAN.md` (acceptance criteria checked)
 
 #### Quality Checks
 
@@ -2196,7 +2196,7 @@ Based on profiling data, Sprint 5 should focus on:
 
 #### Files Modified
 
-- `docs/planning/SPRINT_5/PREP_PLAN.md` - Task 4 acceptance criteria checked off
+- `docs/planning/EPIC_1/SPRINT_5/PREP_PLAN.md` - Task 4 acceptance criteria checked off
 
 #### Sprint 5 Impact
 
@@ -2374,7 +2374,7 @@ Comprehensive validation report including:
 
 #### Files Modified
 
-- `docs/planning/SPRINT_5/PREP_PLAN.md` (acceptance criteria checked off)
+- `docs/planning/EPIC_1/SPRINT_5/PREP_PLAN.md` (acceptance criteria checked off)
 
 #### Sprint 5 Impact
 
@@ -2442,7 +2442,7 @@ Conclusion:        IMPOSSIBLE (cannot satisfy both constraints)
    - Documented mathematical proof of infeasibility
    - Provided recommendations: Must use Strategy 1 (Objective Substitution)
 
-2. **Known Unknowns** (`docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md`)
+2. **Known Unknowns** (`docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md`)
    - Unknown 1.1: Marked as ❌ DISPROVEN with detailed findings
    - Unknown 1.2: Updated to reference Strategy 1 instead of Strategy 2
    - Documented validation results and impact on Sprint 5
@@ -2477,8 +2477,8 @@ Conclusion:        IMPOSSIBLE (cannot satisfy both constraints)
 #### Files Modified
 
 - `docs/research/minmax_objective_reformulation.md` (added validation results section)
-- `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md` (updated Unknown 1.1 and 1.2)
-- `docs/planning/SPRINT_5/PREP_PLAN_TASK2_UPDATE.md` (detailed findings document)
+- `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md` (updated Unknown 1.1 and 1.2)
+- `docs/planning/EPIC_1/SPRINT_5/PREP_PLAN_TASK2_UPDATE.md` (detailed findings document)
 
 #### Testing
 
@@ -2511,7 +2511,7 @@ Sprint 4 successfully completed on schedule (Day 10/10). All critical features d
 **Deliverables:**
 - ✅ Full regression test suite: **972 tests passing** (370+ new tests added in Sprint 4)
 - ✅ Quality checks: **Zero errors** (mypy, ruff, black 100% compliant)
-- ✅ Sprint 4 retrospective created (`docs/planning/SPRINT_4/RETROSPECTIVE.md`)
+- ✅ Sprint 4 retrospective created (`docs/planning/EPIC_1/SPRINT_4/RETROSPECTIVE.md`)
 - ✅ CHANGELOG.md updated with all Sprint 4 changes
 - ✅ README.md updated with Sprint 4 status
 
@@ -2598,7 +2598,7 @@ Sprint 4 successfully completed on schedule (Day 10/10). All critical features d
 
 #### Documentation Deliverables
 
-- **Retrospective** (`docs/planning/SPRINT_4/RETROSPECTIVE.md`): ~450 lines, comprehensive sprint analysis
+- **Retrospective** (`docs/planning/EPIC_1/SPRINT_4/RETROSPECTIVE.md`): ~450 lines, comprehensive sprint analysis
 - **User Guide** (`docs/USER_GUIDE.md`): 500+ lines, all features documented
 - **Examples**: 5 comprehensive models demonstrating all Sprint 4 features
 - **PATH Requirements** (`docs/PATH_REQUIREMENTS.md`): Installation and validation guide
@@ -3021,7 +3021,7 @@ Sprint 4 implementation phase (Days 4-7) successfully completed. All major featu
 - ⏸️ 7 PATH solver-dependent unknowns deferred (licensing pending)
 - 🔄 Ready for Days 8-10 (validation, documentation, polish)
 
-**Checkpoint Report:** See `docs/planning/SPRINT_4/CHECKPOINT2.md` for comprehensive analysis
+**Checkpoint Report:** See `docs/planning/EPIC_1/SPRINT_4/CHECKPOINT2.md` for comprehensive analysis
 
 ---
 
@@ -3038,11 +3038,11 @@ Sprint 4 implementation phase (Days 4-7) successfully completed. All major featu
     - `RESEARCH_SUMMARY_FIXED_VARIABLES.md`
     - `docs/development/AGENTS.md`
     - `docs/planning/SPRINT_1/SUMMARY.md`
-    - `docs/planning/SPRINT_4/archive/PLAN-FINAL.md`
-    - `docs/planning/SPRINT_4/archive/PLAN_REVISED.md`
-    - `docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md`
-    - `docs/planning/SPRINT_4/CHECKPOINT1.md`
-    - `docs/planning/SPRINT_4/PLAN.md`
+    - `docs/planning/EPIC_1/SPRINT_4/archive/PLAN-FINAL.md`
+    - `docs/planning/EPIC_1/SPRINT_4/archive/PLAN_REVISED.md`
+    - `docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS.md`
+    - `docs/planning/EPIC_1/SPRINT_4/CHECKPOINT1.md`
+    - `docs/planning/EPIC_1/SPRINT_4/PLAN.md`
     - `docs/issues/completed/parse_model_file_hang.md`
 
 - **Issue Documentation**
@@ -3737,7 +3737,7 @@ integration with KKT assembly, derivative computation, MCP emission) will be in 
 
 #### Sprint 4 Final Plan
 - **Final Plan Review Completed** - Identified 4 additional gaps in revised plan
-- **Final Plan Created** (`docs/planning/SPRINT_4/PLAN.md`)
+- **Final Plan Created** (`docs/planning/EPIC_1/SPRINT_4/PLAN.md`)
   - Addresses all 4 findings from `PLAN_REVIEW_FINAL.md`
   - Complete rebalancing to ≤8 hours per day including checkpoints
   - ~1,100 lines with comprehensive unknown summaries
@@ -3815,7 +3815,7 @@ integration with KKT assembly, derivative computation, MCP emission) will be in 
 - **Day 10**: Polish + Buffer (8h) - Rebalanced from 10h
 
 #### Files Created/Modified
-- `docs/planning/SPRINT_4/PLAN.md` - **Final** 10-day plan (~1,100 lines)
+- `docs/planning/EPIC_1/SPRINT_4/PLAN.md` - **Final** 10-day plan (~1,100 lines)
 - `CHANGELOG.md` - This final plan summary
 
 #### Verification - All 4 Final Review Findings Addressed
@@ -3830,7 +3830,7 @@ integration with KKT assembly, derivative computation, MCP emission) will be in 
 
 #### Sprint 4 Plan Revision
 - **Plan Review Completed** - Identified 7 gaps in original plan
-- **Revised Plan Created** (`docs/planning/SPRINT_4/PLAN_REVISED.md`)
+- **Revised Plan Created** (`docs/planning/EPIC_1/SPRINT_4/PLAN_REVISED.md`)
   - Addresses all 7 findings from `PLAN_REVIEW.md`
   - Enhanced from 962 lines to ~1100 lines with detailed improvements
 
@@ -3900,7 +3900,7 @@ integration with KKT assembly, derivative computation, MCP emission) will be in 
   - Contingency: Can reduce to 7-8 examples or use Day 10 buffer
 
 #### Files Created/Modified
-- `docs/planning/SPRINT_4/PLAN_REVISED.md` - Complete revised 10-day plan
+- `docs/planning/EPIC_1/SPRINT_4/PLAN_REVISED.md` - Complete revised 10-day plan
 - `CHANGELOG.md` - This revision summary
 
 #### Verification
@@ -3913,7 +3913,7 @@ integration with KKT assembly, derivative computation, MCP emission) will be in 
 ### Planning - 2025-11-01 (ORIGINAL)
 
 #### Added
-- **Sprint 4 Comprehensive Plan** (`docs/planning/SPRINT_4/PLAN_ORIGINAL.md`)
+- **Sprint 4 Comprehensive Plan** (`docs/planning/EPIC_1/SPRINT_4/PLAN_ORIGINAL.md`)
   - Complete 10-day plan for Sprint 4 feature expansion
   - Day-by-day breakdown with goals, tasks, deliverables, and acceptance criteria
   - 7 priority-1 features: `$include`, `Table`, `min/max`, `abs()`, `x.fx`, scaling, diagnostics
@@ -4103,7 +4103,7 @@ Sprint 4 PREP_PLAN includes preventive measures based on Issue #47 lessons:
   - All success metrics achieved ✅
 
 - **Sprint Wrap-Up** (Task 5)
-  - Created **Sprint 3 Summary** document (`docs/planning/SPRINT_3/SUMMARY.md`)
+  - Created **Sprint 3 Summary** document (`docs/planning/EPIC_1/SPRINT_3/SUMMARY.md`)
     - Executive summary with key achievements
     - Sprint goals vs actuals comparison
     - Technical accomplishments (KKT assembly, GAMS emission, CLI)
@@ -4170,7 +4170,7 @@ Sprint 4 PREP_PLAN includes preventive measures based on Issue #47 lessons:
 #### 2025-10-30 - Sprint 3 Retrospective: Known Unknowns List (PREP_PLAN Task 10)
 
 ##### Added
-- **Known Unknowns and Assumptions Document** (`docs/planning/SPRINT_3/DAY_10_KNOWN_UNKNOWNS_LIST.md`)
+- **Known Unknowns and Assumptions Document** (`docs/planning/EPIC_1/SPRINT_3/DAY_10_KNOWN_UNKNOWNS_LIST.md`)
   - Comprehensive retrospective analysis of Sprint 3 assumptions and unknowns
   - Cataloged 25+ unknowns across 6 categories (Integration, GAMS, KKT, Codegen, E2E, Process)
   - Documented confirmed assumptions (20+), incorrect assumptions (3), and discovered unknowns
@@ -4270,7 +4270,7 @@ This retrospective analysis provides:
 #### 2025-10-30 - Sprint 3 Preparation: Complexity Estimation (PREP_PLAN Task 9)
 
 ##### Added
-- **Day 10 Complexity Estimation Document** (`docs/planning/SPRINT_3/DAY_10_COMPLEXITY_ESTIMATION.md`)
+- **Day 10 Complexity Estimation Document** (`docs/planning/EPIC_1/SPRINT_3/DAY_10_COMPLEXITY_ESTIMATION.md`)
   - Comprehensive complexity analysis for all Sprint 3 Day 10 tasks
   - Task-by-task breakdown with complexity ratings (Simple/Medium/Complex)
   - Time estimates: 10 hours total (3h testing, 2h quality, 2.5h coverage, 1h validation, 1.5h wrap-up)
@@ -5018,8 +5018,8 @@ This retrospective analysis provides:
 #### 2025-10-29 - Sprint 3 Final Plan (Post-Final Review)
 
 ##### Added
-- Created final Sprint 3 plan in `docs/planning/SPRINT_3/PLAN.md`
-  - Addresses all 4 findings from `docs/planning/SPRINT_3/PLAN_REVIEW_FINAL.md`
+- Created final Sprint 3 plan in `docs/planning/EPIC_1/SPRINT_3/PLAN.md`
+  - Addresses all 4 findings from `docs/planning/EPIC_1/SPRINT_3/PLAN_REVIEW_FINAL.md`
   - Critical fixes to PLAN_REVISED.md based on actual IR structure inspection
   - Enhanced implementation with correct data structure usage
   - Updated test counts and time estimates
@@ -5153,8 +5153,8 @@ for var_name, var_def in variables.items():
 #### 2025-10-29 - Sprint 3 Revised Plan (Post-Review)
 
 ##### Added
-- Created revised Sprint 3 plan in `docs/planning/SPRINT_3/PLAN_REVISED.md`
-  - Addresses all 4 gaps identified in `docs/planning/SPRINT_3/PLAN_REVIEW.md`
+- Created revised Sprint 3 plan in `docs/planning/EPIC_1/SPRINT_3/PLAN_REVISED.md`
+  - Addresses all 4 gaps identified in `docs/planning/EPIC_1/SPRINT_3/PLAN_REVIEW.md`
   - Enhanced day-by-day plan with review adjustments integrated
   - Detailed implementation strategies for each gap
   - Updated test counts and acceptance criteria
@@ -5237,7 +5237,7 @@ for var_name, var_def in variables.items():
 #### 2025-10-29 - Sprint 3 Detailed Plan
 
 ##### Added
-- Created comprehensive Sprint 3 plan in `docs/planning/SPRINT_3/PLAN_ORIGINAL.md`
+- Created comprehensive Sprint 3 plan in `docs/planning/EPIC_1/SPRINT_3/PLAN_ORIGINAL.md`
   - Complete day-by-day plan for 10 working days
   - Detailed goals, tasks, deliverables, and acceptance criteria for each day
   - Integration of PREP_PLAN Tasks 5-10 into appropriate days
@@ -5795,7 +5795,7 @@ for var_name, var_def in variables.items():
 - Backward compatibility verified: All 267 original tests still pass
 - New functionality verified: All 36 index-aware tests pass
 - Next phases: Update gradient.py and jacobian.py to use index-aware API (Phase 2-5)
-- See docs/planning/SPRINT_2_7_5_PLAN.md for complete implementation roadmap
+- See docs/planning/EPIC_1/SPRINT_2_7_5_PLAN.md for complete implementation roadmap
 
 #### Day 7.5 - Phase 2: Gradient Computation with Index-Aware Differentiation (2025-10-28)
 
@@ -5827,7 +5827,7 @@ for var_name, var_def in variables.items():
 - All 307 tests pass (no regressions)
 - Builds on Phase 1 API enhancement (PR #11)
 - Next phases: Update Jacobian computation (Phase 3), add integration tests (Phase 4)
-- See docs/planning/SPRINT_2_7_5_PLAN.md for complete implementation roadmap
+- See docs/planning/EPIC_1/SPRINT_2_7_5_PLAN.md for complete implementation roadmap
 
 #### Day 7.5 - Phase 3: Sum Differentiation with Index-Aware Collapse (2025-10-28)
 
@@ -5889,7 +5889,7 @@ for var_name, var_def in variables.items():
 #### Day 7.6 - Phase 4: Testing and Verification (2025-10-29)
 
 ##### Analysis
-Reviewed Phase 4 testing requirements from `docs/planning/SPRINT_2_7_5_PLAN.md` and found that **most tests were already implemented** during Phases 1-3. The comprehensive test suite built incrementally already covers all required scenarios.
+Reviewed Phase 4 testing requirements from `docs/planning/EPIC_1/SPRINT_2_7_5_PLAN.md` and found that **most tests were already implemented** during Phases 1-3. The comprehensive test suite built incrementally already covers all required scenarios.
 
 ##### Changed
 - **Updated `SPRINT_2_7_5_PLAN.md`** with corrected Task 4.2 description

@@ -150,7 +150,7 @@ Test case that demonstrates the bug:
 ## Related Research
 
 - See `RESEARCH_SUMMARY_FIXED_VARIABLES.md` for complete analysis
-- See `docs/planning/SPRINT_4/KNOWN_UNKNOWNS.md` Unknown 1.3 for verification results
+- See `docs/planning/EPIC_1/SPRINT_4/KNOWN_UNKNOWNS.md` Unknown 1.3 for verification results
 - Test files in `tests/research/fixed_variable_verification/`
 
 ## Workaround

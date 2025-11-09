@@ -152,7 +152,7 @@ This avoids the infeasibility by making aux the objective variable directly.
    - Documented mathematical proof of infeasibility
    - Provided recommendations for Sprint 5
 
-2. `docs/planning/SPRINT_5/KNOWN_UNKNOWNS.md`
+2. `docs/planning/EPIC_1/SPRINT_5/KNOWN_UNKNOWNS.md`
    - Unknown 1.1: Marked as ❌ DISPROVEN with findings
    - Unknown 1.2: Updated to reference Strategy 1 instead of Strategy 2
    - Added detailed verification results
