@@ -84,7 +84,6 @@ DESCRIPTION:
 
     Downloaded files:
     - <model>.gms       GAMS source file
-    - <model>.html      Model documentation
     - manifest.csv      Download manifest with metadata
     - download.log      Download log with timestamps
 
@@ -108,8 +107,8 @@ EOF
 clean_downloads() {
     print_info "Cleaning downloaded files..."
     if [ -d "$TARGET_DIR" ]; then
-        # Remove .gms and .html files, but keep README.md
-        find "$TARGET_DIR" -type f \( -name "*.gms" -o -name "*.html" \) -delete
+        # Remove .gms files, manifest, and log, but keep README.md
+        find "$TARGET_DIR" -type f -name "*.gms" -delete
         rm -f "$LOG_FILE" "$MANIFEST_FILE"
         print_success "Cleaned downloaded files (kept README.md)"
     else
@@ -143,8 +142,6 @@ download_model() {
     local force_download="${4:-false}"
 
     local gms_file="${TARGET_DIR}/${model_name}.gms"
-    local html_file="${TARGET_DIR}/${model_name}.html"
-    local gms_url="${GAMSLIB_BASE_URL}/libhtml/gamslib_${model_name}.html"
 
     # GAMS library uses sequence numbers for file downloads
     # Format: https://www.gams.com/latest/gamslib_ml/modelname.seqnum
@@ -152,8 +149,8 @@ download_model() {
 
     print_info "Downloading: ${model_name} (seq ${seq_num}) - ${description}"
 
-    # Check if files already exist and skip if not forcing
-    if [ "$force_download" = false ] && [ -f "$gms_file" ] && [ -f "$html_file" ]; then
+    # Check if file already exists and skip if not forcing
+    if [ "$force_download" = false ] && [ -f "$gms_file" ]; then
         if validate_gms_file "$gms_file"; then
             print_warning "Already exists (use --force to re-download): ${model_name}"
             echo "$(date -u +%Y-%m-%dT%H:%M:%SZ),${model_name},SKIPPED,Already exists,0" >> "$LOG_FILE"
@@ -197,12 +194,6 @@ download_model() {
         echo "$(date -u +%Y-%m-%dT%H:%M:%SZ),${model_name},FAILED,Download failed after $max_retries attempts,$duration" >> "$LOG_FILE"
         ((FAIL_COUNT++))
         return 1
-    fi
-
-    # Download HTML documentation (best effort, don't fail if unavailable)
-    if ! curl -f -s -S -o "$html_file" "$gms_url" 2>/dev/null; then
-        print_warning "Documentation not available: ${model_name}.html"
-        rm -f "$html_file"
     fi
 
     local end_time=$(date +%s)
@@ -297,15 +288,13 @@ download_all_models() {
 create_manifest() {
     print_info "Creating manifest..."
 
-    echo "name,description,gms_file,html_file,gms_size_bytes,download_status" > "$MANIFEST_FILE"
+    echo "name,description,gms_file,gms_size_bytes,download_status" > "$MANIFEST_FILE"
 
     for model_entry in "${TIER1_MODELS[@]}"; do
         IFS=: read -r name seq description <<< "$model_entry"
 
         local gms_file="${TARGET_DIR}/${name}.gms"
-        local html_file="${TARGET_DIR}/${name}.html"
         local gms_exists="false"
-        local html_exists="false"
         local gms_size=0
         local status="NOT_DOWNLOADED"
 
@@ -319,11 +308,7 @@ create_manifest() {
             fi
         fi
 
-        if [ -f "$html_file" ]; then
-            html_exists="true"
-        fi
-
-        echo "${name},\"${description}\",${gms_exists},${html_exists},${gms_size},${status}" >> "$MANIFEST_FILE"
+        echo "${name},\"${description}\",${gms_exists},${gms_size},${status}" >> "$MANIFEST_FILE"
     done
 
     print_success "Manifest created: ${MANIFEST_FILE}"

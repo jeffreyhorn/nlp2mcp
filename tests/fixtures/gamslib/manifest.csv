@@ -1,11 +1,11 @@
-name,description,gms_file,html_file,gms_size_bytes,download_status
-trig,"Simple Trigonometric Example",true,true,660,SUCCESS
-rbrock,"Rosenbrock Test Function",true,true,531,SUCCESS
-himmel16,"Area of Hexagon Test Problem",true,true,2329,SUCCESS
-hs62,"Hock-Schittkowski Problem 62",true,true,1233,SUCCESS
-mhw4d,"Nonlinear Test Problem",true,true,664,SUCCESS
-mhw4dx,"MHW4D with Additional Tests",true,true,2920,SUCCESS
-circle,"Circle Enclosing Points - SNOPT Example",true,true,1297,SUCCESS
-maxmin,"Max Min Location of Points in Unit Square",true,true,3350,SUCCESS
-mathopt1,"MathOptimizer Example 1",true,true,1442,SUCCESS
-mingamma,"Minimal y of GAMMA(x)",true,true,1376,SUCCESS
+name,description,gms_file,gms_size_bytes,download_status
+trig,"Simple Trigonometric Example",true,660,SUCCESS
+rbrock,"Rosenbrock Test Function",true,531,SUCCESS
+himmel16,"Area of Hexagon Test Problem",true,2329,SUCCESS
+hs62,"Hock-Schittkowski Problem 62",true,1233,SUCCESS
+mhw4d,"Nonlinear Test Problem",true,664,SUCCESS
+mhw4dx,"MHW4D with Additional Tests",true,2920,SUCCESS
+circle,"Circle Enclosing Points - SNOPT Example",true,1297,SUCCESS
+maxmin,"Max Min Location of Points in Unit Square",true,3350,SUCCESS
+mathopt1,"MathOptimizer Example 1",true,1442,SUCCESS
+mingamma,"Minimal y of GAMMA(x)",true,1376,SUCCESS

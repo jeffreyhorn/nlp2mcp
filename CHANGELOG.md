@@ -28,7 +28,7 @@ Completed Task 7 of Sprint 6 PREP_PLAN: Created automated script to download GAM
 
 1. **Automated Downloads**: Fetches models from GAMS Model Library
    - Uses GAMS sequence numbers for reliable downloads
-   - Downloads both .gms source and .html documentation
+   - Downloads .gms source files only (no unnecessary HTML documentation)
    
 2. **Error Handling**:
    - Retry logic: 3 attempts per model with 2-second delay
@@ -46,7 +46,7 @@ Completed Task 7 of Sprint 6 PREP_PLAN: Created automated script to download GAM
    - Total download time
    
 5. **Metadata Files**:
-   - `manifest.csv`: Name, description, file status, size, download status
+   - `manifest.csv`: Name, description, file existence, size, download status
    - `download.log`: Timestamp, model, status, message, duration
 
 **Command Line Options:**
@@ -141,11 +141,10 @@ Files failing validation trigger automatic retry.
 #### Files Modified
 
 **New Files:**
-- `scripts/download_gamslib_nlp.sh` (330 lines) - Download automation script
-- `tests/fixtures/gamslib/README.md` (280 lines) - Usage guide and model documentation
+- `scripts/download_gamslib_nlp.sh` (310 lines) - Download automation script
+- `tests/fixtures/gamslib/README.md` (270 lines) - Usage guide and model documentation
 - `tests/fixtures/gamslib/*.gms` (10 files, 16KB total) - Downloaded model files
-- `tests/fixtures/gamslib/*.html` (10 files) - Model documentation
-- `tests/fixtures/gamslib/manifest.csv` - Download manifest
+- `tests/fixtures/gamslib/manifest.csv` - Download manifest (5 columns)
 - `tests/fixtures/gamslib/download.log` - Download log
 
 **Modified Files:**
@@ -154,9 +153,9 @@ Files failing validation trigger automatic retry.
 #### Design Decisions
 
 1. **GAMS Version**: Using "latest" instead of pinned version
-   - Specific versions (47.6) not consistently available
-   - "latest" provides most reliable access
-   - Trade-off: Reproducibility vs availability
+   - Specific versions (e.g., 47.6) not consistently available
+   - "latest" provides most reliable access to model library
+   - Trade-off: Reproducibility vs availability (availability wins for testing)
 
 2. **File Naming**: Sequence numbers in URLs, standard names for local files
    - GAMS uses sequence numbers: `trig.261`
@@ -172,6 +171,11 @@ Files failing validation trigger automatic retry.
    - Detects corrupt downloads
    - Doesn't validate GAMS syntax (handled by parser)
    - Fast and effective for purpose
+
+5. **No HTML Documentation**: Only download .gms files
+   - HTML documentation not needed for parsing/testing
+   - Reduces download size and complexity
+   - Keeps focus on essential test fixtures
 
 #### Testing
 

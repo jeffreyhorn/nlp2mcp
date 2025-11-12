@@ -1,6 +1,6 @@
 # GAMS Model Library NLP Models
 
-**Source:** https://www.gams.com/47.6/gamslib_ml/libhtml/  
+**Source:** https://www.gams.com/latest/gamslib_ml/  
 **Purpose:** Test fixtures for Sprint 6 GAMSLib Bootstrapping  
 **License:** GAMS Model Library (publicly available)
 
@@ -46,7 +46,6 @@ Show help:
 
 After running the download script, you'll find:
 - `<model>.gms` - GAMS source files
-- `<model>.html` - Model documentation (when available)
 - `manifest.csv` - Download manifest with file sizes and status
 - `download.log` - Download log with timestamps and durations
 
@@ -99,7 +98,6 @@ CSV format with columns:
 - `name` - Model name (without .gms extension)
 - `description` - Brief model description
 - `gms_file` - Whether .gms file exists (true/false)
-- `html_file` - Whether .html documentation exists (true/false)
 - `gms_size_bytes` - Size of .gms file in bytes
 - `download_status` - SUCCESS, INVALID, or NOT_DOWNLOADED
 
@@ -159,9 +157,8 @@ Target KPIs from `EPIC_2/SPRINT_6/PREP_PLAN.md`:
 
 - Models are **unmodified** from GAMS Model Library
 - Original .gms files preserved for reproducibility
-- GAMS version **47.6** pinned for reproducible builds
+- GAMS version **latest** used for reliable access
 - Models are **public domain** (GAMS Model Library license)
-- Documentation (.html files) provide problem background and references
 
 ## Troubleshooting
 
