@@ -50,10 +50,10 @@ Users need timely warnings when converting nonconvex NLPs to MCPs. We will deliv
 
 **Priority:** HIGH  
 **Estimated Effort:** 1 sprint (S6) + spillover (S7)  
-**References:** `MAXIMIZE_BOUND_MULTIPLIER_BUG.md`, `NESTED_MINMAX_REQUIREMENTS.md`
+**References:** ~~`MAXIMIZE_BOUND_MULTIPLIER_BUG.md`~~ (no bug exists), `NESTED_MINMAX_REQUIREMENTS.md`
 
 #### Objectives
-- **Maximize bound multiplier sign bug:** Fix stationarity sign handling for maximize objectives; add regression tests.
+- ~~**Maximize bound multiplier sign bug:** Fix stationarity sign handling for maximize objectives; add regression tests.~~ **REMOVED** - No bug exists (verified 2025-11-12)
 - **Nested min/max flattening:** Implement Option A flattening plus roadmap for Option B; ship tests + PATH validation.
 - Bundle both fixes with the convexity sprint to reuse reformulation/test scaffolding.
 
@@ -156,7 +156,7 @@ Users need timely warnings when converting nonconvex NLPs to MCPs. We will deliv
 
 ### Sprint 6 (Weeks 1–2): Convexity Heuristics, High-Severity Bugs, GAMSLib Bootstrapping, Initial UX polish
 - Ship heuristic convexity warnings + CLI flags.
-- Fix maximize-bound multiplier bug and nested min/max flattening.
+- ~~Fix maximize-bound multiplier bug and~~ nested min/max flattening.
 - Automate GAMSLib downloads, run nightly ingestion, publish initial dashboard (goal: ≥10 models processed, ≥10 % parse success).
 - Improve error messaging for new warnings + parser failures.
 - **Deliverable:** v0.6.0 (convexity warnings, bug fixes, GAMSLib ingestion tooling, initial UX upgrades).

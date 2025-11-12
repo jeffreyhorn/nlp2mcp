@@ -1,5 +1,7 @@
 # EPIC 2 Goals: Advanced Features & Real-World Validation
 
+> **HISTORICAL NOTE (2025-11-12):** This document contains references to a "Maximize Bound Multiplier Sign Bug" (sections 2.1, etc.) that was determined to NOT exist. The gradient negation for maximize objectives was correctly implemented from Day 7 (Oct 28, 2025). See `SPRINT_6/TASK3_CORRECTED_ANALYSIS.md` for details.
+
 **Timeline:** 10 weeks (5 sprints of 2 weeks each)  
 **Target Release:** v1.0.0  
 **Status:** Planning Phase
