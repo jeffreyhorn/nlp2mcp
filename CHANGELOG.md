@@ -23,7 +23,7 @@ Completed Task 4 of Sprint 6 PREP_PLAN: Comprehensive survey of GAMS Model Libra
 - ✅ Created parser feature matrix identifying capabilities and gaps
 - ✅ Selected 10 models for Sprint 6 Tier 1 (initial target set)
 - ✅ Verified all models are downloadable and accessible
-- ✅ Estimated parse success rate: 70-90% for Tier 1, 50-70% overall
+- ✅ Estimated parse success rate: 70-90% for Tier 1, 50-70% for Tier 2, 30-50% for Tier 3
 - ✅ Documented known blockers and mitigation strategies
 
 **Models Cataloged (120+ total):**

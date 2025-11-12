@@ -9,7 +9,7 @@
 - **Total NLP Models Cataloged:** 120+ models
 - **Model Types:** NLP, DNLP, MINLP, QCP, MIQCP, MPEC, MCP
 - **Sprint 6 Target:** 10 models (Tier 1)
-- **Estimated Parse Success:** 40-60%
+- **Estimated Parse Success:** 70-90% (Tier 1), 50-70% (Tier 2), 30-50% (Tier 3)
 
 ## Complete Model Catalog
 
@@ -64,7 +64,7 @@
 | 203 | gear | Gear Train Design | MINLP | Small | Low |
 | 204 | trimloss | Trim Loss Minimization | MINLP | Medium | Low |
 | 205 | pump | Pump Network Synthesis | MINLP | Medium | Low |
-| 206 | spring | Coil Compression String Design | MINLP | Small | Low |
+| 206 | spring | Coil Compression Spring Design | MINLP | Small | Low |
 | 214 | haverly | Haverly's pooling problem example | NLP | Medium | High |
 | 217 | gastrans | Gas Transmission Problem - Belgium | NLP | Medium | Medium |
 | 222 | csched | Cyclic Scheduling of Continuous Parallel Units | MINLP | Large | Low |
@@ -298,24 +298,24 @@ Based on analysis, current parser **cannot handle**:
 
 ### Expected Parse Success Rate
 
-**Optimistic (70-80%):**
+**Optimistic (80-90%):**
 - Models with only core features
 - Simple indexing
 - Standard functions
 - Tables supported!
 - No loops or conditionals
 
-**Realistic (50-60%):**
+**Realistic (70-80%):**
 - Account for conditional syntax (~15%)
 - Account for loop constructs (~10%)
 - Account for ordered operators (~5%)
 
-**Conservative (40-50%):**
+**Conservative (60-70%):**
 - Account for multiple blockers in same model
 - Account for unknown edge cases
 - Buffer for unexpected syntax
 
-**Sprint 6 Target: 70-80% parse success for selected Tier 1 models** (improved due to table support)
+**Sprint 6 Target: 70-90% parse success for selected Tier 1 models** (improved due to table support)
 
 
 ---
