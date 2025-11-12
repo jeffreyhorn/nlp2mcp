@@ -7,6 +7,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Preparation: Task 1 - Known Unknowns List - 2025-11-11
+
+**Status:** ✅ COMPLETE - Known Unknowns document created with 22 unknowns across 4 categories
+
+#### Summary
+
+Completed Task 1 of Sprint 6 PREP_PLAN: Created comprehensive Known Unknowns document identifying all assumptions and research questions for Sprint 6 features (convexity detection, bug fixes, GAMSLib integration, UX improvements). This proactive approach continues the successful methodology from Sprints 4 and 5.
+
+**Task 1: Create Sprint 6 Known Unknowns List (3-4h)**
+- ✅ Created `docs/planning/EPIC_2/SPRINT_6/KNOWN_UNKNOWNS.md` (1512 lines)
+- ✅ Documented 22 unknowns across 4 categories (exceeds 18-25 target)
+- ✅ All unknowns have: Priority, Assumption, Research Questions, Verification, Time, Owner
+- ✅ Estimated research time: 18-24 hours total
+- ✅ Cross-referenced with PROJECT_PLAN.md deliverables
+
+**Unknown Distribution:**
+
+*Category 1: Convexity Detection (7 unknowns)*
+- 1.1: Pattern matching for nonlinear equality constraints
+- 1.2: Trigonometric function detection and domain analysis
+- 1.3: Bilinear terms in different constraint types
+- 1.4: Quotient detection and division by variables
+- 1.5: Odd powers that break convexity
+- 1.6: `--strict-convexity` flag and exit codes
+- 1.7: Convexity warnings citing specific equation line numbers
+
+*Category 2: Bug Fixes (5 unknowns)*
+- 2.1: Maximize-sense bound multiplier signs in KKT stationarity
+- 2.2: Nested min/max flattening semantics and ambiguity
+- 2.3: AST detection of nested min/max patterns
+- 2.4: Regression testing for nested min/max bug fixes
+- 2.5: Configuration decisions for min/max handling
+
+*Category 3: GAMSLib Integration (6 unknowns)*
+- 3.1: GAMS licensing requirements for model downloads
+- 3.2: GAMSLib NLP model counts and targeting strategy
+- 3.3: Parse error patterns revealed by GAMSLib models
+- 3.4: Conversion dashboard (static HTML vs dynamic)
+- 3.5: KPI tracking (parse%, convert%, solve%)
+- 3.6: Ingestion scheduling (nightly vs on-demand)
+
+*Category 4: UX Improvements (4 unknowns)*
+- 4.1: Parser line and column number support for errors
+- 4.2: Documentation links embedded in error messages
+- 4.3: Suppressible convexity warnings per-equation
+- 4.4: Sprint demo checklist progress display
+
+**Priority Breakdown:**
+- Critical: 4 unknowns (could derail sprint if wrong)
+- High: 7 unknowns (require upfront research)
+- Medium: 6 unknowns (resolve during implementation)
+- Low: 5 unknowns (minimal impact)
+
+**Acceptance Criteria Met (7/7):**
+- ✅ Document created with 18+ unknowns across 4 categories (22 created)
+- ✅ All unknowns have assumption, verification method, priority
+- ✅ All Critical unknowns have verification plan and timeline
+- ✅ Unknowns cover all Sprint 6 components (convexity, bugs, GAMSLib, UX)
+- ✅ Template for updates defined ("How to Use This Document" section)
+- ✅ Research time estimated (18-24 hours)
+- ✅ Cross-referenced with PROJECT_PLAN.md (lines 7-38)
+
+**Next Steps:**
+- Task 2: Research Convexity Detection Approaches (6-8h)
+- Task 3: Analyze Maximize Bug Root Cause (4-6h)
+- Continue through remaining 7 prep tasks before Sprint 6 Day 1
+
+**Status:** ✅ **TASK 1 COMPLETE** - Ready for Task 2 (Convexity Research)
+
+---
+
 ### Sprint 5 Day 10: Polish & Buffer - 2025-11-09
 
 **Status:** ✅ COMPLETE - Sprint 5 complete, all acceptance criteria met, ready for v0.5.0-beta release
