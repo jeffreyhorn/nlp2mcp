@@ -14,7 +14,7 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprintsâ€
   - CLI flags: `--strict-convexity` (fail on warning) and default warning mode.
   - Documentation section covering when to trust MCP vs stick with NLP.
 - **Critical Bug Fixes**
-  - Adjust KKT stationarity for maximize-sense bound multipliers.
+  - ~~Adjust KKT stationarity for maximize-sense bound multipliers.~~ **REMOVED** - No bug exists (verified 2025-11-12)
   - Implement nested min/max flattening (Optionâ€¯A) plus regression tests & PATH validation.
 - **GAMSLib Bootstrapping**
   - Script to download/refresh target NLP models, run nightly ingestion.
@@ -26,8 +26,10 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprintsâ€
 
 ## Deliverables
 - Convexity heuristic module + CLI flags + docs.
-- Fixed maximize multiplier + nested min/max flattening with tests.
+- ~~Fixed maximize multiplier~~ + nested min/max flattening with tests.
 - `scripts/download_gamslib_nlp.sh`, ingestion cron, and conversion dashboard.
+
+**Note:** Maximize multiplier bug fix removed from scope - verified no bug exists (see `SPRINT_6/TASK3_CORRECTED_ANALYSIS.md`).
 - Updated error messaging + documentation describing new warnings.
 - Release tag `v0.6.0`.
 

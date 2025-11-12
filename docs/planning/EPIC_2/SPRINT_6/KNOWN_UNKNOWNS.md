@@ -12,7 +12,7 @@ This document identifies all assumptions and unknowns for Sprint 6 features **be
 
 **Sprint 6 Scope:**
 1. Convexity Heuristics - Pattern-based detection of nonconvex constructs
-2. Critical Bug Fixes - Maximize sense bounds, nested min/max flattening
+2. Critical Bug Fixes - ~~Maximize sense bounds,~~ nested min/max flattening (maximize bug doesn't exist)
 3. GAMSLib Integration - Model ingestion pipeline and conversion tracking
 4. UX Improvements - Enhanced error messages with context and documentation links
 
@@ -620,6 +620,8 @@ The assumption is DEFERRED. Warnings currently cite equation names effectively. 
 # Category 2: Bug Fixes
 
 ## Unknown 2.1: Do maximize-sense bound multipliers need sign flips in stationarity?
+
+> **RESOLVED 2025-11-12:** NO - Bound multiplier signs do NOT change. Gradient negation correctly implemented in `src/ad/gradient.py`. See `TASK3_CORRECTED_ANALYSIS.md`.
 
 ### Priority
 **Critical** - Correctness of KKT conditions
