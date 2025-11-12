@@ -973,7 +973,7 @@ python -c "from src.utils.error_formatter import FormattedError; e = FormattedEr
 
 ## Task 7: Set Up GAMSLib Download Infrastructure
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Medium  
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Sprint 6 Day 1  
@@ -1097,13 +1097,13 @@ test -f tests/fixtures/gamslib/README.md
 
 ### Acceptance Criteria
 
-- [ ] Script downloads models from GAMS library
-- [ ] Model list matches Task 4 Tier 1 (10 models)
-- [ ] Error handling for failed downloads
-- [ ] README documents each model with metadata
-- [ ] Script is idempotent (can re-run safely)
-- [ ] Downloaded files validated as .gms format
-- [ ] Total download time <5 minutes for 10 models
+- [x] Script downloads models from GAMS library
+- [x] Model list matches Task 4 Tier 1 (10 models)
+- [x] Error handling for failed downloads
+- [x] README documents each model with metadata
+- [x] Script is idempotent (can re-run safely)
+- [x] Downloaded files validated as .gms format
+- [x] Total download time <5 minutes for 10 models
 
 ---
 
