@@ -7,6 +7,101 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Preparation: Task 5 - Nested Min/Max Flattening Design - 2025-11-12
+
+**Status:** ✅ COMPLETE - Design ready for Sprint 6 Component 2 implementation
+
+#### Summary
+
+Completed Task 5 of Sprint 6 PREP_PLAN: Designed the flattening approach (Option A) for handling nested min/max expressions like `min(x, min(y, z))`. This design enables Sprint 6 Component 2 implementation with clear algorithm, integration points, and validation strategy.
+
+**Task 5: Design Nested Min/Max Flattening Strategy (3-5h)**
+- ✅ Analyzed existing min/max detection and reformulation code
+- ✅ Designed flattening algorithm for same-operation nesting
+- ✅ Specified 6 test cases covering simple, deep, and mixed-operation nesting
+- ✅ Identified integration point: `detect_min_max_calls()` in `src/kkt/reformulation.py`
+- ✅ Estimated implementation effort: 4-6 hours (fits Sprint 6 schedule)
+- ✅ Defined PATH validation strategy with expected solutions
+- ✅ Documented 4 known limitations with workarounds
+
+**Design Approach: Option A - Flattening Only**
+
+Decision to use flattening-only approach over multi-pass reformulation:
+- **Coverage:** Handles 80-90% of real-world nested min/max cases
+- **Effort:** 4-6 hours (vs 10-15 hours for Option B)
+- **Complexity:** Low - single-pass algorithm
+- **Efficiency:** Fewer auxiliary variables than multi-pass approach
+
+**Core Algorithm:**
+
+Flatten same-operation nested calls before reformulation:
+```
+min(x, min(y, z)) → min(x, y, z)  ✓ Supported
+max(a, max(b, c)) → max(a, b, c)  ✓ Supported
+min(x, max(y, z)) → unchanged     ✗ Not supported (mixed operations)
+```
+
+**Implementation Strategy:**
+
+1. Add `flatten_minmax_calls()` function to `src/kkt/reformulation.py`
+2. Integrate into `detect_min_max_calls()` - flatten before detection
+3. Existing reformulation, KKT, and Jacobian code works unchanged
+4. Bottom-up recursive flattening: O(n) time, O(d) space
+
+**Test Cases Designed (6 total):**
+
+1. **Simple min nesting:** `min(x, min(y, z))` → `min(x, y, z)`
+2. **Simple max nesting:** `max(x, max(y, z))` → `max(x, y, z)`
+3. **Deep nesting:** `min(a, min(b, min(c, d)))` → `min(a, b, c, d)`
+4. **Mixed operations:** `min(x, max(y, z))` → Error (not supported)
+5. **Multiple nested:** `min(...) + max(...)` in same equation
+6. **Nested with constants:** `min(x, min(10, y))` → `min(x, 10, y)`
+
+**Integration Points:**
+
+- **Primary:** `detect_min_max_calls()` in `src/kkt/reformulation.py` (line ~550)
+- **No changes needed:** Detection, reformulation, KKT assembly, Jacobian, emission
+- **Key insight:** Flattening before detection makes downstream code oblivious to nesting
+
+**Known Limitations:**
+
+1. Mixed-operation nesting not supported (e.g., `min(x, max(y, z))`)
+2. No constant folding (e.g., `min(5, 10, x)` could simplify to `min(5, x)`)
+3. No duplicate argument detection (e.g., `min(x, x, y)` creates redundant constraint)
+4. No explicit nesting depth limit (handled by Python recursion limit ~1000)
+
+**PATH Validation Strategy:**
+
+- Run all 6 test cases through nlp2mcp → PATH pipeline
+- Verify objective values match expected solutions
+- Check that auxiliary variables (`aux_min_*`, `aux_max_*`) are created
+- Validate complementarity constraints have correct structure
+- Confirm mixed-operations test fails with clear error message
+
+**Sprint 6 Impact:**
+
+- Component 2 (Min/Max Support) can proceed with confidence
+- Clear implementation roadmap reduces mid-sprint uncertainty
+- Test specifications enable TDD approach
+- Known limitations documented for user communication
+
+**Deliverables:**
+
+- 📄 `NESTED_MINMAX_DESIGN.md` - Complete design document (60+ pages)
+- 🧪 6 test case specifications with expected results
+- 📊 Algorithm analysis: time/space complexity, edge cases
+- 🗺️ Integration guide: call graph, files to modify
+- ⚖️ Option A vs Option B comparison with decision rationale
+
+**Deferred to Future:**
+
+- **Option B (Multi-pass reformulation):** Handles mixed operations like `min(x, max(y, z))`
+- **Estimated effort:** 10-15 hours (too large for Sprint 6)
+- **Coverage gain:** 10-20% additional cases (diminishing returns)
+- **Recommendation:** Implement only if user demand materializes
+
+---
+
 ### Sprint 6 Preparation: Task 4 - GAMSLib NLP Model Catalog Survey - 2025-11-12
 
 **Status:** ✅ COMPLETE - 120+ models cataloged, Tier 1 selection ready for Sprint 6

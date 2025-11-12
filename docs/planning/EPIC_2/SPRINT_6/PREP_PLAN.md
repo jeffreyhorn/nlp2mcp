@@ -596,7 +596,7 @@ grep -q "Tier 1" docs/planning/EPIC_2/SPRINT_6/GAMSLIB_NLP_CATALOG.md
 
 ## Task 5: Design Nested Min/Max Flattening Strategy
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 3-5 hours  
 **Deadline:** Before Sprint 6 Day 1  
@@ -757,13 +757,13 @@ grep -q "test_nested_min_simple" docs/planning/EPIC_2/SPRINT_6/NESTED_MINMAX_DES
 
 ### Acceptance Criteria
 
-- [ ] Flattening algorithm designed for same-operation nesting
-- [ ] Mixed-operation handling specified (no flattening)
-- [ ] 4+ test cases cover: simple nesting, deep nesting, mixed operations
-- [ ] Integration points identified in existing codebase
-- [ ] Implementation effort estimated at 4-6 hours
-- [ ] PATH validation strategy defined
-- [ ] Known limitations documented (e.g., max nesting depth)
+- [x] Flattening algorithm designed for same-operation nesting
+- [x] Mixed-operation handling specified (no flattening)
+- [x] 4+ test cases cover: simple nesting, deep nesting, mixed operations
+- [x] Integration points identified in existing codebase
+- [x] Implementation effort estimated at 4-6 hours
+- [x] PATH validation strategy defined
+- [x] Known limitations documented (e.g., max nesting depth)
 
 ---
 
