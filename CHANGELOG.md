@@ -15,12 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Completed Task 5 of Sprint 6 PREP_PLAN: Designed the flattening approach (Option A) for handling nested min/max expressions like `min(x, min(y, z))`. This design enables Sprint 6 Component 2 implementation with clear algorithm, integration points, and validation strategy.
 
-**Task 5: Design Nested Min/Max Flattening Strategy (3-5h)**
+**Task 5: Design Nested Min/Max Flattening Strategy (4-7h)**
 - ✅ Analyzed existing min/max detection and reformulation code
 - ✅ Designed flattening algorithm for same-operation nesting
 - ✅ Specified 6 test cases covering simple, deep, and mixed-operation nesting
 - ✅ Identified integration point: `detect_min_max_calls()` in `src/kkt/reformulation.py`
-- ✅ Estimated implementation effort: 4-6 hours (fits Sprint 6 schedule)
+- ✅ Estimated implementation effort: 4-7 hours (fits Sprint 6 schedule)
 - ✅ Defined PATH validation strategy with expected solutions
 - ✅ Documented 4 known limitations with workarounds
 
@@ -28,7 +28,7 @@ Completed Task 5 of Sprint 6 PREP_PLAN: Designed the flattening approach (Option
 
 Decision to use flattening-only approach over multi-pass reformulation:
 - **Coverage:** Handles 80-90% of real-world nested min/max cases
-- **Effort:** 4-6 hours (vs 10-15 hours for Option B)
+- **Effort:** 4-7 hours (vs 10-15 hours for Option B)
 - **Complexity:** Low - single-pass algorithm
 - **Efficiency:** Fewer auxiliary variables than multi-pass approach
 
@@ -87,7 +87,7 @@ min(x, max(y, z)) → unchanged     ✗ Not supported (mixed operations)
 
 **Deliverables:**
 
-- 📄 `NESTED_MINMAX_DESIGN.md` - Complete design document (60+ pages)
+- 📄 `NESTED_MINMAX_DESIGN.md` - Complete design document (1000+ lines)
 - 🧪 6 test case specifications with expected results
 - 📊 Algorithm analysis: time/space complexity, edge cases
 - 🗺️ Integration guide: call graph, files to modify

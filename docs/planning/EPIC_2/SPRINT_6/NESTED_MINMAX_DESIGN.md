@@ -3,7 +3,7 @@
 **Date:** 2025-11-12  
 **Status:** ✅ DESIGN COMPLETE - Ready for Sprint 6 Implementation  
 **Approach:** Option A - Flattening Only (Same-Operation Nesting)  
-**Estimated Effort:** 4-6 hours implementation  
+**Estimated Effort:** 4-7 hours implementation  
 **Priority:** High (Sprint 6 Component 2)
 
 ## Executive Summary
@@ -75,12 +75,18 @@ def flatten_minmax_calls(expr: Expr) -> Expr:
            a. Recursively flatten all arguments first (bottom-up)
            b. Collect arguments, expanding nested same-operation calls
            c. Return new Call with flattened argument list
-        3. For non-Call nodes, traverse children and rebuild
+        3. For non-Call nodes (leaf nodes), return as-is
+        
+    Note: This simplified pseudocode focuses on Call expressions since min/max
+    appear as function calls. In the actual implementation, Binary/Unary operators
+    would need separate handling if they could contain nested min/max. However,
+    in the GAMS AST, min/max only appear as Call nodes, so this algorithm is complete.
     
     Time Complexity: O(n) where n = number of nodes in expression tree
     Space Complexity: O(d) where d = max nesting depth (recursion stack)
     """
-    # Base case: non-Call expressions
+    # Base case: non-Call expressions (leaf nodes like VarRef, Const, ParamRef)
+    # These have no children to process, so return as-is
     if not isinstance(expr, Call):
         return expr
     
@@ -292,7 +298,7 @@ balance.. production =e= min(capacity1, demand1, supply1)
 
 **Detection:** Existing reformulation code should detect len(args) == 1
 
-**Recommended Handling:** 
+**Recommended Handling (REQUIRED for Task 1):**
 ```python
 # In reformulation.py
 if len(min_call.args) == 1:
@@ -302,7 +308,9 @@ if len(min_call.args) == 1:
     continue
 ```
 
-**Alternative:** Allow reformulation to proceed (creates unnecessary but valid constraints)
+This optimization is **required** as part of the implementation to avoid creating unnecessary auxiliary variables and constraints.
+
+**Alternative (not recommended):** Allow reformulation to proceed (creates unnecessary but valid constraints)
 
 #### Edge Case 2: Constants Only
 
@@ -421,8 +429,8 @@ obj.l = 1.0
 **Validation Checks:**
 ```python
 assert solution['x'] == pytest.approx(1.0, abs=1e-6)
-assert solution['y'] >= 2.0 - 1e-6
-assert solution['z'] >= 3.0 - 1e-6
+assert solution['y'] == pytest.approx(2.0, abs=1e-6)
+assert solution['z'] == pytest.approx(3.0, abs=1e-6)
 assert solution['w'] == pytest.approx(1.0, abs=1e-6)
 assert solution['obj'] == pytest.approx(1.0, abs=1e-6)
 ```
@@ -522,12 +530,19 @@ Model test /all/;
 Solve test using NLP minimizing obj;
 ```
 
-**Expected Result:** **ERROR**
+**Expected Result:** **ERROR** (current error message from differentiation failure)
 
 ```
 Error: Differentiation not yet implemented for function 'max'.
-Nested min/max with different operations (min inside max or max inside min)
-is not supported. Use multi-argument form: min(a, b, c) instead of min(a, min(b, c)).
+```
+
+**Proposed improved error message** (optional enhancement for future sprint):
+
+```
+Error: Nested min/max with different operations (min inside max or max inside min) 
+is not supported. Flattening only works for same-operation nesting.
+Workaround: Reformulate manually or wait for multi-pass reformulation support.
+Context: Found 'max' inside 'min' at equation 'mixedconstraint'.
 ```
 
 **Purpose:** Document limitation and provide clear error message for unsupported case.
@@ -577,7 +592,7 @@ x3.l = 3.0
 y1.l = 5.0    (lower bound)
 y2.l = 6.0
 y3.l = 7.0
-result.l = 1.0 + 5.0 = 6.0  (minimize sum, so min at lower, max at lower)
+result.l = 1.0 + 5.0 = 6.0  (when minimizing the sum, both min and max terms take their lowest possible values among their candidates)
 ```
 
 **Purpose:** Verify that multiple nested calls in same equation are handled independently.
@@ -612,6 +627,8 @@ x.l = 5.0     (lower bound, active)
 y.l = 5.0     (lower bound, active)
 w.l = 5.0     (min(5, 10, 5) = 5)
 ```
+
+> **Note:** Both `x` and `y` are at their lower bounds (which is correct for this instance). However, mathematically, only one constraint needs to be active (i.e., only one corresponding multiplier needs to be nonzero) to determine the minimum in the complementarity sense.
 
 **Purpose:** Verify constants are handled correctly in flattening.
 
@@ -693,8 +710,9 @@ def detect_min_max_calls(expr: Expr, context: str) -> list[MinMaxCall]:
         nonlocal index_counter
         if isinstance(node, Call) and node.func.lower() in ("min", "max"):
             func_type = node.func.lower()
-            # Note: flatten_min_max_args is now redundant after flatten_minmax_calls
-            # But keeping it for backwards compatibility doesn't hurt
+            # Note: flatten_min_max_args is now redundant after flatten_minmax_calls.
+            # Kept for backwards compatibility: Some legacy code may rely on its output or side effects.
+            # Remove this call once all legacy dependencies are updated and tested.
             flattened_args = flatten_min_max_args(node)
             # ... rest of detection
     
@@ -988,13 +1006,13 @@ Nested min/max with different operations is not supported in Option A.
   - ✅ No changes needed: detection, reformulation, KKT, Jacobian, emission
   - ✅ Call graph documented
 
-- [x] **Implementation effort estimated at 4-6 hours**
+- [x] **Implementation effort estimated at 4-7 hours**
   - ✅ Task 1: Flattening function (2h)
   - ✅ Task 2: Integration (1h)
   - ✅ Task 3: Documentation (0.5h)
   - ✅ Task 4: Tests (2h)
   - ✅ Task 5: PATH validation (1h)
-  - **Total: 6.5 hours** (slightly over estimate due to comprehensive testing)
+  - **Total: 6.5 hours** (within updated estimate range)
 
 - [x] **PATH validation strategy defined**
   - ✅ Validation script specified
@@ -1012,7 +1030,7 @@ Nested min/max with different operations is not supported in Option A.
 
 **Pros:**
 - Simple implementation (single-pass)
-- Low effort (4-6 hours)
+- Low effort (4-7 hours)
 - No iteration limits needed
 - Cleaner MCP output (fewer auxiliary variables)
 - Covers 80-90% of real-world use cases
