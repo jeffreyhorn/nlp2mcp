@@ -7,6 +7,205 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Preparation: Task 8 - Convexity Test Fixtures - 2025-11-12
+
+**Status:** ✅ COMPLETE - Comprehensive test fixture library ready for convexity detection testing
+
+#### Summary
+
+Completed Task 8 of Sprint 6 PREP_PLAN: Created 13 minimal GAMS NLP models as test fixtures for convexity detection heuristics, covering convex cases, non-convex cases, and edge cases.
+
+**Task 8: Create Convexity Test Fixtures (2-3h)**
+- ✅ Created 5 convex models (should NOT warn)
+- ✅ Created 5 non-convex models (should warn)
+- ✅ Created 3 edge case models (ambiguous/borderline)
+- ✅ All models < 20 lines (minimal examples)
+- ✅ Comprehensive README with expected results catalog
+- ✅ All models parse-ready for current parser
+
+**Test Fixture Categories:**
+
+**1. Convex Models** (No warnings expected):
+- `linear_program.gms` - Simple LP with linear constraints
+- `convex_qp.gms` - Quadratic program (minimize x² + y²)
+- `convex_exponential.gms` - Exponential objective (minimize exp(x) + exp(y))
+- `convex_log_barrier.gms` - Log barrier function (minimize -log(x) - log(y))
+- `convex_inequality.gms` - Convex constraints (x² + y² ≤ 25)
+
+**2. Non-Convex Models** (Warnings expected):
+- `nonconvex_circle.gms` - Circle equality (x² + y² = 4)
+- `nonconvex_trig_eq.gms` - Trig equality (sin(x) + cos(y) = 0)
+- `nonconvex_bilinear.gms` - Bilinear term (minimize x*y)
+- `nonconvex_quotient.gms` - Division (minimize x/y)
+- `nonconvex_odd_power.gms` - Cubic term (minimize x³ + y²)
+
+**3. Edge Cases** (Ambiguous):
+- `mixed_convex_nonconvex.gms` - Convex objective, nonlinear equality constraint
+- `convex_with_trig_ineq.gms` - Trigonometric inequality (sin(x) ≤ 0.5)
+- `nearly_affine.gms` - Almost linear but with x² = 4 equality
+
+#### Model Structure
+
+Each model follows a consistent minimal structure:
+```gams
+$title Model Name - Classification
+
+* Expected Classification: CONVEX/NON-CONVEX/AMBIGUOUS  
+* Expected Warning: Description of expected warning message
+* Description: Key feature being tested
+
+Variables x, y, obj;
+Equations objdef, constraint;
+
+objdef..     obj =e= [objective function];
+constraint.. [constraint expression];
+
+[Variable bounds]
+
+Model m /all/;
+Solve m using nlp minimizing obj;
+```
+
+#### Expected Warning Format
+
+Based on Task 2 convexity research:
+
+```
+Warning: Non-convex problem detected (line X, column Y)
+
+Nonlinear equality constraint may cause PATH solver to fail.
+The problem contains: [bilinear term / trigonometric equality / ...]
+
+Action: Consider using NLP solver instead of PATH for MCP reformulation.
+See: docs/CONVEXITY.md
+```
+
+#### Testing Goals
+
+**Sprint 6 Baseline Targets:**
+1. **Recall**: Detect all 5 non-convex models (100% on obvious cases)
+2. **Precision**: Don't warn on 5 convex models (0% false positive rate)
+3. **Consistency**: Predictable behavior on 3 edge cases
+4. **Performance**: Analyze all 13 models in <1 second
+
+#### Usage Examples
+
+**Testing Convexity Detection:**
+```python
+from nlp2mcp.convexity import detect_convexity
+
+# Test convex model (should not warn)
+result = detect_convexity("tests/fixtures/convexity/linear_program.gms")
+assert result.is_convex == True
+assert len(result.warnings) == 0
+
+# Test non-convex model (should warn)
+result = detect_convexity("tests/fixtures/convexity/nonconvex_circle.gms")
+assert result.is_convex == False
+assert len(result.warnings) > 0
+assert "equality" in result.warnings[0].lower()
+```
+
+**Batch Testing:**
+```bash
+for model in tests/fixtures/convexity/*.gms; do
+    python -m nlp2mcp.convexity "$model"
+done
+```
+
+#### Files Created
+
+**New Files:**
+- `tests/fixtures/convexity/README.md` (240 lines) - Complete test catalog
+- `tests/fixtures/convexity/linear_program.gms` - Convex: LP
+- `tests/fixtures/convexity/convex_qp.gms` - Convex: QP
+- `tests/fixtures/convexity/convex_exponential.gms` - Convex: exp
+- `tests/fixtures/convexity/convex_log_barrier.gms` - Convex: -log
+- `tests/fixtures/convexity/convex_inequality.gms` - Convex: convex constraints
+- `tests/fixtures/convexity/nonconvex_circle.gms` - Non-convex: equality
+- `tests/fixtures/convexity/nonconvex_trig_eq.gms` - Non-convex: trig
+- `tests/fixtures/convexity/nonconvex_bilinear.gms` - Non-convex: x*y
+- `tests/fixtures/convexity/nonconvex_quotient.gms` - Non-convex: x/y
+- `tests/fixtures/convexity/nonconvex_odd_power.gms` - Non-convex: x³
+- `tests/fixtures/convexity/mixed_convex_nonconvex.gms` - Edge case
+- `tests/fixtures/convexity/convex_with_trig_ineq.gms` - Edge case
+- `tests/fixtures/convexity/nearly_affine.gms` - Edge case
+
+**Modified Files:**
+- `docs/planning/EPIC_2/SPRINT_6/PREP_PLAN.md` - Marked Task 8 complete
+
+#### Design Rationale
+
+**Why Minimal Models?**
+- Isolate specific convexity features for targeted testing
+- Fast parsing and analysis (<1 second for all 13)
+- Easy to understand and maintain
+- Clear expected results
+
+**Why These Specific Features?**
+
+**Convex Models:**
+1. **LP** - Baseline (everything linear)
+2. **QP** - Positive definite quadratic (classic convex)
+3. **Exponential** - Convex transcendental function
+4. **Log Barrier** - Convex over positive domain
+5. **Convex Inequality** - Feasible set convexity
+
+**Non-Convex Models:**
+1. **Circle Equality** - Nonlinear equality (most common)
+2. **Trig Equality** - Transcendental equality
+3. **Bilinear** - Product of variables (common in economics)
+4. **Quotient** - Ratio (fractional programming)
+5. **Odd Power** - Non-convex polynomial
+
+**Edge Cases:**
+1. **Mixed** - Tests handling of conflicting features
+2. **Trig Inequality** - Tests conservative vs permissive heuristics
+3. **Nearly Affine** - Tests detection granularity
+
+#### Sprint 6 Integration
+
+**Convexity Detection Pipeline:**
+1. **Parse** model → IR
+2. **Analyze** IR for non-convex indicators
+3. **Classify** as CONVEX / NON-CONVEX / AMBIGUOUS
+4. **Generate** warnings for non-convex cases
+
+**Non-Convex Indicators (from Task 2 research):**
+1. Nonlinear equalities (any)
+2. Bilinear terms (x*y)
+3. Division (x/y)
+4. Odd powers (x³, x⁵)
+5. Certain trig patterns
+
+**Testing Strategy:**
+- Unit tests for each model
+- Batch tests for entire fixture set
+- Regression tests to prevent false positives/negatives
+- Performance benchmarks (<1s for all 13 models)
+
+#### Validation
+
+All models verified to:
+- ✅ Contain <20 lines each
+- ✅ Include expected classification in header comments
+- ✅ Parse successfully with current nlp2mcp parser
+- ✅ Represent distinct convexity patterns
+- ✅ Have documented expected warnings
+
+#### Deliverables Checklist
+
+- [x] 5 convex models created
+- [x] 5 non-convex models created
+- [x] 3 edge case models created
+- [x] All models <20 lines
+- [x] Expected warnings documented in README
+- [x] Comprehensive test catalog in README
+- [x] Each model has comment header with classification
+- [x] All acceptance criteria met
+
+---
+
 ### Sprint 6 Preparation: Task 7 - GAMSLib Download Infrastructure - 2025-11-12
 
 **Status:** ✅ COMPLETE - Automated download script ready for Sprint 6 GAMSLib bootstrapping

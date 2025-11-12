@@ -1,36 +1,20 @@
-* Convex Quadratic Program (QP)
-*
-* This is a convex quadratic program with a positive semi-definite
-* quadratic objective.
-*
-* Problem:
-*     minimize: x^2 + y^2
-*     subject to:
-*         x + y >= 5
-*         x >= 0
-*         y >= 0
-*
-* Expected: 0 warnings (objective is convex quadratic, constraints are linear)
+$title Convex Quadratic Program - Convex Test Fixture
 
-Variables
-    x
-    y
-    obj;
+* Expected Classification: CONVEX
+* Expected Warning: None (positive definite quadratic is convex)
+* Description: Minimizes x^2 + y^2 (Euclidean norm squared)
 
-Equations
-    objective
-    constraint1;
+Variables x, y, obj;
 
-* Objective: minimize x^2 + y^2 (convex quadratic)
-objective.. obj =e= x**2 + y**2;
+Equations objdef, linear_constr;
 
-* Constraint: x + y >= 5
-constraint1.. x + y =g= 5;
+objdef..        obj =e= sqr(x) + sqr(y);
+linear_constr.. x + 2*y =l= 5;
 
-* Variable bounds
-x.lo = 0;
-y.lo = 0;
+x.lo = -10;
+x.up = 10;
+y.lo = -10;
+y.up = 10;
 
-* Model definition and solve
-Model quadratic_program / all /;
-Solve quadratic_program using NLP minimizing obj;
+Model m /all/;
+Solve m using nlp minimizing obj;
