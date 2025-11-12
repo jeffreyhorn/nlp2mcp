@@ -60,7 +60,7 @@ def is_constant(expr: Expr) -> bool:
         case Sum(_, body):
             return is_constant(body)
         case _:
-            return False
+            return None
 
 
 def is_affine(expr: Expr) -> bool:
@@ -87,7 +87,24 @@ def is_affine(expr: Expr) -> bool:
         case Sum(_, body):
             return is_affine(body)
         case _:
-            return False
+            return None
+
+
+def has_variable(e: Expr) -> bool:
+    """Check if expression contains any variables."""
+    match e:
+        case VarRef(_):
+            return True
+        case Binary(_, left, right):
+            return has_variable(left) or has_variable(right)
+        case Unary(_, operand):
+            return has_variable(operand)
+        case Call(_, args):
+            return any(has_variable(arg) for arg in args)
+        case Sum(_, body):
+            return has_variable(body)
+        case _:
+            return None
 
 
 def find_trig_functions(expr: Expr) -> list[str]:
@@ -119,22 +136,6 @@ def find_bilinear_terms(expr: Expr) -> list[str]:
     """Find bilinear terms (products of two variables) in expression."""
     bilinear_terms = []
 
-    def has_variable(e: Expr) -> bool:
-        """Check if expression contains any variables."""
-        match e:
-            case VarRef(_):
-                return True
-            case Binary(_, left, right):
-                return has_variable(left) or has_variable(right)
-            case Unary(_, operand):
-                return has_variable(operand)
-            case Call(_, args):
-                return any(has_variable(arg) for arg in args)
-            case Sum(_, body):
-                return has_variable(body)
-            case _:
-                return False
-
     def traverse(e: Expr) -> None:
         match e:
             case Binary("*", left, right):
@@ -154,6 +155,8 @@ def find_bilinear_terms(expr: Expr) -> list[str]:
                     traverse(arg)
             case Sum(_, body):
                 traverse(body)
+            case _:
+                return None
 
     traverse(expr)
     return bilinear_terms
@@ -162,22 +165,6 @@ def find_bilinear_terms(expr: Expr) -> list[str]:
 def find_variable_quotients(expr: Expr) -> list[str]:
     """Find quotients where denominator contains variables."""
     quotients = []
-
-    def has_variable(e: Expr) -> bool:
-        """Check if expression contains any variables."""
-        match e:
-            case VarRef(_):
-                return True
-            case Binary(_, left, right):
-                return has_variable(left) or has_variable(right)
-            case Unary(_, operand):
-                return has_variable(operand)
-            case Call(_, args):
-                return any(has_variable(arg) for arg in args)
-            case Sum(_, body):
-                return has_variable(body)
-            case _:
-                return False
 
     def traverse(e: Expr) -> None:
         match e:
@@ -197,6 +184,8 @@ def find_variable_quotients(expr: Expr) -> list[str]:
                     traverse(arg)
             case Sum(_, body):
                 traverse(body)
+            case _:
+                return None
 
     traverse(expr)
     return quotients
@@ -205,22 +194,6 @@ def find_variable_quotients(expr: Expr) -> list[str]:
 def find_odd_powers(expr: Expr) -> list[str]:
     """Find odd integer powers of variables (x^3, x^5, etc.)."""
     odd_powers = []
-
-    def has_variable(e: Expr) -> bool:
-        """Check if expression contains any variables."""
-        match e:
-            case VarRef(_):
-                return True
-            case Binary(_, left, right):
-                return has_variable(left) or has_variable(right)
-            case Unary(_, operand):
-                return has_variable(operand)
-            case Call(_, args):
-                return any(has_variable(arg) for arg in args)
-            case Sum(_, body):
-                return has_variable(body)
-            case _:
-                return False
 
     def traverse(e: Expr) -> None:
         match e:
@@ -244,6 +217,8 @@ def find_odd_powers(expr: Expr) -> list[str]:
                     traverse(arg)
             case Sum(_, body):
                 traverse(body)
+            case _:
+                return None
 
     traverse(expr)
     return odd_powers
@@ -352,7 +327,7 @@ def detect_bilinear_terms(model_ir: ModelIR) -> list[Warning]:
                 Warning(
                     equation="objective",
                     pattern="bilinear_term",
-                    message=f"Found bilinear terms: {', '.join(bilinear[:3])}... "
+                    message=f"Found bilinear terms: {', '.join(bilinear[:3])}{'...' if len(bilinear) > 3 else ''} "
                     f"({len(bilinear)} total). Bilinear terms are non-convex.",
                 )
             )
@@ -369,7 +344,7 @@ def detect_bilinear_terms(model_ir: ModelIR) -> list[Warning]:
                 Warning(
                     equation=eq_name,
                     pattern="bilinear_term",
-                    message=f"Found bilinear terms: {', '.join(all_bilinear[:3])}... "
+                    message=f"Found bilinear terms: {', '.join(all_bilinear[:3])}{'...' if len(all_bilinear) > 3 else ''} "
                     f"({len(all_bilinear)} total). Bilinear terms are non-convex.",
                 )
             )
@@ -393,7 +368,7 @@ def detect_quotients(model_ir: ModelIR) -> list[Warning]:
                 Warning(
                     equation="objective",
                     pattern="variable_quotient",
-                    message=f"Found variable quotients: {', '.join(quotients[:3])}... "
+                    message=f"Found variable quotients: {', '.join(quotients[:3])}{'...' if len(quotients) > 3 else ''} "
                     f"({len(quotients)} total). Variable quotients are typically non-convex.",
                 )
             )
@@ -410,7 +385,7 @@ def detect_quotients(model_ir: ModelIR) -> list[Warning]:
                 Warning(
                     equation=eq_name,
                     pattern="variable_quotient",
-                    message=f"Found variable quotients: {', '.join(all_quotients[:3])}... "
+                    message=f"Found variable quotients: {', '.join(all_quotients[:3])}{'...' if len(all_quotients) > 3 else ''} "
                     f"({len(all_quotients)} total). Variable quotients are typically non-convex.",
                 )
             )
@@ -434,7 +409,7 @@ def detect_odd_powers(model_ir: ModelIR) -> list[Warning]:
                 Warning(
                     equation="objective",
                     pattern="odd_power",
-                    message=f"Found odd powers: {', '.join(odd_powers[:3])}... "
+                    message=f"Found odd powers: {', '.join(odd_powers[:3])}{'...' if len(odd_powers) > 3 else ''} "
                     f"({len(odd_powers)} total). Odd powers are neither convex nor concave.",
                 )
             )
@@ -451,7 +426,7 @@ def detect_odd_powers(model_ir: ModelIR) -> list[Warning]:
                 Warning(
                     equation=eq_name,
                     pattern="odd_power",
-                    message=f"Found odd powers: {', '.join(all_odd_powers[:3])}... "
+                    message=f"Found odd powers: {', '.join(all_odd_powers[:3])}{'...' if len(all_odd_powers) > 3 else ''} "
                     f"({len(all_odd_powers)} total). Odd powers are neither convex nor concave.",
                 )
             )
