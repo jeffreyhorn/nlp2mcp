@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Completed Task 1 of Sprint 6 PREP_PLAN: Created comprehensive Known Unknowns document identifying all assumptions and research questions for Sprint 6 features (convexity detection, bug fixes, GAMSLib integration, UX improvements). This proactive approach continues the successful methodology from Sprints 4 and 5.
 
 **Task 1: Create Sprint 6 Known Unknowns List (3-4h)**
-- ✅ Created `docs/planning/EPIC_2/SPRINT_6/KNOWN_UNKNOWNS.md` (1510 lines)
+- ✅ Created `docs/planning/EPIC_2/SPRINT_6/KNOWN_UNKNOWNS.md` (1512 lines)
 - ✅ Documented 22 unknowns across 4 categories (exceeds 18-25 target)
 - ✅ All unknowns have: Priority, Assumption, Research Questions, Verification, Time, Owner
 - ✅ Estimated research time: 18-24 hours total
@@ -25,40 +25,40 @@ Completed Task 1 of Sprint 6 PREP_PLAN: Created comprehensive Known Unknowns doc
 **Unknown Distribution:**
 
 *Category 1: Convexity Detection (7 unknowns)*
-- Pattern matching for nonlinear equality constraints
-- Sign/monotonicity rules for log/exp/power terms
-- Bilinear term detection (x*y in objectives)
-- Nested function nonconvexity detection
-- Objective sense interaction with convexity
-- Sufficient conditions for safe transformation
-- Performance/false positive tradeoffs
+- 1.1: Pattern matching for nonlinear equality constraints
+- 1.2: Trigonometric function detection and domain analysis
+- 1.3: Bilinear terms in different constraint types
+- 1.4: Quotient detection and division by variables
+- 1.5: Odd powers that break convexity
+- 1.6: `--strict-convexity` flag and exit codes
+- 1.7: Convexity warnings citing specific equation line numbers
 
 *Category 2: Bug Fixes (5 unknowns)*
-- Maximize objective bound multiplier signs in KKT stationarity
-- Nested min/max flattening approach and bound propagation
-- IR schema changes needed for min/max edge cases
-- Test coverage strategy for edge cases
-- Backward compatibility with existing models
+- 2.1: Maximize-sense bound multiplier signs in KKT stationarity
+- 2.2: Nested min/max flattening semantics and ambiguity
+- 2.3: AST detection of nested min/max patterns
+- 2.4: Regression testing for nested min/max bug fixes
+- 2.5: Configuration decisions for min/max handling
 
 *Category 3: GAMSLib Integration (6 unknowns)*
-- GAMS license requirements for model downloads
-- Model format compatibility and parsing
-- Conversion tracking schema design
-- Success/failure metric definitions
-- Error categorization and regression prevention
-- Performance/storage tradeoffs
+- 3.1: GAMS licensing requirements for model downloads
+- 3.2: GAMSLib NLP model counts and targeting strategy
+- 3.3: Parse error patterns revealed by GAMSLib models
+- 3.4: Conversion dashboard (static HTML vs dynamic)
+- 3.5: KPI tracking (parse%, convert%, solve%)
+- 3.6: Ingestion scheduling (nightly vs on-demand)
 
 *Category 4: UX Improvements (4 unknowns)*
-- Source context formatting in error messages
-- Markdown rendering vs plain text in CLI
-- Documentation link maintenance strategy
-- Multi-line vs single-line context display
+- 4.1: Parser line and column number support for errors
+- 4.2: Documentation links embedded in error messages
+- 4.3: Suppressible convexity warnings per-equation
+- 4.4: Sprint demo checklist progress display
 
 **Priority Breakdown:**
 - Critical: 4 unknowns (could derail sprint if wrong)
-- High: 9 unknowns (require upfront research)
+- High: 7 unknowns (require upfront research)
 - Medium: 6 unknowns (resolve during implementation)
-- Low: 3 unknowns (minimal impact)
+- Low: 5 unknowns (minimal impact)
 
 **Acceptance Criteria Met (7/7):**
 - ✅ Document created with 18+ unknowns across 4 categories (22 created)

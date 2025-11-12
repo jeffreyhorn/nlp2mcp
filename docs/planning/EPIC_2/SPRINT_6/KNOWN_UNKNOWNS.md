@@ -49,9 +49,9 @@ This document identifies all assumptions and unknowns for Sprint 6 features **be
 **Total Unknowns:** 22  
 **By Priority:**
 - Critical: 4 (unknowns that could derail sprint)
-- High: 9 (unknowns requiring upfront research)
+- High: 7 (unknowns requiring upfront research)
 - Medium: 6 (unknowns that can be resolved during implementation)
-- Low: 3 (nice-to-know, low impact)
+- Low: 5 (nice-to-know, low impact)
 
 **By Category:**
 - Category 1 (Convexity Detection): 7 unknowns

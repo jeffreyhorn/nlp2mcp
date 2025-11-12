@@ -126,7 +126,7 @@ grep -q "GAMSLib" docs/planning/EPIC_2/SPRINT_6/KNOWN_UNKNOWNS.md
 - [ ] All Critical unknowns have verification plan and timeline
 - [ ] Unknowns cover all Sprint 6 components (convexity, bugs, GAMSLib, UX)
 - [ ] Template for updates defined
-- [ ] Research time estimated (15-25 hours total)
+- [ ] Research time estimated (18-24 hours total)
 - [ ] Cross-referenced with PROJECT_PLAN.md deliverables
 
 ---
