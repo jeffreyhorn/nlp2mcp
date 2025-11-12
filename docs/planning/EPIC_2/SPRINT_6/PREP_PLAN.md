@@ -262,13 +262,13 @@ test -f docs/planning/EPIC_2/SPRINT_6/CONVEXITY_POC_RESULTS.md
 
 ### Acceptance Criteria
 
-- [ ] POC pattern matchers implemented for: nonlinear equalities, trig, bilinear, quotients
-- [ ] Test suite includes 3+ convex examples (LP, QP, nonlinear ineq)
-- [ ] Test suite includes 3+ non-convex examples (circle, trig, bilinear)
-- [ ] Pattern accuracy documented (no false accepts on test suite)
-- [ ] Performance benchmarks show <100ms overhead for typical models
-- [ ] Clear recommendation made: Approach 1 (heuristic) or Approach 2 (AST)
-- [ ] Implementation plan outlined for chosen approach
+- [x] POC pattern matchers implemented for: nonlinear equalities, trig, bilinear, quotients, odd powers
+- [x] Test suite includes 3+ convex examples (LP, QP, nonlinear ineq)
+- [x] Test suite includes 3+ non-convex examples (circle, trig, bilinear, quotient, odd power - 5 total)
+- [x] Pattern accuracy documented (0% false accepts on test suite)
+- [x] Performance benchmarks show <100ms overhead for typical models
+- [x] Clear recommendation made: Approach 1 (heuristic)
+- [x] Implementation plan outlined for chosen approach
 
 ---
 
