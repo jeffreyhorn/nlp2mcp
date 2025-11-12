@@ -121,13 +121,13 @@ grep -q "GAMSLib" docs/planning/EPIC_2/SPRINT_6/KNOWN_UNKNOWNS.md
 
 ### Acceptance Criteria
 
-- [ ] Document created with 18+ unknowns across 4 categories
-- [ ] All unknowns have assumption, verification method, priority
-- [ ] All Critical unknowns have verification plan and timeline
-- [ ] Unknowns cover all Sprint 6 components (convexity, bugs, GAMSLib, UX)
-- [ ] Template for updates defined
-- [ ] Research time estimated (18-24 hours total)
-- [ ] Cross-referenced with PROJECT_PLAN.md deliverables
+- [x] Document created with 18+ unknowns across 4 categories
+- [x] All unknowns have assumption, verification method, priority
+- [x] All Critical unknowns have verification plan and timeline
+- [x] Unknowns cover all Sprint 6 components (convexity, bugs, GAMSLib, UX)
+- [x] Template for updates defined
+- [x] Research time estimated (18-24 hours total)
+- [x] Cross-referenced with PROJECT_PLAN.md deliverables
 
 ---
 
