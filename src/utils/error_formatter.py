@@ -10,6 +10,7 @@ docs/planning/EPIC_2/SPRINT_6/ERROR_MESSAGE_TEMPLATE.md
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 
 @dataclass
@@ -21,12 +22,28 @@ class ErrorContext:
         line: Line number where error occurred (1-indexed)
         column: Column number where error occurred (1-indexed)
         source_lines: List of source code lines for context (typically 3 lines)
+            IMPORTANT: source_lines[0] must correspond to line number (line - 1).
+            This means if the error is on line 10, source_lines should contain
+            line 9 as the first element (if available), line 10 as the second
+            element (the actual error line), and line 11 as the third element
+            (if available). The formatter will calculate line numbers based on
+            this assumption.
+
+            source_lines must not be empty when ErrorContext is created.
     """
 
     filename: str
     line: int
     column: int
     source_lines: list[str]
+
+    def __post_init__(self):
+        """Validate ErrorContext after initialization."""
+        if not self.source_lines:
+            raise ValueError(
+                "ErrorContext.source_lines must not be empty. "
+                "Provide at least the error line for context."
+            )
 
 
 @dataclass
@@ -50,7 +67,7 @@ class FormattedError:
         doc_link: Optional link to documentation
     """
 
-    level: str  # "Error" or "Warning"
+    level: Literal["Error", "Warning"]
     title: str
     context: ErrorContext | None
     explanation: str
@@ -237,7 +254,24 @@ def create_warning(
         ...     action="Use NLP solver instead of PATH",
         ...     doc_link="docs/CONVEXITY.md"
         ... )
+
+    Note:
+        To create context, either provide all three (line, column, source_lines)
+        or none. If only some are provided, a ValueError will be raised.
     """
+    # Validate that context information is either complete or not provided
+    context_fields = [line, column, source_lines]
+    provided_count = sum(f is not None for f in context_fields)
+
+    if provided_count not in (0, 3):
+        raise ValueError(
+            "Context information must be complete: provide either all three "
+            "(line, column, source_lines) or none. "
+            f"Currently provided: line={line is not None}, "
+            f"column={column is not None}, "
+            f"source_lines={source_lines is not None}"
+        )
+
     context = None
     if line is not None and column is not None and source_lines:
         context = ErrorContext(
