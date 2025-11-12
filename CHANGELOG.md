@@ -7,6 +7,107 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Preparation: Task 4 - GAMSLib NLP Model Catalog Survey - 2025-11-12
+
+**Status:** ✅ COMPLETE - 120+ models cataloged, Tier 1 selection ready for Sprint 6
+
+**⚠️ CORRECTION (2025-11-12):** Initial analysis incorrectly listed Table statements as a parser blocker. Parser fully supports tables via `_handle_table_block` method (src/ir/parser.py:354+). Parse success estimates updated: Tier 1: 70-90% (was 60-80%), Tier 2: 50-70% (was 40-60%), Tier 3: 30-50% (was 20-40%).
+
+#### Summary
+
+Completed Task 4 of Sprint 6 PREP_PLAN: Comprehensive survey of GAMS Model Library NLP models with parser feature analysis and tiered model selection. Identified 10 target models for Sprint 6 ingestion with estimated 70-90% parse success rate.
+
+**Task 4: Survey GAMSLib NLP Model Catalog (4-6h)**
+- ✅ Cataloged 120+ NLP models from GAMS Model Library
+- ✅ Analyzed 15 representative models for parser features
+- ✅ Created parser feature matrix identifying capabilities and gaps
+- ✅ Selected 10 models for Sprint 6 Tier 1 (initial target set)
+- ✅ Verified all models are downloadable and accessible
+- ✅ Estimated parse success rate: 70-90% for Tier 1, 50-70% for Tier 2, 30-50% for Tier 3
+- ✅ Documented known blockers and mitigation strategies
+
+**Models Cataloged (120+ total):**
+- NLP: ~80 models (standard nonlinear programming)
+- DNLP: ~10 models (discontinuous NLP)
+- MINLP: ~20 models (mixed-integer NLP)
+- QCP/MIQCP: ~10 models (quadratic conic programming)
+- MPEC/MCP: ~5 models (equilibrium problems)
+
+**Tier 1 Models for Sprint 6 (10 models):**
+1. **trig (261)** - Simple trigonometric example (baseline test)
+2. **rbrock (83)** - Rosenbrock function (famous unconstrained test)
+3. **himmel16 (36)** - Hexagon area problem (indexed variables)
+4. **hs62 (264)** - Hock-Schittkowski test problem #62
+5. **mhw4d (84)** - Nonlinear test problem
+6. **mhw4dx (267)** - MHW4D variant with additional tests
+7. **circle (201)** - Circle packing (likely convex)
+8. **maxmin (263)** - Max-min location problem (tests reformulation)
+9. **mathopt1 (255)** - MathOptimizer baseline example
+10. **mingamma (299)** - Gamma function optimization
+
+**Parser Feature Analysis:**
+
+*Core Features (90%+ coverage, MUST HAVE):*
+- ✅ Variables with bounds (.lo, .up, .l, .fx)
+- ✅ Equations (=e=, =l=, =g=)
+- ✅ Basic arithmetic (+, -, *, /, **)
+- ✅ Power functions (sqr, power)
+- ✅ Solve statement (minimizing/maximizing, using nlp)
+- ✅ Sets, aliases, parameters, scalars
+
+*Important Features (60-80% coverage):*
+- ✅ Trigonometric functions (sin, cos, tan)
+- ✅ Exp, log, sqrt functions
+- ✅ Set indexing and summation
+- ✅ Multi-dimensional indexing
+- ✅ Table statements (20-30% of models) - Fully supported
+- ⚠️ Display statements (ignorable for MCP generation)
+
+*Advanced Features (<20% coverage):*
+- ⚠️ Loop constructs (~10% of models)
+- ⚠️ Conditionals ($ operators, ~15%)
+- ⚠️ Model suffixes (.solveStat, etc., ~10%)
+- ⚠️ Ordered set operations (ord, card, ~5%)
+- ⚠️ Lag/lead operators (++, --, ~5%)
+- ❌ $include directives (rare)
+- ❌ Min/max functions (requires reformulation)
+
+**Known Parser Blockers:**
+1. **Loop constructs** - Affects ~10%, workaround: single-solve only
+2. **Conditionals ($)** - Affects ~15%, workaround: skip or simplify
+3. **Model suffixes** - Affects ~10%, workaround: ignore (post-solve only)
+4. **Ordered operators** - Affects ~5%, workaround: manual expansion
+
+**Supported Features (NOT blockers):**
+- ✅ **Table statements** - Fully supported via `_handle_table_block` (affects ~20% of models)
+
+**Expected Parse Success Rates:**
+- **Tier 1 (Sprint 6):** 70-90% (7-9 of 10 models parseable)
+- **Tier 2 (Sprint 7):** 50-70% (5-7 of 10 models)
+- **Tier 3 (Sprint 8+):** 30-50% (3-5 of 10 models)
+
+**Documentation Created:**
+- `GAMSLIB_NLP_CATALOG.md` - Complete catalog with 120+ models
+- Parser feature matrix for 15 analyzed models
+- Tier 1/2/3 model selection with rationale
+- Download URLs and accessibility verification
+- Known blocker analysis and mitigation strategies
+
+**Sprint 6 Impact:**
+- Initial target set (10 models) ready for ingestion script
+- Realistic baseline KPI: ≥70% parse success for Tier 1
+- Parser gaps identified for future enhancements
+- Roadmap established for Tier 2 (Sprint 7) and Tier 3 (Sprint 8+)
+
+**Deliverables:**
+- 📊 Catalog: 120+ models across 5 problem types
+- 🔍 Analysis: 15 models with detailed feature matrix
+- 🎯 Selection: 10 Tier 1 models + 20 Tier 2/3 models
+- 📈 Estimates: 70-90% success rate, known blockers documented
+- 🔗 URLs: All models accessible from GAMS Model Library
+
+---
+
 ### Sprint 6 Preparation: Task 3 - Maximize Implementation Verification - 2025-11-12
 
 **Status:** ✅ COMPLETE - **NO BUG EXISTS** - Current implementation verified as correct
