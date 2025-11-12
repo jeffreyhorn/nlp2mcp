@@ -1,0 +1,26 @@
+# Expected Results for Convexity Pattern Detection POC
+#
+# This file specifies the expected number of warnings each test model
+# should generate when analyzed by scripts/poc_convexity_patterns.py
+#
+# Format:
+#   filename: expected_warning_count
+#
+# Warning Types:
+#   - nonlinear_equality: Nonlinear equality constraints
+#   - trig_function: Trigonometric functions (sin, cos, tan)
+#   - bilinear_term: Products of variables (x*y)
+#   - variable_quotient: Variable in denominator (x/y)
+#   - odd_power: Odd powers of variables (x^3, x^5)
+
+# Convex Models (should pass with 0 warnings)
+convex_lp.gms: 0                        # Linear program - all constraints linear
+convex_qp.gms: 0                        # Convex QP - quadratic objective, linear constraints
+convex_with_nonlinear_ineq.gms: 0       # Convex inequalities are allowed
+
+# Non-Convex Models (should generate warnings)
+nonconvex_circle.gms: 1                 # 1 warning: nonlinear equality (circle)
+nonconvex_trig.gms: 2                   # 2 warnings: trig function + nonlinear equality
+nonconvex_bilinear.gms: 1               # 1 warning: bilinear term (x*y)
+nonconvex_quotient.gms: 1               # 1 warning: variable quotient (x/y)
+nonconvex_odd_power.gms: 1              # 1 warning: odd powers (x^3, y^3)

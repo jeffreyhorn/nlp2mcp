@@ -7,6 +7,117 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Preparation: Task 2 - Convexity Detection Research - 2025-11-12
+
+**Status:** ✅ COMPLETE - POC validates Approach 1 (Heuristic Pattern Matching) as recommended strategy
+
+#### Summary
+
+Completed Task 2 of Sprint 6 PREP_PLAN: Implemented proof-of-concept convexity detection using heuristic pattern matching and validated against comprehensive test suite. POC achieves 0% false positive rate with <100ms overhead, confirming Approach 1 as the appropriate implementation strategy for Sprint 6 Component 1 (Convexity Heuristics).
+
+**Task 2: Research Convexity Detection Approaches (6-8h)**
+- ✅ Created `scripts/poc_convexity_patterns.py` (607 lines)
+- ✅ Implemented 5 pattern matchers: nonlinear equalities, trig functions, bilinear terms, quotients, odd powers
+- ✅ Created test suite with 8 GAMS models (3 convex, 5 non-convex)
+- ✅ Created `tests/fixtures/convexity/expected_results.yaml` validation manifest
+- ✅ Documented findings in `docs/planning/EPIC_2/SPRINT_6/CONVEXITY_POC_RESULTS.md` (500+ lines)
+- ✅ Updated Known Unknowns 1.1-1.7 with verification results
+
+**POC Pattern Matchers:**
+
+*1. Nonlinear Equality Detection*
+- Detects non-affine equality constraints (e.g., x²+y²=4)
+- Skips objective definition equations correctly
+- Mathematical basis: Nonlinear equalities define non-convex feasible sets
+
+*2. Trigonometric Function Detection*
+- Detects: sin, cos, tan, arcsin, arccos, arctan
+- Conservative approach (no domain analysis)
+- Recursively traverses AST for Call nodes
+
+*3. Bilinear Term Detection*
+- Detects x*y where both operands are variables
+- Correctly distinguishes variable*variable from variable*constant
+- Mathematical basis: Bilinear terms are non-convex
+
+*4. Variable Quotient Detection*
+- Detects x/y where denominator contains variables
+- Mathematical basis: Rational functions with variable denominators typically non-convex
+
+*5. Odd Power Detection*
+- Detects x**3, x**5, etc. (odd powers excluding 1)
+- Mathematical basis: Odd powers neither globally convex nor concave
+
+**Test Suite Results:**
+
+*Convex Models (0 warnings expected):*
+- ✅ convex_lp.gms - Linear program
+- ✅ convex_qp.gms - Convex quadratic program
+- ✅ convex_with_nonlinear_ineq.gms - Convex with g(x) ≤ 0
+
+*Non-Convex Models (warnings expected):*
+- ✅ nonconvex_circle.gms - 1 warning (nonlinear equality)
+- ✅ nonconvex_trig.gms - 2 warnings (trig + nonlinear eq)
+- ✅ nonconvex_bilinear.gms - 1 warning (bilinear term)
+- ✅ nonconvex_quotient.gms - 1 warning (variable quotient)
+- ✅ nonconvex_odd_power.gms - 1 warning (odd powers)
+
+**Accuracy Metrics:**
+- True Positives: 5/5 non-convex models correctly flagged
+- True Negatives: 3/3 convex models passed without warnings
+- False Positive Rate: 0% (critical requirement met)
+- False Negative Rate: Unknown (conservative by design)
+- Validation Accuracy: 100% match with expected_results.yaml
+
+**Performance Benchmarks:**
+- All 8 models analyzed in <1 second total
+- Per-model overhead: <100ms (meets requirement)
+- Time Complexity: O(n) where n = number of AST nodes
+- Memory usage: Negligible (<1 MB additional)
+
+**Known Unknowns Updates:**
+- ✅ Unknown 1.1: Pattern matching for nonlinear equalities - VERIFIED (assumption correct)
+- ✅ Unknown 1.2: Trig function detection - PARTIALLY VERIFIED (domain analysis deferred)
+- ✅ Unknown 1.3: Bilinear term handling - VERIFIED (assumption correct)
+- ✅ Unknown 1.4: Quotient detection - VERIFIED (assumption correct)
+- ✅ Unknown 1.5: Odd power detection - VERIFIED (assumption correct)
+- ⏳ Unknown 1.6: --strict-convexity flag - DEFERRED (CLI design decision)
+- ⏳ Unknown 1.7: Line number citations - DEFERRED (integration enhancement)
+
+**Recommendation:**
+**Adopt Approach 1: Heuristic Pattern Matching** for Sprint 6 implementation
+
+**Justification:**
+- ✅ Accuracy: 0% false positive rate (no false accepts)
+- ✅ Complexity: 607 lines vs 1500-2000 for Approach 2
+- ✅ Performance: <100ms overhead
+- ✅ Maintainability: Clear, well-structured code
+- ✅ Timeline: Can be completed within Sprint 6
+
+**Implementation Plan (Sprint 6 Days 1-5):**
+- Phase 1 (Days 1-2): Create `src/convexity/checker.py` with pattern matchers
+- Phase 2 (Day 3): Integrate into CLI with `--check-convexity` flag
+- Phase 3 (Day 4): Unit tests based on fixture models
+- Phase 4 (Day 5): Documentation (README, FAQ, Tutorial)
+
+**Acceptance Criteria Met (7/7):**
+- ✅ POC pattern matchers implemented for nonlinear equalities, trig, bilinear, quotients, odd powers
+- ✅ Test suite includes 3+ convex examples (LP, QP, nonlinear ineq)
+- ✅ Test suite includes 3+ non-convex examples (circle, trig, bilinear, quotient, odd power)
+- ✅ Pattern accuracy documented (0% false accepts)
+- ✅ Performance benchmarks show <100ms overhead
+- ✅ Clear recommendation made: Approach 1 (heuristic)
+- ✅ Implementation plan outlined
+
+**Next Steps:**
+- Task 3: Analyze Maximize Bug Root Cause (4-6h)
+- Task 4: Bootstrap GAMSLib Model Ingestion (6-8h)
+- Continue through remaining 6 prep tasks before Sprint 6 Day 1
+
+**Status:** ✅ **TASK 2 COMPLETE** - Ready for Task 3 (Maximize Bug Analysis)
+
+---
+
 ### Sprint 6 Preparation: Task 1 - Known Unknowns List - 2025-11-11
 
 **Status:** ✅ COMPLETE - Known Unknowns document created with 22 unknowns across 4 categories
