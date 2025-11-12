@@ -7,6 +7,234 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Preparation: Task 7 - GAMSLib Download Infrastructure - 2025-11-12
+
+**Status:** ✅ COMPLETE - Automated download script ready for Sprint 6 GAMSLib bootstrapping
+
+#### Summary
+
+Completed Task 7 of Sprint 6 PREP_PLAN: Created automated script to download GAMS Model Library NLP models with comprehensive error handling, validation, and documentation.
+
+**Task 7: Set Up GAMSLib Download Infrastructure (3-4h)**
+- ✅ Created `scripts/download_gamslib_nlp.sh` with 10 Tier 1 models
+- ✅ Implemented retry logic (3 attempts per model)
+- ✅ Added .gms file format validation
+- ✅ Created manifest.csv with download metadata
+- ✅ Generated download.log with timestamps
+- ✅ Documented usage in `tests/fixtures/gamslib/README.md`
+- ✅ All 10 models downloaded successfully in 7 seconds
+
+**Download Script Features:**
+
+1. **Automated Downloads**: Fetches models from GAMS Model Library
+   - Uses GAMS sequence numbers for reliable downloads
+   - Downloads both .gms source and .html documentation
+   
+2. **Error Handling**:
+   - Retry logic: 3 attempts per model with 2-second delay
+   - File validation: Checks for GAMS keywords (Variable, Equation, Model, Solve)
+   - Detailed error messages with failure reasons
+   
+3. **Idempotent Operation**:
+   - Skips already-downloaded valid files
+   - `--force` flag to re-download
+   - Safe to run multiple times
+   
+4. **Progress Tracking**:
+   - Real-time colored output (INFO, SUCCESS, WARNING, ERROR)
+   - Summary statistics (success/skip/fail counts)
+   - Total download time
+   
+5. **Metadata Files**:
+   - `manifest.csv`: Name, description, file status, size, download status
+   - `download.log`: Timestamp, model, status, message, duration
+
+**Command Line Options:**
+```bash
+./scripts/download_gamslib_nlp.sh           # Download all models
+./scripts/download_gamslib_nlp.sh --dry-run # Preview without downloading
+./scripts/download_gamslib_nlp.sh --force   # Force re-download
+./scripts/download_gamslib_nlp.sh --clean   # Remove downloaded files
+./scripts/download_gamslib_nlp.sh --help    # Show usage
+```
+
+**Tier 1 Models (10 models):**
+
+| Model | Description | Type | Size |
+|-------|-------------|------|------|
+| trig | Simple Trigonometric Example | NLP | 660B |
+| rbrock | Rosenbrock Test Function | NLP | 531B |
+| himmel16 | Area of Hexagon Test Problem | NLP | 2.3KB |
+| hs62 | Hock-Schittkowski Problem 62 | NLP | 1.2KB |
+| mhw4d | Nonlinear Test Problem | NLP | 664B |
+| mhw4dx | MHW4D with Additional Tests | NLP | 2.9KB |
+| circle | Circle Enclosing Points | NLP | 1.3KB |
+| maxmin | Max Min Location of Points | DNLP | 3.4KB |
+| mathopt1 | MathOptimizer Example 1 | NLP | 1.4KB |
+| mingamma | Minimal y of GAMMA(x) | DNLP | 1.4KB |
+
+**Total Size:** ~16KB (10 .gms files)
+
+**Performance Metrics:**
+- ✅ Download time: 7 seconds (well under 5-minute target)
+- ✅ Success rate: 100% (10/10 models)
+- ✅ All files validated as valid .gms format
+
+#### Implementation Details
+
+**Script Structure:**
+
+```bash
+# Model configuration with sequence numbers
+TIER1_MODELS=(
+    "trig:261:Simple Trigonometric Example"
+    "rbrock:83:Rosenbrock Test Function"
+    # ... 8 more models
+)
+
+# Download with retry logic
+download_model() {
+    # 1. Check if file exists (idempotent)
+    # 2. Download from https://www.gams.com/latest/gamslib_ml/{name}.{seq}
+    # 3. Validate .gms format
+    # 4. Retry up to 3 times on failure
+    # 5. Log results
+}
+```
+
+**File Organization:**
+```
+tests/fixtures/gamslib/
+├── README.md              # Usage documentation
+├── manifest.csv           # Download manifest
+├── download.log           # Download log
+├── trig.gms              # Model files
+├── trig.html
+├── rbrock.gms
+├── rbrock.html
+└── ... (8 more models)
+```
+
+**Validation Logic:**
+
+Each downloaded .gms file is validated by checking for GAMS keywords:
+```bash
+grep -qi -E '\b(Variable|Equation|Model|Solve)\b' "$file"
+```
+
+Files failing validation trigger automatic retry.
+
+#### Integration with Sprint 6
+
+**GAMSLib Bootstrapping Pipeline:**
+
+1. **Download** (Task 7 - COMPLETE): `./scripts/download_gamslib_nlp.sh`
+2. **Parse** (Sprint 6 Day 1): Test parser on all 10 models
+3. **Analyze** (Sprint 6 Day 2): Run convexity detection
+4. **Dashboard** (Sprint 6 Day 3): Display parse/convexity statistics
+
+**Expected Sprint 6 Baseline:**
+- Parse success: 7-9 out of 10 models (70-90%)
+- Convexity detection: All 10 models classified
+- Initial KPI established for future improvements
+
+#### Files Modified
+
+**New Files:**
+- `scripts/download_gamslib_nlp.sh` (330 lines) - Download automation script
+- `tests/fixtures/gamslib/README.md` (280 lines) - Usage guide and model documentation
+- `tests/fixtures/gamslib/*.gms` (10 files, 16KB total) - Downloaded model files
+- `tests/fixtures/gamslib/*.html` (10 files) - Model documentation
+- `tests/fixtures/gamslib/manifest.csv` - Download manifest
+- `tests/fixtures/gamslib/download.log` - Download log
+
+**Modified Files:**
+- `docs/planning/EPIC_2/SPRINT_6/PREP_PLAN.md` - Marked Task 7 complete
+
+#### Design Decisions
+
+1. **GAMS Version**: Using "latest" instead of pinned version
+   - Specific versions (47.6) not consistently available
+   - "latest" provides most reliable access
+   - Trade-off: Reproducibility vs availability
+
+2. **File Naming**: Sequence numbers in URLs, standard names for local files
+   - GAMS uses sequence numbers: `trig.261`
+   - Local storage uses standard names: `trig.gms`
+   - Maintains compatibility with existing workflows
+
+3. **Download Strategy**: Serial downloads with retry
+   - Simple, reliable approach
+   - 7 seconds for 10 models is acceptable
+   - Could parallelize in future if needed
+
+4. **Validation**: Basic keyword check sufficient
+   - Detects corrupt downloads
+   - Doesn't validate GAMS syntax (handled by parser)
+   - Fast and effective for purpose
+
+#### Testing
+
+**Manual Testing:**
+```bash
+# Dry run test
+./scripts/download_gamslib_nlp.sh --dry-run  # ✓ Shows 10 models
+
+# Download test
+./scripts/download_gamslib_nlp.sh            # ✓ All 10 succeeded in 7s
+
+# Idempotent test
+./scripts/download_gamslib_nlp.sh            # ✓ Skipped existing files
+
+# Force re-download test
+./scripts/download_gamslib_nlp.sh --force    # ✓ Re-downloaded all files
+
+# Clean test
+./scripts/download_gamslib_nlp.sh --clean    # ✓ Removed files, kept README
+```
+
+**Validation Testing:**
+- All 10 .gms files contain GAMS keywords ✓
+- All files are valid text (not HTML or errors) ✓
+- File sizes reasonable (531B - 3.4KB) ✓
+- Manifest contains correct metadata ✓
+- Download log has timestamps and durations ✓
+
+#### Sprint 6 Impact
+
+**Immediate Benefits:**
+- Repeatable model acquisition for testing
+- Baseline model set for parser validation
+- Foundation for parse success KPI tracking
+- Documentation for model characteristics
+
+**Sprint 6 Component 3 Enablement:**
+- ✅ Initial model set (≥10 models): 10 Tier 1 models ready
+- ✅ Baseline KPI (≥10% parse success): Expected 70-90%
+- ✅ Ingestion pipeline: Automated download script
+- ✅ Dashboard data: Manifest provides model metadata
+
+**Follow-on Tasks:**
+- Sprint 6 Day 1: Parse all 10 models, measure success rate
+- Sprint 6 Day 2: Run convexity detection on parsed models
+- Sprint 7: Expand to Tier 2 models (10 additional models)
+- Future: Add Tier 3 models, larger test corpus
+
+#### Deliverables Checklist
+
+- [x] Download script created and executable
+- [x] Script downloads all 10 Tier 1 models
+- [x] Error handling with retry logic (3 attempts)
+- [x] File validation for .gms format
+- [x] Idempotent operation (safe re-runs)
+- [x] README with usage guide and model manifest
+- [x] Manifest.csv with download metadata
+- [x] Download.log with timestamps
+- [x] All downloads complete in <5 minutes (7 seconds)
+- [x] All acceptance criteria met
+
+---
+
 ### Sprint 6 Preparation: Task 6 - Error Message Improvements Prototype - 2025-11-12
 
 **Status:** ✅ COMPLETE - Error formatter prototype ready for Sprint 6 Component 4
