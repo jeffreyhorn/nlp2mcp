@@ -178,6 +178,7 @@ def detect_nonlinear_equalities(model_ir):
     """Check for nonlinear equality constraints."""
     warnings = []
     for eq_name, eq in model_ir.equations.items():
+        # NOTE: eq.lhs_rhs returns tuple (lhs_expr, rhs_expr) based on actual IR schema
         if eq.relation == Rel.EQ and not is_affine(eq.lhs_rhs):
             warnings.append(f"⚠️ {eq_name}: nonlinear equality")
     return warnings
@@ -207,13 +208,18 @@ Build `tests/fixtures/convexity/`:
 # Run POC on test suite
 python scripts/poc_convexity_patterns.py tests/fixtures/convexity/*.gms
 
-# Expected results:
-# - convex_lp.gms: 0 warnings
-# - convex_qp.gms: 0 warnings
-# - nonconvex_circle.gms: 1 warning (nonlinear equality)
-# - nonconvex_trig.gms: 2 warnings (trig + nonlinear eq)
-# - nonconvex_bilinear.gms: 1 warning (bilinear)
-# - convex_with_nonlinear_ineq.gms: 0 warnings (inequalities OK)
+# Expected results are stored in structured YAML manifest for automated validation:
+# tests/fixtures/convexity/expected_results.yaml
+#
+# Example contents:
+# ```yaml
+# convex_lp.gms: 0
+# convex_qp.gms: 0
+# nonconvex_circle.gms: 1  # nonlinear equality
+# nonconvex_trig.gms: 2    # trig + nonlinear eq
+# nonconvex_bilinear.gms: 1  # bilinear
+# convex_with_nonlinear_ineq.gms: 0  # inequalities OK
+# ```
 ```
 
 #### Step 4: Document Findings (1 hour)
@@ -379,8 +385,8 @@ Based on analysis, choose fix strategy:
 ```python
 if objective_sense == ObjSense.MAXIMIZE:
     # Flip signs for maximize
-    expr = Binary("+", expr, MultiplierRef(piL_name, ...))  # was -
-    expr = Binary("-", expr, MultiplierRef(piU_name, ...))  # was +
+    expr = Binary("+", expr, MultiplierRef(piL_name, var_indices))  # was -; var_indices: variable index tuple
+    expr = Binary("-", expr, MultiplierRef(piU_name, var_indices))  # was +; var_indices: variable index tuple
 ```
 
 **Option B: Negate entire stationarity equation**
@@ -643,29 +649,42 @@ def flatten_minmax_calls(expr: Expr) -> Expr:
     min(x, min(y, z)) → min(x, y, z)
     max(a, max(b, c)) → max(a, b, c)
     min(x, max(y, z)) → unchanged (mixed operations)
+    
+    Note: Compatible with Python 3.11+ (project requirement).
+    Uses if/elif instead of match/case for broader compatibility if needed.
     """
-    match expr:
-        case Call("min", args):
-            # Recursively flatten children
-            flat_args = [flatten_minmax_calls(arg) for arg in args]
-            
-            # Collect all min args at this level
-            collected = []
-            for arg in flat_args:
-                if isinstance(arg, Call) and arg.func_name == "min":
-                    # Same operation: flatten
-                    collected.extend(arg.args)
-                else:
-                    collected.append(arg)
-            
-            return Call("min", collected)
+    if isinstance(expr, Call) and expr.func_name == "min":
+        # Recursively flatten children
+        flat_args = [flatten_minmax_calls(arg) for arg in expr.args]
         
-        case Call("max", args):
-            # Similar logic for max
-            ...
+        # Collect all min args at this level
+        collected = []
+        for arg in flat_args:
+            if isinstance(arg, Call) and arg.func_name == "min":
+                # Same operation: flatten
+                collected.extend(arg.args)
+            else:
+                collected.append(arg)
         
-        case _:
-            return expr
+        return Call("min", collected)
+    
+    elif isinstance(expr, Call) and expr.func_name == "max":
+        # Recursively flatten children
+        flat_args = [flatten_minmax_calls(arg) for arg in expr.args]
+        
+        # Collect all max args at this level
+        collected = []
+        for arg in flat_args:
+            if isinstance(arg, Call) and arg.func_name == "max":
+                # Same operation: flatten
+                collected.extend(arg.args)
+            else:
+                collected.append(arg)
+        
+        return Call("max", collected)
+    
+    else:
+        return expr
 ```
 
 Create `docs/planning/EPIC_2/SPRINT_6/NESTED_MINMAX_DESIGN.md`:
@@ -888,7 +907,12 @@ class FormattedError:
     
     def _format_source_context(self) -> str:
         """Format 3-line source context with pointer."""
-        # Implementation...
+        # Pseudocode:
+        # 1. Determine the error line index (self.context.line - 1).
+        # 2. Select up to 1 line before and 1 line after the error line from self.context.source_lines.
+        # 3. For each selected line, format as: "{lineno:>4} | {code}".
+        # 4. For the error line, add a second line below with spaces and a caret (^) at self.context.column.
+        # 5. Join all lines with newlines and return as a string.
         pass
 ```
 
@@ -970,7 +994,10 @@ Create `scripts/download_gamslib_nlp.sh`:
 #!/bin/bash
 # Download GAMS Model Library NLP models
 
-GAMSLIB_URL="https://www.gams.com/latest/gamslib_ml/libhtml"
+# Pinned to GAMS version 47.6 for reproducibility. Update as needed.
+# To use latest: change to "latest" (not recommended for reproducible builds)
+GAMSLIB_VERSION="47.6"
+GAMSLIB_URL="https://www.gams.com/${GAMSLIB_VERSION}/gamslib_ml/libhtml"
 TARGET_DIR="tests/fixtures/gamslib"
 
 # Model list (from Task 4 catalog)
@@ -1249,7 +1276,12 @@ Add to CI/CD:
 # .github/workflows/test.yml
 - name: Check coverage
   run: |
+    # Enforce current baseline (87%) to prevent regression
+    # Target for Sprint 6: gradually increase to 90%
     pytest --cov=src --cov-fail-under=87 tests/
+    
+    # Optional: Add warning if below target
+    # pytest --cov=src --cov-report=term-missing tests/ | grep "TOTAL.*8[7-9]%\|TOTAL.*9[0-9]%"
 ```
 
 **Changes:**
