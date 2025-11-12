@@ -7,6 +7,151 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Preparation: Task 6 - Error Message Improvements Prototype - 2025-11-12
+
+**Status:** ✅ COMPLETE - Error formatter prototype ready for Sprint 6 Component 4
+
+#### Summary
+
+Completed Task 6 of Sprint 6 PREP_PLAN: Designed and prototyped enhanced error message format with structured template, source context display, and actionable suggestions to guide Sprint 6 UX improvements.
+
+**Task 6: Prototype Error Message Improvements (3-4h)**
+- ✅ Designed comprehensive error message template with 7 components
+- ✅ Created `src/utils/error_formatter.py` prototype implementation
+- ✅ Implemented source context display with caret pointer
+- ✅ Documented 8 real-world examples with formatting
+- ✅ Identified integration points in parser, convexity checker, and CLI
+- ✅ Defined migration plan for existing error messages
+- ✅ All quality checks passed (typecheck, lint, format, 1095 tests)
+
+**Error Message Template Structure:**
+
+1. **Error Level**: Error or Warning
+2. **Brief Title**: One-line problem description
+3. **Location**: (line X, column Y) with exact position
+4. **Source Context**: 3 lines of code with caret pointer
+5. **Explanation**: Detailed description of what went wrong
+6. **Action**: Concrete steps to fix the issue
+7. **Documentation Link**: Reference to relevant docs (optional)
+
+**Example Output:**
+```
+Error: Unsupported equation type '=n=' (line 15, column 20)
+
+  15 | constraint.. x + y =n= 0;
+                            ^^^
+
+nlp2mcp currently only supports:
+  =e= (equality)
+  =l= (less than or equal)
+  =g= (greater than or equal)
+
+Action: Convert to one of the supported equation types.
+See: docs/GAMS_SUBSET.md#equation-types
+```
+
+**Implementation Details:**
+
+- **FormattedError dataclass**: Structured error representation
+- **ErrorContext dataclass**: Source code context with file/line/column info
+- **Convenience functions**: `create_parse_error()`, `create_warning()`
+- **Utility function**: `get_source_lines()` for context extraction
+- **Caret positioning**: Accurate column-based pointer with proper indentation
+
+**Real-World Examples Documented (8 total):**
+
+1. Unsupported equation type (=n= operator)
+2. Conditional compilation ($if directive)
+3. Nonlinear equality warning (convexity)
+4. Undefined variable (semantic error)
+5. Loop construct (unsupported feature)
+6. Table statement with complex indexing (warning)
+7. Nested min/max mixed operations (parse error)
+8. Missing solve statement (file-level error)
+
+**Integration Strategy:**
+
+**Parser Integration** (`src/ir/parser.py`):
+```python
+from src.utils.error_formatter import FormattedError, ErrorContext
+
+error = FormattedError(
+    level="Error",
+    title="Unsupported construct",
+    context=ErrorContext(...),
+    explanation="Why it's not supported",
+    action="How to fix it",
+    doc_link="docs/GAMS_SUBSET.md"
+)
+raise ParseError(error.format())
+```
+
+**Convexity Warnings** (`src/convexity/checker.py`):
+```python
+warning = create_warning(
+    title="Non-convex problem detected",
+    line=18, column=20,
+    source_lines=[...],
+    explanation="Nonlinear equality may cause issues",
+    action="Use NLP solver instead",
+    doc_link="docs/CONVEXITY.md"
+)
+self.warnings.append(warning)
+```
+
+**CLI Display** (`src/cli.py`):
+- Formatted errors displayed to stderr
+- Warnings shown after successful compilation
+- Color support planned for future enhancement
+
+**Migration Plan (4 phases):**
+
+1. **Phase 1 (Sprint 6)**: Add formatter module, no changes to existing errors
+2. **Phase 2 (Sprint 6)**: Integrate in parser for new errors
+3. **Phase 3 (Sprint 6 or 7)**: Add convexity warnings
+4. **Phase 4 (Sprint 7+)**: Migrate all remaining error messages
+
+**Future Enhancements:**
+
+- Color output (red for errors, yellow for warnings)
+- JSON output mode for IDE integration
+- Error codes (E001, E002, W001)
+- Quick fix suggestions for common errors
+
+**Design Decisions:**
+
+1. **Column numbers included**: Precise location for editor integration
+2. **Caret pointer style**: `^` for clarity in terminal output
+3. **3-line context**: Balance between context and brevity
+4. **Relative doc links**: Work in both repo and installed package
+5. **Strict Error vs Warning**: Clear distinction, errors are fatal
+
+**Testing:**
+
+- 20+ unit tests covering all functionality
+- Tests for caret positioning, context extraction, formatting
+- Real-world examples validated
+- Integration with existing error hierarchy (`src/utils/errors.py`)
+
+**Deliverables:**
+
+- 📄 `ERROR_MESSAGE_TEMPLATE.md` - Complete specification (600+ lines)
+- 💻 `src/utils/error_formatter.py` - Production-ready prototype (280 lines)
+- 🧪 `tests/unit/utils/test_error_formatter.py` - Comprehensive tests (400+ lines)
+- 📊 8 real-world example formats with expected output
+- 🗺️ Integration guide for parser, convexity checker, CLI
+- 📋 4-phase migration plan
+
+**Sprint 6 Impact:**
+
+- Component 4 (UX Improvements) has clear implementation guide
+- Better error messages will reduce user frustration
+- Structured format enables future tooling (IDE plugins, auto-fixes)
+- Migration plan minimizes risk to existing functionality
+- Foundation for long-term UX improvements
+
+---
+
 ### Sprint 6 Preparation: Task 5 - Nested Min/Max Flattening Design - 2025-11-12
 
 **Status:** ✅ COMPLETE - Design ready for Sprint 6 Component 2 implementation
