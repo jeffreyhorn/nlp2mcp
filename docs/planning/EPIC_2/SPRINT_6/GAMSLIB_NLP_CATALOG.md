@@ -263,7 +263,7 @@
 - ✅ Sqrt function
 - ✅ Set indexing and summation
 - ✅ Multi-dimensional indexing
-- ⚠️ Table statements (20-30% of models)
+- ✅ Table statements (20-30% of models) - Fully supported
 - ⚠️ Display statements (can be ignored for MCP generation)
 
 **Advanced Features (<20% of models):**
@@ -277,49 +277,45 @@
 
 ### Known Parser Gaps (Blockers)
 
-Based on analysis, current parser likely **cannot handle**:
+Based on analysis, current parser **cannot handle**:
 
-1. **Table statements** - Used in ~20% of models (e.g., least, like, haverly, pool)
-   - Example: `Table data(i,j) ... ;`
-   - Workaround: Manual data extraction or skip these models
-
-2. **Loop constructs** - Used in ~10% of models (e.g., trigx)
+1. **Loop constructs** - Used in ~10% of models (e.g., trigx)
    - Example: `loop(i, solve m using nlp; );`
    - Workaround: Single-solve only, skip multi-solve models
 
-3. **Conditionals with $** - Used in ~15% of models
+2. **Conditionals with $** - Used in ~15% of models
    - Example: `$if not set TOL $set TOL 1e-6`
    - Example: `equation$(condition).. ...`
    - Workaround: Skip or manually simplify
 
-4. **Model suffixes** - Used in ~10% of models  
+3. **Model suffixes** - Used in ~10% of models  
    - Example: `m.solveStat`, `m.modelStat`, `obj.slack`
    - Workaround: These are post-solve, not needed for MCP generation
 
-5. **Ordered set operations** - Used in ~5% of models
+4. **Ordered set operations** - Used in ~5% of models
    - Example: `ord(i)`, `card(s)`
    - Workaround: Manual expansion or skip
 
 ### Expected Parse Success Rate
 
-**Optimistic (60-70%):**
+**Optimistic (70-80%):**
 - Models with only core features
 - Simple indexing
 - Standard functions
-- No tables, loops, or conditionals
+- Tables supported!
+- No loops or conditionals
 
-**Realistic (40-50%):**
-- Account for table statements (~20% of models)
+**Realistic (50-60%):**
 - Account for conditional syntax (~15%)
 - Account for loop constructs (~10%)
 - Account for ordered operators (~5%)
 
-**Conservative (30-40%):**
+**Conservative (40-50%):**
 - Account for multiple blockers in same model
 - Account for unknown edge cases
 - Buffer for unexpected syntax
 
-**Sprint 6 Target: 40-60% parse success for selected Tier 1 models**
+**Sprint 6 Target: 70-80% parse success for selected Tier 1 models** (improved due to table support)
 
 
 ---
@@ -348,12 +344,13 @@ Priority models for Sprint 6 ingestion, selected for:
 | 9 | 255 | mathopt1 | NLP | Small | Unknown | **Simple**: MathOptimizer baseline |
 | 10 | 299 | mingamma | DNLP | Small | Unknown | **Special func**: Gamma function test |
 
-**Expected Parse Success:** 6-8 out of 10 (60-80%)
+**Expected Parse Success:** 7-9 out of 10 (70-90%)
 
 **Known Issues:**
 - himmel16: Has lag/lead operators (++), may need manual fix
 - maxmin: May involve min/max reformulation
-- Some models may have display/loop statements (ignorable for MCP generation)
+- trigx (Tier 2): Has loop statements (not in Tier 1)
+- Table statements are fully supported ✅
 
 ### Tier 2: Next Priority (10 models for Sprint 7)
 
@@ -370,7 +367,7 @@ Priority models for Sprint 6 ingestion, selected for:
 | 19 | 20 | process | NLP | Medium | Alkylation process |
 | 20 | 21 | chem | NLP | Small | Chemical equilibrium |
 
-**Expected Parse Success:** 4-6 out of 10 (40-60%)
+**Expected Parse Success:** 5-7 out of 10 (50-70%)
 
 ### Tier 3: Future Target (10+ models for Sprint 8+)
 
@@ -420,23 +417,25 @@ All models available from GAMS Model Library:
 - Medium (10-100 vars): 60 models
 - Large (100+ vars): 20+ models
 
-**Expected parse success (Tier 1):** 60-80%  
-**Expected parse success (Tier 2):** 40-60%  
-**Expected parse success (Tier 3):** 20-40%
+**Expected parse success (Tier 1):** 70-90%  
+**Expected parse success (Tier 2):** 50-70%  
+**Expected parse success (Tier 3):** 30-50%
 
 ---
 
 ## Known Parser Blockers for Sprint 6
 
-1. **Table statements** - Affects ~20% of models
-2. **Loop constructs** - Affects ~10% of models
-3. **Conditionals ($)** - Affects ~15% of models
-4. **Lag/lead operators** - Affects ~5% of models
-5. **Ordered set operations** - Affects ~5% of models
+1. **Loop constructs** - Affects ~10% of models
+2. **Conditionals ($)** - Affects ~15% of models
+3. **Lag/lead operators** - Affects ~5% of models
+4. **Ordered set operations** - Affects ~5% of models
+
+**Supported Features (NOT blockers):**
+- ✅ **Table statements** - Fully supported (affects ~20% of models, all parseable)
 
 **Mitigation:**
 - Tier 1 models selected to avoid most blockers
-- Manual fixes acceptable for 1-2 models
+- Manual fixes acceptable for 1-2 models (e.g., lag/lead operators)
 - Skip problematic models for initial ingestion
 
 ---
@@ -471,8 +470,8 @@ grep -q "Expected Parse Success" docs/planning/EPIC_2/SPRINT_6/GAMSLIB_NLP_CATAL
 - [x] Missing parser capabilities identified
 - [x] 10 models selected for Sprint 6 Tier 1
 - [x] All Tier 1 models are downloadable/accessible
-- [x] Expected parse success rate estimated (60-80% for Tier 1)
-- [x] Known blockers documented (tables, loops, conditionals)
+- [x] Expected parse success rate estimated (70-90% for Tier 1)
+- [x] Known blockers documented (loops, conditionals, ordered operators)
 - [x] Download URLs provided
 - [x] Tier 2 and Tier 3 roadmap created
 

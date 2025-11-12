@@ -11,9 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Status:** ✅ COMPLETE - 120+ models cataloged, Tier 1 selection ready for Sprint 6
 
+**⚠️ CORRECTION (2025-11-12):** Initial analysis incorrectly listed Table statements as a parser blocker. Parser fully supports tables via `_handle_table_block` method (src/ir/parser.py:354+). Parse success estimates updated: Tier 1: 70-90% (was 60-80%), Tier 2: 50-70% (was 40-60%), Tier 3: 30-50% (was 20-40%).
+
 #### Summary
 
-Completed Task 4 of Sprint 6 PREP_PLAN: Comprehensive survey of GAMS Model Library NLP models with parser feature analysis and tiered model selection. Identified 10 target models for Sprint 6 ingestion with estimated 60-80% parse success rate.
+Completed Task 4 of Sprint 6 PREP_PLAN: Comprehensive survey of GAMS Model Library NLP models with parser feature analysis and tiered model selection. Identified 10 target models for Sprint 6 ingestion with estimated 70-90% parse success rate.
 
 **Task 4: Survey GAMSLib NLP Model Catalog (4-6h)**
 - ✅ Cataloged 120+ NLP models from GAMS Model Library
@@ -21,7 +23,7 @@ Completed Task 4 of Sprint 6 PREP_PLAN: Comprehensive survey of GAMS Model Libra
 - ✅ Created parser feature matrix identifying capabilities and gaps
 - ✅ Selected 10 models for Sprint 6 Tier 1 (initial target set)
 - ✅ Verified all models are downloadable and accessible
-- ✅ Estimated parse success rate: 60-80% for Tier 1, 40-60% overall
+- ✅ Estimated parse success rate: 70-90% for Tier 1, 50-70% overall
 - ✅ Documented known blockers and mitigation strategies
 
 **Models Cataloged (120+ total):**
@@ -58,7 +60,7 @@ Completed Task 4 of Sprint 6 PREP_PLAN: Comprehensive survey of GAMS Model Libra
 - ✅ Exp, log, sqrt functions
 - ✅ Set indexing and summation
 - ✅ Multi-dimensional indexing
-- ⚠️ Table statements (20-30% of models)
+- ✅ Table statements (20-30% of models) - Fully supported
 - ⚠️ Display statements (ignorable for MCP generation)
 
 *Advanced Features (<20% coverage):*
@@ -71,16 +73,18 @@ Completed Task 4 of Sprint 6 PREP_PLAN: Comprehensive survey of GAMS Model Libra
 - ❌ Min/max functions (requires reformulation)
 
 **Known Parser Blockers:**
-1. **Table statements** - Affects ~20% of models, workaround: skip or manual data extraction
-2. **Loop constructs** - Affects ~10%, workaround: single-solve only
-3. **Conditionals ($)** - Affects ~15%, workaround: skip or simplify
-4. **Model suffixes** - Affects ~10%, workaround: ignore (post-solve only)
-5. **Ordered operators** - Affects ~5%, workaround: manual expansion
+1. **Loop constructs** - Affects ~10%, workaround: single-solve only
+2. **Conditionals ($)** - Affects ~15%, workaround: skip or simplify
+3. **Model suffixes** - Affects ~10%, workaround: ignore (post-solve only)
+4. **Ordered operators** - Affects ~5%, workaround: manual expansion
+
+**Supported Features (NOT blockers):**
+- ✅ **Table statements** - Fully supported via `_handle_table_block` (affects ~20% of models)
 
 **Expected Parse Success Rates:**
-- **Tier 1 (Sprint 6):** 60-80% (6-8 of 10 models parseable)
-- **Tier 2 (Sprint 7):** 40-60% (4-6 of 10 models)
-- **Tier 3 (Sprint 8+):** 20-40% (2-4 of 10 models)
+- **Tier 1 (Sprint 6):** 70-90% (7-9 of 10 models parseable)
+- **Tier 2 (Sprint 7):** 50-70% (5-7 of 10 models)
+- **Tier 3 (Sprint 8+):** 30-50% (3-5 of 10 models)
 
 **Documentation Created:**
 - `GAMSLIB_NLP_CATALOG.md` - Complete catalog with 120+ models
@@ -91,7 +95,7 @@ Completed Task 4 of Sprint 6 PREP_PLAN: Comprehensive survey of GAMS Model Libra
 
 **Sprint 6 Impact:**
 - Initial target set (10 models) ready for ingestion script
-- Realistic baseline KPI: ≥60% parse success for Tier 1
+- Realistic baseline KPI: ≥70% parse success for Tier 1
 - Parser gaps identified for future enhancements
 - Roadmap established for Tier 2 (Sprint 7) and Tier 3 (Sprint 8+)
 
@@ -99,7 +103,7 @@ Completed Task 4 of Sprint 6 PREP_PLAN: Comprehensive survey of GAMS Model Libra
 - 📊 Catalog: 120+ models across 5 problem types
 - 🔍 Analysis: 15 models with detailed feature matrix
 - 🎯 Selection: 10 Tier 1 models + 20 Tier 2/3 models
-- 📈 Estimates: 60-80% success rate, known blockers documented
+- 📈 Estimates: 70-90% success rate, known blockers documented
 - 🔗 URLs: All models accessible from GAMS Model Library
 
 ---
