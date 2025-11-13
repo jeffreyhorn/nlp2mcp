@@ -79,7 +79,9 @@ def test_detects_nested_min():
     
     nesting_type = detect_minmax_nesting(expr)
     assert nesting_type == NestingType.SAME_TYPE_NESTING
-    assert get_outer_func(expr) == "min"
+    
+    info = analyze_nesting(expr)
+    assert info.outer_func == "min"
 
 def test_detects_nested_max():
     """Should detect max(max(x,y),z) as SAME_TYPE_NESTING."""
@@ -90,7 +92,9 @@ def test_detects_nested_max():
     
     nesting_type = detect_minmax_nesting(expr)
     assert nesting_type == NestingType.SAME_TYPE_NESTING
-    assert get_outer_func(expr) == "max"
+    
+    info = analyze_nesting(expr)
+    assert info.outer_func == "max"
 
 def test_detects_mixed_nesting():
     """Should detect min(max(x,y),z) as MIXED_NESTING."""

@@ -54,7 +54,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..ir.ast import Binary, Call, Const, Expr, Sum, Unary, VarRef
+    from ..ir.ast import Binary, Call, Const, Expr, ParamRef, Sum, Unary, VarRef
 
 
 # ---------- Type Definitions ----------
@@ -203,24 +203,26 @@ def _compute_nesting_depth(expr: Call, target_func: str) -> tuple[int, int]:
         target_func: Function name to match ("min" or "max")
 
     Returns:
-        (depth, total_args) tuple
+        (depth, total_args) tuple where depth counts the number of nesting levels
+        (e.g., min(min(x,y),z) has depth=2)
     """
     from ..ir.ast import Call
 
-    max_depth = 0
+    max_child_depth = 0
     total_args = 0
 
     for arg in expr.args:
         if isinstance(arg, Call) and arg.func == target_func:
             # Recursive case: nested min/max of same type
             child_depth, child_args = _compute_nesting_depth(arg, target_func)
-            max_depth = max(max_depth, child_depth + 1)
+            max_child_depth = max(max_child_depth, child_depth)
             total_args += child_args
         else:
             # Base case: leaf argument
             total_args += 1
 
-    return max_depth, total_args
+    # Add 1 to count the current level
+    return max_child_depth + 1, total_args
 
 
 # ---------- Flattening Functions ----------
@@ -382,7 +384,7 @@ class MinMaxFlattener:
         """Visit a variable reference (leaf - no transformation needed)."""
         return node
 
-    def visit_paramref(self, node: Expr) -> Expr:
+    def visit_paramref(self, node: ParamRef) -> ParamRef:
         """Visit a parameter reference (leaf - no transformation needed)."""
         return node
 
