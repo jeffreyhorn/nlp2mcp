@@ -1333,3 +1333,149 @@ class TestCommaSeparatedDeclarations:
         model = parser.parse_model_text(text)
         assert model.objective is not None
         assert model.objective.objvar == "obj"
+
+
+class TestModelEquationListSyntax:
+    """Tests for explicit equation list syntax in Model statements (Issue #200)."""
+
+    def test_single_equation_model(self):
+        """Test model with single equation in list."""
+        text = dedent(
+            """
+            Variables x, obj;
+            Equations eq1, eq2;
+
+            eq1.. x =e= 5;
+            eq2.. obj =e= x**2;
+
+            Model m1 / eq1 /;
+            Solve m1 using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.declared_model == "m1"
+        assert model.model_equations == ["eq1"]
+        assert model.model_uses_all is False
+
+    def test_multiple_equations_model(self):
+        """Test model with multiple equations in list."""
+        text = dedent(
+            """
+            Variables x, y, obj;
+            Equations eq1, eq2, eq3, objdef;
+
+            eq1.. x =e= 5;
+            eq2.. y =l= 10;
+            eq3.. x + y =g= 3;
+            objdef.. obj =e= x + y;
+
+            Model m1 / eq1, eq2, objdef /;
+            Solve m1 using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.declared_model == "m1"
+        assert model.model_equations == ["eq1", "eq2", "objdef"]
+        assert model.model_uses_all is False
+
+    def test_all_keyword_vs_explicit_list(self):
+        """Test that /all/ behaves differently from explicit list."""
+        text = dedent(
+            """
+            Variables x, y, obj;
+            Equations eq1, eq2, eq3;
+
+            eq1.. x =e= 5;
+            eq2.. y =l= 10;
+            eq3.. obj =e= x + y;
+
+            Model m_all / all /;
+            Solve m_all using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.declared_model == "m_all"
+        assert model.model_equations == []
+        assert model.model_uses_all is True
+
+    def test_gamslib_hs62_syntax(self):
+        """Test syntax from GAMSLib hs62.gms model."""
+        text = dedent(
+            """
+            Variables x1, x2, x3, obj;
+            Equations objdef, eq1x;
+
+            objdef.. obj =e= -32.174*(255*log((x1+x2+x3+0.03)/0.09) + 280*log((x2+x3+0.03)/0.07) + 290*log((x3+0.03)/0.13));
+            eq1x.. x1 + 2*x2 + 2*x3 =l= 4;
+
+            Model mx / objdef, eq1x /;
+            Solve mx using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.declared_model == "mx"
+        assert model.model_equations == ["objdef", "eq1x"]
+        assert model.model_uses_all is False
+
+    def test_gamslib_mingamma_syntax(self):
+        """Test syntax from GAMSLib mingamma.gms model."""
+        text = dedent(
+            """
+            Variables x, y1, y2;
+            Equations y1def, y2def;
+
+            y1def.. y1 =e= x**2;
+            y2def.. y2 =e= (x - 2)**2;
+
+            Model m2 / y2def /;
+            Solve m2 using nlp minimizing y2;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.declared_model == "m2"
+        assert model.model_equations == ["y2def"]
+        assert model.model_uses_all is False
+
+    def test_model_subset_equations(self):
+        """Test model using subset of declared equations."""
+        text = dedent(
+            """
+            Variables x, y, z, obj;
+            Equations eq1, eq2, eq3, eq4, objdef;
+
+            eq1.. x =e= 1;
+            eq2.. y =e= 2;
+            eq3.. z =e= 3;
+            eq4.. x + y + z =l= 10;
+            objdef.. obj =e= x**2 + y**2 + z**2;
+
+            Model subset_model / objdef, eq1, eq3 /;
+            Solve subset_model using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.model_equations == ["objdef", "eq1", "eq3"]
+        assert len(model.model_equations) == 3
+        # eq2 and eq4 should not be in the model
+        assert "eq2" not in model.model_equations
+        assert "eq4" not in model.model_equations
+
+    def test_indexed_equations_in_list(self):
+        """Test that indexed equations can be referenced in model list."""
+        text = dedent(
+            """
+            Sets i /i1, i2/;
+            Variables x(i);
+            Variables obj;
+            Equations balance(i);
+            Equations objdef;
+
+            balance(i).. x(i) =e= 0;
+            objdef.. obj =e= sum(i, x(i));
+
+            Model m / objdef, balance /;
+            Solve m using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.model_equations == ["objdef", "balance"]
