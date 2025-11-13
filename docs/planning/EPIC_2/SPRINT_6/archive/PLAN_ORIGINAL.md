@@ -1,12 +1,10 @@
 # Sprint 6 Plan: Convexity Heuristics, Critical Bug Fixes, GAMSLib Bootstrapping, UX Kickoff
-## FINAL EDITION
 
 **Sprint Duration:** 2 weeks (10 working days)  
 **Sprint Goal:** Deliver v0.6.0 with convexity detection, nested min/max optimization, GAMSLib foundation, and UX improvements  
 **Start Date:** TBD  
 **End Date:** TBD  
-**Release:** v0.6.0  
-**Revision:** Finalized after PLAN_REVIEW.md and PLAN_REVISED_REVIEW.md feedback
+**Release:** v0.6.0
 
 ---
 
@@ -47,70 +45,9 @@ All 9 prep tasks completed:
 
 ## Daily Schedule (10 Days)
 
-### **Day 0: Pre-Sprint Research & Setup**
+### **Day 1: Research Day - Nested Min/Max Unknowns**
 
-**Owner:** Full Team (research specialists from each sub-team)
-
-**Goal:** Resolve all critical unknowns BEFORE implementation begins (addresses Review Finding 2)
-
-**Tasks:**
-1. **Resolve Unknown 4.1** (High) - Parser line/column tracking (2h)
-   - **Owner:** UX Team
-   - Analyze Lark parser position tracking
-   - Implement position metadata on AST nodes
-   - Test error reporting with line/col positions
-   - **Decision:** Use Lark's `meta` attribute for position tracking
-   - **Deliverable:** `docs/research/parser_line_col_tracking.md`
-
-2. **Resolve Unknown 4.2** (Medium) - Documentation links (1h)
-   - **Owner:** UX Team
-   - **Decision:** Single-page docs with anchor links for Sprint 6
-   - Design URL format: `https://docs.project.org/errors/convexity_warnings#E101`
-   - Create documentation link template
-   - **Deliverable:** `docs/research/doc_link_strategy.md`
-
-3. **Resolve Unknown 3.3** (High) - Parse error patterns (2h)
-   - **Owner:** GAMSLib Team
-   - Download Tier 1 models using Task 7 script
-   - Run parser on sample models
-   - Document parse failure patterns
-   - **Deliverable:** `docs/research/gamslib_parse_errors_preliminary.md`
-
-4. **Resolve Unknown 3.5** (Medium) - KPI calculations (1h)
-   - **Owner:** GAMSLib Team
-   - Define metrics: parse%, convert%, solve%
-   - Document calculation formulas
-   - **Sprint 6 targets:** ≥10 models, ≥10% parse%, ≥50% convert%
-   - **Deliverable:** `docs/research/gamslib_kpi_definitions.md`
-
-5. **Resolve Unknown 3.4** (Medium) - Dashboard design (2h)
-   - **Owner:** GAMSLib Team + UX Team
-   - **Decision:** Start with pure Markdown for Sprint 6
-   - Design dashboard format and sections
-   - Create mock dashboard template
-   - **Deliverable:** `docs/research/dashboard_design.md` with template
-
-**Deliverables:**
-- 5 research documents resolving Unknowns 3.3, 3.4, 3.5, 4.1, 4.2
-- All unknowns needed for Days 1-6 resolved
-- Reduced risk of research blocking implementation
-
-**Checkpoint 0 (End of Day 0):**
-- ✅ Unknowns 3.3, 3.4, 3.5, 4.1, 4.2 resolved
-- ✅ Parser line/col tracking strategy confirmed
-- ✅ Documentation link format decided
-- ✅ GAMSLib parse error patterns documented
-- ✅ Dashboard design finalized
-- **Demo Artifact:** Mock dashboard Markdown showing proposed KPI layout
-- **Go/No-Go:** Proceed to Day 1 only if all 5 unknowns resolved
-
----
-
-### **Day 1: Nested Min/Max Research**
-
-**Owner:** Convexity Team
-
-**Goal:** Resolve remaining nested min/max unknowns before implementation
+**Goal:** Resolve 4 critical/high unknowns about nested min/max before implementation
 
 **Tasks:**
 1. **Resolve Unknown 2.2** (Critical) - Nested min/max flattening semantics (2h)
@@ -136,24 +73,16 @@ All 9 prep tasks completed:
    - **Decision:** Start always-on, no flag needed for Sprint 6
    - **Deliverable:** Design doc section
 
-**Deliverables:**
-- `docs/research/nested_minmax_semantics.md` - Mathematical proof
-- `docs/research/nested_minmax_testing.md` - Test strategy
-- AST visitor proof-of-concept
-
 **Checkpoint 1 (End of Day 1):**
-- ✅ All 4 nested min/max unknowns resolved (2.2, 2.3, 2.4, 2.5)
-- ✅ Mathematical semantics confirmed with proof
-- ✅ AST detection approach designed and prototyped
+- ✅ All 4 nested min/max unknowns resolved
+- ✅ Mathematical semantics confirmed
+- ✅ AST detection approach designed
 - ✅ Test strategy documented
-- **Demo Artifact:** Recorded PATH solver comparison showing `min(min(x,y),z)` produces identical solution to `min(x,y,z)` on test problem
-- **Go/No-Go:** Proceed to Day 2 implementation only if semantics mathematically verified
+- **Go/No-Go:** Proceed to Day 2 implementation only if semantics verified
 
 ---
 
 ### **Day 2: Nested Min/Max Implementation**
-
-**Owner:** Convexity Team
 
 **Goal:** Implement nested min/max flattening with full test coverage
 
@@ -188,14 +117,11 @@ All 9 prep tasks completed:
 - ✅ Nested min/max flattening working
 - ✅ All tests passing (regression + new tests)
 - ✅ Example: `min(min(x,y),z)` → `min(x,y,z)` verified
-- **Demo Artifact:** Live execution showing nested min/max input file, AST before/after flattening, and PATH solver output comparison
 - **Go/No-Go:** Proceed to convexity work
 
 ---
 
 ### **Day 3: Convexity Heuristics - Core Patterns**
-
-**Owner:** Convexity Team
 
 **Goal:** Implement 5 core convexity detection patterns from Task 2 POC
 
@@ -230,16 +156,14 @@ All 9 prep tasks completed:
 
 ### **Day 4: Convexity Heuristics - CLI Integration**
 
-**Owner:** Convexity Team + UX Team
-
-**Goal:** Integrate convexity warnings into CLI (unknowns already resolved on Day 0)
+**Goal:** Integrate convexity warnings into CLI and resolve UX unknowns
 
 **Tasks:**
-1. **Apply Day 0 research** (1h)
-   - Review parser line/col tracking research (Unknown 4.1 - resolved Day 0)
-   - Review documentation link strategy (Unknown 4.2 - resolved Day 0)
+1. **Resolve Unknown 4.1** (High) - Parser line/column tracking (2h)
+   - Analyze Lark parser position tracking
    - Implement position metadata on AST nodes
-   - Implement doc link generation
+   - Test error reporting with line/col positions
+   - **Decision:** Use Lark's `meta` attribute for position tracking
 
 2. **CLI integration** (3h)
    - Add convexity checker to main conversion pipeline
@@ -247,10 +171,10 @@ All 9 prep tasks completed:
    - Add `--skip-convexity-check` flag (opposite of strict mode)
    - File: `src/cli.py` updates
 
-3. **Documentation creation** (2h)
+3. **Resolve Unknown 4.2** (Medium) - Documentation links (1h)
+   - **Decision:** Single-page docs with anchor links for Sprint 6
    - Create `docs/errors/convexity_warnings.md`
-   - Document all 5 convexity patterns with examples
-   - Format: Anchor links per error code (E101, E102, etc.)
+   - Format: `https://docs.project.org/errors/convexity_warnings#E101`
 
 4. **End-to-end testing** (2h)
    - Test full pipeline: GAMS → parse → convexity check → warning output
@@ -267,17 +191,14 @@ All 9 prep tasks completed:
 - ✅ Convexity heuristics fully integrated
 - ✅ All 13 test fixtures correctly classified
 - ✅ CLI warnings include source context + doc links
-- ✅ Unknowns 4.1 and 4.2 applied (resolved Day 0)
-- **Demo Artifact:** Terminal recording showing convexity warning on `nonconvex_circle.gms` with line numbers, source context snippet, and clickable documentation URL
-- **Go/No-Go:** Proceed to GAMSLib work
+- ✅ Unknown 4.1 and 4.2 resolved
+- **Demo:** Show convexity warning on `nonconvex_circle.gms` with context
 
 ---
 
-### **Day 5: GAMSLib Integration - Model Ingestion**
+### **Day 5: GAMSLib Integration - Ingestion Pipeline**
 
-**Owner:** GAMSLib Team
-
-**Goal:** Download and ingest 10 Tier 1 models (unknowns already resolved on Day 0, plus new ingestion-scheduling decision)
+**Goal:** Download 10 Tier 1 models and set up ingestion pipeline
 
 **Tasks:**
 1. **Download Tier 1 models** (1h)
@@ -285,70 +206,61 @@ All 9 prep tasks completed:
    - Verify all 10 models downloaded successfully
    - Commit models to `tests/fixtures/gamslib/`
 
-2. **Resolve Unknown 3.6** (Low) - Ingestion scheduling (1h)
-   - Evaluate automation vs. manual cadence requirements
-   - **Decision:** Manual ingestion for Sprint 6; automation deferred to Sprint 7+
-   - Document prerequisites for a `make ingest-gamslib` target
-   - **Deliverable:** `docs/research/ingestion_schedule.md`
+2. **Resolve Unknown 3.3** (High) - Parse error patterns (2h)
+   - Run parser on all 10 models
+   - Document parse failures with specific error messages
+   - Categorize by failure type (attributes, dollar conditions, etc.)
+   - **Deliverable:** `docs/research/gamslib_parse_errors.md`
 
-3. **Apply Day 0 research** (1h)
-   - Review parse error patterns from Day 0 (Unknown 3.3)
-   - Review KPI definitions from Day 0 (Unknown 3.5)
-   - Prepare for expected parse failures
-
-4. **Implement parse-only ingestion** (3h)
+3. **Implement parse-only ingestion** (3h)
    - Create ingestion script: `scripts/ingest_gamslib.py`
    - For each model: attempt parse, record success/failure
    - Generate ingestion report with error details
    - File: `scripts/ingest_gamslib.py`
 
-5. **Calculate KPIs** (1h)
-   - Implement KPI calculation using Day 0 formulas
-   - Metrics: parse%, convert%, solve%
-   - Sprint 6 targets: ≥10 models, ≥10% parse%, ≥50% convert%
+4. **Resolve Unknown 3.5** (Medium) - KPI calculations (1h)
+   - Define metrics: parse%, convert%, solve%
+   - Implement KPI calculation in ingestion script
+   - **Sprint 6 targets:** ≥10 models, ≥10% parse%, ≥50% convert%
 
-6. **Initial ingestion run** (1h)
+5. **Initial ingestion run** (1h)
    - Run `scripts/ingest_gamslib.py` on 10 models
    - Generate initial metrics report
-   - Document actual vs. expected parse errors
    - **Deliverable:** `reports/gamslib_ingestion_sprint6.json`
 
 **Deliverables:**
 - Downloaded models in `tests/fixtures/gamslib/`
 - `scripts/ingest_gamslib.py` - Ingestion automation
+- `docs/research/gamslib_parse_errors.md` - Error analysis
 - `reports/gamslib_ingestion_sprint6.json` - Initial metrics
-- Updated `docs/research/gamslib_parse_errors.md` with actual results
-- `docs/research/ingestion_schedule.md` capturing the Day 5 decision
 
-**Progress Metric:** 10 models ingested, baseline metrics and ingestion schedule established
+**Progress Metric:** 10 models ingested, baseline metrics established
 
 ---
 
 ### **Day 6: GAMSLib Integration - Conversion Dashboard**
 
-**Owner:** GAMSLib Team + UX Team
-
-**Goal:** Create conversion tracking dashboard (design already resolved on Day 0, scheduling decision made on Day 5)
+**Goal:** Create conversion tracking dashboard and resolve remaining unknowns
 
 **Tasks:**
-1. **Apply Day 0 dashboard design** (1h)
-   - Review dashboard design from Day 0 (Unknown 3.4)
-   - Review template and section layout
-   - Prepare dashboard generation logic
+1. **Resolve Unknown 3.4** (Medium) - Dashboard implementation (1h)
+   - **Decision:** Start with pure Markdown for Sprint 6
+   - Format: `docs/status/GAMSLIB_CONVERSION_STATUS.md`
+   - Auto-generated from ingestion script output
 
 2. **Implement dashboard generation** (3h)
    - Extend `scripts/ingest_gamslib.py` to generate Markdown
-   - Dashboard sections (from Day 0 template):
+   - Dashboard sections:
      * Overall KPIs (parse%, convert%, solve%)
      * Per-model status table
      * Common failure patterns
      * Sprint-over-sprint progress chart (manual for Sprint 6)
    - File: `docs/status/GAMSLIB_CONVERSION_STATUS.md`
 
-3. **Implement ingestion scheduling process** (1h)
-   - Use Day 5 decision (`docs/research/ingestion_schedule.md`) to add `make ingest-gamslib`
-   - Document cadence, inputs, and expected outputs
-   - Prepare backlog item for Sprint 7 automation
+3. **Resolve Unknown 3.6** (Low) - Ingestion scheduling (1h)
+   - **Decision:** Manual ingestion for Sprint 6
+   - Document process: `make ingest-gamslib` → updates dashboard
+   - Defer GitHub Action automation to Sprint 7+
 
 4. **Documentation** (2h)
    - Create `docs/features/gamslib_integration.md`
@@ -369,15 +281,12 @@ All 9 prep tasks completed:
 - ✅ 10 GAMSLib models ingested
 - ✅ Conversion dashboard live with baseline metrics
 - ✅ Parse error patterns documented
-- ✅ Unknowns 3.3, 3.4, 3.5 applied (resolved Day 0) + Day 5 ingestion scheduling decision implemented (`make ingest-gamslib`)
-- **Demo Artifact:** Screenshot walkthrough of `GAMSLIB_CONVERSION_STATUS.md` showing parse%, convert%, solve% metrics, per-model table, and failure pattern analysis
-- **Go/No-Go:** Proceed to UX improvements
+- ✅ Unknowns 3.3, 3.4, 3.5, 3.6 resolved
+- **Demo:** Show dashboard with parse%, convert%, solve% KPIs
 
 ---
 
 ### **Day 7: UX Improvements - Error Message Integration**
-
-**Owner:** UX Team
 
 **Goal:** Apply error message improvements from Task 6 throughout codebase
 
@@ -390,7 +299,7 @@ All 9 prep tasks completed:
 
 2. **Source context extraction** (2h)
    - Implement source line extraction for error context
-   - Use line/col metadata from Day 0 research (Unknown 4.1)
+   - Use line/col metadata from Day 4 (Unknown 4.1)
    - Add caret pointer to highlight error location
    - File: `src/utils/error_formatter.py` (from Task 6)
 
@@ -415,8 +324,6 @@ All 9 prep tasks completed:
 ---
 
 ### **Day 8: UX Improvements - Documentation & Polish**
-
-**Owner:** UX Team + Full Team
 
 **Goal:** Complete UX improvements and resolve remaining unknowns
 
@@ -459,8 +366,6 @@ All 9 prep tasks completed:
 ---
 
 ### **Day 9: Testing & Quality Assurance**
-
-**Owner:** QA Team + Full Team
 
 **Goal:** Comprehensive testing and quality checks before release
 
@@ -508,14 +413,11 @@ All 9 prep tasks completed:
 - ✅ Performance acceptable (no major regressions)
 - ✅ Coverage ≥87% (target ≥90%)
 - ✅ All quality checks passing
-- **Demo Artifact:** CI/CD dashboard screenshot showing green builds, test count (≥1098), coverage percentage (≥87%), and benchmark results showing <10% regression
 - **Go/No-Go:** Proceed to release only if all criteria met
 
 ---
 
 ### **Day 10: Release Preparation & Sprint Review**
-
-**Owner:** Full Team
 
 **Goal:** Final release preparation and Sprint 6 retrospective
 
@@ -565,144 +467,83 @@ All 9 prep tasks completed:
 
 ## Checkpoints Summary
 
-### Checkpoint 0 (Day 0 EOD): Pre-Sprint Research Complete
-**Owner:** Full Team (Research Specialists)
-
-**Acceptance Criteria:**
-- Unknowns 3.3, 3.4, 3.5, 4.1, 4.2 resolved
-- Parser line/col tracking strategy confirmed
-- Documentation link format decided
-- GAMSLib parse error patterns documented
-- Dashboard design finalized
-
-**Deliverables:**
-- `docs/research/parser_line_col_tracking.md`
-- `docs/research/doc_link_strategy.md`
-- `docs/research/gamslib_parse_errors_preliminary.md`
-- `docs/research/gamslib_kpi_definitions.md`
-- `docs/research/dashboard_design.md`
-
-**Demo Artifact:** Mock dashboard Markdown file showing proposed KPI layout with sample data
-
-**Go/No-Go Decision:** Proceed to Day 1 only if all 5 unknowns resolved
-
----
-
 ### Checkpoint 1 (Day 1 EOD): Nested Min/Max Research Complete
-**Owner:** Convexity Team
-
-**Acceptance Criteria:**
+**Criteria:**
 - All 4 nested min/max unknowns resolved (2.2, 2.3, 2.4, 2.5)
-- Mathematical semantics verified with proof
-- AST detection approach designed and prototyped
+- Mathematical semantics verified
+- AST detection approach designed
 - Test strategy documented
 
 **Deliverables:**
-- `docs/research/nested_minmax_semantics.md` - Mathematical proof
-- `docs/research/nested_minmax_testing.md` - Test strategy
-- AST visitor proof-of-concept code
+- `docs/research/nested_minmax_semantics.md`
+- `docs/research/nested_minmax_testing.md`
+- AST visitor design
 
-**Demo Artifact:** Recorded PATH solver comparison showing `min(min(x,y),z)` produces identical solution to `min(x,y,z)` on test problem (e.g., Rosenbrock with min constraints)
-
-**Go/No-Go Decision:** Proceed to Day 2 implementation only if semantics mathematically verified
+**Go/No-Go Decision:** Proceed to implementation only if semantics mathematically verified
 
 ---
 
 ### Checkpoint 2 (Day 2 EOD): Nested Min/Max Implementation Complete
-**Owner:** Convexity Team
-
-**Acceptance Criteria:**
+**Criteria:**
 - Flattening logic implemented and tested
 - All regression tests passing
 - Example `min(min(x,y),z)` → `min(x,y,z)` verified
 - Documentation updated
 
 **Deliverables:**
-- `src/ad/minmax_flattener.py` - Complete implementation
-- Unit and integration tests in `tests/ad/test_minmax_flattening.py`
-- Updated `docs/features/min_max.md`
+- `src/ad/minmax_flattener.py`
+- Unit and integration tests
+- Updated documentation
 
-**Demo Artifact:** Live terminal execution showing:
-1. Input `.gms` file with nested min/max
-2. AST dump before flattening
-3. AST dump after flattening
-4. PATH solver output comparison (nested vs. flattened)
-
-**Go/No-Go Decision:** Proceed to convexity work only if all tests pass
+**Go/No-Go Decision:** Proceed to convexity work
 
 ---
 
 ### Checkpoint 3 (Day 4 EOD): Convexity Heuristics Complete
-**Owner:** Convexity Team + UX Team
-
-**Acceptance Criteria:**
+**Criteria:**
 - 5 core patterns implemented
 - All 13 test fixtures correctly classified
 - CLI integration complete with warnings
 - Error messages include source context + doc links
-- Unknowns 4.1 and 4.2 applied (resolved Day 0)
+- Unknowns 4.1 and 4.2 resolved
 
 **Deliverables:**
-- `src/diagnostics/convexity/` - Pattern matchers and core patterns
+- `src/diagnostics/convexity/` - Pattern matchers
 - CLI integration with `--skip-convexity-check` flag
-- `docs/errors/convexity_warnings.md` - User documentation
-- End-to-end tests in `tests/integration/test_convexity_e2e.py`
+- `docs/errors/convexity_warnings.md`
 
-**Demo Artifact:** Terminal recording showing:
-1. Running converter on `nonconvex_circle.gms`
-2. Convexity warning displayed with line number, source snippet (3 lines context), caret pointer
-3. Clickable documentation URL
-4. Navigation to docs showing pattern explanation
-
-**Go/No-Go Decision:** Proceed to GAMSLib work
+**Demo:** Show convexity warning on `nonconvex_circle.gms` with full context
 
 ---
 
 ### Checkpoint 4 (Day 6 EOD): GAMSLib Integration Complete
-**Owner:** GAMSLib Team + UX Team
-
-**Acceptance Criteria:**
+**Criteria:**
 - 10 Tier 1 models downloaded and ingested
 - Conversion dashboard live with baseline metrics
 - Parse error patterns documented
-- Unknowns 3.3, 3.4, 3.5 applied + Day 5 ingestion scheduling decision implemented (`make ingest-gamslib`)
+- Unknowns 3.3, 3.4, 3.5, 3.6 resolved
 
 **Deliverables:**
-- `tests/fixtures/gamslib/` - 10 downloaded models
-- `docs/status/GAMSLIB_CONVERSION_STATUS.md` - Live dashboard
-- `scripts/ingest_gamslib.py` - Ingestion automation
-- `docs/features/gamslib_integration.md` - User documentation
-- Updated `docs/research/gamslib_parse_errors.md`
+- `tests/fixtures/gamslib/` - 10 models
+- `docs/status/GAMSLIB_CONVERSION_STATUS.md` - Dashboard
+- `scripts/ingest_gamslib.py` - Automation
+- `docs/research/gamslib_parse_errors.md`
 
-**Demo Artifact:** Screenshot walkthrough of `GAMSLIB_CONVERSION_STATUS.md` showing:
-1. Overall KPI section (parse%, convert%, solve%)
-2. Per-model status table with color coding
-3. Common failure patterns section
-4. Example: drill down into one failed model showing parse error
-
-**Go/No-Go Decision:** Proceed to UX improvements
+**Demo:** Show dashboard with parse%, convert%, solve% KPIs
 
 ---
 
 ### Checkpoint 5 (Day 9 EOD): Quality Assurance Complete
-**Owner:** QA Team + Full Team
-
-**Acceptance Criteria:**
+**Criteria:**
 - All tests passing (≥1098 tests)
-- Performance acceptable (no >10% regression)
+- Performance acceptable (no major regressions)
 - Coverage ≥87% (target ≥90%)
 - All quality checks passing (typecheck, lint, format)
 
 **Deliverables:**
 - Test report with coverage metrics
-- Performance benchmark comparison (Sprint 5 vs Sprint 6)
-- Quality check results (typecheck, lint, format, security)
-
-**Demo Artifact:** CI/CD dashboard screenshot showing:
-1. All test suites green (unit, integration, e2e)
-2. Test count: ≥1098 tests passing
-3. Coverage percentage: ≥87% (ideally ≥90%)
-4. Benchmark table showing performance comparison with regression analysis
+- Performance benchmark results
+- Quality check results
 
 **Go/No-Go Decision:** Proceed to release only if all criteria met
 
@@ -738,7 +579,6 @@ All 9 prep tasks completed:
 **Impact:** Medium (reduces ingestion count)  
 **Probability:** High  
 **Mitigation:**
-- Day 0 research identifies parse blockers early
 - Start with simple Tier 1 models
 - Document all parse blockers for Sprint 7 parser work
 - Set realistic Sprint 6 target: ≥10% parse rate
@@ -751,7 +591,7 @@ All 9 prep tasks completed:
 **Impact:** High (delays UX improvements)  
 **Probability:** Low (Lark supports this)  
 **Mitigation:**
-- Day 0 research confirms Lark `meta` attribute availability
+- Day 4 research confirms Lark `meta` attribute availability
 - Use Lark's built-in position tracking
 - Start with simple line/col metadata, enhance later
 **Contingency:** Ship v0.6.0 without line numbers, add in v0.6.1 patch
@@ -780,18 +620,6 @@ All 9 prep tasks completed:
 
 ---
 
-### Risk 7: Day 0 research takes longer than planned
-**Impact:** Medium (delays sprint start)  
-**Probability:** Medium  
-**Mitigation:**
-- Day 0 focuses on 5 well-scoped unknowns
-- Research specialists assigned per area
-- Checkpoint 0 go/no-go prevents cascade delays
-- Buffer: can absorb 1 extra day (start Day 1 on calendar Day 2)
-**Contingency:** If research incomplete, defer dependent tasks and re-sequence sprint
-
----
-
 ## Dependencies
 
 ### External Dependencies
@@ -801,66 +629,26 @@ All 9 prep tasks completed:
 
 ### Internal Dependencies
 ```
-Day 0 (Research) ───┬──→ Day 1 (Nested Min/Max Research) ──→ Day 2 (Implementation)
-                    │
-                    ├──→ Day 4 (Convexity CLI) ──→ Day 9 (Testing)
-                    │
-                    ├──→ Day 5 (GAMSLib Ingestion) ──→ Day 6 (Dashboard)
-                    │
-                    └──→ Day 7 (UX Integration)
+Day 1 (Research) ──┐
+                   ├─→ Day 2 (Nested Min/Max) ──┐
+Day 3 (Convexity) ─┘                             ├─→ Day 9 (Testing)
+Day 4 (Convexity) ────────────────────────────┐  │
+                                               │  │
+Day 5 (GAMSLib) ───────────────────────────┐  │  │
+Day 6 (GAMSLib) ───────────────────────────┼──┼──┘
+                                           │  │
+Day 7 (UX) ────────────────────────────────┘  │
+Day 8 (UX) ───────────────────────────────────┘
 
-Day 3 (Convexity Patterns) ──→ Day 4 (Convexity CLI) ──→ Day 9 (Testing)
-
-Day 6 (Dashboard) ──→ Day 9 (Testing)
-Day 7 (UX) ──→ Day 9 (Testing)
-Day 8 (Docs) ──→ Day 9 (Testing)
-
-Day 9 (Testing) ──→ Day 10 (Release)
+Day 10 (Release) depends on Day 9 Go/No-Go
 ```
 
-**Critical Path:** Day 0 → Day 1 → Day 2 → Day 9 → Day 10
-
-**Key Changes from Original Plan:**
-- Day 0 added to resolve unknowns BEFORE dependent work (addresses Review Finding 2)
-- Day 4, 5, 6 now apply Day 0 research instead of doing research same-day
-- Research unblocked: all implementation days can proceed without delays
+**Critical Path:** Day 1 → Day 2 → Day 9 → Day 10 (nested min/max research gates implementation)
 
 **Parallelizable Work:**
-- Day 3 (Convexity Patterns) can run parallel to Day 2 (Nested Min/Max)
-- Days 5-8 can run in parallel if teams coordinate (GAMSLib Team, UX Team, Convexity Team)
-- Day 4 requires Day 3 completion, but Day 5-8 are independent
-
----
-
-## Team Assignments Summary (Addresses Review Finding 1)
-
-### Convexity Team
-- Day 1: Nested Min/Max Research
-- Day 2: Nested Min/Max Implementation
-- Day 3: Convexity Patterns
-- Day 4: Convexity CLI Integration (with UX Team)
-
-### GAMSLib Team
-- Day 0: GAMSLib unknowns (3.3, 3.4, 3.5)
-- Day 5: Model Ingestion
-- Day 6: Dashboard Creation (with UX Team)
-
-### UX Team
-- Day 0: UX unknowns (4.1, 4.2) and Dashboard Design
-- Day 4: Convexity CLI Integration (with Convexity Team)
-- Day 6: Dashboard Creation (with GAMSLib Team)
-- Day 7: Error Message Integration
-- Day 8: Documentation & Polish (with Full Team)
-
-### QA Team
-- Day 9: Testing & Quality Assurance (lead)
-- Day 9: Support from Full Team
-
-### Full Team
-- Day 0: Research & Setup (research specialists from each team)
-- Day 8: Documentation review and polish
-- Day 9: Testing support
-- Day 10: Release Preparation & Retrospective
+- Convexity (Days 3-4) can run parallel to nested min/max (Days 1-2)
+- GAMSLib (Days 5-6) independent of both
+- UX (Days 7-8) depends on Day 4 (line/col tracking) but otherwise independent
 
 ---
 
@@ -887,10 +675,10 @@ Day 9 (Testing) ──→ Day 10 (Release)
 - [x] ✅ GAMSLib integration documented
 
 ### Demo Criteria
-- [x] ✅ Demo 1: Convexity warning working (Checkpoint 3)
-- [x] ✅ Demo 2: Nested min/max flattening working (Checkpoint 2)
-- [x] ✅ Demo 3: GAMSLib dashboard working (Checkpoint 4)
-- [x] ✅ Demo 4: Enhanced error messages working (Day 7)
+- [x] ✅ Demo 1: Convexity warning working
+- [x] ✅ Demo 2: Nested min/max flattening working
+- [x] ✅ Demo 3: GAMSLib dashboard working
+- [x] ✅ Demo 4: Enhanced error messages working
 
 **All criteria must be met before v0.6.0 release.**
 
@@ -918,8 +706,8 @@ Day 9 (Testing) ──→ Day 10 (Release)
 
 ### Sprint 4 Lessons Applied
 - ✅ Known Unknowns process continued (22 unknowns identified upfront)
-- ✅ Research days scheduled before implementation (Day 0, Day 1)
-- ✅ Checkpoints with go/no-go decisions (6 checkpoints defined)
+- ✅ Research days scheduled before implementation (Day 1)
+- ✅ Checkpoints with go/no-go decisions (5 checkpoints defined)
 
 ### Sprint 5 Lessons Applied
 - ✅ Test coverage baseline established before sprint (Task 9)
@@ -927,60 +715,10 @@ Day 9 (Testing) ──→ Day 10 (Release)
 - ✅ Buffer time for fixes and polish (Days 9-10)
 
 ### New Practices for Sprint 6
-- 🆕 Day 0 pre-sprint research to unblock implementation (addresses review feedback)
-- 🆕 Explicit team assignments for every day (addresses review feedback)
-- 🆕 Demo artifacts specified for EVERY checkpoint (addresses review feedback)
 - 🆕 Deferred unknowns tracked for Sprint 7+ (2 deferred items)
 - 🆕 GAMSLib ingestion as ongoing process (not one-time)
 - 🆕 Conversion dashboard for continuous tracking
-
----
-
-## Revisions from Original Plan
-
-### Addressing Review Finding 1: Missing Task Assignments
-**Change:** Added explicit "Owner:" field to every day section (Day 0-10)
-- Day 0: Full Team (research specialists)
-- Days 1-2: Convexity Team
-- Day 3: Convexity Team
-- Day 4: Convexity Team + UX Team
-- Days 5-6: GAMSLib Team (+ UX Team for Day 6)
-- Days 7-8: UX Team (+ Full Team for Day 8)
-- Day 9: QA Team + Full Team
-- Day 10: Full Team
-
-Added "Team Assignments Summary" section with workload breakdown
-
-### Addressing Review Finding 2: Unknown Research Scheduled Too Late
-**Change:** Created Day 0 for pre-sprint research
-- Moved Unknowns 4.1, 4.2 (parser line/col, doc links) from Day 4 to Day 0
-- Moved Unknown 3.3 (parse errors) from Day 5 to Day 0
-- Moved Unknown 3.5 (KPIs) from Day 5 to Day 0
-- Moved Unknown 3.4 (dashboard design) from Day 6 to Day 0
-- Moved Unknown 3.6 (ingestion scheduling) from Day 6 to Day 5
-
-**Result:** All unknowns resolved BEFORE implementation days that depend on them
-- Day 4 (Convexity CLI) now applies Day 0 research instead of doing research same-day
-- Day 5 (GAMSLib Ingestion) now applies Day 0 research instead of doing research same-day
-- Day 5 decision on ingestion scheduling unblocks Day 6 dashboard and `make ingest-gamslib`
-- Day 6 (Dashboard) now applies Day 0 research instead of doing research same-day
-
-Added Checkpoint 0 with go/no-go decision to ensure Day 0 research completes
-
-### Addressing Review Finding 3: Checkpoint Requirements Not Met
-**Change:** Added demo artifacts to ALL checkpoints (0-5)
-
-**Checkpoint 0:** Mock dashboard Markdown showing proposed KPI layout
-**Checkpoint 1:** Recorded PATH solver comparison showing identical solutions
-**Checkpoint 2:** Live execution showing AST before/after flattening + solver output
-**Checkpoint 3:** Terminal recording showing convexity warning with context + doc URL
-**Checkpoint 4:** Screenshot walkthrough of dashboard with KPI metrics
-**Checkpoint 5:** CI/CD dashboard screenshot showing test results + coverage
-
-All 6 checkpoints now have:
-1. ✅ Acceptance criteria
-2. ✅ Demo artifacts (specific, concrete deliverables)
-3. ✅ Go/no-go decision
+- 🆕 Research day dedicated to mathematical verification (Day 1)
 
 ---
 
@@ -992,7 +730,7 @@ All 6 checkpoints now have:
 - Unknown 4.3: Convexity warning suppression
 
 **New Priorities (Based on Sprint 6 Findings):**
-- Parser improvements for GAMSLib models (based on parse error patterns from Day 0/5)
+- Parser improvements for GAMSLib models (based on parse error patterns from Day 5)
 - Additional convexity patterns (based on false negative analysis)
 - Dashboard automation (GitHub Action for nightly ingestion)
 - Enhanced warning suppression mechanisms
@@ -1030,18 +768,16 @@ See individual task deliverables:
 | 2.5 | Low | Day 1 | 🎯 PLANNED |
 | 3.1 | Critical | Prep (Task 7) | ✅ VERIFIED |
 | 3.2 | High | Prep (Task 4) | ✅ VERIFIED |
-| 3.3 | High | Day 0 | 🎯 PLANNED (moved from Day 5) |
-| 3.4 | Medium | Day 0 | 🎯 PLANNED (moved from Day 6) |
-| 3.5 | Medium | Day 0 | 🎯 PLANNED (moved from Day 5) |
-| 3.6 | Low | Day 5 | 🎯 PLANNED (moved from Day 6) |
-| 4.1 | High | Day 0 | 🎯 PLANNED (moved from Day 4) |
-| 4.2 | Medium | Day 0 | 🎯 PLANNED (moved from Day 4) |
+| 3.3 | High | Day 5 | 🎯 PLANNED |
+| 3.4 | Medium | Day 6 | 🎯 PLANNED |
+| 3.5 | Medium | Day 5 | 🎯 PLANNED |
+| 3.6 | Low | Day 6 | 🎯 PLANNED |
+| 4.1 | High | Day 4 | 🎯 PLANNED |
+| 4.2 | Medium | Day 4 | 🎯 PLANNED |
 | 4.3 | Low | Sprint 7+ | ⏳ DEFERRED |
 | 4.4 | Low | Day 8 | 🎯 PLANNED |
 
 **Resolution Rate:** 5/17 verified in prep (29%), 9/17 planned for sprint (53%), 3/17 deferred (18%)
-
-**Key Change:** 5 unknowns moved to Day 0 and Unknown 3.6 moved to Day 5 to unblock implementation days
 
 ### Appendix C: Test Fixture Catalog
 
@@ -1058,14 +794,6 @@ See `tests/fixtures/convexity/README.md` and `tests/fixtures/gamslib/README.md` 
 
 ---
 
-**Document Version:** 2.0 (REVISED)  
+**Document Version:** 1.0  
 **Last Updated:** 2025-11-12  
-**Status:** Addresses all review findings from PLAN_REVIEW.md  
-**Changes from v1.0:**
-1. Added Day 0 for pre-sprint research (addresses Review Finding 2)
-2. Added "Owner:" field to all days (addresses Review Finding 1)
-3. Added demo artifacts to all 6 checkpoints (addresses Review Finding 3)
-4. Added Team Assignments Summary section
-5. Added Revisions from Original Plan section
-6. Updated dependency graph to include Day 0
-7. Updated Unknown Resolution Tracker with moved unknowns
+**Status:** Ready for Sprint 6 Day 1
