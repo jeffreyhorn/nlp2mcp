@@ -199,12 +199,12 @@ def strip_unsupported_directives(source: str) -> str:
 
         # Handle $ontext/$offtext comment blocks
         if stripped_lower.startswith("$ontext"):
-            filtered.append(f"* [Stripped: {line}]")
+            filtered.append(f"* [Stripped: {stripped}]")
             in_ontext_block = True
             continue
 
         if stripped_lower.startswith("$offtext"):
-            filtered.append(f"* [Stripped: {line}]")
+            filtered.append(f"* [Stripped: {stripped}]")
             in_ontext_block = False
             continue
 

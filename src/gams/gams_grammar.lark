@@ -83,6 +83,9 @@ NEGATIVE_K: /(?i:negative)\b/
 BINARY_K  : /(?i:binary)\b/
 INTEGER_K : /(?i:integer)\b/
 
+// NOTE: eqn_head_domain_list allows comma-separated equation names with domains,
+// e.g., "Equations eq1, eq2(i,j);". This is NOT valid GAMS syntax according to
+// the official specification, but we handle it gracefully to support user error recovery.
 eqn_head_decl: id_list "(" id_list ")"                       -> eqn_head_domain_list
              | ID "(" id_list ")"                            -> eqn_head_domain
              | id_list                                       -> eqn_head_list

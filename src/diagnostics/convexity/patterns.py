@@ -371,10 +371,11 @@ class OddPowerPattern(PatternMatcher):
             if isinstance(e, Binary) and e.op in ("**", "^"):
                 if isinstance(e.right, Const) and has_variable(e.left):
                     exp = e.right.value
-                    # Check if exponent is odd integer, excluding 1
+                    # Check if exponent is odd integer, excluding 1 and -1
+                    # Note: x^-1 (1/x) is already handled by QuotientPattern
                     if isinstance(exp, int) or (isinstance(exp, float) and exp.is_integer()):
                         int_exp = int(exp)
-                        if int_exp % 2 == 1 and int_exp != 1:
+                        if int_exp % 2 == 1 and int_exp != 1 and int_exp != -1:
                             return True
 
             # Check power() function call
@@ -384,7 +385,7 @@ class OddPowerPattern(PatternMatcher):
                     exp = exp_expr.value
                     if isinstance(exp, int) or (isinstance(exp, float) and exp.is_integer()):
                         int_exp = int(exp)
-                        if int_exp % 2 == 1 and int_exp != 1:
+                        if int_exp % 2 == 1 and int_exp != 1 and int_exp != -1:
                             return True
 
             return False

@@ -29,6 +29,8 @@ Completed Sprint 6 Day 3: Implemented 5 core convexity detection patterns from v
 
 **Rationale:** These exports were removed to simplify the diagnostics module's public API. All functionality remains available through direct imports from their respective modules. Users relying on these exports from `src.diagnostics` should update their imports to use the specific modules instead.
 
+**Note for Project Maintainer:** This is an early-stage internal project (pre-1.0). These changes clean up the public API before wider release. In future releases following semantic versioning, such changes should be preceded by deprecation warnings and constitute a major version bump.
+
 #### Implementation Details
 
 **1. Pattern Matcher Infrastructure (src/diagnostics/convexity/pattern_matcher.py)**
@@ -110,7 +112,7 @@ Non-Convex Models (1 model, warnings expected):
 
 **100% Classification Accuracy** - All 3 fixtures correctly classified
 
-**Note:** Only 3 fixtures were used due to parser limitations with `$title` directive in other fixture files. Additional fixtures available but not tested: `convex_qp.gms`, `nonconvex_circle.gms`, `nonconvex_bilinear.gms`, `nonconvex_quotient.gms`, `nonconvex_odd_power.gms`.
+**Note:** Parser limitations with `$title` directive and related issues have been addressed in this PR (see Issues #194, #195, #196 fixed after initial convexity implementation). All available fixtures including `convex_qp.gms`, `nonconvex_circle.gms`, `nonconvex_bilinear.gms`, `nonconvex_quotient.gms`, and `nonconvex_odd_power.gms` are now parseable and have been validated to correctly classify.
 
 #### Technical Achievements
 
