@@ -73,7 +73,7 @@ Added convexity checking to main conversion pipeline:
 
 **4. User Documentation (`docs/errors/convexity_warnings.md`)**
 
-Comprehensive 400+ line documentation including:
+Comprehensive 386 line documentation including:
 - Overview of convexity warnings (heuristics, not proofs)
 - Detailed description of each W3xx code
 - Mathematical basis for each pattern
@@ -88,7 +88,7 @@ Anchor links enable direct navigation: `#w301-nonlinear-equality`, etc.
 
 **5. End-to-End Integration Tests**
 
-Created `tests/integration/test_convexity_e2e.py` with 11 tests:
+Created `tests/integration/test_convexity_e2e.py` with 14 test cases (9 regular tests + 5 parametrized):
 - Tests full pipeline: GAMS → parse → convexity check → warning output
 - Verifies each W3xx code appears for corresponding fixture
 - Tests `--skip-convexity-check` flag suppresses warnings
@@ -124,20 +124,20 @@ pytest tests/integration/test_convexity_e2e.py -v
 
 #### Files Modified/Created
 
-**New Files (4):**
-1. `src/utils/error_codes.py` (154 lines) - Error registry
-2. `docs/errors/convexity_warnings.md` (450+ lines) - User documentation
-3. `tests/integration/test_convexity_e2e.py` (245 lines) - E2E tests
+**New Files (3):**
+1. `src/utils/error_codes.py` (160 lines) - Error registry
+2. `docs/errors/convexity_warnings.md` (386 lines) - User documentation
+3. `tests/integration/test_convexity_e2e.py` (229 lines) - E2E tests
 
-**Modified Files (2):**
+**Modified Files (3):**
 1. `src/cli.py` - Added convexity check step, --skip-convexity-check flag
 2. `src/diagnostics/convexity/pattern_matcher.py` - Added error_code field
 3. `src/diagnostics/convexity/patterns.py` - All patterns emit error codes
 
 **Test Results:**
 - Unit tests: 18/18 passing (from Day 3)
-- Integration tests: 11/11 passing (new)
-- Total convexity tests: 29 passing
+- Integration tests: 14/14 passing (new)
+- Total convexity tests: 32 passing
 
 #### Checkpoint 3 Acceptance Criteria
 
