@@ -271,7 +271,7 @@ eq4.. x**(-3) =g= 1;            # W305: x^-3 is negative odd power
 eq5.. x**2 =l= 100;             # No warning: x^2 is even (may be convex)
 eq6.. x =e= 5;                  # No warning: x^1 is linear
 eq7.. x**4 + y**2 =l= 50;       # No warning: both even powers
-eq8.. x**(-1) =l= 10;           # No warning: x^-1 handled by W304
+eq8.. x**(-1) =l= 10;           # No warning: x^-1 is a quotient (1/x), triggers W304 (quotient warning), not W305 (odd power)
 ```
 
 ### How to Fix
