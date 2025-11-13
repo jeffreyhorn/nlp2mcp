@@ -154,11 +154,13 @@ Created comprehensive analysis in `docs/research/gamslib_parse_errors.md`:
 
 #### Files Created
 
-**New Files (4):**
-1. `scripts/ingest_gamslib.py` (228 lines) - Ingestion automation
-2. `reports/gamslib_ingestion_sprint6.json` (150 lines) - Metrics report
-3. `docs/research/ingestion_schedule.md` (185 lines) - Automation strategy
-4. `docs/research/gamslib_parse_errors.md` (350 lines) - Error analysis
+**New Files (6):**
+1. `scripts/ingest_gamslib.py` (246 lines) - Ingestion automation
+2. `reports/gamslib_ingestion_sprint6.json` (92 lines) - Metrics report
+3. `docs/research/ingestion_schedule.md` (205 lines) - Automation strategy
+4. `docs/research/gamslib_parse_errors.md` (294 lines) - Error analysis
+5. `docs/issues/completed/variable-attribute-syntax.md` (225 lines) - Issue completion documentation
+6. `docs/issues/completed/model-equation-list-syntax.md` (287 lines) - Issue completion documentation
 
 **Test Results:**
 - Ingestion script: ✅ Executed successfully on 10 models

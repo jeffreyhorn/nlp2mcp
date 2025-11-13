@@ -5,7 +5,7 @@
 **Priority:** HIGH  
 **Impact:** 20% of GAMSLib Tier 1 models blocked  
 **Effort:** Low  
-**Sprint:** Sprint 7  
+**Sprint:** Sprint 6  
 
 ---
 
@@ -211,15 +211,17 @@ Model mx / objdef, eq1x /;
 
 ## Acceptance Criteria
 
-- [ ] Grammar updated to support explicit equation lists
-- [ ] Parser correctly handles equation list syntax
-- [ ] Parser validates that all equations in list are defined
-- [ ] Unit tests added and passing (≥5 test cases)
-- [ ] Both affected GAMSLib models parse successfully
-- [ ] Parse rate increases (combined with variable attributes: ≥80%)
-- [ ] Backward compatibility: `/all/` syntax still works
-- [ ] Documentation updated with equation list syntax support
-- [ ] No regressions in existing tests
+**Note:** As of Sprint 6, this feature was discovered to be already implemented. Comprehensive test coverage was added to verify functionality. Full GAMSLib model testing is pending due to additional syntax issues in those models.
+
+- [x] Grammar updated to support explicit equation lists *(already implemented)*
+- [x] Parser correctly handles equation list syntax *(already implemented)*
+- [x] Parser validates that all equations in list are defined *(already implemented)*
+- [x] Unit tests added and passing (≥7 test cases)
+- [ ] Both affected GAMSLib models parse successfully *(pending: models have additional syntax issues)*
+- [ ] Parse rate increases (combined with variable attributes: ≥80%) *(pending: models have additional syntax issues)*
+- [x] Backward compatibility: `/all/` syntax still works
+- [x] Documentation updated with equation list syntax support
+- [x] No regressions in existing tests
 
 ---
 

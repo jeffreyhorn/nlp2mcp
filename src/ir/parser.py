@@ -1127,6 +1127,11 @@ class _ModelBuilder:
                     f"Fixed bound for variable '{var_name}' cannot be infinite",
                     node,
                 )
+            if bound_kind == "l":
+                raise self._error(
+                    f"Level (initial value) for variable '{var_name}' cannot be infinite",
+                    node,
+                )
             # For other cases (e.g., lo = +inf), treat like regular value
 
         if bound_kind not in map_attrs:

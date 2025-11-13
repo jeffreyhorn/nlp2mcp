@@ -5,7 +5,7 @@
 **Priority:** HIGH  
 **Impact:** 60% of GAMSLib Tier 1 models blocked  
 **Effort:** Medium  
-**Sprint:** Sprint 7  
+**Sprint:** Sprint 6  
 
 ---
 
@@ -197,13 +197,15 @@ x.l = 2 * y.l + 5;
 
 ## Acceptance Criteria
 
-- [ ] Grammar updated to support `.l`, `.lo`, `.up` attributes
-- [ ] Parser correctly handles attribute assignments
-- [ ] Unit tests added and passing (≥5 test cases)
-- [ ] All 6 affected GAMSLib models parse successfully
-- [ ] Parse rate increases from 0% to ≥60%
-- [ ] Documentation updated with attribute syntax support
-- [ ] No regressions in existing tests
+**Note:** As of Sprint 6, grammar and parser changes are complete, but full GAMSLib model testing is pending. The following criteria are not yet met and will be addressed in a future sprint.
+
+- [x] Grammar updated to support `.l`, `.lo`, `.up` attributes
+- [x] Parser correctly handles attribute assignments
+- [x] Unit tests added and passing (≥5 test cases)
+- [ ] All 6 affected GAMSLib models parse successfully *(pending: models have additional syntax issues)*
+- [ ] Parse rate increases from 0% to ≥60% *(pending: models have additional syntax issues)*
+- [x] Documentation updated with attribute syntax support
+- [x] No regressions in existing tests
 
 ---
 
