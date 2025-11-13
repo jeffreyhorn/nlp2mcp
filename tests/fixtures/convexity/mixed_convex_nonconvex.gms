@@ -6,7 +6,7 @@ $title Mixed Convex/Non-Convex - Edge Case Test Fixture
 
 Variables x, y, obj;
 
-Equations objdef, convex_obj_part, nonlinear_eq;
+Equations objdef, nonlinear_eq;
 
 objdef..        obj =e= sqr(x) + sqr(y);
 nonlinear_eq..  x*y =e= 1;
