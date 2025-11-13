@@ -7,6 +7,115 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Day 0: Pre-Sprint Research & Setup - 2025-11-12
+
+**Status:** ✅ COMPLETE - All 5 unknowns resolved, research documented, ready for Day 1
+
+#### Summary
+
+Completed Sprint 6 Day 0: Resolved 5 critical unknowns before implementation begins, created comprehensive research documentation, and delivered mock dashboard demo artifact for Checkpoint 0.
+
+**Unknowns Resolved:**
+- ✅ Unknown 4.1 (High) - Parser line/column tracking
+- ✅ Unknown 4.2 (Medium) - Documentation links
+- ✅ Unknown 3.3 (High) - Parse error patterns
+- ✅ Unknown 3.5 (Medium) - KPI calculations
+- ✅ Unknown 3.4 (Medium) - Dashboard design
+
+**Research Documents Created (5 docs, 2,882 lines total):**
+
+1. **parser_line_col_tracking.md** (200 lines)
+   - Decision: Use Lark's built-in `meta` attribute
+   - Implementation: `propagate_positions=True`, store `SourceLocation` on IR nodes
+   - Ready for Day 4 implementation
+
+2. **doc_link_strategy.md** (284 lines)
+   - Decision: Single-page docs with anchor links for Sprint 6
+   - URL format: `https://docs.nlp2mcp.dev/errors/#{code}-{description}`
+   - Error code scheme: E/W/I + Category (0xx-9xx) + Number
+   - Central error registry in `src/utils/error_codes.py`
+   - Ready for Day 4 implementation
+
+3. **gamslib_parse_errors_preliminary.md** (541 lines)
+   - Analyzed all 10 Tier 1 models for syntax patterns
+   - 5-category error classification: ATTRIBUTE, DOLLAR, INDEXED, SYNTAX, OTHER
+   - Predicted parse success: 40-60% (4-6 models)
+   - Top blockers: indexed operations (sum/prod), attributes (.l/.m)
+   - Ready for Day 5 benchmark execution
+
+4. **gamslib_kpi_definitions.md** (640 lines)
+   - Defined 4 KPIs: parse%, convert%, solve%, e2e%
+   - Sprint 6 targets: ≥10 models, ≥50% parse, ≥80% convert, ≥50% solve
+   - Complete Python implementation of `compute_kpis()` function
+   - Cascade relationship: parse → convert → solve
+   - Ready for Day 5-6 implementation
+
+5. **dashboard_design.md** (761 lines)
+   - Decision: Pure Markdown for Sprint 6 (simplest, GitHub-friendly)
+   - Dashboard sections: KPIs, model results, error breakdown, failure details
+   - Complete Python generator implementation (~200 lines)
+   - Unicode emoji scheme: ✅/❌/⚠️/ℹ️/-
+   - Ready for Day 6 implementation
+
+**Demo Artifact:**
+- Created `docs/demos/sprint6_day0_mock_dashboard.md`
+- Mock dashboard showing KPI layout with hypothetical results
+- Demonstrates format for Checkpoint 0 requirement
+- 50% parse, 80% convert, 75% solve (mock data)
+
+**Checkpoint 0 Acceptance Criteria:**
+- ✅ Unknowns 3.3, 3.4, 3.5, 4.1, 4.2 resolved
+- ✅ Parser line/col tracking strategy confirmed (Lark meta attribute)
+- ✅ Documentation link format decided (single-page with anchors)
+- ✅ GAMSLib parse error patterns documented (5 categories)
+- ✅ Dashboard design finalized (pure Markdown)
+- ✅ Demo Artifact: Mock dashboard showing KPI layout
+- ✅ Go/No-Go: PROCEED to Day 1 (all unknowns resolved)
+
+**Files Created:**
+- `docs/research/parser_line_col_tracking.md` (200 lines)
+- `docs/research/doc_link_strategy.md` (284 lines)
+- `docs/research/gamslib_parse_errors_preliminary.md` (541 lines)
+- `docs/research/gamslib_kpi_definitions.md` (640 lines)
+- `docs/research/dashboard_design.md` (761 lines)
+- `docs/demos/sprint6_day0_mock_dashboard.md` (156 lines)
+
+**Files Modified:**
+- `README.md` - Checked off Day 0 in Sprint 6 progress checklist
+
+**Implementation Readiness:**
+
+**Day 4 (Convexity CLI Integration):**
+- Parser line/col tracking implementation ready (Unknown 4.1)
+- Documentation link integration ready (Unknown 4.2)
+- Estimated: 3-4 hours
+
+**Day 5 (GAMSLib Ingestion):**
+- Parse error categorization ready (Unknown 3.3)
+- KPI calculation ready (Unknown 3.5)
+- Estimated: Applied during benchmark execution
+
+**Day 6 (Dashboard Generation):**
+- Dashboard generator ready (Unknown 3.4)
+- Mock format validated
+- Estimated: 2-3 hours integration
+
+**Impact:**
+
+Day 0 research eliminates blocking risks for Days 1-6:
+1. **No same-day research blocking:** All unknowns resolved upfront
+2. **Implementation ready:** Concrete decisions and code examples provided
+3. **Test cases defined:** Validation approach documented
+4. **Demo validated:** Mock dashboard confirms format feasibility
+5. **Team alignment:** All sub-teams (UX, GAMSLib, Convexity) have clear direction
+
+**Next Steps:**
+- Proceed to Day 1: Nested Min/Max Research
+- Apply Day 0 research on Days 4-6 as scheduled
+- Use mock dashboard as template for real Day 6 dashboard
+
+---
+
 ### Sprint 6 Preparation: Task 10 Revision - Revised Sprint 6 Plan - 2025-11-12
 
 **Status:** ✅ COMPLETE - Revised plan addresses all review findings with improved task assignments, research scheduling, and checkpoint requirements
