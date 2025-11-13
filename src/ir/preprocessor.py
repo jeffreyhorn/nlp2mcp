@@ -161,17 +161,87 @@ def preprocess_includes(
     return "".join(result_parts)
 
 
+def strip_unsupported_directives(source: str) -> str:
+    """Remove unsupported GAMS compiler directives from source text.
+
+    This function strips out compiler directives that are not yet supported
+    by the parser, replacing them with comments to preserve line numbers.
+    This allows parsing of GAMS files that contain these directives.
+
+    Supported (stripped) directives:
+    - $title: Model title (documentation only)
+    - $ontext/$offtext: Comment blocks (documentation only)
+    - $eolcom: End-of-line comment character definition
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with unsupported directives replaced by comments
+
+    Example:
+        >>> source = "$title My Model\\nVariables x;\\n"
+        >>> result = strip_unsupported_directives(source)
+        >>> # Result: "* [Stripped: $title My Model]\\nVariables x;\\n"
+
+    Notes:
+        - Line numbers are preserved by replacing directives with comments
+        - $include directives are NOT stripped (handled by preprocess_includes)
+        - Case-insensitive matching for all directives
+    """
+    lines = source.split("\n")
+    filtered = []
+    in_ontext_block = False
+
+    for line in lines:
+        stripped = line.strip()
+        stripped_lower = stripped.lower()
+
+        # Handle $ontext/$offtext comment blocks
+        if stripped_lower.startswith("$ontext"):
+            filtered.append(f"* [Stripped: {stripped}]")
+            in_ontext_block = True
+            continue
+
+        if stripped_lower.startswith("$offtext"):
+            filtered.append(f"* [Stripped: {stripped}]")
+            in_ontext_block = False
+            continue
+
+        # If inside comment block, convert to regular comment
+        if in_ontext_block:
+            filtered.append(f"* {line}")
+            continue
+
+        # Strip $title directive
+        if stripped_lower.startswith("$title"):
+            filtered.append(f"* [Stripped: {line}]")
+            continue
+
+        # Strip $eolcom directive
+        if stripped_lower.startswith("$eolcom"):
+            filtered.append(f"* [Stripped: {line}]")
+            continue
+
+        # Keep all other lines unchanged
+        filtered.append(line)
+
+    return "\n".join(filtered)
+
+
 def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
     This is the main entry point for preprocessing GAMS files.
-    It wraps preprocess_includes() with a simpler interface.
+    It wraps preprocess_includes() with a simpler interface and
+    strips unsupported compiler directives.
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
 
     Returns:
-        Preprocessed file content with all includes expanded
+        Preprocessed file content with all includes expanded and
+        unsupported directives stripped
 
     Raises:
         FileNotFoundError: If the file or any included file doesn't exist
@@ -180,9 +250,13 @@ def preprocess_gams_file(file_path: Path | str) -> str:
 
     Example:
         >>> content = preprocess_gams_file("model.gms")
-        >>> # All $include directives expanded
+        >>> # All $include directives expanded, $title stripped
     """
     if isinstance(file_path, str):
         file_path = Path(file_path)
 
-    return preprocess_includes(file_path)
+    # First expand all includes
+    content = preprocess_includes(file_path)
+
+    # Then strip unsupported directives
+    return strip_unsupported_directives(content)

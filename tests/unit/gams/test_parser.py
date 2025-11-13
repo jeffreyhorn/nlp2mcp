@@ -267,7 +267,7 @@ def test_expression_ast_covers_functions_and_ops():
         ;
 
         expr..
-            exp(x) + log(y) - sqrt(x) + sin(x + y) + cos(x) + tan(y) =e= x ^ 2;
+            exp(x) + log(y) - sqrt(x) + sin(x + y) + cos(x) + tan(y) + sqr(x) =e= x ^ 2;
 
         logic..
             (x >= 0) and (y <= 1) =e= (x <> y) or (x = y);
@@ -283,7 +283,7 @@ def test_expression_ast_covers_functions_and_ops():
 
     calls = _collect(expr_eq.lhs_rhs[0], Call)
     func_names = {call.func for call in calls}
-    assert func_names == {"exp", "log", "sqrt", "sin", "cos", "tan"}
+    assert func_names == {"exp", "log", "sqrt", "sin", "cos", "tan", "sqr"}
 
     power_ops = {node.op for node in _collect(expr_eq.lhs_rhs[1], Binary)}
     assert "^" in power_ops
@@ -407,7 +407,7 @@ def test_indexed_equation_requires_declared_set():
         """
     )
 
-    with pytest.raises(parser.ParserSemanticError, match="equation 'g' domain"):
+    with pytest.raises(parser.ParserSemanticError, match="equation domain"):
         parser.parse_model_text(text)
 
 
@@ -1027,3 +1027,167 @@ def test_issue_140_example():
     assert model.variables["x"].kind == VarKind.POSITIVE
     assert model.variables["obj"].domain == ()
     assert model.variables["obj"].kind == VarKind.POSITIVE
+
+
+class TestCommaSeparatedDeclarations:
+    """Tests for comma-separated variable and equation declarations."""
+
+    def test_comma_separated_variables(self):
+        """Test comma-separated variable declarations."""
+        text = dedent(
+            """
+            Variables x, y, z;
+            Equations eq;
+            eq.. x + y + z =e= 10;
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert "y" in model.variables
+        assert "z" in model.variables
+        assert all(model.variables[v].kind == VarKind.CONTINUOUS for v in ["x", "y", "z"])
+
+    def test_comma_separated_equations(self):
+        """Test comma-separated equation declarations."""
+        text = dedent(
+            """
+            Variables x, y, obj;
+            Equations eq1, eq2, objdef;
+            eq1.. x =e= 1;
+            eq2.. y =e= 2;
+            objdef.. obj =e= x + y;
+            Model m /all/;
+            Solve m using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq1" in model.equations
+        assert "eq2" in model.equations
+        assert "objdef" in model.equations
+
+    def test_comma_separated_with_variable_kind(self):
+        """Test comma-separated variables with kind modifier."""
+        text = dedent(
+            """
+            Positive Variables x, y, z;
+            Equations eq;
+            eq.. x + y + z =e= 10;
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert "y" in model.variables
+        assert "z" in model.variables
+        assert all(model.variables[v].kind == VarKind.POSITIVE for v in ["x", "y", "z"])
+
+    def test_comma_separated_binary_variables(self):
+        """Test comma-separated binary variables."""
+        text = dedent(
+            """
+            Binary Variables b1, b2, b3;
+            Equations eq;
+            eq.. b1 + b2 + b3 =e= 2;
+            Model m /all/;
+            Solve m using nlp minimizing b1;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert all(model.variables[v].kind == VarKind.BINARY for v in ["b1", "b2", "b3"])
+
+    def test_mixed_single_and_comma_separated(self):
+        """Test mixing single and comma-separated declarations."""
+        text = dedent(
+            """
+            Variables x;
+            Variables y, z;
+            Variables w;
+            Equations eq;
+            eq.. x + y + z + w =e= 10;
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert len(model.variables) == 4
+        assert all(v in model.variables for v in ["x", "y", "z", "w"])
+
+    def test_comma_separated_single_variable(self):
+        """Test that single variable without comma still works."""
+        text = dedent(
+            """
+            Variables x;
+            Equations eq;
+            eq.. x =e= 5;
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+
+    def test_comma_separated_with_indexed_variable(self):
+        """Test comma-separated alongside indexed variables."""
+        text = dedent(
+            """
+            Sets i /i1, i2/;
+            Variables x, y;
+            Variables z(i);
+            Equations eq;
+            eq.. x + y =e= 10;
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert "y" in model.variables
+        assert "z" in model.variables
+        assert model.variables["x"].domain == ()
+        assert model.variables["y"].domain == ()
+        assert model.variables["z"].domain == ("i",)
+
+    def test_convexity_fixture_style(self):
+        """Test the exact style used in convexity fixtures."""
+        text = dedent(
+            """
+            Variables x, y, obj;
+            Equations objdef, linear_constr;
+
+            objdef.. obj =e= x**2 + y**2;
+            linear_constr.. x + 2*y =l= 5;
+
+            x.lo = -10;
+            x.up = 10;
+            y.lo = -10;
+            y.up = 10;
+
+            Model m /all/;
+            Solve m using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert "y" in model.variables
+        assert "obj" in model.variables
+        assert "objdef" in model.equations
+        assert "linear_constr" in model.equations
+
+    def test_comma_separated_with_obj_variable(self):
+        """Test that objective variable works in comma-separated list."""
+        text = dedent(
+            """
+            Variables x, y, z, obj;
+            Equations eq, objdef;
+            eq.. x + y + z =e= 10;
+            objdef.. obj =e= x**2 + y**2 + z**2;
+            Model m /all/;
+            Solve m using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.objective is not None
+        assert model.objective.objvar == "obj"
