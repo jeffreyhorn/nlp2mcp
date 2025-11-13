@@ -1029,6 +1029,148 @@ def test_issue_140_example():
     assert model.variables["obj"].kind == VarKind.POSITIVE
 
 
+class TestVariableAttributes:
+    """Tests for variable attribute syntax (.l, .lo, .up, .fx, etc.)."""
+
+    def test_variable_level_attribute_scalar(self):
+        """Test .l (level/initial value) attribute on scalar variable."""
+        text = dedent(
+            """
+            Variables x, y;
+            Equations eq;
+
+            x.l = 1.5;
+            y.l = 2.0;
+
+            eq.. x + y =e= 0;
+
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.variables["x"].l == 1.5
+        assert model.variables["y"].l == 2.0
+
+    def test_variable_level_attribute_indexed(self):
+        """Test .l attribute on indexed variable."""
+        text = dedent(
+            """
+            Sets i /i1, i2, i3/;
+            Variables x(i);
+            Equations eq(i);
+
+            x.l(i) = 10;
+
+            eq(i).. x(i) =e= 0;
+
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.variables["x"].l_map[("i1",)] == 10.0
+        assert model.variables["x"].l_map[("i2",)] == 10.0
+        assert model.variables["x"].l_map[("i3",)] == 10.0
+
+    def test_variable_all_attributes_combined(self):
+        """Test combining .l, .lo, .up, .fx attributes."""
+        text = dedent(
+            """
+            Variables x, y, z;
+            Equations eq;
+
+            x.l = 5;
+            x.lo = 0;
+            x.up = 10;
+
+            y.l = 2.5;
+            y.fx = 3.0;
+
+            z.l = 0;
+
+            eq.. x + y + z =e= 0;
+
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+
+        # Variable x
+        assert model.variables["x"].l == 5.0
+        assert model.variables["x"].lo == 0.0
+        assert model.variables["x"].up == 10.0
+
+        # Variable y
+        assert model.variables["y"].l == 2.5
+        assert model.variables["y"].fx == 3.0
+
+        # Variable z
+        assert model.variables["z"].l == 0.0
+
+    def test_variable_level_indexed_all_elements(self):
+        """Test .l attribute sets all indexed variable elements."""
+        text = dedent(
+            """
+            Sets i /i1, i2/;
+            Variables x(i);
+            Equations eq(i);
+
+            x.l(i) = 7.5;
+            x.lo(i) = 0;
+            x.up(i) = 15;
+
+            eq(i).. x(i) =e= 0;
+
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+
+        # Check level values
+        assert model.variables["x"].l_map[("i1",)] == 7.5
+        assert model.variables["x"].l_map[("i2",)] == 7.5
+
+        # Check bounds still work
+        assert model.variables["x"].lo_map[("i1",)] == 0.0
+        assert model.variables["x"].up_map[("i1",)] == 15.0
+
+    def test_gamslib_trig_example(self):
+        """Test the exact syntax from GAMSLib trig.gms model."""
+        text = dedent(
+            """
+            Variables x1, x2, fv;
+            Equations trigfv;
+
+            x1.lo = -2;
+            x1.up =  5;
+            x1.l  =  1;
+
+            x2.lo = -2;
+            x2.up =  5;
+            x2.l  =  1;
+
+            trigfv.. fv =e= 3*x1**4 - 2*x1*x2;
+
+            Model trigm /all/;
+            Solve trigm using nlp minimizing fv;
+            """
+        )
+        model = parser.parse_model_text(text)
+
+        # Verify x1 attributes
+        assert model.variables["x1"].lo == -2.0
+        assert model.variables["x1"].up == 5.0
+        assert model.variables["x1"].l == 1.0
+
+        # Verify x2 attributes
+        assert model.variables["x2"].lo == -2.0
+        assert model.variables["x2"].up == 5.0
+        assert model.variables["x2"].l == 1.0
+
+
 class TestCommaSeparatedDeclarations:
     """Tests for comma-separated variable and equation declarations."""
 

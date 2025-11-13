@@ -1111,9 +1111,9 @@ class _ModelBuilder:
         bound_kind: str,
         node: Tree | Token | None = None,
     ) -> None:
-        label_map = {"lo": "lower", "up": "upper", "fx": "fixed"}
-        map_attrs = {"lo": "lo_map", "up": "up_map", "fx": "fx_map"}
-        scalar_attrs = {"lo": "lo", "up": "up", "fx": "fx"}
+        label_map = {"lo": "lower", "up": "upper", "fx": "fixed", "l": "level"}
+        map_attrs = {"lo": "lo_map", "up": "up_map", "fx": "fx_map", "l": "l_map"}
+        scalar_attrs = {"lo": "lo", "up": "up", "fx": "fx", "l": "l"}
         label = label_map.get(bound_kind, bound_kind)
         index_hint = f" at indices {key}" if key else ""
 

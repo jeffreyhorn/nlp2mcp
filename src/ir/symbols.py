@@ -54,11 +54,13 @@ class VariableDef:
     lo: float | None = None  # None = -inf if unspecified
     up: float | None = None  # None = +inf if unspecified
     fx: float | None = None  # fixed value overrides lo/up
-    # For indexed variables, lo/up/fx can be per-instance; v1 stub keeps scalars here.
+    l: float | None = None  # Initial level value  # noqa: E741
+    # For indexed variables, lo/up/fx/l can be per-instance; v1 stub keeps scalars here.
     # You can expand to maps in Sprint 2/3 if needed:
     lo_map: dict[tuple[str, ...], float] = field(default_factory=dict)
     up_map: dict[tuple[str, ...], float] = field(default_factory=dict)
     fx_map: dict[tuple[str, ...], float] = field(default_factory=dict)
+    l_map: dict[tuple[str, ...], float] = field(default_factory=dict)
 
 
 @dataclass
