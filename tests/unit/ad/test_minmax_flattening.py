@@ -32,7 +32,6 @@ pytestmark = pytest.mark.unit
 # ===== Detection Tests =====
 
 
-@pytest.mark.unit
 class TestNestingDetection:
     """Test detection of min/max nesting patterns."""
 
@@ -130,7 +129,6 @@ class TestNestingDetection:
 # ===== Analysis Tests =====
 
 
-@pytest.mark.unit
 class TestNestingAnalysis:
     """Test detailed nesting analysis (depth, arg count)."""
 
@@ -209,7 +207,6 @@ class TestNestingAnalysis:
 # ===== Flattening Tests =====
 
 
-@pytest.mark.unit
 class TestMinMaxFlattening:
     """Test flattening transformation."""
 
@@ -314,7 +311,6 @@ class TestMinMaxFlattening:
 # ===== Full Visitor Tests =====
 
 
-@pytest.mark.unit
 class TestFullVisitor:
     """Test complete AST visitor with flatten_all_minmax."""
 
@@ -406,7 +402,6 @@ class TestFullVisitor:
 # ===== Edge Case Tests =====
 
 
-@pytest.mark.unit
 class TestEdgeCases:
     """Test edge cases and corner scenarios."""
 
@@ -507,7 +502,6 @@ class TestEdgeCases:
 # ===== Integration Tests =====
 
 
-@pytest.mark.unit
 class TestIntegrationScenarios:
     """Test realistic integration scenarios."""
 
@@ -551,8 +545,8 @@ class TestIntegrationScenarios:
     def test_complex_nested_expression(self):
         """Tests deeply nested expression with multiple operations."""
         # Expression: min(x, max(y, min(z, w)))
-        # Should only flatten the inner min(z,w) because max(y, min(...)) is flat
-        # The outer min(x, max(...)) is also flat
+        # Tests nested expression with NO flattening needed. All operations are already flat -
+        # the inner min(z,w) has 2 args, max(y,min(...)) has 2 args (no nested max), and outer min(x,max(...)) has mixed nesting (not flattenable).
         expr = Call(
             "min",
             (
