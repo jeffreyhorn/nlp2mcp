@@ -7,6 +7,7 @@ from src.ir.preprocessor import (
     IncludeDepthExceededError,
     preprocess_gams_file,
     preprocess_includes,
+    strip_unsupported_directives,
 )
 
 
@@ -407,3 +408,216 @@ class TestMultipleIncludes:
         # Check order
         assert result.index("Parameters a") < result.index("Parameters b")
         assert result.index("Parameters b") < result.index("Parameters c")
+
+
+class TestStripUnsupportedDirectives:
+    """Tests for stripping unsupported compiler directives."""
+
+    def test_strip_title_directive(self):
+        """Test that $title directive is stripped."""
+        source = "$title My Model\nVariables x;\nEquations eq;"
+        result = strip_unsupported_directives(source)
+
+        # $title line should be replaced with comment
+        assert "* [Stripped: $title My Model]" in result
+        assert "Variables x;" in result
+        assert "Equations eq;" in result
+        # Original directive line should not be parseable (starts with comment now)
+        lines = result.split("\n")
+        assert lines[0].startswith("*")
+
+    def test_strip_title_case_insensitive(self):
+        """Test that $title is case-insensitive."""
+        sources = [
+            "$title My Model",
+            "$TITLE My Model",
+            "$Title My Model",
+            "$TiTlE My Model",
+        ]
+
+        for source in sources:
+            result = strip_unsupported_directives(source)
+            assert "* [Stripped:" in result
+            # Line should start with comment
+            assert result.startswith("*")
+
+    def test_strip_ontext_offtext_block(self):
+        """Test that $ontext/$offtext comment blocks are stripped."""
+        source = """Variables x;
+$ontext
+This is a comment block
+that spans multiple lines
+$offtext
+Equations eq;"""
+
+        result = strip_unsupported_directives(source)
+
+        # Content should be commented
+        assert "* [Stripped: $ontext]" in result
+        assert "* [Stripped: $offtext]" in result
+        assert "* This is a comment block" in result
+        assert "* that spans multiple lines" in result
+
+        # Regular code preserved
+        assert "Variables x;" in result
+        assert "Equations eq;" in result
+
+    def test_strip_eolcom_directive(self):
+        """Test that $eolcom directive is stripped."""
+        source = "$eolcom #\nVariables x; # This is a comment"
+        result = strip_unsupported_directives(source)
+
+        # $eolcom line should be replaced with comment
+        assert "* [Stripped: $eolcom #]" in result
+        lines = result.split("\n")
+        assert lines[0].startswith("*")
+
+    def test_preserve_line_numbers(self):
+        """Test that line numbers are preserved after stripping."""
+        source = """Sets i;
+$title Model
+Parameters p;
+$ontext
+Comment
+$offtext
+Variables x;"""
+
+        result = strip_unsupported_directives(source)
+        result_lines = result.split("\n")
+        source_lines = source.split("\n")
+
+        # Same number of lines
+        assert len(result_lines) == len(source_lines)
+
+        # Line 0: preserved
+        assert result_lines[0] == "Sets i;"
+        # Line 1: stripped to comment
+        assert result_lines[1].startswith("* [Stripped:")
+        # Line 2: preserved
+        assert result_lines[2] == "Parameters p;"
+
+    def test_mixed_directives_and_code(self):
+        """Test file with mixed directives and GAMS code."""
+        source = """$title Complex Model
+Sets i /i1, i2/;
+$ontext
+Documentation
+$offtext
+Parameters p(i);
+Variables x, y;"""
+
+        result = strip_unsupported_directives(source)
+
+        # Directives converted to comments
+        assert "* [Stripped: $title Complex Model]" in result
+        assert "* [Stripped: $ontext]" in result
+        assert "* [Stripped: $offtext]" in result
+
+        # Code preserved
+        assert "Sets i /i1, i2/;" in result
+        assert "Parameters p(i);" in result
+        assert "Variables x, y;" in result
+
+    def test_empty_title(self):
+        """Test $title with no text."""
+        source = "$title\nVariables x;"
+        result = strip_unsupported_directives(source)
+
+        assert "* [Stripped: $title]" in result
+        lines = result.split("\n")
+        assert lines[0].startswith("*")
+
+    def test_title_with_special_characters(self):
+        """Test $title with special characters."""
+        source = "$title Model: x² + y² ≤ 10\nVariables x;"
+        result = strip_unsupported_directives(source)
+
+        assert "* [Stripped: $title Model: x² + y² ≤ 10]" in result
+        lines = result.split("\n")
+        assert lines[0].startswith("*")
+
+    def test_nested_ontext_blocks_not_supported(self):
+        """Test that nested $ontext blocks are handled (not nested in GAMS)."""
+        source = """$ontext
+Outer comment
+$ontext
+This would be invalid GAMS anyway
+$offtext
+Variables x;"""
+
+        result = strip_unsupported_directives(source)
+
+        # First $ontext starts block
+        # Everything until $offtext is commented
+        lines = result.split("\n")
+        assert lines[0] == "* [Stripped: $ontext]"
+        assert lines[1] == "* Outer comment"
+        # Inner $ontext is inside the comment block, so it gets another Stripped marker
+        assert lines[2] == "* [Stripped: $ontext]"
+        assert lines[3] == "* This would be invalid GAMS anyway"
+        assert lines[4] == "* [Stripped: $offtext]"
+        assert lines[5] == "Variables x;"
+
+    def test_include_directive_not_stripped(self):
+        """Test that $include directive is NOT stripped (handled elsewhere)."""
+        source = "$include data.inc\nVariables x;"
+        result = strip_unsupported_directives(source)
+
+        # $include should remain untouched
+        assert "$include data.inc" in result
+        assert "Variables x;" in result
+
+    def test_no_directives_unchanged(self):
+        """Test that source without directives is unchanged."""
+        source = """Variables x, y, z;
+Equations eq1, eq2;
+eq1.. x + y =e= z;"""
+
+        result = strip_unsupported_directives(source)
+
+        # Should be identical
+        assert result == source
+
+
+class TestIntegrationWithPreprocessGamsFile:
+    """Tests for integration of directive stripping with file preprocessing."""
+
+    def test_title_stripped_in_preprocess_gams_file(self, tmp_path):
+        """Test that $title is automatically stripped by preprocess_gams_file."""
+        # Create file with $title
+        main_file = tmp_path / "main.gms"
+        main_file.write_text("$title My Model\nVariables x;\nEquations eq;")
+
+        # Preprocess
+        result = preprocess_gams_file(main_file)
+
+        # $title line should be replaced with comment
+        assert "* [Stripped: $title My Model]" in result
+        assert "Variables x;" in result
+        lines = result.split("\n")
+        assert lines[0].startswith("*")
+
+    def test_title_and_include_together(self, tmp_path):
+        """Test that both $title stripping and $include expansion work together."""
+        # Create main file with both directives
+        main_file = tmp_path / "main.gms"
+        main_file.write_text("$title Main Model\nSets i;\n$include data.inc\nVariables x;")
+
+        # Create included file (also with $title)
+        inc_file = tmp_path / "data.inc"
+        inc_file.write_text("$title Data File\nParameters p;")
+
+        # Preprocess
+        result = preprocess_gams_file(main_file)
+
+        # Both $title directives should be replaced with comments
+        assert "* [Stripped: $title Main Model]" in result
+        assert "* [Stripped: $title Data File]" in result
+
+        # $include should be expanded
+        assert "Parameters p;" in result
+        assert "BEGIN INCLUDE: data.inc" in result
+
+        # Regular code preserved
+        assert "Sets i;" in result
+        assert "Variables x;" in result
