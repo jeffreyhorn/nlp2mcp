@@ -1,11 +1,13 @@
 # Issue #194: Parser does not support GAMS $title directive
 
 **Issue URL:** https://github.com/jeffreyhorn/nlp2mcp/issues/194  
-**Status:** Open  
+**Status:** ✅ Closed - Completed  
 **Priority:** Medium  
 **Labels:** bug, enhancement  
 **Created:** 2025-11-13  
-**Milestone:** Sprint 7 (proposed)
+**Resolved:** 2025-11-13  
+**Resolution:** Fixed in commit f21396e  
+**Milestone:** Sprint 6 Day 3 (completed ahead of Sprint 7)
 
 ## Problem Description
 
