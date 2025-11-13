@@ -15,7 +15,7 @@ Fixture Coverage:
 Not all fixtures are tested in this file. Pattern-specific tests use a subset
 of fixtures (e.g., convex_lp, nonconvex_trig, convex_with_nonlinear_ineq).
 
-Total: 15 unit tests covering all 5 patterns with targeted fixture validation.
+Total: 18 unit tests covering all 5 patterns with targeted fixture validation.
 """
 
 import pytest

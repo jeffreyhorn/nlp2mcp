@@ -97,7 +97,7 @@ Test Organization:
 
 - **Display Tests (1 class, 2 tests):** ConvexityWarning __str__ formatting
 
-**Total:** 15 unit tests covering all patterns and fixtures
+**Total:** 18 unit tests covering all patterns and fixtures
 
 **4. Fixture Validation (3 Test Models)**
 
@@ -131,8 +131,8 @@ Non-Convex Models (1 model, warnings expected):
 #### Test Results
 
 ```
-15 new tests: 100% passing
-Total project tests: 1149 passing (was 1134, added 15)
+18 new tests: 100% passing
+Total project tests: 1152 passing (was 1134, added 18)
 Zero regressions
 ```
 
