@@ -1,7 +1,7 @@
 # GAMSLib Ingestion Schedule and Automation Strategy
 
 **Date:** 2025-11-13  
-**Unknown:** 3.6 (Low Priority)  
+**Issue:** 3.6 (Low Priority)  
 **Owner:** GAMSLib Team  
 **Status:** ✅ RESOLVED - Sprint 6 Decision
 

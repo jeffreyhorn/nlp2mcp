@@ -1,5 +1,7 @@
 {
+  "_note": "This report represents the BASELINE state before Sprint 6 Day 5 parser improvements. Issues #199 and #200 were resolved in the same Sprint 6 work, but this ingestion was run prior to those fixes to establish a starting point.",
   "sprint": "Sprint 6",
+  "baseline_timestamp": "2025-11-13 (pre-parser-fixes)",
   "total_models": 10,
   "models": [
     {

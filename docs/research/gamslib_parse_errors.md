@@ -5,6 +5,8 @@
 **Owner:** GAMSLib Team  
 **Status:** ✅ COMPLETE - Actual ingestion results
 
+> **IMPORTANT:** This document describes the **baseline state before parser improvements**. The ingestion was run prior to implementing fixes for Issues #199 and #200 in order to establish a starting point. These priority issues were subsequently resolved in the same Sprint 6 Day 5 work.
+
 ---
 
 ## Executive Summary
@@ -233,16 +235,18 @@ Model mx / all /;
 
 ## Priority Recommendations for Parser Improvements
 
+> **Note:** The following recommendations and error descriptions reflect the parser state **before the Sprint 6 Day 5 parser improvements**. Priority 1 and 2 features were implemented in Sprint 6 via [Issue #199](https://github.com/jeffreyhorn/nlp2mcp/issues/199) and [Issue #200](https://github.com/jeffreyhorn/nlp2mcp/issues/200).
+
 ### Priority 1: Variable Attribute Syntax (`.l`, `.lo`, `.up`)
-- **Impact:** 60% of models blocked
-- **Effort:** Medium (requires grammar extension for dot-notation)
-- **Recommendation:** Implement in Sprint 7
-- **Grammar Addition:** Support `variable.attribute = value` where attribute is `l|lo|up|m|fx`
+- **Impact:** 60% of models blocked (prior to Sprint 6 Day 5)
+- **Effort:** Medium (required grammar extension for dot-notation)
+- **Recommendation:** ✅ **Implemented in Sprint 6 (Issue #199)**
+- **Grammar Addition:** Support `variable.attribute = value` where attribute is `l|lo|up|fx`
 
 ### Priority 2: Model Equation List Syntax
-- **Impact:** 20% of models blocked
-- **Effort:** Low (grammar already has model statement)
-- **Recommendation:** Implement in Sprint 7
+- **Impact:** 20% of models blocked (prior to Sprint 6 Day 5)
+- **Effort:** Low (grammar already had model statement)
+- **Recommendation:** ✅ **Implemented in Sprint 6 (Issue #200)**
 - **Grammar Addition:** Support `Model <name> / <eq1>, <eq2>, ... /;`
 
 ### Priority 3: Compiler Directives
