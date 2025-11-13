@@ -86,6 +86,7 @@ class NonlinearEqualityPattern(PatternMatcher):
                             pattern=self.pattern_name,
                             message="Nonlinear equality constraint detected (may be non-convex)",
                             details=None,
+                            error_code="W301",
                         )
                     )
 
@@ -129,6 +130,7 @@ class TrigonometricPattern(PatternMatcher):
                         pattern=self.pattern_name,
                         message="Trigonometric function in objective",
                         details=", ".join(trig_calls),
+                        error_code="W302",
                     )
                 )
 
@@ -145,6 +147,7 @@ class TrigonometricPattern(PatternMatcher):
                         pattern=self.pattern_name,
                         message="Trigonometric function in constraint",
                         details=", ".join(trig_calls),
+                        error_code="W302",
                     )
                 )
 
@@ -203,6 +206,7 @@ class BilinearTermPattern(PatternMatcher):
                         pattern=self.pattern_name,
                         message="Bilinear term in objective (variable * variable)",
                         details=f"{len(bilinear_terms)} term(s) found",
+                        error_code="W303",
                     )
                 )
 
@@ -218,6 +222,7 @@ class BilinearTermPattern(PatternMatcher):
                         pattern=self.pattern_name,
                         message="Bilinear term in constraint (variable * variable)",
                         details=f"{len(bilinear_terms)} term(s) found",
+                        error_code="W303",
                     )
                 )
 
@@ -272,6 +277,7 @@ class QuotientPattern(PatternMatcher):
                         pattern=self.pattern_name,
                         message="Division by variable in objective",
                         details=f"{len(quotients)} quotient(s) found",
+                        error_code="W304",
                     )
                 )
 
@@ -287,6 +293,7 @@ class QuotientPattern(PatternMatcher):
                         pattern=self.pattern_name,
                         message="Division by variable in constraint",
                         details=f"{len(quotients)} quotient(s) found",
+                        error_code="W304",
                     )
                 )
 
@@ -343,6 +350,7 @@ class OddPowerPattern(PatternMatcher):
                         pattern=self.pattern_name,
                         message="Odd power of variable in objective",
                         details=f"{len(odd_powers)} term(s) found",
+                        error_code="W305",
                     )
                 )
 
@@ -358,6 +366,7 @@ class OddPowerPattern(PatternMatcher):
                         pattern=self.pattern_name,
                         message="Odd power of variable in constraint",
                         details=f"{len(odd_powers)} term(s) found",
+                        error_code="W305",
                     )
                 )
 
