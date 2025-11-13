@@ -38,16 +38,19 @@ class ConvexityWarning:
         pattern: Name of the pattern (e.g., "nonlinear_equality", "trig_function")
         message: Human-readable description of the issue
         details: Optional additional details (e.g., "sin(...)", "x*y")
+        error_code: Error code for documentation linking (e.g., "W301")
     """
 
     equation: str
     pattern: str
     message: str
     details: str | None = None
+    error_code: str | None = None
 
     def __str__(self) -> str:
         """Format warning for display."""
-        base = f"[{self.pattern}] {self.equation}: {self.message}"
+        prefix = f"[{self.error_code}] " if self.error_code else ""
+        base = f"{prefix}[{self.pattern}] {self.equation}: {self.message}"
         if self.details:
             return f"{base} ({self.details})"
         return base

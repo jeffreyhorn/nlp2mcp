@@ -7,6 +7,155 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Day 4: Convexity Heuristics - CLI Integration - 2025-11-13
+
+**Status:** ✅ COMPLETE - Convexity warnings fully integrated into CLI with documentation
+
+#### Summary
+
+Completed Sprint 6 Day 4: Integrated convexity pattern detection into the main CLI pipeline, added error code system with documentation links, created comprehensive user-facing documentation, and end-to-end tests verifying the full warning system works correctly.
+
+**Deliverables Created:**
+- ✅ Error code registry in `src/utils/error_codes.py`
+- ✅ CLI integration with `--skip-convexity-check` flag
+- ✅ Comprehensive documentation in `docs/errors/convexity_warnings.md`
+- ✅ End-to-end integration tests in `tests/integration/test_convexity_e2e.py`
+
+#### Implementation Details
+
+**1. Error Code System (`src/utils/error_codes.py`)**
+
+Central registry for all error codes with metadata:
+- `W301`: Nonlinear equality constraint
+- `W302`: Trigonometric function
+- `W303`: Bilinear term (variable × variable)
+- `W304`: Variable quotient (division by variable)
+- `W305`: Odd power (x³, x⁵, x⁷, ...)
+
+Each error code includes:
+- Unique identifier (W3xx format)
+- Severity level (Warning)
+- Human-readable title
+- Documentation anchor for URL generation
+
+**2. Pattern Matcher Updates**
+
+Enhanced `ConvexityWarning` dataclass with `error_code` field:
+- All 5 patterns now emit structured warnings with codes
+- Warning display includes error code prefix: `[W301] [nonlinear_equality] ...`
+- Backward compatible with existing code
+
+**3. CLI Integration (`src/cli.py`)**
+
+Added convexity checking to main conversion pipeline:
+- Runs after parameter validation (Step 1.7)
+- Checks all 5 patterns against parsed model
+- Displays warnings with:
+  - Error code (e.g., W301)
+  - Equation name where pattern found
+  - Details (e.g., "sin(...)", "2 term(s) found")
+  - Documentation URL with anchor link
+- New flag: `--skip-convexity-check` to suppress warnings
+- Warnings are informational only - conversion proceeds normally
+
+**Warning Output Format:**
+```
+⚠️  Convexity Warnings:
+
+  W301: Nonlinear equality constraint detected (may be non-convex)
+     Equation: circle_eq
+     Docs: https://github.com/jeffreyhorn/nlp2mcp/blob/main/docs/errors/convexity_warnings.md#w301-nonlinear-equality
+
+  Found 1 potential nonconvex pattern(s).
+  These are heuristic warnings and may include false positives.
+  Use --skip-convexity-check to suppress these warnings.
+```
+
+**4. User Documentation (`docs/errors/convexity_warnings.md`)**
+
+Comprehensive 386 line documentation including:
+- Overview of convexity warnings (heuristics, not proofs)
+- Detailed description of each W3xx code
+- Mathematical basis for each pattern
+- GAMS code examples showing when warnings appear
+- False positive scenarios
+- How to fix/address each warning type
+- Reformulation techniques (McCormick envelopes, linearization)
+- Solver recommendations (BARON, ANTIGONE, etc.)
+- Instructions for suppressing warnings
+
+Anchor links enable direct navigation: `#w301-nonlinear-equality`, etc.
+
+**5. End-to-End Integration Tests**
+
+Created `tests/integration/test_convexity_e2e.py` with 14 test cases (9 regular tests + 5 parametrized):
+- Tests full pipeline: GAMS → parse → convexity check → warning output
+- Verifies each W3xx code appears for corresponding fixture
+- Tests `--skip-convexity-check` flag suppresses warnings
+- Confirms warnings don't block conversion
+- Validates output format includes equation names and doc links
+- Parametrized tests for all 5 nonconvex fixtures
+
+**Test Coverage:**
+```bash
+pytest tests/integration/test_convexity_e2e.py -v
+# 14 tests covering CLI integration with convexity system
+```
+
+#### Technical Achievements
+
+**Error Code Architecture:**
+- Centralized registry prevents code duplication
+- Documentation URLs generated dynamically
+- Easy to add new warning types (just add to registry)
+- Type-safe with dataclass validation
+
+**User Experience:**
+- Colored output (yellow warnings with ⚠️  symbol)
+- Clear, actionable information
+- Non-blocking (conversion always proceeds)
+- Easy opt-out with single flag
+
+**Documentation Quality:**
+- Examples for every warning type
+- Mathematical explanations accessible to users
+- Practical advice on fixing issues
+- Links to external resources (Boyd & Vandenberghe, etc.)
+
+#### Files Modified/Created
+
+**New Files (3):**
+1. `src/utils/error_codes.py` (160 lines) - Error registry
+2. `docs/errors/convexity_warnings.md` (386 lines) - User documentation
+3. `tests/integration/test_convexity_e2e.py` (229 lines) - E2E tests
+
+**Modified Files (3):**
+1. `src/cli.py` - Added convexity check step, --skip-convexity-check flag
+2. `src/diagnostics/convexity/pattern_matcher.py` - Added error_code field
+3. `src/diagnostics/convexity/patterns.py` - All patterns emit error codes
+
+**Test Results:**
+- Unit tests: 18/18 passing (from Day 3)
+- Integration tests: 14/14 passing (new)
+- Total convexity tests: 32 passing
+
+#### Checkpoint 3 Acceptance Criteria
+
+- ✅ Convexity heuristics fully integrated into CLI
+- ✅ All 13 test fixtures correctly classified
+- ✅ CLI warnings include error codes and documentation links
+- ✅ Unknowns 4.1 and 4.2 applied from Day 0 research
+- ✅ User-facing documentation complete
+
+**Demo Artifact:** Running `nlp2mcp nonconvex_circle.gms -o output.gms -v` shows:
+- Yellow warning header with emoji
+- W301 error code
+- Equation name (circle_eq)
+- Full documentation URL
+- Helpful hints about false positives
+
+---
+
 ### Sprint 6 Day 3: Convexity Heuristics - Core Patterns - 2025-11-13
 
 **Status:** ✅ COMPLETE - 5 core patterns implemented with comprehensive test coverage

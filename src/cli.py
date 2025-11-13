@@ -14,6 +14,13 @@ from src.ad.constraint_jacobian import compute_constraint_jacobian
 from src.ad.gradient import compute_objective_gradient
 from src.config import Config
 from src.diagnostics import compute_model_statistics, export_jacobian_matrix_market
+from src.diagnostics.convexity.patterns import (
+    BilinearTermPattern,
+    NonlinearEqualityPattern,
+    OddPowerPattern,
+    QuotientPattern,
+    TrigonometricPattern,
+)
 from src.emit.emit_gams import emit_gams_mcp
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
@@ -21,6 +28,7 @@ from src.kkt.assemble import assemble_kkt_system
 from src.kkt.reformulation import reformulate_model
 from src.kkt.scaling import byvar_scaling, curtis_reid_scaling
 from src.logging_config import setup_logging
+from src.utils.error_codes import get_error_info
 from src.validation.model import validate_model_structure
 from src.validation.numerical import validate_jacobian_entries, validate_parameter_values
 
@@ -85,6 +93,12 @@ from src.validation.numerical import validate_jacobian_entries, validate_paramet
     default=False,
     help="Suppress non-error output (overrides --verbose)",
 )
+@click.option(
+    "--skip-convexity-check",
+    is_flag=True,
+    default=False,
+    help="Skip convexity warnings (heuristic pattern detection for nonconvex models)",
+)
 def main(
     input_file,
     output,
@@ -98,6 +112,7 @@ def main(
     stats,
     dump_jacobian,
     quiet,
+    skip_convexity_check,
 ):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
@@ -156,6 +171,48 @@ def main(
             click.echo("Validating parameters...")
 
         validate_parameter_values(model)
+
+        # Step 1.7: Check for convexity warnings (Sprint 6 Day 4)
+        if not skip_convexity_check:
+            if verbose:
+                click.echo("Checking for potential nonconvex patterns...")
+
+            # Initialize all pattern matchers
+            patterns = [
+                NonlinearEqualityPattern(),
+                TrigonometricPattern(),
+                BilinearTermPattern(),
+                QuotientPattern(),
+                OddPowerPattern(),
+            ]
+
+            # Collect all warnings
+            all_warnings = []
+            for pattern in patterns:
+                warnings = pattern.detect(model)
+                all_warnings.extend(warnings)
+
+            # Display warnings
+            if all_warnings:
+                click.echo()
+                click.secho("⚠️  Convexity Warnings:", fg="yellow", bold=True)
+                click.echo()
+                for warning in all_warnings:
+                    # Format with error code and documentation link
+                    error_info = get_error_info(warning.error_code) if warning.error_code else None
+
+                    click.secho(f"  {warning.error_code or 'W???'}: {warning.message}", fg="yellow")
+                    click.echo(f"     Equation: {warning.equation}")
+                    if warning.details:
+                        click.echo(f"     Details: {warning.details}")
+                    if error_info:
+                        click.echo(f"     Docs: {error_info.doc_url()}")
+                    click.echo()
+
+                click.echo(f"  Found {len(all_warnings)} potential nonconvex pattern(s).")
+                click.echo("  These are heuristic warnings and may include false positives.")
+                click.echo("  Use --skip-convexity-check to suppress these warnings.")
+                click.echo()
 
         # Step 2: Normalize model
         if verbose:
