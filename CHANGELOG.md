@@ -20,6 +20,15 @@ Completed Sprint 6 Day 3: Implemented 5 core convexity detection patterns from v
 - ✅ 5 core pattern implementations in `src/diagnostics/convexity/patterns.py`
 - ✅ Comprehensive unit tests in `tests/unit/diagnostics/test_convexity_patterns.py`
 
+#### Breaking Changes
+
+**Removed from Public API (`src/diagnostics/__init__.py`):**
+- `ModelStatistics` class (still available via `from src.diagnostics.statistics import ModelStatistics`)
+- `export_full_kkt_jacobian_matrix_market()` function (still available via direct import from `matrix_market`)
+- `export_constraint_jacobian_matrix_market()` function (still available via direct import from `matrix_market`)
+
+**Rationale:** These exports were removed to simplify the diagnostics module's public API. All functionality remains available through direct imports from their respective modules. Users relying on these exports from `src.diagnostics` should update their imports to use the specific modules instead.
+
 #### Implementation Details
 
 **1. Pattern Matcher Infrastructure (src/diagnostics/convexity/pattern_matcher.py)**
@@ -71,12 +80,12 @@ Each pattern is a conservative heuristic designed to detect common non-convex st
 **3. Comprehensive Test Suite**
 
 Test Organization:
-- **Pattern-Specific Tests (5 classes, 11 tests):** Test each pattern in isolation
+- **Pattern-Specific Tests (5 classes, 10 tests):** Test each pattern in isolation
   - NonlinearEqualityPattern: 3 tests (detects trig equality, ignores linear equality, ignores convex inequality)
   - TrigonometricPattern: 4 tests (detects sin, detects cos, no trig in convex, detects trig in objective)
   - BilinearTermPattern: 1 test (ignores constant×variable)
   - QuotientPattern: 1 test (ignores constant division)
-  - OddPowerPattern: 2 tests (ignores linear term, ignores even powers)
+  - OddPowerPattern: 1 test (ignores linear term)
 
 - **End-to-End Fixture Tests (2 classes, 3 tests):**
   - TestConvexModels: 2 parametrized tests (convex_lp.gms, convex_with_nonlinear_ineq.gms → 0 warnings)
@@ -88,7 +97,7 @@ Test Organization:
 
 - **Display Tests (1 class, 2 tests):** ConvexityWarning __str__ formatting
 
-**Total:** 18 unit tests covering all patterns and fixtures
+**Total:** 15 unit tests covering all patterns and fixtures
 
 **4. Fixture Validation (3 Test Models)**
 
@@ -122,14 +131,14 @@ Non-Convex Models (1 model, warnings expected):
 #### Test Results
 
 ```
-18 new tests: 100% passing
+15 new tests: 100% passing
 Total project tests: 1149 passing (was 1134, added 15)
 Zero regressions
 ```
 
 #### Files Modified
 
-**New Files (3):**
+**New Files (6):**
 1. `src/diagnostics/__init__.py` - Diagnostics module initialization
 2. `src/diagnostics/convexity/__init__.py` - Convexity package exports
 3. `src/diagnostics/convexity/pattern_matcher.py` - Pattern matcher base class and utilities (217 lines)

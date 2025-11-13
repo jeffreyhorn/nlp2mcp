@@ -372,16 +372,20 @@ class OddPowerPattern(PatternMatcher):
                 if isinstance(e.right, Const) and has_variable(e.left):
                     exp = e.right.value
                     # Check if exponent is odd integer, excluding 1
-                    if exp == int(exp) and int(exp) % 2 == 1 and exp != 1:
-                        return True
+                    if isinstance(exp, int) or (isinstance(exp, float) and exp.is_integer()):
+                        int_exp = int(exp)
+                        if int_exp % 2 == 1 and int_exp != 1:
+                            return True
 
             # Check power() function call
             if isinstance(e, Call) and e.func == "power" and len(e.args) == 2:
                 base, exp_expr = e.args
                 if isinstance(exp_expr, Const) and has_variable(base):
                     exp = exp_expr.value
-                    if exp == int(exp) and int(exp) % 2 == 1 and exp != 1:
-                        return True
+                    if isinstance(exp, int) or (isinstance(exp, float) and exp.is_integer()):
+                        int_exp = int(exp)
+                        if int_exp % 2 == 1 and int_exp != 1:
+                            return True
 
             return False
 

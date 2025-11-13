@@ -3,16 +3,19 @@ Unit tests for convexity pattern detection (Sprint 6 Day 3).
 
 Test Coverage:
 -------------
-1. Test each of 5 patterns against 13 test fixtures
-2. Verify convex models generate 0 warnings
-3. Verify non-convex models generate expected warnings
-4. Test individual pattern matchers in isolation
+1. Test individual pattern matchers in isolation (5 pattern classes, 10 tests)
+2. Test selected patterns against a subset of available test fixtures (3 tests)
+3. Verify convex models generate 0 warnings
+4. Verify non-convex models generate expected warnings
 5. Test AST utility functions
+6. Test ConvexityWarning display formatting (2 tests)
 
-Fixtures from Sprint 6 Prep Task 8 (validated):
-- 8 original fixtures (convex_lp, convex_qp, etc.)
-- 5 additional fixtures for comprehensive coverage
-- Total: 13 fixtures
+Fixture Coverage:
+-----------------
+Not all fixtures are tested in this file. Pattern-specific tests use a subset
+of fixtures (e.g., convex_lp, nonconvex_trig, convex_with_nonlinear_ineq).
+
+Total: 15 unit tests covering all 5 patterns with targeted fixture validation.
 """
 
 import pytest
