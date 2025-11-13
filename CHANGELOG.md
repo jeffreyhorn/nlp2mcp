@@ -7,6 +7,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Preparation: Task 9 - Audit Current Test Coverage - 2025-11-12
+
+**Status:** ✅ COMPLETE - Comprehensive test coverage baseline established for Sprint 6
+
+#### Summary
+
+Completed Task 9 of Sprint 6 PREP_PLAN: Audited current test coverage across all modules, documented baseline metrics, identified critical gaps, and established Sprint 6 coverage targets.
+
+**Task 9: Audit Current Test Coverage (2-3h)**
+- ✅ Coverage report generated for all modules (used existing htmlcov/)
+- ✅ Baseline documented: 1098 tests, 87% coverage, 4423 statements
+- ✅ Gaps identified in 11+ modules (5 critical, 6 moderate)
+- ✅ Critical gaps prioritized for Sprint 6
+- ✅ CI/CD already enforces minimum 87% coverage
+- ✅ Target set: 90% by end of Sprint 6
+
+**Overall Coverage Metrics:**
+- Total Tests: 1098 (up from 1078 in Epic 1)
+- Overall Coverage: 87%
+- Total Statements: 4423
+- Missing Statements: 577
+- Covered Statements: 3846
+
+**Critical Gaps Identified (<70% coverage):**
+1. `config_loader.py` - 0% coverage (25/25 statements missing)
+2. `diagnostics/matrix_market.py` - 40% coverage (65/109 missing)
+3. `logging_config.py` - 66% coverage (15/44 missing)
+4. `validation/gams_check.py` - 68% coverage (23/72 missing)
+5. `cli.py` - 69% coverage (50/162 missing)
+
+**Moderate Gaps (70-85%):**
+- `validation/numerical.py` - 70% coverage (27/90 missing)
+- `ir/minmax_detection.py` - 77% coverage (19/83 missing)
+- `kkt/stationarity.py` - 81% coverage (17/88 missing)
+- `ir/parser.py` - 82% coverage (133/758 missing - largest module)
+- `diagnostics/performance.py` - 83% coverage (12/69 missing)
+- `emit/emit_gams.py` - 85% coverage (18/124 missing)
+
+**Sprint 6 Recommendations:**
+1. Priority 1 (Sprint 6): Add tests for config_loader.py (0% → 80%, ~5 tests)
+2. Priority 2 (Sprint 6): Add tests for matrix_market.py (40% → 80%, ~15 tests)
+3. Priority 3 (Sprint 6): Add tests for cli.py (69% → 85%, ~10 tests)
+4. Priority 4 (Sprint 6): Add tests for gams_check.py (68% → 85%, ~8 tests)
+5. Priority 5 (Sprint 6): Add tests for logging_config.py (66% → 85%, ~7 tests)
+
+**Estimated effort:** 45 new tests, ~9 hours total
+**Coverage target:** 87% → 90% by end of Sprint 6
+
+#### Deliverables
+
+Created `docs/planning/EPIC_2/SPRINT_6/TEST_COVERAGE_BASELINE.md` with:
+- Executive summary of coverage metrics
+- Module-level coverage analysis with priorities
+- Critical gaps with detailed gap analysis
+- Sprint 6 recommendations with effort estimates
+- Coverage tracking methodology
+
+**Files Changed:**
+- `docs/planning/EPIC_2/SPRINT_6/TEST_COVERAGE_BASELINE.md` (new file, 240 lines)
+
+**Testing:**
+- Analyzed existing coverage report in htmlcov/
+- Parsed coverage data from htmlcov/index.html
+- Extracted module-level coverage percentages
+- Identified 11 modules with gaps requiring attention
+
+**Documentation:**
+- Updated PREP_PLAN.md Task 9 status: 🔵 NOT STARTED → ✅ COMPLETE
+- Checked off all 6 acceptance criteria in PREP_PLAN.md (lines 1316-1323)
+- Created comprehensive baseline document with actionable recommendations
+
+#### Impact
+
+This baseline ensures:
+1. **Regression Prevention**: 87% minimum enforced in CI/CD
+2. **Sprint 6 Focus**: Clear priorities for new test development
+3. **Quality Tracking**: Measurable progress toward 90% target
+4. **Gap Visibility**: 11 modules identified for improvement
+5. **Effort Estimation**: 45 tests, ~9 hours to reach 90%
+
+#### Next Steps for Sprint 6
+
+- Use baseline to track coverage changes during Sprint 6
+- Focus new tests on Priority 1-3 modules (config_loader, matrix_market, cli)
+- Add convexity detection tests (new code must have ≥90% coverage)
+- Re-run coverage analysis at end of Sprint 6 to measure progress
+
+---
+
 ### Sprint 6 Preparation: Task 8 - Convexity Test Fixtures - 2025-11-12
 
 **Status:** ✅ COMPLETE - Comprehensive test fixture library ready for convexity detection testing
