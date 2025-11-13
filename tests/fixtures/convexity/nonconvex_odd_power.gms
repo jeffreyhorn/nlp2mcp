@@ -1,36 +1,20 @@
-* Non-Convex: Odd Powers
-*
-* This problem contains odd powers of variables.
-* Odd powers (x^3, x^5, etc.) are neither convex nor concave.
-*
-* Problem:
-*     minimize: x**3 + y**3  (odd powers - non-convex!)
-*     subject to:
-*         x + y >= 5
-*         x >= 0
-*         y >= 0
-*
-* Expected: 1 warning (odd powers in objective)
+$title Non-Convex Odd Power - Non-Convex Test Fixture
 
-Variables
-    x
-    y
-    obj;
+* Expected Classification: NON-CONVEX
+* Expected Warning: Cubic term x^3 is non-convex (neither convex nor concave)
+* Description: Odd power terms are non-convex
 
-Equations
-    objective
-    constraint1;
+Variables x, y, obj;
 
-* Objective: minimize x^3 + y^3 (ODD POWERS - NON-CONVEX!)
-objective.. obj =e= x**3 + y**3;
+Equations objdef, constraint;
 
-* Constraint: x + y >= 5
-constraint1.. x + y =g= 5;
+objdef..     obj =e= power(x, 3) + sqr(y);
+constraint.. x + y =l= 5;
 
-* Variable bounds
-x.lo = 0;
-y.lo = 0;
+x.lo = -10;
+x.up = 10;
+y.lo = -10;
+y.up = 10;
 
-* Model definition and solve
-Model odd_power_problem / all /;
-Solve odd_power_problem using NLP minimizing obj;
+Model m /all/;
+Solve m using nlp minimizing obj;

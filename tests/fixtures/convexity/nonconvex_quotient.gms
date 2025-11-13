@@ -1,36 +1,20 @@
-* Non-Convex: Variable Quotients
-*
-* This problem contains a quotient with a variable in the denominator.
-* Quotients x/y where y is a variable are typically non-convex.
-*
-* Problem:
-*     minimize: x/y  (variable quotient - non-convex!)
-*     subject to:
-*         x + y >= 5
-*         x >= 1
-*         y >= 1
-*
-* Expected: 1 warning (variable quotient in objective)
+$title Non-Convex Quotient - Non-Convex Test Fixture
 
-Variables
-    x
-    y
-    obj;
+* Expected Classification: NON-CONVEX
+* Expected Warning: Division x/y is generally non-convex
+* Description: Quotient of variables
 
-Equations
-    objective
-    constraint1;
+Variables x, y, obj;
 
-* Objective: minimize x/y (QUOTIENT - NON-CONVEX!)
-objective.. obj =e= x / y;
+Equations objdef, constraint;
 
-* Constraint: x + y >= 5
-constraint1.. x + y =g= 5;
+objdef..     obj =e= x/y;
+constraint.. x + y =g= 2;
 
-* Variable bounds
-x.lo = 1;
-y.lo = 1;
+x.lo = 0.1;
+x.up = 10;
+y.lo = 0.1;
+y.up = 10;
 
-* Model definition and solve
-Model quotient_problem / all /;
-Solve quotient_problem using NLP minimizing obj;
+Model m /all/;
+Solve m using nlp minimizing obj;

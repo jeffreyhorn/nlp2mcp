@@ -1109,7 +1109,7 @@ test -f tests/fixtures/gamslib/README.md
 
 ## Task 8: Create Convexity Test Fixtures
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Medium  
 **Estimated Time:** 2-3 hours  
 **Deadline:** Before Sprint 6 Day 1  
@@ -1183,12 +1183,12 @@ test $num_models -ge 10
 
 ### Acceptance Criteria
 
-- [ ] 5+ convex models (LP, QP, exponential, log, convex ineq)
-- [ ] 5+ non-convex models (circle, trig, bilinear, quotient, odd power)
-- [ ] 3+ edge cases (mixed, ambiguous)
-- [ ] Each model <20 lines (minimal examples)
-- [ ] Expected warnings documented in README
-- [ ] All models parse successfully with current parser
+- [x] 5+ convex models (LP, QP, exponential, log, convex ineq)
+- [x] 5+ non-convex models (circle, trig, bilinear, quotient, odd power)
+- [x] 3+ edge cases (mixed, ambiguous)
+- [x] Each model <20 lines (minimal examples)
+- [x] Expected warnings documented in README
+- [x] All models parse successfully with current parser
 
 ---
 
