@@ -7,6 +7,156 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Preparation: Task 10 - Plan Sprint 6 Detailed Schedule - 2025-11-12
+
+**Status:** ✅ COMPLETE - Comprehensive 10-day Sprint 6 plan created with checkpoints and risk mitigation
+
+#### Summary
+
+Completed Task 10 of Sprint 6 PREP_PLAN: Created detailed day-by-day schedule for Sprint 6, consolidated all prep findings, scheduled unknown resolution, defined checkpoints, and documented release criteria for v0.6.0.
+
+**Task 10: Plan Sprint 6 Detailed Schedule (4-5h)**
+- ✅ Daily schedule covers all 10 days with specific tasks
+- ✅ Each day has 4-8 hours of planned work (avg 8h/day)
+- ✅ Dependencies clearly marked with critical path diagram
+- ✅ 5 checkpoints defined with go/no-go criteria (exceeded 3 minimum)
+- ✅ Risk register with 6 risks and mitigations (exceeded 3 minimum)
+- ✅ Release criteria for v0.6.0 documented
+- ⏳ Plan pending team review and approval
+
+**Sprint 6 Structure (10 Days):**
+
+**Days 1-2: Nested Min/Max Research & Implementation**
+- Day 1: Resolve 4 unknowns (2.2-2.5) with mathematical verification
+- Day 2: Implement flattening logic with full regression testing
+- Checkpoint 2: Flattening working, all tests passing
+
+**Days 3-4: Convexity Heuristics**
+- Day 3: Implement 5 core pattern matchers
+- Day 4: CLI integration, resolve unknowns 4.1-4.2 (line/col tracking, doc links)
+- Checkpoint 3: All 13 fixtures correctly classified, warnings with context
+
+**Days 5-6: GAMSLib Integration**
+- Day 5: Download 10 models, resolve unknown 3.3 (parse errors), run ingestion
+- Day 6: Create conversion dashboard, resolve unknowns 3.4-3.6 (dashboard design, KPIs, scheduling)
+- Checkpoint 4: Dashboard live with baseline metrics
+
+**Days 7-8: UX Improvements**
+- Day 7: Apply structured error format throughout codebase
+- Day 8: Complete documentation, resolve unknowns 4.3-4.4 (warning suppression, demo checklist)
+
+**Days 9-10: Testing & Release**
+- Day 9: Full regression suite, performance benchmarks, coverage analysis
+- Day 10: Release prep, demo preparation, sprint retrospective
+- Checkpoint 5: All quality criteria met before release
+
+**Unknown Resolution Schedule:**
+- Prep phase (Tasks 1-9): 5 unknowns resolved ✅
+- Day 1: 4 unknowns (2.2-2.5) - Nested min/max research
+- Day 4: 2 unknowns (4.1-4.2) - Parser tracking, doc links
+- Day 5: 2 unknowns (3.3, 3.5) - Parse errors, KPIs
+- Day 6: 2 unknowns (3.4, 3.6) - Dashboard design, scheduling
+- Day 8: 2 unknowns (4.3, 4.4) - Warning suppression (deferred), demo checklist
+- Sprint 7+: 3 unknowns deferred (1.6, 1.7, 4.3)
+
+**5 Checkpoints with Go/No-Go Criteria:**
+
+1. **Checkpoint 1 (Day 1 EOD):** Nested min/max research complete
+   - All 4 unknowns resolved, semantics verified
+   - Go/No-Go: Proceed to implementation only if mathematically sound
+
+2. **Checkpoint 2 (Day 2 EOD):** Nested min/max implementation complete
+   - Flattening working, all tests passing
+   - Demo: `min(min(x,y),z)` → `min(x,y,z)`
+
+3. **Checkpoint 3 (Day 4 EOD):** Convexity heuristics complete
+   - 5 patterns working, 13 fixtures correctly classified
+   - Demo: Convexity warning on `nonconvex_circle.gms`
+
+4. **Checkpoint 4 (Day 6 EOD):** GAMSLib integration complete
+   - 10 models ingested, dashboard live
+   - Demo: Dashboard with parse%, convert%, solve% KPIs
+
+5. **Checkpoint 5 (Day 9 EOD):** Quality assurance complete
+   - All tests passing, coverage ≥87%, performance acceptable
+   - Go/No-Go: Proceed to release only if all criteria met
+
+**6 Risks with Mitigations:**
+
+1. **Risk:** Nested min/max flattening changes PATH solver behavior
+   - Mitigation: Day 1 PATH validation, regression testing, `--preserve-nesting` escape hatch
+
+2. **Risk:** Convexity patterns have high false positive rate
+   - Mitigation: Conservative patterns, test on 13 fixtures, `--skip-convexity-check` flag
+
+3. **Risk:** GAMSLib models have unexpected syntax
+   - Mitigation: Start with simple models, document blockers, realistic targets (≥10% parse rate)
+
+4. **Risk:** Parser line/col tracking requires major refactoring
+   - Mitigation: Use Lark `meta` attribute, ship without line numbers if needed (v0.6.1 patch)
+
+5. **Risk:** Test coverage drops below 87% baseline
+   - Mitigation: Unit tests for all new code, Day 9 coverage analysis, CI/CD enforcement
+
+6. **Risk:** Integration testing reveals feature conflicts
+   - Mitigation: Day 9 end-to-end testing, 2 days buffer, descope GAMSLib if critical conflict
+
+**v0.6.0 Release Criteria:**
+- Feature completeness: 4 major features (convexity, nested min/max, GAMSLib, UX)
+- Quality: All tests passing, coverage ≥87%, no regressions, performance acceptable
+- Documentation: Release notes, user docs, error docs all complete
+- Demo: 4 demos working (convexity, flattening, dashboard, errors)
+
+#### Deliverables
+
+Created `docs/planning/EPIC_2/SPRINT_6/PLAN.md` (comprehensive 10-day plan):
+- Executive summary with goals and metrics
+- Prep work summary (Tasks 1-9 completed)
+- Day-by-day schedule with specific tasks and hours
+- 5 checkpoint definitions with acceptance criteria
+- 6 risks with detailed mitigations
+- Dependency diagram showing critical path
+- Release criteria for v0.6.0
+- Success metrics (quantitative and qualitative)
+- Sprint 7 preview with deferred unknowns
+- Appendices: prep summary, unknown resolution tracker, test fixture catalog
+
+**Files Changed:**
+- `docs/planning/EPIC_2/SPRINT_6/PLAN.md` (new file, 589 lines)
+
+**Planning Approach:**
+- Consolidated all 9 prep task findings
+- Analyzed 11 remaining unknowns (9 incomplete + 2 deferred)
+- Scheduled unknown resolution before dependent work
+- Balanced parallelizable work (convexity, GAMSLib, UX can overlap)
+- Identified critical path: Nested min/max research gates implementation
+- Applied lessons from Sprint 4 & 5 (research days, checkpoints, buffer time)
+
+**Documentation:**
+- Updated PREP_PLAN.md Task 10 status: 🔵 NOT STARTED → ✅ COMPLETE
+- Checked off 6/7 acceptance criteria (pending team review)
+- Created comprehensive sprint plan with all required sections
+
+#### Impact
+
+This detailed plan ensures:
+1. **Clear Sequencing:** Critical unknowns resolved before dependent work
+2. **Risk Mitigation:** 6 risks identified with concrete contingencies
+3. **Quality Gates:** 5 checkpoints with go/no-go criteria prevent late surprises
+4. **Realistic Estimates:** 8h/day average, buffer time on Days 9-10
+5. **Parallel Work:** Convexity, GAMSLib, UX can proceed independently
+6. **Sprint 7 Prep:** Deferred unknowns documented for future work
+
+#### Next Steps
+
+- **Team Review:** Review and approve Sprint 6 PLAN.md
+- **Sprint 6 Day 1:** Begin with nested min/max research (4 unknowns to resolve)
+- **Checkpoint Tracking:** Monitor daily progress against checkpoint criteria
+- **Risk Monitoring:** Watch for early warning signs of identified risks
+- **Unknown Updates:** Document new unknowns discovered during implementation
+
+---
+
 ### Sprint 6 Preparation: Task 9 - Audit Current Test Coverage - 2025-11-12
 
 **Status:** ✅ COMPLETE - Comprehensive test coverage baseline established for Sprint 6

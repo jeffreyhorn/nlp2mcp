@@ -1326,7 +1326,7 @@ grep -q "cov-fail-under" .github/workflows/test.yml
 
 ## Task 10: Plan Sprint 6 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 4-5 hours  
 **Deadline:** Before Sprint 6 Day 1  
@@ -1458,12 +1458,12 @@ grep -q "Checkpoint 1" docs/planning/EPIC_2/SPRINT_6/PLAN.md
 
 ### Acceptance Criteria
 
-- [ ] Daily schedule covers all 10 days
-- [ ] Each day has 4-8 hours of planned work
-- [ ] Dependencies clearly marked (e.g., bug fixes don't block GAMSLib)
-- [ ] 3 checkpoints defined with demo criteria
-- [ ] Risk register includes ≥3 risks with mitigations
-- [ ] Release criteria for v0.6.0 documented
+- [x] Daily schedule covers all 10 days
+- [x] Each day has 4-8 hours of planned work
+- [x] Dependencies clearly marked (e.g., bug fixes don't block GAMSLib)
+- [x] 3 checkpoints defined with demo criteria (5 checkpoints total)
+- [x] Risk register includes ≥3 risks with mitigations (6 risks documented)
+- [x] Release criteria for v0.6.0 documented
 - [ ] Plan reviewed and approved by team
 
 ---
