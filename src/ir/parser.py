@@ -494,7 +494,30 @@ class _ModelBuilder:
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
-            if child.data in {"var_indexed", "var_scalar"}:
+            if child.data == "var_list":
+                # Handle comma-separated list: Variables x, y, z;
+                idx = 0
+                decl_kind = VarKind.CONTINUOUS
+                # Check for declaration-level var_kind
+                if isinstance(child.children[idx], Tree) and child.children[idx].data == "var_kind":
+                    if child.children[idx].children and isinstance(
+                        child.children[idx].children[0], Token
+                    ):
+                        kind_token = child.children[idx].children[0]
+                        if kind_token.type in _VAR_KIND_MAP:
+                            decl_kind = _VAR_KIND_MAP[kind_token.type]
+                    idx += 1
+                # Get id_list
+                if idx < len(child.children) and isinstance(child.children[idx], Tree):
+                    names = _id_list(child.children[idx])
+                    final_kind = (
+                        decl_kind
+                        if decl_kind != VarKind.CONTINUOUS
+                        else (block_kind or VarKind.CONTINUOUS)
+                    )
+                    for name in names:
+                        self.model.add_var(VariableDef(name=name, domain=(), kind=final_kind))
+            elif child.data in {"var_indexed", "var_scalar"}:
                 decl_kind, name, domain = self._parse_var_decl(child)
                 # Declaration-level kind takes precedence over block-level kind
                 final_kind = (
@@ -568,7 +591,13 @@ class _ModelBuilder:
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
-            if child.data == "eqn_head_scalar":
+            if child.data == "eqn_head_list":
+                # Handle comma-separated list: Equations eq1, eq2, eq3;
+                names = _id_list(child.children[0])
+                for name in names:
+                    self._declared_equations.add(name)
+                    self._equation_domains[name] = ()
+            elif child.data == "eqn_head_scalar":
                 name = _token_text(child.children[0])
                 self._declared_equations.add(name)
                 self._equation_domains[name] = ()
@@ -578,6 +607,15 @@ class _ModelBuilder:
                 self._ensure_sets(domain, f"equation '{name}' domain", child)
                 self._declared_equations.add(name)
                 self._equation_domains[name] = domain
+            elif child.data == "eqn_head_domain_list":
+                # Handle comma-separated with domain: Equations eq1, eq2(i,j);
+                # This is actually invalid GAMS syntax, but we handle it gracefully
+                names = _id_list(child.children[0])
+                domain = _id_list(child.children[1])
+                self._ensure_sets(domain, "equation domain", child)
+                for name in names:
+                    self._declared_equations.add(name)
+                    self._equation_domains[name] = domain
 
     def _handle_eqn_def_scalar(self, node: Tree) -> None:
         name = _token_text(node.children[0])

@@ -73,6 +73,7 @@ data_matrix_row: data_indices data_matrix_values
 data_matrix_values: NUMBER (NUMBER)*
 
 var_decl: var_kind? ID "(" id_list ")"                       -> var_indexed
+        | var_kind? id_list                                  -> var_list
         | var_kind? ID                                       -> var_scalar
 
 var_kind: POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K
@@ -82,7 +83,9 @@ NEGATIVE_K: /(?i:negative)\b/
 BINARY_K  : /(?i:binary)\b/
 INTEGER_K : /(?i:integer)\b/
 
-eqn_head_decl: ID "(" id_list ")"                            -> eqn_head_domain
+eqn_head_decl: id_list "(" id_list ")"                       -> eqn_head_domain_list
+             | ID "(" id_list ")"                            -> eqn_head_domain
+             | id_list                                       -> eqn_head_list
              | ID                                            -> eqn_head_scalar
 
 alias_opt : "(" id_list ")"                                  -> alias_domain
