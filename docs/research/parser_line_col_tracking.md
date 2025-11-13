@@ -35,7 +35,7 @@ The GAMS parser can be enhanced to track line/column positions and include them 
 
 From Lark documentation, every parse tree node has a `meta` attribute with:
 - `meta.line` - Line number (1-indexed)
-- `meta.column` - Column number (0-indexed  
+- `meta.column` - Column number (0-indexed)
 - `meta.start_pos` - Absolute character position in input
 - `meta.end_pos` - End position
 - `meta.end_line` - Ending line number

@@ -78,7 +78,7 @@ Completed Sprint 6 Day 0: Resolved 5 critical unknowns before implementation beg
 - `docs/research/gamslib_parse_errors_preliminary.md` (541 lines)
 - `docs/research/gamslib_kpi_definitions.md` (640 lines)
 - `docs/research/dashboard_design.md` (761 lines)
-- `docs/demos/sprint6_day0_mock_dashboard.md` (156 lines)
+- `docs/demos/sprint6_day0_mock_dashboard.md` (230 lines)
 
 **Files Modified:**
 - `README.md` - Checked off Day 0 in Sprint 6 progress checklist
