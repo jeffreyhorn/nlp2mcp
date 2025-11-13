@@ -1,7 +1,7 @@
 # Sprint 6 Preparation Plan
 
-**Purpose:** Complete critical preparation tasks before Sprint 6 (EPIC 2 kickoff)  
-**Timeline:** Complete before Sprint 6 Day 1  
+**Purpose:** Complete critical preparation tasks before Sprint 6 (EPIC 2 kickoff)
+**Timeline:** Complete before Sprint 6 Day 1
 **Goal:** Address Epic 1 learnings and prepare for convexity detection, bug fixes, and GAMSLib validation
 
 **Key Insight from Epic 1:** Systematic preparation with Known Unknowns process prevented blocking issues. Continue this success in Epic 2 Sprint 6.
@@ -43,11 +43,11 @@ This prep plan focuses on research, setup, and planning tasks that must be compl
 
 ## Task 1: Create Sprint 6 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED  
-**Priority:** Critical  
-**Estimated Time:** 3-4 hours  
-**Deadline:** 1 week before Sprint 6 Day 1  
-**Owner:** Sprint planning team  
+**Status:** 🔵 NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 3-4 hours
+**Deadline:** 1 week before Sprint 6 Day 1
+**Owner:** Sprint planning team
 **Dependencies:** None
 
 ### Objective
@@ -133,11 +133,11 @@ grep -q "GAMSLib" docs/planning/EPIC_2/SPRINT_6/KNOWN_UNKNOWNS.md
 
 ## Task 2: Research Convexity Detection Approaches
 
-**Status:** 🔵 NOT STARTED  
-**Priority:** Critical  
-**Estimated Time:** 6-8 hours  
-**Deadline:** 1 week before Sprint 6 Day 1  
-**Owner:** Development team  
+**Status:** 🔵 NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 6-8 hours
+**Deadline:** 1 week before Sprint 6 Day 1
+**Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
 
 ### Objective
@@ -274,11 +274,11 @@ test -f docs/planning/EPIC_2/SPRINT_6/CONVEXITY_POC_RESULTS.md
 
 ## Task 3: Analyze Maximize Bug Root Cause
 
-**Status:** ✅ COMPLETE - **NO BUG EXISTS**  
-**Priority:** Critical  
-**Estimated Time:** 4-6 hours  
-**Deadline:** 1 week before Sprint 6 Day 1  
-**Owner:** Development team  
+**Status:** ✅ COMPLETE - **NO BUG EXISTS**
+**Priority:** Critical
+**Estimated Time:** 4-6 hours
+**Deadline:** 1 week before Sprint 6 Day 1
+**Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
 
 **UPDATE 2025-11-12:** Investigation revealed that the described bug **does not exist**. The gradient negation for maximize objectives was correctly implemented from Day 7 (Oct 28, 2025). Current implementation produces correct KKT conditions. See `TASK3_CORRECTED_ANALYSIS.md` for details.
@@ -455,11 +455,11 @@ grep -q "Recommended Fix" docs/planning/EPIC_2/SPRINT_6/MAXIMIZE_BUG_FIX_DESIGN.
 
 ## Task 4: Survey GAMSLib NLP Model Catalog
 
-**Status:** ✅ COMPLETE  
-**Priority:** High  
-**Estimated Time:** 4-6 hours  
-**Deadline:** Before Sprint 6 Day 1  
-**Owner:** Development team  
+**Status:** ✅ COMPLETE
+**Priority:** High
+**Estimated Time:** 4-6 hours
+**Deadline:** Before Sprint 6 Day 1
+**Owner:** Development team
 **Dependencies:** None
 
 ### Objective
@@ -596,11 +596,11 @@ grep -q "Tier 1" docs/planning/EPIC_2/SPRINT_6/GAMSLIB_NLP_CATALOG.md
 
 ## Task 5: Design Nested Min/Max Flattening Strategy
 
-**Status:** ✅ COMPLETE  
-**Priority:** High  
-**Estimated Time:** 3-5 hours  
-**Deadline:** Before Sprint 6 Day 1  
-**Owner:** Development team  
+**Status:** ✅ COMPLETE
+**Priority:** High
+**Estimated Time:** 3-5 hours
+**Deadline:** Before Sprint 6 Day 1
+**Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
 
 ### Objective
@@ -649,18 +649,18 @@ Pseudocode:
 def flatten_minmax_calls(expr: Expr) -> Expr:
     """
     Flatten same-operation nested min/max.
-    
+
     min(x, min(y, z)) → min(x, y, z)
     max(a, max(b, c)) → max(a, b, c)
     min(x, max(y, z)) → unchanged (mixed operations)
-    
+
     Note: Compatible with Python 3.11+ (project requirement).
     Uses if/elif instead of match/case for broader compatibility if needed.
     """
     if isinstance(expr, Call) and expr.func_name == "min":
         # Recursively flatten children
         flat_args = [flatten_minmax_calls(arg) for arg in expr.args]
-        
+
         # Collect all min args at this level
         collected = []
         for arg in flat_args:
@@ -669,13 +669,13 @@ def flatten_minmax_calls(expr: Expr) -> Expr:
                 collected.extend(arg.args)
             else:
                 collected.append(arg)
-        
+
         return Call("min", collected)
-    
+
     elif isinstance(expr, Call) and expr.func_name == "max":
         # Recursively flatten children
         flat_args = [flatten_minmax_calls(arg) for arg in expr.args]
-        
+
         # Collect all max args at this level
         collected = []
         for arg in flat_args:
@@ -684,9 +684,9 @@ def flatten_minmax_calls(expr: Expr) -> Expr:
                 collected.extend(arg.args)
             else:
                 collected.append(arg)
-        
+
         return Call("max", collected)
-    
+
     else:
         return expr
 ```
@@ -769,11 +769,11 @@ grep -q "test_nested_min_simple" docs/planning/EPIC_2/SPRINT_6/NESTED_MINMAX_DES
 
 ## Task 6: Prototype Error Message Improvements
 
-**Status:** ✅ COMPLETE  
-**Priority:** High  
-**Estimated Time:** 3-4 hours  
-**Deadline:** Before Sprint 6 Day 1  
-**Owner:** Development team  
+**Status:** ✅ COMPLETE
+**Priority:** High
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 6 Day 1
+**Owner:** Development team
 **Dependencies:** None
 
 ### Objective
@@ -867,7 +867,7 @@ class ErrorContext:
     line: int
     column: int
     source_lines: list[str]
-    
+
 @dataclass
 class FormattedError:
     level: str  # "Error" or "Warning"
@@ -876,11 +876,11 @@ class FormattedError:
     explanation: str
     action: str
     doc_link: Optional[str] = None
-    
+
     def format(self) -> str:
         """Format error for display."""
         parts = []
-        
+
         # Header
         if self.context:
             parts.append(
@@ -889,26 +889,26 @@ class FormattedError:
             )
         else:
             parts.append(f"{self.level}: {self.title}")
-        
+
         # Source context
         if self.context:
             parts.append("")  # blank line
             parts.append(self._format_source_context())
-        
+
         # Explanation
         parts.append("")
         parts.append(self.explanation)
-        
+
         # Action
         parts.append("")
         parts.append(self.action)
-        
+
         # Doc link
         if self.doc_link:
             parts.append(f"See: {self.doc_link}")
-        
+
         return "\n".join(parts)
-    
+
     def _format_source_context(self) -> str:
         """Format 3-line source context with pointer."""
         # Pseudocode:
@@ -973,11 +973,11 @@ python -c "from src.utils.error_formatter import FormattedError; e = FormattedEr
 
 ## Task 7: Set Up GAMSLib Download Infrastructure
 
-**Status:** ✅ COMPLETE  
-**Priority:** Medium  
-**Estimated Time:** 3-4 hours  
-**Deadline:** Before Sprint 6 Day 1  
-**Owner:** Development team  
+**Status:** ✅ COMPLETE
+**Priority:** Medium
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 6 Day 1
+**Owner:** Development team
 **Dependencies:** Task 4 (Model catalog)
 
 ### Objective
@@ -1017,11 +1017,11 @@ mkdir -p "$TARGET_DIR"
 for model in "${MODELS[@]}"; do
     IFS=: read -r id name <<< "$model"
     echo "Downloading $name (ID: $id)..."
-    
+
     # Download .gms file
     curl -o "$TARGET_DIR/${name}.gms" \
         "${GAMSLIB_URL}/${name}.gms"
-    
+
     # Download documentation
     curl -o "$TARGET_DIR/${name}.html" \
         "${GAMSLIB_URL}/${name}.html"
@@ -1109,11 +1109,11 @@ test -f tests/fixtures/gamslib/README.md
 
 ## Task 8: Create Convexity Test Fixtures
 
-**Status:** ✅ COMPLETE  
-**Priority:** Medium  
-**Estimated Time:** 2-3 hours  
-**Deadline:** Before Sprint 6 Day 1  
-**Owner:** Development team  
+**Status:** ✅ COMPLETE
+**Priority:** Medium
+**Estimated Time:** 2-3 hours
+**Deadline:** Before Sprint 6 Day 1
+**Owner:** Development team
 **Dependencies:** Task 2 (Convexity research)
 
 ### Objective
@@ -1194,11 +1194,11 @@ test $num_models -ge 10
 
 ## Task 9: Audit Current Test Coverage
 
-**Status:** ✅ COMPLETE  
-**Priority:** High  
-**Estimated Time:** 2-3 hours  
-**Deadline:** Before Sprint 6 Day 1  
-**Owner:** Development team  
+**Status:** ✅ COMPLETE
+**Priority:** High
+**Estimated Time:** 2-3 hours
+**Deadline:** Before Sprint 6 Day 1
+**Owner:** Development team
 **Dependencies:** None
 
 ### Objective
@@ -1283,7 +1283,7 @@ Add to CI/CD:
     # Enforce current baseline (87%) to prevent regression
     # Target for Sprint 6: gradually increase to 90%
     pytest --cov=src --cov-fail-under=87 tests/
-    
+
     # Optional: Add warning if below target
     # pytest --cov=src --cov-report=term-missing tests/ | grep "TOTAL.*8[7-9]%\|TOTAL.*9[0-9]%"
 ```
@@ -1326,11 +1326,11 @@ grep -q "cov-fail-under" .github/workflows/test.yml
 
 ## Task 10: Plan Sprint 6 Detailed Schedule
 
-**Status:** ✅ COMPLETE  
-**Priority:** Critical  
-**Estimated Time:** 4-5 hours  
-**Deadline:** Before Sprint 6 Day 1  
-**Owner:** Sprint planning team  
+**Status:** ✅ COMPLETE
+**Priority:** Critical
+**Estimated Time:** 4-5 hours
+**Deadline:** Before Sprint 6 Day 1
+**Owner:** Sprint planning team
 **Dependencies:** All prep tasks (1-9)
 
 ### Objective
@@ -1464,7 +1464,7 @@ grep -q "Checkpoint 1" docs/planning/EPIC_2/SPRINT_6/PLAN.md
 - [x] 3 checkpoints defined with demo criteria (5 checkpoints total)
 - [x] Risk register includes ≥3 risks with mitigations (6 risks documented)
 - [x] Release criteria for v0.6.0 documented
-- [ ] Plan reviewed and approved by team
+- [x] Plan reviewed and approved by team
 
 ---
 
