@@ -38,21 +38,22 @@ Completed Task 9 of Sprint 6 PREP_PLAN: Audited current test coverage across all
 5. `cli.py` - 69% coverage (50/162 missing)
 
 **Moderate Gaps (70-85%):**
-- `validation/numerical.py` - 70% coverage (27/90 missing)
-- `ir/minmax_detection.py` - 77% coverage (19/83 missing)
-- `kkt/stationarity.py` - 81% coverage (17/88 missing)
+- `validation/numerical.py` - 70% coverage (19/64 missing)
+- `ir/minmax_detection.py` - 77% coverage (28/120 missing)
+- `kkt/stationarity.py` - 81% coverage (34/177 missing)
 - `ir/parser.py` - 82% coverage (133/758 missing - largest module)
-- `diagnostics/performance.py` - 83% coverage (12/69 missing)
-- `emit/emit_gams.py` - 85% coverage (18/124 missing)
+- `emit/equations.py` - 83% coverage (10/59 missing)
+- `ad/evaluator.py` - 84% coverage (22/139 missing)
+- `ad/validation.py` - 84% coverage (11/70 missing)
 
 **Sprint 6 Recommendations:**
-1. Priority 1 (Sprint 6): Add tests for config_loader.py (0% → 80%, ~5 tests)
-2. Priority 2 (Sprint 6): Add tests for matrix_market.py (40% → 80%, ~15 tests)
-3. Priority 3 (Sprint 6): Add tests for cli.py (69% → 85%, ~10 tests)
-4. Priority 4 (Sprint 6): Add tests for gams_check.py (68% → 85%, ~8 tests)
-5. Priority 5 (Sprint 6): Add tests for logging_config.py (66% → 85%, ~7 tests)
+1. Priority 1 (Sprint 6): Add tests for config_loader.py (0% → 80%, 10 tests)
+2. Priority 2 (Sprint 6): Add tests for cli.py (69% → 80%, 15 tests)
+3. Priority 3 (Sprint 6): Add tests for ir/parser.py (82% → 90%, 20 tests)
+4. Priority 4 (Sprint 6): Add tests for matrix_market.py (40% → 70%, 8 tests)
+5. Priority 5 (Sprint 6): Add tests for gams_check.py (68% → 80%, 5 tests)
 
-**Estimated effort:** 45 new tests, ~9 hours total
+**Estimated effort:** 58 new tests, ~12 hours total
 **Coverage target:** 87% → 90% by end of Sprint 6
 
 #### Deliverables
@@ -65,7 +66,7 @@ Created `docs/planning/EPIC_2/SPRINT_6/TEST_COVERAGE_BASELINE.md` with:
 - Coverage tracking methodology
 
 **Files Changed:**
-- `docs/planning/EPIC_2/SPRINT_6/TEST_COVERAGE_BASELINE.md` (new file, 240 lines)
+- `docs/planning/EPIC_2/SPRINT_6/TEST_COVERAGE_BASELINE.md` (new file, 282 lines)
 
 **Testing:**
 - Analyzed existing coverage report in htmlcov/
@@ -75,7 +76,7 @@ Created `docs/planning/EPIC_2/SPRINT_6/TEST_COVERAGE_BASELINE.md` with:
 
 **Documentation:**
 - Updated PREP_PLAN.md Task 9 status: 🔵 NOT STARTED → ✅ COMPLETE
-- Checked off all 6 acceptance criteria in PREP_PLAN.md (lines 1316-1323)
+- Checked off all 6 acceptance criteria in PREP_PLAN.md (lines 1318-1323)
 - Created comprehensive baseline document with actionable recommendations
 
 #### Impact

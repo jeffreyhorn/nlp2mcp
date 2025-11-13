@@ -163,9 +163,9 @@ Most modules have >90% coverage including:
 ### Estimated Impact
 
 If high priority items completed:
-- **New Tests:** ~45 tests
-- **Expected Coverage:** 87% → **91%**
-- **Time Investment:** ~9 hours
+- **New Tests:** ~58 tests
+- **Expected Coverage:** 87% → **90%**
+- **Time Investment:** ~12 hours
 
 ## Coverage Tracking Strategy
 
