@@ -99,7 +99,7 @@ Created `tests/integration/test_convexity_e2e.py` with 14 test cases (9 regular 
 **Test Coverage:**
 ```bash
 pytest tests/integration/test_convexity_e2e.py -v
-# 11 tests covering CLI integration with convexity system
+# 14 tests covering CLI integration with convexity system
 ```
 
 #### Technical Achievements
