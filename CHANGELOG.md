@@ -7,6 +7,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Preparation: Task 10 Revision - Revised Sprint 6 Plan - 2025-11-12
+
+**Status:** ✅ COMPLETE - Revised plan addresses all review findings with improved task assignments, research scheduling, and checkpoint requirements
+
+#### Summary
+
+Created revised Sprint 6 plan (PLAN_REVISED.md) addressing all three critical findings from team review:
+
+**Review Findings Addressed:**
+
+1. **Missing Task Assignments** ✅
+   - Added explicit "Owner:" field to all days (Days 0-10)
+   - Assigned reasonable team ownership (Convexity Team, GAMSLib Team, UX Team, QA Team, Full Team)
+   - Created "Team Assignments Summary" section for easy reference
+
+2. **Unknown Research Scheduled Too Late** ✅
+   - Created **Day 0: Pre-Sprint Research & Setup** to resolve unknowns BEFORE implementation
+   - Moved 5 unknowns to Day 0 (were originally resolved same-day as use):
+     * Unknown 4.1 (parser line/col tracking): Day 4 → Day 0
+     * Unknown 4.2 (documentation links): Day 4 → Day 0
+     * Unknown 3.3 (parse error patterns): Day 5 → Day 0
+     * Unknown 3.5 (KPI calculations): Day 5 → Day 0
+     * Unknown 3.4 (dashboard design): Day 6 → Day 0
+   - Days 4, 5, 6 now **apply** Day 0 research instead of researching same-day
+   - Added **Checkpoint 0** with go/no-go to validate research completion
+
+3. **Checkpoint Requirements Not Met** ✅
+   - Added specific **demo artifacts** to ALL 6 checkpoints (0-5):
+     * Checkpoint 0: Mock dashboard Markdown with KPI layout
+     * Checkpoint 1: Recorded PATH solver comparison video
+     * Checkpoint 2: Live terminal execution showing AST transformation
+     * Checkpoint 3: Terminal recording with convexity warnings + doc URLs
+     * Checkpoint 4: Screenshot walkthrough of dashboard metrics
+     * Checkpoint 5: CI/CD dashboard showing test results and coverage
+   - All checkpoints now have (1) acceptance criteria, (2) demo artifacts, (3) go/no-go decisions
+
+**Revised Sprint Structure (11 Days - Added Day 0):**
+
+**Day 0: Pre-Sprint Research & Setup** (NEW)
+- Owner: Full Team (GAMSLib + UX sub-teams)
+- Resolve 5 unknowns before implementation begins
+- Checkpoint 0: All research complete, designs approved
+
+**Days 1-2: Nested Min/Max**
+- Owner: Convexity Team
+- Day 1: Resolve unknowns 2.2-2.5, mathematical verification
+- Day 2: Implement flattening with regression testing
+- Checkpoint 2: Demo AST transformation in terminal
+
+**Days 3-4: Convexity Heuristics**
+- Owner: Convexity Team (Day 3), Convexity + UX Teams (Day 4)
+- Day 3: Implement 5 core patterns
+- Day 4: CLI integration using Day 0 research (4.1, 4.2)
+- Checkpoint 3: Demo convexity warnings with source context
+
+**Days 5-6: GAMSLib Integration**
+- Owner: GAMSLib Team (Day 5), GAMSLib + UX Teams (Day 6)
+- Day 5: Download 10 models, run ingestion using Day 0 research (3.3, 3.5)
+- Day 6: Generate dashboard using Day 0 design (3.4)
+- Checkpoint 4: Demo dashboard with metrics
+
+**Days 7-8: UX Improvements**
+- Owner: UX Team (Day 7), UX Team + Full Team (Day 8)
+- Day 7: Apply structured error format
+- Day 8: Complete documentation
+- No checkpoint (polish phase)
+
+**Days 9-10: Testing & Release**
+- Owner: QA Team (Day 9), Full Team (Day 10)
+- Day 9: Full regression, performance, coverage
+- Day 10: Release prep, demo, retrospective
+- Checkpoint 5: Demo CI/CD dashboard with all metrics
+
+**Additional Improvements:**
+
+- **Updated dependency graph** showing Day 0 as prerequisite
+- **Added Risk 7** for Day 0 research overrun
+- **Added "Revisions from Original Plan"** section documenting all changes
+- **Updated Unknown Resolution Tracker** showing Day 0 migrations
+- **Team Assignments Summary** table showing workload distribution
+
+**Files Changed:**
+- `docs/planning/EPIC_2/SPRINT_6/PLAN_REVISED.md` (new file, 1063 lines)
+
+**Impact:**
+
+The revised plan eliminates three critical risks identified in review:
+1. **Accountability Risk:** Every day now has clear ownership
+2. **Blocking Risk:** Research conclusions available before implementation needs them
+3. **Demo Risk:** Concrete demo artifacts ensure checkpoint readiness
+
+---
+
 ### Sprint 6 Preparation: Task 10 - Plan Sprint 6 Detailed Schedule - 2025-11-12
 
 **Status:** ✅ COMPLETE - Comprehensive 10-day Sprint 6 plan created with checkpoints and risk mitigation
@@ -122,7 +215,7 @@ Created `docs/planning/EPIC_2/SPRINT_6/PLAN.md` (comprehensive 10-day plan):
 - Appendices: prep summary, unknown resolution tracker, test fixture catalog
 
 **Files Changed:**
-- `docs/planning/EPIC_2/SPRINT_6/PLAN.md` (new file, 589 lines)
+- `docs/planning/EPIC_2/SPRINT_6/PLAN.md` (new file, 799 lines)
 
 **Planning Approach:**
 - Consolidated all 9 prep task findings
