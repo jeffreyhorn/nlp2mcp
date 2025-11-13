@@ -70,11 +70,18 @@ def differentiate(expr: Expr, wrt_var: str) -> Expr:
 
     Note:
         This is the main entry point for symbolic differentiation.
-        Specific rules are delegated to derivative_rules module.
+        Expressions are first flattened (nested min/max operations)
+        before differentiation for optimal performance.
+        Specific derivative rules are delegated to derivative_rules module.
     """
     from . import derivative_rules
+    from .minmax_flattener import flatten_all_minmax
 
-    return derivative_rules.differentiate_expr(expr, wrt_var)
+    # Flatten nested min/max operations before differentiation
+    # This reduces auxiliary variables and improves efficiency
+    flattened_expr = flatten_all_minmax(expr)
+
+    return derivative_rules.differentiate_expr(flattened_expr, wrt_var)
 
 
 def simplify(expr: Expr) -> Expr:
