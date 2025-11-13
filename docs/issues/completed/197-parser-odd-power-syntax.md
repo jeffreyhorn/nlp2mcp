@@ -2,11 +2,13 @@
 
 **Issue URL:** https://github.com/jeffreyhorn/nlp2mcp/issues/197  
 **Issue Number:** #197  
-**Status:** Open  
+**Status:** ✅ Closed - Completed  
+**Resolved:** 2025-11-13  
+**Resolution:** Fixed in commit 5af7556  
 **Priority:** Low  
 **Labels:** bug, parser, enhancement  
 **Created:** 2025-11-13  
-**Milestone:** Sprint 7 (proposed)
+**Milestone:** Sprint 6 Day 3 (completed same day as Issues #194, #195, #196)
 
 ## Problem Description
 
