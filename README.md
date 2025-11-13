@@ -32,6 +32,21 @@ For more details, see [docs/concepts/IDEA.md](docs/concepts/IDEA.md) and [docs/c
 
 Epic 1 (Sprints 1-5) is complete, delivering core NLP to MCP transformation capabilities. For detailed sprint summaries, see [docs/planning/EPIC_1/SUMMARY.md](docs/planning/EPIC_1/SUMMARY.md).
 
+**Sprint 6 Progress** (Epic 2 - Sprint 6: Convexity Heuristics, Bug Fixes, GAMSLib, UX):
+- [ ] Day 0: Pre-Sprint Research & Setup
+- [ ] Day 1: Nested Min/Max Research
+- [ ] Day 2: Nested Min/Max Implementation
+- [ ] Day 3: Convexity Heuristics - Core Patterns
+- [ ] Day 4: Convexity Heuristics - CLI Integration
+- [ ] Day 5: GAMSLib Integration - Model Ingestion
+- [ ] Day 6: GAMSLib Integration - Conversion Dashboard
+- [ ] Day 7: UX Improvements - Error Message Integration
+- [ ] Day 8: UX Improvements - Documentation & Polish
+- [ ] Day 9: Testing & Quality Assurance
+- [ ] Day 10: Release Preparation & Sprint Review
+
+For the detailed Sprint 6 plan, see [docs/planning/EPIC_2/SPRINT_6/PLAN.md](docs/planning/EPIC_2/SPRINT_6/PLAN.md).
+
 ## Installation
 
 ### Requirements
