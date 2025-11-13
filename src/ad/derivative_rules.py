@@ -547,11 +547,13 @@ def _diff_call(
         return _diff_tan(expr, wrt_var, wrt_indices, config)
     elif func == "abs":
         return _diff_abs(expr, wrt_var, wrt_indices, config)
+    elif func == "sqr":
+        return _diff_sqr(expr, wrt_var, wrt_indices, config)
     else:
         # Future: Other functions
         raise ValueError(
             f"Differentiation not yet implemented for function '{func}'. "
-            f"Supported functions: power, exp, log, sqrt, sin, cos, tan, abs. "
+            f"Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. "
             f"Note: abs() requires --smooth-abs flag (non-differentiable at x=0)."
         )
 
@@ -759,6 +761,48 @@ def _diff_sqrt(
 
     # (1/(2*sqrt(arg))) * darg/dx
     return Binary("*", one_over_two_sqrt, darg_dx)
+
+
+def _diff_sqr(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of square function: sqr(x).
+
+    Formula: d(sqr(a))/dx = 2*a * da/dx
+    Note: sqr(x) = x², so this is equivalent to the power rule with n=2
+
+    Args:
+        expr: Call("sqr", [arg])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(sqr(x))/dx = 2*x * 1 = 2*x
+        >>> _diff_sqr(Call("sqr", [VarRef("x")]), "x", None)
+        Binary("*", Binary("*", Const(2.0), VarRef("x")), Const(1.0))
+
+        >>> # d(sqr(x+y))/dx = 2*(x+y) * d(x+y)/dx = 2*(x+y) * 1 (chain rule)
+        >>> _diff_sqr(Call("sqr", [Binary("+", VarRef("x"), VarRef("y"))]), "x", None)
+        # Returns: 2*(x+y) * d(x+y)/dx
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"sqr() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+
+    # 2 * arg
+    two_times_arg = Binary("*", Const(2.0), arg)
+
+    # (2 * arg) * darg/dx
+    return Binary("*", two_times_arg, darg_dx)
 
 
 # ============================================================================

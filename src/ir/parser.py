@@ -71,7 +71,7 @@ _VAR_KIND_MAP = {
     "INTEGER_K": VarKind.INTEGER,
 }
 
-_FUNCTION_NAMES = {"abs", "exp", "log", "sqrt", "sin", "cos", "tan"}
+_FUNCTION_NAMES = {"abs", "exp", "log", "sqrt", "sin", "cos", "tan", "sqr"}
 
 
 @lru_cache

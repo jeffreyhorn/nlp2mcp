@@ -267,7 +267,7 @@ def test_expression_ast_covers_functions_and_ops():
         ;
 
         expr..
-            exp(x) + log(y) - sqrt(x) + sin(x + y) + cos(x) + tan(y) =e= x ^ 2;
+            exp(x) + log(y) - sqrt(x) + sin(x + y) + cos(x) + tan(y) + sqr(x) =e= x ^ 2;
 
         logic..
             (x >= 0) and (y <= 1) =e= (x <> y) or (x = y);
@@ -283,7 +283,7 @@ def test_expression_ast_covers_functions_and_ops():
 
     calls = _collect(expr_eq.lhs_rhs[0], Call)
     func_names = {call.func for call in calls}
-    assert func_names == {"exp", "log", "sqrt", "sin", "cos", "tan"}
+    assert func_names == {"exp", "log", "sqrt", "sin", "cos", "tan", "sqr"}
 
     power_ops = {node.op for node in _collect(expr_eq.lhs_rhs[1], Binary)}
     assert "^" in power_ops
