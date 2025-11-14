@@ -161,7 +161,8 @@ grep -c "^## Unknown" docs/planning/EPIC_2/SPRINT_7/KNOWN_UNKNOWNS.md
 **Estimated Time:** 6-8 hours  
 **Deadline:** 1 week before Sprint 7 Day 1  
 **Owner:** Development team (Parser specialist)  
-**Dependencies:** Task 1 (Known Unknowns)
+**Dependencies:** Task 1 (Known Unknowns)  
+**Unknowns Verified:** 1.3, 3.1
 
 ### Objective
 
@@ -278,6 +279,7 @@ grep -q "Recommended Priority" docs/planning/EPIC_2/SPRINT_7/GAMSLIB_FAILURE_ANA
 - Recommended feature priority (Critical/High/Medium/Low)
 - Quick wins list (2-3 features that unlock most models for least effort)
 - Hard problems list (features to defer to Sprint 8+)
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.3, 3.1
 
 ### Acceptance Criteria
 
@@ -287,6 +289,7 @@ grep -q "Recommended Priority" docs/planning/EPIC_2/SPRINT_7/GAMSLIB_FAILURE_ANA
 - [ ] Quick wins identified (unlock ≥2 models, <6h effort)
 - [ ] Recommended priority aligns with 30% parse rate goal
 - [ ] Cross-referenced with PROJECT_PLAN.md Sprint 7 features
+- [ ] Unknowns 1.3, 3.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -297,7 +300,8 @@ grep -q "Recommended Priority" docs/planning/EPIC_2/SPRINT_7/GAMSLIB_FAILURE_ANA
 **Estimated Time:** 8-10 hours  
 **Deadline:** 1 week before Sprint 7 Day 1  
 **Owner:** Development team (Parser specialist)  
-**Dependencies:** Task 2 (GAMSLib failure analysis)
+**Dependencies:** Task 2 (GAMSLib failure analysis)  
+**Unknowns Verified:** 1.1, 1.4, 1.11
 
 ### Objective
 
@@ -430,6 +434,7 @@ test -f src/gams/grammar_preprocessor_mock.lark || \
 - Test cases for common directive patterns
 - Recommendation: Full vs Mock vs Hybrid approach
 - Implementation plan for Sprint 7 (effort estimate, risks)
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.1, 1.4, 1.11
 
 ### Acceptance Criteria
 
@@ -440,6 +445,7 @@ test -f src/gams/grammar_preprocessor_mock.lark || \
 - [ ] Recommendation documented with pros/cons
 - [ ] Implementation effort estimated (Critical/High priority for Sprint 7)
 - [ ] Limitations and warnings documented
+- [ ] Unknowns 1.1, 1.4, 1.11 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -450,7 +456,8 @@ test -f src/gams/grammar_preprocessor_mock.lark || \
 **Estimated Time:** 6-8 hours  
 **Deadline:** 1 week before Sprint 7 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 2 (GAMSLib failure analysis)
+**Dependencies:** Task 2 (GAMSLib failure analysis)  
+**Unknowns Verified:** 1.2, 1.6
 
 ### Objective
 
@@ -598,6 +605,7 @@ grep -q "Grammar Modifications" docs/research/multidimensional_indexing.md
 - Grammar modification proposal
 - Impact analysis (parser, IR, normalization, AD)
 - Implementation plan for Sprint 7 (effort estimate, risks)
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.2, 1.6
 
 ### Acceptance Criteria
 
@@ -608,6 +616,7 @@ grep -q "Grammar Modifications" docs/research/multidimensional_indexing.md
 - [ ] Grammar modifications drafted
 - [ ] Implementation effort estimated (High priority for Sprint 7)
 - [ ] Test cases identified (simple, nested, conditional)
+- [ ] Unknowns 1.2, 1.6 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -618,7 +627,8 @@ grep -q "Grammar Modifications" docs/research/multidimensional_indexing.md
 **Estimated Time:** 4-6 hours  
 **Deadline:** Before Sprint 7 Day 1  
 **Owner:** Development team (Testing specialist)  
-**Dependencies:** None
+**Dependencies:** None  
+**Unknowns Verified:** 2.1, 2.3, 2.4
 
 ### Objective
 
@@ -741,6 +751,7 @@ test -f test_profile.txt
 - Parallelization blocker analysis
 - Speedup estimates for 4/8 workers
 - Recommended test marking strategy
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 2.1, 2.3, 2.4
 
 ### Acceptance Criteria
 
@@ -750,6 +761,7 @@ test -f test_profile.txt
 - [ ] Parallelization blockers documented
 - [ ] Speedup estimates calculated
 - [ ] Implementation plan for Sprint 7 created
+- [ ] Unknowns 2.1, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -760,7 +772,8 @@ test -f test_profile.txt
 **Estimated Time:** 4-6 hours  
 **Deadline:** Before Sprint 7 Day 1  
 **Owner:** Development team (Parser specialist)  
-**Dependencies:** Task 2 (GAMSLib failure analysis)
+**Dependencies:** Task 2 (GAMSLib failure analysis)  
+**Unknowns Verified:** 1.3 (contributes to), 1.9, 1.10
 
 ### Objective
 
@@ -882,6 +895,7 @@ grep -q "Roadmap" docs/planning/EPIC_2/PARSER_ROADMAP.md
 - Feature dependency graph
 - Effort/impact estimates for top 20 features
 - Recommended roadmap for Sprints 8-10
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.3, 1.9, 1.10
 
 ### Acceptance Criteria
 
@@ -891,6 +905,7 @@ grep -q "Roadmap" docs/planning/EPIC_2/PARSER_ROADMAP.md
 - [ ] Effort/impact estimated for top 20 features
 - [ ] Roadmap drafted for Sprints 8-10
 - [ ] Cross-referenced with PROJECT_PLAN.md targets
+- [ ] Unknowns 1.3, 1.9, 1.10 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -901,7 +916,8 @@ grep -q "Roadmap" docs/planning/EPIC_2/PARSER_ROADMAP.md
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Sprint 7 Day 1  
 **Owner:** Development team  
-**Dependencies:** None
+**Dependencies:** None  
+**Unknowns Verified:** 4.1
 
 ### Objective
 
@@ -1052,6 +1068,7 @@ grep -q "Normalization" docs/design/line_number_tracking.md
 - Warning formatter updates
 - Edge case handling approach
 - Implementation plan for Sprint 7
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknown 4.1
 
 ### Acceptance Criteria
 
@@ -1061,6 +1078,7 @@ grep -q "Normalization" docs/design/line_number_tracking.md
 - [ ] Warning formatter updates specified
 - [ ] Edge cases identified and solutions proposed
 - [ ] Implementation effort estimated (Medium priority for Sprint 7)
+- [ ] Unknown 4.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1071,7 +1089,8 @@ grep -q "Normalization" docs/design/line_number_tracking.md
 **Estimated Time:** 4-5 hours  
 **Deadline:** Before Sprint 7 Day 1  
 **Owner:** DevOps/Development team  
-**Dependencies:** None
+**Dependencies:** None  
+**Unknowns Verified:** 3.2, 3.3, 5.1
 
 ### Objective
 
@@ -1286,6 +1305,7 @@ test -f .github/workflows/gamslib-regression.yml || \
 - Trigger strategy (files to watch)
 - Auto-commit strategy decision
 - Timeout handling approach
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 3.2, 3.3, 5.1
 
 ### Acceptance Criteria
 
@@ -1296,6 +1316,7 @@ test -f .github/workflows/gamslib-regression.yml || \
 - [ ] Auto-commit strategy decided
 - [ ] Timeout handling designed (<10min limit)
 - [ ] Implementation effort estimated (Medium priority for Sprint 7)
+- [ ] Unknowns 3.2, 3.3, 5.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1306,7 +1327,8 @@ test -f .github/workflows/gamslib-regression.yml || \
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Sprint 7 Day 1  
 **Owner:** Development team (Testing specialist)  
-**Dependencies:** Tasks 2, 3, 4 (parser research)
+**Dependencies:** Tasks 2, 3, 4 (parser research)  
+**Unknowns Verified:** Uses findings from Tasks 2, 3, 4 to design comprehensive test coverage
 
 ### Objective
 
@@ -1512,7 +1534,8 @@ grep -q "Coverage Matrix" docs/testing/PARSER_FIXTURE_STRATEGY.md
 **Estimated Time:** 6-8 hours  
 **Deadline:** Before Sprint 7 Day 1  
 **Owner:** Sprint planning team  
-**Dependencies:** All tasks (1-9)
+**Dependencies:** All tasks (1-9)  
+**Unknowns Verified:** Integrates all verified unknowns from Tasks 1-9 into detailed sprint plan
 
 ### Objective
 
