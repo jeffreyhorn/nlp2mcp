@@ -284,13 +284,20 @@ def _generate_kpi_summary(kpis: dict[str, Any]) -> str:
     solve_icon = "⚠️"  # Sprint 6: Not yet implemented
     e2e_icon = "⚠️"  # Sprint 6: Not yet implemented
 
+    # Display "N/A" for solve rate denominator if convert_success is 0
+    solve_display = (
+        f"{kpis['solve_success']}/{kpis['convert_success']}"
+        if kpis["convert_success"] > 0
+        else "N/A"
+    )
+
     return f"""## Overall KPIs
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
 | **Parse Rate** | {parse_rate}% ({kpis["parse_success"]}/{kpis["total_models"]}) | ≥10% | {parse_icon} |
 | **Convert Rate** | {convert_rate}% ({kpis["convert_success"]}/{kpis["parse_success"]}) | ≥50% | {convert_icon} Sprint 6: Not implemented |
-| **Solve Rate** | {solve_rate}% ({kpis["solve_success"]}/{kpis["convert_success"]}) | TBD | {solve_icon} Sprint 6: Not implemented |
+| **Solve Rate** | {solve_rate}% ({solve_display}) | TBD | {solve_icon} Sprint 6: Not implemented |
 | **End-to-End** | {e2e_rate}% (0/{kpis["total_models"]}) | TBD | {e2e_icon} Sprint 6: Not implemented |
 
 **Sprint 6 Target:** {parse_icon} Parse ≥1 model (≥10% rate) - {"✅ MET" if kpis["meets_sprint6_targets"] else "❌ NOT MET"}

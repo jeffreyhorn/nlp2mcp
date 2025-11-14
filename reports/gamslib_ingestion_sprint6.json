@@ -6,14 +6,14 @@
       "model_name": "circle",
       "gms_file": "circle.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches '$' in the current parser context, at line 16 col 1\n\n$if not set size $set size 10\n^\nExpected one of: \n\t* MODEL\n\t* SETS\n\t* EQUATIONS\n\t* SOLVE\n\t* SCALAR\n\t* POSITIVE_K\n\t* INTEGER_K\n\t* PARAMETER\n\t* EQUATION\n\t* PARAMETERS\n\t* BINARY_K\n\t* TABLE\n\t* VARIABLES\n\t* ID\n\t* VARIABLE\n\t* NEGATIVE_K\n\t* ALIASES\n\t* SCALARS\n\t* SEMI\n",
+      "parse_error": "No terminal matches '$' in the current parser context, at line 16 col 1\n\n$if not set size $set size 10\n^\nExpected one of: \n\t* NEGATIVE_K\n\t* PARAMETERS\n\t* SCALARS\n\t* POSITIVE_K\n\t* ID\n\t* EQUATION\n\t* SEMI\n\t* INTEGER_K\n\t* PARAMETER\n\t* ALIASES\n\t* EQUATIONS\n\t* SCALAR\n\t* SETS\n\t* MODEL\n\t* TABLE\n\t* SOLVE\n\t* VARIABLES\n\t* VARIABLE\n\t* BINARY_K\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
       "model_name": "himmel16",
       "gms_file": "himmel16.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'i' in the current parser context, at line 28 col 5\n\nSet i 'indices for the 6 points' / 1*6 /;\n    ^\nExpected one of: \n\t* ASSIGN\n\t* LPAR\n\t* DOT\n\t* __ANON_0\n",
+      "parse_error": "No terminal matches 'i' in the current parser context, at line 28 col 5\n\nSet i 'indices for the 6 points' / 1*6 /;\n    ^\nExpected one of: \n\t* LPAR\n\t* DOT\n\t* ASSIGN\n\t* __ANON_0\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
@@ -27,14 +27,14 @@
       "model_name": "mathopt1",
       "gms_file": "mathopt1.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'm' in the current parser context, at line 38 col 8\n\nModels m / all /;\n       ^\nExpected one of: \n\t* ASSIGN\n\t* SLASH\n\t* LPAR\n\t* DOT\n\t* SEMI\n\t* __ANON_0\n",
+      "parse_error": "No terminal matches 'm' in the current parser context, at line 38 col 8\n\nModels m / all /;\n       ^\nExpected one of: \n\t* LPAR\n\t* SLASH\n\t* __ANON_0\n\t* ASSIGN\n\t* SEMI\n\t* DOT\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
       "model_name": "maxmin",
       "gms_file": "maxmin.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches '$' in the current parser context, at line 28 col 1\n\n$if not set points $set points 13\n^\nExpected one of: \n\t* MODEL\n\t* SETS\n\t* EQUATIONS\n\t* SOLVE\n\t* SCALAR\n\t* POSITIVE_K\n\t* INTEGER_K\n\t* PARAMETER\n\t* EQUATION\n\t* PARAMETERS\n\t* BINARY_K\n\t* TABLE\n\t* VARIABLES\n\t* ID\n\t* VARIABLE\n\t* NEGATIVE_K\n\t* ALIASES\n\t* SCALARS\n\t* SEMI\n",
+      "parse_error": "No terminal matches '$' in the current parser context, at line 28 col 1\n\n$if not set points $set points 13\n^\nExpected one of: \n\t* NEGATIVE_K\n\t* PARAMETERS\n\t* SCALARS\n\t* POSITIVE_K\n\t* ID\n\t* EQUATION\n\t* SEMI\n\t* INTEGER_K\n\t* PARAMETER\n\t* ALIASES\n\t* EQUATIONS\n\t* SCALAR\n\t* SETS\n\t* MODEL\n\t* TABLE\n\t* SOLVE\n\t* VARIABLES\n\t* VARIABLE\n\t* BINARY_K\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
@@ -48,7 +48,7 @@
       "model_name": "mhw4dx",
       "gms_file": "mhw4dx.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'l' in the current parser context, at line 37 col 8\n\noption limCol = 0, limRow = 0;\n       ^\nExpected one of: \n\t* ASSIGN\n\t* LPAR\n\t* DOT\n\t* __ANON_0\n",
+      "parse_error": "No terminal matches 'l' in the current parser context, at line 37 col 8\n\noption limCol = 0, limRow = 0;\n       ^\nExpected one of: \n\t* LPAR\n\t* DOT\n\t* ASSIGN\n\t* __ANON_0\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
@@ -69,7 +69,7 @@
       "model_name": "trig",
       "gms_file": "trig.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches ',' in the current parser context, at line 31 col 13\n\nScalar xdiff, fdiff;\n            ^\nExpected one of: \n\t* ASSIGN\n\t* ID\n\t* SEMI\n\t* SLASH\n",
+      "parse_error": "No terminal matches ',' in the current parser context, at line 31 col 13\n\nScalar xdiff, fdiff;\n            ^\nExpected one of: \n\t* SEMI\n\t* ASSIGN\n\t* SLASH\n\t* ID\n",
       "parse_error_type": "UnexpectedCharacters"
     }
   ],

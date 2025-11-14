@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-13 18:25:41
+**Generated:** 2025-11-13 18:41:01
 **Sprint:** Sprint 6
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint6.json`](../../reports/gamslib_ingestion_sprint6.json)
@@ -13,7 +13,7 @@
 |--------|-------|--------|--------|
 | **Parse Rate** | 10.0% (1/10) | ≥10% | ✅ |
 | **Convert Rate** | 0.0% (0/1) | ≥50% | ⚠️ Sprint 6: Not implemented |
-| **Solve Rate** | 0.0% (0/0) | TBD | ⚠️ Sprint 6: Not implemented |
+| **Solve Rate** | 0.0% (N/A) | TBD | ⚠️ Sprint 6: Not implemented |
 | **End-to-End** | 0.0% (0/10) | TBD | ⚠️ Sprint 6: Not implemented |
 
 **Sprint 6 Target:** ✅ Parse ≥1 model (≥10% rate) - ✅ MET
@@ -66,25 +66,25 @@ No terminal matches '$' in the current parser context, at line 16 col 1
 $if not set size $set size 10
 ^
 Expected one of: 
-	* MODEL
-	* SETS
-	* EQUATIONS
-	* SOLVE
-	* SCALAR
+	* NEGATIVE_K
+	* PARAMETERS
+	* SCALARS
 	* POSITIVE_K
+	* ID
+	* EQUATION
+	* SEMI
 	* INTEGER_K
 	* PARAMETER
-	* EQUATION
-	* PARAMETERS
-	* BINARY_K
-	* TABLE
-	* VARIABLES
-	* ID
-	* VARIABLE
-	* NEGATIVE_K
 	* ALIASES
-	* SCALARS
-	* SEMI
+	* EQUATIONS
+	* SCALAR
+	* SETS
+	* MODEL
+	* TABLE
+	* SOLVE
+	* VARIABLES
+	* VARIABLE
+	* BINARY_K
 
 ```
 
@@ -99,9 +99,9 @@ No terminal matches 'i' in the current parser context, at line 28 col 5
 Set i 'indices for the 6 points' / 1*6 /;
     ^
 Expected one of: 
-	* ASSIGN
 	* LPAR
 	* DOT
+	* ASSIGN
 	* __ANON_0
 
 ```
@@ -132,12 +132,12 @@ No terminal matches 'm' in the current parser context, at line 38 col 8
 Models m / all /;
        ^
 Expected one of: 
-	* ASSIGN
-	* SLASH
 	* LPAR
-	* DOT
-	* SEMI
+	* SLASH
 	* __ANON_0
+	* ASSIGN
+	* SEMI
+	* DOT
 
 ```
 
@@ -152,25 +152,25 @@ No terminal matches '$' in the current parser context, at line 28 col 1
 $if not set points $set points 13
 ^
 Expected one of: 
-	* MODEL
-	* SETS
-	* EQUATIONS
-	* SOLVE
-	* SCALAR
+	* NEGATIVE_K
+	* PARAMETERS
+	* SCALARS
 	* POSITIVE_K
+	* ID
+	* EQUATION
+	* SEMI
 	* INTEGER_K
 	* PARAMETER
-	* EQUATION
-	* PARAMETERS
-	* BINARY_K
-	* TABLE
-	* VARIABLES
-	* ID
-	* VARIABLE
-	* NEGATIVE_K
 	* ALIASES
-	* SCALARS
-	* SEMI
+	* EQUATIONS
+	* SCALAR
+	* SETS
+	* MODEL
+	* TABLE
+	* SOLVE
+	* VARIABLES
+	* VARIABLE
+	* BINARY_K
 
 ```
 
@@ -185,9 +185,9 @@ No terminal matches 'l' in the current parser context, at line 37 col 8
 option limCol = 0, limRow = 0;
        ^
 Expected one of: 
-	* ASSIGN
 	* LPAR
 	* DOT
+	* ASSIGN
 	* __ANON_0
 
 ```
@@ -233,9 +233,9 @@ No terminal matches ',' in the current parser context, at line 31 col 13
 Scalar xdiff, fdiff;
             ^
 Expected one of: 
-	* ASSIGN
-	* ID
 	* SEMI
+	* ASSIGN
 	* SLASH
+	* ID
 
 ```
