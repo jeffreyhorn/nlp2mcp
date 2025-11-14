@@ -7,6 +7,219 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 6 Day 8: UX Improvements - Documentation & Polish - 2025-11-13
+
+**Status:** ✅ COMPLETE - Comprehensive documentation and v0.6.0 release notes created
+
+#### Summary
+
+Completed Sprint 6 Day 8: Resolved remaining unknowns (4.3, 4.4), created comprehensive user documentation, release notes for v0.6.0, demo checklist, and roadmap. Focused on polish and preparing for release.
+
+**Deliverables Created:**
+- ✅ `docs/roadmap.md` - Future features roadmap (Unknown 4.3 resolution)
+- ✅ `docs/planning/EPIC_2/SPRINT_6/SPRINT_6_DEMO.md` - Demo preparation checklist (Unknown 4.4 resolution)
+- ✅ `docs/getting_started.md` - Comprehensive tutorial (450+ lines)
+- ✅ `docs/releases/v0.6.0.md` - Complete release notes (500+ lines)
+
+#### Implementation Details
+
+**1. Unknown 4.3 Resolution: Convexity Warning Suppression**
+
+**Decision:** Defer fine-grained suppression to Sprint 7+
+
+**Rationale:**
+- Current `--skip-convexity-check` flag provides sufficient control
+- Users can disable all warnings when needed
+- Fine-grained suppression (per-code, config file, inline comments) is enhancement
+- Not critical for v0.6.0 release
+
+**Documentation:** Added to `docs/roadmap.md` as Sprint 7+ enhancement
+
+**Future Features (Proposed):**
+- Per-warning-code suppression: `--skip-convexity W301,W302`
+- Configuration file support for suppression rules
+- Inline suppression comments: `$suppress W301`
+
+**2. Unknown 4.4 Resolution: Demo Checklist Tracking**
+
+**Decision:** Use Markdown checklist in dedicated demo document
+
+**Created:** `docs/planning/EPIC_2/SPRINT_6/SPRINT_6_DEMO.md` (250+ lines)
+
+**Demo Checklist Sections:**
+1. **Pre-Demo Preparation:**
+   - Environment setup checklist
+   - Test data preparation
+   - Screen recording readiness
+
+2. **Demo Script (5 sections, 11 minutes total):**
+   - Nested Min/Max Flattening (2 min)
+   - Convexity Warnings (3 min)
+   - GAMSLib Integration & Dashboard (3 min)
+   - Error Message Integration (2 min)
+   - Overall UX Improvements (1 min)
+
+3. **Post-Demo Q&A Preparation:**
+   - Expected questions with answers
+   - Convexity accuracy, GAMSLib targets, suppression features
+
+4. **Demo Success Criteria:**
+   - All 5 sections completed without errors
+   - Key features clearly explained
+   - Audience questions answered
+
+5. **Backup Plans:**
+   - Pre-recorded outputs
+   - Screenshot backups
+   - Slide fallbacks
+
+**3. User Documentation: Getting Started Guide**
+
+**Created:** `docs/getting_started.md` (450+ lines)
+
+**Content:**
+- Installation instructions (PyPI, source, beta versions)
+- First conversion tutorial (step-by-step)
+- Common use cases:
+  - Debugging with verbose output
+  - Convexity warnings (v0.6.0+)
+  - Model statistics
+  - Jacobian export
+  - Scaling for ill-conditioned problems
+  - Smooth absolute value approximation
+- Understanding error messages (v0.6.0+)
+- Advanced features (simplification, config files, includes)
+- Common patterns (indexed vars, constraints, bounds)
+- Troubleshooting section
+- Next steps and resources
+
+**Examples Included:**
+- Simple NLP model creation
+- CLI commands with flags
+- Output interpretation
+- Error message format
+- Configuration file examples
+
+**4. Release Notes: v0.6.0**
+
+**Created:** `docs/releases/v0.6.0.md` (500+ lines)
+
+**Sections:**
+1. **Overview:** Sprint 6 highlights and summary
+2. **New Features (4 major areas):**
+   - Convexity Heuristics (Days 1-4): 5 patterns, nested min/max
+   - GAMSLib Integration (Days 5-6): 10 models, dashboard
+   - Error Message Integration (Day 7): 9 error codes, documentation
+   - Documentation & Polish (Day 8): Getting started, roadmap, demo
+3. **API Changes:** New exports (get_all_error_codes), new CLI flags
+4. **Breaking Changes:** None (backward-compatible)
+5. **Performance Improvements:** Min/max flattening metrics
+6. **Bug Fixes:** None in Sprint 6 (feature-focused)
+7. **Known Limitations:** Parser, convexity detection, features
+8. **Migration Guide:** No migration needed (backward-compatible)
+9. **Installation:** PyPI and source instructions
+10. **Testing:** Coverage metrics (1214 tests)
+11. **Documentation:** All new and updated docs listed
+12. **Contributors:** Sprint 6 teams acknowledged
+13. **Roadmap:** Sprint 7-8+ preview
+14. **Changelog:** Reference to detailed CHANGELOG.md
+15. **License & Support:** Links and resources
+
+**Registered Error Codes (Complete List):**
+- E001-E003: Validation (undefined var/eq, type mismatch)
+- E101: Parser (syntax error)
+- W301-W305: Convexity (5 nonconvex patterns)
+
+**GAMSLib Baseline:**
+- 10 Tier 1 models ingested
+- Parse rate: 10% (Sprint 6 baseline)
+- Target Sprint 7: ≥30% parse rate
+
+**5. Roadmap Document**
+
+**Created:** `docs/roadmap.md` (80+ lines)
+
+**Content:**
+- Sprint 7+ enhancements (convexity suppression)
+- Future feature ideas:
+  - Parser enhancements (GAMS directives, control flow)
+  - Solver integration (PATH, diagnostics)
+  - Performance optimizations (parallelization, sparse matrices)
+  - User experience (interactive mode, web UI, VS Code extension)
+- Version history reference
+
+**6. Code Cleanup**
+
+**Analysis Performed:**
+- Ran linter: ✅ All checks passed
+- Checked for TODO/FIXME: Found 11 TODOs from earlier sprints
+- All TODOs are documented future work (Sprint 5 Day 2 items)
+- No dead code found
+- No critical issues requiring immediate attention
+
+**Result:** No code changes needed for Day 8 polish
+
+#### Files Created/Modified
+
+**New Files (4):**
+1. `docs/roadmap.md` (80 lines) - Future features roadmap
+2. `docs/planning/EPIC_2/SPRINT_6/SPRINT_6_DEMO.md` (250 lines) - Demo checklist
+3. `docs/getting_started.md` (450 lines) - User tutorial
+4. `docs/releases/v0.6.0.md` (500 lines) - Release notes
+
+**Modified Files (2):**
+1. `README.md` (1 line) - Marked Day 8 complete
+2. `CHANGELOG.md` (this entry) - Day 8 summary
+
+**Total Changes:** 2 modified files, 4 new files, ~1280 lines added
+
+#### Technical Achievements
+
+**Documentation Coverage:**
+- Complete user onboarding (getting_started.md)
+- Comprehensive release notes (v0.6.0.md)
+- Future planning (roadmap.md)
+- Demo preparation (SPRINT_6_DEMO.md)
+
+**Unknown Resolution:**
+- Unknown 4.3: Deferred with clear rationale
+- Unknown 4.4: Implemented as Markdown checklist
+- Both unknowns documented and resolved per Sprint 6 plan
+
+**Release Readiness:**
+- All Sprint 6 features documented
+- Migration guide confirms backward compatibility
+- Installation instructions updated
+- Known limitations clearly stated
+
+#### Acceptance Criteria
+
+From `docs/planning/EPIC_2/SPRINT_6/PLAN.md` (lines 417-457):
+- ✅ Unknown 4.3 resolved (deferred to Sprint 7+, documented in roadmap)
+- ✅ Unknown 4.4 resolved (Markdown checklist in SPRINT_6_DEMO.md)
+- ✅ User documentation updated (getting_started.md, README.md)
+- ✅ Release notes created (v0.6.0.md with all Sprint 6 features)
+- ✅ Code cleanup completed (no issues found)
+- ✅ All deliverables created
+
+**Day 8 Deliverables:** ✅ COMPLETE
+- Roadmap: ✅ Created
+- Demo checklist: ✅ Created
+- User docs: ✅ Updated
+- Release notes: ✅ Created
+- Code cleanup: ✅ Verified
+
+#### Notes
+
+- **Documentation Focus:** Day 8 emphasized polish over code changes
+- **Backward Compatibility:** v0.6.0 has zero breaking changes
+- **Demo Preparation:** Comprehensive checklist ready for Day 10 sprint review
+- **Roadmap Transparency:** Future features clearly documented
+- **User Onboarding:** Getting started guide covers all v0.6.0 features
+- **Release Confidence:** All Sprint 6 work documented and explained
+
+---
+
 ### Sprint 6 Day 7: UX Improvements - Error Message Integration - 2025-11-13
 
 **Status:** ✅ COMPLETE - Error code registry and comprehensive documentation created
