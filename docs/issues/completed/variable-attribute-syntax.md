@@ -59,17 +59,18 @@ The parser should recognize and handle variable attribute assignments:
 <variable_name>.<attribute> = <value>;
 ```
 
-**Supported Attributes:**
+**Supported Attributes (Currently Implemented):**
 - `.l` - Level (initial value)
 - `.lo` - Lower bound
 - `.up` - Upper bound
-- `.m` - Marginal value
 - `.fx` - Fixed value (sets .lo = .up = value)
+
+**Future Attributes (Not Yet Implemented):**
+- `.m` - Marginal value
 - `.prior` - Priority for branching
 - `.scale` - Scaling factor
 
-**Most Common (Priority for Sprint 7):**
-- `.l`, `.lo`, `.up` (used in 60% of failing models)
+**Note:** This implementation focuses on the most commonly used attributes (`.l`, `.lo`, `.up`, `.fx`) which are needed to unblock 60% of failing GAMSLib models. Additional attributes will be implemented in future sprints as needed.
 
 ---
 
