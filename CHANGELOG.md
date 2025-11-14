@@ -7,6 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 7 Prep: Task 1 - Known Unknowns List - 2025-11-14
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed Sprint 7 Prep Task 1: Created comprehensive Known Unknowns document identifying 25 assumptions and research questions across 5 categories that could impact Sprint 7 execution.
+
+**Deliverables Created:**
+- ✅ `docs/planning/EPIC_2/SPRINT_7/KNOWN_UNKNOWNS.md` (1,468 lines, 25 unknowns)
+
+#### Document Structure
+
+**Categories and Unknowns:**
+- **Category 1: Parser Enhancements** (11 unknowns)
+  - 1.1: Full preprocessing vs mock directive handling (Critical)
+  - 1.2: Multi-dimensional indexing IR representation (Critical)
+  - 1.3: Minimum syntax for 30% parse rate (High)
+  - 1.4: Lark grammar preprocessor support (High)
+  - 1.5: Set range syntax compatibility (High)
+  - 1.6: Multi-dim indexing KKT impact (High)
+  - 1.7: Table declaration parsing (Medium)
+  - 1.8: Backward compatibility risks (Medium)
+  - 1.9: Equation attributes deferral (Low)
+  - 1.10: Assignment statement support (Medium)
+  - 1.11: $include file handling (Medium)
+
+- **Category 2: Test Performance** (6 unknowns)
+  - 2.1: Test execution time distribution (High)
+  - 2.2: pytest-xdist parallelization safety (High)
+  - 2.3: PATH solver test isolation (High)
+  - 2.4: pytest-xdist overhead (Medium)
+  - 2.5: CI timeout sufficiency (Medium)
+  - 2.6: Test isolation issues (Medium)
+
+- **Category 3: GAMSLib Integration** (4 unknowns)
+  - 3.1: 30% parse rate achievability (Critical)
+  - 3.2: Dashboard auto-commit security (Medium)
+  - 3.3: Parse rate regression threshold (Medium)
+  - 3.4: GAMSLib test set expansion (Low)
+
+- **Category 4: Convexity Refinements** (3 unknowns)
+  - 4.1: Line number extraction performance (High)
+  - 4.2: Fine-grained suppression interface (Medium)
+  - 4.3: Context-aware heuristics feasibility (Low)
+
+- **Category 5: CI/CD** (1 unknown)
+  - 5.1: CI job trigger strategy (Medium)
+
+#### Statistics
+
+- **Total Unknowns:** 25 (exceeded 22+ target)
+- **By Priority:**
+  - Critical: 6 (could derail sprint or prevent 30% parse rate goal)
+  - High: 10 (require upfront research)
+  - Medium: 6 (can be resolved during implementation)
+  - Low: 3 (nice-to-know, low impact)
+- **Estimated Research Time:** 28-36 hours (exceeds 24-32 hour target range)
+
+#### Key Features
+
+- ✅ All unknowns have: assumption, verification method, priority, owner, risk assessment
+- ✅ All Critical unknowns have detailed verification plans and timelines
+- ✅ Template provided for adding new unknowns during Sprint 7
+- ✅ Cross-referenced with PROJECT_PLAN.md (lines 45-92) and PRELIMINARY_PLAN.md
+- ✅ Lessons learned from Sprint 4, 5, 6 incorporated
+- ✅ "Confirmed Knowledge" section documents validated assumptions from prior sprints
+
+#### Sprint 7 Prep Progress
+
+**Task 1:** ✅ COMPLETE (Known Unknowns List)  
+**Remaining Tasks:** 9 prep tasks (Tasks 2-10)
+
+**Next Task:** Task 2 - Analyze GAMSLib Parser Failures (Critical, 6-8 hours)
+
+---
+
 ## [0.6.0] - 2025-11-13
 
 ### Sprint 6: Convexity Heuristics, Bug Fixes, GAMSLib, UX
