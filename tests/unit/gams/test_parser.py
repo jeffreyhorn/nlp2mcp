@@ -1029,6 +1029,148 @@ def test_issue_140_example():
     assert model.variables["obj"].kind == VarKind.POSITIVE
 
 
+class TestVariableAttributes:
+    """Tests for variable attribute syntax (.l, .lo, .up, .fx, etc.)."""
+
+    def test_variable_level_attribute_scalar(self):
+        """Test .l (level/initial value) attribute on scalar variable."""
+        text = dedent(
+            """
+            Variables x, y;
+            Equations eq;
+
+            x.l = 1.5;
+            y.l = 2.0;
+
+            eq.. x + y =e= 0;
+
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.variables["x"].l == 1.5
+        assert model.variables["y"].l == 2.0
+
+    def test_variable_level_attribute_indexed(self):
+        """Test .l attribute on indexed variable."""
+        text = dedent(
+            """
+            Sets i /i1, i2, i3/;
+            Variables x(i);
+            Equations eq(i);
+
+            x.l(i) = 10;
+
+            eq(i).. x(i) =e= 0;
+
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.variables["x"].l_map[("i1",)] == 10.0
+        assert model.variables["x"].l_map[("i2",)] == 10.0
+        assert model.variables["x"].l_map[("i3",)] == 10.0
+
+    def test_variable_all_attributes_combined(self):
+        """Test combining .l, .lo, .up, .fx attributes."""
+        text = dedent(
+            """
+            Variables x, y, z;
+            Equations eq;
+
+            x.l = 5;
+            x.lo = 0;
+            x.up = 10;
+
+            y.l = 2.5;
+            y.fx = 3.0;
+
+            z.l = 0;
+
+            eq.. x + y + z =e= 0;
+
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+
+        # Variable x
+        assert model.variables["x"].l == 5.0
+        assert model.variables["x"].lo == 0.0
+        assert model.variables["x"].up == 10.0
+
+        # Variable y
+        assert model.variables["y"].l == 2.5
+        assert model.variables["y"].fx == 3.0
+
+        # Variable z
+        assert model.variables["z"].l == 0.0
+
+    def test_variable_level_indexed_all_elements(self):
+        """Test .l attribute sets all indexed variable elements."""
+        text = dedent(
+            """
+            Sets i /i1, i2/;
+            Variables x(i);
+            Equations eq(i);
+
+            x.l(i) = 7.5;
+            x.lo(i) = 0;
+            x.up(i) = 15;
+
+            eq(i).. x(i) =e= 0;
+
+            Model m /all/;
+            Solve m using nlp minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+
+        # Check level values
+        assert model.variables["x"].l_map[("i1",)] == 7.5
+        assert model.variables["x"].l_map[("i2",)] == 7.5
+
+        # Check bounds still work
+        assert model.variables["x"].lo_map[("i1",)] == 0.0
+        assert model.variables["x"].up_map[("i1",)] == 15.0
+
+    def test_gamslib_trig_example(self):
+        """Test the exact syntax from GAMSLib trig.gms model."""
+        text = dedent(
+            """
+            Variables x1, x2, fv;
+            Equations trigfv;
+
+            x1.lo = -2;
+            x1.up =  5;
+            x1.l  =  1;
+
+            x2.lo = -2;
+            x2.up =  5;
+            x2.l  =  1;
+
+            trigfv.. fv =e= 3*x1**4 - 2*x1*x2;
+
+            Model trigm /all/;
+            Solve trigm using nlp minimizing fv;
+            """
+        )
+        model = parser.parse_model_text(text)
+
+        # Verify x1 attributes
+        assert model.variables["x1"].lo == -2.0
+        assert model.variables["x1"].up == 5.0
+        assert model.variables["x1"].l == 1.0
+
+        # Verify x2 attributes
+        assert model.variables["x2"].lo == -2.0
+        assert model.variables["x2"].up == 5.0
+        assert model.variables["x2"].l == 1.0
+
+
 class TestCommaSeparatedDeclarations:
     """Tests for comma-separated variable and equation declarations."""
 
@@ -1191,3 +1333,149 @@ class TestCommaSeparatedDeclarations:
         model = parser.parse_model_text(text)
         assert model.objective is not None
         assert model.objective.objvar == "obj"
+
+
+class TestModelEquationListSyntax:
+    """Tests for explicit equation list syntax in Model statements (Issue #200)."""
+
+    def test_single_equation_model(self):
+        """Test model with single equation in list."""
+        text = dedent(
+            """
+            Variables x, obj;
+            Equations eq1, eq2;
+
+            eq1.. x =e= 5;
+            eq2.. obj =e= x**2;
+
+            Model m1 / eq1 /;
+            Solve m1 using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.declared_model == "m1"
+        assert model.model_equations == ["eq1"]
+        assert model.model_uses_all is False
+
+    def test_multiple_equations_model(self):
+        """Test model with multiple equations in list."""
+        text = dedent(
+            """
+            Variables x, y, obj;
+            Equations eq1, eq2, eq3, objdef;
+
+            eq1.. x =e= 5;
+            eq2.. y =l= 10;
+            eq3.. x + y =g= 3;
+            objdef.. obj =e= x + y;
+
+            Model m1 / eq1, eq2, objdef /;
+            Solve m1 using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.declared_model == "m1"
+        assert model.model_equations == ["eq1", "eq2", "objdef"]
+        assert model.model_uses_all is False
+
+    def test_all_keyword_vs_explicit_list(self):
+        """Test that /all/ behaves differently from explicit list."""
+        text = dedent(
+            """
+            Variables x, y, obj;
+            Equations eq1, eq2, eq3;
+
+            eq1.. x =e= 5;
+            eq2.. y =l= 10;
+            eq3.. obj =e= x + y;
+
+            Model m_all / all /;
+            Solve m_all using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.declared_model == "m_all"
+        assert model.model_equations == []
+        assert model.model_uses_all is True
+
+    def test_gamslib_hs62_syntax(self):
+        """Test syntax from GAMSLib hs62.gms model."""
+        text = dedent(
+            """
+            Variables x1, x2, x3, obj;
+            Equations objdef, eq1x;
+
+            objdef.. obj =e= -32.174*(255*log((x1+x2+x3+0.03)/0.09) + 280*log((x2+x3+0.03)/0.07) + 290*log((x3+0.03)/0.13));
+            eq1x.. x1 + 2*x2 + 2*x3 =l= 4;
+
+            Model mx / objdef, eq1x /;
+            Solve mx using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.declared_model == "mx"
+        assert model.model_equations == ["objdef", "eq1x"]
+        assert model.model_uses_all is False
+
+    def test_gamslib_mingamma_syntax(self):
+        """Test syntax from GAMSLib mingamma.gms model."""
+        text = dedent(
+            """
+            Variables x, y1, y2;
+            Equations y1def, y2def;
+
+            y1def.. y1 =e= x**2;
+            y2def.. y2 =e= (x - 2)**2;
+
+            Model m2 / y2def /;
+            Solve m2 using nlp minimizing y2;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.declared_model == "m2"
+        assert model.model_equations == ["y2def"]
+        assert model.model_uses_all is False
+
+    def test_model_subset_equations(self):
+        """Test model using subset of declared equations."""
+        text = dedent(
+            """
+            Variables x, y, z, obj;
+            Equations eq1, eq2, eq3, eq4, objdef;
+
+            eq1.. x =e= 1;
+            eq2.. y =e= 2;
+            eq3.. z =e= 3;
+            eq4.. x + y + z =l= 10;
+            objdef.. obj =e= x**2 + y**2 + z**2;
+
+            Model subset_model / objdef, eq1, eq3 /;
+            Solve subset_model using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.model_equations == ["objdef", "eq1", "eq3"]
+        assert len(model.model_equations) == 3
+        # eq2 and eq4 should not be in the model
+        assert "eq2" not in model.model_equations
+        assert "eq4" not in model.model_equations
+
+    def test_indexed_equations_in_list(self):
+        """Test that indexed equations can be referenced in model list."""
+        text = dedent(
+            """
+            Sets i /i1, i2/;
+            Variables x(i);
+            Variables obj;
+            Equations balance(i);
+            Equations objdef;
+
+            balance(i).. x(i) =e= 0;
+            objdef.. obj =e= sum(i, x(i));
+
+            Model m / objdef, balance /;
+            Solve m using nlp minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.model_equations == ["objdef", "balance"]

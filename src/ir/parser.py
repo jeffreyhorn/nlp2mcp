@@ -1111,9 +1111,14 @@ class _ModelBuilder:
         bound_kind: str,
         node: Tree | Token | None = None,
     ) -> None:
-        label_map = {"lo": "lower", "up": "upper", "fx": "fixed"}
-        map_attrs = {"lo": "lo_map", "up": "up_map", "fx": "fx_map"}
-        scalar_attrs = {"lo": "lo", "up": "up", "fx": "fx"}
+        # Currently supported variable attributes (bound modifiers):
+        #   "lo" (lower bound), "up" (upper bound), "fx" (fixed), "l" (level/initial value)
+        # Additional GAMS attributes exist (e.g., ".m", ".prior", ".scale") but are not yet
+        # implemented in the grammar or parser. This implementation focuses on the most
+        # commonly used attributes needed to unblock 60% of GAMSLib models.
+        label_map = {"lo": "lower", "up": "upper", "fx": "fixed", "l": "level"}
+        map_attrs = {"lo": "lo_map", "up": "up_map", "fx": "fx_map", "l": "l_map"}
+        scalar_attrs = {"lo": "lo", "up": "up", "fx": "fx", "l": "l"}
         label = label_map.get(bound_kind, bound_kind)
         index_hint = f" at indices {key}" if key else ""
 
@@ -1125,6 +1130,11 @@ class _ModelBuilder:
             if bound_kind == "fx":
                 raise self._error(
                     f"Fixed bound for variable '{var_name}' cannot be infinite",
+                    node,
+                )
+            if bound_kind == "l":
+                raise self._error(
+                    f"Level (initial value) for variable '{var_name}' cannot be infinite",
                     node,
                 )
             # For other cases (e.g., lo = +inf), treat like regular value
