@@ -23,7 +23,7 @@ This document identifies all assumptions and unknowns for Sprint 7 features **be
 - Sprint 5: 22 unknowns, all resolved on schedule  
 - Sprint 6: 22 unknowns, enabled realistic scope setting (10% GAMSLib parse rate baseline)
 
-**Sprint 6 Key Learning:** Parser complexity was underestimated - only 10% parse rate achieved due to preprocessor directive gaps. Sprint 7 requires even more thorough analysis of parser internals and GAMSLib syntax requirements.
+**Sprint 6 Key Learning:** Parser complexity was underestimated - only 10% parse rate achieved (1 out of 10 models parsed successfully) due to preprocessor directive gaps. Sprint 7 requires even more thorough analysis of parser internals and GAMSLib syntax requirements.
 
 ---
 
@@ -65,7 +65,7 @@ This document identifies all assumptions and unknowns for Sprint 7 features **be
 - Category 4 (Convexity Refinements): 3 unknowns
 - Category 5 (CI/CD): 1 unknown
 
-**Estimated Research Time:** 28-36 hours (spread across prep phase)
+**Estimated Research Time:** 28-36 hours (exceeds 24-32 hour target; spread across prep phase)
 
 ---
 

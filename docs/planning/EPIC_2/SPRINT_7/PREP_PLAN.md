@@ -149,7 +149,7 @@ grep -c "^## Unknown" docs/planning/EPIC_2/SPRINT_7/KNOWN_UNKNOWNS.md
 - [x] All Critical unknowns have verification plan and timeline
 - [x] Unknowns cover all Sprint 7 components (parser, tests, CI, convexity)
 - [x] Template for updates defined
-- [x] Research time estimated (24-32 hours total)
+- [x] Research time estimated (28-36 hours total; exceeds initial 24-32 hour target)
 - [x] Cross-referenced with PROJECT_PLAN.md and PRELIMINARY_PLAN.md
 
 ---
