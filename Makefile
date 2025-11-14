@@ -1,4 +1,4 @@
-.PHONY: help install install-dev lint format test typecheck coverage clean
+.PHONY: help install install-dev lint format test typecheck coverage clean ingest-gamslib
 
 # Detect virtual environment
 VENV_BIN := $(shell if [ -d ".venv/bin" ]; then echo ".venv/bin/"; else echo ""; fi)
@@ -8,14 +8,15 @@ PIP := $(shell if [ -f ".venv/bin/pip" ]; then echo ".venv/bin/pip"; else echo "
 # Default target
 help:
 	@echo "Available targets:"
-	@echo "  install      - Install the package"
-	@echo "  install-dev  - Install the package with development dependencies"
-	@echo "  lint         - Run code linters (ruff, mypy, black)"
-	@echo "  typecheck    - Run mypy type checker only"
-	@echo "  format       - Format code with black and ruff"
-	@echo "  test         - Run tests with pytest"
-	@echo "  coverage     - Run tests with coverage report"
-	@echo "  clean        - Remove build artifacts and caches"
+	@echo "  install         - Install the package"
+	@echo "  install-dev     - Install the package with development dependencies"
+	@echo "  lint            - Run code linters (ruff, mypy, black)"
+	@echo "  typecheck       - Run mypy type checker only"
+	@echo "  format          - Format code with black and ruff"
+	@echo "  test            - Run tests with pytest"
+	@echo "  coverage        - Run tests with coverage report"
+	@echo "  ingest-gamslib  - Run GAMSLib ingestion and generate dashboard"
+	@echo "  clean           - Remove build artifacts and caches"
 	@echo ""
 	@echo "Note: If .venv/ exists, it will be used automatically"
 
@@ -57,6 +58,22 @@ typecheck:
 coverage:
 	@echo "Running tests with coverage..."
 	$(PYTHON) -m pytest --cov=src tests/
+
+# Run GAMSLib ingestion pipeline
+ingest-gamslib:
+	@echo "Starting GAMSLib ingestion pipeline..."
+	@if [ ! -d "tests/fixtures/gamslib" ]; then \
+		echo "ERROR: GAMSLib models not found. Run ./scripts/download_gamslib_nlp.sh first"; \
+		exit 1; \
+	fi
+	@$(PYTHON) scripts/ingest_gamslib.py \
+		--input tests/fixtures/gamslib \
+		--output reports/gamslib_ingestion_sprint6.json \
+		--dashboard docs/status/GAMSLIB_CONVERSION_STATUS.md
+	@echo ""
+	@echo "✅ Ingestion complete!"
+	@echo "   Report: reports/gamslib_ingestion_sprint6.json"
+	@echo "   Dashboard: docs/status/GAMSLIB_CONVERSION_STATUS.md"
 
 # Clean build artifacts
 clean:

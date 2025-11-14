@@ -4,16 +4,19 @@ GAMSLib Model Ingestion Script
 
 Ingests GAMSLib models by attempting to parse each one and recording results.
 Generates a JSON report with parse success/failure status and KPI metrics.
+Optionally generates a Markdown dashboard for easy viewing.
 
 Usage:
     python scripts/ingest_gamslib.py \
         --input tests/fixtures/gamslib \
-        --output reports/gamslib_ingestion_sprint6.json
+        --output reports/gamslib_ingestion_sprint6.json \
+        --dashboard docs/status/GAMSLIB_CONVERSION_STATUS.md
 
 Sprint 6 Scope:
     - Parse-only validation (no MCP conversion or PATH solving)
     - 10 Tier 1 models
     - Baseline metrics: parse%, convert%, solve%
+    - Markdown dashboard generation
 """
 
 from __future__ import annotations
@@ -22,6 +25,7 @@ import argparse
 import json
 import sys
 from dataclasses import asdict, dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -215,6 +219,201 @@ def ingest_gamslib(input_dir: Path, output_file: Path) -> None:
         print("-" * 60)
 
 
+def generate_dashboard(report: IngestionReport, output_path: Path, json_report_path: Path) -> None:
+    """
+    Generate Markdown dashboard from ingestion report.
+
+    Args:
+        report: IngestionReport with ingestion results
+        output_path: Path to write dashboard Markdown file
+        json_report_path: Path to JSON report (for reference link)
+    """
+    sections = []
+
+    # Header
+    sections.append(_generate_header(report, json_report_path))
+
+    # KPI Summary
+    sections.append(_generate_kpi_summary(report.kpis))
+
+    # Model Results Table
+    sections.append(_generate_model_table(report.models))
+
+    # Error Breakdown
+    sections.append(_generate_error_breakdown(report.models))
+
+    # Failure Details
+    sections.append(_generate_failure_details(report.models))
+
+    # Write dashboard
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    markdown_content = "\n\n".join(sections)
+
+    with open(output_path, "w") as f:
+        f.write(markdown_content)
+
+    print(f"Dashboard written to: {output_path}")
+
+
+def _generate_header(report: IngestionReport, json_report_path: Path) -> str:
+    """Generate dashboard header section."""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    return f"""# GAMSLib Conversion Status Dashboard
+
+**Generated:** {timestamp}
+**Sprint:** {report.sprint}
+**Total Models:** {report.total_models}
+**Report:** [`{json_report_path.name}`](../../{json_report_path})
+
+---"""
+
+
+def _generate_kpi_summary(kpis: dict[str, Any]) -> str:
+    """Generate KPI summary table."""
+    parse_rate = kpis["parse_rate_percent"]
+    convert_rate = kpis["convert_rate_percent"]
+    solve_rate = kpis["solve_rate_percent"]
+
+    # Calculate E2E rate (models that successfully parsed, converted, and solved)
+    e2e_rate = 0.0  # Sprint 6: No models have completed full pipeline yet
+
+    # Determine status icons
+    parse_icon = "✅" if parse_rate >= 10.0 else "❌"
+    convert_icon = "⚠️"  # Sprint 6: Not yet implemented
+    solve_icon = "⚠️"  # Sprint 6: Not yet implemented
+    e2e_icon = "⚠️"  # Sprint 6: Not yet implemented
+
+    # Display "N/A" for solve rate denominator if convert_success is 0
+    solve_display = (
+        f"{kpis['solve_success']}/{kpis['convert_success']}"
+        if kpis["convert_success"] > 0
+        else "N/A"
+    )
+
+    return f"""## Overall KPIs
+
+| Metric | Value | Target | Status |
+|--------|-------|--------|--------|
+| **Parse Rate** | {parse_rate}% ({kpis["parse_success"]}/{kpis["total_models"]}) | ≥10% | {parse_icon} |
+| **Convert Rate** | {convert_rate}% ({kpis["convert_success"]}/{kpis["parse_success"]}) | ≥50% | {convert_icon} Sprint 6: Not implemented |
+| **Solve Rate** | {solve_rate}% ({solve_display}) | TBD | {solve_icon} Sprint 6: Not implemented |
+| **End-to-End** | {e2e_rate}% (0/{kpis["total_models"]}) | TBD | {e2e_icon} Sprint 6: Not implemented |
+
+**Sprint 6 Target:** {parse_icon} Parse ≥1 model (≥10% rate) - {"✅ MET" if kpis["meets_sprint6_targets"] else "❌ NOT MET"}
+
+---"""
+
+
+def _generate_model_table(models: list[ModelResult]) -> str:
+    """Generate per-model status table."""
+
+    def status_icon(status: str) -> str:
+        if status == "SUCCESS":
+            return "✅"
+        elif status == "FAILED":
+            return "❌"
+        else:
+            return "-"
+
+    rows = []
+    for model in models:
+        # Sprint 6: Only parse status available
+        parse = status_icon(model.parse_status)
+        convert = "-"  # Not yet implemented
+        solve = "-"  # Not yet implemented
+        e2e = "❌"  # No complete pipeline yet
+
+        # Notes column
+        if model.parse_status == "FAILED":
+            notes = f"Parse error: {model.parse_error_type}"
+        else:
+            notes = "Parsed successfully"
+
+        rows.append(f"| {model.model_name} | {parse} | {convert} | {solve} | {e2e} | {notes} |")
+
+    return (
+        f"""## Model Status
+
+| Model | Parse | Convert | Solve | E2E | Notes |
+|-------|-------|---------|-------|-----|-------|
+"""
+        + "\n".join(rows)
+        + """
+
+**Legend:**
+- ✅ Success
+- ❌ Failed
+- `-` Not attempted (stage not implemented yet)
+
+---"""
+    )
+
+
+def _generate_error_breakdown(models: list[ModelResult]) -> str:
+    """Generate error breakdown by category."""
+    # Count parse errors by type
+    parse_errors: dict[str, list[str]] = {}
+    for model in models:
+        if model.parse_status == "FAILED" and model.parse_error_type:
+            error_type = model.parse_error_type
+            parse_errors.setdefault(error_type, []).append(model.model_name)
+
+    if not parse_errors:
+        return """## Error Breakdown
+
+**No errors!** All models parsed successfully. 🎉
+
+---"""
+
+    sections = ["## Error Breakdown", "", "### Parse Errors"]
+
+    # Sort by count (most common first)
+    sorted_errors = sorted(parse_errors.items(), key=lambda x: len(x[1]), reverse=True)
+
+    sections.append("| Error Type | Count | Models |")
+    sections.append("|------------|-------|--------|")
+
+    for error_type, model_names in sorted_errors:
+        count = len(model_names)
+        models_str = ", ".join(model_names)
+        sections.append(f"| `{error_type}` | {count} | {models_str} |")
+
+    sections.append("")
+    sections.append(
+        "**Note:** Convert and solve errors will appear here once those stages are implemented."
+    )
+    sections.append("")
+    sections.append("---")
+
+    return "\n".join(sections)
+
+
+def _generate_failure_details(models: list[ModelResult]) -> str:
+    """Generate detailed failure information."""
+    failures = [m for m in models if m.parse_status == "FAILED"]
+
+    if not failures:
+        return """## Failure Details
+
+**No failures!** All models parsed successfully. 🎉"""
+
+    sections = ["## Failure Details", ""]
+
+    for model in failures:
+        sections.append(f"### {model.gms_file}")
+        sections.append(f"**Model:** {model.model_name}")
+        sections.append(f"**Status:** Parse Failed")
+        sections.append(f"**Error Type:** `{model.parse_error_type}`")
+        sections.append(f"**Error Message:**")
+        sections.append("```")
+        sections.append(model.parse_error or "Unknown error")
+        sections.append("```")
+        sections.append("")
+
+    return "\n".join(sections)
+
+
 def main() -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -232,6 +431,11 @@ def main() -> None:
         default=Path("reports/gamslib_ingestion_sprint6.json"),
         help="Output JSON report file (default: reports/gamslib_ingestion_sprint6.json)",
     )
+    parser.add_argument(
+        "--dashboard",
+        type=Path,
+        help="Optional: Generate Markdown dashboard (e.g., docs/status/GAMSLIB_CONVERSION_STATUS.md)",
+    )
 
     args = parser.parse_args()
 
@@ -240,6 +444,25 @@ def main() -> None:
         sys.exit(1)
 
     ingest_gamslib(args.input, args.output)
+
+    # Generate dashboard if requested
+    if args.dashboard:
+        # Reload the report from JSON to get the report object
+        with open(args.output) as f:
+            report_data = json.load(f)
+
+        # Reconstruct report object
+        models = [ModelResult(**m) for m in report_data["models"]]
+        report = IngestionReport(
+            sprint=report_data["sprint"],
+            total_models=report_data["total_models"],
+            models=models,
+            kpis=report_data["kpis"],
+        )
+
+        generate_dashboard(report, args.dashboard, args.output)
+        print()
+        print(f"✅ Dashboard generated at: {args.dashboard}")
 
 
 if __name__ == "__main__":

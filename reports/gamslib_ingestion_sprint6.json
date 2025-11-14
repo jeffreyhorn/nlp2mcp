@@ -1,21 +1,19 @@
 {
-  "_note": "This report represents the BASELINE state before Sprint 6 Day 5 parser improvements (Issues #199 and #200). The fixes for these issues are included in this PR, but this report was generated prior to applying those fixes to serve as a pre-fix baseline for comparison.",
   "sprint": "Sprint 6",
-  "baseline_timestamp": "2025-11-13 (pre-parser-fixes)",
   "total_models": 10,
   "models": [
     {
       "model_name": "circle",
       "gms_file": "circle.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches '$' in the current parser context, at line 16 col 1\n\n$if not set size $set size 10\n^\nExpected one of: \n\t* MODEL\n\t* VARIABLE\n\t* SCALARS\n\t* BINARY_K\n\t* POSITIVE_K\n\t* INTEGER_K\n\t* ALIASES\n\t* EQUATIONS\n\t* TABLE\n\t* VARIABLES\n\t* PARAMETER\n\t* ID\n\t* SOLVE\n\t* NEGATIVE_K\n\t* SCALAR\n\t* SETS\n\t* SEMI\n\t* PARAMETERS\n\t* EQUATION\n",
+      "parse_error": "No terminal matches '$' in the current parser context, at line 16 col 1\n\n$if not set size $set size 10\n^\nExpected one of: \n\t* NEGATIVE_K\n\t* PARAMETERS\n\t* SCALARS\n\t* POSITIVE_K\n\t* ID\n\t* EQUATION\n\t* SEMI\n\t* INTEGER_K\n\t* PARAMETER\n\t* ALIASES\n\t* EQUATIONS\n\t* SCALAR\n\t* SETS\n\t* MODEL\n\t* TABLE\n\t* SOLVE\n\t* VARIABLES\n\t* VARIABLE\n\t* BINARY_K\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
       "model_name": "himmel16",
       "gms_file": "himmel16.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'i' in the current parser context, at line 28 col 5\n\nSet i 'indices for the 6 points' / 1*6 /;\n    ^\nExpected one of: \n\t* ASSIGN\n\t* DOT\n\t* LPAR\n\t* __ANON_0\n",
+      "parse_error": "No terminal matches 'i' in the current parser context, at line 28 col 5\n\nSet i 'indices for the 6 points' / 1*6 /;\n    ^\nExpected one of: \n\t* LPAR\n\t* DOT\n\t* ASSIGN\n\t* __ANON_0\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
@@ -29,28 +27,28 @@
       "model_name": "mathopt1",
       "gms_file": "mathopt1.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'l' in the current parser context, at line 27 col 4\n\nx1.l  =   8; x2.l  = -14;    // initial val\n   ^\nExpected one of: \n\t* BOUND_K\n",
+      "parse_error": "No terminal matches 'm' in the current parser context, at line 38 col 8\n\nModels m / all /;\n       ^\nExpected one of: \n\t* LPAR\n\t* SLASH\n\t* __ANON_0\n\t* ASSIGN\n\t* SEMI\n\t* DOT\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
       "model_name": "maxmin",
       "gms_file": "maxmin.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches '$' in the current parser context, at line 28 col 1\n\n$if not set points $set points 13\n^\nExpected one of: \n\t* MODEL\n\t* VARIABLE\n\t* SCALARS\n\t* BINARY_K\n\t* POSITIVE_K\n\t* INTEGER_K\n\t* ALIASES\n\t* EQUATIONS\n\t* TABLE\n\t* VARIABLES\n\t* PARAMETER\n\t* ID\n\t* SOLVE\n\t* NEGATIVE_K\n\t* SCALAR\n\t* SETS\n\t* SEMI\n\t* PARAMETERS\n\t* EQUATION\n",
+      "parse_error": "No terminal matches '$' in the current parser context, at line 28 col 1\n\n$if not set points $set points 13\n^\nExpected one of: \n\t* NEGATIVE_K\n\t* PARAMETERS\n\t* SCALARS\n\t* POSITIVE_K\n\t* ID\n\t* EQUATION\n\t* SEMI\n\t* INTEGER_K\n\t* PARAMETER\n\t* ALIASES\n\t* EQUATIONS\n\t* SCALAR\n\t* SETS\n\t* MODEL\n\t* TABLE\n\t* SOLVE\n\t* VARIABLES\n\t* VARIABLE\n\t* BINARY_K\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
       "model_name": "mhw4d",
       "gms_file": "mhw4d.gms",
-      "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'l' in the current parser context, at line 27 col 4\n\nx1.l = -1;\n   ^\nExpected one of: \n\t* BOUND_K\n",
-      "parse_error_type": "UnexpectedCharacters"
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null
     },
     {
       "model_name": "mhw4dx",
       "gms_file": "mhw4dx.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'l' in the current parser context, at line 31 col 4\n\nx1.l = -1;\n   ^\nExpected one of: \n\t* BOUND_K\n",
+      "parse_error": "No terminal matches 'l' in the current parser context, at line 37 col 8\n\noption limCol = 0, limRow = 0;\n       ^\nExpected one of: \n\t* LPAR\n\t* DOT\n\t* ASSIGN\n\t* __ANON_0\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
@@ -64,22 +62,22 @@
       "model_name": "rbrock",
       "gms_file": "rbrock.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'l' in the current parser context, at line 19 col 29\n\nx1.lo = -10; x1.up =  5; x1.l = -1.2;\n                            ^\nExpected one of: \n\t* BOUND_K\n",
+      "parse_error": "No terminal matches 'm' in the current parser context, at line 24 col 15\n\nsolve rosenbr minimizing f using nlp;\n              ^\nExpected one of: \n\t* USING\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
       "model_name": "trig",
       "gms_file": "trig.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'l' in the current parser context, at line 27 col 4\n\nx1.l  =  1;\n   ^\nExpected one of: \n\t* BOUND_K\n",
+      "parse_error": "No terminal matches ',' in the current parser context, at line 31 col 13\n\nScalar xdiff, fdiff;\n            ^\nExpected one of: \n\t* SEMI\n\t* ASSIGN\n\t* SLASH\n\t* ID\n",
       "parse_error_type": "UnexpectedCharacters"
     }
   ],
   "kpis": {
     "total_models": 10,
-    "parse_success": 0,
-    "parse_failed": 10,
-    "parse_rate_percent": 0.0,
+    "parse_success": 1,
+    "parse_failed": 9,
+    "parse_rate_percent": 10.0,
     "convert_success": 0,
     "convert_failed": 0,
     "convert_rate_percent": 0.0,
@@ -89,6 +87,6 @@
     "sprint6_target_models": 10,
     "sprint6_target_parse_rate": 10.0,
     "sprint6_target_convert_rate": 50.0,
-    "meets_sprint6_targets": false
+    "meets_sprint6_targets": true
   }
 }
