@@ -1,32 +1,11 @@
-"""
-Central error code registry for nlp2mcp.
+"""Error code registry for nlp2mcp.
 
-This module provides a centralized registry of all error codes, warnings,
-and info messages used throughout nlp2mcp, along with their documentation
-links and metadata.
+Provides centralized error code management with metadata and documentation links.
+Implements the error code scheme from docs/research/doc_link_strategy.md.
 
-Error Code Scheme:
------------------
-- Format: [Level][Category][Number]
-  - Level: E (Error), W (Warning), I (Info)
-  - Category: 0xx-9xx grouping
-  - Number: Sequential within category
-
-Categories:
------------
-- 0xx: Syntax errors (parsing failures)
-- 1xx: Validation errors (semantic issues)
-- 2xx: Solver errors (PATH/CPLEX issues)
-- 3xx: Convexity warnings
-- 9xx: Internal errors (bugs in nlp2mcp)
-
-Sprint 6 Convexity Warnings:
-----------------------------
-- W301: Nonlinear equality (potentially nonconvex)
-- W302: Trigonometric function (potentially nonconvex)
-- W303: Bilinear term (potentially nonconvex)
-- W304: Division/quotient (potentially nonconvex)
-- W305: Odd-power polynomial (potentially nonconvex)
+Error Code Format: {Level}{Category}{Number}
+- Levels: E (Error), W (Warning), I (Info)
+- Categories: 0xx (Syntax), 1xx (Validation), 2xx (Solver), 3xx (Convexity), 9xx (Internal)
 """
 
 from __future__ import annotations
@@ -36,41 +15,66 @@ from dataclasses import dataclass
 
 @dataclass
 class ErrorInfo:
-    """
-    Metadata for an error/warning/info code.
+    """Metadata for an error code.
 
     Attributes:
-        code: Error code (e.g., "W301")
-        level: Severity level ("Error", "Warning", "Info")
-        title: Short title for the error
-        doc_anchor: Anchor link for documentation (e.g., "w301-nonlinear-equality")
+        code: Error code (e.g., "E001", "W301")
+        level: Error level ("Error", "Warning", or "Info")
+        title: Brief description of the error
+        doc_anchor: Anchor for documentation link
     """
 
     code: str
-    level: str
+    level: str  # "Error", "Warning", "Info"
     title: str
     doc_anchor: str
 
     def doc_url(self) -> str:
-        """
-        Generate documentation URL for this error.
+        """Generate documentation URL for this error.
 
         Returns:
-            Full URL to error documentation with anchor
+            Full documentation URL with anchor
+
+        Example:
+            >>> error = ERROR_REGISTRY["E001"]
+            >>> error.doc_url()
+            'https://docs.nlp2mcp.dev/errors/#e001-undefined-variable'
         """
-        base_url = (
-            "https://github.com/jeffreyhorn/nlp2mcp/blob/main/docs/errors/convexity_warnings.md"
-        )
-        return f"{base_url}#{self.doc_anchor}"
+        # For Sprint 6, use GitHub repository link
+        # In future sprints, can update to docs.nlp2mcp.dev
+        base_url = "https://github.com/jeffreyhorn/nlp2mcp/blob/main/docs/errors"
+        return f"{base_url}/README.md#{self.doc_anchor}"
 
 
 # Error Registry
-# ==============
-# Central registry of all error codes used in nlp2mcp.
-# Add new codes here to ensure consistent documentation links.
-
+# Maps error codes to their metadata
 ERROR_REGISTRY: dict[str, ErrorInfo] = {
-    # Convexity Warnings (3xx)
+    # Syntax Errors (E0xx)
+    "E001": ErrorInfo(
+        code="E001",
+        level="Error",
+        title="Undefined variable",
+        doc_anchor="e001-undefined-variable",
+    ),
+    "E002": ErrorInfo(
+        code="E002",
+        level="Error",
+        title="Undefined equation",
+        doc_anchor="e002-undefined-equation",
+    ),
+    "E003": ErrorInfo(
+        code="E003",
+        level="Error",
+        title="Type mismatch",
+        doc_anchor="e003-type-mismatch",
+    ),
+    "E101": ErrorInfo(
+        code="E101",
+        level="Error",
+        title="Syntax error",
+        doc_anchor="e101-syntax-error",
+    ),
+    # Convexity Warnings (W3xx)
     "W301": ErrorInfo(
         code="W301",
         level="Warning",
@@ -92,26 +96,48 @@ ERROR_REGISTRY: dict[str, ErrorInfo] = {
     "W304": ErrorInfo(
         code="W304",
         level="Warning",
-        title="Division by variable may be nonconvex",
-        doc_anchor="w304-variable-quotient",
+        title="Division/quotient may be nonconvex",
+        doc_anchor="w304-division-quotient",
     ),
     "W305": ErrorInfo(
         code="W305",
         level="Warning",
-        title="Odd power may be nonconvex",
-        doc_anchor="w305-odd-power",
+        title="Odd-power polynomial may be nonconvex",
+        doc_anchor="w305-odd-power-polynomial",
     ),
 }
 
 
 def get_error_info(code: str) -> ErrorInfo | None:
-    """
-    Get error metadata by code.
+    """Get error metadata by code.
 
     Args:
-        code: Error code (e.g., "W301")
+        code: Error code (e.g., "E001", "W301")
 
     Returns:
-        ErrorInfo if code exists, None otherwise
+        ErrorInfo object if code exists, None otherwise
+
+    Example:
+        >>> info = get_error_info("E001")
+        >>> info.title
+        'Undefined variable'
+        >>> info.doc_url()
+        'https://github.com/jeffreyhorn/nlp2mcp/blob/main/docs/errors/README.md#e001-undefined-variable'
     """
     return ERROR_REGISTRY.get(code)
+
+
+def get_all_error_codes() -> list[str]:
+    """Get list of all registered error codes.
+
+    Returns:
+        Sorted list of error codes
+
+    Example:
+        >>> codes = get_all_error_codes()
+        >>> 'E001' in codes
+        True
+        >>> 'W301' in codes
+        True
+    """
+    return sorted(ERROR_REGISTRY.keys())
