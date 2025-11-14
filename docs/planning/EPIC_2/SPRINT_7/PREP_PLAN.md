@@ -203,10 +203,15 @@ For each of the 9 failed models:
 
 ```bash
 # For each failed model
+if [ ! -d "data/gamslib" ]; then
+  echo "Error: data/gamslib/ directory does not exist. Please check your path."
+  exit 1
+fi
 cd data/gamslib/
 for model in circle himmel16 hs62 mathopt1 maxmin mhw4dx mingamma rbrock trig; do
   echo "=== $model ===" >> failures.txt
-  python -m src.cli ${model}.gms 2>&1 | grep -A20 "UnexpectedCharacters" >> failures.txt
+  # Change to repo root to ensure src.cli is importable, then run parser
+  (cd ../.. && python -m src.cli data/gamslib/${model}.gms 2>&1 | grep -A20 "UnexpectedCharacters") >> failures.txt
 done
 ```
 
@@ -261,7 +266,7 @@ grep -q "Feature Impact Matrix" docs/planning/EPIC_2/SPRINT_7/GAMSLIB_FAILURE_AN
 grep -q "Recommended Priority" docs/planning/EPIC_2/SPRINT_7/GAMSLIB_FAILURE_ANALYSIS.md
 
 # Should analyze all 9 models
-grep -c "^### " docs/planning/EPIC_2/SPRINT_7/GAMSLIB_FAILURE_ANALYSIS.md | grep 9
+[ "$(grep -c "^### " docs/planning/EPIC_2/SPRINT_7/GAMSLIB_FAILURE_ANALYSIS.md)" -eq 9 ]
 ```
 
 ### Deliverables
@@ -334,7 +339,7 @@ Catalog all GAMS preprocessor directives:
 - Compile control: `$if`, `$ifI`, `$ifE`, `$else`, `$endif`
 - Symbol definition: `$set`, `$setGlobal`, `$setLocal`, `$setEnv`
 - File inclusion: `$include`, `$batInclude`, `$libInclude`
-- Text blocks: `$ontext`, `$offtext`, `$comment`, `$onechoV`, `$offechoV`
+- Text blocks: `$ontext`, `$offtext`, `$comment`, `$onecho`, `$offecho`
 - System calls: `$call`, `$echo`
 - Options: `$onempty`, `$offempty`, `$on`/`$offOrder`
 
@@ -1146,9 +1151,9 @@ jobs:
       - name: Check for dashboard changes
         run: |
           if git diff --quiet docs/status/GAMSLIB_CONVERSION_STATUS.md; then
-            echo "No dashboard changes"
+            echo "No dashboard changes detected - skipping parse rate check"
           else
-            echo "Dashboard changed, checking parse rate..."
+            echo "Dashboard changes detected - checking parse rate..."
           fi
       
       - name: Detect parse rate regression
@@ -1165,11 +1170,19 @@ jobs:
 
 Create `scripts/check_parse_rate_regression.py`:
 ```python
+# Note: This is a design example. Helper functions like read_parse_rate() and 
+# read_parse_rate_from_main() need to be implemented with proper error handling.
+
+import sys
+import json
+
 def check_regression():
     # Read current parse rate from JSON report
+    # TODO: Implement read_parse_rate() with error handling for missing/invalid JSON
     current_rate = read_parse_rate("reports/gamslib_ingestion_sprint7.json")
     
     # Read baseline from main branch
+    # TODO: Implement read_parse_rate_from_main() to fetch baseline from git
     baseline_rate = read_parse_rate_from_main()
     
     # Check for regression (>10% drop)
@@ -1372,7 +1385,7 @@ def test_preprocessor_parsing(fixture_name, preprocessor_fixtures):
     
     # Test parsing
     result = parse_file(model_path)
-    assert (result.success) == expected["should_parse"]
+    assert result.success == expected["should_parse"]
     
     # Test symbols
     if expected["should_parse"]:
@@ -1601,7 +1614,7 @@ grep -q "Day 10:" docs/planning/EPIC_2/SPRINT_7/PLAN.md
 grep -q "Checkpoint" docs/planning/EPIC_2/SPRINT_7/PLAN.md
 
 # Should have 11 days (Days 0-10)
-grep -c "^### Day [0-9]" docs/planning/EPIC_2/SPRINT_7/PLAN.md | grep 11
+[ "$(grep -c "^### Day [0-9]" docs/planning/EPIC_2/SPRINT_7/PLAN.md)" -eq 11 ]
 
 # Cross-references should exist
 grep -q "PROJECT_PLAN.md" docs/planning/EPIC_2/SPRINT_7/PLAN.md
