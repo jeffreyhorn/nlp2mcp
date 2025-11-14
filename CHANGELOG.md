@@ -7,6 +7,136 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-11-13
+
+### Sprint 6: Convexity Heuristics, Bug Fixes, GAMSLib, UX
+
+**Release Summary:** Sprint 6 delivers four major feature areas: convexity detection heuristics, nested min/max flattening, GAMSLib integration with conversion dashboard, and comprehensive error code system. This release establishes a 10% GAMSLib baseline, adds 119 new tests (1217 total), and achieves 99.8% test pass rate with 88-90% code coverage.
+
+**Key Features:**
+- ✅ Convexity detection with 5 warning codes (W301-W305)
+- ✅ Nested min/max AST flattening
+- ✅ GAMSLib ingestion pipeline and conversion dashboard
+- ✅ Structured error code registry with 17 error codes
+- ✅ Enhanced CLI with `--skip-convexity-check` flag
+
+**Statistics:**
+- Version: 0.5.0-beta → 0.6.0 (stable release)
+- Tests: 1098 → 1217 (+119, +10.8%)
+- Pass Rate: 99.8% (1214 passed, 2 skipped, 1 xfailed)
+- Code Coverage: 88-90% (exceeded 87% target)
+- GAMSLib Parse Rate: 10% baseline (1/10 Tier 1 models)
+- Total Sprint 6 Development: 11 days (Days 0-10)
+
+**Quality Metrics:**
+- Zero regressions from Sprint 5
+- All performance benchmarks <10% change
+- Comprehensive QA report: `docs/testing/SPRINT_6_QA_REPORT.md`
+- All quality checks passing (typecheck, lint, format, test)
+
+---
+
+### Sprint 6 Day 10: Release Preparation & Sprint Review - 2025-11-13
+
+**Status:** ✅ COMPLETE - v0.6.0 released, Sprint 6 complete
+
+#### Summary
+
+Completed Sprint 6 Day 10: Final release preparation, demo validation, Sprint 6 retrospective, and Sprint 7 preliminary planning. Released v0.6.0 as first stable release with convexity detection, nested min/max flattening, GAMSLib integration, and comprehensive error system.
+
+**Deliverables Created:**
+- ✅ v0.6.0 release (pyproject.toml, src/__init__.py updated)
+- ✅ Release notes finalized in CHANGELOG.md
+- ✅ `docs/planning/EPIC_2/SPRINT_6/RETROSPECTIVE.md` - Sprint 6 retrospective
+- ✅ `docs/planning/EPIC_2/SPRINT_7/PRELIMINARY_PLAN.md` - Sprint 7 preliminary plan
+
+#### Release Highlights
+
+**Version:** 0.5.0-beta → 0.6.0 (stable release)
+
+**Key Features:**
+- Convexity detection with 5 warning codes (W301-W305)
+- Nested min/max AST flattening
+- GAMSLib ingestion pipeline and conversion dashboard
+- Error code registry with 17 codes
+- Enhanced CLI with `--skip-convexity-check` flag
+
+**Statistics:**
+- Tests: 1098 → 1217 (+119, +10.8%)
+- Pass Rate: 99.8% (1214 passed, 2 skipped, 1 xfailed)
+- Code Coverage: 88-90% (exceeded 87% target)
+- GAMSLib Parse Rate: 10% baseline (1/10 Tier 1 models)
+
+#### Demo Validation
+
+Validated all 4 demo scenarios from `SPRINT_6_DEMO.md`:
+
+1. ✅ **Demo 1: Convexity warnings** - W301 detected on `nonconvex_circle.gms`
+2. ✅ **Demo 2: Min/max flattening** - AST transformation working correctly
+3. ✅ **Demo 3: GAMSLib dashboard** - 10 models ingested, dashboard generated
+4. ✅ **Demo 4: Error documentation** - 17 error codes with examples and fixes
+
+All demos executed successfully with expected output.
+
+#### Sprint 6 Retrospective
+
+**What Went Well:**
+- ✅ Comprehensive prep week with Known Unknowns analysis
+- ✅ Incremental development with daily deliverables
+- ✅ Test-driven approach (99.8% pass rate, zero regressions)
+- ✅ Strong documentation culture (QA report, error docs, demo checklist)
+- ✅ All 5 checkpoints passed, all acceptance criteria met
+
+**What Could Be Improved:**
+- Parser limitations underestimated (only 10% GAMSLib parse rate)
+- Test execution time needs optimization (~107s for full suite)
+- Convexity detection too conservative (needs fine-grained suppression)
+- GAMSLib dashboard updates currently manual (need CI automation)
+
+**Key Learnings:**
+- Prep week tasks eliminate ambiguity and accelerate execution
+- Daily deliverables with checkpoints keep sprints on track
+- Parser improvements are the primary bottleneck for GAMSLib progress
+- Comprehensive testing and documentation add significant value
+
+#### Sprint 7 Preview
+
+**Focus:** Parser Enhancements & GAMSLib Expansion
+
+**Primary Goals:**
+1. Increase GAMSLib parse rate from 10% to 30%+ (address preprocessor directives, multi-dimensional indexing)
+2. Optimize test performance (<60s fast suite, <120s full suite)
+3. Add line numbers to convexity warnings, fine-grained suppression
+4. CI integration for automated GAMSLib monitoring
+
+**Target Version:** v0.7.0
+
+**Prep Week:** Known Unknowns analysis, parser gap research, test profiling
+
+For full details, see `docs/planning/EPIC_2/SPRINT_7/PRELIMINARY_PLAN.md`.
+
+#### Quality Metrics
+
+**Final Sprint 6 Status:**
+- ✅ 100% of planned features delivered
+- ✅ 189% of error code target (17 vs 9 planned)
+- ✅ 111% of test target (1217 vs 1098 planned)
+- ✅ Zero regressions from Sprint 5
+- ✅ All performance benchmarks <10% change
+- ✅ All quality checks passing
+
+**Checkpoints:**
+- Checkpoint 1 (Day 1): ✅ Convexity detection working
+- Checkpoint 2 (Day 3): ✅ Min/max flattening complete
+- Checkpoint 3 (Day 5): ✅ GAMSLib baseline established
+- Checkpoint 4 (Day 7): ✅ Error codes integrated
+- Checkpoint 5 (Day 9): ✅ All tests passing, release ready
+
+**Sprint 6 Duration:** 11 days (Days 0-10)  
+**Sprint Status:** ✅ COMPLETE
+
+---
+
 ### Sprint 6 Day 9: Testing & Quality Assurance - 2025-11-13
 
 **Status:** ✅ COMPLETE - All tests passing, quality criteria met, ready for release
