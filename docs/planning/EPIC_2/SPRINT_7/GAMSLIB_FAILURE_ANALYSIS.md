@@ -16,7 +16,7 @@ Analysis of 9 failed GAMSLib models reveals **3 primary failure categories** blo
 2. **Set Range Syntax** (1 model) - `Set i / 1*6 /` notation not recognized  
 3. **Statement-Level Features** (6 models) - Multiple identifiers, option statements, solve keyword issues
 
-**Key Finding:** Preprocessor directives and set range syntax are **quick wins** that would unlock 3/9 models (33% parse rate) with estimated 8-12 hours of implementation effort.
+**Key Finding:** Preprocessor directives and set range syntax are **quick wins** that would unlock 3 additional models, raising the parse rate to 4/10 (40%), with estimated 9-12 hours of implementation effort.
 
 **Recommendation:** Prioritize preprocessor mocking and set range syntax for Sprint 7 to achieve 30%+ parse rate goal.
 
@@ -52,7 +52,8 @@ Analysis of 9 failed GAMSLib models reveals **3 primary failure categories** blo
 | Solve Keyword Parsing | 1 | rbrock | 60% → 70% |
 | Models Keyword | 1 | mathopt1 | 70% → 80% |
 
-**Critical Path to 30%:** Preprocessor directives (2 models) + Set range syntax (1 model) = **3 additional models = 40% parse rate**
+**Critical Path to 30%:** Preprocessor directives (2 models) = **30% parse rate (3/10 models)**  
+**Critical Path to 40%:** + Set range syntax (1 model) = **40% parse rate (4/10 models)**
 
 ---
 
@@ -339,7 +340,7 @@ Scalar xdiff, fdiff;
 
 ### Quick Wins (High ROI)
 
-Features that unlock ≥2 models with <6 hours effort:
+Features with high ROI (<6 hours effort):
 
 1. **Set Range Syntax** (3-4 hours)
    - Unlocks: himmel16 (+10%)
@@ -402,7 +403,7 @@ Features requiring >6 hours or complex implementation:
 
 ### Sprint 7 Critical Priority (Target: 30% Parse Rate)
 
-**Goal:** Unlock 2 additional models (10% → 30%)
+**Goal:** Unlock 2 additional models (10% → 30% = 3/10 models)
 
 **Recommended Feature Set:**
 
@@ -418,7 +419,7 @@ Features requiring >6 hours or complex implementation:
    - **Unlocks:** himmel16 (+10%)
    - **Rationale:** Simple feature, high ROI, gets to 40% parse rate
 
-**Total Sprint 7 Critical:** 9-12 hours, **+30% parse rate (40% total)**
+**Total Sprint 7 Critical:** 9-12 hours, **+20% parse rate (30% total = 3/10 models)**
 
 ---
 

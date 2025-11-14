@@ -41,7 +41,7 @@ Completed Sprint 7 Prep Task 2: Analyzed all 9 GAMSLib parser failures to identi
 **Minimum Feature Set (9-12 hours):**
 - Preprocessor directive mocking (6-8h) → unlocks circle, maxmin (+20%)
 - Set range syntax (3-4h) → unlocks himmel16 (+10%)
-- **Result:** 30% → 40% parse rate guaranteed
+- **Result:** 10% → 40% parse rate guaranteed
 
 **Stretch Goals (additional 3-5 hours):**
 - Multiple scalar declaration (2-3h) → unlocks trig (+10%)
