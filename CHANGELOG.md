@@ -169,9 +169,9 @@ Completed Sprint 6 Day 8: Resolved remaining unknowns (4.3, 4.4), created compre
 
 **Modified Files (2):**
 1. `README.md` (1 line) - Marked Day 8 complete
-2. `CHANGELOG.md` (this entry) - Day 8 summary
+2. `CHANGELOG.md` (~214 lines) - Day 8 summary (this entry)
 
-**Total Changes:** 2 modified files, 4 new files, ~1280 lines added
+**Total Changes:** 2 modified files, 4 new files, ~1494 lines added (~1280 in new files, ~214 in CHANGELOG)
 
 #### Technical Achievements
 

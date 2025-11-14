@@ -37,18 +37,18 @@ make install-dev
 Create a file `my_model.gms`:
 
 ```gams
-Variables x, y, obj;
+Positive Variables x, y;
+Variables obj;
 Equations objective, constraint1;
 
 objective.. obj =E= (x - 2)**2 + (y - 3)**2;
 constraint1.. x + y =L= 5;
 
-x.lo = 0; x.up = 10;
-y.lo = 0; y.up = 10;
-
 Model mymodel /all/;
 Solve mymodel using NLP minimizing obj;
 ```
+
+> **Note:** This example uses `Positive Variables` which automatically sets lower bounds to 0. If you need to specify explicit upper bounds (e.g., `x.up = 10;`), be aware that the current version has limited support for variable attribute syntax. You may encounter parse errors. For more details, see the [Known Limitations](../docs/releases/v0.6.0.md#known-limitations) section.
 
 ### 2. Convert to MCP
 
@@ -74,12 +74,11 @@ Variables
     y
     obj
     nu_objective
-    nu_constraint1
+    rho_constraint1
     pi_x_lo
     pi_x_up
     pi_y_lo
     pi_y_up
-    rho_constraint1
 ;
 
 Equations
@@ -90,10 +89,10 @@ Equations
 ;
 
 * Stationarity for x
-stat_x.. 2 * (x - 2) + nu_constraint1 - pi_x_lo + pi_x_up =E= 0;
+stat_x.. 2 * (x - 2) + rho_constraint1 - pi_x_lo + pi_x_up =E= 0;
 
 * Stationarity for y
-stat_y.. 2 * (y - 3) + nu_constraint1 - pi_y_lo + pi_y_up =E= 0;
+stat_y.. 2 * (y - 3) + rho_constraint1 - pi_y_lo + pi_y_up =E= 0;
 
 * Original equations
 objective.. obj =E= (x - 2) ** 2 + (y - 3) ** 2;
@@ -102,12 +101,9 @@ constraint1.. x + y =L= 5;
 Model mcp_model /
     stat_x.x,
     stat_y.y,
+    * Note: obj is paired with objective equation to preserve the objective definition in the MCP model
+    * The obj variable does NOT receive its own stationarity condition
     objective.obj,
-    constraint1.nu_constraint1,
-    x.pi_x_lo,
-    x.pi_x_up,
-    y.pi_y_lo,
-    y.pi_y_up,
     constraint1.rho_constraint1
 /;
 
@@ -284,6 +280,8 @@ Files are resolved relative to the including file, with nested includes and circ
 
 ```gams
 Set i /1*10/;
+Set j /1*10/;
+Parameters A(i,j), b(i);
 Variables x(i);
 Equations balance(i);
 
@@ -308,8 +306,12 @@ inequality_cons.. x - y =L= 5;     * Creates dual variable rho_inequality_cons
 ```gams
 x.lo = 0;   * Creates dual variable pi_x_lo
 x.up = 100; * Creates dual variable pi_x_up
-x.fx = 50;  * Treated as x.lo = x.up = 50
+* To fix a variable at a specific value:
+x.lo = 50;  * Set both bounds equal
+x.up = 50;  * This effectively fixes x at 50
 ```
+
+> **Note:** The `.fx` attribute (e.g., `x.fx = 50;`) has limited parser support in the current version. To ensure correct parsing, use both `.lo` and `.up` to fix a variable's value.
 
 ## Troubleshooting
 
@@ -352,7 +354,7 @@ nlp2mcp generates the MCP formulation but doesn't solve it. To solve:
 
 - **Issues:** https://github.com/jeffreyhorn/nlp2mcp/issues
 - **Discussions:** https://github.com/jeffreyhorn/nlp2mcp/discussions
-- **Documentation:** https://docs.claude.com/en/docs/claude-code/
+- **Documentation:** https://github.com/jeffreyhorn/nlp2mcp#readme
 
 ## Contributing
 
