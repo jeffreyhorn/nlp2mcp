@@ -202,17 +202,19 @@ For each of the 9 failed models:
 4. Document in `docs/planning/EPIC_2/SPRINT_7/GAMSLIB_FAILURE_ANALYSIS.md`
 
 ```bash
-# For each failed model
-if [ ! -d "data/gamslib" ]; then
-  echo "Error: data/gamslib/ directory does not exist. Please check your path."
-  exit 1
-fi
-cd data/gamslib/
-for model in circle himmel16 hs62 mathopt1 maxmin mhw4dx mingamma rbrock trig; do
-  echo "=== $model ===" >> failures.txt
-  # Change to repo root to ensure src.cli is importable, then run parser
-  (cd ../.. && python -m src.cli data/gamslib/${model}.gms 2>&1 | grep -A20 "UnexpectedCharacters") >> failures.txt
-done
+# For each failed model (wrapped in subshell to preserve working directory)
+(
+  if [ ! -d "data/gamslib" ]; then
+    echo "Error: data/gamslib/ directory does not exist. Please check your path."
+    exit 1
+  fi
+  cd data/gamslib/
+  for model in circle himmel16 hs62 mathopt1 maxmin mhw4dx mingamma rbrock trig; do
+    echo "=== $model ===" >> failures.txt
+    # Change to repo root to ensure src.cli is importable, then run parser
+    (cd ../.. && python -m src.cli data/gamslib/${model}.gms 2>&1 | grep -A20 "UnexpectedCharacters") >> failures.txt
+  done
+)
 ```
 
 **Step 2: Categorize failures by feature type**
@@ -1175,14 +1177,49 @@ Create `scripts/check_parse_rate_regression.py`:
 
 import sys
 import json
+from pathlib import Path
+
+def read_parse_rate(json_path: str) -> float:
+    """
+    Read parse rate from GAMSLib ingestion JSON report.
+    
+    Args:
+        json_path: Path to JSON report file
+        
+    Returns:
+        Parse rate as float (e.g., 30.0 for 30%)
+        
+    Raises:
+        FileNotFoundError: If JSON file doesn't exist
+        json.JSONDecodeError: If JSON is malformed
+        KeyError: If expected parse_rate field is missing
+    """
+    # TODO: Implement with error handling
+    pass
+
+def read_parse_rate_from_main() -> float:
+    """
+    Read baseline parse rate from main branch.
+    
+    Fetches the latest JSON report from main branch using git show.
+    
+    Returns:
+        Baseline parse rate as float (e.g., 10.0 for 10%)
+        
+    Raises:
+        subprocess.CalledProcessError: If git command fails
+        FileNotFoundError: If baseline file doesn't exist on main
+        json.JSONDecodeError: If baseline JSON is malformed
+        KeyError: If expected parse_rate field is missing
+    """
+    # TODO: Implement using subprocess.run(['git', 'show', 'main:reports/...'])
+    pass
 
 def check_regression():
     # Read current parse rate from JSON report
-    # TODO: Implement read_parse_rate() with error handling for missing/invalid JSON
     current_rate = read_parse_rate("reports/gamslib_ingestion_sprint7.json")
     
     # Read baseline from main branch
-    # TODO: Implement read_parse_rate_from_main() to fetch baseline from git
     baseline_rate = read_parse_rate_from_main()
     
     # Check for regression (>10% drop)
