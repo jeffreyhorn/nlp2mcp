@@ -1,6 +1,6 @@
 """Utility modules for nlp2mcp."""
 
-from .error_codes import ERROR_REGISTRY, ErrorInfo, get_error_info
+from .error_codes import ERROR_REGISTRY, ErrorInfo, get_all_error_codes, get_error_info
 from .error_formatter import (
     ErrorContext,
     FormattedError,
@@ -14,6 +14,7 @@ __all__ = [
     "ERROR_REGISTRY",
     "ErrorInfo",
     "get_error_info",
+    "get_all_error_codes",
     # Error formatting
     "ErrorContext",
     "FormattedError",
