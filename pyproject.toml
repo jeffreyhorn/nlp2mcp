@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nlp2mcp"
-version = "0.5.0-beta"
+version = "0.6.0"
 description = "Convert GAMS NLP models to MCP via KKT conditions"
 readme = "README.md"
 requires-python = ">=3.11"
