@@ -252,8 +252,11 @@ def extract_conditional_sets(source: str) -> dict[str, str]:
         {'size': '10'}
 
     Notes:
-        - Case-insensitive matching for GAMS directives
+        - Case-insensitive matching for GAMS directives and variable names
+        - Backreference \\1 matches case-insensitively with re.IGNORECASE flag
         - Handles both quoted and unquoted default values
+        - Unquoted values: [\\w.-]+ pattern captures identifiers, numbers with
+          dots/hyphens (e.g., 1e-6, 3.14) but stops at semicolons and dollar signs
         - If multiple $if not set directives set the same variable,
           the last one wins
     """
@@ -262,8 +265,11 @@ def extract_conditional_sets(source: str) -> dict[str, str]:
     # Pattern: $if not set varname $set varname value
     # Matches: $if not set size $set size 10
     #          $if not set size $set size "10"
+    #          $if not set tol $set tol 1e-6
     # Case-insensitive for directives, preserves case for variable names
-    pattern = r'\$if\s+not\s+set\s+(\w+)\s+\$set\s+\1\s+(?:"([^"]*)"|(\S+))'
+    # Unquoted values: [\w.-]+ allows identifiers, numbers, dots, and hyphens
+    # This avoids capturing semicolons, dollar signs, and other special characters
+    pattern = r'\$if\s+not\s+set\s+(\w+)\s+\$set\s+\1\s+(?:"([^"]*)"|([\w.-]+))'
 
     for match in re.finditer(pattern, source, re.IGNORECASE):
         var_name = match.group(1)
@@ -343,7 +349,8 @@ def strip_conditional_directives(source: str) -> str:
         # Check if this line contains $if not set directive (more precise)
         if re.match(r"^\$if\s+not\s+set\b", stripped, re.IGNORECASE):
             # Replace with comment to preserve line number
-            filtered.append(f"* [Stripped: {line}]")
+            # Use stripped version to avoid preserving leading whitespace
+            filtered.append(f"* [Stripped: {stripped}]")
         else:
             # Keep line unchanged
             filtered.append(line)

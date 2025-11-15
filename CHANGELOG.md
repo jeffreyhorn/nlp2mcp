@@ -58,9 +58,10 @@ Implemented core preprocessor directive handling functions to support GAMS `$if 
 - TestPreprocessorIntegration: 4 tests (full workflow, circle.gms pattern, maxmin.gms pattern)
 
 **GAMSLib Model Verification:**
-- circle.gms pattern: Extracts `TESTTOL=1e-6`, expands `%TESTTOL%` → `1e-6` ✅
-- maxmin.gms pattern: Extracts `N=10`, expands `p1*p%N%` → `p1*p10` ✅
-- Manual testing confirmed: circle.gms extracts `size=10`, maxmin.gms extracts `points=13`
+- Unit tests use simplified patterns for clarity and independence
+- circle.gms pattern test: Extracts `TESTTOL=1e-6`, expands `%TESTTOL%` → `1e-6` ✅
+- maxmin.gms pattern test: Extracts `N=10`, expands `p1*p%N%` → `p1*p10` ✅
+- Actual GAMSLib files: circle.gms uses `size=10`, maxmin.gms uses `points=13`
 
 #### Quality Checks
 
