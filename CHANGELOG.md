@@ -7,6 +7,214 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 7 Prep: Task 9 - Parser Test Fixture Strategy - 2025-11-15
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed Sprint 7 Prep Task 9: Designed comprehensive test fixture strategy for parser features across Sprints 7-10. Created detailed strategy document with fixture hierarchy, YAML schema, parametrized test approach, documentation templates, and coverage matrix. Strategy enables systematic testing of 60+ parser features with minimal maintenance burden.
+
+**Deliverables Created:**
+- ✅ `docs/testing/PARSER_FIXTURE_STRATEGY.md` (comprehensive 1000+ line strategy document)
+- ✅ 4-directory fixture hierarchy design (preprocessor, sets, multidim, statements)
+- ✅ Extended YAML schema for parser feature validation
+- ✅ Parametrized test approach (following proven convexity pattern)
+- ✅ README and fixture header templates
+- ✅ Coverage matrix for 34 Sprint 7 fixture files
+- ✅ Sprint 8-10 roadmap (60+ total fixtures planned)
+
+#### Key Design Decisions
+
+**1. Fixture Hierarchy: 4-Directory Organization**
+- `tests/fixtures/preprocessor/` - 9 fixtures (Critical/High priority)
+- `tests/fixtures/sets/` - 8 fixtures (Critical/High priority)
+- `tests/fixtures/multidim/` - 8 fixtures (High/Medium priority)
+- `tests/fixtures/statements/` - 9 fixtures (Critical/High/Medium priority)
+- **Total Sprint 7:** 34 fixture files, 40 test cases (24 positive, 3 negative, 13 edge cases)
+- **Decision:** Organize by feature category (not syntax), progressive complexity
+
+**2. Expected Results: Extended YAML Schema**
+- Built on successful convexity pattern (`expected_results.yaml`)
+- New parser-specific fields:
+  - `symbols_defined`: List of expected IR symbols (name, type, dimensions, domain)
+  - `preprocessor_actions`: Directive processing expectations (directive, variable, action, value)
+  - `expression_structure`: Complex expression validation (nested sums, indices)
+- Complete schema documented in Appendix B
+- **Decision:** Extend proven pattern, avoid inventing new format
+
+**3. Test Generation: Parametrized Tests (DRY)**
+- Pattern: `@pytest.mark.parametrize("fixture_name", [...])`
+- 4 test files: `test_preprocessor.py`, `test_sets.py`, `test_multidim.py`, `test_statements.py`
+- Single test function validates all fixtures per category
+- Expected execution: <2s for all 35 fixtures (<5s target ✅)
+- **Decision:** Reuse convexity test pattern, proven successful in Sprint 6
+
+**4. Documentation: Template-Driven**
+- README.md template: 9 sections (overview, catalog, usage, validation, manifest, etc.)
+- Fixture header template: Purpose, expected outcome, category, references
+- Every fixture <30 lines (minimal, focused on ONE feature)
+- Self-documenting: filename + header comment explain purpose
+- **Decision:** Documentation-first approach ensures maintainability
+
+**5. Coverage: Systematic Feature Mapping**
+- 26 parser features mapped across 4 categories
+- Sprint 7: 34 fixture files, 40 test cases (preprocessor: 9, sets: 8, multidim: 8, statements: 9)
+- Sprint 8-10: 60+ total fixtures planned (tables, conditionals, loops, etc.)
+- Prioritization: 7 Critical, 14 High, 13 Medium
+- **Decision:** 100% coverage of Sprint 7 features, roadmap for Sprints 8-10
+
+**6. Fixture Principles**
+- **One feature per fixture:** Each .gms tests ONE specific parser feature
+- **Minimal size:** <30 lines (easier to understand and debug)
+- **Self-documenting:** Filename + header comment
+- **Isolated:** No dependencies between fixtures
+- **Progressive complexity:** simple_ → nested_ → complex_
+
+#### Coverage Matrix Summary
+
+| Category | Fixtures | Critical | High | Medium | Execution Time |
+|----------|----------|----------|------|--------|----------------|
+| Preprocessor | 9 | 3 | 3 | 3 | ~0.5s |
+| Set Range | 8 | 1 | 3 | 4 | ~0.5s |
+| Multi-Dim | 8 | 0 | 4 | 4 | ~0.5s |
+| Statements | 9 | 3 | 4 | 2 | ~0.5s |
+| **TOTAL** | **34** | **7** | **14** | **13** | **~2.0s** |
+
+**Sprint 7 Feature Coverage:**
+- Preprocessor: `$set`, `$if not set`, `$if`/`$else`, `%macro%`, `$eolCom`, combined
+- Set Range: Numeric range (`1*6`), alpha range (`s1*s10`), prefix range (`p1*p100`), with macro
+- Multi-Dim: 2D/3D parameters, 2D/3D variables, nested sums, 2D equations, mixed dimensions
+- Statements: Model declaration, solve (basic + with objective), option, display, scalar assignments
+
+#### Implementation Details
+
+**Fixture Hierarchy Design:**
+```
+tests/fixtures/
+├── preprocessor/         # NEW - Sprint 7
+│   ├── README.md
+│   ├── expected_results.yaml
+│   └── 9 .gms fixtures
+├── sets/                 # NEW - Sprint 7
+│   ├── README.md
+│   ├── expected_results.yaml
+│   └── 8 .gms fixtures
+├── multidim/             # NEW - Sprint 7
+│   ├── README.md
+│   ├── expected_results.yaml
+│   └── 8 .gms fixtures
+├── statements/           # NEW - Sprint 7
+│   ├── README.md
+│   ├── expected_results.yaml
+│   └── 9 .gms fixtures
+└── convexity/            # Existing - Sprint 6 (pattern to replicate)
+```
+
+**YAML Schema Example:**
+```yaml
+simple_set:
+  should_parse: true
+  symbols_defined:
+    - name: "size"
+      type: "scalar"
+      value: 10
+  preprocessor_actions:
+    - directive: "$set"
+      variable: "size"
+      value: "10"
+  warnings: []
+  notes: "Basic $set directive - should define scalar 'size' with value 10"
+```
+
+**Parametrized Test Example:**
+```python
+@pytest.mark.parametrize("fixture_name", [
+    "simple_set", "simple_if", "if_else", "macro_expansion", ...
+])
+def test_preprocessor_parsing(fixture_name, expected_results):
+    fixture_file = FIXTURE_DIR / f"{fixture_name}.gms"
+    expected = expected_results[fixture_name]
+    
+    if expected["should_parse"]:
+        model = parse_model_file(fixture_file)
+        assert model is not None
+        # Validate symbols defined...
+```
+
+#### Sprint 7 Implementation Checklist
+
+**7-Phase Plan:**
+1. Directory setup (Day 1)
+2. Preprocessor fixtures (Day 1-2): 9 fixtures, test_preprocessor.py
+3. Set range fixtures (Day 2): 8 fixtures, test_sets.py
+4. Multi-dim fixtures (Day 3): 8 fixtures, test_multidim.py
+5. Statement fixtures (Day 4): 9 fixtures, test_statements.py
+6. Integration and documentation (Day 5): E2E tests, verification
+7. Acceptance criteria: 34 fixtures, <5s execution, 100% feature coverage
+
+**Estimated Effort:** 3-4 hours for Sprint 7 fixture creation
+
+#### Sprint 8-10 Roadmap
+
+**Sprint 8 (Wave 2):**
+- `tests/fixtures/tables/` - Table declaration syntax (15-20 fixtures)
+- `tests/fixtures/indexed_assign/` - Indexed assignments
+- Estimated effort: 4-6 hours
+
+**Sprint 9 (Wave 3):**
+- `tests/fixtures/conditional/` - Conditional expressions `$(condition)`
+- `tests/fixtures/set_ops/` - Set operations (union, intersect, card)
+- `tests/fixtures/attributes/` - Variable/equation attributes
+- Estimated effort: 6-8 hours
+
+**Sprint 10 (Wave 4):**
+- `tests/fixtures/loops/` - Loop statements
+- `tests/fixtures/special_funcs/` - Special functions (ord, card, smax, smin)
+- `tests/fixtures/file_io/` - File I/O statements
+- Estimated effort: 4-6 hours
+
+**Total Roadmap:** 60+ fixtures across Sprints 7-10
+
+#### Cross-References
+
+**Research Integration:**
+- Task 2: GAMSLib Failure Analysis → Feature priorities (preprocessor 2.9%/hour, set range 2.5%/hour)
+- Task 3: Preprocessor Directive Research → 9 preprocessor fixtures planned
+- Task 4: Multi-Dimensional Indexing Research → 9 multi-dim fixtures planned
+- Task 6: Parser Roadmap → Sprint 8-10 fixture planning (60+ total)
+
+**Pattern Replication:**
+- Convexity pattern: `tests/fixtures/convexity/` → Proven YAML + parametrized tests
+- Expected results: `expected_results.yaml` → Extended schema for parser features
+- Test structure: `test_convexity_patterns.py` → Template for parser tests
+
+#### Acceptance Criteria
+
+- [x] Fixture hierarchy designed (3+ directories for Sprint 7) ✅ 4 directories
+- [x] Expected results format specified (YAML schema) ✅ Complete schema in Appendix B
+- [x] Test case generation approach documented (parametrized) ✅ Following convexity pattern
+- [x] Fixture documentation template created ✅ README + header templates
+- [x] Coverage matrix identifies gaps ✅ 34 fixture files (40 test cases), Sprint 8-10 gaps identified
+- [x] Cross-referenced with Tasks 2, 3, 4 (parser features) ✅ All research integrated
+- [x] Implementation checklist for Sprint 7 created ✅ 7-phase checklist
+
+#### Benefits
+
+**Short-term (Sprint 7):**
+- Systematic test coverage for all new parser features
+- Fast test execution (<2s for 34 fixtures)
+- Easy maintenance (templates + parametrized tests)
+- Clear documentation (README + headers)
+
+**Long-term (Sprints 8-10):**
+- Scalable pattern for 60+ total fixtures
+- Regression safety (fixtures remain indefinitely)
+- Onboarding aid (new developers understand test structure)
+- Quality assurance (100% feature coverage)
+
+---
+
 ### Sprint 7 Prep: Task 8 - CI for GAMSLib Regression Tracking - 2025-11-15
 
 **Status:** ✅ COMPLETE
