@@ -7,6 +7,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 7 Day 2: Preprocessor Integration & Set Range Syntax - 2025-11-15
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Integrated the preprocessor pipeline and implemented set range syntax support for both numeric (`1*10`) and symbolic (`i1*i100`) ranges. This completes the preprocessor feature and adds range syntax capability, unlocking additional GAMSLib models including maxmin.gms and himmel16.gms.
+
+**Deliverables:**
+- ✅ Integrated preprocessor into `preprocess_gams_file()` pipeline (5-step process)
+- ✅ `$eolCom` directive support confirmed (grammar already handles `//` comments)
+- ✅ Added 17 comprehensive integration tests for preprocessor (exceeds 15+ requirement)
+- ✅ Updated grammar to support numeric and symbolic range syntax
+- ✅ Implemented range expansion in parser for both range types
+- ✅ Added 18 comprehensive range syntax tests
+- ✅ All quality checks pass: typecheck, lint, format, 61/61 tests
+
+#### Preprocessor Integration
+
+**Updated `src/ir/preprocessor.py`:**
+- Modified `preprocess_gams_file()` to integrate full pipeline:
+  1. Expand `$include` directives recursively
+  2. Extract macro defaults from `$if not set` directives
+  3. Expand `%macro%` references
+  4. Strip `$if not set` directives (replace with comments)
+  5. Strip other unsupported directives (`$title`, `$ontext`, `$eolCom`, etc.)
+
+**Preprocessor Tests Added (17 tests in `tests/unit/ir/test_preprocessor.py`):**
+- `TestStripUnsupportedDirectives` (7 tests): `$title`, `$eolCom`, `$ontext/$offtext` handling
+- `TestPreprocessGamsFile` (10 tests): Full pipeline integration including real GAMSLib patterns
+
+#### Set Range Syntax
+
+**Grammar Updates (`src/gams/gams_grammar.lark`):**
+```lark
+set_members: set_member ("," set_member)*
+?set_member: range_expr    -> set_range
+           | ID            -> set_element
+           | STRING        -> set_element
+
+range_expr: range_bound TIMES range_bound
+range_bound: NUMBER | ID
+```
+
+**Parser Updates (`src/ir/parser.py`):**
+- Modified `_expand_set_members()` to handle new grammar structure with `range_expr` nodes
+- Enhanced `_expand_range()` to support both numeric and symbolic ranges:
+  - Numeric ranges: `1*10` → `['1', '2', '3', ..., '10']`
+  - Symbolic ranges: `i1*i100` → `['i1', 'i2', ..., 'i100']`
+  - Validation: direction check, base prefix matching for symbolic ranges
+
+**Range Syntax Tests Added (18 tests in `tests/unit/gams/test_parser.py`):**
+- Basic numeric ranges (`1*6`, `100*105`, `0*5`)
+- Symbolic ranges (`s1*s5`, `plant1*plant3`, `item_1*item_4`)
+- Mixed syntax (`1*3, extra, 7*9`)
+- Edge cases (single element, zero start, error conditions)
+- Real GAMSLib patterns (maxmin.gms pattern)
+
+#### Technical Details
+
+**Range Expansion Logic:**
+1. Try numeric range first (pure integers)
+2. Fall back to symbolic range (prefix + number pattern)
+3. Validate range direction (start ≤ end)
+4. Validate prefix matching for symbolic ranges
+
+**Error Handling:**
+- Invalid range direction: "start greater than end"
+- Mismatched prefixes: "base mismatch"
+- Invalid range format: Must be number or identifier+number
+
+#### Impact
+
+**GAMSLib Model Support:**
+- ✅ maxmin.gms: `Set k / 1*13 /` now parses
+- ✅ himmel16.gms: Range syntax support enabled
+- ✅ circle.gms: Full preprocessor integration working
+
+**Testing Coverage:**
+- 43 preprocessor tests (26 from Day 1 + 17 from Day 2)
+- 18 range syntax tests
+- All 61 tests passing
+
+**Quality Metrics:**
+- ✅ Type safety: mypy passes
+- ✅ Code quality: ruff passes
+- ✅ Formatting: black passes
+- ✅ Test coverage: 100% of new code tested
+
 ### Sprint 7 Day 1: Preprocessor Directives (Part 1) - 2025-11-15
 
 **Status:** ✅ COMPLETE
