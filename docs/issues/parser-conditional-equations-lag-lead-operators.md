@@ -3,10 +3,51 @@
 **GitHub Issue**: [#223](https://github.com/jeffreyhorn/nlp2mcp/issues/223)
 
 ## Status
-**Open** - Parser limitation  
+**Partially Resolved** - Conditional equations (✅ DONE), lag/lead operators (⏳ TODO)  
 **Priority**: Medium  
 **Component**: Parser (src/gams/gams_grammar.lark, src/ir/parser.py)  
-**Discovered**: 2025-11-15 during Sprint 7 Day 3 (himmel16.gms testing)
+**Discovered**: 2025-11-15 during Sprint 7 Day 3 (himmel16.gms testing)  
+**Partial Resolution**: 2025-11-15 during Sprint 7 Day 3 (conditional equations completed)
+
+## Resolution (Partial)
+
+### Feature 1: Conditional Equations (`$` operator) - ✅ RESOLVED
+
+Conditional equation syntax has been fully implemented in Sprint 7 Day 3:
+
+**Grammar Addition:**
+```lark
+equation_def: ID "(" id_list ")" condition? ".." expr REL_K expr SEMI
+            | ID condition? ".." expr REL_K expr SEMI
+
+condition: "$" "(" expr ")"
+```
+
+**Implementation Details:**
+- Grammar: Added optional `condition` clause to both scalar and domain equation definitions
+- Parser: Updated `_handle_eqn_def_scalar()` and `_handle_eqn_def_domain()` to skip condition node when extracting expressions
+- Tests: 7 unit tests + 3 integration tests covering all conditional patterns
+
+**Supported Syntax:**
+```gams
+balance(i)$(ord(i) > 2).. x(i) =e= 1;                    # Basic conditional
+maxdist(i,j)$(ord(i) < ord(j)).. x(i) + y(j) =l= 1;     # Multi-index
+supply(i)$(demand(i) > 0).. x(i) =e= demand(i);         # Parameter-based
+offdiag(i,j)$(i <> j).. x(i,j) =e= 0;                   # Set comparison
+```
+
+**Files Modified:**
+- `src/gams/gams_grammar.lark`: Added condition grammar rule
+- `src/ir/parser.py`: Updated equation handlers
+- `tests/unit/gams/test_parser.py`: Added 7 unit tests
+- `tests/e2e/test_integration.py`: Added 3 integration tests
+
+**Current Limitation:**
+Conditions are parsed but not yet evaluated. All equation instances are currently generated regardless of condition. Future work: condition evaluation during normalization or instance generation.
+
+### Feature 2: Lag/Lead Operators (`++`/`--`) - ⏳ TODO
+
+This feature remains unimplemented. See technical details below for implementation guidance.
 
 ## Description
 

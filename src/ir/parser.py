@@ -675,9 +675,14 @@ class _ModelBuilder:
         name = _token_text(node.children[0])
         if name not in self._declared_equations:
             raise self._error(f"Equation '{name}' defined without declaration", node)
-        lhs_node = node.children[1]
-        rel_token = node.children[2]
-        rhs_node = node.children[3]
+
+        # Find expr nodes, skipping optional condition
+        # Children: [ID, condition?, expr, REL_K, expr]
+        expr_nodes = [c for c in node.children[1:] if isinstance(c, Tree) and c.data != "condition"]
+        rel_token = next(c for c in node.children if isinstance(c, Token) and c.type == "REL_K")
+
+        lhs_node = expr_nodes[0]
+        rhs_node = expr_nodes[1]
         domain = self._equation_domains.get(name, ())
         relation = _REL_MAP[rel_token.value.lower()]
         lhs = self._expr_with_context(lhs_node, f"equation '{name}' LHS", domain)
@@ -696,9 +701,14 @@ class _ModelBuilder:
         if name not in self._declared_equations:
             raise self._error(f"Equation '{name}' defined without declaration", node)
         self._ensure_sets(domain, f"equation '{name}' domain", node)
-        lhs_node = node.children[2]
-        rel_token = node.children[3]
-        rhs_node = node.children[4]
+
+        # Find expr nodes, skipping optional condition
+        # Children: [ID, id_list, condition?, expr, REL_K, expr]
+        expr_nodes = [c for c in node.children[2:] if isinstance(c, Tree) and c.data != "condition"]
+        rel_token = next(c for c in node.children if isinstance(c, Token) and c.type == "REL_K")
+
+        lhs_node = expr_nodes[0]
+        rhs_node = expr_nodes[1]
         relation = _REL_MAP[rel_token.value.lower()]
         lhs = self._expr_with_context(lhs_node, f"equation '{name}' LHS", domain)
         rhs = self._expr_with_context(rhs_node, f"equation '{name}' RHS", domain)

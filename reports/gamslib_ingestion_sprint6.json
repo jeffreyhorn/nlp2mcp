@@ -6,14 +6,14 @@
       "model_name": "circle",
       "gms_file": "circle.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'i' in the current parser context, at line 18 col 5\n\nSet i 'points' / p1*p10 /;\n    ^\nExpected one of: \n\t* ASSIGN\n\t* DOT\n\t* __ANON_0\n\t* LPAR\n",
+      "parse_error": "No terminal matches '1' in the current parser context, at line 25 col 16\n\nx(i) = uniform(1,10);\n               ^\nExpected one of: \n\t* ID\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
       "model_name": "himmel16",
       "gms_file": "himmel16.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'i' in the current parser context, at line 28 col 5\n\nSet i 'indices for the 6 points' / 1*6 /;\n    ^\nExpected one of: \n\t* ASSIGN\n\t* DOT\n\t* __ANON_0\n\t* LPAR\n",
+      "parse_error": "No terminal matches '$' in the current parser context, at line 44 col 13\n\nmaxdist(i,j)$(ord(i) < ord(j)).. sqr(x(i) - x(j)) + \n            ^\nExpected one of: \n\t* ASSIGN\n\t* __ANON_0\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
@@ -34,7 +34,7 @@
       "model_name": "maxmin",
       "gms_file": "maxmin.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'd' in the current parser context, at line 31 col 4\n\n   d        'dimension of space' / x, y    \n   ^\nExpected one of: \n\t* ASSIGN\n\t* DOT\n\t* __ANON_0\n\t* LPAR\n",
+      "parse_error": "No terminal matches '(' in the current parser context, at line 51 col 12\n\ndefdist(low(n,nn))..   dist(low) =e= sqrt(sum(d, sq\n           ^\nExpected one of: \n\t* RPAR\n\t* COMMA\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {

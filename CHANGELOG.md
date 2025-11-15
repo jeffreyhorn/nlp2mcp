@@ -7,13 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Sprint 7 Day 3: Set Range Syntax Completion & Grammar Enhancements - 2025-11-15
+### Sprint 7 Day 3: Set Range Syntax Completion & Grammar Enhancements + Conditional Equations - 2025-11-15
 
 **Status:** ✅ COMPLETE
 
 #### Summary
 
-Completed set range syntax implementation with grammar enhancements to support real GAMSLib models. Added support for `Set` (singular) keyword, optional set descriptions, and `Alias (i,j)` parentheses syntax. All range types from Day 2 verified working with new grammar features.
+Completed set range syntax implementation with grammar enhancements to support real GAMSLib models. Added support for `Set` (singular) keyword, optional set descriptions, `Alias (i,j)` parentheses syntax, and conditional equations with `$` operator. All range types from Day 2 verified working with new grammar features.
 
 **Deliverables:**
 - ✅ Verified all 4 range types working (numeric, symbolic, prefix, macro)
@@ -23,8 +23,11 @@ Completed set range syntax implementation with grammar enhancements to support r
 - ✅ Added `Alias` (singular) keyword support
 - ✅ Added `Alias (i,j)` parentheses syntax support
 - ✅ Fixed parser alias handling (corrected argument order)
+- ✅ **Added conditional equation support (`$` operator)**
 - ✅ Added 9 integration tests for ranges and new grammar features
 - ✅ Added 10 unit tests for new grammar features
+- ✅ Added 7 unit tests for conditional equations
+- ✅ Added 3 integration tests for conditional equations
 - ✅ Updated documentation (issue #136 marked resolved)
 - ✅ All quality checks pass
 
@@ -47,6 +50,45 @@ alias_decl: "(" ID "," ID ")"  -> alias_parens
 **Parser Updates (`src/ir/parser.py`):**
 - Modified `_handle_sets_block()` to skip optional STRING description node
 - Fixed `_handle_aliases_block()` to use correct argument order: `(target, alias_name)` for `Alias (i,j)` syntax
+- Updated `_handle_eqn_def_scalar()` and `_handle_eqn_def_domain()` to skip optional condition node
+
+#### Conditional Equations (`$` Operator)
+
+**Grammar Addition (`src/gams/gams_grammar.lark`):**
+```lark
+equation_def: ID "(" id_list ")" condition? ".." expr REL_K expr SEMI
+            | ID condition? ".." expr REL_K expr SEMI
+
+condition: "$" "(" expr ")"
+```
+
+**Feature Description:**
+Conditional equations allow filtering which instances of an indexed equation are generated based on a condition.
+
+**Syntax Examples:**
+```gams
+* Basic conditional
+balance(i)$(ord(i) > 2).. x(i) =e= 1;
+
+* Multi-index conditional (himmel16.gms pattern)
+maxdist(i,j)$(ord(i) < ord(j)).. x(i) + y(j) =l= 1;
+
+* Parameter-based conditional
+supply(i)$(demand(i) > 0).. x(i) =e= demand(i);
+
+* Set comparison conditional
+offdiag(i,j)$(i <> j).. x(i,j) =e= 0;
+```
+
+**Parser Implementation:**
+- Condition is parsed but currently not evaluated (stored in parse tree)
+- Parser skips condition node when extracting LHS/RHS expressions
+- Future: Condition evaluation during normalization or instance generation
+
+**Testing:**
+- 7 unit tests covering scalar, indexed, multi-index, and complex conditionals
+- 3 integration tests verifying parsing and normalization
+- himmel16.gms pattern tested successfully
 
 #### Testing
 
@@ -96,12 +138,18 @@ Both features now parse correctly, enabling more GAMSLib models.
 - ✅ All 4 range types working: numeric, symbolic, prefix, macro
 - ✅ Flexible grammar: supports both singular/plural keywords
 - ✅ Real GAMS compatibility: descriptions and parentheses syntax
-- ✅ Comprehensive testing: 37 tests covering all features
+- ✅ **Conditional equations supported: `$` operator for equation filtering**
+- ✅ Comprehensive testing: 47 tests covering all features
 
 **Quality Metrics:**
-- Total range-related tests: 37 (18 Day 2 + 9 integration + 10 grammar)
+- Total tests: 47 (18 Day 2 range + 9 integration + 10 grammar + 7 conditional unit + 3 conditional integration)
 - Test pass rate: 100%
 - Code coverage: All new grammar paths tested
+
+**GAMSLib Impact:**
+- Partially addresses issue #223 (conditional equations now supported)
+- Lag/lead operators (`++`/`--`) remain for future implementation
+- Enables parsing of models using conditional constraints (e.g., himmel16.gms pattern)
 
 ### Sprint 7 Day 2: Preprocessor Integration & Set Range Syntax - 2025-11-15
 

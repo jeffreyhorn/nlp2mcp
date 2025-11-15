@@ -551,3 +551,69 @@ class TestSetRangeSyntax:
 
         # Verify normalization succeeded
         assert "balance" in model_ir.equalities
+
+
+@pytest.mark.e2e
+class TestConditionalEquations:
+    """Test conditional equation syntax ($ operator) through full pipeline (Sprint 7 Day 3)."""
+
+    def test_conditional_equation_basic(self):
+        """Test basic conditional equation parsing."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / 1*5 /;
+        Variable x(i);
+        Equation balance(i);
+
+        balance(i)$(ord(i) > 2).. x(i) =e= 1;
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify equation was created
+        assert "balance" in model_ir.equations
+        assert model_ir.equations["balance"].domain == ("i",)
+
+    def test_conditional_equation_himmel16_pattern(self):
+        """Test himmel16.gms conditional pattern."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / 1*6 /;
+        Alias (i,j);
+        Variable x(i);
+        Equation maxdist(i,j);
+
+        maxdist(i,j)$(ord(i) < ord(j)).. x(i) + x(j) =l= 1;
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify equation was created
+        assert "maxdist" in model_ir.equations
+        assert model_ir.equations["maxdist"].domain == ("i", "j")
+        assert model_ir.equations["maxdist"].relation.value == "=l="
+
+    def test_conditional_with_normalization(self):
+        """Test conditional equation through normalization."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / i1*i3 /;
+        Variable x(i);
+        Equation balance(i);
+
+        balance(i)$(ord(i) > 1).. x(i) =e= 1;
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Normalize model
+        normalize_model(model_ir)
+
+        # Verify normalization succeeded
+        assert "balance" in model_ir.equalities

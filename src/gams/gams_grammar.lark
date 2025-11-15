@@ -133,8 +133,10 @@ ref_indexed.2: ID "(" id_list ")"             -> symbol_indexed
 // Equations
 // ---------------------------
 
-equation_def: ID "(" id_list ")" ".." expr REL_K expr SEMI    -> eqn_def_domain
-            | ID ".." expr REL_K expr SEMI                     -> eqn_def_scalar
+equation_def: ID "(" id_list ")" condition? ".." expr REL_K expr SEMI    -> eqn_def_domain
+            | ID condition? ".." expr REL_K expr SEMI                     -> eqn_def_scalar
+
+condition: "$" "(" expr ")"
 
 REL_K: /=e=|=l=|=g=/i
 
