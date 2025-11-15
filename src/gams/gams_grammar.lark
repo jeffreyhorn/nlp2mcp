@@ -27,9 +27,9 @@ start: stmt*  -> program
 // Blocks
 // ---------------------------
 
-sets_block: "Sets"i set_decl+ SEMI
+sets_block: ("Sets"i | "Set"i) set_decl+ SEMI
 
-aliases_block: "Aliases"i alias_decl+ SEMI
+aliases_block: ("Aliases"i | "Alias"i) alias_decl+ SEMI
 
 params_block: ("Parameters"i | "Parameter"i) param_decl+ SEMI
 
@@ -45,12 +45,13 @@ equations_block: ("Equations"i | "Equation"i) eqn_head_decl+ SEMI
 // Declarations
 // ---------------------------
 
-set_decl: ID "/" set_members "/"                            -> set_simple
-        | ID alias_opt "/" set_members "/"                   -> set_aliased
+set_decl: ID STRING? "/" set_members "/"                     -> set_simple
+        | ID STRING? alias_opt "/" set_members "/"           -> set_aliased
         | ID "(" id_list ")"                                 -> set_domain
         | ID                                                 -> set_empty
 
 alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_universe
+          | "(" ID "," ID ")"                                -> alias_plain
           | ID "," ID                                        -> alias_plain
 
 param_decl: ID "(" id_list ")" "/" param_data_items "/" param_default? -> param_domain_data

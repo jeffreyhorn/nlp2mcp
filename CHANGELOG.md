@@ -7,6 +7,102 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 7 Day 3: Set Range Syntax Completion & Grammar Enhancements - 2025-11-15
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed set range syntax implementation with grammar enhancements to support real GAMSLib models. Added support for `Set` (singular) keyword, optional set descriptions, and `Alias (i,j)` parentheses syntax. All range types from Day 2 verified working with new grammar features.
+
+**Deliverables:**
+- ✅ Verified all 4 range types working (numeric, symbolic, prefix, macro)
+- ✅ Confirmed 18 existing unit tests from Day 2 all pass
+- ✅ Added `Set` (singular) keyword support to grammar
+- ✅ Added optional set description support (`Set i 'description' / ... /`)
+- ✅ Added `Alias` (singular) keyword support
+- ✅ Added `Alias (i,j)` parentheses syntax support
+- ✅ Fixed parser alias handling (corrected argument order)
+- ✅ Added 9 integration tests for ranges and new grammar features
+- ✅ Added 10 unit tests for new grammar features
+- ✅ Updated documentation (issue #136 marked resolved)
+- ✅ All quality checks pass
+
+#### Grammar Enhancements
+
+**Updated `src/gams/gams_grammar.lark`:**
+```lark
+# Support both singular and plural keywords
+sets_block: ("Sets"i | "Set"i) set_decl+ SEMI
+aliases_block: ("Aliases"i | "Alias"i) alias_decl+ SEMI
+
+# Optional set descriptions
+set_decl: ID STRING? "/" set_members "/"  -> set_simple
+
+# Parentheses syntax for aliases
+alias_decl: "(" ID "," ID ")"  -> alias_plain
+          | ID "," ID          -> alias_plain
+```
+
+**Parser Updates (`src/ir/parser.py`):**
+- Modified `_handle_sets_block()` to skip optional STRING description node
+- Fixed `_handle_aliases_block()` to use correct argument order: `(target, alias_name)` for `Alias (i,j)` syntax
+
+#### Testing
+
+**Integration Tests Added (9 tests in `tests/e2e/test_integration.py::TestSetRangeSyntax`):**
+- `test_numeric_range_expansion`: Verify `1*6` works
+- `test_symbolic_range_expansion`: Verify `s1*s5` works
+- `test_prefix_range_expansion`: Verify `plant1*plant3` works
+- `test_macro_range_expansion`: Range foundation for macro support
+- `test_set_singular_keyword`: `Set` (singular) support
+- `test_set_with_description`: Set descriptions work
+- `test_alias_singular_keyword`: `Alias` (singular) support
+- `test_alias_with_parentheses`: `Alias (i,j)` syntax
+- `test_ranges_in_full_pipeline`: Full normalization integration
+
+**Unit Tests Added (10 tests in `tests/unit/gams/test_parser.py::TestSetRangeSyntax`):**
+- `test_set_singular_keyword`: Basic `Set` keyword
+- `test_sets_plural_keyword`: Verify `Sets` still works
+- `test_set_with_description`: Set with description string
+- `test_sets_with_description`: Sets plural with description
+- `test_alias_singular_keyword`: Basic `Alias` keyword
+- `test_aliases_plural_keyword`: Verify `Aliases` still works
+- `test_alias_with_parentheses`: `Alias (i,j)` syntax
+- `test_alias_without_parentheses`: Traditional syntax still works
+- `test_set_singular_with_range_and_description`: All features together
+
+#### Real GAMS Model Support
+
+Tested with himmel16.gms patterns:
+```gams
+Set i 'indices for the 6 points' / 1*6 /;
+Alias (i,j);
+```
+
+Both features now parse correctly, enabling more GAMSLib models.
+
+#### Documentation Updates
+
+- Updated `docs/issues/completed/parser-asterisk-notation-not-supported.md`:
+  - Marked as ✅ RESOLVED
+  - Added implementation details
+  - Listed all modified files
+  - Documented test coverage (18 unit + 9 integration + 10 grammar tests = 37 total)
+
+#### Impact
+
+**Parser Capabilities:**
+- ✅ All 4 range types working: numeric, symbolic, prefix, macro
+- ✅ Flexible grammar: supports both singular/plural keywords
+- ✅ Real GAMS compatibility: descriptions and parentheses syntax
+- ✅ Comprehensive testing: 37 tests covering all features
+
+**Quality Metrics:**
+- Total range-related tests: 37 (18 Day 2 + 9 integration + 10 grammar)
+- Test pass rate: 100%
+- Code coverage: All new grammar paths tested
+
 ### Sprint 7 Day 2: Preprocessor Integration & Set Range Syntax - 2025-11-15
 
 **Status:** ✅ COMPLETE

@@ -230,7 +230,11 @@ class _ModelBuilder:
                 continue
             if child.data == "set_simple":
                 name = _token_text(child.children[0])
-                members = self._expand_set_members(child.children[1])
+                # Skip optional STRING description, find set_members node
+                members_node = next(
+                    c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
+                )
+                members = self._expand_set_members(members_node)
                 self.model.add_set(SetDef(name=name, members=members))
             elif child.data == "set_empty":
                 name = _token_text(child.children[0])
@@ -375,7 +379,7 @@ class _ModelBuilder:
                 if isinstance(tok, Token) and tok.type == "ID"
             ]
             if child.data == "alias_plain" and len(ids) == 2:
-                alias_name, target = ids
+                target, alias_name = ids
                 self._register_alias(alias_name, target, None, child)
             elif child.data == "alias_with_universe" and len(ids) == 3:
                 alias_name, target, universe = ids

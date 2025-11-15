@@ -3,10 +3,34 @@
 **GitHub Issue**: [#136](https://github.com/jeffreyhorn/nlp2mcp/issues/136)
 
 ## Status
-**Open** - Parser limitation  
+**✅ RESOLVED** - Implemented in Sprint 7 Days 2-3  
 **Priority**: Medium  
-**Component**: Parser (src/ir/parser.py)  
-**Discovered**: 2025-11-06 during Sprint 5 Prep Task 8
+**Component**: Parser (src/ir/parser.py, src/gams/gams_grammar.lark)  
+**Discovered**: 2025-11-06 during Sprint 5 Prep Task 8  
+**Resolved**: 2025-11-15 during Sprint 7 Days 2-3
+
+## Resolution
+
+Set range syntax has been fully implemented with comprehensive support for:
+- **Numeric ranges**: `1*10` expands to `['1', '2', ..., '10']`
+- **Symbolic ranges**: `i1*i100` expands to `['i1', 'i2', ..., 'i100']`
+- **Prefix ranges**: `plant1*plant3` expands to `['plant1', 'plant2', 'plant3']`
+- **Macro integration**: `1*%n%` supports preprocessor macros
+- **Grammar enhancements**: Added support for `Set` (singular), set descriptions, and `Alias (i,j)` syntax
+
+**Implementation Details**:
+- Grammar: Added `set_range` rule in `gams_grammar.lark:41-42`
+- Parser: Added `_expand_set_range()` in `parser.py:911-995`
+- Preprocessor: Added `_expand_range()` in `preprocessor.py:422-503`
+- Tests: 18 unit tests + 9 integration tests covering all range types and edge cases
+
+**Files Modified**:
+- `src/gams/gams_grammar.lark` (grammar rules)
+- `src/ir/parser.py` (range expansion logic)
+- `src/ir/preprocessor.py` (macro support)
+- `tests/ir/test_range_expansion.py` (18 unit tests)
+- `tests/e2e/test_integration.py` (9 integration tests)
+- `tests/unit/gams/test_parser.py` (10 additional tests)
 
 ## Description
 

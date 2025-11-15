@@ -1727,3 +1727,108 @@ class TestSetRangeSyntax:
         )
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["t0", "t1", "t2", "t3"]
+
+    def test_set_singular_keyword(self):
+        """Test that 'Set' (singular) keyword is supported (Sprint 7 Day 3)."""
+        text = dedent(
+            """
+            Set i / 1*3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3"]
+
+    def test_sets_plural_keyword(self):
+        """Test that 'Sets' (plural) keyword still works."""
+        text = dedent(
+            """
+            Sets i / 1*3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3"]
+
+    def test_set_with_description(self):
+        """Test set with optional description (Sprint 7 Day 3)."""
+        text = dedent(
+            """
+            Set i 'indices for points' / 1*6 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3", "4", "5", "6"]
+
+    def test_sets_with_description(self):
+        """Test sets (plural) with optional description."""
+        text = dedent(
+            """
+            Sets i 'my set' / a, b, c /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["a", "b", "c"]
+
+    def test_alias_singular_keyword(self):
+        """Test that 'Alias' (singular) keyword is supported (Sprint 7 Day 3)."""
+        text = dedent(
+            """
+            Set i / 1*3 /;
+            Alias (i,j);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3"]
+
+    def test_aliases_plural_keyword(self):
+        """Test that 'Aliases' (plural) keyword still works."""
+        text = dedent(
+            """
+            Set i / 1*3 /;
+            Aliases j, i;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert "j" in model.aliases
+        assert model.aliases["j"].target == "i"
+
+    def test_alias_with_parentheses(self):
+        """Test Alias (i,j) syntax with parentheses (Sprint 7 Day 3)."""
+        text = dedent(
+            """
+            Set i / 1*5 /;
+            Alias (i,j);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3", "4", "5"]
+
+    def test_alias_without_parentheses(self):
+        """Test traditional Alias j, i syntax still works."""
+        text = dedent(
+            """
+            Set i / 1*5 /;
+            Aliases j, i;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert "j" in model.aliases
+
+    def test_set_singular_with_range_and_description(self):
+        """Test all Day 3 features together: Set singular + description + range."""
+        text = dedent(
+            """
+            Set i 'indices for the 6 points' / 1*6 /;
+            Alias (i,j);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3", "4", "5", "6"]
