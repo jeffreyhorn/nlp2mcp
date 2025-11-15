@@ -32,9 +32,6 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 **Confidence:** HIGH ✅  
 **Recommended Approach:** Focus Week 1 on parser (critical path), Week 2 on tests (high ROI), Week 3 on polish
 
-> **Note on PREP_PLAN Acceptance Criteria:**  
-> The Task 10 acceptance checklist in `docs/planning/EPIC_2/SPRINT_7/PREP_PLAN.md` (lines 2095-2102) should be checked **only after** this final plan receives approval. The checkboxes must reflect the final state of the approved plan, not any intermediate versions.
-
 ---
 
 ## Table of Contents
@@ -208,33 +205,16 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
    - line_number_tracking.md
    - gamslib_regression_tracking.md
    - PARSER_FIXTURE_STRATEGY.md
-4. **Set up development environment** (2 hours)
-   - Verify Python dependencies up to date
-   - Configure pytest-xdist (install but don't enable yet)
-   - Set up development branch and verify CI access
-   - Validate GAMSLib data available in data/gamslib/
-5. **Create fixture directory structure** (2 hours)
-   - Create tests/fixtures/preprocessor/ directory
-   - Create tests/fixtures/sets/ directory
-   - Create tests/fixtures/multidim/ directory
-   - Create tests/fixtures/statements/ directory
-   - Create template expected_results.yaml files
-   - Create template README.md files
-6. **Sprint planning and kickoff** (2-3 hours)
-   - Sprint kickoff meeting
-   - Review daily goals and checkpoints
-   - Assign responsibilities (if team sprint)
-   - Set up daily standup schedule
-   - Review risk register and mitigation plans
+4. Set up development environment
+5. Create Sprint 7 working branch
+6. Sprint kickoff meeting (if applicable)
 
 **Deliverables:**
 - All prep tasks verified complete
 - Development environment ready
 - Sprint 7 branch created
-- All 4 fixture directories created with templates
-- Sprint kickoff complete
 
-**Effort:** 6-8 hours (verification + setup + templates + kickoff)
+**Effort:** 1-2 hours (verification + setup)
 
 **Checkpoint 0 Criteria:**
 - [x] All 9 prep tasks complete
@@ -254,38 +234,22 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
    - `expand_macros()` - Expand `%macro%` references (2h)
    - `strip_conditional_directives()` - Replace directives with comments (0.5h)
 
-2. **Write Unit Tests** (2-2.5 hours)
-   - Test `extract_conditional_sets()` with various patterns (5 tests)
-   - Test `expand_macros()` with user-defined and system macros (5 tests)
-   - Test `strip_conditional_directives()` edge cases (3 tests)
-   - Test error handling (missing macros, invalid syntax)
-
-3. **Test on GAMSLib Models** (0.5 hour)
+2. **Test on GAMSLib Models** (0.5 hour)
    - Test circle.gms (preprocessor blocking)
    - Test maxmin.gms (preprocessor blocking)
    - Document preprocessing flow
 
-4. **Code Review and Refactoring** (1-1.5 hours)
-   - Review code for edge cases
-   - Add error handling and validation
-   - Optimize performance
-   - Add docstrings and comments
-
 **Deliverables:**
 - `src/ir/preprocessor.py` updated with 3 new functions
-- 13+ unit tests for preprocessor functions
 - circle.gms and maxmin.gms preprocessing working
-- Code reviewed and documented
 
-**Effort:** 6-8 hours
+**Effort:** 3.5-4.5 hours
 
 **Success Criteria:**
 - ✅ `extract_conditional_sets()` extracts defaults correctly
 - ✅ `expand_macros()` expands user-defined and system macros
 - ✅ circle.gms preprocesses without errors
 - ✅ maxmin.gms preprocesses without errors
-- ✅ All 13+ unit tests pass
-- ✅ Code reviewed and documented
 
 ---
 
@@ -294,38 +258,27 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 **Objective:** Complete preprocessor implementation and start set range syntax
 
 **Tasks:**
-1. **Complete Preprocessor Integration** (3-4 hours)
+1. **Complete Preprocessor** (2.5-3.5 hours)
    - Integrate into `preprocess_gams_file()` pipeline (0.5h)
-   - Write comprehensive unit tests (15+ tests) (2h)
-   - Handle `$eolCom` directive (1h)
-   - Add integration tests with preprocessor pipeline (0.5h)
+   - Write unit tests (15+ tests) (2h)
+   - Handle `$eolCom` if needed (1h)
 
-2. **Start Set Range Syntax** (2-2.5 hours)
-   - Update grammar.lark with range syntax rules (1h)
-   - Implement range expansion logic (numeric ranges) (1h)
-   - Write initial unit tests for numeric ranges (0.5h)
-
-3. **Documentation and Error Handling** (1-1.5 hours)
-   - Document preprocessor functions with examples
-   - Add comprehensive error messages
-   - Update user documentation if needed
+2. **Start Set Range Syntax** (1-1.5 hours)
+   - Update grammar.lark with range syntax rules
+   - Implement range expansion logic (numeric ranges)
 
 **Deliverables:**
 - Preprocessor fully integrated and tested
 - Grammar updated with range syntax
 - Numeric range expansion working
-- 15+ preprocessor unit tests complete
-- Documentation updated
 
-**Effort:** 6-8 hours
+**Effort:** 3.5-5 hours
 
 **Success Criteria:**
 - ✅ All 15+ preprocessor unit tests pass
 - ✅ Preprocessor integrated into main pipeline
 - ✅ Grammar accepts `Set i / 1*6 /` syntax
 - ✅ Numeric range expansion generates correct elements
-- ✅ Error handling comprehensive
-- ✅ Documentation complete
 
 ---
 
@@ -334,46 +287,35 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 **Objective:** Complete set range syntax implementation
 
 **Tasks:**
-1. **Complete Range Expansion** (3-3.5 hours)
-   - Alpha ranges: `s1*s10` (1h)
-   - Prefix ranges: `p1*p100` (1h)
-   - With macros: `1*%n%` (0.5h)
-   - Integration with preprocessor (1h)
+1. **Complete Range Expansion** (2-3 hours)
+   - Alpha ranges: `s1*s10`
+   - Prefix ranges: `p1*p100`
+   - With macros: `1*%n%`
+   - Integration with preprocessor
 
-2. **Comprehensive Unit Tests** (2-2.5 hours)
-   - Test all 4 range types (8 tests)
-   - Test edge cases (single element, large ranges, empty ranges) (5 tests)
-   - Test macro integration (3 tests)
-   - Test error handling (invalid ranges) (2 tests)
-
-3. **Integration Tests and Documentation** (1.5-2 hours)
-   - Create integration test suite for set ranges
-   - Test himmel16.gms end-to-end
-   - Document range syntax with examples
-   - Add grammar documentation
+2. **Unit Tests** (1-1.5 hours)
+   - Test all 4 range types
+   - Test edge cases (single element, large ranges)
+   - Test macro integration
 
 **Deliverables:**
 - Set range syntax fully implemented
 - All range types working
-- 18+ unit tests passing
-- Integration tests complete
-- Documentation updated
+- Unit tests passing
 
-**Effort:** 6.5-8 hours
+**Effort:** 3-4.5 hours
 
 **Success Criteria:**
 - ✅ All 4 range types expand correctly
 - ✅ himmel16.gms parses successfully
 - ✅ Unit tests cover all range patterns
 - ✅ Integration with preprocessor working
-- ✅ All 18+ tests passing
-- ✅ Documentation complete
 
 ---
 
-### Day 4: Parser Integration & Testing + Quick Wins
+### Day 4: Parser Integration & Testing
 
-**Objective:** Integrate parser enhancements, test on GAMSLib, and implement quick wins for 40-50% parse rate
+**Objective:** Integrate parser enhancements and test on GAMSLib
 
 **Tasks:**
 1. **Integration Testing** (2-3 hours)
@@ -381,45 +323,25 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
    - Test maxmin.gms end-to-end
    - Test himmel16.gms end-to-end
    - Fix any integration issues
-   - Create integration test suite
 
-2. **Quick Win: Multiple Scalar Declarations** (2-3 hours) - REQUIRED
-   - Update grammar to support `Scalars a, b, c;` syntax
-   - Implement parser support for multiple scalars in one statement
-   - Write unit tests (5+ tests)
-   - Test on trig.gms
-   - **Unlocks trig.gms → +10% parse rate**
-
-3. **Quick Win: Models Keyword** (1-2 hours) - REQUIRED
-   - Add `Models` (plural) keyword support to grammar
-   - Implement parser handling for multiple model declarations
-   - Write unit tests (3+ tests)
-   - Test on mathopt1.gms
-   - **Unlocks mathopt1.gms → +10% parse rate**
-
-4. **Validation and Documentation** (1 hour)
-   - Run full parser test suite
-   - Document new features
-   - Update CHANGELOG
+2. **Quick Wins (Optional)** (2-3 hours)
+   - Multiple scalar declarations (2-3h) - Unlocks trig.gms
+   - Models keyword (1-2h) - Unlocks mathopt1.gms
+   - **If time permits, attempt 50% parse rate**
 
 **Deliverables:**
-- 3 models parsing (circle, maxmin, himmel16) - MINIMUM (30%)
-- 5 models parsing (+ trig, mathopt1) - TARGET (50%)
-- Integration test suite complete
-- Multiple scalar syntax supported
-- Models keyword supported
-- Documentation updated
+- 3 models parsing successfully (minimum)
+- 5 models parsing (stretch)
+- Integration test suite passing
 
-**Effort:** 6-8 hours (all tasks required)
+**Effort:** 2-5 hours (2-3h base, +2-3h if quick wins attempted)
 
 **Success Criteria:**
 - ✅ circle.gms parses (preprocessor working)
 - ✅ maxmin.gms parses (preprocessor working)
 - ✅ himmel16.gms parses (set range working)
-- ✅ trig.gms parses (multiple scalars - REQUIRED)
-- ✅ mathopt1.gms parses (models keyword - REQUIRED)
-- ✅ Parse rate = 50% (5/10 models)
-- ✅ All integration tests pass
+- 🎯 trig.gms parses (multiple scalars - stretch)
+- 🎯 mathopt1.gms parses (models keyword - stretch)
 
 ---
 
@@ -433,25 +355,23 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
    - Update dashboard with new parse rate
    - Verify ≥3 models parsing (30%)
 
-2. **Parser Fixture Creation** (4-5 hours)
+2. **Parser Fixture Creation** (3-4 hours)
    - Create 9 preprocessor fixtures
    - Create 8 set range fixtures
    - Create expected_results.yaml files
    - Create README.md files
-   - Document fixture patterns and edge cases
 
-3. **Checkpoint 1 Review** (1-2 hours)
+3. **Checkpoint 1 Review** (1 hour)
    - Review acceptance criteria
    - Document any issues or risks
    - Plan Week 2 work
-   - Update project documentation
 
 **Deliverables:**
 - GAMSLib parse rate ≥30% (Checkpoint 1)
 - 17 parser fixtures created
 - Dashboard updated
 
-**Effort:** 6-8 hours
+**Effort:** 5-6 hours
 
 **Checkpoint 1 Criteria:**
 - [ ] GAMSLib parse rate ≥30% (3/10 models minimum)
@@ -472,33 +392,33 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
    - Update pyproject.toml configuration
    - Document usage in README
 
-2. **Baseline Testing** (1.5-2 hours)
+2. **Baseline Testing** (1-2 hours)
    - Run `pytest -n 4` baseline test
    - Identify flaky tests (if any)
    - Fix test isolation issues
-   - Verify all 1,217 tests pass
 
-3. **Stress Testing** (3.5-5 hours)
+3. **Stress Testing** (1-2 hours)
    - Run 10 iterations: `for i in {1..10}; do pytest -n 4; done`
-   - Each iteration ~60-70s = 10-12 minutes minimum
    - Document any intermittent failures
-   - Fix race conditions and shared state issues
-   - Debug and resolve flaky tests
-   - Additional buffer for unexpected isolation issues
+   - Fix race conditions
+
+4. **Benchmark Worker Counts** (1-2 hours)
+   - Test 2, 4, 8, 16 workers
+   - Plot speedup curve
+   - Measure overhead (15-25% expected)
 
 **Deliverables:**
 - pytest-xdist enabled
-- All tests passing in parallel with no flakiness
-- Stability verified across 10 consecutive runs
-- All isolation issues resolved
+- All tests passing in parallel
+- Worker count benchmarks complete
 
-**Effort:** 6-8 hours
+**Effort:** 4-7 hours
 
 **Success Criteria:**
 - ✅ `pytest -n 4` runs successfully
 - ✅ All 1,217 tests pass in parallel
-- ✅ Zero flaky tests detected across 10 runs
-- ✅ All race conditions and shared state issues fixed
+- ✅ Zero flaky tests detected
+- ✅ Speedup ≥2.9x with 4 workers
 
 ---
 
@@ -507,45 +427,38 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 **Objective:** Achieve <60s test suite (Checkpoint 2)
 
 **Tasks:**
-1. **Benchmark Worker Counts** (1.5-2 hours)
-   - Test 2, 4, 8, 16 workers
-   - Plot speedup curve
-   - Measure overhead (15-25% expected)
-   - Document optimal worker count
-
-2. **Optimize Worker Count** (0.5-1 hour)
+1. **Optimize Worker Count** (1-2 hours)
    - Analyze benchmark results
    - Select optimal worker count (likely 4-8)
    - Configure as default
 
-3. **Mark Slow Tests** (1.5-2 hours)
-   - Add `@pytest.mark.slow` to 5-10 slowest tests
+2. **Mark Slow Tests (Optional)** (2-3 hours)
+   - Add `@pytest.mark.slow` to 10 slowest tests
    - Create fast test suite config
-   - Verify fast suite <60s and full suite <120s
+   - Verify fast suite <30s
 
-4. **CI Configuration** (2-3 hours)
+3. **CI Configuration** (2-3 hours)
    - Enable pip/pytest caching
    - Configure pytest-xdist in CI (`pytest -n auto`)
    - Set timeout to 15 minutes
    - Test CI workflow
 
-5. **Checkpoint 2 Review** (0.5-1 hour)
-   - Verify fast <60s, full <120s achieved
+4. **Checkpoint 2 Review** (1 hour)
+   - Verify <60s test suite achieved
    - Document speedup results
    - Plan Week 3 work
 
 **Deliverables:**
-- Worker count benchmarks complete (Checkpoint 2)
-- Fast test suite <60s, Full test suite <120s (Checkpoint 2)
+- Test suite <60s (Checkpoint 2)
 - CI optimized with parallelization
-- Slow tests marked for fast test suite
+- Fast test suite available (optional)
 
-**Effort:** 6-8 hours
+**Effort:** 6-9 hours
 
 **Checkpoint 2 Criteria:**
-- [ ] Fast test suite <60s (verified with `pytest -m "not slow" -n 4`)
-- [ ] Full test suite <120s (verified with `pytest -n 4`)
+- [ ] Full test suite <60s (or <72s conservative)
 - [ ] CI test time <5 minutes
+- [ ] Fast test suite <30s (optional)
 - [ ] All tests passing with parallelization
 - [ ] Zero regressions from Sprint 6
 
@@ -556,25 +469,23 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 **Objective:** Implement line number tracking and create multi-dim fixtures
 
 **Tasks:**
-1. **Line Number Tracking** (3.5-5 hours)
+1. **Line Number Tracking** (3-4 hours)
    - Phase 1: IR Structure (1h)
    - Phase 2: Parser Integration (1-1.5h)
-   - Phase 3: Normalization Preservation (0.5-1h)
-   - Phase 4: Convexity Integration (0.5-1h)
-   - Phase 5: Testing (0.5-1h)
-   - Phase 6: Documentation and edge cases (0.5h)
+   - Phase 3: Normalization Preservation (0.5h)
+   - Phase 4: Convexity Integration (0.5h)
+   - Phase 5: Testing (0.5h)
 
-2. **Multi-Dim Fixtures** (2.5-3 hours)
+2. **Multi-Dim Fixtures** (2-3 hours)
    - Create 8 multidim fixtures
    - Create expected_results.yaml
    - Create README.md
-   - Document multidimensional patterns
 
 **Deliverables:**
 - Line numbers in all convexity warnings
 - 8 multidim fixtures created
 
-**Effort:** 6-8 hours
+**Effort:** 5-7 hours
 
 **Success Criteria:**
 - ✅ 100% of convexity warnings show line numbers
@@ -589,18 +500,18 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 **Objective:** Complete CI automation and all fixtures (Checkpoint 3)
 
 **Tasks:**
-1. **GAMSLib Regression CI** (3.5-5 hours)
+1. **GAMSLib Regression CI** (4-5 hours)
    - Implement `scripts/check_parse_rate_regression.py` (2h)
-   - Create `.github/workflows/gamslib-regression.yml` (1.5-3h)
+   - Create `.github/workflows/gamslib-regression.yml` (2-3h)
    - Test workflow on PR
    - Verify regression detection
 
-2. **Statement Fixtures** (2-2.5 hours)
+2. **Statement Fixtures** (2-3 hours)
    - Create 9 statement fixtures
    - Create expected_results.yaml
    - Create README.md
 
-3. **Checkpoint 3 Review** (0.5-1 hour)
+3. **Checkpoint 3 Review** (1 hour)
    - Verify all features integrated
    - Verify CI working
    - Plan Day 10 release
@@ -610,7 +521,7 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 - 34 total fixtures created
 - All features integrated
 
-**Effort:** 6-8 hours
+**Effort:** 7-9 hours
 
 **Checkpoint 3 Criteria:**
 - [ ] GAMSLib regression CI workflow active
@@ -627,19 +538,19 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 **Objective:** Complete Sprint 7, release v0.7.0 (Checkpoint 4)
 
 **Tasks:**
-1. **Final QA** (2-2.5 hours)
+1. **Final QA** (2-3 hours)
    - Run full test suite: `pytest tests/`
    - Run quality checks: `make typecheck lint format`
    - Test GAMSLib ingestion
    - Verify all 4 sprint goals met
 
-2. **Documentation** (2-2.5 hours)
+2. **Documentation** (2-3 hours)
    - Update CHANGELOG.md
    - Update PROJECT_PLAN.md Sprint 7 status
    - Create Sprint 7 retrospective (RETROSPECTIVE.md)
    - Update version to 0.7.0
 
-3. **Release** (1-1.5 hours)
+3. **Release** (1-2 hours)
    - Tag v0.7.0 release
    - Create GitHub release notes
    - Update README if needed
@@ -655,7 +566,7 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 - Sprint retrospective complete
 - All documentation updated
 
-**Effort:** 6-8 hours
+**Effort:** 6-10 hours
 
 **Checkpoint 4 Criteria:**
 - [ ] All 4 sprint goals achieved
@@ -739,24 +650,23 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 
 ### Checkpoint 2: Test Performance Optimized (Day 7)
 
-**Objective:** Fast test suite <60s, Full test suite <120s
+**Objective:** Test suite execution time <60s (or <72s conservative)
 
 **Acceptance Criteria:**
-- [ ] pytest-xdist enabled and configured (Day 6)
+- [ ] pytest-xdist enabled and configured
   - [ ] `pytest -n 4` runs successfully
   - [ ] All 1,217 tests pass in parallel
-  - [ ] Zero flaky tests across 10 consecutive runs
-  - [ ] All isolation issues resolved
-- [ ] Worker count benchmarked and optimized (Day 7)
+  - [ ] Zero flaky tests detected
+  - [ ] Speedup ≥2.9x measured
+- [ ] Worker count optimized
   - [ ] Benchmarks run: 2, 4, 8, 16 workers
   - [ ] Speedup curve plotted
   - [ ] Optimal worker count selected
   - [ ] Overhead measured (15-25% expected)
-- [ ] **Test suite performance targets met** (REQUIRED)
-  - [ ] **Fast test suite <60s** (verified with `time pytest -m "not slow" -n 4 tests/`)
-  - [ ] **Full test suite <120s** (verified with `time pytest -n 4 tests/`)
-  - [ ] Slow tests marked with `@pytest.mark.slow` (5-10 tests)
-  - [ ] Fast suite excludes slow tests
+- [ ] Slow tests marked (OPTIONAL)
+  - [ ] 10 slowest tests marked `@pytest.mark.slow`
+  - [ ] Fast test suite <30s
+  - [ ] Full test suite <60s
 - [ ] CI optimized
   - [ ] pip/pytest caching enabled
   - [ ] pytest-xdist configured (`-n auto`)
@@ -767,14 +677,13 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
   - [ ] Code coverage ≥88%
 
 **Measurement:**
-- `time pytest -m "not slow" -n 4 tests/` → <60s (fast suite)
-- `time pytest -n 4 tests/` → <120s (full suite)
+- `time pytest tests/` → execution time
 - CI job duration → <5 minutes
 
 **Success Metrics:**
-- ✅ Minimum (REQUIRED): Fast <60s, Full <120s
-- 🎯 Target: Fast <45s, Full <90s (2x faster)
-- 🚀 Stretch: Fast <30s, Full <60s (3.5x faster)
+- ✅ Minimum: <72s with 4 workers (2.9x speedup)
+- 🎯 Target: <60s with 4-6 workers (3.5x speedup)
+- 🚀 Stretch: <45s with 8 workers (4.6x speedup)
 
 **Estimated Effort:** 11-16 hours (Days 6-7)
 
@@ -843,8 +752,7 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
   - [ ] Dashboard updated
   - [ ] Preprocessor + set range working
 - [ ] **Goal 2: Fast Test Suite** ✅
-  - [ ] Fast test suite <60s (verified with `pytest -m "not slow" -n 4`)
-  - [ ] Full test suite <120s (verified with `pytest -n 4`)
+  - [ ] Test suite <60s (or <72s conservative)
   - [ ] CI test time <5 minutes
   - [ ] pytest-xdist configured
 - [ ] **Goal 3: Convexity UX** ✅
@@ -896,40 +804,40 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 | **Parser Enhancements** | 9-12 hours | TBD | TBD |
 | - Preprocessor directives | 6-8 hours | TBD | TBD |
 | - Set range syntax | 3-4 hours | TBD | TBD |
-| **Test Performance** | 12-16 hours | TBD | TBD |
-| - Enable pytest-xdist | 6-8 hours | TBD | TBD |
-| - Optimize worker count | 1-2 hours | TBD | TBD |
-| - Mark slow tests (optional) | 1-2 hours | TBD | TBD |
-| - CI optimization | 2-3 hours | TBD | TBD |
+| **Test Performance** | 11-16 hours | TBD | TBD |
+| - Enable pytest-xdist | 4-6 hours | TBD | TBD |
+| - Optimize worker count | 2-3 hours | TBD | TBD |
+| - Mark slow tests (optional) | 2-3 hours | TBD | TBD |
+| - CI optimization | 3-4 hours | TBD | TBD |
 | **Convexity UX** | 3-4 hours | TBD | TBD |
 | - Line number tracking | 3-4 hours | TBD | TBD |
 | **CI Automation** | 4-5 hours | TBD | TBD |
 | - Regression detection | 4-5 hours | TBD | TBD |
 | **Test Fixtures** | 7-8 hours | TBD | TBD |
 | - 34 fixtures + YAML + READMEs | 7-8 hours | TBD | TBD |
-| **TOTAL** | **35-45 hours** | **TBD** | **TBD** |
+| **TOTAL** | **34-45 hours** | **TBD** | **TBD** |
 
 ### 4.2 Effort by Day
 
 | Day | Focus | Estimated Effort | Cumulative |
 |-----|-------|------------------|------------|
-| Day 0 | Pre-sprint setup | 6-8 hours | 6-8h |
-| Day 1 | Preprocessor (Part 1) | 6-8 hours | 12-16h |
-| Day 2 | Preprocessor (Part 2) + Set Range (Part 1) | 6-8 hours | 18-24h |
-| Day 3 | Set Range (Part 2) | 6.5-8 hours | 24.5-32h |
-| Day 4 | Parser integration + quick wins | 6-8 hours | 30.5-40h |
-| Day 5 | GAMSLib retest + fixtures | 6-8 hours | 36.5-48h |
-| Day 6 | pytest-xdist | 6-8 hours | 42.5-56h |
-| Day 7 | Test optimization | 6-8 hours | 48.5-64h |
-| Day 8 | Line numbers + multidim fixtures | 6-8 hours | 54.5-72h |
-| Day 9 | CI automation + statement fixtures | 6-8 hours | 60.5-80h |
-| Day 10 | Sprint review + release | 6-8 hours | 66.5-88h |
+| Day 0 | Pre-sprint setup | 1-2 hours | 1-2h |
+| Day 1 | Preprocessor (Part 1) | 3.5-4.5 hours | 4.5-6.5h |
+| Day 2 | Preprocessor (Part 2) + Set Range (Part 1) | 3.5-5 hours | 8-11.5h |
+| Day 3 | Set Range (Part 2) | 3-4.5 hours | 11-16h |
+| Day 4 | Parser integration + quick wins | 2-5 hours | 13-21h |
+| Day 5 | GAMSLib retest + fixtures | 5-6 hours | 18-27h |
+| Day 6 | pytest-xdist | 4-7 hours | 22-34h |
+| Day 7 | Test optimization | 6-9 hours | 28-43h |
+| Day 8 | Line numbers + multidim fixtures | 5-7 hours | 33-50h |
+| Day 9 | CI automation + statement fixtures | 7-9 hours | 40-59h |
+| Day 10 | Sprint review + release | 6-10 hours | 46-69h |
 
-**Target:** 60.5-80 hours (Days 0-9) + 6-8 hours (Day 10) = 66.5-88 hours total
+**Target:** 34-45 hours (Days 0-9) + 6-10 hours (Day 10) = 40-55 hours total
 
 **Budget:** 11 days × 6-8 hours/day = 66-88 hours available
 
-**Margin:** 0-21.5 hours buffer (0-24% contingency)
+**Margin:** 11-33 hours buffer (20-37% contingency)
 
 ### 4.3 Critical Path
 
@@ -963,9 +871,9 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 - 🚀 **EXCEED:** 50% parse rate (5/10 models)
 
 **Goal 2: Fast Test Suite**
-- ✅ **PASS:** Fast <60s, Full <120s (Checkpoint 2 requirement)
-- 🎯 **TARGET:** Fast <45s, Full <90s (2x faster)
-- 🚀 **EXCEED:** Fast <30s, Full <60s (3.5x faster)
+- ✅ **PASS:** <72s with 4 workers (2.9x speedup)
+- 🎯 **TARGET:** <60s with 4-6 workers (3.5x speedup)
+- 🚀 **EXCEED:** <45s with 8 workers (4.6x speedup)
 
 **Goal 3: Convexity UX**
 - ✅ **PASS:** 100% warnings show line numbers

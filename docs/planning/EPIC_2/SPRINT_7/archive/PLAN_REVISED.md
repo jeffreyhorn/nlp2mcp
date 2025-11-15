@@ -32,9 +32,6 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 **Confidence:** HIGH ✅  
 **Recommended Approach:** Focus Week 1 on parser (critical path), Week 2 on tests (high ROI), Week 3 on polish
 
-> **Note on PREP_PLAN Acceptance Criteria:**  
-> The Task 10 acceptance checklist in `docs/planning/EPIC_2/SPRINT_7/PREP_PLAN.md` (lines 2095-2102) should be checked **only after** this final plan receives approval. The checkboxes must reflect the final state of the approved plan, not any intermediate versions.
-
 ---
 
 ## Table of Contents
@@ -478,27 +475,32 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
    - Fix test isolation issues
    - Verify all 1,217 tests pass
 
-3. **Stress Testing** (3.5-5 hours)
+3. **Stress Testing** (2-3 hours)
    - Run 10 iterations: `for i in {1..10}; do pytest -n 4; done`
    - Each iteration ~60-70s = 10-12 minutes minimum
    - Document any intermittent failures
    - Fix race conditions and shared state issues
    - Debug and resolve flaky tests
-   - Additional buffer for unexpected isolation issues
+
+4. **Benchmark Worker Counts** (1.5-2 hours)
+   - Test 2, 4, 8, 16 workers
+   - Plot speedup curve
+   - Measure overhead (15-25% expected)
+   - Document optimal worker count
 
 **Deliverables:**
 - pytest-xdist enabled
-- All tests passing in parallel with no flakiness
-- Stability verified across 10 consecutive runs
-- All isolation issues resolved
+- All tests passing in parallel
+- Worker count benchmarks complete
+- Zero flaky tests
 
 **Effort:** 6-8 hours
 
 **Success Criteria:**
 - ✅ `pytest -n 4` runs successfully
 - ✅ All 1,217 tests pass in parallel
-- ✅ Zero flaky tests detected across 10 runs
-- ✅ All race conditions and shared state issues fixed
+- ✅ Zero flaky tests detected
+- ✅ Speedup ≥2.9x with 4 workers
 
 ---
 
@@ -507,38 +509,31 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 **Objective:** Achieve <60s test suite (Checkpoint 2)
 
 **Tasks:**
-1. **Benchmark Worker Counts** (1.5-2 hours)
-   - Test 2, 4, 8, 16 workers
-   - Plot speedup curve
-   - Measure overhead (15-25% expected)
-   - Document optimal worker count
-
-2. **Optimize Worker Count** (0.5-1 hour)
+1. **Optimize Worker Count** (1-2 hours)
    - Analyze benchmark results
    - Select optimal worker count (likely 4-8)
    - Configure as default
 
-3. **Mark Slow Tests** (1.5-2 hours)
+2. **Mark Slow Tests (Optional)** (1-2 hours)
    - Add `@pytest.mark.slow` to 5-10 slowest tests
    - Create fast test suite config
-   - Verify fast suite <60s and full suite <120s
+   - Verify fast suite <30s (if time permits)
 
-4. **CI Configuration** (2-3 hours)
+3. **CI Configuration** (2-3 hours)
    - Enable pip/pytest caching
    - Configure pytest-xdist in CI (`pytest -n auto`)
    - Set timeout to 15 minutes
    - Test CI workflow
 
-5. **Checkpoint 2 Review** (0.5-1 hour)
-   - Verify fast <60s, full <120s achieved
+4. **Checkpoint 2 Review** (1 hour)
+   - Verify <60s test suite achieved
    - Document speedup results
    - Plan Week 3 work
 
 **Deliverables:**
-- Worker count benchmarks complete (Checkpoint 2)
-- Fast test suite <60s, Full test suite <120s (Checkpoint 2)
+- Test suite <60s (Checkpoint 2)
 - CI optimized with parallelization
-- Slow tests marked for fast test suite
+- Fast test suite available (optional)
 
 **Effort:** 6-8 hours
 
@@ -742,12 +737,12 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 **Objective:** Fast test suite <60s, Full test suite <120s
 
 **Acceptance Criteria:**
-- [ ] pytest-xdist enabled and configured (Day 6)
+- [ ] pytest-xdist enabled and configured
   - [ ] `pytest -n 4` runs successfully
   - [ ] All 1,217 tests pass in parallel
-  - [ ] Zero flaky tests across 10 consecutive runs
-  - [ ] All isolation issues resolved
-- [ ] Worker count benchmarked and optimized (Day 7)
+  - [ ] Zero flaky tests detected
+  - [ ] Speedup ≥2.9x measured
+- [ ] Worker count optimized
   - [ ] Benchmarks run: 2, 4, 8, 16 workers
   - [ ] Speedup curve plotted
   - [ ] Optimal worker count selected
