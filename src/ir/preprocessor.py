@@ -252,7 +252,8 @@ def extract_conditional_sets(source: str) -> dict[str, str]:
         {'size': '10'}
 
     Notes:
-        - Case-insensitive matching for GAMS directives and variable names
+        - Case-insensitive matching for GAMS directives ($if, $set)
+        - Variable names preserve case from source
         - Backreference \\1 matches case-insensitively with re.IGNORECASE flag
         - Handles both quoted and unquoted default values
         - Unquoted values: [\\w.-]+ pattern captures identifiers, numbers with

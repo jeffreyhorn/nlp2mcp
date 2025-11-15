@@ -33,7 +33,7 @@ Implemented core preprocessor directive handling functions to support GAMS `$if 
 **Functions Added to `src/ir/preprocessor.py`:**
 
 1. **`extract_conditional_sets(source: str) -> dict[str, str]`**
-   - Regex pattern: `r'\$if\s+not\s+set\s+(\w+)\s+\$set\s+\1\s+(?:"([^"]*)"|(\S+))'`
+   - Regex pattern: `r'\$if\s+not\s+set\s+(\w+)\s+\$set\s+\1\s+(?:"([^"]*)"|([\w.-]+))'`
    - Extracts default values from `$if not set` directives
    - Case-insensitive directive matching, preserves variable name case
    - Handles both quoted and unquoted values
