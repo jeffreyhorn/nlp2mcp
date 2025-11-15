@@ -61,6 +61,26 @@ This file contains comprehensive prompts for each day of Sprint 7 (Days 0-10). E
 - [ ] Check off Day 0 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
 
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 0: Pre-Sprint Setup & Kickoff" \
+                --body "Completes Day 0 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
+
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 198-244)
 - `docs/planning/EPIC_2/SPRINT_7/PREP_PLAN.md`
@@ -137,6 +157,26 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] Check off Day 1 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
 
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 1: Preprocessor Directives (Part 1)" \
+                --body "Completes Day 1 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
+
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 247-290)
 - `docs/research/preprocessor_directives.md`
@@ -205,6 +245,26 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] Check off Day 2 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
 
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 2: Preprocessor (Part 2) + Set Range Syntax (Part 1)" \
+                --body "Completes Day 2 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
+
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 292-329)
 - `docs/research/preprocessor_directives.md`
@@ -271,6 +331,26 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] Mark Day 3 as complete in `docs/planning/EPIC_2/SPRINT_7/PLAN.md`
 - [ ] Check off Day 3 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
+
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 3: Set Range Syntax (Part 2)" \
+                --body "Completes Day 3 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
 
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 332-371)
@@ -348,6 +428,26 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] Check off Day 4 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
 
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 4: Parser Integration & Testing + Quick Wins" \
+                --body "Completes Day 4 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
+
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 374-423)
 - `docs/planning/EPIC_2/SPRINT_7/KNOWN_UNKNOWNS.md` (Unknowns 1.1-1.5)
@@ -414,6 +514,26 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] Check off Day 5 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
 
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 5: GAMSLib Retest & Checkpoint 1" \
+                --body "Completes Day 5 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
+
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 426-462)
 - `docs/testing/PARSER_FIXTURE_STRATEGY.md`
@@ -476,6 +596,26 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] Mark Day 6 as complete in `docs/planning/EPIC_2/SPRINT_7/PLAN.md`
 - [ ] Check off Day 6 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
+
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 6: Test Performance (Part 1) - pytest-xdist" \
+                --body "Completes Day 6 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
 
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 465-502)
@@ -551,6 +691,26 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] Check off Day 7 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
 
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 7: Test Performance (Part 2) & Checkpoint 2" \
+                --body "Completes Day 7 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
+
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 505-551)
 
@@ -616,6 +776,26 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] Mark Day 8 as complete in `docs/planning/EPIC_2/SPRINT_7/PLAN.md`
 - [ ] Check off Day 8 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
+
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 8: Convexity UX + Multi-Dim Fixtures" \
+                --body "Completes Day 8 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
 
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 554-584)
@@ -686,6 +866,26 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] Check off all Checkpoint 3 criteria in PLAN.md
 - [ ] Check off Day 9 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
+
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 9: CI Automation + Statement Fixtures & Checkpoint 3" \
+                --body "Completes Day 9 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
 
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 587-622)
@@ -768,6 +968,26 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] Check off all Checkpoint 4 criteria in PLAN.md
 - [ ] Check off Day 10 in `README.md`
 - [ ] Log final Sprint 7 summary to `CHANGELOG.md`
+
+**Pull Request & Review:**
+After committing and pushing all changes:
+1. Create a pull request using GitHub CLI:
+   ```bash
+   gh pr create --title "Sprint 7 Day 10: Sprint Review, Release & Checkpoint 4" \
+                --body "Completes Day 10 tasks from Sprint 7 PLAN.md" \
+                --base main
+   ```
+2. Request a review from Copilot:
+   ```bash
+   gh pr edit --add-reviewer copilot
+   ```
+3. Wait for Copilot's review to be completed
+4. Address all review comments:
+   - Read each comment carefully
+   - Make necessary fixes
+   - Commit and push fixes
+   - Reply to comments indicating fixes made
+5. Once approved, merge the PR
 
 **Reference Documents:**
 - `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (lines 625-663)
