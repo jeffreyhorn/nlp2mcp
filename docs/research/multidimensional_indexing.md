@@ -746,7 +746,7 @@ variable_spec: ID ("(" index_list ")")?
    ```gams
    maxdist(i,j)$(ord(i) < ord(j))..  # Not supported
    ```
-   **Fix:** Add grammar rule for `$(...) condition syntax
+   **Fix:** Add grammar rule for `$(...)` condition syntax
 
 4. **Subset domains** (maxmin.gms):
    ```gams
