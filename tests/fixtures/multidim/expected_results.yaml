@@ -1,0 +1,17 @@
+# Template for multi-dimensional indexing fixture expected results
+#
+# Each fixture should have an entry with:
+# - input: Path to .gms file
+# - expected: Expected parsing behavior
+#
+# Example:
+# - fixture_name: 2d_indexing
+#   input: 2d_indexing.gms
+#   expected:
+#     parse_success: true
+#     variable_name: x
+#     dimensions: 2
+#     index_sets: ["i", "j"]
+#     indexing_pattern: "x(i,j)"
+#
+# Fixtures to be added in Day 8
