@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-15 14:40:02
+**Generated:** 2025-11-15 15:23:46
 **Sprint:** Sprint 6
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint6.json`](../../reports/gamslib_ingestion_sprint6.json)
@@ -61,15 +61,12 @@
 **Error Type:** `UnexpectedCharacters`
 **Error Message:**
 ```
-No terminal matches 'i' in the current parser context, at line 18 col 5
+No terminal matches '1' in the current parser context, at line 25 col 16
 
-Set i 'points' / p1*p10 /;
-    ^
+x(i) = uniform(1,10);
+               ^
 Expected one of: 
-	* ASSIGN
-	* DOT
-	* __ANON_0
-	* LPAR
+	* ID
 
 ```
 
@@ -79,15 +76,13 @@ Expected one of:
 **Error Type:** `UnexpectedCharacters`
 **Error Message:**
 ```
-No terminal matches 'i' in the current parser context, at line 28 col 5
+No terminal matches '$' in the current parser context, at line 44 col 13
 
-Set i 'indices for the 6 points' / 1*6 /;
-    ^
+maxdist(i,j)$(ord(i) < ord(j)).. sqr(x(i) - x(j)) + 
+            ^
 Expected one of: 
 	* ASSIGN
-	* DOT
 	* __ANON_0
-	* LPAR
 
 ```
 
@@ -132,15 +127,13 @@ Expected one of:
 **Error Type:** `UnexpectedCharacters`
 **Error Message:**
 ```
-No terminal matches 'd' in the current parser context, at line 31 col 4
+No terminal matches '(' in the current parser context, at line 51 col 12
 
-   d        'dimension of space' / x, y    
-   ^
+defdist(low(n,nn))..   dist(low) =e= sqrt(sum(d, sq
+           ^
 Expected one of: 
-	* ASSIGN
-	* DOT
-	* __ANON_0
-	* LPAR
+	* RPAR
+	* COMMA
 
 ```
 
