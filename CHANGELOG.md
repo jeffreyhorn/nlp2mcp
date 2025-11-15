@@ -7,6 +7,165 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 7 Prep: Task 10 - Detailed Sprint Plan - 2025-11-15
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed Sprint 7 Prep Task 10: Created comprehensive 11-day Sprint 7 detailed plan integrating all prep task findings (Tasks 1-9). Defined 4 sprint goals with success metrics, 5 checkpoints with acceptance criteria, risk register with 7 identified risks, and complete day-by-day breakdown. Sprint 7 is ready to execute with low risk and high confidence.
+
+**Deliverables Created:**
+- ✅ `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (comprehensive 2,300+ line sprint plan)
+- ✅ 11-day breakdown (Days 0-10) with detailed tasks and effort estimates
+- ✅ 5 checkpoints with acceptance criteria (Days 0, 5, 7, 9, 10)
+- ✅ 4 sprint goals with measurable success metrics
+- ✅ Risk register with 7 risks and mitigation strategies
+- ✅ Effort estimates: 34-45 hours core, 46-69 hours total
+- ✅ Complete deliverables list (code, documentation, release)
+- ✅ Cross-references to all 9 prep task outputs
+- ✅ Daily checklists and command reference
+
+#### Sprint 7 Goals
+
+| Goal | Baseline | Target | Measurement |
+|------|----------|--------|-------------|
+| 1. GAMSLib Parse Rate | 10% (1/10) | 30% (3/10) min, 40% (4/10) target | `make ingest-gamslib` |
+| 2. Fast Test Suite | 208s | <60s target, <72s conservative | `time pytest tests/` |
+| 3. Convexity UX | No line numbers | 100% warnings show source location | Manual inspection |
+| 4. CI Automation | Manual dashboard | Automated regression detection | CI workflow active |
+
+#### Sprint Structure (11 Days)
+
+**Week 1: Parser Enhancements (Days 1-5)**
+- Days 1-2: Preprocessor directives (6-8h)
+- Days 2-3: Set range syntax (3-4h)
+- Day 4: Integration testing + quick wins (2-5h)
+- Day 5: GAMSLib retest + fixtures (Checkpoint 1, 5-6h)
+
+**Week 2: Test Performance (Days 6-7)**
+- Day 6: pytest-xdist parallelization (4-7h)
+- Day 7: Optimization + CI config (Checkpoint 2, 6-9h)
+
+**Week 3: Polish & Release (Days 8-10)**
+- Day 8: Line number tracking + fixtures (5-7h)
+- Day 9: CI automation + fixtures (Checkpoint 3, 7-9h)
+- Day 10: Sprint review + release (Checkpoint 4, 6-10h)
+
+#### 5 Checkpoints
+
+**Checkpoint 0 (Day 0): Prep Complete**
+- All 9 prep tasks complete
+- All 25 Known Unknowns verified
+- Development environment ready
+
+**Checkpoint 1 (Day 5): Parser Enhancements Complete**
+- Parse rate ≥30% (3/10 models)
+- Preprocessor + set range syntax implemented
+- 17+ parser fixtures created
+
+**Checkpoint 2 (Day 7): Test Performance Optimized**
+- Test suite <60s (or <72s conservative)
+- pytest-xdist configured
+- CI test time <5 minutes
+
+**Checkpoint 3 (Day 9): All Features Integrated**
+- Line number tracking working
+- CI automation active
+- 34 total fixtures created
+
+**Checkpoint 4 (Day 10): Sprint Complete & Released**
+- All 4 goals achieved
+- v0.7.0 released
+- Retrospective complete
+
+#### Effort Estimates
+
+| Feature Area | Estimated Effort |
+|--------------|------------------|
+| Parser Enhancements | 9-12 hours |
+| - Preprocessor directives | 6-8 hours |
+| - Set range syntax | 3-4 hours |
+| Test Performance | 11-16 hours |
+| - Enable pytest-xdist | 4-6 hours |
+| - Optimize worker count | 2-3 hours |
+| - Mark slow tests (optional) | 2-3 hours |
+| - CI optimization | 3-4 hours |
+| Convexity UX | 3-4 hours |
+| CI Automation | 4-5 hours |
+| Test Fixtures | 7-8 hours |
+| **TOTAL CORE** | **34-45 hours** |
+| Sprint Review + Release | 6-10 hours |
+| **TOTAL** | **40-55 hours** |
+
+**Budget:** 66-88 hours available (11 days × 6-8h/day)  
+**Margin:** 11-33 hours buffer (20-37% contingency)
+
+#### Risk Register
+
+| Risk | Probability | Impact | Score | Mitigation |
+|------|-------------|--------|-------|------------|
+| 1. Preprocessor complexity | Low (20%) | Medium | LOW | Mock/skip well-researched, fallback to Sprint 8 |
+| 2. pytest-xdist flaky tests | Medium (40%) | High | MEDIUM | 95%+ parallelizable, stress test early |
+| 3. Parse rate goal unmet | Very Low (5%) | High | LOW | Conservative estimates, quick wins available |
+| 4. Test performance goal unmet | Very Low (10%) | Medium | LOW | 72s conservative vs 60s target |
+| 5. Scope creep | Medium (30%) | Medium | MEDIUM | Strict prioritization, 20-37% buffer |
+| 6. CI workflow issues | Low (20%) | Low | LOW | Complete design, manual fallback |
+| 7. Line number edge cases | Low (15%) | Low | LOW | Graceful degradation, simplify if needed |
+
+**Overall Risk Level:** LOW-MEDIUM ✅  
+**Confidence Level:** HIGH ✅
+
+#### Integration of All Prep Tasks
+
+- **Task 1:** 25 Known Unknowns → Integrated into risk register
+- **Task 2:** Feature priorities → Days 1-3 (preprocessor 2.9%/h, set range 2.5%/h)
+- **Task 3:** Preprocessor design → Days 1-2 (6-8h, mock/skip approach)
+- **Task 4:** Multi-dim research → No IR changes needed (0h)
+- **Task 5:** Test baseline → Days 6-7 (4-phase plan, 11-16h)
+- **Task 6:** Parser roadmap → Sprint 8-10 planning
+- **Task 7:** Line tracking design → Day 8 (3-4h, 5-phase plan)
+- **Task 8:** CI regression design → Day 9 (4-5h, complete implementation)
+- **Task 9:** Fixture strategy → Days 5, 8, 9 (34 fixtures)
+
+#### Key Planning Decisions
+
+1. **Critical Path:** Preprocessor (6-8h) + Set range (3-4h) + pytest-xdist (4-6h) = 14-19h
+2. **Week 1 Focus:** Parser (critical path, unlocks 30% parse rate)
+3. **Week 2 Focus:** Test performance (high ROI, 65% reduction)
+4. **Week 3 Focus:** Polish and release (quality improvements)
+5. **Contingency:** 20-37% buffer for scope creep and unexpected issues
+
+#### Cross-References
+
+**Sprint 7 Prep Tasks:**
+- `docs/planning/EPIC_2/SPRINT_7/KNOWN_UNKNOWNS.md` (Task 1)
+- `docs/planning/EPIC_2/SPRINT_7/GAMSLIB_FAILURE_ANALYSIS.md` (Task 2)
+- `docs/research/preprocessor_directives.md` (Task 3)
+- `docs/research/multidimensional_indexing.md` (Task 4)
+- `docs/planning/EPIC_2/SPRINT_7/TEST_PERFORMANCE_BASELINE.md` (Task 5)
+- `docs/planning/EPIC_2/PARSER_ROADMAP.md` (Task 6)
+- `docs/design/line_number_tracking.md` (Task 7)
+- `docs/ci/gamslib_regression_tracking.md` (Task 8)
+- `docs/testing/PARSER_FIXTURE_STRATEGY.md` (Task 9)
+
+**Project Planning:**
+- `PROJECT_PLAN.md` Sprint 7 (lines 1145-1192)
+- `PRELIMINARY_PLAN.md` Sprint 7 task breakdown
+- Sprint 6 retrospective lessons learned
+
+#### Conclusion
+
+Sprint 7 is **ready to execute** with:
+- ✅ **Low risk:** All unknowns verified, clear mitigation strategies
+- ✅ **High confidence:** Conservative estimates, proven approaches
+- ✅ **Well-planned:** 11-day breakdown, 5 checkpoints, detailed tasks
+- ✅ **Achievable goals:** 30% parse rate, <60s tests highly likely
+
+All 10 prep tasks complete. Ready to begin Sprint 7 Day 1.
+
+---
+
 ### Sprint 7 Prep: Task 9 - Parser Test Fixture Strategy - 2025-11-15
 
 **Status:** ✅ COMPLETE
