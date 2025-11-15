@@ -1727,3 +1727,235 @@ class TestSetRangeSyntax:
         )
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["t0", "t1", "t2", "t3"]
+
+    def test_set_singular_keyword(self):
+        """Test that 'Set' (singular) keyword is supported (Sprint 7 Day 3)."""
+        text = dedent(
+            """
+            Set i / 1*3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3"]
+
+    def test_sets_plural_keyword(self):
+        """Test that 'Sets' (plural) keyword still works."""
+        text = dedent(
+            """
+            Sets i / 1*3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3"]
+
+    def test_set_with_description(self):
+        """Test set with optional description (Sprint 7 Day 3)."""
+        text = dedent(
+            """
+            Set i 'indices for points' / 1*6 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3", "4", "5", "6"]
+
+    def test_sets_with_description(self):
+        """Test sets (plural) with optional description."""
+        text = dedent(
+            """
+            Sets i 'my set' / a, b, c /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["a", "b", "c"]
+
+    def test_alias_singular_keyword(self):
+        """Test that 'Alias' (singular) keyword is supported (Sprint 7 Day 3)."""
+        text = dedent(
+            """
+            Set i / 1*3 /;
+            Alias (i,j);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3"]
+
+    def test_aliases_plural_keyword(self):
+        """Test that 'Aliases' (plural) keyword still works."""
+        text = dedent(
+            """
+            Set i / 1*3 /;
+            Aliases j, i;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert "j" in model.aliases
+        assert model.aliases["j"].target == "i"
+
+    def test_alias_with_parentheses(self):
+        """Test Alias (i,j) syntax with parentheses (Sprint 7 Day 3)."""
+        text = dedent(
+            """
+            Set i / 1*5 /;
+            Alias (i,j);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3", "4", "5"]
+
+    def test_alias_without_parentheses(self):
+        """Test traditional Alias j, i syntax still works."""
+        text = dedent(
+            """
+            Set i / 1*5 /;
+            Aliases j, i;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert "j" in model.aliases
+
+    def test_set_singular_with_range_and_description(self):
+        """Test all Day 3 features together: Set singular + description + range."""
+        text = dedent(
+            """
+            Set i 'indices for the 6 points' / 1*6 /;
+            Alias (i,j);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["1", "2", "3", "4", "5", "6"]
+
+
+class TestConditionalEquations:
+    """Test conditional equation syntax with $ operator (Sprint 7 Day 3)."""
+
+    def test_scalar_equation_with_condition(self):
+        """Test scalar equation with conditional."""
+        text = dedent(
+            """
+            Variable x;
+            Equation balance;
+
+            balance$(1 > 0).. x =e= 1;
+
+            Model test / all /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "balance" in model.equations
+        assert model.equations["balance"].domain == ()
+
+    def test_indexed_equation_with_condition(self):
+        """Test indexed equation with conditional (basic)."""
+        text = dedent(
+            """
+            Set i / 1*5 /;
+            Variable x(i);
+            Equation balance(i);
+
+            balance(i)$(ord(i) > 2).. x(i) =e= 1;
+
+            Model test / all /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "balance" in model.equations
+        assert model.equations["balance"].domain == ("i",)
+
+    def test_multi_index_equation_with_condition(self):
+        """Test multi-index equation with conditional (himmel16.gms pattern)."""
+        text = dedent(
+            """
+            Set i / 1*6 /;
+            Alias (i,j);
+            Variable x(i);
+            Variable y(i);
+            Equation maxdist(i,j);
+
+            maxdist(i,j)$(ord(i) < ord(j)).. x(i) + y(j) =l= 1;
+
+            Model test / all /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "maxdist" in model.equations
+        assert model.equations["maxdist"].domain == ("i", "j")
+        assert model.equations["maxdist"].relation.value == "=l="
+
+    def test_equation_without_condition_still_works(self):
+        """Test that equations without conditions still work."""
+        text = dedent(
+            """
+            Set i / 1*3 /;
+            Variable x(i);
+            Equation balance(i);
+
+            balance(i).. x(i) =e= 1;
+
+            Model test / all /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "balance" in model.equations
+        assert model.equations["balance"].domain == ("i",)
+
+    def test_condition_with_parameter_comparison(self):
+        """Test conditional with parameter comparison."""
+        text = dedent(
+            """
+            Set i / i1*i5 /;
+            Parameter demand(i) / i1 10, i2 0, i3 5, i4 0, i5 8 /;
+            Variable x(i);
+            Equation supply(i);
+
+            supply(i)$(demand(i) > 0).. x(i) =e= demand(i);
+
+            Model test / all /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "supply" in model.equations
+        assert model.equations["supply"].domain == ("i",)
+
+    def test_condition_with_set_comparison(self):
+        """Test conditional with set element comparison."""
+        text = dedent(
+            """
+            Set i / 1*5 /;
+            Alias (i,j);
+            Variable x(i,j);
+            Equation offdiag(i,j);
+
+            offdiag(i,j)$(i <> j).. x(i,j) =e= 0;
+
+            Model test / all /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "offdiag" in model.equations
+        assert model.equations["offdiag"].domain == ("i", "j")
+
+    def test_condition_with_complex_expression(self):
+        """Test conditional with complex expression."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Variable x(i);
+            Equation firsthalf(i);
+
+            firsthalf(i)$(ord(i) <= 5 and ord(i) > 0).. x(i) =e= 1;
+
+            Model test / all /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "firsthalf" in model.equations
+        assert model.equations["firsthalf"].domain == ("i",)

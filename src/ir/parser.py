@@ -12,7 +12,7 @@ from pathlib import Path
 
 from lark import Lark, Token, Tree
 
-from .ast import Binary, Call, Const, Expr, ParamRef, Sum, Unary, VarRef
+from .ast import Binary, Call, Const, Expr, ParamRef, Sum, SymbolRef, Unary, VarRef
 from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import preprocess_gams_file
 from .symbols import (
@@ -230,7 +230,11 @@ class _ModelBuilder:
                 continue
             if child.data == "set_simple":
                 name = _token_text(child.children[0])
-                members = self._expand_set_members(child.children[1])
+                # Skip optional STRING description, find set_members node
+                members_node = next(
+                    c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
+                )
+                members = self._expand_set_members(members_node)
                 self.model.add_set(SetDef(name=name, members=members))
             elif child.data == "set_empty":
                 name = _token_text(child.children[0])
@@ -375,7 +379,12 @@ class _ModelBuilder:
                 if isinstance(tok, Token) and tok.type == "ID"
             ]
             if child.data == "alias_plain" and len(ids) == 2:
+                # Traditional syntax: Aliases j, i (alias_name, target)
                 alias_name, target = ids
+                self._register_alias(alias_name, target, None, child)
+            elif child.data == "alias_parens" and len(ids) == 2:
+                # Parentheses syntax: Alias (i,j) (target, alias_name)
+                target, alias_name = ids
                 self._register_alias(alias_name, target, None, child)
             elif child.data == "alias_with_universe" and len(ids) == 3:
                 alias_name, target, universe = ids
@@ -666,9 +675,26 @@ class _ModelBuilder:
         name = _token_text(node.children[0])
         if name not in self._declared_equations:
             raise self._error(f"Equation '{name}' defined without declaration", node)
-        lhs_node = node.children[1]
-        rel_token = node.children[2]
-        rhs_node = node.children[3]
+
+        # Extract condition if present
+        # Children: [ID, condition?, expr, REL_K, expr]
+        condition_node = next(
+            (c for c in node.children[1:] if isinstance(c, Tree) and c.data == "condition"), None
+        )
+        condition_expr = None
+        if condition_node:
+            # condition node has one child: the expr
+            domain = self._equation_domains.get(name, ())
+            condition_expr = self._expr_with_context(
+                condition_node.children[0], f"equation '{name}' condition", domain
+            )
+
+        # Find expr nodes, skipping optional condition
+        expr_nodes = [c for c in node.children[1:] if isinstance(c, Tree) and c.data != "condition"]
+        rel_token = next(c for c in node.children if isinstance(c, Token) and c.type == "REL_K")
+
+        lhs_node = expr_nodes[0]
+        rhs_node = expr_nodes[1]
         domain = self._equation_domains.get(name, ())
         relation = _REL_MAP[rel_token.value.lower()]
         lhs = self._expr_with_context(lhs_node, f"equation '{name}' LHS", domain)
@@ -678,6 +704,7 @@ class _ModelBuilder:
             domain=domain,
             relation=relation,
             lhs_rhs=(lhs, rhs),
+            condition=condition_expr,
         )
         self.model.add_equation(equation)
 
@@ -687,9 +714,25 @@ class _ModelBuilder:
         if name not in self._declared_equations:
             raise self._error(f"Equation '{name}' defined without declaration", node)
         self._ensure_sets(domain, f"equation '{name}' domain", node)
-        lhs_node = node.children[2]
-        rel_token = node.children[3]
-        rhs_node = node.children[4]
+
+        # Extract condition if present
+        # Children: [ID, id_list, condition?, expr, REL_K, expr]
+        condition_node = next(
+            (c for c in node.children[2:] if isinstance(c, Tree) and c.data == "condition"), None
+        )
+        condition_expr = None
+        if condition_node:
+            # condition node has one child: the expr
+            condition_expr = self._expr_with_context(
+                condition_node.children[0], f"equation '{name}' condition", domain
+            )
+
+        # Find expr nodes, skipping optional condition
+        expr_nodes = [c for c in node.children[2:] if isinstance(c, Tree) and c.data != "condition"]
+        rel_token = next(c for c in node.children if isinstance(c, Token) and c.type == "REL_K")
+
+        lhs_node = expr_nodes[0]
+        rhs_node = expr_nodes[1]
         relation = _REL_MAP[rel_token.value.lower()]
         lhs = self._expr_with_context(lhs_node, f"equation '{name}' LHS", domain)
         rhs = self._expr_with_context(rhs_node, f"equation '{name}' RHS", domain)
@@ -698,6 +741,7 @@ class _ModelBuilder:
             domain=domain,
             relation=relation,
             lhs_rhs=(lhs, rhs),
+            condition=condition_expr,
         )
         self.model.add_equation(equation)
 
@@ -985,6 +1029,10 @@ class _ModelBuilder:
             object.__setattr__(expr, "symbol_domain", expected)
             object.__setattr__(expr, "index_values", idx_tuple)
             return self._attach_domain(expr, free_domain)
+        # Check if it's a domain index (e.g., 'i' in a condition like ord(i))
+        if not idx_tuple and name in free_domain:
+            # It's a reference to a domain index variable
+            return self._attach_domain(SymbolRef(name), free_domain)
         if idx_tuple:
             raise self._error(
                 f"Undefined symbol '{name}' with indices {idx_tuple} referenced",

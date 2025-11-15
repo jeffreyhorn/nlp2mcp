@@ -27,9 +27,9 @@ start: stmt*  -> program
 // Blocks
 // ---------------------------
 
-sets_block: "Sets"i set_decl+ SEMI
+sets_block: ("Sets"i | "Set"i) set_decl+ SEMI
 
-aliases_block: "Aliases"i alias_decl+ SEMI
+aliases_block: ("Aliases"i | "Alias"i) alias_decl+ SEMI
 
 params_block: ("Parameters"i | "Parameter"i) param_decl+ SEMI
 
@@ -45,12 +45,13 @@ equations_block: ("Equations"i | "Equation"i) eqn_head_decl+ SEMI
 // Declarations
 // ---------------------------
 
-set_decl: ID "/" set_members "/"                            -> set_simple
-        | ID alias_opt "/" set_members "/"                   -> set_aliased
+set_decl: ID STRING? "/" set_members "/"                     -> set_simple
+        | ID STRING? alias_opt "/" set_members "/"           -> set_aliased
         | ID "(" id_list ")"                                 -> set_domain
         | ID                                                 -> set_empty
 
 alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_universe
+          | "(" ID "," ID ")"                                -> alias_parens
           | ID "," ID                                        -> alias_plain
 
 param_decl: ID "(" id_list ")" "/" param_data_items "/" param_default? -> param_domain_data
@@ -132,8 +133,10 @@ ref_indexed.2: ID "(" id_list ")"             -> symbol_indexed
 // Equations
 // ---------------------------
 
-equation_def: ID "(" id_list ")" ".." expr REL_K expr SEMI    -> eqn_def_domain
-            | ID ".." expr REL_K expr SEMI                     -> eqn_def_scalar
+equation_def: ID "(" id_list ")" condition? ".." expr REL_K expr SEMI    -> eqn_def_domain
+            | ID condition? ".." expr REL_K expr SEMI                     -> eqn_def_scalar
+
+condition: "$" "(" expr ")"
 
 REL_K: /=e=|=l=|=g=/i
 
@@ -196,14 +199,14 @@ symbol_plain.1: ID
      | symbol_plain
      | "(" expr ")"
 
-func_call: FUNCNAME "(" arg_list? ")"
+func_call.3: FUNCNAME "(" arg_list? ")"
 arg_list: expr ("," expr)*
 
 // ---------------------------
 // Tokens & basics
 // ---------------------------
 
-FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr)\b/
+FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card)\b/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
 ESCAPED: /'[^']*'|\"[^\"]*\"/
 STRING: /"[^"]*"|'[^']*'/

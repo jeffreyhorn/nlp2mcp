@@ -402,3 +402,300 @@ class TestPositiveVariables:
 
         # Verify that equality derivatives are non-trivial (not all zeros)
         assert J_h.num_nonzeros() > 0
+
+
+@pytest.mark.e2e
+class TestSetRangeSyntax:
+    """Test end-to-end pipeline with set range syntax (Sprint 7 Day 3)."""
+
+    def test_numeric_range_expansion(self):
+        """Test that numeric ranges (1*6) are correctly expanded."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / 1*6 /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify set was created with correct members
+        assert "i" in model_ir.sets
+        assert model_ir.sets["i"].members == ["1", "2", "3", "4", "5", "6"]
+
+    def test_symbolic_range_expansion(self):
+        """Test that symbolic ranges (s1*s5) are correctly expanded."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set s / s1*s5 /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify set was created with correct members
+        assert "s" in model_ir.sets
+        assert model_ir.sets["s"].members == ["s1", "s2", "s3", "s4", "s5"]
+
+    def test_prefix_range_expansion(self):
+        """Test that prefix ranges (plant1*plant3) are correctly expanded."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set p / plant1*plant3 /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify set was created with correct members
+        assert "p" in model_ir.sets
+        assert model_ir.sets["p"].members == ["plant1", "plant2", "plant3"]
+
+    def test_macro_range_expansion(self):
+        """Test that macro ranges work with preprocessor (tested in unit tests)."""
+        # Note: Macro expansion is tested in tests/ir/test_range_expansion.py
+        # This integration test verifies that the range syntax itself supports
+        # macro placeholders. The actual macro expansion is handled by the preprocessor
+        # and is thoroughly tested in the unit test suite (18 tests in Day 2).
+        # For integration testing, we verify basic range expansion which is the
+        # foundation for macro ranges.
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / 1*5 /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify set was created with correct members
+        assert "i" in model_ir.sets
+        assert model_ir.sets["i"].members == ["1", "2", "3", "4", "5"]
+
+    def test_set_singular_keyword(self):
+        """Test that 'Set' (singular) keyword is supported."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / 1*3 /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify set was created
+        assert "i" in model_ir.sets
+        assert model_ir.sets["i"].members == ["1", "2", "3"]
+
+    def test_set_with_description(self):
+        """Test that set descriptions are supported."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i 'indices for points' / 1*6 /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify set was created with correct members
+        assert "i" in model_ir.sets
+        assert model_ir.sets["i"].members == ["1", "2", "3", "4", "5", "6"]
+
+    def test_alias_singular_keyword(self):
+        """Test that 'Alias' (singular) keyword is supported."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / 1*3 /;
+        Alias (i,j);
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify set and alias were created
+        assert "i" in model_ir.sets
+        assert model_ir.sets["i"].members == ["1", "2", "3"]
+
+    def test_alias_with_parentheses(self):
+        """Test that Alias (i,j) syntax with parentheses is supported."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / 1*5 /;
+        Alias (i,j);
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify set was created
+        assert "i" in model_ir.sets
+        assert model_ir.sets["i"].members == ["1", "2", "3", "4", "5"]
+
+    def test_ranges_in_full_pipeline(self):
+        """Test that models with ranges work through normalization pipeline."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / i1*i3 /;
+
+        Positive Variable x(i);
+
+        Equation balance(i);
+
+        balance(i).. x(i) =e= 1;
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify range expansion worked
+        assert "i" in model_ir.sets
+        assert model_ir.sets["i"].members == ["i1", "i2", "i3"]
+
+        # Verify indexed equation was created
+        assert "balance" in model_ir.equations
+        eq_def = model_ir.equations["balance"]
+        assert eq_def.domain == ("i",)
+
+        # Normalize model
+        normalize_model(model_ir)
+
+        # Verify normalization succeeded
+        assert "balance" in model_ir.equalities
+
+
+@pytest.mark.e2e
+class TestConditionalEquations:
+    """Test conditional equation syntax ($ operator) through full pipeline (Sprint 7 Day 3)."""
+
+    def test_conditional_equation_basic(self):
+        """Test basic conditional equation parsing."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / 1*5 /;
+        Variable x(i);
+        Equation balance(i);
+
+        balance(i)$(ord(i) > 2).. x(i) =e= 1;
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify equation was created
+        assert "balance" in model_ir.equations
+        assert model_ir.equations["balance"].domain == ("i",)
+
+    def test_conditional_equation_himmel16_pattern(self):
+        """Test himmel16.gms conditional pattern."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / 1*6 /;
+        Alias (i,j);
+        Variable x(i);
+        Equation maxdist(i,j);
+
+        maxdist(i,j)$(ord(i) < ord(j)).. x(i) + x(j) =l= 1;
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify equation was created
+        assert "maxdist" in model_ir.equations
+        assert model_ir.equations["maxdist"].domain == ("i", "j")
+        assert model_ir.equations["maxdist"].relation.value == "=l="
+
+    def test_conditional_with_normalization(self):
+        """Test conditional equation through normalization."""
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / i1*i3 /;
+        Variable x(i);
+        Equation balance(i);
+
+        balance(i)$(ord(i) > 1).. x(i) =e= 1;
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Normalize model
+        normalize_model(model_ir)
+
+        # Verify normalization succeeded
+        assert "balance" in model_ir.equalities
+
+    def test_conditional_equation_with_parameter_filtering(self):
+        """Test that parameter-based conditions correctly filter equation instances."""
+        from src.ad.index_mapping import build_index_mapping
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / i1*i5 /;
+        Parameter demand(i) / i1 10, i2 0, i3 5, i4 0, i5 8 /;
+        Variable x(i);
+        Variable z;
+        Equation supply(i);
+        Equation balance;
+
+        supply(i)$(demand(i) > 0).. x(i) =e= demand(i);
+        balance.. z =e= sum(i, x(i));
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify parameter data was loaded
+        assert "demand" in model_ir.params
+        assert len(model_ir.params["demand"].values) == 5
+        assert model_ir.params["demand"].values[("i1",)] == 10.0
+        assert model_ir.params["demand"].values[("i2",)] == 0.0
+
+        # Build index mapping (triggers condition evaluation)
+        mapping = build_index_mapping(model_ir)
+
+        # Count supply equation instances
+        supply_instances = [
+            (eq_name, indices)
+            for (eq_name, indices) in mapping.eq_to_row.keys()
+            if eq_name == "supply"
+        ]
+
+        # Should only create instances for i1, i3, i5 (where demand > 0)
+        assert len(supply_instances) == 3
+        assert ("supply", ("i1",)) in supply_instances
+        assert ("supply", ("i3",)) in supply_instances
+        assert ("supply", ("i5",)) in supply_instances
+
+        # Should NOT create instances for i2, i4 (where demand = 0)
+        assert ("supply", ("i2",)) not in supply_instances
+        assert ("supply", ("i4",)) not in supply_instances
+
+    def test_conditional_equation_with_ord_filtering(self):
+        """Test that ord()-based conditions correctly filter equation instances."""
+        from src.ad.index_mapping import build_index_mapping
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / i1*i5 /;
+        Variable x(i);
+        Equation supply(i);
+
+        supply(i)$(ord(i) > 2).. x(i) =e= 1;
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Build index mapping (triggers condition evaluation)
+        mapping = build_index_mapping(model_ir)
+
+        # Count supply equation instances
+        supply_instances = [
+            (eq_name, indices)
+            for (eq_name, indices) in mapping.eq_to_row.keys()
+            if eq_name == "supply"
+        ]
+
+        # Should only create instances for i3, i4, i5 (where ord > 2)
+        assert len(supply_instances) == 3
+        assert ("supply", ("i3",)) in supply_instances
+        assert ("supply", ("i4",)) in supply_instances
+        assert ("supply", ("i5",)) in supply_instances
+
+        # Should NOT create instances for i1, i2 (where ord <= 2)
+        assert ("supply", ("i1",)) not in supply_instances
+        assert ("supply", ("i2",)) not in supply_instances

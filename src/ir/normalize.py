@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import cast
 
 from .ast import Binary, Const, Expr, SymbolRef, VarRef
 from .model_ir import ModelIR
@@ -19,6 +20,7 @@ class NormalizedEquation:
     expr: Expr  # canonicalized as (lhs - rhs)
     expr_domain: tuple[str, ...]
     rank: int
+    condition: Expr | None = None  # Optional condition for $ operator filtering
 
 
 def subtract(lhs: Expr, rhs: Expr) -> Expr:
@@ -92,6 +94,7 @@ def normalize_equation(eq: EquationDef) -> NormalizedEquation:
         expr=expr,
         expr_domain=expr_domain,
         rank=len(expr_domain),
+        condition=cast(Expr | None, eq.condition),
     )
 
 

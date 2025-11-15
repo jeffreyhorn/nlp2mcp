@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-15 14:40:02
+**Generated:** 2025-11-15 16:35:46
 **Sprint:** Sprint 6
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint6.json`](../../reports/gamslib_ingestion_sprint6.json)
@@ -61,15 +61,12 @@
 **Error Type:** `UnexpectedCharacters`
 **Error Message:**
 ```
-No terminal matches 'i' in the current parser context, at line 18 col 5
+No terminal matches '1' in the current parser context, at line 25 col 16
 
-Set i 'points' / p1*p10 /;
-    ^
+x(i) = uniform(1,10);
+               ^
 Expected one of: 
-	* ASSIGN
-	* DOT
-	* __ANON_0
-	* LPAR
+	* ID
 
 ```
 
@@ -79,15 +76,13 @@ Expected one of:
 **Error Type:** `UnexpectedCharacters`
 **Error Message:**
 ```
-No terminal matches 'i' in the current parser context, at line 28 col 5
+No terminal matches '+' in the current parser context, at line 46 col 39
 
-Set i 'indices for the 6 points' / 1*6 /;
-    ^
+areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));
+                                      ^
 Expected one of: 
-	* ASSIGN
-	* DOT
-	* __ANON_0
-	* LPAR
+	* RPAR
+	* COMMA
 
 ```
 
@@ -123,6 +118,7 @@ Expected one of:
 	* __ANON_0
 	* ASSIGN
 	* LPAR
+	* DOLLAR
 
 ```
 
@@ -132,15 +128,13 @@ Expected one of:
 **Error Type:** `UnexpectedCharacters`
 **Error Message:**
 ```
-No terminal matches 'd' in the current parser context, at line 31 col 4
+No terminal matches '(' in the current parser context, at line 51 col 12
 
-   d        'dimension of space' / x, y    
-   ^
+defdist(low(n,nn))..   dist(low) =e= sqrt(sum(d, sq
+           ^
 Expected one of: 
-	* ASSIGN
-	* DOT
-	* __ANON_0
-	* LPAR
+	* RPAR
+	* COMMA
 
 ```
 
@@ -155,10 +149,11 @@ No terminal matches 'l' in the current parser context, at line 37 col 8
 option limCol = 0, limRow = 0;
        ^
 Expected one of: 
-	* ASSIGN
 	* DOT
 	* __ANON_0
+	* ASSIGN
 	* LPAR
+	* DOLLAR
 
 ```
 
