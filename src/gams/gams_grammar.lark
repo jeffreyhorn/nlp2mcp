@@ -199,14 +199,14 @@ symbol_plain.1: ID
      | symbol_plain
      | "(" expr ")"
 
-func_call: FUNCNAME "(" arg_list? ")"
+func_call.3: FUNCNAME "(" arg_list? ")"
 arg_list: expr ("," expr)*
 
 // ---------------------------
 // Tokens & basics
 // ---------------------------
 
-FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr)\b/
+FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card)\b/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
 ESCAPED: /'[^']*'|\"[^\"]*\"/
 STRING: /"[^"]*"|'[^']*'/

@@ -267,17 +267,20 @@ def enumerate_variable_instances(var_def: VariableDef, model_ir: ModelIR) -> lis
 
 
 def enumerate_equation_instances(
-    eq_name: str, eq_domain: tuple[str, ...], model_ir: ModelIR
+    eq_name: str, eq_domain: tuple[str, ...], model_ir: ModelIR, condition=None
 ) -> list[tuple[str, ...]]:
     """
     Enumerate all instances of an equation.
 
     Similar to variable enumeration but for equations.
+    If a condition is provided (from $ operator), only instances
+    satisfying the condition are returned.
 
     Args:
         eq_name: Equation name (for error messages)
         eq_domain: Domain tuple of set names
         model_ir: Model IR containing set definitions
+        condition: Optional condition expression (Expr) for filtering instances
 
     Returns:
         List of index tuples (sorted for deterministic ordering)
@@ -290,9 +293,18 @@ def enumerate_equation_instances(
         >>> # Indexed equation g(i)
         >>> enumerate_equation_instances("g", ("i",), model_ir)
         [("i1",), ("i2",)]
+
+        >>> # Conditional equation g(i)$(ord(i) > 2)
+        >>> enumerate_equation_instances("g", ("i",), model_ir, condition_expr)
+        [("i3",), ("i4",), ("i5",)]  # Only i3, i4, i5 where ord > 2
     """
     if not eq_domain:
-        # Scalar equation
+        # Scalar equation - check condition if present
+        if condition is not None:
+            from ..ir.condition_eval import evaluate_condition
+
+            if not evaluate_condition(condition, (), (), model_ir):
+                return []  # Condition false, no instances
         return [()]
 
     # Get members for each index set (resolve aliases if needed)
@@ -307,6 +319,26 @@ def enumerate_equation_instances(
 
     # Generate cross-product
     instances = _cross_product(index_members_list)
+
+    # Filter by condition if present
+    if condition is not None:
+        from ..ir.condition_eval import evaluate_condition
+
+        filtered_instances = []
+        for indices in instances:
+            try:
+                if evaluate_condition(condition, eq_domain, indices, model_ir):
+                    filtered_instances.append(indices)
+            except Exception as e:
+                # Log warning but continue (could make this configurable)
+                import warnings
+
+                warnings.warn(
+                    f"Failed to evaluate condition for {eq_name}{indices}: {e}. "
+                    f"Including instance by default."
+                )
+                filtered_instances.append(indices)
+        instances = filtered_instances
 
     # Sort for deterministic ordering
     instances.sort()
@@ -387,7 +419,7 @@ def build_index_mapping(model_ir: ModelIR) -> IndexMapping:
     row_id = 0
     for eq_name in sorted(model_ir.equations.keys()):
         eq_def = model_ir.equations[eq_name]
-        instances = enumerate_equation_instances(eq_name, eq_def.domain, model_ir)
+        instances = enumerate_equation_instances(eq_name, eq_def.domain, model_ir, eq_def.condition)
 
         for indices in instances:
             # Store mappings

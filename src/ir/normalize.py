@@ -19,6 +19,7 @@ class NormalizedEquation:
     expr: Expr  # canonicalized as (lhs - rhs)
     expr_domain: tuple[str, ...]
     rank: int
+    condition: Expr | None = None  # Optional condition for $ operator filtering
 
 
 def subtract(lhs: Expr, rhs: Expr) -> Expr:
@@ -92,6 +93,7 @@ def normalize_equation(eq: EquationDef) -> NormalizedEquation:
         expr=expr,
         expr_domain=expr_domain,
         rank=len(expr_domain),
+        condition=eq.condition,
     )
 
 

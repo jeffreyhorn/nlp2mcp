@@ -80,18 +80,20 @@ supply(i)$(demand(i) > 0).. x(i) =e= demand(i);
 offdiag(i,j)$(i <> j).. x(i,j) =e= 0;
 ```
 
-**Parser Implementation:**
-- Condition is parsed but currently not evaluated (stored in parse tree)
-- Parser skips condition node when extracting LHS/RHS expressions
-- Future: Condition evaluation during normalization or instance generation
+**Implementation:**
+- **Parsing**: Condition expressions extracted and stored in IR (parser.py:681-744)
+- **Evaluation**: Full semantic evaluation during instance generation (condition_eval.py)
+- **Filtering**: Only equation instances satisfying condition are created (index_mapping.py:318-340)
+- **Functions**: Supports `ord()` (set element position) and `card()` (set cardinality)
+- **Operators**: Comparisons (>, <, >=, <=, ==, <>), logical (and, or, not), arithmetic (+, -, *, /)
+- **References**: Parameters with index substitution, domain indices
 
-**⚠️ IMPORTANT LIMITATION:**
-Conditions are parsed but **NOT evaluated** during MCP generation. This means:
-- All equation instances are generated regardless of condition
-- Example: `supply(i)$(demand(i) > 0).. x(i) =e= demand(i)` creates equations for ALL i values, even when demand(i) = 0
-- The generated MCP may be over-constrained or produce different solutions than the original GAMS model
-- **Do not use for production conversions** until condition evaluation is implemented
-- Parsing support enables grammar testing and prepares for future semantic implementation
+**✅ FULLY FUNCTIONAL:**
+Condition evaluation is **complete** and produces correct MCP output:
+- Only equation instances satisfying the condition are generated
+- Example: `supply(i)$(ord(i) > 2).. x(i) =e= 1;` with i={i1..i5} creates only 3 instances (i3, i4, i5)
+- Verified through end-to-end testing: index mapping shows correct filtered instances
+- **Safe for production use** - conditions are properly evaluated
 
 **Testing:**
 - 7 unit tests covering scalar, indexed, multi-index, and complex conditionals

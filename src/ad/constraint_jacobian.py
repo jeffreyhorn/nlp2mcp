@@ -167,10 +167,12 @@ def _enumerate_equation_or_bound(eq_name: str, model_ir: ModelIR):
 
     if eq_name in model_ir.equations:
         eq_def = model_ir.equations[eq_name]
-        return enumerate_equation_instances(eq_name, eq_def.domain, model_ir)
+        return enumerate_equation_instances(eq_name, eq_def.domain, model_ir, eq_def.condition)
     elif eq_name in model_ir.normalized_bounds:
         norm_eq = model_ir.normalized_bounds[eq_name]
-        return enumerate_equation_instances(eq_name, norm_eq.domain_sets, model_ir)
+        return enumerate_equation_instances(
+            eq_name, norm_eq.domain_sets, model_ir, norm_eq.condition
+        )
     else:
         return []
 
@@ -310,7 +312,8 @@ def _compute_equality_jacobian(
         # Get all instances of this equation (handles indexed constraints)
         # NormalizedEquation uses 'domain_sets', EquationDef uses 'domain'
         eq_domain = eq_def.domain_sets if isinstance(eq_def, NormalizedEquation) else eq_def.domain
-        eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir)
+        eq_condition = eq_def.condition if hasattr(eq_def, "condition") else None
+        eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir, eq_condition)
 
         for eq_indices in eq_instances:
             # Get row ID for this equation instance
@@ -396,7 +399,8 @@ def _compute_inequality_jacobian(
 
         # Get all instances of this equation (handles indexed constraints)
         eq_domain = eq_def.domain_sets if isinstance(eq_def, NormalizedEquation) else eq_def.domain
-        eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir)
+        eq_condition = eq_def.condition if hasattr(eq_def, "condition") else None
+        eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir, eq_condition)
 
         for eq_indices in eq_instances:
             # Get row ID for this equation instance
@@ -524,12 +528,16 @@ def _count_equation_instances(model_ir: ModelIR, equation_names: list[str]) -> i
         # Check in regular equations first
         if eq_name in model_ir.equations:
             eq_def = model_ir.equations[eq_name]
-            eq_instances = enumerate_equation_instances(eq_name, eq_def.domain, model_ir)
+            eq_instances = enumerate_equation_instances(
+                eq_name, eq_def.domain, model_ir, eq_def.condition
+            )
             total_count += len(eq_instances)
         # Check in normalized bounds (e.g., fixed variables)
         elif eq_name in model_ir.normalized_bounds:
             norm_eq = model_ir.normalized_bounds[eq_name]
-            eq_instances = enumerate_equation_instances(eq_name, norm_eq.domain_sets, model_ir)
+            eq_instances = enumerate_equation_instances(
+                eq_name, norm_eq.domain_sets, model_ir, norm_eq.condition
+            )
             total_count += len(eq_instances)
 
     return total_count
