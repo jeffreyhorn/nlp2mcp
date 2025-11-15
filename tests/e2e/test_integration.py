@@ -376,9 +376,9 @@ class TestPositiveVariables:
                 if ";" in line and (found_x or found_obj):
                     break
 
-        assert (
-            found_x or found_obj
-        ), "Positive variables should be declared in Positive Variables block"
+        assert found_x or found_obj, (
+            "Positive variables should be declared in Positive Variables block"
+        )
 
     def test_positive_variables_in_derivatives(self):
         """Test that Positive Variables are handled correctly in derivative computation."""
@@ -617,3 +617,85 @@ class TestConditionalEquations:
 
         # Verify normalization succeeded
         assert "balance" in model_ir.equalities
+
+    def test_conditional_equation_with_parameter_filtering(self):
+        """Test that parameter-based conditions correctly filter equation instances."""
+        from src.ad.index_mapping import build_index_mapping
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / i1*i5 /;
+        Parameter demand(i) / i1 10, i2 0, i3 5, i4 0, i5 8 /;
+        Variable x(i);
+        Variable z;
+        Equation supply(i);
+        Equation balance;
+
+        supply(i)$(demand(i) > 0).. x(i) =e= demand(i);
+        balance.. z =e= sum(i, x(i));
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Verify parameter data was loaded
+        assert "demand" in model_ir.params
+        assert len(model_ir.params["demand"].values) == 5
+        assert model_ir.params["demand"].values[("i1",)] == 10.0
+        assert model_ir.params["demand"].values[("i2",)] == 0.0
+
+        # Build index mapping (triggers condition evaluation)
+        mapping = build_index_mapping(model_ir)
+
+        # Count supply equation instances
+        supply_instances = [
+            (eq_name, indices)
+            for (eq_name, indices) in mapping.eq_to_row.keys()
+            if eq_name == "supply"
+        ]
+
+        # Should only create instances for i1, i3, i5 (where demand > 0)
+        assert len(supply_instances) == 3
+        assert ("supply", ("i1",)) in supply_instances
+        assert ("supply", ("i3",)) in supply_instances
+        assert ("supply", ("i5",)) in supply_instances
+
+        # Should NOT create instances for i2, i4 (where demand = 0)
+        assert ("supply", ("i2",)) not in supply_instances
+        assert ("supply", ("i4",)) not in supply_instances
+
+    def test_conditional_equation_with_ord_filtering(self):
+        """Test that ord()-based conditions correctly filter equation instances."""
+        from src.ad.index_mapping import build_index_mapping
+        from src.ir.parser import parse_model_text
+
+        gams_code = """
+        Set i / i1*i5 /;
+        Variable x(i);
+        Equation supply(i);
+
+        supply(i)$(ord(i) > 2).. x(i) =e= 1;
+
+        Model test / all /;
+        """
+        model_ir = parse_model_text(gams_code)
+
+        # Build index mapping (triggers condition evaluation)
+        mapping = build_index_mapping(model_ir)
+
+        # Count supply equation instances
+        supply_instances = [
+            (eq_name, indices)
+            for (eq_name, indices) in mapping.eq_to_row.keys()
+            if eq_name == "supply"
+        ]
+
+        # Should only create instances for i3, i4, i5 (where ord > 2)
+        assert len(supply_instances) == 3
+        assert ("supply", ("i3",)) in supply_instances
+        assert ("supply", ("i4",)) in supply_instances
+        assert ("supply", ("i5",)) in supply_instances
+
+        # Should NOT create instances for i1, i2 (where ord <= 2)
+        assert ("supply", ("i1",)) not in supply_instances
+        assert ("supply", ("i2",)) not in supply_instances

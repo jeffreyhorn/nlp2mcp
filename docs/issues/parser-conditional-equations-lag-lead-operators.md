@@ -56,8 +56,11 @@ Conditions are **fully evaluated** during MCP generation, producing correct outp
 - **Operators**: Comparisons (>, <, >=, <=, ==, <>), logical (and, or, not), arithmetic (+, -, *, /)
 - **References**: Parameters with index substitution, domain indices (e.g., `i` in `ord(i)`)
 - **Filtering**: Only instances satisfying condition are created
+- **Parameter Inline Data**: Supports `Parameter p(i) / i1 10, i2 0 /` syntax in conditions
 
 **Test Case Verification:**
+
+*Example 1: ord() function filtering*
 ```gams
 Set i / i1*i5 /;
 Equation supply(i);
@@ -71,12 +74,28 @@ supply(i)$(ord(i) > 2).. x(i) =e= 1;
 Index mapping shows only 3 instances: supply('i3'), supply('i4'), supply('i5') ✓
 ```
 
+*Example 2: Parameter-based filtering*
+```gams
+Set i / i1*i5 /;
+Parameter demand(i) / i1 10, i2 0, i3 5, i4 0, i5 8 /;
+Equation supply(i);
+
+* Should only create equations where demand > 0
+supply(i)$(demand(i) > 0).. x(i) =e= demand(i);
+```
+
+**Actual MCP Output:**
+```
+Index mapping shows only 3 instances: supply('i1'), supply('i3'), supply('i5') ✓
+```
+
 **Impact:**
 - ✅ Only equation instances satisfying condition are generated
 - ✅ MCP system correctly constrained (no spurious equations)
 - ✅ Solution matches original GAMS model semantics
 - ✅ Verified through end-to-end testing with real GAMS models
-- ✅ All 1269 tests pass
+- ✅ Parameter-based conditions fully supported
+- ✅ All 1271 tests pass (including new integration tests)
 
 **Status:** 
 - Parser implementation: ✅ COMPLETE
