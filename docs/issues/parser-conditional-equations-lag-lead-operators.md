@@ -42,8 +42,37 @@ offdiag(i,j)$(i <> j).. x(i,j) =e= 0;                   # Set comparison
 - `tests/unit/gams/test_parser.py`: Added 7 unit tests
 - `tests/e2e/test_integration.py`: Added 3 integration tests
 
-**Current Limitation:**
-Conditions are parsed but not yet evaluated. All equation instances are currently generated regardless of condition. Future work: condition evaluation during normalization or instance generation.
+**⚠️ CRITICAL LIMITATION:**
+Conditions are parsed but **NOT evaluated** during MCP generation. This creates incorrect MCP output:
+
+**Test Case Verification:**
+```gams
+Set i / i1*i5 /;
+Parameter demand(i) / i1 10, i2 0, i3 5, i4 0, i5 8 /;
+
+* Should only create equations for i1, i3, i5 (where demand > 0)
+supply(i)$(demand(i) > 0).. x(i) =e= demand(i);
+```
+
+**Actual MCP Output:**
+```gams
+supply(i).. x(i) =E= demand(i);  # Created for ALL i, including i2 and i4!
+```
+
+**Impact:**
+- ✗ All equation instances generated regardless of condition
+- ✗ MCP system may be over-constrained (extra equations that shouldn't exist)
+- ✗ Solution may differ from original GAMS model
+- ✗ System might be infeasible if condition prevents impossible constraints
+- ✓ Parsing works correctly (grammar and parse tree are correct)
+
+**Status:** 
+- Parser implementation: ✅ COMPLETE (syntax accepted, parse tree correct)
+- Semantic evaluation: ❌ NOT IMPLEMENTED (conditions ignored during IR/MCP generation)
+
+**Do not use for production conversions** until condition evaluation is implemented in normalization or instance generation phase.
+
+**Future Work:** Condition evaluation during normalization or instance generation (estimated 5-8 hours).
 
 ### Feature 2: Lag/Lead Operators (`++`/`--`) - ⏳ TODO
 

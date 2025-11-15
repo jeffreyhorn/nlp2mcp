@@ -85,6 +85,14 @@ offdiag(i,j)$(i <> j).. x(i,j) =e= 0;
 - Parser skips condition node when extracting LHS/RHS expressions
 - Future: Condition evaluation during normalization or instance generation
 
+**⚠️ IMPORTANT LIMITATION:**
+Conditions are parsed but **NOT evaluated** during MCP generation. This means:
+- All equation instances are generated regardless of condition
+- Example: `supply(i)$(demand(i) > 0).. x(i) =e= demand(i)` creates equations for ALL i values, even when demand(i) = 0
+- The generated MCP may be over-constrained or produce different solutions than the original GAMS model
+- **Do not use for production conversions** until condition evaluation is implemented
+- Parsing support enables grammar testing and prepares for future semantic implementation
+
 **Testing:**
 - 7 unit tests covering scalar, indexed, multi-index, and complex conditionals
 - 3 integration tests verifying parsing and normalization
