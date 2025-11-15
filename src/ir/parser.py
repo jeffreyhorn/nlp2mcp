@@ -379,6 +379,11 @@ class _ModelBuilder:
                 if isinstance(tok, Token) and tok.type == "ID"
             ]
             if child.data == "alias_plain" and len(ids) == 2:
+                # Traditional syntax: Aliases j, i (alias_name, target)
+                alias_name, target = ids
+                self._register_alias(alias_name, target, None, child)
+            elif child.data == "alias_parens" and len(ids) == 2:
+                # Parentheses syntax: Alias (i,j) (target, alias_name)
                 target, alias_name = ids
                 self._register_alias(alias_name, target, None, child)
             elif child.data == "alias_with_universe" and len(ids) == 3:
