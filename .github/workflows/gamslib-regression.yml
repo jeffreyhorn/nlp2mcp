@@ -4,28 +4,28 @@ on:
   pull_request:
     paths:
       # Grammar definition
-      - 'src/gams/grammar.lark'
+      - "src/gams/grammar.lark"
 
       # Parser implementation
-      - 'src/gams/parser.py'
-      - 'src/ir/parser.py'
+      - "src/gams/parser.py"
+      - "src/ir/parser.py"
 
       # IR definitions (parser depends on these)
-      - 'src/ir/symbols.py'
-      - 'src/ir/ast.py'
+      - "src/ir/symbols.py"
+      - "src/ir/ast.py"
 
       # Ingestion script itself
-      - 'scripts/ingest_gamslib.py'
+      - "scripts/ingest_gamslib.py"
 
       # Regression check script
-      - 'scripts/check_parse_rate_regression.py'
+      - "scripts/check_parse_rate_regression.py"
 
       # CI workflow (changes to this file)
-      - '.github/workflows/gamslib-regression.yml'
+      - ".github/workflows/gamslib-regression.yml"
 
   schedule:
     # Weekly validation every Sunday at 00:00 UTC
-    - cron: '0 0 * * 0'
+    - cron: "0 0 * * 0"
 
   # Allow manual triggering for testing
   workflow_dispatch:
@@ -38,7 +38,7 @@ permissions:
 jobs:
   gamslib-regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 10  # Fail if exceeds 10 minutes
+    timeout-minutes: 10 # Fail if exceeds 10 minutes
 
     steps:
       - name: Checkout repository
@@ -79,12 +79,12 @@ jobs:
           echo "Checking for parse rate regression..."
           python scripts/check_parse_rate_regression.py \
             --current reports/gamslib_ingestion_sprint6.json \
-            --baseline main \
+            --baseline origin/main \
             --threshold 0.10
 
       - name: Upload ingestion report
         uses: actions/upload-artifact@v4
-        if: always()  # Upload even if regression detected
+        if: always() # Upload even if regression detected
         with:
           name: gamslib-ingestion-report
           path: |
