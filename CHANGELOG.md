@@ -7,6 +7,107 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 7 Prep: Task 7 - Line Number Tracking Design - 2025-11-15
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed Sprint 7 Prep Task 7: Designed comprehensive line number tracking system to enable convexity warnings with source location citations. Confirmed Lark metadata support, designed IR metadata structure, normalization preservation strategy, and warning formatter updates. Ready for Sprint 7 implementation.
+
+**Deliverables Created:**
+- ✅ `docs/design/line_number_tracking.md` (comprehensive design document, 350+ lines)
+- ✅ Updated `KNOWN_UNKNOWNS.md` with verification for Unknown 4.1
+
+#### Key Design Decisions
+
+**1. Lark Metadata Support:**
+- ✅ Confirmed: All Tree nodes have `.meta.line`, `.meta.column`, `.meta.end_line`, `.meta.end_column`
+- Performance impact: Negligible (<1% overhead)
+- Lark automatically computes metadata during parsing
+
+**2. IR Metadata Structure:**
+```python
+@dataclass
+class SourceLocation:
+    line: int  # 1-indexed
+    column: int  # 1-indexed for display
+    end_line: int | None = None
+    end_column: int | None = None
+    source_file: Path | None = None
+```
+
+**3. IR Node Updates:**
+- Added `loc: SourceLocation | None = None` to `EquationDef`, `VariableDef`, `ParameterDef`
+- Optional field maintains backward compatibility
+- `None` for programmatically generated nodes
+
+**4. Parser Integration:**
+- Extract metadata from Lark `tree.meta` in `_TreeToModelIR` transformer
+- New `_extract_location()` helper method
+- Pass `source_file` parameter for complete location tracking
+
+**5. Normalization Preservation:**
+- Inherit parent location when creating derived expressions
+- Preserve `equation.loc` through all transformations
+- Allow `loc=None` for generated nodes
+
+**6. Warning Format:**
+```
+W301: Nonlinear equality constraint detected
+   Equation: circle_eq (nonconvex_circle.gms:15:8)
+   Expression: x**2 + y**2 =e= 4
+   Docs: https://github.com/jeffreyhorn/nlp2mcp/blob/main/docs/errors/W301.md
+```
+
+#### Edge Cases Handled
+
+1. **Generated/Synthetic Equations:** `loc=None`, formatter omits location gracefully
+2. **Multi-Line Equations:** Use start line (equation definition line)
+3. **Included Files:** `source_file` tracks actual file path
+4. **Preprocessor Macros:** Line refers to post-preprocessing source
+5. **Indexed Equations:** All instances share same source location
+6. **Expressions Without Location:** Inherit parent equation's location or use `None`
+
+#### Implementation Plan
+
+**Sprint 7 Implementation (3-4 hours):**
+1. **Phase 1:** IR Structure (1 hour) - Add `SourceLocation` dataclass
+2. **Phase 2:** Parser Integration (1-1.5 hours) - Extract metadata from Lark
+3. **Phase 3:** Normalization Preservation (0.5 hour) - Preserve `loc` field
+4. **Phase 4:** Convexity Integration (0.5 hour) - Update warnings and formatter
+5. **Phase 5:** Testing & Documentation (0.5 hour) - 7 unit tests + 1 E2E test
+
+**Testing Strategy:**
+- 7 unit tests (metadata extraction, preservation, formatting)
+- 1 integration test (E2E with real GAMS file)
+- All tests cover `loc=None` graceful handling
+
+#### Unknowns Verified
+
+**Unknown 4.1: Can line numbers be tracked through parser → IR → convexity pipeline?**
+- ✅ **VERIFIED** - Fully feasible with Lark metadata support
+- Lark provides full metadata (line, column, end_line, end_column)
+- Performance impact negligible (<1% overhead)
+- Normalization preservation straightforward (inherit parent location)
+- Multi-line equations handled (use start line)
+- Generated equations handled gracefully (`loc=None`)
+
+**Evidence:**
+- Lark documentation confirms metadata automatically attached to all parse tree nodes
+- Design document with complete implementation plan
+- Testing strategy covers all edge cases
+- Backward compatible (optional `loc` field defaults to `None`)
+
+#### Future Enhancements
+
+1. **Expression-Level Locations:** Track subexpression locations (2-3 hours)
+2. **Source Range Highlighting:** Display full range with end_line/end_column (1 hour)
+3. **Macro Origin Tracking:** Track original macro definition location (4-6 hours)
+4. **IDE Integration:** VS Code extension, language server protocol (10+ hours)
+
+---
+
 ### Sprint 7 Prep: Task 6 - GAMS Syntax Feature Survey - 2025-11-14
 
 **Status:** ✅ COMPLETE
