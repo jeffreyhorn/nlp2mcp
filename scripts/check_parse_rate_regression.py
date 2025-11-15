@@ -7,8 +7,8 @@ Used by CI to fail builds if parse rate drops significantly.
 
 Usage:
     python scripts/check_parse_rate_regression.py \\
-        --current reports/gamslib_ingestion_sprint7.json \\
-        --baseline main \\
+        --current reports/gamslib_ingestion_sprint6.json \\
+        --baseline origin/main \\
         --threshold 0.10
 
 Exit codes:
@@ -53,8 +53,11 @@ def read_parse_rate_from_file(json_path: Path) -> tuple[float, dict[str, Any]]:
 
     kpis = report["kpis"]
 
-    if "parse_rate_percent" not in kpis:
-        raise KeyError(f"KPIs missing 'parse_rate_percent' field: {json_path}")
+    # Validate all required KPI fields
+    required_fields = ["parse_rate_percent", "parse_success", "total_models"]
+    for field in required_fields:
+        if field not in kpis:
+            raise KeyError(f"KPIs missing '{field}' field: {json_path}")
 
     parse_rate = kpis["parse_rate_percent"]
 
@@ -92,8 +95,11 @@ def read_parse_rate_from_git(branch: str, report_path: Path) -> tuple[float, dic
 
     kpis = report["kpis"]
 
-    if "parse_rate_percent" not in kpis:
-        raise KeyError(f"Baseline KPIs missing 'parse_rate_percent' field (branch: {branch})")
+    # Validate all required KPI fields
+    required_fields = ["parse_rate_percent", "parse_success", "total_models"]
+    for field in required_fields:
+        if field not in kpis:
+            raise KeyError(f"Baseline KPIs missing '{field}' field (branch: {branch})")
 
     parse_rate = kpis["parse_rate_percent"]
 
@@ -144,7 +150,7 @@ def check_regression(
     relative_drop = calculate_relative_drop(baseline_rate, current_rate)
 
     # Check if regression exceeds threshold
-    is_regression = relative_drop > threshold
+    is_regression = relative_drop >= threshold
 
     # Print detailed report
     print("=" * 70)
@@ -211,8 +217,8 @@ def main() -> None:
 Examples:
   # Compare current report against main branch
   python check_parse_rate_regression.py \\
-      --current reports/gamslib_ingestion_sprint7.json \\
-      --baseline main \\
+      --current reports/gamslib_ingestion_sprint6.json \\
+      --baseline origin/main \\
       --threshold 0.10
 
   # Compare two local reports
@@ -238,7 +244,7 @@ Exit codes:
     parser.add_argument(
         "--baseline",
         type=str,
-        help="Git branch name for baseline (e.g., 'main', 'origin/main')",
+        help="Git branch name for baseline (e.g., 'main', 'origin/main'). The baseline report will be read from the same path as --current on this branch.",
     )
 
     parser.add_argument(

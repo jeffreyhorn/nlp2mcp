@@ -40,7 +40,7 @@ This document designs a CI workflow for automated GAMSLib parse rate regression 
 - **Trigger:** Run on parser file changes (`grammar.lark`, `parser.py`, `ir/*.py`) + weekly scheduled run
 - **Regression threshold:** >10% relative drop (e.g., 30% → 27% fails CI)
 - **Auto-commit:** **No** - require manual PR review of dashboard changes for transparency
-- **Timeout:** 5 minutes (sufficient for 10-20 models)
+- **Timeout:** 10 minutes (sufficient for 10-20 models)
 - **Implementation effort:** 4-5 hours (Medium priority for Sprint 7)
 
 **Verified Unknowns:** 3.2 (auto-commit safety), 3.3 (regression threshold), 5.1 (CI trigger strategy)

@@ -746,28 +746,7 @@ Expected: Parser handles string descriptions and data layout
 Development team (Parser specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED  
-**Verified by:** Task 8 (Set Up CI for GAMSLib Regression Tracking)  
-**Date:** 2025-11-15
-
-**Findings:**
-
-**Auto-commit is possible but NOT recommended:**
-- Requires `permissions: contents: write` (broad scope, security risk)
-- Bypasses PR review process (transparency concern)
-- GitHub security best practices favor minimal permissions
-- Other projects (Rust, Go) use manual commit for generated docs
-
-**Manual commit is safer and recommended:**
-- No write permissions needed (`permissions: contents: read`)
-- Maintains PR review process (developer sees changes)
-- Git history shows developer committed (not bot)
-- CI fails if dashboard not committed (strong reminder)
-- Only requires 2 extra commands: `git add` + `git commit`
-
-**Decision:** Require manual commit (fail CI if dashboard not committed).
-
-**Implementation:** See `.github/workflows/gamslib-regression.yml` - step "Check dashboard is up-to-date"
+🔍 **Status:** INCOMPLETE - Not verified in Task 8
 
 ---
 
@@ -815,36 +794,7 @@ done
 Development team (QA specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED  
-**Verified by:** Task 8 (Set Up CI for GAMSLib Regression Tracking)  
-**Date:** 2025-11-15
-
-**Findings:**
-
-**Hybrid approach (path filter + scheduled) is optimal:**
-- Path filter reduces runs by ~80% (most PRs don't touch parser)
-- Weekly scheduled run catches rare edge cases (safety net)
-- Best of both worlds: fast feedback + periodic validation
-
-**Path filter configuration:**
-- Trigger on: `grammar.lark`, `parser.py`, `ir/symbols.py`, `ir/ast.py`, `scripts/ingest_gamslib.py`
-- Skip on: `docs/*`, `tests/*`, `src/normalization/*`, `src/ad/*`
-- Rationale: Only parser-related files affect parse rate
-
-**Scheduled run:**
-- Weekly on Sunday at 00:00 UTC
-- Validates long-term stability
-- Catches indirect dependencies missed by path filter
-
-**Cost analysis:**
-- Path filter only: ~30 runs/year × 5 min = 2.5 hours
-- Scheduled runs: ~52 runs/year × 5 min = 4.3 hours
-- Total: ~7 hours/year (acceptable)
-- Savings vs every PR: ~100 runs/year × 5 min = 8.3 hours saved
-
-**Decision:** Implement hybrid trigger strategy (path filter + weekly scheduled).
-
-**Implementation:** See `.github/workflows/gamslib-regression.yml` - on.pull_request.paths and on.schedule
+🔍 **Status:** INCOMPLETE - Not verified in Task 8
 
 ---
 
