@@ -229,6 +229,137 @@ def strip_unsupported_directives(source: str) -> str:
     return "\n".join(filtered)
 
 
+def extract_conditional_sets(source: str) -> dict[str, str]:
+    """Extract default values from $if not set directives.
+
+    Parses lines like: $if not set varname $set varname "default_value"
+    Returns a dictionary mapping variable names to their default values.
+
+    This implements the mock preprocessing approach from Task 3 research
+    (preprocessor_directives.md). We extract defaults without evaluating
+    the conditional - we always use the default value.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Dictionary mapping variable names to default values
+
+    Example:
+        >>> source = '$if not set size $set size "10"\\nSet i /1*%size%/;'
+        >>> macros = extract_conditional_sets(source)
+        >>> macros
+        {'size': '10'}
+
+    Notes:
+        - Case-insensitive matching for GAMS directives ($if, $set) and backreference
+        - Backreference \\1 matches case-insensitively (e.g., SIZE matches size)
+        - Variable name case from first occurrence is preserved in output
+        - Handles both quoted and unquoted default values
+        - Unquoted values: [\\w.-]+ pattern captures identifiers, numbers with
+          dots/hyphens (e.g., 1e-6, 3.14) but stops at semicolons and dollar signs
+        - If multiple $if not set directives set the same variable,
+          the last one wins
+    """
+    macros = {}
+
+    # Pattern: $if not set varname $set varname value
+    # Matches: $if not set size $set size 10
+    #          $if not set size $set size "10"
+    #          $if not set tol $set tol 1e-6
+    # Case-insensitive for directives, preserves case for variable names
+    # Unquoted values: [\w.-]+ allows identifiers, numbers, dots, and hyphens
+    # This avoids capturing semicolons, dollar signs, and other special characters
+    pattern = r'\$if\s+not\s+set\s+(\w+)\s+\$set\s+\1\s+(?:"([^"]*)"|([\w.-]+))'
+
+    for match in re.finditer(pattern, source, re.IGNORECASE):
+        var_name = match.group(1)
+        # Get value from either quoted (group 2) or unquoted (group 3)
+        value = match.group(2) if match.group(2) is not None else match.group(3)
+        macros[var_name] = value
+
+    return macros
+
+
+def expand_macros(source: str, macros: dict[str, str]) -> str:
+    """Expand %macro% references with their values.
+
+    Replaces %varname% with the corresponding value from the macros dict.
+    Unknown macros are left unchanged.
+
+    This implements the mock preprocessing approach from Task 3 research.
+    We support user-defined macros from $set directives and can be extended
+    to support system macros like %modelStat.optimal% if needed.
+
+    Args:
+        source: GAMS source code text with %macro% references
+        macros: Dictionary mapping macro names to values
+
+    Returns:
+        Source code with macros expanded
+
+    Example:
+        >>> source = "Set i /1*%size%/;"
+        >>> macros = {'size': '10'}
+        >>> expand_macros(source, macros)
+        'Set i /1*10/;'
+
+    Notes:
+        - Case-sensitive macro name matching (GAMS convention)
+        - Unknown macros are left as-is (e.g., %unknown% unchanged)
+        - System macros like %gams.user1% can be added to macros dict
+    """
+    result = source
+
+    for var_name, value in macros.items():
+        # Replace %varname% with value
+        # The % delimiters prevent partial matches
+        # Use lambda to prevent interpreting special regex replacement sequences
+        pattern = f"%{re.escape(var_name)}%"
+        result = re.sub(pattern, lambda m: value, result)
+
+    return result
+
+
+def strip_conditional_directives(source: str) -> str:
+    """Strip $if not set directives, replacing with comments.
+
+    Removes $if not set directives from the source while preserving
+    line numbers by replacing them with comment lines.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with $if not set directives replaced by comments
+
+    Example:
+        >>> source = '$if not set size $set size "10"\\nSet i /1*10/;'
+        >>> result = strip_conditional_directives(source)
+        >>> # Result: '* [Stripped: $if not set size $set size "10"]\\nSet i /1*10/;'
+
+    Notes:
+        - Preserves line numbers for accurate error reporting
+        - Other lines remain unchanged
+    """
+    lines = source.split("\n")
+    filtered = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Check if this line contains $if not set directive (more precise)
+        if re.match(r"^\$if\s+not\s+set\b", stripped, re.IGNORECASE):
+            # Replace with comment to preserve line number, preserving original indentation
+            leading_ws = line[: len(line) - len(line.lstrip())]
+            filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
+        else:
+            # Keep line unchanged
+            filtered.append(line)
+
+    return "\n".join(filtered)
+
+
 def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
