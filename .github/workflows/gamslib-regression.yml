@@ -110,7 +110,8 @@ jobs:
 
           # Parser files changed - check if dashboard is committed
           # Ignore timestamp-only changes (Generated: line)
-          DASHBOARD_DIFF=$(git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep -v "^[-+].*Generated:" || true)
+          # Filter to only actual +/- content lines, excluding the Generated: timestamp
+          DASHBOARD_DIFF=$(git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep "^[-+]" | grep -v "^[-+].*Generated:" || true)
 
           if [ -z "$DASHBOARD_DIFF" ]; then
             echo "✅ Dashboard is up-to-date (no changes or timestamp-only changes)"
