@@ -40,7 +40,7 @@ aliases_block: ("Aliases"i | "Alias"i) alias_decl+ SEMI
 set_decl: ID STRING? "/" set_members "/"  -> set_simple
 
 # Parentheses syntax for aliases
-alias_decl: "(" ID "," ID ")"  -> alias_plain
+alias_decl: "(" ID "," ID ")"  -> alias_parens
           | ID "," ID          -> alias_plain
 ```
 
