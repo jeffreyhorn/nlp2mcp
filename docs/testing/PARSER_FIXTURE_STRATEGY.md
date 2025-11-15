@@ -23,7 +23,7 @@ This document defines a systematic test fixture strategy for new parser features
 - **Parametrized tests**: DRY principle - single test function validates all fixtures
 - **Documentation**: README.md in each directory explains fixture purpose and usage
 
-**Total Fixtures Planned:** 45-60 across 4 categories (Sprint 7: 25-30 fixtures)
+**Total Fixtures Planned:** 45-60 across 4 categories (Sprint 7: 34 fixtures)
 
 ---
 
@@ -271,7 +271,7 @@ macro_expansion:
       value: 100
     - name: "i"
       type: "set"
-      elements: ["1", "2", "3", ..., "100"]  # Expanded from / 1*%n% /
+      elements: ["1", "2", "3", "100"]  # ... (1-100, expanded from / 1*%n% /)
   preprocessor_actions:
     - directive: "$set"
       variable: "n"
@@ -359,7 +359,7 @@ range_alpha:
   symbols_defined:
     - name: "s"
       type: "set"
-      elements: ["s1", "s2", "s3", ..., "s10"]
+      elements: ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"]
       range_syntax: "s1*s10"
   notes: "Alphabetic range: Set s / s1*s10 / expands to 10 elements"
 ```
@@ -728,16 +728,19 @@ Each .gms fixture file should start with a header comment:
 | | Scalar assign | scalar_assignment | 1 | 0 | 0 | 1 | High |
 | | Multiple scalars | multiple_scalars | 1 | 0 | 1 | 2 | Critical |
 | | Indexed assign | assignment_indexed | 1 | 0 | 1 | 2 | Medium |
-| **TOTAL** | | | **25** | **3** | **13** | **41** | |
+| **TOTAL** | | | **24** | **3** | **13** | **40** | |
 
 **Summary:**
-- **Total fixtures:** 41 (Sprint 7 only)
+- **Total test cases:** 40 (Sprint 7 only)
+- **Total fixture files:** 34 (9 preprocessor + 8 sets + 8 multidim + 9 statements)
 - **Positive tests:** 25 (61%)
 - **Negative tests:** 3 (7%)
 - **Edge cases:** 13 (32%)
-- **Critical priority:** 10 fixtures
-- **High priority:** 16 fixtures
-- **Medium priority:** 15 fixtures
+- **Critical priority:** 10 features
+- **High priority:** 16 features
+- **Medium priority:** 15 features
+
+**Note:** Some features require multiple test types (positive + negative + edge), so the total number of test cases (41) exceeds the number of fixture files (35). Each fixture file typically contains one test type.
 
 ### 6.2 Coverage Gaps Identified
 
@@ -756,11 +759,11 @@ Based on convexity fixture timing (~0.3s for 18 fixtures):
 
 | Category | Fixtures | Estimated Time |
 |----------|----------|----------------|
-| Preprocessor | 11 | ~0.6s |
-| Set Range | 5 | ~0.3s |
-| Multi-Dim | 10 | ~0.6s |
+| Preprocessor | 9 | ~0.5s |
+| Set Range | 8 | ~0.5s |
+| Multi-Dim | 8 | ~0.5s |
 | Statements | 9 | ~0.5s |
-| **TOTAL** | **35** | **~2.0s** |
+| **TOTAL** | **34** | **~2.0s** |
 
 **Target:** <5s for all Sprint 7 parser unit tests ✅
 
@@ -813,7 +816,7 @@ Based on convexity fixture timing (~0.3s for 18 fixtures):
 
 - [ ] Create `multidim/README.md` from template
 - [ ] Create `multidim/expected_results.yaml`
-- [ ] Create 9 fixture files:
+- [ ] Create 8 fixture files:
   - [ ] `parameter_2d.gms` (High)
   - [ ] `parameter_3d.gms` (Medium)
   - [ ] `variable_2d.gms` (High)
@@ -852,7 +855,7 @@ Based on convexity fixture timing (~0.3s for 18 fixtures):
 
 ### 7.7 Acceptance Criteria
 
-- [ ] All 35+ fixtures created and documented
+- [ ] All 34+ fixtures created and documented
 - [ ] All fixtures have header comments
 - [ ] All fixtures have expected results in YAML
 - [ ] All 4 README.md files created

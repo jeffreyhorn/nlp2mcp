@@ -29,9 +29,9 @@ Completed Sprint 7 Prep Task 9: Designed comprehensive test fixture strategy for
 **1. Fixture Hierarchy: 4-Directory Organization**
 - `tests/fixtures/preprocessor/` - 9 fixtures (Critical/High priority)
 - `tests/fixtures/sets/` - 8 fixtures (Critical/High priority)
-- `tests/fixtures/multidim/` - 9 fixtures (High/Medium priority)
+- `tests/fixtures/multidim/` - 8 fixtures (High/Medium priority)
 - `tests/fixtures/statements/` - 9 fixtures (Critical/High/Medium priority)
-- **Total Sprint 7:** 35 fixtures (25 positive, 3 negative, 13 edge cases)
+- **Total Sprint 7:** 34 fixture files, 40 test cases (24 positive, 3 negative, 13 edge cases)
 - **Decision:** Organize by feature category (not syntax), progressive complexity
 
 **2. Expected Results: Extended YAML Schema**
@@ -59,9 +59,9 @@ Completed Sprint 7 Prep Task 9: Designed comprehensive test fixture strategy for
 
 **5. Coverage: Systematic Feature Mapping**
 - 26 parser features mapped across 4 categories
-- Sprint 7: 41 fixtures (preprocessor: 9, sets: 8, multidim: 9, statements: 9)
+- Sprint 7: 34 fixture files, 40 test cases (preprocessor: 9, sets: 8, multidim: 8, statements: 9)
 - Sprint 8-10: 60+ total fixtures planned (tables, conditionals, loops, etc.)
-- Prioritization: 10 Critical, 16 High, 15 Medium
+- Prioritization: 7 Critical, 14 High, 13 Medium
 - **Decision:** 100% coverage of Sprint 7 features, roadmap for Sprints 8-10
 
 **6. Fixture Principles**
@@ -75,11 +75,11 @@ Completed Sprint 7 Prep Task 9: Designed comprehensive test fixture strategy for
 
 | Category | Fixtures | Critical | High | Medium | Execution Time |
 |----------|----------|----------|------|--------|----------------|
-| Preprocessor | 9 | 3 | 3 | 3 | ~0.6s |
-| Set Range | 8 | 1 | 3 | 4 | ~0.3s |
-| Multi-Dim | 9 | 0 | 4 | 5 | ~0.6s |
+| Preprocessor | 9 | 3 | 3 | 3 | ~0.5s |
+| Set Range | 8 | 1 | 3 | 4 | ~0.5s |
+| Multi-Dim | 8 | 0 | 4 | 4 | ~0.5s |
 | Statements | 9 | 3 | 4 | 2 | ~0.5s |
-| **TOTAL** | **35** | **10** | **16** | **15** | **~2.0s** |
+| **TOTAL** | **34** | **7** | **14** | **13** | **~2.0s** |
 
 **Sprint 7 Feature Coverage:**
 - Preprocessor: `$set`, `$if not set`, `$if`/`$else`, `%macro%`, `$eolCom`, combined
@@ -148,10 +148,10 @@ def test_preprocessor_parsing(fixture_name, expected_results):
 1. Directory setup (Day 1)
 2. Preprocessor fixtures (Day 1-2): 9 fixtures, test_preprocessor.py
 3. Set range fixtures (Day 2): 8 fixtures, test_sets.py
-4. Multi-dim fixtures (Day 3): 9 fixtures, test_multidim.py
+4. Multi-dim fixtures (Day 3): 8 fixtures, test_multidim.py
 5. Statement fixtures (Day 4): 9 fixtures, test_statements.py
 6. Integration and documentation (Day 5): E2E tests, verification
-7. Acceptance criteria: 35+ fixtures, <5s execution, 100% feature coverage
+7. Acceptance criteria: 34 fixtures, <5s execution, 100% feature coverage
 
 **Estimated Effort:** 3-4 hours for Sprint 7 fixture creation
 
@@ -195,7 +195,7 @@ def test_preprocessor_parsing(fixture_name, expected_results):
 - [x] Expected results format specified (YAML schema) ✅ Complete schema in Appendix B
 - [x] Test case generation approach documented (parametrized) ✅ Following convexity pattern
 - [x] Fixture documentation template created ✅ README + header templates
-- [x] Coverage matrix identifies gaps ✅ 41 Sprint 7 fixtures, Sprint 8-10 gaps identified
+- [x] Coverage matrix identifies gaps ✅ 34 fixture files (40 test cases), Sprint 8-10 gaps identified
 - [x] Cross-referenced with Tasks 2, 3, 4 (parser features) ✅ All research integrated
 - [x] Implementation checklist for Sprint 7 created ✅ 7-phase checklist
 
@@ -203,7 +203,7 @@ def test_preprocessor_parsing(fixture_name, expected_results):
 
 **Short-term (Sprint 7):**
 - Systematic test coverage for all new parser features
-- Fast test execution (<2s for 35 fixtures)
+- Fast test execution (<2s for 34 fixtures)
 - Easy maintenance (templates + parametrized tests)
 - Clear documentation (README + headers)
 
