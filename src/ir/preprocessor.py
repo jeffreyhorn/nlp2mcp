@@ -252,9 +252,9 @@ def extract_conditional_sets(source: str) -> dict[str, str]:
         {'size': '10'}
 
     Notes:
-        - Case-insensitive matching for GAMS directives ($if, $set)
-        - Variable names preserve case from source
-        - Backreference \\1 matches case-insensitively with re.IGNORECASE flag
+        - Case-insensitive matching for GAMS directives ($if, $set) and backreference
+        - Backreference \\1 matches case-insensitively (e.g., SIZE matches size)
+        - Variable name case from first occurrence is preserved in output
         - Handles both quoted and unquoted default values
         - Unquoted values: [\\w.-]+ pattern captures identifiers, numbers with
           dots/hyphens (e.g., 1e-6, 3.14) but stops at semicolons and dollar signs
@@ -349,9 +349,9 @@ def strip_conditional_directives(source: str) -> str:
 
         # Check if this line contains $if not set directive (more precise)
         if re.match(r"^\$if\s+not\s+set\b", stripped, re.IGNORECASE):
-            # Replace with comment to preserve line number
-            # Use stripped version to avoid preserving leading whitespace
-            filtered.append(f"* [Stripped: {stripped}]")
+            # Replace with comment to preserve line number, preserving original indentation
+            leading_ws = line[: len(line) - len(line.lstrip())]
+            filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
         else:
             # Keep line unchanged
             filtered.append(line)
