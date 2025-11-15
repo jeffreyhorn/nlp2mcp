@@ -109,8 +109,11 @@ jobs:
           fi
 
           # Parser files changed - check if dashboard is committed
-          if git diff --quiet docs/status/GAMSLIB_CONVERSION_STATUS.md; then
-            echo "✅ Dashboard is up-to-date (no changes)"
+          # Ignore timestamp-only changes (Generated: line)
+          DASHBOARD_DIFF=$(git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep -v "^[-+].*Generated:" || true)
+
+          if [ -z "$DASHBOARD_DIFF" ]; then
+            echo "✅ Dashboard is up-to-date (no changes or timestamp-only changes)"
           else
             echo "❌ Dashboard has uncommitted changes"
             echo ""
@@ -119,7 +122,7 @@ jobs:
             echo "  git add docs/status/GAMSLIB_CONVERSION_STATUS.md"
             echo "  git commit -m 'Update GAMSLib dashboard'"
             echo ""
-            echo "Dashboard diff:"
-            git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | head -50
+            echo "Dashboard diff (excluding timestamp):"
+            echo "$DASHBOARD_DIFF" | head -50
             exit 1
           fi
