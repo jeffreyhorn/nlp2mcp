@@ -175,21 +175,19 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
             arg = expr.args[0]
             if isinstance(arg, SymbolRef) and arg.name in index_map:
                 element = index_map[arg.name]
-                # Find the set this index belongs to
-                for set_name in index_map:
-                    if set_name == arg.name:
-                        # Get set members to determine ordinal
-                        if set_name in model_ir.sets:
-                            members = model_ir.sets[set_name].members
-                            if element in members:
-                                return float(members.index(element) + 1)  # 1-based
-                        # Check aliases
-                        if set_name in model_ir.aliases:
-                            target = model_ir.aliases[set_name].target
-                            if target in model_ir.sets:
-                                members = model_ir.sets[target].members
-                                if element in members:
-                                    return float(members.index(element) + 1)  # 1-based
+                set_name = arg.name
+                # Get set members to determine ordinal
+                if set_name in model_ir.sets:
+                    members = model_ir.sets[set_name].members
+                    if element in members:
+                        return float(members.index(element) + 1)  # 1-based
+                # Check aliases
+                if set_name in model_ir.aliases:
+                    target = model_ir.aliases[set_name].target
+                    if target in model_ir.sets:
+                        members = model_ir.sets[target].members
+                        if element in members:
+                            return float(members.index(element) + 1)  # 1-based
                 raise ConditionEvaluationError(f"Could not find ordinal for element '{element}'")
             raise ConditionEvaluationError("ord() argument must be an index reference")
 
