@@ -95,18 +95,28 @@ jobs:
       - name: Check dashboard is up-to-date
         if: github.event_name == 'pull_request'
         run: |
-          # Fail if dashboard changes are not committed
+          # Check if dashboard has uncommitted changes
           if git diff --quiet docs/status/GAMSLIB_CONVERSION_STATUS.md; then
-            echo "✅ Dashboard is up-to-date"
+            echo "✅ Dashboard is up-to-date (no changes)"
           else
-            echo "❌ Dashboard has uncommitted changes"
-            echo ""
-            echo "Please commit the updated dashboard:"
-            echo "  make ingest-gamslib"
-            echo "  git add docs/status/GAMSLIB_CONVERSION_STATUS.md"
-            echo "  git commit -m 'Update GAMSLib dashboard'"
-            echo ""
-            echo "Dashboard diff:"
-            git diff docs/status/GAMSLIB_CONVERSION_STATUS.md
-            exit 1
+            # Dashboard changed - check if it's just timestamp or real changes
+            DIFF_LINES=$(git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep -E '^\+|^-' | grep -v '^\+\+\+' | grep -v '^---' | wc -l)
+            TIMESTAMP_CHANGES=$(git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep -E '^\+\*\*Generated:|^-\*\*Generated:' | wc -l)
+
+            # If only timestamp changed (2 lines: old and new), allow it
+            if [ "$DIFF_LINES" -eq 2 ] && [ "$TIMESTAMP_CHANGES" -eq 2 ]; then
+              echo "✅ Dashboard has only timestamp changes (acceptable)"
+              echo "   This is expected when re-running ingestion"
+            else
+              echo "❌ Dashboard has uncommitted changes (beyond just timestamp)"
+              echo ""
+              echo "Please commit the updated dashboard:"
+              echo "  make ingest-gamslib"
+              echo "  git add docs/status/GAMSLIB_CONVERSION_STATUS.md"
+              echo "  git commit -m 'Update GAMSLib dashboard'"
+              echo ""
+              echo "Dashboard diff:"
+              git diff docs/status/GAMSLIB_CONVERSION_STATUS.md
+              exit 1
+            fi
           fi
