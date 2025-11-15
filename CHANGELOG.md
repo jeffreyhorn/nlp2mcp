@@ -60,7 +60,7 @@ Implemented core preprocessor directive handling functions to support GAMS `$if 
 **GAMSLib Model Verification:**
 - Unit tests use simplified patterns for clarity and independence
 - circle.gms pattern test: Extracts `TESTTOL=1e-6`, expands `%TESTTOL%` → `1e-6` ✅
-- maxmin.gms pattern test: Extracts `N=10`, expands `p1*p%N%` → `p1*p10` ✅
+- maxmin.gms pattern test: Extracts `N=10`, expands `1*%N%` → `1*10` ✅
 - Actual GAMSLib files: circle.gms uses `size=10`, maxmin.gms uses `points=13`
 
 #### Quality Checks

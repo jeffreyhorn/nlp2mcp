@@ -314,8 +314,9 @@ def expand_macros(source: str, macros: dict[str, str]) -> str:
     for var_name, value in macros.items():
         # Replace %varname% with value
         # The % delimiters prevent partial matches
+        # Use lambda to prevent interpreting special regex replacement sequences
         pattern = f"%{re.escape(var_name)}%"
-        result = re.sub(pattern, value, result)
+        result = re.sub(pattern, lambda m: value, result)
 
     return result
 
