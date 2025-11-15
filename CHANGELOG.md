@@ -81,7 +81,7 @@ Completed Sprint 7 Prep Task 6: Surveyed all GAMS syntax features beyond Sprint 
 - **ROI:** 0.2-0.3% per hour (low, but completes coverage)
 - **Features:** File I/O, Advanced preprocessor, While/for loops, Execute statements, $gdxin, Abort statements, etc.
 
-**Total Effort to 90%:** 110-150 hours across Sprints 8-10
+**Total Effort to 90%:** 73-102 hours across Sprints 8-10
 
 **Dependency Graph:**
 - ✅ No blocking circular dependencies detected

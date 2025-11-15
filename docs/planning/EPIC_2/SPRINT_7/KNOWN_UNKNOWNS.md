@@ -359,7 +359,7 @@ Development team (Parser specialist)
 - Sprint 8 can achieve 60-70% with 6 statement-level features (19-28 hours)
 - Sprint 9 can achieve 80% with advanced expressions (18-25 hours)
 - Sprint 10 can achieve 90% with specialized features (36-49 hours)
-- Total effort to 90%: 110-150 hours across Sprints 7-10
+- Total effort to 90%: 73-102 hours across Sprints 8-10
 - Top 6 features (Wave 2) have ROI of 2.0-10.0 (excellent return on investment)
 
 **Parser Roadmap Evidence:**

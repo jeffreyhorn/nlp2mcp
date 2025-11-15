@@ -18,7 +18,7 @@ This document catalogs **52 GAMS syntax features** across 5 categories and provi
 - **Wave 3 (Sprint 9):** Advanced expressions + control flow → 80% parse rate
 - **Wave 4 (Sprint 10):** Display, assignments, advanced sets → 90% parse rate
 
-**Total Estimated Effort:** 110-150 hours across Sprints 8-10 (36-50 hours per sprint)
+**Total Estimated Effort:** 73-102 hours across Sprints 8-10 (19-49 hours per sprint)
 
 **ROI Analysis:** Top 10 features unlock 60% of models with 40% of effort (high concentration of value)
 
@@ -396,7 +396,7 @@ All remaining features (display, loops, file I/O, etc.)
 ### Total Wave 2 Impact
 
 **Models Unlocked:** 5 additional models (mathopt1, trig, hs62, mingamma, mhw4dx, rbrock)  
-**Parse Rate Improvement:** 10% → 60-70% (50-60% gain)  
+**Parse Rate Improvement:** 10% → 60-70% (50-60 percentage point increase)  
 **Effort:** 25-35 hours  
 **ROI:** 1.7-2.4% per hour (excellent)
 
@@ -485,7 +485,7 @@ All remaining features (display, loops, file I/O, etc.)
 - **What:** File output statements
 - **Complexity:** Very High (new subsystem)
 
-**B. $gdxin / $load** - 5-5 hours
+**B. $gdxin / $load** - 5-7 hours
 - **What:** External data loading
 - **Complexity:** High (preprocessor + data loading)
 
@@ -584,12 +584,12 @@ All remaining features (display, loops, file I/O, etc.)
 
 ### Must Have (Sprint 8)
 
-1. ✅ Models keyword (1-2h, ROI: 10.0)
-2. ✅ Multiple scalar declarations (2-3h, ROI: 6.7)
-3. ✅ Model declaration (4-6h, ROI: 4.0)
-4. ✅ Variable attributes (4-5h, ROI: 3.3)
-5. ✅ Solve with objective (4-6h, ROI: 2.0)
-6. ✅ Option statements (4-6h, ROI: 2.5)
+1. ⭐ Models keyword (1-2h, ROI: 10.0)
+2. ⭐ Multiple scalar declarations (2-3h, ROI: 6.7)
+3. ⭐ Model declaration (4-6h, ROI: 4.0)
+4. ⭐ Variable attributes (4-5h, ROI: 3.3)
+5. ⭐ Solve with objective (4-6h, ROI: 2.0)
+6. ⭐ Option statements (4-6h, ROI: 2.5)
 
 **Total:** 19-28 hours, unlocks 50-60% of models
 
