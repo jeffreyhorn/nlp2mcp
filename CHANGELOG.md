@@ -7,6 +7,150 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 7 Prep: Task 6 - GAMS Syntax Feature Survey - 2025-11-14
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed Sprint 7 Prep Task 6: Surveyed all GAMS syntax features beyond Sprint 7 scope and created comprehensive parser roadmap for Sprints 8-10. Cataloged 52 features across 5 categories and identified clear progression path from 30% (Sprint 7) to 90% (Sprint 10) parse rate with ROI-driven prioritization.
+
+**Deliverables Created:**
+- ✅ `docs/planning/EPIC_2/PARSER_ROADMAP.md` (comprehensive feature catalog and implementation roadmap)
+- ✅ Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.3, 1.9, 1.10
+
+#### Key Findings
+
+**Feature Catalog:**
+- **52 GAMS syntax features** cataloged across 5 categories:
+  - Preprocessing & Macros: 7 features
+  - Set Features: 9 features
+  - Parameter & Data Features: 8 features
+  - Variable & Equation Features: 10 features
+  - Statement & Control Features: 18 features
+- **21 features already supported** ✅ (40% coverage)
+- **31 features** identified for Sprints 8-10
+
+**GAMSLib Usage Analysis:**
+- Cross-referenced 9 failed GAMSLib models with feature requirements
+- Feature frequency in failed models:
+  - Preprocessor directives: 22% (2 models)
+  - Model declaration: 22% (2 models)
+  - Set range syntax: 11% (1 model)
+  - Multiple scalar declarations: 11% (1 model)
+  - Option statements: 11% (1 model)
+  - Solve with objective: 11% (1 model)
+  - Models keyword (plural): 11% (1 model)
+- No single feature dominates (steady progress needed across categories)
+
+**ROI Rankings (Top 10 Features):**
+
+| Rank | Feature | Effort | Impact | ROI Score |
+|------|---------|--------|--------|-----------|
+| 1 | `Models` keyword (plural) | 1-2h | 10% | 10.0 |
+| 2 | Multiple scalar declarations | 2-3h | 10% | 6.7 |
+| 3 | Model declaration `m / eq1 /` | 4-6h | 20% | 4.0 |
+| 4 | Variable attributes `.l/.m/.fx` | 2-3h | 5-10% | 3.3 |
+| 5 | Preprocessor directives | 6-8h | 20% | 2.5 |
+| 6 | Set range syntax `1*10` | 3-4h | 10% | 2.5 |
+| 7 | Option statements | 3-4h | 10% | 2.5 |
+| 8 | Solve with objective | 4-6h | 10% | 2.0 |
+| 9 | Indexed assignments | 4-6h | 5-10% | 1.7 |
+| 10 | Indexed sets | 4-5h | 5-10% | 1.7 |
+
+**Sprint Roadmaps:**
+
+**Sprint 8 (Wave 2) - 60-70% Parse Rate:**
+- **Features:** 6 high-ROI statement-level features
+- **Effort:** 19-28 hours
+- **Models unlocked:** 6 additional models (mathopt1, trig, hs62, mingamma, mhw4dx, rbrock)
+- **ROI:** 1.7-2.4% per hour (excellent)
+- **Features:** Models keyword, Multiple scalar decl, Model declaration, Variable attributes, Solve with objective, Option statements
+
+**Sprint 9 (Wave 3) - 80% Parse Rate:**
+- **Features:** 7 advanced expression and control flow features
+- **Effort:** 35-46 hours
+- **Models unlocked:** +2 models (expected)
+- **ROI:** 0.3-0.6% per hour (moderate)
+- **Features:** Conditional assignments, Set operations, Display, Loops, Conditional execution, Indexed sets, Equation attributes
+
+**Sprint 10 (Wave 4) - 90% Parse Rate:**
+- **Features:** 10 specialized features and edge cases
+- **Effort:** 36-52 hours
+- **Models unlocked:** +1 model (expected)
+- **ROI:** 0.2-0.3% per hour (low, but completes coverage)
+- **Features:** File I/O, Advanced preprocessor, While/for loops, Execute statements, $gdxin, Abort statements, etc.
+
+**Total Effort to 90%:** 90-126 hours across Sprints 8-10
+
+**Dependency Graph:**
+- ✅ No blocking circular dependencies detected
+- ✅ Features mostly independent (can parallelize implementation)
+- ✅ Preprocessor features are foundational (used by many models)
+- ✅ Statement-level features are independent (Sprint 8 can proceed in parallel)
+
+#### Unknowns Verified
+
+**Unknown 1.3: Is 30% GAMSLib parse rate achievable in Sprint 7?**
+- ✅ **ENHANCED with roadmap insights**
+- Sprint 7 target (30-40%) confirmed conservative
+- Clear path to 90% by Sprint 10 documented
+- No blocking dependencies between features
+- Total effort: 90-126 hours across 3 sprints
+
+**Unknown 1.9: Can we defer equation attributes to Sprint 8?**
+- ✅ **VERIFIED - Can defer to Sprint 9**
+- Zero models in Sprint 7 scope require equation attributes
+- Variable attributes (`.l`, `.m`, `.fx`) are separate feature (Sprint 8 priority)
+- Equation attributes have low ROI (0.8)
+- Recommendation: Sprint 8 for variable attributes, Sprint 9 for equation attributes
+
+**Unknown 1.10: Do we need assignment statements for GAMSLib parsing?**
+- ✅ **VERIFIED - Already supported, enhance in Sprint 8**
+- Basic assignments already supported in grammar (assignment_stmt rule)
+- No failed models blocked by assignment statements
+- Indexed assignments needed for Sprint 8 (ROI: 1.7)
+- Conditional assignments needed for Sprint 9 (ROI: 0.8)
+
+#### Sprint 8-10 Implementation Priorities
+
+**Must Have (Sprint 8):**
+1. Models keyword (1-2h, ROI: 10.0)
+2. Multiple scalar declarations (2-3h, ROI: 6.7)
+3. Model declaration (4-6h, ROI: 4.0)
+4. Variable attributes (4-5h, ROI: 3.3)
+5. Solve with objective (4-6h, ROI: 2.0)
+6. Option statements (4-6h, ROI: 2.5)
+
+**Total:** 19-28 hours, unlocks 50-60% of models
+
+**Should Have (Sprint 9):**
+7. Indexed assignments (4-6h, ROI: 1.7)
+8. Indexed sets (4-5h, ROI: 1.7)
+9. Display statements (4-6h, ROI: 0.8)
+10. Set operations (6-8h, ROI: 0.4)
+
+**Total:** 35-46 hours, unlocks additional 10-20% of models
+
+**Nice to Have (Sprint 10):**
+11. Loop statements (6-8h, ROI: 0.4)
+12. Conditional execution (5-6h, ROI: 0.4)
+13. Advanced preprocessor (10-15h, ROI: 0.4)
+14. File I/O (15-20h, ROI: 0.2)
+
+**Total:** 36-49 hours, completes remaining 10% of models
+
+#### Conclusion
+
+Sprint 7-10 parser roadmap provides clear, ROI-driven path from 30% to 90% parse rate:
+- ✅ **Wave 2 (Sprint 8):** 6 features, 19-28h → 60-70% parse rate
+- ✅ **Wave 3 (Sprint 9):** 7 features, 35-46h → 80% parse rate
+- ✅ **Wave 4 (Sprint 10):** 10 features, 36-49h → 90% parse rate
+
+Top 6 features (Tier 1-2, ROI >2.0) unlock 60% of models with 40% of total effort, demonstrating excellent concentration of value in early sprints.
+
+---
+
 ### Sprint 7 Prep: Task 5 - Test Suite Performance Profiling - 2025-11-14
 
 **Status:** ✅ COMPLETE

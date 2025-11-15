@@ -353,6 +353,23 @@ Development team (Parser specialist)
 
 **Decision:** 30% parse rate is achievable in Sprint 7 with preprocessor mocking (6-8h) + set range syntax (3-4h). Stretch goal of 40% is highly achievable by adding these 2 critical features.
 
+**Additional Findings from Task 6 (Parser Roadmap):**
+- Complete feature catalog created: 52 GAMS features across 5 categories
+- Roadmap analysis confirms Sprint 7 target (30-40%) is conservative
+- Sprint 8 can achieve 60-70% with 6 statement-level features (19-28 hours)
+- Sprint 9 can achieve 80% with advanced expressions (35-46 hours)
+- Sprint 10 can achieve 90% with specialized features (36-52 hours)
+- Total effort to 90%: 90-126 hours across Sprints 8-10
+- Top 6 features (Wave 2) have ROI of 2.0-10.0 (excellent return on investment)
+
+**Parser Roadmap Evidence:**
+- Full analysis: `docs/planning/EPIC_2/PARSER_ROADMAP.md`
+- Wave 2 features: Models keyword, Multiple scalars, Model declaration, Variable attributes, Solve with objective, Option statements
+- Each wave builds incrementally toward higher parse rates
+- No blocking dependencies between features (can parallelize implementation)
+
+**Conclusion:** Sprint 7's 30-40% target is not only achievable but conservative. The roadmap shows clear path to 90% by Sprint 10.
+
 ---
 
 ## Unknown 1.4: Does Lark grammar support preprocessor directives or need custom lexer?
@@ -752,7 +769,35 @@ Expected: Determine if this causes parse failure or can be ignored
 Development team (Parser specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED - Can defer to Sprint 8  
+**Verified by:** Task 6 (GAMS Syntax Feature Survey)  
+**Date:** 2025-11-14
+
+**Findings:**
+- Analyzed all 9 failed GAMSLib models - **NONE use equation attributes** (`.l`, `.m`)
+- Variable attributes (`.lo`, `.up`, `.l`, `.m`, `.fx`) are different from equation attributes
+- Equation attributes are **NOT blocking** any models in Sprint 7 scope
+- Can safely defer to Sprint 8 Wave 3 (advanced features)
+
+**Evidence:**
+- GAMSLib failure analysis: No models blocked by equation attributes
+- Parser roadmap: Equation attributes categorized as Wave 3 (Sprint 9)
+- Variable attributes (`.lo`, `.up`) already supported for bounds
+- Level/marginal attributes (`.l`, `.m`) are post-solve values (not needed for parsing)
+
+**Decision:** ✅ **DEFER equation attributes to Sprint 9 Wave 3**
+
+**Justification:**
+- Zero models in Sprint 7 scope require equation attributes
+- Variable attributes are separate feature (`.l`, `.m`, `.fx` for variables)
+- Implementation effort: 4-5 hours (Medium complexity)
+- ROI: 0.8 (low - no models unlocked)
+- Better to focus Sprint 7/8 on features that unlock models
+
+**Recommendation:**
+- Sprint 7: Focus on preprocessor + set range (unlocks 3-4 models)
+- Sprint 8: Add variable attributes `.l`, `.m`, `.fx` (ROI: 3.3, may unlock models)
+- Sprint 9: Add equation attributes `.l`, `.m` if needed for advanced features
 
 ---
 
@@ -798,7 +843,42 @@ Expected: Parse succeeds or fails with clear error
 Development team (Parser specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED - Yes, needed for Sprint 8  
+**Verified by:** Task 6 (GAMS Syntax Feature Survey)  
+**Date:** 2025-11-14
+
+**Findings:**
+- Assignment statements are **common in GAMS** but not blocking Sprint 7 models
+- Analyzed 9 failed GAMSLib models - **NONE blocked by assignment statements**
+- Current parser **already supports assignments** in grammar (assignment_stmt rule)
+- Assignments are used for:
+  - Scalar initialization: `x = 10;`
+  - Indexed assignments: `p(i) = value;`
+  - Conditional assignments: `p(i)$(condition) = value;` (Sprint 9 feature)
+
+**Evidence:**
+- Grammar analysis: `assignment_stmt` rule exists in `gams_grammar.lark`
+- GAMSLib failure analysis: No models fail due to assignments
+- Parser roadmap: Indexed assignments categorized as Sprint 8 Wave 2 (ROI: 1.7)
+- Conditional assignments categorized as Sprint 9 Wave 3 (ROI: 0.8)
+
+**Decision:** ✅ **Assignments already supported for Sprint 7, enhance in Sprint 8**
+
+**Current Support (Sprint 7):**
+- ✅ Simple assignments: `x = value;`
+- ✅ Basic scalar assignments work
+
+**Needed for Sprint 8:**
+- ❌ Indexed assignments: `p(i) = expr;` (4-6 hours, ROI: 1.7)
+- ❌ Complex expressions in assignments
+
+**Needed for Sprint 9:**
+- ❌ Conditional assignments: `p(i)$(condition) = expr;` (6-8 hours, ROI: 0.8)
+
+**Recommendation:**
+- Sprint 7: No action needed (basic assignments work)
+- Sprint 8: Add indexed assignments `p(i) = expr` (unlocks parametric models)
+- Sprint 9: Add conditional assignments `$(condition)` (advanced feature)
 
 ---
 

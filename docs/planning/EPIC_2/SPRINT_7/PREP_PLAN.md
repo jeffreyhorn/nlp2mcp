@@ -807,11 +807,50 @@ Create `docs/planning/EPIC_2/SPRINT_7/TEST_PERFORMANCE_BASELINE.md`:
 
 **Changes:**
 
-*To be completed*
+1. Created `docs/planning/EPIC_2/PARSER_ROADMAP.md` (comprehensive parser feature catalog and roadmap)
+2. Cataloged **52 GAMS syntax features** across 5 categories:
+   - Preprocessing & Macros: 7 features
+   - Set Features: 9 features
+   - Parameter & Data Features: 8 features
+   - Variable & Equation Features: 10 features
+   - Statement & Control Features: 18 features
+3. Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.3, 1.9, 1.10
 
 **Result:**
 
-*To be completed*
+✅ **Complete Parser Roadmap for Sprints 8-10**
+
+**Feature Catalog:**
+- 52 GAMS features cataloged and analyzed
+- Current support status documented (21 features already supported ✅)
+- 31 features identified for future implementation
+
+**GAMSLib Usage Analysis:**
+- Cross-referenced 9 failed models with feature requirements
+- No single feature dominates (steady progress across categories needed)
+- Feature frequency: Preprocessor (22%), Model declaration (22%), Set range (11%), etc.
+
+**ROI Rankings:**
+- **Tier 1 (Excellent ROI >4.0):** Models keyword (10.0), Multiple scalars (6.7), Model declaration (4.0)
+- **Tier 2 (Good ROI 2.0-4.0):** Variable attributes (3.3), Preprocessor (2.5), Set range (2.5), Option statements (2.5), Solve with objective (2.0)
+- **Tier 3 (Moderate ROI 1.0-2.0):** Indexed assignments (1.7), Indexed sets (1.7)
+- **Tier 4 (Low ROI <1.0):** Display, loops, file I/O, etc.
+
+**Sprint Roadmaps:**
+- **Sprint 8 (Wave 2):** 6 features, 19-28 hours, 60-70% parse rate (ROI: 1.7-2.4% per hour)
+- **Sprint 9 (Wave 3):** 7 features, 35-46 hours, 80% parse rate (ROI: 0.3-0.6% per hour)
+- **Sprint 10 (Wave 4):** 10 features, 36-52 hours, 90% parse rate (ROI: 0.2-0.3% per hour)
+- **Total:** 90-126 hours to achieve 90% parse rate
+
+**Dependency Graph:**
+- No blocking circular dependencies
+- Features mostly independent (can parallelize)
+- Preprocessor features are foundational (many models use them)
+
+**Unknowns Verified:**
+- ✅ **Unknown 1.3:** Enhanced with roadmap insights - Sprint 7 target (30-40%) is conservative, clear path to 90% by Sprint 10
+- ✅ **Unknown 1.9:** Equation attributes can be deferred to Sprint 9 (not blocking any models)
+- ✅ **Unknown 1.10:** Assignments already supported for Sprint 7, enhance with indexed assignments in Sprint 8
 
 ### Verification
 
@@ -853,13 +892,14 @@ test -f test_profile.txt
 
 ## Task 6: Survey GAMS Syntax Features for Wave 2
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 4-6 hours  
-**Deadline:** Before Sprint 7 Day 1  
+**Actual Time:** ~5 hours  
+**Completed:** 2025-11-14  
 **Owner:** Development team (Parser specialist)  
 **Dependencies:** Task 2 (GAMSLib failure analysis)  
-**Unknowns Verified:** 1.3 (contributes to), 1.9, 1.10
+**Unknowns Verified:** 1.3 ✅ (enhanced), 1.9 ✅, 1.10 ✅
 
 ### Objective
 
@@ -985,13 +1025,13 @@ grep -q "Roadmap" docs/planning/EPIC_2/PARSER_ROADMAP.md
 
 ### Acceptance Criteria
 
-- [ ] GAMS features cataloged (≥30 features across 5 categories)
-- [ ] GAMSLib usage analyzed (feature frequency in failed models)
-- [ ] Dependency graph created
-- [ ] Effort/impact estimated for top 20 features
-- [ ] Roadmap drafted for Sprints 8-10
-- [ ] Cross-referenced with PROJECT_PLAN.md targets
-- [ ] Unknowns 1.3, 1.9, 1.10 verified and updated in KNOWN_UNKNOWNS.md
+- [x] GAMS features cataloged (≥30 features across 5 categories) ✅ 52 features across 5 categories
+- [x] GAMSLib usage analyzed (feature frequency in failed models) ✅ Cross-referenced 9 models
+- [x] Dependency graph created ✅ No blocking circular dependencies
+- [x] Effort/impact estimated for top 20 features ✅ All 52 features analyzed with ROI rankings
+- [x] Roadmap drafted for Sprints 8-10 ✅ Wave 2 (Sprint 8), Wave 3 (Sprint 9), Wave 4 (Sprint 10)
+- [x] Cross-referenced with PROJECT_PLAN.md targets ✅ Aligns with Sprint 8-10 parse rate goals
+- [x] Unknowns 1.3, 1.9, 1.10 verified and updated in KNOWN_UNKNOWNS.md ✅
 
 ---
 
