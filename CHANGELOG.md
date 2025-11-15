@@ -21,7 +21,7 @@ Completed Sprint 7 Prep Task 9: Designed comprehensive test fixture strategy for
 - ✅ Extended YAML schema for parser feature validation
 - ✅ Parametrized test approach (following proven convexity pattern)
 - ✅ README and fixture header templates
-- ✅ Coverage matrix for 41 Sprint 7 fixtures
+- ✅ Coverage matrix for 34 Sprint 7 fixture files
 - ✅ Sprint 8-10 roadmap (60+ total fixtures planned)
 
 #### Key Design Decisions
@@ -103,7 +103,7 @@ tests/fixtures/
 ├── multidim/             # NEW - Sprint 7
 │   ├── README.md
 │   ├── expected_results.yaml
-│   └── 9 .gms fixtures
+│   └── 8 .gms fixtures
 ├── statements/           # NEW - Sprint 7
 │   ├── README.md
 │   ├── expected_results.yaml

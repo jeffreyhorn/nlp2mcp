@@ -733,14 +733,14 @@ Each .gms fixture file should start with a header comment:
 **Summary:**
 - **Total test cases:** 40 (Sprint 7 only)
 - **Total fixture files:** 34 (9 preprocessor + 8 sets + 8 multidim + 9 statements)
-- **Positive tests:** 25 (61%)
-- **Negative tests:** 3 (7%)
+- **Positive tests:** 24 (60%)
+- **Negative tests:** 3 (8%)
 - **Edge cases:** 13 (32%)
-- **Critical priority:** 10 features
-- **High priority:** 16 features
-- **Medium priority:** 15 features
+- **Critical priority:** 7 features
+- **High priority:** 14 features
+- **Medium priority:** 13 features
 
-**Note:** Some features require multiple test types (positive + negative + edge), so the total number of test cases (41) exceeds the number of fixture files (35). Each fixture file typically contains one test type.
+**Note:** Some features require multiple test types (positive + negative + edge), so the total number of test cases (40) exceeds the number of fixture files (34). Each fixture file typically contains one test type.
 
 ### 6.2 Coverage Gaps Identified
 

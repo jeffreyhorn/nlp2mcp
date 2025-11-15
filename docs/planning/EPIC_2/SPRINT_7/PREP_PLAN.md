@@ -1752,7 +1752,7 @@ Created comprehensive parser test fixture strategy with complete implementation 
    - Parametrized test pattern using `@pytest.mark.parametrize`
    - 4 test files: `test_preprocessor.py`, `test_sets.py`, `test_multidim.py`, `test_statements.py`
    - DRY principle - single test function validates all fixtures per category
-   - Expected execution time: <2s for all 35 fixtures (<5s target ✅)
+   - Expected execution time: <2s for all 34 fixture files (<5s target ✅)
 
 5. **Documentation Templates:**
    - README.md template with 9 sections (overview, catalog, usage, validation, etc.)
@@ -1762,7 +1762,7 @@ Created comprehensive parser test fixture strategy with complete implementation 
 
 6. **Coverage Matrix:**
    - Mapped 26 parser features across 4 categories
-   - Identified coverage for Sprint 7 (34 fixture files, 40 test cases), Sprint 8 (15-20), Sprint 9 (20-25), Sprint 10 (15-20)
+   - Identified coverage for Sprint 7 (34 fixture files, 40 test cases), Sprint 8 (15-20 fixture files), Sprint 9 (20-25 fixture files), Sprint 10 (15-20 fixture files)
    - Prioritized fixtures: 7 Critical, 14 High, 13 Medium
    - Identified gaps deferred to Sprints 8-10 (tables, conditionals, loops, etc.)
 
