@@ -70,9 +70,9 @@ After committing and pushing all changes:
                 --base main
    ```
 2. Request a review from Copilot:
-   ```bash
-   gh pr edit --add-reviewer copilot
-   ```
+   - Visit the PR on GitHub.com
+   - Click the "Copilot" button or look for Copilot review options in the PR interface
+   - Request a Copilot code review
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
    - Read each comment carefully
@@ -167,7 +167,7 @@ After committing and pushing all changes:
    ```
 2. Request a review from Copilot:
    ```bash
-   gh pr edit --add-reviewer copilot
+   Visit the PR on GitHub.com and request a Copilot code review via the web interface
    ```
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
@@ -255,7 +255,7 @@ After committing and pushing all changes:
    ```
 2. Request a review from Copilot:
    ```bash
-   gh pr edit --add-reviewer copilot
+   Visit the PR on GitHub.com and request a Copilot code review via the web interface
    ```
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
@@ -342,7 +342,7 @@ After committing and pushing all changes:
    ```
 2. Request a review from Copilot:
    ```bash
-   gh pr edit --add-reviewer copilot
+   Visit the PR on GitHub.com and request a Copilot code review via the web interface
    ```
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
@@ -438,7 +438,7 @@ After committing and pushing all changes:
    ```
 2. Request a review from Copilot:
    ```bash
-   gh pr edit --add-reviewer copilot
+   Visit the PR on GitHub.com and request a Copilot code review via the web interface
    ```
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
@@ -524,7 +524,7 @@ After committing and pushing all changes:
    ```
 2. Request a review from Copilot:
    ```bash
-   gh pr edit --add-reviewer copilot
+   Visit the PR on GitHub.com and request a Copilot code review via the web interface
    ```
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
@@ -607,7 +607,7 @@ After committing and pushing all changes:
    ```
 2. Request a review from Copilot:
    ```bash
-   gh pr edit --add-reviewer copilot
+   Visit the PR on GitHub.com and request a Copilot code review via the web interface
    ```
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
@@ -701,7 +701,7 @@ After committing and pushing all changes:
    ```
 2. Request a review from Copilot:
    ```bash
-   gh pr edit --add-reviewer copilot
+   Visit the PR on GitHub.com and request a Copilot code review via the web interface
    ```
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
@@ -787,7 +787,7 @@ After committing and pushing all changes:
    ```
 2. Request a review from Copilot:
    ```bash
-   gh pr edit --add-reviewer copilot
+   Visit the PR on GitHub.com and request a Copilot code review via the web interface
    ```
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
@@ -877,7 +877,7 @@ After committing and pushing all changes:
    ```
 2. Request a review from Copilot:
    ```bash
-   gh pr edit --add-reviewer copilot
+   Visit the PR on GitHub.com and request a Copilot code review via the web interface
    ```
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
@@ -979,7 +979,7 @@ After committing and pushing all changes:
    ```
 2. Request a review from Copilot:
    ```bash
-   gh pr edit --add-reviewer copilot
+   Visit the PR on GitHub.com and request a Copilot code review via the web interface
    ```
 3. Wait for Copilot's review to be completed
 4. Address all review comments:
