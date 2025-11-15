@@ -1,0 +1,18 @@
+# Template for set range fixture expected results
+#
+# Each fixture should have an entry with:
+# - input: Path to .gms file
+# - expected: Expected parsing behavior
+#
+# Example:
+# - fixture_name: numeric_range
+#   input: numeric_range.gms
+#   expected:
+#     parse_success: true
+#     set_name: i
+#     range_type: numeric
+#     range_start: 1
+#     range_end: 6
+#     expanded_elements: ["1", "2", "3", "4", "5", "6"]
+#
+# Fixtures to be added in Day 5
