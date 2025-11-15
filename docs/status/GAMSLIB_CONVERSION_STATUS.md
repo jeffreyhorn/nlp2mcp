@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-15 14:36:18
+**Generated:** 2025-11-15 14:40:02
 **Sprint:** Sprint 6
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint6.json`](../../reports/gamslib_ingestion_sprint6.json)
@@ -66,10 +66,10 @@ No terminal matches 'i' in the current parser context, at line 18 col 5
 Set i 'points' / p1*p10 /;
     ^
 Expected one of: 
-	* LPAR
-	* __ANON_0
 	* ASSIGN
 	* DOT
+	* __ANON_0
+	* LPAR
 
 ```
 
@@ -84,10 +84,10 @@ No terminal matches 'i' in the current parser context, at line 28 col 5
 Set i 'indices for the 6 points' / 1*6 /;
     ^
 Expected one of: 
-	* LPAR
-	* __ANON_0
 	* ASSIGN
 	* DOT
+	* __ANON_0
+	* LPAR
 
 ```
 
@@ -117,12 +117,12 @@ No terminal matches 'm' in the current parser context, at line 38 col 8
 Models m / all /;
        ^
 Expected one of: 
-	* LPAR
-	* __ANON_0
-	* ASSIGN
-	* SEMI
 	* DOT
 	* SLASH
+	* SEMI
+	* __ANON_0
+	* ASSIGN
+	* LPAR
 
 ```
 
@@ -137,10 +137,10 @@ No terminal matches 'd' in the current parser context, at line 31 col 4
    d        'dimension of space' / x, y    
    ^
 Expected one of: 
-	* LPAR
-	* __ANON_0
 	* ASSIGN
 	* DOT
+	* __ANON_0
+	* LPAR
 
 ```
 
@@ -155,10 +155,10 @@ No terminal matches 'l' in the current parser context, at line 37 col 8
 option limCol = 0, limRow = 0;
        ^
 Expected one of: 
-	* LPAR
-	* __ANON_0
 	* ASSIGN
 	* DOT
+	* __ANON_0
+	* LPAR
 
 ```
 
@@ -203,9 +203,9 @@ No terminal matches ',' in the current parser context, at line 31 col 13
 Scalar xdiff, fdiff;
             ^
 Expected one of: 
-	* SLASH
-	* ASSIGN
 	* SEMI
+	* ASSIGN
+	* SLASH
 	* ID
 
 ```

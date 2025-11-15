@@ -66,7 +66,7 @@ ingest-gamslib:
 		echo "ERROR: GAMSLib models not found. Run ./scripts/download_gamslib_nlp.sh first"; \
 		exit 1; \
 	fi
-	@$(PYTHON) scripts/ingest_gamslib.py \
+	@PYTHONHASHSEED=0 $(PYTHON) scripts/ingest_gamslib.py \
 		--input tests/fixtures/gamslib \
 		--output reports/gamslib_ingestion_sprint6.json \
 		--dashboard docs/status/GAMSLIB_CONVERSION_STATUS.md
