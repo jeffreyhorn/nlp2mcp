@@ -759,7 +759,8 @@ def test_asterisk_range_notation_invalid_no_number():
     )
 
     with pytest.raises(
-        parser.ParserSemanticError, match="Invalid range.*must be identifier followed by number"
+        parser.ParserSemanticError,
+        match="Invalid range.*must be a number.*or identifier followed by number",
     ):
         parser.parse_model_text(text)
 
