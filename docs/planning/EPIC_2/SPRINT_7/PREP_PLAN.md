@@ -838,9 +838,9 @@ Create `docs/planning/EPIC_2/SPRINT_7/TEST_PERFORMANCE_BASELINE.md`:
 
 **Sprint Roadmaps:**
 - **Sprint 8 (Wave 2):** 6 features, 19-28 hours, 60-70% parse rate (ROI: 1.7-2.4% per hour)
-- **Sprint 9 (Wave 3):** 7 features, 18-25 hours, 80% parse rate (ROI: 0.3-0.6% per hour)
-- **Sprint 10 (Wave 4):** 10 features, 36-49 hours, 90% parse rate (ROI: 0.2-0.3% per hour)
-- **Total:** 73-102 hours to achieve 90% parse rate
+- **Sprint 9 (Wave 3):** 7 features, 35-46 hours, 80% parse rate (ROI: 0.3-0.6% per hour)
+- **Sprint 10 (Wave 4):** 10 features, 36-52 hours, 90% parse rate (ROI: 0.2-0.3% per hour)
+- **Total:** 90-126 hours to achieve 90% parse rate
 
 **Dependency Graph:**
 - No blocking circular dependencies

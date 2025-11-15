@@ -18,7 +18,7 @@ This document catalogs **52 GAMS syntax features** across 5 categories and provi
 - **Wave 3 (Sprint 9):** Advanced expressions + control flow → 80% parse rate
 - **Wave 4 (Sprint 10):** Display, assignments, advanced sets → 90% parse rate
 
-**Total Estimated Effort:** 73-102 hours across Sprints 8-10 (19-49 hours per sprint)
+**Total Estimated Effort:** 90-126 hours across Sprints 8-10 (19-52 hours per sprint)
 
 **ROI Analysis:** Top 10 features unlock 60% of models with 40% of effort (high concentration of value)
 
@@ -334,7 +334,7 @@ All remaining features (display, loops, file I/O, etc.)
 
 **Goal:** 50-70% GAMSLib parse rate (5-7/10 models)  
 **Focus:** Statement-level features and variable attributes  
-**Estimated Effort:** 25-35 hours
+**Estimated Effort:** 19-28 hours
 
 ### Priority 1: Quick Wins (7-10 hours)
 
@@ -417,7 +417,7 @@ All remaining features (display, loops, file I/O, etc.)
 
 **Goal:** 80% GAMSLib parse rate (8/10 models)  
 **Focus:** Advanced expressions, control flow, and remaining gaps  
-**Estimated Effort:** 35-45 hours
+**Estimated Effort:** 35-46 hours
 
 ### Priority 1: Expression Features (12-16 hours)
 
@@ -456,8 +456,8 @@ All remaining features (display, loops, file I/O, etc.)
 ### Total Wave 3 Impact
 
 **Models Unlocked:** +2 models (expected)  
-**Parse Rate Improvement:** 60-70% → 80% (10-20% gain)  
-**Effort:** 35-45 hours  
+**Parse Rate Improvement:** 60-70% → 80% (10-20 percentage point increase)  
+**Effort:** 35-46 hours  
 **ROI:** 0.3-0.6% per hour (moderate)
 
 ### Acceptance Criteria
@@ -595,21 +595,25 @@ All remaining features (display, loops, file I/O, etc.)
 
 ### Should Have (Sprint 9)
 
-7. Indexed assignments (4-6h, ROI: 1.7)
-8. Indexed sets (4-5h, ROI: 1.7)
+7. Conditional assignments (6-8h, ROI: 0.8)
+8. Set operations (6-8h, ROI: 0.4)
 9. Display statements (4-6h, ROI: 0.8)
-10. Set operations (6-8h, ROI: 0.4)
+10. Loop statements (6-8h, ROI: 0.4)
+11. Conditional execution (5-6h, ROI: 0.4)
+12. Indexed sets (4-5h, ROI: 1.7)
+13. Equation attributes (4-5h, ROI: 0.8)
 
-**Total:** 18-25 hours, unlocks additional 10-20% of models
+**Total:** 35-46 hours, unlocks additional 10-20% of models
 
 ### Nice to Have (Sprint 10)
 
-11. Loop statements (6-8h, ROI: 0.4)
-12. Conditional execution (5-6h, ROI: 0.4)
-13. Advanced preprocessor (10-15h, ROI: 0.4)
-14. File I/O (15-20h, ROI: 0.2)
+14. While/For loops (6-8h, ROI: 0.3)
+15. Advanced preprocessor (10-15h, ROI: 0.4)
+16. File I/O (put/putclose) (15-20h, ROI: 0.2)
+17. Execute statements (3-5h, ROI: 0.2)
+18. Abort statements (2-4h, ROI: 0.4)
 
-**Total:** 36-49 hours, completes remaining 10% of models
+**Total:** 36-52 hours, completes remaining 10% of models
 
 ---
 
@@ -618,8 +622,8 @@ All remaining features (display, loops, file I/O, etc.)
 This roadmap provides a clear path from Sprint 7's 30-40% parse rate to Sprint 10's 90% parse rate through three focused waves:
 
 - **Wave 2 (Sprint 8):** Statement-level features → 60-70% parse rate (19-28 hours)
-- **Wave 3 (Sprint 9):** Advanced expressions + control flow → 80% parse rate (18-25 hours)
-- **Wave 4 (Sprint 10):** Specialized features + edge cases → 90% parse rate (36-49 hours)
+- **Wave 3 (Sprint 9):** Advanced expressions + control flow → 80% parse rate (35-46 hours)
+- **Wave 4 (Sprint 10):** Specialized features + edge cases → 90% parse rate (36-52 hours)
 
 **Key Insights:**
 1. **ROI-driven prioritization:** Top 6 features (19-28h) unlock 50-60% of models

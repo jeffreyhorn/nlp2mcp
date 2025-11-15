@@ -63,25 +63,25 @@ Completed Sprint 7 Prep Task 6: Surveyed all GAMS syntax features beyond Sprint 
 **Sprint 8 (Wave 2) - 60-70% Parse Rate:**
 - **Features:** 6 high-ROI statement-level features
 - **Effort:** 19-28 hours
-- **Models unlocked:** 5 additional models (mathopt1, trig, hs62, mingamma, mhw4dx, rbrock)
+- **Models unlocked:** 6 additional models (mathopt1, trig, hs62, mingamma, mhw4dx, rbrock)
 - **ROI:** 1.7-2.4% per hour (excellent)
 - **Features:** Models keyword, Multiple scalar decl, Model declaration, Variable attributes, Solve with objective, Option statements
 
 **Sprint 9 (Wave 3) - 80% Parse Rate:**
 - **Features:** 7 advanced expression and control flow features
-- **Effort:** 18-25 hours
+- **Effort:** 35-46 hours
 - **Models unlocked:** +2 models (expected)
 - **ROI:** 0.3-0.6% per hour (moderate)
 - **Features:** Conditional assignments, Set operations, Display, Loops, Conditional execution, Indexed sets, Equation attributes
 
 **Sprint 10 (Wave 4) - 90% Parse Rate:**
 - **Features:** 10 specialized features and edge cases
-- **Effort:** 36-49 hours
+- **Effort:** 36-52 hours
 - **Models unlocked:** +1 model (expected)
 - **ROI:** 0.2-0.3% per hour (low, but completes coverage)
 - **Features:** File I/O, Advanced preprocessor, While/for loops, Execute statements, $gdxin, Abort statements, etc.
 
-**Total Effort to 90%:** 73-102 hours across Sprints 8-10
+**Total Effort to 90%:** 90-126 hours across Sprints 8-10
 
 **Dependency Graph:**
 - ✅ No blocking circular dependencies detected
@@ -96,7 +96,7 @@ Completed Sprint 7 Prep Task 6: Surveyed all GAMS syntax features beyond Sprint 
 - Sprint 7 target (30-40%) confirmed conservative
 - Clear path to 90% by Sprint 10 documented
 - No blocking dependencies between features
-- Total effort: 110-150 hours across 3 sprints
+- Total effort: 90-126 hours across 3 sprints
 
 **Unknown 1.9: Can we defer equation attributes to Sprint 8?**
 - ✅ **VERIFIED - Can defer to Sprint 9**

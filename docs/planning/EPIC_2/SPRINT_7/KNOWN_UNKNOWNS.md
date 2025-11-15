@@ -357,9 +357,9 @@ Development team (Parser specialist)
 - Complete feature catalog created: 52 GAMS features across 5 categories
 - Roadmap analysis confirms Sprint 7 target (30-40%) is conservative
 - Sprint 8 can achieve 60-70% with 6 statement-level features (19-28 hours)
-- Sprint 9 can achieve 80% with advanced expressions (18-25 hours)
-- Sprint 10 can achieve 90% with specialized features (36-49 hours)
-- Total effort to 90%: 73-102 hours across Sprints 8-10
+- Sprint 9 can achieve 80% with advanced expressions (35-46 hours)
+- Sprint 10 can achieve 90% with specialized features (36-52 hours)
+- Total effort to 90%: 90-126 hours across Sprints 8-10
 - Top 6 features (Wave 2) have ROI of 2.0-10.0 (excellent return on investment)
 
 **Parser Roadmap Evidence:**
