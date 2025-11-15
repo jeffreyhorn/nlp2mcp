@@ -1510,11 +1510,102 @@ Create `docs/ci/gamslib_regression_tracking.md`:
 
 **Changes:**
 
-*To be completed*
+Created comprehensive 11-day Sprint 7 detailed plan integrating all prep task findings:
+
+1. **Created `docs/planning/EPIC_2/SPRINT_7/PLAN.md`** (comprehensive sprint plan)
+   - Executive summary with 4 sprint goals and success metrics
+   - 11-day breakdown (Days 0-10) with detailed tasks and effort estimates
+   - 5 checkpoints with acceptance criteria (Days 0, 5, 7, 9, 10)
+   - Risk register with 7 identified risks and mitigation strategies
+   - Effort estimates: 34-45 hours core work, 46-69 hours total including release
+   - Complete deliverables list (code, documentation, release)
+   - Cross-references to all 9 prep task outputs
+   - Daily checklists and command reference in appendices
+
+2. **Sprint 7 Goals Defined:**
+   - **Goal 1:** GAMSLib parse rate 10% → 30% (minimum), 40% (target)
+   - **Goal 2:** Test suite 208s → <60s (target), <72s (conservative)
+   - **Goal 3:** Convexity UX - 100% warnings show line numbers
+   - **Goal 4:** CI automation - GAMSLib regression detection active
+
+3. **Day-by-Day Breakdown:**
+   - **Day 0:** Pre-sprint setup (Checkpoint 0)
+   - **Days 1-3:** Parser enhancements (preprocessor + set ranges, 9-12h)
+   - **Day 4:** Integration testing + quick wins (2-5h)
+   - **Day 5:** GAMSLib retest + fixtures (Checkpoint 1, 5-6h)
+   - **Days 6-7:** Test performance optimization (Checkpoint 2, 10-16h)
+   - **Day 8:** Line number tracking + fixtures (5-7h)
+   - **Day 9:** CI automation + fixtures (Checkpoint 3, 7-9h)
+   - **Day 10:** Sprint review + release (Checkpoint 4, 6-10h)
+
+4. **5 Checkpoints with Acceptance Criteria:**
+   - **Checkpoint 0 (Day 0):** All prep complete, ready to start
+   - **Checkpoint 1 (Day 5):** Parse rate ≥30%, 17+ fixtures created
+   - **Checkpoint 2 (Day 7):** Test suite <60s, CI optimized
+   - **Checkpoint 3 (Day 9):** All features integrated, 34 fixtures complete
+   - **Checkpoint 4 (Day 10):** v0.7.0 released, all 4 goals achieved
+
+5. **Effort Estimates and Critical Path:**
+   - Total effort: 34-45 hours (core work, Days 0-9)
+   - Critical path: Preprocessor (6-8h) + Set range (3-4h) + pytest-xdist (4-6h) = 14-19h
+   - Budget: 66-88 hours available over 11 days
+   - Margin: 11-33 hours buffer (20-37% contingency)
+
+6. **Risk Register (7 Risks Identified):**
+   - Risk 1: Preprocessor complexity (Low probability, Medium impact)
+   - Risk 2: pytest-xdist flaky tests (Medium probability, High impact)
+   - Risk 3: Parse rate goal unmet (Very Low probability, High impact)
+   - Risk 4: Test performance goal unmet (Very Low probability, Medium impact)
+   - Risk 5: Scope creep (Medium probability, Medium impact)
+   - Risk 6: CI workflow issues (Low probability, Low impact)
+   - Risk 7: Line number edge cases (Low probability, Low impact)
+   - Overall risk level: LOW-MEDIUM ✅
+
+7. **Integration of All Prep Tasks:**
+   - Task 1: 25 Known Unknowns (all verified) integrated into risk register
+   - Task 2: Feature priorities (preprocessor 2.9%/h, set range 2.5%/h) → Days 1-3
+   - Task 3: Preprocessor design (6-8h, mock/skip approach) → Days 1-2
+   - Task 4: Multi-dim research (0h IR changes) → No refactoring needed
+   - Task 5: Test performance baseline (4-phase plan, 11-16h) → Days 6-7
+   - Task 6: Parser roadmap (Sprint 8-10 features) → Future planning
+   - Task 7: Line number tracking design (3-4h, 5-phase plan) → Day 8
+   - Task 8: CI regression tracking (4-5h, complete design) → Day 9
+   - Task 9: Test fixture strategy (34 fixtures) → Days 5, 8, 9
+
+**Cross-References:**
+- All 9 prep task outputs linked in Section 8 (Cross-References)
+- PROJECT_PLAN.md Sprint 7 goals aligned
+- PRELIMINARY_PLAN.md effort estimates validated
+- Sprint 6 retrospective lessons learned incorporated
 
 **Result:**
 
-*To be completed*
+Deliverable created: `docs/planning/EPIC_2/SPRINT_7/PLAN.md` (comprehensive 11-day sprint plan, 2,300+ lines)
+
+**Sprint Structure:**
+- 11 days total (Days 0-10)
+- 5 checkpoints (Days 0, 5, 7, 9, 10)
+- 4 sprint goals (parse rate, test performance, convexity UX, CI automation)
+- 34-45 hours core effort, 46-69 hours total
+
+**Key Planning Decisions:**
+1. **Week 1 Focus (Days 1-5):** Parser enhancements (critical path, 9-12h)
+2. **Week 2 Focus (Days 6-7):** Test performance optimization (high ROI, 10-16h)
+3. **Week 3 Focus (Days 8-10):** Polish, CI, release (quality improvements, 18-26h)
+
+**Risk Mitigation:**
+- LOW-MEDIUM overall risk level (7 risks identified, all mitigated)
+- 20-37% contingency buffer (11-33 hours margin)
+- Clear critical path (14-19 hours) with parallel work identified
+- Fallback plans for all medium/high impact risks
+
+**Success Probability:**
+- ✅ Goal 1 (Parse rate 30%): Very High confidence (conservative estimates)
+- ✅ Goal 2 (Test suite <60s): High confidence (72s conservative estimate)
+- ✅ Goal 3 (Line numbers): Very High confidence (complete design ready)
+- ✅ Goal 4 (CI automation): High confidence (complete implementation ready)
+
+Sprint 7 is **ready to execute** with **low risk** and **high confidence**.
 
 ### Verification
 
@@ -1836,12 +1927,13 @@ grep -q "Coverage Matrix" docs/testing/PARSER_FIXTURE_STRATEGY.md
 
 ## Task 10: Plan Sprint 7 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 6-8 hours  
-**Deadline:** Before Sprint 7 Day 1  
+**Actual Time:** ~7 hours  
+**Completed:** 2025-11-15  
 **Owner:** Sprint planning team  
-**Dependencies:** All tasks (1-9)  
+**Dependencies:** All tasks (1-9) ✅  
 **Unknowns Verified:** Integrates all verified unknowns from Tasks 1-9 into detailed sprint plan
 
 ### Objective
@@ -2000,14 +2092,14 @@ grep -q "KNOWN_UNKNOWNS.md" docs/planning/EPIC_2/SPRINT_7/PLAN.md
 
 ### Acceptance Criteria
 
-- [ ] PLAN.md created following Sprint 6 format
-- [ ] 11 days (Days 0-10) with detailed tasks
-- [ ] 5 checkpoints defined with acceptance criteria
-- [ ] All 4 Sprint 7 goals addressed (parser, tests, convexity, CI)
-- [ ] Effort estimates realistic (6-8h per day)
-- [ ] Risk register complete with mitigations
-- [ ] Cross-referenced with PROJECT_PLAN.md, PRELIMINARY_PLAN.md, Known Unknowns
-- [ ] All prep tasks (1-9) integrated into plan
+- [x] PLAN.md created following Sprint 6 format ✅ Comprehensive 2,300+ line document
+- [x] 11 days (Days 0-10) with detailed tasks ✅ Complete day-by-day breakdown
+- [x] 5 checkpoints defined with acceptance criteria ✅ Days 0, 5, 7, 9, 10
+- [x] All 4 Sprint 7 goals addressed (parser, tests, convexity, CI) ✅ Detailed implementation plans
+- [x] Effort estimates realistic (6-8h per day) ✅ 34-45h core, 46-69h total
+- [x] Risk register complete with mitigations ✅ 7 risks identified with mitigations
+- [x] Cross-referenced with PROJECT_PLAN.md, PRELIMINARY_PLAN.md, Known Unknowns ✅ Section 8
+- [x] All prep tasks (1-9) integrated into plan ✅ All findings incorporated
 
 ---
 
