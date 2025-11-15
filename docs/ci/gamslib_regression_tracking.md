@@ -320,9 +320,10 @@ jobs:
       
       - name: Check for regression
         run: |
+          # Note: Report path defined in Makefile's ingest-gamslib target
           python scripts/check_parse_rate_regression.py \
             --current reports/gamslib_ingestion_sprint6.json \
-            --baseline main \
+            --baseline origin/main \
             --threshold 0.10
       
       - name: Upload ingestion report
@@ -1054,11 +1055,13 @@ Please commit the updated dashboard:
   git commit -m 'Update GAMSLib dashboard'
 
 Diff:
+```diff
 --- a/docs/status/GAMSLIB_CONVERSION_STATUS.md
 +++ b/docs/status/GAMSLIB_CONVERSION_STATUS.md
 @@ -1,5 +1,5 @@
 -**Parse Rate** | 30.0% (3/10) | ≥10% | ✅ |
 +**Parse Rate** | 20.0% (2/10) | ≥10% | ⚠️ |
+```
 ```
 
 ### Appendix C: CI Job Duration Estimates

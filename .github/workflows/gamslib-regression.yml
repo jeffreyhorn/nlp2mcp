@@ -77,6 +77,8 @@ jobs:
       - name: Check for parse rate regression
         run: |
           echo "Checking for parse rate regression..."
+          # Note: Report name is sprint6 (baseline established in Sprint 6)
+          # This is defined in Makefile's ingest-gamslib target
           python scripts/check_parse_rate_regression.py \
             --current reports/gamslib_ingestion_sprint6.json \
             --baseline origin/main \

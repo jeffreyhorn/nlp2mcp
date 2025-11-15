@@ -167,7 +167,7 @@ def check_regression(
 
     print(f"Absolute Change: {absolute_change:+.1f} percentage points")
     print(f"Models Change:   {models_change:+d} models")
-    print(f"Relative Change: {relative_drop * 100:+.1f}% (threshold: {threshold * 100:.1f}%)")
+    print(f"Relative Drop:   {relative_drop * 100:+.1f}% (threshold: {threshold * 100:.1f}%)")
     print()
 
     # Verdict
