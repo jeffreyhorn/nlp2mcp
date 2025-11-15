@@ -95,9 +95,13 @@ alias_opt : "(" id_list ")"                                  -> alias_domain
 id_list: ID ("," ID)*
 
 set_members: set_member ("," set_member)*
-?set_member: ID TIMES ID  -> set_range
-           | ID           -> set_element
-           | STRING       -> set_element
+?set_member: range_expr    -> set_range
+           | ID            -> set_element
+           | STRING        -> set_element
+
+// Range expression: supports both numeric (1*10) and symbolic (s1*s10) ranges
+range_expr: range_bound TIMES range_bound
+range_bound: NUMBER | ID
 
 // ---------------------------
 // Table rows (for Table blocks)

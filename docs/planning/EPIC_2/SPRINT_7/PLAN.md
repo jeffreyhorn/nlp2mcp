@@ -1378,11 +1378,11 @@ Sprint 7 focuses on **parser enhancements** and **test suite optimization** to a
 
 ### Day 2 Checklist
 
-- [ ] Integrate preprocessor into pipeline
-- [ ] Write 15+ preprocessor unit tests
-- [ ] Handle `$eolCom` directive
-- [ ] Update grammar with range syntax
-- [ ] Implement numeric range expansion
+- [x] Integrate preprocessor into pipeline
+- [x] Write 15+ preprocessor unit tests (17 integration tests added)
+- [x] Handle `$eolCom` directive (already supported via grammar)
+- [x] Update grammar with range syntax (numeric + symbolic)
+- [x] Implement numeric range expansion (numeric + symbolic both implemented)
 
 ### Day 3 Checklist
 

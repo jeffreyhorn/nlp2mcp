@@ -5,13 +5,22 @@ Tests the three new preprocessor functions added in Sprint 7 Day 1:
 - expand_macros(): Expand %macro% references
 - strip_conditional_directives(): Replace directives with comments
 
+Tests the integrated preprocessing pipeline added in Sprint 7 Day 2:
+- preprocess_gams_file(): Full preprocessing pipeline including includes
+
 Based on design from docs/research/preprocessor_directives.md
 """
+
+from pathlib import Path
+
+import pytest
 
 from src.ir.preprocessor import (
     expand_macros,
     extract_conditional_sets,
+    preprocess_gams_file,
     strip_conditional_directives,
+    strip_unsupported_directives,
 )
 
 
@@ -243,3 +252,278 @@ Set i /1*%N%/;"""
 
         final = strip_conditional_directives(expanded)
         assert "Set i /1*10/;" in final
+
+
+class TestStripUnsupportedDirectives:
+    """Test strip_unsupported_directives() function for $title, $ontext, $eolCom."""
+
+    def test_strip_title_directive(self):
+        """Strip $title directive."""
+        source = """$title My Model
+Set i /1*10/;"""
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "* [Stripped: $title My Model]"
+        assert lines[1] == "Set i /1*10/;"
+
+    def test_strip_eolcom_directive(self):
+        """Strip $eolCom directive."""
+        source = """$eolCom //
+Set i /1*10/;  // This is a comment"""
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "* [Stripped: $eolCom //]"
+        assert lines[1] == "Set i /1*10/;  // This is a comment"
+
+    def test_strip_ontext_offtext_block(self):
+        """Strip $ontext/$offtext comment blocks."""
+        source = """Set i /1*10/;
+$ontext
+This is a long comment
+that spans multiple lines
+$offtext
+Variables x;"""
+        result = strip_unsupported_directives(source)
+        # $ontext/$offtext directives are replaced with stripped markers
+        # Content inside is converted to GAMS comments (preserves line numbers)
+        assert "* [Stripped: $ontext]" in result
+        assert "* [Stripped: $offtext]" in result
+        assert "* This is a long comment" in result
+        assert "* that spans multiple lines" in result
+        assert "Set i /1*10/;" in result
+        assert "Variables x;" in result
+
+    def test_strip_multiple_directives(self):
+        """Strip multiple unsupported directives."""
+        source = """$title Test Model
+$eolCom //
+Set i /1*10/;
+$ontext
+Comment block
+$offtext
+Variables x;"""
+        result = strip_unsupported_directives(source)
+        assert "* [Stripped: $title Test Model]" in result
+        assert "* [Stripped: $eolCom //]" in result
+        assert "* [Stripped: $ontext]" in result
+        assert "* [Stripped: $offtext]" in result
+        assert "* Comment block" in result
+        assert "Set i /1*10/;" in result
+
+    def test_case_insensitive_directives(self):
+        """Directive detection is case-insensitive."""
+        source = "$TITLE My Model\n$EOLCOM //"
+        result = strip_unsupported_directives(source)
+        assert "* [Stripped: $TITLE My Model]" in result
+        assert "* [Stripped: $EOLCOM //]" in result
+
+    def test_preserve_other_lines(self):
+        """Lines without directives remain unchanged."""
+        source = """Set i /1*10/;
+Variables x;
+Equations eq;"""
+        result = strip_unsupported_directives(source)
+        assert result == source
+
+    def test_empty_source(self):
+        """Empty source returns empty string."""
+        result = strip_unsupported_directives("")
+        assert result == ""
+
+
+class TestPreprocessGamsFile:
+    """Test the complete preprocess_gams_file() integration function."""
+
+    def test_basic_preprocessing_without_includes(self, tmp_path: Path):
+        """Test preprocessing a simple file without includes."""
+        # Create a test file
+        test_file = tmp_path / "test.gms"
+        test_file.write_text(
+            """$title Test Model
+$if not set N $set N 10
+Set i /1*%N%/;
+Variables x;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        # Check that preprocessing steps were applied
+        assert "* [Stripped: $title Test Model]" in result
+        assert "* [Stripped: $if not set N $set N 10]" in result
+        assert "Set i /1*10/;" in result  # Macro expanded
+        assert "Variables x;" in result
+
+    def test_preprocessing_with_eolcom(self, tmp_path: Path):
+        """Test preprocessing a file with $eolCom directive."""
+        test_file = tmp_path / "test.gms"
+        test_file.write_text(
+            """$eolCom //
+Set i /1*10/;  // This is a comment
+Variables x;   // Another comment"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        # $eolCom directive should be stripped
+        assert "* [Stripped: $eolCom //]" in result
+        # Comments should remain (handled by grammar)
+        assert "// This is a comment" in result
+        assert "// Another comment" in result
+
+    def test_preprocessing_with_multiple_macros(self, tmp_path: Path):
+        """Test preprocessing with multiple macro definitions."""
+        test_file = tmp_path / "test.gms"
+        test_file.write_text(
+            """$if not set N $set N 10
+$if not set M $set M 5
+Set i /1*%N%/;
+Set j /1*%M%/;
+Parameter p(%N%, %M%);"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        # All macros should be expanded
+        assert "Set i /1*10/;" in result
+        assert "Set j /1*5/;" in result
+        assert "Parameter p(10, 5);" in result
+
+    def test_preprocessing_with_ontext_offtext(self, tmp_path: Path):
+        """Test preprocessing with comment blocks."""
+        test_file = tmp_path / "test.gms"
+        test_file.write_text(
+            """Set i /1*10/;
+$ontext
+This is a documentation block
+that should be removed
+$offtext
+Variables x;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        # Comment block directives should be stripped
+        assert "* [Stripped: $ontext]" in result
+        assert "* [Stripped: $offtext]" in result
+        # Content converted to comments (line numbers preserved)
+        assert "* This is a documentation block" in result
+        # Code should remain
+        assert "Set i /1*10/;" in result
+        assert "Variables x;" in result
+
+    def test_preprocessing_preserves_line_structure(self, tmp_path: Path):
+        """Test that preprocessing preserves line structure for error reporting."""
+        test_file = tmp_path / "test.gms"
+        test_file.write_text(
+            """$title Test
+$if not set N $set N 10
+Set i /1*%N%/;
+Variables x;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+        lines = result.split("\n")
+
+        # Should have same number of lines (directives replaced with comments)
+        assert len(lines) == 4
+
+    def test_preprocessing_with_includes(self, tmp_path: Path):
+        """Test preprocessing with $include directives."""
+        # Create an included file
+        included = tmp_path / "data.gms"
+        included.write_text(
+            """$if not set size $set size 5
+Set k /1*%size%/;"""
+        )
+
+        # Create main file
+        main_file = tmp_path / "main.gms"
+        main_file.write_text(
+            """$title Main Model
+$include data.gms
+Variables x;"""
+        )
+
+        result = preprocess_gams_file(main_file)
+
+        # Include should be expanded
+        assert "$include" not in result
+        # Macros from included file should be expanded
+        assert "Set k /1*5/;" in result
+        # Main file content preserved
+        assert "* [Stripped: $title Main Model]" in result
+        assert "Variables x;" in result
+
+    def test_preprocessing_complex_integration(self, tmp_path: Path):
+        """Test preprocessing with all features combined."""
+        # Create included file with macros
+        included = tmp_path / "defs.gms"
+        included.write_text(
+            """$if not set N $set N 10
+$if not set tol $set tol 1e-6"""
+        )
+
+        # Create main file
+        main_file = tmp_path / "main.gms"
+        main_file.write_text(
+            """$title Complex Model
+$eolCom //
+$include defs.gms
+Set i /1*%N%/;  // Index set
+Parameter epsilon /%tol%/;  // Tolerance
+$ontext
+Documentation block
+$offtext
+Variables x;"""
+        )
+
+        result = preprocess_gams_file(main_file)
+
+        # All preprocessing applied correctly
+        assert "* [Stripped: $title Complex Model]" in result
+        assert "* [Stripped: $eolCom //]" in result
+        assert "$include" not in result
+        assert "Set i /1*10/;" in result
+        assert "Parameter epsilon /1e-6/;" in result
+        assert "* [Stripped: $ontext]" in result
+        assert "* [Stripped: $offtext]" in result
+        assert "* Documentation block" in result
+        assert "// Index set" in result  # Comments preserved
+        assert "Variables x;" in result
+
+    def test_accepts_path_or_string(self, tmp_path: Path):
+        """Test that preprocess_gams_file accepts both Path and str."""
+        test_file = tmp_path / "test.gms"
+        test_file.write_text("Set i /1*10/;")
+
+        # Should work with Path
+        result1 = preprocess_gams_file(test_file)
+        assert "Set i /1*10/;" in result1
+
+        # Should work with string
+        result2 = preprocess_gams_file(str(test_file))
+        assert "Set i /1*10/;" in result2
+
+        # Results should be identical
+        assert result1 == result2
+
+    def test_file_not_found_error(self):
+        """Test that FileNotFoundError is raised for non-existent files."""
+        with pytest.raises(FileNotFoundError):
+            preprocess_gams_file("/nonexistent/file.gms")
+
+    def test_maxmin_gms_real_world_pattern(self, tmp_path: Path):
+        """Test pattern from actual maxmin.gms GAMSLib model."""
+        test_file = tmp_path / "maxmin.gms"
+        test_file.write_text(
+            """$eolCom //
+$if not set points $set points 13
+Set k number of points / 1*%points% /;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        # Check preprocessing
+        assert "* [Stripped: $eolCom //]" in result
+        assert "* [Stripped: $if not set points $set points 13]" in result
+        assert "Set k number of points / 1*13 /;" in result
