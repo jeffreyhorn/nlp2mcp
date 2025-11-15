@@ -1479,3 +1479,250 @@ class TestModelEquationListSyntax:
         )
         model = parser.parse_model_text(text)
         assert model.model_equations == ["objdef", "balance"]
+
+
+# ==============================================================================
+# Set Range Syntax Tests (Sprint 7 Day 2)
+# ==============================================================================
+
+
+class TestSetRangeSyntax:
+    """Test set range notation: numeric (1*10) and symbolic (i1*i100)."""
+
+    def test_numeric_range_basic(self):
+        """Test basic numeric range expansion."""
+        text = dedent(
+            """
+            Sets i / 1*6 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["1", "2", "3", "4", "5", "6"]
+
+    def test_numeric_range_single_element(self):
+        """Test numeric range with single element (start equals end)."""
+        text = dedent(
+            """
+            Sets i / 5*5 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["5"]
+
+    def test_numeric_range_large(self):
+        """Test numeric range with larger numbers."""
+        text = dedent(
+            """
+            Sets i / 100*105 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["100", "101", "102", "103", "104", "105"]
+
+    def test_symbolic_range_basic(self):
+        """Test basic symbolic range expansion."""
+        text = dedent(
+            """
+            Sets i / s1*s5 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["s1", "s2", "s3", "s4", "s5"]
+
+    def test_symbolic_range_different_prefix(self):
+        """Test symbolic range with different prefix."""
+        text = dedent(
+            """
+            Sets i / plant1*plant3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["plant1", "plant2", "plant3"]
+
+    def test_symbolic_range_with_underscore(self):
+        """Test symbolic range with underscore in prefix."""
+        text = dedent(
+            """
+            Sets i / item_1*item_4 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["item_1", "item_2", "item_3", "item_4"]
+
+    def test_mixed_range_and_explicit_elements(self):
+        """Test mixing range notation with explicit elements."""
+        text = dedent(
+            """
+            Sets i / 1*3, extra, special, 7*9 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == [
+            "1",
+            "2",
+            "3",
+            "extra",
+            "special",
+            "7",
+            "8",
+            "9",
+        ]
+
+    def test_multiple_sets_with_ranges(self):
+        """Test multiple sets using different range types."""
+        text = dedent(
+            """
+            Sets
+                i / 1*10 /
+                j / a1*a3 /
+                k / x, y, z /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+        ]
+        assert model.sets["j"].members == ["a1", "a2", "a3"]
+        assert model.sets["k"].members == ["x", "y", "z"]
+
+    def test_range_in_parameter_definition(self):
+        """Test using range-defined set in parameter."""
+        text = dedent(
+            """
+            Sets i / i1*i3 /;
+            Parameters p(i) / i1 10, i2 20, i3 30 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["i1", "i2", "i3"]
+        assert model.params["p"].values == {
+            ("i1",): 10.0,
+            ("i2",): 20.0,
+            ("i3",): 30.0,
+        }
+
+    def test_range_in_variable_definition(self):
+        """Test using range-defined set in variable."""
+        text = dedent(
+            """
+            Sets i / 1*3 /;
+            Variables x(i);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["1", "2", "3"]
+        assert model.variables["x"].domain == ("i",)
+
+    def test_numeric_range_invalid_direction(self):
+        """Test that reversed numeric range raises error."""
+        text = dedent(
+            """
+            Sets i / 10*1 /;
+            """
+        )
+        with pytest.raises(parser.ParserSemanticError, match="Invalid range"):
+            parser.parse_model_text(text)
+
+    def test_symbolic_range_invalid_direction(self):
+        """Test that reversed symbolic range raises error."""
+        text = dedent(
+            """
+            Sets i / i10*i1 /;
+            """
+        )
+        with pytest.raises(parser.ParserSemanticError, match="start.*greater than.*end"):
+            parser.parse_model_text(text)
+
+    def test_symbolic_range_mismatched_prefix(self):
+        """Test that mismatched prefixes raise error."""
+        text = dedent(
+            """
+            Sets i / a1*b10 /;
+            """
+        )
+        with pytest.raises(parser.ParserSemanticError, match="base mismatch"):
+            parser.parse_model_text(text)
+
+    def test_range_with_string_elements(self):
+        """Test mixing range with quoted string elements."""
+        text = dedent(
+            """
+            Sets i / 1*3, "special item", 5*6 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        # Note: String elements keep their quotes in the parser
+        assert model.sets["i"].members == [
+            "1",
+            "2",
+            "3",
+            '"special item"',
+            "5",
+            "6",
+        ]
+
+    def test_maxmin_gms_pattern(self):
+        """Test pattern from maxmin.gms GAMSLib model."""
+        text = dedent(
+            """
+            Sets k / 1*13 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["k"].members == [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+        ]
+
+    def test_range_with_alias(self):
+        """Test range-defined set can be aliased."""
+        text = dedent(
+            """
+            Sets i / 1*5 /;
+            Aliases ii, i;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["1", "2", "3", "4", "5"]
+        assert "ii" in model.aliases
+        assert model.aliases["ii"].target == "i"
+
+    def test_numeric_range_zero_start(self):
+        """Test numeric range starting from zero."""
+        text = dedent(
+            """
+            Sets i / 0*5 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["0", "1", "2", "3", "4", "5"]
+
+    def test_symbolic_range_zero_start(self):
+        """Test symbolic range starting from index 0."""
+        text = dedent(
+            """
+            Sets i / t0*t3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["t0", "t1", "t2", "t3"]

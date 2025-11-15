@@ -364,15 +364,18 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
     This is the main entry point for preprocessing GAMS files.
-    It wraps preprocess_includes() with a simpler interface and
-    strips unsupported compiler directives.
+    It performs preprocessing in the following order:
+    1. Expand $include directives recursively
+    2. Extract macro defaults from $if not set directives
+    3. Expand %macro% references
+    4. Strip conditional directives ($if not set)
+    5. Strip other unsupported directives ($title, $ontext, etc.)
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
 
     Returns:
-        Preprocessed file content with all includes expanded and
-        unsupported directives stripped
+        Preprocessed file content ready for parsing
 
     Raises:
         FileNotFoundError: If the file or any included file doesn't exist
@@ -381,13 +384,22 @@ def preprocess_gams_file(file_path: Path | str) -> str:
 
     Example:
         >>> content = preprocess_gams_file("model.gms")
-        >>> # All $include directives expanded, $title stripped
+        >>> # All preprocessing complete
     """
     if isinstance(file_path, str):
         file_path = Path(file_path)
 
-    # First expand all includes
+    # Step 1: Expand all $include directives recursively
     content = preprocess_includes(file_path)
 
-    # Then strip unsupported directives
+    # Step 2: Extract macro defaults from $if not set directives
+    macros = extract_conditional_sets(content)
+
+    # Step 3: Expand %macro% references with their values
+    content = expand_macros(content, macros)
+
+    # Step 4: Strip $if not set directives (replaced with comments)
+    content = strip_conditional_directives(content)
+
+    # Step 5: Strip other unsupported directives ($title, $ontext, etc.)
     return strip_unsupported_directives(content)

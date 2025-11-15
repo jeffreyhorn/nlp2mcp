@@ -241,7 +241,7 @@ class _ModelBuilder:
                 self.model.add_set(SetDef(name=name, members=list(domain)))
 
     def _expand_set_members(self, members_node: Tree) -> list[str]:
-        """Expand set members, handling asterisk range notation (e.g., i1*i100)."""
+        """Expand set members, handling range notation (e.g., i1*i100 or 1*10)."""
         result = []
         for child in members_node.children:
             if isinstance(child, Token):
@@ -257,20 +257,32 @@ class _ModelBuilder:
                     # Simple element: ID or STRING
                     result.append(_token_text(child.children[0]))
                 elif child.data == "set_range":
-                    # Range notation: ID TIMES ID (e.g., i1*i100)
-                    # Extract non-operator tokens (skip the * token)
-                    ids = [
-                        _token_text(tok)
-                        for tok in child.children
-                        if isinstance(tok, Token) and tok.type == "ID"
-                    ]
-                    if len(ids) != 2:
+                    # Range notation: can be symbolic (i1*i100) or numeric (1*10)
+                    # The grammar now produces range_expr with range_bound children
+                    range_expr = child.children[0]  # Get the range_expr node
+                    if not isinstance(range_expr, Tree) or range_expr.data != "range_expr":
                         raise self._error(
-                            f"Range notation requires exactly two identifiers, got {len(ids)}",
+                            f"Expected range_expr node in set_range, got {range_expr}",
                             child,
                         )
-                    start_id, end_id = ids
-                    expanded = self._expand_range(start_id, end_id, child)
+
+                    # Extract the two range bounds (skipping the * operator token)
+                    bounds = [
+                        node.children[0]
+                        for node in range_expr.children
+                        if isinstance(node, Tree) and node.data == "range_bound"
+                    ]
+
+                    if len(bounds) != 2:
+                        raise self._error(
+                            f"Range notation requires exactly two bounds, got {len(bounds)}",
+                            child,
+                        )
+
+                    start_bound = _token_text(bounds[0])
+                    end_bound = _token_text(bounds[1])
+
+                    expanded = self._expand_range(start_bound, end_bound, child)
                     result.extend(expanded)
                 else:
                     raise self._error(
@@ -280,21 +292,53 @@ class _ModelBuilder:
                     )
         return result
 
-    def _expand_range(self, start_id: str, end_id: str, node: Tree) -> list[str]:
-        """Expand a range like 'i1' to 'i100' into ['i1', 'i2', ..., 'i100']."""
-        # Parse start identifier
-        match_start = re.match(r"^([a-zA-Z_]+)(\d+)$", start_id)
+    def _expand_range(self, start_bound: str, end_bound: str, node: Tree) -> list[str]:
+        """Expand a range into a list of elements.
+
+        Supports two range types:
+        1. Numeric ranges: 1*10 -> ['1', '2', '3', ..., '10']
+        2. Symbolic ranges: i1*i100 -> ['i1', 'i2', ..., 'i100']
+
+        Args:
+            start_bound: Start of range (either a number or identifier with number)
+            end_bound: End of range (either a number or identifier with number)
+            node: Parse tree node for error reporting
+
+        Returns:
+            List of expanded range elements as strings
+        """
+        # Check if this is a pure numeric range (e.g., 1*10)
+        try:
+            num_start = int(start_bound)
+            num_end = int(end_bound)
+
+            # Validate range direction
+            if num_start > num_end:
+                raise self._error(
+                    f"Invalid range: start {num_start} is greater than end {num_end}", node
+                )
+
+            # Generate numeric range
+            return [str(i) for i in range(num_start, num_end + 1)]
+
+        except ValueError:
+            # Not a pure numeric range, try symbolic range (e.g., i1*i100)
+            pass
+
+        # Parse symbolic range: identifier followed by number
+        match_start = re.match(r"^([a-zA-Z_]+)(\d+)$", start_bound)
         if not match_start:
             raise self._error(
-                f"Invalid range start '{start_id}': must be identifier followed by number (e.g., i1)",
+                f"Invalid range start '{start_bound}': must be a number (e.g., 1) "
+                f"or identifier followed by number (e.g., i1)",
                 node,
             )
 
-        # Parse end identifier
-        match_end = re.match(r"^([a-zA-Z_]+)(\d+)$", end_id)
+        match_end = re.match(r"^([a-zA-Z_]+)(\d+)$", end_bound)
         if not match_end:
             raise self._error(
-                f"Invalid range end '{end_id}': must be identifier followed by number (e.g., i100)",
+                f"Invalid range end '{end_bound}': must be a number (e.g., 100) "
+                f"or identifier followed by number (e.g., i100)",
                 node,
             )
 
@@ -307,7 +351,8 @@ class _ModelBuilder:
         # Validate same base prefix
         if base_start != base_end:
             raise self._error(
-                f"Range base mismatch: '{start_id}' and '{end_id}' have different prefixes ('{base_start}' vs '{base_end}')",
+                f"Range base mismatch: '{start_bound}' and '{end_bound}' have "
+                f"different prefixes ('{base_start}' vs '{base_end}')",
                 node,
             )
 
@@ -317,7 +362,7 @@ class _ModelBuilder:
                 f"Invalid range: start index {num_start} is greater than end index {num_end}", node
             )
 
-        # Generate range
+        # Generate symbolic range
         return [f"{base_start}{i}" for i in range(num_start, num_end + 1)]
 
     def _handle_aliases_block(self, node: Tree) -> None:
