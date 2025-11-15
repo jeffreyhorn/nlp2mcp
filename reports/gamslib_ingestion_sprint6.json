@@ -13,7 +13,7 @@
       "model_name": "himmel16",
       "gms_file": "himmel16.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches '$' in the current parser context, at line 44 col 13\n\nmaxdist(i,j)$(ord(i) < ord(j)).. sqr(x(i) - x(j)) + \n            ^\nExpected one of: \n\t* ASSIGN\n\t* __ANON_0\n",
+      "parse_error": "No terminal matches '+' in the current parser context, at line 46 col 39\n\nareadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));\n                                      ^\nExpected one of: \n\t* RPAR\n\t* COMMA\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
@@ -27,7 +27,7 @@
       "model_name": "mathopt1",
       "gms_file": "mathopt1.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'm' in the current parser context, at line 38 col 8\n\nModels m / all /;\n       ^\nExpected one of: \n\t* DOT\n\t* SLASH\n\t* SEMI\n\t* __ANON_0\n\t* ASSIGN\n\t* LPAR\n",
+      "parse_error": "No terminal matches 'm' in the current parser context, at line 38 col 8\n\nModels m / all /;\n       ^\nExpected one of: \n\t* DOT\n\t* SLASH\n\t* SEMI\n\t* __ANON_0\n\t* ASSIGN\n\t* LPAR\n\t* DOLLAR\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {
@@ -48,7 +48,7 @@
       "model_name": "mhw4dx",
       "gms_file": "mhw4dx.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'l' in the current parser context, at line 37 col 8\n\noption limCol = 0, limRow = 0;\n       ^\nExpected one of: \n\t* ASSIGN\n\t* DOT\n\t* __ANON_0\n\t* LPAR\n",
+      "parse_error": "No terminal matches 'l' in the current parser context, at line 37 col 8\n\noption limCol = 0, limRow = 0;\n       ^\nExpected one of: \n\t* DOT\n\t* __ANON_0\n\t* ASSIGN\n\t* LPAR\n\t* DOLLAR\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {

@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-15 15:23:46
+**Generated:** 2025-11-15 16:35:46
 **Sprint:** Sprint 6
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint6.json`](../../reports/gamslib_ingestion_sprint6.json)
@@ -76,13 +76,13 @@ Expected one of:
 **Error Type:** `UnexpectedCharacters`
 **Error Message:**
 ```
-No terminal matches '$' in the current parser context, at line 44 col 13
+No terminal matches '+' in the current parser context, at line 46 col 39
 
-maxdist(i,j)$(ord(i) < ord(j)).. sqr(x(i) - x(j)) + 
-            ^
+areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));
+                                      ^
 Expected one of: 
-	* ASSIGN
-	* __ANON_0
+	* RPAR
+	* COMMA
 
 ```
 
@@ -118,6 +118,7 @@ Expected one of:
 	* __ANON_0
 	* ASSIGN
 	* LPAR
+	* DOLLAR
 
 ```
 
@@ -148,10 +149,11 @@ No terminal matches 'l' in the current parser context, at line 37 col 8
 option limCol = 0, limRow = 0;
        ^
 Expected one of: 
-	* ASSIGN
 	* DOT
 	* __ANON_0
+	* ASSIGN
 	* LPAR
+	* DOLLAR
 
 ```
 
