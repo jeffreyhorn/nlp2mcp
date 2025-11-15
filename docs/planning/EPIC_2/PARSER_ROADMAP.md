@@ -395,9 +395,9 @@ All remaining features (display, loops, file I/O, etc.)
 
 ### Total Wave 2 Impact
 
-**Models Unlocked:** 5 additional models (mathopt1, trig, hs62, mingamma, mhw4dx, rbrock)  
+**Models Unlocked:** 6 additional models (mathopt1, trig, hs62, mingamma, mhw4dx, rbrock)  
 **Parse Rate Improvement:** 10% → 60-70% (50-60 percentage point increase)  
-**Effort:** 25-35 hours  
+**Effort:** 19-28 hours  
 **ROI:** 1.7-2.4% per hour (excellent)
 
 ### Acceptance Criteria
@@ -477,7 +477,7 @@ All remaining features (display, loops, file I/O, etc.)
 
 **Goal:** 90% GAMSLib parse rate (9/10 models)  
 **Focus:** Specialized features and edge cases  
-**Estimated Effort:** 40-60 hours
+**Estimated Effort:** 36-52 hours
 
 ### Priority 1: File I/O (15-20 hours)
 
@@ -530,8 +530,8 @@ All remaining features (display, loops, file I/O, etc.)
 ### Total Wave 4 Impact
 
 **Models Unlocked:** +1 model (expected)  
-**Parse Rate Improvement:** 80% → 90% (10% gain)  
-**Effort:** 40-60 hours  
+**Parse Rate Improvement:** 80% → 90% (10 percentage point increase)  
+**Effort:** 36-52 hours  
 **ROI:** 0.2-0.3% per hour (low, but completes coverage)
 
 ### Acceptance Criteria

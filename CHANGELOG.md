@@ -130,7 +130,7 @@ Completed Sprint 7 Prep Task 6: Surveyed all GAMS syntax features beyond Sprint 
 9. Display statements (4-6h, ROI: 0.8)
 10. Set operations (6-8h, ROI: 0.4)
 
-**Total:** 18-25 hours, unlocks additional 10-20% of models
+**Total:** 35-46 hours, unlocks additional 10-20% of models
 
 **Nice to Have (Sprint 10):**
 11. Loop statements (6-8h, ROI: 0.4)
@@ -144,7 +144,7 @@ Completed Sprint 7 Prep Task 6: Surveyed all GAMS syntax features beyond Sprint 
 
 Sprint 7-10 parser roadmap provides clear, ROI-driven path from 30% to 90% parse rate:
 - ✅ **Wave 2 (Sprint 8):** 6 features, 19-28h → 60-70% parse rate
-- ✅ **Wave 3 (Sprint 9):** 7 features, 18-25h → 80% parse rate
+- ✅ **Wave 3 (Sprint 9):** 7 features, 35-46h → 80% parse rate
 - ✅ **Wave 4 (Sprint 10):** 10 features, 36-49h → 90% parse rate
 
 Top 6 features (Tier 1-2, ROI >2.0) unlock 60% of models with 40% of total effort, demonstrating excellent concentration of value in early sprints.
