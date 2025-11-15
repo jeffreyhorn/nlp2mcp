@@ -306,7 +306,7 @@ def expand_macros(source: str, macros: dict[str, str]) -> str:
 
     for var_name, value in macros.items():
         # Replace %varname% with value
-        # Use word boundaries to avoid partial matches
+        # The % delimiters prevent partial matches
         pattern = f"%{re.escape(var_name)}%"
         result = re.sub(pattern, value, result)
 
@@ -338,10 +338,10 @@ def strip_conditional_directives(source: str) -> str:
     filtered = []
 
     for line in lines:
-        stripped = line.strip().lower()
+        stripped = line.strip()
 
-        # Check if this line contains $if not set directive
-        if stripped.startswith("$if") and "not set" in stripped:
+        # Check if this line contains $if not set directive (more precise)
+        if re.match(r"^\$if\s+not\s+set\b", stripped, re.IGNORECASE):
             # Replace with comment to preserve line number
             filtered.append(f"* [Stripped: {line}]")
         else:
