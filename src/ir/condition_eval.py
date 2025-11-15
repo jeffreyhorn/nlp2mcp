@@ -56,7 +56,7 @@ def evaluate_condition(
         True
     """
     # Create index substitution map
-    index_map = dict(zip(domain_sets, index_values))
+    index_map = dict(zip(domain_sets, index_values, strict=True))
 
     # Evaluate the expression
     try:
@@ -113,15 +113,15 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         left = _eval_expr(expr.left, index_map, model_ir)
         right = _eval_expr(expr.right, index_map, model_ir)
 
-        # Comparison operators
+        # Comparison operators (work with both float and str for set comparisons)
         if expr.op == ">":
-            return 1.0 if left > right else 0.0
+            return 1.0 if left > right else 0.0  # type: ignore[operator]
         if expr.op == "<":
-            return 1.0 if left < right else 0.0
+            return 1.0 if left < right else 0.0  # type: ignore[operator]
         if expr.op == ">=":
-            return 1.0 if left >= right else 0.0
+            return 1.0 if left >= right else 0.0  # type: ignore[operator]
         if expr.op == "<=":
-            return 1.0 if left <= right else 0.0
+            return 1.0 if left <= right else 0.0  # type: ignore[operator]
         if expr.op == "==":
             return 1.0 if left == right else 0.0
         if expr.op == "<>":
@@ -133,24 +133,34 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         if expr.op.lower() == "or":
             return 1.0 if (left or right) else 0.0
 
-        # Arithmetic operators (might be used in conditions)
+        # Arithmetic operators - ensure numeric types
         if expr.op == "+":
-            return left + right
+            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+                return left + right
+            raise ConditionEvaluationError("Arithmetic + requires numeric operands")
         if expr.op == "-":
-            return left - right
+            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+                return left - right
+            raise ConditionEvaluationError("Arithmetic - requires numeric operands")
         if expr.op == "*":
-            return left * right
+            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+                return left * right
+            raise ConditionEvaluationError("Arithmetic * requires numeric operands")
         if expr.op == "/":
-            return left / right if right != 0 else 0.0
+            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+                return left / right if right != 0 else 0.0
+            raise ConditionEvaluationError("Arithmetic / requires numeric operands")
 
         raise ConditionEvaluationError(f"Unsupported binary operator '{expr.op}' in condition")
 
     if isinstance(expr, Unary):
-        operand = _eval_expr(expr.operand, index_map, model_ir)
+        operand_val = _eval_expr(expr.child, index_map, model_ir)
         if expr.op.lower() == "not":
-            return 1.0 if not operand else 0.0
+            return 1.0 if not operand_val else 0.0
         if expr.op == "-":
-            return -operand
+            if isinstance(operand_val, (int, float)):
+                return -operand_val
+            raise ConditionEvaluationError("Unary - requires numeric operand")
         raise ConditionEvaluationError(f"Unsupported unary operator '{expr.op}' in condition")
 
     if isinstance(expr, Call):
@@ -181,7 +191,7 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
                                 if element in members:
                                     return float(members.index(element) + 1)  # 1-based
                 raise ConditionEvaluationError(f"Could not find ordinal for element '{element}'")
-            raise ConditionEvaluationError(f"ord() argument must be an index reference")
+            raise ConditionEvaluationError("ord() argument must be an index reference")
 
         # card(set) - returns cardinality of set
         if func_name == "card":
@@ -196,7 +206,7 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
                     target = model_ir.aliases[set_name].target
                     if target in model_ir.sets:
                         return float(len(model_ir.sets[target].members))
-            raise ConditionEvaluationError(f"card() argument must be a set reference")
+            raise ConditionEvaluationError("card() argument must be a set reference")
 
         raise ConditionEvaluationError(f"Unsupported function '{func_name}' in condition")
 

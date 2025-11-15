@@ -77,4 +77,4 @@ class EquationDef:
     domain: tuple[str, ...]  # ("i",) etc.
     relation: Rel
     lhs_rhs: tuple  # (lhs_expr, rhs_expr) kept as AST later
-    condition: object = None  # Optional condition expression (Expr) for $ operator filtering
+    condition: object | None = None  # Optional condition expression (Expr) for $ operator filtering

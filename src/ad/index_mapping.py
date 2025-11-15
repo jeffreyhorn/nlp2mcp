@@ -335,7 +335,8 @@ def enumerate_equation_instances(
 
                 warnings.warn(
                     f"Failed to evaluate condition for {eq_name}{indices}: {e}. "
-                    f"Including instance by default."
+                    f"Including instance by default.",
+                    stacklevel=2,
                 )
                 filtered_instances.append(indices)
         instances = filtered_instances

@@ -85,6 +85,10 @@ def normalize_equation(eq: EquationDef) -> NormalizedEquation:
         relation = Rel.LE
     domain_sets = tuple(eq.domain)
     expr_domain = _expr_domain(expr) or tuple(eq.domain)
+    # Cast condition to Expr | None for type checker
+    from typing import cast
+
+    condition_expr = cast(Expr | None, eq.condition) if eq.condition is not None else None
     return NormalizedEquation(
         name=eq.name,
         domain_sets=domain_sets,
@@ -93,7 +97,7 @@ def normalize_equation(eq: EquationDef) -> NormalizedEquation:
         expr=expr,
         expr_domain=expr_domain,
         rank=len(expr_domain),
-        condition=eq.condition,
+        condition=condition_expr,
     )
 
 
