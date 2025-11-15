@@ -1,0 +1,19 @@
+# Template for preprocessor fixture expected results
+#
+# Each fixture should have an entry with:
+# - input: Path to .gms file
+# - expected: Expected parsing behavior
+#
+# Example:
+# - fixture_name: conditional_set
+#   input: conditional_set.gms
+#   expected:
+#     parse_success: true
+#     sets_extracted:
+#       - name: i
+#         default_value: "1*10"
+#     macros_expanded:
+#       - macro: "%myvar%"
+#         expanded_to: "default_value"
+#
+# Fixtures to be added in Day 5
