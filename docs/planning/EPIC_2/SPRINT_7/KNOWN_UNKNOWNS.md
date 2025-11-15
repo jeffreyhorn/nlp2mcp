@@ -138,7 +138,37 @@ Expected: Parser handles nested directives or fails gracefully
 Development team (Parser specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED  
+**Verified by:** Task 3 (Preprocessor Directive Research)  
+**Date:** 2025-11-14
+
+**Findings:**
+- Analyzed all 60+ GAMS preprocessor directives and their usage in GAMSLib test suite
+- Found only **3 directive types block parsing**: `$if not set`, `%macro%` expansion, `$eolCom`
+- Only **2 models affected** (circle.gms, maxmin.gms) out of 10 GAMSLib models
+- Mock/skip approach is **sufficient** - no advanced directives found in GAMSLib
+- Full preprocessing would require **40-60 hours** vs **6-8 hours** for mock approach
+- Mock approach achieves same result: **+20% parse rate** (unlocks both models)
+
+**Evidence:**
+- Complete research: `docs/research/preprocessor_directives.md`
+- Section 2: Comprehensive directive survey (60+ directives, only 3 block parsing)
+- Section 4: Complexity analysis shows mock approach handles all GAMSLib usage
+- Section 8: Full vs Mock comparison - mock is optimal (6-8h effort, same impact)
+- Section 9: Detailed implementation plan with 6-8 hour estimate
+
+**Decision:** ✅ **Mock/skip approach is sufficient for Sprint 7**
+
+**Recommendation:**
+- Implement minimal mock preprocessing (extract `$if not set` defaults, expand `%macro%`)
+- No grammar changes needed (preprocessing removes directives before parsing)
+- Unlocks circle.gms and maxmin.gms → +20% parse rate
+- Total effort: 6-8 hours (fits Sprint 7 budget perfectly)
+
+**Limitations:**
+- Command-line macro overrides not supported (acceptable for fixed test suite)
+- Advanced conditionals (`$ifThen`, `$else`) not supported (none found in GAMSLib)
+- Macro evaluation (`$eval`) not supported (not needed for GAMSLib)
 
 ---
 
@@ -321,7 +351,36 @@ Expected: Parser handles directive mid-line or errors gracefully
 Development team (Parser specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED  
+**Verified by:** Task 3 (Preprocessor Directive Research)  
+**Date:** 2025-11-14
+
+**Findings:**
+- Lark grammar does **NOT** need preprocessing integration
+- **Preprocessing before parsing** is the correct and optimal approach
+- Grammar-based preprocessing would add unnecessary complexity with no benefits
+- Mock preprocessing removes all directives **before** parsing stage
+- Parser never sees `$if`, `$set`, or `%macro%` syntax
+
+**Evidence:**
+- `docs/research/preprocessor_directives.md` Section 5.1: Three-stage pipeline architecture
+- Section 6.1: Grammar prototype decision - **no grammar changes needed**
+- Current implementation: `src/ir/preprocessor.py` already preprocesses before parsing
+- Industry standard: C, C++, Python all use separate preprocessing stage
+
+**Decision:** ✅ **Preprocess before parsing (no grammar integration needed)**
+
+**Implementation:**
+- Extend existing `preprocessor.py` module with mock preprocessing functions
+- Add `mock_preprocess()` stage between include expansion and directive stripping
+- Parser receives clean GAMS code with no preprocessor directives
+- **Total grammar changes: 0 lines** ✅
+
+**Benefits:**
+- Simple implementation (3 functions, ~100 lines of code)
+- No risk of grammar conflicts or parser bugs
+- Easy to test and maintain
+- Follows established preprocessing patterns
 
 ---
 
@@ -678,7 +737,39 @@ Expected: Parser handles nested includes or detects cycles
 Development team (Parser specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED  
+**Verified by:** Task 3 (Preprocessor Directive Research)  
+**Date:** 2025-11-14
+
+**Findings:**
+- `$include` handling is **ALREADY IMPLEMENTED** in `src/ir/preprocessor.py`
+- `preprocess_includes()` function provides full recursive include expansion
+- Include resolution is **NOT required** for mock preprocessing of `$if`/`$set` directives
+- `$include` and `$if`/`$set`/`%macro%` are **independent features** with no dependency
+- Neither circle.gms nor maxmin.gms use `$include` directives
+
+**Evidence:**
+- `src/ir/preprocessor.py` lines 1-180: Complete `$include` implementation with:
+  - Recursive expansion of nested includes
+  - Circular dependency detection
+  - Relative path resolution
+  - Depth limit protection (max 100 levels)
+- `docs/research/preprocessor_directives.md` Section 5.1: Pipeline shows includes expanded first
+- circle.gms analysis: No `$include` directives found (verified by grep)
+- maxmin.gms analysis: No `$include` directives found (verified by grep)
+
+**Decision:** ✅ **Include resolution is NOT required for preprocessor directive handling**
+
+**Clarification:**
+- `$include` support was implemented in **Sprint 5** (already complete)
+- Mock preprocessing for `$if`/`$set`/`%macro%` is **new for Sprint 7**
+- These are **orthogonal features** - no dependency between them
+- Processing order: includes → mock preprocessing → strip directives → parse
+
+**Implementation:**
+- Keep existing `preprocess_includes()` unchanged (works perfectly)
+- Add new `mock_preprocess()` as separate pipeline stage
+- No interaction between include expansion and macro expansion
 
 ---
 
