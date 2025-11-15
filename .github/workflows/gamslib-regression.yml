@@ -1,0 +1,112 @@
+name: GAMSLib Regression Check
+
+on:
+  pull_request:
+    paths:
+      # Grammar definition
+      - 'src/gams/grammar.lark'
+
+      # Parser implementation
+      - 'src/gams/parser.py'
+      - 'src/ir/parser.py'
+
+      # IR definitions (parser depends on these)
+      - 'src/ir/symbols.py'
+      - 'src/ir/ast.py'
+
+      # Ingestion script itself
+      - 'scripts/ingest_gamslib.py'
+
+      # Regression check script
+      - 'scripts/check_parse_rate_regression.py'
+
+      # CI workflow (changes to this file)
+      - '.github/workflows/gamslib-regression.yml'
+
+  schedule:
+    # Weekly validation every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+# Minimal permissions (principle of least privilege)
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  gamslib-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10  # Fail if exceeds 10 minutes
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for baseline comparison
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install -r requirements.txt
+
+      - name: Download GAMSLib models
+        run: |
+          # Use cached models if available, download if missing
+          if [ ! -d "tests/fixtures/gamslib" ]; then
+            echo "Downloading GAMSLib models..."
+            ./scripts/download_gamslib_nlp.sh
+          else
+            echo "Using cached GAMSLib models"
+            ls -la tests/fixtures/gamslib/ | head -20
+          fi
+
+      - name: Run GAMSLib ingestion
+        run: |
+          echo "Running GAMSLib ingestion..."
+          make ingest-gamslib
+
+      - name: Check for parse rate regression
+        run: |
+          echo "Checking for parse rate regression..."
+          python scripts/check_parse_rate_regression.py \
+            --current reports/gamslib_ingestion_sprint6.json \
+            --baseline main \
+            --threshold 0.10
+
+      - name: Upload ingestion report
+        uses: actions/upload-artifact@v4
+        if: always()  # Upload even if regression detected
+        with:
+          name: gamslib-ingestion-report
+          path: |
+            reports/gamslib_ingestion_sprint6.json
+            docs/status/GAMSLIB_CONVERSION_STATUS.md
+          retention-days: 30
+
+      - name: Check dashboard is up-to-date
+        if: github.event_name == 'pull_request'
+        run: |
+          # Fail if dashboard changes are not committed
+          if git diff --quiet docs/status/GAMSLIB_CONVERSION_STATUS.md; then
+            echo "✅ Dashboard is up-to-date"
+          else
+            echo "❌ Dashboard has uncommitted changes"
+            echo ""
+            echo "Please commit the updated dashboard:"
+            echo "  make ingest-gamslib"
+            echo "  git add docs/status/GAMSLIB_CONVERSION_STATUS.md"
+            echo "  git commit -m 'Update GAMSLib dashboard'"
+            echo ""
+            echo "Dashboard diff:"
+            git diff docs/status/GAMSLIB_CONVERSION_STATUS.md
+            exit 1
+          fi
