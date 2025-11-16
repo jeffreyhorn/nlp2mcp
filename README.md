@@ -50,10 +50,10 @@ For the detailed Sprint 6 plan, see [docs/planning/EPIC_2/SPRINT_6/PLAN.md](docs
 **Sprint 7 Progress** (Epic 2 - Sprint 7: Parser Enhancements & GAMSLib Expansion):
 - [x] Day 0: Pre-Sprint Setup & Kickoff
 - [x] Day 1: Preprocessor Directives (Part 1)
-- [ ] Day 2: Preprocessor Directives (Part 2) + Set Range Syntax (Part 1)
-- [ ] Day 3: Set Range Syntax (Part 2)
-- [ ] Day 4: Parser Integration & Testing + Quick Wins
-- [ ] Day 5: GAMSLib Retest & Checkpoint 1
+- [x] Day 2: Preprocessor Directives (Part 2) + Set Range Syntax (Part 1)
+- [x] Day 3: Set Range Syntax (Part 2)
+- [x] Day 4: Parser Integration & Testing + Quick Wins
+- [x] Day 5: GAMSLib Retest & Checkpoint 1 (Fixtures created, parse rate 20% ModelIR / 50% grammar)
 - [ ] Day 6: Test Performance (Part 1) - pytest-xdist
 - [ ] Day 7: Test Performance (Part 2) & Checkpoint 2
 - [ ] Day 8: Convexity UX + Multi-Dim Fixtures

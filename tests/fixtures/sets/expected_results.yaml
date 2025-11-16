@@ -1,18 +1,147 @@
-# Template for set range fixture expected results
+# Set Range Fixture Expected Results
+# Sprint 7 Day 5 - Parser test fixtures
 #
-# Each fixture should have an entry with:
-# - input: Path to .gms file
-# - expected: Expected parsing behavior
-#
-# Example:
-# - fixture_name: numeric_range
-#   input: numeric_range.gms
-#   expected:
-#     parse_success: true
-#     set_name: i
-#     range_type: numeric
-#     range_start: 1
-#     range_end: 6
-#     expanded_elements: ["1", "2", "3", "4", "5", "6"]
-#
-# Fixtures to be added in Day 5
+# Each fixture documents expected parsing behavior for set range syntax
+
+fixtures:
+  - name: range_numeric
+    file: range_numeric.gms
+    description: Numeric range notation (1*6)
+    expected:
+      parse_success: true
+      sets:
+        - name: i
+          type: numeric_range
+          start: 1
+          end: 6
+          elements: ["1", "2", "3", "4", "5", "6"]
+          cardinality: 6
+
+  - name: range_alpha
+    file: range_alpha.gms
+    description: Alphabetic prefix with numeric range (s1*s10)
+    expected:
+      parse_success: true
+      sets:
+        - name: s
+          type: alpha_range
+          prefix: s
+          start: 1
+          end: 10
+          elements:
+            ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"]
+          cardinality: 10
+
+  - name: range_prefix
+    file: range_prefix.gms
+    description: Custom prefix range (p1*p100)
+    expected:
+      parse_success: true
+      sets:
+        - name: plants
+          type: prefix_range
+          prefix: p
+          start: 1
+          end: 100
+          cardinality: 100
+
+  - name: range_with_macro
+    file: range_with_macro.gms
+    description: Range with macro expansion (1*%n%)
+    expected:
+      parse_success: true
+      macros_expanded:
+        - variable: n
+          value: "8"
+      sets:
+        - name: i
+          type: numeric_range
+          start: 1
+          end: 8
+          cardinality: 8
+
+  - name: explicit_elements
+    file: explicit_elements.gms
+    description: Explicit comma-separated set elements
+    expected:
+      parse_success: true
+      sets:
+        - name: i
+          type: explicit
+          elements: ["i1", "i2", "i3"]
+          cardinality: 3
+        - name: j
+          type: explicit
+          elements: ["j1", "j2"]
+          cardinality: 2
+
+  - name: indexed_set
+    file: indexed_set.gms
+    description: Indexed set (subset) declaration
+    expected:
+      parse_success: true
+      sets:
+        - name: i
+          type: numeric_range
+          cardinality: 5
+        - name: active
+          type: subset
+          parent: i
+          elements: ["1", "3", "5"]
+          cardinality: 3
+
+  - name: multi_dim_set
+    file: multi_dim_set.gms
+    description: Multi-dimensional set (2D)
+    expected:
+      parse_success: true
+      sets:
+        - name: i
+          type: numeric_range
+          cardinality: 3
+        - name: j
+          type: numeric_range
+          cardinality: 2
+        - name: pairs
+          type: multi_dimensional
+          dimensions: 2
+          domain: ["i", "j"]
+          elements: [["1", "1"], ["2", "1"], ["3", "2"]]
+          cardinality: 3
+
+  - name: set_tuple
+    file: set_tuple.gms
+    description: Set tuple notation with dot syntax
+    expected:
+      parse_success: true
+      sets:
+        - name: i
+          type: alpha_range
+          prefix: i
+          cardinality: 3
+        - name: j
+          type: alpha_range
+          prefix: j
+          cardinality: 2
+        - name: ij
+          type: multi_dimensional
+          dimensions: 2
+          domain: ["i", "j"]
+          elements: [["i1", "j1"], ["i2", "j1"], ["i3", "j2"]]
+          cardinality: 3
+
+notes: |
+  These fixtures test the parser's ability to handle various set declaration
+  syntaxes in GAMS, including:
+  - Numeric ranges (1*6)
+  - Alphabetic ranges (s1*s10)
+  - Explicit element lists
+  - Subsets (indexed sets)
+  - Multi-dimensional sets
+  - Tuple notation (i.j)
+
+  Success criteria:
+  - All range notations expand correctly
+  - Set cardinality is computed accurately
+  - Multi-dimensional sets preserve domain information
+  - Subset relationships are maintained
