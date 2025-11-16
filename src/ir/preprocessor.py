@@ -164,12 +164,12 @@ def preprocess_includes(
 def _has_statement_ending_semicolon(line: str) -> bool:
     """Check if a line has a semicolon that ends a statement (not in string/comment).
 
-    This is a simplified check that handles the most common cases:
+    This handles:
     - Semicolons inside single or double quoted strings are ignored
+    - Escaped quotes within strings (e.g., "test\\"quote" or 'test\\'quote')
     - Semicolons after GAMS inline comments (*) are ignored
 
-    Note: This doesn't handle all edge cases (escaped quotes, nested quotes),
-    but works for typical GAMS code.
+    Note: This doesn't handle nested quotes, but works for typical GAMS code.
     """
     in_string = None
     i = 0
@@ -179,8 +179,15 @@ def _has_statement_ending_semicolon(line: str) -> bool:
         # Handle string state
         if in_string:
             if c == in_string:
-                # Simple check: if previous char is backslash, it's escaped
-                if i > 0 and line[i - 1] == "\\":
+                # Check if the quote is escaped by counting preceding backslashes
+                # An odd number of backslashes means the quote is escaped
+                backslash_count = 0
+                j = i - 1
+                while j >= 0 and line[j] == "\\":
+                    backslash_count += 1
+                    j -= 1
+                if backslash_count % 2 == 1:
+                    # Quote is escaped, stay in string
                     i += 1
                     continue
                 in_string = None

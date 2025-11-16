@@ -9,13 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 7 Day 4: Parser Integration & Quick Wins - 2025-11-15
 
-**Status:** ✅ COMPLETE - **50% Parse Rate Achieved (5/10 GAMSLib models)**
+**Status:** ✅ COMPLETE - **50% Grammar-Level Parse Rate Achieved (5/10 GAMSLib models)**
+
+> **Note on Metrics:** "Parse rate" in this context refers to **grammar-level parsing** (parse tree creation), not full ModelIR conversion. The ingestion reports measure ModelIR conversion rate (20% = 2/10 models), while this sprint focused on grammar parsing (50% = 5/10 models). See "GAMSLib Parse Rate Results" section below for detailed breakdown.
 
 #### Summary
 
-Integrated all parser enhancements from Days 1-3 and implemented quick-win features to achieve 50% GAMSLib parse rate. Successfully parsing circle.gms, trig.gms, mathopt1.gms, rbrock.gms, and mhw4d.gms.
+Integrated all parser enhancements from Days 1-3 and implemented quick-win features to achieve 50% grammar-level parse rate. Successfully parsing circle.gms, trig.gms, mathopt1.gms, rbrock.gms, and mhw4d.gms at the grammar level.
 
-**Key Achievement:** Increased parse rate from 10% (Sprint 6 baseline) to 50% through integration of preprocessor, grammar enhancements, and targeted syntax support.
+**Key Achievement:** Increased grammar-level parse rate from 10% (Sprint 6 baseline) to 50% through integration of preprocessor, grammar enhancements, and targeted syntax support.
 
 **Deliverables:**
 - ✅ Integrated preprocessor in parse_file() workflow
