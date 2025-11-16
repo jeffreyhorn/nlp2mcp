@@ -6,7 +6,7 @@ from typing import cast
 
 from .ast import Binary, Const, Expr, SymbolRef, VarRef
 from .model_ir import ModelIR
-from .symbols import EquationDef, Rel
+from .symbols import EquationDef, Rel, SourceLocation
 
 
 @dataclass
@@ -21,6 +21,7 @@ class NormalizedEquation:
     expr_domain: tuple[str, ...]
     rank: int
     condition: Expr | None = None  # Optional condition for $ operator filtering
+    source_location: SourceLocation | None = None  # Source location of equation definition
 
 
 def subtract(lhs: Expr, rhs: Expr) -> Expr:
@@ -95,6 +96,7 @@ def normalize_equation(eq: EquationDef) -> NormalizedEquation:
         expr_domain=expr_domain,
         rank=len(expr_domain),
         condition=cast(Expr | None, eq.condition),
+        source_location=eq.source_location,
     )
 
 

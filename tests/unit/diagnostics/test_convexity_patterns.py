@@ -20,6 +20,7 @@ Total: 18 unit tests covering all 5 patterns with targeted fixture validation.
 
 import pytest
 
+from src.diagnostics.convexity.pattern_matcher import ConvexityWarning
 from src.diagnostics.convexity.patterns import (
     BilinearTermPattern,
     NonlinearEqualityPattern,
@@ -27,7 +28,8 @@ from src.diagnostics.convexity.patterns import (
     QuotientPattern,
     TrigonometricPattern,
 )
-from src.ir.parser import parse_model_file
+from src.ir.parser import parse_model_file, parse_model_text
+from src.ir.symbols import SourceLocation
 
 pytestmark = pytest.mark.unit
 
@@ -202,9 +204,9 @@ class TestConvexModels:
             warnings = pattern.detect(model)
             total_warnings += len(warnings)
 
-        assert (
-            total_warnings == 0
-        ), f"{fixture_file} should have 0 warnings but got {total_warnings}"
+        assert total_warnings == 0, (
+            f"{fixture_file} should have 0 warnings but got {total_warnings}"
+        )
 
 
 class TestNonConvexModels:
@@ -267,13 +269,13 @@ class TestAllFixtures:
         actual_count = len(all_warnings)
 
         if expected_min_warnings == 0:
-            assert (
-                actual_count == 0
-            ), f"{fixture_file}: Expected 0 warnings (convex), got {actual_count}"
+            assert actual_count == 0, (
+                f"{fixture_file}: Expected 0 warnings (convex), got {actual_count}"
+            )
         else:
-            assert (
-                actual_count >= expected_min_warnings
-            ), f"{fixture_file}: Expected at least {expected_min_warnings} warnings, got {actual_count}"
+            assert actual_count >= expected_min_warnings, (
+                f"{fixture_file}: Expected at least {expected_min_warnings} warnings, got {actual_count}"
+            )
 
 
 # ===== Warning Display Tests =====
@@ -314,3 +316,184 @@ class TestWarningDisplay:
         assert "trig_function" in s
         assert "eq2" in s
         assert "Trig detected" in s
+
+
+# ===== Line Number Tracking Tests (Sprint 7 Day 8) =====
+
+
+class TestLineNumberTracking:
+    """Test that source location information is tracked and displayed in warnings."""
+
+    def test_source_location_extracted_from_parser(self):
+        """Test that parser extracts line numbers from GAMS source."""
+        source = """
+Sets
+    i /i1*i3/;
+
+Variables
+    x(i);
+
+Equations
+    test_eq(i);
+
+test_eq(i).. x(i) * x(i) =e= 1;
+
+Model test /all/;
+Solve test using nlp minimizing x;
+"""
+        model = parse_model_text(source)
+
+        # Check that equation has source location
+        assert "test_eq" in model.equations
+        eq = model.equations["test_eq"]
+        assert eq.source_location is not None
+        assert eq.source_location.line == 11  # Line where equation is defined
+        assert eq.source_location.column == 1
+
+    def test_source_location_in_convexity_warning(self):
+        """Test that convexity warnings include source location."""
+        source = """
+Variables x, y;
+Equations eq1;
+
+eq1.. x * x =e= 1;
+
+Model test /all/;
+Solve test using nlp minimizing x;
+"""
+        model = parse_model_text(source)
+        pattern = NonlinearEqualityPattern()
+
+        warnings = pattern.detect(model)
+
+        assert len(warnings) >= 1
+        warning = warnings[0]
+        assert warning.source_location is not None
+        assert warning.source_location.line == 5  # Line where eq1 is defined
+
+    def test_warning_str_includes_location(self):
+        """Test that warning string representation includes source location."""
+        warning = ConvexityWarning(
+            equation="eq1",
+            pattern="nonlinear_equality",
+            message="Nonlinear equality detected",
+            details=None,
+            error_code="W301",
+            source_location=SourceLocation(line=10, column=1),
+        )
+
+        s = str(warning)
+        assert "10:1" in s  # Should include line:column
+        assert "eq1" in s
+        assert "W301" in s
+
+    def test_warning_str_without_location(self):
+        """Test that warning works without source location (backward compatibility)."""
+        warning = ConvexityWarning(
+            equation="eq1",
+            pattern="nonlinear_equality",
+            message="Nonlinear equality detected",
+            details=None,
+            error_code="W301",
+            source_location=None,
+        )
+
+        s = str(warning)
+        # Should not crash, and should still show equation name
+        assert "eq1" in s
+        assert "W301" in s
+
+    def test_multiple_equations_have_different_line_numbers(self):
+        """Test that different equations have different line numbers."""
+        source = """
+Variables x, y;
+Equations eq1, eq2, eq3;
+
+eq1.. x * x =e= 1;
+eq2.. y * y =e= 2;
+eq3.. x * y =e= 3;
+
+Model test /all/;
+Solve test using nlp minimizing x;
+"""
+        model = parse_model_text(source)
+
+        # All three equations should have different line numbers
+        eq1 = model.equations["eq1"]
+        eq2 = model.equations["eq2"]
+        eq3 = model.equations["eq3"]
+
+        assert eq1.source_location is not None
+        assert eq2.source_location is not None
+        assert eq3.source_location is not None
+
+        # Lines should be 5, 6, 7
+        assert eq1.source_location.line == 5
+        assert eq2.source_location.line == 6
+        assert eq3.source_location.line == 7
+
+    def test_source_location_preserved_through_normalization(self):
+        """Test that source location is preserved during normalization."""
+        from src.ir.normalize import normalize_model
+
+        source = """
+Variables x;
+Equations eq1;
+
+eq1.. x * x =e= 1;
+
+Model test /all/;
+Solve test using nlp minimizing x;
+"""
+        model = parse_model_text(source)
+
+        # Normalize the model
+        normalized_equations, _ = normalize_model(model)
+
+        # Check that normalized equation preserves source location
+        assert "eq1" in normalized_equations
+        norm_eq = normalized_equations["eq1"]
+        assert norm_eq.source_location is not None
+        assert norm_eq.source_location.line == 5
+
+    def test_all_patterns_include_source_location(self):
+        """Test that all pattern matchers include source location in warnings."""
+        # Test each pattern type
+        source_nonlinear_eq = """
+Variables x;
+Equations eq1;
+eq1.. x * x =e= 1;
+Model test /all/;
+Solve test using nlp minimizing x;
+"""
+
+        source_trig = """
+Variables x;
+Equations eq1;
+eq1.. sin(x) =e= 0;
+Model test /all/;
+Solve test using nlp minimizing x;
+"""
+
+        source_bilinear = """
+Variables x, y;
+Equations eq1;
+eq1.. x * y =l= 1;
+Model test /all/;
+Solve test using nlp minimizing x;
+"""
+
+        test_cases = [
+            (source_nonlinear_eq, NonlinearEqualityPattern()),
+            (source_trig, TrigonometricPattern()),
+            (source_bilinear, BilinearTermPattern()),
+        ]
+
+        for source, pattern in test_cases:
+            model = parse_model_text(source)
+            warnings = pattern.detect(model)
+
+            if len(warnings) > 0:
+                # Check that warning has source location
+                assert warnings[0].source_location is not None
+                assert warnings[0].source_location.line is not None

@@ -87,6 +87,7 @@ class NonlinearEqualityPattern(PatternMatcher):
                             message="Nonlinear equality constraint detected (may be non-convex)",
                             details=None,
                             error_code="W301",
+                            source_location=eq.source_location,
                         )
                     )
 
@@ -148,6 +149,7 @@ class TrigonometricPattern(PatternMatcher):
                         message="Trigonometric function in constraint",
                         details=", ".join(trig_calls),
                         error_code="W302",
+                        source_location=eq.source_location,
                     )
                 )
 
@@ -223,6 +225,7 @@ class BilinearTermPattern(PatternMatcher):
                         message="Bilinear term in constraint (variable * variable)",
                         details=f"{len(bilinear_terms)} term(s) found",
                         error_code="W303",
+                        source_location=eq.source_location,
                     )
                 )
 
@@ -294,6 +297,7 @@ class QuotientPattern(PatternMatcher):
                         message="Division by variable in constraint",
                         details=f"{len(quotients)} quotient(s) found",
                         error_code="W304",
+                        source_location=eq.source_location,
                     )
                 )
 
@@ -367,6 +371,7 @@ class OddPowerPattern(PatternMatcher):
                         message="Odd power of variable in constraint",
                         details=f"{len(odd_powers)} term(s) found",
                         error_code="W305",
+                        source_location=eq.source_location,
                     )
                 )
 

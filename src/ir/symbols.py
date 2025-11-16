@@ -4,6 +4,21 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 
 
+@dataclass
+class SourceLocation:
+    """Source location information for AST nodes and IR elements."""
+
+    line: int
+    column: int
+    filename: str | None = None
+
+    def __str__(self) -> str:
+        """Format as 'file.gms:line:column' or 'line:column' if no filename."""
+        if self.filename:
+            return f"{self.filename}:{self.line}:{self.column}"
+        return f"{self.line}:{self.column}"
+
+
 class Rel(Enum):
     EQ = "=e="
     LE = "=l="
@@ -78,3 +93,4 @@ class EquationDef:
     relation: Rel
     lhs_rhs: tuple  # (lhs_expr, rhs_expr) kept as AST later
     condition: object | None = None  # Optional condition expression (Expr) for $ operator filtering
+    source_location: SourceLocation | None = None  # Source location of equation definition

@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from src.ir.ast import Binary, Call, Const, Expr, ParamRef, Sum, Unary, VarRef
+from src.ir.symbols import SourceLocation
 
 if TYPE_CHECKING:
     from src.ir.model_ir import ModelIR
@@ -39,6 +40,7 @@ class ConvexityWarning:
         message: Human-readable description of the issue
         details: Optional additional details (e.g., "sin(...)", "x*y")
         error_code: Error code for documentation linking (e.g., "W301")
+        source_location: Source location of the equation (line/column)
     """
 
     equation: str
@@ -46,11 +48,13 @@ class ConvexityWarning:
     message: str
     details: str | None = None
     error_code: str | None = None
+    source_location: SourceLocation | None = None
 
     def __str__(self) -> str:
         """Format warning for display."""
         prefix = f"[{self.error_code}] " if self.error_code else ""
-        base = f"{prefix}[{self.pattern}] {self.equation}: {self.message}"
+        location = f" ({self.source_location})" if self.source_location else ""
+        base = f"{prefix}[{self.pattern}] {self.equation}{location}: {self.message}"
         if self.details:
             return f"{base} ({self.details})"
         return base
