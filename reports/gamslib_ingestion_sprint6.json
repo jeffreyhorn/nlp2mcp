@@ -6,8 +6,8 @@
       "model_name": "circle",
       "gms_file": "circle.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches '1' in the current parser context, at line 25 col 16\n\nx(i) = uniform(1,10);\n               ^\nExpected one of: \n\t* ID\n",
-      "parse_error_type": "UnexpectedCharacters"
+      "parse_error": "Assignments must use numeric constants; got Call(uniform, (Const(1.0), Const(10.0))) in assignment [context: expression]",
+      "parse_error_type": "ParserSemanticError"
     },
     {
       "model_name": "himmel16",
@@ -27,8 +27,8 @@
       "model_name": "mathopt1",
       "gms_file": "mathopt1.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'm' in the current parser context, at line 38 col 8\n\nModels m / all /;\n       ^\nExpected one of: \n\t* DOT\n\t* SLASH\n\t* SEMI\n\t* __ANON_0\n\t* ASSIGN\n\t* LPAR\n\t* DOLLAR\n",
-      "parse_error_type": "UnexpectedCharacters"
+      "parse_error": "Indexed assignments are not supported yet [context: expression] (line 45, column 1)",
+      "parse_error_type": "ParserSemanticError"
     },
     {
       "model_name": "maxmin",
@@ -61,23 +61,23 @@
     {
       "model_name": "rbrock",
       "gms_file": "rbrock.gms",
-      "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'm' in the current parser context, at line 24 col 15\n\nsolve rosenbr minimizing f using nlp;\n              ^\nExpected one of: \n\t* USING\n",
-      "parse_error_type": "UnexpectedCharacters"
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null
     },
     {
       "model_name": "trig",
       "gms_file": "trig.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches ',' in the current parser context, at line 31 col 13\n\nScalar xdiff, fdiff;\n            ^\nExpected one of: \n\t* SEMI\n\t* ASSIGN\n\t* SLASH\n\t* ID\n",
-      "parse_error_type": "UnexpectedCharacters"
+      "parse_error": "Unsupported expression type: bound_scalar. This may be a parser bug or unsupported GAMS syntax. Supported: variables, parameters, numbers, operators (+, -, *, /, ^), functions (sqrt, exp, log, etc.), sum(). [context: assignment] (line 32, column 23)",
+      "parse_error_type": "ParserSemanticError"
     }
   ],
   "kpis": {
     "total_models": 10,
-    "parse_success": 1,
-    "parse_failed": 9,
-    "parse_rate_percent": 10.0,
+    "parse_success": 2,
+    "parse_failed": 8,
+    "parse_rate_percent": 20.0,
     "convert_success": 0,
     "convert_failed": 0,
     "convert_rate_percent": 0.0,

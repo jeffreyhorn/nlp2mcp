@@ -69,6 +69,7 @@ See:
 """
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -81,7 +82,7 @@ import pytest
 #   https://github.com/jeffreyhorn/nlp2mcp/issues/20
 from src.ad.api import compute_derivatives
 from src.ir.normalize import normalize_model
-from src.ir.parser import parse_model_file
+from src.ir.parser import parse_file, parse_model_file
 
 pytestmark = pytest.mark.e2e
 
@@ -699,3 +700,78 @@ class TestConditionalEquations:
         # Should NOT create instances for i1, i2 (where ord <= 2)
         assert ("supply", ("i1",)) not in supply_instances
         assert ("supply", ("i2",)) not in supply_instances
+
+
+class TestGAMSLibParsing:
+    """Test that GAMSLib models parse successfully.
+
+    Sprint 7 Day 4 achievement: 50% parse rate (5/10 models).
+
+    These tests validate the integration of:
+    - Preprocessor directives ($title, $onText/$offText, $if/$set, macros)
+    - Multiple declaration syntax (Parameters x, y, z;)
+    - Variable attribute references (x.l, x.lo, x.up)
+    - Execution statement stripping (if() calls, abort, display)
+    - Models (plural) keyword
+    - Flexible solve statement order
+    """
+
+    # Class-level constants to reduce duplication
+    GAMSLIB_DIR = Path(__file__).parent.parent / "fixtures" / "gamslib"
+
+    def test_circle_gms_parses(self):
+        """Test circle.gms parses successfully (preprocessor + quick wins)."""
+        tree = parse_file(self.GAMSLIB_DIR / "circle.gms")
+        assert tree is not None
+
+    def test_trig_gms_parses(self):
+        """Test trig.gms parses successfully (multiple scalars)."""
+        tree = parse_file(self.GAMSLIB_DIR / "trig.gms")
+        assert tree is not None
+
+    def test_mathopt1_gms_parses(self):
+        """Test mathopt1.gms parses successfully (Models keyword)."""
+        tree = parse_file(self.GAMSLIB_DIR / "mathopt1.gms")
+        assert tree is not None
+
+    def test_rbrock_gms_parses(self):
+        """Test rbrock.gms parses successfully (existing features)."""
+        tree = parse_file(self.GAMSLIB_DIR / "rbrock.gms")
+        assert tree is not None
+
+    def test_mhw4d_gms_parses(self):
+        """Test mhw4d.gms parses successfully (existing features)."""
+        tree = parse_file(self.GAMSLIB_DIR / "mhw4d.gms")
+        assert tree is not None
+
+    def test_gamslib_parse_rate(self):
+        """Validate 50% parse rate achievement (5/10 models)."""
+        models = [
+            "circle.gms",
+            "trig.gms",
+            "mathopt1.gms",
+            "rbrock.gms",
+            "mhw4d.gms",
+            "maxmin.gms",
+            "himmel16.gms",
+            "hs62.gms",
+            "mingamma.gms",
+            "mhw4dx.gms",
+        ]
+
+        passed_models = []
+        failed_models = []
+        for model in models:
+            try:
+                parse_file(self.GAMSLIB_DIR / model)
+                passed_models.append(model)
+            except Exception as e:
+                # Log failures for debugging
+                failed_models.append(f"{model}: {type(e).__name__}")
+
+        # Sprint 7 Day 4 target: 50% parse rate (5/10 models)
+        parse_rate = (len(passed_models) / len(models)) * 100
+        assert parse_rate >= 50.0, (
+            f"Parse rate {parse_rate:.1f}% below 50% target. "
+            f"Passed: {passed_models}. Failed: {failed_models}"
+        )

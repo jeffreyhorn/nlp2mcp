@@ -159,9 +159,13 @@ def parse_text(source: str) -> Tree:
 
 
 def parse_file(path: str | Path) -> Tree:
-    """Parse a GAMS source file and return the parse tree."""
-    data = Path(path).read_text()
-    return parse_text(data)
+    """Parse a GAMS source file and return the parse tree.
+
+    This function preprocesses the file (expanding includes, macros, and
+    stripping unsupported directives) before parsing.
+    """
+    preprocessed = preprocess_gams_file(path)
+    return parse_text(preprocessed)
 
 
 def parse_model_text(source: str) -> ModelIR:
@@ -396,7 +400,20 @@ class _ModelBuilder:
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
-            if child.data in {
+            if child.data == "param_list":
+                # Handle comma-separated parameter names: Parameter x, y, z;
+                # Grammar: ID "," id_list -> first ID + rest from id_list
+                if not child.children or len(child.children) < 2:
+                    raise self._error("Invalid param_list structure", child)
+                first_name = _token_text(child.children[0])
+                rest_names = (
+                    _id_list(child.children[1]) if isinstance(child.children[1], Tree) else []
+                )
+                names = [first_name] + list(rest_names)
+                for name in names:
+                    param = ParameterDef(name=name, domain=())
+                    self.model.add_param(param)
+            elif child.data in {
                 "param_domain",
                 "param_domain_data",
                 "param_plain",
@@ -585,6 +602,22 @@ class _ModelBuilder:
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
+
+            if child.data == "scalar_list":
+                # Handle comma-separated scalar names: Scalars a, b, c;
+                # Grammar: ID "," id_list -> first ID + rest from id_list
+                if not child.children or len(child.children) < 2:
+                    raise self._error("Invalid scalar_list structure", child)
+                first_name = _token_text(child.children[0])
+                rest_names = (
+                    _id_list(child.children[1]) if isinstance(child.children[1], Tree) else []
+                )
+                names = [first_name] + list(rest_names)
+                for name in names:
+                    param = ParameterDef(name=name, domain=())
+                    self.model.add_param(param)
+                continue
+
             name_token = child.children[0]
             name = _token_text(name_token)
             param = ParameterDef(name=name)

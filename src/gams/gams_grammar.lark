@@ -58,9 +58,11 @@ param_decl: ID "(" id_list ")" "/" param_data_items "/" param_default? -> param_
           | ID "(" id_list ")" param_default?                          -> param_domain
           | ID "/" param_data_items "/" param_default?                 -> param_plain_data
           | ID param_default?                                          -> param_plain
+          | ID "," id_list                                             -> param_list
 scalar_decl: ID "/" scalar_data_items "/" (ASSIGN expr)?      -> scalar_with_data
            | ID ASSIGN expr                                       -> scalar_with_assign
            | ID                                                   -> scalar_plain
+           | ID "," id_list                                       -> scalar_list
 scalar_data_items: scalar_data_item ("," scalar_data_item)*
 scalar_data_item: NUMBER
 
@@ -144,14 +146,15 @@ REL_K: /=e=|=l=|=g=/i
 // Solve
 // ---------------------------
 
-solve_stmt: "Solve"i ID "using"i "NLP"i (obj_sense ID)? SEMI  -> solve
+solve_stmt: "Solve"i ID obj_sense ID "using"i "NLP"i SEMI     -> solve
+          | "Solve"i ID "using"i "NLP"i obj_sense ID SEMI     -> solve
 obj_sense: MINIMIZING_K | MAXIMIZING_K
 MINIMIZING_K: /(?i:minimizing|min)\b/
 MAXIMIZING_K: /(?i:maximizing|max)\b/
 
-model_stmt: "Model"i ID "/" "all"i "/" SEMI               -> model_all
-          | "Model"i ID "/" model_ref_list "/" SEMI       -> model_with_list
-          | "Model"i ID SEMI                              -> model_decl
+model_stmt: ("Models"i | "Model"i) ID "/" "all"i "/" SEMI       -> model_all
+          | ("Models"i | "Model"i) ID "/" model_ref_list "/" SEMI  -> model_with_list
+          | ("Models"i | "Model"i) ID SEMI                         -> model_decl
 
 model_ref_list: ID ("," ID)*
 
@@ -195,6 +198,7 @@ symbol_plain.1: ID
 
 ?atom: NUMBER                             -> number
      | func_call                          -> funccall
+     | ref_bound
      | ref_indexed
      | symbol_plain
      | "(" expr ")"
@@ -206,7 +210,7 @@ arg_list: expr ("," expr)*
 // Tokens & basics
 // ---------------------------
 
-FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card)\b/
+FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card|uniform|normal)\b/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
 ESCAPED: /'[^']*'|\"[^\"]*\"/
 STRING: /"[^"]*"|'[^']*'/

@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-15 16:35:46
+**Generated:** 2025-11-15 23:25:30
 **Sprint:** Sprint 6
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint6.json`](../../reports/gamslib_ingestion_sprint6.json)
@@ -11,8 +11,8 @@
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| **Parse Rate** | 10.0% (1/10) | ≥10% | ✅ |
-| **Convert Rate** | 0.0% (0/1) | ≥50% | ⚠️ Sprint 6: Not implemented |
+| **Parse Rate** | 20.0% (2/10) | ≥10% | ✅ |
+| **Convert Rate** | 0.0% (0/2) | ≥50% | ⚠️ Sprint 6: Not implemented |
 | **Solve Rate** | 0.0% (N/A) | TBD | ⚠️ Sprint 6: Not implemented |
 | **End-to-End** | 0.0% (0/10) | TBD | ⚠️ Sprint 6: Not implemented |
 
@@ -24,16 +24,16 @@
 
 | Model | Parse | Convert | Solve | E2E | Notes |
 |-------|-------|---------|-------|-----|-------|
-| circle | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
+| circle | ❌ | - | - | ❌ | Parse error: ParserSemanticError |
 | himmel16 | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
 | hs62 | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
-| mathopt1 | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
+| mathopt1 | ❌ | - | - | ❌ | Parse error: ParserSemanticError |
 | maxmin | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
 | mhw4d | ✅ | - | - | ❌ | Parsed successfully |
 | mhw4dx | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
 | mingamma | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
-| rbrock | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
-| trig | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
+| rbrock | ✅ | - | - | ❌ | Parsed successfully |
+| trig | ❌ | - | - | ❌ | Parse error: ParserSemanticError |
 
 **Legend:**
 - ✅ Success
@@ -47,7 +47,8 @@
 ### Parse Errors
 | Error Type | Count | Models |
 |------------|-------|--------|
-| `UnexpectedCharacters` | 9 | circle, himmel16, hs62, mathopt1, maxmin, mhw4dx, mingamma, rbrock, trig |
+| `UnexpectedCharacters` | 5 | himmel16, hs62, maxmin, mhw4dx, mingamma |
+| `ParserSemanticError` | 3 | circle, mathopt1, trig |
 
 **Note:** Convert and solve errors will appear here once those stages are implemented.
 
@@ -58,16 +59,10 @@
 ### circle.gms
 **Model:** circle
 **Status:** Parse Failed
-**Error Type:** `UnexpectedCharacters`
+**Error Type:** `ParserSemanticError`
 **Error Message:**
 ```
-No terminal matches '1' in the current parser context, at line 25 col 16
-
-x(i) = uniform(1,10);
-               ^
-Expected one of: 
-	* ID
-
+Assignments must use numeric constants; got Call(uniform, (Const(1.0), Const(10.0))) in assignment [context: expression]
 ```
 
 ### himmel16.gms
@@ -104,22 +99,10 @@ Expected one of:
 ### mathopt1.gms
 **Model:** mathopt1
 **Status:** Parse Failed
-**Error Type:** `UnexpectedCharacters`
+**Error Type:** `ParserSemanticError`
 **Error Message:**
 ```
-No terminal matches 'm' in the current parser context, at line 38 col 8
-
-Models m / all /;
-       ^
-Expected one of: 
-	* DOT
-	* SLASH
-	* SEMI
-	* __ANON_0
-	* ASSIGN
-	* LPAR
-	* DOLLAR
-
+Indexed assignments are not supported yet [context: expression] (line 45, column 1)
 ```
 
 ### maxmin.gms
@@ -172,35 +155,11 @@ Expected one of:
 
 ```
 
-### rbrock.gms
-**Model:** rbrock
-**Status:** Parse Failed
-**Error Type:** `UnexpectedCharacters`
-**Error Message:**
-```
-No terminal matches 'm' in the current parser context, at line 24 col 15
-
-solve rosenbr minimizing f using nlp;
-              ^
-Expected one of: 
-	* USING
-
-```
-
 ### trig.gms
 **Model:** trig
 **Status:** Parse Failed
-**Error Type:** `UnexpectedCharacters`
+**Error Type:** `ParserSemanticError`
 **Error Message:**
 ```
-No terminal matches ',' in the current parser context, at line 31 col 13
-
-Scalar xdiff, fdiff;
-            ^
-Expected one of: 
-	* SEMI
-	* ASSIGN
-	* SLASH
-	* ID
-
+Unsupported expression type: bound_scalar. This may be a parser bug or unsupported GAMS syntax. Supported: variables, parameters, numbers, operators (+, -, *, /, ^), functions (sqrt, exp, log, etc.), sum(). [context: assignment] (line 32, column 23)
 ```

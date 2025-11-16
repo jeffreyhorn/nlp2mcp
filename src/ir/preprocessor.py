@@ -161,6 +161,59 @@ def preprocess_includes(
     return "".join(result_parts)
 
 
+def _has_statement_ending_semicolon(line: str) -> bool:
+    """Check if a line has a semicolon that ends a statement (not in string/comment).
+
+    This handles:
+    - Semicolons inside single or double quoted strings are ignored
+    - Escaped quotes within strings (e.g., "test\\"quote" or 'test\\'quote')
+    - Semicolons after GAMS inline comments (*) are ignored
+
+    Note: This doesn't handle nested quotes, but works for typical GAMS code.
+    """
+    in_string = None
+    i = 0
+    while i < len(line):
+        c = line[i]
+
+        # Handle string state
+        if in_string:
+            if c == in_string:
+                # Check if the quote is escaped by counting preceding backslashes
+                # An odd number of backslashes means the quote is escaped
+                backslash_count = 0
+                j = i - 1
+                while j >= 0 and line[j] == "\\":
+                    backslash_count += 1
+                    j -= 1
+                if backslash_count % 2 == 1:
+                    # Quote is escaped, stay in string
+                    i += 1
+                    continue
+                in_string = None
+            i += 1
+            continue
+
+        # Check for comment start (inline comment with *)
+        if c == "*":
+            # GAMS inline comments start with * and go to end of line
+            return False
+
+        # Check for string start
+        if c in ('"', "'"):
+            in_string = c
+            i += 1
+            continue
+
+        # Check for semicolon outside string/comment
+        if c == ";":
+            return True
+
+        i += 1
+
+    return False
+
+
 def strip_unsupported_directives(source: str) -> str:
     """Remove unsupported GAMS compiler directives from source text.
 
@@ -172,6 +225,8 @@ def strip_unsupported_directives(source: str) -> str:
     - $title: Model title (documentation only)
     - $ontext/$offtext: Comment blocks (documentation only)
     - $eolcom: End-of-line comment character definition
+    - if() execution control statements: Runtime conditionals (not needed for model structure)
+    - abort/display: Execution statements (not needed for model structure)
 
     Args:
         source: GAMS source code text
@@ -192,6 +247,7 @@ def strip_unsupported_directives(source: str) -> str:
     lines = source.split("\n")
     filtered = []
     in_ontext_block = False
+    in_if_statement = False
 
     for line in lines:
         stripped = line.strip()
@@ -221,6 +277,27 @@ def strip_unsupported_directives(source: str) -> str:
         # Strip $eolcom directive
         if stripped_lower.startswith("$eolcom"):
             filtered.append(f"* [Stripped: {line}]")
+            continue
+
+        # Handle if() statements (may span multiple lines)
+        if stripped_lower.startswith("if("):
+            in_if_statement = True
+            filtered.append(f"* [Stripped execution: {line}]")
+            # Check if the statement ends on this line (has semicolon outside strings/comments)
+            if _has_statement_ending_semicolon(line):
+                in_if_statement = False
+            continue
+
+        # If inside multi-line if statement, keep stripping
+        if in_if_statement:
+            filtered.append(f"* [Stripped execution: {line}]")
+            if _has_statement_ending_semicolon(line):
+                in_if_statement = False
+            continue
+
+        # Strip other execution control statements (must be complete keywords)
+        if re.match(r"^(abort|display)\b", stripped_lower):
+            filtered.append(f"* [Stripped execution: {line}]")
             continue
 
         # Keep all other lines unchanged
