@@ -4,6 +4,7 @@ These tests validate that the GAMS validation module works correctly
 and that all golden reference files have valid GAMS syntax.
 """
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -67,7 +68,7 @@ class TestGAMSValidationErrors:
         with pytest.raises(FileNotFoundError):
             validate_gams_syntax("nonexistent.gms")
 
-    def test_validate_with_explicit_gams_path(self):
+    def test_validate_with_explicit_gams_path(self, tmp_path):
         """Test validation with explicit GAMS executable path."""
         golden_file = Path("tests/golden/scalar_nlp_mcp.gms")
         if not golden_file.exists():
@@ -78,7 +79,11 @@ class TestGAMSValidationErrors:
         if gams_exe is None:
             pytest.skip("GAMS not available")
 
+        # Copy golden file to tmp_path for isolation in parallel execution
+        test_file = tmp_path / golden_file.name
+        shutil.copy(golden_file, test_file)
+
         # Validate with explicit path
-        success, message = validate_gams_syntax(str(golden_file), gams_exe)
+        success, message = validate_gams_syntax(str(test_file), gams_exe)
         assert success, f"Validation should succeed: {message}"
         assert message == "GAMS syntax valid"
