@@ -699,3 +699,100 @@ class TestConditionalEquations:
         # Should NOT create instances for i1, i2 (where ord <= 2)
         assert ("supply", ("i1",)) not in supply_instances
         assert ("supply", ("i2",)) not in supply_instances
+
+
+class TestGAMSLibParsing:
+    """Test that GAMSLib models parse successfully.
+
+    Sprint 7 Day 4 achievement: 50% parse rate (5/10 models).
+
+    These tests validate the integration of:
+    - Preprocessor directives ($title, $onText/$offText, $if/$set, macros)
+    - Multiple declaration syntax (Parameters x, y, z;)
+    - Variable attribute references (x.l, x.lo, x.up)
+    - Execution statement stripping (if, abort, display)
+    - Models (plural) keyword
+    - Flexible solve statement order
+    """
+
+    def test_circle_gms_parses(self):
+        """Test circle.gms parses successfully (preprocessor + quick wins)."""
+        from pathlib import Path
+
+        from src.ir.parser import parse_file
+
+        model_path = Path(__file__).parent.parent / "fixtures" / "gamslib" / "circle.gms"
+        tree = parse_file(model_path)
+        assert tree is not None
+
+    def test_trig_gms_parses(self):
+        """Test trig.gms parses successfully (multiple scalars)."""
+        from pathlib import Path
+
+        from src.ir.parser import parse_file
+
+        model_path = Path(__file__).parent.parent / "fixtures" / "gamslib" / "trig.gms"
+        tree = parse_file(model_path)
+        assert tree is not None
+
+    def test_mathopt1_gms_parses(self):
+        """Test mathopt1.gms parses successfully (Models keyword)."""
+        from pathlib import Path
+
+        from src.ir.parser import parse_file
+
+        model_path = Path(__file__).parent.parent / "fixtures" / "gamslib" / "mathopt1.gms"
+        tree = parse_file(model_path)
+        assert tree is not None
+
+    def test_rbrock_gms_parses(self):
+        """Test rbrock.gms parses successfully (existing features)."""
+        from pathlib import Path
+
+        from src.ir.parser import parse_file
+
+        model_path = Path(__file__).parent.parent / "fixtures" / "gamslib" / "rbrock.gms"
+        tree = parse_file(model_path)
+        assert tree is not None
+
+    def test_mhw4d_gms_parses(self):
+        """Test mhw4d.gms parses successfully (existing features)."""
+        from pathlib import Path
+
+        from src.ir.parser import parse_file
+
+        model_path = Path(__file__).parent.parent / "fixtures" / "gamslib" / "mhw4d.gms"
+        tree = parse_file(model_path)
+        assert tree is not None
+
+    def test_gamslib_parse_rate(self):
+        """Validate 50% parse rate achievement (5/10 models)."""
+        from pathlib import Path
+
+        from src.ir.parser import parse_file
+
+        gamslib_dir = Path(__file__).parent.parent / "fixtures" / "gamslib"
+        models = [
+            "circle.gms",
+            "trig.gms",
+            "mathopt1.gms",
+            "rbrock.gms",
+            "mhw4d.gms",
+            "maxmin.gms",
+            "himmel16.gms",
+            "hs62.gms",
+            "mingamma.gms",
+            "mhw4dx.gms",
+        ]
+
+        passed = 0
+        for model in models:
+            try:
+                parse_file(gamslib_dir / model)
+                passed += 1
+            except Exception:
+                pass
+
+        # Sprint 7 Day 4 target: 50% parse rate (5/10 models)
+        parse_rate = (passed / len(models)) * 100
+        assert parse_rate >= 50.0, f"Parse rate {parse_rate}% below 50% target"

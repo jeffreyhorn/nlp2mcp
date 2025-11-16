@@ -172,6 +172,8 @@ def strip_unsupported_directives(source: str) -> str:
     - $title: Model title (documentation only)
     - $ontext/$offtext: Comment blocks (documentation only)
     - $eolcom: End-of-line comment character definition
+    - if() statements: Execution control (not needed for model structure)
+    - abort/display: Execution statements (not needed for model structure)
 
     Args:
         source: GAMS source code text
@@ -192,6 +194,7 @@ def strip_unsupported_directives(source: str) -> str:
     lines = source.split("\n")
     filtered = []
     in_ontext_block = False
+    in_if_statement = False
 
     for line in lines:
         stripped = line.strip()
@@ -221,6 +224,27 @@ def strip_unsupported_directives(source: str) -> str:
         # Strip $eolcom directive
         if stripped_lower.startswith("$eolcom"):
             filtered.append(f"* [Stripped: {line}]")
+            continue
+
+        # Handle if() statements (may span multiple lines)
+        if stripped_lower.startswith("if("):
+            in_if_statement = True
+            filtered.append(f"* [Stripped execution: {line}]")
+            # Check if the statement ends on this line (has semicolon)
+            if ";" in line:
+                in_if_statement = False
+            continue
+
+        # If inside multi-line if statement, keep stripping
+        if in_if_statement:
+            filtered.append(f"* [Stripped execution: {line}]")
+            if ";" in line:
+                in_if_statement = False
+            continue
+
+        # Strip other execution control statements
+        if stripped_lower.startswith("abort") or stripped_lower.startswith("display"):
+            filtered.append(f"* [Stripped execution: {line}]")
             continue
 
         # Keep all other lines unchanged
