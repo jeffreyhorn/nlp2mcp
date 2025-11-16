@@ -1,19 +1,148 @@
-# Template for preprocessor fixture expected results
+# Preprocessor Fixture Expected Results
+# Sprint 7 Day 5 - Parser test fixtures
 #
-# Each fixture should have an entry with:
-# - input: Path to .gms file
-# - expected: Expected parsing behavior
-#
-# Example:
-# - fixture_name: conditional_set
-#   input: conditional_set.gms
-#   expected:
-#     parse_success: true
-#     sets_extracted:
-#       - name: i
-#         default_value: "1*10"
-#     macros_expanded:
-#       - macro: "%myvar%"
-#         expanded_to: "default_value"
-#
-# Fixtures to be added in Day 5
+# Each fixture documents expected parsing behavior for preprocessor directives
+
+fixtures:
+  - name: simple_set
+    file: simple_set.gms
+    description: Basic $set directive with macro expansion
+    expected:
+      parse_success: true
+      directives_processed:
+        - type: set
+          variable: myvar
+          value: "100"
+      macros_expanded:
+        - "%myvar%"
+      sets:
+        - name: i
+          elements: "1*100"
+
+  - name: simple_if
+    file: simple_if.gms
+    description: $if not set conditional directive
+    expected:
+      parse_success: true
+      directives_processed:
+        - type: if_not_set
+          variable: n
+        - type: set
+          variable: n
+          value: "10"
+      sets:
+        - name: i
+          elements: "1*10"
+
+  - name: if_else
+    file: if_else.gms
+    description: $if/$else branch testing
+    expected:
+      parse_success: true
+      directives_processed:
+        - type: if_set
+          variable: debug
+        - type: else
+        - type: endif
+      # When debug not set, else branch executes
+      sets:
+        - name: i
+          elements: "1*5"
+
+  - name: macro_expansion
+    file: macro_expansion.gms
+    description: Multiple macro expansions
+    expected:
+      parse_success: true
+      macros_expanded:
+        - "%rows%"
+        - "%cols%"
+        - "%total%"
+      sets:
+        - name: i
+          elements: "1*3"
+        - name: j
+          elements: "1*4"
+
+  - name: nested_if
+    file: nested_if.gms
+    description: Nested $if statements
+    expected:
+      parse_success: true
+      directives_processed:
+        - type: if_not_set
+          variable: mode
+        - type: if
+          condition: "%mode% == 1"
+        - type: if_not_set
+          variable: multiplier
+      sets:
+        - name: i
+          elements: "1*5"
+
+  - name: eolcom
+    file: eolcom.gms
+    description: $eolCom directive for custom comment character
+    expected:
+      parse_success: true
+      directives_processed:
+        - type: eolcom
+          character: "#"
+      sets:
+        - name: i
+          elements: "1*5"
+
+  - name: include_basic
+    file: include_basic.gms
+    description: Basic $include directive (regression test)
+    expected:
+      parse_success: true
+      sets:
+        - name: i
+          elements: "1*3"
+
+  - name: ontext_offtext
+    file: ontext_offtext.gms
+    description: $onText/$offText comment blocks
+    expected:
+      parse_success: true
+      directives_processed:
+        - type: ontext
+        - type: offtext
+      sets:
+        - name: i
+          elements: "1*4"
+
+  - name: combined
+    file: combined.gms
+    description: Multiple preprocessor directives combined
+    expected:
+      parse_success: true
+      directives_processed:
+        - type: eolcom
+          character: "!"
+        - type: if_not_set
+          variable: n
+        - type: set
+          variable: n
+          value: "6"
+        - type: set
+          variable: multiplier
+          value: "2"
+      macros_expanded:
+        - "%n%"
+        - "%multiplier%"
+      sets:
+        - name: i
+          elements: "1*6"
+
+notes: |
+  These fixtures test the preprocessor's ability to handle GAMS directives.
+  Most directives are stripped/mocked in Sprint 7, with full implementation
+  planned for Sprint 8-9.
+
+  Success criteria:
+  - Parser should not crash on any directive
+  - Macro expansion should substitute correctly
+  - Conditional directives should select appropriate branches
+  - Comment directives should allow parsing to continue

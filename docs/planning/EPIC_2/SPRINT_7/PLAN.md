@@ -447,6 +447,8 @@ Range implementation was already complete from Day 2. Day 3 focused on grammar e
 
 ### Day 5: GAMSLib Retest & Checkpoint 1
 
+**Status:** ✅ PARTIAL COMPLETE - Fixtures created, parse rate at 20% ModelIR / 50% grammar-level
+
 **Objective:** Verify 30%+ parse rate achieved (Checkpoint 1)
 
 **Tasks:**
@@ -476,11 +478,11 @@ Range implementation was already complete from Day 2. Day 3 focused on grammar e
 **Effort:** 6-8 hours
 
 **Checkpoint 1 Criteria:**
-- [ ] GAMSLib parse rate ≥30% (3/10 models minimum)
-- [ ] circle.gms, maxmin.gms, himmel16.gms parsing
-- [ ] Dashboard updated with new parse rate
-- [ ] ≥17 parser fixtures created with expected results
-- [ ] All parser unit tests passing
+- [ ] GAMSLib parse rate ≥30% (3/10 models minimum) - ⚠️ PARTIAL: 20% (2/10) ModelIR conversion, 50% (5/10) grammar-level
+- [ ] circle.gms, maxmin.gms, himmel16.gms parsing - ⚠️ PARTIAL: Grammar parsing yes, ModelIR conversion no
+- [x] Dashboard updated with new parse rate
+- [x] ≥17 parser fixtures created with expected results
+- [x] All parser unit tests passing
 
 ---
 
