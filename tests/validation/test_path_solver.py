@@ -11,6 +11,7 @@ Requirements:
 """
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -362,7 +363,7 @@ class TestPATHSolverValidation:
     with correct formulation. Tests should now pass with PATH solver.
     """
 
-    def test_solve_simple_nlp_mcp(self):
+    def test_solve_simple_nlp_mcp(self, tmp_path):
         """Test PATH solver on simple_nlp_mcp.gms."""
         golden_file = Path("tests/golden/simple_nlp_mcp.gms")
         assert golden_file.exists(), f"Golden file not found: {golden_file}"
@@ -370,20 +371,24 @@ class TestPATHSolverValidation:
         gams_exe = find_gams_executable()
         assert gams_exe is not None, "GAMS executable not found"
 
+        # Copy golden file to tmp_path for isolation in parallel execution
+        test_file = tmp_path / golden_file.name
+        shutil.copy(golden_file, test_file)
+
         # Solve the MCP
-        success, message, solution = _solve_gams(golden_file, gams_exe)
+        success, message, solution = _solve_gams(test_file, gams_exe)
         assert success, f"PATH solve failed: {message}"
 
         # Verify we got a solution
         assert len(solution) > 0, "No solution values extracted"
 
         # Check KKT conditions
-        lst_file = golden_file.parent / (golden_file.stem + ".lst")
+        lst_file = test_file.parent / (test_file.stem + ".lst")
         lst_content = lst_file.read_text()
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
 
-    def test_solve_indexed_balance_mcp(self):
+    def test_solve_indexed_balance_mcp(self, tmp_path):
         """Test PATH solver on indexed_balance_mcp.gms."""
         golden_file = Path("tests/golden/indexed_balance_mcp.gms")
         assert golden_file.exists(), f"Golden file not found: {golden_file}"
@@ -391,32 +396,19 @@ class TestPATHSolverValidation:
         gams_exe = find_gams_executable()
         assert gams_exe is not None, "GAMS executable not found"
 
+        # Copy golden file to tmp_path for isolation in parallel execution
+        test_file = tmp_path / golden_file.name
+        shutil.copy(golden_file, test_file)
+
         # Solve the MCP
-        success, message, solution = _solve_gams(golden_file, gams_exe)
+        success, message, solution = _solve_gams(test_file, gams_exe)
         assert success, f"PATH solve failed: {message}"
 
         # Verify we got a solution
         assert len(solution) > 0, "No solution values extracted"
 
         # Check KKT conditions
-        lst_file = golden_file.parent / (golden_file.stem + ".lst")
-        lst_content = lst_file.read_text()
-        kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
-        assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
-        assert golden_file.exists(), f"Golden file not found: {golden_file}"
-
-        gams_exe = find_gams_executable()
-        assert gams_exe is not None, "GAMS executable not found"
-
-        # Solve the MCP
-        success, message, solution = _solve_gams(golden_file, gams_exe)
-        assert success, f"PATH solve failed: {message}"
-
-        # Verify we got a solution
-        assert len(solution) > 0, "No solution values extracted"
-
-        # Check KKT conditions
-        lst_file = golden_file.parent / (golden_file.stem + ".lst")
+        lst_file = test_file.parent / (test_file.stem + ".lst")
         lst_content = lst_file.read_text()
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"

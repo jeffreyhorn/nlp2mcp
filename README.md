@@ -54,7 +54,7 @@ For the detailed Sprint 6 plan, see [docs/planning/EPIC_2/SPRINT_6/PLAN.md](docs
 - [x] Day 3: Set Range Syntax (Part 2)
 - [x] Day 4: Parser Integration & Testing + Quick Wins
 - [x] Day 5: GAMSLib Retest & Checkpoint 1 (Fixtures created, parse rate 20% ModelIR / 50% grammar)
-- [ ] Day 6: Test Performance (Part 1) - pytest-xdist
+- [x] Day 6: Test Performance (Part 1) - pytest-xdist (1277 tests pass in parallel, ~2min runtime)
 - [ ] Day 7: Test Performance (Part 2) & Checkpoint 2
 - [ ] Day 8: Convexity UX + Multi-Dim Fixtures
 - [ ] Day 9: CI Automation + Statement Fixtures & Checkpoint 3
@@ -429,7 +429,13 @@ pytest tests/unit/ad/test_arithmetic.py -v
 
 # Run with coverage
 pytest --cov=src tests/
+
+# Run tests in parallel (faster, ~2 minutes for full suite)
+pytest -n 4             # Use 4 workers
+pytest -n auto          # Auto-detect CPU count
 ```
+
+**Parallel Testing:** The test suite supports parallel execution using `pytest-xdist`. Running with `-n 4` reduces test time from ~3-4 minutes to ~2 minutes. All tests are isolated and safe for parallel execution.
 
 ## Test Organization
 
