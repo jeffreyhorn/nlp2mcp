@@ -16,6 +16,7 @@ FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "large_models"
 class TestLargeModelHandling:
     """Test nlp2mcp handles large models correctly."""
 
+    @pytest.mark.slow
     def test_250_model_converts(self, tmp_path):
         """Test: 250-variable model converts successfully."""
         model = FIXTURES_DIR / "resource_allocation_250.gms"
