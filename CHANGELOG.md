@@ -30,7 +30,7 @@ Integrated all parser enhancements from Days 1-3 and implemented quick-win featu
 **1. Preprocessor Integration**
 - Connected `parse_file()` to `preprocess_gams_file()` for automatic preprocessing
 - Enables parsing of models with $title, $onText/$offText, $if/$set, and macro expansion
-- Multi-line execution statement stripping (if, abort, display)
+- Multi-line if() execution statement stripping, plus abort and display statements
 
 **2. Grammar Enhancements**
 ```lark

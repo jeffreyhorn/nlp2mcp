@@ -402,7 +402,14 @@ class _ModelBuilder:
                 continue
             if child.data == "param_list":
                 # Handle comma-separated parameter names: Parameter x, y, z;
-                names = _id_list(child.children[0])
+                # Grammar: ID "," id_list -> first ID + rest from id_list
+                if not child.children or len(child.children) < 2:
+                    raise self._error("Invalid param_list structure", child)
+                first_name = _token_text(child.children[0])
+                rest_names = (
+                    _id_list(child.children[1]) if isinstance(child.children[1], Tree) else []
+                )
+                names = [first_name] + list(rest_names)
                 for name in names:
                     param = ParameterDef(name=name, domain=())
                     self.model.add_param(param)
@@ -598,7 +605,14 @@ class _ModelBuilder:
 
             if child.data == "scalar_list":
                 # Handle comma-separated scalar names: Scalars a, b, c;
-                names = _id_list(child.children[0])
+                # Grammar: ID "," id_list -> first ID + rest from id_list
+                if not child.children or len(child.children) < 2:
+                    raise self._error("Invalid scalar_list structure", child)
+                first_name = _token_text(child.children[0])
+                rest_names = (
+                    _id_list(child.children[1]) if isinstance(child.children[1], Tree) else []
+                )
+                names = [first_name] + list(rest_names)
                 for name in names:
                     param = ParameterDef(name=name, domain=())
                     self.model.add_param(param)

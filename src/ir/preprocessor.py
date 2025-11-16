@@ -172,7 +172,7 @@ def strip_unsupported_directives(source: str) -> str:
     - $title: Model title (documentation only)
     - $ontext/$offtext: Comment blocks (documentation only)
     - $eolcom: End-of-line comment character definition
-    - if() statements: Execution control (not needed for model structure)
+    - if() execution control statements: Runtime conditionals (not needed for model structure)
     - abort/display: Execution statements (not needed for model structure)
 
     Args:
@@ -242,8 +242,8 @@ def strip_unsupported_directives(source: str) -> str:
                 in_if_statement = False
             continue
 
-        # Strip other execution control statements
-        if stripped_lower.startswith("abort") or stripped_lower.startswith("display"):
+        # Strip other execution control statements (must be complete keywords)
+        if re.match(r"^(abort|display)\b", stripped_lower):
             filtered.append(f"* [Stripped execution: {line}]")
             continue
 
