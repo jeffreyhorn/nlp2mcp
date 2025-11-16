@@ -161,6 +161,52 @@ def preprocess_includes(
     return "".join(result_parts)
 
 
+def _has_statement_ending_semicolon(line: str) -> bool:
+    """Check if a line has a semicolon that ends a statement (not in string/comment).
+
+    This is a simplified check that handles the most common cases:
+    - Semicolons inside single or double quoted strings are ignored
+    - Semicolons after GAMS inline comments (*) are ignored
+
+    Note: This doesn't handle all edge cases (escaped quotes, nested quotes),
+    but works for typical GAMS code.
+    """
+    in_string = None
+    i = 0
+    while i < len(line):
+        c = line[i]
+
+        # Handle string state
+        if in_string:
+            if c == in_string:
+                # Simple check: if previous char is backslash, it's escaped
+                if i > 0 and line[i - 1] == "\\":
+                    i += 1
+                    continue
+                in_string = None
+            i += 1
+            continue
+
+        # Check for comment start (inline comment with *)
+        if c == "*":
+            # GAMS inline comments start with * and go to end of line
+            return False
+
+        # Check for string start
+        if c in ('"', "'"):
+            in_string = c
+            i += 1
+            continue
+
+        # Check for semicolon outside string/comment
+        if c == ";":
+            return True
+
+        i += 1
+
+    return False
+
+
 def strip_unsupported_directives(source: str) -> str:
     """Remove unsupported GAMS compiler directives from source text.
 
@@ -230,15 +276,15 @@ def strip_unsupported_directives(source: str) -> str:
         if stripped_lower.startswith("if("):
             in_if_statement = True
             filtered.append(f"* [Stripped execution: {line}]")
-            # Check if the statement ends on this line (has semicolon)
-            if ";" in line:
+            # Check if the statement ends on this line (has semicolon outside strings/comments)
+            if _has_statement_ending_semicolon(line):
                 in_if_statement = False
             continue
 
         # If inside multi-line if statement, keep stripping
         if in_if_statement:
             filtered.append(f"* [Stripped execution: {line}]")
-            if ";" in line:
+            if _has_statement_ending_semicolon(line):
                 in_if_statement = False
             continue
 

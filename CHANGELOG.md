@@ -35,14 +35,15 @@ Integrated all parser enhancements from Days 1-3 and implemented quick-win featu
 **2. Grammar Enhancements**
 ```lark
 # Multiple declaration support (comma-separated)
-param_decl: ... | id_list -> param_list
-scalar_decl: ... | id_list -> scalar_list
+param_decl: ... | ID "," id_list -> param_list
+scalar_decl: ... | ID "," id_list -> scalar_list
 
 # Models (plural) keyword
 model_stmt: ("Models"i | "Model"i) ID "/" "all"i "/" SEMI
 
 # Flexible solve statement order (obj before or after using)
-solve_stmt: "Solve"i ID (obj_sense ID)? "using"i "NLP"i (obj_sense ID)? SEMI
+solve_stmt: "Solve"i ID obj_sense ID "using"i "NLP"i SEMI
+          | "Solve"i ID "using"i "NLP"i obj_sense ID SEMI
 
 # Additional GAMS functions
 FUNCNAME: /(?i:...|uniform|normal)\b/
@@ -63,14 +64,31 @@ FUNCNAME: /(?i:...|uniform|normal)\b/
 
 #### GAMSLib Parse Rate Results
 
-**✅ Successfully Parsing (5/10 models = 50%):**
+**Important Note on Metrics:**
+This PR tracks **grammar-level parsing** (parse tree creation), which is the first stage of the parsing pipeline. The second stage is **ModelIR conversion** (semantic analysis and IR building). The achievements are:
+
+- **Grammar-level parsing**: 50% (5/10 models) - parse tree created successfully
+- **ModelIR conversion**: 20% (2/10 models) - full semantic IR built successfully
+
+The GAMSLib ingestion reports (`reports/gamslib_ingestion_sprint6.json`) measure ModelIR conversion (20%), not grammar-level parsing (50%). Three models (circle, trig, mathopt1) now parse successfully at the grammar level but still fail during ModelIR conversion due to unsupported semantic features (function calls in assignments, variable attributes in expressions, indexed assignments). These will be addressed in future sprints.
+
+**✅ Grammar-Level Parsing Success (5/10 models = 50%):**
 1. **circle.gms** - Preprocessor integration, uniform(), comma-separated params, variable attributes (.l, .lo)
 2. **trig.gms** - Multiple scalar declarations
 3. **mathopt1.gms** - Models (plural) keyword, flexible solve order
 4. **rbrock.gms** - Existing features from Days 1-3
 5. **mhw4d.gms** - Existing features from Days 1-3
 
-**❌ Not Yet Parsing (5/10 models):**
+**✅ Full ModelIR Conversion Success (2/10 models = 20%):**
+1. **rbrock.gms** - Complete end-to-end conversion
+2. **mhw4d.gms** - Complete end-to-end conversion
+
+**⚠️ Grammar Parses but ModelIR Conversion Fails (3/10 models):**
+1. **circle.gms** - Fails on function calls in assignments (future work)
+2. **trig.gms** - Fails on variable attributes in expressions (future work)
+3. **mathopt1.gms** - Fails on indexed assignments (future work)
+
+**❌ Grammar Parsing Fails (5/10 models):**
 - **maxmin.gms** - Filtered domain syntax `equation(subset(i,j))` (advanced feature, future work)
 - **himmel16.gms** - Lag/lead operators `i++1` (not in Day 4 scope)
 - **hs62.gms**, **mingamma.gms**, **mhw4dx.gms** - TBD (require further investigation)
