@@ -75,6 +75,7 @@ class TestPerformanceBenchmarks:
         assert elapsed < 3.0, f"Parse medium model took {elapsed:.3f}s (target < 3.0s)"
         print(f"\nParse medium model: {elapsed:.3f}s")
 
+    @pytest.mark.slow
     def test_parse_large_model(self, large_model):
         """Benchmark: Parse large model (200 vars)."""
         start = time.perf_counter()
@@ -86,6 +87,7 @@ class TestPerformanceBenchmarks:
         assert elapsed < 5.0, f"Parse large model took {elapsed:.3f}s (target < 5.0s)"
         print(f"\nParse large model: {elapsed:.3f}s")
 
+    @pytest.mark.slow
     def test_differentiation_scalability(self, small_model, medium_model):
         """Benchmark: Verify differentiation scales sub-quadratically."""
         # Small model
@@ -134,6 +136,7 @@ class TestPerformanceBenchmarks:
         print(f"\nMemory usage: {peak_mb:.1f} MB (peak)")
         assert peak_mb < 50, f"Memory usage too high: {peak_mb:.1f} MB for 200 vars"
 
+    @pytest.mark.slow
     def test_end_to_end_performance(self, medium_model):
         """Benchmark: Full pipeline for medium model."""
 
@@ -155,6 +158,7 @@ class TestPerformanceBenchmarks:
         print(f"\nEnd-to-end (100 vars): {elapsed:.3f}s")
         assert elapsed < 10.0, f"End-to-end took {elapsed:.3f}s for 100 vars (target < 10.0s)"
 
+    @pytest.mark.slow
     def test_sparsity_exploitation(self, tmp_path):
         """Verify sparse Jacobians scale better than dense."""
         # Create sparse model (each constraint touches 2 vars)
