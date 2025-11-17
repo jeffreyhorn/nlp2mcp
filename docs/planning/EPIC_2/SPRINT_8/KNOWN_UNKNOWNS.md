@@ -222,12 +222,12 @@ Development team
 
 **Findings:**
 1. ✅ **3 of 10 GAMSLib models use option statements (30%)**
-   - mhw4dx.gms: `option limCol = 0, limRow = 0;` (line 37), `option decimals = 8;` (line 47)
-   - maxmin.gms: `option limCol = 0, limRow = 0;` (line 86)
+   - mhw4dx.gms: `option limcol = 0, limrow = 0;` (line 37), `option decimals = 8;` (line 47)
+   - maxmin.gms: `option limcol = 0, limrow = 0;` (line 86)
    - mingamma.gms: `option decimals = 8;` (line 43)
 
 2. ✅ **All options are basic integer types:**
-   - limrow/limCol: Integer (0 = suppress listing)
+   - limrow/limcol: Integer (0 = suppress listing)
    - decimals: Integer (0-8, display precision)
    - No boolean, string, float, or advanced types in GAMSLib
 
@@ -301,7 +301,7 @@ Development team
 
 **Findings:**
 1. ✅ **Option statement is sole blocker for mhw4dx.gms:**
-   - Primary error (line 37): `option limCol = 0, limRow = 0;`
+   - Primary error (line 37): `option limcol = 0, limrow = 0;`
    - Parser error: "No terminal matches 'l' in the current parser context"
    - No secondary errors identified in manual review
 

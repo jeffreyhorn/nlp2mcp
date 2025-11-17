@@ -43,10 +43,10 @@ Comprehensive research of GAMS option statement syntax, semantics, and usage pat
 
 **GAMSLib Usage Analysis:**
 - **3 of 10 models** (30%) use option statements
-  - mhw4dx.gms (line 37, 47): `option limCol = 0, limRow = 0;` + `option decimals = 8;`
-  - maxmin.gms (line 86): `option limCol = 0, limRow = 0;`
+  - mhw4dx.gms (line 37, 47): `option limcol = 0, limrow = 0;` + `option decimals = 8;`
+  - maxmin.gms (line 86): `option limcol = 0, limrow = 0;`
   - mingamma.gms (line 43): `option decimals = 8;`
-- **All options are basic integer types:** limrow/limCol (0 = suppress), decimals (0-8 display precision)
+- **All options are basic integer types:** limrow/limcol (0 = suppress), decimals (0-8 display precision)
 - **Multi-option statements:** 2 of 3 models use comma-separated format
 - **No advanced features:** No per-identifier syntax (`:` operator), projection/permutation (`<`, `<=`, `>`), or string values
 - **Sprint 8 unlock:** mhw4dx.gms only (+10% parse rate: 2/10 → 3/10)
@@ -126,7 +126,7 @@ option_value: NUMBER                // Sprint 8: integers only
 
 **1.3: How do we know option statements unlock mhw4dx.gms?**
 - ✅ VERIFIED: Option statement is sole blocker for mhw4dx.gms
-- Primary error (line 37): `option limCol = 0, limRow = 0;`
+- Primary error (line 37): `option limcol = 0, limrow = 0;`
 - Manual inspection confirms no secondary errors
 - Uses only basic GAMS constructs (Sets, Parameters, Variables, Equations, Solve)
 - +10% parse rate confirmed (2/10 → 3/10)

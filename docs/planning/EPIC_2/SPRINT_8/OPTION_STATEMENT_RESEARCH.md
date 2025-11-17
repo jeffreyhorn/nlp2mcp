@@ -178,8 +178,8 @@ transport.reslim = p;  // Use model attributes instead
 ### Results
 
 ```
-tests/fixtures/gamslib/maxmin.gms:86:option limCol = 0, limRow = 0;
-tests/fixtures/gamslib/mhw4dx.gms:37:option limCol = 0, limRow = 0;
+tests/fixtures/gamslib/maxmin.gms:86:option limcol = 0, limrow = 0;
+tests/fixtures/gamslib/mhw4dx.gms:37:option limcol = 0, limrow = 0;
 tests/fixtures/gamslib/mhw4dx.gms:47:option decimals = 8;
 tests/fixtures/gamslib/mingamma.gms:43:option decimals = 8;
 ```
@@ -187,7 +187,7 @@ tests/fixtures/gamslib/mingamma.gms:43:option decimals = 8;
 ### Per-Model Analysis
 
 #### mhw4dx.gms (Sprint 8 Target)
-- **Line 37:** `option limCol = 0, limRow = 0;`
+- **Line 37:** `option limcol = 0, limrow = 0;`
   - Type: Multi-option, integer values
   - Sprint 8 scope: ✅ YES (primary unlock target)
 - **Line 47:** `option decimals = 8;`
@@ -199,13 +199,13 @@ tests/fixtures/gamslib/mingamma.gms:43:option decimals = 8;
 ```
 No terminal matches 'l' in the current parser context
        ^
-option limCol = 0, limRow = 0;
+option limcol = 0, limrow = 0;
 ```
 
 **Root Cause:** Parser doesn't recognize `option` keyword
 
 #### maxmin.gms
-- **Line 86:** `option limCol = 0, limRow = 0;`
+- **Line 86:** `option limcol = 0, limrow = 0;`
   - Type: Multi-option, integer values
   - Sprint 8 scope: ✅ YES
 
@@ -234,8 +234,8 @@ option limCol = 0, limRow = 0;
 - mingamma.gms (1 option statement)
 
 **Option Types in GAMSLib:**
-- `limCol` (limcol): Integer (0 = suppress listing)
-- `limRow` (limrow): Integer (0 = suppress listing)
+- `limcol` (limcol): Integer (0 = suppress listing)
+- `limrow` (limrow): Integer (0 = suppress listing)
 - `decimals`: Integer (0-8, display precision)
 
 **Sprint 8 Unlock Rate:**
@@ -746,7 +746,7 @@ oPtIoN solprint = OFF;
 
 **Unknown 1.3: How do we know option statements unlock mhw4dx.gms?**
 - ✅ **VERIFIED:** Option statement is sole blocker
-- Error on line 37: `option limCol = 0, limRow = 0;`
+- Error on line 37: `option limcol = 0, limrow = 0;`
 - No secondary errors (manual review of mhw4dx.gms)
 - +10% parse rate confirmed (2/10 → 3/10)
 
