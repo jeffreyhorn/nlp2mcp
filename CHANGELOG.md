@@ -68,8 +68,9 @@ Created comprehensive test fixtures for GAMS statement patterns:
 - Model declarations: fixtures 01, 09
 - Solve statements: fixtures 02, 03
 - Scalar declarations: fixtures 06, 07
-- Expected failures: fixtures 04 (option), 08 (indexed assignment)
+- Expected failures: fixture 08 (indexed assignment)
 - Success rate: 8/9 parse successfully, 1/9 expected failure by design
+- Note: Fixture 04 parses successfully because option statements are commented out
 
 **Parser Fixes During Fixture Testing:**
 - Fixed comma-separated variable declarations not supported

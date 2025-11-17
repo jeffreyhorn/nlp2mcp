@@ -192,8 +192,11 @@ def main() -> int:
         # Read baseline from git
         baseline_rate = read_baseline_from_git(args.baseline, args.current)
 
-        # Assume 10 models for Sprint 6 (TODO: read from report)
-        total_models = 10
+        # Read total models from report
+        path = Path(args.current)
+        with open(path) as f:
+            report = json.load(f)
+        total_models = report["kpis"]["total_models"]
 
         # Check for regression
         is_regression = check_regression(current_rate, baseline_rate, args.threshold)
