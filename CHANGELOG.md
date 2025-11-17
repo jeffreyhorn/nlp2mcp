@@ -44,7 +44,7 @@ Comprehensive test fixture strategy for Sprint 8 features (option statements, in
 
 **Indexed Assignments (5 fixtures):**
 1. `01_simple_1d.gms` - Basic 1D indexed assignment (`p('i1') = 10;`)
-2. `02_multi_dim_2d.gms` - 2D indexed assignment (mathopt1 pattern: `report('x1','global') = 1;`)
+2. `02_multi_dim_2d.gms` - 2D indexed assignment (mathopt1 pattern: `report('global','x1') = 1.0;`)
 3. `03_variable_attributes.gms` - Variable .l attribute access (trig pattern: `xdiff = x1.l;`)
 4. `04_indexed_expressions.gms` - Indexed params in RHS expressions (`p('diff') = p('global') - p('solver');`)
 5. `05_error_index_mismatch.gms` - Index count validation (expected to fail)
@@ -72,16 +72,15 @@ Comprehensive test fixture strategy for Sprint 8 features (option statements, in
 - **tests/fixtures/partial_parse/README.md:** Partial parse metric fixture documentation
 
 **Implementation Plan:**
-- Phase 1: Create fixture directories (15 minutes)
-- Phase 2: Write .gms fixtures (13 fixtures × 10 min = 2.2 hours)
-- Phase 3: Write expected_results.yaml (13 fixtures × 5 min = 1.1 hours)
-- Phase 4: Write README.md files (3 × 10 min = 30 minutes)
-- Phase 5: Integration with ingestion script (optional, 1 hour)
-- **Total: 3.5 hours** (within Sprint 8 testing budget)
+- Phase 1: Complete `options` fixture directory (GMS, YAML, README) – 1 hour
+- Phase 2: Complete `indexed_assignments` fixture directory (GMS, YAML, README) – 1.5 hours
+- Phase 3: Complete `partial_parse` fixture directory (GMS, YAML, README) – 1 hour
+- Phase 4: Final review, integration, and ingestion script update (optional) – 0.5 hour
+- **Total: 4 hours** (within Sprint 8 testing budget)
 
 **Unknowns Verified:**
 - ✅ **7.1:** Sprint 7 fixture pattern fully reusable (saves 4-6 hours redesign effort)
-- ✅ **7.2:** 13 fixtures provide comprehensive coverage (3.5 hour total effort, not 23+ fixtures)
+- ✅ **7.2:** 13 fixtures provide comprehensive coverage (4 hour total effort, not 23+ fixtures)
 - ✅ **7.3:** Hybrid approach (real GAMSLib patterns in synthetic fixtures) selected
 
 **Coverage Analysis:**
@@ -94,7 +93,7 @@ Comprehensive test fixture strategy for Sprint 8 features (option statements, in
 #### Impact
 
 - Test strategy ready for Sprint 8 implementation
-- Fixture creation effort (3.5 hours) fits within Sprint 8 testing budget
+- Fixture creation effort (4 hours) fits within Sprint 8 testing budget
 - All Sprint 8 features have comprehensive test coverage (100% coverage)
 - Backward compatible YAML schema preserves all Sprint 7 fixtures
 - No separate error message fixtures needed (unit tests sufficient)

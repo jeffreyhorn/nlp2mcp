@@ -13,7 +13,7 @@ Sprint 8 will create **13 test fixtures** for three feature categories: option s
 **Key Findings:**
 - **Total Fixtures:** 13 (5 option + 5 indexed + 3 partial)
 - **Sprint 7 Patterns:** Fully reusable (directory structure, YAML format, README templates)
-- **Fixture Creation Effort:** 4-5 hours (13 fixtures × ~20 min each)
+- **Fixture Creation Effort:** ~4 hours (13 fixtures × ~18 min each)
 - **Coverage:** 100% of Sprint 8 parser features
 - **Backward Compatibility:** Yes (extends Sprint 7 YAML schema)
 
@@ -385,7 +385,7 @@ Set i /i1, i2/;
 Set j /j1, j2/;
 Parameter p(i, j);
 
-p('i1') = 10;  # ERROR: Parameter expects 2 indices, got 1
+p('i1') = 10;  * ERROR: Parameter expects 2 indices, got 1
 ```
 
 **Expected Result:** ❌ FAILED
@@ -437,7 +437,7 @@ solve m using nlp minimizing area('i1');
 ```
 
 **Expected Result:** ❌ FAILED (Partial Parse)
-- **Parse Percentage:** ~80% (parsed declarations, failed at equation definition)
+- **Parse Percentage:** ~80-92% (parsed declarations, failed at equation definition)
 - **Statements Parsed:** Set, Variable declarations (3 statements)
 - **Statements Failed:** Equation definition (1 statement)
 - **Missing Feature:** "Lead/lag indexing (i++1)"
@@ -466,7 +466,7 @@ display result;
 ```
 
 **Expected Result:** ❌ FAILED (Partial Parse)
-- **Parse Percentage:** ~70% (parsed declarations, failed at assignments)
+- **Parse Percentage:** ~70-100% (parsed declarations, failed at assignments)
 - **Statements Parsed:** Set, Parameter declarations (2 statements)
 - **Statements Failed:** Assignments with function calls (2 statements)
 - **Missing Feature:** "Function calls in assignments (uniform, normal, etc.)"
@@ -843,7 +843,7 @@ mkdir -p tests/fixtures/partial_parse
 - Phase 3: 1.5 hours
 - Phase 4: 45 minutes
 - Phase 5: 30 minutes
-- **Total: ~3.5 hours** for fixture creation
+- **Total: ~4 hours** for fixture creation
 
 **Note:** This estimate is for fixture **creation** during Sprint 8 Days 1-3, not for this prep task (which only designs the strategy).
 

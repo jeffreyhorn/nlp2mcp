@@ -2181,6 +2181,7 @@ fixtures:
     statements_total: 7
     missing_features:
       - "Lead/lag indexing (i++1)"
+    # ...other fields (e.g., error_location) omitted for brevity; see TEST_FIXTURE_STRATEGY.md for full schema
 ```
 
 **Decision:**
