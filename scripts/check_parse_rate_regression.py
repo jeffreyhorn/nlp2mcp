@@ -22,7 +22,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict
 
 
 def read_parse_rate(json_path: str) -> float:
