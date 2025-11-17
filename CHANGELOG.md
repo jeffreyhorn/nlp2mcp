@@ -18,7 +18,7 @@ Researched error message enhancement patterns from mature parsers (Rust, Python,
 #### Deliverables
 
 **Created:**
-- `docs/planning/EPIC_2/SPRINT_8/ERROR_MESSAGE_ENHANCEMENTS.md` (532 lines)
+- `docs/planning/EPIC_2/SPRINT_8/ERROR_MESSAGE_ENHANCEMENTS.md` (1184 lines)
   - Error message pattern catalog (6 patterns from Rust/Python/TypeScript)
   - GAMS error categorization (5 categories with frequency analysis)
   - Enhancement framework design (ErrorEnhancer + EnhancedError classes)
@@ -230,7 +230,8 @@ class ErrorEnhancer:
 - ✅ VERIFIED: 6 patterns identified
 - Patterns 1-3 (HIGH applicability) selected for Sprint 8
 - Patterns 4-6 (MEDIUM/LOW applicability) deferred to Sprint 8b/9+
-- Total Sprint 8 effort: 6-8 hours for Patterns 1-3
+- Total Sprint 8 effort: 4.5 hours for Patterns 1-3
+  - _Note: Pattern 1 requires only 1 hour (extending existing ParseError) rather than 4 hours (implementing from scratch), resulting in lower total effort_
 
 **5.3: How do we categorize GAMS parser errors for enhancement?**
 - ✅ VERIFIED: 5 categories identified with frequency analysis

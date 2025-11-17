@@ -248,14 +248,14 @@ Quick Fix Available:
 
 | Pattern | Rust | Python | TypeScript | GAMS Applicability | Sprint 8? | Effort |
 |---------|------|--------|------------|-------------------|-----------|--------|
-| Source Context + Caret | ✅ Excellent | ✅ Good (3.10+) | ✅ Good | **HIGH** (already partial) | ✅ YES | 4h |
-| "Did You Mean?" | ✅ Excellent | ✅ Good | ✅ Excellent | **HIGH** (keyword typos) | ✅ YES | 1-2h |
-| Contextual Hints | ✅ Excellent | ✅ Good | ✅ Good | **HIGH** (punctuation) | ✅ YES | 2h |
+| Source Context + Caret | ✅ Excellent | ✅ Good (3.10+) | ✅ Good | **HIGH** (already partial) | ✅ YES | 1h |
+| "Did You Mean?" | ✅ Excellent | ✅ Good | ✅ Excellent | **HIGH** (keyword typos) | ✅ YES | 1h |
+| Contextual Hints | ✅ Excellent | ✅ Good | ✅ Good | **HIGH** (punctuation) | ✅ YES | 1.5h |
 | Multi-Line Context | ✅ Excellent | ⚠️ Limited | ⚠️ Limited | **MEDIUM** (equations) | ❌ NO (defer) | 5-6h |
 | Documentation Links | ✅ Good | ✅ Good | ⚠️ Limited | **LOW** (no docs yet) | ❌ NO (defer) | 2-3h |
 | Fix-It Automation | ✅ Excellent | ❌ None | ✅ Good (LSP) | **LOW** (no IDE yet) | ❌ NO (defer) | 10+h |
 
-**Sprint 8 Priority:** Patterns 1, 2, 3 (total: 6-8 hours)  
+**Sprint 8 Priority:** Patterns 1, 2, 3 (total: 4.5 hours)  
 **Sprint 8 Scope:** Source context (extend existing) + "Did you mean?" + Contextual hints
 
 ---
