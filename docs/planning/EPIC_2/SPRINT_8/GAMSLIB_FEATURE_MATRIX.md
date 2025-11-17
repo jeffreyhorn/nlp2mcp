@@ -340,9 +340,9 @@ This document provides a comprehensive per-model feature dependency analysis for
 | Feature | Complexity | Effort | Models Needing | Models List | Unlock Rate | Priority |
 |---------|------------|--------|----------------|-------------|-------------|----------|
 | **Option statements** | **Low** | **6-8h** | **1** | mhw4dx | **+10%** (2/10 → 3/10) | **Critical** |
-| **Indexed assignments** | **Medium** | **6-8h** | **2** | mathopt1, trig | **+20%** (2/10 → 4/10) | **High** |
+| **Indexed assignments** | **Medium** | **6-8h** | **2** | mathopt1, trig | **+20%** (3/10 → 5/10) | **High** |
 | Function calls in assignments | Medium | 6-8h | 1 | circle | +10% (needs preprocessor too) | Medium |
-| Multiple model definitions | Medium | 5-6h | 2 | hs62, mingamma | +20% (4/10 → 6/10) | Low-Medium |
+| Multiple model definitions | Medium | 5-6h | 2 | hs62, mingamma | +20% (5/10 → 7/10) | Low-Medium |
 | Lead/lag indexing (i++1) | High | 8-10h | 1 | himmel16 | +10% | Low |
 | Nested/subset indexing | High | 10-12h | 1 | maxmin | +10% (needs options too) | Low |
 
@@ -356,9 +356,9 @@ This document provides a comprehensive per-model feature dependency analysis for
 
 **Combined Sprint 8 Impact:**
 - Option statements: +10% (2/10 → 3/10)
-- Indexed assignments: +20% (2/10 → 4/10)
-- **Combined: 2/10 → 4/10 = 40% parse rate**
-- **Adjusted conservative: 30%** (account for implementation risks)
+- Indexed assignments: +20% (3/10 → 5/10)
+- **Combined: 2/10 → 5/10 = 50% parse rate (optimistic)**
+- **Adjusted conservative: 30%** (2/10 → 3/10, if only one feature is implemented or overlap exists)
 
 ---
 
@@ -515,8 +515,8 @@ xdiff = 2.66695657 - x1.l;          // Variable attribute access (.l suffix)
 
 **Sprint 8 Focus:** 3 models in Tier 1 (mhw4dx, mathopt1, trig)
 - Option statements: +10% (2/10 → 3/10)
-- Indexed assignments: +20% (3/10 → 5/10)
-- Combined: 2/10 → 5/10 = 50%
+- Then, indexed assignments: +20% (3/10 → 5/10)
+- **Combined cumulative effect:** 2/10 → 5/10 = 50%
 
 ### Tier 2: Multi-Feature Models (Sprint 8b+)
 
@@ -562,13 +562,13 @@ xdiff = 2.66695657 - x1.l;          // Variable attribute access (.l suffix)
 **Option A: Parser Maturity Focus (2 features, 11-14 hours)**
 - Multiple model definitions (5-6h) → +20% parse rate
 - Function calls in assignments (6-8h) → +10% parse rate
-- Total: 11-14 hours, +30% parse rate (40% → 70%)
+- Total: 11-14 hours, +30% parse rate (50% → 80%)
 
 **Option B: Balanced Approach (3 features, 19-24 hours)**
 - Multiple model definitions (5-6h) → +20%
 - Function calls in assignments (6-8h) → +10%
 - Lead/lag indexing (8-10h) → +10%
-- Total: 19-24 hours, +40% parse rate (40% → 80%)
+- Total: 19-24 hours, +40% parse rate (50% → 90%)
 
 **Recommendation:** Option A (Parser Maturity Focus)
 - Rationale: 11-14 hour sprint maintains velocity, delivers high ROI

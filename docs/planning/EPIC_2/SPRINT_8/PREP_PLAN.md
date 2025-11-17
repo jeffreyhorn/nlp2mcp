@@ -481,7 +481,7 @@ List features deferred to Sprint 8b:
 **Sprint 8 Recommendation:**
 - Confirmed: Option statements (unlocks mhw4dx, +10%, 6-8 hours, Low complexity)
 - Recommended: Indexed assignments over function calls (unlocks 2 models vs 1 model)
-- Combined parse rate projection: 30% conservative (3/10), 40% optimistic (5/10)
+- Combined parse rate projection: 30% conservative (3/10), 50% optimistic (5/10)
 - Exceeds Sprint 8 target of 25-30% in optimistic scenario
 
 **Sprint 8b Boundary:**
