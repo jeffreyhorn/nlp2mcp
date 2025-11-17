@@ -93,18 +93,19 @@ jobs:
       - name: Check dashboard is up-to-date
         if: github.event_name == 'pull_request'
         run: |
-          # Fail if dashboard changes are not committed
-          if git diff --quiet docs/status/GAMSLIB_CONVERSION_STATUS.md; then
-            echo "✅ Dashboard is up-to-date"
-          else
-            echo "❌ Dashboard has uncommitted changes"
+          # Check if there are meaningful changes (not just timestamp)
+          # Exclude the "Generated:" line from the diff
+          if git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep -v '^[+-].*Generated:' | grep -q '^[+-]'; then
+            echo "❌ Dashboard has uncommitted changes (excluding timestamp)"
             echo ""
             echo "Please commit the updated dashboard:"
             echo "  make ingest-gamslib"
             echo "  git add docs/status/GAMSLIB_CONVERSION_STATUS.md"
             echo "  git commit -m 'Update GAMSLib dashboard'"
             echo ""
-            echo "Dashboard diff:"
-            git diff docs/status/GAMSLIB_CONVERSION_STATUS.md
+            echo "Dashboard diff (meaningful changes only):"
+            git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep -v '^[+-].*Generated:'
             exit 1
+          else
+            echo "✅ Dashboard is up-to-date (timestamp changes ignored)"
           fi
