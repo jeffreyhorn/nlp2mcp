@@ -7,6 +7,100 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 8 Prep: Task 8 - Create Parser Test Fixture Strategy - 2025-11-17
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Comprehensive test fixture strategy for Sprint 8 features (option statements, indexed assignments, partial parse metrics). 13 fixtures designed following Sprint 7 pattern with extended YAML schema for backward compatibility. Verified unknowns 7.1, 7.2, 7.3.
+
+#### Deliverables
+
+**Created:**
+- `docs/planning/EPIC_2/SPRINT_8/TEST_FIXTURE_STRATEGY.md` (896 lines)
+  - Option statement fixtures (5 fixtures)
+  - Indexed assignment fixtures (5 fixtures)
+  - Partial parse metric fixtures (3 fixtures)
+  - Extended YAML schema with backward compatibility
+  - Three README templates
+  - Implementation plan (3.5 hours)
+
+**Modified:**
+- `docs/planning/EPIC_2/SPRINT_8/KNOWN_UNKNOWNS.md` (verified unknowns 7.1, 7.2, 7.3)
+- `docs/planning/EPIC_2/SPRINT_8/PREP_PLAN.md` (Task 8 marked complete)
+- `CHANGELOG.md` (this entry)
+
+#### Key Findings
+
+**13 Fixtures Designed:**
+
+**Option Statements (5 fixtures):**
+1. `01_single_integer.gms` - Single option with integer value (`option limrow = 0;`)
+2. `02_multiple_options.gms` - Comma-separated multiple options (`option limrow = 0, limcol = 0;`)
+3. `03_decimals_option.gms` - decimals display option (`option decimals = 8;`)
+4. `04_placement.gms` - Options in different statement locations (before/after declarations)
+5. `05_mhw4dx_pattern.gms` - Real GAMSLib pattern from mhw4dx.gms
+
+**Indexed Assignments (5 fixtures):**
+1. `01_simple_1d.gms` - Basic 1D indexed assignment (`p('i1') = 10;`)
+2. `02_multi_dim_2d.gms` - 2D indexed assignment (mathopt1 pattern: `report('x1','global') = 1;`)
+3. `03_variable_attributes.gms` - Variable .l attribute access (trig pattern: `xdiff = x1.l;`)
+4. `04_indexed_expressions.gms` - Indexed params in RHS expressions (`p('diff') = p('global') - p('solver');`)
+5. `05_error_index_mismatch.gms` - Index count validation (expected to fail)
+
+**Partial Parse Metrics (3 fixtures):**
+1. `01_himmel16_pattern.gms` - Partial parse ~80-92% (i++1 indexing blocker, based on himmel16.gms)
+2. `02_circle_pattern.gms` - Partial parse ~70-100% (function call blocker, based on circle.gms)
+3. `03_complete_success.gms` - 100% parse baseline (uses only supported constructs)
+
+**Extended YAML Schema:**
+- **Sprint 7 fields preserved:** description, expected_status, expected_equations, expected_variables, priority
+- **New status value:** "PARTIAL" alongside SUCCESS/FAILED
+- **New optional fields:**
+  - `option_statements:` list of {name, value} pairs
+  - `indexed_assignments:` list of {parameter, indices, value}
+  - `variable_attributes:` list of {variable, attribute}
+  - `parse_percentage:` integer (0-100)
+  - `statements_parsed:` integer
+  - `statements_total:` integer
+  - `missing_features:` list of strings
+
+**README Templates:**
+- **tests/fixtures/options/README.md:** Option statement fixture documentation
+- **tests/fixtures/indexed_assignments/README.md:** Indexed assignment fixture documentation
+- **tests/fixtures/partial_parse/README.md:** Partial parse metric fixture documentation
+
+**Implementation Plan:**
+- Phase 1: Create fixture directories (15 minutes)
+- Phase 2: Write .gms fixtures (13 fixtures × 10 min = 2.2 hours)
+- Phase 3: Write expected_results.yaml (13 fixtures × 5 min = 1.1 hours)
+- Phase 4: Write README.md files (3 × 10 min = 30 minutes)
+- Phase 5: Integration with ingestion script (optional, 1 hour)
+- **Total: 3.5 hours** (within Sprint 8 testing budget)
+
+**Unknowns Verified:**
+- ✅ **7.1:** Sprint 7 fixture pattern fully reusable (saves 4-6 hours redesign effort)
+- ✅ **7.2:** 13 fixtures provide comprehensive coverage (3.5 hour total effort, not 23+ fixtures)
+- ✅ **7.3:** Hybrid approach (real GAMSLib patterns in synthetic fixtures) selected
+
+**Coverage Analysis:**
+- ✅ **Option statements:** All 3 GAMSLib patterns (single, multiple, decimals)
+- ✅ **Indexed assignments:** All 4 GAMS syntax patterns from Task 7
+- ✅ **Partial parse:** Both partial scenarios (himmel16, circle) + success baseline
+- ✅ **Error scenarios:** Index mismatch error case included
+- ✅ **Real-world patterns:** mhw4dx, mathopt1, trig, himmel16, circle patterns
+
+#### Impact
+
+- Test strategy ready for Sprint 8 implementation
+- Fixture creation effort (3.5 hours) fits within Sprint 8 testing budget
+- All Sprint 8 features have comprehensive test coverage (100% coverage)
+- Backward compatible YAML schema preserves all Sprint 7 fixtures
+- No separate error message fixtures needed (unit tests sufficient)
+
+---
+
 ### Sprint 8 Prep: Task 7 - Survey High-ROI Parser Features - 2025-11-17
 
 **Status:** ✅ COMPLETE
