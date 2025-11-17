@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive per-model feature dependency analysis for all 10 GAMSLib models, addressing the Sprint 7 retrospective finding that "didn't deeply analyze what each individual model needs to parse."
+This document provides a comprehensive per-model feature dependency analysis for all 10 GAMSLib models, addressing the Sprint 7 retrospective finding about insufficient per-model analysis of parsing requirements.
 
 **Key Findings:**
 - **2 models** currently parsing (20%): mhw4d.gms, rbrock.gms
@@ -19,8 +19,8 @@ This document provides a comprehensive per-model feature dependency analysis for
 **Sprint 8 Recommendation:**
 - **Confirmed:** Option statements (unlocks mhw4dx.gms, +10% parse rate)
 - **Recommended:** Indexed assignments (unlocks mathopt1.gms + trig.gms, +20% parse rate)
-- **Combined Parse Rate:** 30% (3/10 models → 5/10 models)
-- **Meets Sprint 8 Target:** ✅ YES (25% conservative, 30% optimistic)
+- **Combined Parse Rate:** 50% (2/10 models → 5/10 models)
+- **Meets Sprint 8 Target:** ✅ YES (30% conservative, 50% optimistic)
 
 ---
 
@@ -454,19 +454,19 @@ xdiff = 2.66695657 - x1.l;          // Variable attribute access (.l suffix)
 **Parse Rate Projection:**
 - **Baseline:** 20% (2/10 models: mhw4d, rbrock)
 - **After option statements:** 30% (3/10 models: +mhw4dx)
-- **After indexed assignments:** 40% (5/10 models: +mathopt1, +trig)
+- **After indexed assignments:** 50% (5/10 models: +mathopt1, +trig)
 
 **Conservative Estimate:** 30% (3/10 models)
 - Account for implementation risks (unexpected complexity)
 - Account for secondary errors in trig.gms (attribute access may be complex)
 
-**Optimistic Estimate:** 40% (5/10 models)
+**Optimistic Estimate:** 50% (5/10 models)
 - Both features implemented successfully
 - trig.gms fully unlocked by indexed assignment support
 
 **Sprint 8 Target Comparison:**
 - Sprint 8 Target: 25% conservative, 30% optimistic (from PROJECT_PLAN.md)
-- Projected: 30% conservative, 40% optimistic
+- Projected: 30% conservative, 50% optimistic
 - ✅ **EXCEEDS TARGET** in both scenarios
 
 ---
@@ -625,7 +625,7 @@ xdiff = 2.66695657 - x1.l;          // Variable attribute access (.l suffix)
 - Rationale: Option statements confirmed to unlock mhw4dx (straightforward implementation)
 - Risk: Indexed assignments has unexpected complexity (mitigated by clear error messages)
 
-**Optimistic Estimate (40%):**
+**Optimistic Estimate (50%):**
 - Confidence: **High (80%)**
 - Rationale: Both features implemented successfully
 - Risk: trig.gms attribute access (.l suffix) may need additional work
@@ -633,7 +633,7 @@ xdiff = 2.66695657 - x1.l;          // Variable attribute access (.l suffix)
 
 **Comparison to Sprint 7:**
 - Sprint 7: 30% target, 20% actual (67% of target)
-- Sprint 8: 30% conservative, 40% optimistic (uncertainty range: ±10%)
+- Sprint 8: 30% conservative, 50% optimistic (uncertainty range: ±20%)
 - Improved confidence due to per-model analysis
 
 ---
@@ -662,7 +662,7 @@ From lines 84-148 of PROJECT_PLAN.md:
 > **Features:** Option statements + one additional feature (indexed assignments OR function calls)
 
 **This Document Validates:**
-- ✅ 25-30% target is achievable (projected 30-40%)
+- ✅ 25-30% target is achievable (projected 30-50%)
 - ✅ Option statements confirmed (unlocks mhw4dx)
 - ✅ Indexed assignments recommended over function calls (unlocks 2 models vs 1 model)
 

@@ -46,8 +46,8 @@ Created comprehensive per-model feature dependency matrix for all 10 GAMSLib mod
 
 **Feature Unlock Rates:**
 - **Option statements:** Unlocks mhw4dx.gms (+10% parse rate, 2/10 → 3/10)
-- **Indexed assignments:** Unlocks mathopt1.gms + trig.gms (+20% parse rate, 2/10 → 4/10)
-- **Combined Sprint 8:** 2/10 → 4/10 = 40% parse rate (optimistic), 30% conservative
+- **Indexed assignments:** Unlocks mathopt1.gms + trig.gms (+20% parse rate, 3/10 → 5/10)
+- **Combined Sprint 8:** 2/10 → 5/10 = 50% parse rate (optimistic), 30% conservative
 - **Multiple model definitions:** Unlocks hs62.gms + mingamma.gms (+20% parse rate) - deferred to Sprint 8b
 - **Function calls in assignments:** Unlocks circle.gms (+10%) - deferred to Sprint 8b
 - **Lead/lag indexing (i++1):** Unlocks himmel16.gms (+10%) - deferred to Sprint 8b
@@ -59,7 +59,7 @@ Created comprehensive per-model feature dependency matrix for all 10 GAMSLib mod
   - Effort: 6-8 hours (Medium complexity)
   - Combined unlock rate: +30% parse rate
 - **Total Sprint 8 effort:** 12-16 hours (within sprint capacity)
-- **Parse rate projection:** 30% conservative (3/10 models), 40% optimistic (5/10 models)
+- **Parse rate projection:** 30% conservative (3/10 models), 50% optimistic (5/10 models)
 - **Target validation:** ✅ Exceeds Sprint 8 target (25% conservative, 30% optimistic)
 
 **Sprint 8b Boundary:**
@@ -87,7 +87,7 @@ Created comprehensive per-model feature dependency matrix for all 10 GAMSLib mod
 **2.3: How do we validate that per-model analysis prevents Sprint 7 underestimation?**
 - ✅ VERIFIED: Per-model methodology is superior to feature-based analysis
 - Sprint 7 gap: Feature-based analysis assumed preprocessor unlocks 3 models, actually unlocked 1
-- Sprint 7 missed: circle.gms needs preprocessor AND function calls (multi-feature dependency)
+- Sprint 7 missed: circle.gms needs the preprocessor AND function calls (multi-feature dependency)
 - Sprint 8 improvement: Per-model matrix explicitly shows primary AND secondary errors
 - Decision: High confidence (95%) in Sprint 8 conservative estimate (30%)
 
@@ -103,7 +103,7 @@ Created comprehensive per-model feature dependency matrix for all 10 GAMSLib mod
 | Aspect | Sprint 7 (Feature-Based) | Sprint 8 (Per-Model) |
 |--------|--------------------------|----------------------|
 | Approach | Analyze features, assume unlock rates | Analyze each model's specific requirements |
-| Prediction | Preprocessor unlocks 3 models (30%) | Option + Indexed unlocks 4 models (40%) |
+| Prediction | Preprocessor unlocks 3 models (30%) | Option + Indexed unlocks 5 models (50%) |
 | Actual (S7) | Preprocessor unlocked 1 model (20%) | TBD (Sprint 8 execution) |
 | Multi-feature detection | ❌ Missed (circle needs 2 features) | ✅ Explicit (circle: 2, maxmin: 2) |
 | Confidence | Low (67% of target achieved) | High (95% for conservative, 80% for optimistic) |
@@ -120,7 +120,7 @@ Created comprehensive per-model feature dependency matrix for all 10 GAMSLib mod
 **Feature Selection Validated:**
 - Sprint 8 will implement option statements (6-8h) + indexed assignments (6-8h)
 - Total effort: 12-16 hours (aligns with Sprint 8 capacity)
-- Parse rate projection: 30-40% (meets/exceeds 25-30% target)
+- Parse rate projection: 30-50% (meets/exceeds 25-30% target)
 
 **Sprint 8b Roadmap Defined:**
 - Clear prioritization for next 3 features (multiple models, function calls, lead/lag)

@@ -499,14 +499,14 @@ List features deferred to Sprint 8b:
 
 **Key Achievements:**
 1. ✅ High-confidence Sprint 8 feature recommendation: Option statements + Indexed assignments
-2. ✅ Parse rate projection: 30% conservative, 40% optimistic (meets/exceeds 25-30% target)
+2. ✅ Parse rate projection: 30% conservative, 50% optimistic (meets/exceeds 25-30% target)
 3. ✅ Identified 3 quick-win models for Sprint 8 (mhw4dx, mathopt1, trig)
 4. ✅ Clear Sprint 8b roadmap with 3 deferred features
 5. ✅ Methodology validation: Per-model analysis prevents Sprint 7-style underestimation
 
 **Impact on Sprint 8 Planning:**
 - Sprint 8 will implement option statements (6-8h) + indexed assignments (6-8h) = 12-16h total
-- Combined unlock rate: +30% (best case: +40%)
+- Combined unlock rate: +30% (best case: +50%)
 - Single-feature models prioritized over multi-feature models
 - High confidence (95%) in conservative estimate, high confidence (80%) in optimistic estimate
 
@@ -547,7 +547,7 @@ grep -q "Sprint 8 Feature Recommendation" docs/planning/EPIC_2/SPRINT_8/GAMSLIB_
 - [x] All 8 failing models analyzed with primary/secondary errors
 - [x] Feature dependency matrix created with unlock rates
 - [x] Sprint 8 feature recommendation provided with rationale
-- [x] Parse rate projection for Sprint 8 (30% conservative, 40% optimistic - exceeds 25-30% target)
+- [x] Parse rate projection for Sprint 8 (30% conservative, 50% optimistic - exceeds 25-30% target)
 - [x] Models "close" to parsing identified (6 single-feature models)
 - [x] Sprint 8b boundary defined (3 deferred features documented)
 - [x] Cross-referenced with Sprint 7 RETROSPECTIVE.md recommendations

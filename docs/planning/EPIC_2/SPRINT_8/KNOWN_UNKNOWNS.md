@@ -387,7 +387,7 @@ Development team
 - Feature dependency matrix in GAMSLIB_FEATURE_MATRIX.md shows explicit dependencies
 - Option statements: Unlocks 1 model (mhw4dx) = +10% parse rate
 - Indexed assignments: Unlocks 2 models (mathopt1, trig) = +20% parse rate
-- Combined Sprint 8: 2/10 → 4/10 = 40% parse rate (conservative: 30%)
+- Combined Sprint 8: 2/10 → 5/10 = 50% parse rate (conservative: 30%)
 
 **Decision:**
 - Most models (75%) have single-feature dependencies - excellent news for Sprint 8/8b
@@ -396,7 +396,7 @@ Development team
 - 25% target achievable, 30% target highly likely, 40% optimistic but possible
 
 **Impact:**
-- Sprint 8 parse rate projection: 30% conservative, 40% optimistic
+- Sprint 8 parse rate projection: 30% conservative, 50% optimistic
 - Sprint 8b can achieve 60-70% by adding multiple model definitions (2 more models)
 - High confidence in feature prioritization based on empirical unlock rates
 
@@ -459,7 +459,7 @@ Sprint planning team
 - Sprint 7 prediction: Preprocessor unlocks circle, himmel16, mhw4dx = 30% parse rate
 - Sprint 7 actual: Preprocessor unlocks only 1 model (rbrock.gms) = 20% parse rate
 - Gap: Feature-based analysis assumed single-feature dependencies
-- Reality: circle.gms needs preprocessor + function calls (multi-feature dependency)
+- Reality: circle.gms needs the preprocessor + function calls (multi-feature dependency)
 
 **Sprint 8 Methodology Improvements:**
 1. ✅ Per-model matrix shows primary AND secondary errors for each model
