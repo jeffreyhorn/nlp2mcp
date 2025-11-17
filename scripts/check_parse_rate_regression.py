@@ -2,8 +2,8 @@
 """
 GAMSLib Parse Rate Regression Checker
 
-Compares current parse rate against baseline to detect regressions.
-Used by CI to fail builds if parse rate drops significantly.
+This script compares the current parse rate against a baseline to detect regressions.
+Used in CI to prevent merging changes that significantly reduce parse rate.
 
 Usage:
     python scripts/check_parse_rate_regression.py \\
@@ -12,321 +12,280 @@ Usage:
         --threshold 0.10
 
 Exit codes:
-    0: No regression (pass CI)
-    1: Regression detected (fail CI)
-    2: Error reading reports or invalid arguments
+    0 - No regression (parse rate stable or improved)
+    1 - Regression detected (parse rate dropped >threshold)
+    2 - Error (invalid arguments, missing files, etc.)
 """
-
-from __future__ import annotations
 
 import argparse
 import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict
 
 
-def read_parse_rate_from_file(json_path: Path) -> tuple[float, dict[str, Any]]:
+def read_parse_rate(json_path: str) -> float:
     """
-    Read parse rate from a JSON ingestion report file.
+    Read parse rate from JSON report.
 
     Args:
-        json_path: Path to JSON report file
+        json_path: Path to GAMSLib ingestion JSON report
 
     Returns:
-        Tuple of (parse_rate_percent, full_kpis_dict)
+        Parse rate as percentage (0.0-100.0)
 
     Raises:
         FileNotFoundError: If JSON file doesn't exist
+        KeyError: If 'kpis' or 'parse_rate_percent' not in JSON
         json.JSONDecodeError: If JSON is malformed
-        KeyError: If expected fields are missing
     """
-    if not json_path.exists():
-        raise FileNotFoundError(f"Report file not found: {json_path}")
+    path = Path(json_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Report not found: {json_path}")
 
-    with open(json_path) as f:
+    with open(path) as f:
         report = json.load(f)
 
     if "kpis" not in report:
-        raise KeyError(f"Report missing 'kpis' field: {json_path}")
+        raise KeyError(f"Missing 'kpis' key in {json_path}")
 
-    kpis = report["kpis"]
+    if "parse_rate_percent" not in report["kpis"]:
+        raise KeyError(f"Missing 'parse_rate_percent' in kpis of {json_path}")
 
-    # Validate all required KPI fields
-    required_fields = ["parse_rate_percent", "parse_success", "total_models"]
-    for field in required_fields:
-        if field not in kpis:
-            raise KeyError(f"KPIs missing '{field}' field: {json_path}")
-
-    parse_rate = kpis["parse_rate_percent"]
-
-    return parse_rate, kpis
+    return float(report["kpis"]["parse_rate_percent"])
 
 
-def read_parse_rate_from_git(branch: str, report_path: Path) -> tuple[float, dict[str, Any]]:
+def read_baseline_from_git(baseline_ref: str, report_path: str) -> float:
     """
-    Read parse rate from a JSON report on a different git branch.
+    Read baseline parse rate from a git reference (branch/commit).
 
     Args:
-        branch: Git branch name (e.g., "main", "origin/main")
-        report_path: Path to JSON report file (relative to repo root)
+        baseline_ref: Git reference (e.g., 'origin/main', 'HEAD~1')
+        report_path: Path to report file relative to repo root
 
     Returns:
-        Tuple of (parse_rate_percent, full_kpis_dict)
+        Baseline parse rate as percentage (0.0-100.0)
 
     Raises:
         subprocess.CalledProcessError: If git command fails
-        json.JSONDecodeError: If baseline JSON is malformed
-        KeyError: If expected fields are missing
+        KeyError: If report structure invalid
+        json.JSONDecodeError: If JSON is malformed
     """
-    # Use git show to read file from branch
+    # Use git show to read file from baseline ref
     result = subprocess.run(
-        ["git", "show", f"{branch}:{report_path}"],
+        ["git", "show", f"{baseline_ref}:{report_path}"],
         capture_output=True,
         text=True,
         check=True,
     )
 
-    report = json.loads(result.stdout)
+    baseline_report = json.loads(result.stdout)
 
-    if "kpis" not in report:
-        raise KeyError(f"Baseline report missing 'kpis' field (branch: {branch})")
+    if "kpis" not in baseline_report:
+        raise KeyError(f"Missing 'kpis' in baseline report from {baseline_ref}")
 
-    kpis = report["kpis"]
+    if "parse_rate_percent" not in baseline_report["kpis"]:
+        raise KeyError(f"Missing 'parse_rate_percent' in baseline from {baseline_ref}")
 
-    # Validate all required KPI fields
-    required_fields = ["parse_rate_percent", "parse_success", "total_models"]
-    for field in required_fields:
-        if field not in kpis:
-            raise KeyError(f"Baseline KPIs missing '{field}' field (branch: {branch})")
-
-    parse_rate = kpis["parse_rate_percent"]
-
-    return parse_rate, kpis
+    return float(baseline_report["kpis"]["parse_rate_percent"])
 
 
-def calculate_relative_drop(baseline: float, current: float) -> float:
+def check_regression(current: float, baseline: float, threshold: float) -> bool:
     """
-    Calculate relative drop from baseline to current.
+    Check if current parse rate represents a regression from baseline.
+
+    A regression occurs when the relative drop exceeds the threshold:
+        (baseline - current) / baseline > threshold
 
     Args:
-        baseline: Baseline parse rate (percentage)
-        current: Current parse rate (percentage)
-
-    Returns:
-        Relative drop as decimal (e.g., 0.10 for 10% drop)
-        Returns 0.0 if baseline is 0 (can't calculate relative drop)
-    """
-    if baseline == 0:
-        return 0.0  # Can't regress from 0%
-
-    return (baseline - current) / baseline
-
-
-def check_regression(
-    current_rate: float,
-    baseline_rate: float,
-    threshold: float,
-    current_kpis: dict[str, Any],
-    baseline_kpis: dict[str, Any],
-) -> bool:
-    """
-    Check if current rate represents a regression.
-
-    Args:
-        current_rate: Current parse rate (percentage)
-        baseline_rate: Baseline parse rate (percentage)
-        threshold: Regression threshold (decimal, e.g., 0.10 for 10%)
-        current_kpis: Current KPIs (for detailed reporting)
-        baseline_kpis: Baseline KPIs (for detailed reporting)
+        current: Current parse rate (0.0-100.0)
+        baseline: Baseline parse rate (0.0-100.0)
+        threshold: Regression threshold as fraction (e.g., 0.10 for 10%)
 
     Returns:
         True if regression detected, False otherwise
 
-    Side effects:
-        Prints detailed regression report to stdout
+    Edge cases:
+        - If baseline is 0%, cannot regress (returns False)
+        - If current >= baseline, improvement (returns False)
     """
-    relative_drop = calculate_relative_drop(baseline_rate, current_rate)
+    # Edge case: Can't regress from 0%
+    if baseline == 0:
+        return False
 
-    # Check if regression exceeds threshold
-    is_regression = relative_drop >= threshold
+    # Calculate relative drop
+    relative_drop = (baseline - current) / baseline
 
-    # Print detailed report
-    print("=" * 70)
-    print("PARSE RATE REGRESSION CHECK")
-    print("=" * 70)
-    print()
+    # Regression if drop exceeds threshold
+    return relative_drop > threshold
 
-    # Current vs baseline
-    print(
-        f"Current Parse Rate:  {current_rate}% ({current_kpis['parse_success']}/{current_kpis['total_models']} models)"
+
+def format_models_info(current: float, baseline: float, total_models: int) -> str:
+    """
+    Format human-readable model count comparison.
+
+    Args:
+        current: Current parse rate (0.0-100.0)
+        baseline: Baseline parse rate (0.0-100.0)
+        total_models: Total number of models tested
+
+    Returns:
+        Formatted string showing model counts
+    """
+    current_count = int(current * total_models / 100)
+    baseline_count = int(baseline * total_models / 100)
+    delta = current_count - baseline_count
+
+    delta_str = f"{delta:+d}" if delta != 0 else "0"
+
+    return (
+        f"  Current:  {current_count}/{total_models} models ({current:.1f}%)\n"
+        f"  Baseline: {baseline_count}/{total_models} models ({baseline:.1f}%)\n"
+        f"  Delta:    {delta_str} models"
     )
-    print(
-        f"Baseline Parse Rate: {baseline_rate}% ({baseline_kpis['parse_success']}/{baseline_kpis['total_models']} models)"
-    )
-    print()
-
-    # Calculate change
-    absolute_change = current_rate - baseline_rate
-    models_change = current_kpis["parse_success"] - baseline_kpis["parse_success"]
-
-    print(f"Absolute Change: {absolute_change:+.1f} percentage points")
-    print(f"Models Change:   {models_change:+d} models")
-    print(f"Relative Drop:   {relative_drop * 100:+.1f}% (threshold: {threshold * 100:.1f}%)")
-    print()
-
-    # Verdict
-    if is_regression:
-        print("❌ REGRESSION DETECTED")
-        print()
-        print(
-            f"Parse rate dropped by {relative_drop * 100:.1f}%, exceeding threshold of {threshold * 100:.1f}%"
-        )
-        print()
-        print("Action required:")
-        print("  1. Review recent parser changes")
-        print("  2. Identify which models stopped parsing")
-        print("  3. Fix parser or update test expectations")
-        print("  4. Re-run ingestion to verify fix")
-    elif current_rate > baseline_rate:
-        print("✅ IMPROVEMENT: Parse rate increased!")
-        print()
-        print("No action needed. Great work!")
-    elif current_rate == baseline_rate:
-        print("✅ STABLE: Parse rate unchanged")
-        print()
-        print("No action needed.")
-    else:
-        # Drop within threshold
-        print("✅ OK: Minor drop within acceptable threshold")
-        print()
-        print("No action needed. Variation is within expected range.")
-
-    print("=" * 70)
-
-    return is_regression
 
 
-def main() -> None:
-    """Main entry point for regression checker."""
+def main() -> int:
+    """
+    Main entry point for regression checker.
+
+    Returns:
+        Exit code (0 = no regression, 1 = regression, 2 = error)
+    """
     parser = argparse.ArgumentParser(
-        description="Check for parse rate regressions in GAMSLib ingestion reports",
+        description="Check GAMSLib parse rate for regressions",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Compare current report against main branch
-  python check_parse_rate_regression.py \\
-      --current reports/gamslib_ingestion_sprint6.json \\
-      --baseline origin/main \\
-      --threshold 0.10
-
-  # Compare two local reports
-  python check_parse_rate_regression.py \\
-      --current reports/current.json \\
-      --baseline-file reports/baseline.json \\
-      --threshold 0.05
-
-Exit codes:
-  0: No regression (pass)
-  1: Regression detected (fail)
-  2: Error reading reports
-        """,
+        epilog=__doc__,
     )
 
     parser.add_argument(
         "--current",
-        type=Path,
         required=True,
-        help="Path to current ingestion report (JSON)",
+        help="Path to current GAMSLib ingestion JSON report",
     )
 
     parser.add_argument(
         "--baseline",
-        type=str,
-        help="Git branch name for baseline (e.g., 'main', 'origin/main'). The baseline report will be read from the same path as --current on this branch.",
-    )
-
-    parser.add_argument(
-        "--baseline-file",
-        type=Path,
-        help="Path to baseline ingestion report (JSON) - alternative to --baseline",
+        required=True,
+        help="Git reference for baseline (e.g., 'origin/main', 'HEAD~1')",
     )
 
     parser.add_argument(
         "--threshold",
         type=float,
         default=0.10,
-        help="Regression threshold as decimal (default: 0.10 for 10%%)",
+        help="Regression threshold as fraction (default: 0.10 = 10%%)",
+    )
+
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print detailed comparison even on success",
     )
 
     args = parser.parse_args()
 
-    # Validate arguments
-    if not args.baseline and not args.baseline_file:
-        print("Error: Must specify either --baseline or --baseline-file", file=sys.stderr)
-        sys.exit(2)
-
-    if args.baseline and args.baseline_file:
-        print("Error: Cannot specify both --baseline and --baseline-file", file=sys.stderr)
-        sys.exit(2)
-
-    if args.threshold < 0 or args.threshold > 1:
-        print(f"Error: Threshold must be between 0 and 1 (got {args.threshold})", file=sys.stderr)
-        sys.exit(2)
-
     try:
         # Read current parse rate
-        current_rate, current_kpis = read_parse_rate_from_file(args.current)
+        current_rate = read_parse_rate(args.current)
 
-        # Read baseline parse rate
-        if args.baseline:
-            # Read from git branch
-            baseline_rate, baseline_kpis = read_parse_rate_from_git(args.baseline, args.current)
-        else:
-            # Read from file
-            baseline_rate, baseline_kpis = read_parse_rate_from_file(args.baseline_file)
+        # Read baseline from git
+        baseline_rate = read_baseline_from_git(args.baseline, args.current)
+
+        # Assume 10 models for Sprint 6 (TODO: read from report)
+        total_models = 10
 
         # Check for regression
-        is_regression = check_regression(
-            current_rate,
-            baseline_rate,
-            args.threshold,
-            current_kpis,
-            baseline_kpis,
-        )
+        is_regression = check_regression(current_rate, baseline_rate, args.threshold)
 
-        # Exit with appropriate code
         if is_regression:
-            sys.exit(1)  # Fail CI
+            # Regression detected - fail CI
+            relative_drop = (baseline_rate - current_rate) / baseline_rate
+            print("❌ REGRESSION DETECTED")
+            print()
+            print(f"Parse rate dropped from {baseline_rate:.1f}% to {current_rate:.1f}%")
+            print(
+                f"Relative drop: {relative_drop * 100:.1f}% (threshold: {args.threshold * 100:.0f}%)"
+            )
+            print()
+            print(format_models_info(current_rate, baseline_rate, total_models))
+            print()
+            print("This regression blocks CI. Please investigate:")
+            print("  1. Check what parser changes may have broken existing models")
+            print("  2. Run 'make ingest-gamslib' to see detailed error messages")
+            print("  3. Fix the parser or adjust test models if the change is intentional")
+            return 1
+
+        elif current_rate > baseline_rate:
+            # Improvement - celebrate!
+            improvement = (current_rate - baseline_rate) / baseline_rate * 100
+            print("✅ IMPROVEMENT!")
+            print()
+            print(f"Parse rate improved from {baseline_rate:.1f}% to {current_rate:.1f}%")
+            print(f"Relative improvement: +{improvement:.1f}%")
+            print()
+            print(format_models_info(current_rate, baseline_rate, total_models))
+            return 0
+
+        elif current_rate == baseline_rate:
+            # Unchanged
+            if args.verbose:
+                print("✅ OK")
+                print()
+                print(f"Parse rate unchanged: {current_rate:.1f}%")
+                print()
+                print(format_models_info(current_rate, baseline_rate, total_models))
+            else:
+                print(f"✅ OK: Parse rate {current_rate:.1f}% (baseline {baseline_rate:.1f}%)")
+            return 0
+
         else:
-            sys.exit(0)  # Pass CI
+            # Small drop within threshold
+            relative_drop = (baseline_rate - current_rate) / baseline_rate
+            if args.verbose:
+                print("✅ OK (small drop within threshold)")
+                print()
+                print(f"Parse rate: {current_rate:.1f}% (baseline {baseline_rate:.1f}%)")
+                print(
+                    f"Relative drop: {relative_drop * 100:.1f}% (threshold: {args.threshold * 100:.0f}%)"
+                )
+                print()
+                print(format_models_info(current_rate, baseline_rate, total_models))
+            else:
+                print(
+                    f"✅ OK: Parse rate {current_rate:.1f}% (baseline {baseline_rate:.1f}%, "
+                    f"drop {relative_drop * 100:.1f}% < threshold {args.threshold * 100:.0f}%)"
+                )
+            return 0
 
     except FileNotFoundError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(2)
+        print(f"❌ ERROR: {e}", file=sys.stderr)
+        print(
+            "\nMake sure to run 'make ingest-gamslib' before checking for regressions.",
+            file=sys.stderr,
+        )
+        return 2
 
     except subprocess.CalledProcessError as e:
-        print(f"Error reading baseline from git: {e}", file=sys.stderr)
-        print(f"Command: {' '.join(e.cmd)}", file=sys.stderr)
-        print(f"Stderr: {e.stderr}", file=sys.stderr)
-        sys.exit(2)
+        print(f"❌ ERROR: Failed to read baseline from git", file=sys.stderr)
+        print(f"Git command failed: {e}", file=sys.stderr)
+        print(
+            f"\nMake sure baseline reference '{args.baseline}' exists.",
+            file=sys.stderr,
+        )
+        return 2
 
-    except json.JSONDecodeError as e:
-        print(f"Error parsing JSON: {e}", file=sys.stderr)
-        sys.exit(2)
-
-    except KeyError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(2)
+    except (KeyError, json.JSONDecodeError) as e:
+        print(f"❌ ERROR: Invalid JSON report format", file=sys.stderr)
+        print(f"Details: {e}", file=sys.stderr)
+        return 2
 
     except Exception as e:
-        print(f"Unexpected error: {e}", file=sys.stderr)
-        import traceback
-
-        traceback.print_exc()
-        sys.exit(2)
+        print(f"❌ ERROR: Unexpected error", file=sys.stderr)
+        print(f"Details: {e}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

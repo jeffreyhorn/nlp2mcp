@@ -1,16 +1,82 @@
-# Template for statement syntax fixture expected results
+# Expected Results for Statement Fixtures
+# Sprint 7 Day 9
 #
-# Each fixture should have an entry with:
-# - input: Path to .gms file
-# - expected: Expected parsing behavior
-#
-# Example:
-# - fixture_name: multiple_scalars
-#   input: multiple_scalars.gms
-#   expected:
-#     parse_success: true
-#     statement_type: scalar_declaration
-#     scalars_declared: ["a", "b", "c"]
-#     values: [2.0, 3.5, 1.0]
-#
-# Fixtures to be added in Day 9
+# This file documents the expected parse outcomes for each statement fixture.
+# Used for automated testing and regression detection.
+
+fixtures:
+  01_model_declaration:
+    description: "Model declaration with /all/ syntax"
+    expected_status: "SUCCESS"
+    expected_equations: 2
+    expected_variables: 2
+    priority: "Critical"
+
+  02_solve_basic:
+    description: "Basic solve statement with nlp solver"
+    expected_status: "SUCCESS"
+    expected_equations: 2
+    expected_variables: 3
+    priority: "Critical"
+
+  03_solve_with_objective:
+    description: "Solve statement with explicit objective variable"
+    expected_status: "SUCCESS"
+    expected_equations: 2
+    expected_variables: 2
+    priority: "High"
+
+  04_option_statement:
+    description: "Option statement (commented out - not yet supported)"
+    expected_status: "SUCCESS"
+    expected_equations: 1
+    expected_variables: 1
+    priority: "High"
+    notes: "Option statements commented out until parser support added"
+
+  05_display_statement:
+    description: "Display statement (parser should skip)"
+    expected_status: "SUCCESS"
+    expected_equations: 1
+    expected_variables: 2
+    priority: "Medium"
+    notes: "Display statements not implemented but should be skipped gracefully"
+
+  06_scalar_assignment:
+    description: "Scalar declaration with assignment"
+    expected_status: "SUCCESS"
+    expected_equations: 1
+    expected_variables: 1
+    priority: "High"
+
+  07_multiple_scalars:
+    description: "Multiple scalar declarations"
+    expected_status: "SUCCESS"
+    expected_equations: 1
+    expected_variables: 1
+    priority: "Critical"
+
+  08_assignment_indexed:
+    description: "Indexed assignment statement (not supported)"
+    expected_status: "FAILED"
+    expected_error_type: "ParserSemanticError"
+    priority: "Medium"
+    notes: "Indexed assignments not yet supported - expected to fail"
+
+  09_model_with_list:
+    description: "Model declaration with equation list"
+    expected_status: "SUCCESS"
+    expected_equations: 3
+    expected_variables: 3
+    priority: "High"
+
+summary:
+  total_fixtures: 9
+  expected_success: 8
+  expected_failures: 1
+  coverage:
+    - "Model declarations (/all/ and specific equation lists)"
+    - "Solve statements (basic and with objectives)"
+    - "Scalar declarations and assignments"
+    - "Display statements (skipped)"
+    - "Indexed assignments (error handling)"
