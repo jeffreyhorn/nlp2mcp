@@ -7,6 +7,170 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 8 Prep: Task 4 - Design Parser Error Line Number Tracking - 2025-11-17
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Designed approach to extend SourceLocation tracking from convexity warnings (Sprint 7) to ALL parser errors, achieving 100% coverage. Critical discovery: Parser errors already have line number tracking via `_error()` helper—the gap is UX, not infrastructure. ParserSemanticError used throughout, but ParseError (in errors.py) provides superior user experience with source line display, caret pointer, and actionable suggestions. Validated 4-hour implementation estimate (within 4-6 hour budget).
+
+#### Deliverables
+
+**Created:**
+- `docs/planning/EPIC_2/SPRINT_8/PARSER_ERROR_LINE_NUMBERS.md` (577 lines)
+  - Parser error type catalog (8 error types: 2 Lark-native, 6 custom)
+  - Current line number coverage analysis (58/58 parser errors = 100%!)
+  - Location extraction patterns (`_error()`, `_node_position()`, `_extract_source_location()` helpers)
+  - Exception class analysis (ParserSemanticError vs ParseError comparison)
+  - Error raise point inventory (58 raise points in parser.py)
+  - Test strategy (5 new fixtures: 2 Lark wrapping, 3 semantic errors)
+  - Implementation effort validation (4-hour breakdown)
+
+**Modified:**
+- `docs/planning/EPIC_2/SPRINT_8/KNOWN_UNKNOWNS.md` (verified unknowns 4.1, 4.2, 4.3, 4.4)
+- `docs/planning/EPIC_2/SPRINT_8/PREP_PLAN.md` (Task 4 marked complete)
+- `CHANGELOG.md` (this entry)
+
+#### Key Findings
+
+**Critical Discovery:**
+Parser errors already have 100% line number coverage via the `_error()` helper method (parser.py:1010-1024). The gap is not infrastructure—it's UX. ParserSemanticError is used throughout, but ParseError (errors.py:70-118) provides superior user experience.
+
+**Error Type Catalog (8 types identified):**
+1. **UnexpectedToken** (Lark-native) - ✅ Has line numbers from Lark
+2. **UnexpectedCharacters** (Lark-native) - ✅ Has line numbers from Lark
+3. **ParserSemanticError** (58 raise points) - ✅ Has line numbers via `_error()` helper
+4. **ConditionEvaluationError** (17 raises) - ❌ Not parser errors (preprocessor)
+5. **CircularIncludeError** - ❌ Preprocessor, not parser
+6. **IncludeDepthExceededError** - ❌ Preprocessor, not parser
+7. **ValueError** - ❌ Normalization, not parser
+8. **ParseError** (errors.py) - ❌ Unused by parser (should be used!)
+
+**Current Coverage:**
+- Parser errors: 58/58 (100%) ✅ Already have line numbers!
+- All errors: 58/79 (73%) - Others are preprocessor/normalization, not in scope
+
+**The `_error()` Helper (parser.py:1010-1024):**
+```python
+def _error(self, message: str, node: Tree | Token | None = None) -> ParserSemanticError:
+    context_desc = self._current_context_description()
+    if context_desc:
+        message = f"{message} [context: {context_desc}]"
+    if self._context_stack:
+        current_domain = self._context_stack[-1][2]
+        if current_domain:
+            message = f"{message} [domain: {current_domain}]"
+    line, column = self._node_position(node)  # ← Extracts line/column
+    if line is None and self._context_stack:
+        for _, ctx_node, _ in reversed(self._context_stack):
+            line, column = self._node_position(ctx_node)
+            if line is not None:
+                break
+    return ParserSemanticError(message, line, column)
+```
+
+**Gap Identified:**
+ParserSemanticError provides basic location (line, column) but ParseError provides superior UX:
+- Source line display from original GAMS code
+- Caret (^) pointer to exact error location
+- Actionable suggestions for common errors
+- Consistent error message format
+
+**ParserSemanticError vs ParseError Comparison:**
+
+Current (ParserSemanticError):
+```
+ParserSemanticError: Assignments must use numeric constants; got Call(...) (line 10, column 15)
+```
+
+Target (ParseError):
+```
+Parse error at line 10, column 15: Assignments must use numeric constants
+  x = uniform(1, 10);
+              ^
+Suggestion: Use a literal number instead of a function call
+```
+
+**Implementation Scope:**
+1. **Wrap Lark errors** in ParseError for consistent formatting (1 hour)
+2. **Create `_parse_error()` helper** similar to `_error()` (1 hour)
+3. **Migrate top 5 error types** to include suggestions (1 hour)
+4. **Add test fixtures** for new error wrapping (1 hour)
+5. **Total: 4 hours** ✅ Within 4-6 hour estimate
+
+**Not needed:** Build location extraction infrastructure (already exists from Sprint 7)
+
+**Test Strategy:**
+5 new test fixtures needed:
+1. Lark UnexpectedToken wrapping with source line display
+2. Lark UnexpectedCharacters wrapping with suggestion
+3. Semantic error with caret pointer
+4. Semantic error with actionable suggestion
+5. Coverage test: All error types include location
+
+**Unknown Verification:**
+
+**Unknown 4.1 (Custom error coverage):** ✅ VERIFIED
+- 58 custom error raise points in parser.py already use `_error()` helper
+- All custom errors already have line/column tracking via ParserSemanticError
+- Infrastructure exists: `_node_position()` and `_extract_source_location()` from Sprint 7
+
+**Unknown 4.2 (Lark error coverage):** ✅ VERIFIED
+- Lark errors have line numbers (UnexpectedToken, UnexpectedCharacters include .line and .column)
+- Not wrapped currently—Lark errors propagate directly without nlp2mcp formatting
+- Should wrap for consistency (ParseError provides better UX)
+
+**Unknown 4.3 (Test strategy):** ✅ VERIFIED
+- 5 new test fixtures needed: 2 for Lark wrapping, 3 for semantic errors
+- Parameterized tests for all error types
+- Coverage verification: Run existing tests, verify all error paths include location
+
+**Unknown 4.4 (Performance impact):** ✅ VERIFIED
+- Negligible overhead: Line number extraction only happens when errors are raised (exceptional path)
+- Already extracted: Current `_error()` helper already extracts location for all 58 raise points
+- No performance-critical error paths: Parse errors are terminal (parsing fails)
+- Lark metadata is free: Metadata already populated by parser during normal operation
+
+#### Implementation Effort
+
+**Validated: 4 hours** (within 4-6 hour estimate from PROJECT_PLAN.md)
+
+Detailed breakdown:
+1. Wrap Lark errors in ParseError: 1 hour
+   - Modify parse_text() to catch UnexpectedToken, UnexpectedCharacters
+   - Extract source line from input
+   - Wrap in ParseError with caret pointer
+2. Create `_parse_error()` helper: 1 hour
+   - Similar to `_error()` but returns ParseError
+   - Extract source line from original GAMS input
+   - Add caret pointer generation logic
+3. Migrate top 5 error types with suggestions: 1 hour
+   - Identify most common semantic errors
+   - Add actionable suggestions (e.g., "Use literal number instead of function call")
+   - Replace `_error()` calls with `_parse_error()` calls
+4. Add test fixtures: 1 hour
+   - 2 Lark wrapping tests (UnexpectedToken, UnexpectedCharacters)
+   - 3 semantic error tests (with suggestions)
+   - Coverage verification test
+
+**Sprint 8 vs Sprint 8b Scope:**
+- **Sprint 8 (critical):** Lark error wrapping + top 5 semantic errors with suggestions
+- **Sprint 8b (nice-to-have):** Migrate remaining 53 semantic errors, add suggestions for edge cases
+
+#### Sprint 8 Readiness
+
+✅ All unknowns verified  
+✅ Design complete  
+✅ Effort validated  
+✅ Test strategy defined  
+✅ Implementation can proceed with confidence
+
+**Risk:** Very Low (infrastructure exists, just UX enhancement)  
+**Impact:** High (dramatically improved developer experience for parser errors)
+
+---
+
 ### Sprint 8 Prep: Task 3 - Research Option Statement Syntax - 2025-11-17
 
 **Status:** ✅ COMPLETE
