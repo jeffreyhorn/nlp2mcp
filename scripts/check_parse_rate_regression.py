@@ -185,6 +185,10 @@ def main() -> int:
 
     args = parser.parse_args()
 
+    # Validate threshold is between 0.0 and 1.0
+    if not 0.0 <= args.threshold <= 1.0:
+        parser.error(f"threshold must be between 0.0 and 1.0, got {args.threshold}")
+
     try:
         # Read current parse rate
         current_rate = read_parse_rate(args.current)

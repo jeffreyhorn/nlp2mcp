@@ -36,8 +36,7 @@ jobs:
     timeout-minutes: 10 # Fail if exceeds 10 minutes
 
     permissions:
-      contents: read # Read repository (default)
-      pull-requests: read # Read PR metadata (optional)
+      contents: read # Read repository
 
     steps:
       - name: Checkout repository

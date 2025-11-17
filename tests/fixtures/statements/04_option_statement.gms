@@ -2,7 +2,7 @@ $onText
 Fixture 04: Option Statement (Not Yet Supported)
 Tests: option statement handling
 Priority: High
-Note: Parser does not support option statements yet - expected to fail
+Note: Option statements not yet supported, so they are commented out
 $offText
 
 * Option statements configure GAMS solver behavior
