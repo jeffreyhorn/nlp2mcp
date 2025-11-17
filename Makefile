@@ -44,9 +44,9 @@ format:
 	@echo "Sorting imports with ruff..."
 	$(PYTHON) -m ruff check --fix --select I src/ tests/
 
-# Run tests
+# Run tests (parallel execution with pytest-xdist)
 test:
-	$(PYTHON) -m pytest tests/ -v
+	$(PYTHON) -m pytest tests/ -n auto
 
 # Run type checker
 typecheck:
