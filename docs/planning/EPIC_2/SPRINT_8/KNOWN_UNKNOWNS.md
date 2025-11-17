@@ -208,7 +208,7 @@ Development team
 **Medium** - Validates Sprint 8 feature selection rationale
 
 ### Assumption
-Implementing option statements will unlock mhw4dx.gms (currently failing on `option limCol = 0, limRow = 0;`), increasing parse rate from 20% to 30%.
+Implementing option statements will unlock mhw4dx.gms (currently failing on `option limcol = 0, limrow = 0;`), increasing parse rate from 20% (2/10) to 30% (3/10), which exceeds the 25% target stated earlier.
 
 ### Research Questions
 1. Is the option statement the ONLY blocker for mhw4dx.gms?
@@ -1821,7 +1821,7 @@ This table shows which prep tasks verify which unknowns:
 | **Task 9: Design Dashboard Enhancements** | 6.4 | Dashboard format compatibility (confirms Task 5 findings) |
 | **Task 10: Plan Sprint 8 Detailed Schedule** | 8.1, 8.2, 8.3 | Effort allocation, parse rate confidence, checkpoint design |
 
-**Total Unknowns:** 27 across 5 categories  
+**Total Unknowns:** 27 across 8 categories  
 **Verification Coverage:** All unknowns mapped to specific prep tasks  
 **Critical Path:** Tasks 2, 3 verify most Critical unknowns (1.1, 1.2, 2.2, 6.1, 8.2)
 

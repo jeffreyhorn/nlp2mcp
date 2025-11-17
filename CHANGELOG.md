@@ -88,7 +88,7 @@ All 27 unknowns mapped to prep tasks for systematic verification:
 - Stronger focus on Sprint 7 retrospective lessons (per-model analysis, conservative targets)
 
 **Quality Metrics:**
-- 27 unknowns exceeds 22-30 target range (middle of range)
+- 27 unknowns within 22-30 target range (middle of range)
 - 100% of unknowns have all required fields (assumption, questions, verification, priority, risk, owner)
 - 100% of Critical unknowns assigned to specific prep tasks with verification plans
 - 100% coverage of Sprint 8 components (parser, UX, metrics, testing, planning)

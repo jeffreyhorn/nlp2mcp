@@ -282,7 +282,7 @@ grep -c "^## Unknown" docs/planning/EPIC_2/SPRINT_8/KNOWN_UNKNOWNS.md
 
 ### Acceptance Criteria
 
-- [x] Document created with 22+ unknowns across 5 categories (✅ 27 unknowns across 8 categories)
+- [x] Document created with 22+ unknowns across 5 categories (✅ 27 unknowns across 8 categories, exceeds 22+ across 5)
 - [x] All unknowns have assumption, verification method, priority
 - [x] All Critical unknowns have verification plan and timeline
 - [x] Unknowns cover all Sprint 8 components (parser, UX, metrics, testing)
