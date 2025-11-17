@@ -7,6 +7,124 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 8 Prep: Task 1 - Create Known Unknowns List - 2025-11-17
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive Sprint 8 Known Unknowns document with 27 unknowns across 8 categories, following the successful methodology from Sprints 4-7. Document proactively identifies all assumptions and uncertainties for Sprint 8's hybrid strategy (60% Parser Maturity + 40% Infrastructure/UX).
+
+#### Changes
+
+**Added:**
+- `docs/planning/EPIC_2/SPRINT_8/KNOWN_UNKNOWNS.md` (1,200+ lines)
+  - Executive Summary with Sprint 8 strategic shift context
+  - 27 unknowns across 8 categories with full details (assumption, research questions, verification method, priority, risk, owner)
+  - Task-to-Unknown mapping table showing which prep tasks (2-10) verify which unknowns
+  - Template for adding new unknowns during sprint execution
+  - Cross-references to PROJECT_PLAN.md, RETROSPECTIVE.md, and other planning docs
+
+**Modified:**
+- `docs/planning/EPIC_2/SPRINT_8/PREP_PLAN.md`
+  - Updated Task 1 status: 🔵 NOT STARTED → ✅ COMPLETE
+  - Added detailed Changes and Result sections for Task 1
+  - Checked off all 7 acceptance criteria
+  - Updated Tasks 2-10 with correct "Unknowns Verified" metadata matching mapping table
+
+#### Categories & Distribution
+
+**8 Categories Created:**
+1. Parser Enhancements - Option Statements (3 unknowns)
+2. Parser Enhancements - Per-Model Feature Analysis (3 unknowns)
+3. Parser Enhancements - High-ROI Feature (3 unknowns)
+4. Infrastructure & UX - Parser Error Line Numbers (4 unknowns)
+5. Infrastructure & UX - Improved Error Messages (4 unknowns)
+6. Metrics & Analysis - Partial Parse Metrics (4 unknowns)
+7. Testing & Quality (3 unknowns)
+8. Sprint Planning & Execution (3 unknowns)
+
+**Priority Distribution:**
+- Critical: 7 unknowns (26%) - Could derail sprint or prevent 25% parse rate goal
+- High: 11 unknowns (41%) - Require upfront research
+- Medium: 7 unknowns (26%) - Can be resolved during implementation
+- Low: 2 unknowns (7%) - Minimal impact
+
+**Estimated Research Time:** 32-42 hours (aligns with 42-56 hour prep phase estimate)
+
+#### Key Unknowns Identified
+
+**Critical Unknowns:**
+- 1.1: Is option statement semantic handling truly "straightforward"?
+- 2.2: Do most models have 1-feature or multi-feature dependencies?
+- 6.1: How do we define "statement" for partial parse percentage?
+- 8.2: Is 25% parse rate conservative enough given Sprint 7 underperformance?
+
+**High-Impact Unknowns:**
+- 2.1: Can per-model analysis be completed in 8-10 hours?
+- 5.1: Can we generate useful "did you mean?" suggestions?
+- 6.2: How do we count total statements in unparseable files?
+- 6.3: How do we extract "missing features" from parse failures?
+
+#### Task-to-Unknown Verification Mapping
+
+All 27 unknowns mapped to prep tasks for systematic verification:
+- Task 2 (Per-Model Analysis): Verifies 2.1, 2.2, 2.3
+- Task 3 (Option Statements): Verifies 1.1, 1.2, 1.3
+- Task 4 (Parser Error Line Numbers): Verifies 4.1, 4.2, 4.3, 4.4
+- Task 5 (Partial Parse Metrics): Verifies 6.1, 6.2, 6.3, 6.4
+- Task 6 (Error Message Patterns): Verifies 5.1, 5.2, 5.3, 5.4
+- Task 7 (High-ROI Features): Verifies 3.1, 3.2, 3.3
+- Task 8 (Test Fixtures): Verifies 7.1, 7.2, 7.3
+- Task 9 (Dashboard Enhancements): Verifies 6.4
+- Task 10 (Detailed Schedule): Verifies 8.1, 8.2, 8.3
+
+#### Improvements Over Sprint 7
+
+**Novel Additions:**
+- More granular categorization (8 categories vs 5 in Sprint 7)
+- Explicit Task-to-Unknown mapping table in Appendix
+- "Unknowns Verified" metadata added to all prep tasks in PREP_PLAN.md
+- Stronger focus on Sprint 7 retrospective lessons (per-model analysis, conservative targets)
+
+**Quality Metrics:**
+- 27 unknowns within 22-30 target range (middle of range)
+- 100% of unknowns have all required fields (assumption, questions, verification, priority, risk, owner)
+- 100% of Critical unknowns assigned to specific prep tasks with verification plans
+- 100% coverage of Sprint 8 components (parser, UX, metrics, testing, planning)
+
+#### Cross-References
+
+- `docs/planning/EPIC_2/PROJECT_PLAN.md` (Sprint 8 goals, lines 84-148)
+- `docs/planning/EPIC_2/SPRINT_8/PREP_PLAN.md` (Task 1, lines 53-407)
+- `docs/planning/EPIC_2/SPRINT_7/RETROSPECTIVE.md` (Recommendations, lines 138-379)
+- `docs/planning/EPIC_2/SPRINT_7/KNOWN_UNKNOWNS.md` (Format reference)
+- `docs/status/GAMSLIB_CONVERSION_STATUS.md` (Current 20% baseline)
+
+#### Files Modified
+
+**Created:**
+- `docs/planning/EPIC_2/SPRINT_8/KNOWN_UNKNOWNS.md` (1,200+ lines, 27 unknowns)
+
+**Modified:**
+- `docs/planning/EPIC_2/SPRINT_8/PREP_PLAN.md` (Task 1 complete, Tasks 2-10 unknowns metadata)
+- `CHANGELOG.md` (this entry)
+
+#### Next Steps
+
+Tasks 2-10 will systematically verify all 27 unknowns during the prep phase:
+- Task 2: Per-model feature dependency analysis (verifies unknowns about ROI and complexity)
+- Task 3: Option statement syntax research (verifies implementation complexity assumptions)
+- Task 4: Parser error line number design (verifies coverage and effort assumptions)
+- Task 5: Partial parse metrics design (verifies statement counting approach)
+- Task 6: Error message enhancement patterns (verifies suggestion generation feasibility)
+- Task 7: High-ROI feature survey (verifies indexed assignments vs function calls choice)
+- Task 8: Test fixture strategy (verifies coverage needs and effort)
+- Task 9: Dashboard enhancements design (verifies format compatibility)
+- Task 10: Detailed sprint schedule (synthesizes all verified unknowns into execution plan)
+
+---
+
 ## [0.7.0] - 2025-11-16
 
 ### Sprint 7 Summary: Parser Enhancements & Test Performance - COMPLETE
