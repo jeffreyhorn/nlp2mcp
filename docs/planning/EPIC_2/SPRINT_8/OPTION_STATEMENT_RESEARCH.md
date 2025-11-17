@@ -234,8 +234,8 @@ option limcol = 0, limrow = 0;
 - mingamma.gms (1 option statement)
 
 **Option Types in GAMSLib:**
-- `limcol` (limcol): Integer (0 = suppress listing)
-- `limrow` (limrow): Integer (0 = suppress listing)
+- `limcol`: Integer (0 = suppress listing)
+- `limrow`: Integer (0 = suppress listing)
 - `decimals`: Integer (0-8, display precision)
 
 **Sprint 8 Unlock Rate:**
