@@ -67,7 +67,7 @@ Created comprehensive per-model feature dependency matrix for all 10 GAMSLib mod
   1. Multiple model definitions (5-6h, Medium complexity, +20% unlock rate)
   2. Function calls in assignments (6-8h, Medium complexity, +10% unlock rate)
   3. Lead/lag indexing (8-10h, High complexity, +10% unlock rate)
-- **Sprint 8b potential:** 40% → 60-70% parse rate with features #1 and #2
+- **Sprint 8b potential:** 30-50% → 60-80% parse rate with features #1 and #2
 
 #### Unknown Verification
 
@@ -82,7 +82,7 @@ Created comprehensive per-model feature dependency matrix for all 10 GAMSLib mod
 - ✅ VERIFIED: 6 of 8 failing models (75%) have single-feature dependencies
 - Sprint 8 targeting 3 single-feature models (mhw4dx, mathopt1, trig)
 - Indexed assignments selected over function calls due to higher unlock rate (2 models vs 1)
-- Decision: 25% target achievable, 30% target highly likely, 40% optimistic but possible
+- Decision: 25% target achievable, 30% target highly likely, 50% optimistic but possible
 
 **2.3: How do we validate that per-model analysis prevents Sprint 7 underestimation?**
 - ✅ VERIFIED: Per-model methodology is superior to feature-based analysis

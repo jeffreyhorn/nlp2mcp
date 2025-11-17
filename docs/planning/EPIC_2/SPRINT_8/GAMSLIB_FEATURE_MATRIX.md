@@ -416,7 +416,7 @@ option solPrint = off;           // Single option
 - ✅ **Clear scope:** Both models have explicit "Indexed assignments are not supported yet" errors
 - ✅ **Medium complexity:** Grammar + semantic changes, but well-defined scope
 - ✅ **Foundation for future:** Indexed assignments are common GAMS pattern
-- ✅ **Meets Sprint 8 target:** Combined with option statements → 30-40% parse rate
+- ✅ **Meets Sprint 8 target:** Combined with option statements → 50% parse rate
 
 **Implementation Scope:**
 ```gams
@@ -490,8 +490,8 @@ xdiff = 2.66695657 - x1.l;          // Variable attribute access (.l suffix)
    - Rationale: High complexity, single model unlock
    - Sprint 8b: Advanced indexing feature
 
-**Sprint 8b Parse Rate Target:** 50-60%
-- Sprint 8 delivers 30-40%
+**Sprint 8b Parse Rate Target:** 50-70%
+- Sprint 8 delivers 30-50%
 - Sprint 8b adds 20% (2 models: hs62, mingamma) with multiple model definitions
 - Sprint 8b optionally adds 10% (circle) with function calls
 
@@ -514,6 +514,9 @@ xdiff = 2.66695657 - x1.l;          // Variable attribute access (.l suffix)
 | mingamma.gms | Multiple models | 5-6h | Medium | ❌ Defer Sprint 8b |
 
 **Sprint 8 Focus:** 3 models in Tier 1 (mhw4dx, mathopt1, trig)
+- Option statements: +10% (2/10 → 3/10)
+- Indexed assignments: +20% (3/10 → 5/10)
+- Combined: 2/10 → 5/10 = 50%
 
 ### Tier 2: Multi-Feature Models (Sprint 8b+)
 
@@ -610,7 +613,7 @@ xdiff = 2.66695657 - x1.l;          // Variable attribute access (.l suffix)
 - Analyzed each failing model's specific requirements
 - Identified primary AND secondary errors
 - Created dependency matrix showing which models need which features
-- Result: High confidence in 30-40% parse rate projection
+- Result: High confidence in 30-50% parse rate projection
 
 **Key Improvements:**
 1. ✅ Multi-feature dependencies explicitly captured (circle, maxmin)

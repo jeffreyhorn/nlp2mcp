@@ -316,7 +316,7 @@ Development team (Parser specialist)
 **Impact:**
 - Task 2 estimate validated for future prep phase planning
 - Per-model analysis approach confirmed as superior to feature-based analysis
-- High confidence in Sprint 8 parse rate projections (30-40%)
+- High confidence in Sprint 8 parse rate projections (30-50%)
 
 ---
 
@@ -393,7 +393,7 @@ Development team
 - Most models (75%) have single-feature dependencies - excellent news for Sprint 8/8b
 - Sprint 8 targeting 3 single-feature models (mhw4dx, mathopt1, trig)
 - Indexed assignments selected over function calls due to higher unlock rate (2 models vs 1)
-- 25% target achievable, 30% target highly likely, 40% optimistic but possible
+- 25% target achievable, 30% target highly likely, 50% optimistic but possible
 
 **Impact:**
 - Sprint 8 parse rate projection: 30% conservative, 50% optimistic
@@ -465,7 +465,7 @@ Sprint planning team
 1. ✅ Per-model matrix shows primary AND secondary errors for each model
 2. ✅ Unlock rates calculated empirically (not assumed based on feature complexity)
 3. ✅ Multi-feature dependencies explicitly identified (circle: 2, maxmin: 2)
-4. ✅ Confidence ranges provided (30% conservative, 40% optimistic)
+4. ✅ Confidence ranges provided (30% conservative, 50% optimistic)
 
 **Validation Criteria Met:**
 - ✅ Identified all multi-feature models (circle, maxmin)
