@@ -1949,10 +1949,11 @@ grep -q "3-5 hours" docs/planning/EPIC_2/SPRINT_8/ERROR_MESSAGE_ENHANCEMENTS.md
 
 ## Task 7: Survey High-ROI Parser Features
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 5-7 hours  
-**Deadline:** 1 week before Sprint 8 Day 1  
+**Actual Time:** ~6 hours  
+**Completed:** 2025-11-17  
 **Owner:** Development team (Parser specialist)  
 **Dependencies:** Task 2 (Feature matrix - identifies indexed assignments vs function calls ROI)  
 **Unknowns Verified:** 3.1, 3.2, 3.3
@@ -2251,11 +2252,81 @@ Identify implementation risks:
 
 ### Changes
 
-To be completed during Task 7 execution.
+**Created:** `docs/planning/EPIC_2/SPRINT_8/INDEXED_ASSIGNMENTS_RESEARCH.md` [896 lines]
+
+**Feature Selection:**
+- Reviewed Task 2 recommendation: **Indexed assignments** selected over function calls
+- Rationale: Higher ROI (unlocks 2 models vs 1 model), +20% parse rate vs +10%
+- Confirmed choice based on per-model dependency analysis
+
+**GAMS Syntax Survey:**
+- Documented 4 syntax patterns for indexed assignments:
+  1. Simple 1D indexed assignment (`p('i1') = 10;`)
+  2. Multi-dimensional 2D/3D (`report('x1','global') = 1;`)
+  3. Variable attribute access (`xdiff = x1.l;`)
+  4. Indexed expressions on RHS (`data('diff') = data('global') - data('solver');`)
+- Complexity assessment: Medium (grammar minimal, semantic handling moderate)
+- All patterns found in mathopt1.gms and trig.gms (unlocked models)
+
+**Grammar Design:**
+- Lark grammar changes: **1 line** (add `.m` to BOUND_K token for marginal attribute)
+- Grammar already 95% supports indexed assignments via existing `ref_indexed` rule
+- Integration points: `lvalue` rule already includes `ref_indexed` and `ref_bound`
+- Estimated grammar effort: **15 minutes** (minimal changes)
+
+**Implementation Plan:**
+- Phase 1: Grammar extension (15 minutes) - Extend BOUND_K token
+- Phase 2: Semantic handlers (4.5 hours) - Indexed params, var attributes, expressions
+- Phase 3: Testing (1.5 hours) - 5 test fixtures + integration tests
+- Phase 4: Documentation (30 minutes) - CHANGELOG + docs
+- **Total: 6.5 hours** (within 6-8 hour estimate, +1.5h risk buffer = 8h upper bound)
+
+**Test Fixture Design:**
+- Designed 5 test fixtures covering all patterns:
+  1. Simple 1D indexed assignment (basic case)
+  2. Multi-dimensional 2D (mathopt1.gms pattern)
+  3. Variable attributes (trig.gms pattern)
+  4. Indexed expressions (mathopt1.gms RHS pattern)
+  5. Error handling - index count mismatch (validation)
+- Coverage: 100% of GAMS syntax patterns + error cases
+
+**Risk Assessment:**
+- Risk 1: Variable attribute semantics (Medium/Low) - Store as initial values, document limitation
+- Risk 2: Indexed params in expressions (High/Low) - Create ParameterRef IR node
+- Risk 3: Index validation complexity (Low/Very Low) - Validate count only, defer domain checks
+- Risk 4: Grammar ambiguity (Low/Very Low) - Priority rules prevent conflicts
+- **Overall Risk: Medium** (acceptable for Sprint 8)
 
 ### Result
 
-To be completed during Task 7 execution.
+**Feature Confirmed: Indexed Assignments**
+- Task 2 recommendation validated: Indexed assignments > Function calls (2 models vs 1 model)
+- Deep dive confirms appropriate choice for Sprint 8
+- No hidden complexity found in GAMS syntax or implementation
+
+**Models Unlocked:**
+- mathopt1.gms (95% confidence) - Primary blocker: 2D indexed assignments
+- trig.gms (85% confidence) - Primary blocker: Variable `.l` attribute access
+- Combined unlock rate: +20% parse rate (3/10 → 5/10 models)
+
+**Effort Estimate Validated:**
+- Original estimate: 6-8 hours (from PROJECT_PLAN.md)
+- Detailed breakdown: 6.5 hours (grammar 15min + semantic 4.5h + testing 1.5h + docs 30min)
+- Risk buffer: +1.5 hours for edge cases
+- **Total with buffer: 8 hours** (upper bound confirmed)
+
+**Sprint 8 Impact:**
+- Option statements: +10% (2/10 → 3/10)
+- Indexed assignments: +20% (3/10 → 5/10)
+- **Combined: 50% parse rate optimistic, 30% conservative**
+- Exceeds Sprint 8 target of 25-30% parse rate
+
+**Implementation Ready:**
+- Grammar design complete (1 line change identified)
+- Semantic handler pseudocode documented
+- Test fixtures designed (5 cases)
+- Risk mitigation strategies defined
+- Clear Sprint 8 vs Sprint 8b boundary (all patterns in scope)
 
 ### Verification
 
@@ -2285,14 +2356,14 @@ grep -q "6-8 hours" docs/planning/EPIC_2/SPRINT_8/*_RESEARCH.md
 
 ### Acceptance Criteria
 
-- [ ] Task 2 feature recommendation reviewed
-- [ ] Selected feature (indexed assignments OR function calls) researched in depth
-- [ ] GAMS syntax patterns cataloged
-- [ ] Grammar design completed
-- [ ] Implementation plan created with 6-8 hour breakdown
-- [ ] Test fixtures identified (4-5 cases)
-- [ ] Risks assessed and mitigations identified
-- [ ] Sprint 8 vs Sprint 8b scope defined (simple vs complex cases)
+- [x] Task 2 feature recommendation reviewed
+- [x] Selected feature (indexed assignments OR function calls) researched in depth
+- [x] GAMS syntax patterns cataloged
+- [x] Grammar design completed
+- [x] Implementation plan created with 6-8 hour breakdown
+- [x] Test fixtures identified (4-5 cases)
+- [x] Risks assessed and mitigations identified
+- [x] Sprint 8 vs Sprint 8b scope defined (simple vs complex cases)
 
 ---
 
