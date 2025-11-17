@@ -7,6 +7,153 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 8 Prep: Task 3 - Research Option Statement Syntax - 2025-11-17
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Comprehensive research of GAMS option statement syntax, semantics, and usage patterns to design parser implementation for Sprint 8. Validated that basic integer options (limrow, limcol, decimals) cover 100% of GAMSLib usage and confirmed 6-8 hour implementation estimate. Designed Lark grammar rules and planned 8 test fixtures. Verified all 3 unknowns (1.1, 1.2, 1.3) with high confidence.
+
+#### Deliverables
+
+**Created:**
+- `docs/planning/EPIC_2/SPRINT_8/OPTION_STATEMENT_RESEARCH.md` (750+ lines)
+  - GAMS documentation survey (6 value type categories, syntax patterns, edge cases)
+  - GAMSLib usage analysis (3 models use options: mhw4dx, maxmin, mingamma)
+  - Lark grammar design (5 rules: `option_stmt`, `option_list`, `option_item`, `option_value`)
+  - Test fixture planning (8 cases: 5 positive + 3 edge cases)
+  - Implementation effort validation (detailed 7.5 hour breakdown)
+  - Sprint 8 vs Sprint 8b scope boundary
+
+**Modified:**
+- `docs/planning/EPIC_2/SPRINT_8/KNOWN_UNKNOWNS.md` (verified unknowns 1.1, 1.2, 1.3)
+- `docs/planning/EPIC_2/SPRINT_8/PREP_PLAN.md` (Task 3 marked complete)
+- `CHANGELOG.md` (this entry)
+
+#### Key Findings
+
+**GAMS Documentation Survey:**
+- **6 value type categories:** Boolean (flags), Integer, Real (float), String, Identifier, Operation (projection/permutation)
+- **Basic syntax:** `option(s) key1 [= value1] {, key2 [= value2]}* ;`
+- **Multi-option support:** Comma or EOL separated options in single statement
+- **Scope rules:** Sequential execution, reassignment allowed, no parser behavior dependencies
+- **Edge cases:** No expressions allowed (literals only), option names not reserved words
+- **Sprint 8 scope:** Integer values + boolean on/off keywords (covers 100% of GAMSLib)
+
+**GAMSLib Usage Analysis:**
+- **3 of 10 models** (30%) use option statements
+  - mhw4dx.gms (line 37, 47): `option limCol = 0, limRow = 0;` + `option decimals = 8;`
+  - maxmin.gms (line 86): `option limCol = 0, limRow = 0;`
+  - mingamma.gms (line 43): `option decimals = 8;`
+- **All options are basic integer types:** limrow/limCol (0 = suppress), decimals (0-8 display precision)
+- **Multi-option statements:** 2 of 3 models use comma-separated format
+- **No advanced features:** No per-identifier syntax (`:` operator), projection/permutation (`<`, `<=`, `>`), or string values
+- **Sprint 8 unlock:** mhw4dx.gms only (+10% parse rate: 2/10 → 3/10)
+  - maxmin.gms: Primary blocker is nested indexing, options are secondary
+  - mingamma.gms: Primary blocker is multiple model definitions, options are secondary
+
+**Grammar Design:**
+```lark
+option_stmt: ("option"i | "options"i) option_list SEMI
+option_list: option_item ("," option_item)*
+option_item: ID "=" option_value    -> option_with_value
+           | ID                     -> option_flag
+option_value: NUMBER                // Sprint 8: integers only
+            | "on"i | "off"i        // Boolean keywords
+```
+- **AST Node:** `OptionStatement(options: List[Tuple[str, Optional[Union[int, str]]]])`
+- **Semantic approach:** Mock/store (store in AST, no behavior implementation)
+- **Extensible:** Can add FLOAT, STRING in Sprint 8b without breaking existing rules
+
+**Test Fixture Planning:**
+1. Single integer option (`option limrow = 0;`)
+2. Multi-option statement (`option limrow = 0, limcol = 0;`)
+3. Multiple option statements (sequential)
+4. Options in context (between other declarations)
+5. Boolean on/off keywords (`option solprint = off;`)
+6. Edge case: Empty option list (error)
+7. Edge case: Missing semicolon (error)
+8. Edge case: Case insensitivity (`OPTION LimRow = 0;`)
+
+**Implementation Effort Validation:**
+- **Detailed breakdown:** 7.5 hours (within 6-8 hour estimate)
+  - Grammar changes: 1 hour (5 simple rules)
+  - AST node creation: 1 hour (straightforward dataclass)
+  - Test fixtures: 3 hours (8 cases)
+  - Integration testing: 1.5 hours (verify mhw4dx.gms parses)
+  - Documentation: 1 hour
+- **Risk assessment:** Low complexity, low implementation risk, low testing risk
+- **Recommendation:** Proceed with 6-8 hour Sprint 8 estimate ✅
+
+#### Sprint 8 vs Sprint 8b Scope
+
+**Sprint 8 Scope (Confirmed):**
+- Integer value options (limrow, limcol, decimals)
+- Boolean on/off keywords (grammar support)
+- Multi-option statements (comma-separated)
+- Case-insensitive keywords and option names
+- Mock/store semantic handling (no behavior implementation)
+- **Unlocks:** mhw4dx.gms (+10% parse rate: 2/10 → 3/10)
+- **Effort:** 6-8 hours
+
+**Sprint 8b Scope (Deferred):**
+- Per-identifier display customization (`:` syntax: `option ident:d:r:c;`)
+- Projection/permutation operations (`<`, `<=`, `>` operators)
+- Float value options (e.g., `option optcr = 0.01;`)
+- String value options (e.g., `option lp = "cplex";`)
+- Semantic processing (map limrow/limcol to nlp2mcp output verbosity)
+- **Unlocks:** 0 additional models (not in GAMSLib)
+- **Effort:** 4-6 hours (grammar extensions + semantic validation)
+
+**Rationale:** Sprint 8 scope covers 100% of GAMSLib usage with minimal effort. Advanced features provide no parse rate improvement but add complexity.
+
+#### Unknown Verification
+
+**1.1: Is option statement semantic handling truly "straightforward"?**
+- ✅ VERIFIED: Yes, mock/store approach is sufficient
+- GAMS options control output/solver settings, NOT parsing behavior
+- No parser behavior dependencies identified
+- Sprint 8 can store options in AST without implementing behavioral effects
+- 6-8 hour estimate CONFIRMED by detailed task breakdown (7.5 hours)
+
+**1.2: What is the actual scope of option statements in GAMSLib models?**
+- ✅ VERIFIED: Basic integer options cover 100% of GAMSLib usage
+- 3 of 10 models use options (30%): mhw4dx, maxmin, mingamma
+- All options are integer types: limrow, limcol, decimals
+- Multi-option statements present (2 of 3 models)
+- No advanced features in GAMSLib (no risk of under-scoping)
+
+**1.3: How do we know option statements unlock mhw4dx.gms?**
+- ✅ VERIFIED: Option statement is sole blocker for mhw4dx.gms
+- Primary error (line 37): `option limCol = 0, limRow = 0;`
+- Manual inspection confirms no secondary errors
+- Uses only basic GAMS constructs (Sets, Parameters, Variables, Equations, Solve)
+- +10% parse rate confirmed (2/10 → 3/10)
+- maxmin.gms and mingamma.gms NOT unlocked (have other primary blockers)
+
+#### Impact on Sprint 8
+
+**Implementation Ready:**
+- Grammar rules designed and ready (5 rules)
+- Semantic approach decided (mock/store)
+- Test coverage planned (8 fixtures)
+- Effort estimate validated (7.5 hours within 6-8 hour range)
+- No hidden complexity discovered
+
+**Parse Rate Impact:**
+- Option statements alone reach 30% parse rate (exceeds 25% conservative target)
+- Combined with indexed assignments: 50% optimistic parse rate
+- Clear implementation path reduces Sprint 8 risk
+
+**Risk Reduction:**
+- All unknowns verified with high confidence
+- No semantic processing required (low complexity)
+- No interaction with other features (low integration risk)
+- Straightforward grammar extension (low testing risk)
+
+---
+
 ### Sprint 8 Prep: Task 2 - Analyze GAMSLib Per-Model Feature Dependencies - 2025-11-17
 
 **Status:** ✅ COMPLETE
