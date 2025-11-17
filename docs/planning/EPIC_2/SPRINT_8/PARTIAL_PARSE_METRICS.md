@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-**Objective:** Enable dashboard to show "himmel16: 85% parsed, needs [i++1 indexing]" instead of binary "FAILED" status.
+**Objective:** Enable dashboard to show "himmel16: 92% parsed, needs [i++1 indexing]" instead of binary "FAILED" status.
 
 **Current State:** Dashboard shows binary pass/fail for parsing (20% parse rate = 2/10 models). No visibility into partial progress on failing models.
 
@@ -118,7 +118,7 @@ Equation balance;                    ← Logical line 5
 balance.. sum(i, x(i)) =e= 100;     ← Logical line 6 (ERROR: syntax error here)
 ```
 
-**Partial parse metric:** 5/7 logical lines = 71% parsed (error on line 6)
+**Partial parse metric:** 5/6 logical lines = 83% parsed (error on line 6)
 
 **Accuracy:**
 - ✅ Underestimates for multi-line statements (counts as multiple lines)
@@ -274,15 +274,15 @@ def extract_lark_error_features(error_msg: str, source_line: str | None) -> list
         features.append("i++1 indexing (lead/lag)")
     
     # Pattern: Short model declaration (mx / eqlist /)
-    if re.search(r'[a-z]+\s*/\s*[a-z]+', source_line or ''):
+    if re.search(r'[a-zA-Z_]\w*\s*/\s*[a-zA-Z_]\w*', source_line or ''):
         features.append("short model declaration syntax")
     
     # Pattern: Missing semicolon
-    if 'Expected.*SEMI' in error_msg:
+    if re.search(r'Expected.*SEMI', error_msg):
         features.append("missing semicolon")
     
     # Pattern: Unexpected character (generic)
-    if 'UnexpectedCharacters' in str(type(error_msg)):
+    if 'UnexpectedCharacters' in error_msg:
         features.append("unsupported syntax")
     
     return features
@@ -616,11 +616,7 @@ def parse_model(gms_path: Path) -> ModelResult:
 
 def extract_error_line(exception: Exception) -> int | None:
     """Extract line number from parser exception."""
-    # Lark errors
-    if hasattr(exception, 'line'):
-        return exception.line
-    
-    # ParserSemanticError
+    # Lark errors and ParserSemanticError both have .line attribute
     if hasattr(exception, 'line') and exception.line is not None:
         return exception.line
     
@@ -659,13 +655,13 @@ def calculate_kpis(models: list[ModelResult]) -> dict[str, Any]:
         "total_models": total,
         "parse_success": parse_success,
         "parse_failed": total - parse_success,
-        "parse_rate_percent": round((parse_success / total * 100), 1),
+        "parse_rate_percent": round((parse_success / total * 100), 1) if total > 0 else 0.0,
         
         # New partial parse metrics
         "average_parse_progress_percent": round(avg_progress, 1),
         "models_high_progress": high_progress,  # ≥90%
         "models_partial_success": partial_success,  # 50-99%
-        "partial_parse_rate_percent": round((partial_success / total * 100), 1),
+        "partial_parse_rate_percent": round((partial_success / total * 100), 1) if total > 0 else 0.0,
         
         # Existing (Sprint 6)
         "convert_success": 0,
@@ -868,7 +864,7 @@ ParserSemanticError: Assignments must use numeric constants; got Call(uniform, .
 ## References
 
 - Sprint 7 retrospective: "Consider 'partial parse' metric"
-- PROJECT_PLAN.md: Task 6 acceptance criteria
+- PROJECT_PLAN.md: Task 5 acceptance criteria
 - GAMS grammar: `src/gams/gams_grammar.lark`
 - Parser implementation: `src/ir/parser.py`
 - Symbol definitions: `src/ir/symbols.py`
