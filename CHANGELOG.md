@@ -7,6 +7,140 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 8 Prep: Task 7 - Survey High-ROI Parser Features - 2025-11-17
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Deep research on indexed assignments (Sprint 8's second high-ROI feature after option statements) validates effort estimate, design implementation approach, and confirms +20% parse rate unlock (mathopt1.gms + trig.gms).
+
+#### Deliverables
+
+**Created:**
+- `docs/planning/EPIC_2/SPRINT_8/INDEXED_ASSIGNMENTS_RESEARCH.md` (896 lines)
+  - GAMS syntax survey for indexed assignments (4 patterns)
+  - Lark grammar design (1 line change)
+  - Implementation plan with 6.5 hour breakdown
+  - Test fixture design (5 cases)
+  - Risk assessment
+
+**Modified:**
+- `docs/planning/EPIC_2/SPRINT_8/KNOWN_UNKNOWNS.md` (verified unknowns 3.1, 3.2, 3.3)
+- `docs/planning/EPIC_2/SPRINT_8/PREP_PLAN.md` (Task 7 marked complete)
+- `CHANGELOG.md` (this entry)
+
+#### Key Findings
+
+**Feature Selection:**
+- Task 2 recommended: **Indexed assignments** over function calls
+- Rationale: Unlocks 2 models (mathopt1 + trig) vs 1 model (circle)
+- ROI: +20% parse rate vs +10% parse rate
+- Deep dive confirms: Appropriate choice for Sprint 8
+
+**GAMS Syntax Patterns:**
+1. **Pattern 1: Simple 1D indexed assignment**
+   - Example: `p('i1') = 10;`
+   - Frequency: Low (GAMSLib uses 2D patterns)
+   - Sprint 8: Foundation for other patterns
+
+2. **Pattern 2: Multi-dimensional 2D/3D**
+   - Example: `report('x1','global') = 1;`
+   - Frequency: **High** (mathopt1.gms uses extensively)
+   - Sprint 8 Priority: **Critical** (unlocks mathopt1.gms)
+
+3. **Pattern 3: Variable attribute access**
+   - Example: `xdiff = x1.l;` (`.l` = level attribute)
+   - Frequency: **High** (trig.gms, mathopt1.gms)
+   - Sprint 8 Priority: **Critical** (unlocks trig.gms)
+
+4. **Pattern 4: Indexed expressions on RHS**
+   - Example: `report('diff') = report('global') - report('solver');`
+   - Frequency: High (mathopt1.gms)
+   - Sprint 8 Priority: Critical (required for mathopt1.gms)
+
+**Grammar Design:**
+```lark
+# Only 1 line change needed!
+BOUND_K: /(lo|up|fx|l|m)/i  # Add .m for marginal attribute
+```
+- Grammar already 95% supports indexed assignments
+- Existing `ref_indexed` rule handles parameter indexing
+- Existing `ref_bound` rule handles variable attributes (`.lo`, `.up`, `.fx`, `.l`)
+- Integration: `lvalue` already includes both rules
+
+**Implementation Plan:**
+- Phase 1: Grammar extension (15 minutes)
+  - Extend BOUND_K token for `.m` attribute
+- Phase 2: Semantic handlers (4.5 hours)
+  - Task 2.1: Indexed parameter assignment (2 hours)
+  - Task 2.2: Variable attribute handling (1 hour)
+  - Task 2.3: Attribute access in expressions (1.5 hours)
+- Phase 3: Testing (1.5 hours)
+  - 5 test fixtures + integration tests
+- Phase 4: Documentation (30 minutes)
+- **Total: 6.5 hours** (within 6-8 hour estimate)
+- Risk buffer: +1.5 hours (total: 8 hours upper bound)
+
+**Test Fixtures:**
+1. **Fixture 1: Simple 1D** - `p('i1') = 10;`
+2. **Fixture 2: Multi-dim 2D** - `report('x1','global') = 1;`
+3. **Fixture 3: Variable attributes** - `xdiff = x1.l;`
+4. **Fixture 4: Indexed expressions** - `p('diff') = p('global') - p('solver');`
+5. **Fixture 5: Error handling** - Index count mismatch validation
+
+**Risk Assessment:**
+- Risk 1: Variable attribute semantics (Medium → Low)
+  - Mitigation: Store as initial values, document pre-solve limitation
+- Risk 2: Indexed params in expressions (High → Low)
+  - Mitigation: Create ParameterRef IR node (1.5h allocated)
+- Risk 3: Index validation complexity (Low → Very Low)
+  - Mitigation: Validate count only, defer domain checks to Sprint 8b
+- Risk 4: Grammar ambiguity (Low → Very Low)
+  - Mitigation: Priority rules prevent conflicts (func_call.3 vs ref_indexed.2)
+- **Overall Risk: Medium** (acceptable for Sprint 8)
+
+**Models Unlocked:**
+- **mathopt1.gms** (95% confidence)
+  - Primary blocker: 2D indexed assignments (`report('x1','global') = 1;`)
+  - Uses all 4 patterns
+  - No secondary errors identified
+- **trig.gms** (85% confidence)
+  - Primary blocker: Variable `.l` attribute (`xdiff = x1.l;`)
+  - Possible secondary: bound_scalar expression handling
+  - Risk: May need additional debugging
+- **Unlock rate: +20%** (3/10 → 5/10 models)
+
+**Sprint 8 Combined Impact:**
+- Option statements (Task 3): +10% (2/10 → 3/10)
+- Indexed assignments (Task 7): +20% (3/10 → 5/10)
+- **Total: 50% parse rate (optimistic), 40% conservative**
+- Exceeds Sprint 8 target of 25-30% parse rate
+
+#### Unknown Verification
+
+**3.1: Is indexed assignments OR function calls the right choice?**
+- ✅ VERIFIED: Indexed assignments confirmed
+- Evidence: Task 2 showed 2 models vs 1 model unlock
+- Decision: Sprint 8 = Indexed assignments, Sprint 8b = Function calls
+
+**3.2: Are there hidden complexities in indexed assignments?**
+- ✅ VERIFIED: No hidden complexity found
+- Evidence: Grammar 95% ready, 4 patterns identified, 6.5 hour breakdown
+- Decision: 6-8 hour estimate CONFIRMED
+
+**3.3: What test fixtures are needed for indexed assignments?**
+- ✅ VERIFIED: 5 fixtures identified
+- Coverage: All 4 GAMS patterns + error handling
+- Decision: 100% pattern coverage with realistic GAMSLib examples
+
+#### Next Steps
+
+**Task 8:** Create Parser Test Fixture Strategy
+- Define comprehensive test fixture strategy for Sprint 8
+- Include option statements + indexed assignments + partial metrics
+- Follow Sprint 7 fixture pattern (34 fixtures created)
+
 ### Sprint 8 Prep: Task 6 - Research Error Message Enhancement Patterns - 2025-11-17
 
 **Status:** ✅ COMPLETE
