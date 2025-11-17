@@ -22,6 +22,7 @@ from .symbols import (
     ParameterDef,
     Rel,
     SetDef,
+    SourceLocation,
     VariableDef,
     VarKind,
 )
@@ -709,6 +710,9 @@ class _ModelBuilder:
         if name not in self._declared_equations:
             raise self._error(f"Equation '{name}' defined without declaration", node)
 
+        # Extract source location from equation definition node
+        source_location = self._extract_source_location(node)
+
         # Extract condition if present
         # Children: [ID, condition?, expr, REL_K, expr]
         condition_node = next(
@@ -738,6 +742,7 @@ class _ModelBuilder:
             relation=relation,
             lhs_rhs=(lhs, rhs),
             condition=condition_expr,
+            source_location=source_location,
         )
         self.model.add_equation(equation)
 
@@ -747,6 +752,9 @@ class _ModelBuilder:
         if name not in self._declared_equations:
             raise self._error(f"Equation '{name}' defined without declaration", node)
         self._ensure_sets(domain, f"equation '{name}' domain", node)
+
+        # Extract source location from equation definition node
+        source_location = self._extract_source_location(node)
 
         # Extract condition if present
         # Children: [ID, id_list, condition?, expr, REL_K, expr]
@@ -775,6 +783,7 @@ class _ModelBuilder:
             relation=relation,
             lhs_rhs=(lhs, rhs),
             condition=condition_expr,
+            source_location=source_location,
         )
         self.model.add_equation(equation)
 
@@ -1031,6 +1040,23 @@ class _ModelBuilder:
                 if line is not None:
                     return line, column
         return (None, None)
+
+    def _extract_source_location(
+        self, node: Tree | Token | None, filename: str | None = None
+    ) -> SourceLocation | None:
+        """Extract source location from a parse tree node.
+
+        Args:
+            node: Parse tree node or token to extract location from
+            filename: Optional filename to include in source location
+
+        Returns:
+            SourceLocation instance if line/column info is available, None otherwise
+        """
+        line, column = self._node_position(node)
+        if line is not None and column is not None:
+            return SourceLocation(line=line, column=column, filename=filename)
+        return None
 
     def _make_symbol(
         self,

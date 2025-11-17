@@ -7,6 +7,125 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 7 Day 8: Convexity UX + Multi-Dim Fixtures - 2025-11-16
+
+**Status:** ✅ COMPLETE - Line number tracking + 8 multidim fixtures
+
+#### Summary
+
+Implemented comprehensive line number tracking for convexity warnings, providing developers with precise source locations for non-convex patterns. Created 8 multi-dimensional indexing test fixtures covering 2D, 3D, and 4D patterns. All convexity warnings now display in format: `"W301 in equation 'eq' (10:1): message"`.
+
+**Key Achievement:** Enhanced developer UX by adding file/line/column information to all convexity diagnostics, making it easy to locate non-convex patterns in source files.
+
+#### Tasks Completed
+
+**1. Line Number Tracking Implementation (6 phases)**
+
+**Phase 1: IR Structure**
+- Added `SourceLocation` dataclass to `src/ir/symbols.py`
+  - Fields: `line: int`, `column: int`, `filename: str | None`
+  - String format: `"file.gms:15:8"` or `"15:8"` (if no filename)
+- Added `source_location: SourceLocation | None` field to `EquationDef`
+
+**Phase 2: Parser Integration**
+- Added `_extract_source_location()` helper to `src/ir/parser.py`
+- Modified `_handle_eqn_def_scalar()` to extract Lark metadata
+- Modified `_handle_eqn_def_domain()` to extract Lark metadata
+- Populated `source_location` when creating `EquationDef` instances
+
+**Phase 3: Normalization Preservation**
+- Added `source_location` field to `NormalizedEquation` in `src/ir/normalize.py`
+- Modified `normalize_equation()` to preserve source location through normalization
+- Source locations flow from parser → normalization → convexity detection
+
+**Phase 4: Convexity Integration**
+- Added `source_location: SourceLocation | None` field to `ConvexityWarning`
+- Updated `ConvexityWarning.__str__()` to include location in format: `"eq (10:1)"`
+- Modified all 5 pattern matchers to pass `source_location` from equations:
+  - `NonlinearEqualityPattern`
+  - `TrigonometricPattern`
+  - `BilinearTermPattern`
+  - `QuotientPattern`
+  - `OddPowerPattern`
+
+**Phase 5: Testing**
+- Created `TestLineNumberTracking` test class with 7 comprehensive tests:
+  - `test_source_location_extracted_from_parser`: Verifies parser extracts line/column
+  - `test_source_location_in_convexity_warning`: Verifies warnings include location
+  - `test_warning_str_includes_location`: Verifies string formatting
+  - `test_warning_str_without_location`: Backward compatibility test
+  - `test_multiple_equations_have_different_line_numbers`: Multi-equation tracking
+  - `test_source_location_preserved_through_normalization`: Normalization preservation
+  - `test_all_patterns_include_source_location`: All pattern matchers tested
+- All 7 new tests pass ✅
+- All 25 existing convexity tests still pass ✅
+
+**2. Multi-Dimensional Fixtures (8 fixtures)**
+
+Created comprehensive test fixtures for multi-dimensional indexing:
+
+1. **01_simple_2d.gms** - Basic 2D indexing `x(i,j)` pattern
+2. **02_simple_3d.gms** - Basic 3D indexing `y(i,j,k)` with nested sums
+3. **03_mixed_dimensions.gms** - Mix of 1D, 2D, and 3D variables
+4. **04_nested_sums.gms** - Nested summation patterns over 2D variables
+5. **05_transportation.gms** - Classic transportation problem (supply/demand)
+6. **06_4d_indexing.gms** - Four-dimensional indexing `w(i,j,k,l)`
+7. **07_partial_indexing.gms** - Variables with partial index overlap
+8. **08_bilinear_2d.gms** - Bilinear terms with 2D indexing (regression test)
+
+**Coverage:**
+- 2D indexing: fixtures 01, 05, 08
+- 3D indexing: fixture 02
+- 4D indexing: fixture 06
+- Nested sum patterns: fixtures 02, 03, 04
+- Mixed dimensions: fixture 03
+- Partial indexing: fixture 07
+
+All 8 fixtures parse successfully and demonstrate supported multi-dimensional patterns.
+
+**3. Documentation**
+- Updated `tests/fixtures/multidim/README.md` with fixture list and coverage details
+- Updated `docs/planning/EPIC_2/SPRINT_7/PLAN.md` with completion status
+- Updated main `README.md` checkbox for Day 8
+
+#### Files Modified
+
+**Core Implementation:**
+- `src/ir/symbols.py` - Added SourceLocation dataclass
+- `src/ir/parser.py` - Added source location extraction
+- `src/ir/normalize.py` - Preserved source location through normalization
+- `src/diagnostics/convexity/pattern_matcher.py` - Added source_location to ConvexityWarning
+- `src/diagnostics/convexity/patterns.py` - Updated all 5 pattern matchers
+
+**Tests:**
+- `tests/unit/diagnostics/test_convexity_patterns.py` - Added TestLineNumberTracking with 7 tests
+
+**Fixtures:**
+- `tests/fixtures/multidim/01_simple_2d.gms` through `08_bilinear_2d.gms`
+- `tests/fixtures/multidim/README.md`
+
+#### Quality Assurance
+
+- ✅ All 7 new line number tracking tests pass
+- ✅ All 25 existing convexity tests pass (no regressions)
+- ✅ Type checks pass (mypy)
+- ✅ All 8 multidim fixtures parse successfully
+- ✅ 100% of convexity warnings now show line numbers
+
+#### Impact
+
+**Developer Experience:**
+- Convexity warnings now show exact source location: `"[W301] [nonlinear_equality] eq1 (10:1): message"`
+- Developers can instantly jump to the problematic equation in their editor
+- Line number tracking works for all 5 convexity patterns
+
+**Test Coverage:**
+- 8 new multi-dimensional fixtures provide regression testing
+- Fixtures document supported indexing patterns (2D, 3D, 4D)
+- Test suite validates line number tracking end-to-end
+
+---
+
 ### Sprint 7 Day 7: Test Performance (Part 2) & Checkpoint 2 - 2025-11-16
 
 **Status:** ✅ COMPLETE - Checkpoint 2 achieved, fast <60s, full <120s
