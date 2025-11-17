@@ -556,9 +556,10 @@ grep -q "Sprint 8 Feature Recommendation" docs/planning/EPIC_2/SPRINT_8/GAMSLIB_
 
 ## Task 3: Research Option Statement Syntax
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 6-8 hours  
+**Actual Time:** ~7 hours  
 **Deadline:** 1 week before Sprint 8 Day 1  
 **Owner:** Development team (Parser specialist)  
 **Dependencies:** Task 2 (Feature Matrix - confirms option statements are Sprint 8 priority)  
@@ -748,11 +749,89 @@ If complexity higher than expected (e.g., semantic handling required), document 
 
 ### Changes
 
-To be completed during Task 3 execution.
+**Created:** `docs/planning/EPIC_2/SPRINT_8/OPTION_STATEMENT_RESEARCH.md` (750+ lines)
+
+**GAMS Documentation Survey:**
+- Comprehensive syntax catalog from official GAMS documentation
+- 6 value type categories documented (boolean, integer, real, string, identifier, operation)
+- Multi-option statement format confirmed (comma or EOL separated)
+- Scope rules documented (sequential execution, reassignment allowed)
+- Edge cases identified (no expressions allowed, option names not reserved)
+
+**GAMSLib Usage Analysis:**
+- Scanned all 10 GAMSLib models for option statement usage
+- Found 3 models using options (30%): mhw4dx, maxmin, mingamma
+- All usage is basic integer options: limrow, limcol, decimals
+- Multi-option statements present in 2 of 3 models
+- No advanced features (projection, per-identifier) in GAMSLib
+
+**Grammar Design:**
+- Designed Lark grammar rules for Sprint 8 scope
+- `option_stmt`, `option_list`, `option_item`, `option_value` rules
+- Supports integer values and on/off boolean keywords
+- Extensible design for Sprint 8b additions (float, string values)
+- AST node design (OptionStatement dataclass)
+
+**Test Fixture Planning:**
+- Identified 8 test cases (5 positive + 3 edge cases)
+- Single option, multi-option, multiple statements, options in context
+- Boolean on/off support (grammar only)
+- Edge cases: empty list, missing semicolon, case insensitivity
+
+**Implementation Effort Validation:**
+- Detailed breakdown: 7.5 hours (within 6-8 hour estimate)
+- Grammar changes: 1 hour
+- AST node creation: 1 hour
+- Test fixtures: 3 hours
+- Integration testing: 1.5 hours
+- Documentation: 1 hour
+
+**Unknown Verification:**
+- 1.1: ✅ Semantic handling is straightforward (mock/store approach confirmed)
+- 1.2: ✅ Sprint 8 scope (basic integer options) covers 100% of GAMSLib usage
+- 1.3: ✅ Option statements are sole blocker for mhw4dx.gms (+10% parse rate confirmed)
 
 ### Result
 
-To be completed during Task 3 execution.
+**Key Achievements:**
+1. ✅ Comprehensive GAMS option statement syntax documented
+2. ✅ Sprint 8 scope validated (basic integer options sufficient for 100% GAMSLib coverage)
+3. ✅ Lark grammar designed and ready for implementation
+4. ✅ 8 test fixtures planned (positive + edge cases)
+5. ✅ 6-8 hour implementation estimate confirmed (detailed breakdown: 7.5 hours)
+6. ✅ All 3 unknowns (1.1, 1.2, 1.3) verified with high confidence
+7. ✅ Clear Sprint 8 vs Sprint 8b boundary defined
+
+**Sprint 8 Implementation Ready:**
+- Grammar rules: 5 rules designed (`option_stmt`, `option_list`, `option_item`, `option_value`)
+- Semantic approach: Mock/store (no behavior implementation)
+- Test coverage: 8 fixtures cover all Sprint 8 scope patterns
+- Unlock confirmation: mhw4dx.gms (+10% parse rate: 2/10 → 3/10)
+
+**Sprint 8 Scope (Confirmed):**
+- Integer value options (limrow, limcol, decimals)
+- Boolean on/off keywords (grammar support)
+- Multi-option statements (comma-separated)
+- Case-insensitive keywords and option names
+- Mock/store semantic handling
+
+**Sprint 8b Scope (Deferred):**
+- Per-identifier display customization (`:` syntax)
+- Projection/permutation operations (`<`, `<=`, `>`)
+- Float/string value options
+- Semantic processing (map options to nlp2mcp behavior)
+
+**Risk Assessment:**
+- Complexity: Low (grammar extension only)
+- Implementation risk: Low (no interaction with other features)
+- Testing risk: Low (straightforward syntax patterns)
+- Schedule risk: None (7.5 hour estimate within 6-8 hour range)
+
+**Impact on Sprint 8:**
+- Option statements ready for implementation
+- High confidence in +10% parse rate unlock
+- Clear implementation path reduces Sprint 8 risk
+- Exceeds conservative 25% parse rate target (reaches 30% with options alone)
 
 ### Verification
 
@@ -781,13 +860,13 @@ grep -q "6-8 hours" docs/planning/EPIC_2/SPRINT_8/OPTION_STATEMENT_RESEARCH.md
 
 ### Acceptance Criteria
 
-- [ ] Option syntax patterns documented (integer, boolean, multi-option, string)
-- [ ] GAMSLib usage analyzed (which models, which options)
-- [ ] Lark grammar designed for Sprint 8 scope
-- [ ] Test fixtures identified (4+ cases)
-- [ ] Implementation effort validated (6-8 hours confirmed or adjusted)
-- [ ] Sprint 8 vs Sprint 8b scope defined (basic options vs advanced)
-- [ ] Semantic handling approach decided (mock/skip vs full processing)
+- [x] Option syntax patterns documented (integer, boolean, multi-option, string)
+- [x] GAMSLib usage analyzed (which models, which options)
+- [x] Lark grammar designed for Sprint 8 scope
+- [x] Test fixtures identified (4+ cases) (✅ 8 cases: 5 positive + 3 edge cases)
+- [x] Implementation effort validated (6-8 hours confirmed or adjusted) (✅ 7.5 hours confirmed)
+- [x] Sprint 8 vs Sprint 8b scope defined (basic options vs advanced)
+- [x] Semantic handling approach decided (mock/skip vs full processing) (✅ mock/store approach)
 
 ---
 

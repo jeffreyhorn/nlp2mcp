@@ -146,8 +146,27 @@ Expected: Option placement doesn't break surrounding statements
 Development team (Parser specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE  
-**To be verified by:** Task 3 (Research Option Statement Syntax)
+✅ **Status:** VERIFIED  
+**Verified by:** Task 3 (Research Option Statement Syntax)  
+**Date:** 2025-11-17
+
+**Findings:**
+1. ✅ **Mock/skip approach is sufficient:** Option statements do NOT affect subsequent parsing behavior
+2. ✅ **Semantic processing NOT required for Sprint 8:** Options can be stored in AST without implementing behavioral effects
+3. ✅ **No parser behavior dependencies:** GAMS options control output/solver settings, not parsing logic
+4. ✅ **Scope is manageable:** GAMSLib uses only 3 basic integer options (limrow, limcol, decimals)
+5. ✅ **Grammar is straightforward:** Simple comma-separated list format, no complex patterns
+
+**Evidence:**
+- GAMS documentation confirms options are runtime/output settings only
+- All GAMSLib option statements follow basic `option name = value [, name = value]*;` pattern
+- No advanced features (projection, per-identifier syntax) in GAMSLib models
+- 6-8 hour estimate CONFIRMED by detailed task breakdown (7.5 hours)
+
+**Impact:**
+- Sprint 8 can proceed with mock/store approach (no semantic processing)
+- 6-8 hour effort estimate is accurate
+- Low risk implementation (grammar extension only)
 
 ---
 
@@ -197,8 +216,39 @@ grep -n "^option\|^ option" tests/fixtures/gamslib/*.gms
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE  
-**To be verified by:** Task 3 (Research Option Statement Syntax)
+✅ **Status:** VERIFIED  
+**Verified by:** Task 3 (Research Option Statement Syntax)  
+**Date:** 2025-11-17
+
+**Findings:**
+1. ✅ **3 of 10 GAMSLib models use option statements (30%)**
+   - mhw4dx.gms: `option limcol = 0, limrow = 0;` (line 37), `option decimals = 8;` (line 47)
+   - maxmin.gms: `option limcol = 0, limrow = 0;` (line 86)
+   - mingamma.gms: `option decimals = 8;` (line 43)
+
+2. ✅ **All options are basic integer types:**
+   - limrow/limcol: Integer (0 = suppress listing)
+   - decimals: Integer (0-8, display precision)
+   - No boolean, string, float, or advanced types in GAMSLib
+
+3. ✅ **Sprint 8 scope covers 100% of GAMSLib usage:**
+   - All options follow `option name = value [, name = value]*;` pattern
+   - Multi-option statements present (2 of 3 models use comma-separated)
+   - No advanced patterns (per-identifier, projection/permutation)
+
+4. ✅ **Minimal viable scope defined:**
+   - Sprint 8: Integer options + multi-option statements
+   - Defer to Sprint 8b: Float/string values, advanced features
+
+**Evidence:**
+- `grep -n "^\s*option\s" tests/fixtures/gamslib/*.gms` results documented in OPTION_STATEMENT_RESEARCH.md
+- Complete catalog of option types and patterns analyzed
+- Scope matrix created (see research document)
+
+**Impact:**
+- Sprint 8 scope (basic integer options) is sufficient for all GAMSLib models
+- No risk of under-scoping
+- Clear boundary for Sprint 8b features
 
 ---
 
@@ -245,8 +295,41 @@ Implementing option statements will unlock mhw4dx.gms (currently failing on `opt
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE  
-**To be verified by:** Task 3 (Research Option Statement Syntax)
+✅ **Status:** VERIFIED  
+**Verified by:** Task 3 (Research Option Statement Syntax)  
+**Date:** 2025-11-17
+
+**Findings:**
+1. ✅ **Option statement is sole blocker for mhw4dx.gms:**
+   - Primary error (line 37): `option limcol = 0, limrow = 0;`
+   - Parser error: "No terminal matches 'l' in the current parser context"
+   - No secondary errors identified in manual review
+
+2. ✅ **Manual inspection confirms no other blockers:**
+   - Reviewed entire mhw4dx.gms file (102 lines)
+   - Uses only basic GAMS constructs: Sets, Parameters, Variables, Equations, Solve
+   - No preprocessor directives, advanced indexing, or other missing features
+   - Second option statement (line 47) also needs support: `option decimals = 8;`
+
+3. ✅ **High confidence in +10% parse rate:**
+   - mhw4dx.gms is fully supported except for option statements
+   - Unlocking mhw4dx: 2/10 → 3/10 = +10% (20% → 30%)
+   - Exceeds Sprint 8 conservative target of 25%
+
+4. ✅ **maxmin.gms and mingamma.gms NOT unlocked by option statements:**
+   - maxmin.gms: Primary blocker is nested indexing (line 51), options are secondary (line 86)
+   - mingamma.gms: Primary blocker is multiple model definitions (line 26), options are secondary (line 43)
+   - Sprint 8 option implementation unlocks only 1 model (mhw4dx), not 3 models
+
+**Evidence:**
+- GAMSLIB_CONVERSION_STATUS.md documents mhw4dx.gms error
+- Manual review of mhw4dx.gms source code completed
+- GAMSLIB_FEATURE_MATRIX.md (Task 2) confirms per-model dependencies
+
+**Impact:**
+- Sprint 8 option statements unlock exactly +10% parse rate (1 model)
+- Feature priority is correct (option statements = confirmed quick win)
+- Parse rate target (25%) will be exceeded with option statements alone (30%)
 
 ---
 
