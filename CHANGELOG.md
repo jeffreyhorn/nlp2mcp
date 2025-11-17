@@ -114,7 +114,7 @@ BOUND_K: /(lo|up|fx|l|m)/i  # Add .m for marginal attribute
 **Sprint 8 Combined Impact:**
 - Option statements (Task 3): +10% (2/10 → 3/10)
 - Indexed assignments (Task 7): +20% (3/10 → 5/10)
-- **Total: 50% parse rate (optimistic), 30% conservative**
+- **Total: 50% parse rate (optimistic), 40% conservative**
 - Exceeds Sprint 8 target of 25-30% parse rate
 
 #### Unknown Verification

@@ -2318,7 +2318,7 @@ Identify implementation risks:
 **Sprint 8 Impact:**
 - Option statements: +10% (2/10 → 3/10)
 - Indexed assignments: +20% (3/10 → 5/10)
-- **Combined: 50% parse rate optimistic, 30% conservative**
+- **Combined: 50% parse rate optimistic, 40% conservative**
 - Exceeds Sprint 8 target of 25-30% parse rate
 
 **Implementation Ready:**

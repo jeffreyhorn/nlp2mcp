@@ -13,7 +13,7 @@ Indexed assignments enable assigning values to multi-dimensional parameters and 
 **Key Findings:**
 - **Feature Selection:** Indexed assignments confirmed as Sprint 8's second high-ROI feature (after option statements)
 - **Unlock Rate:** +20% (2 models: mathopt1.gms + trig.gms)
-- **Combined Sprint 8 Impact:** Option statements (+10%) + Indexed assignments (+20%) = **50% parse rate** (optimistic), **30% conservative**
+- **Combined Sprint 8 Impact:** Option statements (+10%) + Indexed assignments (+20%) = **50% parse rate** (optimistic), **40% conservative**
 - **Effort Estimate:** 6-8 hours (validated, Medium complexity)
 - **Risk Assessment:** Medium risk (grammar changes + semantic validation, no hidden complexity found)
 - **Grammar Design:** Minimal changes to existing lvalue rule (already partially supports indexing)
@@ -46,7 +46,7 @@ From GAMSLIB_FEATURE_MATRIX.md (lines 341-373):
 > **Recommended: Indexed Assignments**
 >
 > **Unlocks:** mathopt1.gms, trig.gms  
-> **Unlock Rate:** +20% (2/10 → 4/10 models)  
+> **Unlock Rate:** +20% (3/10 → 5/10 models)  
 > **Effort:** 6-8 hours  
 > **Complexity:** Medium  
 > **Risk:** Medium  
@@ -237,7 +237,7 @@ ref_indexed.2: ID "(" id_list ")"             -> symbol_indexed
 - ✅ Grammar **already supports** variable attributes via `ref_bound` (`.lo`, `.up`, `.fx`, `.l`)
 - ❌ Parser **raises error** for `symbol_indexed` in `src/ir/parser.py:876`
 
-**Key Finding:** Grammar changes are **minimal** - only need to extend `.l` and `.m` attribute support, which is **already in grammar**!
+**Key Finding:** Grammar changes are **minimal** - only need to add `.m` attribute support, since `.l` is already present in the grammar!
 
 ---
 
