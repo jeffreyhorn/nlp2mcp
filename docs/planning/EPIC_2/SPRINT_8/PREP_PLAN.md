@@ -1100,7 +1100,7 @@ If time tight, defer non-critical error types to Sprint 8b.
 
 ### Changes
 
-**Created:** `docs/planning/EPIC_2/SPRINT_8/PARSER_ERROR_LINE_NUMBERS.md` [769 lines]
+**Created:** `docs/planning/EPIC_2/SPRINT_8/PARSER_ERROR_LINE_NUMBERS.md` [577 lines]
 
 **Error Type Catalog:**
 - Surveyed 2 Lark-native errors (UnexpectedCharacters, UnexpectedToken)

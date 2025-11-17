@@ -18,7 +18,7 @@ Designed approach to extend SourceLocation tracking from convexity warnings (Spr
 #### Deliverables
 
 **Created:**
-- `docs/planning/EPIC_2/SPRINT_8/PARSER_ERROR_LINE_NUMBERS.md` (769 lines)
+- `docs/planning/EPIC_2/SPRINT_8/PARSER_ERROR_LINE_NUMBERS.md` (577 lines)
   - Parser error type catalog (8 error types: 2 Lark-native, 6 custom)
   - Current line number coverage analysis (58/58 parser errors = 100%!)
   - Location extraction patterns (`_error()`, `_node_position()`, `_extract_source_location()` helpers)
@@ -35,7 +35,7 @@ Designed approach to extend SourceLocation tracking from convexity warnings (Spr
 #### Key Findings
 
 **Critical Discovery:**
-Parser errors already have 100% line number coverage via the `_error()` helper method (parser.py:1010-1024). The gap is not infrastructure—it's UX. ParserSemanticError is used throughout, but ParseError (errors.py:57-117) provides superior user experience.
+Parser errors already have 100% line number coverage via the `_error()` helper method (parser.py:1010-1024). The gap is not infrastructure—it's UX. ParserSemanticError is used throughout, but ParseError (errors.py:70-118) provides superior user experience.
 
 **Error Type Catalog (8 types identified):**
 1. **UnexpectedToken** (Lark-native) - ✅ Has line numbers from Lark

@@ -161,16 +161,26 @@ def _error(self, message: str, node: Tree | Token | None = None) -> ParserSemant
     return ParserSemanticError(message, line, column)  # ← Returns error with location
 ```
 
-**2. Location Extraction (`_node_position` helper, parser.py:1027-1042):**
+**2. Location Extraction (`_node_position` helper, parser.py:1026-1042):**
 ```python
 def _node_position(self, node: Tree | Token | None) -> tuple[int | None, int | None]:
-    """Extract line and column from a Lark node."""
+    """Extract line and column from a Lark node, safely."""
     if node is None:
         return (None, None)
     if isinstance(node, Token):
-        return (node.line, node.column)
-    if isinstance(node, Tree) and hasattr(node, "meta"):
-        return (node.meta.line, node.meta.column)
+        return getattr(node, "line", None), getattr(node, "column", None)
+    if isinstance(node, Tree):
+        meta = getattr(node, "meta", None)
+        if meta is not None:
+            line = getattr(meta, "line", None)
+            column = getattr(meta, "column", None)
+            if line is not None:
+                return line, column
+        # If meta is missing or incomplete, try children
+        for child in node.children:
+            line, column = self._node_position(child)
+            if line is not None:
+                return line, column
     return (None, None)
 ```
 
