@@ -7,6 +7,160 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 8 Prep: Task 5 - Design Partial Parse Metrics - 2025-11-17
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Designed system to track and report statement-level parse success for models that partially parse. Enables dashboard to show "himmel16: 92% parsed, needs [i++1 indexing]" instead of binary FAILED status. Key finding: Parser does not support partial parsing (Lark Earley stops on first syntax error), so designed pragmatic line-based progress tracking instead.
+
+#### Deliverables
+
+**Created:**
+- `docs/planning/EPIC_2/SPRINT_8/PARTIAL_PARSE_METRICS.md` (876 lines)
+  - Statement definition (logical lines as pragmatic approximation)
+  - Counting mechanism design (line scanning, no parsing required)
+  - Missing feature extraction patterns (70-80% coverage via pattern matching)
+  - Dashboard mockup with partial metrics (new columns: Progress, Missing Features)
+  - Ingestion pipeline update design (enhanced ModelResult dataclass)
+
+**Modified:**
+- `docs/planning/EPIC_2/SPRINT_8/KNOWN_UNKNOWNS.md` (verified unknowns 6.1, 6.2, 6.3, 6.4)
+- `docs/planning/EPIC_2/SPRINT_8/PREP_PLAN.md` (Task 5 marked complete)
+- `CHANGELOG.md` (this entry)
+
+#### Key Findings
+
+**Critical Discovery:**
+Parser does **not** support partial parsing - Lark Earley parser stops on first syntax error with no partial AST available. Sprint 8 will use **line-based progress tracking** as pragmatic approximation instead of true statement counting.
+
+**Statement Definition:**
+- **Chosen:** "Logical lines" (non-empty, non-comment lines)
+- **Why not true statements?** Would require parser modifications (10+ hours for error-recovering parser)
+- **Granularity:** Counts lines with code content, excludes blank lines, `*` comments, `$ontext...$offtext` blocks
+- **Accuracy:** Good enough proxy for dashboard "at-a-glance" progress indication
+
+**Counting Mechanism:**
+- **Design:** Line scanning (no parsing required)
+- **Functions:**
+  - `count_logical_lines(source)` - Counts total non-empty, non-comment lines
+  - `calculate_parse_progress(source, error_line)` - Counts lines before error vs total
+- **Works for:**
+  - Syntax errors: Count lines before error line (e.g., himmel16: 22/24 = 92%)
+  - Semantic errors: Count all lines (e.g., circle: 24/24 = 100%, error after full parse)
+- **Implementation:** 2 hours (counting logic + multiline comment handling + tests)
+
+**Missing Feature Extraction:**
+- **Pattern:** Extract from error message text using regex
+- **Two methods:**
+  - Lark syntax errors: Heuristic patterns (i++1 detection, short model syntax, etc.)
+  - Semantic errors: Explicit "not supported" message patterns
+- **Coverage:** 70-80% of GAMSLib failures can be annotated with specific features
+- **Example mappings:**
+  - `i++1` in error → "i++1 indexing (lead/lag)"
+  - `got Call(uniform)` → "function calls in assignments"
+  - `option.*not supported` → "option statements"
+- **Implementation:** 2 hours (regex patterns + testing on GAMSLib errors)
+
+**Dashboard Integration:**
+- **New columns:** "Progress" and "Missing Features" (backward compatible, additive)
+- **Enhanced Parse column:** ✅ (100%) / ⚠️ (partial) / ❌ (failed)
+- **Progress format:** "92% (22/24)" showing lines_parsed/total_lines
+- **Missing features format:** Comma-separated list, limit to 2 for readability
+- **New KPIs:** Average parse progress, models >90% parsed, partial success rate
+- **Color coding:**
+  - 🟢 100% (full success)
+  - 🟡 75-99% (high progress)
+  - 🟠 25-74% (moderate progress)
+  - 🔴 <25% (low progress)
+
+**Dashboard Mockup:**
+```markdown
+| Model | Parse | Progress | Missing Features | Convert | Solve | E2E |
+|-------|-------|----------|------------------|---------|-------|-----|
+| himmel16 | ⚠️ | 92% (22/24) | i++1 indexing | - | - | ❌ |
+| circle | ⚠️ | 100% (24/24) | function calls in assignments | - | - | ❌ |
+| mhw4d | ✅ | 100% (18/18) | - | ⚠️ | - | ❌ |
+```
+
+**Ingestion Pipeline:**
+- **Enhanced ModelResult dataclass** with new optional fields:
+  - `parse_progress_lines_parsed: int | None`
+  - `parse_progress_total_lines: int | None`
+  - `parse_progress_percentage: float | None`
+  - `missing_features: list[str] | None`
+  - `error_line: int | None`
+- **Updated parse_model()** to read source, extract error line, count lines, extract features
+- **Enhanced calculate_kpis()** with partial parse metrics
+- **Schema version field** in JSON report for future migrations
+- **Backward compatible:** Old fields unchanged, new fields optional
+
+**Implementation Effort:**
+- Line counting logic: 2 hours
+- Missing feature extraction: 2 hours
+- Ingestion pipeline updates: 1 hour
+- Dashboard template updates: 1 hour
+- **Total: 6 hours** (slightly over 4-5 hour estimate, but within acceptable range)
+
+#### Unknown Verification
+
+**6.1: What counts as a "statement" for parsing metrics?**
+- ✅ VERIFIED: Statement = "Logical lines" (non-empty, non-comment)
+- Pragmatic choice avoids parser modifications (10+ hours saved)
+- Good enough for dashboard progress indication
+
+**6.2: How do we count total statements in unparseable files?**
+- ✅ VERIFIED: Line scanning (no parsing required)
+- `count_logical_lines()` works on any file
+- Deterministic, fast, handles multiline comments correctly
+
+**6.3: How do we extract "missing features" from parse failures?**
+- ✅ VERIFIED: Pattern matching on error messages
+- 70-80% coverage achievable on GAMSLib test set
+- 100% of semantic errors, 50-60% of syntax errors
+
+**6.4: Can dashboard display partial metrics without breaking existing format?**
+- ✅ VERIFIED: Fully backward compatible
+- New columns are additive (existing columns unchanged)
+- JSON schema enhanced with optional new fields
+- No CI breakage (no scripts currently parse dashboard markdown)
+
+#### Validation Examples
+
+**himmel16.gms (Syntax Error, Partial Parse):**
+- Error at line 46: `No terminal matches '+' ... i++1`
+- Lines parsed: 22/24 = 92%
+- Missing features: ["i++1 indexing (lead/lag)"]
+- Dashboard: `himmel16 | ⚠️ | 92% (22/24) | i++1 indexing | - | - | ❌`
+
+**circle.gms (Semantic Error, Full Parse):**
+- Error: `Assignments must use numeric constants; got Call(uniform)`
+- Lines parsed: 24/24 = 100%
+- Missing features: ["function calls in assignments"]
+- Dashboard: `circle | ⚠️ | 100% (24/24) | function calls in assignments | - | - | ❌`
+
+**mhw4d.gms (Full Success):**
+- No error
+- Lines parsed: 18/18 = 100%
+- Missing features: None
+- Dashboard: `mhw4d | ✅ | 100% (18/18) | - | ⚠️ | - | ❌`
+
+#### Sprint 8 Readiness
+
+✅ All unknowns verified  
+✅ Design complete  
+✅ Effort validated (6 hours)  
+✅ Implementation approach pragmatic (line-based vs true statement counting)  
+✅ Backward compatibility ensured
+
+**Risk:** Low (no parser changes, uses existing error information)  
+**Impact:** High (dramatically improves dashboard UX, shows partial progress instead of binary fail)
+
+**Trade-off Accepted:** Line-based counting is less accurate than true statement counting, but provides sufficient value for Sprint 8 goals without requiring 10+ hours of parser modifications for error recovery.
+
+---
+
 ### Sprint 8 Prep: Task 4 - Design Parser Error Line Number Tracking - 2025-11-17
 
 **Status:** ✅ COMPLETE
