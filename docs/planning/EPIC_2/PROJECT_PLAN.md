@@ -81,38 +81,140 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
 
 ---
 
-# Sprint 8 (Weeks 5–6): Parser Enhancements Wave 2, Nested Min/Max Option B, Conversion & Performance KPIs, UX Iteration
+# Sprint 8 (Weeks 5–6): Parser Maturity & Developer Experience (Hybrid Strategy)
 
-**Goal:** Achieve ≥50 % parse and ≥30 % conversion on target GAMSLib models, add nested min/max Option B if required, and stand up automated performance dashboards while continuing UX work.
+**Goal:** Incremental parse rate improvement (20% → 25%) with enhanced developer UX through parser error line numbers and improved diagnostics. Conservative, achievable targets based on Sprint 7 retrospective.
+
+**Strategy:** 60% Parser Maturity + 40% Infrastructure/UX (Sprint 7 Retrospective recommendation)
 
 ## Components
-- **Parser Enhancements (Wave 2)**
-  - Implement remaining high-impact features (multi-dimensional sets, equation attributes, conditional expressions, selected `display`/`option` statements).
-  - Harden normalization and IR storage of `.l/.m` where semantically relevant.
-- **Nested Min/Max Option B (Conditional)**
-  - If telemetry shows flattening insufficient, add multi-pass reformulation for mixed min/max expressions.
-- **Conversion & Performance Instrumentation**
-  - Expand dashboard to track parse/convert/solve rates; KPI: ≥50 % parse, ≥30 % convert, ≥10 % solve.
-  - Establish benchmark harness comparing NLP solver vs MCP PATH times; log to `docs/benchmarks/GAMSLIB_PERFORMANCE.md`.
-- **UX Improvements (Iteration 3)**
-  - Add `--stats` output summarizing pipeline timings, derivatives, and convexity notes.
+
+### Parser Enhancements (60% effort, ~15-20 hours)
+- **Option Statements (High Priority)**
+  - Implement `option` statement parsing (`option limrow = 0;`, `option limcol = 0;`)
+  - Unlocks: mhw4dx.gms and other models using basic options
+  - Effort: 6-8 hours
+  - Risk: Low (grammar extension, semantic handling straightforward)
+  
+- **Per-Model Feature Analysis**
+  - Create feature dependency matrix for all 10 GAMSLib models
+  - Identify models closest to parsing (1-2 features away)
+  - Prioritize features that unlock multiple models
+  - Effort: 3-4 hours
+  - Deliverable: `docs/planning/EPIC_2/SPRINT_8/GAMSLIB_FEATURE_MATRIX.md`
+
+- **One Additional High-ROI Feature** (choose based on analysis)
+  - Either: Simple indexed assignments (if unlocks 2+ models)
+  - Or: Function call syntax improvements (if unlocks 2+ models)
+  - Effort: 6-8 hours
+  - Risk: Medium (grammar changes required)
+
+### Infrastructure & UX Improvements (40% effort, ~10-15 hours)
+- **Parser Error Line Numbers (High Priority)**
+  - Extend SourceLocation tracking to parser errors (builds on Sprint 7 work)
+  - Show precise file/line/column for all parse errors
+  - Effort: 4-6 hours
+  - Risk: Very Low (infrastructure exists from convexity line numbers)
+  
+- **Partial Parse Metrics**
+  - Track percentage of statements parsed per model (not just binary pass/fail)
+  - Update dashboard to show "80% parsed" for partially-supported models
+  - Effort: 3-4 hours
+  - Deliverable: Enhanced `docs/status/GAMSLIB_CONVERSION_STATUS.md`
+  
+- **Improved Error Messages**
+  - Enhance parser error messages with actionable suggestions
+  - Add "did you mean?" hints for common mistakes
+  - Effort: 3-5 hours
 
 ## Deliverables
-- Parser feature implementations + regression suites.
-- Option B nested min/max support (if triggered) with docs/tests.
-- Automated conversion/performance dashboards fed by nightly runs.
-- `--stats` CLI mode + documentation updates.
-- Release tag `v0.8.0`.
+- Option statement support with regression tests
+- One additional parser feature (indexed assignments OR function calls)
+- Parser error line numbers for all parse errors
+- Per-model feature dependency matrix
+- Partial parse metrics in dashboard
+- Improved error messages with suggestions
+- Release tag `v0.8.0`
 
 ## Acceptance Criteria
-- KPIs met: ≥50 % parse and ≥30 % convert across target set; metrics published automatically.
-- PATH solve tracking initiated with notes on failures (convexity, solver limits).
-- Performance report generated for baseline models; comparisons documented.
-- UX checklist shows stats output functioning and validated against real models.
+- **Parse Rate:** ≥25% (2.5/10 models) - Conservative target from Sprint 7 retrospective
+- **Parser Errors:** 100% of parse errors show file/line/column (matches convexity UX)
+- **Feature Matrix:** All 10 models analyzed with feature dependencies documented
+- **Partial Metrics:** Dashboard shows statement-level parse success (e.g., "himmel16: 85% parsed")
+- **Quality:** All existing tests pass, new features have comprehensive test coverage
+- **UX Validation:** Error messages tested with real-world models, developer feedback positive
+
+**Estimated Effort:** 25-35 hours (Sprint 7 Retrospective recommendation)  
+**Risk Level:** LOW (focuses on proven patterns from Sprint 7)
 
 ---
 
-# Sprint 9 (Weeks 7–8): Aggressive Simplification, Regression Guardrails, UX Diagnostics
+# Sprint 8b (Weeks 7–8): Advanced Parser Features & Conversion Pipeline
+
+**Goal:** Implement advanced parser features requiring grammar changes and begin conversion pipeline work. Builds on Sprint 8's foundation with higher-complexity features.
+
+**Strategy:** Advanced features + conversion infrastructure (deferred from original Sprint 8)
+
+## Components
+
+### Advanced Parser Features (~15-20 hours)
+- **Advanced Indexing (i++1, i--1)**
+  - Implement lead/lag indexing operators
+  - Unlocks: himmel16.gms and models with sequential indexing
+  - Effort: 8-10 hours
+  - Risk: Medium-High (requires grammar changes, semantic complexity)
+  
+- **Model Sections (mx syntax)**
+  - Support multi-line model declarations with `/` syntax
+  - Unlocks: hs62.gms, mingamma.gms
+  - Effort: 5-6 hours
+  - Risk: Medium (grammar extension)
+  
+- **Equation Attributes (.l/.m)**
+  - Parse and store equation attributes where semantically relevant
+  - Foundation for conversion pipeline
+  - Effort: 4-6 hours
+
+### Conversion & Performance Instrumentation (~10-15 hours)
+- **Dashboard Expansion**
+  - Track parse/convert/solve rates (extend existing dashboard)
+  - KPI: Monitor conversion rate on successfully parsed models
+  - Effort: 3-4 hours
+  
+- **Conversion Pipeline Foundation**
+  - Begin conversion infrastructure for successfully parsed models
+  - Focus on simple models (mhw4d, rbrock) as initial targets
+  - Effort: 6-8 hours
+  - Risk: Medium (new pipeline stage)
+  
+- **Performance Baseline**
+  - Establish benchmark harness for parse/convert times
+  - Document baseline performance for regression tracking
+  - Effort: 3-4 hours
+
+## Deliverables
+- Advanced indexing support (i++1, i--1)
+- Model sections support (mx syntax)
+- Equation attributes parsing (.l/.m)
+- Expanded dashboard with conversion tracking
+- Conversion pipeline foundation
+- Performance baseline documentation
+- Release tag `v0.8.1`
+
+## Acceptance Criteria
+- **Parse Rate:** ≥30% (3/10 models) - Original Sprint 8 target, achievable with advanced features
+- **Advanced Features:** i++1 indexing and model sections working with comprehensive tests
+- **Conversion Pipeline:** At least 1 model (mhw4d or rbrock) successfully converts end-to-end
+- **Dashboard:** Tracks parse/convert/solve rates automatically
+- **Performance:** Baseline benchmarks established and documented
+- **Quality:** All existing tests pass, advanced features have edge case coverage
+
+**Estimated Effort:** 25-35 hours  
+**Risk Level:** MEDIUM (complex grammar changes, new pipeline stage)
+
+---
+
+# Sprint 9 (Weeks 9–10): Aggressive Simplification, Regression Guardrails, UX Diagnostics
 
 **Goal:** Deliver `--simplification aggressive` informed by telemetry, integrate CI regression hooks (GAMSLib sampling, PATH smoke, performance alerts), and expand diagnostics features.
 
@@ -138,7 +240,7 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
 
 ---
 
-# Sprint 10 (Weeks 9–10): Final UX Polish, Documentation Wrap, Release Readiness, v1.0.0
+# Sprint 10 (Weeks 11–12): Final UX Polish, Documentation Wrap, Release Readiness, v1.0.0
 
 **Goal:** Complete diagnostics/progress UI, finalize documentation (advanced usage, GAMSLib handbook, tutorials), close outstanding bugs, and ship v1.0.0 meeting all KPIs.
 
