@@ -94,8 +94,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           # Check if there are meaningful changes (not just timestamp)
-          # Count lines changed excluding the Generated timestamp line
-          MEANINGFUL_CHANGES=$(git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep '^[+-]' | grep -v '^[+-].*Generated:' | grep -v '^[+-]@@' | grep -v '^[+-]---' | grep -v '^[+-]+++' | wc -l)
+          # Count lines changed excluding the Generated timestamp line and diff headers
+          MEANINGFUL_CHANGES=$(git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep '^[+-]' | grep -v '^[+-].*Generated:' | grep -v '^+++' | grep -v '^---' | grep -v '^@@' | wc -l)
 
           if [ "$MEANINGFUL_CHANGES" -gt 0 ]; then
             echo "❌ Dashboard has $MEANINGFUL_CHANGES meaningful changes (excluding timestamp)"
@@ -106,7 +106,7 @@ jobs:
             echo "  git commit -m 'Update GAMSLib dashboard'"
             echo ""
             echo "Dashboard diff (meaningful changes only):"
-            git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep '^[+-]' | grep -v '^[+-].*Generated:' | grep -v '^[+-]@@' | grep -v '^[+-]---' | grep -v '^[+-]+++'
+            git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep '^[+-]' | grep -v '^[+-].*Generated:' | grep -v '^+++' | grep -v '^---' | grep -v '^@@'
             exit 1
           else
             echo "✅ Dashboard is up-to-date (only timestamp changed)"
