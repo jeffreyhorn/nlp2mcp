@@ -1103,9 +1103,9 @@ class _ModelBuilder:
 
                 param = self.model.params[param_name]
 
-                # In GAMS, scalar parameters can be implicitly expanded to multi-dimensional
-                # when used with indices (e.g., mathopt1.gms: Parameter report; report('x1','global') = 1;)
-                # Only validate index count if parameter has an explicit domain
+                # Only validate index count if the parameter has an explicit domain declaration.
+                # For parameters without an explicit domain, index count is not validated.
+                # (e.g., mathopt1.gms: Parameter report; report('x1','global') = 1;)
                 if len(param.domain) > 0 and len(indices) != len(param.domain):
                     index_word = "index" if len(param.domain) == 1 else "indices"
                     raise self._error(
@@ -1336,8 +1336,9 @@ class _ModelBuilder:
             return self._attach_domain(expr, free_domain)
         if name in self.model.params:
             expected = self.model.params[name].domain
-            # In GAMS, scalar parameters can be implicitly expanded to multi-dimensional
-            # when used with indices. Only validate if parameter has an explicit domain.
+            # In GAMS, validation is skipped only for parameters with empty domains (true scalars),
+            # allowing them to be implicitly expanded when used with indices. For parameters with an
+            # explicit domain, the number of indices must match the domain length.
             if len(expected) > 0 and len(expected) != len(idx_tuple):
                 index_word = "index" if len(expected) == 1 else "indices"
                 raise self._error(
