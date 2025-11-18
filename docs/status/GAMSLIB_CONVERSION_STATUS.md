@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-18 12:17:38
+**Generated:** 2025-11-18 12:36:26
 **Sprint:** Sprint 8
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint8.json`](../../reports/gamslib_ingestion_sprint8.json)
@@ -24,21 +24,21 @@
 
 | Model | Status | Progress | Missing Features | Convert | Solve | E2E |
 |-------|--------|----------|------------------|---------|-------|-----|
-| circle | ⚠️ PARTIAL | 57% (16/28) | parse error | - | - | ❌ |
-| himmel16 | ⚠️ PARTIAL | 42% (14/33) | lead/lag indexing (i++1, i--1) | - | - | ❌ |
-| hs62 | ⚠️ PARTIAL | 61% (11/18) | model sections (mx, my, etc.) | - | - | ❌ |
+| circle | ⚠️ PARTIALLY PARSED | 57% (16/28) | parse error | - | - | ❌ |
+| himmel16 | ⚠️ PARTIALLY PARSED | 42% (14/33) | lead/lag indexing (i++1, i--1) | - | - | ❌ |
+| hs62 | ⚠️ PARTIALLY PARSED | 61% (11/18) | model sections (mx, my, etc.) | - | - | ❌ |
 | mathopt1 | ✅ PASS | 100% (20/20) | - | - | - | ❌ |
-| maxmin | ⚠️ PARTIAL | 40% (19/47) | nested indexing | - | - | ❌ |
+| maxmin | ⚠️ PARTIALLY PARSED | 40% (19/47) | nested indexing | - | - | ❌ |
 | mhw4d | ✅ PASS | 100% (14/14) | - | - | - | ❌ |
-| mhw4dx | ⚠️ PARTIAL | 51% (27/53) | variable attributes (.l, .m, etc.) | - | - | ❌ |
+| mhw4dx | ⚠️ PARTIALLY PARSED | 51% (27/53) | variable attributes (.l, .m, etc.) | - | - | ❌ |
 | mingamma | ❌ FAIL | 24% (9/37) | parse error | - | - | ❌ |
 | rbrock | ✅ PASS | 100% (8/8) | - | - | - | ❌ |
 | trig | ✅ PASS | 100% (14/14) | - | - | - | ❌ |
 
 **Legend:**
 - ✅ PASS: 100% parsed successfully
-- 🟡 PARTIAL: 75-99% parsed
-- ⚠️ PARTIAL: 25-74% parsed
+- 🟡 MOSTLY PARSED: 75-99% parsed
+- ⚠️ PARTIALLY PARSED: 25-74% parsed
 - ❌ FAIL: <25% parsed
 - `-` Not attempted (stage not implemented yet)
 
