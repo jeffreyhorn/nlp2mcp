@@ -841,7 +841,7 @@ class _ModelBuilder:
             option_list: option_item ("," option_item)*
             option_item: ID "=" option_value  -> option_with_value
                        | ID                   -> option_flag
-            option_value: NUMBER | "on"i | "off"i
+            option_value: NUMBER | ON | OFF
 
         Example:
             option limrow = 0, limcol = 0;
@@ -910,9 +910,6 @@ class _ModelBuilder:
         option_stmt = OptionStatement(options=options, location=location)
 
         # Sprint 8: Mock/store approach - just store, don't process
-        # Add to model's option_statements list (we'll need to add this field to ModelIR)
-        if not hasattr(self.model, "option_statements"):
-            self.model.option_statements = []
         self.model.option_statements.append(option_stmt)
 
     def _handle_assign(self, node: Tree) -> None:

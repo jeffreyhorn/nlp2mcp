@@ -116,4 +116,4 @@ class OptionStatement:
     """
 
     options: list[tuple[str, int | str | None]]
-    location: SourceLocation
+    location: SourceLocation | None
