@@ -247,6 +247,7 @@ def strip_unsupported_directives(source: str) -> str:
     lines = source.split("\n")
     filtered = []
     in_ontext_block = False
+    in_if_statement = False
 
     for line in lines:
         stripped = line.strip()
@@ -278,8 +279,31 @@ def strip_unsupported_directives(source: str) -> str:
             filtered.append(f"* [Stripped: {line}]")
             continue
 
-        # Sprint 8 Day 2: if/elseif/else, abort, and display statements are now supported
-        # No longer stripping these execution control statements
+        # Sprint 8 Day 2: Partial if/elseif/else support
+        # Note: Currently stripping if statements due to dependencies on unsupported features
+        # (model attributes, compile-time constants). Grammar and parser infrastructure ready
+        # for future full support when these features are implemented.
+
+        # Handle if() statements (may span multiple lines)
+        if stripped_lower.startswith("if("):
+            in_if_statement = True
+            filtered.append(f"* [Stripped execution: {line}]")
+            # Check if the statement ends on this line (has semicolon outside strings/comments)
+            if _has_statement_ending_semicolon(line):
+                in_if_statement = False
+            continue
+
+        # If inside multi-line if statement, keep stripping
+        if in_if_statement:
+            filtered.append(f"* [Stripped execution: {line}]")
+            if _has_statement_ending_semicolon(line):
+                in_if_statement = False
+            continue
+
+        # Strip other execution control statements (must be complete keywords)
+        if re.match(r"^(abort|display)\b", stripped_lower):
+            filtered.append(f"* [Stripped execution: {line}]")
+            continue
 
         # Keep all other lines unchanged
         filtered.append(line)

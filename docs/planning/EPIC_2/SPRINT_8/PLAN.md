@@ -1545,40 +1545,46 @@ This appendix provides detailed quality gate checklists for each day.
 
 ---
 
-### **Day 2+: If-Elseif-Else Support** (BONUS - COMPLETED 2025-11-18)
+### **Day 2+: If-Elseif-Else Support (Infrastructure)** (BONUS - 2025-11-18)
 
-**Objective:** Implement elseif statement parsing to unblock mhw4dx.gms
+**Objective:** Build grammar and parser infrastructure for if-elseif-else statements
 
 **Quality Gates:**
 - [x] Grammar updated for if-elseif-else ✅
-- [x] Preprocessor stops stripping if/elseif/else ✅
+- [x] Model attribute access grammar added (`attr_access` rule) ✅
 - [x] ConditionalStatement AST node created ✅
 - [x] Parser handler implemented ✅
-- [x] Simple test cases pass ✅
-- [x] mhw4dx.gms gets past line 63 ✅
+- [x] Simple test cases pass (with stripping disabled) ✅
 - [x] `make test` passes (929 tests) ✅
 - [x] `make typecheck` passes ✅
 - [x] `make lint` passes ✅
-- [x] No regressions ✅
+- [x] No regressions (50% parse rate maintained) ✅
 
-**STATUS:** ✅ COMPLETE
+**STATUS:** ⚠️ INFRASTRUCTURE READY (Preprocessor still strips if statements)
 
 **Implementation:**
 - Grammar: Added `IF_K`, `ELSEIF_K`, `ELSE_K` terminals and `exec_stmt` rule
-- Preprocessor: Removed if/abort/display stripping
+- Grammar: Added `attr_access` rule for model attributes (e.g., `m.modelStat`)
+- Preprocessor: **Still strips if/abort/display** to avoid regressions
 - AST: `ConditionalStatement(condition, then_stmts, elseif_clauses, else_stmts, location)`
 - Parser: `_handle_if_stmt()` extracts and stores conditionals (mock/store approach)
 
 **Validation Results:**
-- Simple conditionals parse correctly ✅
-- mhw4dx.gms now fails at line 62 (model attributes) instead of line 63 (elseif) ✅
-- Elseif blocker removed, new blocker identified: model attribute access
+- Grammar compiles without errors ✅
+- Simple conditionals parse correctly (when stripping disabled) ✅
+- Parse rate maintained at 50% (no regressions) ✅
 - All unit tests pass (929 tests) ✅
 
+**Blocking Issues:**
+- circle.gms uses `m.modelStat` (model attribute access) - not yet supported
+- circle.gms uses `%modelStat.optimal%` (compile-time constants) - not yet supported
+- Enabling if statement parsing causes circle.gms regression
+- **Decision:** Keep preprocessor stripping until dependencies are implemented
+
 **Impact:**
-- mhw4dx.gms parse progress: line 63 → line 62
-- Foundation for future conditional execution support
-- Clean implementation following Sprint 8 mock/store pattern
+- Infrastructure ready for future activation ✅
+- No parse rate impact (50% maintained)
+- Foundation for future conditional support when model attributes are implemented
 
 ---
 

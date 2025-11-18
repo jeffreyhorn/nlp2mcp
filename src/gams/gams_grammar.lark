@@ -130,6 +130,7 @@ lvalue: ref_bound | ref_indexed | ID
 
 ref_bound: ID "." BOUND_K "(" id_list ")"   -> bound_indexed
          | ID "." BOUND_K                      -> bound_scalar
+         | ID "." ID                            -> attr_access
 
 BOUND_K: /(lo|up|fx|l)/i
 

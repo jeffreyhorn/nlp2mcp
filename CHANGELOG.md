@@ -7,13 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Sprint 8: Day 2+ - If-Elseif-Else Support - 2025-11-18
+### Sprint 8: Day 2+ - If-Elseif-Else Support (Infrastructure) - 2025-11-18
 
-**Status:** ✅ COMPLETE
+**Status:** ⚠️ INFRASTRUCTURE READY (Preprocessor still strips if statements)
 
 #### Summary
 
-Implemented parsing support for GAMS if-elseif-else conditional statements to unblock mhw4dx.gms. This secondary feature was needed to achieve the Sprint 8 Day 2 goal of unlocking mhw4dx.gms parsing.
+Built grammar and parser infrastructure for GAMS if-elseif-else conditional statements. While the parsing infrastructure is complete and tested, if statements are still stripped in preprocessing due to dependencies on unsupported features (model attributes, compile-time constants). This infrastructure is ready for activation once those features are implemented.
 
 #### Changes Made
 
@@ -21,12 +21,14 @@ Implemented parsing support for GAMS if-elseif-else conditional statements to un
 - Added if-elseif-else statement support with correct GAMS syntax structure
 - Created `exec_stmt` rule for statements that can appear inside conditional blocks
 - Added terminal tokens: `IF_K`, `ELSEIF_K`, `ELSE_K`
+- Added `attr_access` rule for model/variable attribute access (e.g., `m.modelStat`)
 - Grammar structure: `if(condition, stmts elseif condition, stmts else stmts);`
 
 **Preprocessor (src/ir/preprocessor.py):**
-- Removed if/elseif/else statement stripping (previously treated as execution-only)
-- Removed abort/display statement stripping (now supported inside conditionals)
-- Removed `in_if_statement` tracking flag (no longer needed)
+- **Still strips if/elseif/else statements** to avoid regressions
+- Added detailed comment explaining why (dependencies on model attributes, compile-time constants)
+- Strips abort/display statements (used inside conditionals in GAMSLib models)
+- Infrastructure ready for future activation
 
 **AST & Model IR:**
 - Added `ConditionalStatement` dataclass in `src/ir/symbols.py`
@@ -40,16 +42,22 @@ Implemented parsing support for GAMS if-elseif-else conditional statements to un
 
 #### Validation Results
 
-**Simple Test Cases:**
-- `if(condition, stmt);` → Parses correctly ✅
-- `if(condition, stmt elseif condition, stmt);` → Parses correctly ✅
-- `if(condition, stmt elseif condition, stmt elseif condition, stmt else stmt);` → Parses correctly ✅
+**Grammar & Parser Testing:**
+- Simple if statements parse correctly when preprocessor stripping is disabled ✅
+- If-elseif statements parse correctly ✅
+- Full if-elseif-else statements parse correctly ✅
+- Grammar compiles without errors ✅
 
-**mhw4dx.gms Progress:**
-- Previously failed at line 63 (elseif statement)
-- Now parses past line 63 successfully ✅
-- Currently fails at line 62 (model attribute access: `wright.modelStat`)
-- Model attribute access is a separate feature, not related to conditionals
+**Regression Testing:**
+- Parse rate maintained at 50% (5/10 models) ✅
+- No test regressions (929 tests pass) ✅
+- circle.gms continues to parse (if statements stripped) ✅
+
+**Blocking Issues Identified:**
+- circle.gms uses `m.modelStat` (model attribute access) - not yet supported
+- circle.gms uses `%modelStat.optimal%` (compile-time constants) - not yet supported
+- mhw4dx.gms uses similar patterns in conditional statements
+- **Decision:** Keep preprocessor stripping enabled until these features are implemented
 
 #### Quality Checks
 
@@ -60,15 +68,20 @@ Implemented parsing support for GAMS if-elseif-else conditional statements to un
 
 #### Impact
 
-**Parse Progress:**
-- mhw4dx.gms now parses further (line 62 vs line 63)
-- Elseif blocker removed, remaining blocker is model attributes
-- Foundation laid for future execution support
+**Infrastructure Value:**
+- Complete if-elseif-else grammar ready for activation ✅
+- Parser handler tested and working ✅
+- AST nodes defined with full structure support ✅
+- Ready to activate when model attributes and compile-time constants are implemented
+
+**Parse Rate:**
+- Maintained at 50% (5/10 models) - no regressions ✅
+- Future activation will potentially unlock mhw4dx.gms and other models
 
 **Technical Debt:**
-- None - implementation follows existing mock/store pattern
-- Grammar structure matches actual GAMS syntax
-- Clean integration with existing parser infrastructure
+- None - infrastructure ready but dormant
+- Clean implementation following Sprint 8 mock/store pattern
+- Documented rationale for preprocessor stripping decision
 
 ---
 

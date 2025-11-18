@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-18 00:48:05
+**Generated:** 2025-11-18 00:53:39
 **Sprint:** Sprint 6
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint6.json`](../../reports/gamslib_ingestion_sprint6.json)
@@ -24,7 +24,7 @@
 
 | Model | Parse | Convert | Solve | E2E | Notes |
 |-------|-------|---------|-------|-----|-------|
-| circle | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
+| circle | ❌ | - | - | ❌ | Parse error: ParserSemanticError |
 | himmel16 | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
 | hs62 | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
 | mathopt1 | ❌ | - | - | ❌ | Parse error: ParserSemanticError |
@@ -47,8 +47,8 @@
 ### Parse Errors
 | Error Type | Count | Models |
 |------------|-------|--------|
-| `UnexpectedCharacters` | 6 | circle, himmel16, hs62, maxmin, mhw4dx, mingamma |
-| `ParserSemanticError` | 2 | mathopt1, trig |
+| `UnexpectedCharacters` | 5 | himmel16, hs62, maxmin, mhw4dx, mingamma |
+| `ParserSemanticError` | 3 | circle, mathopt1, trig |
 
 **Note:** Convert and solve errors will appear here once those stages are implemented.
 
@@ -59,16 +59,10 @@
 ### circle.gms
 **Model:** circle
 **Status:** Parse Failed
-**Error Type:** `UnexpectedCharacters`
+**Error Type:** `ParserSemanticError`
 **Error Message:**
 ```
-No terminal matches 'm' in the current parser context, at line 54 col 6
-
-if(m.modelStat <> %modelStat.optimal%        
-     ^
-Expected one of: 
-	* BOUND_K
-
+Assignments must use numeric constants; got Call(uniform, (Const(1.0), Const(10.0))) in assignment [context: expression]
 ```
 
 ### himmel16.gms
@@ -133,12 +127,16 @@ Expected one of:
 **Error Type:** `UnexpectedCharacters`
 **Error Message:**
 ```
-No terminal matches 'm' in the current parser context, at line 62 col 18
+No terminal matches 'a' in the current parser context, at line 63 col 11
 
-   abort$(wright.modelStat = %modelStat.optimal%) 'solver
-                 ^
+elseif    abs(m.l-44.02207169) < tol, // local sol
+          ^
 Expected one of: 
-	* BOUND_K
+	* DOT
+	* __ANON_0
+	* ASSIGN
+	* LPAR
+	* DOLLAR
 
 ```
 
