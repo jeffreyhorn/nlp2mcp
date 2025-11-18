@@ -1156,6 +1156,11 @@ After committing and pushing all changes:
      - Option statements: Mock/store only (no behavior)
      - Indexed assignments: Pre-solve only (no runtime evaluation)
      - Partial metrics: Line-based approximation (not true statement counting)
+     - Create `docs/planning/EPIC_2/SPRINT_8/RETROSPECTIVE.md`
+        - What went well
+        - What could be improved
+        - Lessons learned
+        - Metrics vs goals
    - Add usage examples to docs
 
 2. **CHANGELOG Update** (30 min)
@@ -1190,6 +1195,7 @@ After committing and pushing all changes:
 - Documentation updated (README, parser docs)
 - CHANGELOG.md updated with Sprint 8 entry
 - PR created and ready for review
+- Sprint retrospective complete
 - Sprint 8 marked complete in PROJECT_PLAN.md
 
 **Quality Checks:**
@@ -1208,6 +1214,7 @@ You do NOT need to do this if all changes you are committing or pushing are docu
   - [ ] Documentation complete ✅
   - [ ] PR ready for review ✅
   - [ ] All acceptance criteria met (PLAN.md Section 5)
+- [ ] Retrospective complete
 - [ ] Mark Day 10 as complete in `docs/planning/EPIC_2/SPRINT_8/PLAN.md`
 - [ ] Check off Day 10 in `README.md`
 - [ ] Log progress to `CHANGELOG.md`
