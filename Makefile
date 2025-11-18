@@ -68,11 +68,11 @@ ingest-gamslib:
 	fi
 	@PYTHONHASHSEED=0 $(PYTHON) scripts/ingest_gamslib.py \
 		--input tests/fixtures/gamslib \
-		--output reports/gamslib_ingestion_sprint6.json \
+		--output reports/gamslib_ingestion_sprint8.json \
 		--dashboard docs/status/GAMSLIB_CONVERSION_STATUS.md
 	@echo ""
 	@echo "✅ Ingestion complete!"
-	@echo "   Report: reports/gamslib_ingestion_sprint6.json"
+	@echo "   Report: reports/gamslib_ingestion_sprint8.json"
 	@echo "   Dashboard: docs/status/GAMSLIB_CONVERSION_STATUS.md"
 
 # Clean build artifacts
