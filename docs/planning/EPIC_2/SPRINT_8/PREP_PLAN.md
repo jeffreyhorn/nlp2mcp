@@ -3103,8 +3103,29 @@ grep -q "Backward Compatibility" docs/planning/EPIC_2/SPRINT_8/DASHBOARD_ENHANCE
 **Actual Time:** ~7 hours  
 **Completed:** 2025-11-17  
 **Owner:** Development team (Sprint lead)  
-**Dependencies:** All tasks (1-9)
-**Unknowns Verified:** 8.1, 8.2, 8.3
+**Dependencies:** All tasks (1-9)  
+**Unknowns Verified:** 8.1 ✅, 8.2 ✅, 8.3 ✅
+
+**Unknown Verification Results:**
+
+- **8.1 (Effort allocation):** ✅ VERIFIED
+  - Total: 30-36h fits within 25-35h budget (with 10% flexibility for upper bound)
+  - Parser: 12-16h (45%), UX: 14-19h (50%), Testing: 4-5h (15%), Docs: 2-3h (8%)
+  - Original 60/40 parser/UX split refined to 45/50/15 (parser/UX/testing) with overlap
+  - Testing & documentation (6-8h) was unaccounted in original 60/40 assumption
+
+- **8.2 (Parse rate conservative enough):** ✅ VERIFIED
+  - 25% is floor/minimum, NOT the target
+  - Primary target: 40-50% (5/10 models) - 80% confidence
+  - Secondary target: 30% (4/10 models) - 95% confidence
+  - Minimum acceptable: 25% (3/10 models) - 99% confidence
+  - Per-model analysis (Task 2) eliminates Sprint 7 underestimation risk
+
+- **8.3 (Checkpoint strategy):** ✅ VERIFIED
+  - 4 checkpoints defined at critical decision points (Days 2, 4, 8, 9)
+  - All checkpoints have verifiable success criteria (tests passing, parse rate thresholds)
+  - Go/No-Go decisions based on objective metrics with clear contingencies
+  - Explicit scope adjustment options at each checkpoint for course correction
 
 ### Objective
 
