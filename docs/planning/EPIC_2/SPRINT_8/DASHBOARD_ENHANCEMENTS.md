@@ -3,7 +3,8 @@
 **Sprint:** Epic 2 - Sprint 8 Prep  
 **Task:** Task 9 - Design Dashboard Enhancements  
 **Created:** 2025-11-17  
-**Purpose:** Design enhancements to GAMSLIB_CONVERSION_STATUS.md to display partial parse metrics, missing features, and color-coded status
+**Purpose:** Design enhancements to GAMSLIB_CONVERSION_STATUS.md to display partial parse metrics, missing features, and color-coded status  
+**Document Size:** 821 lines
 
 ---
 
@@ -222,6 +223,17 @@ class ModelResult:
 
 **Algorithm (from Task 5 design):**
 ```python
+def extract_error_line(error: Exception) -> Optional[int]:
+    """Extract line number from exception."""
+    if hasattr(error, 'line') and error.line is not None:
+        return error.line
+    # Fallback: parse from error message
+    match = re.search(r'line (\d+)', str(error))
+    if match:
+        return int(match.group(1))
+    return None
+
+
 def calculate_parse_progress(source_file: Path, error: Optional[Exception]) -> Dict:
     """
     Calculate parse progress metrics.
@@ -300,7 +312,9 @@ def count_logical_lines_up_to(source: str, line_number: int) -> int:
     in_multiline_comment = False
     count = 0
     
-    for i, line in enumerate(lines[:line_number - 1], start=1):
+    # Process lines 0 to line_number-2 (up to but not including line_number-1, which is line_number in 1-based indexing)
+    for i in range(line_number - 1):
+        line = lines[i]
         stripped = line.strip()
         
         # Handle multiline comments
@@ -352,7 +366,7 @@ def extract_missing_features(error: Exception, error_message: str) -> List[str]:
         features.append("option statements")
     
     # Pattern 3: Model sections (mx, my)
-    if re.search(r'm[xyz]\s*/\s*', error_message):
+    if re.search(r'model sections?[:\s(]*m[xyz]\b', error_message, re.IGNORECASE):
         features.append("model sections (mx, my, etc.)")
     
     # Pattern 4: Nested indexing
@@ -360,7 +374,7 @@ def extract_missing_features(error: Exception, error_message: str) -> List[str]:
         features.append("nested indexing")
     
     # Pattern 5: Multiple model definitions
-    if 'm2' in error_message or 'multiple.*model' in error_message.lower():
+    if re.search(r'\bm2\b', error_message, re.IGNORECASE) or re.search(r'multiple.*model', error_message, re.IGNORECASE):
         features.append("multiple model definitions")
     
     # Pattern 6: Indexed assignments (from ParserSemanticError)
@@ -379,7 +393,7 @@ def extract_missing_features(error: Exception, error_message: str) -> List[str]:
     if not features:
         features.append("unknown syntax pattern")
     
-    return features
+    return features[:2]  # Limit to 2 features for readability
 ```
 
 ### Status Determination Logic

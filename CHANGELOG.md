@@ -18,7 +18,7 @@ Designed enhancements to `GAMSLIB_CONVERSION_STATUS.md` to display partial parse
 #### Deliverables
 
 **Created:**
-- `docs/planning/EPIC_2/SPRINT_8/DASHBOARD_ENHANCEMENTS.md` (635 lines)
+- `docs/planning/EPIC_2/SPRINT_8/DASHBOARD_ENHANCEMENTS.md` (821 lines)
   - Enhanced dashboard mockup with 4-level color coding
   - Color coding scheme and thresholds (✅ 100%, 🟡 75-99%, ⚠️ 25-74%, ❌ <25%)
   - Ingestion script update design (~140 lines of new code)
@@ -105,6 +105,17 @@ class ModelResult:
 
 Parse progress calculation:
 ```python
+def extract_error_line(error: Exception) -> Optional[int]:
+    """Extract line number from exception."""
+    if hasattr(error, 'line') and error.line is not None:
+        return error.line
+    # Fallback: parse from error message
+    match = re.search(r'line (\d+)', str(error))
+    if match:
+        return int(match.group(1))
+    return None
+
+
 def calculate_parse_progress(model_path: Path, error: Exception) -> Dict[str, Any]:
     """Calculate partial parse progress from error location."""
     source = model_path.read_text()
@@ -121,7 +132,7 @@ def calculate_parse_progress(model_path: Path, error: Exception) -> Dict[str, An
         }
     
     # Syntax error: count lines before error
-    lines_parsed = count_logical_lines_before(source, error_line)
+    lines_parsed = count_logical_lines_up_to(source, error_line)
     percentage = (lines_parsed / total_lines * 100) if total_lines > 0 else 0.0
     
     return {
@@ -244,7 +255,7 @@ Sprint 7 data compatibility:
 - Parse progress percentage enables data-driven feature ROI analysis
 
 **Sprint 8 Readiness:**
-- ✅ Design complete and comprehensive (635 lines of documentation)
+- ✅ Design complete and comprehensive (821 lines of documentation)
 - ✅ Implementation effort validated (4 hours)
 - ✅ Backward compatibility ensured (Sprint 7 data works)
 - ✅ Unknown 6.4 verified (dashboard format not broken)
