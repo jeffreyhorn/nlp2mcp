@@ -1,0 +1,76 @@
+# Expected Results for Option Statement Fixtures
+# Sprint 8 Day 2: Option Statements - Integration & Fixtures
+
+fixtures:
+  01_single_integer.gms:
+    description: "Single integer option statement"
+    should_parse: true
+    option_statements:
+      - options:
+          - name: "limrow"
+            value: 0
+    notes: "Tests basic option statement with single integer value"
+
+  02_multiple_options.gms:
+    description: "Multiple options in one statement"
+    should_parse: true
+    option_statements:
+      - options:
+          - name: "limrow"
+            value: 0
+          - name: "limcol"
+            value: 0
+    notes: "Tests comma-separated multiple options in one statement"
+
+  03_decimals_option.gms:
+    description: "Decimals display option"
+    should_parse: true
+    option_statements:
+      - options:
+          - name: "decimals"
+            value: 8
+    notes: "Tests decimals option (different option type from limrow/limcol)"
+
+  04_placement.gms:
+    description: "Options in different locations"
+    should_parse: true
+    option_statements:
+      - options:
+          - name: "limrow"
+            value: 0
+      - options:
+          - name: "decimals"
+            value: 8
+      - options:
+          - name: "limcol"
+            value: 0
+    notes: "Tests option statements before declarations, after declarations, and after code"
+
+  05_mhw4dx_pattern.gms:
+    description: "Real GAMSLib pattern from mhw4dx.gms"
+    should_parse: true
+    option_statements:
+      - options:
+          - name: "limCol"
+            value: 0
+          - name: "limRow"
+            value: 0
+      - options:
+          - name: "decimals"
+            value: 8
+    notes: "Simplified excerpt from mhw4dx.gms - ensures real-world pattern support. Note: Case preserved in option names"
+
+sprint8_validation:
+  total_fixtures: 5
+  expected_passing: 5
+  expected_failing: 0
+  coverage:
+    - "Single integer option (limrow, decimals)"
+    - "Multiple options in one statement"
+    - "Different option types (limrow, limcol, decimals)"
+    - "Option placement flexibility"
+    - "Real GAMSLib patterns"
+  scope:
+    - "Sprint 8: Mock/store approach - options parsed and stored, not processed"
+    - "All option values are integers (0-8 range)"
+    - "No semantic effects (display options ignored)"
