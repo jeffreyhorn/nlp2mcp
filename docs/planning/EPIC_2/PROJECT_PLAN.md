@@ -159,7 +159,7 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
 
 ---
 
-# Sprint 8b (Weeks 7–8): Advanced Parser Features & Conversion Pipeline
+# Sprint 9 (Weeks 7–8): Advanced Parser Features & Conversion Pipeline
 
 **Goal:** Implement advanced parser features requiring grammar changes and begin conversion pipeline work. Builds on Sprint 8's foundation with higher-complexity features.
 
@@ -224,7 +224,7 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
 
 ---
 
-# Sprint 9 (Weeks 9–10): Aggressive Simplification, Regression Guardrails, UX Diagnostics
+# Sprint 10 (Weeks 9–10): Aggressive Simplification, Regression Guardrails, UX Diagnostics
 
 **Goal:** Deliver `--simplification aggressive` informed by telemetry, integrate CI regression hooks (GAMSLib sampling, PATH smoke, performance alerts), and expand diagnostics features.
 
@@ -250,7 +250,7 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
 
 ---
 
-# Sprint 10 (Weeks 11–12): Final UX Polish, Documentation Wrap, Release Readiness, v1.0.0
+# Sprint 11 (Weeks 11–12): Final UX Polish, Documentation Wrap, Release Readiness, v1.0.0
 
 **Goal:** Complete diagnostics/progress UI, finalize documentation (advanced usage, GAMSLib handbook, tutorials), close outstanding bugs, and ship v1.0.0 meeting all KPIs.
 
