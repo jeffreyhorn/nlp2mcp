@@ -93,11 +93,11 @@ Enhanced the GAMSLib conversion dashboard to display partial parse metrics with 
 |-------|--------|----------|------------------|
 | circle | ⚠️ PARTIAL | 57% (16/28) | parse error |
 | himmel16 | ⚠️ PARTIAL | 42% (14/33) | lead/lag indexing |
-| hs62 | ⚠️ PARTIAL | 61% (11/18) | model sections (mx, my) |
+| hs62 | ⚠️ PARTIAL | 61% (11/18) | model sections (mx, my, etc.) |
 | mathopt1 | ✅ PASS | 100% (20/20) | - |
 | maxmin | ⚠️ PARTIAL | 40% (19/47) | nested indexing |
 | mhw4d | ✅ PASS | 100% (14/14) | - |
-| mhw4dx | ⚠️ PARTIAL | 51% (27/53) | variable attributes (.l, .m) |
+| mhw4dx | ⚠️ PARTIAL | 51% (27/53) | variable attributes (.l, .m, etc.) |
 | mingamma | ❌ FAIL | 24% (9/37) | parse error |
 | rbrock | ✅ PASS | 100% (8/8) | - |
 | trig | ✅ PASS | 100% (14/14) | - |

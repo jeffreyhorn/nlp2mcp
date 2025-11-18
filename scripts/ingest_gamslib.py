@@ -374,8 +374,11 @@ def _generate_model_table(models: list[ModelResult]) -> str:
         if not model.missing_features:
             return "-"
 
-        # Join with commas, limit to 2 for readability
+        # Join with commas, limit to 2 for readability, indicate if more
         features = model.missing_features[:2]
+        more_count = len(model.missing_features) - 2
+        if more_count > 0:
+            return f"{', '.join(features)} (+{more_count} more)"
         return ", ".join(features)
 
     rows = []
@@ -405,7 +408,7 @@ def _generate_model_table(models: list[ModelResult]) -> str:
 
 **Legend:**
 - ✅ PASS: 100% parsed successfully
-- 🟡 PARTIAL: 75-99% parsed, or 100% with semantic errors
+- 🟡 PARTIAL: 75-99% parsed
 - ⚠️ PARTIAL: 25-74% parsed
 - ❌ FAIL: <25% parsed
 - `-` Not attempted (stage not implemented yet)
