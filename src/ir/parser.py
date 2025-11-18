@@ -19,6 +19,7 @@ from .symbols import (
     AliasDef,
     EquationDef,
     ObjSense,
+    OptionStatement,
     ParameterDef,
     Rel,
     SetDef,
@@ -831,6 +832,88 @@ class _ModelBuilder:
             self.model.declared_model = name
         self.model.model_equations = []
         self.model.model_uses_all = False
+
+    def _handle_option_stmt(self, node: Tree) -> None:
+        """Handle option statement (Sprint 8: mock/store approach).
+
+        Grammar structure:
+            option_stmt: ("option"i | "options"i) option_list SEMI
+            option_list: option_item ("," option_item)*
+            option_item: ID "=" option_value  -> option_with_value
+                       | ID                   -> option_flag
+            option_value: NUMBER | "on"i | "off"i
+
+        Example:
+            option limrow = 0, limcol = 0;
+        """
+        options = []
+
+        # Find the option_list node
+        option_list = next(
+            (
+                child
+                for child in node.children
+                if isinstance(child, Tree) and child.data == "option_list"
+            ),
+            None,
+        )
+
+        if option_list is None:
+            raise self._error("Malformed option statement: missing option_list", node)
+
+        # Process each option_item
+        for item in option_list.children:
+            if not isinstance(item, Tree):
+                continue
+
+            if item.data == "option_with_value":
+                # ID "=" option_value
+                if len(item.children) < 2:
+                    raise self._error("Malformed option with value", item)
+
+                name = _token_text(item.children[0])
+                value_node = item.children[1]
+
+                # option_value is always a Tree node with a single child token
+                if not isinstance(value_node, Tree):
+                    raise self._error("Expected option_value tree node", value_node)
+
+                if not value_node.children:
+                    raise self._error("option_value has no children", value_node)
+
+                value_token = value_node.children[0]
+
+                if not isinstance(value_token, Token):
+                    raise self._error("Expected token in option_value", value_token)
+
+                # Parse the value (NUMBER, "on", or "off")
+                value_text = _token_text(value_token)
+                if value_token.type == "NUMBER":
+                    # Parse as int or float
+                    try:
+                        value = int(value_text)
+                    except ValueError:
+                        value = float(value_text)
+                else:
+                    # Keep as string ("on" or "off")
+                    value = value_text.lower()
+
+                options.append((name, value))
+
+            elif item.data == "option_flag":
+                # ID only (flag with no value)
+                name = _token_text(item.children[0])
+                options.append((name, None))
+
+        # Create OptionStatement and store in model
+        location = self._extract_source_location(node)
+        option_stmt = OptionStatement(options=options, location=location)
+
+        # Sprint 8: Mock/store approach - just store, don't process
+        # Add to model's option_statements list (we'll need to add this field to ModelIR)
+        if not hasattr(self.model, "option_statements"):
+            self.model.option_statements = []
+        self.model.option_statements.append(option_stmt)
 
     def _handle_assign(self, node: Tree) -> None:
         # Expected structure: lvalue, ASSIGN token, expression

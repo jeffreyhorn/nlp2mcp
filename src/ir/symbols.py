@@ -94,3 +94,26 @@ class EquationDef:
     lhs_rhs: tuple  # (lhs_expr, rhs_expr) kept as AST later
     condition: object | None = None  # Optional condition expression (Expr) for $ operator filtering
     source_location: SourceLocation | None = None  # Source location of equation definition
+
+
+@dataclass
+class OptionStatement:
+    """Represents a GAMS option statement.
+
+    Sprint 8: Mock/store approach - options are parsed and stored but not processed.
+
+    Examples:
+        option limrow = 0;
+        option limrow = 0, limcol = 0;
+        option decimals = 8;
+        option solprint = off;
+
+    Attributes:
+        options: List of (name, value) tuples where:
+            - name is the option name (e.g., "limrow", "decimals")
+            - value is None for flags, int for numbers, str for "on"/"off"
+        location: Source location of the option statement
+    """
+
+    options: list[tuple[str, int | str | None]]
+    location: SourceLocation
