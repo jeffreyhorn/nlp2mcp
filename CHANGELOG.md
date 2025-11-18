@@ -32,12 +32,11 @@ Implemented comprehensive error message improvements with line numbers, source c
 - Preserves context and domain information from parser state
 - Provides consistent error formatting across all parser errors
 
-**Top 5 Error Types Migrated with Suggestions:**
+**Top 4 Error Types Migrated with Suggestions:**
 1. **Undefined symbol**: "Declare '{name}' as a variable, parameter, or set before using it"
-2. **Numeric constants only**: "Use a literal number (e.g., 5, 3.14) instead of a function call or expression"
-3. **Index count mismatch**: "Provide exactly {n} indices to match the parameter declaration"
-4. **Equation without declaration**: "Add a declaration like 'Equation {name};' before defining it"
-5. **Unsupported assignment target**: "Assignment targets must be scalars, parameters, or variable attributes (e.g., x.l, x.lo, x.up)"
+2. **Index count mismatch**: "Provide exactly {n} indices to match the parameter declaration"
+3. **Equation without declaration**: "Add a declaration like 'Equation {name};' before defining it"
+4. **Unsupported assignment target**: "Assignment targets must be scalars, parameters, or variable attributes (e.g., x.l, x.lo, x.up)"
 
 **Test Fixtures (tests/parser/test_error_messages.py):**
 - Created comprehensive test suite with 9 test cases:
@@ -56,7 +55,7 @@ Implemented comprehensive error message improvements with line numbers, source c
 
 - ✅ All Lark errors wrapped with ParseError
 - ✅ `_parse_error()` helper implemented
-- ✅ Top 5 error types migrated with suggestions
+- ✅ Top 4 error types migrated with suggestions
 - ✅ 100% parser errors include location information
 - ✅ 9 error test cases created (exceeded target of 5)
 - ✅ make test passes (1312 tests)
@@ -67,7 +66,7 @@ Implemented comprehensive error message improvements with line numbers, source c
 #### Impact
 
 - **User Experience**: All parser errors now include helpful context with line numbers, source snippets, and caret pointers
-- **Actionable Guidance**: Top 5 error types provide specific suggestions for resolution
+- **Actionable Guidance**: Top 4 error types provide specific suggestions for resolution
 - **Consistency**: Unified error handling through ParseError class
 - **Developer Experience**: Easy-to-use `_parse_error()` helper for adding new error messages
 
