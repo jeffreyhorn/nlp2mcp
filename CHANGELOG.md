@@ -42,7 +42,7 @@ Enhanced the GAMSLib conversion dashboard to display partial parse metrics with 
 **Integration Results:**
 - Parse Rate: 40% (4/10 models passing)
 - Models Passing: mathopt1, mhw4d, rbrock, trig
-- Models with High Progress (≥50%): circle (57%), himmel16 (42%), hs62 (61%), mhw4dx (51%)
+- Models with High Progress (≥50%): circle (57%), hs62 (61%), mhw4dx (51%)
 - Models with Missing Feature Identification: 6/6 failed models annotated
 - Color Coding: Working correctly across all thresholds
 

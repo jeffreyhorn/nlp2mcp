@@ -352,9 +352,9 @@ def _generate_model_table(models: list[ModelResult]) -> str:
         if model.parse_status == "SUCCESS":
             return "✅ PASS"
         elif percentage >= 75.0:
-            return "🟡 PARTIAL"
+            return "🟡 MOSTLY PARSED"
         elif percentage >= 25.0:
-            return "⚠️ PARTIAL"
+            return "⚠️ PARTIALLY PARSED"
         else:
             return "❌ FAIL"
 
@@ -408,8 +408,8 @@ def _generate_model_table(models: list[ModelResult]) -> str:
 
 **Legend:**
 - ✅ PASS: 100% parsed successfully
-- 🟡 PARTIAL: 75-99% parsed
-- ⚠️ PARTIAL: 25-74% parsed
+- 🟡 MOSTLY PARSED: 75-99% parsed
+- ⚠️ PARTIALLY PARSED: 25-74% parsed
 - ❌ FAIL: <25% parsed
 - `-` Not attempted (stage not implemented yet)
 
