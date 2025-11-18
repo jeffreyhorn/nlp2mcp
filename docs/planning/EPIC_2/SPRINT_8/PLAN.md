@@ -1512,14 +1512,14 @@ This appendix provides detailed quality gate checklists for each day.
 ### **Day 1: Option Statements - Grammar & AST**
 
 **Quality Gates:**
-- [ ] Grammar compiles without errors
-- [ ] `make test` passes (all existing + new option tests)
-- [ ] `make typecheck` passes
-- [ ] `make lint` passes
-- [ ] OptionStatement AST node created
-- [ ] Semantic handler implemented
-- [ ] 4+ basic tests passing
-- [ ] No regressions in mhw4d, rbrock
+- [x] Grammar compiles without errors ✅
+- [x] `make test` passes (all existing + new option tests) ✅
+- [x] `make typecheck` passes ✅
+- [x] `make lint` passes ✅
+- [x] OptionStatement AST node created ✅
+- [x] Semantic handler implemented ✅
+- [x] 4+ basic tests passing (8 tests created) ✅
+- [x] No regressions in mhw4d, rbrock ✅
 
 ---
 

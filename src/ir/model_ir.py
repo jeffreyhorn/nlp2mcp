@@ -8,6 +8,7 @@ from .symbols import (
     AliasDef,
     EquationDef,
     ObjSense,
+    OptionStatement,
     ParameterDef,
     SetDef,
     VariableDef,
@@ -34,6 +35,9 @@ class ModelIR:
 
     # Equations
     equations: dict[str, EquationDef] = field(default_factory=dict)
+
+    # Option statements (Sprint 8: mock/store approach)
+    option_statements: list[OptionStatement] = field(default_factory=list)
 
     # Solve info
     declared_model: str | None = None

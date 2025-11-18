@@ -48,7 +48,7 @@
       "model_name": "mhw4dx",
       "gms_file": "mhw4dx.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'l' in the current parser context, at line 37 col 8\n\noption limCol = 0, limRow = 0;\n       ^\nExpected one of: \n\t* DOT\n\t* __ANON_0\n\t* ASSIGN\n\t* LPAR\n\t* DOLLAR\n",
+      "parse_error": "No terminal matches 'a' in the current parser context, at line 63 col 11\n\nelseif    abs(m.l-44.02207169) < tol, // local sol\n          ^\nExpected one of: \n\t* DOT\n\t* __ANON_0\n\t* ASSIGN\n\t* LPAR\n\t* DOLLAR\n",
       "parse_error_type": "UnexpectedCharacters"
     },
     {

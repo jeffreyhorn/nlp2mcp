@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-17 23:28:00
+**Generated:** 2025-11-18 00:04:03
 **Sprint:** Sprint 6
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint6.json`](../../reports/gamslib_ingestion_sprint6.json)
@@ -127,10 +127,10 @@ Expected one of:
 **Error Type:** `UnexpectedCharacters`
 **Error Message:**
 ```
-No terminal matches 'l' in the current parser context, at line 37 col 8
+No terminal matches 'a' in the current parser context, at line 63 col 11
 
-option limCol = 0, limRow = 0;
-       ^
+elseif    abs(m.l-44.02207169) < tol, // local sol
+          ^
 Expected one of: 
 	* DOT
 	* __ANON_0

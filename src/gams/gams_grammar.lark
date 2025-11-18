@@ -18,6 +18,7 @@ start: stmt*  -> program
      | variables_block
      | equations_block
      | model_stmt
+     | option_stmt
      | assignment_stmt
      | equation_def
      | solve_stmt
@@ -159,6 +160,21 @@ model_stmt: ("Models"i | "Model"i) ID "/" "all"i "/" SEMI       -> model_all
 model_ref_list: ID ("," ID)*
 
 // ---------------------------
+// Option Statement (Sprint 8)
+// ---------------------------
+
+option_stmt: ("option"i | "options"i) option_list SEMI
+
+option_list: option_item ("," option_item)*
+
+option_item: ID "=" option_value  -> option_with_value
+           | ID                   -> option_flag
+
+option_value: NUMBER
+            | ON
+            | OFF
+
+// ---------------------------
 // Expressions
 // ---------------------------
 
@@ -211,6 +227,8 @@ arg_list: expr ("," expr)*
 // ---------------------------
 
 FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card|uniform|normal)\b/
+ON: /(?i:on)\b/
+OFF: /(?i:off)\b/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
 ESCAPED: /'[^']*'|\"[^\"]*\"/
 STRING: /"[^"]*"|'[^']*'/
