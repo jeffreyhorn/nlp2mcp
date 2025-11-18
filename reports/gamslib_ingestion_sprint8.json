@@ -1,0 +1,144 @@
+{
+  "sprint": "Sprint 8",
+  "total_models": 10,
+  "models": [
+    {
+      "model_name": "circle",
+      "gms_file": "circle.gms",
+      "parse_status": "FAILED",
+      "parse_error": "Error: Parse error at line 40, column 13: Undefined symbol 'i' referenced [context: assignment]\n  xmin = smin(i, x(i));\n              ^\n\nSuggestion: Declare 'i' as a variable, parameter, or set before using it",
+      "parse_error_type": "ParseError",
+      "parse_progress_percentage": 57.1,
+      "parse_progress_lines_parsed": 16,
+      "parse_progress_lines_total": 28,
+      "missing_features": [
+        "parse error"
+      ]
+    },
+    {
+      "model_name": "himmel16",
+      "gms_file": "himmel16.gms",
+      "parse_status": "FAILED",
+      "parse_error": "Error: Parse error at line 46, column 39: Unexpected character: '+'\n  areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));\n                                        ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error_type": "ParseError",
+      "parse_progress_percentage": 42.4,
+      "parse_progress_lines_parsed": 14,
+      "parse_progress_lines_total": 33,
+      "missing_features": [
+        "lead/lag indexing (i++1, i--1)"
+      ]
+    },
+    {
+      "model_name": "hs62",
+      "gms_file": "hs62.gms",
+      "parse_status": "FAILED",
+      "parse_error": "Error: Parse error at line 35, column 1: Unexpected character: 'm'\n  mx / objdef, eq1x /;\n  ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error_type": "ParseError",
+      "parse_progress_percentage": 61.1,
+      "parse_progress_lines_parsed": 11,
+      "parse_progress_lines_total": 18,
+      "missing_features": [
+        "model sections (mx, my, etc.)"
+      ]
+    },
+    {
+      "model_name": "mathopt1",
+      "gms_file": "mathopt1.gms",
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null,
+      "parse_progress_percentage": 100.0,
+      "parse_progress_lines_parsed": 20,
+      "parse_progress_lines_total": 20,
+      "missing_features": []
+    },
+    {
+      "model_name": "maxmin",
+      "gms_file": "maxmin.gms",
+      "parse_status": "FAILED",
+      "parse_error": "Error: Parse error at line 51, column 12: Unexpected character: '('\n  defdist(low(n,nn))..   dist(low) =e= sqrt(sum(d, sqr(point(n,d) - point(nn,d))));\n             ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error_type": "ParseError",
+      "parse_progress_percentage": 40.4,
+      "parse_progress_lines_parsed": 19,
+      "parse_progress_lines_total": 47,
+      "missing_features": [
+        "nested indexing"
+      ]
+    },
+    {
+      "model_name": "mhw4d",
+      "gms_file": "mhw4d.gms",
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null,
+      "parse_progress_percentage": 100.0,
+      "parse_progress_lines_parsed": 14,
+      "parse_progress_lines_total": 14,
+      "missing_features": []
+    },
+    {
+      "model_name": "mhw4dx",
+      "gms_file": "mhw4dx.gms",
+      "parse_status": "FAILED",
+      "parse_error": "Error: Parse error at line 63, column 11: Unexpected character: 'a'\n  elseif    abs(m.l-44.02207169) < tol, // local solution\n            ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error_type": "ParseError",
+      "parse_progress_percentage": 50.9,
+      "parse_progress_lines_parsed": 27,
+      "parse_progress_lines_total": 53,
+      "missing_features": [
+        "variable attributes (.l, .m, etc.)"
+      ]
+    },
+    {
+      "model_name": "mingamma",
+      "gms_file": "mingamma.gms",
+      "parse_status": "FAILED",
+      "parse_error": "Error: Parse error at line 26, column 1: Unexpected character: 'm'\n  m2 / y2def /;\n  ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error_type": "ParseError",
+      "parse_progress_percentage": 24.3,
+      "parse_progress_lines_parsed": 9,
+      "parse_progress_lines_total": 37,
+      "missing_features": [
+        "parse error"
+      ]
+    },
+    {
+      "model_name": "rbrock",
+      "gms_file": "rbrock.gms",
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null,
+      "parse_progress_percentage": 100.0,
+      "parse_progress_lines_parsed": 8,
+      "parse_progress_lines_total": 8,
+      "missing_features": []
+    },
+    {
+      "model_name": "trig",
+      "gms_file": "trig.gms",
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null,
+      "parse_progress_percentage": 100.0,
+      "parse_progress_lines_parsed": 14,
+      "parse_progress_lines_total": 14,
+      "missing_features": []
+    }
+  ],
+  "kpis": {
+    "total_models": 10,
+    "parse_success": 4,
+    "parse_failed": 6,
+    "parse_rate_percent": 40.0,
+    "convert_success": 0,
+    "convert_failed": 0,
+    "convert_rate_percent": 0.0,
+    "solve_success": 0,
+    "solve_failed": 0,
+    "solve_rate_percent": 0.0,
+    "sprint6_target_models": 10,
+    "sprint6_target_parse_rate": 10.0,
+    "sprint6_target_convert_rate": 50.0,
+    "meets_sprint6_targets": true
+  }
+}

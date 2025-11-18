@@ -13,7 +13,8 @@ help:
 	@echo "  lint            - Run code linters (ruff, mypy, black)"
 	@echo "  typecheck       - Run mypy type checker only"
 	@echo "  format          - Format code with black and ruff"
-	@echo "  test            - Run tests with pytest"
+	@echo "  test            - Run tests with pytest (skips slow tests)"
+	@echo "  test-all        - Run all tests including slow ones"
 	@echo "  coverage        - Run tests with coverage report"
 	@echo "  ingest-gamslib  - Run GAMSLib ingestion and generate dashboard"
 	@echo "  clean           - Remove build artifacts and caches"
@@ -44,8 +45,12 @@ format:
 	@echo "Sorting imports with ruff..."
 	$(PYTHON) -m ruff check --fix --select I src/ tests/
 
-# Run tests (parallel execution with pytest-xdist)
+# Run tests (parallel execution with pytest-xdist, skip slow tests by default)
 test:
+	$(PYTHON) -m pytest tests/ -n auto -m "not slow"
+
+# Run all tests including slow ones (benchmarks, production, research)
+test-all:
 	$(PYTHON) -m pytest tests/ -n auto
 
 # Run type checker
@@ -68,11 +73,11 @@ ingest-gamslib:
 	fi
 	@PYTHONHASHSEED=0 $(PYTHON) scripts/ingest_gamslib.py \
 		--input tests/fixtures/gamslib \
-		--output reports/gamslib_ingestion_sprint6.json \
+		--output reports/gamslib_ingestion_sprint8.json \
 		--dashboard docs/status/GAMSLIB_CONVERSION_STATUS.md
 	@echo ""
 	@echo "✅ Ingestion complete!"
-	@echo "   Report: reports/gamslib_ingestion_sprint6.json"
+	@echo "   Report: reports/gamslib_ingestion_sprint8.json"
 	@echo "   Dashboard: docs/status/GAMSLIB_CONVERSION_STATUS.md"
 
 # Clean build artifacts
