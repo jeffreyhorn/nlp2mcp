@@ -1,0 +1,50 @@
+fixtures:
+  himmel16_pattern:
+    description: "Partial parse with lead/lag indexing error (i++1 pattern from himmel16.gms)"
+    expected_status: "PARTIAL"
+    parse_percentage: 80 # Approximate - parsed declarations, failed at equation
+    statements_parsed: 3 # Set, Variable declarations
+    statements_total: 6 # Including equation definition and model/solve
+    missing_features:
+      - "Lead/lag indexing (i++1, i--1)"
+    error_location:
+      line: 10
+      statement: "areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1))"
+    priority: "High"
+    notes: "Tests partial parse metric calculation for lead/lag indexing blocker"
+
+  circle_pattern:
+    description: "Partial parse with function call in assignment (uniform() from circle.gms)"
+    expected_status: "PARTIAL"
+    parse_percentage: 70 # Approximate - parsed declarations, failed at assignments
+    statements_parsed: 2 # Set, Parameter declarations
+    statements_total: 7 # Including assignments, scalar, display
+    missing_features:
+      - "Function calls in assignments (uniform, normal, etc.)"
+    error_location:
+      line: 9
+      statement: "x(i) = uniform(1,10)"
+    priority: "High"
+    notes: "Tests partial parse with function call blocker"
+
+  complete_success:
+    description: "Complete 100% parse success (baseline for partial metrics)"
+    expected_status: "SUCCESS"
+    parse_percentage: 100
+    statements_parsed: 8
+    statements_total: 8
+    missing_features: []
+    priority: "Medium"
+    notes: "Validates that 100% parse is correctly reported (no partial metrics)"
+    expected_equations: 1
+    expected_variables: 1
+
+summary:
+  total_fixtures: 3
+  expected_success: 1
+  expected_failures: 0
+  expected_partial: 2
+  coverage:
+    - "Partial parse with lead/lag indexing"
+    - "Partial parse with function calls"
+    - "100% parse baseline"
