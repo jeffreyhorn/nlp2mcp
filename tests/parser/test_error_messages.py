@@ -164,14 +164,6 @@ class TestErrorCoverage:
     def test_semantic_errors_preserve_context(self):
         """Test that semantic errors preserve context information."""
         source = """
-Set i / i1, i2, i3 /;
-Parameter p(i);
-p(i) = 5;
-"""
-
-        # This should actually work now after Sprint 8 Day 3, but let's test error handling
-        # Let's use a different error case
-        source = """
 Set i / i1, i2 /;
 Variable x;
 Equation eq;

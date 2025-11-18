@@ -156,6 +156,34 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
     return resolved[id(node)]
 
 
+def _extract_source_line_with_adjusted_column(
+    source: str, line: int | None, column: int | None
+) -> tuple[str | None, int | None]:
+    """Extract source line and adjust column for whitespace stripping.
+
+    Args:
+        source: Full source text
+        line: Line number (1-indexed)
+        column: Column number (1-indexed)
+
+    Returns:
+        Tuple of (stripped source line, adjusted column number)
+    """
+    source_lines = source.split("\n")
+    source_line = None
+    adjusted_column = column
+
+    if line and 1 <= line <= len(source_lines):
+        source_line = source_lines[line - 1].lstrip()
+        # Adjust column for stripped whitespace
+        original_line = source_lines[line - 1]
+        stripped_count = len(original_line) - len(original_line.lstrip())
+        if column is not None:
+            adjusted_column = max(1, column - stripped_count)
+
+    return source_line, adjusted_column
+
+
 def parse_text(source: str) -> Tree:
     """Parse a source string and return a disambiguated Lark parse tree.
 
@@ -173,17 +201,8 @@ def parse_text(source: str) -> Tree:
         raw = parser.parse(source)
         return _resolve_ambiguities(raw)
     except UnexpectedToken as e:
-        # Extract source line for display
-        source_lines = source.split("\n")
-        source_line = None
-        if e.line and 1 <= e.line <= len(source_lines):
-            source_line = source_lines[e.line - 1].lstrip()
-            # Adjust column for stripped whitespace
-            original_line = source_lines[e.line - 1]
-            stripped_count = len(original_line) - len(original_line.lstrip())
-            column = max(1, (e.column or 1) - stripped_count)
-        else:
-            column = e.column
+        # Extract source line and adjust column
+        source_line, column = _extract_source_line_with_adjusted_column(source, e.line, e.column)
 
         # Format expected tokens
         expected = getattr(e, "expected", None)
@@ -202,17 +221,8 @@ def parse_text(source: str) -> Tree:
         ) from e
 
     except UnexpectedCharacters as e:
-        # Extract source line for display
-        source_lines = source.split("\n")
-        source_line = None
-        if e.line and 1 <= e.line <= len(source_lines):
-            source_line = source_lines[e.line - 1].lstrip()
-            # Adjust column for stripped whitespace
-            original_line = source_lines[e.line - 1]
-            stripped_count = len(original_line) - len(original_line.lstrip())
-            column = max(1, (e.column or 1) - stripped_count)
-        else:
-            column = e.column
+        # Extract source line and adjust column
+        source_line, column = _extract_source_line_with_adjusted_column(source, e.line, e.column)
 
         # Get the unexpected character
         char = getattr(e, "char", None)
@@ -230,12 +240,10 @@ def parse_text(source: str) -> Tree:
         ) from e
 
     except UnexpectedEOF as e:
-        # Extract source line for display
+        # Extract source line (use last line for EOF errors)
         source_lines = source.split("\n")
         last_line = len(source_lines)
-        source_line = None
-        if last_line > 0:
-            source_line = source_lines[last_line - 1].lstrip()
+        source_line, _ = _extract_source_line_with_adjusted_column(source, last_line, 1)
 
         # Format expected tokens
         expected = getattr(e, "expected", None)
@@ -1210,11 +1218,10 @@ class _ModelBuilder:
                 # (e.g., mathopt1.gms: Parameter report; report('x1','global') = 1;)
                 if len(param.domain) > 0 and len(indices) != len(param.domain):
                     index_word = "index" if len(param.domain) == 1 else "indices"
-                    expected_word = "index" if len(param.domain) == 1 else "indices"
                     raise self._parse_error(
                         f"Parameter '{param_name}' expects {len(param.domain)} {index_word}, got {len(indices)}",
                         target,
-                        suggestion=f"Provide exactly {len(param.domain)} {expected_word} to match the parameter declaration",
+                        suggestion=f"Provide exactly {len(param.domain)} {index_word} to match the parameter declaration",
                     )
 
                 # Store indexed value
