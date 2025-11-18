@@ -7,6 +7,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 8: Day 7 - Partial Parse Metrics - 2025-11-18
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented parse progress tracking and missing feature extraction to provide visibility into partial parse success. The system now tracks how many logical lines were successfully parsed before an error occurred and identifies which GAMS features are blocking complete parsing. This enables the dashboard to show "himmel16: 92% parsed, needs [i++1 indexing]" instead of binary "FAILED" status.
+
+#### Changes Made
+
+**Parse Progress Module (src/utils/parse_progress.py):**
+- Created count_logical_lines() function to count non-empty, non-comment lines
+  - Handles multiline comments ($ontext...$offtext)
+  - Skips single-line comments (*)
+  - Handles inline comments correctly
+- Created count_logical_lines_up_to() to count lines before error
+- Created extract_error_line() to extract line numbers from exceptions
+- Created extract_missing_features() with 8 pattern detection rules:
+  - Pattern 1: Lead/lag indexing (i++1, i--1)
+  - Pattern 2: Option statements
+  - Pattern 3: Model sections (mx, my)
+  - Pattern 4: Function calls in assignments
+  - Pattern 5: Indexed assignments
+  - Pattern 6: Nested indexing
+  - Pattern 7: Short model syntax
+  - Pattern 8: Generic unsupported features
+- Created calculate_parse_progress() to calculate partial progress metrics
+- Returns top 2 features for dashboard readability
+
+**ModelResult Enhancement (scripts/ingest_gamslib.py):**
+- Added parse_progress_percentage field (0-100)
+- Added parse_progress_lines_parsed field (lines before error)
+- Added parse_progress_lines_total field (total logical lines)
+- Added missing_features field (list of blocking features)
+- Updated parse_model() to calculate progress for all parses (success and failure)
+- Integrated extract_missing_features() for failed parses
+
+**Comprehensive Test Coverage:**
+- tests/unit/utils/test_parse_progress.py: 39 tests covering all functions
+  - 10 tests for count_logical_lines (empty, single, multiple, comments, multiline)
+  - 6 tests for count_logical_lines_up_to (various edge cases)
+  - 5 tests for extract_error_line (attribute, message parsing, fallbacks)
+  - 14 tests for extract_missing_features (8 patterns + edge cases)
+  - 4 tests for calculate_parse_progress (success, partial, empty, high%)
+- tests/integration/test_partial_parse_metrics.py: 10 integration tests
+  - Successful parse reports 100% progress
+  - Failed parse reports partial progress
+  - Comment handling verified
+  - Multiline comment handling verified
+  - Missing feature extraction integration
+  - ModelResult dataclass field validation
+
+#### Quality Gates
+
+- ✅ make test passes (1320 tests, all new tests passing)
+- ✅ make typecheck passes (61 source files)
+- ✅ make lint passes
+- ✅ make format passes
+- ✅ Line counting handles multiline comments correctly
+- ✅ Feature extraction covers 8+ common GAMS error patterns
+- ✅ Progress calculation accurate for all test cases
+- ✅ ModelResult dataclass enhanced with 4 new fields
+- ✅ Ingestion script integration complete
+
+#### Technical Details
+
+**Line Counting Algorithm:**
+- Counts "logical lines" (non-empty, non-comment)
+- Excludes blank lines and comment-only lines
+- Handles $ontext...$offtext multiline comments (case-insensitive)
+- Handles inline comments (* after code)
+- Provides pragmatic approximation for progress tracking
+
+**Feature Extraction Patterns:**
+- Uses regex pattern matching on error messages and source lines
+- Extracts up to 2 features for dashboard readability
+- Deduplicates features to avoid redundancy
+- Falls back to generic hints for unknown error types
+
+**Progress Calculation:**
+- Successful parse: 100% (all lines parsed)
+- Failed parse: (lines_before_error / total_lines) * 100
+- Semantic errors: 100% (full parse, semantic issue after)
+- Handles missing line information gracefully (assumes 0% progress)
+
+#### Cross-References
+
+- PARTIAL_PARSE_METRICS.md: Algorithm design and line counting specification
+- DASHBOARD_ENHANCEMENTS.md: ModelResult schema and dashboard integration
+- PLAN.md Day 7: Implementation tasks and quality gates
+
+---
+
 ### Sprint 8: Day 6 - Error Message Enhancements - 2025-11-18
 
 **Status:** ✅ COMPLETE
