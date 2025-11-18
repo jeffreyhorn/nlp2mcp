@@ -211,7 +211,7 @@ def ingest_gamslib(input_dir: Path, output_file: Path) -> None:
 
     # Create report
     report = IngestionReport(
-        sprint="Sprint 6",
+        sprint="Sprint 8",
         total_models=len(results),
         models=results,
         kpis=kpis,
@@ -343,44 +343,71 @@ def _generate_kpi_summary(kpis: dict[str, Any]) -> str:
 
 
 def _generate_model_table(models: list[ModelResult]) -> str:
-    """Generate per-model status table."""
+    """Generate per-model status table with Sprint 8 enhancements."""
 
-    def status_icon(status: str) -> str:
-        if status == "SUCCESS":
-            return "✅"
-        elif status == "FAILED":
-            return "❌"
+    def determine_status_symbol(model: ModelResult) -> str:
+        """Determine color-coded status symbol based on parse percentage."""
+        percentage = model.parse_progress_percentage or 0.0
+
+        if model.parse_status == "SUCCESS":
+            return "✅ PASS"
+        elif percentage >= 75.0:
+            return "🟡 PARTIAL"
+        elif percentage >= 25.0:
+            return "⚠️ PARTIAL"
         else:
+            return "❌ FAIL"
+
+    def format_progress(model: ModelResult) -> str:
+        """Format progress column."""
+        if model.parse_progress_percentage is None:
             return "-"
+
+        pct = model.parse_progress_percentage
+        parsed = model.parse_progress_lines_parsed or 0
+        total = model.parse_progress_lines_total or 0
+
+        return f"{pct:.0f}% ({parsed}/{total})"
+
+    def format_missing_features(model: ModelResult) -> str:
+        """Format missing features column."""
+        if not model.missing_features:
+            return "-"
+
+        # Join with commas, limit to 2 for readability
+        features = model.missing_features[:2]
+        return ", ".join(features)
 
     rows = []
     for model in models:
-        # Sprint 6: Only parse status available
-        parse = status_icon(model.parse_status)
+        # Sprint 8: Enhanced status with color coding
+        status = determine_status_symbol(model)
+        progress = format_progress(model)
+        missing = format_missing_features(model)
+
+        # Convert/Solve/E2E columns (unchanged)
         convert = "-"  # Not yet implemented
         solve = "-"  # Not yet implemented
         e2e = "❌"  # No complete pipeline yet
 
-        # Notes column
-        if model.parse_status == "FAILED":
-            notes = f"Parse error: {model.parse_error_type}"
-        else:
-            notes = "Parsed successfully"
-
-        rows.append(f"| {model.model_name} | {parse} | {convert} | {solve} | {e2e} | {notes} |")
+        rows.append(
+            f"| {model.model_name} | {status} | {progress} | {missing} | {convert} | {solve} | {e2e} |"
+        )
 
     return (
         f"""## Model Status
 
-| Model | Parse | Convert | Solve | E2E | Notes |
-|-------|-------|---------|-------|-----|-------|
+| Model | Status | Progress | Missing Features | Convert | Solve | E2E |
+|-------|--------|----------|------------------|---------|-------|-----|
 """
         + "\n".join(rows)
         + """
 
 **Legend:**
-- ✅ Success
-- ❌ Failed
+- ✅ PASS: 100% parsed successfully
+- 🟡 PARTIAL: 75-99% parsed, or 100% with semantic errors
+- ⚠️ PARTIAL: 25-74% parsed
+- ❌ FAIL: <25% parsed
 - `-` Not attempted (stage not implemented yet)
 
 ---"""
@@ -427,7 +454,7 @@ def _generate_error_breakdown(models: list[ModelResult]) -> str:
 
 
 def _generate_failure_details(models: list[ModelResult]) -> str:
-    """Generate detailed failure information."""
+    """Generate detailed failure information with Sprint 8 enhancements."""
     failures = [m for m in models if m.parse_status == "FAILED"]
 
     if not failures:
@@ -441,6 +468,19 @@ def _generate_failure_details(models: list[ModelResult]) -> str:
         sections.append(f"### {model.gms_file}")
         sections.append(f"**Model:** {model.model_name}")
         sections.append(f"**Status:** Parse Failed")
+
+        # Sprint 8: Add parse progress information
+        if model.parse_progress_percentage is not None:
+            pct = model.parse_progress_percentage
+            parsed = model.parse_progress_lines_parsed or 0
+            total = model.parse_progress_lines_total or 0
+            sections.append(f"**Progress:** {pct:.0f}% ({parsed}/{total} lines parsed)")
+
+        # Sprint 8: Add missing features
+        if model.missing_features:
+            features_str = ", ".join(model.missing_features)
+            sections.append(f"**Missing Features:** {features_str}")
+
         sections.append(f"**Error Type:** `{model.parse_error_type}`")
         sections.append(f"**Error Message:**")
         sections.append("```")
