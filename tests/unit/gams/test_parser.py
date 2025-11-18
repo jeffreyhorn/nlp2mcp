@@ -411,7 +411,8 @@ def test_indexed_equation_requires_declared_set():
         parser.parse_model_text(text)
 
 
-def test_indexed_parameter_assignment_not_supported():
+def test_indexed_parameter_assignment_supported():
+    """Test that indexed parameter assignments are now supported (Sprint 8 Day 3)."""
     text = dedent(
         """
         Sets
@@ -421,12 +422,14 @@ def test_indexed_parameter_assignment_not_supported():
             alpha(i)
         ;
 
-        alpha(i) = 2;
+        alpha('i1') = 2;
         """
     )
 
-    with pytest.raises(parser.ParserSemanticError, match="Indexed assignments are not supported"):
-        parser.parse_model_text(text)
+    # This should parse successfully now (Sprint 8 Day 3 feature)
+    model = parser.parse_model_text(text)
+    assert "alpha" in model.params
+    assert model.params["alpha"].values[("i1",)] == 2
 
 
 def test_non_constant_bound_expression_rejected():

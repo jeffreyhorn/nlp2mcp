@@ -206,6 +206,26 @@ def _id_list(node: Tree) -> tuple[str, ...]:
     return tuple(_token_text(tok) for tok in node.children if isinstance(tok, Token))
 
 
+def _extract_indices(node: Tree) -> tuple[str, ...]:
+    """Extract indices from id_list, stripping quotes from escaped identifiers.
+
+    Used for indexed parameter assignments like p('i1') where 'i1' should become i1.
+    """
+    indices = []
+    for tok in node.children:
+        if isinstance(tok, Token):
+            value = str(tok)
+            # Strip quotes from escaped ID tokens (e.g., 'i1', "cost%")
+            if tok.type == "ID" and len(value) >= 2:
+                if (value[0] == "'" and value[-1] == "'") or (value[0] == '"' and value[-1] == '"'):
+                    indices.append(value[1:-1])
+                else:
+                    indices.append(value)
+            else:
+                indices.append(_token_text(tok))
+    return tuple(indices)
+
+
 @dataclass
 class _ModelBuilder:
     """Walks the parse tree and instantiates ModelIR components."""
@@ -1052,7 +1072,28 @@ class _ModelBuilder:
                 self._apply_variable_bound(var_name, bound_token, (), value, target)
                 return
             if target.data == "symbol_indexed":
-                raise self._error("Indexed assignments are not supported yet", target)
+                # Handle indexed parameter assignment: p('i1') = 10 or report('x1','global') = 1
+                param_name = _token_text(target.children[0])
+
+                # Extract indices from id_list, stripping quotes
+                indices = _extract_indices(target.children[1]) if len(target.children) > 1 else ()
+
+                # Validate parameter exists
+                if param_name not in self.model.params:
+                    raise self._error(f"Parameter '{param_name}' not declared", target)
+
+                param = self.model.params[param_name]
+
+                # Validate index count matches domain
+                if len(indices) != len(param.domain):
+                    raise self._error(
+                        f"Parameter '{param_name}' expects {len(param.domain)} indices, got {len(indices)}",
+                        target,
+                    )
+
+                # Store indexed value
+                param.values[tuple(indices)] = value
+                return
         elif isinstance(target, Token):
             name = _token_text(target)
             if name in self.model.params:
@@ -1443,13 +1484,13 @@ class _ModelBuilder:
         node: Tree | Token | None = None,
     ) -> None:
         # Currently supported variable attributes (bound modifiers):
-        #   "lo" (lower bound), "up" (upper bound), "fx" (fixed), "l" (level/initial value)
-        # Additional GAMS attributes exist (e.g., ".m", ".prior", ".scale") but are not yet
+        #   "lo" (lower bound), "up" (upper bound), "fx" (fixed), "l" (level/initial value), "m" (marginal/dual value)
+        # Additional GAMS attributes exist (e.g., ".prior", ".scale") but are not yet
         # implemented in the grammar or parser. This implementation focuses on the most
-        # commonly used attributes needed to unblock 60% of GAMSLib models.
-        label_map = {"lo": "lower", "up": "upper", "fx": "fixed", "l": "level"}
-        map_attrs = {"lo": "lo_map", "up": "up_map", "fx": "fx_map", "l": "l_map"}
-        scalar_attrs = {"lo": "lo", "up": "up", "fx": "fx", "l": "l"}
+        # commonly used attributes needed to unblock GAMSLib models.
+        label_map = {"lo": "lower", "up": "upper", "fx": "fixed", "l": "level", "m": "marginal"}
+        map_attrs = {"lo": "lo_map", "up": "up_map", "fx": "fx_map", "l": "l_map", "m": "m_map"}
+        scalar_attrs = {"lo": "lo", "up": "up", "fx": "fx", "l": "l", "m": "m"}
         label = label_map.get(bound_kind, bound_kind)
         index_hint = f" at indices {key}" if key else ""
 
@@ -1466,6 +1507,11 @@ class _ModelBuilder:
             if bound_kind == "l":
                 raise self._error(
                     f"Level (initial value) for variable '{var_name}' cannot be infinite",
+                    node,
+                )
+            if bound_kind == "m":
+                raise self._error(
+                    f"Marginal (dual value) for variable '{var_name}' cannot be infinite",
                     node,
                 )
             # For other cases (e.g., lo = +inf), treat like regular value

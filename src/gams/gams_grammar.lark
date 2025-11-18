@@ -132,7 +132,7 @@ ref_bound: ID "." BOUND_K "(" id_list ")"   -> bound_indexed
          | ID "." BOUND_K                      -> bound_scalar
          | ID "." ID                            -> attr_access
 
-BOUND_K: /(lo|up|fx|l)/i
+BOUND_K: /(lo|up|fx|l|m)/i
 
 ref_indexed.2: ID "(" id_list ")"             -> symbol_indexed
 
