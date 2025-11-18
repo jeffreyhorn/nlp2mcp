@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 8: Day 5 - Error Line Numbers & Source Context - 2025-11-18
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented comprehensive error message improvements with line numbers, source context, and actionable suggestions for all parser errors. All Lark syntax errors are now wrapped in ParseError with source line display and caret pointers. Top 5 most common semantic errors migrated to provide helpful guidance to users.
+
+#### Changes Made
+
+**Lark Error Wrapping (src/ir/parser.py):**
+- Modified `parse_text()` to catch and wrap all Lark exceptions:
+  - `UnexpectedToken`: Wrapped with expected token suggestions
+  - `UnexpectedCharacters`: Wrapped with context about invalid characters
+  - `UnexpectedEOF`: Wrapped with helpful messages about incomplete files
+- All wrapped errors include source line extraction and caret pointer alignment
+- Column numbers adjusted for whitespace stripping in display
+
+**_parse_error() Helper Method (src/ir/parser.py):**
+- Added `source` field to `_ModelBuilder` to store original GAMS source text
+- Created `_parse_error()` method similar to existing `_error()` but returns `ParseError`
+- Extracts source line from original input for display with caret pointer
+- Preserves context and domain information from parser state
+- Provides consistent error formatting across all parser errors
+
+**Top 5 Error Types Migrated with Suggestions:**
+1. **Undefined symbol**: "Declare '{name}' as a variable, parameter, or set before using it"
+2. **Numeric constants only**: "Use a literal number (e.g., 5, 3.14) instead of a function call or expression"
+3. **Index count mismatch**: "Provide exactly {n} indices to match the parameter declaration"
+4. **Equation without declaration**: "Add a declaration like 'Equation {name};' before defining it"
+5. **Unsupported assignment target**: "Assignment targets must be scalars, parameters, or variable attributes (e.g., x.l, x.lo, x.up)"
+
+**Test Fixtures (tests/parser/test_error_messages.py):**
+- Created comprehensive test suite with 9 test cases:
+  - `TestLarkErrorWrapping`: 2 tests for syntax error wrapping
+  - `TestParseErrorFormatting`: 2 tests for source context and suggestions
+  - `TestSemanticErrorsWithSuggestions`: 3 tests for specific error types
+  - `TestErrorCoverage`: 2 tests for line number coverage
+- All tests verify line/column information and error messages
+- Tests confirm actionable suggestions are provided
+
+**Updated Existing Tests (tests/unit/gams/test_parser.py):**
+- Updated 3 tests to expect `ParseError` instead of `ParserSemanticError`
+- All tests pass with no regressions (1312 tests passing)
+
+#### Quality Gates
+
+- ✅ All Lark errors wrapped with ParseError
+- ✅ `_parse_error()` helper implemented
+- ✅ Top 5 error types migrated with suggestions
+- ✅ 100% parser errors include location information
+- ✅ 9 error test cases created (exceeded target of 5)
+- ✅ make test passes (1312 tests)
+- ✅ make typecheck passes
+- ✅ make lint passes
+- ✅ No regressions in error handling
+
+#### Impact
+
+- **User Experience**: All parser errors now include helpful context with line numbers, source snippets, and caret pointers
+- **Actionable Guidance**: Top 5 error types provide specific suggestions for resolution
+- **Consistency**: Unified error handling through ParseError class
+- **Developer Experience**: Easy-to-use `_parse_error()` helper for adding new error messages
+
+#### Notes
+
+- Error wrapping handles all three Lark exception types (UnexpectedToken, UnexpectedCharacters, UnexpectedEOF)
+- Source line extraction properly handles whitespace stripping and column adjustment
+- Context and domain information preserved from parser state
+- Future error migrations can easily use the `_parse_error()` helper
+
+---
+
 ### Sprint 8: Day 4 - Indexed Assignments - Test Fixtures & Validation - 2025-11-18
 
 **Status:** ✅ COMPLETE

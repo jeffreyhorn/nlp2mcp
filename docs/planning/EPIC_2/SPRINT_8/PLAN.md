@@ -1621,15 +1621,15 @@ This appendix provides detailed quality gate checklists for each day.
 ### **Day 5: Error Line Numbers**
 
 **Quality Gates:**
-- [ ] All Lark errors wrapped with ParseError
-- [ ] `_parse_error()` helper implemented
-- [ ] Top 5 error types migrated
-- [ ] 100% parser errors include location
-- [ ] 5 error test fixtures created
-- [ ] `make test` passes
-- [ ] `make typecheck` passes
-- [ ] `make lint` passes
-- [ ] No regressions in error handling
+- [x] All Lark errors wrapped with ParseError ✅
+- [x] `_parse_error()` helper implemented ✅
+- [x] Top 5 error types migrated ✅
+- [x] 100% parser errors include location ✅
+- [x] 5 error test fixtures created ✅ (9 test cases)
+- [x] `make test` passes ✅ (1312 tests)
+- [x] `make typecheck` passes ✅
+- [x] `make lint` passes ✅
+- [x] No regressions in error handling ✅
 
 ---
 
