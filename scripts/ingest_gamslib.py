@@ -102,12 +102,16 @@ def parse_model(gms_path: Path) -> ModelResult:
         error_message = str(e)
         error_type = type(e).__name__
 
+        # Read source once for both progress calculation and feature extraction
+        source = gms_path.read_text()
+
         # Calculate partial parse progress
-        progress = calculate_parse_progress_from_file(gms_path, error=e)
+        from src.utils.parse_progress import calculate_parse_progress
+
+        progress = calculate_parse_progress(source, error=e)
 
         # Extract missing features from error
         error_line = extract_error_line(e)
-        source = gms_path.read_text()
         source_line = None
         if error_line and 0 < error_line <= len(source.split("\n")):
             source_line = source.split("\n")[error_line - 1]

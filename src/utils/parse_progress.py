@@ -45,10 +45,17 @@ def count_logical_lines(source: str) -> int:
         if not stripped or stripped.startswith("*"):
             continue
 
-        # Skip inline comments (line starts with code but has *)
-        # Split by * and check if there's code before the comment
-        code_part = stripped.split("*")[0].strip()
-        if code_part:  # Has non-comment content
+        # Handle inline comments
+        # Look for comment asterisk (preceded by whitespace, not a multiplication operator)
+        # Match pattern: whitespace followed by asterisk
+        comment_match = re.search(r"\s\*", stripped)
+        if comment_match:
+            # Check if there's code before the comment
+            code_part = stripped[: comment_match.start()].strip()
+            if code_part:
+                logical_count += 1
+        else:
+            # No inline comment detected, count this line
             logical_count += 1
 
     return logical_count
@@ -88,9 +95,16 @@ def count_logical_lines_up_to(source: str, line_number: int) -> int:
         if not stripped or stripped.startswith("*"):
             continue
 
-        # Skip inline comments
-        code_part = stripped.split("*")[0].strip()
-        if code_part:
+        # Handle inline comments
+        # Look for comment asterisk (preceded by whitespace, not a multiplication operator)
+        comment_match = re.search(r"\s\*", stripped)
+        if comment_match:
+            # Check if there's code before the comment
+            code_part = stripped[: comment_match.start()].strip()
+            if code_part:
+                logical_count += 1
+        else:
+            # No inline comment detected, count this line
             logical_count += 1
 
     return logical_count
@@ -143,10 +157,13 @@ def extract_missing_features(
     features = []
 
     # Pattern 1: Lead/lag indexing (i++1, i--1)
-    if re.search(r"[a-z]\+\+\d", error_message) or re.search(r"[a-z]--\d", error_message):
+    if re.search(r"[a-z]\+\+\d", error_message, re.IGNORECASE) or re.search(
+        r"[a-z]--\d", error_message, re.IGNORECASE
+    ):
         features.append("lead/lag indexing (i++1, i--1)")
     elif source_line and (
-        re.search(r"[a-z]\+\+\d", source_line) or re.search(r"[a-z]--\d", source_line)
+        re.search(r"[a-z]\+\+\d", source_line, re.IGNORECASE)
+        or re.search(r"[a-z]--\d", source_line, re.IGNORECASE)
     ):
         features.append("lead/lag indexing (i++1, i--1)")
 
@@ -174,9 +191,9 @@ def extract_missing_features(
         features.append("indexed assignments")
 
     # Pattern 6: Nested indexing
-    if re.search(r"[a-z]+\([a-z]+\(", error_message):
+    if re.search(r"[a-zA-Z]+\([a-zA-Z]+\(", error_message):
         features.append("nested indexing")
-    elif source_line and re.search(r"[a-z]+\([a-z]+\(", source_line):
+    elif source_line and re.search(r"[a-zA-Z]+\([a-zA-Z]+\(", source_line):
         features.append("nested indexing")
 
     # Pattern 7: Short model syntax
