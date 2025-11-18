@@ -91,7 +91,7 @@ Built grammar and parser infrastructure for GAMS if-elseif-else conditional stat
 
 #### Summary
 
-Completed Day 2 option statement integration with comprehensive test fixtures and validation. Created 5 test fixtures covering all option patterns, validated option statement parsing in mhw4dx.gms, and documented findings. Option statements parse correctly, but mhw4dx.gms full unlock is blocked by secondary feature (elseif statements not yet supported).
+Completed Day 2 option statement integration with comprehensive test fixtures and validation. Created 5 test fixtures covering all option patterns, validated option statement parsing in mhw4dx.gms, and documented findings. Option statements parse correctly. The elseif blocker has been resolved in this PR, but mhw4dx.gms remains blocked by model attribute access (line 62).
 
 #### Test Fixtures Created
 
@@ -119,7 +119,7 @@ Created 5 GMS test fixtures with comprehensive coverage:
 - Option statements on lines 37 and 47 parse correctly ✅
 - `option limCol = 0, limRow = 0;` → Parsed successfully
 - `option decimals = 8;` → Parsed successfully
-- Model fails at line 63 due to unsupported `elseif` statements ❌
+- Model fails at line 62 due to model attribute access: `wright.modelStat` ❌
 
 **Parse Rate:**
 - Current: 20% (2/10 models: mhw4d, rbrock)
@@ -137,11 +137,11 @@ Created 5 GMS test fixtures with comprehensive coverage:
 - ✅ No regressions in existing tests
 
 **Blocked:**
-- ❌ mhw4dx.gms full parse (blocked by elseif at line 63)
-- ❌ Parse rate increase to 30% (requires elseif support)
+- ❌ mhw4dx.gms full parse (blocked by model attribute access at line 62)
+- ❌ Parse rate increase to 30% (requires model attributes and compile-time constants)
 
-**Recommendation:**
-Proceed with indexed assignments (Days 3-4) to maintain sprint momentum. elseif statements can be addressed in future sprint if needed.
+**Note:**
+The elseif blocker has been resolved with infrastructure implementation in this PR. The preprocessor currently strips if statements to maintain parse rate, but the grammar and parser are ready for activation when model attributes and compile-time constants are implemented.
 
 #### Files Added
 

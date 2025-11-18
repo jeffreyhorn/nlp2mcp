@@ -105,7 +105,7 @@ These fixtures directly support mhw4dx.gms unlock:
 **Parse Rate Impact:**
 - Before Sprint 8: 20% (2/10 models: mhw4d, rbrock)
 - After Sprint 8 Day 1-2: Target 30% (3/10 models: +mhw4dx)
-  - Note: mhw4dx has secondary blocker (elseif statements) that may prevent full unlock in Sprint 8
+  - Note: mhw4dx has secondary blocker (model attribute access) that prevents full unlock. The elseif blocker has been resolved.
 
 ## Cross-References
 

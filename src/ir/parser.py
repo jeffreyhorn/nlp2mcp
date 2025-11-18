@@ -917,7 +917,7 @@ class _ModelBuilder:
         """Handle if-elseif-else statement (Sprint 8 Day 2: mock/store approach).
 
         Grammar structure:
-            if_stmt: "if"i "(" expr "," stmt+ elseif_clause* else_clause? ")" SEMI?
+            if_stmt: "if"i "(" expr "," stmt+ elseif_clause* else_clause? ")" SEMI
             elseif_clause: "elseif"i expr "," stmt+
             else_clause: "else"i stmt+
 
@@ -1009,8 +1009,6 @@ class _ModelBuilder:
         )
 
         # Sprint 8: Mock/store approach - just store, don't execute
-        if not hasattr(self.model, "conditional_statements"):
-            self.model.conditional_statements = []
         self.model.conditional_statements.append(cond_stmt)
 
     def _handle_assign(self, node: Tree) -> None:
