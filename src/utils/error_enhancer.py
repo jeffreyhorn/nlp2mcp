@@ -126,7 +126,7 @@ class ErrorEnhancer:
             Suggestion string if typo detected, None otherwise
         """
         # Extract capitalized words that might be keywords
-        words = re.findall(r"\b[A-Z][a-z]+\b", source_line)
+        words = re.findall(r"\b[A-Z][a-zA-Z]*\b", source_line)
 
         for word in words:
             if word not in GAMS_KEYWORDS:
@@ -147,9 +147,22 @@ class ErrorEnhancer:
         Returns:
             Suggestion string if bracket error detected, None otherwise
         """
-        # Suggest replacing [...] with /.../ for Set declarations
-        fixed_line = source_line.replace("[", "/").replace("]", "/")
-        return f"GAMS set elements use /.../ not [...]. Try: {fixed_line.strip()}"
+        # Ignore comments (lines starting with * or with only whitespace before *)
+        if re.match(r"^\s*\*", source_line):
+            return None
+
+        # Remove string literals to avoid false positives inside quotes
+        line_wo_strings = re.sub(r'(["\']).*?\1', "", source_line)
+
+        # Check for Set declaration with square brackets before semicolon
+        # e.g., Set i [A, B, C];
+        set_decl_pattern = r"^\s*Set[s]?\s+\w+\s*\[.*\]"
+        if re.search(set_decl_pattern, line_wo_strings):
+            fixed_line = re.sub(r"\[", "/", source_line)
+            fixed_line = re.sub(r"\]", "/", fixed_line)
+            return f"GAMS set elements use /.../ not [...]. Try: {fixed_line.strip()}"
+
+        return None
 
     def _detect_missing_semicolon(self, source: str, error_line: int, message: str) -> str | None:
         """
@@ -168,6 +181,7 @@ class ErrorEnhancer:
             return None
 
         source_lines = source.split("\n")
+        # If the error is on the first line, there is no previous line to check for a missing semicolon.
         if error_line < 2 or error_line > len(source_lines):
             return None
 

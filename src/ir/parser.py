@@ -157,6 +157,10 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
     return resolved[id(node)]
 
 
+# Module-level ErrorEnhancer instance (stateless, can be reused)
+_ERROR_ENHANCER = ErrorEnhancer()
+
+
 def _extract_source_line_with_adjusted_column(
     source: str, line: int | None, column: int | None
 ) -> tuple[str | None, int | None]:
@@ -198,7 +202,6 @@ def parse_text(source: str) -> Tree:
         ParseError: If syntax errors are found (wraps Lark exceptions)
     """
     parser = _build_lark()
-    enhancer = ErrorEnhancer()
 
     try:
         raw = parser.parse(source)
@@ -223,7 +226,7 @@ def parse_text(source: str) -> Tree:
             suggestion="Check syntax near this location",
         )
         # Enhance error with contextual suggestions
-        enhanced_error = enhancer.enhance(error, source)
+        enhanced_error = _ERROR_ENHANCER.enhance(error, source)
         raise enhanced_error from e
 
     except UnexpectedCharacters as e:
@@ -245,7 +248,7 @@ def parse_text(source: str) -> Tree:
             suggestion="This character is not valid in this context",
         )
         # Enhance error with contextual suggestions
-        enhanced_error = enhancer.enhance(error, source)
+        enhanced_error = _ERROR_ENHANCER.enhance(error, source)
         raise enhanced_error from e
 
     except UnexpectedEOF as e:
@@ -270,7 +273,7 @@ def parse_text(source: str) -> Tree:
             suggestion="The file appears to be incomplete. Check for missing semicolons or closing brackets",
         )
         # Enhance error with contextual suggestions
-        enhanced_error = enhancer.enhance(error, source)
+        enhanced_error = _ERROR_ENHANCER.enhance(error, source)
         raise enhanced_error from e
 
 
