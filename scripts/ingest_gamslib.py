@@ -33,6 +33,11 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.ir.parser import parse_model_file
+from src.utils.parse_progress import (
+    calculate_parse_progress_from_file,
+    extract_error_line,
+    extract_missing_features,
+)
 
 
 @dataclass
@@ -44,6 +49,11 @@ class ModelResult:
     parse_status: str  # "SUCCESS" or "FAILED"
     parse_error: str | None = None
     parse_error_type: str | None = None
+    # Sprint 8 Day 7: Partial parse metrics
+    parse_progress_percentage: float | None = None
+    parse_progress_lines_parsed: int | None = None
+    parse_progress_lines_total: int | None = None
+    missing_features: list[str] | None = None
 
 
 @dataclass
@@ -64,7 +74,7 @@ def parse_model(gms_path: Path) -> ModelResult:
         gms_path: Path to .gms file
 
     Returns:
-        ModelResult with parse status and error details
+        ModelResult with parse status, error details, and partial parse metrics
     """
     model_name = gms_path.stem
 
@@ -72,18 +82,41 @@ def parse_model(gms_path: Path) -> ModelResult:
         # Attempt to parse the model
         parse_model_file(gms_path)
 
+        # Success - calculate progress (100%)
+        progress = calculate_parse_progress_from_file(gms_path, error=None)
+
         return ModelResult(
             model_name=model_name,
             gms_file=gms_path.name,
             parse_status="SUCCESS",
             parse_error=None,
             parse_error_type=None,
+            parse_progress_percentage=progress["percentage"],
+            parse_progress_lines_parsed=progress["lines_parsed"],
+            parse_progress_lines_total=progress["lines_total"],
+            missing_features=[],
         )
 
     except Exception as e:
-        # Parse failed - capture error details
+        # Parse failed - capture error details and calculate partial progress
         error_message = str(e)
         error_type = type(e).__name__
+
+        # Read source once for both progress calculation and feature extraction
+        source = gms_path.read_text()
+
+        # Calculate partial parse progress
+        from src.utils.parse_progress import calculate_parse_progress
+
+        progress = calculate_parse_progress(source, error=e)
+
+        # Extract missing features from error
+        error_line = extract_error_line(e)
+        source_line = None
+        if error_line and 0 < error_line <= len(source.split("\n")):
+            source_line = source.split("\n")[error_line - 1]
+
+        features = extract_missing_features(error_type, error_message, source_line)
 
         return ModelResult(
             model_name=model_name,
@@ -91,6 +124,10 @@ def parse_model(gms_path: Path) -> ModelResult:
             parse_status="FAILED",
             parse_error=error_message,
             parse_error_type=error_type,
+            parse_progress_percentage=progress["percentage"],
+            parse_progress_lines_parsed=progress["lines_parsed"],
+            parse_progress_lines_total=progress["lines_total"],
+            missing_features=features,
         )
 
 
