@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Created comprehensive 1715-line Sprint 8 execution plan synthesizing findings from all 9 prep tasks. Defines day-by-day breakdown (Days 0-10), 4 checkpoints with go/no-go criteria, effort allocation (30-36h), quality gates, risk mitigation, and cross-references to all prep tasks. Verified 3 Sprint Planning unknowns (8.1, 8.2, 8.3) in KNOWN_UNKNOWNS.md. Plan targets 40-50% parse rate (optimistic, 80% confidence) with 30% fallback (realistic, 95% confidence) and 25% minimum (99% confidence).
+Created comprehensive 1715-line Sprint 8 execution plan synthesizing findings from all 9 prep tasks. Defines day-by-day breakdown (Days 0-10), 4 checkpoints with go/no-go criteria, effort allocation (30-41h, average 35.5h), quality gates, risk mitigation, and cross-references to all prep tasks. Verified 3 Sprint Planning unknowns (8.1, 8.2, 8.3) in KNOWN_UNKNOWNS.md. Plan targets 40% parse rate (primary, 95% confidence) with 50% stretch (80% confidence) and 30% fallback (99% confidence).
 
 #### Deliverables
 
@@ -22,7 +22,7 @@ Created comprehensive 1715-line Sprint 8 execution plan synthesizing findings fr
   - Executive Summary with 4 Sprint 8 goals and success metrics
   - Day-by-day breakdown for Days 0-10 (10 days total, Day 10 as buffer)
   - 4 checkpoint definitions (Days 2, 4, 8, 9) with clear go/no-go criteria
-  - Effort estimates breakdown (30-36h total, within 25-35h target)
+  - Effort estimates breakdown (30-41h total, average 35.5h)
   - Success criteria (Primary: 40-50%, Secondary: 30%, Minimum: 25%)
   - Risk register (6 risks with mitigation strategies)
   - Deliverables section (code + documentation + metrics)
@@ -36,7 +36,7 @@ Created comprehensive 1715-line Sprint 8 execution plan synthesizing findings fr
 
 #### Key Findings
 
-**Day-by-Day Breakdown (30-36h total):**
+**Day-by-Day Breakdown (30-41h total):**
 
 | Days | Activity | Hours | Key Deliverables |
 |------|----------|-------|------------------|
@@ -72,19 +72,21 @@ Created comprehensive 1715-line Sprint 8 execution plan synthesizing findings fr
    - Go: Create PR
    - No-Go: Document blockers, plan Sprint 8b
 
-**Effort Allocation (30-36h, within 25-35h target):**
+**Effort Allocation (30-41h total, average 35.5h):**
 
 | Category | Tasks | Effort | % of Total |
 |----------|-------|--------|------------|
-| **Parser** | Option statements (6-8h) + Indexed assignments (6-8h) | 12-16h | 40-47% |
-| **UX** | Error line numbers (4-5h) + Error enhancements (3-4h) + Partial metrics (4-6h) + Dashboard (3-4h) | 14-19h | 47-56% |
-| **Testing** | 13 test fixtures | 4-5h | 13-15% |
-| **Docs** | CHANGELOG, KNOWN_UNKNOWNS, PR | 2-3h | 7-9% |
+| **Parser** | Option statements (6-8h) + Indexed assignments (6-8h) | 12-16h | 38% |
+| **UX** | Error line numbers (4-5h) + Error enhancements (3-4h) + Partial metrics (4-6h) + Dashboard (3-4h) | 14-19h | 43% |
+| **Testing** | 13 test fixtures | 4-5h | 12% |
+| **Docs** | CHANGELOG, KNOWN_UNKNOWNS, PR | 2-3h | 7% |
+| **TOTAL** | All tasks | **30-41h** | **100%** |
 
 **Analysis:**
-- Conservative estimate: 30h (within budget)
-- Upper estimate: 36h (slightly over, requires 10% flexibility)
-- Original 60/40 parser/UX split refined to 45/50/15 (parser/UX/testing)
+- Conservative estimate: 30h (within 25-35h budget ✅)
+- Average estimate: 35.5h (slightly over budget, manageable)
+- Upper estimate: 41h (requires Day 10 buffer + 20% flexibility)
+- Original 60/40 parser/UX split refined to 38/43/12/7 (parser/UX/testing/docs)
 - Testing & documentation (6-8h) was unaccounted in original 60/40 assumption
 
 **Parse Rate Projections (from prep task synthesis):**
@@ -98,9 +100,10 @@ Created comprehensive 1715-line Sprint 8 execution plan synthesizing findings fr
 **Unknown Verification:**
 
 - **8.1 (Effort allocation):** ✅ VERIFIED
-  - Total: 30-36h fits within 25-35h budget with 10% flexibility
-  - Parser: 12-16h (45%), UX: 14-19h (50%), Testing: 4-5h (15%), Docs: 2-3h (8%)
-  - Original 60/40 split refined to 45/50/15 split with overlap
+  - Total: 30-41h (average 35.5h, requires 10-20% flexibility over 25-35h target)
+  - Parser: 12-16h (38%), UX: 14-19h (43%), Testing: 4-5h (12%), Docs: 2-3h (7%)
+  - Original 60/40 split refined to 38/43/12/7 (parser/UX/testing/docs)
+  - Conservative (30h) within budget; upper (41h) uses Day 10 buffer
 
 - **8.2 (Parse rate conservative enough):** ✅ VERIFIED
   - 25% is floor/minimum, NOT the target

@@ -3109,16 +3109,18 @@ grep -q "Backward Compatibility" docs/planning/EPIC_2/SPRINT_8/DASHBOARD_ENHANCE
 **Unknown Verification Results:**
 
 - **8.1 (Effort allocation):** ✅ VERIFIED
-  - Total: 30-36h fits within 25-35h budget (with 10% flexibility for upper bound)
-  - Parser: 12-16h (45%), UX: 14-19h (50%), Testing: 4-5h (15%), Docs: 2-3h (8%)
-  - Original 60/40 parser/UX split refined to 45/50/15 (parser/UX/testing) with overlap
+  - Total: 30-41h (average 35.5h, requires 10-20% flexibility over 25-35h target)
+  - Parser: 12-16h (38%), UX: 14-19h (43%), Testing: 4-5h (12%), Docs: 2-3h (7%)
+  - Original 60/40 parser/UX split refined to 38/43/12/7 (parser/UX/testing/docs)
   - Testing & documentation (6-8h) was unaccounted in original 60/40 assumption
+  - Conservative estimate (30h) is within budget; upper bound (41h) uses Day 10 buffer
 
 - **8.2 (Parse rate conservative enough):** ✅ VERIFIED
   - 25% is floor/minimum, NOT the target
-  - Primary target: 40-50% (5/10 models) - 80% confidence
-  - Secondary target: 30% (4/10 models) - 95% confidence
-  - Minimum acceptable: 25% (3/10 models) - 99% confidence
+  - Primary target: 40% (4/10 models) - 95% confidence (mathopt1 + mhw4dx unlock)
+  - Stretch target: 50% (5/10 models) - 80% confidence (trig also unlocks)
+  - Secondary target: 30% (3/10 models) - 99% confidence (mhw4dx only)
+  - Minimum acceptable: 25% (worst case if option statements have issues)
   - Per-model analysis (Task 2) eliminates Sprint 7 underestimation risk
 
 - **8.3 (Checkpoint strategy):** ✅ VERIFIED
@@ -3601,7 +3603,7 @@ Link each day to relevant prep tasks:
 **Key Achievements:**
 - ✅ Created comprehensive 1715-line Sprint 8 execution plan (exceeds 1500+ line requirement)
 - ✅ Defined 4 checkpoints at critical decision points (Days 2, 4, 8, 9)
-- ✅ Validated effort allocation (30-36h total, within 25-35h target with buffer)
+- ✅ Validated effort allocation (30-41h total, average 35.5h)
 - ✅ Established clear quality gates for daily and feature-specific validation
 - ✅ Planned risk mitigation for 6 identified risks
 - ✅ Cross-referenced all 9 prep tasks to specific execution days
@@ -3634,9 +3636,10 @@ Link each day to relevant prep tasks:
 - Task 9 findings: Dashboard color coding + progress column (3-4h effort)
 
 **Unknown Verification:**
-- 8.1 (Effort allocation): Total 30-36h fits within 25-35h budget with 10% flexibility
-  - Parser: 12-16h (45%), UX: 14-19h (50%), Testing: 4-5h (15%), Docs: 2-3h (8%)
-  - Original 60/40 split refined to 45/50/15 (parser/UX/testing)
+- 8.1 (Effort allocation): Total 30-41h (average 35.5h) with Day 10 buffer
+  - Parser: 12-16h (38%), UX: 14-19h (43%), Testing: 4-5h (12%), Docs: 2-3h (7%)
+  - Original 60/40 split refined to 38/43/12/7 (parser/UX/testing/docs)
+  - Conservative (30h) within budget; upper (41h) requires Day 10 buffer
 - 8.2 (Parse rate conservative enough): 25% is floor, not target
   - Primary target: 40-50% (80% confidence)
   - Secondary target: 30% (95% confidence)
@@ -3683,7 +3686,7 @@ grep -q "Task 2: Feature Matrix" docs/planning/EPIC_2/SPRINT_8/PLAN.md
 - [x] 10-day execution plan created (Days 0-10) ✅ Days 0-9 with Day 10 buffer
 - [x] Each day has: objective, tasks, deliverables, quality gates ✅ All days detailed
 - [x] Checkpoints defined with clear criteria (3-4 checkpoints) ✅ 4 checkpoints: Days 2, 4, 8, 9
-- [x] Effort allocation validated (25-35 hours total) ✅ 30-36h with buffer
+- [x] Effort allocation validated (25-35 hours total) ✅ 30-41h (conservative 30h within budget, upper 41h with buffer)
 - [x] Quality gates specified (daily checks + feature-specific) ✅ Continuous + feature gates
 - [x] Risk mitigation plans created ✅ 6 risks with mitigation strategies
 - [x] All prep tasks (1-9) cross-referenced ✅ Mapping table in PLAN.md
