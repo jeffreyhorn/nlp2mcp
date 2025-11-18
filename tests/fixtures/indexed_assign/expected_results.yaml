@@ -9,7 +9,7 @@
 fixtures:
   01_simple_1d:
     description: "Basic 1D indexed parameter assignment - Pattern 1"
-    expected_status: "SUCCESS"
+    should_parse: true
     expected_parameters: 1
     expected_sets: 1
     expected_assignments: 3
@@ -21,7 +21,7 @@ fixtures:
 
   02_multi_dim_2d:
     description: "2D indexed parameter assignment (mathopt1.gms pattern) - Pattern 2"
-    expected_status: "SUCCESS"
+    should_parse: true
     expected_parameters: 1
     expected_sets: 2
     expected_assignments: 4
@@ -34,7 +34,7 @@ fixtures:
 
   03_variable_attributes:
     description: "Variable attribute access in assignments (trig.gms pattern) - Pattern 3"
-    expected_status: "SUCCESS"
+    should_parse: true
     expected_variables: 2
     expected_scalars: 2
     expected_equations: 1
@@ -48,7 +48,7 @@ fixtures:
 
   04_indexed_expressions:
     description: "Indexed parameter references in RHS expressions - Pattern 4"
-    expected_status: "SUCCESS"
+    should_parse: true
     expected_parameters: 1
     expected_sets: 1
     expected_assignments: 3
@@ -61,7 +61,7 @@ fixtures:
 
   05_error_index_mismatch:
     description: "Index count validation - parameter domain mismatch"
-    expected_status: "FAILED"
+    should_parse: false
     expected_error_type: "ParserSemanticError"
     expected_error_message: "Index count mismatch"
     priority: "High"
