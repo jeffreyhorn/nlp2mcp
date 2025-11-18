@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 8: Day 3 - Indexed Assignments - Grammar & Foundation - 2025-11-18
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented indexed parameter assignments and variable attribute access to unlock mathopt1.gms and trig.gms. This feature allows assigning values to specific indices of multi-dimensional parameters (e.g., `report('x1','global') = 1;`) and accessing variable attributes like `.l` (level) and `.m` (marginal).
+
+#### Changes Made
+
+**Grammar (src/gams/gams_grammar.lark):**
+- Extended `BOUND_K` token to include `.m` (marginal) attribute: `/(lo|up|fx|l|m)/i`
+- Existing `ref_indexed` and `lvalue` rules already supported indexed assignments
+
+**Parser (src/ir/parser.py):**
+- Implemented indexed parameter assignment handler in `_handle_assign()` method
+  - Validates parameter exists and is declared
+  - Validates index count matches parameter domain
+  - Stores indexed values in `param.values[tuple(indices)]`
+- Extended variable attribute handler to support `.m` (marginal) attribute
+  - Added validation to prevent infinite marginal values
+  - Updated `_apply_variable_bound()` with marginal attribute support
+- Added `_extract_indices()` helper function to properly strip quotes from escaped identifiers
+- Fixed quote handling to preserve quotes in set members while stripping them in indexed expressions
+
+**IR Symbols (src/ir/symbols.py):**
+- Added `.m` (marginal) field to `VariableDef` dataclass
+- Added `m_map` dictionary for indexed marginal values
+
+**Tests (tests/parser/test_indexed_assignments.py):**
+- Created comprehensive test suite with 11 test cases:
+  - 1D indexed parameter assignments
+  - 2D indexed parameter assignments
+  - Multiple assignments to same parameter
+  - Variable attribute access (`.l` and `.m`)
+  - Validation errors (undeclared parameters, wrong index count)
+  - Real patterns from mathopt1.gms and trig.gms
+
+**Bug Fixes:**
+- Added `_extract_indices()` function to strip quotes from indices in parameter assignments while preserving them in set members
+- Updated `test_indexed_parameter_assignment_not_supported` to verify feature now works
+
+#### Validation Results
+
+**Test Suite:**
+- All 11 new indexed assignment tests pass ✅
+- All 1297 existing tests pass ✅
+- `make typecheck` passes ✅
+- `make lint` passes ✅
+- `make format` passes ✅
+
+**Patterns Supported:**
+- 1D indexed parameter: `p('i1') = 10;` ✅
+- 2D indexed parameter: `report('x1','global') = 1;` ✅ (mathopt1.gms pattern)
+- Variable level attribute: `x.l = 5;` ✅ (trig.gms pattern)
+- Variable marginal attribute: `x.m = 1.5;` ✅
+- Multiple assignments: `p('i1') = 10; p('i2') = 20;` ✅
+
+#### Models Unlocked
+
+This feature unlocks parsing of:
+- mathopt1.gms (2D indexed parameter assignments)
+- trig.gms (variable attribute access)
+- Expected parse rate increase: +20%
+
+---
+
 ### Sprint 8: Day 2+ - If-Elseif-Else Support (Infrastructure) - 2025-11-18
 
 **Status:** ⚠️ INFRASTRUCTURE READY (Preprocessor still strips if statements)

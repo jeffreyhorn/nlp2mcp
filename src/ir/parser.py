@@ -206,6 +206,26 @@ def _id_list(node: Tree) -> tuple[str, ...]:
     return tuple(_token_text(tok) for tok in node.children if isinstance(tok, Token))
 
 
+def _extract_indices(node: Tree) -> tuple[str, ...]:
+    """Extract indices from id_list, stripping quotes from escaped identifiers.
+
+    Used for indexed parameter assignments like p('i1') where 'i1' should become i1.
+    """
+    indices = []
+    for tok in node.children:
+        if isinstance(tok, Token):
+            value = str(tok)
+            # Strip quotes from escaped ID tokens (e.g., 'i1', "cost%")
+            if tok.type == "ID" and len(value) >= 2:
+                if (value[0] == "'" and value[-1] == "'") or (value[0] == '"' and value[-1] == '"'):
+                    indices.append(value[1:-1])
+                else:
+                    indices.append(value)
+            else:
+                indices.append(_token_text(tok))
+    return tuple(indices)
+
+
 @dataclass
 class _ModelBuilder:
     """Walks the parse tree and instantiates ModelIR components."""
@@ -1030,7 +1050,6 @@ class _ModelBuilder:
             raise self._error("Malformed assignment target", lvalue_tree)
 
         expr = self._expr_with_context(expr_tree, "assignment", ())
-        value = self._extract_constant(expr, "assignment")
 
         target = next(
             (child for child in lvalue_tree.children if isinstance(child, (Tree, Token))),
@@ -1038,6 +1057,26 @@ class _ModelBuilder:
         )
         if target is None:
             raise self._error("Empty assignment target", lvalue_tree)
+
+        # Determine if we're assigning to a variable bound or a parameter
+        is_variable_bound = isinstance(target, Tree) and target.data in (
+            "bound_indexed",
+            "bound_scalar",
+        )
+
+        # Try to extract a constant value. If the expression is non-constant
+        # (e.g., contains variable attributes like x.l), we skip storing the value
+        # (Sprint 8 mock/store approach - we don't execute expressions)
+        try:
+            value = self._extract_constant(expr, "assignment")
+        except ParserSemanticError:
+            # Non-constant expressions are only allowed for scalar parameter assignments
+            # (e.g., trig.gms: xdiff = 2.66695657 - x1.l)
+            # Variable bounds must always be constants
+            if is_variable_bound:
+                raise  # Re-raise the error for variable bounds
+            # For scalar parameters, just parse and validate the expression but don't store the value
+            return
 
         if isinstance(target, Tree):
             if target.data == "bound_indexed":
@@ -1052,7 +1091,31 @@ class _ModelBuilder:
                 self._apply_variable_bound(var_name, bound_token, (), value, target)
                 return
             if target.data == "symbol_indexed":
-                raise self._error("Indexed assignments are not supported yet", target)
+                # Handle indexed parameter assignment: p('i1') = 10 or report('x1','global') = 1
+                param_name = _token_text(target.children[0])
+
+                # Extract indices from id_list, stripping quotes
+                indices = _extract_indices(target.children[1]) if len(target.children) > 1 else ()
+
+                # Validate parameter exists
+                if param_name not in self.model.params:
+                    raise self._error(f"Parameter '{param_name}' not declared", target)
+
+                param = self.model.params[param_name]
+
+                # Only validate index count if the parameter has an explicit domain declaration.
+                # For parameters without an explicit domain, index count is not validated.
+                # (e.g., mathopt1.gms: Parameter report; report('x1','global') = 1;)
+                if len(param.domain) > 0 and len(indices) != len(param.domain):
+                    index_word = "index" if len(param.domain) == 1 else "indices"
+                    raise self._error(
+                        f"Parameter '{param_name}' expects {len(param.domain)} {index_word}, got {len(indices)}",
+                        target,
+                    )
+
+                # Store indexed value
+                param.values[tuple(indices)] = value
+                return
         elif isinstance(target, Token):
             name = _token_text(target)
             if name in self.model.params:
@@ -1163,6 +1226,20 @@ class _ModelBuilder:
             expr = Call(func_name, tuple(args))
             return self._attach_domain(expr, self._merge_domains(args, node))
 
+        # Support variable attribute access in expressions (e.g., x1.l, x.lo(i))
+        if node.data == "bound_scalar":
+            var_name = _token_text(node.children[0])
+            # Note: bound_attr (e.g., 'l', 'm', 'lo') is in node.children[1] but not used
+            # For now, treat it as a variable reference (Sprint 8 mock/store approach)
+            return self._make_symbol(var_name, (), free_domain, node)
+
+        if node.data == "bound_indexed":
+            var_name = _token_text(node.children[0])
+            # Note: bound_attr (e.g., 'l', 'm', 'lo') is in node.children[1] but not used
+            indices = _id_list(node.children[2]) if len(node.children) > 2 else ()
+            # Return an indexed symbol reference (Sprint 8 mock/store approach)
+            return self._make_symbol(var_name, indices, free_domain, node)
+
         raise self._error(
             f"Unsupported expression type: {node.data}. "
             f"This may be a parser bug or unsupported GAMS syntax. "
@@ -1248,8 +1325,9 @@ class _ModelBuilder:
         if name in self.model.variables:
             expected = self.model.variables[name].domain
             if len(expected) != len(idx_tuple):
+                index_word = "index" if len(expected) == 1 else "indices"
                 raise self._error(
-                    f"Variable '{name}' expects {len(expected)} indices but received {len(idx_tuple)}",
+                    f"Variable '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)}",
                     node,
                 )
             expr = VarRef(name, idx_tuple)
@@ -1258,9 +1336,13 @@ class _ModelBuilder:
             return self._attach_domain(expr, free_domain)
         if name in self.model.params:
             expected = self.model.params[name].domain
-            if len(expected) != len(idx_tuple):
+            # In GAMS, validation is skipped only for parameters with empty domains (true scalars),
+            # allowing them to be implicitly expanded when used with indices. For parameters with an
+            # explicit domain, the number of indices must match the domain length.
+            if len(expected) > 0 and len(expected) != len(idx_tuple):
+                index_word = "index" if len(expected) == 1 else "indices"
                 raise self._error(
-                    f"Parameter '{name}' expects {len(expected)} indices but received {len(idx_tuple)}",
+                    f"Parameter '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)}",
                     node,
                 )
             expr = ParamRef(name, idx_tuple)
@@ -1443,13 +1525,13 @@ class _ModelBuilder:
         node: Tree | Token | None = None,
     ) -> None:
         # Currently supported variable attributes (bound modifiers):
-        #   "lo" (lower bound), "up" (upper bound), "fx" (fixed), "l" (level/initial value)
-        # Additional GAMS attributes exist (e.g., ".m", ".prior", ".scale") but are not yet
+        #   "lo" (lower bound), "up" (upper bound), "fx" (fixed), "l" (level/initial value), "m" (marginal/dual value)
+        # Additional GAMS attributes exist (e.g., ".prior", ".scale") but are not yet
         # implemented in the grammar or parser. This implementation focuses on the most
-        # commonly used attributes needed to unblock 60% of GAMSLib models.
-        label_map = {"lo": "lower", "up": "upper", "fx": "fixed", "l": "level"}
-        map_attrs = {"lo": "lo_map", "up": "up_map", "fx": "fx_map", "l": "l_map"}
-        scalar_attrs = {"lo": "lo", "up": "up", "fx": "fx", "l": "l"}
+        # commonly used attributes needed to unblock GAMSLib models.
+        label_map = {"lo": "lower", "up": "upper", "fx": "fixed", "l": "level", "m": "marginal"}
+        map_attrs = {"lo": "lo_map", "up": "up_map", "fx": "fx_map", "l": "l_map", "m": "m_map"}
+        scalar_attrs = {"lo": "lo", "up": "up", "fx": "fx", "l": "l", "m": "m"}
         label = label_map.get(bound_kind, bound_kind)
         index_hint = f" at indices {key}" if key else ""
 
@@ -1466,6 +1548,11 @@ class _ModelBuilder:
             if bound_kind == "l":
                 raise self._error(
                     f"Level (initial value) for variable '{var_name}' cannot be infinite",
+                    node,
+                )
+            if bound_kind == "m":
+                raise self._error(
+                    f"Marginal (dual value) for variable '{var_name}' cannot be infinite",
                     node,
                 )
             # For other cases (e.g., lo = +inf), treat like regular value
@@ -1591,8 +1678,9 @@ class _ModelBuilder:
         node: Tree | Token | None = None,
     ) -> list[tuple[str, ...]]:
         if len(index_symbols) != len(var.domain):
+            index_word = "index" if len(var.domain) == 1 else "indices"
             raise self._error(
-                f"Variable '{var_name}' bounds expect {len(var.domain)} indices but received {len(index_symbols)}",
+                f"Variable '{var_name}' bounds expect {len(var.domain)} {index_word} but received {len(index_symbols)}",
                 node,
             )
         member_lists: list[list[str]] = []

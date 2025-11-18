@@ -64,9 +64,9 @@ For the detailed Sprint 7 plan, see [docs/planning/EPIC_2/SPRINT_7/PLAN.md](docs
 
 **Sprint 8 Progress** (Epic 2 - Sprint 8: High-ROI Parser Features & UX Enhancements):
 - [x] Day 0: Sprint Planning & Setup (2-3h) - Verify unknowns, set up branch, confirm scope
-- [ ] Day 1: Option Statements - Grammar & AST (6-8h) - Grammar extension, semantic handler, basic tests
-- [ ] Day 2: Option Statements - Integration & Fixtures (4-5h) - Advanced patterns, fixtures, mhw4dx validation (Checkpoint 1: 30% parse rate)
-- [ ] Day 3: Indexed Assignments - Grammar & Foundation (6-8h) - Indexed params, variable attributes, basic tests
+- [x] Day 1: Option Statements - Grammar & AST (6-8h) - Grammar extension, semantic handler, basic tests
+- [x] Day 2: Option Statements - Integration & Fixtures (4-5h) - Advanced patterns, fixtures, mhw4dx validation (Checkpoint 1: 30% parse rate)
+- [x] Day 3: Indexed Assignments - Grammar & Foundation (6-8h) - Indexed params, variable attributes, basic tests
 - [ ] Day 4: Indexed Assignments - Advanced Patterns & Integration (4-5h) - Indexed expressions, fixtures, mathopt1/trig validation (Checkpoint 2: 40-50% parse rate)
 - [ ] Day 5: Error Line Numbers & Source Context (4-5h) - Lark error wrapping, ParseError migration
 - [ ] Day 6: Error Message Enhancements (3-4h) - "Did you mean?" suggestions, contextual hints
