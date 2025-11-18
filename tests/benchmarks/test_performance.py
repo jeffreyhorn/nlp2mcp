@@ -48,6 +48,7 @@ class TestPerformanceBenchmarks:
         model = self._generate_model(tmp_path, name="large", num_vars=200, num_constraints=100)
         return model
 
+    @pytest.mark.slow
     def test_parse_small_model(self, small_model):
         """Benchmark: Parse small model (10 vars)."""
         start = time.perf_counter()
@@ -64,6 +65,7 @@ class TestPerformanceBenchmarks:
         assert elapsed < 1.0, f"Parse small model took {elapsed:.3f}s (target < 1.0s)"
         print(f"\nParse small model: {elapsed:.3f}s")
 
+    @pytest.mark.slow
     def test_parse_medium_model(self, medium_model):
         """Benchmark: Parse medium model (100 vars)."""
         start = time.perf_counter()
