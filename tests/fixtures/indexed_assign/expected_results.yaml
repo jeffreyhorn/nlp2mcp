@@ -1,0 +1,106 @@
+# Expected Results for Indexed Assignment Test Fixtures
+# Sprint 8 Day 4: Indexed Assignments - Advanced Patterns & Integration
+# Created: 2025-11-18
+#
+# This file documents the expected parsing and execution results for each
+# indexed assignment test fixture. These fixtures validate the four GAMS
+# indexed assignment patterns identified in INDEXED_ASSIGNMENTS_RESEARCH.md.
+
+fixtures:
+  01_simple_1d:
+    description: "Basic 1D indexed parameter assignment - Pattern 1"
+    expected_status: "SUCCESS"
+    expected_parameters: 1
+    expected_sets: 1
+    expected_assignments: 3
+    priority: "Critical"
+    notes: |
+      Tests the simplest form of indexed assignment: p('i1') = 10;
+      This is the foundation for all indexed assignment patterns.
+      Validates that single-index parameter references parse correctly.
+
+  02_multi_dim_2d:
+    description: "2D indexed parameter assignment (mathopt1.gms pattern) - Pattern 2"
+    expected_status: "SUCCESS"
+    expected_parameters: 1
+    expected_sets: 2
+    expected_assignments: 4
+    priority: "Critical"
+    notes: |
+      Tests multi-dimensional indexed assignment: report('global','x1') = 1.0;
+      This pattern appears in mathopt1.gms from GAMSLib.
+      Validates that 2D parameter references with multiple indices parse correctly.
+      Key for real-world GAMS model compatibility.
+
+  03_variable_attributes:
+    description: "Variable attribute access in assignments (trig.gms pattern) - Pattern 3"
+    expected_status: "SUCCESS"
+    expected_variables: 2
+    expected_scalars: 2
+    expected_equations: 1
+    expected_assignments: 4
+    priority: "Critical"
+    notes: |
+      Tests variable attribute access: diff1 = 10.0 - x1.l;
+      This pattern appears in trig.gms from GAMSLib.
+      Validates that .l (level) attribute access works in expressions.
+      Critical for reading variable solution values.
+
+  04_indexed_expressions:
+    description: "Indexed parameter references in RHS expressions - Pattern 4"
+    expected_status: "SUCCESS"
+    expected_parameters: 1
+    expected_sets: 1
+    expected_assignments: 3
+    priority: "Critical"
+    notes: |
+      Tests indexed params in expressions: data('diff') = data('global') - data('solver');
+      This is the most complex pattern, combining indexed refs with arithmetic.
+      Validates that indexed parameter references work as expression operands.
+      Appears in mathopt1.gms calculation patterns.
+
+  05_error_index_mismatch:
+    description: "Index count validation - parameter domain mismatch"
+    expected_status: "FAILED"
+    expected_error_type: "ParserSemanticError"
+    expected_error_message: "Index count mismatch"
+    priority: "High"
+    notes: |
+      Tests validation of index count matching parameter domain.
+      Parameter p is declared with 2 dimensions: p(i, j)
+      Assignment uses only 1 index: p('i1') = 10;
+      This should fail with a semantic error during parsing.
+      Validates that our parser correctly enforces GAMS index rules.
+
+summary:
+  total_fixtures: 5
+  expected_success: 4
+  expected_failures: 1
+  coverage:
+    - "Pattern 1: Simple 1D indexed parameter assignment"
+    - "Pattern 2: Multi-dimensional (2D/3D) indexed parameter assignment"
+    - "Pattern 3: Variable attribute access (.l, .m, .lo, .up)"
+    - "Pattern 4: Indexed parameter references in RHS expressions"
+    - "Index count validation and error handling"
+  validation_models:
+    - "mathopt1.gms (GAMSLib) - Pattern 2 and Pattern 4"
+    - "trig.gms (GAMSLib) - Pattern 3"
+  sprint8_integration:
+    parse_rate_target: "40-50% (4-5/10 GAMSLib models)"
+    current_parse_rate: "40% (4/10 models)"
+    newly_enabled_models:
+      - "mathopt1.gms (multi-dim indexed params, indexed expressions)"
+      - "trig.gms (variable attribute access)"
+  implementation_notes: |
+    All four patterns were implemented in Sprint 8 Day 3 (PR #248).
+    Day 4 focused on creating comprehensive test fixtures and documentation.
+
+    Key implementation details:
+    - Pattern 1-2: ref_indexed node supports 1D and multi-dimensional indices
+    - Pattern 3: AttributeAccess node handles variable.attribute syntax
+    - Pattern 4: ParameterRef in expressions allows indexed params as operands
+    - Mock/Store approach: Assignments are parsed and stored, not executed
+
+    Error handling:
+    - Index count validation ensures assignment indices match parameter domain
+    - Type checking deferred to later sprints (current focus: parsing only)
