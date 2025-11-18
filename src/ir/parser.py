@@ -17,6 +17,7 @@ from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import preprocess_gams_file
 from .symbols import (
     AliasDef,
+    ConditionalStatement,
     EquationDef,
     ObjSense,
     OptionStatement,
@@ -911,6 +912,106 @@ class _ModelBuilder:
 
         # Sprint 8: Mock/store approach - just store, don't process
         self.model.option_statements.append(option_stmt)
+
+    def _handle_if_stmt(self, node: Tree) -> None:
+        """Handle if-elseif-else statement (Sprint 8 Day 2: mock/store approach).
+
+        Grammar structure:
+            if_stmt: "if"i "(" expr "," stmt+ elseif_clause* else_clause? ")" SEMI?
+            elseif_clause: "elseif"i expr "," stmt+
+            else_clause: "else"i stmt+
+
+        Example:
+            if(abs(x.l - 5) < tol,
+               display 'case 1';
+            elseif abs(x.l - 10) < tol,
+               display 'case 2';
+            else
+               display 'default';
+            );
+        """
+        # Extract condition (first child should be expr)
+        condition = None
+        then_stmts = []
+        elseif_clauses = []
+        else_stmts = None
+
+        # Parse children: expr, stmt+, elseif_clause*, else_clause?
+        in_then = False
+        for child in node.children:
+            if isinstance(child, Token):
+                continue  # Skip SEMI and other tokens
+
+            if isinstance(child, Tree):
+                if child.data in (
+                    "expr",
+                    "sum_expr",
+                    "or_expr",
+                    "and_expr",
+                    "comp_expr",
+                    "arith_expr",
+                    "term",
+                    "factor",
+                    "power",
+                    "atom",
+                ):
+                    # This is the main condition
+                    if condition is None:
+                        condition = child
+                        in_then = True
+                    # Note: elseif conditions are inside elseif_clause nodes
+                elif child.data == "elseif_clause":
+                    # Extract elseif condition and statements
+                    in_then = False
+                    elseif_cond = None
+                    elseif_stmts = []
+                    for elseif_child in child.children:
+                        if isinstance(elseif_child, Tree):
+                            if elseif_child.data in (
+                                "expr",
+                                "sum_expr",
+                                "or_expr",
+                                "and_expr",
+                                "comp_expr",
+                                "arith_expr",
+                                "term",
+                                "factor",
+                                "power",
+                                "atom",
+                            ):
+                                elseif_cond = elseif_child
+                            else:
+                                elseif_stmts.append(elseif_child)
+                    if elseif_cond is not None:
+                        elseif_clauses.append((elseif_cond, elseif_stmts))
+                elif child.data == "else_clause":
+                    # Extract else statements
+                    in_then = False
+                    else_stmts = []
+                    for else_child in child.children:
+                        if isinstance(else_child, Tree):
+                            else_stmts.append(else_child)
+                elif in_then:
+                    # This is a statement in the then block
+                    then_stmts.append(child)
+
+        if condition is None:
+            raise self._error("Malformed if statement: missing condition", node)
+
+        # Create ConditionalStatement and store in model
+        location = self._extract_source_location(node)
+        cond_stmt = ConditionalStatement(
+            condition=condition,
+            then_stmts=then_stmts,
+            elseif_clauses=elseif_clauses,
+            else_stmts=else_stmts,
+            location=location,
+        )
+
+        # Sprint 8: Mock/store approach - just store, don't execute
+        if not hasattr(self.model, "conditional_statements"):
+            self.model.conditional_statements = []
+        self.model.conditional_statements.append(cond_stmt)
 
     def _handle_assign(self, node: Tree) -> None:
         # Expected structure: lvalue, ASSIGN token, expression
