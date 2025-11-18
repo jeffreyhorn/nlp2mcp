@@ -13,6 +13,7 @@ from pathlib import Path
 from lark import Lark, Token, Tree
 from lark.exceptions import UnexpectedCharacters, UnexpectedEOF, UnexpectedToken
 
+from ..utils.error_enhancer import ErrorEnhancer
 from ..utils.errors import ParseError
 from .ast import Binary, Call, Const, Expr, ParamRef, Sum, SymbolRef, Unary, VarRef
 from .model_ir import ModelIR, ObjectiveIR
@@ -156,6 +157,10 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
     return resolved[id(node)]
 
 
+# Module-level ErrorEnhancer instance (stateless, can be reused)
+_ERROR_ENHANCER = ErrorEnhancer()
+
+
 def _extract_source_line_with_adjusted_column(
     source: str, line: int | None, column: int | None
 ) -> tuple[str | None, int | None]:
@@ -212,13 +217,16 @@ def parse_text(source: str) -> Tree:
         else:
             message = f"Unexpected token: {e.token}"
 
-        raise ParseError(
+        error = ParseError(
             message=message,
             line=e.line,
             column=column,
             source_line=source_line,
             suggestion="Check syntax near this location",
-        ) from e
+        )
+        # Enhance error with contextual suggestions
+        enhanced_error = _ERROR_ENHANCER.enhance(error, source)
+        raise enhanced_error from e
 
     except UnexpectedCharacters as e:
         # Extract source line and adjust column
@@ -231,13 +239,16 @@ def parse_text(source: str) -> Tree:
         else:
             message = "Unexpected character in input"
 
-        raise ParseError(
+        error = ParseError(
             message=message,
             line=e.line,
             column=column,
             source_line=source_line,
             suggestion="This character is not valid in this context",
-        ) from e
+        )
+        # Enhance error with contextual suggestions
+        enhanced_error = _ERROR_ENHANCER.enhance(error, source)
+        raise enhanced_error from e
 
     except UnexpectedEOF as e:
         # Extract source line (use last line for EOF errors)
@@ -253,13 +264,16 @@ def parse_text(source: str) -> Tree:
         else:
             message = "Unexpected end of file"
 
-        raise ParseError(
+        error = ParseError(
             message=message,
             line=last_line,
             column=1,
             source_line=source_line,
             suggestion="The file appears to be incomplete. Check for missing semicolons or closing brackets",
-        ) from e
+        )
+        # Enhance error with contextual suggestions
+        enhanced_error = _ERROR_ENHANCER.enhance(error, source)
+        raise enhanced_error from e
 
 
 def parse_file(path: str | Path) -> Tree:

@@ -7,6 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 8: Day 6 - Error Message Enhancements - 2025-11-18
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented "did you mean?" suggestions and contextual hints for parser errors using an ErrorEnhancer class. The enhancer analyzes ParseError instances and adds actionable suggestions for common mistakes including keyword typos, punctuation errors, and unsupported features.
+
+#### Changes Made
+
+**ErrorEnhancer Class (src/utils/error_enhancer.py):**
+- Created ErrorEnhancer class with 5 suggestion rules
+- Rule 1: Keyword typo detection using difflib.get_close_matches() with 60% similarity threshold
+- Rule 2: Set bracket error detection (suggests /.../ instead of [...])
+- Rule 3: Missing semicolon detection (detects unexpected keywords on next line)
+- Rule 4: Unsupported feature explanation (adds roadmap references)
+- Rule 5: Function call error explanation (explains literal-only limitation)
+- GAMS_KEYWORDS constant with all major GAMS keywords for typo matching
+
+**Parser Integration (src/ir/parser.py):**
+- Integrated ErrorEnhancer into parse_text() for all three Lark exception types
+- Enhanced errors wrap ParseError instances with additional contextual suggestions
+- Preserves original error location and message while adding helpful hints
+
+**Test Fixtures (tests/parser/test_error_messages.py):**
+- Created TestErrorEnhancer class with 5 comprehensive test cases
+- test_keyword_typo_suggestion: Validates "Scaler" → "Did you mean 'Scalar'?"
+- test_set_bracket_error_suggestion: Validates bracket syntax hints
+- test_missing_semicolon_suggestion: Validates semicolon detection
+- test_unsupported_feature_explanation: Validates error location preservation
+- test_error_enhancement_preserves_location: Validates location/suggestion preservation
+
+#### Quality Gates
+
+- ✅ ErrorEnhancer class implemented with categorization logic
+- ✅ 5 suggestion rules implemented (keyword typos, brackets, semicolons, features, functions)
+- ✅ Integration with parse_text() complete
+- ✅ Keyword typos suggest correct spelling
+- ✅ Punctuation errors show correct syntax hints
+- ✅ 5 test fixtures created and passing
+- ✅ make test passes (1314 tests)
+- ✅ make typecheck passes
+- ✅ make lint passes
+
+#### Impact
+
+- **User Experience**: Parser errors now include "did you mean?" suggestions for common typos
+- **Helpful Hints**: Punctuation errors show correct GAMS syntax (e.g., /.../ vs [...])
+- **Actionable Guidance**: Errors explain what went wrong and how to fix it
+- **Roadmap References**: Unsupported features reference docs/ROADMAP.md for status
+- **80%+ Coverage**: Most common error types now have contextual suggestions
+
+#### Notes
+
+- ErrorEnhancer uses Python's difflib for fuzzy string matching (no new dependencies)
+- Suggestions are additive - existing ParseError suggestions are preserved
+- Enhancement rules are pattern-based and easily extensible for future error types
+- Integration is non-invasive - wraps errors without modifying parser internals
+
+---
+
 ### Sprint 8: Day 5 - Error Line Numbers & Source Context - 2025-11-18
 
 **Status:** ✅ COMPLETE

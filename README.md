@@ -69,7 +69,7 @@ For the detailed Sprint 7 plan, see [docs/planning/EPIC_2/SPRINT_7/PLAN.md](docs
 - [x] Day 3: Indexed Assignments - Grammar & Foundation (6-8h) - Indexed params, variable attributes, basic tests
 - [x] Day 4: Indexed Assignments - Advanced Patterns & Integration (4-5h) - Indexed expressions, fixtures, mathopt1/trig validation (Checkpoint 2: 40% parse rate ✅)
 - [x] Day 5: Error Line Numbers & Source Context (4-5h) - Lark error wrapping, ParseError migration, 5 error types migrated ✅
-- [ ] Day 6: Error Message Enhancements (3-4h) - "Did you mean?" suggestions, contextual hints
+- [x] Day 6: Error Message Enhancements (3-4h) - "Did you mean?" suggestions, contextual hints ✅
 - [ ] Day 7: Partial Parse Metrics (4-6h) - Line-based counting, missing feature extraction
 - [ ] Day 8: Dashboard Updates & Integration (3-4h) - Color-coded progress, partial metrics display (Checkpoint 3: All features integrated)
 - [ ] Day 9: Test Fixtures & Final Testing (4-5h) - 13 fixtures, comprehensive testing (Checkpoint 4: Sprint complete)
