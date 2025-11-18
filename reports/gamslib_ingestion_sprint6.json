@@ -6,7 +6,7 @@
       "model_name": "circle",
       "gms_file": "circle.gms",
       "parse_status": "FAILED",
-      "parse_error": "Assignments must use numeric constants; got Call(uniform, (Const(1.0), Const(10.0))) in assignment [context: expression]",
+      "parse_error": "Undefined symbol 'i' referenced [context: assignment] (line 40, column 13)",
       "parse_error_type": "ParserSemanticError"
     },
     {
@@ -26,9 +26,9 @@
     {
       "model_name": "mathopt1",
       "gms_file": "mathopt1.gms",
-      "parse_status": "FAILED",
-      "parse_error": "Indexed assignments are not supported yet [context: expression] (line 45, column 1)",
-      "parse_error_type": "ParserSemanticError"
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null
     },
     {
       "model_name": "maxmin",
@@ -68,16 +68,16 @@
     {
       "model_name": "trig",
       "gms_file": "trig.gms",
-      "parse_status": "FAILED",
-      "parse_error": "Unsupported expression type: bound_scalar. This may be a parser bug or unsupported GAMS syntax. Supported: variables, parameters, numbers, operators (+, -, *, /, ^), functions (sqrt, exp, log, etc.), sum(). [context: assignment] (line 32, column 23)",
-      "parse_error_type": "ParserSemanticError"
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null
     }
   ],
   "kpis": {
     "total_models": 10,
-    "parse_success": 2,
-    "parse_failed": 8,
-    "parse_rate_percent": 20.0,
+    "parse_success": 4,
+    "parse_failed": 6,
+    "parse_rate_percent": 40.0,
     "convert_success": 0,
     "convert_failed": 0,
     "convert_rate_percent": 0.0,

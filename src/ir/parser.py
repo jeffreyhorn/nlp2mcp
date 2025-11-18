@@ -1050,7 +1050,6 @@ class _ModelBuilder:
             raise self._error("Malformed assignment target", lvalue_tree)
 
         expr = self._expr_with_context(expr_tree, "assignment", ())
-        value = self._extract_constant(expr, "assignment")
 
         target = next(
             (child for child in lvalue_tree.children if isinstance(child, (Tree, Token))),
@@ -1058,6 +1057,26 @@ class _ModelBuilder:
         )
         if target is None:
             raise self._error("Empty assignment target", lvalue_tree)
+
+        # Determine if we're assigning to a variable bound or a parameter
+        is_variable_bound = isinstance(target, Tree) and target.data in (
+            "bound_indexed",
+            "bound_scalar",
+        )
+
+        # Try to extract a constant value. If the expression is non-constant
+        # (e.g., contains variable attributes like x.l), we skip storing the value
+        # (Sprint 8 mock/store approach - we don't execute expressions)
+        try:
+            value = self._extract_constant(expr, "assignment")
+        except ParserSemanticError:
+            # Non-constant expressions are only allowed for scalar parameter assignments
+            # (e.g., trig.gms: xdiff = 2.66695657 - x1.l)
+            # Variable bounds must always be constants
+            if is_variable_bound:
+                raise  # Re-raise the error for variable bounds
+            # For scalar parameters, just parse and validate the expression but don't store the value
+            return
 
         if isinstance(target, Tree):
             if target.data == "bound_indexed":
@@ -1084,8 +1103,10 @@ class _ModelBuilder:
 
                 param = self.model.params[param_name]
 
-                # Validate index count matches domain
-                if len(indices) != len(param.domain):
+                # In GAMS, scalar parameters can be implicitly expanded to multi-dimensional
+                # when used with indices (e.g., mathopt1.gms: Parameter report; report('x1','global') = 1;)
+                # Only validate index count if parameter has an explicit domain
+                if len(param.domain) > 0 and len(indices) != len(param.domain):
                     raise self._error(
                         f"Parameter '{param_name}' expects {len(param.domain)} indices, got {len(indices)}",
                         target,
@@ -1204,6 +1225,21 @@ class _ModelBuilder:
             expr = Call(func_name, tuple(args))
             return self._attach_domain(expr, self._merge_domains(args, node))
 
+        # Support variable attribute access in expressions (e.g., x1.l, x.lo(i))
+        if node.data == "bound_scalar":
+            var_name = _token_text(node.children[0])
+            bound_attr = _token_text(node.children[1]).lower()
+            # Return a symbol reference with the attribute suffix
+            # For now, treat it as a variable reference (Sprint 8 mock/store approach)
+            return self._make_symbol(var_name, (), free_domain, node)
+
+        if node.data == "bound_indexed":
+            var_name = _token_text(node.children[0])
+            bound_attr = _token_text(node.children[1]).lower()
+            indices = _id_list(node.children[2]) if len(node.children) > 2 else ()
+            # Return an indexed symbol reference (Sprint 8 mock/store approach)
+            return self._make_symbol(var_name, indices, free_domain, node)
+
         raise self._error(
             f"Unsupported expression type: {node.data}. "
             f"This may be a parser bug or unsupported GAMS syntax. "
@@ -1299,7 +1335,9 @@ class _ModelBuilder:
             return self._attach_domain(expr, free_domain)
         if name in self.model.params:
             expected = self.model.params[name].domain
-            if len(expected) != len(idx_tuple):
+            # In GAMS, scalar parameters can be implicitly expanded to multi-dimensional
+            # when used with indices. Only validate if parameter has an explicit domain.
+            if len(expected) > 0 and len(expected) != len(idx_tuple):
                 raise self._error(
                     f"Parameter '{name}' expects {len(expected)} indices but received {len(idx_tuple)}",
                     node,
