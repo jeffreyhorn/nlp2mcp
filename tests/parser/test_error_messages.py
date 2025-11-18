@@ -211,7 +211,7 @@ class TestErrorEnhancer:
 
     def test_missing_semicolon_suggestion(self):
         """Test that missing semicolons are detected and suggested."""
-        source = "Set i / 1*10 /\nParameter x"  # Line 1: Set, Line 2: Parameter (Missing semicolon after Set, incomplete Parameter statement)
+        source = "Set i / 1*10 /\nParameter x"  # Missing semicolon after Set declaration
 
         with pytest.raises(ParseError) as exc_info:
             parse_text(source)

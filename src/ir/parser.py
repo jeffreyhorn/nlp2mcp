@@ -202,7 +202,6 @@ def parse_text(source: str) -> Tree:
         ParseError: If syntax errors are found (wraps Lark exceptions)
     """
     parser = _build_lark()
-
     try:
         raw = parser.parse(source)
         return _resolve_ambiguities(raw)

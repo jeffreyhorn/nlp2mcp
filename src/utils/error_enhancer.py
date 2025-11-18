@@ -98,16 +98,18 @@ class ErrorEnhancer:
         # Combine existing and new suggestions
         if new_suggestions:
             if existing_suggestion:
-                combined_suggestion = existing_suggestion + "\n" + "\n".join(new_suggestions)
+                combined_suggestion = (
+                    existing_suggestion.rstrip() + "\n\n" + "\n".join(new_suggestions)
+                )
             else:
                 combined_suggestion = "\n".join(new_suggestions)
 
             # Create a new ParseError with the enhanced suggestion
             return ParseError(
-                message=error.message if hasattr(error, "message") else str(error).split("\n")[0],
-                line=error.line if hasattr(error, "line") else None,
-                column=error.column if hasattr(error, "column") else None,
-                source_line=error.source_line if hasattr(error, "source_line") else None,
+                message=error.message,
+                line=error.line,
+                column=error.column,
+                source_line=error.source_line,
                 suggestion=combined_suggestion,
             )
 
@@ -125,15 +127,18 @@ class ErrorEnhancer:
         Returns:
             Suggestion string if typo detected, None otherwise
         """
-        # Extract capitalized words that might be keywords
-        words = re.findall(r"\b[A-Z][a-zA-Z]*\b", source_line)
+        # Extract the first capitalized word (likely a keyword)
+        # Check if it appears at the start of the line (after whitespace)
+        match = re.match(r"^\s*([A-Z][a-zA-Z]*)\b", source_line)
+        if not match:
+            return None
 
-        for word in words:
-            if word not in GAMS_KEYWORDS:
-                # Find close matches with 60% similarity threshold
-                matches = get_close_matches(word, GAMS_KEYWORDS, n=3, cutoff=0.6)
-                if matches:
-                    return f"Did you mean '{matches[0]}'?"
+        word = match.group(1)
+        if word not in GAMS_KEYWORDS:
+            # Find close matches with 60% similarity threshold
+            matches = get_close_matches(word, GAMS_KEYWORDS, n=3, cutoff=0.6)
+            if matches:
+                return f"Did you mean '{matches[0]}'?"
 
         return None
 
@@ -156,10 +161,19 @@ class ErrorEnhancer:
 
         # Check for Set declaration with square brackets before semicolon
         # e.g., Set i [A, B, C];
-        set_decl_pattern = r"^\s*Set[s]?\s+\w+\s*\[.*\]"
+        set_decl_pattern = r"^\s*Sets?\s+\w+\s*\[.*\]"
         if re.search(set_decl_pattern, line_wo_strings):
-            fixed_line = re.sub(r"\[", "/", source_line)
-            fixed_line = re.sub(r"\]", "/", fixed_line)
+            # Replace brackets only outside string literals
+            def replace_brackets_outside_strings(line):
+                # Split by string literals (handles both "..." and '...')
+                parts = re.split(r'((?:"[^"]*"|\'[^\']*\'))', line)
+                for i in range(len(parts)):
+                    # Only replace in non-string-literal parts (even indices)
+                    if i % 2 == 0:
+                        parts[i] = parts[i].replace("[", "/").replace("]", "/")
+                return "".join(parts)
+
+            fixed_line = replace_brackets_outside_strings(source_line)
             return f"GAMS set elements use /.../ not [...]. Try: {fixed_line.strip()}"
 
         return None
@@ -191,6 +205,11 @@ class ErrorEnhancer:
 
         # If previous line doesn't end with semicolon and current line starts with keyword
         if prev_line and not prev_line.endswith(";"):
+            # Skip if previous line ends with a delimiter that indicates continuation
+            # (e.g., '/' for set declarations, '..' for equation definitions)
+            if prev_line.endswith("/") or prev_line.endswith(".."):
+                return None
+
             # Check if current line starts with a GAMS keyword
             first_word = current_line.split()[0] if current_line.split() else ""
             if first_word in GAMS_KEYWORDS:
