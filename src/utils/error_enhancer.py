@@ -91,7 +91,7 @@ class ErrorEnhancer:
 
         # Rule 5: Function call error
         if "Call(" in message or "function call" in message.lower():
-            function_suggestion = self._explain_function_call_limitation(message)
+            function_suggestion = self._explain_function_call_limitation()
             if function_suggestion:
                 new_suggestions.append(function_suggestion)
 
@@ -219,7 +219,7 @@ class ErrorEnhancer:
 
         return None
 
-    def _explain_unsupported_feature(self, message: str) -> str | None:
+    def _explain_unsupported_feature(self, message: str) -> str:
         """
         Explain unsupported features with roadmap reference.
 
@@ -248,12 +248,9 @@ class ErrorEnhancer:
             "See docs/ROADMAP.md for the current feature support status."
         )
 
-    def _explain_function_call_limitation(self, message: str) -> str | None:
+    def _explain_function_call_limitation(self) -> str | None:
         """
         Explain that assignments only support numeric literals currently.
-
-        Args:
-            message: Error message about function calls
 
         Returns:
             Explanation string about literal-only limitation
