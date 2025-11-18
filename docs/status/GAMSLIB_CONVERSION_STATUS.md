@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-18 11:52:49
+**Generated:** 2025-11-18 12:17:38
 **Sprint:** Sprint 8
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint8.json`](../../reports/gamslib_ingestion_sprint8.json)
@@ -37,7 +37,7 @@
 
 **Legend:**
 - ✅ PASS: 100% parsed successfully
-- 🟡 PARTIAL: 75-99% parsed, or 100% with semantic errors
+- 🟡 PARTIAL: 75-99% parsed
 - ⚠️ PARTIAL: 25-74% parsed
 - ❌ FAIL: <25% parsed
 - `-` Not attempted (stage not implemented yet)
