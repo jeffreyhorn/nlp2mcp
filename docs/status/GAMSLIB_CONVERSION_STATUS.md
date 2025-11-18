@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-18 00:53:39
+**Generated:** 2025-11-18 02:08:27
 **Sprint:** Sprint 6
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint6.json`](../../reports/gamslib_ingestion_sprint6.json)
@@ -102,7 +102,7 @@ Expected one of:
 **Error Type:** `ParserSemanticError`
 **Error Message:**
 ```
-Indexed assignments are not supported yet [context: expression] (line 45, column 1)
+Parameter 'report' expects 0 indices, got 2 [context: expression] (line 45, column 1)
 ```
 
 ### maxmin.gms
