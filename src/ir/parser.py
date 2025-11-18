@@ -11,7 +11,9 @@ from itertools import product
 from pathlib import Path
 
 from lark import Lark, Token, Tree
+from lark.exceptions import UnexpectedCharacters, UnexpectedEOF, UnexpectedToken
 
+from ..utils.errors import ParseError
 from .ast import Binary, Call, Const, Expr, ParamRef, Sum, SymbolRef, Unary, VarRef
 from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import preprocess_gams_file
@@ -154,11 +156,110 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
     return resolved[id(node)]
 
 
+def _extract_source_line_with_adjusted_column(
+    source: str, line: int | None, column: int | None
+) -> tuple[str | None, int | None]:
+    """Extract source line and adjust column for whitespace stripping.
+
+    Args:
+        source: Full source text
+        line: Line number (1-indexed)
+        column: Column number (1-indexed)
+
+    Returns:
+        Tuple of (stripped source line, adjusted column number)
+    """
+    source_lines = source.split("\n")
+    source_line = None
+    adjusted_column = column
+
+    if line and 1 <= line <= len(source_lines):
+        source_line = source_lines[line - 1].lstrip()
+        # Adjust column for stripped whitespace
+        original_line = source_lines[line - 1]
+        stripped_count = len(original_line) - len(original_line.lstrip())
+        if column is not None:
+            adjusted_column = max(1, column - stripped_count)
+
+    return source_line, adjusted_column
+
+
 def parse_text(source: str) -> Tree:
-    """Parse a source string and return a disambiguated Lark parse tree."""
+    """Parse a source string and return a disambiguated Lark parse tree.
+
+    Args:
+        source: GAMS source code to parse
+
+    Returns:
+        Disambiguated parse tree
+
+    Raises:
+        ParseError: If syntax errors are found (wraps Lark exceptions)
+    """
     parser = _build_lark()
-    raw = parser.parse(source)
-    return _resolve_ambiguities(raw)
+    try:
+        raw = parser.parse(source)
+        return _resolve_ambiguities(raw)
+    except UnexpectedToken as e:
+        # Extract source line and adjust column
+        source_line, column = _extract_source_line_with_adjusted_column(source, e.line, e.column)
+
+        # Format expected tokens
+        expected = getattr(e, "expected", None)
+        if expected:
+            expected_str = ", ".join(sorted(expected))
+            message = f"Unexpected token '{e.token}'. Expected one of: {expected_str}"
+        else:
+            message = f"Unexpected token: {e.token}"
+
+        raise ParseError(
+            message=message,
+            line=e.line,
+            column=column,
+            source_line=source_line,
+            suggestion="Check syntax near this location",
+        ) from e
+
+    except UnexpectedCharacters as e:
+        # Extract source line and adjust column
+        source_line, column = _extract_source_line_with_adjusted_column(source, e.line, e.column)
+
+        # Get the unexpected character
+        char = getattr(e, "char", None)
+        if char:
+            message = f"Unexpected character: '{char}'"
+        else:
+            message = "Unexpected character in input"
+
+        raise ParseError(
+            message=message,
+            line=e.line,
+            column=column,
+            source_line=source_line,
+            suggestion="This character is not valid in this context",
+        ) from e
+
+    except UnexpectedEOF as e:
+        # Extract source line (use last line for EOF errors)
+        source_lines = source.split("\n")
+        last_line = len(source_lines)
+        source_line, _ = _extract_source_line_with_adjusted_column(source, last_line, 1)
+
+        # Format expected tokens
+        expected = getattr(e, "expected", None)
+        if expected:
+            expected_str = ", ".join(sorted(expected))
+            message = f"Unexpected end of file. Expected one of: {expected_str}"
+        else:
+            message = "Unexpected end of file"
+
+        raise ParseError(
+            message=message,
+            line=last_line,
+            column=1,
+            source_line=source_line,
+            suggestion="The file appears to be incomplete. Check for missing semicolons or closing brackets",
+        ) from e
 
 
 def parse_file(path: str | Path) -> Tree:
@@ -180,7 +281,7 @@ def parse_model_text(source: str) -> ModelIR:
     sys.setrecursionlimit() is set appropriately (recommended: 10000).
     """
     tree = parse_text(source)
-    return _ModelBuilder().build(tree)
+    return _ModelBuilder(source=source).build(tree)
 
 
 def parse_model_file(path: str | Path) -> ModelIR:
@@ -231,6 +332,7 @@ class _ModelBuilder:
     """Walks the parse tree and instantiates ModelIR components."""
 
     model: ModelIR = field(default_factory=ModelIR)
+    source: str = ""  # Source text for error reporting
     _equation_domains: dict[str, tuple[str, ...]] = None
     _context_stack: list[tuple[str, Tree | Token | None, tuple[str, ...]]] = field(
         default_factory=list
@@ -730,7 +832,11 @@ class _ModelBuilder:
     def _handle_eqn_def_scalar(self, node: Tree) -> None:
         name = _token_text(node.children[0])
         if name not in self._declared_equations:
-            raise self._error(f"Equation '{name}' defined without declaration", node)
+            raise self._parse_error(
+                f"Equation '{name}' defined without declaration",
+                node,
+                suggestion=f"Add a declaration like 'Equation {name};' before defining it",
+            )
 
         # Extract source location from equation definition node
         source_location = self._extract_source_location(node)
@@ -772,7 +878,11 @@ class _ModelBuilder:
         name = _token_text(node.children[0])
         domain = _id_list(node.children[1])
         if name not in self._declared_equations:
-            raise self._error(f"Equation '{name}' defined without declaration", node)
+            raise self._parse_error(
+                f"Equation '{name}' defined without declaration",
+                node,
+                suggestion=f"Add a declaration like 'Equation {name}({','.join(domain)});' before defining it",
+            )
         self._ensure_sets(domain, f"equation '{name}' domain", node)
 
         # Extract source location from equation definition node
@@ -1108,9 +1218,10 @@ class _ModelBuilder:
                 # (e.g., mathopt1.gms: Parameter report; report('x1','global') = 1;)
                 if len(param.domain) > 0 and len(indices) != len(param.domain):
                     index_word = "index" if len(param.domain) == 1 else "indices"
-                    raise self._error(
+                    raise self._parse_error(
                         f"Parameter '{param_name}' expects {len(param.domain)} {index_word}, got {len(indices)}",
                         target,
+                        suggestion=f"Provide exactly {len(param.domain)} {index_word} to match the parameter declaration",
                     )
 
                 # Store indexed value
@@ -1131,7 +1242,11 @@ class _ModelBuilder:
                 var = self.model.variables[name]
                 var.lo = var.up = var.fx = value
                 return
-        raise self._error("Unsupported assignment target", lvalue_tree)
+        raise self._parse_error(
+            "Unsupported assignment target",
+            lvalue_tree,
+            suggestion="Assignment targets must be scalars, parameters, or variable attributes (e.g., x.l, x.lo, x.up)",
+        )
 
     def _expr(self, node: Tree | Token, free_domain: tuple[str, ...]) -> Expr:
         if isinstance(node, Token):
@@ -1279,6 +1394,69 @@ class _ModelBuilder:
                     break
         return ParserSemanticError(message, line, column)
 
+    def _parse_error(
+        self,
+        message: str,
+        node: Tree | Token | None = None,
+        suggestion: str | None = None,
+    ) -> ParseError:
+        """Create a ParseError with location and source context extracted from node.
+
+        This is similar to _error() but returns a ParseError with enhanced formatting
+        including source line display and caret pointer.
+
+        Args:
+            message: Error message describing the problem
+            node: Parse tree node or token to extract location from
+            suggestion: Optional suggestion for how to fix the error
+
+        Returns:
+            ParseError with location, source context, and suggestion
+
+        Example:
+            raise self._parse_error(
+                "Indexed assignments are not supported yet",
+                target,
+                suggestion="Use scalar assignment: x.l = 5"
+            )
+        """
+        # Add context information to message
+        context_desc = self._current_context_description()
+        if context_desc:
+            message = f"{message} [context: {context_desc}]"
+        if self._context_stack:
+            current_domain = self._context_stack[-1][2]
+            if current_domain:
+                message = f"{message} [domain: {current_domain}]"
+
+        # Extract line/column from node
+        line, column = self._node_position(node)
+        if line is None and self._context_stack:
+            for _, ctx_node, _ in reversed(self._context_stack):
+                line, column = self._node_position(ctx_node)
+                if line is not None:
+                    break
+
+        # Extract source line for display
+        source_line = None
+        if self.source and line is not None:
+            source_lines = self.source.split("\n")
+            if 1 <= line <= len(source_lines):
+                source_line = source_lines[line - 1].lstrip()
+                # Adjust column for stripped whitespace
+                original_line = source_lines[line - 1]
+                stripped_count = len(original_line) - len(original_line.lstrip())
+                if column is not None:
+                    column = max(1, column - stripped_count)
+
+        return ParseError(
+            message=message,
+            line=line,
+            column=column,
+            source_line=source_line,
+            suggestion=suggestion,
+        )
+
     def _node_position(self, node: Tree | Token | None) -> tuple[int | None, int | None]:
         if node is None:
             return (None, None)
@@ -1354,11 +1532,16 @@ class _ModelBuilder:
             # It's a reference to a domain index variable
             return self._attach_domain(SymbolRef(name), free_domain)
         if idx_tuple:
-            raise self._error(
+            raise self._parse_error(
                 f"Undefined symbol '{name}' with indices {idx_tuple} referenced",
                 node,
+                suggestion=f"Declare '{name}' as a variable, parameter, or set before using it",
             )
-        raise self._error(f"Undefined symbol '{name}' referenced", node)
+        raise self._parse_error(
+            f"Undefined symbol '{name}' referenced",
+            node,
+            suggestion=f"Declare '{name}' as a variable, parameter, or set before using it",
+        )
 
     def _parse_param_decl(self, node: Tree) -> ParameterDef:
         name: str | None = None

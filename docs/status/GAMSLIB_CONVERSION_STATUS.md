@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-18 02:42:34
+**Generated:** 2025-11-18 08:20:13
 **Sprint:** Sprint 6
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint6.json`](../../reports/gamslib_ingestion_sprint6.json)
@@ -24,14 +24,14 @@
 
 | Model | Parse | Convert | Solve | E2E | Notes |
 |-------|-------|---------|-------|-----|-------|
-| circle | ❌ | - | - | ❌ | Parse error: ParserSemanticError |
-| himmel16 | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
-| hs62 | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
+| circle | ❌ | - | - | ❌ | Parse error: ParseError |
+| himmel16 | ❌ | - | - | ❌ | Parse error: ParseError |
+| hs62 | ❌ | - | - | ❌ | Parse error: ParseError |
 | mathopt1 | ✅ | - | - | ❌ | Parsed successfully |
-| maxmin | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
+| maxmin | ❌ | - | - | ❌ | Parse error: ParseError |
 | mhw4d | ✅ | - | - | ❌ | Parsed successfully |
-| mhw4dx | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
-| mingamma | ❌ | - | - | ❌ | Parse error: UnexpectedCharacters |
+| mhw4dx | ❌ | - | - | ❌ | Parse error: ParseError |
+| mingamma | ❌ | - | - | ❌ | Parse error: ParseError |
 | rbrock | ✅ | - | - | ❌ | Parsed successfully |
 | trig | ✅ | - | - | ❌ | Parsed successfully |
 
@@ -47,8 +47,7 @@
 ### Parse Errors
 | Error Type | Count | Models |
 |------------|-------|--------|
-| `UnexpectedCharacters` | 5 | himmel16, hs62, maxmin, mhw4dx, mingamma |
-| `ParserSemanticError` | 1 | circle |
+| `ParseError` | 6 | circle, himmel16, hs62, maxmin, mhw4dx, mingamma |
 
 **Note:** Convert and solve errors will appear here once those stages are implemented.
 
@@ -59,89 +58,77 @@
 ### circle.gms
 **Model:** circle
 **Status:** Parse Failed
-**Error Type:** `ParserSemanticError`
+**Error Type:** `ParseError`
 **Error Message:**
 ```
-Undefined symbol 'i' referenced [context: assignment] (line 40, column 13)
+Error: Parse error at line 40, column 13: Undefined symbol 'i' referenced [context: assignment]
+  xmin = smin(i, x(i));
+              ^
+
+Suggestion: Declare 'i' as a variable, parameter, or set before using it
 ```
 
 ### himmel16.gms
 **Model:** himmel16
 **Status:** Parse Failed
-**Error Type:** `UnexpectedCharacters`
+**Error Type:** `ParseError`
 **Error Message:**
 ```
-No terminal matches '+' in the current parser context, at line 46 col 39
+Error: Parse error at line 46, column 39: Unexpected character: '+'
+  areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));
+                                        ^
 
-areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));
-                                      ^
-Expected one of: 
-	* RPAR
-	* COMMA
-
+Suggestion: This character is not valid in this context
 ```
 
 ### hs62.gms
 **Model:** hs62
 **Status:** Parse Failed
-**Error Type:** `UnexpectedCharacters`
+**Error Type:** `ParseError`
 **Error Message:**
 ```
-No terminal matches 'm' in the current parser context, at line 35 col 4
+Error: Parse error at line 35, column 1: Unexpected character: 'm'
+  mx / objdef, eq1x /;
+  ^
 
-   mx / objdef, eq1x /;
-   ^
-Expected one of: 
-	* SEMI
-
+Suggestion: This character is not valid in this context
 ```
 
 ### maxmin.gms
 **Model:** maxmin
 **Status:** Parse Failed
-**Error Type:** `UnexpectedCharacters`
+**Error Type:** `ParseError`
 **Error Message:**
 ```
-No terminal matches '(' in the current parser context, at line 51 col 12
+Error: Parse error at line 51, column 12: Unexpected character: '('
+  defdist(low(n,nn))..   dist(low) =e= sqrt(sum(d, sqr(point(n,d) - point(nn,d))));
+             ^
 
-defdist(low(n,nn))..   dist(low) =e= sqrt(sum(d, sq
-           ^
-Expected one of: 
-	* RPAR
-	* COMMA
-
+Suggestion: This character is not valid in this context
 ```
 
 ### mhw4dx.gms
 **Model:** mhw4dx
 **Status:** Parse Failed
-**Error Type:** `UnexpectedCharacters`
+**Error Type:** `ParseError`
 **Error Message:**
 ```
-No terminal matches 'a' in the current parser context, at line 63 col 11
+Error: Parse error at line 63, column 11: Unexpected character: 'a'
+  elseif    abs(m.l-44.02207169) < tol, // local solution
+            ^
 
-elseif    abs(m.l-44.02207169) < tol, // local sol
-          ^
-Expected one of: 
-	* DOT
-	* __ANON_0
-	* ASSIGN
-	* LPAR
-	* DOLLAR
-
+Suggestion: This character is not valid in this context
 ```
 
 ### mingamma.gms
 **Model:** mingamma
 **Status:** Parse Failed
-**Error Type:** `UnexpectedCharacters`
+**Error Type:** `ParseError`
 **Error Message:**
 ```
-No terminal matches 'm' in the current parser context, at line 26 col 4
+Error: Parse error at line 26, column 1: Unexpected character: 'm'
+  m2 / y2def /;
+  ^
 
-   m2 / y2def /;
-   ^
-Expected one of: 
-	* SEMI
-
+Suggestion: This character is not valid in this context
 ```

@@ -6,22 +6,22 @@
       "model_name": "circle",
       "gms_file": "circle.gms",
       "parse_status": "FAILED",
-      "parse_error": "Undefined symbol 'i' referenced [context: assignment] (line 40, column 13)",
-      "parse_error_type": "ParserSemanticError"
+      "parse_error": "Error: Parse error at line 40, column 13: Undefined symbol 'i' referenced [context: assignment]\n  xmin = smin(i, x(i));\n              ^\n\nSuggestion: Declare 'i' as a variable, parameter, or set before using it",
+      "parse_error_type": "ParseError"
     },
     {
       "model_name": "himmel16",
       "gms_file": "himmel16.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches '+' in the current parser context, at line 46 col 39\n\nareadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));\n                                      ^\nExpected one of: \n\t* RPAR\n\t* COMMA\n",
-      "parse_error_type": "UnexpectedCharacters"
+      "parse_error": "Error: Parse error at line 46, column 39: Unexpected character: '+'\n  areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));\n                                        ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error_type": "ParseError"
     },
     {
       "model_name": "hs62",
       "gms_file": "hs62.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'm' in the current parser context, at line 35 col 4\n\n   mx / objdef, eq1x /;\n   ^\nExpected one of: \n\t* SEMI\n",
-      "parse_error_type": "UnexpectedCharacters"
+      "parse_error": "Error: Parse error at line 35, column 1: Unexpected character: 'm'\n  mx / objdef, eq1x /;\n  ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error_type": "ParseError"
     },
     {
       "model_name": "mathopt1",
@@ -34,8 +34,8 @@
       "model_name": "maxmin",
       "gms_file": "maxmin.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches '(' in the current parser context, at line 51 col 12\n\ndefdist(low(n,nn))..   dist(low) =e= sqrt(sum(d, sq\n           ^\nExpected one of: \n\t* RPAR\n\t* COMMA\n",
-      "parse_error_type": "UnexpectedCharacters"
+      "parse_error": "Error: Parse error at line 51, column 12: Unexpected character: '('\n  defdist(low(n,nn))..   dist(low) =e= sqrt(sum(d, sqr(point(n,d) - point(nn,d))));\n             ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error_type": "ParseError"
     },
     {
       "model_name": "mhw4d",
@@ -48,15 +48,15 @@
       "model_name": "mhw4dx",
       "gms_file": "mhw4dx.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'a' in the current parser context, at line 63 col 11\n\nelseif    abs(m.l-44.02207169) < tol, // local sol\n          ^\nExpected one of: \n\t* DOT\n\t* __ANON_0\n\t* ASSIGN\n\t* LPAR\n\t* DOLLAR\n",
-      "parse_error_type": "UnexpectedCharacters"
+      "parse_error": "Error: Parse error at line 63, column 11: Unexpected character: 'a'\n  elseif    abs(m.l-44.02207169) < tol, // local solution\n            ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error_type": "ParseError"
     },
     {
       "model_name": "mingamma",
       "gms_file": "mingamma.gms",
       "parse_status": "FAILED",
-      "parse_error": "No terminal matches 'm' in the current parser context, at line 26 col 4\n\n   m2 / y2def /;\n   ^\nExpected one of: \n\t* SEMI\n",
-      "parse_error_type": "UnexpectedCharacters"
+      "parse_error": "Error: Parse error at line 26, column 1: Unexpected character: 'm'\n  m2 / y2def /;\n  ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error_type": "ParseError"
     },
     {
       "model_name": "rbrock",
