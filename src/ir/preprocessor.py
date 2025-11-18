@@ -279,6 +279,11 @@ def strip_unsupported_directives(source: str) -> str:
             filtered.append(f"* [Stripped: {line}]")
             continue
 
+        # Sprint 8 Day 2: Partial if/elseif/else support
+        # Note: Currently stripping if statements due to dependencies on unsupported features
+        # (model attributes, compile-time constants). Grammar and parser infrastructure ready
+        # for future full support when these features are implemented.
+
         # Handle if() statements (may span multiple lines)
         if stripped_lower.startswith("if("):
             in_if_statement = True

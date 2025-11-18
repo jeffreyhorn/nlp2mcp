@@ -19,6 +19,9 @@ start: stmt*  -> program
      | equations_block
      | model_stmt
      | option_stmt
+     | if_stmt
+     | display_stmt
+     | abort_stmt
      | assignment_stmt
      | equation_def
      | solve_stmt
@@ -127,6 +130,7 @@ lvalue: ref_bound | ref_indexed | ID
 
 ref_bound: ID "." BOUND_K "(" id_list ")"   -> bound_indexed
          | ID "." BOUND_K                      -> bound_scalar
+         | ID "." ID                            -> attr_access
 
 BOUND_K: /(lo|up|fx|l)/i
 
@@ -173,6 +177,33 @@ option_item: ID "=" option_value  -> option_with_value
 option_value: NUMBER
             | ON
             | OFF
+
+// ---------------------------
+// Conditional Statements (Sprint 8 Day 2)
+// ---------------------------
+
+if_stmt: IF_K "(" expr "," exec_stmt+ elseif_clause* else_clause? ")" SEMI
+
+elseif_clause: ELSEIF_K expr "," exec_stmt+
+
+else_clause: ELSE_K exec_stmt+
+
+// Executable statements that can appear inside if blocks
+?exec_stmt: display_stmt
+          | abort_stmt
+          | assignment_stmt
+          | SEMI
+
+// ---------------------------
+// Display and Abort Statements (Sprint 8 Day 2 - mock/skip)
+// ---------------------------
+
+display_stmt: "display"i display_item ("," display_item)* SEMI
+
+display_item: expr
+            | STRING
+
+abort_stmt: "abort"i ("$" expr)? STRING? SEMI
 
 // ---------------------------
 // Expressions
@@ -227,6 +258,9 @@ arg_list: expr ("," expr)*
 // ---------------------------
 
 FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card|uniform|normal)\b/
+IF_K: /(?i:if)\b/
+ELSEIF_K: /(?i:elseif)\b/
+ELSE_K: /(?i:else)\b/
 ON: /(?i:on)\b/
 OFF: /(?i:off)\b/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/

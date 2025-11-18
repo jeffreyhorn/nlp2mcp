@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from .ast import Expr
 from .symbols import (
     AliasDef,
+    ConditionalStatement,
     EquationDef,
     ObjSense,
     OptionStatement,
@@ -38,6 +39,9 @@ class ModelIR:
 
     # Option statements (Sprint 8: mock/store approach)
     option_statements: list[OptionStatement] = field(default_factory=list)
+
+    # Conditional statements (Sprint 8 Day 2: mock/store approach)
+    conditional_statements: list[ConditionalStatement] = field(default_factory=list)
 
     # Solve info
     declared_model: str | None = None

@@ -117,3 +117,33 @@ class OptionStatement:
 
     options: list[tuple[str, int | str | None]]
     location: SourceLocation | None
+
+
+@dataclass
+class ConditionalStatement:
+    """Represents a GAMS if-elseif-else statement.
+
+    Sprint 8 Day 2: Mock/store approach - conditionals are parsed and stored but not executed.
+
+    Examples:
+        if(abs(x.l - 5) < tol,
+           display 'case 1';
+        elseif abs(x.l - 10) < tol,
+           display 'case 2';
+        else
+           display 'default';
+        );
+
+    Attributes:
+        condition: The if condition expression (stored as raw tree)
+        then_stmts: List of statements in the if block (stored as raw trees)
+        elseif_clauses: List of (condition, statements) for each elseif
+        else_stmts: List of statements in the else block, or None
+        location: Source location of the if statement
+    """
+
+    condition: object  # Condition expression (Tree)
+    then_stmts: list[object]  # Then block statements (Trees)
+    elseif_clauses: list[tuple[object, list[object]]]  # (condition, statements) pairs
+    else_stmts: list[object] | None  # Else block statements or None
+    location: SourceLocation | None
