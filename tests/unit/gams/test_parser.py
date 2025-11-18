@@ -3,7 +3,6 @@
 from pathlib import Path
 from textwrap import dedent
 
-import lark
 import pytest
 
 from src.ir import parser
