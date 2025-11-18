@@ -9,6 +9,7 @@ import pytest
 from src.ir import parser
 from src.ir.ast import Binary, Call, Const, Expr, ParamRef, Sum, VarRef
 from src.ir.symbols import ObjSense, Rel, VarKind
+from src.utils.errors import ParseError
 
 
 def test_simple_nlp_parses_into_program_tree():
@@ -75,7 +76,7 @@ def test_undefined_symbol_raises():
         """
     )
 
-    with pytest.raises(parser.ParserSemanticError, match="Undefined symbol 'y'") as excinfo:
+    with pytest.raises(ParseError, match="Undefined symbol 'y'") as excinfo:
         parser.parse_model_text(text)
     assert excinfo.value.line is not None
     assert "context" in str(excinfo.value)
@@ -449,7 +450,7 @@ def test_non_constant_bound_expression_rejected():
         """
     )
 
-    with pytest.raises(parser.ParserSemanticError, match="Assignments must use numeric constants"):
+    with pytest.raises(ParseError, match="Assignments must use numeric constants"):
         parser.parse_model_text(text)
 
 
@@ -506,7 +507,7 @@ def test_unsupported_statement_rejected():
         """
     )
 
-    with pytest.raises((lark.exceptions.UnexpectedToken, lark.exceptions.UnexpectedCharacters)):
+    with pytest.raises(ParseError):
         parser.parse_model_text(text)
 
 
