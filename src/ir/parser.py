@@ -1107,8 +1107,9 @@ class _ModelBuilder:
                 # when used with indices (e.g., mathopt1.gms: Parameter report; report('x1','global') = 1;)
                 # Only validate index count if parameter has an explicit domain
                 if len(param.domain) > 0 and len(indices) != len(param.domain):
+                    index_word = "index" if len(param.domain) == 1 else "indices"
                     raise self._error(
-                        f"Parameter '{param_name}' expects {len(param.domain)} indices, got {len(indices)}",
+                        f"Parameter '{param_name}' expects {len(param.domain)} {index_word}, got {len(indices)}",
                         target,
                     )
 
@@ -1228,14 +1229,13 @@ class _ModelBuilder:
         # Support variable attribute access in expressions (e.g., x1.l, x.lo(i))
         if node.data == "bound_scalar":
             var_name = _token_text(node.children[0])
-            bound_attr = _token_text(node.children[1]).lower()
-            # Return a symbol reference with the attribute suffix
+            # Note: bound_attr (e.g., 'l', 'm', 'lo') is in node.children[1] but not used
             # For now, treat it as a variable reference (Sprint 8 mock/store approach)
             return self._make_symbol(var_name, (), free_domain, node)
 
         if node.data == "bound_indexed":
             var_name = _token_text(node.children[0])
-            bound_attr = _token_text(node.children[1]).lower()
+            # Note: bound_attr (e.g., 'l', 'm', 'lo') is in node.children[1] but not used
             indices = _id_list(node.children[2]) if len(node.children) > 2 else ()
             # Return an indexed symbol reference (Sprint 8 mock/store approach)
             return self._make_symbol(var_name, indices, free_domain, node)
@@ -1325,8 +1325,9 @@ class _ModelBuilder:
         if name in self.model.variables:
             expected = self.model.variables[name].domain
             if len(expected) != len(idx_tuple):
+                index_word = "index" if len(expected) == 1 else "indices"
                 raise self._error(
-                    f"Variable '{name}' expects {len(expected)} indices but received {len(idx_tuple)}",
+                    f"Variable '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)}",
                     node,
                 )
             expr = VarRef(name, idx_tuple)
@@ -1338,8 +1339,9 @@ class _ModelBuilder:
             # In GAMS, scalar parameters can be implicitly expanded to multi-dimensional
             # when used with indices. Only validate if parameter has an explicit domain.
             if len(expected) > 0 and len(expected) != len(idx_tuple):
+                index_word = "index" if len(expected) == 1 else "indices"
                 raise self._error(
-                    f"Parameter '{name}' expects {len(expected)} indices but received {len(idx_tuple)}",
+                    f"Parameter '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)}",
                     node,
                 )
             expr = ParamRef(name, idx_tuple)
@@ -1675,8 +1677,9 @@ class _ModelBuilder:
         node: Tree | Token | None = None,
     ) -> list[tuple[str, ...]]:
         if len(index_symbols) != len(var.domain):
+            index_word = "index" if len(var.domain) == 1 else "indices"
             raise self._error(
-                f"Variable '{var_name}' bounds expect {len(var.domain)} indices but received {len(index_symbols)}",
+                f"Variable '{var_name}' bounds expect {len(var.domain)} {index_word} but received {len(index_symbols)}",
                 node,
             )
         member_lists: list[list[str]] = []

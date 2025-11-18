@@ -22,7 +22,7 @@ Implemented indexed parameter assignments and variable attribute access to unloc
 - Existing `ref_indexed` and `lvalue` rules already supported indexed assignments
 
 **Parser (src/ir/parser.py):**
-- Implemented indexed parameter assignment handler in `_assignment()` method
+- Implemented indexed parameter assignment handler in `_handle_assign()` method
   - Validates parameter exists and is declared
   - Validates index count matches parameter domain
   - Stores indexed values in `param.values[tuple(indices)]`
@@ -46,7 +46,7 @@ Implemented indexed parameter assignments and variable attribute access to unloc
   - Real patterns from mathopt1.gms and trig.gms
 
 **Bug Fixes:**
-- Fixed `_token_text()` to not strip quotes from set members
+- Added `_extract_indices()` function to strip quotes from indices in parameter assignments while preserving them in set members
 - Updated `test_indexed_parameter_assignment_not_supported` to verify feature now works
 
 #### Validation Results

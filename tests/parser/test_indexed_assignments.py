@@ -123,7 +123,7 @@ class TestIndexedAssignmentValidation:
         Parameter p(i);
         p('i1', 'i2') = 10;
         """
-        with pytest.raises(Exception, match="expects 1 indices, got 2"):
+        with pytest.raises(Exception, match="expects 1 index, got 2"):
             parse_model_text(gams)
 
     def test_2d_param_requires_2_indices(self):
