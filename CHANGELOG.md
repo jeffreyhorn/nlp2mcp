@@ -32,9 +32,9 @@ All 3 Sprint Planning unknowns confirmed as ✅ VERIFIED in KNOWN_UNKNOWNS.md:
   - Upper bound (41h) uses Day 10 buffer
 
 - **Unknown 8.2 (Parse rate targets):** 40% primary target with confidence ranges
-  - Primary: 40% (4/10 models) - 95% confidence (mathopt1 + mhw4dx unlock)
+  - Primary: 40% (4/10 models) - 80% confidence (mathopt1 + mhw4dx unlock)
   - Stretch: 50% (5/10 models) - 80% confidence (trig also unlocks)
-  - Secondary: 30% (3/10 models) - 99% confidence (mhw4dx only)
+  - Secondary: 30% (3/10 models) - 95% confidence (mhw4dx only)
   - Minimum: 25% (worst case if issues arise)
 
 - **Unknown 8.3 (Checkpoint strategy):** 4 checkpoints at Days 2, 4, 8, 9
@@ -62,7 +62,7 @@ All 8 prep tasks (Tasks 2-9) reviewed and validated:
 - ✅ Clear scope: Option statements + Indexed assignments
 - ✅ Validated effort: 30-41h (average 35.5h) across 11 days
 - ✅ Parse rate target: 40-50% (exceeds 25-30% from PROJECT_PLAN.md)
-- ✅ High confidence: 95% for 40%, 80% for 50%
+- ✅ High confidence: 80% for 40-50%, 95% for 30%
 
 **Next:** Day 1 - Option Statements Grammar & AST (6-8h)
 
