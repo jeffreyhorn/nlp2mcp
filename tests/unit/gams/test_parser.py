@@ -449,7 +449,7 @@ def test_non_constant_bound_expression_rejected():
         """
     )
 
-    with pytest.raises(ParseError, match="Assignments must use numeric constants"):
+    with pytest.raises(parser.ParserSemanticError, match="Assignments must use numeric constants"):
         parser.parse_model_text(text)
 
 

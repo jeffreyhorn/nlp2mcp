@@ -1657,11 +1657,7 @@ class _ModelBuilder:
             return -float(expr.child.value)
         if isinstance(expr, Unary) and expr.op == "+" and isinstance(expr.child, Const):
             return float(expr.child.value)
-        raise self._parse_error(
-            f"Assignments must use numeric constants; got {expr!r} in {context}",
-            node=None,
-            suggestion="Use a literal number (e.g., 5, 3.14) instead of a function call or expression",
-        )
+        raise self._error(f"Assignments must use numeric constants; got {expr!r} in {context}")
 
     def _apply_variable_bound(
         self,
