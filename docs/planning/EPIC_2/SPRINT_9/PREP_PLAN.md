@@ -24,7 +24,7 @@ Sprint 9 focuses on **advanced parser features requiring grammar changes** and *
 - **Test infrastructure first** (Sprint 8 lesson: address gaps early)
 - **Complete blocker analysis** (Sprint 8 lesson: prevent underestimation)
 
-**Preparation Effort:** 45-62 hours (~6-8 working days)  
+**Preparation Effort:** 47-63 hours (~6-8 working days)  
 **Critical Path:** Tasks 1 → 2 → 3 → 5 → 10
 
 ---
@@ -44,7 +44,7 @@ Sprint 9 focuses on **advanced parser features requiring grammar changes** and *
 | 9 | Design Performance Baseline & Budget Framework | Medium | 3-4 hours | Task 1 | Performance instrumentation |
 | 10 | Plan Sprint 9 Detailed Schedule | Critical | 7-9 hours | All tasks | Sprint 9 execution planning |
 
-**Total Estimated Time:** 40-54 hours (~5-7 working days) for main tasks + 5-8 hours for Task 10 = **45-62 hours total**
+**Total Estimated Time:** 40-54 hours (~5-7 working days) for main tasks + 7-9 hours for Task 10 = **47-63 hours total**
 
 **Critical Path:** Tasks 1 → 2 → 3 → 5 → 10 (must complete before Sprint 9 Day 1)
 
@@ -1700,7 +1700,7 @@ grep -c "Check [0-9]:" docs/planning/EPIC_2/SPRINT_9/FIXTURE_VALIDATION_SCRIPT.m
 - [ ] Auto-fix mode designed (safety, confirmation prompt)
 - [ ] Integration plan defined (pre-commit hook, CI integration)
 - [ ] Documentation created (FIXTURE_VALIDATION_SCRIPT.md)
-- [ ] Effort estimate validated (should align with 1h in PROJECT_PLAN.md, but 2-3h more realistic)
+- [ ] Effort estimate validated (originally 1h in PROJECT_PLAN.md; updated to 2-3h based on detailed task breakdown and accepted for this sprint)
 - [ ] Addresses Sprint 8 retrospective recommendation #3
 
 ---
@@ -2065,7 +2065,7 @@ Sprint 8 retrospective recommendations (lines 404-405):
    - Budget enforcement (CI): 1h (CI workflow changes)
    - Benchmark harness: 1-2h (pytest-benchmark setup)
    - Documentation: 0.5h
-   - Total: 3.5-4.5h (validates 3-4h + 1h estimate)
+   - Total: 3.5-4.5h (sum of above estimates)
 
 ### Changes
 
