@@ -7,6 +7,126 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 9: Prep Task 3 - Research Advanced Indexing (i++1, i--1) Syntax - 2025-11-19
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed Sprint 9 Prep Task 3: Conducted comprehensive research on GAMS lead/lag indexing operators (i++1, i--1, i++N, i--N) to design grammar rules, IR representation, and semantic validation logic. Produced 1,295-line implementation guide for Sprint 9 Day 3-4 work. Validated 8-10 hour implementation estimate from PROJECT_PLAN.md. Verified 5 unknowns (9.1.1-9.1.3, 9.1.8, 9.1.10) with detailed answers. Analysis confirms himmel16.gms unlock with VERY HIGH probability (95%+) for +10% parse rate improvement (40% → 50%). Research documents ready-to-implement grammar design (token-level disambiguation), IR node structure (IndexOffset), and semantic validation strategy (4 checks).
+
+#### Key Findings
+
+**GAMS Lead/Lag Operators (4 types cataloged):**
+- **Circular lead `++`:** Wraps around at boundaries (last++1 = first)
+- **Circular lag `--`:** Wraps around at boundaries (first--1 = last)
+- **Linear lead `+`:** Suppresses at boundaries (out-of-bounds = 0/skip)
+- **Linear lag `-`:** Suppresses at boundaries (out-of-bounds = 0/skip)
+- All operators work on ordered, one-dimensional sets with exogenous offsets
+- Supports both constant offsets (i++1) and expression offsets (i++(k-1))
+
+**GAMSLib Usage Analysis (very rare feature):**
+- Only **3 occurrences** found across entire GAMSLib (347 models)
+- All 3 occurrences in **himmel16.gms** using **i++1 pattern only**
+- No other models use lead/lag indexing operators
+- No circular lag (--), linear lead (+), or linear lag (-) found in GAMSLib
+
+**Grammar Design Decision:**
+- **Approach:** Token-level disambiguation with context separation
+- New tokens: `CIRCULAR_LEAD: "++"` and `CIRCULAR_LAG: "--"`
+- Lark's longest-match precedence automatically resolves `++` vs `+ +`
+- Linear operators `+`/`-` disambiguated by context (indexing vs arithmetic)
+- **No grammar conflicts found** (tested with prototype rules)
+- Grammar changes estimated at 2-3 hours implementation effort
+
+**IR Representation Design:**
+```python
+@dataclass
+class IndexOffset(IRNode):
+    base: str          # Base identifier (e.g., 'i', 't', 's')
+    offset: IRNode     # Offset expression (Const, Parameter, BinaryOp, etc.)
+    circular: bool     # True for ++/--, False for +/-
+```
+- Explicit representation of all components for type safety
+- Supports both constant and expression offsets
+- Easy validation and boundary resolution
+- IR + semantic handler estimated at 3-4 hours
+
+**Semantic Validation Strategy (4 checks):**
+1. Base identifier exists in symbol table
+2. Base is a set index/element (not parameter/variable)
+3. Offset is exogenous (compile-time known, parameters OK, variables not OK)
+4. Set is ordered (unless `$offOrder` directive active)
+
+**himmel16.gms Unlock Analysis:**
+- **Unlock Probability:** VERY HIGH (95%+)
+- **Primary Blocker:** i++1 (3 occurrences: lines 35 comment, 46 equation, 48 objective)
+- **Secondary Blockers:** NONE (line-by-line verification of all 66 lines completed)
+- **Expected Parse Rate:** 100% (66/66 lines) after i++1 implementation
+- **Parse Rate Impact:** 40% → 50% (+10%, 1 model unlock out of 10 targeted models)
+
+**Implementation Effort Validation:**
+- Grammar changes: 2-3 hours (token definitions, id_list modifications, lag_lead_suffix rules)
+- IR + semantic handler: 3-4 hours (IndexOffset node, 4 validation checks)
+- Test fixtures: 2-3 hours (5 fixtures, 2 error test functions)
+- **Total: 8-10 hours** ✅ Aligns with PROJECT_PLAN.md Sprint 9 estimate
+
+**Test Coverage Strategy:**
+- **5 success fixtures:** circular_lead_simple, circular_lag, linear_lead_lag, sum_with_lead, expression_offset
+- **2 error test functions:** test_invalid_lag_lead (semantic errors), test_boundary_conditions
+- **4 validation levels:** Syntax Parsing, IR Construction, Semantic Validation, Boundary Behavior
+- Sprint 9 delivers Levels 1-3 (Level 4 deferred to Sprint 10 with MCP conversion)
+
+#### Deliverables
+
+**LEAD_LAG_INDEXING_RESEARCH.md (docs/planning/EPIC_2/SPRINT_9/LEAD_LAG_INDEXING_RESEARCH.md):**
+- **1,295 lines** of comprehensive research and implementation guide
+- **Executive Summary:** Key findings, decisions, and recommendations
+- **GAMS Operator Syntax:** 4 operators with boundary behavior, ordered set requirements, exogenous offset constraints
+- **GAMSLib Pattern Analysis:** 3 occurrences (all i++1 in himmel16.gms), grep commands documented
+- **Grammar Design:** Token-level approach, rule modifications, conflict resolution, prototype Lark rules
+- **IR Representation Design:** IndexOffset node structure, boundary resolution algorithms, validation integration
+- **Semantic Validation Logic:** 4 checks specified with error messages and implementation guidance
+- **Test Fixture Strategy:** 5 fixtures designed with input/expected output, error test specifications
+- **Implementation Guide:** Day 3-4 breakdown with step-by-step tasks and effort estimates
+- **Unknown Verification Results:** All 5 unknowns (9.1.1, 9.1.2, 9.1.3, 9.1.8, 9.1.10) answered with detailed findings
+
+**KNOWN_UNKNOWNS.md Updates (docs/planning/EPIC_2/SPRINT_9/KNOWN_UNKNOWNS.md):**
+- **Unknown 9.1.1 (i++1 Complexity):** ✅ VERIFIED - Works on any ordered set (not just time), 4 operators, expression offsets supported, 8-10h estimate VALIDATED
+- **Unknown 9.1.2 (Grammar Integration):** ✅ VERIFIED - Token-level disambiguation chosen, longest-match precedence resolves conflicts, NO conflicts found
+- **Unknown 9.1.3 (Semantic Handling):** ✅ VERIFIED - IndexOffset IR node chosen, 4 validation checks specified, boundary resolution at conversion time
+- **Unknown 9.1.8 (himmel16.gms Unlock):** ✅ VERIFIED - VERY HIGH probability (95%+), no secondary blockers, 100% parse rate expected, +10% parse rate impact
+- **Unknown 9.1.10 (Test Coverage):** ✅ VERIFIED - 5 fixtures provide comprehensive coverage, 4 validation levels, Sprint 9 delivers Levels 1-3
+
+**PREP_PLAN.md Updates (docs/planning/EPIC_2/SPRINT_9/PREP_PLAN.md):**
+- Updated Task 3 status from 🔵 NOT STARTED to ✅ COMPLETE
+- Added completion metadata (Actual Time: 6-8 hours, Completion Date: 2025-11-19)
+- Documented Changes section with files created and modified
+- Documented Result section with 8 key findings and recommendation
+- Checked off all 11 Acceptance Criteria items
+
+#### Recommendations
+
+**Proceed with Sprint 9 Day 3-4 implementation:**
+- All research validates feasibility of 8-10 hour estimate
+- No technical blockers or risks identified
+- Grammar design is conflict-free and ready to implement
+- IR design is type-safe and extensible
+- himmel16.gms unlock probability is VERY HIGH (95%+)
+- Test coverage strategy is comprehensive (5 fixtures, 4 validation levels)
+
+**Implementation Priority:**
+1. **Day 3 Morning:** Grammar changes (CIRCULAR_LEAD/CIRCULAR_LAG tokens, id_list modifications)
+2. **Day 3 Afternoon:** IR node (IndexOffset class, transformer rules)
+3. **Day 4 Morning:** Semantic validation (4 checks in symbol table phase)
+4. **Day 4 Afternoon:** Test fixtures (5 success fixtures, 2 error test functions)
+
+**Follow-up for Sprint 10:**
+- Level 4 testing (Boundary Behavior) requires MCP conversion framework
+- Defer boundary resolution validation until Sprint 10 Task 8 (MCP integration)
+
+---
+
 ### Sprint 9: Prep Task 2 - Complete Secondary Blocker Analysis for mhw4dx.gms - 2025-11-19
 
 **Status:** ✅ COMPLETE
