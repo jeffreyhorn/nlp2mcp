@@ -657,9 +657,86 @@ Expected: Research GAMS documentation for "all" keyword
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE  
-**To be verified by:** Task 4 (Research Model Section Syntax)  
-**Expected completion:** Before Sprint 9 Day 1
+🔍 **Status:** ✅ VERIFIED  
+**Verified by:** Task 4 - Research Model Section Syntax  
+**Date:** 2025-11-19  
+**Actual time:** 4-5 hours (within estimate)
+
+**Answers to Research Questions:**
+
+**1. Are there single-model vs multi-model files?**
+
+**Answer:** BOTH patterns exist in GAMSLib
+
+**Evidence:**
+- **Single-line models:** 5 files use `Model m /all/;` pattern (circle, mhw4d, mhw4dx, rbrock, trig)
+- **Multi-line multiple models:** 4 files use multi-line syntax (himmel16, hs62, mingamma, maxmin)
+- **Pattern distribution:** 56% single-line, 44% multi-line
+
+**Multi-line example (hs62.gms):**
+```gams
+Model
+   m  / objdef, eq1  /
+   mx / objdef, eq1x /;
+```
+
+**Key finding:** Current grammar supports single-line, but NOT multi-line (TARGET FEATURE)
+
+**2. Does `model m / all /;` keyword exist?**
+
+**Answer:** YES (extensively used)
+
+**Evidence:**
+- 5 models in GAMSLib use `/all/` keyword (circle, mhw4d, mhw4dx, rbrock, trig)
+- GAMS documentation confirms `/all/` expands to all declared equations
+- Current grammar already supports this (`model_all` rule)
+
+**Semantic behavior:**
+- `/all/` keyword expands at semantic validation time
+- Includes all equations declared before model statement
+- Can be used in both single-line and multi-line (though not found in multi-line GAMSLib)
+
+**3. Are empty model sections allowed?**
+
+**Answer:** YES (forward declarations)
+
+**Evidence:**
+- Current grammar has `model_decl` rule: `Model mx;`
+- Allows declaring model before defining equations
+- Not found in GAMSLib (all models have equation lists)
+
+**Use case:** Declare model early, add equations later
+
+**4. Can model sections span multiple lines?**
+
+**Answer:** YES (common pattern - 44% of GAMSLib models)
+
+**Evidence:**
+- himmel16.gms: Multi-line, 2 models (lines 52-54)
+- hs62.gms: Multi-line, 2 models (lines 33-35)
+- mingamma.gms: Multi-line, 2 models (lines 24-26)
+- maxmin.gms: Multi-line, 4 models (lines 61-65)
+
+**Pattern:**
+```gams
+Model
+   <name1> / <eqlist1> /
+   <name2> / <eqlist2> /;
+```
+
+**Whitespace handling:** Lark ignores whitespace between tokens (no special handling needed)
+
+**5. What's the relationship between model declarations and solve statements?**
+
+**Answer:** Models group equations for solving, referenced by name in solve statement
+
+**Evidence:**
+- Model declaration: `Model mx / objdef, eq1 /;`
+- Solve statement: `solve mx using nlp min obj;`
+- Model name must exist before solve (semantic validation)
+- Multiple models allow alternative formulations (hs62: m vs mx)
+
+**Decision:** Multi-line model syntax VALIDATED as primary missing feature
 
 ---
 
@@ -711,9 +788,80 @@ Expected: No grammar conflicts, distinct AST nodes
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE  
-**To be verified by:** Task 4 (Grammar design section)  
-**Expected completion:** Before Sprint 9 Day 1
+🔍 **Status:** ✅ VERIFIED  
+**Verified by:** Task 4 - Research Model Section Syntax (Grammar Design section)  
+**Date:** 2025-11-19
+
+**Answers to Research Questions:**
+
+**1. How to distinguish `model m / eq1 /` from `x = y / z /` (division)?**
+
+**Answer:** Context-based disambiguation (different parsing contexts)
+
+**Evidence:**
+- **Model statements:** Top-level statements starting with "Model" keyword
+- **Arithmetic expressions:** Inside assignments, equation definitions, etc.
+- **No ambiguity:** "/" appears in different contexts (mutually exclusive)
+
+**Parser behavior:**
+- After seeing "Model" keyword → parser is in model statement context
+- "/" tokens interpreted as delimiters (not division operator)
+- Current grammar already uses "/" successfully in single-line model statements
+
+**2. How to distinguish `model m / all /` from `set s / all /` (set declarations)?**
+
+**Answer:** Leading keyword disambiguates (`Model` vs `Set`)
+
+**Evidence:**
+- Different grammar rules for different statement types
+- Lark identifies statement type by first keyword
+- No conflict possible (keywords are distinct)
+
+**Grammar structure:**
+```lark
+model_stmt: ("Models"i | "Model"i) ...
+set_stmt: ("Sets"i | "Set"i) ...
+```
+
+**3. Is context-aware parsing required, or can grammar rules disambiguate?**
+
+**Answer:** Grammar rules disambiguate (no special context-awareness needed)
+
+**Evidence:**
+- Lark's default parsing is sufficient
+- Statement type determined by keyword
+- "/" delimiter vs division operator resolved by context (different rules)
+
+**Proposed grammar (no conflicts):**
+```lark
+model_stmt: ("Models"i | "Model"i) model_def_list SEMI  -> model_multi
+model_def: ID "/" model_ref_list "/"
+```
+
+**4. What AST structure should model sections produce?**
+
+**Answer:** `model_multi` tree with `model_def_list` children
+
+**AST structure:**
+```python
+Tree('model_multi', [
+    Tree('model_def_list', [
+        Tree('model_def', [Token('ID', 'm1'), ...]),
+        Tree('model_def', [Token('ID', 'm2'), ...])
+    ])
+])
+```
+
+**5. Does `model` keyword uniquely identify model sections?**
+
+**Answer:** YES (no conflicts with other keywords)
+
+**Evidence:**
+- "Model" is a reserved keyword in GAMS
+- Only used for model declarations
+- No other statement types use "Model" keyword
+
+**Decision:** NO grammar conflicts found. Token-level disambiguation CHOSEN.
 
 ---
 
@@ -1010,9 +1158,63 @@ Expected: Capture primary blocker (should be model sections)
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE  
-**To be verified by:** Task 4 (hs62/mingamma analysis section)  
-**Expected completion:** Before Sprint 9 Day 1
+🔍 **Status:** ✅ VERIFIED  
+**Verified by:** Task 4 - Research Model Section Syntax  
+**Date:** 2025-11-19  
+**Actual time:** 1 hour (within estimate)
+
+**Answers to Research Questions:**
+
+**1. Do both models use same model section pattern?**
+
+**Answer:** Same multi-line pattern, different equation counts
+
+**hs62.gms pattern (lines 33-35):**
+```gams
+Model
+   m  / objdef, eq1  /   # 2 equations
+   mx / objdef, eq1x /;  # 2 equations
+```
+
+**mingamma.gms pattern (lines 24-26):**
+```gams
+Model
+   m1 / y1def /   # 1 equation
+   m2 / y2def /;  # 1 equation
+```
+
+**Common pattern:** Multi-line model declaration, 2 models, explicit equation lists
+
+**2. Are there secondary blockers after model sections?**
+
+**Answer:** NO secondary blockers in either model (100% unlock probability)
+
+**hs62.gms (72 lines):** Model sections is ONLY blocker  
+**mingamma.gms (45 lines):** Model sections is ONLY blocker
+
+**3. What % of each model will parse with model section support?**
+
+**Answer:**
+- **hs62.gms:** 100% (72/72 lines, +85 percentage points)
+- **mingamma.gms:** 100% (45/45 lines, +78 percentage points)
+
+**4. Are there other models using model sections?**
+
+**Answer:** YES - 4 models use multi-line syntax (himmel16, hs62, mingamma, maxmin)
+
+**Immediate unlocks:** 2 models (hs62, mingamma)  
+**Deferred unlocks:** 2 models (himmel16 needs i++1, maxmin needs nested indexing)
+
+**5. Should we pre-analyze both models?**
+
+**Answer:** ✅ COMPLETE - pre-analysis performed, no secondary blockers found
+
+**Decision:** Unlock probability = **VERY HIGH (100%)**
+
+**Parse Rate Impact:**
+- Current: 40% (4/10 models)
+- After model sections: 60% (6/10 models: +hs62, +mingamma)
+- **Improvement:** +20% parse rate (+2 models)
 
 ---
 
@@ -1069,8 +1271,8 @@ Expected: 3 fixtures for equation attributes
 Development team
 
 ### Verification Results
-🔍 **Status:** ✅ VERIFIED  
-**Verified by:** Task 3 - Research Advanced Indexing (Test Fixture Strategy section)  
+🔍 **Status:** ✅ VERIFIED (Updated)  
+**Verified by:** Task 3 - Research Advanced Indexing, Task 4 - Research Model Section Syntax  
 **Date:** 2025-11-19  
 **Actual time:** 45 minutes (within 1h estimate)
 
@@ -1096,7 +1298,24 @@ Development team
 
 **2. How many model section patterns to test?**
 
-**Answer:** Deferred to Task 4 (not part of Task 3 scope)
+**Answer:** 6 fixtures provide comprehensive model section coverage (Task 4)
+
+**Fixtures designed:**
+1. **multi_line_simple.gms:** 2 models with explicit equation lists (hs62 pattern)
+2. **multi_line_four_models.gms:** 4 models in single statement (maxmin pattern)
+3. **multi_line_all_keyword.gms:** Mix of /all/ and explicit lists
+4. **multi_line_single_model.gms:** Single model in multi-line format (edge case)
+5. **error_undefined_equation.gms:** Undefined equation detection (error case)
+6. **error_duplicate_model.gms:** Duplicate model name detection (error case)
+
+**Coverage dimensions:**
+- ✅ Multi-line syntax (vs single-line already supported)
+- ✅ Multiple models (2, 4 models)
+- ✅ Shared equations across models
+- ✅ /all/ keyword expansion
+- ✅ Semantic validation (undefined equations, duplicate names)
+
+**Total for model sections:** 6 fixtures (4 success + 2 error)
 
 **3. How many equation attribute contexts to test?**
 
@@ -1118,16 +1337,19 @@ Development team
 
 **5. What's the total fixture count target?**
 
-**Answer:** Sprint 9 adds 5 i++1 fixtures (Task 3 only)
+**Answer:** Sprint 9 adds 11 fixtures total (Task 3 + Task 4 completed)
 
 **Fixture count by task:**
-- Task 3 (i++1): 5 fixtures (circular_lead_simple, circular_lag, linear_lead_lag, sum_with_lead, expression_offset)
-- Task 4 (model sections): TBD (estimated 4-5)
-- Task 8 (equation attributes): TBD (estimated 3-4)
+- **Task 3 (i++1):** 5 fixtures (circular_lead_simple, circular_lag, linear_lead_lag, sum_with_lead, expression_offset)
+- **Task 4 (model sections):** 6 fixtures (4 success + 2 error)
+- **Task 8 (equation attributes):** TBD (estimated 3-4)
 
-**Sprint 9 total estimate:** 12-14 new fixtures + existing fixtures
+**Sprint 9 total:** 11-15 new fixtures + existing fixtures
 
-**Decision:** 5 i++1 fixtures VALIDATED as comprehensive
+**Decision:**
+- ✅ 5 i++1 fixtures VALIDATED as comprehensive
+- ✅ 6 model section fixtures VALIDATED as comprehensive
+- ⏳ Equation attributes fixtures pending Task 8
 
 **Validation levels defined:**
 
