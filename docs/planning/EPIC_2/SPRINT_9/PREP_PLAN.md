@@ -1299,169 +1299,135 @@ grep -c "Pattern:" docs/planning/EPIC_2/SPRINT_9/MODEL_SECTIONS_RESEARCH.md
 
 ---
 
-## Task 5: Design Conversion Pipeline Architecture
+## Task 5: Audit MCP Generation Pipeline & Design Conversion Testing Infrastructure
 
 **Status:** 🔵 NOT STARTED  
 **Priority:** Critical  
-**Estimated Time:** 5-7 hours  
+**Estimated Time:** 4-5 hours  
 **Deadline:** Before Sprint 9 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 1 (Unknowns 9.2.1-9.2.5: Architecture, IR-to-MCP mapping, simple model scope)  
-**Unknowns Verified:** 9.2.1, 9.2.2, 9.2.3, 9.2.4, 9.2.5, 9.2.6, 9.2.7, 9.2.8, 9.2.9
+**Dependencies:** None (Sprint 8 completed MCP generation in emit/kkt modules)
 
 ### Objective
 
-Design end-to-end conversion pipeline architecture for transforming parsed GAMS ModelIR into MCP JSON format. Enable at least 1 simple model (mhw4d or rbrock) to convert successfully.
+Audit the existing MCP generation pipeline (emit/kkt modules) and design testing infrastructure to validate that parsed models can successfully generate valid MCP GAMS files. Enable systematic tracking of conversion rate (parse → convert → solve) starting with mhw4d and rbrock.
 
 ### Why This Matters
 
-Conversion pipeline is Sprint 9's new infrastructure component with "Medium" risk (6-8 hour effort). This is the first step toward end-to-end GAMS→MCP→PATH workflow. Successful design prevents mid-sprint architecture pivots.
+Sprint 9 aims to extend pipeline tracking from just "parse rate" to "parse → convert → solve" rates. Currently we track which models parse successfully, but we don't systematically track which parsed models can generate valid MCP GAMS files.
 
-PROJECT_PLAN.md acceptance criterion (lines 261-263): "At least 1 model (mhw4d or rbrock) successfully converts end-to-end." This task ensures we can meet that criterion.
+PROJECT_PLAN.md acceptance criterion: "At least 1 model (mhw4d or rbrock) successfully converts end-to-end."
+
+This task audits existing MCP generation code (src/emit/ and src/kkt/) and designs infrastructure to validate conversion success.
 
 ### Background
 
-From PROJECT_PLAN.md Sprint 9 Conversion & Performance (lines 233-239):
-> **Conversion Pipeline Foundation**
-> - Begin conversion infrastructure for successfully parsed models
-> - Focus on simple models (mhw4d, rbrock) as initial targets
-> - Effort: 6-8 hours
-> - Risk: Medium (new pipeline stage)
+**Current MCP Generation Pipeline (Sprints 1-8):**
+- `src/kkt/` - KKT system generation from ModelIR
+- `src/emit/` - MCP GAMS file emission from KKT system
+- Works for test fixtures but not systematically validated on GAMSLib models
 
-Current state:
-- Parser produces ModelIR (AST + semantic information)
-- No conversion infrastructure exists yet
-- MCP JSON schema defined elsewhere in project
-- Goal: ModelIR → MCP JSON transformation
+**Gap:** No automated testing infrastructure to validate:
+1. Which parsed GAMSLib models can generate MCP files
+2. Whether generated MCP files are valid GAMS syntax
+3. Whether generated MCP files solve correctly in PATH
 
-Simple models for initial conversion:
-- mhw4d.gms: 14 lines, Sprint 7 unlock (20% parse rate milestone)
-- rbrock.gms: 8 lines, Sprint 7 unlock (simplest GAMSLib model)
+**Sprint 9 Goal:** 
+- Design testing infrastructure for conversion validation
+- Validate mhw4d.gms and rbrock.gms conversion
+- Enable dashboard tracking: Parse Rate → **Conversion Rate** → (future: Solve Rate)
 
 ### What Needs to Be Done
 
-**1. Architecture Design (2 hours)**
+**1. Audit Existing MCP Generation Pipeline (1.5 hours)**
 
-1.1. Define conversion pipeline stages
-   - **Stage 1:** ModelIR validation (check completeness)
-   - **Stage 2:** IR normalization (simplify for conversion)
-   - **Stage 3:** MCP transformation (IR → MCP JSON)
-   - **Stage 4:** MCP validation (check schema compliance)
-   - **Stage 5:** Output serialization (write JSON file)
+1.1. Review current pipeline architecture
+   - Read `src/kkt/` modules (kkt_system.py, objective.py, etc.)
+   - Read `src/emit/` modules (emit_gams.py, model.py, etc.)
+   - Understand ModelIR → KKT → GAMS MCP flow
 
-1.2. Choose architecture pattern
-   - **Option A:** Single-pass visitor pattern (IR → MCP in one traversal)
-   - **Option B:** Multi-pass (IR → intermediate → MCP)
-   - **Option C:** Pipeline with intermediate representations
+1.2. Document pipeline stages
+   - **Stage 1:** ModelIR → KKT system generation
+   - **Stage 2:** KKT → GAMS MCP text generation
+   - **Stage 3:** (missing) MCP validation & testing
 
-1.3. Design error handling strategy
-   - Unsupported IR nodes: error or warning?
-   - Partial conversion: allow or fail?
-   - Error reporting: line numbers from SourceLocation?
+1.3. Identify what exists vs what's needed
+   - What works: Emit pipeline generates MCP GAMS code
+   - Gap 1: No systematic testing of MCP generation on GAMSLib
+   - Gap 2: No validation that generated MCP files parse in GAMS
+   - Gap 3: No validation that generated MCP files solve in PATH
 
-1.4. Design module structure
-   - `src/conversion/` directory
-   - `converter.py`: Main conversion orchestrator
-   - `ir_to_mcp.py`: IR-to-MCP transformation logic
-   - `mcp_schema.py`: MCP JSON schema validation
-   - `errors.py`: Conversion error types
+**2. Analyze mhw4d/rbrock Conversion Feasibility (1 hour)**
 
-**2. IR-to-MCP Mapping Design (2 hours)**
+2.1. Parse mhw4d.gms and inspect ModelIR
+   - Run: `python -m nlp2mcp.cli parse tests/fixtures/gamslib/mhw4d.gms`
+   - Inspect variables, parameters, equations, solve statement
+   - Document: Which ModelIR nodes are present?
 
-2.1. Audit current ModelIR coverage
-   - Which IR nodes exist? (VariableDef, ParameterDef, EquationDef, etc.)
-   - Which are needed for mhw4d.gms and rbrock.gms?
-   - Which have no MCP equivalent?
+2.2. Parse rbrock.gms and inspect ModelIR
+   - Run: `python -m nlp2mcp.cli parse tests/fixtures/gamslib/rbrock.gms`
+   - Same inspection as mhw4d
+   - Compare: Are both similar in complexity?
 
-2.2. Design IR-to-MCP mappings
-   - VariableDef → MCP variable
-   - ParameterDef → MCP parameter
-   - EquationDef → MCP constraint
-   - SetDef → MCP set (if MCP supports)
-   - Expressions → MCP expression tree
+2.3. Identify conversion blockers (if any)
+   - Does ModelIR contain all info needed for MCP generation?
+   - Are there missing attributes (bounds, domains, etc.)?
+   - Can emit pipeline handle these models?
 
-2.3. Identify mapping gaps
-   - Which IR nodes can't convert to MCP?
-   - Which MCP fields have no IR equivalent?
-   - Document conversion coverage % for simple models
+**3. Design Conversion Testing Infrastructure (1.5 hours)**
 
-2.4. Design unsupported feature handling
-   - Error: "GAMS feature X not supported in MCP"
-   - Warning: "Approximated GAMS feature Y as Z"
-   - Graceful degradation: Skip unsupported, convert rest?
+3.1. Design conversion validation workflow
+   - **Step 1:** Parse GAMS file → ModelIR (already works)
+   - **Step 2:** Generate MCP GAMS file (emit pipeline)
+   - **Step 3:** Validate MCP file parses in GAMS (new)
+   - **Step 4:** (future) Validate MCP solves in PATH
 
-**3. Simple Model Analysis (1 hour)**
+3.2. Design test framework structure
+   - `tests/conversion/` directory
+   - `test_gamslib_conversion.py`: End-to-end GAMSLib tests
+   - Helper: `run_conversion(model_name) → mcp_file_path`
+   - Helper: `validate_gams_syntax(mcp_file) → bool`
 
-3.1. Analyze mhw4d.gms IR requirements
-   - Parse mhw4d.gms, inspect ModelIR
-   - List all IR nodes present (variables, parameters, equations)
-   - Estimate conversion coverage: 100%? 80%? 50%?
+3.3. Define success criteria
+   - **Level 1:** MCP file generated without exceptions
+   - **Level 2:** MCP file is valid GAMS syntax (gams check)
+   - **Level 3:** (future) MCP file solves in PATH
 
-3.2. Analyze rbrock.gms IR requirements
-   - Same analysis as mhw4d.gms
-   - Compare: Are both convertible with same code?
+**4. Design Dashboard Integration (45 minutes)**
 
-3.3. Identify conversion blockers
-   - Which IR nodes in mhw4d/rbrock have no MCP mapping?
-   - Which require special handling (e.g., bounds, domains)?
-   - Estimate: Can we convert 100%? Or partial?
+4.1. Extend dashboard schema
+   - Current: model name, parse status, error type
+   - Add: `conversion_status` (not_attempted, success, failed)
+   - Add: `conversion_error` (exception message if failed)
+   - Add: `mcp_file_path` (where MCP file is written)
 
-**4. MCP Schema Review (1 hour)**
+4.2. Design conversion rate metric
+   - **Parse Rate:** % of models that parse successfully
+   - **Conversion Rate:** % of **parsed** models that convert to MCP
+   - **Solve Rate:** (future) % of converted models that solve
 
-4.1. Review existing MCP JSON schema
-   - Where is MCP schema defined? (docs? code?)
-   - What fields are required vs optional?
-   - What constraints exist (e.g., variable bounds format)?
+4.3. Design dashboard display
+   - Table columns: Model | Parse | Convert | Solve | Notes
+   - Color coding: Green (success), Red (fail), Gray (not attempted)
+   - Summary: "4/10 parse (40%), 2/4 convert (50%)"
 
-4.2. Identify GAMS-specific extensions needed
-   - Does MCP support GAMS sets with aliases?
-   - Does MCP support multi-dimensional parameters?
-   - Does MCP support equation attributes (.l, .m)?
+**5. Documentation (30 minutes)**
 
-4.3. Design schema validation approach
-   - Use jsonschema library?
-   - Custom validation logic?
-   - Validation before or after conversion?
-
-**5. Test Strategy Design (45 minutes)**
-
-5.1. Define conversion test levels
-   - **Unit tests:** Individual IR node conversions
-   - **Integration tests:** Full model conversions (mhw4d, rbrock)
-   - **Schema validation tests:** MCP JSON schema compliance
-
-5.2. Design test fixtures
-   - `tests/conversion/test_ir_to_mcp.py`: IR node conversion tests
-   - `tests/conversion/test_converter.py`: End-to-end conversion tests
-   - `tests/conversion/fixtures/mhw4d_expected.json`: Expected MCP output
-
-5.3. Define acceptance criteria for conversion
-   - **Success:** MCP JSON passes schema validation
-   - **Success:** MCP JSON can be read by PATH solver (future)
-   - **Partial:** Some IR nodes convert, some fail with errors
-
-**6. Documentation (45 minutes)**
-
-6.1. Create architecture design document
-   - File: `docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_ARCHITECTURE.md`
+5.1. Create design document
+   - File: `docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md`
    - Sections:
-     - Architecture overview (5 stages)
-     - IR-to-MCP mapping table
-     - Unsupported feature handling
-     - Module structure
-     - Test strategy
+     - Current Pipeline Audit (emit/kkt review)
+     - mhw4d/rbrock Analysis
+     - Testing Infrastructure Design
+     - Dashboard Integration Design
+     - Implementation Plan (6-8h breakdown)
 
-6.2. Create implementation plan
-   - Phase 1: Basic converter scaffolding (2h)
-   - Phase 2: IR-to-MCP mappings (3h)
-   - Phase 3: MCP validation (1h)
-   - Phase 4: mhw4d/rbrock conversion tests (1-2h)
-   - Total: 7-8 hours (validates 6-8h estimate)
-
-6.3. Document conversion coverage
-   - mhw4d.gms: X% of IR nodes convertible
-   - rbrock.gms: Y% of IR nodes convertible
-   - Blockers: List unsupported features
+5.2. Document implementation phases
+   - Phase 1: Conversion test framework (2-3h)
+   - Phase 2: mhw4d/rbrock validation (1-2h)
+   - Phase 3: Dashboard integration (2-3h)
+   - Phase 4: Documentation & testing (1h)
+   - Total: 6-9 hours
 
 ### Changes
 
@@ -1474,47 +1440,46 @@ To be completed during task execution.
 ### Verification
 
 ```bash
-# Verify architecture document exists
-ls -la docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_ARCHITECTURE.md
+# Verify design document exists
+ls -la docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md
 
-# Verify architecture stages documented
-grep -c "Stage [0-9]:" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_ARCHITECTURE.md
-
-# Verify IR-to-MCP mapping table exists
-grep "VariableDef.*MCP variable" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_ARCHITECTURE.md
+# Verify emit/kkt pipeline audit
+grep "src/kkt" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md
+grep "src/emit" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md
 
 # Verify mhw4d/rbrock analysis
-grep "mhw4d.gms" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_ARCHITECTURE.md
-grep "rbrock.gms" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_ARCHITECTURE.md
+grep "mhw4d.gms" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md
+grep "rbrock.gms" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md
 
-# Verify module structure documented
-grep "src/conversion/" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_ARCHITECTURE.md
+# Verify test framework design
+grep "tests/conversion" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md
+
+# Verify dashboard design
+grep "conversion_status" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_ARCHITECTURE.md` (800-1000 lines)
-- Architecture design (5-stage pipeline)
-- IR-to-MCP mapping table (all IR nodes mapped)
-- Module structure specification (`src/conversion/`)
+- `docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md` (600-800 lines)
+- Current MCP generation pipeline audit (emit/kkt modules review)
 - mhw4d.gms conversion feasibility analysis
 - rbrock.gms conversion feasibility analysis
-- Unsupported feature handling strategy
-- Test strategy (unit, integration, schema validation)
-- Implementation plan (7-8 hour breakdown)
+- Conversion testing infrastructure design
+- Dashboard integration design (conversion rate tracking)
+- Implementation plan (6-8 hour breakdown)
 
 ### Acceptance Criteria
 
-- [ ] Conversion pipeline architecture designed (5 stages defined)
-- [ ] IR-to-MCP mapping table created (all IR nodes addressed)
-- [ ] mhw4d.gms IR analyzed (conversion coverage estimated)
-- [ ] rbrock.gms IR analyzed (conversion coverage estimated)
-- [ ] MCP JSON schema reviewed (GAMS extensions identified)
-- [ ] Unsupported feature handling strategy defined
-- [ ] Module structure specified (`src/conversion/` directory layout)
-- [ ] Test strategy designed (unit, integration, schema validation)
-- [ ] Implementation plan created (phase breakdown, effort estimates)
-- [ ] Effort estimate validated (should align with 6-8h in PROJECT_PLAN.md)
+- [ ] Current emit/kkt pipeline reviewed and documented
+- [ ] mhw4d.gms parsed and ModelIR analyzed
+- [ ] rbrock.gms parsed and ModelIR analyzed  
+- [ ] Conversion blockers identified (if any)
+- [ ] Test framework design completed (`tests/conversion/` structure)
+- [ ] Conversion validation workflow designed (3 validation levels)
+- [ ] Dashboard schema extended for conversion tracking
+- [ ] Dashboard display design completed (Parse/Convert/Solve columns)
+- [ ] Implementation plan created (4 phases, 6-9h breakdown)
+- [ ] Effort estimate validates PROJECT_PLAN.md 6-8h estimate
 
 ---
 
