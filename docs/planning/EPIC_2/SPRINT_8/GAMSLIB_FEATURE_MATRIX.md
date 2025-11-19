@@ -210,7 +210,7 @@ This document provides a comprehensive per-model feature dependency analysis for
 
 ### Model: mhw4dx.gms
 
-**Primary Error:**
+**Primary Error (Sprint 8 Pre-Analysis):**
 - **Type:** UnexpectedCharacters
 - **Location:** Line 37, column 8
 - **Message:** "No terminal matches 'l' in the current parser context"
@@ -221,24 +221,48 @@ This document provides a comprehensive per-model feature dependency analysis for
 - GAMS uses `option <name> = <value>, <name> = <value>;` to set solver/display options
 - Parser doesn't recognize `option` keyword, expects DOT, ASSIGN, LPAR, or DOLLAR after identifier
 
-**Secondary Errors (if primary fixed):**
-- None identified in manual review
-- Model uses standard NLP constructs (variables, equations, bounds, solve)
-- No preprocessor directives or advanced syntax
+**Secondary Blocker Analysis (Sprint 9 Prep Task 2 - 2025-11-19):**
+- ✅ **Option statements (lines 37, 47):** RESOLVED in Sprint 8
+- ❌ **NEW BLOCKER FOUND:** if/elseif/else control flow statements (lines 53-93)
+- **First error after Sprint 8 parser:** Line 53, `if(` control flow statement
+
+**Secondary Errors (Sprint 9 Analysis):**
+After implementing option statement support in Sprint 8, the model now fails due to:
+- **Primary Secondary Blocker:** if/elseif/else control flow (lines 53-93, 41 lines)
+  - Complexity: Medium (6-8 hours)
+  - Priority: High
+- **Related Blockers (within control flow):**
+  - abort$ conditional statements (16 occurrences, Simple, 2-3 hours)
+  - Model attribute access: `wright.modelStat` (2 occurrences, Simple, 1-2 hours)
+  - Macro expansion: `%modelStat.optimal%` (2 occurrences, Simple, 2-3 hours)
+  - $eolCom preprocessor directive (line 51, Simple, 1 hour)
 
 **Parsing Percentage if Primary Fixed:**
-- **Estimated:** 100% (option statements is only blocker)
-- Confidence: Very High
+- **Sprint 8 Estimate:** 100% (option statements is only blocker) - ❌ INCORRECT
+- **Sprint 9 Reality:** 0% (control flow blocks 45.2% of file - 42/93 lines)
+- **Sprint 9 Revised:** 100% requires if/elseif/else + abort$ + model attributes + macros + $eolCom
+- Confidence: Very High (complete line-by-line analysis performed)
 
 **Full Parse Dependencies:**
-- [ ] Option statement syntax (6-8 hours estimated)
-- **Total features needed:** 1
+- [x] Option statement syntax (✅ Implemented in Sprint 8)
+- [ ] if/elseif/else control flow (6-8 hours estimated)
+- [ ] abort$ conditional statements (2-3 hours estimated)
+- [ ] Model attribute access (1-2 hours estimated)
+- [ ] Macro expansion (2-3 hours estimated)
+- [ ] $eolCom preprocessor directive (1 hour estimated)
+- **Total features needed:** 6 (1 implemented, 5 remaining)
+- **Total effort for full unlock:** 12-17 hours
 
-**Priority for Sprint 8:**
-- **Critical** (Low complexity, High ROI - confirmed unlock)
-- Unlocks: +10% parse rate (1 model confirmed)
-- Complexity: Low (straightforward grammar addition, semantic handling is mock/store)
-- **Recommendation:** Include in Sprint 8 (confirmed in PREP_PLAN)
+**Priority for Sprint 9:**
+- **Defer to Sprint 10** (Medium-High complexity, requires 5 features)
+- Unlocks: +10% parse rate (1 model, but requires 12-17 hours)
+- Complexity: Medium for primary blocker (if/elseif/else), Simple for related blockers
+- **Recommendation:** Sprint 10 implementation (too complex for Sprint 9)
+
+**Sprint 8 Retrospective Note:**
+The Sprint 8 assumption that "mhw4dx only needs option statements" was incorrect. This was identified as a critical gap in the Sprint 8 Retrospective (High Priority Recommendation #1: "Conduct secondary blocker analysis for all remaining GAMSLIB models"). Sprint 9 Prep Task 2 addresses this gap with complete line-by-line analysis.
+
+**See:** `docs/planning/EPIC_2/SPRINT_9/MHW4DX_BLOCKER_ANALYSIS.md` for detailed secondary blocker analysis
 
 ---
 

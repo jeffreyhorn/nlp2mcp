@@ -7,6 +7,169 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 9: Prep Task 2 - Complete Secondary Blocker Analysis for mhw4dx.gms - 2025-11-19
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed Sprint 9 Prep Task 2: Conducted comprehensive secondary blocker analysis for mhw4dx.gms, addressing Sprint 8 Retrospective High Priority Recommendation #1. Analysis revealed that Sprint 8 assumption "mhw4dx only needs option statements" was incorrect. Identified 5 secondary blockers (if/elseif/else control flow, abort$ statements, model attributes, macro expansion, $eolCom) requiring 12-17 hours total implementation effort. Created detailed 594-line blocker analysis document with line-by-line error catalog (93 lines analyzed). Updated GAMSLIB_FEATURE_MATRIX.md with corrected unlock estimate. Verified Unknown 9.3.4 (Secondary Blocker Analysis Methodology) with validated methodology: manual inspection critical, 1h per model, line-by-line catalogs essential.
+
+#### Key Finding
+
+**Sprint 8 Assumption:** "mhw4dx.gms only needs option statements (lines 37, 47)" - ❌ **INCORRECT**
+
+**Reality:**
+- ✅ **Option statements (lines 37, 47):** RESOLVED in Sprint 8
+- ❌ **NEW BLOCKER FOUND:** if/elseif/else control flow statements (lines 53-93, 41 lines)
+
+**Secondary Blockers Identified (5 total):**
+
+| ID | Feature | Lines Affected | Complexity | Estimated Hours | Priority |
+|----|---------|----------------|------------|-----------------|----------|
+| 1  | if/elseif/else control flow | 53-93 (41 lines) | Medium | 6-8 | High |
+| 2  | abort$ conditional statements | 16 occurrences | Simple | 2-3 | Medium |
+| 3  | Model attribute access | 2 occurrences | Simple | 1-2 | Medium |
+| 4  | Macro expansion | 2 occurrences | Simple | 2-3 | Medium |
+| 5  | $eolCom preprocessor | 1 occurrence | Simple | 1 | Low |
+
+**Total Implementation Effort:** 12-17 hours (exceeds Sprint 9 capacity, defer to Sprint 10)
+
+#### Deliverables
+
+**MHW4DX_BLOCKER_ANALYSIS.md (docs/planning/EPIC_2/SPRINT_9/MHW4DX_BLOCKER_ANALYSIS.md):**
+- 594 lines of comprehensive blocker analysis
+- Executive summary with key finding (if/elseif/else control flow is primary secondary blocker)
+- Blocker classification table (5 blockers with complexity, effort, priority)
+- Complete line-by-line error catalog (lines 1-93):
+  - Lines 1-50: 50/50 lines parse successfully (100%)
+  - Line 51: $eolCom preprocessor blocker (low priority, 0/1 parse)
+  - Line 52: empty line parses successfully (1/1, 100%)
+  - Lines 53-93: if/elseif/else control flow block (41 lines, 0/41 parse)
+  - Overall: 51/93 lines = 54.8% parse rate, 42/93 lines = 45.2% blocked
+- Summary statistics (parse rate by section, blocker counts, occurrence frequencies)
+- Sprint 8 retrospective analysis (incorrect assumption identified and explained)
+- Recommendations for Sprint 10 implementation (4 tasks, phased approach)
+- Appendix with full file content for reference
+
+**GAMSLIB_FEATURE_MATRIX.md Updates (docs/planning/EPIC_2/SPRINT_8/GAMSLIB_FEATURE_MATRIX.md):**
+- Added "Secondary Blocker Analysis (Sprint 9 Prep Task 2 - 2025-11-19)" section to mhw4dx.gms entry
+- Documented all 5 secondary blockers with complexity and effort estimates
+- Updated "Parsing Percentage if Primary Fixed" from "100% (option statements is only blocker)" to "0% (control flow blocks 45.2% of file)"
+- Updated "Full Parse Dependencies" from 1 feature (6-8h) to 6 features (12-17h total)
+- Changed "Priority for Sprint 8: Critical" to "Priority for Sprint 9: Defer to Sprint 10"
+- Added "Sprint 8 Retrospective Note" explaining why assumption was incorrect
+- Added cross-reference to MHW4DX_BLOCKER_ANALYSIS.md
+
+**KNOWN_UNKNOWNS.md Updates (docs/planning/EPIC_2/SPRINT_9/KNOWN_UNKNOWNS.md):**
+- Updated Unknown 9.3.4 status from "🔍 INCOMPLETE" to "✅ VERIFIED"
+- Added comprehensive answers to all 5 research questions:
+  1. Lark error recovery helps but manual inspection is CRITICAL
+  2. Complete analysis = ALL errors in targeted section (lines 37-93)
+  3. Documentation in BOTH summary (matrix) and detailed (separate) files
+  4. Complexity classification: Simple (1-3h), Medium (4-8h), Complex (8+h)
+  5. Secondary blocker analysis should apply to all 6 remaining models
+- Documented secondary blocker analysis methodology (manual inspection essential)
+- Added complexity classification rubric validated on mhw4dx blockers
+- Listed priority order for remaining 5 GAMSLib models
+- Included key findings from mhw4dx.gms analysis (5 blockers, 12-17h total effort)
+- Validated methodology: 1h per model (<100 lines), line-by-line catalogs prevent missed blockers
+
+#### Parse Statistics
+
+**mhw4dx.gms (93 lines total):**
+- Lines 1-36: ✅ 36/36 (100%) - variable/equation declarations parse successfully
+- Line 37: ✅ 1/1 (100%) - option statement (Sprint 8 feature)
+- Lines 38-46: ✅ 9/9 (100%) - model instantiation, solve statement
+- Line 47: ✅ 1/1 (100%) - option statement (Sprint 8 feature)
+- Lines 48-50: ✅ 3/3 (100%) - display statements
+- Line 51: ⚠️ 0/1 (0%) - $eolCom preprocessor directive (low priority blocker)
+- Line 52: ✅ 1/1 (100%) - empty line (parses successfully)
+- Lines 53-93: ❌ 0/41 (0%) - if/elseif/else control flow (primary blocker)
+- **Overall:** 51/93 lines = **54.8% parse rate**, 42/93 lines = **45.2% blocked**
+
+#### Recommendations
+
+**Defer mhw4dx.gms unlock to Sprint 10:**
+- Sprint 9 target: ≤8 hours of new features
+- mhw4dx requires: 12-17 hours (exceeds capacity by 50-110%)
+- Primary blocker (if/elseif/else) alone: 6-8 hours (at upper limit)
+- Risk: Scope creep, sprint failure if attempted in Sprint 9
+
+**Sprint 10 Implementation Strategy:**
+1. **Sprint 10 Task 1:** if/elseif/else control flow (6-8h)
+   - Add grammar rules for if/elseif/else/);
+   - Implement semantic handler for conditional execution
+   - Add tests for nested control flow
+2. **Sprint 10 Task 2:** abort$ conditional statements (2-3h)
+   - Add grammar for abort$ conditional and abort$yes
+   - Implement abort behavior in semantic handler
+3. **Sprint 10 Task 3:** Model attributes + macros (3-5h)
+   - Add model.attribute syntax
+   - Add %macro% expansion
+4. **Sprint 10 Task 4:** $eolCom preprocessor (1h)
+   - Add lexer support for end-of-line comments
+5. **Expected outcome:** mhw4dx.gms unlock, 50% parse rate (5/10 models)
+
+#### Lesson Learned
+
+✅ **Secondary blocker analysis is CRITICAL** - Surface-level analysis (examining only first error) leads to incorrect assumptions and sprint planning failures. This task validates Sprint 8 Retrospective High Priority Recommendation #1: "Conduct secondary blocker analysis for all remaining GAMSLIB models."
+
+**Why Sprint 8 Assumption Failed:**
+1. Surface-level analysis: Only examined first parse error, not complete error set
+2. No error recovery: Parser stopped at first error, didn't continue to find subsequent blockers
+3. No manual inspection: Didn't manually review entire file to catalog all unsupported features
+
+**Methodology Validated (Unknown 9.3.4):**
+- ✅ Manual inspection is essential (parser error recovery insufficient for complete analysis)
+- ✅ 1 hour per model (<100 lines) is appropriate time allocation
+- ✅ Line-by-line catalogs prevent missed blockers
+- ✅ Complexity classification helps sprint planning (Simple/Medium/Complex rubric)
+- ✅ Separate detailed analysis documents improve implementation planning
+- ✅ Both summary (GAMSLIB_FEATURE_MATRIX.md) and detailed (MHW4DX_BLOCKER_ANALYSIS.md) docs needed
+
+#### Cross-References
+
+**Sprint 8 Retrospective:**
+- Addresses High Priority Recommendation #1 (lines 366-373): "Complete secondary blocker analysis for mhw4dx.gms"
+- Validates finding that "option statements alone would NOT unlock mhw4dx.gms"
+
+**PROJECT_PLAN.md:**
+- Sprint 9 Test Infrastructure (lines 175-181): Secondary blocker analysis for mhw4dx.gms
+- Sprint 9 goals: Parse rate target ≥30% (defer mhw4dx to maintain realistic scope)
+
+**PREP_PLAN.md:**
+- Task 2 completed: All acceptance criteria met (10 criteria)
+- Unknown 9.3.4 verified: Secondary blocker analysis methodology validated
+- Actual time: 1 hour (within 2-3h estimate)
+
+#### Acceptance Criteria
+
+- [x] mhw4dx.gms re-parsed with Sprint 8 parser (option statements enabled)
+- [x] All errors in lines 37-93 cataloged (extended range to cover complete control flow block)
+- [x] Secondary blocker(s) identified and documented (5 blockers total)
+- [x] Secondary blocker complexity estimated (1 Medium, 4 Simple)
+- [x] GAMSLIB_FEATURE_MATRIX.md updated with secondary blocker section
+- [x] MHW4DX_BLOCKER_ANALYSIS.md created with complete analysis (594 lines)
+- [x] Unlock timeline recommendation provided (defer to Sprint 10)
+- [x] Cross-reference to Sprint 9 planned features (none match secondary blockers)
+- [x] Analysis addresses Sprint 8 retrospective recommendation #1
+- [x] Unknown 9.3.4 verified with methodology validated
+
+#### Next Steps
+
+**Apply Methodology to Remaining Models:**
+Follow validated methodology for secondary blocker analysis of remaining 5 GAMSLib models:
+1. **haverly.gms** - Check if option statements were only blocker (high priority)
+2. **himmel16.gms** - Known blocker: i++1 indexing (verify no secondary blockers)
+3. **etamac.gms** - Unknown blocker (small model, quick analysis)
+4. **springs.gms** - Unknown blocker (medium model)
+5. **procsel.gms** - Unknown blocker (medium model)
+
+Time allocation: 1 hour per model (<100 lines), 1.5-2h for larger models.
+
+---
+
 ### Sprint 9: Prep Task 1 - Create Known Unknowns List - 2025-11-19
 
 **Status:** ✅ COMPLETE
