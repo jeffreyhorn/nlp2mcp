@@ -72,7 +72,7 @@ Completed Sprint 9 Prep Task 5: Audited existing ModelIR → KKT → GAMS MCP co
 #### Deliverables
 
 **CONVERSION_PIPELINE_DESIGN.md (docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md):**
-- **794 lines** of comprehensive design and implementation guide
+- **1478 lines** of comprehensive design and implementation guide
 - **Executive Summary:** Key findings, scope clarification, implementation estimate
 - **Current Pipeline Audit:** 5-stage architecture, key modules (kkt/, emit/), flow summary
 - **Model Analysis:** mhw4d.gms and rbrock.gms ModelIR coverage, conversion results, comparison

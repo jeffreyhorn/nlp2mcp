@@ -1461,7 +1461,7 @@ grep "conversion_status" docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIG
 
 ### Deliverables
 
-- `docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md` (600-800 lines)
+- `docs/planning/EPIC_2/SPRINT_9/CONVERSION_PIPELINE_DESIGN.md` (1478 lines)
 - Current MCP generation pipeline audit (emit/kkt modules review)
 - mhw4d.gms conversion feasibility analysis
 - rbrock.gms conversion feasibility analysis
