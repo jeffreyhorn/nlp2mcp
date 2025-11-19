@@ -124,10 +124,10 @@ class ModelDef:
 3. **Step 3 (1h):** Semantic validation (4 checks: uniqueness, existence, definition, /all/ expansion)
 4. **Step 4 (1-2h):** Test fixtures (6 fixtures + hs62/mingamma validation tests)
 
-**Sprint 9 Combined Impact (Task 3 + Task 4):**
-- Task 3 (i++1): +10% parse rate (himmel16 unlock) = 50%
-- Task 4 (model sections): +20% parse rate (hs62 + mingamma unlock) = 60%
-- **Total Sprint 9 Target:** 60% (6/10 models) ✅ Exceeds conservative 30% target
+**Sprint 9 Combined Impact (Task 3 + Task 4 Sequential):**
+- After Task 4 (model sections, Days 1-2/5): 40% → 60% (+20%, hs62 + mingamma unlock)
+- After Task 3 (i++1, Days 3-4): 60% → 70% (+10%, himmel16 requires BOTH features)
+- **Total Sprint 9 Potential:** 70% (7/10 models if both implemented) ✅ Up from 40% after Sprint 8
 
 ---
 

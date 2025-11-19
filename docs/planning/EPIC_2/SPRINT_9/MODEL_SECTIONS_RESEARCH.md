@@ -734,7 +734,7 @@ def validate_solve_stmt(solve_stmt: SolveStmt, program_ir: GAMSProgram) -> None:
     model = program_ir.models[solve_stmt.model_name]
     if not model.equations:
         raise SemanticError(
-            f"Model '{model.model_name}' has no equations. "
+            f"Model '{model.name}' has no equations. "
             f"Cannot solve empty model."
         )
     
@@ -751,7 +751,7 @@ def validate_solve_stmt(solve_stmt: SolveStmt, program_ir: GAMSProgram) -> None:
     if not found:
         warnings.warn(
             f"Objective variable '{obj_var}' does not appear in any "
-            f"equation of model '{model.model_name}'. "
+            f"equation of model '{model.name}'. "
             f"This may be a modeling error."
         )
 ```
@@ -1575,7 +1575,7 @@ Model
 **Answer:** +20% parse rate (4/10 → 6/10 models)
 
 **Before implementation:**
-- Current: 40% (4/10 models: circle, mhw4dx, rbrock, mathopt1, trig)
+- Current: 40% (4/10 models: mhw4dx, rbrock, mathopt1, trig)
 - Note: Sprint 8 achieved 40% (was 20% in Sprint 7)
 
 **After implementation:**
@@ -1583,13 +1583,13 @@ Model
 - **Improvement:** +20 percentage points (+2 models)
 
 **Deferred unlocks:**
-- himmel16.gms: Needs model sections + i++1 (Task 3) → Sprint 9 Day 3-4
+- himmel16.gms: Requires BOTH model sections (Task 4) AND i++1 lead/lag indexing (Task 3) to unlock → Sprint 9 Day 3-4
 - maxmin.gms: Needs model sections + nested indexing → Sprint 10+
 
-**Sprint 9 combined impact (Task 3 + Task 4):**
-- Task 3 (i++1): +10% (himmel16 unlock) = 50%
-- Task 4 (model sections): +20% (hs62 + mingamma) = 60%
-- **Total Sprint 9 target:** 60% (6/10 models)
+**Sprint 9 combined impact (Task 3 + Task 4 sequential):**
+- After Task 4 (model sections, Days 1-2/5): 40% → 60% (+20%, hs62 + mingamma unlock)
+- After Task 3 (i++1, Days 3-4): 60% → 70% (+10%, himmel16 unlock requires BOTH features)
+- **Total Sprint 9 potential:** 70% (7/10 models if both features implemented)
 
 **Decision:** Unlock probability for hs62 + mingamma = **VERY HIGH (100%)**
 
