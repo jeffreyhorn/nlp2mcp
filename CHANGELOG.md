@@ -7,6 +7,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 9: Prep Task 1 - Create Known Unknowns List - 2025-11-19
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed Sprint 9 Prep Task 1: Created comprehensive Known Unknowns document with 27 unknowns across 5 categories. Documented all assumptions and verification approaches for advanced parser features (i++1 indexing, model sections, equation attributes), conversion pipeline architecture, test infrastructure improvements, and performance baseline framework. Created task-to-unknown mapping table linking all prep tasks (2-10) to their respective unknowns. Updated PREP_PLAN.md with "Unknowns Verified" metadata for all tasks.
+
+#### Deliverables
+
+**KNOWN_UNKNOWNS.md (docs/planning/EPIC_2/SPRINT_9/KNOWN_UNKNOWNS.md):**
+- 2,047 lines of comprehensive unknown documentation
+- 27 unknowns across 5 categories:
+  - Category 1 (Parser Enhancements): 10 unknowns
+  - Category 2 (Conversion Pipeline): 9 unknowns
+  - Category 3 (Test Infrastructure): 4 unknowns
+  - Category 4 (Performance & Metrics): 2 unknowns
+  - Category 5 (Sprint Planning): 2 unknowns
+- Priority distribution: 7 Critical, 11 High, 7 Medium, 2 Low
+- Estimated research time: 28-36 hours
+- Complete task-to-unknown mapping table in Appendix
+- Sprint 9 execution mapping (prep tasks → sprint days)
+
+**PREP_PLAN.md Updates:**
+- Updated Task 1 status to ✅ COMPLETE
+- Added "Unknowns Verified" metadata to Tasks 2-10:
+  - Task 2: 9.3.4
+  - Task 3: 9.1.1, 9.1.2, 9.1.3, 9.1.8, 9.1.10
+  - Task 4: 9.1.4, 9.1.5, 9.1.9, 9.1.10
+  - Task 5: 9.2.1-9.2.9 (all conversion pipeline unknowns)
+  - Task 6: 9.3.1, 9.3.2
+  - Task 7: 9.3.3
+  - Task 8: 9.1.6, 9.1.7, 9.1.10
+  - Task 9: 9.4.1, 9.4.2
+  - Task 10: 9.5.1, 9.5.2
+- Updated Task 1 acceptance criteria (all checked off)
+- Documented Changes and Result sections for Task 1
+
+#### Key Unknowns by Category
+
+**Critical Unknowns (7):**
+1. 9.1.1: i++1/i--1 lead/lag indexing complexity (affects 8-10h estimate)
+2. 9.1.2: i++1/i--1 grammar integration (grammar conflicts could require major refactoring)
+3. 9.2.1: Conversion pipeline architecture (foundation for all conversion work)
+4. 9.2.2: IR-to-MCP mapping coverage (determines conversion feasibility)
+5. 9.3.4: Secondary blocker analysis methodology (Sprint 8 retro recommendation #1)
+6. 9.5.1: 30-41 hour budget allocation (validates sprint scope feasibility)
+
+**High Priority Unknowns (11):**
+- Parser: 9.1.3 (i++1 semantic handling), 9.1.4 (model section syntax), 9.1.8 (himmel16 unlock), 9.1.9 (hs62/mingamma unlock)
+- Conversion: 9.2.3 (simple model scope), 9.2.4 (MCP schema compatibility), 9.2.5 (testing strategy)
+- Test Infra: 9.3.1 (fixture framework), 9.3.2 (validation scope)
+- Performance: 9.4.1 (baseline metrics)
+- Planning: 9.5.2 (checkpoint strategy)
+
+#### Cross-References
+
+**Sprint 8 Retrospective Integration:**
+- Unknown 9.3.4 → Sprint 8 Retro Recommendation #1 (secondary blocker analysis)
+- Unknowns 9.3.1, 9.3.2 → Sprint 8 Retro Recommendation #2 (automated fixtures)
+- Unknown 9.3.3 → Sprint 8 Retro Recommendation #3 (fixture validation script)
+- Unknown 9.4.2 → Sprint 8 Retro Recommendation #5 (performance budget)
+
+**PROJECT_PLAN.md References:**
+- Sprint 9 goals (lines 164-168)
+- Advanced parser features (lines 210-226)
+- Conversion pipeline (lines 233-239)
+- Test infrastructure (lines 175-196)
+- Acceptance criteria (lines 261-271)
+
+#### Acceptance Criteria
+
+- [x] KNOWN_UNKNOWNS.md created with all 5 categories
+- [x] Parser Enhancement Unknowns: 10 unknowns documented
+- [x] Conversion Pipeline Unknowns: 9 unknowns documented
+- [x] Test Infrastructure Unknowns: 4 unknowns documented
+- [x] Performance & Metrics Unknowns: 2 unknowns documented
+- [x] Sprint Planning Unknowns: 2 unknowns documented
+- [x] Each unknown has clear verification approach
+- [x] Critical unknowns identified for Task 2-9 dependencies
+- [x] Cross-references to Sprint 8 retrospective
+- [x] Task-to-unknown mapping complete
+- [x] PREP_PLAN.md Tasks 2-10 updated with "Unknowns Verified" metadata
+
+#### Next Steps
+
+**Ready for Prep Tasks 2-9:**
+- Task 2: Complete secondary blocker analysis for mhw4dx.gms (verifies Unknown 9.3.4)
+- Task 3: Research i++1/i--1 indexing (verifies Unknowns 9.1.1-9.1.3, 9.1.8)
+- Task 4: Research model sections (verifies Unknowns 9.1.4, 9.1.5, 9.1.9)
+- Task 5: Design conversion pipeline (verifies Unknowns 9.2.1-9.2.9)
+- Task 6: Design fixture framework (verifies Unknowns 9.3.1, 9.3.2)
+- Task 7: Design validation script (verifies Unknown 9.3.3)
+- Task 8: Research equation attributes (verifies Unknowns 9.1.6, 9.1.7)
+- Task 9: Design performance framework (verifies Unknowns 9.4.1, 9.4.2)
+- Task 10: Plan Sprint 9 schedule (verifies Unknowns 9.5.1, 9.5.2; integrates all findings)
+
+---
+
 ### Sprint 8: Day 10 - Documentation & Sprint Closeout - 2025-11-18
 
 **Status:** ✅ COMPLETE
