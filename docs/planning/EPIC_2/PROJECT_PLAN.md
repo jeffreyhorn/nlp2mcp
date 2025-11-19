@@ -163,9 +163,36 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
 
 **Goal:** Implement advanced parser features requiring grammar changes and begin conversion pipeline work. Builds on Sprint 8's foundation with higher-complexity features.
 
-**Strategy:** Advanced features + conversion infrastructure (deferred from original Sprint 8)
+**Strategy:** Advanced features + conversion infrastructure (deferred from original Sprint 8) + Test infrastructure improvements (Sprint 8 retrospective recommendations)
+
+**Sprint 8 Retrospective Integration:** Incorporates 5 high/medium priority recommendations to strengthen test infrastructure and prevent issues identified in Sprint 8.
 
 ## Components
+
+### High Priority: Test Infrastructure Improvements (~5-6 hours)
+**NEW - Sprint 8 Retrospective Recommendations:**
+
+- **Secondary Blocker Analysis for mhw4dx.gms (2-3 hours)**
+  - Manual inspection of mhw4dx.gms lines 37-63 to identify ALL blockers
+  - Parse with current parser, capture ALL errors (not just first)
+  - Document: "Primary blocker: option statements ✅. Secondary blocker: [TBD]"
+  - Update GAMSLIB_FEATURE_MATRIX.md with complete findings
+  - **Impact:** Prevents underestimation of unlock requirements (Sprint 8 lesson)
+  - **Rationale:** Sprint 8 assumed option statements alone would unlock mhw4dx.gms, but secondary blockers exist
+
+- **Automated Fixture Tests (2-3 hours)**
+  - Create `tests/test_fixtures.py`: Iterate over all 13 fixture directories
+  - For each fixture: Parse GMS file, compare actual vs expected_results.yaml
+  - Validate: parse status, statement counts, line numbers, option statements, indexed assignments
+  - **Impact:** Regression protection for all documented test patterns
+  - **Addresses:** Sprint 8 gap - "13 fixtures created, 0 automated tests"
+
+- **Fixture Validation Script (1 hour)**
+  - Create `scripts/validate_fixtures.py` for pre-commit validation
+  - Input: GMS file + expected_results.yaml
+  - Output: Report discrepancies (line numbers, statement counts, feature counts)
+  - **Impact:** Prevents PR review issues like PR #254 (5 review comments on incorrect counts)
+  - **Use:** Run before creating fixture PRs to ensure accuracy
 
 ### Advanced Parser Features (~15-20 hours)
 - **Advanced Indexing (i++1, i--1)**
@@ -197,30 +224,62 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
   - Effort: 6-8 hours
   - Risk: Medium (new pipeline stage)
   
-- **Performance Baseline**
+- **Performance Baseline & Budget**
   - Establish benchmark harness for parse/convert times
   - Document baseline performance for regression tracking
-  - Effort: 3-4 hours
+  - **NEW:** Establish test suite performance budgets (Sprint 8 recommendation):
+    - Fast tests (`make test`): <30s (currently 24s ✅)
+    - Full suite (`make test-all`): <5min baseline
+  - Add test timing to CI/CD reports
+  - **Sprint 8 Lesson:** Set up performance budget on Day 0 for all-day benefits
+  - Effort: 3-4 hours + 1 hour (performance budget) = 4-5 hours
 
 ## Deliverables
+
+**Test Infrastructure (NEW):**
+- Secondary blocker analysis for mhw4dx.gms (GAMSLIB_FEATURE_MATRIX.md update)
+- Automated fixture test suite (`tests/test_fixtures.py`)
+- Fixture validation script (`scripts/validate_fixtures.py`)
+- Test suite performance budget documentation
+
+**Parser Features (Original):**
 - Advanced indexing support (i++1, i--1)
 - Model sections support (mx syntax)
 - Equation attributes parsing (.l/.m)
+
+**Conversion & Performance (Original + Enhanced):**
 - Expanded dashboard with conversion tracking
 - Conversion pipeline foundation
-- Performance baseline documentation
-- Release tag `v0.8.1`
+- Performance baseline documentation + performance budgets
+
+**Release:**
+- Release tag `v0.9.0` (bumped from v0.8.1 due to test infrastructure additions)
 
 ## Acceptance Criteria
+
+**Parse Rate & Features (Original):**
 - **Parse Rate:** ≥30% (3/10 models) - Original Sprint 8 target, achievable with advanced features
 - **Advanced Features:** i++1 indexing and model sections working with comprehensive tests
 - **Conversion Pipeline:** At least 1 model (mhw4d or rbrock) successfully converts end-to-end
 - **Dashboard:** Tracks parse/convert/solve rates automatically
-- **Performance:** Baseline benchmarks established and documented
 - **Quality:** All existing tests pass, advanced features have edge case coverage
 
-**Estimated Effort:** 25-35 hours  
-**Risk Level:** MEDIUM (complex grammar changes, new pipeline stage)
+**Test Infrastructure (NEW - Sprint 8 Retrospective):**
+- **Secondary Blocker Analysis:** mhw4dx.gms blockers fully documented in GAMSLIB_FEATURE_MATRIX.md ✅
+- **Automated Fixtures:** All 13 fixtures have automated tests in `tests/test_fixtures.py` ✅
+- **Fixture Validation:** `scripts/validate_fixtures.py` prevents manual counting errors ✅
+- **Performance Budget:** Test suite budgets established and documented (<30s fast, <5min full) ✅
+
+## Sprint 8 Retrospective Lessons Applied
+
+1. **✅ Address Test Infrastructure Gaps Early:** Fix fixture testing gap before it becomes technical debt
+2. **✅ Performance Budget on Day 0:** Establish budgets early (Sprint 8 lesson: benefits all days)
+3. **✅ Complete Secondary Blocker Analysis:** Prevent underestimation (mhw4dx.gms lesson learned)
+4. **✅ Fixture Validation Automation:** Prevent PR review cycles on manual counting errors
+5. **✅ Regression Protection:** Automated fixture tests protect documented behavior
+
+**Estimated Effort:** 30-41 hours (25-35h original + 5-6h test infrastructure)  
+**Risk Level:** MEDIUM (complex grammar changes, new pipeline stage, offset by test infrastructure improvements)
 
 ---
 
