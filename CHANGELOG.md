@@ -80,7 +80,7 @@ class IndexOffset(IRNode):
 #### Deliverables
 
 **LEAD_LAG_INDEXING_RESEARCH.md (docs/planning/EPIC_2/SPRINT_9/LEAD_LAG_INDEXING_RESEARCH.md):**
-- **1,295 lines** of comprehensive research and implementation guide
+- **1,627 lines** of comprehensive research and implementation guide
 - **Executive Summary:** Key findings, decisions, and recommendations
 - **GAMS Operator Syntax:** 4 operators with boundary behavior, ordered set requirements, exogenous offset constraints
 - **GAMSLib Pattern Analysis:** 3 occurrences (all i++1 in himmel16.gms), grep commands documented

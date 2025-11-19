@@ -226,7 +226,7 @@ Development team (Parser specialist)
 - IR construction: 2-3h (IndexOffset node + transformer rules)
 - Semantic validation: 2-3h (4 checks + error messages)
 - Test fixtures: 2-3h (5 fixtures + pytest tests)
-- **Total: 8-12h** ✅ Aligns with PROJECT_PLAN.md estimate
+- **Total: 8-10h** ✅ Aligns with PROJECT_PLAN.md estimate
 
 **Key Learnings:**
 - GAMSLib has minimal usage (only i++1 in himmel16.gms), but GAMS supports broad syntax
@@ -946,7 +946,7 @@ grep -n "++[0-9]" *.gms
 - ✅ Semantic validation is straightforward
 
 **Parse Rate Impact:**
-- Current: 40% (4/10 models: mhw4d, rbrock, mathopt1, trig)
+- Current: 40% (4/10 models: mhw4dx, rbrock, mathopt1, trig)
 - After i++1: 50% (5/10 models: +himmel16)
 - **Improvement:** +10% parse rate (1 model unlock)
 

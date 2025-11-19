@@ -555,7 +555,7 @@ if 7 > 6: return None  # Out of bounds, suppressed
 
 # i--2 for i=2 (circular lag, offset = -2)
 target_ord = 2 + (-2) = 0
-wrapped = ((0 - 1) % 6) + 1 = ((-1) % 6) + 1 = 5 + 1 = 6
+wrapped = ((0 - 1) % 6) + 1 = ((-1) % 6) + 1 = (5) + 1 = 6
 result = elements[5] = '6'  # Wraps to last element
 ```
 
@@ -1622,6 +1622,6 @@ def test_lead_lag_fixture(fixture_name):
 ---
 
 **Document Status:** ✅ COMPLETE  
-**Total Lines:** 1,295  
+**Total Lines:** 1,627  
 **Research Time:** 6-8 hours (within estimate)  
 **Next Steps:** Update KNOWN_UNKNOWNS.md with verification results, update PREP_PLAN.md Task 3 status
