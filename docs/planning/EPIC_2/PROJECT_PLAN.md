@@ -159,68 +159,97 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
 
 ---
 
-# Sprint 9 (Weeks 7–8): Advanced Parser Features & Conversion Pipeline
+# Sprint 9 (Weeks 7–8): Parser Maturity Focus & Test Infrastructure
 
-**Goal:** Implement advanced parser features requiring grammar changes and begin conversion pipeline work. Builds on Sprint 8's foundation with higher-complexity features.
+**Goal:** Achieve 70% parse rate (7/10 models) through high-ROI parser features while strengthening test infrastructure based on Sprint 8 retrospective learnings.
 
-**Strategy:** Advanced features + conversion infrastructure (deferred from original Sprint 8)
+**Strategy:** Parser Maturity Focus (Option A from Sprint 8 retrospective) + Test Infrastructure improvements
+
+**Sprint 8 Retrospective Integration:** This sprint incorporates 5 high/medium priority recommendations from Sprint 8 retrospective analysis.
 
 ## Components
 
-### Advanced Parser Features (~15-20 hours)
-- **Advanced Indexing (i++1, i--1)**
-  - Implement lead/lag indexing operators
-  - Unlocks: himmel16.gms and models with sequential indexing
-  - Effort: 8-10 hours
-  - Risk: Medium-High (requires grammar changes, semantic complexity)
-  
-- **Model Sections (mx syntax)**
-  - Support multi-line model declarations with `/` syntax
-  - Unlocks: hs62.gms, mingamma.gms
-  - Effort: 5-6 hours
-  - Risk: Medium (grammar extension)
-  
-- **Equation Attributes (.l/.m)**
-  - Parse and store equation attributes where semantically relevant
-  - Foundation for conversion pipeline
-  - Effort: 4-6 hours
+### High Priority: Test Infrastructure Improvements (~5-6 hours)
+Based on Sprint 8 retrospective recommendations:
 
-### Conversion & Performance Instrumentation (~10-15 hours)
-- **Dashboard Expansion**
-  - Track parse/convert/solve rates (extend existing dashboard)
-  - KPI: Monitor conversion rate on successfully parsed models
-  - Effort: 3-4 hours
-  
-- **Conversion Pipeline Foundation**
-  - Begin conversion infrastructure for successfully parsed models
-  - Focus on simple models (mhw4d, rbrock) as initial targets
+- **Secondary Blocker Analysis for mhw4dx.gms (2-3 hours)**
+  - Manual inspection of mhw4dx.gms lines 37-63
+  - Parse with current parser, capture ALL errors (not just first)
+  - Document: "Primary blocker: option statements ✅. Secondary blocker: [TBD]"
+  - Deliverable: Update GAMSLIB_FEATURE_MATRIX.md with findings
+  - **Impact:** Accurate planning for mhw4dx.gms unlock
+
+- **Automated Fixture Tests (2-3 hours)**
+  - Create `tests/test_fixtures.py`: Iterate over all 13 fixture directories
+  - For each fixture: Parse GMS file, compare actual vs expected_results.yaml
+  - Validate: parse status, statement counts, line numbers
+  - **Impact:** Regression protection for all documented test patterns
+  - **Addresses:** Sprint 8 issue - 13 fixtures created, 0 automated tests
+
+- **Fixture Validation Script (1 hour)**
+  - Script: `scripts/validate_fixtures.py`
+  - Input: GMS file + expected_results.yaml
+  - Output: Report discrepancies (line numbers, statement counts)
+  - **Impact:** Prevent PR review issues like PR #254 (5 review comments on incorrect counts)
+
+### High Priority: Parser Maturity Features (~11-14 hours)
+Option A from Sprint 8 retrospective - targets 70% parse rate:
+
+- **Multiple Model Definitions (5-6 hours)**
+  - Support multiple `Model` statements in single file
+  - Grammar: `model <name> / <equations> /;`
+  - Unlocks: circle.gms, hs62.gms
+  - Effort: 5-6 hours
+  - Risk: Low-Medium (grammar extension, semantic handling)
+
+- **Function Calls in Assignments (6-8 hours)**
+  - Parse function calls on RHS of assignments: `x = sqrt(y);`
+  - Store in IR (mock/store approach like Sprint 8 option statements)
+  - Unlocks: circle.gms (confirmed single-feature model)
   - Effort: 6-8 hours
-  - Risk: Medium (new pipeline stage)
-  
-- **Performance Baseline**
-  - Establish benchmark harness for parse/convert times
-  - Document baseline performance for regression tracking
-  - Effort: 3-4 hours
+  - Risk: Medium (grammar changes, AST node creation)
+
+### Medium Priority: Test Performance & Monitoring (~1 hour)
+
+- **Test Suite Performance Budget**
+  - Establish performance budgets:
+    - Fast tests (`make test`): <30s (currently 24s ✅)
+    - Full suite (`make test-all`): <5min baseline
+  - Add test timing to CI/CD reports
+  - Document in Day 0 sprint setup (Sprint 8 lesson: test optimization benefits all days)
+  - Effort: 1 hour
 
 ## Deliverables
-- Advanced indexing support (i++1, i--1)
-- Model sections support (mx syntax)
-- Equation attributes parsing (.l/.m)
-- Expanded dashboard with conversion tracking
-- Conversion pipeline foundation
-- Performance baseline documentation
-- Release tag `v0.8.1`
+- Secondary blocker analysis for mhw4dx.gms (documentation update)
+- Automated fixture test suite (`tests/test_fixtures.py`)
+- Fixture validation script (`scripts/validate_fixtures.py`)
+- Multiple model definitions support with tests
+- Function calls in assignments support with tests
+- Test performance budget documentation
+- Release tag `v0.9.0`
 
 ## Acceptance Criteria
-- **Parse Rate:** ≥30% (3/10 models) - Original Sprint 8 target, achievable with advanced features
-- **Advanced Features:** i++1 indexing and model sections working with comprehensive tests
-- **Conversion Pipeline:** At least 1 model (mhw4d or rbrock) successfully converts end-to-end
-- **Dashboard:** Tracks parse/convert/solve rates automatically
-- **Performance:** Baseline benchmarks established and documented
-- **Quality:** All existing tests pass, advanced features have edge case coverage
+- **Parse Rate:** ≥70% (7/10 models) - Target from Sprint 8 retrospective Option A
+  - Current: mhw4d, rbrock, mathopt1, trig (40%)
+  - Expected unlocks: circle, hs62, +1 more (function calls + multiple models)
+- **Test Infrastructure:**
+  - All 13 fixtures have automated tests ✅
+  - Fixture validation script prevents manual counting errors ✅
+  - Test suite performance budget established ✅
+- **Secondary Blocker Analysis:** mhw4dx.gms blockers fully documented ✅
+- **Quality:** All existing tests pass, new features have comprehensive test coverage
+- **Performance:** Test suite stays within budget (<30s fast, <5min full)
 
-**Estimated Effort:** 25-35 hours  
-**Risk Level:** MEDIUM (complex grammar changes, new pipeline stage)
+## Sprint 8 Retrospective Lessons Applied
+
+1. **✅ Test Infrastructure First:** Address fixture testing gap before adding features
+2. **✅ Performance Budget Early:** Establish on Day 0 (Sprint 8 lesson: benefits all days)
+3. **✅ Secondary Blocker Analysis:** Prevent underestimation (mhw4dx.gms lesson)
+4. **✅ Parser Maturity Focus:** Option A (sustainable 11-14h vs Option B's 19-24h)
+5. **✅ Conservative Targets:** 70% achievable vs 90% stretch (Sprint 8: 40% vs 50%)
+
+**Estimated Effort:** 17-21 hours (within 25-35h budget, conservative)  
+**Risk Level:** LOW-MEDIUM (proven patterns from Sprint 8, incremental improvements)
 
 ---
 
