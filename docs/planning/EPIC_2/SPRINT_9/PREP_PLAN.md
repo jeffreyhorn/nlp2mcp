@@ -610,11 +610,11 @@ PROJECT_PLAN.md Sprint 9 Test Infrastructure (lines 175-181):
 ### Changes
 
 **Files Created:**
-- `docs/planning/EPIC_2/SPRINT_9/MHW4DX_BLOCKER_ANALYSIS.md` (950 lines)
+- `docs/planning/EPIC_2/SPRINT_9/MHW4DX_BLOCKER_ANALYSIS.md` (594 lines)
   - Executive summary with key finding: if/elseif/else control flow is secondary blocker
   - Blocker classification table (5 blockers identified)
   - Line-by-line error catalog (lines 1-93, showing 42 blocked lines)
-  - Summary statistics (53.8% parse rate, 45.2% blocked)
+  - Summary statistics (54.8% parse rate, 45.2% blocked)
   - Sprint 8 retrospective analysis (incorrect assumption identified)
   - Recommendations for Sprint 10 (defer mhw4dx.gms unlock)
 
@@ -666,8 +666,9 @@ PROJECT_PLAN.md Sprint 9 Test Infrastructure (lines 175-181):
 - Line 47: ✅ 1/1 (100%) - option statement (Sprint 8 feature)
 - Lines 48-50: ✅ 3/3 (100%) - parse successfully
 - Line 51: ⚠️ 0/1 (0%) - $eolCom preprocessor (low priority blocker)
+- Line 52: ✅ 1/1 (100%) - empty line
 - Lines 53-93: ❌ 0/41 (0%) - if/elseif/else control flow (primary blocker)
-- **Overall:** 50/93 lines = 53.8% parse rate, 42/93 lines = 45.2% blocked
+- **Overall:** 51/93 lines = 54.8% parse rate, 42/93 lines = 45.2% blocked
 
 **Recommendation:** Defer mhw4dx.gms unlock to **Sprint 10**
 - Sprint 9 target: ≤8 hours of new features
@@ -723,7 +724,7 @@ grep -c "Blocker:" docs/planning/EPIC_2/SPRINT_9/MHW4DX_BLOCKER_ANALYSIS.md
 - [x] Secondary blocker(s) identified and documented (5 blockers total)
 - [x] Secondary blocker complexity estimated (1 Medium, 4 Simple)
 - [x] GAMSLIB_FEATURE_MATRIX.md updated with secondary blocker section
-- [x] MHW4DX_BLOCKER_ANALYSIS.md created with complete analysis (950 lines)
+- [x] MHW4DX_BLOCKER_ANALYSIS.md created with complete analysis (594 lines)
 - [x] Unlock timeline recommendation provided (defer to Sprint 10)
 - [x] Cross-reference to Sprint 9 planned features (none match secondary blockers)
 - [x] Analysis addresses Sprint 8 retrospective recommendation #1 (complete blocker analysis)
