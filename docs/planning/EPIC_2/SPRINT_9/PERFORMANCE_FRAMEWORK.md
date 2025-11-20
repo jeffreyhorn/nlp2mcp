@@ -29,7 +29,7 @@
 - Full suite: Unknown (slow tests not measured separately)
 - Per-model parse: Not measured systematically
 
-**Implementation Effort:** 3.5-4.5 hours (validates 4-5h estimate)
+**Implementation Effort:** 3.5-4.5 hours (validates 3.5-4.5h estimate)
 
 ---
 
@@ -244,14 +244,7 @@ def test_gamslib_parse_performance(benchmark, model_name):
     
     assert result is not None, f"Failed to parse {model_name}"
     
-    # Budget enforcement (100ms for small models)
-    mean_time_ms = benchmark.stats['mean'] * 1000
-    if mean_time_ms > 100:
-        warnings.warn(
-            f"PERFORMANCE WARNING: {model_name} took {mean_time_ms:.1f}ms "
-            f"(budget: 100ms)",
-            UserWarning
-        )
+    # Budget enforcement is handled externally (see check_parse_budgets.py or pytest-benchmark CLI options)
 ```
 
 **File:** `tests/benchmarks/test_suite_performance.py` (new file)
@@ -325,7 +318,27 @@ def test_full_suite_duration():
 
 ### 3.3 Benchmark Configuration
 
-**File:** `pyproject.toml` (add pytest-benchmark section)
+**pytest-benchmark CLI Options**
+
+> **Note:** pytest-benchmark does **not** support configuration via `[tool.pytest-benchmark]` in `pyproject.toml`.  
+> Use command-line options, environment variables, or a `.benchmarks` file for configuration.
+
+**Example: Run pytest with benchmark options**
+
+```sh
+# Run benchmarks with configuration
+pytest \
+  --benchmark-min-rounds=5 \
+  --benchmark-min-time=0.1 \
+  --benchmark-warmup=on \
+  --benchmark-warmup-iterations=2 \
+  --benchmark-disable-gc \
+  --benchmark-timer=time.perf_counter \
+  --benchmark-json=docs/performance/baselines/latest.json \
+  --benchmark-compare=0001
+```
+
+**Pytest markers configuration** (add to `pyproject.toml`):
 
 ```toml
 [tool.pytest.ini_options]
@@ -333,17 +346,6 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "benchmark: marks tests as performance benchmarks",
 ]
-
-# pytest-benchmark configuration
-[tool.pytest-benchmark]
-min_rounds = 5            # Minimum iterations per benchmark
-min_time = 0.1            # Minimum time per benchmark (100ms)
-warmup = true             # Enable warm-up iterations
-warmup_iterations = 2     # Number of warm-up iterations
-disable_gc = true         # Disable GC during benchmarks
-timer = "time.perf_counter"  # High-resolution timer
-json = true               # Enable JSON output
-compare = "0001"          # Compare against baseline 0001
 ```
 
 ---
@@ -534,7 +536,7 @@ jobs:
           python scripts/check_parse_budgets.py benchmark_results.json
       
       - name: Upload performance artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: performance-results
           path: |
