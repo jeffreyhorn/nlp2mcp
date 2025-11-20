@@ -220,6 +220,7 @@ Establishes baselines for individual model parse times.
 Run with: pytest tests/benchmarks/test_gamslib_performance.py --benchmark-only
 """
 
+import warnings
 import pytest
 from pathlib import Path
 from src.ir.parser import parse_model_file
@@ -246,11 +247,10 @@ def test_gamslib_parse_performance(benchmark, model_name):
     # Budget enforcement (100ms for small models)
     mean_time_ms = benchmark.stats['mean'] * 1000
     if mean_time_ms > 100:
-        pytest.warn(
-            UserWarning(
-                f"PERFORMANCE WARNING: {model_name} took {mean_time_ms:.1f}ms "
-                f"(budget: 100ms)"
-            )
+        warnings.warn(
+            f"PERFORMANCE WARNING: {model_name} took {mean_time_ms:.1f}ms "
+            f"(budget: 100ms)",
+            UserWarning
         )
 ```
 
@@ -263,6 +263,7 @@ Test suite performance measurements (fast vs full).
 Run with: pytest tests/benchmarks/test_suite_performance.py
 """
 
+import warnings
 import subprocess
 import time
 import pytest
@@ -282,11 +283,10 @@ def test_fast_suite_duration():
     
     # Warning at 90% budget
     if elapsed > 27.0:
-        pytest.warn(
-            UserWarning(
-                f"PERFORMANCE WARNING: Fast tests took {elapsed:.2f}s "
-                f"(90% budget: 27s)"
-            )
+        warnings.warn(
+            f"PERFORMANCE WARNING: Fast tests took {elapsed:.2f}s "
+            f"(90% budget: 27s)",
+            UserWarning
         )
     
     # Failure at 100% budget
@@ -310,11 +310,10 @@ def test_full_suite_duration():
     
     # Warning at 90% budget
     if elapsed > 270.0:  # 4.5 minutes
-        pytest.warn(
-            UserWarning(
-                f"PERFORMANCE WARNING: Full tests took {elapsed:.2f}s "
-                f"(90% budget: 270s)"
-            )
+        warnings.warn(
+            f"PERFORMANCE WARNING: Full tests took {elapsed:.2f}s "
+            f"(90% budget: 270s)",
+            UserWarning
         )
     
     # Informational (no failure)
@@ -834,22 +833,22 @@ pytest tests/benchmarks/test_suite_performance.py
 ### 9.1 Deliverables Checklist
 
 - [x] **PERFORMANCE_FRAMEWORK.md created** (this document, 400-600 lines target)
-- [ ] Performance metrics defined (test suite, per-model parse, memory deferred)
-- [ ] Performance budgets set (<30s fast, <5min full, <100ms per-model)
-- [ ] Benchmark harness designed (pytest-benchmark, JSON storage)
-- [ ] Baseline storage format defined (JSON schema, directory structure)
-- [ ] CI integration designed (GitHub Actions workflow, budget enforcement)
-- [ ] Implementation plan created (4 phases, 4.0h estimate)
-- [ ] Unknown 9.4.1 verified (metrics selection)
-- [ ] Unknown 9.4.2 verified (budget enforcement)
+- [x] Performance metrics defined (test suite, per-model parse, memory deferred)
+- [x] Performance budgets set (<30s fast, <5min full, <100ms per-model)
+- [x] Benchmark harness designed (pytest-benchmark, JSON storage)
+- [x] Baseline storage format defined (JSON schema, directory structure)
+- [x] CI integration designed (GitHub Actions workflow, budget enforcement)
+- [x] Implementation plan created (4 phases, 4.0h estimate)
+- [x] Unknown 9.4.1 verified (metrics selection)
+- [x] Unknown 9.4.2 verified (budget enforcement)
 
 ### 9.2 Quality Gates
 
 - [x] **Documentation complete:** PERFORMANCE_FRAMEWORK.md covers all 9 sections
-- [ ] **Implementation estimate validated:** 4.0h within 3.5-4.5h target ✅
-- [ ] **Unknowns verified:** 9.4.1 and 9.4.2 answered with evidence
-- [ ] **Design comprehensive:** Covers metrics, budgets, harness, storage, CI, reporting
-- [ ] **Sprint 8 lessons applied:** Performance budget on Day 0, not Day 9
+- [x] **Implementation estimate validated:** 4.0h within 3.5-4.5h target ✅
+- [x] **Unknowns verified:** 9.4.1 and 9.4.2 answered with evidence
+- [x] **Design comprehensive:** Covers metrics, budgets, harness, storage, CI, reporting
+- [x] **Sprint 8 lessons applied:** Performance budget on Day 0, not Day 9
 
 ### 9.3 Sprint 9 Readiness
 
