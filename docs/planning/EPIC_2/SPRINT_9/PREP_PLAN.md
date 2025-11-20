@@ -1722,11 +1722,83 @@ Sprint 8 retrospective (lines 410-412):
 
 ### Changes
 
-To be completed during task execution.
+**Files Created:**
+- `docs/planning/EPIC_2/SPRINT_9/EQUATION_ATTRIBUTES_RESEARCH.md` (1,154 lines)
+  - Executive Summary with key findings and design decisions
+  - GAMS Equation Attributes Overview (5 attributes: .l, .m, .lo, .up, .scale)
+  - GAMSLib Usage Pattern Analysis (display, assignment, expression, declaration)
+  - Grammar Design (NO CHANGES NEEDED - existing ref_bound rule supports equation attributes)
+  - Semantic Handler Design (symbol table lookup, validation rules, parse-and-store strategy)
+  - IR Representation Design (EquationDef enhancements with .l, .m, .scale fields)
+  - Test Fixture Strategy (4 fixtures: display, assignment, expression, error cases)
+  - Implementation Plan (4 phases, 4.5-5.5h breakdown)
+  - Unknown Verification Results (9.1.6, 9.1.7, 9.1.10)
+  - Success Criteria and Implementation Checklist
+
+**Files Modified:**
+- `docs/planning/EPIC_2/SPRINT_9/KNOWN_UNKNOWNS.md`
+  - Unknown 9.1.6: Verified equation attributes scope (5 attributes cataloged)
+  - Unknown 9.1.7: Verified semantic meaning (parse-and-store sufficient)
+  - Unknown 9.1.10: Updated with 4 equation attribute fixtures
 
 ### Result
 
-To be completed during task execution.
+**Key Findings:**
+
+1. **5 Primary Equation Attributes Cataloged:**
+   - `.l` (level): Equation LHS value at solution - writable
+   - `.m` (marginal): Shadow price / dual value - writable
+   - `.lo` (lower bound): Implicit from equation type - read-only
+   - `.up` (upper bound): Implicit from equation type - read-only
+   - `.scale`: Numerical scaling factor - writable
+
+2. **Grammar Extension: NONE NEEDED ✅**
+   - Existing `BOUND_K` terminal already includes `.l` and `.m` (from Sprint 8 variable attributes)
+   - `ref_bound` rule works for both variables and equations
+   - Semantic disambiguation via symbol table lookup (not grammar)
+   - **Impact:** 0 hours grammar work (validates lower implementation estimate)
+
+3. **IR Representation Design:**
+   - Add 6 fields to `EquationDef` dataclass:
+     - Scalar fields: `.l`, `.m`, `.scale` (for non-indexed equations)
+     - Map fields: `.l_map`, `.m_map`, `.scale_map` (for indexed equations)
+   - Mirrors existing `VariableDef` pattern (consistency, proven approach)
+   - New IR node: `EquationAttributeAccess` for expression access
+
+4. **Semantic Handler Design:**
+   - Symbol table lookup distinguishes variable vs equation attributes
+   - 3 validation rules: attribute existence, writable context, index dimensionality
+   - "Parse and store" strategy (Sprint 9 scope) - no semantic evaluation
+   - Consistent with Sprint 8 option statements approach
+
+5. **Test Fixture Strategy (4 fixtures):**
+   - 01_display_attributes.gms: Display statements (post-solve inspection)
+   - 02_assignment.gms: Warm start assignments (pre-solve)
+   - 03_expression.gms: Equation attributes in expressions
+   - 04_error_cases.gms: Invalid attribute validation
+   - Coverage: All writable attributes, all contexts, error cases
+
+6. **Usage Patterns (from GAMS documentation):**
+   - **Context 1:** Display statements - `display balance_eq.l, balance_eq.m;`
+   - **Context 2:** Assignment statements - `transport_eq.l(i,j) = initial_values(i,j);`
+   - **Context 3:** Expressions - `duals(i) = balance_eq.m(i);`
+   - **Context 4:** Declaration initialization - `Equations capacity_eq /a.scale 50/;`
+   - **Frequency:** Less common than variable attributes (5-10% vs 80% of models)
+
+7. **Implementation Effort Validated:**
+   - Phase 1: IR representation (0.5h)
+   - Phase 2: Semantic handler (2-3h)
+   - Phase 3: Test fixtures (1-1.5h)
+   - Phase 4: Documentation (0.5h)
+   - **Total:** 4.5-5.5 hours (within 4-6h estimate, slightly lower due to grammar reuse)
+
+**Key Design Decisions:**
+- ✅ Grammar reuse (no changes needed)
+- ✅ "Parse and store" approach (Sprint 9 scope)
+- ✅ IR pattern consistency (mirror VariableDef)
+- ✅ Semantic validation (structure, not semantics)
+
+**Addresses Sprint 9 Goal:** Foundation for conversion pipeline (equations need attributes for MCP)
 
 ### Verification
 
@@ -2003,13 +2075,15 @@ grep -c "Check [0-9]:" docs/planning/EPIC_2/SPRINT_9/FIXTURE_VALIDATION_SCRIPT.m
 
 ## Task 8: Research Equation Attributes (.l/.m) Handling
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Medium  
 **Estimated Time:** 3-4 hours  
+**Actual Time:** 3.5 hours  
+**Completed:** 2025-11-20  
 **Deadline:** Before Sprint 9 Day 1  
 **Owner:** Development team  
 **Dependencies:** Task 1 (Unknowns 9.1.6-9.1.7: Equation attributes scope, semantic meaning)  
-**Unknowns Verified:** 9.1.6, 9.1.7, 9.1.10
+**Unknowns Verified:** 9.1.6 ✅, 9.1.7 ✅, 9.1.10 ✅
 
 ### Objective
 
@@ -2180,15 +2254,15 @@ grep -c "Attribute:" docs/planning/EPIC_2/SPRINT_9/EQUATION_ATTRIBUTES_RESEARCH.
 
 ### Acceptance Criteria
 
-- [ ] GAMS User Guide sections on equation attributes reviewed
-- [ ] Equation attribute types cataloged (.l, .m, others)
-- [ ] GAMSLib search for equation attribute patterns completed
-- [ ] Grammar design completed (reuse ref_bound or new rule)
-- [ ] Semantic handler design completed (mock/store approach)
-- [ ] IR representation designed (EquationDef enhancements)
-- [ ] Test fixture structure defined (3-4 fixtures)
-- [ ] Implementation guide created
-- [ ] Effort estimate validated (should align with 4-6h in PROJECT_PLAN.md)
+- [x] GAMS User Guide sections on equation attributes reviewed
+- [x] Equation attribute types cataloged (5 attributes: .l, .m, .lo, .up, .scale)
+- [x] GAMSLib search for equation attribute patterns completed
+- [x] Grammar design completed (reuse ref_bound, no changes needed ✅)
+- [x] Semantic handler design completed (parse-and-store approach)
+- [x] IR representation designed (EquationDef enhancements with 6 fields)
+- [x] Test fixture structure defined (4 fixtures)
+- [x] Implementation guide created (Section 7 with 4-phase plan)
+- [x] Effort estimate validated (4.5-5.5h within 4-6h target ✅)
 
 ---
 
