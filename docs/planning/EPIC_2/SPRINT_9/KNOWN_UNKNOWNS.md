@@ -1426,10 +1426,6 @@ Development team
 
 **4. Should fixtures test success cases only, or error cases too?**
 
-**Answer:** Deferred to Task 8 (not part of Task 3 scope)
-
-**4. Should fixtures test success cases only, or error cases too?**
-
 **Answer:** BOTH - success fixtures + error test cases in pytest
 
 **Success fixtures (5):**

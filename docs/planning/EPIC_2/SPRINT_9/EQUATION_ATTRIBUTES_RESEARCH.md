@@ -15,13 +15,13 @@
 **Key Decisions:**
 1. **Grammar:** NO CHANGES NEEDED - existing `BOUND_K` terminal already supports `.l` and `.m`
 2. **IR Design:** Add `.l`, `.m`, `.scale` fields to `EquationDef` (mirroring `VariableDef` pattern)
-3. **Semantic Handling:** "Parse and store" approach - equations attributes are treated like variable attributes
+3. **Semantic Handling:** "Parse and store" approach - equation attributes are treated like variable attributes
 4. **Semantic Disambiguation:** Context-based (symbol table lookup determines if identifier is equation vs variable)
 5. **Sprint 9 Scope:** Parse, store, and validate - no solver integration needed
 
-**Implementation Effort:** 4-5 hours (lower than 4-6h estimate due to grammar reuse)
+**Implementation Effort:** 4.5-5.5 hours (lower than 4-6h estimate due to grammar reuse)
 - Grammar changes: 0h (already supported)
-- IR representation: 0.5h (add 3 fields to EquationDef)
+- IR representation: 0.5h (add 6 fields to EquationDef: l, m, scale, l_map, m_map, scale_map)
 - Semantic handler: 2-3h (attribute access logic, validation)
 - Test fixtures: 1-1.5h (4 fixtures)
 - Documentation: 0.5h
