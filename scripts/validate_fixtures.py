@@ -174,9 +174,11 @@ def count_statements(gms_file: Path) -> int:
             if not stripped or stripped.startswith("*"):
                 continue
 
-            # Check for statement terminators
-            if ";" in stripped or ".." in stripped:
-                statements += 1
+            # Check for statement terminators (count all semicolons and double-dots)
+            semicolon_count = stripped.count(";")
+            double_dot_count = stripped.count("..")
+            if semicolon_count > 0 or double_dot_count > 0:
+                statements += semicolon_count + double_dot_count
                 in_statement = False
             else:
                 in_statement = True
