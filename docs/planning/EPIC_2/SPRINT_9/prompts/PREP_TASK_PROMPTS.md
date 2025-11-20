@@ -630,7 +630,7 @@ Execute Sprint 9 Prep Task 5 from `docs/planning/EPIC_2/SPRINT_9/PREP_PLAN.md` (
 
 ### Objective
 
-Design end-to-end conversion pipeline architecture for transforming parsed GAMS ModelIR into MCP JSON format. Enable at least 1 simple model (mhw4d or rbrock) to convert successfully.
+Design end-to-end conversion pipeline architecture for transforming parsed GAMS ModelIR into MCP GAMS format. Enable at least 1 simple model (mhw4d or rbrock) to convert successfully.
 
 ### Context
 
@@ -642,7 +642,7 @@ PROJECT_PLAN.md acceptance criterion: "At least 1 model (mhw4d or rbrock) succes
 **Background:**
 - Parser produces ModelIR (AST + semantic information)
 - No conversion infrastructure exists yet
-- Goal: ModelIR → MCP JSON transformation
+- Goal: ModelIR → MCP GAMS transformation
 - Target models: mhw4d.gms (14 lines), rbrock.gms (8 lines)
 
 ### What to Do
@@ -666,7 +666,7 @@ PROJECT_PLAN.md acceptance criterion: "At least 1 model (mhw4d or rbrock) succes
 - Estimate conversion coverage (100%? 80%?)
 
 **4. MCP Schema Review (1 hour)**
-- Review existing MCP JSON schema
+- Review existing MCP GAMS schema
 - Identify GAMS-specific extensions needed
 - Design schema validation approach
 
@@ -708,7 +708,7 @@ PROJECT_PLAN.md acceptance criterion: "At least 1 model (mhw4d or rbrock) succes
 - Findings: Which model is simpler (mhw4d or rbrock), can we convert 100%?
 - Evidence: IR analysis results
 
-**Unknown 9.2.4: MCP JSON Schema Compatibility**
+**Unknown 9.2.4: MCP GAMS Schema Compatibility**
 - Findings: GAMS extensions needed or not
 - Evidence: Schema review results
 
@@ -775,7 +775,7 @@ PROJECT_PLAN.md acceptance criterion: "At least 1 model (mhw4d or rbrock) succes
 
 #### Summary
 
-Designed comprehensive conversion pipeline architecture for ModelIR → MCP JSON transformation. Analyzed mhw4d.gms and rbrock.gms for conversion feasibility. Created IR-to-MCP mapping table and implementation plan validating 6-8 hour effort estimate.
+Designed comprehensive conversion pipeline architecture for ModelIR → MCP GAMS transformation. Analyzed mhw4d.gms and rbrock.gms for conversion feasibility. Created IR-to-MCP mapping table and implementation plan validating 6-8 hour effort estimate.
 
 #### Architecture Design
 - **Pattern:** [single-pass visitor / multi-pass]
@@ -1332,7 +1332,7 @@ Sprint 8 PLAN.md was 1715 lines with 4 checkpoints, all passed on schedule. Spri
 - Checkpoint 3 (Day 6 End): All Parser Features Complete
   - Success criteria: hs62/mingamma parse, parse rate ≥60%
 - Checkpoint 4 (Day 8 End): Conversion Pipeline Working
-  - Success criteria: 1 model converts, MCP JSON validates
+  - Success criteria: 1 model converts, MCP GAMS validates
 
 **4. Effort Allocation (1 hour)**
 - Validate 30-41 hour budget (sum components)
