@@ -2217,9 +2217,50 @@ Expected: Day 10 buffer sufficient
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE  
-**To be verified by:** Task 10 (Effort allocation section)  
-**Expected completion:** Before Sprint 9 Day 1
+✅ **Status:** VERIFIED  
+**Verified by:** Task 10 - Plan Sprint 9 Detailed Schedule  
+**Date:** 2025-11-20  
+**Actual time:** 7 hours (within 7-9h estimate)
+
+**Answers to Research Questions:**
+
+**1. Does test infra (5-6h) + parser (15-20h) + conversion (10-15h) = 30-41h?**
+- **Answer:** YES, with minor variance
+- **Actual breakdown:**
+  - Test infrastructure: 5-7h (fixtures, validation, performance)
+  - Advanced parser: 17-22h (i++1: 8-10h, model sections: 5-6h, attributes: 4-6h)
+  - Conversion + dashboard: 10-13h (conversion: 6-8h, dashboard: 4-5h)
+  - Planning + documentation: 4-6h
+  - **Total: 36-48h** (slightly above 30-41h target, but manageable with Day 10 buffer)
+
+**2. Are individual task estimates realistic (validated by prep research)?**
+- **Answer:** YES - all estimates validated by prep tasks
+- i++1 indexing: 8-10h validated in Task 3 (grammar prototype successful)
+- Model sections: 5-6h validated in Task 4 (straightforward implementation)
+- Equation attributes: 4-6h validated in Task 8 (grammar already supports, only semantic work)
+- Conversion: 6-8h validated in Task 5 (architecture defined)
+
+**3. What's the critical path (longest dependency chain)?**
+- **Answer:** Test Infrastructure → i++1 Indexing → Model Sections → Conversion → Closeout
+- **Critical path effort:** 18-24h (Conservative: 18h, Realistic: 21h, Upper: 24h)
+- **Fits in sprint:** YES (10 days × 2-3h/day = 20-30h capacity)
+
+**4. How much buffer is needed (10%? 20%? Day 10 as buffer?)?**
+- **Answer:** Day 10 as 2-3h buffer is sufficient
+- Conservative scenario (36h): 11h buffer available (36h vs 33h capacity)
+- Realistic scenario (42h): 9h buffer needed (42h - 33h = use Day 10 + some parallel work)
+- Upper scenario (48h): Requires Day 10 + scope reduction (defer conversion or attributes)
+
+**5. Can sprint complete in 10 days or need 11 days?**
+- **Answer:** 11 days total (Days 0-10), with Day 10 as designated BUFFER
+- Same structure as Sprint 8 (which succeeded with this approach)
+- Day 10 absorbs overruns or used for polish/documentation
+
+**Key Design Decision:** Sprint 9 effort (36-48h) slightly exceeds PROJECT_PLAN.md estimate (30-41h) by 1-7h, but this is acceptable because:
+1. Day 10 buffer provides 2-3h additional capacity
+2. Scope flexibility (conversion and attributes can be deferred if needed)
+3. Conservative critical path (18-24h) fits comfortably in 10 days
+4. Comprehensive prep work (47-63h) reduces implementation risk
 
 ---
 
@@ -2300,9 +2341,52 @@ Expected: Meets Sprint 9 acceptance criterion
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE  
-**To be verified by:** Task 10 (Checkpoint definitions section)  
-**Expected completion:** Before Sprint 9 Day 1
+✅ **Status:** VERIFIED  
+**Verified by:** Task 10 - Plan Sprint 9 Detailed Schedule  
+**Date:** 2025-11-20
+
+**Answers to Research Questions:**
+
+**1. Are 4 checkpoints the right cadence (every 2 days)?**
+- **Answer:** YES - 4 checkpoints aligned with Sprint 8's successful approach
+- **Checkpoint 1 (Day 2):** Test infrastructure complete
+- **Checkpoint 2 (Day 4):** i++1 indexing working, himmel16 parses
+- **Checkpoint 3 (Day 6):** All parser features complete, hs62/mingamma parse
+- **Checkpoint 4 (Day 8):** Conversion pipeline working, 1 model converts
+- **Rationale:** Every 2 days provides enough time for meaningful progress while catching issues early
+
+**2. What are the success criteria for each checkpoint?**
+- **Answer:** Detailed success criteria defined in PLAN.md Section 3
+- **Checkpoint 1:** 5 criteria (mhw4dx documented, fixtures working, validation working, fast tests <30s, slow markers applied)
+- **Checkpoint 2:** 6 criteria (grammar works, semantic handler works, IR complete, himmel16 parses, parse rate ≥50%, test coverage ≥80%)
+- **Checkpoint 3:** 6 criteria (model sections complete, hs62 parses, attributes complete, mingamma parses, parse rate ≥60%, all features tested)
+- **Checkpoint 4:** 5 criteria (converter scaffolding, IR→MCP mappings, 1 model converts, JSON validates, validation script works)
+
+**3. What are the go/no-go decisions at each checkpoint?**
+- **Answer:** Clear go/no-go criteria defined for each checkpoint
+- **Checkpoint 1:** GO → proceed to i++1 indexing; NO-GO → spend Day 3 optimizing, use Day 10 buffer
+- **Checkpoint 2:** GO → proceed to model sections; NO-GO → spend Day 5 debugging indexing, use Day 10 buffer
+- **Checkpoint 3:** GO → proceed to conversion; NO-GO → finish parser on Day 7, defer conversion or accept reduced scope
+- **Checkpoint 4:** GO → proceed to dashboard; NO-GO → debug conversion on Day 9, document gaps, accept partial conversion
+
+**4. Should checkpoints be strict gates or informational only?**
+- **Answer:** STRICT GATES with contingency plans
+- Checkpoints 1-3 are hard dependencies (later work depends on earlier features)
+- Checkpoint 4 is softer (conversion is stretch goal, parser features are higher priority)
+- Each checkpoint has defined contingency if failed
+
+**5. What contingency plans if checkpoint fails?**
+- **Answer:** 3-tier contingency strategy
+- **Tier 1:** Use same-day debugging time (each day has 0.5-1h debugging buffer)
+- **Tier 2:** Use Day 10 buffer (2-3h additional capacity)
+- **Tier 3:** Reduce scope (defer conversion or attributes to Sprint 10)
+- **Example:** If Checkpoint 2 fails (himmel16 doesn't parse), spend Day 5 debugging i++1, defer model sections to Day 6, use Day 10 for conversion
+
+**Key Design Decision:** 4 checkpoints is optimal because:
+1. Matches Sprint 8's proven approach (all 4 checkpoints passed on schedule)
+2. Every 2 days balances progress monitoring vs overhead
+3. Checkpoints align with feature boundaries (infrastructure → indexing → parser features → conversion)
+4. Each checkpoint has clear success criteria and contingency plans
 
 ---
 

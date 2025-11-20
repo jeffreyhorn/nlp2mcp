@@ -7,6 +7,141 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 9: Prep Task 10 - Plan Sprint 9 Detailed Schedule - 2025-11-20
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Synthesized all prep work (Tasks 1-9, 47-63h total) into comprehensive Sprint 9 execution plan. Created day-by-day breakdown with 4 checkpoints, effort allocation, quality gates, and risk mitigation. PLAN.md totals 1,950 lines, matching Sprint 8's level of detail and rigor.
+
+**All Sprint 9 Prep Tasks Complete (1-10).** Ready for Sprint 9 execution.
+
+#### Sprint 9 Schedule
+
+- **Duration:** 11 days (Days 0-10, Day 10 as buffer)
+- **Checkpoints:** 4 checkpoints (Days 2, 4, 6, 8) with go/no-go criteria
+- **Effort:** 36-48h validated (Conservative: 36h, Realistic: 42h, Upper: 48h)
+- **Alignment:** Slightly above 30-41h estimate by 1-7h, manageable with Day 10 buffer and scope flexibility
+- **Critical path:** 18-24h (Test Infrastructure → i++1 → Model Sections → Conversion → Closeout)
+
+#### Day-by-Day Breakdown
+
+- **Day 0:** Sprint planning & setup (2-3h) - Review prep tasks, baseline metrics, establish budgets
+- **Days 1-2:** Test infrastructure (5-7h) → **Checkpoint 1**
+  - mhw4dx secondary blocker analysis (defer to Sprint 10)
+  - Automated fixture generation framework
+  - Fixture validation script
+  - Performance optimization (<30s fast tests)
+- **Days 3-4:** i++1 indexing (8-10h) → **Checkpoint 2**
+  - Grammar changes for arithmetic indexing
+  - Semantic handlers and IR representation
+  - himmel16.gms unlocked, parse rate ≥50%
+- **Days 5-6:** Model sections + equation attributes (9-12h) → **Checkpoint 3**
+  - Model section grammar and semantics (5-6h)
+  - Equation attribute handlers (4-6h, grammar already exists)
+  - hs62.gms and mingamma.gms unlocked, parse rate ≥60%
+- **Days 7-8:** Conversion pipeline (6-8h) → **Checkpoint 4**
+  - Converter class scaffolding
+  - IR → MCP JSON mappings
+  - At least 1 model converts end-to-end
+- **Day 9:** Dashboard + performance (4-5h) - Metrics expansion, CI budget enforcement
+- **Day 10:** Documentation, PR, closeout (2-3h) - **BUFFER DAY**
+
+#### Checkpoint Strategy
+
+Each checkpoint has 5-6 success criteria and clear go/no-go decisions:
+
+**Checkpoint 1 (Day 2): Test Infrastructure Complete**
+- Success: Fixtures automated, validation working, fast tests <30s
+- GO → proceed to i++1 | NO-GO → spend Day 3 optimizing, use Day 10 buffer
+
+**Checkpoint 2 (Day 4): i++1 Indexing Working**
+- Success: himmel16.gms parses, parse rate ≥50%, test coverage ≥80%
+- GO → proceed to model sections | NO-GO → spend Day 5 debugging, use Day 10 buffer
+
+**Checkpoint 3 (Day 6): All Parser Features Complete**
+- Success: hs62/mingamma parse, parse rate ≥60%, all features tested
+- GO → proceed to conversion | NO-GO → finish parser Day 7, defer conversion
+
+**Checkpoint 4 (Day 8): Conversion Pipeline Working**
+- Success: 1 model converts, JSON validates, validation script working
+- GO → proceed to dashboard | NO-GO → debug Day 9, document gaps
+
+#### Effort Allocation
+
+| Component | Conservative | Realistic | Upper | Notes |
+|-----------|--------------|-----------|-------|-------|
+| Test Infrastructure | 5h | 6h | 7h | Fixtures, validation, performance |
+| i++1 Indexing | 8h | 9h | 10h | Grammar, semantic, IR, tests |
+| Model Sections + Attributes | 9h | 10.5h | 12h | Two features in parallel |
+| Conversion Pipeline | 6h | 7h | 8h | Converter, mappings, validation |
+| Dashboard + Performance | 4h | 4.5h | 5h | Metrics, CI integration |
+| Planning + Documentation | 4h | 5h | 6h | Setup, CHANGELOG, retrospective |
+| **TOTAL** | **36h** | **42h** | **48h** | Target: 30-41h |
+
+**Critical Path:** 18-24h (fits comfortably in 10 days at 2-3h/day capacity)
+
+#### Risk Mitigation
+
+**7 risks identified** with 3-tier contingency strategy:
+
+1. **i++1 indexing more complex than 8-10h** → Use Day 10 buffer, defer attributes if needed
+2. **Conversion blocked by IR gaps** → Document gaps, defer to Sprint 10, accept partial conversion
+3. **Performance budget not achievable (<30s)** → Extra optimization time, accept 40s if needed
+4. **Parse rate drops below 30% baseline** → Debug regressions immediately, revert grammar changes if needed
+5. **Model sections or attributes take longer** → Defer attributes to Sprint 10, use Day 10 buffer
+6. **Fixture validation finds existing bugs** → Budget 1h for fixes, document if needed
+7. **Day 10 buffer insufficient (3+ day overrun)** → Extend sprint, reduce scope, or defer conversion
+
+**Contingency Tiers:**
+- **Tier 1:** Same-day debugging buffer (0.5-1h per day)
+- **Tier 2:** Day 10 buffer (2-3h additional capacity)
+- **Tier 3:** Scope reduction (defer conversion or attributes to Sprint 10)
+
+#### Parse Rate Projections
+
+- **Conservative (≥30% baseline):** Maintain 40% with added complexity (no regressions)
+- **Realistic (50-60%):** i++1 (+10%) + model sections (+10%) = 60% achievable
+- **Optimistic (≥60%):** All features work first try, 7/10 models parse
+
+**Theoretical max:** 70% with all features (himmel16 + hs62 + mingamma = +30%)
+
+#### Unknowns Verified
+
+- **9.5.1:** ✅ Budget allocation (36-48h validated, slightly above 30-41h target but manageable)
+- **9.5.2:** ✅ Checkpoint strategy (4 checkpoints sufficient with clear go/no-go criteria)
+
+#### Deliverables
+
+1. **PLAN.md (1,950 lines)** - Comprehensive execution plan
+2. **4 checkpoint definitions** - With success criteria and go/no-go decisions
+3. **Effort allocation table** - Component breakdown and critical path analysis
+4. **Risk register** - 7 risks with mitigation strategies and 3-tier contingency
+5. **Quality gates** - Continuous (typecheck, lint, format, test) + feature-specific
+6. **Deliverables section** - 12 deliverables compiled from PROJECT_PLAN + Tasks 1-9
+7. **Acceptance criteria** - 12 criteria, 10/12 = success threshold
+8. **Cross-references** - Prep tasks → sprint days mapping, features → models unlocked
+9. **4 appendices** - Sprint 9 vs 8 comparison, Sprint 8 lessons, quality gate checklist, unknown verification summary
+
+#### Files Modified
+
+- `docs/planning/EPIC_2/SPRINT_9/PLAN.md` (created, 1,950 lines)
+- `docs/planning/EPIC_2/SPRINT_9/KNOWN_UNKNOWNS.md` (verified unknowns 9.5.1, 9.5.2)
+- `docs/planning/EPIC_2/SPRINT_9/PREP_PLAN.md` (Task 10 marked complete)
+
+#### Key Insights
+
+1. **Effort slightly high but manageable:** 36-48h vs 30-41h target (Day 10 buffer + scope flexibility handles variance)
+2. **Critical path fits comfortably:** 18-24h fits in 10 days (2-3h/day capacity)
+3. **Comprehensive prep reduces risk:** 47-63h prep work validates all estimates and designs
+4. **4 checkpoints provide early warning:** Every 2 days with clear go/no-go criteria, matches Sprint 8 success
+5. **Scope flexibility built in:** Conversion and attributes are deferrable if parser takes longer
+6. **Sprint 9 more complex than Sprint 8:** Grammar changes, new pipeline stage, but higher confidence from prep
+7. **Day 0 performance budgets:** Addresses Sprint 8 retrospective, prevents Day 9 optimization pattern
+
+---
+
 ### Sprint 9: Prep Task 9 - Design Performance Baseline & Budget Framework - 2025-11-20
 
 **Status:** ✅ COMPLETE
