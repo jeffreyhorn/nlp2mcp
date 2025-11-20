@@ -10,6 +10,9 @@ from pathlib import Path
 
 import pytest
 
+# Mark all tests in this module as slow (CLI subprocess overhead)
+pytestmark = pytest.mark.slow
+
 
 @pytest.fixture
 def fixtures_dir():
