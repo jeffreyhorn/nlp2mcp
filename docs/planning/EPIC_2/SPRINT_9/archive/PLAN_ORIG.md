@@ -1,49 +1,11 @@
-# Sprint 9 Detailed Plan (FINAL)
+# Sprint 9 Detailed Plan
 
 **Sprint:** Epic 2 - Sprint 9 (Advanced Parser Features & Conversion Pipeline)  
 **Duration:** 11 days (Days 0-10, with Day 10 as BUFFER)  
 **Start Date:** TBD  
 **End Date:** TBD  
-**Version:** v0.9.0-final  
-**Revision Date:** 2025-11-20  
-**Revised By:** Addressing Cody's re-review recommendations (arithmetic corrections)
-
----
-
-## Revision Summary
-
-This final plan addresses all recommendations from Cody's initial review (PLAN_REVIEW.md) and re-review (PLAN_REREVIEW.md):
-
-**Changes from PLAN_REVISED.md (Re-review Round):**
-
-1. **✅ Fixed Effort Table Arithmetic (Re-review Recommendation 1)**
-   - **Issue:** Effort table columns didn't sum to stated totals:
-     - Conservative column summed to 36h (claimed 30h)
-     - Realistic column summed to 43.5h (claimed 35.5h)
-     - Upper column summed to 49h (claimed 41h)
-   - **Fix:** Recomputed all effort allocations to sum exactly to 30h/35.5h/41h:
-     - Reduced Days 1-2 from 6/7.5/9h to 4/5/6.5h
-     - Reduced Days 3-4 from 8/9/10h to 7/8.5/9.5h
-     - Reduced Days 5-6 from 11/13/14h to 10/11.5/13h
-     - Reduced Days 7-8 from 6/7/8h to 5/6/7h
-     - Reduced Day 9 from 2/2.5/3h to 1.5/1.5/1.5h
-     - Reduced Day 10 from 1/2/2h to 0.5/0.5/0.5h
-   - **Verification:** Conservative 2+4+7+10+5+1.5+0.5 = **30h** ✅
-   - **Verification:** Realistic 2.5+5+8.5+11.5+6+1.5+0.5 = **35.5h** ✅
-   - **Verification:** Upper 3+6.5+9.5+13+7+1.5+0.5 = **41h** ✅
-
-2. **✅ Aligned Day Headers with Effort Table (Re-review Recommendation 2)**
-   - Day 9 header: Changed from "4-5 hours" to "1.5 hours"
-   - Day 10 header: Changed from "2-3 hours" to "0.5 hours"
-   - All day-level headers now match effort table exactly
-
-**Changes from PLAN.md (Initial Review Round - PLAN_REVISED.md):**
-
-1. **✅ Expanded Document Length:** 1,236 lines → 1,661 lines (added implementation details, checkpoint decision trees, risk mitigation)
-2. **✅ Fixed Per-Day Estimates:** Day 1 (4-5h → 5-7h), Day 6 (4-6h → 6-8h) to match task lists
-3. **✅ Updated All Sections for Consistency:** Appendix A, executive summary, all effort references aligned
-
-**Result:** Plan now has mathematically correct effort totals that sum exactly to 30-41h, with all headers and sections internally consistent.
+**Version:** v0.9.0  
+**Date:** 2025-11-20  
 
 ---
 
@@ -73,16 +35,10 @@ Sprint 9 advances the NLP-to-MCP transformation tool with **advanced indexing fe
 | 6 | **Test Performance** | 52.39s fast tests (74% over budget) | <30s fast tests (within budget) | `make test` timing |
 
 **Effort Estimates:**
-- **Conservative:** 30h (minimum viable scope, within 30-41h target ✅)
-- **Realistic:** 35.5h average (mid-range, balanced scope)
-- **Upper bound:** 41h (maximum budget, requires Day 10 buffer)
+- **Conservative:** 34h (within 30-41h target ✅)
+- **Realistic:** 39h average (mid-range)
+- **Upper bound:** 44h (requires Day 10 buffer + scope flexibility)
 - **Day 10 is explicitly designated as BUFFER** to absorb overruns without sprint failure
-
-**Effort Note:**
-- Conservative estimate: 30h (descoped optional dashboard metrics, streamlined Day 9-10)
-- Realistic estimate: 35.5h (core features + essential polish)
-- Upper bound: 41h (full scope if all goes smoothly, uses Day 10 buffer)
-- **All estimates now within mandated 30-41h budget ✅**
 
 **Parse Rate Projections:**
 - **Conservative (30% baseline):** Maintain 40% with added complexity (no regressions)
@@ -256,7 +212,7 @@ Sprint 9 advances the NLP-to-MCP transformation tool with **advanced indexing fe
 
 ---
 
-### Day 1: Test Infrastructure - Part 1 (5-7 hours)
+### Day 1: Test Infrastructure - Part 1 (4-5 hours)
 
 **Objectives:**
 1. Document mhw4dx secondary blockers (defer to Sprint 10)
@@ -292,61 +248,7 @@ Sprint 9 advances the NLP-to-MCP transformation tool with **advanced indexing fe
 - Task 2 (mhw4dx research) complete
 - Task 6 (fixture framework design) complete
 
-**Total Effort:** 5-7h
-
-**Effort Note:** Tasks sum to 5-7h (2-3h analysis + 0.5h docs + 1-2h implementation + 0.5h tests + 0.5h profiling)
-
-**Implementation Details:**
-
-*mhw4dx Secondary Blocker Analysis (2-3h):*
-- Review mhw4dx.gms parse failures from Task 2 research
-- Identify blocking features: likely includes advanced model types, special indexing, or constraint forms
-- For each blocker, estimate implementation effort (grammar + semantic + IR + tests)
-- Compare total effort against Sprint 9 budget (30-41h)
-- **Expected Finding:** mhw4dx requires 12-17h effort (too large for Sprint 9)
-- **Decision Framework:**
-  - If effort <8h: Consider including in Sprint 9
-  - If effort 8-12h: Defer to Sprint 10, document as "next priority"
-  - If effort >12h: Defer to Sprint 10, mark as "complex feature requiring dedicated sprint"
-
-*Automated Fixture Generation Framework (1-2h):*
-- Implement `generate_fixtures.py` based on Task 6 design
-- Key functions:
-  - `create_variable_fixture(name, type, bounds)` → IR VariableDeclaration node
-  - `create_parameter_fixture(name, value)` → IR ParameterDeclaration node
-  - `create_equation_fixture(name, expr)` → IR EquationDeclaration node
-  - `create_model_fixture(variables, parameters, equations)` → Complete IR tree
-- Use template-based generation for common patterns
-- Support parameterization (e.g., number of variables, equation complexity)
-- Example usage:
-  ```python
-  # Instead of manually writing 50 lines of IR fixture code:
-  fixture = generate_model_fixture(
-      variables=[("x", "positive"), ("y", "free")],
-      parameters=[("a", 2.5), ("b", 3.0)],
-      equations=[("obj", "a*x + b*y")]
-  )
-  ```
-
-*Slow Test Identification (30min):*
-- Run `pytest --durations=20` to identify slowest tests
-- Expected findings from Task 9:
-  - Full GAMSLib ingest: ~15-20s per model (currently marked slow ✅)
-  - Complex IR validation tests: ~2-3s each
-  - Dashboard generation tests: ~1-2s each
-- Create "slow test candidates" list for Day 2 marker application
-- Target: Identify ≥10 tests >1s that can be marked slow
-
-**Technical Notes:**
-- Fixture generator uses Python AST to create type-safe IR nodes
-- Validation happens at generation time (fail fast on invalid fixtures)
-- Generated fixtures are deterministic (same inputs → same IR)
-
-**Exit Criteria for Day 1:**
-- mhw4dx analysis complete with clear defer decision
-- Fixture generator creates valid IR for ≥3 fixture types (variables, parameters, equations)
-- Slow test list has ≥10 candidates
-- All new code passes quality gates
+**Total Effort:** 4-5h
 
 ---
 
@@ -424,78 +326,6 @@ Sprint 9 advances the NLP-to-MCP transformation tool with **advanced indexing fe
 - Task 3 (i++1 design) complete
 
 **Total Effort:** 4-5h
-
-**Implementation Details:**
-
-*Grammar Changes for Arithmetic Indexing (1-1.5h):*
-- Update `src/grammar/gams.lark` based on Task 3 design
-- Current grammar (simplified):
-  ```
-  index_expression: IDENTIFIER
-  ```
-- New grammar (arithmetic indexing support):
-  ```
-  index_expression: IDENTIFIER
-                  | IDENTIFIER "++" NUMBER
-                  | IDENTIFIER "--" NUMBER
-                  | IDENTIFIER "+" IDENTIFIER
-                  | IDENTIFIER "-" IDENTIFIER
-                  | IDENTIFIER "+" NUMBER
-                  | IDENTIFIER "-" NUMBER
-  ```
-- Key challenges:
-  - Avoid ambiguity with increment operators (++ in other contexts)
-  - Ensure left-to-right associativity for multi-term expressions (i+j+k)
-  - Handle precedence correctly (i++1 should parse as i + (+1), not (i++) + 1)
-- Validation strategy:
-  - Parse test cases: "x(i)", "x(i++1)", "x(i--2)", "x(i+j)", "x(i+j+k)"
-  - Verify parse trees match expected structure
-
-*Semantic Handler Implementation (2-2.5h):*
-- Update `src/ir/semantic_handler.py` to handle new index_expression grammar
-- Create `IndexExpression` IR node:
-  ```python
-  @dataclass
-  class IndexExpression:
-      base: str  # Base index variable (e.g., "i")
-      offset: Optional[Expression]  # Arithmetic offset (e.g., BinaryOp("+", 1))
-  ```
-- Semantic handler logic:
-  - Case 1: `IDENTIFIER` → IndexExpression(base=id, offset=None)
-  - Case 2: `IDENTIFIER "++" NUMBER` → IndexExpression(base=id, offset=BinaryOp("+", number))
-  - Case 3: `IDENTIFIER "--" NUMBER` → IndexExpression(base=id, offset=BinaryOp("-", number))
-  - Case 4: `IDENTIFIER "+" IDENTIFIER` → IndexExpression(base=id1, offset=VariableRef(id2))
-  - Case 5: Complex expressions (i+j+k) → Recursive expression tree
-
-*IR Node Implementation (1h):*
-- Update `src/ir/nodes.py` with IndexExpression class
-- Add validation:
-  - Base must be valid identifier
-  - Offset must be arithmetic expression or None
-- Add IR traversal support (visitor pattern)
-- Add string representation for debugging
-
-*Unit Tests (1h):*
-- Test basic indexing: `x(i)` → IndexExpression("i", None)
-- Test i++1: `x(i++1)` → IndexExpression("i", BinaryOp("+", Literal(1)))
-- Test i--5: `x(i--5)` → IndexExpression("i", BinaryOp("-", Literal(5)))
-- Test i+j: `x(i+j)` → IndexExpression("i", VariableRef("j"))
-- Test complex: `x(i+j+k)` → IndexExpression("i", BinaryOp("+", VariableRef("j"), VariableRef("k")))
-- Test edge cases:
-  - Negative offsets: i++(-3) should work
-  - Large offsets: i++100
-  - Multiple indices: x(i++1, j--2)
-
-**Technical Notes:**
-- Indexing semantic handler reuses existing expression handling logic
-- IR traversal needed for later conversion pipeline (KKT transformation uses index expressions)
-- Performance: Indexing is hot path in parse (every variable/equation uses it), keep semantic handler fast
-
-**Exit Criteria for Day 3:**
-- Grammar parses all 5 arithmetic indexing patterns
-- Semantic handler creates correct IndexExpression nodes
-- IR validation passes for all node types
-- Unit tests pass with ≥80% coverage
 
 ---
 
@@ -581,7 +411,7 @@ Sprint 9 advances the NLP-to-MCP transformation tool with **advanced indexing fe
 
 ---
 
-### Day 6: Equation Attributes (6-8 hours) → CHECKPOINT 3
+### Day 6: Equation Attributes (4-6 hours) → CHECKPOINT 3
 
 **Objectives:**
 1. Implement semantic handlers for equation attributes (.marginal, .l, .up, .lo)
@@ -620,9 +450,7 @@ Sprint 9 advances the NLP-to-MCP transformation tool with **advanced indexing fe
 - Task 8 (equation attributes design) complete
 - Grammar already supports attributes (no grammar work)
 
-**Total Effort:** 6-8h
-
-**Effort Note:** Tasks sum to 6-8h (2-3h semantic handler + 1h IR + 1h validation + 0.5-1h debugging + 1-1.5h tests + 0.5h dashboard)
+**Total Effort:** 4-6h
 
 **Checkpoint 3 Decision:**
 - **GO:** All parser features working, parse rate ≥60% → Proceed to Day 7
@@ -709,51 +537,62 @@ Sprint 9 advances the NLP-to-MCP transformation tool with **advanced indexing fe
 
 ---
 
-### Day 9: Dashboard & Performance Instrumentation (1.5 hours)
+### Day 9: Dashboard & Performance Instrumentation (4-5 hours)
 
 **Objectives:**
-1. Add essential Sprint 9 metrics to dashboard (parse rate, conversion count)
-2. Implement CI performance budget enforcement (minimal)
+1. Expand dashboard with Sprint 9 metrics
+2. Implement performance budget enforcement in CI
+3. Document all Sprint 9 achievements
 
 **Tasks:**
 
 | Task | Effort | Owner | Dependencies |
 |------|--------|-------|--------------|
-| Add parse rate to dashboard (with i++1/model sections breakdown) | 45min | Team | All parser features complete |
-| Add conversion success count to dashboard | 30min | Team | Conversion pipeline working |
-| Implement CI performance budget check (fail if >30s) | 15min | Team | Task 9 design complete |
+| Add indexing metrics to dashboard | 1-1.5h | Team | i++1 feature complete |
+| Add model section metrics to dashboard | 1h | Team | Model sections complete |
+| Add conversion metrics to dashboard | 1-1.5h | Team | Conversion pipeline working |
+| Implement CI performance budget checks | 1-2h | Team | Task 9 design complete |
+| Update performance documentation | 30min | Team | Budgets enforced |
 
 **Quality Gates:**
-- ✅ Dashboard shows updated parse rate (≥50%)
-- ✅ Dashboard shows conversion count (≥1 model)
+- ✅ Dashboard shows i++1 indexing statistics
+- ✅ Dashboard shows model section statistics
+- ✅ Dashboard shows conversion success rate
 - ✅ CI fails if fast tests >30s
+- ✅ CI warns if fast tests >27s (90% budget)
 - ✅ All quality checks pass: `make typecheck && make lint && make format && make test`
 
 **Deliverables:**
-- Updated `scripts/dashboard.py` (parse rate + conversion metrics only)
-- Updated `.github/workflows/performance-check.yml` (basic budget check)
+- Updated `scripts/dashboard.py` (Sprint 9 metrics)
+- Updated `.github/workflows/performance-check.yml` (budget enforcement)
+- `docs/performance/BUDGET_ENFORCEMENT.md` (documentation)
 
 **Dependencies:**
 - Checkpoint 4 passed
 - All Sprint 9 features complete
+- Task 9 (performance framework) complete
 
-**Total Effort:** 1.5h
-
-**Scope Note:** Descoped detailed indexing/model section statistics, extensive budget tiers, and performance documentation to meet 1.5h budget. Focus on essential metrics only.
+**Total Effort:** 4-5h
 
 ---
 
-### Day 10: Documentation, PR, & Sprint Closeout (0.5 hours) - BUFFER DAY
+### Day 10: Documentation, PR, & Sprint Closeout (2-3 hours) - BUFFER DAY
 
 **Objectives:**
-1. Create Sprint 9 PR
-2. **Primary purpose: Absorb any overruns from Days 1-9**
+1. Complete all documentation updates
+2. Create Sprint 9 PR with comprehensive summary
+3. Run final quality checks and sprint retrospective
+4. **Absorb any overruns from Days 1-9**
 
 **Tasks:**
 
 | Task | Effort | Owner | Dependencies |
 |------|--------|-------|--------------|
-| Create Sprint 9 PR with brief summary | 30min | Team | All commits ready |
+| Update CHANGELOG.md with Sprint 9 summary | 1h | Team | All features complete |
+| Write Sprint 9 retrospective notes | 30min | Team | Sprint complete |
+| Create Sprint 9 PR | 30min | Team | All commits ready |
+| Final quality gate validation | 30min | Team | PR created |
+| Sprint closeout meeting | 30min | Team | - |
 
 **Quality Gates:**
 - ✅ All Sprint 9 acceptance criteria met (see Deliverables section)
@@ -765,21 +604,19 @@ Sprint 9 advances the NLP-to-MCP transformation tool with **advanced indexing fe
 - ✅ PR ready for review
 
 **Deliverables:**
+- Updated `CHANGELOG.md` (Sprint 9 summary)
 - Sprint 9 PR created
+- Retrospective notes in `docs/planning/EPIC_2/SPRINT_9/RETROSPECTIVE.md`
 
 **Dependencies:**
 - Days 1-9 complete (or absorb overruns)
 
-**Total Effort:** 0.5h (if no overruns; expands to absorb overruns up to 10h)
+**Total Effort:** 2-3h (or more if absorbing overruns)
 
 **Buffer Usage:**
-- **Scenario 1 (No Overruns):** Minimal 0.5h - create PR and close sprint
-- **Scenario 2 (1-2h Overrun):** Day 10 extends to 1.5-2.5h total (includes 0.5h PR + overrun work)
-- **Scenario 3 (3-5h Overrun):** Day 10 extends to 3.5-5.5h total (buffer absorbs, sprint completes)
-- **Scenario 4 (6-10h Overrun):** Day 10 extends to full day (sprint at risk, may need to reduce scope or extend to Day 11)
-- **Scenario 5 (>10h Overrun):** Sprint extends to Days 11-12 OR scope reduction required (defer conversion or attributes)
-
-**Scope Note:** Descoped CHANGELOG updates and retrospective notes to meet 0.5h base budget. Day 10 is explicitly a buffer day - actual effort depends on Days 1-9 execution.
+- **Scenario 1:** All days on schedule → Use Day 10 for polish and documentation
+- **Scenario 2:** 1-2 day overrun → Day 10 absorbs, sprint still completes on time
+- **Scenario 3:** 3+ day overrun → Reduce scope (defer conversion or attributes), still deliver core features
 
 ---
 
@@ -804,72 +641,6 @@ Sprint 9 has **4 checkpoints** with clear go/no-go criteria. Each checkpoint val
 
 **Risk if Skipped:** Slow tests bog down development, fixture bugs waste debugging time.
 
-**Detailed Decision Tree:**
-
-**Scenario 1: All 5 criteria met (PASS)**
-- **Action:** Celebrate! Proceed to Day 3 as planned
-- **Communication:** Update sprint board, mark Checkpoint 1 complete
-- **Risk Assessment:** Low risk for remainder of sprint
-- **Buffer Status:** Day 10 buffer remains available (2-3h capacity)
-
-**Scenario 2: Performance budget not achieved (fast tests still >30s)**
-- **Root Cause Analysis:**
-  - Re-run slow test identification: `pytest --durations=50`
-  - Check if slow markers were applied correctly: `pytest -m "not slow" --durations=10`
-  - Identify if slowness is from test logic or test data
-- **Immediate Actions:**
-  1. Apply additional slow markers to tests >1s
-  2. Investigate tests between 0.5-1s (candidates for optimization)
-  3. Check for redundant test setup/teardown
-  4. Profile slowest test with `py-spy` or `cProfile`
-- **Recovery Plan:**
-  - Spend Day 3 morning (2-3h) on performance optimization
-  - If budget achieved by Day 3 noon: Resume i++1 work on Day 3 afternoon
-  - If budget not achieved by Day 3 noon: Escalate decision
-    - **Option A:** Accept 35-40s budget (still better than 52s baseline)
-    - **Option B:** Use full Day 3 + part of Day 10 buffer for optimization
-- **Impact:**
-  - Delays i++1 indexing by 0.5-1 day
-  - Day 10 buffer absorbs delay
-  - Sprint still achievable
-
-**Scenario 3: Fixture validation script finds critical bugs**
-- **Definition:** "Critical" = bugs that block existing tests or cause incorrect IR generation
-- **Immediate Actions:**
-  1. Triage bugs: How many existing tests are affected?
-  2. Fix P0 bugs immediately (blocking existing tests)
-  3. Document P1/P2 bugs for later fixing (non-blocking)
-- **Recovery Plan:**
-  - Allocate 1-2h on Day 3 for P0 bug fixes
-  - Accept reduced fixture generator scope if needed (manual fallback for complex fixtures)
-- **Impact:**
-  - Minimal delay (1-2h absorbed by Day 3-4 buffer in critical path)
-  - Quality improvement (better to find bugs now than later)
-
-**Scenario 4: Fixture generator doesn't work for 1+ fixture types**
-- **Root Cause Analysis:**
-  - Which fixture types are failing? (variables, parameters, equations, models)
-  - Is failure in generation logic or IR construction?
-- **Recovery Plan:**
-  - **If 2/3 types work:** Proceed with working types, manual fallback for failing type
-  - **If 1/3 types work:** Spend Day 3 morning fixing generator
-  - **If 0/3 types work:** Revert to manual fixtures, document generator issues for Sprint 10
-- **Impact:**
-  - Reduces automation benefits (still need some manual fixtures)
-  - Does not block sprint (manual fixtures still work)
-
-**Scenario 5: mhw4dx analysis incomplete**
-- **Root Cause:** Analysis took >3h, couldn't finish on Day 1
-- **Recovery Plan:**
-  - Finish analysis on Day 2 morning (use 1h from Day 2 buffer)
-  - Decision deadline: Day 2 noon (must decide defer/include by Checkpoint 1)
-- **Impact:** Minimal (1h delay absorbed by Day 2 slack)
-
-**Checkpoint 1 Metrics:**
-- **Target:** All 5 criteria met
-- **Acceptable:** 4/5 criteria met (only performance budget exception allowed)
-- **Failure:** <4/5 criteria met → Requires re-planning
-
 ---
 
 ### Checkpoint 2: i++1 Indexing Working (Day 4 End)
@@ -889,110 +660,6 @@ Sprint 9 has **4 checkpoints** with clear go/no-go criteria. Each checkpoint val
 **Rationale:** i++1 indexing is foundational for himmel16 and other models. Must work before adding more features.
 
 **Risk if Skipped:** Compound bugs between indexing and model sections, harder debugging.
-
-**Detailed Decision Tree:**
-
-**Scenario 1: All 6 criteria met, himmel16 parses successfully (PASS)**
-- **Action:** Proceed to Day 5 (model sections) as planned
-- **Validation:**
-  - Verify himmel16 IR is structurally correct (spot-check key equations)
-  - Ensure no regressions in existing 4 models (mhw4d, rbrock, mathopt1, trig)
-  - Confirm parse rate now 50% (5/10 models)
-- **Communication:** Checkpoint 2 complete, update dashboard with new parse rate
-- **Buffer Status:** Day 10 buffer still available (no overruns yet)
-
-**Scenario 2: Grammar works, but himmel16 fails to parse (semantic/IR issue)**
-- **Root Cause Analysis:**
-  - Parse himmel16 with verbose logging: identify failure point
-  - Check parse tree: Is grammar capturing i++1 correctly?
-  - Check semantic handler: Is IndexExpression being created?
-  - Check IR: Are nodes structurally valid?
-- **Common Failure Modes:**
-  1. **Semantic handler not called:** Grammar rule not connected to handler
-     - **Fix:** Add handler hook in semantic_handler.py (30min-1h)
-  2. **IR validation error:** IndexExpression missing required field
-     - **Fix:** Update IR node definition (30min)
-  3. **Expression type mismatch:** Offset is wrong type (e.g., string instead of Expression)
-     - **Fix:** Update semantic handler type conversion (1-2h)
-  4. **Indexing in unexpected context:** himmel16 uses i++1 in context we didn't test
-     - **Fix:** Extend grammar to cover new context (2-3h)
-- **Recovery Plan:**
-  - Allocate Day 5 morning (2-3h) for debugging
-  - If fixed by Day 5 noon: Proceed with model sections on Day 5 afternoon
-  - If not fixed by Day 5 noon: Use full Day 5 for debugging
-    - Defer model sections to Day 6
-    - Compress model sections + attributes into Days 6-7 (tight but feasible)
-    - Day 10 buffer absorbs 0.5-1 day delay
-- **Impact:**
-  - Delays model sections by 0.5-1 day
-  - May compress Day 6-7 schedule
-  - Sprint still achievable with Day 10 buffer
-
-**Scenario 3: Grammar doesn't parse i++1 correctly (grammar issue)**
-- **Root Cause Analysis:**
-  - Test grammar in isolation: Create minimal test case with just "x(i++1)"
-  - Check for ambiguity: Does grammar create multiple parse trees?
-  - Check precedence: Is i++1 parsing as (i++) + 1 instead of i + (+1)?
-- **Common Failure Modes:**
-  1. **Ambiguity with increment operator:** ++ conflicts with post-increment
-     - **Fix:** Use different token (e.g., "PLUS PLUS" instead of "++") or context-sensitive parsing
-     - **Effort:** 2-3h (grammar refactor + all tests)
-  2. **Precedence issue:** i++1 parsing incorrectly
-     - **Fix:** Adjust grammar rules, add explicit precedence
-     - **Effort:** 1-2h
-  3. **Tokenization issue:** Lexer not creating ++ token
-     - **Fix:** Update lexer rules in gams.lark
-     - **Effort:** 1h
-- **Recovery Plan:**
-  - If grammar fix <2h: Fix on Day 5 morning, resume model sections Day 5 afternoon
-  - If grammar fix 2-4h: Use full Day 5, defer model sections to Day 6
-  - If grammar fix >4h: **Escalate** - consider deferring i++1 to Sprint 10
-    - **Fallback:** Reduce scope to simple i+1 indexing only (no ++/--)
-    - **Impact:** himmel16 may not parse, parse rate stays at 40%
-- **Impact:**
-  - Critical path delay: 0.5-1 day
-  - Worst case: Defer i++1 to Sprint 10, focus on model sections instead
-
-**Scenario 4: Parse rate doesn't reach 50% (himmel16 not the only issue)**
-- **Root Cause Analysis:**
-  - Did existing models regress? (Check mhw4d, rbrock, mathopt1, trig)
-  - Is himmel16 parsing but failing validation?
-- **If Regression:**
-  - **Immediate Action:** Halt Day 4 work, debug regression
-  - **Priority:** Fix regressions before proceeding (non-negotiable)
-  - **Recovery:** Use Day 5 for regression fixes, defer model sections
-- **If No Regression (himmel16 still fails):**
-  - See Scenario 2/3 above
-- **Impact:** Sprint at risk if regressions found (quality gate failure)
-
-**Scenario 5: Test coverage <80% for indexing**
-- **Root Cause Analysis:**
-  - Which code paths are not covered?
-  - Are edge cases missing (i++100, i+j+k, negative offsets)?
-- **Recovery Plan:**
-  - Spend Day 5 morning (1-2h) writing additional tests
-  - Prioritize critical paths (common indexing patterns in real models)
-  - Accept 70-75% coverage if exhaustive testing not feasible
-- **Impact:** Low risk (test coverage nice-to-have, not blocking)
-
-**Scenario 6: Days 3-4 overrun significantly (>6h total effort)**
-- **Root Cause Analysis:**
-  - Did grammar changes take longer than expected? (planned 1-1.5h)
-  - Did semantic handler have unexpected complexity? (planned 2-2.5h)
-  - Was debugging time underestimated?
-- **Recovery Plan:**
-  - **If 1-2h overrun:** Absorb with Day 5-6 buffer
-  - **If 3-4h overrun:** Use Day 10 buffer, compress later days
-  - **If >4h overrun:** **Escalate** - consider reducing scope
-    - **Option A:** Defer equation attributes to Sprint 10
-    - **Option B:** Defer conversion to Sprint 10
-    - **Option C:** Extend sprint to Day 11-12
-- **Impact:** Buffer consumption, may require scope reduction
-
-**Checkpoint 2 Metrics:**
-- **Target:** All 6 criteria met
-- **Acceptable:** 5/6 criteria met (test coverage exception allowed if 70-75%)
-- **Failure:** himmel16 doesn't parse OR regressions found → Requires debugging/recovery
 
 ---
 
@@ -1046,43 +713,23 @@ Sprint 9 has **4 checkpoints** with clear go/no-go criteria. Each checkpoint val
 | Component | Conservative | Realistic | Upper Bound | Notes |
 |-----------|--------------|-----------|-------------|-------|
 | **Day 0: Sprint Planning** | 2h | 2.5h | 3h | Review, baseline, setup |
-| **Days 1-2: Test Infrastructure** | 4h | 5h | 6.5h | Fixtures, validation, performance (streamlined) |
-| **Days 3-4: i++1 Indexing** | 7h | 8.5h | 9.5h | Grammar, semantic, IR, tests (focused scope) |
-| **Days 5-6: Model Sections + Attributes** | 10h | 11.5h | 13h | Model sections + Attributes (efficient execution) |
-| **Days 7-8: Conversion Pipeline** | 5h | 6h | 7h | Converter, mappings, validation (core only) |
-| **Day 9: Dashboard + Performance** | 1.5h | 1.5h | 1.5h | Essential metrics only (minimal scope) |
-| **Day 10: Documentation + Closeout** | 0.5h | 0.5h | 0.5h | Minimal closeout (PR + essential docs) |
-| **TOTAL** | **30h** ✅ | **35.5h** ✅ | **41h** ✅ | Arithmetic verified: columns sum correctly |
+| **Days 1-2: Test Infrastructure** | 5h | 6h | 7h | Fixtures, validation, performance |
+| **Days 3-4: i++1 Indexing** | 8h | 9h | 10h | Grammar, semantic, IR, tests |
+| **Days 5-6: Model Sections + Attributes** | 9h | 10.5h | 12h | Two features in parallel |
+| **Days 7-8: Conversion Pipeline** | 6h | 7h | 8h | Converter, mappings, validation |
+| **Day 9: Dashboard + Performance** | 4h | 4.5h | 5h | Metrics, CI integration |
+| **Day 10: Documentation + Closeout** | 2h | 2.5h | 3h | CHANGELOG, PR, retrospective |
+| **TOTAL** | **36h** | **42h** | **48h** | Target: 30-41h |
 
 **Effort Analysis:**
-- **Conservative (30h):** Minimum viable scope, streamlined execution ✅
-  - Descoped: Detailed dashboard metrics, extensive documentation, Day 10 polish
-  - Focus: Core parser features (i++1, model sections, attributes) + basic conversion validation
-  - Assumes: Efficient execution, minimal debugging, no major blockers
-- **Realistic (35.5h):** Balanced scope, mid-range effort ✅
-  - Includes: All core features + essential dashboard updates + minimal documentation
-  - Assumes: Steady execution, some debugging (1-2h per checkpoint)
-  - Day 10 buffer: Used for minor overruns (1-2h)
-- **Upper Bound (41h):** Maximum budget, uses full Day 10 buffer ✅
-  - Includes: All planned features + debugging + Day 10 buffer
-  - Assumes: Some complexity/debugging, Day 10 absorbs 3-5h overruns
-  - Still within 30-41h mandate
+- **Conservative (36h):** Exceeds 30-41h target by 1h, but within acceptable margin
+- **Realistic (42h):** Exceeds target by 1h, requires Day 10 buffer + efficient execution
+- **Upper Bound (48h):** Requires Day 10 buffer + scope reduction (defer conversion or attributes)
 
-**Key Changes from PLAN_REVISED.md (Arithmetic Corrections):**
-- Days 1-2: Reduced from 6/7.5/9h to 4/5/6.5h (streamlined test infrastructure scope)
-- Days 3-4: Reduced from 8/9/10h to 7/8.5/9.5h (focused i++1 implementation)
-- Days 5-6: Reduced from 11/13/14h to 10/11.5/13h (efficient parser feature execution)
-- Days 7-8: Reduced from 6/7/8h to 5/6/7h (core conversion pipeline only)
-- Day 9: Reduced from 2/2.5/3h to 1.5/1.5/1.5h (essential metrics only)
-- Day 10: Reduced from 1/2/2h to 0.5/0.5/0.5h (minimal closeout, true buffer)
-- **Result:** Columns now sum exactly to 30h/35.5h/41h (arithmetic verified) ✅
-
-**Conclusion:** Sprint 9 effort estimates now have **mathematically correct 30-41h totals**:
-1. Conservative column sums to exactly 30h (2+4+7+10+5+1.5+0.5)
-2. Realistic column sums to exactly 35.5h (2.5+5+8.5+11.5+6+1.5+0.5)
-3. Upper column sums to exactly 41h (3+6.5+9.5+13+7+1.5+0.5)
-4. All day headers and effort table aligned
-5. Day 10 explicitly designated as minimal buffer (0.5h base, expands as needed)
+**Conclusion:** Sprint 9 effort estimates are **tight but achievable** with:
+1. Efficient execution (minimize debugging)
+2. Day 10 buffer usage (2-3h available)
+3. Scope flexibility (defer conversion if parser takes longer)
 
 ### 4.2 Effort by Feature Area
 
@@ -1134,56 +781,6 @@ Sprint 9 has **7 identified risks** with mitigation strategies and contingency p
 - Accept 50% parse rate instead of 60% if model sections also delayed
 
 **Trigger:** Day 4 checkpoint fails (himmel16 doesn't parse)
-
-**Detailed Mitigation Strategy:**
-
-*Pre-Sprint Preparation (Already Complete):*
-1. **Grammar Prototype (Task 3):** Validated that i++1 pattern can be expressed in Lark grammar
-   - Tested minimal grammar: `index: ID "++" NUMBER` works
-   - Identified potential ambiguity with increment operators (resolved in design)
-2. **Semantic Handler Design:** Documented exact IR structure needed (IndexExpression node)
-3. **Test Cases Identified:** Listed 15 test cases covering edge cases (i++1, i--5, i+j+k, etc.)
-
-*During Sprint (Days 3-4):*
-1. **Incremental Testing:** Test grammar changes immediately after each modification
-   - Don't wait until Day 4 to test himmel16
-   - Test with synthetic examples on Day 3: "x(i++1)", "x(i--2)", "x(i+j)"
-2. **Early Warning System:** Run existing 4 models after each grammar change
-   - Catch regressions immediately (mhw4d, rbrock, mathopt1, trig must still parse)
-3. **Paired Programming:** Complex grammar changes benefit from two sets of eyes
-4. **Checkpoint Review:** Mid-Day 3 checkpoint: Is grammar working for synthetic examples?
-
-*Contingency Execution (If 2-4h Overrun):*
-1. **Day 5 Morning (2-3h):** Continue i++1 debugging
-2. **Day 5 Afternoon:** Start model sections (compressed schedule)
-3. **Day 6:** Complete model sections + attributes (compressed)
-4. **Day 10 Buffer:** Absorbs 2-3h overrun
-
-*Contingency Execution (If >4h Overrun):*
-1. **Escalation Point:** Day 5 noon - if i++1 still not working, escalate decision
-2. **Option A - Reduce Scope:** Defer i++1 to Sprint 10, focus on model sections
-   - **Pros:** Model sections unlock hs62 (+10% parse rate), simpler implementation
-   - **Cons:** himmel16 remains unparseable, lose +10% parse rate from i++1
-3. **Option B - Extend Sprint:** Use Days 11-12 for i++1 completion
-   - **Pros:** Maintain full scope, deliver all features
-   - **Cons:** Sprint timeline extends, delays Sprint 10 start
-4. **Option C - Simplified i++1:** Implement only i+1, i-1 (no ++/-- syntax)
-   - **Pros:** Reduced grammar complexity, may unlock himmel16 if it uses i+1 not i++1
-   - **Cons:** Partial feature, may not unlock himmel16 if it specifically needs ++
-
-*Example Recovery Scenario:*
-```
-Day 3: Grammar changes complete (1.5h), but semantic handler complex (4h instead of 2.5h)
-Day 4: himmel16 still failing due to IR validation bug (2h debugging)
-Total: 7.5h actual vs 4-5h planned = 2.5-3.5h overrun
-
-Recovery:
-- Use Day 5 morning (2h) to finish debugging
-- Start model sections Day 5 afternoon (3h)
-- Complete model sections Day 6 (remaining 2-3h)
-- Attributes Day 6 afternoon (6h compressed to 4h - focus on .marginal only)
-- Result: Checkpoint 3 achieved by end of Day 6, 0.5 day delay absorbed
-```
 
 ---
 
@@ -1525,10 +1122,7 @@ Day 10 (Documentation + Closeout)
 | Aspect | Sprint 8 | Sprint 9 | Change |
 |--------|----------|----------|--------|
 | **Duration** | 11 days (Days 0-10) | 11 days (Days 0-10) | Same |
-| **Effort (Execution)** | 30-41h (average 35.5h) | 30-41h (average 35.5h) | Same (revised) ✅ |
-| **Effort (Conservative)** | 30h | 30h | Same |
-| **Effort (Realistic)** | 35.5h | 35.5h | Same |
-| **Effort (Upper Bound)** | 41h | 41h | Same |
+| **Effort** | 30-41h (average 35.5h) | 36-48h (average 42h) | +18% effort |
 | **Parse Rate Target** | 40% (4/10) | 50-60% (5-6/10) | +25-50% improvement |
 | **Grammar Changes** | None (only semantic) | Yes (i++1 indexing) | Higher risk |
 | **New Pipeline Stage** | No | Yes (conversion) | New infrastructure |
@@ -1538,26 +1132,7 @@ Day 10 (Documentation + Closeout)
 | **Complexity** | Medium | High | More complex |
 | **Risk Level** | Low | Medium | Higher risk |
 
-**Key Insight:** Sprint 9 maintains the same 30-41h effort budget as Sprint 8, but with higher complexity (grammar changes + conversion pipeline). This was achieved by:
-1. **Descoping optional work:** Reduced Day 9-10 scope (dashboard metrics, extensive polish)
-2. **Accurate task estimates:** Increased Day 1 and Day 6 to match actual task complexity
-3. **Comprehensive prep work:** 47-63h prep (vs Sprint 8's ~30h) reduces sprint risk
-4. **Day 10 buffer:** Explicitly designated for overrun absorption
-
-**Effort Reconciliation Notes:**
-- Original PLAN.md: 36-48h (exceeded 30-41h mandate by 6-7h)
-- PLAN_REVISED.md: Claimed 30-41h but arithmetic was wrong (table summed to 36/43.5/49h)
-- PLAN_FINAL.md: **Arithmetically correct 30-41h** by:
-  - **Effort Table Corrections (Re-review):**
-    - Days 1-2: Reduced 6/7.5/9h → 4/5/6.5h (streamlined test infrastructure)
-    - Days 3-4: Reduced 8/9/10h → 7/8.5/9.5h (focused i++1 scope)
-    - Days 5-6: Reduced 11/13/14h → 10/11.5/13h (efficient execution)
-    - Days 7-8: Reduced 6/7/8h → 5/6/7h (core conversion only)
-    - Day 9: Reduced 2/2.5/3h → 1.5/1.5/1.5h (essential metrics only)
-    - Day 10: Reduced 1/2/2h → 0.5/0.5/0.5h (minimal closeout, true buffer)
-  - **Verification:** Conservative 2+4+7+10+5+1.5+0.5 = **30h** ✅
-  - **Verification:** Realistic 2.5+5+8.5+11.5+6+1.5+0.5 = **35.5h** ✅
-  - **Verification:** Upper 3+6.5+9.5+13+7+1.5+0.5 = **41h** ✅
+**Key Insight:** Sprint 9 is more complex than Sprint 8 due to grammar changes and new conversion pipeline. However, comprehensive prep work (47-63h vs Sprint 8's ~30h) provides higher confidence.
 
 ### Appendix B: Lessons from Sprint 8
 
@@ -1637,7 +1212,7 @@ All 27 unknowns identified in Task 1 have been verified across Tasks 2-9:
 | 9.3.2 | Fixture Validation | Task 7 | 2.5h validation script |
 | 9.4.1 | Performance Metrics | Task 9 | 3 critical metrics selected |
 | 9.4.2 | Budget Enforcement | Task 9 | Tiered enforcement strategy |
-| 9.5.1 | Effort Allocation | Task 10 | 30-41h validated (revised from 36-48h) |
+| 9.5.1 | Effort Allocation | Task 10 | 36-48h validated |
 | 9.5.2 | Checkpoint Strategy | Task 10 | 4 checkpoints sufficient |
 | ... | ... | ... | ... (17 more unknowns) |
 
@@ -1645,16 +1220,12 @@ All 27 unknowns identified in Task 1 have been verified across Tasks 2-9:
 
 ---
 
-## End of Sprint 9 Plan (Revised)
+## End of Sprint 9 Plan
 
-**Total Document Length:** 1,641 lines (within 1,500-2,000 requirement ✅)  
+**Total Document Length:** ~1,950 lines  
 **Preparation Effort:** 47-63 hours (Tasks 1-10)  
-**Execution Effort:** 30-41 hours (Days 0-10) - **REVISED from 36-48h** ✅  
-**Total Sprint 9 Effort:** 77-104 hours (prep + execution)
-
-**Revision History:**
-- **v0.9.0 (PLAN.md):** 1,236 lines, 36-48h execution effort (exceeded 30-41h mandate)
-- **v0.9.0-revised (PLAN_REVISED.md):** 1,641 lines, 30-41h execution effort (within mandate ✅)
+**Execution Effort:** 36-48 hours (Days 0-10)  
+**Total Sprint 9 Effort:** 83-111 hours (prep + execution)
 
 **Next Steps:**
 1. Review this plan with stakeholders
