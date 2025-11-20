@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 9: Day 0 - Sprint Planning & Setup - 2025-11-20
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed Day 0 sprint planning and setup for Sprint 9. Reviewed all prep tasks (1-10), created sprint branch, baselined metrics, and established performance budgets. All prerequisites verified and sprint ready to proceed with Day 1.
+
+#### Achievements
+
+**Prep Task Verification:**
+- All 10 prep tasks verified as ✅ COMPLETE in PREP_PLAN.md
+- Task 1: 27 unknowns documented and verified
+- Tasks 2-9: All research and design tasks complete
+- Task 10: Sprint 9 detailed schedule created (PLAN.md)
+
+**Sprint Branch:**
+- Created `sprint9-advanced-features` branch from main
+- CI passing on main before branching
+- Branch pushed to remote and tracked
+
+**Baseline Metrics:**
+- Parse rate: 40% (4/10 models) ✅ matches Sprint 8 final
+- Passing models: mhw4d, rbrock, mathopt1, trig
+- Fast test duration: 36.59s (improved from Sprint 8's 52.39s)
+- Test count: 1,349 passed, 2 skipped, 1 xfailed
+- Baseline saved to `docs/performance/baselines/sprint9_day0.json`
+
+**Performance Budgets:**
+- Fast test budget: 30s (current: 36.59s, 21.97% over budget)
+- Full test budget: 300s (current: 36.59s, within budget)
+- Per-model parse budget: 5s per model
+- Budgets saved to `docs/performance/baselines/budgets.json`
+- Action plan: Apply slow test markers on Day 2 to achieve <30s
+
+**Sprint Readiness:**
+- All 27 known unknowns verified
+- Sprint goals reviewed and confirmed
+- 4 checkpoints defined (Days 2, 4, 6, 8)
+- Day 10 designated as buffer
+- Effort allocation validated: 30-41h
+
+#### Sprint 9 Goals Confirmed
+
+| Goal | Baseline | Target | Measurement |
+|------|----------|--------|-------------|
+| Parse Rate | 40% (4/10) | ≥30% baseline, 50-60% realistic | make ingest-gamslib |
+| Advanced Indexing | Basic i, i+1 | i++1, i--1 working | himmel16.gms parses ✅ |
+| Model Structure | No model sections | Model sections parsed | hs62.gms, mingamma.gms parse ✅ |
+| Equation Attributes | None | .marginal, .l, .up, .lo parsed | Attribute expressions work |
+| Conversion Pipeline | No conversion | ≥1 model converts NLP → MCP | mhw4d/rbrock converts ✅ |
+| Test Performance | 36.59s fast tests | <30s fast tests | make test timing |
+
+**Next:** Day 1 - Test Infrastructure Part 1 (5-7 hours)
+
+---
+
 ### Sprint 9: Prep Task 10 - Plan Sprint 9 Detailed Schedule - 2025-11-20
 
 **Status:** ✅ COMPLETE
