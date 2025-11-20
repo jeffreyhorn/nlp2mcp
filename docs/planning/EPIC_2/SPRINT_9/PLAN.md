@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-Sprint 9 advances the GAMS-to-MCP parser with **advanced indexing features**, **model structure parsing**, and the **first conversion pipeline implementation**. Building on comprehensive prep work (Tasks 1-10, 47-63 hours total), this sprint implements carefully validated features with clear parse rate targets and introduces end-to-end model conversion capability.
+Sprint 9 advances the NLP-to-MCP transformation tool with **advanced indexing features**, **model structure parsing**, and the **first conversion pipeline implementation**. Building on comprehensive prep work (Tasks 1-10, 47-63 hours total), this sprint implements carefully validated features with clear parse rate targets and introduces end-to-end model conversion capability (GAMS NLP → MCP formulation in GAMS syntax).
 
 **Key Achievements from Prep Phase:**
 - **27 Known Unknowns identified and verified** across 5 categories (100% verification rate)
@@ -19,7 +19,7 @@ Sprint 9 advances the GAMS-to-MCP parser with **advanced indexing features**, **
 - **mhw4dx secondary blocker analyzed** (12-17h effort, deferred to Sprint 10)
 - **i++1 indexing design validated** at 8-10h (unlocks himmel16.gms, +10% parse rate)
 - **Model sections design complete** at 4-5h (unlocks hs62/mingamma, +20% parse rate)
-- **Conversion pipeline architecture** defined (end-to-end GAMS → MCP JSON)
+- **Conversion pipeline architecture** defined (end-to-end NLP → MCP via KKT transformation)
 - **Performance framework established** (budgets: <30s fast tests, currently 52s ⚠️)
 - **Automated test fixtures designed** (reduces manual fixture writing by 80%)
 
@@ -31,7 +31,7 @@ Sprint 9 advances the GAMS-to-MCP parser with **advanced indexing features**, **
 | 2 | **Advanced Indexing** | Basic i, i+1 | i++1, i--1 arithmetic indexing | himmel16.gms parses ✅ |
 | 3 | **Model Structure** | No model sections | Model sections parsed | hs62.gms, mingamma.gms parse ✅ |
 | 4 | **Equation Attributes** | No equation attributes | .marginal, .l, .up, .lo parsed | Attribute expressions work |
-| 5 | **Conversion Pipeline** | No conversion capability | ≥1 model converts GAMS → MCP JSON | mhw4d.gms or rbrock.gms converts |
+| 5 | **Conversion Pipeline** | No conversion capability | ≥1 model converts NLP → MCP formulation | mhw4d.gms or rbrock.gms converts to valid MCP GAMS |
 | 6 | **Test Performance** | 52.39s fast tests (74% over budget) | <30s fast tests (within budget) | `make test` timing |
 
 **Effort Estimates:**
@@ -130,15 +130,15 @@ Sprint 9 advances the GAMS-to-MCP parser with **advanced indexing features**, **
 **Goal 5: Establish Conversion Pipeline Foundation**
 
 - **Current State:** Parser outputs IR, no conversion capability
-- **Gap:** No IR → MCP JSON conversion infrastructure
-- **Target:** ≥1 model converts end-to-end (GAMS source → MCP JSON)
+- **Gap:** No IR → MCP GAMS conversion infrastructure
+- **Target:** ≥1 model converts end-to-end (GAMS source → MCP GAMS)
 - **Unlock:** End-to-end workflow validation
 - **Effort:** 6-8 hours
 - **Success Criteria:**
   - Converter class scaffolding complete
-  - IR → MCP JSON mappings for variables, parameters, equations
+  - IR → MCP GAMS mappings for variables, parameters, equations
   - At least 1 model (mhw4d or rbrock) converts successfully
-  - MCP JSON validates against schema
+  - MCP GAMS output parses successfully as valid GAMS
   - Conversion validation script working
 
 **Goal 6: Establish Performance Baseline & Budgets**
@@ -462,8 +462,8 @@ Sprint 9 advances the GAMS-to-MCP parser with **advanced indexing features**, **
 
 **Objectives:**
 1. Implement converter class scaffolding
-2. Implement IR → MCP JSON mappings for variables, parameters
-3. Implement IR → MCP JSON mappings for equations
+2. Implement IR → MCP GAMS mappings for variables, parameters
+3. Implement IR → MCP GAMS mappings for equations
 
 **Tasks:**
 
@@ -477,9 +477,9 @@ Sprint 9 advances the GAMS-to-MCP parser with **advanced indexing features**, **
 
 **Quality Gates:**
 - ✅ Converter class instantiates and accepts IR as input
-- ✅ Variables convert to MCP JSON format
-- ✅ Parameters convert to MCP JSON format
-- ✅ Equations convert to MCP JSON format
+- ✅ Variables convert to MCP GAMS format
+- ✅ Parameters convert to MCP GAMS format
+- ✅ Equations convert to MCP GAMS format
 - ✅ Unit tests cover all IR node types
 - ✅ All quality checks pass: `make typecheck && make lint && make format && make test`
 
@@ -499,8 +499,8 @@ Sprint 9 advances the GAMS-to-MCP parser with **advanced indexing features**, **
 ### Day 8: Conversion Pipeline - Part 2 (2-3 hours) → CHECKPOINT 4
 
 **Objectives:**
-1. Convert at least 1 model end-to-end (GAMS → MCP JSON)
-2. Validate MCP JSON against schema
+1. Convert at least 1 model end-to-end (GAMS NLP → MCP GAMS)
+2. Validate MCP GAMS output parses successfully
 3. Implement conversion validation script
 4. Achieve Checkpoint 4: 1 model converts
 
@@ -511,23 +511,23 @@ Sprint 9 advances the GAMS-to-MCP parser with **advanced indexing features**, **
 | Convert mhw4d.gms or rbrock.gms end-to-end | 1h | Team | Day 7 converter complete |
 | Debug conversion failures (if any) | 0.5-1h | Team | Initial conversion attempted |
 | Implement conversion validation script | 1h | Team | Conversion working |
-| Validate MCP JSON against schema | 30min | Team | Validation script working |
+| Validate MCP GAMS output parses as valid GAMS | 30min | Team | Validation script working |
 
 **Quality Gates:**
 - ✅ At least 1 model converts successfully (mhw4d or rbrock)
-- ✅ MCP JSON validates against schema
+- ✅ MCP GAMS output parses successfully as valid GAMS
 - ✅ Conversion validation script working
 - ✅ All quality checks pass: `make typecheck && make lint && make format && make test`
 - ✅ **CHECKPOINT 4 PASSED** (see Checkpoint Definitions section)
 
 **Deliverables:**
-- mhw4d.gms or rbrock.gms converted to MCP JSON
+- mhw4d.gms or rbrock.gms converted to MCP GAMS format
 - `scripts/validate_conversion.py` (conversion validation script)
-- MCP JSON output validated
+- MCP GAMS output validated (parses successfully)
 
 **Dependencies:**
 - Day 7 converter implementation complete
-- MCP JSON schema available
+- GAMS parser available for validation
 
 **Total Effort:** 2-3h
 
@@ -689,9 +689,9 @@ Sprint 9 has **4 checkpoints** with clear go/no-go criteria. Each checkpoint val
 
 **Success Criteria:**
 1. ✅ Converter class scaffolding complete
-2. ✅ IR → MCP JSON mappings for variables, parameters, equations
+2. ✅ IR → MCP GAMS mappings for variables, parameters, equations
 3. ✅ At least 1 model converts successfully (mhw4d or rbrock)
-4. ✅ MCP JSON validates against schema
+4. ✅ MCP GAMS output parses successfully as valid GAMS
 5. ✅ Conversion validation script working
 
 **Go/No-Go Decision:**
@@ -793,14 +793,14 @@ Sprint 9 has **7 identified risks** with mitigation strategies and contingency p
 **Mitigation:**
 - Task 5 already identified IR coverage (variables, parameters, equations supported)
 - Start with simplest models (mhw4d, rbrock)
-- Document gaps instead of fixing in Sprint 9
+- Document missing KKT transformation patterns instead of fixing in Sprint 9
 
 **Contingency:**
-- Accept "partial conversion" as Sprint 9 deliverable
-- Document IR gaps for Sprint 10
-- Defer full conversion to Sprint 10
+- Accept "partial conversion" as Sprint 9 deliverable (e.g., KKT equations generated but not all complementarity conditions)
+- Document IR gaps and missing transformation patterns for Sprint 10
+- Defer full NLP→MCP conversion to Sprint 10
 
-**Trigger:** Day 8 checkpoint fails (no model converts)
+**Trigger:** Day 8 checkpoint fails (no model converts to valid MCP GAMS)
 
 ---
 
@@ -949,7 +949,7 @@ These gates must pass **every day** before committing:
 #### Day 8 Quality Gates (Checkpoint 4)
 
 - ✅ At least 1 model converts (mhw4d or rbrock)
-- ✅ MCP JSON validates against schema
+- ✅ MCP GAMS validates against schema
 - ✅ Conversion validation script working
 
 #### Day 10 Quality Gates (Sprint Complete)
@@ -1006,9 +1006,9 @@ These gates must pass **every day** before committing:
 
 7. **Converter Infrastructure**
    - `src/converter/converter.py` (Converter class)
-   - `src/converter/mappings.py` (IR → MCP mappings)
+   - `src/converter/mappings.py` (IR → MCP GAMS mappings)
    - `scripts/validate_conversion.py` (validation script)
-   - At least 1 model converts (mhw4d or rbrock)
+   - At least 1 model converts (mhw4d or rbrock) to valid MCP GAMS
 
 #### Dashboard & Performance
 
@@ -1042,8 +1042,8 @@ These gates must pass **every day** before committing:
 - ✅ **AC2:** i++1 and i--1 indexing working (himmel16.gms parses)
 - ✅ **AC3:** Model sections implemented (hs62.gms parses)
 - ✅ **AC4:** Equation attributes implemented (mingamma.gms parses)
-- ✅ **AC5:** At least 1 model converts end-to-end (GAMS → MCP JSON)
-- ✅ **AC6:** MCP JSON validates against schema
+- ✅ **AC5:** At least 1 model converts end-to-end (GAMS NLP → MCP GAMS)
+- ✅ **AC6:** MCP GAMS output parses successfully as valid GAMS
 - ✅ **AC7:** Automated fixture generation working
 - ✅ **AC8:** Fixture validation script working
 - ✅ **AC9:** Performance baseline established (<30s fast tests)
@@ -1067,7 +1067,7 @@ These gates must pass **every day** before committing:
 | **Task 2: mhw4dx** | Day 1 | BLOCKERS.md documentation | Defer to Sprint 10 (12-17h) |
 | **Task 3: i++1 Indexing** | Days 3-4 | Grammar, semantic, IR, tests | Unlocks himmel16.gms |
 | **Task 4: Model Sections** | Day 5 | Grammar, semantic, IR, tests | Unlocks hs62.gms |
-| **Task 5: Conversion** | Days 7-8 | Converter, mappings, validation | End-to-end GAMS → MCP |
+| **Task 5: Conversion** | Days 7-8 | Converter, mappings, validation | End-to-end GAMS NLP → MCP GAMS |
 | **Task 6: Fixtures** | Day 1 | Fixture generator | Reduces manual fixture work |
 | **Task 7: Validation** | Day 2 | Validation script | Catches fixture bugs |
 | **Task 8: Attributes** | Day 6 | Semantic handler, IR, tests | Unlocks mingamma.gms |
@@ -1188,8 +1188,8 @@ Day 10 (Documentation + Closeout)
 - [ ] Parse rate ≥60%
 
 #### Day 8 Gates (Checkpoint 4)
-- [ ] 1 model converts
-- [ ] MCP JSON validates
+- [ ] 1 model converts to MCP GAMS
+- [ ] MCP GAMS output parses successfully
 - [ ] Conversion validation script working
 
 #### Day 10 Gates (Sprint Complete)
