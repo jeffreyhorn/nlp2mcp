@@ -744,6 +744,7 @@ class TestGAMSLibParsing:
         tree = parse_file(self.GAMSLIB_DIR / "mhw4d.gms")
         assert tree is not None
 
+    @pytest.mark.slow
     def test_gamslib_parse_rate(self):
         """Validate 50% parse rate achievement (5/10 models)."""
         models = [
