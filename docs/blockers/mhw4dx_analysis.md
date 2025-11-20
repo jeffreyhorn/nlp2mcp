@@ -1,9 +1,9 @@
 # mhw4dx.gms Secondary Blocker Analysis
 
-**Date:** 2025-11-20  
+**Date:** 2025-11-20 (Updated: 2025-11-20)  
 **Sprint:** Sprint 9 Day 1  
 **Status:** DEFERRED to Sprint 10  
-**Reason:** Total effort 12-17h exceeds Sprint 9 budget (30-41h total)
+**Reason:** Total effort 6-11h (revised from 12-17h after if-elseif-else found implemented)
 
 ---
 
@@ -11,7 +11,9 @@
 
 Analysis completed during Sprint 9 Prep Task 2 identified **5 secondary blockers** preventing mhw4dx.gms from parsing after Sprint 8's option statement implementation.
 
-**Key Finding:** Sprint 8 assumption that "mhw4dx only needs option statements" was incorrect. While option statements (lines 37, 47) now parse, the model contains complex control flow logic (lines 53-93, 41 lines) that represents a significant blocker.
+**Update (Day 2):** Blocker 1 (if-elseif-else) is already implemented in Sprint 8! Grammar and semantic handler exist at `src/ir/parser.py:1060`. This reduces total effort estimate from 12-17h to **6-11h**.
+
+**Key Finding:** Sprint 8 assumption that "mhw4dx only needs option statements" was incorrect. While option statements (lines 37, 47) now parse, the model contains additional features (abort$, model attributes, macros, preprocessor directives) that block parsing.
 
 ---
 
@@ -25,9 +27,9 @@ Analysis completed during Sprint 9 Prep Task 2 identified **5 secondary blockers
 
 ## Secondary Blockers Identified
 
-### Blocker 1: if/elseif/else Control Flow
-- **Error:** Parse error at line 63, column 11: Unexpected character: 'a'
-- **Location:** Lines 53-93 (41 lines) in mhw4dx.gms
+### Blocker 1: if/elseif/else Control Flow - ✅ ALREADY IMPLEMENTED
+- **Status:** ✅ Implemented in Sprint 8 (found during Day 2 review)
+- **Location:** `src/gams/gams_grammar.lark` (grammar), `src/ir/parser.py:1060` (semantic handler)
 - **Example:**
   ```gams
   if(       abs(m.l-52.90257967) < tol,
@@ -39,13 +41,13 @@ Analysis completed during Sprint 9 Prep Task 2 identified **5 secondary blockers
      abort$yes 'unknown solution';
   );
   ```
-- **Required Work:**
-  - Grammar: Add if/elseif/else production rules (2h)
-  - Semantic: Conditional expression evaluation, branch execution (2-3h)
-  - IR: ControlFlow node with condition/branches (1-2h)
-  - Tests: 10+ test cases for all control flow patterns (1-2h)
-- **Total Effort:** 6-8h
-- **Priority:** High (primary blocker for mhw4dx)
+- **Implementation Status:**
+  - ✅ Grammar: `if_stmt: IF_K "(" expr "," exec_stmt+ elseif_clause* else_clause? ")" SEMI`
+  - ✅ Semantic: `_handle_if_stmt()` at line 1060
+  - ✅ IR: Mock/store approach (Sprint 8 Day 2)
+  - ⚠️ Tests: May need additional edge case coverage
+- **Remaining Work:** 0h (already done)
+- **Original Estimate:** 6-8h (now saved)
 
 ### Blocker 2: abort$ Conditional Statements
 - **Error:** Part of control flow block
@@ -110,16 +112,20 @@ Analysis completed during Sprint 9 Prep Task 2 identified **5 secondary blockers
 
 ## Total Effort Estimate
 
-| Estimate Type | Hours | Notes |
-|---------------|-------|-------|
-| **Conservative** | 12h | if/elseif/else (6h) + abort$ (2h) + attributes (1h) + macros (2h) + preprocessor (1h) |
-| **Realistic** | 14.5h | if/elseif/else (7h) + abort$ (2.5h) + attributes (1.5h) + macros (2.5h) + preprocessor (1h) |
-| **Upper Bound** | 17h | if/elseif/else (8h) + abort$ (3h) + attributes (2h) + macros (3h) + preprocessor (1h) |
+**REVISED (Day 2):** if/elseif/else is already implemented, reducing total effort by 6-8h.
+
+| Estimate Type | Hours | Notes | Original |
+|---------------|-------|-------|----------|
+| **Conservative** | 6h | ~~if/elseif/else (6h)~~ + abort$ (2h) + attributes (1h) + macros (2h) + preprocessor (1h) | 12h |
+| **Realistic** | 8.5h | ~~if/elseif/else (7h)~~ + abort$ (2.5h) + attributes (1.5h) + macros (2.5h) + preprocessor (1h) | 14.5h |
+| **Upper Bound** | 11h | ~~if/elseif/else (8h)~~ + abort$ (3h) + attributes (2h) + macros (3h) + preprocessor (1h) | 17h |
 
 **Sprint 9 Budget:** 30-41h total  
 **Other Sprint 9 Features:** i++1 (7-9.5h), model sections (10-13h), attributes (10-13h), conversion (5-7h), dashboard (1.5h) = 33.5-43h
 
-**Conclusion:** mhw4dx blockers (12-17h) would exceed Sprint 9 capacity. Even the conservative estimate (12h) combined with other features (33.5h) totals 45.5h, exceeding the 41h upper bound.
+**Conclusion (Original):** mhw4dx blockers (12-17h) would exceed Sprint 9 capacity. Even the conservative estimate (12h) combined with other features (33.5h) totals 45.5h, exceeding the 41h upper bound.
+
+**Conclusion (Revised):** mhw4dx blockers (6-11h) still exceed Sprint 9 capacity. Conservative estimate (6h) combined with other features (33.5h) totals 39.5h, which is within budget but leaves no buffer for overruns. **Decision stands: DEFER to Sprint 10.**
 
 ---
 
@@ -142,14 +148,15 @@ Analysis completed during Sprint 9 Prep Task 2 identified **5 secondary blockers
 
 ## Recommendation for Sprint 10
 
-### Implementation Order
+### Implementation Order (Revised Day 2)
 
-1. **Sprint 10 Task 1:** if/elseif/else control flow (6-8h)
-   - Highest impact (blocks entire control flow section)
-   - Medium complexity but well-defined
-   - Unlocks mhw4dx after other blockers addressed
+1. **Sprint 10 Task 1:** abort$ conditional statements (2-3h)
+   - ~~if/elseif/else control flow (6-8h)~~ ✅ Already implemented
+   - Highest remaining impact (appears in 16 locations)
+   - Simple implementation
+   - Unlocks control flow blocks to work
 
-2. **Sprint 10 Task 2:** abort$ conditional statements (2-3h)
+2. **Sprint 10 Task 2:** Model attribute access (1-2h)
    - Required for control flow blocks to work
    - Simple implementation
    - Appears in 16 locations in mhw4dx
