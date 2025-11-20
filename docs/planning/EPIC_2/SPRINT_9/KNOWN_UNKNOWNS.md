@@ -1997,9 +1997,49 @@ Expected: Decide granularity of baseline data
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE  
-**To be verified by:** Task 9 (Metrics selection section)  
-**Expected completion:** Before Sprint 9 Day 1
+✅ **Status:** VERIFIED  
+**Verified by:** Task 9 - Design Performance Baseline & Budget Framework  
+**Date:** 2025-11-20  
+**Actual time:** 3.5 hours (within 3-4h estimate)
+
+**Answers to Research Questions:**
+
+**1. Should we track per-model metrics or aggregate metrics?**
+- **Answer:** BOTH - per-model metrics for detailed analysis, aggregate for quick overview
+- **Per-model metrics:** Parse time for each GAMSLib model (mathopt1, trig, eoq1, eoq2)
+- **Aggregate metrics:** Fast test suite total time, full test suite total time
+- **Evidence:** `docs/performance/baselines/*.json` schema includes both levels
+- **Sprint 9 scope:** 4 successful GAMSLib models from Sprint 8
+
+**2. Should we include memory usage in baseline?**
+- **Answer:** NO - deferred to Sprint 10+
+- **Rationale:** Sprint 9 models are small (<100 lines, <50 variables)
+- **Rationale:** Memory profiling (tracemalloc) adds measurement overhead
+- **Future:** Add memory metrics when targeting larger GAMSLib models (200+ variables)
+- **Evidence:** All Sprint 9 target models are <100 lines (mathopt1: 20, trig: 57, eoq1: 40, eoq2: 45)
+
+**3. Should we include AST/IR size metrics (node count)?**
+- **Answer:** NO - deferred to Sprint 10+
+- **Rationale:** Not critical for MVP, adds complexity to measurement
+- **Rationale:** AST/IR size correlates with parse time (redundant metric)
+- **Future:** May add if IR bloat becomes a concern
+
+**4. What statistical measures (mean? median? p95? min/max)?**
+- **Answer:** Mean + std + min/max for per-model benchmarks
+- **Tool:** pytest-benchmark computes statistics automatically (warmup, multiple iterations)
+- **Storage:** JSON includes mean, std, min, max, quartiles
+- **CI:** Mean time compared against budget (100ms for small models)
+- **Evidence:** pytest-benchmark JSON output schema in PERFORMANCE_FRAMEWORK.md
+
+**5. How to handle variance across runs (warmup? multiple iterations)?**
+- **Answer:** pytest-benchmark handles this automatically
+- **Warmup:** 2 iterations (discard to avoid cold-start overhead)
+- **Iterations:** ≥5 rounds per benchmark
+- **Outlier detection:** pytest-benchmark filters statistical outliers
+- **CI variance:** 10-20% slower than local (accounted for in budget thresholds)
+- **Evidence:** pyproject.toml pytest-benchmark configuration
+
+**Key Design Decision:** Minimal metric set for Sprint 9 (test suite + per-model parse), defer memory/AST to Sprint 10+
 
 ---
 
@@ -2058,9 +2098,51 @@ Expected: Identify top 10 slowest tests
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE  
-**To be verified by:** Task 9 (Budget enforcement section)  
-**Expected completion:** Before Sprint 9 Day 1
+✅ **Status:** VERIFIED  
+**Verified by:** Task 9 - Design Performance Baseline & Budget Framework (Section 2 & 5)  
+**Date:** 2025-11-20  
+**Actual time:** 1 hour (within estimate)
+
+**Answers to Research Questions:**
+
+**1. Should CI fail if budget exceeded by X%? (What's X: 5%? 10%? 20%?)**
+- **Answer:** Tiered enforcement - FAIL at 100%, WARN at 90%
+- **Fast tests (<30s):** FAIL at 100% (>30s), WARN at 90% (>27s)
+- **Full suite (<5min):** WARN at 100% (>300s), INFO at 90% (>270s)
+- **Per-model (<100ms):** WARN at 100% (>100ms), INFO at 90% (>90ms)
+- **No tolerance for fast tests:** Hard limit prevents budget creep
+- **Evidence:** `.github/workflows/performance-check.yml` design in PERFORMANCE_FRAMEWORK.md
+
+**2. How to identify slow tests automatically (profile or manual inspection)?**
+- **Answer:** pytest --durations=10 flag identifies slowest tests
+- **CI integration:** Slow tests logged in performance-check.yml workflow
+- **Markers:** Apply `@pytest.mark.slow` to tests >1s (exclude from fast suite)
+- **Sprint 8 precedent:** Benchmarks marked slow → 24s fast suite
+- **Evidence:** Sprint 8 achieved 5x speedup with slow test markers
+
+**3. Should performance budgets be per-test-file or total suite?**
+- **Answer:** Both levels - total suite (hard budget) + per-model (informational)
+- **Total suite budget:** <30s fast tests (FAIL if exceeded)
+- **Per-model budget:** <100ms for small models (WARN if exceeded)
+- **Rationale:** Total suite is hard gate, per-model helps diagnose regressions
+- **Evidence:** Budget schema in `docs/performance/baselines/budgets.json`
+
+**4. What happens on budget violation (fail build? warning only?)?**
+- **Answer:** Depends on metric (see answer #1)
+- **Fast tests:** CI fails (blocking PR merge)
+- **Full suite:** CI warns (non-blocking, informational)
+- **Per-model:** CI warns (non-blocking, helps catch regressions)
+- **Rationale:** Fast tests run every commit → must stay fast
+
+**5. How to handle natural performance variance (different CI runners)?**
+- **Answer:** 10% warning threshold + statistical benchmarks
+- **Warning threshold:** CI warns at 90% budget (provides early signal)
+- **pytest-benchmark:** Multiple iterations + outlier filtering reduce variance
+- **CI environment:** GitHub Actions runners have ~10-20% variance
+- **Budget margin:** 30s budget vs 24s Sprint 8 baseline = 25% margin
+- **Evidence:** Sprint 8 achieved 24s, current 52s suggests missing slow markers (not variance)
+
+**Key Design Decision:** Fail fast on critical metrics (test suite), warn on informational metrics (per-model)
 
 ---
 

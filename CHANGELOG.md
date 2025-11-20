@@ -7,6 +7,156 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 9: Prep Task 9 - Design Performance Baseline & Budget Framework - 2025-11-20
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Designed performance baseline measurement framework and test suite performance budgets to address Sprint 8 retrospective recommendation #5: "Establish test suite performance budget on Day 0." Framework enforces <30s fast tests and <5min full suite budgets from Sprint 9 Day 0, preventing the Day 9 performance optimization pattern from Sprint 8.
+
+**Current Baseline:** Fast tests run in 52.39s (74% over 30s budget), likely due to missing slow test markers.
+
+#### Performance Framework
+
+**Metrics Selected (3 critical + 2 deferred):**
+- ✅ **Test suite timing:** Fast tests <30s, full suite <5min (critical for development velocity)
+- ✅ **Per-model parse timing:** <100ms for small models (detects per-model regressions)
+- ❌ **Memory usage:** Deferred to Sprint 10+ (Sprint 9 models <100 lines, profiling overhead high)
+- ❌ **AST/IR size:** Deferred to Sprint 10+ (not critical for MVP, correlates with parse time)
+
+**Performance Budgets:**
+
+| Budget | Target | Enforcement | Rationale |
+|--------|--------|-------------|-----------|
+| Fast tests | <30s | FAIL at 100%, WARN at 90% | Runs every commit - must stay fast |
+| Full suite | <5min | WARN at 100%, INFO at 90% | Pre-merge only - allows temporary slowdowns |
+| Per-model parse | <100ms | WARN at 100%, INFO at 90% | Informational - catches regressions early |
+
+**Budget Adjustment Policy:**
+- Budgets NOT auto-adjusted based on current performance
+- Budget increase requires explicit discussion + PR to update `budgets.json`
+- Prevents "budget creep" where slow tests become normalized
+
+**Benchmark Harness:**
+- **Tool:** pytest-benchmark (already available, no new dependencies)
+- **Configuration:** Warmup (2 iterations), ≥5 rounds per benchmark, outlier filtering
+- **Storage:** JSON format in `docs/performance/baselines/` (version-controlled)
+- **Files:**
+  - `tests/benchmarks/test_gamslib_performance.py` - Per-model parse benchmarks
+  - `tests/benchmarks/test_suite_performance.py` - Fast/full suite timing
+  - `scripts/check_parse_budgets.py` - Budget enforcement script
+
+**Baseline Storage Format:**
+```json
+{
+  "version": "1.0.0",
+  "sprint": "Sprint 9",
+  "day": 0,
+  "test_suite": {
+    "fast_tests": {"duration_seconds": 52.39, "budget_seconds": 30.0, "budget_status": "OVER_BUDGET"},
+    "full_tests": {"duration_seconds": null, "budget_status": "NOT_MEASURED"}
+  },
+  "per_model_parse": {
+    "mathopt1.gms": {"mean_ms": null, "budget_ms": 100.0, "budget_status": "NOT_MEASURED"}
+  }
+}
+```
+
+**CI Integration:**
+- **Workflow:** `.github/workflows/performance-check.yml` (new workflow)
+- **Steps:**
+  1. Run fast tests with timing measurement
+  2. Compare to 30s budget (FAIL if exceeded)
+  3. Run per-model parse benchmarks (pytest-benchmark)
+  4. Check per-model budgets (WARN if exceeded)
+  5. Upload performance artifacts (logs, JSON results)
+- **Enforcement:** CI fails if fast tests >30s (blocks PR merge)
+- **Reporting:** Performance summary in CI logs with budget status
+
+**Historical Tracking:**
+- **Baselines:** Sprint start (Day 0) and end (Day 10) kept in version control
+- **Retention:** Per-commit measurements are CI artifacts only (not version-controlled)
+- **Future:** Trend plotting deferred to Sprint 10+ (requires ≥3 data points)
+
+#### Implementation Plan
+
+**Total Effort:** 4.0 hours (within 3.5-4.5h estimate ✅)
+
+1. **Phase 1: Baseline Measurement (1.0h)**
+   - Create `docs/performance/baselines/` directory
+   - Create `budgets.json` with budget definitions
+   - Measure current state: fast tests (52.39s), full suite, per-model parse
+   - Record Sprint 9 Day 0 baseline in JSON
+
+2. **Phase 2: Benchmark Harness (1.5h)**
+   - Create `test_gamslib_performance.py` (per-model parse benchmarks)
+   - Create `test_suite_performance.py` (fast/full suite timing)
+   - Update `pyproject.toml` (pytest-benchmark configuration)
+   - Create `check_parse_budgets.py` (budget enforcement script)
+
+3. **Phase 3: CI Integration (1.0h)**
+   - Create `.github/workflows/performance-check.yml`
+   - Test workflow locally (act or manual push)
+   - Verify budget enforcement (intentional failure test)
+   - Document CI failure modes
+
+4. **Phase 4: Documentation (0.5h)**
+   - Create `docs/performance/baselines/README.md`
+   - Update CHANGELOG.md (Task 9 entry)
+   - Update PREP_PLAN.md (Task 9 status)
+   - Update KNOWN_UNKNOWNS.md (verify 9.4.1, 9.4.2)
+
+#### Unknowns Verified
+
+**9.4.1: Performance Baseline Metrics Selection ✅**
+- **Answer:** 3 critical metrics (test suite + per-model parse), 2 deferred (memory, AST size)
+- **Evidence:** Sprint 9 models are small (<100 lines), memory profiling overhead high
+- **Decision:** Minimal metric set for Sprint 9, expand in Sprint 10+ for larger models
+
+**9.4.2: Performance Budget Enforcement ✅**
+- **Answer:** Tiered enforcement (FAIL fast tests, WARN full suite, WARN per-model)
+- **Evidence:** Fast tests run every commit → must stay fast (blocking)
+- **Decision:** Fail at 100% budget, warn at 90% (provides early signal before failure)
+
+#### Addresses Sprint 8 Retrospective
+
+**Recommendation #5: "Test Suite Performance Budget"**
+- **Sprint 8 History:** Days 1-8 ran in 120s, Day 9 optimized to 24s (5x faster)
+- **Sprint 8 Lesson:** "Performance budget should be Day 0, not Day 9"
+- **Sprint 9 Impact:** Fast feedback from Day 1 (not 52s per test run)
+- **Budget Proposal:** <30s fast tests, <5min full suite (validated from Sprint 8 data)
+
+**Current State Analysis:**
+- Fast tests: 52.39s (74% over 30s budget) ⚠️
+- **Hypothesis:** Slow test markers not applied yet (Sprint 8 achieved 24s with markers)
+- **Action:** Re-apply slow markers as part of Day 0 baseline (Phase 1)
+
+#### Files Created
+
+- `docs/planning/EPIC_2/SPRINT_9/PERFORMANCE_FRAMEWORK.md` (730+ lines)
+  - Executive Summary (metrics, budgets, current state)
+  - Performance Metrics Selection (Section 1, 3 critical + 2 deferred)
+  - Performance Budgets (Section 2, tiered enforcement)
+  - Benchmark Harness Design (Section 3, pytest-benchmark)
+  - Baseline Storage Format (Section 4, JSON schema)
+  - CI Integration Design (Section 5, GitHub Actions workflow)
+  - Historical Tracking & Reporting (Section 6, trend analysis deferred)
+  - Implementation Plan (Section 7, 4 phases, 4.0h)
+  - Unknown Verification Results (Section 8, 9.4.1 and 9.4.2)
+  - Appendices (Sprint 8 history, tool comparison, references)
+
+#### Files Modified
+
+- `docs/planning/EPIC_2/SPRINT_9/KNOWN_UNKNOWNS.md`
+  - Unknown 9.4.1: Verified (metrics selection: test suite + per-model parse)
+  - Unknown 9.4.2: Verified (budget enforcement: tiered FAIL/WARN/INFO)
+- `docs/planning/EPIC_2/SPRINT_9/PREP_PLAN.md`
+  - Task 9 status: COMPLETE
+  - Changes, Result, and acceptance criteria documented
+
+---
+
 ### Sprint 9: Prep Task 8 - Research Equation Attributes (.l/.m) Handling - 2025-11-20
 
 **Status:** ✅ COMPLETE
