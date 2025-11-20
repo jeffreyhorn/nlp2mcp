@@ -1,0 +1,26 @@
+{
+  "fast_tests": {
+    "budget_seconds": 30,
+    "current_seconds": 36.59,
+    "status": "over_budget",
+    "over_by_percent": 21.97,
+    "action": "Apply slow test markers on Day 2 to achieve <30s budget",
+    "notes": "Current 36.59s is better than Sprint 8 baseline (52.39s) but still over 30s target"
+  },
+  "full_tests": {
+    "budget_seconds": 300,
+    "current_seconds": 36.59,
+    "status": "within_budget",
+    "notes": "Full test suite same as fast tests currently (no slow markers applied yet)"
+  },
+  "per_model_parse": {
+    "budget_seconds": 5,
+    "action": "Monitor on Day 4 (i++1) and Day 6 (model sections)",
+    "notes": "Will track per-model parse times when new features are implemented"
+  },
+  "enforcement_strategy": {
+    "day_2": "Apply @pytest.mark.slow to tests >1s to achieve <30s fast test budget",
+    "ci_integration": "Add CI check on Day 9 that fails if fast tests >30s",
+    "warning_threshold": "Warn if fast tests >27s (90% of budget)"
+  }
+}

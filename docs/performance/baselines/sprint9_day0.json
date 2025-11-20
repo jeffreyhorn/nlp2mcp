@@ -1,0 +1,18 @@
+{
+  "date": "2025-11-20",
+  "sprint": "9",
+  "day": "0",
+  "parse_rate": 0.40,
+  "models_passing": 4,
+  "models_total": 10,
+  "models_list": ["mhw4d", "rbrock", "mathopt1", "trig"],
+  "models_failing": ["circle", "himmel16", "hs62", "maxmin", "mhw4dx", "mingamma"],
+  "fast_test_duration_seconds": 36.59,
+  "full_test_duration_seconds": 36.59,
+  "test_count": 1349,
+  "test_passed": 1349,
+  "test_skipped": 2,
+  "test_xfailed": 1,
+  "git_commit": "08d7125eaceb6646de34115a24da83ec2277a9a6",
+  "notes": "Fast test performance improved from Sprint 8 baseline (~52s) to 36.59s. Ready to proceed with Sprint 9."
+}
