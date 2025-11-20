@@ -68,7 +68,7 @@ def create_variable_fixture(
     var_kind = kind_map[kind]
     lo, up = bounds if bounds else (None, None)
 
-    return VariableDef(name=name, kind=var_kind, lo=lo, up=up)
+    return VariableDef(name=name, kind=var_kind, domain=(), lo=lo, up=up)
 
 
 def create_parameter_fixture(name: str, value: float, domain: tuple[str, ...] = ()) -> ParameterDef:

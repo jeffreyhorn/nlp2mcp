@@ -120,7 +120,7 @@ class TestCreateEquationFixture:
 
         assert eq.name == "obj2"
         assert eq.relation == Rel.EQ
-        # lhs should be BinaryOp with "*"
+        # lhs should be Binary with "*"
         lhs, rhs = eq.lhs_rhs
         assert lhs.op == "*"
 
