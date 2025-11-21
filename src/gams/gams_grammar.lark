@@ -181,6 +181,10 @@ MAXIMIZING_K: /(?i:maximizing|max)\b/
 model_stmt: ("Models"i | "Model"i) ID "/" "all"i "/" SEMI       -> model_all
           | ("Models"i | "Model"i) ID "/" model_ref_list "/" SEMI  -> model_with_list
           | ("Models"i | "Model"i) ID SEMI                         -> model_decl
+          | ("Models"i | "Model"i) model_decl_item+ SEMI        -> model_multi
+
+model_decl_item: ID "/" model_ref_list "/"
+               | ID "/" "all"i "/"
 
 model_ref_list: ID ("," ID)*
 
