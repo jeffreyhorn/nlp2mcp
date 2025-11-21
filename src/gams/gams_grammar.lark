@@ -290,10 +290,15 @@ symbol_plain: ID
 ?atom: NUMBER                             -> number
      | func_call                          -> funccall
      | sum_expr
+     | compile_time_const                 -> compile_const
      | ref_bound
      | ref_indexed
      | symbol_plain
      | "(" expr ")"
+
+// Compile-time constants: %identifier% or %path.to.value%
+compile_time_const: "%" compile_const_path "%"
+compile_const_path: ID ("." ID)*
 
 sum_expr: SUM_K "(" id_list "," expr ")"  -> sum
 

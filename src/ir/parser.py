@@ -1273,6 +1273,8 @@ class _ModelBuilder:
                     "factor",
                     "power",
                     "atom",
+                    "binop",
+                    "compile_const",
                 ):
                     # This is the main condition
                     if condition is None:
@@ -1297,6 +1299,8 @@ class _ModelBuilder:
                                 "factor",
                                 "power",
                                 "atom",
+                                "binop",
+                                "compile_const",
                             ):
                                 elseif_cond = elseif_child
                             else:
@@ -1571,6 +1575,20 @@ class _ModelBuilder:
 
             # Otherwise, treat as variable reference (Sprint 8 behavior)
             return self._make_symbol(name, indices, free_domain, node)
+
+        # Support compile-time constants: %identifier% or %path.to.value%
+        if node.data == "compile_const":
+            from .ast import CompileTimeConstant
+
+            # Extract the dotted path from compile_time_const node
+            # compile_time_const has compile_const_path child
+            const_node = node.children[0]
+            path = []
+            for child in const_node.children:
+                if isinstance(child, Token):
+                    path.append(_token_text(child))
+            expr = CompileTimeConstant(path=tuple(path))
+            return self._attach_domain(expr, free_domain)
 
         raise self._error(
             f"Unsupported expression type: {node.data}. "
