@@ -1,6 +1,6 @@
 # Issue: Support abort$ Statements Inside if-Block Bodies
 
-**GitHub Issue:** TBD (create at https://github.com/jeffreyhorn/nlp2mcp/issues/new)  
+**GitHub Issue:** #278 - https://github.com/jeffreyhorn/nlp2mcp/issues/278  
 **Status:** Open  
 **Priority:** Medium  
 **Effort:** 3-4 hours  

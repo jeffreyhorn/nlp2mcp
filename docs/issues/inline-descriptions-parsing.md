@@ -1,6 +1,6 @@
 # Issue: Support Inline Text Descriptions in Declarations
 
-**GitHub Issue:** TBD (create at https://github.com/jeffreyhorn/nlp2mcp/issues/new)  
+**GitHub Issue:** #277 - https://github.com/jeffreyhorn/nlp2mcp/issues/277  
 **Status:** Open  
 **Priority:** Medium  
 **Effort:** 2-3 hours  
