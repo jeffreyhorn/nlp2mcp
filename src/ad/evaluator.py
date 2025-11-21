@@ -94,11 +94,12 @@ def _evaluate_expr(
         return _check_numeric(expr.value, "constant")
 
     elif isinstance(expr, VarRef):
-        key = (expr.name, expr.indices)
+        indices_str = expr.indices_as_strings()
+        key = (expr.name, indices_str)
         if key not in var_values:
             raise KeyError(
                 f"Missing value for variable {expr.name}"
-                f"{'(' + ','.join(expr.indices) + ')' if expr.indices else ''}"
+                f"{'(' + ','.join(indices_str) + ')' if indices_str else ''}"
             )
         value = var_values[key]
         return _check_numeric(value, f"variable {expr.name}")
@@ -111,11 +112,12 @@ def _evaluate_expr(
         return _check_numeric(value, f"symbol {expr.name}")
 
     elif isinstance(expr, ParamRef):
-        key = (expr.name, expr.indices)
+        indices_str = expr.indices_as_strings()
+        key = (expr.name, indices_str)
         if key not in param_values:
             raise KeyError(
                 f"Missing value for parameter {expr.name}"
-                f"{'(' + ','.join(expr.indices) + ')' if expr.indices else ''}"
+                f"{'(' + ','.join(indices_str) + ')' if indices_str else ''}"
             )
         value = param_values[key]
         return _check_numeric(value, f"parameter {expr.name}")
