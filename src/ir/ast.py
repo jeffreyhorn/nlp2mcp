@@ -125,3 +125,33 @@ class Call(Expr):
     def __repr__(self) -> str:
         args = ", ".join(repr(a) for a in self.args)
         return f"Call({self.func}, ({args}))"
+
+
+@dataclass(frozen=True)
+class IndexOffset(Expr):
+    """
+    Lead/lag indexing offset (Sprint 9 Day 3).
+
+    Examples:
+        i++1  → IndexOffset(base='i', offset=Const(1), circular=True)
+        i--2  → IndexOffset(base='i', offset=Const(-2), circular=True)
+        i+1   → IndexOffset(base='i', offset=Const(1), circular=False)
+        i-3   → IndexOffset(base='i', offset=Const(-3), circular=False)
+        i+j   → IndexOffset(base='i', offset=SymbolRef('j'), circular=False)
+
+    Attributes:
+        base: Base identifier (e.g., 'i', 't', 's')
+        offset: Offset expression (Const, SymbolRef, Binary, etc.)
+        circular: True for ++/-- (wrap-around), False for +/- (suppress)
+    """
+
+    base: str
+    offset: Expr
+    circular: bool
+
+    def children(self) -> Iterable[Expr]:
+        yield self.offset
+
+    def __repr__(self) -> str:
+        op = "++" if self.circular else "+"
+        return f"IndexOffset({self.base}{op}{self.offset!r})"
