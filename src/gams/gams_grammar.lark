@@ -63,10 +63,23 @@ param_decl: ID "(" id_list ")" "/" param_data_items "/" param_default? -> param_
           | ID "/" param_data_items "/" param_default?                 -> param_plain_data
           | ID param_default?                                          -> param_plain
           | ID "," id_list                                             -> param_list
-scalar_decl: ID "/" scalar_data_items "/" (ASSIGN expr)?      -> scalar_with_data
-           | ID ASSIGN expr                                       -> scalar_with_assign
-           | ID                                                   -> scalar_plain
+scalar_decl: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?      -> scalar_with_data
+           | ID desc_text ASSIGN expr                                       -> scalar_with_assign
+           | ID desc_text                                                   -> scalar_plain
            | ID "," id_list                                       -> scalar_list
+
+// Optional inline description text
+// Matches zero or more words/operators, implicitly stops at structural tokens (/, =, ;, etc.)
+// The grammar rules ensure it stops before these delimiters
+// NOTE: desc_text always produces a node in the parse tree (even if empty with zero words)
+// Parser code must handle this by checking if the node has children or skipping it entirely
+desc_text: _desc_word*
+
+// NOTE: Currently limited to ID tokens and hyphens (sufficient for hs62.gms)
+// Other characters like +, *, /, parentheses will cause description to stop prematurely
+// Future: May need to expand pattern to support richer description syntax
+_desc_word: ID | MINUS
+
 scalar_data_items: scalar_data_item ("," scalar_data_item)*
 scalar_data_item: NUMBER
 
@@ -109,6 +122,8 @@ set_members: set_member ("," set_member)*
 // Range expression: supports both numeric (1*10) and symbolic (s1*s10) ranges
 range_expr: range_bound TIMES range_bound
 range_bound: NUMBER | ID
+
+
 
 // ---------------------------
 // Table rows (for Table blocks)
@@ -319,5 +334,10 @@ OR: /(?i:or)\b/
 %ignore WS_INLINE
 %ignore /(?m)^\s*\*.*$/      // GAMS inline comments: * comment
 %ignore /\/\/.*?$/m      // // comment
-%ignore /(?s)\$ontext.*?\$offtext/ // block comments
+%ignore /(?si)\$ontext.*?\$offtext/ // block comments (case insensitive)
+%ignore /\$title[^\n]*/i     // $title directives
+// NOTE: This pattern intentionally ignores all $ directives for simplicity
+// Some directives like $include, $set, $eval may need special handling in future
+// but are ignored for now to enable parsing of models like hs62.gms
+%ignore /\$[a-z]+/i          // Other $ directives (broad pattern)
 %ignore NEWLINE
