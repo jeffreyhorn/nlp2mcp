@@ -1207,11 +1207,17 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         return expr
     elif isinstance(expr, VarRef):
         # Substitute indices in VarRef
-        new_indices = tuple(substitution.get(idx, idx) for idx in expr.indices)
+        # For now, only substitute string indices (IndexOffset not supported in AD yet)
+        new_indices = tuple(
+            substitution.get(idx, idx) if isinstance(idx, str) else idx for idx in expr.indices
+        )
         return VarRef(expr.name, new_indices)
     elif isinstance(expr, ParamRef):
         # Substitute indices in ParamRef
-        new_indices = tuple(substitution.get(idx, idx) for idx in expr.indices)
+        # For now, only substitute string indices (IndexOffset not supported in AD yet)
+        new_indices = tuple(
+            substitution.get(idx, idx) if isinstance(idx, str) else idx for idx in expr.indices
+        )
         return ParamRef(expr.name, new_indices)
     elif isinstance(expr, Binary):
         # Recursively substitute in both operands

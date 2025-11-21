@@ -37,25 +37,43 @@ class SymbolRef(Expr):
 
 @dataclass(frozen=True)
 class VarRef(Expr):
-    """Reference to a variable; indices are symbolic (strings)."""
+    """Reference to a variable; indices are symbolic (strings or IndexOffset)."""
 
     name: str
-    indices: tuple[str, ...] = ()
+    indices: tuple[str | IndexOffset, ...] = ()
+
+    def indices_as_strings(self) -> tuple[str, ...]:
+        """Convert indices to strings, raising error if IndexOffset present."""
+        result = []
+        for idx in self.indices:
+            if isinstance(idx, IndexOffset):
+                raise NotImplementedError(f"IndexOffset not yet supported in this context: {idx}")
+            result.append(idx)
+        return tuple(result)
 
     def __repr__(self) -> str:
-        idx = ",".join(self.indices)
+        idx = ",".join(str(i) if isinstance(i, IndexOffset) else i for i in self.indices)
         return f"VarRef({self.name}({idx}))" if idx else f"VarRef({self.name})"
 
 
 @dataclass(frozen=True)
 class ParamRef(Expr):
-    """Reference to a parameter; indices symbolic (strings)."""
+    """Reference to a parameter; indices symbolic (strings or IndexOffset)."""
 
     name: str
-    indices: tuple[str, ...] = ()
+    indices: tuple[str | IndexOffset, ...] = ()
+
+    def indices_as_strings(self) -> tuple[str, ...]:
+        """Convert indices to strings, raising error if IndexOffset present."""
+        result = []
+        for idx in self.indices:
+            if isinstance(idx, IndexOffset):
+                raise NotImplementedError(f"IndexOffset not yet supported in this context: {idx}")
+            result.append(idx)
+        return tuple(result)
 
     def __repr__(self) -> str:
-        idx = ",".join(self.indices)
+        idx = ",".join(str(i) if isinstance(i, IndexOffset) else i for i in self.indices)
         return f"ParamRef({self.name}({idx}))" if idx else f"ParamRef({self.name})"
 
 
@@ -64,10 +82,19 @@ class MultiplierRef(Expr):
     """Reference to a KKT multiplier variable (λ, ν, π)."""
 
     name: str
-    indices: tuple[str, ...] = ()
+    indices: tuple[str | IndexOffset, ...] = ()
+
+    def indices_as_strings(self) -> tuple[str, ...]:
+        """Convert indices to strings, raising error if IndexOffset present."""
+        result = []
+        for idx in self.indices:
+            if isinstance(idx, IndexOffset):
+                raise NotImplementedError(f"IndexOffset not yet supported in this context: {idx}")
+            result.append(idx)
+        return tuple(result)
 
     def __repr__(self) -> str:
-        idx = ",".join(self.indices)
+        idx = ",".join(str(i) if isinstance(i, IndexOffset) else i for i in self.indices)
         return f"MultiplierRef({self.name}({idx}))" if idx else f"MultiplierRef({self.name})"
 
 
@@ -153,5 +180,4 @@ class IndexOffset(Expr):
         yield self.offset
 
     def __repr__(self) -> str:
-        op = "++" if self.circular else "+"
-        return f"IndexOffset({self.base}{op}{self.offset!r})"
+        return f"IndexOffset(base={self.base!r}, offset={self.offset!r}, circular={self.circular})"

@@ -317,6 +317,15 @@ def _token_text(token: Token) -> str:
     return value
 
 
+def _strip_quotes(token: Token) -> str:
+    """Strip quotes from ID tokens (e.g., 'i1', \"cost%\" → i1, cost%)."""
+    value = str(token)
+    if token.type == "ID" and len(value) >= 2:
+        if (value[0] == "'" and value[-1] == "'") or (value[0] == '"' and value[-1] == '"'):
+            return value[1:-1]
+    return value
+
+
 def _id_list(node: Tree) -> tuple[str, ...]:
     return tuple(_token_text(tok) for tok in node.children if isinstance(tok, Token))
 
@@ -333,32 +342,18 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
     for child in node.children:
         if isinstance(child, Token):
             # Old-style direct token (from id_list)
-            value = str(child)
             # Strip quotes from escaped ID tokens (e.g., 'i1', "cost%")
-            if child.type == "ID" and len(value) >= 2:
-                if (value[0] == "'" and value[-1] == "'") or (value[0] == '"' and value[-1] == '"'):
-                    indices.append(value[1:-1])
-                else:
-                    indices.append(value)
-            else:
-                indices.append(_token_text(child))
+            indices.append(_strip_quotes(child) if child.type == "ID" else _token_text(child))
         elif isinstance(child, Tree) and child.data == "index_expr":
             # New-style index_expr (from index_list)
             # Only support plain ID (no lag/lead for parameter assignments)
             if len(child.children) == 1:
                 # No lag/lead suffix, just extract the ID
                 id_token = child.children[0]
-                value = str(id_token)
                 # Strip quotes if present
-                if id_token.type == "ID" and len(value) >= 2:
-                    if (value[0] == "'" and value[-1] == "'") or (
-                        value[0] == '"' and value[-1] == '"'
-                    ):
-                        indices.append(value[1:-1])
-                    else:
-                        indices.append(value)
-                else:
-                    indices.append(_token_text(id_token))
+                indices.append(
+                    _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
+                )
             else:
                 # Has lag/lead suffix - not supported for parameter assignments
                 raise ParserSemanticError(
@@ -374,8 +369,6 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset:
         str: Simple identifier if no lag/lead suffix
         IndexOffset: If lag/lead operator present (i++1, i--2, i+j, etc.)
     """
-    from .ast import Const, IndexOffset, SymbolRef
-
     # index_expr: ID lag_lead_suffix?
     base_token = index_node.children[0]
     base = _token_text(base_token)

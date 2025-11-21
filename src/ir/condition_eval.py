@@ -100,10 +100,15 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
 
         param = model_ir.params[param_name]
 
-        # Substitute indices
-        concrete_indices = tuple(
-            index_map.get(idx, idx) if isinstance(idx, str) else idx for idx in expr.indices
-        )
+        # Substitute indices - only string indices supported, IndexOffset raises error
+        concrete_indices_list = []
+        for idx in expr.indices:
+            if isinstance(idx, str):
+                concrete_indices_list.append(index_map.get(idx, idx))
+            else:
+                # IndexOffset not yet supported in condition evaluation
+                raise ConditionEvaluationError(f"IndexOffset not supported in conditions: {idx}")
+        concrete_indices: tuple[str, ...] = tuple(concrete_indices_list)
 
         # Look up parameter value
         value = param.values.get(concrete_indices, 0.0)

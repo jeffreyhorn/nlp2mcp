@@ -6,8 +6,7 @@ for lead/lag indexing in GAMS (parameter assignments don't support IndexOffset).
 
 import pytest
 
-from src.ir.parser import parse_model_text
-from src.utils.errors import ParseError
+from src.ir.parser import ParserSemanticError, parse_model_text
 
 
 class TestBasicArithmeticIndexing:
@@ -375,7 +374,7 @@ Parameter x(i);
 x(i++1) = 10;
 """
         # Parameter assignments don't support lead/lag offsets
-        with pytest.raises(Exception):  # Should raise ParserSemanticError
+        with pytest.raises(ParserSemanticError):
             parse_model_text(source)
 
 
