@@ -4,11 +4,7 @@ Sprint 9 Day 1: Validates that fixture generator creates valid IR nodes.
 """
 
 import pytest
-
-from src.ir.model_ir import ModelIR
-from src.ir.symbols import ParameterDef, Rel, VariableDef, VarKind
-
-from .fixtures.generate_fixtures import (
+from fixtures.generate_fixtures import (
     create_bounded_variable_fixture,
     create_equation_fixture,
     create_model_fixture,
@@ -16,6 +12,9 @@ from .fixtures.generate_fixtures import (
     create_simple_nlp_fixture,
     create_variable_fixture,
 )
+
+from src.ir.model_ir import ModelIR
+from src.ir.symbols import ParameterDef, Rel, VariableDef, VarKind
 
 
 class TestCreateVariableFixture:
