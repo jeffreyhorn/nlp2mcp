@@ -867,10 +867,14 @@ class _ModelBuilder:
                 # child.children[1] = desc_text (optional inline description - skip it)
                 # child.children[2] = scalar_data_items tree
                 # child.children[3] = optional expr
-                # Find the scalar_data_items node (skip desc_text)
+                # Find the scalar_data_items node (skip desc_text and any tokens like '/')
                 data_idx = 1
-                while data_idx < len(child.children) and isinstance(child.children[data_idx], Tree):
-                    if child.children[data_idx].data == "scalar_data_items":
+                while data_idx < len(child.children):
+                    node_candidate = child.children[data_idx]
+                    if (
+                        isinstance(node_candidate, Tree)
+                        and node_candidate.data == "scalar_data_items"
+                    ):
                         break
                     data_idx += 1
 

@@ -37,7 +37,15 @@ class TestHS62Integration:
 
     def test_hs62_parses(self):
         """Test that hs62.gms parses successfully with inline descriptions."""
-        with open("tests/fixtures/gamslib/hs62.gms") as f:
+        from pathlib import Path
+
+        fixture_path = Path("tests/fixtures/gamslib/hs62.gms")
+        if not fixture_path.exists():
+            import pytest
+
+            pytest.skip(f"Fixture file not found: {fixture_path}")
+
+        with open(fixture_path) as f:
             gams_code = f.read()
 
         model = parse_model_text(gams_code)

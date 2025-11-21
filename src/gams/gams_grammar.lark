@@ -71,6 +71,8 @@ scalar_decl: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?      -> scala
 // Optional inline description text
 // Matches zero or more words/operators, implicitly stops at structural tokens (/, =, ;, etc.)
 // The grammar rules ensure it stops before these delimiters
+// NOTE: desc_text always produces a node in the parse tree (even if empty with zero words)
+// Parser code must handle this by checking if the node has children or skipping it entirely
 desc_text: _desc_word*
 
 _desc_word: ID | MINUS
