@@ -901,9 +901,10 @@ class _ModelBuilder:
             elif child.data == "scalar_with_assign":
                 # Format: ID desc_text ASSIGN expr
                 # child.children[0] = ID
-                # child.children[1] = desc_text (skip)
-                # child.children[2] = expr
-                # Find the expr node (last child that is not desc_text)
+                # child.children[1] = desc_text (may be empty)
+                # child.children[2] = ASSIGN token (optional, depends on Lark)
+                # child.children[-1] = expr (always the last child)
+                # Get the expr node (always the last child after ID and desc_text)
                 expr_idx = len(child.children) - 1
                 value_expr = self._expr_with_context(
                     child.children[expr_idx], f"scalar '{name}' assignment", ()

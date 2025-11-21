@@ -75,6 +75,9 @@ scalar_decl: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?      -> scala
 // Parser code must handle this by checking if the node has children or skipping it entirely
 desc_text: _desc_word*
 
+// NOTE: Currently limited to ID tokens and hyphens (sufficient for hs62.gms)
+// Other characters like +, *, /, parentheses will cause description to stop prematurely
+// Future: May need to expand pattern to support richer description syntax
 _desc_word: ID | MINUS
 
 scalar_data_items: scalar_data_item ("," scalar_data_item)*
@@ -333,5 +336,8 @@ OR: /(?i:or)\b/
 %ignore /\/\/.*?$/m      // // comment
 %ignore /(?si)\$ontext.*?\$offtext/ // block comments (case insensitive)
 %ignore /\$title[^\n]*/i     // $title directives
-%ignore /\$[a-z]+/i          // Other $ directives
+// NOTE: This pattern intentionally ignores all $ directives for simplicity
+// Some directives like $include, $set, $eval may need special handling in future
+// but are ignored for now to enable parsing of models like hs62.gms
+%ignore /\$[a-z]+/i          // Other $ directives (broad pattern)
 %ignore NEWLINE
