@@ -23,6 +23,143 @@ eq(i).. y(i) =e= x(i++1);
 """
         model = parse_model_text(source)
         assert model is not None
+
+
+class TestHimmel16Integration:
+    """Integration tests based on himmel16.gms patterns (Sprint 9 Day 4)."""
+
+    def test_himmel16_complete_model(self):
+        """Test complete himmel16-like model with all i++1 patterns."""
+        source = """
+Set i / 1*6 /;
+Alias (i,j);
+
+Variable
+   x(i)
+   y(i)
+   area(i)
+   totarea;
+
+Equation
+   areadef(i)
+   maxdist(i,j)
+   obj1
+   obj2;
+
+maxdist(i,j)$(ord(i) < ord(j)).. sqr(x(i) - x(j)) + sqr(y(i) - y(j)) =l= 1;
+
+areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));
+
+obj1.. totarea =e= 0.5*sum(i, x(i)*y(i++1) - y(i)*x(i++1));
+
+obj2.. totarea =e= sum(i, area(i));
+
+Model himmel / maxdist, obj1, areadef /;
+
+x.fx("1") = 0;
+y.fx("1") = 0;
+"""
+        model = parse_model_text(source)
+        assert model is not None
+        assert len(model.equations) == 4
+        assert "areadef" in model.equations
+        assert "obj1" in model.equations
+        assert len(model.variables) == 4
+
+    def test_number_times_sum_with_indexing(self):
+        """Test NUMBER*sum(...i++1...) pattern from himmel16."""
+        source = """
+Set i /1*6/;
+Variable x(i);
+Variable y(i);
+Variable z;
+Equation eq;
+eq.. z =e= 0.5*sum(i, x(i)*y(i++1));
+"""
+        model = parse_model_text(source)
+        assert model is not None
+        assert "eq" in model.equations
+
+    def test_complex_sum_expression_with_multiple_indexing(self):
+        """Test complex sum with multiple i++1 references."""
+        source = """
+Set i /1*6/;
+Variable x(i);
+Variable y(i);
+Variable z;
+Equation eq;
+eq.. z =e= sum(i, x(i)*y(i++1) - y(i)*x(i++1) + x(i++1)*y(i--1));
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+
+class TestEdgeCasesDay4:
+    """Additional edge cases from Sprint 9 Day 4 requirements."""
+
+    def test_sum_in_multiplication_chain(self):
+        """Test sum in multiplication chain: a * sum(...) * b."""
+        source = """
+Set i /1*5/;
+Variable x(i);
+Variable a;
+Variable b;
+Variable z;
+Equation eq;
+eq.. z =e= a * sum(i, x(i++1)) * b;
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_nested_sum_with_indexing(self):
+        """Test nested sum expressions with lead/lag."""
+        source = """
+Set i /1*3/;
+Set j /1*3/;
+Variable x(i,j);
+Variable z;
+Equation eq;
+eq.. z =e= sum(i, sum(j, x(i++1, j)));
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_division_by_sum_with_indexing(self):
+        """Test division by sum with indexing."""
+        source = """
+Set i /1*5/;
+Variable x(i);
+Variable a;
+Variable z;
+Equation eq;
+eq.. z =e= a / sum(i, x(i++1));
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_power_of_sum_with_indexing(self):
+        """Test sum raised to power."""
+        source = """
+Set i /1*5/;
+Variable x(i);
+Variable z;
+Equation eq;
+eq.. z =e= sum(i, x(i++1)) ** 2;
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_conditional_with_lead_lag(self):
+        """Test conditional statement with lead/lag indexing."""
+        source = """
+Set i /1*5/;
+Variable x(i);
+Variable y(i);
+Equation eq(i);
+eq(i)$(ord(i) < 5).. y(i) =e= x(i++1);
+"""
+        model = parse_model_text(source)
+        assert model is not None
         assert "eq" in model.equations
 
     def test_circular_lag_constant(self):
