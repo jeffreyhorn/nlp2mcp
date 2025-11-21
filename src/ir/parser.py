@@ -1514,20 +1514,42 @@ class _ModelBuilder:
             expr = Call(func_name, tuple(args))
             return self._attach_domain(expr, self._merge_domains(args, node))
 
-        # Support variable attribute access in expressions (e.g., x1.l, x.lo(i))
+        # Support variable/equation attribute access in expressions (e.g., x1.l, eq.m)
+        # Sprint 9 Day 6: Added equation attribute support
         if node.data == "bound_scalar":
-            var_name = _token_text(node.children[0])
-            # Note: bound_attr (e.g., 'l', 'm', 'lo') is in node.children[1] but not used
-            # For now, treat it as a variable reference (Sprint 8 mock/store approach)
-            return self._make_symbol(var_name, (), free_domain, node)
+            name = _token_text(node.children[0])
+            attribute = _token_text(
+                node.children[1]
+            ).lower()  # Extract attribute (.l, .m, .lo, .up)
+
+            # Check if this is an equation reference (Sprint 9 Day 6)
+            if name in self.model.equations:
+                # Return EquationRef for equation attributes
+                from .ast import EquationRef
+
+                expr = EquationRef(name=name, indices=(), attribute=attribute)
+                return self._attach_domain(expr, free_domain)
+
+            # Otherwise, treat as variable reference (Sprint 8 behavior)
+            return self._make_symbol(name, (), free_domain, node)
 
         if node.data == "bound_indexed":
-            var_name = _token_text(node.children[0])
-            # Note: bound_attr (e.g., 'l', 'm', 'lo') is in node.children[1] but not used
+            name = _token_text(node.children[0])
+            attribute = _token_text(node.children[1]).lower()  # Extract attribute
             # Use _process_index_list to handle i++1, i--2, etc. (Sprint 9)
             indices = _process_index_list(node.children[2]) if len(node.children) > 2 else ()
-            # Return an indexed symbol reference (Sprint 8 mock/store approach)
-            return self._make_symbol(var_name, indices, free_domain, node)
+
+            # Check if this is an equation reference (Sprint 9 Day 6)
+            if name in self.model.equations:
+                # Return EquationRef for indexed equation attributes
+                from .ast import EquationRef
+
+                # Convert indices to strings (EquationRef uses tuple[str | IndexOffset, ...])
+                expr = EquationRef(name=name, indices=indices, attribute=attribute)
+                return self._attach_domain(expr, free_domain)
+
+            # Otherwise, treat as variable reference (Sprint 8 behavior)
+            return self._make_symbol(name, indices, free_domain, node)
 
         raise self._error(
             f"Unsupported expression type: {node.data}. "

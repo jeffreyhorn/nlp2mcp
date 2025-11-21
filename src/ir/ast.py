@@ -78,6 +78,33 @@ class ParamRef(Expr):
 
 
 @dataclass(frozen=True)
+class EquationRef(Expr):
+    """Reference to an equation with attribute access (e.g., eq1.m, eq2.l).
+
+    Sprint 9 Day 6: Equations can be referenced for their attributes (.l, .m)
+    in post-solve contexts (e.g., display eq.l, x = eq.m).
+    """
+
+    name: str
+    indices: tuple[str | IndexOffset, ...] = ()
+    attribute: str = "l"  # Default to level attribute (.l)
+
+    def indices_as_strings(self) -> tuple[str, ...]:
+        """Convert indices to strings, raising error if IndexOffset present."""
+        result = []
+        for idx in self.indices:
+            if isinstance(idx, IndexOffset):
+                raise NotImplementedError(f"IndexOffset not yet supported in this context: {idx}")
+            result.append(idx)
+        return tuple(result)
+
+    def __repr__(self) -> str:
+        idx = ",".join(str(i) if isinstance(i, IndexOffset) else i for i in self.indices)
+        base = f"{self.name}({idx})" if idx else self.name
+        return f"EquationRef({base}.{self.attribute})"
+
+
+@dataclass(frozen=True)
 class MultiplierRef(Expr):
     """Reference to a KKT multiplier variable (λ, ν, π)."""
 
