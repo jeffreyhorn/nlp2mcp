@@ -243,7 +243,14 @@ display_stmt: "display"i display_item ("," display_item)* SEMI
 display_item: expr
             | STRING
 
-abort_stmt: "abort"i ("$" expr)? STRING? SEMI
+abort_stmt: "abort"i "$" "[" expr "]" STRING SEMI     -> abort_cond_square_msg
+          | "abort"i "$" "[" expr "]" SEMI             -> abort_cond_square
+          | "abort"i "$" "(" expr ")" STRING SEMI      -> abort_cond_paren_msg
+          | "abort"i "$" "(" expr ")" SEMI             -> abort_cond_paren
+          | "abort"i "$" expr STRING SEMI              -> abort_cond_plain_msg
+          | "abort"i "$" expr SEMI                     -> abort_cond_plain
+          | "abort"i STRING SEMI                       -> abort_msg
+          | "abort"i SEMI                              -> abort_plain
 
 // ---------------------------
 // Expressions
