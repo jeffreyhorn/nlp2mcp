@@ -377,9 +377,9 @@ class TestPositiveVariables:
                 if ";" in line and (found_x or found_obj):
                     break
 
-        assert found_x or found_obj, (
-            "Positive variables should be declared in Positive Variables block"
-        )
+        assert (
+            found_x or found_obj
+        ), "Positive variables should be declared in Positive Variables block"
 
     def test_positive_variables_in_derivatives(self):
         """Test that Positive Variables are handled correctly in derivative computation."""

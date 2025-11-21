@@ -441,6 +441,6 @@ def test_recovery_test_count():
     # Exclude this meta-test itself
     test_functions = [name for name in test_functions if name != "test_recovery_test_count"]
 
-    assert len(test_functions) >= 20, (
-        f"Day 4 requires ≥20 recovery tests, found {len(test_functions)}"
-    )
+    assert (
+        len(test_functions) >= 20
+    ), f"Day 4 requires ≥20 recovery tests, found {len(test_functions)}"

@@ -1113,11 +1113,7 @@ class _ModelBuilder:
         # Check if this model uses "all" or has an equation list
         if len(first_item.children) > 1:
             second_child = first_item.children[1]
-            if isinstance(second_child, Token) and second_child.type == "ALL":
-                # Model uses / all /
-                self.model.model_equations = []
-                self.model.model_uses_all = True
-            elif isinstance(second_child, Tree) and second_child.data == "model_ref_list":
+            if isinstance(second_child, Tree) and second_child.data == "model_ref_list":
                 # Model has equation list
                 refs = [
                     _token_text(tok)

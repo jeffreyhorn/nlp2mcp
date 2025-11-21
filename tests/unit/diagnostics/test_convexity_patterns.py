@@ -204,9 +204,9 @@ class TestConvexModels:
             warnings = pattern.detect(model)
             total_warnings += len(warnings)
 
-        assert total_warnings == 0, (
-            f"{fixture_file} should have 0 warnings but got {total_warnings}"
-        )
+        assert (
+            total_warnings == 0
+        ), f"{fixture_file} should have 0 warnings but got {total_warnings}"
 
 
 class TestNonConvexModels:
@@ -269,13 +269,13 @@ class TestAllFixtures:
         actual_count = len(all_warnings)
 
         if expected_min_warnings == 0:
-            assert actual_count == 0, (
-                f"{fixture_file}: Expected 0 warnings (convex), got {actual_count}"
-            )
+            assert (
+                actual_count == 0
+            ), f"{fixture_file}: Expected 0 warnings (convex), got {actual_count}"
         else:
-            assert actual_count >= expected_min_warnings, (
-                f"{fixture_file}: Expected at least {expected_min_warnings} warnings, got {actual_count}"
-            )
+            assert (
+                actual_count >= expected_min_warnings
+            ), f"{fixture_file}: Expected at least {expected_min_warnings} warnings, got {actual_count}"
 
 
 # ===== Warning Display Tests =====
