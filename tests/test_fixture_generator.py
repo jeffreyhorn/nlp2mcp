@@ -7,7 +7,8 @@ import pytest
 
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import ParameterDef, Rel, VariableDef, VarKind
-from tests.fixtures.generate_fixtures import (
+
+from .fixtures.generate_fixtures import (
     create_bounded_variable_fixture,
     create_equation_fixture,
     create_model_fixture,
