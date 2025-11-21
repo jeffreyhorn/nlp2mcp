@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-21 09:58:12
+**Generated:** 2025-11-21 12:53:35
 **Sprint:** Sprint 8
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint8.json`](../../reports/gamslib_ingestion_sprint8.json)
@@ -11,8 +11,8 @@
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| **Parse Rate** | 40.0% (4/10) | ≥10% | ✅ |
-| **Convert Rate** | 0.0% (0/4) | ≥50% | ⚠️ Sprint 6: Not implemented |
+| **Parse Rate** | 50.0% (5/10) | ≥10% | ✅ |
+| **Convert Rate** | 0.0% (0/5) | ≥50% | ⚠️ Sprint 6: Not implemented |
 | **Solve Rate** | 0.0% (N/A) | TBD | ⚠️ Sprint 6: Not implemented |
 | **End-to-End** | 0.0% (0/10) | TBD | ⚠️ Sprint 6: Not implemented |
 
@@ -26,7 +26,7 @@
 |-------|--------|----------|------------------|---------|-------|-----|
 | circle | ⚠️ PARTIALLY PARSED | 57% (16/28) | parse error | - | - | ❌ |
 | himmel16 | 🟡 MOSTLY PARSED | 79% (26/33) | variable attributes (.l, .m, etc.) | - | - | ❌ |
-| hs62 | 🟡 MOSTLY PARSED | 83% (15/18) | parse error | - | - | ❌ |
+| hs62 | ✅ PASS | 100% (18/18) | - | - | - | ❌ |
 | mathopt1 | ✅ PASS | 100% (20/20) | - | - | - | ❌ |
 | maxmin | ⚠️ PARTIALLY PARSED | 40% (19/47) | nested indexing | - | - | ❌ |
 | mhw4d | ✅ PASS | 100% (14/14) | - | - | - | ❌ |
@@ -49,7 +49,7 @@
 ### Parse Errors
 | Error Type | Count | Models |
 |------------|-------|--------|
-| `ParseError` | 5 | circle, hs62, maxmin, mhw4dx, mingamma |
+| `ParseError` | 4 | circle, maxmin, mhw4dx, mingamma |
 | `ParserSemanticError` | 1 | himmel16 |
 
 **Note:** Convert and solve errors will appear here once those stages are implemented.
@@ -82,21 +82,6 @@ Suggestion: Declare 'i' as a variable, parameter, or set before using it
 **Error Message:**
 ```
 Conflicting level bound for variable 'x' at indices ('1',) [context: expression] (line 63, column 1)
-```
-
-### hs62.gms
-**Model:** hs62
-**Status:** Parse Failed
-**Progress:** 83% (15/18 lines parsed)
-**Missing Features:** parse error
-**Error Type:** `ParseError`
-**Error Message:**
-```
-Error: Parse error at line 44, column 14: Unexpected character: '-'
-  diff   optcr - relative distance from global;
-               ^
-
-Suggestion: This character is not valid in this context
 ```
 
 ### maxmin.gms
