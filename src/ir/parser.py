@@ -862,31 +862,47 @@ class _ModelBuilder:
             param = ParameterDef(name=name)
 
             if child.data == "scalar_with_data":
-                # Format: ID "/" scalar_data_items "/" (ASSIGN expr)?
+                # Format: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?
                 # child.children[0] = ID
-                # child.children[1] = scalar_data_items tree
-                # child.children[2] = optional expr
-                data_node = child.children[1]
-                values = [
-                    float(_token_text(tok))
-                    for tok in data_node.scan_values(
-                        lambda v: isinstance(v, Token) and v.type == "NUMBER"
-                    )
-                ]
-                if values:
-                    param.values[()] = values[-1]
-                # Check for optional assignment after the data
-                if len(child.children) > 2 and isinstance(child.children[2], Tree):
-                    value_expr = self._expr_with_context(
-                        child.children[2], f"scalar '{name}' assignment", ()
-                    )
-                    param.values[()] = self._extract_constant(
-                        value_expr, f"scalar '{name}' assignment"
-                    )
+                # child.children[1] = desc_text (optional inline description - skip it)
+                # child.children[2] = scalar_data_items tree
+                # child.children[3] = optional expr
+                # Find the scalar_data_items node (skip desc_text)
+                data_idx = 1
+                while data_idx < len(child.children) and isinstance(child.children[data_idx], Tree):
+                    if child.children[data_idx].data == "scalar_data_items":
+                        break
+                    data_idx += 1
+
+                if data_idx < len(child.children):
+                    data_node = child.children[data_idx]
+                    values = [
+                        float(_token_text(tok))
+                        for tok in data_node.scan_values(
+                            lambda v: isinstance(v, Token) and v.type == "NUMBER"
+                        )
+                    ]
+                    if values:
+                        param.values[()] = values[-1]
+                    # Check for optional assignment after the data
+                    if len(child.children) > data_idx + 1 and isinstance(
+                        child.children[data_idx + 1], Tree
+                    ):
+                        value_expr = self._expr_with_context(
+                            child.children[data_idx + 1], f"scalar '{name}' assignment", ()
+                        )
+                        param.values[()] = self._extract_constant(
+                            value_expr, f"scalar '{name}' assignment"
+                        )
             elif child.data == "scalar_with_assign":
-                # Format: ID ASSIGN expr
+                # Format: ID desc_text ASSIGN expr
+                # child.children[0] = ID
+                # child.children[1] = desc_text (skip)
+                # child.children[2] = expr
+                # Find the expr node (last child that is not desc_text)
+                expr_idx = len(child.children) - 1
                 value_expr = self._expr_with_context(
-                    child.children[1], f"scalar '{name}' assignment", ()
+                    child.children[expr_idx], f"scalar '{name}' assignment", ()
                 )
                 param.values[()] = self._extract_constant(value_expr, f"scalar '{name}' assignment")
             # else: scalar_plain, just declare without value
