@@ -1,0 +1,18 @@
+{
+  "date": "2025-11-20",
+  "sprint": "9",
+  "day": "2",
+  "fast_test_duration_seconds": 24.81,
+  "fast_test_count": 1361,
+  "slow_test_count": 30,
+  "skipped_test_count": 2,
+  "xfailed_test_count": 1,
+  "total_test_count": 1394,
+  "improvement_from_day0_seconds": 11.78,
+  "improvement_from_day0_percent": 32.2,
+  "budget_seconds": 30,
+  "within_budget": true,
+  "git_commit": "49494fe",
+  "baseline_day0_seconds": 36.59,
+  "notes": "Applied @pytest.mark.slow to 15 tests (1 GAMSLib + 14 CLI convexity tests). Fast suite now 24.81s, 5.19s under budget (17.3% headroom)."
+}

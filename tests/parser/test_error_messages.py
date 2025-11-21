@@ -225,22 +225,22 @@ class TestErrorEnhancer:
 
     def test_unsupported_feature_explanation(self):
         """Test that unsupported features get roadmap explanations."""
+        # Sprint 9: Lead/lag indexing (i++1) is now supported!
+        # Updated test to verify it parses successfully
         source = """
 Set i / i1, i2, i3 /;
 Parameter x(i);
 Equation eq(i);
 eq(i).. x(i) =e= x(i++1);
-"""  # Lead/lag indexing - not yet supported
+"""  # Lead/lag indexing - NOW SUPPORTED (Sprint 9)
 
-        with pytest.raises(ParseError) as exc_info:
-            parse_model_text(source)
+        # Should parse successfully now
+        model = parse_model_text(source)
+        assert model is not None
+        assert len(model.equations) == 1
 
-        error = exc_info.value
-        error_str = str(error)
-        # Should explain that feature is coming or reference roadmap
-        # Note: Currently this triggers a syntax error, not an explicit unsupported feature message
-        # The test passes if error contains standard error information
-        assert error.line is not None, f"Should have line number: {error_str}"
+        # Verify the equation exists
+        assert "eq" in model.equations
 
     def test_error_enhancement_preserves_location(self):
         """Test that error enhancement preserves line/column information."""

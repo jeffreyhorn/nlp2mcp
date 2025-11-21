@@ -15,7 +15,7 @@ from lark.exceptions import UnexpectedCharacters, UnexpectedEOF, UnexpectedToken
 
 from ..utils.error_enhancer import ErrorEnhancer
 from ..utils.errors import ParseError
-from .ast import Binary, Call, Const, Expr, ParamRef, Sum, SymbolRef, Unary, VarRef
+from .ast import Binary, Call, Const, Expr, IndexOffset, ParamRef, Sum, SymbolRef, Unary, VarRef
 from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import preprocess_gams_file
 from .symbols import (
@@ -317,27 +317,127 @@ def _token_text(token: Token) -> str:
     return value
 
 
+def _strip_quotes(token: Token) -> str:
+    """Strip quotes from ID tokens (e.g., 'i1', \"cost%\" → i1, cost%)."""
+    value = str(token)
+    if token.type == "ID" and len(value) >= 2:
+        if (value[0] == "'" and value[-1] == "'") or (value[0] == '"' and value[-1] == '"'):
+            return value[1:-1]
+    return value
+
+
 def _id_list(node: Tree) -> tuple[str, ...]:
     return tuple(_token_text(tok) for tok in node.children if isinstance(tok, Token))
 
 
 def _extract_indices(node: Tree) -> tuple[str, ...]:
-    """Extract indices from id_list, stripping quotes from escaped identifiers.
+    """Extract indices from index_list, stripping quotes from escaped identifiers.
 
     Used for indexed parameter assignments like p('i1') where 'i1' should become i1.
+
+    Sprint 9 Note: Now handles index_expr nodes from index_list grammar.
+    Only supports plain identifiers (no IndexOffset) for parameter assignments.
     """
     indices = []
-    for tok in node.children:
-        if isinstance(tok, Token):
-            value = str(tok)
+    for child in node.children:
+        if isinstance(child, Token):
+            # Old-style direct token (from id_list)
             # Strip quotes from escaped ID tokens (e.g., 'i1', "cost%")
-            if tok.type == "ID" and len(value) >= 2:
-                if (value[0] == "'" and value[-1] == "'") or (value[0] == '"' and value[-1] == '"'):
-                    indices.append(value[1:-1])
-                else:
-                    indices.append(value)
+            indices.append(_strip_quotes(child) if child.type == "ID" else _token_text(child))
+        elif isinstance(child, Tree) and child.data == "index_expr":
+            # New-style index_expr (from index_list)
+            # Only support plain ID (no lag/lead for parameter assignments)
+            if len(child.children) == 1:
+                # No lag/lead suffix, just extract the ID
+                id_token = child.children[0]
+                # Strip quotes if present
+                indices.append(
+                    _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
+                )
             else:
-                indices.append(_token_text(tok))
+                # Has lag/lead suffix - not supported for parameter assignments
+                raise ParserSemanticError(
+                    "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
+                )
+    return tuple(indices)
+
+
+def _process_index_expr(index_node: Tree) -> str | IndexOffset:
+    """Process a single index_expr from grammar (Sprint 9 Day 3).
+
+    Returns:
+        str: Simple identifier if no lag/lead suffix
+        IndexOffset: If lag/lead operator present (i++1, i--2, i+j, etc.)
+    """
+    # index_expr: ID lag_lead_suffix?
+    base_token = index_node.children[0]
+    base = _token_text(base_token)
+
+    # No suffix? Just return the base identifier
+    if len(index_node.children) == 1:
+        return base
+
+    # Has lag_lead_suffix
+    suffix_node = index_node.children[1]
+    offset_node = suffix_node.children[0]  # offset_expr
+
+    # Parse offset expression
+    if isinstance(offset_node, Token):
+        # Direct token (shouldn't happen with current grammar, but handle it)
+        if offset_node.type == "NUMBER":
+            offset_expr = Const(float(offset_node))
+        else:
+            offset_expr = SymbolRef(_token_text(offset_node))
+    elif offset_node.data == "offset_number":
+        offset_value = float(offset_node.children[0])
+        offset_expr = Const(offset_value)
+    elif offset_node.data == "offset_variable":
+        offset_name = _token_text(offset_node.children[0])
+        offset_expr = SymbolRef(offset_name)
+    else:
+        raise ParserSemanticError(f"Unknown offset_expr type: {offset_node.data}")
+
+    # Determine circular flag and adjust offset for lag operators
+    if suffix_node.data == "circular_lead":
+        return IndexOffset(base=base, offset=offset_expr, circular=True)
+    elif suffix_node.data == "circular_lag":
+        # Convert lag to negative offset: i--2 → IndexOffset(base='i', offset=Const(-2))
+        if isinstance(offset_expr, Const):
+            negated = Const(-offset_expr.value)
+        else:
+            negated = Unary("-", offset_expr)
+        return IndexOffset(base=base, offset=negated, circular=True)
+    elif suffix_node.data == "linear_lead":
+        return IndexOffset(base=base, offset=offset_expr, circular=False)
+    elif suffix_node.data == "linear_lag":
+        # Convert lag to negative offset: i-2 → IndexOffset(base='i', offset=Const(-2))
+        if isinstance(offset_expr, Const):
+            negated = Const(-offset_expr.value)
+        else:
+            negated = Unary("-", offset_expr)
+        return IndexOffset(base=base, offset=negated, circular=False)
+    else:
+        raise ParserSemanticError(f"Unknown lag_lead_suffix type: {suffix_node.data}")
+
+
+def _process_index_list(node: Tree) -> tuple[str | IndexOffset, ...]:
+    """Process index_list from grammar (Sprint 9 Day 3).
+
+    Handles both plain identifiers and lag/lead indexed expressions.
+
+    Returns tuple of str (plain ID) or IndexOffset objects.
+    """
+    indices = []
+    for child in node.children:
+        if isinstance(child, Token):
+            # Old-style: direct ID token (from id_list in declarations)
+            indices.append(_token_text(child))
+        elif isinstance(child, Tree) and child.data == "index_expr":
+            # New-style: index_expr tree (from index_list in references)
+            indices.append(_process_index_expr(child))
+        else:
+            # Fallback for unknown nodes
+            raise ParserSemanticError(f"Unknown index_list child: {child}")
     return tuple(indices)
 
 
@@ -978,6 +1078,60 @@ class _ModelBuilder:
         self.model.model_equations = []
         self.model.model_uses_all = False
 
+    def _handle_model_multi(self, node: Tree) -> None:
+        """Handle multi-model declaration (Sprint 9 Day 5).
+
+        Grammar structure:
+            model_stmt: ("Models"i | "Model"i) model_decl_item+ SEMI
+            model_decl_item: ID "/" model_ref_list "/"
+                           | ID "/" "all"i "/"
+
+        Example:
+            Model
+               m  / objdef, eq1  /
+               mx / objdef, eq1x /;
+
+        Note: Only the first model is stored in ModelIR (current limitation).
+        """
+        # Extract all model_decl_item nodes
+        model_items = [
+            child
+            for child in node.children
+            if isinstance(child, Tree) and child.data == "model_decl_item"
+        ]
+
+        if not model_items:
+            raise self._error("Multi-model declaration has no model items", node)
+
+        # Process the first model only (store in ModelIR)
+        first_item = model_items[0]
+        name = _token_text(first_item.children[0])
+
+        if self.model.declared_model is None:
+            self.model.declared_model = name
+
+        # Check if this model uses "all" or has an equation list
+        if len(first_item.children) > 1:
+            second_child = first_item.children[1]
+            if isinstance(second_child, Tree) and second_child.data == "model_ref_list":
+                # Model has equation list
+                refs = [
+                    _token_text(tok)
+                    for tok in second_child.children
+                    if isinstance(tok, Token) and tok.type == "ID"
+                ]
+                # Special case: if the list contains only "all" (case-insensitive), treat it as / all /
+                if len(refs) == 1 and refs[0].lower() == "all":
+                    self.model.model_equations = []
+                    self.model.model_uses_all = True
+                else:
+                    self.model.model_equations = refs
+                    self.model.model_uses_all = False
+        else:
+            # No equations specified
+            self.model.model_equations = []
+            self.model.model_uses_all = False
+
     def _handle_option_stmt(self, node: Tree) -> None:
         """Handle option statement (Sprint 8: mock/store approach).
 
@@ -1206,7 +1360,10 @@ class _ModelBuilder:
             if target.data == "bound_indexed":
                 var_name = _token_text(target.children[0])
                 bound_token = target.children[1]
-                indices = _id_list(target.children[2]) if len(target.children) > 2 else ()
+                # Use _process_index_list to handle i++1, i--2, etc. (Sprint 9)
+                indices = (
+                    _process_index_list(target.children[2]) if len(target.children) > 2 else ()
+                )
                 self._apply_variable_bound(var_name, bound_token, indices, value, target)
                 return
             if target.data == "bound_scalar":
@@ -1303,7 +1460,8 @@ class _ModelBuilder:
             name = _token_text(node.children[0])
             indices_node = node.children[1]
             if name in self.model.variables or name in self.model.params:
-                indices = _id_list(indices_node)
+                # Use _process_index_list to handle i++1, i--2, etc. (Sprint 9)
+                indices = _process_index_list(indices_node)
                 return self._make_symbol(name, indices, free_domain, node)
             if name.lower() in _FUNCTION_NAMES:
                 args: list[Expr] = []
@@ -1314,7 +1472,8 @@ class _ModelBuilder:
                         args.append(self._expr(child, free_domain))
                 expr = Call(name.lower(), tuple(args))
                 return self._attach_domain(expr, self._merge_domains(args, node))
-            indices = _id_list(indices_node)
+            # Fallback for unknown symbols (use _process_index_list for i++1 support)
+            indices = _process_index_list(indices_node)
             return self._make_symbol(name, indices, free_domain, node)
 
         if node.data == "number":
@@ -1355,19 +1514,42 @@ class _ModelBuilder:
             expr = Call(func_name, tuple(args))
             return self._attach_domain(expr, self._merge_domains(args, node))
 
-        # Support variable attribute access in expressions (e.g., x1.l, x.lo(i))
+        # Support variable/equation attribute access in expressions (e.g., x1.l, eq.m)
+        # Sprint 9 Day 6: Added equation attribute support
         if node.data == "bound_scalar":
-            var_name = _token_text(node.children[0])
-            # Note: bound_attr (e.g., 'l', 'm', 'lo') is in node.children[1] but not used
-            # For now, treat it as a variable reference (Sprint 8 mock/store approach)
-            return self._make_symbol(var_name, (), free_domain, node)
+            name = _token_text(node.children[0])
+            attribute = _token_text(
+                node.children[1]
+            ).lower()  # Extract attribute (.l, .m, .lo, .up)
+
+            # Check if this is an equation reference (Sprint 9 Day 6)
+            if name in self.model.equations:
+                # Return EquationRef for equation attributes
+                from .ast import EquationRef
+
+                expr = EquationRef(name=name, indices=(), attribute=attribute)
+                return self._attach_domain(expr, free_domain)
+
+            # Otherwise, treat as variable reference (Sprint 8 behavior)
+            return self._make_symbol(name, (), free_domain, node)
 
         if node.data == "bound_indexed":
-            var_name = _token_text(node.children[0])
-            # Note: bound_attr (e.g., 'l', 'm', 'lo') is in node.children[1] but not used
-            indices = _id_list(node.children[2]) if len(node.children) > 2 else ()
-            # Return an indexed symbol reference (Sprint 8 mock/store approach)
-            return self._make_symbol(var_name, indices, free_domain, node)
+            name = _token_text(node.children[0])
+            attribute = _token_text(node.children[1]).lower()  # Extract attribute
+            # Use _process_index_list to handle i++1, i--2, etc. (Sprint 9)
+            indices = _process_index_list(node.children[2]) if len(node.children) > 2 else ()
+
+            # Check if this is an equation reference (Sprint 9 Day 6)
+            if name in self.model.equations:
+                # Return EquationRef for indexed equation attributes
+                from .ast import EquationRef
+
+                # Convert indices to strings (EquationRef uses tuple[str | IndexOffset, ...])
+                expr = EquationRef(name=name, indices=indices, attribute=attribute)
+                return self._attach_domain(expr, free_domain)
+
+            # Otherwise, treat as variable reference (Sprint 8 behavior)
+            return self._make_symbol(name, indices, free_domain, node)
 
         raise self._error(
             f"Unsupported expression type: {node.data}. "
@@ -1924,15 +2106,10 @@ class _ModelBuilder:
                 if eq_name not in self.model.equations:
                     raise self._error(f"Model references unknown equation '{eq_name}'")
 
-        if self.model.model_name is not None:
-            if self.model.declared_model is None:
-                raise self._error(
-                    f"Solve references model '{self.model.model_name}' which is not declared"
-                )
-            if self.model.model_name != self.model.declared_model:
-                raise self._error(
-                    f"Solve references model '{self.model.model_name}' but declared model is '{self.model.declared_model}'"
-                )
+        # Note: We don't validate that model_name matches declared_model because:
+        # 1. Multi-model declarations can declare multiple models, but we only store the first
+        # 2. GAMS allows solving any declared model, not just the first one
+        # 3. Model declarations and solve statements are independent in GAMS
 
         if self.model.objective is not None:
             objvar = self.model.objective.objvar

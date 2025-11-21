@@ -113,7 +113,7 @@ Parameter x(i);
         assert progress["lines_total"] == 2
 
     def test_missing_features_extracted_for_lead_lag(self, tmp_path: Path):
-        """Missing features should detect lead/lag indexing."""
+        """Lead/lag indexing now supported (Sprint 9)."""
         model_file = tmp_path / "test.gms"
         model_file.write_text(
             """
@@ -125,24 +125,18 @@ eq(i).. y(i) =e= x(i++1);
 """
         )
 
-        # This will fail because i++1 is not supported
-        error = None
-        try:
-            parse_model_file(model_file)
-        except Exception as e:
-            error = e
+        # Sprint 9: i++1 is now supported, should parse successfully
+        model = parse_model_file(model_file)
+        assert model is not None
+        assert len(model.equations) == 1
 
-        assert error is not None
+        # Verify progress is 100%
+        progress = calculate_parse_progress_from_file(model_file, error=None)
+        assert progress["percentage"] == 100.0
 
-        # Extract missing features
-        source = model_file.read_text()
-        source_lines = source.split("\n")
-        source_line = None
-        if hasattr(error, "line") and error.line:
-            source_line = source_lines[error.line - 1] if error.line <= len(source_lines) else None
-
-        features = extract_missing_features(type(error).__name__, str(error), source_line)
-        assert any("lead/lag" in f.lower() or "i++" in f.lower() for f in features)
+        # No missing features to extract since parsing succeeded
+        # Previously this test checked for lead/lag feature detection in errors
+        # Now that lead/lag is supported, the test validates successful parsing
 
     def test_parse_empty_file(self, tmp_path: Path):
         """Empty file should parse successfully with 0 lines."""

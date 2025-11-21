@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-20 16:14:20
+**Generated:** 2025-11-21 09:58:12
 **Sprint:** Sprint 8
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint8.json`](../../reports/gamslib_ingestion_sprint8.json)
@@ -25,13 +25,13 @@
 | Model | Status | Progress | Missing Features | Convert | Solve | E2E |
 |-------|--------|----------|------------------|---------|-------|-----|
 | circle | ⚠️ PARTIALLY PARSED | 57% (16/28) | parse error | - | - | ❌ |
-| himmel16 | ⚠️ PARTIALLY PARSED | 42% (14/33) | lead/lag indexing (i++1, i--1) | - | - | ❌ |
-| hs62 | ⚠️ PARTIALLY PARSED | 61% (11/18) | model sections (mx, my, etc.) | - | - | ❌ |
+| himmel16 | 🟡 MOSTLY PARSED | 79% (26/33) | variable attributes (.l, .m, etc.) | - | - | ❌ |
+| hs62 | 🟡 MOSTLY PARSED | 83% (15/18) | parse error | - | - | ❌ |
 | mathopt1 | ✅ PASS | 100% (20/20) | - | - | - | ❌ |
 | maxmin | ⚠️ PARTIALLY PARSED | 40% (19/47) | nested indexing | - | - | ❌ |
 | mhw4d | ✅ PASS | 100% (14/14) | - | - | - | ❌ |
 | mhw4dx | ⚠️ PARTIALLY PARSED | 51% (27/53) | variable attributes (.l, .m, etc.) | - | - | ❌ |
-| mingamma | ❌ FAIL | 24% (9/37) | parse error | - | - | ❌ |
+| mingamma | 🟡 MOSTLY PARSED | 89% (33/37) | parse error | - | - | ❌ |
 | rbrock | ✅ PASS | 100% (8/8) | - | - | - | ❌ |
 | trig | ✅ PASS | 100% (14/14) | - | - | - | ❌ |
 
@@ -49,7 +49,8 @@
 ### Parse Errors
 | Error Type | Count | Models |
 |------------|-------|--------|
-| `ParseError` | 6 | circle, himmel16, hs62, maxmin, mhw4dx, mingamma |
+| `ParseError` | 5 | circle, hs62, maxmin, mhw4dx, mingamma |
+| `ParserSemanticError` | 1 | himmel16 |
 
 **Note:** Convert and solve errors will appear here once those stages are implemented.
 
@@ -75,29 +76,25 @@ Suggestion: Declare 'i' as a variable, parameter, or set before using it
 ### himmel16.gms
 **Model:** himmel16
 **Status:** Parse Failed
-**Progress:** 42% (14/33 lines parsed)
-**Missing Features:** lead/lag indexing (i++1, i--1)
-**Error Type:** `ParseError`
+**Progress:** 79% (26/33 lines parsed)
+**Missing Features:** variable attributes (.l, .m, etc.)
+**Error Type:** `ParserSemanticError`
 **Error Message:**
 ```
-Error: Parse error at line 46, column 39: Unexpected character: '+'
-  areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));
-                                        ^
-
-Suggestion: This character is not valid in this context
+Conflicting level bound for variable 'x' at indices ('1',) [context: expression] (line 63, column 1)
 ```
 
 ### hs62.gms
 **Model:** hs62
 **Status:** Parse Failed
-**Progress:** 61% (11/18 lines parsed)
-**Missing Features:** model sections (mx, my, etc.)
+**Progress:** 83% (15/18 lines parsed)
+**Missing Features:** parse error
 **Error Type:** `ParseError`
 **Error Message:**
 ```
-Error: Parse error at line 35, column 1: Unexpected character: 'm'
-  mx / objdef, eq1x /;
-  ^
+Error: Parse error at line 44, column 14: Unexpected character: '-'
+  diff   optcr - relative distance from global;
+               ^
 
 Suggestion: This character is not valid in this context
 ```
@@ -135,13 +132,13 @@ Suggestion: This character is not valid in this context
 ### mingamma.gms
 **Model:** mingamma
 **Status:** Parse Failed
-**Progress:** 24% (9/37 lines parsed)
+**Progress:** 89% (33/37 lines parsed)
 **Missing Features:** parse error
 **Error Type:** `ParseError`
 **Error Message:**
 ```
-Error: Parse error at line 26, column 1: Unexpected character: 'm'
-  m2 / y2def /;
+Error: Parse error at line 60, column 1: Unexpected character: ')'
+  );
   ^
 
 Suggestion: This character is not valid in this context

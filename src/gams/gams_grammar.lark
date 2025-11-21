@@ -128,13 +128,34 @@ assignment_stmt: lvalue ASSIGN expr SEMI                    -> assign
 // lvalue supports: x.lo(i), x.up(i), x.fx(i), parameter(i), scalar
 lvalue: ref_bound | ref_indexed | ID
 
-ref_bound: ID "." BOUND_K "(" id_list ")"   -> bound_indexed
+ref_bound: ID "." BOUND_K "(" index_list ")"   -> bound_indexed
          | ID "." BOUND_K                      -> bound_scalar
          | ID "." ID                            -> attr_access
 
 BOUND_K: /(lo|up|fx|l|m)/i
 
-ref_indexed.2: ID "(" id_list ")"             -> symbol_indexed
+ref_indexed.2: ID "(" index_list ")"             -> symbol_indexed
+
+// ---------------------------
+// Indexing with lead/lag offsets (Sprint 9 Day 3)
+// ---------------------------
+
+// index_list supports both plain identifiers and lag/lead indexing
+// Example: x(i, j++1, k--2)
+index_list: index_expr ("," index_expr)*
+
+index_expr: ID lag_lead_suffix?
+
+lag_lead_suffix: CIRCULAR_LEAD offset_expr   -> circular_lead
+               | CIRCULAR_LAG offset_expr    -> circular_lag
+               | PLUS offset_expr            -> linear_lead
+               | MINUS offset_expr           -> linear_lag
+
+offset_expr: NUMBER                          -> offset_number
+           | ID                              -> offset_variable
+
+CIRCULAR_LEAD: "++"
+CIRCULAR_LAG: "--"
 
 // ---------------------------
 // Equations
@@ -160,6 +181,10 @@ MAXIMIZING_K: /(?i:maximizing|max)\b/
 model_stmt: ("Models"i | "Model"i) ID "/" "all"i "/" SEMI       -> model_all
           | ("Models"i | "Model"i) ID "/" model_ref_list "/" SEMI  -> model_with_list
           | ("Models"i | "Model"i) ID SEMI                         -> model_decl
+          | ("Models"i | "Model"i) model_decl_item+ SEMI        -> model_multi
+
+model_decl_item: ID "/" model_ref_list "/"
+               | ID "/" "all"i "/"
 
 model_ref_list: ID ("," ID)*
 
@@ -209,10 +234,7 @@ abort_stmt: "abort"i ("$" expr)? STRING? SEMI
 // Expressions
 // ---------------------------
 
-?expr: sum_expr
-
-sum_expr: SUM_K "(" id_list "," expr ")" -> sum
-        | or_expr
+?expr: or_expr
 
 SUM_K: "sum"i
 
@@ -241,14 +263,17 @@ comp_op: ASSIGN | LE | GE | LT | GT | NE
 ?power: atom
       | atom POW factor                  -> binop
 
-symbol_plain.1: ID
+symbol_plain: ID
 
 ?atom: NUMBER                             -> number
      | func_call                          -> funccall
+     | sum_expr
      | ref_bound
      | ref_indexed
      | symbol_plain
      | "(" expr ")"
+
+sum_expr: SUM_K "(" id_list "," expr ")"  -> sum
 
 func_call.3: FUNCNAME "(" arg_list? ")"
 arg_list: expr ("," expr)*

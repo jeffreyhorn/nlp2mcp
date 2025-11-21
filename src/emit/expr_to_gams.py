@@ -8,6 +8,7 @@ from src.ir.ast import (
     Binary,
     Call,
     Const,
+    EquationRef,
     Expr,
     MultiplierRef,
     ParamRef,
@@ -152,26 +153,34 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
         case SymbolRef(name):
             return name
 
-        case VarRef(name, indices):
-            if indices:
-                quoted_indices = _quote_indices(indices)
+        case VarRef() as var_ref:
+            if var_ref.indices:
+                quoted_indices = _quote_indices(var_ref.indices_as_strings())
                 indices_str = ",".join(quoted_indices)
-                return f"{name}({indices_str})"
-            return name
+                return f"{var_ref.name}({indices_str})"
+            return var_ref.name
 
-        case ParamRef(name, indices):
-            if indices:
-                quoted_indices = _quote_indices(indices)
+        case ParamRef() as param_ref:
+            if param_ref.indices:
+                quoted_indices = _quote_indices(param_ref.indices_as_strings())
                 indices_str = ",".join(quoted_indices)
-                return f"{name}({indices_str})"
-            return name
+                return f"{param_ref.name}({indices_str})"
+            return param_ref.name
 
-        case MultiplierRef(name, indices):
-            if indices:
-                quoted_indices = _quote_indices(indices)
+        case MultiplierRef() as mult_ref:
+            if mult_ref.indices:
+                quoted_indices = _quote_indices(mult_ref.indices_as_strings())
                 indices_str = ",".join(quoted_indices)
-                return f"{name}({indices_str})"
-            return name
+                return f"{mult_ref.name}({indices_str})"
+            return mult_ref.name
+
+        case EquationRef() as eq_ref:
+            # Equation attribute access: eq.m, eq.l('1'), etc.
+            if eq_ref.indices:
+                quoted_indices = _quote_indices(eq_ref.indices_as_strings())
+                indices_str = ",".join(quoted_indices)
+                return f"{eq_ref.name}.{eq_ref.attribute}({indices_str})"
+            return f"{eq_ref.name}.{eq_ref.attribute}"
 
         case Unary(op, child):
             child_str = expr_to_gams(child, parent_op=op)
