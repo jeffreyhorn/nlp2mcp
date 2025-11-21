@@ -38,9 +38,9 @@ class TestLarkErrorWrapping:
         error = exc_info.value
         assert error.line == 1, f"Error should be on line 1, got {error.line}"
         assert error.column is not None, "Error should include column number"
-        assert "Unexpected character" in str(
-            error
-        ), "Error message should mention 'Unexpected character'"
+        assert "Unexpected character" in str(error), (
+            "Error message should mention 'Unexpected character'"
+        )
 
 
 class TestParseErrorFormatting:
@@ -114,9 +114,9 @@ p('i1') = 10;
 
         error = exc_info.value
         error_str = str(error)
-        assert (
-            "expects" in error_str.lower() or "2" in error_str
-        ), "Error should mention expected index count"
+        assert "expects" in error_str.lower() or "2" in error_str, (
+            "Error should mention expected index count"
+        )
         assert error.line is not None, "Error should have line number"
 
     def test_equation_without_declaration_has_suggestion(self):
@@ -131,9 +131,9 @@ undeclared_eq.. x =e= 5;
 
         error = exc_info.value
         error_str = str(error)
-        assert (
-            "declaration" in error_str.lower() or "Equation" in error_str
-        ), "Error should mention equation declaration"
+        assert "declaration" in error_str.lower() or "Equation" in error_str, (
+            "Error should mention equation declaration"
+        )
         assert error.line is not None, "Error should have line number"
 
 
@@ -156,9 +156,9 @@ class TestErrorCoverage:
 
             error = exc_info.value
             # All errors should have line information
-            assert (
-                error.line is not None
-            ), f"Error for '{expected_text}' missing line number: {error}"
+            assert error.line is not None, (
+                f"Error for '{expected_text}' missing line number: {error}"
+            )
             # Column may be None in some cases, but line should always be present
 
     def test_semantic_errors_preserve_context(self):
@@ -192,9 +192,9 @@ class TestErrorEnhancer:
 
         error = exc_info.value
         error_str = str(error)
-        assert (
-            "Did you mean 'Scalar'?" in error_str
-        ), f"Should suggest 'Scalar' for typo 'Scaler': {error_str}"
+        assert "Did you mean 'Scalar'?" in error_str, (
+            f"Should suggest 'Scalar' for typo 'Scaler': {error_str}"
+        )
 
     def test_set_bracket_error_suggestion(self):
         """Test that set bracket errors suggest correct syntax."""
@@ -205,9 +205,9 @@ class TestErrorEnhancer:
 
         error = exc_info.value
         error_str = str(error)
-        assert (
-            "/.../" in error_str or "not [...]" in error_str.lower()
-        ), f"Should suggest /.../ syntax: {error_str}"
+        assert "/.../" in error_str or "not [...]" in error_str.lower(), (
+            f"Should suggest /.../ syntax: {error_str}"
+        )
 
     def test_missing_semicolon_suggestion(self):
         """Test that missing semicolons are detected and suggested."""
@@ -219,9 +219,9 @@ class TestErrorEnhancer:
         error = exc_info.value
         error_str = str(error)
         # Should suggest adding semicolon (the enhancer should detect this pattern)
-        assert (
-            "semicolon" in error_str.lower() or ";" in error_str
-        ), f"Should mention semicolon: {error_str}"
+        assert "semicolon" in error_str.lower() or ";" in error_str, (
+            f"Should mention semicolon: {error_str}"
+        )
 
     def test_unsupported_feature_explanation(self):
         """Test that unsupported features get roadmap explanations."""

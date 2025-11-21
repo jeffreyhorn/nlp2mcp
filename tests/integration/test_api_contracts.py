@@ -75,17 +75,17 @@ class TestSparseGradientContract:
         normalize_model(model)
         gradient = compute_objective_gradient(model)
 
-        assert hasattr(
-            gradient, "index_mapping"
-        ), "GradientVector must have index_mapping attribute"
+        assert hasattr(gradient, "index_mapping"), (
+            "GradientVector must have index_mapping attribute"
+        )
         # index_mapping should be IndexMapping with required attributes
         assert hasattr(gradient.index_mapping, "num_vars"), "index_mapping must have num_vars"
-        assert hasattr(
-            gradient.index_mapping, "var_to_col"
-        ), "index_mapping must have var_to_col mapping"
-        assert hasattr(
-            gradient.index_mapping, "col_to_var"
-        ), "index_mapping must have col_to_var mapping"
+        assert hasattr(gradient.index_mapping, "var_to_col"), (
+            "index_mapping must have var_to_col mapping"
+        )
+        assert hasattr(gradient.index_mapping, "col_to_var"), (
+            "index_mapping must have col_to_var mapping"
+        )
 
     def test_num_cols_matches_mapping_num_vars(self):
         """num_cols must equal index_mapping.num_vars.
@@ -98,9 +98,9 @@ class TestSparseGradientContract:
         gradient = compute_objective_gradient(model)
 
         # These must be consistent
-        assert (
-            gradient.num_cols == gradient.index_mapping.num_vars
-        ), "num_cols must match number of variables in index_mapping"
+        assert gradient.num_cols == gradient.index_mapping.num_vars, (
+            "num_cols must match number of variables in index_mapping"
+        )
 
     def test_sparse_gradient_has_get_derivative_methods(self):
         """GradientVector must have get_derivative and get_derivative_by_name methods."""
@@ -109,9 +109,9 @@ class TestSparseGradientContract:
         gradient = compute_objective_gradient(model)
 
         assert hasattr(gradient, "get_derivative"), "GradientVector must have get_derivative method"
-        assert hasattr(
-            gradient, "get_derivative_by_name"
-        ), "GradientVector must have get_derivative_by_name method"
+        assert hasattr(gradient, "get_derivative_by_name"), (
+            "GradientVector must have get_derivative_by_name method"
+        )
         assert callable(gradient.get_derivative), "get_derivative must be callable"
         assert callable(gradient.get_derivative_by_name), "get_derivative_by_name must be callable"
 
@@ -146,9 +146,9 @@ class TestJacobianStructureContract:
         # Keys should be row IDs (int), values should be dict of col_id → Expr
         for row_id, row_entries in j_ineq.entries.items():
             assert isinstance(row_id, int), f"entries key must be int (row_id), got {type(row_id)}"
-            assert isinstance(
-                row_entries, dict
-            ), f"entries value must be dict, got {type(row_entries)}"
+            assert isinstance(row_entries, dict), (
+                f"entries value must be dict, got {type(row_entries)}"
+            )
             for col_id, expr in row_entries.items():
                 assert isinstance(col_id, int), f"col_id must be int, got {type(col_id)}"
                 assert expr is not None, "expr must not be None"
@@ -159,16 +159,16 @@ class TestJacobianStructureContract:
         normalize_model(model)
         j_eq, j_ineq = compute_constraint_jacobian(model)
 
-        assert hasattr(
-            j_ineq, "index_mapping"
-        ), "JacobianStructure must have index_mapping attribute"
+        assert hasattr(j_ineq, "index_mapping"), (
+            "JacobianStructure must have index_mapping attribute"
+        )
         # index_mapping should have methods to look up equations and variables
-        assert hasattr(
-            j_ineq.index_mapping, "get_eq_instance"
-        ), "index_mapping must have get_eq_instance"
-        assert hasattr(
-            j_ineq.index_mapping, "get_var_instance"
-        ), "index_mapping must have get_var_instance"
+        assert hasattr(j_ineq.index_mapping, "get_eq_instance"), (
+            "index_mapping must have get_eq_instance"
+        )
+        assert hasattr(j_ineq.index_mapping, "get_var_instance"), (
+            "index_mapping must have get_var_instance"
+        )
 
     def test_jacobian_structure_has_get_derivative_methods(self):
         """JacobianStructure must have get_derivative and get_derivative_by_names methods."""
@@ -176,12 +176,12 @@ class TestJacobianStructureContract:
         normalize_model(model)
         j_eq, j_ineq = compute_constraint_jacobian(model)
 
-        assert hasattr(
-            j_ineq, "get_derivative"
-        ), "JacobianStructure must have get_derivative method"
-        assert hasattr(
-            j_ineq, "get_derivative_by_names"
-        ), "JacobianStructure must have get_derivative_by_names method"
+        assert hasattr(j_ineq, "get_derivative"), (
+            "JacobianStructure must have get_derivative method"
+        )
+        assert hasattr(j_ineq, "get_derivative_by_names"), (
+            "JacobianStructure must have get_derivative_by_names method"
+        )
         assert callable(j_ineq.get_derivative), "get_derivative must be callable"
         assert callable(j_ineq.get_derivative_by_names), "get_derivative_by_names must be callable"
 
@@ -221,9 +221,9 @@ class TestModelIRContract:
         # Bounds should NOT be in equations dict
         for bound_name in model.normalized_bounds.keys():
             # Bound names like 'x_lo', 'x_up', 'x_lo(i1)' should NOT be in equations
-            assert (
-                bound_name not in model.equations
-            ), f"Bound {bound_name} should not be in equations dict (Issue #24)"
+            assert bound_name not in model.equations, (
+                f"Bound {bound_name} should not be in equations dict (Issue #24)"
+            )
 
     def test_bounds_in_inequalities_list(self):
         """Bounds should appear in inequalities list for iteration convenience."""
@@ -235,9 +235,9 @@ class TestModelIRContract:
 
         # Every bound should be in inequalities list
         for bound_name in model.normalized_bounds.keys():
-            assert (
-                bound_name in model.inequalities
-            ), f"Bound {bound_name} should be in inequalities list"
+            assert bound_name in model.inequalities, (
+                f"Bound {bound_name} should be in inequalities list"
+            )
 
     def test_model_ir_has_objective(self):
         """ModelIR must have objective field."""

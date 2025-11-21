@@ -301,9 +301,9 @@ Solve test using NLP minimizing obj;
             except NumericalError as e:
                 error_msg = str(e).lower()
                 for keyword in expected_keywords:
-                    assert (
-                        keyword.lower() in error_msg
-                    ), f"Expected '{keyword}' in error message, got: {error_msg}"
+                    assert keyword.lower() in error_msg, (
+                        f"Expected '{keyword}' in error message, got: {error_msg}"
+                    )
 
 
 class TestErrorMessageLength:

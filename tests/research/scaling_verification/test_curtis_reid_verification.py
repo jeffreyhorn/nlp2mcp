@@ -83,9 +83,9 @@ class TestCurtisReidVerification:
         # Check condition number doesn't drastically worsen
         cond_before = np.linalg.cond(A)
         cond_after = np.linalg.cond(A_scaled)
-        assert (
-            cond_after < cond_before * MAX_CONDITION_WORSENING_FACTOR
-        ), f"Condition number worsened significantly: {cond_before:.2e} -> {cond_after:.2e}"
+        assert cond_after < cond_before * MAX_CONDITION_WORSENING_FACTOR, (
+            f"Condition number worsened significantly: {cond_before:.2e} -> {cond_after:.2e}"
+        )
 
         print(f"✓ Condition number: {cond_before:.2e} -> {cond_after:.2e}")
 
@@ -108,9 +108,9 @@ class TestCurtisReidVerification:
         # Unscale: x = C @ y
         x_scaled = C @ y_scaled
 
-        assert np.allclose(
-            x_orig, x_scaled, rtol=1e-10
-        ), f"Solutions differ: {x_orig} vs {x_scaled}"
+        assert np.allclose(x_orig, x_scaled, rtol=1e-10), (
+            f"Solutions differ: {x_orig} vs {x_scaled}"
+        )
 
         print(f"✓ Solutions match: {x_orig}")
 
@@ -185,12 +185,12 @@ class TestCurtisReidVerification:
 
         # Compare (should be very close)
         # For identity matrix, scaling should be identity (norms already 1.0)
-        assert np.allclose(
-            R_impl, R_ref_diag, rtol=1e-6
-        ), f"Row scaling differs: {R_impl} vs {R_ref_diag}"
-        assert np.allclose(
-            C_impl, C_ref_diag, rtol=1e-6
-        ), f"Column scaling differs: {C_impl} vs {C_ref_diag}"
+        assert np.allclose(R_impl, R_ref_diag, rtol=1e-6), (
+            f"Row scaling differs: {R_impl} vs {R_ref_diag}"
+        )
+        assert np.allclose(C_impl, C_ref_diag, rtol=1e-6), (
+            f"Column scaling differs: {C_impl} vs {C_ref_diag}"
+        )
 
         print("✓ Implementation matches specification (identity matrix test)")
 
@@ -231,9 +231,9 @@ class TestConditioningImprovement:
             print(f"  Ratio:  {improvement_ratio:.2f}x")
 
             # At minimum, shouldn't drastically worsen
-            assert (
-                cond_after < cond_before * MAX_CONDITION_WORSENING_FACTOR
-            ), f"{name}: Conditioning worsened significantly"
+            assert cond_after < cond_before * MAX_CONDITION_WORSENING_FACTOR, (
+                f"{name}: Conditioning worsened significantly"
+            )
 
 
 if __name__ == "__main__":
