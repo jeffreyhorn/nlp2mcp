@@ -231,27 +231,6 @@ class TestEquationConversion:
         assert "Equation ineq;" in result.output
         assert "ineq.. x =L= 10;" in result.output
 
-    # TODO: Fix indexed equation test - need to use VarRef instead of SymbolRef
-    # def test_convert_indexed_equation(self):
-    #     """Test converting an indexed equation."""
-    #     from src.ir.ast import VarRef
-    #     from src.ir.symbols import EquationDef, Rel
-    #
-    #     ir = ModelIR()
-    #     # Indexed equation: balance(i).. supply(i) =e= demand(i);
-    #     lhs = VarRef(name="supply", indices=("i",))
-    #     rhs = VarRef(name="demand", indices=("i",))
-    #     ir.equations["balance"] = EquationDef(
-    #         name="balance", domain=("i",), relation=Rel.EQ, lhs_rhs=(lhs, rhs)
-    #     )
-    #
-    #     converter = Converter(ir)
-    #     result = converter.convert()
-    #
-    #     assert result.success is True
-    #     assert "Equation balance(i);" in result.output
-    #     assert "balance(i).." in result.output
-
     def test_convert_equation_with_binary_expression(self):
         """Test converting equation with binary operation."""
         from src.ir.ast import Binary, Const, SymbolRef

@@ -61,9 +61,9 @@ Implemented conversion pipeline infrastructure with IR → MCP GAMS mappings for
 #### Deliverables
 
 - `src/converter/__init__.py` - Module exports
-- `src/converter/converter.py` - Converter class (263 lines)
+- `src/converter/converter.py` - Converter class (260 lines)
 - `tests/converter/__init__.py` - Test module
-- `tests/converter/test_converter.py` - Unit tests (295 lines)
+- `tests/converter/test_converter.py` - Unit tests (297 lines)
 
 #### Next Steps
 

@@ -12,13 +12,11 @@ from dataclasses import dataclass
 
 from ..emit.expr_to_gams import expr_to_gams
 from ..ir.model_ir import ModelIR
-from ..ir.symbols import Rel, VarKind
+from ..ir.symbols import EquationDef, Rel, VariableDef, VarKind
 
 
 class ConversionError(Exception):
     """Exception raised when IR cannot be converted to MCP GAMS."""
-
-    pass
 
 
 @dataclass
@@ -134,7 +132,7 @@ class Converter:
         }
         return type_map.get(kind, "Free")
 
-    def _emit_variable_bounds(self, var_name: str, var_def):
+    def _emit_variable_bounds(self, var_name: str, var_def: VariableDef):
         """Emit variable bounds and initial values.
 
         Args:
@@ -221,7 +219,7 @@ class Converter:
             # Generate definition
             self._emit_equation_definition(eq_name, eq_def)
 
-    def _emit_equation_definition(self, eq_name: str, eq_def):
+    def _emit_equation_definition(self, eq_name: str, eq_def: EquationDef):
         """Emit equation definition.
 
         Args:
