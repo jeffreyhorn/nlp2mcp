@@ -1,6 +1,6 @@
 # Issue: Support Compile-Time Constants (%...% syntax)
 
-**Status:** Open  
+**Status:** Completed  
 **Priority:** Medium  
 **Effort:** 2-3 hours  
 **Blocking:** mingamma.gms parsing  

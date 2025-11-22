@@ -239,32 +239,28 @@ else_clause: ELSE_K exec_stmt+
 // Display and Abort Statements (Sprint 8 Day 2 - mock/skip)
 // ---------------------------
 
+// Abort statement base rule (no SEMI)
+abort_base: "abort"i "$" "[" expr "]" STRING     -> abort_cond_square_msg
+          | "abort"i "$" "[" expr "]"             -> abort_cond_square
+          | "abort"i "$" "(" expr ")" STRING      -> abort_cond_paren_msg
+          | "abort"i "$" "(" expr ")"             -> abort_cond_paren
+          | "abort"i "$" expr STRING              -> abort_cond_plain_msg
+          | "abort"i "$" expr                     -> abort_cond_plain
+          | "abort"i STRING                       -> abort_msg
+          | "abort"i                              -> abort_plain
+
 // Top-level statements (with SEMI)
 display_stmt: "display"i display_item ("," display_item)* SEMI
 
 display_item: expr
             | STRING
 
-abort_stmt: "abort"i "$" "[" expr "]" STRING SEMI     -> abort_cond_square_msg
-          | "abort"i "$" "[" expr "]" SEMI             -> abort_cond_square
-          | "abort"i "$" "(" expr ")" STRING SEMI      -> abort_cond_paren_msg
-          | "abort"i "$" "(" expr ")" SEMI             -> abort_cond_paren
-          | "abort"i "$" expr STRING SEMI              -> abort_cond_plain_msg
-          | "abort"i "$" expr SEMI                     -> abort_cond_plain
-          | "abort"i STRING SEMI                       -> abort_msg
-          | "abort"i SEMI                              -> abort_plain
+abort_stmt: abort_base SEMI
 
 // Variants for use in if-statements (without SEMI)
 display_stmt_nosemi: "display"i display_item ("," display_item)*
 
-abort_stmt_nosemi: "abort"i "$" "[" expr "]" STRING     -> abort_cond_square_msg
-                 | "abort"i "$" "[" expr "]"             -> abort_cond_square
-                 | "abort"i "$" "(" expr ")" STRING      -> abort_cond_paren_msg
-                 | "abort"i "$" "(" expr ")"             -> abort_cond_paren
-                 | "abort"i "$" expr STRING              -> abort_cond_plain_msg
-                 | "abort"i "$" expr                     -> abort_cond_plain
-                 | "abort"i STRING                       -> abort_msg
-                 | "abort"i                              -> abort_plain
+abort_stmt_nosemi: abort_base
 
 // ---------------------------
 // Expressions

@@ -216,12 +216,12 @@ class CompileTimeConstant(Expr):
     GAMS compile-time constant using %...% syntax.
 
     Examples:
-        %solveStat.capabilityProblems%  → CompileTimeConstant(path=['solveStat', 'capabilityProblems'])
-        %system.date%                   → CompileTimeConstant(path=['system', 'date'])
-        %myvar%                         → CompileTimeConstant(path=['myvar'])
+        %solveStat.capabilityProblems%  → CompileTimeConstant(path=('solveStat', 'capabilityProblems'))
+        %system.date%                   → CompileTimeConstant(path=('system', 'date'))
+        %myvar%                         → CompileTimeConstant(path=('myvar',))
 
     Attributes:
-        path: List of identifiers forming the dotted path (e.g., ['solveStat', 'capabilityProblems'])
+        path: Tuple of identifiers forming the dotted path (e.g., ('solveStat', 'capabilityProblems'))
     """
 
     path: tuple[str, ...]
