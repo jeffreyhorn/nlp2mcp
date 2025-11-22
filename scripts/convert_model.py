@@ -35,7 +35,7 @@ def main():
     print("-" * 60)
 
     # Step 1: Parse GAMS source → IR
-    print("\n[1/2] Parsing GAMS source to IR...")
+    print("\n[1/3] Parsing GAMS source to IR...")
     try:
         ir = parse_model_file(str(input_file))
         print(f"  ✓ Parsed successfully")
@@ -47,7 +47,7 @@ def main():
         sys.exit(1)
 
     # Step 2: Convert IR → MCP GAMS
-    print("\n[2/2] Converting IR to MCP GAMS format...")
+    print("\n[2/3] Converting IR to MCP GAMS format...")
     try:
         converter = Converter(ir)
         result = converter.convert()

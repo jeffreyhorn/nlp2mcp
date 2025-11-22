@@ -49,7 +49,7 @@ def check_gams_syntax(file_path: Path) -> CheckResult:
             return CheckResult(
                 name="Balanced parentheses",
                 passed=False,
-                message=f"Unbalanced parentheses: {paren_count} extra '('",
+                message=f"Unbalanced parentheses: {abs(paren_count)} extra {'(' if paren_count > 0 else ')''}",
             )
 
         # Check that declarations end with semicolons
@@ -141,7 +141,7 @@ def check_variables_declared(file_path: Path) -> CheckResult:
         # Check for undefined variables
         undefined = references - declared_vars
         # Filter out likely false positives (single letters that are indices, etc.)
-        undefined = {v for v in undefined if len(v) > 1 or v in declared_vars}
+        undefined = {v for v in undefined if len(v) > 1}
 
         if undefined and len(undefined) < 10:  # Only report if not too many
             return CheckResult(
