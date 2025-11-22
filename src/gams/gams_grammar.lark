@@ -229,8 +229,9 @@ elseif_clause: ELSEIF_K expr "," exec_stmt+
 else_clause: ELSE_K exec_stmt+
 
 // Executable statements that can appear inside if blocks
-?exec_stmt: display_stmt
-          | abort_stmt
+// Note: These statements don't include trailing SEMI - the if_stmt grammar handles it
+?exec_stmt: display_stmt_nosemi
+          | abort_stmt_nosemi
           | assignment_stmt
           | SEMI
 
@@ -238,12 +239,28 @@ else_clause: ELSE_K exec_stmt+
 // Display and Abort Statements (Sprint 8 Day 2 - mock/skip)
 // ---------------------------
 
+// Abort statement base rule (no SEMI)
+abort_base: "abort"i "$" "[" expr "]" STRING     -> abort_cond_square_msg
+          | "abort"i "$" "[" expr "]"             -> abort_cond_square
+          | "abort"i "$" "(" expr ")" STRING      -> abort_cond_paren_msg
+          | "abort"i "$" "(" expr ")"             -> abort_cond_paren
+          | "abort"i "$" expr STRING              -> abort_cond_plain_msg
+          | "abort"i "$" expr                     -> abort_cond_plain
+          | "abort"i STRING                       -> abort_msg
+          | "abort"i                              -> abort_plain
+
+// Top-level statements (with SEMI)
 display_stmt: "display"i display_item ("," display_item)* SEMI
 
 display_item: expr
             | STRING
 
-abort_stmt: "abort"i ("$" expr)? STRING? SEMI
+abort_stmt: abort_base SEMI
+
+// Variants for use in if-statements (without SEMI)
+display_stmt_nosemi: "display"i display_item ("," display_item)*
+
+abort_stmt_nosemi: abort_base
 
 // ---------------------------
 // Expressions
@@ -283,10 +300,15 @@ symbol_plain: ID
 ?atom: NUMBER                             -> number
      | func_call                          -> funccall
      | sum_expr
+     | compile_time_const                 -> compile_const
      | ref_bound
      | ref_indexed
      | symbol_plain
      | "(" expr ")"
+
+// Compile-time constants: %identifier% or %path.to.value%
+compile_time_const: "%" compile_const_path "%"
+compile_const_path: ID ("." ID)*
 
 sum_expr: SUM_K "(" id_list "," expr ")"  -> sum
 
@@ -297,7 +319,7 @@ arg_list: expr ("," expr)*
 // Tokens & basics
 // ---------------------------
 
-FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card|uniform|normal)\b/
+FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card|uniform|normal|gamma|loggamma)\b/
 IF_K: /(?i:if)\b/
 ELSEIF_K: /(?i:elseif)\b/
 ELSE_K: /(?i:else)\b/

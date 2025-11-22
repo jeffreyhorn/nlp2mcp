@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-21 12:53:35
+**Generated:** 2025-11-21 18:21:48
 **Sprint:** Sprint 8
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint8.json`](../../reports/gamslib_ingestion_sprint8.json)
@@ -11,8 +11,8 @@
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| **Parse Rate** | 50.0% (5/10) | ≥10% | ✅ |
-| **Convert Rate** | 0.0% (0/5) | ≥50% | ⚠️ Sprint 6: Not implemented |
+| **Parse Rate** | 60.0% (6/10) | ≥10% | ✅ |
+| **Convert Rate** | 0.0% (0/6) | ≥50% | ⚠️ Sprint 6: Not implemented |
 | **Solve Rate** | 0.0% (N/A) | TBD | ⚠️ Sprint 6: Not implemented |
 | **End-to-End** | 0.0% (0/10) | TBD | ⚠️ Sprint 6: Not implemented |
 
@@ -30,8 +30,8 @@
 | mathopt1 | ✅ PASS | 100% (20/20) | - | - | - | ❌ |
 | maxmin | ⚠️ PARTIALLY PARSED | 40% (19/47) | nested indexing | - | - | ❌ |
 | mhw4d | ✅ PASS | 100% (14/14) | - | - | - | ❌ |
-| mhw4dx | ⚠️ PARTIALLY PARSED | 51% (27/53) | variable attributes (.l, .m, etc.) | - | - | ❌ |
-| mingamma | 🟡 MOSTLY PARSED | 89% (33/37) | parse error | - | - | ❌ |
+| mhw4dx | ✅ PASS | 100% (53/53) | - | - | - | ❌ |
+| mingamma | ⚠️ PARTIALLY PARSED | 54% (20/37) | parse error | - | - | ❌ |
 | rbrock | ✅ PASS | 100% (8/8) | - | - | - | ❌ |
 | trig | ✅ PASS | 100% (14/14) | - | - | - | ❌ |
 
@@ -49,7 +49,7 @@
 ### Parse Errors
 | Error Type | Count | Models |
 |------------|-------|--------|
-| `ParseError` | 4 | circle, maxmin, mhw4dx, mingamma |
+| `ParseError` | 3 | circle, maxmin, mingamma |
 | `ParserSemanticError` | 1 | himmel16 |
 
 **Note:** Convert and solve errors will appear here once those stages are implemented.
@@ -99,32 +99,17 @@ Error: Parse error at line 51, column 12: Unexpected character: '('
 Suggestion: This character is not valid in this context
 ```
 
-### mhw4dx.gms
-**Model:** mhw4dx
-**Status:** Parse Failed
-**Progress:** 51% (27/53 lines parsed)
-**Missing Features:** variable attributes (.l, .m, etc.)
-**Error Type:** `ParseError`
-**Error Message:**
-```
-Error: Parse error at line 63, column 11: Unexpected character: 'a'
-  elseif    abs(m.l-44.02207169) < tol, // local solution
-            ^
-
-Suggestion: This character is not valid in this context
-```
-
 ### mingamma.gms
 **Model:** mingamma
 **Status:** Parse Failed
-**Progress:** 89% (33/37 lines parsed)
+**Progress:** 54% (20/37 lines parsed)
 **Missing Features:** parse error
 **Error Type:** `ParseError`
 **Error Message:**
 ```
-Error: Parse error at line 60, column 1: Unexpected character: ')'
-  );
-  ^
+Error: Parse error at line 41, column 13: Undefined symbol 'y1opt' referenced [context: assignment]
+  y2opt = log(y1opt);
+              ^
 
-Suggestion: This character is not valid in this context
+Suggestion: Declare 'y1opt' as a variable, parameter, or set before using it
 ```

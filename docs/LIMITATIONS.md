@@ -84,6 +84,7 @@ nlp2mcp expects well-formed GAMS NLP models with:
 - Exponential/Logarithmic: `exp(x)`, `log(x)` (natural log)
 - Power: `power(x, n)`, `sqr(x)`, `sqrt(x)`
 - Trigonometric: `sin(x)`, `cos(x)`, `tan(x)`
+- Special Functions: `gamma(x)`, `loggamma(x)` - **Note:** Derivatives require digamma function (psi) which GAMS lacks. Models using these functions currently skip autodiff and are parsed but not converted to MCP.
 
 **Indexing and Sets:**
 - Sets with explicit members: `Set i /i1, i2, i3/`
@@ -114,6 +115,7 @@ nlp2mcp expects well-formed GAMS NLP models with:
 **Advanced GAMS Functions:**
 - `min(x, y, z)` / `max(x, y, z)` - **Partially supported** (see note below)
 - `abs(x)` - **Partially supported** (reformulated using complementarity)
+- `gamma(x)` / `loggamma(x)` - **Parse only** (derivatives require unsupported digamma function)
 - Conditional expressions: `$(condition)`
 - Special functions: `sign`, `mod`, `div`, `ceil`, `floor`
 - String operations

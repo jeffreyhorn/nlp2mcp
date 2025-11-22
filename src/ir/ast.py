@@ -208,3 +208,27 @@ class IndexOffset(Expr):
 
     def __repr__(self) -> str:
         return f"IndexOffset(base={self.base!r}, offset={self.offset!r}, circular={self.circular})"
+
+
+@dataclass(frozen=True)
+class CompileTimeConstant(Expr):
+    """
+    GAMS compile-time constant using %...% syntax.
+
+    Examples:
+        %solveStat.capabilityProblems%  → CompileTimeConstant(path=('solveStat', 'capabilityProblems'))
+        %system.date%                   → CompileTimeConstant(path=('system', 'date'))
+        %myvar%                         → CompileTimeConstant(path=('myvar',))
+
+    Attributes:
+        path: Tuple of identifiers forming the dotted path (e.g., ('solveStat', 'capabilityProblems'))
+    """
+
+    path: tuple[str, ...]
+
+    def children(self) -> Iterable[Expr]:
+        return []
+
+    def __repr__(self) -> str:
+        dotted = ".".join(self.path)
+        return f"CompileTimeConstant(%{dotted}%)"
