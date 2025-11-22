@@ -22,7 +22,7 @@ jobs:
       - name: Run fast tests with timing
         run: |
           start_time=$(date +%s)
-          pytest -m "not slow" --tb=short
+          python -m pytest tests/ -n auto -m "not slow" --tb=short
           end_time=$(date +%s)
           duration=$((end_time - start_time))
           echo "Fast test duration: ${duration}s"
