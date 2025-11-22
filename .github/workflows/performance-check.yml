@@ -1,0 +1,39 @@
+name: Performance Budget Check
+
+on: [pull_request]
+
+jobs:
+  check-performance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run fast tests with timing
+        run: |
+          start_time=$(date +%s)
+          pytest -m "not slow" --tb=short
+          end_time=$(date +%s)
+          duration=$((end_time - start_time))
+          echo "Fast test duration: ${duration}s"
+
+          # Check budget (30s limit, 27s warning)
+          if [ $duration -gt 30 ]; then
+            echo "❌ BUDGET EXCEEDED: Fast tests took ${duration}s (budget: 30s)"
+            exit 1
+          elif [ $duration -gt 27 ]; then
+            echo "⚠️  WARNING: Fast tests took ${duration}s (approaching 30s budget)"
+            exit 0
+          else
+            echo "✅ Within budget: ${duration}s / 30s"
+            exit 0
+          fi

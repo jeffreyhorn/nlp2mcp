@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 9: Day 9 - Dashboard & Performance Instrumentation - 2025-11-22
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Added essential Sprint 9 metrics to dashboard showing parse rate with feature breakdown and conversion pipeline progress. Implemented CI performance budget enforcement (30s limit for fast tests). Current status: 40% parse rate (4/10 models), 50% conversion rate (2/4 parseable models), fast tests run in 18.74s.
+
+#### Achievements
+
+**Dashboard Implementation (45 minutes):**
+- ✅ Created `scripts/dashboard.py` (190 lines) with parse rate and conversion metrics
+- ✅ Parse rate tracking: 40% (4/10 GAMSLib models)
+- ✅ Baseline models (Sprint 8): mathopt1, mhw4d, rbrock, trig (all ✅)
+- ✅ Sprint 9 targets: himmel16 (i++1), hs62 (model sections), mingamma (attributes) - 0/3 unlocked
+- ✅ Feature breakdown showing which features would unlock which models
+- ✅ Conversion metrics: 2 models converted (mhw4d, rbrock)
+- ✅ Conversion rate: 50% of parseable models
+
+**CI Performance Budget (30 minutes):**
+- ✅ Created `.github/workflows/performance-check.yml`
+- ✅ Budget enforcement: Fail if >30s, warn if >27s
+- ✅ Current fast test duration: 18.74s (✅ within budget)
+- ✅ Automated timing and budget checking in CI
+
+**Sprint 9 Metrics Summary:**
+- Parse rate: 40% (4/10 models) - baseline models from Sprint 8 maintained
+- Models unlocked by Sprint 9 features: 0/3 (himmel16, hs62, mingamma not yet parsing)
+- Conversion: 2 models converted successfully (50% of parseable models)
+- Performance: Fast tests 18.74s (well under 30s budget)
+
+#### Quality Gates
+
+- ✅ `make typecheck` - No type errors (63 source files)
+- ✅ `make lint` - All checks passed
+- ✅ `make format` - All files formatted
+- ✅ `make test` - 1436 passed, 2 skipped, 1 xfailed (18.74s)
+
+#### Deliverables
+
+- `scripts/dashboard.py` - Dashboard generation with parse rate and conversion metrics
+- `.github/workflows/performance-check.yml` - CI performance budget enforcement
+- Dashboard output showing Sprint 9 progress
+
+#### Next Steps
+
+- Day 10: Sprint closeout and documentation
+
 ### Sprint 9: Day 8 - Conversion Pipeline Part 2 → CHECKPOINT 4 - 2025-11-22
 
 **Status:** ✅ COMPLETE → CHECKPOINT 4 PASSED ✅

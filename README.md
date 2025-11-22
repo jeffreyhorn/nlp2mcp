@@ -87,7 +87,7 @@ For the detailed Sprint 8 plan, see [docs/planning/EPIC_2/SPRINT_8/PLAN.md](docs
 - [x] Day 6: Equation Attributes (6-8 hours) → CHECKPOINT 3
 - [x] Day 7: Conversion Pipeline - Part 1 (4-5 hours)
 - [x] Day 8: Conversion Pipeline - Part 2 (2-3 hours) → CHECKPOINT 4
-- [ ] Day 9: Dashboard & Performance Instrumentation (1.5 hours)
+- [x] Day 9: Dashboard & Performance Instrumentation (1.5 hours)
 - [ ] Day 10: Documentation, PR, & Sprint Closeout (0.5 hours) - BUFFER DAY
 
 For the detailed Sprint 9 plan, see [docs/planning/EPIC_2/SPRINT_9/PLAN.md](docs/planning/EPIC_2/SPRINT_9/PLAN.md).
