@@ -80,8 +80,12 @@ def generate_parse_rate_summary() -> dict[str, Any]:
     }
 
 
-def generate_conversion_summary() -> dict[str, Any]:
-    """Generate conversion pipeline summary."""
+def generate_conversion_summary(passing_count: int) -> dict[str, Any]:
+    """Generate conversion pipeline summary.
+
+    Args:
+        passing_count: Number of models that parse successfully
+    """
     output_dir = Path("output")
     if not output_dir.exists():
         converted_models = []
@@ -89,10 +93,6 @@ def generate_conversion_summary() -> dict[str, Any]:
         converted_models = [
             p.stem.replace("_mcp", "") for p in output_dir.glob("*_mcp.gms") if p.is_file()
         ]
-
-    # Get parse rate to calculate conversion rate
-    parse_summary = generate_parse_rate_summary()
-    passing_count = parse_summary["passing_models"]
 
     conversion_rate = (len(converted_models) / passing_count * 100) if passing_count > 0 else 0
 
@@ -107,7 +107,7 @@ def generate_conversion_summary() -> dict[str, Any]:
 def generate_dashboard() -> str:
     """Generate the complete dashboard output."""
     parse_summary = generate_parse_rate_summary()
-    conversion_summary = generate_conversion_summary()
+    conversion_summary = generate_conversion_summary(parse_summary["passing_models"])
 
     output = []
     output.append("# Sprint 9 Dashboard")
