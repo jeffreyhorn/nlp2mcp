@@ -1,5 +1,5 @@
 {
-  "sprint": "Sprint 6",
+  "sprint": "Sprint 8",
   "total_models": 10,
   "models": [
     {
@@ -19,27 +19,25 @@
       "model_name": "himmel16",
       "gms_file": "himmel16.gms",
       "parse_status": "FAILED",
-      "parse_error": "Error: Parse error at line 46, column 39: Unexpected character: '+'\n  areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));\n                                        ^\n\nSuggestion: This character is not valid in this context",
-      "parse_error_type": "ParseError",
-      "parse_progress_percentage": 42.4,
-      "parse_progress_lines_parsed": 14,
+      "parse_error": "Conflicting level bound for variable 'x' at indices ('1',) [context: expression] (line 63, column 1)",
+      "parse_error_type": "ParserSemanticError",
+      "parse_progress_percentage": 78.8,
+      "parse_progress_lines_parsed": 26,
       "parse_progress_lines_total": 33,
       "missing_features": [
-        "lead/lag indexing (i++1, i--1)"
+        "variable attributes (.l, .m, etc.)"
       ]
     },
     {
       "model_name": "hs62",
       "gms_file": "hs62.gms",
-      "parse_status": "FAILED",
-      "parse_error": "Error: Parse error at line 35, column 1: Unexpected character: 'm'\n  mx / objdef, eq1x /;\n  ^\n\nSuggestion: This character is not valid in this context",
-      "parse_error_type": "ParseError",
-      "parse_progress_percentage": 61.1,
-      "parse_progress_lines_parsed": 11,
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null,
+      "parse_progress_percentage": 100.0,
+      "parse_progress_lines_parsed": 18,
       "parse_progress_lines_total": 18,
-      "missing_features": [
-        "model sections (mx, my, etc.)"
-      ]
+      "missing_features": []
     },
     {
       "model_name": "mathopt1",
@@ -93,10 +91,10 @@
       "model_name": "mingamma",
       "gms_file": "mingamma.gms",
       "parse_status": "FAILED",
-      "parse_error": "Error: Parse error at line 26, column 1: Unexpected character: 'm'\n  m2 / y2def /;\n  ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error": "Error: Parse error at line 60, column 1: Unexpected character: ')'\n  );\n  ^\n\nSuggestion: This character is not valid in this context",
       "parse_error_type": "ParseError",
-      "parse_progress_percentage": 24.3,
-      "parse_progress_lines_parsed": 9,
+      "parse_progress_percentage": 89.2,
+      "parse_progress_lines_parsed": 33,
       "parse_progress_lines_total": 37,
       "missing_features": [
         "parse error"
@@ -127,9 +125,9 @@
   ],
   "kpis": {
     "total_models": 10,
-    "parse_success": 4,
-    "parse_failed": 6,
-    "parse_rate_percent": 40.0,
+    "parse_success": 5,
+    "parse_failed": 5,
+    "parse_rate_percent": 50.0,
     "convert_success": 0,
     "convert_failed": 0,
     "convert_rate_percent": 0.0,
