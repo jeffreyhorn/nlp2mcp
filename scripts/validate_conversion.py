@@ -97,9 +97,14 @@ def check_variables_declared(file_path: Path) -> CheckResult:
     try:
         content = file_path.read_text()
 
-        # Extract variable declarations
-        var_pattern = r"(?:Free|Positive|Negative|Binary|Integer)\s+Variable\s+(\w+)"
-        declared_vars = set(re.findall(var_pattern, content))
+        # Extract variable declarations (support multiple names per line)
+        var_pattern = r"(?:Free|Positive|Negative|Binary|Integer)\s+Variables?\s+([\w,\s]+)"
+        declared_vars = set()
+        for match in re.findall(var_pattern, content):
+            for var in match.split(","):
+                var_name = var.strip()
+                if var_name:
+                    declared_vars.add(var_name)
 
         # Extract variable references (simplified - looks for word chars followed by . or in expressions)
         # This is a simple heuristic - matches x1, x2, etc. but not keywords
@@ -142,7 +147,7 @@ def check_variables_declared(file_path: Path) -> CheckResult:
             return CheckResult(
                 name="Variable declarations",
                 passed=True,  # Soft warning
-                message=f"All variables declared (possible refs: {', '.join(sorted(undefined)[:5])})",
+                message=f"{len(declared_vars)} variables declared (potential undeclared refs: {', '.join(sorted(undefined)[:5])})",
             )
 
         return CheckResult(
@@ -164,9 +169,14 @@ def check_equations_declared(file_path: Path) -> CheckResult:
     try:
         content = file_path.read_text()
 
-        # Extract equation declarations
-        eq_decl_pattern = r"Equation\s+(\w+)"
-        declared_eqs = set(re.findall(eq_decl_pattern, content))
+        # Extract equation declarations (support multiple names per line)
+        eq_decl_pattern = r"Equations?\s+([\w,\s]+);"
+        declared_eqs = set()
+        for match in re.findall(eq_decl_pattern, content):
+            for eq in match.split(","):
+                eq_name = eq.strip()
+                if eq_name:
+                    declared_eqs.add(eq_name)
 
         # Extract equation definitions
         eq_def_pattern = r"(\w+)\.\."

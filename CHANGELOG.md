@@ -25,7 +25,7 @@ Achieved Checkpoint 4 with successful end-to-end conversion of 2 GAMS NLP models
 - ✅ Output files: `output/rbrock_mcp.gms` (251 chars), `output/mhw4d_mcp.gms` (500 chars)
 
 **Conversion Validation (1h):**
-- ✅ Implemented `scripts/validate_conversion.py` (329 lines)
+- ✅ Implemented `scripts/validate_conversion.py` (339 lines)
 - ✅ 5 validation checks:
   1. File structure (variables, equations, definitions present)
   2. GAMS syntax (balanced parentheses, semicolons)
@@ -53,7 +53,7 @@ Achieved Checkpoint 4 with successful end-to-end conversion of 2 GAMS NLP models
 #### Deliverables
 
 - `scripts/convert_model.py` - End-to-end conversion script (88 lines)
-- `scripts/validate_conversion.py` - Validation script (329 lines)
+- `scripts/validate_conversion.py` - Validation script (339 lines)
 - `output/rbrock_mcp.gms` - Converted Rosenbrock model
 - `output/mhw4d_mcp.gms` - Converted Wright model
 
