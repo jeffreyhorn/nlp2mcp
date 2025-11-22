@@ -7,6 +7,11 @@ This script demonstrates the end-to-end conversion pipeline:
 
 Usage:
     python scripts/convert_model.py <input.gms> <output.gms>
+
+Exit codes:
+    0: Conversion succeeded
+    1: Conversion failed (parse or conversion errors)
+    2: Invalid arguments or file not found
 """
 
 import sys
@@ -22,14 +27,14 @@ from src.ir.parser import parse_model_file
 def main():
     if len(sys.argv) != 3:
         print("Usage: python scripts/convert_model.py <input.gms> <output.gms>")
-        sys.exit(1)
+        sys.exit(2)
 
     input_file = Path(sys.argv[1])
     output_file = Path(sys.argv[2])
 
     if not input_file.exists():
         print(f"Error: Input file not found: {input_file}")
-        sys.exit(1)
+        sys.exit(2)
 
     print(f"Converting {input_file} → {output_file}")
     print("-" * 60)
@@ -52,7 +57,7 @@ def main():
         converter = Converter(ir)
         result = converter.convert()
 
-        if not result.success:
+        if not result.success or result.output is None:
             print(f"  ✗ Conversion failed:")
             for error in result.errors:
                 print(f"    - {error}")

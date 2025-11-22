@@ -49,7 +49,7 @@ def check_gams_syntax(file_path: Path) -> CheckResult:
             return CheckResult(
                 name="Balanced parentheses",
                 passed=False,
-                message=f"Unbalanced parentheses: {abs(paren_count)} extra {'(' if paren_count > 0 else ')''}",
+                message=f"Unbalanced parentheses: {abs(paren_count)} extra {'(' if paren_count > 0 else ')'}",
             )
 
         # Check that declarations end with semicolons
