@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 10: Prep Phase - Task 1: Create Known Unknowns List - 2025-11-23
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive Known Unknowns document for Sprint 10 with 28 unknowns across 7 categories, focusing on dependency chain analysis and feature validation. Addressed Sprint 9's key lesson: need complete blocker chains (primary, secondary, tertiary) before implementation, not just implementation unknowns.
+
+#### Achievements
+
+**Known Unknowns Document (2.5 hours):**
+- ✅ Created `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md` (28 unknowns)
+- ✅ 7 categories: Dependency Analysis (8), Comma-Separated (3), Function Calls (5), Level Bounds (3), Nested Indexing (5), abort$ (2), Synthetic Tests (2)
+- ✅ Priority distribution: 8 Critical (29%), 11 High (39%), 7 Medium (25%), 2 Low (7%)
+- ✅ Each unknown includes: Priority, Assumption, Research Questions (3-5), How to Verify, Risk if Wrong, Estimated Research Time, Owner
+- ✅ Task-to-Unknown mapping table showing which prep tasks (2-10) verify which unknowns
+- ✅ Total estimated research time: 32-40 hours distributed across prep tasks
+
+**Key Unknowns Identified:**
+- ✅ 10.1.1-10.1.4: Complete blocker chains for all 4 blocked models (circle, himmel16, maxmin, mingamma)
+- ✅ 10.5.1: Nested indexing go/no-go decision (determines 100% vs 90% parse rate target)
+- ✅ 10.7.2: Sprint 9 features validation (must verify i++1, attributes, model sections work before building on them)
+- ✅ Feature semantic unknowns for: function calls (10.3.x), level bounds (10.4.x), nested indexing (10.5.x), abort$ (10.6.x), comma-separated (10.2.x)
+
+**PREP_PLAN.md Updates (30 minutes):**
+- ✅ Updated Task 1 status: NOT STARTED → COMPLETE
+- ✅ Added Changes and Result sections documenting 28 unknowns created
+- ✅ Checked off all 5 deliverables and 8 acceptance criteria
+- ✅ Added "Unknowns Verified" metadata to Tasks 2-10 showing bidirectional traceability
+- ✅ Each task (2-10) now links to specific unknowns it will verify
+
+**Sprint 9 Lessons Applied:**
+- ✅ Focus on dependency unknowns (complete blocker chains) not just implementation unknowns
+- ✅ Identify secondary/tertiary blockers before committing to features
+- ✅ Create validation unknowns (how to test features work in isolation)
+- ✅ Map unknowns to specific verification tasks (Task-to-Unknown table)
+
+#### Deliverables
+
+- `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md` - 28 unknowns with complete metadata
+- `docs/planning/EPIC_2/SPRINT_10/PREP_PLAN.md` - Updated Task 1 to COMPLETE, Tasks 2-10 with "Unknowns Verified" metadata
+
+#### Impact
+
+**Proactive Risk Identification:**
+- 28 unknowns identified before Sprint 10 starts (vs discovering during sprint)
+- Complete blocker chains will prevent Sprint 9's issue (implemented features that didn't unlock models)
+- Go/no-go decision framework for nested indexing (high-risk 10-12 hour feature)
+
+**Preparation Quality:**
+- 32-40 hours of research tasks mapped to specific unknowns
+- Tasks 2-10 now have clear verification targets (which unknowns to resolve)
+- Bidirectional traceability: unknowns → tasks → unknowns
+
+#### Next Steps
+
+- Task 2: Analyze circle.gms complete blocker chain (verify Unknown 10.1.1)
+- Task 3: Analyze himmel16.gms complete blocker chain (verify Unknowns 10.1.2, 10.4.1, 10.4.2)
+- Task 4: Analyze maxmin.gms complete blocker chain (verify Unknowns 10.1.3, 10.5.1-10.5.3)
+- Continue with prep tasks 5-12 before Sprint 10 Day 1
+
+---
+
 ### Sprint 9: Day 9 - Dashboard & Performance Instrumentation - 2025-11-22
 
 **Status:** ✅ COMPLETE
