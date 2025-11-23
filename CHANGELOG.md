@@ -92,7 +92,130 @@ Performed comprehensive blocker chain analysis for circle.gms (56 lines), identi
 
 #### Next Steps
 
-- Task 3: Analyze himmel16.gms complete blocker chain (verify Unknowns 10.1.2, 10.4.1, 10.4.2)
+- Task 4: Analyze maxmin.gms complete blocker chain (verify Unknowns 10.1.3, 10.5.1, 10.5.2, 10.5.3)
+
+---
+
+### Sprint 10: Prep Phase - Task 3: himmel16.gms Blocker Chain Analysis - 2025-11-23
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Performed comprehensive remaining blocker chain analysis for himmel16.gms (70 lines) after Sprint 9's i++1 fix. Identified parser bug in `_expand_variable_indices` function causing incorrect index expansion. This is a localized bug fix, not a feature gap.
+
+#### Achievements
+
+**Complete Remaining Blocker Chain Identified:**
+- PRIMARY BLOCKER: Lead/lag indexing (i++1) - ✅ FIXED in Sprint 9 Day 4
+- SECONDARY BLOCKER (Line 63): Parser bug in variable bound index expansion - TO BE FIXED in Sprint 10
+- TERTIARY BLOCKER: None (level bounds is the ONLY remaining blocker)
+
+**Root Cause Analysis Completed (1.5 hours):**
+- Line-by-line analysis of all 70 lines in himmel16.gms
+- Deep dive into parser code to understand error origin
+- GAMS semantics research for `.l` and `.fx` assignments
+- Synthetic test requirements specified
+
+**Parser Bug Identified:**
+- Location: `src/ir/parser.py`, function `_expand_variable_indices` (line 2125)
+- Bug behavior: Expands literal string indices to ALL domain members
+- Example: `x.fx("1") = 0` should affect only index "1" but affects ALL indices ("1" through "6")
+- Error origin: `_set_bound_value` at parser.py:1988 detects conflicting bounds
+
+#### Deliverables
+
+- `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/himmel16_analysis.md` (714 lines, 23KB) - Complete root cause analysis
+- `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md` - Updated 3 unknowns with verification results
+- `docs/planning/EPIC_2/SPRINT_10/PREP_PLAN.md` - Task 3 marked COMPLETE with Changes/Result sections
+
+#### Key Findings
+
+**Why Error Message is Confusing:**
+- Error says: "Conflicting bounds for variable x at indices ('1',)"
+- Error occurs at: Line 63 which sets `x.l("5") = 0`
+- Why mismatch: Parser bug expands `x.fx("1")` at line 57 to affect ALL indices
+  - Line 57: Sets l_map for ALL indices to 0 (BUG!)
+  - Line 60: Sets l_map["2"] = 0.5 (no conflict, "2" wasn't fixed)
+  - Line 61: Sets l_map["3"] = 0 (no conflict, "3" wasn't fixed)
+  - Line 62: Sets l_map["4"] = 0 (no conflict, "4" wasn't fixed)
+  - Line 63: Tries to set l_map["5"] = 0 BUT index "1" has conflicting .fx/.l → CONFLICT!
+- Error message is actually correct - conflict IS at index "1", just manifests when processing line 63
+
+**GAMS Semantics Verified:**
+- Multiple `.l` assignments on different indices: ✅ VALID in GAMS
+- Mixing `.fx` and `.l` on different indices: ✅ VALID in GAMS
+- Parser bug is rejecting valid GAMS code
+
+**Code Example of Bug:**
+
+Expected behavior:
+```python
+# x.fx("1") = 0  →  Should only expand to: {bounds["1"]: BoundInfo(fixed=0)}
+```
+
+Actual behavior (BUG):
+```python
+# x.fx("1") = 0  →  Incorrectly expands to: {bounds[i]: BoundInfo(fixed=0) for i in ["1","2","3","4","5","6"]}
+```
+
+**Fix Approach:**
+- Modify `_expand_variable_indices` to distinguish:
+  - Set names → Expand to all members
+  - Literal strings → Use as-is (no expansion)
+- Estimated effort: 3-4 hours
+- Complexity: LOW-MEDIUM (localized bug fix)
+- Confidence: 95%+ that fix will unlock himmel16.gms to 100%
+
+#### Unknowns Verified
+
+- Unknown 10.1.2: ✅ VERIFIED - Complete blocker chain
+  - Primary: i++1 (FIXED in Sprint 9)
+  - Secondary: Parser bug in index expansion
+  - Tertiary: None
+  - Added 78 lines of verification details to KNOWN_UNKNOWNS.md
+
+- Unknown 10.4.1: ✅ VERIFIED - Level bound conflict root cause
+  - Error: "Conflicting bounds for variable x at indices ('1',)"
+  - Root cause: Parser bug in `_expand_variable_indices` function
+  - Bug expands literal index "1" to ALL domain members
+  - Added 57 lines of root cause analysis to KNOWN_UNKNOWNS.md
+
+- Unknown 10.4.2: ✅ VERIFIED - GAMS semantics for .l assignments
+  - Multiple `.l` on different indices: VALID in GAMS
+  - Mixing `.fx` and `.l` on different indices: VALID in GAMS
+  - Parser bug is rejecting valid GAMS code
+  - Added 41 lines of semantics verification to KNOWN_UNKNOWNS.md
+
+#### Sprint 10 Decision
+
+**FIX in Sprint 10:**
+- Parser bug in variable bound index expansion
+- Effort: 3-4 hours (localized bug fix)
+- Complexity: LOW-MEDIUM
+- Expected outcome: 100% parse success (70/70 lines)
+- High confidence: 95%+ that this is the ONLY remaining blocker
+
+**Why High Confidence:**
+- Bug is localized to one function (`_expand_variable_indices`)
+- Root cause is clear (incorrect expansion logic)
+- Fix approach is straightforward (distinguish literals from sets)
+- No tertiary blockers found in manual analysis
+
+#### Impact on Sprint 10
+
+**Scope Addition:**
+- Parser bug fix is SEPARATE from function call support (Task 2)
+- Can be implemented independently
+- Does not complicate circle.gms function call implementation
+
+**Model Unlock Prediction:**
+- himmel16.gms will reach 100% parse after bug fix
+- Strong contribution to Sprint 10 goal of 100% (10/10 models)
+
+#### Next Steps
+
+- Task 4: Analyze maxmin.gms complete blocker chain (verify Unknowns 10.1.3, 10.5.1, 10.5.2, 10.5.3)
 
 ---
 
