@@ -283,7 +283,158 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
 
 ---
 
-# Sprint 10 (Weeks 9–10): Aggressive Simplification, Regression Guardrails, UX Diagnostics
+# Sprint 10 (Weeks 9–10): Complete GAMSLIB Tier 1 Parse Coverage & Comma-Separated Declarations
+
+**Goal:** Achieve 100% parse rate on Tier 1 GAMSLIB models (10/10) through comprehensive dependency analysis and targeted feature implementation. Add support for comma-separated VARIABLE, PARAMETER, and EQUATION declarations.
+
+**Strategy:** Deep dependency analysis first, then implement only the features required to unlock all remaining blocked models. Focus on understanding complete blocker chains before any implementation work.
+
+## Components
+
+### Phase 1: Comprehensive Dependency Analysis (~6-9 hours)
+**Critical Foundation - Sprint 9 Retrospective Priority #1:**
+
+- **Full Dependency Chain Analysis (6-9 hours)**
+  - Analyze each blocked model line-by-line to identify ALL blockers (primary, secondary, tertiary)
+  - For each model: circle.gms, himmel16.gms, maxmin.gms, mingamma.gms
+  - Parse with current parser, capture complete error cascade
+  - Document blockers in priority order with effort estimates
+  - Create synthetic test cases for each identified feature
+  - **Deliverable:** `docs/planning/EPIC_2/SPRINT_10/BLOCKER_ANALYSIS.md`
+  - **Sprint 9 Lesson:** Features implemented ≠ models unlocked without complete blocker analysis
+  - **Validation:** Each model must have full blocker chain documented before implementation starts
+
+### Phase 2: Comma-Separated Declarations (~4-6 hours)
+**Quick Win - Common GAMS Pattern:**
+
+- **Comma-Separated Declaration Support**
+  - Support multiple declarations in single statement:
+    - `Variable x1, x2, x3;` (currently requires separate lines)
+    - `Parameter a, b, c;`
+    - `Equation eq1, eq2, eq3;`
+  - Grammar extension + parser updates
+  - Comprehensive test coverage for all declaration types
+  - **Effort:** 4-6 hours
+  - **Risk:** Low (straightforward grammar extension)
+  - **Impact:** Common GAMS pattern, improves compatibility
+
+### Phase 3: Targeted Feature Implementation (~18-25 hours)
+**Based on Phase 1 Analysis - Implement Only Required Features:**
+
+- **Function Calls in Parameter Assignments (6-8 hours)**
+  - Support `uniform(1,10)`, `smin(i, x(i))`, etc.
+  - Unlocks: circle.gms (primary blocker)
+  - Risk: Medium (AST changes for parameter initialization)
+
+- **Level Bound Conflict Resolution (2-3 hours)**
+  - Handle multiple `.l` assignments to same variable
+  - Unlocks: himmel16.gms (secondary blocker - i++1 already implemented)
+  - Risk: Low (semantic validation improvement)
+
+- **Nested/Subset Indexing in Domains (10-12 hours)**
+  - Support `defdist(low(n,nn))..` where low is 2D subset
+  - Unlocks: maxmin.gms (primary blocker)
+  - Risk: High (complex indexing semantics)
+
+- **abort$ in If-Block Bodies (2-3 hours)**
+  - Allow `abort$[condition]` statements inside if-blocks
+  - Unlocks: mingamma.gms (primary blocker - equation attributes already implemented)
+  - Risk: Low (grammar extension)
+
+### Phase 4: Mid-Sprint Validation Checkpoint (Day 5)
+**NEW - Sprint 9 Retrospective Recommendation:**
+
+- **Impact Validation at Sprint Midpoint**
+  - Re-run parser on all 10 models
+  - Verify parse rate increase matches projections
+  - If parse rate hasn't improved, investigate and pivot
+  - **Sprint 9 Lesson:** Features complete by Day 5, but 0% impact discovered only on Day 10
+  - **Time Budget:** 1-2 hours
+  - **Decision Point:** Continue with remaining features OR investigate why unlocks aren't happening
+
+### Phase 5: Synthetic Test Suite (~3-4 hours)
+**Quality Assurance - Sprint 9 Retrospective Recommendation:**
+
+- **Isolated Feature Tests**
+  - Create minimal GAMS files testing each feature in isolation
+  - Validate: i++1 indexing works correctly (can't tell with himmel16.gms failures)
+  - Validate: Equation attributes work correctly (mingamma.gms had different blocker)
+  - Validate: Model sections work correctly (hs62.gms now parses)
+  - Validate: New features (function calls, nested indexing, abort$, comma-separated)
+  - **Impact:** Distinguish feature bugs from secondary blockers
+  - **Sprint 9 Lesson:** Can't validate i++1 implementation without synthetic test
+
+## Deliverables
+
+**Analysis & Planning:**
+- Complete blocker analysis document (`BLOCKER_ANALYSIS.md`) with full dependency chains
+- Synthetic test suite for all Sprint 9 and Sprint 10 features
+
+**Parser Features:**
+- Comma-separated VARIABLE, PARAMETER, EQUATION declarations
+- Function calls in parameter assignments
+- Level bound conflict resolution
+- Nested/subset indexing in equation domains
+- abort$ statements in if-block bodies
+
+**Validation & Metrics:**
+- Mid-sprint checkpoint report (Day 5)
+- Updated GAMSLIB_CONVERSION_STATUS.md showing 100% parse rate
+- Parse rate dashboard showing 10/10 models
+
+**Release:**
+- Release tag `v0.10.0`
+
+## Acceptance Criteria
+
+**Primary Goal:**
+- **Parse Rate:** 100% (10/10 Tier 1 GAMSLIB models) - All models parse successfully
+- **Quality:** All 10 models have complete blocker analysis documented BEFORE implementation
+- **Mid-Sprint Checkpoint:** Parse rate progress validated on Day 5; pivot if needed
+
+**Feature Validation:**
+- **Comma-Separated Declarations:** Works for Variable, Parameter, Equation statements
+- **Function Calls:** Parameter assignments support function call expressions
+- **Level Bounds:** Multiple `.l` assignments handled without conflicts
+- **Nested Indexing:** Subset domains like `low(n,nn)` parse correctly
+- **abort$ in If-Blocks:** Conditional abort statements allowed in if-block bodies
+
+**Testing & Documentation:**
+- **Synthetic Tests:** Each feature has isolated test case proving it works
+- **Regression:** All existing tests pass (1400+ tests expected)
+- **Documentation:** BLOCKER_ANALYSIS.md explains complete dependency chains for all 4 blocked models
+
+**Sprint 9 Retrospective Lessons Applied:**
+1. ✅ Complete dependency analysis BEFORE any implementation
+2. ✅ Synthetic test cases for feature validation
+3. ✅ Mid-sprint checkpoint at Day 5 to validate impact
+4. ✅ Document full blocker chains, not just primary errors
+
+## Risk Mitigation
+
+**High Risk: Nested/Subset Indexing (10-12 hours)**
+- Mitigation: Complete analysis in Phase 1 to understand exact requirements
+- Fallback: If too complex, defer to Sprint 11 and target 90% parse rate (9/10 models)
+
+**Medium Risk: Feature Interactions**
+- Mitigation: Synthetic test suite validates each feature in isolation
+- Mitigation: Mid-sprint checkpoint catches interaction issues early
+
+**Low Risk: Time Estimation**
+- Total Estimated Effort: 35-50 hours
+- Sprint Capacity: ~40 hours (2 weeks)
+- Buffer: Phase 1 analysis may reveal simpler/faster solutions
+
+## Success Metrics
+
+- **Before Sprint 10:** 60% parse rate (6/10 models)
+- **After Sprint 10:** 100% parse rate (10/10 models) - **40 percentage point increase**
+- **Models Unlocked:** circle, himmel16, maxmin, mingamma (4 new models)
+- **Conversion Rate:** Target ≥50% of parseable models (5/10 minimum)
+
+---
+
+# Sprint 11 (Weeks 11–12): Aggressive Simplification, Regression Guardrails, UX Diagnostics
 
 **Goal:** Deliver `--simplification aggressive` informed by telemetry, integrate CI regression hooks (GAMSLib sampling, PATH smoke, performance alerts), and expand diagnostics features.
 
@@ -309,7 +460,7 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
 
 ---
 
-# Sprint 11 (Weeks 11–12): Final UX Polish, Documentation Wrap, Release Readiness, v1.0.0
+# Sprint 12 (Weeks 13–14): Final UX Polish, Documentation Wrap, Release Readiness, v1.0.0
 
 **Goal:** Complete diagnostics/progress UI, finalize documentation (advanced usage, GAMSLib handbook, tutorials), close outstanding bugs, and ship v1.0.0 meeting all KPIs.
 
