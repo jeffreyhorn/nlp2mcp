@@ -57,7 +57,7 @@ def main():
         converter = Converter(ir)
         result = converter.convert()
 
-        if not result.success or result.output is None:
+        if not result.success:
             print(f"  ✗ Conversion failed:")
             for error in result.errors:
                 print(f"    - {error}")

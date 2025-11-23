@@ -21,7 +21,11 @@ from src.ir.parser import parse_model_file
 
 
 def check_model_parses(model_name: str) -> bool:
-    """Check if a model parses successfully."""
+    """Check if a model parses successfully.
+
+    Silent failure is intentional for dashboard generation - we only care
+    about success/failure status, not the specific parsing errors.
+    """
     model_path = Path(f"tests/fixtures/gamslib/{model_name}.gms")
     if not model_path.exists():
         return False
@@ -29,24 +33,14 @@ def check_model_parses(model_name: str) -> bool:
         parse_model_file(str(model_path))
         return True
     except Exception:
+        # Silently fail for dashboard - parse failures are expected
         return False
 
 
 def generate_parse_rate_summary() -> dict[str, Any]:
     """Generate parse rate summary with feature breakdown."""
-    # Define all test models
-    all_models = [
-        "circle",
-        "himmel16",
-        "hs62",
-        "mathopt1",
-        "maxmin",
-        "mhw4d",
-        "mhw4dx",
-        "mingamma",
-        "rbrock",
-        "trig",
-    ]
+    # Dynamically discover all .gms model files in the directory
+    all_models = sorted([p.stem for p in Path("tests/fixtures/gamslib").glob("*.gms")])
 
     # Check which models parse
     passing_models = [model for model in all_models if check_model_parses(model)]

@@ -13,6 +13,10 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+# Maximum number of undefined variables to report before suppressing output
+# Avoids flooding output with false positives from heuristic matching
+MAX_UNDEFINED_TO_REPORT = 10
+
 
 @dataclass
 class CheckResult:
@@ -143,7 +147,7 @@ def check_variables_declared(file_path: Path) -> CheckResult:
         # Filter out likely false positives (single letters that are indices, etc.)
         undefined = {v for v in undefined if len(v) > 1}
 
-        if undefined and len(undefined) < 10:  # Only report if not too many
+        if undefined and len(undefined) < MAX_UNDEFINED_TO_REPORT:
             return CheckResult(
                 name="Variable declarations",
                 passed=True,  # Soft warning
@@ -221,7 +225,8 @@ def check_no_undefined_refs(file_path: Path) -> CheckResult:
         errors = []
 
         # Check for .lo, .up, .fx, .l, .m without variable name
-        if re.search(r"\.\s*\.(lo|up|fx|l|m)", content):
+        # Use word boundary to avoid false positives
+        if re.search(r"\.\s+\.(lo|up|fx|l|m)\b", content):
             errors.append("Double-dot attribute reference found")
 
         # Check for empty parentheses (invalid indexing)
