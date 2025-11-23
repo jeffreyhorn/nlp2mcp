@@ -5,7 +5,7 @@
 **File:** `/Users/jeff/experiments/nlp2mcp/tests/fixtures/gamslib/circle.gms`  
 **Total Lines:** 56  
 **Current Parse Status:** FAILED at line 40  
-**Parse Progress:** ~71% (40/56 lines reached before error)  
+**Parse Progress:** ~70% (39/56 lines reached before error)  
 **Model Type:** Nonlinear Programming (NLP) - Smallest Circle Problem
 
 **Purpose:** Find the smallest circle that contains a number of given points.
@@ -61,12 +61,13 @@ ymax = smax(i, y(i));  # Line 43 - max y coordinate
 - Parameter x(i) is defined at line 19: `x(i) 'x coordinates'`
 - This requires runtime evaluation or at least deferred evaluation strategy
 
-**Estimated Fix Effort:** 8-12 hours
+**Estimated Fix Effort:** 6-10 hours
 - Grammar changes to allow function call expressions in parameter assignments
-- AST nodes for aggregation function calls (FunctionCall node)
+- AST nodes for aggregation function calls (FunctionCall node likely already exists)
 - Expression parser for nested expressions within function calls
 - Set iterator scope handling
 - Integration with symbol table for set/parameter resolution
+- Note: Function calls already work in equations, reducing implementation effort
 
 **Impact:** CRITICAL - Blocks parsing at line 40, prevents analysis of remaining 16 lines (29% of file)
 
@@ -318,7 +319,7 @@ After line 56, file ends. No additional blockers expected beyond tertiary.
 **Rationale:**
 - Both blockers involve function call expressions
 - Can be implemented as unified "function call support" feature
-- Combined effort: 10-14 hours (less than separate: 8-12 + 6-8 = 14-20)
+- Combined effort: 6-10 hours (less than separate: 6-10 + 4-6 = 10-16)
 - Achieves 95% parse rate (53/56 lines)
 - Enables testing of model structure and logic
 
@@ -519,7 +520,7 @@ Line 40 (Primary) → Line 48 (Secondary) → Line 54 (Tertiary) → Complete
 
 **Decision:** 
 - Implement primary + secondary together as generalized function call support
-- Estimated effort: 10-14 hours
+- Estimated effort: 6-10 hours
 - Expected result: 95% parse rate (53/56 lines)
 - Defer tertiary to future sprint
 
