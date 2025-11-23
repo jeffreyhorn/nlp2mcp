@@ -1799,7 +1799,7 @@ Complete parsing analysis for all 108 lines of maxmin.gms:
 | 64 | `   maxmin1a /          mindist1a /` | **FAIL*** | **Grammar** | **Multi-model declaration** | **TERTIARY** |
 | 65 | `   maxmin2a /          mindist2a /;` | **FAIL*** | **Grammar** | **Multi-model declaration** | **TERTIARY** |
 | 66 | *(blank)* | NOT REACHED | - | - | - |
-| 67 | `Scalar p;                     // Pinter's` | PASS* | None | Scalar declaration + comment | - |
+| 67 | `Scalar p;                     // Pinter's parameter` | PASS* | None | Scalar declaration + comment | - |
 | 68 | `p = 0;` | PASS* | None | Scalar assignment | - |
 | 69 | *(blank)* | NOT REACHED | - | - | - |
 | 70 | `loop((n,d),                   // original` | **FAIL*** | **Grammar** | **Loop with tuple domain** | **QUATERNARY** |
@@ -2052,7 +2052,9 @@ Expected result:
 
 **Unknowns Verified:**
 - Unknown 10.1.3: maxmin.gms complete blocker chain ✅ VERIFIED
-- Unknown 10.2.1: Subset indexing complexity ✅ VERIFIED
+- Unknown 10.5.1: Subset indexing complexity ✅ VERIFIED
+- Unknown 10.5.2: GAMS subset domain semantics ✅ VERIFIED
+- Unknown 10.5.3: Partial implementation feasibility ✅ VERIFIED
 
 **Unknowns Created:**
 - Unknown 11.1.1: GAMS subset semantics deep dive (Sprint 11)
