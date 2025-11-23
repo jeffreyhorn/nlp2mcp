@@ -862,31 +862,52 @@ class _ModelBuilder:
             param = ParameterDef(name=name)
 
             if child.data == "scalar_with_data":
-                # Format: ID "/" scalar_data_items "/" (ASSIGN expr)?
+                # Format: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?
                 # child.children[0] = ID
-                # child.children[1] = scalar_data_items tree
-                # child.children[2] = optional expr
-                data_node = child.children[1]
-                values = [
-                    float(_token_text(tok))
-                    for tok in data_node.scan_values(
-                        lambda v: isinstance(v, Token) and v.type == "NUMBER"
-                    )
-                ]
-                if values:
-                    param.values[()] = values[-1]
-                # Check for optional assignment after the data
-                if len(child.children) > 2 and isinstance(child.children[2], Tree):
-                    value_expr = self._expr_with_context(
-                        child.children[2], f"scalar '{name}' assignment", ()
-                    )
-                    param.values[()] = self._extract_constant(
-                        value_expr, f"scalar '{name}' assignment"
-                    )
+                # child.children[1] = desc_text (optional inline description - skip it)
+                # child.children[2] = scalar_data_items tree
+                # child.children[3] = optional expr
+                # Find the scalar_data_items node (skip desc_text and any tokens like '/')
+                data_idx = 1
+                while data_idx < len(child.children):
+                    node_candidate = child.children[data_idx]
+                    if (
+                        isinstance(node_candidate, Tree)
+                        and node_candidate.data == "scalar_data_items"
+                    ):
+                        break
+                    data_idx += 1
+
+                if data_idx < len(child.children):
+                    data_node = child.children[data_idx]
+                    values = [
+                        float(_token_text(tok))
+                        for tok in data_node.scan_values(
+                            lambda v: isinstance(v, Token) and v.type == "NUMBER"
+                        )
+                    ]
+                    if values:
+                        param.values[()] = values[-1]
+                    # Check for optional assignment after the data
+                    if len(child.children) > data_idx + 1 and isinstance(
+                        child.children[data_idx + 1], Tree
+                    ):
+                        value_expr = self._expr_with_context(
+                            child.children[data_idx + 1], f"scalar '{name}' assignment", ()
+                        )
+                        param.values[()] = self._extract_constant(
+                            value_expr, f"scalar '{name}' assignment"
+                        )
             elif child.data == "scalar_with_assign":
-                # Format: ID ASSIGN expr
+                # Format: ID desc_text ASSIGN expr
+                # child.children[0] = ID
+                # child.children[1] = desc_text (may be empty)
+                # child.children[2] = ASSIGN token (optional, depends on Lark)
+                # child.children[-1] = expr (always the last child)
+                # Get the expr node (always the last child after ID and desc_text)
+                expr_idx = len(child.children) - 1
                 value_expr = self._expr_with_context(
-                    child.children[1], f"scalar '{name}' assignment", ()
+                    child.children[expr_idx], f"scalar '{name}' assignment", ()
                 )
                 param.values[()] = self._extract_constant(value_expr, f"scalar '{name}' assignment")
             # else: scalar_plain, just declare without value
@@ -1252,6 +1273,8 @@ class _ModelBuilder:
                     "factor",
                     "power",
                     "atom",
+                    "binop",
+                    "compile_const",
                 ):
                     # This is the main condition
                     if condition is None:
@@ -1276,6 +1299,8 @@ class _ModelBuilder:
                                 "factor",
                                 "power",
                                 "atom",
+                                "binop",
+                                "compile_const",
                             ):
                                 elseif_cond = elseif_child
                             else:
@@ -1514,20 +1539,56 @@ class _ModelBuilder:
             expr = Call(func_name, tuple(args))
             return self._attach_domain(expr, self._merge_domains(args, node))
 
-        # Support variable attribute access in expressions (e.g., x1.l, x.lo(i))
+        # Support variable/equation attribute access in expressions (e.g., x1.l, eq.m)
+        # Sprint 9 Day 6: Added equation attribute support
         if node.data == "bound_scalar":
-            var_name = _token_text(node.children[0])
-            # Note: bound_attr (e.g., 'l', 'm', 'lo') is in node.children[1] but not used
-            # For now, treat it as a variable reference (Sprint 8 mock/store approach)
-            return self._make_symbol(var_name, (), free_domain, node)
+            name = _token_text(node.children[0])
+            attribute = _token_text(
+                node.children[1]
+            ).lower()  # Extract attribute (.l, .m, .lo, .up)
+
+            # Check if this is an equation reference (Sprint 9 Day 6)
+            if name in self.model.equations:
+                # Return EquationRef for equation attributes
+                from .ast import EquationRef
+
+                expr = EquationRef(name=name, indices=(), attribute=attribute)
+                return self._attach_domain(expr, free_domain)
+
+            # Otherwise, treat as variable reference (Sprint 8 behavior)
+            return self._make_symbol(name, (), free_domain, node)
 
         if node.data == "bound_indexed":
-            var_name = _token_text(node.children[0])
-            # Note: bound_attr (e.g., 'l', 'm', 'lo') is in node.children[1] but not used
+            name = _token_text(node.children[0])
+            attribute = _token_text(node.children[1]).lower()  # Extract attribute
             # Use _process_index_list to handle i++1, i--2, etc. (Sprint 9)
             indices = _process_index_list(node.children[2]) if len(node.children) > 2 else ()
-            # Return an indexed symbol reference (Sprint 8 mock/store approach)
-            return self._make_symbol(var_name, indices, free_domain, node)
+
+            # Check if this is an equation reference (Sprint 9 Day 6)
+            if name in self.model.equations:
+                # Return EquationRef for indexed equation attributes
+                from .ast import EquationRef
+
+                # Convert indices to strings (EquationRef uses tuple[str | IndexOffset, ...])
+                expr = EquationRef(name=name, indices=indices, attribute=attribute)
+                return self._attach_domain(expr, free_domain)
+
+            # Otherwise, treat as variable reference (Sprint 8 behavior)
+            return self._make_symbol(name, indices, free_domain, node)
+
+        # Support compile-time constants: %identifier% or %path.to.value%
+        if node.data == "compile_const":
+            from .ast import CompileTimeConstant
+
+            # Extract the dotted path from compile_time_const node
+            # compile_time_const has compile_const_path child
+            const_node = node.children[0]
+            path = []
+            for child in const_node.children:
+                if isinstance(child, Token):
+                    path.append(_token_text(child))
+            expr = CompileTimeConstant(path=tuple(path))
+            return self._attach_domain(expr, free_domain)
 
         raise self._error(
             f"Unsupported expression type: {node.data}. "

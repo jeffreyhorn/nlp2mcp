@@ -7,6 +7,281 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 10: Prep Phase - Task 2: circle.gms Blocker Chain Analysis - 2025-11-23
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Performed comprehensive blocker chain analysis for circle.gms (56 lines), identifying 3 blockers in dependency chain. Discovered that function call infrastructure already exists for equations, significantly simplifying implementation effort.
+
+#### Achievements
+
+**Complete Blocker Chain Identified (3 blockers):**
+- PRIMARY BLOCKER (Lines 40-43): Aggregation function calls (`smin`, `smax`) in parameter assignments
+- SECONDARY BLOCKER (Line 48): Mathematical function calls (`sqrt`, `sqr`) in variable level assignments  
+- TERTIARY BLOCKER (Lines 54-56): Conditional abort statement with compile-time variables
+
+**Analysis Completed (1.5 hours):**
+- Line-by-line analysis of all 56 lines in circle.gms
+- Parse attempt and error logging
+- Progressive parse rate analysis: 70% → 84% → 95% → 100%
+- Effort estimates per blocker with implementation recommendations
+
+**Critical Discovery:**
+- Function calls already work in equation context (line 35: `sqr(x(i) - a)`)
+- Function call AST nodes and parser logic exist
+- Implementation simplified to: extend equation context logic to assignment context
+- Effort revised DOWN from 10-14 hours to 6-10 hours
+
+#### Deliverables
+
+- `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/circle_analysis.md` (603 lines, 22KB) - Complete blocker chain analysis
+- `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md` - Updated Unknown 10.1.1 with verification results
+- `docs/planning/EPIC_2/SPRINT_10/PREP_PLAN.md` - Task 2 marked COMPLETE with Changes/Result sections
+- `/tmp/circle_parse_attempt.log` - Parse attempt log for reference
+
+#### Key Findings
+
+**Progressive Parse Rates:**
+- Current: 70% (39/56 lines) - Fails at line 40 (smin function call)
+- After Primary fix: 84% (47/56 lines) - Would fail at line 48 (sqrt/sqr)
+- After Secondary fix: 95% (53/56 lines) - Would fail at line 54 (conditional abort)
+- After Tertiary fix: 100% (56/56 lines) - Complete parse
+
+**Blocker Details:**
+1. **Primary:** Aggregation functions (smin/smax) at lines 40-43, affects 4 lines
+2. **Secondary:** Math functions (sqrt/sqr) at line 48, affects 1 line  
+3. **Tertiary:** Conditional abort at lines 54-56, affects 3 lines
+
+#### Unknowns Verified
+
+- Unknown 10.1.1: ✅ VERIFIED - Assumption was PARTIALLY WRONG
+  - Original assumption: No secondary blockers after fixing primary
+  - Actual finding: THREE blockers in dependency chain (Primary, Secondary, Tertiary)
+  - Impact: Must implement Primary + Secondary together for 95% parse success
+
+#### Sprint 10 Decision
+
+**IMPLEMENT in Sprint 10:**
+- Primary + Secondary blockers together as unified "function call support in assignments" feature
+- Combined effort: 6-10 hours (reduced from 10-14)
+- Expected outcome: 95% parse success (53/56 lines)
+- High ROI: Unlocks model structure, parameter initialization, and variable starting values
+
+**DEFER to Sprint 11+:**
+- Tertiary blocker (conditional abort with compile-time variables)
+- Low ROI: Only 5% of remaining file (3 lines)
+- Edge case pattern, can be addressed in future sprint
+
+#### Impact on Sprint 10
+
+**Scope Adjustment:**
+- Must handle both aggregation functions (smin/smax) AND mathematical functions (sqrt/sqr)
+- Cannot implement just one type - both needed for meaningful progress
+
+**Complexity Reduction:**
+- Function call infrastructure exists (works in equation context)
+- Main task: Context extension, not building from scratch
+- Estimated 40% effort reduction vs original estimate
+
+**Model Unlock Prediction:**
+- circle.gms will reach 95% parse after Primary + Secondary implementation
+- Acceptable progress toward Sprint 10 goal of 100% (10/10 models)
+- Realistic expectation: Some models may not reach 100% but significant progress is valuable
+
+#### Next Steps
+
+- Task 4: Analyze maxmin.gms complete blocker chain (verify Unknowns 10.1.3, 10.5.1, 10.5.2, 10.5.3)
+
+---
+
+### Sprint 10: Prep Phase - Task 3: himmel16.gms Blocker Chain Analysis - 2025-11-23
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Performed comprehensive remaining blocker chain analysis for himmel16.gms (70 lines) after Sprint 9's i++1 fix. Identified parser bug in `_expand_variable_indices` function causing incorrect index expansion. This is a localized bug fix, not a feature gap.
+
+#### Achievements
+
+**Complete Remaining Blocker Chain Identified:**
+- PRIMARY BLOCKER: Lead/lag indexing (i++1) - ✅ FIXED in Sprint 9 Day 4
+- SECONDARY BLOCKER (Line 63): Parser bug in variable bound index expansion - TO BE FIXED in Sprint 10
+- TERTIARY BLOCKER: None (level bounds is the ONLY remaining blocker)
+
+**Root Cause Analysis Completed (1.5 hours):**
+- Line-by-line analysis of all 70 lines in himmel16.gms
+- Deep dive into parser code to understand error origin
+- GAMS semantics research for `.l` and `.fx` assignments
+- Synthetic test requirements specified
+
+**Parser Bug Identified:**
+- Location: `src/ir/parser.py`, function `_expand_variable_indices` (line 2125)
+- Bug behavior: Expands literal string indices to ALL domain members
+- Example: `x.fx("1") = 0` should affect only index "1" but affects ALL indices ("1" through "6")
+- Error origin: `_set_bound_value` at parser.py:1988 detects conflicting bounds
+
+#### Deliverables
+
+- `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/himmel16_analysis.md` (714 lines, 23KB) - Complete root cause analysis
+- `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md` - Updated 3 unknowns with verification results
+- `docs/planning/EPIC_2/SPRINT_10/PREP_PLAN.md` - Task 3 marked COMPLETE with Changes/Result sections
+
+#### Key Findings
+
+**Why Error Message is Confusing:**
+- Error says: "Conflicting bounds for variable x at indices ('1',)"
+- Error occurs at: Line 63 which sets `x.l("5") = 0`
+- Why mismatch: Parser bug expands `x.fx("1")` at line 57 to affect ALL indices
+  - Line 57: Sets l_map for ALL indices to 0 (BUG!)
+  - Line 60: Sets l_map["2"] = 0.5 (no conflict, "2" wasn't fixed)
+  - Line 61: Sets l_map["3"] = 0 (no conflict, "3" wasn't fixed)
+  - Line 62: Sets l_map["4"] = 0 (no conflict, "4" wasn't fixed)
+  - Line 63: Tries to set l_map["5"] = 0 BUT index "1" has conflicting .fx/.l → CONFLICT!
+- Error message is actually correct - conflict IS at index "1", just manifests when processing line 63
+
+**GAMS Semantics Verified:**
+- Multiple `.l` assignments on different indices: ✅ VALID in GAMS
+- Mixing `.fx` and `.l` on different indices: ✅ VALID in GAMS
+- Parser bug is rejecting valid GAMS code
+
+**Code Example of Bug:**
+
+Expected behavior:
+```python
+# x.fx("1") = 0  →  Should only expand to: {bounds["1"]: BoundInfo(fixed=0)}
+```
+
+Actual behavior (BUG):
+```python
+# x.fx("1") = 0  →  Incorrectly expands to: {bounds[i]: BoundInfo(fixed=0) for i in ["1","2","3","4","5","6"]}
+```
+
+**Fix Approach:**
+- Modify `_expand_variable_indices` to distinguish:
+  - Set names → Expand to all members
+  - Literal strings → Use as-is (no expansion)
+- Estimated effort: 3-4 hours
+- Complexity: LOW-MEDIUM (localized bug fix)
+- Confidence: 95%+ that fix will unlock himmel16.gms to 100%
+
+#### Unknowns Verified
+
+- Unknown 10.1.2: ✅ VERIFIED - Complete blocker chain
+  - Primary: i++1 (FIXED in Sprint 9)
+  - Secondary: Parser bug in index expansion
+  - Tertiary: None
+  - Added 78 lines of verification details to KNOWN_UNKNOWNS.md
+
+- Unknown 10.4.1: ✅ VERIFIED - Level bound conflict root cause
+  - Error: "Conflicting bounds for variable x at indices ('1',)"
+  - Root cause: Parser bug in `_expand_variable_indices` function
+  - Bug expands literal index "1" to ALL domain members
+  - Added 57 lines of root cause analysis to KNOWN_UNKNOWNS.md
+
+- Unknown 10.4.2: ✅ VERIFIED - GAMS semantics for .l assignments
+  - Multiple `.l` on different indices: VALID in GAMS
+  - Mixing `.fx` and `.l` on different indices: VALID in GAMS
+  - Parser bug is rejecting valid GAMS code
+  - Added 41 lines of semantics verification to KNOWN_UNKNOWNS.md
+
+#### Sprint 10 Decision
+
+**FIX in Sprint 10:**
+- Parser bug in variable bound index expansion
+- Effort: 3-4 hours (localized bug fix)
+- Complexity: LOW-MEDIUM
+- Expected outcome: 100% parse success (70/70 lines)
+- High confidence: 95%+ that this is the ONLY remaining blocker
+
+**Why High Confidence:**
+- Bug is localized to one function (`_expand_variable_indices`)
+- Root cause is clear (incorrect expansion logic)
+- Fix approach is straightforward (distinguish literals from sets)
+- No tertiary blockers found in manual analysis
+
+#### Impact on Sprint 10
+
+**Scope Addition:**
+- Parser bug fix is SEPARATE from function call support (Task 2)
+- Can be implemented independently
+- Does not complicate circle.gms function call implementation
+
+**Model Unlock Prediction:**
+- himmel16.gms will reach 100% parse after bug fix
+- Strong contribution to Sprint 10 goal of 100% (10/10 models)
+
+#### Next Steps
+
+- Task 4: Analyze maxmin.gms complete blocker chain (verify Unknowns 10.1.3, 10.5.1, 10.5.2, 10.5.3)
+
+---
+
+### Sprint 10: Prep Phase - Task 1: Create Known Unknowns List - 2025-11-23
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive Known Unknowns document for Sprint 10 with 28 unknowns across 7 categories, focusing on dependency chain analysis and feature validation. Addressed Sprint 9's key lesson: need complete blocker chains (primary, secondary, tertiary) before implementation, not just implementation unknowns.
+
+#### Achievements
+
+**Known Unknowns Document (2.5 hours):**
+- ✅ Created `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md` (28 unknowns)
+- ✅ 7 categories: Dependency Analysis (8), Comma-Separated (3), Function Calls (5), Level Bounds (3), Nested Indexing (5), abort$ (2), Synthetic Tests (2)
+- ✅ Priority distribution: 8 Critical (29%), 11 High (39%), 7 Medium (25%), 2 Low (7%)
+- ✅ Each unknown includes: Priority, Assumption, Research Questions (3-5), How to Verify, Risk if Wrong, Estimated Research Time, Owner
+- ✅ Task-to-Unknown mapping table showing which prep tasks (2-10) verify which unknowns
+- ✅ Total estimated research time: 32-40 hours distributed across prep tasks
+
+**Key Unknowns Identified:**
+- ✅ 10.1.1-10.1.4: Complete blocker chains for all 4 blocked models (circle, himmel16, maxmin, mingamma)
+- ✅ 10.5.1: Nested indexing go/no-go decision (determines 100% vs 90% parse rate target)
+- ✅ 10.7.2: Sprint 9 features validation (must verify i++1, attributes, model sections work before building on them)
+- ✅ Feature semantic unknowns for: function calls (10.3.x), level bounds (10.4.x), nested indexing (10.5.x), abort$ (10.6.x), comma-separated (10.2.x)
+
+**PREP_PLAN.md Updates (30 minutes):**
+- ✅ Updated Task 1 status: NOT STARTED → COMPLETE
+- ✅ Added Changes and Result sections documenting 28 unknowns created
+- ✅ Checked off all 5 deliverables and 8 acceptance criteria
+- ✅ Added "Unknowns Verified" metadata to Tasks 2-10 showing bidirectional traceability
+- ✅ Each task (2-10) now links to specific unknowns it will verify
+
+**Sprint 9 Lessons Applied:**
+- ✅ Focus on dependency unknowns (complete blocker chains) not just implementation unknowns
+- ✅ Identify secondary/tertiary blockers before committing to features
+- ✅ Create validation unknowns (how to test features work in isolation)
+- ✅ Map unknowns to specific verification tasks (Task-to-Unknown table)
+
+#### Deliverables
+
+- `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md` - 28 unknowns with complete metadata
+- `docs/planning/EPIC_2/SPRINT_10/PREP_PLAN.md` - Updated Task 1 to COMPLETE, Tasks 2-10 with "Unknowns Verified" metadata
+
+#### Impact
+
+**Proactive Risk Identification:**
+- 28 unknowns identified before Sprint 10 starts (vs discovering during sprint)
+- Complete blocker chains will prevent Sprint 9's issue (implemented features that didn't unlock models)
+- Go/no-go decision framework for nested indexing (high-risk 10-12 hour feature)
+
+**Preparation Quality:**
+- 32-40 hours of research tasks mapped to specific unknowns
+- Tasks 2-10 now have clear verification targets (which unknowns to resolve)
+- Bidirectional traceability: unknowns → tasks → unknowns
+
+#### Next Steps
+
+- Task 2: Analyze circle.gms complete blocker chain (verify Unknown 10.1.1)
+- Task 3: Analyze himmel16.gms complete blocker chain (verify Unknowns 10.1.2, 10.4.1, 10.4.2)
+- Task 4: Analyze maxmin.gms complete blocker chain (verify Unknowns 10.1.3, 10.5.1-10.5.3)
+- Continue with prep tasks 5-12 before Sprint 10 Day 1
+
+---
+
 ### Sprint 9: Day 9 - Dashboard & Performance Instrumentation - 2025-11-22
 
 **Status:** ✅ COMPLETE

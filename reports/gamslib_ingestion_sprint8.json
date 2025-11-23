@@ -31,15 +31,13 @@
     {
       "model_name": "hs62",
       "gms_file": "hs62.gms",
-      "parse_status": "FAILED",
-      "parse_error": "Error: Parse error at line 44, column 14: Unexpected character: '-'\n  diff   optcr - relative distance from global;\n               ^\n\nSuggestion: This character is not valid in this context",
-      "parse_error_type": "ParseError",
-      "parse_progress_percentage": 83.3,
-      "parse_progress_lines_parsed": 15,
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null,
+      "parse_progress_percentage": 100.0,
+      "parse_progress_lines_parsed": 18,
       "parse_progress_lines_total": 18,
-      "missing_features": [
-        "parse error"
-      ]
+      "missing_features": []
     },
     {
       "model_name": "mathopt1",
@@ -79,24 +77,22 @@
     {
       "model_name": "mhw4dx",
       "gms_file": "mhw4dx.gms",
-      "parse_status": "FAILED",
-      "parse_error": "Error: Parse error at line 63, column 11: Unexpected character: 'a'\n  elseif    abs(m.l-44.02207169) < tol, // local solution\n            ^\n\nSuggestion: This character is not valid in this context",
-      "parse_error_type": "ParseError",
-      "parse_progress_percentage": 50.9,
-      "parse_progress_lines_parsed": 27,
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null,
+      "parse_progress_percentage": 100.0,
+      "parse_progress_lines_parsed": 53,
       "parse_progress_lines_total": 53,
-      "missing_features": [
-        "variable attributes (.l, .m, etc.)"
-      ]
+      "missing_features": []
     },
     {
       "model_name": "mingamma",
       "gms_file": "mingamma.gms",
       "parse_status": "FAILED",
-      "parse_error": "Error: Parse error at line 60, column 1: Unexpected character: ')'\n  );\n  ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error": "Error: Parse error at line 41, column 13: Undefined symbol 'y1opt' referenced [context: assignment]\n  y2opt = log(y1opt);\n              ^\n\nSuggestion: Declare 'y1opt' as a variable, parameter, or set before using it",
       "parse_error_type": "ParseError",
-      "parse_progress_percentage": 89.2,
-      "parse_progress_lines_parsed": 33,
+      "parse_progress_percentage": 54.1,
+      "parse_progress_lines_parsed": 20,
       "parse_progress_lines_total": 37,
       "missing_features": [
         "parse error"
@@ -127,9 +123,9 @@
   ],
   "kpis": {
     "total_models": 10,
-    "parse_success": 4,
-    "parse_failed": 6,
-    "parse_rate_percent": 40.0,
+    "parse_success": 6,
+    "parse_failed": 4,
+    "parse_rate_percent": 60.0,
     "convert_success": 0,
     "convert_failed": 0,
     "convert_rate_percent": 0.0,

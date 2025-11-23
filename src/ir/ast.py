@@ -78,6 +78,33 @@ class ParamRef(Expr):
 
 
 @dataclass(frozen=True)
+class EquationRef(Expr):
+    """Reference to an equation with attribute access (e.g., eq1.m, eq2.l).
+
+    Sprint 9 Day 6: Equations can be referenced for their attributes (.l, .m)
+    in post-solve contexts (e.g., display eq.l, x = eq.m).
+    """
+
+    name: str
+    indices: tuple[str | IndexOffset, ...] = ()
+    attribute: str = "l"  # Default to level attribute (.l)
+
+    def indices_as_strings(self) -> tuple[str, ...]:
+        """Convert indices to strings, raising error if IndexOffset present."""
+        result = []
+        for idx in self.indices:
+            if isinstance(idx, IndexOffset):
+                raise NotImplementedError(f"IndexOffset not yet supported in this context: {idx}")
+            result.append(idx)
+        return tuple(result)
+
+    def __repr__(self) -> str:
+        idx = ",".join(str(i) if isinstance(i, IndexOffset) else i for i in self.indices)
+        base = f"{self.name}({idx})" if idx else self.name
+        return f"EquationRef({base}.{self.attribute})"
+
+
+@dataclass(frozen=True)
 class MultiplierRef(Expr):
     """Reference to a KKT multiplier variable (λ, ν, π)."""
 
@@ -181,3 +208,27 @@ class IndexOffset(Expr):
 
     def __repr__(self) -> str:
         return f"IndexOffset(base={self.base!r}, offset={self.offset!r}, circular={self.circular})"
+
+
+@dataclass(frozen=True)
+class CompileTimeConstant(Expr):
+    """
+    GAMS compile-time constant using %...% syntax.
+
+    Examples:
+        %solveStat.capabilityProblems%  → CompileTimeConstant(path=('solveStat', 'capabilityProblems'))
+        %system.date%                   → CompileTimeConstant(path=('system', 'date'))
+        %myvar%                         → CompileTimeConstant(path=('myvar',))
+
+    Attributes:
+        path: Tuple of identifiers forming the dotted path (e.g., ('solveStat', 'capabilityProblems'))
+    """
+
+    path: tuple[str, ...]
+
+    def children(self) -> Iterable[Expr]:
+        return []
+
+    def __repr__(self) -> str:
+        dotted = ".".join(self.path)
+        return f"CompileTimeConstant(%{dotted}%)"
