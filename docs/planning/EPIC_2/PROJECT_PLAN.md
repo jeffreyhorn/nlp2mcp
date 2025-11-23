@@ -318,7 +318,7 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprintsâ€
   - **Risk:** Low (straightforward grammar extension)
   - **Impact:** Common GAMS pattern, improves compatibility
 
-### Phase 3: Targeted Feature Implementation (~18-25 hours)
+### Phase 3: Targeted Feature Implementation (~20-26 hours)
 **Based on Phase 1 Analysis - Implement Only Required Features:**
 
 - **Function Calls in Parameter Assignments (6-8 hours)**
@@ -337,7 +337,7 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprintsâ€
   - Risk: High (complex indexing semantics)
 
 - **abort$ in If-Block Bodies (2-3 hours)**
-  - Allow `abort$[condition]` statements inside if-blocks
+  - Allow `abort$(condition)` statements inside if-blocks
   - Unlocks: mingamma.gms (primary blocker - equation attributes already implemented)
   - Risk: Low (grammar extension)
 
@@ -421,13 +421,14 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprintsâ€
 - Mitigation: Mid-sprint checkpoint catches interaction issues early
 
 **Low Risk: Time Estimation**
-- Total Estimated Effort: 35-50 hours
+- Total Estimated Effort: 32-46 hours
 - Sprint Capacity: ~40 hours (2 weeks)
 - Buffer: Phase 1 analysis may reveal simpler/faster solutions
 
 ## Success Metrics
 
 - **Before Sprint 10:** 60% parse rate (6/10 models)
+  - _Assumes Sprint 9 successfully unlocks 2 additional models (himmel16.gms and hs62.gms); actual parse rate may be lower if these are not achieved._
 - **After Sprint 10:** 100% parse rate (10/10 models) - **40 percentage point increase**
 - **Models Unlocked:** circle, himmel16, maxmin, mingamma (4 new models)
 - **Conversion Rate:** Target â‰¥50% of parseable models (5/10 minimum)
