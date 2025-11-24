@@ -53,7 +53,7 @@ SYNTHETIC_DIR = Path(__file__).parent
         ("mixed_variable_bounds.gms", False, "mixed variable bound types", "10"),
         # Sprint 10 Features - Comma-Separated Declarations
         ("comma_separated_variables.gms", True, "comma-separated variables", "10"),  # Already works
-        ("comma_separated_scalars.gms", False, "comma-separated scalars with inline values", "10"),
+        ("comma_separated_scalars.gms", True, "comma-separated scalars with inline values", "10"),
         ("abort_in_if_blocks.gms", True, "abort$ in if-blocks", "9/10"),  # Already works
         # Deferred Features (Sprint 11+)
         ("nested_subset_indexing.gms", False, "nested/subset indexing in equation domains", "11+"),
