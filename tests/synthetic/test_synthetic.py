@@ -35,6 +35,8 @@ import pytest
 from src.ir.parser import parse_model_file
 
 SYNTHETIC_DIR = Path(__file__).parent
+
+
 @pytest.mark.parametrize(
     "test_file,should_parse,feature,sprint",
     [
@@ -86,9 +88,9 @@ def test_synthetic_feature(test_file, should_parse, feature, sprint):
         # Feature should work - test that parsing succeeds
         try:
             result = parse_model_file(str(file_path))
-            assert result is not None, (
-                f"{feature} (Sprint {sprint}) should parse successfully but returned None"
-            )
+            assert (
+                result is not None
+            ), f"{feature} (Sprint {sprint}) should parse successfully but returned None"
         except Exception as e:
             pytest.fail(
                 f"{feature} (Sprint {sprint}) should parse but failed with: {type(e).__name__}: {e}"
@@ -130,8 +132,6 @@ EXPECTED_TEST_FILES = [
     "comma_separated_variables.gms",
     "comma_separated_scalars.gms",
     "abort_in_if_blocks.gms",
-    "abort_in_if_blocks.gms",
-
     # Deferred
     "nested_subset_indexing.gms",
 ]
