@@ -2132,12 +2132,22 @@ class _ModelBuilder:
                     member_lists.append(domain_set.members)
                 else:
                     # Symbol is a literal value (e.g., "1", "2", "pellets")
-                    # Strip quotes - check for matching quotes at both ends
-                    if len(symbol) >= 2 and (
-                        (symbol[0] == '"' and symbol[-1] == '"')
-                        or (symbol[0] == "'" and symbol[-1] == "'")
-                    ):
-                        literal_value = symbol[1:-1]
+                    # Strip quotes - validate matching quotes at both ends
+                    if len(symbol) >= 2 and (symbol[0] in ("'", '"') or symbol[-1] in ("'", '"')):
+                        # At least one quote found - validate they match
+                        if symbol[0] in ("'", '"') and symbol[-1] in ("'", '"'):
+                            if symbol[0] == symbol[-1]:
+                                literal_value = symbol[1:-1]
+                            else:
+                                raise self._error(
+                                    f"Mismatched quotes in literal index '{symbol}' for variable '{var_name}' in domain '{domain_name}'",
+                                    node,
+                                )
+                        else:
+                            raise self._error(
+                                f"Unmatched quote in literal index '{symbol}' for variable '{var_name}' in domain '{domain_name}'",
+                                node,
+                            )
                     else:
                         literal_value = symbol
 
