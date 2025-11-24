@@ -201,7 +201,7 @@ tests/synthetic/test_synthetic.py::test_synthetic_feature[model_sections.gms-Tru
 
 **Expected Sprint 10 Outcome:**
 - Parse rate: 60% → 90% (9/10 models)
-- Total effort: 9-13 hours for 3 models
+- Total effort: 9-13 hours for 3 models (3-4h + 4-6h + 2.5-3h)
 - High confidence in success
 
 ---
@@ -255,7 +255,7 @@ tests/synthetic/test_synthetic.py::test_synthetic_feature[model_sections.gms-Tru
 - [x] Confirms Sprint 9 features work in isolation ✅
 - [x] Cross-references Sprint 9 feature implementations ✅
 - [x] Cross-references synthetic test framework (Task 9) ✅
-- [ ] Unknown 10.7.2 verified and updated in KNOWN_UNKNOWNS.md (next step)
+- [x] Unknown 10.7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
