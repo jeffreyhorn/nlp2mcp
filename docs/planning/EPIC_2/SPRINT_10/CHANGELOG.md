@@ -18,6 +18,7 @@ Created comprehensive day-by-day execution plan for Sprint 10 based on all prep 
 
 **Created:**
 - `docs/planning/EPIC_2/SPRINT_10/PLAN.md` - Comprehensive Sprint 10 execution schedule (30KB, 850+ lines)
+- `docs/planning/EPIC_2/SPRINT_10/prompts/PLAN_PROMPTS.md` - Day-by-day execution prompts (850+ lines, self-contained instructions for each sprint day)
 
 **Updated:**
 - `docs/planning/EPIC_2/SPRINT_10/PREP_PLAN.md` - Marked Task 12 as complete with results
@@ -130,6 +131,24 @@ Created comprehensive day-by-day execution plan for Sprint 10 based on all prep 
 ✅ **Critical Path:** Day 1 → Days 2-3 → Days 4-6 → Day 5 checkpoint validates  
 ✅ **Risk Coverage:** All high-risk items have mitigation and buffer  
 ✅ **Phase Distribution:** 5 phases properly distributed across 10 days  
+
+### Execution Prompts
+
+**Created:** `docs/planning/EPIC_2/SPRINT_10/prompts/PLAN_PROMPTS.md`
+
+Comprehensive, self-contained execution prompts for all 10 days of Sprint 10. Each prompt includes:
+
+- **Branch naming convention:** Consistent branch names for each day
+- **Detailed objectives:** What to accomplish, extracted from PLAN.md
+- **Prerequisites:** Required reading with document references and line numbers
+- **Task breakdowns:** Complete task lists with time estimates
+- **Deliverables:** Specific outputs for each day
+- **Quality checks:** `make typecheck && make lint && make format && make test`
+- **Completion criteria:** Clear success indicators
+- **PR creation commands:** Ready-to-use PR templates
+- **Reference documents:** All relevant docs with line numbers
+
+**Structure:** Following Sprint 7 template format, all 10 prompts are completely self-contained and executable without needing to read other documents during execution.
 
 ### Success Metrics
 
