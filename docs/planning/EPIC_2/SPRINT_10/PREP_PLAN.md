@@ -2178,9 +2178,11 @@ grep -i "recommend" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/nested_indexing_rese
 
 ## Task 9: Design Synthetic Test Framework
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 2-3 hours  
+**Actual Time:** 2.5 hours  
+**Completed:** 2025-11-23  
 **Deadline:** Before Sprint 10 Day 1  
 **Owner:** Development team  
 **Dependencies:** Tasks 2-5 (blocker analyses)  
@@ -2380,11 +2382,107 @@ Update test expectations as features implemented during Sprint 10.
 
 ### Changes
 
-*To be completed during prep phase*
+**Created:**
+- `tests/synthetic/README.md` (comprehensive framework documentation, ~8KB)
+- `tests/synthetic/test_synthetic.py` (parametrized pytest runner)
+- 12 synthetic test files (.gms):
+  - Sprint 9: `i_plusplus_indexing.gms`, `equation_attributes.gms`, `model_sections.gms`
+  - Sprint 10: `function_calls_parameters.gms`, `aggregation_functions.gms`, `nested_function_calls.gms`, `variable_level_bounds.gms`, `mixed_variable_bounds.gms`, `comma_separated_variables.gms`, `comma_separated_scalars.gms`, `abort_in_if_blocks.gms`
+  - Deferred: `nested_subset_indexing.gms`
+
+**Updated:**
+- `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md` (Unknown 10.7.1 verified)
 
 ### Result
 
-*To be completed during prep phase*
+**Synthetic Test Framework Created:**
+
+**Framework Design Principles (4 key principles):**
+
+1. **MINIMAL:** Tests are 5-15 lines, only include declarations needed for the feature
+2. **ISOLATED:** Each test validates ONE feature with no dependencies on other features
+3. **VALIDATING:** Clear pass/fail criteria that directly indicate feature correctness
+4. **AUTOMATABLE:** Run automatically via pytest with clear success/failure reporting
+
+**Test Template Defined:**
+
+Each synthetic test includes:
+- Title and purpose comment
+- Feature being tested
+- Expected behavior (parse success/failure)
+- Minimal GAMS code (5-15 lines)
+- Verification criteria
+- Test state (PASS/SKIP/FAIL)
+
+**Directory Structure:**
+```
+tests/synthetic/
+├── README.md (framework documentation)
+├── test_synthetic.py (pytest runner)
+├── i_plusplus_indexing.gms (Sprint 9)
+├── equation_attributes.gms (Sprint 9)
+├── model_sections.gms (Sprint 9)
+├── function_calls_parameters.gms (Sprint 10)
+├── aggregation_functions.gms (Sprint 10)
+├── nested_function_calls.gms (Sprint 10)
+├── variable_level_bounds.gms (Sprint 10)
+├── mixed_variable_bounds.gms (Sprint 10)
+├── comma_separated_variables.gms (Sprint 10)
+├── comma_separated_scalars.gms (Sprint 10)
+├── abort_in_if_blocks.gms (Sprint 10)
+└── nested_subset_indexing.gms (Deferred - Sprint 11+)
+```
+
+**Test Specifications (12 features):**
+
+**Sprint 9 Features (should PASS):**
+1. i++1 lead/lag indexing
+2. Equation attributes (.l, .m)
+3. Model declaration and solve statements
+
+**Sprint 10 Features (initially SKIP, will PASS after implementation):**
+4. Function calls in parameter assignments
+5. Aggregation functions (smin/smax)
+6. Nested function calls
+7. Variable level bounds (.l attribute)
+8. Mixed variable bounds (.l and .fx)
+9. Comma-separated variable declarations
+10. Comma-separated scalar declarations with inline values
+11. abort$ statements in if-blocks
+
+**Deferred Features (SKIP until Sprint 11+):**
+12. Nested/subset indexing in equation domains
+
+**Pytest Integration:**
+
+Created parametrized test runner with:
+- 12 test cases (3 Sprint 9 + 8 Sprint 10 + 1 deferred)
+- `should_parse` parameter: True (expect PASS), False (expect SKIP)
+- Clear feature names and sprint labels
+- After feature implementation: change should_parse to True
+- Tests transition from SKIP → PASS as features are implemented
+
+**Test States:**
+- **PASS:** Feature works correctly (Sprint 9 features)
+- **SKIP:** Feature not yet implemented (Sprint 10 features, initially)
+- **FAIL:** Feature has bugs (none expected)
+
+**Unknown 10.7.1 Verification:**
+
+✅ **Synthetic Test Design Principles:** VERIFIED
+
+**Findings:**
+- 4 key principles defined (MINIMAL, ISOLATED, VALIDATING, AUTOMATABLE)
+- Test template created with all required sections
+- 12 test files specified (3 Sprint 9 + 8 Sprint 10 + 1 deferred)
+- pytest integration complete with parametrization
+- Framework ready for Sprint 10 feature validation
+
+**Impact:**
+- Can now validate features work in isolation before integration testing
+- Addresses Sprint 9 lesson: i++1 indexing couldn't be validated due to himmel16.gms secondary blockers
+- Clear test progression: SKIP → implement feature → change should_parse=True → PASS
+- Fast feedback loop (<1 second per test)
 
 ### Verification
 
@@ -2395,49 +2493,54 @@ test -d tests/synthetic
 # Verify README exists
 test -f tests/synthetic/README.md
 
-# Verify test files exist (initially can be templates)
+# Verify test files exist
 ls tests/synthetic/*.gms | wc -l
-# Should be >= 8 files
+# Shows 12 files
 
 # Verify pytest integration
 test -f tests/synthetic/test_synthetic.py
 
-# Run synthetic tests (will fail for unimplemented features)
+# Run synthetic tests
 pytest tests/synthetic/test_synthetic.py -v
+# Sprint 9 tests PASS, Sprint 10 tests SKIP (as expected)
 ```
 
 ### Deliverables
 
-- [ ] `tests/synthetic/README.md` explaining synthetic test framework
-- [ ] Synthetic test design principles documented
-- [ ] Test template defined
-- [ ] Directory structure created: `tests/synthetic/`
-- [ ] Test file specifications for 8+ features:
-  - i++1 indexing (Sprint 9)
-  - Equation attributes (Sprint 9)
-  - Model sections (Sprint 9)
-  - Function calls (Sprint 10)
-  - Level bounds (Sprint 10)
-  - Nested indexing (Sprint 10)
-  - abort$ in if-blocks (Sprint 10)
-  - Comma-separated declarations (Sprint 10)
-- [ ] Pytest integration designed (`test_synthetic.py`)
-- [ ] Template GAMS files created (can be minimal stubs for prep)
-- [ ] Updated KNOWN_UNKNOWNS.md with verification results for Unknown 10.7.1
+- [x] `tests/synthetic/README.md` explaining synthetic test framework (~8KB)
+- [x] Synthetic test design principles documented (4 principles: MINIMAL, ISOLATED, VALIDATING, AUTOMATABLE)
+- [x] Test template defined (with title, purpose, feature, expected behavior, minimal code, verification)
+- [x] Directory structure created: `tests/synthetic/`
+- [x] Test file specifications for 12 features:
+  - [x] i++1 indexing (Sprint 9)
+  - [x] Equation attributes (Sprint 9)
+  - [x] Model sections (Sprint 9)
+  - [x] Function calls in parameters (Sprint 10)
+  - [x] Aggregation functions (Sprint 10)
+  - [x] Nested function calls (Sprint 10)
+  - [x] Variable level bounds (Sprint 10)
+  - [x] Mixed variable bounds (Sprint 10)
+  - [x] Comma-separated variables (Sprint 10)
+  - [x] Comma-separated scalars (Sprint 10)
+  - [x] abort$ in if-blocks (Sprint 10)
+  - [x] Nested/subset indexing (Deferred)
+- [x] Pytest integration designed (`test_synthetic.py` with parametrization)
+- [x] Template GAMS files created (12 minimal test files)
+- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknown 10.7.1
 
 ### Acceptance Criteria
 
-- [ ] Synthetic test framework principles documented
-- [ ] Test template clearly defined
-- [ ] Directory structure created
-- [ ] Specifications for 8+ features documented
-- [ ] Each specification includes minimal test description
-- [ ] Each specification includes expected parse result
-- [ ] Pytest integration designed with parametrized tests
-- [ ] Tests can run (initially fail for unimplemented features - expected)
-- [ ] Cross-references blocker analyses (Tasks 2-5)
-- [ ] Cross-references Known Unknowns Category 3 (Validation)
-- [ ] Unknown 10.7.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Synthetic test framework principles documented (4 principles defined)
+- [x] Test template clearly defined (title, purpose, feature, code, verification)
+- [x] Directory structure created (tests/synthetic/ with README, pytest runner, 12 test files)
+- [x] Specifications for 12 features documented (3 Sprint 9 + 8 Sprint 10 + 1 deferred)
+- [x] Each specification includes minimal test description (documented in README.md)
+- [x] Each specification includes expected parse result (should_parse parameter in pytest)
+- [x] Pytest integration designed with parametrized tests (test_synthetic.py with 12 test cases)
+- [x] Tests can run (Sprint 9 PASS, Sprint 10 SKIP as expected)
+- [x] Cross-references blocker analyses (Tasks 2-5: circle, himmel16, maxmin, mingamma)
+- [x] Cross-references Known Unknowns Category 7 (Synthetic Test Suite)
+- [x] Unknown 10.7.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
