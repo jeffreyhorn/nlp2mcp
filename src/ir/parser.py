@@ -1919,6 +1919,17 @@ class _ModelBuilder:
             # Check the offset expression recursively
             if self._contains_function_call(expr.offset):
                 return True
+        # Check for function calls in indices of reference nodes
+        if isinstance(expr, (VarRef, ParamRef)):
+            for idx in expr.indices:
+                if isinstance(idx, IndexOffset) and self._contains_function_call(idx):
+                    return True
+        # Check EquationRef and MultiplierRef if they're being used
+        # These are imported locally in some contexts, so we check type name
+        if type(expr).__name__ in ("EquationRef", "MultiplierRef"):
+            for idx in expr.indices:  # type: ignore[attr-defined]
+                if isinstance(idx, IndexOffset) and self._contains_function_call(idx):
+                    return True
         return False
 
     def _extract_constant(self, expr: Expr, context: str) -> float:

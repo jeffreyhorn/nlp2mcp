@@ -110,10 +110,9 @@ def test_nested_function_calls(tmp_path):
     test_file = tmp_path / "test_nested.gms"
     test_file.write_text(
         """
-Parameter a, b, result;
-a = 3;
-b = 4;
-result = sqrt(sqr(a) + sqr(b));
+Parameter x, result;
+x = 2;
+result = log(exp(sqrt(x)));
 """
     )
     model = parse_model_file(test_file)
@@ -123,12 +122,13 @@ result = sqrt(sqr(a) + sqr(b));
 
     assert () in param.expressions
     expr = param.expressions[()]
+    # Top-level should be log()
     assert isinstance(expr, Call)
-    assert expr.func == "sqrt"
+    assert expr.func == "log"
 
-    # The argument should contain nested sqr calls
+    # The argument should be another Call (exp)
     assert len(expr.args) == 1
-    # We don't test the full AST structure, just that nesting works
+    # We don't test the full AST structure, just that deep nesting works
 
 
 def test_uniform_function(tmp_path):
