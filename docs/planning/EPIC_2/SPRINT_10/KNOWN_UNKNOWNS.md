@@ -716,14 +716,14 @@ Development team (Prep Task 6)
 
 **Complete Analysis:**
 1. **How many models use this pattern?** → **8/10 models (80%)**
-   - Variable: 6/10 models (60%)
+   - Variable: 7/10 models (70%)
    - Equation: 6/10 models (60%)
    - Parameter: 1/10 models (10%)
    - Scalar: 2/10 models (20%)
    - Set: 0/10 models (0%)
 
-2. **Total instances found:** 14 instances across 10 models
-   - Average: 1.4 comma-separated declarations per model
+2. **Total instances found:** 16 instances across 10 models
+   - Average: 1.6 comma-separated declarations per model
 
 3. **Does any blocked model need this?** → **YES - mingamma.gms**
    - mingamma.gms uses Scalar comma-separated with inline values (lines 30-38)

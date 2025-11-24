@@ -44,18 +44,18 @@
 
 | Declaration Type | Instances | Models Using | Frequency |
 |------------------|-----------|--------------|-----------|
-| **Variable** | 6 | 6/10 (60%) | **VERY COMMON** |
+| **Variable** | 7 | 7/10 (70%) | **VERY COMMON** |
 | **Equation** | 6 | 6/10 (60%) | **VERY COMMON** |
 | **Scalar** | 2 | 2/10 (20%) | UNCOMMON |
 | **Parameter** | 1 | 1/10 (10%) | RARE |
 | **Set** | 0 | 0/10 (0%) | NOT USED |
-| **Total** | 14 | 8/10 (80%) | **EXTREMELY COMMON** |
+| **Total** | 16 | 8/10 (80%) | **EXTREMELY COMMON** |
 
 ### Key Insights
 
 **80% of models use comma-separated declarations** - This is a fundamental GAMS pattern, not an edge case.
 
-**Variable and Equation dominate:** 12/14 instances (86%) are Variable or Equation declarations.
+**Variable and Equation dominate:** 13/16 instances (81%) are Variable or Equation declarations.
 
 **Scalar inline values pattern is rare but critical:** Only 1/10 models (mingamma.gms), but it's the blocker preventing 100% parse.
 
@@ -63,7 +63,7 @@
 
 ## 2. GAMSLIB Survey Results
 
-### 2.1 Variable Declarations (6 instances)
+### 2.1 Variable Declarations (7 instances)
 
 #### Simple Comma-Separated (Free Variables)
 
@@ -549,11 +549,11 @@ scalar_item: ID desc_text "/" scalar_data_items "/"                     -> scala
 
 **Actual Frequency:**
 - **80% of models** (8/10 GAMSLib Tier 1 models) use comma-separated declarations
-- **14 total instances** across 10 models
-- **1.4 average per model** (including models with zero instances)
+- **16 total instances** across 10 models
+- **1.6 average per model** (including models with zero instances)
 
 **Evidence:**
-- Variable: 6/10 models (60%)
+- Variable: 7/10 models (70%)
 - Equation: 6/10 models (60%)
 - Parameter: 1/10 models (10%)
 - Scalar: 2/10 models (20%)

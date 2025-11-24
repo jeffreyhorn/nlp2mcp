@@ -18,12 +18,12 @@ Researched GAMS comma-separated declaration syntax across 10 GAMSLib models. **C
 #### Achievements
 
 **Pattern Frequency Survey (80% of models):**
-- Variable: 6/10 models (60%) - 6 instances
+- Variable: 7/10 models (70%) - 7 instances
 - Equation: 6/10 models (60%) - 6 instances  
 - Scalar: 2/10 models (20%) - 2 instances (mingamma.gms is blocker)
 - Parameter: 1/10 models (10%) - 1 instance
 - Set: 0/10 models (0%)
-- **Total: 14 instances across 8/10 models**
+- **Total: 16 instances across 8/10 models**
 
 **Grammar Status Discovery:**
 - ✅ Variable ALREADY SUPPORTED (via `var_list` with `id_list`)

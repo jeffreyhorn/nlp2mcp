@@ -1531,7 +1531,7 @@ grep "grammar" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/comma_separated_research.
 **CRITICAL FINDING: Comma-separated declarations are EXTREMELY COMMON (80% of models), not optional.**
 
 **Pattern Frequency (MUCH higher than assumed):**
-- Variable: 6/10 models (60%) - 6 instances
+- Variable: 7/10 models (70%) - 7 instances
 - Equation: 6/10 models (60%) - 6 instances
 - Scalar: 2/10 models (20%) - 2 instances (1 is mingamma.gms blocker)
 - Parameter: 1/10 models (10%) - 1 instance

@@ -2,12 +2,12 @@
 
 ## Summary Statistics
 
-- **Variable declarations:** 6 instances
+- **Variable declarations:** 7 instances
 - **Parameter declarations:** 1 instance
 - **Equation declarations:** 6 instances
-- **Scalar declarations:** 1 instance
+- **Scalar declarations:** 2 instances
 - **Set declarations:** 0 instances
-- **Total:** 14 instances across 10 GAMS models
+- **Total:** 16 instances across 10 GAMS models
 
 ## Variable Declarations
 
@@ -119,7 +119,7 @@ Scalar
 ```
 **Context:** 7 scalars, some with inline values, some without (THIS IS THE BLOCKER)
 **Notes:**
-- This is the PRIMARY blocker discovered in Task 5
+- This is the SECONDARY blocker discovered in Task 5
 - Grammar doesn't support mixing inline values with plain declarations
 - Current parse rate: 65% (fails at line 41 when trying to use y1opt)
 
