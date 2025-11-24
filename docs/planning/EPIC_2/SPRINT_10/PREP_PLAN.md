@@ -1841,7 +1841,7 @@ grep -i "evaluation" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/function_call_resea
 - [x] `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/function_call_research.md` (1,500+ lines) with:
   - [x] Complete function catalog from GAMSLIB (19 unique functions, 90+ occurrences)
   - [x] Function categories (6 categories: Mathematical, Aggregation, Trigonometric, Statistical, Special, Set)
-  - [x] Argument pattern analysis (4 complexity levels, distribution statistics)
+  - [x] Argument pattern analysis (5 complexity levels, distribution statistics)
   - [x] Nesting analysis (max depth 5, distribution across depths)
   - [x] Evaluation strategy (Option C: parse-only, store as expressions)
   - [x] Grammar production changes required (add 3 functions to FUNCNAME: 5 minutes)

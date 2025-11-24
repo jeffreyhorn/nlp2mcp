@@ -20,8 +20,8 @@
 
 **Implementation Impact:**
 - **Original estimate:** 6-8 hours (assuming infrastructure needed)
-- **Revised estimate:** 0-2 hours (infrastructure exists, may only need semantic handler verification)
-- **Effort reduction:** ~75-100% (from 6-8h to 0-2h)
+- **Revised estimate:** 2.5-3 hours (matches detailed breakdown in Section 8.2)
+- **Effort reduction:** ~60% (from 6-8h to 2.5-3h)
 
 **circle.gms Blocker Status:**
 - Functions used: `uniform(1,10)`, `smin(i, x(i))`, `smax(i, x(i))`, `sqrt(...)`, `sqr(...)`
