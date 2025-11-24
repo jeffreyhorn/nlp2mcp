@@ -63,10 +63,18 @@ param_decl: ID "(" id_list ")" "/" param_data_items "/" param_default? -> param_
           | ID "/" param_data_items "/" param_default?                 -> param_plain_data
           | ID param_default?                                          -> param_plain
           | ID "," id_list                                             -> param_list
-scalar_decl: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?      -> scalar_with_data
-           | ID desc_text ASSIGN expr                                       -> scalar_with_assign
-           | ID desc_text                                                   -> scalar_plain
-           | ID "," id_list                                       -> scalar_list
+scalar_decl: scalar_single_item                                          -> scalar_single
+           | scalar_item (","? scalar_item)+                                 -> scalar_list
+
+// For comma-separated or newline-separated lists: NO desc_text (ambiguous)
+scalar_item: ID "/" scalar_data_items "/" (ASSIGN expr)?                -> scalar_with_data
+           | ID ASSIGN expr                                             -> scalar_with_assign
+           | ID                                                         -> scalar_plain
+
+// For single scalar declarations: allow desc_text (unambiguous)
+scalar_single_item: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?  -> scalar_with_data
+                  | ID desc_text ASSIGN expr                               -> scalar_with_assign
+                  | ID desc_text                                           -> scalar_plain
 
 // Optional inline description text
 // Matches zero or more words/operators, implicitly stops at structural tokens (/, =, ;, etc.)
