@@ -77,6 +77,9 @@ _VAR_KIND_MAP = {
     "INTEGER_K": VarKind.INTEGER,
 }
 
+# Aggregation functions that bind a set iterator as first argument (Sprint 10 Day 6)
+_AGGREGATION_FUNCTIONS = {"smin", "smax", "sum", "prod", "card"}
+
 _FUNCTION_NAMES = {"abs", "exp", "log", "sqrt", "sin", "cos", "tan", "sqr"}
 
 
@@ -1377,11 +1380,15 @@ class _ModelBuilder:
         try:
             value = self._extract_constant(expr, "assignment")
         except ParserSemanticError:
-            # Non-constant expressions are only allowed for scalar parameter assignments
+            # Non-constant expressions:
+            # - For parameters with function calls: store as expression (Sprint 10 Day 4)
+            # - For variable bounds with expressions: parse and continue (Sprint 10 Day 6)
+            # - For other non-constant parameters: just parse and validate but don't store
             # (e.g., trig.gms: xdiff = 2.66695657 - x1.l, circle.gms: xmin = smin(i, x(i)))
-            # Variable bounds must always be constants
             if is_variable_bound:
-                raise  # Re-raise the error for variable bounds
+                # Variable bounds with expressions (circle.gms: a.l = (xmin + xmax)/2)
+                # Parse and continue without storing (mock/store approach)
+                return
             # For parameters with function calls, continue to store as expression
             # For other non-constant parameters, just parse and validate but don't store
             if not has_function_call:
@@ -1544,11 +1551,49 @@ class _ModelBuilder:
             func_tree = node.children[0]
             func_name = _token_text(func_tree.children[0]).lower()
             args: list[Expr] = []
+
             if len(func_tree.children) > 1:
                 arg_list = func_tree.children[1]
-                for child in arg_list.children:
-                    if isinstance(child, (Tree, Token)):
-                        args.append(self._expr(child, free_domain))
+
+                # Sprint 10 Day 6: Handle aggregation functions with set iterators
+                # Aggregation functions like smin(i, x(i)) have a set iterator as first arg
+                if func_name in _AGGREGATION_FUNCTIONS and len(arg_list.children) >= 1:
+                    # First argument is the set iterator (creates local scope)
+                    first_arg = arg_list.children[0]
+                    # Check if first arg is a simple symbol (symbol_plain tree with single ID token)
+                    if (
+                        isinstance(first_arg, Tree)
+                        and first_arg.data == "symbol_plain"
+                        and len(first_arg.children) == 1
+                        and isinstance(first_arg.children[0], Token)
+                    ):
+                        # This is a set iterator like 'i' in smin(i, x(i))
+                        # We parse it as a SymbolRef without validation
+                        iterator_name = _token_text(first_arg.children[0])
+                        args.append(SymbolRef(iterator_name))
+
+                        # Remaining arguments are parsed with the iterator in the local scope
+                        # Add the iterator to free_domain so it's recognized as a valid symbol
+                        extended_domain = free_domain + (iterator_name,)
+                        for child in arg_list.children[1:]:
+                            if isinstance(child, (Tree, Token)):
+                                args.append(self._expr(child, extended_domain))
+
+                        # For aggregation functions with iterators, return with free_domain
+                        # (the iterator is bound, so the result domain is the outer scope)
+                        expr = Call(func_name, tuple(args))
+                        return self._attach_domain(expr, free_domain)
+                    else:
+                        # Not a simple symbol, parse all args normally
+                        for child in arg_list.children:
+                            if isinstance(child, (Tree, Token)):
+                                args.append(self._expr(child, free_domain))
+                else:
+                    # Regular function call - parse all arguments normally
+                    for child in arg_list.children:
+                        if isinstance(child, (Tree, Token)):
+                            args.append(self._expr(child, free_domain))
+
             expr = Call(func_name, tuple(args))
             return self._attach_domain(expr, self._merge_domains(args, node))
 

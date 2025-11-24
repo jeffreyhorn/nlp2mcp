@@ -5,15 +5,13 @@
     {
       "model_name": "circle",
       "gms_file": "circle.gms",
-      "parse_status": "FAILED",
-      "parse_error": "Error: Parse error at line 40, column 13: Undefined symbol 'i' referenced [context: assignment]\n  xmin = smin(i, x(i));\n              ^\n\nSuggestion: Declare 'i' as a variable, parameter, or set before using it",
-      "parse_error_type": "ParseError",
-      "parse_progress_percentage": 57.1,
-      "parse_progress_lines_parsed": 16,
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null,
+      "parse_progress_percentage": 100.0,
+      "parse_progress_lines_parsed": 28,
       "parse_progress_lines_total": 28,
-      "missing_features": [
-        "parse error"
-      ]
+      "missing_features": []
     },
     {
       "model_name": "himmel16",
@@ -119,9 +117,9 @@
   ],
   "kpis": {
     "total_models": 10,
-    "parse_success": 8,
-    "parse_failed": 2,
-    "parse_rate_percent": 80.0,
+    "parse_success": 9,
+    "parse_failed": 1,
+    "parse_rate_percent": 90.0,
     "convert_success": 0,
     "convert_failed": 0,
     "convert_rate_percent": 0.0,

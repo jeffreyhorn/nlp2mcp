@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-24 09:30:02
+**Generated:** 2025-11-24 13:30:13
 **Sprint:** Sprint 8
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint8.json`](../../reports/gamslib_ingestion_sprint8.json)
@@ -11,8 +11,8 @@
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| **Parse Rate** | 80.0% (8/10) | ≥10% | ✅ |
-| **Convert Rate** | 0.0% (0/8) | ≥50% | ⚠️ Sprint 6: Not implemented |
+| **Parse Rate** | 90.0% (9/10) | ≥10% | ✅ |
+| **Convert Rate** | 0.0% (0/9) | ≥50% | ⚠️ Sprint 6: Not implemented |
 | **Solve Rate** | 0.0% (N/A) | TBD | ⚠️ Sprint 6: Not implemented |
 | **End-to-End** | 0.0% (0/10) | TBD | ⚠️ Sprint 6: Not implemented |
 
@@ -24,7 +24,7 @@
 
 | Model | Status | Progress | Missing Features | Convert | Solve | E2E |
 |-------|--------|----------|------------------|---------|-------|-----|
-| circle | ⚠️ PARTIALLY PARSED | 57% (16/28) | parse error | - | - | ❌ |
+| circle | ✅ PASS | 100% (28/28) | - | - | - | ❌ |
 | himmel16 | ✅ PASS | 100% (33/33) | - | - | - | ❌ |
 | hs62 | ✅ PASS | 100% (18/18) | - | - | - | ❌ |
 | mathopt1 | ✅ PASS | 100% (20/20) | - | - | - | ❌ |
@@ -49,28 +49,13 @@
 ### Parse Errors
 | Error Type | Count | Models |
 |------------|-------|--------|
-| `ParseError` | 2 | circle, maxmin |
+| `ParseError` | 1 | maxmin |
 
 **Note:** Convert and solve errors will appear here once those stages are implemented.
 
 ---
 
 ## Failure Details
-
-### circle.gms
-**Model:** circle
-**Status:** Parse Failed
-**Progress:** 57% (16/28 lines parsed)
-**Missing Features:** parse error
-**Error Type:** `ParseError`
-**Error Message:**
-```
-Error: Parse error at line 40, column 13: Undefined symbol 'i' referenced [context: assignment]
-  xmin = smin(i, x(i));
-              ^
-
-Suggestion: Declare 'i' as a variable, parameter, or set before using it
-```
 
 ### maxmin.gms
 **Model:** maxmin

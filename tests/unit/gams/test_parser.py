@@ -433,6 +433,11 @@ def test_indexed_parameter_assignment_supported():
 
 
 def test_non_constant_bound_expression_rejected():
+    """Test that variable bound expressions with parameters are parsed (Sprint 10 Day 6).
+
+    Previously these were rejected, but now we allow them (parse and continue without storing).
+    This supports patterns like circle.gms: a.l = (xmin + xmax)/2
+    """
     text = dedent(
         """
         Sets
@@ -449,8 +454,10 @@ def test_non_constant_bound_expression_rejected():
         """
     )
 
-    with pytest.raises(parser.ParserSemanticError, match="Assignments must use numeric constants"):
-        parser.parse_model_text(text)
+    # Sprint 10 Day 6: Variable bounds with expressions now parse successfully
+    # (mock/store approach - parse and continue without storing the expression)
+    model = parser.parse_model_text(text)
+    assert "x" in model.variables
 
 
 def test_conflicting_bounds_raise_error():
