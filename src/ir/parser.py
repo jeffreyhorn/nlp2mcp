@@ -2109,38 +2109,37 @@ class _ModelBuilder:
                     f"Variable '{var_name}' references unknown domain set '{domain_name}'",
                     node,
                 )
+
+            # Early check: domain must have members for expansion
+            if not domain_set.members:
+                raise self._error(
+                    f"Cannot expand bounds for variable '{var_name}' because set '{domain_name}' has no explicit members",
+                    node,
+                )
+
             # Check if symbol is a string (set name or literal)
             # If it's an IndexOffset or other non-string type, use all domain members
             if isinstance(symbol, str):
                 resolved_symbol_set = self._resolve_set_def(symbol, node=node)
                 if resolved_symbol_set is not None:
                     # Symbol is a set/alias name - validate and use its members
-                    if (
-                        domain_set is not None
-                        and domain_set.members
-                        and resolved_symbol_set.members
-                    ):
+                    if domain_set.members and resolved_symbol_set.members:
                         if set(resolved_symbol_set.members) - set(domain_set.members):
                             raise self._error(
                                 f"Alias '{symbol}' for variable '{var_name}' does not match domain '{domain_name}'",
                                 node,
                             )
-                    if not domain_set.members:
-                        raise self._error(
-                            f"Cannot expand bounds for variable '{var_name}' because set '{domain_name}' has no explicit members",
-                            node,
-                        )
                     member_lists.append(domain_set.members)
                 else:
                     # Symbol is a literal value (e.g., "1", "2", "pellets")
-                    # Strip quotes and validate it's in the domain
-                    literal_value = symbol.strip('"').strip("'")
-
-                    if not domain_set.members:
-                        raise self._error(
-                            f"Cannot expand bounds for variable '{var_name}' because set '{domain_name}' has no explicit members",
-                            node,
-                        )
+                    # Strip quotes - check for matching quotes at both ends
+                    if len(symbol) >= 2 and (
+                        (symbol[0] == '"' and symbol[-1] == '"')
+                        or (symbol[0] == "'" and symbol[-1] == "'")
+                    ):
+                        literal_value = symbol[1:-1]
+                    else:
+                        literal_value = symbol
 
                     if literal_value not in domain_set.members:
                         raise self._error(
@@ -2152,12 +2151,7 @@ class _ModelBuilder:
                     member_lists.append([literal_value])
             else:
                 # Symbol is not a string (e.g., IndexOffset like i++1)
-                # For now, expand to all domain members (original behavior)
-                if not domain_set.members:
-                    raise self._error(
-                        f"Cannot expand bounds for variable '{var_name}' because set '{domain_name}' has no explicit members",
-                        node,
-                    )
+                # Expand to all domain members (original behavior)
                 member_lists.append(domain_set.members)
         return [tuple(comb) for comb in product(*member_lists)]
 
