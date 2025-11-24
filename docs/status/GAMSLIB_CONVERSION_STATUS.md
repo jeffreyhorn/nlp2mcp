@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-21 18:21:48
+**Generated:** 2025-11-24 08:14:13
 **Sprint:** Sprint 8
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint8.json`](../../reports/gamslib_ingestion_sprint8.json)
@@ -11,8 +11,8 @@
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| **Parse Rate** | 60.0% (6/10) | ≥10% | ✅ |
-| **Convert Rate** | 0.0% (0/6) | ≥50% | ⚠️ Sprint 6: Not implemented |
+| **Parse Rate** | 70.0% (7/10) | ≥10% | ✅ |
+| **Convert Rate** | 0.0% (0/7) | ≥50% | ⚠️ Sprint 6: Not implemented |
 | **Solve Rate** | 0.0% (N/A) | TBD | ⚠️ Sprint 6: Not implemented |
 | **End-to-End** | 0.0% (0/10) | TBD | ⚠️ Sprint 6: Not implemented |
 
@@ -25,7 +25,7 @@
 | Model | Status | Progress | Missing Features | Convert | Solve | E2E |
 |-------|--------|----------|------------------|---------|-------|-----|
 | circle | ⚠️ PARTIALLY PARSED | 57% (16/28) | parse error | - | - | ❌ |
-| himmel16 | 🟡 MOSTLY PARSED | 79% (26/33) | variable attributes (.l, .m, etc.) | - | - | ❌ |
+| himmel16 | ✅ PASS | 100% (33/33) | - | - | - | ❌ |
 | hs62 | ✅ PASS | 100% (18/18) | - | - | - | ❌ |
 | mathopt1 | ✅ PASS | 100% (20/20) | - | - | - | ❌ |
 | maxmin | ⚠️ PARTIALLY PARSED | 40% (19/47) | nested indexing | - | - | ❌ |
@@ -50,7 +50,6 @@
 | Error Type | Count | Models |
 |------------|-------|--------|
 | `ParseError` | 3 | circle, maxmin, mingamma |
-| `ParserSemanticError` | 1 | himmel16 |
 
 **Note:** Convert and solve errors will appear here once those stages are implemented.
 
@@ -71,17 +70,6 @@ Error: Parse error at line 40, column 13: Undefined symbol 'i' referenced [conte
               ^
 
 Suggestion: Declare 'i' as a variable, parameter, or set before using it
-```
-
-### himmel16.gms
-**Model:** himmel16
-**Status:** Parse Failed
-**Progress:** 79% (26/33 lines parsed)
-**Missing Features:** variable attributes (.l, .m, etc.)
-**Error Type:** `ParserSemanticError`
-**Error Message:**
-```
-Conflicting level bound for variable 'x' at indices ('1',) [context: expression] (line 63, column 1)
 ```
 
 ### maxmin.gms
