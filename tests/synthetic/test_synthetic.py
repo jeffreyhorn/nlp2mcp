@@ -45,12 +45,12 @@ SYNTHETIC_DIR = Path(__file__).parent
         ("equation_attributes.gms", True, "equation attributes (.l, .m)", "9"),
         ("model_sections.gms", True, "model declaration and solve statements", "9"),
         # Sprint 10 Features - Function Calls
-        ("function_calls_parameters.gms", False, "function calls in parameters", "10"),
-        ("aggregation_functions.gms", False, "aggregation functions (smin/smax)", "10"),
-        ("nested_function_calls.gms", False, "nested function calls", "10"),
+        ("function_calls_parameters.gms", True, "function calls in parameters", "10"),  # Day 6
+        ("aggregation_functions.gms", True, "aggregation functions (smin/smax)", "10"),  # Day 6
+        ("nested_function_calls.gms", False, "nested function calls", "10"),  # Deferred
         # Sprint 10 Features - Variable Bounds (Bug Fixes)
-        ("variable_level_bounds.gms", False, "variable level bounds (.l)", "10"),
-        ("mixed_variable_bounds.gms", False, "mixed variable bound types", "10"),
+        ("variable_level_bounds.gms", False, "variable level bounds (.l)", "10"),  # Deferred
+        ("mixed_variable_bounds.gms", False, "mixed variable bound types", "10"),  # Deferred
         # Sprint 10 Features - Comma-Separated Declarations
         ("comma_separated_variables.gms", True, "comma-separated variables", "10"),  # Already works
         ("comma_separated_scalars.gms", True, "comma-separated scalars with inline values", "10"),

@@ -554,16 +554,16 @@ pytest tests/synthetic/test_synthetic.py -v -m "not skip"
 ✓ model_sections.gms
 ```
 
-**Sprint 10 Features:** Initially SKIP (not implemented), then PASS after implementation
+**Sprint 10 Features:** PASS after Day 6 implementation
 ```
-⏭ function_calls_parameters.gms        (skip until implemented)
-⏭ aggregation_functions.gms            (skip until implemented)
-⏭ nested_function_calls.gms            (skip until implemented)
-✓ variable_level_bounds.gms            (after bug fix)
-✓ mixed_variable_bounds.gms            (after bug fix)
+✓ function_calls_parameters.gms        (Day 6 - IMPLEMENTED)
+✓ aggregation_functions.gms            (Day 6 - IMPLEMENTED)
+⏭ nested_function_calls.gms            (deferred - not implemented)
+⏭ variable_level_bounds.gms            (deferred - not implemented)
+⏭ mixed_variable_bounds.gms            (deferred - not implemented)
 ✓ comma_separated_variables.gms        (already works)
-⏭ comma_separated_scalars.gms          (skip until implemented)
-✓ abort_in_if_blocks.gms               (already works)
+✓ comma_separated_scalars.gms          (Day 3 - IMPLEMENTED)
+✓ abort_in_if_blocks.gms               (Sprint 9 - already works)
 ```
 
 **Deferred Features:** SKIP (not planned for Sprint 10)
