@@ -4,6 +4,178 @@ This document tracks all preparation tasks completed before Sprint 10 Day 1.
 
 ---
 
+## 2025-11-23 - Task 12: Plan Sprint 10 Detailed Schedule
+
+**Status:** ✅ COMPLETE  
+**PR:** (pending)  
+**Time:** 3.5 hours  
+
+### Summary
+
+Created comprehensive day-by-day execution plan for Sprint 10 based on all prep task findings (Tasks 1-11). The schedule targets 90% parse rate (9/10 models) by implementing 3 features across 10 days with mid-sprint checkpoint validation and robust contingency planning.
+
+### What Changed
+
+**Created:**
+- `docs/planning/EPIC_2/SPRINT_10/PLAN.md` - Comprehensive Sprint 10 execution schedule (30KB, 850+ lines)
+
+**Updated:**
+- `docs/planning/EPIC_2/SPRINT_10/PREP_PLAN.md` - Marked Task 12 as complete with results
+
+### Schedule Overview
+
+**Parse Rate Progression:**
+- Day 0 (Baseline): 60% (6/10 models)
+- Day 1: 70% (himmel16.gms unlocked)
+- Day 3: 80% (mingamma.gms unlocked)
+- Day 6: 90% (circle.gms unlocked) ✅ GOAL ACHIEVED
+
+**Target Models:**
+1. **himmel16.gms** (Day 1): 90% → 100% via variable bound index bug fix (3-4h, LOW risk)
+2. **mingamma.gms** (Days 2-3): 65% → 100% via comma-separated scalar declarations (4-6h, LOW risk)
+3. **circle.gms** (Days 4-6): 70% → 95% via function calls in assignments (2.5-3h, MEDIUM risk)
+
+**Deferred:**
+- **maxmin.gms**: Deferred to Sprint 11 (HIGH complexity 9/10, LOW ROI, 10-14h for primary blocker alone)
+
+**Total Effort Budgeted:**
+- Optimistic: 15-23 hours
+- Realistic: 20-31 hours
+- Pessimistic: 25-35 hours
+- Available: 40 hours (10 days × 4 hours)
+- Buffer: 5-20 hours for unknowns
+
+### Key Decisions
+
+1. **90% Target (9/10 models):** Conservative, achievable goal vs. 100% (10/10) with high-risk maxmin.gms
+2. **maxmin.gms Deferred:** HIGH complexity, HIGH risk, LOW ROI → Sprint 11
+3. **Front-load Low-Risk Work:** Variable bound bug (Day 1), comma-separated (Days 2-3), function calls (Days 4-6)
+4. **Mid-Sprint Checkpoint on Day 5:** Validate 80% progress, enable pivot if needed
+5. **Buffer Time Protected:** Days 9-10 reserved for genuine unknowns, not planned work
+
+### Risk Mitigation
+
+**High-Risk Items:**
+- **Function calls implementation:** Mitigated by parse-only approach, existing infrastructure (func_call grammar, Call AST node)
+  - Fallback 1: Aggregation functions only (smin/smax), defer mathematical functions
+  - Fallback 2: Defer circle.gms entirely, achieve 80% instead of 90%
+
+**Medium-Risk Items:**
+- **Comma-separated scalar grammar:** Mitigated by isolated changes (only Scalar rule, not Variable/Parameter/Equation)
+  - Fallback: Implement simple comma list first, add inline values incrementally
+
+**Low-Risk Items:**
+- **Variable bound index bug:** Localized fix in single function (~10-15 lines), clear test case
+  - High confidence (95%+), quick rollback if needed
+
+### Contingency Plans
+
+**Scenario 1: Day 5 Checkpoint <70% (Behind Schedule)**
+- **Action A:** Debug and fix if bugs in implemented features (<2h)
+- **Action B:** Pivot to different models if current blockers too complex
+- **Action C:** Reduce scope to 70-80% if time insufficient
+
+**Scenario 2: Function Calls >5 hours (Over Budget)**
+- **Action A:** Reduce scope to aggregation-only (smin/smax)
+- **Action B:** Defer circle.gms, target 80% instead
+- **Action C:** Use Days 6-7 buffer time (higher risk)
+
+**Scenario 3: Discovered Secondary Blocker**
+- Quick fix (<2h): Implement immediately
+- Medium fix (2-4h): Use buffer time
+- Complex (>4h): Defer model to Sprint 11
+
+**Scenario 4: Early Completion (Before Day 8)**
+- **Option A:** Improve circle.gms to 100% (conditional abort, 4-6h)
+- **Option B:** Start Sprint 11 prep (maxmin.gms research)
+- **Option C:** Test Tier 2 GAMSLIB models
+
+### Schedule Structure
+
+**Day 1:** Variable Bound Index Bug Fix (3-4h)
+- Fix `_expand_variable_indices` bug in src/ir/parser.py
+- Add test coverage for literal/variable/mixed indices
+- Unlock himmel16.gms (90% → 100%)
+- **Parse Rate: 60% → 70%**
+
+**Days 2-3:** Comma-Separated Scalar Declarations (4-6h total)
+- Day 2: Grammar changes + semantic handler (3-4h)
+- Day 3: Integration tests + unlock mingamma.gms (2-3h)
+- **Parse Rate: 70% → 80%**
+
+**Days 4-6:** Function Calls in Assignments (2.5-3h total)
+- Day 4: Add expressions field, implement handler (2-3h)
+- Day 5: **MID-SPRINT CHECKPOINT** + complete tests (1-2h checkpoint, 1-2h implementation)
+- Day 6: Validate circle.gms, unlock model (1-2h)
+- **Parse Rate: 80% → 90%** ✅
+
+**Day 7:** Integration Testing (2-3h)
+- Full test suite validation
+- All 9 target models verified
+- Regression testing for existing models
+
+**Day 8:** Synthetic Test Validation (3-4h)
+- Run all synthetic tests (Sprint 9 + Sprint 10)
+- Verify features work in isolation
+- Add edge case tests
+
+**Days 9-10:** Final Validation + Buffer (3-6h)
+- Day 9: Final quality checks, bug fixes, buffer time (2-4h)
+- Day 10: Sprint completion, documentation, retrospective (1-2h)
+
+### Schedule Validation
+
+✅ **Time Budget:** 20-31 hours budgeted vs. 40 hours available (9-20h buffer)  
+✅ **Dependencies:** No circular dependencies, proper sequencing  
+✅ **Critical Path:** Day 1 → Days 2-3 → Days 4-6 → Day 5 checkpoint validates  
+✅ **Risk Coverage:** All high-risk items have mitigation and buffer  
+✅ **Phase Distribution:** 5 phases properly distributed across 10 days  
+
+### Success Metrics
+
+**Primary:**
+- Parse Rate: 60% → 90% (6/10 → 9/10 models) ✅
+- Models Unlocked: himmel16 (100%), mingamma (100%), circle (95%) = 3 models
+- Features: Variable bound bug fix, comma-separated scalars, function calls (parse-only)
+
+**Secondary:**
+- Test Coverage: 10+ unit tests, 3 integration tests, 4+ synthetic tests
+- Quality: All checks pass, no regressions
+- Process: Checkpoint executed on Day 5, contingency plans documented
+
+**Sprint 10 Success Confidence:** 85-90% (high confidence in 9/10 models)
+
+### Cross-References
+
+**Prep Tasks Applied:**
+- Task 1 (Known Unknowns) → Risk mitigation strategies
+- Task 2 (circle.gms) → Days 4-6 implementation
+- Task 3 (himmel16.gms) → Day 1 implementation
+- Task 4 (maxmin.gms) → DEFERRED to Sprint 11
+- Task 5 (mingamma.gms) → Days 2-3 implementation
+- Task 6 (Comma-separated research) → Days 2-3 approach
+- Task 7 (Function call research) → Days 4-6 approach
+- Task 8 (Nested indexing research) → maxmin.gms defer decision
+- Task 9 (Synthetic tests) → Day 8 validation
+- Task 10 (Sprint 9 validation) → Confidence in existing features
+- Task 11 (Checkpoint infrastructure) → Day 5 checkpoint execution
+
+**Blocker Analyses:**
+- circle_analysis.md → Function calls implementation (Days 4-6)
+- himmel16_analysis.md → Variable bound bug fix (Day 1)
+- mingamma_analysis.md → Comma-separated scalars (Days 2-3)
+- maxmin_analysis.md → Defer to Sprint 11
+
+### Sprint 10 Readiness
+
+✅ **Schedule Complete:** Day-by-day breakdown with tasks, deliverables, risks  
+✅ **Decisions Made:** 90% target, maxmin deferred, low-risk features first  
+✅ **Contingencies Ready:** 4 scenarios with clear action plans  
+✅ **Validation Done:** Time budget, dependencies, critical path, risk coverage  
+✅ **Ready to Execute:** All 12 prep tasks complete, Sprint 10 can start immediately  
+
+---
+
 ## 2025-11-23 - Task 11: Set Up Mid-Sprint Checkpoint Infrastructure
 
 **Status:** ✅ COMPLETE  
