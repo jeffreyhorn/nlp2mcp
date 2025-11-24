@@ -13,7 +13,7 @@
 #   0: On track or ahead of schedule
 #   1: Behind schedule (action required)
 
-set -e
+set -euo pipefail
 
 # ANSI color codes
 GREEN='\033[0;32m'
@@ -57,11 +57,13 @@ echo ""
 
 # Extract parse rate from output
 # Format: "Parse Rate: X/10 models (Y.Y%)"
+set +e
 CURRENT_COUNT=$(echo "$OUTPUT" | grep "Parse Rate:" | sed -E 's/.*Parse Rate: ([0-9]+)\/[0-9]+ models.*/\1/')
 CURRENT_RATE=$(echo "$OUTPUT" | grep "Parse Rate:" | sed -E 's/.*\(([0-9.]+)%\).*/\1/' | cut -d'.' -f1)
+set -e
 
 if [ -z "$CURRENT_COUNT" ] || [ -z "$CURRENT_RATE" ]; then
-    echo -e "${RED}❌ ERROR: Could not parse output from measure_parse_rate.py${NC}"
+    echo -e "${RED}❌ ERROR: Could not parse output from measure_parse_rate.py (exit code: ${PARSE_EXIT_CODE})${NC}"
     exit 1
 fi
 

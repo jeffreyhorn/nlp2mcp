@@ -517,7 +517,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Run checkpoint
@@ -551,7 +551,7 @@ chmod +x scripts/measure_parse_rate.py
 python scripts/measure_parse_rate.py --verbose
 
 # Check Python environment
-python --version  # Should be 3.10+
+python --version  # Should be 3.11+
 pip list | grep nlp2mcp
 ```
 
@@ -562,10 +562,10 @@ pip list | grep nlp2mcp
 **Solution:**
 ```bash
 # Verify GAMSLIB directory exists
-ls -la gamslib/
+ls -la tests/fixtures/gamslib/
 
 # Check for specific model
-ls -la gamslib/circle.gms
+ls -la tests/fixtures/gamslib/circle.gms
 
 # If missing, check if in correct directory
 pwd  # Should be project root
