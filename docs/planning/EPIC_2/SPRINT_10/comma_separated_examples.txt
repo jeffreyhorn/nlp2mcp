@@ -1,0 +1,180 @@
+# Comma-Separated Declaration Patterns from GAMSLib
+
+## Summary Statistics
+
+- **Variable declarations:** 7 instances
+- **Parameter declarations:** 1 instance
+- **Equation declarations:** 6 instances
+- **Scalar declarations:** 2 instances
+- **Set declarations:** 0 instances
+- **Total:** 16 instances across 10 GAMS models
+
+## Variable Declarations
+
+### Simple Comma-Separated (Free Variables)
+**File:** mathopt1.gms, Line 24
+```gams
+Variable x1, x2, obj;
+```
+**Context:** Declaration only, bounds/initial values set separately on lines 26-28
+
+**File:** mhw4d.gms, Line 13
+```gams
+Variable m, x1, x2, x3, x4, x5;
+```
+**Context:** 6 variables declared, objective function + 5 decision variables
+
+**File:** mhw4dx.gms, Line 17
+```gams
+Variable m, x1, x2, x3, x4, x5;
+```
+**Context:** Same as mhw4d.gms (extended version)
+
+**File:** mingamma.gms, Line 13
+```gams
+Variable y1, y2, x1, x2;
+```
+**Context:** 4 variables, all Free, bounds set separately
+
+**File:** rbrock.gms, Line 13
+```gams
+Variable f, x1, x2;
+```
+**Context:** Rosenbrock function - objective + 2 variables
+
+**File:** trig.gms, Line 15
+```gams
+Variable x1, obj;
+```
+**Context:** 2 variables
+
+### With Type Modifier (Positive Variable)
+**File:** hs62.gms, Line 21
+```gams
+Positive Variable x1, x2, x3;
+```
+**Context:** 3 positive variables declared together with type modifier
+
+## Parameter Declarations
+
+### Simple Comma-Separated
+**File:** circle.gms, Line 39
+```gams
+Parameter xmin, ymin, xmax, ymax;
+```
+**Context:** 4 parameters for min/max bounds, values assigned later
+
+## Equation Declarations
+
+### Simple Comma-Separated
+**File:** hs62.gms, Line 23
+```gams
+Equation objdef, eq1, eq1x;
+```
+**Context:** 3 equations (objective + 2 constraints)
+
+**File:** mathopt1.gms, Line 30
+```gams
+Equation objdef, eqs, ineqs;
+```
+**Context:** 3 equations (objective + equality + inequality)
+
+**File:** mhw4d.gms, Line 15
+```gams
+Equation funct, eq1, eq2, eq3;
+```
+**Context:** 4 equations (objective + 3 constraints)
+
+**File:** mhw4dx.gms, Line 19
+```gams
+Equation funct, eq1, eq2, eq3;
+```
+**Context:** Same as mhw4d.gms (extended version)
+
+**File:** mingamma.gms, Line 15
+```gams
+Equation y1def, y2def;
+```
+**Context:** 2 equation definitions
+
+**File:** trig.gms, Line 17
+```gams
+Equation objdef, ineq1;
+```
+**Context:** 2 equations (objective + inequality)
+
+## Scalar Declarations
+
+### Mixed: With and Without Inline Values
+**File:** mingamma.gms, Lines 30-38
+```gams
+Scalar
+   x1opt   / 1.46163214496836   /
+   x1delta
+   x2delta
+   y1opt   / 0.8856031944108887 /
+   y1delta
+   y2delta
+   y2opt;
+```
+**Context:** 7 scalars, some with inline values, some without (THIS IS THE BLOCKER)
+**Notes:**
+- This is the SECONDARY blocker discovered in Task 5
+- Grammar doesn't support mixing inline values with plain declarations
+- Current parse rate: 65% (fails at line 41 when trying to use y1opt)
+
+### Simple Comma-Separated (Without Inline Values)
+**File:** trig.gms, Line 31
+```gams
+Scalar xdiff, fdiff;
+```
+**Context:** 2 scalars declared together, values assigned later
+
+## Edge Cases Observed
+
+### No Edge Cases Found in GAMSLib
+After surveying all 10 GAMSLib models, NO instances found of:
+- ❌ Trailing commas: `Variable x1, x2, x3,;`
+- ❌ Inline comments within list: `Variable x1, * comment * x2;`
+- ❌ Per-item attributes: `Variable x1 /lo 0/, x2;` (only type-level modifiers like `Positive Variable`)
+- ❌ Mixed whitespace patterns - all use consistent spacing
+
+### Patterns Confirmed
+✅ **Type modifiers apply to all items:** `Positive Variable x1, x2, x3;` makes ALL three positive
+✅ **Simple comma separation:** All instances use simple comma with optional whitespace
+✅ **Attributes set separately:** Bounds/initial values always set after declaration
+✅ **Scalar inline values:** Can mix declarations with/without values in same Scalar block (mingamma.gms)
+
+## Pattern Frequency Analysis
+
+### By Declaration Type
+1. **Variable:** 6/10 models (60%) - VERY COMMON
+2. **Equation:** 6/10 models (60%) - VERY COMMON
+3. **Parameter:** 1/10 models (10%) - RARE
+4. **Scalar:** 2/10 models (20%) - UNCOMMON
+5. **Set:** 0/10 models (0%) - NOT USED in GAMSLib Tier 1
+
+### By Complexity
+1. **Simple comma-separated (no modifiers):** 12/14 instances (86%)
+2. **With type modifier (Positive, etc.):** 1/14 instances (7%)
+3. **Mixed inline values (Scalar):** 1/14 instances (7%)
+
+### Prevalence
+- **Total declarations found:** 14 instances
+- **Total models surveyed:** 10 models
+- **Average per model:** 1.4 comma-separated declarations per model
+- **Models with at least one:** 8/10 models (80%)
+
+**Conclusion:** Comma-separated declarations are EXTREMELY COMMON (80% of models use them), making this a HIGH-PRIORITY feature for Sprint 10.
+
+## Cross-Reference to Task 5 Discovery
+
+The mingamma.gms Scalar declaration (lines 30-38) is the SECONDARY blocker discovered in Task 5:
+- PRIMARY blocker: abort$ in if-blocks (FIXED in Sprint 9)
+- SECONDARY blocker: Comma-separated scalar declarations with inline values (THIS PATTERN)
+
+This research validates that:
+1. The blocker affects 1/10 models directly (mingamma.gms)
+2. Simple comma-separated declarations affect 8/10 models (80%)
+3. Implementing comma-separated support unlocks mingamma.gms AND simplifies 7 other models
+4. ROI is HIGH: affects majority of models
