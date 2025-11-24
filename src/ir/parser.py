@@ -844,7 +844,7 @@ class _ModelBuilder:
 
             # New grammar: scalar_list contains scalar_item nodes
             # scalar_list: scalar_item (","? scalar_item)+
-            # scalar_single: scalar_item
+            # scalar_single: scalar_single_item
             if child.data == "scalar_list":
                 for scalar_item_node in child.children:
                     if not isinstance(scalar_item_node, Tree):
@@ -861,18 +861,16 @@ class _ModelBuilder:
             self._process_scalar_item(child)
 
     def _process_scalar_item(self, child: Tree) -> None:
-        """Process a single scalar_item (scalar_with_data, scalar_with_assign, or scalar_plain)."""
+        """Process a scalar node from either scalar_item or scalar_single_item."""
         name_token = child.children[0]
         name = _token_text(name_token)
         param = ParameterDef(name=name)
 
         if child.data == "scalar_with_data":
-            # Format: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?
+            # Format: ID [desc_text] "/" scalar_data_items "/" (ASSIGN expr)?
             # child.children[0] = ID
-            # child.children[1] = desc_text (optional inline description - skip it)
-            # child.children[2] = scalar_data_items tree
-            # child.children[3] = optional expr
-            # Find the scalar_data_items node (skip desc_text and any tokens like '/')
+            # child.children[1] = desc_text (only for scalar_single_item) or first "/" token
+            # Find the scalar_data_items node (skip desc_text if present and any tokens like '/')
             data_idx = 1
             while data_idx < len(child.children):
                 node_candidate = child.children[data_idx]
@@ -901,10 +899,9 @@ class _ModelBuilder:
                         value_expr, f"scalar '{name}' assignment"
                     )
         elif child.data == "scalar_with_assign":
-            # Format: ID desc_text ASSIGN expr
+            # Format: ID [desc_text] ASSIGN expr
             # child.children[0] = ID
-            # child.children[1] = desc_text (may be empty)
-            # child.children[2] = ASSIGN token (optional, depends on Lark)
+            # child.children[1] = desc_text (only for scalar_single_item, may be empty)
             # child.children[-1] = expr (always the last child)
             # Get the expr node (always the last child after ID and desc_text)
             expr_idx = len(child.children) - 1
