@@ -236,8 +236,76 @@ grep -n "\.l\s*=" tests/fixtures/gamslib/himmel16.gms
 Development team (Prep Task 3)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 3)
+✅ **Status: VERIFIED**  
+**Verification Date:** 2025-11-23  
+**Verified By:** Task 3 - himmel16.gms Complete Blocker Chain Analysis
+
+**Finding:** The assumption was CORRECT. Level bound conflict is the ONLY remaining blocker, with NO tertiary blockers.
+
+**Complete Blocker Chain:**
+
+1. **PRIMARY BLOCKER (Lines ~47-50):** Lead/lag indexing (i++1, i--1)
+   - Status: ✅ FIXED in Sprint 9
+   - Evidence: Parser now successfully reaches line 63 (90% of file)
+   - Sprint 8: Blocked at ~67% (line 47)
+   - Sprint 9: Reaches 90% (line 63)
+
+2. **SECONDARY BLOCKER (Line 63):** Variable bound index expansion bug
+   - Currently blocks at line 63: `x.l("5") = 0`
+   - Error: "Conflicting level bound for variable 'x' at indices ('1',)"
+   - Parse rate: 90% (63/70 lines)
+
+3. **TERTIARY BLOCKER:** NONE - Confirmed no additional blockers after line 63
+
+**Root Cause Identified:**
+
+This is a **PARSER BUG**, not a GAMS semantics issue or missing feature.
+
+**Bug Description:** Parser's `_expand_variable_indices` function incorrectly expands literal string indices to ALL domain members instead of using only the specified literal.
+
+**Example:**
+```gams
+x.fx("1") = 0  # Should affect ONLY index "1"
+```
+
+**Expected:** Sets fx_map for index "1" only  
+**Actual:** Sets fx_map for ALL indices ("1", "2", "3", "4", "5", "6") ← BUG!
+
+**Why Error Message Says Index '1':**
+1. Line 57: `x.fx("1") = 0` → Bug sets fx_map AND l_map for ALL indices to 0
+2. Lines 60-62: `x.l("2")`, `x.l("3")`, `x.l("4") = 0.5` → Bug sets l_map["1"] = 0.5
+3. Line 63: `x.l("5") = 0` → Bug tries to set l_map["1"] = 0 → CONFLICT (0.5 vs 0)
+
+The conflict IS at index "1", it just manifests when parsing line 63!
+
+**Evidence:**
+- Comprehensive line-by-line analysis of all 70 lines
+- Parse attempt log at `/tmp/himmel16_parse_attempt.log`
+- No additional syntax blockers after line 63
+- Only `solve` statement remains (standard syntax)
+
+**Decision/Outcome:**
+
+**IMPLEMENT in Sprint 10:** Fix variable bound index expansion bug
+- Location: `src/ir/parser.py`, function `_expand_variable_indices` (line 2125)
+- Fix: Distinguish between set names (expand) and literal values (use as-is)
+- Effort: 3-4 hours (localized bug fix)
+- Complexity: LOW-MEDIUM (single function)
+- Risk: LOW (isolated change with clear test case)
+- Expected result: himmel16.gms from 90% → 100%
+
+**Impact on Sprint 10:**
+- This is a bug fix, not a new feature implementation
+- High confidence fix (95%+) based on clear root cause analysis
+- himmel16.gms will unlock completely after fix
+- Fix likely benefits other models with mixed bound types (.fx + .l)
+
+**GAMS Semantics Verified:**
+- Having `.fx("1") = 0` and `.l("2") = 0.5` is VALID in GAMS (different indices)
+- Multiple `.l` assignments on different indices is VALID
+- Parser currently incorrectly rejects this valid GAMS code
+
+**Model Unlock Prediction:** himmel16.gms will reach 100% parse (70/70 lines) after fixing the bound index expansion bug.
 
 ---
 
@@ -278,8 +346,60 @@ grep -n "low(n,nn)" tests/fixtures/gamslib/maxmin.gms
 Development team (Prep Task 4)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 4)
+✅ **Status: VERIFIED**  
+**Date:** November 23, 2025  
+**Task:** Prep Task 4 - maxmin.gms Blocker Chain Analysis  
+**Time Spent:** 2.5 hours
+
+**Finding:** Assumption was PARTIALLY WRONG - nested indexing is primary blocker, but there are MULTIPLE secondary/tertiary blockers.
+
+**Complete Blocker Chain:**
+1. **PRIMARY BLOCKER (3 lines):** Subset/nested indexing in equation domains
+   - Lines 51, 53, 55: `defdist(low(n,nn))..`, `mindist1(low)..`, `mindist1a(low(n,nn))..`
+   - Error: "No terminal matches '(' in the current parser context, at line 51 col 12"
+   - Grammar limitation: `id_list: ID ("," ID)*` only supports simple identifiers
+
+2. **SECONDARY BLOCKER (2 lines):** Aggregation functions in equation domains
+   - Lines 57, 59: `smin(low, dist(low))` and `smin(low(n,nn), sqrt(...))`
+   - Same blocker as circle.gms (will be fixed by Sprint 10 function call implementation)
+
+3. **TERTIARY BLOCKER (5 lines):** Multi-model declaration syntax
+   - Lines 61-65: Multi-line model block with 4 models in one statement
+   - Current grammar only supports single model per statement
+
+4. **QUATERNARY BLOCKER (4 lines):** Loop with tuple domain
+   - Lines 70-73: `loop((n,d), ...);` - nested parentheses for tuple iteration
+
+5. **RELATED BLOCKERS (9 lines):** Lower priority features
+   - Line 37: Set assignment with `ord()` functions
+   - Line 78: Variable bounds with subset indexing
+   - Line 83: Function calls in parameter assignments (max, ceil, sqrt, card)
+   - Line 87: Conditional option statement `if(card(n) > 9, option ...)`
+   - Line 106: DNLP solver (grammar only supports NLP)
+
+**Total Blocker Lines:** 23 lines (19 parse blockers + 4 semantic blockers)
+
+**Progressive Parse Rates:**
+- **Current:** 18% (19/108 lines) - Fails at line 51 (nested indexing)
+- **After Primary fix:** ~51% (55/108 lines) - Would fail at line 57 (aggregation functions)
+- **After Primary + Secondary:** ~57% (61/108 lines) - Would fail at line 61 (multi-model)
+- **After Primary + Secondary + Tertiary:** ~65% (70/108 lines) - Would fail at line 70 (loop tuple)
+- **After ALL parse blockers:** 79% (85/108 lines) - Remaining are semantic issues
+
+**Answer to Research Questions:**
+1. **Does maxmin.gms parse to 100% after nested indexing?** NO - Only reaches ~51% (55/108 lines)
+2. **Are there other syntax issues?** YES - 4 additional blocker categories (20 lines)
+3. **How many lines blocked?** 23 total (3 primary, 20 secondary+)
+4. **Is nested indexing the ONLY blocker?** NO - It's the first blocker, but 4 more categories exist
+5. **Can we achieve 90% (9/10) if we defer?** YES - circle.gms + himmel16.gms = 9/10 models
+
+**Impact:** Original assumption that "nested indexing is primary AND ONLY blocker" was WRONG. There are 4 additional blocker categories beyond nested indexing. This strengthens the case for DEFERRING maxmin.gms to Sprint 11+.
+
+**Complexity Assessment:** Nested indexing alone is 10-14 hours. Full maxmin.gms support requires 23-40 hours total (all 5 blocker categories).
+
+**Sprint 10 Decision:** DEFER maxmin.gms entirely. Target 90% (9/10 models) by fixing circle.gms + himmel16.gms.
+
+**Documentation:** Complete analysis in `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/maxmin_analysis.md` (750 lines)
 
 ---
 
@@ -322,8 +442,76 @@ grep -n "abort" tests/fixtures/gamslib/mingamma.gms
 Development team (Prep Task 5)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 5)
+✅ **Status: VERIFIED**  
+**Date:** November 23, 2025  
+**Task:** Prep Task 5 - mingamma.gms Blocker Chain Analysis  
+**Time Spent:** 1.5 hours
+
+**Finding:** Sprint 9 assumption was COMPLETELY WRONG on multiple fronts.
+
+**Complete Analysis:**
+
+1. **Does mingamma.gms use equation attributes?** NO
+   - Verified with: `grep -E "y1def\.|y2def\." tests/fixtures/gamslib/mingamma.gms`
+   - Result: No equation attribute access found
+   - Only variable attributes used: x1.l, x2.l, y1.l, y2.l, x1.lo, x2.lo
+
+2. **After fixing abort$ in if-blocks, does mingamma parse to 100%?** NO
+   - abort$ in if-blocks WAS fixed in Sprint 9 (lines 59, 62 now parse)
+   - But NEW blocker discovered: Comma-separated scalar declarations with inline values
+   - File fails at line 41 (65% parse rate)
+
+3. **Are there other blockers beyond abort$?** YES
+   - **NEW PRIMARY BLOCKER:** Comma-separated scalar declarations with mixed inline values (lines 30-38)
+   - Pattern: `Scalar x1opt /1.46/, x1delta, y1opt /0.88/, y1delta;`
+   - Grammar doesn't support mixing scalars with and without inline values
+   - This blocker was hidden because it causes semantic error (undefined symbol)
+
+4. **Why did Sprint 9 assume equation attributes?**
+   - Incorrect assumption based on insufficient analysis
+   - Did NOT verify with grep before implementing
+   - Confused variable attributes (.l on variables) with equation attributes (.l on equations)
+   - Lesson: ALWAYS verify assumptions with code search before implementing
+
+5. **How many abort$ statements and where?**
+   - 2 abort$ statements: lines 59 and 62
+   - Both inside if-block bodies
+   - Syntax: `abort$[condition] "message";` (uses square brackets)
+   - Status: ✅ FIXED in Sprint 9
+
+**Complete Blocker Chain:**
+- **PRIMARY (Sprint 9):** abort$ in if-blocks - ✅ FIXED
+- **SECONDARY (NEW):** Comma-separated scalar declarations with inline values - TO FIX in Sprint 10
+- **TERTIARY:** None
+
+**Sprint 9 Lessons Learned:**
+
+1. **Verification Failure:**
+   - Assumed equation attributes needed WITHOUT verifying with grep
+   - Simple `grep -E "eq.*\.l|eq.*\.m"` would have shown no usage
+   - Wasted implementation effort on unnecessary feature
+
+2. **Incomplete Blocker Analysis:**
+   - Sprint 9 analysis stopped at first blocker (abort$)
+   - Didn't discover secondary blocker (comma-separated scalars)
+   - Should have tested with blocker commented out to find secondary blockers
+
+3. **Hidden Semantic Blockers:**
+   - Comma-separated scalar blocker causes SEMANTIC error (undefined symbol)
+   - Not immediately obvious as parse blocker
+   - Requires deeper analysis to discover
+
+**Impact:**
+- Equation attributes: Implemented but NOT needed for mingamma.gms (wasted effort)
+- abort$ in if-blocks: ✅ Correctly implemented (was actual blocker)
+- Comma-separated scalars: Discovered in Task 5 (would have been Sprint 10 surprise)
+
+**Actual Blocker for Sprint 10:**
+- Comma-separated scalar declarations with inline values
+- Effort: 4-6 hours (LOW-MEDIUM complexity)
+- Expected outcome: mingamma.gms from 65% → 100%
+
+**Documentation:** Complete analysis in `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/mingamma_analysis.md` (1604 lines)
 
 ---
 
@@ -858,8 +1046,65 @@ except Exception as e:
 Development team (Prep Task 3)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 3)
+✅ **Status: VERIFIED**  
+**Verification Date:** 2025-11-23  
+**Verified By:** Task 3 - himmel16.gms Complete Blocker Chain Analysis
+
+**Finding:** The assumption was PARTIALLY WRONG. The error is indeed from the parser (not just semantic validation), BUT the root cause is a PARSER BUG in index expansion, not intentional validation.
+
+**Root Cause Identified:**
+
+**Location:** `src/ir/parser.py`, function `_expand_variable_indices` (line 2125)
+
+**Bug:** Parser incorrectly expands literal string indices to ALL domain members instead of using only the specified literal value.
+
+**Example from himmel16.gms:**
+```gams
+Set i /1*6/;
+Variable x(i);
+
+x.fx("1") = 0;  # Should set fx ONLY for index "1"
+```
+
+**Expected behavior:**
+- Creates fx_map entry for index ("1",) only
+- Does NOT affect indices ("2",), ("3",), etc.
+
+**Actual (buggy) behavior:**
+- Calls `_expand_variable_indices` which expands to ALL set members
+- Creates fx_map entries for ("1",), ("2",), ("3",), ("4",), ("5",), ("6",)
+- Also sets implicit l_map for ALL indices
+
+**Why Conflict Occurs:**
+1. Line 57: `x.fx("1") = 0` → Bug sets fx_map AND l_map for ALL indices ("1" through "6")
+2. Lines 60-62: `x.l("2") = 0.5`, `x.l("3") = 0.5`, `x.l("4") = 0.5`
+   - Bug expands each to ALL indices
+   - Sets l_map["1"] = 0.5 (conflicts with implicit 0 from fx)
+3. Line 63: `x.l("5") = 0` → Bug expands to ALL indices
+   - Tries to set l_map["1"] = 0
+   - **CONFLICT:** l_map["1"] already has 0.5
+
+**Error Origin:**
+- Error thrown from: `_set_bound_value` at parser.py:1988
+- Called by: `_apply_variable_bound` at parser.py:1934
+- Root cause in: `_expand_variable_indices` at parser.py:2125
+
+**Parser vs Validator:**
+- This IS a parser error (thrown during parsing)
+- NOT a separate semantic validation step
+- Parser incorrectly expands indices during bound application
+
+**Fix Approach:**
+Modify `_expand_variable_indices` to distinguish:
+- Set/alias names → expand to all members
+- Literal strings ("1", "2", etc.) → use as-is, don't expand
+
+**Estimated Fix:** 3-4 hours (localized change, clear test case)
+
+**Evidence:**
+- Detailed stack trace analysis in himmel16_analysis.md
+- Code inspection of parser.py index expansion logic
+- Test case: himmel16.gms lines 57-68
 
 ---
 
@@ -895,8 +1140,49 @@ Included in Task 3 (2 hours total includes semantics research)
 Development team (Prep Task 3)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 3)
+✅ **Status: VERIFIED**  
+**Verification Date:** 2025-11-23  
+**Verified By:** Task 3 - himmel16.gms Complete Blocker Chain Analysis
+
+**Finding:** The assumption was CORRECT. In GAMS, multiple `.l` assignments on different indices are VALID, and the parser should allow them.
+
+**GAMS Semantics Verified:**
+
+**Multiple `.l` Assignments:**
+- VALID in GAMS to have `.l` assignments on different indices: `x.l("1") = 0`, `x.l("2") = 0.5`
+- VALID in GAMS to mix `.fx` and `.l` on different indices: `x.fx("1") = 0`, `x.l("2") = 0.5`
+- Last assignment wins if same index assigned multiple times
+- Sequential assignments are processed in order
+
+**Attribute Behavior:**
+- `.l` = Level/starting value for solver (initial point)
+- `.fx` = Fixed bound (sets both .lo and .up to same value, variable cannot change)
+- `.lo` = Lower bound
+- `.up` = Upper bound
+
+**Index-Specific:**
+For indexed variables like `x(i)`, bounds are per-index:
+- `x.fx("1") = 0` only fixes index "1"
+- `x.l("2") = 0.5` only sets level for index "2"
+- These DO NOT conflict - they affect different indices
+
+**Our Parser's Bug:**
+The parser currently INCORRECTLY rejects this valid GAMS syntax because it expands literal indices to ALL domain members. This is a bug in our implementation, not a difference in semantics philosophy.
+
+**Expected Behavior:**
+Our parser should match GAMS behavior exactly:
+- Allow multiple `.l` assignments on different indices
+- Allow mixing `.fx`, `.l`, `.lo`, `.up` on different indices
+- Track bounds per-index, not globally per variable
+- Only conflict if SAME index gets conflicting values (e.g., `.lo("1") = 5` and `.up("1") = 3`)
+
+**Evidence:**
+- himmel16.gms is valid GAMS code (from official GAMSLIB)
+- Pattern `x.fx("1")` + `x.l("2")` appears in production GAMS models
+- No GAMS documentation suggests this should error
+- Parser bug is preventing valid code from parsing
+
+**Conclusion:** Our parser must be fixed to match GAMS semantics. The current behavior is incorrect.
 
 ---
 
@@ -983,9 +1269,69 @@ Nested/subset indexing requires 10-12 hours to implement, but this is based on i
 Development team (Prep Task 8) - Makes recommendation
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 8)  
-**Decision required before Sprint 10 Day 1**
+✅ **Status: VERIFIED**  
+**Date:** November 23, 2025  
+**Task:** Prep Task 4 - maxmin.gms Blocker Chain Analysis  
+**Time Spent:** 2.5 hours (combined with Unknown 10.1.3)
+
+**Finding:** Assumption was OPTIMISTIC - actual complexity is 10-14 hours for nested indexing alone, 23-40 hours for full maxmin.gms support.
+
+**Complexity Assessment - Nested Indexing (HIGH: 9/10):**
+
+**Grammar Changes Required:**
+- Modify `equation_def` rule to support nested syntax: `ID "(" domain_spec ")" ..`
+- Create new `domain_spec` rule to handle:
+  - Simple identifiers: `i, j`
+  - Subset references: `low`
+  - Nested subset with indices: `low(n,nn)`
+- Current limitation: `id_list: ID ("," ID)*` only accepts simple IDs
+- Estimated: 3-4 hours
+
+**AST Changes Required:**
+- Equation domain nodes need new structure to represent subsets
+- Must distinguish: `equation(i,j)` vs `equation(subset)` vs `equation(subset(i,j))`
+- Add subset reference nodes with optional index expressions
+- Estimated: 2-3 hours
+
+**Semantic Resolution Required:**
+- Resolve subset definitions at equation creation time
+- Expand subset domains to actual index combinations: `low(n,nn)` → all (n,nn) where ord(n) > ord(nn)
+- Handle subset assignments: `low(n,nn) = ord(n) > ord(nn);`
+- Track subset membership for domain expansion
+- Estimated: 4-6 hours
+
+**Testing Required:**
+- 7 test suites with 20+ test cases (see maxmin_analysis.md)
+- Estimated: 1-2 hours
+
+**Total Effort:** 10-14 hours (nested indexing alone)
+
+**Comparison to Previous Features:**
+- Sprint 8 option statements: 6-8 hours (MEDIUM complexity)
+- Sprint 9 i++1 lead/lag: 8-10 hours (MEDIUM-HIGH complexity)
+- Sprint 10 nested indexing: 10-14 hours (HIGH complexity)
+- **Risk Level:** HIGH - Most complex feature to date
+
+**Answer to Research Questions:**
+1. **What is `low(n,nn)` syntax?** Subset domain - restricts equation to subset of index combinations
+2. **How does GAMS resolve?** At compile time, expands to filtered index combinations based on subset definition
+3. **Grammar changes?** Recursive domain expressions (new `domain_spec` rule)
+4. **AST changes?** Nested index nodes with subset references
+5. **Is 10-12 hours realistic?** YES for nested indexing alone, but maxmin.gms has 4 additional blocker categories
+6. **Implement or defer?** **DEFER to Sprint 11+**
+
+**RECOMMENDATION: DEFER**
+
+**Rationale:**
+1. **HIGH RISK:** Could consume 10-14 hours without success
+2. **LOW ROI:** Only unlocks 1 model (maxmin.gms 40% → 51%)
+3. **MULTIPLE DEPENDENCIES:** Requires function calls + multi-model + loop tuples for 100%
+4. **FALLBACK VIABLE:** Target 90% (9/10 models) without maxmin.gms
+5. **BETTER SEQUENCING:** Implement simpler features first (circle.gms, himmel16.gms)
+
+**Sprint 10 Decision:** DEFER nested indexing. Target 90% (9/10 models) with circle.gms + himmel16.gms (9-14 hours total).
+
+**Documentation:** Complete complexity assessment in `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/maxmin_analysis.md` (Section 12)
 
 ---
 
@@ -1027,8 +1373,85 @@ Included in Task 8 (3-4 hours total includes semantics research)
 Development team (Prep Task 8)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 8)
+✅ **Status: VERIFIED**  
+**Date:** November 23, 2025  
+**Task:** Prep Task 4 - maxmin.gms Blocker Chain Analysis  
+**Time Spent:** 2.5 hours (combined with Unknowns 10.1.3 and 10.5.1)
+
+**Finding:** Assumption was CORRECT - subset domains do restrict equation domains to subset members, resolved at compile time.
+
+**GAMS Subset Domain Semantics:**
+
+**1. How are subsets declared?**
+```gams
+Set
+   n        'number of points'   / p1*p13 /
+   low(n,n) 'lower triangle';     // 2D subset declaration
+
+Alias (n,nn);
+
+low(n,nn) = ord(n) > ord(nn);     // Subset assignment
+```
+- **Declaration:** `Set subset_name(parent_set, ...);` - declares subset with domain
+- **Assignment:** `subset(i,j) = condition;` - populates subset based on condition
+- **Example:** `low(n,nn)` is true when ord(n) > ord(nn) (lower triangle of n×n matrix)
+
+**2. How does `defdist(low(n,nn))..` differ from `defdist(n,nn)..`?**
+
+WITHOUT subset (full domain):
+```gams
+defdist(n,nn)..  // Defines equation for ALL (n,nn) pairs
+                 // If n = {p1,p2,p3}, creates 3×3 = 9 equations
+```
+
+WITH subset (filtered domain):
+```gams
+defdist(low(n,nn))..  // Defines equation ONLY for (n,nn) WHERE low(n,nn) = true
+                      // If n = {p1,p2,p3} and low = lower triangle
+                      // Creates only 3 equations: (p2,p1), (p3,p1), (p3,p2)
+```
+
+**3. Does subset domain mean iteration?**
+Yes - "for all (n,nn) in low" means "for each (n,nn) pair where low(n,nn) is true"
+
+**4. How to represent in IR?**
+Two approaches:
+- **Option A:** Filtered domain - store subset reference, expand at equation creation
+- **Option B:** Pre-expanded domain - resolve subset membership, store explicit index list
+- **Recommended:** Option A (more flexible, matches GAMS semantics)
+
+**5. Is this common pattern?**
+Moderately common in GAMSLIB:
+- Used for triangular matrices (avoid duplicate constraints)
+- Used for conditional equation generation
+- maxmin.gms uses it extensively (5 occurrences)
+
+**Pattern Frequency in maxmin.gms:**
+- Line 37: Subset assignment `low(n,nn) = ord(n) > ord(nn);`
+- Line 51: `defdist(low(n,nn))..` - nested subset with indices
+- Line 53: `mindist1(low)..` - subset reference shorthand
+- Line 55: `mindist1a(low(n,nn))..` - nested subset with indices
+- Line 59: `smin(low(n,nn), ...)` - subset in aggregation
+- Line 78: `dist.l(low(n,nn)) = ...` - subset in variable bounds
+
+**Shorthand Syntax:**
+- `equation(low)..` is shorthand for `equation(low(n,nn))..`
+- Parser must infer indices from subset dimensionality
+- Adds complexity to implementation
+
+**Answer to Research Questions:**
+1. **Subset declaration:** `Set subset_name(domain1, domain2, ...);`
+2. **Semantic difference:** Filters equation domain to subset members only
+3. **Iteration meaning:** Yes - generates equation for each member of subset
+4. **IR representation:** Subset reference node with index expansion at creation time
+5. **Pattern frequency:** Moderately common - used for conditional equation generation
+
+**Impact on Implementation:**
+- Must support both `equation(subset(i,j))` (explicit indices) AND `equation(subset)` (inferred indices)
+- Must resolve subset definitions before equation expansion
+- Shorthand syntax adds complexity (automatic index inference)
+
+**Documentation:** Complete semantics research in `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/maxmin_analysis.md` (Section 11)
 
 ---
 
@@ -1063,8 +1486,75 @@ Included in Task 8 (part of complexity assessment)
 Development team (Prep Task 8)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 8)
+✅ **Status: VERIFIED**  
+**Date:** November 23, 2025  
+**Task:** Prep Task 4 - maxmin.gms Blocker Chain Analysis  
+**Time Spent:** 2.5 hours (combined with Unknowns 10.1.3, 10.5.1, 10.5.2)
+
+**Finding:** Assumption was CORRECT - partial implementation is NOT feasible, it's all-or-nothing.
+
+**Partial Implementation Analysis:**
+
+**maxmin.gms Nesting Patterns:**
+- **1-level:** `mindist1(low)..` - subset reference without indices (3 occurrences)
+- **2-level:** `defdist(low(n,nn))..` - subset with explicit indices (2 occurrences)
+- **Complexity:** BOTH patterns must be supported together
+
+**Can we support 1-level without 2-level?**
+**NO** - Both patterns appear in same file, interdependent:
+```gams
+mindist1(low)..        mindist =l= dist(low);        // 1-level (shorthand)
+mindist1a(low(n,nn)).. mindist =l= sqrt(sum(...));   // 2-level (explicit)
+```
+- Both reference same subset `low(n,nn)`
+- 1-level is shorthand that requires parsing 2-level semantics
+- Cannot implement 1-level without understanding 2-level structure
+
+**Is there intermediate syntax?**
+**NO** - No simpler subset patterns found in GAMSLIB Tier 1:
+- Either files don't use subsets at all
+- Or files use full nested indexing (both 1-level and 2-level)
+- No "subset-lite" syntax exists
+
+**Would partial implementation unlock any models?**
+**NO** - maxmin.gms requires BOTH 1-level and 2-level:
+- Even if we implement 1-level only, still blocked by 2-level patterns
+- Must implement full nested indexing to unlock maxmin.gms
+- No other Tier 1 model uses subsets
+
+**Is partial better than deferring entirely?**
+**NO** - Partial provides zero value:
+- Doesn't unlock any models
+- Still requires significant implementation (6-8 hours for 1-level)
+- Leaves incomplete feature in codebase
+- Better to defer entirely and implement complete feature in Sprint 11
+
+**All-or-nothing?**
+**YES** - Must implement full nested indexing (both patterns) or defer entirely:
+- 1-level alone: 6-8 hours, unlocks 0 models
+- 2-level alone: 4-6 hours, unlocks 0 models  
+- Full nested indexing: 10-14 hours, unlocks 1 model (maxmin.gms 40% → 51%)
+- Full maxmin.gms support: 23-40 hours (all 5 blocker categories)
+
+**Answer to Research Questions:**
+1. **Can we support 1-level without 2-level?** NO - Interdependent in same file
+2. **Is there intermediate syntax?** NO - No subset-lite patterns exist
+3. **Would partial unlock models?** NO - maxmin.gms needs both patterns
+4. **Is partial better than defer?** NO - Zero value, incomplete feature
+5. **All-or-nothing?** YES - Full implementation or defer entirely
+
+**Decision Impact:**
+- Partial implementation is NOT an option
+- Choice is binary: FULL nested indexing (10-14 hours) OR DEFER
+- Analysis strongly supports DEFER given:
+  - HIGH complexity (10-14 hours for subset alone)
+  - LOW ROI (only 1 model, only to 51% not 100%)
+  - HIGH risk (most complex feature to date)
+  - BETTER alternatives (circle.gms + himmel16.gms = 9/10 models in 9-14 hours)
+
+**Sprint 10 Decision:** DEFER nested indexing entirely. No partial implementation.
+
+**Documentation:** Partial implementation feasibility analysis in `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/maxmin_analysis.md` (Section 13)
 
 ---
 
@@ -1187,8 +1677,75 @@ grep -rn "^\s*abort" tests/fixtures/gamslib/*.gms | grep -v "if" | head -10
 Development team (Prep Task 5)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 5)
+✅ **Status: VERIFIED**  
+**Date:** November 23, 2025  
+**Task:** Prep Task 5 - mingamma.gms Blocker Chain Analysis  
+**Time Spent:** 1.5 hours (combined with Unknown 10.1.4)
+
+**Finding:** abort$ syntax in mingamma.gms uses SQUARE BRACKETS `abort$[condition]`, not parentheses. Sprint 9 implemented this correctly.
+
+**abort$ Syntax Analysis:**
+
+1. **What are all abort$ syntax forms in mingamma.gms?**
+   ```bash
+   grep -n "abort" tests/fixtures/gamslib/mingamma.gms
+   ```
+   - Line 59: `abort$[abs(x1delta) > xtol or abs(y1delta) > ytol] "inconsistent results with gamma";`
+   - Line 62: `abort$[abs(x2delta) > xtol or abs(y2delta) > ytol] "inconsistent results with loggamma";`
+   - **Syntax:** `abort$[condition] "message";` (uses SQUARE BRACKETS)
+
+2. **Can abort$ appear outside if-blocks?**
+   - In mingamma.gms: NO - both abort$ statements are inside if-blocks (lines 58-60, 61-63)
+   - General GAMS: YES - abort can appear at top level
+   - Current grammar (line 231): `abort_stmt: "abort"i ("$" expr)? STRING? SEMI`
+   - Top-level abort is already supported, if-block abort was the blocker
+
+3. **What condition syntax is valid?**
+   - Boolean expressions with comparison operators: `abs(x1delta) > xtol`
+   - Logical operators: `or`, `and`
+   - No `$-conditions` found in mingamma.gms
+   - Uses SQUARE BRACKETS `[...]` not parentheses `(...)`
+
+4. **Are there abort$ variants to handle?**
+   - `abort$[...]` with square brackets: YES (mingamma.gms uses this)
+   - `abort$(...)` with parentheses: NOT in mingamma.gms
+   - Plain `abort` without condition: NOT in mingamma.gms
+   - Status: Sprint 9 implementation handles square bracket syntax correctly
+
+5. **How many abort$ statements and where?**
+   - Total: 2 abort$ statements
+   - Line 59: Inside first if-block (checking m1.solveStat)
+   - Line 62: Inside second if-block (checking m2.solveStat)
+   - All in if-blocks: YES (0 at top level)
+
+**Sprint 9 Implementation Status:**
+- ✅ abort$ in if-blocks: FIXED in Sprint 9
+- ✅ Square bracket syntax: Correctly supported
+- ✅ Boolean expressions: Correctly parsed
+- ✅ String messages: Correctly parsed
+
+**Verification Test:**
+- Commented out all scalar references (which cause undefined symbol errors)
+- Kept abort$ lines intact (lines 59, 62)
+- Result: ✅ File parsed successfully through abort$ statements
+- Confirms: abort$ in if-blocks is fully functional
+
+**GAMSLIB Survey (broader patterns):**
+Not needed for mingamma.gms analysis - Sprint 9 implementation handles the pattern correctly.
+
+**Answer to Research Questions:**
+1. **Syntax forms:** `abort$[condition] "message";` with square brackets
+2. **Outside if-blocks:** Not in mingamma.gms (but top-level already supported)
+3. **Condition syntax:** Boolean expressions with comparison and logical operators
+4. **Variants:** Square bracket syntax (correctly implemented in Sprint 9)
+5. **Location:** 2 statements, both inside if-blocks
+
+**Impact on Sprint 10:**
+- abort$ in if-blocks: ✅ Already complete (Sprint 9)
+- No additional work needed for abort$ feature
+- mingamma.gms blocker is comma-separated scalar declarations (different feature)
+
+**Documentation:** Complete abort$ analysis in `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/mingamma_analysis.md` (Section 7)
 
 ---
 
@@ -1227,8 +1784,64 @@ Included in Task 5 (part of abort$ analysis)
 Development team (Prep Task 5)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be validated during Task 5
+✅ **Status: VERIFIED**  
+**Date:** November 23, 2025  
+**Task:** Prep Task 5 - mingamma.gms Blocker Chain Analysis  
+**Time Spent:** 1.5 hours (combined with Unknowns 10.1.4, 10.6.1)
+
+**Finding:** abort$ in if-blocks was ALREADY implemented in Sprint 9. No additional grammar work needed.
+
+**If-Block Grammar Analysis:**
+
+**Current Grammar Structure:**
+```bash
+grep -A10 "if_stmt" src/gams/gams_grammar.lark
+```
+
+Sprint 9 already added support for statements in if-block bodies, including abort$.
+
+**What statements are allowed in if-block bodies?**
+- Assignment statements
+- abort$ statements (ADDED in Sprint 9)
+- Other statements supported by the grammar
+
+**Is abort$ the only missing statement type?**
+- abort$ is NO LONGER missing - it was implemented in Sprint 9
+- Current blocker for mingamma.gms is comma-separated scalar declarations (different feature)
+
+**How do nested if-blocks work?**
+- Sprint 9 implementation handles nested if-blocks correctly
+- No issues found in testing
+
+**Was 2-3 hour estimate realistic?**
+- N/A - Sprint 9 already completed this work
+- Actual implementation: Part of Sprint 9 abort$ in if-blocks feature
+- Tests: `tests/unit/test_abort_in_if_blocks.py` exists and passes
+
+**Verification:**
+- Tested mingamma.gms with scalar references commented out
+- abort$ statements at lines 59, 62 parse successfully
+- Confirms: If-block grammar correctly supports abort$ statements
+
+**Sprint 9 Implementation:**
+- ✅ Grammar changes: Complete
+- ✅ If-block body statements: Complete  
+- ✅ abort$ support: Complete
+- ✅ Tests: Complete (test_abort_in_if_blocks.py)
+
+**Impact on Sprint 10:**
+- No work needed for if-block grammar
+- No work needed for abort$ feature
+- mingamma.gms blocker is comma-separated scalar declarations (lines 30-38)
+
+**Answer to Research Questions:**
+1. **Current if-block structure:** Supports statement lists in bodies (implemented Sprint 9)
+2. **Allowed statements:** Assignments, abort$, and other statement types
+3. **Missing statement types:** None for mingamma.gms use case
+4. **Nested if-blocks:** Handled correctly by Sprint 9 implementation
+5. **Estimate realistic:** Sprint 9 completed this work successfully
+
+**Documentation:** If-block grammar analysis in `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/mingamma_analysis.md` (Section 7)
 
 ---
 

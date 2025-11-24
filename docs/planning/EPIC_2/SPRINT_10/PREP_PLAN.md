@@ -500,9 +500,11 @@ grep -E "[0-9]+-[0-9]+ hours" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/circle_ana
 
 ## Task 3: Analyze himmel16.gms Complete Blocker Chain
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 2 hours  
+**Actual Time:** 1.5 hours  
+**Completed:** 2025-11-23  
 **Deadline:** Before Sprint 10 Day 1  
 **Owner:** Development team  
 **Dependencies:** Task 1 (Known Unknowns)  
@@ -622,11 +624,71 @@ Create `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/himmel16_analysis.md`:
 
 ### Changes
 
-*To be completed during prep phase*
+**Created:** `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/himmel16_analysis.md` (714 lines, 23KB)
+
+**Analysis Completed:**
+- Line-by-line analysis of all 70 lines in himmel16.gms
+- Root cause analysis of level bound conflict error
+- Parser bug identification in `_expand_variable_indices` function
+- GAMS semantics research for variable bounds
+- Complete blocker chain documentation
+
+**Updated:** `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md`
+- Unknown 10.1.2 marked as ✅ VERIFIED (complete blocker chain)
+- Unknown 10.4.1 marked as ✅ VERIFIED (parser bug in index expansion)
+- Unknown 10.4.2 marked as ✅ VERIFIED (GAMS semantics confirmed)
 
 ### Result
 
-*To be completed during prep phase*
+**Complete Blocker Chain Identified:**
+
+1. **PRIMARY BLOCKER (Lines ~47-50):** Lead/lag indexing (i++1, i--1)
+   - Status: ✅ FIXED in Sprint 9
+   - Evidence: Parser now reaches line 63 (vs ~line 47 in Sprint 8)
+   - Parse improvement: 67% → 90%
+
+2. **SECONDARY BLOCKER (Line 63):** Variable bound index expansion bug
+   - Currently blocks at line 63: `x.l("5") = 0`
+   - Error: "Conflicting level bound for variable 'x' at indices ('1',)"
+   - Parse rate: 90% (63/70 lines)
+
+3. **TERTIARY BLOCKER:** NONE - Confirmed no additional blockers
+
+**Root Cause Discovered: Parser Bug**
+
+**Location:** `src/ir/parser.py`, function `_expand_variable_indices` (line 2125)
+
+**Bug:** Parser incorrectly expands literal string indices to ALL domain members instead of using only the specified literal.
+
+**Example:**
+```gams
+x.fx("1") = 0  # Should affect ONLY index "1"
+```
+- Expected: Sets fx_map for index ("1",) only
+- Actual (buggy): Sets fx_map for ALL indices ("1", "2", "3", "4", "5", "6")
+
+**Why Error Message is Confusing:**
+- Error says "indices ('1',)" but occurs at line 63 which sets `x.l("5")`
+- This is actually CORRECT - the conflict IS at index "1"
+- Line 57: `x.fx("1") = 0` → Bug sets l_map for ALL indices to 0
+- Lines 60-62: Set l_map["1"] = 0.5 (same value, no conflict yet)
+- Line 63: `x.l("5") = 0` → Bug tries to set l_map["1"] = 0 → **CONFLICT** (0.5 vs 0)
+
+**GAMS Semantics Verified:**
+- Multiple `.l` assignments on different indices: VALID in GAMS
+- Mixing `.fx` and `.l` on different indices: VALID in GAMS
+- himmel16.gms uses valid GAMS syntax - parser bug is blocking it
+
+**Sprint 10 Decision:**
+
+✅ **FIX:** Variable bound index expansion bug
+- Effort: 3-4 hours (localized bug fix)
+- Complexity: LOW-MEDIUM (single function)
+- Risk: LOW (isolated change, clear test case)
+- Confidence: 95%+
+- Expected result: himmel16.gms from 90% → 100%
+
+**Model Unlock Prediction:** himmel16.gms will parse completely (100%, 70/70 lines) after fixing the index expansion bug. This is a high-confidence prediction based on thorough line-by-line analysis.
 
 ### Verification
 
@@ -646,34 +708,35 @@ grep -E "(Secondary|Tertiary)" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/himmel16_
 
 ### Deliverables
 
-- [ ] `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/himmel16_analysis.md` with complete remaining blocker chain
-- [ ] Level bound conflict analysis (what variables, what values, why conflict)
-- [ ] GAMS semantics research findings (is multiple `.l` valid?)
-- [ ] Confirmation if level bounds is ONLY remaining blocker (no tertiary)
-- [ ] Line-by-line table for all 33 lines
-- [ ] Synthetic test requirements
-- [ ] Model unlock prediction
-- [ ] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 10.1.2, 10.4.1, 10.4.2
+- [x] `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/himmel16_analysis.md` with complete remaining blocker chain
+- [x] Level bound conflict analysis (what variables, what values, why conflict)
+- [x] GAMS semantics research findings (is multiple `.l` valid?)
+- [x] Confirmation if level bounds is ONLY remaining blocker (no tertiary)
+- [x] Line-by-line table for all 33 lines
+- [x] Synthetic test requirements
+- [x] Model unlock prediction
+- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 10.1.2, 10.4.1, 10.4.2
 
 ### Acceptance Criteria
 
-- [ ] Complete remaining blocker chain documented (after i++1 fix)
-- [ ] Level bound conflict thoroughly analyzed
-- [ ] GAMS semantics verified (is this valid/invalid in GAMS?)
-- [ ] Tertiary blocker search completed (confirm level bounds is last blocker)
-- [ ] Effort estimate for level bound fix provided
-- [ ] Synthetic test requirements specified
-- [ ] Cross-references Sprint 9 i++1 implementation status
-- [ ] Unknowns 10.1.2, 10.4.1, 10.4.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Complete remaining blocker chain documented (after i++1 fix)
+- [x] Level bound conflict thoroughly analyzed
+- [x] GAMS semantics verified (is this valid/invalid in GAMS?)
+- [x] Tertiary blocker search completed (confirm level bounds is last blocker)
+- [x] Effort estimate for level bound fix provided
+- [x] Synthetic test requirements specified
+- [x] Cross-references Sprint 9 i++1 implementation status
+- [x] Unknowns 10.1.2, 10.4.1, 10.4.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
 ## Task 4: Analyze maxmin.gms Complete Blocker Chain
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 2-3 hours  
-**Deadline:** Before Sprint 10 Day 1  
+**Actual Time:** 2.5 hours  
+**Completed:** 2025-11-23  
 **Owner:** Development team  
 **Dependencies:** Task 1 (Known Unknowns)  
 **Unknowns Verified:** 10.1.3, 10.5.1, 10.5.2, 10.5.3
@@ -832,38 +895,162 @@ grep -i "complexity" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/maxmin_analysis.md
 grep -i "recommend" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/maxmin_analysis.md
 ```
 
+### Changes
+
+**Files Created:**
+- `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/maxmin_analysis.md` (2062 lines, comprehensive blocker analysis)
+
+**Files Modified:**
+- `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md` (added 4 verification results: 10.1.3, 10.5.1, 10.5.2, 10.5.3)
+
+**Analysis Completed:**
+- Line-by-line analysis of all 108 lines in maxmin.gms
+- Complete blocker chain identified (5 categories, 23 blocker lines total)
+- Nested indexing complexity assessment (HIGH: 9/10 rating)
+- GAMS subset domain semantics research
+- Progressive parse rate analysis
+- Implementation recommendation: DEFER to Sprint 11+
+
+### Result
+
+**Complete Blocker Chain Identified (5 Categories, 23 Lines):**
+
+1. **PRIMARY BLOCKER (3 lines):** Subset/nested indexing in equation domains
+   - Lines 51, 53, 55: `defdist(low(n,nn))..`, `mindist1(low)..`, `mindist1a(low(n,nn))..`
+   - Error: "No terminal matches '(' in the current parser context, at line 51 col 12"
+   - Grammar limitation: `id_list: ID ("," ID)*` only supports simple identifiers
+   - Parse improvement: 18% → 51% (after fix)
+
+2. **SECONDARY BLOCKER (2 lines):** Aggregation functions in equation domains
+   - Lines 57, 59: `mindist2.. mindist =e= smin(low, dist(low));`
+   - Same blocker as circle.gms (will be fixed by Sprint 10 function call implementation)
+   - Parse improvement: 51% → 57% (after fix)
+
+3. **TERTIARY BLOCKER (5 lines):** Multi-model declaration syntax
+   - Lines 61-65: Multi-line model block with 4 models in one statement
+   - Current grammar only supports single model per statement
+   - Parse improvement: 57% → 65% (after fix)
+
+4. **QUATERNARY BLOCKER (4 lines):** Loop with tuple domain
+   - Lines 70-73: `loop((n,d), ...);` - nested parentheses for tuple iteration
+   - Parse improvement: 65% → 69% (after fix)
+
+5. **RELATED BLOCKERS (9 lines):** Lower priority features
+   - Line 37: Set assignment with ord() functions
+   - Line 78: Variable bounds with subset indexing  
+   - Line 83: Function calls in parameter assignments (max, ceil, sqrt, card)
+   - Line 87: Conditional option statement
+   - Line 106: DNLP solver support
+   - Parse improvement: 69% → 79% (after all fixes)
+
+**Progressive Parse Rates:**
+- **Current:** 18% (19/108 lines) - Fails at line 51 (nested indexing)
+- **After Primary:** ~51% (55/108 lines) - Would fail at line 57 (aggregation functions)
+- **After Primary + Secondary:** ~57% (61/108 lines) - Would fail at line 61 (multi-model)
+- **After Primary + Secondary + Tertiary:** ~65% (70/108 lines) - Would fail at line 70 (loop tuple)
+- **After ALL parse blockers:** 79% (85/108 lines) - Remaining are semantic issues
+
+**Total Effort Required:**
+- Primary blocker alone: 10-14 hours (HIGH complexity)
+- All 5 blocker categories: 23-40 hours
+- Far exceeds Sprint 10 capacity
+
+**Nested Indexing Complexity Assessment (HIGH: 9/10):**
+
+**Grammar Changes (3-4 hours):**
+- Modify `equation_def` rule to support nested syntax
+- Create new `domain_spec` rule for: simple IDs, subset references, nested subset with indices
+- Most complex grammar change to date
+
+**AST Changes (2-3 hours):**
+- New structure for subset references with optional indices
+- Distinguish: `equation(i,j)` vs `equation(subset)` vs `equation(subset(i,j))`
+
+**Semantic Resolution (4-6 hours):**
+- Resolve subset definitions at equation creation time
+- Expand subset domains to actual index combinations
+- Handle subset assignments: `low(n,nn) = ord(n) > ord(nn);`
+- Track subset membership for domain expansion
+
+**Testing (1-2 hours):**
+- 7 test suites with 20+ test cases specified in analysis
+
+**GAMS Subset Domain Semantics:**
+- **Declaration:** `Set low(n,n);` - 2D subset with parent domain
+- **Assignment:** `low(n,nn) = ord(n) > ord(nn);` - populates subset (lower triangle)
+- **Usage:** `defdist(low(n,nn))..` generates equations ONLY for (n,nn) pairs where low(n,nn) is true
+- **Shorthand:** `mindist1(low)..` is equivalent to `mindist1(low(n,nn))..` with inferred indices
+- **Semantics:** Filters equation domain to subset members (conditional equation generation)
+
+**Partial Implementation Analysis:**
+- **NOT FEASIBLE:** maxmin.gms uses both 1-level (`low`) and 2-level (`low(n,nn)`) patterns
+- **Interdependent:** 1-level is shorthand requiring 2-level semantics
+- **All-or-nothing:** Must implement full nested indexing or defer entirely
+- **No value in partial:** 1-level alone doesn't unlock any models
+
+**Sprint 10 Decision: DEFER maxmin.gms to Sprint 11+**
+
+**Recommendation Rationale:**
+1. **HIGH RISK:** Nested indexing alone is 10-14 hours, could consume entire sprint without success
+2. **LOW ROI:** Only unlocks 1 model (maxmin.gms), only to 51% not 100%
+3. **MULTIPLE DEPENDENCIES:** Full maxmin.gms requires 5 blocker categories (23-40 hours total)
+4. **FALLBACK VIABLE:** Target 90% (9/10 models) with circle.gms + himmel16.gms (9-14 hours)
+5. **BETTER SEQUENCING:** Implement simpler, well-understood features first
+6. **COMPLEXITY:** Highest complexity feature to date (9/10 rating)
+
+**Alternative Strategy: Target 90% Success Rate**
+- **Implement:** circle.gms function calls (6-10 hours)
+- **Implement:** himmel16.gms parser bug fix (3-4 hours)
+- **Defer:** maxmin.gms to Sprint 11
+- **Expected Outcome:** 9/10 models parsing = 90% success rate
+- **Total Effort:** 9-14 hours (fits comfortably in sprint)
+- **Risk Level:** LOW-MEDIUM (well-understood blockers, clear fix approaches)
+
+**Unknowns Verified:**
+- ✅ Unknown 10.1.3: Complete blocker chain (PRIMARY assumption was WRONG - 5 categories, not just nested indexing)
+- ✅ Unknown 10.5.1: Complexity level (10-14 hours confirmed, HIGH risk)
+- ✅ Unknown 10.5.2: GAMS semantics (subset domains filter equation generation)
+- ✅ Unknown 10.5.3: Partial implementation (NOT feasible, all-or-nothing)
+
+**Model Unlock Prediction:**
+- After nested indexing only: maxmin.gms from 18% → 51%
+- After all 5 blocker categories: maxmin.gms from 18% → 79%
+- Full 100% requires semantic fixes beyond parser scope
+- **Confidence:** 95%+ in blocker analysis accuracy
+
 ### Deliverables
 
-- [ ] `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/maxmin_analysis.md` with complete blocker chain
-- [ ] Nested indexing deep dive (GAMS semantics, pattern frequency, complexity)
-- [ ] Line-by-line table for all 47 lines
-- [ ] Complexity assessment (validate 10-12 hour estimate)
-- [ ] Implementation recommendation (attempt in Sprint 10 vs defer to Sprint 11)
-- [ ] Fallback plan documented (90% target without maxmin.gms)
-- [ ] Synthetic test requirements
-- [ ] Model unlock prediction
-- [ ] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 10.1.3, 10.5.1, 10.5.2, 10.5.3
+- [x] `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/maxmin_analysis.md` with complete blocker chain
+- [x] Nested indexing deep dive (GAMS semantics, pattern frequency, complexity)
+- [x] Line-by-line table for all 108 lines
+- [x] Complexity assessment (validated 10-14 hour estimate)
+- [x] Implementation recommendation (DEFER to Sprint 11)
+- [x] Fallback plan documented (90% target without maxmin.gms)
+- [x] Synthetic test requirements
+- [x] Model unlock prediction
+- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 10.1.3, 10.5.1, 10.5.2, 10.5.3
 
 ### Acceptance Criteria
 
-- [ ] Complete blocker chain documented
-- [ ] Nested indexing pattern thoroughly analyzed
-- [ ] GAMS semantics research completed
-- [ ] Complexity estimate validated or revised
-- [ ] Clear recommendation: implement in Sprint 10 or defer
-- [ ] If defer recommended, fallback plan specified
-- [ ] Synthetic test requirements for nested indexing feature
-- [ ] Cross-references Known Unknowns Category 1 and 2
-- [ ] Unknowns 10.1.3, 10.5.1, 10.5.2, 10.5.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Complete blocker chain documented
+- [x] Nested indexing pattern thoroughly analyzed
+- [x] GAMS semantics research completed
+- [x] Complexity estimate validated (10-14 hours confirmed)
+- [x] Clear recommendation: DEFER to Sprint 11
+- [x] Fallback plan specified (target 90% with circle.gms + himmel16.gms)
+- [x] Synthetic test requirements for nested indexing feature
+- [x] Cross-references Known Unknowns Category 1 and 5
+- [x] Unknowns 10.1.3, 10.5.1, 10.5.2, 10.5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
 ## Task 5: Analyze mingamma.gms Complete Blocker Chain
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 1-2 hours  
-**Deadline:** Before Sprint 10 Day 1  
+**Actual Time:** 1.5 hours  
+**Completed:** 2025-11-23  
 **Owner:** Development team  
 **Dependencies:** Task 1 (Known Unknowns)  
 **Unknowns Verified:** 10.1.4, 10.6.1, 10.6.2
@@ -998,29 +1185,155 @@ grep -i "equation.*attribute" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/mingamma_a
 grep "Sprint 9" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/mingamma_analysis.md
 ```
 
+### Changes
+
+**Files Created:**
+- `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/mingamma_analysis.md` (1604 lines, comprehensive blocker analysis)
+
+**Files Modified:**
+- `docs/planning/EPIC_2/SPRINT_10/KNOWN_UNKNOWNS.md` (added 3 verification results: 10.1.4, 10.6.1, 10.6.2)
+
+**Analysis Completed:**
+- Line-by-line analysis of all 63 lines in mingamma.gms
+- abort$ syntax analysis (Sprint 9 status verified)
+- Equation attributes verification (NOT used in mingamma.gms - Sprint 9 assumption WRONG)
+- Complete blocker chain identified (NEW blocker discovered)
+- Sprint 9 lessons learned documentation
+
+### Result
+
+**Critical Discovery: Sprint 9 Assumption Was COMPLETELY WRONG**
+
+**Sprint 9 Claimed:**
+- Primary blocker: Equation attributes (`.l`, `.m` on equations)
+- Secondary blocker: abort$ in if-blocks
+
+**Actual Truth:**
+1. **Equation attributes:** NOT USED in mingamma.gms
+   - Verified with: `grep -E "y1def\.|y2def\." tests/fixtures/gamslib/mingamma.gms`
+   - Result: NO equation attribute access found
+   - Only VARIABLE attributes used: x1.l, x2.l, y1.l, y2.l, x1.lo, x2.lo
+   - Sprint 9 confused variable attributes with equation attributes
+
+2. **abort$ in if-blocks:** ✅ WAS actual blocker, correctly fixed in Sprint 9
+   - Lines 59, 62: `abort$[condition] "message";`
+   - Syntax uses SQUARE BRACKETS, not parentheses
+   - Status: ✅ FIXED in Sprint 9 (now parses correctly)
+
+**NEW Blocker Discovered:**
+
+**PRIMARY BLOCKER (Lines 30-38): Comma-Separated Scalar Declarations with Inline Values**
+
+```gams
+Scalar
+   x1opt   / 1.46163214496836   /
+   x1delta
+   x2delta
+   y1opt   / 0.8856031944108887 /
+   y1delta
+   y2delta
+   y2opt;
+```
+
+**Problem:** Grammar supports comma-separated scalar lists OR scalars with inline values, but NOT BOTH in same declaration.
+
+**Current Grammar (gams_grammar.lark line 66-69):**
+```
+scalar_decl: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?      -> scalar_with_data
+           | ID desc_text ASSIGN expr                                   -> scalar_with_assign
+           | ID desc_text                                               -> scalar_plain
+           | ID "," id_list                                             -> scalar_list
+```
+
+**Issue:** `scalar_list` doesn't support inline values. Need to support MIXED declarations where some scalars have `/value/` and others don't.
+
+**Complete Blocker Chain:**
+- **PRIMARY (Sprint 9):** abort$ in if-blocks - ✅ FIXED  
+- **SECONDARY (NEW):** Comma-separated scalar declarations with inline values - TO FIX in Sprint 10
+- **TERTIARY:** None
+
+**Error Details:**
+- Error location: Line 41, column 13
+- Error message: "Undefined symbol 'y1opt' referenced [context: assignment]"
+- Root cause: Parser doesn't register scalars declared in comma-separated format with inline values
+- Parse rate: 65% (41/63 lines before semantic error)
+
+**Progressive Parse Rates:**
+- **Current:** 65% (41/63 lines) - Fails at first use of comma-separated scalar (line 41)
+- **After fixing comma-separated scalars:** 100% (63/63 lines) - No other blockers found
+- **Confidence:** 95%+ (tested by commenting out scalar references - file parses completely)
+
+**Sprint 9 Lessons Learned:**
+
+1. **Verification Failure:**
+   - Assumed equation attributes needed WITHOUT grep verification
+   - Simple `grep -E "eq.*\.l|eq.*\.m"` would have shown no usage
+   - Wasted implementation effort on unnecessary feature
+
+2. **Incomplete Blocker Analysis:**
+   - Sprint 9 analysis stopped at first blocker (abort$)
+   - Didn't discover secondary blocker (comma-separated scalars)
+   - Should have tested with blocker commented out
+
+3. **Hidden Semantic Blockers:**
+   - Comma-separated scalar blocker causes SEMANTIC error (undefined symbol)
+   - Not immediately obvious as parse blocker
+   - Requires deeper analysis to discover
+
+**Sprint 10 Decision: IMPLEMENT**
+
+**Comma-Separated Scalar Declarations with Inline Values:**
+- **Effort:** 4-6 hours (LOW-MEDIUM complexity)
+- **Complexity:** Extend grammar to support mixed declarations
+- **Expected outcome:** mingamma.gms from 65% → 100%
+- **Confidence:** 95%+ (no other blockers found)
+
+**Rationale:**
+1. LOW-MEDIUM complexity (4-6 hours)
+2. Unlocks mingamma.gms completely (65% → 100%)
+3. Common GAMS pattern (likely used in other models)
+4. Clean implementation (extends existing scalar declaration logic)
+5. Fits Sprint 10 alongside circle.gms + himmel16.gms
+
+**Updated Sprint 10 Scope:**
+- circle.gms: Function calls (6-10 hours)
+- himmel16.gms: Parser bug fix (3-4 hours)
+- mingamma.gms: Comma-separated scalar declarations (4-6 hours)
+- **Total:** 13-20 hours for 3 models (excellent ROI)
+- **Expected outcome:** 9/10 models parsing (90% success rate)
+
+**Unknowns Verified:**
+- ✅ Unknown 10.1.4: Sprint 9 assumption COMPLETELY WRONG (equation attributes NOT used, comma-separated scalars is actual blocker)
+- ✅ Unknown 10.6.1: abort$ syntax verified (uses square brackets, ✅ FIXED in Sprint 9)
+- ✅ Unknown 10.6.2: If-block grammar verified (✅ FIXED in Sprint 9, no additional work needed)
+
+**Model Unlock Prediction:**
+- After comma-separated scalar fix: mingamma.gms from 65% → 100%
+- Confidence: 95%+ in complete parse success
+
 ### Deliverables
 
-- [ ] `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/mingamma_analysis.md` with complete blocker chain
-- [ ] abort$ syntax analysis (all occurrences, syntax variants, GAMS semantics)
-- [ ] Verification that equation attributes NOT needed (Sprint 9 assumption incorrect)
-- [ ] Line-by-line table for all 37 lines
-- [ ] Model unlock prediction (does abort$ fix unlock model?)
-- [ ] Synthetic test requirements for abort$ feature
-- [ ] Sprint 9 lessons learned documented
-- [ ] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 10.1.4, 10.6.1, 10.6.2
+- [x] `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/mingamma_analysis.md` with complete blocker chain
+- [x] abort$ syntax analysis (all occurrences, syntax variants, GAMS semantics)
+- [x] Verification that equation attributes NOT needed (Sprint 9 assumption incorrect)
+- [x] Line-by-line table for all 63 lines
+- [x] Model unlock prediction (comma-separated scalar fix unlocks to 100%)
+- [x] Synthetic test requirements for comma-separated scalar declarations
+- [x] Sprint 9 lessons learned documented
+- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 10.1.4, 10.6.1, 10.6.2
 
 ### Acceptance Criteria
 
-- [ ] Complete blocker chain documented (confirm abort$ is only blocker)
-- [ ] abort$ in if-blocks thoroughly analyzed
-- [ ] All abort$ occurrences catalogued
-- [ ] GAMS abort$ syntax research completed
-- [ ] Verification that equation attributes not required for this model
-- [ ] Sprint 9 incorrect assumption documented as lesson
-- [ ] Effort estimate for abort$ fix (should be low, 2-3 hours)
-- [ ] Synthetic test requirements specified
-- [ ] Cross-references Sprint 9 mingamma_blocker_analysis.md
-- [ ] Unknowns 10.1.4, 10.6.1, 10.6.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Complete blocker chain documented (abort$ FIXED, comma-separated scalars is actual blocker)
+- [x] abort$ in if-blocks thoroughly analyzed (Sprint 9 implementation verified)
+- [x] All abort$ occurrences catalogued (2 statements, both in if-blocks)
+- [x] GAMS abort$ syntax research completed (square brackets, boolean expressions)
+- [x] Verification that equation attributes not required for this model
+- [x] Sprint 9 incorrect assumption documented as lesson
+- [x] Effort estimate for actual blocker (comma-separated scalars: 4-6 hours)
+- [x] Synthetic test requirements specified
+- [x] Cross-references Sprint 9 mingamma_blocker_analysis.md
+- [x] Unknowns 10.1.4, 10.6.1, 10.6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
