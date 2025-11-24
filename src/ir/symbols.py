@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.ir.ast import Expr
 
 
 @dataclass
@@ -59,6 +63,9 @@ class ParameterDef:
     name: str
     domain: tuple[str, ...] = ()  # e.g., ("i","j")
     values: dict[tuple[str, ...], float] = field(default_factory=dict)
+    expressions: dict[tuple[str, ...], Expr] = field(
+        default_factory=dict
+    )  # Sprint 10 Day 4: Store function calls as expressions
 
 
 @dataclass

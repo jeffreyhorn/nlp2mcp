@@ -1366,19 +1366,26 @@ class _ModelBuilder:
             "bound_scalar",
         )
 
+        # Sprint 10 Day 4: Check if expression contains function calls
+        # If so, store as expression instead of trying to evaluate
+        has_function_call = self._contains_function_call(expr)
+
         # Try to extract a constant value. If the expression is non-constant
-        # (e.g., contains variable attributes like x.l), we skip storing the value
+        # (e.g., contains variable attributes like x.l or function calls), we handle specially
         # (Sprint 8 mock/store approach - we don't execute expressions)
+        value = None
         try:
             value = self._extract_constant(expr, "assignment")
         except ParserSemanticError:
             # Non-constant expressions are only allowed for scalar parameter assignments
-            # (e.g., trig.gms: xdiff = 2.66695657 - x1.l)
+            # (e.g., trig.gms: xdiff = 2.66695657 - x1.l, circle.gms: xmin = smin(i, x(i)))
             # Variable bounds must always be constants
             if is_variable_bound:
                 raise  # Re-raise the error for variable bounds
-            # For scalar parameters, just parse and validate the expression but don't store the value
-            return
+            # For parameters with function calls, continue to store as expression
+            # For other non-constant parameters, just parse and validate but don't store
+            if not has_function_call:
+                return
 
         if isinstance(target, Tree):
             if target.data == "bound_indexed":
@@ -1419,8 +1426,11 @@ class _ModelBuilder:
                         suggestion=f"Provide exactly {len(param.domain)} {index_word} to match the parameter declaration",
                     )
 
-                # Store indexed value
-                param.values[tuple(indices)] = value
+                # Sprint 10 Day 4: Store expression if it contains function calls, otherwise store value
+                if has_function_call:
+                    param.expressions[tuple(indices)] = expr
+                elif value is not None:
+                    param.values[tuple(indices)] = value
                 return
         elif isinstance(target, Token):
             name = _token_text(target)
@@ -1431,7 +1441,11 @@ class _ModelBuilder:
                         f"Assignment to parameter '{name}' requires indices for domain {param.domain}",
                         target,
                     )
-                param.values[()] = value
+                # Sprint 10 Day 4: Store expression if it contains function calls, otherwise store value
+                if has_function_call:
+                    param.expressions[()] = expr
+                elif value is not None:
+                    param.values[()] = value
                 return
             if name in self.model.variables:
                 var = self.model.variables[name]
@@ -1883,6 +1897,40 @@ class _ModelBuilder:
             if d != first:
                 raise self._error("Expression domain mismatch", node)
         return first
+
+    def _contains_function_call(self, expr: Expr) -> bool:
+        """Check if an expression contains any function calls (recursively).
+
+        Sprint 10 Day 4: Used to detect when parameter assignments contain function calls
+        that should be stored as expressions rather than evaluated.
+        """
+        if isinstance(expr, Call):
+            return True
+        if isinstance(expr, (Binary, Unary)):
+            # Check children recursively
+            for child in expr.children():
+                if self._contains_function_call(child):
+                    return True
+        if isinstance(expr, Sum):
+            # Check the summation body
+            if self._contains_function_call(expr.body):
+                return True
+        if isinstance(expr, IndexOffset):
+            # Check the offset expression recursively
+            if self._contains_function_call(expr.offset):
+                return True
+        # Check for function calls in indices of reference nodes
+        if isinstance(expr, (VarRef, ParamRef)):
+            for idx in expr.indices:
+                if isinstance(idx, IndexOffset) and self._contains_function_call(idx):
+                    return True
+        # Check EquationRef and MultiplierRef if they're being used
+        # These are imported locally in some contexts, so we check type name
+        if type(expr).__name__ in ("EquationRef", "MultiplierRef"):
+            for idx in expr.indices:  # type: ignore[attr-defined]
+                if isinstance(idx, IndexOffset) and self._contains_function_call(idx):
+                    return True
+        return False
 
     def _extract_constant(self, expr: Expr, context: str) -> float:
         if isinstance(expr, Const):
