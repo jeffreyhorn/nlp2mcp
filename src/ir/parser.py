@@ -1915,6 +1915,10 @@ class _ModelBuilder:
             # Check the summation body
             if self._contains_function_call(expr.body):
                 return True
+        if isinstance(expr, IndexOffset):
+            # Check the offset expression recursively
+            if self._contains_function_call(expr.offset):
+                return True
         return False
 
     def _extract_constant(self, expr: Expr, context: str) -> float:

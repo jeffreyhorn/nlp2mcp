@@ -4,7 +4,7 @@ Sprint 10 Day 4: Test that parameter assignments containing function calls
 are stored as expressions (Call AST nodes) rather than being evaluated.
 
 Test coverage:
-- Aggregation functions (smin, smax, sum)
+- Aggregation functions (min, max)
 - Mathematical functions (sqrt, sqr, log)
 - Nested function calls
 - Backward compatibility (simple value assignments)
