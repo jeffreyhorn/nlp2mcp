@@ -5,8 +5,12 @@ These tests verify that function calls are properly detected, stored as expressi
 and work in realistic scenarios.
 """
 
+import pytest
+
 from src.ir.ast import Call
 from src.ir.parser import parse_model_file
+
+pytestmark = pytest.mark.integration
 
 
 class TestMathematicalFunctions:
