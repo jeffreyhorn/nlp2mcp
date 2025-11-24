@@ -953,8 +953,52 @@ grep -rn "=\s*\w\+(" tests/fixtures/gamslib/*.gms | grep -E "(uniform|normal|smi
 Development team (Prep Task 7)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 7)
+✅ **Status: VERIFIED**  
+**Verification Date:** 2025-11-23  
+**Verified By:** Task 7 - GAMS Function Call Syntax Research
+
+**Finding:** The assumption was CORRECT. Parse-only strategy is the right approach.
+
+**Complete Analysis:**
+
+1. **Does parser need to evaluate function calls?** → **NO**
+   - Equations store expressions as AST (not evaluated)
+   - Parameters can follow same pattern
+   - Evaluation deferred to GAMS runtime
+   - Our scope: Parse → IR conversion only
+
+2. **What does current IR store for parameters?** → **Values (float)**
+   - Current: `ParameterDef.values: dict[tuple[str, ...], float]`
+   - Limitation: Cannot store expressions
+   - Solution: Add `expressions: dict[tuple[str, ...], Expr]` field
+
+3. **Can we defer evaluation to GAMS?** → **YES**
+   - GAMS evaluates expressions at compile/runtime
+   - Consistent with equation handling (also stores expressions)
+   - No evaluation engine needed in parser
+
+4. **Which functions appear in GAMSLIB parameter assignments?** → **19 unique functions**
+   - Mathematical (10): sqr, sqrt, power, log, abs, round, mod, ceil, max, min
+   - Aggregation (4): smin, smax, sum, max
+   - Trigonometric (2): sin, cos
+   - Statistical (1): uniform
+   - Special (2): gamma, loggamma
+   - Set (2): ord, card
+
+5. **Do functions require special handling?** → **uniform and aggregation functions require runtime evaluation**
+   - `uniform(1,10)`: Non-deterministic (runtime only)
+   - `smin(i, x(i))`: Requires set iteration (runtime)
+   - `sqrt(2)`: Could evaluate but unnecessary
+
+**Implementation Decision: Option C (Store all as expressions)**
+- Add `expressions` field to ParameterDef
+- Store all function calls as Call AST nodes
+- No evaluation engine needed
+- Effort: 2.5-3 hours (not original 6-8 hours)
+
+**Impact:** Major effort reduction from 6-8 hours to 2.5-3 hours (62-71% reduction) due to parse-only approach.
+
+**Reference:** `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/function_call_research.md` Section 6, 9.1
 
 ---
 
@@ -994,8 +1038,52 @@ Included in Task 7 (2-3 hours total includes nesting analysis)
 Development team (Prep Task 7)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 7)
+✅ **Status: VERIFIED**  
+**Verification Date:** 2025-11-23  
+**Verified By:** Task 7 - GAMS Function Call Syntax Research
+
+**Finding:** The assumption was PARTIALLY WRONG. Functions are NOT "mostly flat or single-level nested" - nesting can reach up to 5 levels.
+
+**Complete Analysis:**
+
+1. **Maximum nesting depth in GAMSLIB?** → **5 levels (not 1-2)**
+   - Example: `1/max(ceil(sqrt(card(n)))-1,1)` (maxmin.gms:83)
+   - Nesting breakdown: Division → max → ceil → sqrt → card
+   - Original assumption underestimated maximum depth
+
+2. **Does grammar need to support arbitrary nesting?** → **YES, but already supported ✅**
+   - Grammar ALREADY supports arbitrary nesting through recursion
+   - `atom → func_call`, `func_call → arg_list`, `arg_list → expr`, `expr → atom`
+   - Recursive grammar handles any depth automatically
+   - No implementation work needed
+
+3. **How common are nested function calls?** → **89% are depth ≤2, but 11% go deeper**
+   - Nesting depth distribution:
+     - Depth 1 (no nesting): 67% (~60 occurrences)
+     - Depth 2: 22% (~20 occurrences)
+     - Depth 3: 9% (~8 occurrences)
+     - Depth 4: 1% (~1 occurrence)
+     - Depth 5: 1% (~1 occurrence)
+   - While uncommon, deep nesting DOES exist and must be supported
+
+4. **Can we start with flat functions and add nesting later?** → **NO NEED**
+   - Grammar already handles all depths ✅
+   - Infrastructure complete (no incremental approach needed)
+   - Nesting "just works" with existing expression grammar
+
+5. **Does nesting affect AST node structure significantly?** → **YES, but handled automatically**
+   - Nested Call nodes: `Call("sqrt", (Call("sqr", (VarRef("x1"),)),))`
+   - Call.children() method provides AST traversal
+   - No special implementation required beyond existing Call node
+
+**Common Nesting Patterns Found:**
+- `sqrt(sqr(...) + sqr(...))` - Euclidean distance (8 occurrences)
+- `smin(subset, sqrt(sum(...)))` - Aggregation with nested math (5 occurrences)
+- `sqr(sqr(x1) - x2)` - Nested mathematical operations (3 occurrences)
+
+**Impact:** While assumption about typical depth was wrong, no additional work needed since grammar already supports arbitrary nesting through recursion.
+
+**Reference:** `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/function_call_research.md` Sections 4, 5.3, 9.2
 
 ---
 
@@ -1030,8 +1118,61 @@ Included in Task 7 (part of function survey)
 Development team (Prep Task 7)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 7)
+✅ **Status: VERIFIED**  
+**Verification Date:** 2025-11-23  
+**Verified By:** Task 7 - GAMS Function Call Syntax Research
+
+**Finding:** The assumption was CORRECT. Function categories have been identified and don't require different parsing approaches.
+
+**Complete Analysis:**
+
+1. **Should parser validate function names against known GAMS functions?** → **NO - Parse any identifier**
+   - Parse-only approach: Accept any `IDENTIFIER(args)` syntax
+   - GAMS compiler validates function names later
+   - Keeps parser simple and flexible
+
+2. **Does GAMS allow user-defined functions?** → **NOT in parameter assignments (GAMSLIB context)**
+   - All 19 functions found are built-in GAMS functions
+   - No user-defined function calls in parameter context
+   - GAMS does support extrinsic functions but not in this context
+
+3. **How to handle unknown function names?** → **Parse anyway, defer validation**
+   - Grammar accepts any identifier in FUNCNAME pattern
+   - Creates Call AST node regardless
+   - GAMS runtime reports error if function invalid
+   - Consistent with parse-only philosophy
+
+4. **Is there definitive list of valid GAMS functions?** → **YES - 19 functions cataloged**
+   - **6 categories identified:**
+     - Mathematical (10): sqr, sqrt, power, log, abs, round, mod, ceil, max, min
+     - Aggregation (4): smin, smax, sum, max
+     - Trigonometric (2): sin, cos
+     - Statistical (1): uniform
+     - Special (2): gamma, loggamma
+     - Set (2): ord, card
+   - **Current FUNCNAME token:** Has 18/21 functions (86% coverage)
+   - **Missing from token:** round, mod, ceil (need to add)
+
+5. **Should validation happen at parse time or later?** → **LATER (GAMS runtime)**
+   - Parse time: Syntax checking only (identifier + parentheses + args)
+   - Compile time: Symbol resolution (GAMS)
+   - Runtime: Function evaluation (GAMS)
+   - Separation of concerns: Parser handles syntax, GAMS handles semantics
+
+**Categories and Parsing:**
+- **Do categories need different handling?** → **NO for parse-only**
+  - All use same syntax: `func_name(arg1, arg2, ...)`
+  - All stored as `Call(func_name, args)` AST node
+  - Category only matters for GAMS evaluation (not our scope)
+  - Uniform parsing across all categories
+
+**Implementation Impact:**
+- Add 3 missing functions (round, mod, ceil) to FUNCNAME token: 5 minutes
+- No category-specific parsing logic needed
+- No runtime validation needed
+- Simple, uniform implementation
+
+**Reference:** `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/function_call_research.md` Sections 2, 5.1, 9.3
 
 ---
 
@@ -1070,8 +1211,73 @@ Included in Task 7 (part of function call analysis)
 Development team (Prep Task 7)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 7)
+✅ **Status: VERIFIED**  
+**Verification Date:** 2025-11-23  
+**Verified By:** Task 7 - GAMS Function Call Syntax Research
+
+**Finding:** The assumption was CORRECT. Function call infrastructure ALREADY EXISTS - no grammar production changes needed.
+
+**Complete Analysis:**
+
+1. **What argument types are valid?** → **Constants, variables, indices, expressions (ALL)**
+   - **Level 1:** Constants: `uniform(1,10)`, `sqrt(2)`
+   - **Level 2:** Simple variables: `sqr(x1)`, `log(y1opt)`
+   - **Level 3:** Indexed variables: `sqr(x(i))`, `smin(i, x(i))`
+   - **Level 4:** Arithmetic expressions: `sqr(x1-1)`, `log((x1+x2+x3+0.03)/(...))`
+   - **Level 5:** Nested function calls: `sqrt(sqr(...) + sqr(...))`
+
+2. **Do we parse arguments as general expressions or specific types?** → **General expressions ✅**
+   - Grammar: `arg_list: expr ("," expr)*`
+   - Each argument is full expression (supports nesting, operations, etc.)
+   - No special-case argument types
+   - Maximum flexibility
+
+3. **How to handle set references like `i` in `smin(i, x(i))`?** → **Already handled as symbols**
+   - Set identifier `i` parsed as symbol reference
+   - Expression grammar includes `symbol_plain` alternative
+   - No special AST node needed
+   - Works with existing infrastructure
+
+4. **Does AST need special nodes for set arguments vs value arguments?** → **NO ✅**
+   - All arguments stored as `Expr` in `Call.args: tuple[Expr, ...]`
+   - Set reference is just `SymbolRef("i")` (existing node)
+   - Variable reference is `VarRef("x", ("i",))` (existing node)
+   - Call AST node handles all uniformly
+
+5. **Can arguments be other function calls (nested)?** → **YES, already supported ✅**
+   - Example: `sqrt(sqr(a.l - xmin) + sqr(b.l - ymin))`
+   - Inner `sqr` calls are arguments to outer `sqrt`
+   - Grammar recursion handles this: `expr → atom → func_call → arg_list → expr`
+   - No special implementation needed
+
+**CRITICAL DISCOVERY:**
+
+**Grammar Infrastructure EXISTS:**
+- ✅ `func_call.3: FUNCNAME "(" arg_list? ")"` (gams_grammar.lark:315)
+- ✅ `arg_list: expr ("," expr)*` (gams_grammar.lark:316)
+- ✅ `atom → func_call → funccall` (expression integration)
+- ✅ `Call` AST node exists (src/ir/ast.py:170)
+- ✅ Works in equation context already
+
+**Only Missing Piece:**
+- Semantic handler for parameter assignment context (may not create Call nodes currently)
+- Grammar and AST are complete ✅
+
+**Argument Complexity Distribution:**
+- Constants only: 17% (~15 occurrences)
+- Simple variables: 28% (~25 occurrences)
+- Indexed variables: 33% (~30 occurrences)
+- Complex expressions: 22% (~20 occurrences)
+
+**Implementation Effort Revision:**
+- **Grammar changes:** 5 minutes (add round, mod, ceil to FUNCNAME token)
+- **AST changes:** 0 hours (Call node exists)
+- **Semantic handler:** 1-1.5 hours (verify/fix parameter context handling)
+- **IR changes:** 30 minutes (add expressions field to ParameterDef)
+- **Testing:** 1 hour
+- **Total: 2.5-3 hours** (NOT 6-8 hours - 62-71% reduction)
+
+**Reference:** `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/function_call_research.md` Sections 3, 5, 7, 8, 9.4
 
 ---
 

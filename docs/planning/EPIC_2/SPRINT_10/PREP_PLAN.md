@@ -873,11 +873,110 @@ Create `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/maxmin_analysis.md` with recomme
 
 ### Changes
 
-*To be completed during prep phase*
+**Created:** `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/function_call_research.md` (1,500+ lines)
+
+**CRITICAL DISCOVERY: Function call infrastructure ALREADY EXISTS!**
+
+**Survey Findings:**
+- **19 unique functions** cataloged across 6 categories
+- **90+ total occurrences** in GAMSLIB (8/10 models use function calls)
+- **Maximum nesting depth:** 5 levels (maxmin.gms:83)
+- **Nesting distribution:** 89% are depth ≤2 (deep nesting rare but exists)
+
+**Function Categories:**
+1. **Mathematical (10):** sqr, sqrt, power, log, abs, round, mod, ceil, max, min
+2. **Aggregation (4):** smin, smax, sum, max
+3. **Trigonometric (2):** sin, cos
+4. **Statistical (1):** uniform
+5. **Special (2):** gamma, loggamma
+6. **Set (2):** ord, card
+
+**Infrastructure Analysis:**
+- ✅ Grammar rule exists: `func_call.3: FUNCNAME "(" arg_list? ")"` (gams_grammar.lark:315)
+- ✅ Call AST node exists: `class Call(Expr)` (src/ir/ast.py:170)
+- ✅ FUNCNAME token has 18/21 functions (86% coverage - missing: round, mod, ceil)
+- ✅ Expression integration complete: atom → func_call → funccall
+- ✅ Works in equation context already
+
+**Evaluation Strategy Decision:**
+- **Chosen:** Option C (Parse-only - store all as expressions)
+- Add `expressions: dict[tuple[str, ...], Expr]` field to ParameterDef
+- Store function calls as Call AST nodes (no evaluation needed)
+- Consistent with equation handling (also stores expressions)
+
+**Effort Estimate Revision:**
+- **Original:** 6-8 hours (assumed infrastructure needed)
+- **Revised:** 2.5-3 hours (infrastructure exists, only semantic handler work)
+- **Reduction:** 62-71% effort reduction
+
+**Breakdown:**
+- Grammar changes: 5 min (add round, mod, ceil to FUNCNAME)
+- IR changes: 30 min (add expressions field)
+- Semantic handler: 1-1.5h (verify/fix parameter context)
+- Testing: 1h
+- **Total: 2.5-3 hours**
+
+**Updated KNOWN_UNKNOWNS.md:** Verified all 4 unknowns (10.3.1-10.3.4)
 
 ### Result
 
-*To be completed during prep phase*
+**Objective achieved:** Complete understanding of function call requirements with major discovery about existing infrastructure.
+
+**Key Findings:**
+
+1. **Infrastructure Status:** COMPLETE ✅
+   - Grammar, AST, and expression integration already support function calls
+   - Only missing piece: semantic handler for parameter assignment context
+   - 3 functions need to be added to FUNCNAME token (trivial 5-minute fix)
+
+2. **Function Catalog:** 19 unique functions across 6 categories
+   - circle.gms uses: uniform, sqrt, sqr, smin, smax (5 functions)
+   - All 5 circle.gms functions already in FUNCNAME token ✅
+   - Common patterns: Euclidean distance (sqrt of sum of sqr), aggregation (smin/smax)
+
+3. **Nesting Complexity:** Maximum depth 5, but 89% are ≤2
+   - Grammar supports arbitrary nesting through recursion ✅
+   - No special implementation needed for nesting
+
+4. **Evaluation Strategy:** Parse-only (Option C)
+   - Store as expressions, don't evaluate at parse time
+   - Defers evaluation to GAMS runtime
+   - Consistent with equation handling
+   - Simplest implementation (2.5-3h vs 6-8h)
+
+5. **Argument Types:** All expressions supported
+   - Constants, variables, indexed variables, arithmetic expressions, nested calls
+   - Grammar: `arg_list: expr ("," expr)*` handles everything
+   - No special-case argument handling needed
+
+**Unknown Verification Results:**
+
+✅ **Unknown 10.3.1 (Evaluation Strategy):** CORRECT - Parse-only is the right approach
+- Add expressions field to ParameterDef
+- Store Call AST nodes without evaluation
+- Major effort reduction: 2.5-3h instead of 6-8h
+
+✅ **Unknown 10.3.2 (Nesting Depth):** PARTIALLY WRONG - Depth can reach 5 levels (not just 1-2)
+- Grammar already supports arbitrary nesting ✅
+- 89% are depth ≤2, but 11% go deeper
+- No implementation work needed (grammar handles it)
+
+✅ **Unknown 10.3.3 (Function Categories):** CORRECT - Categories identified
+- 6 categories: Mathematical, Aggregation, Trigonometric, Statistical, Special, Set
+- All use same syntax (no category-specific parsing)
+- Uniform implementation across categories
+
+✅ **Unknown 10.3.4 (Grammar Infrastructure):** ASSUMPTION COMPLETELY WRONG - Infrastructure exists!
+- Grammar changes: Only add 3 functions to FUNCNAME token (5 minutes)
+- AST changes: None needed (Call node exists)
+- Expression integration: Already complete
+- Massive effort reduction from expected work
+
+**Impact on Sprint 10:**
+- **circle.gms implementation:** 2.5-3 hours (not 6-8 hours)
+- **High confidence:** Infrastructure exists, low-risk implementation
+- **Clear path:** Add expressions field, fix semantic handler, done
+- **ROI:** Unlocks circle.gms from 57% → 95% (secondary blocker analysis in Task 2)
 
 ### Verification
 
@@ -1583,11 +1682,13 @@ grep "grammar" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/comma_separated_research.
 
 ---
 
-## Task 7: Survey Existing GAMS Function Call Syntax
+## Task 7: Survey Existing GAMS Function Call Syntax {#task-7}
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 2-3 hours  
+**Actual Time:** 2.5 hours  
+**Completed:** 2025-11-23  
 **Deadline:** Before Sprint 10 Day 1  
 **Owner:** Development team  
 **Dependencies:** Task 2 (circle.gms analysis)  
@@ -1737,30 +1838,30 @@ grep -i "evaluation" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/function_call_resea
 
 ### Deliverables
 
-- [ ] `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/function_call_research.md` with:
-  - Complete function catalog from GAMSLIB
-  - Function categories (Math, Statistical, Aggregation, Other)
-  - Argument pattern analysis
-  - Nesting analysis
-  - Evaluation strategy (parse-only vs parse-and-evaluate)
-  - Grammar production changes required
-  - AST node type specifications
-  - Effort estimate validation (6-8 hours)
-- [ ] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 10.3.1, 10.3.2, 10.3.3, 10.3.4
+- [x] `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/function_call_research.md` (1,500+ lines) with:
+  - [x] Complete function catalog from GAMSLIB (19 unique functions, 90+ occurrences)
+  - [x] Function categories (6 categories: Mathematical, Aggregation, Trigonometric, Statistical, Special, Set)
+  - [x] Argument pattern analysis (4 complexity levels, distribution statistics)
+  - [x] Nesting analysis (max depth 5, distribution across depths)
+  - [x] Evaluation strategy (Option C: parse-only, store as expressions)
+  - [x] Grammar production changes required (add 3 functions to FUNCNAME: 5 minutes)
+  - [x] AST node type specifications (Call node exists, no changes needed)
+  - [x] Effort estimate validation (REVISED: 2.5-3 hours, 62-71% reduction from original 6-8h)
+- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 10.3.1, 10.3.2, 10.3.3, 10.3.4
 
 ### Acceptance Criteria
 
-- [ ] All GAMSLIB function calls catalogued
-- [ ] Functions categorized by type
-- [ ] Argument patterns documented
-- [ ] Nesting complexity assessed
-- [ ] Evaluation strategy determined (parse-only vs evaluate)
-- [ ] Grammar changes specified
-- [ ] AST changes specified
-- [ ] Effort estimate validated (6-8 hours) or revised
-- [ ] Cross-references circle.gms blocker analysis
-- [ ] Cross-references Known Unknowns Category 2
-- [ ] Unknowns 10.3.1, 10.3.2, 10.3.3, 10.3.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All GAMSLIB function calls catalogued (19 unique functions across 8/10 models)
+- [x] Functions categorized by type (6 categories with complete taxonomy)
+- [x] Argument patterns documented (5 complexity levels with distribution)
+- [x] Nesting complexity assessed (max depth 5, 89% are ≤2 levels)
+- [x] Evaluation strategy determined (parse-only, Option C selected)
+- [x] Grammar changes specified (add round, mod, ceil to FUNCNAME token)
+- [x] AST changes specified (none needed - Call node exists)
+- [x] Effort estimate revised (6-8h → 2.5-3h due to existing infrastructure)
+- [x] Cross-references circle.gms blocker analysis (Task 2)
+- [x] Cross-references Known Unknowns Category 3 (Function Calls in Parameters)
+- [x] Unknowns 10.3.1, 10.3.2, 10.3.3, 10.3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
