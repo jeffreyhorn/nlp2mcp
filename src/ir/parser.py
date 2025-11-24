@@ -77,6 +77,9 @@ _VAR_KIND_MAP = {
     "INTEGER_K": VarKind.INTEGER,
 }
 
+# Aggregation functions that bind a set iterator as first argument (Sprint 10 Day 6)
+_AGGREGATION_FUNCTIONS = {"smin", "smax", "sum", "prod", "card"}
+
 _FUNCTION_NAMES = {"abs", "exp", "log", "sqrt", "sin", "cos", "tan", "sqr"}
 
 
@@ -1549,14 +1552,12 @@ class _ModelBuilder:
             func_name = _token_text(func_tree.children[0]).lower()
             args: list[Expr] = []
 
-            # Sprint 10 Day 6: Handle aggregation functions with set iterators
-            # Aggregation functions like smin(i, x(i)) have a set iterator as first arg
-            aggregation_functions = {"smin", "smax", "sum", "prod", "card"}
-
             if len(func_tree.children) > 1:
                 arg_list = func_tree.children[1]
 
-                if func_name in aggregation_functions and len(arg_list.children) >= 1:
+                # Sprint 10 Day 6: Handle aggregation functions with set iterators
+                # Aggregation functions like smin(i, x(i)) have a set iterator as first arg
+                if func_name in _AGGREGATION_FUNCTIONS and len(arg_list.children) >= 1:
                     # First argument is the set iterator (creates local scope)
                     first_arg = arg_list.children[0]
                     # Check if first arg is a simple symbol (symbol_plain tree with single ID token)
