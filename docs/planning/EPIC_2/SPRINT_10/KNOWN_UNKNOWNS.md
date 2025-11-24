@@ -710,8 +710,37 @@ grep "Variable.*," tests/fixtures/gamslib/{circle,himmel16,maxmin,mingamma}.gms
 Development team (Prep Task 6)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 6)
+✅ **Status: VERIFIED** (Task 6 completed 2025-11-23)
+
+**Finding:** Comma-separated declarations are **EXTREMELY COMMON** (80% of models), MUCH MORE than assumed 40-50%.
+
+**Complete Analysis:**
+1. **How many models use this pattern?** → **8/10 models (80%)**
+   - Variable: 6/10 models (60%)
+   - Equation: 6/10 models (60%)
+   - Parameter: 1/10 models (10%)
+   - Scalar: 2/10 models (20%)
+   - Set: 0/10 models (0%)
+
+2. **Total instances found:** 14 instances across 10 models
+   - Average: 1.4 comma-separated declarations per model
+
+3. **Does any blocked model need this?** → **YES - mingamma.gms**
+   - mingamma.gms uses Scalar comma-separated with inline values (lines 30-38)
+   - This is the SECONDARY blocker discovered in Task 5
+   - Variable comma-separated used in: mingamma (line 13), rbrock (line 13), trig (line 15)
+
+4. **Is this quick win worth 4-6 hours?** → **YES - HIGH ROI**
+   - Affects 80% of models (fundamental GAMS pattern, not edge case)
+   - Unlocks mingamma.gms to 100% parse (currently 65%)
+   - Simplifies 7 other models that already parse
+
+5. **Which types use commas most?** → **Variable and Equation (60% each)**
+
+**Impact:** This is a **HIGH-PRIORITY** feature, not optional. Affects majority of models.
+
+**Reference:** `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/comma_separated_research.md` Section 1
+**Reference:** `docs/planning/EPIC_2/SPRINT_10/comma_separated_examples.txt`
 
 ---
 
@@ -751,8 +780,47 @@ grep -r "Variable.*,.*," tests/fixtures/gamslib/ | head -20  # Multiple commas
 Development team (Prep Task 6)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 6)
+✅ **Status: VERIFIED** (Task 6 completed 2025-11-23)
+
+**Finding:** GAMS officially supports mixing inline values with plain declarations. **This is VALID GAMS syntax.**
+
+**Complete Analysis:**
+1. **Can attributes be specified per item?** → **NO per-item attributes**
+   - Type modifiers (Positive, Negative) apply to ALL items: `Positive Variable x, y, z;`
+   - NO per-item bounds found: `Variable x /lo 0/, y;` NOT used in GAMSLib
+   - Scalar inline values ARE supported: `Scalar x1 /5.0/, x2;` (different from bounds)
+
+2. **Does GAMS support mixed attributes?** → **NO mixed types on one line**
+   - `Positive Variable x, y; Free Variable z;` NOT valid (separate statements required)
+   - Type modifier applies uniformly to all items in comma-separated list
+
+3. **Exact grammar for comma-separated declarations:**
+   - Variable: `[var_type] variable[s] var_name [text] {, var_name [text]}`
+   - Scalar: `scalar[s] scalar_name [text] [/value/] {, scalar_name [text] [/value/]}`
+   - **KEY:** Scalar inline values `/value/` are OPTIONAL PER ITEM
+
+4. **Edge cases found:** → **NONE in GAMSLib**
+   - NO trailing commas in any model
+   - NO inline comments within comma lists
+   - Consistent whitespace handling (all use standard spacing)
+
+5. **Implementation complexity:** → **SIMPLE for most, MEDIUM for Scalar**
+   - Variable, Parameter, Equation: ✅ ALREADY SUPPORTED via `id_list` rule
+   - Scalar: ❌ NEEDS FIX - `scalar_list` doesn't support inline values
+
+**GAMS Documentation Evidence:**
+```gams
+Scalar
+    rho  "discount rate"                           / .15 /
+    irr  "internal rate of return"
+    life "financial lifetime of productive units"  / 20  /;
+```
+This official example shows `rho` and `life` with inline values, `irr` without - ALL IN ONE STATEMENT.
+
+**Impact:** Parser MUST support Scalar inline value mixing (mingamma.gms blocker).
+
+**Reference:** `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/comma_separated_research.md` Section 3
+**Source:** https://www.gams.com/latest/docs/UG_DataEntry.html
 
 ---
 
@@ -788,8 +856,56 @@ Included in Task 6 (2 hours total includes this analysis)
 Development team (Prep Task 6)
 
 ### Verification Results
-🔍 **Status: INCOMPLETE**  
-To be completed during prep phase (Task 6)
+✅ **Status: VERIFIED** (Task 6 completed 2025-11-23)
+
+**Finding:** Assumption was WRONG. Only Scalar needs grammar changes (NOT 4 types). Grammar work is 0.5-1.0h (NOT 2-3h).
+
+**Complete Analysis:**
+1. **Which grammar rules need changes?** → **ONLY Scalar declarations**
+   - Variable: ✅ ALREADY SUPPORTS comma-separated (via `var_list` with `id_list`)
+   - Parameter: ✅ ALREADY SUPPORTS comma-separated (via `param_list`)
+   - Equation: ✅ ALREADY SUPPORTS comma-separated (via `eqn_head_list`)
+   - Scalar: ❌ NEEDS FIX - `scalar_list` rule doesn't support inline values
+
+2. **Are AST changes required?** → **NO - IR already handles scalars**
+   - Need to add `scalar_item` rule (2 alternatives)
+   - Modify `scalar_list` to use `scalar_item ("," scalar_item)*`
+   - No new AST nodes required
+
+3. **How many test cases needed?** → **7 test suites (comprehensive coverage)**
+   - Simple comma-separated (no inline values)
+   - All with inline values
+   - Mixed inline values (mingamma.gms pattern)
+   - Single scalar with value
+   - Negative values
+   - Scientific notation
+   - With description text
+
+4. **Do comma-separated declarations interact with other features?** → **NO**
+   - Grammar changes are localized to Scalar declarations
+   - No dependencies on other parser features
+   - Backward compatible (existing tests unaffected)
+
+5. **Is 4-6 hour estimate realistic?** → **YES - validated breakdown:**
+   - Grammar changes: 0.5-1.0h (NOT 2-3h - only Scalar needs work)
+   - Semantic handler: 2.0-2.5h
+   - Test coverage: 1.5-2.0h
+   - **Total: 4.0-5.5 hours** ✅
+
+**Grammar Changes Required:**
+```lark
+scalar_decl: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?      -> scalar_with_data
+           | ID desc_text ASSIGN expr                                   -> scalar_with_assign
+           | scalar_item ("," scalar_item)*                             -> scalar_list
+           | ID desc_text                                               -> scalar_plain
+
+scalar_item: ID desc_text "/" scalar_data_items "/"                     -> scalar_item_with_data
+           | ID desc_text                                               -> scalar_item_plain
+```
+
+**Impact:** Implementation is SIMPLER than expected. Most work is semantic handling (2-2.5h), not grammar (0.5-1h).
+
+**Reference:** `docs/planning/EPIC_2/SPRINT_10/BLOCKERS/comma_separated_research.md` Sections 4-6
 
 ---
 

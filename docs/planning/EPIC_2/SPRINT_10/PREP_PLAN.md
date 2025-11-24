@@ -1339,7 +1339,9 @@ scalar_decl: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?      -> scala
 
 ## Task 6: Research Comma-Separated Declaration Patterns
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
+**Actual Time:** 2.0 hours  
+**Completed:** 2025-11-23  
 **Priority:** High  
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 10 Day 1  
@@ -1514,6 +1516,70 @@ grep "grammar" docs/planning/EPIC_2/SPRINT_10/BLOCKERS/comma_separated_research.
 - [ ] No surprising edge cases that increase complexity
 - [ ] Cross-references Known Unknowns Category 2 (Semantic)
 - [ ] Unknowns 10.2.1, 10.2.2, 10.2.3 verified and updated in KNOWN_UNKNOWNS.md
+
+### Changes
+
+- Created `comma_separated_examples.txt` with 14 instances catalogued from 10 GAMSLib models
+- Created `comma_separated_research.md` (comprehensive research document, ~1500 lines)
+- Updated KNOWN_UNKNOWNS.md with 3 unknown verifications (10.2.1, 10.2.2, 10.2.3)
+- Surveyed 10 GAMSLib models for comma-separated patterns across 5 declaration types
+- Researched GAMS official documentation for syntax specifications
+- Identified grammar production requirements (only Scalar needs changes)
+
+### Result
+
+**CRITICAL FINDING: Comma-separated declarations are EXTREMELY COMMON (80% of models), not optional.**
+
+**Pattern Frequency (MUCH higher than assumed):**
+- Variable: 6/10 models (60%) - 6 instances
+- Equation: 6/10 models (60%) - 6 instances
+- Scalar: 2/10 models (20%) - 2 instances (1 is mingamma.gms blocker)
+- Parameter: 1/10 models (10%) - 1 instance
+- Set: 0/10 models (0%)
+- **Total: 8/10 models (80%) use comma-separated declarations** (assumed 40-50%)
+
+**Grammar Status Discovery:**
+- Variable: ✅ ALREADY SUPPORTED (via `var_list` rule with `id_list`)
+- Parameter: ✅ ALREADY SUPPORTED (via `param_list` rule)
+- Equation: ✅ ALREADY SUPPORTED (via `eqn_head_list` rule)
+- Scalar: ❌ NEEDS FIX - `scalar_list` rule doesn't support inline values
+
+**GAMS Documentation Confirmation:**
+- Mixing inline values with plain declarations is **VALID GAMS syntax** (officially documented)
+- Type modifiers (Positive, Negative) apply to ALL items in comma-separated list
+- No per-item attributes found (only type-level modifiers)
+- No edge cases found (no trailing commas, inline comments, mixed types)
+
+**mingamma.gms Blocker Confirmed:**
+- Lines 30-38: Scalar comma-separated with mixed inline values
+- Pattern: 7 scalars, some with `/value/`, some without
+- This is the SECONDARY blocker discovered in Task 5
+- Unlocking this pattern enables mingamma.gms: 65% → 100%
+
+**Effort Estimate Validated:**
+- Grammar changes: 0.5-1.0h (NOT 2-3h - only Scalar needs work)
+- Semantic handler: 2.0-2.5h
+- Test coverage: 1.5-2.0h
+- **Total: 4.0-5.5 hours** ✅ (within original 4-6h estimate)
+
+**Implementation Approach Defined:**
+- Add `scalar_item` rule with 2 alternatives (`scalar_item_with_data`, `scalar_item_plain`)
+- Modify `scalar_list` to use `scalar_item ("," scalar_item)*`
+- No AST changes required (IR already handles scalars)
+- 7 test suites specified for comprehensive coverage
+
+**Sprint 10 Impact:**
+- HIGH-PRIORITY feature (affects 80% of models, not niche pattern)
+- Unlocks mingamma.gms to 100% parse
+- Simplifies 7 other models that already parse
+- Expected outcome: 8/10 → 9/10 models (90% success rate)
+
+**Unknowns Verified:**
+- 10.2.1: ✅ Frequency is 80% (NOT assumed 40-50%) - HIGH-PRIORITY
+- 10.2.2: ✅ Mixing inline values is valid GAMS syntax (documented)
+- 10.2.3: ✅ Only Scalar needs grammar changes (NOT 4 types) - grammar work is 0.5-1.0h (NOT 2-3h)
+
+**All deliverables created, all acceptance criteria met.**
 
 ---
 
