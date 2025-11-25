@@ -7,6 +7,119 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 11: Prep Phase - Task 4: Research Common Subexpression Elimination (CSE) - 2025-11-25
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Researched CSE algorithms, designed cost model and integration approach, and made Sprint 11 scope decision. **Decision:** Implement T5.1 (Expensive Function CSE) only in Sprint 11 as MEDIUM priority (5h effort), defer advanced CSE patterns to Sprint 12. **Cost model:** Cost-weighted thresholds (≥2 for expensive ops, ≥3 for cheap ops) with opt-in `--cse` flag.
+
+#### Achievements
+
+**CSE Research Document Created (cse_research.md, 8 sections, ~5,000 lines):**
+- ✅ **Section 1: Background and Motivation** - CSE overview, AD context, PROJECT_PLAN.md requirements
+- ✅ **Section 2: CSE Algorithm Survey** - Compared LLVM GVN-PRE, GCC CSE, SymPy hash-based, AD tools
+- ✅ **Section 3: Cost Model Research** - Operation costs (exp/log=5, trig=4, div/pow=3, mul=2, add=1), overhead analysis, threshold derivation
+- ✅ **Section 4: Integration Design** - Pipeline position (Step 8), algorithm implementation, GAMS code generation, flag design
+- ✅ **Section 5: Scope Decision** - Analysis framework (value/complexity/risk/time/dependencies), recommendation with rationale
+- ✅ **Section 6: Implementation Plan** - Sprint 11 T5.1 (5 phases, 5.5h) vs Sprint 12 T5.2-T5.4 (6h)
+- ✅ **Section 7: Risk Assessment** - 5 risks identified with mitigations (overhead, code gen bugs, factoring interaction, naming conflicts, over-aggressive CSE)
+- ✅ **Section 8: References** - 13 academic/industry sources (CMU lectures, LLVM/GCC docs, SymPy code, performance papers, AD literature)
+
+**Key Research Findings:**
+
+1. **Algorithm Selection:** Hash-based tree traversal (SymPy approach)
+   - **Complexity:** O(n) average, O(n²) worst case
+   - **Advantages:** Simple, works on expression DAGs, no SSA/control-flow complexity
+   - **Comparison:** LLVM GVN-PRE (too complex, O(n²)), GCC local CSE (concept applicable), dvda explicit DAG (future enhancement)
+
+2. **Cost Model Design:**
+   - **Formula:** `operation_cost × (reuse_count - 1) > 1` (CSE beneficial if savings > overhead)
+   - **Thresholds:** Expensive ops (cost ≥3) need ≥2 reuses, cheap ops (cost ≤2) need ≥3 reuses
+   - **Operation Costs:** Derived from CPU cycle measurements (exp/log ~200 cycles, sin/cos ~100-200, arithmetic ~3-5)
+   - **Mathematical Proof:** Appendix A shows derivation from first principles
+   - **Improvement over SymPy:** SymPy uses fixed ≥2 threshold; cost-aware model avoids low-value CSE (e.g., `x+y` appearing 2 times)
+
+3. **Integration Design:**
+   - **Pipeline Position:** Step 8 (final pass after all algebraic simplifications)
+   - **Rationale:** Factoring eliminates most redundancy first; CSE catches what factoring missed
+   - **Temporary Variables:** `cse_tmp_0`, `cse_tmp_1`, etc. (unique naming)
+   - **GAMS Code Gen:** Emit `Scalar` declarations and assignments before equations
+   - **Metadata:** Store temporaries in expression attribute for code generator
+
+4. **Flag Design:**
+   - `--cse`: Enable CSE (default: disabled, opt-in)
+   - `--cse-threshold=N`: Override reuse threshold (default: cost-weighted, range: 2-10)
+   - `--cse-min-cost=N`: Only CSE ops with cost ≥N (default: 3 = expensive ops only, range: 1-5)
+   - **Rationale for opt-in:** CSE changes code structure; conservative default avoids surprises
+
+5. **Sprint 11 Scope Decision:** **Implement T5.1 (Expensive Function CSE) only**
+   - **Value:** Medium-high (5-10% typical FLOP reduction, 20-30% best case for exp/log heavy models)
+   - **Complexity:** Low (~380 lines code, 5 phases)
+   - **Risk:** Low-medium (opt-in, well-understood, FD validated)
+   - **Effort:** 5 hours (fits Sprint 11 extended scope: 12.5h baseline + 5.5h MEDIUM = 18h total)
+   - **Defer to Sprint 12:** T5.2 (Nested CSE), T5.3 (Multiplicative CSE), T5.4 (CSE with Aliasing) - 6h additional
+
+**Unknown 1.9 Verification Results:**
+- ✅ **Question 1 (Cost-varying thresholds):** YES - ≥2 for expensive (cost ≥3), ≥3 for cheap (cost ≤2)
+- ✅ **Question 2 (Temp overhead):** ~1 operation equivalent (assignment cost) per temporary
+- ✅ **Question 3 (Cost model):** Formula derived: `operation_cost × (reuse_count - 1) > 1`
+- ✅ **Question 4 (Nested CSE):** Deferred to Sprint 12 (low priority, marginal value, factoring handles most cases)
+- ✅ **Question 5 (Opt-in vs default):** Opt-in via `--cse` flag (avoids surprise, conservative default)
+
+**Evidence Base:**
+- **Compiler implementations:** LLVM GVN-PRE (value numbering), GCC CSE (local/global passes)
+- **Symbolic math:** SymPy `cse()` source code analysis (hash-based, ≥2 threshold, no cost model)
+- **AD tools:** dvda (Haskell, explicit CSE on FunGraphs), reverse-mode tape minimization
+- **Performance data:** Stack Overflow (sin ~200 cycles), OpTuner paper (58× speed variation for transcendentals)
+- **Literature:** CMU compiler design lectures, AD/symbolic equivalence papers
+
+#### Implementation Estimates
+
+**Sprint 11 (T5.1 only):**
+- Core algorithm: 1.5h
+- Cost model: 0.5h
+- Pipeline integration: 0.5h
+- Code generation: 1h
+- Testing/validation: 1h
+- Documentation: 0.5h
+- **Total:** 5 hours (MEDIUM priority)
+
+**Sprint 12 (T5.2-T5.4 if needed):**
+- Nested CSE (T5.2): 2h
+- Canonicalization/aliasing (T5.4): 2h
+- Multiplicative CSE (T5.3): 1h (likely skip - factoring handles)
+- Testing/integration: 1h
+- **Total:** 6 hours
+
+#### Deliverables
+
+- ✅ `docs/planning/EPIC_2/SPRINT_11/cse_research.md` - Comprehensive research document (8 sections, ~5,000 lines)
+- ✅ `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` - Unknown 1.9 verified with cost model and scope decision
+- ✅ `docs/planning/EPIC_2/SPRINT_11/PREP_PLAN.md` - Task 4 marked COMPLETE with results summary
+- ✅ `CHANGELOG.md` - Task 4 entry documenting research findings and Sprint 11 decision
+
+#### Impact
+
+**Sprint 11 Scope:**
+- Add T5.1 to MEDIUM priority transformations (alongside T1.3, T3.2, T4.1)
+- Total Sprint 11 effort: 12.5h (HIGH baseline) + 5.5h (MEDIUM extended) = **18 hours**
+- Within available time (~20-22 hours based on Sprint 10 velocity)
+
+**Expected Benefits:**
+- 5-10% FLOP reduction typical (models with exp, log, trig in derivatives)
+- 20-30% FLOP reduction best case (exp/log heavy models)
+- No impact if disabled (opt-in default)
+- Foundation for Sprint 12 advanced CSE if benchmarks show high value
+
+**Next Steps:**
+- Proceed with Prep Task 5 (Prototype Factoring Algorithms)
+- Implement T5.1 during Sprint 11 execution (MEDIUM priority, 5h)
+- Benchmark T5.1 effectiveness to inform Sprint 12 CSE decisions
+
+---
+
 ### Sprint 11: Prep Phase - Task 3: Design Aggressive Simplification Architecture - 2025-11-25
 
 **Status:** ✅ COMPLETE
