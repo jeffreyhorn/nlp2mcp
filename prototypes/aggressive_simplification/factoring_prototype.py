@@ -12,15 +12,11 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ir.ast import Binary, Const, Expr, VarRef
-
-if TYPE_CHECKING:
-    pass
 
 
 def _flatten_addition(expr: Expr) -> list[Expr]:
@@ -69,32 +65,6 @@ def _rebuild_addition(terms: list[Expr]) -> Expr:
     for term in terms[1:]:
         result = Binary("+", result, term)
     return result
-
-
-def _get_common_factors(term1_factors: list[Expr], term2_factors: list[Expr]) -> list[Expr]:
-    """
-    Find common factors between two factor lists.
-
-    Uses AST equality (frozen dataclasses with __eq__).
-
-    Args:
-        term1_factors: Factors from first term
-        term2_factors: Factors from second term
-
-    Returns:
-        List of common factors (intersection)
-    """
-    common = []
-    remaining1 = list(term1_factors)
-    remaining2 = list(term2_factors)
-
-    for factor in term1_factors:
-        if factor in remaining2:
-            common.append(factor)
-            remaining1.remove(factor)
-            remaining2.remove(factor)
-
-    return common
 
 
 def factor_common_terms(expr: Expr) -> Expr:
