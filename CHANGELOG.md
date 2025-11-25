@@ -7,6 +7,156 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 11: Prep Phase - Task 5: Prototype Factoring Algorithms - 2025-11-25
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Prototyped distribution cancellation and multi-term factoring algorithms for aggressive simplification, **exceeding all performance and effectiveness targets**. Key finding: factoring achieves **39.2% average reduction** (nearly 2× the 20% target) with execution time **57× faster** than the 1ms threshold. Ready for Sprint 11 integration with **LOW risk**.
+
+#### Achievements
+
+**Prototype Implementation Complete:**
+- ✅ `prototypes/aggressive_simplification/factoring_prototype.py` - Core algorithms (~380 lines)
+  - `factor_common_terms()` - Distribution cancellation via set-based common factor detection
+  - `factor_multi_terms()` - Multi-term factoring (2×2 pattern matching, best-effort)
+  - Helper functions: `_flatten_addition()`, `_flatten_multiplication()`, `_rebuild_*()`, `count_operations()`
+- ✅ `prototypes/aggressive_simplification/test_factoring.py` - Test suite (7/7 tests passing, ~200 lines)
+- ✅ `prototypes/aggressive_simplification/benchmark_factoring.py` - Performance benchmarks (~150 lines)
+- ✅ `docs/planning/EPIC_2/SPRINT_11/factoring_prototype_results.md` - Comprehensive results document
+
+**Performance Benchmarks (1000 iterations per case):**
+
+| Test Case | Before | After | Reduction | Time (ms) | Status |
+|-----------|--------|-------|-----------|-----------|--------|
+| Simple 2-term (x*y + x*z) | 3 ops | 2 ops | 33.3% | 0.0098 | ✅ |
+| Three terms (x*y + x*z + x*w) | 5 ops | 3 ops | 40.0% | 0.0143 | ✅ |
+| Multiple common (2*x*y + 2*x*z) | 5 ops | 3 ops | 40.0% | 0.0138 | ✅ |
+| PROJECT_PLAN.md example | 5 ops | 3 ops | 40.0% | 0.0141 | ✅ |
+| Four terms (x*a + x*b + x*c + x*d) | 7 ops | 4 ops | 42.9% | 0.0175 | ✅ |
+| No common factors (x*y + z*w) | 3 ops | 3 ops | 0.0% | 0.0046 | ✅ |
+
+**Summary Statistics:**
+- **Average reduction (when applicable):** 39.2% (target: ≥20%, **margin: +96%**)
+- **Max execution time:** 0.0175ms (target: <1ms, **margin: 57× faster**)
+- **All 6 test cases:** Pass both performance and effectiveness targets
+
+**Key Research Findings:**
+
+1. **Distribution Cancellation Algorithm:** ✅ **HIGHLY EFFECTIVE**
+   - **Approach:** Set-based common factor detection via AST structural equality
+   - **Algorithm:**
+     1. Flatten addition into terms: `a + b + c → [a, b, c]`
+     2. Flatten each term's multiplication into factors: `x*y*z → [x, y, z]`
+     3. Find intersection via set operations: `common = set(factors1) & set(factors2) & ...`
+     4. Factor out common terms: `common * (remaining_sum)`
+   - **Effectiveness:** 33-43% reduction on applicable expressions
+   - **Performance:** 0.0046-0.0175ms per expression
+   - **Complexity:** O(n×m) where n=terms, m=factors per term (acceptable, typically n<50, m<10)
+
+2. **Multi-Term Factoring:** ⚠️ **COMPLEX, LIMITED**
+   - **Pattern:** `a*c + a*d + b*c + b*d → (a+b)*(c+d)` (2×2 matching)
+   - **Status:** Best-effort prototype, acceptable for validation
+   - **Current limitation:** Complex pattern recognition required for general case
+   - **Recommendation:** Prioritize distribution cancellation (39% reduction sufficient), defer multi-term to Sprint 12
+
+3. **AST Structural Equality:** ✅ **WORKS CORRECTLY**
+   - **Mechanism:** Frozen dataclasses provide automatic `__eq__` based on field values
+   - **Examples:**
+     - `VarRef("x") == VarRef("x")` → `True`
+     - `Const(2.0) == Const(2.0)` → `True`
+     - `Binary("*", x, y) == Binary("*", x, y)` → `True` (recursive equality)
+   - **Handles multiple common factors:** `2*x*y + 2*x*z` factors out both `2` and `x`
+   - **Known limitation:** Commutativity (`x*y` vs `y*x` not structurally equal) - can add canonical ordering if needed
+
+4. **Edge Case Handling:**
+   - ✅ No common factors: Expression unchanged (correct behavior)
+   - ✅ Multiple common factors: All factored out correctly
+   - ✅ Single-term expressions: Unchanged (correct behavior)
+   - ✅ Non-addition expressions: Unchanged (correct behavior)
+
+**Unknown 1.1 Verification: ✅ VERIFIED - Common Factor Detection Algorithm**
+
+**Decision:** Set-based common factor detection via AST structural equality is the correct approach.
+
+**Evidence:**
+- Frozen dataclasses provide correct `__eq__` for structural comparison
+- Set intersection efficiently finds common factors across terms
+- Handles multiple common factors (2, x in `2*x*y + 2*x*z`)
+- Performance: 0.0046-0.0175ms (well below 1ms threshold)
+- Complexity: O(n×m) acceptable (linear in practice)
+
+**Unknown 1.7 Verification: ✅ VERIFIED - Factoring Performance**
+
+**Decision:** Factoring easily achieves ≥20% term reduction with <1ms execution time. Targets exceeded by wide margins.
+
+**Evidence:**
+
+| Metric | Target | Achieved | Margin |
+|--------|--------|----------|--------|
+| Operation reduction | ≥20% | 39.2% | +96% |
+| Execution time | <1ms | 0.0175ms | 57× faster |
+
+**Analysis:**
+- Reduction effectiveness: Nearly 2× the target
+- Performance headroom: 57× faster than threshold
+- Scalability: Linear complexity, acceptable for large expressions
+- No trade-offs: Both effectiveness and performance exceed targets
+
+#### Recommendations for Sprint 11
+
+1. ✅ **Integrate `factor_common_terms()` into simplification pipeline**
+   - Add as a pass after constant folding (Step 5 in 8-step pipeline)
+   - Run recursively on sub-expressions (bottom-up traversal)
+   - Location: `src/ad/term_collection.py` or new `src/ad/factoring.py`
+
+2. ✅ **Port prototype tests to main test suite**
+   - All 7 test cases validated
+   - Add tests for recursive factoring: `(x*y + x*z) + (x*w + x*v)`
+   - Add tests for AD-generated expressions
+
+3. ⚠️ **Defer multi-term factoring to Sprint 12** (if still needed)
+   - Complex pattern recognition required
+   - Distribution cancellation alone achieves 39% reduction (may be sufficient)
+   - Can revisit if real-world models show additional opportunities
+
+4. ✅ **No blocking issues identified**
+   - Algorithm is simple, maintainable, and performant
+   - Ready to proceed with Sprint 11 implementation with high confidence
+   - Optional enhancement: Canonical factor ordering for commutativity (low priority)
+
+#### Implementation Estimates for Sprint 11
+
+**Integration Effort (estimated):**
+- Port prototype to `src/ad/factoring.py`: 1h
+- Integrate into simplification pipeline: 0.5h
+- Port tests to main test suite: 0.5h
+- Test on AD-generated expressions: 0.5h
+- **Total:** ~2.5 hours (already budgeted in Sprint 11 simplification work)
+
+#### Deliverables
+
+- ✅ `prototypes/aggressive_simplification/factoring_prototype.py` - Working prototype (~380 lines)
+- ✅ `prototypes/aggressive_simplification/test_factoring.py` - Test suite (7/7 passing, ~200 lines)
+- ✅ `prototypes/aggressive_simplification/benchmark_factoring.py` - Performance benchmarks (~150 lines)
+- ✅ `docs/planning/EPIC_2/SPRINT_11/factoring_prototype_results.md` - Results document (comprehensive analysis)
+- ✅ `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` - Unknowns 1.1, 1.7 verified with detailed findings
+- ✅ `docs/planning/EPIC_2/SPRINT_11/PREP_PLAN.md` - Task 5 marked COMPLETE with results summary
+
+#### Risk Assessment
+
+**Overall Risk:** ✅ **LOW** - Safe to proceed with high confidence
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Performance regression | Low | Medium | Already 57× faster than threshold |
+| Incorrect factoring | Low | High | Comprehensive test suite passes |
+| Integration issues | Low | Low | Algorithm is self-contained |
+| Commutativity edge cases | Medium | Low | Can add canonical ordering if needed |
+
+---
+
 ### Sprint 11: Prep Phase - Task 4: Research Common Subexpression Elimination (CSE) - 2025-11-25
 
 **Status:** ✅ COMPLETE
