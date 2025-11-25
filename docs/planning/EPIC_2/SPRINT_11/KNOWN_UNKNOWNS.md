@@ -497,7 +497,42 @@ Nested/subset indexing uses `$` operator for subset conditions. Example: `Equati
 - Missed patterns → partial parsing (18% stays at 50%, not 100%)
 - Complex conditions not supported → need to defer more features to Sprint 12
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 2 will verify)
+**Verification Results:** ✅ **VERIFIED - ASSUMPTION PARTIALLY WRONG**
+
+**Actual GAMS Syntax:**
+The assumption about `$` operator was WRONG. GAMS nested/subset indexing uses **subset with explicit indices in parentheses**, not conditional `$` operator:
+
+```gams
+Set n / p1*p13 /;
+Set low(n,n) 'lower triangle subset';
+low(n,nn) = ord(n) > ord(nn);  // Subset assignment
+
+Equation defdist(low(n,nn));     // Subset with explicit indices (PRIMARY SYNTAX)
+defdist(low(n,nn)).. dist(low) =e= sqrt(...);
+
+Equation mindist1(low);          // Shorthand notation (inferred indices)
+mindist1(low).. mindist =l= dist(low);
+```
+
+**Key Findings:**
+1. **Syntax:** `equation(subset_name(index1, index2, ...))` not `equation(index)$(condition)`
+2. **Subset declaration:** 2D subset `low(n,n)` with parent set `n`
+3. **Subset assignment:** Static condition `low(n,nn) = ord(n) > ord(nn)` (compile-time evaluation)
+4. **Equation domain:** Uses subset name with explicit indices: `defdist(low(n,nn))`
+5. **Shorthand notation:** `mindist1(low)` infers indices from subset dimensionality
+
+**Impact on Implementation:**
+- Grammar must support nested domain elements: `domain_element: subset_domain | simple_domain`
+- AST must represent subset domains: `SubsetDomain(subset_name, indices)`
+- Semantic analyzer must expand subsets to concrete members at compile time
+- `$` operator is DIFFERENT feature (conditional indexing) - not required for maxmin.gms
+
+**Evidence:**
+- Analyzed `tests/fixtures/gamslib/maxmin.gms` lines 20-24 (subset declaration), 51-56 (equation usage)
+- Created research document: `docs/research/nested_subset_indexing_research.md`
+- Created minimal test case: `tests/synthetic/nested_subset_indexing.gms`
+
+**Decision:** Original assumption was wrong, but correct syntax is now understood and documented.
 
 ---
 
@@ -529,7 +564,71 @@ Subset conditions can be represented in AST as a `condition: Optional[Expr]` fie
 - Can't evaluate conditions → incorrect MCP generation (infeasible systems)
 - Empty subset handling wrong → crash or incorrect equation count
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 2 will verify)
+**Verification Results:** ✅ **VERIFIED - ASSUMPTION CORRECT with refinements**
+
+**Confirmed AST Representation:**
+The assumption was largely CORRECT. AST should represent subset domains distinctly from simple domains using a `DomainElement` hierarchy:
+
+```python
+@dataclass
+class DomainElement(ABC):
+    @abstractmethod
+    def get_identifiers(self) -> list[str]:
+        pass
+
+@dataclass
+class SimpleDomain(DomainElement):
+    """Simple identifier: i, j, k"""
+    identifier: str
+    
+@dataclass
+class SubsetDomain(DomainElement):
+    """Subset with explicit indices: low(n,nn)"""
+    subset_name: str
+    indices: list[str]
+
+@dataclass
+class EquationDef:
+    name: str
+    domain: list[DomainElement]  # Changed from list[str]
+    body: EquationBody
+```
+
+**Key Findings:**
+1. **Static evaluation:** YES - subset conditions in maxmin.gms use `ord()` which is compile-time evaluable
+2. **Subset expansion:** Eager strategy at semantic analysis time (expand to concrete members)
+3. **Equation instances:** Generated from Cartesian product with subset filtering
+4. **Empty subset handling:** Valid case, generates zero equation instances
+
+**Semantic Resolution Algorithm:**
+```
+For each EquationDef with SubsetDomain:
+  1. Resolve subset reference (lookup Set declaration)
+  2. Validate dimensionality matches indices
+  3. Expand subset to concrete members (evaluate ord(n) > ord(nn))
+  4. Generate equation instances for each member
+  5. Store instances in symbol table
+```
+
+**Example:**
+```gams
+Set n / p1*p3 /;
+Set low(n,n);
+low(n,nn) = ord(n) > ord(nn);  // Evaluates to {(p2,p1), (p3,p1), (p3,p2)}
+
+Equation defdist(low(n,nn));
+// Generates 3 instances:
+//   defdist[p2,p1].. 
+//   defdist[p3,p1].. 
+//   defdist[p3,p2].. 
+```
+
+**Evidence:**
+- Designed AST in `docs/research/nested_subset_indexing_research.md` Section 4
+- Designed semantic algorithm in Section 5 (subset expansion with eager evaluation)
+- Verified maxmin.gms uses static conditions only (`ord()` function)
+
+**Decision:** Assumption confirmed. DomainElement hierarchy with eager subset expansion is correct approach.
 
 ---
 
@@ -561,7 +660,45 @@ Nested indices follow standard scoping (inner index shadows outer index with sam
 - Index name collisions → parse errors or semantic errors
 - Missed dependencies → evaluation order wrong, incorrect results
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 2 will verify)
+**Verification Results:** ✅ **VERIFIED - ASSUMPTION CORRECT**
+
+**Confirmed Scoping Rules:**
+The assumption was CORRECT. GAMS subset indexing uses straightforward scoping rules:
+
+**Key Findings:**
+1. **Subset indices are local to equation domain:** In `defdist(low(n,nn))`, indices `n` and `nn` are scoped to that equation
+2. **Alias declarations provide index names:** `Alias (n, nn)` declares `nn` as alias for set `n`
+3. **No shadowing in maxmin.gms:** Each equation uses distinct index names, no collisions observed
+4. **Subset condition scope:** In `low(n,nn) = ord(n) > ord(nn)`, indices `n` and `nn` refer to iteration variables over parent set
+
+**Example from maxmin.gms:**
+```gams
+Set n / p1*p13 /;
+Alias (n, nn);                // nn is alias of n
+
+low(n,nn) = ord(n) > ord(nn); // n, nn iterate over set n
+                              // ord(n) gets ordinal position in set n
+
+Equation defdist(low(n,nn));  // n, nn are indices (bound to subset members)
+defdist(low(n,nn)).. ...      // Equation body uses n, nn
+```
+
+**Scoping is standard:**
+- Indices are lexically scoped (declared in domain, used in body)
+- No shadowing observed (no inner/outer scope conflicts in maxmin.gms)
+- Alias mechanism provides multiple names for same set (not shadowing, just synonyms)
+
+**Impact on Implementation:**
+- Standard symbol table scoping is sufficient
+- No special GAMS scoping rules needed for Sprint 11
+- Index validation: ensure indices in subset domain match subset dimensionality
+
+**Evidence:**
+- Analyzed maxmin.gms lines 20-24 (alias and subset assignment)
+- Analyzed lines 51-56 (equation definitions with subset indices)
+- No complex scoping patterns observed (straightforward lexical scope)
+
+**Decision:** Standard scoping rules are sufficient. No special handling needed.
 
 ---
 
@@ -593,7 +730,66 @@ Equations with subset conditions generate fewer instances (filtered by condition
 - Complementarity mismatch → PATH solver errors
 - Generated GAMS code incorrect → compile errors or wrong solutions
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 2 will verify)
+**Verification Results:** ✅ **VERIFIED - PYTHON FILTERING RECOMMENDED with DEFER decision**
+
+**Confirmed Approach:**
+The assumption was CORRECT. Python-side filtering (generate only valid instances) is the recommended approach:
+
+**Key Findings:**
+1. **Subset expansion:** Expand subset to concrete members at semantic analysis time
+2. **IR generation:** Generate only concrete equation instances (one per subset member)
+3. **MCP generation:** Emit one constraint per equation instance with concrete indices
+4. **Complementarity:** Variables must match equation instances (handled at IR level)
+
+**Example:**
+```python
+# Semantic analysis expands subset:
+#   low = {(p2,p1), (p3,p1), (p3,p2)}
+
+# IR generation creates 3 concrete equations:
+IREquation(name="defdist[p2,p1]", body=...)
+IREquation(name="defdist[p3,p1]", body=...)
+IREquation(name="defdist[p3,p2]", body=...)
+
+# MCP generation emits 3 constraints:
+{
+  "constraints": [
+    {"name": "defdist[p2,p1]", "type": "eq", "lhs": ..., "rhs": ...},
+    {"name": "defdist[p3,p1]", "type": "eq", "lhs": ..., "rhs": ...},
+    {"name": "defdist[p3,p2]", "type": "eq", "lhs": ..., "rhs": ...}
+  ]
+}
+```
+
+**Rationale for Python filtering:**
+- More explicit (clear which instances generated)
+- Easier to debug (inspect IR for concrete instances)
+- Better error messages (can validate complementarity at IR level)
+- Performance acceptable (static evaluation, no runtime overhead)
+
+**Implementation Complexity:**
+- Grammar changes: 3-4 hours
+- AST changes: 2-3 hours
+- Semantic analyzer: 4-6 hours (subset expansion, instance generation)
+- IR/MCP generation: included in semantic work
+- Testing: 1-2 hours
+- **Total: 10-14 hours** with HIGH risk (40% slippage probability → 16-20h)
+
+**GO/NO-GO Decision: ✅ DEFER to Sprint 12**
+
+**Rationale for DEFER:**
+1. **Sprint 11 capacity conflict:** Already committed 22-28h (simplification 12-15h, CI 6-8h, diagnostics 4-5h) vs. 20-30h capacity
+2. **High slippage risk:** Adding 10-14h baseline (16-20h with slippage) pushes sprint to 32-42h total
+3. **Partial benefit:** Only unlocks maxmin.gms to 56% parse rate (4 more blocker categories remain: aggregation, multi-model, loops, misc)
+4. **Better alternative:** Sprint 12 can implement ALL maxmin.gms features together (nested indexing 10-14h + aggregation 8-12h + multi-model 3-5h + loops 2-3h = 23-34h total) for complete 18% → 100% improvement
+
+**Evidence:**
+- Designed IR/MCP generation in `docs/planning/EPIC_2/SPRINT_11/maxmin_implementation_plan.md` Phase 4
+- Calculated implementation effort in Section "Phase Overview" (10-14h baseline, 16-20h with slippage)
+- Analyzed Sprint 11 capacity in Section "Integration with Sprint 11" (22-28h committed vs 20-30h capacity)
+- Created comprehensive DEFER rationale in Section "Sprint 12 Alternative (RECOMMENDED)"
+
+**Decision:** DEFER to Sprint 12 for complete maxmin.gms implementation. Document decision in PREP_PLAN.md.
 
 ---
 

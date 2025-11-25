@@ -7,6 +7,138 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 11: Prep Phase - Task 2: Research maxmin.gms Nested/Subset Indexing - 2025-11-25
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Researched GAMS nested/subset indexing semantics for maxmin.gms implementation. Created comprehensive research document, detailed implementation plan, and minimal test case. **Key finding:** Original `$` operator assumption was WRONG - GAMS uses subset with explicit indices in parentheses. **Decision:** DEFER to Sprint 12 due to capacity conflict and better ROI implementing all maxmin.gms features together.
+
+#### Achievements
+
+**Research Document Created (nested_subset_indexing_research.md, 10 sections):**
+- ✅ Section 1: Executive Summary with DEFER recommendation
+- ✅ Section 2: GAMS subset indexing semantics (2D subsets, static conditions, ord() function)
+- ✅ Section 3: Grammar design (3 alternatives evaluated, recommended explicit subset syntax)
+- ✅ Section 4: AST representation (DomainElement hierarchy: SimpleDomain, SubsetDomain)
+- ✅ Section 5: Semantic resolution algorithm (eager subset expansion, instance generation)
+- ✅ Section 6: Subset expansion strategies (eager vs lazy, recommended eager for Sprint 11)
+- ✅ Section 7: IR and MCP generation modifications
+- ✅ Section 8: Testing strategy (unit, integration, end-to-end)
+- ✅ Section 9: Implementation complexity (10-14h baseline, 40% slippage risk → 16-20h)
+- ✅ Section 10: GO/NO-GO decision with comprehensive Sprint 12 alternative plan
+
+**Implementation Plan Created (maxmin_implementation_plan.md, 5 phases):**
+- ✅ Phase 1: Grammar changes (3-4 hours, HIGH risk) - recursive domain parsing
+- ✅ Phase 2: AST changes (2-3 hours, MEDIUM risk) - DomainElement class hierarchy
+- ✅ Phase 3: Semantic analyzer (4-6 hours, HIGH risk) - subset expansion algorithm
+- ✅ Phase 4: IR/MCP generation (included in Phase 3) - concrete equation instances
+- ✅ Phase 5: Testing & validation (1-2 hours) - minimal test case + maxmin.gms validation
+- ✅ Risk register with 7 identified risks and mitigations
+- ✅ Sprint 12 alternative plan (23-34h for ALL maxmin.gms features, 82% improvement)
+
+**Minimal Test Case Created (tests/synthetic/nested_subset_indexing.gms):**
+- ✅ Isolates subset domain feature (3-element set with lower triangle subset)
+- ✅ Single equation with explicit subset indices: `defdist(low(n,nn))..`
+- ✅ Expected results: 100% parse rate, 3 equation instances
+- ✅ Comprehensive documentation with expected behavior
+
+**Unknown Verification (KNOWN_UNKNOWNS.md updated):**
+- ✅ Unknown 2.1 (GAMS Syntax): ❌ **ASSUMPTION WRONG** - Uses `equation(subset(i,j))` not `equation(i)$(condition)`
+- ✅ Unknown 2.2 (Semantic Handling): ✅ VERIFIED - DomainElement hierarchy with eager expansion correct
+- ✅ Unknown 2.3 (Scoping Rules): ✅ VERIFIED - Standard lexical scoping sufficient, no special GAMS rules
+- ✅ Unknown 2.4 (MCP Generation): ✅ VERIFIED - Python filtering recommended, DEFER decision made
+
+#### Key Findings
+
+**GAMS Nested/Subset Indexing Syntax (Assumption was WRONG):**
+```gams
+Set n / p1*p13 /;
+Set low(n,n) 'lower triangle';          # 2D subset declaration
+Alias (n, nn);
+low(n,nn) = ord(n) > ord(nn);           # Static condition (compile-time)
+
+Equation defdist(low(n,nn));            # Subset with explicit indices
+defdist(low(n,nn)).. dist(low) =e= ...; # Generates 78 instances for n=13
+
+Equation mindist1(low);                 # Shorthand notation (infers indices)
+mindist1(low).. mindist =l= dist(low);  # Equivalent to mindist1(low(n,nn))
+```
+
+**Implementation Design:**
+- **Grammar:** `domain_element: simple_domain | subset_domain` with `subset_domain: ID "(" id_list ")"`
+- **AST:** DomainElement base class with SimpleDomain (identifier) and SubsetDomain (subset_name, indices)
+- **Semantic:** Eager expansion at analysis time - evaluate `ord(n) > ord(nn)` to concrete member tuples
+- **IR/MCP:** Generate one equation instance per subset member with concrete indices
+
+**Complexity Assessment:**
+- **Baseline effort:** 10-14 hours (Grammar 3-4h, AST 2-3h, Semantic 4-6h, Testing 1-2h)
+- **Risk:** HIGH (9/10 complexity) with 40% slippage probability → 16-20 hours
+- **Impact:** Only unlocks maxmin.gms to 56% parse rate (4 more blocker categories remain)
+
+#### GO/NO-GO Decision: ✅ DEFER to Sprint 12
+
+**Rationale for DEFER:**
+
+1. **Sprint 11 Capacity Conflict:**
+   - Already committed: Aggressive simplification (12-15h) + CI guardrails (6-8h) + Diagnostics (4-5h) = 22-28h
+   - Sprint 11 capacity: 20-30h (from Sprint 10 velocity)
+   - Adding nested indexing: 10-14h baseline, 16-20h with slippage → Total 32-42h (exceeds capacity)
+
+2. **High Slippage Risk:**
+   - 40% probability of slippage (HIGH complexity, many unknowns)
+   - Could consume 16-20h instead of 10-14h
+   - Risks delaying higher-priority features (aggressive simplification)
+
+3. **Partial Benefit:**
+   - Unlocks maxmin.gms from 18% → 56% (38% improvement)
+   - BUT 44% still blocked by 4 other categories: aggregation (sum, sqrt), multi-model blocks, loop tuples, misc
+   - Incomplete maxmin.gms support doesn't achieve 100% Tier 1 goal
+
+4. **Better Alternative - Sprint 12 Complete Implementation:**
+   - Nested/subset indexing: 10-14h
+   - Aggregation operators: 8-12h
+   - Multi-model blocks: 3-5h
+   - Loop tuples: 2-3h
+   - **Total: 23-34h for maxmin.gms 18% → 100% (82% improvement)**
+   - Better ROI: 2.4x more efficient than partial implementation
+
+#### Deliverables
+
+- `docs/research/nested_subset_indexing_research.md` - Comprehensive research (10 sections, implementation-ready)
+- `docs/planning/EPIC_2/SPRINT_11/maxmin_implementation_plan.md` - Detailed 5-phase plan with risk register
+- `tests/synthetic/nested_subset_indexing.gms` - Minimal test case isolating subset domain feature
+- `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` - Updated with verification results (Unknowns 2.1-2.4)
+- `docs/planning/EPIC_2/SPRINT_11/PREP_PLAN.md` - Task 2 marked COMPLETE with comprehensive results
+
+#### Impact
+
+**Sprint 11 Scope Change:**
+- maxmin.gms nested/subset indexing implementation **REMOVED** from Sprint 11
+- Sprint 11 focus: Aggressive simplification, CI guardrails, Diagnostics mode
+- 100% GAMSLIB Tier 1 parse rate goal **DEFERRED** to Sprint 12
+
+**Sprint 12 Planning:**
+- Dedicated maxmin.gms sprint implementing ALL 5 blocker categories (23-34h)
+- Complete implementation: 18% → 100% parse rate (vs. partial 18% → 56%)
+- Holistic approach reduces integration complexity
+
+**Research Value:**
+- Implementation-ready design documented for Sprint 12
+- Risk assessment informs Sprint 12 capacity planning
+- Minimal test case ready for implementation validation
+- Grammar, AST, semantic design complete (no research needed in Sprint 12)
+
+#### Next Steps
+
+- Task 3: Design Aggressive Simplification Architecture (verify Unknowns 1.2-1.11)
+- Task 4: Research Common Subexpression Elimination (verify Unknown 1.9)
+- Task 5: Prototype Factoring Algorithms (verify Unknowns 1.1, 1.7)
+- Sprint 12: Implement complete maxmin.gms support (nested indexing + aggregation + multi-model + loops)
+
+---
+
 ### Sprint 11: Prep Phase - Task 1: Create Known Unknowns List - 2025-11-25
 
 **Status:** ✅ COMPLETE
