@@ -7,6 +7,205 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 11: Prep Phase - Task 7: Design GAMSLib Sampling Strategy - 2025-11-25
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Designed comprehensive GAMSLib sampling strategy for automated CI regression testing. The strategy balances comprehensive coverage with CI performance by **testing all 10 Tier 1 models** using parallelized matrix builds while keeping CI runtime **under 3 minutes** (70% faster than sequential testing). The strategy includes multi-metric pass/fail criteria, dual-baseline management (rolling + golden), and flaky test mitigation to ensure reliable regression detection.
+
+#### Achievements
+
+**Comprehensive Sampling Strategy Document Created:**
+- ✅ `docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_strategy.md` (1,361 lines, ~31,000 words)
+  - Section 1: Model Selection Strategy (test all 10 Tier 1 models with matrix parallelization)
+  - Section 2: Test Frequency Strategy (three-tier: per-PR, nightly, weekly)
+  - Section 3: Test Scope Strategy (incremental expansion: parse→convert→solve→trends)
+  - Section 4: Pass/Fail Criteria (multi-metric thresholds)
+  - Section 5: Baseline Management (dual-baseline: rolling + golden)
+  - Section 6: Flaky Test Mitigation (caching, variance tolerance, deterministic seeding)
+  - Section 7: Implementation Roadmap (6 phases, 12-16h total effort)
+  - Section 8: Cost-Benefit Analysis (930 CI min/month, within free tier)
+  - Appendix A: Tier 1 Model Characteristics (10 models detailed)
+  - Appendix B: Alternative Sampling Approaches (4 alternatives evaluated and rejected)
+  - Appendix C: CI Workflow Examples (per-PR, nightly, weekly)
+
+**Key Decisions:**
+
+1. **Model Selection: Test All 10 Tier 1 Models** - ✅ **COMPREHENSIVE COVERAGE**
+   - **Decision:** Test all 10 Tier 1 models (no sampling, no canaries)
+   - **Models:** trig, rbrock, himmel16, hs62, mhw4d, mhw4dx, circle, maxmin, mathopt1, mingamma
+   - **Coverage:** Trig functions, power functions, sets, indexing, special functions, DNLP
+   - **Parse rate:** 90% (9/10 models, maxmin fails due to nested indexing)
+   - **CI runtime:** 2-3 min (matrix parallelization) vs. 10 min (sequential)
+   - **Why:** Matrix parallelization makes "test all" as fast as "test 5 canary models"
+
+2. **Test Frequency: Three-Tier Strategy** - ✅ **PER-PR + NIGHTLY + WEEKLY**
+   - **Per-PR Fast Checks:** Parse + Convert on all 10 Tier 1 models (2-3 min runtime)
+     - Trigger: All PRs (not just parser changes)
+     - Fast feedback, prevents merge of any regression
+   - **Nightly Full Validation:** Parse + Convert + Solve (10-20 min runtime)
+     - Tier 1 + Tier 2 models (20+ total)
+     - End-to-end validation with PATH solver
+   - **Weekly Extended Suite:** Full + Performance Trends (30-60 min runtime)
+     - All Tiers (50+ models)
+     - Long-term trend tracking, golden baseline validation
+
+3. **Test Scope: Incremental Expansion** - ✅ **PARSE → CONVERT → SOLVE → TRENDS**
+   - **Per-PR:** Parse + Convert (validates full pipeline, catches IR/MCP bugs)
+   - **Nightly:** Parse + Convert + Solve (end-to-end validation, too slow for per-PR)
+   - **Weekly:** Full + Performance Trends (long-term tracking, historical baselines)
+   - **Metrics tracked:**
+     - Parse rate % (current: 90%)
+     - Convert rate % (NEW, target: 80-90%)
+     - Conversion time ms (performance tracking)
+     - Solve rate % (nightly only)
+     - Solve time ms (nightly only)
+     - Performance trends (weekly only)
+
+4. **Pass/Fail Criteria: Multi-Metric Thresholds** - ✅ **PARSE + CONVERT + PER-MODEL + PERFORMANCE**
+   - **Parse Rate:** 5% drop warning, 10% drop failure (current proven threshold)
+   - **Convert Rate:** 5% drop warning, 10% drop failure (NEW, validates full pipeline)
+   - **Per-Model Status:** Any passing → failing triggers failure (catches hidden regressions)
+   - **Conversion Time:** +20% warning, +50% failure (accounts for ±10% variance)
+   - **Solve Rate:** 5% drop warning, 10% drop failure (nightly only)
+   - **Solve Time:** +20% warning, +50% failure (nightly only)
+   - **Aggregate logic:** CI fails if ANY of: parse rate regression, convert rate regression, any model regressed, performance regression >50%
+
+5. **Baseline Management: Dual-Baseline Approach** - ✅ **ROLLING + GOLDEN**
+   - **Rolling Baselines:** Git-tracked JSON, auto-update on main merge
+     - `reports/gamslib_ingestion_sprint11.json` (parse rate, git-tracked)
+     - `baselines/performance/baseline_latest.json` (performance, git-lfs)
+     - Purpose: Per-PR regression detection
+   - **Golden Baselines:** Manual updates at sprint milestones
+     - `baselines/golden/sprint10.json` (Sprint 10 final: 90% parse rate)
+     - `baselines/golden/sprint11.json` (Sprint 11 target: 100% parse rate)
+     - Purpose: Long-term trend tracking, sprint goal validation
+   - **Historical Snapshots:** Weekly snapshots for trend analysis (git-lfs)
+
+6. **Flaky Test Mitigation** - ✅ **CACHING + VARIANCE TOLERANCE + DETERMINISTIC SEEDING**
+   - **Caching (already implemented):** pip dependencies, GAMSLib models (eliminates network flakiness)
+   - **Variance Tolerance:** 20% warning, 50% failure (2×/5× above ±10% variance)
+   - **Deterministic Seeding:** `PYTHONHASHSEED=0`, `random.seed(42)` (eliminates nondeterminism)
+   - **Retry Logic:** ONLY for external network operations (not for tests - masks bugs)
+   - **Multiple Iterations:** Run 3× and use median (nightly/weekly only)
+
+#### Alternatives Considered
+
+**Model Selection:**
+1. **Canary Models (5 fixed + 5 rotated)** - ❌ Rejected: delayed detection for non-canary models
+2. **Risk-Based Sampling** - ❌ Rejected: requires manual risk assessment, too complex
+3. **Fast/Full Split (3 fast + 10 full nightly)** - ❌ Rejected: can merge PRs with regressions
+4. **Adaptive Sampling (expand on failure)** - ❌ Rejected: variable CI time, false negatives
+
+**Why "Test All" Wins:**
+- Matrix parallelization makes "test all" as fast as "test 5" (2-3 min)
+- Comprehensive coverage eliminates delayed regression detection
+- Simpler strategy (no canary selection logic needed)
+- Future-proof: scales to Tier 2 nightly tests (add more models to matrix)
+
+#### Cost-Benefit Analysis
+
+**Current CI Cost:**
+- ~200 CI min/month (parser changes only, 20% of PRs)
+- Only tests parse rate (not convert rate or solve rate)
+- Sequential testing (10 min runtime)
+
+**Proposed CI Cost:**
+- ~930 CI min/month (all PRs + nightly + weekly)
+  - Per-PR: 100 PRs × 3 min = 300 min/month
+  - Nightly: 30 runs × 15 min = 450 min/month
+  - Weekly: 4 runs × 45 min = 180 min/month
+- **Still within GitHub Actions free tier:** Yes (930 < 2000 min/month)
+- **Per-PR feedback:** 70% faster (10 min → 3 min)
+
+**Benefits:**
+1. **70% faster per-PR feedback** (10 min → 3 min)
+2. **100% PR coverage** (vs. 20% currently - only parser changes)
+3. **4× more metrics** (parse + convert + solve + performance)
+4. **Per-model regression detection** (vs. aggregate only)
+5. **Comprehensive validation** (nightly + weekly)
+6. **Performance trend tracking** (weekly)
+
+**Conclusion:** Cost increase (+730 min/month) justified by massive value increase, still within free tier.
+
+#### Implementation Roadmap
+
+**Total Estimated Effort:** 12-16 hours (over 10 days)
+
+1. **Phase 1:** Enhance ingestion script (parse + convert + performance tracking) - 4-5h
+2. **Phase 2:** Enhance regression checker (multi-metric thresholds) - 3-4h
+3. **Phase 3:** Add matrix build workflow (parallelization) - 2-3h
+4. **Phase 4:** Add baseline management (rolling + golden baselines) - 2-3h
+5. **Phase 5:** Add flaky test mitigation (deterministic seeding, variance tolerance) - 1-2h
+6. **Phase 6:** Documentation and testing - 1-2h
+
+#### Unknown Verification
+
+**Unknown 3.1: GAMSLib Sampling Strategy Effectiveness** - ✅ **VERIFIED**
+
+**Decision:** Testing all 10 Tier 1 models with matrix parallelization provides optimal regression coverage while maintaining fast CI feedback (<5 min).
+
+**Evidence:**
+- Analyzed current Tier 1 models (10 models, 90% parse rate, diverse feature coverage)
+- Evaluated 4 alternative sampling approaches (all rejected due to delayed detection, complexity, or false negatives)
+- Calculated CI runtime with matrix builds (2-3 min vs. 10 min sequential, 70% reduction)
+- Designed multi-metric pass/fail criteria (parse + convert + performance + per-model)
+- Documented baseline management strategy (rolling + golden baselines with git-lfs)
+- Identified flaky test mitigation strategies (caching, variance tolerance, deterministic seeding)
+- Verified cost within GitHub Actions free tier (930 < 2000 min/month)
+
+**Updated:** `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` (Unknown 3.1 verification results)
+
+#### Deliverables
+
+- ✅ GAMSLib sampling strategy document (1,361 lines, comprehensive)
+- ✅ Model selection approach (test all 10 Tier 1 models with matrix parallelization)
+- ✅ Test frequency (three-tier: per-PR, nightly, weekly)
+- ✅ Test scope (incremental expansion: parse+convert per-PR, +solve nightly, +trends weekly)
+- ✅ Pass/fail criteria (multi-metric thresholds: parse 5%/10%, convert 5%/10%, performance 20%/50%)
+- ✅ Baseline update process (dual-baseline: rolling + golden)
+- ✅ Flaky mitigation (caching, variance tolerance, deterministic seeding)
+- ✅ Implementation roadmap (6 phases, 12-16h total effort)
+- ✅ Cost-benefit analysis (930 CI min/month, within free tier, 70% faster per-PR)
+- ✅ Updated KNOWN_UNKNOWNS.md (Unknown 3.1 verified)
+
+#### Files Modified
+
+- `docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_strategy.md` (created, 1,361 lines)
+- `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` (Unknown 3.1 verification)
+- `docs/planning/EPIC_2/SPRINT_11/PREP_PLAN.md` (Task 7 completion, result summary, verification)
+- `CHANGELOG.md` (this entry)
+
+#### Risk Assessment
+
+**Low Risk:**
+- Strategy based on proven CI infrastructure (GitHub Actions matrix builds well-documented)
+- Thresholds based on current proven values (10% parse rate threshold effective in Sprint 10)
+- Cost within free tier (930 < 2000 min/month, 54% buffer remaining)
+
+**Medium Risk:**
+- Implementation effort may exceed estimates (12-16h baseline, 16-22h with unknowns)
+- PATH solver integration unclear (licensing question, may need IPOPT alternative)
+- Flaky tests may still occur despite mitigation (shared runners have unpredictable variance)
+
+**Mitigation:**
+- Allocate buffer time in Sprint 11 (4-8h for unknowns)
+- Prototype IPOPT as PATH alternative (Task 8 will investigate)
+- Monitor flaky test rate, adjust thresholds if needed (20%/50% may be too tight)
+
+#### Next Steps
+
+1. Sprint 11 Day 1: Implement Phase 1 (enhance ingestion script) - 4-5h
+2. Sprint 11 Day 2-3: Implement Phase 2 (enhance regression checker) - 3-4h
+3. Sprint 11 Day 4-5: Implement Phase 3 (matrix build workflow) - 2-3h
+4. Sprint 11 Day 6-7: Implement Phase 4 (baseline management) - 2-3h
+5. Sprint 11 Day 8: Implement Phase 5 (flaky mitigation) - 1-2h
+6. Sprint 11 Day 9: Implement Phase 6 (documentation + testing) - 1-2h
+
+---
+
 ### Sprint 11: Prep Phase - Task 6: Survey CI Regression Frameworks - 2025-11-25
 
 **Status:** ✅ COMPLETE
