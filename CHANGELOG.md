@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Designed comprehensive architecture for `--simplification aggressive` mode with 8-step transformation pipeline, 18 transformation patterns across 5 categories, and safety mechanisms (150% size budget, automatic rollback, opt-in FD validation). **Key decisions:** Prioritized 6 HIGH-priority transformations for Sprint 11 (12-15h effort), deferred 5 LOW-priority patterns to Sprint 12, and validated all 8 unknowns with implementation-ready designs.
+Designed comprehensive architecture for `--simplification aggressive` mode with 8-step transformation pipeline, 18 transformation patterns across 5 categories, and safety mechanisms (150% size budget, automatic rollback, opt-in FD validation). **Key decisions:** Prioritized 6 HIGH-priority transformations for Sprint 11 (12.5h baseline, 18h with MEDIUM priority), deferred 5 LOW-priority patterns to Sprint 12, and validated all 8 unknowns with implementation-ready designs.
 
 #### Achievements
 

@@ -15,7 +15,7 @@ This catalog documents all 18 transformation patterns in aggressive simplificati
 - **Implementation Notes:** Key algorithms or edge cases
 - **Priority:** Importance ranking (HIGH/MEDIUM/LOW)
 
-**Total Transformations:** 18 patterns across 5 categories
+**Total Transformations:** 18 patterns across 5 categories (includes 1 duplicate pattern T4.3=T2.2, and 3 already-implemented patterns)
 
 ---
 
@@ -616,7 +616,9 @@ After:  t1 = x*y
 | T2.2 Distribution (Conditional) | 2h | MEDIUM |
 | T3.1 Associativity | 1h | LOW |
 | T4.2 Variable Cancellation | 1.5h | MEDIUM |
-| **Total** | **8.5h** | - |
+| Pipeline integration | 2h | - |
+| Metrics/diagnostics | 2h | - |
+| **Total** | **12.5h** | - |
 
 ### Sprint 11 Extended (+ MEDIUM priority)
 
