@@ -448,6 +448,196 @@ This plan translates `GOALS_REVISED.md` into sprint-ready guidance for Sprints�
 - **UX Improvements (Iteration 4)**
   - Introduce deeper diagnostics mode (`--diagnostic`) showing stage-by-stage stats, pipeline decisions, and simplification summaries.
 
+## Aggressive Simplification Specifications
+
+The aggressive simplification mode (`--simplification aggressive`) extends beyond basic and advanced simplification with additional transformations that may increase expression size in intermediate steps but enable further optimizations through factoring, cancellation, and algebraic restructuring.
+
+### Building on Existing Simplification Levels
+
+**Basic Simplification** (already implemented):
+- Constant folding: `2 + 3 → 5`
+- Identity operations: `x * 1 → x`, `x + 0 → x`, `x * 0 → 0`
+- Negation simplification: `-(-x) → x`
+- Power simplification: `x^1 → x`, `x^0 → 1`
+
+**Advanced Simplification** (already implemented):
+- Algebraic combination of like terms: `2*x + 3*x → 5*x`
+- Cancellation in fractions: `(x * y) / x → y`
+- Power law application: `x^a * x^b → x^(a+b)`
+- Nested negation: `-(a - b) → b - a`
+
+**Aggressive Simplification** (new transformations):
+
+### 1. Distribution and Factoring
+
+**Distribution Cancellation** (factoring common terms):
+- **Pattern:** `x*y + x*z → x*(y + z)`
+- **Rationale:** Reduces multiplication operations and exposes common structure
+- **Example:**
+  ```
+  Before: grad_x = 2*exp(x)*sin(y) + 2*exp(x)*cos(y)
+  After:  grad_x = 2*exp(x)*(sin(y) + cos(y))
+  ```
+
+**Coefficient Factoring** (already done via different mechanism, but documented here):
+- **Pattern:** `2*x + 3*x → (2 + 3)*x → 5*x`
+- **Note:** Currently achieved through like-term combination in advanced simplification
+- **Maintains:** No change needed; existing mechanism is sufficient
+
+**Multi-term Factoring:**
+- **Pattern:** `a*c + a*d + b*c + b*d → (a + b)*(c + d)`
+- **Rationale:** Exposes multiplicative structure across multiple terms
+- **Complexity:** Requires common factor detection across term pairs
+
+### 2. Fraction Simplification
+
+**Distribution Over Division** (expansion):
+- **Pattern:** `(a + b) / c → a/c + b/c`
+- **Rationale:** May increase size temporarily but can enable cancellation
+- **Use case:** When `a/c` or `b/c` can simplify further
+- **Example:**
+  ```
+  Before: (x*y + x*z) / x
+  After:  (x*y)/x + (x*z)/x → y + z
+  ```
+- **Trade-off:** Can make expressions larger; apply only if cancellation detected
+
+**Combining Fractions** (same denominator):
+- **Pattern:** `a/c + b/c → (a + b)/c`
+- **Rationale:** Reduces division operations and consolidates structure
+- **Example:**
+  ```
+  Before: x/y + z/y
+  After:  (x + z)/y
+  ```
+
+**Common Denominator Handling:**
+- **Pattern:** `a/b + c/d → (a*d + c*b)/(b*d)`
+- **Rationale:** Enables further simplification when numerators combine
+- **Complexity:** Can significantly increase expression size; use cautiously
+- **Heuristic:** Only apply if resulting numerator simplifies by ≥20%
+
+### 3. Nested Operations
+
+**Associativity for Constants:**
+- **Pattern:** `(x * c1) * c2 → x * (c1 * c2)`
+- **Rationale:** Constant folding opportunity; reduces operation count
+- **Example:**
+  ```
+  Before: (x * 2) * 3
+  After:  x * 6
+  ```
+
+**Division Chain Simplification:**
+- **Pattern:** `(x / c1) / c2 → x / (c1 * c2)`
+- **Rationale:** Consolidates multiple divisions into one
+- **Example:**
+  ```
+  Before: (x / 2) / 3
+  After:  x / 6
+  ```
+
+**Multiplication-Division Reordering:**
+- **Pattern:** `(x * y) / z → x * (y / z)` (if `y/z` simplifies)
+- **Rationale:** Expose cancellation opportunities through reordering
+
+### 4. Division by Multiplication
+
+**Extracting Constants from Denominator:**
+- **Pattern:** `x / (y * c) → (x / c) / y`
+- **Alternative:** `x / (y * c) → (x / y) / c`
+- **Rationale:** Simplify constant division first, or enable variable cancellation
+- **Example:**
+  ```
+  Before: (6*x) / (y * 2)
+  After:  (6*x / 2) / y → (3*x) / y
+  ```
+
+**Variable Extraction:**
+- **Pattern:** `x / (y * z) → (x / y) / z` (if `x` and `y` have common factors)
+- **Use case:** When extracting enables cancellation
+- **Example:**
+  ```
+  Before: (x*a) / (x*b)
+  After:  ((x*a) / x) / b → a / b
+  ```
+
+### 5. Common Subexpression Elimination (CSE)
+
+**Explicit CSE** (optional, controlled by flag):
+- **Pattern:** Replace repeated subexpressions with temporary variables
+- **Example:**
+  ```
+  Before: grad_x = exp(x)*sin(y) + exp(x)*cos(y)
+  After:  t1 = exp(x)
+          grad_x = t1*sin(y) + t1*cos(y)
+  ```
+- **Rationale:** Reduces computation when subexpression is expensive (e.g., `exp`, `log`)
+- **Trade-off:** Increases variable count; only beneficial if subexpression reused ≥2 times
+- **Note:** May be deferred to later sprint or made opt-in via `--cse` flag
+
+### Implementation Strategy
+
+**Transformation Ordering:**
+1. **Constant folding and identity operations** (Basic)
+2. **Like-term combination** (Advanced)
+3. **Associativity for constants** (Aggressive) - enables more constant folding
+4. **Fraction combining** (Aggressive) - consolidate before factoring
+5. **Distribution cancellation** (Aggressive) - factor common terms
+6. **Division simplification** (Aggressive) - extract constants, enable cancellation
+7. **Multi-term factoring** (Aggressive) - expose multiplicative structure
+8. **CSE** (Optional, if enabled) - final pass for repeated subexpressions
+
+**Heuristics and Safeguards:**
+- **Size increase limit:** Reject transformation if expression grows >150% without subsequent simplification
+- **Depth limit:** Avoid transformations that increase nesting depth beyond reasonable bounds
+- **Cancellation detection:** Prioritize transformations that enable immediate cancellation
+- **Metrics tracking:** Report term count, operation count, depth before/after with `--simplification-stats`
+
+**Validation Requirements:**
+- **Finite difference validation:** All transformations must pass FD correctness checks
+- **PATH solver alignment:** Results must match baseline within numerical tolerance
+- **Performance regression:** Simplification overhead must be <10% of total conversion time
+- **Benchmark target:** Achieve ≥20% derivative term count reduction on ≥50% of benchmark models
+
+### Example: Full Aggressive Simplification Pipeline
+
+**Input Expression:**
+```
+grad_f = 2*x*exp(y) + 3*x*exp(y) + (a + b)/c + a/c
+```
+
+**Step-by-step Transformation:**
+1. **Like-term combination:** `2*x*exp(y) + 3*x*exp(y) → 5*x*exp(y)`
+   ```
+   grad_f = 5*x*exp(y) + (a + b)/c + a/c
+   ```
+
+2. **Distribution over division:** `(a + b)/c → a/c + b/c`
+   ```
+   grad_f = 5*x*exp(y) + a/c + b/c + a/c
+   ```
+
+3. **Like-term combination (fractions):** `a/c + a/c → 2*a/c`
+   ```
+   grad_f = 5*x*exp(y) + 2*a/c + b/c
+   ```
+
+4. **Combining fractions:** `2*a/c + b/c → (2*a + b)/c`
+   ```
+   grad_f = 5*x*exp(y) + (2*a + b)/c
+   ```
+
+**Final Result:**
+```
+grad_f = 5*x*exp(y) + (2*a + b)/c
+```
+
+**Metrics:**
+- **Before:** 8 operations (4 multiplications, 2 additions, 2 divisions)
+- **After:** 5 operations (2 multiplications, 2 additions, 1 division)
+- **Reduction:** 37.5% fewer operations
+
 ## Deliverables
 - Simplification engine updates + documentation + examples.
 - CI workflows covering GAMSLib sampling, PATH smoke subset, performance guardrails.
