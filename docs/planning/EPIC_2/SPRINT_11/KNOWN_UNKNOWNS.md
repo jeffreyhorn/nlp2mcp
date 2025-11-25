@@ -534,7 +534,7 @@ CSE (common subexpression elimination) is beneficial when subexpression is reuse
 - Cost model derivation: mathematical proof of thresholds (Appendix A in cse_research.md)
 - Similar tools: dvda (Haskell AD), OpTuner (math function optimization)
 
-**Implementation Reference:** `docs/planning/EPIC_2/SPRINT_11/cse_research.md` (comprehensive 90+ page research document)
+**Implementation Reference:** `docs/planning/EPIC_2/SPRINT_11/cse_research.md` (comprehensive research document, 981 lines)
 
 **Sprint 11 Scope:**
 - **Implement:** T5.1 (Expensive Function CSE) - 5 hours effort (MEDIUM priority)

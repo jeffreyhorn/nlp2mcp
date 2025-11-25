@@ -18,7 +18,7 @@
 5. **Scope Decision:** **Implement basic CSE (T5.1 only) in Sprint 11** - expensive function CSE only, defer nested/complex patterns to Sprint 12
 
 **Estimated Effort:**
-- **Sprint 11 Basic CSE (T5.1):** 2-3 hours implementation + 1 hour integration = **3-4 hours total**
+- **Sprint 11 Basic CSE (T5.1):** 1.5h algorithm + 0.5h cost model + 0.5h integration + 1h code gen + 1h testing + 0.5h docs = **5 hours total**
 - **Sprint 12 Extended CSE (T5.2-T5.4):** 4-5 hours (if needed)
 
 **Recommendation:** Implement T5.1 (Expensive Function CSE) in Sprint 11 as MEDIUM priority transformation. This provides high-value optimization (eliminating redundant exp, log, sin, cos calls) with minimal complexity and risk.
@@ -732,7 +732,7 @@ Update GAMS code generator:
 - Document `--cse`, `--cse-threshold`, `--cse-min-cost` flags
 - Add usage examples
 
-**Total: 5.5 hours**
+**Total: 5 hours**
 
 ### Sprint 12: T5.2-T5.4 (Advanced CSE) - Optional
 
@@ -902,7 +902,6 @@ Total cost = `C + O + (R × 0)` = `C + O` (compute once, assign to temp, reuse t
 
 **CSE is beneficial when:**
 ```
-C + O < C × R
 C + O < C × R
 O < C × R - C
 O < C × (R - 1)
