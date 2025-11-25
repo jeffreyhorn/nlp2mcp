@@ -639,15 +639,69 @@ grad_f = 5*x*exp(y) + (2*a + b)/c
 - **Reduction:** 37.5% fewer operations
 
 ## Deliverables
+
+### Core Sprint 11 Features
 - Simplification engine updates + documentation + examples.
 - CI workflows covering GAMSLib sampling, PATH smoke subset, performance guardrails.
 - Diagnostics mode implementation and supporting docs.
 - Release tag `v0.9.0`.
 
+### High Priority Action Items from Sprint 10 Retrospective
+
+**1. maxmin.gms Implementation (Parser Coverage)**
+- Dedicated research phase for nested/subset indexing semantics
+- Prototype approach before full implementation
+- Budget: 8-12 hours for complexity 9/10 feature
+- Target: maxmin.gms 18% → 100% (final GAMSLIB Tier 1 model)
+- Goal: Achieve 100% parse rate on all 10 GAMSLIB Tier 1 models
+
+**2. Effort Estimation Refinement (Process Improvement)**
+- Calibrate estimation based on Sprint 10 actuals (~18-20h vs. 20-31h budgeted)
+- Use Sprint 10 velocity as baseline (3 features in 6 days)
+- Track actual time spent in Sprint 11 for better future data
+- Update estimation templates with refined coefficients
+
+**3. Incremental Documentation Process (Process Improvement)**
+- Update SPRINT_LOG.md after each PR merge (not end of sprint)
+- Document decisions and lessons learned immediately
+- Add "update docs" to PR checklist template
+- Create incremental documentation workflow guide
+
+### Medium Priority Action Items from Sprint 10 Retrospective
+
+**4. GAMSLIB Tier 2 Models Exploration (Future Planning)**
+- Research next set of models beyond Tier 1
+- Identify new blockers and complexity levels
+- Prioritize models for Sprint 11-12
+- Create Tier 2 feature dependency matrix
+
+**5. Feature Interaction Testing (Quality Improvement)**
+- Test feature combinations incrementally (after each PR, not end of sprint)
+- Create synthetic tests that combine multiple features
+- Add "integration test" step to PR checklist
+- Validate no regressions when features interact
+
+**6. Nested Function Call Support (Parser Coverage)**
+- Remaining blocker for circle.gms (3 lines) to reach 100%
+- Low priority but achieves complete circle.gms coverage
+- Estimate: 2-3 hours (low complexity)
+- Example: `exp(log(x))`, `sqrt(power(a, 2))`
+
 ## Acceptance Criteria
 - Simplification reduces derivative term count ≥20 % on at least half of benchmark models while keeping correctness checks green.
 - CI guardrails run on every PR/nightly and block regressions per thresholds.
 - Diagnostics mode validated on representative models; UX checklist updated.
+
+### High Priority Action Items
+- maxmin.gms achieves 100% parse rate (nested/subset indexing implemented and tested)
+- 100% parse rate achieved on all 10 GAMSLIB Tier 1 models
+- Sprint 11 effort estimation refined and documented using Sprint 10 actuals
+- Incremental documentation process established, documented, and followed throughout sprint
+
+### Medium Priority Action Items (Stretch Goals)
+- GAMSLIB Tier 2 models researched with blocker analysis and prioritization complete
+- Feature interaction tests added to synthetic test suite with ≥3 combination tests
+- Nested function calls implemented (circle.gms → 100%)
 
 ---
 
