@@ -362,9 +362,10 @@ test -f data/gamslib_nlp/maxmin.gms && echo "✅ maxmin.gms available"
 
 ## Task 3: Design Aggressive Simplification Architecture
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 5 hours  
+**Actual Time:** ~5 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Simplification team  
 **Dependencies:** Task 1 (Known Unknowns)  
@@ -431,15 +432,107 @@ Upfront design prevents costly refactoring during sprint.
 
 ### Changes
 
-**Files to Create:**
-- `docs/planning/EPIC_2/SPRINT_11/aggressive_simplification_architecture.md` - Architecture doc
-- `docs/planning/EPIC_2/SPRINT_11/transformation_catalog.md` - Transformation patterns with examples
+**Files Created:**
+- ✅ `docs/planning/EPIC_2/SPRINT_11/aggressive_simplification_architecture.md` - Comprehensive architecture (10 sections, ~12,000 words)
+- ✅ `docs/planning/EPIC_2/SPRINT_11/transformation_catalog.md` - 18 transformation patterns with detailed specifications
 
-To be completed during task execution.
+**Files Updated:**
+- ✅ `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` - Verified 8 unknowns (1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 1.10, 1.11)
+- ✅ `docs/planning/EPIC_2/SPRINT_11/PREP_PLAN.md` - Task 3 marked COMPLETE
 
 ### Result
 
-To be completed during task execution.
+**Executive Summary:**
+Sprint 11 Prep Task 3 successfully designed comprehensive architecture for aggressive simplification mode. Key decisions: 8-step pipeline with fixpoint iteration, 150% size budget with automatic rollback, opt-in FD validation, and prioritized 6 HIGH-priority transformations for Sprint 11 implementation (12-15h total effort).
+
+**Architecture Highlights:**
+
+1. **8-Step Transformation Pipeline (Optimally Ordered):**
+   - Step 1: Basic simplification (existing)
+   - Step 2: Like-term combination (existing)
+   - Step 3: Associativity for constants (NEW - enables constant folding)
+   - Step 4: Fraction combining (NEW - consolidates before factoring)
+   - Step 5: Distribution/Factoring (NEW - primary term reduction)
+   - Step 6: Division simplification (NEW - enables cancellation)
+   - Step 7: Multi-term factoring (NEW - higher-order patterns)
+   - Step 8: CSE (NEW - optional, final pass)
+   - **Fixpoint iteration:** Max 5 passes until convergence
+
+2. **18 Transformation Patterns Cataloged:**
+   - **Category 1 (Distribution/Factoring):** 4 patterns
+   - **Category 2 (Fraction Simplification):** 4 patterns
+   - **Category 3 (Nested Operations):** 3 patterns
+   - **Category 4 (Division by Multiplication):** 3 patterns
+   - **Category 5 (CSE):** 4 patterns
+   - **Priority breakdown:** 6 HIGH, 4 MEDIUM, 5 LOW (defer to Sprint 12), 3 already implemented
+
+3. **Safety Mechanisms Designed:**
+   - **Size budget:** 150% growth limit per transformation with automatic rollback
+   - **Depth limit:** Max depth = 20 to prevent pathological nesting
+   - **Cancellation detection:** Predictive for distribution over division (T2.2)
+   - **Validation:** Opt-in FD checks (epsilon=1e-6, 3 test points)
+   - **Performance budget:** <10% of total conversion time (enforced via fixpoint iteration limit)
+
+4. **Metrics and Diagnostics:**
+   - `--simplification-stats` output specification with per-step metrics
+   - Term count, operation count, depth, size tracking
+   - Transformation application counts
+   - Performance overhead measurement
+   - Integration with `--diagnostic` mode
+
+**Key Design Decisions:**
+
+**Unknown 1.2 (Validation):** ✅ FD validation sufficient, opt-in via `--validate` flag (epsilon=1e-6, 3 test points)
+
+**Unknown 1.3 (Size Explosion):** ✅ 150% threshold with AST node count, automatic rollback, depth limit=20
+
+**Unknown 1.4 (Cancellation Detection):** ✅ Predictive for distribution (pattern-based), speculative+rollback for others
+
+**Unknown 1.5 (Fraction Applicability):** ✅ Same as 1.4 (conditional distribution)
+
+**Unknown 1.6 (Associativity Safety):** ✅ Safe with IEEE 754, negligible floating-point errors (~1e-15)
+
+**Unknown 1.8 (Division Chains):** ✅ Safe for constant denominators only, always beneficial
+
+**Unknown 1.10 (Pipeline Ordering):** ✅ Designed order optimal (associativity→fractions→factoring→division→CSE) with mathematical justification
+
+**Unknown 1.11 (Performance Budget):** ✅ Global 10% budget, fixpoint iteration limit (max 5), no per-transformation allocation
+
+**Implementation Estimate:**
+
+**Sprint 11 Baseline (HIGH priority transformations):**
+- T1.1 Common Factor Extraction: 2h
+- T1.2 Common Factor (Multiple Terms): +0.5h
+- T2.1 Fraction Combining: 1.5h
+- T2.2 Distribution (Conditional): 2h
+- T3.1 Associativity for Constants: 1h
+- T4.2 Variable Factor Cancellation: 1.5h
+- Pipeline integration: 2h
+- Metrics/diagnostics: 2h
+- **Total: 12.5h**
+
+**Sprint 11 Extended (+ MEDIUM priority):**
+- T1.3 Multi-Term Factoring: 2h
+- T3.2 Division Chain: 0.5h
+- T4.1 Constant Extraction: 1h
+- T5.1 CSE: 2h
+- **Additional: 5.5h**
+- **Grand Total: 18h**
+
+**Deferred to Sprint 12 (LOW priority):** 5 transformations (8h estimated)
+
+**Architecture Validation:**
+- All 5 transformation categories from PROJECT_PLAN.md covered
+- 8-step pipeline matches PROJECT_PLAN.md specification with optimization
+- Target: ≥20% term reduction on ≥50% benchmark models (achievable with HIGH priority transformations)
+- Performance: <10% overhead (validated via fixpoint limit + timeout)
+- Correctness: FD validation + PATH alignment in CI
+
+**Integration with Existing Code:**
+- Extends existing `simplify()` and `simplify_advanced()` functions in `src/ad/ad_core.py`
+- Reuses utilities from `src/ad/term_collection.py` (_flatten_addition, _extract_term, etc.)
+- New module: `src/ad/aggressive_transformations.py` (houses all new transformations)
+- New module: `src/ad/simplification_metrics.py` (metrics collection and reporting)
 
 ### Verification
 
@@ -467,15 +560,15 @@ grep -q "Heuristics\|Safety" docs/planning/EPIC_2/SPRINT_11/aggressive_simplific
 
 ### Acceptance Criteria
 
-- [ ] Architecture document covers all 5 transformation categories from PROJECT_PLAN.md
-- [ ] 8-step transformation pipeline designed with execution order justified
-- [ ] Each transformation has pattern, applicability conditions, example
-- [ ] Heuristics documented: size limit (150%), depth limit, cancellation detection
-- [ ] Validation strategy defined: FD checks, PATH alignment, performance <10%
-- [ ] Metrics collection designed for `--simplification-stats`
-- [ ] Extension points in existing code identified
-- [ ] Rollback/safety mechanisms designed to prevent expression explosion
-- [ ] Unknowns 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 1.10, 1.11 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Architecture document covers all 5 transformation categories from PROJECT_PLAN.md
+- [x] 8-step transformation pipeline designed with execution order justified
+- [x] Each transformation has pattern, applicability conditions, example
+- [x] Heuristics documented: size limit (150%), depth limit, cancellation detection
+- [x] Validation strategy defined: FD checks, PATH alignment, performance <10%
+- [x] Metrics collection designed for `--simplification-stats`
+- [x] Extension points in existing code identified
+- [x] Rollback/safety mechanisms designed to prevent expression explosion
+- [x] Unknowns 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 1.10, 1.11 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

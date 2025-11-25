@@ -7,6 +7,172 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 11: Prep Phase - Task 3: Design Aggressive Simplification Architecture - 2025-11-25
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Designed comprehensive architecture for `--simplification aggressive` mode with 8-step transformation pipeline, 18 transformation patterns across 5 categories, and safety mechanisms (150% size budget, automatic rollback, opt-in FD validation). **Key decisions:** Prioritized 6 HIGH-priority transformations for Sprint 11 (12-15h effort), deferred 5 LOW-priority patterns to Sprint 12, and validated all 8 unknowns with implementation-ready designs.
+
+#### Achievements
+
+**Architecture Document Created (aggressive_simplification_architecture.md, 10 sections):**
+- ✅ Section 1: Executive Summary with implementation effort (12-15h baseline, 15-18h with CSE)
+- ✅ Section 2: Background and Motivation (why aggressive simplification needed)
+- ✅ Section 3: Existing Simplification Architecture (current code review, extension points)
+- ✅ Section 4: 8-Step Transformation Pipeline (optimally ordered, fixpoint iteration)
+- ✅ Section 5: Individual Transformation Categories (5 categories, detailed algorithms)
+- ✅ Section 6: Heuristics and Safety Mechanisms (size budget, depth limit, cancellation detection, rollback)
+- ✅ Section 7: Validation Strategy (FD checks, PATH alignment, performance budgeting)
+- ✅ Section 8: Metrics and Diagnostics (`--simplification-stats` specification)
+- ✅ Section 9: Implementation Plan (5 phases with effort estimates)
+- ✅ Section 10: Risk Assessment and Mitigations (5 risks with mitigations)
+
+**Transformation Catalog Created (transformation_catalog.md, 18 patterns):**
+- ✅ **Category 1 (Distribution/Factoring):** 4 patterns
+  - T1.1: Common Factor Extraction (HIGH priority, 2h)
+  - T1.2: Common Factor (Multiple Terms) (HIGH priority, +0.5h)
+  - T1.3: Multi-Term Factoring (MEDIUM priority, 2h)
+  - T1.4: Coefficient Factoring (already implemented)
+- ✅ **Category 2 (Fraction Simplification):** 4 patterns
+  - T2.1: Fraction Combining (HIGH priority, 1.5h)
+  - T2.2: Distribution Over Division (HIGH priority, 2h)
+  - T2.3: Common Denominator (LOW priority, defer to Sprint 12)
+  - T2.4: Multiplicative Cancellation (already implemented)
+- ✅ **Category 3 (Nested Operations):** 3 patterns
+  - T3.1: Associativity for Constants (HIGH priority, 1h)
+  - T3.2: Division Chain Simplification (MEDIUM priority, 0.5h)
+  - T3.3: Multiplication-Division Reordering (LOW priority, defer)
+- ✅ **Category 4 (Division by Multiplication):** 3 patterns
+  - T4.1: Constant Extraction from Denominator (MEDIUM priority, 1h)
+  - T4.2: Variable Factor Cancellation (HIGH priority, 1.5h)
+  - T4.3: Distribution for Cancellation (same as T2.2)
+- ✅ **Category 5 (CSE):** 4 patterns
+  - T5.1: Expensive Function CSE (MEDIUM priority, 2h)
+  - T5.2: Nested Expression CSE (LOW priority, defer)
+  - T5.3: Multiplicative Subexpression CSE (LOW priority, defer)
+  - T5.4: CSE with Aliasing (LOW priority, defer)
+
+**8-Step Pipeline Designed (Optimally Ordered):**
+1. Basic simplification (existing)
+2. Like-term combination (existing)
+3. **Associativity for constants** (NEW) - enables more constant folding
+4. **Fraction combining** (NEW) - consolidates before factoring
+5. **Distribution cancellation/factoring** (NEW) - primary term reduction
+6. **Division simplification** (NEW) - enables cancellation
+7. **Multi-term factoring** (NEW) - higher-order patterns
+8. **CSE** (NEW, optional) - final pass
+
+**Fixpoint Iteration:** Max 5 iterations until convergence (prevents infinite loops)
+
+**Safety Mechanisms Designed:**
+- ✅ **Size budget:** 150% growth limit with automatic rollback (`_check_size_budget()`)
+- ✅ **Depth limit:** Max depth = 20 to prevent pathological nesting
+- ✅ **Cancellation detection:** Predictive for distribution over division (`_will_enable_cancellation()`)
+- ✅ **Validation:** Opt-in FD checks (epsilon=1e-6, 3 test points, `validate_transformation_fd()`)
+- ✅ **Performance budget:** <10% of total conversion time (fixpoint iteration limit enforces)
+
+**Unknown Verification (KNOWN_UNKNOWNS.md updated for 8 unknowns):**
+- ✅ **Unknown 1.2 (Validation):** FD validation sufficient, opt-in via `--validate` flag
+- ✅ **Unknown 1.3 (Size Explosion):** 150% threshold with AST node count, automatic rollback
+- ✅ **Unknown 1.4 (Cancellation Detection):** Predictive for distribution, speculative+rollback for others
+- ✅ **Unknown 1.5 (Fraction Applicability):** Same as 1.4 (conditional distribution)
+- ✅ **Unknown 1.6 (Associativity Safety):** Safe with IEEE 754, negligible errors (~1e-15)
+- ✅ **Unknown 1.8 (Division Chains):** Safe for constant denominators only
+- ✅ **Unknown 1.10 (Pipeline Ordering):** Designed order optimal with mathematical justification
+- ✅ **Unknown 1.11 (Performance Budget):** Global 10% budget, fixpoint iteration limit
+
+#### Key Design Decisions
+
+**Transformation Pipeline Ordering:**
+- **Why Associativity before Factoring?** Consolidates constants enabling like-term collection
+- **Why Fractions before Factoring?** Consolidates denominators enabling common factor detection in numerators
+- **Why Factoring before Division?** Enables single cancellation vs multiple
+- **Why CSE last?** Operates on fully simplified expression (algebraic transformations may eliminate redundancy)
+
+**Safety-First Approach:**
+- All transformations wrapped with size budget checks
+- Automatic rollback if transformation increases size >150% without benefit
+- Cancellation detection prevents wasteful expansions
+- Fixpoint iteration bounds total execution time
+
+**Priority-Based Implementation:**
+- **HIGH priority (6 transformations):** Sprint 11 baseline (12.5h)
+- **MEDIUM priority (4 transformations):** Sprint 11 extended (18h total)
+- **LOW priority (5 transformations):** Defer to Sprint 12 (8h)
+- **Already implemented (3 patterns):** Reuse existing code
+
+#### Implementation Estimate
+
+**Sprint 11 Baseline (HIGH priority only):**
+| Transformation | Effort | Notes |
+|---|---|---|
+| T1.1 Common Factor Extraction | 2h | Core factoring algorithm |
+| T1.2 Common Factor (Multiple) | +0.5h | Extends T1.1 |
+| T2.1 Fraction Combining | 1.5h | Group by denominator |
+| T2.2 Distribution (Conditional) | 2h | Cancellation detection |
+| T3.1 Associativity | 1h | Flatten, fold constants |
+| T4.2 Variable Cancellation | 1.5h | Factor intersection |
+| Pipeline integration | 2h | Fixpoint iteration, safety wrappers |
+| Metrics/diagnostics | 2h | `--simplification-stats` |
+| **Total** | **12.5h** | **Sprint 11 baseline** |
+
+**Sprint 11 Extended (+ MEDIUM priority):**
+- T1.3 Multi-Term Factoring: 2h
+- T3.2 Division Chain: 0.5h
+- T4.1 Constant Extraction: 1h
+- T5.1 CSE: 2h
+- **Additional: 5.5h → Grand Total: 18h**
+
+**Sprint 12 (LOW priority deferred):**
+- T2.3 Common Denominator: 2h
+- T3.3 Reordering: 1.5h
+- T5.2 Nested CSE: 1h
+- T5.3 Multiplicative CSE: 0.5h
+- T5.4 CSE Aliasing: 3h
+- **Total: 8h**
+
+#### Deliverables
+
+- `docs/planning/EPIC_2/SPRINT_11/aggressive_simplification_architecture.md` - Comprehensive architecture (10 sections, implementation-ready)
+- `docs/planning/EPIC_2/SPRINT_11/transformation_catalog.md` - 18 transformation patterns with detailed specifications
+- `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` - Updated with 8 unknowns verified (1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 1.10, 1.11)
+- `docs/planning/EPIC_2/SPRINT_11/PREP_PLAN.md` - Task 3 marked COMPLETE with comprehensive results
+
+#### Impact
+
+**Sprint 11 Implementation Ready:**
+- Architecture provides clear implementation path for aggressive simplification
+- 8-step pipeline optimally ordered (validated against PROJECT_PLAN.md examples)
+- Safety mechanisms prevent expression explosion and performance regressions
+- Metrics enable transparency and debugging
+
+**Risk Mitigation:**
+- 150% size budget prevents runaway expression growth
+- FD validation catches correctness bugs
+- Performance budget (<10%) prevents unacceptable slowdowns
+- Prioritization allows incremental implementation (HIGH → MEDIUM → LOW)
+
+**Target Validation:**
+- **Goal:** ≥20% derivative term reduction on ≥50% benchmark models
+- **Achievable:** HIGH priority transformations (factoring, fractions, associativity) are primary term reduction mechanisms
+- **Measurable:** `--simplification-stats` tracks term count reduction per step
+
+**Integration Strategy:**
+- Extends existing `src/ad/ad_core.py` (`simplify_aggressive()` function)
+- Reuses utilities from `src/ad/term_collection.py`
+- New modules: `src/ad/aggressive_transformations.py`, `src/ad/simplification_metrics.py`
+- Backward compatible: existing basic/advanced simplification unchanged
+
+#### Next Steps
+
+- Task 4: Research Common Subexpression Elimination (verify Unknown 1.9)
+- Task 5: Prototype Factoring Algorithms (verify Unknowns 1.1, 1.7)
+- Sprint 11 Day 1: Begin implementation with HIGH priority transformations
+
+---
+
 ### Sprint 11: Prep Phase - Task 2: Research maxmin.gms Nested/Subset Indexing - 2025-11-25
 
 **Status:** ✅ COMPLETE
