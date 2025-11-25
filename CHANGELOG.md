@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 11: Prep Phase - Task 1: Create Known Unknowns List - 2025-11-25
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive Known Unknowns document for Sprint 11 with 26 unknowns across 7 categories, focusing on aggressive simplification, maxmin.gms implementation, CI regression guardrails, UX diagnostics, and process improvements. Established bidirectional traceability with Task-to-Unknown mapping table linking prep tasks to specific unknowns.
+
+#### Achievements
+
+**Known Unknowns Document (3 hours):**
+- ✅ Created `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` (26 unknowns)
+- ✅ 7 categories: Aggressive Simplification (11), maxmin.gms (4), CI Guardrails (4), UX Diagnostics (2), Process Improvements (3), Tier 2 Exploration (1), Nested Function Calls (1)
+- ✅ Priority distribution: 7 Critical (27%), 10 High (38%), 7 Medium (27%), 2 Low (8%)
+- ✅ Each unknown includes: Priority, Assumption, Research Questions (3-5), How to Verify, Risk if Wrong, Estimated Research Time, Owner, Status
+- ✅ Task-to-Unknown mapping table showing which prep tasks (2-12) verify which unknowns
+- ✅ Total estimated research time: 32 hours distributed across prep tasks
+
+**PREP_PLAN.md Updates (30 minutes):**
+- ✅ Updated Task 1 status: NOT STARTED → COMPLETE
+- ✅ Checked off all 6 acceptance criteria
+- ✅ Added "Unknowns Verified" metadata to Tasks 2-12 showing bidirectional traceability
+- ✅ Each task (2-12) now links to specific unknowns it will verify
+
+**Key Unknowns Identified:**
+- ✅ Category 1 (Aggressive Simplification): 11 unknowns covering factoring algorithms, transformation ordering, heuristics, validation strategies
+- ✅ Category 2 (maxmin.gms): 4 unknowns for nested/subset indexing semantics and implementation approach
+- ✅ Category 3 (CI Guardrails): 4 unknowns for GAMSLib sampling, PATH integration, and infrastructure setup
+- ✅ Category 4 (UX Diagnostics): 2 unknowns for diagnostic output granularity and format
+- ✅ Category 5 (Process Improvements): 3 unknowns for incremental documentation and effort estimation
+- ✅ Categories 6-7 (Stretch Goals): Tier 2 exploration and nested function calls (may defer)
+
+#### Deliverables
+
+- `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` - 26 unknowns with complete metadata
+- `docs/planning/EPIC_2/SPRINT_11/PREP_PLAN.md` - Updated Task 1 to COMPLETE, Tasks 2-12 with "Unknowns Verified" metadata
+- Task-to-Unknown mapping table providing bidirectional traceability
+
+#### Impact
+
+**Proactive Risk Identification:**
+- 26 unknowns identified before Sprint 11 starts (preventing mid-sprint surprises)
+- Aggressive simplification unknowns focus on correctness risks (expression explosion, wrong transformations)
+- maxmin.gms unknowns validate implementation approach (8-12 hour budget)
+- CI guardrails unknowns clarify infrastructure requirements early
+
+**Preparation Quality:**
+- 32 hours of research tasks mapped to specific unknowns
+- Tasks 2-12 now have clear verification targets (which unknowns to resolve)
+- Bidirectional traceability: unknowns → tasks → unknowns verified
+
+**Sprint 10 Lessons Applied:**
+- Comprehensive unknown identification upfront (learned from Sprint 10 success)
+- Focus on architectural unknowns (transformation pipeline, heuristics, validation)
+- Include stretch goal unknowns (Tier 2, nested functions) for scheduling decisions
+
+#### Next Steps
+
+- Task 2: Research maxmin.gms Nested/Subset Indexing (verify Unknowns 2.1-2.4)
+- Task 3: Design Aggressive Simplification Architecture (verify Unknowns 1.2-1.11)
+- Continue with prep tasks 4-12 before Sprint 11 Day 1
+
+---
+
 ### Sprint 10: Prep Phase - Task 8: Research Nested/Subset Indexing Semantics - 2025-11-24
 
 **Status:** ✅ COMPLETE (Completed in Task 4)
