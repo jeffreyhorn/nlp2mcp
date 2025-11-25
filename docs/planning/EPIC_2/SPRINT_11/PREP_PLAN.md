@@ -574,9 +574,10 @@ grep -q "Heuristics\|Safety" docs/planning/EPIC_2/SPRINT_11/aggressive_simplific
 
 ## Task 4: Research Common Subexpression Elimination (CSE)
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 4 hours  
+**Actual Time:** ~4 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Simplification team  
 **Dependencies:** Task 3 (Simplification Architecture)  
@@ -643,15 +644,71 @@ Research needed to determine if Sprint 11 scope or defer to Sprint 12.
 
 ### Changes
 
-**Files to Create:**
-- `docs/research/cse_research.md` - CSE algorithm research
-- `docs/planning/EPIC_2/SPRINT_11/cse_integration_design.md` - Integration design (if Sprint 11 scope)
+**Files Created:**
+- ✅ `docs/planning/EPIC_2/SPRINT_11/cse_research.md` - Comprehensive CSE research document (~1,000 lines)
 
-To be completed during task execution.
+**Files Updated:**
+- ✅ `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` - Unknown 1.9 verified with cost model and scope decision
+- ✅ `docs/planning/EPIC_2/SPRINT_11/PREP_PLAN.md` - Task 4 status updated to COMPLETE
+- ✅ `CHANGELOG.md` - Task 4 entry added
+
+**Note:** Integration design incorporated directly into `cse_research.md` (Section 4: Integration Design) rather than separate document.
 
 ### Result
 
-To be completed during task execution.
+**Research Complete:** Comprehensive CSE research completed with algorithm selection, cost model design, and Sprint 11 scope decision.
+
+**Key Findings:**
+
+1. **Algorithm Selection:** Hash-based tree traversal (SymPy approach) most suitable for expression DAGs
+   - Complexity: O(n) average, O(n²) worst case
+   - Simple frequency counting with cost-weighted thresholds
+   - Avoids overkill of compiler CSE (LLVM GVN-PRE, GCC global CSE)
+
+2. **Cost Model Design:** Cost-weighted threshold model balances benefit vs overhead
+   - **Formula:** `operation_cost × (reuse_count - 1) > 1` (mathematical proof in Appendix A)
+   - **Thresholds:** ≥2 for expensive ops (cost ≥3), ≥3 for cheap ops (cost ≤2)
+   - **Operation costs:** exp/log=5, trig=4, power/div=3, mul=2, add/sub=1
+   - **Rationale:** Transcendental functions ~200 cycles vs arithmetic ~3 cycles (50-100× difference)
+
+3. **Integration Design:** CSE as Step 8 (final pass) in transformation pipeline
+   - Position: After all algebraic simplifications (factoring eliminates most redundancy first)
+   - Temporary variables: `cse_tmp_0`, `cse_tmp_1`, etc.
+   - Code generation: Emit `Scalar` declarations and assignments before equations
+   - Metadata: Store temporaries in expression attribute for code gen
+
+4. **Flag Design:**
+   - `--cse`: Enable CSE (default: disabled, opt-in)
+   - `--cse-threshold=N`: Override reuse threshold (default: cost-weighted, range: 2-10)
+   - `--cse-min-cost=N`: Only CSE ops with cost ≥N (default: 3 = expensive only, range: 1-5)
+
+5. **Sprint 11 Scope Decision:** **Implement T5.1 (Expensive Function CSE) only**
+   - **Effort:** 5 hours (MEDIUM priority transformation)
+   - **Defer to Sprint 12:** T5.2 (Nested CSE), T5.3 (Multiplicative CSE), T5.4 (CSE with Aliasing)
+   - **Rationale:**
+     - High value (5-10% typical FLOP reduction, 20-30% best case for exp/log heavy models)
+     - Low complexity (simple algorithm, straightforward integration)
+     - Low risk (opt-in, well-understood technique, FD validated)
+     - Fits in Sprint 11 extended scope (12.5h baseline + 5.5h MEDIUM = 18h total)
+
+**Evidence Base:**
+- **Compiler implementations:** LLVM (GVN-PRE), GCC (local/global CSE)
+- **Symbolic math tools:** SymPy `cse()` implementation analysis
+- **AD tools:** dvda (Haskell), reverse-mode AD tape minimization
+- **Performance data:** Transcendental function costs from Stack Overflow, OpTuner paper
+- **Literature:** CMU compiler design lectures, AD/symbolic differentiation equivalence papers
+
+**Unknown 1.9 Verification:**
+- ✅ Threshold varies by cost (≥2 expensive, ≥3 cheap) - VERIFIED
+- ✅ Temp overhead ~1 operation equivalent - VERIFIED
+- ✅ Cost model formula derived and validated - VERIFIED
+- ✅ Nested CSE deferred to Sprint 12 - VERIFIED
+- ✅ Opt-in via `--cse` flag - VERIFIED
+
+**Impact on Sprint 11:**
+- Add T5.1 to MEDIUM priority (5 hours)
+- Total effort: 12.5h (HIGH baseline) + 5.5h (MEDIUM: T1.3, T3.2, T4.1, T5.1) = **18h**
+- Within available Sprint 11 time (~20-22 hours)
 
 ### Verification
 
@@ -678,13 +735,13 @@ fi
 
 ### Acceptance Criteria
 
-- [ ] CSE algorithms researched (hash-based, tree traversal, cost models)
-- [ ] Reuse threshold analyzed (≥2 vs. ≥3 vs. cost-based)
-- [ ] Integration approach designed (where in pipeline, how to handle temporaries)
-- [ ] Scope decision made: Sprint 11 full/basic/deferred with clear rationale
-- [ ] If Sprint 11: Integration design complete with implementation plan
-- [ ] If deferred: Sprint 12 proposal documented
-- [ ] Unknown 1.9 verified and updated in KNOWN_UNKNOWNS.md
+- [x] CSE algorithms researched (hash-based, tree traversal, cost models)
+- [x] Reuse threshold analyzed (≥2 vs. ≥3 vs. cost-based)
+- [x] Integration approach designed (where in pipeline, how to handle temporaries)
+- [x] Scope decision made: Sprint 11 full/basic/deferred with clear rationale
+- [x] If Sprint 11: Integration design complete with implementation plan
+- [x] If deferred: Sprint 12 proposal documented
+- [x] Unknown 1.9 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

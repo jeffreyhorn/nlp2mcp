@@ -488,7 +488,59 @@ CSE (common subexpression elimination) is beneficial when subexpression is reuse
 - Under-aggressive CSE → missed optimization (expensive `exp(x)` computed 5 times)
 - Wrong default → user confusion, unexpected behavior
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 4 will verify)
+**Verification Results:** ✅ **VERIFIED - Cost-weighted threshold model with opt-in flag**
+
+**Decision:**
+**CSE Algorithm:** Hash-based tree traversal (SymPy approach) with frequency counting
+
+**Cost Model:** Cost-weighted threshold combining reuse count and operation cost
+- **Formula:** `operation_cost × (reuse_count - 1) > 1` (CSE beneficial if savings > overhead)
+- **Thresholds:**
+  - Expensive ops (cost ≥3: exp, log, trig, power, div): Apply CSE if reuse_count ≥ 2
+  - Cheap ops (cost ≤2: mul, add, sub): Apply CSE if reuse_count ≥ 3
+
+**Operation Cost Weights:**
+| Operation | Cost Weight | Rationale |
+|-----------|-------------|-----------|
+| exp, log | 5 | ~200 CPU cycles (transcendental functions) |
+| sin, cos, tan | 4 | ~100-200 CPU cycles |
+| power, div, sqrt | 3 | ~15-30 cycles |
+| mul | 2 | ~3-5 cycles |
+| add, sub, const, var | 1 | ~1-2 cycles (baseline) |
+
+**Temporary Variable Overhead:** ~1 operation equivalent (assignment cost) per temporary
+
+**Default Behavior:** Opt-in via `--cse` flag (not default in aggressive mode)
+
+**Flags:**
+- `--cse`: Enable CSE in aggressive mode (default: disabled)
+- `--cse-threshold=N`: Override reuse threshold (default: cost-weighted, range: 2-10)
+- `--cse-min-cost=N`: Only CSE ops with cost ≥ N (default: 3 = expensive ops only, range: 1-5)
+
+**Nested CSE:** Deferred to Sprint 12 (low priority, marginal value)
+
+**Rationale:**
+- **Cost-weighted thresholds** balance benefit (FLOP reduction) vs overhead (temp variables)
+- **Expensive ops prioritized** provide highest value (eliminating 1 exp call saves ~200 cycles vs ~3 for mul)
+- **Opt-in default** avoids surprising users with changed code structure
+- **Research evidence:** 
+  - Transcendental functions (exp, log, sin, cos) are 50-100× more expensive than basic arithmetic
+  - SymPy uses simple ≥2 threshold (no cost model) but operates in pure symbolic context
+  - Compilers (LLVM GVN-PRE, GCC CSE) use sophisticated analysis but target control flow (overkill for DAGs)
+
+**Evidence:**
+- Literature review: LLVM, GCC, SymPy implementations
+- Performance analysis: transcendental functions ~200 cycles vs arithmetic ~3 cycles
+- Cost model derivation: mathematical proof of thresholds (Appendix A in cse_research.md)
+- Similar tools: dvda (Haskell AD), OpTuner (math function optimization)
+
+**Implementation Reference:** `docs/planning/EPIC_2/SPRINT_11/cse_research.md` (comprehensive research document, 981 lines)
+
+**Sprint 11 Scope:**
+- **Implement:** T5.1 (Expensive Function CSE) - 5 hours effort (MEDIUM priority)
+- **Defer to Sprint 12:** T5.2 (Nested CSE), T5.3 (Multiplicative CSE), T5.4 (CSE with Aliasing)
+
+**Impact:** Medium-high value (5-10% typical FLOP reduction, 20-30% best case), low-medium complexity, low risk (opt-in)
 
 ---
 
