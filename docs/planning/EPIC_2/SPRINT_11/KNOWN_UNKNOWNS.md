@@ -1150,7 +1150,59 @@ PATH solver license permits use in CI (automated cloud testing). If not, we can 
 - Too loose thresholds → real regressions slip through (50% slower not caught)
 - Wrong metrics → optimize wrong thing (measure parse time but convert time regresses)
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 6 will verify)
+**Verification Results:** ✅ **VERIFIED - 20%/50% thresholds with multi-metric tracking**
+
+**Decision:**
+Performance regression thresholds should use hybrid absolute + relative approach with multi-metric tracking:
+
+**Thresholds:**
+
+| Metric | Warning | Failure | Rationale |
+|--------|---------|---------|-----------|
+| Parse rate | 5% drop | 10% drop | Current threshold proven effective |
+| Convert rate | 5% drop | 10% drop | NEW - validates full pipeline |
+| Conversion time | +20% | +50% | Accounts for ±10% variance on shared runners |
+| Fast test runtime | >27s | >30s | Current budget (already implemented) |
+| Simplification effectiveness | -10% | -20% | NEW - Sprint 11 feature metric |
+
+**Metrics to Track:**
+- **Primary:** Parse rate, convert rate, total conversion time
+- **Secondary:** Simplification effectiveness (term count reduction), operation count
+- **Tertiary:** CI runtime, memory usage (peak RSS)
+
+**Variance Handling:**
+- GitHub Actions shared runners have ±10% performance variance
+- 20% threshold provides 2× safety margin above typical variance
+- Use median of 3 runs for stability (if needed for flaky tests)
+
+**Baseline Storage:**
+```
+baselines/
+  performance/
+    baseline_latest.json  # Rolling baseline (git-lfs, updated on main merge)
+    baseline_sprint10.json  # Sprint 10 golden baseline
+    baseline_sprint11.json  # Sprint 11 golden baseline (target)
+    history/
+      2025-11-01_commit-abc123.json  # Historical snapshots
+      2025-11-15_commit-def456.json
+  parse_rate/
+    gamslib_ingestion_sprint11.json  # Current (git-tracked)
+```
+
+**Baseline Update Process:**
+- **Automatic:** Update `baseline_latest.json` on main merge (git-lfs)
+- **Manual:** Update golden baselines at sprint milestones
+- **Audit:** Git history provides full baseline evolution trail
+
+**Evidence:**
+- Existing `performance-check.yml` uses 30s absolute threshold (no false positives)
+- Existing `check_parse_rate_regression.py` uses 10% relative threshold (proven effective)
+- Industry standard: pytest-benchmark, Google Benchmark use 20-50% thresholds
+- Statistical analysis: 20% = 2σ above ±10% typical variance
+
+**Comprehensive Survey:** `docs/planning/EPIC_2/SPRINT_11/ci_regression_framework_survey.md` Section 4.2
+
+**Recommendation:** Implement multi-metric thresholds in Sprint 11 (12 hours estimated effort)
 
 ---
 
@@ -1182,7 +1234,69 @@ CI workflow runs on every PR (pull_request trigger) and nightly (schedule trigge
 - No parallelization → CI too slow (10 models * 2 min = 20 min total)
 - Baseline storage wrong → can't compare performance (CI useless)
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 6, 7 will verify)
+**Verification Results:** ✅ **VERIFIED - Matrix builds with git-lfs baselines and PR comments**
+
+**Decision:**
+CI workflow integration should use matrix builds for parallelization, git-lfs for baseline storage, and PR comments for reporting:
+
+**1. Matrix Builds:** ✅ **YES - Adopt for GAMSLib regression workflow**
+```yaml
+strategy:
+  matrix:
+    model: [trnsport, prodsch, bearing, hansmcp, scarfmcp, ...]  # 10 Tier 1 models
+  fail-fast: false  # Test all models even if one fails
+```
+- **Benefit:** 10 minutes → 2-3 minutes (parallel testing across GitHub runners)
+- **Isolation:** Per-model failures clearly visible
+- **Cost:** Within GitHub free tier (2000 min/month for private repos)
+
+**2. Baseline Storage:** ✅ **Git-lfs for performance, git-tracked for parse rate**
+- **Parse rate baselines** (small JSON, infrequent updates): Git-tracked (current approach)
+- **Performance baselines** (larger, frequent updates): Git-lfs
+- **Artifacts:** 30-day retention for PR comparisons
+- **Cost:** 1 GB free tier sufficient (baselines ~10 MB/month)
+
+**3. Trigger Strategy:** ✅ **Per-PR for fast checks, nightly for slow checks**
+- **Every PR:** Parse + Convert testing (<5 min with matrix builds)
+- **Nightly:** Parse + Convert + Solve with PATH/IPOPT (<30 min)
+- **Weekly:** Extended suite (Tier 2 models, performance trends)
+
+**4. Reporting:** ✅ **GitHub Actions summary + PR comments**
+```yaml
+- run: echo "## Regression Check Results" >> $GITHUB_STEP_SUMMARY
+- uses: actions/github-script@v7  # Post PR comment with summary table
+```
+- **Visibility:** Persistent PR comments (not ephemeral like workflow logs)
+- **Format:** Markdown tables with deltas (✅/❌ indicators)
+
+**5. Separation:** ✅ **Fast checks (parse + convert) vs. slow checks (solve)**
+- **Fast checks (<5 min):** Parse rate + convert rate (every PR)
+- **Slow checks (<30 min):** Solve validation with PATH/IPOPT (nightly)
+- **Rationale:** Balance comprehensive validation vs. fast feedback
+
+**Workflow Structure (Final Design):**
+```
+.github/workflows/
+  ci.yml                    # Existing - fast tests, linting (keep as-is)
+  gamslib-regression.yml    # Enhanced - matrix builds, conversion testing
+  performance-check.yml     # New - performance baselines, multi-metric thresholds
+  nightly-validation.yml    # New - full solve validation (Sprint 12)
+```
+
+**Evidence:**
+- Existing workflows already use caching, selective triggering, artifacts (proven effective)
+- Matrix builds supported natively in GitHub Actions (no additional complexity)
+- Git-lfs integrated with GitHub (transparent to workflows)
+- PR comment reporting used successfully in many open-source projects (Jest, ESLint, webpack)
+
+**Cost Analysis:**
+- Current: ~10 min/PR × 100 PRs/month = 1000 CI minutes
+- With matrix builds: ~3 min/PR × 100 PRs/month = 300 CI minutes
+- **Savings:** 700 minutes/month (faster feedback + lower cost)
+
+**Comprehensive Survey:** `docs/planning/EPIC_2/SPRINT_11/ci_regression_framework_survey.md` Sections 1.3, 1.4, 1.5, 5.4
+
+**Recommendation:** Implement matrix builds and enhanced reporting in Sprint 11 (4 hours effort)
 
 ---
 
