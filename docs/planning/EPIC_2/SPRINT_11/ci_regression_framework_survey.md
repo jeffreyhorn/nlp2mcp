@@ -208,7 +208,7 @@ print("::error file=app.py,line=10::Performance regression detected")
 
 **Existing Implementation** (`gamslib-regression.yml`):
 - **Trigger:** Changes to parser, grammar, IR, ingestion scripts, weekly schedule, manual
-- **Models Tested:** All GAMSLIB Tier 1 models (10 models currently)
+- **Models Tested:** All GAMSLib Tier 1 models (10 models currently)
 - **Checks:**
   1. Parse rate regression (10% threshold via `check_parse_rate_regression.py`)
   2. Dashboard up-to-date validation
@@ -492,7 +492,7 @@ def test_path_smoke_simple_mcp():
 
 **Smoke Test Suite for CI:**
 1. **Trivial MCP:** 2×2 system (x+y=1, x=y)
-2. **Small GAMSLIB MCP:** `hansmcp.gms` (5 variables, known solution)
+2. **Small GAMSLib MCP:** `hansmcp.gms` (5 variables, known solution)
 3. **Infeasible MCP:** System with no solution (x≥0, x+y=1, y≥2)
 4. **Unbounded MCP:** System with infinite solutions
 
@@ -825,7 +825,7 @@ steps:
 **4. Prototype IPOPT Alternative** (2 hours)
 - ✅ Install IPOPT in CI workflow (`apt-get install coinor-libipopt-dev`)
 - ✅ Implement `solve_mcp_with_ipopt()` using Fischer-Burmeister reformulation
-- ✅ Test accuracy on 3 GAMSLIB models (hansmcp, scarfmcp, oligomcp)
+- ✅ Test accuracy on 3 GAMSLib models (hansmcp, scarfmcp, oligomcp)
 - ✅ Compare solutions to PATH (should agree within 1%)
 - ✅ Document as PATH fallback if licensing prohibits CI use
 
@@ -1295,7 +1295,7 @@ where φ(a, b) = sqrt(a² + b²) - a - b  (Fischer-Burmeister)
 **Final Recommendation:**
 - **Primary:** PATH (if licensing permits CI use)
 - **Fallback:** IPOPT (open source, proven accuracy)
-- **Validation:** Compare PATH vs. IPOPT on 10 GAMSLIB models (expect <1% disagreement)
+- **Validation:** Compare PATH vs. IPOPT on 10 GAMSLib models (expect <1% disagreement)
 
 ---
 
