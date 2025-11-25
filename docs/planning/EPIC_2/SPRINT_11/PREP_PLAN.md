@@ -55,7 +55,7 @@ This prep plan focuses on research, prototyping, and infrastructure setup to de-
 
 ## Task 1: Create Sprint 11 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 3 hours  
 **Deadline:** Before Sprint 11 Day 1  
@@ -157,12 +157,12 @@ grep -q "CI.*Regression\|Guardrails" docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOW
 
 ### Acceptance Criteria
 
-- [ ] Document created with 50+ unknowns across 5 categories
-- [ ] All unknowns have assumption, verification method, priority, and risk if wrong
-- [ ] All Critical/High unknowns have verification plan with timeline
-- [ ] Unknowns cover all Sprint 11 features and action items
-- [ ] Template for updates during sprint defined
-- [ ] Verification deadlines assigned (Day 0/1/2)
+- [x] Document created with 50+ unknowns across 5 categories
+- [x] All unknowns have assumption, verification method, priority, and risk if wrong
+- [x] All Critical/High unknowns have verification plan with timeline
+- [x] Unknowns cover all Sprint 11 features and action items
+- [x] Template for updates during sprint defined
+- [x] Verification deadlines assigned (Day 0/1/2)
 
 ---
 
@@ -173,7 +173,8 @@ grep -q "CI.*Regression\|Guardrails" docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOW
 **Estimated Time:** 6 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Parser team  
-**Dependencies:** Task 1 (Known Unknowns)
+**Dependencies:** Task 1 (Known Unknowns)  
+**Unknowns Verified:** 2.1, 2.2, 2.3, 2.4
 
 ### Objective
 
@@ -272,6 +273,7 @@ test -f data/gamslib_nlp/maxmin.gms && echo "✅ maxmin.gms available"
 - Minimal reproducible test cases for each pattern
 - Complexity and risk assessment
 - Estimated implementation time (should be 8-12 hours based on research)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4
 
 ### Acceptance Criteria
 
@@ -282,6 +284,7 @@ test -f data/gamslib_nlp/maxmin.gms && echo "✅ maxmin.gms available"
 - [ ] Minimal test cases created for each pattern
 - [ ] Complexity assessment confirms 8-12 hour budget is reasonable
 - [ ] Edge cases identified (empty subsets, complex conditions, nested levels)
+- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -292,7 +295,8 @@ test -f data/gamslib_nlp/maxmin.gms && echo "✅ maxmin.gms available"
 **Estimated Time:** 5 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Simplification team  
-**Dependencies:** Task 1 (Known Unknowns)
+**Dependencies:** Task 1 (Known Unknowns)  
+**Unknowns Verified:** 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 1.10, 1.11
 
 ### Objective
 
@@ -387,6 +391,7 @@ grep -q "Heuristics\|Safety" docs/planning/EPIC_2/SPRINT_11/aggressive_simplific
 - Heuristic thresholds documented with rationale
 - Validation strategy (FD checks, size limits, performance budgets)
 - Extension points in existing code identified
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 1.10, 1.11
 
 ### Acceptance Criteria
 
@@ -398,6 +403,7 @@ grep -q "Heuristics\|Safety" docs/planning/EPIC_2/SPRINT_11/aggressive_simplific
 - [ ] Metrics collection designed for `--simplification-stats`
 - [ ] Extension points in existing code identified
 - [ ] Rollback/safety mechanisms designed to prevent expression explosion
+- [ ] Unknowns 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 1.10, 1.11 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -408,7 +414,8 @@ grep -q "Heuristics\|Safety" docs/planning/EPIC_2/SPRINT_11/aggressive_simplific
 **Estimated Time:** 4 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Simplification team  
-**Dependencies:** Task 3 (Simplification Architecture)
+**Dependencies:** Task 3 (Simplification Architecture)  
+**Unknowns Verified:** 1.9
 
 ### Objective
 
@@ -502,6 +509,7 @@ fi
 - Scope recommendation for Sprint 11 with rationale
 - If Sprint 11 scope: Integration design with implementation plan
 - If deferred: Justification and Sprint 12 proposal
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 1.9
 
 ### Acceptance Criteria
 
@@ -511,6 +519,7 @@ fi
 - [ ] Scope decision made: Sprint 11 full/basic/deferred with clear rationale
 - [ ] If Sprint 11: Integration design complete with implementation plan
 - [ ] If deferred: Sprint 12 proposal documented
+- [ ] Unknown 1.9 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -521,7 +530,8 @@ fi
 **Estimated Time:** 5 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Simplification team  
-**Dependencies:** Task 3 (Simplification Architecture)
+**Dependencies:** Task 3 (Simplification Architecture)  
+**Unknowns Verified:** 1.1, 1.7
 
 ### Objective
 
@@ -615,6 +625,7 @@ test -f docs/planning/EPIC_2/SPRINT_11/factoring_prototype_results.md && echo "�
 - Test suite with examples from PROJECT_PLAN.md and edge cases
 - Performance measurements (execution time, term count reduction)
 - Results document with findings, recommendations, identified challenges
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.7
 
 ### Acceptance Criteria
 
@@ -624,6 +635,7 @@ test -f docs/planning/EPIC_2/SPRINT_11/factoring_prototype_results.md && echo "�
 - [ ] Performance measured: <1ms per expression, ≥20% term reduction on examples
 - [ ] Results documented with recommendations for Sprint 11 implementation
 - [ ] Challenges identified (AST equality, pattern matching, heuristics)
+- [ ] Unknowns 1.1, 1.7 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -634,7 +646,8 @@ test -f docs/planning/EPIC_2/SPRINT_11/factoring_prototype_results.md && echo "�
 **Estimated Time:** 3 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Infrastructure team  
-**Dependencies:** Task 1 (Known Unknowns)
+**Dependencies:** Task 1 (Known Unknowns)  
+**Unknowns Verified:** 3.3, 3.4
 
 ### Objective
 
@@ -722,6 +735,7 @@ grep -q "Performance.*Tracking\|Metrics" docs/planning/EPIC_2/SPRINT_11/ci_regre
 - PATH integration approach (licensing, installation, validation)
 - Performance tracking design (metrics, thresholds, storage)
 - Recommended CI workflow structure
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.3, 3.4
 
 ### Acceptance Criteria
 
@@ -731,6 +745,7 @@ grep -q "Performance.*Tracking\|Metrics" docs/planning/EPIC_2/SPRINT_11/ci_regre
 - [ ] Performance tracking designed (metrics, thresholds, baseline storage)
 - [ ] Recommended CI workflow structure documented
 - [ ] Estimated CI runtime calculated (should be <10 minutes per PR)
+- [ ] Unknowns 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -741,7 +756,8 @@ grep -q "Performance.*Tracking\|Metrics" docs/planning/EPIC_2/SPRINT_11/ci_regre
 **Estimated Time:** 3 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Infrastructure team  
-**Dependencies:** Task 6 (CI Framework Survey)
+**Dependencies:** Task 6 (CI Framework Survey)  
+**Unknowns Verified:** 3.1
 
 ### Objective
 
@@ -836,6 +852,7 @@ grep -q "Pass.*Fail.*Criteria\|Threshold" docs/planning/EPIC_2/SPRINT_11/gamslib
 - Test scope (parse + convert recommended, solve nightly if PATH available)
 - Pass/fail criteria (≥90% parse rate, no model regressions, <20% performance regression)
 - Baseline update process
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 3.1
 
 ### Acceptance Criteria
 
@@ -846,6 +863,7 @@ grep -q "Pass.*Fail.*Criteria\|Threshold" docs/planning/EPIC_2/SPRINT_11/gamslib
 - [ ] Baseline update process defined
 - [ ] Flaky test handling approach defined
 - [ ] Estimated CI runtime calculated (should be <2 minutes for 10 models)
+- [ ] Unknown 3.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -856,7 +874,8 @@ grep -q "Pass.*Fail.*Criteria\|Threshold" docs/planning/EPIC_2/SPRINT_11/gamslib
 **Estimated Time:** 3 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Infrastructure team  
-**Dependencies:** Task 6 (CI Framework Survey)
+**Dependencies:** Task 6 (CI Framework Survey)  
+**Unknowns Verified:** 3.2
 
 ### Objective
 
@@ -943,6 +962,7 @@ grep -q "Recommendation\|Sprint 11 Scope" docs/planning/EPIC_2/SPRINT_11/path_sm
 - PATH installation instructions for GitHub Actions
 - Smoke test design (model selection, validation criteria, timeout handling)
 - Recommendation: Sprint 11 scope or defer to Sprint 12
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 3.2
 
 ### Acceptance Criteria
 
@@ -952,6 +972,7 @@ grep -q "Recommendation\|Sprint 11 Scope" docs/planning/EPIC_2/SPRINT_11/path_sm
 - [ ] Recommendation made: Sprint 11 full/basic/deferred with rationale
 - [ ] If Sprint 11: Implementation plan outlined
 - [ ] If deferred: Alternative validation approach proposed
+- [ ] Unknown 3.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -962,7 +983,8 @@ grep -q "Recommendation\|Sprint 11 Scope" docs/planning/EPIC_2/SPRINT_11/path_sm
 **Estimated Time:** 4 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** UX team  
-**Dependencies:** Task 1 (Known Unknowns)
+**Dependencies:** Task 1 (Known Unknowns)  
+**Unknowns Verified:** 4.1, 4.2
 
 ### Objective
 
@@ -1055,6 +1077,7 @@ grep -q "Simplification.*Diagnostics" docs/planning/EPIC_2/SPRINT_11/diagnostics
 - Simplification diagnostics design (per-transformation reporting)
 - Output format specification (JSON, text, YAML)
 - Performance overhead assessment (<5% target)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2
 
 ### Acceptance Criteria
 
@@ -1065,6 +1088,7 @@ grep -q "Simplification.*Diagnostics" docs/planning/EPIC_2/SPRINT_11/diagnostics
 - [ ] Output mechanism designed (stdout, file, structured logging)
 - [ ] Performance overhead estimated (<5% acceptable)
 - [ ] Verbosity levels defined (summary, detailed, debug)
+- [ ] Unknowns 4.1, 4.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1075,7 +1099,8 @@ grep -q "Simplification.*Diagnostics" docs/planning/EPIC_2/SPRINT_11/diagnostics
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Process improvement  
-**Dependencies:** Task 1 (Known Unknowns)
+**Dependencies:** Task 1 (Known Unknowns)  
+**Unknowns Verified:** 5.1, 5.2
 
 ### Objective
 
@@ -1173,6 +1198,7 @@ fi
 - Incremental documentation workflow guide
 - Updated PR template with documentation checklist items
 - Example documentation entries (good and bad)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2
 
 ### Acceptance Criteria
 
@@ -1182,6 +1208,7 @@ fi
 - [ ] Example documentation entries provided (1 good, 1 bad with explanation)
 - [ ] Time estimate documented: 5-10 minutes per PR
 - [ ] Enforcement mechanism defined (PR reviewer checks)
+- [ ] Unknowns 5.1, 5.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1192,7 +1219,8 @@ fi
 **Estimated Time:** 3 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** QA / Testing  
-**Dependencies:** Task 1 (Known Unknowns)
+**Dependencies:** Task 1 (Known Unknowns)  
+**Unknowns Verified:** 5.3
 
 ### Objective
 
@@ -1289,6 +1317,7 @@ pytest tests/integration/test_feature_interactions.py -v && echo "✅ Initial te
 - At least 1 example synthetic test (simplification + functions)
 - Feature interaction testing guide
 - PR checklist item: "Run interaction tests if feature added"
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 5.3
 
 ### Acceptance Criteria
 
@@ -1299,6 +1328,7 @@ pytest tests/integration/test_feature_interactions.py -v && echo "✅ Initial te
 - [ ] Testing guide created with when/how to write interaction tests
 - [ ] Tests pass on current codebase
 - [ ] PR checklist item added for interaction testing
+- [ ] Unknown 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1309,7 +1339,8 @@ pytest tests/integration/test_feature_interactions.py -v && echo "✅ Initial te
 **Estimated Time:** 5 hours  
 **Deadline:** Before Sprint 11 Day 1  
 **Owner:** Sprint planning  
-**Dependencies:** Tasks 1-11 (all prep tasks)
+**Dependencies:** Tasks 1-11 (all prep tasks)  
+**Unknowns Verified:** 6.1, 7.1
 
 ### Objective
 
@@ -1427,6 +1458,7 @@ grep -q "Acceptance Criteria" docs/planning/EPIC_2/SPRINT_11/PLAN.md && echo "�
 - Risk mitigation strategies documented
 - Total effort estimate (should be 20-30 hours based on Sprint 10 velocity)
 - Dependencies and critical path identified
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 7.1 (stretch goals)
 
 ### Acceptance Criteria
 
@@ -1438,6 +1470,7 @@ grep -q "Acceptance Criteria" docs/planning/EPIC_2/SPRINT_11/PLAN.md && echo "�
 - [ ] Risk mitigation strategies for maxmin.gms, CSE, PATH licensing
 - [ ] Scope reductions documented if any (based on prep findings)
 - [ ] Incremental documentation process integrated into daily tasks
+- [ ] Unknowns 6.1, 7.1 verified and updated in KNOWN_UNKNOWNS.md (stretch goal research during scheduling)
 
 ---
 
