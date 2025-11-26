@@ -336,10 +336,12 @@ def _id_list(node: Tree) -> tuple[str, ...]:
 def _domain_list(node: Tree) -> tuple[str, ...]:
     """Extract domain identifiers from domain_list (Sprint 11 Day 1).
 
-    Supports both simple domains and nested/subset indexing:
-    - Simple: domain_element(i) -> 'i'
-    - Nested: domain_element(low, [n, nn]) -> 'n', 'nn'
-    - Mixed: domain_list([i, low(n,nn), k]) -> 'i', 'n', 'nn', 'k'
+    Supports both simple domains and nested/subset indexing.
+
+    Examples:
+        - Simple:      i                -> 'i'
+        - Nested:      low(n,nn)        -> 'n', 'nn'
+        - Mixed:       i, low(n,nn), k  -> 'i', 'n', 'nn', 'k'
 
     Returns a flat tuple of all identifier names used in the domain.
     """
