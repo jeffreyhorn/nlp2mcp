@@ -128,9 +128,8 @@ class SimplificationPipeline:
                 new_expr = pass_obj.transform_fn(current_expr)
 
                 # Check if transformation changed anything
-                # Use both identity and equality checks to handle cases where
-                # a pass returns a semantically identical but deep-copied expression
-                if new_expr is not current_expr or new_expr != current_expr:
+                # Use equality check to detect semantic changes regardless of object identity
+                if new_expr != current_expr:
                     # Check size budget
                     new_size = self._expression_size(new_expr)
                     if new_size > initial_size * self.size_budget:
@@ -167,18 +166,42 @@ class SimplificationPipeline:
             Number of nodes in the expression tree
         """
         # Import here to avoid circular dependency
-        from src.ir.ast import Binary, Call, Const, SymbolRef, Unary
+        from src.ir.ast import (
+            Binary,
+            Call,
+            CompileTimeConstant,
+            Const,
+            EquationRef,
+            IndexOffset,
+            MultiplierRef,
+            ParamRef,
+            Sum,
+            SymbolRef,
+            Unary,
+            VarRef,
+        )
 
-        if isinstance(expr, Const):
+        # Leaf nodes (constants and references) - size 1
+        if isinstance(
+            expr,
+            (Const, SymbolRef, VarRef, ParamRef, EquationRef, MultiplierRef, CompileTimeConstant),
+        ):
             return 1
-        elif isinstance(expr, SymbolRef):
-            return 1
+        # Unary operations - 1 + child size
         elif isinstance(expr, Unary):
             return 1 + self._expression_size(expr.child)
+        # Binary operations - 1 + left + right
         elif isinstance(expr, Binary):
             return 1 + self._expression_size(expr.left) + self._expression_size(expr.right)
+        # Function calls - 1 + sum of argument sizes
         elif isinstance(expr, Call):
             return 1 + sum(self._expression_size(arg) for arg in expr.args)
+        # Sum expression - 1 + body size
+        elif isinstance(expr, Sum):
+            return 1 + self._expression_size(expr.body)
+        # Index offset - 1 + offset size
+        elif isinstance(expr, IndexOffset):
+            return 1 + self._expression_size(expr.offset)
         else:
-            # For unknown expression types, estimate conservatively
+            # Unknown expression type - should not happen
             return 1
