@@ -137,10 +137,57 @@ class TestPowerConsolidation:
         expr = Binary("*", x, Binary("**", x, Const(2)))
         result = consolidate_powers(expr)
 
-        # Note: Current implementation doesn't handle implicit exponent=1
-        # This test documents expected behavior once implemented
-        # For now, it should return unchanged
+        # Expected: x^3
         assert isinstance(result, Binary)
+        assert result.op == "**"
+        assert result.left == x
+        assert isinstance(result.right, Const)
+        assert result.right.value == 3
+
+    def test_power_with_bare_base(self):
+        """Test: x^2 * x → x^3 (implicit exponent of 1 for bare base)"""
+        x = SymbolRef("x")
+
+        # x^2 * x
+        expr = Binary("*", Binary("**", x, Const(2)), x)
+        result = consolidate_powers(expr)
+
+        # Expected: x^3
+        assert isinstance(result, Binary)
+        assert result.op == "**"
+        assert result.left == x
+        assert isinstance(result.right, Const)
+        assert result.right.value == 3
+
+    def test_multiple_bare_bases(self):
+        """Test: x * x * x → x^3"""
+        x = SymbolRef("x")
+
+        # x * x * x
+        expr = Binary("*", Binary("*", x, x), x)
+        result = consolidate_powers(expr)
+
+        # Expected: x^3
+        assert isinstance(result, Binary)
+        assert result.op == "**"
+        assert result.left == x
+        assert isinstance(result.right, Const)
+        assert result.right.value == 3
+
+    def test_mixed_bare_and_power(self):
+        """Test: x * x^2 * x → x^4"""
+        x = SymbolRef("x")
+
+        # x * x^2 * x
+        expr = Binary("*", Binary("*", x, Binary("**", x, Const(2))), x)
+        result = consolidate_powers(expr)
+
+        # Expected: x^4
+        assert isinstance(result, Binary)
+        assert result.op == "**"
+        assert result.left == x
+        assert isinstance(result.right, Const)
+        assert result.right.value == 4
 
     def test_consolidation_resulting_in_exponent_one(self):
         """Test: x^3 * x^(-2) → x^1 → x"""

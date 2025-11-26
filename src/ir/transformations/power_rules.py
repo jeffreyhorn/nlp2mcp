@@ -8,10 +8,12 @@ Patterns:
 - (x^a)^b → x^(a*b)
 - x^1 → x
 - x^0 → 1
+- x * x^a → x^(1+a)  (implicit exponent of 1)
 
 Example:
     x^2 * x^3 → x^5
     (x^2)^3 → x^6
+    x * x^2 → x^3
 
 Priority: MEDIUM (useful for derivative expressions with power rules)
 """
@@ -86,6 +88,10 @@ def _consolidate_power_products(expr: Expr) -> Expr:
 
     Pattern: x^a * x^b * ... → x^(a+b+...)
 
+    Also handles implicit exponent of 1 for bare bases:
+    - x * x^2 → x^3
+    - x^2 * x → x^3
+
     Args:
         expr: Multiplication expression
 
@@ -96,8 +102,9 @@ def _consolidate_power_products(expr: Expr) -> Expr:
     factors = flatten_multiplication(expr)
 
     # Group factors by base for power expressions
+    # Treats bare factors as having implicit exponent of 1
     power_groups: dict[tuple, list[tuple[Expr, Expr]]] = {}  # base_key -> [(base, exp), ...]
-    non_power_factors: list[Expr] = []
+    non_consolidatable: list[Expr] = []
 
     for factor in factors:
         if isinstance(factor, Binary) and factor.op == "**":
@@ -111,19 +118,31 @@ def _consolidate_power_products(expr: Expr) -> Expr:
                     power_groups[base_key] = []
                 power_groups[base_key].append((base, exponent))
             else:
-                non_power_factors.append(factor)
+                non_consolidatable.append(factor)
         else:
-            # Not a power expression
-            non_power_factors.append(factor)
+            # Bare factor: treat as having implicit exponent of 1
+            # Only consolidate simple expressions (Const, SymbolRef, VarRef)
+            # to avoid complex cases
+            if _is_simple_base(factor):
+                base_key = _get_base_key(factor)
+                if base_key not in power_groups:
+                    power_groups[base_key] = []
+                power_groups[base_key].append((factor, Const(1)))
+            else:
+                non_consolidatable.append(factor)
 
     # Consolidate power groups
     consolidated_factors: list[Expr] = []
 
     for _base_key, power_list in power_groups.items():
         if len(power_list) == 1:
-            # Only one power with this base, keep as-is
+            # Only one power with this base
             base, exp = power_list[0]
-            consolidated_factors.append(Binary("**", base, exp))
+            # If exponent is 1 (from implicit or explicit), return bare base
+            if isinstance(exp, Const) and abs(exp.value - 1) < 1e-10:
+                consolidated_factors.append(base)
+            else:
+                consolidated_factors.append(Binary("**", base, exp))
         else:
             # Multiple powers with same base: x^a * x^b → x^(a+b)
             base, _ = power_list[0]  # Use first base
@@ -145,8 +164,8 @@ def _consolidate_power_products(expr: Expr) -> Expr:
             else:
                 consolidated_factors.append(Binary("**", base, Const(total_exponent)))
 
-    # Add non-power factors
-    consolidated_factors.extend(non_power_factors)
+    # Add non-consolidatable factors
+    consolidated_factors.extend(non_consolidatable)
 
     # Rebuild multiplication
     if len(consolidated_factors) == 0:
@@ -158,6 +177,29 @@ def _consolidate_power_products(expr: Expr) -> Expr:
         for factor in consolidated_factors[1:]:
             result = Binary("*", result, factor)
         return result
+
+
+def _is_simple_base(expr: Expr) -> bool:
+    """Check if an expression is simple enough to treat as a power base.
+
+    Simple bases are those that can safely have an implicit exponent of 1:
+    - Constants (numbers)
+    - Symbol references (variables)
+    - Variable references
+    - Parameter references
+
+    Complex expressions like Binary operations are excluded to avoid
+    unintended transformations.
+
+    Args:
+        expr: Expression to check
+
+    Returns:
+        True if expression is a simple base
+    """
+    from src.ir.ast import Const, ParamRef, SymbolRef, VarRef
+
+    return isinstance(expr, (Const, SymbolRef, VarRef, ParamRef))
 
 
 def _expr_structural_key(expr: Expr) -> tuple[str, ...]:
