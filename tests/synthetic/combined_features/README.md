@@ -13,12 +13,12 @@ This directory contains synthetic GAMS models that combine multiple features to 
 ## Risk-Based Testing Strategy
 
 ### HIGH Risk (P0 - Critical)
-- **functions_with_nested_indexing.gms:** Function calls + nested index expressions
-- **bounds_with_nested_indexing.gms:** Variable bounds + nested index extraction
+- **functions_with_nested_indexing.gms:** Function calls + nested index expressions (✅ created)
+- **bounds_with_nested_indexing.gms:** Variable bounds + nested index extraction (planned)
 
 ### MEDIUM Risk (P1 - Important)
-- **functions_with_simplification.gms:** Function calls + expression simplification (Sprint 11)
-- **comma_separated_complex.gms:** Comma-separated declarations + complex inline expressions
+- **functions_with_simplification.gms:** Function calls + expression simplification (planned, Sprint 11)
+- **comma_separated_complex.gms:** Comma-separated declarations + complex inline expressions (planned)
 
 ### File Naming Convention
 
@@ -55,16 +55,16 @@ $offtext
 
 ## Current Test Coverage
 
-| Feature Pair | Risk | File | Test Class |
-|--------------|------|------|------------|
-| Function Calls + Nested Indexing | HIGH | functions_with_nested_indexing.gms | TestFunctionCallsWithNestedIndexing |
-| Variable Bounds + Nested Indexing | HIGH | bounds_with_nested_indexing.gms | TestVariableBoundsWithNestedIndexing |
-| Function Calls + Simplification | MEDIUM | functions_with_simplification.gms | TestFunctionCallsWithSimplification |
-| Comma-Separated + Complex Expr | MEDIUM | comma_separated_complex.gms | TestCommaSeparatedWithComplexExprs |
+| Feature Pair | Risk | File | Status | Test Class |
+|--------------|------|------|--------|------------|
+| Function Calls + Nested Indexing | HIGH | functions_with_nested_indexing.gms | ✅ Created | TestFunctionCallsWithNestedIndexing |
+| Variable Bounds + Nested Indexing | HIGH | (planned) | Planned | TestVariableBoundsWithNestedIndexing |
+| Function Calls + Simplification | MEDIUM | (planned) | Planned | TestFunctionCallsWithSimplification |
+| Comma-Separated + Complex Expr | MEDIUM | (planned) | Planned | TestCommaSeparatedWithComplexExprs |
 
-**Coverage:** 2/3 HIGH-risk pairs (66%), 2/5 MEDIUM-risk pairs (40%)
+**Coverage:** 1/2 HIGH-risk files (50%), 0/2 MEDIUM-risk files (0%)
 
-**Sprint 11 Target:** 3/3 HIGH (100%), 3/5 MEDIUM (60%)
+**Note:** Integration tests exist for all feature pairs, but only one synthetic GAMS model file is currently created. Additional synthetic models can be added as needed during Sprint 11 execution.
 
 ## Adding New Interaction Tests
 

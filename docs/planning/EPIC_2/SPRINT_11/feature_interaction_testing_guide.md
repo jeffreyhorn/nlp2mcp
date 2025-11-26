@@ -319,7 +319,7 @@ class TestAggressiveSimplificationWithFunctions:
         
         # Verify Call node preserved
         assert isinstance(model.params["result"].expressions[()], Call)
-        assert model.params["result"].expressions[()].function_name == "sqrt"
+        assert model.params["result"].expressions[()].func == "sqrt"
         
         # Verify argument simplified (if simplification enabled)
         # But Call structure intact
@@ -461,7 +461,7 @@ assert simplified.correct  # Simplification OK?
 ```python
 # Print AST structure
 print(model.params["x"].expressions[()])
-# Expected: Call(function_name='sqrt', arguments=[...])
+# Expected: Call(func='sqrt', args=[...])
 # Actual: BinaryOp(...) - Call node lost!
 
 # Identify where Call node disappeared
@@ -524,10 +524,10 @@ def test_function_with_nested_index(tmp_path):
     # Verify Call node structure
     expr = model.params["result"].expressions[()]
     assert isinstance(expr, Call)
-    assert expr.function_name == "sqrt"
+    assert expr.func == "sqrt"
     
     # Verify nested index preserved in argument
-    arg = expr.arguments[0]
+    arg = expr.args[0]
     # arg should be IndexedAccess(data, subset(i))
     assert hasattr(arg, 'indices')  # Nested indexing preserved
 ```
