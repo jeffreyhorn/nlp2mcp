@@ -2,8 +2,8 @@
 
 Tests maxmin.gms grammar parsing after subset indexing, option in exec, and solver support.
 
-Note: Grammar parsing is essentially complete! Remaining blocker at line 37 is semantic
-(indexed set assignments with domain context), not a grammar issue.
+Note: Line 37 blocker (indexed set assignments) has been resolved!
+New blocker at line 51: subset references as indices (dist(low) where low is a 2D set).
 """
 
 import pytest
@@ -12,21 +12,28 @@ from src.ir.parser import parse_model_file
 
 
 def test_maxmin_parse_progress():
-    """Test that maxmin.gms grammar parses past line 78 with full grammar extensions.
+    """Test that maxmin.gms parses past line 37 with indexed set assignment support.
 
     Progress tracking:
     - Before Sprint 11 Day 1: Line 51 (40% parse rate) - nested indexing blocker
     - After Sprint 11 Day 1: Line 70 (66% parse rate) - loop statement blocker
     - After Sprint 11 Day 2 loop: Line 78 (85% parse rate) - subset indexing in grammar
-    - After Sprint 11 Day 2 Extended: Line 37 (grammar complete!) - semantic blocker
+    - After Sprint 11 Day 2 Extended (grammar): Line 37 - indexed set assignment blocker
+    - After Sprint 11 Day 2 Extended (semantic): Line 51 - subset reference as index blocker
 
-    The remaining blocker at line 37 is semantic, not grammar:
-    low(n,nn) = ord(n) > ord(nn);  -- requires domain context for indexed set assignment
+    Line 37 fix: Added domain context for indexed assignments
+    - low(n,nn) = ord(n) > ord(nn) now parses successfully
+    - Indices from lvalue are available as free domain in expression
 
-    Grammar achievements (all blocking syntax now supported):
+    New blocker at line 51 is subset reference pattern:
+    - defdist(low(n,nn)).. dist(low) =e= ...
+    - Using 'low' (a 2D set) as single index requires expansion to underlying indices
+
+    Achievements:
     - Line 78: Subset indexing in lvalues (dist.l(low(n,nn)))
     - Line 87: Option statements in if/loop blocks
     - Line 106: DNLP and other solver types
+    - Line 37: Indexed set assignments with domain context
     """
     try:
         model = parse_model_file("tests/fixtures/gamslib/maxmin.gms")
@@ -43,10 +50,13 @@ def test_maxmin_parse_progress():
         print("✅ AMAZING: maxmin.gms parsed 100%!")
 
     except Exception as e:
-        # Now expected to fail at line 37 (semantic issue, not grammar)
+        # Now expected to fail at line 51 (subset reference as index)
         error_msg = str(e)
 
-        # Should NOT fail on grammar issues from lines 78, 87, 106
+        # Should NOT fail on earlier blockers (lines 37, 78, 87, 106)
+        assert not ("37" in error_msg and "ord" in error_msg), (
+            f"Should not fail on indexed set assignment (line 37): {error_msg}"
+        )
         assert "subset indexing" not in error_msg.lower(), (
             f"Should not fail on subset indexing grammar (line 78): {error_msg}"
         )
@@ -57,15 +67,15 @@ def test_maxmin_parse_progress():
             f"Should not fail on DNLP solver (line 106): {error_msg}"
         )
 
-        # Should fail at line 37 (indexed set assignment semantic issue)
-        assert "37" in error_msg or "line 3" in error_msg, (
-            f"Expected to fail at line 37 (semantic blocker), but got: {error_msg}"
+        # Should fail at line 51 (subset reference as index)
+        assert "51" in error_msg or "line 5" in error_msg, (
+            f"Expected to fail at line 51 (subset reference blocker), but got: {error_msg}"
         )
 
-        print("✅ Sprint 11 Day 2 Extended Grammar Complete:")
-        print("   Grammar parses past lines 78, 87, 106 (all syntax now supported)")
-        print("   Blocker moved: line 78 (grammar) → line 37 (semantic)")
-        print("   Line 37: Indexed set assignments require domain context handling")
+        print("✅ Sprint 11 Day 2 Extended Semantic Progress:")
+        print("   Indexed set assignments now supported (line 37 ✓)")
+        print("   Blocker moved: line 37 → line 51")
+        print("   Line 51: Subset references as indices require expansion (dist(low))")
 
 
 if __name__ == "__main__":

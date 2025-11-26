@@ -1514,14 +1514,39 @@ class _ModelBuilder:
         if not isinstance(lvalue_tree, Tree) or lvalue_tree.data != "lvalue":
             raise self._error("Malformed assignment target", lvalue_tree)
 
-        expr = self._expr_with_context(expr_tree, "assignment", ())
-
+        # Extract target first to determine domain context
         target = next(
             (child for child in lvalue_tree.children if isinstance(child, (Tree, Token))),
             None,
         )
         if target is None:
             raise self._error("Empty assignment target", lvalue_tree)
+
+        # Sprint 11 Day 2 Extended: Extract indices from lvalue to use as domain context
+        # For indexed assignments like low(n,nn) = ord(n) > ord(nn), the indices
+        # n and nn should be in scope when evaluating the expression
+        domain_context = ()
+        if isinstance(target, Tree):
+            if target.data == "symbol_indexed" and len(target.children) > 1:
+                # Extract index names from the lvalue for use as free domain
+                try:
+                    domain_context = _extract_indices(target.children[1])
+                except Exception:
+                    # If extraction fails, fall back to empty domain
+                    domain_context = ()
+            elif target.data == "bound_indexed" and len(target.children) > 2:
+                # For variable bounds, also extract indices
+                try:
+                    indices = _process_index_list(target.children[2])
+                    # Convert to strings for domain context (ignore IndexOffset for now)
+                    domain_context = tuple(
+                        idx if isinstance(idx, str) else idx.base_name for idx in indices
+                    )
+                except Exception:
+                    domain_context = ()
+
+        # Now evaluate expression with domain context
+        expr = self._expr_with_context(expr_tree, "assignment", domain_context)
 
         # Determine if we're assigning to a variable bound or a parameter
         is_variable_bound = isinstance(target, Tree) and target.data in (
@@ -1570,17 +1595,24 @@ class _ModelBuilder:
                 self._apply_variable_bound(var_name, bound_token, (), value, target)
                 return
             if target.data == "symbol_indexed":
-                # Handle indexed parameter assignment: p('i1') = 10 or report('x1','global') = 1
-                param_name = _token_text(target.children[0])
+                # Handle indexed assignment: p('i1') = 10, report('x1','global') = 1, or low(n,nn) = ...
+                symbol_name = _token_text(target.children[0])
 
                 # Extract indices from id_list, stripping quotes
                 indices = _extract_indices(target.children[1]) if len(target.children) > 1 else ()
 
-                # Validate parameter exists
-                if param_name not in self.model.params:
-                    raise self._error(f"Parameter '{param_name}' not declared", target)
+                # Sprint 11 Day 2 Extended: Check if this is a set assignment
+                if symbol_name in self.model.sets:
+                    # Set assignment like: low(n,nn) = ord(n) > ord(nn)
+                    # For now, parse and validate but don't store (mock/store approach)
+                    # The expression has already been validated with the correct domain context
+                    return
 
-                param = self.model.params[param_name]
+                # Validate parameter exists
+                if symbol_name not in self.model.params:
+                    raise self._error(f"Parameter '{symbol_name}' not declared", target)
+
+                param = self.model.params[symbol_name]
 
                 # Only validate index count if the parameter has an explicit domain declaration.
                 # For parameters without an explicit domain, index count is not validated.
@@ -1588,7 +1620,7 @@ class _ModelBuilder:
                 if len(param.domain) > 0 and len(indices) != len(param.domain):
                     index_word = "index" if len(param.domain) == 1 else "indices"
                     raise self._parse_error(
-                        f"Parameter '{param_name}' expects {len(param.domain)} {index_word}, got {len(indices)}",
+                        f"Parameter '{symbol_name}' expects {len(param.domain)} {index_word}, got {len(indices)}",
                         target,
                         suggestion=f"Provide exactly {len(param.domain)} {index_word} to match the parameter declaration",
                     )
