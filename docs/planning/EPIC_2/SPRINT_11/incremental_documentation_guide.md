@@ -48,7 +48,7 @@ Document in the appropriate **Daily Section** of SPRINT_LOG.md:
 
 #### 1. **PR Number and Title**
 ```markdown
-### PR #XXX: Feature Name
+#### PR #XXX: Feature Name
 
 **Status:** ✅ MERGED | ⏳ IN PROGRESS | ❌ BLOCKED  
 **Day:** X  
@@ -108,7 +108,7 @@ Blockers, bugs, or unexpected complexity:
    ```
 
 2. **Find the current day section**
-   - Navigate to `## Day X` (e.g., `## Day 3`)
+   - Navigate to `### Day X` (e.g., `### Day 3`)
    - If day section doesn't exist, create it using the template
 
 3. **Add PR entry** under the day section
@@ -136,7 +136,7 @@ Blockers, bugs, or unexpected complexity:
 ### Template 1: Feature Implementation PR
 
 ```markdown
-### PR #XXX: [Feature Name]
+#### PR #XXX: [Feature Name]
 
 **Status:** ✅ MERGED  
 **Day:** X  
@@ -162,7 +162,7 @@ Implemented [feature name] to unlock [target model]. [Technical approach summary
 ### Template 2: Bug Fix PR
 
 ```markdown
-### PR #XXX: Fix [Bug Name]
+#### PR #XXX: Fix [Bug Name]
 
 **Status:** ✅ MERGED  
 **Day:** X  
@@ -182,7 +182,7 @@ Fixed [bug description] that prevented [capability]. Root cause was [explanation
 ### Template 3: Refactoring/Tech Debt PR
 
 ```markdown
-### PR #XXX: Refactor [Component]
+#### PR #XXX: Refactor [Component]
 
 **Status:** ✅ MERGED  
 **Day:** X  
@@ -208,7 +208,7 @@ Refactored [component] to improve [maintainability/performance/testability]. [Ap
 ### ❌ BAD Example (Too Vague)
 
 ```markdown
-### PR #285: Dashboard stuff
+#### PR #285: Dashboard stuff
 
 Fixed some bugs and added features.
 
@@ -226,7 +226,7 @@ Fixed some bugs and added features.
 ### ✅ GOOD Example (Informative)
 
 ```markdown
-### PR #285: Dashboard Performance Optimization
+#### PR #285: Dashboard Performance Optimization
 
 **Status:** ✅ MERGED  
 **Day:** 9  
@@ -328,12 +328,12 @@ git push
 
 **A:** Both add entries to same day section:
 ```markdown
-## Day 3
+### Day 3
 
-### PR #100: Feature A (Author: Alice)
+#### PR #100: Feature A (Author: Alice)
 [Alice's entry]
 
-### PR #101: Feature B (Author: Bob)
+#### PR #101: Feature B (Author: Bob)
 [Bob's entry]
 ```
 
