@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 11 Day 4: Core HIGH Priority Transformations (1-3) - 2025-11-26
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented the first 3 HIGH-priority transformations for aggressive simplification: common factor extraction (T1.1), fraction combining (T2.1), and associativity normalization (T3.1). **Key deliverables:** 3 transformation modules with 47 comprehensive unit tests, all quality checks passing, ready for pipeline integration.
+
+#### Achievements
+
+**Three Core Transformations Implemented:**
+
+1. **T1.1: Common Factor Extraction** (`src/ir/transformations/factoring.py`)
+   - Pattern: `x*y + x*z → x*(y + z)`
+   - Example: `2*exp(x)*sin(y) + 2*exp(x)*cos(y) → 2*exp(x)*(sin(y) + cos(y))`
+   - 13 unit tests covering basic, nested, function calls, edge cases
+   - Reduces operation count by factoring common multiplicative terms
+
+2. **T2.1: Fraction Combining** (`src/ir/transformations/fractions.py`)
+   - Pattern: `a/c + b/c → (a + b)/c`
+   - Example: `x/a + y/a + z/a → (x + y + z)/a`
+   - 14 unit tests covering basic, complex denominators, multiple groups
+   - Enables further factoring in numerators
+
+3. **T3.1: Associativity for Constants** (`src/ir/transformations/associativity.py`)
+   - Pattern (Multiplication): `(x * 2) * 3 → x * 6`
+   - Pattern (Addition): `(x + 1) + 2 → x + 3`
+   - 20 unit tests covering multiplication, addition, deep nesting, floating-point
+   - Consolidates constants through associativity reordering
+
+**Test Coverage:**
+- 47 new unit tests (13 + 14 + 20)
+- All tests passing (1633 total)
+- Quality checks: typecheck ✅, lint ✅, format ✅, test ✅
+
+**Files Created:**
+- `src/ir/transformations/factoring.py` (215 lines)
+- `src/ir/transformations/fractions.py` (139 lines)
+- `src/ir/transformations/associativity.py` (202 lines)
+- `tests/unit/ir/test_factoring.py` (211 lines, 13 tests)
+- `tests/unit/ir/test_fractions.py` (211 lines, 14 tests)
+- `tests/unit/ir/test_associativity.py` (240 lines, 20 tests)
+
+**Files Modified:**
+- `src/ir/transformations/__init__.py` (exported all 3 functions)
+- `docs/planning/EPIC_2/SPRINT_11/PLAN.md` (Day 4 deliverables complete)
+- `README.md` (Day 4 checked off)
+
+---
+
 ### Sprint 11: Prep Phase - Task 12: Plan Sprint 11 Detailed Schedule - 2025-11-26
 
 **Status:** ✅ COMPLETE

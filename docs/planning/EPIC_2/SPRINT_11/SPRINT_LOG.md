@@ -127,11 +127,49 @@ _PR will be documented here when merged._
 
 ### Day 4
 
-**Date:** _TBD_  
-**Focus:** _Primary task for the day_  
-**Parse Rate:** _TBD_ → _TBD_
+**Date:** 2025-11-26  
+**Focus:** Core HIGH Priority Transformations (T1.1, T2.1, T3.1)  
+**Parse Rate:** 100% → 100% (maintained)
 
-_PRs will be documented here as they are merged._
+#### Transformations Implemented
+
+**1. T1.1: Common Factor Extraction** (`src/ir/transformations/factoring.py`)
+- **Pattern:** `x*y + x*z → x*(y + z)`
+- **Example:** `2*exp(x)*sin(y) + 2*exp(x)*cos(y) → 2*exp(x)*(sin(y) + cos(y))`
+- **Tests:** 13 unit tests
+- **Impact:** Reduces operation count by factoring common multiplicative terms
+
+**2. T2.1: Fraction Combining** (`src/ir/transformations/fractions.py`)
+- **Pattern:** `a/c + b/c → (a + b)/c`
+- **Example:** `x/a + y/a + z/a → (x + y + z)/a`
+- **Tests:** 14 unit tests
+- **Impact:** Enables further factoring in numerators, reduces division operations
+
+**3. T3.1: Associativity for Constants** (`src/ir/transformations/associativity.py`)
+- **Pattern (Multiplication):** `(x * 2) * 3 → x * 6`
+- **Pattern (Addition):** `(x + 1) + 2 → x * 3`
+- **Tests:** 20 unit tests
+- **Impact:** Consolidates constants through associativity reordering
+
+#### Quality Metrics
+
+- **Tests:** 1633 total (47 new for Day 4)
+- **Test Results:** All passing ✅
+- **Code Quality:**
+  - typecheck: ✅ (68 source files, 0 errors)
+  - lint: ✅ (all checks passed)
+  - format: ✅ (black formatted)
+  
+#### Implementation Notes
+
+- All transformations ready for pipeline integration
+- Size budget enforcement built into each transformation
+- Comprehensive edge case coverage (function calls, nested expressions, multiple groups)
+- Helper functions for flattening operations reused across modules
+
+#### Pull Requests
+
+- PR #TBD: Sprint 11 Day 4: Core HIGH Priority Transformations (1-3)
 
 ---
 
