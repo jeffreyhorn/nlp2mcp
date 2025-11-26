@@ -156,3 +156,26 @@ class ConditionalStatement:
     elseif_clauses: list[tuple[object, list[object]]]  # (condition, statements) pairs
     else_stmts: list[object] | None  # Else block statements or None
     location: SourceLocation | None
+
+
+@dataclass
+class LoopStatement:
+    """Represents a GAMS loop statement.
+
+    Sprint 11 Day 2 Extended: Mock/store approach - loops are parsed and stored but not executed.
+
+    Examples:
+        loop((n,d),
+           p = round(mod(p,10)) + 1;
+           point.l(n,d) = p/10;
+        );
+
+    Attributes:
+        indices: Tuple of index variable names (e.g., ('n', 'd'))
+        body_stmts: List of statements in the loop body (stored as raw trees)
+        location: Source location of the loop statement
+    """
+
+    indices: tuple[str, ...]  # Loop index variables
+    body_stmts: list[object]  # Loop body statements (Trees)
+    location: SourceLocation | None

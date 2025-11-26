@@ -8,6 +8,7 @@ from .symbols import (
     AliasDef,
     ConditionalStatement,
     EquationDef,
+    LoopStatement,
     ObjSense,
     OptionStatement,
     ParameterDef,
@@ -42,6 +43,9 @@ class ModelIR:
 
     # Conditional statements (Sprint 8 Day 2: mock/store approach)
     conditional_statements: list[ConditionalStatement] = field(default_factory=list)
+
+    # Loop statements (Sprint 11 Day 2 Extended: mock/store approach)
+    loop_statements: list[LoopStatement] = field(default_factory=list)
 
     # Solve info
     declared_model: str | None = None
