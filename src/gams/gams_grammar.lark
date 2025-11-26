@@ -20,6 +20,7 @@ start: stmt*  -> program
      | model_stmt
      | option_stmt
      | if_stmt
+     | loop_stmt
      | display_stmt
      | abort_stmt
      | assignment_stmt
@@ -243,8 +244,14 @@ elseif_clause: ELSEIF_K expr "," exec_stmt+
 
 else_clause: ELSE_K exec_stmt+
 
-// Executable statements that can appear inside if blocks
-// Note: These statements don't include trailing SEMI - the if_stmt grammar handles it
+// Loop statement (Sprint 11 Day 2 Extended)
+// Syntax: loop((indices), statements);
+// Example: loop((n,d), p = p + 1; point.l(n,d) = p/10;);
+loop_stmt: LOOP_K "(" id_list "," exec_stmt+ ")" SEMI
+         | LOOP_K "(" "(" id_list ")" "," exec_stmt+ ")" SEMI  -> loop_stmt_paren
+
+// Executable statements that can appear inside if blocks or loop blocks
+// Note: These statements don't include trailing SEMI - the if_stmt/loop_stmt grammar handles it
 ?exec_stmt: display_stmt_nosemi
           | abort_stmt_nosemi
           | assignment_stmt
@@ -338,6 +345,7 @@ FUNCNAME: /(?i:abs|exp|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card
 IF_K: /(?i:if)\b/
 ELSEIF_K: /(?i:elseif)\b/
 ELSE_K: /(?i:else)\b/
+LOOP_K: /(?i:loop)\b/
 ON: /(?i:on)\b/
 OFF: /(?i:off)\b/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/

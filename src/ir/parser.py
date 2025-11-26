@@ -22,6 +22,7 @@ from .symbols import (
     AliasDef,
     ConditionalStatement,
     EquationDef,
+    LoopStatement,
     ObjSense,
     OptionStatement,
     ParameterDef,
@@ -1369,6 +1370,54 @@ class _ModelBuilder:
 
         # Sprint 8: Mock/store approach - just store, don't execute
         self.model.conditional_statements.append(cond_stmt)
+
+    def _handle_loop_stmt(self, node: Tree) -> None:
+        """Handle loop statement (Sprint 11 Day 2 Extended: mock/store approach).
+
+        Grammar structure:
+            loop_stmt: "loop"i "(" id_list "," exec_stmt+ ")" SEMI
+                     | "loop"i "(" "(" id_list ")" "," exec_stmt+ ")" SEMI  -> loop_stmt_paren
+
+        Example:
+            loop((n,d),
+               p = round(mod(p,10)) + 1;
+               point.l(n,d) = p/10;
+            );
+        """
+        # Extract indices and body statements
+        indices = None
+        body_stmts = []
+
+        for child in node.children:
+            if isinstance(child, Token):
+                continue  # Skip SEMI and other tokens
+
+            if isinstance(child, Tree):
+                if child.data == "id_list":
+                    # Extract loop indices
+                    indices = _id_list(child)
+                else:
+                    # This is a statement in the loop body
+                    body_stmts.append(child)
+
+        if indices is None:
+            raise self._error("Malformed loop statement: missing indices", node)
+
+        # Create LoopStatement and store in model
+        location = self._extract_source_location(node)
+        loop_stmt = LoopStatement(
+            indices=indices,
+            body_stmts=body_stmts,
+            location=location,
+        )
+
+        # Sprint 11: Mock/store approach - just store, don't execute
+        self.model.loop_statements.append(loop_stmt)
+
+    def _handle_loop_stmt_paren(self, node: Tree) -> None:
+        """Handle loop statement with double parentheses: loop((indices), ...)."""
+        # Same as _handle_loop_stmt - the grammar handles the extra parens
+        self._handle_loop_stmt(node)
 
     def _handle_assign(self, node: Tree) -> None:
         # Expected structure: lvalue, ASSIGN token, expression
