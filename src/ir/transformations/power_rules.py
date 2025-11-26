@@ -18,7 +18,7 @@ Example:
 Priority: MEDIUM (useful for derivative expressions with power rules)
 """
 
-from src.ir.ast import Binary, Const, Expr
+from src.ir.ast import Binary, Const, Expr, ParamRef, SymbolRef, VarRef
 from src.ir.transformations.utils import flatten_multiplication
 
 
@@ -148,7 +148,7 @@ def _consolidate_power_products(expr: Expr) -> Expr:
             base, _ = power_list[0]  # Use first base
 
             # Sum exponents
-            total_exponent: int | float = 0
+            total_exponent: float = 0.0
             for _, exp in power_list:
                 if isinstance(exp, Const):
                     total_exponent += exp.value
@@ -197,8 +197,6 @@ def _is_simple_base(expr: Expr) -> bool:
     Returns:
         True if expression is a simple base
     """
-    from src.ir.ast import Const, ParamRef, SymbolRef, VarRef
-
     return isinstance(expr, (Const, SymbolRef, VarRef, ParamRef))
 
 
@@ -213,8 +211,6 @@ def _expr_structural_key(expr: Expr) -> tuple[str, ...]:
         one element (the type discriminator), and potentially more elements
         depending on the expression type.
     """
-    from src.ir.ast import Binary, Const, SymbolRef
-
     if isinstance(expr, Binary):
         return (
             "Binary",

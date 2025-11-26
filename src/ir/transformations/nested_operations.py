@@ -71,7 +71,7 @@ def simplify_nested_products(expr: Expr) -> Expr:
         return _rebuild_multiplication(factors)
 
     # Consolidate constants
-    constant_product: int | float = 1
+    constant_product: float = 1.0
     for const in constants:
         constant_product *= const.value
 
