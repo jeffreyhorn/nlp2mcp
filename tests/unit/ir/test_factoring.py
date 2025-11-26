@@ -1,7 +1,5 @@
 """Tests for common factor extraction transformation (T1.1 and T1.2)."""
 
-import pytest
-
 from src.ir.ast import Binary, Call, Const, SymbolRef
 from src.ir.transformations.factoring import extract_common_factors, multi_term_factoring
 
@@ -258,7 +256,6 @@ class TestNestedStructures:
 class TestMultiTermFactoring:
     """Test multi-term factoring (T1.2) - 2x2 pattern."""
 
-    @pytest.mark.skip(reason="Multi-term factoring implementation incomplete")
     def test_simple_2x2_pattern(self):
         """a*c + a*d + b*c + b*d → (a + b)*(c + d)"""
         a = SymbolRef("a")
@@ -280,7 +277,6 @@ class TestMultiTermFactoring:
         assert isinstance(result, Binary)
         assert result.op == "*"
 
-    @pytest.mark.skip(reason="Multi-term factoring implementation incomplete")
     def test_2x2_with_constants(self):
         """2*x + 2*y + 3*x + 3*y → (2 + 3)*(x + y)"""
         x = SymbolRef("x")
@@ -372,7 +368,6 @@ class TestMultiTermFactoring:
         # Should be unchanged
         assert result == expr
 
-    @pytest.mark.skip(reason="Multi-term factoring implementation incomplete")
     def test_complex_2x2_pattern(self):
         """(x*y)*a + (x*y)*b + (z*w)*a + (z*w)*b → factored"""
         x = SymbolRef("x")

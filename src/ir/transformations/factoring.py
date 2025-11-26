@@ -66,8 +66,11 @@ def extract_common_factors(expr: Expr) -> Expr:
     for term in terms:
         term_factors = _get_multiplication_factors(term)
 
-        # Remove common factors from this term
-        remaining = [f for f in term_factors if f not in common_factors]
+        # Remove common factors from this term (one occurrence per match)
+        remaining = term_factors.copy()
+        for common_factor in common_factors:
+            if common_factor in remaining:
+                remaining.remove(common_factor)
 
         # Build remaining expression for this term
         remaining_expr: Expr
@@ -244,26 +247,38 @@ def _try_2x2_factoring(terms: list[Expr]) -> Expr | None:
         # Get remaining factors for group 1
         remaining1_set = []
         for factors in group1_factors:
-            remaining = [f for f in factors if f not in common1]
+            remaining = factors.copy()
+            # Remove common factors (one occurrence per match)
+            for common_factor in common1:
+                if common_factor in remaining:
+                    remaining.remove(common_factor)
             remaining1_set.append(remaining)
 
         # Get remaining factors for group 2
         remaining2_set = []
         for factors in group2_factors:
-            remaining = [f for f in factors if f not in common2]
+            remaining = factors.copy()
+            # Remove common factors (one occurrence per match)
+            for common_factor in common2:
+                if common_factor in remaining:
+                    remaining.remove(common_factor)
             remaining2_set.append(remaining)
 
         # Check if remainders match across groups
         # This is the key condition for 2x2 factoring
         if _check_remainder_match(remaining1_set, remaining2_set):
-            # Build factored expression: (common1 + common2) * remainder
+            # Build factored expression: (common1 + common2) * (remainder1 + remainder2)
             # Build (common1 + common2)
             factor1 = _rebuild_product(common1)
             factor2 = _rebuild_product(common2)
             left_factor = Binary("+", factor1, factor2)
 
-            # Build remainder product
-            right_factor = _rebuild_product(remaining1_set[0])
+            # Build (remainder1 + remainder2) from the two remainders
+            # For a*c + a*d + b*c + b*d: remainders are [[c], [d]]
+            # We need to build (c + d)
+            remainder1 = _rebuild_product(remaining1_set[0])
+            remainder2 = _rebuild_product(remaining1_set[1])
+            right_factor = Binary("+", remainder1, remainder2)
 
             return Binary("*", left_factor, right_factor)
 
@@ -273,29 +288,35 @@ def _try_2x2_factoring(terms: list[Expr]) -> Expr | None:
 def _check_remainder_match(remaining1: list[list[Expr]], remaining2: list[list[Expr]]) -> bool:
     """Check if remainder factors match across both groups.
 
-    For 2x2 pattern, the remainders should be the same for all terms.
+    For 2x2 pattern a*c + a*d + b*c + b*d → (a+b)*(c+d):
+    - Group 1 remainders: [[c], [d]] after factoring out [a]
+    - Group 2 remainders: [[c], [d]] after factoring out [b]
+
+    The remainders should form the same set in both groups (order doesn't matter).
 
     Args:
-        remaining1: Remainder factors from group 1
-        remaining2: Remainder factors from group 2
+        remaining1: Remainder factors from group 1 (2 elements)
+        remaining2: Remainder factors from group 2 (2 elements)
 
     Returns:
-        True if all remainders match
+        True if both groups have the same set of remainders
     """
-    # All remainders in group1 should be equal
-    if len(remaining1) < 2:
+    if len(remaining1) != 2 or len(remaining2) != 2:
         return False
-    first_remainder = remaining1[0]
-    for rem in remaining1[1:]:
-        if not _factor_lists_equal(rem, first_remainder):
-            return False
 
-    # All remainders in group2 should equal the group1 remainder
-    for rem in remaining2:
-        if not _factor_lists_equal(rem, first_remainder):
-            return False
+    # Check if group1 remainders match group2 remainders (in either order)
+    # Pattern 1: rem1[0]==rem2[0] and rem1[1]==rem2[1]
+    # Pattern 2: rem1[0]==rem2[1] and rem1[1]==rem2[0]
 
-    return True
+    pattern1 = _factor_lists_equal(remaining1[0], remaining2[0]) and _factor_lists_equal(
+        remaining1[1], remaining2[1]
+    )
+
+    pattern2 = _factor_lists_equal(remaining1[0], remaining2[1]) and _factor_lists_equal(
+        remaining1[1], remaining2[0]
+    )
+
+    return pattern1 or pattern2
 
 
 def _factor_lists_equal(list1: list[Expr], list2: list[Expr]) -> bool:
