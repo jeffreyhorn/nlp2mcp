@@ -39,6 +39,7 @@ def simplify_division(expr: Expr) -> Expr:
 
     Example:
         >>> # (x*y*z)/x → y*z
+        >>> x, y, z = SymbolRef("x"), SymbolRef("y"), SymbolRef("z")
         >>> expr = Binary("/", Binary("*", Binary("*", x, y), z), x)
         >>> result = simplify_division(expr)
         >>> # result = Binary("*", y, z)
@@ -61,9 +62,14 @@ def simplify_division(expr: Expr) -> Expr:
     if len(common_factors) == 0:
         return expr
 
-    # Cancel common factors
-    remaining_num_factors = [f for f in num_factors if f not in common_factors]
-    remaining_denom_factors = [f for f in denom_factors if f not in common_factors]
+    # Cancel common factors (remove one occurrence per match)
+    remaining_num_factors = num_factors.copy()
+    remaining_denom_factors = denom_factors.copy()
+    for factor in common_factors:
+        if factor in remaining_num_factors:
+            remaining_num_factors.remove(factor)
+        if factor in remaining_denom_factors:
+            remaining_denom_factors.remove(factor)
 
     # Build simplified numerator
     simplified_numerator: Expr
@@ -119,22 +125,26 @@ def _find_safe_common_factors(num_factors: list[Expr], denom_factors: list[Expr]
     - Named variables (assumed non-zero in well-formed models)
     - Does NOT cancel function calls or complex expressions
 
+    Properly handles duplicate factors by tracking which denominator factors
+    have been matched to avoid over-cancellation.
+
     Args:
         num_factors: Factors from numerator
         denom_factors: Factors from denominator
 
     Returns:
-        List of factors safe to cancel
+        List of factors safe to cancel (one per match)
     """
     common_factors: list[Expr] = []
+    denom_used = [False] * len(denom_factors)
 
     for num_factor in num_factors:
-        # Check if this factor appears in denominator
-        for denom_factor in denom_factors:
-            if _is_safe_to_cancel(num_factor, denom_factor):
-                # Found a match, add to common factors (once)
-                if num_factor not in common_factors:
-                    common_factors.append(num_factor)
+        # Check if this factor appears in denominator (not yet used)
+        for j, denom_factor in enumerate(denom_factors):
+            if not denom_used[j] and _is_safe_to_cancel(num_factor, denom_factor):
+                # Found a match, add to common factors and mark denominator as used
+                common_factors.append(num_factor)
+                denom_used[j] = True
                 break
 
     return common_factors

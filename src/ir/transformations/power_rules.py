@@ -43,7 +43,7 @@ def consolidate_powers(expr: Expr) -> Expr:
 
     Example:
         >>> # x^2 * x^3 → x^5
-        >>> x = Var("x")
+        >>> x = SymbolRef("x")
         >>> expr = Binary("*", Binary("**", x, Const(2)), Binary("**", x, Const(3)))
         >>> result = consolidate_powers(expr)
         >>> # result = Binary("**", x, Const(5))
@@ -96,7 +96,7 @@ def _consolidate_power_products(expr: Expr) -> Expr:
     factors = flatten_multiplication(expr)
 
     # Group factors by base for power expressions
-    power_groups: dict[str, list[tuple[Expr, Expr]]] = {}  # base_key -> [(base, exp), ...]
+    power_groups: dict[tuple, list[tuple[Expr, Expr]]] = {}  # base_key -> [(base, exp), ...]
     non_power_factors: list[Expr] = []
 
     for factor in factors:
@@ -129,13 +129,20 @@ def _consolidate_power_products(expr: Expr) -> Expr:
             base, _ = power_list[0]  # Use first base
 
             # Sum exponents
-            total_exponent = 0.0
+            total_exponent: int | float = 0
             for _, exp in power_list:
                 if isinstance(exp, Const):
                     total_exponent += exp.value
 
-            # Build consolidated power
-            consolidated_factors.append(Binary("**", base, Const(total_exponent)))
+            # Build consolidated power with edge case handling
+            if total_exponent == 0:
+                # x^0 = 1
+                consolidated_factors.append(Const(1))
+            elif total_exponent == 1:
+                # x^1 = x
+                consolidated_factors.append(base)
+            else:
+                consolidated_factors.append(Binary("**", base, Const(total_exponent)))
 
     # Add non-power factors
     consolidated_factors.extend(non_power_factors)
@@ -152,17 +159,43 @@ def _consolidate_power_products(expr: Expr) -> Expr:
         return result
 
 
-def _get_base_key(base: Expr) -> str:
-    """Get a string key representing the base expression.
+def _expr_structural_key(expr: Expr):
+    """Recursively generate a structural key for an expression.
 
-    This is used to group powers by their base.
+    Args:
+        expr: Expression to generate key for
+
+    Returns:
+        Tuple representing the structural key
+    """
+    from src.ir.ast import Binary, Const, SymbolRef
+
+    if isinstance(expr, Binary):
+        return (
+            "Binary",
+            expr.op,
+            _expr_structural_key(expr.left),
+            _expr_structural_key(expr.right),
+        )
+    elif isinstance(expr, Const):
+        return ("Const", expr.value)
+    elif isinstance(expr, SymbolRef):
+        return ("SymbolRef", expr.name)
+    else:
+        # Fallback for other types
+        return (type(expr).__name__, repr(expr))
+
+
+def _get_base_key(base: Expr) -> tuple:
+    """Get a structural key representing the base expression.
+
+    This is used to group powers by their base. Uses structural equality
+    rather than repr() to correctly identify equivalent expressions.
 
     Args:
         base: Base expression
 
     Returns:
-        String representation of the base
+        Structural key of the base
     """
-    # Simple approach: use repr()
-    # For more sophisticated matching, could use expression hashing
-    return repr(base)
+    return _expr_structural_key(base)

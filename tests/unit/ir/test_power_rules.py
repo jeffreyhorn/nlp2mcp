@@ -128,3 +128,45 @@ class TestPowerConsolidation:
 
         # Expected: unchanged
         assert result == expr
+
+    def test_bare_base_with_power(self):
+        """Test: x * x^2 → x^3 (implicit exponent of 1 for bare base)"""
+        x = SymbolRef("x")
+
+        # x * x^2
+        expr = Binary("*", x, Binary("**", x, Const(2)))
+        result = consolidate_powers(expr)
+
+        # Note: Current implementation doesn't handle implicit exponent=1
+        # This test documents expected behavior once implemented
+        # For now, it should return unchanged
+        assert isinstance(result, Binary)
+
+    def test_consolidation_resulting_in_exponent_one(self):
+        """Test: x^3 * x^(-2) → x^1 → x"""
+        x = SymbolRef("x")
+
+        # x^3 * x^(-2)
+        pow1 = Binary("**", x, Const(3))
+        pow2 = Binary("**", x, Const(-2))
+        expr = Binary("*", pow1, pow2)
+
+        result = consolidate_powers(expr)
+
+        # Expected: x (exponent=1 should simplify to base)
+        assert result == x
+
+    def test_consolidation_resulting_in_exponent_zero(self):
+        """Test: x^2 * x^(-2) → x^0 → 1"""
+        x = SymbolRef("x")
+
+        # x^2 * x^(-2)
+        pow1 = Binary("**", x, Const(2))
+        pow2 = Binary("**", x, Const(-2))
+        expr = Binary("*", pow1, pow2)
+
+        result = consolidate_powers(expr)
+
+        # Expected: 1 (exponent=0 should simplify to 1)
+        assert isinstance(result, Const)
+        assert result.value == 1

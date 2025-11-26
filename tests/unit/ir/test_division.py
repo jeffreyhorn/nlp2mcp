@@ -147,3 +147,46 @@ class TestDivisionSimplification:
         # Denominator should be w
         assert isinstance(result.right, SymbolRef)
         assert result.right.name == "w"
+
+    def test_duplicate_factors_in_numerator(self):
+        """Test: (x*x*y)/x → x*y (cancel only one x)"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+
+        # (x*x*y)/x
+        expr = Binary("/", Binary("*", Binary("*", x, x), y), x)
+        result = simplify_division(expr)
+
+        # Expected: x*y (only one x should be canceled)
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+    def test_duplicate_factors_in_denominator(self):
+        """Test: (x*y)/(x*x) → y/x (cancel only one x)"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+
+        # (x*y)/(x*x)
+        expr = Binary("/", Binary("*", x, y), Binary("*", x, x))
+        result = simplify_division(expr)
+
+        # Expected: y/x (only one x should be canceled)
+        assert isinstance(result, Binary)
+        assert result.op == "/"
+        assert isinstance(result.left, SymbolRef)
+        assert result.left.name == "y"
+        assert isinstance(result.right, SymbolRef)
+        assert result.right.name == "x"
+
+    def test_duplicate_factors_both_sides(self):
+        """Test: (x*x*y)/(x*x) → y (cancel matching pairs)"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+
+        # (x*x*y)/(x*x)
+        expr = Binary("/", Binary("*", Binary("*", x, x), y), Binary("*", x, x))
+        result = simplify_division(expr)
+
+        # Expected: y (both x's should be canceled)
+        assert isinstance(result, SymbolRef)
+        assert result.name == "y"

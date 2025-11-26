@@ -39,6 +39,7 @@ def simplify_nested_products(expr: Expr) -> Expr:
 
     Example:
         >>> # (2*x)*3 → 6*x
+        >>> x = SymbolRef("x")
         >>> expr = Binary("*", Binary("*", Const(2), x), Const(3))
         >>> result = simplify_nested_products(expr)
         >>> # result = Binary("*", Const(6), x)
@@ -70,7 +71,7 @@ def simplify_nested_products(expr: Expr) -> Expr:
         return _rebuild_multiplication(factors)
 
     # Consolidate constants
-    constant_product = 1.0
+    constant_product: int | float = 1
     for const in constants:
         constant_product *= const.value
 

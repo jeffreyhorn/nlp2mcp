@@ -1,7 +1,5 @@
 """Tests for nested operation simplification."""
 
-import pytest
-
 from src.ir.ast import Binary, Const, SymbolRef
 from src.ir.transformations.nested_operations import simplify_nested_products
 
@@ -63,7 +61,6 @@ class TestNestedProductSimplification:
         assert isinstance(result, Binary)
         assert result.op == "*"
 
-    @pytest.mark.skip(reason="Test assertion needs adjustment for actual implementation")
     def test_mixed_constants_and_vars(self):
         """Test: (2*x)*(3*y) → 6*x*y"""
         x = SymbolRef("x")
@@ -76,12 +73,21 @@ class TestNestedProductSimplification:
 
         result = simplify_nested_products(expr)
 
-        # Expected: 6*x*y
+        # Expected: 6*x*y (structured as (6*x)*y)
         assert isinstance(result, Binary)
         assert result.op == "*"
-        # First factor should be 6
-        assert isinstance(result.left, Const)
-        assert result.left.value == 6
+        # Result should be nested: Binary("*", Binary("*", Const(6), x), y)
+        assert isinstance(result.left, Binary)
+        assert result.left.op == "*"
+        # The consolidated constant should be 6
+        assert isinstance(result.left.left, Const)
+        assert result.left.left.value == 6
+        # Followed by variable x
+        assert isinstance(result.left.right, SymbolRef)
+        assert result.left.right.name == "x"
+        # And variable y at the top level
+        assert isinstance(result.right, SymbolRef)
+        assert result.right.name == "y"
 
     def test_no_nesting_unchanged(self):
         """Test: 2*x → 2*x (no nesting, should be unchanged)"""

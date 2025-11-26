@@ -299,21 +299,28 @@ def _check_remainder_match(remaining1: list[list[Expr]], remaining2: list[list[E
 
 
 def _factor_lists_equal(list1: list[Expr], list2: list[Expr]) -> bool:
-    """Check if two factor lists are equal (same elements, any order).
+    """Check if two factor lists are equal (same elements with same counts).
+
+    Properly handles duplicates by counting occurrences.
 
     Args:
         list1: First factor list
         list2: Second factor list
 
     Returns:
-        True if lists contain the same factors
+        True if lists contain the same factors with same multiplicities
     """
     if len(list1) != len(list2):
         return False
 
-    # Check if all elements in list1 are in list2
+    # Create a copy of list2 to track usage
+    list2_copy = list2.copy()
+
+    # Check if all elements in list1 can be matched in list2
     for factor in list1:
-        if factor not in list2:
+        if factor in list2_copy:
+            list2_copy.remove(factor)
+        else:
             return False
 
     return True
