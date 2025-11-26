@@ -49,15 +49,13 @@
     {
       "model_name": "maxmin",
       "gms_file": "maxmin.gms",
-      "parse_status": "FAILED",
-      "parse_error": "Error: Parse error at line 70, column 6: Unexpected character: '('\n  loop((n,d),                   // original\n       ^\n\nSuggestion: This character is not valid in this context",
-      "parse_error_type": "ParseError",
-      "parse_progress_percentage": 66.0,
-      "parse_progress_lines_parsed": 31,
+      "parse_status": "SUCCESS",
+      "parse_error": null,
+      "parse_error_type": null,
+      "parse_progress_percentage": 100.0,
+      "parse_progress_lines_parsed": 47,
       "parse_progress_lines_total": 47,
-      "missing_features": [
-        "parse error"
-      ]
+      "missing_features": []
     },
     {
       "model_name": "mhw4d",
@@ -117,9 +115,9 @@
   ],
   "kpis": {
     "total_models": 10,
-    "parse_success": 9,
-    "parse_failed": 1,
-    "parse_rate_percent": 90.0,
+    "parse_success": 10,
+    "parse_failed": 0,
+    "parse_rate_percent": 100.0,
     "convert_success": 0,
     "convert_failed": 0,
     "convert_rate_percent": 0.0,
