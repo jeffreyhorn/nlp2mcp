@@ -1086,7 +1086,65 @@ Testing all 10 GAMSLIB Tier 1 models on every PR provides sufficient regression 
 - Too few models → regressions slip through (parse rate drops but CI green)
 - Flaky tests → false positives, loss of trust in CI
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 7 will verify)
+**Verification Results:** ✅ **VERIFIED - Test all 10 Tier 1 models with matrix parallelization**
+
+**Decision:**
+Testing all 10 Tier 1 models with matrix parallelization provides optimal regression coverage while maintaining fast CI feedback.
+
+**Sampling Strategy:**
+- **Model Selection:** Test all 10 Tier 1 models (comprehensive coverage)
+  - Models: trig, rbrock, himmel16, hs62, mhw4d, mhw4dx, circle, maxmin, mathopt1, mingamma
+  - Coverage: Trig functions, power functions, sets, indexing, special functions, DNLP
+  - Parse rate: 90% (9/10 models, maxmin fails due to nested indexing)
+
+- **Test Frequency:** Three-tier testing strategy
+  - **Per-PR:** Parse + Convert (2-3 min runtime)
+  - **Nightly:** Parse + Convert + Solve (10-20 min runtime)
+  - **Weekly:** Full + Performance Trends (30-60 min runtime)
+
+- **Test Scope:** Incremental expansion
+  - **Per-PR:** Parse + Convert (fast feedback)
+  - **Nightly:** Parse + Convert + Solve (end-to-end validation)
+  - **Weekly:** Full + Performance Trends (long-term tracking)
+
+- **CI Runtime with Matrix Builds:**
+  - **Sequential:** 10 minutes (1 min per model)
+  - **Matrix (10 parallel jobs):** 2-3 minutes (longest model + overhead)
+  - **Runtime Reduction:** 70% faster
+
+**Pass/Fail Criteria:**
+- **Parse Rate:** 5% warning, 10% failure (relative drop)
+- **Convert Rate:** 5% warning, 10% failure (NEW)
+- **Per-Model Status:** Any passing → failing triggers failure (NEW)
+- **Performance:** +20% warning, +50% failure (accounts for ±10% variance)
+
+**Alternatives Considered:**
+1. **Canary Models (5 fixed + 5 rotated)** - Rejected: delayed detection for non-canary models
+2. **Risk-Based Sampling** - Rejected: requires manual risk assessment, complex
+3. **Fast/Full Split** - Rejected: can merge PRs with regressions if only fast tests run
+
+**Why "Test All" Wins:**
+- Matrix parallelization makes "test all" as fast as "test 5" (2-3 min)
+- Comprehensive coverage eliminates delayed regression detection
+- Simpler strategy (no canary selection logic needed)
+- Future-proof: scales to Tier 2 nightly tests (add more models to matrix)
+
+**Cost Analysis:**
+- **Current:** ~200 CI min/month (parser changes only, 20% of PRs)
+- **Proposed:** ~930 CI min/month (all PRs + nightly + weekly)
+- **Still within free tier:** Yes (930 < 2000 min/month)
+- **Per-PR feedback:** 70% faster (10 min → 3 min)
+
+**Evidence:**
+- Designed comprehensive sampling strategy in `docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_strategy.md`
+- Analyzed current Tier 1 models (10 models, 90% parse rate)
+- Evaluated 4 alternative sampling approaches (all rejected)
+- Calculated CI runtime with matrix builds (2-3 min vs. 10 min sequential)
+- Designed multi-metric pass/fail criteria (parse + convert + performance + per-model)
+- Documented baseline management strategy (rolling + golden baselines)
+- Identified flaky test mitigation strategies (caching, variance tolerance, deterministic seeding)
+
+**Decision:** Implement "Test All 10 Tier 1 Models with Matrix Parallelization" strategy in Sprint 11. Document in PREP_PLAN.md.
 
 ---
 
