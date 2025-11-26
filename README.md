@@ -109,6 +109,20 @@ For the detailed Sprint 9 plan, see [docs/planning/EPIC_2/SPRINT_9/PLAN.md](docs
 
 For the detailed Sprint 10 plan, see [docs/planning/EPIC_2/SPRINT_10/PLAN.md](docs/planning/EPIC_2/SPRINT_10/PLAN.md).
 
+**Sprint 11 Progress** (Epic 2 - Sprint 11: 100% Tier 1 Parse Rate + Aggressive Simplification + CI Guardrails):
+- [ ] Day 1: Grammar Extension for Nested Indexing
+- [ ] Day 2: Semantic Resolution for Nested Indexing
+- [ ] Day 3: maxmin.gms Validation + Simplification Pipeline Start
+- [ ] Day 4: Core HIGH Priority Transformations (1-3)
+- [ ] Day 5: Remaining HIGH Transforms + MEDIUM Priority Start + Checkpoint
+- [ ] Day 6: MEDIUM Transforms Finish + Testing + CI Matrix Builds
+- [ ] Day 7: Performance Baselines + CSE Advanced (T5.2-T5.3) + Day 7 Checkpoint
+- [ ] Day 8: CSE Aliasing + Multi-Metric Thresholds + Diagnostics + CI Polish
+- [ ] Day 9: Integration Testing + Buffer Time
+- [ ] Day 10: Final Validation + Retrospective + Buffer
+
+For the detailed Sprint 11 plan, see [docs/planning/EPIC_2/SPRINT_11/PLAN.md](docs/planning/EPIC_2/SPRINT_11/PLAN.md).
+
 ## Installation
 
 ### Requirements
