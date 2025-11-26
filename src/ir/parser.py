@@ -1984,7 +1984,43 @@ class _ModelBuilder:
         free_domain: Sequence[str],
         node: Tree | Token | None = None,
     ) -> Expr:
-        idx_tuple = tuple(indices)
+        # Sprint 11 Day 2 Extended: Expand set references in indices
+        # When we see dist(low) where low is a 2D set, expand to dist(n,nn)
+        #
+        # Complex logic needed:
+        # 1. If idx is a set with multi-dimensional domain, expand it
+        #    (e.g., low in dist(low) where low has domain (n,n))
+        # 2. BUT if idx is in free_domain AND is a base set (like 'n'), don't expand
+        #    (e.g., n in point(n,d) where n is a domain variable)
+        expanded_indices = []
+        for idx in indices:
+            # Skip IndexOffset objects - only expand plain string identifiers
+            if isinstance(idx, str) and idx in self.model.sets:
+                set_def = self.model.sets[idx]
+                # Check if this set's members are domain indices (other sets) or element values
+                # E.g., low(n,n) has members ['n', 'n'] - domain indices (should expand)
+                # E.g., d has members ['x', 'y'] - element values (should NOT expand)
+                members_are_sets = set_def.members and all(
+                    m in self.model.sets for m in set_def.members
+                )
+
+                # Check if this is a multi-dimensional set reference with set-based domain
+                if members_are_sets and len(set_def.members) > 1:
+                    # Multi-dimensional set with domain indices - always expand
+                    # E.g., low(n,n) expands to (n, n)
+                    expanded_indices.extend(set_def.members)
+                elif idx in free_domain:
+                    # Set that's in domain - don't expand
+                    # E.g., n in point(n,d) where domain is (n,nn)
+                    expanded_indices.append(idx)
+                else:
+                    # Set with element values or single-dim not in domain - don't expand
+                    expanded_indices.append(idx)
+            else:
+                # Not a set reference, keep as-is
+                expanded_indices.append(idx)
+
+        idx_tuple = tuple(expanded_indices)
         if name in self.model.variables:
             expected = self.model.variables[name].domain
             if len(expected) != len(idx_tuple):
