@@ -13,7 +13,8 @@ through all equation declarations/definitions (lines 44-58).
 
 import pytest
 
-from src.ir.parser import parse_model_file, parse_model_text
+from src.ir.parser import ParserSemanticError, parse_model_file, parse_model_text
+from src.utils.errors import ParseError
 
 
 class TestMaxminNestedIndexing:
@@ -84,8 +85,8 @@ class TestMaxminNestedIndexing:
             model = parse_model_file("tests/fixtures/gamslib/maxmin.gms")
             # If it fully parses, great! Check we got the equations
             assert len(model.equations) >= 5, "Should have at least 5 equations from maxmin.gms"
-        except Exception as e:
-            # If it fails, verify we made progress past earlier blockers
+        except (ParseError, ParserSemanticError) as e:
+            # If parsing fails, verify we made progress past earlier blockers
             error_msg = str(e)
 
             # Should NOT fail on earlier fixes

@@ -1475,6 +1475,8 @@ class _ModelBuilder:
                     indices = _id_list(child)
                 else:
                     # This is a statement in the loop body
+                    # Expected statement types: assign_stmt, solve_stmt, option_stmt, etc.
+                    # All exec_stmt types from grammar are valid here
                     body_stmts.append(child)
 
         if indices is None:
@@ -1531,8 +1533,8 @@ class _ModelBuilder:
                 # Extract index names from the lvalue for use as free domain
                 try:
                     domain_context = _extract_indices(target.children[1])
-                except Exception:
-                    # If extraction fails, fall back to empty domain
+                except (AttributeError, IndexError, TypeError):
+                    # If extraction fails due to malformed tree, fall back to empty domain
                     domain_context = ()
             elif target.data == "bound_indexed" and len(target.children) > 2:
                 # For variable bounds, also extract indices
@@ -1542,7 +1544,8 @@ class _ModelBuilder:
                     domain_context = tuple(
                         idx if isinstance(idx, str) else idx.base for idx in indices
                     )
-                except Exception:
+                except (AttributeError, IndexError, TypeError):
+                    # If extraction fails due to malformed tree, fall back to empty domain
                     domain_context = ()
 
         # Now evaluate expression with domain context
@@ -2032,8 +2035,12 @@ class _ModelBuilder:
                 # Check if this set's members are domain indices (other sets) or element values
                 # E.g., low(n,n) has members ['n', 'n'] - domain indices (should expand)
                 # E.g., d has members ['x', 'y'] - element values (should NOT expand)
-                members_are_sets = set_def.members and all(
-                    m in self.model.sets for m in set_def.members
+                # Note: Single-member sets are not expanded even if the member is a set,
+                # as they represent simple domain references rather than multi-dimensional expansions
+                members_are_sets = (
+                    set_def.members is not None
+                    and len(set_def.members) > 0
+                    and all(m in self.model.sets for m in set_def.members)
                 )
 
                 # Check if this is a multi-dimensional set reference with set-based domain

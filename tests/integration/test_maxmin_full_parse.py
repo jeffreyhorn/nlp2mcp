@@ -8,7 +8,8 @@ New blocker at line 75: variable bounds expansion for sets without explicit memb
 
 import pytest
 
-from src.ir.parser import parse_model_file
+from src.ir.parser import ParserSemanticError, parse_model_file
+from src.utils.errors import ParseError
 
 
 def test_maxmin_parse_progress():
@@ -61,8 +62,8 @@ def test_maxmin_parse_progress():
 
         print("✅ AMAZING: maxmin.gms parsed 100%!")
 
-    except Exception as e:
-        # Now expected to fail at line 51 (subset reference as index)
+    except (ParseError, ParserSemanticError) as e:
+        # If parsing fails, verify we've passed the previously resolved blockers
         error_msg = str(e)
 
         # Should NOT fail on earlier blockers (lines 37, 51, 59, 78, 87, 106)
