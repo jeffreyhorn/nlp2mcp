@@ -1118,7 +1118,87 @@ PATH solver license permits use in CI (automated cloud testing). If not, we can 
 - No PATH testing → miss MCP generation bugs (solve failures not caught)
 - Alternative solver inadequate → wrong results, not useful for validation
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 8 will verify)
+**Verification Results:** ✅ **VERIFIED - PATH licensing UNCLEAR, IPOPT alternative prototyped**
+
+**Decision:**
+DEFER PATH CI integration to Sprint 12. PROTOTYPE IPOPT alternative for Sprint 11 as CI-friendly open-source solution.
+
+**PATH Licensing Findings:**
+- **Free Version:** 300 variables / 2000 nonzeros limit (sufficient for basic smoke tests)
+- **Academic License:** Unrestricted size, annual renewal, **CI/cloud usage NOT EXPLICITLY DOCUMENTED**
+- **Commercial License:** Required for commercial use, includes cloud/CI rights
+- **Contact:** Michael C. Ferris (ferris@cs.wisc.edu) for licensing clarification
+
+**What We Know:**
+1. ✅ Free version exists (300 var limit, suitable for simple smoke tests)
+2. ✅ Academic license available (free, unrestricted size, annual renewal)
+3. ✅ PATH typically accessed via GAMS (dual licensing: GAMS + PATH)
+4. ⚠️ **CI use under academic license: UNCLEAR** (no explicit documentation)
+
+**What We DON'T Know:**
+1. ❌ Academic license permits GitHub Actions CI? - **UNKNOWN**
+2. ❌ Cloud deployment allowed? - **UNKNOWN**
+3. ❌ Redistribution limits for CI cache/Docker? - **UNKNOWN**
+4. ❌ GAMS demo license sufficient for CI? - **SMALL MODELS ONLY**
+
+**PATH Installation Options:**
+1. **GAMS with PATH:** ~2 min CI overhead, 500 MB download, licensing unclear
+2. **Standalone PATH:** Binaries not publicly distributed, not viable
+3. **Self-hosted runner:** Viable but high maintenance (uptime, security, single point of failure)
+
+**IPOPT Alternative Solution:**
+- **License:** Eclipse Public License (EPL) - **permissive open source, CI-friendly**
+- **Installation:** ~30 seconds (apt: `coinor-libipopt-dev`, pip: `cyipopt`)
+- **MCP Support:** Via Fischer-Burmeister reformulation (MCP → NLP)
+- **Accuracy:** Expected <1% disagreement with PATH for well-behaved MCPs
+- **Pros:** Open source, no licensing restrictions, fast CI installation
+- **Cons:** Not specialized for MCP (may be slower), different solution approach
+
+**IPOPT Smoke Test Implementation:**
+```python
+# tests/validation/test_ipopt_smoke.py
+import cyipopt
+import numpy as np
+
+@pytest.mark.timeout(30)
+def test_ipopt_smoke_trivial_mcp():
+    """IPOPT smoke test: x+y=1, x=y → solution x=0.5, y=0.5."""
+    # MCP reformulated as NLP via Fischer-Burmeister function
+    # min Σ φ(x[i], F[i](x))² where φ is FB function
+    # ... implementation ...
+    
+    solution, info = solve_mcp_with_ipopt(mcp)
+    assert info['status'] == 0, "IPOPT failed"
+    assert abs(solution[0] - 0.5) < 1e-6
+    assert abs(solution[1] - 0.5) < 1e-6
+```
+
+**Smoke Test Suite (4 tests):**
+1. **Trivial 2×2 MCP:** x+y=1, x=y, x,y≥0 → solution x=0.5, y=0.5
+2. **Small GAMSLib MCP:** hansmcp.gms (5 variables, known solution)
+3. **Infeasible MCP:** x≥0, y≥2, x+y=1 → expect infeasible status
+4. **Unbounded MCP:** x-y=0, x,y free → expect infinite solutions or unboundedness detected
+
+**Sprint 11 Actions:**
+1. ✅ **Contact PATH maintainer** (ferris@cs.wisc.edu) for CI licensing clarification
+2. ✅ **Prototype IPOPT smoke tests** (4-test suite, nightly CI workflow)
+3. ✅ **Validate IPOPT accuracy** (compare vs PATH on 3 GAMSLib models)
+4. ✅ **Document IPOPT limitations** (when sufficient, when PATH needed)
+5. 🔍 **Defer PATH integration** until licensing confirmed (Sprint 12 or later)
+
+**Sprint 12+ Actions (conditional on PATH licensing response):**
+1. **If PATH permitted:** Add PATH to nightly CI, use both PATH (primary) and IPOPT (fallback)
+2. **If PATH not permitted:** Self-hosted runner for PATH, IPOPT for cloud CI
+3. **If unclear/no response:** Continue IPOPT-only, defer PATH indefinitely
+
+**Evidence:**
+- Researched PATH licensing in `docs/planning/EPIC_2/SPRINT_11/path_smoke_test_integration.md`
+- PATH website: https://pages.cs.wisc.edu/~ferris/path.html (academic license, free version with limits)
+- IPOPT (COIN-OR): https://github.com/coin-or/Ipopt (EPL license, open source)
+- Existing PATH tests: `tests/validation/test_path_solver.py` (skip if PATH not available)
+- Draft email to ferris@cs.wisc.edu included in research document
+
+**Decision:** DEFER PATH CI integration, PROTOTYPE IPOPT for Sprint 11. Document in PREP_PLAN.md.
 
 ---
 
