@@ -50,13 +50,13 @@
       "model_name": "maxmin",
       "gms_file": "maxmin.gms",
       "parse_status": "FAILED",
-      "parse_error": "Error: Parse error at line 51, column 12: Unexpected character: '('\n  defdist(low(n,nn))..   dist(low) =e= sqrt(sum(d, sqr(point(n,d) - point(nn,d))));\n             ^\n\nSuggestion: This character is not valid in this context",
+      "parse_error": "Error: Parse error at line 70, column 6: Unexpected character: '('\n  loop((n,d),                   // original\n       ^\n\nSuggestion: This character is not valid in this context",
       "parse_error_type": "ParseError",
-      "parse_progress_percentage": 40.4,
-      "parse_progress_lines_parsed": 19,
+      "parse_progress_percentage": 66.0,
+      "parse_progress_lines_parsed": 31,
       "parse_progress_lines_total": 47,
       "missing_features": [
-        "nested indexing"
+        "parse error"
       ]
     },
     {
