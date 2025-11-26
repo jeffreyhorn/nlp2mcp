@@ -18,7 +18,7 @@ Designed comprehensive GAMSLib sampling strategy for automated CI regression tes
 #### Achievements
 
 **Comprehensive Sampling Strategy Document Created:**
-- ✅ `docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_strategy.md` (1,361 lines, ~31,000 words)
+- ✅ `docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_strategy.md` (1,775 lines, ~31,000 words)
   - Section 1: Model Selection Strategy (test all 10 Tier 1 models with matrix parallelization)
   - Section 2: Test Frequency Strategy (three-tier: per-PR, nightly, weekly)
   - Section 3: Test Scope Strategy (incremental expansion: parse→convert→solve→trends)
@@ -160,7 +160,7 @@ Designed comprehensive GAMSLib sampling strategy for automated CI regression tes
 
 #### Deliverables
 
-- ✅ GAMSLib sampling strategy document (1,361 lines, comprehensive)
+- ✅ GAMSLib sampling strategy document (1,775 lines, comprehensive)
 - ✅ Model selection approach (test all 10 Tier 1 models with matrix parallelization)
 - ✅ Test frequency (three-tier: per-PR, nightly, weekly)
 - ✅ Test scope (incremental expansion: parse+convert per-PR, +solve nightly, +trends weekly)
@@ -173,7 +173,7 @@ Designed comprehensive GAMSLib sampling strategy for automated CI regression tes
 
 #### Files Modified
 
-- `docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_strategy.md` (created, 1,361 lines)
+- `docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_strategy.md` (created, 1,775 lines)
 - `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` (Unknown 3.1 verification)
 - `docs/planning/EPIC_2/SPRINT_11/PREP_PLAN.md` (Task 7 completion, result summary, verification)
 - `CHANGELOG.md` (this entry)

@@ -1159,7 +1159,7 @@ Well-designed sampling balances coverage, speed, and reliability.
 ### Changes
 
 **Files Created:**
-- `docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_strategy.md` (1,361 lines, ~31,000 words)
+- `docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_strategy.md` (1,775 lines, ~31,000 words)
 
 **Files Modified:**
 - `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` - Unknown 3.1 verified (test all 10 Tier 1 models with matrix parallelization)
@@ -1288,7 +1288,7 @@ Designed comprehensive GAMSLib sampling strategy for automated CI regression tes
 ### Verification
 
 ```bash
-# ✅ Strategy document created (1,361 lines)
+# ✅ Strategy document created (1,775 lines)
 test -f docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_strategy.md && echo "✅ Strategy doc created"
 
 # ✅ Model selection defined (Section 1)
@@ -1318,7 +1318,7 @@ grep -q "Cost-Benefit Analysis" docs/planning/EPIC_2/SPRINT_11/gamslib_sampling_
 
 ### Deliverables
 
-- ✅ **GAMSLib sampling strategy document** (`gamslib_sampling_strategy.md` - 1,361 lines, comprehensive)
+- ✅ **GAMSLib sampling strategy document** (`gamslib_sampling_strategy.md` - 1,775 lines, comprehensive)
 - ✅ **Model selection approach:** Test all 10 Tier 1 models with matrix parallelization
 - ✅ **Test frequency:** Three-tier (per-PR, nightly, weekly)
 - ✅ **Test scope:** Incremental expansion (parse+convert per-PR, +solve nightly, +trends weekly)
