@@ -135,10 +135,11 @@ def _consolidate_power_products(expr: Expr) -> Expr:
                     total_exponent += exp.value
 
             # Build consolidated power with edge case handling
-            if total_exponent == 0:
+            # Use epsilon comparison for floating-point safety
+            if abs(total_exponent) < 1e-10:
                 # x^0 = 1
                 consolidated_factors.append(Const(1))
-            elif total_exponent == 1:
+            elif abs(total_exponent - 1) < 1e-10:
                 # x^1 = x
                 consolidated_factors.append(base)
             else:
@@ -159,14 +160,16 @@ def _consolidate_power_products(expr: Expr) -> Expr:
         return result
 
 
-def _expr_structural_key(expr: Expr):
+def _expr_structural_key(expr: Expr) -> tuple[str, ...]:
     """Recursively generate a structural key for an expression.
 
     Args:
         expr: Expression to generate key for
 
     Returns:
-        Tuple representing the structural key
+        Tuple representing the structural key. Returns a tuple with at least
+        one element (the type discriminator), and potentially more elements
+        depending on the expression type.
     """
     from src.ir.ast import Binary, Const, SymbolRef
 
@@ -174,11 +177,11 @@ def _expr_structural_key(expr: Expr):
         return (
             "Binary",
             expr.op,
-            _expr_structural_key(expr.left),
-            _expr_structural_key(expr.right),
+            str(_expr_structural_key(expr.left)),
+            str(_expr_structural_key(expr.right)),
         )
     elif isinstance(expr, Const):
-        return ("Const", expr.value)
+        return ("Const", str(expr.value))
     elif isinstance(expr, SymbolRef):
         return ("SymbolRef", expr.name)
     else:

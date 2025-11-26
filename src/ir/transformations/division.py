@@ -156,8 +156,8 @@ def _is_safe_to_cancel(factor1: Expr, factor2: Expr) -> bool:
     Conservative heuristics:
     - Constants: Must be non-zero and equal
     - SymbolRefs: Must have same name (assumes non-zero)
-    - Binary/Unary: Exact structural match
-    - Function calls: NOT canceled (may be zero)
+    - Binary: Exact structural match (conservative approach)
+    - Function calls, Unary, etc.: NOT canceled (may be zero)
 
     Args:
         factor1: First factor
@@ -191,6 +191,9 @@ def _is_safe_to_cancel(factor1: Expr, factor2: Expr) -> bool:
 def _expressions_equal(expr1: Expr, expr2: Expr) -> bool:
     """Check if two expressions are structurally identical.
 
+    Handles Const, SymbolRef, and Binary node types. For other node types
+    (Call, Unary, VarRef, ParamRef), falls back to identity comparison.
+
     Args:
         expr1: First expression
         expr2: Second expression
@@ -218,5 +221,6 @@ def _expressions_equal(expr1: Expr, expr2: Expr) -> bool:
             and _expressions_equal(expr1.right, expr2.right)
         )
 
-    # Default: not equal
-    return False
+    # Fallback for other node types (Call, Unary, VarRef, ParamRef):
+    # Use identity comparison (conservative - only equal if same object)
+    return expr1 is expr2

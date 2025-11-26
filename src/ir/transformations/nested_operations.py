@@ -51,8 +51,8 @@ def simplify_nested_products(expr: Expr) -> Expr:
     # Flatten multiplication into list of factors
     factors = flatten_multiplication(expr)
 
-    # If only 1-2 factors, no nesting to simplify
-    if len(factors) <= 2:
+    # If only 1 factor, nothing to simplify
+    if len(factors) <= 1:
         return expr
 
     # Separate constants from non-constants

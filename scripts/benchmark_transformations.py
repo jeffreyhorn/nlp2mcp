@@ -90,7 +90,8 @@ def create_test_expressions():
     expr5 = Binary("/", Binary("*", Binary("*", x, y), z), x)
 
     # Test 6: Complex combination
-    # (2*x)/(2) + (3*x)/(3) → x + x → 2*x
+    # (2*x)/(2) + (3*x)/(3) → x + x
+    # Note: Like-term collection is not implemented, so result stays as x + x
     expr6 = Binary(
         "+",
         Binary("/", Binary("*", Const(2), x), Const(2)),
