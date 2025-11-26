@@ -5,8 +5,8 @@
 **Sprint Theme:** "Complete Tier 1 Coverage + Quality Infrastructure"  
 **Target:** 100% Tier 1 parse rate (10/10 models) + ≥20% term reduction on ≥50% models  
 **Status:** FINAL (expanded to 50h budget with all simplification features)  
-**Total Effort:** 47 hours planned + 3 hours buffer = 50 hours total  
-**Utilization:** 94% (47h/50h) with 3h buffer for contingencies
+**Total Effort:** 45 hours planned + 5 hours buffer = 50 hours total  
+**Utilization:** 90% (45h/50h) with 5h buffer for contingencies
 
 ---
 
@@ -29,10 +29,9 @@ This final plan expands Sprint 11 to 50h capacity based on stakeholder input:
 - CSE Advanced Features (T5.2-T5.4): 6h (nested, multiplicative, aliasing)
 - CI Guardrails: 7h (full features including PR comments)
 - Diagnostics: 4h (text tables + JSON output)
-- IPOPT Prototype: 2h (MCP validation)
 - Integration/Testing: 1.5h
-- **Total Planned: 47h** ✅ (94% utilization)
-- **Buffer Available: 3h** ✅ (6% for contingencies)
+- **Total Planned: 45h** ✅ (90% utilization)
+- **Buffer Available: 5h** ✅ (10% for contingencies)
 
 ---
 
@@ -82,26 +81,22 @@ This plan implements **100% Tier 1 parse rate coverage** plus **quality infrastr
    - Simplification pass breakdowns
    - <2% overhead
 
-6. **IPOPT Prototype (Day 9):** 2 hours
-   - IPOPT installation in CI
-   - Fischer-Burmeister reformulation
-   - Smoke tests + accuracy validation
-
-7. **Integration & Retrospective (Days 9-10):** 1.5 hours
+6. **Integration & Retrospective (Days 9-10):** 1.5 hours
    - Final validation
    - Documentation
    - Sprint retrospective
 
-### Sprint Buffer (3 hours)
+### Sprint Buffer (5 hours)
 
-- **Allocated:** 3 hours (Day 10)
+- **Allocated:** 5 hours (Days 9-10)
 - **Purpose:** Protect Day 3 maxmin checkpoint and handle overruns
 - **Usage Priority:**
   1. FIRST: Extend maxmin work if Days 1-3 exceed 12h estimate
   2. SECOND: Fix critical simplification bugs if Day 5 checkpoint fails
   3. THIRD: Address CSE implementation issues if Days 7-8 overrun
   4. FOURTH: Address CI performance issues if Day 7 checkpoint fails
-- **If Unused:** Apply to documentation polish or additional test coverage
+  5. FIFTH: Additional test coverage or feature interaction tests
+- **If Unused:** Apply to documentation polish or Sprint 12 prep
 
 ### Process Improvements (Established in Prep)
 
@@ -126,10 +121,11 @@ These processes are active from Day 1 with no additional implementation effort.
 
 **Stakeholder-Accepted Deferrals:**
 - PATH CI Integration: 6-8h (licensing pending, see Unknown 6.1)
+- IPOPT Prototype: 2-4h (requires new output format or GAMS licensing)
 - Additional maxmin.gms blockers: 11-26h (other 4 categories)
 - Feature Interaction Tests: 3h (framework established, tests deferred)
 
-**Note:** PATH smoke tests remain in Unknown 6.1 pending licensing clarification. All aggressive simplification work from aggressive_simplification_architecture.md is now included in Sprint 11.
+**Note:** PATH and IPOPT smoke tests remain deferred pending licensing/architecture clarification. All aggressive simplification work from aggressive_simplification_architecture.md is now included in Sprint 11.
 
 ---
 
@@ -141,9 +137,9 @@ These processes are active from Day 1 with no additional implementation effort.
 | **Phase 2** | 3-5 | Simplification core (6 HIGH transforms) | 12.5h | Day 5: ≥20% on ≥3 models |
 | **Phase 3** | 5-6 | Simplification MEDIUM (4 transforms) | 2h | - |
 | **Phase 4** | 6-8 | CI guardrails + CSE Advanced | 13h | Day 7: CI <3 min |
-| **Phase 5** | 8-9 | Diagnostics + IPOPT + integration | 6h | - |
+| **Phase 5** | 8-9 | Diagnostics + integration | 5.5h | - |
 | **Phase 6** | 9-10 | Validation + retrospective | 1.5h | Sprint complete |
-| **Buffer** | 10 | Contingency time | 3h | - |
+| **Buffer** | 9-10 | Contingency time | 5h | - |
 
 **Note:** Phases overlap to maintain continuous progress (e.g., simplification starts Day 3 while maxmin completes).
 
@@ -256,12 +252,12 @@ These processes are active from Day 1 with no additional implementation effort.
 | 6 | P3+P4 | Testing + CI matrix + MEDIUM finish | Validation, CI workflow, 4 MEDIUM transforms | 4h | - |
 | 7 | P4 | Baselines + CSE Advanced (T5.2-T5.3) | CI checkpoint, nested CSE, multiplicative CSE | 5h | ✅ Day 7 (CI <3 min) |
 | 8 | P4+P5 | CSE (T5.4) + Diagnostics + CI polish | Aliasing CSE, text tables, JSON, PR comments | 5h | - |
-| 9 | P5+P6 | IPOPT + Integration | IPOPT prototype, integration tests | 3.5h | - |
-| 10 | P6 | Final validation + retrospective + buffer | Docs, tests, retrospective, 3h buffer | 4.5h | Sprint complete |
+| 9 | P5+P6 | Integration + buffer start | Integration tests, 2.5h buffer available | 3.5h | - |
+| 10 | P6 | Final validation + retrospective + buffer | Docs, tests, retrospective, 2.5h buffer | 4.5h | Sprint complete |
 
-**Total Planned:** 47 hours (average 4.7h/day)  
-**Total Buffer:** 3 hours (Day 10)  
-**Total Available:** 50 hours (94% utilization on planned work)
+**Total Planned:** 45 hours (average 4.5h/day)  
+**Total Buffer:** 5 hours (Days 9-10: 2.5h each day)  
+**Total Available:** 50 hours (90% utilization on planned work)
 
 **Critical Path:** Phase 1 (maxmin) → Phase 2 (simplification core) → Phase 4 (CI) → Phase 6 (complete)
 
@@ -1071,70 +1067,51 @@ These processes are active from Day 1 with no additional implementation effort.
 
 ---
 
-### **Day 9: IPOPT Prototype + Integration Testing**
+### **Day 9: Integration Testing + Buffer Time**
 
 **Date:** TBD  
-**Phase:** 5 + 6 (IPOPT + Integration + validation start)  
-**Goal:** Implement IPOPT prototype + validate all features together  
-**Effort:** 3.5 hours (2h IPOPT + 1.5h integration)  
+**Phase:** 5 + 6 (Integration + validation start + buffer)  
+**Goal:** Validate all features together + use buffer if needed  
+**Effort:** 3.5 hours (1.5h integration + 2h buffer available)  
 **Risk:** LOW  
-**Confidence:** 90%
+**Confidence:** 95%
 
-#### Morning (2 hours): IPOPT Prototype
+#### Morning (1.5 hours): Integration Testing
 
-**Task 9.1: IPOPT installation and smoke tests (1h)**
-- Install IPOPT in CI: `apt-get install coinor-libipopt-dev`
-- Create nightly workflow: `.github/workflows/ipopt-smoke-tests.yml`
-- Implement 4 smoke tests:
-  1. Trivial MCP (single equation)
-  2. hansmcp.gms (from GAMSLib)
-  3. Infeasible MCP (no solution)
-  4. Unbounded MCP (no bounds)
-- Validate all tests pass locally
-
-**Task 9.2: Fischer-Burmeister reformulation + accuracy validation (1h)**
-- File: `src/mcp/ipopt_solver.py`
-- Implement Fischer-Burmeister reformulation:
-  - Convert complementarity to smooth equations
-  - φ(a,b) = sqrt(a² + b²) - (a + b) = 0
-- Test accuracy on 3 GAMSLib models:
-  - hansmcp.gms
-  - scarfmcp.gms
-  - oligomcp.gms
-- Compare PATH vs IPOPT solutions (<1% disagreement expected)
-- Document accuracy findings
-
-#### Afternoon (1.5 hours): Integration Testing
-
-**Task 9.3: Run full integration tests (1h)**
+**Task 9.1: Run full integration tests (1h)**
 - Test all Sprint 11 features together:
   - maxmin.gms parsing
   - Aggressive simplification (10 transformations + CSE)
   - CI guardrails
   - Diagnostics output (text + JSON)
-  - IPOPT smoke tests
 - Verify no feature interactions cause issues
 - Run full test suite: `make test`
 - Benchmark all features together
 - Test on all 10 Tier 1 models
 
-**Task 9.4: Document integration results (30 min)**
+**Task 9.2: Document integration results (30 min)**
 - File: `docs/planning/EPIC_2/SPRINT_11/SPRINT_LOG.md`
 - Record integration test results
 - Note any issues or unexpected interactions
 - Validate all success criteria progress
 - Prepare for Day 10 final validation
 
+#### Afternoon (2 hours): Buffer Time Available
+
+**Buffer Usage Options:**
+1. Address any issues found in integration testing
+2. Add additional test coverage for edge cases
+3. Implement feature interaction tests (if time permits)
+4. Polish documentation
+5. Start Sprint 12 prep work
+
 #### Deliverables
 
-- [ ] IPOPT installed in CI (nightly workflow)
-- [ ] Fischer-Burmeister reformulation implemented
-- [ ] 4 IPOPT smoke tests passing
-- [ ] IPOPT accuracy validated on 3 models
 - [ ] Integration tests passing
 - [ ] All features validated together
 - [ ] No feature interaction issues
 - [ ] Integration results documented
+- [ ] 2h buffer available for adjustments or enhancements
 
 #### Dependencies
 
@@ -1161,7 +1138,7 @@ These processes are active from Day 1 with no additional implementation effort.
 **Date:** TBD  
 **Phase:** 6 (Validation + retrospective + buffer)  
 **Goal:** Final validation + complete Sprint 11 + reserve buffer time  
-**Effort:** 4.5 hours (1.5h validation + 3h buffer)  
+**Effort:** 4.5 hours (1.5h validation + 3h buffer available)  
 **Risk:** NONE  
 **Confidence:** 100%
 
@@ -1178,7 +1155,6 @@ These processes are active from Day 1 with no additional implementation effort.
   - All 10 simplification transformations working
   - All CSE advanced features (T5.2-T5.4) working
   - Diagnostics text + JSON output
-  - IPOPT smoke tests passing
 - Document final metrics
 - Confirm buffer usage and outcomes
 
@@ -1189,7 +1165,6 @@ These processes are active from Day 1 with no additional implementation effort.
   - CSE advanced features (T5.2-T5.4)
   - CI regression guardrails (matrix builds, baselines, thresholds, PR comments)
   - Diagnostics mode (text + JSON)
-  - IPOPT prototype
 - Document usage examples
 - Add configuration options
 - Update CLI flags documentation
@@ -1207,14 +1182,17 @@ These processes are active from Day 1 with no additional implementation effort.
 - Document any scope changes or adjustments made
 - Record checkpoint outcomes (Days 3, 5, 7)
 
-#### Buffer Time (3 hours): Contingency Reserve
+#### Afternoon/Buffer Time (3 hours): Contingency Reserve
 
 **Allocated for:**
 1. **FIRST priority:** Maxmin overruns from Days 1-3
 2. **SECOND priority:** Simplification bug fixes from Day 5 checkpoint
 3. **THIRD priority:** CSE implementation issues from Days 7-8
 4. **FOURTH priority:** CI performance issues from Day 7 checkpoint
-5. **If unused:** Additional test coverage, documentation polish, or Sprint 12 prep
+5. **FIFTH priority:** Feature interaction tests (if all above complete)
+6. **If unused:** Additional test coverage, documentation polish, or Sprint 12 prep
+
+**Note:** Combined with Day 9 buffer (2h), total 5h buffer available across Days 9-10
 
 #### Deliverables
 
@@ -1271,18 +1249,15 @@ These processes are active from Day 1 with no additional implementation effort.
 | **Diagnostics Mode (Full)** | 4 | P0 | 8-9 |
 | ├─ Text output with formatting | 2 | P0 | 8 |
 | └─ JSON output | 2 | P0 | 8 |
-| **IPOPT Prototype** | 2 | P0 | 9 |
-| ├─ Installation + smoke tests | 1 | P0 | 9 |
-| └─ Fischer-Burmeister + validation | 1 | P0 | 9 |
 | **Integration & Validation** | 1.5 | P0 | 9-10 |
 | **Final Validation + Retrospective** | 1.5 | P0 | 10 |
-| **TOTAL PLANNED** | **47** | | |
-| **Sprint Buffer** | **3** | P0 | 10 |
+| **TOTAL PLANNED** | **45** | | |
+| **Sprint Buffer** | **5** | P0 | 9-10 |
 | **TOTAL AVAILABLE** | **50** | | |
 
-**Planned Capacity:** 47 hours (94% utilization)  
-**Buffer Capacity:** 3 hours (6% for contingencies)  
-**Risk:** MEDIUM (buffer protects Day 3 checkpoint and handles CSE/diagnostics overruns)
+**Planned Capacity:** 45 hours (90% utilization)  
+**Buffer Capacity:** 5 hours (10% for contingencies)  
+**Risk:** MEDIUM (larger buffer protects Day 3 checkpoint and provides flexibility for overruns)
 
 ---
 
@@ -1304,16 +1279,15 @@ These processes are active from Day 1 with no additional implementation effort.
 - [ ] **Diagnostics mode (FULL)** validated on representative models
   - [ ] Text output with formatting
   - [ ] JSON output for automation
-- [ ] **IPOPT prototype** smoke tests passing
 - [ ] All tests pass with **≥95% coverage** maintained
 - [ ] No regressions in existing functionality
 
 ### Secondary Criteria (Stretch Goals)
 
 - [ ] Term reduction ≥20% on ≥50% of models (5/10) - **Primary target met with ≥3 models**
-- [ ] IPOPT accuracy within 1% of PATH on 3 models
 - [ ] Diagnostics overhead <2% for summary mode
 - [ ] PR comment formatting with detailed tables
+- [ ] Feature interaction tests (if buffer allows)
 
 ### Sprint 11 Definition of Done
 
@@ -1354,26 +1328,28 @@ These processes are active from Day 1 with no additional implementation effort.
 
 ### Unknown 7.1: IPOPT Prototype
 
-**Decision:** ✅ **INCLUDE in Sprint 11** (expanded from 30h to 50h budget)
+**Decision:** ❌ **DEFER to Sprint 12** (architecture clarification needed)
 
 **Rationale:**
-- Sprint 11 expanded to 50h capacity (94% planned utilization)
-- IPOPT provides end-to-end MCP validation without PATH licensing issues
-- 2h implementation effort fits within expanded budget
-- Enables smoke testing in CI without external dependencies
-- Open-source solver reduces infrastructure dependencies
+- IPOPT cannot directly read `.gms` files (nlp2mcp's output format)
+- Two implementation options, both problematic:
+  - **Option A:** IPOPT via GAMS - Still has GAMS licensing issues (doesn't solve PATH licensing problem)
+  - **Option B:** Python IPOPT with new output format - Requires significant architecture work (new output format)
+- Sprint 11 focuses on parse rate + simplification; solver integration is secondary
+- Better to clarify architecture requirements in Sprint 12 planning
 
-**Sprint 11 Scope (Day 9):** 2 hours
-- IPOPT installation in CI (1h)
-- Fischer-Burmeister reformulation (1h)
-- Smoke tests + accuracy validation (included)
+**Sprint 12 Scope (if pursued):** 4-6 hours
+- **IF Option A (GAMS+IPOPT):** 2h
+  - Install GAMS + IPOPT in CI
+  - Test licensing for CI usage
+  - May not solve the PATH licensing problem
+- **IF Option B (Python integration):** 4-6h
+  - Design alternative output format (Python/JSON)
+  - Implement `nlp2mcp --format python` option
+  - Integrate with cyipopt
+  - More experimental, enables direct solver integration
 
-**Value Proposition:**
-- Provides end-to-end MCP validation without PATH licensing
-- Enables smoke testing in nightly workflow
-- Validates MCP generation accuracy on 3 GAMSLib models
-
-**Implementation:** Included in Day 9 (2h) along with integration testing (1.5h)
+**Deferral Accepted:** IPOPT scope unclear - needs architecture decision before implementation
 
 ---
 
@@ -1507,10 +1483,10 @@ Sprint Buffer (Days 9-10)
 **Days 1-3:** maxmin.gms (12h) → **Day 3 Checkpoint** → Decision point  
 **Days 3-6:** Simplification FULL (14.5h: 6 HIGH + 4 MEDIUM) → **Day 5 Checkpoint** → Decision point  
 **Days 6-8:** CI guardrails (7h) + CSE Advanced (6h) → **Day 7 Checkpoint** → Decision point  
-**Days 8-9:** Diagnostics (4h) + IPOPT (2h)  
-**Days 9-10:** Integration + Validation (1.5h) + **Buffer (3h)**  
+**Days 8-9:** Diagnostics (4h) + Integration (1.5h)  
+**Days 9-10:** Integration + Validation + **Buffer (5h)**  
 
-**Total Critical Path:** 47 hours planned + 3 hours buffer = 50 hours total
+**Total Critical Path:** 45 hours planned + 5 hours buffer = 50 hours total
 
 ---
 
@@ -1681,8 +1657,8 @@ Sprint Buffer (Days 9-10)
 **Sprint Duration:** 10 working days  
 **Hours per day:** ~5 hours (average, expanded capacity)  
 **Total Available:** 50 hours  
-**Planned Work:** 47 hours (94% utilization)  
-**Buffer:** 3 hours (6% for contingencies)
+**Planned Work:** 45 hours (90% utilization)  
+**Buffer:** 5 hours (10% for contingencies)
 
 ### Actual Allocation
 
@@ -1692,42 +1668,43 @@ Sprint Buffer (Days 9-10)
 | Phase 2 (simplification HIGH) | 3-5 | 12.5h | 25% |
 | Phase 3 (simplification MEDIUM) | 5-6 | 2h | 4% |
 | Phase 4 (CI + CSE advanced) | 6-8 | 13h | 26% |
-| Phase 5 (diagnostics + IPOPT) | 8-9 | 6h | 12% |
-| Phase 6 (integration + validation) | 9-10 | 1.5h | 3% |
-| **TOTAL PLANNED** | | **47h** | **94%** |
-| **Sprint Buffer** | 10 | **3h** | **6%** |
+| Phase 5 (diagnostics + integration) | 8-9 | 5.5h | 11% |
+| Phase 6 (validation + retrospective) | 9-10 | 1.5h | 3% |
+| **TOTAL PLANNED** | | **45h** | **90%** |
+| **Sprint Buffer** | 9-10 | **5h** | **10%** |
 | **TOTAL AVAILABLE** | | **50h** | **100%** |
 
 ### Risk Assessment
 
-**94% Utilization with 3h Buffer:**
-- ✅ All features fit within planned capacity (47h)
-- ✅ 3h buffer protects Day 3 maxmin checkpoint and handles overruns
+**90% Utilization with 5h Buffer:**
+- ✅ All features fit within planned capacity (45h)
+- ✅ 5h buffer provides substantial protection for Day 3 maxmin checkpoint
 - ✅ All aggressive simplification work (10 transformations) included
 - ✅ All CSE advanced features (T5.2-T5.4) included
 - ✅ Full diagnostics (text + JSON) included
-- ✅ IPOPT prototype included
-- ⚠️ Less buffer percentage (6% vs 7% in 30h plan) but more absolute hours (3h vs 2h)
+- ✅ 10% buffer percentage provides good flexibility (vs 6% with IPOPT included)
+- ✅ Higher absolute buffer hours (5h vs 3h)
 
 **Contingency Options (If Buffer Exhausted):**
 1. Reduce CSE advanced testing (save 1-2h) - FIRST option
 2. Reduce diagnostics JSON polish (save 1h) - SECOND option
-3. Reduce IPOPT validation scope (save 0.5h) - THIRD option
-4. Emergency: Skip feature interaction considerations (save 1h)
+3. Reduce CI polish scope (save 0.5h) - THIRD option
+4. Emergency: Defer MEDIUM simplification transforms (save 2h)
 
 **Total Contingency Available (including buffer):**
-- **Base buffer:** 3h (Day 10)
+- **Base buffer:** 5h (Days 9-10)
 - **CSE testing reduction:** +1-2h
 - **Diagnostics polish:** +1h
-- **IPOPT scope reduction:** +0.5h
-- **Total maximum:** 5.5-6.5h (11-13% of sprint capacity)
+- **CI polish reduction:** +0.5h
+- **MEDIUM transforms deferral:** +2h (emergency only)
+- **Total maximum:** 9.5-10.5h (19-21% of sprint capacity)
 
-**Risk Level:** MEDIUM (smaller percentage buffer but higher absolute hours, adequate protection for expanded scope)
+**Risk Level:** LOW-MEDIUM (10% buffer provides good protection, with additional contingency options available)
 
 ### Buffer Usage Guidelines
 
-**Buffer Allocation (3h):**
-- **Day 10:** Explicitly allocated to final day
+**Buffer Allocation (5h):**
+- **Days 9-10:** 2.5h each day (distributed buffer)
 - **Usage:** Apply to earlier phases if needed (Day 3 priority)
 - **Tracking:** Document usage at each checkpoint
 
@@ -1736,14 +1713,19 @@ Sprint Buffer (Days 9-10)
 2. **Day 5 simplification bugs** (if critical - 14.5h work)
 3. **Days 7-8 CSE implementation issues** (if blocking - 6h work)
 4. **Day 7 CI performance** (if blocking - 7h work)
-5. **Day 10 documentation polish** (if unused)
+5. **Days 9-10 feature interaction tests** (if buffer unused)
+6. **Day 10 documentation polish** (if buffer unused)
 
 **Buffer Monitoring:**
 - Day 3: Assess if buffer needed for maxmin (12h planned)
 - Day 5: Assess remaining buffer after simplification checkpoint
 - Day 7: Assess remaining buffer after CI + CSE checkpoint
-- Day 9: Assess remaining buffer after diagnostics + IPOPT
-- Day 10: Decide on polish vs. Sprint 12 prep (if unused)
+- Day 9: Decide on buffer usage (2.5h available)
+  - If needed: Apply to outstanding issues
+  - If unused: Feature interaction tests or polish
+- Day 10: Decide on remaining buffer usage (2.5h available)
+  - If needed: Apply to outstanding issues
+  - If unused: Sprint 12 prep or additional test coverage
 
 ---
 
