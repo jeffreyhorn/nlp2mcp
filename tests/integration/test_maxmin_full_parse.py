@@ -66,29 +66,29 @@ def test_maxmin_parse_progress():
         error_msg = str(e)
 
         # Should NOT fail on earlier blockers (lines 37, 51, 59, 78, 87, 106)
-        assert not ("37" in error_msg and "ord" in error_msg), (
-            f"Should not fail on indexed set assignment (line 37): {error_msg}"
-        )
-        assert not ("51" in error_msg and "dist" in error_msg and "2 indices" in error_msg), (
-            f"Should not fail on subset expansion (line 51): {error_msg}"
-        )
-        assert not ("59" in error_msg and "low" in error_msg and "Undefined" in error_msg), (
-            f"Should not fail on aggregation over subset (line 59): {error_msg}"
-        )
-        assert "subset indexing" not in error_msg.lower(), (
-            f"Should not fail on subset indexing grammar (line 78): {error_msg}"
-        )
-        assert not ("option" in error_msg.lower() and "87" in error_msg), (
-            f"Should not fail on option in exec (line 87): {error_msg}"
-        )
-        assert "dnlp" not in error_msg.lower(), (
-            f"Should not fail on DNLP solver (line 106): {error_msg}"
-        )
+        assert not (
+            "37" in error_msg and "ord" in error_msg
+        ), f"Should not fail on indexed set assignment (line 37): {error_msg}"
+        assert not (
+            "51" in error_msg and "dist" in error_msg and "2 indices" in error_msg
+        ), f"Should not fail on subset expansion (line 51): {error_msg}"
+        assert not (
+            "59" in error_msg and "low" in error_msg and "Undefined" in error_msg
+        ), f"Should not fail on aggregation over subset (line 59): {error_msg}"
+        assert (
+            "subset indexing" not in error_msg.lower()
+        ), f"Should not fail on subset indexing grammar (line 78): {error_msg}"
+        assert not (
+            "option" in error_msg.lower() and "87" in error_msg
+        ), f"Should not fail on option in exec (line 87): {error_msg}"
+        assert (
+            "dnlp" not in error_msg.lower()
+        ), f"Should not fail on DNLP solver (line 106): {error_msg}"
 
         # Should fail at line 75 (variable bounds expansion)
-        assert "75" in error_msg or "line 7" in error_msg, (
-            f"Expected to fail at line 75 (bounds expansion blocker), but got: {error_msg}"
-        )
+        assert (
+            "75" in error_msg or "line 7" in error_msg
+        ), f"Expected to fail at line 75 (bounds expansion blocker), but got: {error_msg}"
 
         print("✅ Sprint 11 Day 2 Extended Aggregation Complete:")
         print("   Aggregation over subset domains now supported (line 59 ✓)")

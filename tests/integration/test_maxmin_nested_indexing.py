@@ -89,15 +89,15 @@ class TestMaxminNestedIndexing:
             error_msg = str(e)
 
             # Should NOT fail on earlier fixes
-            assert not ("37" in error_msg and "ord" in error_msg), (
-                f"Should not fail on indexed set assignment (line 37): {error_msg}"
-            )
-            assert not ("51" in error_msg and "dist" in error_msg and "2 indices" in error_msg), (
-                f"Should not fail on subset expansion (line 51): {error_msg}"
-            )
-            assert not ("59" in error_msg and "low" in error_msg and "Undefined" in error_msg), (
-                f"Should not fail on aggregation over subset (line 59): {error_msg}"
-            )
+            assert not (
+                "37" in error_msg and "ord" in error_msg
+            ), f"Should not fail on indexed set assignment (line 37): {error_msg}"
+            assert not (
+                "51" in error_msg and "dist" in error_msg and "2 indices" in error_msg
+            ), f"Should not fail on subset expansion (line 51): {error_msg}"
+            assert not (
+                "59" in error_msg and "low" in error_msg and "Undefined" in error_msg
+            ), f"Should not fail on aggregation over subset (line 59): {error_msg}"
 
             # The current blocker is variable bounds expansion (line 75)
             # This is expected and acceptable for now

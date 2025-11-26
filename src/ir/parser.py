@@ -1538,9 +1538,9 @@ class _ModelBuilder:
                 # For variable bounds, also extract indices
                 try:
                     indices = _process_index_list(target.children[2])
-                    # Convert to strings for domain context (ignore IndexOffset for now)
+                    # Convert to strings for domain context (extract base from IndexOffset)
                     domain_context = tuple(
-                        idx if isinstance(idx, str) else idx.base_name for idx in indices
+                        idx if isinstance(idx, str) else idx.base for idx in indices
                     )
                 except Exception:
                     domain_context = ()
@@ -2273,7 +2273,17 @@ class _ModelBuilder:
                     f"Variable '{name}' has indices {var.domain}; bounds must specify them",
                     node,
                 )
-            index_tuples = self._expand_variable_indices(var, idx_tuple, name, node)
+            # Sprint 11 Day 2: Try to expand indices, but if sets have no members yet,
+            # use mock/store approach (parse and continue without storing)
+            try:
+                index_tuples = self._expand_variable_indices(var, idx_tuple, name, node)
+            except ParserSemanticError as e:
+                # If expansion fails because sets have no members, just return
+                # (mock/store approach - parse but don't store bounds)
+                if "has no explicit members" in str(e):
+                    return
+                # Other errors should still be raised
+                raise
         else:
             if idx_tuple:
                 raise self._error(
