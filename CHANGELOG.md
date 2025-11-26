@@ -43,12 +43,13 @@ Implemented the first 3 HIGH-priority transformations for aggressive simplificat
 - Quality checks: typecheck ✅, lint ✅, format ✅, test ✅
 
 **Files Created:**
-- `src/ir/transformations/factoring.py` (215 lines)
-- `src/ir/transformations/fractions.py` (139 lines)
-- `src/ir/transformations/associativity.py` (202 lines)
-- `tests/unit/ir/test_factoring.py` (211 lines, 13 tests)
-- `tests/unit/ir/test_fractions.py` (211 lines, 14 tests)
-- `tests/unit/ir/test_associativity.py` (240 lines, 20 tests)
+- `src/ir/transformations/factoring.py` (151 lines)
+- `src/ir/transformations/fractions.py` (112 lines)
+- `src/ir/transformations/associativity.py` (152 lines)
+- `src/ir/transformations/utils.py` (66 lines)
+- `tests/unit/ir/test_factoring.py` (253 lines, 13 tests)
+- `tests/unit/ir/test_fractions.py` (274 lines, 14 tests)
+- `tests/unit/ir/test_associativity.py` (329 lines, 20 tests)
 
 **Files Modified:**
 - `src/ir/transformations/__init__.py` (exported all 3 functions)
