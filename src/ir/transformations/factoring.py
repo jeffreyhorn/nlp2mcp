@@ -13,6 +13,7 @@ Priority: HIGH (primary term reduction mechanism)
 """
 
 from src.ir.ast import Binary, Const, Expr
+from src.ir.transformations.utils import flatten_addition, flatten_multiplication
 
 
 def extract_common_factors(expr: Expr) -> Expr:
@@ -46,7 +47,7 @@ def extract_common_factors(expr: Expr) -> Expr:
         return expr
 
     # Flatten addition into list of terms
-    terms = _flatten_addition(expr)
+    terms = flatten_addition(expr)
 
     # Need at least 2 terms to have common factors
     if len(terms) < 2:
@@ -95,60 +96,10 @@ def extract_common_factors(expr: Expr) -> Expr:
     return result
 
 
-def _flatten_addition(expr: Expr) -> list[Expr]:
-    """Flatten nested + operations into a list.
-
-    Args:
-        expr: Expression to flatten
-
-    Returns:
-        List of terms (flattened if expr is addition, [expr] otherwise)
-
-    Example:
-        >>> # (a + b) + c → [a, b, c]
-        >>> expr = Binary("+", Binary("+", a, b), c)
-        >>> _flatten_addition(expr)
-        [a, b, c]
-    """
-    if not isinstance(expr, Binary) or expr.op != "+":
-        return [expr]
-
-    # Recursively flatten left and right
-    result = []
-    result.extend(_flatten_addition(expr.left))
-    result.extend(_flatten_addition(expr.right))
-    return result
-
-
-def _flatten_multiplication(expr: Expr) -> list[Expr]:
-    """Flatten nested * operations into a list.
-
-    Args:
-        expr: Expression to flatten
-
-    Returns:
-        List of factors (flattened if expr is multiplication, [expr] otherwise)
-
-    Example:
-        >>> # (a * b) * c → [a, b, c]
-        >>> expr = Binary("*", Binary("*", a, b), c)
-        >>> _flatten_multiplication(expr)
-        [a, b, c]
-    """
-    if not isinstance(expr, Binary) or expr.op != "*":
-        return [expr]
-
-    # Recursively flatten left and right
-    result = []
-    result.extend(_flatten_multiplication(expr.left))
-    result.extend(_flatten_multiplication(expr.right))
-    return result
-
-
 def _get_multiplication_factors(expr: Expr) -> list[Expr]:
     """Get all multiplicative factors from an expression.
 
-    This is a wrapper around _flatten_multiplication for clarity.
+    This is a wrapper around flatten_multiplication for clarity.
 
     Args:
         expr: Expression to extract factors from
@@ -160,7 +111,7 @@ def _get_multiplication_factors(expr: Expr) -> list[Expr]:
         >>> # x*y*z → [x, y, z]
         >>> # x → [x]
     """
-    return _flatten_multiplication(expr)
+    return flatten_multiplication(expr)
 
 
 def _find_common_factors(terms: list[Expr]) -> list[Expr]:

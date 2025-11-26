@@ -14,6 +14,7 @@ Priority: HIGH (enables further simplification through constant folding)
 """
 
 from src.ir.ast import Binary, Const, Expr
+from src.ir.transformations.utils import flatten_addition, flatten_multiplication
 
 
 def normalize_associativity(expr: Expr) -> Expr:
@@ -63,7 +64,7 @@ def _normalize_multiplication(expr: Expr) -> Expr:
         Expression with constants consolidated
     """
     # Flatten multiplication into list of factors
-    factors = _flatten_multiplication(expr)
+    factors = flatten_multiplication(expr)
 
     # Separate constants from non-constants
     constants = []
@@ -113,7 +114,7 @@ def _normalize_addition(expr: Expr) -> Expr:
         Expression with constants consolidated
     """
     # Flatten addition into list of terms
-    terms = _flatten_addition(expr)
+    terms = flatten_addition(expr)
 
     # Separate constants from non-constants
     constants = []
@@ -149,53 +150,3 @@ def _normalize_addition(expr: Expr) -> Expr:
         for term in non_constants[1:]:
             result = Binary("+", result, term)
         return Binary("+", result, folded_constant)
-
-
-def _flatten_multiplication(expr: Expr) -> list[Expr]:
-    """Flatten nested * operations into a list.
-
-    Args:
-        expr: Expression to flatten
-
-    Returns:
-        List of factors (flattened if expr is multiplication, [expr] otherwise)
-
-    Example:
-        >>> # (a * b) * c → [a, b, c]
-        >>> expr = Binary("*", Binary("*", a, b), c)
-        >>> _flatten_multiplication(expr)
-        [a, b, c]
-    """
-    if not isinstance(expr, Binary) or expr.op != "*":
-        return [expr]
-
-    # Recursively flatten left and right
-    result = []
-    result.extend(_flatten_multiplication(expr.left))
-    result.extend(_flatten_multiplication(expr.right))
-    return result
-
-
-def _flatten_addition(expr: Expr) -> list[Expr]:
-    """Flatten nested + operations into a list.
-
-    Args:
-        expr: Expression to flatten
-
-    Returns:
-        List of terms (flattened if expr is addition, [expr] otherwise)
-
-    Example:
-        >>> # (a + b) + c → [a, b, c]
-        >>> expr = Binary("+", Binary("+", a, b), c)
-        >>> _flatten_addition(expr)
-        [a, b, c]
-    """
-    if not isinstance(expr, Binary) or expr.op != "+":
-        return [expr]
-
-    # Recursively flatten left and right
-    result = []
-    result.extend(_flatten_addition(expr.left))
-    result.extend(_flatten_addition(expr.right))
-    return result

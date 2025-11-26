@@ -11,7 +11,8 @@ Example:
 Priority: HIGH (enables further factoring in numerators)
 """
 
-from src.ir.ast import Binary, Const, Expr
+from src.ir.ast import Binary, Expr
+from src.ir.transformations.utils import flatten_addition
 
 
 def combine_fractions(expr: Expr) -> Expr:
@@ -45,7 +46,7 @@ def combine_fractions(expr: Expr) -> Expr:
         return expr
 
     # Flatten addition into list of terms
-    terms = _flatten_addition(expr)
+    terms = flatten_addition(expr)
 
     # Need at least 2 terms to have common denominators
     if len(terms) < 2:
@@ -99,8 +100,8 @@ def combine_fractions(expr: Expr) -> Expr:
 
     # Build final expression
     if len(combined_terms) == 0:
-        # Shouldn't happen, but handle gracefully
-        return Const(0)
+        # Shouldn't happen, but handle gracefully by returning original
+        return expr
     elif len(combined_terms) == 1:
         return combined_terms[0]
     else:
@@ -109,28 +110,3 @@ def combine_fractions(expr: Expr) -> Expr:
         for term in combined_terms[1:]:
             result = Binary("+", result, term)
         return result
-
-
-def _flatten_addition(expr: Expr) -> list[Expr]:
-    """Flatten nested + operations into a list.
-
-    Args:
-        expr: Expression to flatten
-
-    Returns:
-        List of terms (flattened if expr is addition, [expr] otherwise)
-
-    Example:
-        >>> # (a + b) + c → [a, b, c]
-        >>> expr = Binary("+", Binary("+", a, b), c)
-        >>> _flatten_addition(expr)
-        [a, b, c]
-    """
-    if not isinstance(expr, Binary) or expr.op != "+":
-        return [expr]
-
-    # Recursively flatten left and right
-    result: list[Expr] = []
-    result.extend(_flatten_addition(expr.left))
-    result.extend(_flatten_addition(expr.right))
-    return result

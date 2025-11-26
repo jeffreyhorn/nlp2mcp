@@ -147,7 +147,7 @@ _PR will be documented here when merged._
 
 **3. T3.1: Associativity for Constants** (`src/ir/transformations/associativity.py`)
 - **Pattern (Multiplication):** `(x * 2) * 3 → x * 6`
-- **Pattern (Addition):** `(x + 1) + 2 → x * 3`
+- **Pattern (Addition):** `(x + 1) + 2 → x + 3`
 - **Tests:** 20 unit tests
 - **Impact:** Consolidates constants through associativity reordering
 
