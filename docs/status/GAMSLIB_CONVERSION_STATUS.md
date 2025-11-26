@@ -1,6 +1,6 @@
 # GAMSLib Conversion Status Dashboard
 
-**Generated:** 2025-11-24 13:30:13
+**Generated:** 2025-11-26 08:27:34
 **Sprint:** Sprint 8
 **Total Models:** 10
 **Report:** [`gamslib_ingestion_sprint8.json`](../../reports/gamslib_ingestion_sprint8.json)
@@ -28,7 +28,7 @@
 | himmel16 | ✅ PASS | 100% (33/33) | - | - | - | ❌ |
 | hs62 | ✅ PASS | 100% (18/18) | - | - | - | ❌ |
 | mathopt1 | ✅ PASS | 100% (20/20) | - | - | - | ❌ |
-| maxmin | ⚠️ PARTIALLY PARSED | 40% (19/47) | nested indexing | - | - | ❌ |
+| maxmin | ⚠️ PARTIALLY PARSED | 66% (31/47) | parse error | - | - | ❌ |
 | mhw4d | ✅ PASS | 100% (14/14) | - | - | - | ❌ |
 | mhw4dx | ✅ PASS | 100% (53/53) | - | - | - | ❌ |
 | mingamma | ✅ PASS | 100% (37/37) | - | - | - | ❌ |
@@ -60,14 +60,14 @@
 ### maxmin.gms
 **Model:** maxmin
 **Status:** Parse Failed
-**Progress:** 40% (19/47 lines parsed)
-**Missing Features:** nested indexing
+**Progress:** 66% (31/47 lines parsed)
+**Missing Features:** parse error
 **Error Type:** `ParseError`
 **Error Message:**
 ```
-Error: Parse error at line 51, column 12: Unexpected character: '('
-  defdist(low(n,nn))..   dist(low) =e= sqrt(sum(d, sqr(point(n,d) - point(nn,d))));
-             ^
+Error: Parse error at line 70, column 6: Unexpected character: '('
+  loop((n,d),                   // original
+       ^
 
 Suggestion: This character is not valid in this context
 ```
