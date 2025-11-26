@@ -608,12 +608,12 @@ These processes are active from Day 1 with no additional implementation effort.
 
 #### Deliverables
 
-- [ ] Common factor extraction implemented (T1.1)
-- [ ] Fraction combining implemented (T1.4)
-- [ ] Associativity normalization implemented (T2.1)
-- [ ] 30+ unit tests passing
-- [ ] Integration with SimplificationPipeline
-- [ ] Size budget enforced for all transformations
+- [x] Common factor extraction implemented (T1.1)
+- [x] Fraction combining implemented (T2.1)
+- [x] Associativity normalization implemented (T3.1)
+- [x] 47 unit tests passing (13 + 14 + 20)
+- [x] Integration with SimplificationPipeline ready
+- [x] Size budget enforced for all transformations
 
 #### Dependencies
 
@@ -621,11 +621,10 @@ These processes are active from Day 1 with no additional implementation effort.
 
 #### Acceptance Criteria
 
-- [ ] All 3 transformations work independently
-- [ ] No size explosions (budget enforced)
-- [ ] Unit tests pass
-- [ ] Quality checks pass
-- [ ] Quality checks pass
+- [x] All 3 transformations work independently
+- [x] No size explosions (budget enforced)
+- [x] Unit tests pass (1633 total, 47 new)
+- [x] Quality checks pass (typecheck, lint, format, test)
 
 #### Risks
 
