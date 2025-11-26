@@ -7,6 +7,174 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 11: Prep Phase - Task 12: Plan Sprint 11 Detailed Schedule - 2025-11-26
+
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive Sprint 11 detailed schedule completing all 12 prep tasks. **Key deliverables:** 10-day PLAN.md with daily goals/tasks/deliverables, 3 checkpoints, 27.5-28.5h scope (baseline + IPOPT), all 26 unknowns verified, all prep tasks complete. Sprint 11 ready to begin.
+
+#### Achievements
+
+**Sprint 11 Plan Created:**
+
+1. **Scope Decision: Baseline + IPOPT (27.5-28.5h)**
+   - **PRIMARY features (25.5-26.5h):**
+     - Aggressive Simplification (HIGH priority): 12.5h
+     - CI Regression Guardrails (core): 9h
+     - Diagnostics Mode (text tables): 4-5h
+   - **SECONDARY feature (2h):**
+     - IPOPT Prototype: 2h
+   - **Capacity utilization:** 92-95% (5-8% buffer)
+
+2. **Deferred to Sprint 12:**
+   - ❌ Nested/Subset Indexing (maxmin.gms): 10-14h
+   - ❌ CSE (T5.1 Expensive Functions): 5h
+   - ❌ PATH Smoke Tests (full integration): 6-8h
+   - ❌ Aggressive Simplification (MEDIUM priority): 2h
+   - ❌ JSON Diagnostics Output: 2h
+   - ❌ Tier 2 Exploration: 2h (Unknown 6.1)
+   - ❌ Nested Function Calls: 2-3h (Unknown 7.1)
+
+3. **10-Day Detailed Schedule:**
+   - **Days 1-2:** CI Regression Guardrails (9h)
+   - **Days 3-6:** Aggressive Simplification (12.5h)
+   - **Days 7-8:** Diagnostics Mode (4-5h)
+   - **Day 9:** IPOPT Prototype (2h) + Integration Testing (2h)
+   - **Day 10:** Documentation + Retrospective (3h)
+
+4. **3 Critical Checkpoints:**
+   - **Day 5:** ≥20% term reduction on ≥3 models (60% of target)
+   - **Day 8:** CI workflow <3 min, diagnostics validated
+   - **Day 10:** All acceptance criteria met
+
+5. **Risk Register (7 Risks):**
+   - Expression size explosion (30%, HIGH) - Mitigated via 150% budget + rollback
+   - Incorrect transformations (20%, CRITICAL) - Mitigated via FD validation + tests
+   - Performance overhead >10% (25%, MEDIUM) - Mitigated via profiling + timeouts
+   - Insufficient term reduction (35%, MEDIUM) - Mitigated via prioritized transformations
+   - CI time inflation (20%, MEDIUM) - Mitigated via matrix builds (70% reduction)
+   - PATH licensing blocks (50%, MEDIUM) - Mitigated via IPOPT alternative
+   - Diagnostics overhead (15%, LOW) - Mitigated via <2% opt-in instrumentation
+
+6. **All 26 Unknowns Verified ✅:**
+   - Category 1 (Aggressive Simplification): 11 unknowns verified
+   - Category 2 (maxmin.gms): 4 unknowns verified (feature deferred)
+   - Category 3 (CI Guardrails): 4 unknowns verified
+   - Category 4 (Diagnostics): 2 unknowns verified
+   - Category 5 (Process): 3 unknowns verified
+   - Category 6 (Tier 2): 1 unknown verified (deferred to Sprint 12)
+   - Category 7 (Nested Functions): 1 unknown verified (deferred to Sprint 12)
+
+#### Key Findings
+
+**1. Scope Optimization: Baseline + IPOPT is Optimal**
+
+**Decision:** 27.5-28.5h scope (92-95% capacity) with 1.5-2.5h buffer.
+
+**Rationale:**
+- Sprint 10 velocity: 20-30h capacity (18-20h actual in 6 days)
+- Baseline features (25.5-26.5h) provide maximum value
+- IPOPT prototype (2h) enables end-to-end validation without PATH licensing risk
+- Extended scope (32.5-33.5h) exceeds capacity and eliminates buffer
+
+**Evidence:**
+- prep_task_synthesis.md analyzed all 11 prep task outcomes
+- Effort estimates validated via prototype results (factoring 39.2% reduction in <1ms)
+- Risk assessment shows all features are low-MEDIUM risk (manageable)
+
+**2. maxmin.gms Deferral: Sprint 12 Better Fit**
+
+**Decision:** DEFER all maxmin.gms work to Sprint 12 (nested indexing, aggregation, multi-model, loops, misc).
+
+**Rationale:**
+- **Partial implementation insufficient:** Nested indexing alone only unlocks 56% of maxmin.gms
+- **4 more blocker categories remain:** Aggregation, multi-model, loops, misc syntax
+- **Sprint 12 theme:** "Complete Tier 1 Coverage" - implement ALL maxmin.gms blockers together (23-40h)
+- **Sprint 11 capacity:** maxmin.gms (10-14h) + simplification (12.5h) = 32-42h (exceeds capacity)
+
+**Evidence:**
+- Task 2 research complete with implementation-ready design
+- GO/NO-GO analysis in prep_task_synthesis.md recommends deferral
+- Sprint 12 proposal documented in KNOWN_UNKNOWNS.md (Unknown 2.1)
+
+**3. CI Matrix Builds: 70% Runtime Reduction**
+
+**Decision:** Test all 10 Tier 1 models with GitHub Actions matrix builds (no sampling).
+
+**Benefit:**
+- **Sequential:** 10 minutes (1 min per model)
+- **Matrix (parallel):** 2-3 minutes (70% faster)
+- **Cost:** Still within free tier (930 < 2000 min/month)
+
+**Implementation:**
+- GAMSLib regression workflow enhancement (4h effort in Sprint 11 Days 1-2)
+- Matrix strategy: `matrix: { model: [trnsport, rbrock, ...] }`
+- Fail-fast: false (test all models even if one fails)
+
+**4. IPOPT Alternative: No PATH Licensing Risk**
+
+**Decision:** Prototype IPOPT for Sprint 11 smoke testing, defer PATH integration to Sprint 12 pending licensing clarification.
+
+**Rationale:**
+- **PATH licensing:** UNCLEAR for CI/cloud usage under academic license
+- **IPOPT:** Open-source (EPL), no restrictions, <1% accuracy difference vs PATH
+- **Effort:** 2h (install, Fischer-Burmeister reformulation, 4 smoke tests)
+- **Contact PATH:** Async (ferris@cs.wisc.edu) for written CI clarification
+
+**Evidence:**
+- Task 8 research documented in path_smoke_test_integration.md
+- IPOPT proven equivalent to PATH for well-behaved MCPs
+- Sprint 12 can add PATH if licensing permits (5h additional effort)
+
+**5. Diagnostics Text-First: JSON Deferred**
+
+**Decision:** Text table output for Sprint 11, JSON output deferred to Sprint 12.
+
+**Rationale:**
+- **Text tables:** 4-5h effort, covers 90% of use cases
+- **JSON output:** +2h effort, enables automation (Sprint 12 value)
+- **Industry standard:** LLVM and GCC added JSON later (v10+), text-first approach validated
+
+**Implementation:**
+- Stage-level timing (5 stages: parse, semantic, simplification, IR, MCP)
+- Simplification pass breakdowns (8 passes with metrics)
+- <2% performance overhead (opt-in via `--diagnostic`)
+
+#### Sprint 11 Recommendations
+
+**Execution Strategy:**
+1. **Days 1-2:** Establish CI foundation (matrix builds, baselines, thresholds)
+2. **Days 3-6:** Implement aggressive simplification (core feature, highest value)
+3. **Days 7-8:** Add diagnostics mode (depends on simplification metrics)
+4. **Day 9 (Optional):** IPOPT prototype if schedule permits (secondary feature)
+5. **Day 10:** Integration testing, documentation, retrospective
+
+**Success Criteria:**
+- ✅ Aggressive simplification: ≥20% term reduction on ≥50% models
+- ✅ CI guardrails: Running on every PR, <3 min runtime
+- ✅ Diagnostics: Validated on representative models, <5% overhead
+- ✅ Tests: All passing, ≥95% coverage maintained
+- ✅ Quality: No regressions, all checks pass
+
+**Risk Mitigation:**
+- **Day 5 checkpoint:** Validate ≥20% term reduction early (60% of target)
+- **Day 8 checkpoint:** Verify CI and diagnostics before final integration
+- **Buffer time:** Days 9-10 have flexibility for unknowns
+
+**Files Created:**
+- `docs/planning/EPIC_2/SPRINT_11/PLAN.md` (40 KB, 10 daily sections)
+- `docs/planning/EPIC_2/SPRINT_11/prep_task_synthesis.md` (synthesis of all prep tasks)
+
+**Files Modified:**
+- `docs/planning/EPIC_2/SPRINT_11/KNOWN_UNKNOWNS.md` (Unknowns 6.1, 7.1 verified)
+- `docs/planning/EPIC_2/SPRINT_11/PREP_PLAN.md` (Task 12 complete - **ALL 12 PREP TASKS COMPLETE**)
+
+**Sprint 11 Prep Status:** ✅ **COMPLETE** (all 12 tasks done, all 26 unknowns verified, ready to begin Sprint 11 Day 1)
+
+---
+
 ### Sprint 11: Prep Phase - Task 11: Create Feature Interaction Test Framework - 2025-11-26
 
 **Status:** ✅ COMPLETE
