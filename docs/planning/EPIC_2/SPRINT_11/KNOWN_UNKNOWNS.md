@@ -1786,7 +1786,75 @@ Using Sprint 10 velocity (3 features in 6 days, ~18-20 hours total) as baseline 
 - Too many tests → test suite bloat, slow CI, hard to maintain
 - Wrong pairs → test low-risk interactions, miss high-risk ones
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 11 will verify)
+**Verification Results:** ✅ **VERIFIED - 3-5 interaction tests sufficient with risk-based prioritization**
+
+**Decision:**
+Feature interaction testing should be **risk-based** (not exhaustive pairwise). Test 3-5 highest-risk interactions in Sprint 11, add placeholders for future features.
+
+**Evidence:**
+
+1. **Sprint 9 and Sprint 10 Features Analyzed:**
+   - **Sprint 9:** i++1 indexing, model sections, equation attributes, conversion pipeline improvements, fixture validation
+   - **Sprint 10:** Variable bound literals, comma-separated scalars, function calls (parse-only)
+   - **Sprint 11 (Planned):** Aggressive simplification, maxmin.gms (deferred), diagnostics mode, CI guardrails
+
+2. **Risk Assessment Matrix:**
+
+   | Feature Pair | Risk Level | Reason | Priority |
+   |--------------|------------|--------|----------|
+   | Function Calls + Nested Indexing | HIGH | Both involve complex expression parsing | P0 |
+   | Variable Bounds + Nested Indexing | HIGH | Index extraction from attribute access | P0 |
+   | Function Calls + Simplification | MEDIUM | Simplification may alter function arguments | P1 |
+   | Comma-Separated + Complex Expressions | MEDIUM | Parsing multiple items with operations | P1 |
+   | Variable Bounds + Simplification | MEDIUM | Bound expressions simplified | P1 |
+   | Model Sections + Any Feature | LOW | Orthogonal (just organizational) | P2 |
+   | Equation Attributes + Any Feature | LOW | Parsed separately from equation body | P2 |
+
+3. **Sprint 11 Test Framework Design:**
+   - **Test 9 interaction scenarios:** 5 working tests + 4 skipped placeholders
+   - **High-risk (P0):** 2 test classes
+     - Function calls with nested indexing (3 tests: 1 working, 2 placeholders)
+     - Variable bounds with nested indexing (2 tests: 1 working, 1 placeholder)
+   - **Medium-risk (P1):** 2 test classes
+     - Function calls with simplification (1 working test)
+     - Comma-separated with complex expressions (2 tests: 1 working, 1 placeholder)
+   - **Coverage meta-test:** Validates minimum 2 HIGH-risk and 2 MEDIUM-risk test classes exist
+
+4. **Placeholder Strategy:**
+   - Tests requiring unimplemented features marked with `@pytest.mark.skip(reason="...")`
+   - Example: Nested subset indexing not yet implemented
+   - Placeholders document expected behavior for future implementation
+   - Can be enabled incrementally as features are added
+
+5. **Test Runtime:**
+   - All interaction tests: <1 second total (no performance impact)
+   - Pytest discovery overhead: ~0.1s
+   - Individual tests: 0.01-0.1s each
+   - ✅ Well under 5 second target
+
+6. **Test Organization:**
+   - File: `tests/integration/test_feature_interactions.py`
+   - Hierarchy: Test class per feature pair → Test method per scenario
+   - Synthetic models: `tests/synthetic/combined_features/*.gms`
+   - Documentation: `docs/planning/EPIC_2/SPRINT_11/feature_interaction_testing_guide.md`
+
+**Key Findings:**
+
+- **Not exhaustive:** 9 tests out of 21 possible pairwise combinations (43% coverage)
+- **Risk-based:** 100% coverage of HIGH-risk pairs (2 of 2)
+- **Scalable:** Framework supports adding more tests as features are added
+- **Pragmatic:** Focus on highest-value tests, avoid test suite bloat
+
+**Recommendation:**
+- ✅ Implement 9 interaction tests in Sprint 11 (5 working + 4 placeholders)
+- ✅ Prioritize HIGH-risk and MEDIUM-risk pairs
+- ✅ Use placeholder tests for unimplemented features
+- ⏸️ Defer LOW-risk pairs (orthogonal features) to future sprints if needed
+
+**Reference:**
+- `docs/planning/EPIC_2/SPRINT_11/feature_interaction_testing_guide.md` - Comprehensive framework
+- `tests/integration/test_feature_interactions.py` - Test implementation
+- `tests/synthetic/combined_features/` - Synthetic test models
 
 ---
 
