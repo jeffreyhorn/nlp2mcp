@@ -88,7 +88,7 @@ def test_maxmin_parse_progress():
 
         # Should fail at line 75 (variable bounds expansion)
         assert (
-            "75" in error_msg or "line 7" in error_msg
+            "75" in error_msg or "line 75" in error_msg
         ), f"Expected to fail at line 75 (bounds expansion blocker), but got: {error_msg}"
 
         print("✅ Sprint 11 Day 2 Extended Aggregation Complete:")
