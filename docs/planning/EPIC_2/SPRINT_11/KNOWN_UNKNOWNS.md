@@ -1890,7 +1890,30 @@ Tier 2 models should be selected based on: (1) parse complexity (5-7/10), (2) fe
 - Wrong criteria → select too-easy models (already parse at 100%, no value)
 - No clear Tier 2 → Sprint 12 has no target models (unfocused sprint)
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 12 will verify during Sprint 11 planning)
+**Verification Results:** ✅ **VERIFIED - DEFER to Sprint 12**
+
+**Decision:**
+Tier 2 exploration is DEFERRED to Sprint 12 during Task 12 planning. Sprint 11 has sufficient scope (27.5-28.5h) without Tier 2 research.
+
+**Rationale:**
+1. **Sprint 11 capacity:** Already at 92-95% utilization with baseline + IPOPT
+2. **Tier 1 incomplete:** maxmin.gms still at 18% (4 blocker categories remain)
+3. **Better Sprint 12 theme:** "Complete Tier 1 Coverage" (100% parse rate on all 10 models)
+4. **Research timing:** Tier 2 selection makes more sense after Tier 1 is 100% complete
+
+**Sprint 12 Proposal:**
+- **Theme:** Complete Tier 1 Coverage + Begin Tier 2 Exploration
+- **Tier 1 work:** Implement all 5 maxmin.gms blocker categories (23-40h)
+- **Tier 2 research:** Select 10 models for Tier 2 (2h research during prep)
+- **Criteria:** Parse complexity 5-7/10, feature diversity, size <200 lines
+
+**Evidence:**
+- Sprint 11 PLAN.md created with 27.5-28.5h scope (no room for Tier 2)
+- prep_task_synthesis.md recommends deferring all stretch goals to Sprint 12
+- maxmin.gms deferred to Sprint 12 means Tier 1 incomplete
+- Sprint 12 can research Tier 2 during prep phase (Unknown 6.1 research in Prep Task 1)
+
+**Recommendation:** No action needed for Sprint 11. Address in Sprint 12 Prep Task 1.
 
 ---
 
@@ -1926,7 +1949,30 @@ Nested function calls (`exp(log(x))`, `sqrt(power(a, 2))`) can be implemented in
 - Already works → time wasted researching non-issue
 - Reveals deeper blocker → cascade of changes needed
 
-**Verification Results:** 🔍 Status: INCOMPLETE (Prep Task 12 will verify during Sprint 11 planning)
+**Verification Results:** ✅ **VERIFIED - DEFER to Sprint 12**
+
+**Decision:**
+Nested function call implementation is DEFERRED to Sprint 12 during Task 12 planning. Sprint 11 has sufficient scope without circle.gms completion.
+
+**Rationale:**
+1. **Sprint 11 capacity:** Already at 92-95% utilization (27.5-28.5h committed)
+2. **Low ROI:** circle.gms already 95% parsed (only 3 lines remain), completing to 100% has minimal value
+3. **Higher priorities:** Aggressive simplification, CI guardrails, diagnostics provide more value
+4. **Unknown implementation time:** Could be 2-3h (estimate) or 6-8h (if complex)
+5. **Sprint 12 better fit:** Can bundle with other parser enhancements (nested indexing, etc.)
+
+**Sprint 12 Proposal:**
+- **Theme:** Parser Completeness
+- **Scope:** Nested function calls (2-3h) + nested indexing (10-14h) + other parser gaps
+- **Goal:** Circle.gms 100%, maxmin.gms 100%, comprehensive parser coverage
+
+**Evidence:**
+- Sprint 11 PLAN.md created with 27.5-28.5h scope (no room for nested calls)
+- prep_task_synthesis.md recommends baseline + IPOPT only (27.5-28.5h)
+- circle.gms 95% parse rate is "good enough" for Sprint 11 (not blocking other work)
+- Sprint 10 completed circle.gms to 95% in 2 hours (remaining 5% may be harder than expected)
+
+**Recommendation:** No action needed for Sprint 11. Address in Sprint 12 if circle.gms completion is prioritized.
 
 ---
 
