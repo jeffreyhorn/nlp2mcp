@@ -1,10 +1,11 @@
 """Common factor extraction transformation.
 
-This module implements T1.1: Common Factor Extraction transformation for
-aggressive simplification. It factors out common multiplicative terms from
-additions.
+This module implements T1.1 and T1.2 transformations for aggressive simplification:
+- T1.1: Common Factor Extraction (single/multiple terms)
+- T1.2: Multi-Term Factoring (2x2 pattern)
 
-Pattern: x*y + x*z → x*(y + z)
+Pattern (T1.1): x*y + x*z → x*(y + z)
+Pattern (T1.2): a*c + a*d + b*c + b*d → (a + b)*(c + d)
 
 Example:
     2*exp(x)*sin(y) + 2*exp(x)*cos(y) → 2*exp(x)*(sin(y) + cos(y))
@@ -149,3 +150,205 @@ def _find_common_factors(terms: list[Expr]) -> list[Expr]:
         common = [f for f in common if f in factors]
 
     return common
+
+
+def multi_term_factoring(expr: Expr) -> Expr:
+    """Apply multi-term factoring (2x2 pattern).
+
+    Detects and factors expressions of the form:
+    a*c + a*d + b*c + b*d → (a + b)*(c + d)
+
+    This is a more advanced factoring pattern that groups terms by
+    partial common factors rather than factors common to all terms.
+
+    Algorithm:
+        1. Check if expression is addition with exactly 4 terms
+        2. Try to find 2x2 grouping structure
+        3. Verify that factoring reduces expression size
+        4. Apply factoring if beneficial
+
+    Args:
+        expr: Expression to transform
+
+    Returns:
+        Transformed expression using 2x2 factoring,
+        or original expression if pattern not detected or not beneficial
+
+    Example:
+        >>> # a*c + a*d + b*c + b*d → (a + b)*(c + d)
+        >>> # Terms: [a*c, a*d, b*c, b*d]
+        >>> # Group 1 factors: {a, c}, {a, d} → common: {a}, remaining: {c, d}
+        >>> # Group 2 factors: {b, c}, {b, d} → common: {b}, remaining: {c, d}
+        >>> # Result: (a + b) * (c + d)
+    """
+    # Only apply to addition expressions
+    if not isinstance(expr, Binary) or expr.op != "+":
+        return expr
+
+    # Flatten addition into list of terms
+    terms = flatten_addition(expr)
+
+    # Multi-term factoring requires exactly 4 terms for 2x2 pattern
+    if len(terms) != 4:
+        return expr
+
+    # Try to find 2x2 grouping
+    factored = _try_2x2_factoring(terms)
+
+    # If factoring succeeded and is beneficial, return it
+    if factored is not None:
+        # Count operations to verify benefit
+        if _count_operations(factored) < _count_operations(expr):
+            return factored
+
+    return expr
+
+
+def _try_2x2_factoring(terms: list[Expr]) -> Expr | None:
+    """Attempt to factor 4 terms using 2x2 pattern.
+
+    Tries different groupings to find a 2x2 structure.
+
+    Args:
+        terms: Exactly 4 terms from flattened addition
+
+    Returns:
+        Factored expression if 2x2 pattern found, None otherwise
+    """
+    # Try all possible ways to split 4 terms into 2 groups of 2
+    # Groupings: (0,1)+(2,3), (0,2)+(1,3), (0,3)+(1,2)
+    groupings = [
+        ([terms[0], terms[1]], [terms[2], terms[3]]),
+        ([terms[0], terms[2]], [terms[1], terms[3]]),
+        ([terms[0], terms[3]], [terms[1], terms[2]]),
+    ]
+
+    for group1, group2 in groupings:
+        # Extract factors from each group
+        group1_factors = [_get_multiplication_factors(t) for t in group1]
+        group2_factors = [_get_multiplication_factors(t) for t in group2]
+
+        # Find common factor in group 1
+        common1 = _find_common_factors(group1)
+        if len(common1) == 0:
+            continue
+
+        # Find common factor in group 2
+        common2 = _find_common_factors(group2)
+        if len(common2) == 0:
+            continue
+
+        # Check if remaining factors are the same for both groups
+        # After factoring out common1 and common2, the remainders should match
+
+        # Get remaining factors for group 1
+        remaining1_set = []
+        for factors in group1_factors:
+            remaining = [f for f in factors if f not in common1]
+            remaining1_set.append(remaining)
+
+        # Get remaining factors for group 2
+        remaining2_set = []
+        for factors in group2_factors:
+            remaining = [f for f in factors if f not in common2]
+            remaining2_set.append(remaining)
+
+        # Check if remainders match across groups
+        # This is the key condition for 2x2 factoring
+        if _check_remainder_match(remaining1_set, remaining2_set):
+            # Build factored expression: (common1 + common2) * remainder
+            # Build (common1 + common2)
+            factor1 = _rebuild_product(common1)
+            factor2 = _rebuild_product(common2)
+            left_factor = Binary("+", factor1, factor2)
+
+            # Build remainder product
+            right_factor = _rebuild_product(remaining1_set[0])
+
+            return Binary("*", left_factor, right_factor)
+
+    return None
+
+
+def _check_remainder_match(remaining1: list[list[Expr]], remaining2: list[list[Expr]]) -> bool:
+    """Check if remainder factors match across both groups.
+
+    For 2x2 pattern, the remainders should be the same for all terms.
+
+    Args:
+        remaining1: Remainder factors from group 1
+        remaining2: Remainder factors from group 2
+
+    Returns:
+        True if all remainders match
+    """
+    # All remainders in group1 should be equal
+    if len(remaining1) < 2:
+        return False
+    first_remainder = remaining1[0]
+    for rem in remaining1[1:]:
+        if not _factor_lists_equal(rem, first_remainder):
+            return False
+
+    # All remainders in group2 should equal the group1 remainder
+    for rem in remaining2:
+        if not _factor_lists_equal(rem, first_remainder):
+            return False
+
+    return True
+
+
+def _factor_lists_equal(list1: list[Expr], list2: list[Expr]) -> bool:
+    """Check if two factor lists are equal (same elements, any order).
+
+    Args:
+        list1: First factor list
+        list2: Second factor list
+
+    Returns:
+        True if lists contain the same factors
+    """
+    if len(list1) != len(list2):
+        return False
+
+    # Check if all elements in list1 are in list2
+    for factor in list1:
+        if factor not in list2:
+            return False
+
+    return True
+
+
+def _rebuild_product(factors: list[Expr]) -> Expr:
+    """Rebuild a product expression from a list of factors.
+
+    Args:
+        factors: List of factors to multiply
+
+    Returns:
+        Product expression, or Const(1) if empty, or single factor if length 1
+    """
+    if len(factors) == 0:
+        return Const(1)
+    elif len(factors) == 1:
+        return factors[0]
+    else:
+        result = factors[0]
+        for factor in factors[1:]:
+            result = Binary("*", result, factor)
+        return result
+
+
+def _count_operations(expr: Expr) -> int:
+    """Count the number of operations in an expression.
+
+    Args:
+        expr: Expression to count operations in
+
+    Returns:
+        Number of operations (Binary nodes)
+    """
+    if isinstance(expr, Binary):
+        return 1 + _count_operations(expr.left) + _count_operations(expr.right)
+    else:
+        return 0
