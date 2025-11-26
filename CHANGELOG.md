@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Designed comprehensive architecture for `--diagnostic` mode providing visibility into NLP→MCP conversion pipeline. **Key decision:** Implement **two-tier verbosity** (summary + detailed) with **text table output** in Sprint 11, deferring JSON output and dashboard integration to Sprint 12. Diagnostics provide stage-by-stage stats, simplification breakdowns, and performance profiling with <2% overhead.
+Designed comprehensive architecture for `--diagnostic` mode providing visibility into NLP→MCP conversion pipeline. **Key decision:** Implement **three-tier verbosity** (minimal, summary, detailed) with **text table output** in Sprint 11, deferring JSON output and dashboard integration to Sprint 12. Diagnostics provide stage-by-stage stats, simplification breakdowns, and performance profiling with <2% overhead.
 
 #### Achievements
 

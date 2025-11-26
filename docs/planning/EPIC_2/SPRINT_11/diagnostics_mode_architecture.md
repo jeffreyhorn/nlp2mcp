@@ -8,13 +8,13 @@
 
 ## Executive Summary
 
-This document designs the architecture for Sprint 11's diagnostics mode (`--diagnostic` flag), providing visibility into the NLP→MCP conversion pipeline. **Key decision:** Implement **two-tier verbosity** (summary + detailed) with **text table output** in Sprint 11, deferring JSON output and dashboard integration to Sprint 12.
+This document designs the architecture for Sprint 11's diagnostics mode (`--diagnostic` flag), providing visibility into the NLP→MCP conversion pipeline. **Key decision:** Implement **three-tier verbosity** (minimal, summary, detailed) with **text table output** in Sprint 11, deferring JSON output and dashboard integration to Sprint 12.
 
 **Critical Findings:**
 - **Granularity:** Stage-level diagnostics (parse, semantic, simplification, IR generation, MCP generation) with per-pass breakdowns for simplification
 - **Output Format:** Pretty-printed text tables for Sprint 11 (implementation: 4-5h), JSON output deferred to Sprint 12 (+2h)
 - **Performance Overhead:** <2% overhead for stage-level timing, <5% for detailed simplification tracking
-- **Verbosity Levels:** Default (summary only), `--diagnostic` (detailed), `--diagnostic --verbose` (debug)
+- **Verbosity Levels:** Default (minimal output), `--diagnostic` (summary), `--diagnostic --verbose` (detailed)
 
 **Sprint 11 Recommendation:** Implement text-based diagnostic output with stage timing, simplification breakdowns, and transformation summaries. Provides 90% of value with 40% less implementation effort than JSON + dashboard.
 
@@ -29,6 +29,7 @@ This document designs the architecture for Sprint 11's diagnostics mode (`--diag
 5. [Section 5: Implementation Roadmap](#section-5-implementation-roadmap)
 6. [Appendix A: Example Diagnostic Outputs](#appendix-a-example-diagnostic-outputs)
 7. [Appendix B: Comparison with Other Tools](#appendix-b-comparison-with-other-tools)
+8. [Appendix C: Unknown Verification Results](#appendix-c-unknown-verification-results)
 
 ---
 
@@ -110,7 +111,7 @@ Output: rbrock_mcp.gms
 ├────────────────────┼───────────┼─────────┼─────────────────────┤
 │ 1. Parsing         │     12.4  │   27.4% │ 48 lines → 127 AST  │
 │ 2. Semantic        │      3.8  │    8.4% │ 127 AST → 127 AST   │
-│ 3. Simplification  │     18.7  │   41.4% │ 89 terms → 52 terms │
+│ 3. Simplification  │     18.7  │   41.4% │ 89 terms → 56 terms │
 │ 4. IR Generation   │      6.2  │   13.7% │ 2 vars, 1 eq        │
 │ 5. MCP Generation  │      4.1  │    9.1% │ 2 vars, 1 eq        │
 ├────────────────────┼───────────┼─────────┼─────────────────────┤
@@ -118,8 +119,8 @@ Output: rbrock_mcp.gms
 └─────────────────────────────────────────────────────────────────┘
 
 Simplification Summary:
-  • Term count reduction: 89 → 52 (41.6% reduction)
-  • Transformations applied: 23
+  • Term count reduction: 89 → 56 (37.1% reduction)
+  • Transformations applied: 33
   • Fixpoint iterations: 3
 
 Output: rbrock_mcp.gms
@@ -325,7 +326,7 @@ Iteration 1 (29 transformations, 89 → 60 terms):
       - Skipped (reuse threshold not met)
       - Term count: 60 → 60
 
-Iteration 2 (4 transformations, 60 → 52 terms):
+Iteration 2 (4 transformations, 60 → 56 terms):
   [Similar breakdown with fewer transformations]
 
 Iteration 3:
@@ -919,7 +920,7 @@ def colorize(text: str, color: str) -> str:
 ├────────────────────┼───────────┼─────────┼─────────────────────┤
 │ 1. Parsing         │     12.4  │   27.4% │ 48 lines → 127 AST  │
 │ 2. Semantic        │      3.8  │    8.4% │ 127 AST → 127 AST   │
-│ 3. Simplification  │     18.7  │   41.4% │ 89 terms → 52 terms │
+│ 3. Simplification  │     18.7  │   41.4% │ 89 terms → 56 terms │
 │ 4. IR Generation   │      6.2  │   13.7% │ 2 vars, 1 eq        │
 │ 5. MCP Generation  │      4.1  │    9.1% │ 2 vars, 1 eq        │
 ├────────────────────┼───────────┼─────────┼─────────────────────┤
@@ -927,8 +928,8 @@ def colorize(text: str, color: str) -> str:
 └─────────────────────────────────────────────────────────────────┘
 
 Simplification Summary:
-  • Term count reduction: 89 → 52 (41.6% reduction)
-  • Transformations applied: 23
+  • Term count reduction: 89 → 56 (37.1% reduction)
+  • Transformations applied: 33
   • Fixpoint iterations: 3
   • Time: 18.7ms
 
@@ -950,7 +951,7 @@ Output: rbrock_mcp.gms
 
 Simplification Breakdown (3 iterations):
 
-Iteration 1 (21 transformations, 89 → 62 terms):
+Iteration 1 (29 transformations, 89 → 60 terms):
 ┌──────────────────────────────────────────────────────────────┐
 │ Pass                          │ Applied │ Terms Before → After │
 ├───────────────────────────────┼─────────┼──────────────────────┤
