@@ -100,11 +100,19 @@ class SimplificationPipeline:
         """
         if metrics is None:
             metrics = SimplificationMetrics()
+        else:
+            # Reset metrics fields when reusing an existing metrics object
+            # to prevent accumulation across multiple apply() calls
+            metrics.initial_size = 0
+            metrics.final_size = 0
+            metrics.iterations = 0
+            metrics.passes_applied.clear()
+            metrics.rollbacks = 0
+            metrics.budget_violations = 0
 
         # Record initial size
         initial_size = self._expression_size(expr)
         metrics.initial_size = initial_size
-        max_allowed_size = int(initial_size * self.size_budget)
 
         current_expr = expr
         iteration = 0
@@ -120,10 +128,12 @@ class SimplificationPipeline:
                 new_expr = pass_obj.transform_fn(current_expr)
 
                 # Check if transformation changed anything
-                if new_expr is not current_expr:  # Identity check for efficiency
+                # Use both identity and equality checks to handle cases where
+                # a pass returns a semantically identical but deep-copied expression
+                if new_expr is not current_expr or new_expr != current_expr:
                     # Check size budget
                     new_size = self._expression_size(new_expr)
-                    if new_size > max_allowed_size:
+                    if new_size > initial_size * self.size_budget:
                         # Budget violation - rollback this transformation
                         metrics.rollbacks += 1
                         metrics.budget_violations += 1
