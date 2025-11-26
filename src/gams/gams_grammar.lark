@@ -165,11 +165,13 @@ ref_indexed.2: ID "(" index_list ")"             -> symbol_indexed
 // Indexing with lead/lag offsets (Sprint 9 Day 3)
 // ---------------------------
 
-// index_list supports both plain identifiers and lag/lead indexing
-// Example: x(i, j++1, k--2)
+// index_list supports both plain identifiers, lag/lead indexing, and subset indexing
+// Examples: x(i, j++1, k--2), dist.l(low(n,nn))
 index_list: index_expr ("," index_expr)*
 
-index_expr: ID lag_lead_suffix?
+// Sprint 11 Day 2 Extended: Support subset indexing like low(n,nn)
+index_expr: ID "(" id_list ")" lag_lead_suffix?  -> index_subset
+          | ID lag_lead_suffix?                   -> index_simple
 
 lag_lead_suffix: CIRCULAR_LEAD offset_expr   -> circular_lead
                | CIRCULAR_LAG offset_expr    -> circular_lag
@@ -203,9 +205,10 @@ REL_K: /=e=|=l=|=g=/i
 // Solve
 // ---------------------------
 
-solve_stmt: "Solve"i ID obj_sense ID "using"i "NLP"i SEMI     -> solve
-          | "Solve"i ID "using"i "NLP"i obj_sense ID SEMI     -> solve
+solve_stmt: "Solve"i ID obj_sense ID "using"i solver_type SEMI     -> solve
+          | "Solve"i ID "using"i solver_type obj_sense ID SEMI     -> solve
 obj_sense: MINIMIZING_K | MAXIMIZING_K
+solver_type: /(?i:nlp|dnlp|minlp|mip|lp|mcp|cns|qcp|rmip|rminlp)\b/  // Sprint 11 Day 2: Support more solvers
 MINIMIZING_K: /(?i:minimizing|min)\b/
 MAXIMIZING_K: /(?i:maximizing|max)\b/
 
@@ -254,6 +257,7 @@ loop_stmt: LOOP_K "(" id_list "," exec_stmt+ ")" SEMI
 // Note: These statements don't include trailing SEMI - the if_stmt/loop_stmt grammar handles it
 ?exec_stmt: display_stmt_nosemi
           | abort_stmt_nosemi
+          | option_stmt          // Sprint 11 Day 2: Support option inside if/loop
           | assignment_stmt
           | SEMI
 
