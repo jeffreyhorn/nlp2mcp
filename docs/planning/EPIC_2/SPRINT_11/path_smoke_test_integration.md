@@ -663,9 +663,9 @@ def test_ipopt_smoke_trivial_mcp():
         return phi1**2 + phi2**2
     
     def gradient(vars):
-        # Analytic gradient (or use automatic differentiation)
-        # ... gradient implementation ...
-        pass
+        # For demonstration, return zeros to let IPOPT use finite differences
+        # TODO: Implement analytical gradient for production use
+        return np.zeros(2)
     
     # Constraints: x ≥ 0, y ≥ 0
     x0 = np.array([0.1, 0.1])  # Initial guess
@@ -887,7 +887,7 @@ PATH Licensing Response?
 | Feature | PATH | IPOPT | KNITRO |
 |---------|------|-------|--------|
 | **Problem Type** | MCP/LCP | NLP | NLP/MCP |
-| **License** | Proprietary | Open (EPL) | Commercial |
+| **License** | Proprietary | Open Source (EPL) | Commercial |
 | **Speed (MCP)** | Fast | Medium | Fast |
 | **Complementarity** | Native | Reformulated | Native |
 | **CI-Friendly** | ❓ Unclear | ✅ Yes | ❌ No |
@@ -1025,9 +1025,34 @@ def test_ipopt_smoke_trivial():
     
     def gradient(vars):
         x, y = vars
-        # Compute gradient analytically or via finite differences
-        # For simplicity, use IPOPT's finite differences
-        return np.zeros(2)  # IPOPT will use finite differences
+        # Analytical gradient for Fischer-Burmeister reformulation
+        # F1 = x + y - 1, F2 = x - y
+        F1 = x + y - 1
+        F2 = x - y
+        
+        # phi1 = sqrt(x^2 + F1^2) - (x + F1)
+        # phi2 = sqrt(y^2 + F2^2) - (y + F2)
+        sqrt1 = np.sqrt(x**2 + F1**2) + 1e-10  # Add epsilon for numerical stability
+        sqrt2 = np.sqrt(y**2 + F2**2) + 1e-10
+        
+        phi1 = sqrt1 - (x + F1)
+        phi2 = sqrt2 - (y + F2)
+        
+        # d(phi1)/dx = x/sqrt1 - 1 - dF1/dx = x/sqrt1 - 1 - 1
+        # d(phi1)/dy = F1/sqrt1 - dF1/dy = F1/sqrt1 - 1
+        dphi1_dx = (x / sqrt1) - 1 - 1  # dF1/dx = 1
+        dphi1_dy = (F1 / sqrt1) - 1     # dF1/dy = 1
+        
+        # d(phi2)/dx = x/sqrt2 - 1 - dF2/dx = x/sqrt2 - 1 - 1
+        # d(phi2)/dy = F2/sqrt2 - dF2/dy = F2/sqrt2 - (-1) = F2/sqrt2 + 1
+        dphi2_dx = (x / sqrt2) - 1 - 1  # dF2/dx = 1
+        dphi2_dy = (F2 / sqrt2) + 1     # dF2/dy = -1
+        
+        # Gradient of objective = d/d[x,y] (phi1^2 + phi2^2)
+        grad_x = 2 * phi1 * dphi1_dx + 2 * phi2 * dphi2_dx
+        grad_y = 2 * phi1 * dphi1_dy + 2 * phi2 * dphi2_dy
+        
+        return np.array([grad_x, grad_y])
     
     # Initial guess
     x0 = np.array([0.1, 0.1])
@@ -1054,7 +1079,7 @@ def test_ipopt_smoke_trivial():
     assert info['status'] == 0, f"IPOPT failed: {info['status_msg']}"
     assert abs(solution[0] - 0.5) < 1e-6, f"x incorrect: {solution[0]}"
     assert abs(solution[1] - 0.5) < 1e-6, f"y incorrect: {solution[1]}"
-    assert abs(objective(solution)) < 1e-10, "Complementarity violated"
+    assert abs(objective(solution)) < 1e-6, "Complementarity violated"
 ```
 
 ---

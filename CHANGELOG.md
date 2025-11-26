@@ -18,7 +18,7 @@ Researched PATH solver licensing, installation options, and smoke test design fo
 #### Achievements
 
 **Comprehensive PATH Integration Research Document Created:**
-- ✅ `docs/planning/EPIC_2/SPRINT_11/path_smoke_test_integration.md` (1,775 lines)
+- ✅ `docs/planning/EPIC_2/SPRINT_11/path_smoke_test_integration.md` (1,083 lines)
   - Section 1: PATH Solver Licensing Research (free/academic/commercial tiers, CI usage analysis)
   - Section 2: PATH Installation in GitHub Actions (GAMS distribution, conda, manual options, timing estimates)
   - Section 3: Smoke Test Design (minimal 4-test suite, validation criteria, timeout handling)
@@ -37,7 +37,7 @@ Researched PATH solver licensing, installation options, and smoke test design fo
    - **Action Required:** Email PATH maintainer for explicit CI usage clarification (async, may take weeks)
 
 2. **PATH Installation Options:**
-   - **Option 1 (GAMS Distribution):** Most reliable, ~2 min installation, 250MB download, dual licensing (GAMS + PATH)
+   - **Option 1 (GAMS Distribution):** Most reliable, ~2 min installation, ~500 MB download, dual licensing (GAMS + PATH)
    - **Option 2 (Conda):** 30-45s installation, 50MB, but GAMS license still required
    - **Option 3 (Manual Build):** 3-5 min, complex dependencies, not recommended for CI
    - **Recommended:** GAMS distribution for reliability (if licensing permits)
