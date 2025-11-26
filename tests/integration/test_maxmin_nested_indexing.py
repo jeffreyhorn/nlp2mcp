@@ -69,15 +69,16 @@ class TestMaxminNestedIndexing:
         assert test3.domain == (), f"test3 domain: {test3.domain}"
 
     def test_maxmin_file_parse_progress(self):
-        """Test that maxmin.gms now parses further with subset expansion support.
+        """Test that maxmin.gms now parses further with aggregation over subset domains.
 
         Before Sprint 11 Day 1: Failed at line 51 (nested indexing not supported)
         After Sprint 11 Day 1: Failed at line 70 (loop statement not supported)
         After Sprint 11 Day 2 Extended (domain context): Parses past line 37 (indexed set assignments)
         After Sprint 11 Day 2 Extended (subset expansion): Parses past line 51 (subset expansion working)
+        After Sprint 11 Day 2 Extended (aggregation): Parses past line 59 (aggregation over subsets working)
 
-        Current blocker: Line 59 (aggregation over subset domains like smin(low(n,nn), ...))
-        This is expected - aggregation with subset domains is an advanced feature.
+        Current blocker: Line 75 (variable bounds expansion for sets without explicit members)
+        This is expected - requires handling sets with range specifications.
         """
         try:
             model = parse_model_file("tests/fixtures/gamslib/maxmin.gms")
@@ -94,8 +95,11 @@ class TestMaxminNestedIndexing:
             assert not ("51" in error_msg and "dist" in error_msg and "2 indices" in error_msg), (
                 f"Should not fail on subset expansion (line 51): {error_msg}"
             )
+            assert not ("59" in error_msg and "low" in error_msg and "Undefined" in error_msg), (
+                f"Should not fail on aggregation over subset (line 59): {error_msg}"
+            )
 
-            # The current blocker is aggregation over subset domains (line 59)
+            # The current blocker is variable bounds expansion (line 75)
             # This is expected and acceptable for now
 
     def test_nested_domain_in_equation_head(self):

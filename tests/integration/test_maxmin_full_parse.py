@@ -1,9 +1,9 @@
 """Integration test for maxmin.gms parse progress (Sprint 11 Day 2 Extended).
 
-Tests maxmin.gms parsing after subset indexing, indexed set assignments, and subset expansion.
+Tests maxmin.gms parsing after subset indexing, indexed set assignments, subset expansion, and aggregation.
 
-Note: Line 51 blocker (subset expansion) has been resolved!
-New blocker at line 59: subset references in aggregation functions (smin(low(n,nn), ...)).
+Note: Line 59 blocker (aggregation over subsets) has been resolved!
+New blocker at line 75: variable bounds expansion for sets without explicit members.
 """
 
 import pytest
@@ -12,7 +12,7 @@ from src.ir.parser import parse_model_file
 
 
 def test_maxmin_parse_progress():
-    """Test that maxmin.gms parses past line 51 with subset expansion support.
+    """Test that maxmin.gms parses past line 59 with aggregation over subset domains.
 
     Progress tracking:
     - Before Sprint 11 Day 1: Line 51 (47% parse rate) - nested indexing blocker
@@ -21,6 +21,7 @@ def test_maxmin_parse_progress():
     - After Sprint 11 Day 2 Extended (grammar): Line 37 - indexed set assignment blocker
     - After Sprint 11 Day 2 Extended (domain context): Line 51 - subset expansion blocker
     - After Sprint 11 Day 2 Extended (subset expansion): Line 59 (~55% parse rate) - aggregation subset blocker
+    - After Sprint 11 Day 2 Extended (aggregation): Line 75 (~69% parse rate) - bounds expansion blocker
 
     Line 37 fix: Added domain context for indexed assignments
     - low(n,nn) = ord(n) > ord(nn) now parses successfully
@@ -30,9 +31,13 @@ def test_maxmin_parse_progress():
     - dist(low) where low is low(n,n) now expands to dist(n,n)
     - Only expands multi-dimensional sets whose members are other sets
 
-    New blocker at line 59 is aggregation with subset domain:
-    - smin(low(n,nn), expr) - using subset as aggregation domain
-    - Requires special handling in aggregation functions
+    Line 59 fix: Added subset domain support in aggregation functions
+    - smin(low(n,nn), expr) now recognized as aggregation over subset domain
+    - Indices n,nn are available in aggregated expression
+
+    New blocker at line 75 is variable bounds expansion:
+    - point.lo(n,d) = 0 where n is /p1*p13/ (no explicit members yet)
+    - Requires handling sets with range specifications
 
     Achievements:
     - Line 78: Subset indexing in lvalues (dist.l(low(n,nn)))
@@ -40,6 +45,7 @@ def test_maxmin_parse_progress():
     - Line 106: DNLP and other solver types
     - Line 37: Indexed set assignments with domain context
     - Line 51: Subset reference expansion in variable indices
+    - Line 59: Aggregation over subset domains
     """
     try:
         model = parse_model_file("tests/fixtures/gamslib/maxmin.gms")
@@ -59,12 +65,15 @@ def test_maxmin_parse_progress():
         # Now expected to fail at line 51 (subset reference as index)
         error_msg = str(e)
 
-        # Should NOT fail on earlier blockers (lines 37, 51, 78, 87, 106)
+        # Should NOT fail on earlier blockers (lines 37, 51, 59, 78, 87, 106)
         assert not ("37" in error_msg and "ord" in error_msg), (
             f"Should not fail on indexed set assignment (line 37): {error_msg}"
         )
         assert not ("51" in error_msg and "dist" in error_msg and "2 indices" in error_msg), (
             f"Should not fail on subset expansion (line 51): {error_msg}"
+        )
+        assert not ("59" in error_msg and "low" in error_msg and "Undefined" in error_msg), (
+            f"Should not fail on aggregation over subset (line 59): {error_msg}"
         )
         assert "subset indexing" not in error_msg.lower(), (
             f"Should not fail on subset indexing grammar (line 78): {error_msg}"
@@ -76,15 +85,15 @@ def test_maxmin_parse_progress():
             f"Should not fail on DNLP solver (line 106): {error_msg}"
         )
 
-        # Should fail at line 59 (aggregation with subset domain)
-        assert "59" in error_msg or "line 5" in error_msg, (
-            f"Expected to fail at line 59 (aggregation subset blocker), but got: {error_msg}"
+        # Should fail at line 75 (variable bounds expansion)
+        assert "75" in error_msg or "line 7" in error_msg, (
+            f"Expected to fail at line 75 (bounds expansion blocker), but got: {error_msg}"
         )
 
-        print("✅ Sprint 11 Day 2 Extended Subset Expansion Complete:")
-        print("   Subset expansion now supported (line 51 ✓)")
-        print("   Blocker moved: line 51 → line 59")
-        print("   Line 59: Aggregation over subset domains (smin(low(n,nn), ...))")
+        print("✅ Sprint 11 Day 2 Extended Aggregation Complete:")
+        print("   Aggregation over subset domains now supported (line 59 ✓)")
+        print("   Blocker moved: line 59 → line 75")
+        print("   Line 75: Variable bounds expansion for sets without explicit members")
 
 
 if __name__ == "__main__":

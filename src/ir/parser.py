@@ -1747,11 +1747,43 @@ class _ModelBuilder:
             if len(func_tree.children) > 1:
                 arg_list = func_tree.children[1]
 
-                # Sprint 10 Day 6: Handle aggregation functions with set iterators
-                # Aggregation functions like smin(i, x(i)) have a set iterator as first arg
+                # Sprint 10 Day 6 / Sprint 11 Day 2: Handle aggregation functions with set iterators
+                # Aggregation functions like smin(i, x(i)) or smin(low(n,nn), ...) have domain spec as first arg
                 if func_name in _AGGREGATION_FUNCTIONS and len(arg_list.children) >= 1:
-                    # First argument is the set iterator (creates local scope)
+                    # First argument is the domain specification (creates local scope)
                     first_arg = arg_list.children[0]
+
+                    # Sprint 11 Day 2: Handle subset domain like low(n,nn)
+                    if isinstance(first_arg, Tree) and first_arg.data == "symbol_indexed":
+                        # This is a subset domain like 'low(n,nn)' in smin(low(n,nn), expr)
+                        # Extract the set name and indices
+                        set_name = _token_text(first_arg.children[0])
+
+                        # Check if this is a known set
+                        if set_name in self.model.sets:
+                            # Extract the indices from the subset reference
+                            indices_node = first_arg.children[1]
+                            indices = (
+                                _extract_indices(indices_node)
+                                if len(first_arg.children) > 1
+                                else ()
+                            )
+
+                            # Add the subset reference as a SymbolRef for the aggregation
+                            # (represents the domain being aggregated over)
+                            args.append(SymbolRef(set_name))
+
+                            # Remaining arguments are parsed with the subset indices in scope
+                            # E.g., smin(low(n,nn), expr) - expr can reference n and nn
+                            extended_domain = free_domain + indices
+                            for child in arg_list.children[1:]:
+                                if isinstance(child, (Tree, Token)):
+                                    args.append(self._expr(child, extended_domain))
+
+                            # Return with free_domain (the subset indices are bound)
+                            expr = Call(func_name, tuple(args))
+                            return self._attach_domain(expr, free_domain)
+
                     # Check if first arg is a simple symbol (symbol_plain tree with single ID token)
                     if (
                         isinstance(first_arg, Tree)
@@ -1776,7 +1808,7 @@ class _ModelBuilder:
                         expr = Call(func_name, tuple(args))
                         return self._attach_domain(expr, free_domain)
                     else:
-                        # Not a simple symbol, parse all args normally
+                        # Not a simple symbol or subset, parse all args normally
                         for child in arg_list.children:
                             if isinstance(child, (Tree, Token)):
                                 args.append(self._expr(child, free_domain))
