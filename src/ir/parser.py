@@ -333,6 +333,38 @@ def _id_list(node: Tree) -> tuple[str, ...]:
     return tuple(_token_text(tok) for tok in node.children if isinstance(tok, Token))
 
 
+def _domain_list(node: Tree) -> tuple[str, ...]:
+    """Extract domain identifiers from domain_list (Sprint 11 Day 1).
+
+    Supports both simple domains and nested/subset indexing:
+    - Simple: domain_element(i) -> 'i'
+    - Nested: domain_element(low, [n, nn]) -> 'n', 'nn'
+    - Mixed: domain_list([i, low(n,nn), k]) -> 'i', 'n', 'nn', 'k'
+
+    Returns a flat tuple of all identifier names used in the domain.
+    """
+    identifiers = []
+    for domain_elem in node.children:
+        if not isinstance(domain_elem, Tree) or domain_elem.data != "domain_element":
+            continue
+
+        # domain_element: ID ("(" id_list ")")?
+        # First child is always the ID
+        if domain_elem.children:
+            first_child = domain_elem.children[0]
+            if isinstance(first_child, Token):
+                # Simple domain: just the ID
+                if len(domain_elem.children) == 1:
+                    identifiers.append(_token_text(first_child))
+                # Nested domain: ID "(" id_list ")"
+                # Extract identifiers from the id_list (the indices, not the subset name)
+                elif len(domain_elem.children) == 2 and isinstance(domain_elem.children[1], Tree):
+                    id_list_node = domain_elem.children[1]
+                    identifiers.extend(_id_list(id_list_node))
+
+    return tuple(identifiers)
+
+
 def _extract_indices(node: Tree) -> tuple[str, ...]:
     """Extract indices from index_list, stripping quotes from escaped identifiers.
 
@@ -952,7 +984,7 @@ class _ModelBuilder:
                 self._equation_domains[name] = ()
             elif child.data == "eqn_head_domain":
                 name = _token_text(child.children[0])
-                domain = _id_list(child.children[1])
+                domain = _domain_list(child.children[1])  # Sprint 11 Day 1: Use _domain_list
                 self._ensure_sets(domain, f"equation '{name}' domain", child)
                 self._declared_equations.add(name)
                 self._equation_domains[name] = domain
@@ -960,7 +992,7 @@ class _ModelBuilder:
                 # Handle comma-separated with domain: Equations eq1, eq2(i,j);
                 # This is actually invalid GAMS syntax, but we handle it gracefully
                 names = _id_list(child.children[0])
-                domain = _id_list(child.children[1])
+                domain = _domain_list(child.children[1])  # Sprint 11 Day 1: Use _domain_list
                 self._ensure_sets(domain, "equation domain", child)
                 for name in names:
                     self._declared_equations.add(name)
@@ -1013,7 +1045,7 @@ class _ModelBuilder:
 
     def _handle_eqn_def_domain(self, node: Tree) -> None:
         name = _token_text(node.children[0])
-        domain = _id_list(node.children[1])
+        domain = _domain_list(node.children[1])  # Sprint 11 Day 1: Use _domain_list
         if name not in self._declared_equations:
             raise self._parse_error(
                 f"Equation '{name}' defined without declaration",

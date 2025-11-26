@@ -114,8 +114,9 @@ INTEGER_K : /(?i:integer)\b/
 // NOTE: eqn_head_domain_list allows comma-separated equation names with domains,
 // e.g., "Equations eq1, eq2(i,j);". This is NOT valid GAMS syntax according to
 // the official specification, but we handle it gracefully to support user error recovery.
-eqn_head_decl: id_list "(" id_list ")"                       -> eqn_head_domain_list
-             | ID "(" id_list ")"                            -> eqn_head_domain
+// Updated for Sprint 11 Day 1: Support nested/subset indexing like defdist(low(n,nn))
+eqn_head_decl: id_list "(" domain_list ")"                   -> eqn_head_domain_list
+             | ID "(" domain_list ")"                        -> eqn_head_domain
              | id_list                                       -> eqn_head_list
              | ID                                            -> eqn_head_scalar
 
@@ -184,8 +185,14 @@ CIRCULAR_LAG: "--"
 // Equations
 // ---------------------------
 
-equation_def: ID "(" id_list ")" condition? ".." expr REL_K expr SEMI    -> eqn_def_domain
+equation_def: ID "(" domain_list ")" condition? ".." expr REL_K expr SEMI    -> eqn_def_domain
             | ID condition? ".." expr REL_K expr SEMI                     -> eqn_def_scalar
+
+// Domain list for equation definitions - supports nested/subset indexing
+domain_list: domain_element ("," domain_element)*
+
+// Domain element can be simple (i) or subset with indices (low(n,nn))
+domain_element: ID ("(" id_list ")")?
 
 condition: "$" "(" expr ")"
 
