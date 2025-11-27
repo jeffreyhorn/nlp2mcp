@@ -35,8 +35,8 @@ def apply_all_transformations(expr, max_iterations=5):
     """Apply all transformations in a fixpoint iteration.
 
     Applies all 10 transformations (6 HIGH + 4 MEDIUM priority):
-    - HIGH: factoring, fractions, associativity, division, nested products, powers
-    - MEDIUM: multi-term factoring, nested operations, trig identities, log rules
+    - HIGH: factoring, fractions, associativity, division, powers
+    - MEDIUM: nested operations, multi-term factoring, trig identities, log rules
     """
     transformations = [
         extract_common_factors,  # HIGH - T1.1

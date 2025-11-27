@@ -43,6 +43,8 @@ jobs:
           - tier1-part1 # circle, himmel16, hs62, mathopt1, maxmin
           - tier1-part2 # mhw4d, mhw4dx, mingamma, rbrock, trig
           - all-models # Full GAMSLib suite
+      # NOTE: Currently all matrix jobs run the same tests. Future work will
+      # filter models based on model-group to enable true parallel testing.
 
     permissions:
       contents: read # Read repository

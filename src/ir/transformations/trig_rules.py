@@ -65,7 +65,13 @@ def apply_trig_identities(expr: Expr) -> Expr:
 
     # Check for trigonometric function conversions
     if isinstance(expr, Call):
-        return _convert_trig_function(expr)
+        result = _convert_trig_function(expr)
+        if result != expr:
+            return result
+        # Also recursively apply to arguments
+        new_args = tuple(apply_trig_identities(arg) for arg in expr.args)
+        if any(new_arg != old_arg for new_arg, old_arg in zip(new_args, expr.args, strict=True)):
+            return Call(expr.func, new_args)
 
     # Recursively apply to subexpressions
     if isinstance(expr, Binary):
