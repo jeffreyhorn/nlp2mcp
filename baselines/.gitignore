@@ -1,0 +1,6 @@
+# Ignore rolling baselines (dynamically generated)
+performance/rolling/
+
+# Keep golden and parse_rate baselines (milestone snapshots)
+!performance/golden/
+!parse_rate/
