@@ -85,13 +85,12 @@ jobs:
       - name: Check for regression
         id: regression-check
         run: |
-          # Compare against baseline from main branch with multi-metric thresholds
-          # Parse rate: 5% warn, 10% fail
-          # Convert rate: 5% warn, 10% fail
-          # Performance: 20% warn, 50% fail
-          # Note: Multi-metric mode requires updated ingestion report with convert_rate
+          # Compare against baseline from main branch
+          # Currently enforced: Parse rate threshold (10% fail)
+          # Multi-metric arguments (parse/convert/perf) are accepted but not yet implemented
+          # Note: convert_rate tracking exists in measure_parse_rate.py but not integrated with ingest_gamslib.py
           python scripts/check_parse_rate_regression.py \
-            --current reports/gamslib_ingestion_sprint6.json \
+            --current reports/gamslib_ingestion_sprint8.json \
             --baseline origin/main \
             --parse-warn 0.05 \
             --parse-fail 0.10 \
@@ -124,12 +123,15 @@ jobs:
             <details>
             <summary>About Regression Thresholds</summary>
 
-            This PR is checked against the following regression thresholds:
-            - **Parse Rate**: 5% warning, 10% failure
-            - **Convert Rate**: 5% warning, 10% failure
-            - **Performance**: 20% warning, 50% failure
+            **Currently Enforced:**
+            - **Parse Rate**: 10% failure threshold (hard block on merge)
 
-            A failure blocks merging. Warnings are informational only.
+            **Planned (not yet implemented):**
+            - Parse Rate: 5% warning threshold
+            - Convert Rate: 5% warning, 10% failure
+            - Performance: 20% warning, 50% failure
+
+            Note: Multi-metric threshold arguments are accepted by the CI but only parse rate is currently enforced.
             </details>
             `;
 
