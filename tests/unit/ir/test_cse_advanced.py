@@ -1,7 +1,7 @@
-"""Unit tests for advanced CSE transformations (T5.2 and T5.3)."""
+"""Unit tests for advanced CSE transformations (T5.2, T5.3, and T5.4)."""
 
 from src.ir.ast import Binary, Call, Const, SymbolRef
-from src.ir.transformations.cse_advanced import multiplicative_cse, nested_cse
+from src.ir.transformations.cse_advanced import cse_with_aliasing, multiplicative_cse, nested_cse
 
 
 class TestNestedCSE:
@@ -396,3 +396,225 @@ class TestMultiplicativeCSE:
         if len(temps) == 2:
             # First temp should be xy (higher savings)
             assert "m1" in temps
+
+
+class TestCSEWithAliasing:
+    """Test T5.4: CSE with Aliasing."""
+
+    def test_reuse_existing_alias(self):
+        """Test: Expression already assigned to variable - reuse existing variable"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+        xy = Binary("+", x, y)
+
+        # Given: t1 = x+y
+        # Expression: (x+y)^2 + 3*(x+y) + sin(x+y)
+        # Should reuse t1, not create new temp
+        symbol_table = {"t1": xy}
+        expr = Binary(
+            "+",
+            Binary("+", Binary("**", xy, Const(2)), Binary("*", Const(3), xy)),
+            Call("sin", (xy,)),
+        )
+
+        result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+
+        # Should not create new temps (reuses t1)
+        assert len(temps) == 0
+
+        # Result should reference t1 (as SymbolRef)
+        assert isinstance(result, Binary)
+
+    def test_mix_aliased_and_new(self):
+        """Test: Mix of aliased and new expressions"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+
+        xy = Binary("+", x, y)
+        ab = Binary("+", a, b)
+
+        # Given: t1 = x+y
+        # Expression: (x+y) + (x+y) + (x+y) + (a+b) + (a+b) + (a+b)
+        # Should reuse t1 for x+y, create new temp for a+b
+        symbol_table = {"t1": xy}
+        expr = Binary(
+            "+",
+            Binary("+", Binary("+", xy, xy), xy),
+            Binary("+", Binary("+", ab, ab), ab),
+        )
+
+        result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+
+        # Should create one new temp for a+b
+        assert len(temps) == 1
+        assert "a1" in temps
+
+        # a1 should be a+b
+        a1_def = temps["a1"]
+        assert isinstance(a1_def, Binary)
+        assert a1_def.op == "+"
+
+    def test_empty_symbol_table(self):
+        """Test: Empty symbol table - behaves like regular nested CSE"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+        xy = Binary("+", x, y)
+
+        # (x+y)^2 + 3*(x+y) + sin(x+y)
+        expr = Binary(
+            "+",
+            Binary("+", Binary("**", xy, Const(2)), Binary("*", Const(3), xy)),
+            Call("sin", (xy,)),
+        )
+
+        result, temps = cse_with_aliasing(expr, None, min_occurrences=3)
+
+        # Should extract x+y as a1
+        assert len(temps) == 1
+        assert "a1" in temps
+
+    def test_no_aliasing_below_threshold(self):
+        """Test: Aliased expression appears below threshold - no replacement"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+        xy = Binary("+", x, y)
+
+        # Given: t1 = x+y
+        # Expression: (x+y) + (x+y) - only 2 occurrences (below threshold=3)
+        symbol_table = {"t1": xy}
+        expr = Binary("+", xy, xy)
+
+        result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+
+        # No replacement (below threshold)
+        assert len(temps) == 0
+        assert result == expr
+
+    def test_multiple_existing_aliases(self):
+        """Test: Multiple expressions already have aliases"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+
+        xy = Binary("+", x, y)
+        ab = Binary("*", a, b)
+
+        # Given: t1 = x+y, m1 = a*b
+        # Expression: (x+y) + (x+y) + (x+y) + (a*b) + (a*b) + (a*b)
+        symbol_table = {"t1": xy, "m1": ab}
+        expr = Binary(
+            "+",
+            Binary("+", Binary("+", xy, xy), xy),
+            Binary("+", Binary("+", ab, ab), ab),
+        )
+
+        result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+
+        # No new temps (both expressions already aliased)
+        assert len(temps) == 0
+
+    def test_nested_with_aliasing(self):
+        """Test: Nested expressions with some aliased"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+        z = SymbolRef("z")
+
+        xy = Binary("+", x, y)
+        xyz = Binary("+", xy, z)
+
+        # Given: t1 = x+y
+        # Expression: (x+y+z) + (x+y+z) + (x+y+z) + (x+y) + (x+y) + (x+y)
+        symbol_table = {"t1": xy}
+        expr = Binary(
+            "+",
+            Binary("+", Binary("+", xyz, xyz), xyz),
+            Binary("+", Binary("+", xy, xy), xy),
+        )
+
+        result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+
+        # Should create temp for x+y+z, but reuse t1 within it
+        assert len(temps) >= 1
+
+    def test_function_call_aliasing(self):
+        """Test: Function call expressions with aliasing"""
+        x = SymbolRef("x")
+        exp_x = Call("exp", (x,))
+
+        # Given: t1 = exp(x)
+        # Expression: exp(x)*a + exp(x)*b + exp(x)*c
+        symbol_table = {"t1": exp_x}
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+        c = SymbolRef("c")
+        expr = Binary(
+            "+",
+            Binary("+", Binary("*", exp_x, a), Binary("*", exp_x, b)),
+            Binary("*", exp_x, c),
+        )
+
+        result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+
+        # Should reuse t1, no new temps
+        assert len(temps) == 0
+
+    def test_custom_threshold_with_aliasing(self):
+        """Test: Custom occurrence threshold with aliasing"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+        xy = Binary("+", x, y)
+
+        # Given: t1 = x+y
+        # Expression: (x+y) + (x+y) - only 2 occurrences
+        symbol_table = {"t1": xy}
+        expr = Binary("+", xy, xy)
+
+        # With threshold=2, should reuse t1
+        result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=2)
+        assert len(temps) == 0
+
+        # With threshold=3, should not extract (below threshold)
+        result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+        assert len(temps) == 0
+
+    def test_complex_mixed_scenario(self):
+        """Test: Complex scenario with mixed aliased and new expressions"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+        z = SymbolRef("z")
+        w = SymbolRef("w")
+
+        xy = Binary("+", x, y)
+        zw = Binary("*", z, w)
+
+        # Given: t1 = x+y
+        # Expression: (x+y)*(x+y)*(x+y) + (z*w)+(z*w)+(z*w)
+        symbol_table = {"t1": xy}
+        expr = Binary(
+            "+",
+            Binary("*", Binary("*", xy, xy), xy),
+            Binary("+", Binary("+", zw, zw), zw),
+        )
+
+        result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+
+        # Should create temp for z*w, reuse t1 for x+y
+        assert len(temps) == 1
+        assert "a1" in temps
+
+    def test_no_simple_variable_aliasing(self):
+        """Test: Simple variables not extracted even with aliasing"""
+        x = SymbolRef("x")
+
+        # Given: t1 = x (simple variable)
+        # Expression: x + x + x + x
+        symbol_table = {"t1": x}
+        expr = Binary("+", Binary("+", Binary("+", x, x), x), x)
+
+        result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+
+        # No extraction (simple variable not CSE candidate)
+        assert len(temps) == 0

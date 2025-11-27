@@ -1,11 +1,12 @@
 """Advanced Common Subexpression Elimination (CSE) transformations.
 
-This module implements T5.2 (Nested CSE) and T5.3 (Multiplicative CSE)
-for aggressive simplification mode.
+This module implements T5.2 (Nested CSE), T5.3 (Multiplicative CSE), and
+T5.4 (CSE with Aliasing) for aggressive simplification mode.
 
 Patterns:
 - T5.2: Nested CSE - Replace repeated complex subexpressions
 - T5.3: Multiplicative CSE - Replace repeated multiplication patterns
+- T5.4: CSE with Aliasing - Avoid creating CSE for already-aliased expressions
 
 Example:
     # T5.2: Nested CSE
@@ -13,6 +14,9 @@ Example:
 
     # T5.3: Multiplicative CSE
     x*y*a + x*y*b + x*y*c → m1 = x*y; m1*a + m1*b + m1*c
+
+    # T5.4: CSE with Aliasing
+    Given: t1 = x+y, later: z = x+y → Recognize z as alias, reuse t1
 
 Priority: LOW (optional CSE features, high reuse threshold required)
 
@@ -386,3 +390,108 @@ def _replace_subexpression(expr: Expr, target: Expr, replacement: Expr) -> Expr:
             return Sum(expr.index_sets, new_body)
 
     return expr
+
+
+def cse_with_aliasing(
+    expr: Expr,
+    symbol_table: dict[str, Expr] | None = None,
+    min_occurrences: int = 3,
+) -> tuple[Expr, dict[str, Expr]]:
+    """Apply CSE with aliasing awareness - avoid creating CSE for already-aliased expressions.
+
+    This transformation extends nested CSE by tracking variable substitutions in a symbol
+    table. If an expression is already assigned to a variable (either from a previous CSE
+    pass or from user-defined variables), this function recognizes the alias and reuses
+    the existing variable instead of creating a new temporary.
+
+    Algorithm:
+    1. Start with existing symbol table (mapping variable names to their expressions)
+    2. Collect subexpressions and check if any match existing variables
+    3. For matched expressions, use existing variable instead of creating new temp
+    4. For unmatched expressions, apply standard nested CSE
+    5. Update symbol table with new temporary variables
+
+    Args:
+        expr: Expression to transform
+        symbol_table: Optional dict mapping variable names to their expressions.
+                     If None, starts with empty symbol table.
+        min_occurrences: Minimum occurrences required for CSE (default: 3)
+
+    Returns:
+        Tuple of (transformed expression, dict mapping temp names to definitions)
+
+    Example:
+        >>> # Given existing: t1 = x+y
+        >>> # Expression: (x+y)^2 + 3*(x+y) + (a+b) + (a+b) + (a+b)
+        >>> x, y, a, b = SymbolRef("x"), SymbolRef("y"), SymbolRef("a"), SymbolRef("b")
+        >>> xy = Binary("+", x, y)
+        >>> ab = Binary("+", a, b)
+        >>> symbol_table = {"t1": xy}  # t1 already assigned to x+y
+        >>> expr = Binary("+", Binary("**", xy, Const(2)),
+        ...               Binary("+", Binary("+", ab, ab), ab))
+        >>> result, temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+        >>> # result uses t1 for x+y (existing), creates new temp for a+b
+        >>> # temps only contains new temporaries (not t1)
+    """
+    if symbol_table is None:
+        symbol_table = {}
+
+    # Step 1: Collect subexpressions with counts
+    subexpr_counts: dict[str, tuple[Expr, int]] = {}
+    _collect_subexpressions(expr, subexpr_counts)
+
+    # Step 2: Build reverse mapping: expression key -> existing variable name
+    expr_to_var: dict[str, str] = {}
+    for var_name, var_expr in symbol_table.items():
+        expr_key = _expression_key(var_expr)
+        expr_to_var[expr_key] = var_name
+
+    # Step 3: Filter candidates and separate into aliased vs new
+    aliased_candidates: dict[str, str] = {}  # expr_key -> existing var name
+    new_candidates: dict[str, tuple[Expr, int]] = {}  # expr_key -> (expr, count)
+
+    for key, (subexpr, count) in subexpr_counts.items():
+        if count >= min_occurrences and _is_cse_candidate(subexpr):
+            if key in expr_to_var:
+                # This expression is already assigned to a variable
+                aliased_candidates[key] = expr_to_var[key]
+            else:
+                # This is a new candidate for CSE
+                new_candidates[key] = (subexpr, count)
+
+    # Step 4: Replace aliased expressions with existing variables first
+    result_expr = expr
+    for expr_key, var_name in aliased_candidates.items():
+        # Find the original expression from subexpr_counts
+        subexpr = subexpr_counts[expr_key][0]
+        var_ref = SymbolRef(var_name)
+        result_expr = _replace_subexpression(result_expr, subexpr, var_ref)
+
+    # Step 5: Apply standard nested CSE to remaining candidates
+    if not new_candidates:
+        return result_expr, {}
+
+    # Sort new candidates by dependency (innermost first)
+    sorted_new_candidates = _topological_sort_candidates(new_candidates)
+
+    # Step 6: Generate temporary variables and replace
+    temps: dict[str, Expr] = {}
+
+    for i, (_key, (subexpr, _count)) in enumerate(sorted_new_candidates):
+        temp_name = f"a{i + 1}"  # Use 'a' prefix for aliasing-aware temps
+        temp_ref = SymbolRef(temp_name)
+
+        # Store the definition
+        temps[temp_name] = subexpr
+
+        # Replace all occurrences in result expression
+        result_expr = _replace_subexpression(result_expr, subexpr, temp_ref)
+
+        # Also update temp definitions to use previously extracted temps
+        existing_temp_names = list(temps.keys())[:-1]
+        for existing_temp_name in existing_temp_names:
+            temps[existing_temp_name] = _replace_subexpression(
+                temps[existing_temp_name], subexpr, temp_ref
+            )
+
+    return result_expr, temps
