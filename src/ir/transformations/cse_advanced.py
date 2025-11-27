@@ -12,7 +12,7 @@ Example:
     (x*y + z)^2 + 3*(x*y + z) + sin(x*y + z) → t1 = x*y + z; t1^2 + 3*t1 + sin(t1)
 
     # T5.3: Multiplicative CSE
-    x*y*a + x*y*b + x*y*c → t1 = x*y; t1*a + t1*b + t1*c
+    x*y*a + x*y*b + x*y*c → m1 = x*y; m1*a + m1*b + m1*c
 
 Priority: LOW (optional CSE features, high reuse threshold required)
 
@@ -25,7 +25,7 @@ expression structure significantly. They should only be applied when:
 
 from collections import defaultdict
 
-from src.ir.ast import Binary, Call, Const, Expr, SymbolRef, VarRef
+from src.ir.ast import Binary, Call, Const, Expr, Sum, SymbolRef, Unary, VarRef
 
 
 def nested_cse(expr: Expr, min_occurrences: int = 3) -> tuple[Expr, dict[str, Expr]]:
@@ -186,6 +186,10 @@ def _collect_subexpressions(expr: Expr, counts: dict[str, tuple[Expr, int]]) -> 
     elif isinstance(expr, Call):
         for arg in expr.args:
             _collect_subexpressions(arg, counts)
+    elif isinstance(expr, Unary):
+        _collect_subexpressions(expr.child, counts)
+    elif isinstance(expr, Sum):
+        _collect_subexpressions(expr.body, counts)
 
 
 def _collect_multiplicative_subexpressions(expr: Expr, counts: dict[str, tuple[Expr, int]]) -> None:
@@ -210,6 +214,10 @@ def _collect_multiplicative_subexpressions(expr: Expr, counts: dict[str, tuple[E
     elif isinstance(expr, Call):
         for arg in expr.args:
             _collect_multiplicative_subexpressions(arg, counts)
+    elif isinstance(expr, Unary):
+        _collect_multiplicative_subexpressions(expr.child, counts)
+    elif isinstance(expr, Sum):
+        _collect_multiplicative_subexpressions(expr.body, counts)
 
 
 def _expression_key(expr: Expr) -> str:
@@ -228,7 +236,7 @@ def _expression_key(expr: Expr) -> str:
     elif isinstance(expr, SymbolRef):
         return f"SymbolRef({expr.name})"
     elif isinstance(expr, VarRef):
-        return f"VarRef({expr.name})"
+        return f"VarRef({expr.name},{repr(expr.indices)})"
     elif isinstance(expr, Binary):
         left_key = _expression_key(expr.left)
         right_key = _expression_key(expr.right)
@@ -236,6 +244,12 @@ def _expression_key(expr: Expr) -> str:
     elif isinstance(expr, Call):
         args_keys = ",".join(_expression_key(arg) for arg in expr.args)
         return f"Call({expr.func},{args_keys})"
+    elif isinstance(expr, Unary):
+        child_key = _expression_key(expr.child)
+        return f"Unary({expr.op},{child_key})"
+    elif isinstance(expr, Sum):
+        body_key = _expression_key(expr.body)
+        return f"Sum({expr.index_sets},{body_key})"
     else:
         return f"{type(expr).__name__}({id(expr)})"
 
@@ -329,6 +343,10 @@ def _contains_subexpression(container: Expr, target: Expr) -> bool:
         )
     elif isinstance(container, Call):
         return any(_contains_subexpression(arg, target) for arg in container.args)
+    elif isinstance(container, Unary):
+        return _contains_subexpression(container.child, target)
+    elif isinstance(container, Sum):
+        return _contains_subexpression(container.body, target)
 
     return False
 
@@ -358,5 +376,13 @@ def _replace_subexpression(expr: Expr, target: Expr, replacement: Expr) -> Expr:
         new_args = tuple(_replace_subexpression(arg, target, replacement) for arg in expr.args)
         if any(new_arg != old_arg for new_arg, old_arg in zip(new_args, expr.args, strict=True)):
             return Call(expr.func, new_args)
+    elif isinstance(expr, Unary):
+        new_child = _replace_subexpression(expr.child, target, replacement)
+        if new_child != expr.child:
+            return Unary(expr.op, new_child)
+    elif isinstance(expr, Sum):
+        new_body = _replace_subexpression(expr.body, target, replacement)
+        if new_body != expr.body:
+            return Sum(expr.index_sets, new_body)
 
     return expr
