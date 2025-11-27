@@ -924,13 +924,13 @@ These processes are active from Day 1 with no additional implementation effort.
 
 #### Deliverables
 
-- [ ] Baseline storage structure created
-- [ ] Performance comparison script working
-- [ ] Nested CSE implemented (T5.2)
-- [ ] Multiplicative CSE implemented (T5.3)
-- [ ] 20+ unit tests for CSE advanced features
-- [ ] **Day 7 Checkpoint Complete:** CI <3 min validated
-- [ ] Basic reporting functional
+- [x] Baseline storage structure created
+- [x] Performance comparison script working
+- [x] Nested CSE implemented (T5.2)
+- [x] Multiplicative CSE implemented (T5.3)
+- [x] 20+ unit tests for CSE advanced features
+- [ ] **Day 7 Checkpoint Complete:** CI <3 min validated (CI validation pending)
+- [x] Basic reporting functional
 
 #### Dependencies
 
@@ -938,11 +938,11 @@ These processes are active from Day 1 with no additional implementation effort.
 
 #### Acceptance Criteria
 
-- [ ] CI runtime <3 minutes (70% reduction from 10 min)
-- [ ] Baselines track all 10 models
-- [ ] Comparison script detects regressions
-- [ ] Basic console output shows deltas
-- [ ] Quality checks pass
+- [ ] CI runtime <3 minutes (70% reduction from 10 min) - validation pending
+- [x] Baselines track all 10 models
+- [x] Comparison script detects regressions
+- [x] Basic console output shows deltas
+- [x] Quality checks pass
 
 #### Checkpoint Decision
 
