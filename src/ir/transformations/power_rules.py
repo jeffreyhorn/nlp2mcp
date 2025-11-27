@@ -222,6 +222,10 @@ def _expr_structural_key(expr: Expr) -> tuple[str, ...]:
         return ("Const", str(expr.value))
     elif isinstance(expr, SymbolRef):
         return ("SymbolRef", expr.name)
+    elif isinstance(expr, VarRef):
+        return ("VarRef", expr.name, str(expr.indices))
+    elif isinstance(expr, ParamRef):
+        return ("ParamRef", expr.name, str(expr.indices))
     else:
         # Fallback for other types
         return (type(expr).__name__, repr(expr))

@@ -13,7 +13,7 @@ Example:
 Priority: HIGH (enables cascading simplifications)
 """
 
-from src.ir.ast import Binary, Const, Expr, SymbolRef
+from src.ir.ast import Binary, Const, Expr, ParamRef, SymbolRef, VarRef
 from src.ir.transformations.utils import flatten_multiplication
 
 
@@ -175,8 +175,8 @@ def _is_safe_to_cancel(factor1: Expr, factor2: Expr) -> bool:
     if isinstance(factor1, Const):
         return factor1.value != 0
 
-    # Variables: assume non-zero (standard in optimization models)
-    if isinstance(factor1, SymbolRef):
+    # Variables and parameters: assume non-zero (standard in optimization models)
+    if isinstance(factor1, (SymbolRef, VarRef, ParamRef)):
         return True
 
     # Binary operations: safe if both operands are safe
