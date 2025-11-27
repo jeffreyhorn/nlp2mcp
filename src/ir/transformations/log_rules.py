@@ -119,9 +119,9 @@ def _simplify_log_call(call: Call) -> Expr:
         base = arg.left
         exponent = arg.right
 
-        # Only apply if exponent is a constant (safe)
-        if isinstance(exponent, Const):
-            return Binary("*", exponent, Call(log_fn, (base,)))
+        # Apply power rule: log(a^n) → n*log(a)
+        # This is valid for any exponent (constant or variable)
+        return Binary("*", exponent, Call(log_fn, (base,)))
 
     return call
 
