@@ -1,7 +1,7 @@
-"""Tests for common factor extraction transformation (T1.1)."""
+"""Tests for common factor extraction transformation (T1.1 and T1.2)."""
 
 from src.ir.ast import Binary, Call, Const, SymbolRef
-from src.ir.transformations.factoring import extract_common_factors
+from src.ir.transformations.factoring import extract_common_factors, multi_term_factoring
 
 
 class TestBasicFactoring:
@@ -251,3 +251,178 @@ class TestNestedStructures:
         assert isinstance(result, Binary)
         assert result.op == "*"
         assert result.left == x
+
+
+class TestMultiTermFactoring:
+    """Test multi-term factoring (T1.2) - 2x2 pattern."""
+
+    def test_simple_2x2_pattern(self):
+        """a*c + a*d + b*c + b*d → (a + b)*(c + d)"""
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+        c = SymbolRef("c")
+        d = SymbolRef("d")
+
+        # a*c + a*d + b*c + b*d
+        term1 = Binary("*", a, c)
+        term2 = Binary("*", a, d)
+        term3 = Binary("*", b, c)
+        term4 = Binary("*", b, d)
+
+        expr = Binary("+", Binary("+", Binary("+", term1, term2), term3), term4)
+
+        result = multi_term_factoring(expr)
+
+        # Should be (a + b)*(c + d)
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+    def test_2x2_with_constants(self):
+        """2*x + 2*y + 3*x + 3*y → (2 + 3)*(x + y)"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+
+        # 2*x + 2*y + 3*x + 3*y
+        term1 = Binary("*", Const(2), x)
+        term2 = Binary("*", Const(2), y)
+        term3 = Binary("*", Const(3), x)
+        term4 = Binary("*", Const(3), y)
+
+        expr = Binary("+", Binary("+", Binary("+", term1, term2), term3), term4)
+
+        result = multi_term_factoring(expr)
+
+        # Should factor to (2 + 3)*(x + y)
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+    def test_no_2x2_pattern_3_terms(self):
+        """a*c + a*d + b*c → unchanged (only 3 terms)"""
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+        c = SymbolRef("c")
+        d = SymbolRef("d")
+
+        # a*c + a*d + b*c (only 3 terms)
+        term1 = Binary("*", a, c)
+        term2 = Binary("*", a, d)
+        term3 = Binary("*", b, c)
+
+        expr = Binary("+", Binary("+", term1, term2), term3)
+
+        result = multi_term_factoring(expr)
+
+        # Should be unchanged (requires exactly 4 terms)
+        assert result == expr
+
+    def test_no_2x2_pattern_5_terms(self):
+        """5 terms → unchanged (requires exactly 4 terms)"""
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+        c = SymbolRef("c")
+        d = SymbolRef("d")
+        e = SymbolRef("e")
+
+        # a + b + c + d + e (5 terms)
+        expr = Binary("+", Binary("+", Binary("+", Binary("+", a, b), c), d), e)
+
+        result = multi_term_factoring(expr)
+
+        # Should be unchanged
+        assert result == expr
+
+    def test_no_common_structure(self):
+        """a*b + c*d + e*f + g*h → unchanged (no 2x2 structure)"""
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+        c = SymbolRef("c")
+        d = SymbolRef("d")
+        e = SymbolRef("e")
+        f = SymbolRef("f")
+        g = SymbolRef("g")
+        h = SymbolRef("h")
+
+        # All different factors, no 2x2 pattern
+        term1 = Binary("*", a, b)
+        term2 = Binary("*", c, d)
+        term3 = Binary("*", e, f)
+        term4 = Binary("*", g, h)
+
+        expr = Binary("+", Binary("+", Binary("+", term1, term2), term3), term4)
+
+        result = multi_term_factoring(expr)
+
+        # Should be unchanged
+        assert result == expr
+
+    def test_non_addition_unchanged(self):
+        """Non-addition expressions unchanged"""
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+
+        # a * b (multiplication, not addition)
+        expr = Binary("*", a, b)
+
+        result = multi_term_factoring(expr)
+
+        # Should be unchanged
+        assert result == expr
+
+    def test_complex_2x2_pattern(self):
+        """(x*y)*a + (x*y)*b + (z*w)*a + (z*w)*b → factored"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+        z = SymbolRef("z")
+        w = SymbolRef("w")
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+
+        # (x*y)*a + (x*y)*b + (z*w)*a + (z*w)*b
+        term1 = Binary("*", Binary("*", x, y), a)
+        term2 = Binary("*", Binary("*", x, y), b)
+        term3 = Binary("*", Binary("*", z, w), a)
+        term4 = Binary("*", Binary("*", z, w), b)
+
+        expr = Binary("+", Binary("+", Binary("+", term1, term2), term3), term4)
+
+        result = multi_term_factoring(expr)
+
+        # Should factor
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+    def test_mixed_multiplication_factors(self):
+        """x*y*a + x*y*b + x*z*a + x*z*b → factored"""
+        x = SymbolRef("x")
+        y = SymbolRef("y")
+        z = SymbolRef("z")
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+
+        # Three-factor products
+        term1 = Binary("*", Binary("*", x, y), a)
+        term2 = Binary("*", Binary("*", x, y), b)
+        term3 = Binary("*", Binary("*", x, z), a)
+        term4 = Binary("*", Binary("*", x, z), b)
+
+        expr = Binary("+", Binary("+", Binary("+", term1, term2), term3), term4)
+
+        result = multi_term_factoring(expr)
+
+        # Should recognize pattern
+        assert isinstance(result, Binary)
+
+    def test_single_term_factors(self):
+        """a + b + c + d → unchanged (no products)"""
+        a = SymbolRef("a")
+        b = SymbolRef("b")
+        c = SymbolRef("c")
+        d = SymbolRef("d")
+
+        # Simple sum, no multiplication
+        expr = Binary("+", Binary("+", Binary("+", a, b), c), d)
+
+        result = multi_term_factoring(expr)
+
+        # Should be unchanged (no common factors in non-products)
+        assert result == expr
