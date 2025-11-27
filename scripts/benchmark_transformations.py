@@ -12,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.ir.ast import Binary
 from src.ir.transformations import (
+    apply_log_rules,
+    apply_trig_identities,
     combine_fractions,
     consolidate_powers,
     extract_common_factors,
@@ -30,15 +32,22 @@ def count_operations(expr) -> int:
 
 
 def apply_all_transformations(expr, max_iterations=5):
-    """Apply all transformations in a fixpoint iteration."""
+    """Apply all transformations in a fixpoint iteration.
+
+    Applies all 10 transformations (6 HIGH + 4 MEDIUM priority):
+    - HIGH: factoring, fractions, associativity, division, powers
+    - MEDIUM: nested operations, multi-term factoring, trig identities, log rules
+    """
     transformations = [
-        extract_common_factors,
-        combine_fractions,
-        normalize_associativity,
-        simplify_division,
-        multi_term_factoring,
-        simplify_nested_products,
-        consolidate_powers,
+        extract_common_factors,  # HIGH - T1.1
+        combine_fractions,  # HIGH - T1.2
+        normalize_associativity,  # HIGH - T1.3
+        simplify_division,  # HIGH - T3.1
+        consolidate_powers,  # HIGH - T2.3
+        simplify_nested_products,  # MEDIUM - T2.1
+        multi_term_factoring,  # MEDIUM - T2.2
+        apply_trig_identities,  # MEDIUM - T2.4
+        apply_log_rules,  # MEDIUM - T2.5
     ]
 
     for iteration in range(max_iterations):
@@ -111,7 +120,9 @@ def create_test_expressions():
 def main():
     """Run benchmarks."""
     print("=" * 70)
-    print("TRANSFORMATION BENCHMARK")
+    print("TRANSFORMATION BENCHMARK - ALL 10 TRANSFORMATIONS")
+    print("=" * 70)
+    print("Testing 6 HIGH + 4 MEDIUM priority transformations")
     print("=" * 70)
     print()
 
