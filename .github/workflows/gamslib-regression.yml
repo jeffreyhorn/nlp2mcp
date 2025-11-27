@@ -93,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always() # Upload even if regression detected
         with:
-          name: gamslib-ingestion-report
+          name: gamslib-ingestion-report-${{ matrix.model-group }}
           path: |
             reports/gamslib_ingestion_sprint6.json
             docs/status/GAMSLIB_CONVERSION_STATUS.md
