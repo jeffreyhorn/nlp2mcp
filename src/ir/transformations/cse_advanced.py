@@ -74,10 +74,9 @@ def nested_cse(expr: Expr, min_occurrences: int = 3) -> tuple[Expr, dict[str, Ex
 
     # Step 5: Generate temporary variables and replace
     temps: dict[str, Expr] = {}
-    temp_mapping: dict[str, SymbolRef] = {}
     result_expr = expr
 
-    for i, (key, (subexpr, _count)) in enumerate(sorted_candidates):
+    for i, (_key, (subexpr, _count)) in enumerate(sorted_candidates):
         temp_name = f"t{i + 1}"
         temp_ref = SymbolRef(temp_name)
 
@@ -85,15 +84,15 @@ def nested_cse(expr: Expr, min_occurrences: int = 3) -> tuple[Expr, dict[str, Ex
         temps[temp_name] = subexpr
 
         # Replace all occurrences in result expression
-        temp_mapping[key] = temp_ref
         result_expr = _replace_subexpression(result_expr, subexpr, temp_ref)
 
         # Also update temp definitions to use previously extracted temps
-        for existing_temp_name in temps:
-            if existing_temp_name != temp_name:
-                temps[existing_temp_name] = _replace_subexpression(
-                    temps[existing_temp_name], subexpr, temp_ref
-                )
+        # Only iterate over temps that existed before this iteration
+        existing_temp_names = list(temps.keys())[:-1]  # Exclude the just-added temp
+        for existing_temp_name in existing_temp_names:
+            temps[existing_temp_name] = _replace_subexpression(
+                temps[existing_temp_name], subexpr, temp_ref
+            )
 
     return result_expr, temps
 
@@ -124,7 +123,7 @@ def multiplicative_cse(expr: Expr, min_occurrences: int = 4) -> tuple[Expr, dict
         >>> a, b, c, d = SymbolRef("a"), SymbolRef("b"), SymbolRef("c"), SymbolRef("d")
         >>> # Build x*y*a + x*y*b + x*y*c + x*y*d expression...
         >>> result, temps = multiplicative_cse(expr, min_occurrences=4)
-        >>> # result uses t1 for x*y, temps = {"t1": x*y}
+        >>> # result uses m1 for x*y, temps = {"m1": x*y}
     """
     # Step 1: Collect multiplication subexpressions with counts
     mult_counts: dict[str, tuple[Expr, int]] = {}
@@ -308,12 +307,18 @@ def _topological_sort_candidates(
 def _contains_subexpression(container: Expr, target: Expr) -> bool:
     """Check if container expression contains target as a subexpression.
 
+    Note: Returns True if container and target are the same expression.
+    This is intentional for the topological sort algorithm, which uses this
+    function to detect dependencies between CSE candidates. An expression
+    containing itself creates a self-loop that gets handled correctly by
+    the topological sort.
+
     Args:
         container: Expression to search in
         target: Expression to search for
 
     Returns:
-        True if target is found as a subexpression of container
+        True if target is found as a subexpression of container (including if they're the same)
     """
     if _expression_key(container) == _expression_key(target):
         return True

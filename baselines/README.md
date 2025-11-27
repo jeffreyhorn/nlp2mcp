@@ -12,9 +12,11 @@ baselines/
   parse_rate/        # Parse rate baselines (git-tracked)
 ```
 
-## Baseline Format
+## Baseline Formats
 
-Each baseline is stored as a JSON file with the following structure:
+### Individual Model Baseline (Rolling Baselines)
+
+Individual model baselines (used for rolling CI comparisons):
 
 ```json
 {
@@ -28,8 +30,37 @@ Each baseline is stored as a JSON file with the following structure:
 }
 ```
 
+### Aggregate Baseline (Golden Baselines)
+
+Golden milestone baselines contain multiple models with aggregate statistics:
+
+```json
+{
+  "sprint": "Sprint 11",
+  "checkpoint": "Day 6 - All 10 Transformations Complete",
+  "commit": "abc1234",
+  "timestamp": "2025-01-27T00:00:00Z",
+  "models": {
+    "circle.gms": {
+      "parse_rate": 1.0,
+      "convert_rate": 1.0,
+      "parse_time_ms": 45,
+      "total_time_ms": 443
+    }
+  },
+  "summary": {
+    "total_models": 10,
+    "avg_parse_time_ms": 68.4,
+    "avg_total_time_ms": 559.7,
+    "parse_rate": 1.0,
+    "convert_rate": 1.0
+  }
+}
+```
+
 ### Fields
 
+**Individual Model Fields:**
 - `model`: Model filename (e.g., "circle.gms")
 - `parse_rate`: Parse success rate (0.0 to 1.0)
 - `convert_rate`: Conversion success rate (0.0 to 1.0)
@@ -37,6 +68,12 @@ Each baseline is stored as a JSON file with the following structure:
 - `total_time_ms`: Total processing time in milliseconds
 - `commit`: Git commit SHA
 - `timestamp`: ISO 8601 timestamp
+
+**Golden Baseline Additional Fields:**
+- `sprint`: Sprint identifier
+- `checkpoint`: Checkpoint description
+- `models`: Dictionary mapping model names to their metrics
+- `summary`: Aggregate statistics across all models
 
 ## Usage
 
