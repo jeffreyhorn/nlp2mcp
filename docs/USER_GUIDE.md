@@ -426,7 +426,7 @@ Options:
   --stats                        Print model statistics
   --dump-jacobian PATH           Export Jacobian to Matrix Market format
   --scale {none,auto,byvar}      Scaling mode (default: none)
-  --simplification {none,basic,advanced}
+  --simplification {none,basic,advanced,aggressive}
                                  Expression simplification (default: advanced)
   --smooth-abs                   Enable abs() smoothing
   --smooth-abs-epsilon FLOAT     Epsilon for abs smoothing (default: 1e-6)
@@ -684,6 +684,72 @@ Applies all basic simplifications plus algebraic term collection:
 
 Plus all basic simplifications (constant folding, zero/identity elimination).
 
+**Aggressive** - `--simplification aggressive` *(Sprint 11)*
+
+Applies all advanced simplifications plus 10 additional algebraic transformations and Common Subexpression Elimination (CSE):
+
+**High Priority Transformations (T1-T3):**
+
+1. **Common Factor Extraction (T1.1):**
+   - `a*x + a*y` → `a*(x + y)`
+   - `2*x + 4*y` → `2*(x + 2*y)`
+
+2. **Fraction Combining (T1.2):**
+   - `a/c + b/c` → `(a + b)/c`
+   - `x/2 + y/2` → `(x + y)/2`
+
+3. **Division Simplification (T2):**
+   - `(x*y)/y` → `x` (cancellation)
+   - `(a/b)/c` → `a/(b*c)` (nested division)
+
+4. **Associativity Normalization (T3):**
+   - `(a + b) + c` → `a + b + c` (flatten)
+   - Enables constant folding across nested operations
+
+**Medium Priority Transformations (T4):**
+
+5. **Power Rules (T4.1):**
+   - `x^a * x^b` → `x^(a+b)`
+   - `(x^a)^b` → `x^(a*b)`
+   - Applied in `consolidate_powers()`
+
+6. **Logarithm Rules (T4.2):**
+   - `log(a*b)` → `log(a) + log(b)`
+   - `log(a^n)` → `n*log(a)`
+   - `log(a/b)` → `log(a) - log(b)`
+
+7. **Trigonometric Identities (T4.3):**
+   - `sin(x)^2 + cos(x)^2` → `1` (Pythagorean identity)
+   - `tan(x)` → `sin(x)/cos(x)`
+
+8. **Nested Operation Simplification (T4.4):**
+   - `x*y*z*x` → `x^2*y*z` (consolidate nested products)
+
+**Low Priority Transformations (T5 - CSE):**
+
+9. **Nested CSE (T5.2):**
+   - Extracts repeated complex subexpressions (≥3 occurrences)
+   - `(x+y)^2 + 3*(x+y) + log(x+y)` → creates temp for `x+y`
+
+10. **Multiplicative CSE (T5.3):**
+    - Extracts repeated multiplication patterns (≥4 occurrences)
+    - `x*y*z` appearing multiple times → creates temp
+
+11. **Aliasing-Aware CSE (T5.4):**
+    - Reuses existing variable aliases instead of creating new temps
+    - If `a = x+y` already exists, uses `a` instead of creating new temp
+
+**When to Use Aggressive Mode:**
+- Large models with complex derivative expressions
+- When MCP output needs maximum simplification
+- Research or educational contexts where simplified forms are clearer
+- When CSE can significantly reduce expression size
+
+**Trade-offs:**
+- More computation time during conversion
+- May create temporary variables for CSE (changes structure)
+- Rare edge cases may have unexpected simplifications
+
 **Basic** - `--simplification basic`
 
 Applies only fundamental simplification rules:
@@ -724,6 +790,9 @@ nlp2mcp model.gms -o output.gms
 # Explicitly use advanced
 nlp2mcp model.gms -o output.gms --simplification advanced
 
+# Use aggressive simplification (Sprint 11: 10 transforms + CSE)
+nlp2mcp model.gms -o output.gms --simplification aggressive
+
 # Use basic simplification only
 nlp2mcp model.gms -o output.gms --simplification basic
 
@@ -737,7 +806,7 @@ Set the default simplification mode in `pyproject.toml`:
 
 ```toml
 [tool.nlp2mcp]
-simplification = "advanced"  # or "basic" or "none"
+simplification = "advanced"  # or "aggressive", "basic", or "none"
 scale = "none"
 smooth_abs = false
 ```
