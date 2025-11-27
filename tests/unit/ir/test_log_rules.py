@@ -25,15 +25,25 @@ class TestLogConstants:
         assert isinstance(result, Const)
         assert result.value == 0
 
-    def test_log_of_e(self):
-        """Test: log(e) → 1"""
+    def test_ln_of_e(self):
+        """Test: ln(e) → 1 (only for natural log)"""
         # e ≈ 2.71828182845904523536
-        expr = Call("log", [Const(2.71828182845904523536)])
+        expr = Call("ln", [Const(2.71828182845904523536)])
         result = apply_log_rules(expr)
 
         # Expected: 1
         assert isinstance(result, Const)
         assert result.value == 1
+
+    def test_log_of_e_unchanged(self):
+        """Test: log(e) is NOT simplified (log₁₀(e) ≠ 1)"""
+        # e ≈ 2.71828182845904523536
+        expr = Call("log", [Const(2.71828182845904523536)])
+        result = apply_log_rules(expr)
+
+        # Expected: unchanged (log₁₀(e) ≈ 0.434, not 1)
+        assert isinstance(result, Call)
+        assert result.func == "log"
 
 
 class TestLogProductRule:

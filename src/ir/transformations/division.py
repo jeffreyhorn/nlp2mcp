@@ -14,7 +14,7 @@ Priority: HIGH (enables cascading simplifications)
 """
 
 from src.ir.ast import Binary, Const, Expr, ParamRef, SymbolRef, VarRef
-from src.ir.transformations.utils import flatten_multiplication
+from src.ir.transformations.utils import expressions_equal, flatten_multiplication
 
 
 def simplify_division(expr: Expr) -> Expr:
@@ -167,7 +167,7 @@ def _is_safe_to_cancel(factor1: Expr, factor2: Expr) -> bool:
         True if factors are identical and safe to cancel
     """
     # Check for exact structural equality
-    if not _expressions_equal(factor1, factor2):
+    if not expressions_equal(factor1, factor2):
         return False
 
     # Both factors are structurally equal, check safety
@@ -186,41 +186,3 @@ def _is_safe_to_cancel(factor1: Expr, factor2: Expr) -> bool:
 
     # Function calls, Unary, etc.: do not cancel (may be zero)
     return False
-
-
-def _expressions_equal(expr1: Expr, expr2: Expr) -> bool:
-    """Check if two expressions are structurally identical.
-
-    Handles Const, SymbolRef, and Binary node types. For other node types
-    (Call, Unary, VarRef, ParamRef), falls back to identity comparison.
-
-    Args:
-        expr1: First expression
-        expr2: Second expression
-
-    Returns:
-        True if expressions are structurally equal
-    """
-    # Check type equality
-    if type(expr1) is not type(expr2):
-        return False
-
-    # Const: compare values
-    if isinstance(expr1, Const) and isinstance(expr2, Const):
-        return expr1.value == expr2.value
-
-    # SymbolRef: compare names
-    if isinstance(expr1, SymbolRef) and isinstance(expr2, SymbolRef):
-        return expr1.name == expr2.name
-
-    # Binary: compare operator and recursively check operands
-    if isinstance(expr1, Binary) and isinstance(expr2, Binary):
-        return (
-            expr1.op == expr2.op
-            and _expressions_equal(expr1.left, expr2.left)
-            and _expressions_equal(expr1.right, expr2.right)
-        )
-
-    # Fallback for other node types (Call, Unary, VarRef, ParamRef):
-    # Use identity comparison (conservative - only equal if same object)
-    return expr1 is expr2

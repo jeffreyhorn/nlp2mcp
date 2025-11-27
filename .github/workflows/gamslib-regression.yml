@@ -40,11 +40,10 @@ jobs:
       fail-fast: false
       matrix:
         model-group:
-          - tier1-part1 # circle, himmel16, hs62, mathopt1, maxmin
-          - tier1-part2 # mhw4d, mhw4dx, mingamma, rbrock, trig
           - all-models # Full GAMSLib suite
-      # NOTE: Currently all matrix jobs run the same tests. Future work will
-      # filter models based on model-group to enable true parallel testing.
+      # NOTE: Matrix strategy prepared for future parallel testing.
+      # TODO: Add tier1-part1/tier1-part2 groups back when ingestion script
+      # supports model filtering to avoid running duplicate tests.
 
     permissions:
       contents: read # Read repository

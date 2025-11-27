@@ -22,7 +22,7 @@ Safety:
     - Conservative: avoids increasing expression size significantly
 """
 
-from src.ir.ast import Binary, Call, Const, Expr
+from src.ir.ast import Binary, Call, Const, Expr, ParamRef, SymbolRef, VarRef
 
 
 def apply_log_rules(expr: Expr) -> Expr:
@@ -97,9 +97,13 @@ def _simplify_log_call(call: Call) -> Expr:
     if isinstance(arg, Const) and arg.value == 1:
         return Const(0)
 
-    # Rule 2: log(e) → 1 (for natural log)
+    # Rule 2: ln(e) → 1 (only for natural log, not base-10 log)
     # e ≈ 2.71828182845904523536
-    if isinstance(arg, Const) and abs(arg.value - 2.71828182845904523536) < 1e-10:
+    if (
+        call.func == "ln"
+        and isinstance(arg, Const)
+        and abs(arg.value - 2.71828182845904523536) < 1e-10
+    ):
         return Const(1)
 
     # Rule 3: log(a*b) → log(a) + log(b)
@@ -159,8 +163,6 @@ def _is_simple_log_arg(expr: Expr) -> bool:
     Returns:
         True if expression is simple for log expansion
     """
-    from src.ir.ast import Call, Const, ParamRef, SymbolRef, VarRef
-
     # Constants, symbols, and function calls are simple
     if isinstance(expr, (Const, SymbolRef, VarRef, ParamRef, Call)):
         return True

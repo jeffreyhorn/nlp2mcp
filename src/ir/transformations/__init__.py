@@ -12,7 +12,7 @@ from src.ir.transformations.log_rules import apply_log_rules
 from src.ir.transformations.nested_operations import simplify_nested_products
 from src.ir.transformations.power_rules import consolidate_powers
 from src.ir.transformations.trig_rules import apply_trig_identities
-from src.ir.transformations.utils import flatten_addition, flatten_multiplication
+from src.ir.transformations.utils import expressions_equal, flatten_addition, flatten_multiplication
 
 __all__ = [
     "extract_common_factors",
@@ -26,4 +26,5 @@ __all__ = [
     "apply_log_rules",
     "flatten_addition",
     "flatten_multiplication",
+    "expressions_equal",
 ]

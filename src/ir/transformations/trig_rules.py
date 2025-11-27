@@ -19,7 +19,7 @@ Priority: MEDIUM (useful for some derivative expressions)
 """
 
 from src.ir.ast import Binary, Call, Const, Expr
-from src.ir.transformations.utils import flatten_addition
+from src.ir.transformations.utils import expressions_equal, flatten_addition
 
 
 def apply_trig_identities(expr: Expr) -> Expr:
@@ -124,7 +124,7 @@ def _apply_pythagorean_identity(expr: Expr) -> Expr:
                 continue
 
             # Check if arguments match (structural equality)
-            if _expressions_equal(sin_arg, cos_arg):
+            if expressions_equal(sin_arg, cos_arg):
                 # Found a match! Replace sin^2(x) + cos^2(x) with 1
                 remaining_terms = [t for k, t in enumerate(terms) if k != i and k != j]
                 remaining_terms.append(Const(1))
@@ -221,46 +221,3 @@ def _is_cos_squared(expr: Expr) -> bool:
 
     # Check if base is cos(x)
     return isinstance(base, Call) and base.func == "cos" and len(base.args) == 1
-
-
-def _expressions_equal(expr1: Expr, expr2: Expr) -> bool:
-    """Check if two expressions are structurally identical.
-
-    Args:
-        expr1: First expression
-        expr2: Second expression
-
-    Returns:
-        True if expressions are structurally equal
-    """
-    # Check type equality
-    if not isinstance(expr1, type(expr2)):
-        return False
-
-    # Const: compare values
-    if isinstance(expr1, Const):
-        return isinstance(expr2, Const) and expr1.value == expr2.value
-
-    # Binary: compare operator and operands
-    if isinstance(expr1, Binary):
-        if not isinstance(expr2, Binary):
-            return False
-        return (
-            expr1.op == expr2.op
-            and _expressions_equal(expr1.left, expr2.left)
-            and _expressions_equal(expr1.right, expr2.right)
-        )
-
-    # Call: compare function name and arguments
-    if isinstance(expr1, Call):
-        if not isinstance(expr2, Call):
-            return False
-        if expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
-            return False
-        return all(
-            _expressions_equal(a1, a2) for a1, a2 in zip(expr1.args, expr2.args, strict=True)
-        )
-
-    # For other types (SymbolRef, VarRef, ParamRef), use identity comparison
-    # This is safe because frozen dataclasses have structural equality
-    return expr1 == expr2
