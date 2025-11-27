@@ -47,6 +47,7 @@ jobs:
 
     permissions:
       contents: read # Read repository
+      pull-requests: write # Post PR comments
 
     steps:
       - name: Checkout repository
