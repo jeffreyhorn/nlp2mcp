@@ -246,7 +246,7 @@ nlp2mcp input.gms -o output.gms --show-excluded
 - `--stats`: Print model statistics (equations, variables, nonzeros)
 - `--dump-jacobian FILE`: Export Jacobian structure to Matrix Market format
 - `--scale {none,auto,byvar}`: Apply scaling (default: none)
-- `--simplification {none,basic,advanced}`: Expression simplification mode (default: advanced)
+- `--simplification {none,basic,advanced,aggressive}`: Expression simplification mode (default: advanced)
 - `--smooth-abs`: Enable smooth abs() approximation via sqrt(x²+ε)
 - `--smooth-abs-epsilon FLOAT`: Epsilon for abs smoothing (default: 1e-6)
 - `--help`: Show help message
@@ -279,6 +279,25 @@ nlp2mcp automatically simplifies derivative expressions to produce more compact 
 
 Recommended for most use cases - produces cleanest output
 
+**Aggressive** - `--simplification aggressive` *(Sprint 11)*
+- Applies all advanced simplifications plus 10 additional algebraic transformations and Common Subexpression Elimination (CSE)
+- **High priority transformations (T1-T3):**
+  - Common factor extraction: `a*x + a*y → a*(x + y)`
+  - Fraction combining: `a/c + b/c → (a + b)/c`
+  - Division simplification: `(x*y)/y → x`
+  - Associativity normalization: `(a + b) + c → a + b + c`
+- **Medium priority transformations (T4):**
+  - Power rules: `x^a * x^b → x^(a+b)`, `(x^a)^b → x^(a*b)`
+  - Logarithm rules: `log(a*b) → log(a) + log(b)`, `log(a^n) → n*log(a)`
+  - Trigonometric identities: `sin(x)^2 + cos(x)^2 → 1`
+  - Nested operation simplification: `x*y*z*x → x^2*y*z`
+- **Low priority transformations (T5 - CSE):**
+  - Nested CSE: Extracts repeated complex subexpressions (≥3 occurrences)
+  - Multiplicative CSE: Extracts repeated multiplication patterns (≥4 occurrences)
+  - Aliasing-aware CSE: Reuses existing variable aliases instead of creating new temps
+- Use for large models with complex derivatives requiring maximum simplification
+- May create temporary variables for CSE and has slightly longer conversion time
+
 **Basic** - `--simplification basic`
 - Applies only fundamental simplification rules:
   - Constant folding: `2 + 3 → 5`, `4 * 5 → 20`
@@ -301,6 +320,9 @@ nlp2mcp model.gms -o output.gms
 
 # Explicitly use advanced
 nlp2mcp model.gms -o output.gms --simplification advanced
+
+# Use aggressive simplification (Sprint 11: 10 transforms + CSE)
+nlp2mcp model.gms -o output.gms --simplification aggressive
 
 # Use basic simplification only
 nlp2mcp model.gms -o output.gms --simplification basic
