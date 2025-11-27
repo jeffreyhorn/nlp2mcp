@@ -1076,13 +1076,13 @@ Phase 4 (CI Guardrails) marked complete.
 
 #### Deliverables
 
-- [ ] CSE with aliasing implemented (T5.4)
-- [ ] **ALL CSE features complete** (T5.1-T5.4)
-- [ ] Convert rate tracking implemented
-- [ ] Multi-metric thresholds enforced
-- [ ] Diagnostics text output with formatting
-- [ ] Diagnostics JSON output implemented
-- [ ] PR comment reporting working
+- [x] CSE with aliasing implemented (T5.4)
+- [x] **ALL CSE features complete** (T5.1-T5.4)
+- [x] Convert rate tracking implemented
+- [x] Multi-metric thresholds enforced
+- [x] Diagnostics text output with formatting
+- [x] Diagnostics JSON output implemented
+- [x] PR comment reporting working
 
 #### Dependencies
 
@@ -1090,12 +1090,31 @@ Phase 4 (CI Guardrails) marked complete.
 
 #### Acceptance Criteria
 
-- [ ] Both parse_rate and convert_rate reported
-- [ ] Multi-metric thresholds working
-- [ ] 5 pipeline stages timed
-- [ ] <2% overhead for timing
-- [ ] Basic text output functional
-- [ ] Quality checks pass
+- [x] Both parse_rate and convert_rate reported
+- [x] Multi-metric thresholds working
+- [x] 5 pipeline stages timed
+- [x] <2% overhead for timing
+- [x] Basic text output functional
+- [x] Quality checks pass
+
+#### Checkpoint Results
+
+**Commit:** `87e5f5a`  
+**Branch:** `sprint11-day8-cse-aliasing-diagnostics`  
+**Quality:** All checks passing (typecheck, lint, format, test)  
+**Tests:** 30/30 CSE tests passing (10 T5.2 + 10 T5.3 + 10 T5.4)  
+**Metrics:**
+- Parse rate: 90% (9/10 models)
+- Convert rate: 90% (9/10 models)
+- CI thresholds: Parse 5%/10%, Convert 5%/10%, Perf 20%/50%
+- Diagnostics: Text + JSON output modes implemented
+
+**Key Features:**
+1. T5.4 CSE with Aliasing: Tracks variable substitutions, reuses existing temps
+2. Convert rate tracking: Full pipeline success (parse → IR → MCP)
+3. Multi-metric thresholds: 3 metrics × 2 levels (warn/fail)
+4. Diagnostics: 5-stage pipeline tracking with timing
+5. CI polish: PR comment reporting with regression results
 
 #### Note on Scope Reduction
 
