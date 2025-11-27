@@ -84,7 +84,11 @@ def test_convert(model_path: Path) -> tuple[bool, bool]:
 
         # Conversion succeeds if result.success is True
         return True, result.success
-    except Exception:
+    except Exception as e:
+        # Parse failed - log error for debugging if needed
+        # Note: Exceptions during parse indicate parse failure
+        # We return (False, False) to indicate both parse and convert failed
+        del e  # Suppress unused variable warning
         return False, False
 
 

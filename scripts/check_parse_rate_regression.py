@@ -270,6 +270,30 @@ def main() -> int:
     if not 0.0 <= args.threshold <= 1.0:
         parser.error(f"threshold must be between 0.0 and 1.0, got {args.threshold}")
 
+    # Warn if multi-metric arguments provided but not yet implemented
+    multi_metric_args = [
+        args.parse_warn,
+        args.parse_fail,
+        args.convert_warn,
+        args.convert_fail,
+        args.perf_warn,
+        args.perf_fail,
+    ]
+    if any(arg is not None for arg in multi_metric_args):
+        print(
+            "⚠️  WARNING: Multi-metric threshold arguments provided but not yet implemented.",
+            file=sys.stderr,
+        )
+        print(
+            "   These arguments are currently ignored. Only --threshold is enforced.",
+            file=sys.stderr,
+        )
+        print(
+            "   Multi-metric support planned for future enhancement.",
+            file=sys.stderr,
+        )
+        print(file=sys.stderr)
+
     try:
         # Read current parse rate
         current_rate = read_parse_rate(args.current)

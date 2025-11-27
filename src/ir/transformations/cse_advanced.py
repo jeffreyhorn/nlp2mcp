@@ -484,6 +484,12 @@ def cse_with_aliasing(
         # Store the definition
         temps[temp_name] = subexpr
 
+        # Also replace aliased expressions in the temp definition
+        for expr_key, var_name in aliased_candidates.items():
+            aliased_subexpr = subexpr_counts[expr_key][0]
+            var_ref = SymbolRef(var_name)
+            temps[temp_name] = _replace_subexpression(temps[temp_name], aliased_subexpr, var_ref)
+
         # Replace all occurrences in result expression
         result_expr = _replace_subexpression(result_expr, subexpr, temp_ref)
 
