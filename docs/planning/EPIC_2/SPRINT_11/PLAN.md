@@ -924,13 +924,13 @@ These processes are active from Day 1 with no additional implementation effort.
 
 #### Deliverables
 
-- [ ] Baseline storage structure created
-- [ ] Performance comparison script working
-- [ ] Nested CSE implemented (T5.2)
-- [ ] Multiplicative CSE implemented (T5.3)
-- [ ] 20+ unit tests for CSE advanced features
-- [ ] **Day 7 Checkpoint Complete:** CI <3 min validated
-- [ ] Basic reporting functional
+- [x] Baseline storage structure created
+- [x] Performance comparison script working
+- [x] Nested CSE implemented (T5.2)
+- [x] Multiplicative CSE implemented (T5.3)
+- [x] 20+ unit tests for CSE advanced features
+- [x] **Day 7 Checkpoint Complete:** CI <3 min validated (CI: 1m34s ✅)
+- [x] Basic reporting functional
 
 #### Dependencies
 
@@ -938,11 +938,11 @@ These processes are active from Day 1 with no additional implementation effort.
 
 #### Acceptance Criteria
 
-- [ ] CI runtime <3 minutes (70% reduction from 10 min)
-- [ ] Baselines track all 10 models
-- [ ] Comparison script detects regressions
-- [ ] Basic console output shows deltas
-- [ ] Quality checks pass
+- [x] CI runtime <3 minutes (84% reduction: 10min → 1m34s) ✅
+- [x] Baselines track all 10 models
+- [x] Comparison script detects regressions
+- [x] Basic console output shows deltas
+- [x] Quality checks pass
 
 #### Checkpoint Decision
 
@@ -959,6 +959,24 @@ These processes are active from Day 1 with no additional implementation effort.
 - ❌ Reduce to 5 canary models
 - Or defer full suite to nightly
 - Re-validate before proceeding
+
+#### Checkpoint Results
+
+**✅ DAY 7 CHECKPOINT ACHIEVED**
+
+CI Performance (PR #331):
+- **Test job:** 1m34s (target: <3min) ✅
+- **Typecheck:** 19s
+- **Lint:** 16s
+- **Format:** 16s
+- **Performance Budget:** 34s
+- **Total CI time:** ~1m34s (longest job)
+
+**Result:** 84% reduction from baseline (10min → 1m34s)
+
+**Decision:** ✅ **Proceed to Phase 5 (Day 8) - Diagnostics + CI Polish**
+
+Phase 4 (CI Guardrails) marked complete.
 
 ---
 
