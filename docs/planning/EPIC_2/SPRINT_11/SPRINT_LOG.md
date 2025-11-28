@@ -297,12 +297,19 @@ Completed all CSE advanced features (T5.2-T5.4), added multi-metric tracking wit
 
 3. **Aggressive Simplification Testing** ✅
    - **Result:** Working correctly
-   - All 10 transformations functional:
-     - T1.1-T1.2: Factoring, fractions
-     - T2: Division simplification
-     - T3: Associativity normalization
-     - T4.1-T4.4: Power, log, trig, nested operations
-     - T5.2-T5.4: CSE (nested, multiplicative, aliasing)
+   - 11 transformation functions operational:
+     - Factoring: Common factor extraction
+     - Fractions: Fraction combining
+     - Division: Division simplification
+     - Associativity: Normalization
+     - Power rules: Power consolidation
+     - Logarithm rules: Log simplification
+     - Trigonometric rules: Trig identities
+     - Nested operations: Nested product simplification
+   - CSE advanced features (3 functions):
+     - Nested CSE: Extract repeated complex subexpressions
+     - Multiplicative CSE: Extract repeated multiplication patterns
+     - Aliasing CSE: Reuse existing variable aliases
    - CLI `--simplification aggressive` option operational
 
 4. **Diagnostics Output Testing** ✅
