@@ -42,9 +42,18 @@ class DiagnosticReport:
     """Complete diagnostic report for pipeline execution."""
 
     model_name: str
-    total_duration_ms: float = 0.0
     stages: dict[Stage, StageMetrics] = field(default_factory=dict)
-    overall_success: bool = False
+
+    @property
+    def total_duration_ms(self) -> float:
+        """Calculate total duration from all stages."""
+        return sum(m.duration_ms for m in self.stages.values())
+
+    @property
+    def overall_success(self) -> bool:
+        """Check if all stages succeeded."""
+        # If there are no stages, consider as False (no success)
+        return bool(self.stages) and all(m.success for m in self.stages.values())
 
     def add_stage(self, metrics: StageMetrics) -> None:
         """Add stage metrics to the report."""

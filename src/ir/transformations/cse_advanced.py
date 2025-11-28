@@ -441,10 +441,12 @@ def cse_with_aliasing(
     _collect_subexpressions(expr, subexpr_counts)
 
     # Step 2: Build reverse mapping: expression key -> existing variable name
+    # If multiple variables map to same expression, pick lexicographically smallest for determinism
     expr_to_var: dict[str, str] = {}
     for var_name, var_expr in symbol_table.items():
         expr_key = _expression_key(var_expr)
-        expr_to_var[expr_key] = var_name
+        if expr_key not in expr_to_var or var_name < expr_to_var[expr_key]:
+            expr_to_var[expr_key] = var_name
 
     # Step 3: Filter candidates and separate into aliased vs new
     aliased_candidates: dict[str, str] = {}  # expr_key -> existing var name
