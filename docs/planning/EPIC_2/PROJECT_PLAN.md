@@ -705,32 +705,145 @@ grad_f = 5*x*exp(y) + (2*a + b)/c
 
 ---
 
-# Sprint 12 (Weeks 13–14): Final UX Polish, Documentation Wrap, Release Readiness, v1.0.0
+# Sprint 12 (Weeks 13–14): Measurement, Polish, and Tier 2 Expansion
 
-**Goal:** Complete diagnostics/progress UI, finalize documentation (advanced usage, GAMSLib handbook, tutorials), close outstanding bugs, and ship v1.0.0 meeting all KPIs.
+**Goal:** Validate Sprint 11 simplification effectiveness through quantitative measurement, complete Sprint 11 technical debt, and expand parser coverage to Tier 2 GAMSLib models (≥50% parse rate on 20 total models).
+
+**Sprint 11 Context:** Achieved 100% Tier 1 parse rate (10/10 models), implemented 11 transformation functions for aggressive simplification, and established CI regression guardrails. Sprint 12 focuses on measurement/validation of these features plus expansion to Tier 2.
+
+**Recommended Scope:** 19-28 hours (HIGH + MEDIUM priority items from Sprint 11 deferrals)
+
+**Detailed Planning Document:** See `docs/planning/EPIC_2/SPRINT_11/DEFERRED_TO_SPRINT_12.md` for complete specifications of all 12 deferred items.
 
 ## Components
-- **UX & Diagnostics Finalization**
-  - Polish progress indicators, diagnostics, and stats dashboards.
-  - Ensure CLI outputs are consistent, localized, and documented.
-- **Documentation Enhancements**
-  - Expand `docs/ADVANCED_USAGE.md`, `docs/GAMSLIB_EXAMPLES.md`, API reference, and produce video scripts/walkthroughs.
-  - Update release notes, changelog, and adoption guides.
-- **Release Readiness & QA**
-  - Ensure KPIs met (≥80 % parse, ≥60 % convert, ≥40 % solve; ≥90 % code coverage).
-  - Run full regression suite, performance benchmarks, and PATH validations.
-  - Finalize CI dashboards and release checklist execution.
+
+### HIGH Priority (Must Do - 7-10h)
+
+**1. Term Reduction Benchmarking (4-6h)**
+- Implement quantitative measurement infrastructure for Sprint 11's 11 transformation functions
+- Validate success criterion: "≥20% term reduction on ≥50% of models"
+- Track: operation count before/after, term reduction %, transformations applied, execution time
+- Create `baselines/simplification/baseline_sprint11.json` baseline
+- Integrate into CI with regression detection (fail if avg reduction drops >10%)
+- **Deliverable:** `scripts/measure_simplification.py`, `docs/SIMPLIFICATION_BENCHMARKS.md`
+- **Decision Point (Day 3):** If <20% average, add LOW priority transformations to sprint
+
+**2. Multi-Metric Threshold Implementation (3-4h)**
+- Complete Sprint 11 technical debt: CLI arguments accepted but not implemented
+- Fully implement `--parse-rate-warn/fail`, `--convert-rate-warn/fail`, `--performance-warn/fail`
+- Integrate `measure_parse_rate.py` with `ingest_gamslib.py` for unified metrics
+- Add convert_rate tracking (% completing full parse → IR → MCP pipeline)
+- Update `.github/workflows/gamslib-regression.yml` with all 3 metrics
+- **Deliverable:** Functional multi-metric CI with PR comment showing all 3 metrics (✅/⚠️/❌)
+
+### MEDIUM Priority (Should Do - 12-18h)
+
+**3. JSON Diagnostics Output (2h)**
+- Add `--diagnostic-json` flag for machine-parseable diagnostics
+- Schema: `{summary: {...}, stages: [...], simplification: {...}}`
+- Support output to stdout, stderr, or file
+- Store as CI artifacts for historical trending
+- **Deliverable:** JSON schema docs, example outputs, CI integration
+
+**4. PATH Solver CI Integration (3-5h, conditional)**
+- **Status:** Blocked on licensing clarification (async, non-blocking)
+- Contact PATH maintainer (ferris@cs.wisc.edu) for CI usage permission
+- If approved: Install PATH in nightly CI, 4-test smoke suite
+- If denied/no response: Keep IPOPT, document decision
+- **Decision Point (Day 7):** Implement if approved, document if denied
+
+**5. Tier 2 GAMSLib Expansion (4-6h)**
+- Select 10 additional Tier 2 models (chenery, demandq, dipole, dispatch, egypt, fdesign, gasoil, hydroelasticity, jbearing, karush)
+- Run parse failure analysis, classify blockers by frequency
+- Implement HIGH priority blockers (≥3 models affected)
+- Target: ≥50% Tier 2 parse rate (5/10 models)
+- **Deliverable:** `TIER_2_MODELS.md`, `TIER_2_IMPLEMENTATION_PLAN.md`, `tier2-validation.yml` CI workflow
+
+**6. CI Workflow Testing Checklist (1h)**
+- Add CI workflow testing section to PR template
+- Checklist: syntax validation, file paths, permissions, secrets, matrix builds
+- Create `docs/infrastructure/CI_WORKFLOW_TESTING.md` guide
+- Prevent Sprint 11 pattern: follow-up PRs fixing CI issues
+- **Goal:** Zero CI-fix follow-up PRs in Sprint 12
+
+### LOW Priority (Deferred Unless Needed - 18-28h)
+
+**7-12. Additional Components** (See `DEFERRED_TO_SPRINT_12.md` for details)
+- LOW priority transformations (6-8h) - Only if benchmarking shows <20%
+- Dashboard integration (4-6h) - Requires JSON output
+- CSE temp propagation (2-3h) - Pending user feedback
+- Transformation catalog alignment (1-2h) - Documentation task
+- Naming convention (1h) - Quick win if time permits
+- Performance trending (4-6h) - Nice-to-have visualization
+
+## Timeline & Checkpoints
+
+**Day 1-3: Measurement & Validation**
+- Implement Components 1 & 2 (benchmarking, multi-metric thresholds)
+- **Day 3 Checkpoint:** Term reduction results available
+  - If <20% average → Add Component 7 (LOW priority transformations)
+  - If ≥20% average → Proceed with Tier 2
+
+**Day 4-6: Tier 2 Expansion**
+- Component 5: Model selection, parse analysis, implementation
+- **Day 6 Checkpoint:** Tier 2 parse rate measured (target: ≥50%)
+
+**Day 7-8: Polish & Integration**
+- Components 3, 4, 6: JSON diagnostics, PATH decision, CI checklist
+- **Day 7 Checkpoint:** PATH licensing decision (implement/document/defer)
+
+**Day 9: Buffer & Optional**
+- 2-3h buffer for unknowns or quick-win LOW priority components
+
+**Day 10: Final Validation & Retrospective**
+- Test all 20 models (10 Tier 1 + 10 Tier 2)
+- Validate success criteria, documentation, PR creation
 
 ## Deliverables
-- Polished UX features (diagnostics/progress/stats) with final documentation.
-- Complete documentation set (advanced usage, GAMSLib examples, API reference, video guides).
-- Release notes, CHANGELOG entries, and v1.0.0 tag/sign-off artifacts.
+1. **Simplification Benchmarking:** `measure_simplification.py`, baselines, CI integration, analysis report
+2. **Multi-Metric CI:** Functional thresholds for parse/convert/performance with PR comments
+3. **Tier 2 Coverage:** 10 models selected, ≥50% parse rate, nightly CI workflow
+4. **JSON Diagnostics:** `--diagnostic-json` flag, schema docs, CI artifacts
+5. **PATH Decision:** Licensing clarified, implementation or documentation complete
+6. **CI Process:** Updated PR template with checklist, testing guide, zero follow-up fix PRs
 
 ## Acceptance Criteria
-- KPIs satisfied and recorded; release checklist completed with approvals.
-- Documentation covers all new capabilities and references dashboards/metrics.
-- No P0/P1 bugs open; regression and performance suites green.
-- PATH/GAMSLib dashboards confirm targets; v1.0.0 artifacts published.
+
+### PRIMARY (Must Achieve)
+1. ✅ **Term Reduction Validated:** ≥20% average on ≥50% Tier 1 models (or transformations adjusted)
+2. ✅ **Multi-Metric CI Complete:** All 3 metrics functional (parse, convert, performance) with thresholds
+3. ✅ **Tier 2 Parse Rate:** ≥50% (5/10 Tier 2 models) = ≥75% overall (15/20 total)
+4. ✅ **JSON Diagnostics:** `--diagnostic-json` functional and documented
+5. ✅ **PATH Decision:** Licensing clarified and implemented/documented
+6. ✅ **Process Improvements:** CI checklist adopted, zero follow-up fix PRs
+
+### SECONDARY (Stretch Goals)
+- Tier 2 ≥60% (6/10) or ≥70% (7/10)
+- Term reduction ≥30% average
+- One or more LOW priority components (7-12) completed
+
+### Quality Gates
+- All tests passing: Fast <30s, full <2 min
+- No Tier 1 regressions (100% maintained)
+- Quality checks: typecheck ✅, lint ✅, format ✅
+- CI green: All workflows passing
+
+## Risk Mitigation
+
+**Risk 1: Benchmarking reveals <20%**
+- Likelihood: Low (Sprint 11 prototypes: 39%)
+- Mitigation: Component 7 ready, Day 3 checkpoint for early detection
+
+**Risk 2: Tier 2 extremely complex (>10h per blocker)**
+- Likelihood: Medium
+- Mitigation: Start with easier models, defer complex to Sprint 13, success = 50% not 100%
+
+**Risk 3: PATH no response**
+- Likelihood: High
+- Mitigation: IPOPT fallback working, send email Day 1, defer if no response by Day 7
+
+**Buffer:** ~5 hours (Day 9: 2-3h, Day 10: 1-2h, embedded: 1-2h) - validated by Sprint 11 (10% utilization)
+
 
 ---
 
