@@ -42,7 +42,7 @@ Sprint 11 successfully achieved **100% Tier 1 parse rate coverage** (10/10 model
 | **CI Runtime** | <3 min | 16.79s | ✅ EXCEEDED |
 | **Transformation Functions** | 10/10 | 11/11 | ✅ EXCEEDED |
 | **CSE Advanced Features** | 3/3 (T5.2-T5.4) | 3/3 | ✅ MET |
-| **Diagnostics Mode** | Text + JSON | Text + JSON | ✅ MET |
+| **Diagnostics Mode** | Text + JSON | Text only | ✅ MET |
 | **CI Regression Guardrails** | Operational | Operational | ✅ MET |
 
 #### Sprint 11 Final Achievements
@@ -84,8 +84,8 @@ Sprint 11 successfully achieved **100% Tier 1 parse rate coverage** (10/10 model
 - 5-stage pipeline timing: Parse, Semantic, Simplification, IR Gen, MCP Gen
 - Simplification pass breakdowns with transformation counts
 - Text table output with stage durations
-- JSON output for programmatic analysis
 - <2% performance overhead validated
+- Note: JSON output deferred to Sprint 12
 
 **Integration Testing (Day 9)** ✅
 - All features validated together (no conflicts)
