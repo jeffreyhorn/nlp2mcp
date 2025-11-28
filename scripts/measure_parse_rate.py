@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-Measure parse rate across GAMSLIB Tier 1 models.
+Measure parse rate and convert rate across GAMSLIB Tier 1 models.
 
-This script tests parsing success for the 10 GAMSLIB Tier 1 models
-and calculates the parse rate percentage. It's used for tracking
-Sprint 10 progress and validating parse rate improvements.
+This script tests parsing, IR generation, and MCP conversion success
+for the 10 GAMSLIB Tier 1 models. It calculates:
+- parse_rate: % of models that parse successfully
+- convert_rate: % of models that complete full parse → IR → MCP pipeline
 
 Usage:
     python scripts/measure_parse_rate.py [--verbose]
 
 Exit codes:
-    0: All models parsed successfully (100% parse rate)
-    1: Some models failed to parse (< 100% parse rate)
+    0: All models converted successfully (100% convert rate)
+    1: Some models failed to convert (< 100% convert rate)
 """
 
 import argparse
@@ -22,7 +23,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.ir.parser import parse_model_file
+from src.converter.converter import Converter  # noqa: E402
+from src.ir.parser import parse_model_file  # noqa: E402
 
 # GAMSLIB Tier 1 models (10 models)
 TIER1_MODELS = [
@@ -58,21 +60,52 @@ def test_parse(model_path: Path) -> bool:
         return False
 
 
-def measure_parse_rate(verbose: bool = False) -> tuple[int, int, float]:
+def test_convert(model_path: Path) -> tuple[bool, bool]:
     """
-    Measure parse rate across GAMSLIB Tier 1 models.
+    Test if a model completes the full parse → IR → MCP pipeline.
+
+    Args:
+        model_path: Path to the GAMS model file
+
+    Returns:
+        Tuple of (parse_success, convert_success)
+        - parse_success: True if parsing succeeded
+        - convert_success: True if full pipeline (parse + IR + MCP) succeeded
+    """
+    try:
+        # Step 1: Parse
+        ir_model = parse_model_file(str(model_path))
+        if ir_model is None:
+            return False, False
+
+        # Step 2: Convert to MCP
+        converter = Converter(ir_model)
+        result = converter.convert()
+
+        # Conversion succeeds if result.success is True
+        return True, result.success
+    except Exception:
+        # Parse or conversion failed
+        # Exceptions during parse indicate parse failure
+        # We return (False, False) to indicate both parse and convert failed
+        return False, False
+
+
+def measure_parse_rate(verbose: bool = False) -> tuple[int, int, float, int, float]:
+    """
+    Measure parse rate and convert rate across GAMSLIB Tier 1 models.
 
     Args:
         verbose: If True, print detailed results for each model
 
     Returns:
-        Tuple of (successful_count, total_count, percentage)
+        Tuple of (parse_count, total_count, parse_percentage, convert_count, convert_percentage)
     """
     results = []
 
     if verbose:
         print("Testing GAMSLIB Tier 1 models...")
-        print("=" * 60)
+        print("=" * 70)
 
     for model_name in TIER1_MODELS:
         model_path = GAMSLIB_DIR / model_name
@@ -80,41 +113,63 @@ def measure_parse_rate(verbose: bool = False) -> tuple[int, int, float]:
         if not model_path.exists():
             if verbose:
                 print(f"⚠️  {model_name:20s} - FILE NOT FOUND")
-            results.append((model_name, False))
+            results.append((model_name, False, False))
             continue
 
-        success = test_parse(model_path)
-        results.append((model_name, success))
+        parse_success, convert_success = test_convert(model_path)
+        results.append((model_name, parse_success, convert_success))
 
         if verbose:
-            status = "✅ PASS" if success else "❌ FAIL"
+            if convert_success:
+                status = "✅ CONVERT"
+            elif parse_success:
+                status = "⚠️  PARSE  "
+            else:
+                status = "❌ FAIL   "
             print(f"{status}  {model_name}")
 
     # Calculate statistics
-    successful = sum(1 for _, success in results if success)
+    parse_successful = sum(1 for _, parse_ok, _ in results if parse_ok)
+    convert_successful = sum(1 for _, _, convert_ok in results if convert_ok)
     total = len(results)
-    percentage = (successful / total * 100) if total > 0 else 0.0
+    parse_percentage = (parse_successful / total * 100) if total > 0 else 0.0
+    convert_percentage = (convert_successful / total * 100) if total > 0 else 0.0
 
     if verbose:
-        print("=" * 60)
-        print(f"Parse Rate: {successful}/{total} models ({percentage:.1f}%)")
+        print("=" * 70)
+        print(f"Parse Rate:   {parse_successful}/{total} models ({parse_percentage:.1f}%)")
+        print(f"Convert Rate: {convert_successful}/{total} models ({convert_percentage:.1f}%)")
         print()
 
         # Show failed models
-        failed_models = [name for name, success in results if not success]
-        if failed_models:
-            print("Failed models:")
-            for model_name in failed_models:
-                print(f"  - {model_name}")
-        else:
-            print("🎉 All models parsed successfully!")
+        parse_failed = [name for name, parse_ok, _ in results if not parse_ok]
+        convert_failed = [
+            name for name, parse_ok, convert_ok in results if parse_ok and not convert_ok
+        ]
 
-    return successful, total, percentage
+        if parse_failed:
+            print("Parse failures:")
+            for model_name in parse_failed:
+                print(f"  - {model_name}")
+            print()
+
+        if convert_failed:
+            print("Conversion failures (parsed but didn't convert):")
+            for model_name in convert_failed:
+                print(f"  - {model_name}")
+            print()
+
+        if not parse_failed and not convert_failed:
+            print("🎉 All models parsed and converted successfully!")
+
+    return parse_successful, total, parse_percentage, convert_successful, convert_percentage
 
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Measure parse rate across GAMSLIB Tier 1 models")
+    parser = argparse.ArgumentParser(
+        description="Measure parse rate and convert rate across GAMSLIB Tier 1 models"
+    )
     parser.add_argument(
         "--verbose",
         "-v",
@@ -124,10 +179,12 @@ def main():
 
     args = parser.parse_args()
 
-    successful, total, percentage = measure_parse_rate(verbose=args.verbose)
+    parse_count, total, parse_pct, convert_count, convert_pct = measure_parse_rate(
+        verbose=args.verbose
+    )
 
-    # Exit with code 0 if all models parsed, 1 otherwise
-    sys.exit(0 if successful == total else 1)
+    # Exit with code 0 if all models converted, 1 otherwise
+    sys.exit(0 if convert_count == total else 1)
 
 
 if __name__ == "__main__":

@@ -47,6 +47,7 @@ jobs:
 
     permissions:
       contents: read # Read repository
+      pull-requests: write # Post PR comments
 
     steps:
       - name: Checkout repository
@@ -82,13 +83,87 @@ jobs:
           make ingest-gamslib
 
       - name: Check for regression
+        id: regression-check
         run: |
           # Compare against baseline from main branch
+          # Currently enforced: Parse rate threshold (10% fail)
+          # Multi-metric arguments (parse/convert/perf) are accepted but not yet implemented
+          # Note: convert_rate tracking exists in measure_parse_rate.py but not integrated with ingest_gamslib.py
           python scripts/check_parse_rate_regression.py \
-            --current reports/gamslib_ingestion_sprint6.json \
+            --current reports/gamslib_ingestion_sprint8.json \
             --baseline origin/main \
-            --threshold 0.10 \
-            --verbose
+            --parse-warn 0.05 \
+            --parse-fail 0.10 \
+            --convert-warn 0.05 \
+            --convert-fail 0.10 \
+            --perf-warn 0.20 \
+            --perf-fail 0.50 \
+            --verbose | tee regression_output.txt
+
+      - name: Post regression results as PR comment
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let output = '';
+            try {
+              output = fs.readFileSync('regression_output.txt', 'utf8');
+            } catch (e) {
+              output = 'Regression check output not available';
+            }
+
+            const body = `## 📊 GAMSLib Regression Check Results
+
+            \`\`\`
+            ${output}
+            \`\`\`
+
+            <details>
+            <summary>About Regression Thresholds</summary>
+
+            **Currently Enforced:**
+            - **Parse Rate**: 10% failure threshold (hard block on merge)
+
+            **Planned (not yet implemented):**
+            - Parse Rate: 5% warning threshold
+            - Convert Rate: 5% warning, 10% failure
+            - Performance: 20% warning, 50% failure
+
+            Note: Multi-metric threshold arguments are accepted by the CI but only parse rate is currently enforced.
+            </details>
+            `;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('GAMSLib Regression Check Results')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
 
       - name: Upload ingestion report
         uses: actions/upload-artifact@v4

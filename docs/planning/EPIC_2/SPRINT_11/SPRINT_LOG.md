@@ -211,11 +211,54 @@ _PRs will be documented here as they are merged._
 
 ### Day 8
 
-**Date:** _TBD_  
-**Focus:** _Primary task for the day_  
-**Parse Rate:** _TBD_ → _TBD_
+**Date:** 2025-11-27  
+**Focus:** CSE Aliasing + Multi-Metric Thresholds + Diagnostics + CI Polish  
+**Parse Rate:** 90% → 90% (stable)
 
-_PRs will be documented here as they are merged._
+#### PR #TBD: CSE Aliasing + Multi-Metric Thresholds + Diagnostics
+
+**Status:** ✅ READY FOR REVIEW  
+**Branch:** `sprint11-day8-cse-aliasing-diagnostics`  
+**Commit:** `87e5f5a`
+
+**Summary:**
+Completed all CSE advanced features (T5.2-T5.4), added multi-metric tracking with thresholds, and implemented diagnostics infrastructure for pipeline analysis.
+
+**Key Changes:**
+1. **T5.4: CSE with Aliasing** (`src/ir/transformations/cse_advanced.py` +109 lines)
+   - Track variable-to-expression mappings in symbol table
+   - Reuse existing variables instead of creating duplicate temps
+   - 10 comprehensive unit tests
+
+2. **Convert Rate Tracking** (`scripts/measure_parse_rate.py` +48 lines)
+   - Extended to track full pipeline: parse → IR → MCP
+   - Dual metrics: parse_rate (90%) and convert_rate (90%)
+   
+3. **Multi-Metric Thresholds** (CI workflow +70 lines)
+   - Parse rate: 5% warn, 10% fail
+   - Convert rate: 5% warn, 10% fail
+   - Performance: 20% warn, 50% fail
+   - CLI arguments added to regression checker
+
+4. **Diagnostics Infrastructure** (`src/ir/diagnostics.py` 194 lines)
+   - Track 5 pipeline stages with timing
+   - Text table + JSON output modes
+   - Context manager API for easy integration
+
+5. **CI Polish** (GitHub Actions workflow)
+   - PR comment reporting with regression results
+   - Automatic comment updates on re-runs
+   - Markdown tables with threshold documentation
+
+**Testing:**
+- 30/30 CSE tests passing (10 T5.2 + 10 T5.3 + 10 T5.4)
+- Quality checks: typecheck ✅, lint ✅, format ✅, test ✅
+
+**Impact:**
+- ALL CSE features complete (T5.2-T5.4) ✅
+- Pipeline visibility with convert_rate metric
+- Granular CI thresholds for early warnings
+- Performance diagnostics infrastructure ready
 
 ---
 

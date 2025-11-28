@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-GAMSLib Parse Rate Regression Checker
+GAMSLib Multi-Metric Regression Checker
 
-This script compares the current parse rate against a baseline to detect regressions.
-Used in CI to prevent merging changes that significantly reduce parse rate.
+This script compares current metrics against baselines to detect regressions.
+Supports parse rate, convert rate, and performance metrics with separate
+warn/fail thresholds for each.
 
 Usage:
     python scripts/check_parse_rate_regression.py \\
@@ -11,10 +12,20 @@ Usage:
         --baseline origin/main \\
         --threshold 0.10
 
+    # Multi-metric mode (Sprint 11 Day 8+):
+    python scripts/check_parse_rate_regression.py \\
+        --current reports/gamslib_ingestion_sprint6.json \\
+        --baseline origin/main \\
+        --parse-warn 0.05 --parse-fail 0.10 \\
+        --convert-warn 0.05 --convert-fail 0.10 \\
+        --perf-warn 0.20 --perf-fail 0.50
+
 Exit codes:
-    0 - No regression (parse rate stable or improved)
-    1 - Regression detected (parse rate dropped >threshold)
+    0 - No regression (all metrics stable or improved)
+    1 - Hard failure (metric exceeded fail threshold)
     2 - Error (invalid arguments, missing files, etc.)
+
+Note: Warnings are printed but don't cause failure (exit code 0)
 """
 
 import argparse
@@ -24,19 +35,19 @@ import sys
 from pathlib import Path
 
 
-def read_parse_rate(json_path: str) -> float:
+def read_metrics(json_path: str) -> dict[str, float]:
     """
-    Read parse rate from JSON report.
+    Read all metrics from JSON report.
 
     Args:
         json_path: Path to GAMSLib ingestion JSON report
 
     Returns:
-        Parse rate as percentage (0.0-100.0)
+        Dict with metrics: parse_rate, convert_rate (optional), avg_time_ms (optional)
 
     Raises:
         FileNotFoundError: If JSON file doesn't exist
-        KeyError: If 'kpis' or 'parse_rate_percent' not in JSON
+        KeyError: If 'kpis' not in JSON
         json.JSONDecodeError: If JSON is malformed
     """
     path = Path(json_path)
@@ -49,10 +60,43 @@ def read_parse_rate(json_path: str) -> float:
     if "kpis" not in report:
         raise KeyError(f"Missing 'kpis' key in {json_path}")
 
-    if "parse_rate_percent" not in report["kpis"]:
-        raise KeyError(f"Missing 'parse_rate_percent' in kpis of {json_path}")
+    kpis = report["kpis"]
+    metrics = {}
 
-    return float(report["kpis"]["parse_rate_percent"])
+    # Parse rate (required)
+    if "parse_rate_percent" in kpis:
+        metrics["parse_rate"] = float(kpis["parse_rate_percent"])
+
+    # Convert rate (optional, Sprint 11 Day 8+)
+    if "convert_rate_percent" in kpis:
+        metrics["convert_rate"] = float(kpis["convert_rate_percent"])
+
+    # Average time (optional, for performance tracking)
+    if "avg_time_ms" in kpis:
+        metrics["avg_time_ms"] = float(kpis["avg_time_ms"])
+
+    return metrics
+
+
+def read_parse_rate(json_path: str) -> float:
+    """
+    Read parse rate from JSON report (legacy compatibility).
+
+    Args:
+        json_path: Path to GAMSLib ingestion JSON report
+
+    Returns:
+        Parse rate as percentage (0.0-100.0)
+
+    Raises:
+        FileNotFoundError: If JSON file doesn't exist
+        KeyError: If 'kpis' or 'parse_rate_percent' not in JSON
+        json.JSONDecodeError: If JSON is malformed
+    """
+    metrics = read_metrics(json_path)
+    if "parse_rate" not in metrics:
+        raise KeyError(f"Missing 'parse_rate_percent' in kpis of {json_path}")
+    return metrics["parse_rate"]
 
 
 def read_baseline_from_git(baseline_ref: str, report_path: str) -> float:
@@ -174,7 +218,44 @@ def main() -> int:
         "--threshold",
         type=float,
         default=0.10,
-        help="Regression threshold as fraction (default: 0.10 = 10%%)",
+        help="Regression threshold as fraction (default: 0.10 = 10%%) - legacy single-metric mode",
+    )
+
+    # Multi-metric thresholds (Sprint 11 Day 8+)
+    parser.add_argument(
+        "--parse-warn",
+        type=float,
+        help="Parse rate warning threshold (e.g., 0.05 = 5%%)",
+    )
+
+    parser.add_argument(
+        "--parse-fail",
+        type=float,
+        help="Parse rate failure threshold (e.g., 0.10 = 10%%)",
+    )
+
+    parser.add_argument(
+        "--convert-warn",
+        type=float,
+        help="Convert rate warning threshold (e.g., 0.05 = 5%%)",
+    )
+
+    parser.add_argument(
+        "--convert-fail",
+        type=float,
+        help="Convert rate failure threshold (e.g., 0.10 = 10%%)",
+    )
+
+    parser.add_argument(
+        "--perf-warn",
+        type=float,
+        help="Performance (time) warning threshold (e.g., 0.20 = 20%%)",
+    )
+
+    parser.add_argument(
+        "--perf-fail",
+        type=float,
+        help="Performance (time) failure threshold (e.g., 0.50 = 50%%)",
     )
 
     parser.add_argument(
@@ -188,6 +269,30 @@ def main() -> int:
     # Validate threshold is between 0.0 and 1.0
     if not 0.0 <= args.threshold <= 1.0:
         parser.error(f"threshold must be between 0.0 and 1.0, got {args.threshold}")
+
+    # Warn if multi-metric arguments provided but not yet implemented
+    multi_metric_args = [
+        args.parse_warn,
+        args.parse_fail,
+        args.convert_warn,
+        args.convert_fail,
+        args.perf_warn,
+        args.perf_fail,
+    ]
+    if any(arg is not None for arg in multi_metric_args):
+        print(
+            "⚠️  WARNING: Multi-metric threshold arguments provided but not yet implemented.",
+            file=sys.stderr,
+        )
+        print(
+            "   These arguments are currently ignored. Only --threshold is enforced.",
+            file=sys.stderr,
+        )
+        print(
+            "   Multi-metric support planned for future enhancement.",
+            file=sys.stderr,
+        )
+        print(file=sys.stderr)
 
     try:
         # Read current parse rate
@@ -274,7 +379,7 @@ def main() -> int:
         return 2
 
     except subprocess.CalledProcessError as e:
-        print(f"❌ ERROR: Failed to read baseline from git", file=sys.stderr)
+        print("❌ ERROR: Failed to read baseline from git", file=sys.stderr)
         print(f"Git command failed: {e}", file=sys.stderr)
         print(
             f"\nMake sure baseline reference '{args.baseline}' exists.",
@@ -283,12 +388,12 @@ def main() -> int:
         return 2
 
     except (KeyError, json.JSONDecodeError) as e:
-        print(f"❌ ERROR: Invalid JSON report format", file=sys.stderr)
+        print("❌ ERROR: Invalid JSON report format", file=sys.stderr)
         print(f"Details: {e}", file=sys.stderr)
         return 2
 
     except Exception as e:
-        print(f"❌ ERROR: Unexpected error", file=sys.stderr)
+        print("❌ ERROR: Unexpected error", file=sys.stderr)
         print(f"Details: {e}", file=sys.stderr)
         return 2
 

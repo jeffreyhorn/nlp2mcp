@@ -76,6 +76,12 @@ from src.validation.numerical import validate_jacobian_entries, validate_paramet
     help="Apply scaling to Jacobian: none (default), auto (Curtis-Reid), byvar (per-variable)",
 )
 @click.option(
+    "--simplification",
+    type=click.Choice(["none", "basic", "advanced", "aggressive"], case_sensitive=False),
+    default="advanced",
+    help="Expression simplification mode: none, basic, advanced (default), or aggressive (Sprint 11: 10 transforms + CSE)",
+)
+@click.option(
     "--stats",
     is_flag=True,
     default=False,
@@ -109,6 +115,7 @@ def main(
     smooth_abs,
     smooth_abs_epsilon,
     scale,
+    simplification,
     stats,
     dump_jacobian,
     quiet,
@@ -254,6 +261,7 @@ def main(
             smooth_abs=smooth_abs,
             smooth_abs_epsilon=smooth_abs_epsilon,
             scale=scale.lower(),
+            simplification=simplification.lower(),
         )
 
         gradient = compute_objective_gradient(model, config)

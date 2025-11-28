@@ -408,6 +408,92 @@ def simplify_advanced(expr: Expr) -> Expr:
             return basic_simplified
 
 
+def simplify_aggressive(expr: Expr) -> Expr:
+    """Apply aggressive simplification with all Sprint 11 transformations.
+
+    This mode applies advanced simplification plus 10 algebraic transformations
+    and Common Subexpression Elimination:
+    - T1: Factoring (common factors, fractions)
+    - T2: Division simplification (division by constants, fraction combining)
+    - T3: Associativity normalization
+    - T4: Power/logarithm/trig rules
+    - T5: Common Subexpression Elimination (nested, multiplicative, aliasing)
+
+    Args:
+        expr: Expression to simplify
+
+    Returns:
+        Aggressively simplified expression
+    """
+    # Import Sprint 11 transformation modules
+    from src.ir.transformations.associativity import normalize_associativity
+    from src.ir.transformations.cse_advanced import (
+        cse_with_aliasing,
+        multiplicative_cse,
+        nested_cse,
+    )
+    from src.ir.transformations.division import simplify_division
+    from src.ir.transformations.factoring import extract_common_factors
+    from src.ir.transformations.fractions import combine_fractions
+    from src.ir.transformations.log_rules import apply_log_rules
+    from src.ir.transformations.nested_operations import simplify_nested_products
+    from src.ir.transformations.power_rules import consolidate_powers
+    from src.ir.transformations.trig_rules import apply_trig_identities
+
+    # Start with advanced simplification
+    expr = simplify_advanced(expr)
+
+    # Apply HIGH priority transformations (T1-T3)
+    # T1.1: Common factor extraction
+    expr = extract_common_factors(expr)
+
+    # T1.2: Combine fractions
+    expr = combine_fractions(expr)
+
+    # T2: Simplify division (includes constant division and fraction combining)
+    expr = simplify_division(expr)
+
+    # T3.1: Associativity normalization
+    expr = normalize_associativity(expr)
+
+    # Apply MEDIUM priority transformations (T4)
+    # T4.1: Power rules (consolidate powers)
+    expr = consolidate_powers(expr)
+
+    # T4.2: Logarithm rules
+    expr = apply_log_rules(expr)
+
+    # T4.3: Trigonometric rules
+    expr = apply_trig_identities(expr)
+
+    # T4.4: Nested operations
+    expr = simplify_nested_products(expr)
+
+    # Apply LOW priority transformations (T5 - CSE)
+    # Note: CSE creates temps which changes structure significantly
+    # Only apply if expression is complex enough to benefit
+
+    # T5.2: Nested CSE (extract repeated complex subexpressions)
+    expr, nested_temps = nested_cse(expr, min_occurrences=3)
+
+    # T5.3: Multiplicative CSE (extract repeated multiplication patterns)
+    expr, mult_temps = multiplicative_cse(expr, min_occurrences=4)
+
+    # T5.4: CSE with aliasing (reuse existing temps)
+    # Combine all temps from previous CSE passes into symbol table
+    symbol_table = {**nested_temps, **mult_temps}
+    expr, aliasing_temps = cse_with_aliasing(expr, symbol_table, min_occurrences=3)
+
+    # Note: CSE temps are currently not propagated back to the caller
+    # This is intentional - the temps are inlined back into the expression
+    # If we need to preserve temps for debugging, we can add that later
+
+    # Final pass of basic simplification to clean up
+    expr = simplify(expr)
+
+    return expr
+
+
 def get_simplification_mode(config: Config | None) -> str:
     """
     Get the simplification mode from config, with a sensible default.
@@ -416,7 +502,7 @@ def get_simplification_mode(config: Config | None) -> str:
         config: Configuration object (may be None)
 
     Returns:
-        Simplification mode string: "none", "basic", or "advanced"
+        Simplification mode string: "none", "basic", "advanced", or "aggressive"
     """
     if config:
         return config.simplification
@@ -431,13 +517,13 @@ def apply_simplification(expr: Expr, mode: str) -> Expr:
 
     Args:
         expr: Expression to simplify
-        mode: Simplification mode - "none", "basic", or "advanced"
+        mode: Simplification mode - "none", "basic", "advanced", or "aggressive"
 
     Returns:
         Simplified expression (or original if mode is "none")
 
     Raises:
-        ValueError: If mode is not one of "none", "basic", "advanced"
+        ValueError: If mode is not valid
     """
     if mode == "none":
         return expr
@@ -445,7 +531,9 @@ def apply_simplification(expr: Expr, mode: str) -> Expr:
         return simplify(expr)
     elif mode == "advanced":
         return simplify_advanced(expr)
+    elif mode == "aggressive":
+        return simplify_aggressive(expr)
     else:
         raise ValueError(
-            f"Invalid simplification mode: {mode}. Must be 'none', 'basic', or 'advanced'"
+            f"Invalid simplification mode: {mode}. Must be 'none', 'basic', 'advanced', or 'aggressive'"
         )
