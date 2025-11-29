@@ -1,0 +1,146 @@
+[
+  {
+    "model_name": "bearing",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 68, column 21: Unexpected character: '*'\n  Table oil_constants(*,*) 'various oil grades'\n                      ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 68,
+    "file_size_lines": 125,
+    "blocker_category": "table_data"
+  },
+  {
+    "model_name": "chain",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 56, column 26: Unexpected character: '+'\n  energy =e= 0.5*h*sum(nh(i+1), x(i)*sqrt(1 + sqr(u(i))) + x(i+1)*sqrt(1 + sqr(u(i+1))));\n                           ^\n\nSuggestion: ",
+    "error_line": 56,
+    "file_size_lines": 51,
+    "blocker_category": "syntax_error"
+  },
+  {
+    "model_name": "chem",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 16, column 19: Unexpected character: '''\n  i 'atoms'     / H 'hydrogen', N 'nitrogen', O 'oxygen' /;\n                    ^\n\nSuggestion: This character is not valid in this c",
+    "error_line": 16,
+    "file_size_lines": 40,
+    "blocker_category": "syntax_error"
+  },
+  {
+    "model_name": "chenery",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 17, column 37: Unexpected character: '-'\n  i    'sectors'               / light-ind, food+agr, heavy-ind, services /\n                                      ^\n\nSuggestion: Thi",
+    "error_line": 17,
+    "file_size_lines": 172,
+    "blocker_category": "syntax_error"
+  },
+  {
+    "model_name": "elec",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 31, column 24: Unexpected character: '%'\n  $if     set n  $set np %n%\n                         ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 31,
+    "file_size_lines": 47,
+    "blocker_category": "preprocessor_directive"
+  },
+  {
+    "model_name": "fct",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 29, column 41: Undefined symbol 'pi' referenced [context: equation 'defaux1a' RHS]\n  defaux1a.. aux1a =e= abs(sin(4*mod(aux1,pi)));\n                                         ",
+    "error_line": 29,
+    "file_size_lines": 36,
+    "blocker_category": "loop_construct"
+  },
+  {
+    "model_name": "gasoil",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 48, column 4: Unexpected character: '1'\n  /  1  0.000,  2  0.025,  3  0.050,  4  0.075,  5  0.100,  6  0.125\n     ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 48,
+    "file_size_lines": 75,
+    "blocker_category": "syntax_error"
+  },
+  {
+    "model_name": "gastrans",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 25, column 1: Unexpected character: 'B'\n  Brugge,    Dudzele,   Gent,    Liege,     Loenhout\n  ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 25,
+    "file_size_lines": 180,
+    "blocker_category": "syntax_error"
+  },
+  {
+    "model_name": "haverly",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 32, column 16: Unexpected character: '*'\n  Table data_S(s,*) 'supply data summary'\n                 ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 32,
+    "file_size_lines": 69,
+    "blocker_category": "table_data"
+  },
+  {
+    "model_name": "house",
+    "parse_status": "SUCCESS",
+    "error_message": null,
+    "error_line": null,
+    "file_size_lines": 45,
+    "blocker_category": null
+  },
+  {
+    "model_name": "inscribedsquare",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 34, column 14: Unexpected character: 's'\n  $macro fx(t) sin\n               ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 34,
+    "file_size_lines": 82,
+    "blocker_category": "preprocessor_directive"
+  },
+  {
+    "model_name": "jbearing",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 39, column 13: Unexpected character: ','\n  Alias (nx,i), (ny,j);\n              ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 39,
+    "file_size_lines": 55,
+    "blocker_category": "alias_statement"
+  },
+  {
+    "model_name": "least",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 16, column 13: Unexpected character: '*'\n  Table dat(i,*) 'basic data'\n              ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 16,
+    "file_size_lines": 40,
+    "blocker_category": "table_data"
+  },
+  {
+    "model_name": "like",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 19, column 12: Unexpected character: '*'\n  Table data(*,i) 'systolic blood pressure data'\n             ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 19,
+    "file_size_lines": 49,
+    "blocker_category": "table_data"
+  },
+  {
+    "model_name": "polygon",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 45, column 30: Unexpected character: '+'\n  polygon_area =e= 0.5*sum(j(i + 1), r(i + 1)*r(i)*sin(theta(i + 1) - theta(i)));\n                               ^\n\nSuggestion: This",
+    "error_line": 45,
+    "file_size_lines": 43,
+    "blocker_category": "syntax_error"
+  },
+  {
+    "model_name": "pool",
+    "parse_status": "FAILED",
+    "error_message": "Included file not found: /Users/jeff/experiments/nlp2mcp/tests/fixtures/tier2_candidates/poolmod.inc\n  Referenced from: /Users/jeff/experiments/nlp2mcp/tests/fixtures/tier2_candidates/pool.gms",
+    "error_line": null,
+    "file_size_lines": 701,
+    "blocker_category": "file_io"
+  },
+  {
+    "model_name": "process",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 71, column 9: Unexpected character: '''\n  process 'process model with equalities'\n          ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 71,
+    "file_size_lines": 67,
+    "blocker_category": "syntax_error"
+  },
+  {
+    "model_name": "water",
+    "parse_status": "FAILED",
+    "error_message": "Error: Parse error at line 22, column 21: Unexpected character: '''\n  n      'nodes' / nw 'north west reservoir', e 'east reservoir'\n                      ^\n\nSuggestion: This character is not valid in",
+    "error_line": 22,
+    "file_size_lines": 88,
+    "blocker_category": "syntax_error"
+  }
+]

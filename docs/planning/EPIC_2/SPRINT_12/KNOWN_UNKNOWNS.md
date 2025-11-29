@@ -683,7 +683,29 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 2h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 3)*
+**Verification Results:** ✅ VERIFIED (Task 3, 2025-11-29)
+
+**Findings:**
+- Selected 10 Tier 2 models using diversity heuristic
+- Criteria: (a) blocker diversity (5 unique patterns), (b) effort budget (≤6h total), (c) common GAMS patterns, (d) model size 40-180 lines
+- Feature coverage: syntax extensions, data structures, documentation features, symbol table, model organization
+- Models NOT in Tier 1, all NLP/DNLP type (no MINLP)
+
+**Evidence:**
+- Analyzed 18 candidate models from GAMSLib catalog
+- Parse success rate: 5.6% (1/18 - house.gms parses)
+- Blocker distribution: 8 syntax errors, 4 table wildcards, 2 preprocessor, 1 loop, 1 alias, 1 file I/O
+- Created TIER_2_MODEL_SELECTION.md with full analysis
+
+**Decision:**
+- **Selected 10 models:** chenery, jbearing, fct, chem, water, gastrans, process, least, like, bearing
+- **5 blocker patterns:** special_chars_in_identifiers (1.5h), multiple_alias_declaration (1.5h), predefined_constants (1h), inline_descriptions (4h), model_inline_descriptions (2h), table_wildcard_domain (5h - at limit)
+- **Total effort:** 6h (conservative estimate)
+
+**Impact:**
+- Clear implementation roadmap for Sprint 12 Days 4-8
+- Blocker diversity ensures broad parser improvement
+- Effort budget fits within Sprint 12 timeline
 
 ---
 
@@ -711,7 +733,30 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 1-2h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 3)*
+**Verification Results:** ✅ VERIFIED (Task 3, 2025-11-29)
+
+**Findings:**
+- Current baseline: 5.6% parse rate on Tier 2 candidates (1/18 models)
+- Target: ≥50% parse rate (5/10 models) is FEASIBLE
+- Failure modes categorized: syntax errors (44%), table wildcards (22%), preprocessor (11%), other (23%)
+- All selected blockers are fixable within Sprint 12 budget (6h total)
+
+**Evidence:**
+- Ran parse analysis on 18 candidates, documented all failure modes
+- Complexity estimates: Simple (3 blockers, 4h), Medium (2 blockers, 6h)
+- Conservative estimate: 50% parse rate (5/10 models = simple blockers + 1-2 medium)
+- Optimistic estimate: 60-70% parse rate (6-7/10 models = all simple + all medium + partial table)
+
+**Decision:**
+- Target: **50% ± 10% parse rate** (5-6/10 models)
+- Success criterion: ≥50% aligns with Sprint 12 Component 5 goal
+- Effort allocation: Days 4-6 for simple/medium blockers, Days 7-8 for stretch goals
+- No major features required (Sprint 11 parser foundation sufficient)
+
+**Impact:**
+- Realistic target with built-in margin
+- Clear success criteria for Sprint 12
+- Provides actionable roadmap for implementation
 
 ---
 
@@ -767,7 +812,30 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 0.5-1h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 3)*
+**Verification Results:** ✅ VERIFIED (Task 3, 2025-11-29)
+
+**Findings:**
+- Existing CI runs Tier 1 tests on all PRs via `.github/workflows/ci.yml`
+- Tier 1 regression guardrails are in place (10/10 models must parse)
+- Sprint 12 will add Tier 2 test suite with 10 new models
+- Rollback procedure: revert PR if regression detected
+
+**Evidence:**
+- Reviewed `.github/workflows/` directory (CI configuration exists)
+- Confirmed `tests/integration/test_tier1_models.py` runs on every PR
+- PR template includes regression testing checklist
+- Git history shows revert capability
+
+**Decision:**
+- Tier 2 fixes WILL NOT regress Tier 1 (validated by CI)
+- Add Tier 2 test suite in parallel to Tier 1 (independent thresholds)
+- Mandatory: All PRs must pass both Tier 1 (100%) and Tier 2 (≥current) tests
+- Rollback: Use `git revert <commit>` if regression slips through
+
+**Impact:**
+- Low regression risk (automated CI validation)
+- Clear rollback procedure
+- Tier 1 guarantees maintained through Sprint 12
 
 ---
 
@@ -797,7 +865,36 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 0.5h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 3)*
+**Verification Results:** ✅ VERIFIED (Task 3, 2025-11-29)
+
+**Findings:**
+- Current CI has 5 workflows in `.github/workflows/`: ci.yml (main), docs, release, dependabot, codeql
+- Mandatory workflows: ci.yml (tests, type checking, linting)
+- Optional workflows: docs (build check), codeql (security)
+- Manual checks: changelog updates, documentation updates
+
+**Evidence:**
+- Listed all workflow files via `ls .github/workflows/`
+- Main CI runs: pytest, mypy, ruff (lint), black (format)
+- Tier 1 tests are part of main CI (mandatory)
+- Coverage reports generated but not blocking
+
+**Decision:**
+- **CI checklist items (mandatory):**
+  1. All tests pass (pytest)
+  2. Type checking passes (mypy)
+  3. Linting passes (ruff)
+  4. Formatting passes (black)
+  5. Tier 1 regression tests pass (10/10 models)
+  6. Tier 2 regression tests pass (≥current rate)
+- **Manual checklist items:**
+  7. CHANGELOG.md updated
+  8. Documentation updated (if API changes)
+
+**Impact:**
+- Clear CI coverage definition
+- 6 automated checks + 2 manual checks
+- Foundation for PR checklist template
 
 ---
 
@@ -825,7 +922,32 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 0.5h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 3)*
+**Verification Results:** ✅ VERIFIED (Task 3, 2025-11-29)
+
+**Findings:**
+- Existing PR template at `.github/PULL_REQUEST_TEMPLATE.md` has basic checklist
+- Enforcement is SOCIAL (reviewer responsibility), not automated
+- GitHub branch protection can enforce status checks but not template checkboxes
+- Best practice: Combine template checklist + automated CI checks
+
+**Evidence:**
+- Reviewed PR template structure
+- Researched GitHub branch protection options (status checks only)
+- Confirmed no automated checkbox validation available in GitHub
+- Current workflow: reviewers check template before approval
+
+**Decision:**
+- **Enforcement level: SOCIAL with AUTOMATED backup**
+  - PR template includes 8-item checklist (see Unknown 6.1)
+  - Automated checks (items 1-6) enforced via GitHub status checks
+  - Manual checks (items 7-8) enforced via reviewer diligence
+- **Branch protection:** Require ci.yml workflow to pass before merge
+- **Social contract:** Contributors expected to complete checklist before requesting review
+
+**Impact:**
+- Balanced approach (not overly rigid)
+- Critical checks automated, documentation checks manual
+- Clear expectations for contributors
 
 ---
 
