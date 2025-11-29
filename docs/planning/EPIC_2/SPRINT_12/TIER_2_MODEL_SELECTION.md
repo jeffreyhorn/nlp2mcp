@@ -8,33 +8,35 @@
 
 ## Executive Summary
 
-**Final Selection:** 10 models covering 5 distinct blocker patterns  
-**Total Estimated Effort:** 6h (conservative estimate)  
-**Expected Parse Rate:** 45-60% (5-6 models parsing after implementation)  
-**Blocker Diversity:** 5 patterns across syntax, data structures, and preprocessor features
+**Final Selection:** 10 models covering 6 distinct blocker patterns  
+**Total Estimated Effort:** 15h (4h high-priority, 6h medium-priority, 5h stretch goal)  
+**Expected Parse Rate:** 40-70% depending on implementation scope (4-7 models parsing)  
+**Blocker Diversity:** 6 patterns across syntax, data structures, and preprocessor features
 
 ### Key Metrics
 
 - **Candidates Evaluated:** 18 models
 - **Parse Success Rate (baseline):** 5.6% (1/18 models: house.gms)
 - **Selected Models:** 10
-- **Unique Blocker Patterns:** 5
-- **Estimated Implementation Effort:**  6h total
-  - Simple blockers (1-2h each): 3 blockers = 4h
-  - Medium blockers (2-4h each): 2 blockers = 6h (at limit)
+- **Unique Blocker Patterns:** 6
+- **Estimated Implementation Effort:** 15h total (6h high-priority, 9h stretch goals)
+  - High-priority blockers (Days 4-6): 3 simple blockers = 4h
+  - Stretch blockers (Days 7-8): 2 medium blockers = 6h  
+  - Deferred if time-constrained: 1 complex blocker = 5h
 
 ### Blocker Distribution
 
-| Blocker Pattern | Complexity | Effort | Model Count | Models |
-|-----------------|------------|--------|-------------|--------|
-| special_chars_in_identifiers | Simple | 1.5h | 1 | chenery |
-| multiple_alias_declaration | Simple | 1.5h | 1 | jbearing |
-| predefined_constants | Simple | 1h | 1 | fct |
-| inline_descriptions | Medium | 4h | 3 | chem, water, gastrans |
-| model_inline_descriptions | Medium | 2h | 1 | process |
-| table_wildcard_domain | Medium | 5h | 3 | least, like, bearing |
+| Blocker Pattern | Complexity | Effort | Model Count | Models | Priority |
+|-----------------|------------|--------|-------------|--------|----------|
+| special_chars_in_identifiers | Simple | 1.5h | 1 | chenery | High |
+| multiple_alias_declaration | Simple | 1.5h | 1 | jbearing | High |
+| predefined_constants | Simple | 1h | 1 | fct | High |
+| inline_descriptions | Medium | 4h | 3 | chem, water, gastrans | Medium |
+| model_inline_descriptions | Medium | 2h | 1 | process | Medium |
+| table_wildcard_domain | Complex | 5h | 3 | least, like, bearing | Low (stretch) |
 
-**Total:** 6h for 5 distinct blockers, 10 models selected
+**Total:** 15h for 6 distinct blockers, 10 models selected  
+**Note:** Effort is per blocker, not per model. Fixing `inline_descriptions` (4h) unlocks 3 models simultaneously.
 
 ---
 
@@ -42,7 +44,7 @@
 
 ### Primary Criteria
 1. **Blocker Diversity:** Select models representing different blocker patterns
-2. **Effort Budget:** Total ≤6h, no single blocker >5h
+2. **Effort Budget:** Prioritized implementation (4h core, 6h medium, 5h stretch), no single blocker >5h
 3. **Common Patterns:** Prioritize blockers marked "common" in GAMS code
 4. **Model Size:** Prefer small-medium models (40-180 lines)
 5. **Multiple Models per Blocker:** Validate fixes across 2-3 models when possible
@@ -56,10 +58,11 @@
 ### Selection Algorithm
 1. Group candidates by blocker pattern
 2. Estimate effort per blocker (not per model)
-3. Select simplest blockers first (1-2h range)
-4. Add medium blockers up to 6h total budget
-5. For each blocker, select 1-3 models to validate fix
-6. Ensure at least 5 distinct blocker patterns
+3. Select simplest blockers first (1-2h range) as high-priority
+4. Add medium blockers (3-4h) as medium-priority stretch goals
+5. Add one complex blocker (5h) as low-priority stretch goal
+6. For each blocker, select 1-3 models to validate fix
+7. Ensure at least 6 distinct blocker patterns for diversity
 
 ---
 

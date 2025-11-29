@@ -1,0 +1,5 @@
+Input=?
+ScrDir=225a
+SysDir=/Library/Frameworks/GAMS.framework/Versions/51/Resources
+ScriptNext=225a/gamsnext.sh
+AppendLog=1

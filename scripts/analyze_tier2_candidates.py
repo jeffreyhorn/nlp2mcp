@@ -52,8 +52,10 @@ def categorize_blocker(error_msg: str) -> str:
 
     msg_lower = error_msg.lower()
 
-    # Check for specific patterns
-    if "table" in msg_lower:
+    # Check for specific patterns (order matters - check undefined before loop)
+    if "undefined" in msg_lower or "referenced" in msg_lower:
+        return "undefined_symbol"
+    elif "table" in msg_lower:
         return "table_data"
     elif "loop" in msg_lower or "for" in msg_lower:
         return "loop_construct"
@@ -88,7 +90,7 @@ def analyze_model(file_path: Path) -> AnalysisResult:
 
     # Attempt parse
     try:
-        result = parse_model_file(str(file_path))
+        parse_model_file(str(file_path))
         return AnalysisResult(
             model_name=model_name,
             parse_status="SUCCESS",
