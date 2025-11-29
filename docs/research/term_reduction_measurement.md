@@ -122,12 +122,12 @@ Where:
 
 **Status:** ✅ RECOMMENDED for operation counting
 
-**Location:** `src/ir/simplification_pipeline.py` lines 145-187
+**Location:** `src/ir/simplification_pipeline.py` lines 156-208
 
 **Implementation:**
 ```python
 def _expression_size(self, expr: Expr) -> int:
-    """Count AST nodes (operations only, not leaf nodes)."""
+    """Count all AST nodes (each node, including leaf nodes, contributes size 1)."""
     # Leaf nodes: size 1
     if isinstance(expr, (Const, SymbolRef, VarRef, ...)):
         return 1
@@ -250,9 +250,9 @@ def simplify_aggressive(expr: Expr) -> Expr:
     expr = apply_log_rules(expr)
     expr = apply_trig_identities(expr)
     expr = simplify_nested_products(expr)
-    expr = nested_cse(expr)
-    expr = multiplicative_cse(expr)
-    expr = cse_with_aliasing(expr, symbol_table)
+    expr, nested_temps = nested_cse(expr)
+    expr, mult_temps = multiplicative_cse(expr)
+    expr, aliasing_temps = cse_with_aliasing(expr, symbol_table)
     
     # Final cleanup
     expr = simplify(expr)
@@ -443,8 +443,8 @@ def simplify_with_metrics(expr: Expr, model: str) -> tuple[Expr, SimplificationM
       "terms_after": 65,
       "terms_reduction_pct": 31.6,
       "execution_time_ms": 25.8
-    }
-    // ... (all 10 Tier 1 models)
+    },
+    "...": "additional 8 Tier 1 models omitted for brevity"
   },
   "aggregate": {
     "total_models": 10,
