@@ -815,7 +815,7 @@ For Unknown 3.3 (Backward Compatibility):
 - Verify text remains default
 - Note test coverage strategy
 
-UPDATE PREP_PLAN.MD:
+UPDATE PREP_PLAN.md:
 1. Change Task 5 status to ✅ COMPLETE
 2. Fill in Changes and Result sections
 3. Check off all deliverables and acceptance criteria
