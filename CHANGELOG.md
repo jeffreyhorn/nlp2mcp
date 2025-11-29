@@ -7,6 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Prep: Task 1 Complete - Known Unknowns List - 2025-11-29
+
+**Branch:** `planning/sprint12-prep`  
+**Status:** ✅ COMPLETE
+
+#### Task 1: Create Sprint 12 Known Unknowns List
+
+**Objective:** Proactively identify and document all critical unknowns, assumptions, and risks for Sprint 12 before sprint execution begins.
+
+**Deliverables:**
+- ✅ Created `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` with **27 unknowns** across **7 categories**
+- ✅ Categories: Term Reduction Benchmarking (7), Multi-Metric Thresholds (4), JSON Diagnostics (3), PATH Integration (4), Tier 2 Expansion (4), CI Workflow Testing (3), Process & Documentation (2)
+- ✅ Each unknown includes: Priority, Assumption, Research Questions, Verification Method, Risk Assessment, Estimated Research Time, Owner, Verification Results placeholder
+- ✅ **Task-to-Unknown Mapping Table** (Appendix A) showing which prep tasks (2-10) verify which unknowns
+- ✅ Updated PREP_PLAN.md Tasks 2-10 with "Unknowns Verified" metadata
+
+**Key Metrics:**
+- **Total Unknowns:** 27 (target: 22-30)
+- **HIGH Priority:** 11 unknowns (41%)
+- **Estimated Research Effort:** 21-28 hours (matches prep task total)
+- **Categories:** 7 (target: 5-7)
+
+**Unknown Distribution:**
+- **Category 1 - Term Reduction Benchmarking:** 7 unknowns (6-8h research)
+  - Baseline metric selection, collection approach, statistical thresholds, granular reporting, performance overhead, baseline drift, actionability
+- **Category 2 - Multi-Metric Thresholds:** 4 unknowns (4-5h research)
+  - Metric selection/prioritization, threshold methodology, CI integration architecture, backward compatibility
+- **Category 3 - JSON Diagnostic Output:** 3 unknowns (2-3h research)
+  - Schema design complexity, output format selection, backward compatibility
+- **Category 4 - PATH Solver Integration:** 4 unknowns (3-4h research)
+  - License compatibility, CI installation method, model availability, integration scope
+- **Category 5 - Tier 2 GAMSLib Expansion:** 4 unknowns (4-5h research)
+  - Model selection criteria, target parse rate feasibility, blocker documentation process, regression risk
+- **Category 6 - CI Workflow Testing Checklist:** 3 unknowns (1-2h research)
+  - Workflow coverage identification, checklist enforcement mechanism, multi-metric threshold integration
+- **Category 7 - Process & Documentation:** 2 unknowns (1-2h research)
+  - Sprint 12 scope management, dependency on external research
+
+**Task-to-Unknown Mapping:**
+- Task 2 (Term Reduction Measurement) → Unknowns 1.1, 1.3, 1.4, 1.7
+- Task 3 (Tier 2 Survey) → Unknowns 5.1, 5.2, 5.4, 6.1, 6.2
+- Task 4 (Multi-Metric Thresholds) → Unknowns 2.1, 2.2, 2.3, 2.4, 6.3
+- Task 5 (JSON Diagnostics) → Unknowns 3.1, 3.2, 3.3
+- Task 6 (PATH Licensing) → Unknowns 4.1, 4.2, 4.3, 4.4
+- Task 7 (Simplification Metrics Prototype) → Unknowns 1.5, 1.2
+- Task 8 (Tier 2 Blocker Template) → Unknown 5.3
+- Task 9 (Baseline Storage) → Unknowns 1.2, 1.6
+- Task 10 (Sprint Schedule) → Unknowns 7.1, 7.2
+
+**Changes:**
+- Added: `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` (27 unknowns with full metadata)
+- Updated: `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` (Task 1 marked COMPLETE, Tasks 2-10 updated with unknowns metadata)
+
+**Impact:**
+- ✅ Proactive risk identification prevents late-stage surprises (Sprint 11 lesson: JSON diagnostics scope clarification)
+- ✅ All prep tasks (2-10) now have explicit research questions to answer
+- ✅ Clear traceability from unknowns → verification tasks → sprint components
+- ✅ Template provided for adding new unknowns discovered during research
+
+---
+
 ### Sprint 11 Day 10: Final Validation + Retrospective + Documentation - 2025-11-28
 
 **Status:** ✅ COMPLETE

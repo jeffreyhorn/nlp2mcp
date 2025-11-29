@@ -49,7 +49,7 @@ This prep plan addresses critical unknowns and setup tasks to prevent blocking i
 
 ## Task 1: Create Sprint 12 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 2-3 hours  
 **Deadline:** Before Sprint 12 Day 1  
@@ -161,20 +161,24 @@ grep "**Priority:**" docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md | sort | u
 
 ### Deliverables
 
-- [ ] `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` with 18-25 unknowns
-- [ ] 5 categories: Measurement, Tier 2, Multi-Metric, PATH, JSON
-- [ ] Each unknown has: assumption, verification method, priority, research time estimate
-- [ ] Critical/High unknowns assigned to specific prep tasks
-- [ ] Summary table showing distribution by priority and category
+- [x] `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` with 27 unknowns (target: 18-25)
+- [x] 7 categories: Term Reduction (7), Multi-Metric (4), JSON (3), PATH (4), Tier 2 (4), CI Checklist (3), Process (2)
+- [x] Each unknown has: assumption, verification method, priority, research time estimate
+- [x] Critical/High unknowns assigned to specific prep tasks
+- [x] Summary table showing distribution by priority and category
+- [x] Task-to-Unknown mapping table in Appendix A
+- [x] PREP_PLAN.md Tasks 2-10 updated with "Unknowns Verified" metadata
 
 ### Acceptance Criteria
 
-- [ ] Document created with ≥18 unknowns across 5 categories
-- [ ] All Critical/High unknowns have verification plans
-- [ ] All unknowns reference Sprint 12 components (1-6)
-- [ ] Research time estimated for each unknown
-- [ ] Template for updates during sprint defined
-- [ ] Cross-references to DEFERRED_TO_SPRINT_12.md included
+- [x] Document created with 27 unknowns across 7 categories (target: ≥18 across 5)
+- [x] All Critical/High unknowns (11 total) have verification plans
+- [x] All unknowns reference Sprint 12 components (1-6)
+- [x] Research time estimated for each unknown (21-28h total)
+- [x] Template for adding new unknowns defined
+- [x] Cross-references to DEFERRED_TO_SPRINT_12.md included
+- [x] Task-to-Unknown mapping shows which prep tasks verify which unknowns
+- [x] PREP_PLAN.md updated with unknowns metadata for Tasks 2-10
 
 ---
 
@@ -185,7 +189,8 @@ grep "**Priority:**" docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md | sort | u
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Sprint 12 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 1 (Known Unknowns - resolve measurement unknowns)
+**Dependencies:** Task 1 (Known Unknowns - resolve measurement unknowns)  
+**Unknowns Verified:** 1.1, 1.3, 1.4, 1.7
 
 ### Objective
 
@@ -330,7 +335,8 @@ test -f docs/research/term_reduction_measurement.md && echo "✅ Research doc ex
 **Estimated Time:** 2-3 hours  
 **Deadline:** Before Sprint 12 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 1 (Known Unknowns - resolve Tier 2 selection unknowns)
+**Dependencies:** Task 1 (Known Unknowns - resolve Tier 2 selection unknowns)  
+**Unknowns Verified:** 5.1, 5.2, 5.4, 6.1, 6.2
 
 ### Objective
 
@@ -479,7 +485,8 @@ done
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 12 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 1 (Known Unknowns - resolve multi-metric integration unknowns)
+**Dependencies:** Task 1 (Known Unknowns - resolve multi-metric integration unknowns)  
+**Unknowns Verified:** 2.1, 2.2, 2.3, 2.4, 6.3
 
 ### Objective
 
@@ -637,7 +644,8 @@ grep "| Metric | Threshold" docs/research/multi_metric_thresholds.md
 **Estimated Time:** 1-2 hours  
 **Deadline:** Before Sprint 12 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 1 (Known Unknowns - resolve JSON schema unknowns)
+**Dependencies:** Task 1 (Known Unknowns - resolve JSON schema unknowns)  
+**Unknowns Verified:** 3.1, 3.2, 3.3
 
 ### Objective
 
@@ -810,7 +818,8 @@ grep "schema_version" docs/planning/EPIC_2/SPRINT_12/JSON_DIAGNOSTICS_SCHEMA.md
 **Estimated Time:** 1 hour  
 **Deadline:** Before Sprint 12 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 1 (Known Unknowns - resolve PATH licensing questions)
+**Dependencies:** Task 1 (Known Unknowns - resolve PATH licensing questions)  
+**Unknowns Verified:** 4.1, 4.2, 4.3, 4.4
 
 ### Objective
 
@@ -966,7 +975,8 @@ grep "ferris@cs.wisc.edu" docs/planning/EPIC_2/SPRINT_12/PATH_LICENSING_EMAIL.md
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Sprint 12 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 2 (Term Reduction Measurement - methodology defined)
+**Dependencies:** Task 2 (Term Reduction Measurement - methodology defined)  
+**Unknowns Verified:** 1.5, 1.2
 
 ### Objective
 
@@ -1123,7 +1133,8 @@ grep "Overhead:" docs/research/simplification_metrics_prototype.md
 **Estimated Time:** 1-2 hours  
 **Deadline:** Before Sprint 12 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 3 (Tier 2 Model Selection - models selected)
+**Dependencies:** Task 3 (Tier 2 Model Selection - models selected)  
+**Unknowns Verified:** 5.3
 
 ### Objective
 
@@ -1280,7 +1291,8 @@ grep "## Blocker:" docs/planning/EPIC_2/SPRINT_12/TIER_2_BLOCKER_TEMPLATE.md | w
 **Estimated Time:** 1-2 hours  
 **Deadline:** Before Sprint 12 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 2 (Term Reduction Measurement - baseline format defined)
+**Dependencies:** Task 2 (Term Reduction Measurement - baseline format defined)  
+**Unknowns Verified:** 1.2, 1.6
 
 ### Objective
 
@@ -1481,7 +1493,8 @@ test -x scripts/update_baselines.sh && echo "✅ update script executable"
 **Estimated Time:** 4-5 hours  
 **Deadline:** Before Sprint 12 Day 1  
 **Owner:** Sprint planning team  
-**Dependencies:** All tasks (1-9 must complete first)
+**Dependencies:** All tasks (1-9 must complete first)  
+**Unknowns Verified:** 7.1, 7.2
 
 ### Objective
 
