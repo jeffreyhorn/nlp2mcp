@@ -13,7 +13,7 @@ This document defines the measurement methodology for quantifying Sprint 11 tran
 
 **Key Decisions:**
 - **"Term" Definition:** Additive components in normalized form (e.g., `x + 2*y + z` = 3 terms)
-- **"Operation" Definition:** AST node count excluding leaf nodes (existing `_expression_size()` method)
+- **"Operation" Definition:** AST node count (existing `_expression_size()` method)
 - **Recommended Approach:** Use existing `SimplificationPipeline._expression_size()` for operation counting, implement custom term counting via AST traversal
 - **Instrumentation:** Wrap simplification calls in `simplify_aggressive()`, collect metrics before/after entire pipeline
 - **Baseline Format:** JSON with per-model metrics (ops_before, ops_after, terms_before, terms_after, transformations_applied)
@@ -60,7 +60,7 @@ This document defines the measurement methodology for quantifying Sprint 11 tran
 
 ### 1.2 "Operation" Definition
 
-**Definition:** An **operation** is an AST node representing a computation (unary, binary, function call, sum, etc.). Leaf nodes (constants, variable references) are NOT counted as operations.
+**Definition:** An **operation** is an AST node. For practical use, we use `_expression_size()`, which counts all nodes including leaves (constants, variable references, etc.) as operations.
 
 **Rationale:**
 - Aligns with existing `SimplificationPipeline._expression_size()` implementation
@@ -241,7 +241,7 @@ def simplify_aggressive(expr: Expr) -> Expr:
     # Start with advanced simplification
     expr = simplify_advanced(expr)
     
-    # Apply all 11 transformations
+    # Apply all 12 transformations
     expr = extract_common_factors(expr)
     expr = combine_fractions(expr)
     expr = simplify_division(expr)
@@ -279,6 +279,11 @@ def simplify_aggressive(expr: Expr) -> Expr:
 **Proposed Implementation:**
 
 ```python
+# Assumes imports from src.ad.ad_core and src.ir.simplification_pipeline
+# from src.ad.ad_core import simplify_aggressive
+# from src.ir.simplification_pipeline import SimplificationPipeline
+# from src.ir.metrics import count_terms
+
 @dataclass
 class SimplificationMetrics:
     """Extended metrics for benchmarking."""
@@ -369,7 +374,8 @@ def simplify_with_metrics(expr: Expr, model: str) -> tuple[Expr, SimplificationM
    │  ├─► simplify_nested_products() │
    │  ├─► nested_cse()               │
    │  ├─► multiplicative_cse()       │
-   │  └─► cse_with_aliasing()        │
+   │  ├─► cse_with_aliasing()        │
+   │  └─► simplify() (final cleanup) │
    └─────────────┬───────────────────┘
                  │
                  ▼
@@ -422,7 +428,8 @@ def simplify_with_metrics(expr: Expr, model: str) -> tuple[Expr, SimplificationM
       "simplify_nested_products",
       "nested_cse",
       "multiplicative_cse",
-      "cse_with_aliasing"
+      "cse_with_aliasing",
+      "simplify"
     ]
   },
   "models": {
@@ -484,14 +491,14 @@ def simplify_with_metrics(expr: Expr, model: str) -> tuple[Expr, SimplificationM
 **Directory:** `baselines/simplification/`
 
 **Files:**
-- `baseline_sprint11.json` - Sprint 11 baseline (with all 11 transformations)
+- `baseline_sprint11.json` - Sprint 11 baseline (with all 12 transformations)
 - `baseline_sprint11_disabled.json` - Sprint 11 baseline (transformations disabled, for comparison)
 - `README.md` - Format documentation
 
 **Git Tracking:** Use git (not git-lfs). Files are small (<10KB).
 
 **Versioning:** Create new baseline file for each sprint that adds transformations:
-- `baseline_sprint11.json` (11 transformations)
+- `baseline_sprint11.json` (12 transformations)
 - `baseline_sprint12.json` (if new transformations added)
 - etc.
 
@@ -797,7 +804,7 @@ This checklist will guide Sprint 12 implementation based on this research.
 **Decision:** Start with AGGREGATE reporting (all transformations on vs all off). Defer per-transformation ablation study to future sprints.
 
 **Approach:**
-- Collect: baseline_sprint11.json (all 11 transformations enabled)
+- Collect: baseline_sprint11.json (all 12 transformations enabled)
 - Optional: baseline_sprint11_disabled.json (all transformations disabled, for comparison)
 - Report: aggregate metrics (avg reduction, models meeting threshold)
 
