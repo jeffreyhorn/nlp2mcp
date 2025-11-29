@@ -36,15 +36,15 @@ This document defines the measurement methodology for quantifying Sprint 11 tran
 
 **Examples:**
 
-| Expression | Normalized Form | Term Count |
-|------------|----------------|------------|
-| `x + y` | `x + y` | 2 |
-| `2*x + 3*y` | `2*x + 3*y` | 2 |
-| `x*y + x*z` | `x*y + x*z` | 2 |
-| `x*(y + z)` | `x*y + x*z` (expanded) | 2 |
-| `(a+b)*(c+d)` | `a*c + a*d + b*c + b*d` | 4 |
-| `2*x*y + 2*x*z` | `2*x*y + 2*x*z` | 2 |
-| `2*x*(y+z)` | `2*x*y + 2*x*z` (expanded) | 2 |
+| Expression           | Term Count |
+|----------------------|------------|
+| `x + y`              | 2          |
+| `2*x + 3*y`          | 2          |
+| `x*y + x*z`          | 2          |
+| `x*(y + z)`          | 1          |
+| `(a+b)*(c+d)`        | 1          |
+| `2*x*y + 2*x*z`      | 2          |
+| `2*x*(y+z)`          | 1          |
 
 **Implementation Approach:**
 1. Do NOT expand expressions (preserve factored form)
@@ -72,14 +72,14 @@ This document defines the measurement methodology for quantifying Sprint 11 tran
 
 | Expression | AST Structure | Operation Count |
 |------------|---------------|-----------------|
-| `x` | `VarRef('x')` | 0 (leaf) |
-| `2` | `Const(2)` | 0 (leaf) |
-| `x + y` | `Binary('+', VarRef('x'), VarRef('y'))` | 1 |
-| `2*x + 3*y` | `Binary('+', Binary('*', ...), Binary('*', ...))` | 3 |
-| `sin(x)` | `Call('sin', [VarRef('x')])` | 1 |
-| `x^2 + y^2` | `Binary('+', Binary('**', ...), Binary('**', ...))` | 3 |
+| `x` | `VarRef('x')` | 1 |
+| `2` | `Const(2)` | 1 |
+| `x + y` | `Binary('+', VarRef('x'), VarRef('y'))` | 3 |
+| `2*x + 3*y` | `Binary('+', Binary('*', Const(2), VarRef('x')), Binary('*', Const(3), VarRef('y'))) ` | 7 |
+| `sin(x)` | `Call('sin', [VarRef('x')])` | 2 |
+| `x^2 + y^2` | `Binary('+', Binary('**', VarRef('x'), Const(2)), Binary('**', VarRef('y'), Const(2)))` | 7 |
 
-**Implementation:** Use existing `SimplificationPipeline._expression_size()` method (lines 145-187 in `src/ir/simplification_pipeline.py`).
+**Implementation:** Use existing `SimplificationPipeline._expression_size()` method (lines 156-208 in `src/ir/simplification_pipeline.py`).
 
 ### 1.3 Reduction Percentage
 
@@ -147,7 +147,7 @@ def _expression_size(self, expr: Expr) -> int:
 - ✅ Already implemented and tested
 - ✅ Used in Sprint 11 pipeline metrics (SimplificationMetrics)
 - ✅ Fast (simple recursion, O(n) where n = nodes)
-- ✅ Accurate (counts all non-leaf nodes)
+- ✅ Accurate (counts all nodes including leaves at size 1)
 - ✅ No dependencies
 
 **Cons:**
@@ -241,7 +241,7 @@ def simplify_aggressive(expr: Expr) -> Expr:
     # Start with advanced simplification
     expr = simplify_advanced(expr)
     
-    # Apply all 12 transformations
+    # Apply all 11 transformations
     expr = extract_common_factors(expr)
     expr = combine_fractions(expr)
     expr = simplify_division(expr)
@@ -428,8 +428,7 @@ def simplify_with_metrics(expr: Expr, model: str) -> tuple[Expr, SimplificationM
       "simplify_nested_products",
       "nested_cse",
       "multiplicative_cse",
-      "cse_with_aliasing",
-      "simplify"
+      "cse_with_aliasing"
     ]
   },
   "models": {
@@ -491,14 +490,14 @@ def simplify_with_metrics(expr: Expr, model: str) -> tuple[Expr, SimplificationM
 **Directory:** `baselines/simplification/`
 
 **Files:**
-- `baseline_sprint11.json` - Sprint 11 baseline (with all 12 transformations)
+- `baseline_sprint11.json` - Sprint 11 baseline (with all 11 transformations)
 - `baseline_sprint11_disabled.json` - Sprint 11 baseline (transformations disabled, for comparison)
 - `README.md` - Format documentation
 
 **Git Tracking:** Use git (not git-lfs). Files are small (<10KB).
 
 **Versioning:** Create new baseline file for each sprint that adds transformations:
-- `baseline_sprint11.json` (12 transformations)
+- `baseline_sprint11.json` (11 transformations)
 - `baseline_sprint12.json` (if new transformations added)
 - etc.
 
@@ -804,7 +803,7 @@ This checklist will guide Sprint 12 implementation based on this research.
 **Decision:** Start with AGGREGATE reporting (all transformations on vs all off). Defer per-transformation ablation study to future sprints.
 
 **Approach:**
-- Collect: baseline_sprint11.json (all 12 transformations enabled)
+- Collect: baseline_sprint11.json (all 11 transformations enabled)
 - Optional: baseline_sprint11_disabled.json (all transformations disabled, for comparison)
 - Report: aggregate metrics (avg reduction, models meeting threshold)
 
