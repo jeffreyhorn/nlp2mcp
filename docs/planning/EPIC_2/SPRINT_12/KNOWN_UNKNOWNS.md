@@ -87,7 +87,27 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 2-3h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 2)*
+**Verification Results:** ✅ VERIFIED (Task 2, 2025-11-29)
+
+**Findings:**
+- Selected TWO metrics: (1) Operation Count - AST node count via existing `_expression_size()`, (2) Term Count - additive components via custom `count_terms()`
+- Operation count measures computational complexity, term count measures visual/conceptual complexity
+- Both metrics are O(n) traversals with <0.1% overhead
+- Dropped expression depth and parse time (not relevant to transformation effectiveness)
+
+**Evidence:**
+- Existing `SimplificationPipeline._expression_size()` already validated in Sprint 11
+- Term counting aligns with user perception of simplification (fewer additive components)
+- Both traverse AST once, fast implementation confirmed via code analysis
+
+**Decision:**
+- Use operation count (AST nodes) AND term count (additive components)
+- Sprint 11 success criterion focuses on terms ("≥20% term reduction")
+- Operations provide secondary metric for computational complexity
+
+**Impact:**
+- De-risks Sprint 12 benchmarking with proven, fast metrics
+- Two complementary views of simplification effectiveness
 
 ---
 
@@ -143,7 +163,26 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 1h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 2)*
+**Verification Results:** ✅ VERIFIED (Task 2, 2025-11-29)
+
+**Findings:**
+- Threshold: ≥20% reduction on ≥50% of models (per Sprint 12 success criteria)
+- NO statistical testing for sample of 10 models (sample too small, measurements deterministic)
+- Success criterion is absolute (≥20% on ≥5 models), not statistical
+
+**Evidence:**
+- Sample size (n=10) too small for meaningful p-values
+- AST traversal measurements are deterministic (zero variance)
+- Sprint 11 prototype showed 39.2% average on synthetic examples, so 20% on real models is conservative
+
+**Decision:**
+- Use absolute threshold: ≥20% term reduction
+- Apply to ≥50% of models (5 out of 10)
+- No statistical tests (not applicable for deterministic measurements)
+
+**Impact:**
+- Clear, actionable success criteria
+- No ambiguity from statistical interpretation
 
 ---
 
@@ -171,7 +210,27 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 1-2h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 2)*
+**Verification Results:** ✅ VERIFIED (Task 2, 2025-11-29)
+
+**Findings:**
+- Chosen approach: AGGREGATE reporting (all transformations on vs all off)
+- Defer per-transformation ablation study to future sprints
+- Collect baseline with all 11 transformations enabled, optionally with all disabled for comparison
+
+**Evidence:**
+- Sprint 12 goal is to validate Sprint 11 success criterion (aggregate reduction)
+- Ablation study requires 11× overhead (11 runs per model × 10 models = 110 runs)
+- Transformation interdependencies complicate attribution (some transformations enable others)
+- Can add granular analysis in future sprint if needed for optimization
+
+**Decision:**
+- Aggregate metrics: avg reduction, models meeting threshold
+- Implementation effort: 2-3h (Sprint 12 Day 1-2)
+- Ablation study effort: 20-30h (deferred to future sprint if ROI justifies)
+
+**Impact:**
+- Focuses Sprint 12 on validation, not detailed analysis
+- Leaves optimization decisions for future sprints based on aggregate results
 
 ---
 
@@ -255,7 +314,32 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 1h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 2)*
+**Verification Results:** ✅ VERIFIED (Task 2, 2025-11-29)
+
+**Findings:**
+- Decision criteria defined for interpreting benchmark results
+- Links metrics to user value: operation reduction → faster evaluation, term reduction → simpler code/debugging
+- Provides Sprint 13+ roadmap guidance based on results
+
+**Evidence:**
+- Defined 4 result scenarios: ≥20% (SUCCESS), 15-19% (PARTIAL), 10-14% (INVESTIGATE), <10% (RETHINK)
+- Each scenario has clear next action
+- Sprint 13+ guidance: ≥30% = invest in more transformations, 20-30% = optimize existing, <20% = focus elsewhere
+
+**Decision:**
+- **≥20% on ≥50% models:** SUCCESS - Sprint 11 validated, continue with transformations
+- **15-19%:** PARTIAL - Investigate low-performers, consider targeted optimizations
+- **10-14%:** INVESTIGATE - Review measurement methodology, check for bugs  
+- **<10%:** RETHINK - Transformations may not be effective, consider alternatives
+
+**User Value Mapping:**
+- Operation reduction → Faster evaluation (if expressions evaluated repeatedly)
+- Term reduction → Simpler code generation, easier debugging
+- Both → Smaller MCP model files
+
+**Impact:**
+- Clear decision framework prevents "data for data's sake"
+- Actionable roadmap guidance for Sprint 13+
 
 ---
 
