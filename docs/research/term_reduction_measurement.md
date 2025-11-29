@@ -237,7 +237,13 @@ def count_terms(expr: Expr) -> int:
 **Aggressive Pipeline:**
 ```python
 def simplify_aggressive(expr: Expr) -> Expr:
-    """Apply all transformations in sequence."""
+    """Apply all transformations in sequence.
+    
+    Note: CSE function parameters (min_occurrences, etc.) omitted for brevity.
+    Actual implementation includes: nested_cse(expr, min_occurrences=3),
+    multiplicative_cse(expr, min_occurrences=4), and 
+    cse_with_aliasing(expr, symbol_table, min_occurrences=3).
+    """
     # Start with advanced simplification
     expr = simplify_advanced(expr)
     
@@ -297,11 +303,16 @@ class SimplificationMetrics:
     terms_reduction_pct: float
 
 def simplify_with_metrics(expr: Expr, model: str) -> tuple[Expr, SimplificationMetrics]:
-    """Simplify expression and collect benchmarking metrics."""
+    """Simplify expression and collect benchmarking metrics.
+    
+    Note: This is conceptual pseudocode. _expression_size() is an instance method
+    of SimplificationPipeline, so actual implementation would use pipeline._expression_size()
+    or create a module-level wrapper function.
+    """
     import time
     
     # Measure before
-    ops_before = _expression_size(expr)  # Existing method
+    ops_before = _expression_size(expr)  # Existing method (conceptual)
     terms_before = count_terms(expr)      # New method
     
     # Apply simplification
