@@ -135,7 +135,41 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 1-2h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 9)*
+**Verification Results:** ✅ PARTIALLY VERIFIED (Task 7, 2025-11-30)
+
+**Findings:**
+- **Can disable transformations:** Create SimplificationPipeline with no passes registered
+- **Parser still works:** Prototype confirmed expressions process correctly with zero transformations
+- **Baseline approach:** Create empty pipeline for "before" metrics, full pipeline for "after"
+- **Storage format:** JSON (per Task 2 specification)
+
+**Evidence:**
+- Prototype first run had SimplificationPipeline with no transformation passes
+- All expressions showed 0% reduction (expected behavior for baseline)
+- No errors or crashes when running with empty pipeline
+- Metrics collection worked correctly in both modes
+
+**Implementation:**
+```python
+# Baseline mode: no transformations
+baseline_pipeline = SimplificationPipeline()
+# No pipeline.add_pass() calls - empty pipeline
+
+# Enhanced mode: all transformations  
+enhanced_pipeline = SimplificationPipeline()
+for transform in all_transformations:
+    enhanced_pipeline.add_pass(transform.fn, transform.priority, transform.name)
+```
+
+**Remaining Work (Task 9):**
+- Set up baseline storage infrastructure in baselines/simplification/
+- Define complete JSON schema with per-model and aggregate metrics
+- Document baseline update procedures
+
+**Impact:**
+- Approach validated as viable for Sprint 12
+- No parser modifications needed (just create empty pipeline)
+- Baseline collection will be straightforward
 
 ---
 
@@ -258,7 +292,31 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 1h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 7)*
+**Verification Results:** ✅ VERIFIED (Task 7, 2025-11-30)
+
+**Findings:**
+- **Actual overhead:** 7.53% (exceeds <5% assumption but acceptable)
+- **Measurement:** Baseline (_expression_size): 2.82ms, With count_terms: 3.03ms (100 runs)
+- **Absolute overhead:** 2.1 microseconds per expression
+- **Instrumentation location:** Wrap SimplificationPipeline.apply() calls
+- **Toggling:** Opt-in benchmarking mode (not always-on)
+
+**Evidence:**
+- Prototype measured overhead of adding count_terms() calls to existing _expression_size() instrumentation
+- Test expression: 2*x + 3*y + 4*z + 5*w (moderately complex, 4 additive components)
+- 100 iterations for statistical significance
+- Overhead isolated to just count_terms() function, not wrapper overhead
+
+**Decision:**
+- **Accept 7.53% overhead** for benchmarking mode (opt-in, not production)
+- **Rationale:** 2.1μs per expression negligible in practice (100 equations = 210μs total)
+- **Mitigation if needed:** Combined traversal (count ops and terms in single pass)
+- **Production mode:** No instrumentation (zero overhead)
+
+**Impact:**
+- Benchmarking mode will add ~7.5% overhead during metrics collection
+- Acceptable for development/analysis tools (Sprint 12 Days 1-3)
+- Does not affect runtime performance (benchmarking is opt-in)
 
 ---
 
