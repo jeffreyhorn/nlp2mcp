@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Prep: Task 8 Complete - Tier 2 Blocker Analysis Template - 2025-11-30
+
+**Branch:** `planning/sprint12-task8`  
+**Status:** ✅ COMPLETE
+
+#### Task 8: Create Tier 2 Blocker Analysis Template
+
+**Objective:** Create systematic template for analyzing Tier 2 parse failures to guide Sprint 12 Days 4-6 implementation priority.
+
+**Template Components:**
+- **Classification schema:** Frequency (1/2-3/4-5/6+ models), Complexity (Simple/Medium/Hard/Very Hard), Category (Syntax/Control Flow/Data Structure/Directive/Semantic/Other), Criticality (Must-have/Nice-to-have/Stretch)
+- **Priority formula:** `Priority Score = (Frequency Score) + (5 - Complexity Score)`
+  - Optimizes for high-frequency, low-complexity blockers
+  - Priority bands: ≥40 HIGH, 20-39 MEDIUM, <20 LOW
+- **Blocker template:** Error message, example syntax, GAMS manual reference, complexity estimate with breakdown, parser changes checklist, implementation notes
+- **Prioritization algorithm:** Cumulative sum to 6h budget, sort by priority descending then complexity ascending
+
+**Example Blocker Analyses:**
+1. **special_chars_in_identifiers:** Priority 14 (Simple, 1 model - chenery.gms)
+   - Effort: 1.5h - Lexer change to allow hyphens/plus in identifiers
+2. **multiple_alias_declaration:** Priority 14 (Simple, 1 model - jbearing.gms)
+   - Effort: 1.5h - Grammar extension for comma-separated alias pairs
+3. **inline_descriptions:** Priority 27 (Medium, 3 models - chem.gms, water.gms, gastrans.gms)
+   - Effort: 4h - Grammar + AST changes for optional description strings
+   - **Highest priority:** Unlocks 3 models with single fix
+
+**Prioritization Summary:**
+Based on 6 blockers from TIER_2_MODEL_SELECTION.md, recommended implementation order:
+1. inline_descriptions (4h) - Priority 27, unlocks 3 models
+2. multiple_alias_declaration (1.5h) - Priority 14, simple syntax fix
+3. predefined_constants (0.5h partial) - If time remains in 6h budget
+
+**Expected Parse Rate:** 40-60% (4-6 models unlocked with 6h effort)
+
+**Unknowns Verified:**
+- ✅ 5.3 Blocker Documentation Process:
+  - Format: Markdown in `docs/planning/EPIC_2/SPRINT_12/TIER_2_BLOCKER_TEMPLATE.md`
+  - Storage: Co-located with sprint planning (not GitHub issues for faster iteration)
+  - Triage: Priority score formula ensures high-ROI blockers implemented first
+  - Information captured: Classification, error messages, GAMS refs, effort breakdown, parser changes checklist
+
+**Changes:**
+- Added: `docs/planning/EPIC_2/SPRINT_12/TIER_2_BLOCKER_TEMPLATE.md` - Comprehensive blocker analysis template
+  - Classification schema documentation
+  - Priority formula with rationale and examples
+  - Markdown template structure for blocker documentation
+  - Prioritization algorithm (cumulative budget selection)
+  - 3 complete example analyses with all fields filled
+  - Prioritization summary table
+  - Usage instructions for Sprint 12 Days 4-6
+- Updated: `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` - Verified unknown 5.3
+- Updated: `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` - Task 8 marked complete
+
+**Key Findings:**
+- Frequency-driven prioritization maximizes parse rate gain per hour spent
+- Inline descriptions blocker affects 3 models, making it highest priority despite medium complexity
+- 6h budget (Days 4-6) realistic for 4-6 model unlocks (40-60% parse rate)
+- Template validated with 3 real blocker examples from Task 3 model selection
+
+**Impact on Sprint 12:**
+- Component 5 (Tier 2 Expansion) ready to execute with systematic blocker analysis framework
+- Days 4-5: Rapid blocker categorization using template (1-2h)
+- Days 5-6: Prioritized implementation fitting 6h budget
+- Expected outcome: ≥50% parse rate (5+ models) via frequency-driven prioritization
+
+---
+
 ### Sprint 12 Prep: Task 7 Complete - Simplification Metrics Prototype - 2025-11-30
 
 **Branch:** `planning/sprint12-task7`  

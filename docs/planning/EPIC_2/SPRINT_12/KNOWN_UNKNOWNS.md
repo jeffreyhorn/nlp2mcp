@@ -1146,7 +1146,39 @@ gams2mcp model.gms --diagnostics --format json
 
 **Estimated Research Time:** 1h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 8)*
+**Verification Results:** ✅ VERIFIED (Task 8, 2025-11-30)
+
+**Findings:**
+
+**Template Structure:**
+- **Format:** Markdown files in `docs/planning/EPIC_2/SPRINT_12/TIER_2_BLOCKER_TEMPLATE.md`
+- **Classification Schema:** Frequency (1/2-3/4-5/6+ models), Complexity (Simple/Medium/Hard/Very Hard), Category (Syntax/Control Flow/Data Structure/Directive/Semantic/Other), Criticality (Must-have/Nice-to-have/Stretch)
+- **Priority Formula:** `Priority Score = (Frequency Score) + (5 - Complexity Score)` 
+  - Optimizes for high-frequency, low-complexity blockers
+  - Priority bands: ≥40 HIGH, 20-39 MEDIUM, <20 LOW
+
+**Information Captured Per Blocker:**
+- Classification (frequency, complexity, category, criticality, priority score)
+- Error message and example syntax from failing models
+- GAMS manual reference (section, page, link)
+- Complexity estimate with rationale and breakdown
+- Parser changes needed (lexer, grammar, AST, semantic, tests, docs)
+- Implementation notes and related patterns
+
+**Storage Location:**
+- **Template:** `docs/planning/EPIC_2/SPRINT_12/TIER_2_BLOCKER_TEMPLATE.md` (systematic analysis framework)
+- **Not GitHub issues:** Inline markdown provides faster iteration, co-located with planning docs
+- **Not separate files:** Single document allows prioritization comparison and cumulative budget tracking
+
+**Triage Approach:**
+- **Prioritize by score:** Frequency × complexity formula ensures high-ROI blockers implemented first
+- **Budget-bounded:** Cumulative sum algorithm stops at 6h budget (Sprint 12 Days 4-6)
+- **Conservative:** Document all blockers but only implement those fitting budget
+
+**Decision:**
+- **Markdown template approach** balances documentation thoroughness with implementation focus
+- **Co-location with sprint planning** (vs separate issue tracker) reduces context switching
+- **Example analyses** validate template usability (3 examples provided: simple, simple, medium complexity)
 
 ---
 
