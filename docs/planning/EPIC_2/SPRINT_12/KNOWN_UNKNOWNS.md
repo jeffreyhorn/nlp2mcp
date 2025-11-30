@@ -344,7 +344,43 @@ for transform in all_transformations:
 
 **Estimated Research Time:** 0.5h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 9)*
+**Verification Results:** ✅ VERIFIED (Task 9, 2025-11-30)
+
+**Findings:**
+- **Baseline versioning:** Sprint-based naming (baseline_sprint11.json, baseline_sprint12.json)
+- **Baseline invalidation triggers:** (1) Transformation changes, (2) IR structure changes, (3) Baseline improvement >10%
+- **Version tracking:** Git SHA + timestamp + sprint number in baseline metadata
+- **Recollection criteria:** Document in baselines/*/README.md and docs/infrastructure/BASELINES.md
+- **CI staleness detection:** Not automated (manual review recommended quarterly)
+
+**Evidence:**
+- Created baseline storage infrastructure in baselines/simplification/ and baselines/multi_metric/
+- Documented versioning policy in both README.md files (SemVer for schema, sprint-based for baselines)
+- Defined invalidation triggers in docs/infrastructure/BASELINES.md
+- Git tracking ensures all baseline changes are reviewed in PRs
+
+**Decision:**
+- **Baseline lifecycle:** Create new baseline when invalidation trigger occurs
+- **Drift detection:** Manual review recommended (not automated in Sprint 12)
+- **Validity period:** 2-3 sprints typical, but depends on transformation changes
+- **Future enhancement:** Add CI check to warn when baseline >6 months old (deferred to Sprint 13+)
+
+**Invalidation Triggers (from infrastructure docs):**
+1. **Transformation changes:** Adding/modifying/removing transformation passes
+2. **IR changes:** Modifications to IR structure affecting metrics
+3. **Baseline improvement:** >10% improvement suggests recalibration needed
+4. **Major refactoring:** Simplification engine or parser architecture changes
+
+**Versioning Scheme:**
+- **Schema version:** SemVer (1.0.0) in schema_version field
+- **Baseline version:** Sprint number in filename (sprint11, sprint12, etc.)
+- **Metadata tracking:** git_commit SHA, created_at timestamp, sprint identifier
+
+**Impact:**
+- Clear baseline lifecycle documented
+- Invalidation triggers prevent stale baselines
+- Git-based versioning provides audit trail
+- Quarterly review cadence balances freshness vs. overhead
 
 ---
 
