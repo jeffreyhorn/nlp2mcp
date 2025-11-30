@@ -1,0 +1,10 @@
+{
+  "num_runs": 100,
+  "baseline_ms": 2.82,
+  "with_count_terms_ms": 3.03,
+  "overhead_ms": 0.21,
+  "overhead_pct": 7.53,
+  "avg_baseline_per_run_us": 28.2,
+  "avg_with_terms_per_run_us": 30.32,
+  "note": "Overhead measures cost of adding count_terms() calls to existing _expression_size() instrumentation"
+}

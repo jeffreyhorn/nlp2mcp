@@ -1,0 +1,35 @@
+[
+  {
+    "model": "rbrock.eq1",
+    "ops_before": 3,
+    "ops_after": 3,
+    "terms_before": 2,
+    "terms_after": 2,
+    "execution_time_ms": 0.016429927200078964,
+    "ops_reduction_pct": 0.0,
+    "terms_reduction_pct": 0.0,
+    "iterations": 1
+  },
+  {
+    "model": "rbrock.eq2",
+    "ops_before": 3,
+    "ops_after": 3,
+    "terms_before": 1,
+    "terms_after": 1,
+    "execution_time_ms": 0.012126052752137184,
+    "ops_reduction_pct": 0.0,
+    "terms_reduction_pct": 0.0,
+    "iterations": 1
+  },
+  {
+    "model": "rbrock.eq3",
+    "ops_before": 7,
+    "ops_after": 7,
+    "terms_before": 2,
+    "terms_after": 2,
+    "execution_time_ms": 0.016386155039072037,
+    "ops_reduction_pct": 0.0,
+    "terms_reduction_pct": 0.0,
+    "iterations": 1
+  }
+]

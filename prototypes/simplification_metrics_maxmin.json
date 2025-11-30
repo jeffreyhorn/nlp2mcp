@@ -1,0 +1,24 @@
+[
+  {
+    "model": "maxmin.eq1",
+    "ops_before": 15,
+    "ops_after": 15,
+    "terms_before": 2,
+    "terms_after": 2,
+    "execution_time_ms": 0.03183004446327686,
+    "ops_reduction_pct": 0.0,
+    "terms_reduction_pct": 0.0,
+    "iterations": 1
+  },
+  {
+    "model": "maxmin.eq2",
+    "ops_before": 7,
+    "ops_after": 1,
+    "terms_before": 1,
+    "terms_after": 1,
+    "execution_time_ms": 0.017520040273666382,
+    "ops_reduction_pct": 85.71,
+    "terms_reduction_pct": 0.0,
+    "iterations": 2
+  }
+]
