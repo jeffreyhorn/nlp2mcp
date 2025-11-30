@@ -784,7 +784,7 @@ gams2mcp model.gms --diagnostics --format json
 - **Academic license:** Free, unrestricted size, annual renewal
 - **CI usage:** UNCLEAR - not explicitly documented in license terms
 - **Email template prepared** to request written clarification from ferris@cs.wisc.edu
-- **Free version:** 300 var / 2000 nonzero limit (sufficient for smoke tests)
+- **Free version:** 300 var / 2,000 nonzero limit (sufficient for smoke tests)
 
 **Evidence:**
 - Reviewed PATH website (https://pages.cs.wisc.edu/~ferris/path.html)

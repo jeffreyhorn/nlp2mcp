@@ -900,56 +900,53 @@ Sprint 11 implemented text table diagnostics. Sprint 12 adds JSON output for aut
 ### Changes
 
 **Files Created:**
-- `docs/planning/EPIC_2/SPRINT_12/PATH_LICENSING_EMAIL.md` - Professional email template with:
-  - Verified contact information (ferris@cs.wisc.edu)
-  - 3 specific licensing questions (cloud CI, frequency, public repos)
-  - 4 follow-up scenarios with effort estimates
-  - Timeline expectations (1-2 week response)
-  - Quick-copy template for easy sending
+- `docs/planning/EPIC_2/SPRINT_12/JSON_DIAGNOSTICS_SCHEMA.md` - Comprehensive JSON schema documentation (855 lines)
+  - Complete field descriptions and data types
+  - Per-stage details structure with examples
+  - Summary object specification
+  - CI integration patterns (artifact storage, jq queries)
+  - Implementation checklist for Sprint 12 Days 7-8
+  - Performance analysis (0.2-0.5ms overhead, ~3-4KB per report)
+- `docs/planning/EPIC_2/SPRINT_12/examples/success.json` - Success scenario (all stages pass, 45.23ms)
+- `docs/planning/EPIC_2/SPRINT_12/examples/partial.json` - Partial success with simplification warnings (78.91ms)
+- `docs/planning/EPIC_2/SPRINT_12/examples/failure.json` - Parse failure with early termination (8.45ms)
 
 **Files Modified:**
-- `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` - Verified 4 PATH unknowns:
-  - 4.1: License Compatibility - Email template prepared
-  - 4.2: CI Installation - GAMS demo method documented  
-  - 4.3: PATH Model Availability - 4-test suite designed
-  - 4.4: Integration Scope - Conditional Day 7 implementation
-
-**Key Deliverables:**
-- Email subject: "PATH Solver Academic License - GitHub Actions CI Usage Clarification"
-- 3 questions: (1) Cloud CI permitted? (2) Frequency restrictions? (3) Public repos allowed?
-- 4 scenarios: Approved (3-4h), Denied (1h), No response (defer), Self-hosted (2-3h)
-- Decision point: Sprint 12 Day 7
+- `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` - Verified 3 JSON diagnostics unknowns:
+  - 3.1: Schema Complexity - Direct serialization, extend existing to_json() method
+  - 3.2: Output Format - Single JSON object (not NDJSON or JSON array)
+  - 3.3: Backward Compatibility - --format flag with text default (100% backward compatible)
+- `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` - Task 5 marked COMPLETE with all deliverables checked
+- `CHANGELOG.md` - Task 5 completion entry
 
 ### Result
 
-✅ **SUCCESS** - Email template ready to send on Sprint 12 Day 1
+✅ **SUCCESS** - JSON schema v1.0.0 designed and validated
 
-**Email Template:**
-- Professional tone, concise (~250 words)
-- Specific questions about GitHub Actions cloud CI usage
-- Clear use case description (~100 runs/month, 4-5 smoke tests)
-- Alternative options offered (self-hosted runner, IPOPT)
-- Timeline acknowledged (2-week sprint, but can wait)
+**Schema Overview:**
+- **Version:** 1.0.0 (SemVer)
+- **Format:** Single JSON object per model
+- **Top-level fields:** schema_version, generated_at, model_name, total_duration_ms, overall_success, stages, summary
+- **Versioning policy:** MAJOR.MINOR.PATCH with migration guides
 
-**Follow-Up Scenarios Documented:**
-1. **Approved:** Implement PATH in CI (Sprint 12 Days 7-8, 3-4h)
-2. **Denied:** Document decision, continue IPOPT (Day 7, 1h)
-3. **No response:** Defer to Sprint 13, no blocking (Day 7, 0.5h)
-4. **Self-hosted required:** Evaluate feasibility (Days 7-8, 2-3h)
+**Example Scenarios:**
+- **Success:** rbrock.gms - All 5 stages complete (45.23ms total)
+- **Partial:** complex.gms - All stages complete with simplification warnings (78.91ms)
+- **Failure:** invalid.gms - Parse error at line 42, 4 stages skipped (8.45ms)
 
-**Contact Verified:**
-- Name: Dr. Michael C. Ferris
-- Email: ferris@cs.wisc.edu (verified current 2025-11-30)
-- Affiliation: University of Wisconsin-Madison, Computer Sciences
-- Role: PATH Solver Maintainer
+**Unknowns Verified:** 3/3 (3.1, 3.2, 3.3)
 
-**Unknowns Verified:** 4/4 (4.1, 4.2, 4.3, 4.4)
+**Key Decisions:**
+- **Format:** Single JSON object (not NDJSON) - simplest for CLI, jq-friendly
+- **Versioning:** SemVer with schema_version field at top level
+- **Complexity:** LOW - Direct serialization, extend existing to_json() method
+- **Backward Compatible:** --format flag with text default preserves existing behavior
 
 **Impact on Sprint 12:**
-- Component 4 (PATH Integration) can proceed with clear guidance
-- No blocking issues - IPOPT fallback ensures CI validation
-- Professional approach maximizes approval likelihood
-- All scenarios have effort estimates and decision criteria
+- Component 3 (Days 7-8) can proceed with clear schema specification
+- Direct serialization - no parser refactoring needed
+- 100% backward compatible with Sprint 11 text diagnostics
+- CI-ready with validated JSON examples and jq patterns
 
 ### Verification
 
