@@ -1335,7 +1335,7 @@ Sprint 11 implemented 11 transformations but deferred measurement. Prototype mus
 ```
 Priority Score = (Frequency Score) + (5 - Complexity Score)
 ```
-- Highest priority: High frequency + Low complexity (e.g., 3 models × Simple = 25 + 4 = 29)
+- Highest priority: High frequency + Low complexity (e.g., 3 models × Medium = 25 + 2 = 27)
 - Lowest priority: Low frequency + High complexity (e.g., 1 model × Very Hard = 10 + (-5) = 5)
 
 **Prioritization Algorithm:**

@@ -80,7 +80,9 @@ Priority Score = (Frequency Score) + (5 - Complexity Score)
 ### Rationale
 
 - **High frequency + Low complexity = Highest priority**
-  - Example: 5 models × Simple = 45 + (5-1) = 49
+  - Example (hypothetical maximum): 5 models × Simple = 45 + (5-1) = 49  
+    _(Note: No actual blocker currently matches this profile in this sprint.)_
+  - Example (actual highest-priority blocker): 3 models × Medium = 25 + (5-3) = 27 (inline_descriptions)
   
 - **Low frequency + Low complexity = Medium priority**
   - Example: 1 model × Simple = 10 + (5-1) = 14
@@ -470,7 +472,7 @@ Based on the 6 blockers identified in TIER_2_MODEL_SELECTION.md:
 | multiple_alias_declaration | 1 | Simple | Syntax | 14 | 1.5h | 1 |
 | predefined_constants | 1 | Simple | Syntax | 14 | 1h | 1 |
 | model_inline_descriptions | 1 | Medium | Syntax | 12 | 2h | 1 |
-| table_wildcard_domain | 3 | Complex | Data Structure | 22 | 5h | 3 |
+| table_wildcard_domain | 3 | Medium | Data Structure | 27 | 5h | 3 |
 
 ### Recommended Implementation Order (6h Budget)
 
