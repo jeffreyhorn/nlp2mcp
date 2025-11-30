@@ -58,3 +58,8 @@ build/
 *.log
 output/
 results/
+
+# GAMS temporary/scratch directories
+[0-9][0-9][0-9][a-z]/
+**/gamsnext.sh
+**/gmsprmun.dat

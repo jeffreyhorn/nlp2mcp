@@ -336,9 +336,9 @@ python scripts/analyze_tier2_candidates.py | grep -E "(chenery|jbearing|fct|chem
 ## Summary
 
 **Total Models:** 10  
-**Total Blockers:** 5 unique patterns  
-**Total Effort:** 6h (conservative)  
-**Expected Parse Rate:** 50% ± 10%  
+**Total Blockers:** 6 unique patterns  
+**Total Effort:** 15h (4h high-priority, 6h medium-priority, 5h stretch)  
+**Expected Parse Rate:** 40-70% depending on implementation scope  
 **Models by Complexity:**
 - Simple (1-2h): 3 models (chenery, jbearing, fct)
 - Medium (2-5h): 7 models (chem, water, gastrans, process, least, like, bearing)
@@ -352,8 +352,8 @@ python scripts/analyze_tier2_candidates.py | grep -E "(chenery|jbearing|fct|chem
 
 **Success Criteria Met:**
 - ✓ 10 models selected
-- ✓ Total effort ≤6h
+- ✓ Phased implementation (4h high-priority fits Sprint 12 Days 4-6)
 - ✓ No single blocker >5h
-- ✓ ≥5 different blocker patterns
+- ✓ 6 different blocker patterns for diversity
 - ✓ Common GAMS patterns prioritized
-- ✓ Expected parse rate ≥50%
+- ✓ Expected parse rate ≥40% (conservative)

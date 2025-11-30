@@ -320,10 +320,11 @@ Sprint 11 prototype (factoring_prototype_results.md) showed 39.2% average reduct
 10. bearing.gms - table_wildcard_domain (shared, 5h total)
 
 **Blocker Metrics:**
-- **Total unique blockers:** 5 patterns
-- **Total estimated effort:** 6h (conservative)
-- **Effort distribution:** Simple (3h for 3 blockers), Medium (6h for 2 blockers)
-- **Expected parse rate:** 50% ± 10% (5-6 models parsing after implementation)
+- **Total unique blockers:** 6 patterns
+- **Total estimated effort:** 15h total
+- **Effort distribution:** Simple (4h for 3 blockers), Medium (6h for 2 blockers), Complex (5h for 1 blocker)
+- **Phased implementation:** High-priority 4h (Days 4-6), Medium-priority 6h (Days 7-8), Stretch 5h
+- **Expected parse rate:** 40-70% depending on implementation scope (4-7 models)
 
 **Diversity Achieved:**
 - ✓ Syntax extensions (special chars, alias)

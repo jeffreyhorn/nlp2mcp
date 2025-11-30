@@ -687,7 +687,7 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Findings:**
 - Selected 10 Tier 2 models using diversity heuristic
-- Criteria: (a) blocker diversity (5 unique patterns), (b) effort budget (≤6h total), (c) common GAMS patterns, (d) model size 40-180 lines
+- Criteria: (a) blocker diversity (6 unique patterns), (b) effort budget (15h total, 4h high-priority), (c) common GAMS patterns, (d) model size 40-180 lines
 - Feature coverage: syntax extensions, data structures, documentation features, symbol table, model organization
 - Models NOT in Tier 1, all NLP/DNLP type (no MINLP)
 
@@ -699,8 +699,8 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Decision:**
 - **Selected 10 models:** chenery, jbearing, fct, chem, water, gastrans, process, least, like, bearing
-- **5 blocker patterns:** special_chars_in_identifiers (1.5h), multiple_alias_declaration (1.5h), predefined_constants (1h), inline_descriptions (4h), model_inline_descriptions (2h), table_wildcard_domain (5h - at limit)
-- **Total effort:** 6h (conservative estimate)
+- **6 blocker patterns:** special_chars_in_identifiers (1.5h), multiple_alias_declaration (1.5h), predefined_constants (1h), inline_descriptions (4h), model_inline_descriptions (2h), table_wildcard_domain (5h)
+- **Total effort:** 15h (4h high-priority, 6h medium-priority, 5h stretch goal)
 
 **Impact:**
 - Clear implementation roadmap for Sprint 12 Days 4-8

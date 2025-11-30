@@ -29,9 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 10. bearing.gms - table_wildcard_domain (5h shared)
 
 **Selection Metrics:**
-- **Blocker diversity:** 5 unique patterns across 10 models
-- **Total estimated effort:** 6h (conservative estimate)
-- **Expected parse rate:** 50% ± 10% (5-6/10 models after implementation)
+- **Blocker diversity:** 6 unique patterns across 10 models
+- **Total estimated effort:** 15h total (4h high-priority, 6h medium-priority, 5h stretch)
+- **Expected parse rate:** 40-70% depending on implementation scope (4-7/10 models)
 - **Alternate models:** 8 fallback options identified (house.gms already parses!)
 
 **Blocker Distribution:**
