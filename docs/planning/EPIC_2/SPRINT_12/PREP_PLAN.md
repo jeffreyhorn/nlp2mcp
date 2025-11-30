@@ -899,11 +899,54 @@ Sprint 11 implemented text table diagnostics. Sprint 12 adds JSON output for aut
 
 ### Changes
 
-To be completed during prep task execution.
+**Files Created:**
+- `docs/planning/EPIC_2/SPRINT_12/JSON_DIAGNOSTICS_SCHEMA.md` - Comprehensive JSON schema documentation (855 lines)
+  - Complete field descriptions and data types
+  - Per-stage details structure with examples
+  - Summary object specification
+  - CI integration patterns (artifact storage, jq queries)
+  - Implementation checklist for Sprint 12 Days 7-8
+  - Performance analysis (0.2-0.5ms overhead, ~3-4KB per report)
+- `docs/planning/EPIC_2/SPRINT_12/examples/success.json` - Success scenario (all stages pass, 45.23ms)
+- `docs/planning/EPIC_2/SPRINT_12/examples/partial.json` - Partial success with simplification warnings (78.91ms)
+- `docs/planning/EPIC_2/SPRINT_12/examples/failure.json` - Parse failure with early termination (8.45ms)
+
+**Files Modified:**
+- `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` - Verified 3 JSON diagnostics unknowns:
+  - 3.1: Schema Complexity - Direct serialization, extend existing to_json() method
+  - 3.2: Output Format - Single JSON object (not NDJSON or JSON array)
+  - 3.3: Backward Compatibility - --format flag with text default (100% backward compatible)
+- `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` - Task 5 marked COMPLETE with all deliverables checked
+- `CHANGELOG.md` - Task 5 completion entry
 
 ### Result
 
-To be completed during prep task execution.
+✅ **SUCCESS** - JSON schema v1.0.0 designed and validated
+
+**Schema Overview:**
+- **Version:** 1.0.0 (SemVer)
+- **Format:** Single JSON object per model
+- **Top-level fields:** schema_version, generated_at, model_name, total_duration_ms, overall_success, stages, summary
+- **Versioning policy:** MAJOR.MINOR.PATCH with migration guides
+
+**Example Scenarios:**
+- **Success:** rbrock.gms - All 5 stages complete (45.23ms total)
+- **Partial:** complex.gms - All stages complete with simplification warnings (78.91ms)
+- **Failure:** invalid.gms - Parse error at line 42, 4 stages skipped (8.45ms)
+
+**Unknowns Verified:** 3/3 (3.1, 3.2, 3.3)
+
+**Key Decisions:**
+- **Format:** Single JSON object (not NDJSON) - simplest for CLI, jq-friendly
+- **Versioning:** SemVer with schema_version field at top level
+- **Complexity:** LOW - Direct serialization, extend existing to_json() method
+- **Backward Compatible:** --format flag with text default preserves existing behavior
+
+**Impact on Sprint 12:**
+- Component 3 (Days 7-8) can proceed with clear schema specification
+- Direct serialization - no parser refactoring needed
+- 100% backward compatible with Sprint 11 text diagnostics
+- CI-ready with validated JSON examples and jq patterns
 
 ### Verification
 
@@ -942,7 +985,7 @@ grep "schema_version" docs/planning/EPIC_2/SPRINT_12/JSON_DIAGNOSTICS_SCHEMA.md
 
 ## Task 6: Draft PATH Licensing Email Template
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Medium  
 **Estimated Time:** 1 hour  
 **Deadline:** Before Sprint 12 Day 1  
@@ -1079,21 +1122,21 @@ grep "ferris@cs.wisc.edu" docs/planning/EPIC_2/SPRINT_12/PATH_LICENSING_EMAIL.md
 
 ### Deliverables
 
-- [ ] `docs/planning/EPIC_2/SPRINT_12/PATH_LICENSING_EMAIL.md` - Email template and documentation
-- [ ] Professional email template ready to send
-- [ ] Specific questions about CI usage
-- [ ] Confirmed contact information
-- [ ] Follow-up scenario decision tree
-- [ ] Timeline expectations documented
+- [x] `docs/planning/EPIC_2/SPRINT_12/PATH_LICENSING_EMAIL.md` - Email template and documentation
+- [x] Professional email template ready to send
+- [x] Specific questions about CI usage (3 questions)
+- [x] Confirmed contact information (ferris@cs.wisc.edu verified 2025-11-30)
+- [x] Follow-up scenario decision tree (4 scenarios with effort estimates)
+- [x] Timeline expectations documented (1-2 weeks)
 
 ### Acceptance Criteria
 
-- [ ] Email template professional and specific
-- [ ] All licensing questions addressed
-- [ ] Contact information verified current
-- [ ] Follow-up scenarios cover all outcomes (approve/deny/no response)
-- [ ] Template ready to send on Sprint 12 Day 1
-- [ ] All PATH licensing unknowns from Task 1 addressed
+- [x] Email template professional and specific (~250 words, clear questions)
+- [x] All licensing questions addressed (cloud CI, frequency, public repos)
+- [x] Contact information verified current (verified via PATH website)
+- [x] Follow-up scenarios cover all outcomes (4 scenarios: approve/deny/no response/self-hosted)
+- [x] Template ready to send on Sprint 12 Day 1
+- [x] All PATH licensing unknowns from Task 1 addressed (4.1, 4.2, 4.3, 4.4)
 
 ---
 

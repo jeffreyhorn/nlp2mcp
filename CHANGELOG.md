@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Prep: Task 6 Complete - PATH Licensing Email Template - 2025-11-30
+
+**Branch:** `planning/sprint12-task6`  
+**Status:** ✅ COMPLETE
+
+#### Task 6: Draft PATH Licensing Email Template
+
+**Objective:** Draft professional email template requesting PATH solver CI usage clarification for Sprint 12 Component 4.
+
+**Email Template:**
+- **Recipient:** Dr. Michael C. Ferris (ferris@cs.wisc.edu)
+- **Subject:** PATH Solver Academic License - GitHub Actions CI Usage Clarification
+- **Tone:** Professional, concise (~250 words), respectful
+- **Questions:** 3 specific questions about cloud CI, frequency restrictions, public repo usage
+- **Timeline:** Sprint 12 (Dec 2-13) but acknowledges async nature (1-2 weeks expected)
+
+**Follow-Up Scenarios:**
+1. **Approved** (CI use permitted): Implement PATH in nightly CI (Sprint 12 Days 7-8, 3-4h)
+2. **Denied** (CI use not permitted): Document decision, continue IPOPT (Day 7, 1h)
+3. **No response** (by Day 7): Defer PATH to Sprint 13, no blocking (Day 7, 0.5h)
+4. **Self-hosted required**: Evaluate feasibility (Days 7-8, 2-3h)
+
+**Unknowns Verified:**
+- ✅ 4.1 License Compatibility: Email template prepared, licensing UNCLEAR (requires written clarification)
+- ✅ 4.2 CI Installation Method: GAMS demo installation documented (~2min, cacheable to 30s)
+- ✅ 4.3 PATH Model Availability: 4-test smoke suite designed (<50 variables each)
+- ✅ 4.4 Integration Scope: Conditional Day 7 implementation based on licensing response
+
+**Changes:**
+- Added: `docs/planning/EPIC_2/SPRINT_12/PATH_LICENSING_EMAIL.md` (complete email documentation)
+  - Professional email template ready to copy/send
+  - Verified contact information (ferris@cs.wisc.edu confirmed current)
+  - 4 follow-up scenarios with effort estimates
+  - Timeline expectations and decision tree
+  - Installation procedure documentation
+  - Quick-copy template for convenience
+- Modified: `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` (verified 4 PATH unknowns)
+- Modified: `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` (Task 6 marked complete)
+
+**Key Insights:**
+- PATH academic license terms silent on cloud CI usage (requires clarification)
+- IPOPT fallback ensures Sprint 12 not blocked by PATH licensing uncertainty
+- Professional approach maximizes approval likelihood
+- All scenarios documented with clear decision criteria
+
+**Impact on Sprint 12:**
+- Component 4 (PATH Integration) ready to execute pending licensing response
+- Day 7 checkpoint allows decision based on email response status
+- No blocking issues - IPOPT provides equivalent CI validation
+- Professional email template demonstrates good-faith compliance effort
+
+---
+
 ### Sprint 12 Prep: Task 5 Complete - JSON Diagnostics Schema - 2025-11-30
 
 **Branch:** `planning/sprint12-task5`  

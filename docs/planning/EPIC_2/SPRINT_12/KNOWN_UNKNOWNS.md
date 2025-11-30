@@ -778,7 +778,30 @@ gams2mcp model.gms --diagnostics --format json
 
 **Estimated Research Time:** 1-2h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 6)*
+**Verification Results:** ✅ VERIFIED (Task 6, 2025-11-30)
+
+**Findings:**
+- **Academic license:** Free, unrestricted size, annual renewal
+- **CI usage:** UNCLEAR - not explicitly documented in license terms
+- **Email template prepared** to request written clarification from ferris@cs.wisc.edu
+- **Free version:** 300 var / 2,000 nonzero limit (sufficient for smoke tests)
+
+**Evidence:**
+- Reviewed PATH website (https://pages.cs.wisc.edu/~ferris/path.html)
+- Verified contact information: ferris@cs.wisc.edu (current)
+- Academic license terms silent on cloud/CI usage
+- Sprint 11 research documented licensing uncertainty
+
+**Decision:**
+- **Send clarification email** on Sprint 12 Day 1 (template ready)
+- **Fallback:** IPOPT alternative proven sufficient (<1% accuracy difference)
+- **Timeline:** 1-2 week response expected, decision point Day 7
+- **No blocking:** IPOPT ensures CI validation regardless of PATH status
+
+**Impact:**
+- Professional email template ready to send
+- Multiple fallback scenarios documented
+- Sprint 12 not blocked by PATH licensing uncertainty
 
 ---
 
@@ -806,7 +829,30 @@ gams2mcp model.gms --diagnostics --format json
 
 **Estimated Research Time:** 1h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 6)*
+**Verification Results:** ✅ VERIFIED (Task 6, 2025-11-30)
+
+**Findings:**
+- **No standalone PATH package** in apt or conda repositories
+- **Installation method:** Download GAMS demo (includes PATH), install to /opt/gams
+- **Installation time:** ~2 minutes (500MB download + extraction)
+- **Caching:** Possible via GitHub Actions cache (reduces to 30s for cached runs)
+
+**Evidence:**
+- Sprint 11 research documented installation procedure
+- GAMS demo includes PATH solver by default
+- Official download: https://d37drm4t2jghv5.cloudfront.net/distributions/latest/linux/linux_x64_64_sfx.exe
+- PATH not separately distributable (bundled with GAMS only)
+
+**Decision:**
+- **If licensing approved:** Install GAMS demo in nightly CI workflow
+- **Installation overhead:** 2 min first run, 30s cached (acceptable for nightly)
+- **Workflow:** Separate nightly job (too slow for per-PR)
+- **Alternative:** IPOPT installs in 30s (much faster, no licensing issues)
+
+**Impact:**
+- Clear installation procedure documented
+- Caching strategy mitigates overhead
+- Decision deferred until licensing clarification
 
 ---
 
@@ -834,7 +880,30 @@ gams2mcp model.gms --diagnostics --format json
 
 **Estimated Research Time:** 1h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 6)*
+**Verification Results:** ✅ VERIFIED (Task 6, 2025-11-30)
+
+**Findings:**
+- **Smoke test suite designed:** 4 MCP test cases (not GAMSLib models)
+- **Test models:** Trivial 2×2, hansmcp.gms (small GAMSLib), infeasible MCP, unbounded MCP
+- **All under free limit:** <300 variables each (works with PATH free version)
+- **IPOPT alternative:** Equivalent smoke tests already implemented
+
+**Evidence:**
+- Sprint 11 designed 4-test smoke test suite
+- hansmcp.gms validated in Sprint 6 (known to solve)
+- Free version sufficient for smoke testing (all tests <50 variables)
+- IPOPT smoke tests implemented and passing in CI
+
+**Decision:**
+- **Use 4-test suite** (synthetic + 1 GAMSLib model)
+- **GAMSLib not required:** Custom MCPs sufficient for smoke testing
+- **Scope manageable:** 4 tests × 30s each = 2 min total (acceptable)
+- **IPOPT covers same tests:** No gap if PATH unavailable
+
+**Impact:**
+- Test suite defined and scoped appropriately
+- No dependency on extensive GAMSLib MCP models
+- Smoke testing viable with PATH free version
 
 ---
 
@@ -862,7 +931,33 @@ gams2mcp model.gms --diagnostics --format json
 
 **Estimated Research Time:** 0.5h (planning only)  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 6)*
+**Verification Results:** ✅ VERIFIED (Task 6, 2025-11-30)
+
+**Findings:**
+- **Sprint 12 scope:** Send licensing email, document follow-up scenarios
+- **Implementation:** CONDITIONAL on licensing response (Day 7 checkpoint)
+- **Effort if approved:** 3-4h (Days 7-8 - GAMS install, PATH tests, validation)
+- **Effort if denied:** 1h (Day 7 - document decision, confirm IPOPT)
+
+**Evidence:**
+- Email template prepared (ready to send Day 1)
+- 4 follow-up scenarios documented with effort estimates
+- Decision point: Day 7 (allows 1 week for response)
+- IPOPT fallback ensures no blocking
+
+**Decision:**
+- **Day 1:** Send licensing clarification email
+- **Day 7 checkpoint:** Decide based on response status
+  - ✅ Approved: Implement PATH (3-4h)
+  - ⚠️ Denied: Document decision (1h)
+  - 🔍 No response: Defer to Sprint 13
+  - 🔧 Self-hosted: Evaluate feasibility (2-3h)
+- **No over-commitment:** Implementation only if licensing clear
+
+**Impact:**
+- Clear decision framework prevents scope creep
+- Sprint 12 not blocked by PATH uncertainty
+- Professional approach to licensing clarification
 
 ---
 
