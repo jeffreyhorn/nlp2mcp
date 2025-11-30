@@ -1610,10 +1610,12 @@ grep "## Blocker:" docs/planning/EPIC_2/SPRINT_12/TIER_2_BLOCKER_TEMPLATE.md | w
 
 ## Task 9: Set Up Baseline Storage Infrastructure
 
-**Status:** ✅ COMPLETE  
+**Status:** ✅ COMPLETE - MERGED  
 **Priority:** High  
 **Estimated Time:** 1-2 hours  
-**Deadline:** Before Sprint 12 Day 1  
+**Actual Time:** 2 hours  
+**Completed:** 2025-11-30  
+**PR:** #343 (merged)  
 **Owner:** Development team  
 **Dependencies:** Task 2 (Term Reduction Measurement - baseline format defined)  
 **Unknowns Verified:** 1.2, 1.6
