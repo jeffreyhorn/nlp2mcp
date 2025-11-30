@@ -437,7 +437,11 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 - **parse_rate:** warn=5%, fail=10% (strict, correctness critical)
 - **convert_rate:** warn=5%, fail=10% (strict, quality critical)
 - **performance:** warn=20%, fail=50% (loose, accounts for system variance)
-- **Methodology:** relative_change = (baseline - current) / baseline
+- **Methodology:**
+  - For metrics where **higher is better** (e.g., `parse_rate`, `convert_rate`):
+    `relative_change = (baseline - current) / baseline`
+  - For metrics where **lower is better** (e.g., `avg_time_ms`):
+    `relative_change = (current - baseline) / baseline`
 
 **Recalibration Strategy:**
 - Monitor false positive/negative rates in Sprint 12-13

@@ -521,9 +521,19 @@ Performance: ❌ 45.2ms (23.5ms baseline, +92.3%)
 
 **Approach: Relative Thresholds (% change from baseline)**
 
-**Formula:**
+**Formula (Metric-Specific):**
+
+For metrics where **higher is better** (e.g., `parse_rate`, `convert_rate`):
 ```
 relative_change = (baseline - current) / baseline
+status = FAIL if relative_change > fail_threshold
+status = WARN if relative_change > warn_threshold
+status = PASS otherwise
+```
+
+For metrics where **lower is better** (e.g., `avg_time_ms`):
+```
+relative_change = (current - baseline) / baseline
 status = FAIL if relative_change > fail_threshold
 status = WARN if relative_change > warn_threshold
 status = PASS otherwise
