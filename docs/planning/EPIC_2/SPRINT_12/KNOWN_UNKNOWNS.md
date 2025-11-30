@@ -1473,7 +1473,57 @@ gams2mcp model.gms --diagnostics --format json
 
 **Estimated Research Time:** 1h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 10)*
+**Verification Results:** ✅ VERIFIED (Task 10, 2025-11-30)
+
+**Findings:**
+
+**Sprint 10-11 Velocity Analysis:**
+- **Sprint 10:** Estimated 35-42h, Actual ~38h, Accuracy: +2% (excellent)
+- **Sprint 11:** Estimated 29-36h, Actual ~32h, Accuracy: -3% (excellent)
+- **Historical average:** (38 + 32) / 2 = 35h per sprint
+- **Sprint 11 buffer utilization:** 10% (1.6h of 16h scope used)
+
+**Sprint 12 Capacity Calculation:**
+- Sprint 12 estimate: 22-27h (midpoint: 24.5h)
+- Safety margin: 24.5h / 35h = 70% of historical capacity
+- **Conclusion:** Conservative scope, high confidence in delivery
+
+**Minimum Viable Sprint 12 (PRIMARY criteria only):**
+- Component 1: Term reduction benchmarking (4-6h)
+- Component 2: Multi-metric thresholds (3-4h)
+- Component 5 (partial): Tier 2 core blockers (3-4h)
+- **Total minimum:** 10-14h (leaves 10-13h buffer for MEDIUM items)
+
+**Scope Management Strategy:**
+- **HIGH priority:** 10-14h (must complete)
+- **MEDIUM priority:** 9-10h (should complete if buffer permits)
+- **LOW priority:** 18-28h (defer unless Day 3 checkpoint triggers)
+- **Buffer allocation:** 5h total (23% of scope)
+  - Embedded: 1-2h (days 1-8)
+  - Day 9: 2-3h dedicated contingency
+  - Day 10: 1-2h validation
+
+**Deferral Decision Criteria:**
+- **Day 3 Checkpoint:** If term reduction <15%, defer Tier 2 and add transformations
+- **Day 6 Checkpoint:** If Tier 2 <40%, defer complex blockers to Sprint 13
+- **Day 7 Checkpoint:** If PATH no response, defer to Sprint 13
+- **Day 9 Buffer:** If all checkpoints pass, add optional items; else use for recovery
+
+**Evidence:**
+- Sprint 10-11 retrospectives document actual effort
+- Consistent estimation accuracy (±3%)
+- Proven buffer strategy from Sprint 11
+
+**Decision:**
+- Sprint 12 scope = 22-27h (70% of historical capacity = LOW RISK)
+- Minimum viable = 10-14h (PRIMARY criteria only)
+- Flexible scope management via checkpoint decisions
+- Strong confidence in delivery based on historical velocity
+
+**Impact:**
+- De-risks Sprint 12 with conservative scope
+- Clear deferral criteria prevent scope creep
+- Buffer strategy validated by Sprint 11 success
 
 ---
 
@@ -1501,7 +1551,69 @@ gams2mcp model.gms --diagnostics --format json
 
 **Estimated Research Time:** 0.5h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 10)*
+**Verification Results:** ✅ VERIFIED (Task 10, 2025-11-30)
+
+**Findings:**
+
+**External Dependencies Identified:**
+
+1. **PATH Licensing (Component 4)**
+   - Dependency: Email response from ferris@cs.wisc.edu
+   - Timeline: Sent Day 1, decision Day 7 (1 week response window)
+   - **Plan B:** IPOPT fallback (already working, <1% accuracy difference)
+   - Risk: LOW (IPOPT adequate for all current use cases)
+   - **Mitigation:** Professional email template (Task 6), send Day 1 to maximize window
+
+2. **GAMSLib Model Availability (Component 5)**
+   - Dependency: GAMSLib models downloadable from GAMS website
+   - Timeline: Day 4 download required
+   - **Plan B:** Use cached models from Task 3 (tests/fixtures/tier2_candidates/)
+   - Risk: VERY LOW (models already downloaded during prep)
+   - **Mitigation:** Models cached in repo during Task 3 execution
+
+3. **No Other External Dependencies**
+   - All other components self-contained (measurement, multi-metric, JSON, CI)
+   - No third-party API calls required
+   - No external data sources beyond GAMSLib (cached)
+   - No library version dependencies (using existing stack)
+
+**Front-Loading Strategy:**
+- PATH email: Send Day 1 (maximizes 7-day response window before Day 7 checkpoint)
+- Tier 2 models: Pre-downloaded in Task 3 (eliminates Day 4 download dependency)
+- All prep tasks: Completed before sprint start (no in-sprint research blockers)
+- Unknown verification: 27/27 unknowns addressed before sprint execution
+
+**Contingency Plans:**
+
+**PATH Dependency (Day 7 Checkpoint):**
+- **Scenario 1 (Approved):** Implement PATH in CI (2-3h)
+- **Scenario 2 (Denied):** Document decision, keep IPOPT (30 min)
+- **Scenario 3 (No response):** Defer to Sprint 13, send follow-up (30 min)
+- **Scenario 4 (Self-hosted required):** Evaluate feasibility, likely defer (1h)
+- **No scenario blocks sprint completion**
+
+**GAMSLib Dependency (Day 4):**
+- If website down: Use Task 3 cached models (tests/fixtures/tier2_candidates/)
+- If models changed: Re-run analysis, adjust blocker priorities
+- If download fails: Work from cache, document limitation
+
+**Evidence:**
+- Task 6 email template professionally drafted and ready
+- Task 3 downloaded and analyzed 18 candidate models (cached)
+- Sprint 12 has only 1 real external dependency (PATH email)
+- All other work self-contained within team's control
+
+**Decision:**
+- Risk: LOW - Only 1 external dependency with robust fallback
+- PATH licensing is nice-to-have, not blocking (IPOPT sufficient)
+- Front-loading strategy maximizes response window (7 days)
+- Contingency plans cover all scenarios without blocking sprint
+
+**Impact:**
+- Sprint 12 can execute without external blockers
+- PATH decision flexible (any outcome acceptable)
+- Prep tasks eliminated research dependencies
+- High confidence in unblocked execution
 
 ---
 

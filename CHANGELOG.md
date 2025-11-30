@@ -7,6 +7,118 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Prep: Task 10 Complete - Sprint 12 Detailed Schedule - 2025-11-30
+
+**Branch:** `planning/sprint12-prep`  
+**Status:** ✅ COMPLETE
+
+#### Task 10: Plan Sprint 12 Detailed Schedule
+
+**Objective:** Create comprehensive Sprint 12 day-by-day plan incorporating all prep task findings and resolving all unknowns identified in Task 1.
+
+**Schedule Overview:**
+- **Days 1-3:** Measurement & Validation (7-10h) - Term reduction benchmarking, multi-metric backend
+- **Days 4-6:** Tier 2 Expansion (6-8h) - Model analysis, blocker implementation
+- **Days 7-8:** Polish & Integration (6-7h) - JSON diagnostics, PATH decision, CI checklist
+- **Days 9-10:** Buffer & Validation (3-4h) - Contingency, retrospective
+- **Total:** 22-27h (target: 19-28h, midpoint: 24.5h)
+
+**Checkpoints:**
+- **Day 3:** Term reduction ≥20% on ≥50% models? (Decision: add transforms vs proceed to Tier 2)
+- **Day 6:** Tier 2 parse rate ≥50%? (Decision: partial success 40-49% acceptable, defer <40%)
+- **Day 7:** PATH licensing decision (4 scenarios: approve/deny/no response/self-hosted)
+
+**Risk Register:**
+- 6 risks identified with mitigations and contingency plans
+- Risk 1: Benchmarking <20% reduction (Low likelihood, High impact) - LOW priority transforms ready
+- Risk 2: Tier 2 blockers >10h complexity (Medium likelihood, Medium impact) - Alternate models available
+- Risk 3: PATH no response (High likelihood, Low impact) - IPOPT fallback working
+- Risk 4: Convert rate reveals bugs (Medium likelihood, Medium impact) - Embedded buffer for debug
+- Risk 5: JSON schema evolution (Low likelihood, Low impact) - v1.0.0 locked
+- Risk 6: CI checklist overhead (Medium likelihood, Low impact) - Keep checklist short (5-7 items)
+
+**Unknowns Verified:**
+- ✅ **7.1 Scope Management:**
+  - Sprint 10-11 velocity: 38h and 32h (average 35h)
+  - Sprint 12 scope: 22-27h (70% of historical capacity = LOW RISK)
+  - Minimum viable: 10-14h (PRIMARY criteria: Components 1, 2, 5 partial)
+  - Buffer: 5h (23% of scope) - embedded 1-2h, Day 9: 2-3h, Day 10: 1-2h
+  - Deferral criteria: Day 3/6/7 checkpoints with decision trees
+  
+- ✅ **7.2 External Dependencies:**
+  - PATH licensing: Email Day 1, decision Day 7, IPOPT fallback (LOW RISK)
+  - GAMSLib models: Pre-downloaded in Task 3, cached (VERY LOW RISK)
+  - No other external dependencies (self-contained work)
+  - Front-loading strategy: 27/27 unknowns verified before sprint start
+
+**Prep Task Synthesis:**
+- ✅ All 10 prep tasks complete (21-28h estimated)
+- ✅ 27/27 unknowns verified (100%)
+- ✅ Research documents: 6 created (term reduction, Tier 2, multi-metric, JSON, prototype, blocker template)
+- ✅ Infrastructure: baselines/, scripts/, docs/ ready (PR #343 merged)
+- ✅ Email template: ready to send Day 1
+
+**Changes:**
+- Added: `docs/planning/EPIC_2/SPRINT_12/PLAN.md` - Comprehensive 10-day Sprint 12 plan (900+ lines)
+  - Executive summary with Sprint 11 context
+  - Scope allocation: 22-27h across 4 phases
+  - Prep task synthesis (all 10 tasks findings)
+  - Day-by-day schedule (Days 1-10 with tasks, deliverables, success criteria)
+  - 3 checkpoint decision trees with ASCII diagrams
+  - Risk register with 6 risks and mitigations
+  - PRIMARY and SECONDARY success criteria
+  - Buffer strategy (5h allocation: 23% of scope)
+  - Unknown verification section (7.1 and 7.2 with detailed findings)
+- Updated: `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` - Verified unknowns 7.1 and 7.2
+  - 7.1: Velocity analysis, capacity calculation, minimum viable scope, deferral criteria
+  - 7.2: External dependency analysis, contingency plans, front-loading strategy
+- Updated: `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` - Task 10 marked complete
+  - Status updated to ✅ COMPLETE with actual time (4.5h)
+  - Changes and Result sections filled with detailed findings
+  - All deliverables and acceptance criteria checked off
+  - Summary section updated to reflect completion
+
+**Impact on Sprint 12:**
+- **Ready to begin:** All prep tasks complete, no blocking unknowns
+- **High confidence:** Conservative scope (70% of historical capacity)
+- **Flexible execution:** 3 checkpoints with decision trees for adaptive planning
+- **Risk mitigated:** 6 risks identified with contingencies
+- **Clear success criteria:** PRIMARY (must achieve) and SECONDARY (stretch goals) defined
+
+---
+
+### Sprint 12 Prep COMPLETE - Ready for Sprint Execution - 2025-11-30
+
+**Status:** ✅ ALL PREP TASKS COMPLETE
+
+**Summary:**
+All 10 Sprint 12 preparation tasks successfully completed. 27 known unknowns identified and verified. Sprint 12 ready to begin.
+
+**Prep Tasks Completed:**
+1. ✅ Known Unknowns List (27 unknowns, 7 categories)
+2. ✅ Term Reduction Measurement Research
+3. ✅ Tier 2 Model Selection (10 models)
+4. ✅ Multi-Metric Threshold Research
+5. ✅ JSON Diagnostics Schema
+6. ✅ PATH Licensing Email
+7. ✅ Simplification Metrics Prototype
+8. ✅ Tier 2 Blocker Template
+9. ✅ Baseline Storage Infrastructure (PR #343 merged)
+10. ✅ Sprint 12 Detailed Schedule
+
+**Total Prep Effort:** ~24h actual (estimated: 21-28h) - excellent accuracy
+
+**Key Deliverables:**
+- 27 unknowns verified across 7 categories (100% resolution)
+- 6 research documents created
+- 4 planning documents created
+- Infrastructure components set up (baselines/, scripts/, docs/)
+- 10-day Sprint 12 plan ready with checkpoints
+
+**Sprint 12 Start:** Ready to begin immediately
+
+---
+
 ### Sprint 12 Prep: Task 9 Complete - Baseline Storage Infrastructure - 2025-11-30
 
 **Branch:** `planning/sprint12-task9`  
