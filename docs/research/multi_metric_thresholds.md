@@ -546,9 +546,9 @@ status = PASS otherwise
 - ❌ Can be confusing if baseline near 0%
 
 **Edge Cases:**
-- If baseline = 0%, cannot regress (always PASS)
-- If current > baseline, improvement (always PASS)
-- If baseline < warn_threshold, warn threshold may be too sensitive
+- If baseline = 0%, relative change is undefined (division by zero). Implementation should handle this explicitly (e.g., treat as FAIL if current != baseline, or skip threshold check).
+- If relative_change is negative (improvement direction), always PASS
+- If the baseline metric value is very low, small absolute changes can result in large relative changes, potentially making thresholds overly sensitive
 
 **Recalibration Strategy:**
 - Review thresholds after Sprint 12
