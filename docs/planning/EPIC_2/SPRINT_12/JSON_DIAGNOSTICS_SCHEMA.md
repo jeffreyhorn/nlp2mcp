@@ -2,7 +2,7 @@
 
 **Date:** 2025-11-30  
 **Sprint:** Epic 2 - Sprint 12 Prep Task 5  
-**Purpose:** Design JSON schema for `--diagnostic-json` output  
+**Purpose:** Design JSON schema for diagnostic output (via `--diagnostics --format json`)  
 **Version:** 1.0.0
 
 ---
@@ -263,9 +263,9 @@ When releasing a new MAJOR version:
 ### Future: Batch Processing
 
 If Sprint 13+ needs batch diagnostics for GAMSLib ingestion:
-- Consider NDJSON for `scripts/measure_parse_rate.py --diagnostic-json`
-- Keep single JSON object for CLI `gams2mcp --diagnostic-json`
-- Add `--diagnostic-format` flag to choose (json | ndjson)
+- Consider NDJSON for `scripts/measure_parse_rate.py --diagnostics --format ndjson`
+- Keep single JSON object for CLI `gams2mcp --diagnostics --format json`
+- Add `--format` flag to choose (json | ndjson)
 
 ---
 
@@ -615,7 +615,7 @@ def test_json_v1_schema():
 - name: Run GAMSLib ingestion with diagnostics
   run: |
     for model in gamslib/*.gms; do
-      gams2mcp "$model" --diagnostics --format json > "artifacts/$(basename $model).diag.json" 2>&1
+      gams2mcp "$model" --diagnostics --format json 2> "artifacts/$(basename $model).diag.json"
     done
 
 - name: Upload diagnostic artifacts
@@ -632,7 +632,7 @@ def test_json_v1_schema():
 jq -r '[.model_name, .total_duration_ms] | @csv' artifacts/*.diag.json > performance.csv
 
 # Find slowest stage across models
-jq -r '.stages | to_entries | max_by(.value.duration_ms) | [input_filename, .key, .value.duration_ms] | @csv' artifacts/*.diag.json
+jq -r '. as $data | .stages | to_entries | max_by(.value.duration_ms) | [$data.model_name, .key, .value.duration_ms] | @csv' artifacts/*.diag.json
 ```
 
 ### Use Case 3: Detect Failures in CI
@@ -695,11 +695,25 @@ For strict validation, a JSON Schema can be defined:
     },
     "summary": {
       "type": "object",
-      "required": ["stages_completed", "stages_failed", "stages_skipped"],
+      "required": [
+        "stages_completed",
+        "stages_failed",
+        "stages_skipped",
+        "parse_duration_ms",
+        "semantic_duration_ms",
+        "simplification_duration_ms",
+        "ir_generation_duration_ms",
+        "mcp_generation_duration_ms"
+      ],
       "properties": {
         "stages_completed": { "type": "number", "minimum": 0 },
         "stages_failed": { "type": "number", "minimum": 0 },
-        "stages_skipped": { "type": "number", "minimum": 0 }
+        "stages_skipped": { "type": "number", "minimum": 0 },
+        "parse_duration_ms": { "type": "number", "minimum": 0 },
+        "semantic_duration_ms": { "type": "number", "minimum": 0 },
+        "simplification_duration_ms": { "type": "number", "minimum": 0 },
+        "ir_generation_duration_ms": { "type": "number", "minimum": 0 },
+        "mcp_generation_duration_ms": { "type": "number", "minimum": 0 }
       }
     }
   }
