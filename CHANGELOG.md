@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Prep: Task 3 Complete - Tier 2 Model Selection - 2025-11-29
+
+**Branch:** `planning/sprint12-task3`  
+**Status:** ✅ COMPLETE
+
+#### Task 3: Survey Tier 2 GAMSLib Model Candidates
+
+**Objective:** Select 10 Tier 2 models for Sprint 12 parser expansion that maximize coverage while staying within implementation budget.
+
+**Selected Models:**
+1. chenery.gms - special_chars_in_identifiers (1.5h)
+2. jbearing.gms - multiple_alias_declaration (1.5h)
+3. fct.gms - predefined_constants (1h)
+4. chem.gms - inline_descriptions (4h shared across 3 models)
+5. water.gms - inline_descriptions (4h shared)
+6. gastrans.gms - inline_descriptions (4h shared)
+7. process.gms - model_inline_descriptions (2h)
+8. least.gms - table_wildcard_domain (5h shared across 3 models)
+9. like.gms - table_wildcard_domain (5h shared)
+10. bearing.gms - table_wildcard_domain (5h shared)
+
+**Selection Metrics:**
+- **Blocker diversity:** 6 unique patterns across 10 models
+- **Total estimated effort:** 15h total (4h high-priority, 6h medium-priority, 5h stretch)
+- **Expected parse rate:** 40-70% depending on implementation scope (4-7/10 models)
+- **Alternate models:** 8 fallback options identified (house.gms already parses!)
+
+**Blocker Distribution:**
+- Simple (1-2h): 3 blockers affecting 3 models (chenery, jbearing, fct)
+- Medium (2-5h): 2 blockers affecting 7 models (chem/water/gastrans, process, least/like/bearing)
+- No hard blockers (>5h) selected to stay within budget
+
+**Unknowns Verified:**
+- ✅ 5.1 Model Selection Criteria: Diversity heuristic with effort budget
+- ✅ 5.2 Target Parse Rate Feasibility: 50% ± 10% is achievable with 6h effort
+- ✅ 5.4 Regression Risk from Tier 2 Fixes: Mitigated via existing CI
+- ✅ 6.1 Workflow Coverage Identification: 6 automated + 2 manual checks
+- ✅ 6.2 Checklist Enforcement Mechanism: Social + automated (branch protection)
+
+**Changes:**
+- Added: `docs/planning/EPIC_2/SPRINT_12/TIER_2_MODEL_SELECTION.md` (comprehensive selection document)
+- Added: `scripts/download_tier2_candidates.sh` (download 18 candidates)
+- Added: `scripts/analyze_tier2_candidates.py` (parse failure analysis tool)
+- Added: `tests/fixtures/tier2_candidates/` (18 downloaded models + analysis results)
+- Updated: `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` (verified 5 unknowns)
+- Updated: `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` (Task 3 complete)
+
+**Impact:**
+- ✅ Sprint 12 Days 4-8 Tier 2 implementation now de-risked
+- ✅ Clear blocker roadmap with effort estimates
+- ✅ Diversity ensures broad parser improvement
+- ✅ Realistic target with built-in margin
+
+---
+
 ### Sprint 12 Prep: Task 2 Complete - Term Reduction Measurement Research - 2025-11-29
 
 **Branch:** `planning/sprint12-task2`  
