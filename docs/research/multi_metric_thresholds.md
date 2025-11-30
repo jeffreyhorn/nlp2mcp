@@ -499,8 +499,8 @@ Performance: ❌ 45.2ms (23.5ms baseline, +92.3%)
 
 **Rationale:**
 - Performance more variable than parse/convert rates
-- 20% warn = noticeable slowdown (23ms → 28ms)
-- 50% fail = severe regression (23ms → 35ms)
+- 20% warn = noticeable slowdown (23ms → 27.6ms)
+- 50% fail = severe regression (23ms → 34.5ms)
 - Looser thresholds account for system noise
 
 **Example:**
