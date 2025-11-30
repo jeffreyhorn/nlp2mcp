@@ -162,15 +162,11 @@ Use this template for each unique blocker pattern:
 
 ### Error Message
 
-```
-[Paste actual parser error message from logs]
-```
+    [Paste actual parser error message from logs]
 
 ### Example Syntax
 
-```gams
-[Paste minimal example from failing model]
-```
+    [Paste minimal example from failing model]
 
 ### GAMS Manual Reference
 
@@ -274,12 +270,12 @@ Lexer-level change to identifier token rules. Requires distinguishing between op
 
 ### Parser Changes Needed
 
-- [x] Lexer: Modify identifier token pattern to accept `[a-zA-Z_][a-zA-Z0-9_\-+]*`
+- [ ] Lexer: Modify identifier token pattern to accept `[a-zA-Z_][a-zA-Z0-9_\-+]*`
 - [ ] Grammar: No changes (identifiers already used in set elements)
 - [ ] AST: No changes (string identifiers already supported)
 - [ ] Semantic: Verify symbol table lookup works with special chars
-- [x] Tests: Add test cases for `light-ind`, `food+agr`, edge cases like `--`, `++`
-- [x] Docs: Update lexer documentation with identifier rules
+- [ ] Tests: Add test cases for `light-ind`, `food+agr`, edge cases like `--`, `++`
+- [ ] Docs: Update lexer documentation with identifier rules
 
 ### Implementation Notes
 
@@ -354,11 +350,11 @@ Grammar extension to allow list of alias pairs. Minimal AST and semantic impact.
 ### Parser Changes Needed
 
 - [ ] Lexer: No changes needed
-- [x] Grammar: Change `alias_stmt: 'Alias' '(' ID ',' ID ')' ';'` to `alias_stmt: 'Alias' alias_pair (',' alias_pair)* ';'` where `alias_pair: '(' ID ',' ID ')'`
-- [x] AST: Extend `Alias` node from `(set_name, alias_name)` to `[(set1, alias1), (set2, alias2), ...]`
-- [x] Semantic: Loop over pairs in semantic analyzer, register each alias in symbol table
-- [x] Tests: Test `Alias (nx,i), (ny,j), (nz,k);` and single pair for backward compatibility
-- [x] Docs: Update grammar documentation
+- [ ] Grammar: Change `alias_stmt: 'Alias' '(' ID ',' ID ')' ';'` to `alias_stmt: 'Alias' alias_pair (',' alias_pair)* ';'` where `alias_pair: '(' ID ',' ID ')'`
+- [ ] AST: Extend `Alias` node from `(set_name, alias_name)` to `[(set1, alias1), (set2, alias2), ...]`
+- [ ] Semantic: Loop over pairs in semantic analyzer, register each alias in symbol table
+- [ ] Tests: Test `Alias (nx,i), (ny,j), (nz,k);` and single pair for backward compatibility
+- [ ] Docs: Update grammar documentation
 
 ### Implementation Notes
 
@@ -434,18 +430,18 @@ Grammar changes for 3 statement types (Parameter, Variable, Equation), AST exten
 ### Parser Changes Needed
 
 - [ ] Lexer: No changes (string literals already tokenized)
-- [x] Grammar: 
+- [ ] Grammar: 
   - `param_decl: 'Parameter' ID index_expr? string_literal? ';'`
   - `var_decl: 'Variable' ID index_expr? string_literal? ';'`
   - `eq_decl: 'Equation' ID index_expr? string_literal? ';'`
-- [x] AST: Add `description: Optional[str] = None` to Parameter, Variable, Equation classes
-- [x] Semantic: Store description in symbol table metadata
-- [x] Tests: 
+- [ ] AST: Add `description: Optional[str] = None` to Parameter, Variable, Equation classes
+- [ ] Semantic: Store description in symbol table metadata
+- [ ] Tests: 
   - Test parameter with description: `Parameter cap(i) "capacity";`
   - Test variable with description: `Variable x(i,j) "shipment";`
   - Test equation with description: `Equation supply(i) "supply constraint";`
   - Test without description (backward compat): `Parameter cap(i);`
-- [x] Docs: Document inline description syntax in grammar reference
+- [ ] Docs: Document inline description syntax in grammar reference
 
 ### Implementation Notes
 
