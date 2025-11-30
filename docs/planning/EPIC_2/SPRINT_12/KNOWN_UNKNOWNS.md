@@ -739,13 +739,13 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 - Current baseline: 5.6% parse rate on Tier 2 candidates (1/18 models)
 - Target: ≥50% parse rate (5/10 models) is FEASIBLE
 - Failure modes categorized: syntax errors (44%), table wildcards (22%), preprocessor (11%), other (23%)
-- All selected blockers are fixable within Sprint 12 budget (6h total)
+- All selected blockers required to reach 50% parse rate are fixable within Sprint 12 budget (10h total: simple + medium)
 
 **Evidence:**
 - Ran parse analysis on 18 candidates, documented all failure modes
 - Complexity estimates: Simple (3 blockers, 4h), Medium (2 blockers, 6h)
-- Conservative estimate: 50% parse rate (5/10 models = simple blockers + 1-2 medium)
-- Optimistic estimate: 60-70% parse rate (6-7/10 models = all simple + all medium + partial table)
+- Conservative estimate: 50% parse rate (5/10 models = all simple blockers + all medium blockers)
+- Optimistic estimate: 60-70% parse rate (6-7/10 models = simple + medium + partial table wildcard)
 
 **Decision:**
 - Target: **50% ± 10% parse rate** (5-6/10 models)

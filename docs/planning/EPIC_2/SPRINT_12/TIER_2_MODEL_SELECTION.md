@@ -19,10 +19,10 @@
 - **Parse Success Rate (baseline):** 5.6% (1/18 models: house.gms)
 - **Selected Models:** 10
 - **Unique Blocker Patterns:** 6
-- **Estimated Implementation Effort:** 15h total (6h high-priority, 9h stretch goals)
+- **Estimated Implementation Effort:** 15h total (4h high-priority, 6h medium-priority, 5h stretch goal)
   - High-priority blockers (Days 4-6): 3 simple blockers = 4h
-  - Stretch blockers (Days 7-8): 2 medium blockers = 6h  
-  - Deferred if time-constrained: 1 complex blocker = 5h
+  - Medium-priority blockers (Days 4-6): 2 medium blockers = 6h  
+  - Stretch goal if time permits: 1 complex blocker = 5h
 
 ### Blocker Distribution
 

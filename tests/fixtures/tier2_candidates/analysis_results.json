@@ -45,7 +45,7 @@
     "error_message": "Error: Parse error at line 29, column 41: Undefined symbol 'pi' referenced [context: equation 'defaux1a' RHS]\n  defaux1a.. aux1a =e= abs(sin(4*mod(aux1,pi)));\n                                         ",
     "error_line": 29,
     "file_size_lines": 36,
-    "blocker_category": "loop_construct"
+    "blocker_category": "undefined_symbol"
   },
   {
     "model_name": "gasoil",

@@ -507,10 +507,10 @@ done
 
 ### Acceptance Criteria
 
-- [x] 10 models selected covering ≥5 different blocker patterns
-- [x] Total estimated blocker effort ≤6h (conservative estimate)
+- [x] 10 models selected covering ≥5 different blocker patterns (achieved 6 patterns)
+- [x] Total estimated blocker effort ≤15h with phased implementation (4h high-priority, 6h medium-priority, 5h stretch)
 - [x] No single blocker >5h effort (to fit Sprint 12 Day 4-6 timeline)
-- [x] Models diverse in size (100-500 lines) and domain
+- [x] Models diverse in size (40-180 lines) and domain
 - [x] Parse failure analysis validated via actual ingestion attempts
 - [x] Selection documented with clear rationale
 - [x] All Tier 2 unknowns from Task 1 resolved
