@@ -476,30 +476,30 @@ Based on the 6 blockers identified in TIER_2_MODEL_SELECTION.md:
 
 ### Recommended Implementation Order (6h Budget)
 
-**Phase 1: HIGH Priority (4h total)**
+**Phase 1: Top Priority Implementation (4h total)**
 1. **inline_descriptions** - 4h → Unlocks 3 models (chem, water, gastrans)
    - Priority: 27 (MEDIUM band, but highest score)
    - Reason: Best ROI (3 models for 4h effort)
 
-**Phase 2: MEDIUM Priority (2h additional, 6h total)**
+**Phase 2: Secondary Priority (2h additional, 6h total)**
 2. **multiple_alias_declaration** - 1.5h → Unlocks 1 model (jbearing)
-   - Priority: 14 (MEDIUM band)
+   - Priority: 14 (LOW band)
    - Reason: Simple syntax fix
    
 3. **predefined_constants** - 0.5h remaining budget → Partial implementation
-   - Priority: 14 (MEDIUM band)
+   - Priority: 14 (LOW band)
    - Reason: May complete if inline_descriptions takes <4h
 
 **Deferred (beyond 6h budget):**
 - special_chars_in_identifiers (1.5h) - Lower priority simple fix
 - model_inline_descriptions (2h) - Related to #1 but lower frequency
-- table_wildcard_domain (5h) - Complex, stretch goal
+- table_wildcard_domain (5h) - Medium complexity, stretch goal
 
 ### Expected Parse Rate
 
-**Conservative (4h spent):** 4/10 models = 40% (inline_descriptions only)  
-**Realistic (6h spent):** 5-6/10 models = 50-60% (inline_descriptions + 1-2 simple blockers)  
-**Optimistic (8h spent):** 7-8/10 models = 70-80% (add model_inline_descriptions + special_chars)
+**Conservative (4h spent):** 3/10 models = 30% (inline_descriptions only)  
+**Realistic (6h spent):** 4-5/10 models = 40-50% (inline_descriptions + 1-2 simple blockers)  
+**Optimistic (8h spent):** 6-7/10 models = 60-70% (add model_inline_descriptions + special_chars)
 
 ---
 
