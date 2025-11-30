@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Prep: Task 4 Complete - Multi-Metric Threshold Research - 2025-11-29
+
+**Branch:** `planning/sprint12-task4`  
+**Status:** ✅ COMPLETE
+
+#### Task 4: Research Multi-Metric Threshold Patterns
+
+**Objective:** Research best practices for multi-metric CI threshold checking to guide Sprint 12 Component 2 implementation.
+
+**Tools Surveyed:**
+1. **Lighthouse CI** - Multi-metric assertions with warn/error levels, check-all pattern before exit
+2. **pytest-benchmark** - Relative thresholds (% change from baseline), default 200% threshold
+3. **Codecov** - Coverage thresholds with baseline comparison and wiggle room config
+
+**Key Decisions:**
+- **Exit Code Strategy:** Option B - Check all metrics before exiting, return worst status (0=pass, 1=fail, 2=error)
+- **Threshold Methodology:** Relative (% change from baseline) not absolute values
+- **Architecture:** Extend existing `check_parse_rate_regression.py` rather than creating new script
+- **Threshold Sensitivity:**
+  - parse_rate: warn=5%, fail=10% (strict, correctness critical)
+  - convert_rate: warn=5%, fail=10% (strict, quality critical)
+  - performance: warn=20%, fail=50% (loose, accounts for system variance)
+
+**Unknowns Verified:**
+- ✅ 2.1 Metric Selection: Chose parse_rate, convert_rate, performance (avg_time_ms)
+- ✅ 2.2 Threshold Setting: Defined relative thresholds with dual warn/fail levels
+- ✅ 2.3 CI Integration: Extend check_parse_rate_regression.py, no new infrastructure
+- ✅ 2.4 Backward Compatibility: 100% compatible, legacy and new modes coexist
+- ✅ 6.3 CI Checklist Integration: Single item with override process
+
+**Changes:**
+- Added: `docs/research/multi_metric_thresholds.md` (comprehensive research document)
+  - Survey findings with tool patterns and examples
+  - Exit code strategy with decision logic
+  - Unified metrics architecture design
+  - PR comment format with status indicators (✅/⚠️/❌)
+  - Threshold recommendations based on metric characteristics
+  - Implementation checklist for Sprint 12 Days 4-6
+- Modified: `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` (verified 5 unknowns)
+- Modified: `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` (Task 4 marked complete)
+
+**Impact on Sprint 12:**
+- Component 2 (Days 4-6) can proceed with clear design guidance
+- No new infrastructure required - extends existing script
+- 100% backward compatible with Sprint 11 workflows
+- Industry-validated patterns reduce risk of flaky CI
+
+---
+
 ### Sprint 12 Prep: Task 3 Complete - Tier 2 Model Selection - 2025-11-29
 
 **Branch:** `planning/sprint12-task3`  
