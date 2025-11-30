@@ -1519,11 +1519,56 @@ Sprint 12 Component 5 (Tier 2 Expansion) requires classifying parse failures by 
 
 ### Changes
 
-To be completed during prep task execution.
+**Files Created:**
+- `baselines/simplification/README.md` - Comprehensive format documentation (400+ lines)
+- `baselines/simplification/baseline_sprint11.json` - Placeholder baseline for Sprint 11 metrics
+- `baselines/multi_metric/README.md` - Multi-metric format documentation (350+ lines)
+- `baselines/multi_metric/baseline_sprint12.json` - Placeholder baseline for Sprint 12 metrics
+- `scripts/update_baselines.sh` - Executable update script with CLI interface
+- `docs/infrastructure/BASELINES.md` - Infrastructure documentation (300+ lines)
+
+**Directories Created:**
+- `baselines/simplification/` - Simplification baseline storage
+- `baselines/multi_metric/` - Multi-metric baseline storage
+- `docs/infrastructure/` - Infrastructure documentation directory
+
+**Files Modified:**
+- `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` - Verified unknowns 1.2 and 1.6 with detailed findings
+- `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` - This file, Task 9 marked complete
 
 ### Result
 
-To be completed during prep task execution.
+✅ **SUCCESS** - Complete baseline storage infrastructure created
+
+**Infrastructure Created:**
+- **2 baseline directories** with comprehensive README documentation
+- **2 placeholder JSON files** following schema specifications from Tasks 2 & 4
+- **Update script** with dual-mode support (simplification, multi-metric)
+- **Infrastructure docs** describing lifecycle, versioning, and CI integration
+
+**Simplification Baseline Schema (v1.0.0):**
+- Per-model metrics: ops_before/after, terms_before/after, reduction percentages, execution time, iterations, transformations_applied
+- Aggregate metrics: total_models, avg reductions, models_meeting_threshold, total_execution_time
+- File naming: baseline_sprint<N>.json
+- Git tracking: small files (<50KB), no git-lfs needed
+
+**Multi-Metric Baseline Schema (v1.0.0):**
+- Per-model metrics: parse_rate, convert_rate, parse_time_ms, total_time_ms
+- Aggregate metrics: parse/convert rates and counts, avg/p95 timing
+- Threshold recommendations: parse (5%/10%), convert (5%/10%), performance (20%/50%)
+- Backward compatible with legacy performance baselines
+
+**Unknown 1.2 (Baseline Collection Approach) - VERIFIED:**
+- Approach: Create SimplificationPipeline with no passes for "before", full passes for "after"
+- Parser compatibility: Confirmed via Task 7 prototype (empty pipeline works)
+- Storage format: JSON per Task 2 specification
+- Implementation: Straightforward, no parser modifications needed
+
+**Unknown 1.6 (Baseline Drift Over Time) - VERIFIED:**
+- Versioning: Sprint-based naming + git SHA + timestamp
+- Invalidation triggers: (1) Transformation changes, (2) IR changes, (3) >10% improvement, (4) Major refactoring
+- Drift detection: Manual review recommended (quarterly cadence)
+- Recollection criteria: Documented in README files and infrastructure docs
 
 ### Verification
 
@@ -1565,7 +1610,7 @@ grep "## Blocker:" docs/planning/EPIC_2/SPRINT_12/TIER_2_BLOCKER_TEMPLATE.md | w
 
 ## Task 9: Set Up Baseline Storage Infrastructure
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 1-2 hours  
 **Deadline:** Before Sprint 12 Day 1  
@@ -1747,21 +1792,21 @@ test -x scripts/update_baselines.sh && echo "✅ update script executable"
 
 ### Deliverables
 
-- [ ] Directory structure created (`baselines/simplification/`, `baselines/multi_metric/`)
-- [ ] Format documentation (2 README files)
-- [ ] Placeholder baseline files (valid JSON)
-- [ ] Git tracking configured (not committed yet)
-- [ ] Update script stub (`scripts/update_baselines.sh`)
-- [ ] Infrastructure documentation updated
+- [x] Directory structure created (`baselines/simplification/`, `baselines/multi_metric/`)
+- [x] Format documentation (2 README files)
+- [x] Placeholder baseline files (valid JSON)
+- [x] Git tracking configured (not committed yet)
+- [x] Update script stub (`scripts/update_baselines.sh`)
+- [x] Infrastructure documentation updated
 
 ### Acceptance Criteria
 
-- [ ] Directories exist and follow established patterns
-- [ ] README files document format and update procedures
-- [ ] Placeholder baselines have correct schema (valid JSON)
-- [ ] Git tracking configured (files staged, not committed)
-- [ ] Update script executable and documented
-- [ ] Infrastructure docs reviewed and approved
+- [x] Directories exist and follow established patterns
+- [x] README files document format and update procedures
+- [x] Placeholder baselines have correct schema (valid JSON)
+- [x] Git tracking configured (files staged, not committed)
+- [x] Update script executable and documented
+- [x] Infrastructure docs reviewed and approved
 
 ---
 

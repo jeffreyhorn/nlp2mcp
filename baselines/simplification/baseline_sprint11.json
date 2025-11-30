@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "created_at": "2025-11-30T00:00:00Z",
+  "sprint": "sprint11",
+  "git_commit": "placeholder",
+  "description": "Placeholder baseline for Sprint 11 simplification metrics (to be populated during Sprint 12 Day 2)",
+  "transformations_enabled": [
+    "constant_propagation",
+    "constant_fold",
+    "zero_multiply",
+    "identity_add",
+    "identity_multiply",
+    "double_negation",
+    "subtract_zero",
+    "divide_one",
+    "power_one",
+    "power_zero",
+    "multiply_one"
+  ],
+  "models": {},
+  "aggregate": {
+    "total_models": 0,
+    "ops_avg_reduction_pct": 0.0,
+    "terms_avg_reduction_pct": 0.0,
+    "models_meeting_threshold": 0,
+    "threshold_pct": 20.0,
+    "total_execution_time_ms": 0.0
+  }
+}

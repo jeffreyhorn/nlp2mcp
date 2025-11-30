@@ -7,6 +7,107 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Prep: Task 9 Complete - Baseline Storage Infrastructure - 2025-11-30
+
+**Branch:** `planning/sprint12-task9`  
+**Status:** ✅ COMPLETE
+
+#### Task 9: Set Up Baseline Storage Infrastructure
+
+**Objective:** Create directory structure and initial baseline files for Sprint 12 metrics tracking (term reduction and multi-metric thresholds).
+
+**Infrastructure Created:**
+- **2 baseline directories** with comprehensive README documentation
+- **2 placeholder JSON files** following schema specifications from Tasks 2 & 4
+- **Update script** (`scripts/update_baselines.sh`) with dual-mode support (simplification, multi-metric)
+- **Infrastructure docs** (`docs/infrastructure/BASELINES.md`) describing lifecycle, versioning, and CI integration
+
+**Simplification Baseline Schema (v1.0.0):**
+- **Per-model metrics:** ops_before, ops_after, terms_before, terms_after, ops_reduction_pct, terms_reduction_pct, execution_time_ms, iterations, transformations_applied
+- **Aggregate metrics:** total_models, ops_avg_reduction_pct, terms_avg_reduction_pct, models_meeting_threshold, threshold_pct, total_execution_time_ms
+- **File naming:** `baseline_sprint<N>.json` (e.g., baseline_sprint11.json)
+- **Git tracking:** Small files (<50KB), no git-lfs needed
+
+**Multi-Metric Baseline Schema (v1.0.0):**
+- **Per-model metrics:** parse_rate, convert_rate, parse_time_ms, total_time_ms
+- **Aggregate metrics:** total_models, parse/convert rates and counts, avg/p95 timing
+- **Threshold recommendations:** parse_rate (warn 5%, fail 10%), convert_rate (warn 5%, fail 10%), performance (warn 20%, fail 50%)
+- **Backward compatible** with legacy `baselines/performance/golden/` format
+
+**Unknowns Verified:**
+- ✅ **1.2 Baseline Collection Approach:**
+  - **Approach:** Create SimplificationPipeline with no passes for "before" metrics, full passes for "after" metrics
+  - **Parser compatibility:** Confirmed via Task 7 prototype (empty pipeline works without errors)
+  - **Storage format:** JSON following Task 2 specification
+  - **Implementation:** Straightforward, no parser modifications needed
+  
+- ✅ **1.6 Baseline Drift Over Time:**
+  - **Versioning:** Sprint-based naming + git SHA + timestamp in metadata
+  - **Invalidation triggers:** (1) Transformation changes, (2) IR structure changes, (3) >10% improvement, (4) Major refactoring
+  - **Drift detection:** Manual review recommended (quarterly cadence)
+  - **Recollection criteria:** Documented in README files and infrastructure docs
+  - **Validity period:** 2-3 sprints typical, depends on transformation changes
+  - **Future enhancement:** CI staleness check (deferred to Sprint 13+)
+
+**Changes:**
+- Added: `baselines/simplification/README.md` - Comprehensive format documentation (400+ lines)
+  - JSON schema v1.0.0 specification with all field types and descriptions
+  - Per-model and aggregate metrics structure
+  - File naming convention and versioning policy
+  - Update procedures (manual and automated)
+  - Baseline invalidation triggers
+  - CI usage examples with regression testing
+- Added: `baselines/simplification/baseline_sprint11.json` - Placeholder baseline for Sprint 11 metrics
+  - Valid JSON with schema_version "1.0.0"
+  - Empty models object, zero-initialized aggregate metrics
+  - 11 transformation names in transformations_enabled array
+  - Marked as placeholder to be populated during Sprint 12 Day 2
+- Added: `baselines/multi_metric/README.md` - Multi-metric format documentation (350+ lines)
+  - JSON schema v1.0.0 specification for parse/convert/performance metrics
+  - Threshold recommendations from Task 4 (relative thresholds)
+  - CI usage with multi-metric regression check examples
+  - Exit code behavior (0=PASS, 1=WARN, 2=FAIL)
+  - Backward compatibility notes with legacy baselines
+- Added: `baselines/multi_metric/baseline_sprint12.json` - Placeholder baseline for Sprint 12 metrics
+  - Valid JSON with sprint "Sprint 12", checkpoint "Day 10 - Sprint Complete"
+  - Empty models object, zero-initialized aggregate metrics
+  - model_set "tier1" field
+  - Description marked as placeholder to be populated during Sprint 12 Day 6
+- Added: `scripts/update_baselines.sh` - Executable baseline update script
+  - CLI interface with --simplification, --multi-metric, --all options
+  - Dry-run support for previewing changes
+  - Help documentation with usage examples
+  - Prerequisite checks (git repo, python3, pytest, measure_parse_rate.py)
+  - Placeholder implementation (TODOs for Sprint 12 Days 2 & 6)
+- Added: `docs/infrastructure/BASELINES.md` - Infrastructure documentation (300+ lines)
+  - Directory structure overview
+  - Baseline type descriptions (simplification, multi-metric, legacy)
+  - Git tracking rationale (no git-lfs for small files)
+  - Update process documentation (manual and automated)
+  - Validation procedures with command examples
+  - CI integration examples for regression checks
+  - Baseline lifecycle (creation, maintenance, retirement)
+  - Schema versioning policy (SemVer)
+  - Related documentation links
+- Added: `docs/infrastructure/` directory
+- Updated: `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` - Verified unknowns 1.2 and 1.6 with detailed findings
+- Updated: `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` - Task 9 marked complete with deliverables
+
+**Key Findings:**
+- **Baseline collection proven viable:** Task 7 prototype confirmed empty SimplificationPipeline works for "before" metrics
+- **Schema design straightforward:** Direct extension of existing performance baseline format
+- **Git tracking sufficient:** Baseline files <50KB, no git-lfs complexity needed
+- **Versioning strategy clear:** Sprint-based file naming + SemVer schema versioning
+- **Invalidation criteria defined:** 4 triggers documented with quarterly review cadence
+
+**Impact on Sprint 12:**
+- **Component 1 (Term Reduction Benchmarking) ready:** Baseline storage prepared for Day 2 population
+- **Component 2 (Multi-Metric Thresholds) ready:** Schema defined for Day 6 population
+- **CI integration path clear:** Regression checks documented with examples
+- **No blocking unknowns remain:** All measurement infrastructure questions resolved
+
+---
+
 ### Sprint 12 Prep: Task 8 Complete - Tier 2 Blocker Analysis Template - 2025-11-30
 
 **Branch:** `planning/sprint12-task8`  
