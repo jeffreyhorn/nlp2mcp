@@ -15,8 +15,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from src.ir.ast import Binary, Call, Const, Expr, ParamRef, Sum, SymbolRef, Unary, VarRef
-from src.ir.simplification_pipeline import SimplificationMetrics, SimplificationPipeline
+from src.ir.ast import Binary, Const, Expr, VarRef
+from src.ir.simplification_pipeline import SimplificationPipeline
 
 
 def count_terms(expr: Expr) -> int:
