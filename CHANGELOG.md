@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Per-model metrics:** parse_rate, convert_rate, parse_time_ms, total_time_ms
 - **Aggregate metrics:** total_models, parse/convert rates and counts, avg/p95 timing
 - **Threshold recommendations:** parse_rate (warn 5%, fail 10%), convert_rate (warn 5%, fail 10%), performance (warn 20%, fail 50%)
-- **Backward compatible** with legacy `baselines/performance/golden/` format
+- **Backward compatible** with legacy `baselines/performance/golden/` format (uses same "summary" field name)
 
 **Unknowns Verified:**
 - ✅ **1.2 Baseline Collection Approach:**

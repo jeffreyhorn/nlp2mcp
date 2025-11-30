@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # update_baselines.sh - Update baseline files for regression testing
 #
@@ -165,16 +165,28 @@ update_multi_metric_baseline() {
 while [[ $# -gt 0 ]]; do
     case $1 in
         --simplification)
+            if [ -z "${2:-}" ]; then
+                log_error "Missing SPRINT argument for --simplification"
+                exit 1
+            fi
             UPDATE_SIMPLIFICATION=true
             SPRINT="$2"
             shift 2
             ;;
         --multi-metric)
+            if [ -z "${2:-}" ]; then
+                log_error "Missing SPRINT argument for --multi-metric"
+                exit 1
+            fi
             UPDATE_MULTI_METRIC=true
             SPRINT="$2"
             shift 2
             ;;
         --all)
+            if [ -z "${2:-}" ]; then
+                log_error "Missing SPRINT argument for --all"
+                exit 1
+            fi
             UPDATE_SIMPLIFICATION=true
             UPDATE_MULTI_METRIC=true
             SPRINT="$2"

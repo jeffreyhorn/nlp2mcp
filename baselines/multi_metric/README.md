@@ -34,7 +34,7 @@ This directory contains multi-metric baselines for comprehensive CI regression d
     "himmel16.gms": { ... },
     ...
   },
-  "aggregate": { ... }
+  "summary": { ... }
 }
 ```
 
@@ -59,7 +59,7 @@ This directory contains multi-metric baselines for comprehensive CI regression d
 
 **Aggregate Metrics:**
 ```json
-"aggregate": {
+"summary": {
   "total_models": 10,
   "parse_rate": 1.0,              // Aggregate parse rate (0.0-1.0)
   "parse_rate_pct": 100.0,        // As percentage (0-100)
@@ -111,7 +111,7 @@ git commit -m "Update Sprint 12 multi-metric baseline"
 
 ```bash
 # Use update script
-./scripts/update_baselines.sh multi_metric
+./scripts/update_baselines.sh --multi-metric sprint12
 ```
 
 ---
@@ -268,7 +268,7 @@ Exit Code: 0 (PASS)
       "total_time_ms": 412
     }
   },
-  "aggregate": {
+  "summary": {
     "total_models": 10,
     "parse_rate": 1.0,
     "parse_rate_pct": 100.0,
@@ -295,7 +295,7 @@ Exit Code: 0 (PASS)
 
 **Multi-Metric Baselines (baselines/multi_metric/):**
 - Sprint 12+ uses multi-metric regression detection
-- Extends legacy format with explicit aggregate metrics
+- Extends legacy format with additional aggregate metrics (p95 timing, separate parse/convert counts)
 - Enables per-metric threshold configuration
 
 **Migration Path:**

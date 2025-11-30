@@ -79,7 +79,7 @@ baselines/
 
 **CI Usage**: Multi-metric regression check with warn/fail thresholds
 
-**Backward Compatibility**: Compatible with legacy `baselines/performance/golden/` format
+**Backward Compatibility**: Compatible with legacy `baselines/performance/golden/` format (uses same "summary" field name, extends with additional metrics)
 
 ### 3. Legacy Performance Baselines
 

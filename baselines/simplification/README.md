@@ -43,7 +43,7 @@ This directory contains baseline metrics for IR simplification transformations. 
 }
 ```
 
-###  Field Descriptions
+### Field Descriptions
 
 **Metadata:**
 - `schema_version`: Baseline schema version (SemVer)
@@ -122,7 +122,7 @@ git commit -m "Update Sprint 11 simplification baseline"
 
 ```bash
 # Use update script
-./scripts/update_baselines.sh simplification
+./scripts/update_baselines.sh --simplification sprint11
 ```
 
 ---

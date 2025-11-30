@@ -1556,7 +1556,7 @@ Sprint 12 Component 5 (Tier 2 Expansion) requires classifying parse failures by 
 - Per-model metrics: parse_rate, convert_rate, parse_time_ms, total_time_ms
 - Aggregate metrics: parse/convert rates and counts, avg/p95 timing
 - Threshold recommendations: parse (5%/10%), convert (5%/10%), performance (20%/50%)
-- Backward compatible with legacy performance baselines
+- Backward compatible with legacy performance baselines (uses same "summary" field name)
 
 **Unknown 1.2 (Baseline Collection Approach) - VERIFIED:**
 - Approach: Create SimplificationPipeline with no passes for "before", full passes for "after"

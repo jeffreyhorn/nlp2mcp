@@ -6,7 +6,7 @@
   "model_set": "tier1",
   "description": "Placeholder baseline for Sprint 12 multi-metric thresholds (to be populated during Sprint 12 Day 6)",
   "models": {},
-  "aggregate": {
+  "summary": {
     "total_models": 0,
     "parse_rate": 0.0,
     "parse_rate_pct": 0.0,
