@@ -24,6 +24,7 @@ This directory contains multi-metric baselines for comprehensive CI regression d
 
 ```json
 {
+  "schema_version": "1.0.0",
   "sprint": "sprint12",
   "checkpoint": "Day 10 - Sprint Complete",
   "commit": "abc123...",
@@ -41,6 +42,7 @@ This directory contains multi-metric baselines for comprehensive CI regression d
 ### Field Descriptions
 
 **Metadata:**
+- `schema_version`: Baseline schema version (SemVer, e.g., "1.0.0")
 - `sprint`: Sprint identifier (e.g., "sprint11", "sprint12")
 - `checkpoint`: Sprint checkpoint or milestone description
 - `commit`: Git commit SHA when baseline created
@@ -243,6 +245,7 @@ Exit Code: 0 (PASS)
 
 ```json
 {
+  "schema_version": "1.0.0",
   "sprint": "sprint12",
   "checkpoint": "Day 10 - Sprint Complete",
   "commit": "abc123def456",

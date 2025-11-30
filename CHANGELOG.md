@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Exit code behavior (0=PASS, 1=WARN, 2=FAIL)
   - Backward compatibility notes with legacy baselines
 - Added: `baselines/multi_metric/baseline_sprint12.json` - Placeholder baseline for Sprint 12 metrics
-  - Valid JSON with sprint "Sprint 12", checkpoint "Day 10 - Sprint Complete"
+  - Valid JSON with sprint "sprint12", checkpoint "Day 10 - Sprint Complete"
   - Empty models object, zero-initialized aggregate metrics
   - model_set "tier1" field
   - Description marked as placeholder to be populated during Sprint 12 Day 6
