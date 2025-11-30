@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2025-11-30T12:35:12.456Z",
+  "model_name": "complex.gms",
+  "total_duration_ms": 78.91,
+  "overall_success": true,
+  "stages": {
+    "Parse": {
+      "duration_ms": 18.23,
+      "success": true,
+      "error": null,
+      "details": {
+        "lines": 450,
+        "tokens": 3456
+      }
+    },
+    "Semantic Analysis": {
+      "duration_ms": 12.67,
+      "success": true,
+      "error": null,
+      "details": {
+        "symbols_declared": 75,
+        "symbols_referenced": 82
+      }
+    },
+    "Simplification": {
+      "duration_ms": 35.89,
+      "success": true,
+      "error": null,
+      "details": {
+        "passes": 5,
+        "expressions_simplified": 42,
+        "constants_folded": 18,
+        "warnings": [
+          "Complex nested expression at line 125 - may benefit from manual refactoring",
+          "High recursion depth in equation system - consider simplification"
+        ]
+      }
+    },
+    "IR Generation": {
+      "duration_ms": 7.45,
+      "success": true,
+      "error": null,
+      "details": {
+        "sets_generated": 12,
+        "parameters_generated": 25,
+        "variables_generated": 18
+      }
+    },
+    "MCP Generation": {
+      "duration_ms": 4.67,
+      "success": true,
+      "error": null,
+      "details": {
+        "output_lines": 550,
+        "output_bytes": 15678
+      }
+    }
+  },
+  "summary": {
+    "stages_completed": 5,
+    "stages_failed": 0,
+    "stages_skipped": 0,
+    "parse_duration_ms": 18.23,
+    "semantic_duration_ms": 12.67,
+    "simplification_duration_ms": 35.89,
+    "ir_generation_duration_ms": 7.45,
+    "mcp_generation_duration_ms": 4.67
+  }
+}

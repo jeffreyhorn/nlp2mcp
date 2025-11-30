@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Prep: Task 5 Complete - JSON Diagnostics Schema - 2025-11-30
+
+**Branch:** `planning/sprint12-task5`  
+**Status:** ✅ COMPLETE
+
+#### Task 5: Design JSON Diagnostics Schema
+
+**Objective:** Design JSON schema for diagnostic output to guide Sprint 12 Component 3 implementation.
+
+**Schema Overview:**
+- **Version:** 1.0.0 (SemVer)
+- **Format:** Single JSON object per model
+- **Top-level fields:** schema_version, generated_at, model_name, total_duration_ms, overall_success, stages, summary
+- **Versioning policy:** MAJOR.MINOR.PATCH with migration guides
+
+**Example Scenarios:**
+- **Success:** rbrock.gms - All 5 stages complete (45.23ms total)
+- **Partial:** complex.gms - All stages complete with simplification warnings (78.91ms)
+- **Failure:** invalid.gms - Parse error at line 42, 4 stages skipped (8.45ms)
+
+**Unknowns Verified:**
+- ✅ 3.1 Schema Complexity: Direct serialization, extend existing to_json() method
+- ✅ 3.2 Output Format: Single JSON object (not NDJSON or JSON array)
+- ✅ 3.3 Backward Compatibility: --format flag with text default (100% backward compatible)
+
+**Changes:**
+- Added: `docs/planning/EPIC_2/SPRINT_12/JSON_DIAGNOSTICS_SCHEMA.md` (comprehensive schema document)
+  - Complete field descriptions and data types
+  - Per-stage details structure with examples
+  - Summary object specification
+  - CI integration patterns (artifact storage, jq queries)
+  - Implementation checklist for Sprint 12 Days 7-8
+  - Performance analysis (0.2-0.5ms overhead, ~3-4KB per report)
+- Added: `docs/planning/EPIC_2/SPRINT_12/examples/success.json` (success scenario)
+- Added: `docs/planning/EPIC_2/SPRINT_12/examples/partial.json` (partial success with warnings)
+- Added: `docs/planning/EPIC_2/SPRINT_12/examples/failure.json` (parse failure with early termination)
+- Modified: `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` (verified 3 unknowns)
+- Modified: `docs/planning/EPIC_2/SPRINT_12/PREP_PLAN.md` (Task 5 marked complete)
+
+**Impact on Sprint 12:**
+- Component 3 (Days 7-8) can proceed with clear schema
+- Direct serialization - no parser refactoring needed
+- 100% backward compatible with Sprint 11 text diagnostics
+- CI-ready with validated JSON examples
+
+---
+
 ### Sprint 12 Prep: Task 4 Complete - Multi-Metric Threshold Research - 2025-11-29
 
 **Branch:** `planning/sprint12-task4`  

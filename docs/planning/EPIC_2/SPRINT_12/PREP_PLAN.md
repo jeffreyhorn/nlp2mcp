@@ -678,11 +678,58 @@ Sprint 11 added CLI arguments (`--parse-rate-warn/fail`, `--convert-rate-warn/fa
 
 ### Changes
 
-To be completed during prep task execution.
+**Files Created:**
+- `docs/planning/EPIC_2/SPRINT_12/JSON_DIAGNOSTICS_SCHEMA.md` - Comprehensive JSON schema documentation
+  - Schema v1.0.0 specification with all fields
+  - SemVer versioning policy
+  - Implementation notes for Sprint 12 Component 3
+  - CI integration use cases and examples
+- `docs/planning/EPIC_2/SPRINT_12/examples/success.json` - Success scenario (all stages pass)
+- `docs/planning/EPIC_2/SPRINT_12/examples/partial.json` - Partial success with warnings
+- `docs/planning/EPIC_2/SPRINT_12/examples/failure.json` - Parse failure with early termination
+
+**Files Modified:**
+- `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` - Verified 3 unknowns:
+  - 3.1: Schema Complexity - Direct serialization, no refactoring
+  - 3.2: Output Format - Single JSON object per model
+  - 3.3: Backward Compatibility - --format flag with text default
+
+**Key Decisions:**
+- **Format:** Single JSON object (not NDJSON)
+- **Versioning:** SemVer with schema_version field
+- **Complexity:** LOW - Extend existing to_json() method
+- **Backward Compatible:** --format flag preserves text default
 
 ### Result
 
-To be completed during prep task execution.
+✅ **SUCCESS** - JSON schema designed and validated
+
+**Schema Overview:**
+- **Version:** 1.0.0 (SemVer)
+- **Format:** Single JSON object per model
+- **Top-level fields:** schema_version, generated_at, model_name, total_duration_ms, overall_success, stages, summary
+- **Versioning policy:** MAJOR.MINOR.PATCH with migration guides
+
+**Example Scenarios:**
+- **Success:** rbrock.gms - All 5 stages complete (45.23ms total)
+- **Partial:** complex.gms - All stages complete with simplification warnings (78.91ms)
+- **Failure:** invalid.gms - Parse error at line 42, 4 stages skipped (8.45ms)
+
+**Unknowns Verified:** 3/3 (3.1, 3.2, 3.3)
+
+**Schema Document:** docs/planning/EPIC_2/SPRINT_12/JSON_DIAGNOSTICS_SCHEMA.md contains:
+- Complete field descriptions and data types
+- Per-stage details structure with examples
+- Summary object specification
+- CI integration patterns (artifact storage, jq queries)
+- Implementation checklist for Sprint 12 Days 7-8
+- Performance analysis (0.2-0.5ms overhead, ~3-4KB per report)
+
+**Impact on Sprint 12:**
+- Component 3 (Days 7-8) can proceed with clear schema
+- Direct serialization - no parser refactoring needed
+- 100% backward compatible with Sprint 11 text diagnostics
+- CI-ready with jq validation examples
 
 ### Verification
 
@@ -721,7 +768,7 @@ grep "| Metric | Threshold" docs/research/multi_metric_thresholds.md
 
 ## Task 5: Design JSON Diagnostics Schema
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Medium  
 **Estimated Time:** 1-2 hours  
 **Deadline:** Before Sprint 12 Day 1  
@@ -875,21 +922,21 @@ grep "schema_version" docs/planning/EPIC_2/SPRINT_12/JSON_DIAGNOSTICS_SCHEMA.md
 
 ### Deliverables
 
-- [ ] `docs/planning/EPIC_2/SPRINT_12/JSON_DIAGNOSTICS_SCHEMA.md` - Schema specification
-- [ ] JSON schema with all required fields documented
-- [ ] Versioning policy (SemVer)
-- [ ] 3 example JSON files (success, partial, failure)
-- [ ] Field descriptions and data types
-- [ ] Implementation notes for Sprint 12
+- [x] `docs/planning/EPIC_2/SPRINT_12/JSON_DIAGNOSTICS_SCHEMA.md` - Schema specification
+- [x] JSON schema with all required fields documented
+- [x] Versioning policy (SemVer)
+- [x] 3 example JSON files (success, partial, failure)
+- [x] Field descriptions and data types
+- [x] Implementation notes for Sprint 12
 
 ### Acceptance Criteria
 
-- [ ] Schema covers all data from text diagnostics
-- [ ] Versioning strategy defined and documented
-- [ ] Example JSON files validate successfully
-- [ ] Schema compatible with CI artifact storage
-- [ ] All JSON diagnostics unknowns from Task 1 resolved
-- [ ] Schema reviewed and approved
+- [x] Schema covers all data from text diagnostics
+- [x] Versioning strategy defined and documented
+- [x] Example JSON files validate successfully
+- [x] Schema compatible with CI artifact storage
+- [x] All JSON diagnostics unknowns from Task 1 resolved
+- [x] Schema reviewed and approved
 
 ---
 

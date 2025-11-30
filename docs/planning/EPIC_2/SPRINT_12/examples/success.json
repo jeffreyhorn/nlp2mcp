@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2025-11-30T12:34:56.789Z",
+  "model_name": "rbrock.gms",
+  "total_duration_ms": 45.23,
+  "overall_success": true,
+  "stages": {
+    "Parse": {
+      "duration_ms": 12.34,
+      "success": true,
+      "error": null,
+      "details": {
+        "lines": 150,
+        "tokens": 1234
+      }
+    },
+    "Semantic Analysis": {
+      "duration_ms": 8.56,
+      "success": true,
+      "error": null,
+      "details": {
+        "symbols_declared": 25,
+        "symbols_referenced": 30
+      }
+    },
+    "Simplification": {
+      "duration_ms": 15.78,
+      "success": true,
+      "error": null,
+      "details": {
+        "passes": 3,
+        "expressions_simplified": 12,
+        "constants_folded": 5
+      }
+    },
+    "IR Generation": {
+      "duration_ms": 4.32,
+      "success": true,
+      "error": null,
+      "details": {
+        "sets_generated": 5,
+        "parameters_generated": 10,
+        "variables_generated": 8
+      }
+    },
+    "MCP Generation": {
+      "duration_ms": 4.23,
+      "success": true,
+      "error": null,
+      "details": {
+        "output_lines": 200,
+        "output_bytes": 5432
+      }
+    }
+  },
+  "summary": {
+    "stages_completed": 5,
+    "stages_failed": 0,
+    "stages_skipped": 0,
+    "parse_duration_ms": 12.34,
+    "semantic_duration_ms": 8.56,
+    "simplification_duration_ms": 15.78,
+    "ir_generation_duration_ms": 4.32,
+    "mcp_generation_duration_ms": 4.23
+  }
+}
