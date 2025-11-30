@@ -169,7 +169,7 @@ pytest tests/test_simplification.py --baseline=baselines/simplification/baseline
 
 ```bash
 # Run multi-metric check with thresholds
-python scripts/check_multi_metric_regression.py \
+python scripts/check_parse_rate_regression.py \
   --baseline baselines/multi_metric/baseline_sprint12.json \
   --parse-warn 0.05 --parse-fail 0.10 \
   --convert-warn 0.05 --convert-fail 0.10 \
@@ -221,7 +221,7 @@ Current versions:
 - `baselines/multi_metric/README.md` - Multi-metric baseline format specification
 - `docs/research/term_reduction_measurement.md` - Sprint 12 Prep Task 2 (simplification design)
 - `docs/research/multi_metric_thresholds.md` - Sprint 12 Prep Task 4 (threshold design)
-- `KNOWN_UNKNOWNS.md` - Unknown 1.2 (Baseline Collection Approach), 1.6 (Baseline Drift Over Time)
+- `docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md` - Unknown 1.2 (Baseline Collection Approach), 1.6 (Baseline Drift Over Time)
 
 ## Change History
 
@@ -233,5 +233,5 @@ Current versions:
 
 For questions about baseline infrastructure:
 - Review README files in `baselines/simplification/` and `baselines/multi_metric/`
-- Check KNOWN_UNKNOWNS.md for open questions about baseline management
+- Check docs/planning/EPIC_2/SPRINT_12/KNOWN_UNKNOWNS.md for open questions about baseline management
 - See sprint retrospectives for lessons learned about baseline maintenance

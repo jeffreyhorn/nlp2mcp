@@ -24,7 +24,7 @@ This directory contains multi-metric baselines for comprehensive CI regression d
 
 ```json
 {
-  "sprint": "Sprint 12",
+  "sprint": "sprint12",
   "checkpoint": "Day 10 - Sprint Complete",
   "commit": "abc123...",
   "timestamp": "2025-12-13T23:59:59Z",
@@ -41,7 +41,7 @@ This directory contains multi-metric baselines for comprehensive CI regression d
 ### Field Descriptions
 
 **Metadata:**
-- `sprint`: Sprint identifier (e.g., "Sprint 11", "Sprint 12")
+- `sprint`: Sprint identifier (e.g., "sprint11", "sprint12")
 - `checkpoint`: Sprint checkpoint or milestone description
 - `commit`: Git commit SHA when baseline created
 - `timestamp`: ISO 8601 timestamp
@@ -243,7 +243,7 @@ Exit Code: 0 (PASS)
 
 ```json
 {
-  "sprint": "Sprint 12",
+  "sprint": "sprint12",
   "checkpoint": "Day 10 - Sprint Complete",
   "commit": "abc123def456",
   "timestamp": "2025-12-13T23:59:59Z",
