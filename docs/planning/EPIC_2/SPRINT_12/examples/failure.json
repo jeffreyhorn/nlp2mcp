@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2025-11-30T12:36:45.123Z",
+  "model_name": "invalid.gms",
+  "total_duration_ms": 8.45,
+  "overall_success": false,
+  "stages": {
+    "Parse": {
+      "duration_ms": 8.45,
+      "success": false,
+      "error": "Syntax error at line 42: Unexpected token 'INVALID_KEYWORD'",
+      "details": {
+        "lines": 100,
+        "tokens": 0,
+        "error_line": 42,
+        "error_column": 15
+      }
+    }
+  },
+  "summary": {
+    "stages_completed": 1,
+    "stages_failed": 1,
+    "stages_skipped": 4,
+    "parse_duration_ms": 8.45,
+    "semantic_duration_ms": 0,
+    "simplification_duration_ms": 0,
+    "ir_generation_duration_ms": 0,
+    "mcp_generation_duration_ms": 0
+  }
+}

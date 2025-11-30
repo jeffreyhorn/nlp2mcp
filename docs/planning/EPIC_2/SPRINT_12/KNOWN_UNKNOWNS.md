@@ -596,7 +596,30 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 1-2h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 5)*
+**Verification Results:** ✅ VERIFIED (Task 5, 2025-11-30)
+
+**Findings:**
+- **Direct serialization** with minor enhancements
+- Current `to_json()` method in DiagnosticReport is 90% complete
+- Only additions: schema_version, generated_at, summary fields
+- No parser refactoring required
+
+**Evidence:**
+- Reviewed src/ir/diagnostics.py (lines 1-196)
+- DiagnosticReport uses simple JSON-compatible types (str, float, bool, dict)
+- StageMetrics.details is dict[str, Any] - already serializable
+- to_json() method exists (lines 116-131) - just needs metadata
+
+**Decision:**
+- **Complexity:** LOW - Extend existing to_json() → to_json_v1()
+- **Schema:** v1.0.0 with SemVer versioning
+- **Fields:** schema_version, generated_at, model_name, total_duration_ms, overall_success, stages, summary
+- **Implementation:** <4 hours for Sprint 12 Day 7
+
+**Impact:**
+- No major refactoring needed
+- Low risk, straightforward implementation
+- Full coverage of text diagnostic data
 
 ---
 
@@ -624,7 +647,36 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 0.5-1h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 5)*
+**Verification Results:** ✅ VERIFIED (Task 5, 2025-11-30)
+
+**Findings:**
+- **Single JSON object** per model (not NDJSON or JSON array)
+- Simplest for CLI use case (one model per invocation)
+- jq-friendly for CI scripts
+- NDJSON deferred to future batch processing needs
+
+**Evidence:**
+- Researched common diagnostic formats (LSP, compiler JSON outputs)
+- Analyzed use cases: CLI (single model), CI (artifact storage), trending
+- Tested example JSON sizes: ~3-4KB indented, ~2KB compact
+- NDJSON only beneficial for streaming multiple models
+
+**Decision:**
+- **Format:** Single JSON object
+- **Rationale:** CLI processes one model at a time
+- **Size:** Negligible (<5KB per report)
+- **CI Integration:** Store as artifacts, parse with jq
+- **Future:** Add NDJSON support if measure_parse_rate.py needs it
+
+**Trade-offs:**
+- ✅ Simple, standard JSON
+- ✅ jq-friendly (standard tooling)
+- ❌ Not optimized for streaming multiple models (acceptable for Sprint 12)
+
+**Impact:**
+- Clear decision enables straightforward implementation
+- Standard JSON tooling (no special parsers)
+- Easy CI integration with existing tools
 
 ---
 
@@ -652,7 +704,51 @@ Sprint 12 preparation tasks (Tasks 2-10 in PREP_PLAN.md) are explicitly designed
 
 **Estimated Research Time:** 0.5h  
 **Owner:** Sprint Team  
-**Verification Results:** *(To be completed during Task 5)*
+**Verification Results:** ✅ VERIFIED (Task 5, 2025-11-30)
+
+**Findings:**
+- **--format flag** with text default (100% backward compatible)
+- JSON output opt-in via explicit flag
+- No breaking changes to existing --diagnostics behavior
+- Both formats tested in CI
+
+**Evidence:**
+- Reviewed CLI argument structure in existing codebase
+- Existing --diagnostics flag outputs text to stderr
+- Adding --format flag with default="text" preserves behavior
+- Similar pattern used by industry tools (gcc -fdiagnostics-format, rustc --error-format)
+
+**Decision:**
+```bash
+# Existing behavior (unchanged)
+gams2mcp model.gms --diagnostics
+# → Text output to stderr
+
+# New behavior (opt-in)
+gams2mcp model.gms --diagnostics --format json
+# → JSON output to stderr
+```
+
+**Backward Compatibility Guarantees:**
+- ✅ Existing scripts using --diagnostics unchanged
+- ✅ Text remains default format
+- ✅ No changes to DiagnosticReport.to_text() API
+- ✅ JSON opt-in only (explicit flag required)
+
+**Test Coverage:**
+- Unit tests: Both text and JSON outputs
+- Integration tests: CLI with --format flag
+- Regression: Verify text output unchanged from Sprint 11
+
+**Migration Path:**
+- Sprint 12: Both formats supported
+- Sprint 13+: JSON becomes recommended (docs)
+- Sprint 15+: Consider JSON as default (with deprecation warning for text)
+
+**Impact:**
+- Zero risk to existing users
+- Smooth migration path to JSON
+- Both formats maintainable long-term
 
 ---
 
