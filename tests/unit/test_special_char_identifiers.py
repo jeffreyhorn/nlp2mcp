@@ -11,7 +11,7 @@ def test_hyphen_in_identifier():
     Set i / light-ind, heavy-ind /;
     """
     model = parse_model_text(source)
-    
+
     assert "i" in model.sets
     assert "light-ind" in model.sets["i"].members
     assert "heavy-ind" in model.sets["i"].members
@@ -23,7 +23,7 @@ def test_plus_in_identifier():
     Set i / food+agr, manu+trade /;
     """
     model = parse_model_text(source)
-    
+
     assert "i" in model.sets
     assert "food+agr" in model.sets["i"].members
     assert "manu+trade" in model.sets["i"].members
@@ -35,7 +35,7 @@ def test_mixed_special_chars_in_identifier():
     Set i / light-ind, food+agr, heavy-ind /;
     """
     model = parse_model_text(source)
-    
+
     assert "i" in model.sets
     assert len(model.sets["i"].members) == 3
     assert "light-ind" in model.sets["i"].members
@@ -51,7 +51,7 @@ def test_special_chars_in_variable_indexing():
     balance(i).. x(i) =e= 1;
     """
     model = parse_model_text(source)
-    
+
     assert "i" in model.sets
     assert "x" in model.variables
     assert "balance" in model.equations
@@ -64,7 +64,7 @@ def test_special_chars_in_parameters():
     Parameter a(i);
     """
     model = parse_model_text(source)
-    
+
     assert "i" in model.sets
     assert "a" in model.params
 
@@ -77,7 +77,7 @@ def test_regular_arithmetic_still_works():
     sum_eq.. x + y =e= 10;
     """
     model = parse_model_text(source)
-    
+
     # Should parse without treating "x + y" as identifier "x+y"
     assert "x" in model.variables
     assert "y" in model.variables
@@ -92,7 +92,7 @@ def test_subtraction_still_works():
     diff_eq.. x - y =e= 5;
     """
     model = parse_model_text(source)
-    
+
     assert "x" in model.variables
     assert "y" in model.variables
     assert "diff_eq" in model.equations
@@ -105,7 +105,7 @@ def test_chenery_style_identifiers():
     Set t(i) 'tradables' / light-ind, food+agr, heavy-ind /;
     """
     model = parse_model_text(source)
-    
+
     assert "i" in model.sets
     assert len(model.sets["i"].members) == 4
     assert "services" in model.sets["i"].members
@@ -117,7 +117,7 @@ def test_multiple_hyphens_in_identifier():
     Set i / north-east-region, south-west-region /;
     """
     model = parse_model_text(source)
-    
+
     assert "north-east-region" in model.sets["i"].members
     assert "south-west-region" in model.sets["i"].members
 
@@ -128,5 +128,5 @@ def test_multiple_plus_in_identifier():
     Set i / sector+subsector+type /;
     """
     model = parse_model_text(source)
-    
+
     assert "sector+subsector+type" in model.sets["i"].members
