@@ -889,24 +889,57 @@ class _ModelBuilder:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
             return
 
-        # Extract row labels first (to handle dotted labels)
-        row_label_map = {}  # line_number -> row_label_string
+        # Extract row labels first (to handle dotted labels and tuple labels)
+        row_label_map = {}  # line_number -> row_label_string or list of row_label_strings
         for row in table_rows:
             # First child is always the row label (either table_row_label tree or ID token)
             if row.children:
                 first_child = row.children[0]
-                if isinstance(first_child, Tree) and first_child.data == "dotted_label":
-                    # Dotted label like "low.a.subst"
-                    label_parts = [
-                        _token_text(tok) for tok in first_child.children if isinstance(tok, Token)
-                    ]
-                    row_label = ".".join(label_parts)
-                    # Get line number from first token
-                    first_token = first_child.children[0]
-                    if hasattr(first_token, "line"):
-                        row_label_map[first_token.line] = row_label
+                if isinstance(first_child, Tree):
+                    if first_child.data == "simple_label":
+                        # Simple or dotted label wrapped in simple_label
+                        dotted_label_node = first_child.children[0]
+                        label_parts = [
+                            _token_text(tok)
+                            for tok in dotted_label_node.children
+                            if isinstance(tok, Token)
+                        ]
+                        row_label = ".".join(label_parts)
+                        # Get line number from first token
+                        first_token = dotted_label_node.children[0]
+                        if hasattr(first_token, "line"):
+                            row_label_map[first_token.line] = row_label
+                    elif first_child.data == "tuple_label":
+                        # Tuple label like "(low,medium,high).ynot"
+                        # Structure: tuple_label -> id_list, dotted_label
+                        id_list_node = first_child.children[0]
+                        dotted_label_node = first_child.children[1]
+
+                        # Extract tuple elements
+                        elements = [
+                            _token_text(tok)
+                            for tok in id_list_node.children
+                            if isinstance(tok, Token)
+                        ]
+
+                        # Extract suffix (can be multi-part like "a.b.c")
+                        suffix_parts = [
+                            _token_text(tok)
+                            for tok in dotted_label_node.children
+                            if isinstance(tok, Token)
+                        ]
+                        suffix = ".".join(suffix_parts)
+
+                        # Expand to multiple labels: elem1.suffix, elem2.suffix, ...
+                        expanded_labels = [f"{elem}.{suffix}" for elem in elements]
+
+                        # Get line number from first token (in id_list)
+                        first_token = id_list_node.children[0]
+                        if hasattr(first_token, "line"):
+                            # Store as list to indicate this row should be replicated
+                            row_label_map[first_token.line] = expanded_labels
                 elif isinstance(first_child, Token):
-                    # Simple ID label
+                    # Simple ID label (legacy, shouldn't happen with new grammar)
                     row_label = _token_text(first_child)
                     if hasattr(first_child, "line"):
                         row_label_map[first_child.line] = row_label
@@ -922,12 +955,20 @@ class _ModelBuilder:
                         for grandchild in child.children:
                             if isinstance(grandchild, Token):
                                 all_tokens.append(grandchild)
-                    elif child.data == "dotted_label":
-                        # Handle dotted labels like "low.a.subst"
-                        # Collect all ID tokens (for column position of first token)
-                        for grandchild in child.children:
+                    elif child.data == "simple_label":
+                        # simple_label wraps dotted_label
+                        dotted_label_node = child.children[0]
+                        for grandchild in dotted_label_node.children:
                             if isinstance(grandchild, Token):
                                 all_tokens.append(grandchild)
+                    elif child.data == "tuple_label":
+                        # tuple_label contains id_list and dotted_label
+                        # Collect tokens from both
+                        for subnode in child.children:
+                            if isinstance(subnode, Tree):
+                                for tok in subnode.children:
+                                    if isinstance(tok, Token):
+                                        all_tokens.append(tok)
 
         if not all_tokens:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
@@ -951,6 +992,11 @@ class _ModelBuilder:
         # First line should be column headers
         first_line_num, first_line_tokens = sorted_lines[0]
 
+        # Remove column header line from row_label_map if it was added
+        # (column headers are parsed as a table_row, so they might have been extracted as a row label)
+        if first_line_num in row_label_map:
+            del row_label_map[first_line_num]
+
         # Column headers: store name and column position
         col_headers = []  # List of (col_name, col_position) tuples
         for token in first_line_tokens:
@@ -969,16 +1015,23 @@ class _ModelBuilder:
             if not line_tokens:
                 continue
 
-            # Get row header from row_label_map (handles dotted labels)
+            # Get row header(s) from row_label_map (handles dotted labels and tuple labels)
             if line_num not in row_label_map:
                 # Fallback: first token should be row header
                 if line_tokens[0].type != "ID":
                     continue
-                row_header = _token_text(line_tokens[0])
+                row_headers = [_token_text(line_tokens[0])]
             else:
-                row_header = row_label_map[line_num]
+                row_header_or_list = row_label_map[line_num]
+                # Check if it's a tuple label (list) or simple label (string)
+                if isinstance(row_header_or_list, list):
+                    row_headers = row_header_or_list  # Multiple expanded labels
+                else:
+                    row_headers = [row_header_or_list]  # Single label
 
             # Match remaining tokens to columns by position
+            # Collect all values for this row first
+            row_values = {}  # col_name -> value
             for token in line_tokens[1:]:
                 if token.type not in ("NUMBER", "ID"):
                     continue
@@ -1004,18 +1057,30 @@ class _ModelBuilder:
                     except ValueError:
                         value = 0.0
 
-                    key = (row_header, best_match)
+                    row_values[best_match] = value
+
+            # Replicate the row data for each expanded label (for tuple labels)
+            for row_header in row_headers:
+                for col_name, value in row_values.items():
+                    key = (row_header, col_name)
                     values[key] = value
 
         # Fill in missing cells with 0.0
         # For each combination of row and column that doesn't have a value
-        row_headers = set()
-        for _line_num, line_tokens in sorted_lines[1:]:
+        # Collect all row headers from the values that were already parsed
+        all_row_headers = set()
+        for row_header, _col_name in values.keys():
+            all_row_headers.add(row_header)
+
+        # Also collect row headers from lines (to handle completely empty rows)
+        for line_num, line_tokens in sorted_lines[1:]:
             if line_tokens and line_tokens[0].type == "ID":
-                row_headers.add(_token_text(line_tokens[0]))
+                # First token is row header
+                row_header = _token_text(line_tokens[0])
+                all_row_headers.add(row_header)
 
         col_names = [name for name, _ in col_headers]
-        for row_header in row_headers:
+        for row_header in all_row_headers:
             for col_name in col_names:
                 key = (row_header, col_name)
                 if key not in values:

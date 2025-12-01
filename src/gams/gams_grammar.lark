@@ -156,9 +156,14 @@ range_bound: NUMBER | ID
 
 // table_value will match NUMBER or ID tokens
 // Since WS_INLINE is ignored globally, tokens are automatically separated
-// table_row_label supports nested dot notation like "low.a.subst"
+// table_row_label supports:
+//   - nested dot notation: "low.a.subst"
+//   - tuple notation: "(low,medium,high).ynot" expands to multiple rows
 table_row: table_row_label table_value*
-table_row_label: ID ("." ID)*       -> dotted_label
+table_row_label: dotted_label                    -> simple_label
+               | "(" id_list ")" "." dotted_label  -> tuple_label
+
+dotted_label: ID ("." ID)*
 table_value: NUMBER | ID
 
 // ---------------------------
