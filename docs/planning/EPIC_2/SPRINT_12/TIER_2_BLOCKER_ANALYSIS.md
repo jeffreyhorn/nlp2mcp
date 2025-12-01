@@ -20,7 +20,7 @@
 | Priority | Blocker | Frequency | Complexity | Score | Effort | Models Affected | Status |
 |----------|---------|-----------|------------|-------|--------|-----------------|--------|
 | **HIGH** | inline_descriptions | 3 models | Medium (3h) | 27 | 3h | chem, water, gastrans | 📋 Day 5 |
-| MEDIUM | special_chars_in_identifiers | 1 model | Simple (1.5h) | 14 | 1.5h | chenery | ✅ Day 4 |
+| MEDIUM | special_chars_in_identifiers | 1 model | Simple (1.5h) | 14 | 1.5h | chenery | ❌ REVERTED |
 | MEDIUM | multiple_alias_declaration | 1 model | Simple (1.5h) | 14 | 1.5h | jbearing | ✅ Day 4 |
 | MEDIUM | predefined_constants | 1 model | Simple (1h) | 14 | 1h | fct | ✅ Day 4 |
 | MEDIUM | model_inline_descriptions | 1 model | Simple (1.5h) | 14 | 1.5h | process | 📋 Day 5-6 |
@@ -532,11 +532,13 @@ make ingest-gamslib  # Should still be 100% (10/10)
 - **Commit:** b0a9e79
 
 #### 2. special_chars_in_identifiers (1.5h)
-- **Status:** ✅ Complete
+- **Status:** ❌ REVERTED
 - **Implementation:** Extended ID token pattern to allow + and - in identifiers
-- **Tests:** 10 unit tests (all passing)
-- **Models Partially Unlocked:** chenery.gms (blocked by table_wildcard_domain)
-- **Commit:** 51d98fb
+- **Revert Reason:** Caused arithmetic parsing issues (x1-1 parsed as identifier instead of subtraction)
+- **Impact:** Broke hs62.gms, mhw4d.gms, mhw4dx.gms
+- **Decision:** Trade-off not worth it (breaks 3 models to fix 1)
+- **Alternative:** Models can use quoted identifiers: 'light-ind'
+- **Commit:** fc1a2d6 (reverted)
 
 #### 3. multiple_alias_declaration (1.5h)
 - **Status:** ✅ Complete
@@ -552,8 +554,10 @@ make ingest-gamslib  # Should still be 100% (10/10)
 | Baseline Parse Rate | 0/10 (0%) |
 | Day 4 Parse Rate | 1/10 (10%) |
 | Models Fully Parsing | fct.gms |
-| Models Partially Unlocked | chenery.gms, jbearing.gms |
-| Test Suite Status | 1824 passed, 9 failed (golden files - expected) |
+| Models Partially Unlocked | jbearing.gms |
+| Blockers Implemented | 2 (predefined_constants, multiple_alias_declaration) |
+| Blockers Reverted | 1 (special_chars_in_identifiers - broke arithmetic) |
+| Test Suite Status | 1820 passed, 3 failed (golden files - expected) |
 
 ### New Blockers Discovered
 
