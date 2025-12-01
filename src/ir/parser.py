@@ -851,10 +851,26 @@ class _ModelBuilder:
         1. Group tokens by line number
         2. First line with IDs = column headers (and their column positions)
         3. Subsequent lines = data rows (match values to columns by position)
+
+        Supports wildcard domains (*) where dimension names are inferred from data.
         """
         # Extract name and domain
         name = _token_text(node.children[0])
-        domain = _id_list(node.children[1])
+
+        # Handle table_domain_list which may contain wildcards
+        domain_list_node = node.children[1]
+        domain = []
+        has_wildcard = False
+
+        for child in domain_list_node.children:
+            if isinstance(child, Tree):
+                if child.data == "explicit_domain":
+                    domain.append(_token_text(child.children[0]))
+                elif child.data == "wildcard_domain":
+                    domain.append("*")
+                    has_wildcard = True
+
+        domain = tuple(domain)
 
         # Find all table_row nodes and collect all tokens
         table_rows = [
@@ -2507,6 +2523,9 @@ class _ModelBuilder:
         node: Tree | Token | None = None,
     ) -> None:
         for name in names:
+            # Skip wildcard domains (used in table declarations)
+            if name == "*":
+                continue
             self._ensure_set_exists(name, context, node)
 
     def _resolve_set_def(

@@ -38,7 +38,11 @@ aliases_block: ("Aliases"i | "Alias"i) alias_decl+ SEMI
 
 params_block: ("Parameters"i | "Parameter"i) param_decl+ SEMI
 
-table_block: "Table"i ID "(" id_list ")" STRING? table_row+ SEMI
+table_block: "Table"i ID "(" table_domain_list ")" STRING? table_row+ SEMI
+
+table_domain_list: table_domain ("," table_domain)*
+table_domain: ID          -> explicit_domain
+            | "*"         -> wildcard_domain
 
 scalars_block: ("Scalars"i | "Scalar"i) scalar_decl+ SEMI
 
