@@ -123,6 +123,20 @@ For the detailed Sprint 10 plan, see [docs/planning/EPIC_2/SPRINT_10/PLAN.md](do
 
 For the detailed Sprint 11 plan, see [docs/planning/EPIC_2/SPRINT_11/PLAN.md](docs/planning/EPIC_2/SPRINT_11/PLAN.md).
 
+**Sprint 12 Progress** (Epic 2 - Sprint 12: Measurement, Polish, and Tier 2 Expansion):
+- [ ] Day 1: Measurement Infrastructure Setup + Extended Testing
+- [ ] Day 2: Baseline Collection & Multi-Metric Backend + Extended Validation
+- [ ] Day 3: Validation, Analysis & Checkpoint
+- [ ] Day 4: Tier 2 Model Analysis & High-Priority Blockers
+- [ ] Day 5: Tier 2 Medium-Priority Blocker Implementation
+- [ ] Day 6: Tier 2 Stretch Blockers & Checkpoint
+- [ ] Day 7: JSON Diagnostics & PATH Decision
+- [ ] Day 8: Dashboard Completion & CI Checklist
+- [ ] Day 9: Contingent Features & Recovery
+- [ ] Day 10: Documentation Updates & Final Validation
+
+For the detailed Sprint 12 plan, see [docs/planning/EPIC_2/SPRINT_12/PLAN.md](docs/planning/EPIC_2/SPRINT_12/PLAN.md).
+
 ## Installation
 
 ### Requirements
