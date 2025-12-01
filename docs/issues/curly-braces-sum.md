@@ -241,3 +241,64 @@ This is a simple find-replace operation and maintains semantic equivalence.
 - Parser: `src/ir/parser.py` (aggregation parsing section)
 - Blocker analysis: `docs/planning/EPIC_2/SPRINT_12/TIER_2_BLOCKER_ANALYSIS.md`
 - GAMS Documentation: Aggregation functions (sum, prod, smin, smax)
+
+---
+
+## Implementation Update (2025-12-01)
+
+### Status: PARTIALLY IMPLEMENTED
+
+**Commit:** 95452a4
+
+**What Works:**
+- ✅ Basic curly braces: `sum{i, expr}`
+- ✅ Nested sums: `sum{i, sum{j, expr}}`
+- ✅ Complex expressions: `sum{i, x(i)*2 + y(i)/3}`
+- ✅ Mixed brackets: `sum{i, sum(j, expr)}`
+- ✅ Backward compatibility: all `sum(i, expr)` syntax still works
+
+**What Doesn't Work:**
+- ❌ Subset indexing with arithmetic: `sum{(nx(i+1),ny(j+1)), expr}`
+
+### Additional Blocker Discovered
+
+**jbearing.gms** requires a separate feature beyond curly braces:
+
+**Pattern:** `sum{(nx(i+1), ny(j+1)), expr}`
+
+**Issue:** This uses **arithmetic expressions inside subset filters**, not just curly braces.
+- `nx(i+1)` means "filter set nx where index is i+1"
+- Requires extending `index_expr` to support arithmetic expressions
+- Current grammar only supports: `ID "(" id_list ")"` for subset indexing
+
+**New Blocker:** Subset Indexing with Arithmetic Expressions
+- Effort: 2-3h
+- Pattern: `set_name(arithmetic_expr)` in sum indices
+- Example: `nx(i+1)`, `ny(j+1)`, `low(n*2)`
+- Affects: jbearing.gms
+
+**Recommendation:** Create new GitHub issue for this separate blocker.
+
+### Impact
+
+**Parse Rate:** Still 20% (2/10 models: fct, process)
+- jbearing.gms NOT unlocked (needs arithmetic subset indexing)
+- Curly braces implementation correct but insufficient for jbearing
+
+**Value:** Curly braces support is still useful for:
+- Future models using curly brace syntax
+- User preference/style
+- GAMS compatibility
+
+### Next Steps
+
+1. **Option A:** Defer jbearing to Sprint 14+
+   - Create issue for subset indexing with arithmetic
+   - Focus on higher-impact blockers (#353, #354)
+   
+2. **Option B:** Implement arithmetic subset indexing now
+   - Adds 2-3h to current work
+   - Would unlock jbearing (+10% Tier 2)
+   - May discover additional blockers in jbearing
+
+**Recommended:** Option A - defer to Sprint 14+, focus on #353 next

@@ -418,6 +418,141 @@ def strip_conditional_directives(source: str) -> str:
     return "\n".join(filtered)
 
 
+def normalize_multi_line_continuations(source: str) -> str:
+    """Add missing commas for implicit line continuations in data blocks.
+
+    GAMS allows multi-line set/parameter declarations without trailing commas.
+    For example:
+        Set i /
+            a
+            b
+            c
+        /;
+
+    This function normalizes such declarations by inserting commas at line ends,
+    making them parseable by the grammar which requires explicit separators.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with commas inserted at appropriate line ends
+
+    Example:
+        >>> source = "Set i /\\n    a\\n    b\\n/;"
+        >>> result = normalize_multi_line_continuations(source)
+        >>> # Result: "Set i /\\n    a,\\n    b\\n/;"
+
+    Notes:
+        - Only processes lines within /.../ data blocks
+        - Skips lines that already end with comma, slash, or semicolon
+        - Skips lines that are comments or empty
+        - Preserves original whitespace and indentation
+    """
+    lines = source.split("\n")
+    result = []
+    in_data_block = False
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+
+        # Track if we're inside a /.../ data block
+        if "/" in line and not in_data_block:
+            # Entering a data block
+            # Check if it also closes on the same line (e.g., Set i / a, b /;)
+            slash_count = line.count("/")
+            if slash_count >= 2:
+                # Both opening and closing slash on same line
+                result.append(line)
+                continue
+
+            # Opening slash - check if there's data after it
+            slash_idx = line.find("/")
+            after_slash = line[slash_idx + 1 :].strip()
+
+            if after_slash:
+                # Data on same line as opening /, e.g., "Set i / i-1"
+                # Need to check if this needs a comma (if more data follows)
+                in_data_block = True
+
+                # Look ahead to see if next line has more data
+                needs_comma = False
+                if i + 1 < len(lines):
+                    next_stripped = lines[i + 1].strip()
+                    # If next line has data (not just closing /), we need comma
+                    if next_stripped and not next_stripped.startswith("*"):
+                        if "/" in next_stripped:
+                            # Check if there's data before the /
+                            next_slash_idx = next_stripped.find("/")
+                            before_slash = next_stripped[:next_slash_idx].strip()
+                            if before_slash:
+                                # Next line has data before /, so current line needs comma
+                                needs_comma = True
+                        else:
+                            # Next line has data without /, so current line needs comma
+                            needs_comma = True
+
+                if needs_comma:
+                    result.append(line + ",")
+                else:
+                    result.append(line)
+                continue
+            else:
+                # Just opening slash on this line
+                in_data_block = True
+                result.append(line)
+                continue
+
+        # If we're in a data block, process the line
+        if in_data_block and stripped:
+            # Skip if line is a comment
+            if stripped.startswith("*"):
+                result.append(line)
+                continue
+
+            # Check if this line contains the closing /
+            if "/" in stripped:
+                # This line closes the block
+                # It may have data before the / (e.g., "i-2  /") or just be "/" alone
+                # Don't add comma - the closing / indicates this is the last element
+                result.append(line)
+                in_data_block = False
+                continue
+
+            # Regular data line within block
+            # Skip if line already ends with a comma or semicolon
+            if stripped.endswith((",", ";")):
+                result.append(line)
+                continue
+
+            # Check if next line closes the block or has more data
+            needs_comma = True
+            if i + 1 < len(lines):
+                next_stripped = lines[i + 1].strip()
+                # If next line starts with / or only contains /, this is last element
+                if next_stripped == "/" or next_stripped.startswith("/;"):
+                    needs_comma = False
+                # If next line has data followed by /, this is not the last element
+                elif "/" in next_stripped:
+                    slash_idx = next_stripped.find("/")
+                    before_slash = next_stripped[:slash_idx].strip()
+                    if before_slash:
+                        # Next line has data before /, so current line needs comma
+                        needs_comma = True
+                    else:
+                        # Next line is just /, current line is last element
+                        needs_comma = False
+
+            if needs_comma:
+                result.append(line + ",")
+            else:
+                result.append(line)
+        else:
+            result.append(line)
+
+    return "\n".join(result)
+
+
 def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
@@ -428,6 +563,7 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     3. Expand %macro% references
     4. Strip conditional directives ($if not set)
     5. Strip other unsupported directives ($title, $ontext, etc.)
+    6. Normalize multi-line continuations (add missing commas)
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -460,4 +596,7 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     content = strip_conditional_directives(content)
 
     # Step 5: Strip other unsupported directives ($title, $ontext, etc.)
-    return strip_unsupported_directives(content)
+    content = strip_unsupported_directives(content)
+
+    # Step 6: Normalize multi-line continuations (add missing commas)
+    return normalize_multi_line_continuations(content)
