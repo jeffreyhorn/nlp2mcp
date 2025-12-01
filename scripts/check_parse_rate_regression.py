@@ -99,6 +99,69 @@ def read_parse_rate(json_path: str) -> float:
     return metrics["parse_rate"]
 
 
+def read_baseline(baseline_ref: str, report_path: str) -> dict[str, float]:
+    """
+    Read all baseline metrics from a git reference.
+
+    Args:
+        baseline_ref: Git reference (e.g., 'origin/main', 'HEAD~1')
+        report_path: Path to report file relative to repo root
+
+    Returns:
+        Dict with baseline metrics: parse_rate, convert_rate (optional), avg_time_ms (optional)
+
+    Raises:
+        subprocess.CalledProcessError: If git command fails
+        KeyError: If report structure invalid
+        json.JSONDecodeError: If JSON is malformed
+    """
+    # Use git show to read file from baseline ref
+    result = subprocess.run(
+        ["git", "show", f"{baseline_ref}:{report_path}"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    baseline_report = json.loads(result.stdout)
+
+    if "kpis" not in baseline_report:
+        raise KeyError(f"Missing 'kpis' in baseline report from {baseline_ref}")
+
+    return read_metrics_from_dict(baseline_report)
+
+
+def read_metrics_from_dict(report: dict) -> dict[str, float]:
+    """
+    Extract metrics from a report dictionary.
+
+    Args:
+        report: Report dictionary with 'kpis' key
+
+    Returns:
+        Dict with metrics: parse_rate, convert_rate (optional), avg_time_ms (optional)
+    """
+    if "kpis" not in report:
+        raise KeyError("Missing 'kpis' key in report")
+
+    kpis = report["kpis"]
+    metrics = {}
+
+    # Parse rate (required)
+    if "parse_rate_percent" in kpis:
+        metrics["parse_rate"] = float(kpis["parse_rate_percent"])
+
+    # Convert rate (optional, Sprint 11 Day 8+)
+    if "convert_rate_percent" in kpis:
+        metrics["convert_rate"] = float(kpis["convert_rate_percent"])
+
+    # Average time (optional, for performance tracking)
+    if "avg_time_ms" in kpis:
+        metrics["avg_time_ms"] = float(kpis["avg_time_ms"])
+
+    return metrics
+
+
 def read_baseline_from_git(baseline_ref: str, report_path: str) -> float:
     """
     Read baseline parse rate from a git reference (branch/commit).
@@ -162,6 +225,153 @@ def check_regression(current: float, baseline: float, threshold: float) -> bool:
 
     # Regression if drop exceeds threshold
     return relative_drop > threshold
+
+
+def check_all_metrics(args) -> int:
+    """
+    Check all metrics (parse_rate, convert_rate, performance) against thresholds.
+
+    Implements dual-threshold approach: warn and fail thresholds for each metric.
+    Returns the worst status across all metrics.
+
+    Args:
+        args: Parsed command-line arguments with multi-metric thresholds
+
+    Returns:
+        Exit code: 0 (pass), 1 (fail), 2 (error)
+    """
+    try:
+        # Read current metrics
+        current_metrics = read_metrics(args.current)
+
+        # Read baseline metrics from git
+        baseline_metrics = read_baseline(args.baseline, args.current)
+
+        # Track worst status (0=pass, 1=warn, 2=fail)
+        worst_status = 0
+        warnings = []
+        failures = []
+
+        # Check parse_rate (higher is better)
+        if "parse_rate" in current_metrics and "parse_rate" in baseline_metrics:
+            current = current_metrics["parse_rate"]
+            baseline = baseline_metrics["parse_rate"]
+
+            if baseline > 0:
+                relative_change = (baseline - current) / baseline
+
+                if args.parse_fail is not None and relative_change > args.parse_fail:
+                    failures.append(
+                        f"parse_rate: {current:.1f}% (baseline {baseline:.1f}%, drop {relative_change * 100:.1f}% > fail threshold {args.parse_fail * 100:.0f}%)"
+                    )
+                    worst_status = max(worst_status, 2)
+                elif args.parse_warn is not None and relative_change > args.parse_warn:
+                    warnings.append(
+                        f"parse_rate: {current:.1f}% (baseline {baseline:.1f}%, drop {relative_change * 100:.1f}% > warn threshold {args.parse_warn * 100:.0f}%)"
+                    )
+                    worst_status = max(worst_status, 1)
+
+        # Check convert_rate (higher is better)
+        if "convert_rate" in current_metrics and "convert_rate" in baseline_metrics:
+            current = current_metrics["convert_rate"]
+            baseline = baseline_metrics["convert_rate"]
+
+            if baseline > 0:
+                relative_change = (baseline - current) / baseline
+
+                if args.convert_fail is not None and relative_change > args.convert_fail:
+                    failures.append(
+                        f"convert_rate: {current:.1f}% (baseline {baseline:.1f}%, drop {relative_change * 100:.1f}% > fail threshold {args.convert_fail * 100:.0f}%)"
+                    )
+                    worst_status = max(worst_status, 2)
+                elif args.convert_warn is not None and relative_change > args.convert_warn:
+                    warnings.append(
+                        f"convert_rate: {current:.1f}% (baseline {baseline:.1f}%, drop {relative_change * 100:.1f}% > warn threshold {args.convert_warn * 100:.0f}%)"
+                    )
+                    worst_status = max(worst_status, 1)
+
+        # Check performance/avg_time_ms (lower is better)
+        if "avg_time_ms" in current_metrics and "avg_time_ms" in baseline_metrics:
+            current = current_metrics["avg_time_ms"]
+            baseline = baseline_metrics["avg_time_ms"]
+
+            if baseline > 0:
+                relative_change = (current - baseline) / baseline
+
+                if args.perf_fail is not None and relative_change > args.perf_fail:
+                    failures.append(
+                        f"avg_time_ms: {current:.2f}ms (baseline {baseline:.2f}ms, increase {relative_change * 100:.1f}% > fail threshold {args.perf_fail * 100:.0f}%)"
+                    )
+                    worst_status = max(worst_status, 2)
+                elif args.perf_warn is not None and relative_change > args.perf_warn:
+                    warnings.append(
+                        f"avg_time_ms: {current:.2f}ms (baseline {baseline:.2f}ms, increase {relative_change * 100:.1f}% > warn threshold {args.perf_warn * 100:.0f}%)"
+                    )
+                    worst_status = max(worst_status, 1)
+
+        # Report results
+        if failures:
+            print("❌ MULTI-METRIC REGRESSION DETECTED")
+            print()
+            print("The following metrics exceeded FAIL thresholds:")
+            for failure in failures:
+                print(f"  • {failure}")
+
+            if warnings:
+                print()
+                print("The following metrics exceeded WARN thresholds:")
+                for warning in warnings:
+                    print(f"  ⚠️  {warning}")
+
+            print()
+            print("This regression blocks CI. Please investigate:")
+            print("  1. Check what changes may have caused the regression")
+            print("  2. Run 'make ingest-gamslib' to see detailed metrics")
+            print("  3. Fix the issue or adjust thresholds if the change is intentional")
+            return 1  # Return 1 for failure (CI convention)
+
+        elif warnings:
+            print("⚠️  MULTI-METRIC WARNING")
+            print()
+            print("The following metrics exceeded WARN thresholds:")
+            for warning in warnings:
+                print(f"  • {warning}")
+
+            print()
+            print("This is a warning only and does not block CI.")
+            print("Consider investigating to prevent further degradation.")
+            return 0  # Return 0 for warnings (don't block CI)
+
+        else:
+            print("✅ MULTI-METRIC CHECK PASSED")
+            print()
+            print("All metrics are stable or improved:")
+
+            for metric_name in ["parse_rate", "convert_rate", "avg_time_ms"]:
+                if metric_name in current_metrics and metric_name in baseline_metrics:
+                    current = current_metrics[metric_name]
+                    baseline = baseline_metrics[metric_name]
+
+                    if metric_name == "avg_time_ms":
+                        # Lower is better for time
+                        change = (current - baseline) / baseline if baseline > 0 else 0
+                        status = "slower" if change > 0 else "faster" if change < 0 else "unchanged"
+                        print(
+                            f"  • {metric_name}: {current:.2f}ms (baseline {baseline:.2f}ms, {abs(change) * 100:.1f}% {status})"
+                        )
+                    else:
+                        # Higher is better for rates
+                        change = (current - baseline) / baseline if baseline > 0 else 0
+                        status = "better" if change > 0 else "worse" if change < 0 else "unchanged"
+                        print(
+                            f"  • {metric_name}: {current:.1f}% (baseline {baseline:.1f}%, {abs(change) * 100:.1f}% {status})"
+                        )
+
+            return 0
+
+    except Exception as e:
+        print(f"❌ ERROR in multi-metric check: {e}", file=sys.stderr)
+        return 2
 
 
 def format_models_info(current: float, baseline: float, total_models: int) -> str:
@@ -270,29 +480,22 @@ def main() -> int:
     if not 0.0 <= args.threshold <= 1.0:
         parser.error(f"threshold must be between 0.0 and 1.0, got {args.threshold}")
 
-    # Warn if multi-metric arguments provided but not yet implemented
-    multi_metric_args = [
-        args.parse_warn,
-        args.parse_fail,
-        args.convert_warn,
-        args.convert_fail,
-        args.perf_warn,
-        args.perf_fail,
-    ]
-    if any(arg is not None for arg in multi_metric_args):
-        print(
-            "⚠️  WARNING: Multi-metric threshold arguments provided but not yet implemented.",
-            file=sys.stderr,
-        )
-        print(
-            "   These arguments are currently ignored. Only --threshold is enforced.",
-            file=sys.stderr,
-        )
-        print(
-            "   Multi-metric support planned for future enhancement.",
-            file=sys.stderr,
-        )
-        print(file=sys.stderr)
+    # Check if multi-metric mode is enabled
+    multi_metric_mode = any(
+        [
+            args.parse_warn is not None,
+            args.parse_fail is not None,
+            args.convert_warn is not None,
+            args.convert_fail is not None,
+            args.perf_warn is not None,
+            args.perf_fail is not None,
+        ]
+    )
+
+    if multi_metric_mode:
+        return check_all_metrics(args)
+
+    # Fall back to legacy single-metric mode if no multi-metric args provided
 
     try:
         # Read current parse rate

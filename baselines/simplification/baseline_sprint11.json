@@ -1,29 +1,140 @@
 {
   "schema_version": "1.0.0",
-  "created_at": "2025-11-30T00:00:00Z",
+  "created_at": "2025-12-01T06:20:17.421660+00:00",
   "sprint": "sprint11",
-  "git_commit": "placeholder",
-  "description": "Placeholder baseline for Sprint 11 simplification metrics (to be populated during Sprint 12 Day 2)",
+  "git_commit": "26ea3a08d6b2a68e12c902830c5798292318db7e",
+  "description": "Sprint 11 baseline with 11 transformations",
   "transformations_enabled": [
-    "constant_propagation",
-    "constant_fold",
-    "zero_multiply",
-    "identity_add",
-    "identity_multiply",
-    "double_negation",
-    "subtract_zero",
-    "divide_one",
-    "power_one",
-    "power_zero",
-    "multiply_one"
+    "extract_common_factors",
+    "multi_term_factoring",
+    "combine_fractions",
+    "normalize_associativity",
+    "simplify_division",
+    "simplify_nested_products",
+    "consolidate_powers",
+    "apply_trig_identities",
+    "apply_log_rules",
+    "nested_cse",
+    "multiplicative_cse"
   ],
-  "models": {},
+  "models": {
+    "circle.gms": {
+      "ops_before": 12,
+      "ops_after": 3,
+      "terms_before": 4,
+      "terms_after": 3,
+      "ops_reduction_pct": 75.0,
+      "terms_reduction_pct": 25.0,
+      "execution_time_ms": 0.43,
+      "iterations": 5,
+      "transformations_applied": {}
+    },
+    "himmel16.gms": {
+      "ops_before": 35,
+      "ops_after": 9,
+      "terms_before": 10,
+      "terms_after": 9,
+      "ops_reduction_pct": 74.29,
+      "terms_reduction_pct": 10.0,
+      "execution_time_ms": 1.004,
+      "iterations": 5,
+      "transformations_applied": {}
+    },
+    "hs62.gms": {
+      "ops_before": 73,
+      "ops_after": 7,
+      "terms_before": 10,
+      "terms_after": 7,
+      "ops_reduction_pct": 90.41,
+      "terms_reduction_pct": 30.0,
+      "execution_time_ms": 1.233,
+      "iterations": 5,
+      "transformations_applied": {}
+    },
+    "mathopt1.gms": {
+      "ops_before": 26,
+      "ops_after": 7,
+      "terms_before": 9,
+      "terms_after": 7,
+      "ops_reduction_pct": 73.08,
+      "terms_reduction_pct": 22.22,
+      "execution_time_ms": 0.793,
+      "iterations": 5,
+      "transformations_applied": {}
+    },
+    "maxmin.gms": {
+      "ops_before": 30,
+      "ops_after": 11,
+      "terms_before": 11,
+      "terms_after": 11,
+      "ops_reduction_pct": 63.33,
+      "terms_reduction_pct": 0.0,
+      "execution_time_ms": 1.21,
+      "iterations": 5,
+      "transformations_applied": {}
+    },
+    "mhw4d.gms": {
+      "ops_before": 59,
+      "ops_after": 9,
+      "terms_before": 19,
+      "terms_after": 9,
+      "ops_reduction_pct": 84.75,
+      "terms_reduction_pct": 52.63,
+      "execution_time_ms": 1.28,
+      "iterations": 5,
+      "transformations_applied": {}
+    },
+    "mhw4dx.gms": {
+      "ops_before": 59,
+      "ops_after": 9,
+      "terms_before": 19,
+      "terms_after": 9,
+      "ops_reduction_pct": 84.75,
+      "terms_reduction_pct": 52.63,
+      "execution_time_ms": 1.304,
+      "iterations": 5,
+      "transformations_applied": {}
+    },
+    "mingamma.gms": {
+      "ops_before": 7,
+      "ops_after": 5,
+      "terms_before": 5,
+      "terms_after": 5,
+      "ops_reduction_pct": 28.57,
+      "terms_reduction_pct": 0.0,
+      "execution_time_ms": 0.473,
+      "iterations": 5,
+      "transformations_applied": {}
+    },
+    "rbrock.gms": {
+      "ops_before": 14,
+      "ops_after": 3,
+      "terms_before": 4,
+      "terms_after": 3,
+      "ops_reduction_pct": 78.57,
+      "terms_reduction_pct": 25.0,
+      "execution_time_ms": 0.395,
+      "iterations": 5,
+      "transformations_applied": {}
+    },
+    "trig.gms": {
+      "ops_before": 29,
+      "ops_after": 5,
+      "terms_before": 9,
+      "terms_after": 5,
+      "ops_reduction_pct": 82.76,
+      "terms_reduction_pct": 44.44,
+      "execution_time_ms": 0.658,
+      "iterations": 5,
+      "transformations_applied": {}
+    }
+  },
   "aggregate": {
-    "total_models": 0,
-    "ops_avg_reduction_pct": 0.0,
-    "terms_avg_reduction_pct": 0.0,
-    "models_meeting_threshold": 0,
+    "total_models": 10,
+    "ops_avg_reduction_pct": 73.55,
+    "terms_avg_reduction_pct": 26.19,
+    "models_meeting_threshold": 7,
     "threshold_pct": 20.0,
-    "total_execution_time_ms": 0.0
+    "total_execution_time_ms": 8.78
   }
 }
