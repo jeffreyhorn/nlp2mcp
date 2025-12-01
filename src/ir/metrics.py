@@ -18,7 +18,49 @@ Accuracy: 0% error on manual validation (Sprint 12 Prep Task 7)
 
 from dataclasses import dataclass, field
 
-from src.ir.ast import Binary, Expr
+from src.ir.ast import Binary, Call, Const, Expr, Sum, Unary, VarRef
+
+
+def count_operations(expr: Expr) -> int:
+    """Count total number of operation nodes in expression tree.
+
+    This provides a measure of expression complexity by counting all AST nodes.
+    Each node type contributes to the operation count as follows:
+    - Constants, variables: 1 operation each
+    - Binary operations (+, -, *, /, ^): 1 + left + right operations
+    - Unary operations (-, +): 1 + operand operations
+    - Function calls: 1 + sum of argument operations
+    - Sum aggregations: 1 + body operations
+
+    Algorithm: O(n) recursive traversal of AST
+
+    Examples:
+        x → 1 operation (variable)
+        x + y → 3 operations (2 vars + 1 binary op)
+        x*y + x*z → 7 operations (4 vars + 2 products + 1 sum)
+        sin(x) → 2 operations (1 var + 1 function call)
+
+    Args:
+        expr: Expression to count operations in
+
+    Returns:
+        Total number of operation nodes in the expression tree
+    """
+    if isinstance(expr, Const):
+        return 1
+    elif isinstance(expr, VarRef):
+        return 1
+    elif isinstance(expr, Binary):
+        return 1 + count_operations(expr.left) + count_operations(expr.right)
+    elif isinstance(expr, Unary):
+        return 1 + count_operations(expr.child)
+    elif isinstance(expr, Call):
+        return 1 + sum(count_operations(arg) for arg in expr.args)
+    elif isinstance(expr, Sum):
+        return 1 + count_operations(expr.body)
+    else:
+        # Unknown expression type: count as 1
+        return 1
 
 
 def count_terms(expr: Expr) -> int:
@@ -65,14 +107,15 @@ def count_terms(expr: Expr) -> int:
 
 
 @dataclass
-class SimplificationMetrics:
-    """Metrics for term reduction benchmarking.
+class TermReductionMetrics:
+    """Standalone metrics class for term reduction benchmarking.
 
     Collects data on expression simplification effectiveness, including
     operation count, term count, timing, and transformation statistics.
 
-    This extends the base SimplificationMetrics in simplification_pipeline.py
-    with term counting and per-model tracking for benchmarking purposes.
+    This is a purpose-specific metrics class for benchmarking GAMS expression
+    simplification. It is not related by inheritance to the SimplificationMetrics
+    class in simplification_pipeline.py, which serves internal pipeline metrics.
 
     Fields:
         model: Model name (e.g., "rbrock.gms" or "rbrock.eq1")
@@ -88,7 +131,8 @@ class SimplificationMetrics:
         terms_reduction_pct: Percentage reduction in terms
 
     Usage:
-        >>> metrics = SimplificationMetrics(model="rbrock.eq1")
+        >>> from src.ir.metrics import TermReductionMetrics, count_operations, count_terms
+        >>> metrics = TermReductionMetrics(model="rbrock.eq1")
         >>> metrics.ops_before = count_operations(expr)
         >>> metrics.terms_before = count_terms(expr)
         >>> # ... run simplification ...
