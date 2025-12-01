@@ -553,6 +553,151 @@ def normalize_multi_line_continuations(source: str) -> str:
     return "\n".join(result)
 
 
+def normalize_special_identifiers(source: str) -> str:
+    """Quote identifiers containing special characters (-, +) in data blocks.
+
+    GAMS allows hyphens and plus signs in identifiers (e.g., light-ind, food+agr).
+    To avoid ambiguity with arithmetic operators, we quote these identifiers when
+    they appear in /.../ data blocks or table headers.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with special identifiers quoted
+
+    Example:
+        Set i / light-ind, food+agr /;
+        →
+        Set i / 'light-ind', 'food+agr' /;
+
+    Notes:
+        - Processes identifiers within /.../ data blocks
+        - Processes identifiers in table headers (after Table keyword)
+        - Preserves already-quoted strings
+        - Detects identifiers with - or + that aren't arithmetic operators
+        - Uses context: no surrounding whitespace = identifier
+    """
+    import re
+
+    lines = source.split("\n")
+    result = []
+    in_data_block = False
+    in_table = False
+    table_header_seen = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Check if we're starting a table
+        if re.match(r"^Table\b", stripped, re.IGNORECASE):
+            in_table = True
+            table_header_seen = False
+            result.append(line)
+            continue
+
+        # If in a table, process header and data rows
+        if in_table:
+            # Table ends with a semicolon
+            if stripped.endswith(";"):
+                in_table = False
+                # Still process this line (could be data row)
+                processed = _quote_special_in_line(line)
+                result.append(processed)
+                continue
+
+            # First non-empty line after Table declaration is the header
+            if not table_header_seen and stripped:
+                table_header_seen = True
+                processed = _quote_special_in_line(line)
+                result.append(processed)
+                continue
+
+            # All table rows (data rows with row labels and values)
+            if stripped:
+                processed = _quote_special_in_line(line)
+                result.append(processed)
+                continue
+
+        # Track if we're inside a /.../ data block
+        if "/" in line and not in_data_block:
+            # Check if entering a data block
+            slash_count = line.count("/")
+            if slash_count == 1:
+                # Opening a data block
+                in_data_block = True
+            elif slash_count >= 2:
+                # Inline block - process it
+                processed = _quote_special_in_line(line)
+                result.append(processed)
+                continue
+        elif "/" in line and in_data_block:
+            # Check if closing the data block
+            if line.strip().endswith("/") or line.strip().endswith("/;"):
+                in_data_block = False
+
+        # Process line if in data block
+        if in_data_block:
+            processed = _quote_special_in_line(line)
+            result.append(processed)
+        else:
+            result.append(line)
+
+    return "\n".join(result)
+
+
+def _quote_special_in_line(line: str) -> str:
+    """Quote identifiers with special chars in a single line.
+
+    Detects patterns like:
+    - word-word (no spaces around -)
+    - word+word (no spaces around +)
+
+    And wraps them in quotes if not already quoted.
+    """
+    import re
+
+    # Skip if line is a comment
+    if line.strip().startswith("*"):
+        return line
+
+    # Pattern: identifier with - or + that's NOT surrounded by whitespace
+    # This distinguishes:
+    #   light-ind (identifier) vs x1 - 1 (arithmetic)
+    #   food+agr (identifier) vs x + y (arithmetic)
+    #
+    # Match: Start of identifier, then word chars, then one or more (-/+ followed by word chars)
+    # Word boundary at start to ensure we match the full identifier
+    pattern = r"\b([a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+)\b"
+
+    def replace_if_not_quoted(match):
+        """Replace match with quoted version if not already in quotes."""
+        matched_text = match.group(1)
+        start_pos = match.start()
+
+        # Check if already inside a quoted string
+        # Count quotes before this position
+        before = line[:start_pos]
+        single_quotes = before.count("'")
+        double_quotes = before.count('"')
+
+        # If odd number of quotes, we're inside a string
+        if single_quotes % 2 == 1 or double_quotes % 2 == 1:
+            return matched_text
+
+        # Check if there's whitespace around -/+ to distinguish from operators
+        # Look at the context around the identifier
+        # If the identifier is preceded/followed by whitespace around the operator, skip it
+        # This is already handled by the pattern requiring word boundaries
+
+        # Quote the identifier
+        return f"'{matched_text}'"
+
+    # Apply the replacement
+    processed = re.sub(pattern, replace_if_not_quoted, line)
+    return processed
+
+
 def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
@@ -599,4 +744,7 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     content = strip_unsupported_directives(content)
 
     # Step 6: Normalize multi-line continuations (add missing commas)
-    return normalize_multi_line_continuations(content)
+    content = normalize_multi_line_continuations(content)
+
+    # Step 7: Quote identifiers with special characters (-, +) in data blocks
+    return normalize_special_identifiers(content)
