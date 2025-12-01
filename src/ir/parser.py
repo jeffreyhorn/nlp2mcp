@@ -553,6 +553,7 @@ class _ModelBuilder:
 
     def _init_predefined_constants(self) -> None:
         """Initialize predefined GAMS constants (pi, inf, eps, na)."""
+        import sys
         from math import pi as math_pi
 
         # Add predefined constants as scalar parameters
@@ -560,7 +561,7 @@ class _ModelBuilder:
         predefined = {
             "pi": math_pi,  # 3.141592653589793
             "inf": float("inf"),  # Infinity
-            "eps": 2.220446049250313e-16,  # Machine epsilon (float64)
+            "eps": sys.float_info.epsilon,  # Machine epsilon (float64)
             "na": float("nan"),  # Not available / missing data
         }
 
@@ -724,6 +725,29 @@ class _ModelBuilder:
         # Generate symbolic range
         return [f"{base_start}{i}" for i in range(num_start, num_end + 1)]
 
+    def _process_alias_pair(self, pair_node: Tree) -> None:
+        """Extract and register an alias pair from an alias_pair node.
+
+        Args:
+            pair_node: Tree node with data="alias_pair"
+
+        Note:
+            In GAMS, Alias (target, alias_name) syntax - first ID is target, second is alias
+        """
+        ids = [
+            _token_text(tok)
+            for tok in pair_node.children
+            if isinstance(tok, Token) and tok.type == "ID"
+        ]
+        if len(ids) == 2:
+            target, alias_name = ids
+            self._register_alias(alias_name, target, None, pair_node)
+        else:
+            # Grammar should prevent this, but add defensive check
+            raise self._error(
+                f"Alias pair must have exactly 2 identifiers, got {len(ids)}", pair_node
+            )
+
     def _handle_aliases_block(self, node: Tree) -> None:
         for child in node.children:
             if not isinstance(child, Tree):
@@ -731,31 +755,14 @@ class _ModelBuilder:
 
             if child.data == "alias_multi":
                 # Multiple alias pairs: Alias (nx,i), (ny,j);
-                # Extract all alias_pair nodes
-                # Note: In GAMS, Alias (target, alias_name) syntax
                 for pair_node in child.children:
                     if isinstance(pair_node, Tree) and pair_node.data == "alias_pair":
-                        ids = [
-                            _token_text(tok)
-                            for tok in pair_node.children
-                            if isinstance(tok, Token) and tok.type == "ID"
-                        ]
-                        if len(ids) == 2:
-                            target, alias_name = ids
-                            self._register_alias(alias_name, target, None, pair_node)
+                        self._process_alias_pair(pair_node)
             elif child.data == "alias_single":
                 # Single alias pair: Alias (i,j);
-                # Note: In GAMS, Alias (target, alias_name) syntax
                 pair_node = child.children[0]
                 if isinstance(pair_node, Tree) and pair_node.data == "alias_pair":
-                    ids = [
-                        _token_text(tok)
-                        for tok in pair_node.children
-                        if isinstance(tok, Token) and tok.type == "ID"
-                    ]
-                    if len(ids) == 2:
-                        target, alias_name = ids
-                        self._register_alias(alias_name, target, None, pair_node)
+                    self._process_alias_pair(pair_node)
             else:
                 # Handle legacy syntax
                 ids = [

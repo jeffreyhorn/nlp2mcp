@@ -13,12 +13,12 @@
 
 **Blockers Implemented (4-5h):**
 1. ✅ **predefined_constants** (1h) - Unlocked fct.gms
-2. ✅ **special_chars_in_identifiers** (1.5h) - Partially unlocked chenery.gms
+2. ❌ **special_chars_in_identifiers** (1.5h) - Implemented but REVERTED (broke arithmetic parsing in hs62, mhw4d, mhw4dx)
 3. ✅ **multiple_alias_declaration** (1.5h) - Partially unlocked jbearing.gms
 
 **Models Unlocked:** 1/10 (10% parse rate)
 - ✅ fct.gms - Fully parsing
-- ⚠️ chenery.gms - Has additional blocker (table_wildcard_domain)
+- ❌ chenery.gms - Needs table_wildcard_domain (special_chars was reverted)
 - ⚠️ jbearing.gms - Has additional blocker (curly_braces_sum)
 
 **Remaining Time:** ~3h (within 8h time-box)

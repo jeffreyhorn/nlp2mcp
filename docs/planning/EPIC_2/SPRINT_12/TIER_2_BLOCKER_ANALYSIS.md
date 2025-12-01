@@ -13,7 +13,7 @@
 **Baseline Parse Rate:** 0/10 (0%)  
 **Day 4 Parse Rate:** 1/10 (10%) - fct.gms fully parsing  
 **Unique Blockers Identified:** 6  
-**Day 4 Status:** 3 blockers implemented (predefined_constants, special_chars_in_identifiers, multiple_alias_declaration)
+**Day 4 Status:** 2 blockers successfully implemented (predefined_constants, multiple_alias_declaration), 1 reverted (special_chars_in_identifiers)
 
 ### Blocker Priority Summary
 
@@ -542,6 +542,7 @@ make ingest-gamslib  # Should still be 100% (10/10)
 - **Decision:** Trade-off not worth it (breaks 3 models to fix 1)
 - **Alternative:** Models can use quoted identifiers: 'light-ind'
 - **Commit:** fc1a2d6 (reverted)
+- **Note:** Associated test file (`tests/unit/test_special_char_identifiers.py`) was also removed during the revert
 
 #### 3. multiple_alias_declaration (1.5h)
 - **Status:** ✅ Complete

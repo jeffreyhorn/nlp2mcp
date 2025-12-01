@@ -7,7 +7,9 @@ Tests the parser's ability to handle GAMS syntax like:
 Sprint 12 Day 4 - Blocker #3: multiple_alias_declaration
 """
 
-from src.ir.parser import parse_model_text
+import pytest
+
+from src.ir.parser import ParseError, parse_model_text
 
 
 def test_single_alias_pair_parentheses():
@@ -184,3 +186,26 @@ def test_alias_chain_with_multiple_declaration():
 
     assert model.aliases["i1"].target == "i"
     assert model.aliases["i2"].target == "i1"
+
+
+def test_malformed_alias_pair_single_id():
+    """Test that alias pair with only one ID raises parse error."""
+    source = """
+    Set i / 1*5 /;
+    Alias (i);
+    """
+    # Grammar should reject this - alias_pair requires exactly 2 IDs
+    with pytest.raises(ParseError):
+        parse_model_text(source)
+
+
+def test_malformed_alias_pair_three_ids():
+    """Test that alias pair with three IDs raises parse error."""
+    source = """
+    Set i / 1*5 /;
+    Set j / 1*3 /;
+    Alias (i,j,k);
+    """
+    # Grammar should reject this - alias_pair requires exactly 2 IDs
+    with pytest.raises(ParseError):
+        parse_model_text(source)
