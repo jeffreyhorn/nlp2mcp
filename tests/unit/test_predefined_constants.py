@@ -129,7 +129,8 @@ def test_predefined_constant_case_sensitive():
     Equation test;
     test.. x =e= PI;
     """
-    # PI (uppercase) should fail - GAMS is case-insensitive but our implementation
-    # needs to handle this. For now, lowercase works.
+    # KNOWN LIMITATION: GAMS is case-insensitive, but our parser is case-sensitive.
+    # Predefined constants must be referenced in lowercase (pi, inf, eps, na).
+    # This is documented as a limitation that may be addressed in future sprints.
     with pytest.raises(ParseError, match="Undefined symbol 'PI'"):
         parse_model_text(source)

@@ -247,6 +247,9 @@ Breakdown:
 - Zero parser/lexer changes needed (pure symbol table initialization)
 - **Lowest risk blocker** - no grammar changes
 
+**Known Limitations:**
+- **Case Sensitivity:** GAMS is case-insensitive, but our parser is currently case-sensitive. Predefined constants must be referenced in lowercase (`pi`, `inf`, `eps`, `na`). References like `PI`, `Pi`, or `INF` will fail. This limitation may be addressed in future sprints by implementing case-insensitive identifier lookup.
+
 **Estimated Models Unlocked:** 1 (fct) = +10% parse rate
 
 ---

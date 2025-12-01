@@ -125,7 +125,7 @@
     "error_message": "Included file not found: /Users/jeff/experiments/nlp2mcp/tests/fixtures/tier2_candidates/poolmod.inc\n  Referenced from: /Users/jeff/experiments/nlp2mcp/tests/fixtures/tier2_candidates/pool.gms",
     "error_line": null,
     "file_size_lines": 701,
-    "blocker_category": "undefined_symbol"
+    "blocker_category": "file_io"
   },
   {
     "model_name": "process",

@@ -57,8 +57,8 @@ set_decl: ID STRING? "/" set_members "/"                     -> set_simple
 
 alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_universe
           | alias_pair ("," alias_pair)+                     -> alias_multi
-          | alias_pair                                       -> alias_single
           | ID "," ID                                        -> alias_plain
+          | alias_pair                                       -> alias_single
 
 alias_pair: "(" ID "," ID ")"
 
