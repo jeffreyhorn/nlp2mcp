@@ -4,8 +4,6 @@ GAMS allows wildcard * in table domain specifications to indicate
 that dimension names should be inferred from table data.
 """
 
-import pytest
-
 from src.ir.parser import parse_model_text
 
 

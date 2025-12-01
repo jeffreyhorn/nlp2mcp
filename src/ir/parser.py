@@ -860,7 +860,6 @@ class _ModelBuilder:
         # Handle table_domain_list which may contain wildcards
         domain_list_node = node.children[1]
         domain = []
-        has_wildcard = False
 
         for child in domain_list_node.children:
             if isinstance(child, Tree):
@@ -868,7 +867,14 @@ class _ModelBuilder:
                     domain.append(_token_text(child.children[0]))
                 elif child.data == "wildcard_domain":
                     domain.append("*")
-                    has_wildcard = True
+                elif child.data == "wildcard_tuple_domain":
+                    # Handle (*,*) or (*,*,*) etc.
+                    # Count the number of wildcards in the tuple
+                    wildcard_tuple_node = child.children[0]  # wildcard_tuple
+                    num_wildcards = len(wildcard_tuple_node.children)
+                    # Add each wildcard to domain
+                    for _ in range(num_wildcards):
+                        domain.append("*")
 
         domain = tuple(domain)
 
@@ -883,16 +889,45 @@ class _ModelBuilder:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
             return
 
+        # Extract row labels first (to handle dotted labels)
+        row_label_map = {}  # line_number -> row_label_string
+        for row in table_rows:
+            # First child is always the row label (either table_row_label tree or ID token)
+            if row.children:
+                first_child = row.children[0]
+                if isinstance(first_child, Tree) and first_child.data == "dotted_label":
+                    # Dotted label like "low.a.subst"
+                    label_parts = [
+                        _token_text(tok) for tok in first_child.children if isinstance(tok, Token)
+                    ]
+                    row_label = ".".join(label_parts)
+                    # Get line number from first token
+                    first_token = first_child.children[0]
+                    if hasattr(first_token, "line"):
+                        row_label_map[first_token.line] = row_label
+                elif isinstance(first_child, Token):
+                    # Simple ID label
+                    row_label = _token_text(first_child)
+                    if hasattr(first_child, "line"):
+                        row_label_map[first_child.line] = row_label
+
         # Collect all tokens from all table_row nodes with position info
         all_tokens = []
         for row in table_rows:
             for child in row.children:
                 if isinstance(child, Token):
                     all_tokens.append(child)
-                elif isinstance(child, Tree) and child.data == "table_value":
-                    for grandchild in child.children:
-                        if isinstance(grandchild, Token):
-                            all_tokens.append(grandchild)
+                elif isinstance(child, Tree):
+                    if child.data == "table_value":
+                        for grandchild in child.children:
+                            if isinstance(grandchild, Token):
+                                all_tokens.append(grandchild)
+                    elif child.data == "dotted_label":
+                        # Handle dotted labels like "low.a.subst"
+                        # Collect all ID tokens (for column position of first token)
+                        for grandchild in child.children:
+                            if isinstance(grandchild, Token):
+                                all_tokens.append(grandchild)
 
         if not all_tokens:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
@@ -930,15 +965,18 @@ class _ModelBuilder:
 
         # Parse data rows
         values = {}
-        for _line_num, line_tokens in sorted_lines[1:]:
+        for line_num, line_tokens in sorted_lines[1:]:
             if not line_tokens:
                 continue
 
-            # First token in line should be row header (ID)
-            if line_tokens[0].type != "ID":
-                continue
-
-            row_header = _token_text(line_tokens[0])
+            # Get row header from row_label_map (handles dotted labels)
+            if line_num not in row_label_map:
+                # Fallback: first token should be row header
+                if line_tokens[0].type != "ID":
+                    continue
+                row_header = _token_text(line_tokens[0])
+            else:
+                row_header = row_label_map[line_num]
 
             # Match remaining tokens to columns by position
             for token in line_tokens[1:]:

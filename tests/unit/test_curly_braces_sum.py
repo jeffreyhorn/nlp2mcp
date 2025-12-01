@@ -1,7 +1,5 @@
 """Tests for curly braces in sum/aggregation functions (Issue #355)."""
 
-import pytest
-
 from src.ir.parser import parse_model_text
 
 

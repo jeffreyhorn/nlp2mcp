@@ -5,8 +5,6 @@ GAMS supports two tuple notations:
 2. Tuple expansion: a.(b,c,d) → (a,b), (a,c), (a,d)
 """
 
-import pytest
-
 from src.ir.parser import parse_model_text
 
 

@@ -7,8 +7,6 @@ ambiguity with arithmetic operators.
 Related to GitHub Issue #357.
 """
 
-import pytest
-
 from src.ir.preprocessor import normalize_special_identifiers
 
 
