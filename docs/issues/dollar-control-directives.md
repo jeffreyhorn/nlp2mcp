@@ -1,11 +1,35 @@
 # Issue: Dollar Control Directives
 
 **GitHub Issue:** [#360](https://github.com/jeffreyhorn/nlp2mcp/issues/360)  
-**Status:** Open  
+**Status:** In Progress (Phase 1 Complete)  
 **Priority:** HIGH  
 **Complexity:** HIGH (10-15h)  
 **Impact:** 3 Tier 2 models (elec, gasoil, inscribedsquare)  
-**Sprint:** Sprint 13+
+**Sprint:** Sprint 12 (Phase 1) / Sprint 13+ (Phases 2-4)
+
+---
+
+## Progress Update
+
+### Phase 1: COMPLETE ✓ (Sprint 12, Commit 0cd64bf)
+
+**Implemented Features:**
+- `extract_set_directives()`: Extracts `$set varname value` directives
+- `strip_set_directives()`: Strips `$set` lines from output
+- Enhanced `%variable%` substitution for all `$set` variables
+- Nested macro expansion (e.g., `$set np %n%+1`)
+
+**Testing:**
+- 19 unit tests in `test_dollar_set_directives.py` (all passing)
+- elec.gms now parses past line 31 (was blocked by `%n%` and `%np%`)
+- New failure at line 39 with `$(...)` syntax (different issue, out of scope)
+
+**Quality Gates:** ✓ typecheck ✓ lint ✓ format ✓ test
+
+**Remaining Phases:**
+- Phase 2: `$macro` system (4h) - for inscribedsquare.gms
+- Phase 3: `$batInclude` with arguments (2h) - for gasoil.gms  
+- Phase 4: `$if`/`$else`/`$endif` conditionals (5h) - future-proofing
 
 ---
 
