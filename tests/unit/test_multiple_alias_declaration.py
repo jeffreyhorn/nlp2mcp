@@ -122,17 +122,18 @@ def test_multiple_alias_statements():
     assert model.aliases["m1"].target == "m"
 
 
-def test_alias_with_hyphens():
-    """Test aliases with special characters (combined with Blocker #2)."""
+def test_alias_with_quoted_names():
+    """Test aliases with quoted names (GAMS escaped identifiers)."""
     source = """
-    Set i / light-ind, heavy-ind /;
-    Alias (i, i-alias);
+    Set i / a, b, c /;
+    Alias (i, 'i-alias');
     """
     model = parse_model_text(source)
 
     assert "i" in model.sets
-    assert "i-alias" in model.aliases
-    assert model.aliases["i-alias"].target == "i"
+    # Quoted identifiers are stored with quotes
+    assert "'i-alias'" in model.aliases
+    assert model.aliases["'i-alias'"].target == "i"
 
 
 def test_multiple_aliases_of_same_set():
