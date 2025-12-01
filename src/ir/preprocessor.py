@@ -405,6 +405,52 @@ def extract_set_directives(
     return macros
 
 
+def extract_macro_definitions(source: str) -> dict[str, tuple[list[str], str]]:
+    """Extract $macro function definitions.
+
+    Parses lines like: $macro name(param1, param2) body
+    Returns a dictionary mapping macro names to (parameters, body) tuples.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Dictionary mapping macro names to (parameter_list, body) tuples
+
+    Example:
+        >>> source = '$macro fx(t) %scale%*t\\nx =e= fx(y);'
+        >>> macros = extract_macro_definitions(source)
+        >>> macros
+        {'fx': (['t'], '%scale%*t')}
+
+    Notes:
+        - Case-insensitive matching for $macro directive
+        - Macro name and parameter names are case-preserving
+        - Body can contain %variable% references
+        - Parameters are whitespace-trimmed
+    """
+    macros: dict[str, tuple[list[str], str]] = {}
+
+    # Pattern: $macro name(param1, param2, ...) body
+    # Matches: $macro fx(t) %scale%*t
+    #          $macro sum2(i,j,expr) sum(i, sum(j, expr))
+    # Case-insensitive for $macro directive
+    # Body extends to end of line
+    pattern = r"\$macro\s+(\w+)\(([^)]*)\)\s+(.+)"
+
+    for match in re.finditer(pattern, source, re.IGNORECASE):
+        name = match.group(1)
+        params_str = match.group(2)
+        body = match.group(3).strip()
+
+        # Parse parameter list (comma-separated, whitespace-trimmed)
+        params = [p.strip() for p in params_str.split(",")] if params_str.strip() else []
+
+        macros[name] = (params, body)
+
+    return macros
+
+
 def expand_macros(source: str, macros: dict[str, str]) -> str:
     """Expand %macro% references with their values.
 
@@ -443,6 +489,132 @@ def expand_macros(source: str, macros: dict[str, str]) -> str:
         result = re.sub(pattern, lambda m: value, result)
 
     return result
+
+
+def expand_macro_calls(source: str, macro_defs: dict[str, tuple[list[str], str]]) -> str:
+    """Expand macro function calls with argument substitution.
+
+    Replaces macro calls like fx(arg1, arg2) with the macro body,
+    substituting parameters with the provided arguments.
+
+    Args:
+        source: GAMS source code text with macro calls
+        macro_defs: Dictionary mapping macro names to (parameters, body) tuples
+
+    Returns:
+        Source code with macro calls expanded
+
+    Example:
+        >>> source = "x =e= fx(t('1'));"
+        >>> macro_defs = {'fx': (['t'], 'sin(t) * cos(t-t*t)')}
+        >>> expand_macro_calls(source, macro_defs)
+        "x =e= sin(t('1')) * cos(t('1')-t('1')*t('1'));"
+
+    Notes:
+        - Performs textual substitution of parameters with arguments
+        - Arguments can contain parentheses (e.g., t('1'))
+        - Multiple macro calls can appear in the same line
+        - Macro calls are case-sensitive (GAMS convention)
+    """
+    result = source
+
+    for name, (params, body) in macro_defs.items():
+        # Pattern: name(args)
+        # Need to handle nested parentheses in arguments (e.g., fx(t('1')))
+        # Use a more sophisticated approach: find all occurrences and parse carefully
+
+        # Build regex pattern for this macro call
+        # Match: name followed by (
+        pattern = rf"\b{re.escape(name)}\("
+
+        # Process all matches from end to start to avoid offset issues
+        matches = list(re.finditer(pattern, result))
+
+        # Process in reverse order to maintain string positions
+        for match in reversed(matches):
+            start_pos = match.start()
+            # Find the matching closing parenthesis
+            paren_start = match.end() - 1  # Position of opening (
+            paren_count = 1
+            pos = paren_start + 1
+            args_str = ""
+
+            while pos < len(result) and paren_count > 0:
+                if result[pos] == "(":
+                    paren_count += 1
+                elif result[pos] == ")":
+                    paren_count -= 1
+                    if paren_count == 0:
+                        # Found matching closing paren
+                        args_str = result[paren_start + 1 : pos]
+                        break
+                pos += 1
+
+            if paren_count != 0:
+                # Unmatched parentheses - skip this match
+                continue
+
+            # Parse arguments (comma-separated, but respect nested parens)
+            args = _parse_macro_arguments(args_str)
+
+            # Check if argument count matches parameter count
+            if len(args) != len(params):
+                # Argument count mismatch - skip this expansion
+                # This could be a different function with the same name
+                continue
+
+            # Substitute parameters with arguments in the body
+            expanded = body
+            for param, arg in zip(params, args, strict=True):
+                # Use word boundaries to avoid partial replacements
+                # But also handle cases where param is followed by non-word chars
+                param_pattern = rf"\b{re.escape(param)}\b"
+                expanded = re.sub(param_pattern, arg, expanded)
+
+            # Replace the macro call with the expanded body
+            call_end = pos + 1  # Position after closing )
+            result = result[:start_pos] + expanded + result[call_end:]
+
+    return result
+
+
+def _parse_macro_arguments(args_str: str) -> list[str]:
+    """Parse comma-separated macro arguments, respecting nested parentheses.
+
+    Args:
+        args_str: String containing comma-separated arguments
+
+    Returns:
+        List of argument strings (whitespace-trimmed)
+
+    Example:
+        >>> _parse_macro_arguments("t('1'), x+y")
+        ["t('1')", "x+y"]
+    """
+    if not args_str.strip():
+        return []
+
+    args = []
+    current_arg = ""
+    paren_depth = 0
+
+    for char in args_str:
+        if char == "," and paren_depth == 0:
+            # Argument separator at top level
+            args.append(current_arg.strip())
+            current_arg = ""
+        else:
+            if char == "(":
+                paren_depth += 1
+            elif char == ")":
+                paren_depth -= 1
+            current_arg += char
+
+    # Add the last argument
+    if current_arg.strip():
+        args.append(current_arg.strip())
+
+    return args
 
 
 def strip_conditional_directives(source: str) -> str:
@@ -518,6 +690,45 @@ def strip_set_directives(source: str) -> str:
         #          $if set n $set np %n%
         #          $if not set n $set n 10
         if re.search(r"\$set\b", stripped, re.IGNORECASE):
+            # Replace with comment to preserve line number, preserving original indentation
+            leading_ws = line[: len(line) - len(line.lstrip())]
+            filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
+        else:
+            # Keep line unchanged
+            filtered.append(line)
+
+    return "\n".join(filtered)
+
+
+def strip_macro_directives(source: str) -> str:
+    """Strip $macro directives, replacing with comments.
+
+    Removes $macro definitions from the source while preserving
+    line numbers by replacing them with comment lines.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with $macro directives replaced by comments
+
+    Example:
+        >>> source = '$macro fx(t) %fx%\\nx =e= fx(y);'
+        >>> result = strip_macro_directives(source)
+        >>> # Result: '* [Stripped: $macro fx(t) %fx%]\\nx =e= sin(y) * cos(y);'
+
+    Notes:
+        - Preserves line numbers for accurate error reporting
+        - Should be called after expand_macro_calls() to avoid losing expansions
+    """
+    lines = source.split("\n")
+    filtered = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Check if this line contains a $macro directive
+        if re.search(r"\$macro\b", stripped, re.IGNORECASE):
             # Replace with comment to preserve line number, preserving original indentation
             leading_ws = line[: len(line) - len(line.lstrip())]
             filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
@@ -833,10 +1044,16 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     It performs preprocessing in the following order:
     1. Expand $include directives recursively
     2. Extract macro defaults from $if not set directives
-    3. Expand %macro% references
-    4. Strip conditional directives ($if not set)
-    5. Strip other unsupported directives ($title, $ontext, etc.)
-    6. Normalize multi-line continuations (add missing commas)
+    3. Extract general $set directives
+    4. Expand %variable% references
+    5. Extract $macro definitions
+    6. Expand macro function calls
+    7. Strip conditional directives ($if not set)
+    8. Strip $set directives
+    9. Strip $macro directives
+    10. Strip other unsupported directives ($title, $ontext, etc.)
+    11. Normalize multi-line continuations (add missing commas)
+    12. Quote identifiers with special characters (-, +) in data blocks
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -867,20 +1084,32 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     set_macros = extract_set_directives(content, macros)
     macros.update(set_macros)  # $set directives override conditional defaults
 
-    # Step 4: Expand %macro% references with their values
+    # Step 4: Expand %variable% references with their values
     content = expand_macros(content, macros)
 
-    # Step 5: Strip $if not set directives (replaced with comments)
+    # Step 5: Extract $macro function definitions
+    # This must happen after %variable% expansion so that macro bodies have variables expanded
+    # For example: $macro fx(t) %fx% becomes $macro fx(t) sin(t) * cos(t-t*t)
+    macro_defs = extract_macro_definitions(content)
+
+    # Step 6: Expand macro function calls
+    # Replace fx(t('1')) with sin(t('1')) * cos(t('1')-t('1')*t('1'))
+    content = expand_macro_calls(content, macro_defs)
+
+    # Step 7: Strip $if not set directives (replaced with comments)
     content = strip_conditional_directives(content)
 
-    # Step 6: Strip $set directives (replaced with comments)
+    # Step 8: Strip $set directives (replaced with comments)
     content = strip_set_directives(content)
 
-    # Step 7: Strip other unsupported directives ($title, $ontext, etc.)
+    # Step 9: Strip $macro directives (replaced with comments)
+    content = strip_macro_directives(content)
+
+    # Step 10: Strip other unsupported directives ($title, $ontext, etc.)
     content = strip_unsupported_directives(content)
 
-    # Step 8: Normalize multi-line continuations (add missing commas)
+    # Step 11: Normalize multi-line continuations (add missing commas)
     content = normalize_multi_line_continuations(content)
 
-    # Step 9: Quote identifiers with special characters (-, +) in data blocks
+    # Step 12: Quote identifiers with special characters (-, +) in data blocks
     return normalize_special_identifiers(content)
