@@ -348,6 +348,7 @@ symbol_plain: ID
      | ref_indexed
      | symbol_plain
      | "(" expr ")"
+     | "[" expr "]"                       -> bracket_expr
 
 // Compile-time constants: %identifier% or %path.to.value%
 compile_time_const: "%" compile_const_path "%"
