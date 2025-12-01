@@ -1,12 +1,12 @@
-# Sprint 12 Plan (FINAL): Measurement, Polish, and Tier 2 Expansion
+# Sprint 12 Plan (REVISED): Measurement, Polish, and Tier 2 Expansion
 
 **Sprint:** Sprint 12 (Weeks 13-14)  
 **Epic:** Epic 2 - Multi-Solver MCP Server  
 **Start Date:** TBD (after prep completion)  
 **Duration:** 10 working days  
 **Total Capacity:** 80 hours (10 days × 8 hours/day)  
-**Allocated Effort:** 75-84 hours  
-**Buffer:** -4 to +5 hours (94-105% capacity utilization)  
+**Allocated Effort:** 65-72 hours  
+**Buffer:** 8-15 hours (10-19%)  
 **Theme:** Validate Sprint 11 achievements, complete technical debt, expand to Tier 2, add deferred features
 
 ---
@@ -34,99 +34,44 @@ Sprint 12 validates Sprint 11's aggressive simplification through quantitative m
 **Capacity Utilization:**
 - Original plan: 22-27h (28-34% of 80h capacity)
 - Revised plan: 65-72h (81-90% of 80h capacity)
-- Final plan: 75-84h (94-105% of 80h capacity)
-- Added scope: ~50h of deferred features, expanded validation, and documentation
-
-**Daily Load Normalization:**
-- Each day targets 7-9h of work (average 7.5-8.4h/day)
-- Total allocated: 75-84h across 10 days
-- Moved work from overloaded days (9-10) to underloaded days (1-3)
-- Explicit time-boxing on Tier 2 days (4-6) at 8h max per day
-- Optional items clearly marked as contingent on checkpoint success
-- Buffer: Up to 5h slack, or -4h if all maximums hit (requires deferral priority)
+- Added scope: ~40h of deferred features, expanded validation, and documentation
 
 ---
 
 ## Scope & Effort Allocation
 
-### Total Hours: 75-84h (of 80h capacity, 94-105% utilization)
+### Total Hours: 65-72h (of 80h capacity)
 
-**Normalized Daily Allocation:**
-
-| Day | Focus | Original | Revised | Final | Hours/Day |
-|-----|-------|----------|---------|-------|-----------|
-| 1 | Measurement Setup | 2-3h | 3-4h | 7-8h | ✅ 7-9h |
-| 2 | Baseline & Multi-Metric | 3-4h | 4-5h | 8-9h | ✅ 7-9h |
-| 3 | Validation & Checkpoint | 1-2h | 2-3h | 7-8h | ✅ 7-9h |
-| 4 | Tier 2 Analysis + Blockers | 2h | 7-8h | 8h max | ✅ 7-9h |
-| 5 | Tier 2 Medium Blockers | 3-4h | 6-7h | 8h max | ✅ 7-9h |
-| 6 | Tier 2 Stretch + Checkpoint | 2-3h | 5-6h | 7-8h | ✅ 7-9h |
-| 7 | JSON + PATH + Dashboard | 3-4h | 6-7h | 8-9h | ✅ 7-9h |
-| 8 | Dashboard + CI + Trending | 1-2h | 6-7h | 7-8h | ✅ 7-9h |
-| 9 | Extended Features (contingent) | 0h | 12-14h | 7-9h | ✅ 7-9h |
-| 10 | Validation + Docs | 1-2h | 10-14h | 8-9h | ✅ 7-9h |
-| **Total** | | **19-28h** | **65-72h** | **75-84h** | **Avg 7.5-8.4h/day** |
-
-**Phase Allocation (Final):**
-
-| Phase | Days | Components | Final Hours |
-|-------|------|------------|-------------|
-| **Measurement & Validation** | 1-3 | Benchmarking, Multi-Metric, Extended Testing | 22-25h |
-| **Tier 2 Expansion** | 4-6 | Model Selection, Blockers (time-boxed 8h max/day) | 22-24h |
-| **Polish & Integration** | 7-8 | JSON, PATH, CI, Dashboard, Trending | 15-17h |
-| **Contingent Features** | 9 | LOW priority (checkpoint-dependent) | 7-9h |
-| **Validation & Docs** | 10 | Testing, Documentation, Retrospective | 8-9h |
-| **TOTAL** | 1-10 | All components | **75-84h** |
+| Phase | Days | Components | Original | Revised | Change |
+|-------|------|------------|----------|---------|--------|
+| **Measurement & Validation** | 1-3 | Benchmarking, Multi-Metric | 7-10h | 9-12h | +2h validation |
+| **Tier 2 Expansion** | 4-6 | Model Selection, Blockers | 7-9h | 18-22h | +11-13h scope |
+| **Polish & Integration** | 7-8 | JSON, PATH, CI, Dashboard | 4-6h | 16-20h | +12-14h features |
+| **Extended Features** | 9 | LOW priority items, trending | 0h | 12-14h | NEW |
+| **Buffer & Validation** | 10 | Contingency, Final Testing | 3-4h | 10-14h | +7-10h depth |
 
 ### Scope by Priority
 
 **HIGH Priority (Must Do - 20-24h):**
 1. Term Reduction Benchmarking (6-8h, expanded validation)
 2. Multi-Metric Threshold Implementation (3-4h)
-3. Tier 2 Expansion - Core Blockers (10-12h, time-boxed per day)
+3. Tier 2 Expansion - Core + Extended (10-12h, more models/blockers)
 
 **MEDIUM Priority (Should Do - 28-32h):**
 4. JSON Diagnostics Output (3h, with CI integration)
-5. Tier 2 Expansion - Medium Blockers (6-8h, time-boxed, checkpoint contingent)
-6. PATH Solver CI Integration (3-5h, conditional on email response)
+5. Tier 2 Expansion - Additional Candidates (6-8h, stretch to 60%+)
+6. PATH Solver CI Integration (3-5h, conditional)
 7. CI Workflow Testing Checklist (2h, with examples)
-8. Dashboard Integration (4-6h, checkpoint contingent)
-9. Performance Trending (4-6h, checkpoint contingent)
+8. Dashboard Integration (4-6h, pulled forward from deferred)
+9. Performance Trending (4-6h, pulled forward from deferred)
 
-**LOW Priority (Checkpoint-Contingent - 7-9h allocated on Day 9):**
-10. Additional transformations if Day 3 <20% reduction (6-8h) - **ONLY if checkpoint fails**
-11. Naming convention alignment (1-2h) - **IF Day 6 checkpoint succeeds AND buffer available**
-12. CSE temp propagation (2-3h) - **IF user feedback available AND buffer available**
-13. Transformation catalog alignment (1-2h) - **IF buffer available**
-14. Extended Tier 2 analysis (moved to Day 6, contingent)
-
-**REQUIRED Documentation (Day 10 - 2-3h):**
-15. Update KNOWN_UNKNOWNS.md with verification results (60-90 min)
-16. Update PREP_PLAN.md Task 10 status/result/summary (60-90 min)
-17. Add CHANGELOG.md Sprint 12 entry (60-90 min)
-
----
-
-### Optional Feature Priority Order
-
-If scope reduction is needed due to overruns, defer in this order (protect PRIMARY goals):
-
-**Deferral Priority (defer first to last):**
-1. **DEFER FIRST:** CSE temp propagation (Day 9) - lowest value, requires user feedback
-2. **DEFER SECOND:** Transformation catalog alignment (Day 9) - documentation only
-3. **DEFER THIRD:** Naming convention alignment (Day 9) - code cleanup, not functional
-4. **DEFER FOURTH:** Performance trending (Day 8) - nice-to-have visualization
-5. **DEFER FIFTH:** Dashboard integration (Days 7-8) - useful but not critical
-6. **DEFER SIXTH:** Extended Tier 2 analysis (Day 6) - stretch beyond 60%
-7. **PROTECT:** Core Tier 2 blockers (Days 4-6) - needed for 50% parse rate
-8. **PROTECT:** Multi-metric thresholds (Days 2-3) - technical debt must complete
-9. **PROTECT:** Term reduction benchmarking (Days 1-3) - PRIMARY goal
-
-**Checkpoint-Driven Decisions:**
-- **Day 3 Checkpoint FAIL (<20% reduction):** Add LOW priority transformations (Day 9), defer dashboard/trending
-- **Day 6 Checkpoint FAIL (<50% Tier 2):** Stop Tier 2 work, document limitation, keep dashboard/trending
-- **Day 7 Checkpoint (PATH no response):** Skip PATH implementation, use time for dashboard/trending
-- **Any overrun:** Defer LOW priority items in priority order above
+**LOW Priority (Conditional - 17-26h):**
+10. Additional transformations if <20% reduction (6-8h)
+11. Naming convention alignment (1-2h)
+12. CSE temp propagation (2-3h, if user feedback available)
+13. Transformation catalog alignment (1-2h, documentation)
+14. Extended Tier 2 analysis (4-6h, push to 70%+ parse rate)
+15. Documentation updates (2-3h, KNOWN_UNKNOWNS, PREP_PLAN, CHANGELOG)
 
 ---
 
@@ -234,9 +179,9 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 
 ## Day-by-Day Schedule
 
-### Day 1: Measurement Infrastructure Setup + Extended Testing (7-8h)
+### Day 1: Measurement Infrastructure Setup (3-4h)
 
-**Focus:** Component 1 (Term Reduction Benchmarking - Part 1) + Comprehensive Testing
+**Focus:** Component 1 (Term Reduction Benchmarking - Part 1)
 
 **Tasks:**
 1. Send PATH licensing email to ferris@cs.wisc.edu (15 min)
@@ -258,22 +203,12 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
    - Collect before/after metrics when enabled
    - No changes to transformation functions (instrumentation only)
 
-5. Extended testing and validation (180-240 min)
-   - Edge case testing: nested expressions, complex factorizations
-   - Performance profiling: measure overhead on large expressions
-   - Integration testing: run on 5 Tier 1 models (subset validation)
-   - Documentation: Add inline examples and usage notes to metrics.py
-   - Code review preparation: ensure clean, well-documented code
-
 **Deliverables:**
 - [ ] PATH email sent (tracked in email client)
 - [ ] src/ir/metrics.py with SimplificationMetrics and count_terms()
 - [ ] tests/unit/test_metrics.py with ≥15 test cases
 - [ ] Instrumented SimplificationPipeline (backward compatible)
 - [ ] All existing tests still passing (make test-fast)
-- [ ] Extended testing complete (edge cases, performance profiling)
-- [ ] Integration validation on 5 Tier 1 models
-- [ ] Code documentation complete and ready for review
 
 **Decision Points:** None
 
@@ -289,16 +224,14 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 - [ ] Pipeline instrumentation works on rbrock.gms without errors
 - [ ] make test-fast completes in <30s
 - [ ] PATH email sent and delivery confirmed
-- [ ] Extended testing demonstrates <10% overhead on realistic expressions
-- [ ] Integration validation shows consistent results across 5 models
 
-**Time Budget:** 7-8 hours
+**Time Budget:** 3-4 hours
 
 ---
 
-### Day 2: Baseline Collection & Multi-Metric Backend + Extended Validation (8-9h)
+### Day 2: Baseline Collection & Multi-Metric Backend (4-5h)
 
-**Focus:** Component 1 (Part 2) + Component 2 (Part 1) + Synthetic Model Testing
+**Focus:** Component 1 (Part 2) + Component 2 (Part 1)
 
 **Tasks:**
 1. Create measure_simplification.py script (120-150 min)
@@ -329,24 +262,12 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
    - Exit code logic: 0 (pass), 1 (warn), 2 (fail)
    - Return worst status across all 3 metrics
 
-4. Extended validation and synthetic testing (180-240 min)
-   - Create 3 synthetic test models with known characteristics:
-     - Model A: Heavy factorization opportunities (expected: 40-50% reduction)
-     - Model B: Minimal simplification (expected: <10% reduction)
-     - Model C: Mixed transformations (expected: 20-30% reduction)
-   - Run measure_simplification.py on synthetic models
-   - Validate against expected reduction percentages
-   - Test multi-metric threshold logic with edge cases
-   - Document synthetic model creation for future testing
-
 **Deliverables:**
 - [ ] scripts/measure_simplification.py (executable, --help works)
 - [ ] baselines/simplification/baseline_sprint11.json (valid JSON, ≥10 models)
 - [ ] Updated check_parse_rate_regression.py with multi-metric support
 - [ ] Unit tests for multi-metric threshold logic
 - [ ] Extended validation on synthetic models
-- [ ] 3 synthetic test models created and documented
-- [ ] Synthetic model results match expected reduction ranges
 
 **Decision Points:** None
 
@@ -362,15 +283,14 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 - [ ] Multi-metric backend passes unit tests (warn/fail thresholds trigger correctly)
 - [ ] Baseline committed to git with proper metadata
 - [ ] Extended validation passes on synthetic models
-- [ ] Synthetic models demonstrate measurement accuracy (within 5% of expected)
 
-**Time Budget:** 8-9 hours
+**Time Budget:** 4-5 hours
 
 ---
 
-### Day 3: Validation, Analysis & Checkpoint (7-8h)
+### Day 3: Validation & Checkpoint (2-3h)
 
-**Focus:** Component 1 (Part 3) + Component 2 (Part 2) + Per-Transformation Analysis + Checkpoint
+**Focus:** Component 1 (Part 3) + Component 2 (Part 2) + Checkpoint
 
 **Tasks:**
 1. Analyze baseline_sprint11.json results (45-60 min)
@@ -395,28 +315,11 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
    - Update PR comment template to show all 3 metrics
    - Add example PR comment to documentation
 
-4. Extended validation and edge case testing (180-240 min)
-   - Validate measurement accuracy on edge cases:
-     - Very large expressions (>500 operations)
-     - Deeply nested expressions (>10 levels)
-     - Expressions with no simplification opportunities
-   - Cross-validate top 3 models with manual analysis
-   - Test multi-metric thresholds with simulated regressions
-   - Document edge case behavior
-
-5. Prepare comprehensive checkpoint evidence (60-90 min)
-   - Compile detailed reduction statistics
-   - Create visualization/tables for retrospective
-   - Document transformation effectiveness ranking
-   - Prepare decision evidence for checkpoint meeting
-
 **Deliverables:**
 - [ ] docs/SIMPLIFICATION_BENCHMARKS.md with detailed analysis
 - [ ] Updated measure_parse_rate.py with --all-metrics
 - [ ] baselines/multi_metric/baseline_sprint12.json populated
 - [ ] Updated .github/workflows/gamslib-regression.yml
-- [ ] Extended validation complete on edge cases
-- [ ] Checkpoint evidence prepared and compiled
 - [ ] Commit: "Complete Components 1 & 2: Benchmarking and Multi-Metric"
 
 **Decision Point: DAY 3 CHECKPOINT**
@@ -441,22 +344,14 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 - [ ] PR comment format validated (table with ✅/⚠️/❌)
 - [ ] Components 1 & 2 complete and functional
 - [ ] Per-transformation effectiveness documented
-- [ ] Edge case validation demonstrates robustness
-- [ ] Comprehensive checkpoint evidence compiled
 
-**Time Budget:** 7-8 hours
+**Time Budget:** 2-3 hours
 
 ---
 
-### Day 4: Tier 2 Model Analysis & High-Priority Blockers (8h max - TIME-BOXED)
+### Day 4: Tier 2 Model Analysis & High-Priority Blockers (7-8h)
 
 **Focus:** Component 5 (Tier 2 Expansion - Part 1 + Part 2)
-
-**⚠️ TIME-BOX ENFORCEMENT:**
-- Maximum 8 hours on this day
-- If analysis takes longer than allocated, defer lower-priority blockers to Day 5
-- Stop at 8h regardless of blocker implementation status
-- Checkpoint on Day 6 will determine if additional Tier 2 work continues
 
 **Tasks:**
 1. Download 10 Tier 2 candidate models (15 min)
@@ -526,15 +421,9 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 
 ---
 
-### Day 5: Tier 2 Medium-Priority Blocker Implementation (8h max - TIME-BOXED)
+### Day 5: Tier 2 Medium-Priority Blocker Implementation (6-7h)
 
 **Focus:** Component 5 (Part 3) - Implement medium-priority blockers
-
-**⚠️ TIME-BOX ENFORCEMENT:**
-- Maximum 8 hours on this day
-- Prioritize blockers that unlock multiple models
-- If running over, defer remaining blockers to Day 6
-- Goal: Reach 40-50% Tier 2 parse rate (4-5 models) by end of day
 
 **Tasks:**
 1. Implement Blocker #3 (MEDIUM priority, 90-120 min)
@@ -579,24 +468,17 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 
 **Success Criteria:**
 - [ ] ≥3 blockers fully implemented and tested
-- [ ] ≥4-5 Tier 2 models parsing (cumulative, 40-50% rate)
+- [ ] ≥5 Tier 2 models parsing (cumulative, ≥50% rate)
 - [ ] All Tier 1 tests still passing (no regressions)
 - [ ] Code quality: typecheck ✅, lint ✅, format ✅
-- [ ] Time-box respected (stopped at 8h if needed)
 
-**Time Budget:** 8 hours max (TIME-BOXED)
+**Time Budget:** 6-7 hours
 
 ---
 
-### Day 6: Tier 2 Stretch Blockers & Checkpoint (7-8h - includes contingent analysis)
+### Day 6: Tier 2 Stretch Blockers & Checkpoint (5-6h)
 
-**Focus:** Component 5 (Part 4) + Checkpoint + Conditional Extended Analysis
-
-**✅ CHECKPOINT CONTINGENCY:**
-- **IF Day 6 checkpoint ≥60% (6+ models):** Analyze 5 additional Tier 2 candidates (90-120 min)
-- **IF Day 6 checkpoint 50-59% (5 models):** Document success, proceed to Day 7
-- **IF Day 6 checkpoint 40-49% (4 models):** Document partial success, proceed to Day 7
-- **IF Day 6 checkpoint <40%:** Stop Tier 2 work, document limitation, use time for dashboard prep
+**Focus:** Component 5 (Part 4) + Checkpoint
 
 **Tasks:**
 1. Implement Blocker #6 (STRETCH goal, 90-120 min)
@@ -656,7 +538,7 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 
 ---
 
-### Day 7: JSON Diagnostics & PATH Decision (8-9h)
+### Day 7: JSON Diagnostics & PATH Decision (6-7h)
 
 **Focus:** Component 3 (JSON Diagnostics) + Component 4 (PATH Decision) + Dashboard (Part 1)
 
@@ -712,19 +594,13 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
    - Set up Chart.js integration
    - Initial HTML template
 
-6. Extended dashboard widgets (90-120 min, NEW with normalized hours)
-   - Add parse rate trend visualization
-   - Add transformation effectiveness charts
-   - Add model-by-model breakdown table
-   - Create responsive layout for mobile viewing
-
 **Deliverables:**
 - [ ] JSON diagnostics implemented (--format json works)
 - [ ] docs/schemas/diagnostics_v1.0.0.json
 - [ ] docs/JSON_DIAGNOSTICS.md
 - [ ] CI artifacts storing JSON diagnostics
 - [ ] PATH decision made and documented OR PATH implemented in CI
-- [ ] Dashboard infrastructure started with basic widgets
+- [ ] Dashboard infrastructure started
 
 **Risks & Mitigation:**
 - Risk: JSON schema evolves during implementation
@@ -739,11 +615,11 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 - [ ] Dashboard infrastructure ready for Day 8 completion
 - [ ] All quality checks passing
 
-**Time Budget:** 8-9 hours
+**Time Budget:** 6-7 hours
 
 ---
 
-### Day 8: Dashboard Completion & CI Checklist (7-8h)
+### Day 8: Dashboard Completion & CI Checklist (6-7h)
 
 **Focus:** Component 6 (CI Checklist) + Dashboard (Part 2) + Documentation Polish
 
@@ -816,25 +692,57 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 - [ ] Performance trending shows Sprints 8-12
 - [ ] All documentation reviewed and polished
 
-**Time Budget:** 7-8 hours
+**Time Budget:** 6-7 hours
 
 ---
 
-### Day 9: Contingent Features & Recovery (7-9h - CHECKPOINT-DEPENDENT)
+### Day 9: Extended Features & Low Priority Items (12-14h)
 
-**Focus:** Checkpoint-driven work: LOW priority transformations OR optional features
+**Focus:** LOW priority items, additional validation, conditional transformations
 
-**⚠️ EXPLICIT CONTINGENCY - Work depends on checkpoint outcomes:**
-
-**Scenario A: Day 3 Checkpoint FAIL (<15% reduction) - 7-8h for recovery**
-
-**Priority:** Implement LOW priority transformations to reach ≥20% reduction target
+**Scenario A: Day 3 Checkpoint Success (≥20% reduction) - 12-14h available**
 
 **Tasks:**
-1. Implement HIGH-value LOW priority transformations (5-6h)
-   - T5.2: Nested Expression CSE (2h) - highest value for complex models
-   - T2.3: Common Denominator (2h) - known improvement for fraction-heavy models
-   - T5.4: CSE with Aliasing (2h) - covers remaining CSE gaps
+1. Naming convention alignment (60-90 min)
+   - Review `src/ir/` and `src/ad/` for inconsistent naming
+   - Align with PROJECT_PLAN.md conventions
+   - Create naming standards document
+   - Update CONTRIBUTING.md with guidelines
+
+2. Transformation catalog alignment (60-90 min)
+   - Update `docs/planning/EPIC_2/SPRINT_11/transformation_catalog.md`
+   - Mark implementation status for all 18 patterns
+   - Create summary table (implemented/deferred/merged)
+   - Cross-reference with SIMPLIFICATION_BENCHMARKS.md
+
+3. CSE temp variable propagation (120-180 min, if time permits)
+   - Implement temp preservation in MCP generation
+   - Preserve `cse_tmp_*` variables in output
+   - Add `--cse-inline` flag for backward compatibility
+   - Test suite validating both modes
+   - Example outputs
+
+4. Extended Tier 2 validation (120-180 min)
+   - Run longer benchmark runs on all 20 models (Tier 1 + Tier 2)
+   - Synthetic test generation for edge cases
+   - Multi-metric threshold resilience checks
+   - Performance profiling and optimization
+   - Document results
+
+5. Additional documentation polish (60-90 min)
+   - Review all Epic 2 documentation
+   - Update cross-references
+   - Ensure consistency across sprints
+   - Prepare for Epic 2 completion
+
+**Scenario B: Day 3 Checkpoint Failure (<15% reduction) - 12-14h needed**
+
+**Tasks:**
+1. Implement LOW priority transformations (6-8h)
+   - T5.2: Nested Expression CSE (2h)
+   - T2.3: Common Denominator (2h)
+   - T5.4: CSE with Aliasing (2h)
+   - T3.3: Multiplication-Division Reordering (2h, optional)
    - Test suite (10+ tests per pattern)
 
 2. Re-measure simplification effectiveness (60-90 min)
@@ -842,82 +750,37 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
    - Update baseline_sprint11.json
    - Validate ≥20% target now met
    - Update SIMPLIFICATION_BENCHMARKS.md
-   - Document improvement vs baseline
+
+3. Extended validation and testing (120-180 min)
+   - Comprehensive regression testing
+   - Edge case validation
+   - Performance impact assessment
+   - Documentation updates
 
 **Deliverables:**
-- [ ] 3 LOW priority transformations implemented
-- [ ] ≥20% reduction target met with new transformations
-- [ ] SIMPLIFICATION_BENCHMARKS.md updated
-- [ ] Test suite passing
-
-**Success Criteria:**
-- [ ] ≥20% average reduction achieved
-- [ ] All transformations tested and validated
-- [ ] Ready for Day 10 validation
-
-**Time Budget:** 7-8 hours
-
----
-
-**Scenario B: Day 3 Checkpoint SUCCESS (≥20% reduction) - 7-9h for optional features**
-
-**Priority:** Optional features in deferral priority order (see "Optional Feature Priority Order" section above)
-
-**⚠️ CONTINGENT WORK:** These items proceed ONLY if Days 1-8 are on schedule. Follow deferral priority if any overruns occurred.
-
-**Tasks (in priority order, implement as time allows):**
-1. **IF time available:** Dashboard integration expansion (2-3h)
-   - Only if Days 7-8 dashboard work complete
-   - Add additional dashboard widgets
-   - Enhanced visualization features
-   - User feedback integration
-
-2. **IF time available:** Performance trending enhancements (2-3h)
-   - Only if Day 8 trending work complete
-   - Historical trend analysis
-   - Performance regression detection
-   - Trend visualization improvements
-
-3. **IF time available:** Transformation catalog alignment (2h)
-   - Review all transformations in codebase
-   - Compare against TRANSFORMATION_CATALOG.md
-   - Update catalog with any missing patterns
-   - Document transformation interactions
-
-4. **IF time available:** Naming convention alignment (2h)
-   - Review Sprint 10/11 code for naming inconsistencies
-   - Align with PROJECT_CONVENTIONS.md
-   - Update variable/function names where needed
-   - No functional changes, code clarity only
-
-**DO NOT IMPLEMENT (defer unless explicitly approved):**
-- CSE temporary variable propagation (requires user feedback - DEFER FIRST per priority)
-- Extended Tier 2 analysis beyond 60%
-- Additional experimental transformations
-
-**Deliverables:**
-- [ ] ≥1 optional feature complete (prioritized by value)
+- [ ] Scenario A: ≥2 LOW priority items complete
+- [ ] Scenario B: LOW priority transformations implemented and validated
+- [ ] Extended validation results documented
 - [ ] All code quality checks passing
-- [ ] Documentation updated for implemented features
 
 **Decision Points:**
-- Only proceed with optional features if Days 1-8 are on schedule
-- Stop work immediately if any previous day overruns
-- Follow deferral priority order strictly
+- Choose Scenario A or B based on Day 3 checkpoint result
+- Prioritize items based on time remaining and value
 
 **Success Criteria:**
-- [ ] Time used productively on highest-value items
-- [ ] No introduction of technical debt
-- [ ] Ready for Day 10 validation
-- [ ] All work well-documented
+- [ ] Time used productively (not idle)
+- [ ] If Scenario A: Naming conventions aligned, catalog updated
+- [ ] If Scenario B: ≥20% reduction target now met
+- [ ] Extended validation complete
+- [ ] No critical blockers for Day 10
 
-**Time Budget:** 7-9 hours (Scenario B only)
+**Time Budget:** 12-14 hours
 
 ---
 
-### Day 10: Documentation Updates & Final Validation (8-9h)
+### Day 10: Documentation Updates & Final Validation (10-14h)
 
-**Focus:** Required documentation, comprehensive validation, retrospective (streamlined)
+**Focus:** Documentation completion, comprehensive validation, retrospective
 
 **Tasks:**
 1. Update KNOWN_UNKNOWNS.md verification status (60-90 min, REQUIRED)
@@ -940,7 +803,7 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
    - Format following existing CHANGELOG structure
    - Include metrics: parse rate, reduction %, models supported
 
-4. Run comprehensive validation (90-120 min, REQUIRED)
+4. Run comprehensive validation (90-120 min)
    - All 20 models (10 Tier 1 + 10 Tier 2)
    - Validate parse rates:
      - Tier 1: 100% (10/10) - no regressions
@@ -949,8 +812,20 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
    - Run full test suite: make test (expect <2 min)
    - Quality checks: make typecheck && make lint && make format
    - CI workflows all green
+   - Run verification commands:
+     - Check PLAN_REVISED.md structure
+     - Verify 10 day headings present
+     - Confirm 3 checkpoints documented
 
-5. Sprint 12 Retrospective (60-90 min, REQUIRED)
+5. Extended benchmark validation (120-180 min, NEW with 80h capacity)
+   - Longer benchmark runs on all models
+   - Performance profiling and optimization
+   - Multi-metric resilience testing
+   - Synthetic edge case generation and testing
+   - Comprehensive regression suite
+   - Document all validation results
+
+6. Sprint 12 Retrospective (90-120 min)
    - Create `docs/planning/EPIC_2/SPRINT_12/RETROSPECTIVE.md`
    - Sections:
      - What went well (e.g., prep tasks, measurement approach, 80h utilization)
@@ -962,13 +837,13 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
    - Capacity utilization: 80h available, X used, Y% efficiency
    - Compare revised plan (65-72h) vs actual
 
-6. Update PROJECT_PLAN.md (30-45 min, REQUIRED)
+7. Update PROJECT_PLAN.md (45-60 min)
    - Mark Sprint 12 complete
    - Update Epic 2 progress
    - Note Sprint 12 results and metrics
    - Identify Sprint 13 priorities
 
-7. Create Sprint 12 PR (30 min, REQUIRED)
+8. Create Sprint 12 PR (30 min)
    - Branch: sprint12-complete → main
    - Title: "Sprint 12: Measurement, Polish, and Tier 2 Expansion"
    - Description: Summary of all deliverables
@@ -982,12 +857,13 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 - [ ] CHANGELOG.md Sprint 12 section complete
 - [ ] All 20 models validated (parse rates confirmed)
 - [ ] Full test suite passing (make test <2 min)
+- [ ] Extended validation results documented
 - [ ] RETROSPECTIVE.md complete
 - [ ] PROJECT_PLAN.md updated
 - [ ] Sprint 12 PR created
-- [ ] All required documentation updated
+- [ ] All documentation updated
 
-**Decision Points:** None (Day 10 is final validation and documentation only)
+**Decision Points:** None
 
 **Success Criteria:**
 - [ ] All required documentation updates complete
@@ -998,8 +874,9 @@ All 10 Sprint 12 preparation tasks completed successfully (21-28h estimated, act
 - [ ] Zero critical bugs or regressions
 - [ ] Documentation complete and accurate
 - [ ] Sprint 12 ready for merge and Sprint 13 planning
+- [ ] Verification commands run successfully
 
-**Time Budget:** 8-9 hours
+**Time Budget:** 10-14 hours
 
 ---
 
