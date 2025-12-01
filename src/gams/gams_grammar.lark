@@ -352,7 +352,7 @@ ELSE_K: /(?i:else)\b/
 LOOP_K: /(?i:loop)\b/
 ON: /(?i:on)\b/
 OFF: /(?i:off)\b/
-ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
+ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_+\-]*/
 ESCAPED: /'[^']*'|\"[^\"]*\"/
 STRING: /"[^"]*"|'[^']*'/
 
