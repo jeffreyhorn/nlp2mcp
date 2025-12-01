@@ -124,7 +124,7 @@ For the detailed Sprint 10 plan, see [docs/planning/EPIC_2/SPRINT_10/PLAN.md](do
 For the detailed Sprint 11 plan, see [docs/planning/EPIC_2/SPRINT_11/PLAN.md](docs/planning/EPIC_2/SPRINT_11/PLAN.md).
 
 **Sprint 12 Progress** (Epic 2 - Sprint 12: Measurement, Polish, and Tier 2 Expansion):
-- [ ] Day 1: Measurement Infrastructure Setup + Extended Testing
+- [x] Day 1: Measurement Infrastructure Setup + Extended Testing (PR #345 - SimplificationMetrics + count_terms())
 - [ ] Day 2: Baseline Collection & Multi-Metric Backend + Extended Validation
 - [ ] Day 3: Validation, Analysis & Checkpoint
 - [ ] Day 4: Tier 2 Model Analysis & High-Priority Blockers

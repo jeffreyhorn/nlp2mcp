@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Day 1: Measurement Infrastructure Setup - 2025-11-30
+
+**Branch:** `sprint12-day1-measurement-setup`  
+**PR:** #345  
+**Status:** ✅ COMPLETE (merged to main)
+
+#### Summary
+
+Implemented production-ready term reduction measurement infrastructure for benchmarking Sprint 11's simplification transformations.
+
+#### Changes
+
+**New Files:**
+- `src/ir/metrics.py`: SimplificationMetrics class with term counting functionality
+  - `SimplificationMetrics` dataclass: Tracks ops_before/after, terms_before/after, execution_time_ms, transformations_applied
+  - `count_terms()` function: O(n) recursive AST traversal counting additive terms in sum-of-products form
+  - Methods: `calculate_reductions()`, `to_dict()`, `record_transformation()`
+
+**Tests:**
+- `tests/unit/test_metrics.py`: 36 unit tests for metrics
+  - 20 tests for count_terms() covering: single variables/constants, sums, products, quotients, powers, functions, nested expressions
+  - 11 tests for SimplificationMetrics: initialization, calculate_reductions, record_transformation, to_dict
+  - 5 validation cases from prototype (rbrock.eq1-3, mhw4d.eq1,eq3)
+  
+- `tests/integration/test_metrics_integration.py`: 7 integration tests
+  - Simple expression tracking
+  - Reduction tracking validation
+  - to_dict conversion
+  - Performance overhead validation (<20% in realistic usage)
+  - Batch mode (multiple expressions)
+  - Edge cases: large expressions (>500 ops), deeply nested (>10 levels)
+
+#### Implementation Details
+
+- **count_terms()**: Counts terms in sum-of-products form without expansion (e.g., `x + y` = 2 terms, `x*(y+z)` = 1 term)
+- **Manual wrapper approach**: Backward compatible - metrics collection is opt-in, doesn't modify SimplificationPipeline
+- **Performance**: <20% overhead validated in realistic usage (count_terms before/after pipeline.apply)
+- **Accuracy**: 0% error validated on 20+ test cases including prototype validation cases
+
+#### Quality Checks
+
+- ✅ Type checking passed (mypy: 77 source files)
+- ✅ Linting passed (ruff: all checks)
+- ✅ Format checking passed (black: 204 files)
+- ✅ All tests passing (43 metrics tests + 1814 existing tests)
+- ✅ CI checks passed (test, lint, typecheck, format, check-performance)
+
+#### Notes
+
+- PATH licensing email requires manual sending (template ready in `docs/planning/EPIC_2/SPRINT_12/PATH_LICENSING_EMAIL.md`)
+- Metrics collection pattern demonstrated in integration tests for Day 2's measure_simplification.py script
+
 ### Sprint 12 Prep: Task 10 Complete - Sprint 12 Detailed Schedule - 2025-11-30
 
 **Branch:** `planning/sprint12-prep`  
