@@ -7,7 +7,20 @@ Sprint 12 Day 1: Measurement Infrastructure Setup
 
 import pytest
 
-from src.ir.ast import Binary, Call, Const, Sum, Unary, VarRef
+from src.ir.ast import (
+    Binary,
+    Call,
+    CompileTimeConstant,
+    Const,
+    EquationRef,
+    IndexOffset,
+    MultiplierRef,
+    ParamRef,
+    Sum,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 from src.ir.metrics import TermReductionMetrics, count_operations, count_terms
 
 
@@ -56,6 +69,41 @@ class TestCountOperations:
     def test_sum_aggregation(self):
         """sum(i, x(i)) is 2 operations (1 var + 1 sum aggregation)."""
         expr = Sum(("i",), VarRef("x", ("i",)))
+        assert count_operations(expr) == 2
+
+    def test_symbol_ref(self):
+        """SymbolRef is 1 operation (scalar symbol reference)."""
+        expr = SymbolRef("pi")
+        assert count_operations(expr) == 1
+
+    def test_param_ref(self):
+        """ParamRef is 1 operation (parameter reference)."""
+        expr = ParamRef("demand", ("i",))
+        assert count_operations(expr) == 1
+
+    def test_equation_ref(self):
+        """EquationRef is 1 operation (equation attribute access)."""
+        expr = EquationRef("eqn1", ("i",), "m")
+        assert count_operations(expr) == 1
+
+    def test_multiplier_ref(self):
+        """MultiplierRef is 1 operation (KKT multiplier reference)."""
+        expr = MultiplierRef("lambda", ("i",))
+        assert count_operations(expr) == 1
+
+    def test_compile_time_constant(self):
+        """CompileTimeConstant is 1 operation (GAMS %...% constant)."""
+        expr = CompileTimeConstant(("system", "date"))
+        assert count_operations(expr) == 1
+
+    def test_index_offset_simple(self):
+        """i++1 is 2 operations (1 index offset + 1 const)."""
+        expr = IndexOffset("i", Const(1.0), circular=True)
+        assert count_operations(expr) == 2
+
+    def test_index_offset_expression(self):
+        """i+j is 2 operations (1 index offset + 1 symbol ref)."""
+        expr = IndexOffset("i", SymbolRef("j"), circular=False)
         assert count_operations(expr) == 2
 
 
