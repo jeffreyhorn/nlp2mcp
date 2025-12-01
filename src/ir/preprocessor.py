@@ -457,7 +457,25 @@ def normalize_multi_line_continuations(source: str) -> str:
         stripped = line.strip()
 
         # Track if we're inside a /.../ data block
+        # Only treat / as data block delimiter if it appears in a declaration context
         if "/" in line and not in_data_block:
+            # If line ends with ; and has only 1 slash, it's likely division (e.g., "x = a/2;")
+            # not a data block
+            if stripped.endswith(";") and line.count("/") == 1:
+                result.append(line)
+                continue
+
+            # Check if / appears after a declaration keyword (Set, Parameter, Scalar, Alias)
+            # Use a simple heuristic: look for these keywords before the /
+            import re
+
+            if not re.search(
+                r"\b(Set|Parameter|Scalar|Alias)\b", line[: line.find("/")], re.IGNORECASE
+            ):
+                # No declaration keyword before /, likely an expression or other context
+                result.append(line)
+                continue
+
             # Entering a data block
             # Check if it also closes on the same line (e.g., Set i / a, b /;)
             slash_count = line.count("/")
