@@ -2,7 +2,7 @@ $title House Plan Design (HOUSE,SEQ=99)
 
 $onText
 This problem designs the size of an L shaped house meeting
-limitations imposed by city codes and aesthetic considerations.
+limitations imposed by city codes and aestheticconsiderations.
 
 
 Borland, Eureka: The Solver. Tech. rep., Borland International, 1987.

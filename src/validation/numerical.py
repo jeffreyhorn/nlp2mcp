@@ -33,7 +33,14 @@ def validate_parameter_values(model_ir: ModelIR) -> None:
         >>> validate_parameter_values(model_ir)  # doctest: +SKIP
         NumericalError: Numerical error in parameter 'p[1]': Invalid value (value is NaN)
     """
+    # Predefined GAMS constants that are allowed to be inf/nan
+    PREDEFINED_CONSTANTS = {"pi", "inf", "eps", "na"}
+
     for param_name, param_def in model_ir.params.items():
+        # Skip validation for predefined constants
+        if param_name in PREDEFINED_CONSTANTS:
+            continue
+
         for indices, value in param_def.values.items():
             if not math.isfinite(value):
                 # Format indices for display

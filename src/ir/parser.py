@@ -548,6 +548,26 @@ class _ModelBuilder:
     def __post_init__(self) -> None:
         if self._equation_domains is None:
             self._equation_domains = {}
+        # Initialize predefined GAMS constants
+        self._init_predefined_constants()
+
+    def _init_predefined_constants(self) -> None:
+        """Initialize predefined GAMS constants (pi, inf, eps, na)."""
+        from math import pi as math_pi
+
+        # Add predefined constants as scalar parameters
+        # These are available globally in all GAMS models
+        predefined = {
+            "pi": math_pi,  # 3.141592653589793
+            "inf": float("inf"),  # Infinity
+            "eps": 2.220446049250313e-16,  # Machine epsilon (float64)
+            "na": float("nan"),  # Not available / missing data
+        }
+
+        for name, value in predefined.items():
+            # Create a scalar parameter (no domain)
+            param_def = ParameterDef(name=name, domain=(), values={(): value})
+            self.model.params[name] = param_def
 
     def build(self, tree: Tree) -> ModelIR:
         for child in tree.children:
