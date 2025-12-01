@@ -728,24 +728,50 @@ class _ModelBuilder:
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
-            ids = [
-                _token_text(tok)
-                for tok in child.children
-                if isinstance(tok, Token) and tok.type == "ID"
-            ]
-            if child.data == "alias_plain" and len(ids) == 2:
-                # Traditional syntax: Aliases j, i (alias_name, target)
-                alias_name, target = ids
-                self._register_alias(alias_name, target, None, child)
-            elif child.data == "alias_parens" and len(ids) == 2:
-                # Parentheses syntax: Alias (i,j) (target, alias_name)
-                target, alias_name = ids
-                self._register_alias(alias_name, target, None, child)
-            elif child.data == "alias_with_universe" and len(ids) == 3:
-                alias_name, target, universe = ids
-                self._register_alias(alias_name, target, universe, child)
+
+            if child.data == "alias_multi":
+                # Multiple alias pairs: Alias (nx,i), (ny,j);
+                # Extract all alias_pair nodes
+                # Note: In GAMS, Alias (target, alias_name) syntax
+                for pair_node in child.children:
+                    if isinstance(pair_node, Tree) and pair_node.data == "alias_pair":
+                        ids = [
+                            _token_text(tok)
+                            for tok in pair_node.children
+                            if isinstance(tok, Token) and tok.type == "ID"
+                        ]
+                        if len(ids) == 2:
+                            target, alias_name = ids
+                            self._register_alias(alias_name, target, None, pair_node)
+            elif child.data == "alias_single":
+                # Single alias pair: Alias (i,j);
+                # Note: In GAMS, Alias (target, alias_name) syntax
+                pair_node = child.children[0]
+                if isinstance(pair_node, Tree) and pair_node.data == "alias_pair":
+                    ids = [
+                        _token_text(tok)
+                        for tok in pair_node.children
+                        if isinstance(tok, Token) and tok.type == "ID"
+                    ]
+                    if len(ids) == 2:
+                        target, alias_name = ids
+                        self._register_alias(alias_name, target, None, pair_node)
             else:
-                raise self._error("Unsupported alias declaration form", child)
+                # Handle legacy syntax
+                ids = [
+                    _token_text(tok)
+                    for tok in child.children
+                    if isinstance(tok, Token) and tok.type == "ID"
+                ]
+                if child.data == "alias_plain" and len(ids) == 2:
+                    # Traditional syntax: Aliases j, i (alias_name, target)
+                    alias_name, target = ids
+                    self._register_alias(alias_name, target, None, child)
+                elif child.data == "alias_with_universe" and len(ids) == 3:
+                    alias_name, target, universe = ids
+                    self._register_alias(alias_name, target, universe, child)
+                else:
+                    raise self._error("Unsupported alias declaration form", child)
 
     def _handle_params_block(self, node: Tree) -> None:
         for child in node.children:
