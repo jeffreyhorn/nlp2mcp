@@ -339,6 +339,72 @@ def extract_conditional_sets(source: str) -> dict[str, str]:
     return macros
 
 
+def extract_set_directives(
+    source: str, existing_macros: dict[str, str] | None = None
+) -> dict[str, str]:
+    """Extract variable assignments from $set directives.
+
+    Parses lines like: $set varname value
+    Returns a dictionary mapping variable names to their values.
+
+    This extends the preprocessor to support general $set directives,
+    not just $if not set patterns. Values can be quoted strings,
+    numbers, or unquoted identifiers.
+
+    Args:
+        source: GAMS source code text
+        existing_macros: Optional dict of already-defined macros to expand within values
+
+    Returns:
+        Dictionary mapping variable names to values
+
+    Example:
+        >>> source = '$set n 10\\n$set np %n%+1\\nSet ip /1*%np%/;'
+        >>> macros = extract_set_directives(source, {'n': '10'})
+        >>> macros
+        {'n': '10', 'np': '10+1'}
+
+    Notes:
+        - Case-insensitive matching for $set directive
+        - Variable name case from first occurrence is preserved
+        - Handles both quoted and unquoted values
+        - If multiple $set directives set the same variable, later ones override
+        - Unquoted values can contain: identifiers, numbers, dots, hyphens, plus signs
+        - Expands %macros% within values using existing_macros
+    """
+    if existing_macros is None:
+        existing_macros = {}
+
+    macros: dict[str, str] = {}
+
+    # Pattern: $set varname value
+    # Matches: $set n 10
+    #          $set path "c:\data\models"
+    #          $set tol 1e-6
+    #          $if set n $set np %n%  (extracts the $set np %n% part)
+    # Case-insensitive for $set directive, preserves case for variable names
+    # The pattern looks for $set followed by variable name and value
+    # It can appear anywhere in the line (e.g., after $if directives)
+    # For unquoted values, match everything except semicolon and newline
+    pattern = r'\$set\s+(\w+)\s+(?:"([^"]*)"|([^;\n]+))'
+
+    for match in re.finditer(pattern, source, re.IGNORECASE):
+        var_name = match.group(1)
+        # Get value from either quoted (group 2) or unquoted (group 3)
+        value = match.group(2) if match.group(2) is not None else match.group(3)
+        # Strip whitespace from unquoted values
+        if match.group(2) is None:
+            value = value.strip()
+
+        # Expand any %macro% references within the value using existing macros
+        # This handles cases like: $set np %n%+1
+        expanded_value = expand_macros(value, {**existing_macros, **macros})
+
+        macros[var_name] = expanded_value
+
+    return macros
+
+
 def expand_macros(source: str, macros: dict[str, str]) -> str:
     """Expand %macro% references with their values.
 
@@ -408,6 +474,50 @@ def strip_conditional_directives(source: str) -> str:
 
         # Check if this line contains $if not set directive (more precise)
         if re.match(r"^\$if\s+not\s+set\b", stripped, re.IGNORECASE):
+            # Replace with comment to preserve line number, preserving original indentation
+            leading_ws = line[: len(line) - len(line.lstrip())]
+            filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
+        else:
+            # Keep line unchanged
+            filtered.append(line)
+
+    return "\n".join(filtered)
+
+
+def strip_set_directives(source: str) -> str:
+    """Strip $set directives, replacing with comments.
+
+    Removes $set directives from the source while preserving
+    line numbers by replacing them with comment lines.
+    Also strips lines containing $if ... $set patterns.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with $set directives replaced by comments
+
+    Example:
+        >>> source = '$set n 10\\nSet i /1*%n%/;'
+        >>> result = strip_set_directives(source)
+        >>> # Result: '* [Stripped: $set n 10]\\nSet i /1*%n%/;'
+
+    Notes:
+        - Preserves line numbers for accurate error reporting
+        - Should be called after expand_macros() to avoid losing values
+        - Also strips $if set/not set lines containing $set
+    """
+    lines = source.split("\n")
+    filtered = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Check if this line contains a $set directive (standalone or after $if)
+        # Matches: $set n 10
+        #          $if set n $set np %n%
+        #          $if not set n $set n 10
+        if re.search(r"\$set\b", stripped, re.IGNORECASE):
             # Replace with comment to preserve line number, preserving original indentation
             leading_ws = line[: len(line) - len(line.lstrip())]
             filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
@@ -752,17 +862,25 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     # Step 2: Extract macro defaults from $if not set directives
     macros = extract_conditional_sets(content)
 
-    # Step 3: Expand %macro% references with their values
+    # Step 3: Extract general $set directives (merge with conditional sets)
+    # Pass existing macros so that $set can reference earlier macros
+    set_macros = extract_set_directives(content, macros)
+    macros.update(set_macros)  # $set directives override conditional defaults
+
+    # Step 4: Expand %macro% references with their values
     content = expand_macros(content, macros)
 
-    # Step 4: Strip $if not set directives (replaced with comments)
+    # Step 5: Strip $if not set directives (replaced with comments)
     content = strip_conditional_directives(content)
 
-    # Step 5: Strip other unsupported directives ($title, $ontext, etc.)
+    # Step 6: Strip $set directives (replaced with comments)
+    content = strip_set_directives(content)
+
+    # Step 7: Strip other unsupported directives ($title, $ontext, etc.)
     content = strip_unsupported_directives(content)
 
-    # Step 6: Normalize multi-line continuations (add missing commas)
+    # Step 8: Normalize multi-line continuations (add missing commas)
     content = normalize_multi_line_continuations(content)
 
-    # Step 7: Quote identifiers with special characters (-, +) in data blocks
+    # Step 9: Quote identifiers with special characters (-, +) in data blocks
     return normalize_special_identifiers(content)

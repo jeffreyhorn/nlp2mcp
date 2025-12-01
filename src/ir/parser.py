@@ -1073,7 +1073,7 @@ class _ModelBuilder:
             all_row_headers.add(row_header)
 
         # Also collect row headers from lines (to handle completely empty rows)
-        for line_num, line_tokens in sorted_lines[1:]:
+        for _line_num, line_tokens in sorted_lines[1:]:
             if line_tokens and line_tokens[0].type == "ID":
                 # First token is row header
                 row_header = _token_text(line_tokens[0])
