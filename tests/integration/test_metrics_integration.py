@@ -10,7 +10,7 @@ import time
 import pytest
 
 from src.ir.ast import Binary, Const, VarRef
-from src.ir.metrics import SimplificationMetrics, count_terms
+from src.ir.metrics import TermReductionMetrics, count_operations, count_terms
 from src.ir.simplification_pipeline import SimplificationPipeline
 
 
@@ -26,10 +26,10 @@ class TestMetricsWithSimplificationPipeline:
         pipeline = SimplificationPipeline(max_iterations=5, size_budget=1.5)
 
         # Collect metrics manually (simulating benchmarking mode)
-        metrics = SimplificationMetrics(model="test.eq1")
+        metrics = TermReductionMetrics(model="test.eq1")
 
         # Before simplification
-        metrics.ops_before = pipeline._expression_size(expr)
+        metrics.ops_before = count_operations(expr)
         metrics.terms_before = count_terms(expr)
 
         # Apply simplification with timing
@@ -38,7 +38,7 @@ class TestMetricsWithSimplificationPipeline:
         metrics.execution_time_ms = (time.perf_counter() - start) * 1000
 
         # After simplification
-        metrics.ops_after = pipeline._expression_size(simplified)
+        metrics.ops_after = count_operations(simplified)
         metrics.terms_after = count_terms(simplified)
 
         # Validate metrics
@@ -57,10 +57,10 @@ class TestMetricsWithSimplificationPipeline:
 
         pipeline = SimplificationPipeline(max_iterations=5, size_budget=1.5)
 
-        metrics = SimplificationMetrics(model="test.constant_fold")
+        metrics = TermReductionMetrics(model="test.constant_fold")
 
         # Before
-        metrics.ops_before = pipeline._expression_size(expr)
+        metrics.ops_before = count_operations(expr)
         metrics.terms_before = count_terms(expr)
 
         # Simplify
@@ -69,7 +69,7 @@ class TestMetricsWithSimplificationPipeline:
         metrics.execution_time_ms = (time.perf_counter() - start) * 1000
 
         # After
-        metrics.ops_after = pipeline._expression_size(simplified)
+        metrics.ops_after = count_operations(simplified)
         metrics.terms_after = count_terms(simplified)
 
         # Validate structure (may not reduce without transformations registered)
@@ -83,13 +83,13 @@ class TestMetricsWithSimplificationPipeline:
         expr = Binary("+", VarRef("x"), VarRef("y"))
         pipeline = SimplificationPipeline()
 
-        metrics = SimplificationMetrics(model="rbrock.eq1")
-        metrics.ops_before = pipeline._expression_size(expr)
+        metrics = TermReductionMetrics(model="rbrock.eq1")
+        metrics.ops_before = count_operations(expr)
         metrics.terms_before = count_terms(expr)
 
         simplified, _ = pipeline.apply(expr)
 
-        metrics.ops_after = pipeline._expression_size(simplified)
+        metrics.ops_after = count_operations(simplified)
         metrics.terms_after = count_terms(simplified)
         metrics.execution_time_ms = 1.234
 
@@ -163,16 +163,16 @@ class TestMetricsWithSimplificationPipeline:
         all_metrics = []
 
         for eq_name, expr in test_cases:
-            metrics = SimplificationMetrics(model=f"rbrock.{eq_name}")
+            metrics = TermReductionMetrics(model=f"rbrock.{eq_name}")
 
-            metrics.ops_before = pipeline._expression_size(expr)
+            metrics.ops_before = count_operations(expr)
             metrics.terms_before = count_terms(expr)
 
             start = time.perf_counter()
             simplified, _ = pipeline.apply(expr)
             metrics.execution_time_ms = (time.perf_counter() - start) * 1000
 
-            metrics.ops_after = pipeline._expression_size(simplified)
+            metrics.ops_after = count_operations(simplified)
             metrics.terms_after = count_terms(simplified)
 
             all_metrics.append(metrics)
@@ -195,9 +195,9 @@ class TestMetricsWithSimplificationPipeline:
             expr = Binary("+", expr, Const(1.0))
 
         pipeline = SimplificationPipeline()
-        metrics = SimplificationMetrics(model="large_expr")
+        metrics = TermReductionMetrics(model="large_expr")
 
-        metrics.ops_before = pipeline._expression_size(expr)
+        metrics.ops_before = count_operations(expr)
         metrics.terms_before = count_terms(expr)
 
         start = time.perf_counter()
@@ -205,7 +205,7 @@ class TestMetricsWithSimplificationPipeline:
         elapsed = (time.perf_counter() - start) * 1000
         metrics.execution_time_ms = elapsed
 
-        metrics.ops_after = pipeline._expression_size(simplified)
+        metrics.ops_after = count_operations(simplified)
         metrics.terms_after = count_terms(simplified)
 
         # Validate metrics are reasonable
@@ -221,14 +221,14 @@ class TestMetricsWithSimplificationPipeline:
             expr = Binary("+", expr, VarRef(f"v{idx}"))
 
         pipeline = SimplificationPipeline()
-        metrics = SimplificationMetrics(model="nested_expr")
+        metrics = TermReductionMetrics(model="nested_expr")
 
-        metrics.ops_before = pipeline._expression_size(expr)
+        metrics.ops_before = count_operations(expr)
         metrics.terms_before = count_terms(expr)
 
         simplified, _ = pipeline.apply(expr)
 
-        metrics.ops_after = pipeline._expression_size(simplified)
+        metrics.ops_after = count_operations(simplified)
         metrics.terms_after = count_terms(simplified)
 
         # Should count all additive terms correctly
