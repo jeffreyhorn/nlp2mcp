@@ -238,7 +238,9 @@ def check_all_metrics(args) -> int:
         args: Parsed command-line arguments with multi-metric thresholds
 
     Returns:
-        Exit code: 0 (pass), 1 (fail), 2 (error)
+        Exit code: 0 (pass or warning), 1 (fail), 2 (error)
+
+        Note: Warnings do not cause a nonzero exit code; only failures and errors do.
     """
     try:
         # Read current metrics
@@ -247,8 +249,7 @@ def check_all_metrics(args) -> int:
         # Read baseline metrics from git
         baseline_metrics = read_baseline(args.baseline, args.current)
 
-        # Track worst status (0=pass, 1=warn, 2=fail)
-        worst_status = 0
+        # Track warnings and failures
         warnings = []
         failures = []
 
@@ -264,12 +265,10 @@ def check_all_metrics(args) -> int:
                     failures.append(
                         f"parse_rate: {current:.1f}% (baseline {baseline:.1f}%, drop {relative_change * 100:.1f}% > fail threshold {args.parse_fail * 100:.0f}%)"
                     )
-                    worst_status = max(worst_status, 2)
                 elif args.parse_warn is not None and relative_change > args.parse_warn:
                     warnings.append(
                         f"parse_rate: {current:.1f}% (baseline {baseline:.1f}%, drop {relative_change * 100:.1f}% > warn threshold {args.parse_warn * 100:.0f}%)"
                     )
-                    worst_status = max(worst_status, 1)
 
         # Check convert_rate (higher is better)
         if "convert_rate" in current_metrics and "convert_rate" in baseline_metrics:
@@ -283,12 +282,10 @@ def check_all_metrics(args) -> int:
                     failures.append(
                         f"convert_rate: {current:.1f}% (baseline {baseline:.1f}%, drop {relative_change * 100:.1f}% > fail threshold {args.convert_fail * 100:.0f}%)"
                     )
-                    worst_status = max(worst_status, 2)
                 elif args.convert_warn is not None and relative_change > args.convert_warn:
                     warnings.append(
                         f"convert_rate: {current:.1f}% (baseline {baseline:.1f}%, drop {relative_change * 100:.1f}% > warn threshold {args.convert_warn * 100:.0f}%)"
                     )
-                    worst_status = max(worst_status, 1)
 
         # Check performance/avg_time_ms (lower is better)
         if "avg_time_ms" in current_metrics and "avg_time_ms" in baseline_metrics:
@@ -302,12 +299,10 @@ def check_all_metrics(args) -> int:
                     failures.append(
                         f"avg_time_ms: {current:.2f}ms (baseline {baseline:.2f}ms, increase {relative_change * 100:.1f}% > fail threshold {args.perf_fail * 100:.0f}%)"
                     )
-                    worst_status = max(worst_status, 2)
                 elif args.perf_warn is not None and relative_change > args.perf_warn:
                     warnings.append(
                         f"avg_time_ms: {current:.2f}ms (baseline {baseline:.2f}ms, increase {relative_change * 100:.1f}% > warn threshold {args.perf_warn * 100:.0f}%)"
                     )
-                    worst_status = max(worst_status, 1)
 
         # Report results
         if failures:

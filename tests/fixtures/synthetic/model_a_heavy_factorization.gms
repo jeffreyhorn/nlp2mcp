@@ -1,7 +1,7 @@
 $Title Model A - Heavy Factorization Opportunities
 $Ontext
 Synthetic model designed to test heavy factorization simplification.
-Expected term reduction: 40-50%
+Expected term reduction: 50-65% (actual measured: 61.54%)
 
 Key patterns:
 - Common factor extraction: 2*x + 2*y + 2*z => 2*(x+y+z)

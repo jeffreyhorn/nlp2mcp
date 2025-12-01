@@ -175,7 +175,7 @@ Created production measurement script, collected Sprint 11 baseline metrics on 1
 **Synthetic Testing Framework Established:**
 - ✅ 3 validated test models with known characteristics
 - ✅ Validation script demonstrates measurement accuracy
-- ✅ Clear progression: Heavy (61.54%) > Mixed (51.85%) > Minimal (59.09%)
+- ✅ Reduction results: Heavy (61.54%) > Minimal (59.09%) > Mixed (51.85%)
 - ✅ Foundation for future regression testing
 
 ### Risks & Issues

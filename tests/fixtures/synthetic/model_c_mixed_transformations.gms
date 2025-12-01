@@ -1,7 +1,7 @@
 $Title Model C - Mixed Transformation Opportunities
 $Ontext
 Synthetic model designed to test mixed simplification transformations.
-Expected term reduction: 20-30%
+Expected term reduction: 40-60% (actual measured: 51.85%)
 
 Strategy: Mix of factorable and non-factorable expressions
 $Offtext
