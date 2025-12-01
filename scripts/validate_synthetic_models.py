@@ -49,7 +49,7 @@ SYNTHETIC_MODELS = {
 def run_measurement(model_path: Path) -> dict[str, Any]:
     """Run measure_simplification.py on a model and return results."""
     result = subprocess.run(
-        ["python", "scripts/measure_simplification.py", "--model", str(model_path)],
+        [sys.executable, "scripts/measure_simplification.py", "--model", str(model_path)],
         capture_output=True,
         text=True,
         check=True,

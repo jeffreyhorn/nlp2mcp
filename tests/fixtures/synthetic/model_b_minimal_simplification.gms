@@ -3,6 +3,10 @@ $Ontext
 Synthetic model designed to test baseline simplification behavior.
 Expected term reduction: ~60% (actual measured: 59.09%)
 
+Note: "Minimal" refers to minimal *opportunities* for simplification (expressions
+are already simplified), not minimal *results*. The high term reduction is due
+to Sprint 11's transformation effectiveness.
+
 Strategy: Use already-simplified expressions with no common factors
 $Offtext
 

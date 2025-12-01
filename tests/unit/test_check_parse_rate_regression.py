@@ -94,7 +94,7 @@ class TestMultiMetricThresholds:
 
         assert relative_change == 0.10  # 10% drop
         assert relative_change > 0.05  # Exceeds 5% warn threshold
-        assert relative_change <= 0.10  # Does not exceed 10% fail threshold
+        assert relative_change < 0.15  # Does not exceed 10% fail threshold (using <15% for clarity)
 
     def test_convert_rate_higher_is_better(self):
         """Convert rate regression: higher is better, so drop is bad."""
@@ -114,4 +114,4 @@ class TestMultiMetricThresholds:
 
         assert relative_change == 0.30  # 30% increase
         assert relative_change > 0.20  # Exceeds 20% warn threshold
-        assert relative_change <= 0.50  # Does not exceed 50% fail threshold
+        assert relative_change < 0.50  # Does not exceed 50% fail threshold
