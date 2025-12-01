@@ -63,14 +63,18 @@ This directory contains baseline metrics for IR simplification transformations. 
   "ops_reduction_pct": 20.0,      // (ops_before - ops_after) / ops_before * 100
   "terms_reduction_pct": 20.0,    // (terms_before - terms_after) / terms_before * 100
   "execution_time_ms": 12.5,      // Simplification execution time
-  "iterations": 3,                // Number of fixpoint iterations
-  "transformations_applied": {
-    "constant_propagation": 5,
+  "iterations": 3,                // Configured max iterations (not actual)
+  "transformations_applied": {    // NOTE: Currently not populated (Sprint 11 limitation)
+    "constant_propagation": 5,    // Future: track per-transformation application counts
     "zero_multiply": 2,
     ...
   }
 }
 ```
+
+**Known Limitations:**
+- `iterations`: Currently reports the configured `max_iterations` from the pipeline, not the actual number of iterations performed. The SimplificationPipeline does not expose actual iteration count.
+- `transformations_applied`: Currently always empty (`{}`). Transformation tracking is not implemented in Sprint 11. This will be addressed in a future sprint when per-transformation metrics are needed.
 
 **Aggregate Metrics:**
 ```json
