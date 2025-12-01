@@ -18,8 +18,8 @@
   {
     "model_name": "chem",
     "parse_status": "FAILED",
-    "error_message": "Error: Parse error at line 16, column 19: Unexpected character: '''\n  i 'atoms'     / H 'hydrogen', N 'nitrogen', O 'oxygen' /;\n                    ^\n\nSuggestion: This character is not valid in this c",
-    "error_line": 16,
+    "error_message": "Error: Parse error at line 28, column 1: Unexpected character: 'N'\n  NH -18.918, NO -28.032 , O   -14.640, o2 -30.594, OH -26.11  /\n  ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 28,
     "file_size_lines": 40,
     "blocker_category": "syntax_error"
   },
@@ -90,10 +90,10 @@
   {
     "model_name": "jbearing",
     "parse_status": "FAILED",
-    "error_message": "Error: Parse error at line 39, column 13: Unexpected character: ','\n  Alias (nx,i), (ny,j);\n              ^\n\nSuggestion: This character is not valid in this context",
-    "error_line": 39,
+    "error_message": "Error: Parse error at line 62, column 23: Unexpected character: '{'\n  obj =e= (hx*hy/12)*sum{(nx(i+1),ny(j+1)), (wq[i] + 2*wq[i+1])\n                        ^\n\nSuggestion: This character is not valid i",
+    "error_line": 62,
     "file_size_lines": 55,
-    "blocker_category": "alias_statement"
+    "blocker_category": "syntax_error"
   },
   {
     "model_name": "least",
@@ -125,7 +125,7 @@
     "error_message": "Included file not found: /Users/jeff/experiments/nlp2mcp/tests/fixtures/tier2_candidates/poolmod.inc\n  Referenced from: /Users/jeff/experiments/nlp2mcp/tests/fixtures/tier2_candidates/pool.gms",
     "error_line": null,
     "file_size_lines": 701,
-    "blocker_category": "file_io"
+    "blocker_category": "undefined_symbol"
   },
   {
     "model_name": "process",
@@ -138,8 +138,8 @@
   {
     "model_name": "water",
     "parse_status": "FAILED",
-    "error_message": "Error: Parse error at line 22, column 21: Unexpected character: '''\n  n      'nodes' / nw 'north west reservoir', e 'east reservoir'\n                      ^\n\nSuggestion: This character is not valid in",
-    "error_line": 22,
+    "error_message": "Error: Parse error at line 23, column 1: Unexpected character: 'c'\n  cc 'central city',         w 'west'\n  ^\n\nSuggestion: This character is not valid in this context",
+    "error_line": 23,
     "file_size_lines": 88,
     "blocker_category": "syntax_error"
   }
