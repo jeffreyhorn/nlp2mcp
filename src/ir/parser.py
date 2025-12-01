@@ -616,6 +616,10 @@ class _ModelBuilder:
                 if child.data == "set_element":
                     # Simple element: ID or STRING
                     result.append(_token_text(child.children[0]))
+                elif child.data == "set_element_with_desc":
+                    # Element with inline description: ID STRING
+                    # Take first token (ID), ignore description (STRING)
+                    result.append(_token_text(child.children[0]))
                 elif child.data == "set_range":
                     # Range notation: can be symbolic (i1*i100) or numeric (1*10)
                     # The grammar now produces range_expr with range_bound children
@@ -647,7 +651,7 @@ class _ModelBuilder:
                 else:
                     raise self._error(
                         f"Unexpected set member node type: '{child.data}'. "
-                        f"Expected 'set_element' or 'set_range'.",
+                        f"Expected 'set_element', 'set_element_with_desc', or 'set_range'.",
                         child,
                     )
         return result

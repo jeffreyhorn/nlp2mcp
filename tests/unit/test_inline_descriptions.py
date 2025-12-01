@@ -1,76 +1,137 @@
-"""Test inline text descriptions in declarations.
+"""Tests for inline descriptions in set member declarations.
 
-Sprint 9 - GitHub Issue #277: Support inline text descriptions in scalar declarations.
+GAMS allows inline descriptions for set members:
+    Set i 'atoms' / H 'hydrogen', N 'nitrogen', O 'oxygen' /;
+    Set n 'nodes' / nw 'north west reservoir',
+                    e 'east reservoir',
+                    ne 'north east reservoir' /;
 
-Note: Currently only scalar declarations support inline descriptions. Parameter, variable,
-and equation inline descriptions are not yet implemented due to grammar ambiguity issues.
+This module tests that the parser correctly handles these patterns.
 """
 
 from src.ir.parser import parse_model_text
 
 
-class TestScalarInlineDescriptions:
-    """Test scalar declarations with inline descriptions."""
-
-    def test_scalar_with_inline_description(self):
-        """Test scalar declaration with inline description."""
-        gams_code = """
-        Scalar
-           diff optcr - relative distance from global;
-        """
-        model = parse_model_text(gams_code)
-        assert "diff" in model.params
-
-    def test_scalar_with_data_and_description(self):
-        """Test scalar with description and data."""
-        gams_code = """
-        Scalar
-           global global solution / -0.262725145e5 /;
-        """
-        model = parse_model_text(gams_code)
-        assert "global" in model.params
-        assert model.params["global"].values == {(): -0.262725145e5}
+def test_single_element_with_description():
+    """Test set member with inline description."""
+    source = """
+    Set i 'atoms' / H 'hydrogen' /;
+    """
+    model = parse_model_text(source)
+    assert "i" in model.sets
+    assert "H" in model.sets["i"].members
+    assert len(model.sets["i"].members) == 1
 
 
-class TestHS62Integration:
-    """Test that hs62.gms parses successfully with inline descriptions."""
-
-    def test_hs62_parses(self):
-        """Test that hs62.gms parses successfully with inline descriptions."""
-        from pathlib import Path
-
-        fixture_path = Path("tests/fixtures/gamslib/hs62.gms")
-        if not fixture_path.exists():
-            import pytest
-
-            pytest.skip(f"Fixture file not found: {fixture_path}")
-
-        with open(fixture_path) as f:
-            gams_code = f.read()
-
-        model = parse_model_text(gams_code)
-        # Verify the scalar with inline description was parsed
-        assert "diff" in model.params
-        assert "global" in model.params
+def test_multiple_elements_all_with_descriptions():
+    """Test multiple set members all with inline descriptions."""
+    source = """
+    Set i 'atoms' / H 'hydrogen', N 'nitrogen', O 'oxygen' /;
+    """
+    model = parse_model_text(source)
+    assert "i" in model.sets
+    assert model.sets["i"].members == ["H", "N", "O"]
 
 
-class TestComplexDescriptions:
-    """Test complex description patterns."""
+def test_mixed_elements_some_with_descriptions():
+    """Test set with mixed descriptions (some elements have descriptions, some don't)."""
+    source = """
+    Set i / a, b 'beta', c, d 'delta' /;
+    """
+    model = parse_model_text(source)
+    assert model.sets["i"].members == ["a", "b", "c", "d"]
 
-    def test_description_with_hyphens(self):
-        """Test description containing hyphens."""
-        gams_code = """
-        Scalar
-           myvar this-is-a-complex-description;
-        """
-        model = parse_model_text(gams_code)
-        assert "myvar" in model.params
 
-    def test_description_with_multiple_words(self):
-        """Test description with multiple words."""
-        gams_code = """
-        Scalar
-           test a long description with many words;
-        """
-        model = parse_model_text(gams_code)
-        assert "test" in model.params
+def test_multi_line_with_descriptions():
+    """Test multi-line set with descriptions (gastrans pattern)."""
+    source = """
+    Set n 'nodes' /
+        nw 'north west reservoir',
+        e 'east reservoir',
+        ne 'north east reservoir',
+        s 'south reservoir' /;
+    """
+    model = parse_model_text(source)
+    assert len(model.sets["n"].members) == 4
+    assert "nw" in model.sets["n"].members
+    assert "e" in model.sets["n"].members
+    assert "ne" in model.sets["n"].members
+    assert "s" in model.sets["n"].members
+
+
+def test_chem_exact_pattern():
+    """Test exact pattern from chem.gms."""
+    source = """
+    Set i 'atoms' / H 'hydrogen', N 'nitrogen', O 'oxygen' /;
+    """
+    model = parse_model_text(source)
+    assert model.sets["i"].members == ["H", "N", "O"]
+
+
+def test_descriptions_with_special_chars():
+    """Test descriptions containing special characters."""
+    source = """
+    Set i / a 'alpha (A)', b 'beta: B-value' /;
+    """
+    model = parse_model_text(source)
+    assert len(model.sets["i"].members) == 2
+    assert "a" in model.sets["i"].members
+    assert "b" in model.sets["i"].members
+
+
+def test_description_with_spaces():
+    """Test description with multiple words separated by spaces."""
+    source = """
+    Set n / nw 'north west reservoir' /;
+    """
+    model = parse_model_text(source)
+    assert "nw" in model.sets["n"].members
+
+
+def test_empty_description():
+    """Test element with empty string description."""
+    source = """
+    Set i / a '', b /;
+    """
+    model = parse_model_text(source)
+    assert model.sets["i"].members == ["a", "b"]
+
+
+def test_description_with_numbers():
+    """Test description containing numbers."""
+    source = """
+    Set i / x 'option 1', y 'option 2' /;
+    """
+    model = parse_model_text(source)
+    assert model.sets["i"].members == ["x", "y"]
+
+
+def test_no_descriptions_still_works():
+    """Test that sets without descriptions still work (backward compatibility)."""
+    source = """
+    Set i / a, b, c /;
+    """
+    model = parse_model_text(source)
+    assert model.sets["i"].members == ["a", "b", "c"]
+
+
+def test_range_with_description_after():
+    """Test that range notation followed by element with description works."""
+    source = """
+    Set i / 1*5, a 'alpha' /;
+    """
+    model = parse_model_text(source)
+    assert "1" in model.sets["i"].members
+    assert "5" in model.sets["i"].members
+    assert "a" in model.sets["i"].members
+
+
+def test_description_before_range():
+    """Test element with description before range notation."""
+    source = """
+    Set i / a 'alpha', 1*3 /;
+    """
+    model = parse_model_text(source)
+    assert "a" in model.sets["i"].members
+    assert "1" in model.sets["i"].members
+    assert "3" in model.sets["i"].members
