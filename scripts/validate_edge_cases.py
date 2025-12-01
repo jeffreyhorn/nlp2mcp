@@ -156,6 +156,7 @@ def test_deeply_nested_expression():
     # Validation: Deep nesting should not crash
     assert ops_before >= 10, f"Expected ≥10 operations, got {ops_before}"
     assert ops_after <= ops_before, "Operations should not increase"
+    assert terms_after <= terms_before, "Terms should not increase"
 
     print("✅ PASS: Deeply nested expression handled correctly")
     return True
@@ -262,12 +263,12 @@ def cross_validate_model(model_name: str, expected_term_reduction_range: tuple[f
 
     # Validation: Should be within expected range
     min_pct, max_pct = expected_term_reduction_range
-    if min_pct <= reduction_pct <= max_pct:
+    in_range = min_pct <= reduction_pct <= max_pct
+    if in_range:
         print(f"  ✅ PASS: Within expected range")
-        return True
     else:
-        print(f"  ⚠️  WARNING: Outside expected range (but not a failure)")
-        return True  # Don't fail, just warn
+        print(f"  ⚠️  WARNING: Outside expected range")
+    return in_range
 
 
 def test_cross_validation():

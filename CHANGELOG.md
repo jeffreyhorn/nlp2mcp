@@ -56,10 +56,10 @@ Analyzed Sprint 11 baseline results achieving **26.19% average term reduction** 
 
 - `baselines/multi_metric/baseline_sprint12.json`: Populated with Sprint 12 Day 3 metrics
   - 10 Tier 1 models measured with timing data
-  - Parse rate: 90% (9/10 models) - himmel16.gms fails at convert (IndexOffset not supported)
-  - Convert rate: 90% (9/10 models)
-  - Avg parse time: 246.83ms
-  - Avg total time: 246.97ms
+  - Parse rate: 100% (10/10 models) - all models parse successfully
+  - Convert rate: 90% (9/10 models) - himmel16.gms fails at convert (IndexOffset not supported)
+  - Avg parse time: 577.20ms
+  - Avg total time: 588.23ms
 
 - `.github/workflows/gamslib-regression.yml`: Updated for Sprint 12 multi-metric enforcement
   - Comments updated: "Sprint 12 multi-metric" (was "not yet implemented")
@@ -88,10 +88,10 @@ Analyzed Sprint 11 baseline results achieving **26.19% average term reduction** 
 - Total execution time: 8.78ms (0.88ms per model average)
 
 **Multi-Metric Baseline (Sprint 12):**
-- Parse rate: 90% (9/10 models)
+- Parse rate: 100% (10/10 models)
 - Convert rate: 90% (9/10 models)
-- Avg parse time: 246.83ms
-- Avg total time: 246.97ms
+- Avg parse time: 577.20ms
+- Avg total time: 588.23ms
 
 **Top Performers (Term Reduction):**
 1. mhw4d.gms: 52.63% (19→9 terms)

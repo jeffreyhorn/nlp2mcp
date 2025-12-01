@@ -74,10 +74,10 @@ Analyzed Sprint 11 baseline results, documenting **26.19% average term reduction
 
 **baselines/multi_metric/baseline_sprint12.json:**
 - Populated with Day 3 metrics (10 Tier 1 models)
-- Parse rate: 90% (9/10) - himmel16 fails at convert (IndexOffset not supported)
-- Convert rate: 90% (9/10)
-- Avg parse time: 246.83ms
-- Avg total time: 246.97ms
+- Parse rate: 100% (10/10) - all models parse successfully
+- Convert rate: 90% (9/10) - himmel16 fails at convert (IndexOffset not supported)
+- Avg parse time: 577.20ms
+- Avg total time: 588.23ms
 - Schema v1.0.0 compliant
 
 #### 3. CI Workflow Multi-Metric Update (0.5h)
@@ -143,7 +143,7 @@ Analyzed Sprint 11 baseline results, documenting **26.19% average term reduction
    - Day 9 will focus on extended features, not debugging transformations
 
 3. **Checkpoint evidence = SIMPLIFICATION_BENCHMARKS.md:**
-   - Comprehensive 513-line analysis document
+   - Comprehensive 297-line analysis document
    - Serves as both checkpoint evidence and reference documentation
    - Can be used for Sprint 13+ planning and retrospectives
 
@@ -170,10 +170,10 @@ Analyzed Sprint 11 baseline results, documenting **26.19% average term reduction
 - Execution time: 8.78ms total (0.88ms per model)
 
 **Sprint 12 Multi-Metric Baseline:**
-- Parse rate: 90% (9/10 models)
+- Parse rate: 100% (10/10 models)
 - Convert rate: 90% (9/10 models)
-- Avg parse time: 246.83ms
-- Avg total time: 246.97ms
+- Avg parse time: 577.20ms
+- Avg total time: 588.23ms
 
 **Top Performers (Term Reduction):**
 1. mhw4d.gms: 52.63% (19→9 terms)

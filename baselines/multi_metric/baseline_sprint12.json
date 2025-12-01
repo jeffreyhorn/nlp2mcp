@@ -2,80 +2,80 @@
   "schema_version": "1.0.0",
   "sprint": "sprint12",
   "checkpoint": "Day 3 - Validation and Analysis",
-  "commit": "ae624d501a05725dd05d165c865cfbda0b8b0b0a",
-  "timestamp": "2025-12-01T14:39:47.380704+00:00",
+  "commit": "3cb1e5d0b42a93aaf0023d78e05dcd487e4910a9",
+  "timestamp": "2025-12-01T15:38:19.522052+00:00",
   "model_set": "tier1",
   "models": {
     "circle.gms": {
       "parse_rate": 1.0,
       "convert_rate": 1.0,
-      "parse_time_ms": 371.84,
-      "total_time_ms": 371.95
+      "parse_time_ms": 910.67,
+      "total_time_ms": 910.86
     },
     "himmel16.gms": {
-      "parse_rate": 0.0,
+      "parse_rate": 1.0,
       "convert_rate": 0.0,
-      "parse_time_ms": 0.0,
-      "total_time_ms": 222.91
+      "parse_time_ms": 480.01,
+      "total_time_ms": 480.22
     },
     "hs62.gms": {
       "parse_rate": 1.0,
       "convert_rate": 1.0,
-      "parse_time_ms": 162.59,
-      "total_time_ms": 162.8
+      "parse_time_ms": 376.96,
+      "total_time_ms": 377.29
     },
     "mathopt1.gms": {
       "parse_rate": 1.0,
       "convert_rate": 1.0,
-      "parse_time_ms": 146.17,
-      "total_time_ms": 146.29
+      "parse_time_ms": 339.97,
+      "total_time_ms": 340.14
     },
     "maxmin.gms": {
       "parse_rate": 1.0,
       "convert_rate": 1.0,
-      "parse_time_ms": 360.8,
-      "total_time_ms": 360.95
+      "parse_time_ms": 830.61,
+      "total_time_ms": 830.85
     },
     "mhw4d.gms": {
       "parse_rate": 1.0,
       "convert_rate": 1.0,
-      "parse_time_ms": 137.0,
-      "total_time_ms": 137.17
+      "parse_time_ms": 324.96,
+      "total_time_ms": 325.32
     },
     "mhw4dx.gms": {
       "parse_rate": 1.0,
       "convert_rate": 1.0,
-      "parse_time_ms": 659.0,
-      "total_time_ms": 659.19
+      "parse_time_ms": 1617.32,
+      "total_time_ms": 1617.62
     },
     "mingamma.gms": {
       "parse_rate": 1.0,
       "convert_rate": 1.0,
-      "parse_time_ms": 214.09,
-      "total_time_ms": 214.21
+      "parse_time_ms": 495.23,
+      "total_time_ms": 495.34
     },
     "rbrock.gms": {
       "parse_rate": 1.0,
       "convert_rate": 1.0,
-      "parse_time_ms": 75.63,
-      "total_time_ms": 75.71
+      "parse_time_ms": 167.91,
+      "total_time_ms": 168.04
     },
     "trig.gms": {
       "parse_rate": 1.0,
       "convert_rate": 1.0,
-      "parse_time_ms": 94.39,
-      "total_time_ms": 94.5
+      "parse_time_ms": 228.4,
+      "total_time_ms": 228.57
     }
   },
   "summary": {
     "total_models": 10,
-    "parse_rate": 0.9,
-    "parse_rate_pct": 90.0,
-    "parsed_models": 9,
+    "parse_rate": 1.0,
+    "parse_rate_pct": 100.0,
+    "parsed_models": 10,
     "convert_rate": 0.9,
     "convert_rate_pct": 90.0,
     "converted_models": 9,
-    "avg_parse_time_ms": 246.83,
-    "avg_total_time_ms": 246.97
+    "avg_parse_time_ms": 577.2,
+    "avg_total_time_ms": 588.23
   }
 }
