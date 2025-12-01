@@ -85,10 +85,11 @@ jobs:
       - name: Check for regression
         id: regression-check
         run: |
-          # Compare against baseline from main branch
-          # Currently enforced: Parse rate threshold (10% fail)
-          # Multi-metric arguments (parse/convert/perf) are accepted but not yet implemented
-          # Note: convert_rate tracking exists in measure_parse_rate.py but not integrated with ingest_gamslib.py
+          # Compare against baseline from main branch (Sprint 12 multi-metric)
+          # Enforces thresholds for all 3 metrics: parse rate, convert rate, performance
+          # - Parse rate: 5% warn, 10% fail (higher is better)
+          # - Convert rate: 5% warn, 10% fail (higher is better)
+          # - Performance: 20% warn, 50% fail (lower is better)
           python scripts/check_parse_rate_regression.py \
             --current reports/gamslib_ingestion_sprint8.json \
             --baseline origin/main \
@@ -114,24 +115,35 @@ jobs:
               output = 'Regression check output not available';
             }
 
-            const body = `## 📊 GAMSLib Regression Check Results
+            const body = `## 📊 GAMSLib Regression Check Results (Sprint 12 Multi-Metric)
 
             \`\`\`
             ${output}
             \`\`\`
 
             <details>
-            <summary>About Regression Thresholds</summary>
+            <summary>About Multi-Metric Thresholds</summary>
 
-            **Currently Enforced:**
-            - **Parse Rate**: 10% failure threshold (hard block on merge)
+            **Sprint 12 Multi-Metric Regression Detection** ✅
 
-            **Planned (not yet implemented):**
-            - Parse Rate: 5% warning threshold
-            - Convert Rate: 5% warning, 10% failure
-            - Performance: 20% warning, 50% failure
+            All three metrics are now enforced with dual warn/fail thresholds:
 
-            Note: Multi-metric threshold arguments are accepted by the CI but only parse rate is currently enforced.
+            | Metric | Direction | Warn Threshold | Fail Threshold | Purpose |
+            |--------|-----------|----------------|----------------|---------|
+            | **Parse Rate** | Higher is better | 5% drop | 10% drop | Detect parser regressions |
+            | **Convert Rate** | Higher is better | 5% drop | 10% drop | Detect converter regressions |
+            | **Performance** | Lower is better | 20% increase | 50% increase | Detect performance regressions |
+
+            **Exit Code Behavior:**
+            - **0 (PASS):** All metrics pass thresholds
+            - **1 (WARN):** ≥1 metric warns, none fail (does not block merge)
+            - **2 (FAIL):** ≥1 metric fails (blocks merge)
+
+            **Status Indicators:**
+            - ✅ **PASS:** Metric within acceptable range
+            - ⚠️ **WARN:** Metric exceeds warning threshold (review recommended)
+            - ❌ **FAIL:** Metric exceeds failure threshold (must fix before merge)
+
             </details>
             `;
 
