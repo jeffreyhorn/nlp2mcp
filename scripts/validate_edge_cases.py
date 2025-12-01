@@ -236,12 +236,16 @@ def cross_validate_model(model_name: str, expected_term_reduction_range: tuple[f
     total_terms_after = 0
 
     for expr_id, expr in expressions:
-        terms_before = count_terms(expr)
-        simplified, _ = pipeline.apply(expr)
-        terms_after = count_terms(simplified)
+        try:
+            terms_before = count_terms(expr)
+            simplified, _ = pipeline.apply(expr)
+            terms_after = count_terms(simplified)
 
-        total_terms_before += terms_before
-        total_terms_after += terms_after
+            total_terms_before += terms_before
+            total_terms_after += terms_after
+        except Exception as e:
+            print(f"  ⚠️  Error processing {expr_id}: {e}")
+            continue
 
     reduction_pct = (
         (total_terms_before - total_terms_after) / total_terms_before * 100

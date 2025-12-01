@@ -112,28 +112,28 @@ def test_convert_with_timing(model_path: Path) -> tuple[bool, bool, float, float
     """
     total_start = time.perf_counter()
 
+    # Step 1: Parse with timing
     try:
-        # Step 1: Parse with timing
         parse_start = time.perf_counter()
         ir_model = parse_model_file(str(model_path))
         parse_time_ms = (time.perf_counter() - parse_start) * 1000
-
-        if ir_model is None:
-            total_time_ms = (time.perf_counter() - total_start) * 1000
-            return False, False, parse_time_ms, total_time_ms
-
-        # Step 2: Convert to MCP
-        converter = Converter(ir_model)
-        result = converter.convert()
-
-        total_time_ms = (time.perf_counter() - total_start) * 1000
-
-        # Conversion succeeds if result.success is True
-        return True, result.success, parse_time_ms, total_time_ms
     except Exception:
-        # Parse or conversion failed
         total_time_ms = (time.perf_counter() - total_start) * 1000
         return False, False, 0.0, total_time_ms
+
+    if ir_model is None:
+        total_time_ms = (time.perf_counter() - total_start) * 1000
+        return False, False, parse_time_ms, total_time_ms
+
+    # Step 2: Convert to MCP
+    try:
+        converter = Converter(ir_model)
+        result = converter.convert()
+        total_time_ms = (time.perf_counter() - total_start) * 1000
+        return True, result.success, parse_time_ms, total_time_ms
+    except Exception:
+        total_time_ms = (time.perf_counter() - total_start) * 1000
+        return True, False, parse_time_ms, total_time_ms
 
 
 def measure_parse_rate(verbose: bool = False) -> tuple[int, int, float, int, float]:

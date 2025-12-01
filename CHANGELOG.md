@@ -33,7 +33,7 @@ Analyzed Sprint 11 baseline results achieving **26.19% average term reduction** 
 #### Changes
 
 **New Files:**
-- `docs/SIMPLIFICATION_BENCHMARKS.md` (513 lines): Comprehensive analysis of Sprint 11 baseline results
+- `docs/SIMPLIFICATION_BENCHMARKS.md` (297 lines): Comprehensive analysis of Sprint 11 baseline results
   - Executive summary with aggregate metrics
   - Per-model breakdown (7 models ≥20%, 3 models <20%)
   - Inferred transformation effectiveness patterns
@@ -41,7 +41,7 @@ Analyzed Sprint 11 baseline results achieving **26.19% average term reduction** 
   - Day 3 checkpoint decision analysis
   - Future optimization opportunities
 
-- `scripts/validate_edge_cases.py` (331 lines): Extended validation script with 4 test categories
+- `scripts/validate_edge_cases.py` (346 lines): Extended validation script with 4 test categories
   - Test 1: Very large expressions (>500 operations) ✅
   - Test 2: Deeply nested expressions (>10 levels) ✅
   - Test 3: Pre-simplified expressions (no opportunities) ✅

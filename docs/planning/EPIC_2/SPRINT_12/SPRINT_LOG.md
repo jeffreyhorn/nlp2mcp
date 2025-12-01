@@ -42,7 +42,7 @@ Analyzed Sprint 11 baseline results, documenting **26.19% average term reduction
 
 #### 1. Baseline Analysis & Documentation (1.5h)
 
-**docs/SIMPLIFICATION_BENCHMARKS.md (513 lines):**
+**docs/SIMPLIFICATION_BENCHMARKS.md (297 lines):**
 - Executive summary: 26.19% avg term reduction, 73.55% avg operation reduction
 - Per-model breakdown:
   - **Top performers (≥40%):** mhw4d (52.63%), mhw4dx (52.63%), trig (44.44%)
@@ -96,7 +96,7 @@ Analyzed Sprint 11 baseline results, documenting **26.19% average term reduction
 
 #### 4. Extended Validation & Edge Case Testing (3-4h)
 
-**scripts/validate_edge_cases.py (331 lines, 4 test categories):**
+**scripts/validate_edge_cases.py (346 lines, 4 test categories):**
 
 **Test 1: Very Large Expressions (>500 operations)**
 - Created expression with 600 variables (1199 operations)
