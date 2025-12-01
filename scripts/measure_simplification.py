@@ -19,6 +19,7 @@ Sprint 12 Day 2: Baseline Collection & Multi-Metric Backend
 
 import argparse
 import json
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -266,8 +267,6 @@ def calculate_aggregate(
 
 def get_git_commit() -> str:
     """Get current git commit SHA."""
-    import subprocess
-
     try:
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"],

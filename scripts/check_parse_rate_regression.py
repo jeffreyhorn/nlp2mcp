@@ -243,6 +243,10 @@ def check_all_metrics(args) -> int:
         Note: Warnings do not cause a nonzero exit code; only failures and errors do.
     """
     try:
+        # Ensure current report file exists before reading baseline
+        if not Path(args.current).exists():
+            raise FileNotFoundError(f"Report not found: {args.current}")
+
         # Read current metrics
         current_metrics = read_metrics(args.current)
 

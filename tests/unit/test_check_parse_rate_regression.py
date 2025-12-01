@@ -87,14 +87,14 @@ class TestMultiMetricThresholds:
 
     def test_parse_rate_higher_is_better(self):
         """Parse rate regression: higher is better, so drop is bad."""
-        # Baseline 50%, current 45% = 10% relative drop
+        # Baseline 50%, current 47.5% = 5% relative drop
         baseline = 50.0
-        current = 45.0
+        current = 47.5
         relative_change = (baseline - current) / baseline
 
-        assert relative_change == 0.10  # 10% drop
-        assert relative_change > 0.05  # Exceeds 5% warn threshold
-        assert relative_change < 0.15  # Does not exceed 10% fail threshold (using <15% for clarity)
+        assert relative_change == 0.05  # 5% drop
+        assert relative_change >= 0.05  # Meets 5% warn threshold
+        assert relative_change < 0.10  # Does not exceed 10% fail threshold
 
     def test_convert_rate_higher_is_better(self):
         """Convert rate regression: higher is better, so drop is bad."""
