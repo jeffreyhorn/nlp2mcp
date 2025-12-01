@@ -599,6 +599,17 @@ class _ModelBuilder:
                 name = _token_text(child.children[0])
                 domain = _id_list(child.children[1])
                 self.model.add_set(SetDef(name=name, members=list(domain)))
+            elif child.data == "set_domain_with_members":
+                # Set with domain and members: ID(id_list) STRING? / set_members /
+                name = _token_text(child.children[0])
+                # domain is second child (id_list)
+                # optional STRING description
+                # set_members node is last
+                members_node = next(
+                    c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
+                )
+                members = self._expand_set_members(members_node)
+                self.model.add_set(SetDef(name=name, members=members))
 
     def _expand_set_members(self, members_node: Tree) -> list[str]:
         """Expand set members, handling range notation (e.g., i1*i100 or 1*10)."""
@@ -620,6 +631,26 @@ class _ModelBuilder:
                     # Element with inline description: ID STRING
                     # Take first token (ID), ignore description (STRING)
                     result.append(_token_text(child.children[0]))
+                elif child.data == "set_tuple":
+                    # Basic tuple notation: ID.ID (e.g., a.b)
+                    prefix = _token_text(child.children[0])
+                    suffix = _token_text(child.children[1])
+                    result.append(f"{prefix}.{suffix}")
+                elif child.data == "set_tuple_with_desc":
+                    # Tuple with description: ID.ID STRING (e.g., a.b "description")
+                    prefix = _token_text(child.children[0])
+                    suffix = _token_text(child.children[1])
+                    # Ignore description (third child)
+                    result.append(f"{prefix}.{suffix}")
+                elif child.data == "set_tuple_expansion":
+                    # Tuple expansion: ID.(id1,id2,...) (e.g., nw.(w,cc,n))
+                    # Expands to: nw.w, nw.cc, nw.n
+                    prefix = _token_text(child.children[0])
+                    # Second child is id_list node
+                    id_list_node = child.children[1]
+                    suffixes = _id_list(id_list_node)
+                    for suffix in suffixes:
+                        result.append(f"{prefix}.{suffix}")
                 elif child.data == "set_range":
                     # Range notation: can be symbolic (i1*i100) or numeric (1*10)
                     # The grammar now produces range_expr with range_bound children
@@ -651,7 +682,8 @@ class _ModelBuilder:
                 else:
                     raise self._error(
                         f"Unexpected set member node type: '{child.data}'. "
-                        f"Expected 'set_element', 'set_element_with_desc', or 'set_range'.",
+                        f"Expected 'set_element', 'set_element_with_desc', 'set_tuple', "
+                        f"'set_tuple_with_desc', 'set_tuple_expansion', or 'set_range'.",
                         child,
                     )
         return result

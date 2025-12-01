@@ -50,7 +50,8 @@ equations_block: ("Equations"i | "Equation"i) eqn_head_decl+ SEMI
 // Declarations
 // ---------------------------
 
-set_decl: ID STRING? "/" set_members "/"                     -> set_simple
+set_decl: ID "(" id_list ")" STRING? "/" set_members "/"     -> set_domain_with_members
+        | ID STRING? "/" set_members "/"                     -> set_simple
         | ID STRING? alias_opt "/" set_members "/"           -> set_aliased
         | ID "(" id_list ")"                                 -> set_domain
         | ID                                                 -> set_empty
@@ -128,10 +129,13 @@ alias_opt : "(" id_list ")"                                  -> alias_domain
 id_list: ID ("," ID)*
 
 set_members: set_member ("," set_member)*
-?set_member: range_expr              -> set_range
-           | ID STRING               -> set_element_with_desc
-           | ID                      -> set_element
-           | STRING                  -> set_element
+?set_member: range_expr                          -> set_range
+           | ID "." "(" id_list ")"              -> set_tuple_expansion
+           | ID "." ID STRING                    -> set_tuple_with_desc
+           | ID "." ID                           -> set_tuple
+           | ID STRING                           -> set_element_with_desc
+           | ID                                  -> set_element
+           | STRING                              -> set_element
 
 // Range expression: supports both numeric (1*10) and symbolic (s1*s10) ranges
 range_expr: range_bound TIMES range_bound
