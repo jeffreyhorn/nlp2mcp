@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
     from ..ir.model_ir import ModelIR
 
+from ..ir.constants import PREDEFINED_GAMS_CONSTANTS
 from ..utils.errors import NumericalError
 
 
@@ -34,6 +35,10 @@ def validate_parameter_values(model_ir: ModelIR) -> None:
         NumericalError: Numerical error in parameter 'p[1]': Invalid value (value is NaN)
     """
     for param_name, param_def in model_ir.params.items():
+        # Skip validation for predefined constants
+        if param_name in PREDEFINED_GAMS_CONSTANTS:
+            continue
+
         for indices, value in param_def.values.items():
             if not math.isfinite(value):
                 # Format indices for display

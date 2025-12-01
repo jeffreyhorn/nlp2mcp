@@ -11,6 +11,7 @@ Key principles:
 - Multi-dimensional parameter keys formatted as GAMS syntax: ("i1", "j2") → "i1.j2"
 """
 
+from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 
 
@@ -136,15 +137,22 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 lines.append(f"    {param_name}({domain_str})")
         lines.append(";")
 
-    # Emit Scalars
+    # Emit Scalars (skip predefined GAMS constants)
     if scalars:
-        if lines:  # Add blank line if parameters were emitted
-            lines.append("")
-        lines.append("Scalars")
-        for scalar_name, scalar_def in scalars.items():
-            # Scalars have values[()] = value (Finding #3)
-            value = scalar_def.values.get((), 0.0)
-            lines.append(f"    {scalar_name} /{value}/")
-        lines.append(";")
+        # Filter out predefined constants
+        user_scalars = {
+            name: param_def
+            for name, param_def in scalars.items()
+            if name not in PREDEFINED_GAMS_CONSTANTS
+        }
+        if user_scalars:
+            if lines:  # Add blank line if parameters were emitted
+                lines.append("")
+            lines.append("Scalars")
+            for scalar_name, scalar_def in user_scalars.items():
+                # Scalars have values[()] = value (Finding #3)
+                value = scalar_def.values.get((), 0.0)
+                lines.append(f"    {scalar_name} /{value}/")
+            lines.append(";")
 
     return "\n".join(lines)

@@ -41,11 +41,11 @@
   },
   {
     "model_name": "fct",
-    "parse_status": "FAILED",
-    "error_message": "Error: Parse error at line 29, column 41: Undefined symbol 'pi' referenced [context: equation 'defaux1a' RHS]\n  defaux1a.. aux1a =e= abs(sin(4*mod(aux1,pi)));\n                                         ",
-    "error_line": 29,
+    "parse_status": "SUCCESS",
+    "error_message": null,
+    "error_line": null,
     "file_size_lines": 36,
-    "blocker_category": "undefined_symbol"
+    "blocker_category": null
   },
   {
     "model_name": "gasoil",

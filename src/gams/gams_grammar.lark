@@ -56,8 +56,11 @@ set_decl: ID STRING? "/" set_members "/"                     -> set_simple
         | ID                                                 -> set_empty
 
 alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_universe
-          | "(" ID "," ID ")"                                -> alias_parens
+          | alias_pair ("," alias_pair)+                     -> alias_multi
           | ID "," ID                                        -> alias_plain
+          | alias_pair                                       -> alias_single
+
+alias_pair: "(" ID "," ID ")"
 
 param_decl: ID "(" id_list ")" "/" param_data_items "/" param_default? -> param_domain_data
           | ID "(" id_list ")" param_default?                          -> param_domain
