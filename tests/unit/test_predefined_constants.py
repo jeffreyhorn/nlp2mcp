@@ -122,15 +122,14 @@ def test_all_four_predefined_constants():
     assert "na" in model.params
 
 
-def test_predefined_constant_case_sensitive():
-    """Test that predefined constants are case-sensitive (lowercase only)."""
+def test_predefined_constant_case_insensitive():
+    """Test that predefined constants work case-insensitively (Issue #373)."""
     source = """
     Variable x;
     Equation test;
     test.. x =e= PI;
     """
-    # KNOWN LIMITATION: GAMS is case-insensitive, but our parser is case-sensitive.
-    # Predefined constants must be referenced in lowercase (pi, inf, eps, na).
-    # This is documented as a limitation that may be addressed in future sprints.
-    with pytest.raises(ParseError, match="Undefined symbol 'PI'"):
-        parse_model_text(source)
+    # After Issue #373: Predefined constants are now case-insensitive like all GAMS symbols
+    # PI, Pi, pi all refer to the same predefined constant
+    model = parse_model_text(source)
+    assert "test" in model.equations

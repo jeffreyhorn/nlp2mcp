@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from ..utils.case_insensitive_dict import CaseInsensitiveDict
 from .ast import Expr
 from .symbols import (
     AliasDef,
@@ -29,14 +30,15 @@ class ObjectiveIR:
 
 @dataclass
 class ModelIR:
-    # Symbols
-    sets: dict[str, SetDef] = field(default_factory=dict)
-    aliases: dict[str, AliasDef] = field(default_factory=dict)
-    params: dict[str, ParameterDef] = field(default_factory=dict)
-    variables: dict[str, VariableDef] = field(default_factory=dict)
+    # Symbols - using case-insensitive dictionaries (Issue #373)
+    # GAMS is case-insensitive, so 'myParam' and 'MYPARAM' refer to the same symbol
+    sets: CaseInsensitiveDict[SetDef] = field(default_factory=CaseInsensitiveDict)
+    aliases: CaseInsensitiveDict[AliasDef] = field(default_factory=CaseInsensitiveDict)
+    params: CaseInsensitiveDict[ParameterDef] = field(default_factory=CaseInsensitiveDict)
+    variables: CaseInsensitiveDict[VariableDef] = field(default_factory=CaseInsensitiveDict)
 
-    # Equations
-    equations: dict[str, EquationDef] = field(default_factory=dict)
+    # Equations - also case-insensitive
+    equations: CaseInsensitiveDict[EquationDef] = field(default_factory=CaseInsensitiveDict)
 
     # Option statements (Sprint 8: mock/store approach)
     option_statements: list[OptionStatement] = field(default_factory=list)
