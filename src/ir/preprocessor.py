@@ -49,6 +49,128 @@ class IncludeDepthExceededError(Exception):
         )
 
 
+def preprocess_bat_includes(
+    file_path: Path,
+    source: str,
+    max_depth: int = 100,
+    _include_stack: list[Path] | None = None,
+) -> str:
+    """Process $batInclude directives with argument substitution.
+
+    $batInclude allows passing arguments to included files, where arguments
+    are referenced as %1%, %2%, %3%, etc. in the included file.
+
+    Args:
+        file_path: Path to the GAMS file being processed
+        source: Source code containing $batInclude directives
+        max_depth: Maximum allowed include nesting depth (default: 100)
+        _include_stack: Internal parameter for tracking include chain
+
+    Returns:
+        Source code with $batInclude directives expanded
+
+    Example:
+        >>> # In main.gms:
+        >>> # $batInclude helper.inc foo bar
+        >>> # In helper.inc:
+        >>> # Set s%1% /%2%/;
+        >>> # After expansion:
+        >>> # Set sfoo /bar/;
+
+    Notes:
+        - Arguments are whitespace-separated
+        - %1% refers to first argument, %2% to second, etc.
+        - If included file doesn't exist, directive is commented out
+        - Paths are resolved relative to the containing file
+    """
+    # Initialize include stack on first call
+    if _include_stack is None:
+        _include_stack = []
+
+    # Normalize path for consistent comparison
+    file_path = file_path.resolve()
+
+    # Check depth limit
+    current_depth = len(_include_stack)
+    if current_depth >= max_depth:
+        raise IncludeDepthExceededError(current_depth, max_depth, file_path)
+
+    # Pattern matches: $batInclude filename arg1 arg2 ...
+    # Case-insensitive, allows optional whitespace
+    bat_include_pattern = r'\$batInclude\s+(?:"([^"]+)"|(\S+))(.*)$'
+
+    # Track position for building result
+    result_parts = []
+    last_end = 0
+
+    # Add current file to include stack
+    new_stack = _include_stack + [file_path]
+
+    # Process all $batInclude directives
+    for match in re.finditer(bat_include_pattern, source, re.IGNORECASE | re.MULTILINE):
+        # Add content before this include
+        result_parts.append(source[last_end : match.start()])
+
+        # Get the included filename (either from quoted or unquoted group)
+        included_filename = match.group(1) or match.group(2)
+
+        # Get arguments (everything after filename, split by whitespace)
+        args_str = match.group(3).strip()
+        args = args_str.split() if args_str else []
+
+        # Resolve path relative to the file containing the $batInclude
+        included_path = (file_path.parent / included_filename).resolve()
+
+        # Check if file exists
+        if not included_path.exists():
+            # File doesn't exist - comment out the directive
+            result_parts.append(
+                f"\n* [Stripped: $batInclude {included_filename} {args_str} - file not found]\n"
+            )
+            last_end = match.end()
+            continue
+
+        # Check for circular includes
+        if included_path in new_stack:
+            chain = new_stack + [included_path]
+            raise CircularIncludeError(chain)
+
+        # Read the included file
+        included_content = included_path.read_text()
+
+        # Substitute %1, %2, etc. with arguments
+        # Note: GAMS $batInclude uses %1, %2, etc. (not %1%, %2%)
+        for i, arg in enumerate(args, 1):
+            # Use regex to match %N where N is the argument number
+            # Must use word boundary or lookahead to avoid matching %10 when looking for %1
+            # Pattern matches %N followed by non-digit or end of string
+            arg_pattern = rf"%{i}(?!\d)"
+            included_content = re.sub(arg_pattern, arg, included_content)
+
+        # Add debug comment showing include boundary
+        result_parts.append(f"\n* BEGIN BATINCLUDE: {included_filename} {args_str}\n")
+
+        # Recursively process the included file for nested $batInclude directives
+        included_content = preprocess_bat_includes(
+            included_path,
+            included_content,
+            max_depth=max_depth,
+            _include_stack=new_stack,
+        )
+
+        result_parts.append(included_content)
+
+        # Add end marker
+        result_parts.append(f"\n* END BATINCLUDE: {included_filename}\n")
+
+        last_end = match.end()
+
+    # Add remaining content after last include
+    result_parts.append(source[last_end:])
+
+    return "".join(result_parts)
+
+
 def preprocess_includes(
     file_path: Path,
     max_depth: int = 100,
@@ -1043,17 +1165,18 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     This is the main entry point for preprocessing GAMS files.
     It performs preprocessing in the following order:
     1. Expand $include directives recursively
-    2. Extract macro defaults from $if not set directives
-    3. Extract general $set directives
-    4. Expand %variable% references
-    5. Extract $macro definitions
-    6. Expand macro function calls
-    7. Strip conditional directives ($if not set)
-    8. Strip $set directives
-    9. Strip $macro directives
-    10. Strip other unsupported directives ($title, $ontext, etc.)
-    11. Normalize multi-line continuations (add missing commas)
-    12. Quote identifiers with special characters (-, +) in data blocks
+    2. Expand $batInclude directives with argument substitution
+    3. Extract macro defaults from $if not set directives
+    4. Extract general $set directives
+    5. Expand %variable% references
+    6. Extract $macro definitions
+    7. Expand macro function calls
+    8. Strip conditional directives ($if not set)
+    9. Strip $set directives
+    10. Strip $macro directives
+    11. Strip other unsupported directives ($title, $ontext, etc.)
+    12. Normalize multi-line continuations (add missing commas)
+    13. Quote identifiers with special characters (-, +) in data blocks
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -1076,40 +1199,45 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     # Step 1: Expand all $include directives recursively
     content = preprocess_includes(file_path)
 
-    # Step 2: Extract macro defaults from $if not set directives
+    # Step 2: Expand $batInclude directives with argument substitution
+    # This must happen after regular includes so that $batInclude can reference
+    # files that were themselves included via $include
+    content = preprocess_bat_includes(file_path, content)
+
+    # Step 3: Extract macro defaults from $if not set directives
     macros = extract_conditional_sets(content)
 
-    # Step 3: Extract general $set directives (merge with conditional sets)
+    # Step 4: Extract general $set directives (merge with conditional sets)
     # Pass existing macros so that $set can reference earlier macros
     set_macros = extract_set_directives(content, macros)
     macros.update(set_macros)  # $set directives override conditional defaults
 
-    # Step 4: Expand %variable% references with their values
+    # Step 5: Expand %variable% references with their values
     content = expand_macros(content, macros)
 
-    # Step 5: Extract $macro function definitions
+    # Step 6: Extract $macro function definitions
     # This must happen after %variable% expansion so that macro bodies have variables expanded
     # For example: $macro fx(t) %fx% becomes $macro fx(t) sin(t) * cos(t-t*t)
     macro_defs = extract_macro_definitions(content)
 
-    # Step 6: Expand macro function calls
+    # Step 7: Expand macro function calls
     # Replace fx(t('1')) with sin(t('1')) * cos(t('1')-t('1')*t('1'))
     content = expand_macro_calls(content, macro_defs)
 
-    # Step 7: Strip $if not set directives (replaced with comments)
+    # Step 8: Strip $if not set directives (replaced with comments)
     content = strip_conditional_directives(content)
 
-    # Step 8: Strip $set directives (replaced with comments)
+    # Step 9: Strip $set directives (replaced with comments)
     content = strip_set_directives(content)
 
-    # Step 9: Strip $macro directives (replaced with comments)
+    # Step 10: Strip $macro directives (replaced with comments)
     content = strip_macro_directives(content)
 
-    # Step 10: Strip other unsupported directives ($title, $ontext, etc.)
+    # Step 11: Strip other unsupported directives ($title, $ontext, etc.)
     content = strip_unsupported_directives(content)
 
-    # Step 11: Normalize multi-line continuations (add missing commas)
+    # Step 12: Normalize multi-line continuations (add missing commas)
     content = normalize_multi_line_continuations(content)
 
-    # Step 12: Quote identifiers with special characters (-, +) in data blocks
+    # Step 13: Quote identifiers with special characters (-, +) in data blocks
     return normalize_special_identifiers(content)
