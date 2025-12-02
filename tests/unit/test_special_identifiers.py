@@ -235,3 +235,53 @@ row2    3     4;"""
 row1    1     2
 row2    3     4;"""
     assert normalize_special_identifiers(source) == expected
+
+
+def test_multi_line_set_declaration():
+    """Test multi-line Set declaration with special chars (Issue #366)."""
+    source = """Set
+   i    'sectors'               / light-ind, food+agr, heavy-ind, services /
+   t(i) 'tradables'             / light-ind, food+agr, heavy-ind /
+   lmh  'possible elasticities' / low, medium, high /;"""
+    expected = """Set
+   i    'sectors'               / 'light-ind', 'food+agr', 'heavy-ind', services /
+   t(i) 'tradables'             / 'light-ind', 'food+agr', 'heavy-ind' /
+   lmh  'possible elasticities' / low, medium, high /;"""
+    assert normalize_special_identifiers(source) == expected
+
+
+def test_multi_line_parameter_declaration():
+    """Test multi-line Parameter declaration with special chars."""
+    source = """Parameter
+   p(i) 'prices' / light-ind 100, food+agr 200 /
+   q(i) 'quantities' / heavy-ind 50 /;"""
+    expected = """Parameter
+   p(i) 'prices' / 'light-ind' 100, 'food+agr' 200 /
+   q(i) 'quantities' / 'heavy-ind' 50 /;"""
+    assert normalize_special_identifiers(source) == expected
+
+
+def test_multi_line_scalar_declaration():
+    """Test multi-line Scalar declaration (edge case)."""
+    source = """Scalar
+   tax-rate 'tax rate' / 0.15 /
+   sub-rate 'subsidy rate' / 0.05 /;"""
+    expected = """Scalar
+   'tax-rate' 'tax rate' / 0.15 /
+   'sub-rate' 'subsidy rate' / 0.05 /;"""
+    assert normalize_special_identifiers(source) == expected
+
+
+def test_chenery_full_example():
+    """Test the full chenery.gms Set declaration."""
+    source = """Set
+   i    'sectors'               / light-ind, food+agr, heavy-ind, services /
+   t(i) 'tradables'             / light-ind, food+agr, heavy-ind /
+   lmh  'possible elasticities' / low, medium, high /
+   sde  'other parameters'      / subst, distr, effic /;"""
+    expected = """Set
+   i    'sectors'               / 'light-ind', 'food+agr', 'heavy-ind', services /
+   t(i) 'tradables'             / 'light-ind', 'food+agr', 'heavy-ind' /
+   lmh  'possible elasticities' / low, medium, high /
+   sde  'other parameters'      / subst, distr, effic /;"""
+    assert normalize_special_identifiers(source) == expected

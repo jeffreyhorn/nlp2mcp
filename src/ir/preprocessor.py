@@ -1391,9 +1391,17 @@ def normalize_special_identifiers(source: str) -> str:
     in_data_block = False
     in_table = False
     table_header_seen = False
+    in_multi_line_declaration = False  # Track multi-line Set/Parameter/Scalar/Alias
 
     for line in lines:
         stripped = line.strip()
+
+        # Check if we're starting a multi-line declaration
+        if re.match(r"^\s*(Set|Parameter|Scalar|Alias)\b", stripped, re.IGNORECASE):
+            in_multi_line_declaration = True
+            # Check if this line also has a semicolon (single-line declaration)
+            if ";" in line:
+                in_multi_line_declaration = False
 
         # Check if we're starting a table
         if re.match(r"^Table\b", stripped, re.IGNORECASE):
@@ -1426,12 +1434,13 @@ def normalize_special_identifiers(source: str) -> str:
                 continue
 
         # Track if we're inside a /.../ data block
-        # Only consider / as data block delimiter if line starts with declaration keyword
+        # Data blocks can appear on lines starting with declaration keywords
+        # OR on continuation lines within a multi-line declaration
         if "/" in line and not in_data_block:
             # Check if this is actually a data block (not division in equations)
             # Data blocks appear after Set, Parameter, Scalar, Alias keywords
             is_declaration = re.match(r"^\s*(Set|Parameter|Scalar|Alias)\b", line, re.IGNORECASE)
-            if is_declaration:
+            if is_declaration or in_multi_line_declaration:
                 # Check if entering a data block
                 slash_count = line.count("/")
                 if slash_count == 1:
@@ -1441,11 +1450,18 @@ def normalize_special_identifiers(source: str) -> str:
                     # Inline block - process it
                     processed = _quote_special_in_line(line)
                     result.append(processed)
+                    # Check if declaration ends
+                    if ";" in line:
+                        in_multi_line_declaration = False
                     continue
         elif "/" in line and in_data_block:
             # Check if closing the data block
             if line.strip().endswith("/") or line.strip().endswith("/;"):
                 in_data_block = False
+
+        # Check if multi-line declaration ends (semicolon outside data block)
+        if in_multi_line_declaration and ";" in line and not in_data_block:
+            in_multi_line_declaration = False
 
         # Process line if in data block
         if in_data_block:
