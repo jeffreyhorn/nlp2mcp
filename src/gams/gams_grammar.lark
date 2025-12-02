@@ -328,18 +328,18 @@ SUM_K: "sum"i
 ?and_expr: comp_expr
          | and_expr AND comp_expr      -> binop
 
-?comp_expr: dollar_expr
-          | dollar_expr comp_op dollar_expr -> binop
+?comp_expr: arith_expr
+          | arith_expr comp_op arith_expr -> binop
 
 comp_op: ASSIGN | LE | GE | LT | GT | NE
 
-?dollar_expr: arith_expr
-            | arith_expr DOLLAR arith_expr   -> dollar_cond
-            | arith_expr DOLLAR "(" arith_expr ")"  -> dollar_cond_paren
+?arith_expr: dollar_expr
+           | arith_expr PLUS dollar_expr        -> binop
+           | arith_expr MINUS dollar_expr       -> binop
 
-?arith_expr: term
-           | arith_expr PLUS term        -> binop
-           | arith_expr MINUS term       -> binop
+?dollar_expr: term
+            | term DOLLAR term   -> dollar_cond
+            | term DOLLAR "(" arith_expr ")"  -> dollar_cond_paren
 
 ?term: factor
      | term TIMES factor                 -> binop
