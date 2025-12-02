@@ -1,11 +1,30 @@
 # Issue: Chenery Special Characters Regression
 
 **GitHub Issue:** [#366](https://github.com/jeffreyhorn/nlp2mcp/issues/366)  
-**Status:** Open  
+**Status:** ✅ RESOLVED  
 **Priority:** MEDIUM  
 **Complexity:** LOW (1-2h)  
 **Impact:** 1 Tier 2 model (chenery)  
-**Sprint:** Sprint 13+
+**Sprint:** Sprint 13 (Completed)  
+**Resolution:** Fixed in commit 3e33db1
+
+---
+
+## Resolution Summary
+
+Issue resolved by adding multi-line declaration state tracking to `normalize_special_identifiers()`.
+
+**Fixed by:** commit 3e33db1  
+**Function:** `normalize_special_identifiers()` in `src/ir/preprocessor.py`  
+**Tests Added:** 5 new unit tests for multi-line declarations
+
+### Fix Details
+Added `in_multi_line_declaration` state flag to track when inside a Set/Parameter/Scalar/Alias declaration that spans multiple lines. This allows the function to detect and process data blocks on continuation lines that don't start with the declaration keyword.
+
+### Verification
+- chenery.gms now progresses from line 17 → line 127
+- Special characters in multi-line set declarations are correctly quoted
+- All 2027 tests passing including 5 new tests
 
 ---
 
