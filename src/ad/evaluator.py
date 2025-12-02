@@ -234,6 +234,28 @@ def _evaluate_call(
         result = math.log(arg)
         return _check_numeric(result, f"log({arg})")
 
+    elif func == "log10":
+        if len(expr.args) != 1:
+            raise ValueError(f"log10 expects 1 argument, got {len(expr.args)}")
+        arg = _evaluate_expr(expr.args[0], var_values, param_values)
+        if arg <= 0:
+            raise EvaluationError(
+                f"log10 domain error: log10({arg}). Argument must be positive (> 0)."
+            )
+        result = math.log10(arg)
+        return _check_numeric(result, f"log10({arg})")
+
+    elif func == "log2":
+        if len(expr.args) != 1:
+            raise ValueError(f"log2 expects 1 argument, got {len(expr.args)}")
+        arg = _evaluate_expr(expr.args[0], var_values, param_values)
+        if arg <= 0:
+            raise EvaluationError(
+                f"log2 domain error: log2({arg}). Argument must be positive (> 0)."
+            )
+        result = math.log2(arg)
+        return _check_numeric(result, f"log2({arg})")
+
     elif func == "sqrt":
         if len(expr.args) != 1:
             raise ValueError(f"sqrt expects 1 argument, got {len(expr.args)}")

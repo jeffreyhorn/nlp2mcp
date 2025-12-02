@@ -133,6 +133,18 @@ class TestFunctionCalls:
         result = evaluate(expr, var_values={("x", ()): math.e})
         assert abs(result - 1.0) < 1e-10
 
+    def test_log10(self):
+        """Evaluate log10(x)"""
+        expr = Call("log10", (VarRef("x"),))
+        result = evaluate(expr, var_values={("x", ()): 100.0})
+        assert abs(result - 2.0) < 1e-10
+
+    def test_log2(self):
+        """Evaluate log2(x)"""
+        expr = Call("log2", (VarRef("x"),))
+        result = evaluate(expr, var_values={("x", ()): 8.0})
+        assert abs(result - 3.0) < 1e-10
+
     def test_sqrt(self):
         """Evaluate sqrt(x)"""
         expr = Call("sqrt", (VarRef("x"),))
@@ -210,6 +222,44 @@ class TestDomainViolations:
             evaluate(expr)
 
         assert "log domain error" in str(exc_info.value)
+
+    def test_log10_of_negative(self):
+        """log10 of negative number should raise EvaluationError"""
+        expr = Call("log10", (VarRef("x"),))
+
+        with pytest.raises(EvaluationError) as exc_info:
+            evaluate(expr, var_values={("x", ()): -1.0})
+
+        assert "log10 domain error" in str(exc_info.value)
+        assert "positive" in str(exc_info.value)
+
+    def test_log10_of_zero(self):
+        """log10(0) should raise EvaluationError"""
+        expr = Call("log10", (Const(0.0),))
+
+        with pytest.raises(EvaluationError) as exc_info:
+            evaluate(expr)
+
+        assert "log10 domain error" in str(exc_info.value)
+
+    def test_log2_of_negative(self):
+        """log2 of negative number should raise EvaluationError"""
+        expr = Call("log2", (VarRef("x"),))
+
+        with pytest.raises(EvaluationError) as exc_info:
+            evaluate(expr, var_values={("x", ()): -1.0})
+
+        assert "log2 domain error" in str(exc_info.value)
+        assert "positive" in str(exc_info.value)
+
+    def test_log2_of_zero(self):
+        """log2(0) should raise EvaluationError"""
+        expr = Call("log2", (Const(0.0),))
+
+        with pytest.raises(EvaluationError) as exc_info:
+            evaluate(expr)
+
+        assert "log2 domain error" in str(exc_info.value)
 
     def test_sqrt_of_negative(self):
         """sqrt of negative number should raise EvaluationError"""

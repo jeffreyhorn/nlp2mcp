@@ -239,6 +239,148 @@ class TestLogDifferentiation:
 
 
 # ============================================================================
+# Base-10 Logarithm Function Tests
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestLog10Differentiation:
+    """Tests for log10(x) differentiation."""
+
+    def test_log10_variable(self):
+        """Test d(log10(x))/dx = 1/(x * ln(10))"""
+        # log10(x)
+        expr = Call("log10", (VarRef("x"),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: (1/(x * ln(10))) * 1
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left should be 1/(x * ln(10))
+        assert isinstance(result.left, Binary)
+        assert result.left.op == "/"
+        assert isinstance(result.left.left, Const)
+        assert result.left.left.value == 1.0
+
+        # Denominator should be x * ln(10)
+        assert isinstance(result.left.right, Binary)
+        assert result.left.right.op == "*"
+
+    def test_log10_constant(self):
+        """Test d(log10(5))/dx = 0"""
+        # log10(5)
+        expr = Call("log10", (Const(5.0),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: (1/(5 * ln(10))) * 0
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        assert isinstance(result.right, Const)
+        assert result.right.value == 0.0
+
+    def test_log10_different_variable(self):
+        """Test d(log10(y))/dx = 0"""
+        # log10(y)
+        expr = Call("log10", (VarRef("y"),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: (1/(y * ln(10))) * 0
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        assert isinstance(result.right, Const)
+        assert result.right.value == 0.0
+
+    def test_log10_chain_rule(self):
+        """Test d(log10(x^2))/dx = (1/(x^2 * ln(10))) * 2x"""
+        # log10(x^2)
+        inner = Call("power", (VarRef("x"), Const(2.0)))
+        expr = Call("log10", (inner,))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: (1/(x^2 * ln(10))) * d(x^2)/dx
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left should be 1/(x^2 * ln(10))
+        assert isinstance(result.left, Binary)
+        assert result.left.op == "/"
+
+
+# ============================================================================
+# Base-2 Logarithm Function Tests
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestLog2Differentiation:
+    """Tests for log2(x) differentiation."""
+
+    def test_log2_variable(self):
+        """Test d(log2(x))/dx = 1/(x * ln(2))"""
+        # log2(x)
+        expr = Call("log2", (VarRef("x"),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: (1/(x * ln(2))) * 1
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left should be 1/(x * ln(2))
+        assert isinstance(result.left, Binary)
+        assert result.left.op == "/"
+        assert isinstance(result.left.left, Const)
+        assert result.left.left.value == 1.0
+
+        # Denominator should be x * ln(2)
+        assert isinstance(result.left.right, Binary)
+        assert result.left.right.op == "*"
+
+    def test_log2_constant(self):
+        """Test d(log2(5))/dx = 0"""
+        # log2(5)
+        expr = Call("log2", (Const(5.0),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: (1/(5 * ln(2))) * 0
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        assert isinstance(result.right, Const)
+        assert result.right.value == 0.0
+
+    def test_log2_different_variable(self):
+        """Test d(log2(y))/dx = 0"""
+        # log2(y)
+        expr = Call("log2", (VarRef("y"),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: (1/(y * ln(2))) * 0
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        assert isinstance(result.right, Const)
+        assert result.right.value == 0.0
+
+    def test_log2_chain_rule(self):
+        """Test d(log2(x^2))/dx = (1/(x^2 * ln(2))) * 2x"""
+        # log2(x^2)
+        inner = Call("power", (VarRef("x"), Const(2.0)))
+        expr = Call("log2", (inner,))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: (1/(x^2 * ln(2))) * d(x^2)/dx
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left should be 1/(x^2 * ln(2))
+        assert isinstance(result.left, Binary)
+        assert result.left.op == "/"
+
+
+# ============================================================================
 # Square Root Function Tests
 # ============================================================================
 
