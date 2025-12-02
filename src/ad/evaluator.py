@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..ir.ast import Expr
 
-from ..ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, Unary, VarRef
+from ..ir.ast import Binary, Call, Const, DollarConditional, ParamRef, Sum, SymbolRef, Unary, VarRef
 
 
 class EvaluationError(Exception):
@@ -130,6 +130,16 @@ def _evaluate_expr(
 
     elif isinstance(expr, Call):
         return _evaluate_call(expr, var_values, param_values)
+
+    elif isinstance(expr, DollarConditional):
+        # Dollar conditional: value_expr$condition
+        # Evaluates to value_expr if condition is non-zero (true), otherwise 0
+        condition_val = _evaluate_expr(expr.condition, var_values, param_values)
+        if condition_val != 0:
+            value = _evaluate_expr(expr.value_expr, var_values, param_values)
+            return _check_numeric(value, "dollar conditional value")
+        else:
+            return 0.0
 
     elif isinstance(expr, Sum):
         # Sum evaluation requires knowing the set members
