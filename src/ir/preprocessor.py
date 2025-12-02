@@ -1140,6 +1140,126 @@ def strip_macro_directives(source: str) -> str:
     return "\n".join(filtered)
 
 
+def normalize_table_continuations(source: str) -> str:
+    """Remove table continuation markers (+) from multi-line table data.
+
+    GAMS uses + at the start of a line to indicate table continuation.
+    This function removes these markers so the table data can be parsed correctly.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with + continuation markers removed
+
+    Example:
+        Table data(i,j)
+               col1  col2
+           +   col3  col4
+           row1  1     2
+
+        Becomes:
+        Table data(i,j)
+               col1  col2
+               col3  col4
+           row1  1     2
+    """
+    lines = source.split("\n")
+    result = []
+    in_table = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Check if we're starting a table
+        if re.match(r"^Table\b", stripped, re.IGNORECASE):
+            in_table = True
+            result.append(line)
+            continue
+
+        # If in table and line starts with +, remove it
+        if in_table:
+            if stripped.startswith("+"):
+                # Remove the + and preserve indentation
+                # Find the + and replace it with spaces to maintain column alignment
+                plus_idx = line.find("+")
+                # Replace + with space
+                fixed_line = line[:plus_idx] + " " + line[plus_idx + 1 :]
+                result.append(fixed_line)
+                continue
+
+            # Check if table ends
+            if stripped.endswith(";"):
+                in_table = False
+
+        result.append(line)
+
+    return "\n".join(result)
+
+
+def normalize_parameter_data_blocks(source: str) -> str:
+    """Track multi-line parameter declarations with data blocks on continuation lines.
+
+    GAMS allows parameter data blocks to start on lines after the parameter name:
+        Parameter
+           tau(nm) 'description'
+                   / data values here
+                     more data /;
+
+    This function ensures such patterns are correctly identified as data blocks.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with parameter data blocks properly marked
+    """
+    lines = source.split("\n")
+    result = []
+    in_param_block = False
+    in_data_block = False
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+
+        # Check if we're starting a Parameter/Scalar block
+        if re.match(r"^(Parameter|Parameters|Scalar|Scalars)\b", stripped, re.IGNORECASE):
+            in_param_block = True
+            result.append(line)
+            continue
+
+        # If in parameter block, look for data blocks
+        if in_param_block:
+            # Check if this line starts a data block (has /)
+            if "/" in line and not in_data_block:
+                # Check if it's likely a data block (not division)
+                # Data blocks have / at start or after whitespace
+                slash_idx = line.find("/")
+                before_slash = line[:slash_idx].strip()
+
+                # If before slash is empty or ends with description string, it's a data block
+                if not before_slash or before_slash.endswith('"') or before_slash.endswith("'"):
+                    in_data_block = True
+                    # Check if it closes on same line
+                    if line.count("/") >= 2:
+                        in_data_block = False
+
+            # Check if data block closes
+            if in_data_block and "/" in stripped:
+                closing_slash_idx = stripped.rfind("/")
+                # If this is the closing slash (not opening)
+                if closing_slash_idx > 0 or (closing_slash_idx == 0 and i > 0):
+                    in_data_block = False
+
+            # Check if parameter block ends
+            if stripped.endswith(";") and not in_data_block:
+                in_param_block = False
+
+        result.append(line)
+
+    return "\n".join(result)
+
+
 def normalize_multi_line_continuations(source: str) -> str:
     """Add missing commas for implicit line continuations in data blocks.
 
@@ -1174,9 +1294,14 @@ def normalize_multi_line_continuations(source: str) -> str:
     lines = source.split("\n")
     result = []
     in_data_block = False
+    in_declaration = False  # Track if we're in a Set/Parameter/Scalar/Alias block
 
     for i, line in enumerate(lines):
         stripped = line.strip()
+
+        # Track if we're entering a declaration block
+        if re.match(r"^\s*(Set|Parameter|Scalar|Alias)\b", stripped, re.IGNORECASE):
+            in_declaration = True
 
         # Track if we're inside a /.../ data block
         # Only treat / as data block delimiter if it appears in a declaration context
@@ -1188,11 +1313,12 @@ def normalize_multi_line_continuations(source: str) -> str:
                 continue
 
             # Check if / appears after a declaration keyword (Set, Parameter, Scalar, Alias)
-            # Use a simple heuristic: look for these keywords before the /
-            if not re.search(
+            # OR if we're currently in a declaration block (keyword was on a previous line)
+            has_keyword_before_slash = re.search(
                 r"\b(Set|Parameter|Scalar|Alias)\b", line[: line.find("/")], re.IGNORECASE
-            ):
-                # No declaration keyword before /, likely an expression or other context
+            )
+            if not has_keyword_before_slash and not in_declaration:
+                # No declaration keyword before / and not in declaration block
                 result.append(line)
                 continue
 
@@ -1287,6 +1413,10 @@ def normalize_multi_line_continuations(source: str) -> str:
                 result.append(line)
         else:
             result.append(line)
+
+        # Reset declaration state if we hit a semicolon (end of declaration)
+        if in_declaration and ";" in line:
+            in_declaration = False
 
     return "\n".join(result)
 
@@ -1456,8 +1586,10 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     10. Strip $set directives
     11. Strip $macro directives
     12. Strip other unsupported directives ($title, $ontext, etc.)
-    13. Normalize multi-line continuations (add missing commas)
-    14. Quote identifiers with special characters (-, +) in data blocks
+    13. Remove table continuation markers (+)
+    14. Mark parameter data blocks on continuation lines
+    15. Normalize multi-line continuations (add missing commas)
+    16. Quote identifiers with special characters (-, +) in data blocks
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -1522,8 +1654,14 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     # Step 12: Strip other unsupported directives ($title, $ontext, etc.)
     content = strip_unsupported_directives(content)
 
-    # Step 13: Normalize multi-line continuations (add missing commas)
+    # Step 13: Remove table continuation markers (+)
+    content = normalize_table_continuations(content)
+
+    # Step 14: Mark parameter data blocks on continuation lines
+    content = normalize_parameter_data_blocks(content)
+
+    # Step 15: Normalize multi-line continuations (add missing commas)
     content = normalize_multi_line_continuations(content)
 
-    # Step 14: Quote identifiers with special characters (-, +) in data blocks
+    # Step 16: Quote identifiers with special characters (-, +) in data blocks
     return normalize_special_identifiers(content)
