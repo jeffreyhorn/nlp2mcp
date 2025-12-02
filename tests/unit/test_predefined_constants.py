@@ -2,9 +2,7 @@
 
 import math
 
-import pytest
-
-from src.ir.parser import ParseError, parse_model_text
+from src.ir.parser import parse_model_text
 
 
 def test_predefined_constant_pi():
