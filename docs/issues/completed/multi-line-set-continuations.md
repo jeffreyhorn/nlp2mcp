@@ -1,11 +1,22 @@
 # Issue: Multi-line Set Member Continuations
 
 **GitHub Issue:** [#365](https://github.com/jeffreyhorn/nlp2mcp/issues/365)  
-**Status:** Open  
+**Status:** ✅ RESOLVED (Fixed in PR #368)  
 **Priority:** HIGH  
 **Complexity:** MEDIUM (4-6h)  
 **Impact:** 3 Tier 2 models (chem, gastrans, water)  
-**Sprint:** Sprint 13+
+**Sprint:** Sprint 12 (Completed)  
+**Resolution:** Issue was resolved by PR #368 which implemented `normalize_multi_line_continuations()` function
+
+---
+
+## Resolution Summary
+
+This issue was **already fixed** in PR #368 (Fix #364: Multi-line Parameter Data with Numeric Indices). The `normalize_multi_line_continuations()` function implemented in that PR handles all the cases described in this issue.
+
+**Fixed by:** PR #368 - commit 6855be6  
+**Function:** `normalize_multi_line_continuations()` in `src/ir/preprocessor.py`  
+**Verification:** All three test cases from this issue now parse successfully
 
 ---
 
