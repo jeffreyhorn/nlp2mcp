@@ -599,6 +599,18 @@ class _ModelBuilder:
                 name = _token_text(child.children[0])
                 domain = _id_list(child.children[1])
                 self.model.add_set(SetDef(name=name, members=list(domain)))
+            elif child.data == "set_domain_with_members":
+                # Set with domain and members: ID(id_list) STRING? / set_members /
+                name = _token_text(child.children[0])
+                # Note: domain is in second child (id_list), but SetDef doesn't have a domain field yet.
+                # For now, we only extract members. Future enhancement: add domain field to SetDef.
+                # optional STRING description
+                # set_members node is last
+                members_node = next(
+                    c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
+                )
+                members = self._expand_set_members(members_node)
+                self.model.add_set(SetDef(name=name, members=members))
 
     def _expand_set_members(self, members_node: Tree) -> list[str]:
         """Expand set members, handling range notation (e.g., i1*i100 or 1*10)."""
@@ -620,6 +632,26 @@ class _ModelBuilder:
                     # Element with inline description: ID STRING
                     # Take first token (ID), ignore description (STRING)
                     result.append(_token_text(child.children[0]))
+                elif child.data == "set_tuple":
+                    # Basic tuple notation: ID.ID (e.g., a.b)
+                    prefix = _token_text(child.children[0])
+                    suffix = _token_text(child.children[1])
+                    result.append(f"{prefix}.{suffix}")
+                elif child.data == "set_tuple_with_desc":
+                    # Tuple with description: ID.ID STRING (e.g., a.b "description")
+                    prefix = _token_text(child.children[0])
+                    suffix = _token_text(child.children[1])
+                    # Ignore description (third child)
+                    result.append(f"{prefix}.{suffix}")
+                elif child.data == "set_tuple_expansion":
+                    # Tuple expansion: ID.(id1,id2,...) (e.g., nw.(w,cc,n))
+                    # Expands to: nw.w, nw.cc, nw.n
+                    prefix = _token_text(child.children[0])
+                    # Second child is id_list node
+                    id_list_node = child.children[1]
+                    suffixes = _id_list(id_list_node)
+                    for suffix in suffixes:
+                        result.append(f"{prefix}.{suffix}")
                 elif child.data == "set_range":
                     # Range notation: can be symbolic (i1*i100) or numeric (1*10)
                     # The grammar now produces range_expr with range_bound children
@@ -651,7 +683,8 @@ class _ModelBuilder:
                 else:
                     raise self._error(
                         f"Unexpected set member node type: '{child.data}'. "
-                        f"Expected 'set_element', 'set_element_with_desc', or 'set_range'.",
+                        f"Expected 'set_element', 'set_element_with_desc', 'set_tuple', "
+                        f"'set_tuple_with_desc', 'set_tuple_expansion', or 'set_range'.",
                         child,
                     )
         return result
@@ -819,10 +852,32 @@ class _ModelBuilder:
         1. Group tokens by line number
         2. First line with IDs = column headers (and their column positions)
         3. Subsequent lines = data rows (match values to columns by position)
+
+        Supports wildcard domains (*) where dimension names are inferred from data.
         """
         # Extract name and domain
         name = _token_text(node.children[0])
-        domain = _id_list(node.children[1])
+
+        # Handle table_domain_list which may contain wildcards
+        domain_list_node = node.children[1]
+        domain = []
+
+        for child in domain_list_node.children:
+            if isinstance(child, Tree):
+                if child.data == "explicit_domain":
+                    domain.append(_token_text(child.children[0]))
+                elif child.data == "wildcard_domain":
+                    domain.append("*")
+                elif child.data == "wildcard_tuple_domain":
+                    # Handle (*,*) or (*,*,*) etc.
+                    # Count the number of wildcards in the tuple
+                    wildcard_tuple_node = child.children[0]  # wildcard_tuple
+                    num_wildcards = len(wildcard_tuple_node.children)
+                    # Add each wildcard to domain
+                    for _ in range(num_wildcards):
+                        domain.append("*")
+
+        domain = tuple(domain)
 
         # Find all table_row nodes and collect all tokens
         table_rows = [
@@ -835,16 +890,86 @@ class _ModelBuilder:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
             return
 
+        # Extract row labels first (to handle dotted labels and tuple labels)
+        row_label_map = {}  # line_number -> row_label_string or list of row_label_strings
+        for row in table_rows:
+            # First child is always the row label (either table_row_label tree or ID token)
+            if row.children:
+                first_child = row.children[0]
+                if isinstance(first_child, Tree):
+                    if first_child.data == "simple_label":
+                        # Simple or dotted label wrapped in simple_label
+                        dotted_label_node = first_child.children[0]
+                        label_parts = [
+                            _token_text(tok)
+                            for tok in dotted_label_node.children
+                            if isinstance(tok, Token)
+                        ]
+                        row_label = ".".join(label_parts)
+                        # Get line number from first token
+                        first_token = dotted_label_node.children[0]
+                        if hasattr(first_token, "line"):
+                            row_label_map[first_token.line] = row_label
+                    elif first_child.data == "tuple_label":
+                        # Tuple label like "(low,medium,high).ynot"
+                        # Structure: tuple_label -> id_list, dotted_label
+                        id_list_node = first_child.children[0]
+                        dotted_label_node = first_child.children[1]
+
+                        # Extract tuple elements
+                        elements = [
+                            _token_text(tok)
+                            for tok in id_list_node.children
+                            if isinstance(tok, Token)
+                        ]
+
+                        # Extract suffix (can be multi-part like "a.b.c")
+                        suffix_parts = [
+                            _token_text(tok)
+                            for tok in dotted_label_node.children
+                            if isinstance(tok, Token)
+                        ]
+                        suffix = ".".join(suffix_parts)
+
+                        # Expand to multiple labels: elem1.suffix, elem2.suffix, ...
+                        expanded_labels = [f"{elem}.{suffix}" for elem in elements]
+
+                        # Get line number from first token (in id_list)
+                        first_token = id_list_node.children[0]
+                        if hasattr(first_token, "line"):
+                            # Store as list to indicate this row should be replicated
+                            row_label_map[first_token.line] = expanded_labels
+                elif isinstance(first_child, Token):
+                    # Simple ID label (legacy, shouldn't happen with new grammar)
+                    row_label = _token_text(first_child)
+                    if hasattr(first_child, "line"):
+                        row_label_map[first_child.line] = row_label
+
         # Collect all tokens from all table_row nodes with position info
         all_tokens = []
         for row in table_rows:
             for child in row.children:
                 if isinstance(child, Token):
                     all_tokens.append(child)
-                elif isinstance(child, Tree) and child.data == "table_value":
-                    for grandchild in child.children:
-                        if isinstance(grandchild, Token):
-                            all_tokens.append(grandchild)
+                elif isinstance(child, Tree):
+                    if child.data == "table_value":
+                        for grandchild in child.children:
+                            if isinstance(grandchild, Token):
+                                all_tokens.append(grandchild)
+                    elif child.data == "simple_label":
+                        # simple_label wraps dotted_label
+                        dotted_label_node = child.children[0]
+                        for grandchild in dotted_label_node.children:
+                            if isinstance(grandchild, Token):
+                                all_tokens.append(grandchild)
+                    elif child.data == "tuple_label":
+                        # tuple_label contains id_list and dotted_label
+                        # Collect tokens from both
+                        for subnode in child.children:
+                            if isinstance(subnode, Tree):
+                                for tok in subnode.children:
+                                    if isinstance(tok, Token):
+                                        all_tokens.append(tok)
 
         if not all_tokens:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
@@ -868,6 +993,11 @@ class _ModelBuilder:
         # First line should be column headers
         first_line_num, first_line_tokens = sorted_lines[0]
 
+        # Remove column header line from row_label_map if it was added
+        # (column headers are parsed as a table_row, so they might have been extracted as a row label)
+        if first_line_num in row_label_map:
+            del row_label_map[first_line_num]
+
         # Column headers: store name and column position
         col_headers = []  # List of (col_name, col_position) tuples
         for token in first_line_tokens:
@@ -882,17 +1012,27 @@ class _ModelBuilder:
 
         # Parse data rows
         values = {}
-        for _line_num, line_tokens in sorted_lines[1:]:
+        for line_num, line_tokens in sorted_lines[1:]:
             if not line_tokens:
                 continue
 
-            # First token in line should be row header (ID)
-            if line_tokens[0].type != "ID":
-                continue
-
-            row_header = _token_text(line_tokens[0])
+            # Get row header(s) from row_label_map (handles dotted labels and tuple labels)
+            if line_num not in row_label_map:
+                # Fallback: first token should be row header
+                if line_tokens[0].type != "ID":
+                    continue
+                row_headers = [_token_text(line_tokens[0])]
+            else:
+                row_header_or_list = row_label_map[line_num]
+                # Check if it's a tuple label (list) or simple label (string)
+                if isinstance(row_header_or_list, list):
+                    row_headers = row_header_or_list  # Multiple expanded labels
+                else:
+                    row_headers = [row_header_or_list]  # Single label
 
             # Match remaining tokens to columns by position
+            # Collect all values for this row first
+            row_values = {}  # col_name -> value
             for token in line_tokens[1:]:
                 if token.type not in ("NUMBER", "ID"):
                     continue
@@ -918,18 +1058,30 @@ class _ModelBuilder:
                     except ValueError:
                         value = 0.0
 
-                    key = (row_header, best_match)
+                    row_values[best_match] = value
+
+            # Replicate the row data for each expanded label (for tuple labels)
+            for row_header in row_headers:
+                for col_name, value in row_values.items():
+                    key = (row_header, col_name)
                     values[key] = value
 
         # Fill in missing cells with 0.0
         # For each combination of row and column that doesn't have a value
-        row_headers = set()
+        # Collect all row headers from the values that were already parsed
+        all_row_headers = set()
+        for row_header, _col_name in values.keys():
+            all_row_headers.add(row_header)
+
+        # Also collect row headers from lines (to handle completely empty rows)
         for _line_num, line_tokens in sorted_lines[1:]:
             if line_tokens and line_tokens[0].type == "ID":
-                row_headers.add(_token_text(line_tokens[0]))
+                # First token is row header
+                row_header = _token_text(line_tokens[0])
+                all_row_headers.add(row_header)
 
         col_names = [name for name, _ in col_headers]
-        for row_header in row_headers:
+        for row_header in all_row_headers:
             for col_name in col_names:
                 key = (row_header, col_name)
                 if key not in values:
@@ -2475,6 +2627,9 @@ class _ModelBuilder:
         node: Tree | Token | None = None,
     ) -> None:
         for name in names:
+            # Skip wildcard domains (used in table declarations)
+            if name == "*":
+                continue
             self._ensure_set_exists(name, context, node)
 
     def _resolve_set_def(

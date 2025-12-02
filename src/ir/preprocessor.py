@@ -49,6 +49,407 @@ class IncludeDepthExceededError(Exception):
         )
 
 
+def process_conditionals(source: str, macros: dict[str, str]) -> str:
+    """Process $if/$else/$endif conditional compilation directives.
+
+    Evaluates conditional blocks and includes/excludes code based on conditions.
+    Supports nested conditionals.
+
+    Supported conditions:
+    - $if set varname: Include if variable is defined
+    - $if not set varname: Include if variable is NOT defined
+    - $if varname: Include if variable is defined (same as "set varname")
+    - $if expr: Include if expression evaluates to true (basic support)
+    - $else: Alternative block when condition is false
+    - $elseif: Alternative condition (processed as $else $if)
+    - $endif: End conditional block
+
+    Args:
+        source: GAMS source code text
+        macros: Dictionary of defined variables (from $set directives)
+
+    Returns:
+        Source code with conditionals evaluated and inactive blocks removed
+
+    Example:
+        >>> source = '''$if set debug
+        ... Parameter debugMode;
+        ... $else
+        ... Parameter prodMode;
+        ... $endif'''
+        >>> macros = {'debug': '1'}
+        >>> result = process_conditionals(source, macros)
+        >>> # Result includes "Parameter debugMode;" and excludes "Parameter prodMode;"
+
+    Notes:
+        - Conditions are evaluated at compile time
+        - Nested conditionals are supported
+        - Unknown variables in "set" checks are treated as undefined
+        - Expression evaluation is basic (comparisons, logical ops)
+        - Excluded blocks are replaced with comments to preserve line numbers
+    """
+    lines = source.split("\n")
+    result = []
+
+    # Stack to track conditional nesting
+    # Each entry: (condition_met, else_seen, include_lines)
+    # condition_met: Was the $if condition true?
+    # else_seen: Have we seen an $else yet?
+    # include_lines: Should we include lines at this level?
+    conditional_stack: list[tuple[bool, bool, bool]] = []
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+        stripped_lower = stripped.lower()
+
+        # Check for $if directive
+        if stripped_lower.startswith("$if"):
+            # Special case: Single-line $if not set ... $set ... is handled by
+            # extract_conditional_sets() and strip_conditional_directives()
+            # Skip it here to avoid double-processing
+            if re.match(
+                r"\$if\s+not\s+set\s+(\w+)\s+\$set\s+\1\b",
+                stripped,
+                re.IGNORECASE,
+            ):
+                # This is a single-line default pattern - pass through unchanged
+                result.append(line)
+                i += 1
+                continue
+
+            # Parse the condition
+            condition_met = _evaluate_if_condition(stripped, macros)
+
+            # Push new conditional context
+            # Include lines if: no parent conditional OR parent is including
+            parent_including = True if not conditional_stack else conditional_stack[-1][2]
+            include_lines = parent_including and condition_met
+
+            conditional_stack.append((condition_met, False, include_lines))
+
+            # Add comment showing the directive
+            result.append(f"* [Conditional: {stripped}]")
+            i += 1
+            continue
+
+        # Check for $elseif directive (treat as $else + $if)
+        elif stripped_lower.startswith("$elseif"):
+            if not conditional_stack:
+                # $elseif without $if - skip with warning
+                result.append(f"* [Warning: {stripped} without $if]")
+                i += 1
+                continue
+
+            # Pop the current $if context
+            condition_met, else_seen, _ = conditional_stack.pop()
+
+            if else_seen:
+                # Already saw $else, can't have $elseif
+                result.append(f"* [Warning: {stripped} after $else]")
+                conditional_stack.append((condition_met, True, False))
+                i += 1
+                continue
+
+            # Evaluate new condition (only if previous condition was false)
+            new_condition = _evaluate_if_condition(stripped.replace("$elseif", "$if", 1), macros)
+
+            # Include this block if: previous condition was false AND new condition is true
+            parent_including = True if not conditional_stack else conditional_stack[-1][2]
+            include_lines = parent_including and not condition_met and new_condition
+
+            # Push back with else_seen=False (allows more $elseif)
+            conditional_stack.append((condition_met or new_condition, False, include_lines))
+
+            result.append(f"* [Conditional: {stripped}]")
+            i += 1
+            continue
+
+        # Check for $else directive
+        elif stripped_lower.startswith("$else"):
+            if not conditional_stack:
+                # $else without $if - skip with warning
+                result.append(f"* [Warning: {stripped} without $if]")
+                i += 1
+                continue
+
+            condition_met, else_seen, _ = conditional_stack.pop()
+
+            if else_seen:
+                # Already saw $else - this is an error
+                result.append(f"* [Warning: duplicate {stripped}]")
+                conditional_stack.append((condition_met, True, False))
+                i += 1
+                continue
+
+            # Include else block if condition was false
+            parent_including = True if not conditional_stack else conditional_stack[-1][2]
+            include_lines = parent_including and not condition_met
+
+            conditional_stack.append((condition_met, True, include_lines))
+
+            result.append(f"* [Conditional: {stripped}]")
+            i += 1
+            continue
+
+        # Check for $endif directive
+        elif stripped_lower.startswith("$endif"):
+            if not conditional_stack:
+                # $endif without $if - skip with warning
+                result.append(f"* [Warning: {stripped} without $if]")
+                i += 1
+                continue
+
+            # Pop the conditional context
+            conditional_stack.pop()
+
+            result.append(f"* [Conditional: {stripped}]")
+            i += 1
+            continue
+
+        # Regular line - include or exclude based on conditional stack
+        if conditional_stack:
+            # We're inside a conditional block
+            _, _, include_lines = conditional_stack[-1]
+            if include_lines:
+                # Include this line
+                result.append(line)
+            else:
+                # Exclude this line (replace with comment to preserve line numbers)
+                leading_ws = line[: len(line) - len(line.lstrip())]
+                if stripped:  # Only comment non-empty lines
+                    result.append(f"{leading_ws}* [Excluded: {stripped}]")
+                else:
+                    result.append(line)  # Keep empty lines
+        else:
+            # Not inside a conditional - include the line
+            result.append(line)
+
+        i += 1
+
+    # Check for unclosed conditionals
+    if conditional_stack:
+        # Warning: unclosed $if directives
+        result.append(f"* [Warning: {len(conditional_stack)} unclosed $if directive(s)]")
+
+    return "\n".join(result)
+
+
+def _evaluate_if_condition(condition_line: str, macros: dict[str, str]) -> bool:
+    """Evaluate a $if condition.
+
+    Args:
+        condition_line: The $if directive line (e.g., "$if set n", "$if %n% > 5")
+        macros: Dictionary of defined variables
+
+    Returns:
+        True if condition is met, False otherwise
+
+    Examples:
+        >>> _evaluate_if_condition("$if set n", {"n": "10"})
+        True
+        >>> _evaluate_if_condition("$if not set n", {"n": "10"})
+        False
+        >>> _evaluate_if_condition("$if not set missing", {})
+        True
+    """
+    stripped = condition_line.strip()
+
+    # Pattern: $if set varname
+    match = re.match(r"\$if\s+set\s+(\w+)", stripped, re.IGNORECASE)
+    if match:
+        var_name = match.group(1)
+        return var_name in macros
+
+    # Pattern: $if not set varname
+    match = re.match(r"\$if\s+not\s+set\s+(\w+)", stripped, re.IGNORECASE)
+    if match:
+        var_name = match.group(1)
+        return var_name not in macros
+
+    # Pattern: $if varname (same as "set varname")
+    match = re.match(r"\$if\s+(\w+)\s*$", stripped, re.IGNORECASE)
+    if match:
+        var_name = match.group(1)
+        return var_name in macros
+
+    # Pattern: $if expression (e.g., $if %n% > 5)
+    # For now, basic support: expand macros and try to evaluate
+    # This is complex and would need a full expression parser
+    # For Phase 4, we'll support basic patterns
+
+    # Expand any %variable% references in the condition
+    expanded = stripped
+    for var_name, value in macros.items():
+        pattern = f"%{re.escape(var_name)}%"
+        expanded = re.sub(pattern, value, expanded)
+
+    # Try to evaluate simple comparisons
+    # Pattern: $if value1 OP value2 where OP is >=, <=, >, <, ==, !=, =
+    # Note: Must check >= and <= before > and < to avoid partial matches
+    match = re.match(
+        r"\$if\s+([^\s]+)\s*(>=|<=|>|<|==|!=|=)\s*([^\s]+)",
+        expanded,
+        re.IGNORECASE,
+    )
+    if match:
+        left = match.group(1).strip()
+        op = match.group(2).strip()
+        right = match.group(3).strip()
+
+        # Try to convert to numbers for comparison
+        try:
+            left_num = float(left)
+            right_num = float(right)
+
+            if op == ">=":
+                return left_num >= right_num
+            elif op == "<=":
+                return left_num <= right_num
+            elif op == ">":
+                return left_num > right_num
+            elif op == "<":
+                return left_num < right_num
+            elif op == "==" or op == "=":
+                return left_num == right_num
+            elif op == "!=":
+                return left_num != right_num
+        except ValueError:
+            # Not numeric - do string comparison
+            if op == "==" or op == "=":
+                return left == right
+            elif op == "!=":
+                return left != right
+            # Other ops don't make sense for strings
+            return False
+
+    # Default: if we can't parse it, assume false (conservative)
+    return False
+
+
+def preprocess_bat_includes(
+    file_path: Path,
+    source: str,
+    max_depth: int = 100,
+    _include_stack: list[Path] | None = None,
+) -> str:
+    """Process $batInclude directives with argument substitution.
+
+    $batInclude allows passing arguments to included files, where arguments
+    are referenced as %1%, %2%, %3%, etc. in the included file.
+
+    Args:
+        file_path: Path to the GAMS file being processed
+        source: Source code containing $batInclude directives
+        max_depth: Maximum allowed include nesting depth (default: 100)
+        _include_stack: Internal parameter for tracking include chain
+
+    Returns:
+        Source code with $batInclude directives expanded
+
+    Example:
+        >>> # In main.gms:
+        >>> # $batInclude helper.inc foo bar
+        >>> # In helper.inc:
+        >>> # Set s%1% /%2%/;
+        >>> # After expansion:
+        >>> # Set sfoo /bar/;
+
+    Notes:
+        - Arguments are whitespace-separated
+        - %1% refers to first argument, %2% to second, etc.
+        - If included file doesn't exist, directive is commented out
+        - Paths are resolved relative to the containing file
+    """
+    # Initialize include stack on first call
+    if _include_stack is None:
+        _include_stack = []
+
+    # Normalize path for consistent comparison
+    file_path = file_path.resolve()
+
+    # Check depth limit
+    current_depth = len(_include_stack)
+    if current_depth >= max_depth:
+        raise IncludeDepthExceededError(current_depth, max_depth, file_path)
+
+    # Pattern matches: $batInclude filename arg1 arg2 ...
+    # Case-insensitive, allows optional whitespace
+    bat_include_pattern = r'\$batInclude\s+(?:"([^"]+)"|(\S+))(.*)$'
+
+    # Track position for building result
+    result_parts = []
+    last_end = 0
+
+    # Add current file to include stack
+    new_stack = _include_stack + [file_path]
+
+    # Process all $batInclude directives
+    for match in re.finditer(bat_include_pattern, source, re.IGNORECASE | re.MULTILINE):
+        # Add content before this include
+        result_parts.append(source[last_end : match.start()])
+
+        # Get the included filename (either from quoted or unquoted group)
+        included_filename = match.group(1) or match.group(2)
+
+        # Get arguments (everything after filename, split by whitespace)
+        args_str = match.group(3).strip()
+        args = args_str.split() if args_str else []
+
+        # Resolve path relative to the file containing the $batInclude
+        included_path = (file_path.parent / included_filename).resolve()
+
+        # Check if file exists
+        if not included_path.exists():
+            # File doesn't exist - comment out the directive
+            result_parts.append(
+                f"\n* [Stripped: $batInclude {included_filename} {args_str} - file not found]\n"
+            )
+            last_end = match.end()
+            continue
+
+        # Check for circular includes
+        if included_path in new_stack:
+            chain = new_stack + [included_path]
+            raise CircularIncludeError(chain)
+
+        # Read the included file
+        included_content = included_path.read_text()
+
+        # Substitute %1, %2, etc. with arguments
+        # Note: GAMS $batInclude uses %1, %2, etc. (not %1%, %2%)
+        for i, arg in enumerate(args, 1):
+            # Use regex to match %N where N is the argument number
+            # Must use word boundary or lookahead to avoid matching %10 when looking for %1
+            # Pattern matches %N followed by non-digit or end of string
+            arg_pattern = rf"%{i}(?!\d)"
+            included_content = re.sub(arg_pattern, arg, included_content)
+
+        # Add debug comment showing include boundary
+        result_parts.append(f"\n* BEGIN BATINCLUDE: {included_filename} {args_str}\n")
+
+        # Recursively process the included file for nested $batInclude directives
+        included_content = preprocess_bat_includes(
+            included_path,
+            included_content,
+            max_depth=max_depth,
+            _include_stack=new_stack,
+        )
+
+        result_parts.append(included_content)
+
+        # Add end marker
+        result_parts.append(f"\n* END BATINCLUDE: {included_filename}\n")
+
+        last_end = match.end()
+
+    # Add remaining content after last include
+    result_parts.append(source[last_end:])
+
+    return "".join(result_parts)
+
+
 def preprocess_includes(
     file_path: Path,
     max_depth: int = 100,
@@ -339,6 +740,118 @@ def extract_conditional_sets(source: str) -> dict[str, str]:
     return macros
 
 
+def extract_set_directives(
+    source: str, existing_macros: dict[str, str] | None = None
+) -> dict[str, str]:
+    """Extract variable assignments from $set directives.
+
+    Parses lines like: $set varname value
+    Returns a dictionary mapping variable names to their values.
+
+    This extends the preprocessor to support general $set directives,
+    not just $if not set patterns. Values can be quoted strings,
+    numbers, or unquoted identifiers.
+
+    Args:
+        source: GAMS source code text
+        existing_macros: Optional dict of already-defined macros to expand within values
+
+    Returns:
+        Dictionary mapping variable names to values
+
+    Example:
+        >>> source = '$set n 10\\n$set np %n%+1\\nSet ip /1*%np%/;'
+        >>> macros = extract_set_directives(source, {'n': '10'})
+        >>> macros
+        {'n': '10', 'np': '10+1'}
+
+    Notes:
+        - Case-insensitive matching for $set directive
+        - Variable name case from first occurrence is preserved
+        - Handles both quoted and unquoted values
+        - If multiple $set directives set the same variable, later ones override
+        - Unquoted values can contain: identifiers, numbers, dots, hyphens, plus signs
+        - Expands %macros% within values using existing_macros
+    """
+    if existing_macros is None:
+        existing_macros = {}
+
+    macros: dict[str, str] = {}
+
+    # Pattern: $set varname value
+    # Matches: $set n 10
+    #          $set path "c:\data\models"
+    #          $set tol 1e-6
+    #          $if set n $set np %n%  (extracts the $set np %n% part)
+    # Case-insensitive for $set directive, preserves case for variable names
+    # The pattern looks for $set followed by variable name and value
+    # It can appear anywhere in the line (e.g., after $if directives)
+    # For unquoted values, match everything except semicolon and newline
+    pattern = r'\$set\s+(\w+)\s+(?:"([^"]*)"|([^;\n]+))'
+
+    for match in re.finditer(pattern, source, re.IGNORECASE):
+        var_name = match.group(1)
+        # Get value from either quoted (group 2) or unquoted (group 3)
+        value = match.group(2) if match.group(2) is not None else match.group(3)
+        # Strip whitespace from unquoted values
+        if match.group(2) is None:
+            value = value.strip()
+
+        # Expand any %macro% references within the value using existing macros
+        # This handles cases like: $set np %n%+1
+        expanded_value = expand_macros(value, {**existing_macros, **macros})
+
+        macros[var_name] = expanded_value
+
+    return macros
+
+
+def extract_macro_definitions(source: str) -> dict[str, tuple[list[str], str]]:
+    """Extract $macro function definitions.
+
+    Parses lines like: $macro name(param1, param2) body
+    Returns a dictionary mapping macro names to (parameters, body) tuples.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Dictionary mapping macro names to (parameter_list, body) tuples
+
+    Example:
+        >>> source = '$macro fx(t) %scale%*t\\nx =e= fx(y);'
+        >>> macros = extract_macro_definitions(source)
+        >>> macros
+        {'fx': (['t'], '%scale%*t')}
+
+    Notes:
+        - Case-insensitive matching for $macro directive
+        - Macro name and parameter names are case-preserving
+        - Body can contain %variable% references
+        - Parameters are whitespace-trimmed
+    """
+    macros: dict[str, tuple[list[str], str]] = {}
+
+    # Pattern: $macro name(param1, param2, ...) body
+    # Matches: $macro fx(t) %scale%*t
+    #          $macro sum2(i,j,expr) sum(i, sum(j, expr))
+    # Case-insensitive for $macro directive
+    # Body extends to end of line
+    pattern = r"\$macro\s+(\w+)\(([^)]*)\)\s+(.+)"
+
+    for match in re.finditer(pattern, source, re.IGNORECASE):
+        name = match.group(1)
+        params_str = match.group(2)
+        body = match.group(3).strip()
+
+        # Parse parameter list (comma-separated, whitespace-trimmed)
+        params = [p.strip() for p in params_str.split(",")] if params_str.strip() else []
+
+        macros[name] = (params, body)
+
+    return macros
+
+
 def expand_macros(source: str, macros: dict[str, str]) -> str:
     """Expand %macro% references with their values.
 
@@ -377,6 +890,132 @@ def expand_macros(source: str, macros: dict[str, str]) -> str:
         result = re.sub(pattern, lambda m: value, result)
 
     return result
+
+
+def expand_macro_calls(source: str, macro_defs: dict[str, tuple[list[str], str]]) -> str:
+    """Expand macro function calls with argument substitution.
+
+    Replaces macro calls like fx(arg1, arg2) with the macro body,
+    substituting parameters with the provided arguments.
+
+    Args:
+        source: GAMS source code text with macro calls
+        macro_defs: Dictionary mapping macro names to (parameters, body) tuples
+
+    Returns:
+        Source code with macro calls expanded
+
+    Example:
+        >>> source = "x =e= fx(t('1'));"
+        >>> macro_defs = {'fx': (['t'], 'sin(t) * cos(t-t*t)')}
+        >>> expand_macro_calls(source, macro_defs)
+        "x =e= sin(t('1')) * cos(t('1')-t('1')*t('1'));"
+
+    Notes:
+        - Performs textual substitution of parameters with arguments
+        - Arguments can contain parentheses (e.g., t('1'))
+        - Multiple macro calls can appear in the same line
+        - Macro calls are case-sensitive (GAMS convention)
+    """
+    result = source
+
+    for name, (params, body) in macro_defs.items():
+        # Pattern: name(args)
+        # Need to handle nested parentheses in arguments (e.g., fx(t('1')))
+        # Use a more sophisticated approach: find all occurrences and parse carefully
+
+        # Build regex pattern for this macro call
+        # Match: name followed by (
+        pattern = rf"\b{re.escape(name)}\("
+
+        # Process all matches from end to start to avoid offset issues
+        matches = list(re.finditer(pattern, result))
+
+        # Process in reverse order to maintain string positions
+        for match in reversed(matches):
+            start_pos = match.start()
+            # Find the matching closing parenthesis
+            paren_start = match.end() - 1  # Position of opening (
+            paren_count = 1
+            pos = paren_start + 1
+            args_str = ""
+
+            while pos < len(result) and paren_count > 0:
+                if result[pos] == "(":
+                    paren_count += 1
+                elif result[pos] == ")":
+                    paren_count -= 1
+                    if paren_count == 0:
+                        # Found matching closing paren
+                        args_str = result[paren_start + 1 : pos]
+                        break
+                pos += 1
+
+            if paren_count != 0:
+                # Unmatched parentheses - skip this match
+                continue
+
+            # Parse arguments (comma-separated, but respect nested parens)
+            args = _parse_macro_arguments(args_str)
+
+            # Check if argument count matches parameter count
+            if len(args) != len(params):
+                # Argument count mismatch - skip this expansion
+                # This could be a different function with the same name
+                continue
+
+            # Substitute parameters with arguments in the body
+            expanded = body
+            for param, arg in zip(params, args, strict=True):
+                # Use word boundaries to avoid partial replacements
+                # But also handle cases where param is followed by non-word chars
+                param_pattern = rf"\b{re.escape(param)}\b"
+                expanded = re.sub(param_pattern, arg, expanded)
+
+            # Replace the macro call with the expanded body
+            call_end = pos + 1  # Position after closing )
+            result = result[:start_pos] + expanded + result[call_end:]
+
+    return result
+
+
+def _parse_macro_arguments(args_str: str) -> list[str]:
+    """Parse comma-separated macro arguments, respecting nested parentheses.
+
+    Args:
+        args_str: String containing comma-separated arguments
+
+    Returns:
+        List of argument strings (whitespace-trimmed)
+
+    Example:
+        >>> _parse_macro_arguments("t('1'), x+y")
+        ["t('1')", "x+y"]
+    """
+    if not args_str.strip():
+        return []
+
+    args = []
+    current_arg = ""
+    paren_depth = 0
+
+    for char in args_str:
+        if char == "," and paren_depth == 0:
+            # Argument separator at top level
+            args.append(current_arg.strip())
+            current_arg = ""
+        else:
+            if char == "(":
+                paren_depth += 1
+            elif char == ")":
+                paren_depth -= 1
+            current_arg += char
+
+    # Add the last argument
+    if current_arg.strip():
+        args.append(current_arg.strip())
+
+    return args
 
 
 def strip_conditional_directives(source: str) -> str:
@@ -418,16 +1057,407 @@ def strip_conditional_directives(source: str) -> str:
     return "\n".join(filtered)
 
 
+def strip_set_directives(source: str) -> str:
+    """Strip $set directives, replacing with comments.
+
+    Removes $set directives from the source while preserving
+    line numbers by replacing them with comment lines.
+    Also strips lines containing $if ... $set patterns.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with $set directives replaced by comments
+
+    Example:
+        >>> source = '$set n 10\\nSet i /1*%n%/;'
+        >>> result = strip_set_directives(source)
+        >>> # Result: '* [Stripped: $set n 10]\\nSet i /1*%n%/;'
+
+    Notes:
+        - Preserves line numbers for accurate error reporting
+        - Should be called after expand_macros() to avoid losing values
+        - Also strips $if set/not set lines containing $set
+    """
+    lines = source.split("\n")
+    filtered = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Check if this line contains a $set directive (standalone or after $if)
+        # Matches: $set n 10
+        #          $if set n $set np %n%
+        #          $if not set n $set n 10
+        if re.search(r"\$set\b", stripped, re.IGNORECASE):
+            # Replace with comment to preserve line number, preserving original indentation
+            leading_ws = line[: len(line) - len(line.lstrip())]
+            filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
+        else:
+            # Keep line unchanged
+            filtered.append(line)
+
+    return "\n".join(filtered)
+
+
+def strip_macro_directives(source: str) -> str:
+    """Strip $macro directives, replacing with comments.
+
+    Removes $macro definitions from the source while preserving
+    line numbers by replacing them with comment lines.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with $macro directives replaced by comments
+
+    Example:
+        >>> source = '$macro fx(t) %fx%\\nx =e= fx(y);'
+        >>> result = strip_macro_directives(source)
+        >>> # Result: '* [Stripped: $macro fx(t) %fx%]\\nx =e= sin(y) * cos(y);'
+
+    Notes:
+        - Preserves line numbers for accurate error reporting
+        - Should be called after expand_macro_calls() to avoid losing expansions
+    """
+    lines = source.split("\n")
+    filtered = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Check if this line contains a $macro directive
+        if re.search(r"\$macro\b", stripped, re.IGNORECASE):
+            # Replace with comment to preserve line number, preserving original indentation
+            leading_ws = line[: len(line) - len(line.lstrip())]
+            filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
+        else:
+            # Keep line unchanged
+            filtered.append(line)
+
+    return "\n".join(filtered)
+
+
+def normalize_multi_line_continuations(source: str) -> str:
+    """Add missing commas for implicit line continuations in data blocks.
+
+    GAMS allows multi-line set/parameter declarations without trailing commas.
+    For example:
+        Set i /
+            a
+            b
+            c
+        /;
+
+    This function normalizes such declarations by inserting commas at line ends,
+    making them parseable by the grammar which requires explicit separators.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with commas inserted at appropriate line ends
+
+    Example:
+        >>> source = "Set i /\\n    a\\n    b\\n/;"
+        >>> result = normalize_multi_line_continuations(source)
+        >>> # Result: "Set i /\\n    a,\\n    b\\n/;"
+
+    Notes:
+        - Only processes lines within /.../ data blocks
+        - Skips lines that already end with comma, slash, or semicolon
+        - Skips lines that are comments or empty
+        - Preserves original whitespace and indentation
+    """
+    lines = source.split("\n")
+    result = []
+    in_data_block = False
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+
+        # Track if we're inside a /.../ data block
+        # Only treat / as data block delimiter if it appears in a declaration context
+        if "/" in line and not in_data_block:
+            # If line ends with ; and has only 1 slash, it's likely division (e.g., "x = a/2;")
+            # not a data block
+            if stripped.endswith(";") and line.count("/") == 1:
+                result.append(line)
+                continue
+
+            # Check if / appears after a declaration keyword (Set, Parameter, Scalar, Alias)
+            # Use a simple heuristic: look for these keywords before the /
+            if not re.search(
+                r"\b(Set|Parameter|Scalar|Alias)\b", line[: line.find("/")], re.IGNORECASE
+            ):
+                # No declaration keyword before /, likely an expression or other context
+                result.append(line)
+                continue
+
+            # Entering a data block
+            # Check if it also closes on the same line (e.g., Set i / a, b /;)
+            slash_count = line.count("/")
+            if slash_count >= 2:
+                # Both opening and closing slash on same line
+                result.append(line)
+                continue
+
+            # Opening slash - check if there's data after it
+            slash_idx = line.find("/")
+            after_slash = line[slash_idx + 1 :].strip()
+
+            if after_slash:
+                # Data on same line as opening /, e.g., "Set i / i-1"
+                # Need to check if this needs a comma (if more data follows)
+                in_data_block = True
+
+                # Look ahead to see if next line has more data
+                needs_comma = False
+                if i + 1 < len(lines):
+                    next_stripped = lines[i + 1].strip()
+                    # If next line has data (not just closing /), we need comma
+                    if next_stripped and not next_stripped.startswith("*"):
+                        if "/" in next_stripped:
+                            # Check if there's data before the /
+                            next_slash_idx = next_stripped.find("/")
+                            before_slash = next_stripped[:next_slash_idx].strip()
+                            if before_slash:
+                                # Next line has data before /, so current line needs comma
+                                needs_comma = True
+                        else:
+                            # Next line has data without /, so current line needs comma
+                            needs_comma = True
+
+                if needs_comma:
+                    result.append(line + ",")
+                else:
+                    result.append(line)
+                continue
+            else:
+                # Just opening slash on this line
+                in_data_block = True
+                result.append(line)
+                continue
+
+        # If we're in a data block, process the line
+        if in_data_block and stripped:
+            # Skip if line is a comment
+            if stripped.startswith("*"):
+                result.append(line)
+                continue
+
+            # Check if this line contains the closing /
+            if "/" in stripped:
+                # This line closes the block
+                # It may have data before the / (e.g., "i-2  /") or just be "/" alone
+                # Don't add comma - the closing / indicates this is the last element
+                result.append(line)
+                in_data_block = False
+                continue
+
+            # Regular data line within block
+            # Skip if line already ends with a comma or semicolon
+            if stripped.endswith((",", ";")):
+                result.append(line)
+                continue
+
+            # Check if next line closes the block or has more data
+            needs_comma = True
+            if i + 1 < len(lines):
+                next_stripped = lines[i + 1].strip()
+                # If next line starts with / or only contains /, this is last element
+                if next_stripped == "/" or next_stripped.startswith("/;"):
+                    needs_comma = False
+                # If next line has data followed by /, this is not the last element
+                elif "/" in next_stripped:
+                    slash_idx = next_stripped.find("/")
+                    before_slash = next_stripped[:slash_idx].strip()
+                    if before_slash:
+                        # Next line has data before /, so current line needs comma
+                        needs_comma = True
+                    else:
+                        # Next line is just /, current line is last element
+                        needs_comma = False
+
+            if needs_comma:
+                result.append(line + ",")
+            else:
+                result.append(line)
+        else:
+            result.append(line)
+
+    return "\n".join(result)
+
+
+def normalize_special_identifiers(source: str) -> str:
+    """Quote identifiers containing special characters (-, +) in data blocks.
+
+    GAMS allows hyphens and plus signs in identifiers (e.g., light-ind, food+agr).
+    To avoid ambiguity with arithmetic operators, we quote these identifiers when
+    they appear in /.../ data blocks or table headers.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with special identifiers quoted
+
+    Example:
+        Set i / light-ind, food+agr /;
+        →
+        Set i / 'light-ind', 'food+agr' /;
+
+    Notes:
+        - Processes identifiers within /.../ data blocks
+        - Processes identifiers in table headers (after Table keyword)
+        - Preserves already-quoted strings
+        - Detects identifiers with - or + that aren't arithmetic operators
+        - Uses context: no surrounding whitespace = identifier
+    """
+    lines = source.split("\n")
+    result = []
+    in_data_block = False
+    in_table = False
+    table_header_seen = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Check if we're starting a table
+        if re.match(r"^Table\b", stripped, re.IGNORECASE):
+            in_table = True
+            table_header_seen = False
+            result.append(line)
+            continue
+
+        # If in a table, process header and data rows
+        if in_table:
+            # Table ends with a semicolon
+            if stripped.endswith(";"):
+                in_table = False
+                # Still process this line (could be data row)
+                processed = _quote_special_in_line(line)
+                result.append(processed)
+                continue
+
+            # First non-empty line after Table declaration is the header
+            if not table_header_seen and stripped:
+                table_header_seen = True
+                processed = _quote_special_in_line(line)
+                result.append(processed)
+                continue
+
+            # All table rows (data rows with row labels and values)
+            if stripped:
+                processed = _quote_special_in_line(line)
+                result.append(processed)
+                continue
+
+        # Track if we're inside a /.../ data block
+        # Only consider / as data block delimiter if line starts with declaration keyword
+        if "/" in line and not in_data_block:
+            # Check if this is actually a data block (not division in equations)
+            # Data blocks appear after Set, Parameter, Scalar, Alias keywords
+            is_declaration = re.match(r"^\s*(Set|Parameter|Scalar|Alias)\b", line, re.IGNORECASE)
+            if is_declaration:
+                # Check if entering a data block
+                slash_count = line.count("/")
+                if slash_count == 1:
+                    # Opening a data block
+                    in_data_block = True
+                elif slash_count >= 2:
+                    # Inline block - process it
+                    processed = _quote_special_in_line(line)
+                    result.append(processed)
+                    continue
+        elif "/" in line and in_data_block:
+            # Check if closing the data block
+            if line.strip().endswith("/") or line.strip().endswith("/;"):
+                in_data_block = False
+
+        # Process line if in data block
+        if in_data_block:
+            processed = _quote_special_in_line(line)
+            result.append(processed)
+        else:
+            result.append(line)
+
+    return "\n".join(result)
+
+
+def _quote_special_in_line(line: str) -> str:
+    """Quote identifiers with special chars in a single line.
+
+    Detects patterns like:
+    - word-word (no spaces around -)
+    - word+word (no spaces around +)
+
+    And wraps them in quotes if not already quoted.
+    """
+    # Skip if line is a comment
+    if line.strip().startswith("*"):
+        return line
+
+    # Pattern: identifier with - or + that's NOT surrounded by whitespace
+    # This distinguishes:
+    #   light-ind (identifier) vs x1 - 1 (arithmetic)
+    #   food+agr (identifier) vs x + y (arithmetic)
+    #
+    # Match: Start of identifier, then word chars, then one or more (-/+ followed by word chars)
+    # Word boundary at start to ensure we match the full identifier
+    # Note: This function is only called for lines in data blocks (Set/Parameter/etc.),
+    # so we don't need to worry about matching arithmetic in equations
+    pattern = r"\b([a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+)\b"
+
+    def replace_if_not_quoted(match):
+        """Replace match with quoted version if not already in quotes."""
+        matched_text = match.group(1)
+        start_pos = match.start()
+
+        # Check if already inside a quoted string
+        # Count quotes before this position
+        before = line[:start_pos]
+        single_quotes = before.count("'")
+        double_quotes = before.count('"')
+
+        # If odd number of quotes, we're inside a string
+        if single_quotes % 2 == 1 or double_quotes % 2 == 1:
+            return matched_text
+
+        # Check if there's whitespace around -/+ to distinguish from operators
+        # Look at the context around the identifier
+        # If the identifier is preceded/followed by whitespace around the operator, skip it
+        # This is already handled by the pattern requiring word boundaries
+
+        # Quote the identifier
+        return f"'{matched_text}'"
+
+    # Apply the replacement
+    processed = re.sub(pattern, replace_if_not_quoted, line)
+    return processed
+
+
 def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
     This is the main entry point for preprocessing GAMS files.
     It performs preprocessing in the following order:
     1. Expand $include directives recursively
-    2. Extract macro defaults from $if not set directives
-    3. Expand %macro% references
-    4. Strip conditional directives ($if not set)
-    5. Strip other unsupported directives ($title, $ontext, etc.)
+    2. Expand $batInclude directives with argument substitution
+    3. Extract macro defaults from $if not set directives
+    4. Extract general $set directives
+    5. Process $if/$else/$endif conditional blocks
+    6. Expand %variable% references
+    7. Extract $macro definitions
+    8. Expand macro function calls
+    9. Strip conditional directives ($if not set)
+    10. Strip $set directives
+    11. Strip $macro directives
+    12. Strip other unsupported directives ($title, $ontext, etc.)
+    13. Normalize multi-line continuations (add missing commas)
+    14. Quote identifiers with special characters (-, +) in data blocks
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -450,14 +1480,50 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     # Step 1: Expand all $include directives recursively
     content = preprocess_includes(file_path)
 
-    # Step 2: Extract macro defaults from $if not set directives
+    # Step 2: Expand $batInclude directives with argument substitution
+    # This must happen after regular includes so that $batInclude can reference
+    # files that were themselves included via $include
+    content = preprocess_bat_includes(file_path, content)
+
+    # Step 3: Extract macro defaults from $if not set directives
     macros = extract_conditional_sets(content)
 
-    # Step 3: Expand %macro% references with their values
+    # Step 4: Extract general $set directives (merge with conditional sets)
+    # Pass existing macros so that $set can reference earlier macros
+    set_macros = extract_set_directives(content, macros)
+    macros.update(set_macros)  # $set directives override conditional defaults
+
+    # Step 5: Process $if/$else/$endif conditional blocks
+    # This must happen after extracting macros so conditionals can test variable definitions
+    # but before expanding %variable% so conditional blocks are removed first
+    content = process_conditionals(content, macros)
+
+    # Step 6: Expand %variable% references with their values
     content = expand_macros(content, macros)
 
-    # Step 4: Strip $if not set directives (replaced with comments)
+    # Step 7: Extract $macro function definitions
+    # This must happen after %variable% expansion so that macro bodies have variables expanded
+    # For example: $macro fx(t) %fx% becomes $macro fx(t) sin(t) * cos(t-t*t)
+    macro_defs = extract_macro_definitions(content)
+
+    # Step 8: Expand macro function calls
+    # Replace fx(t('1')) with sin(t('1')) * cos(t('1')-t('1')*t('1'))
+    content = expand_macro_calls(content, macro_defs)
+
+    # Step 9: Strip $if not set directives (replaced with comments)
     content = strip_conditional_directives(content)
 
-    # Step 5: Strip other unsupported directives ($title, $ontext, etc.)
-    return strip_unsupported_directives(content)
+    # Step 10: Strip $set directives (replaced with comments)
+    content = strip_set_directives(content)
+
+    # Step 11: Strip $macro directives (replaced with comments)
+    content = strip_macro_directives(content)
+
+    # Step 12: Strip other unsupported directives ($title, $ontext, etc.)
+    content = strip_unsupported_directives(content)
+
+    # Step 13: Normalize multi-line continuations (add missing commas)
+    content = normalize_multi_line_continuations(content)
+
+    # Step 14: Quote identifiers with special characters (-, +) in data blocks
+    return normalize_special_identifiers(content)
