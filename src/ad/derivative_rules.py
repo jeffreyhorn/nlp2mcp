@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from ..config import Config
     from ..ir.ast import Expr
 
-from ..ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, Unary, VarRef
+from ..ir.ast import Binary, Call, Const, DollarConditional, ParamRef, Sum, SymbolRef, Unary, VarRef
 
 
 def differentiate_expr(
@@ -137,6 +137,10 @@ def differentiate_expr(
     # Day 3: Function calls (power, exp, log, sqrt, trig)
     elif isinstance(expr, Call):
         return _diff_call(expr, wrt_var, wrt_indices, config)
+
+    # Dollar conditional: d/dx[f$g] = (df/dx)$g
+    elif isinstance(expr, DollarConditional):
+        return _diff_dollar_conditional(expr, wrt_var, wrt_indices, config)
 
     # Day 5: Sum aggregations
     elif isinstance(expr, Sum):
@@ -1107,6 +1111,52 @@ def _diff_abs(
 # ============================================================================
 # Day 5: Sum Aggregations
 # ============================================================================
+
+
+def _diff_dollar_conditional(
+    expr: DollarConditional,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of dollar conditional: value_expr$condition
+
+    Mathematical rule:
+    d/dx[f$g] = (df/dx)$g
+
+    The condition g is treated as a constant multiplier (0 or 1), so only the
+    value expression f is differentiated. The condition itself is not differentiated.
+
+    This follows from the mathematical interpretation:
+    - f$g = f * indicator(g != 0)
+    - d/dx[f * indicator(g != 0)] = (df/dx) * indicator(g != 0) = (df/dx)$g
+
+    Args:
+        expr: DollarConditional expression with value_expr and condition
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+        config: Optional configuration
+
+    Returns:
+        DollarConditional with differentiated value_expr and original condition
+
+    Examples:
+        >>> # d/dx[(x+1)$y] = 1$y
+        >>> expr = DollarConditional(Binary("+", VarRef("x"), Const(1)), VarRef("y"))
+        >>> result = _diff_dollar_conditional(expr, "x")
+        >>> # result is DollarConditional(Const(1), VarRef("y"))
+
+        >>> # d/dx[s(n)$rn(n)] = 0 (s is a parameter, not differentiating w.r.t. s)
+        >>> expr = DollarConditional(ParamRef("s", ("n",)), ParamRef("rn", ("n",)))
+        >>> result = _diff_dollar_conditional(expr, "x")
+        >>> # result is DollarConditional(Const(0), ParamRef("rn", ("n",)))
+    """
+    # Differentiate the value expression
+    dvalue_dx = differentiate_expr(expr.value_expr, wrt_var, wrt_indices, config)
+
+    # Keep the condition unchanged (it acts as a constant multiplier)
+    return DollarConditional(dvalue_dx, expr.condition)
 
 
 def _diff_sum(
