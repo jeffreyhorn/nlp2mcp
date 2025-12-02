@@ -2283,3 +2283,269 @@ class TestLagLeadOperators:
         assert "fxsum" in model.equations
         assert "defr" in model.equations
         assert model.equations["defr"].domain == ("k",)
+
+
+class TestMultiDimensionalParameters:
+    """Test multi-dimensional parameter data with dotted notation (Issue #139)."""
+
+    def test_2d_parameter_dotted_notation(self):
+        """Test 2D parameter with dotted notation (i.j)."""
+        text = dedent(
+            """
+            Sets
+                i /i1, i2/
+                j /j1, j2/
+            ;
+
+            Parameters
+                a(i, j) /
+                    i1.j1 1.0,
+                    i1.j2 2.0,
+                    i2.j1 3.0,
+                    i2.j2 4.0
+                /
+            ;
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "a" in model.params
+        assert model.params["a"].domain == ("i", "j")
+        assert model.params["a"].values == {
+            ("i1", "j1"): 1.0,
+            ("i1", "j2"): 2.0,
+            ("i2", "j1"): 3.0,
+            ("i2", "j2"): 4.0,
+        }
+
+    def test_3d_parameter_dotted_notation(self):
+        """Test 3D parameter with dotted notation (i.j.k)."""
+        text = dedent(
+            """
+            Sets
+                i /i1, i2/
+                j /j1, j2/
+                k /k1, k2/
+            ;
+
+            Parameters
+                a(i, j, k) /
+                    i1.j1.k1 1.0,
+                    i1.j2.k2 2.0,
+                    i2.j1.k1 3.0
+                /
+            ;
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "a" in model.params
+        assert model.params["a"].domain == ("i", "j", "k")
+        assert model.params["a"].values == {
+            ("i1", "j1", "k1"): 1.0,
+            ("i1", "j2", "k2"): 2.0,
+            ("i2", "j1", "k1"): 3.0,
+        }
+
+    def test_2d_parameter_sparse_data(self):
+        """Test 2D parameter with sparse data (not all combinations specified)."""
+        text = dedent(
+            """
+            Sets
+                i /i1, i2, i3/
+                j /j1, j2, j3/
+            ;
+
+            Parameters
+                cost(i, j) /
+                    i1.j1 10.0,
+                    i1.j3 15.0,
+                    i3.j2 20.0
+                /
+            ;
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["cost"].values == {
+            ("i1", "j1"): 10.0,
+            ("i1", "j3"): 15.0,
+            ("i3", "j2"): 20.0,
+        }
+        # Unspecified values should not be in the dict (sparse representation)
+        assert ("i1", "j2") not in model.params["cost"].values
+        assert ("i2", "j1") not in model.params["cost"].values
+
+    def test_2d_parameter_in_equation(self):
+        """Test using 2D parameter in equation."""
+        text = dedent(
+            """
+            Sets
+                i /i1, i2/
+                j /j1, j2/
+            ;
+
+            Parameters
+                cost(i, j) /
+                    i1.j1 5.0,
+                    i1.j2 10.0,
+                    i2.j1 7.0,
+                    i2.j2 12.0
+                /
+            ;
+
+            Variables
+                x(i,j)
+                obj
+            ;
+
+            Equations
+                objdef
+            ;
+
+            objdef.. obj =e= sum(i, sum(j, cost(i,j) * x(i,j)));
+
+            Model test /all/;
+            Solve test using NLP minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "cost" in model.params
+        assert len(model.params["cost"].values) == 4
+
+    def test_2d_parameter_transportation_problem(self):
+        """Test realistic transportation problem with cost matrix."""
+        text = dedent(
+            """
+            Sets
+                sources /s1, s2/
+                destinations /d1, d2, d3/
+            ;
+
+            Parameters
+                cost(sources, destinations) 'shipping cost' /
+                    s1.d1 10.0,
+                    s1.d2 20.0,
+                    s1.d3 15.0,
+                    s2.d1 12.0,
+                    s2.d2 18.0,
+                    s2.d3 25.0
+                /
+                supply(sources) / s1 100, s2 150 /
+                demand(destinations) / d1 80, d2 90, d3 80 /
+            ;
+
+            Variables
+                ship(sources, destinations)
+                total_cost
+            ;
+
+            Equations
+                objective
+            ;
+
+            objective.. total_cost =e= sum(sources, sum(destinations,
+                                      cost(sources, destinations) * ship(sources, destinations)));
+
+            Model transport /all/;
+            Solve transport using NLP minimizing total_cost;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert len(model.params["cost"].values) == 6
+        assert model.params["cost"].values[("s1", "d1")] == 10.0
+        assert model.params["cost"].values[("s2", "d3")] == 25.0
+
+    def test_2d_parameter_validation_invalid_index(self):
+        """Test that invalid indices are caught."""
+        text = dedent(
+            """
+            Sets
+                i /i1, i2/
+                j /j1, j2/
+            ;
+
+            Parameters
+                a(i, j) /
+                    i1.j1 1.0,
+                    i1.j3 2.0
+                /
+            ;
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        with pytest.raises(parser.ParserSemanticError, match="not present in set"):
+            parser.parse_model_text(text)
+
+    def test_2d_parameter_validation_dimension_mismatch(self):
+        """Test that dimension mismatch is caught."""
+        text = dedent(
+            """
+            Sets
+                i /i1, i2/
+                j /j1, j2/
+            ;
+
+            Parameters
+                a(i, j) /
+                    i1 1.0
+                /
+            ;
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        with pytest.raises(parser.ParserSemanticError, match="index mismatch"):
+            parser.parse_model_text(text)
+
+    def test_4d_parameter(self):
+        """Test 4D parameter to ensure arbitrary dimensions work."""
+        text = dedent(
+            """
+            Sets
+                i /i1/
+                j /j1/
+                k /k1/
+                l /l1/
+            ;
+
+            Parameters
+                a(i, j, k, l) /
+                    i1.j1.k1.l1 42.0
+                /
+            ;
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["a"].domain == ("i", "j", "k", "l")
+        assert model.params["a"].values[("i1", "j1", "k1", "l1")] == 42.0
