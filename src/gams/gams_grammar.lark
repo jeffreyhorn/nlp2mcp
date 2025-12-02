@@ -195,7 +195,8 @@ ref_indexed.2: ID "(" index_list ")"             -> symbol_indexed
 index_list: index_expr ("," index_expr)*
 
 // Sprint 11 Day 2 Extended: Support subset indexing like low(n,nn)
-index_expr: ID "(" id_list ")" lag_lead_suffix?  -> index_subset
+// Also support lag/lead inside subset like nh(i+1)
+index_expr: ID "(" index_list ")" lag_lead_suffix?  -> index_subset
           | ID lag_lead_suffix?                   -> index_simple
 
 lag_lead_suffix: CIRCULAR_LEAD offset_expr   -> circular_lead
@@ -220,7 +221,8 @@ equation_def: ID "(" domain_list ")" condition? ".." expr REL_K expr SEMI    -> 
 domain_list: domain_element ("," domain_element)*
 
 // Domain element can be simple (i) or subset with indices (low(n,nn))
-domain_element: ID ("(" id_list ")")?
+domain_element: ID ("(" index_list ")")?
+              | ID lag_lead_suffix
 
 condition: "$" "(" expr ")"
 
@@ -362,8 +364,8 @@ symbol_plain: ID
 compile_time_const: "%" compile_const_path "%"
 compile_const_path: ID ("." ID)*
 
-sum_expr: SUM_K "(" id_list "," expr ")"   -> sum
-        | SUM_K "{" id_list "," expr "}"   -> sum
+sum_expr: SUM_K "(" index_list "," expr ")"   -> sum
+        | SUM_K "{" index_list "," expr "}"   -> sum
 
 func_call.3: FUNCNAME "(" arg_list? ")"
 arg_list: expr ("," expr)*

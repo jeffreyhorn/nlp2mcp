@@ -343,6 +343,7 @@ def _domain_list(node: Tree) -> tuple[str, ...]:
         - Simple:      i                -> 'i'
         - Nested:      low(n,nn)        -> 'n', 'nn'
         - Mixed:       i, low(n,nn), k  -> 'i', 'n', 'nn', 'k'
+        - Lag/Lead:    i+1              -> 'i'  (extract base identifier)
 
     Returns a flat tuple of all identifier names used in the domain.
     """
@@ -351,7 +352,8 @@ def _domain_list(node: Tree) -> tuple[str, ...]:
         if not isinstance(domain_elem, Tree) or domain_elem.data != "domain_element":
             continue
 
-        # domain_element: ID ("(" id_list ")")?
+        # domain_element: ID ("(" index_list ")")?
+        #               | ID lag_lead_suffix
         # First child is always the ID
         if domain_elem.children:
             first_child = domain_elem.children[0]
@@ -359,13 +361,53 @@ def _domain_list(node: Tree) -> tuple[str, ...]:
                 # Simple domain: just the ID
                 if len(domain_elem.children) == 1:
                     identifiers.append(_token_text(first_child))
-                # Nested domain: ID "(" id_list ")"
-                # Extract identifiers from the id_list (the indices, not the subset name)
-                elif len(domain_elem.children) == 2 and isinstance(domain_elem.children[1], Tree):
-                    id_list_node = domain_elem.children[1]
-                    identifiers.extend(_id_list(id_list_node))
+                # Check second child to determine type
+                elif len(domain_elem.children) == 2:
+                    second_child = domain_elem.children[1]
+                    if isinstance(second_child, Tree):
+                        # Lag/lead suffix: ID lag_lead_suffix
+                        # Extract just the base identifier (e.g., i+1 -> 'i')
+                        if second_child.data in (
+                            "linear_lead",
+                            "linear_lag",
+                            "circular_lead",
+                            "circular_lag",
+                        ):
+                            identifiers.append(_token_text(first_child))
+                        # Nested domain with index_list: ID "(" index_list ")"
+                        # Extract identifiers from the index_list recursively
+                        elif second_child.data == "index_list":
+                            identifiers.extend(_extract_domain_indices(second_child))
 
     return tuple(identifiers)
+
+
+def _extract_domain_indices(index_list_node: Tree) -> list[str]:
+    """Recursively extract base identifiers from index_list for domain tracking.
+
+    Examples:
+        - i          -> ['i']
+        - i+1        -> ['i']
+        - nh(i+1)    -> ['i']
+        - i, j+1     -> ['i', 'j']
+    """
+    identifiers = []
+    for child in index_list_node.children:
+        if isinstance(child, Token):
+            identifiers.append(_token_text(child))
+        elif isinstance(child, Tree):
+            if child.data == "index_simple":
+                # index_simple: ID lag_lead_suffix?
+                # First child is the base ID
+                if child.children and isinstance(child.children[0], Token):
+                    identifiers.append(_token_text(child.children[0]))
+            elif child.data == "index_subset":
+                # index_subset: ID "(" index_list ")" lag_lead_suffix?
+                # Recursively extract from the nested index_list
+                for subchild in child.children:
+                    if isinstance(subchild, Tree) and subchild.data == "index_list":
+                        identifiers.extend(_extract_domain_indices(subchild))
+    return identifiers
 
 
 def _extract_indices(node: Tree) -> tuple[str, ...]:
@@ -1929,7 +1971,14 @@ class _ModelBuilder:
             return self._attach_domain(Const(float(node.children[0])), free_domain)
 
         if node.data == "sum":
-            indices = _id_list(node.children[1])
+            # Extract base identifiers from index_list (supporting lag/lead operators)
+            index_list_node = node.children[1]
+            if index_list_node.data == "id_list":
+                # Legacy path for old grammar
+                indices = _id_list(index_list_node)
+            else:
+                # New path: extract base identifiers from index_list
+                indices = tuple(_extract_domain_indices(index_list_node))
             self._ensure_sets(indices, "sum indices", node)
             remaining_domain = tuple(d for d in free_domain if d not in indices)
             body_domain = tuple(indices) + remaining_domain
