@@ -1284,18 +1284,18 @@ class _ModelBuilder:
                 # Handle comma-separated list: Equations eq1, eq2, eq3;
                 names = _id_list(child.children[0])
                 for name in names:
-                    self._declared_equations.add(name)
-                    self._equation_domains[name] = ()
+                    self._declared_equations.add(name.lower())  # Issue #373: case-insensitive
+                    self._equation_domains[name.lower()] = ()  # Issue #373: case-insensitive
             elif child.data == "eqn_head_scalar":
                 name = _token_text(child.children[0])
-                self._declared_equations.add(name)
-                self._equation_domains[name] = ()
+                self._declared_equations.add(name.lower())  # Issue #373: case-insensitive
+                self._equation_domains[name.lower()] = ()  # Issue #373: case-insensitive
             elif child.data == "eqn_head_domain":
                 name = _token_text(child.children[0])
                 domain = _domain_list(child.children[1])  # Sprint 11 Day 1: Use _domain_list
                 self._ensure_sets(domain, f"equation '{name}' domain", child)
-                self._declared_equations.add(name)
-                self._equation_domains[name] = domain
+                self._declared_equations.add(name.lower())  # Issue #373: case-insensitive
+                self._equation_domains[name.lower()] = domain  # Issue #373: case-insensitive
             elif child.data == "eqn_head_domain_list":
                 # Handle comma-separated with domain: Equations eq1, eq2(i,j);
                 # This is actually invalid GAMS syntax, but we handle it gracefully
@@ -1303,12 +1303,12 @@ class _ModelBuilder:
                 domain = _domain_list(child.children[1])  # Sprint 11 Day 1: Use _domain_list
                 self._ensure_sets(domain, "equation domain", child)
                 for name in names:
-                    self._declared_equations.add(name)
-                    self._equation_domains[name] = domain
+                    self._declared_equations.add(name.lower())  # Issue #373: case-insensitive
+                    self._equation_domains[name.lower()] = domain  # Issue #373: case-insensitive
 
     def _handle_eqn_def_scalar(self, node: Tree) -> None:
         name = _token_text(node.children[0])
-        if name not in self._declared_equations:
+        if name.lower() not in self._declared_equations:  # Issue #373: case-insensitive
             raise self._parse_error(
                 f"Equation '{name}' defined without declaration",
                 node,
@@ -1326,7 +1326,7 @@ class _ModelBuilder:
         condition_expr = None
         if condition_node:
             # condition node has one child: the expr
-            domain = self._equation_domains.get(name, ())
+            domain = self._equation_domains.get(name.lower(), ())  # Issue #373: case-insensitive
             condition_expr = self._expr_with_context(
                 condition_node.children[0], f"equation '{name}' condition", domain
             )
@@ -1337,7 +1337,7 @@ class _ModelBuilder:
 
         lhs_node = expr_nodes[0]
         rhs_node = expr_nodes[1]
-        domain = self._equation_domains.get(name, ())
+        domain = self._equation_domains.get(name.lower(), ())  # Issue #373: case-insensitive
         relation = _REL_MAP[rel_token.value.lower()]
         lhs = self._expr_with_context(lhs_node, f"equation '{name}' LHS", domain)
         rhs = self._expr_with_context(rhs_node, f"equation '{name}' RHS", domain)
@@ -1354,7 +1354,7 @@ class _ModelBuilder:
     def _handle_eqn_def_domain(self, node: Tree) -> None:
         name = _token_text(node.children[0])
         domain = _domain_list(node.children[1])  # Sprint 11 Day 1: Use _domain_list
-        if name not in self._declared_equations:
+        if name.lower() not in self._declared_equations:  # Issue #373: case-insensitive
             raise self._parse_error(
                 f"Equation '{name}' defined without declaration",
                 node,
