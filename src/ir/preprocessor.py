@@ -17,6 +17,9 @@ Based on KNOWN_UNKNOWNS.md findings:
 import re
 from pathlib import Path
 
+# Regex pattern for GAMS declaration keywords (both singular and plural forms)
+DECLARATION_KEYWORDS_PATTERN = r"\b(Set|Sets|Parameter|Parameters|Scalar|Scalars|Alias)\b"
+
 
 class CircularIncludeError(Exception):
     """Raised when a circular include dependency is detected.
@@ -1223,7 +1226,7 @@ def normalize_parameter_data_blocks(source: str) -> str:
         stripped = line.strip()
 
         # Check if we're starting a Parameter/Scalar block
-        if re.match(r"^(Parameter|Parameters|Scalar|Scalars)\b", stripped, re.IGNORECASE):
+        if re.match(f"^{DECLARATION_KEYWORDS_PATTERN}", stripped, re.IGNORECASE):
             in_param_block = True
             result.append(line)
             continue
@@ -1237,8 +1240,11 @@ def normalize_parameter_data_blocks(source: str) -> str:
                 slash_idx = line.find("/")
                 before_slash = line[:slash_idx].strip()
 
-                # If before slash is empty or ends with description string, it's a data block
-                if not before_slash or before_slash.endswith('"') or before_slash.endswith("'"):
+                # If before slash is empty or ends with description string, and does not contain
+                # assignment/arithmetic operators, it's a data block
+                if (
+                    not before_slash or before_slash.endswith('"') or before_slash.endswith("'")
+                ) and not re.search(r"[=:+\-*/]", before_slash):
                     in_data_block = True
                     # Check if it closes on same line
                     if line.count("/") >= 2:
@@ -1300,7 +1306,7 @@ def normalize_multi_line_continuations(source: str) -> str:
         stripped = line.strip()
 
         # Track if we're entering a declaration block
-        if re.match(r"^\s*(Set|Parameter|Scalar|Alias)\b", stripped, re.IGNORECASE):
+        if re.match(f"^\\s*{DECLARATION_KEYWORDS_PATTERN}", stripped, re.IGNORECASE):
             in_declaration = True
 
         # Track if we're inside a /.../ data block
@@ -1315,7 +1321,7 @@ def normalize_multi_line_continuations(source: str) -> str:
             # Check if / appears after a declaration keyword (Set, Parameter, Scalar, Alias)
             # OR if we're currently in a declaration block (keyword was on a previous line)
             has_keyword_before_slash = re.search(
-                r"\b(Set|Parameter|Scalar|Alias)\b", line[: line.find("/")], re.IGNORECASE
+                DECLARATION_KEYWORDS_PATTERN, line[: line.find("/")], re.IGNORECASE
             )
             if not has_keyword_before_slash and not in_declaration:
                 # No declaration keyword before / and not in declaration block
