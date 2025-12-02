@@ -81,7 +81,7 @@ _VAR_KIND_MAP = {
 # Aggregation functions that bind a set iterator as first argument (Sprint 10 Day 6)
 _AGGREGATION_FUNCTIONS = {"smin", "smax", "sum", "prod", "card"}
 
-_FUNCTION_NAMES = {"abs", "exp", "log", "sqrt", "sin", "cos", "tan", "sqr"}
+_FUNCTION_NAMES = {"abs", "exp", "log", "log10", "log2", "sqrt", "sin", "cos", "tan", "sqr"}
 
 
 @lru_cache

@@ -537,6 +537,10 @@ def _diff_call(
         return _diff_exp(expr, wrt_var, wrt_indices, config)
     elif func == "log":
         return _diff_log(expr, wrt_var, wrt_indices, config)
+    elif func == "log10":
+        return _diff_log10(expr, wrt_var, wrt_indices, config)
+    elif func == "log2":
+        return _diff_log2(expr, wrt_var, wrt_indices, config)
     elif func == "sqrt":
         return _diff_sqrt(expr, wrt_var, wrt_indices, config)
     elif func == "sin":
@@ -713,6 +717,88 @@ def _diff_log(
 
     # (1/arg) * darg/dx
     return Binary("*", one_over_arg, darg_dx)
+
+
+def _diff_log10(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of base-10 logarithm: log10(x).
+
+    Formula: d(log10(a))/dx = (1/(a * ln(10))) * da/dx
+
+    Args:
+        expr: Call("log10", [arg])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(log10(x))/dx = 1/(x * ln(10))
+        >>> _diff_log10(Call("log10", [VarRef("x")]), "x", None)
+        Binary("*", Binary("/", Const(1.0), Binary("*", VarRef("x"), Const(2.302585...))), Const(1.0))
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"log10() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+
+    # ln(10) ≈ 2.302585092994046
+    ln10 = Const(2.302585092994046)
+
+    # 1/(arg * ln(10))
+    denominator = Binary("*", arg, ln10)
+    one_over_arg_ln10 = Binary("/", Const(1.0), denominator)
+
+    # (1/(arg * ln(10))) * darg/dx
+    return Binary("*", one_over_arg_ln10, darg_dx)
+
+
+def _diff_log2(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of base-2 logarithm: log2(x).
+
+    Formula: d(log2(a))/dx = (1/(a * ln(2))) * da/dx
+
+    Args:
+        expr: Call("log2", [arg])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(log2(x))/dx = 1/(x * ln(2))
+        >>> _diff_log2(Call("log2", [VarRef("x")]), "x", None)
+        Binary("*", Binary("/", Const(1.0), Binary("*", VarRef("x"), Const(0.693147...))), Const(1.0))
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"log2() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+
+    # ln(2) ≈ 0.6931471805599453
+    ln2 = Const(0.6931471805599453)
+
+    # 1/(arg * ln(2))
+    denominator = Binary("*", arg, ln2)
+    one_over_arg_ln2 = Binary("/", Const(1.0), denominator)
+
+    # (1/(arg * ln(2))) * darg/dx
+    return Binary("*", one_over_arg_ln2, darg_dx)
 
 
 def _diff_sqrt(
