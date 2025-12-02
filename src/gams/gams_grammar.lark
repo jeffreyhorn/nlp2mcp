@@ -418,16 +418,9 @@ OR: /(?i:or)\b/
 %ignore /(?m)^\s*\*.*$/      // GAMS inline comments: * comment
 %ignore /\/\/.*?$/m      // // comment
 %ignore /(?si)\$ontext.*?\$offtext/ // block comments (case insensitive)
-%ignore /\$title[^\n]*/i     // $title directives
-// Specific $ directives to ignore (explicit list to avoid conflicting with $ operator)
-%ignore /\$include[^\n]*/i
-%ignore /\$set[^\n]*/i
-%ignore /\$eval[^\n]*/i
-%ignore /\$if[^\n]*/i
-%ignore /\$ifthen[^\n]*/i
-%ignore /\$endif[^\n]*/i
-%ignore /\$offtext[^\n]*/i
-%ignore /\$ontext[^\n]*/i
-%ignore /\$phantom[^\n]*/i
-%ignore /\$hidden[^\n]*/i
+// Ignore $ directives but not $ operator in expressions
+// Pattern matches $directive (not followed by ( or space) to avoid matching expr$(condition)
+// Common directives: $title, $include, $set, $eval, $if, $ifthen, $else, $endif,
+// $load, $gdxin, $gdxout, $call, $setglobal, $setlocal, $show, $log, $onecho, $offecho, etc.
+%ignore /\$(?![\(\s])[a-z]+[^\n]*/i
 %ignore NEWLINE

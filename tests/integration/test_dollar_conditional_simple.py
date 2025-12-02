@@ -26,6 +26,21 @@ def test_parse_simple_dollar_conditional():
 
 
 @pytest.mark.integration
+def test_parse_parenthesized_dollar_conditional():
+    """Parse and verify parenthesized dollar conditional: x$(y > 0)"""
+    code = """
+    Variables x, y, obj;
+    Equations eq1, objdef;
+    eq1.. obj =e= x$(y > 0);
+    objdef.. obj =e= 0;
+    Model test /all/;
+    """
+    model = parse_model_text(code)
+    assert "eq1" in model.equations
+    print("✓ Parsed x$(y > 0)")
+
+
+@pytest.mark.integration
 def test_evaluate_dollar_conditional_true():
     """Evaluate x$y when y is non-zero (true)"""
     expr = DollarConditional(VarRef("x"), VarRef("y"))

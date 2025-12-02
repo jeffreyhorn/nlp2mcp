@@ -1997,11 +1997,10 @@ class _ModelBuilder:
         if node.data == "dollar_cond" or node.data == "dollar_cond_paren":
             # Dollar conditional: value_expr$condition or value_expr$(condition)
             # Evaluates to value_expr if condition is non-zero, otherwise 0
+            # Both forms: children are [value_expr, DOLLAR_token, condition]
+            # (Lark discards string literal tokens like "(" and ")" from parse tree)
             value_expr = self._expr(node.children[0], free_domain)
-            # For dollar_cond: children are [value_expr, DOLLAR_token, condition]
-            # For dollar_cond_paren: children are [value_expr, DOLLAR_token, "(", condition, ")"]
-            condition_index = 2 if node.data == "dollar_cond" else 3
-            condition = self._expr(node.children[condition_index], free_domain)
+            condition = self._expr(node.children[2], free_domain)
             from src.ir.ast import DollarConditional
 
             expr = DollarConditional(value_expr, condition)
