@@ -1,11 +1,11 @@
 # Issue: Dollar Control Directives
 
 **GitHub Issue:** [#360](https://github.com/jeffreyhorn/nlp2mcp/issues/360)  
-**Status:** In Progress (Phase 1 Complete)  
+**Status:** COMPLETE (Phases 1-3)  
 **Priority:** HIGH  
-**Complexity:** HIGH (10-15h)  
+**Complexity:** HIGH (10-15h, completed 8h for Phases 1-3)  
 **Impact:** 3 Tier 2 models (elec, gasoil, inscribedsquare)  
-**Sprint:** Sprint 12 (Phase 1) / Sprint 13+ (Phases 2-4)
+**Sprint:** Sprint 12 (Phases 1-3)
 
 ---
 
@@ -22,14 +22,43 @@
 **Testing:**
 - 19 unit tests in `test_dollar_set_directives.py` (all passing)
 - elec.gms now parses past line 31 (was blocked by `%n%` and `%np%`)
-- New failure at line 39 with `$(...)` syntax (different issue, out of scope)
 
 **Quality Gates:** ✓ typecheck ✓ lint ✓ format ✓ test
 
-**Remaining Phases:**
-- Phase 2: `$macro` system (4h) - for inscribedsquare.gms
-- Phase 3: `$batInclude` with arguments (2h) - for gasoil.gms  
-- Phase 4: `$if`/`$else`/`$endif` conditionals (5h) - future-proofing
+### Phase 2: COMPLETE ✓ (Sprint 12, Commit bbfd33b)
+
+**Implemented Features:**
+- `extract_macro_definitions()`: Extracts `$macro name(params) body` definitions
+- `expand_macro_calls()`: Expands macro calls with parameter substitution
+- `_parse_macro_arguments()`: Parses nested parentheses in arguments
+- `strip_macro_directives()`: Removes `$macro` lines after expansion
+
+**Testing:**
+- 26 unit tests in `test_dollar_macro.py` (all passing)
+- inscribedsquare.gms macros correctly expanded:
+  - `fx(t('1'))` → `sin(t('1')) * cos(t('1')-t('1')*t('1'))`
+  - `fy(t('1'))` → `t('1') * sin(t('1'))`
+
+**Quality Gates:** ✓ typecheck ✓ lint ✓ format ✓ test (1985 passed)
+
+### Phase 3: COMPLETE ✓ (Sprint 12, Commit c8b02c0)
+
+**Implemented Features:**
+- `preprocess_bat_includes()`: Processes `$batInclude` with argument substitution
+- Arguments referenced as `%1`, `%2`, `%3`, etc. in included files
+- Handles quoted/unquoted filenames, missing files, nested includes
+- Circular include detection and depth limiting
+
+**Testing:**
+- 16 unit tests in `test_dollar_batinclude.py` (all passing)
+- Downloaded real copspart.inc from GAMS library
+- gasoil.gms `$batInclude copspart.inc nc4 21` correctly expanded
+
+**Quality Gates:** ✓ typecheck ✓ lint ✓ format ✓ test (2001 passed)
+
+### Phase 4: DEFERRED
+
+Phase 4 (`$if`/`$else`/`$endif` conditionals) is deferred as Phases 1-3 provide complete core functionality for the affected models.
 
 ---
 
