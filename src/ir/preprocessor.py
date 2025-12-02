@@ -1356,17 +1356,22 @@ def normalize_special_identifiers(source: str) -> str:
                 continue
 
         # Track if we're inside a /.../ data block
+        # Only consider / as data block delimiter if line starts with declaration keyword
         if "/" in line and not in_data_block:
-            # Check if entering a data block
-            slash_count = line.count("/")
-            if slash_count == 1:
-                # Opening a data block
-                in_data_block = True
-            elif slash_count >= 2:
-                # Inline block - process it
-                processed = _quote_special_in_line(line)
-                result.append(processed)
-                continue
+            # Check if this is actually a data block (not division in equations)
+            # Data blocks appear after Set, Parameter, Scalar, Alias keywords
+            is_declaration = re.match(r"^\s*(Set|Parameter|Scalar|Alias)\b", line, re.IGNORECASE)
+            if is_declaration:
+                # Check if entering a data block
+                slash_count = line.count("/")
+                if slash_count == 1:
+                    # Opening a data block
+                    in_data_block = True
+                elif slash_count >= 2:
+                    # Inline block - process it
+                    processed = _quote_special_in_line(line)
+                    result.append(processed)
+                    continue
         elif "/" in line and in_data_block:
             # Check if closing the data block
             if line.strip().endswith("/") or line.strip().endswith("/;"):
@@ -1402,6 +1407,8 @@ def _quote_special_in_line(line: str) -> str:
     #
     # Match: Start of identifier, then word chars, then one or more (-/+ followed by word chars)
     # Word boundary at start to ensure we match the full identifier
+    # Note: This function is only called for lines in data blocks (Set/Parameter/etc.),
+    # so we don't need to worry about matching arithmetic in equations
     pattern = r"\b([a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+)\b"
 
     def replace_if_not_quoted(match):
