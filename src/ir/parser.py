@@ -2386,11 +2386,7 @@ class _ModelBuilder:
     def _parse_param_data_items(
         self, node: Tree, domain: tuple[str, ...], param_name: str
     ) -> dict[tuple[str, ...], float]:
-        if len(domain) > 1:
-            raise self._error(
-                f"Parameter '{param_name}' data for multi-dimensional domains is not supported",
-                node,
-            )
+        # Multi-dimensional parameter data is now supported via dotted notation (e.g., i1.j1)
         values: dict[tuple[str, ...], float] = {}
         for child in node.children:
             if not isinstance(child, Tree):
