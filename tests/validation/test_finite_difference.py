@@ -263,6 +263,38 @@ def test_log_rule():
     assert abs(sym_val - expected) < 1e-9, f"d(log(x))/dx should be 1/x={expected}"
 
 
+def test_log10_rule():
+    """Test base-10 logarithm rule: d(log10(x))/dx = 1/(x * ln(10))."""
+    expr = Call("log10", (VarRef("x"),))
+    symbolic_deriv = differentiate_expr(expr, "x")
+
+    # Avoid near-zero x (log10 domain restriction)
+    var_values = generate_test_point(["x"], {"x": (0.5, 5.0)})
+
+    is_valid, sym_val, fd_val, error = validate_derivative(expr, symbolic_deriv, "x", var_values)
+
+    assert is_valid, f"Validation failed: symbolic={sym_val}, fd={fd_val}, error={error}"
+    ln10 = 2.302585092994046  # ln(10)
+    expected = 1.0 / (var_values["x"] * ln10)
+    assert abs(sym_val - expected) < 1e-9, f"d(log10(x))/dx should be 1/(x*ln(10))={expected}"
+
+
+def test_log2_rule():
+    """Test base-2 logarithm rule: d(log2(x))/dx = 1/(x * ln(2))."""
+    expr = Call("log2", (VarRef("x"),))
+    symbolic_deriv = differentiate_expr(expr, "x")
+
+    # Avoid near-zero x (log2 domain restriction)
+    var_values = generate_test_point(["x"], {"x": (0.5, 5.0)})
+
+    is_valid, sym_val, fd_val, error = validate_derivative(expr, symbolic_deriv, "x", var_values)
+
+    assert is_valid, f"Validation failed: symbolic={sym_val}, fd={fd_val}, error={error}"
+    ln2 = 0.6931471805599453  # ln(2)
+    expected = 1.0 / (var_values["x"] * ln2)
+    assert abs(sym_val - expected) < 1e-9, f"d(log2(x))/dx should be 1/(x*ln(2))={expected}"
+
+
 def test_sqrt_rule():
     """Test square root rule: d(sqrt(x))/dx = 1/(2*sqrt(x))."""
     expr = Call("sqrt", (VarRef("x"),))
