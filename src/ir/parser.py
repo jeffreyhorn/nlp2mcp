@@ -1325,10 +1325,10 @@ class _ModelBuilder:
         )
         condition_expr = None
         if condition_node:
-            # condition node has one child: the expr
+            # condition node: DOLLAR "(" expr ")" -> children are [DOLLAR_token, expr_tree]
             domain = self._equation_domains.get(name.lower(), ())  # Issue #373: case-insensitive
             condition_expr = self._expr_with_context(
-                condition_node.children[0], f"equation '{name}' condition", domain
+                condition_node.children[1], f"equation '{name}' condition", domain
             )
 
         # Find expr nodes, skipping optional condition
@@ -1372,9 +1372,9 @@ class _ModelBuilder:
         )
         condition_expr = None
         if condition_node:
-            # condition node has one child: the expr
+            # condition node: DOLLAR "(" expr ")" -> children are [DOLLAR_token, expr_tree]
             condition_expr = self._expr_with_context(
-                condition_node.children[0], f"equation '{name}' condition", domain
+                condition_node.children[1], f"equation '{name}' condition", domain
             )
 
         # Find expr nodes, skipping optional condition
@@ -1993,6 +1993,19 @@ class _ModelBuilder:
             right = self._expr(node.children[2], free_domain)
             expr = Binary(self._extract_operator(op_token), left, right)
             return self._attach_domain(expr, self._merge_domains([left, right], node))
+
+        if node.data == "dollar_cond" or node.data == "dollar_cond_paren":
+            # Dollar conditional: value_expr$condition or value_expr$(condition)
+            # Evaluates to value_expr if condition is non-zero, otherwise 0
+            value_expr = self._expr(node.children[0], free_domain)
+            # For dollar_cond: children are [value_expr, DOLLAR_token, condition]
+            # For dollar_cond_paren: children are [value_expr, DOLLAR_token, "(", condition, ")"]
+            condition_index = 2 if node.data == "dollar_cond" else 3
+            condition = self._expr(node.children[condition_index], free_domain)
+            from src.ir.ast import DollarConditional
+
+            expr = DollarConditional(value_expr, condition)
+            return self._attach_domain(expr, self._merge_domains([value_expr, condition], node))
 
         if node.data == "unaryop":
             op_token = node.children[0]

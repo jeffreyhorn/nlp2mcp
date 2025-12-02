@@ -224,7 +224,7 @@ domain_list: domain_element ("," domain_element)*
 domain_element: ID ("(" index_list ")")?
               | ID lag_lead_suffix
 
-condition: "$" "(" expr ")"
+condition: DOLLAR "(" expr ")"
 
 REL_K: /=e=|=l=|=g=/i
 
@@ -293,12 +293,12 @@ loop_stmt: LOOP_K "(" id_list "," exec_stmt+ ")" SEMI
 // ---------------------------
 
 // Abort statement base rule (no SEMI)
-abort_base: "abort"i "$" "[" expr "]" STRING     -> abort_cond_square_msg
-          | "abort"i "$" "[" expr "]"             -> abort_cond_square
-          | "abort"i "$" "(" expr ")" STRING      -> abort_cond_paren_msg
-          | "abort"i "$" "(" expr ")"             -> abort_cond_paren
-          | "abort"i "$" expr STRING              -> abort_cond_plain_msg
-          | "abort"i "$" expr                     -> abort_cond_plain
+abort_base: "abort"i DOLLAR "[" expr "]" STRING     -> abort_cond_square_msg
+          | "abort"i DOLLAR "[" expr "]"             -> abort_cond_square
+          | "abort"i DOLLAR "(" expr ")" STRING      -> abort_cond_paren_msg
+          | "abort"i DOLLAR "(" expr ")"             -> abort_cond_paren
+          | "abort"i DOLLAR expr STRING              -> abort_cond_plain_msg
+          | "abort"i DOLLAR expr                     -> abort_cond_plain
           | "abort"i STRING                       -> abort_msg
           | "abort"i                              -> abort_plain
 
@@ -328,10 +328,14 @@ SUM_K: "sum"i
 ?and_expr: comp_expr
          | and_expr AND comp_expr      -> binop
 
-?comp_expr: arith_expr
-          | arith_expr comp_op arith_expr -> binop
+?comp_expr: dollar_expr
+          | dollar_expr comp_op dollar_expr -> binop
 
 comp_op: ASSIGN | LE | GE | LT | GT | NE
+
+?dollar_expr: arith_expr
+            | arith_expr DOLLAR arith_expr   -> dollar_cond
+            | arith_expr DOLLAR "(" arith_expr ")"  -> dollar_cond_paren
 
 ?arith_expr: term
            | arith_expr PLUS term        -> binop
@@ -401,6 +405,7 @@ MINUS: /-/
 TIMES: /\*/
 DIV: /\//
 POW: "**" | "^"
+DOLLAR.10: "$"  // Higher priority to prevent being consumed by ignore patterns
 AND: /(?i:and)\b/
 OR: /(?i:or)\b/
 
@@ -414,8 +419,15 @@ OR: /(?i:or)\b/
 %ignore /\/\/.*?$/m      // // comment
 %ignore /(?si)\$ontext.*?\$offtext/ // block comments (case insensitive)
 %ignore /\$title[^\n]*/i     // $title directives
-// NOTE: This pattern intentionally ignores all $ directives for simplicity
-// Some directives like $include, $set, $eval may need special handling in future
-// but are ignored for now to enable parsing of models like hs62.gms
-%ignore /\$[a-z]+/i          // Other $ directives (broad pattern)
+// Specific $ directives to ignore (explicit list to avoid conflicting with $ operator)
+%ignore /\$include[^\n]*/i
+%ignore /\$set[^\n]*/i
+%ignore /\$eval[^\n]*/i
+%ignore /\$if[^\n]*/i
+%ignore /\$ifthen[^\n]*/i
+%ignore /\$endif[^\n]*/i
+%ignore /\$offtext[^\n]*/i
+%ignore /\$ontext[^\n]*/i
+%ignore /\$phantom[^\n]*/i
+%ignore /\$hidden[^\n]*/i
 %ignore NEWLINE

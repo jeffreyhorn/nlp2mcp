@@ -182,6 +182,33 @@ class Call(Expr):
 
 
 @dataclass(frozen=True)
+class DollarConditional(Expr):
+    """Dollar conditional operator: expr$condition
+
+    Evaluates to expr if condition is non-zero (true), otherwise 0.
+
+    Examples:
+        x$y            → DollarConditional(value_expr=VarRef('x'), condition=VarRef('y'))
+        (e - m)$t      → DollarConditional(value_expr=Binary('-', ...), condition=VarRef('t'))
+        s(n)$rn(n)     → DollarConditional(value_expr=VarRef('s', ('n',)), condition=ParamRef('rn', ('n',)))
+
+    Attributes:
+        value_expr: The expression to evaluate if condition is true
+        condition: The condition expression (non-zero = true)
+    """
+
+    value_expr: Expr
+    condition: Expr
+
+    def children(self) -> Iterable[Expr]:
+        yield self.value_expr
+        yield self.condition
+
+    def __repr__(self) -> str:
+        return f"DollarConditional({self.value_expr!r}${self.condition!r})"
+
+
+@dataclass(frozen=True)
 class IndexOffset(Expr):
     """
     Lead/lag indexing offset (Sprint 9 Day 3).
