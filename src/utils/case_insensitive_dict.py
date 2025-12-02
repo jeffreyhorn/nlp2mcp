@@ -95,7 +95,7 @@ class CaseInsensitiveDict(dict[str, T]):
         """Return view of values."""
         return super().values()
 
-    def items(self):
+    def items(self) -> Iterator[tuple[str, T]]:  # type: ignore[override]
         """Return iterator of (original_key, value) pairs."""
         for canonical_key, value in super().items():
             original_key = self._original_names.get(canonical_key, canonical_key)
@@ -108,7 +108,7 @@ class CaseInsensitiveDict(dict[str, T]):
 
     def copy(self) -> "CaseInsensitiveDict[T]":
         """Return a shallow copy."""
-        new_dict = CaseInsensitiveDict[T]()
+        new_dict: CaseInsensitiveDict[T] = CaseInsensitiveDict()
         for canonical_key, value in super().items():
             original_key = self._original_names.get(canonical_key, canonical_key)
             new_dict[original_key] = value
