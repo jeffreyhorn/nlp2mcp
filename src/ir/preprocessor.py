@@ -49,6 +49,285 @@ class IncludeDepthExceededError(Exception):
         )
 
 
+def process_conditionals(source: str, macros: dict[str, str]) -> str:
+    """Process $if/$else/$endif conditional compilation directives.
+
+    Evaluates conditional blocks and includes/excludes code based on conditions.
+    Supports nested conditionals.
+
+    Supported conditions:
+    - $if set varname: Include if variable is defined
+    - $if not set varname: Include if variable is NOT defined
+    - $if varname: Include if variable is defined (same as "set varname")
+    - $if expr: Include if expression evaluates to true (basic support)
+    - $else: Alternative block when condition is false
+    - $elseif: Alternative condition (processed as $else $if)
+    - $endif: End conditional block
+
+    Args:
+        source: GAMS source code text
+        macros: Dictionary of defined variables (from $set directives)
+
+    Returns:
+        Source code with conditionals evaluated and inactive blocks removed
+
+    Example:
+        >>> source = '''$if set debug
+        ... Parameter debugMode;
+        ... $else
+        ... Parameter prodMode;
+        ... $endif'''
+        >>> macros = {'debug': '1'}
+        >>> result = process_conditionals(source, macros)
+        >>> # Result includes "Parameter debugMode;" and excludes "Parameter prodMode;"
+
+    Notes:
+        - Conditions are evaluated at compile time
+        - Nested conditionals are supported
+        - Unknown variables in "set" checks are treated as undefined
+        - Expression evaluation is basic (comparisons, logical ops)
+        - Excluded blocks are replaced with comments to preserve line numbers
+    """
+    lines = source.split("\n")
+    result = []
+
+    # Stack to track conditional nesting
+    # Each entry: (condition_met, else_seen, include_lines)
+    # condition_met: Was the $if condition true?
+    # else_seen: Have we seen an $else yet?
+    # include_lines: Should we include lines at this level?
+    conditional_stack: list[tuple[bool, bool, bool]] = []
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+        stripped_lower = stripped.lower()
+
+        # Check for $if directive
+        if stripped_lower.startswith("$if"):
+            # Special case: Single-line $if not set ... $set ... is handled by
+            # extract_conditional_sets() and strip_conditional_directives()
+            # Skip it here to avoid double-processing
+            if re.match(
+                r"\$if\s+not\s+set\s+(\w+)\s+\$set\s+\1\b",
+                stripped,
+                re.IGNORECASE,
+            ):
+                # This is a single-line default pattern - pass through unchanged
+                result.append(line)
+                i += 1
+                continue
+
+            # Parse the condition
+            condition_met = _evaluate_if_condition(stripped, macros)
+
+            # Push new conditional context
+            # Include lines if: no parent conditional OR parent is including
+            parent_including = True if not conditional_stack else conditional_stack[-1][2]
+            include_lines = parent_including and condition_met
+
+            conditional_stack.append((condition_met, False, include_lines))
+
+            # Add comment showing the directive
+            result.append(f"* [Conditional: {stripped}]")
+            i += 1
+            continue
+
+        # Check for $elseif directive (treat as $else + $if)
+        elif stripped_lower.startswith("$elseif"):
+            if not conditional_stack:
+                # $elseif without $if - skip with warning
+                result.append(f"* [Warning: {stripped} without $if]")
+                i += 1
+                continue
+
+            # Pop the current $if context
+            condition_met, else_seen, _ = conditional_stack.pop()
+
+            if else_seen:
+                # Already saw $else, can't have $elseif
+                result.append(f"* [Warning: {stripped} after $else]")
+                conditional_stack.append((condition_met, True, False))
+                i += 1
+                continue
+
+            # Evaluate new condition (only if previous condition was false)
+            new_condition = _evaluate_if_condition(stripped.replace("$elseif", "$if", 1), macros)
+
+            # Include this block if: previous condition was false AND new condition is true
+            parent_including = True if not conditional_stack else conditional_stack[-1][2]
+            include_lines = parent_including and not condition_met and new_condition
+
+            # Push back with else_seen=False (allows more $elseif)
+            conditional_stack.append((condition_met or new_condition, False, include_lines))
+
+            result.append(f"* [Conditional: {stripped}]")
+            i += 1
+            continue
+
+        # Check for $else directive
+        elif stripped_lower.startswith("$else"):
+            if not conditional_stack:
+                # $else without $if - skip with warning
+                result.append(f"* [Warning: {stripped} without $if]")
+                i += 1
+                continue
+
+            condition_met, else_seen, _ = conditional_stack.pop()
+
+            if else_seen:
+                # Already saw $else - this is an error
+                result.append(f"* [Warning: duplicate {stripped}]")
+                conditional_stack.append((condition_met, True, False))
+                i += 1
+                continue
+
+            # Include else block if condition was false
+            parent_including = True if not conditional_stack else conditional_stack[-1][2]
+            include_lines = parent_including and not condition_met
+
+            conditional_stack.append((condition_met, True, include_lines))
+
+            result.append(f"* [Conditional: {stripped}]")
+            i += 1
+            continue
+
+        # Check for $endif directive
+        elif stripped_lower.startswith("$endif"):
+            if not conditional_stack:
+                # $endif without $if - skip with warning
+                result.append(f"* [Warning: {stripped} without $if]")
+                i += 1
+                continue
+
+            # Pop the conditional context
+            conditional_stack.pop()
+
+            result.append(f"* [Conditional: {stripped}]")
+            i += 1
+            continue
+
+        # Regular line - include or exclude based on conditional stack
+        if conditional_stack:
+            # We're inside a conditional block
+            _, _, include_lines = conditional_stack[-1]
+            if include_lines:
+                # Include this line
+                result.append(line)
+            else:
+                # Exclude this line (replace with comment to preserve line numbers)
+                leading_ws = line[: len(line) - len(line.lstrip())]
+                if stripped:  # Only comment non-empty lines
+                    result.append(f"{leading_ws}* [Excluded: {stripped}]")
+                else:
+                    result.append(line)  # Keep empty lines
+        else:
+            # Not inside a conditional - include the line
+            result.append(line)
+
+        i += 1
+
+    # Check for unclosed conditionals
+    if conditional_stack:
+        # Warning: unclosed $if directives
+        result.append(f"* [Warning: {len(conditional_stack)} unclosed $if directive(s)]")
+
+    return "\n".join(result)
+
+
+def _evaluate_if_condition(condition_line: str, macros: dict[str, str]) -> bool:
+    """Evaluate a $if condition.
+
+    Args:
+        condition_line: The $if directive line (e.g., "$if set n", "$if %n% > 5")
+        macros: Dictionary of defined variables
+
+    Returns:
+        True if condition is met, False otherwise
+
+    Examples:
+        >>> _evaluate_if_condition("$if set n", {"n": "10"})
+        True
+        >>> _evaluate_if_condition("$if not set n", {"n": "10"})
+        False
+        >>> _evaluate_if_condition("$if not set missing", {})
+        True
+    """
+    stripped = condition_line.strip()
+
+    # Pattern: $if set varname
+    match = re.match(r"\$if\s+set\s+(\w+)", stripped, re.IGNORECASE)
+    if match:
+        var_name = match.group(1)
+        return var_name in macros
+
+    # Pattern: $if not set varname
+    match = re.match(r"\$if\s+not\s+set\s+(\w+)", stripped, re.IGNORECASE)
+    if match:
+        var_name = match.group(1)
+        return var_name not in macros
+
+    # Pattern: $if varname (same as "set varname")
+    match = re.match(r"\$if\s+(\w+)\s*$", stripped, re.IGNORECASE)
+    if match:
+        var_name = match.group(1)
+        return var_name in macros
+
+    # Pattern: $if expression (e.g., $if %n% > 5)
+    # For now, basic support: expand macros and try to evaluate
+    # This is complex and would need a full expression parser
+    # For Phase 4, we'll support basic patterns
+
+    # Expand any %variable% references in the condition
+    expanded = stripped
+    for var_name, value in macros.items():
+        pattern = f"%{re.escape(var_name)}%"
+        expanded = re.sub(pattern, value, expanded)
+
+    # Try to evaluate simple comparisons
+    # Pattern: $if value1 OP value2 where OP is >=, <=, >, <, ==, !=, =
+    # Note: Must check >= and <= before > and < to avoid partial matches
+    match = re.match(
+        r"\$if\s+([^\s]+)\s*(>=|<=|>|<|==|!=|=)\s*([^\s]+)",
+        expanded,
+        re.IGNORECASE,
+    )
+    if match:
+        left = match.group(1).strip()
+        op = match.group(2).strip()
+        right = match.group(3).strip()
+
+        # Try to convert to numbers for comparison
+        try:
+            left_num = float(left)
+            right_num = float(right)
+
+            if op == ">=":
+                return left_num >= right_num
+            elif op == "<=":
+                return left_num <= right_num
+            elif op == ">":
+                return left_num > right_num
+            elif op == "<":
+                return left_num < right_num
+            elif op == "==" or op == "=":
+                return left_num == right_num
+            elif op == "!=":
+                return left_num != right_num
+        except ValueError:
+            # Not numeric - do string comparison
+            if op == "==" or op == "=":
+                return left == right
+            elif op == "!=":
+                return left != right
+            # Other ops don't make sense for strings
+            return False
+
+    # Default: if we can't parse it, assume false (conservative)
+    return False
+
+
 def preprocess_bat_includes(
     file_path: Path,
     source: str,
@@ -1168,15 +1447,16 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     2. Expand $batInclude directives with argument substitution
     3. Extract macro defaults from $if not set directives
     4. Extract general $set directives
-    5. Expand %variable% references
-    6. Extract $macro definitions
-    7. Expand macro function calls
-    8. Strip conditional directives ($if not set)
-    9. Strip $set directives
-    10. Strip $macro directives
-    11. Strip other unsupported directives ($title, $ontext, etc.)
-    12. Normalize multi-line continuations (add missing commas)
-    13. Quote identifiers with special characters (-, +) in data blocks
+    5. Process $if/$else/$endif conditional blocks
+    6. Expand %variable% references
+    7. Extract $macro definitions
+    8. Expand macro function calls
+    9. Strip conditional directives ($if not set)
+    10. Strip $set directives
+    11. Strip $macro directives
+    12. Strip other unsupported directives ($title, $ontext, etc.)
+    13. Normalize multi-line continuations (add missing commas)
+    14. Quote identifiers with special characters (-, +) in data blocks
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -1212,32 +1492,37 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     set_macros = extract_set_directives(content, macros)
     macros.update(set_macros)  # $set directives override conditional defaults
 
-    # Step 5: Expand %variable% references with their values
+    # Step 5: Process $if/$else/$endif conditional blocks
+    # This must happen after extracting macros so conditionals can test variable definitions
+    # but before expanding %variable% so conditional blocks are removed first
+    content = process_conditionals(content, macros)
+
+    # Step 6: Expand %variable% references with their values
     content = expand_macros(content, macros)
 
-    # Step 6: Extract $macro function definitions
+    # Step 7: Extract $macro function definitions
     # This must happen after %variable% expansion so that macro bodies have variables expanded
     # For example: $macro fx(t) %fx% becomes $macro fx(t) sin(t) * cos(t-t*t)
     macro_defs = extract_macro_definitions(content)
 
-    # Step 7: Expand macro function calls
+    # Step 8: Expand macro function calls
     # Replace fx(t('1')) with sin(t('1')) * cos(t('1')-t('1')*t('1'))
     content = expand_macro_calls(content, macro_defs)
 
-    # Step 8: Strip $if not set directives (replaced with comments)
+    # Step 9: Strip $if not set directives (replaced with comments)
     content = strip_conditional_directives(content)
 
-    # Step 9: Strip $set directives (replaced with comments)
+    # Step 10: Strip $set directives (replaced with comments)
     content = strip_set_directives(content)
 
-    # Step 10: Strip $macro directives (replaced with comments)
+    # Step 11: Strip $macro directives (replaced with comments)
     content = strip_macro_directives(content)
 
-    # Step 11: Strip other unsupported directives ($title, $ontext, etc.)
+    # Step 12: Strip other unsupported directives ($title, $ontext, etc.)
     content = strip_unsupported_directives(content)
 
-    # Step 12: Normalize multi-line continuations (add missing commas)
+    # Step 13: Normalize multi-line continuations (add missing commas)
     content = normalize_multi_line_continuations(content)
 
-    # Step 13: Quote identifiers with special characters (-, +) in data blocks
+    # Step 14: Quote identifiers with special characters (-, +) in data blocks
     return normalize_special_identifiers(content)
