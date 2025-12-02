@@ -1,7 +1,7 @@
 # Issue: Table Wildcard Domain Support
 
 **GitHub Issue:** [#354](https://github.com/jeffreyhorn/nlp2mcp/issues/354)  
-**Status:** Open  
+**Status:** Completed  
 **Priority:** MEDIUM (Stretch Goal)  
 **Complexity:** HARD (5h)  
 **Impact:** 3 Tier 2 models (least, like, bearing)  

@@ -1,7 +1,7 @@
 # Issue: Tuple Notation in Set Declarations
 
 **GitHub Issue:** [#356](https://github.com/jeffreyhorn/nlp2mcp/issues/356)  
-**Status:** Open  
+**Status:** Completed  
 **Priority:** MEDIUM  
 **Complexity:** MEDIUM (2-3h)  
 **Impact:** 1 Tier 2 model (water - secondary blocker)  

@@ -1,7 +1,7 @@
 # Issue: Newline as Implicit Separator in Set and Parameter Declarations
 
 **GitHub Issue:** [#353](https://github.com/jeffreyhorn/nlp2mcp/issues/353)  
-**Status:** Open  
+**Status:** Completed  
 **Priority:** HIGH  
 **Complexity:** HIGH (4-6h)  
 **Impact:** 3 Tier 2 models (chem, water, gastrans)  

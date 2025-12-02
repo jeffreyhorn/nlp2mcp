@@ -1189,8 +1189,6 @@ def normalize_multi_line_continuations(source: str) -> str:
 
             # Check if / appears after a declaration keyword (Set, Parameter, Scalar, Alias)
             # Use a simple heuristic: look for these keywords before the /
-            import re
-
             if not re.search(
                 r"\b(Set|Parameter|Scalar|Alias)\b", line[: line.find("/")], re.IGNORECASE
             ):
@@ -1318,8 +1316,6 @@ def normalize_special_identifiers(source: str) -> str:
         - Detects identifiers with - or + that aren't arithmetic operators
         - Uses context: no surrounding whitespace = identifier
     """
-    import re
-
     lines = source.split("\n")
     result = []
     in_data_block = False
@@ -1395,8 +1391,6 @@ def _quote_special_in_line(line: str) -> str:
 
     And wraps them in quotes if not already quoted.
     """
-    import re
-
     # Skip if line is a comment
     if line.strip().startswith("*"):
         return line

@@ -602,7 +602,8 @@ class _ModelBuilder:
             elif child.data == "set_domain_with_members":
                 # Set with domain and members: ID(id_list) STRING? / set_members /
                 name = _token_text(child.children[0])
-                # domain is second child (id_list)
+                # Note: domain is in second child (id_list), but SetDef doesn't have a domain field yet.
+                # For now, we only extract members. Future enhancement: add domain field to SetDef.
                 # optional STRING description
                 # set_members node is last
                 members_node = next(

@@ -1,7 +1,7 @@
 # Issue: Curly Braces in Sum/Aggregation Functions
 
 **GitHub Issue:** [#355](https://github.com/jeffreyhorn/nlp2mcp/issues/355)  
-**Status:** Open  
+**Status:** Completed  
 **Priority:** MEDIUM  
 **Complexity:** SIMPLE-MEDIUM (1-2h)  
 **Impact:** 1 Tier 2 model (jbearing)  
