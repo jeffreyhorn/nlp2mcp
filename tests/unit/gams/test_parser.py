@@ -2549,3 +2549,276 @@ class TestMultiDimensionalParameters:
         model = parser.parse_model_text(text)
         assert model.params["a"].domain == ("i", "j", "k", "l")
         assert model.params["a"].values[("i1", "j1", "k1", "l1")] == 42.0
+
+
+class TestCaseInsensitivity:
+    """Test case-insensitive symbol lookup (Issue #373)."""
+
+    def test_parameter_case_insensitive_reference(self):
+        """Test parameter declared with one case, referenced with another."""
+        text = dedent(
+            """
+            Sets
+                i /i1, i2/
+            ;
+
+            Parameters
+                myParam(i) / i1 1.0, i2 2.0 /
+            ;
+
+            Variables
+                x(i)
+            ;
+
+            Equations
+                balance(i)
+            ;
+
+            balance(i).. x(i) =e= MYPARAM(i);
+
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "myparam" in model.params  # Case-insensitive lookup
+        assert model.params["myParam"].domain == ("i",)  # Case-insensitive lookup
+        assert model.params["MYPARAM"].domain == ("i",)  # Case-insensitive lookup
+
+    def test_variable_case_insensitive_reference(self):
+        """Test variable declared and referenced with different cases."""
+        text = dedent(
+            """
+            Variables
+                myVar
+                obj
+            ;
+
+            Equations
+                objective
+            ;
+
+            objective.. obj =e= MYVAR + MyVar;
+
+            Model test /all/;
+            Solve test using NLP minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "myvar" in model.variables
+        # All references should resolve to same variable
+        assert model.variables["myVar"].domain == ()
+        assert model.variables["MYVAR"].domain == ()
+
+    def test_set_case_insensitive_reference(self):
+        """Test set declared and referenced with different cases."""
+        text = dedent(
+            """
+            Sets
+                mySet /s1, s2, s3/
+            ;
+
+            Parameters
+                p(MYSET) / s1 1.0 /
+            ;
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "myset" in model.sets
+        assert "p" in model.params
+        assert model.params["p"].domain == ("MYSET",)  # Case preserved as written
+
+    def test_equation_case_insensitive_reference(self):
+        """Test equation declared and referenced with different cases."""
+        text = dedent(
+            """
+            Variables x;
+
+            Equations
+                myEquation
+            ;
+
+            MYEQUATION.. x =e= 1;
+
+            Model test / MyEquation /;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "myequation" in model.equations
+        assert model.model_equations == ["MyEquation"]  # Case preserved from Model statement
+
+    def test_alias_case_insensitive(self):
+        """Test alias with different cases."""
+        text = dedent(
+            """
+            Sets
+                i /i1, i2/
+            ;
+
+            Alias (i, J);
+
+            Parameters
+                p(j) / i1 1.0 /
+            ;
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "j" in model.aliases
+        assert model.aliases["J"].target == "i"  # Case-insensitive
+
+    def test_table_case_insensitive_reference(self):
+        """Test table declared and referenced with different cases."""
+        text = dedent(
+            """
+            Sets
+                i /i1, i2/
+                j /j1, j2/
+            ;
+
+            Table myTable(i,j)
+                    j1  j2
+            i1      1   2
+            i2      3   4
+            ;
+
+            Parameters
+                result(i)
+            ;
+
+            result(i) = sum(j, MYTABLE(i,j));
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "mytable" in model.params
+        assert len(model.params["MYTABLE"].values) == 4
+
+    def test_mixed_case_in_expressions(self):
+        """Test multiple symbols with mixed cases in same expression."""
+        text = dedent(
+            """
+            Parameters
+                alpha
+                beta
+                gamma
+            ;
+
+            alpha = 2.0;
+            beta = 3.0;
+            gamma = 4.0;
+
+            Variables
+                x
+            ;
+
+            Equations
+                balance
+            ;
+
+            balance.. x =e= ALPHA + Beta + gamma;
+
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "alpha" in model.params
+        assert "beta" in model.params
+        assert "gamma" in model.params
+
+    def test_case_preservation_in_output(self):
+        """Test that original casing is preserved for display."""
+        text = dedent(
+            """
+            Parameters
+                MyParameter
+            ;
+
+            MyParameter = 5.0;
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        # Check that we can get the original name
+        original_name = model.params.get_original_name("myparameter")
+        assert original_name == "MyParameter"
+
+    def test_haverly_pattern(self):
+        """Test the exact pattern from haverly.gms."""
+        text = dedent(
+            """
+            Sets
+                f /f1, f2/
+            ;
+
+            Table data_f(f,*)
+                    price  sulfur
+            f1      9      2.5
+            f2      15     1.5
+            ;
+
+            Parameters
+                req_sulfur(f)
+            ;
+
+            req_sulfur(f) = data_F(f,'sulfur');
+
+            Variables x;
+            Equations eq;
+            eq.. x =e= 0;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data_f" in model.params
+        # This should not fail with "Undefined symbol 'data_F'"
+        assert "req_sulfur" in model.params
+
+    def test_no_redeclaration_error_different_case(self):
+        """Test that same symbol with different case is not a redeclaration error."""
+        text = dedent(
+            """
+            Parameters
+                myParam
+            ;
+
+            myParam = 1.0;
+
+            Variables x;
+            Equations eq;
+
+            myParam = 2.0;
+            MYPARAM = 3.0;
+
+            eq.. x =e= myParam;
+            Model test /all/;
+            Solve test using NLP minimizing x;
+            """
+        )
+        # Should parse without redeclaration errors
+        model = parser.parse_model_text(text)
+        assert "myparam" in model.params
