@@ -2581,7 +2581,7 @@ class TestCaseInsensitivity:
             """
         )
         model = parser.parse_model_text(text)
-        assert "myparam" in model.params  # Stored with lowercase key
+        assert "myparam" in model.params  # Case-insensitive lookup
         assert model.params["myParam"].domain == ("i",)  # Case-insensitive lookup
         assert model.params["MYPARAM"].domain == ("i",)  # Case-insensitive lookup
 
