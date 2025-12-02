@@ -70,10 +70,10 @@ alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_unive
 
 alias_pair: "(" ID "," ID ")"
 
-param_decl: ID "(" id_list ")" "/" param_data_items "/" param_default? -> param_domain_data
-          | ID "(" id_list ")" param_default?                          -> param_domain
-          | ID "/" param_data_items "/" param_default?                 -> param_plain_data
-          | ID param_default?                                          -> param_plain
+param_decl: ID "(" id_list ")" STRING? "/" param_data_items "/" param_default? -> param_domain_data
+          | ID "(" id_list ")" STRING? param_default?                          -> param_domain
+          | ID STRING? "/" param_data_items "/" param_default?                 -> param_plain_data
+          | ID STRING? param_default?                                          -> param_plain
           | ID "," id_list                                             -> param_list
 scalar_decl: scalar_single_item                                          -> scalar_single
            | scalar_item (","? scalar_item)+                                 -> scalar_list
@@ -105,11 +105,13 @@ scalar_data_item: NUMBER
 
 param_default: ASSIGN expr
 param_data_items: param_data_item ("," param_data_item)*
-param_data_item: data_indices NUMBER                       -> param_data_scalar
-                 | data_matrix_row                         -> param_data_matrix_row
+param_data_item: data_matrix_row                         -> param_data_matrix_row
+                 | data_indices NUMBER                   -> param_data_scalar
 
-data_indices: ID ("." ID)*
-data_matrix_row: data_indices data_matrix_values
+// data_indices can be numeric (e.g., parameter tau(nm) / 1 0.000, 2 0.025 /)
+data_indices: (ID | NUMBER) ("." (ID | NUMBER))*
+// Matrix row must have at least 2 values (data_indices followed by 2+ NUMBERs) to disambiguate from scalar
+data_matrix_row: data_indices NUMBER NUMBER+
 data_matrix_values: NUMBER (NUMBER)*
 
 var_decl: var_kind? ID "(" id_list ")"                       -> var_indexed
@@ -141,6 +143,7 @@ set_members: set_member ("," set_member)*
            | ID "." ID STRING                    -> set_tuple_with_desc
            | ID "." ID                           -> set_tuple
            | ID STRING                           -> set_element_with_desc
+           | NUMBER                              -> set_element
            | ID                                  -> set_element
            | STRING                              -> set_element
 

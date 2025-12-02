@@ -2395,7 +2395,7 @@ class _ModelBuilder:
             return [
                 _token_text(tok)
                 for tok in node.children
-                if isinstance(tok, Token) and tok.type == "ID"
+                if isinstance(tok, Token) and tok.type in ("ID", "NUMBER")
             ]
         return [_token_text(node)]
 
