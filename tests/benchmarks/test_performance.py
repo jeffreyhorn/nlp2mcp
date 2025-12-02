@@ -85,8 +85,8 @@ class TestPerformanceBenchmarks:
         elapsed = time.perf_counter() - start
 
         assert result is not None
-        # Target: < 6.0 seconds (increased from 5.0s to account for CI environment variability)
-        assert elapsed < 6.0, f"Parse large model took {elapsed:.3f}s (target < 6.0s)"
+        # Target: < 5.0 seconds
+        assert elapsed < 5.0, f"Parse large model took {elapsed:.3f}s (target < 5.0s)"
         print(f"\nParse large model: {elapsed:.3f}s")
 
     @pytest.mark.slow
