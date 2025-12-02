@@ -1974,3 +1974,312 @@ class TestConditionalEquations:
         model = parser.parse_model_text(text)
         assert "firsthalf" in model.equations
         assert model.equations["firsthalf"].domain == ("i",)
+
+
+class TestLagLeadOperators:
+    """Test lag/lead operators in set indexing (Issue #361)."""
+
+    def test_lead_operator_in_sum_expression(self):
+        """Test linear lead operator i+1 in sum expression."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i5/ ;
+
+            Variables
+                x(i)
+                energy ;
+
+            Equations
+                objective ;
+
+            objective.. energy =e= sum(i, x(i) + x(i+1));
+
+            Model test / all / ;
+            Solve test using NLP minimizing energy;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "objective" in model.equations
+        # Verify the equation parsed successfully
+        assert model.equations["objective"].relation == Rel.EQ
+
+    def test_lag_operator_in_sum_expression(self):
+        """Test linear lag operator i-1 in sum expression."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i5/ ;
+
+            Variables
+                x(i)
+                obj ;
+
+            Equations
+                objective ;
+
+            objective.. obj =e= sum(i, x(i) + x(i-1));
+
+            Model test / all / ;
+            Solve test using NLP minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "objective" in model.equations
+
+    def test_lead_operator_in_equation_domain(self):
+        """Test lead operator in equation domain declaration."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i5/ ;
+
+            Variables
+                x(i) ;
+
+            Equations
+                balance(i) ;
+
+            balance(i+1).. x(i+1) =e= x(i) + 1;
+
+            Model test / all / ;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "balance" in model.equations
+        # Domain should be extracted as just 'i' (base identifier)
+        assert model.equations["balance"].domain == ("i",)
+
+    def test_lag_operator_in_equation_domain(self):
+        """Test lag operator in equation domain declaration."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i5/ ;
+
+            Variables
+                x(i) ;
+
+            Equations
+                balance(i) ;
+
+            balance(i-1).. x(i-1) =e= x(i);
+
+            Model test / all / ;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "balance" in model.equations
+        assert model.equations["balance"].domain == ("i",)
+
+    def test_lead_operator_in_filtered_set(self):
+        """Test lead operator inside filtered set like nh(i+1)."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i5/
+                nh(i) /i2*i4/ ;
+
+            Variables
+                x(i)
+                energy ;
+
+            Equations
+                objective ;
+
+            objective.. energy =e= sum(nh(i+1), x(i));
+
+            Model test / all / ;
+            Solve test using NLP minimizing energy;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "objective" in model.equations
+
+    def test_chain_gms_pattern(self):
+        """Test the specific pattern from chain.gms (Tier 2 model)."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i6/
+                nh(i) /i2*i6/ ;
+
+            Parameters
+                h ;
+
+            Variables
+                x(i)
+                u(i)
+                energy ;
+
+            Equations
+                energy_def
+                x_eqn(i) ;
+
+            h = 1.0;
+
+            energy_def.. energy =e= 0.5*h*sum(nh(i+1), x(i)*sqrt(1 + sqr(u(i))) + x(i+1)*sqrt(1 + sqr(u(i+1))));
+
+            x_eqn(i+1).. x(i+1) =e= x(i) + 0.5*h*(u(i) + u(i+1));
+
+            Model chain / all / ;
+            Solve chain using NLP minimizing energy;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "energy_def" in model.equations
+        assert "x_eqn" in model.equations
+        assert model.equations["x_eqn"].domain == ("i",)
+
+    def test_circular_lead_operator(self):
+        """Test circular lead operator i++1."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i5/ ;
+
+            Variables
+                x(i)
+                obj ;
+
+            Equations
+                circular ;
+
+            circular.. obj =e= sum(i, x(i) + x(i++1));
+
+            Model test / all / ;
+            Solve test using NLP minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "circular" in model.equations
+
+    def test_circular_lag_operator(self):
+        """Test circular lag operator i--1."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i5/ ;
+
+            Variables
+                x(i)
+                obj ;
+
+            Equations
+                circular ;
+
+            circular.. obj =e= sum(i, x(i) + x(i--1));
+
+            Model test / all / ;
+            Solve test using NLP minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "circular" in model.equations
+
+    def test_multiple_lag_lead_operators(self):
+        """Test multiple lag/lead operators in same expression."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i10/ ;
+
+            Variables
+                x(i)
+                obj ;
+
+            Equations
+                balance ;
+
+            balance.. obj =e= sum(i, x(i-2) + x(i-1) + x(i) + x(i+1) + x(i+2));
+
+            Model test / all / ;
+            Solve test using NLP minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "balance" in model.equations
+
+    def test_lag_lead_with_variable_offset(self):
+        """Test lag/lead with variable offset (not just numeric)."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i5/ ;
+
+            Scalars
+                offset /2/ ;
+
+            Variables
+                x(i)
+                obj ;
+
+            Equations
+                balance ;
+
+            balance.. obj =e= sum(i, x(i) + x(i+offset));
+
+            Model test / all / ;
+            Solve test using NLP minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "balance" in model.equations
+
+    def test_nested_domain_with_lag_lead(self):
+        """Test nested domain indexing with lag/lead operators."""
+        text = dedent(
+            """
+            Sets
+                i /i1*i5/
+                j /j1*j3/
+                subset(i,j) /i1.j1, i2.j2/ ;
+
+            Variables
+                x(i,j) ;
+
+            Equations
+                balance(i,j) ;
+
+            balance(subset(i+1,j)).. x(i+1,j) =e= x(i,j);
+
+            Model test / all / ;
+            Solve test using NLP minimizing x;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "balance" in model.equations
+        # Domain should extract both i and j
+        assert model.equations["balance"].domain == ("i", "j")
+
+    def test_polygon_gms_pattern(self):
+        """Test pattern from polygon.gms (Tier 2 model)."""
+        text = dedent(
+            """
+            Sets
+                k /1*8/ ;
+
+            Variables
+                x(k)
+                y(k)
+                r(k)
+                obj ;
+
+            Equations
+                fxsum
+                defr(k) ;
+
+            fxsum.. obj =e= sum(k, r(k));
+
+            defr(k).. r(k) =e= sqrt(sqr(x(k+1)-x(k)) + sqr(y(k+1)-y(k)));
+
+            Model polygon / all / ;
+            Solve polygon using NLP minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "fxsum" in model.equations
+        assert "defr" in model.equations
+        assert model.equations["defr"].domain == ("k",)
