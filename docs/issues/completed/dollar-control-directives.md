@@ -1,11 +1,11 @@
 # Issue: Dollar Control Directives
 
 **GitHub Issue:** [#360](https://github.com/jeffreyhorn/nlp2mcp/issues/360)  
-**Status:** COMPLETE (Phases 1-3)  
+**Status:** COMPLETE (All Phases 1-4)  
 **Priority:** HIGH  
-**Complexity:** HIGH (10-15h, completed 8h for Phases 1-3)  
+**Complexity:** HIGH (10-15h, completed 13h for Phases 1-4)  
 **Impact:** 3 Tier 2 models (elec, gasoil, inscribedsquare)  
-**Sprint:** Sprint 12 (Phases 1-3)
+**Sprint:** Sprint 12 (Phases 1-4)
 
 ---
 
@@ -56,9 +56,30 @@
 
 **Quality Gates:** ✓ typecheck ✓ lint ✓ format ✓ test (2001 passed)
 
-### Phase 4: DEFERRED
+### Phase 4: COMPLETE ✓ (Sprint 12, Commit 1d66d23)
 
-Phase 4 (`$if`/`$else`/`$endif` conditionals) is deferred as Phases 1-3 provide complete core functionality for the affected models.
+**Implemented Features:**
+- `process_conditionals()`: Processes `$if/$else/$endif` conditional compilation directives
+- `_evaluate_if_condition()`: Evaluates conditional expressions
+- Supported conditions:
+  - `$if set varname` / `$if not set varname`: Variable existence checks
+  - `$if varname`: Shorthand for `$if set varname`
+  - `$if expr`: Expression evaluation (>, <, >=, <=, ==, !=, =)
+  - `$else`: Alternative block when condition is false
+  - `$elseif`: Chained conditional (equivalent to `$else $if`)
+  - `$endif`: End conditional block
+- Nested conditionals support
+- Special handling for single-line `$if not set ... $set ...` patterns (no double-processing)
+- Excluded blocks replaced with comments to preserve line numbers
+
+**Testing:**
+- 14 unit tests in `test_dollar_conditionals.py` (all passing)
+- Tests cover: basic conditionals, else/elseif blocks, nesting, comparisons, edge cases
+- Real-world patterns: elec.gms defaults, feature flags, multi-condition blocks
+
+**Quality Gates:** ✓ typecheck ✓ lint ✓ format ✓ test (118 dollar control + preprocessor tests)
+
+**Integration:** Added as Step 5 in preprocessing pipeline (after macro extraction, before variable expansion)
 
 ---
 
