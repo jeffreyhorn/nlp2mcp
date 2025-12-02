@@ -1998,7 +1998,8 @@ class _ModelBuilder:
             # Dollar conditional: value_expr$condition or value_expr$(condition)
             # Evaluates to value_expr if condition is non-zero, otherwise 0
             # Both forms: children are [value_expr, DOLLAR_token, condition]
-            # (Lark discards string literal tokens like "(" and ")" from parse tree)
+            # (Lark discards tokens defined as string literals in the grammar, such as "(" and ")",
+            # from the parse tree; terminals defined without quotes like DOLLAR are included)
             value_expr = self._expr(node.children[0], free_domain)
             condition = self._expr(node.children[2], free_domain)
             from src.ir.ast import DollarConditional

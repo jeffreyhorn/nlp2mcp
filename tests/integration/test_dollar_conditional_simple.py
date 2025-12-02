@@ -22,7 +22,6 @@ def test_parse_simple_dollar_conditional():
     """
     model = parse_model_text(code)
     assert "eq1" in model.equations
-    print("✓ Parsed x$y")
 
 
 @pytest.mark.integration
@@ -37,7 +36,6 @@ def test_parse_parenthesized_dollar_conditional():
     """
     model = parse_model_text(code)
     assert "eq1" in model.equations
-    print("✓ Parsed x$(y > 0)")
 
 
 @pytest.mark.integration
