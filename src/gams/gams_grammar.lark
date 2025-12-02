@@ -105,8 +105,8 @@ scalar_data_item: NUMBER
 
 param_default: ASSIGN expr
 param_data_items: param_data_item ("," param_data_item)*
-param_data_item: data_indices NUMBER                       -> param_data_scalar
-                 | data_matrix_row                         -> param_data_matrix_row
+param_data_item: data_matrix_row                         -> param_data_matrix_row
+                 | data_indices NUMBER                   -> param_data_scalar
 
 // data_indices can be numeric (e.g., parameter tau(nm) / 1 0.000, 2 0.025 /)
 data_indices: (ID | NUMBER) ("." (ID | NUMBER))*

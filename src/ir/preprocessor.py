@@ -1200,72 +1200,6 @@ def normalize_table_continuations(source: str) -> str:
     return "\n".join(result)
 
 
-def normalize_parameter_data_blocks(source: str) -> str:
-    """Track multi-line parameter declarations with data blocks on continuation lines.
-
-    GAMS allows parameter data blocks to start on lines after the parameter name:
-        Parameter
-           tau(nm) 'description'
-                   / data values here
-                     more data /;
-
-    This function ensures such patterns are correctly identified as data blocks.
-
-    Args:
-        source: GAMS source code text
-
-    Returns:
-        Source code with parameter data blocks properly marked
-    """
-    lines = source.split("\n")
-    result = []
-    in_param_block = False
-    in_data_block = False
-
-    for i, line in enumerate(lines):
-        stripped = line.strip()
-
-        # Check if we're starting a Parameter/Scalar block
-        if re.match(f"^{DECLARATION_KEYWORDS_PATTERN}", stripped, re.IGNORECASE):
-            in_param_block = True
-            result.append(line)
-            continue
-
-        # If in parameter block, look for data blocks
-        if in_param_block:
-            # Check if this line starts a data block (has /)
-            if "/" in line and not in_data_block:
-                # Check if it's likely a data block (not division)
-                # Data blocks have / at start or after whitespace
-                slash_idx = line.find("/")
-                before_slash = line[:slash_idx].strip()
-
-                # If before slash is empty or ends with description string, and does not contain
-                # assignment/arithmetic operators, it's a data block
-                if (
-                    not before_slash or before_slash.endswith('"') or before_slash.endswith("'")
-                ) and not re.search(r"[=:+\-*/]", before_slash):
-                    in_data_block = True
-                    # Check if it closes on same line
-                    if line.count("/") >= 2:
-                        in_data_block = False
-
-            # Check if data block closes
-            if in_data_block and "/" in stripped:
-                closing_slash_idx = stripped.rfind("/")
-                # If this is the closing slash (not opening)
-                if closing_slash_idx > 0 or (closing_slash_idx == 0 and i > 0):
-                    in_data_block = False
-
-            # Check if parameter block ends
-            if stripped.endswith(";") and not in_data_block:
-                in_param_block = False
-
-        result.append(line)
-
-    return "\n".join(result)
-
-
 def normalize_multi_line_continuations(source: str) -> str:
     """Add missing commas for implicit line continuations in data blocks.
 
@@ -1663,10 +1597,7 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     # Step 13: Remove table continuation markers (+)
     content = normalize_table_continuations(content)
 
-    # Step 14: Mark parameter data blocks on continuation lines
-    content = normalize_parameter_data_blocks(content)
-
-    # Step 15: Normalize multi-line continuations (add missing commas)
+    # Step 14: Normalize multi-line continuations (add missing commas)
     content = normalize_multi_line_continuations(content)
 
     # Step 16: Quote identifiers with special characters (-, +) in data blocks
