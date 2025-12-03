@@ -2822,3 +2822,223 @@ class TestCaseInsensitivity:
         # Should parse without redeclaration errors
         model = parser.parse_model_text(text)
         assert "myparam" in model.params
+
+
+class TestDescriptionText:
+    """Test suite for DESCRIPTION terminal - Issue #137."""
+
+    def test_equation_with_hyphenated_description(self):
+        """Test equation declaration with hyphenated description text."""
+        text = dedent(
+            """
+            Sets
+                i /i1, i2/
+            ;
+
+            Variables
+                x(i)
+                obj
+            ;
+
+            Equations
+                objdef objective definition
+                non_negative(i) non-negativity constraints
+            ;
+
+            objdef.. obj =e= sum(i, x(i));
+            non_negative(i).. x(i) =g= 0;
+
+            Model test /all/;
+            Solve test using NLP minimizing obj;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "objdef" in model.equations
+        assert "non_negative" in model.equations
+        assert model.equations["objdef"].domain == ()
+        assert model.equations["non_negative"].domain == ("i",)
+
+    def test_equation_scalar_with_description(self):
+        """Test scalar equation with multi-word description."""
+        text = dedent(
+            """
+            Variables x, y;
+            Equations balance supply demand balance;
+
+            balance.. x + y =e= 10;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "balance" in model.equations
+
+    def test_equation_indexed_with_description(self):
+        """Test indexed equation with description containing hyphens."""
+        text = dedent(
+            """
+            Set i /i1, i2/;
+            Variables x(i);
+            Equations flow_limit(i) arc-capacity constraint;
+
+            flow_limit(i).. x(i) =l= 100;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "flow_limit" in model.equations
+        assert model.equations["flow_limit"].domain == ("i",)
+
+    def test_table_with_hyphenated_description(self):
+        """Test table declaration with hyphenated description text."""
+        text = dedent(
+            """
+            Set i / i1, i2 /;
+            Set j / j1, j2 /;
+
+            Table data(i,j) test-data with hyphens
+                   j1  j2
+              i1   1   2
+              i2   3   4;
+
+            Parameters result;
+            result = sum(i, sum(j, data(i,j)));
+
+            Variables x;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        # Tables are stored as params in ModelIR
+        assert "data" in model.params
+        assert model.params["data"].domain == ("i", "j")
+
+    def test_description_does_not_match_short_identifiers(self):
+        """Ensure DESCRIPTION doesn't match short identifier sequences like 'i j'."""
+        text = dedent(
+            """
+            Set i / i1, i2 /;
+            Set j / j1, j2 /;
+
+            Table data(i,j)
+                   j1  j2
+              i1   1   2
+              i2   3   4;
+
+            Variables x;
+            Model m /all/;
+            """
+        )
+        # Should parse successfully - 'j1 j2' is table header, not description
+        model = parser.parse_model_text(text)
+        # Tables are stored as params in ModelIR
+        assert "data" in model.params
+
+    def test_description_does_not_match_comma_separated_ids(self):
+        """Ensure DESCRIPTION doesn't consume comma-separated equation lists."""
+        text = dedent(
+            """
+            Variables x, y, z;
+            Equations eq1, eq2, eq3;
+
+            eq1.. x =e= 1;
+            eq2.. y =e= 2;
+            eq3.. z =e= 3;
+
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq1" in model.equations
+        assert "eq2" in model.equations
+        assert "eq3" in model.equations
+
+    def test_description_does_not_match_across_newlines(self):
+        """Ensure DESCRIPTION doesn't match across newlines in multi-line declarations."""
+        text = dedent(
+            """
+            Variables
+                x
+                y
+                obj
+            ;
+
+            Equations
+                objective
+                constraint
+            ;
+
+            objective.. obj =e= x + y;
+            constraint.. x + y =e= 10;
+
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "objective" in model.equations
+        assert "constraint" in model.equations
+
+    def test_equation_with_quoted_description_still_works(self):
+        """Ensure quoted string descriptions still work (existing feature)."""
+        text = dedent(
+            """
+            Variables x;
+            Equations eq "This is a quoted description";
+
+            eq.. x =e= 1;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
+
+    def test_description_with_multiple_hyphens(self):
+        """Test description with multiple hyphenated words."""
+        text = dedent(
+            """
+            Variables x;
+            Equations eq piece-wise linear-approximation function;
+
+            eq.. x =e= 1;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
+
+    def test_description_requires_meaningful_words(self):
+        """Test that description requires at least one word with 4+ chars."""
+        text = dedent(
+            """
+            Set i /i1, i2/;
+            Variables x(i);
+            Equations eq(i) this equation has meaningful words;
+
+            eq(i).. x(i) =e= 1;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
+
+    def test_mixed_declarations_with_and_without_descriptions(self):
+        """Test mixing equations with and without descriptions."""
+        text = dedent(
+            """
+            Variables x, y, z;
+            Equations
+                eq1 first equation
+                eq2
+                eq3 third-equation with-hyphens
+            ;
+
+            eq1.. x =e= 1;
+            eq2.. y =e= 2;
+            eq3.. z =e= 3;
+
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq1" in model.equations
+        assert "eq2" in model.equations
+        assert "eq3" in model.equations
