@@ -637,6 +637,12 @@ class _ModelBuilder:
             elif child.data == "set_empty":
                 name = _token_text(child.children[0])
                 self.model.add_set(SetDef(name=name))
+            elif child.data == "set_list":
+                # Comma-separated list of set names: Set i, j, k;
+                for token in child.children:
+                    if isinstance(token, Token):
+                        name = _token_text(token)
+                        self.model.add_set(SetDef(name=name))
             elif child.data == "set_domain":
                 name = _token_text(child.children[0])
                 domain = _id_list(child.children[1])
@@ -648,6 +654,14 @@ class _ModelBuilder:
                 # For now, we only extract members. Future enhancement: add domain field to SetDef.
                 # optional STRING description
                 # set_members node is last
+                members_node = next(
+                    c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
+                )
+                members = self._expand_set_members(members_node)
+                self.model.add_set(SetDef(name=name, members=members))
+            elif child.data == "set_aliased":
+                # Set with alias: ID STRING? alias_opt / set_members /
+                name = _token_text(child.children[0])
                 members_node = next(
                     c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
                 )
@@ -1167,10 +1181,10 @@ class _ModelBuilder:
             if not isinstance(child, Tree):
                 continue
             if child.data == "var_list":
-                # Handle comma-separated list: Variables x, y, z;
+                # Handle comma-separated list: Variables z "desc", t(i) "desc", x;
+                # Get declaration-level var_kind if present
                 idx = 0
                 decl_kind = VarKind.CONTINUOUS
-                # Check for declaration-level var_kind
                 if isinstance(child.children[idx], Tree) and child.children[idx].data == "var_kind":
                     if child.children[idx].children and isinstance(
                         child.children[idx].children[0], Token
@@ -1179,24 +1193,78 @@ class _ModelBuilder:
                         if kind_token.type in _VAR_KIND_MAP:
                             decl_kind = _VAR_KIND_MAP[kind_token.type]
                     idx += 1
-                # Get id_list
-                if idx < len(child.children) and isinstance(child.children[idx], Tree):
-                    names = _id_list(child.children[idx])
-                    final_kind = (
-                        decl_kind
-                        if decl_kind != VarKind.CONTINUOUS
-                        else (block_kind or VarKind.CONTINUOUS)
-                    )
-                    for name in names:
+                # Process each var_item in the list
+                for var_item in child.children[idx:]:
+                    if not isinstance(var_item, Tree):
+                        continue
+                    if var_item.data == "var_item_indexed":
+                        # var_item_indexed: var_kind? ID "(" id_list ")" STRING?
+                        item_idx = 0
+                        item_kind = VarKind.CONTINUOUS
+                        # Check for item-level var_kind
+                        if (
+                            isinstance(var_item.children[item_idx], Tree)
+                            and var_item.children[item_idx].data == "var_kind"
+                        ):
+                            if var_item.children[item_idx].children and isinstance(
+                                var_item.children[item_idx].children[0], Token
+                            ):
+                                kind_token = var_item.children[item_idx].children[0]
+                                if kind_token.type in _VAR_KIND_MAP:
+                                    item_kind = _VAR_KIND_MAP[kind_token.type]
+                            item_idx += 1
+                        name = _token_text(var_item.children[item_idx])
+                        domain = _id_list(var_item.children[item_idx + 1])
+                        # Item-level > declaration-level > block-level
+                        final_kind = (
+                            item_kind
+                            if item_kind != VarKind.CONTINUOUS
+                            else (
+                                decl_kind
+                                if decl_kind != VarKind.CONTINUOUS
+                                else (block_kind or VarKind.CONTINUOUS)
+                            )
+                        )
+                        self.model.add_var(VariableDef(name=name, domain=domain, kind=final_kind))
+                    elif var_item.data == "var_item_scalar":
+                        # var_item_scalar: var_kind? ID STRING?
+                        item_idx = 0
+                        item_kind = VarKind.CONTINUOUS
+                        # Check for item-level var_kind
+                        if (
+                            isinstance(var_item.children[item_idx], Tree)
+                            and var_item.children[item_idx].data == "var_kind"
+                        ):
+                            if var_item.children[item_idx].children and isinstance(
+                                var_item.children[item_idx].children[0], Token
+                            ):
+                                kind_token = var_item.children[item_idx].children[0]
+                                if kind_token.type in _VAR_KIND_MAP:
+                                    item_kind = _VAR_KIND_MAP[kind_token.type]
+                            item_idx += 1
+                        name = _token_text(var_item.children[item_idx])
+                        # Item-level > declaration-level > block-level
+                        final_kind = (
+                            item_kind
+                            if item_kind != VarKind.CONTINUOUS
+                            else (
+                                decl_kind
+                                if decl_kind != VarKind.CONTINUOUS
+                                else (block_kind or VarKind.CONTINUOUS)
+                            )
+                        )
                         self.model.add_var(VariableDef(name=name, domain=(), kind=final_kind))
             elif child.data in {"var_indexed", "var_scalar"}:
-                decl_kind, name, domain = self._parse_var_decl(child)
+                # Handle single variable declaration (backward compatibility)
+                decl_kind, name, domain, _description = self._parse_var_decl(child)
                 # Declaration-level kind takes precedence over block-level kind
                 final_kind = (
                     decl_kind
                     if decl_kind != VarKind.CONTINUOUS
                     else (block_kind or VarKind.CONTINUOUS)
                 )
+                # TODO: Support storing description in VariableDef. Description is parsed but not stored
+                #       (no description field yet). Consider adding description field in future enhancement.
                 self.model.add_var(VariableDef(name=name, domain=domain, kind=final_kind))
 
     def _handle_scalars_block(self, node: Tree) -> None:
@@ -1275,7 +1343,7 @@ class _ModelBuilder:
 
         self.model.add_param(param)
 
-    def _parse_var_decl(self, node: Tree) -> tuple[VarKind, str, tuple[str, ...]]:
+    def _parse_var_decl(self, node: Tree) -> tuple[VarKind, str, tuple[str, ...], str | None]:
         idx = 0
         kind = VarKind.CONTINUOUS
         # Check for declaration-level var_kind (wrapped in Tree node)
@@ -1291,9 +1359,16 @@ class _ModelBuilder:
         name = _token_text(node.children[idx])
         idx += 1
         domain: tuple[str, ...] = ()
+        description: str | None = None
+        # Check for domain specification (id_list for var_indexed)
         if idx < len(node.children) and isinstance(node.children[idx], Tree):
             domain = _id_list(node.children[idx])
-        return kind, name, domain
+            idx += 1
+        # Check for description (STRING token)
+        if idx < len(node.children) and isinstance(node.children[idx], Token):
+            if node.children[idx].type == "STRING":
+                description = _token_text(node.children[idx])
+        return kind, name, domain, description
 
     def _handle_equations_block(self, node: Tree) -> None:
         for child in node.children:
