@@ -2953,6 +2953,244 @@ class TestDescriptionText:
         assert "eq3" in model.equations
 
 
+class TestVariableIndexingSyntax:
+    """Test variable declarations with domain indexing (Issue #391).
+
+    GAMS allows variables to be declared with their domain specified using
+    parentheses notation directly in the declaration block, enabling more
+    concise and documented model structure.
+
+    This fixes GitHub Issue #391 and unblocks inscribedsquare.gms (106 lines, NLP).
+    """
+
+    def test_single_index_variable(self):
+        """Test variable with single index."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Variable x(i);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert model.variables["x"].domain == ("i",)
+
+    def test_two_dimensional_variable(self):
+        """Test variable with two indices."""
+        text = dedent(
+            """
+            Set i / 1*5 /;
+            Set j / 1*5 /;
+            Variable flow(i,j);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "flow" in model.variables
+        assert model.variables["flow"].domain == ("i", "j")
+
+    def test_three_dimensional_variable(self):
+        """Test variable with three indices."""
+        text = dedent(
+            """
+            Set i, j, k;
+            Variable cube(i,j,k);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "cube" in model.variables
+        assert model.variables["cube"].domain == ("i", "j", "k")
+
+    def test_mixed_scalar_and_indexed(self):
+        """Test comma-separated list with both scalar and indexed variables."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Variables
+                total        "total cost",
+                x(i)         "decision variable",
+                y(i)         "allocation variable";
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "total" in model.variables
+        assert model.variables["total"].domain == ()
+        assert "x" in model.variables
+        assert model.variables["x"].domain == ("i",)
+        assert "y" in model.variables
+        assert model.variables["y"].domain == ("i",)
+
+    def test_inscribedsquare_pattern(self):
+        """Test exact pattern from inscribedsquare.gms (Issue #391)."""
+        text = dedent(
+            """
+            Set i "corner points" / 1*4 /;
+            Variables
+              z     "area of square",
+              t(i)  "position of corner points",
+              x     "x-coordinate",
+              y     "y-coordinate";
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "z" in model.variables
+        assert model.variables["z"].domain == ()
+        assert "t" in model.variables
+        assert model.variables["t"].domain == ("i",)
+        assert "x" in model.variables
+        assert model.variables["x"].domain == ()
+        assert "y" in model.variables
+        assert model.variables["y"].domain == ()
+
+    def test_positive_variable_with_domain(self):
+        """Test positive variable with domain specification."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Positive Variable x(i);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert model.variables["x"].domain == ("i",)
+        assert model.variables["x"].kind == VarKind.POSITIVE
+
+    def test_binary_variable_with_domain(self):
+        """Test binary variable with domain specification."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Binary Variable b(i);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "b" in model.variables
+        assert model.variables["b"].domain == ("i",)
+        assert model.variables["b"].kind == VarKind.BINARY
+
+    def test_integer_variable_with_domain(self):
+        """Test integer variable with domain specification."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Integer Variable n(i);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "n" in model.variables
+        assert model.variables["n"].domain == ("i",)
+        assert model.variables["n"].kind == VarKind.INTEGER
+
+    def test_negative_variable_with_domain(self):
+        """Test negative variable with domain specification."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Negative Variable y(i);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "y" in model.variables
+        assert model.variables["y"].domain == ("i",)
+        assert model.variables["y"].kind == VarKind.NEGATIVE
+
+    def test_block_level_kind_with_indexed_variables(self):
+        """Test block-level variable kind with indexed variables."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Positive Variables
+                x(i)  "first positive variable",
+                y(i)  "second positive variable";
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert model.variables["x"].domain == ("i",)
+        assert model.variables["x"].kind == VarKind.POSITIVE
+        assert "y" in model.variables
+        assert model.variables["y"].domain == ("i",)
+        assert model.variables["y"].kind == VarKind.POSITIVE
+
+    def test_declaration_kind_overrides_block_kind(self):
+        """Test declaration-level kind overrides block-level kind."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Positive Variables
+                x(i)           "uses block kind (positive)",
+                Binary y(i)    "overrides with binary";
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert model.variables["x"].kind == VarKind.POSITIVE
+        assert "y" in model.variables
+        assert model.variables["y"].kind == VarKind.BINARY
+
+    def test_multiple_variables_with_descriptions(self):
+        """Test multiple indexed variables with descriptions."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Set j / 1*5 /;
+            Variables
+                x(i)     "indexed by i",
+                y(i,j)   "indexed by i and j",
+                z        "scalar variable";
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert model.variables["x"].domain == ("i",)
+        assert "y" in model.variables
+        assert model.variables["y"].domain == ("i", "j")
+        assert "z" in model.variables
+        assert model.variables["z"].domain == ()
+
+    def test_four_dimensional_variable(self):
+        """Test variable with four indices."""
+        text = dedent(
+            """
+            Set i, j, k, t;
+            Variable x(i,j,k,t);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert model.variables["x"].domain == ("i", "j", "k", "t")
+
+    def test_variable_without_description(self):
+        """Test indexed variable without description."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Variable x(i);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert model.variables["x"].domain == ("i",)
+
+    def test_newline_separated_variables(self):
+        """Test variables separated by newlines (original syntax still works)."""
+        text = dedent(
+            """
+            Set i / 1*10 /;
+            Variables
+                x(i)
+                y
+                z(i);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert model.variables["x"].domain == ("i",)
+        assert "y" in model.variables
+        assert model.variables["y"].domain == ()
+        assert "z" in model.variables
+        assert model.variables["z"].domain == ("i",)
+
+
 class TestHyphenatedIdentifiers:
     """Test support for hyphens and plus signs in set element identifiers.
 
