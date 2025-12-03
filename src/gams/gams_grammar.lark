@@ -68,7 +68,7 @@ alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_unive
           | ID "," ID                                        -> alias_plain
           | alias_pair                                       -> alias_single
 
-alias_pair: "(" ID "," ID ")"
+alias_pair: "(" ID "," id_list ")"
 
 param_decl: ID "(" id_list ")" STRING? "/" param_data_items "/" param_default? -> param_domain_data
           | ID "(" id_list ")" STRING? param_default?                          -> param_domain
