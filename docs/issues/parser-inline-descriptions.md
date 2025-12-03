@@ -1,47 +1,65 @@
 # Parser Enhancement: Inline Descriptions in Set Element Declarations
 
 **GitHub Issue**: #385 - https://github.com/jeffreyhorn/nlp2mcp/issues/385  
-**Status**: Open  
-**Priority**: High  
+**Status**: ✅ ALREADY IMPLEMENTED  
+**Priority**: ~~High~~ N/A (Complete)  
 **Component**: Parser (src/ir/parser.py, src/gams/gams_grammar.lark)  
-**Effort**: 3h  
-**Impact**: Unlocks 3 Tier 2 models (chem, water, gastrans) - 30% parse rate improvement
+**Implementation**: Already complete with full test coverage  
+**Actual Impact**: Feature implemented, but blocked models have different issues
 
-## Summary
+## Status Update (2025-12-03)
 
-GAMS allows inline text descriptions for set elements using quoted strings. The parser currently does not support this syntax, blocking 3 Tier 2 models from parsing.
+**This feature is already fully implemented in the codebase!**
 
-## Current Behavior
+- ✅ Grammar support exists: `ID STRING -> set_element_with_desc` (gams_grammar.lark:145)
+- ✅ Parser implementation exists: src/ir/parser.py:673-676
+- ✅ Comprehensive test coverage: tests/unit/test_inline_descriptions.py (15+ tests)
 
-When parsing GAMS files with inline descriptions in set declarations, the parser fails with:
+## Actual Blockers for Originally Identified Models
 
-**Example from chem.gms (line 16):**
+The models originally thought to be blocked by this feature have **different** blockers:
+
+1. **chem.gms** - Variable domain/indexing mismatch issue
+2. **water.gms** - Undefined symbol 'yes' (predefined constant)
+3. **gastrans.gms** - Special character in identifier (hyphen in table data)
+
+## Original Summary (Historical)
+
+GAMS allows inline text descriptions for set elements using quoted strings. ~~The parser currently does not support this syntax~~ This feature is fully implemented.
+
+## Current Behavior (OUTDATED - Feature is implemented)
+
+~~When parsing GAMS files with inline descriptions in set declarations, the parser fails~~
+
+**UPDATE:** The parser now successfully handles inline descriptions. The originally identified errors were misdiagnosed:
+
+**chem.gms** - Actual error (line 47):
 ```
-Error: Parse error at line 16, column 19: Unexpected character: '''
-  i 'atoms'     / H 'hydrogen', N 'nitrogen', O 'oxygen' /;
-                    ^
+Variable 'x' expects 0 indices but received 1 [context: equation 'cdef' LHS]
 ```
+Blocker: Variable domain mismatch, not inline descriptions
 
-**Example from water.gms (line 22):**
+**water.gms** - Actual error (line 31):
 ```
-Error: Parse error at line 22, column 21: Unexpected character: '''
-  n      'nodes' / nw 'north west reservoir', e 'east reservoir'
-                      ^
+Error: Undefined symbol 'yes' referenced
 ```
+Blocker: Predefined constant 'yes', not inline descriptions
 
-**Example from gastrans.gms (line 25):**
+**gastrans.gms** - Actual error (line 45):
 ```
-Error: Parse error at line 25, column 1: Unexpected character: 'B'
-  Brugge,    Dudzele,   Gent,    Liege,     Loenhout
-  ^
+Error: Unexpected character: '-' (in table data)
 ```
-(Note: gastrans has multi-line set declarations with continuation)
+Blocker: Hyphen in numeric table data, not set inline descriptions
 
-## Expected Behavior
+## Expected Behavior ✅ IMPLEMENTED
 
-The parser should accept inline descriptions in set element declarations and either:
-1. Store them as metadata on the set element AST nodes, OR
-2. Parse and ignore them (like comments)
+~~The parser should accept inline descriptions in set element declarations~~
+
+**IMPLEMENTED:** The parser successfully handles inline descriptions:
+- Set elements can have optional STRING descriptions
+- Grammar rule: `ID STRING -> set_element_with_desc` (line 145)
+- Descriptions are parsed but not stored in AST (treated as documentation)
+- Full test coverage exists in tests/unit/test_inline_descriptions.py
 
 ## GAMS Syntax Reference
 
