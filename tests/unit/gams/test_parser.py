@@ -2953,6 +2953,201 @@ class TestDescriptionText:
         assert "eq3" in model.equations
 
 
+class TestAttributeAssignments:
+    """Test variable/parameter/model attribute assignments (Issue #389).
+
+    GAMS allows assignment to various attributes such as .scale, .prior, .lo, .up, etc.
+    The grammar already supports this via ref_bound and attr_access rules.
+    """
+
+    def test_variable_scale_attribute(self):
+        """Test variable scaling attribute (bearing.gms pattern)."""
+        text = dedent(
+            """
+            Variable mu;
+            mu.scale = 1.0e-6;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "mu" in model.variables
+
+    def test_multiple_variable_scales(self):
+        """Test multiple variable scaling attributes (bearing.gms pattern)."""
+        text = dedent(
+            """
+            Variable mu, h, W;
+            mu.scale = 1.0e-6;
+            h.scale  = 0.001;
+            W.scale  = 1000;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "mu" in model.variables
+        assert "h" in model.variables
+        assert "W" in model.variables
+
+    def test_variable_bounds_lo_up(self):
+        """Test variable bounds (.lo, .up) assignments."""
+        text = dedent(
+            """
+            Variable x;
+            x.lo = 0;
+            x.up = 100;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        # Note: bounds are stored in VariableDef
+        assert model.variables["x"].lo == 0
+        assert model.variables["x"].up == 100
+
+    def test_variable_initial_value(self):
+        """Test variable initial value (.l) assignment."""
+        text = dedent(
+            """
+            Variable z;
+            z.l = 50;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "z" in model.variables
+
+    def test_variable_fixed_value(self):
+        """Test variable fixed value (.fx) assignment."""
+        text = dedent(
+            """
+            Variable x;
+            x.fx = 42;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        # .fx sets both lo and up
+        assert model.variables["x"].fx == 42
+
+    def test_variable_prior_attribute(self):
+        """Test branching priority (.prior) attribute."""
+        text = dedent(
+            """
+            Variable z;
+            z.prior = 1;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "z" in model.variables
+
+    def test_model_scaleopt_attribute(self):
+        """Test model scaleOpt attribute (bearing.gms pattern)."""
+        text = dedent(
+            """
+            Variable x;
+            Equations obj;
+            obj.. x =e= 1;
+            Model m /all/;
+            m.scaleOpt = 1;
+            """
+        )
+        model = parser.parse_model_text(text)
+        # Model attributes are parsed but not stored in IR
+        assert "x" in model.variables
+
+    def test_variable_bounds_with_parameters(self):
+        """Test variable bounds using parameter values."""
+        text = dedent(
+            """
+            Parameter lower, upper;
+            lower = 10;
+            upper = 20;
+            Variable x;
+            x.lo = lower;
+            x.up = upper;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+
+    def test_bracket_expressions(self):
+        """Test bracket expressions in equations (bearing.gms uses [(expr)])."""
+        text = dedent(
+            """
+            Parameter pi, mu;
+            pi = 3.14159;
+            mu = 0.000006;
+            Variable h;
+            Equations test;
+            test.. h =e= [2*pi*mu];
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+
+    def test_bearing_gms_attribute_pattern(self):
+        """Test exact pattern from bearing.gms."""
+        text = dedent(
+            """
+            Parameter hmin, Ws;
+            hmin = 0.001;
+            Ws = 1000;
+            Variable mu, h, W, PL, Ep, Ef;
+
+            mu.scale = 1.0e-6;
+            h.scale  = hmin;
+            W.scale  = Ws;
+            PL.scale = 1.0e4;
+            Ep.scale = 1.0e4;
+            Ef.scale = 1.0e4;
+
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "mu" in model.variables
+        assert "h" in model.variables
+        assert "W" in model.variables
+        assert "PL" in model.variables
+        assert "Ep" in model.variables
+        assert "Ef" in model.variables
+
+    def test_variable_attribute_with_expression(self):
+        """Test variable attribute assigned with expression."""
+        text = dedent(
+            """
+            Parameter scale_factor;
+            scale_factor = 1000;
+            Variable x;
+            x.scale = 2 * scale_factor;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+
+    def test_multiple_attributes_same_variable(self):
+        """Test multiple attributes on same variable."""
+        text = dedent(
+            """
+            Variable x;
+            x.lo = 0;
+            x.up = 100;
+            x.l = 50;
+            x.scale = 100;
+            Model m /all/;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert model.variables["x"].lo == 0
+        assert model.variables["x"].up == 100
+
+
 class TestMultiLineDeclarations:
     """Test multi-line set/parameter/scalar declarations (Issue #388).
 
