@@ -811,21 +811,40 @@ class _ModelBuilder:
             pair_node: Tree node with data="alias_pair"
 
         Note:
-            In GAMS, Alias (target, alias_name) syntax - first ID is target, second is alias
+            GAMS Alias syntax: Alias (target, alias_name1, alias_name2, ...)
+            - First ID is always the existing set (target)
+            - Remaining IDs are new alias names for that target
+
+        Grammar: alias_pair: "(" ID "," id_list ")"
+        Structure: [ID_token, id_list_tree]
         """
-        ids = [
+        if len(pair_node.children) < 2:
+            raise self._error("Alias pair must have at least 2 parts", pair_node)
+
+        # First child is an ID token
+        first_id = _token_text(pair_node.children[0])
+
+        # Second child is id_list tree containing remaining IDs
+        id_list_node = pair_node.children[1]
+        remaining_ids = [
             _token_text(tok)
-            for tok in pair_node.children
+            for tok in id_list_node.children
             if isinstance(tok, Token) and tok.type == "ID"
         ]
-        if len(ids) == 2:
-            target, alias_name = ids
+
+        if not remaining_ids:
+            raise self._error("Alias pair must have at least one ID in the id_list", pair_node)
+
+        # GAMS Alias syntax: Alias (target, alias_name1, alias_name2, ...)
+        # - First ID is always the existing set (target)
+        # - Remaining IDs are new alias names for that target
+        # Examples:
+        #   Alias (nx,i) → i is an alias for nx
+        #   Alias (nc,j,k) → j and k are both aliases for nc
+        target = first_id
+        alias_names = remaining_ids
+        for alias_name in alias_names:
             self._register_alias(alias_name, target, None, pair_node)
-        else:
-            # Grammar should prevent this, but add defensive check
-            raise self._error(
-                f"Alias pair must have exactly 2 identifiers, got {len(ids)}", pair_node
-            )
 
     def _handle_aliases_block(self, node: Tree) -> None:
         for child in node.children:

@@ -199,13 +199,58 @@ def test_malformed_alias_pair_single_id():
         parse_model_text(source)
 
 
-def test_malformed_alias_pair_three_ids():
-    """Test that alias pair with three IDs raises parse error."""
+def test_alias_with_multiple_targets():
+    """Test alias with multiple aliases for one target: Alias (nc,j,k)."""
     source = """
-    Set i / 1*5 /;
-    Set j / 1*3 /;
-    Alias (i,j,k);
+    Set nc / 1*3 /;
+    Alias (nc,j,k);
     """
-    # Grammar should reject this - alias_pair requires exactly 2 IDs
-    with pytest.raises(ParseError):
-        parse_model_text(source)
+    model = parse_model_text(source)
+
+    assert "nc" in model.sets
+    assert "j" in model.aliases
+    assert "k" in model.aliases
+    # j and k are both aliases for nc
+    assert model.aliases["j"].target == "nc"
+    assert model.aliases["k"].target == "nc"
+
+
+def test_gasoil_pattern():
+    """Test the exact pattern from gasoil.gms line 85."""
+    source = """
+    Set nh / 1*5 /;
+    Set nc / 1*3 /;
+    Set ne / a, b /;
+    Alias (nh,i), (nc,j,k), (ne,s);
+    """
+    model = parse_model_text(source)
+
+    assert "i" in model.aliases
+    assert "j" in model.aliases
+    assert "k" in model.aliases
+    assert "s" in model.aliases
+    assert model.aliases["i"].target == "nh"
+    assert model.aliases["j"].target == "nc"
+    assert model.aliases["k"].target == "nc"
+    assert model.aliases["s"].target == "ne"
+
+
+def test_multiple_targets_with_usage():
+    """Test that multiple aliases for one target can be used in equations."""
+    source = """
+    Set nc / 1*3 /;
+    Alias (nc,j,k);
+
+    Variable x(nc);
+    Variable y(j);
+    Variable z;
+    Equation eq1(k);
+
+    eq1(k).. z =e= x(k) + y(k);
+    """
+    model = parse_model_text(source)
+
+    assert "j" in model.aliases
+    assert "k" in model.aliases
+    assert "eq1" in model.equations
+    assert model.equations["eq1"].domain == ("k",)
