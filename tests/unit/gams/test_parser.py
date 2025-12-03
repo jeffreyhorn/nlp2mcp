@@ -2952,6 +2952,286 @@ class TestDescriptionText:
         assert "eq2" in model.equations
         assert "eq3" in model.equations
 
+
+class TestMultiLineDeclarations:
+    """Test multi-line set/parameter/scalar declarations (Issue #388).
+
+    GAMS allows comma-separated set element lists and parameter data to span
+    multiple lines. Since NEWLINE is in the grammar's %ignore directive, newlines
+    are treated as whitespace, allowing multi-line comma-separated lists to parse
+    naturally without special grammar rules.
+    """
+
+    def test_multiline_set_with_commas_gastrans_style(self):
+        """Test multi-line set with commas (gastrans.gms pattern)."""
+        text = dedent(
+            """
+            Set i /
+                a, b,
+                c
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c"]
+
+    def test_multiline_set_with_commas(self):
+        """Test multi-line set with commas."""
+        text = dedent(
+            """
+            Set i /
+                a, b, c,
+                d, e, f
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c", "d", "e", "f"]
+
+    def test_multiline_set_mixed_commas(self):
+        """Test multi-line set with commas on different lines."""
+        text = dedent(
+            """
+            Set i /
+                a, b,
+                c, d
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c", "d"]
+
+    def test_multiline_set_with_descriptions(self):
+        """Test multi-line set with element descriptions (water.gms pattern)."""
+        text = dedent(
+            """
+            Set n 'nodes' /
+                nw 'north west reservoir', e  'east reservoir',
+                cc 'central city',         w  'west'
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["n"].members == ["nw", "e", "cc", "w"]
+
+    def test_multiline_set_gastrans_pattern(self):
+        """Test exact multi-line pattern from gastrans.gms."""
+        text = dedent(
+            """
+            Set i 'towns'
+              / Anderlues, Antwerpen, Arlon,   Berneau,   Blaregnies,
+                Brugge,    Dudzele,   Gent,    Liege,     Loenhout,
+                Mons,      Namur,     Petange, Peronnes,  Sinsin,
+                Voeren,    Wanze,     Warnand, Zeebrugge, Zomergem   /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        expected = [
+            "Anderlues",
+            "Antwerpen",
+            "Arlon",
+            "Berneau",
+            "Blaregnies",
+            "Brugge",
+            "Dudzele",
+            "Gent",
+            "Liege",
+            "Loenhout",
+            "Mons",
+            "Namur",
+            "Petange",
+            "Peronnes",
+            "Sinsin",
+            "Voeren",
+            "Wanze",
+            "Warnand",
+            "Zeebrugge",
+            "Zomergem",
+        ]
+        assert model.sets["i"].members == expected
+
+    def test_multiline_parameter_1d(self):
+        """Test multi-line 1D parameter (chem.gms pattern)."""
+        text = dedent(
+            """
+            Set c / H, H2, NH /;
+            Parameter gibbs(c) 'gibbs free energy' /
+                H   -10.021, H2  -21.096,
+                NH  -18.918
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["gibbs"].values == {
+            ("H",): -10.021,
+            ("H2",): -21.096,
+            ("NH",): -18.918,
+        }
+
+    def test_multiline_parameter_with_commas(self):
+        """Test multi-line parameter with commas."""
+        text = dedent(
+            """
+            Set i / a, b, c /;
+            Parameter p(i) /
+                a 1.5, b 2.7,
+                c 3.9
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values == {
+            ("a",): 1.5,
+            ("b",): 2.7,
+            ("c",): 3.9,
+        }
+
+    def test_multiline_parameter_2d(self):
+        """Test multi-line 2D parameter."""
+        text = dedent(
+            """
+            Set i / a, b /;
+            Set j / x, y /;
+            Parameter cost(i,j) /
+                a.x  10, a.y  20,
+                b.x  30, b.y  40
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["cost"].values == {
+            ("a", "x"): 10.0,
+            ("a", "y"): 20.0,
+            ("b", "x"): 30.0,
+            ("b", "y"): 40.0,
+        }
+
+    def test_multiline_scalar_declarations(self):
+        """Test multi-line scalar declarations (commas optional per scalar_item grammar)."""
+        text = dedent(
+            """
+            Scalar
+                a / 1.5 /
+                b / 2.7 /
+                c / 3.9 /
+            ;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["a"].values == {(): 1.5}
+        assert model.params["b"].values == {(): 2.7}
+        assert model.params["c"].values == {(): 3.9}
+
+    def test_multiline_scalar_with_commas(self):
+        """Test multi-line scalar declarations with commas."""
+        text = dedent(
+            """
+            Scalar
+                a / 1.5 /,
+                b / 2.7 /,
+                c / 3.9 /
+            ;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["a"].values == {(): 1.5}
+        assert model.params["b"].values == {(): 2.7}
+        assert model.params["c"].values == {(): 3.9}
+
+    def test_multiline_set_trailing_comma(self):
+        """Test multi-line set with trailing comma on last line."""
+        text = dedent(
+            """
+            Set i /
+                a,
+                b,
+                c
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c"]
+
+    def test_multiline_set_blank_lines(self):
+        """Test multi-line set with blank lines (newlines are ignored as whitespace)."""
+        text = dedent(
+            """
+            Set i /
+                a,
+
+                b,
+
+                c
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c"]
+
+    def test_mixed_singleline_multiline_sets(self):
+        """Test mixing single-line and multi-line set declarations in same file."""
+        text = dedent(
+            """
+            Set i / a, b /;
+            Set j /
+                x,
+                y,
+                z
+            /;
+            Set k / p, q, r /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b"]
+        assert model.sets["j"].members == ["x", "y", "z"]
+        assert model.sets["k"].members == ["p", "q", "r"]
+
+    def test_multiline_set_with_range(self):
+        """Test multi-line set containing range notation."""
+        text = dedent(
+            """
+            Set i /
+                i1*i5,
+                i10*i12
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["i1", "i2", "i3", "i4", "i5", "i10", "i11", "i12"]
+
+    def test_multiline_set_mixed_elements_and_ranges(self):
+        """Test multi-line set with mix of explicit elements and ranges."""
+        text = dedent(
+            """
+            Set i /
+                a, b,
+                i1*i3,
+                c, d
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "i1", "i2", "i3", "c", "d"]
+
+    def test_multiline_parameter_numeric_indices(self):
+        """Test multi-line parameter with numeric indices."""
+        text = dedent(
+            """
+            Set nm / 1, 2, 3 /;
+            Parameter tau(nm) /
+                1 0.000,
+                2 0.025,
+                3 0.050
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["tau"].values == {
+            ("1",): 0.0,
+            ("2",): 0.025,
+            ("3",): 0.050,
+        }
+
     def test_description_does_not_match_across_newlines(self):
         """Ensure DESCRIPTION doesn't match across newlines in multi-line declarations."""
         text = dedent(
