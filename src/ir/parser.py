@@ -1193,7 +1193,8 @@ class _ModelBuilder:
                             if decl_kind != VarKind.CONTINUOUS
                             else (block_kind or VarKind.CONTINUOUS)
                         )
-                        # Note: description is parsed but not stored in VariableDef (no description field yet)
+                        # TODO: Support storing description in VariableDef. Description is parsed but not stored
+                        #       (no description field yet). Consider adding description field in future enhancement.
                         self.model.add_var(VariableDef(name=name, domain=domain, kind=final_kind))
 
     def _handle_scalars_block(self, node: Tree) -> None:
