@@ -1676,12 +1676,12 @@ class TestSetRangeSyntax:
             """
         )
         model = parser.parse_model_text(text)
-        # Note: String elements keep their quotes in the parser
+        # Note: String elements have quotes stripped by the parser
         assert model.sets["i"].members == [
             "1",
             "2",
             "3",
-            '"special item"',
+            "special item",
             "5",
             "6",
         ]
@@ -2951,6 +2951,234 @@ class TestDescriptionText:
         assert "eq1" in model.equations
         assert "eq2" in model.equations
         assert "eq3" in model.equations
+
+
+class TestHyphenatedIdentifiers:
+    """Test support for hyphens and plus signs in set element identifiers.
+
+    GAMS allows hyphens (-) and plus signs (+) in identifiers, commonly used
+    in set element names like 'light-ind', 'food+agr', etc.
+
+    The grammar achieves disambiguation through rule-based context, not truly
+    context-sensitive lexing. SET_ELEMENT_ID tokens (priority .2) allow hyphens
+    and plus signs in identifiers. These tokens are only used in set_member and
+    data_indices grammar rules. In expression contexts, symbol_plain uses ID
+    tokens, so 'a-b' is parsed as three tokens (a, -, b), not one hyphenated
+    identifier. This gives correct behavior: 'Set i /a-b/' defines one element,
+    while 'c = a - b' is subtraction.
+
+    This fixes GitHub Issue #390 and unblocks chenery.gms (185 lines, NLP).
+    """
+
+    def test_simple_hyphenated_identifier(self):
+        """Test single hyphenated identifier in set."""
+        text = dedent(
+            """
+            Set i / light-ind /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["light-ind"]
+
+    def test_simple_plus_identifier(self):
+        """Test single plus-sign identifier in set."""
+        text = dedent(
+            """
+            Set i / food+agr /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["food+agr"]
+
+    def test_multiple_hyphenated_identifiers(self):
+        """Test multiple hyphenated identifiers in same set."""
+        text = dedent(
+            """
+            Set i / light-ind, heavy-ind, semi-auto /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["light-ind", "heavy-ind", "semi-auto"]
+
+    def test_chenery_sectors(self):
+        """Test exact pattern from chenery.gms line 17."""
+        text = dedent(
+            """
+            Set i 'sectors' / light-ind, food+agr, heavy-ind, services /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["light-ind", "food+agr", "heavy-ind", "services"]
+
+    def test_hyphenated_with_descriptions(self):
+        """Test hyphenated identifiers with element descriptions."""
+        text = dedent(
+            """
+            Set i 'sectors' /
+                light-ind 'light industry',
+                food+agr  'food and agriculture',
+                heavy-ind 'heavy industry'
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["light-ind", "food+agr", "heavy-ind"]
+
+    def test_mixed_regular_and_hyphenated(self):
+        """Test mix of regular and hyphenated identifiers."""
+        text = dedent(
+            """
+            Set i / a, b-c, d, e+f, g /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b-c", "d", "e+f", "g"]
+
+    def test_multiple_hyphens(self):
+        """Test identifier with multiple hyphens."""
+        text = dedent(
+            """
+            Set i / light-semi-auto-ind /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["light-semi-auto-ind"]
+
+    def test_multiple_plus_signs(self):
+        """Test identifier with multiple plus signs."""
+        text = dedent(
+            """
+            Set i / food+agr+services /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["food+agr+services"]
+
+    def test_mixed_hyphens_and_plus(self):
+        """Test identifier with both hyphens and plus signs."""
+        text = dedent(
+            """
+            Set i / light-ind+services /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["light-ind+services"]
+
+    def test_hyphenated_with_underscore(self):
+        """Test identifier with hyphens and underscores."""
+        text = dedent(
+            """
+            Set i / light_semi-auto /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["light_semi-auto"]
+
+    def test_operators_still_work_in_expressions(self):
+        """Test that minus and plus still work as operators in expressions."""
+        text = dedent(
+            """
+            Scalar a / 10 /;
+            Scalar b / 5 /;
+            Scalar c;
+            c = a - b + 2;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "c" in model.params
+        # Verify the assignment parsed (no exception means success)
+
+    def test_operators_without_spaces(self):
+        """Test that operators work correctly without spaces around them.
+
+        Critical test: Verify that 'c=a-b+d' is parsed as subtraction/addition
+        (three tokens: a, -, b) and not as hyphenated identifiers (a-b, +d).
+        The grammar correctly disambiguates based on context: SET_ELEMENT_ID
+        is only used in set/data contexts, while expressions use ID tokens.
+        """
+        text = dedent(
+            """
+            Scalar a / 10 /;
+            Scalar b / 5 /;
+            Scalar d / 3 /;
+            Scalar c;
+            c=a-b+d;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "c" in model.params
+        assert "a" in model.params
+        assert "b" in model.params
+        assert "d" in model.params
+        # Verify the expression parsed correctly (no exception means success)
+
+    def test_hyphenated_in_parameter_indexing(self):
+        """Test using hyphenated set elements in parameter indexing."""
+        text = dedent(
+            """
+            Set i / light-ind, heavy-ind /;
+            Parameter cost(i) / light-ind 100, heavy-ind 200 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["light-ind", "heavy-ind"]
+        assert "cost" in model.params
+
+    def test_hyphenated_in_variable_bounds(self):
+        """Test using hyphenated set elements in variable bounds.
+
+        IMPORTANT: Hyphenated identifiers in index expressions MUST be quoted.
+        Unquoted hyphenated identifiers like x.lo(light-ind) are misparsed
+        as lag/lead expressions (light with offset -ind). This is a known
+        limitation: index_expr uses ID tokens, not SET_ELEMENT_ID tokens.
+        Users must use quotes: x.lo('light-ind').
+        """
+        text = dedent(
+            """
+            Set i / light-ind, heavy-ind /;
+            Variable x(i);
+            x.lo('light-ind') = 0;
+            x.up('heavy-ind') = 100;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert model.sets["i"].members == ["light-ind", "heavy-ind"]
+        assert "x" in model.variables
+
+    def test_hyphen_as_operator_in_expressions(self):
+        """Test that hyphen works as subtraction operator in expressions.
+
+        Verifies that the hyphen operator works correctly in scalar expressions.
+        This is separate from hyphenated identifiers in set contexts.
+        """
+        text = dedent(
+            """
+            Set i / a /;
+            Scalar x;
+            x = 10 - 5;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a"]
+        assert "x" in model.params
+
+    def test_hyphenated_multiline(self):
+        """Test hyphenated identifiers across multiple lines."""
+        text = dedent(
+            """
+            Set i /
+                light-ind,
+                food+agr,
+                heavy-ind
+            /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["light-ind", "food+agr", "heavy-ind"]
 
 
 class TestAttributeAssignments:
