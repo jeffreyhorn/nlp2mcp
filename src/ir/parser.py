@@ -1180,22 +1180,92 @@ class _ModelBuilder:
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
-            if child.data == "var_decl_list":
-                # Handle comma-separated list: Variables z, t(i), x;
-                for var_node in child.children:
-                    if not isinstance(var_node, Tree):
+            if child.data == "var_list":
+                # Handle comma-separated list: Variables z "desc", t(i) "desc", x;
+                # Get declaration-level var_kind if present
+                idx = 0
+                decl_kind = VarKind.CONTINUOUS
+                if isinstance(child.children[idx], Tree) and child.children[idx].data == "var_kind":
+                    if child.children[idx].children and isinstance(
+                        child.children[idx].children[0], Token
+                    ):
+                        kind_token = child.children[idx].children[0]
+                        if kind_token.type in _VAR_KIND_MAP:
+                            decl_kind = _VAR_KIND_MAP[kind_token.type]
+                    idx += 1
+                # Process each var_item in the list
+                for var_item in child.children[idx:]:
+                    if not isinstance(var_item, Tree):
                         continue
-                    if var_node.data in {"var_indexed", "var_scalar"}:
-                        decl_kind, name, domain, _description = self._parse_var_decl(var_node)
-                        # Declaration-level kind takes precedence over block-level kind
+                    if var_item.data == "var_item_indexed":
+                        # var_item_indexed: var_kind? ID "(" id_list ")" STRING?
+                        item_idx = 0
+                        item_kind = VarKind.CONTINUOUS
+                        # Check for item-level var_kind
+                        if (
+                            isinstance(var_item.children[item_idx], Tree)
+                            and var_item.children[item_idx].data == "var_kind"
+                        ):
+                            if var_item.children[item_idx].children and isinstance(
+                                var_item.children[item_idx].children[0], Token
+                            ):
+                                kind_token = var_item.children[item_idx].children[0]
+                                if kind_token.type in _VAR_KIND_MAP:
+                                    item_kind = _VAR_KIND_MAP[kind_token.type]
+                            item_idx += 1
+                        name = _token_text(var_item.children[item_idx])
+                        domain = _id_list(var_item.children[item_idx + 1])
+                        # Item-level > declaration-level > block-level
                         final_kind = (
-                            decl_kind
-                            if decl_kind != VarKind.CONTINUOUS
-                            else (block_kind or VarKind.CONTINUOUS)
+                            item_kind
+                            if item_kind != VarKind.CONTINUOUS
+                            else (
+                                decl_kind
+                                if decl_kind != VarKind.CONTINUOUS
+                                else (block_kind or VarKind.CONTINUOUS)
+                            )
                         )
-                        # TODO: Support storing description in VariableDef. Description is parsed but not stored
-                        #       (no description field yet). Consider adding description field in future enhancement.
                         self.model.add_var(VariableDef(name=name, domain=domain, kind=final_kind))
+                    elif var_item.data == "var_item_scalar":
+                        # var_item_scalar: var_kind? ID STRING?
+                        item_idx = 0
+                        item_kind = VarKind.CONTINUOUS
+                        # Check for item-level var_kind
+                        if (
+                            isinstance(var_item.children[item_idx], Tree)
+                            and var_item.children[item_idx].data == "var_kind"
+                        ):
+                            if var_item.children[item_idx].children and isinstance(
+                                var_item.children[item_idx].children[0], Token
+                            ):
+                                kind_token = var_item.children[item_idx].children[0]
+                                if kind_token.type in _VAR_KIND_MAP:
+                                    item_kind = _VAR_KIND_MAP[kind_token.type]
+                            item_idx += 1
+                        name = _token_text(var_item.children[item_idx])
+                        # Item-level > declaration-level > block-level
+                        final_kind = (
+                            item_kind
+                            if item_kind != VarKind.CONTINUOUS
+                            else (
+                                decl_kind
+                                if decl_kind != VarKind.CONTINUOUS
+                                else (block_kind or VarKind.CONTINUOUS)
+                            )
+                        )
+                        self.model.add_var(VariableDef(name=name, domain=(), kind=final_kind))
+            elif child.data in {"var_indexed", "var_scalar"}:
+                # Handle single variable declaration (backward compatibility)
+                decl_kind, name, domain, _description = self._parse_var_decl(child)
+                # Declaration-level kind takes precedence over block-level kind
+                final_kind = (
+                    decl_kind
+                    if decl_kind != VarKind.CONTINUOUS
+                    else (block_kind or VarKind.CONTINUOUS)
+                )
+                # TODO: Support storing description in VariableDef. Description is parsed but not stored
+                #       (no description field yet). Consider adding description field in future enhancement.
+                self.model.add_var(VariableDef(name=name, domain=domain, kind=final_kind))
 
     def _handle_scalars_block(self, node: Tree) -> None:
         for child in node.children:

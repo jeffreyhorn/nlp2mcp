@@ -49,9 +49,7 @@ wildcard_tuple: "*" ("," "*")+
 
 scalars_block: ("Scalars"i | "Scalar"i) scalar_decl+ SEMI
 
-variables_block: var_kind? ("Variables"i | "Variable"i) var_decl_list SEMI
-
-var_decl_list: var_decl (","? var_decl)*
+variables_block: var_kind? ("Variables"i | "Variable"i) var_decl+ SEMI
 
 equations_block: ("Equations"i | "Equation"i) eqn_head_decl+ SEMI
 
@@ -118,8 +116,12 @@ data_indices: (SET_ELEMENT_ID | NUMBER) ("." (SET_ELEMENT_ID | NUMBER))*
 data_matrix_row: data_indices NUMBER NUMBER+
 data_matrix_values: NUMBER (NUMBER)*
 
-var_decl: var_kind? ID "(" id_list ")" STRING?               -> var_indexed
+var_decl: var_kind? var_item ("," var_item)*                 -> var_list
+        | var_kind? ID "(" id_list ")" STRING?               -> var_indexed
         | var_kind? ID STRING?                               -> var_scalar
+
+var_item: var_kind? ID "(" id_list ")" STRING?               -> var_item_indexed
+        | var_kind? ID STRING?                                -> var_item_scalar
 
 var_kind: POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K
 
