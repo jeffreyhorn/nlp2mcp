@@ -527,3 +527,114 @@ Set k number of points / 1*%points% /;"""
         assert "* [Stripped: $eolCom //]" in result
         assert "* [Stripped: $if not set points $set points 13]" in result
         assert "Set k number of points / 1*13 /;" in result
+
+
+class TestDynamicSetRanges:
+    """Test dynamic set range patterns from Tier 2 models (Issue #387)."""
+
+    def test_chain_gms_pattern(self, tmp_path: Path):
+        """Test dynamic set range from chain.gms: i0*i%nh%."""
+        test_file = tmp_path / "chain.gms"
+        test_file.write_text(
+            """$if not set nh $set nh 50
+Set nh / i0*i%nh% /;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        # Macro should be expanded
+        assert "Set nh / i0*i50 /;" in result
+        assert "%nh%" not in result
+
+    def test_elec_gms_pattern(self, tmp_path: Path):
+        """Test dynamic set range from elec.gms: i1*i%np%."""
+        test_file = tmp_path / "elec.gms"
+        test_file.write_text(
+            """$if not set np $set np 50
+Set i 'electrons' /i1*i%np%/;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        # Macro should be expanded
+        assert "Set i 'electrons' /i1*i50/;" in result
+        assert "%np%" not in result
+
+    def test_polygon_gms_pattern(self, tmp_path: Path):
+        """Test dynamic set range from polygon.gms: i1*i%nv%."""
+        test_file = tmp_path / "polygon.gms"
+        test_file.write_text(
+            """$if not set nv $set nv 5
+Set i 'sides' / i1*i%nv% /;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        # Macro should be expanded
+        assert "Set i 'sides' / i1*i5 /;" in result
+        assert "%nv%" not in result
+
+    def test_zero_indexed_range(self, tmp_path: Path):
+        """Test zero-indexed dynamic range (i0*i%n%)."""
+        test_file = tmp_path / "test.gms"
+        test_file.write_text(
+            """$set n 10
+Set i / i0*i%n% /;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        assert "Set i / i0*i10 /;" in result
+
+    def test_one_indexed_range(self, tmp_path: Path):
+        """Test one-indexed dynamic range (i1*i%n%)."""
+        test_file = tmp_path / "test.gms"
+        test_file.write_text(
+            """$set n 100
+Set i / i1*i%n% /;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        assert "Set i / i1*i100 /;" in result
+
+    def test_custom_prefix_range(self, tmp_path: Path):
+        """Test dynamic range with custom prefix (node1*node%count%)."""
+        test_file = tmp_path / "test.gms"
+        test_file.write_text(
+            """$set count 25
+Set nodes / node1*node%count% /;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        assert "Set nodes / node1*node25 /;" in result
+
+    def test_multiple_dynamic_sets(self, tmp_path: Path):
+        """Test multiple sets with different dynamic ranges."""
+        test_file = tmp_path / "test.gms"
+        test_file.write_text(
+            """$set m 10
+$set n 20
+Set i / i1*i%m% /;
+Set j / j1*j%n% /;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        assert "Set i / i1*i10 /;" in result
+        assert "Set j / j1*j20 /;" in result
+
+    def test_nested_macro_reference(self, tmp_path: Path):
+        """Test macro referencing another macro."""
+        test_file = tmp_path / "test.gms"
+        test_file.write_text(
+            """$set base 10
+$set derived %base%
+Set i / i1*i%derived% /;"""
+        )
+
+        result = preprocess_gams_file(test_file)
+
+        # Both macros should be expanded
+        assert "Set i / i1*i10 /;" in result
