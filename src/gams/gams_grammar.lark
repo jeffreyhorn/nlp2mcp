@@ -38,7 +38,7 @@ aliases_block: ("Aliases"i | "Alias"i) alias_decl+ SEMI
 
 params_block: ("Parameters"i | "Parameter"i) param_decl+ SEMI
 
-table_block: "Table"i ID "(" table_domain_list ")" STRING? table_row+ SEMI
+table_block: "Table"i ID "(" table_domain_list ")" (STRING | DESCRIPTION)? table_row+ SEMI
 
 table_domain_list: table_domain ("," table_domain)*
 table_domain: ID                      -> explicit_domain
@@ -129,10 +129,10 @@ INTEGER_K : /(?i:integer)\b/
 // e.g., "Equations eq1, eq2(i,j);". This is NOT valid GAMS syntax according to
 // the official specification, but we handle it gracefully to support user error recovery.
 // Updated for Sprint 11 Day 1: Support nested/subset indexing like defdist(low(n,nn))
-eqn_head_decl: id_list "(" domain_list ")"                   -> eqn_head_domain_list
-             | ID "(" domain_list ")"                        -> eqn_head_domain
-             | id_list                                       -> eqn_head_list
-             | ID                                            -> eqn_head_scalar
+eqn_head_decl: id_list "(" domain_list ")" (STRING | DESCRIPTION)?  -> eqn_head_domain_list
+             | ID "(" domain_list ")" (STRING | DESCRIPTION)?       -> eqn_head_domain
+             | id_list (STRING | DESCRIPTION)?                      -> eqn_head_list
+             | ID (STRING | DESCRIPTION)?                           -> eqn_head_scalar
 
 alias_opt : "(" id_list ")"                                  -> alias_domain
 id_list: ID ("," ID)*
@@ -388,6 +388,7 @@ OFF: /(?i:off)\b/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
 ESCAPED: /'[^']*'|\"[^\"]*\"/
 STRING: /"[^"]*"|'[^']*'/
+DESCRIPTION.10: /(?=.*(?:[a-zA-Z_][a-zA-Z0-9_]{3,}|\w+\-\w+))[a-zA-Z_][\w\-]*(?:[ \t]+[a-zA-Z_][\w\-]*)+/
 
 NUMBER: SIGNED_NUMBER
 
