@@ -819,7 +819,7 @@ class _ModelBuilder:
         Structure: [ID_token, id_list_tree]
         """
         if len(pair_node.children) < 2:
-            raise self._error(f"Alias pair must have at least 2 parts", pair_node)
+            raise self._error("Alias pair must have at least 2 parts", pair_node)
 
         # First child is an ID token
         first_id = _token_text(pair_node.children[0])
@@ -833,7 +833,7 @@ class _ModelBuilder:
         ]
 
         if not remaining_ids:
-            raise self._error(f"Alias pair must have at least one ID in the id_list", pair_node)
+            raise self._error("Alias pair must have at least one ID in the id_list", pair_node)
 
         # GAMS Alias syntax: Alias (target, alias_name1, alias_name2, ...)
         # - First ID is always the existing set (target)
