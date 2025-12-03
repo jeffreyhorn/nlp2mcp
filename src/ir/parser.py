@@ -321,6 +321,16 @@ def _token_text(token: Token) -> str:
     return value
 
 
+def _is_string_literal(token: Token) -> bool:
+    """Check if a token is a string literal (quoted text) that should be treated as a description."""
+    value = str(token)
+    # Check if token value starts and ends with matching quotes
+    if len(value) >= 2:
+        if (value[0] == '"' and value[-1] == '"') or (value[0] == "'" and value[-1] == "'"):
+            return True
+    return False
+
+
 def _strip_quotes(token: Token) -> str:
     """Strip quotes from ID tokens (e.g., 'i1', \"cost%\" → i1, cost%)."""
     value = str(token)
@@ -955,11 +965,12 @@ class _ModelBuilder:
         domain = tuple(domain)
 
         # Find all table_content nodes (which can be table_row or PLUS tokens)
+        # Also collect DESCRIPTION tokens which might contain column headers
         table_contents = [
             child
             for child in node.children
             if (isinstance(child, Tree) and child.data == "table_content")
-            or (isinstance(child, Token) and child.type == "PLUS")
+            or (isinstance(child, Token) and child.type in ("PLUS", "DESCRIPTION"))
         ]
 
         if not table_contents:
@@ -975,7 +986,21 @@ class _ModelBuilder:
                 if isinstance(actual_node, Tree) and actual_node.data == "table_row":
                     table_rows.append(actual_node)
 
-        if not table_rows:
+        # Allow empty table_rows if we have DESCRIPTION tokens or continuations
+        # (which might contain all the data)
+        has_description_or_continuation = any(
+            isinstance(c, Token)
+            and c.type in ("DESCRIPTION", "PLUS")
+            or (
+                isinstance(c, Tree)
+                and c.data == "table_content"
+                and c.children
+                and isinstance(c.children[0], Tree)
+                and c.children[0].data == "table_continuation"
+            )
+            for c in table_contents
+        )
+        if not table_rows and not has_description_or_continuation:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
             return
 
@@ -989,16 +1014,20 @@ class _ModelBuilder:
                     if first_child.data == "simple_label":
                         # Simple or dotted label wrapped in simple_label
                         dotted_label_node = first_child.children[0]
-                        label_parts = [
-                            _token_text(tok)
+                        # Filter out string literals (table descriptions) when building label
+                        label_tokens = [
+                            tok
                             for tok in dotted_label_node.children
-                            if isinstance(tok, Token)
+                            if isinstance(tok, Token) and not _is_string_literal(tok)
                         ]
-                        row_label = ".".join(label_parts)
-                        # Get line number from first token
-                        first_token = dotted_label_node.children[0]
-                        if hasattr(first_token, "line"):
-                            row_label_map[first_token.line] = row_label
+                        if label_tokens:
+                            # Only create row label if there are non-string-literal tokens
+                            label_parts = [_token_text(tok) for tok in label_tokens]
+                            row_label = ".".join(label_parts)
+                            # Get line number from first token
+                            first_token = label_tokens[0]
+                            if hasattr(first_token, "line"):
+                                row_label_map[first_token.line] = row_label
                     elif first_child.data == "tuple_label":
                         # Tuple label like "(low,medium,high).ynot"
                         # Structure: tuple_label -> id_list, dotted_label
@@ -1051,7 +1080,9 @@ class _ModelBuilder:
                         dotted_label_node = child.children[0]
                         for grandchild in dotted_label_node.children:
                             if isinstance(grandchild, Token):
-                                all_tokens.append(grandchild)
+                                # Skip string literals (table descriptions)
+                                if not _is_string_literal(grandchild):
+                                    all_tokens.append(grandchild)
                     elif child.data == "tuple_label":
                         # tuple_label contains id_list and dotted_label
                         # Collect tokens from both
@@ -1081,6 +1112,31 @@ class _ModelBuilder:
                                 for val_token in token.children:
                                     if isinstance(val_token, Token):
                                         all_tokens.append(val_token)
+            elif isinstance(content, Token) and content.type == "DESCRIPTION":
+                # DESCRIPTION tokens may contain column headers that need to be parsed
+                # These appear when column headers are on a line before a continuation marker
+                # Parse the DESCRIPTION text to extract column header tokens
+                desc_text = str(content)
+                if desc_text and not _is_string_literal(content):
+                    # Split on whitespace to get individual column names
+                    # Create pseudo-tokens for each column header
+                    col_names = desc_text.split()
+                    if col_names and hasattr(content, "line") and hasattr(content, "column"):
+                        # Estimate column positions based on the text
+                        base_col = content.column
+                        for col_name in col_names:
+                            # Find position of this column name in the original text
+                            col_pos = desc_text.find(col_name)
+                            if col_pos >= 0:
+                                # Create a pseudo-token with position info
+                                from lark import Token as LarkToken
+
+                                pseudo_token = LarkToken("ID", col_name)
+                                pseudo_token.line = content.line
+                                pseudo_token.column = (
+                                    base_col if base_col is not None else 0
+                                ) + col_pos
+                                all_tokens.append(pseudo_token)
 
         if not all_tokens:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
@@ -1108,20 +1164,34 @@ class _ModelBuilder:
         # Create a mapping to store column offsets for continuation tokens
         continuation_col_offsets: dict[int, int] = {}  # token id -> column offset
 
+        # Track which lines come after a continuation marker
+        # These lines have values that should be offset to match continuation columns
+        continuation_data_lines = set()
+        for plus_line in plus_lines:
+            # Lines after the continuation marker (+) should have offsets applied
+            # because their values are positioned under the original columns but should
+            # match to the continuation columns
+            for ln, _ in sorted_lines:
+                if plus_line is not None and ln is not None and ln > plus_line:
+                    continuation_data_lines.add(ln)
+
         # Merge continuation lines (those with +) with previous line
         merged_lines: list[tuple[int, list[Token]]] = []
+        current_continuation_offset = 0  # Offset to apply to current continuation section
         for line_num, line_tokens in sorted_lines:
             if line_num in plus_lines:
-                # This is a continuation line - merge with previous line
+                # This is a continuation line - should merge with FIRST line (column headers)
+                # not with the last line (which might be a data row)
                 if merged_lines:
-                    prev_line_num, prev_tokens = merged_lines[-1]
+                    # Always merge continuation tokens with the first line (column headers)
+                    first_line_num, first_line_tokens_list = merged_lines[0]
 
                     # Need to adjust column positions of continuation tokens
-                    # Find the maximum column position in the previous line to know where to continue
-                    if prev_tokens:
-                        # Get all column positions from previous tokens (with offsets applied)
+                    # Find the maximum column position in the first line to know where to continue
+                    if first_line_tokens_list:
+                        # Get all column positions from first line tokens (with offsets applied)
                         prev_cols = []
-                        for t in prev_tokens:
+                        for t in first_line_tokens_list:
                             if hasattr(t, "column") and t.column is not None:
                                 col = t.column
                                 # Apply offset if this token was from a continuation
@@ -1158,6 +1228,14 @@ class _ModelBuilder:
                                     col_spacing = sum(spacings) // len(spacings)
 
                             # Store column offsets for continuation tokens
+                            # Calculate the offset needed to shift these tokens after the previous columns
+                            if line_tokens:
+                                first_token_col = getattr(line_tokens[0], "column", 0)
+                                # The offset is how much we need to shift all tokens in this continuation
+                                current_continuation_offset = (
+                                    max_prev_col + col_spacing - first_token_col
+                                )
+
                             for idx, token in enumerate(line_tokens):
                                 # Each continuation token should be spaced after the last previous token
                                 new_col = max_prev_col + (idx + 1) * col_spacing
@@ -1166,18 +1244,55 @@ class _ModelBuilder:
                                     offset = new_col - token.column
                                     continuation_col_offsets[id(token)] = offset
 
-                            merged_lines[-1] = (prev_line_num, prev_tokens + line_tokens)
+                            merged_lines[0] = (first_line_num, first_line_tokens_list + line_tokens)
                         else:
-                            merged_lines[-1] = (prev_line_num, prev_tokens + line_tokens)
+                            merged_lines[0] = (first_line_num, first_line_tokens_list + line_tokens)
                     else:
-                        merged_lines[-1] = (prev_line_num, prev_tokens + line_tokens)
+                        merged_lines[0] = (first_line_num, first_line_tokens_list + line_tokens)
 
                     # Remove this line's label from row_label_map if it exists
                     if line_num in row_label_map:
                         del row_label_map[line_num]
                 # else: no previous line, skip this continuation
             else:
-                # Regular line
+                # Regular line (not a continuation marker line)
+                # Apply continuation offset to data rows that come after a continuation marker
+                # ONLY if they don't span all columns (i.e., they're continuation data rows)
+                if line_num in continuation_data_lines and current_continuation_offset != 0:
+                    # Check if this row has values spanning continuation columns
+                    # If values are only in the original column range, apply offset
+                    has_continuation_range_values = False
+                    if line_tokens:
+                        max_col = max((getattr(t, "column", 0) for t in line_tokens), default=0)
+                        # If max column is significantly beyond the original range, don't apply offset
+                        # (this row already spans into continuation columns)
+                        first_line_tokens_sample = merged_lines[0][1] if merged_lines else []
+                        if first_line_tokens_sample:
+                            # Find the midpoint between original and continuation columns
+                            orig_cols = [
+                                getattr(t, "column", 0)
+                                for t in first_line_tokens_sample[
+                                    : len(first_line_tokens_sample) // 2
+                                ]
+                                if hasattr(t, "column")
+                            ]
+                            cont_cols = [
+                                getattr(t, "column", 0) + continuation_col_offsets.get(id(t), 0)
+                                for t in first_line_tokens_sample[
+                                    len(first_line_tokens_sample) // 2 :
+                                ]
+                                if hasattr(t, "column")
+                            ]
+                            if orig_cols and cont_cols:
+                                midpoint = (max(orig_cols) + min(cont_cols)) / 2
+                                has_continuation_range_values = max_col > midpoint
+
+                    if not has_continuation_range_values:
+                        # Apply offset to all tokens in this row
+                        for token in line_tokens:
+                            if hasattr(token, "column") and token.column is not None:
+                                continuation_col_offsets[id(token)] = current_continuation_offset
+
                 merged_lines.append((line_num, line_tokens))
 
         sorted_lines = merged_lines
@@ -1197,7 +1312,11 @@ class _ModelBuilder:
         # Column headers: store name and column position
         col_headers = []  # List of (col_name, col_position) tuples
         for token in first_line_tokens:
-            if token.type == "ID":
+            # Column headers can be ID or NUMBER tokens
+            if token.type in ("ID", "NUMBER"):
+                # Skip string literals (table descriptions) that were incorrectly parsed as IDs
+                if token.type == "ID" and _is_string_literal(token):
+                    continue
                 col_name = _token_text(token)
                 col_pos = getattr(token, "column", 0)
                 # Apply continuation offset if this token came from a continuation line
@@ -1232,6 +1351,7 @@ class _ModelBuilder:
             # Match remaining tokens to columns by position
             # Collect all values for this row first
             row_values = {}  # col_name -> value
+            used_columns = set()  # Track which columns have been matched
             for token in line_tokens[1:]:
                 if token.type not in ("NUMBER", "ID"):
                     continue
@@ -1246,6 +1366,9 @@ class _ModelBuilder:
                 best_match = None
                 min_dist = float("inf")
                 for col_name, col_pos in col_headers:
+                    # Skip columns that have already been matched
+                    if col_name in used_columns:
+                        continue
                     # Allow token to be within ~6 chars of column header position
                     dist = abs(token_col - col_pos)
                     if dist < min_dist and dist <= 6:
@@ -1261,6 +1384,7 @@ class _ModelBuilder:
                         value = 0.0
 
                     row_values[best_match] = value
+                    used_columns.add(best_match)  # Mark this column as used
 
             # Replicate the row data for each expanded label (for tuple labels)
             for row_header in row_headers:
