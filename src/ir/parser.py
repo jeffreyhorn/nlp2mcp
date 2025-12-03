@@ -811,9 +811,9 @@ class _ModelBuilder:
             pair_node: Tree node with data="alias_pair"
 
         Note:
-            GAMS Alias syntax has two patterns:
-            - Alias (target, alias_name): 2 IDs - first is target, second is alias
-            - Alias (alias_name, target1, target2, ...): 3+ IDs - first is alias, rest are targets
+            GAMS Alias syntax: Alias (target, alias_name1, alias_name2, ...)
+            - First ID is always the existing set (target)
+            - Remaining IDs are new alias names for that target
 
         Grammar: alias_pair: "(" ID "," id_list ")"
         Structure: [ID_token, id_list_tree]
