@@ -1873,8 +1873,17 @@ class _ModelBuilder:
                 # For now, we parse and validate but don't store attribute values
                 # (mock/store approach - similar to how we handle variable bounds with expressions)
                 # Common attributes: scale, prior, stage, scaleOpt
-                # This can be variable attributes, model attributes, or other object attributes
-                # We don't validate the object exists for now (permissive parsing)
+                # Validate that the base object exists (variable, parameter, or model)
+                base_name = _token_text(target.children[0])
+                if (
+                    base_name not in self.model.variables
+                    and base_name not in self.model.params
+                    and base_name != self.model.declared_model
+                ):
+                    raise self._error(
+                        f"Symbol '{base_name}' not declared as a variable, parameter, or model",
+                        target,
+                    )
                 return
             if target.data == "symbol_indexed":
                 # Handle indexed assignment: p('i1') = 10, report('x1','global') = 1, or low(n,nn) = ...

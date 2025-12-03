@@ -3015,6 +3015,7 @@ class TestAttributeAssignments:
         )
         model = parser.parse_model_text(text)
         assert "z" in model.variables
+        assert model.variables["z"].l == 50
 
     def test_variable_fixed_value(self):
         """Test variable fixed value (.fx) assignment."""
@@ -3058,7 +3059,13 @@ class TestAttributeAssignments:
         assert "x" in model.variables
 
     def test_variable_bounds_with_parameters(self):
-        """Test variable bounds using parameter values."""
+        """Test variable bounds using parameter values.
+
+        Note: The parser uses mock/store approach for bounds with non-constant
+        expressions (see parser.py lines 1846-1849). Since 'lower' and 'upper'
+        are parameter references (not constants), these bounds are parsed but
+        not stored in the variable.
+        """
         text = dedent(
             """
             Parameter lower, upper;
@@ -3072,6 +3079,9 @@ class TestAttributeAssignments:
         )
         model = parser.parse_model_text(text)
         assert "x" in model.variables
+        # Bounds are not stored because they use parameter references (mock/store)
+        assert model.variables["x"].lo is None
+        assert model.variables["x"].up is None
 
     def test_bracket_expressions(self):
         """Test bracket expressions in equations (bearing.gms uses [(expr)])."""
@@ -3146,6 +3156,7 @@ class TestAttributeAssignments:
         assert "x" in model.variables
         assert model.variables["x"].lo == 0
         assert model.variables["x"].up == 100
+        assert model.variables["x"].l == 50
 
 
 class TestMultiLineDeclarations:
