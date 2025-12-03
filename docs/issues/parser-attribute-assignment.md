@@ -162,7 +162,7 @@ assignment_target: ID indices?
 **Tier 2 Models (1 blocked by this issue):**
 - ✅ bearing.gms (154 lines, NLP) - Journal Bearing Problem
 
-**Impact:** Unlocking this model improves Tier 2 parse rate from 27.8% → 33.3% (5/18 → 6/18)
+**Impact:** Unlocking this model improves Tier 2 parse rate from 27.78% → 33.33% (5/18 → 6/18)
 
 ## Related Issues
 
@@ -295,7 +295,7 @@ x.scale = 100;
 ### Test 7: Fixed value
 ```gams
 Variable x;
-x.fx = 42;  # Equivalent to x.lo = 42; x.up = 42;
+x.fx = 42;  * Equivalent to x.lo = 42; x.up = 42;
 ```
 
 ### Test 8: Branching priority

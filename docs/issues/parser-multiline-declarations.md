@@ -175,7 +175,7 @@ set_element: ID STRING?
 ```lark
 set_block: "Set"i set_decl+ SEMI
 set_decl: ID STRING? "/" set_elements "/"
-set_elements: set_element (","? NEWLINE? set_element)*
+set_elements: set_element (","? NEWLINE* set_element)*
 set_element: ID STRING?
 ```
 

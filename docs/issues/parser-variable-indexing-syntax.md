@@ -47,7 +47,7 @@ Variables
 This is equivalent to:
 ```gams
 Variables z, t, x;
-# Domain implied by usage
+* Domain implied by usage
 ```
 
 But the explicit indexing provides:
@@ -59,7 +59,7 @@ From GAMS User's Guide, Section 6.1 "Variable Declarations":
 - Variables can be declared with their domain in parentheses
 - Syntax: `variable_name(index_set1, index_set2, ...)  "description"`
 - Domain specification is optional but recommended for clarity
-- Commas separate multiple variables in a declaration
+- Commas separate multiple variable declarations in a declaration
 
 ## Reproduction
 
@@ -156,7 +156,7 @@ index_spec: "(" ID ("," ID)* ")"
 **Tier 2 Models (1 blocked by this issue):**
 - ✅ inscribedsquare.gms (106 lines, NLP) - Inscribed Square Problem
 
-**Impact:** Unlocking this model improves Tier 2 parse rate from 27.8% → 33.3% (5/18 → 6/18)
+**Impact:** Unlocking this model improves Tier 2 parse rate from 27.78% → 33.33% (5/18 → 6/18)
 
 ## Related Issues
 
@@ -172,14 +172,14 @@ index_spec: "(" ID ("," ID)* ")"
 ```gams
 Variable x;
 Equation balance;
-balance.. sum(i, x) =e= total;  # Domain inferred from usage
+balance.. sum(i, x) =e= total;  * Domain inferred from usage
 ```
 
 **With explicit domain:**
 ```gams
 Variable x(i);
 Equation balance;
-balance.. sum(i, x(i)) =e= total;  # Domain explicit
+balance.. sum(i, x(i)) =e= total;  * Domain explicit
 ```
 
 Benefits:

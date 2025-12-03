@@ -120,13 +120,13 @@ table_row: ID NUMBER+
 ```lark
 table_stmt: "Table"i ID indices? STRING? table_data SEMI
 table_data: table_header table_rows
-table_header: header_segment continuation_segment*
+table_header: header_segment header_continuation_segment*
 header_segment: ID+
-continuation_segment: "+" ID+
+header_continuation_segment: "+" ID+
 table_rows: table_row+
-table_row: row_segment continuation_segment*
+table_row: row_segment data_continuation_segment*
 row_segment: ID NUMBER+
-continuation_segment: "+" NUMBER+
+data_continuation_segment: "+" NUMBER+
 ```
 
 **Parser Semantic Handler:**
@@ -148,7 +148,7 @@ continuation_segment: "+" NUMBER+
 **Tier 2 Models (1 blocked by this issue):**
 - ✅ like.gms (85 lines, NLP) - Likelihood Function Fitting
 
-**Impact:** Unlocking this model improves Tier 2 parse rate from 27.8% → 33.3% (5/18 → 6/18)
+**Impact:** Unlocking this model improves Tier 2 parse rate from 27.78% → 33.33% (5/18 → 6/18)
 
 ## Related Issues
 
@@ -162,14 +162,14 @@ continuation_segment: "+" NUMBER+
 
 **Conceptual model:**
 ```gams
-# With continuation
+* With continuation
 Table data(i,j)
        a  b  c
    +   d  e  f
 row1   1  2  3
    +   4  5  6;
 
-# Equivalent without continuation
+* Equivalent without continuation
 Table data(i,j)
        a  b  c  d  e  f
 row1   1  2  3  4  5  6;

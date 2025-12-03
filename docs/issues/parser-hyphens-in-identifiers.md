@@ -135,7 +135,7 @@ set_element: identifier STRING?
 **Tier 2 Models (1 blocked by this issue):**
 - ✅ chenery.gms (185 lines, NLP) - Substitution and Structural Change
 
-**Impact:** Unlocking this model improves Tier 2 parse rate from 27.8% → 33.3% (5/18 → 6/18)
+**Impact:** Unlocking this model improves Tier 2 parse rate from 27.78% → 33.33% (5/18 → 6/18)
 
 ## Related Issues
 
@@ -245,12 +245,12 @@ Table data(i,j)
 
 ### Test 5: Disambiguation - hyphen as operator
 ```gams
-x = a - b;    # Minus operator, not identifier "a-b"
+x = a - b;    * Minus operator, not identifier "a-b"
 ```
 
 ### Test 6: Disambiguation - plus as operator
 ```gams
-y = c + d;    # Plus operator, not identifier "c+d"
+y = c + d;    * Plus operator, not identifier "c+d"
 ```
 
 ### Test 7: Multiple hyphens
