@@ -140,9 +140,9 @@ id_list: ID ("," ID)*
 
 set_members: set_member ("," set_member)*
 ?set_member: range_expr                          -> set_range
-           | ID "." "(" id_list ")"              -> set_tuple_expansion
-           | ID "." ID STRING                    -> set_tuple_with_desc
-           | ID "." ID                           -> set_tuple
+           | SET_ELEMENT_ID "." "(" id_list ")"  -> set_tuple_expansion
+           | SET_ELEMENT_ID "." SET_ELEMENT_ID STRING -> set_tuple_with_desc
+           | SET_ELEMENT_ID "." SET_ELEMENT_ID   -> set_tuple
            | SET_ELEMENT_ID STRING               -> set_element_with_desc
            | NUMBER                              -> set_element
            | SET_ELEMENT_ID                      -> set_element
