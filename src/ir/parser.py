@@ -1867,6 +1867,24 @@ class _ModelBuilder:
                 bound_token = target.children[1]
                 self._apply_variable_bound(var_name, bound_token, (), value, target)
                 return
+            if target.data == "attr_access":
+                # Handle general attribute access: var.scale, model.scaleOpt, etc.
+                # This is for attributes not covered by BOUND_K (lo, up, fx, l, m)
+                # For now, we parse and validate but don't store attribute values
+                # (mock/store approach - similar to how we handle variable bounds with expressions)
+                # Common attributes: scale, prior, stage, scaleOpt
+                # Validate that the base object exists (variable, parameter, or model)
+                base_name = _token_text(target.children[0])
+                if (
+                    base_name not in self.model.variables
+                    and base_name not in self.model.params
+                    and base_name != self.model.declared_model
+                ):
+                    raise self._error(
+                        f"Symbol '{base_name}' not declared as a variable, parameter, or model",
+                        target,
+                    )
+                return
             if target.data == "symbol_indexed":
                 # Handle indexed assignment: p('i1') = 10, report('x1','global') = 1, or low(n,nn) = ...
                 symbol_name = _token_text(target.children[0])
@@ -2164,6 +2182,13 @@ class _ModelBuilder:
                     path.append(_token_text(child))
             expr = CompileTimeConstant(path=tuple(path))
             return self._attach_domain(expr, free_domain)
+
+        # Support bracket expressions: [expr] is treated like (expr)
+        if node.data == "bracket_expr":
+            # Just unwrap and process the inner expression
+            if len(node.children) > 0:
+                return self._expr(node.children[0], free_domain)
+            raise self._error("Empty bracket expression", node)
 
         raise self._error(
             f"Unsupported expression type: {node.data}. "
