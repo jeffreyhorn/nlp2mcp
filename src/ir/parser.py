@@ -954,12 +954,26 @@ class _ModelBuilder:
 
         domain = tuple(domain)
 
-        # Find all table_row nodes and collect all tokens
-        table_rows = [
+        # Find all table_content nodes (which can be table_row or PLUS tokens)
+        table_contents = [
             child
             for child in node.children
-            if isinstance(child, Tree) and child.data == "table_row"
+            if (isinstance(child, Tree) and child.data == "table_content")
+            or (isinstance(child, Token) and child.type == "PLUS")
         ]
+
+        if not table_contents:
+            self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
+            return
+
+        # Extract table_row nodes from table_content wrappers
+        # PLUS tokens will be collected separately in the token collection phase
+        table_rows = []
+        for content in table_contents:
+            if isinstance(content, Tree) and content.children:
+                actual_node = content.children[0]
+                if isinstance(actual_node, Tree) and actual_node.data == "table_row":
+                    table_rows.append(actual_node)
 
         if not table_rows:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
@@ -1020,7 +1034,8 @@ class _ModelBuilder:
                     if hasattr(first_child, "line"):
                         row_label_map[first_child.line] = row_label
 
-        # Collect all tokens from all table_row nodes with position info
+        # Collect all tokens from table_row nodes with position info
+        # Note: PLUS tokens are markers and will be skipped in line grouping
         all_tokens = []
         for row in table_rows:
             for child in row.children:
@@ -1046,6 +1061,27 @@ class _ModelBuilder:
                                     if isinstance(tok, Token):
                                         all_tokens.append(tok)
 
+        # Collect PLUS tokens to identify continuation lines and extract continuation values
+        plus_lines = set()  # Set of line numbers that start with +
+        for content in table_contents:
+            if isinstance(content, Tree):
+                if content.data == "table_content" and content.children:
+                    actual_node = content.children[0]
+                    if isinstance(actual_node, Tree) and actual_node.data == "table_continuation":
+                        # Extract PLUS token and collect continuation values
+                        for token in actual_node.children:
+                            if isinstance(token, Token):
+                                if token.type == "PLUS":
+                                    if hasattr(token, "line"):
+                                        plus_lines.add(token.line)
+                                else:
+                                    # Add value tokens to all_tokens
+                                    all_tokens.append(token)
+                            elif isinstance(token, Tree) and token.data == "table_value":
+                                for val_token in token.children:
+                                    if isinstance(val_token, Token):
+                                        all_tokens.append(val_token)
+
         if not all_tokens:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
             return
@@ -1058,12 +1094,97 @@ class _ModelBuilder:
             if hasattr(token, "line"):
                 lines[token.line].append(token)
 
+        # Sort tokens within each line by column position
+        for line_num in lines:
+            lines[line_num] = sorted(lines[line_num], key=lambda t: getattr(t, "column", 0))
+
         if not lines:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
             return
 
         # Sort lines by line number
         sorted_lines = sorted(lines.items())
+
+        # Create a mapping to store column offsets for continuation tokens
+        continuation_col_offsets: dict[int, int] = {}  # token id -> column offset
+
+        # Merge continuation lines (those with +) with previous line
+        merged_lines: list[tuple[int, list[Token]]] = []
+        for line_num, line_tokens in sorted_lines:
+            if line_num in plus_lines:
+                # This is a continuation line - merge with previous line
+                if merged_lines:
+                    prev_line_num, prev_tokens = merged_lines[-1]
+
+                    # Need to adjust column positions of continuation tokens
+                    # Find the maximum column position in the previous line to know where to continue
+                    if prev_tokens:
+                        # Get all column positions from previous tokens (with offsets applied)
+                        prev_cols = []
+                        for t in prev_tokens:
+                            if hasattr(t, "column") and t.column is not None:
+                                col = t.column
+                                # Apply offset if this token was from a continuation
+                                if id(t) in continuation_col_offsets:
+                                    col += continuation_col_offsets[id(t)]
+                                prev_cols.append(col)
+                        if prev_cols:
+                            max_prev_col = max(prev_cols)
+                            # Find the column spacing from the first merged line (headers) to determine spacing
+                            # Use merged_lines if available, otherwise fall back to sorted_lines
+                            first_line_tokens = merged_lines[0][1] if merged_lines else []
+                            col_spacing = 3  # default spacing
+                            if len(first_line_tokens) >= 2:
+                                # Calculate average spacing between columns
+                                # Need to account for adjusted positions in continuation tokens
+                                spacings = []
+                                for j in range(len(first_line_tokens) - 1):
+                                    if hasattr(first_line_tokens[j], "column") and hasattr(
+                                        first_line_tokens[j + 1], "column"
+                                    ):
+                                        col1 = first_line_tokens[j].column or 0
+                                        col2 = first_line_tokens[j + 1].column or 0
+                                        # Apply offsets if these tokens were from continuation
+                                        if id(first_line_tokens[j]) in continuation_col_offsets:
+                                            col1 += continuation_col_offsets[
+                                                id(first_line_tokens[j])
+                                            ]
+                                        if id(first_line_tokens[j + 1]) in continuation_col_offsets:
+                                            col2 += continuation_col_offsets[
+                                                id(first_line_tokens[j + 1])
+                                            ]
+                                        spacings.append(col2 - col1)
+                                if spacings:
+                                    col_spacing = sum(spacings) // len(spacings)
+
+                            # Store column offsets for continuation tokens
+                            for idx, token in enumerate(line_tokens):
+                                # Each continuation token should be spaced after the last previous token
+                                new_col = max_prev_col + (idx + 1) * col_spacing
+                                # Store the offset needed for this token using its id
+                                if hasattr(token, "column") and token.column is not None:
+                                    offset = new_col - token.column
+                                    continuation_col_offsets[id(token)] = offset
+
+                            merged_lines[-1] = (prev_line_num, prev_tokens + line_tokens)
+                        else:
+                            merged_lines[-1] = (prev_line_num, prev_tokens + line_tokens)
+                    else:
+                        merged_lines[-1] = (prev_line_num, prev_tokens + line_tokens)
+
+                    # Remove this line's label from row_label_map if it exists
+                    if line_num in row_label_map:
+                        del row_label_map[line_num]
+                # else: no previous line, skip this continuation
+            else:
+                # Regular line
+                merged_lines.append((line_num, line_tokens))
+
+        sorted_lines = merged_lines
+
+        if not sorted_lines:
+            self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
+            return
 
         # First line should be column headers
         first_line_num, first_line_tokens = sorted_lines[0]
@@ -1079,6 +1200,9 @@ class _ModelBuilder:
             if token.type == "ID":
                 col_name = _token_text(token)
                 col_pos = getattr(token, "column", 0)
+                # Apply continuation offset if this token came from a continuation line
+                if id(token) in continuation_col_offsets:
+                    col_pos += continuation_col_offsets[id(token)]
                 col_headers.append((col_name, col_pos))
 
         if not col_headers:
@@ -1113,6 +1237,9 @@ class _ModelBuilder:
                     continue
 
                 token_col = getattr(token, "column", 0)
+                # Apply continuation column offset if this token came from a continuation line
+                if id(token) in continuation_col_offsets:
+                    token_col += continuation_col_offsets[id(token)]
 
                 # Find the closest column header at or before this position
                 # (to handle slight alignment variations)
