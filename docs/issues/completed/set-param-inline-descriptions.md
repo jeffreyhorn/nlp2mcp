@@ -1,9 +1,11 @@
 # Issue: Sets and Parameters with Inline Descriptions Misparsed
 
-**Status**: Open  
+**Status**: Completed  
 **Priority**: High  
 **Component**: Parser (Grammar)  
-**GitHub Issue**: [#417](https://github.com/jeffreyhorn/nlp2mcp/issues/417)
+**GitHub Issue**: [#417](https://github.com/jeffreyhorn/nlp2mcp/issues/417)  
+**Branch**: fix-issue-409-pool-include-file  
+**Resolved**: Sprint 12 Day 5 (2024)
 
 ## Description
 
@@ -87,10 +89,72 @@ Parameter p(s3);  # Should recognize s3
 Expected: All three sets registered, parameter references `s3` successfully
 Actual: TBD - need to verify exact behavior
 
-## Next Steps
+---
 
-1. Create GitHub issue
-2. Add test case to reproduce the problem
-3. Investigate grammar patterns for set_decl and param_decl
-4. Consider same solution approach as variables: split into single vs. list patterns
-5. Implement fix ensuring all sets/parameters with descriptions are registered correctly
+## Resolution
+
+**Resolved**: Sprint 12 Day 5 (2024)  
+**Commit**: `3ffa4dd` - Fix issue #417: Sets and Parameters with Inline Descriptions
+
+### Root Cause
+
+The issue had two problems:
+1. **desc_text as a rule consumed tokens across newlines**: When desc_text was a grammar rule matching `_desc_word _desc_word _desc_word+`, it would match IDs across multiple lines, causing subsequent set/parameter names to be consumed as part of a description.
+2. **Quoted strings (ESCAPED) were treated as IDs**: Both ID and STRING could match quoted text, and ID had higher priority, so desc_text could match quoted strings.
+
+### Solution Implemented
+
+Applied a multi-part fix similar to issue #416:
+
+1. **Split patterns** (same as variables):
+   - `set_decl: set_item ("," set_item)+ | set_single_item`
+   - `param_decl: param_item ("," param_item)+ | param_single_item`
+   - Single items allow desc_text, list items only allow STRING
+
+2. **Made desc_text a terminal token**:
+   - Changed from rule to terminal: `DESC_TEXT.-1: /[a-zA-Z_][\w\-]*(?:[ \t]+[a-zA-Z_][\w\-]*){1,}/`
+   - Uses `[ \t]+` (space/tab) instead of `\s+` to prevent matching across newlines
+   - Matches 2+ words (changed from 3+ to support "total cost")
+   - Priority -1 to avoid interfering with normal ID matching
+
+3. **Parser updates**:
+   - Updated handlers to route through `_process_set_decl` and `_process_param_decl`
+   - Added `_process_set_item` and `_process_param_item` helpers
+   - Modified `_parse_var_decl` to handle DESC_TEXT as a Token instead of Tree node
+   - Added backward compatibility for legacy desc_text tree nodes
+
+### Test Results
+
+All tests passing (2190 passed):
+- ✅ Sets with unquoted multi-word descriptions parse correctly
+- ✅ Parameters with inline descriptions parse correctly  
+- ✅ Newline-separated declarations work
+- ✅ 2-word descriptions like "total cost" supported
+- ✅ Space-separated set declarations still work
+
+### Verified Examples
+
+**poolmod.inc sets**:
+```gams
+Sets comp_ Components and Raw Matereials
+     pro_  Products
+     qual_ Qualities
+     pool_ Pools
+```
+Result: All four sets registered correctly ✓
+
+**poolmod.inc variables**:
+```gams
+variables  q(comp_, pool_) pool quality from pooling raw materials
+           y(pool_, pro_)  flow from pool to product
+           z(comp_, pro_)  direct flow of rawmaterials to product
+           cost            total cost
+```
+Result: All variables parse correctly (semantic validation requires set definitions) ✓
+
+### Lessons Learned
+
+1. **Terminal vs Rule**: Using a terminal with explicit line-boundary constraints ([ \t] vs \s) prevents cross-line matching better than rule-based patterns
+2. **Priority matters**: Terminal priority (-1) prevents interference with normal lexing
+3. **2-word minimum**: Requiring 3+ words was too restrictive; 2+ words balances ambiguity vs usability
+4. **Consistent patterns**: Applying the same split-pattern approach (single vs list) across sets, parameters, and variables maintains consistency
