@@ -38,7 +38,11 @@ aliases_block: ("Aliases"i | "Alias"i) alias_decl+ SEMI
 
 params_block: ("Parameters"i | "Parameter"i) param_decl+ SEMI
 
-table_block: "Table"i ID "(" table_domain_list ")" (STRING | DESCRIPTION)? table_row+ SEMI
+table_block: "Table"i ID "(" table_domain_list ")" (STRING | DESCRIPTION)? table_content+ SEMI
+
+table_content: table_row | table_continuation
+
+table_continuation: PLUS (table_value | ID | NUMBER)+
 
 table_domain_list: table_domain ("," table_domain)*
 table_domain: ID                      -> explicit_domain
