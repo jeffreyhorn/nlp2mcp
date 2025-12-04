@@ -1164,34 +1164,47 @@ class _ModelBuilder:
         # Create a mapping to store column offsets for continuation tokens
         continuation_col_offsets: dict[int, int] = {}  # token id -> column offset
 
-        # Track which lines come after a continuation marker
-        # These lines have values that should be offset to match continuation columns
-        continuation_data_lines = set()
-        for plus_line in plus_lines:
-            # Lines after the continuation marker (+) should have offsets applied
-            # because their values are positioned under the original columns but should
-            # match to the continuation columns
-            for ln, _ in sorted_lines:
-                if plus_line is not None and ln is not None and ln > plus_line:
-                    continuation_data_lines.add(ln)
-
         # Merge continuation lines (those with +) with previous line
         merged_lines: list[tuple[int, list[Token]]] = []
-        current_continuation_offset = 0  # Offset to apply to current continuation section
         for line_num, line_tokens in sorted_lines:
             if line_num in plus_lines:
-                # This is a continuation line - should merge with FIRST line (column headers)
-                # not with the last line (which might be a data row)
+                # This is a continuation line - need to determine if it contains:
+                # 1. Column headers (ID tokens) -> merge with first line (column headers)
+                # 2. Data values (NUMBER tokens) -> merge with last line (previous data row)
                 if merged_lines:
-                    # Always merge continuation tokens with the first line (column headers)
-                    first_line_num, first_line_tokens_list = merged_lines[0]
+                    # Check if continuation line looks like column headers or data
+                    # Column headers are all ID tokens (no numbers)
+                    # Data rows have NUMBER tokens
+                    has_number_tokens = any(
+                        tok.type == "NUMBER" for tok in line_tokens if isinstance(tok, Token)
+                    )
+                    all_id_tokens = all(
+                        tok.type == "ID" and not _is_string_literal(tok)
+                        for tok in line_tokens
+                        if isinstance(tok, Token)
+                    )
+
+                    # Determine if this is a column header continuation or data continuation
+                    # 1. If only one line exists (column headers), continuation must be for headers
+                    # 2. Otherwise, if all ID tokens and no numbers, it's column headers
+                    if len(merged_lines) == 1:
+                        is_column_header_continuation = True
+                    else:
+                        is_column_header_continuation = all_id_tokens and not has_number_tokens
+
+                    if is_column_header_continuation:
+                        # Merge with first line (column headers)
+                        target_line_num, target_tokens = merged_lines[0]
+                    else:
+                        # Data continuation, merge with last line (previous data row)
+                        target_line_num, target_tokens = merged_lines[-1]
 
                     # Need to adjust column positions of continuation tokens
-                    # Find the maximum column position in the first line to know where to continue
-                    if first_line_tokens_list:
-                        # Get all column positions from first line tokens (with offsets applied)
+                    # Find the maximum column position in the target line to know where to continue
+                    if target_tokens:
+                        # Get all column positions from target line tokens (with offsets applied)
                         prev_cols = []
-                        for t in first_line_tokens_list:
+                        for t in target_tokens:
                             if hasattr(t, "column") and t.column is not None:
                                 col = t.column
                                 # Apply offset if this token was from a continuation
@@ -1200,55 +1213,104 @@ class _ModelBuilder:
                                 prev_cols.append(col)
                         if prev_cols:
                             max_prev_col = max(prev_cols)
-                            # Find the column spacing from the first merged line (headers) to determine spacing
-                            # Use merged_lines if available, otherwise fall back to sorted_lines
-                            first_line_tokens = merged_lines[0][1] if merged_lines else []
+                            # Find the column spacing from the target line to determine spacing
                             col_spacing = 3  # default spacing
-                            if len(first_line_tokens) >= 2:
+                            if len(target_tokens) >= 2:
                                 # Calculate average spacing between columns
                                 # Need to account for adjusted positions in continuation tokens
                                 spacings = []
-                                for j in range(len(first_line_tokens) - 1):
-                                    if hasattr(first_line_tokens[j], "column") and hasattr(
-                                        first_line_tokens[j + 1], "column"
+                                for j in range(len(target_tokens) - 1):
+                                    if hasattr(target_tokens[j], "column") and hasattr(
+                                        target_tokens[j + 1], "column"
                                     ):
-                                        col1 = first_line_tokens[j].column or 0
-                                        col2 = first_line_tokens[j + 1].column or 0
+                                        col1 = target_tokens[j].column or 0
+                                        col2 = target_tokens[j + 1].column or 0
                                         # Apply offsets if these tokens were from continuation
-                                        if id(first_line_tokens[j]) in continuation_col_offsets:
-                                            col1 += continuation_col_offsets[
-                                                id(first_line_tokens[j])
-                                            ]
-                                        if id(first_line_tokens[j + 1]) in continuation_col_offsets:
+                                        if id(target_tokens[j]) in continuation_col_offsets:
+                                            col1 += continuation_col_offsets[id(target_tokens[j])]
+                                        if id(target_tokens[j + 1]) in continuation_col_offsets:
                                             col2 += continuation_col_offsets[
-                                                id(first_line_tokens[j + 1])
+                                                id(target_tokens[j + 1])
                                             ]
                                         spacings.append(col2 - col1)
                                 if spacings:
                                     col_spacing = sum(spacings) // len(spacings)
 
                             # Store column offsets for continuation tokens
-                            # Calculate the offset needed to shift these tokens after the previous columns
-                            if line_tokens:
-                                first_token_col = getattr(line_tokens[0], "column", 0)
-                                # The offset is how much we need to shift all tokens in this continuation
-                                current_continuation_offset = (
-                                    max_prev_col + col_spacing - first_token_col
-                                )
+                            # Different handling for column header vs data continuations
+                            if is_column_header_continuation:
+                                # Column headers: place tokens sequentially after existing columns
+                                for idx, token in enumerate(line_tokens):
+                                    new_col = max_prev_col + (idx + 1) * col_spacing
+                                    if hasattr(token, "column") and token.column is not None:
+                                        offset = new_col - token.column
+                                        continuation_col_offsets[id(token)] = offset
+                            else:
+                                # Data continuation: try to match with continuation column headers
+                                # that have the same original column position
+                                first_line_tokens = merged_lines[0][1] if merged_lines else []
+                                has_matching_columns = False
 
-                            for idx, token in enumerate(line_tokens):
-                                # Each continuation token should be spaced after the last previous token
-                                new_col = max_prev_col + (idx + 1) * col_spacing
-                                # Store the offset needed for this token using its id
-                                if hasattr(token, "column") and token.column is not None:
-                                    offset = new_col - token.column
-                                    continuation_col_offsets[id(token)] = offset
+                                for token in line_tokens:
+                                    if hasattr(token, "column") and token.column is not None:
+                                        token_col = token.column
+                                        matching_offset = None
+                                        for header_token in first_line_tokens:
+                                            if (
+                                                hasattr(header_token, "column")
+                                                and header_token.column == token_col
+                                                and id(header_token) in continuation_col_offsets
+                                            ):
+                                                matching_offset = continuation_col_offsets[
+                                                    id(header_token)
+                                                ]
+                                                has_matching_columns = True
+                                                break
 
-                            merged_lines[0] = (first_line_num, first_line_tokens_list + line_tokens)
+                                        if matching_offset is not None:
+                                            continuation_col_offsets[id(token)] = matching_offset
+
+                                # If no matching continuation columns, use sequential placement
+                                if not has_matching_columns:
+                                    # Count existing data tokens to find which columns to map to
+                                    data_tokens_count = len(
+                                        [t for t in target_tokens[1:] if hasattr(t, "column")]
+                                    )
+
+                                    for idx, token in enumerate(line_tokens):
+                                        if hasattr(token, "column") and token.column is not None:
+                                            col_idx = data_tokens_count + idx
+                                            if col_idx < len(first_line_tokens):
+                                                target_col_header = first_line_tokens[col_idx]
+                                                if hasattr(target_col_header, "column"):
+                                                    target_col = target_col_header.column
+                                                    if (
+                                                        id(target_col_header)
+                                                        in continuation_col_offsets
+                                                    ):
+                                                        target_col += continuation_col_offsets[
+                                                            id(target_col_header)
+                                                        ]
+                                                    offset = target_col - token.column
+                                                    continuation_col_offsets[id(token)] = offset
+
+                            # Update the target line with merged tokens
+                            if is_column_header_continuation:
+                                merged_lines[0] = (target_line_num, target_tokens + line_tokens)
+                            else:
+                                merged_lines[-1] = (target_line_num, target_tokens + line_tokens)
                         else:
-                            merged_lines[0] = (first_line_num, first_line_tokens_list + line_tokens)
+                            # Update the target line with merged tokens
+                            if is_column_header_continuation:
+                                merged_lines[0] = (target_line_num, target_tokens + line_tokens)
+                            else:
+                                merged_lines[-1] = (target_line_num, target_tokens + line_tokens)
                     else:
-                        merged_lines[0] = (first_line_num, first_line_tokens_list + line_tokens)
+                        # Update the target line with merged tokens
+                        if is_column_header_continuation:
+                            merged_lines[0] = (target_line_num, target_tokens + line_tokens)
+                        else:
+                            merged_lines[-1] = (target_line_num, target_tokens + line_tokens)
 
                     # Remove this line's label from row_label_map if it exists
                     if line_num in row_label_map:
@@ -1256,43 +1318,6 @@ class _ModelBuilder:
                 # else: no previous line, skip this continuation
             else:
                 # Regular line (not a continuation marker line)
-                # Apply continuation offset to data rows that come after a continuation marker
-                # ONLY if they don't span all columns (i.e., they're continuation data rows)
-                if line_num in continuation_data_lines and current_continuation_offset != 0:
-                    # Check if this row has values spanning continuation columns
-                    # If values are only in the original column range, apply offset
-                    has_continuation_range_values = False
-                    if line_tokens:
-                        max_col = max((getattr(t, "column", 0) for t in line_tokens), default=0)
-                        # If max column is significantly beyond the original range, don't apply offset
-                        # (this row already spans into continuation columns)
-                        first_line_tokens_sample = merged_lines[0][1] if merged_lines else []
-                        if first_line_tokens_sample:
-                            # Find the midpoint between original and continuation columns
-                            orig_cols = [
-                                getattr(t, "column", 0)
-                                for t in first_line_tokens_sample[
-                                    : len(first_line_tokens_sample) // 2
-                                ]
-                                if hasattr(t, "column")
-                            ]
-                            cont_cols = [
-                                getattr(t, "column", 0) + continuation_col_offsets.get(id(t), 0)
-                                for t in first_line_tokens_sample[
-                                    len(first_line_tokens_sample) // 2 :
-                                ]
-                                if hasattr(t, "column")
-                            ]
-                            if orig_cols and cont_cols:
-                                midpoint = (max(orig_cols) + min(cont_cols)) / 2
-                                has_continuation_range_values = max_col > midpoint
-
-                    if not has_continuation_range_values:
-                        # Apply offset to all tokens in this row
-                        for token in line_tokens:
-                            if hasattr(token, "column") and token.column is not None:
-                                continuation_col_offsets[id(token)] = current_continuation_offset
-
                 merged_lines.append((line_num, line_tokens))
 
         sorted_lines = merged_lines
