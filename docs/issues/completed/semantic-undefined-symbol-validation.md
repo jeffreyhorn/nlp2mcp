@@ -162,7 +162,7 @@ All **syntax parsing issues** for pool.gms have been resolved. This is now a **s
 
 ## Resolution
 
-**Resolved:** Sprint 12 Day 5 (2024)  
+**Resolved:** Sprint 12 Day 5 (2025)  
 **Commits:** 
 - `497b8ff` - Sprint 12 Day 5: Implement inline_descriptions blocker
 - `5d6728c` - Fix var_single grammar: support both inline descriptions and newline-separated variables

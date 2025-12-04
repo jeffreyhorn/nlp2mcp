@@ -5,7 +5,7 @@
 **Component**: Parser (Grammar)  
 **GitHub Issue**: [#417](https://github.com/jeffreyhorn/nlp2mcp/issues/417)  
 **Branch**: fix-issue-409-pool-include-file  
-**Resolved**: Sprint 12 Day 5 (2024)
+**Resolved**: Sprint 12 Day 5 (2025)
 
 ## Description
 
@@ -48,7 +48,7 @@ This same problem likely affects:
 From `poolmod.inc`:
 ```gams
 parameters cl(comp_)          min use of raw material
-           cu(comp_)          max avaialbility of raw material
+           cu(comp_)          max availability of raw material
            cprice(comp_)      unit cost of raw materials
 ```
 
@@ -93,7 +93,7 @@ Actual: TBD - need to verify exact behavior
 
 ## Resolution
 
-**Resolved**: Sprint 12 Day 5 (2024)  
+**Resolved**: Sprint 12 Day 5 (2025)  
 **Commit**: `3ffa4dd` - Fix issue #417: Sets and Parameters with Inline Descriptions
 
 ### Root Cause
