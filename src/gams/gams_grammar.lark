@@ -32,11 +32,21 @@ start: stmt*  -> program
 // Blocks
 // ---------------------------
 
-sets_block: ("Sets"i | "Set"i) set_decl+ SEMI
+// Sprint 12 Day 5: Support unquoted inline descriptions in set declarations
+// Same fix as variables_block and params_block - use NEWLINE to delimit declarations
+// Note: SEMI is optional to handle GAMS files where new block keywords implicitly end previous blocks
+sets_block: ("Sets"i | "Set"i) set_decl_list SEMI?
+
+set_decl_list: set_decl (NEWLINE set_decl)*
 
 aliases_block: ("Aliases"i | "Alias"i) alias_decl+ SEMI
 
-params_block: ("Parameters"i | "Parameter"i) param_decl+ SEMI
+// Sprint 12 Day 5: Support unquoted inline descriptions in parameter declarations
+// Same fix as variables_block - use NEWLINE to delimit declarations
+// Note: SEMI is optional to handle GAMS files where new block keywords implicitly end previous blocks
+params_block: ("Parameters"i | "Parameter"i) param_decl_list SEMI?
+
+param_decl_list: param_decl (NEWLINE param_decl)*
 
 table_block: "Table"i ID "(" table_domain_list ")" (STRING | DESCRIPTION)? table_content+ SEMI
 
@@ -53,7 +63,13 @@ wildcard_tuple: "*" ("," "*")+
 
 scalars_block: ("Scalars"i | "Scalar"i) scalar_decl+ SEMI
 
-variables_block: var_kind? ("Variables"i | "Variable"i) var_decl+ SEMI
+// Sprint 12 Day 5: Support unquoted inline descriptions in variable declarations
+// Even though NEWLINE is globally ignored, we explicitly reference it here
+// to delimit variable declarations with inline descriptions
+// Note: SEMI is optional to handle GAMS files where new block keywords implicitly end previous blocks
+variables_block: var_kind? ("Variables"i | "Variable"i) var_decl_list SEMI?
+
+var_decl_list: var_decl (NEWLINE var_decl)*
 
 equations_block: ("Equations"i | "Equation"i) eqn_head_decl+ SEMI
 
@@ -61,12 +77,15 @@ equations_block: ("Equations"i | "Equation"i) eqn_head_decl+ SEMI
 // Declarations
 // ---------------------------
 
-set_decl: ID "(" id_list ")" STRING? "/" set_members "/"     -> set_domain_with_members
-        | ID STRING? "/" set_members "/"                     -> set_simple
-        | ID STRING? alias_opt "/" set_members "/"           -> set_aliased
-        | ID ("," ID)+                                       -> set_list
-        | ID "(" id_list ")"                                 -> set_domain
-        | ID                                                 -> set_empty
+// Sprint 12 Day 5: Inline descriptions for sets
+// WARNING: desc_text in newline-delimited sets may consume subsequent declarations
+// This is a known limitation - use with caution or prefer STRING descriptions
+set_decl: ID "(" id_list ")" (STRING | desc_text)? "/" set_members "/"     -> set_domain_with_members
+        | ID (STRING | desc_text)? "/" set_members "/"                     -> set_simple
+        | ID (STRING | desc_text)? alias_opt "/" set_members "/"           -> set_aliased
+        | ID ("," ID)+                                                     -> set_list
+        | ID "(" id_list ")" (STRING | desc_text)?                         -> set_domain
+        | ID (STRING | desc_text)?                                         -> set_empty
 
 alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_universe
           | alias_pair ("," alias_pair)+                     -> alias_multi
@@ -75,10 +94,12 @@ alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_unive
 
 alias_pair: "(" ID "," id_list ")"
 
-param_decl: ID "(" id_or_wildcard_list ")" STRING? "/" param_data_items "/" param_default? -> param_domain_data
-          | ID "(" id_or_wildcard_list ")" STRING? param_default?                          -> param_domain
-          | ID STRING? "/" param_data_items "/" param_default?                 -> param_plain_data
-          | ID STRING? param_default?                                          -> param_plain
+// Sprint 12 Day 5: Inline descriptions for parameters
+// WARNING: Same limitation as sets - desc_text may consume subsequent declarations
+param_decl: ID "(" id_or_wildcard_list ")" (STRING | desc_text)? "/" param_data_items "/" param_default? -> param_domain_data
+          | ID "(" id_or_wildcard_list ")" (STRING | desc_text)? param_default?                          -> param_domain
+          | ID (STRING | desc_text)? "/" param_data_items "/" param_default?                 -> param_plain_data
+          | ID (STRING | desc_text)? param_default?                                          -> param_plain
           | ID "," id_list                                             -> param_list
 scalar_decl: scalar_single_item                                          -> scalar_single
            | scalar_item (","? scalar_item)+                                 -> scalar_list
@@ -88,17 +109,19 @@ scalar_item: ID "/" scalar_data_items "/" (ASSIGN expr)?                -> scala
            | ID ASSIGN expr                                             -> scalar_with_assign
            | ID                                                         -> scalar_plain
 
-// For single scalar declarations: allow desc_text (unambiguous)
-scalar_single_item: ID desc_text "/" scalar_data_items "/" (ASSIGN expr)?  -> scalar_with_data
-                  | ID desc_text ASSIGN expr                               -> scalar_with_assign
-                  | ID desc_text                                           -> scalar_plain
+// For single scalar declarations: allow scalar_desc_text (unambiguous)
+scalar_single_item: ID scalar_desc_text "/" scalar_data_items "/" (ASSIGN expr)?  -> scalar_with_data
+                  | ID scalar_desc_text ASSIGN expr                               -> scalar_with_assign
+                  | ID scalar_desc_text                                           -> scalar_plain
 
-// Optional inline description text
-// Matches zero or more words/operators, implicitly stops at structural tokens (/, =, ;, etc.)
-// The grammar rules ensure it stops before these delimiters
-// NOTE: desc_text always produces a node in the parse tree (even if empty with zero words)
-// Parser code must handle this by checking if the node has children or skipping it entirely
-desc_text: _desc_word*
+// Optional inline description text for scalars (can be 0 or more words)
+scalar_desc_text: _desc_word*
+
+// Optional inline description text for variables/sets/params
+// Sprint 12 Day 5: Require at least 2 words to avoid consuming single-word variable names
+// This prevents "variables x y;" from parsing y as a description of x
+// Multi-word descriptions like "total cost" or "pool quality from pooling" still work
+desc_text: _desc_word _desc_word+
 
 // NOTE: Currently limited to ID tokens and hyphens (sufficient for hs62.gms)
 // Other characters like +, *, /, parentheses will cause description to stop prematurely
@@ -122,12 +145,16 @@ data_indices: range_expr
 data_matrix_row: data_indices NUMBER NUMBER+
 data_matrix_values: NUMBER (NUMBER)*
 
-var_decl: var_kind? var_item ("," var_item)*                 -> var_list
-        | var_kind? ID "(" id_list ")" STRING?               -> var_indexed
-        | var_kind? ID STRING?                               -> var_scalar
+// Variable declarations with support for unquoted inline descriptions
+// Now that NEWLINE is explicit in var_decl_list, we can use desc_text safely
+// Each var_decl is delimited by NEWLINE, so desc_text won't consume the next variable name
+var_decl: var_item ("," var_item)+                                  -> var_list
+        | var_kind? ID "(" id_list ")" (STRING | desc_text)?        -> var_indexed
+        | var_kind? ID (STRING | desc_text)?                        -> var_scalar
 
+// For comma-separated lists: only STRING allowed (desc_text would be ambiguous)
 var_item: var_kind? ID "(" id_list ")" STRING?               -> var_item_indexed
-        | var_kind? ID STRING?                                -> var_item_scalar
+        | var_kind? ID STRING?                               -> var_item_scalar
 
 var_kind: POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K
 
@@ -443,6 +470,8 @@ OR: /(?i:or)\b/
 %import common.WS_INLINE
 %import common.NEWLINE
 
+// Note: WS_INLINE and NEWLINE are selectively ignored
+// They can be explicitly referenced in rules where needed
 %ignore WS_INLINE
 %ignore /(?m)^\s*\*.*$/      // GAMS inline comments: * comment
 %ignore /\/\/.*?$/m      // // comment

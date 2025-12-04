@@ -653,6 +653,17 @@ class _ModelBuilder:
         return self.model
 
     def _handle_sets_block(self, node: Tree) -> None:
+        # Sprint 12 Day 5: Handle new set_decl_list structure
+        for child in node.children:
+            if isinstance(child, Tree) and child.data == "set_decl_list":
+                # Process each set_decl in the list
+                for set_decl_node in child.children:
+                    if not isinstance(set_decl_node, Tree):
+                        continue
+                    self._process_set_decl(set_decl_node)
+                return  # Done processing
+
+        # Legacy path for backward compatibility
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
@@ -697,6 +708,51 @@ class _ModelBuilder:
                 )
                 members = self._expand_set_members(members_node)
                 self.model.add_set(SetDef(name=name, members=members))
+
+    def _process_set_decl(self, child: Tree) -> None:
+        """Process a single set_decl node (helper for _handle_sets_block)."""
+        if child.data == "set_simple":
+            name = _token_text(child.children[0])
+            # Skip optional STRING/desc_text description, find set_members node
+            members_node = next(
+                c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
+            )
+            members = self._expand_set_members(members_node)
+            self.model.add_set(SetDef(name=name, members=members))
+        elif child.data == "set_empty":
+            name = _token_text(child.children[0])
+            # Note: desc_text is now allowed but we ignore it (no description field in SetDef yet)
+            self.model.add_set(SetDef(name=name))
+        elif child.data == "set_list":
+            # Comma-separated list of set names: Set i, j, k;
+            for token in child.children:
+                if isinstance(token, Token):
+                    name = _token_text(token)
+                    self.model.add_set(SetDef(name=name))
+        elif child.data == "set_domain":
+            name = _token_text(child.children[0])
+            domain = _id_list(child.children[1])
+            # Note: desc_text is now allowed but we ignore it
+            self.model.add_set(SetDef(name=name, members=list(domain)))
+        elif child.data == "set_domain_with_members":
+            # Set with domain and members: ID(id_list) STRING? / set_members /
+            name = _token_text(child.children[0])
+            # Note: domain is in second child (id_list), but SetDef doesn't have a domain field yet.
+            # For now, we only extract members. Future enhancement: add domain field to SetDef.
+            # optional STRING/desc_text description
+            members_node = next(
+                c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
+            )
+            members = self._expand_set_members(members_node)
+            self.model.add_set(SetDef(name=name, members=members))
+        elif child.data == "set_aliased":
+            # Set with alias: ID STRING? alias_opt / set_members /
+            name = _token_text(child.children[0])
+            members_node = next(
+                c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
+            )
+            members = self._expand_set_members(members_node)
+            self.model.add_set(SetDef(name=name, members=members))
 
     def _expand_set_members(self, members_node: Tree) -> list[str]:
         """Expand set members, handling range notation (e.g., i1*i100 or 1*10)."""
@@ -923,6 +979,17 @@ class _ModelBuilder:
                     raise self._error("Unsupported alias declaration form", child)
 
     def _handle_params_block(self, node: Tree) -> None:
+        # Sprint 12 Day 5: Handle new param_decl_list structure
+        for child in node.children:
+            if isinstance(child, Tree) and child.data == "param_decl_list":
+                # Process each param_decl in the list
+                for param_decl_node in child.children:
+                    if not isinstance(param_decl_node, Tree):
+                        continue
+                    self._process_param_decl(param_decl_node)
+                return  # Done processing
+
+        # Legacy path for backward compatibility
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
@@ -947,6 +1014,28 @@ class _ModelBuilder:
             }:
                 param = self._parse_param_decl(child)
                 self.model.add_param(param)
+
+    def _process_param_decl(self, child: Tree) -> None:
+        """Process a single param_decl node (helper for _handle_params_block)."""
+        if child.data == "param_list":
+            # Handle comma-separated parameter names: Parameter x, y, z;
+            # Grammar: ID "," id_list -> first ID + rest from id_list
+            if not child.children or len(child.children) < 2:
+                raise self._error("Invalid param_list structure", child)
+            first_name = _token_text(child.children[0])
+            rest_names = _id_list(child.children[1]) if isinstance(child.children[1], Tree) else []
+            names = [first_name] + list(rest_names)
+            for name in names:
+                param = ParameterDef(name=name, domain=())
+                self.model.add_param(param)
+        elif child.data in {
+            "param_domain",
+            "param_domain_data",
+            "param_plain",
+            "param_plain_data",
+        }:
+            param = self._parse_param_decl(child)
+            self.model.add_param(param)
 
     def _handle_table_block(self, node: Tree) -> None:
         """
@@ -1475,7 +1564,19 @@ class _ModelBuilder:
                         block_kind = _VAR_KIND_MAP[kind_token.type]
                         break
 
-        # Process variable declarations
+        # Sprint 12 Day 5: Handle new var_decl_list structure
+        # variables_block now contains var_decl_list, which contains var_decl nodes
+        for child in node.children:
+            if isinstance(child, Tree) and child.data == "var_decl_list":
+                # Process each var_decl in the list
+                for var_decl_node in child.children:
+                    if not isinstance(var_decl_node, Tree):
+                        continue
+                    # Delegate to existing logic by processing var_decl as if it were a direct child
+                    self._process_var_decl(var_decl_node, block_kind)
+                return  # Done processing
+
+        # Process variable declarations (legacy path for backward compatibility)
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
@@ -1566,6 +1667,93 @@ class _ModelBuilder:
                 #       (no description field yet). Consider adding description field in future enhancement.
                 self.model.add_var(VariableDef(name=name, domain=domain, kind=final_kind))
 
+    def _process_var_decl(self, child: Tree, block_kind: VarKind | None) -> None:
+        """Process a single var_decl node (helper for _handle_variables_block)."""
+        if child.data == "var_list":
+            # Handle comma-separated list: Variables z "desc", t(i) "desc", x;
+            # Get declaration-level var_kind if present
+            idx = 0
+            decl_kind = VarKind.CONTINUOUS
+            if isinstance(child.children[idx], Tree) and child.children[idx].data == "var_kind":
+                if child.children[idx].children and isinstance(
+                    child.children[idx].children[0], Token
+                ):
+                    kind_token = child.children[idx].children[0]
+                    if kind_token.type in _VAR_KIND_MAP:
+                        decl_kind = _VAR_KIND_MAP[kind_token.type]
+                idx += 1
+            # Process each var_item in the list
+            for var_item in child.children[idx:]:
+                if not isinstance(var_item, Tree):
+                    continue
+                if var_item.data == "var_item_indexed":
+                    # var_item_indexed: var_kind? ID "(" id_list ")" STRING?
+                    item_idx = 0
+                    item_kind = VarKind.CONTINUOUS
+                    # Check for item-level var_kind
+                    if (
+                        isinstance(var_item.children[item_idx], Tree)
+                        and var_item.children[item_idx].data == "var_kind"
+                    ):
+                        if var_item.children[item_idx].children and isinstance(
+                            var_item.children[item_idx].children[0], Token
+                        ):
+                            kind_token = var_item.children[item_idx].children[0]
+                            if kind_token.type in _VAR_KIND_MAP:
+                                item_kind = _VAR_KIND_MAP[kind_token.type]
+                        item_idx += 1
+                    name = _token_text(var_item.children[item_idx])
+                    domain = _id_list(var_item.children[item_idx + 1])
+                    # Item-level > declaration-level > block-level
+                    final_kind = (
+                        item_kind
+                        if item_kind != VarKind.CONTINUOUS
+                        else (
+                            decl_kind
+                            if decl_kind != VarKind.CONTINUOUS
+                            else (block_kind or VarKind.CONTINUOUS)
+                        )
+                    )
+                    self.model.add_var(VariableDef(name=name, domain=domain, kind=final_kind))
+                elif var_item.data == "var_item_scalar":
+                    # var_item_scalar: var_kind? ID STRING?
+                    item_idx = 0
+                    item_kind = VarKind.CONTINUOUS
+                    # Check for item-level var_kind
+                    if (
+                        isinstance(var_item.children[item_idx], Tree)
+                        and var_item.children[item_idx].data == "var_kind"
+                    ):
+                        if var_item.children[item_idx].children and isinstance(
+                            var_item.children[item_idx].children[0], Token
+                        ):
+                            kind_token = var_item.children[item_idx].children[0]
+                            if kind_token.type in _VAR_KIND_MAP:
+                                item_kind = _VAR_KIND_MAP[kind_token.type]
+                        item_idx += 1
+                    name = _token_text(var_item.children[item_idx])
+                    # Item-level > declaration-level > block-level
+                    final_kind = (
+                        item_kind
+                        if item_kind != VarKind.CONTINUOUS
+                        else (
+                            decl_kind
+                            if decl_kind != VarKind.CONTINUOUS
+                            else (block_kind or VarKind.CONTINUOUS)
+                        )
+                    )
+                    self.model.add_var(VariableDef(name=name, domain=(), kind=final_kind))
+        elif child.data in {"var_indexed", "var_scalar"}:
+            # Handle single variable declaration
+            decl_kind, name, domain, _description = self._parse_var_decl(child)
+            # Declaration-level kind takes precedence over block-level kind
+            final_kind = (
+                decl_kind if decl_kind != VarKind.CONTINUOUS else (block_kind or VarKind.CONTINUOUS)
+            )
+            # TODO: Support storing description in VariableDef. Description is parsed but not stored
+            #       (no description field yet). Consider adding description field in future enhancement.
+            self.model.add_var(VariableDef(name=name, domain=domain, kind=final_kind))
+
     def _handle_scalars_block(self, node: Tree) -> None:
         for child in node.children:
             if not isinstance(child, Tree):
@@ -1596,10 +1784,10 @@ class _ModelBuilder:
         param = ParameterDef(name=name)
 
         if child.data == "scalar_with_data":
-            # Format: ID [desc_text] "/" scalar_data_items "/" (ASSIGN expr)?
+            # Format: ID [scalar_desc_text] "/" scalar_data_items "/" (ASSIGN expr)?
             # child.children[0] = ID
-            # child.children[1] = desc_text (only for scalar_single_item) or first "/" token
-            # Find the scalar_data_items node (skip desc_text if present and any tokens like '/')
+            # child.children[1] = scalar_desc_text (only for scalar_single_item) or first "/" token
+            # Find the scalar_data_items node (skip scalar_desc_text if present and any tokens like '/')
             data_idx = 1
             while data_idx < len(child.children):
                 node_candidate = child.children[data_idx]
@@ -1628,11 +1816,11 @@ class _ModelBuilder:
                         value_expr, f"scalar '{name}' assignment"
                     )
         elif child.data == "scalar_with_assign":
-            # Format: ID [desc_text] ASSIGN expr
+            # Format: ID [scalar_desc_text] ASSIGN expr
             # child.children[0] = ID
-            # child.children[1] = desc_text (only for scalar_single_item, may be empty)
+            # child.children[1] = scalar_desc_text (only for scalar_single_item, may be empty)
             # child.children[-1] = expr (always the last child)
-            # Get the expr node (always the last child after ID and desc_text)
+            # Get the expr node (always the last child after ID and scalar_desc_text)
             expr_idx = len(child.children) - 1
             value_expr = self._expr_with_context(
                 child.children[expr_idx], f"scalar '{name}' assignment", ()
@@ -1661,12 +1849,22 @@ class _ModelBuilder:
         description: str | None = None
         # Check for domain specification (id_list for var_indexed)
         if idx < len(node.children) and isinstance(node.children[idx], Tree):
-            domain = _id_list(node.children[idx])
-            idx += 1
-        # Check for description (STRING token)
-        if idx < len(node.children) and isinstance(node.children[idx], Token):
-            if node.children[idx].type == "STRING":
-                description = _token_text(node.children[idx])
+            # Sprint 12 Day 5: distinguish between id_list (domain) and desc_text (description)
+            if node.children[idx].data == "id_list":
+                domain = _id_list(node.children[idx])
+                idx += 1
+            # desc_text is handled below
+        # Check for description (STRING token or desc_text node)
+        if idx < len(node.children):
+            child = node.children[idx]
+            if isinstance(child, Token) and child.type == "STRING":
+                description = _token_text(child)
+            elif isinstance(child, Tree) and child.data in ("desc_text", "scalar_desc_text"):
+                # desc_text/scalar_desc_text contains ID tokens - extract and join them
+                # Note: scalar_desc_text may be empty (zero tokens), desc_text requires 2+
+                if child.children:
+                    desc_tokens = [_token_text(t) for t in child.children if isinstance(t, Token)]
+                    description = " ".join(desc_tokens) if desc_tokens else None
         return kind, name, domain, description
 
     def _handle_equations_block(self, node: Tree) -> None:
