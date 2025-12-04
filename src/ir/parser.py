@@ -2370,12 +2370,10 @@ class _ModelBuilder:
             if sum_domain_node.data == "tuple_domain":
                 # Tuple notation: sum{(i,j), expr}
                 index_list_node = sum_domain_node.children[0]
-            elif sum_domain_node.data == "sum_domain":
-                # sum_domain -> index_list (no transform, so extract first child)
-                index_list_node = sum_domain_node.children[0]
             else:
-                # Direct index_list (shouldn't happen with current grammar, but keep for safety)
-                index_list_node = sum_domain_node
+                # sum_domain -> index_list (no transform, so extract first child)
+                # This handles the plain sum_domain case from the grammar
+                index_list_node = sum_domain_node.children[0]
 
             if index_list_node.data == "id_list":
                 # Legacy path for old grammar (if any old tests use it)
