@@ -117,10 +117,10 @@ scalar_single_item: ID scalar_desc_text "/" scalar_data_items "/" (ASSIGN expr)?
 scalar_desc_text: _desc_word*
 
 // Optional inline description text for variables/sets/params
-// Sprint 12 Day 5: Require at least 2 words to avoid consuming single-word variable names
-// This prevents "variables x y;" from parsing y as a description of x
-// Multi-word descriptions like "total cost" or "pool quality from pooling" still work
-desc_text: _desc_word _desc_word+
+// Sprint 12 Day 5: Require at least 3 words to avoid consuming variable names on subsequent lines
+// This prevents "variables x\n y\n z;" from parsing "y z" as a description of x
+// Multi-word descriptions like "pool quality from pooling" (3+ words) still work
+desc_text: _desc_word _desc_word _desc_word+
 
 // NOTE: Currently limited to ID tokens and hyphens (sufficient for hs62.gms)
 // Other characters like +, *, /, parentheses will cause description to stop prematurely
@@ -145,11 +145,13 @@ data_matrix_row: data_indices NUMBER NUMBER+
 data_matrix_values: NUMBER (NUMBER)*
 
 // Variable declarations with support for unquoted inline descriptions
-// Now that NEWLINE is explicit in var_decl_list, we can use desc_text safely
-// Each var_decl is delimited by NEWLINE, so desc_text won't consume the next variable name
+// Two patterns: single declarations (with desc_text) and lists (without desc_text)
 var_decl: var_item ("," var_item)+                                  -> var_list
-        | var_kind? ID "(" id_list ")" (STRING | desc_text)?        -> var_indexed
-        | var_kind? ID (STRING | desc_text)?                        -> var_scalar
+        | var_single_item                                           -> var_single
+
+// For single variable declarations: allow desc_text (3+ words) or STRING
+var_single_item: var_kind? ID "(" id_list ")" (STRING | desc_text)? -> var_item_indexed
+               | var_kind? ID (STRING | desc_text)?                 -> var_item_scalar
 
 // For comma-separated lists: only STRING allowed (desc_text would be ambiguous)
 var_item: var_kind? ID "(" id_list ")" STRING?               -> var_item_indexed

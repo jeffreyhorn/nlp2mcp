@@ -1732,8 +1732,61 @@ class _ModelBuilder:
                         )
                     )
                     self.model.add_var(VariableDef(name=name, domain=(), kind=final_kind))
+        elif child.data == "var_single":
+            # Handle single variable declaration with potential description
+            # var_single wraps a var_single_item which can be var_item_indexed or var_item_scalar
+            var_single_item = child.children[0]
+            if var_single_item.data == "var_item_indexed":
+                # var_item_indexed: var_kind? ID "(" id_list ")" (STRING | desc_text)?
+                item_idx = 0
+                item_kind = VarKind.CONTINUOUS
+                # Check for item-level var_kind
+                if (
+                    isinstance(var_single_item.children[item_idx], Tree)
+                    and var_single_item.children[item_idx].data == "var_kind"
+                ):
+                    if var_single_item.children[item_idx].children and isinstance(
+                        var_single_item.children[item_idx].children[0], Token
+                    ):
+                        kind_token = var_single_item.children[item_idx].children[0]
+                        if kind_token.type in _VAR_KIND_MAP:
+                            item_kind = _VAR_KIND_MAP[kind_token.type]
+                    item_idx += 1
+                name = _token_text(var_single_item.children[item_idx])
+                domain = _id_list(var_single_item.children[item_idx + 1])
+                # Item-level > block-level
+                final_kind = (
+                    item_kind
+                    if item_kind != VarKind.CONTINUOUS
+                    else (block_kind or VarKind.CONTINUOUS)
+                )
+                self.model.add_var(VariableDef(name=name, domain=domain, kind=final_kind))
+            elif var_single_item.data == "var_item_scalar":
+                # var_item_scalar: var_kind? ID (STRING | desc_text)?
+                item_idx = 0
+                item_kind = VarKind.CONTINUOUS
+                # Check for item-level var_kind
+                if (
+                    isinstance(var_single_item.children[item_idx], Tree)
+                    and var_single_item.children[item_idx].data == "var_kind"
+                ):
+                    if var_single_item.children[item_idx].children and isinstance(
+                        var_single_item.children[item_idx].children[0], Token
+                    ):
+                        kind_token = var_single_item.children[item_idx].children[0]
+                        if kind_token.type in _VAR_KIND_MAP:
+                            item_kind = _VAR_KIND_MAP[kind_token.type]
+                    item_idx += 1
+                name = _token_text(var_single_item.children[item_idx])
+                # Item-level > block-level
+                final_kind = (
+                    item_kind
+                    if item_kind != VarKind.CONTINUOUS
+                    else (block_kind or VarKind.CONTINUOUS)
+                )
+                self.model.add_var(VariableDef(name=name, domain=(), kind=final_kind))
         elif child.data in {"var_indexed", "var_scalar"}:
-            # Handle single variable declaration
+            # Handle single variable declaration (backward compatibility)
             decl_kind, name, domain, _description = self._parse_var_decl(child)
             # Declaration-level kind takes precedence over block-level kind
             final_kind = (
