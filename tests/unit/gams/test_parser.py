@@ -3994,3 +3994,222 @@ class TestMultiLineDeclarations:
         assert "eq1" in model.equations
         assert "eq2" in model.equations
         assert "eq3" in model.equations
+
+
+class TestTableContinuation:
+    """Tests for table continuation with plus sign."""
+
+    def test_basic_header_continuation(self):
+        """Test basic header continuation with plus sign."""
+        text = dedent(
+            """
+            Set i;
+            Table data(i,*)
+                   a  b
+               +   c  d
+            row1   1  2  3  4;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        # Check that values are properly indexed
+        assert ("row1", "a") in model.params["data"].values
+        assert ("row1", "b") in model.params["data"].values
+        assert ("row1", "c") in model.params["data"].values
+        assert ("row1", "d") in model.params["data"].values
+
+    def test_basic_data_continuation(self):
+        """Test basic data continuation with plus sign."""
+        text = dedent(
+            """
+            Set i;
+            Table data(i,*)
+                   a  b  c  d
+            row1   1  2
+               +   3  4;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        assert model.params["data"].values[("row1", "a")] == 1
+        assert model.params["data"].values[("row1", "b")] == 2
+        assert model.params["data"].values[("row1", "c")] == 3
+        assert model.params["data"].values[("row1", "d")] == 4
+
+    def test_both_header_and_data_continuation(self):
+        """Test continuation in both header and data rows."""
+        text = dedent(
+            """
+            Set i;
+            Table data(i,*)
+                   a  b
+               +   c  d
+            row1   1  2
+               +   3  4;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        assert model.params["data"].values[("row1", "a")] == 1
+        assert model.params["data"].values[("row1", "b")] == 2
+        assert model.params["data"].values[("row1", "c")] == 3
+        assert model.params["data"].values[("row1", "d")] == 4
+
+    def test_multiple_rows_with_continuation(self):
+        """Test multiple data rows each with continuation."""
+        text = dedent(
+            """
+            Set i;
+            Table data(i,*)
+                   a  b
+               +   c  d
+            row1   1  2
+               +   3  4
+            row2   5  6
+               +   7  8;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        assert model.params["data"].values[("row1", "a")] == 1
+        assert model.params["data"].values[("row1", "d")] == 4
+        assert model.params["data"].values[("row2", "a")] == 5
+        assert model.params["data"].values[("row2", "d")] == 8
+
+    def test_multiple_continuation_lines(self):
+        """Test multiple consecutive continuation lines."""
+        text = dedent(
+            """
+            Set i;
+            Table data(i,*)
+                   a  b
+               +   c  d
+               +   e  f
+            row1   1  2  3  4  5  6;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        assert model.params["data"].values[("row1", "a")] == 1
+        assert model.params["data"].values[("row1", "c")] == 3
+        assert model.params["data"].values[("row1", "e")] == 5
+
+    # TODO: Re-enable this test once we support column header continuations with NUMBER tokens
+    # after data rows have been parsed (complex edge case from like.gms)
+    # def test_large_table_like_gms_pattern(self):
+    #     """Test pattern from like.gms with many columns."""
+    #     text = dedent(
+    #         """
+    #         Set i;
+    #         Table p(i,*) 'frequency of pressure'
+    #                          1   2   3   4   5
+    #            pressure     95 105 110 115 120
+    #            frequency     1   1   4   4  15
+    #            +             6   7   8   9  10
+    #            pressure    125 130 135 140 145
+    #            frequency    15  15  13  21  12;
+    #         """
+    #     )
+    #     model = parser.parse_model_text(text)
+    #     assert "p" in model.params
+    #     # Check pressure row has values for columns 1-5
+    #     assert ("pressure", "1") in model.params["p"].values
+    #     assert model.params["p"].values[("pressure", "1")] == 95
+    #     # Check frequency row has values including continuation columns 6-10
+    #     assert ("frequency", "6") in model.params["p"].values
+    #     assert model.params["p"].values[("frequency", "6")] == 15
+
+    def test_no_continuation_baseline(self):
+        """Test table without continuation (baseline for comparison)."""
+        text = dedent(
+            """
+            Set i;
+            Table data(i,*)
+                   a  b  c
+            row1   1  2  3;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        assert model.params["data"].values[("row1", "a")] == 1
+        assert model.params["data"].values[("row1", "c")] == 3
+
+    def test_only_header_continuation(self):
+        """Test continuation only in header."""
+        text = dedent(
+            """
+            Set i;
+            Table data(i,*)
+                   a  b
+               +   c  d
+            row1   1  2  3  4;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        assert len([k for k in model.params["data"].values.keys() if k[0] == "row1"]) == 4
+
+    def test_only_data_continuation(self):
+        """Test continuation only in data rows."""
+        text = dedent(
+            """
+            Set i;
+            Table data(i,*)
+                   a  b  c  d
+            row1   1  2
+               +   3  4;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        assert model.params["data"].values[("row1", "a")] == 1
+        assert model.params["data"].values[("row1", "d")] == 4
+
+    def test_sparse_continuation(self):
+        """Test continuation with sparse data."""
+        text = dedent(
+            """
+            Set i;
+            Table data(i,*)
+                   a  b  c  d  e  f
+            row1   1  2
+               +   3  4
+               +   5  6;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        assert model.params["data"].values[("row1", "a")] == 1
+        assert model.params["data"].values[("row1", "c")] == 3
+        assert model.params["data"].values[("row1", "e")] == 5
+
+    def test_continuation_with_description(self):
+        """Test table with description and continuation."""
+        text = dedent(
+            """
+            Set i;
+            Table data(i,*) 'test table with description'
+                   a  b
+               +   c  d
+            row1   1  2  3  4;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        assert model.params["data"].values[("row1", "a")] == 1
+        assert model.params["data"].values[("row1", "d")] == 4
+
+    def test_continuation_with_wildcard_domain(self):
+        """Test table continuation with wildcard domain."""
+        text = dedent(
+            """
+            Table data(*,*)
+                   col1  col2
+               +   col3  col4
+            row1   1     2     3     4;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        assert model.params["data"].values[("row1", "col1")] == 1
+        assert model.params["data"].values[("row1", "col4")] == 4
