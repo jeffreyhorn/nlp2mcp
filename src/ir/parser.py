@@ -1282,7 +1282,10 @@ class _ModelBuilder:
                                             col_idx = data_tokens_count + idx
                                             if col_idx < len(first_line_tokens):
                                                 target_col_header = first_line_tokens[col_idx]
-                                                if hasattr(target_col_header, "column"):
+                                                if (
+                                                    hasattr(target_col_header, "column")
+                                                    and target_col_header.column is not None
+                                                ):
                                                     target_col = target_col_header.column
                                                     if (
                                                         id(target_col_header)
