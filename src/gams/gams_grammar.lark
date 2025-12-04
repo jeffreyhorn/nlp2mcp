@@ -35,9 +35,8 @@ start: stmt*  -> program
 // Sprint 12 Day 5: Support unquoted inline descriptions in set declarations
 // Same fix as variables_block and params_block - use NEWLINE to delimit declarations
 // Note: SEMI is optional to handle GAMS files where new block keywords implicitly end previous blocks
-sets_block: ("Sets"i | "Set"i) set_decl_list SEMI?
-
-set_decl_list: set_decl (NEWLINE set_decl)*
+// Note: set_decl+ allows both newline-separated AND space-separated declarations
+sets_block: ("Sets"i | "Set"i) set_decl+ SEMI?
 
 aliases_block: ("Aliases"i | "Alias"i) alias_decl+ SEMI
 

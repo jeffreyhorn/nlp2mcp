@@ -653,17 +653,6 @@ class _ModelBuilder:
         return self.model
 
     def _handle_sets_block(self, node: Tree) -> None:
-        # Sprint 12 Day 5: Handle new set_decl_list structure
-        for child in node.children:
-            if isinstance(child, Tree) and child.data == "set_decl_list":
-                # Process each set_decl in the list
-                for set_decl_node in child.children:
-                    if not isinstance(set_decl_node, Tree):
-                        continue
-                    self._process_set_decl(set_decl_node)
-                return  # Done processing
-
-        # Legacy path for backward compatibility
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
