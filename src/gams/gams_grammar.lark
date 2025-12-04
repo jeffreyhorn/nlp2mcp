@@ -188,12 +188,14 @@ assignment_stmt: lvalue ASSIGN expr SEMI                    -> assign
 lvalue: ref_bound | ref_indexed | ID
 
 ref_bound: ID "." BOUND_K "(" index_list ")"   -> bound_indexed
+         | ID "." BOUND_K "[" index_list "]"   -> bound_indexed
          | ID "." BOUND_K                      -> bound_scalar
          | ID "." ID                            -> attr_access
 
 BOUND_K: /(lo|up|fx|l|m)/i
 
 ref_indexed.2: ID "(" index_list ")"             -> symbol_indexed
+             | ID "[" index_list "]"             -> symbol_indexed
 
 // ---------------------------
 // Indexing with lead/lag offsets (Sprint 9 Day 3)
@@ -205,7 +207,9 @@ index_list: index_expr ("," index_expr)*
 
 // Sprint 11 Day 2 Extended: Support subset indexing like low(n,nn)
 // Also support lag/lead inside subset like nh(i+1)
+// Sprint 12 Day 5: Support square brackets [] in addition to parentheses ()
 index_expr: ID "(" index_list ")" lag_lead_suffix?  -> index_subset
+          | ID "[" index_list "]" lag_lead_suffix?  -> index_subset
           | ID lag_lead_suffix?                   -> index_simple
 
 lag_lead_suffix: CIRCULAR_LEAD offset_expr   -> circular_lead
@@ -230,7 +234,8 @@ equation_def: ID "(" domain_list ")" condition? ".." expr REL_K expr SEMI    -> 
 domain_list: domain_element ("," domain_element)*
 
 // Domain element can be simple (i) or subset with indices (low(n,nn))
-domain_element: ID ("(" index_list ")")?
+// Sprint 12 Day 5: Support square brackets [] in addition to parentheses ()
+domain_element: ID ("(" index_list ")" | "[" index_list "]")?
               | ID lag_lead_suffix
 
 condition: DOLLAR "(" expr ")"
