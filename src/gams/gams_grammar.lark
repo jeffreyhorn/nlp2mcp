@@ -304,6 +304,7 @@ loop_stmt: LOOP_K "(" id_list "," exec_stmt+ ")" SEMI
 ?exec_stmt: display_stmt_nosemi
           | abort_stmt_nosemi
           | option_stmt          // Sprint 11 Day 2: Support option inside if/loop
+          | solve_stmt           // Support solve inside if/loop
           | assignment_stmt
           | SEMI
 
