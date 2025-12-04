@@ -4213,3 +4213,126 @@ class TestTableContinuation:
         assert "data" in model.params
         assert model.params["data"].values[("row1", "col1")] == 1
         assert model.params["data"].values[("row1", "col4")] == 4
+
+
+class TestCurlyBraceSumComplexIndexing:
+    """Tests for curly brace sum with complex indexing (Issue #379)."""
+
+    def test_curly_brace_sum_with_tuple_domain(self):
+        """Test sum{(i,j), expr} with tuple domain syntax."""
+        text = dedent(
+            """
+            Set i /1*3/;
+            Set j /1*3/;
+            Parameter x(i,j);
+            Variable obj;
+
+            Equation eq;
+            eq.. obj =e= sum{(i,j), x(i,j)};
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
+        assert model.equations["eq"].relation == Rel.EQ
+
+    def test_curly_brace_sum_with_subset_indexing(self):
+        """Test sum{(nx(i),ny(j)), expr} with subset indexing."""
+        text = dedent(
+            """
+            Set i /1*5/;
+            Set j /1*5/;
+            Set nx(i);
+            Set ny(j);
+            Parameter wq(i,j);
+            Variable obj;
+
+            Equation eq;
+            eq.. obj =e= sum{(nx(i),ny(j)), wq(i,j)};
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
+        assert model.equations["eq"].relation == Rel.EQ
+
+    def test_curly_brace_sum_with_arithmetic_in_subset(self):
+        """Test sum{(nx(i+1),ny(j+1)), expr} pattern from jbearing.gms."""
+        text = dedent(
+            """
+            Set i /1*5/;
+            Set j /1*5/;
+            Set nx(i);
+            Set ny(j);
+            Parameter wq(i);
+            Variable obj;
+
+            Equation eq;
+            eq.. obj =e= sum{(nx(i+1),ny(j+1)), wq(i)};
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
+        assert model.equations["eq"].relation == Rel.EQ
+
+    def test_curly_brace_sum_simple_backward_compat(self):
+        """Test that simple sum{i, expr} still works."""
+        text = dedent(
+            """
+            Set i /1*5/;
+            Parameter x(i);
+            Variable obj;
+
+            Equation eq;
+            eq.. obj =e= sum{i, x(i)};
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
+
+    def test_parenthesis_sum_with_tuple_domain(self):
+        """Test sum((i,j), expr) with parentheses also works."""
+        text = dedent(
+            """
+            Set i /1*3/;
+            Set j /1*3/;
+            Parameter x(i,j);
+            Variable obj;
+
+            Equation eq;
+            eq.. obj =e= sum((i,j), x(i,j));
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
+
+    def test_curly_brace_sum_with_lag_in_subset(self):
+        """Test sum{(nx(i-1)), expr} with lag operator in subset."""
+        text = dedent(
+            """
+            Set i /1*5/;
+            Set nx(i);
+            Parameter wq(i);
+            Variable obj;
+
+            Equation eq;
+            eq.. obj =e= sum{(nx(i-1)), wq(i)};
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
+
+    def test_curly_brace_sum_triple_tuple(self):
+        """Test sum{(i,j,k), expr} with three-element tuple."""
+        text = dedent(
+            """
+            Set i /1*2/;
+            Set j /1*2/;
+            Set k /1*2/;
+            Parameter x(i,j,k);
+            Variable obj;
+
+            Equation eq;
+            eq.. obj =e= sum{(i,j,k), x(i,j,k)};
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
