@@ -1,11 +1,11 @@
 # Semantic: Undefined Symbol Validation Incorrectly Fails
 
-**GitHub Issue:** #416  
-**URL:** https://github.com/jeffreyhorn/nlp2mcp/issues/416  
-**Status:** Open  
+**GitHub Issue:** [#416](https://github.com/jeffreyhorn/nlp2mcp/issues/416)  
+**Status:** Completed  
 **Priority:** Medium  
-**Component:** Parser (Semantic Validation)  
+**Component:** Parser (Grammar)  
 **Tier 2 Candidate:** pool.gms  
+**Branch:** fix-issue-409-pool-include-file  
 
 ## Problem Statement
 
@@ -157,6 +157,74 @@ All **syntax parsing issues** for pool.gms have been resolved. This is now a **s
 ## References
 
 - GAMS Documentation: [Variable Declarations](https://www.gams.com/latest/docs/UG_VariableDeclaration.html)
+
+---
+
+## Resolution
+
+**Resolved:** Sprint 12 Day 5 (2024)  
+**Commits:** 
+- `497b8ff` - Sprint 12 Day 5: Implement inline_descriptions blocker
+- `5d6728c` - Fix var_single grammar: support both inline descriptions and newline-separated variables
+
+### Root Cause
+
+The issue was **not** a semantic validation problem as initially suspected. It was a **grammar parsing issue** with variable declarations that have unquoted inline descriptions.
+
+In `poolmod.inc` line 41:
+```gams
+variables  q(comp_, pool_) pool quality from pooling raw materials
+           y(pool_, pro_)  flow from pool to product
+           z(comp_, pro_)  direct flow of rawmaterials to product
+           cost            total cost
+```
+
+The parser was incorrectly treating the unquoted description words (e.g., "total cost") as separate variable declarations, causing:
+1. Variables with descriptions to not be registered correctly
+2. Description words to be interpreted as undefined variable references
+
+### Solution Implemented
+
+Modified the grammar to properly handle inline descriptions using a two-pattern approach:
+
+1. **Grammar Changes** (`src/gams/gams_grammar.lark`):
+   - Split `var_decl` into two patterns:
+     - `var_single`: For single variable declarations that may have inline descriptions
+     - `var_list`: For comma-separated lists (no inline descriptions to avoid ambiguity)
+   - Used NEWLINE-delimited lists: `var_decl_list: var_decl (NEWLINE var_decl)*`
+   - Made semicolons optional in declaration blocks
+
+2. **Parser Updates** (`src/ir/parser.py`):
+   - Added `_process_var_decl` helper method to handle both var_single and var_list patterns
+   - Updated `_handle_variables_block` to process var_decl_list structure
+   - Properly extract and handle desc_text (3+ word descriptions) and STRING descriptions
+
+### Test Results
+
+All tests passing after fix:
+- **Unit tests**: 1,709 passed
+- **Integration tests**: 246 passed (5 skipped)
+- **E2E tests**: 42 passed
+- **Quality gates**: typecheck ✓, lint ✓, format ✓
+
+### Impact
+
+- ✅ Variables with inline descriptions now parse correctly
+- ✅ poolmod.inc variables (q, y, z, cost) all registered properly
+- ✅ pool.gms progresses past this blocker
+
+### Remaining Issues
+
+While issue #416 is resolved, pool.gms still has parsing issues:
+- **Issue #417**: Sets and parameters with inline descriptions have similar problems
+- The same grammar pattern needs to be applied to set_decl and param_decl
+
+### Lessons Learned
+
+1. **Inline descriptions are grammar issues, not semantic issues**: The problem was in tokenization/parsing, not symbol resolution
+2. **desc_text pattern is greedy**: Multi-word unquoted descriptions can consume subsequent declarations if not carefully bounded
+3. **NEWLINE as delimiter**: Explicitly using NEWLINE tokens in grammar rules (even when globally ignored) provides better structure
+4. **Two-pattern approach**: Separating single declarations (with descriptions) from lists (without descriptions) resolves ambiguity
 - File: `tests/fixtures/tier2_candidates/poolmod.inc` (lines 38-41: variable declarations, line 62: equation using cost)
 - GAMS Library: pool.gms is model 237 in GAMSLib
 
