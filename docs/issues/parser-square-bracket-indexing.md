@@ -37,8 +37,8 @@ Parameter p(i);
 Variable x(i);
 
 * Both should work:
-equation.. obj =e= p(i) * x(i);   # Currently works
-equation.. obj =e= p[i] * x[i];   # Currently fails
+equation.. obj =e= p(i) * x(i);   * Currently works
+equation.. obj =e= p[i] * x[i];   * Currently fails
 ```
 
 ### Multi-dimensional Index
@@ -46,8 +46,8 @@ equation.. obj =e= p[i] * x[i];   # Currently fails
 Parameter data(i,j);
 
 * Both should work:
-equation.. cost =e= data(i,j);    # Currently works
-equation.. cost =e= data[i,j];    # Currently fails
+equation.. cost =e= data(i,j);    * Currently works
+equation.. cost =e= data[i,j];    * Currently fails
 ```
 
 ### Mixed Usage

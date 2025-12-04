@@ -37,8 +37,8 @@ The parser should recognize GAMS predefined constants and treat them as built-in
 Parameter active(i);
 
 * Set flags using yes/no
-active('item1') = yes;  # Should evaluate to 1
-active('item2') = no;   # Should evaluate to 0
+active('item1') = yes;  * Should evaluate to 1
+active('item2') = no;   * Should evaluate to 0
 
 * Use in conditionals
 equation$(active(i) = yes).. x(i) =e= 1;
@@ -51,7 +51,7 @@ Parameter bounds(i) / i1 inf, i2 100, i3 inf /;
 * Use in variable bounds
 Variable x;
 x.lo = 0;
-x.up = inf;  # Unbounded above
+x.up = inf;  * Unbounded above
 ```
 
 ### Epsilon Constant
@@ -116,9 +116,9 @@ PREDEFINED_CONSTANTS = {
     'yes': 1.0,
     'no': 0.0,
     'inf': float('inf'),
-    'eps': 2.2204460492503131e-16,  # sys.float_info.epsilon
-    'na': None,  # Special marker
-    'undf': None,  # Special marker
+    'eps': 2.2204460492503131e-16,  * sys.float_info.epsilon
+    'na': None,  * Special marker
+    'undf': None,  * Special marker
 }
 ```
 

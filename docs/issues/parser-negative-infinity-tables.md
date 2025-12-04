@@ -41,8 +41,8 @@ Table data(i,*)
 Table bounds(i,*)
                lo       up
     x           0      100
-    y        -inf      inf      # Unbounded variable
-    z        -100      inf ;    # Only lower bound
+    y        -inf      inf      * Unbounded variable
+    z        -100      inf ;    * Only lower bound
 ```
 
 ## GAMS Specification
@@ -88,15 +88,15 @@ Display data;
 Current table value grammar likely has:
 ```lark
 table_value: NUMBER
-           | ID      # For 'inf', 'na', etc.
+           | ID      * For 'inf', 'na', etc.
 ```
 
 Need to ensure it can handle:
 ```lark
 table_value: NUMBER
-           | MINUS NUMBER  # For negative numbers
-           | MINUS ID      # For -inf, -na, etc.
-           | ID            # For inf, na, etc.
+           | MINUS NUMBER  * For negative numbers
+           | MINUS ID      * For -inf, -na, etc.
+           | ID            * For inf, na, etc.
 ```
 
 Or more elegantly:
