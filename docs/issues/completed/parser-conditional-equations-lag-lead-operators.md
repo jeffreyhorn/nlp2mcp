@@ -3,13 +3,15 @@
 **GitHub Issue**: [#223](https://github.com/jeffreyhorn/nlp2mcp/issues/223)
 
 ## Status
-**Partially Resolved** - Conditional equations (✅ FULLY COMPLETE), lag/lead operators (⏳ TODO)  
-**Priority**: Medium  
+**✅ FULLY RESOLVED** - Both conditional equations AND lag/lead operators are complete!
+**Priority**: ~~Medium~~ N/A (Complete)
 **Component**: Parser, Condition Evaluator (src/gams/gams_grammar.lark, src/ir/parser.py, src/ir/condition_eval.py)  
 **Discovered**: 2025-11-15 during Sprint 7 Day 3 (himmel16.gms testing)  
-**Resolution**: 2025-11-15 during Sprint 7 Day 3 (conditional equations fully implemented with semantic evaluation)
+**Resolution**: 
+- 2025-11-15: Conditional equations fully implemented with semantic evaluation
+- 2025-12-03: Verified lag/lead operators also fully implemented with comprehensive tests
 
-## Resolution (Partial)
+## Resolution (Complete - Both Features Implemented)
 
 ### Feature 1: Conditional Equations (`$` operator) - ✅ FULLY RESOLVED
 
@@ -104,9 +106,41 @@ Index mapping shows only 3 instances: supply('i1'), supply('i3'), supply('i5') �
 
 **Safe for production conversions** - conditions are properly evaluated and produce correct MCP output.
 
-### Feature 2: Lag/Lead Operators (`++`/`--`) - ⏳ TODO
+### Feature 2: Lag/Lead Operators (`++`/`--`) - ✅ FULLY RESOLVED
 
-This feature remains unimplemented. See technical details below for implementation guidance.
+**This feature is fully implemented and tested!**
+
+**Grammar Support:**
+```lark
+lag_lead_suffix: CIRCULAR_LEAD offset_expr   -> circular_lead
+               | CIRCULAR_LAG offset_expr    -> circular_lag
+               | PLUS offset_expr            -> linear_lead
+               | MINUS offset_expr           -> linear_lag
+
+CIRCULAR_LEAD: "++"
+CIRCULAR_LAG: "--"
+```
+
+**Supported Syntax:**
+```gams
+x(i++1)     # Circular lead: next element with wraparound
+x(i--1)     # Circular lag: previous element with wraparound
+x(i+1)      # Linear lead: next element (no wraparound)
+x(i-1)      # Linear lag: previous element (no wraparound)
+x(i+n)      # Linear offset by n positions ahead
+x(i-n)      # Linear offset by n positions back
+```
+
+**Test Coverage:**
+- 12 comprehensive tests in `tests/unit/gams/test_parser.py::TestLagLeadOperators`
+- All tests passing ✅
+- Covers circular/linear operators, multiple operators, variable offsets, nested domains
+
+**Example from himmel16.gms:**
+```gams
+areadef(i).. area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1));
+```
+**Status:** ✅ Parses successfully and generates correct IR
 
 ## Description
 
