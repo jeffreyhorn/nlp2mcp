@@ -33,9 +33,8 @@ start: stmt*  -> program
 // ---------------------------
 
 // Sprint 12 Day 5: Support unquoted inline descriptions in set declarations
-// Same fix as variables_block and params_block - use NEWLINE to delimit declarations
+// Sprint 12 Day 5 (Issue #417): Allow both space and newline separation for sets
 // Note: SEMI is optional to handle GAMS files where new block keywords implicitly end previous blocks
-// Note: set_decl+ allows both newline-separated AND space-separated declarations
 sets_block: ("Sets"i | "Set"i) set_decl+ SEMI?
 
 aliases_block: ("Aliases"i | "Alias"i) alias_decl+ SEMI
@@ -76,15 +75,24 @@ equations_block: ("Equations"i | "Equation"i) eqn_head_decl+ SEMI
 // Declarations
 // ---------------------------
 
-// Sprint 12 Day 5: Inline descriptions for sets
-// WARNING: desc_text in newline-delimited sets may consume subsequent declarations
-// This is a known limitation - use with caution or prefer STRING descriptions
-set_decl: ID "(" id_list ")" (STRING | desc_text)? "/" set_members "/"     -> set_domain_with_members
-        | ID (STRING | desc_text)? "/" set_members "/"                     -> set_simple
-        | ID (STRING | desc_text)? alias_opt "/" set_members "/"           -> set_aliased
-        | ID ("," ID)+                                                     -> set_list
-        | ID "(" id_list ")" (STRING | desc_text)?                         -> set_domain
-        | ID (STRING | desc_text)?                                         -> set_empty
+// Sprint 12 Day 5 (Issue #417): Split into single vs list patterns to handle inline descriptions
+// Two patterns: single declarations (with desc_text) and lists (without desc_text to avoid ambiguity)
+set_decl: set_item ("," set_item)+          -> set_list
+        | set_single_item                   -> set_single
+
+// For single set declarations: allow desc_text or STRING
+set_single_item: ID "(" id_list ")" (STRING | desc_text)? "/" set_members "/"     -> set_domain_with_members
+               | ID (STRING | desc_text)? "/" set_members "/"                     -> set_simple
+               | ID (STRING | desc_text)? alias_opt "/" set_members "/"           -> set_aliased
+               | ID "(" id_list ")" (STRING | desc_text)?                         -> set_domain
+               | ID (STRING | desc_text)?                                         -> set_empty
+
+// For comma-separated lists: only STRING allowed (desc_text would be ambiguous)
+set_item: ID "(" id_list ")" STRING? "/" set_members "/"     -> set_domain_with_members
+        | ID STRING? "/" set_members "/"                     -> set_simple
+        | ID STRING? alias_opt "/" set_members "/"           -> set_aliased
+        | ID "(" id_list ")" STRING?                         -> set_domain
+        | ID STRING?                                         -> set_empty
 
 alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_universe
           | alias_pair ("," alias_pair)+                     -> alias_multi
@@ -93,13 +101,22 @@ alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_unive
 
 alias_pair: "(" ID "," id_list ")"
 
-// Sprint 12 Day 5: Inline descriptions for parameters
-// WARNING: Same limitation as sets - desc_text may consume subsequent declarations
-param_decl: ID "(" id_or_wildcard_list ")" (STRING | desc_text)? "/" param_data_items "/" param_default? -> param_domain_data
-          | ID "(" id_or_wildcard_list ")" (STRING | desc_text)? param_default?                          -> param_domain
-          | ID (STRING | desc_text)? "/" param_data_items "/" param_default?                 -> param_plain_data
-          | ID (STRING | desc_text)? param_default?                                          -> param_plain
-          | ID "," id_list                                             -> param_list
+// Sprint 12 Day 5 (Issue #417): Split into single vs list patterns to handle inline descriptions
+// Two patterns: single declarations (with desc_text) and lists (without desc_text to avoid ambiguity)
+param_decl: param_item ("," param_item)+          -> param_list
+          | param_single_item                     -> param_single
+
+// For single parameter declarations: allow desc_text or STRING
+param_single_item: ID "(" id_or_wildcard_list ")" (STRING | desc_text)? "/" param_data_items "/" param_default? -> param_domain_data
+                 | ID "(" id_or_wildcard_list ")" (STRING | desc_text)? param_default?                          -> param_domain
+                 | ID (STRING | desc_text)? "/" param_data_items "/" param_default?                             -> param_plain_data
+                 | ID (STRING | desc_text)? param_default?                                                      -> param_plain
+
+// For comma-separated lists: only STRING allowed (desc_text would be ambiguous)
+param_item: ID "(" id_or_wildcard_list ")" STRING? "/" param_data_items "/" param_default? -> param_domain_data
+          | ID "(" id_or_wildcard_list ")" STRING? param_default?                          -> param_domain
+          | ID STRING? "/" param_data_items "/" param_default?                             -> param_plain_data
+          | ID STRING? param_default?                                                      -> param_plain
 scalar_decl: scalar_single_item                                          -> scalar_single
            | scalar_item (","? scalar_item)+                                 -> scalar_list
 
@@ -108,24 +125,20 @@ scalar_item: ID "/" scalar_data_items "/" (ASSIGN expr)?                -> scala
            | ID ASSIGN expr                                             -> scalar_with_assign
            | ID                                                         -> scalar_plain
 
-// For single scalar declarations: allow scalar_desc_text (unambiguous)
-scalar_single_item: ID scalar_desc_text "/" scalar_data_items "/" (ASSIGN expr)?  -> scalar_with_data
-                  | ID scalar_desc_text ASSIGN expr                               -> scalar_with_assign
-                  | ID scalar_desc_text                                           -> scalar_plain
-
-// Optional inline description text for scalars (can be 0 or more words)
-scalar_desc_text: _desc_word*
+// For single scalar declarations: allow optional scalar_desc_text
+// Sprint 12 Day 5 (Issue #417): Made DESC_TEXT optional with ? since terminal can't match empty
+scalar_single_item: ID DESC_TEXT? "/" scalar_data_items "/" (ASSIGN expr)?  -> scalar_with_data
+                  | ID DESC_TEXT? ASSIGN expr                               -> scalar_with_assign
+                  | ID DESC_TEXT?                                           -> scalar_plain
 
 // Optional inline description text for variables/sets/params
 // Sprint 12 Day 5: Require at least 3 words to avoid consuming variable names on subsequent lines
 // This prevents "variables x\n y\n z;" from parsing "y z" as a description of x
 // Multi-word descriptions like "pool quality from pooling" (3+ words) still work
-desc_text: _desc_word _desc_word _desc_word+
-
-// NOTE: Currently limited to ID tokens and hyphens (sufficient for hs62.gms)
-// Other characters like +, *, /, parentheses will cause description to stop prematurely
-// Future: May need to expand pattern to support richer description syntax
-_desc_word: ID | MINUS
+// Sprint 12 Day 5 (Issue #417): Make desc_text a terminal to prevent crossing newlines
+// Pattern: 3+ words separated by spaces/tabs (not newlines)
+// Words can contain letters, numbers, underscores, and hyphens
+desc_text: DESC_TEXT
 
 scalar_data_items: scalar_data_item ("," scalar_data_item)*
 scalar_data_item: NUMBER
@@ -443,7 +456,14 @@ OFF: /(?i:off)\b/
 SET_ELEMENT_ID.2: /[a-zA-Z_][a-zA-Z0-9_+\-]*/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
 ESCAPED: /'[^']*'|\"[^\"]*\"/
+UNQUOTED_ID: /[a-zA-Z_][a-zA-Z0-9_]*/
 STRING: /"[^"]*"|'[^']*'/
+// Sprint 12 Day 5 (Issue #417): DESC_TEXT matches 2+ words on same line (no newlines)
+// Pattern: word word (word)* where words are separated by spaces/tabs
+// Words can contain letters, numbers, underscores, hyphens
+// Priority -1: Lower than default (0) to avoid interfering with normal ID matching
+// Note: {1,} means 1 or more additional words after the first = 2+ words total
+DESC_TEXT.-1: /[a-zA-Z_][\w\-]*(?:[ \t]+[a-zA-Z_][\w\-]*){1,}/
 DESCRIPTION.10: /(?=.*(?:[a-zA-Z_][a-zA-Z0-9_]{3,}|\w+\-\w+))[a-zA-Z_][\w\-]*(?:[ \t]+[a-zA-Z_][\w\-]*)+/
 
 NUMBER: SIGNED_NUMBER

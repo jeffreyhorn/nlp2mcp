@@ -653,54 +653,28 @@ class _ModelBuilder:
         return self.model
 
     def _handle_sets_block(self, node: Tree) -> None:
+        # Sprint 12 Day 5 (Issue #417): Process set declarations (allows space and newline separation)
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
-            if child.data == "set_simple":
-                name = _token_text(child.children[0])
-                # Skip optional STRING description, find set_members node
-                members_node = next(
-                    c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
-                )
-                members = self._expand_set_members(members_node)
-                self.model.add_set(SetDef(name=name, members=members))
-            elif child.data == "set_empty":
-                name = _token_text(child.children[0])
-                self.model.add_set(SetDef(name=name))
-            elif child.data == "set_list":
-                # Comma-separated list of set names: Set i, j, k;
-                for token in child.children:
-                    if isinstance(token, Token):
-                        name = _token_text(token)
-                        self.model.add_set(SetDef(name=name))
-            elif child.data == "set_domain":
-                name = _token_text(child.children[0])
-                domain = _id_list(child.children[1])
-                self.model.add_set(SetDef(name=name, members=list(domain)))
-            elif child.data == "set_domain_with_members":
-                # Set with domain and members: ID(id_list) STRING? / set_members /
-                name = _token_text(child.children[0])
-                # Note: domain is in second child (id_list), but SetDef doesn't have a domain field yet.
-                # For now, we only extract members. Future enhancement: add domain field to SetDef.
-                # optional STRING description
-                # set_members node is last
-                members_node = next(
-                    c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
-                )
-                members = self._expand_set_members(members_node)
-                self.model.add_set(SetDef(name=name, members=members))
-            elif child.data == "set_aliased":
-                # Set with alias: ID STRING? alias_opt / set_members /
-                name = _token_text(child.children[0])
-                members_node = next(
-                    c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
-                )
-                members = self._expand_set_members(members_node)
-                self.model.add_set(SetDef(name=name, members=members))
+            # Route all set declarations through _process_set_decl
+            self._process_set_decl(child)
 
     def _process_set_decl(self, child: Tree) -> None:
         """Process a single set_decl node (helper for _handle_sets_block)."""
-        if child.data == "set_simple":
+        # Sprint 12 Day 5 (Issue #417): Handle new set_single and set_list patterns
+        if child.data == "set_list":
+            # Handle comma-separated list: Set i, j, k;
+            for set_item in child.children:
+                if not isinstance(set_item, Tree):
+                    continue
+                self._process_set_item(set_item)
+        elif child.data == "set_single":
+            # Handle single set declaration with potential description
+            set_single_item = child.children[0]
+            self._process_set_item(set_single_item)
+        # Legacy patterns for backward compatibility
+        elif child.data == "set_simple":
             name = _token_text(child.children[0])
             # Skip optional STRING/desc_text description, find set_members node
             members_node = next(
@@ -712,12 +686,6 @@ class _ModelBuilder:
             name = _token_text(child.children[0])
             # Note: desc_text is now allowed but we ignore it (no description field in SetDef yet)
             self.model.add_set(SetDef(name=name))
-        elif child.data == "set_list":
-            # Comma-separated list of set names: Set i, j, k;
-            for token in child.children:
-                if isinstance(token, Token):
-                    name = _token_text(token)
-                    self.model.add_set(SetDef(name=name))
         elif child.data == "set_domain":
             name = _token_text(child.children[0])
             domain = _id_list(child.children[1])
@@ -739,6 +707,42 @@ class _ModelBuilder:
             name = _token_text(child.children[0])
             members_node = next(
                 c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
+            )
+            members = self._expand_set_members(members_node)
+            self.model.add_set(SetDef(name=name, members=members))
+
+    def _process_set_item(self, item: Tree) -> None:
+        """Process a single set_item or set_single_item node."""
+        if item.data == "set_simple":
+            name = _token_text(item.children[0])
+            # Skip optional STRING/desc_text description, find set_members node
+            members_node = next(
+                c for c in item.children if isinstance(c, Tree) and c.data == "set_members"
+            )
+            members = self._expand_set_members(members_node)
+            self.model.add_set(SetDef(name=name, members=members))
+        elif item.data == "set_empty":
+            name = _token_text(item.children[0])
+            # Note: desc_text is now allowed but we ignore it (no description field in SetDef yet)
+            self.model.add_set(SetDef(name=name))
+        elif item.data == "set_domain":
+            name = _token_text(item.children[0])
+            domain = _id_list(item.children[1])
+            # Note: desc_text is now allowed but we ignore it
+            self.model.add_set(SetDef(name=name, members=list(domain)))
+        elif item.data == "set_domain_with_members":
+            # Set with domain and members: ID(id_list) STRING? / set_members /
+            name = _token_text(item.children[0])
+            members_node = next(
+                c for c in item.children if isinstance(c, Tree) and c.data == "set_members"
+            )
+            members = self._expand_set_members(members_node)
+            self.model.add_set(SetDef(name=name, members=members))
+        elif item.data == "set_aliased":
+            # Set with alias: ID STRING? alias_opt / set_members /
+            name = _token_text(item.children[0])
+            members_node = next(
+                c for c in item.children if isinstance(c, Tree) and c.data == "set_members"
             )
             members = self._expand_set_members(members_node)
             self.model.add_set(SetDef(name=name, members=members))
@@ -1006,17 +1010,18 @@ class _ModelBuilder:
 
     def _process_param_decl(self, child: Tree) -> None:
         """Process a single param_decl node (helper for _handle_params_block)."""
+        # Sprint 12 Day 5 (Issue #417): Handle new param_single and param_list patterns
         if child.data == "param_list":
-            # Handle comma-separated parameter names: Parameter x, y, z;
-            # Grammar: ID "," id_list -> first ID + rest from id_list
-            if not child.children or len(child.children) < 2:
-                raise self._error("Invalid param_list structure", child)
-            first_name = _token_text(child.children[0])
-            rest_names = _id_list(child.children[1]) if isinstance(child.children[1], Tree) else []
-            names = [first_name] + list(rest_names)
-            for name in names:
-                param = ParameterDef(name=name, domain=())
-                self.model.add_param(param)
+            # Handle comma-separated list: Parameter x, y, z;
+            for param_item in child.children:
+                if not isinstance(param_item, Tree):
+                    continue
+                self._process_param_item(param_item)
+        elif child.data == "param_single":
+            # Handle single parameter declaration with potential description
+            param_single_item = child.children[0]
+            self._process_param_item(param_single_item)
+        # Legacy patterns for backward compatibility
         elif child.data in {
             "param_domain",
             "param_domain_data",
@@ -1024,6 +1029,17 @@ class _ModelBuilder:
             "param_plain_data",
         }:
             param = self._parse_param_decl(child)
+            self.model.add_param(param)
+
+    def _process_param_item(self, item: Tree) -> None:
+        """Process a single param_item or param_single_item node."""
+        if item.data in {
+            "param_domain",
+            "param_domain_data",
+            "param_plain",
+            "param_plain_data",
+        }:
+            param = self._parse_param_decl(item)
             self.model.add_param(param)
 
     def _handle_table_block(self, node: Tree) -> None:
@@ -1896,12 +1912,17 @@ class _ModelBuilder:
                 domain = _id_list(node.children[idx])
                 idx += 1
             # desc_text is handled below
-        # Check for description (STRING token or desc_text node)
+        # Check for description (STRING token or DESC_TEXT/SCALAR_DESC_TEXT terminal)
         if idx < len(node.children):
             child = node.children[idx]
-            if isinstance(child, Token) and child.type == "STRING":
-                description = _token_text(child)
+            if isinstance(child, Token):
+                if child.type == "STRING":
+                    description = _token_text(child)
+                elif child.type == "DESC_TEXT":
+                    # Sprint 12 Day 5 (Issue #417): DESC_TEXT is now a terminal token
+                    description = str(child.value) if child.value else None
             elif isinstance(child, Tree) and child.data in ("desc_text", "scalar_desc_text"):
+                # Legacy: desc_text as a rule node (backward compatibility)
                 # desc_text/scalar_desc_text contains ID tokens - extract and join them
                 # Note: scalar_desc_text may be empty (zero tokens), desc_text requires 2+
                 if child.children:
