@@ -377,8 +377,11 @@ symbol_plain: ID
 compile_time_const: "%" compile_const_path "%"
 compile_const_path: ID ("." ID)*
 
-sum_expr: SUM_K "(" index_list "," expr ")"   -> sum
-        | SUM_K "{" index_list "," expr "}"   -> sum
+sum_expr: SUM_K "(" sum_domain "," expr ")"   -> sum
+        | SUM_K "{" sum_domain "," expr "}"   -> sum
+
+sum_domain: index_list
+          | "(" index_list ")"  -> tuple_domain
 
 func_call.3: FUNCNAME "(" arg_list? ")"
 arg_list: expr ("," expr)*

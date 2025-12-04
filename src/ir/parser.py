@@ -406,6 +406,7 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
         if isinstance(child, Token):
             identifiers.append(_token_text(child))
         elif isinstance(child, Tree):
+            # index_list contains index_expr nodes, which are transformed to index_simple or index_subset
             if child.data == "index_simple":
                 # index_simple: ID lag_lead_suffix?
                 # First child is the base ID
@@ -2362,10 +2363,20 @@ class _ModelBuilder:
             return self._attach_domain(Const(float(node.children[0])), free_domain)
 
         if node.data == "sum":
-            # Extract base identifiers from index_list (supporting lag/lead operators)
-            index_list_node = node.children[1]
+            # Extract base identifiers from sum_domain (supporting lag/lead operators and tuples)
+            sum_domain_node = node.children[1]
+
+            # Handle sum_domain which can be index_list or tuple_domain
+            if sum_domain_node.data == "tuple_domain":
+                # Tuple notation: sum{(i,j), expr}
+                index_list_node = sum_domain_node.children[0]
+            else:
+                # sum_domain -> index_list (no transform, so extract first child)
+                # This handles the plain sum_domain case from the grammar
+                index_list_node = sum_domain_node.children[0]
+
             if index_list_node.data == "id_list":
-                # Legacy path for old grammar
+                # Legacy path for old grammar (if any old tests use it)
                 indices = _id_list(index_list_node)
             else:
                 # New path: extract base identifiers from index_list
