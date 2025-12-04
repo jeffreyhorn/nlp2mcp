@@ -1,9 +1,32 @@
 # Parser: Curly Brace Sum with Complex Indexing Not Supported
 
+**Status:** ✅ Fixed  
 **GitHub Issue:** #379  
 **URL:** https://github.com/jeffreyhorn/nlp2mcp/issues/379  
 **Priority:** HIGH  
-**Tier 2 Models Blocked:** jbearing.gms
+**Tier 2 Models Blocked:** jbearing.gms  
+**Fixed:** 2025-12-03
+
+## Resolution
+
+Fixed by adding `sum_domain` grammar rule that supports tuple notation in sum expressions:
+
+1. **Grammar Changes** (`src/gams/gams_grammar.lark`):
+   - Added `sum_domain` rule: `index_list | "(" index_list ")" -> tuple_domain`
+   - Updated `sum_expr` to use `sum_domain` instead of directly using `index_list`
+   - This enables both `sum{i, expr}` and `sum{(i,j), expr}` and `sum{(nx(i+1),ny(j+1)), expr}`
+
+2. **Parser Changes** (`src/ir/parser.py`):
+   - Updated sum expression handling to extract `index_list` from `sum_domain` node
+   - Added logic to handle both `tuple_domain` (with parentheses) and plain `sum_domain`
+   - Maintains backward compatibility with existing simple sum syntax
+
+3. **Test Coverage** (`tests/unit/gams/test_parser.py`):
+   - Added 7 comprehensive test cases in `TestCurlyBraceSumComplexIndexing` class
+   - Tests cover tuple notation, subset indexing, arithmetic in subsets, lag/lead operators
+   - All tests pass, including backward compatibility tests
+
+The fix allows patterns like `sum{(nx(i+1),ny(j+1)), expr}` to parse correctly.
 
 ## Problem
 
