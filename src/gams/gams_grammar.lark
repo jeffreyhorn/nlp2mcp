@@ -187,6 +187,7 @@ table_value: NUMBER | ID | range_expr
 // ---------------------------
 
 assignment_stmt: lvalue ASSIGN expr SEMI                    -> assign
+               | lvalue DOLLAR "(" expr ")" ASSIGN expr SEMI  -> conditional_assign
 
 // lvalue supports: x.lo(i), x.up(i), x.fx(i), parameter(i), scalar
 lvalue: ref_bound | ref_indexed | ID

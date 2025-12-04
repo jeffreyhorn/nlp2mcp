@@ -2321,6 +2321,102 @@ class _ModelBuilder:
             suggestion="Assignment targets must be scalars, parameters, or variable attributes (e.g., x.l, x.lo, x.up)",
         )
 
+    def _handle_conditional_assign(self, node: Tree) -> None:
+        """Handle conditional assignments: lhs$(condition) = rhs;
+
+        This transforms the conditional assignment into an if statement:
+        lhs$(condition) = rhs  =>  if(condition, lhs = rhs;)
+
+        Expected structure: lvalue, DOLLAR, "(", expr (condition), ")", ASSIGN, expr (rhs)
+        """
+        if len(node.children) < 4:
+            raise self._error("Malformed conditional assignment statement", node)
+
+        # Extract components: lvalue, condition expr, rhs expr
+        lvalue_tree = node.children[0]
+        if not isinstance(lvalue_tree, Tree) or lvalue_tree.data != "lvalue":
+            raise self._error("Malformed assignment target", lvalue_tree)
+
+        # Find the condition expression (after DOLLAR and before ASSIGN)
+        # Find the rhs expression (after ASSIGN)
+        condition_expr = None
+        rhs_expr = None
+        found_dollar = False
+        found_assign = False
+
+        for child in node.children[1:]:
+            if isinstance(child, Token):
+                if child.type == "DOLLAR":
+                    found_dollar = True
+                elif child.type == "ASSIGN":
+                    found_assign = True
+            elif isinstance(child, Tree):
+                if found_dollar and not found_assign:
+                    # This is the condition expression
+                    condition_expr = child
+                elif found_assign:
+                    # This is the RHS expression
+                    rhs_expr = child
+
+        if condition_expr is None:
+            raise self._error("Missing condition in conditional assignment", node)
+        if rhs_expr is None:
+            raise self._error("Missing right-hand side in conditional assignment", node)
+
+        # Transform to if statement: create an if node and handle it
+        # We create a synthetic Tree node for the if statement
+        # Structure: if_stmt with condition and a body containing the assignment
+
+        # Create a synthetic assignment node (without the condition)
+        assign_node = Tree("assign", [lvalue_tree, Token("ASSIGN", ":="), rhs_expr])
+
+        # Now create the if statement node
+        # The if_stmt grammar expects: IF_K "(" expr "," exec_stmt+ elseif_clause* else_clause? ")" SEMI
+        # We'll create a simpler conditional statement and store it
+
+        # Extract indices from lvalue for domain context (same as in _handle_assign)
+        target = next(
+            (child for child in lvalue_tree.children if isinstance(child, (Tree, Token))),
+            None,
+        )
+        domain_context = ()
+        if isinstance(target, Tree):
+            if target.data == "symbol_indexed" and len(target.children) > 1:
+                try:
+                    domain_context = _extract_indices(target.children[1])
+                except (AttributeError, IndexError, TypeError):
+                    domain_context = ()
+            elif target.data == "bound_indexed" and len(target.children) > 2:
+                try:
+                    indices = _process_index_list(target.children[2])
+                    domain_context = tuple(
+                        idx if isinstance(idx, str) else idx.base for idx in indices
+                    )
+                except (AttributeError, IndexError, TypeError):
+                    domain_context = ()
+
+        # Evaluate the condition expression with domain context
+        condition = self._expr_with_context(
+            condition_expr, "conditional assignment", domain_context
+        )
+
+        # Create a ConditionalStatement and store it
+        location = self._extract_source_location(node)
+        cond_stmt = ConditionalStatement(
+            condition=condition,
+            then_stmts=[assign_node],  # Store the assignment node to be processed
+            elseif_clauses=[],
+            else_stmts=[],
+            location=location,
+        )
+
+        # Store the conditional statement
+        self.model.conditional_statements.append(cond_stmt)
+
+        # Also process the assignment itself so variables/parameters are updated
+        # This handles the actual data assignment in the "then" branch
+        self._handle_assign(assign_node)
+
     def _expr(self, node: Tree | Token, free_domain: tuple[str, ...]) -> Expr:
         if isinstance(node, Token):
             if node.type == "NUMBER":
