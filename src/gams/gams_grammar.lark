@@ -389,8 +389,10 @@ compile_const_path: ID ("." ID)*
 sum_expr: SUM_K "(" sum_domain "," expr ")"   -> sum
         | SUM_K "{" sum_domain "," expr "}"   -> sum
 
-sum_domain: index_list
-          | "(" index_list ")"  -> tuple_domain
+sum_domain: index_spec
+          | "(" index_spec ")"  -> tuple_domain
+
+index_spec: index_list (DOLLAR expr)?
 
 func_call.3: FUNCNAME "(" arg_list? ")"
 arg_list: expr ("," expr)*

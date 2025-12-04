@@ -2382,17 +2382,26 @@ class _ModelBuilder:
             return self._attach_domain(Const(float(node.children[0])), free_domain)
 
         if node.data == "sum":
-            # Extract base identifiers from sum_domain (supporting lag/lead operators and tuples)
+            # Extract base identifiers from sum_domain (supporting lag/lead operators, tuples, and conditionals)
             sum_domain_node = node.children[1]
 
-            # Handle sum_domain which can be index_list or tuple_domain
+            # Handle sum_domain which can be index_spec or tuple_domain
+            condition_expr = None
             if sum_domain_node.data == "tuple_domain":
-                # Tuple notation: sum{(i,j), expr}
-                index_list_node = sum_domain_node.children[0]
+                # Tuple notation: sum{(i,j), expr} or sum{(i,j)$cond, expr}
+                index_spec_node = sum_domain_node.children[0]
             else:
-                # sum_domain -> index_list (no transform, so extract first child)
-                # This handles the plain sum_domain case from the grammar
-                index_list_node = sum_domain_node.children[0]
+                # Plain sum_domain -> index_spec
+                index_spec_node = sum_domain_node.children[0]
+
+            # index_spec contains: index_list (DOLLAR expr)?
+            index_list_node = index_spec_node.children[0]
+
+            # Check if there's a conditional (DOLLAR expr)
+            if len(index_spec_node.children) > 1:
+                # There's a conditional: extract it
+                # Children are: index_list, DOLLAR token, expr
+                condition_expr = self._expr(index_spec_node.children[2], free_domain)
 
             if index_list_node.data == "id_list":
                 # Legacy path for old grammar (if any old tests use it)
@@ -2403,7 +2412,18 @@ class _ModelBuilder:
             self._ensure_sets(indices, "sum indices", node)
             remaining_domain = tuple(d for d in free_domain if d not in indices)
             body_domain = tuple(indices) + remaining_domain
+
+            # If there's a condition, evaluate it in the body domain
+            if condition_expr is not None:
+                # Re-evaluate condition in body_domain since it may reference sum indices
+                condition_expr = self._expr(index_spec_node.children[2], body_domain)
+
             body = self._expr(node.children[2], body_domain)
+
+            # Apply condition by multiplying: sum(i$cond, expr) => sum(i, cond * expr)
+            if condition_expr is not None:
+                body = Binary("*", condition_expr, body)
+
             expr = Sum(indices, body)
             object.__setattr__(expr, "sum_indices", tuple(indices))
             return self._attach_domain(expr, remaining_domain)
