@@ -210,18 +210,17 @@ class TestErrorEnhancer:
         ), f"Should suggest /.../ syntax: {error_str}"
 
     def test_missing_semicolon_suggestion(self):
-        """Test that missing semicolons are detected and suggested."""
-        source = "Set i / 1*10 /\nParameter x"  # Missing semicolon after Set declaration
+        """Test that semicolons are now optional in declaration blocks.
 
-        with pytest.raises(ParseError) as exc_info:
-            parse_text(source)
+        Sprint 12 Day 5: Semicolons are now optional in declaration blocks
+        to support GAMS files where new block keywords implicitly end previous blocks.
+        This test verifies that multiple sets without semicolons parse successfully.
+        """
+        source = "Set i / 1*10 /\nSet j / 1*5 /"  # No semicolons - should parse successfully
 
-        error = exc_info.value
-        error_str = str(error)
-        # Should suggest adding semicolon (the enhancer should detect this pattern)
-        assert (
-            "semicolon" in error_str.lower() or ";" in error_str
-        ), f"Should mention semicolon: {error_str}"
+        # Sprint 12 Day 5: This now parses successfully because semicolons are optional
+        parse_text(source)
+        # If we get here, parsing succeeded as expected
 
     def test_unsupported_feature_explanation(self):
         """Test that unsupported features get roadmap explanations."""
