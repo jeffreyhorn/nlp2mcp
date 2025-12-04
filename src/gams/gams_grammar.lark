@@ -132,11 +132,11 @@ scalar_single_item: ID DESC_TEXT? "/" scalar_data_items "/" (ASSIGN expr)?  -> s
                   | ID DESC_TEXT?                                           -> scalar_plain
 
 // Optional inline description text for variables/sets/params
-// Sprint 12 Day 5: Require at least 3 words to avoid consuming variable names on subsequent lines
+// Sprint 12 Day 5: Require at least 2 words to avoid consuming variable names on subsequent lines
 // This prevents "variables x\n y\n z;" from parsing "y z" as a description of x
-// Multi-word descriptions like "pool quality from pooling" (3+ words) still work
+// Multi-word descriptions like "total cost" (2+ words) still work
 // Sprint 12 Day 5 (Issue #417): Make desc_text a terminal to prevent crossing newlines
-// Pattern: 3+ words separated by spaces/tabs (not newlines)
+// Pattern: 2+ words separated by spaces/tabs (not newlines)
 // Words can contain letters, numbers, underscores, and hyphens
 desc_text: DESC_TEXT
 
@@ -456,7 +456,6 @@ OFF: /(?i:off)\b/
 SET_ELEMENT_ID.2: /[a-zA-Z_][a-zA-Z0-9_+\-]*/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
 ESCAPED: /'[^']*'|\"[^\"]*\"/
-UNQUOTED_ID: /[a-zA-Z_][a-zA-Z0-9_]*/
 STRING: /"[^"]*"|'[^']*'/
 // Sprint 12 Day 5 (Issue #417): DESC_TEXT matches 2+ words on same line (no newlines)
 // Pattern: word (separator word)+ where words are separated by spaces/tabs

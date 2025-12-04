@@ -136,7 +136,7 @@ All tests passing (2190 passed):
 
 **poolmod.inc sets**:
 ```gams
-Sets comp_ Components and Raw Matereials
+Sets comp_ Components and Raw Materials
      pro_  Products
      qual_ Qualities
      pool_ Pools
@@ -147,7 +147,7 @@ Result: All four sets registered correctly ✓
 ```gams
 variables  q(comp_, pool_) pool quality from pooling raw materials
            y(pool_, pro_)  flow from pool to product
-           z(comp_, pro_)  direct flow of rawmaterials to product
+           z(comp_, pro_)  direct flow of raw materials to product
            cost            total cost
 ```
 Result: All variables parse correctly (semantic validation requires set definitions) ✓

@@ -666,50 +666,15 @@ class _ModelBuilder:
         if child.data == "set_list":
             # Handle comma-separated list: Set i, j, k;
             for set_item in child.children:
-                if not isinstance(set_item, Tree):
-                    continue
-                self._process_set_item(set_item)
+                if isinstance(set_item, Tree):
+                    self._process_set_item(set_item)
         elif child.data == "set_single":
             # Handle single set declaration with potential description
             set_single_item = child.children[0]
             self._process_set_item(set_single_item)
-        # Legacy patterns for backward compatibility
-        elif child.data == "set_simple":
-            name = _token_text(child.children[0])
-            # Skip optional STRING/desc_text description, find set_members node
-            members_node = next(
-                c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
-            )
-            members = self._expand_set_members(members_node)
-            self.model.add_set(SetDef(name=name, members=members))
-        elif child.data == "set_empty":
-            name = _token_text(child.children[0])
-            # Note: desc_text is now allowed but we ignore it (no description field in SetDef yet)
-            self.model.add_set(SetDef(name=name))
-        elif child.data == "set_domain":
-            name = _token_text(child.children[0])
-            domain = _id_list(child.children[1])
-            # Note: desc_text is now allowed but we ignore it
-            self.model.add_set(SetDef(name=name, members=list(domain)))
-        elif child.data == "set_domain_with_members":
-            # Set with domain and members: ID(id_list) STRING? / set_members /
-            name = _token_text(child.children[0])
-            # Note: domain is in second child (id_list), but SetDef doesn't have a domain field yet.
-            # For now, we only extract members. Future enhancement: add domain field to SetDef.
-            # optional STRING/desc_text description
-            members_node = next(
-                c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
-            )
-            members = self._expand_set_members(members_node)
-            self.model.add_set(SetDef(name=name, members=members))
-        elif child.data == "set_aliased":
-            # Set with alias: ID STRING? alias_opt / set_members /
-            name = _token_text(child.children[0])
-            members_node = next(
-                c for c in child.children if isinstance(c, Tree) and c.data == "set_members"
-            )
-            members = self._expand_set_members(members_node)
-            self.model.add_set(SetDef(name=name, members=members))
+        else:
+            # Legacy patterns - delegate to _process_set_item
+            self._process_set_item(child)
 
     def _process_set_item(self, item: Tree) -> None:
         """Process a single set_item or set_single_item node."""
@@ -1014,22 +979,15 @@ class _ModelBuilder:
         if child.data == "param_list":
             # Handle comma-separated list: Parameter x, y, z;
             for param_item in child.children:
-                if not isinstance(param_item, Tree):
-                    continue
-                self._process_param_item(param_item)
+                if isinstance(param_item, Tree):
+                    self._process_param_item(param_item)
         elif child.data == "param_single":
             # Handle single parameter declaration with potential description
             param_single_item = child.children[0]
             self._process_param_item(param_single_item)
-        # Legacy patterns for backward compatibility
-        elif child.data in {
-            "param_domain",
-            "param_domain_data",
-            "param_plain",
-            "param_plain_data",
-        }:
-            param = self._parse_param_decl(child)
-            self.model.add_param(param)
+        else:
+            # Legacy patterns - delegate to _process_param_item
+            self._process_param_item(child)
 
     def _process_param_item(self, item: Tree) -> None:
         """Process a single param_item or param_single_item node."""
