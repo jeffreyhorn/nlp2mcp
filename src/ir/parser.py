@@ -344,6 +344,25 @@ def _id_list(node: Tree) -> tuple[str, ...]:
     return tuple(_token_text(tok) for tok in node.children if isinstance(tok, Token))
 
 
+def _id_or_wildcard_list(node: Tree) -> tuple[str, ...]:
+    """Extract IDs or wildcards from id_or_wildcard_list.
+
+    Handles the grammar rule:
+        id_or_wildcard_list: id_or_wildcard ("," id_or_wildcard)*
+        id_or_wildcard: ID | "*"
+    """
+    result = []
+    for child in node.children:
+        if isinstance(child, Token):
+            result.append(_token_text(child))
+        elif isinstance(child, Tree) and child.data == "id_or_wildcard":
+            # Extract the token from id_or_wildcard rule
+            for token in child.children:
+                if isinstance(token, Token):
+                    result.append(_token_text(token))
+    return tuple(result)
+
+
 def _domain_list(node: Tree) -> tuple[str, ...]:
     """Extract domain identifiers from domain_list (Sprint 11 Day 1).
 
@@ -2794,6 +2813,8 @@ class _ModelBuilder:
             elif isinstance(child, Tree):
                 if child.data == "id_list" and not domain:
                     domain = _id_list(child)
+                elif child.data == "id_or_wildcard_list" and not domain:
+                    domain = _id_or_wildcard_list(child)
                 elif child.data == "param_data_items":
                     data_node = child
         if name is None:

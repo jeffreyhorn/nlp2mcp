@@ -75,8 +75,8 @@ alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_unive
 
 alias_pair: "(" ID "," id_list ")"
 
-param_decl: ID "(" id_list ")" STRING? "/" param_data_items "/" param_default? -> param_domain_data
-          | ID "(" id_list ")" STRING? param_default?                          -> param_domain
+param_decl: ID "(" id_or_wildcard_list ")" STRING? "/" param_data_items "/" param_default? -> param_domain_data
+          | ID "(" id_or_wildcard_list ")" STRING? param_default?                          -> param_domain
           | ID STRING? "/" param_data_items "/" param_default?                 -> param_plain_data
           | ID STRING? param_default?                                          -> param_plain
           | ID "," id_list                                             -> param_list
@@ -115,7 +115,9 @@ param_data_item: data_matrix_row                         -> param_data_matrix_ro
 
 // data_indices can be numeric (e.g., parameter tau(nm) / 1 0.000, 2 0.025 /)
 // Also allows hyphenated identifiers (e.g., parameter cost(i) / light-ind 100 /)
-data_indices: (SET_ELEMENT_ID | NUMBER) ("." (SET_ELEMENT_ID | NUMBER))*
+// Sprint 12 Day 5: Support range notation (e.g., foulds3*foulds5 -8)
+data_indices: range_expr
+            | (SET_ELEMENT_ID | NUMBER) ("." (SET_ELEMENT_ID | NUMBER))*
 // Matrix row must have at least 2 values (data_indices followed by 2+ NUMBERs) to disambiguate from scalar
 data_matrix_row: data_indices NUMBER NUMBER+
 data_matrix_values: NUMBER (NUMBER)*
@@ -145,6 +147,8 @@ eqn_head_decl: id_list "(" domain_list ")" (STRING | DESCRIPTION)?  -> eqn_head_
 
 alias_opt : "(" id_list ")"                                  -> alias_domain
 id_list: ID ("," ID)*
+id_or_wildcard_list: id_or_wildcard ("," id_or_wildcard)*
+id_or_wildcard: ID | "*"
 
 set_members: set_member ("," set_member)*
 ?set_member: range_expr                          -> set_range
@@ -175,8 +179,8 @@ table_row: table_row_label table_value*
 table_row_label: dotted_label                    -> simple_label
                | "(" id_list ")" "." dotted_label  -> tuple_label
 
-dotted_label: ID ("." ID)*
-table_value: NUMBER | ID
+dotted_label: ID ("." (ID | range_expr))*
+table_value: NUMBER | ID | range_expr
 
 // ---------------------------
 // Assignments & Bounds
