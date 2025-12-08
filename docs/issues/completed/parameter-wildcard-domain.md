@@ -1,6 +1,6 @@
 # Issue: Wildcard Domain `*` in Parameter Declarations Not Handled
 
-**Status**: Open  
+**Status**: Completed  
 **Priority**: Medium  
 **Component**: Parser (Parameter Declaration Handling)  
 **GitHub Issue**: [#425](https://github.com/jeffreyhorn/nlp2mcp/issues/425)  
@@ -101,8 +101,27 @@ In GAMS, the wildcard `*` in a domain declaration means:
 - Issue #424 (Completed): Set parsing for newline-separated declarations - Fixed grammar ambiguity
 - pool.gms now parses to line 850 (previously failed much earlier)
 
+## Resolution
+
+Fixed by adding a named `WILDCARD` terminal to the grammar instead of using an anonymous literal `"*"`.
+
+**Root Cause**: The grammar rule `id_or_wildcard: ID | "*"` used an anonymous literal `"*"` which was matched by the lexer but not preserved as a token in the parse tree. This caused `_id_or_wildcard_list()` to return `('case',)` instead of `('case', '*')`.
+
+**Fix**: Added `WILDCARD: "*"` terminal and changed the rule to `id_or_wildcard: ID | WILDCARD`. Now the wildcard is captured as a `WILDCARD` token in the parse tree.
+
+**Result**: pool.gms now parses successfully with 23 sets, 26 parameters, 4 variables, and 10 equations.
+
+**Tests Added**: 7 tests in `TestWildcardDomain` covering:
+- Basic wildcard domain
+- Wildcard with assignment
+- Wildcard in first position
+- Wildcard-only domain
+- Multiple wildcards
+- pool.gms pattern with report parameters
+- Index validation with wildcards
+
 ## Notes
 
 - This issue was discovered after fixing issues #421 and #424
 - The file now parses much further than before, with sets and parameter data working correctly
-- The wildcard domain issue is the next blocking problem for pool.gms
+- The wildcard domain issue was the final blocking problem for pool.gms
