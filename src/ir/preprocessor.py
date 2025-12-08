@@ -20,6 +20,28 @@ from pathlib import Path
 # Regex pattern for GAMS declaration keywords (both singular and plural forms)
 DECLARATION_KEYWORDS_PATTERN = r"\b(Set|Sets|Parameter|Parameters|Scalar|Scalars|Alias)\b"
 
+# Block keywords that start a new declaration block and require previous block to be terminated
+# These keywords, when appearing at the start of a line, indicate a new block
+BLOCK_KEYWORDS = [
+    "set",
+    "sets",
+    "parameter",
+    "parameters",
+    "scalar",
+    "scalars",
+    "variable",
+    "variables",
+    "equation",
+    "equations",
+    "alias",
+    "table",
+    "model",
+    "positive",
+    "negative",
+    "binary",
+    "integer",
+]
+
 
 class CircularIncludeError(Exception):
     """Raised when a circular include dependency is detected.
@@ -1525,6 +1547,66 @@ def _quote_special_in_line(line: str) -> str:
     return processed
 
 
+def insert_missing_semicolons(source: str) -> str:
+    """Insert missing semicolons before block keywords.
+
+    GAMS allows omitting semicolons at the end of declaration blocks when
+    the next block starts with a keyword. This function inserts semicolons
+    before block keywords (Set, Parameter, Variable, Equation, etc.) when
+    the previous non-empty, non-comment line doesn't end with a semicolon.
+
+    This fixes issue #418 where variables declared in include files were
+    not being recognized because the parser consumed them as part of a
+    preceding block (e.g., parameters or sets) that was missing a semicolon.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with missing semicolons inserted
+
+    Example:
+        >>> source = '''parameters p(i) test
+        ...
+        ... variables x(i) test;'''
+        >>> result = insert_missing_semicolons(source)
+        >>> # Result has semicolon inserted before 'variables'
+    """
+    lines = source.split("\n")
+    result = []
+
+    # Build regex pattern for block keywords at start of line (case-insensitive)
+    # Pattern matches: optional whitespace, then keyword, then word boundary
+    block_keyword_pattern = re.compile(r"^\s*(" + "|".join(BLOCK_KEYWORDS) + r")\b", re.IGNORECASE)
+
+    # Track if we need to insert a semicolon
+    last_content_line_idx = -1  # Index of last non-empty, non-comment line
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+
+        # Skip empty lines and comments
+        if not stripped or stripped.startswith("*"):
+            result.append(line)
+            continue
+
+        # Check if this line starts with a block keyword
+        if block_keyword_pattern.match(stripped):
+            # Check if we need to insert a semicolon before this line
+            if last_content_line_idx >= 0:
+                last_line = result[last_content_line_idx]
+                last_stripped = last_line.rstrip()
+
+                # If the last content line doesn't end with semicolon, insert one
+                if not last_stripped.endswith(";"):
+                    result[last_content_line_idx] = last_stripped + ";"
+
+        result.append(line)
+        last_content_line_idx = i
+
+    return "\n".join(result)
+
+
 def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
@@ -1543,8 +1625,8 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     11. Strip $macro directives
     12. Strip other unsupported directives ($title, $ontext, etc.)
     13. Remove table continuation markers (+)
-    14. Mark parameter data blocks on continuation lines
-    15. Normalize multi-line continuations (add missing commas)
+    14. Normalize multi-line continuations (add missing commas)
+    15. Insert missing semicolons before block keywords (fixes #418)
     16. Quote identifiers with special characters (-, +) in data blocks
 
     Args:
@@ -1615,6 +1697,11 @@ def preprocess_gams_file(file_path: Path | str) -> str:
 
     # Step 14: Normalize multi-line continuations (add missing commas)
     content = normalize_multi_line_continuations(content)
+
+    # Step 15: Insert missing semicolons before block keywords
+    # This fixes issue #418 where variables from include files weren't recognized
+    # because previous blocks (sets, parameters) were missing semicolons
+    content = insert_missing_semicolons(content)
 
     # Step 16: Quote identifiers with special characters (-, +) in data blocks
     return normalize_special_identifiers(content)
