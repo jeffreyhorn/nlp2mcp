@@ -2687,6 +2687,96 @@ class TestParameterDataRangeNotation:
             parser.parse_model_text(text)
 
 
+class TestWildcardDomain:
+    """Test wildcard domain * in parameter declarations (Issue #425)."""
+
+    def test_wildcard_domain_basic(self):
+        """Test parameter with wildcard domain."""
+        text = dedent(
+            """
+            Set i /a, b, c/;
+            Parameter p(i,*);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "p" in model.params
+        assert model.params["p"].domain == ("i", "*")
+
+    def test_wildcard_domain_with_assignment(self):
+        """Test parameter with wildcard domain and assignment."""
+        text = dedent(
+            """
+            Set i /a, b, c/;
+            Parameter p(i,*);
+            p('a', 'x') = 10;
+            p('b', 'y') = 20;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].domain == ("i", "*")
+        assert model.params["p"].values[("a", "x")] == 10.0
+        assert model.params["p"].values[("b", "y")] == 20.0
+
+    def test_wildcard_domain_first_position(self):
+        """Test wildcard in first position of domain."""
+        text = dedent(
+            """
+            Set j /x, y, z/;
+            Parameter p(*,j);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].domain == ("*", "j")
+
+    def test_wildcard_domain_only(self):
+        """Test parameter with only wildcard domain."""
+        text = dedent(
+            """
+            Parameter p(*);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].domain == ("*",)
+
+    def test_wildcard_domain_multiple(self):
+        """Test parameter with multiple wildcards."""
+        text = dedent(
+            """
+            Parameter p(*,*);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].domain == ("*", "*")
+
+    def test_wildcard_domain_pool_pattern(self):
+        """Test pool.gms pattern with wildcard report parameters."""
+        text = dedent(
+            """
+            Set case /a, b, c/;
+            Parameter
+               rep1(case,*) 'problem characteristics'
+               rep2(case,*) 'solution summary';
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["rep1"].domain == ("case", "*")
+        assert model.params["rep2"].domain == ("case", "*")
+
+    def test_wildcard_domain_index_validation(self):
+        """Test that wildcard domains accept any second index."""
+        text = dedent(
+            """
+            Set i /a, b/;
+            Parameter p(i,*);
+            p('a', 'foo') = 1;
+            p('a', 'bar') = 2;
+            p('b', 'baz') = 3;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert len(model.params["p"].values) == 3
+
+
 class TestCaseInsensitivity:
     """Test case-insensitive symbol lookup (Issue #373)."""
 

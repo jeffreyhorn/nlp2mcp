@@ -191,7 +191,9 @@ eqn_head_decl: id_list "(" domain_list ")" (STRING | DESCRIPTION)?  -> eqn_head_
 alias_opt : "(" id_list ")"                                  -> alias_domain
 id_list: ID ("," ID)*
 id_or_wildcard_list: id_or_wildcard ("," id_or_wildcard)*
-id_or_wildcard: ID | "*"
+// Issue #425: Use WILDCARD terminal instead of literal "*" to preserve token in parse tree
+id_or_wildcard: ID | WILDCARD
+WILDCARD: "*"
 
 set_members: set_member ("," set_member)*
 ?set_member: range_expr                          -> set_range
