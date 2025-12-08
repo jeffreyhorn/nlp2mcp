@@ -3202,6 +3202,12 @@ class _ModelBuilder:
                     values[key_tuple] = value
             elif child.data == "param_data_matrix_row":
                 row_indices = self._parse_data_indices(child.children[0])
+                # Explicitly disallow range notation in matrix row indices
+                if len(row_indices) == 3 and row_indices[0] == "__range__":
+                    raise self._error(
+                        f"Parameter '{param_name}' range notation not supported in table/matrix row indices",
+                        child,
+                    )
                 number_tokens = list(
                     child.scan_values(lambda v: isinstance(v, Token) and v.type == "NUMBER")
                 )
@@ -3255,6 +3261,12 @@ class _ModelBuilder:
                         if len(bounds) == 2:
                             # Return special marker for range that caller will expand
                             return ["__range__", bounds[0], bounds[1]]
+                        else:
+                            # Unexpected number of bounds - raise error for debugging
+                            raise self._error(
+                                f"Expected 2 bounds in range_expr, got {len(bounds)}: {bounds}",
+                                child,
+                            )
             # Standard case: extract tokens directly
             return [
                 _token_text(tok)
