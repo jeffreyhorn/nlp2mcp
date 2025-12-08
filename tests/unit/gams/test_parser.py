@@ -4132,6 +4132,123 @@ class TestMultiLineDeclarations:
         assert "eq3" in model.equations
 
 
+class TestNewlineSeparatedSetDeclarations:
+    """Test newline-separated set declarations without commas (Issue #424).
+
+    GAMS allows multiple set declarations in a single Set block, separated by
+    newlines without commas. The grammar must correctly associate quoted
+    description strings with their preceding set name, not parse them as
+    separate set names.
+    """
+
+    def test_two_sets_newline_separated(self):
+        """Test two sets separated by newline with descriptions."""
+        text = dedent(
+            """
+            Set
+               comp_ 'components' / c1*c32 /
+               pro_  'products'   / p1*p16 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "comp_" in model.sets
+        assert "pro_" in model.sets
+        assert len(model.sets["comp_"].members) == 32
+        assert len(model.sets["pro_"].members) == 16
+        # Verify quoted strings are NOT parsed as set names
+        assert "'components'" not in model.sets
+        assert "'products'" not in model.sets
+
+    def test_multiple_sets_newline_separated_pool_pattern(self):
+        """Test pool.gms pattern with multiple newline-separated sets."""
+        text = dedent(
+            """
+            Set
+               comp_ 'components and raw materials' / c1*c32 /
+               pro_  'products'                     / p1*p16 /
+               qual_ 'qualities'                    / q1*q10 /
+               pool_ 'pools'                        / o1*o10 /
+               case  'case index'
+                      / haverly1*haverly3, foulds2*foulds5 /
+               labels / lo, up, price /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "comp_" in model.sets
+        assert "pro_" in model.sets
+        assert "qual_" in model.sets
+        assert "pool_" in model.sets
+        assert "case" in model.sets
+        assert "labels" in model.sets
+        assert len(model.sets["comp_"].members) == 32
+        assert len(model.sets["pro_"].members) == 16
+        assert len(model.sets["qual_"].members) == 10
+        assert len(model.sets["pool_"].members) == 10
+        assert len(model.sets["case"].members) == 7  # haverly1-3, foulds2-5
+        assert len(model.sets["labels"].members) == 3
+
+    def test_set_with_multiline_members(self):
+        """Test set with description and members on separate line."""
+        text = dedent(
+            """
+            Set case  'case index'
+                      / haverly1, haverly2, haverly3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "case" in model.sets
+        assert model.sets["case"].members == ["haverly1", "haverly2", "haverly3"]
+
+    def test_mixed_with_and_without_descriptions(self):
+        """Test mixing sets with and without descriptions."""
+        text = dedent(
+            """
+            Set
+               i 'first set' / a, b, c /
+               j              / x, y, z /
+               k 'third set' / 1, 2, 3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c"]
+        assert model.sets["j"].members == ["x", "y", "z"]
+        assert model.sets["k"].members == ["1", "2", "3"]
+
+    def test_empty_sets_newline_separated(self):
+        """Test empty sets (no members) separated by newlines."""
+        text = dedent(
+            """
+            Set
+               i 'first set'
+               j
+               k 'third set';
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert "j" in model.sets
+        assert "k" in model.sets
+        assert model.sets["i"].members == []
+        assert model.sets["j"].members == []
+        assert model.sets["k"].members == []
+
+    def test_quoted_description_not_set_name(self):
+        """Verify quoted strings are descriptions, not set names."""
+        text = dedent(
+            """
+            Set
+               x 'description one' / a /
+               y 'description two' / b /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        # Only x and y should be sets
+        assert set(model.sets.keys()) == {"x", "y"}
+        # Quoted strings should NOT be in sets
+        assert "'description one'" not in model.sets
+        assert "'description two'" not in model.sets
+
+
 class TestTableContinuation:
     """Tests for table continuation with plus sign."""
 
