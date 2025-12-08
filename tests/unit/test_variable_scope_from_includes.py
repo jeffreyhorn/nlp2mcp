@@ -81,7 +81,7 @@ variables x(i) test var;"""
 
 variables  q(comp_, pool_) pool quality from pooling raw materials
            y(pool_, pro_)  flow from pool to product
-           z(comp_, pro_)  direct flow of rawmaterials to product
+           z(comp_, pro_)  direct flow of raw materials to product
            cost          total cost
 positive variables q,y,z;
 
