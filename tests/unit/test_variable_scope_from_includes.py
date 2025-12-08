@@ -180,24 +180,36 @@ positive variables q, y, z;"""
         assert model.variables["cost"].kind == VarKind.CONTINUOUS
 
     def test_missing_semicolon_before_variables(self):
-        """Test that missing semicolon before 'variables' is handled."""
+        """Test that missing semicolon before 'variables' is handled.
+
+        Note: parse_model_text() doesn't apply preprocessing, so we manually
+        call insert_missing_semicolons() to test the full pipeline behavior.
+        """
         source = """Sets i /1*3/;
 parameters p(i) test param
 
 variables x(i) test var;"""
-        model = parse_model_text(source)
+        # Apply preprocessing to insert missing semicolons
+        preprocessed = insert_missing_semicolons(source)
+        model = parse_model_text(preprocessed)
 
         assert "p" in model.params
         assert "x" in model.variables
         assert model.variables["x"].domain == ("i",)
 
     def test_missing_semicolon_before_positive(self):
-        """Test that missing semicolon before 'positive' is handled."""
+        """Test that missing semicolon before 'positive' is handled.
+
+        Note: parse_model_text() doesn't apply preprocessing, so we manually
+        call insert_missing_semicolons() to test the full pipeline behavior.
+        """
         source = """Sets i /1*3/;
 variables x(i) test var
 
 positive variables x;"""
-        model = parse_model_text(source)
+        # Apply preprocessing to insert missing semicolons
+        preprocessed = insert_missing_semicolons(source)
+        model = parse_model_text(preprocessed)
 
         assert model.variables["x"].domain == ("i",)
         assert model.variables["x"].kind == VarKind.POSITIVE
