@@ -79,6 +79,30 @@ class ModelIR:
         self.params[p.name] = p
 
     def add_var(self, v: VariableDef) -> None:
+        """Add or update a variable definition.
+
+        When adding a variable that already exists:
+        - If the new definition has an empty domain (scalar) but includes a non-default kind
+          (e.g., from "positive variables x,y,z;"), merge by updating the kind while
+          preserving the existing domain. This handles GAMS patterns like:
+            variables x(i) "indexed var";
+            positive variables x;  # Just updates kind, doesn't change domain
+        - Otherwise, the new definition replaces the old one entirely.
+
+        This fixes issue #418 where variables declared in include files with domains
+        were being overwritten by subsequent "positive variables" statements.
+        """
+        from .symbols import VarKind
+
+        if v.name in self.variables:
+            existing = self.variables[v.name]
+            # If new var is scalar (no domain) and existing has a domain,
+            # and new var has a non-default kind, just update the kind
+            if not v.domain and existing.domain and v.kind != VarKind.CONTINUOUS:
+                # Update kind while preserving domain and other attributes
+                existing.kind = v.kind
+                return
+
         self.variables[v.name] = v
 
     def add_equation(self, e: EquationDef) -> None:
