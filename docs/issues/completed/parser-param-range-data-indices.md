@@ -1,6 +1,6 @@
 # Issue: Parameter Data Range Indices Not Parsed Correctly
 
-**Status**: Open  
+**Status**: Completed  
 **Priority**: Medium  
 **Component**: Parser (Parameter Data Handling)  
 **GitHub Issue**: [#421](https://github.com/jeffreyhorn/nlp2mcp/issues/421)  
@@ -84,6 +84,25 @@ Expected: `p('a') = 10, p('b') = 10, p('c') = 10, p('d') = 20, p('e') = 30`
 
 - Issue #418 (Completed): Variables from include files not visible - Fixed preprocessing and variable kind merging
 - The pool.gms file now gets past the variable scope issue but fails on this parameter parsing issue
+
+## Resolution
+
+Fixed by modifying the parser to detect and expand range notation in parameter data indices:
+
+1. **`_parse_data_indices()`**: Modified to detect `range_expr` nodes within `data_indices` and return a special marker `['__range__', start, end]` instead of an empty list.
+
+2. **`_expand_range_in_set()`**: New method that expands a range like `'a*c'` to `['a', 'b', 'c']` by looking up the set membership and slicing between the start and end indices.
+
+3. **`_parse_param_data_items()`**: Updated to detect the range marker and call `_expand_range_in_set()` to expand the indices before assigning values.
+
+The minimal reproduction case now works correctly:
+```gams
+Set i /a, b, c, d, e/;
+Parameter p(i) / a*c 10, d 20, e 30 /;
+```
+Result: `p('a')=10, p('b')=10, p('c')=10, p('d')=20, p('e')=30`
+
+**Note**: The pool.gms file still fails due to a separate upstream issue with set parsing when multiple sets are declared without commas (the `case` set gets empty members). This is a different issue unrelated to range notation in parameter data.
 
 ## Notes
 
