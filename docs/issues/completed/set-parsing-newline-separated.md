@@ -1,6 +1,6 @@
 # Issue: Set Parsing Fails for Newline-Separated Declarations Without Commas
 
-**Status**: Open  
+**Status**: Completed  
 **Priority**: Medium  
 **Component**: Parser (Set Declaration Handling)  
 **GitHub Issue**: [#424](https://github.com/jeffreyhorn/nlp2mcp/issues/424)  
@@ -112,6 +112,30 @@ Set
 
 - Issue #421 (Completed): Parameter data range indices - Fixed range notation in parameter data
 - Issue #417: Allow both space and newline separation for sets - Added the current grammar pattern
+
+## Resolution
+
+Fixed by implementing solution #2 from the potential solutions list:
+
+1. **Added `SYMBOL_NAME` terminal** in `src/gams/gams_grammar.lark`:
+   ```lark
+   SYMBOL_NAME: /[a-zA-Z_][a-zA-Z0-9_]*/
+   ```
+   This terminal matches only unquoted identifiers, unlike `ID` which includes `ESCAPED` (quoted strings).
+
+2. **Updated set declaration rules** to use `SYMBOL_NAME` instead of `ID` for set names:
+   - `set_single_item` rules now use `SYMBOL_NAME` for the set name
+   - `set_item` rules now use `SYMBOL_NAME` for the set name
+
+This prevents quoted description strings like `'products'` from being parsed as set names, ensuring they are correctly associated with their preceding set declaration.
+
+**Test cases added**: 6 tests in `TestNewlineSeparatedSetDeclarations` covering:
+- Two sets newline-separated with descriptions
+- pool.gms pattern with multiple sets
+- Set with multiline members
+- Mixed with/without descriptions
+- Empty sets newline-separated
+- Verification that quoted strings are not set names
 
 ## Notes
 
