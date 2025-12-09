@@ -5036,6 +5036,14 @@ class TestSubsetReferenceInExpressions:
         )
         model = parser.parse_model_text(text)
         assert "test" in model.equations
+        # Verify the equation structure - LHS should be a Sum containing a VarRef
+        lhs, _ = model.equations["test"].lhs_rhs
+        assert isinstance(lhs, Sum)
+        # The sum body should contain a VarRef to q with expanded indices
+        assert isinstance(lhs.body, VarRef)
+        assert lhs.body.name == "q"
+        # Indices should be expanded from 'arc' to ('np', 'n')
+        assert len(lhs.body.indices) == 2
 
     def test_subset_as_parameter_index_in_sum(self):
         """Test using subset name as parameter index: dist(arc) in sum."""
@@ -5052,6 +5060,16 @@ class TestSubsetReferenceInExpressions:
         )
         model = parser.parse_model_text(text)
         assert "test" in model.equations
+        # Verify the equation structure - LHS should be a Sum containing a ParamRef
+        from src.ir.ast import ParamRef
+
+        lhs, _ = model.equations["test"].lhs_rhs
+        assert isinstance(lhs, Sum)
+        # The sum body should contain a ParamRef to dist with expanded indices
+        assert isinstance(lhs.body, ParamRef)
+        assert lhs.body.name == "dist"
+        # Indices should be expanded from 'arc' to ('np', 'n')
+        assert len(lhs.body.indices) == 2
 
     def test_set_membership_test_in_conditional(self):
         """Test set membership test: rn(n) in conditional."""
@@ -5067,6 +5085,14 @@ class TestSubsetReferenceInExpressions:
         )
         model = parser.parse_model_text(text)
         assert "test" in model.equations
+        # Verify the LHS is a DollarConditional with SetMembershipTest as condition
+        from src.ir.ast import DollarConditional, SetMembershipTest
+
+        lhs, _ = model.equations["test"].lhs_rhs
+        assert isinstance(lhs, DollarConditional)
+        # The condition should be a SetMembershipTest for rn(n)
+        assert isinstance(lhs.condition, SetMembershipTest)
+        assert lhs.condition.set_name == "rn"
 
     def test_multiple_subset_references_in_expression(self):
         """Test multiple subset references: dist(arc) * q(arc)."""

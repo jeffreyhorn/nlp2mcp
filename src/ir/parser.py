@@ -2436,6 +2436,56 @@ class _ModelBuilder:
         # Same as _handle_loop_stmt - the grammar handles the extra parens
         self._handle_loop_stmt(node)
 
+    def _expand_subset_assignment(
+        self,
+        set_def: SetDef,
+        param: ParameterDef,
+        has_function_call: bool,
+        expr: Expr | None,
+        value: float | None,
+        node: Tree | Token | None = None,
+    ) -> None:
+        """Expand subset assignment to all members of a set.
+
+        Args:
+            set_def: The set definition containing members to expand
+            param: The parameter to assign values/expressions to
+            has_function_call: True if the RHS contains function calls
+            expr: The expression to assign (if has_function_call)
+            value: The numeric value to assign (if not has_function_call)
+            node: The AST node for error reporting
+        """
+        if not set_def.members:
+            return
+
+        for member in set_def.members:
+            # member can be a single element or tuple for multi-dim sets
+            # Multi-dim set members are stored as dot-separated strings (e.g., 'a.b')
+            # Note: This assumes dots are tuple separators, not part of element names.
+            # GAMS elements with literal dots (e.g., 'element.1') should be quoted
+            # in the source, and our preprocessor preserves them without dots.
+            if isinstance(member, tuple):
+                key = member
+            elif "." in member:
+                # Split dot-separated member into tuple (e.g., 'nw.cc' -> ('nw', 'cc'))
+                split_member = tuple(member.split("."))
+                # Validate dimension matches parameter domain if domain is declared
+                if param.domain and len(split_member) != len(param.domain):
+                    raise self._error(
+                        f"Set member '{member}' splits into {len(split_member)} elements, "
+                        f"but parameter '{param.name}' expects {len(param.domain)} indices. "
+                        "This may be due to a dot in an element name.",
+                        node,
+                    )
+                key = split_member
+            else:
+                key = (member,)
+
+            if has_function_call:
+                param.expressions[key] = expr
+            elif value is not None:
+                param.values[key] = value
+
     def _handle_assign(self, node: Tree) -> None:
         # Expected structure: lvalue, ASSIGN token, expression
         if len(node.children) < 3:
@@ -2585,29 +2635,10 @@ class _ModelBuilder:
                             f"Set '{subset_name}' used in subset indexing is not declared",
                             target,
                         )
-                if subset_name is not None and subset_name in self.model.sets:
                     subset_def = self.model.sets[subset_name]
-                    if subset_def.members:
-                        # Expand assignment to all subset members
-                        for member in subset_def.members:
-                            # member can be a single element or tuple for multi-dim sets
-                            # Multi-dim set members are stored as dot-separated strings (e.g., 'a.b')
-                            # Note: This assumes dots are tuple separators, not part of element names.
-                            # GAMS elements with literal dots (e.g., 'element.1') should be quoted
-                            # in the source, and our preprocessor preserves them without dots.
-                            if isinstance(member, tuple):
-                                key = member
-                            elif "." in member:
-                                # Split dot-separated member into tuple (e.g., 'nw.cc' -> ('nw', 'cc'))
-                                key = tuple(member.split("."))
-                            else:
-                                key = (member,)
-                            if has_function_call:
-                                param.expressions[key] = expr
-                            elif value is not None:
-                                param.values[key] = value
-                        return
-                    # If subset has no explicit members, use mock/store approach
+                    self._expand_subset_assignment(
+                        subset_def, param, has_function_call, expr, value, target
+                    )
                     return
 
                 # Handle simple subset name as index: flag(sub) where sub is a subset of i
@@ -2616,19 +2647,9 @@ class _ModelBuilder:
                     simple_subset = self.model.sets[indices[0]]
                     # Check if this set is a subset (has a domain that's another set)
                     if simple_subset.members:
-                        # Expand assignment to all subset members
-                        # Note: Same dot-splitting assumption as above - dots are tuple separators
-                        for member in simple_subset.members:
-                            if isinstance(member, tuple):
-                                key = member
-                            elif "." in member:
-                                key = tuple(member.split("."))
-                            else:
-                                key = (member,)
-                            if has_function_call:
-                                param.expressions[key] = expr
-                            elif value is not None:
-                                param.values[key] = value
+                        self._expand_subset_assignment(
+                            simple_subset, param, has_function_call, expr, value, target
+                        )
                         return
 
                 # Only validate index count if the parameter has an explicit domain declaration.
@@ -3313,9 +3334,13 @@ class _ModelBuilder:
                     first_member = set_def.members[0]
                     dim = len(first_member.split("."))
                     if dim > 1 and len(free_domain) >= dim:
-                        # Use the last 'dim' indices from free_domain
+                        # HEURISTIC: Use the last 'dim' indices from free_domain
                         # E.g., free_domain = ('n', 'np'), dim = 2 -> expand to ('n', 'np')
                         # Or free_domain = ('np', 'n'), dim = 2 -> expand to ('np', 'n')
+                        #
+                        # Limitation: This assumes free_domain order matches the set's domain.
+                        # A more robust solution would store domain info in SetDef during parsing.
+                        # For now, this works for common patterns like sum(arc(np,n), q(arc)).
                         expanded_indices.extend(free_domain[-dim:])
                     else:
                         # Can't expand, keep as-is
@@ -3375,9 +3400,22 @@ class _ModelBuilder:
             # This represents the boolean check "is idx_tuple in set 'name'"
             from src.ir.ast import SetMembershipTest
 
-            expr = SetMembershipTest(
-                name, tuple(SymbolRef(i) if i in free_domain else Const(0) for i in idx_tuple)
-            )
+            # Convert indices: domain variables become SymbolRef, literals become Const strings
+            # Note: All indices in a set membership test should typically be domain variables.
+            # If an index is not in free_domain, treat it as a literal element name.
+            index_exprs: list[Expr] = []
+            for i in idx_tuple:
+                if isinstance(i, str) and i in free_domain:
+                    index_exprs.append(SymbolRef(i))
+                elif isinstance(i, str):
+                    # Treat as literal element name - wrap in SymbolRef for consistency
+                    # This handles cases like rn('a') where 'a' is a literal element
+                    index_exprs.append(SymbolRef(i))
+                else:
+                    # IndexOffset or other non-string types
+                    index_exprs.append(SymbolRef(str(i)))
+
+            expr = SetMembershipTest(name, tuple(index_exprs))
             return self._attach_domain(expr, free_domain)
         if idx_tuple:
             raise self._parse_error(
