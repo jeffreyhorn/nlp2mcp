@@ -19,6 +19,7 @@ Usage:
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -204,8 +205,9 @@ def get_tier_progress() -> dict[str, Any]:
                             tier1_success += 1
                         elif (tier2_dir / model_name).exists():
                             tier2_success += 1
-            except (json.JSONDecodeError, OSError):
-                pass
+            except (json.JSONDecodeError, OSError) as e:
+                # Skip malformed diagnostics files silently during tier counting
+                print(f"Warning: Failed to load {json_file}: {e}", file=sys.stderr)
 
     return {
         "tier1_total": tier1_total,
@@ -247,8 +249,6 @@ def get_blocking_issues() -> list[dict[str, str]]:
             for line in content.split("\n"):
                 if "github.com" in line and "/issues/" in line:
                     # Extract URL
-                    import re
-
                     match = re.search(r"https://github\.com/[^\s\)]+/issues/\d+", line)
                     if match:
                         github_url = match.group(0)
