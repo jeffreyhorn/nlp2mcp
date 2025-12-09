@@ -1,5 +1,6 @@
 """Parser smoke tests covering tree output and ModelIR synthesis."""
 
+import math
 from pathlib import Path
 from textwrap import dedent
 
@@ -4788,6 +4789,10 @@ class TestPredefinedConstants:
         )
         model = parser.parse_model_text(text)
         assert "x" in model.variables
+        # Verify actual bound values
+        # Note: lo=0 is explicitly set, up=inf is represented as None (default unbounded)
+        assert model.variables["x"].lo == 0.0
+        assert model.variables["x"].up is None  # inf bounds are stored as None (unbounded)
 
     def test_negative_inf_in_variable_bounds(self):
         """Test -inf (negative infinity) in variable bounds."""
@@ -4800,6 +4805,10 @@ class TestPredefinedConstants:
         )
         model = parser.parse_model_text(text)
         assert "x" in model.variables
+        # Verify that -inf/inf bounds are stored as None (default unbounded)
+        # The parser recognizes inf as valid and doesn't error, but stores unbounded as None
+        assert model.variables["x"].lo is None
+        assert model.variables["x"].up is None
 
     def test_inf_case_insensitive(self):
         """Test inf constant is case-insensitive."""
@@ -4815,6 +4824,10 @@ class TestPredefinedConstants:
         assert "x" in model.variables
         assert "y" in model.variables
         assert "z" in model.variables
+        # Verify all case variants are recognized (stored as None = unbounded)
+        assert model.variables["x"].up is None
+        assert model.variables["y"].up is None
+        assert model.variables["z"].up is None
 
     def test_eps_constant(self):
         """Test eps constant (machine epsilon)."""

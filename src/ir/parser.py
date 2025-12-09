@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -85,11 +86,15 @@ _FUNCTION_NAMES = {"abs", "exp", "log", "log10", "log2", "sqrt", "sin", "cos", "
 
 # GAMS predefined constants (case-insensitive)
 # These are automatically available in all GAMS models
+# Note: This is the single source of truth for predefined constant values.
+# The _init_predefined_constants() method uses this dictionary to create
+# scalar parameters, and _make_symbol() checks this for constant references.
 _PREDEFINED_CONSTANTS: dict[str, float] = {
-    "yes": 1.0,
-    "no": 0.0,
-    "inf": math.inf,
-    "eps": 2.2204460492503131e-16,  # Machine epsilon (sys.float_info.epsilon)
+    "yes": 1.0,  # Boolean true
+    "no": 0.0,  # Boolean false
+    "pi": math.pi,  # 3.141592653589793
+    "inf": math.inf,  # Positive infinity
+    "eps": sys.float_info.epsilon,  # Machine epsilon (2.220446049250313e-16)
     "na": math.nan,  # Not available marker (represented as NaN)
     "undf": math.nan,  # Undefined value marker (represented as NaN)
 }
@@ -695,20 +700,19 @@ class _ModelBuilder:
         self._init_predefined_constants()
 
     def _init_predefined_constants(self) -> None:
-        """Initialize predefined GAMS constants (pi, inf, eps, na)."""
-        import sys
-        from math import pi as math_pi
+        """Initialize predefined GAMS constants as scalar parameters.
 
-        # Add predefined constants as scalar parameters
-        # These are available globally in all GAMS models
-        predefined = {
-            "pi": math_pi,  # 3.141592653589793
-            "inf": float("inf"),  # Infinity
-            "eps": sys.float_info.epsilon,  # Machine epsilon (float64)
-            "na": float("nan"),  # Not available / missing data
-        }
+        Uses _PREDEFINED_CONSTANTS as the single source of truth for values.
+        Creates scalar parameters for constants that can be used in expressions
+        (pi, inf, eps, na). Boolean constants (yes, no) and undf are handled
+        directly in _make_symbol() without creating parameters.
+        """
+        # Constants that should be available as scalar parameters
+        # (not yes/no/undf which are handled as literals in _make_symbol)
+        param_constants = {"pi", "inf", "eps", "na"}
 
-        for name, value in predefined.items():
+        for name in param_constants:
+            value = _PREDEFINED_CONSTANTS[name]
             # Create a scalar parameter (no domain)
             param_def = ParameterDef(name=name, domain=(), values={(): value})
             self.model.params[name] = param_def
@@ -2575,6 +2579,12 @@ class _ModelBuilder:
 
                 # Handle subset indexing: dist(arc(n,np)) = value
                 # Expand to all members of the subset
+                if subset_name is not None:
+                    if subset_name not in self.model.sets:
+                        raise self._error(
+                            f"Set '{subset_name}' used in subset indexing is not declared",
+                            target,
+                        )
                 if subset_name is not None and subset_name in self.model.sets:
                     subset_def = self.model.sets[subset_name]
                     if subset_def.members:
@@ -2582,10 +2592,13 @@ class _ModelBuilder:
                         for member in subset_def.members:
                             # member can be a single element or tuple for multi-dim sets
                             # Multi-dim set members are stored as dot-separated strings (e.g., 'a.b')
+                            # Note: This assumes dots are tuple separators, not part of element names.
+                            # GAMS elements with literal dots (e.g., 'element.1') should be quoted
+                            # in the source, and our preprocessor preserves them without dots.
                             if isinstance(member, tuple):
                                 key = member
                             elif "." in member:
-                                # Split dot-separated member into tuple
+                                # Split dot-separated member into tuple (e.g., 'nw.cc' -> ('nw', 'cc'))
                                 key = tuple(member.split("."))
                             else:
                                 key = (member,)
@@ -2604,6 +2617,7 @@ class _ModelBuilder:
                     # Check if this set is a subset (has a domain that's another set)
                     if simple_subset.members:
                         # Expand assignment to all subset members
+                        # Note: Same dot-splitting assumption as above - dots are tuple separators
                         for member in simple_subset.members:
                             if isinstance(member, tuple):
                                 key = member
@@ -2870,16 +2884,26 @@ class _ModelBuilder:
                         # Expand to domain indices: a(n,n) -> (n, n)
                         expanded_indices.extend(set_def.members)
                     elif members_are_multidim:
-                        # Infer dimensionality from member format and create synthetic indices
-                        # E.g., a with members ['nw.w', 'e.n'] -> use first two indices from domain if available
+                        # HEURISTIC: Infer domain indices for multi-dimensional sets with
+                        # dot-separated element values (e.g., arc with members ['nw.w', 'e.cc']).
+                        #
+                        # Assumptions:
+                        # 1. Only 2D sets are expanded; higher dimensions fall back to original
+                        # 2. The base set has simple (non-dot) element names
+                        # 3. There exists an alias of that base set for the second dimension
+                        # 4. The pattern follows common GAMS convention: (base_set, alias)
+                        #
+                        # Limitations:
+                        # - May not find correct expansion if multiple candidate base sets exist
+                        # - Does not handle 3D+ sets
+                        # - Relies on alias existence; fails gracefully if no alias found
+                        #
+                        # If expansion fails, the original index is kept and downstream
+                        # processing may raise a more specific error.
                         first_member = set_def.members[0]
                         dim = len(first_member.split("."))
-                        # We need to find the underlying domain. For now, use the last 'dim' indices
-                        # from an expanded domain if we can find one from aliases
-                        # Look for the set's domain by finding its definition context
-                        # As a heuristic, use common GAMS pattern: n, np for 2D arcs
                         if dim == 2:
-                            # Look for aliases of the base set
+                            # Look for aliases of a base set with simple elements
                             base_sets = [
                                 s
                                 for s in self.model.sets
@@ -2902,6 +2926,7 @@ class _ModelBuilder:
                                 # No suitable expansion found, keep original
                                 expanded_indices.append(idx)
                         else:
+                            # Non-2D sets: keep original (no heuristic for 3D+)
                             expanded_indices.append(idx)
                     else:
                         expanded_indices.append(idx)
@@ -3346,10 +3371,11 @@ class _ModelBuilder:
         # Issue #428: Check if it's a set membership test (e.g., rn(n) in a condition)
         # In GAMS, set(index) in a conditional context returns 1 if index is in set, 0 otherwise
         if name in self.model.sets and idx_tuple:
-            # Set membership test - return as a Call to a pseudo-function
+            # Set membership test - use dedicated SetMembershipTest node
             # This represents the boolean check "is idx_tuple in set 'name'"
-            # We use a special SetMembership representation via SymbolRef
-            expr = Call(
+            from src.ir.ast import SetMembershipTest
+
+            expr = SetMembershipTest(
                 name, tuple(SymbolRef(i) if i in free_domain else Const(0) for i in idx_tuple)
             )
             return self._attach_domain(expr, free_domain)
