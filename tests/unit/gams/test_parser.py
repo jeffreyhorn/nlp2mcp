@@ -4890,3 +4890,115 @@ class TestPredefinedConstants:
         model = parser.parse_model_text(text)
         assert "angle" in model.params
         assert model.params["angle"].values[("a",)] == pytest.approx(3.141592653589793)
+
+
+class TestSubsetIndexingAssignments:
+    """Test subset indexing in parameter assignments.
+
+    Issue #426: GAMS allows using a subset as an index in parameter assignments
+    to set values for only those elements that belong to the subset.
+    """
+
+    def test_simple_subset_as_index(self):
+        """Test using a simple subset name as index: flag(sub) = value."""
+        text = dedent(
+            """
+            Set i / a, b, c, d /;
+            Set sub(i) / b, c /;
+            Parameter flag(i);
+
+            flag(i) = 1;
+            flag(sub) = 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "flag" in model.params
+        # All elements set to 1, then b and c overwritten to 0
+        assert model.params["flag"].values[("a",)] == 1.0
+        assert model.params["flag"].values[("b",)] == 0.0
+        assert model.params["flag"].values[("c",)] == 0.0
+        assert model.params["flag"].values[("d",)] == 1.0
+
+    def test_subset_indexing_with_domain_indices(self):
+        """Test subset indexing with explicit domain indices: dist(arc(n,np)) = value."""
+        text = dedent(
+            """
+            Set n / a, b, c, d /;
+            Set arc(n,n) / a.b, b.c, c.d /;
+            Parameter dist(n,n);
+
+            dist(arc(n,np)) = 10;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "dist" in model.params
+        # Should expand to all arc members
+        assert model.params["dist"].values[("a", "b")] == 10.0
+        assert model.params["dist"].values[("b", "c")] == 10.0
+        assert model.params["dist"].values[("c", "d")] == 10.0
+        # Other pairs should not be set
+        assert ("a", "c") not in model.params["dist"].values
+
+    def test_subset_with_predefined_constants(self):
+        """Test subset indexing with yes/no constants (water.gms pattern)."""
+        text = dedent(
+            """
+            Set n / nw, e, cc, w, sw, s, se /;
+            Set rn(n) / nw, e /;
+            Parameter dn(n);
+
+            dn(n) = yes;
+            dn(rn) = no;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "dn" in model.params
+        # Reservoir nodes should be 0 (no)
+        assert model.params["dn"].values[("nw",)] == 0.0
+        assert model.params["dn"].values[("e",)] == 0.0
+        # Other nodes should be 1 (yes)
+        assert model.params["dn"].values[("cc",)] == 1.0
+        assert model.params["dn"].values[("w",)] == 1.0
+        assert model.params["dn"].values[("sw",)] == 1.0
+        assert model.params["dn"].values[("s",)] == 1.0
+        assert model.params["dn"].values[("se",)] == 1.0
+
+    def test_subset_overwrites_previous_values(self):
+        """Test that subset assignment overwrites previous values."""
+        text = dedent(
+            """
+            Set i / 1, 2, 3, 4, 5 /;
+            Set odds(i) / 1, 3, 5 /;
+            Parameter p(i);
+
+            p(i) = 100;
+            p(odds) = 1;
+        """
+        )
+        model = parser.parse_model_text(text)
+        # Odd indices should be 1, even indices should be 100
+        assert model.params["p"].values[("1",)] == 1.0
+        assert model.params["p"].values[("2",)] == 100.0
+        assert model.params["p"].values[("3",)] == 1.0
+        assert model.params["p"].values[("4",)] == 100.0
+        assert model.params["p"].values[("5",)] == 1.0
+
+    def test_multi_dimensional_subset(self):
+        """Test subset indexing for multi-dimensional sets."""
+        text = dedent(
+            """
+            Set i / a, b /;
+            Set j / x, y /;
+            Set pairs(i,j) / a.x, b.y /;
+            Parameter cost(i,j);
+
+            cost(pairs(i,j)) = 50;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "cost" in model.params
+        assert model.params["cost"].values[("a", "x")] == 50.0
+        assert model.params["cost"].values[("b", "y")] == 50.0
+        # Other pairs should not be set
+        assert ("a", "y") not in model.params["cost"].values
+        assert ("b", "x") not in model.params["cost"].values

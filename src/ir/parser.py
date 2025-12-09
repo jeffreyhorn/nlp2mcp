@@ -485,9 +485,15 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
                     _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
                 )
             elif child.data == "index_subset":
-                # index_subset: ID "(" id_list ")" lag_lead_suffix?
-                # For parameter assignments, we don't support subset indexing
-                raise ParserSemanticError("Subset indexing not supported in parameter assignments")
+                # index_subset: ID "(" index_list ")" lag_lead_suffix?
+                # Extract the subset name and its domain indices
+                # e.g., arc(n,np) -> subset_name='arc', domain_indices=['n', 'np']
+                # Find the nested index_list and extract domain indices
+                for subchild in child.children:
+                    if isinstance(subchild, Tree) and subchild.data == "index_list":
+                        domain_indices = _extract_domain_indices(subchild)
+                        indices.extend(domain_indices)
+                        break
             else:
                 # Old index_expr from legacy grammar
                 # Only support plain ID (no lag/lead for parameter assignments)
@@ -504,6 +510,60 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
                         "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
                     )
     return tuple(indices)
+
+
+def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | None]:
+    """Extract indices from index_list along with any subset constraint.
+
+    Returns:
+        Tuple of (indices, subset_name) where:
+        - indices: tuple of domain index names
+        - subset_name: name of constraining subset if present, None otherwise
+
+    Example:
+        - arc(n,np) -> (('n', 'np'), 'arc')
+        - (i, j) -> (('i', 'j'), None)
+    """
+    indices: list[str] = []
+    subset_name: str | None = None
+
+    for child in node.children:
+        if isinstance(child, Token):
+            indices.append(_strip_quotes(child) if child.type == "ID" else _token_text(child))
+        elif isinstance(child, Tree) and child.data in (
+            "index_expr",
+            "index_simple",
+            "index_subset",
+        ):
+            if child.data == "index_simple":
+                id_token = child.children[0]
+                if len(child.children) > 1:
+                    raise ParserSemanticError(
+                        "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
+                    )
+                indices.append(
+                    _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
+                )
+            elif child.data == "index_subset":
+                # index_subset: ID "(" index_list ")" lag_lead_suffix?
+                subset_name = _token_text(child.children[0])
+                for subchild in child.children:
+                    if isinstance(subchild, Tree) and subchild.data == "index_list":
+                        domain_indices = _extract_domain_indices(subchild)
+                        indices.extend(domain_indices)
+                        break
+            else:
+                if len(child.children) == 1:
+                    id_token = child.children[0]
+                    indices.append(
+                        _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
+                    )
+                else:
+                    raise ParserSemanticError(
+                        "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
+                    )
+
+    return tuple(indices), subset_name
 
 
 def _process_index_expr(index_node: Tree) -> str | IndexOffset:
@@ -2493,8 +2553,12 @@ class _ModelBuilder:
                 # Handle indexed assignment: p('i1') = 10, report('x1','global') = 1, or low(n,nn) = ...
                 symbol_name = _token_text(target.children[0])
 
-                # Extract indices from id_list, stripping quotes
-                indices = _extract_indices(target.children[1]) if len(target.children) > 1 else ()
+                # Extract indices and any subset constraint from id_list
+                indices, subset_name = (
+                    _extract_indices_with_subset(target.children[1])
+                    if len(target.children) > 1
+                    else ((), None)
+                )
 
                 # Sprint 11 Day 2 Extended: Check if this is a set assignment
                 if symbol_name in self.model.sets:
@@ -2508,6 +2572,50 @@ class _ModelBuilder:
                     raise self._error(f"Parameter '{symbol_name}' not declared", target)
 
                 param = self.model.params[symbol_name]
+
+                # Handle subset indexing: dist(arc(n,np)) = value
+                # Expand to all members of the subset
+                if subset_name is not None and subset_name in self.model.sets:
+                    subset_def = self.model.sets[subset_name]
+                    if subset_def.members:
+                        # Expand assignment to all subset members
+                        for member in subset_def.members:
+                            # member can be a single element or tuple for multi-dim sets
+                            # Multi-dim set members are stored as dot-separated strings (e.g., 'a.b')
+                            if isinstance(member, tuple):
+                                key = member
+                            elif "." in member:
+                                # Split dot-separated member into tuple
+                                key = tuple(member.split("."))
+                            else:
+                                key = (member,)
+                            if has_function_call:
+                                param.expressions[key] = expr
+                            elif value is not None:
+                                param.values[key] = value
+                        return
+                    # If subset has no explicit members, use mock/store approach
+                    return
+
+                # Handle simple subset name as index: flag(sub) where sub is a subset of i
+                # Check if a single index is actually a subset name that should be expanded
+                if subset_name is None and len(indices) == 1 and indices[0] in self.model.sets:
+                    simple_subset = self.model.sets[indices[0]]
+                    # Check if this set is a subset (has a domain that's another set)
+                    if simple_subset.members:
+                        # Expand assignment to all subset members
+                        for member in simple_subset.members:
+                            if isinstance(member, tuple):
+                                key = member
+                            elif "." in member:
+                                key = tuple(member.split("."))
+                            else:
+                                key = (member,)
+                            if has_function_call:
+                                param.expressions[key] = expr
+                            elif value is not None:
+                                param.values[key] = value
+                        return
 
                 # Only validate index count if the parameter has an explicit domain declaration.
                 # For parameters without an explicit domain, index count is not validated.
