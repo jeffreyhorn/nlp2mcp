@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2025-12-09T19:43:16.035552+00:00",
+  "model_name": "mathopt1.gms",
+  "total_duration_ms": 567.5333009567112,
+  "overall_success": true,
+  "stages": {
+    "Parse": {
+      "duration_ms": 560.8352340059355,
+      "success": true,
+      "error": null,
+      "details": {
+        "sets": 0,
+        "parameters": 5,
+        "variables": 3,
+        "equations": 3
+      }
+    },
+    "Semantic Analysis": {
+      "duration_ms": 0.1224309962708503,
+      "success": true,
+      "error": null,
+      "details": {
+        "equalities": 0,
+        "inequalities": 0
+      }
+    },
+    "Simplification": {
+      "duration_ms": 1.663013972574845,
+      "success": true,
+      "error": null,
+      "details": {
+        "vars_added": 0,
+        "eqs_added": 0,
+        "normalized_equations": 3
+      }
+    },
+    "IR Generation": {
+      "duration_ms": 4.361072991741821,
+      "success": true,
+      "error": null,
+      "details": {
+        "gradient_cols": 3,
+        "eq_jacobian_rows": 2,
+        "ineq_jacobian_rows": 5,
+        "stationarity_eqs": 2
+      }
+    },
+    "MCP Generation": {
+      "duration_ms": 0.5515489901881665,
+      "success": true,
+      "error": null,
+      "details": {
+        "output_lines": 121,
+        "output_bytes": 2957
+      }
+    }
+  },
+  "summary": {
+    "stages_completed": 5,
+    "stages_failed": 0,
+    "stages_skipped": 0,
+    "parse_duration_ms": 560.8352340059355,
+    "semantic_duration_ms": 0.1224309962708503,
+    "simplification_duration_ms": 1.663013972574845,
+    "ir_generation_duration_ms": 4.361072991741821,
+    "mcp_generation_duration_ms": 0.5515489901881665
+  }
+}

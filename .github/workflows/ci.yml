@@ -42,7 +42,7 @@ jobs:
       - name: Generate JSON diagnostics for tier 1 models
         run: |
           mkdir -p diagnostics
-          for model in models/tier1/*.gms; do
+          for model in tests/fixtures/gamslib/*.gms; do
             model_name=$(basename "$model" .gms)
             python -m src.cli "$model" --diagnostics --format json 2> "diagnostics/${model_name}.json" || true
           done
