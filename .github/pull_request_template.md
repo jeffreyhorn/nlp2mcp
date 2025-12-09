@@ -78,6 +78,20 @@ Sprint 10 Retrospective identified incremental documentation as key improvement.
 - ✅ Captures decisions while fresh
 - ✅ Enables real-time progress tracking
 
+## CI Workflow Changes
+
+<!-- Complete this section ONLY if modifying files in .github/workflows/ -->
+
+**If this PR modifies CI workflows:**
+- [ ] Workflow syntax validated locally (`yamllint .github/workflows/`)
+- [ ] Actions validated with actionlint (`actionlint`)
+- [ ] File paths verified (all referenced files exist)
+- [ ] Matrix builds tested locally (if applicable)
+- [ ] Secrets/permissions documented (if new ones added)
+- [ ] CI passes on PR before merge
+
+**See:** [CI Workflow Testing Guide](../docs/infrastructure/CI_WORKFLOW_TESTING.md)
+
 ## Checklist
 
 **Before Marking Ready for Review:**
@@ -96,6 +110,7 @@ Sprint 10 Retrospective identified incremental documentation as key improvement.
 - [ ] SPRINT_LOG.md entry verified (description + key decisions present)
 - [ ] Documentation sufficient
 - [ ] No obvious performance or security issues
+- [ ] CI workflow changes validated (if applicable)
 
 ## Additional Notes
 

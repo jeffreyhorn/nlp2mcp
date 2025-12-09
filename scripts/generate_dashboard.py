@@ -261,8 +261,8 @@ def get_blocking_issues() -> list[dict[str, str]]:
                     "github_url": github_url,
                 }
             )
-        except OSError:
-            pass
+        except OSError as e:
+            print(f"Warning: Failed to read {md_file}: {e}", file=sys.stderr)
 
     return blockers
 
