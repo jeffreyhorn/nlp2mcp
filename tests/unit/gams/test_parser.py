@@ -5108,3 +5108,120 @@ class TestSubsetReferenceInExpressions:
         )
         model = parser.parse_model_text(text)
         assert "loss" in model.equations
+
+
+class TestSumDomainMismatch:
+    """Test sum domain calculation with shared outer indices.
+
+    Issue #429: When an equation combines sum expressions with the outer domain
+    variable appearing in the sum indices, the domain calculation was incorrect.
+    For example, in test(n).. sum(arc(np,n), q(np,n)) + s(n) =e= 0, the 'n' in
+    sum indices should remain in the result domain since it's bound to the outer
+    equation domain.
+    """
+
+    def test_sum_with_outer_domain_index(self):
+        """Test sum where outer domain index appears in sum indices."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n) / a.b, b.c /;
+            Variable q(n,n), s(n);
+
+            Equation test(n);
+            test(n).. sum(arc(np,n), q(np,n)) + s(n) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+        assert model.equations["test"].domain == ("n",)
+
+    def test_sum_difference_different_order(self):
+        """Test sum(a(np,n), ...) - sum(a(n,np), ...) with same result domain."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set a(n,n) / a.b, b.c /;
+            Variable q(n,n), s(n);
+
+            Equation cont(n);
+            cont(n).. sum(a(np,n), q(a)) - sum(a(n,np), q(a)) + s(n) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "cont" in model.equations
+        assert model.equations["cont"].domain == ("n",)
+
+    def test_scalar_sum_with_multidim_set(self):
+        """Test scalar sum over multi-dimensional set: sum(a, dist(a))."""
+        text = dedent(
+            """
+            Set n / nw, e, cc /;
+            Alias(n, np);
+            Set a(n,n) / nw.cc, e.cc /;
+            Parameter dist(n,n) / nw.cc 100, e.cc 200 /;
+            Variable d(n,n), dcost;
+
+            Equation deq;
+            deq.. dcost =e= sum(a, dist(a)*d(a));
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "deq" in model.equations
+        # Scalar equation - domain should be empty
+        assert model.equations["deq"].domain == ()
+
+    def test_water_gms_cont_equation(self):
+        """Test the actual cont equation from water.gms."""
+        text = dedent(
+            """
+            Set n / nw, e, cc, w, sw, s, se /;
+            Set a(n,n) / nw.w, nw.cc, e.cc, e.s /;
+            Set rn(n) / nw, e /;
+            Alias(n, np);
+            Parameter node(n,*);
+            Variable q(n,n), s(n);
+
+            Equation cont(n);
+            cont(n).. sum(a(np,n), q(a)) - sum(a(n,np), q(a)) + s(n)$rn(n) =e= node(n,"demand");
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "cont" in model.equations
+        assert model.equations["cont"].domain == ("n",)
+
+    def test_water_gms_deq_equation(self):
+        """Test the actual deq equation from water.gms."""
+        text = dedent(
+            """
+            Set n / nw, e, cc /;
+            Alias(n, np);
+            Set a(n,n) / nw.cc, e.cc /;
+            Parameter dist(n,n), dprc, cpow;
+            Variable d(n,n), dcost;
+
+            Equation deq;
+            deq.. dcost =e= dprc*sum(a, dist(a)*d(a)**cpow);
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "deq" in model.equations
+
+    def test_nested_sum_with_shared_indices(self):
+        """Test nested sums with shared outer indices."""
+        text = dedent(
+            """
+            Set i / a, b /;
+            Set j / x, y /;
+            Alias(i, ip);
+            Variable x(i,j);
+
+            Equation test(j);
+            test(j).. sum(i, sum(ip, x(i,j) + x(ip,j))) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+        assert model.equations["test"].domain == ("j",)

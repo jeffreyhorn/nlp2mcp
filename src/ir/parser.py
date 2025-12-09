@@ -2844,8 +2844,80 @@ class _ModelBuilder:
                 # New path: extract base identifiers from index_list
                 indices = tuple(_extract_domain_indices(index_list_node))
             self._ensure_sets(indices, "sum indices", node)
-            remaining_domain = tuple(d for d in free_domain if d not in indices)
-            body_domain = tuple(indices) + remaining_domain
+
+            # Expand multi-dimensional set indices to their domain components
+            # E.g., sum(a, ...) where a(n,n) expands body_domain to include (n, n)
+            # This allows expressions like dist(a) to be expanded to dist(n, np)
+            expanded_indices: list[str] = []
+            for idx in indices:
+                if isinstance(idx, str) and idx in self.model.sets:
+                    set_def = self.model.sets[idx]
+                    # Check if this set has a multi-dimensional domain (members are set names)
+                    members_are_domain_sets = (
+                        set_def.members is not None
+                        and len(set_def.members) > 1
+                        and all(
+                            m in self.model.sets or m in self.model.aliases for m in set_def.members
+                        )
+                    )
+                    # Check if members are multi-dimensional values (e.g., 'a.b')
+                    members_are_multidim = (
+                        set_def.members is not None
+                        and len(set_def.members) > 0
+                        and any("." in m for m in set_def.members)
+                    )
+                    if members_are_domain_sets:
+                        # Expand to domain indices: a(n,n) -> (n, n)
+                        expanded_indices.extend(set_def.members)
+                    elif members_are_multidim:
+                        # Infer dimensionality from member format and create synthetic indices
+                        # E.g., a with members ['nw.w', 'e.n'] -> use first two indices from domain if available
+                        first_member = set_def.members[0]
+                        dim = len(first_member.split("."))
+                        # We need to find the underlying domain. For now, use the last 'dim' indices
+                        # from an expanded domain if we can find one from aliases
+                        # Look for the set's domain by finding its definition context
+                        # As a heuristic, use common GAMS pattern: n, np for 2D arcs
+                        if dim == 2:
+                            # Look for aliases of the base set
+                            base_sets = [
+                                s
+                                for s in self.model.sets
+                                if s != idx and len(self.model.sets[s].members) > 0
+                            ]
+                            # Find a base set that has simple elements (not dots)
+                            for bs_name in base_sets:
+                                bs = self.model.sets[bs_name]
+                                if bs.members and not any("." in m for m in bs.members):
+                                    # Found a base set, check if there's an alias
+                                    alias_name = None
+                                    for a_name, a_def in self.model.aliases.items():
+                                        if a_def.target == bs_name:
+                                            alias_name = a_name
+                                            break
+                                    if alias_name:
+                                        expanded_indices.extend([bs_name, alias_name])
+                                        break
+                            else:
+                                # No suitable expansion found, keep original
+                                expanded_indices.append(idx)
+                        else:
+                            expanded_indices.append(idx)
+                    else:
+                        expanded_indices.append(idx)
+                else:
+                    expanded_indices.append(idx)
+
+            # Only sum out indices that are NEW (not already in free_domain)
+            # Indices already in free_domain are bound from outer scope, not summed out
+            # Example: sum(arc(np,n), q(np,n)) in equation test(n)
+            #   - n is in free_domain (outer equation index), stays in result
+            #   - np is new to sum, gets summed out
+            new_sum_indices = set(expanded_indices) - set(free_domain)
+            remaining_domain = tuple(d for d in free_domain if d not in new_sum_indices)
+            body_domain = tuple(expanded_indices) + tuple(
+                d for d in remaining_domain if d not in expanded_indices
+            )
 
             # If there's a condition, evaluate it in the body domain
             if condition_expr is not None:
