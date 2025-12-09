@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2025-12-09T19:45:40.754671+00:00",
+  "model_name": "hs62.gms",
+  "total_duration_ms": 682.7881569624878,
+  "overall_success": true,
+  "stages": {
+    "Parse": {
+      "duration_ms": 612.0640309818555,
+      "success": true,
+      "error": null,
+      "details": {
+        "sets": 0,
+        "parameters": 7,
+        "variables": 4,
+        "equations": 3
+      }
+    },
+    "Semantic Analysis": {
+      "duration_ms": 0.22263999562710524,
+      "success": true,
+      "error": null,
+      "details": {
+        "equalities": 0,
+        "inequalities": 0
+      }
+    },
+    "Simplification": {
+      "duration_ms": 2.1343129919841886,
+      "success": true,
+      "error": null,
+      "details": {
+        "vars_added": 0,
+        "eqs_added": 0,
+        "normalized_equations": 3
+      }
+    },
+    "IR Generation": {
+      "duration_ms": 66.52385299094021,
+      "success": true,
+      "error": null,
+      "details": {
+        "gradient_cols": 4,
+        "eq_jacobian_rows": 3,
+        "ineq_jacobian_rows": 0,
+        "stationarity_eqs": 3
+      }
+    },
+    "MCP Generation": {
+      "duration_ms": 1.8433200020808727,
+      "success": true,
+      "error": null,
+      "details": {
+        "output_lines": 105,
+        "output_bytes": 3646
+      }
+    }
+  },
+  "summary": {
+    "stages_completed": 5,
+    "stages_failed": 0,
+    "stages_skipped": 0,
+    "parse_duration_ms": 612.0640309818555,
+    "semantic_duration_ms": 0.22263999562710524,
+    "simplification_duration_ms": 2.1343129919841886,
+    "ir_generation_duration_ms": 66.52385299094021,
+    "mcp_generation_duration_ms": 1.8433200020808727
+  }
+}

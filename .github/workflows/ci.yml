@@ -39,6 +39,22 @@ jobs:
           pytest tests/ -n auto --cov=src --cov-report=term-missing --tb=short
         timeout-minutes: 10
 
+      - name: Generate JSON diagnostics for tier 1 models
+        run: |
+          mkdir -p diagnostics
+          for model in tests/fixtures/gamslib/*.gms; do
+            model_name=$(basename "$model" .gms)
+            python -m src.cli "$model" --diagnostics --format json 2> "diagnostics/${model_name}.json" || true
+          done
+        continue-on-error: true
+
+      - name: Upload diagnostics artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-diagnostics
+          path: diagnostics/
+          retention-days: 90
+
       - name: Generate test pyramid visualization
         run: |
           python scripts/test_pyramid.py
