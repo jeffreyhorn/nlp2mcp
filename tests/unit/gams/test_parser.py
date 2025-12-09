@@ -1,5 +1,6 @@
 """Parser smoke tests covering tree output and ModelIR synthesis."""
 
+import math
 from pathlib import Path
 from textwrap import dedent
 
@@ -3768,10 +3769,8 @@ class TestAttributeAssignments:
     def test_variable_bounds_with_parameters(self):
         """Test variable bounds using parameter values.
 
-        Note: The parser uses mock/store approach for bounds with non-constant
-        expressions (see parser.py lines 1846-1849). Since 'lower' and 'upper'
-        are parameter references (not constants), these bounds are parsed but
-        not stored in the variable.
+        Scalar parameters with assigned values can be resolved at parse time
+        and used for variable bounds.
         """
         text = dedent(
             """
@@ -3786,9 +3785,9 @@ class TestAttributeAssignments:
         )
         model = parser.parse_model_text(text)
         assert "x" in model.variables
-        # Bounds are not stored because they use parameter references (mock/store)
-        assert model.variables["x"].lo is None
-        assert model.variables["x"].up is None
+        # Scalar parameters with values are resolved at parse time
+        assert model.variables["x"].lo == 10.0
+        assert model.variables["x"].up == 20.0
 
     def test_bracket_expressions(self):
         """Test bracket expressions in equations (bearing.gms uses [(expr)])."""
@@ -4722,3 +4721,542 @@ class TestCurlyBraceSumComplexIndexing:
         _, rhs = model.equations["eq"].lhs_rhs
         assert isinstance(rhs, Sum)
         assert rhs.sum_indices == ("i", "j", "k")
+
+
+class TestPredefinedConstants:
+    """Test GAMS predefined constants (yes, no, inf, eps, na, undf).
+
+    Issue #407: GAMS has several predefined constants that are automatically
+    available in all models. The parser should recognize these and treat them
+    as built-in values.
+    """
+
+    def test_yes_constant_in_parameter_assignment(self):
+        """Test yes constant (boolean true = 1.0) in parameter assignment."""
+        text = dedent(
+            """
+            Set i / a, b, c /;
+            Parameter flag(i);
+
+            flag('a') = yes;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "flag" in model.params
+        assert model.params["flag"].values[("a",)] == 1.0
+
+    def test_no_constant_in_parameter_assignment(self):
+        """Test no constant (boolean false = 0.0) in parameter assignment."""
+        text = dedent(
+            """
+            Set i / a, b, c /;
+            Parameter flag(i);
+
+            flag('b') = no;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "flag" in model.params
+        assert model.params["flag"].values[("b",)] == 0.0
+
+    def test_yes_no_case_insensitive(self):
+        """Test yes/no constants are case-insensitive."""
+        text = dedent(
+            """
+            Set i / a, b, c, d /;
+            Parameter flag(i);
+
+            flag('a') = yes;
+            flag('b') = YES;
+            flag('c') = Yes;
+            flag('d') = NO;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["flag"].values[("a",)] == 1.0
+        assert model.params["flag"].values[("b",)] == 1.0
+        assert model.params["flag"].values[("c",)] == 1.0
+        assert model.params["flag"].values[("d",)] == 0.0
+
+    def test_inf_constant_in_variable_bounds(self):
+        """Test inf constant (positive infinity) in variable bounds."""
+        text = dedent(
+            """
+            Variable x;
+            x.lo = 0;
+            x.up = inf;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        # Verify actual bound values
+        # Note: lo=0 is explicitly set, up=inf is represented as None (default unbounded)
+        assert model.variables["x"].lo == 0.0
+        assert model.variables["x"].up is None  # inf bounds are stored as None (unbounded)
+
+    def test_negative_inf_in_variable_bounds(self):
+        """Test -inf (negative infinity) in variable bounds."""
+        text = dedent(
+            """
+            Variable x;
+            x.lo = -inf;
+            x.up = inf;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        # Verify that -inf/inf bounds are stored as None (default unbounded)
+        # The parser recognizes inf as valid and doesn't error, but stores unbounded as None
+        assert model.variables["x"].lo is None
+        assert model.variables["x"].up is None
+
+    def test_inf_case_insensitive(self):
+        """Test inf constant is case-insensitive."""
+        text = dedent(
+            """
+            Variable x, y, z;
+            x.up = inf;
+            y.up = INF;
+            z.up = Inf;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert "y" in model.variables
+        assert "z" in model.variables
+        # Verify all case variants are recognized (stored as None = unbounded)
+        assert model.variables["x"].up is None
+        assert model.variables["y"].up is None
+        assert model.variables["z"].up is None
+
+    def test_eps_constant(self):
+        """Test eps constant (machine epsilon)."""
+        text = dedent(
+            """
+            Set i / a /;
+            Parameter tolerance(i);
+
+            tolerance('a') = eps;
+        """
+        )
+        model = parser.parse_model_text(text)
+        # eps should be approximately 2.22e-16
+        assert "tolerance" in model.params
+        assert model.params["tolerance"].values[("a",)] == pytest.approx(2.2204460492503131e-16)
+
+    def test_na_constant(self):
+        """Test na constant (not available marker)."""
+        text = dedent(
+            """
+            Set i / a /;
+            Parameter missing(i);
+
+            missing('a') = na;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "missing" in model.params
+        # na is represented as NaN
+        assert math.isnan(model.params["missing"].values[("a",)])
+
+    def test_undf_constant(self):
+        """Test undf constant (undefined value marker)."""
+        text = dedent(
+            """
+            Set i / a /;
+            Parameter undef(i);
+
+            undef('a') = undf;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "undef" in model.params
+        # undf is represented as NaN
+        assert math.isnan(model.params["undef"].values[("a",)])
+
+    def test_predefined_constants_in_scalar_parameter(self):
+        """Test predefined constants assigned to scalar parameters."""
+        text = dedent(
+            """
+            Scalar use_feature;
+            use_feature = yes;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "use_feature" in model.params
+        assert model.params["use_feature"].values[()] == 1.0
+
+    def test_predefined_pi_constant(self):
+        """Test pi constant (predefined as scalar parameter)."""
+        text = dedent(
+            """
+            Set i / a /;
+            Parameter angle(i);
+
+            angle('a') = pi;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "angle" in model.params
+        assert model.params["angle"].values[("a",)] == pytest.approx(3.141592653589793)
+
+
+class TestSubsetIndexingAssignments:
+    """Test subset indexing in parameter assignments.
+
+    Issue #426: GAMS allows using a subset as an index in parameter assignments
+    to set values for only those elements that belong to the subset.
+    """
+
+    def test_simple_subset_as_index(self):
+        """Test using a simple subset name as index: flag(sub) = value."""
+        text = dedent(
+            """
+            Set i / a, b, c, d /;
+            Set sub(i) / b, c /;
+            Parameter flag(i);
+
+            flag(i) = 1;
+            flag(sub) = 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "flag" in model.params
+        # All elements set to 1, then b and c overwritten to 0
+        assert model.params["flag"].values[("a",)] == 1.0
+        assert model.params["flag"].values[("b",)] == 0.0
+        assert model.params["flag"].values[("c",)] == 0.0
+        assert model.params["flag"].values[("d",)] == 1.0
+
+    def test_subset_indexing_with_domain_indices(self):
+        """Test subset indexing with explicit domain indices: dist(arc(n,np)) = value."""
+        text = dedent(
+            """
+            Set n / a, b, c, d /;
+            Set arc(n,n) / a.b, b.c, c.d /;
+            Parameter dist(n,n);
+
+            dist(arc(n,np)) = 10;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "dist" in model.params
+        # Should expand to all arc members
+        assert model.params["dist"].values[("a", "b")] == 10.0
+        assert model.params["dist"].values[("b", "c")] == 10.0
+        assert model.params["dist"].values[("c", "d")] == 10.0
+        # Other pairs should not be set
+        assert ("a", "c") not in model.params["dist"].values
+
+    def test_subset_with_predefined_constants(self):
+        """Test subset indexing with yes/no constants (water.gms pattern)."""
+        text = dedent(
+            """
+            Set n / nw, e, cc, w, sw, s, se /;
+            Set rn(n) / nw, e /;
+            Parameter dn(n);
+
+            dn(n) = yes;
+            dn(rn) = no;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "dn" in model.params
+        # Reservoir nodes should be 0 (no)
+        assert model.params["dn"].values[("nw",)] == 0.0
+        assert model.params["dn"].values[("e",)] == 0.0
+        # Other nodes should be 1 (yes)
+        assert model.params["dn"].values[("cc",)] == 1.0
+        assert model.params["dn"].values[("w",)] == 1.0
+        assert model.params["dn"].values[("sw",)] == 1.0
+        assert model.params["dn"].values[("s",)] == 1.0
+        assert model.params["dn"].values[("se",)] == 1.0
+
+    def test_subset_overwrites_previous_values(self):
+        """Test that subset assignment overwrites previous values."""
+        text = dedent(
+            """
+            Set i / 1, 2, 3, 4, 5 /;
+            Set odds(i) / 1, 3, 5 /;
+            Parameter p(i);
+
+            p(i) = 100;
+            p(odds) = 1;
+        """
+        )
+        model = parser.parse_model_text(text)
+        # Odd indices should be 1, even indices should be 100
+        assert model.params["p"].values[("1",)] == 1.0
+        assert model.params["p"].values[("2",)] == 100.0
+        assert model.params["p"].values[("3",)] == 1.0
+        assert model.params["p"].values[("4",)] == 100.0
+        assert model.params["p"].values[("5",)] == 1.0
+
+    def test_multi_dimensional_subset(self):
+        """Test subset indexing for multi-dimensional sets."""
+        text = dedent(
+            """
+            Set i / a, b /;
+            Set j / x, y /;
+            Set pairs(i,j) / a.x, b.y /;
+            Parameter cost(i,j);
+
+            cost(pairs(i,j)) = 50;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "cost" in model.params
+        assert model.params["cost"].values[("a", "x")] == 50.0
+        assert model.params["cost"].values[("b", "y")] == 50.0
+        # Other pairs should not be set
+        assert ("a", "y") not in model.params["cost"].values
+        assert ("b", "x") not in model.params["cost"].values
+
+
+class TestSubsetReferenceInExpressions:
+    """Test subset name as variable/parameter index in expressions.
+
+    Issue #428: When a subset name is used as an index to a variable or parameter
+    within an expression (e.g., q(a) where a is a subset), the parser should
+    expand the subset to the underlying domain indices.
+    """
+
+    def test_subset_as_variable_index_in_sum(self):
+        """Test using subset name as variable index: q(arc) in sum."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n) / a.b, b.c /;
+            Variable q(n,n);
+
+            Equation test;
+            test.. sum(arc(np,n), q(arc)) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+        # Verify the equation structure - LHS should be a Sum containing a VarRef
+        lhs, _ = model.equations["test"].lhs_rhs
+        assert isinstance(lhs, Sum)
+        # The sum body should contain a VarRef to q with expanded indices
+        assert isinstance(lhs.body, VarRef)
+        assert lhs.body.name == "q"
+        # Indices should be expanded from 'arc' to ('np', 'n')
+        assert len(lhs.body.indices) == 2
+
+    def test_subset_as_parameter_index_in_sum(self):
+        """Test using subset name as parameter index: dist(arc) in sum."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n) / a.b, b.c /;
+            Parameter dist(n,n) / a.b 10, b.c 20 /;
+
+            Equation test;
+            test.. sum(arc(np,n), dist(arc)) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+        # Verify the equation structure - LHS should be a Sum containing a ParamRef
+        from src.ir.ast import ParamRef
+
+        lhs, _ = model.equations["test"].lhs_rhs
+        assert isinstance(lhs, Sum)
+        # The sum body should contain a ParamRef to dist with expanded indices
+        assert isinstance(lhs.body, ParamRef)
+        assert lhs.body.name == "dist"
+        # Indices should be expanded from 'arc' to ('np', 'n')
+        assert len(lhs.body.indices) == 2
+
+    def test_set_membership_test_in_conditional(self):
+        """Test set membership test: rn(n) in conditional."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Set rn(n) / a, b /;
+            Variable s(n);
+
+            Equation test(n);
+            test(n).. s(n)$rn(n) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+        # Verify the LHS is a DollarConditional with SetMembershipTest as condition
+        from src.ir.ast import DollarConditional, SetMembershipTest
+
+        lhs, _ = model.equations["test"].lhs_rhs
+        assert isinstance(lhs, DollarConditional)
+        # The condition should be a SetMembershipTest for rn(n)
+        assert isinstance(lhs.condition, SetMembershipTest)
+        assert lhs.condition.set_name == "rn"
+
+    def test_multiple_subset_references_in_expression(self):
+        """Test multiple subset references: dist(arc) * q(arc)."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n) / a.b, b.c /;
+            Variable q(n,n);
+            Parameter dist(n,n) / a.b 10, b.c 20 /;
+
+            Equation test;
+            test.. sum(arc(np,n), dist(arc) * q(arc)) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+
+    def test_subset_without_explicit_members(self):
+        """Test subset reference when subset has domain indices as members."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n);
+            Variable q(n,n);
+
+            Equation test;
+            test.. sum(arc(np,n), q(arc)) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+
+    def test_subset_in_equation_domain(self):
+        """Test subset reference in equation with domain: loss(arc(n,np))."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n) / a.b, b.c /;
+            Variable h(n);
+            Parameter dist(n,n) / a.b 10, b.c 20 /;
+
+            Equation loss(n,n);
+            loss(arc(n,np)).. h(n) - h(np) =e= dist(arc);
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "loss" in model.equations
+
+
+class TestSumDomainMismatch:
+    """Test sum domain calculation with shared outer indices.
+
+    Issue #429: When an equation combines sum expressions with the outer domain
+    variable appearing in the sum indices, the domain calculation was incorrect.
+    For example, in test(n).. sum(arc(np,n), q(np,n)) + s(n) =e= 0, the 'n' in
+    sum indices should remain in the result domain since it's bound to the outer
+    equation domain.
+    """
+
+    def test_sum_with_outer_domain_index(self):
+        """Test sum where outer domain index appears in sum indices."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n) / a.b, b.c /;
+            Variable q(n,n), s(n);
+
+            Equation test(n);
+            test(n).. sum(arc(np,n), q(np,n)) + s(n) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+        assert model.equations["test"].domain == ("n",)
+
+    def test_sum_difference_different_order(self):
+        """Test sum(a(np,n), ...) - sum(a(n,np), ...) with same result domain."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set a(n,n) / a.b, b.c /;
+            Variable q(n,n), s(n);
+
+            Equation cont(n);
+            cont(n).. sum(a(np,n), q(a)) - sum(a(n,np), q(a)) + s(n) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "cont" in model.equations
+        assert model.equations["cont"].domain == ("n",)
+
+    def test_scalar_sum_with_multidim_set(self):
+        """Test scalar sum over multi-dimensional set: sum(a, dist(a))."""
+        text = dedent(
+            """
+            Set n / nw, e, cc /;
+            Alias(n, np);
+            Set a(n,n) / nw.cc, e.cc /;
+            Parameter dist(n,n) / nw.cc 100, e.cc 200 /;
+            Variable d(n,n), dcost;
+
+            Equation deq;
+            deq.. dcost =e= sum(a, dist(a)*d(a));
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "deq" in model.equations
+        # Scalar equation - domain should be empty
+        assert model.equations["deq"].domain == ()
+
+    def test_water_gms_cont_equation(self):
+        """Test the actual cont equation from water.gms."""
+        text = dedent(
+            """
+            Set n / nw, e, cc, w, sw, s, se /;
+            Set a(n,n) / nw.w, nw.cc, e.cc, e.s /;
+            Set rn(n) / nw, e /;
+            Alias(n, np);
+            Parameter node(n,*);
+            Variable q(n,n), s(n);
+
+            Equation cont(n);
+            cont(n).. sum(a(np,n), q(a)) - sum(a(n,np), q(a)) + s(n)$rn(n) =e= node(n,"demand");
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "cont" in model.equations
+        assert model.equations["cont"].domain == ("n",)
+
+    def test_water_gms_deq_equation(self):
+        """Test the actual deq equation from water.gms."""
+        text = dedent(
+            """
+            Set n / nw, e, cc /;
+            Alias(n, np);
+            Set a(n,n) / nw.cc, e.cc /;
+            Parameter dist(n,n), dprc, cpow;
+            Variable d(n,n), dcost;
+
+            Equation deq;
+            deq.. dcost =e= dprc*sum(a, dist(a)*d(a)**cpow);
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "deq" in model.equations
+
+    def test_nested_sum_with_shared_indices(self):
+        """Test nested sums with shared outer indices."""
+        text = dedent(
+            """
+            Set i / a, b /;
+            Set j / x, y /;
+            Alias(i, ip);
+            Variable x(i,j);
+
+            Equation test(j);
+            test(j).. sum(i, sum(ip, x(i,j) + x(ip,j))) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+        assert model.equations["test"].domain == ("j",)

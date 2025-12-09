@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -82,6 +83,21 @@ _VAR_KIND_MAP = {
 _AGGREGATION_FUNCTIONS = {"smin", "smax", "sum", "prod", "card"}
 
 _FUNCTION_NAMES = {"abs", "exp", "log", "log10", "log2", "sqrt", "sin", "cos", "tan", "sqr"}
+
+# GAMS predefined constants (case-insensitive)
+# These are automatically available in all GAMS models
+# Note: This is the single source of truth for predefined constant values.
+# The _init_predefined_constants() method uses this dictionary to create
+# scalar parameters, and _make_symbol() checks this for constant references.
+_PREDEFINED_CONSTANTS: dict[str, float] = {
+    "yes": 1.0,  # Boolean true
+    "no": 0.0,  # Boolean false
+    "pi": math.pi,  # 3.141592653589793
+    "inf": math.inf,  # Positive infinity
+    "eps": sys.float_info.epsilon,  # Machine epsilon (2.220446049250313e-16)
+    "na": math.nan,  # Not available marker (represented as NaN)
+    "undf": math.nan,  # Undefined value marker (represented as NaN)
+}
 
 
 @lru_cache
@@ -474,9 +490,15 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
                     _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
                 )
             elif child.data == "index_subset":
-                # index_subset: ID "(" id_list ")" lag_lead_suffix?
-                # For parameter assignments, we don't support subset indexing
-                raise ParserSemanticError("Subset indexing not supported in parameter assignments")
+                # index_subset: ID "(" index_list ")" lag_lead_suffix?
+                # Extract the subset name and its domain indices
+                # e.g., arc(n,np) -> subset_name='arc', domain_indices=['n', 'np']
+                # Find the nested index_list and extract domain indices
+                for subchild in child.children:
+                    if isinstance(subchild, Tree) and subchild.data == "index_list":
+                        domain_indices = _extract_domain_indices(subchild)
+                        indices.extend(domain_indices)
+                        break
             else:
                 # Old index_expr from legacy grammar
                 # Only support plain ID (no lag/lead for parameter assignments)
@@ -493,6 +515,60 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
                         "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
                     )
     return tuple(indices)
+
+
+def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | None]:
+    """Extract indices from index_list along with any subset constraint.
+
+    Returns:
+        Tuple of (indices, subset_name) where:
+        - indices: tuple of domain index names
+        - subset_name: name of constraining subset if present, None otherwise
+
+    Example:
+        - arc(n,np) -> (('n', 'np'), 'arc')
+        - (i, j) -> (('i', 'j'), None)
+    """
+    indices: list[str] = []
+    subset_name: str | None = None
+
+    for child in node.children:
+        if isinstance(child, Token):
+            indices.append(_strip_quotes(child) if child.type == "ID" else _token_text(child))
+        elif isinstance(child, Tree) and child.data in (
+            "index_expr",
+            "index_simple",
+            "index_subset",
+        ):
+            if child.data == "index_simple":
+                id_token = child.children[0]
+                if len(child.children) > 1:
+                    raise ParserSemanticError(
+                        "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
+                    )
+                indices.append(
+                    _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
+                )
+            elif child.data == "index_subset":
+                # index_subset: ID "(" index_list ")" lag_lead_suffix?
+                subset_name = _token_text(child.children[0])
+                for subchild in child.children:
+                    if isinstance(subchild, Tree) and subchild.data == "index_list":
+                        domain_indices = _extract_domain_indices(subchild)
+                        indices.extend(domain_indices)
+                        break
+            else:
+                if len(child.children) == 1:
+                    id_token = child.children[0]
+                    indices.append(
+                        _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
+                    )
+                else:
+                    raise ParserSemanticError(
+                        "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
+                    )
+
+    return tuple(indices), subset_name
 
 
 def _process_index_expr(index_node: Tree) -> str | IndexOffset:
@@ -624,20 +700,19 @@ class _ModelBuilder:
         self._init_predefined_constants()
 
     def _init_predefined_constants(self) -> None:
-        """Initialize predefined GAMS constants (pi, inf, eps, na)."""
-        import sys
-        from math import pi as math_pi
+        """Initialize predefined GAMS constants as scalar parameters.
 
-        # Add predefined constants as scalar parameters
-        # These are available globally in all GAMS models
-        predefined = {
-            "pi": math_pi,  # 3.141592653589793
-            "inf": float("inf"),  # Infinity
-            "eps": sys.float_info.epsilon,  # Machine epsilon (float64)
-            "na": float("nan"),  # Not available / missing data
-        }
+        Uses _PREDEFINED_CONSTANTS as the single source of truth for values.
+        Creates scalar parameters for constants that can be used in expressions
+        (pi, inf, eps, na). Boolean constants (yes, no) and undf are handled
+        directly in _make_symbol() without creating parameters.
+        """
+        # Constants that should be available as scalar parameters
+        # (not yes/no/undf which are handled as literals in _make_symbol)
+        param_constants = {"pi", "inf", "eps", "na"}
 
-        for name, value in predefined.items():
+        for name in param_constants:
+            value = _PREDEFINED_CONSTANTS[name]
             # Create a scalar parameter (no domain)
             param_def = ParameterDef(name=name, domain=(), values={(): value})
             self.model.params[name] = param_def
@@ -2361,6 +2436,60 @@ class _ModelBuilder:
         # Same as _handle_loop_stmt - the grammar handles the extra parens
         self._handle_loop_stmt(node)
 
+    def _expand_subset_assignment(
+        self,
+        set_def: SetDef,
+        param: ParameterDef,
+        has_function_call: bool,
+        expr: Expr | None,
+        value: float | None,
+        node: Tree | Token | None = None,
+    ) -> None:
+        """Expand subset assignment to all members of a set.
+
+        Args:
+            set_def: The set definition containing members to expand
+            param: The parameter to assign values/expressions to
+            has_function_call: True if the RHS contains function calls
+            expr: The expression to assign (if has_function_call)
+            value: The numeric value to assign (if not has_function_call)
+            node: The AST node for error reporting
+        """
+        if not set_def.members:
+            return
+
+        for member in set_def.members:
+            # member can be a single element or tuple for multi-dim sets
+            # Multi-dim set members are stored as dot-separated strings (e.g., 'a.b')
+            # Note: This assumes dots are tuple separators, not part of element names.
+            # GAMS elements with literal dots (e.g., 'element.1') should be quoted
+            # in the source, and our preprocessor preserves them without dots.
+            if isinstance(member, tuple):
+                key = member
+            elif "." in member:
+                # Split dot-separated member into tuple (e.g., 'nw.cc' -> ('nw', 'cc'))
+                split_member = tuple(member.split("."))
+                # Always validate dimension: if param.domain is empty, expect scalar (1 index)
+                expected_dim = len(param.domain) if param.domain else 1
+                if len(split_member) != expected_dim:
+                    raise self._error(
+                        f"Set member '{member}' splits into {len(split_member)} elements, "
+                        f"but parameter '{param.name}' expects {expected_dim} "
+                        f"index{'es' if expected_dim > 1 else ''}. "
+                        "If your element name contains a dot, quote it in the source "
+                        "(e.g., '\"element.1\"'). Alternatively, check that the parameter's "
+                        "domain declaration matches the set member structure.",
+                        node,
+                    )
+                key = split_member
+            else:
+                key = (member,)
+
+            if has_function_call:
+                param.expressions[key] = expr
+            elif value is not None:
+                param.values[key] = value
+
     def _handle_assign(self, node: Tree) -> None:
         # Expected structure: lvalue, ASSIGN token, expression
         if len(node.children) < 3:
@@ -2482,8 +2611,12 @@ class _ModelBuilder:
                 # Handle indexed assignment: p('i1') = 10, report('x1','global') = 1, or low(n,nn) = ...
                 symbol_name = _token_text(target.children[0])
 
-                # Extract indices from id_list, stripping quotes
-                indices = _extract_indices(target.children[1]) if len(target.children) > 1 else ()
+                # Extract indices and any subset constraint from id_list
+                indices, subset_name = (
+                    _extract_indices_with_subset(target.children[1])
+                    if len(target.children) > 1
+                    else ((), None)
+                )
 
                 # Sprint 11 Day 2 Extended: Check if this is a set assignment
                 if symbol_name in self.model.sets:
@@ -2497,6 +2630,36 @@ class _ModelBuilder:
                     raise self._error(f"Parameter '{symbol_name}' not declared", target)
 
                 param = self.model.params[symbol_name]
+
+                # Handle subset indexing: dist(arc(n,np)) = value
+                # Expand to all members of the subset
+                if subset_name is not None:
+                    if subset_name not in self.model.sets:
+                        raise self._error(
+                            f"Set '{subset_name}' used in subset indexing is not declared",
+                            target,
+                        )
+                    subset_def = self.model.sets[subset_name]
+                    self._expand_subset_assignment(
+                        subset_def, param, has_function_call, expr, value, target
+                    )
+                    return
+
+                # Handle simple subset name as index: flag(sub) where sub is a subset of i
+                # Check if a single index is actually a subset name that should be expanded
+                if subset_name is None and len(indices) == 1 and indices[0] in self.model.sets:
+                    simple_subset = self.model.sets[indices[0]]
+                    # Note: SetDef currently doesn't store domain information (the parent set).
+                    # E.g., for "Set sub(i) / b, c /", we only store name='sub', members=['b','c'].
+                    # Future enhancement: add domain field to SetDef to enable validation that
+                    # subset domain is compatible with parameter domain (e.g., reject p(sub_j)
+                    # when p is defined over domain i but sub_j is a subset of j).
+                    # Check if this set has members to expand
+                    if simple_subset.members:
+                        self._expand_subset_assignment(
+                            simple_subset, param, has_function_call, expr, value, target
+                        )
+                        return
 
                 # Only validate index count if the parameter has an explicit domain declaration.
                 # For parameters without an explicit domain, index count is not validated.
@@ -2725,8 +2888,96 @@ class _ModelBuilder:
                 # New path: extract base identifiers from index_list
                 indices = tuple(_extract_domain_indices(index_list_node))
             self._ensure_sets(indices, "sum indices", node)
-            remaining_domain = tuple(d for d in free_domain if d not in indices)
-            body_domain = tuple(indices) + remaining_domain
+
+            # Expand multi-dimensional set indices to their domain components
+            # E.g., sum(a, ...) where a(n,n) expands body_domain to include (n, n)
+            # This allows expressions like dist(a) to be expanded to dist(n, np)
+            expanded_indices: list[str] = []
+            for idx in indices:
+                if isinstance(idx, str) and idx in self.model.sets:
+                    set_def = self.model.sets[idx]
+                    # Check if this set has a multi-dimensional domain (members are set names)
+                    members_are_domain_sets = (
+                        set_def.members is not None
+                        and len(set_def.members) > 1
+                        and all(
+                            m in self.model.sets or m in self.model.aliases for m in set_def.members
+                        )
+                    )
+                    # Check if members are multi-dimensional values (e.g., 'a.b')
+                    members_are_multidim = (
+                        set_def.members is not None
+                        and len(set_def.members) > 0
+                        and any("." in m for m in set_def.members)
+                    )
+                    if members_are_domain_sets:
+                        # Expand to domain indices: a(n,n) -> (n, n)
+                        expanded_indices.extend(set_def.members)
+                    elif members_are_multidim:
+                        # HEURISTIC: Infer domain indices for multi-dimensional sets with
+                        # dot-separated element values (e.g., arc with members ['nw.w', 'e.cc']).
+                        #
+                        # Assumptions:
+                        # 1. Only 2D sets are expanded; higher dimensions fall back to original
+                        # 2. The base set has simple (non-dot) element names
+                        # 3. There exists an alias of that base set for the second dimension
+                        # 4. The pattern follows common GAMS convention: (base_set, alias)
+                        #
+                        # Limitations:
+                        # - May not find correct expansion if multiple candidate base sets exist
+                        # - Does not handle 3D+ sets
+                        # - Relies on alias existence; fails gracefully if no alias found
+                        #
+                        # If expansion fails, the original index is kept and downstream
+                        # processing may raise a more specific error.
+                        first_member = set_def.members[0]
+                        dim = len(first_member.split("."))
+                        if dim == 2:
+                            # Look for aliases of a base set with simple elements
+                            base_sets = [
+                                s
+                                for s in self.model.sets
+                                if s != idx and len(self.model.sets[s].members) > 0
+                            ]
+                            # Find a base set that has simple elements (not dots)
+                            for bs_name in base_sets:
+                                bs = self.model.sets[bs_name]
+                                if bs.members and not any("." in m for m in bs.members):
+                                    # Found a base set, check if there's an alias
+                                    alias_name = None
+                                    for a_name, a_def in self.model.aliases.items():
+                                        if a_def.target == bs_name:
+                                            alias_name = a_name
+                                            break
+                                    if alias_name:
+                                        expanded_indices.extend([bs_name, alias_name])
+                                        break
+                            else:
+                                # No suitable expansion found, keep original
+                                expanded_indices.append(idx)
+                        else:
+                            # Non-2D sets: keep original (no heuristic for 3D+)
+                            expanded_indices.append(idx)
+                    else:
+                        expanded_indices.append(idx)
+                else:
+                    expanded_indices.append(idx)
+
+            # Only sum out indices that are NEW (not already in free_domain)
+            # Indices already in free_domain are bound from outer scope, not summed out
+            # Example: sum(arc(np,n), q(np,n)) in equation test(n)
+            #   - n is in free_domain (outer equation index), stays in result
+            #   - np is new to sum, gets summed out
+            new_sum_indices = set(expanded_indices) - set(free_domain)
+            remaining_domain = tuple(d for d in free_domain if d not in new_sum_indices)
+            # Build body_domain without duplicates, preserving order
+            # Use a set to track seen indices and filter duplicates
+            seen: set[str] = set()
+            body_domain = tuple(
+                x
+                for x in list(expanded_indices) + list(remaining_domain)
+                if not (x in seen or seen.add(x))  # type: ignore[func-returns-value]
+            )
 
             # If there's a condition, evaluate it in the body domain
             if condition_expr is not None:
@@ -3077,11 +3328,37 @@ class _ModelBuilder:
                     and all(m in self.model.sets for m in set_def.members)
                 )
 
+                # Issue #428: Check if members are multi-dimensional (dot-separated values)
+                # E.g., arc(n,n) / a.b, b.c / has members ['a.b', 'b.c'] - 2D element values
+                # When q(arc) is used, expand to q(np, n) using free_domain indices
+                members_are_multidim = (
+                    set_def.members is not None
+                    and len(set_def.members) > 0
+                    and any("." in m for m in set_def.members)
+                )
+
                 # Check if this is a multi-dimensional set reference with set-based domain
                 if members_are_sets and len(set_def.members) > 1:
                     # Multi-dimensional set with domain indices - always expand
                     # E.g., low(n,n) expands to (n, n)
                     expanded_indices.extend(set_def.members)
+                elif members_are_multidim and free_domain:
+                    # Multi-dimensional set with element values (e.g., arc with members 'a.b')
+                    # Infer dimensionality from first member and expand using free_domain
+                    first_member = set_def.members[0]
+                    dim = len(first_member.split("."))
+                    if dim > 1 and len(free_domain) >= dim:
+                        # HEURISTIC: Use the last 'dim' indices from free_domain
+                        # E.g., free_domain = ('n', 'np'), dim = 2 -> expand to ('n', 'np')
+                        # Or free_domain = ('np', 'n'), dim = 2 -> expand to ('np', 'n')
+                        #
+                        # Limitation: This assumes free_domain order matches the set's domain.
+                        # A more robust solution would store domain info in SetDef during parsing.
+                        # For now, this works for common patterns like sum(arc(np,n), q(arc)).
+                        expanded_indices.extend(free_domain[-dim:])
+                    else:
+                        # Can't expand, keep as-is
+                        expanded_indices.append(idx)
                 elif idx in free_domain:
                     # Set that's in domain - don't expand
                     # E.g., n in point(n,d) where domain is (n,nn)
@@ -3125,6 +3402,35 @@ class _ModelBuilder:
         if not idx_tuple and name in free_domain:
             # It's a reference to a domain index variable
             return self._attach_domain(SymbolRef(name), free_domain)
+        # Check if it's a GAMS predefined constant (yes, no, inf, eps, na, undf)
+        # These are case-insensitive
+        name_lower = name.lower()
+        if not idx_tuple and name_lower in _PREDEFINED_CONSTANTS:
+            return self._attach_domain(Const(_PREDEFINED_CONSTANTS[name_lower]), free_domain)
+        # Issue #428: Check if it's a set membership test (e.g., rn(n) in a condition)
+        # In GAMS, set(index) in a conditional context returns 1 if index is in set, 0 otherwise
+        if name in self.model.sets and idx_tuple:
+            # Set membership test - use dedicated SetMembershipTest node
+            # This represents the boolean check "is idx_tuple in set 'name'"
+            from src.ir.ast import SetMembershipTest
+
+            # Convert indices: domain variables become SymbolRef, literals become Const strings
+            # Note: All indices in a set membership test should typically be domain variables.
+            # If an index is not in free_domain, treat it as a literal element name.
+            index_exprs: list[Expr] = []
+            for i in idx_tuple:
+                if isinstance(i, str) and i in free_domain:
+                    index_exprs.append(SymbolRef(i))
+                elif isinstance(i, str):
+                    # Treat as literal element name - wrap in SymbolRef for consistency
+                    # This handles cases like rn('a') where 'a' is a literal element
+                    index_exprs.append(SymbolRef(i))
+                else:
+                    # IndexOffset or other non-string types
+                    index_exprs.append(SymbolRef(str(i)))
+
+            expr = SetMembershipTest(name, tuple(index_exprs))
+            return self._attach_domain(expr, free_domain)
         if idx_tuple:
             raise self._parse_error(
                 f"Undefined symbol '{name}' with indices {idx_tuple} referenced",
@@ -3378,6 +3684,18 @@ class _ModelBuilder:
             return -float(expr.child.value)
         if isinstance(expr, Unary) and expr.op == "+" and isinstance(expr.child, Const):
             return float(expr.child.value)
+        # Handle predefined scalar parameters (pi, inf, eps, na) used as constants
+        if isinstance(expr, ParamRef) and not expr.indices:
+            param = self.model.params.get(expr.name)
+            if param and not param.domain and () in param.values:
+                return float(param.values[()])
+        # Handle -inf for negative infinity (Unary minus on ParamRef)
+        if isinstance(expr, Unary) and expr.op == "-" and isinstance(expr.child, ParamRef):
+            param_ref = expr.child
+            if not param_ref.indices:
+                param = self.model.params.get(param_ref.name)
+                if param and not param.domain and () in param.values:
+                    return -float(param.values[()])
         raise self._error(f"Assignments must use numeric constants; got {expr!r} in {context}")
 
     def _apply_variable_bound(

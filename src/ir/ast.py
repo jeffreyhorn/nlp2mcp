@@ -182,6 +182,28 @@ class Call(Expr):
 
 
 @dataclass(frozen=True)
+class SetMembershipTest(Expr):
+    """Set membership test: set_name(indices).
+
+    In GAMS, when a set name is used with indices in a conditional context
+    (e.g., rn(n) in s(n)$rn(n)), it tests whether the index combination
+    is a member of that set. Returns 1 if true, 0 if false.
+
+    This is distinct from Call nodes which represent function invocations.
+    """
+
+    set_name: str
+    indices: tuple[Expr, ...]
+
+    def children(self) -> Iterable[Expr]:
+        yield from self.indices
+
+    def __repr__(self) -> str:
+        idx = ", ".join(repr(i) for i in self.indices)
+        return f"SetMembershipTest({self.set_name}, ({idx}))"
+
+
+@dataclass(frozen=True)
 class DollarConditional(Expr):
     """Dollar conditional operator: expr$condition
 
