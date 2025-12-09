@@ -1,6 +1,6 @@
 # Pipeline Diagnostics Dashboard
 
-**Generated:** 2025-12-09 13:43:25
+**Generated:** 2025-12-09 13:45:51
 **Schema Version:** 1.0.0
 
 ## Pipeline Success Rate
@@ -15,13 +15,13 @@
 
 | Stage | Success Rate | Avg (ms) | Min (ms) | Max (ms) |
 |-------|-------------|----------|----------|----------|
-| Parse | 100% (6/6) | 667.6 | 432.9 | 1313.6 |
+| Parse | 100% (6/6) | 674.7 | 430.9 | 1311.2 |
 | Semantic Analysis | 100% (6/6) | 0.2 | 0.1 | 0.2 |
-| Simplification | 100% (6/6) | 1.5 | 1.4 | 1.7 |
-| IR Generation | 100% (6/6) | 14.5 | 3.8 | 49.2 |
-| MCP Generation | 100% (6/6) | 0.7 | 0.4 | 1.1 |
+| Simplification | 100% (6/6) | 1.8 | 1.4 | 2.4 |
+| IR Generation | 100% (6/6) | 17.6 | 4.5 | 66.5 |
+| MCP Generation | 100% (6/6) | 0.8 | 0.4 | 1.8 |
 
-**Average Total Pipeline Duration:** 684.4 ms
+**Average Total Pipeline Duration:** 695.1 ms
 
 ## Model Coverage
 
@@ -39,12 +39,36 @@
 ```
 Stage Duration Distribution (avg ms)
 
-Parse           |▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓| 667.6 ms
+Parse           |▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓| 674.7 ms
 Semantic Analysis |                              | 0.2 ms
-Simplification  |                              | 1.5 ms
-IR Generation   |                              | 14.5 ms
-MCP Generation  |                              | 0.7 ms
+Simplification  |                              | 1.8 ms
+IR Generation   |                              | 17.6 ms
+MCP Generation  |                              | 0.8 ms
 ```
+
+## Tier Progress
+
+| Tier | Models | Success | Rate |
+|------|--------|---------|------|
+| Tier 1 | 10 | 6 | ❌ 60% |
+| Tier 2 | 18 | 0 | ❌ 0% |
+
+## Blocking Issues
+
+- Min/Max Reformulation Bug: Spurious Lambda Variables (`docs/issues/minmax-reformulation-spurious-variables.md`)
+- [Parser: `file` Statement Not Supported](https://github.com/jeffreyhorn/nlp2mcp/issues/434)
+- [Parser: Level Attribute `.l` Access Not Supported](https://github.com/jeffreyhorn/nlp2mcp/issues/432)
+- [Parser: `not` Operator Not Supported](https://github.com/jeffreyhorn/nlp2mcp/issues/431)
+- [Parser: Set Member Validation Too Strict (Case Sensitivity)](https://github.com/jeffreyhorn/nlp2mcp/issues/435)
+- [Parser: Unquoted Parameter Descriptions Not Supported](https://github.com/jeffreyhorn/nlp2mcp/issues/433)
+
+## Recent Commits
+
+- `d47c826` Add dashboard infrastructure with generate_dashboard.py
+- `adb0604` Document PATH decision: defer integration, proceed with tier 2 parsing
+- `b79ac07` Integrate JSON diagnostics with CI workflow
+- `b180aa8` Document 5 tier 2 blocking issues with GitHub issue links (#436)
+- `260b150` Fix parser to support -inf (negative infinity) in table data (#430)
 
 ---
 

@@ -176,6 +176,117 @@ def calculate_stats(diagnostics: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def get_tier_progress() -> dict[str, Any]:
+    """Get tier 1 and tier 2 model parsing progress."""
+    tier1_dir = Path("tests/fixtures/gamslib")
+    tier2_dir = Path("tests/fixtures/tier2_candidates")
+
+    # Add src to path for imports
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+
+    tier1_total = len(list(tier1_dir.glob("*.gms"))) if tier1_dir.exists() else 0
+    tier2_total = len(list(tier2_dir.glob("*.gms"))) if tier2_dir.exists() else 0
+
+    # Count parseable models by checking diagnostics
+    diagnostics_dir = Path("diagnostics")
+    tier1_success = 0
+    tier2_success = 0
+
+    if diagnostics_dir.exists():
+        for json_file in diagnostics_dir.glob("*.json"):
+            try:
+                with open(json_file) as f:
+                    data = json.load(f)
+                    if data.get("overall_success", False):
+                        # Check if it's tier1 or tier2
+                        model_name = json_file.stem + ".gms"
+                        if (tier1_dir / model_name).exists():
+                            tier1_success += 1
+                        elif (tier2_dir / model_name).exists():
+                            tier2_success += 1
+            except (json.JSONDecodeError, OSError):
+                pass
+
+    return {
+        "tier1_total": tier1_total,
+        "tier1_success": tier1_success,
+        "tier1_rate": (tier1_success / tier1_total * 100) if tier1_total > 0 else 0,
+        "tier2_total": tier2_total,
+        "tier2_success": tier2_success,
+        "tier2_rate": (tier2_success / tier2_total * 100) if tier2_total > 0 else 0,
+    }
+
+
+def get_blocking_issues() -> list[dict[str, str]]:
+    """Get list of open blocking issues from docs/issues."""
+    issues_dir = Path("docs/issues")
+    blockers = []
+
+    if not issues_dir.exists():
+        return blockers
+
+    for md_file in sorted(issues_dir.glob("*.md")):
+        if md_file.name == "README.md":
+            continue
+
+        # Skip completed issues
+        if "completed" in str(md_file):
+            continue
+
+        try:
+            content = md_file.read_text()
+            # Extract title (first # heading)
+            title = md_file.stem.replace("-", " ").replace("_", " ").title()
+            for line in content.split("\n"):
+                if line.startswith("# "):
+                    title = line[2:].strip()
+                    break
+
+            # Extract GitHub issue URL if present
+            github_url = ""
+            for line in content.split("\n"):
+                if "github.com" in line and "/issues/" in line:
+                    # Extract URL
+                    import re
+
+                    match = re.search(r"https://github\.com/[^\s\)]+/issues/\d+", line)
+                    if match:
+                        github_url = match.group(0)
+                        break
+
+            blockers.append(
+                {
+                    "file": md_file.name,
+                    "title": title,
+                    "github_url": github_url,
+                }
+            )
+        except OSError:
+            pass
+
+    return blockers
+
+
+def get_recent_commits(limit: int = 5) -> list[dict[str, str]]:
+    """Get recent commits that might affect parse rate."""
+    try:
+        result = subprocess.run(
+            ["git", "log", f"-{limit}", "--oneline", "--no-decorate"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        commits = []
+        for line in result.stdout.strip().split("\n"):
+            if line:
+                parts = line.split(" ", 1)
+                if len(parts) == 2:
+                    commits.append({"hash": parts[0], "message": parts[1]})
+        return commits
+    except (subprocess.TimeoutExpired, OSError):
+        return []
+
+
 def generate_dashboard_markdown(
     diagnostics: list[dict[str, Any]],
     stats: dict[str, Any],
@@ -296,6 +407,59 @@ def generate_dashboard_markdown(
 
     lines.append("```")
     lines.append("")
+
+    # Tier Progress Widget
+    tier_progress = get_tier_progress()
+    lines.append("## Tier Progress")
+    lines.append("")
+    lines.append("| Tier | Models | Success | Rate |")
+    lines.append("|------|--------|---------|------|")
+
+    tier1_emoji = (
+        "✅"
+        if tier_progress["tier1_rate"] >= 90
+        else "⚠️"
+        if tier_progress["tier1_rate"] >= 70
+        else "❌"
+    )
+    tier2_emoji = (
+        "✅"
+        if tier_progress["tier2_rate"] >= 90
+        else "⚠️"
+        if tier_progress["tier2_rate"] >= 70
+        else "❌"
+    )
+
+    lines.append(
+        f"| Tier 1 | {tier_progress['tier1_total']} | {tier_progress['tier1_success']} | "
+        f"{tier1_emoji} {tier_progress['tier1_rate']:.0f}% |"
+    )
+    lines.append(
+        f"| Tier 2 | {tier_progress['tier2_total']} | {tier_progress['tier2_success']} | "
+        f"{tier2_emoji} {tier_progress['tier2_rate']:.0f}% |"
+    )
+    lines.append("")
+
+    # Blocking Issues Widget
+    blockers = get_blocking_issues()
+    if blockers:
+        lines.append("## Blocking Issues")
+        lines.append("")
+        for blocker in blockers:
+            if blocker["github_url"]:
+                lines.append(f"- [{blocker['title']}]({blocker['github_url']})")
+            else:
+                lines.append(f"- {blocker['title']} (`docs/issues/{blocker['file']}`)")
+        lines.append("")
+
+    # Recent Commits Widget
+    commits = get_recent_commits(5)
+    if commits:
+        lines.append("## Recent Commits")
+        lines.append("")
+        for commit in commits:
+            lines.append(f"- `{commit['hash']}` {commit['message']}")
+        lines.append("")
 
     # Footer
     lines.append("---")

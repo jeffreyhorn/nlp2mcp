@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2025-12-09T19:43:21.529253+00:00",
+  "generated_at": "2025-12-09T19:45:47.462927+00:00",
   "model_name": "mhw4dx.gms",
-  "total_duration_ms": 1328.0682639742736,
+  "total_duration_ms": 1325.2647490007803,
   "overall_success": true,
   "stages": {
     "Parse": {
-      "duration_ms": 1313.5772660025395,
+      "duration_ms": 1311.248785990756,
       "success": true,
       "error": null,
       "details": {
@@ -17,7 +17,7 @@
       }
     },
     "Semantic Analysis": {
-      "duration_ms": 0.23216899717226624,
+      "duration_ms": 0.18614198779687285,
       "success": true,
       "error": null,
       "details": {
@@ -26,7 +26,7 @@
       }
     },
     "Simplification": {
-      "duration_ms": 1.3659909891430289,
+      "duration_ms": 1.3503090012818575,
       "success": true,
       "error": null,
       "details": {
@@ -36,7 +36,7 @@
       }
     },
     "IR Generation": {
-      "duration_ms": 11.959683994064108,
+      "duration_ms": 11.561699997400865,
       "success": true,
       "error": null,
       "details": {
@@ -47,7 +47,7 @@
       }
     },
     "MCP Generation": {
-      "duration_ms": 0.9331539913546294,
+      "duration_ms": 0.917812023544684,
       "success": true,
       "error": null,
       "details": {
@@ -60,10 +60,10 @@
     "stages_completed": 5,
     "stages_failed": 0,
     "stages_skipped": 0,
-    "parse_duration_ms": 1313.5772660025395,
-    "semantic_duration_ms": 0.23216899717226624,
-    "simplification_duration_ms": 1.3659909891430289,
-    "ir_generation_duration_ms": 11.959683994064108,
-    "mcp_generation_duration_ms": 0.9331539913546294
+    "parse_duration_ms": 1311.248785990756,
+    "semantic_duration_ms": 0.18614198779687285,
+    "simplification_duration_ms": 1.3503090012818575,
+    "ir_generation_duration_ms": 11.561699997400865,
+    "mcp_generation_duration_ms": 0.917812023544684
   }
 }
