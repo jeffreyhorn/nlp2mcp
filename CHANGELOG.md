@@ -30,7 +30,7 @@ Completed interactive HTML dashboard with Chart.js visualizations, created compr
 - `docs/dashboard.html`: Generated interactive dashboard
   - Chart.js visualizations
   - Mobile-responsive layout
-  - Real-time data from diagnostics JSON
+  - Static snapshot of diagnostics data
 
 - `docs/infrastructure/CI_WORKFLOW_TESTING.md`: CI workflow testing guide
   - Syntax validation (yamllint, actionlint)

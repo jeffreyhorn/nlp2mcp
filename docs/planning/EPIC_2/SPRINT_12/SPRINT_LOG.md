@@ -33,7 +33,7 @@ Completed interactive HTML dashboard with Chart.js visualizations showing stage 
 **docs/dashboard.html:**
 - Generated interactive dashboard
 - Chart.js CDN integration
-- Real-time data from diagnostics JSON
+- Static snapshot of diagnostics data
 
 #### 2. CI Workflow Testing Guide (1-1.5h)
 

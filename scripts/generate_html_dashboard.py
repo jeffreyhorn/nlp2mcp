@@ -3,9 +3,8 @@
 
 This script generates a static HTML dashboard with:
 - Stage timing bar chart
-- Simplification effectiveness line chart (Sprints 10-12)
-- Model comparison heatmap
-- Transformation frequency pie chart
+- Sprint progress line chart (parse rate, term reduction over Sprints 8-12)
+- Model duration bar chart
 
 Usage:
     # Generate from local diagnostics directory
