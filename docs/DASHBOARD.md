@@ -3,6 +3,8 @@
 **Generated:** 2025-12-09 13:45:51
 **Schema Version:** 1.0.0
 
+> **Interactive Dashboard:** For Chart.js visualizations and sprint trends, see [dashboard.html](dashboard.html)
+
 ## Pipeline Success Rate
 
 **Overall:** ✅ 100.0% (6/6 models)
