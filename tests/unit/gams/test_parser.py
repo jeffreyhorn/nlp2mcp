@@ -4846,8 +4846,6 @@ class TestPredefinedConstants:
 
     def test_na_constant(self):
         """Test na constant (not available marker)."""
-        import math
-
         text = dedent(
             """
             Set i / a /;
@@ -4863,8 +4861,6 @@ class TestPredefinedConstants:
 
     def test_undf_constant(self):
         """Test undf constant (undefined value marker)."""
-        import math
-
         text = dedent(
             """
             Set i / a /;
