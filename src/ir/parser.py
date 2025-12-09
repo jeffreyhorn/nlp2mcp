@@ -83,6 +83,17 @@ _AGGREGATION_FUNCTIONS = {"smin", "smax", "sum", "prod", "card"}
 
 _FUNCTION_NAMES = {"abs", "exp", "log", "log10", "log2", "sqrt", "sin", "cos", "tan", "sqr"}
 
+# GAMS predefined constants (case-insensitive)
+# These are automatically available in all GAMS models
+_PREDEFINED_CONSTANTS: dict[str, float] = {
+    "yes": 1.0,
+    "no": 0.0,
+    "inf": math.inf,
+    "eps": 2.2204460492503131e-16,  # Machine epsilon (sys.float_info.epsilon)
+    "na": math.nan,  # Not available marker (represented as NaN)
+    "undf": math.nan,  # Undefined value marker (represented as NaN)
+}
+
 
 @lru_cache
 def _build_lark() -> Lark:
@@ -3125,6 +3136,11 @@ class _ModelBuilder:
         if not idx_tuple and name in free_domain:
             # It's a reference to a domain index variable
             return self._attach_domain(SymbolRef(name), free_domain)
+        # Check if it's a GAMS predefined constant (yes, no, inf, eps, na, undf)
+        # These are case-insensitive
+        name_lower = name.lower()
+        if not idx_tuple and name_lower in _PREDEFINED_CONSTANTS:
+            return self._attach_domain(Const(_PREDEFINED_CONSTANTS[name_lower]), free_domain)
         if idx_tuple:
             raise self._parse_error(
                 f"Undefined symbol '{name}' with indices {idx_tuple} referenced",
@@ -3378,6 +3394,18 @@ class _ModelBuilder:
             return -float(expr.child.value)
         if isinstance(expr, Unary) and expr.op == "+" and isinstance(expr.child, Const):
             return float(expr.child.value)
+        # Handle predefined scalar parameters (pi, inf, eps, na) used as constants
+        if isinstance(expr, ParamRef) and not expr.indices:
+            param = self.model.params.get(expr.name)
+            if param and not param.domain and () in param.values:
+                return float(param.values[()])
+        # Handle -inf for negative infinity (Unary minus on ParamRef)
+        if isinstance(expr, Unary) and expr.op == "-" and isinstance(expr.child, ParamRef):
+            param_ref = expr.child
+            if not param_ref.indices:
+                param = self.model.params.get(param_ref.name)
+                if param and not param.domain and () in param.values:
+                    return -float(param.values[()])
         raise self._error(f"Assignments must use numeric constants; got {expr!r} in {context}")
 
     def _apply_variable_bound(

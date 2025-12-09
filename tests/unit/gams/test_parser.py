@@ -3768,10 +3768,8 @@ class TestAttributeAssignments:
     def test_variable_bounds_with_parameters(self):
         """Test variable bounds using parameter values.
 
-        Note: The parser uses mock/store approach for bounds with non-constant
-        expressions (see parser.py lines 1846-1849). Since 'lower' and 'upper'
-        are parameter references (not constants), these bounds are parsed but
-        not stored in the variable.
+        Scalar parameters with assigned values can be resolved at parse time
+        and used for variable bounds.
         """
         text = dedent(
             """
@@ -3786,9 +3784,9 @@ class TestAttributeAssignments:
         )
         model = parser.parse_model_text(text)
         assert "x" in model.variables
-        # Bounds are not stored because they use parameter references (mock/store)
-        assert model.variables["x"].lo is None
-        assert model.variables["x"].up is None
+        # Scalar parameters with values are resolved at parse time
+        assert model.variables["x"].lo == 10.0
+        assert model.variables["x"].up == 20.0
 
     def test_bracket_expressions(self):
         """Test bracket expressions in equations (bearing.gms uses [(expr)])."""
@@ -4722,3 +4720,173 @@ class TestCurlyBraceSumComplexIndexing:
         _, rhs = model.equations["eq"].lhs_rhs
         assert isinstance(rhs, Sum)
         assert rhs.sum_indices == ("i", "j", "k")
+
+
+class TestPredefinedConstants:
+    """Test GAMS predefined constants (yes, no, inf, eps, na, undf).
+
+    Issue #407: GAMS has several predefined constants that are automatically
+    available in all models. The parser should recognize these and treat them
+    as built-in values.
+    """
+
+    def test_yes_constant_in_parameter_assignment(self):
+        """Test yes constant (boolean true = 1.0) in parameter assignment."""
+        text = dedent(
+            """
+            Set i / a, b, c /;
+            Parameter flag(i);
+
+            flag('a') = yes;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "flag" in model.params
+        assert model.params["flag"].values[("a",)] == 1.0
+
+    def test_no_constant_in_parameter_assignment(self):
+        """Test no constant (boolean false = 0.0) in parameter assignment."""
+        text = dedent(
+            """
+            Set i / a, b, c /;
+            Parameter flag(i);
+
+            flag('b') = no;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "flag" in model.params
+        assert model.params["flag"].values[("b",)] == 0.0
+
+    def test_yes_no_case_insensitive(self):
+        """Test yes/no constants are case-insensitive."""
+        text = dedent(
+            """
+            Set i / a, b, c, d /;
+            Parameter flag(i);
+
+            flag('a') = yes;
+            flag('b') = YES;
+            flag('c') = Yes;
+            flag('d') = NO;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["flag"].values[("a",)] == 1.0
+        assert model.params["flag"].values[("b",)] == 1.0
+        assert model.params["flag"].values[("c",)] == 1.0
+        assert model.params["flag"].values[("d",)] == 0.0
+
+    def test_inf_constant_in_variable_bounds(self):
+        """Test inf constant (positive infinity) in variable bounds."""
+        text = dedent(
+            """
+            Variable x;
+            x.lo = 0;
+            x.up = inf;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+
+    def test_negative_inf_in_variable_bounds(self):
+        """Test -inf (negative infinity) in variable bounds."""
+        text = dedent(
+            """
+            Variable x;
+            x.lo = -inf;
+            x.up = inf;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+
+    def test_inf_case_insensitive(self):
+        """Test inf constant is case-insensitive."""
+        text = dedent(
+            """
+            Variable x, y, z;
+            x.up = inf;
+            y.up = INF;
+            z.up = Inf;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert "y" in model.variables
+        assert "z" in model.variables
+
+    def test_eps_constant(self):
+        """Test eps constant (machine epsilon)."""
+        text = dedent(
+            """
+            Set i / a /;
+            Parameter tolerance(i);
+
+            tolerance('a') = eps;
+        """
+        )
+        model = parser.parse_model_text(text)
+        # eps should be approximately 2.22e-16
+        assert "tolerance" in model.params
+        assert model.params["tolerance"].values[("a",)] == pytest.approx(2.2204460492503131e-16)
+
+    def test_na_constant(self):
+        """Test na constant (not available marker)."""
+        import math
+
+        text = dedent(
+            """
+            Set i / a /;
+            Parameter missing(i);
+
+            missing('a') = na;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "missing" in model.params
+        # na is represented as NaN
+        assert math.isnan(model.params["missing"].values[("a",)])
+
+    def test_undf_constant(self):
+        """Test undf constant (undefined value marker)."""
+        import math
+
+        text = dedent(
+            """
+            Set i / a /;
+            Parameter undef(i);
+
+            undef('a') = undf;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "undef" in model.params
+        # undf is represented as NaN
+        assert math.isnan(model.params["undef"].values[("a",)])
+
+    def test_predefined_constants_in_scalar_parameter(self):
+        """Test predefined constants assigned to scalar parameters."""
+        text = dedent(
+            """
+            Scalar use_feature;
+            use_feature = yes;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "use_feature" in model.params
+        assert model.params["use_feature"].values[()] == 1.0
+
+    def test_predefined_pi_constant(self):
+        """Test pi constant (predefined as scalar parameter)."""
+        text = dedent(
+            """
+            Set i / a /;
+            Parameter angle(i);
+
+            angle('a') = pi;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "angle" in model.params
+        assert model.params["angle"].values[("a",)] == pytest.approx(3.141592653589793)
