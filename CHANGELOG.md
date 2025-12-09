@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Day 7: JSON Diagnostics & PATH Decision - 2025-12-09
+
+**Branch:** `sprint12-day7-json-path-dashboard`  
+**PR:** TBD  
+**Status:** ✅ COMPLETE (pending PR)
+
+#### Summary
+
+Implemented JSON diagnostics infrastructure with schema v1.0.0, integrated with CI for artifact storage, documented PATH licensing decision (defer integration), and created dashboard infrastructure with extended widgets.
+
+#### Changes
+
+**New Files:**
+- `src/ir/diagnostics.py`: Pipeline diagnostics infrastructure
+  - `DiagnosticReport` class with `to_json_v1()` and `to_text()` methods
+  - `DiagnosticContext` context manager for stage timing and error capture
+  - `Stage` enum for 5 pipeline stages (Parse, Semantic, Simplification, IR Generation, MCP Generation)
+  - `StageMetrics` dataclass for per-stage metrics
+
+- `docs/schemas/diagnostics_v1.0.0.json`: JSON Schema for diagnostics output
+  - SemVer versioned schema (v1.0.0)
+  - Defines structure for stages, summary, and metadata
+
+- `docs/JSON_DIAGNOSTICS.md`: User documentation for diagnostics feature
+  - CLI usage examples
+  - Schema documentation
+  - CI integration patterns
+
+- `docs/CI_REGRESSION_GUARDRAILS.md`: CI guardrails documentation
+  - JSON diagnostics artifact storage
+  - Regression detection workflow
+
+- `docs/PATH_LICENSING_EMAIL.md`: PATH licensing decision
+  - Decision: Defer PATH integration, proceed with tier 2 parsing
+  - Rationale documented
+
+- `scripts/generate_dashboard.py`: Dashboard generation script
+  - Pipeline success rate widget
+  - Stage timing breakdown widget
+  - Model coverage widget
+  - Tier progress widget (tier 1 vs tier 2)
+  - Blocking issues widget with GitHub links
+  - Recent commits widget
+
+- `docs/DASHBOARD.md`: Generated pipeline diagnostics dashboard
+
+- `tests/unit/ir/test_diagnostics.py`: 18 unit tests for diagnostics infrastructure
+
+**Modified Files:**
+- `src/cli.py`: Added `--diagnostics` and `--format` CLI flags
+  - Integrated `DiagnosticContext` for all 5 pipeline stages
+  - JSON output to stderr (separate from MCP output)
+
+- `.github/workflows/ci.yml`: Added diagnostics artifact generation
+  - Generate JSON diagnostics for tier 1 models
+  - Upload artifacts with 90-day retention
+
+---
+
 ### Sprint 12 Day 3: Validation, Analysis & Checkpoint - 2025-12-01
 
 **Branch:** `sprint12-day3-validation-checkpoint`  

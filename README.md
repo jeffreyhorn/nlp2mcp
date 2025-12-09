@@ -127,10 +127,10 @@ For the detailed Sprint 11 plan, see [docs/planning/EPIC_2/SPRINT_11/PLAN.md](do
 - [x] Day 1: Measurement Infrastructure Setup + Extended Testing (PR #345 - SimplificationMetrics + count_terms())
 - [x] Day 2: Baseline Collection & Multi-Metric Backend + Extended Validation (PR #348 - 26.19% avg term reduction ✅)
 - [x] Day 3: Validation, Analysis & Checkpoint (PR #349 - ✅ SUCCESS: Day 9 Scenario B)
-- [ ] Day 4: Tier 2 Model Analysis & High-Priority Blockers
-- [ ] Day 5: Tier 2 Medium-Priority Blocker Implementation
-- [ ] Day 6: Tier 2 Stretch Blockers & Checkpoint
-- [ ] Day 7: JSON Diagnostics & PATH Decision
+- [x] Day 4: Tier 2 Model Analysis & High-Priority Blockers
+- [x] Day 5: Tier 2 Medium-Priority Blocker Implementation
+- [x] Day 6: Tier 2 Stretch Blockers & Checkpoint
+- [x] Day 7: JSON Diagnostics & PATH Decision (PATH deferred, dashboard infrastructure complete)
 - [ ] Day 8: Dashboard Completion & CI Checklist
 - [ ] Day 9: Contingent Features & Recovery
 - [ ] Day 10: Documentation Updates & Final Validation
