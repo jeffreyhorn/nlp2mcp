@@ -104,7 +104,7 @@ class DiagnosticReport:
         return "\n".join(lines)
 
     def to_json(self) -> dict[str, Any]:
-        """Format report as JSON-serializable dictionary.
+        """Format report as JSON-serializable dictionary (legacy format).
 
         Returns:
             Dictionary with all diagnostic data
@@ -122,6 +122,60 @@ class DiagnosticReport:
                 }
                 for stage, metrics in self.stages.items()
             },
+        }
+
+    def to_json_v1(self) -> dict[str, Any]:
+        """Format report as JSON with schema v1.0.0.
+
+        Returns:
+            Dictionary conforming to diagnostics schema v1.0.0
+        """
+        from datetime import UTC, datetime
+
+        return {
+            "schema_version": "1.0.0",
+            "generated_at": datetime.now(UTC).isoformat(),
+            "model_name": self.model_name,
+            "total_duration_ms": self.total_duration_ms,
+            "overall_success": self.overall_success,
+            "stages": {
+                stage.value: {
+                    "duration_ms": metrics.duration_ms,
+                    "success": metrics.success,
+                    "error": metrics.error,
+                    "details": metrics.details,
+                }
+                for stage, metrics in self.stages.items()
+            },
+            "summary": self._build_summary(),
+        }
+
+    def _build_summary(self) -> dict[str, Any]:
+        """Build summary object from stages.
+
+        Returns:
+            Summary statistics for the diagnostic report
+        """
+        all_stages = list(Stage)
+        completed = len(self.stages)
+        failed = sum(1 for m in self.stages.values() if not m.success)
+        skipped = len(all_stages) - completed
+
+        # Helper to get duration or 0 if stage not present
+        def get_duration(stage: Stage) -> float:
+            if stage in self.stages:
+                return self.stages[stage].duration_ms
+            return 0.0
+
+        return {
+            "stages_completed": completed,
+            "stages_failed": failed,
+            "stages_skipped": skipped,
+            "parse_duration_ms": get_duration(Stage.PARSE),
+            "semantic_duration_ms": get_duration(Stage.SEMANTIC),
+            "simplification_duration_ms": get_duration(Stage.SIMPLIFICATION),
+            "ir_generation_duration_ms": get_duration(Stage.IR_GENERATION),
+            "mcp_generation_duration_ms": get_duration(Stage.MCP_GENERATION),
         }
 
 

@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GAMS-to-MCP Diagnostic Report",
+  "description": "Schema for diagnostic output from nlp2mcp pipeline (version 1.0.0)",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "model_name",
+    "total_duration_ms",
+    "overall_success",
+    "stages",
+    "summary"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "SemVer version of the schema (e.g., '1.0.0')"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp when report was generated"
+    },
+    "model_name": {
+      "type": "string",
+      "description": "Name of the GAMS model file"
+    },
+    "total_duration_ms": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total pipeline duration in milliseconds"
+    },
+    "overall_success": {
+      "type": "boolean",
+      "description": "True if all stages completed successfully"
+    },
+    "stages": {
+      "type": "object",
+      "description": "Per-stage metrics keyed by stage name",
+      "additionalProperties": {
+        "$ref": "#/definitions/stage_metrics"
+      }
+    },
+    "summary": {
+      "$ref": "#/definitions/summary"
+    }
+  },
+  "definitions": {
+    "stage_metrics": {
+      "type": "object",
+      "required": ["duration_ms", "success", "error", "details"],
+      "properties": {
+        "duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Stage execution time in milliseconds"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if stage completed without errors"
+        },
+        "error": {
+          "type": ["string", "null"],
+          "description": "Error message if failed, null if success"
+        },
+        "details": {
+          "type": "object",
+          "description": "Stage-specific metadata",
+          "additionalProperties": true
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "stages_completed",
+        "stages_failed",
+        "stages_skipped",
+        "parse_duration_ms",
+        "semantic_duration_ms",
+        "simplification_duration_ms",
+        "ir_generation_duration_ms",
+        "mcp_generation_duration_ms"
+      ],
+      "properties": {
+        "stages_completed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of stages that ran"
+        },
+        "stages_failed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of stages that failed"
+        },
+        "stages_skipped": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of stages not executed"
+        },
+        "parse_duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Parse stage duration (0 if skipped)"
+        },
+        "semantic_duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Semantic analysis duration (0 if skipped)"
+        },
+        "simplification_duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Simplification stage duration (0 if skipped)"
+        },
+        "ir_generation_duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "IR generation stage duration (0 if skipped)"
+        },
+        "mcp_generation_duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "MCP generation stage duration (0 if skipped)"
+        }
+      }
+    }
+  }
+}

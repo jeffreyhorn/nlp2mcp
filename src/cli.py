@@ -22,6 +22,7 @@ from src.diagnostics.convexity.patterns import (
     TrigonometricPattern,
 )
 from src.emit.emit_gams import emit_gams_mcp
+from src.ir.diagnostics import DiagnosticContext, Stage, create_report
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
 from src.kkt.assemble import assemble_kkt_system
@@ -105,6 +106,19 @@ from src.validation.numerical import validate_jacobian_entries, validate_paramet
     default=False,
     help="Skip convexity warnings (heuristic pattern detection for nonconvex models)",
 )
+@click.option(
+    "--diagnostics",
+    is_flag=True,
+    default=False,
+    help="Output pipeline diagnostics (timing, success/failure per stage)",
+)
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["text", "json"], case_sensitive=False),
+    default="text",
+    help="Diagnostic output format: text (default) or json (schema v1.0.0)",
+)
 def main(
     input_file,
     output,
@@ -120,6 +134,8 @@ def main(
     dump_jacobian,
     quiet,
     skip_convexity_check,
+    diagnostics,
+    output_format,
 ):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
@@ -149,6 +165,11 @@ def main(
     if required_limit > original_limit:
         sys.setrecursionlimit(required_limit)
 
+    # Initialize diagnostic report if requested
+    diag_report = None
+    if diagnostics:
+        diag_report = create_report(Path(input_file).name)
+
     try:
         # Determine verbosity level (quiet overrides verbose)
         verbosity_level = 0 if quiet else verbose
@@ -159,7 +180,15 @@ def main(
         if verbose:
             click.echo(f"Parsing model: {input_file}")
 
-        model = parse_model_file(input_file)
+        if diag_report:
+            with DiagnosticContext(diag_report, Stage.PARSE) as ctx:
+                model = parse_model_file(input_file)
+                ctx.add_detail("sets", len(model.sets))
+                ctx.add_detail("parameters", len(model.params))
+                ctx.add_detail("variables", len(model.variables))
+                ctx.add_detail("equations", len(model.equations))
+        else:
+            model = parse_model_file(input_file)
 
         if verbose >= 2:
             click.echo(f"  Sets: {len(model.sets)}")
@@ -171,13 +200,18 @@ def main(
         if verbose:
             click.echo("Validating model structure...")
 
-        validate_model_structure(model)
-
-        # Step 1.6: Validate parameters for NaN/Inf (Sprint 5 Day 4 - Task 4.1)
-        if verbose:
-            click.echo("Validating parameters...")
-
-        validate_parameter_values(model)
+        if diag_report:
+            with DiagnosticContext(diag_report, Stage.SEMANTIC) as ctx:
+                validate_model_structure(model)
+                validate_parameter_values(model)
+                ctx.add_detail("equalities", len(model.equalities))
+                ctx.add_detail("inequalities", len(model.inequalities))
+        else:
+            validate_model_structure(model)
+            # Step 1.6: Validate parameters for NaN/Inf (Sprint 5 Day 4 - Task 4.1)
+            if verbose:
+                click.echo("Validating parameters...")
+            validate_parameter_values(model)
 
         # Step 1.7: Check for convexity warnings (Sprint 6 Day 4)
         if not skip_convexity_check:
@@ -221,38 +255,52 @@ def main(
                 click.echo("  Use --skip-convexity-check to suppress these warnings.")
                 click.echo()
 
-        # Step 2: Normalize model
+        # Step 2: Normalize model and reformulate (Simplification stage)
         if verbose:
             click.echo("Normalizing model...")
 
-        normalized_eqs, _ = normalize_model(model)
-
-        if verbose >= 2:
-            click.echo(f"  Equalities: {len(model.equalities)}")
-            click.echo(f"  Inequalities: {len(model.inequalities)}")
-
-        # Step 2.5: Reformulate min/max functions (Sprint 4 Day 4)
-        if verbose:
-            click.echo("Reformulating min/max functions...")
-
-        vars_before = len(model.variables)
-        eqs_before = len(model.equations)
-
-        reformulate_model(model)
-
-        vars_added = len(model.variables) - vars_before
-        eqs_added = len(model.equations) - eqs_before
-
-        if verbose >= 2 and (vars_added > 0 or eqs_added > 0):
-            click.echo(f"  Added {vars_added} auxiliary variables")
-            click.echo(f"  Added {eqs_added} complementarity constraints")
-
-        # Re-normalize model after reformulation to capture new equations
-        # and update equations that had min/max replaced with aux vars
-        if vars_added > 0 or eqs_added > 0:
+        if diag_report:
+            with DiagnosticContext(diag_report, Stage.SIMPLIFICATION) as ctx:
+                normalized_eqs, _ = normalize_model(model)
+                vars_before = len(model.variables)
+                eqs_before = len(model.equations)
+                reformulate_model(model)
+                vars_added = len(model.variables) - vars_before
+                eqs_added = len(model.equations) - eqs_before
+                if vars_added > 0 or eqs_added > 0:
+                    normalized_eqs, _ = normalize_model(model)
+                ctx.add_detail("vars_added", vars_added)
+                ctx.add_detail("eqs_added", eqs_added)
+                ctx.add_detail("normalized_equations", len(normalized_eqs))
+        else:
             normalized_eqs, _ = normalize_model(model)
 
-        # Step 3: Compute derivatives
+            if verbose >= 2:
+                click.echo(f"  Equalities: {len(model.equalities)}")
+                click.echo(f"  Inequalities: {len(model.inequalities)}")
+
+            # Step 2.5: Reformulate min/max functions (Sprint 4 Day 4)
+            if verbose:
+                click.echo("Reformulating min/max functions...")
+
+            vars_before = len(model.variables)
+            eqs_before = len(model.equations)
+
+            reformulate_model(model)
+
+            vars_added = len(model.variables) - vars_before
+            eqs_added = len(model.equations) - eqs_before
+
+            if verbose >= 2 and (vars_added > 0 or eqs_added > 0):
+                click.echo(f"  Added {vars_added} auxiliary variables")
+                click.echo(f"  Added {eqs_added} complementarity constraints")
+
+            # Re-normalize model after reformulation to capture new equations
+            # and update equations that had min/max replaced with aux vars
+            if vars_added > 0 or eqs_added > 0:
+                normalized_eqs, _ = normalize_model(model)
+
+        # Step 3: Compute derivatives (IR Generation stage)
         if verbose:
             click.echo("Computing derivatives...")
 
@@ -264,61 +312,92 @@ def main(
             simplification=simplification.lower(),
         )
 
-        gradient = compute_objective_gradient(model, config)
-        J_eq, J_ineq = compute_constraint_jacobian(model, normalized_eqs, config)
+        if diag_report:
+            with DiagnosticContext(diag_report, Stage.IR_GENERATION) as ctx:
+                gradient = compute_objective_gradient(model, config)
+                J_eq, J_ineq = compute_constraint_jacobian(model, normalized_eqs, config)
+                validate_jacobian_entries(gradient, "objective gradient")
+                validate_jacobian_entries(J_eq, "equality constraint Jacobian")
+                validate_jacobian_entries(J_ineq, "inequality constraint Jacobian")
 
-        if verbose >= 2:
-            click.echo(f"  Gradient columns: {gradient.num_cols}")
-            click.echo(f"  Equality Jacobian: {J_eq.num_rows} × {J_eq.num_cols}")
-            click.echo(f"  Inequality Jacobian: {J_ineq.num_rows} × {J_ineq.num_cols}")
-
-        # Step 3.5: Validate Jacobians for NaN/Inf (Sprint 5 Day 4)
-        if verbose:
-            click.echo("Validating derivatives...")
-
-        validate_jacobian_entries(gradient, "objective gradient")
-        validate_jacobian_entries(J_eq, "equality constraint Jacobian")
-        validate_jacobian_entries(J_ineq, "inequality constraint Jacobian")
-
-        # Step 4: Compute scaling factors (if requested)
-        row_scales = None
-        col_scales = None
-
-        if config.scale != "none":
-            if verbose:
-                click.echo(f"Computing {config.scale} scaling...")
-
-            # Scale based on the inequality Jacobian (larger system with bounds)
-            # Note: Equality Jacobian could also be scaled separately if needed
-            if config.scale == "auto":
-                # Curtis-Reid scaling uses both row and column scaling
-                R_ineq, C_ineq = curtis_reid_scaling(J_ineq)
-                row_scales, col_scales = R_ineq.tolist(), C_ineq.tolist()
-
-                if verbose >= 2:
-                    click.echo(f"  Computed row scaling for {len(row_scales)} equations")
-                    click.echo(f"  Computed column scaling for {len(col_scales)} variables")
-
-            elif config.scale == "byvar":
-                # Byvar scaling only scales columns (variables)
-                C_ineq = byvar_scaling(J_ineq)
+                # Compute scaling if needed
                 row_scales = None
-                col_scales = C_ineq.tolist()
+                col_scales = None
+                if config.scale != "none":
+                    if config.scale == "auto":
+                        R_ineq, C_ineq = curtis_reid_scaling(J_ineq)
+                        row_scales, col_scales = R_ineq.tolist(), C_ineq.tolist()
+                    elif config.scale == "byvar":
+                        C_ineq = byvar_scaling(J_ineq)
+                        col_scales = C_ineq.tolist()
 
-                if verbose >= 2:
-                    click.echo(f"  Computed column scaling for {len(col_scales)} variables")
+                # Assemble KKT
+                kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+                if config.scale != "none":
+                    kkt.scaling_row_factors = row_scales
+                    kkt.scaling_col_factors = col_scales
+                    kkt.scaling_mode = config.scale
 
-        # Step 5: Assemble KKT system
-        if verbose:
-            click.echo("Assembling KKT system...")
+                ctx.add_detail("gradient_cols", gradient.num_cols)
+                ctx.add_detail("eq_jacobian_rows", J_eq.num_rows)
+                ctx.add_detail("ineq_jacobian_rows", J_ineq.num_rows)
+                ctx.add_detail("stationarity_eqs", len(kkt.stationarity))
+        else:
+            gradient = compute_objective_gradient(model, config)
+            J_eq, J_ineq = compute_constraint_jacobian(model, normalized_eqs, config)
 
-        kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+            if verbose >= 2:
+                click.echo(f"  Gradient columns: {gradient.num_cols}")
+                click.echo(f"  Equality Jacobian: {J_eq.num_rows} × {J_eq.num_cols}")
+                click.echo(f"  Inequality Jacobian: {J_ineq.num_rows} × {J_ineq.num_cols}")
 
-        # Store scaling factors in KKT system
-        if config.scale != "none":
-            kkt.scaling_row_factors = row_scales
-            kkt.scaling_col_factors = col_scales
-            kkt.scaling_mode = config.scale
+            # Step 3.5: Validate Jacobians for NaN/Inf (Sprint 5 Day 4)
+            if verbose:
+                click.echo("Validating derivatives...")
+
+            validate_jacobian_entries(gradient, "objective gradient")
+            validate_jacobian_entries(J_eq, "equality constraint Jacobian")
+            validate_jacobian_entries(J_ineq, "inequality constraint Jacobian")
+
+            # Step 4: Compute scaling factors (if requested)
+            row_scales = None
+            col_scales = None
+
+            if config.scale != "none":
+                if verbose:
+                    click.echo(f"Computing {config.scale} scaling...")
+
+                # Scale based on the inequality Jacobian (larger system with bounds)
+                # Note: Equality Jacobian could also be scaled separately if needed
+                if config.scale == "auto":
+                    # Curtis-Reid scaling uses both row and column scaling
+                    R_ineq, C_ineq = curtis_reid_scaling(J_ineq)
+                    row_scales, col_scales = R_ineq.tolist(), C_ineq.tolist()
+
+                    if verbose >= 2:
+                        click.echo(f"  Computed row scaling for {len(row_scales)} equations")
+                        click.echo(f"  Computed column scaling for {len(col_scales)} variables")
+
+                elif config.scale == "byvar":
+                    # Byvar scaling only scales columns (variables)
+                    C_ineq = byvar_scaling(J_ineq)
+                    row_scales = None
+                    col_scales = C_ineq.tolist()
+
+                    if verbose >= 2:
+                        click.echo(f"  Computed column scaling for {len(col_scales)} variables")
+
+            # Step 5: Assemble KKT system
+            if verbose:
+                click.echo("Assembling KKT system...")
+
+            kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+
+            # Store scaling factors in KKT system
+            if config.scale != "none":
+                kkt.scaling_row_factors = row_scales
+                kkt.scaling_col_factors = col_scales
+                kkt.scaling_mode = config.scale
 
         # Report excluded duplicate bounds
         if show_excluded and kkt.duplicate_bounds_excluded:
@@ -360,14 +439,23 @@ def main(
             if verbose:
                 click.echo(f"✓ Jacobian exported to {dump_jacobian}")
 
-        # Step 6: Emit GAMS MCP code
+        # Step 6: Emit GAMS MCP code (MCP Generation stage)
         if verbose:
             click.echo("Generating GAMS MCP code...")
 
         add_comments = not no_comments
-        gams_code = emit_gams_mcp(
-            kkt, model_name=model_name, add_comments=add_comments, config=config
-        )
+
+        if diag_report:
+            with DiagnosticContext(diag_report, Stage.MCP_GENERATION) as ctx:
+                gams_code = emit_gams_mcp(
+                    kkt, model_name=model_name, add_comments=add_comments, config=config
+                )
+                ctx.add_detail("output_lines", gams_code.count("\n") + 1)
+                ctx.add_detail("output_bytes", len(gams_code.encode("utf-8")))
+        else:
+            gams_code = emit_gams_mcp(
+                kkt, model_name=model_name, add_comments=add_comments, config=config
+            )
 
         # Step 7: Write output
         if output:
@@ -383,6 +471,15 @@ def main(
 
         if verbose:
             click.echo("✓ Conversion complete")
+
+        # Output diagnostics report if requested
+        if diag_report:
+            import json
+
+            if output_format.lower() == "json":
+                click.echo(json.dumps(diag_report.to_json_v1(), indent=2), err=True)
+            else:
+                click.echo(diag_report.to_text(), err=True)
 
     except FileNotFoundError as e:
         click.echo(f"Error: File not found - {e}", err=True)
