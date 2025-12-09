@@ -3172,18 +3172,45 @@ class _ModelBuilder:
             if child.data == "param_data_scalar":
                 key = self._parse_data_indices(child.children[0])
                 value_token = child.children[-1]
-                key_tuple: tuple[str, ...] = tuple(key) if domain else ()
-                if len(key_tuple) != len(domain):
-                    raise self._error(
-                        f"Parameter '{param_name}' data index mismatch: expected {len(domain)} dims, got {len(key_tuple)}",
-                        child,
+                value = float(_token_text(value_token))
+
+                # Check if this is a range expression (e.g., 'a*c 10')
+                if len(key) == 3 and key[0] == "__range__":
+                    # Range notation: expand to multiple entries
+                    if len(domain) != 1:
+                        raise self._error(
+                            f"Parameter '{param_name}' range notation only supported for 1-D parameters",
+                            child,
+                        )
+                    range_start, range_end = key[1], key[2]
+                    expanded_members = self._expand_range_in_set(
+                        range_start, range_end, domain[0], child
                     )
-                if domain:
-                    for idx, set_name in zip(key_tuple, domain, strict=True):
-                        self._verify_member_in_domain(param_name, set_name, idx, child)
-                values[key_tuple] = float(_token_text(value_token))
+                    for member in expanded_members:
+                        values[(member,)] = value
+                else:
+                    # Standard scalar data
+                    key_tuple: tuple[str, ...] = tuple(key) if domain else ()
+                    if len(key_tuple) != len(domain):
+                        raise self._error(
+                            f"Parameter '{param_name}' data index mismatch: expected {len(domain)} dims, got {len(key_tuple)}",
+                            child,
+                        )
+                    if domain:
+                        for idx, set_name in zip(key_tuple, domain, strict=True):
+                            # Skip wildcard domains - they accept any element
+                            if set_name == "*":
+                                continue
+                            self._verify_member_in_domain(param_name, set_name, idx, child)
+                    values[key_tuple] = value
             elif child.data == "param_data_matrix_row":
                 row_indices = self._parse_data_indices(child.children[0])
+                # Explicitly disallow range notation in matrix row indices
+                if len(row_indices) == 3 and row_indices[0] == "__range__":
+                    raise self._error(
+                        f"Parameter '{param_name}' range notation not supported in table/matrix row indices",
+                        child,
+                    )
                 number_tokens = list(
                     child.scan_values(lambda v: isinstance(v, Token) and v.type == "NUMBER")
                 )
@@ -3214,13 +3241,81 @@ class _ModelBuilder:
         return values
 
     def _parse_data_indices(self, node: Tree | Token) -> list[str]:
+        """Parse data indices from a data_indices node.
+
+        Returns a list of index strings. For simple indices like 'a' or 'a.b',
+        returns ['a'] or ['a', 'b']. For range expressions like 'a*c', returns
+        a special format ['__range__', 'a', 'c'] that the caller must expand.
+        """
         if isinstance(node, Tree):
+            # Check if this is a data_indices node containing a range_expr
+            if node.data == "data_indices":
+                for child in node.children:
+                    if isinstance(child, Tree) and child.data == "range_expr":
+                        # Extract range bounds from range_expr
+                        bounds = []
+                        for bound_node in child.children:
+                            if isinstance(bound_node, Tree) and bound_node.data == "range_bound":
+                                for tok in bound_node.children:
+                                    if isinstance(tok, Token):
+                                        bounds.append(_token_text(tok))
+                            elif isinstance(bound_node, Token) and bound_node.type != "TIMES":
+                                bounds.append(_token_text(bound_node))
+                        if len(bounds) == 2:
+                            # Return special marker for range that caller will expand
+                            return ["__range__", bounds[0], bounds[1]]
+                        else:
+                            # Unexpected number of bounds - raise error for debugging
+                            raise self._error(
+                                f"Expected 2 bounds in range_expr, got {len(bounds)}: {bounds}",
+                                child,
+                            )
+            # Standard case: extract tokens directly
             return [
                 _token_text(tok)
                 for tok in node.children
                 if isinstance(tok, Token) and tok.type in ("ID", "NUMBER", "SET_ELEMENT_ID")
             ]
         return [_token_text(node)]
+
+    def _expand_range_in_set(
+        self, start: str, end: str, set_name: str, node: Tree | Token
+    ) -> list[str]:
+        """Expand a range like 'a*c' to ['a', 'b', 'c'] using set membership.
+
+        Args:
+            start: Start of range (e.g., 'foulds3')
+            end: End of range (e.g., 'foulds5')
+            set_name: Name of the set to look up members from
+            node: Parse tree node for error reporting
+
+        Returns:
+            List of set members from start to end inclusive
+
+        Raises:
+            ParserSemanticError if start/end not found in set or end before start
+        """
+        set_def = self._resolve_set_def(set_name, node=node)
+        if not set_def:
+            raise self._error(f"Cannot expand range: set '{set_name}' not found", node)
+
+        members = set_def.members
+        try:
+            start_idx = members.index(start)
+        except ValueError as err:
+            raise self._error(f"Range start '{start}' not found in set '{set_name}'", node) from err
+        try:
+            end_idx = members.index(end)
+        except ValueError as err:
+            raise self._error(f"Range end '{end}' not found in set '{set_name}'", node) from err
+
+        if end_idx < start_idx:
+            raise self._error(
+                f"Range end '{end}' comes before start '{start}' in set '{set_name}'",
+                node,
+            )
+
+        return members[start_idx : end_idx + 1]
 
     def _attach_domain(self, expr: Expr, domain: Sequence[str]) -> Expr:
         domain_tuple = tuple(domain)

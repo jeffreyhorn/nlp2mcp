@@ -2551,6 +2551,247 @@ class TestMultiDimensionalParameters:
         assert model.params["a"].values[("i1", "j1", "k1", "l1")] == 42.0
 
 
+class TestParameterDataRangeNotation:
+    """Test range notation in parameter data indices (Issue #421)."""
+
+    def test_range_notation_basic(self):
+        """Test basic range notation a*c expands to a, b, c."""
+        text = dedent(
+            """
+            Set i /a, b, c, d, e/;
+            Parameter p(i) / a*c 10, d 20, e 30 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values == {
+            ("a",): 10.0,
+            ("b",): 10.0,
+            ("c",): 10.0,
+            ("d",): 20.0,
+            ("e",): 30.0,
+        }
+
+    def test_range_notation_numeric_elements(self):
+        """Test range notation with numeric set elements."""
+        text = dedent(
+            """
+            Set i /1, 2, 3, 4, 5/;
+            Parameter p(i) / 1*3 100, 4 200, 5 300 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values == {
+            ("1",): 100.0,
+            ("2",): 100.0,
+            ("3",): 100.0,
+            ("4",): 200.0,
+            ("5",): 300.0,
+        }
+
+    def test_range_notation_symbolic_elements(self):
+        """Test range notation with symbolic identifiers."""
+        text = dedent(
+            """
+            Set case /haverly1, haverly2, haverly3, foulds2, foulds3/;
+            Parameter sol(case) / haverly1*haverly3 -400, foulds2 -1100, foulds3 -8 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["sol"].values == {
+            ("haverly1",): -400.0,
+            ("haverly2",): -400.0,
+            ("haverly3",): -400.0,
+            ("foulds2",): -1100.0,
+            ("foulds3",): -8.0,
+        }
+
+    def test_range_notation_negative_value(self):
+        """Test range notation with negative values."""
+        text = dedent(
+            """
+            Set i /x, y, z/;
+            Parameter p(i) / x*z -5.5 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values == {
+            ("x",): -5.5,
+            ("y",): -5.5,
+            ("z",): -5.5,
+        }
+
+    def test_range_notation_multiple_ranges(self):
+        """Test multiple range expressions in same parameter."""
+        text = dedent(
+            """
+            Set i /a, b, c, d, e, f/;
+            Parameter p(i) / a*b 1, c*d 2, e*f 3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values == {
+            ("a",): 1.0,
+            ("b",): 1.0,
+            ("c",): 2.0,
+            ("d",): 2.0,
+            ("e",): 3.0,
+            ("f",): 3.0,
+        }
+
+    def test_range_notation_single_element(self):
+        """Test range where start equals end (single element)."""
+        text = dedent(
+            """
+            Set i /a, b, c/;
+            Parameter p(i) / a*a 10, b 20, c 30 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values == {
+            ("a",): 10.0,
+            ("b",): 20.0,
+            ("c",): 30.0,
+        }
+
+    def test_range_notation_error_start_not_found(self):
+        """Test error when range start not in set."""
+        text = dedent(
+            """
+            Set i /a, b, c/;
+            Parameter p(i) / x*c 10 /;
+            """
+        )
+        with pytest.raises(parser.ParserSemanticError, match="Range start 'x' not found"):
+            parser.parse_model_text(text)
+
+    def test_range_notation_error_end_not_found(self):
+        """Test error when range end not in set."""
+        text = dedent(
+            """
+            Set i /a, b, c/;
+            Parameter p(i) / a*z 10 /;
+            """
+        )
+        with pytest.raises(parser.ParserSemanticError, match="Range end 'z' not found"):
+            parser.parse_model_text(text)
+
+    def test_range_notation_error_reversed(self):
+        """Test error when range end comes before start."""
+        text = dedent(
+            """
+            Set i /a, b, c/;
+            Parameter p(i) / c*a 10 /;
+            """
+        )
+        with pytest.raises(parser.ParserSemanticError, match="comes before start"):
+            parser.parse_model_text(text)
+
+
+class TestWildcardDomain:
+    """Test wildcard domain * in parameter declarations (Issue #425)."""
+
+    def test_wildcard_domain_basic(self):
+        """Test parameter with wildcard domain."""
+        text = dedent(
+            """
+            Set i /a, b, c/;
+            Parameter p(i,*);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "p" in model.params
+        assert model.params["p"].domain == ("i", "*")
+
+    def test_wildcard_domain_with_assignment(self):
+        """Test parameter with wildcard domain and assignment."""
+        text = dedent(
+            """
+            Set i /a, b, c/;
+            Parameter p(i,*);
+            p('a', 'x') = 10;
+            p('b', 'y') = 20;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].domain == ("i", "*")
+        assert model.params["p"].values[("a", "x")] == 10.0
+        assert model.params["p"].values[("b", "y")] == 20.0
+
+    def test_wildcard_domain_first_position(self):
+        """Test wildcard in first position of domain."""
+        text = dedent(
+            """
+            Set j /x, y, z/;
+            Parameter p(*,j);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].domain == ("*", "j")
+
+    def test_wildcard_domain_only(self):
+        """Test parameter with only wildcard domain."""
+        text = dedent(
+            """
+            Parameter p(*);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].domain == ("*",)
+
+    def test_wildcard_domain_multiple(self):
+        """Test parameter with multiple wildcards."""
+        text = dedent(
+            """
+            Parameter p(*,*);
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].domain == ("*", "*")
+
+    def test_wildcard_domain_pool_pattern(self):
+        """Test pool.gms pattern with wildcard report parameters."""
+        text = dedent(
+            """
+            Set case /a, b, c/;
+            Parameter
+               rep1(case,*) 'problem characteristics'
+               rep2(case,*) 'solution summary';
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["rep1"].domain == ("case", "*")
+        assert model.params["rep2"].domain == ("case", "*")
+
+    def test_wildcard_domain_index_validation(self):
+        """Test that wildcard domains accept any second index."""
+        text = dedent(
+            """
+            Set i /a, b/;
+            Parameter p(i,*);
+            p('a', 'foo') = 1;
+            p('a', 'bar') = 2;
+            p('b', 'baz') = 3;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert len(model.params["p"].values) == 3
+
+    def test_wildcard_domain_with_inline_data(self):
+        """Test wildcard domain with inline parameter data."""
+        text = dedent(
+            """
+            Set i /a, b/;
+            Parameter p(i,*) / a.x 10, a.y 20, b.z 30 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values == {
+            ("a", "x"): 10.0,
+            ("a", "y"): 20.0,
+            ("b", "z"): 30.0,
+        }
+
+
 class TestCaseInsensitivity:
     """Test case-insensitive symbol lookup (Issue #373)."""
 
@@ -3994,6 +4235,123 @@ class TestMultiLineDeclarations:
         assert "eq1" in model.equations
         assert "eq2" in model.equations
         assert "eq3" in model.equations
+
+
+class TestNewlineSeparatedSetDeclarations:
+    """Test newline-separated set declarations without commas (Issue #424).
+
+    GAMS allows multiple set declarations in a single Set block, separated by
+    newlines without commas. The grammar must correctly associate quoted
+    description strings with their preceding set name, not parse them as
+    separate set names.
+    """
+
+    def test_two_sets_newline_separated(self):
+        """Test two sets separated by newline with descriptions."""
+        text = dedent(
+            """
+            Set
+               comp_ 'components' / c1*c32 /
+               pro_  'products'   / p1*p16 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "comp_" in model.sets
+        assert "pro_" in model.sets
+        assert len(model.sets["comp_"].members) == 32
+        assert len(model.sets["pro_"].members) == 16
+        # Verify quoted strings are NOT parsed as set names
+        assert "'components'" not in model.sets
+        assert "'products'" not in model.sets
+
+    def test_multiple_sets_newline_separated_pool_pattern(self):
+        """Test pool.gms pattern with multiple newline-separated sets."""
+        text = dedent(
+            """
+            Set
+               comp_ 'components and raw materials' / c1*c32 /
+               pro_  'products'                     / p1*p16 /
+               qual_ 'qualities'                    / q1*q10 /
+               pool_ 'pools'                        / o1*o10 /
+               case  'case index'
+                      / haverly1*haverly3, foulds2*foulds5 /
+               labels / lo, up, price /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "comp_" in model.sets
+        assert "pro_" in model.sets
+        assert "qual_" in model.sets
+        assert "pool_" in model.sets
+        assert "case" in model.sets
+        assert "labels" in model.sets
+        assert len(model.sets["comp_"].members) == 32
+        assert len(model.sets["pro_"].members) == 16
+        assert len(model.sets["qual_"].members) == 10
+        assert len(model.sets["pool_"].members) == 10
+        assert len(model.sets["case"].members) == 7  # haverly1-3, foulds2-5
+        assert len(model.sets["labels"].members) == 3
+
+    def test_set_with_multiline_members(self):
+        """Test set with description and members on separate line."""
+        text = dedent(
+            """
+            Set case  'case index'
+                      / haverly1, haverly2, haverly3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "case" in model.sets
+        assert model.sets["case"].members == ["haverly1", "haverly2", "haverly3"]
+
+    def test_mixed_with_and_without_descriptions(self):
+        """Test mixing sets with and without descriptions."""
+        text = dedent(
+            """
+            Set
+               i 'first set' / a, b, c /
+               j              / x, y, z /
+               k 'third set' / 1, 2, 3 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c"]
+        assert model.sets["j"].members == ["x", "y", "z"]
+        assert model.sets["k"].members == ["1", "2", "3"]
+
+    def test_empty_sets_newline_separated(self):
+        """Test empty sets (no members) separated by newlines."""
+        text = dedent(
+            """
+            Set
+               i 'first set'
+               j
+               k 'third set';
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "i" in model.sets
+        assert "j" in model.sets
+        assert "k" in model.sets
+        assert model.sets["i"].members == []
+        assert model.sets["j"].members == []
+        assert model.sets["k"].members == []
+
+    def test_quoted_description_not_set_name(self):
+        """Verify quoted strings are descriptions, not set names."""
+        text = dedent(
+            """
+            Set
+               x 'description one' / a /
+               y 'description two' / b /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        # Only x and y should be sets
+        assert set(model.sets.keys()) == {"x", "y"}
+        # Quoted strings should NOT be in sets
+        assert "'description one'" not in model.sets
+        assert "'description two'" not in model.sets
 
 
 class TestTableContinuation:

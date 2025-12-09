@@ -81,18 +81,20 @@ set_decl: set_item ("," set_item)+          -> set_list
         | set_single_item                   -> set_single
 
 // For single set declarations: allow desc_text or STRING
-set_single_item: ID "(" id_list ")" (STRING | desc_text)? "/" set_members "/"     -> set_domain_with_members
-               | ID (STRING | desc_text)? "/" set_members "/"                     -> set_simple
-               | ID (STRING | desc_text)? alias_opt "/" set_members "/"           -> set_aliased
-               | ID "(" id_list ")" (STRING | desc_text)?                         -> set_domain
-               | ID (STRING | desc_text)?                                         -> set_empty
+// Issue #424: Use SYMBOL_NAME instead of ID to prevent quoted strings as set names
+set_single_item: SYMBOL_NAME "(" id_list ")" (STRING | desc_text)? "/" set_members "/"     -> set_domain_with_members
+               | SYMBOL_NAME (STRING | desc_text)? "/" set_members "/"                     -> set_simple
+               | SYMBOL_NAME (STRING | desc_text)? alias_opt "/" set_members "/"           -> set_aliased
+               | SYMBOL_NAME "(" id_list ")" (STRING | desc_text)?                         -> set_domain
+               | SYMBOL_NAME (STRING | desc_text)?                                         -> set_empty
 
 // For comma-separated lists: only STRING allowed (desc_text would be ambiguous)
-set_item: ID "(" id_list ")" STRING? "/" set_members "/"     -> set_domain_with_members
-        | ID STRING? "/" set_members "/"                     -> set_simple
-        | ID STRING? alias_opt "/" set_members "/"           -> set_aliased
-        | ID "(" id_list ")" STRING?                         -> set_domain
-        | ID STRING?                                         -> set_empty
+// Issue #424: Use SYMBOL_NAME instead of ID to prevent quoted strings as set names
+set_item: SYMBOL_NAME "(" id_list ")" STRING? "/" set_members "/"     -> set_domain_with_members
+        | SYMBOL_NAME STRING? "/" set_members "/"                     -> set_simple
+        | SYMBOL_NAME STRING? alias_opt "/" set_members "/"           -> set_aliased
+        | SYMBOL_NAME "(" id_list ")" STRING?                         -> set_domain
+        | SYMBOL_NAME STRING?                                         -> set_empty
 
 alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_universe
           | alias_pair ("," alias_pair)+                     -> alias_multi
@@ -189,7 +191,9 @@ eqn_head_decl: id_list "(" domain_list ")" (STRING | DESCRIPTION)?  -> eqn_head_
 alias_opt : "(" id_list ")"                                  -> alias_domain
 id_list: ID ("," ID)*
 id_or_wildcard_list: id_or_wildcard ("," id_or_wildcard)*
-id_or_wildcard: ID | "*"
+// Issue #425: Use WILDCARD terminal instead of literal "*" to preserve token in parse tree
+id_or_wildcard: ID | WILDCARD
+WILDCARD: "*"
 
 set_members: set_member ("," set_member)*
 ?set_member: range_expr                          -> set_range
@@ -455,6 +459,9 @@ ON: /(?i:on)\b/
 OFF: /(?i:off)\b/
 SET_ELEMENT_ID.2: /[a-zA-Z_][a-zA-Z0-9_+\-]*/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
+// Issue #424: SYMBOL_NAME matches only unquoted identifiers for use as set/param/var names
+// This prevents quoted strings like 'products' from being parsed as symbol names
+SYMBOL_NAME: /[a-zA-Z_][a-zA-Z0-9_]*/
 ESCAPED: /'[^']*'|\"[^\"]*\"/
 STRING: /"[^"]*"|'[^']*'/
 // Sprint 12 Day 5 (Issue #417): DESC_TEXT matches 2+ words on same line (no newlines)
