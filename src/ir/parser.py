@@ -3196,11 +3196,33 @@ class _ModelBuilder:
                     and all(m in self.model.sets for m in set_def.members)
                 )
 
+                # Issue #428: Check if members are multi-dimensional (dot-separated values)
+                # E.g., arc(n,n) / a.b, b.c / has members ['a.b', 'b.c'] - 2D element values
+                # When q(arc) is used, expand to q(np, n) using free_domain indices
+                members_are_multidim = (
+                    set_def.members is not None
+                    and len(set_def.members) > 0
+                    and any("." in m for m in set_def.members)
+                )
+
                 # Check if this is a multi-dimensional set reference with set-based domain
                 if members_are_sets and len(set_def.members) > 1:
                     # Multi-dimensional set with domain indices - always expand
                     # E.g., low(n,n) expands to (n, n)
                     expanded_indices.extend(set_def.members)
+                elif members_are_multidim and free_domain:
+                    # Multi-dimensional set with element values (e.g., arc with members 'a.b')
+                    # Infer dimensionality from first member and expand using free_domain
+                    first_member = set_def.members[0]
+                    dim = len(first_member.split("."))
+                    if dim > 1 and len(free_domain) >= dim:
+                        # Use the last 'dim' indices from free_domain
+                        # E.g., free_domain = ('n', 'np'), dim = 2 -> expand to ('n', 'np')
+                        # Or free_domain = ('np', 'n'), dim = 2 -> expand to ('np', 'n')
+                        expanded_indices.extend(free_domain[-dim:])
+                    else:
+                        # Can't expand, keep as-is
+                        expanded_indices.append(idx)
                 elif idx in free_domain:
                     # Set that's in domain - don't expand
                     # E.g., n in point(n,d) where domain is (n,nn)
@@ -3249,6 +3271,16 @@ class _ModelBuilder:
         name_lower = name.lower()
         if not idx_tuple and name_lower in _PREDEFINED_CONSTANTS:
             return self._attach_domain(Const(_PREDEFINED_CONSTANTS[name_lower]), free_domain)
+        # Issue #428: Check if it's a set membership test (e.g., rn(n) in a condition)
+        # In GAMS, set(index) in a conditional context returns 1 if index is in set, 0 otherwise
+        if name in self.model.sets and idx_tuple:
+            # Set membership test - return as a Call to a pseudo-function
+            # This represents the boolean check "is idx_tuple in set 'name'"
+            # We use a special SetMembership representation via SymbolRef
+            expr = Call(
+                name, tuple(SymbolRef(i) if i in free_domain else Const(0) for i in idx_tuple)
+            )
+            return self._attach_domain(expr, free_domain)
         if idx_tuple:
             raise self._parse_error(
                 f"Undefined symbol '{name}' with indices {idx_tuple} referenced",

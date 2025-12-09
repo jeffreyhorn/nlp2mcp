@@ -5002,3 +5002,109 @@ class TestSubsetIndexingAssignments:
         # Other pairs should not be set
         assert ("a", "y") not in model.params["cost"].values
         assert ("b", "x") not in model.params["cost"].values
+
+
+class TestSubsetReferenceInExpressions:
+    """Test subset name as variable/parameter index in expressions.
+
+    Issue #428: When a subset name is used as an index to a variable or parameter
+    within an expression (e.g., q(a) where a is a subset), the parser should
+    expand the subset to the underlying domain indices.
+    """
+
+    def test_subset_as_variable_index_in_sum(self):
+        """Test using subset name as variable index: q(arc) in sum."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n) / a.b, b.c /;
+            Variable q(n,n);
+
+            Equation test;
+            test.. sum(arc(np,n), q(arc)) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+
+    def test_subset_as_parameter_index_in_sum(self):
+        """Test using subset name as parameter index: dist(arc) in sum."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n) / a.b, b.c /;
+            Parameter dist(n,n) / a.b 10, b.c 20 /;
+
+            Equation test;
+            test.. sum(arc(np,n), dist(arc)) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+
+    def test_set_membership_test_in_conditional(self):
+        """Test set membership test: rn(n) in conditional."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Set rn(n) / a, b /;
+            Variable s(n);
+
+            Equation test(n);
+            test(n).. s(n)$rn(n) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+
+    def test_multiple_subset_references_in_expression(self):
+        """Test multiple subset references: dist(arc) * q(arc)."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n) / a.b, b.c /;
+            Variable q(n,n);
+            Parameter dist(n,n) / a.b 10, b.c 20 /;
+
+            Equation test;
+            test.. sum(arc(np,n), dist(arc) * q(arc)) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+
+    def test_subset_without_explicit_members(self):
+        """Test subset reference when subset has domain indices as members."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n);
+            Variable q(n,n);
+
+            Equation test;
+            test.. sum(arc(np,n), q(arc)) =e= 0;
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+
+    def test_subset_in_equation_domain(self):
+        """Test subset reference in equation with domain: loss(arc(n,np))."""
+        text = dedent(
+            """
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,n) / a.b, b.c /;
+            Variable h(n);
+            Parameter dist(n,n) / a.b 10, b.c 20 /;
+
+            Equation loss(n,n);
+            loss(arc(n,np)).. h(n) - h(np) =e= dist(arc);
+        """
+        )
+        model = parser.parse_model_text(text)
+        assert "loss" in model.equations
