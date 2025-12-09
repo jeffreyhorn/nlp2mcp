@@ -1075,6 +1075,92 @@ class _ModelBuilder:
             param = self._parse_param_decl(item)
             self.model.add_param(param)
 
+    def _parse_table_value(self, value_text: str) -> float:
+        """Parse a table value, handling special GAMS values like inf, -inf, eps, na.
+
+        Args:
+            value_text: The text representation of the value
+
+        Returns:
+            The parsed float value
+        """
+        # Try parsing as a regular number first
+        try:
+            return float(value_text)
+        except ValueError:
+            pass
+
+        # Handle signed special values (e.g., -inf, +inf)
+        value_lower = value_text.lower()
+        if value_lower.startswith("-"):
+            base_value = value_lower[1:]
+            if base_value in _PREDEFINED_CONSTANTS:
+                return -_PREDEFINED_CONSTANTS[base_value]
+        elif value_lower.startswith("+"):
+            base_value = value_lower[1:]
+            if base_value in _PREDEFINED_CONSTANTS:
+                return _PREDEFINED_CONSTANTS[base_value]
+
+        # Handle unsigned special values
+        if value_lower in _PREDEFINED_CONSTANTS:
+            return _PREDEFINED_CONSTANTS[value_lower]
+
+        # Default to 0.0 for unrecognized values
+        return 0.0
+
+    def _combine_signed_special_tokens(self, tokens: list[Token]) -> list[Token]:
+        """Combine MINUS/PLUS + ID tokens for special values like -inf, +inf, -eps.
+
+        In GAMS, special values like -inf are tokenized as MINUS followed by ID("inf").
+        This method identifies such patterns and combines them into a single synthetic token.
+
+        Args:
+            tokens: List of tokens to process
+
+        Returns:
+            New list with signed special values combined into single tokens
+        """
+        # Special value identifiers that can be prefixed with a sign
+        special_values = {"inf", "eps", "na"}
+
+        result: list[Token] = []
+        i = 0
+        while i < len(tokens):
+            token = tokens[i]
+            # Check if this is a MINUS or PLUS token followed by a special value ID
+            if isinstance(token, Token) and token.type in ("MINUS", "PLUS") and i + 1 < len(tokens):
+                next_token = tokens[i + 1]
+                if (
+                    isinstance(next_token, Token)
+                    and next_token.type == "ID"
+                    and _token_text(next_token).lower() in special_values
+                ):
+                    # Check they're on the same line and adjacent (no gap)
+                    same_line = getattr(token, "line", None) == getattr(next_token, "line", None)
+                    # Check column positions - sign should be immediately before ID
+                    sign_col = getattr(token, "column", 0) or 0
+                    id_col = getattr(next_token, "column", 0) or 0
+                    # Allow for the sign character width (1 char)
+                    adjacent = same_line and (id_col - sign_col <= 1)
+
+                    if adjacent:
+                        # Combine into a synthetic token
+                        combined_value = _token_text(token) + _token_text(next_token)
+                        synthetic_token = Token(
+                            "ID",
+                            combined_value,
+                            line=getattr(token, "line", None),
+                            column=getattr(token, "column", None),
+                        )
+                        result.append(synthetic_token)
+                        i += 2  # Skip both tokens
+                        continue
+
+            result.append(token)
+            i += 1
+
+        return result
+
     def _handle_table_block(self, node: Tree) -> None:
         """
         Handle GAMS Table block.
@@ -1222,6 +1308,21 @@ class _ModelBuilder:
                         for grandchild in child.children:
                             if isinstance(grandchild, Token):
                                 all_tokens.append(grandchild)
+                            elif (
+                                isinstance(grandchild, Tree)
+                                and grandchild.data == "negative_special"
+                            ):
+                                # Handle -inf, -eps, etc. - combine MINUS and ID into one token
+                                sign_token = grandchild.children[0]  # MINUS
+                                id_token = grandchild.children[1]  # ID (e.g., inf)
+                                combined_value = _token_text(sign_token) + _token_text(id_token)
+                                synthetic_token = Token(
+                                    "ID",
+                                    combined_value,
+                                    line=getattr(sign_token, "line", None),
+                                    column=getattr(sign_token, "column", None),
+                                )
+                                all_tokens.append(synthetic_token)
                     elif child.data == "simple_label":
                         # simple_label wraps dotted_label
                         dotted_label_node = child.children[0]
@@ -1259,6 +1360,23 @@ class _ModelBuilder:
                                 for val_token in token.children:
                                     if isinstance(val_token, Token):
                                         all_tokens.append(val_token)
+                                    elif (
+                                        isinstance(val_token, Tree)
+                                        and val_token.data == "negative_special"
+                                    ):
+                                        # Handle -inf, -eps in continuations
+                                        sign_token = val_token.children[0]
+                                        id_token = val_token.children[1]
+                                        combined_value = _token_text(sign_token) + _token_text(
+                                            id_token
+                                        )
+                                        synthetic_token = Token(
+                                            "ID",
+                                            combined_value,
+                                            line=getattr(sign_token, "line", None),
+                                            column=getattr(sign_token, "column", None),
+                                        )
+                                        all_tokens.append(synthetic_token)
             elif isinstance(content, Token) and content.type == "DESCRIPTION":
                 # DESCRIPTION tokens may contain column headers that need to be parsed
                 # These appear when column headers are on a line before a continuation marker
@@ -1288,6 +1406,10 @@ class _ModelBuilder:
         if not all_tokens:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
             return
+
+        # Post-process tokens to combine MINUS + ID for special values like -inf, -eps
+        # This handles the case where "-inf" is tokenized as MINUS followed by ID("inf")
+        all_tokens = self._combine_signed_special_tokens(all_tokens)
 
         # Group tokens by line
         from collections import defaultdict
@@ -1553,11 +1675,7 @@ class _ModelBuilder:
                 if best_match:
                     # Parse the value
                     value_text = _token_text(token)
-                    try:
-                        value = float(value_text)
-                    except ValueError:
-                        value = 0.0
-
+                    value = self._parse_table_value(value_text)
                     row_values[best_match] = value
                     used_columns.add(best_match)  # Mark this column as used
 

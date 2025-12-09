@@ -225,7 +225,11 @@ table_row_label: dotted_label                    -> simple_label
                | "(" id_list ")" "." dotted_label  -> tuple_label
 
 dotted_label: ID ("." (ID | range_expr))*
-table_value: NUMBER | ID | range_expr
+// table_value: NUMBER handles signed numbers like -5, 3.14
+// ID handles special values like inf, eps, na
+// negative_special handles -inf, -eps, etc. (MINUS only, not PLUS since + means continuation)
+table_value: NUMBER | ID | range_expr | negative_special
+negative_special: MINUS ID
 
 // ---------------------------
 // Assignments & Bounds
