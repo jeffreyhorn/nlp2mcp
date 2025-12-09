@@ -4572,6 +4572,134 @@ class TestTableContinuation:
         assert model.params["data"].values[("row1", "col4")] == 4
 
 
+class TestNegativeInfinityInTables:
+    """Tests for -inf and other special values in table data.
+
+    Issue #408: GAMS supports -inf (negative infinity) as a special value
+    in table data to represent unbounded lower limits.
+    """
+
+    def test_negative_inf_in_table(self):
+        """Test -inf in table data (gastrans.gms pattern)."""
+        text = dedent(
+            """
+            Set i / item1, item2, item3 /;
+            Table data(i,*)
+                       lower    upper
+                item1   -inf     100
+                item2      0     inf
+                item3   -inf     inf ;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "data" in model.params
+        # Check -inf values
+        assert model.params["data"].values[("item1", "lower")] == float("-inf")
+        assert model.params["data"].values[("item3", "lower")] == float("-inf")
+        # Check +inf values
+        assert model.params["data"].values[("item2", "upper")] == float("inf")
+        assert model.params["data"].values[("item3", "upper")] == float("inf")
+        # Check regular values
+        assert model.params["data"].values[("item1", "upper")] == 100.0
+        assert model.params["data"].values[("item2", "lower")] == 0.0
+
+    def test_negative_inf_case_insensitive(self):
+        """Test that -inf is case-insensitive."""
+        text = dedent(
+            """
+            Set i / a, b, c /;
+            Table data(i,*)
+                   lower
+                a  -inf
+                b  -INF
+                c  -Inf ;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["data"].values[("a", "lower")] == float("-inf")
+        assert model.params["data"].values[("b", "lower")] == float("-inf")
+        assert model.params["data"].values[("c", "lower")] == float("-inf")
+
+    def test_mixed_special_values_in_table(self):
+        """Test mix of special values in table."""
+        text = dedent(
+            """
+            Set i / a, b, c, d /;
+            Table data(i,*)
+                   lo       up
+                a  -inf    inf
+                b     0    100
+                c   eps      1
+                d    na     na ;
+            """
+        )
+        model = parser.parse_model_text(text)
+        # -inf and inf
+        assert model.params["data"].values[("a", "lo")] == float("-inf")
+        assert model.params["data"].values[("a", "up")] == float("inf")
+        # Regular numbers
+        assert model.params["data"].values[("b", "lo")] == 0.0
+        assert model.params["data"].values[("b", "up")] == 100.0
+        # eps (machine epsilon)
+        assert model.params["data"].values[("c", "lo")] == pytest.approx(2.2204460492503131e-16)
+        # na (not available - represented as NaN)
+        assert math.isnan(model.params["data"].values[("d", "lo")])
+        assert math.isnan(model.params["data"].values[("d", "up")])
+
+    def test_negative_inf_first_column(self):
+        """Test -inf as the first value in a data row."""
+        text = dedent(
+            """
+            Set i / x /;
+            Table data(i,*)
+                   a    b    c
+                x  -inf  5   10 ;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["data"].values[("x", "a")] == float("-inf")
+        assert model.params["data"].values[("x", "b")] == 5.0
+        assert model.params["data"].values[("x", "c")] == 10.0
+
+    def test_negative_inf_last_column(self):
+        """Test -inf as the last value in a data row."""
+        text = dedent(
+            """
+            Set i / x /;
+            Table data(i,*)
+                   a    b    c
+                x  10   5   -inf ;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["data"].values[("x", "a")] == 10.0
+        assert model.params["data"].values[("x", "b")] == 5.0
+        assert model.params["data"].values[("x", "c")] == float("-inf")
+
+    def test_gastrans_pattern(self):
+        """Test pattern from gastrans.gms (supply lower/upper bounds)."""
+        text = dedent(
+            """
+            Set i / Anderlues, Antwerpen, Arlon, Berneau /;
+            Table slb(i,*)
+                          slo       sup   plo    pup   c
+               Anderlues    0     1.2       0   66.2   0
+               Antwerpen -inf    -4.034    30   80.0   0
+               Arlon     -inf    -0.222     0   66.2   0
+               Berneau      0     0         0   66.2   0 ;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert "slb" in model.params
+        # Check -inf values
+        assert model.params["slb"].values[("Antwerpen", "slo")] == float("-inf")
+        assert model.params["slb"].values[("Arlon", "slo")] == float("-inf")
+        # Check regular values
+        assert model.params["slb"].values[("Anderlues", "slo")] == 0.0
+        assert model.params["slb"].values[("Antwerpen", "sup")] == pytest.approx(-4.034)
+        assert model.params["slb"].values[("Berneau", "pup")] == 66.2
+
+
 class TestCurlyBraceSumComplexIndexing:
     """Tests for curly brace sum with complex indexing (Issue #379)."""
 
