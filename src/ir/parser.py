@@ -3198,6 +3198,9 @@ class _ModelBuilder:
                         )
                     if domain:
                         for idx, set_name in zip(key_tuple, domain, strict=True):
+                            # Skip wildcard domains - they accept any element
+                            if set_name == "*":
+                                continue
                             self._verify_member_in_domain(param_name, set_name, idx, child)
                     values[key_tuple] = value
             elif child.data == "param_data_matrix_row":

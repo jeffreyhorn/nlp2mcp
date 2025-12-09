@@ -2776,6 +2776,21 @@ class TestWildcardDomain:
         model = parser.parse_model_text(text)
         assert len(model.params["p"].values) == 3
 
+    def test_wildcard_domain_with_inline_data(self):
+        """Test wildcard domain with inline parameter data."""
+        text = dedent(
+            """
+            Set i /a, b/;
+            Parameter p(i,*) / a.x 10, a.y 20, b.z 30 /;
+            """
+        )
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values == {
+            ("a", "x"): 10.0,
+            ("a", "y"): 20.0,
+            ("b", "z"): 30.0,
+        }
+
 
 class TestCaseInsensitivity:
     """Test case-insensitive symbol lookup (Issue #373)."""
