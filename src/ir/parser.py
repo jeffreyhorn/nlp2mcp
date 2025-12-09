@@ -2469,12 +2469,16 @@ class _ModelBuilder:
             elif "." in member:
                 # Split dot-separated member into tuple (e.g., 'nw.cc' -> ('nw', 'cc'))
                 split_member = tuple(member.split("."))
-                # Validate dimension matches parameter domain if domain is declared
-                if param.domain and len(split_member) != len(param.domain):
+                # Always validate dimension: if param.domain is empty, expect scalar (1 index)
+                expected_dim = len(param.domain) if param.domain else 1
+                if len(split_member) != expected_dim:
                     raise self._error(
                         f"Set member '{member}' splits into {len(split_member)} elements, "
-                        f"but parameter '{param.name}' expects {len(param.domain)} indices. "
-                        "This may be due to a dot in an element name.",
+                        f"but parameter '{param.name}' expects {expected_dim} "
+                        f"index{'es' if expected_dim > 1 else ''}. "
+                        "If your element name contains a dot, quote it in the source "
+                        "(e.g., '\"element.1\"'). Alternatively, check that the parameter's "
+                        "domain declaration matches the set member structure.",
                         node,
                     )
                 key = split_member
@@ -2645,7 +2649,12 @@ class _ModelBuilder:
                 # Check if a single index is actually a subset name that should be expanded
                 if subset_name is None and len(indices) == 1 and indices[0] in self.model.sets:
                     simple_subset = self.model.sets[indices[0]]
-                    # Check if this set is a subset (has a domain that's another set)
+                    # Note: SetDef currently doesn't store domain information (the parent set).
+                    # E.g., for "Set sub(i) / b, c /", we only store name='sub', members=['b','c'].
+                    # Future enhancement: add domain field to SetDef to enable validation that
+                    # subset domain is compatible with parameter domain (e.g., reject p(sub_j)
+                    # when p is defined over domain i but sub_j is a subset of j).
+                    # Check if this set has members to expand
                     if simple_subset.members:
                         self._expand_subset_assignment(
                             simple_subset, param, has_function_call, expr, value, target
@@ -2961,8 +2970,13 @@ class _ModelBuilder:
             #   - np is new to sum, gets summed out
             new_sum_indices = set(expanded_indices) - set(free_domain)
             remaining_domain = tuple(d for d in free_domain if d not in new_sum_indices)
-            body_domain = tuple(expanded_indices) + tuple(
-                d for d in remaining_domain if d not in expanded_indices
+            # Build body_domain without duplicates, preserving order
+            # Use a set to track seen indices and filter duplicates
+            seen: set[str] = set()
+            body_domain = tuple(
+                x
+                for x in list(expanded_indices) + list(remaining_domain)
+                if not (x in seen or seen.add(x))  # type: ignore[func-returns-value]
             )
 
             # If there's a condition, evaluate it in the body domain
