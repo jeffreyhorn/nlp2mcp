@@ -141,8 +141,7 @@ def test_not_operator_in_equation():
     source = """
 Set i / i1, i2 /;
 Parameter flag(i) / i1 1, i2 0 /;
-Variable x(i);
-Positive Variable x;
+Positive Variable x(i);
 x.lo(i) = 0;
 x.up(i) = 10;
 
