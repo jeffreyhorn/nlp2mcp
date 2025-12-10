@@ -238,6 +238,7 @@ negative_special: MINUS ID
 
 assignment_stmt: lvalue ASSIGN expr SEMI                    -> assign
                | lvalue DOLLAR "(" expr ")" ASSIGN expr SEMI  -> conditional_assign
+               | lvalue DOLLAR ref_indexed ASSIGN expr SEMI   -> conditional_assign_simple
 
 // lvalue supports: x.lo(i), x.up(i), x.fx(i), parameter(i), scalar
 lvalue: ref_bound | ref_indexed | ID
