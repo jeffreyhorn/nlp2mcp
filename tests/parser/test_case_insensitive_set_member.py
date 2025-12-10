@@ -4,7 +4,9 @@ GAMS is case-insensitive, so set members like 'H' and 'h' should be treated
 as equivalent when validating parameter data references.
 """
 
-from src.ir.parser import parse_model_text
+import pytest
+
+from src.ir.parser import ParserSemanticError, parse_model_text
 
 
 def test_lowercase_member_uppercase_set():
@@ -28,6 +30,9 @@ Parameter p(i) / A 1, B 2, C 3 /;
 """
     model = parse_model_text(source)
     assert "p" in model.params
+    assert model.params["p"].values[("A",)] == 1
+    assert model.params["p"].values[("B",)] == 2
+    assert model.params["p"].values[("C",)] == 3
 
 
 def test_mixed_case_members():
@@ -39,6 +44,10 @@ Parameter gibbs(c) / H -10.021, h2 -21.096, H2O -37.986, n -9.846, N2 -28.653,
 """
     model = parse_model_text(source)
     assert "gibbs" in model.params
+    # Verify some values with different case patterns
+    assert model.params["gibbs"].values[("H",)] == -10.021
+    assert model.params["gibbs"].values[("h2",)] == -21.096  # lowercase key
+    assert model.params["gibbs"].values[("o2",)] == -30.594  # lowercase key
 
 
 def test_single_character_case_mismatch():
@@ -61,6 +70,10 @@ Parameter p(i,j) / a.x 1, A.Y 2, b.X 3, B.y 4 /;
 """
     model = parse_model_text(source)
     assert "p" in model.params
+    assert model.params["p"].values[("a", "x")] == 1
+    assert model.params["p"].values[("A", "Y")] == 2
+    assert model.params["p"].values[("b", "X")] == 3
+    assert model.params["p"].values[("B", "y")] == 4
 
 
 def test_exact_case_still_works():
@@ -71,6 +84,9 @@ Parameter p(i) / alpha 1, beta 2, gamma 3 /;
 """
     model = parse_model_text(source)
     assert "p" in model.params
+    assert model.params["p"].values[("alpha",)] == 1
+    assert model.params["p"].values[("beta",)] == 2
+    assert model.params["p"].values[("gamma",)] == 3
 
 
 def test_invalid_member_still_errors():
@@ -79,10 +95,5 @@ def test_invalid_member_still_errors():
 Set i / A, B, C /;
 Parameter p(i) / X 1 /;
 """
-    try:
+    with pytest.raises(ParserSemanticError, match="not present in set"):
         parse_model_text(source)
-        raise AssertionError("Should have raised an error")
-    except AssertionError:
-        raise
-    except Exception as e:
-        assert "not present in set" in str(e)
