@@ -120,8 +120,13 @@ def get_tier_progress() -> dict[str, Any]:
 
 
 def get_transformation_coverage() -> dict[str, Any]:
-    """Get transformation coverage information."""
-    # From Sprint 11/12 transformation catalog
+    """Get transformation coverage information.
+
+    Note: Transformation list is derived from baselines/simplification/baseline_sprint11.json
+    'transformations_enabled' field. If transformations change, update both the baseline
+    and this list, or consider loading dynamically from the baseline JSON.
+    """
+    # From Sprint 11/12 transformation catalog (sync with baseline_sprint11.json)
     transformations = [
         {"name": "extract_common_factors", "category": "Factoring", "enabled": True},
         {"name": "multi_term_factoring", "category": "Factoring", "enabled": True},
@@ -274,6 +279,7 @@ def generate_html_dashboard(diagnostics: list[dict[str, Any]], stats: dict[str, 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NLP2MCP Pipeline Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
     <style>
         :root {{
             --bg-primary: #1a1a2e;
