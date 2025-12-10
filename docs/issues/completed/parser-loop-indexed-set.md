@@ -1,7 +1,7 @@
 # Parser: Loop Over Indexed/Mapped Set Not Supported
 
 **GitHub Issue:** [#450](https://github.com/jeffreyhorn/nlp2mcp/issues/450)
-**Status:** Open  
+**Status:** Completed  
 **Priority:** Medium  
 **Blocking Model:** gasoil.gms (tier 2)
 

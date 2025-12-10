@@ -1,7 +1,7 @@
 # Parser: Loop Statement Conditional Filter Not Supported
 
 **GitHub Issue:** [#449](https://github.com/jeffreyhorn/nlp2mcp/issues/449)
-**Status:** Open  
+**Status:** Completed  
 **Priority:** Medium  
 **Blocking Model:** gasoil.gms (tier 2)
 

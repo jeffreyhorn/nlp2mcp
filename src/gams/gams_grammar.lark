@@ -377,10 +377,14 @@ loop_body: exec_stmt* exec_stmt_final
           | SEMI
 
 // Final statement in loop - semicolon is optional
+// Must include all statement types from exec_stmt for completeness
 ?exec_stmt_final: assignment_nosemi
                 | assignment_stmt
                 | display_stmt_nosemi
                 | abort_stmt_nosemi
+                | option_stmt
+                | solve_stmt
+                | SEMI
 
 // ---------------------------
 // File Statement (Sprint 12 - mock/skip for file I/O)
