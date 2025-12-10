@@ -469,7 +469,7 @@ arg_list: expr ("," expr)*
 // Tokens & basics
 // ---------------------------
 
-FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card|uniform|normal|gamma|loggamma|round|mod|ceil)\b/
+FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card|uniform|normal|gamma|loggamma|round|mod|ceil|floor)\b/
 IF_K: /(?i:if)\b/
 ELSEIF_K: /(?i:elseif)\b/
 ELSE_K: /(?i:else)\b/
