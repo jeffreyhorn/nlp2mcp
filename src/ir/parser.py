@@ -2572,6 +2572,16 @@ class _ModelBuilder:
         # Same as _handle_loop_stmt - the grammar handles the structure
         self._handle_loop_stmt(node)
 
+    def _handle_loop_stmt_indexed(self, node: Tree) -> None:
+        """Handle loop over indexed set: loop(setname(i,j), ...)."""
+        # Same as _handle_loop_stmt - indices come from id_list inside setname(...)
+        self._handle_loop_stmt(node)
+
+    def _handle_loop_stmt_indexed_filtered(self, node: Tree) -> None:
+        """Handle loop over indexed set with filter: loop(setname(i,j)$(cond), ...)."""
+        # Same as _handle_loop_stmt - the grammar handles the structure
+        self._handle_loop_stmt(node)
+
     def _expand_subset_assignment(
         self,
         set_def: SetDef,

@@ -351,15 +351,18 @@ elseif_clause: ELSEIF_K expr "," exec_stmt+
 
 else_clause: ELSE_K exec_stmt+
 
-// Loop statement (Sprint 11 Day 2 Extended, Sprint 12 conditional filter)
+// Loop statement (Sprint 11 Day 2 Extended, Sprint 12 conditional filter and indexed sets)
 // Syntax: loop((indices), statements);
 // Example: loop((n,d), p = p + 1; point.l(n,d) = p/10;);
 // Conditional filter syntax: loop(i$(cond), ...) or loop((i,j)$(cond), ...)
+// Indexed set syntax: loop(setname(i,j), ...) - iterate over mapped/sparse set
 // Note: GAMS allows the final statement to omit the semicolon
 loop_stmt: LOOP_K "(" id_list "," loop_body ")" SEMI
          | LOOP_K "(" "(" id_list ")" "," loop_body ")" SEMI  -> loop_stmt_paren
          | LOOP_K "(" ID DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_filtered
          | LOOP_K "(" "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
+         | LOOP_K "(" ID "(" id_list ")" "," loop_body ")" SEMI  -> loop_stmt_indexed
+         | LOOP_K "(" ID "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_indexed_filtered
 
 // Loop body: zero or more statements with semicolons, followed by a final statement (semicolon optional)
 loop_body: exec_stmt* exec_stmt_final
