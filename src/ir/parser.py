@@ -4017,11 +4017,18 @@ class _ModelBuilder:
                 f"Unknown set '{set_name}' referenced in parameter '{param_name}' data",
                 node,
             )
-        if set_def.members and member not in set_def.members:
-            raise self._error(
-                f"Parameter '{param_name}' references member '{member}' not present in set '{set_name}'",
-                node,
-            )
+        # Issue #435: Case-insensitive comparison for GAMS identifiers
+        # Cache lowercase members on the SetDef instance for efficiency
+        if set_def.members:
+            members_lower = getattr(set_def, "_members_lower", None)
+            if members_lower is None:
+                members_lower = {m.lower() for m in set_def.members}
+                set_def._members_lower = members_lower  # type: ignore[attr-defined]
+            if member.lower() not in members_lower:
+                raise self._error(
+                    f"Parameter '{param_name}' references member '{member}' not present in set '{set_name}'",
+                    node,
+                )
 
     def _expand_variable_indices(
         self,
