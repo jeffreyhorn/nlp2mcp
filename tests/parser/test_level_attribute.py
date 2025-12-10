@@ -1,8 +1,9 @@
 """Tests for GAMS level attribute (.l) access parsing (GitHub Issue #432).
 
-The .l attribute is used to access variable level values both for setting
-initial values (LHS) and reading current values in expressions (RHS).
-This also tests conditional assignment without parentheses: x.l(i)$cond(i) = value;
+This file tests parsing of the .l attribute for GAMS variables, including:
+- Setting and reading level values for scalar and indexed variables (LHS and RHS)
+- Conditional assignment without parentheses (e.g., x.l(i)$cond(i) = value;)
+- Other bound attributes (.lo, .up, .fx, .m)
 """
 
 from src.ir.parser import parse_model_text
