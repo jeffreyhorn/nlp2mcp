@@ -109,11 +109,12 @@ alias_pair: "(" ID "," id_list ")"
 param_decl: param_item ("," param_item)+          -> param_list
           | param_single_item                     -> param_single
 
-// For single parameter declarations: allow desc_text or STRING
-param_single_item: ID "(" id_or_wildcard_list ")" (STRING | desc_text)? "/" param_data_items "/" param_default? -> param_domain_data
-                 | ID "(" id_or_wildcard_list ")" (STRING | desc_text)? param_default?                          -> param_domain
-                 | ID (STRING | desc_text)? "/" param_data_items "/" param_default?                             -> param_plain_data
-                 | ID (STRING | desc_text)? param_default?                                                      -> param_plain
+// For single parameter declarations: allow PARAM_DESC or STRING
+// Issue #433: Use PARAM_DESC instead of desc_text to allow single-word descriptions like "partition"
+param_single_item: ID "(" id_or_wildcard_list ")" (STRING | PARAM_DESC)? "/" param_data_items "/" param_default? -> param_domain_data
+                 | ID "(" id_or_wildcard_list ")" (STRING | PARAM_DESC)? param_default?                          -> param_domain
+                 | ID (STRING | PARAM_DESC)? "/" param_data_items "/" param_default?                             -> param_plain_data
+                 | ID (STRING | PARAM_DESC)? param_default?                                                      -> param_plain
 
 // For comma-separated lists: only STRING allowed (desc_text would be ambiguous)
 param_item: ID "(" id_or_wildcard_list ")" STRING? "/" param_data_items "/" param_default? -> param_domain_data
@@ -490,6 +491,10 @@ STRING: /"[^"]*"|'[^']*'/
 // Priority -1: Lower than default (0) to avoid interfering with normal ID matching
 // Note: {1,} means 1 or more additional (separator word) sequences after the first = 2+ words total
 DESC_TEXT.-1: /[a-zA-Z_]\w*(?:-\w+)*(?:(?:[ \t]+|[ \t]+-[ \t]+)[a-zA-Z_]\w*(?:-\w+)*){1,}/
+// Issue #433: PARAM_DESC matches 1+ words for parameter descriptions (allows single-word like "partition")
+// This is safe in parameter context because params are always followed by domain or nothing
+// Priority -2: Lower than DESC_TEXT to prefer 2+ word matches when available
+PARAM_DESC.-2: /[a-zA-Z_]\w*(?:-\w+)*(?:(?:[ \t]+|[ \t]+-[ \t]+)[a-zA-Z_]\w*(?:-\w+)*)*/
 DESCRIPTION.10: /(?=.*(?:[a-zA-Z_][a-zA-Z0-9_]{3,}|\w+\-\w+))[a-zA-Z_][\w\-]*(?:[ \t]+[a-zA-Z_][\w\-]*)+/
 
 NUMBER: SIGNED_NUMBER
