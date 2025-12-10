@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Day 9: Contingent Features & Recovery - 2025-12-09
+
+**Branch:** `sprint12-day9-contingent-features`  
+**PR:** TBD  
+**Status:** ✅ COMPLETE (pending PR)
+
+#### Summary
+
+Day 3 checkpoint SUCCESS (26.19% ≥ 20% target) triggered Scenario B. Implemented dashboard integration expansion with simplification charts and tier/transformation widgets. Enhanced performance trending documentation with sprint-over-sprint comparison and regression detection thresholds.
+
+#### Changes
+
+**Modified Files:**
+- `scripts/generate_html_dashboard.py`: Extended dashboard with new visualizations
+  - Added `load_simplification_baseline()` function for Sprint 11 baseline data
+  - Added `get_tier_progress()` function for tier 1/tier 2 model tracking
+  - Added `get_transformation_coverage()` function for transformation catalog display
+  - New Simplification Summary card (avg term reduction, models meeting threshold)
+  - New Term Reduction by Model bar chart (color-coded by 20% threshold)
+  - New Simplification Effectiveness comparison chart (term vs ops reduction)
+  - New Tier Progress card (Tier 1 and Tier 2 model counts and rates)
+  - New Transformation Coverage card (11 transformations, 4 categories)
+
+- `docs/dashboard.html`: Regenerated with 5 new widgets (6 total Chart.js visualizations)
+
+- `docs/performance/TRENDS.md`: Enhanced with sprint comparison and regression detection
+  - Sprint-over-Sprint Comparison section (S11→S12, S10→S11 tables)
+  - Regression Detection section with thresholds and logic
+  - Recent regression checks summary table
+
+- `docs/planning/EPIC_2/SPRINT_12/PLAN.md`: Marked Day 9 deliverables complete
+
+- `README.md`: Checked off Day 9 in Sprint 12 progress
+
+---
+
 ### Sprint 12 Day 8: Dashboard Completion & CI Checklist - 2025-12-09
 
 **Branch:** `sprint12-day8-dashboard-ci-checklist`  

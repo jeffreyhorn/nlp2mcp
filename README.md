@@ -132,7 +132,7 @@ For the detailed Sprint 11 plan, see [docs/planning/EPIC_2/SPRINT_11/PLAN.md](do
 - [x] Day 6: Tier 2 Stretch Blockers & Checkpoint
 - [x] Day 7: JSON Diagnostics & PATH Decision (PATH deferred, dashboard infrastructure complete)
 - [x] Day 8: Dashboard Completion & CI Checklist (Chart.js dashboard, CI guide, performance trends)
-- [ ] Day 9: Contingent Features & Recovery
+- [x] Day 9: Contingent Features & Recovery (Scenario B: Dashboard expansion, performance trending enhancements)
 - [ ] Day 10: Documentation Updates & Final Validation
 
 For the detailed Sprint 12 plan, see [docs/planning/EPIC_2/SPRINT_12/PLAN.md](docs/planning/EPIC_2/SPRINT_12/PLAN.md).
