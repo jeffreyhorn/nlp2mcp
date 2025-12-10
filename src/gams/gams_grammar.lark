@@ -23,6 +23,7 @@ start: stmt*  -> program
      | loop_stmt
      | display_stmt
      | abort_stmt
+     | file_stmt
      | assignment_stmt
      | equation_def
      | solve_stmt
@@ -357,6 +358,18 @@ loop_stmt: LOOP_K "(" id_list "," exec_stmt+ ")" SEMI
           | solve_stmt           // Support solve inside if/loop
           | assignment_stmt
           | SEMI
+
+// ---------------------------
+// File Statement (Sprint 12 - mock/skip for file I/O)
+// ---------------------------
+
+// File statement declares a file handle for output operations
+// Syntax: file <name> / '<path>' /;
+// We parse but don't process since file I/O is not relevant for NLP model extraction
+file_stmt: "file"i ID "/" file_path "/" SEMI
+
+file_path: STRING
+         | compile_time_const
 
 // ---------------------------
 // Display and Abort Statements (Sprint 8 Day 2 - mock/skip)
