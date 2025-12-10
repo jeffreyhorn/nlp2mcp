@@ -418,6 +418,7 @@ comp_op: ASSIGN | LE | GE | LT | GT | NE
 ?factor: power
        | PLUS factor                     -> unaryop
        | MINUS factor                    -> unaryop
+       | NOT_K factor                    -> unaryop
 
 ?power: atom
       | atom POW factor                  -> binop
@@ -496,6 +497,7 @@ POW: "**" | "^"
 DOLLAR.10: "$"  // Higher priority to prevent being consumed by ignore patterns
 AND: /(?i:and)\b/
 OR: /(?i:or)\b/
+NOT_K: /(?i:not)\b/
 
 %import common.SIGNED_NUMBER
 %import common.CNAME
