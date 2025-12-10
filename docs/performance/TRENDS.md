@@ -140,6 +140,73 @@ Historical performance metrics across sprints, tracking parse rate, convert rate
 
 *Note: Sprint 10 optimized with parallel test execution*
 
+## Sprint-over-Sprint Comparison
+
+### Sprint 11 → Sprint 12 Changes
+
+| Metric | Sprint 11 | Sprint 12 | Change | Status |
+|--------|-----------|-----------|--------|--------|
+| Parse Rate | 100% | 100% | 0pp | ✅ Stable |
+| Convert Rate | 90% | 90% | 0pp | ✅ Stable |
+| Test Time | ~17s | ~24s | +7s (+41%) | ⚠️ Increased |
+| Term Reduction | 26.19% | 26.19% | 0pp | ✅ Stable |
+| Test Count | 1730 | 2279 | +549 (+32%) | ℹ️ Expected |
+
+**Analysis:**
+- Test time increase is proportional to test count increase (32% more tests, 41% more time)
+- Core metrics (parse rate, term reduction) remain stable
+- No performance regressions in pipeline execution
+
+### Sprint 10 → Sprint 11 Changes
+
+| Metric | Sprint 10 | Sprint 11 | Change | Status |
+|--------|-----------|-----------|--------|--------|
+| Parse Rate | 90% | 100% | +10pp | ✅ Improved |
+| Convert Rate | 90% | 90% | 0pp | ✅ Stable |
+| Test Time | ~16s | ~17s | +1s (+6%) | ✅ Acceptable |
+| Term Reduction | ~15% est. | 26.19% | +11pp | ✅ Major Improvement |
+
+**Key Achievement:** Unlocked final Tier 1 model (maxmin.gms) and achieved primary simplification goal.
+
+## Regression Detection
+
+### Thresholds
+
+| Metric | Warning Threshold | Failure Threshold | Direction |
+|--------|-------------------|-------------------|-----------|
+| Parse Rate | -5pp | -10pp | Higher is better |
+| Convert Rate | -5pp | -10pp | Higher is better |
+| Test Time | +20% | +50% | Lower is better |
+| Term Reduction | -5pp | -10pp | Higher is better |
+
+### Detection Logic
+
+```python
+# Pseudo-code for regression detection
+def check_regression(current, baseline, metric_type):
+    if metric_type in ["parse_rate", "convert_rate", "term_reduction"]:
+        # Higher is better
+        delta = current - baseline
+        if delta <= -10: return "FAIL"
+        if delta <= -5: return "WARN"
+        return "PASS"
+    elif metric_type == "test_time":
+        # Lower is better (check percentage increase)
+        pct_change = (current - baseline) / baseline * 100
+        if pct_change >= 50: return "FAIL"
+        if pct_change >= 20: return "WARN"
+        return "PASS"
+```
+
+### Recent Regression Checks
+
+| Sprint | Parse Rate | Convert Rate | Test Time | Term Reduction | Overall |
+|--------|------------|--------------|-----------|----------------|---------|
+| Sprint 12 | ✅ PASS | ✅ PASS | ⚠️ WARN* | ✅ PASS | ✅ PASS |
+| Sprint 11 | ✅ PASS | ✅ PASS | ✅ PASS | ✅ PASS | ✅ PASS |
+
+*Test time warning explained by proportional test count increase (+32% tests → +41% time).
+
 ## Automation
 
 ### Update Script

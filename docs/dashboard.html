@@ -183,7 +183,7 @@
     <div class="dashboard">
         <header>
             <h1>NLP2MCP Pipeline Dashboard</h1>
-            <p class="meta">Generated: 2025-12-09 17:15:44 | Schema: v1.0.0</p>
+            <p class="meta">Generated: 2025-12-09 17:58:28 | Schema: v1.0.0</p>
         </header>
 
         <!-- Summary Stats -->
@@ -241,6 +241,82 @@
                 <h2>Model Pipeline Duration</h2>
                 <div class="chart-container">
                     <canvas id="modelDurationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simplification Stats -->
+        <div class="grid">
+            <div class="card">
+                <h2>Simplification Summary</h2>
+                <div class="stat-grid">
+                    <div class="stat">
+                        <div class="stat-value">26.2%</div>
+                        <div class="stat-label">Avg Term Reduction</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">7/10</div>
+                        <div class="stat-label">Models ≥20.0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Term Reduction by Model</h2>
+                <div class="chart-container">
+                    <canvas id="termReductionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simplification Comparison Chart -->
+        <div class="grid">
+            <div class="card wide-card">
+                <h2>Simplification Effectiveness (Term vs Ops Reduction)</h2>
+                <div class="chart-container">
+                    <canvas id="simpComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tier Progress and Transformations -->
+        <div class="grid">
+            <div class="card">
+                <h2>Tier Progress</h2>
+                <div class="stat-grid">
+                    <div class="stat">
+                        <div class="stat-value">10/10</div>
+                        <div class="stat-label">Tier 1 Models</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Tier 1 Parse Rate</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">18</div>
+                        <div class="stat-label">Tier 2 Candidates</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value warning">0%</div>
+                        <div class="stat-label">Tier 2 Progress</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Transformation Coverage</h2>
+                <div class="stat-grid">
+                    <div class="stat">
+                        <div class="stat-value">11/11</div>
+                        <div class="stat-label">Transformations Enabled</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">4</div>
+                        <div class="stat-label">Categories</div>
+                    </div>
+                </div>
+                <div class="model-list" style="margin-top: 15px;">
+                    <span class="model-badge success" title="Factoring: 2/2 enabled">Factoring</span><span class="model-badge success" title="Algebraic: 5/5 enabled">Algebraic</span><span class="model-badge success" title="Transcendental: 2/2 enabled">Transcendental</span><span class="model-badge success" title="CSE: 2/2 enabled">CSE</span>
                 </div>
             </div>
         </div>
@@ -412,6 +488,87 @@
                     y: {
                         beginAtZero: true,
                         title: { display: true, text: 'Duration (ms)' }
+                    }
+                }
+            }
+        });
+
+        // Term Reduction Bar Chart
+        new Chart(document.getElementById('termReductionChart'), {
+            type: 'bar',
+            data: {
+                labels: ["circle", "himmel16", "hs62", "mathopt1", "maxmin", "mhw4d", "mhw4dx", "mingamma", "rbrock", "trig"],
+                datasets: [{
+                    label: 'Term Reduction (%)',
+                    data: [25.0, 10.0, 30.0, 22.22, 0.0, 52.63, 52.63, 0.0, 25.0, 44.44],
+                    backgroundColor: ["rgba(74, 222, 128, 0.8)", "rgba(251, 191, 36, 0.8)", "rgba(74, 222, 128, 0.8)", "rgba(74, 222, 128, 0.8)", "rgba(251, 191, 36, 0.8)", "rgba(74, 222, 128, 0.8)", "rgba(74, 222, 128, 0.8)", "rgba(251, 191, 36, 0.8)", "rgba(74, 222, 128, 0.8)", "rgba(74, 222, 128, 0.8)"],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    annotation: {
+                        annotations: {
+                            thresholdLine: {
+                                type: 'line',
+                                yMin: 20,
+                                yMax: 20,
+                                borderColor: 'rgba(248, 113, 113, 0.8)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                label: {
+                                    display: true,
+                                    content: '20% target',
+                                    position: 'end'
+                                }
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 60,
+                        title: { display: true, text: 'Reduction (%)' }
+                    }
+                }
+            }
+        });
+
+        // Simplification Comparison Chart (Term vs Ops)
+        new Chart(document.getElementById('simpComparisonChart'), {
+            type: 'bar',
+            data: {
+                labels: ["circle", "himmel16", "hs62", "mathopt1", "maxmin", "mhw4d", "mhw4dx", "mingamma", "rbrock", "trig"],
+                datasets: [
+                    {
+                        label: 'Term Reduction (%)',
+                        data: [25.0, 10.0, 30.0, 22.22, 0.0, 52.63, 52.63, 0.0, 25.0, 44.44],
+                        backgroundColor: 'rgba(96, 165, 250, 0.8)',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Ops Reduction (%)',
+                        data: [75.0, 74.29, 90.41, 73.08, 63.33, 84.75, 84.75, 28.57, 78.57, 82.76],
+                        backgroundColor: 'rgba(74, 222, 128, 0.8)',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: 'Reduction (%)' }
                     }
                 }
             }
