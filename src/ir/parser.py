@@ -2523,12 +2523,20 @@ class _ModelBuilder:
 
         for child in node.children:
             if isinstance(child, Token):
+                # Sprint 12: Handle single ID as loop index (filtered loop case)
+                if child.type == "ID" and indices is None:
+                    indices = (str(child),)
                 continue  # Skip SEMI and other tokens
 
             if isinstance(child, Tree):
                 if child.data == "id_list":
                     # Extract loop indices
                     indices = _id_list(child)
+                elif child.data == "loop_body":
+                    # Sprint 12: Unwrap loop_body to extract individual statements
+                    for stmt in child.children:
+                        if isinstance(stmt, Tree):
+                            body_stmts.append(stmt)
                 else:
                     # This is a statement in the loop body
                     # Expected statement types: assign_stmt, solve_stmt, option_stmt, etc.
@@ -2552,6 +2560,16 @@ class _ModelBuilder:
     def _handle_loop_stmt_paren(self, node: Tree) -> None:
         """Handle loop statement with double parentheses: loop((indices), ...)."""
         # Same as _handle_loop_stmt - the grammar handles the extra parens
+        self._handle_loop_stmt(node)
+
+    def _handle_loop_stmt_filtered(self, node: Tree) -> None:
+        """Handle loop statement with conditional filter: loop(i$(cond), ...)."""
+        # Same as _handle_loop_stmt - the filter condition is in the tree
+        self._handle_loop_stmt(node)
+
+    def _handle_loop_stmt_paren_filtered(self, node: Tree) -> None:
+        """Handle loop statement with parens and filter: loop((i,j)$(cond), ...)."""
+        # Same as _handle_loop_stmt - the grammar handles the structure
         self._handle_loop_stmt(node)
 
     def _expand_subset_assignment(
