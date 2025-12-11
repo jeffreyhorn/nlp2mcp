@@ -1,9 +1,9 @@
 # Parser: Option Statement Colon Syntax Not Supported
 
 **GitHub Issue:** [#446](https://github.com/jeffreyhorn/nlp2mcp/issues/446)
-**Status:** Open  
+**Status:** Completed  
 **Priority:** Medium  
-**Blocking Model:** gastrans.gms (tier 2)
+**Blocking Model:** gastrans.gms (tier 2) - now progresses to line 134
 
 ---
 
