@@ -2330,11 +2330,20 @@ class _ModelBuilder:
             option_stmt: ("option"i | "options"i) option_list SEMI
             option_list: option_item ("," option_item)*
             option_item: ID "=" option_value  -> option_with_value
+                       | ID ":" NUMBER (":" NUMBER)*  -> option_format
                        | ID                   -> option_flag
             option_value: NUMBER | ON | OFF
 
+        Option values are stored as tuples (name, value) where value is:
+            - int/float for numeric options (option limrow = 0)
+            - str ("on"/"off") for boolean options (option solprint = off)
+            - list[int] for format options (option arep:6:3:1 -> [6, 3, 1])
+            - None for flag options (option clear)
+
         Example:
             option limrow = 0, limcol = 0;
+            option arep:6:3:1;
+            option limrow=0, arep:6, clear;
         """
         options = []
 
@@ -2389,6 +2398,17 @@ class _ModelBuilder:
                     value = value_text.lower()
 
                 options.append((name, value))
+
+            elif item.data == "option_format":
+                # ID ":" NUMBER (":" NUMBER)* - display format syntax
+                # GAMS format syntax (d:r:c) expects integers only
+                name = _token_text(item.children[0])
+                # Collect all the format numbers (must be integers)
+                format_numbers = []
+                for child in item.children[1:]:
+                    if isinstance(child, Token) and child.type == "NUMBER":
+                        format_numbers.append(int(_token_text(child)))
+                options.append((name, format_numbers))
 
             elif item.data == "option_flag":
                 # ID only (flag with no value)

@@ -116,15 +116,17 @@ class OptionStatement:
         option limrow = 0, limcol = 0;
         option decimals = 8;
         option solprint = off;
+        option arep:6:3:1;
 
     Attributes:
         options: List of (name, value) tuples where:
-            - name is the option name (e.g., "limrow", "decimals")
-            - value is None for flags, int for numbers, str for "on"/"off"
+            - name is the option name (e.g., "limrow", "decimals", "arep")
+            - value is None for flags, int for numbers, str for "on"/"off",
+              or list[int] for format options (e.g., arep:6:3:1 -> [6, 3, 1])
         location: Source location of the option statement
     """
 
-    options: list[tuple[str, int | str | None]]
+    options: list[tuple[str, int | str | list[int] | None]]
     location: SourceLocation | None
 
 
