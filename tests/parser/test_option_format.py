@@ -26,6 +26,7 @@ Scalar x;
     assert len(opt_stmt.options) == 1
     # Format options are stored as (name, [numbers])
     assert opt_stmt.options[0][0] == "arep"
+    assert opt_stmt.options[0][1] == [6]
 
 
 def test_option_format_two_numbers():
@@ -41,6 +42,7 @@ Scalar x;
     opt_stmt = model.option_statements[0]
     assert len(opt_stmt.options) == 1
     assert opt_stmt.options[0][0] == "arep"
+    assert opt_stmt.options[0][1] == [6, 3]
 
 
 def test_option_format_three_numbers():
@@ -56,6 +58,7 @@ Scalar x;
     opt_stmt = model.option_statements[0]
     assert len(opt_stmt.options) == 1
     assert opt_stmt.options[0][0] == "arep"
+    assert opt_stmt.options[0][1] == [6, 3, 1]
 
 
 def test_option_format_brep():
@@ -70,6 +73,7 @@ Scalar x;
     assert len(model.option_statements) == 1
     opt_stmt = model.option_statements[0]
     assert opt_stmt.options[0][0] == "brep"
+    assert opt_stmt.options[0][1] == [5, 2, 2]
 
 
 def test_option_format_mixed_with_equals():
@@ -86,6 +90,7 @@ Scalar x;
     assert len(opt_stmt.options) == 2
     assert opt_stmt.options[0] == ("limrow", 0)
     assert opt_stmt.options[1][0] == "arep"
+    assert opt_stmt.options[1][1] == [6]
 
 
 def test_option_format_multiple_formats():
@@ -101,7 +106,9 @@ Scalar x;
     opt_stmt = model.option_statements[0]
     assert len(opt_stmt.options) == 2
     assert opt_stmt.options[0][0] == "arep"
+    assert opt_stmt.options[0][1] == [6]
     assert opt_stmt.options[1][0] == "brep"
+    assert opt_stmt.options[1][1] == [5]
 
 
 def test_option_format_case_insensitive():
@@ -116,6 +123,7 @@ Scalar x;
     assert len(model.option_statements) == 1
     opt_stmt = model.option_statements[0]
     assert opt_stmt.options[0][0] == "AREP"
+    assert opt_stmt.options[0][1] == [6, 3, 1]
 
 
 def test_option_format_zero_decimals():
@@ -130,6 +138,7 @@ Scalar x;
     assert len(model.option_statements) == 1
     opt_stmt = model.option_statements[0]
     assert opt_stmt.options[0][0] == "arep"
+    assert opt_stmt.options[0][1] == [0]
 
 
 def test_option_format_in_if_block():
@@ -177,6 +186,7 @@ Scalar x;
     assert len(model.option_statements) == 1
     opt_stmt = model.option_statements[0]
     assert opt_stmt.options[0][0] == "arep"
+    assert opt_stmt.options[0][1] == [15, 20, 25]
 
 
 def test_option_format_crep():
@@ -191,6 +201,7 @@ Scalar x;
     assert len(model.option_statements) == 1
     opt_stmt = model.option_statements[0]
     assert opt_stmt.options[0][0] == "crep"
+    assert opt_stmt.options[0][1] == [4, 2, 1]
 
 
 def test_option_format_with_flag_option():
@@ -206,4 +217,5 @@ Scalar x;
     opt_stmt = model.option_statements[0]
     assert len(opt_stmt.options) == 2
     assert opt_stmt.options[0][0] == "arep"
+    assert opt_stmt.options[0][1] == [6]
     assert opt_stmt.options[1] == ("clear", True)

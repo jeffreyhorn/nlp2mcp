@@ -2334,6 +2334,12 @@ class _ModelBuilder:
                        | ID                   -> option_flag
             option_value: NUMBER | ON | OFF
 
+        Option values are stored as tuples (name, value) where value is:
+            - int/float for numeric options (option limrow = 0)
+            - str ("on"/"off") for boolean options (option solprint = off)
+            - list[int] for format options (option arep:6:3:1 -> [6, 3, 1])
+            - True for flag options (option clear)
+
         Example:
             option limrow = 0, limcol = 0;
             option arep:6:3:1;
@@ -2394,15 +2400,13 @@ class _ModelBuilder:
 
             elif item.data == "option_format":
                 # ID ":" NUMBER (":" NUMBER)* - display format syntax
+                # GAMS format syntax (d:r:c) expects integers only
                 name = _token_text(item.children[0])
-                # Collect all the format numbers
+                # Collect all the format numbers (must be integers)
                 format_numbers = []
                 for child in item.children[1:]:
                     if isinstance(child, Token) and child.type == "NUMBER":
-                        try:
-                            format_numbers.append(int(_token_text(child)))
-                        except ValueError:
-                            format_numbers.append(float(_token_text(child)))
+                        format_numbers.append(int(_token_text(child)))
                 options.append((name, format_numbers))
 
             elif item.data == "option_flag":
