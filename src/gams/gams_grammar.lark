@@ -241,6 +241,11 @@ assignment_stmt: lvalue ASSIGN expr SEMI                    -> assign
                | lvalue DOLLAR "(" expr ")" ASSIGN expr SEMI  -> conditional_assign
                | lvalue DOLLAR ref_indexed ASSIGN expr SEMI   -> conditional_assign_simple
 
+// Assignment without semicolon - for use as final statement in loop/if blocks
+assignment_nosemi: lvalue ASSIGN expr                         -> assign
+                 | lvalue DOLLAR "(" expr ")" ASSIGN expr     -> conditional_assign
+                 | lvalue DOLLAR ref_indexed ASSIGN expr      -> conditional_assign_simple
+
 // lvalue supports: x.lo(i), x.up(i), x.fx(i), parameter(i), scalar
 lvalue: ref_bound | ref_indexed | ID
 
@@ -346,11 +351,21 @@ elseif_clause: ELSEIF_K expr "," exec_stmt+
 
 else_clause: ELSE_K exec_stmt+
 
-// Loop statement (Sprint 11 Day 2 Extended)
+// Loop statement (Sprint 11 Day 2 Extended, Sprint 12 conditional filter and indexed sets)
 // Syntax: loop((indices), statements);
 // Example: loop((n,d), p = p + 1; point.l(n,d) = p/10;);
-loop_stmt: LOOP_K "(" id_list "," exec_stmt+ ")" SEMI
-         | LOOP_K "(" "(" id_list ")" "," exec_stmt+ ")" SEMI  -> loop_stmt_paren
+// Conditional filter syntax: loop(i$(cond), ...) or loop((i,j)$(cond), ...)
+// Indexed set syntax: loop(setname(i,j), ...) - iterate over mapped/sparse set
+// Note: GAMS allows the final statement to omit the semicolon
+loop_stmt: LOOP_K "(" id_list "," loop_body ")" SEMI
+         | LOOP_K "(" "(" id_list ")" "," loop_body ")" SEMI  -> loop_stmt_paren
+         | LOOP_K "(" ID DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_filtered
+         | LOOP_K "(" "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
+         | LOOP_K "(" ID "(" id_list ")" "," loop_body ")" SEMI  -> loop_stmt_indexed
+         | LOOP_K "(" ID "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_indexed_filtered
+
+// Loop body: zero or more statements with semicolons, followed by a final statement (semicolon optional)
+loop_body: exec_stmt* exec_stmt_final
 
 // Executable statements that can appear inside if blocks or loop blocks
 // Note: These statements don't include trailing SEMI - the if_stmt/loop_stmt grammar handles it
@@ -360,6 +375,16 @@ loop_stmt: LOOP_K "(" id_list "," exec_stmt+ ")" SEMI
           | solve_stmt           // Support solve inside if/loop
           | assignment_stmt
           | SEMI
+
+// Final statement in loop - semicolon is optional
+// Must include all statement types from exec_stmt for completeness
+?exec_stmt_final: assignment_nosemi
+                | assignment_stmt
+                | display_stmt_nosemi
+                | abort_stmt_nosemi
+                | option_stmt
+                | solve_stmt
+                | SEMI
 
 // ---------------------------
 // File Statement (Sprint 12 - mock/skip for file I/O)
@@ -469,7 +494,7 @@ arg_list: expr ("," expr)*
 // Tokens & basics
 // ---------------------------
 
-FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card|uniform|normal|gamma|loggamma|round|mod|ceil)\b/
+FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|smin|smax|power|sqr|ord|card|uniform|normal|gamma|loggamma|round|mod|ceil|floor)\b/
 IF_K: /(?i:if)\b/
 ELSEIF_K: /(?i:elseif)\b/
 ELSE_K: /(?i:else)\b/
