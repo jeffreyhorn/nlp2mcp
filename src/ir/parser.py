@@ -2338,11 +2338,12 @@ class _ModelBuilder:
             - int/float for numeric options (option limrow = 0)
             - str ("on"/"off") for boolean options (option solprint = off)
             - list[int] for format options (option arep:6:3:1 -> [6, 3, 1])
-            - True for flag options (option clear)
+            - None for flag options (option clear)
 
         Example:
             option limrow = 0, limcol = 0;
             option arep:6:3:1;
+            option limrow=0, arep:6, clear;
         """
         options = []
 
@@ -2412,7 +2413,7 @@ class _ModelBuilder:
             elif item.data == "option_flag":
                 # ID only (flag with no value)
                 name = _token_text(item.children[0])
-                options.append((name, True))
+                options.append((name, None))
 
         # Create OptionStatement and store in model
         location = self._extract_source_location(node)

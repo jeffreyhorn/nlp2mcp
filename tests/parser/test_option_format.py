@@ -218,4 +218,4 @@ Scalar x;
     assert len(opt_stmt.options) == 2
     assert opt_stmt.options[0][0] == "arep"
     assert opt_stmt.options[0][1] == [6]
-    assert opt_stmt.options[1] == ("clear", True)
+    assert opt_stmt.options[1] == ("clear", None)
