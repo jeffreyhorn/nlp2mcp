@@ -1,9 +1,9 @@
 # Parser: signpower Function Not Supported
 
 **GitHub Issue:** [#453](https://github.com/jeffreyhorn/nlp2mcp/issues/453)
-**Status:** Open  
+**Status:** Completed  
 **Priority:** Medium  
-**Blocking Model:** gastrans.gms (tier 2)
+**Blocking Model:** gastrans.gms (tier 2) - now progresses to line 145
 
 ---
 
