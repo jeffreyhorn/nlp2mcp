@@ -334,6 +334,7 @@ option_stmt: OPTION_K option_list SEMI
 option_list: option_item (","? option_item)*
 
 option_item: ID "=" option_value  -> option_with_value
+           | ID ":" NUMBER (":" NUMBER)*  -> option_format
            | ID                   -> option_flag
 
 option_value: NUMBER
