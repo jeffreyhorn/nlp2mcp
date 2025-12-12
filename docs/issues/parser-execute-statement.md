@@ -53,7 +53,7 @@ The model uses `execute` statements to run gnuplot for visualization and to clea
 The `execute` statement has several forms:
 
 1. **Basic execute:** `execute 'command';`
-2. **Execute with return code:** `execute.checkaliashell 'command';`
+2. **Execute with return code:** `execute.checkErrorLevel 'command';`
 3. **Execute with options:** `execute.async 'command';`
 
 ### Related Constructs
@@ -73,13 +73,15 @@ The grammar does not include a rule for the `execute` statement. Since `execute`
 Add `execute_stmt` rule to `src/gams/gams_grammar.lark`:
 
 ```lark
-// Execute statement (Sprint 12 - mock/skip for external program execution)
+// Execute statement (mock/skip for external program execution)
 // Syntax: execute 'command';
 // We parse but don't process since external execution is not relevant for NLP model extraction
 execute_stmt: "execute"i ("." ID)? STRING SEMI?
 ```
 
 Note: The semicolon may be optional in some GAMS contexts (especially inside if blocks).
+
+Note: The existing STRING terminal in the grammar should handle both single- and double-quoted strings. If the lexer fails to recognize strings in the execute context, ensure the STRING terminal is properly defined or check for lexer priority issues.
 
 Also add to the `stmt` rule and `exec_stmt` rule for use inside if/loop blocks.
 
