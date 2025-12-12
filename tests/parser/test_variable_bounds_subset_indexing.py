@@ -228,3 +228,66 @@ x.Lo(ij(i,j)) = 0;
 """
         model = parse_model_text(source)
         assert model is not None
+
+
+class TestSubsetIndexingErrorCases:
+    """Test error handling for invalid subset indexing."""
+
+    def test_subset_index_count_mismatch_too_few(self):
+        """Test error when subset provides fewer indices than variable domain.
+
+        f(a,i,j) expects 3 indices but aij(i) provides only 1.
+        """
+        import pytest
+
+        from src.ir.parser import ParserSemanticError
+
+        source = """
+Set a / a1, a2 /;
+Set i / 1*3 /;
+Set j / 1*3 /;
+Set aij(i);
+Variable f(a,i,j);
+f.lo(aij(i)) = 0;
+"""
+        with pytest.raises(ParserSemanticError, match=r"expect.*3.*indices.*provided 1"):
+            parse_model_text(source)
+
+    def test_subset_index_count_mismatch_too_many(self):
+        """Test error when subset provides more indices than variable domain.
+
+        x(i) expects 1 index but ij(i,j) provides 2.
+        """
+        import pytest
+
+        from src.ir.parser import ParserSemanticError
+
+        source = """
+Set i / 1*3 /;
+Set j / 1*3 /;
+Set ij(i,j);
+Variable x(i);
+x.lo(ij(i,j)) = 0;
+"""
+        with pytest.raises(ParserSemanticError, match=r"expect.*1.*index.*provided 2"):
+            parse_model_text(source)
+
+    def test_subset_index_count_mismatch_3d_to_2d(self):
+        """Test error when 3D subset used for 2D variable.
+
+        x(i,j) expects 2 indices but aij(a,i,j) provides 3.
+        """
+        import pytest
+
+        from src.ir.parser import ParserSemanticError
+
+        source = """
+Set a / a1, a2 /;
+Set i / 1*3 /;
+Set j / 1*3 /;
+Set aij(a,i,j);
+Variable x(i,j);
+x.lo(aij(a,i,j)) = 0;
+"""
+        with pytest.raises(ParserSemanticError, match=r"expect.*2.*indices.*provided 3"):
+            parse_model_text(source)

@@ -591,7 +591,7 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
         IndexOffset: If lag/lead operator present (i++1, i--2, i+j, etc.)
         SubsetIndex: If subset indexing (aij(as,i,j)) - Sprint 12 Issue #455
 
-    Sprint 11 Day 2 Extended: Support subset indexing (index_subset).
+    Sprint 12 Issue #455: Support subset indexing (index_subset).
     For subset indexing like low(n,nn), we return a SubsetIndex that preserves
     both the subset name and the inner indices for proper bounds validation.
     """
@@ -610,10 +610,27 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
                 if child.data == "index_simple":
                     # index_simple has ID as first child
                     inner_indices.append(_token_text(child.children[0]))
-                elif child.data == "index_subset" or child.data == "index_expr":
+                elif child.data == "index_expr":
+                    # Recursively process index_expr
+                    result = _process_index_expr(child)
+                    if isinstance(result, str):
+                        inner_indices.append(result)
+                    elif isinstance(result, SubsetIndex):
+                        raise ParserSemanticError(
+                            f"Nested subset indexing is not supported: found nested SubsetIndex in subset index '{subset_name}'"
+                        )
+                    elif isinstance(result, IndexOffset):
+                        raise ParserSemanticError(
+                            f"Index offsets are not supported in subset index '{subset_name}'"
+                        )
+                    else:
+                        raise ParserSemanticError(
+                            f"Unexpected result type '{type(result).__name__}' in subset index '{subset_name}'"
+                        )
+                elif child.data == "index_subset":
                     # Nested subset indexing is not supported
                     raise ParserSemanticError(
-                        f"Nested subset indexing is not supported: found '{child.data}' in subset index '{subset_name}'"
+                        f"Nested subset indexing is not supported: found 'index_subset' in subset index '{subset_name}'"
                     )
                 else:
                     raise ParserSemanticError(
@@ -4117,6 +4134,15 @@ class _ModelBuilder:
         # - Validate that the index count matches the variable's domain
         # - Skip strict member validation since subsets may not have explicit members
         # - Return empty list to indicate bounds should be accepted without storing
+
+        # Check for multiple SubsetIndex objects - not supported
+        subset_count = sum(1 for s in index_symbols if isinstance(s, SubsetIndex))
+        if subset_count > 1:
+            raise self._error(
+                f"Multiple subset indexing in variable bounds is not supported for variable '{var_name}'",
+                node,
+            )
+
         if len(index_symbols) == 1 and isinstance(index_symbols[0], SubsetIndex):
             subset_idx = index_symbols[0]
             # Validate index count matches variable domain
