@@ -606,9 +606,19 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
         # The index_list contains index_simple trees, each with an ID token
         inner_indices: list[str] = []
         for child in index_list_node.children:
-            if isinstance(child, Tree) and child.data == "index_simple":
-                # index_simple has ID as first child
-                inner_indices.append(_token_text(child.children[0]))
+            if isinstance(child, Tree):
+                if child.data == "index_simple":
+                    # index_simple has ID as first child
+                    inner_indices.append(_token_text(child.children[0]))
+                elif child.data == "index_subset" or child.data == "index_expr":
+                    # Nested subset indexing is not supported
+                    raise ParserSemanticError(
+                        f"Nested subset indexing is not supported: found '{child.data}' in subset index '{subset_name}'"
+                    )
+                else:
+                    raise ParserSemanticError(
+                        f"Unexpected node type '{child.data}' in subset index '{subset_name}'"
+                    )
             elif isinstance(child, Token):
                 # Direct token (fallback)
                 inner_indices.append(_token_text(child))
