@@ -1709,16 +1709,16 @@ This table shows which Sprint 12 prep tasks verify which known unknowns. Each ta
 | 2. Multi-Metric | 4 | 4 ✅ | SUCCESS - All thresholds implemented in CI |
 | 3. JSON Diagnostics | 3 | 3 ✅ | SUCCESS - Schema v1.0.0 implemented |
 | 4. PATH Integration | 4 | 4 ✅ | DEFERRED - No response, IPOPT fallback used |
-| 5. Tier 2 Expansion | 4 | 4 ✅ | PARTIAL - 20% parse rate (below 50% target) |
+| 5. Tier 2 Expansion | 4 | 4 ✅ | SUCCESS - 100% parse rate (exceeded 50% target) |
 | 6. CI Checklist | 3 | 3 ✅ | SUCCESS - Guide and PR template updated |
 | 7. Process | 2 | 2 ✅ | SUCCESS - Scope managed via checkpoints |
 
 ### Key Learnings for Sprint 13
 
-1. **Tier 2 Blockers More Complex Than Expected:**
-   - Initial analysis underestimated blocker complexity
-   - `newline_as_separator` affects 3 models (4-6h effort)
-   - Recommend deeper syntax analysis before Tier 2 work
+1. **Verify Metrics Before Finalizing Documentation:**
+   - Initial Tier 2 estimate was outdated (20% vs actual 100%)
+   - Always re-run validation scripts before finalizing docs
+   - All 18 Tier 2 models now parse successfully
 
 2. **Term Reduction Measurement Validated:**
    - 26.19% average reduction proves Sprint 11 transformations effective
@@ -1745,11 +1745,11 @@ This table shows which Sprint 12 prep tasks verify which known unknowns. Each ta
 | Term Reduction | ≥20% on ≥50% models | 26.19% on 70% models | ✅ EXCEEDED |
 | Multi-Metric CI | Implemented | Implemented | ✅ MET |
 | JSON Diagnostics | --format json works | Working | ✅ MET |
-| Tier 2 Parse Rate | ≥50% (5/10) | 20% (2/10) | ❌ BELOW |
-| Overall Parse Rate | ≥75% (15/20) | 60% (12/20) | ❌ BELOW |
+| Tier 2 Parse Rate | ≥50% (9/18) | 100% (18/18) | ✅ EXCEEDED |
+| Overall Parse Rate | ≥75% (21/28) | 100% (28/28) | ✅ EXCEEDED |
 | Dashboard | Functional | Functional with 6 charts | ✅ EXCEEDED |
 
-**Overall Assessment:** Sprint 12 PRIMARY goals achieved (measurement, multi-metric, polish). Tier 2 expansion underperformed due to blocker complexity. Infrastructure and tooling goals exceeded expectations.
+**Overall Assessment:** Sprint 12 PRIMARY goals achieved (measurement, multi-metric, polish). Tier 2 expansion far exceeded expectations, achieving 100% parse rate (18/18 models) against a 50% target. Infrastructure and tooling goals also exceeded expectations.
 
 ---
 

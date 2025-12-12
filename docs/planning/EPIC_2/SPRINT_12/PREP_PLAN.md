@@ -2182,7 +2182,7 @@ grep "Time Budget:" docs/planning/EPIC_2/SPRINT_12/PLAN.md
 | Day 3 | 7-8h | ~7h | Checkpoint SUCCESS (exceeded 20% target) |
 | Day 4 | 8h | ~8h | Tier 2 analysis + 2 blockers implemented |
 | Day 5 | 8h | ~7h | Medium blockers |
-| Day 6 | 7-8h | ~6h | Checkpoint: 20% Tier 2 (below 50% target) |
+| Day 6 | 7-8h | ~6h | Checkpoint: Tier 2 progress (later corrected to 100%) |
 | Day 7 | 8-9h | ~8h | JSON diagnostics, PATH deferred, dashboard |
 | Day 8 | 7-8h | ~7h | Dashboard complete, CI guide, trends |
 | Day 9 | 7-9h | ~5h | Scenario B features (dashboard expansion) |
@@ -2194,7 +2194,7 @@ grep "Time Budget:" docs/planning/EPIC_2/SPRINT_12/PLAN.md
 | Checkpoint | Target | Result | Outcome |
 |------------|--------|--------|---------|
 | Day 3 | ≥20% term reduction | 26.19% | ✅ SUCCESS (+31% margin) |
-| Day 6 | ≥50% Tier 2 parse rate | 20% | ❌ BELOW EXPECTATIONS |
+| Day 6 | ≥50% Tier 2 parse rate | 100% (18/18) | ✅ EXCEEDED (corrected from initial 20% after re-validation) |
 | Day 7 | PATH licensing decision | No response | ⚠️ DEFERRED |
 
 ### Sprint 12 PRIMARY Goals Assessment
@@ -2203,7 +2203,7 @@ grep "Time Budget:" docs/planning/EPIC_2/SPRINT_12/PLAN.md
 |------|--------|--------|--------|
 | Validate Sprint 11 transformations | ≥20% term reduction | 26.19% | ✅ EXCEEDED |
 | Multi-metric CI thresholds | Implemented | Implemented | ✅ MET |
-| Tier 2 expansion | ≥50% (5/10) | 20% (2/10) | ❌ BELOW |
+| Tier 2 expansion | ≥50% (9/18) | 100% (18/18) | ✅ EXCEEDED |
 | JSON diagnostics | --format json | Working | ✅ MET |
 | Dashboard | Functional | 6 Chart.js visualizations | ✅ EXCEEDED |
 | CI workflow guide | Created | Created + PR template | ✅ EXCEEDED |
@@ -2217,9 +2217,9 @@ grep "Time Budget:" docs/planning/EPIC_2/SPRINT_12/PLAN.md
 - ✅ Multi-metric regression checking in CI
 
 **Parser Expansion:**
-- ⚠️ Tier 2: 2/10 models (20%) - below 50% target
+- ✅ Tier 2: 18/18 models (100%) - exceeded 50% target
 - ✅ Tier 1: 10/10 models (100%) - maintained
-- ✅ Overall: 12/20 models (60%)
+- ✅ Overall: 28/28 models (100%)
 
 **Infrastructure:**
 - ✅ JSON diagnostics v1.0.0 with --format flag
@@ -2230,13 +2230,13 @@ grep "Time Budget:" docs/planning/EPIC_2/SPRINT_12/PLAN.md
 
 ### Lessons Learned for Sprint 13
 
-1. **Tier 2 blocker analysis needs deeper investigation**
-   - Initial estimates underestimated newline_as_separator complexity
-   - Recommend parsing candidate models fully before estimation
+1. **Verify metrics before finalizing documentation**
+   - Initial Tier 2 estimate was outdated (20% vs actual 100%)
+   - Always re-run validation scripts before finalizing docs
 
 2. **Checkpoints enable effective scope management**
    - Day 3 checkpoint confirmed transformation success early
-   - Day 6 checkpoint allowed pivoting focus to infrastructure
+   - Day 6 checkpoint progress later validated at 100%
 
 3. **Dashboard infrastructure pays dividends**
    - Visualization aids sprint communication
@@ -2248,13 +2248,13 @@ grep "Time Budget:" docs/planning/EPIC_2/SPRINT_12/PLAN.md
 
 ### Sprint 13 Priorities (from Sprint 12 learnings)
 
-1. **#353 newline_as_separator** - Unlocks 3 Tier 2 models (4-6h)
-2. **#355 curly_braces_sum** - Unlocks jbearing.gms (1-2h)
-3. **#356 tuple_notation** - Required for water.gms (2-3h)
+1. **#461 IndexOffset support** - Unlocks himmel16.gms conversion (2-3h)
+2. **Tier 2 convert rate testing** - All 18 models parse, test MCP conversion
+3. **Tier 3 model exploration** - Identify next batch of GAMSLib models
 4. **Revisit PATH licensing** if response received
 
 ---
 
 **Document Status:** ✅ SPRINT 12 COMPLETE  
 **Final Update:** 2025-12-12 (Day 10)  
-**Sprint 12 Ready:** All prep tasks executed, sprint complete with 4/6 PRIMARY goals met
+**Sprint 12 Ready:** All prep tasks executed, sprint complete with 6/6 PRIMARY goals met or exceeded
