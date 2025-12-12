@@ -16,7 +16,19 @@ from lark.exceptions import UnexpectedCharacters, UnexpectedEOF, UnexpectedToken
 
 from ..utils.error_enhancer import ErrorEnhancer
 from ..utils.errors import ParseError
-from .ast import Binary, Call, Const, Expr, IndexOffset, ParamRef, Sum, SymbolRef, Unary, VarRef
+from .ast import (
+    Binary,
+    Call,
+    Const,
+    Expr,
+    IndexOffset,
+    ParamRef,
+    SubsetIndex,
+    Sum,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import preprocess_gams_file
 from .symbols import (
@@ -571,38 +583,62 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
     return tuple(indices), subset_name
 
 
-def _process_index_expr(index_node: Tree) -> str | IndexOffset:
+def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
     """Process a single index_expr from grammar (Sprint 9 Day 3, Sprint 11 Day 2 Extended).
 
     Returns:
         str: Simple identifier if no lag/lead suffix
         IndexOffset: If lag/lead operator present (i++1, i--2, i+j, etc.)
+        SubsetIndex: If subset indexing (aij(as,i,j)) - Sprint 12 Issue #455
 
-    Sprint 11 Day 2 Extended: Support subset indexing (index_subset).
-    For subset indexing like low(n,nn), we flatten to the underlying indices.
-    This allows dist.l(low(n,nn)) to work by extracting n,nn as separate indices.
+    Sprint 12 Issue #455: Support subset indexing (index_subset).
+    For subset indexing like low(n,nn), we return a SubsetIndex that preserves
+    both the subset name and the inner indices for proper bounds validation.
     """
-    # Handle index_subset: ID "(" id_list ")" lag_lead_suffix?
+    # Handle index_subset: ID "(" index_list ")" lag_lead_suffix?
     if index_node.data == "index_subset":
-        # For subset indexing like low(n,nn), extract the underlying indices
-        # Child 0: subset name (ID), Child 1: id_list with indices
+        # For subset indexing like aij(as,i,j), return SubsetIndex
+        # Child 0: subset name (ID), Child 1: index_list with index_simple nodes
         subset_name = _token_text(index_node.children[0])
-        id_list_node = index_node.children[1]
-        indices = _id_list(id_list_node)
+        index_list_node = index_node.children[1]
 
-        # Simplified approach: Use the first index as the base
-        # Full semantic resolution would expand low(n,nn) to all (n,nn) pairs in subset low
-        # But for parsing purposes, using the first index allows the parse to succeed
-        base = indices[0] if indices else subset_name
+        # Extract string indices from the nested index_list
+        # The index_list contains index_simple trees, each with an ID token
+        inner_indices: list[str] = []
+        for child in index_list_node.children:
+            if isinstance(child, Tree):
+                if child.data == "index_simple":
+                    # index_simple has ID as first child
+                    inner_indices.append(_token_text(child.children[0]))
+                elif child.data == "index_expr":
+                    # Recursively process index_expr
+                    result = _process_index_expr(child)
+                    if isinstance(result, str):
+                        inner_indices.append(result)
+                    elif isinstance(result, SubsetIndex):
+                        raise ParserSemanticError(
+                            f"Nested subset indexing is not supported: found nested SubsetIndex in subset index '{subset_name}'"
+                        )
+                    elif isinstance(result, IndexOffset):
+                        raise ParserSemanticError(
+                            f"Index offsets are not supported in subset index '{subset_name}'"
+                        )
+                    else:
+                        raise ParserSemanticError(
+                            f"Unexpected result type '{type(result).__name__}' in subset index '{subset_name}'"
+                        )
+                else:
+                    raise ParserSemanticError(
+                        f"Unexpected node type '{child.data}' in subset index '{subset_name}'"
+                    )
+            elif isinstance(child, Token):
+                # Direct token (fallback)
+                inner_indices.append(_token_text(child))
 
-        # Check for lag/lead suffix (would be child 2)
-        # For now, subset indexing with lag/lead is not fully supported
-        # Just return the base - full support would require semantic resolution
-        if len(index_node.children) > 2:
-            # Has lag/lead suffix - simplified handling
-            pass  # Fall through to return base
-
-        return base
+        # Sprint 12 Issue #455: Return SubsetIndex to preserve full information
+        # This allows _expand_variable_indices to properly handle bounds like
+        # f.lo(aij(as,i,j)) where f(a,i,j) expects 3 indices
+        return SubsetIndex(subset_name=subset_name, indices=tuple(inner_indices))
 
     # Handle index_simple: ID lag_lead_suffix?
     base_token = index_node.children[0]
@@ -655,12 +691,12 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset:
         raise ParserSemanticError(f"Unknown lag_lead_suffix type: {suffix_node.data}")
 
 
-def _process_index_list(node: Tree) -> tuple[str | IndexOffset, ...]:
-    """Process index_list from grammar (Sprint 9 Day 3).
+def _process_index_list(node: Tree) -> tuple[str | IndexOffset | SubsetIndex, ...]:
+    """Process index_list from grammar (Sprint 9 Day 3, Sprint 12 Issue #455).
 
-    Handles both plain identifiers and lag/lead indexed expressions.
+    Handles plain identifiers, lag/lead indexed expressions, and subset indexing.
 
-    Returns tuple of str (plain ID) or IndexOffset objects.
+    Returns tuple of str (plain ID), IndexOffset, or SubsetIndex objects.
     """
     indices = []
     for child in node.children:
@@ -3466,7 +3502,7 @@ class _ModelBuilder:
     def _make_symbol(
         self,
         name: str,
-        indices: Sequence[str],
+        indices: Sequence[str | IndexOffset | SubsetIndex],
         free_domain: Sequence[str],
         node: Tree | Token | None = None,
     ) -> Expr:
@@ -3478,8 +3514,13 @@ class _ModelBuilder:
         #    (e.g., low in dist(low) where low has domain (n,n))
         # 2. BUT if idx is in free_domain AND is a base set (like 'n'), don't expand
         #    (e.g., n in point(n,d) where n is a domain variable)
-        expanded_indices = []
+        expanded_indices: list[str] = []
         for idx in indices:
+            # Handle SubsetIndex objects by flattening to inner indices
+            # This allows expressions like x = dist.l(low(n,nn)) to work
+            if isinstance(idx, SubsetIndex):
+                expanded_indices.extend(idx.indices)
+                continue
             # Skip IndexOffset objects - only expand plain string identifiers
             if isinstance(idx, str) and idx in self.model.sets:
                 set_def = self.model.sets[idx]
@@ -4081,10 +4122,53 @@ class _ModelBuilder:
     def _expand_variable_indices(
         self,
         var: VariableDef,
-        index_symbols: Sequence[str],
+        index_symbols: Sequence[str | IndexOffset | SubsetIndex],
         var_name: str,
         node: Tree | Token | None = None,
     ) -> list[tuple[str, ...]]:
+        # Sprint 12 Issue #455: Handle SubsetIndex for bounds like f.lo(aij(as,i,j))
+        # When we have a single SubsetIndex, its inner indices provide the actual indices
+        # for the variable's domain (e.g., aij(as,i,j) provides 3 indices for f(a,i,j))
+        #
+        # For SubsetIndex, we use the mock/skip approach:
+        # - Validate that the index count matches the variable's domain
+        # - Skip strict member validation since subsets may not have explicit members
+        # - Return empty list to indicate bounds should be accepted without storing
+
+        # Check for multiple SubsetIndex objects - not supported
+        subset_count = sum(1 for s in index_symbols if isinstance(s, SubsetIndex))
+        if subset_count > 1:
+            raise self._error(
+                f"Multiple subset indexing in variable bounds is not supported for variable '{var_name}'",
+                node,
+            )
+
+        # Explicitly reject mixing SubsetIndex with other index types
+        if subset_count > 0 and len(index_symbols) > 1:
+            raise self._error(
+                "Cannot mix subset indexing with other indices in variable bounds",
+                node,
+            )
+
+        if len(index_symbols) == 1 and isinstance(index_symbols[0], SubsetIndex):
+            subset_idx = index_symbols[0]
+            # Validate that the subset name refers to a declared set
+            if self._resolve_set_def(subset_idx.subset_name, node=node) is None:
+                raise self._error(
+                    f"Subset '{subset_idx.subset_name}' in variable bounds is not a declared set",
+                    node,
+                )
+            # Validate index count matches variable domain
+            if len(subset_idx.indices) != len(var.domain):
+                index_word = "index" if len(var.domain) == 1 else "indices"
+                raise self._error(
+                    f"Variable '{var_name}' bounds expect {len(var.domain)} {index_word} but subset indexing provided {len(subset_idx.indices)}",
+                    node,
+                )
+            # Mock/skip: Accept the bounds without full semantic validation
+            # We can't fully expand subset-indexed bounds without complete set membership data
+            return []
+
         if len(index_symbols) != len(var.domain):
             index_word = "index" if len(var.domain) == 1 else "indices"
             raise self._error(

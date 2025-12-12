@@ -260,6 +260,38 @@ class IndexOffset(Expr):
 
 
 @dataclass(frozen=True)
+class SubsetIndex(Expr):
+    """
+    Subset indexing for variable bounds (Sprint 12 - Issue #455).
+
+    When a variable is indexed with a subset that filters indices, e.g.:
+        f.lo(aij(as,i,j)) = 0
+    where f(a,i,j) is a 3D variable and aij(a,i,j) is a subset.
+
+    The subset reference provides all the indices needed to match the variable's domain.
+    The inner indices (as,i,j) may further filter which elements are affected.
+
+    Examples:
+        aij(as,i,j)  → SubsetIndex(subset_name='aij', indices=('as', 'i', 'j'))
+        low(n,nn)    → SubsetIndex(subset_name='low', indices=('n', 'nn'))
+
+    Attributes:
+        subset_name: Name of the subset being referenced (e.g., 'aij', 'low')
+        indices: The indices within the subset reference (e.g., ('as', 'i', 'j'))
+    """
+
+    subset_name: str
+    indices: tuple[str, ...]
+
+    def children(self) -> Iterable[Expr]:
+        return []
+
+    def __repr__(self) -> str:
+        idx = ",".join(self.indices)
+        return f"SubsetIndex({self.subset_name}({idx}))"
+
+
+@dataclass(frozen=True)
 class CompileTimeConstant(Expr):
     """
     GAMS compile-time constant using %...% syntax.
