@@ -5,7 +5,9 @@ are set using a subset that maps to those indices (e.g., f.lo(aij(as,i,j))),
 the parser should correctly accept the bounds.
 """
 
-from src.ir.parser import parse_model_text
+import pytest
+
+from src.ir.parser import ParserSemanticError, parse_model_text
 
 
 class TestSubsetIndexingBasic:
@@ -238,10 +240,6 @@ class TestSubsetIndexingErrorCases:
 
         f(a,i,j) expects 3 indices but aij(i) provides only 1.
         """
-        import pytest
-
-        from src.ir.parser import ParserSemanticError
-
         source = """
 Set a / a1, a2 /;
 Set i / 1*3 /;
@@ -258,10 +256,6 @@ f.lo(aij(i)) = 0;
 
         x(i) expects 1 index but ij(i,j) provides 2.
         """
-        import pytest
-
-        from src.ir.parser import ParserSemanticError
-
         source = """
 Set i / 1*3 /;
 Set j / 1*3 /;
@@ -277,10 +271,6 @@ x.lo(ij(i,j)) = 0;
 
         x(i,j) expects 2 indices but aij(a,i,j) provides 3.
         """
-        import pytest
-
-        from src.ir.parser import ParserSemanticError
-
         source = """
 Set a / a1, a2 /;
 Set i / 1*3 /;

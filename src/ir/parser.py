@@ -3519,8 +3519,13 @@ class _ModelBuilder:
         #    (e.g., low in dist(low) where low has domain (n,n))
         # 2. BUT if idx is in free_domain AND is a base set (like 'n'), don't expand
         #    (e.g., n in point(n,d) where n is a domain variable)
-        expanded_indices = []
+        expanded_indices: list[str] = []
         for idx in indices:
+            # Handle SubsetIndex objects by flattening to inner indices
+            # This allows expressions like x = dist.l(low(n,nn)) to work
+            if isinstance(idx, SubsetIndex):
+                expanded_indices.extend(idx.indices)
+                continue
             # Skip IndexOffset objects - only expand plain string identifiers
             if isinstance(idx, str) and idx in self.model.sets:
                 set_def = self.model.sets[idx]
@@ -4143,8 +4148,21 @@ class _ModelBuilder:
                 node,
             )
 
+        # Explicitly reject mixing SubsetIndex with other index types
+        if subset_count > 0 and len(index_symbols) > 1:
+            raise self._error(
+                "Cannot mix subset indexing with other indices in variable bounds",
+                node,
+            )
+
         if len(index_symbols) == 1 and isinstance(index_symbols[0], SubsetIndex):
             subset_idx = index_symbols[0]
+            # Validate that the subset name refers to a declared set
+            if self._resolve_set_def(subset_idx.subset_name, node=node) is None:
+                raise self._error(
+                    f"Subset '{subset_idx.subset_name}' in variable bounds is not a declared set",
+                    node,
+                )
             # Validate index count matches variable domain
             if len(subset_idx.indices) != len(var.domain):
                 index_word = "index" if len(var.domain) == 1 else "indices"
