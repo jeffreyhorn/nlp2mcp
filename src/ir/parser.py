@@ -627,11 +627,6 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
                         raise ParserSemanticError(
                             f"Unexpected result type '{type(result).__name__}' in subset index '{subset_name}'"
                         )
-                elif child.data == "index_subset":
-                    # Nested subset indexing is not supported
-                    raise ParserSemanticError(
-                        f"Nested subset indexing is not supported: found 'index_subset' in subset index '{subset_name}'"
-                    )
                 else:
                     raise ParserSemanticError(
                         f"Unexpected node type '{child.data}' in subset index '{subset_name}'"
@@ -3507,7 +3502,7 @@ class _ModelBuilder:
     def _make_symbol(
         self,
         name: str,
-        indices: Sequence[str],
+        indices: Sequence[str | IndexOffset | SubsetIndex],
         free_domain: Sequence[str],
         node: Tree | Token | None = None,
     ) -> Expr:
