@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12 Complete: Measurement, Polish, and Tier 2 Expansion - 2025-12-12
+
+**Duration:** 10 days (2025-12-01 to 2025-12-12)  
+**Status:** ✅ COMPLETE
+
+#### Executive Summary
+
+Sprint 12 validated Sprint 11's simplification transformations through quantitative measurement, completed multi-metric CI thresholds, expanded parser coverage to Tier 2 models, and delivered interactive dashboard and diagnostics infrastructure.
+
+#### Key Metrics
+
+| Metric | Target | Actual | Status |
+|--------|--------|--------|--------|
+| Term Reduction | ≥20% avg | 26.19% avg | ✅ EXCEEDED |
+| Models Meeting 20% | ≥50% (5/10) | 70% (7/10) | ✅ EXCEEDED |
+| Tier 1 Parse Rate | 100% | 100% (10/10) | ✅ MET |
+| Tier 1 Convert Rate | 100% | 90% (9/10) | ⚠️ PARTIAL |
+| Tier 2 Parse Rate | ≥50% | 100% (18/18) | ✅ EXCEEDED |
+| Overall Parse Rate | ≥75% | 100% (28/28) | ✅ EXCEEDED |
+| Test Suite | All pass | 2454 pass, 1 flaky | ✅ MET |
+| Test Time | <2 min | 38s | ✅ EXCEEDED |
+
+#### Features Added
+
+**Measurement Infrastructure:**
+- `SimplificationMetrics` class with `count_terms()` function
+- `measure_simplification.py` script for baseline collection
+- Sprint 11 baseline: 26.19% avg term reduction validated
+- Multi-metric regression checking (parse_rate, convert_rate, performance)
+
+**JSON Diagnostics:**
+- `--diagnostics --format json` CLI flag
+- Schema v1.0.0 with SemVer versioning
+- CI artifact storage with 90-day retention
+- `docs/JSON_DIAGNOSTICS.md` documentation
+
+**Interactive Dashboard:**
+- Chart.js visualizations (6 charts)
+- Stage timing, sprint trends, model comparison
+- Simplification effectiveness charts
+- Tier progress tracking
+
+**CI Infrastructure:**
+- `docs/infrastructure/CI_WORKFLOW_TESTING.md` guide
+- PR template with CI checklist
+- Performance trending (`docs/performance/TRENDS.md`)
+- Multi-metric threshold enforcement
+
+**Parser Expansion (Tier 2):**
+- `predefined_constants` blocker resolved (fct.gms)
+- `model_inline_descriptions` blocker resolved (process.gms)
+- 5 GitHub issues created for remaining blockers (#353-#357)
+
+#### Bug Fixes
+
+- None (measurement and infrastructure sprint)
+
+#### Known Issues
+
+- [#461](https://github.com/jeffreyhorn/nlp2mcp/issues/461): IndexOffset not supported in expr_to_gams (blocks himmel16.gms convert)
+- PATH licensing: No response received, integration deferred
+
+#### Documentation
+
+- `docs/SIMPLIFICATION_BENCHMARKS.md`: Comprehensive baseline analysis
+- `docs/TIER_2_MODELS.md`: Tier 2 status and Sprint 13 roadmap
+- `docs/planning/EPIC_2/SPRINT_12/RETROSPECTIVE.md`: Sprint retrospective
+- Updated `KNOWN_UNKNOWNS.md` with 27/27 unknowns verified
+- Updated `PREP_PLAN.md` with execution results
+
+#### Sprint 13 Priorities
+
+1. **#461** IndexOffset support - Unlocks himmel16.gms (100% Tier 1 convert rate)
+2. Tier 2 convert rate testing - All 18 models parse, test MCP conversion
+3. Tier 3 model exploration - Identify next batch of GAMSLib models
+4. PATH licensing follow-up (if response received)
+
+---
+
 ### Sprint 12: Execute Statement Support (Issue #456) - 2025-12-11
 
 **Branch:** `fix-456-execute-statement`  
