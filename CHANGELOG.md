@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 12: Execute Statement Support (Issue #456) - 2025-12-11
+
+**Branch:** `fix-456-execute-statement`  
+**PR:** #458  
+**Status:** ✅ MERGED
+
+#### Summary
+
+Added support for the GAMS `execute` statement, which runs external programs/commands. This unblocks inscribedsquare.gms, improving tier 2 parsing from 89% to 94%.
+
+#### Changes
+
+**Modified Files:**
+- `src/gams/gams_grammar.lark`: Added execute statement support
+  - Added `execute_stmt` rule: `"execute"i ("." ID)? STRING SEMI?`
+  - Added to `stmt`, `exec_stmt`, and `exec_stmt_final` rules for if/loop blocks
+
+**New Files:**
+- `tests/parser/test_execute_statement.py`: 21 unit tests for execute statement
+
+**Moved Files:**
+- `docs/issues/parser-execute-statement.md` → `docs/issues/completed/`
+
+#### Results
+- inscribedsquare.gms now parses completely (was blocked at line 105)
+- Tier 2 parsing: 17/18 models (94%)
+
+---
+
 ### Sprint 12 Day 9: Contingent Features & Recovery - 2025-12-09
 
 **Branch:** `sprint12-day9-contingent-features`  
