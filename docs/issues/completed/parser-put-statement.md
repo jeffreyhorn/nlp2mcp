@@ -1,9 +1,9 @@
 # Parser: Put Statement Not Supported
 
 **GitHub Issue:** [#447](https://github.com/jeffreyhorn/nlp2mcp/issues/447)
-**Status:** Open  
+**Status:** Completed  
 **Priority:** Medium  
-**Blocking Model:** inscribedsquare.gms (tier 2)
+**Blocking Model:** inscribedsquare.gms (tier 2) - now progresses to line 105
 
 ---
 

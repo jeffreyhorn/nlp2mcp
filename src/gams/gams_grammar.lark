@@ -24,6 +24,8 @@ start: stmt*  -> program
      | display_stmt
      | abort_stmt
      | file_stmt
+     | put_stmt
+     | putclose_stmt
      | assignment_stmt
      | equation_def
      | solve_stmt
@@ -374,6 +376,8 @@ loop_body: exec_stmt* exec_stmt_final
           | abort_stmt_nosemi
           | option_stmt          // Sprint 11 Day 2: Support option inside if/loop
           | solve_stmt           // Support solve inside if/loop
+          | put_stmt             // Sprint 12: Support put inside if/loop
+          | putclose_stmt        // Sprint 12: Support putclose inside if/loop
           | assignment_stmt
           | SEMI
 
@@ -385,6 +389,8 @@ loop_body: exec_stmt* exec_stmt_final
                 | abort_stmt_nosemi
                 | option_stmt
                 | solve_stmt
+                | put_stmt
+                | putclose_stmt
                 | SEMI
 
 // ---------------------------
@@ -398,6 +404,27 @@ file_stmt: "file"i ID "/" file_path "/" SEMI
 
 file_path: STRING
          | compile_time_const
+
+// ---------------------------
+// Put Statement (Sprint 12 - Issue #447 - mock/skip for file I/O)
+// ---------------------------
+
+// Put statement writes output to files
+// Syntax variations:
+//   put f;                    - select file handle
+//   put 'text' /;             - write string with newline
+//   put x.l;                  - write expression
+//   put 'x = ' x.l /;         - write multiple items with newline
+// We parse but don't process since file I/O is not relevant for NLP model extraction
+put_stmt: "put"i put_item* SEMI
+        | "put"i put_item* "/" SEMI
+
+put_item: STRING
+        | "/" -> put_newline
+        | expr
+
+// Putclose statement closes a file after writing
+putclose_stmt: "putclose"i ID? SEMI
 
 // ---------------------------
 // Display and Abort Statements (Sprint 8 Day 2 - mock/skip)
