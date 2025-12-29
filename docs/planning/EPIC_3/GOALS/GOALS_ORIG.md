@@ -37,12 +37,13 @@ Before we can test nlp2mcp against real-world models, we need to systematically 
   - Research GAMSLIB model metadata and classification scheme
   - Identify all NLP and LP models in the library
   - Exclude specialized types:
-    - Integer Programs (MIP, MILP, MINLP)
+    - Integer Programs (MIP, MILP, MINLP) and any mixed discrete/continuous model
     - MPEC (Mathematical Programs with Equilibrium Constraints)
     - MPSGE (General Equilibrium models)
     - CNS (Constrained Nonlinear Systems)
     - DNLP (Discontinuous NLP)
     - Other non-convex model types
+  - Perform static inspection of .gms sources to detect integer/binary declarations, implicit complementarity sections, or other discrete constructs and auto-label such models as discrete/mixed and skip them for parse/translate/solve (record skip reason in catalog)
   - Create initial candidate list of potentially convex models
 
 - **1.2 Download Script Development**
@@ -59,10 +60,16 @@ Before we can test nlp2mcp against real-world models, we need to systematically 
   - Store metadata in JSON format
   - Create initial catalog: `data/gamslib/catalog.json`
 
+- **1.4 Dependency Resolution**
+  - Detect and fetch required includes/external data referenced by candidate models
+  - Record resolved dependency paths; if dependencies are missing or unsupported, mark the model as `missing_dependencies` and skip testing
+  - Ensure download logs capture dependency fetch successes/failures
+
 #### Success Criteria
 - Script can download all NLP and LP models from GAMSLIB
 - Initial catalog contains 50+ candidate models
-- Models correctly categorized by declared type
+- Models correctly categorized by declared type, with discrete/mixed models explicitly labeled and skipped
+- Dependency handling resolves includes/data where available and records skips with reasons
 - Download script is idempotent and handles failures gracefully
 
 ---
@@ -79,15 +86,16 @@ Not all NLP models labeled as "NLP" in GAMSLIB are convex. We need to verify con
 
 - **2.1 GAMS Solver Execution Framework**
   - Create `scripts/gamslib/verify_convexity.py`
-  - Execute models locally using GAMS command-line interface
+  - Execute models locally using GAMS command-line interface with a global-capable solver (e.g., BARON/ANTIGONE/SCIP/other licensed global NLP solver); configure deterministic seeds and capped threads
   - Capture solver output (solve status, solution values, marginals)
-  - Parse GAMS listing files (.lst) for solution information
+  - Parse GAMS listing files (.lst) for solution information and capture full solver logs
+  - Persist full NLP solution artifacts (primal variables, multipliers, objective) to a version-controlled format plus associated log paths for later MCP comparisons
   - Handle solver timeouts and failures gracefully
 
 - **2.2 Convexity Classification Logic**
-  - Analyze solver termination status:
-    - Optimal (globally) - convex candidate
-    - Locally optimal - likely non-convex, exclude
+  - Analyze solver termination status using global-capable results where available:
+    - Optimal (globally) from a global solver - convex candidate
+    - Locally optimal (only local optimum reported or global solver unavailable) - tag as possibly non-convex, exclude from convex set
     - Infeasible - exclude from testing
     - Unbounded - exclude from testing
     - Error - flag for manual review
@@ -103,17 +111,17 @@ Not all NLP models labeled as "NLP" in GAMSLIB are convex. We need to verify con
 - **2.4 Update Catalog with Convexity Status**
   - Add `convexity_status` field to catalog entries:
     - `verified_convex` - solver confirms global optimum
-    - `locally_optimal` - solver found local but not global solution
+    - `locally_optimal` - solver found local but not global solution (treated as possibly non-convex)
     - `infeasible` - no feasible solution exists
     - `unbounded` - problem is unbounded
     - `unknown` - solver failed or timed out
     - `excluded` - wrong model type (IP, MPEC, etc.)
-  - Store solver output summary (objective value, solve time, solver used)
+  - Store solver output summary (objective value, solve time, solver used), deterministic seed/threads/options, and paths to persisted solution vectors and logs
 
 #### Success Criteria
-- Can execute GAMS models locally and capture results
-- Convexity verification correctly identifies non-convex models
-- Catalog updated with convexity status for all candidate models
+- Can execute GAMS models locally with a global-capable solver and capture results with deterministic settings
+- Convexity verification correctly identifies non-convex models (local-only results are not marked verified)
+- Catalog updated with convexity status for all candidate models, including solution artifacts/log references
 - At least 30+ models verified as convex and suitable for testing
 
 ---
@@ -139,13 +147,27 @@ We need a persistent, version-controlled database to track the status of each GA
       "source_url": "https://...",
       "download_date": "2025-01-15",
       "file_size_bytes": 2345,
+      "environment": {
+        "gams_version": "xx.x.x",
+        "global_solver": "BARON",
+        "path_version": "xx.x",
+        "solver_options": {"threads": 4, "tol": 1e-8},
+        "random_seed": 12345,
+        "platform": "macOS-14-arm64",
+        "license_tier": "demo|academic|commercial"
+      },
       
       "convexity": {
         "status": "verified_convex",
         "solver": "CONOPT",
         "solve_time_sec": 0.12,
         "objective_value": 153.675,
-        "verified_date": "2025-01-16"
+        "verified_date": "2025-01-16",
+        "solution_artifacts": {
+          "variables_file": "data/gamslib/solutions/trnsport_primal.json",
+          "multipliers_file": "data/gamslib/solutions/trnsport_dual.json",
+          "log_file": "data/gamslib/logs/trnsport_convexity.log"
+        }
       },
       
       "nlp2mcp_parse": {
@@ -155,7 +177,8 @@ We need a persistent, version-controlled database to track the status of each GA
         "variables_count": 6,
         "equations_count": 5,
         "tested_date": "2025-01-17",
-        "nlp2mcp_version": "0.10.0"
+        "nlp2mcp_version": "0.10.0",
+        "random_seed": 12345
       },
       
       "nlp2mcp_translate": {
@@ -166,7 +189,8 @@ We need a persistent, version-controlled database to track the status of each GA
         "mcp_equations_count": 17,
         "output_file": "data/gamslib/mcp/trnsport_mcp.gms",
         "tested_date": "2025-01-17",
-        "nlp2mcp_version": "0.10.0"
+        "nlp2mcp_version": "0.10.0",
+        "random_seed": 12345
       },
       
       "mcp_solve": {
@@ -176,7 +200,12 @@ We need a persistent, version-controlled database to track the status of each GA
         "objective_value": 153.675,
         "solution_match": true,
         "tolerance": 1e-6,
-        "tested_date": "2025-01-17"
+        "tested_date": "2025-01-17",
+        "solution_artifacts": {
+          "variables_file": "data/gamslib/solutions/trnsport_mcp_primal.json",
+          "multipliers_file": "data/gamslib/solutions/trnsport_mcp_dual.json",
+          "log_file": "data/gamslib/logs/trnsport_mcp.log"
+        }
       },
       
       "notes": "Example transportation model, good test case"
@@ -196,7 +225,7 @@ We need a persistent, version-controlled database to track the status of each GA
   - Database file: `data/gamslib/gamslib_status.json`
   - Raw .gms files: gitignored (too large, licensing concerns)
   - Generated MCP files: gitignored (can be regenerated)
-  - Database and reports: version controlled
+  - Database, reports, solver logs, and solution artifacts: version controlled
   - Create `.gitignore` entries for raw files
 
 - **3.4 Database Backup & History**
@@ -207,8 +236,8 @@ We need a persistent, version-controlled database to track the status of each GA
 #### Success Criteria
 - JSON schema fully specified and documented
 - Database manager script functional with all commands
-- Can add, update, and query model entries
-- Database validates against schema
+- Can add, update, and query model entries with environment/provenance and solution artifact references
+- Database validates against schema and enforces deterministic fields (seeds/options)
 - Version control strategy implemented
 
 ---
@@ -228,6 +257,7 @@ With the database in place, we need automated scripts to run all verified convex
   - Run nlp2mcp parser on each verified convex model
   - Capture parse success/failure and error messages
   - Record timing and model statistics
+  - Use deterministic configuration (fixed seeds, capped threads) and record them in the database
   - Update database with parse results
   - Support single model or batch testing
 
@@ -237,22 +267,23 @@ With the database in place, we need automated scripts to run all verified convex
   - Generate MCP files to `data/gamslib/mcp/`
   - Capture translation success/failure and error messages
   - Record MCP model statistics (variable count, equation count)
+  - Use deterministic configuration and record seeds/options used
   - Update database with translation results
 
 - **4.3 MCP Solve Testing Script**
   - Create `scripts/gamslib/test_solve.py`
   - For models that translate successfully, solve with PATH
-  - Compare MCP solution to original NLP solution:
+  - Compare MCP solution to persisted NLP solution artifacts from convexity stage:
     - Objective value match (within tolerance)
     - Variable values match (within tolerance)
     - Multiplier values reasonable
-  - Record solve success/failure and any mismatches
+  - Record solve success/failure, seeds/options, and any mismatches
   - Update database with solve results
 
 - **4.4 Full Pipeline Test Runner**
   - Create `scripts/gamslib/run_full_test.py`
   - Orchestrate all three stages in sequence
-  - Handle failures gracefully (continue to next model)
+  - Handle failures gracefully (continue to next model) with deterministic configs applied end-to-end
   - Generate summary statistics after run
   - Support filters: `--only-parse`, `--only-failing`, `--model=NAME`
 
@@ -260,6 +291,7 @@ With the database in place, we need automated scripts to run all verified convex
 - Can run parse/translate/solve tests on all verified models
 - Database accurately reflects current test status
 - Can identify exactly which models fail at which stage
+- Pipeline runs with deterministic seeds/options captured for reproducibility
 - Batch testing completes in reasonable time (<1 hour for full corpus)
 
 ---
@@ -466,6 +498,7 @@ Address translation and solve failures identified in gap analysis to improve end
 - `scripts/gamslib/download_models.py`
 - `data/gamslib/catalog.json` (initial)
 - 50+ models downloaded and cataloged
+- Dependency resolution/skip logging for includes/external data
 
 ### Sprint 14 (Weeks 3-4): Convexity Verification & Database
 - Complete convexity verification system
@@ -477,7 +510,7 @@ Address translation and solve failures identified in gap analysis to improve end
 **Deliverables:**
 - `scripts/gamslib/verify_convexity.py`
 - `scripts/gamslib/db_manager.py`
-- `data/gamslib/gamslib_status.json` (with convexity data)
+- `data/gamslib/gamslib_status.json` (with convexity data, provenance, solution artifacts/log references)
 - 30+ verified convex models ready for testing
 
 ### Sprint 15 (Weeks 5-6): Pipeline Testing Infrastructure
@@ -551,6 +584,8 @@ data/gamslib/
   ├── mcp/                    # Generated MCP files (gitignored)
   │   ├── trnsport_mcp.gms
   │   ├── ...
+  ├── solutions/              # Persisted NLP/MCP solution vectors (version controlled)
+  ├── logs/                   # Solver logs for reproducibility (version controlled)
   ├── catalog.json            # Model metadata (version controlled)
   ├── gamslib_status.json     # Test status database (version controlled)
   ├── progress_history.json   # Historical metrics (version controlled)
@@ -620,7 +655,8 @@ scripts/gamslib/
 ### External Dependencies
 - GAMS software installed locally (with valid license)
 - PATH solver available
-- Internet access for GAMSLIB downloads
+- Global-capable NLP solver available (e.g., BARON/ANTIGONE/SCIP or equivalent license)
+- Internet access for GAMSLIB downloads and dependency includes
 
 ### Internal Dependencies
 - nlp2mcp core functionality from Epic 1-2
