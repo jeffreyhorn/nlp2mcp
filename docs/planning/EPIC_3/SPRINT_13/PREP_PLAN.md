@@ -272,7 +272,8 @@ test -f docs/research/GAMSLIB_ACCESS_RESEARCH.md && echo "Research document exis
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 13 Day 1  
 **Owner:** Development team  
-**Dependencies:** None
+**Dependencies:** None  
+**Unknowns Verified:** 4.3, 4.4, 4.5
 
 ### Objective
 
@@ -382,7 +383,8 @@ grep "MODEL STATUS" /tmp/test_nlp.lst
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Sprint 13 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 2 (GAMSLIB Structure Research)
+**Dependencies:** Task 2 (GAMSLIB Structure Research)  
+**Unknowns Verified:** 1.4, 2.1, 2.2, 2.3, 2.4, 2.5
 
 ### Objective
 
@@ -481,7 +483,8 @@ grep -c "## " docs/research/GAMSLIB_MODEL_TYPES.md
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Sprint 13 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 1 (Known Unknowns), Task 3 (GAMS Environment)
+**Dependencies:** Task 1 (Known Unknowns), Task 3 (GAMS Environment)  
+**Unknowns Verified:** 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7
 
 ### Objective
 
@@ -597,7 +600,8 @@ grep "verified_convex" docs/research/CONVEXITY_VERIFICATION_DESIGN.md
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 13 Day 1  
 **Owner:** Development team  
-**Dependencies:** None
+**Dependencies:** None  
+**Unknowns Verified:** 5.1, 5.2, 5.3
 
 ### Objective
 
@@ -683,7 +687,8 @@ ls -la tests/fixtures/gamslib/ 2>/dev/null || echo "No GAMSLIB fixtures director
 **Estimated Time:** 2-3 hours  
 **Deadline:** Before Sprint 13 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 4 (Model Types Survey)
+**Dependencies:** Task 4 (Model Types Survey)  
+**Unknowns Verified:** 5.3
 
 ### Objective
 
@@ -791,7 +796,8 @@ print('All required fields present')
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 13 Day 3  
 **Owner:** Development team  
-**Dependencies:** Task 2 (GAMSLIB Access), Task 3 (GAMS Environment)
+**Dependencies:** Task 2 (GAMSLIB Access), Task 3 (GAMS Environment)  
+**Unknowns Verified:** 1.5, 2.1, 3.5
 
 ### Objective
 
@@ -881,7 +887,8 @@ gams tests/fixtures/gamslib_test_models/trnsport.gms 2>/dev/null && echo "Model 
 **Estimated Time:** 1-2 hours  
 **Deadline:** Before Sprint 13 Day 1  
 **Owner:** Development team  
-**Dependencies:** Task 3 (GAMS Environment)
+**Dependencies:** Task 3 (GAMS Environment)  
+**Unknowns Verified:** 4.1, 4.2
 
 ### Objective
 
@@ -968,7 +975,8 @@ gams solvers 2>&1 | grep -i nlp
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Sprint 13 Day 1  
 **Owner:** Sprint planning  
-**Dependencies:** All tasks
+**Dependencies:** All tasks  
+**Unknowns Verified:** All (integrates findings from Tasks 1-9)
 
 ### Objective
 
