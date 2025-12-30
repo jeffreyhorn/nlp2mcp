@@ -197,6 +197,10 @@ START
 from enum import Enum
 from dataclasses import dataclass
 from typing import Optional
+import subprocess
+import time
+import tempfile
+import os
 
 class ConvexityStatus(Enum):
     VERIFIED_CONVEX = "verified_convex"  # Proven convex (LP or global solver)
@@ -231,11 +235,6 @@ def verify_convexity(
     Returns:
         VerificationResult with status and details
     """
-    import subprocess
-    import time
-    import tempfile
-    import os
-    
     # Skip non-candidate types
     if model_type not in ('LP', 'NLP', 'QCP'):
         return VerificationResult(
@@ -252,7 +251,21 @@ def verify_convexity(
         lst_path = os.path.join(tmpdir, 'output.lst')
         
         # Select solver based on model type
-        solver_option = 'LP=CPLEX' if model_type == 'LP' else 'NLP=CONOPT'
+        if model_type == 'LP':
+            solver_option = 'LP=CPLEX'
+        elif model_type in ('NLP', 'QCP'):
+            solver_option = 'NLP=CONOPT'
+        else:
+            # This should be unreachable due to the earlier type filter,
+            # but we handle it defensively to avoid confusing defaults.
+            return VerificationResult(
+                status=ConvexityStatus.ERROR,
+                model_status=None,
+                solver_status=None,
+                objective_value=None,
+                solve_time_seconds=0.0,
+                message=f"Unexpected model type after validation: {model_type}"
+            )
         
         # Run GAMS
         start_time = time.time()
@@ -265,6 +278,15 @@ def verify_convexity(
                 cwd=tmpdir
             )
             solve_time = time.time() - start_time
+        except FileNotFoundError:
+            return VerificationResult(
+                status=ConvexityStatus.ERROR,
+                model_status=None,
+                solver_status=None,
+                objective_value=None,
+                solve_time_seconds=0.0,
+                message="GAMS executable not found in PATH. Please install GAMS or add it to PATH."
+            )
         except subprocess.TimeoutExpired:
             return VerificationResult(
                 status=ConvexityStatus.ERROR,
@@ -418,7 +440,8 @@ def parse_gams_listing(lst_content: str) -> dict:
     
     Returns:
         dict with keys: solver_status, solver_status_text,
-                       model_status, model_status_text, objective_value
+                       model_status, model_status_text, objective_value,
+                       has_solve_summary (bool indicating if SOLVE SUMMARY was found)
     """
     result = {
         'solver_status': None,
@@ -426,7 +449,15 @@ def parse_gams_listing(lst_content: str) -> dict:
         'model_status': None,
         'model_status_text': None,
         'objective_value': None,
+        'has_solve_summary': False,
     }
+    
+    # Validate that the listing file contains expected SOLVE SUMMARY content
+    if 'S O L V E      S U M M A R Y' not in lst_content:
+        # No solve summary found - likely no solve statement executed
+        return result
+    
+    result['has_solve_summary'] = True
     
     # Patterns
     solver_pattern = re.compile(
@@ -587,8 +618,9 @@ done
 ```python
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from typing import List, Dict
+import os
 
-def verify_batch(
+def batch_verify_convexity(
     model_paths: List[str],
     model_types: Dict[str, str],
     max_workers: int = 4,
@@ -665,6 +697,8 @@ def full_convexity_check(
     Full convexity verification with heuristic pre-check.
     """
     # Tier 1: Heuristic check (if IR available)
+    # quick_convexity_check is provided by the heuristic/AST-based detection module
+    # (see docs/research/convexity_detection.md for its design and implementation).
     if model_ir is not None:
         warnings = quick_convexity_check(model_ir)
         if warnings:

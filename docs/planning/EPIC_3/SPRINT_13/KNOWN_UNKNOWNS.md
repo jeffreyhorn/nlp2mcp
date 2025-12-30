@@ -835,7 +835,7 @@ Development team
 - MODEL STATUS 2 (Locally Optimal) = Local optimum found (NLP with local solver)
 - MODEL STATUS 3 = Unbounded, 4 = Infeasible (exclude from corpus)
 - SOLVER STATUS 1 = Normal Completion (required for valid result)
-- **Critical insight:** Local NLP solvers (CONOPT, IPOPT) cannot prove global optimality even for convex problems
+- **Critical insight:** Local NLP solvers (CONOPT, IPOPT), which use interior-point and SQP-type methods and are inherently local optimization algorithms, cannot prove global optimality even for convex problems
 
 **Evidence:**
 ```
