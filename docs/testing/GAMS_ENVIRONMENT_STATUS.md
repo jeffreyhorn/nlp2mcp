@@ -119,7 +119,7 @@ model_status_pattern = r'\*\*\*\* MODEL STATUS\s+(\d+)\s*(.*)'
 # Groups: (2, "Locally Optimal")
 
 # Objective value
-objective_pattern = r'\*\*\*\* OBJECTIVE VALUE\s+([\d.E+-]+)'
+objective_pattern = r'\*\*\*\* OBJECTIVE VALUE\s+([-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)'
 # Match: "**** OBJECTIVE VALUE                0.5000"
 # Groups: ("0.5000",)
 ```
@@ -186,7 +186,7 @@ def classify_convexity(model_type: str, model_status: int) -> str:
     
     elif model_type == 'NLP':
         if model_status == 1:
-            return 'convex'  # Solver found global optimum
+            return 'convex'  # Solver declared optimal (may be global or local depending on solver type)
         elif model_status == 2:
             return 'unknown'  # Local solver, can't verify convexity
         elif model_status in (3, 4, 5, 6):
@@ -236,7 +236,7 @@ Result: `MODEL STATUS = 2 (Locally Optimal)` - same as CONOPT
 
 ### Syntax Error (Exit Code = 2)
 ```gams
-x.lo = -10 x.up = 10;  * Missing semicolon
+x.lo = -10 x.up = 10;  * Missing semicolon between assignments
 ```
 Result: Exit code 2, error in .lst file
 
@@ -251,7 +251,7 @@ Result: Exit code 2, error in .lst file
    - MODEL STATUS = 1 → `verified_convex` (rare with local solvers)
    - MODEL STATUS = 2 → `locally_optimal` (cannot verify convexity with local solver)
    - Consider using global solver (BARON) if available
-3. **Exclude:** MODEL STATUS in {3, 4, 5, 6, 11, 12, 13, 14, 18, 19}
+3. **Exclude:** MODEL STATUS in {3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19} (i.e., all model status codes other than 1 and 2)
 
 ### Parsing Implementation
 
@@ -280,11 +280,14 @@ def parse_gams_listing(lst_content: str) -> dict:
                 result['model_status_text'] = match.group(2).strip()
         
         elif '**** OBJECTIVE VALUE' in line:
-            match = re.search(r'([\d.E+-]+)', line)
+            match = re.search(r'([-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)', line)
             if match:
                 result['objective_value'] = float(match.group(1))
     
     return result
+
+# Note: This function captures only the LAST occurrence of each status line.
+# For .lst files with multiple solves, consider modifying to return a list of results.
 ```
 
 ### Batch Execution
@@ -299,8 +302,12 @@ if [ $exit_code -ne 0 ]; then
     echo "GAMS error (exit code $exit_code)"
 fi
 
-# Parse .lst file for status
-grep -E "SOLVER STATUS|MODEL STATUS|OBJECTIVE VALUE" model.lst
+# Parse .lst file for status (only if it exists)
+if [ -f model.lst ]; then
+    grep -E "SOLVER STATUS|MODEL STATUS|OBJECTIVE VALUE" model.lst
+else
+    echo "Listing file 'model.lst' not found; skipping status parse."
+fi
 ```
 
 ---

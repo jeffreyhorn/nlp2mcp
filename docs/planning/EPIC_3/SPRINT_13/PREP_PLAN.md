@@ -368,7 +368,7 @@ From EPIC 2 PATH Solver work:
 ```
 
 **Model Status Codes for Convexity:**
-- STATUS 1 (Optimal) → Convex (global optimum found)
+- STATUS 1 (Optimal) → Solver reported optimality (may be local for NLP); treat as candidate convex only when combined with separate convexity verification
 - STATUS 2 (Locally Optimal) → Unknown (local solver)
 - STATUS 3 (Unbounded) → Exclude
 - STATUS 4 (Infeasible) → Exclude
