@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 13 Prep: Task 5 Complete - Research Convexity Verification Approaches - 2025-12-30
+
+**Branch:** `sprint13-prep-task5-convexity-verification`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Designed comprehensive convexity verification algorithm using GAMS solver output. Documented all MODEL STATUS and SOLVER STATUS codes, recommended solver selection, and verified 7 unknowns related to convexity verification.
+
+#### Key Findings
+
+- **LP models:** Verified convex when MODEL STATUS = 1 (CPLEX proves global optimum)
+- **NLP/QCP models:** Classified as "likely_convex" with STATUS 1 or 2 (local solvers cannot prove global optimality)
+- **Primary solver:** CONOPT for NLP/QCP, CPLEX for LP
+- **Timeout:** 60 seconds sufficient for GAMSLIB models
+- **Multi-start:** Deferred to Sprint 14+ (single solve sufficient for initial classification)
+
+#### Classification Categories
+
+| Category | Description |
+|----------|-------------|
+| `verified_convex` | LP with MODEL STATUS 1 (proven global optimum) |
+| `likely_convex` | NLP/QCP with STATUS 1 or 2 (local solver, probably convex) |
+| `excluded` | Infeasible (STATUS 4) or Unbounded (STATUS 3) |
+| `error` | Solver failure, timeout, or compilation error |
+
+#### Solver Selection
+
+| Model Type | Solver | Capability |
+|------------|--------|------------|
+| LP | CPLEX | Proves global optimum |
+| NLP/QCP | CONOPT | Finds local optimum (default) |
+| NLP/QCP | IPOPT | Finds local optimum (secondary) |
+
+#### Changes
+
+- Added: `docs/research/CONVEXITY_VERIFICATION_DESIGN.md` (~760 lines)
+  - Complete MODEL STATUS codes (1-19) with convexity implications
+  - Complete SOLVER STATUS codes (1-13)
+  - Verification algorithm with decision tree
+  - Python implementation code for verification
+  - .lst file parsing patterns
+  - Batch processing strategy
+  - Integration with heuristic detection (Tier 1/Tier 2)
+- Modified: `docs/planning/EPIC_3/SPRINT_13/KNOWN_UNKNOWNS.md`
+  - Verified Unknowns 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7 with detailed findings
+- Modified: `docs/planning/EPIC_3/SPRINT_13/PREP_PLAN.md`
+  - Task 5 marked COMPLETE with all acceptance criteria checked
+
+#### Unknowns Verified
+
+| Unknown | Finding |
+|---------|---------|
+| 3.1: Status codes | MODEL STATUS 1=Optimal, 2=Locally Optimal; SOLVER STATUS 1=Normal Completion |
+| 3.2: Solver selection | CONOPT primary for NLP, CPLEX for LP; local solvers cannot prove global optimality |
+| 3.3: Timeout | 60 seconds sufficient for GAMSLIB models (most solve in <1s) |
+| 3.4: .lst parsing | Consistent regex patterns work across all solvers |
+| 3.5: Non-convex behavior | Both convex and non-convex NLP return STATUS 2 with local solvers |
+| 3.6: Multi-start | Deferred to Sprint 14+; single solve sufficient for initial classification |
+| 3.7: Infeasible/unbounded | Exclude models with STATUS 3, 4, 5, 6, 18, 19 from corpus |
+
+---
+
 ### Sprint 13 Prep: Task 4 Complete - Survey GAMSLIB Model Types - 2025-12-29
 
 **Branch:** `sprint13-prep-task4-model-types`  

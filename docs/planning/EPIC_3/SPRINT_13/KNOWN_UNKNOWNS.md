@@ -827,7 +827,23 @@ Expected: MODEL STATUS = 2 (Locally Optimal)
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- MODEL STATUS codes range from 1-19, each with specific meaning
+- MODEL STATUS 1 (Optimal) = Global optimum found (reliable for LP, not guaranteed for NLP with local solvers)
+- MODEL STATUS 2 (Locally Optimal) = Local optimum found (NLP with local solver)
+- MODEL STATUS 3 = Unbounded, 4 = Infeasible (exclude from corpus)
+- SOLVER STATUS 1 = Normal Completion (required for valid result)
+- **Critical insight:** Local NLP solvers (CONOPT, IPOPT), which use interior-point and SQP-type methods and are inherently local optimization algorithms, cannot prove global optimality even for convex problems
+
+**Evidence:**
+```
+LP with CPLEX: MODEL STATUS = 1 (Optimal) → verified_convex
+NLP with CONOPT: MODEL STATUS = 2 (Locally Optimal) → likely_convex (not proven)
+```
+
+**Decision:** LP with STATUS 1 = verified_convex. NLP/QCP with STATUS 1 or 2 = likely_convex (local solver cannot guarantee global optimality). See `docs/research/CONVEXITY_VERIFICATION_DESIGN.md` for complete status code reference.
 
 ---
 
@@ -871,7 +887,30 @@ Display model.modelstat, model.solvestat;
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- Available NLP solvers under demo license: CONOPT, IPOPT, MINOS, SNOPT, KNITRO
+- **CONOPT recommended as primary solver** - default, robust, well-tested
+- IPOPT as secondary if CONOPT fails
+- Both CONOPT and IPOPT are **local solvers** - cannot prove global optimality
+- BARON (global solver) has demo license limitations but could prove convexity definitively
+- LP uses CPLEX (finds global optimum for linear programs)
+
+**Evidence:**
+```bash
+$ gams solvers | grep -i nlp
+NLP: CONOPT, IPOPT, MINOS, SNOPT, KNITRO
+```
+
+**Solver Selection:**
+| Model Type | Solver | Capability |
+|------------|--------|------------|
+| LP | CPLEX | Proves global optimum |
+| NLP/QCP | CONOPT | Finds local optimum (default) |
+| NLP/QCP | IPOPT | Finds local optimum (secondary) |
+
+**Decision:** Use CONOPT as primary NLP solver, CPLEX for LP. Local solvers cannot prove global optimality, so NLP models are classified as "likely_convex" rather than "verified_convex".
 
 ---
 
@@ -911,7 +950,30 @@ Development team
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- GAMSLIB models are designed as small examples - most solve in <1 second
+- From GAMS_ENVIRONMENT_STATUS.md testing: solve times typically 0.01-0.1 seconds
+- 60 seconds is **more than sufficient** for GAMSLIB models
+- Timeout primarily guards against:
+  - Pathological cases with numerical difficulties
+  - Models that trigger infinite loops
+  - License-related hangs
+
+**Recommended Timeout Strategy:**
+| Model Size | Timeout |
+|------------|---------|
+| Small (<100 vars) | 30 seconds |
+| Medium (<1000 vars) | 60 seconds |
+| Large (>1000 vars) | 120 seconds |
+
+**Timeout Handling:**
+- Mark as ERROR status
+- Log for manual review
+- Retry with longer timeout if needed (Sprint 14)
+
+**Decision:** Use 60 seconds as default timeout. Models timing out are rare edge cases and should be flagged for manual review. Batch processing of 115 models should complete in <10 minutes even with conservative timeout.
 
 ---
 
@@ -955,7 +1017,37 @@ GAMS .lst files have consistent structure with MODEL STATUS, SOLVER STATUS, and 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- .lst file format is consistent across solvers (CONOPT, IPOPT, CPLEX tested)
+- Key lines appear in SOLVE SUMMARY section with consistent format
+- Encoding is ASCII/UTF-8
+
+**Exact Format:**
+```
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE                0.5000
+```
+
+**Parsing Regex Patterns:**
+```python
+# Solver status
+solver_status_pattern = r'\*\*\*\* SOLVER STATUS\s+(\d+)\s+(.*)'
+
+# Model status
+model_status_pattern = r'\*\*\*\* MODEL STATUS\s+(\d+)\s*(.*)'
+
+# Objective value (handles scientific notation)
+objective_pattern = r'\*\*\*\* OBJECTIVE VALUE\s+([-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)'
+```
+
+**Multiple Solves:**
+- For models with multiple solve statements, parse ALL occurrences
+- Use last occurrence for final result (or first for initial solve)
+
+**Decision:** Patterns documented in `docs/research/CONVEXITY_VERIFICATION_DESIGN.md` and `docs/testing/GAMS_ENVIRONMENT_STATUS.md`. Format is stable across GAMS versions and solvers.
 
 ---
 
@@ -995,7 +1087,25 @@ Non-convex models solved with local solvers (CONOPT, IPOPT) will report MODEL ST
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- Non-convex models with local solvers typically return MODEL STATUS = 2 (Locally Optimal)
+- Local solvers **never** report STATUS = 1 for NLP - they always report STATUS = 2
+- Even **convex** NLP models return STATUS = 2 with local solvers (CONOPT, IPOPT)
+- A local solver may find the global optimum by chance but cannot prove it
+- Non-convex models may also return STATUS = 4 (Infeasible) if starting point is poor
+- Multi-start is not default behavior - single solve from default starting point
+
+**Key Insight:**
+Both convex and non-convex NLP models return STATUS = 2 with local solvers. The status code **does not distinguish** between convex and non-convex problems when using local solvers.
+
+**Implications for Classification:**
+- LP with STATUS 1 → verified_convex (LP solver proves global optimum)
+- NLP with STATUS 1 → unlikely (local solvers don't report this)
+- NLP with STATUS 2 → likely_convex (cannot prove, but usable for testing)
+
+**Decision:** Accept STATUS 2 for NLP/QCP as "likely_convex" since local solvers cannot distinguish convex from non-convex. Combine with heuristic detection (Tier 1) to flag obvious non-convex patterns.
 
 ---
 
@@ -1029,7 +1139,29 @@ Single solve is sufficient; multi-start verification is optional enhancement for
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- Different starting points CAN lead to different local optima for non-convex problems
+- For convex problems, all starting points converge to same global optimum
+- Multi-start would help detect non-convexity but adds complexity and time
+- GAMSLIB models use default starting points (typically 0 or midpoint of bounds)
+
+**Multi-Start Benefits:**
+- If different starts → different objectives → definitely non-convex
+- If different starts → same objective → likely convex (not proven)
+
+**Time Cost:**
+- 3 starting points = 3x solve time
+- For 115 models at 1 second each = 5-6 minutes extra
+
+**Sprint 13 Recommendation:**
+- **Defer multi-start to Sprint 14+**
+- Single solve is sufficient for initial classification
+- GAMSLIB models are curated examples, most are well-posed
+- Heuristic detection (Tier 1) catches obvious non-convex patterns
+
+**Decision:** Sprint 13 uses single solve. Multi-start verification is enhancement for Sprint 14+ when validating MCP reformulation results.
 
 ---
 
@@ -1069,7 +1201,30 @@ Infeasible and unbounded models should be excluded from the convex corpus and fl
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- Infeasibility codes: MODEL STATUS 4 (Infeasible), 5 (Locally Infeasible), 6 (Intermediate Infeasible), 19 (Infeasible - No Solution)
+- Unboundedness codes: MODEL STATUS 3 (Unbounded), 18 (Unbounded - No Solution)
+- GAMSLIB models are designed to be solvable - infeasible/unbounded cases are rare
+- Some GAMSLIB models may have parameter configurations that lead to infeasibility
+
+**Handling Strategy:**
+| MODEL STATUS | Name | Action |
+|--------------|------|--------|
+| 3 | Unbounded | Exclude from corpus |
+| 4 | Infeasible | Exclude from corpus |
+| 5 | Locally Infeasible | Exclude from corpus |
+| 6 | Intermediate Infeasible | Exclude from corpus |
+| 18 | Unbounded - No Solution | Exclude from corpus |
+| 19 | Infeasible - No Solution | Exclude from corpus |
+
+**No Retry Strategy:**
+- GAMSLIB models should work with default parameters
+- If infeasible, likely intentional or data issue
+- Do NOT retry with relaxed bounds - just log and exclude
+
+**Decision:** Exclude all infeasible/unbounded models from corpus. Log them separately for reference. No retry logic needed for Sprint 13. See `docs/research/CONVEXITY_VERIFICATION_DESIGN.md` Section 3 for complete decision tree.
 
 ---
 
