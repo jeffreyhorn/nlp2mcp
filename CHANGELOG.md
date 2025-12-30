@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 13 Prep: Task 4 Complete - Survey GAMSLIB Model Types - 2025-12-29
+
+**Branch:** `sprint13-prep-task4-model-types`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive survey of GAMSLIB model types with inclusion/exclusion criteria for Sprint 13 corpus. Documented all 15 GAMS model types and verified 6 unknowns.
+
+#### Key Findings
+
+- **GAMSLIB contains 437 models** across 15 type categories
+- **115 candidate models** for Sprint 13 corpus:
+  - LP: 57 models (always convex by definition)
+  - NLP: 49 models (require convexity verification)
+  - QCP: 9 models (require convexity verification)
+- **Corpus size exceeds 50+ target** with significant margin
+
+#### Inclusion Criteria
+
+| Type | Count | Rationale |
+|------|-------|-----------|
+| LP | 57 | Always convex (linear objective + constraints) |
+| NLP | 49 | Smooth nonlinear, verify via solve status |
+| QCP | 9 | Quadratic, convex if Q ⪰ 0 |
+
+#### Exclusion Criteria
+
+| Type | Count | Rationale |
+|------|-------|-----------|
+| MIP/MINLP/MIQCP | 86 | Integer variables = non-convex |
+| MCP/MPEC | 16 | No objective / complementarity constraints |
+| CNS | 4 | No objective (system of equations) |
+| DNLP | 6 | Non-smooth functions |
+| EMP/MPSGE/GAMS/DECIS | 46 | Special frameworks |
+
+#### Model Type Detection
+
+Model types declared in solve statement: `solve m using nlp minimizing obj;`
+- Parse `using <type>` pattern
+- Cannot distinguish convex from non-convex NLP by type alone
+- Requires empirical verification via MODEL STATUS
+
+#### Changes
+
+- Added: `docs/research/GAMSLIB_MODEL_TYPES.md` (~350 lines)
+- Modified: `docs/planning/EPIC_3/SPRINT_13/KNOWN_UNKNOWNS.md`
+  - Verified Unknowns 1.4, 2.1, 2.2, 2.3, 2.4, 2.5 with detailed findings
+- Modified: `docs/planning/EPIC_3/SPRINT_13/PREP_PLAN.md`
+  - Task 4 marked COMPLETE with all acceptance criteria checked
+
+#### Unknowns Verified
+
+| Unknown | Finding |
+|---------|---------|
+| 1.4: NLP/LP model counts | 57 LP + 49 NLP + 9 QCP = 115 candidates |
+| 2.1: Type declarations | In solve statement: `using <type>` |
+| 2.2: Convex vs non-convex | Cannot distinguish by type, need verification |
+| 2.3: Exclusion criteria | MIP, MINLP, MCP, CNS, DNLP, MPEC, MPSGE, EMP, DECIS |
+| 2.4: QCP handling | Include, verify like NLP (9 models) |
+| 2.5: RMINLP handling | Exclude (relaxed integer types) |
+
+---
+
 ### Sprint 13 Prep: Task 3 Complete - Validate GAMS Local Environment - 2025-12-29
 
 **Branch:** `sprint13-prep-task3-gams-environment`  
