@@ -38,8 +38,8 @@ Created comprehensive Known Unknowns list for Sprint 13 GAMSLIB discovery, downl
 
 #### Changes
 
-- Added: `docs/planning/EPIC_3/SPRINT_13/KNOWN_UNKNOWNS.md` (~800 lines)
-- Added: `docs/planning/EPIC_3/SPRINT_13/prompts/PREP_TASK_PROMPTS.md` (~600 lines)
+- Added: `docs/planning/EPIC_3/SPRINT_13/KNOWN_UNKNOWNS.md` (~1300 lines)
+- Added: `docs/planning/EPIC_3/SPRINT_13/prompts/PREP_TASK_PROMPTS.md` (~1300 lines)
 - Modified: `docs/planning/EPIC_3/SPRINT_13/PREP_PLAN.md`
   - Task 1 marked COMPLETE with all acceptance criteria checked
   - Tasks 2-10 updated with "Unknowns Verified" metadata
