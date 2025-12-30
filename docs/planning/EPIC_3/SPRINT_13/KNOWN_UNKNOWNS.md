@@ -1068,7 +1068,30 @@ env | grep -i gams
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- GAMS IS on system PATH on macOS after standard installation
+- Location: `/Library/Frameworks/GAMS.framework/Versions/51/Resources/gams`
+- `which gams` returns the path successfully
+- `gamslib` command is also on PATH
+- No environment variables needed for standard usage
+
+**Evidence:**
+```bash
+$ which gams
+/Library/Frameworks/GAMS.framework/Versions/51/Resources/gams
+
+$ which gamslib
+/Library/Frameworks/GAMS.framework/Versions/51/Resources/gamslib
+```
+
+**Cross-Platform Notes:**
+- macOS: `/Library/Frameworks/GAMS.framework/Versions/XX/Resources/`
+- Linux: Typically `/opt/gams/` or user directory
+- Windows: Typically `C:\GAMS\XX\`
+
+**Decision:** Scripts should use `which gams` to verify availability. Provide clear error message if GAMS not found on PATH.
 
 ---
 
@@ -1115,7 +1138,42 @@ gams model.gms lo=0 o=/dev/null
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- GAMS runs non-interactively by default with `gams model.gms`
+- No interactive prompts occur during batch execution
+- Exit codes: 0 = normal completion, 2 = compilation error
+- **Important:** Exit code 0 does NOT mean optimal solution - must check MODEL STATUS in .lst file
+
+**Evidence:**
+```bash
+# Normal execution
+$ gams convex_nlp.gms lo=3
+Exit code: 0
+
+# Syntax error
+$ gams syntax_error.gms lo=3
+Exit code: 2
+```
+
+**Key Command-Line Options:**
+| Option | Description |
+|--------|-------------|
+| `lo=N` | Log output level (0=none, 3=summary, 4=verbose) |
+| `o=file` | Specify output .lst file path |
+| `NLP=solver` | Select NLP solver (CONOPT, IPOPT, etc.) |
+| `LP=solver` | Select LP solver |
+
+**Batch Execution Pattern:**
+```bash
+gams model.gms lo=3 o=output.lst
+if [ $? -eq 0 ]; then
+    grep "MODEL STATUS" output.lst
+fi
+```
+
+**Decision:** Use `gams model.gms lo=3` for batch processing. Always check MODEL STATUS in .lst file, not just exit code.
 
 ---
 
@@ -1162,7 +1220,35 @@ Check .lst for error message
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- Compilation errors: Exit code 2, errors reported in .lst file with line numbers
+- Execution errors: Exit code varies, errors in .lst file
+- Solve failures (infeasible, unbounded): Exit code 0, but MODEL STATUS indicates issue
+- Error messages include file path, line number, and error code
+
+**Evidence - Syntax Error:**
+```
+*** Error 409 in /tmp/gams_test/syntax_error.gms
+    Unrecognizable item - skip to find a new statement
+Exit code: 2
+```
+
+**Evidence - Infeasible Model:**
+```
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      4 Infeasible
+Exit code: 0  (must check MODEL STATUS!)
+```
+
+**Error Detection Strategy:**
+1. Check exit code first (non-zero = compilation/system error)
+2. If exit code 0, parse .lst for SOLVER STATUS and MODEL STATUS
+3. SOLVER STATUS != 1 indicates solver problem
+4. MODEL STATUS in {3, 4, 5, 6, ...} indicates solve issue
+
+**Decision:** Implement two-stage error detection: exit code check + .lst file parsing. Never trust exit code 0 alone.
 
 ---
 
