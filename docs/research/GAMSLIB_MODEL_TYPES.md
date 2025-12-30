@@ -1,6 +1,6 @@
 # GAMSLIB Model Types Survey
 
-**Date:** December 29, 2025  
+**Date:** December 30, 2025  
 **Sprint 13 Prep Task 4:** Survey GAMSLIB Model Types  
 **Purpose:** Establish inclusion/exclusion criteria for Sprint 13 model catalog
 
@@ -10,8 +10,8 @@
 
 GAMSLIB contains 437 models across 15 model type categories. For Sprint 13 convexity verification:
 
-- **Include:** 115 models (57 LP + 49 NLP + 9 QCP)
-- **Exclude:** 322 models (MIP, MINLP, MCP, CNS, DNLP, MPEC, MPSGE, EMP, etc.)
+- **Include:** 119 models (57 LP + 51 NLP + 11 QCP)
+- **Exclude:** 318 models (MIP, MINLP, MCP, CNS, DNLP, MPEC, MPSGE, EMP, etc.)
 
 This exceeds the 50+ model target for corpus creation.
 
@@ -34,9 +34,9 @@ This exceeds the 50+ model target for corpus creation.
 | **MIP** | Mixed Integer Programming | Linear with integer/binary variables | Non-convex by definition |
 | **MINLP** | Mixed Integer Nonlinear Programming | Nonlinear with integer/binary variables | Non-convex by definition |
 | **MIQCP** | Mixed Integer QCP | Quadratic with integer/binary variables | Non-convex by definition |
-| **RMIP** | Relaxed MIP | MIP with relaxed integrality | Designed for integer problems |
-| **RMINLP** | Relaxed MINLP | MINLP with relaxed integrality | Designed for integer problems |
 | **RMIQCP** | Relaxed MIQCP | MIQCP with relaxed integrality | Designed for integer problems |
+
+**Note:** RMIP and RMINLP are valid GAMS model types but have 0 models in GAMSLIB.
 
 ### 1.3 Complementarity/Equilibrium (Excluded)
 
@@ -64,17 +64,17 @@ This exceeds the 50+ model target for corpus creation.
 
 | Type | Count | Percentage | Inclusion Status |
 |------|-------|------------|------------------|
-| MIP | 60 | 13.7% | ❌ Excluded |
+| MIP | 72 | 16.5% | ❌ Excluded |
 | LP | 57 | 13.0% | ✅ **Included** |
-| NLP | 49 | 11.2% | ✅ **Included** |
-| MINLP | 21 | 4.8% | ❌ Excluded |
-| GAMS | 19 | 4.3% | ❌ Excluded |
-| MPSGE | 18 | 4.1% | ❌ Excluded |
-| MCP | 15 | 3.4% | ❌ Excluded |
-| QCP | 9 | 2.1% | ✅ **Included** |
-| DNLP | 6 | 1.4% | ❌ Excluded |
-| MIQCP | 5 | 1.1% | ❌ Excluded |
+| NLP | 51 | 11.7% | ✅ **Included** |
+| MINLP | 24 | 5.5% | ❌ Excluded |
+| GAMS | 23 | 5.3% | ❌ Excluded |
+| MPSGE | 21 | 4.8% | ❌ Excluded |
+| MCP | 16 | 3.7% | ❌ Excluded |
+| QCP | 11 | 2.5% | ✅ **Included** |
+| DNLP | 7 | 1.6% | ❌ Excluded |
 | DECIS | 5 | 1.1% | ❌ Excluded |
+| MIQCP | 4 | 0.9% | ❌ Excluded |
 | CNS | 4 | 0.9% | ❌ Excluded |
 | EMP | 4 | 0.9% | ❌ Excluded |
 | RMIQCP | 2 | 0.5% | ❌ Excluded |
@@ -86,11 +86,11 @@ This exceeds the 50+ model target for corpus creation.
 | Category | Count | Notes |
 |----------|-------|-------|
 | LP models | 57 | All convex by definition |
-| NLP models | 49 | Need convexity verification |
-| QCP models | 9 | Need convexity verification |
-| **Total Candidates** | **115** | Exceeds 50+ target |
+| NLP models | 51 | Need convexity verification |
+| QCP models | 11 | Need convexity verification |
+| **Total Candidates** | **119** | Exceeds 50+ target |
 
-**Note:** Some models may fail execution or have other issues, so actual corpus may be smaller. The 115 candidates provide sufficient margin.
+**Note:** Some models may fail execution or have other issues, so actual corpus may be smaller. The 119 candidates provide sufficient margin.
 
 ---
 
@@ -110,7 +110,7 @@ This exceeds the 50+ model target for corpus creation.
 solve transport using lp minimizing z;
 ```
 
-### 3.2 NLP Models (49 models) - INCLUDE FOR VERIFICATION
+### 3.2 NLP Models (51 models) - INCLUDE FOR VERIFICATION
 
 **Criteria:**
 - Solve statement uses `using NLP`
@@ -129,7 +129,7 @@ solve transport using lp minimizing z;
 solve m using nlp minimizing r;
 ```
 
-### 3.3 QCP Models (9 models) - INCLUDE FOR VERIFICATION
+### 3.3 QCP Models (11 models) - INCLUDE FOR VERIFICATION
 
 **Criteria:**
 - Solve statement uses `using QCP`
@@ -154,14 +154,14 @@ solve qp7 using qcp minimizing z;
 
 ### 4.1 Integer/Discrete Variables - EXCLUDE
 
-**Types:** MIP, MINLP, MIQCP, RMIP, RMINLP, RMIQCP
+**Types:** MIP, MINLP, MIQCP, RMIQCP
 
 **Rationale:**
 - Integer variables create non-convex feasible regions
-- Even relaxed versions (RMIP, RMINLP) are designed for integer problems
+- Even relaxed formulations of integer problems are designed for discrete decisions
 - Convexity concept doesn't apply to discrete optimization
 
-**Count:** 60 + 21 + 5 + 2 = 88 models
+**Count:** 72 + 24 + 4 + 2 = 102 models
 
 ### 4.2 Complementarity Problems - EXCLUDE
 
@@ -172,7 +172,7 @@ solve qp7 using qcp minimizing z;
 - MPEC has complementarity constraints which are inherently non-convex
 - Not standard convex optimization problems
 
-**Count:** 15 + 1 = 16 models
+**Count:** 16 + 1 = 17 models
 
 ### 4.3 System of Equations - EXCLUDE
 
@@ -194,7 +194,7 @@ solve qp7 using qcp minimizing z;
 - Violates smoothness requirement for standard convexity
 - Often reformulated as MINLP internally
 
-**Count:** 6 models
+**Count:** 7 models
 
 ### 4.5 Specialized Frameworks - EXCLUDE
 
@@ -206,7 +206,7 @@ solve qp7 using qcp minimizing z;
 - GAMS: Utility models without solve statements
 - DECIS: Stochastic programming framework
 
-**Count:** 4 + 18 + 19 + 5 = 46 models
+**Count:** 4 + 21 + 23 + 5 = 53 models
 
 ---
 
@@ -227,7 +227,7 @@ solve m using nlp minimizing r;             -- NLP
 solve qp7 using qcp minimizing z;           -- QCP
 solve hansen using mcp;                     -- MCP (no objective)
 solve model1 using cns;                     -- CNS (no objective)
-solve absM max y using mip;                 -- MIP
+solve absM using mip maximizing y;          -- MIP
 ```
 
 ### 5.2 Parsing Strategy
@@ -239,9 +239,7 @@ To identify model type:
 
 **Regex Pattern:**
 ```python
-model_type_pattern = r'solve\s+\w+\s+(?:using\s+)?(\w+)'
-# or more precisely:
-model_type_pattern = r'solve\s+\w+\s+(?:\w+\s+\w+\s+)?using\s+(\w+)'
+model_type_pattern = r'solve\s+\w+\s+using\s+(\w+)'
 ```
 
 ### 5.3 Type Determination Notes
@@ -332,18 +330,18 @@ solve b2 minimizing phi using lp;
 | Model Type | Decision | Count | Rationale |
 |------------|----------|-------|-----------|
 | LP | ✅ Include | 57 | Always convex |
-| NLP | ✅ Include | 49 | Verify with solver |
-| QCP | ✅ Include | 9 | Verify with solver |
-| MIP | ❌ Exclude | 60 | Integer variables |
-| MINLP | ❌ Exclude | 21 | Integer + nonlinear |
-| MIQCP | ❌ Exclude | 5 | Integer + quadratic |
-| MCP | ❌ Exclude | 15 | No objective |
+| NLP | ✅ Include | 51 | Verify with solver |
+| QCP | ✅ Include | 11 | Verify with solver |
+| MIP | ❌ Exclude | 72 | Integer variables |
+| MINLP | ❌ Exclude | 24 | Integer + nonlinear |
+| MIQCP | ❌ Exclude | 4 | Integer + quadratic |
+| MCP | ❌ Exclude | 16 | No objective |
 | MPEC | ❌ Exclude | 1 | Non-convex constraints |
 | CNS | ❌ Exclude | 4 | No objective |
-| DNLP | ❌ Exclude | 6 | Non-smooth |
+| DNLP | ❌ Exclude | 7 | Non-smooth |
 | EMP | ❌ Exclude | 4 | Special framework |
-| MPSGE | ❌ Exclude | 18 | CGE models |
-| GAMS | ❌ Exclude | 19 | No optimization |
+| MPSGE | ❌ Exclude | 21 | CGE models |
+| GAMS | ❌ Exclude | 23 | No optimization |
 | DECIS | ❌ Exclude | 5 | Stochastic framework |
 | RMIQCP | ❌ Exclude | 2 | Relaxed integer |
 
@@ -352,11 +350,11 @@ solve b2 minimizing phi using lp;
 | Category | Count | Expected Valid |
 |----------|-------|----------------|
 | LP | 57 | ~50-55 (some may have issues) |
-| NLP | 49 | ~40-45 (some may fail) |
-| QCP | 9 | ~7-9 |
-| **Total** | **115** | **~100-109** |
+| NLP | 51 | ~45-50 (some may fail) |
+| QCP | 11 | ~9-11 |
+| **Total** | **119** | **~104-116** |
 
-The 115 candidate models significantly exceed the 50+ target, providing margin for:
+The 119 candidate models significantly exceed the 50+ target, providing margin for:
 - Models that fail to execute
 - Models excluded due to other issues
 - Models with STATUS ≠ 1 or 2
