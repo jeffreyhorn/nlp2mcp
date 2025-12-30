@@ -331,7 +331,22 @@ GAMSLIB contains at least 100 NLP and LP models combined, making the 50+ target 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- Total GAMSLIB models: 437
+- NLP models: 49
+- LP models: 57
+- QCP models: 9
+- **Combined NLP + LP + QCP: 115 models** (exceeds 50+ target)
+- MIP models: 60 (excluded - integer variables)
+- MINLP models: 21 (excluded - mixed integer nonlinear)
+- Other excluded types: MCP (15), MPSGE (18), GAMS (19), DNLP (6), CNS (4), EMP (4), MIQCP (5), DECIS (5), MPEC (1), RMIQCP (2)
+
+**Evidence:**
+GAMSLIB index page at `https://www.gams.com/latest/gamslib_ml/libhtml/index.html` provides model counts by type. Verified by browsing type filters.
+
+**Decision:** 115 candidate models significantly exceeds 50+ target. Focus on LP (all convex), NLP (requires verification), and QCP (requires verification).
 
 ---
 
@@ -492,7 +507,31 @@ Extract: `NLP`
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- Model type is declared in the `Solve` statement, NOT in the `Model` definition
+- Syntax: `solve <model_name> using <type> [minimizing|maximizing] <variable>;`
+- All valid model type keywords: LP, NLP, QCP, MIP, MINLP, MIQCP, MCP, MPEC, CNS, DNLP, EMP, MPSGE, RMIP, RMINLP, RMIQCP
+- Type keyword is case-insensitive in GAMS
+- A model CAN have multiple solve statements with different types
+- No models found without explicit type declaration in solve statement
+
+**Evidence:**
+```gams
+solve transport using lp minimizing z;      -- LP type
+solve m using nlp minimizing r;             -- NLP type
+solve qp7 using qcp minimizing z;           -- QCP type
+solve hansen using mcp;                     -- MCP (no objective)
+solve model1 using cns;                     -- CNS (no objective)
+```
+
+**Parsing Regex:**
+```python
+model_type_pattern = r'solve\s+\w+\s+.*?using\s+(\w+)'
+```
+
+**Decision:** Parse `using <type>` from solve statements. For models with multiple solves, use the first/primary solve type or flag for review.
 
 ---
 
@@ -534,7 +573,29 @@ Model type declaration (NLP vs DNLP) does not guarantee convexity - actual conve
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- **Cannot distinguish convex from non-convex NLP by type declaration alone**
+- The `NLP` type encompasses both convex and non-convex problems
+- LP is always convex by definition (linear objective + linear constraints)
+- QCP is convex only if all quadratic forms are positive semidefinite
+- DNLP is never convex (contains non-differentiable functions)
+- Convexity must be verified empirically by solving
+
+**Evidence:**
+- `circle.gms` (NLP): Convex problem (minimize radius of enclosing circle)
+- `qp1.gms`: QCP problem solved as NLP (`solve qp1 using nlp`)
+- Local NLP solvers (CONOPT, IPOPT) report MODEL STATUS 2 (Locally Optimal) even for convex problems
+- Only LP solver (CPLEX) reliably reports MODEL STATUS 1 (Optimal)
+
+**Verification Strategy:**
+1. LP → Always convex, MODEL STATUS 1 expected
+2. NLP/QCP → Solve and check MODEL STATUS:
+   - STATUS 1 → Solver proved global optimality → Convex
+   - STATUS 2 → Local optimum only → Unknown (needs further analysis)
+
+**Decision:** Type declaration is insufficient for convexity. Implement empirical verification via solve status. LP can be auto-classified as convex; NLP/QCP require verification.
 
 ---
 
@@ -573,7 +634,36 @@ The following model types are unsuitable for MCP reformulation and should be exc
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+The following model types should be **excluded** from the Sprint 13 corpus:
+
+| Type | Count | Exclusion Rationale |
+|------|-------|---------------------|
+| MIP | 60 | Integer variables create non-convex feasible region |
+| MINLP | 21 | Integer + nonlinear = non-convex |
+| MIQCP | 5 | Integer + quadratic = non-convex |
+| MCP | 15 | No objective function (equilibrium problem) |
+| MPEC | 1 | Complementarity constraints are non-convex |
+| CNS | 4 | No objective function (system of equations) |
+| DNLP | 6 | Non-smooth functions (abs, min, max) violate differentiability |
+| EMP | 4 | Meta-programming framework, not standard optimization |
+| MPSGE | 18 | Specialized CGE equilibrium models |
+| GAMS | 19 | Utility models without solve statements |
+| DECIS | 5 | Stochastic programming framework |
+| RMIP/RMINLP/RMIQCP | ~4 | Relaxed integer types still designed for integer problems |
+
+**Total Excluded:** ~162 models
+
+**Evidence:**
+- MIP/MINLP/MIQCP: Integer variables fundamentally incompatible with KKT-based reformulation
+- MCP/CNS: No objective to optimize - find equilibrium/solution to system
+- MPEC: Contains complementarity constraints (already MCP-like)
+- DNLP: Uses non-differentiable intrinsic functions; GAMS recommends reformulating as MINLP
+- MPSGE: Domain-specific CGE modeling language
+
+**Decision:** Exclude all listed types. Include only LP (57), NLP (49), and QCP (9) = 115 candidates.
 
 ---
 
@@ -607,7 +697,30 @@ QCP models should be included if convex (convex quadratic constraints), excluded
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- GAMSLIB contains **9 QCP models**
+- QCP = Quadratically Constrained Program (quadratic objective and/or constraints)
+- QCP is convex **only if** all quadratic forms are positive semidefinite (Q ⪰ 0)
+- Some GAMSLIB QCP models are actually solved as NLP (e.g., `qp1.gms` uses `solve qp1 using nlp`)
+- nlp2mcp should support QCP since quadratic functions are expressible in GAMS/MCP format
+
+**Evidence:**
+```gams
+# qp7.gms - Uses QCP solve type
+solve qp7 using qcp minimizing z;
+
+# qp1.gms - QCP problem but solved as NLP
+solve qp1 using nlp minimizing z;
+```
+
+**Convexity Verification for QCP:**
+Same as NLP - solve and check MODEL STATUS:
+- STATUS 1 → Convex (global optimum found)
+- STATUS 2 → Unknown (may or may not be convex)
+
+**Decision:** **Include QCP models** in Sprint 13 corpus. Apply same verification strategy as NLP. The 9 QCP models expand corpus to 115 candidates total.
 
 ---
 
@@ -638,7 +751,31 @@ RMINLP models are continuous relaxations of MINLP and may be suitable for testin
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+- RMINLP = Relaxed MINLP (continuous relaxation of mixed-integer nonlinear program)
+- In RMINLP, integer/binary variables are treated as continuous within their bounds
+- GAMSLIB has **0 models explicitly categorized as RMINLP** in the main index
+- However, some models may use RMINLP internally for initialization or bounds computation
+- Some models categorized elsewhere actually solve as different types (e.g., `ramsey.gms` solves as NLP)
+
+**Evidence:**
+```gams
+# ramsey.gms - listed under various categories but solves as NLP
+solve ramsey maximizing utility using nlp;
+```
+
+**Key Insight:** The library categorization may not match the actual solve type. Always parse the `solve ... using <type>` statement from the .gms file.
+
+**RMIP/RMINLP/RMIQCP Handling:**
+- These relaxed types are used for:
+  1. Generating starting points for integer solvers
+  2. Computing bounds in branch-and-bound
+  3. Testing continuous relaxation of integer models
+- They originate from integer problems and should be **excluded** from convex corpus
+
+**Decision:** Exclude RMINLP/RMIP/RMIQCP types. If a model listed as RMINLP actually uses `solve ... using nlp`, evaluate based on actual solve type. Focus on models that are inherently continuous (LP, NLP, QCP).
 
 ---
 
