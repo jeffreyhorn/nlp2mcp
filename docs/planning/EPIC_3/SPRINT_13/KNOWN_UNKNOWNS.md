@@ -1584,7 +1584,32 @@ find docs -name "*.md" -exec grep -l -i "gamslib" {} \;
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+Extensive GAMSLIB infrastructure exists from EPIC 2 Sprints 6-12:
+
+**Scripts:**
+- `scripts/download_gamslib_nlp.sh` - Downloads models from GAMS website with retry logic, validation
+- `scripts/ingest_gamslib.py` - Parses models, generates JSON reports, creates dashboards
+
+**Test Fixtures:**
+- `tests/fixtures/gamslib/` - 10 Tier 1 NLP models (circle, himmel16, hs62, mathopt1, maxmin, mhw4d, mhw4dx, mingamma, rbrock, trig)
+- All 10 models parse successfully (100% parse rate achieved in Sprint 8)
+
+**Research Documents:**
+- `docs/research/gamslib_parse_errors.md` - Sprint 6 baseline (0% → 100% parse rate)
+- `docs/research/gamslib_kpi_definitions.md` - 4-KPI framework (parse%, convert%, solve%, e2e%)
+- `docs/research/ingestion_schedule.md` - Manual ingestion planning
+- `docs/status/GAMSLIB_CONVERSION_STATUS.md` - Current status dashboard
+
+**Lessons Learned:**
+- Initial 0% parse rate due to grammar gaps (variable .l assignments, compiler directives, set ranges)
+- All grammar issues fixed in Sprint 6-8
+- KPI framework provides solid metrics foundation
+- Scripts are well-structured and extensible
+
+**Decision:** Sprint 13 can reuse download script (extend for 115 models), ingestion script (add convexity verification), and KPI framework. See `docs/research/GAMSLIB_EXISTING_WORK_REVIEW.md` for full details.
 
 ---
 
@@ -1623,7 +1648,47 @@ print(model.model_type)  # or similar accessor
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+
+**1. Grammar DOES parse solver_type:**
+From `src/gams/gams_grammar.lark`:
+```lark
+solve_stmt: "Solve"i ID obj_sense ID "using"i solver_type SEMI     -> solve
+          | "Solve"i ID "using"i solver_type obj_sense ID SEMI     -> solve
+
+solver_type: /(?i:nlp|dnlp|minlp|mip|lp|mcp|cns|qcp|rmip|rminlp)\b/
+```
+Supports: NLP, DNLP, MINLP, MIP, LP, MCP, CNS, QCP, RMIP, RMINLP
+
+**2. GAP: solver_type is NOT stored in ModelIR:**
+From `src/ir/model_ir.py`:
+```python
+@dataclass
+class ModelIR:
+    declared_model: str | None = None
+    model_equations: list[str] = field(default_factory=list)
+    model_uses_all: bool = False
+    model_name: str | None = None
+    objective: ObjectiveIR | None = None
+    # NOTE: solver_type field is MISSING!
+```
+
+**3. Cannot query model type after parsing:**
+- `model.solver_type` does not exist
+- Type is parsed and discarded during transformation
+
+**4. Unsupported types:**
+- All types in grammar are parsed without error
+- No filtering by type occurs during parsing
+
+**Impact on Sprint 13:**
+- Must add `solver_type: str | None = None` to ModelIR
+- Must update transformer to populate solver_type from parse tree
+- Estimated fix: 1-2 hours
+
+**Decision:** Grammar works correctly. Need to extend ModelIR and transformer to store solver_type. See `docs/research/GAMSLIB_EXISTING_WORK_REVIEW.md` Section 4 for details.
 
 ---
 
@@ -1658,7 +1723,52 @@ JSON catalog is a standalone data structure, separate from nlp2mcp IR, for maxim
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:**
+
+**1. Existing data classes for model metadata:**
+- `scripts/ingest_gamslib.py` defines `ModelResult` and `IngestionReport` dataclasses
+- `src/ir/diagnostics.py` defines `DiagnosticReport` with stage metrics
+- These are separate from ModelIR (internal representation)
+
+**2. JSON serialization already supported:**
+- Uses `dataclasses.asdict()` for serialization (standard library)
+- No external dependencies (dataclasses_json, pydantic not used)
+- Pattern: `json.dump(asdict(report), f, indent=2)`
+
+**3. Existing pattern from ingest_gamslib.py:**
+```python
+@dataclass
+class ModelResult:
+    model_name: str
+    gms_file: str
+    parse_status: str  # "SUCCESS" or "FAILED"
+    parse_error: str | None = None
+    parse_error_type: str | None = None
+    parse_progress_percentage: float | None = None
+    ...
+
+@dataclass
+class IngestionReport:
+    sprint: str
+    total_models: int
+    models: list[ModelResult]
+    kpis: dict[str, Any]
+```
+
+**4. Recommendation:**
+- **Use standalone catalog structure** (not tied to ModelIR)
+- ModelIR is optimized for internal transformation, not external metadata
+- Follow `ModelResult` pattern with dedicated dataclasses
+- Use `dataclasses.asdict()` for JSON serialization
+- This provides flexibility to evolve catalog independently
+
+**5. No existing JSON schema validation:**
+- Current approach uses Python dataclasses without formal JSON Schema
+- Sprint 14 can add JSON Schema validation if needed
+
+**Decision:** Create standalone catalog dataclasses following the `ModelResult` pattern. Keep catalog independent of ModelIR for flexibility. See `docs/research/GAMSLIB_EXISTING_WORK_REVIEW.md` Section 4.3 for details.
 
 ---
 
