@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 13 Prep: Task 7 Complete - Design JSON Catalog Schema (Draft) - 2025-12-31
+
+**Branch:** `sprint13-prep-task7-json-schema`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created draft JSON schema for GAMSLIB model catalog. Documented field descriptions, valid values, and extension points for Sprint 14 expansion.
+
+#### Schema Structure
+
+**Top-Level Fields:**
+- schema_version, created_date, updated_date, gams_version, total_models, models
+
+**Model Entry Fields (12 fields):**
+| Category | Fields |
+|----------|--------|
+| Identification | model_id, sequence_number, model_name |
+| Type | gamslib_type (LP, NLP, QCP, MIP, etc.) |
+| Source | source_url, web_page_url, description, keywords |
+| Download | download_status, download_date, file_path, file_size_bytes |
+| Metadata | notes |
+
+#### Sprint 14 Extension Points
+
+- `convexity` object: status, solver, model/solver status, objective, timing
+- `pipeline` object: parse/convert/solve status with dates and errors
+- `versions` object: GAMS version, nlp2mcp version, last tested
+
+#### Changes
+
+- Added: `docs/infrastructure/GAMSLIB_CATALOG_SCHEMA.md` (~300 lines)
+  - Complete field descriptions with types and valid values
+  - Python dataclass implementation (ModelEntry, GamslibCatalog)
+  - Example usage code for creating and querying catalogs
+  - Design decision rationale (standalone vs integrated)
+- Added: `data/gamslib/catalog_example.json`
+  - 5 example model entries (2 LP, 2 NLP, 1 MIP)
+  - Demonstrates all download status values (downloaded, pending, excluded)
+- Modified: `docs/planning/EPIC_3/SPRINT_13/PREP_PLAN.md`
+  - Task 7 marked COMPLETE with all acceptance criteria checked
+
+---
+
 ### Sprint 13 Prep: Task 6 Complete - Review Existing nlp2mcp GAMSLIB Work - 2025-12-31
 
 **Branch:** `sprint13-prep-task6-gamslib-review`  
