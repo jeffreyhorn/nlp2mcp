@@ -1292,7 +1292,7 @@ All major solvers are available under the GAMS Demo license with size restrictio
 | BARON | ✅ Available | Returns MODEL STATUS 1 (Optimal) |
 | ANTIGONE | ✅ Available | Returns global optimum confirmation |
 | SCIP | ✅ Available | Open-source global solver |
-| LINDOGLOBAL | ✅ Available | Returns MODEL STATUS 2 |
+| LINDOGLOBAL | ✅ Available | Returns MODEL STATUS 2 (locally optimal for tested models; global optimality not confirmed on rbrock test) |
 
 **MCP Solvers (all tested successfully):**
 | Solver | Status | Notes |
@@ -1374,13 +1374,16 @@ Demo license has different limits for different model types:
 **Model Size Limits:**
 | Model Type | Max Rows | Max Columns | Tested |
 |------------|----------|-------------|--------|
-| LP | 2,000 | 2,000 | ✅ 1,999 vars works, 5,000 fails |
-| NLP | 1,000 | 1,000 | ✅ 999 vars works, 1,000 fails |
+| LP | 2,000 | 2,000 | ✅ 1,999 vars (2000 total rows) works; 2,000 vars (2001 total rows) fails |
+| NLP | 1,000 | 1,000 | ✅ 999 vars (1000 total rows) works; 1,000 vars (1001 total rows) fails |
 | MIP | 2,000 | 2,000 | ✅ 500 int vars works |
+
+**Note:** Limits are on total rows/columns, not just variable count. A model with N variables typically has N+1 rows (N constraints + 1 objective).
 
 **Evidence:**
 ```bash
-# NLP at limit (999 variables + 1 objective = 1000 rows)
+# NLP at limit: 999 decision variables + 1 objective variable = 1000 columns
+# Model has 1000 constraints (999 cons(i) + 1 obj) and 1000 variables
 $ gams test_size_999.gms lo=3
 **** Optimal solution. (1000 constraints, 1000 variables)
 
@@ -1390,11 +1393,16 @@ $ gams test_size_1000.gms lo=3
     of more than 1000 rows or columns
 *** Status: Terminated due to a licensing error
 
-# LP at limit (1999 variables)
+# LP at limit: 1999 decision variables + 1 objective = 2000 columns (within limit)
 $ gams test_lp_2000.gms lo=3
 Optimal solution found
 
-# LP over limit (5000 variables)
+# LP at boundary: 2000 decision variables + 1 objective = 2001 columns (exceeds limit)
+$ gams test_lp_2000_exact.gms lo=3
+*** The model exceeds the demo license limits for linear models 
+    of more than 2000 rows or columns
+
+# LP well over limit (5000 variables)
 $ gams test_lp_5000.gms lo=3
 *** The model exceeds the demo license limits for linear models 
     of more than 2000 rows or columns
