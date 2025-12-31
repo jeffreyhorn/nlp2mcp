@@ -28,8 +28,8 @@ All LP models are convex by definition (linear objective + linear constraints).
 |-------|------|-------------|------|--------------|-----------|
 | trnsport.gms | 1 | A Transportation Problem | 1,751 bytes | 1 (Optimal) | verified_convex |
 | blend.gms | 2 | Blending Problem I | 1,699 bytes | 1 (Optimal) | verified_convex |
-| diet.gms | 8 | Stigler's Nutrition Model | 3,768 bytes | 1 (Optimal) | verified_convex |
-| aircraft.gms | 9 | Aircraft Allocation Problem | 3,696 bytes | 1 (Optimal) | verified_convex |
+| diet.gms | 7 | Stigler's Nutrition Model | 3,768 bytes | 1 (Optimal) | verified_convex |
+| aircraft.gms | 8 | Aircraft Allocation Problem | 3,696 bytes | 1 (Optimal) | verified_convex |
 | prodmix.gms | 3 | Product Mix Problem | varies | 1 (Optimal) | verified_convex |
 
 **Expected Behavior:**
@@ -49,7 +49,7 @@ NLP models require convexity verification via solve status.
 | rbrock.gms | 83 | Rosenbrock Test Function | 531 bytes | 2 (Locally Optimal) | likely_convex |
 | himmel16.gms | 36 | Hexagon Area Optimization | 2,329 bytes | 2 (Locally Optimal) | likely_convex |
 | hs62.gms | 264 | Hock-Schittkowski Problem 62 | 1,233 bytes | 2 (Locally Optimal) | likely_convex |
-| chem.gms | 16 | Chemical Equilibrium | 1,625 bytes | 2 (Locally Optimal) | likely_convex |
+| chem.gms | 21 | Chemical Equilibrium | 1,625 bytes | 2 (Locally Optimal) | likely_convex |
 
 **Expected Behavior:**
 - All solve with MODEL STATUS = 2 (Locally Optimal) using local NLP solvers
@@ -71,9 +71,9 @@ These models demonstrate type-based exclusion criteria.
 
 | Model | Seq# | Type | Description | Size | Exclusion Reason |
 |-------|------|------|-------------|------|------------------|
-| absmip.gms | 77 | MIP | Absolute Value MIP Example | 4,349 bytes | Integer variables |
-| magic.gms | 31 | MIP | Magic Square Problem | 3,199 bytes | Integer variables |
-| linear.gms | 22 | DNLP | Linear Regression via DNLP | varies | Non-smooth functions |
+| absmip.gms | 208 | MIP | Absolute Value MIP Example | 4,349 bytes | Integer variables [1] |
+| magic.gms | 12 | MIP | Magic Square Problem | 3,199 bytes | Integer variables |
+| linear.gms | 23 | DNLP | Linear Regression via DNLP | varies | Non-smooth functions |
 
 **Expected Behavior:**
 - MIP models: Solve with MODEL STATUS = 1 but excluded due to integer variables
@@ -83,6 +83,9 @@ These models demonstrate type-based exclusion criteria.
 **Exclusion Rationale:**
 - **MIP (Mixed Integer Program):** Integer variables create non-convex feasible region, incompatible with KKT-based MCP reformulation
 - **DNLP (Discontinuous NLP):** Contains non-smooth functions (abs, min, max) that violate differentiability requirements
+
+**Notes:**
+[1] absmip.gms contains upstream typo "discontinous" (should be "discontinuous") in GAMSLIB source - not modified to preserve original file integrity
 
 ---
 
