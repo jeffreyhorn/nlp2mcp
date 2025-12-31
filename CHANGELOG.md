@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 13 Prep: Task 8 Complete - Create Test Model Set - 2025-12-31
+
+**Branch:** `sprint13-prep-task8-test-models`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Downloaded 13 test models from GAMSLIB to validate Sprint 13 infrastructure. Created comprehensive manifest with expected convexity status.
+
+#### Test Models
+
+**LP Models (5) - Verified Convex:**
+- trnsport.gms - A Transportation Problem
+- blend.gms - Blending Problem I
+- diet.gms - Stigler's Nutrition Model
+- aircraft.gms - Aircraft Allocation Problem
+- prodmix.gms - Product Mix Problem
+
+**NLP Models (5) - Likely Convex:**
+- circle.gms - Circle Enclosing Points
+- rbrock.gms - Rosenbrock Test Function
+- himmel16.gms - Hexagon Area Optimization
+- hs62.gms - Hock-Schittkowski Problem 62
+- chem.gms - Chemical Equilibrium
+
+**Excluded Types (3):**
+- absmip.gms - MIP (integer variables)
+- magic.gms - MIP (integer variables)
+- linear.gms - DNLP (non-smooth functions)
+
+#### Validation Results
+
+| Type | Count | Model Status | Convexity |
+|------|-------|--------------|-----------|
+| LP | 5 | STATUS 1 (Optimal) | verified_convex |
+| NLP | 5 | STATUS 2 (Locally Optimal) | likely_convex |
+| MIP | 2 | STATUS 1 (Optimal) | excluded |
+| DNLP | 1 | STATUS 7 (Intermediate) | excluded |
+
+#### Changes
+
+- Added: `tests/fixtures/gamslib_test_models/` with 13 .gms files
+- Added: `tests/fixtures/gamslib_test_models/MANIFEST.md` (~200 lines)
+  - Model descriptions and expected convexity
+  - Verification commands
+  - Model status reference table
+- Modified: `docs/planning/EPIC_3/SPRINT_13/PREP_PLAN.md`
+  - Task 8 marked COMPLETE with all acceptance criteria checked
+
+---
+
 ### Sprint 13 Prep: Task 7 Complete - Design JSON Catalog Schema (Draft) - 2025-12-31
 
 **Branch:** `sprint13-prep-task7-json-schema`  
