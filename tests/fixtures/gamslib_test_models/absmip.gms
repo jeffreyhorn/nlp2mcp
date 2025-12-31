@@ -1,4 +1,4 @@
-$title Discontinous Functions abs, min, max, and sign as MIPs (ABSMIP,SEQ=208)
+$title Discontinuous Functions abs, min, max, and sign as MIPs (ABSMIP,SEQ=208)
 
 $onText
 This illustrates the MIP formulations of some difficult functions.
@@ -6,7 +6,7 @@ This illustrates the MIP formulations of some difficult functions.
 
 GAMS Development Corporation, Formulation and Language Example.
 
-Keywords: mixed integer linear programming, discontinous functions,
+Keywords: mixed integer linear programming, discontinuous functions,
           GAMS language example, mathematics, transformation techniques
 $offText
 

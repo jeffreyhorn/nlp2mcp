@@ -71,7 +71,7 @@ These models demonstrate type-based exclusion criteria.
 
 | Model | Seq# | Type | Description | Size | Exclusion Reason |
 |-------|------|------|-------------|------|------------------|
-| absmip.gms | 208 | MIP | Absolute Value MIP Example | 4,349 bytes | Integer variables [1] |
+| absmip.gms | 208 | MIP | Absolute Value MIP Example | 4,349 bytes | Integer variables |
 | magic.gms | 12 | MIP | Magic Square Problem | 3,199 bytes | Integer variables |
 | linear.gms | 23 | DNLP | Linear Regression via DNLP | varies | Non-smooth functions |
 
@@ -83,9 +83,6 @@ These models demonstrate type-based exclusion criteria.
 **Exclusion Rationale:**
 - **MIP (Mixed Integer Program):** Integer variables create non-convex feasible region, incompatible with KKT-based MCP reformulation
 - **DNLP (Discontinuous NLP):** Contains non-smooth functions (abs, min, max) that violate differentiability requirements
-
-**Notes:**
-[1] absmip.gms contains upstream typo "discontinous" (should be "discontinuous") in GAMSLIB source - not modified to preserve original file integrity
 
 ---
 
