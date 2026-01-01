@@ -391,19 +391,21 @@ Migration will be implemented in Sprint 14:
 
 ---
 
-## Verified Unknowns
+## Unknowns Addressed
 
-This schema design resolves the following unknowns from KNOWN_UNKNOWNS.md:
+This schema design implements decisions from the following unknowns (verified across Tasks 3-5):
 
-| ID | Question | Resolution |
-|----|----------|------------|
-| 2.2 | Nested vs flat structure | Nested (2 levels for pipeline stages) |
-| 2.3 | Required vs optional fields | 3 required at top, status required per stage |
-| 2.4 | Field naming convention | snake_case (consistent with catalog.json) |
-| 2.5 | Error representation | Structured with category, message, optional line/column |
-| 2.6 | Status values per stage | Defined enums per stage type |
-| 2.7 | Schema versioning strategy | Semantic versioning (MAJOR.MINOR.PATCH) |
-| 4.3 | MCP output organization | output_file field with relative path |
+| ID | Question | Resolution | Verified In |
+|----|----------|------------|-------------|
+| 2.2 | Nested vs flat structure | Nested (2 levels for pipeline stages) | Task 3 |
+| 2.3 | Required vs optional fields | 3 required at top, status required per stage | Task 4 |
+| 2.4 | Field naming convention | snake_case (consistent with catalog.json) | Task 5 |
+| 2.5 | Error representation | Structured with category, message, optional line/column | Task 4 |
+| 2.6 | Status values per stage | Defined enums per stage type | Task 5 |
+| 2.7 | Schema versioning strategy | Semantic versioning (MAJOR.MINOR.PATCH) | Task 3 |
+| 4.3 | MCP output organization | output_file field with relative path | Task 5 |
+
+**Note:** Unknowns 2.4, 2.6, and 4.3 were newly verified in Task 5. Unknowns 2.2, 2.3, 2.5, and 2.7 were verified in Tasks 3 and 4.
 
 ---
 

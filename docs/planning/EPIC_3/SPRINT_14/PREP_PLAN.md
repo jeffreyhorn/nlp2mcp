@@ -619,7 +619,7 @@ print('Schema is valid JSON Schema')
 - [x] `docs/planning/EPIC_3/SPRINT_14/SCHEMA_DESIGN_NOTES.md`
 - [x] Field descriptions and valid values
 - [x] Migration notes from current catalog
-- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 4.3
+- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.4, 2.6, 4.3
 
 ### Acceptance Criteria
 
@@ -628,7 +628,7 @@ print('Schema is valid JSON Schema')
 - [x] All fields documented
 - [x] Tested against sample catalog entries
 - [x] Migration approach documented
-- [x] Unknowns 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 4.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Unknowns 2.4, 2.6, 4.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
