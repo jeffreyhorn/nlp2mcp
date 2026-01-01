@@ -94,12 +94,12 @@ This significantly exceeds the 50+ model target for corpus creation.
 
 ### 2.2 Actual Corpus (Sprint 13 Results)
 
-| Category | Discovered | Verified/Likely | Errors |
-|----------|-----------|-----------------|--------|
-| LP | 86 | 57 verified_convex | 29 |
-| NLP | 120 | 97 likely_convex | 23 |
-| QCP | 13 | 6 likely_convex | 3 |
-| **Total** | **219** | **160 + 4 excluded** | **55** |
+| Category | Discovered | Verified/Likely | Excluded | Errors |
+|----------|-----------|-----------------|----------|--------|
+| LP | 86 | 57 verified_convex | 0 | 29 |
+| NLP | 120 | 97 likely_convex | 4 | 19 |
+| QCP | 13 | 6 likely_convex | 0 | 7 |
+| **Total** | **219** | **160 (57 verified + 103 likely)** | **4** | **55** |
 
 **Note:** The 55 errors are expected edge cases:
 - License limits (11): Models exceed GAMS demo license size limits
