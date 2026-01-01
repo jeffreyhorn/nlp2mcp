@@ -194,7 +194,7 @@ Development team
 ## Unknown 1.3: How should models with license limit errors be handled?
 
 ### Priority
-**High** - 11 models affected per Sprint 13 report
+**High** - 10 models affected per catalog quality analysis
 
 ### Assumption
 Models that hit GAMS demo license limits should be marked as "license_limited" and excluded from pipeline testing until full license is available.
@@ -240,14 +240,39 @@ python3 -m src.cli data/gamslib/raw/large_model.gms --parse-only 2>&1
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from Catalog Quality Analysis (Task 2):**
+
+1. **License-limited model count:** 10 models (not 11 as originally reported)
+   - LP: 6 (airsp, airsp2, andean, emfl, indus89, phosdis)
+   - NLP: 3 (jbearing, minsurf, torsion)
+   - QCP: 1 (msm)
+
+2. **Detection pattern:** `verification_error: "Model exceeds demo license limits"`
+   - This string is consistently used in catalog.json
+   - Can be detected programmatically during batch processing
+
+3. **Recommended handling:**
+   - Add `license_limited: true` flag in new database schema
+   - Skip these 10 models during batch verification
+   - Track separately for future verification with full license
+   - Do NOT attempt to simplify models (would change problem structure)
+
+4. **nlp2mcp parsing:** License limits are a GAMS execution issue, not a parsing issue
+   - nlp2mcp parsing does NOT hit license limits (parsing is independent of GAMS)
+   - License limits only affect GAMS solve verification
+
+**Decision:** ✅ Mark as `license_limited` in database, skip during batch verification, track separately for future full-license testing
+
+**Evidence:** See `docs/planning/EPIC_3/SPRINT_14/CATALOG_QUALITY_REPORT.md` for full analysis
 
 ---
 
 ## Unknown 1.4: How should models with missing $include files be handled?
 
 ### Priority
-**Medium** - 18 models affected per Sprint 13 report
+**Medium** - Only 2 models truly affected (not 18 as originally reported)
 
 ### Assumption
 Models with missing $include files should be marked as "dependency_missing" and excluded from pipeline testing, or have their dependencies resolved if feasible.
@@ -294,7 +319,32 @@ python3 -m src.cli data/gamslib/raw/affected_model.gms --parse-only
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from Catalog Quality Analysis (Task 2):**
+
+1. **Corrected count:** Only **2 models** have truly missing includes (not 18)
+   - gqapsdp: uses `$include '%instance%'` (parameterized path)
+   - kqkpsdp: uses `$include 'kQKP%instance%.gms'` (parameterized path)
+
+2. **Models with $include directives:** 11 total
+   - Most include files ARE present in `data/gamslib/raw/`
+   - Examples: qpdata.inc, poolmod.inc, t1000d.inc (all exist)
+
+3. **Root cause of "18 models" error:** The original Sprint 13 report conflated:
+   - Models with $include that work (9 models)
+   - Models with parameterized includes that can't work (2 models)
+   - Models with GAMS compilation errors from other causes (19 models total)
+
+4. **Recommended handling:**
+   - The 2 parameterized-include models cannot be fixed (require runtime parameters)
+   - Mark as `dependency_missing` in database
+   - Do NOT stub includes (would produce invalid models)
+   - These 2 models are already in the "error" category
+
+**Decision:** ✅ Only 2 models have true missing includes. Mark as `dependency_missing`, no action needed (already classified as errors).
+
+**Evidence:** See `docs/planning/EPIC_3/SPRINT_14/CATALOG_QUALITY_REPORT.md` for full analysis
 
 ---
 
@@ -346,7 +396,37 @@ def migrate_entry(old_entry) -> new_entry:
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from Catalog Quality Analysis (Task 2):**
+
+1. **Migration approach:** Create new `gamslib_status.json`, migrate data from `catalog.json`
+   - catalog.json is high quality (9.75/10 score)
+   - All 20 fields use consistent snake_case naming
+   - Clean 1:1 field mapping possible
+
+2. **Field preservation:** All catalog.json fields should be preserved
+   - Core fields: model_id, sequence_number, model_name, gamslib_type, source_url, etc.
+   - Convexity fields: convexity_status, verification_date, solver_status, model_status, etc.
+   - New schema adds: nlp2mcp_parse, nlp2mcp_translate, mcp_solve nested objects
+
+3. **Coexistence strategy:**
+   - Keep catalog.json as read-only archive (Sprint 13 deliverable)
+   - Create gamslib_status.json as new authoritative source
+   - Do NOT dual-write (adds complexity, risk of inconsistency)
+
+4. **Migration timing:**
+   - Sprint 14 Day 1-2: Create migration script
+   - One-time migration when db_manager.py is ready
+   - catalog.json remains but is not updated after migration
+
+5. **Schema version bump:** 1.0.0 → 2.0.0
+   - Breaking change (new nested structure)
+   - Migration script handles transformation
+
+**Decision:** ✅ Create new gamslib_status.json, one-time migration from catalog.json, no dual-write. catalog.json remains as Sprint 13 archive.
+
+**Evidence:** See `docs/planning/EPIC_3/SPRINT_14/CATALOG_QUALITY_REPORT.md` for full analysis
 
 ---
 
