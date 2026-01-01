@@ -1,5 +1,12 @@
 """Tests for GAMSLIB convexity verification script."""
 
+import sys
+from pathlib import Path
+
+# Add project root to path so we can import from scripts/
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
 from scripts.gamslib.verify_convexity import (
     MODEL_STATUS_DESCRIPTIONS,
     SOLVER_STATUS_DESCRIPTIONS,
