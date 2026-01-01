@@ -19,7 +19,7 @@ Created download script that uses the `gamslib` command to extract models to the
 #### Changes
 
 **New Files:**
-- `scripts/gamslib/download_models.py` (~400 lines)
+- `scripts/gamslib/download_models.py`
   - Uses `gamslib` command to extract models to `data/gamslib/raw/`
   - Idempotent downloads (skips existing files)
   - `--force` flag to re-download existing files

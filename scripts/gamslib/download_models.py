@@ -158,6 +158,11 @@ def update_model_status(
             model.file_path = str(gms_file)
         if gms_file.exists():
             model.file_size_bytes = gms_file.stat().st_size
+        else:
+            logger.warning(
+                f"Expected file '{gms_file}' for model '{model.model_id}' to exist "
+                "during status update, but it was missing."
+            )
     else:
         model.download_status = "failed"
         model.download_date = get_utc_timestamp()
@@ -232,6 +237,16 @@ def download_models(
                     f"[{i}/{len(models_to_download)}] Skipping {model.model_id} (already exists)"
                 )
             result.add_skip()
+            # Ensure catalog reflects that the file is already present on disk
+            update_model_status(model, success=True, target_dir=RAW_DIR)
+            downloads_since_save += 1
+            # Save catalog periodically even when skipping existing files
+            if downloads_since_save >= batch_size:
+                saved_count = downloads_since_save
+                catalog.save(CATALOG_PATH)
+                downloads_since_save = 0
+                if verbose:
+                    logger.info(f"Catalog saved (batch checkpoint after {saved_count} updates)")
             continue
 
         # Download the model

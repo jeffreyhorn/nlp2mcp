@@ -123,7 +123,7 @@ Daily progress log for Sprint 13: GAMSLIB Discovery, Download Infrastructure & C
 
 ### Deliverables
 
-- `scripts/gamslib/download_models.py` - Download script (~400 lines)
+- `scripts/gamslib/download_models.py` - Download script
 - Updated `data/gamslib/catalog.json` - 3 test models downloaded
 - Downloaded models in `data/gamslib/raw/` (trnsport.gms, blend.gms, circle.gms)
 
