@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.gamslib.catalog import (
+from src.gamslib.catalog import (
     VALID_DOWNLOAD_STATUS,
     VALID_MODEL_TYPES,
     GamslibCatalog,
