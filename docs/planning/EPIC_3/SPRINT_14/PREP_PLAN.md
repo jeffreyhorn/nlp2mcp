@@ -393,7 +393,7 @@ cat docs/research/JSON_SCHEMA_BEST_PRACTICES.md | head -30
 
 ## Task 4: Research jsonschema Library Usage
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 14 Day 1  
@@ -439,11 +439,44 @@ From PROJECT_PLAN.md: "Implement JSON schema validation (jsonschema library)"
 
 ### Changes
 
-*To be completed*
+- Created `docs/research/JSONSCHEMA_LIBRARY_GUIDE.md` with comprehensive usage guide
+- Updated `docs/planning/EPIC_3/SPRINT_14/KNOWN_UNKNOWNS.md` with verification results for Unknowns 2.1, 2.3, 2.5
 
 ### Result
 
-*To be completed*
+**Key Findings:**
+
+1. **Library Version:** jsonschema 4.25.1 with full Draft-07 and Draft 2020-12 support
+   - Use `Draft7Validator` (consistent with Task 3 decision)
+   - Both validators fully functional
+
+2. **Performance:** ~10,000 validations/second
+   - 219 models batch validation: ~22 ms
+   - Negligible overhead - always validate
+
+3. **Required vs Optional Fields:**
+   - Fields in `required` array must be present
+   - Optional fields can be absent without error
+   - Use separate CREATE/UPDATE schemas for partial updates
+
+4. **Error Handling:**
+   - Rich error objects with path, message, validator details
+   - Use `iter_errors()` to collect all errors
+   - Structured format recommended for storage
+
+5. **Strict Validation:**
+   - Use `additionalProperties: false` to reject unknown fields
+   - Prevents typos and schema drift
+
+6. **Format Validation:**
+   - `date-time` format not strictly validated by default
+   - Use regex patterns or application code for date validation
+
+**Integration Pattern for db_manager.py:**
+- Create validators once at module level (singleton)
+- Use `iter_errors()` for full error collection
+- Store structured errors with field, message, validator
+- Separate schemas for create vs update operations
 
 ### Verification
 
@@ -462,18 +495,18 @@ print('Validation works')
 
 ### Deliverables
 
-- `docs/research/JSONSCHEMA_LIBRARY_GUIDE.md`
-- Example validation code snippets
-- Error handling recommendations
-- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.3, 2.5
+- [x] `docs/research/JSONSCHEMA_LIBRARY_GUIDE.md`
+- [x] Example validation code snippets
+- [x] Error handling recommendations
+- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.3, 2.5
 
 ### Acceptance Criteria
 
-- [ ] jsonschema library version confirmed
-- [ ] Validation patterns documented
-- [ ] Example code created
-- [ ] Integration approach defined
-- [ ] Unknowns 2.1, 2.3, 2.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] jsonschema library version confirmed (4.25.1)
+- [x] Validation patterns documented
+- [x] Example code created
+- [x] Integration approach defined
+- [x] Unknowns 2.1, 2.3, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1014,7 +1047,7 @@ All prep tasks complete when:
 - [x] Known Unknowns document created with 15+ unknowns (26 created)
 - [x] Catalog quality validated, no blocking issues
 - [x] JSON Schema best practices researched
-- [ ] jsonschema library validated
+- [x] jsonschema library validated
 - [ ] Draft database schema created
 - [ ] Parse rate baseline established
 - [ ] db_manager design documented

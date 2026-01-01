@@ -520,7 +520,13 @@ Development team
 - No advanced features (dynamic refs, unevaluated properties) needed
 - Lower validation overhead
 
-**Evidence:** See `docs/research/JSON_SCHEMA_BEST_PRACTICES.md` for full analysis
+**Library-Specific Findings (Task 4):**
+- jsonschema 4.25.1 provides `Draft7Validator` and `Draft202012Validator`
+- Both validators are fully functional
+- Performance: ~10,000 validations/second with Draft7Validator
+- Use `Draft7Validator.check_schema()` to validate schema correctness
+
+**Evidence:** See `docs/research/JSON_SCHEMA_BEST_PRACTICES.md` and `docs/research/JSONSCHEMA_LIBRARY_GUIDE.md`
 
 ---
 
@@ -712,7 +718,47 @@ Core identification fields (model_id, model_name, gamslib_type) are required; pi
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from jsonschema Library Research (Task 4):**
+
+1. **Required vs Optional Behavior:**
+   - Fields in `required` array: validation fails if missing
+   - Fields in `properties` only: can be absent without error
+   - Missing optional fields do NOT cause validation errors
+
+2. **Tested Validation Results:**
+   ```python
+   # Schema: required = ["model_id", "model_name"]
+   
+   {"model_id": "x", "model_name": "y"}  # Valid (0 errors)
+   {"model_id": "x"}  # Invalid: 'model_name' is a required property
+   {"model_id": "x", "model_name": "y", "optional": "z"}  # Valid (0 errors)
+   ```
+
+3. **Nested Object Validation:**
+   - Optional nested objects (e.g., `convexity`) can be absent
+   - When present, nested objects enforce their own `required` fields
+   - Example: `convexity` absent = valid; `convexity: {}` without `status` = invalid
+
+4. **Null vs Absent Fields:**
+   - **Recommended:** Use absent fields, not explicit null
+   - Absent fields don't appear in JSON (cleaner)
+   - Handle in code with `.get()`: `entry.get("convexity", {}).get("status")`
+
+5. **Partial Updates:**
+   - Use separate schemas: CREATE_SCHEMA (with required) and UPDATE_SCHEMA (no required)
+   - UPDATE_SCHEMA validates field types without requiring all fields
+
+**Decision:** ✅ Confirmed assumption is correct
+
+**Implementation:**
+- Required fields: `model_id`, `model_name`, `gamslib_type` (core identification)
+- Optional objects: `convexity`, `nlp2mcp_parse`, `nlp2mcp_translate`, `mcp_solve`
+- When optional object is present, its `status` field is required
+- Use separate CREATE/UPDATE schemas for different validation scenarios
+
+**Evidence:** See `docs/research/JSONSCHEMA_LIBRARY_GUIDE.md` sections 3, 4, 6
 
 ---
 
@@ -839,7 +885,77 @@ Error messages should be stored as structured objects with error_type, error_mes
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from jsonschema Library Research (Task 4):**
+
+1. **jsonschema Error Object Properties:**
+   ```python
+   error.message          # Human-readable: "123 is not of type 'string'"
+   error.absolute_path    # Field path: ['convexity', 'status']
+   error.schema_path      # Schema location in definition
+   error.validator        # Validator type: "type", "enum", "required"
+   error.validator_value  # Expected value: "string", ["good", "bad"]
+   ```
+
+2. **Structured Error Format (Recommended):**
+   ```json
+   {
+     "error": {
+       "field": "convexity.status",
+       "message": "'invalid' is not one of ['verified_convex', ...]",
+       "validator": "enum",
+       "expected": "['verified_convex', 'likely_convex', ...]"
+     }
+   }
+   ```
+
+3. **Tested Error Formatting:**
+   ```python
+   def format_validation_error(error) -> dict:
+       return {
+           "field": ".".join(str(p) for p in error.absolute_path) or "(root)",
+           "message": error.message,
+           "validator": error.validator,
+           "expected": str(error.validator_value)[:100]
+       }
+   ```
+
+4. **Human-Readable Format:**
+   ```python
+   # Output: "convexity.status: 'invalid' is not one of [...]"
+   f"{path}: {error.message}"
+   ```
+
+5. **Multiple Errors:**
+   - Use `validator.iter_errors()` to collect all errors
+   - Store as array if needed, but single `error` object is simpler for Sprint 14
+
+**Decision:** ✅ Use **structured error objects** with standardized fields
+
+**Recommended Schema:**
+```json
+{
+  "nlp2mcp_parse": {
+    "status": "failure",
+    "error": {
+      "category": "syntax_error",
+      "message": "Unexpected token at line 42",
+      "field": "line_42",
+      "validator": "parse"
+    }
+  }
+}
+```
+
+**Rationale:**
+- Structured format enables querying by error category
+- `message` field provides human-readable context
+- `field` and `validator` enable programmatic analysis
+- Single `error` object (not array) for Sprint 14 simplicity
+- Can extend to `errors` array in future if needed
+
+**Evidence:** See `docs/research/JSONSCHEMA_LIBRARY_GUIDE.md` section 7
 
 ---
 
