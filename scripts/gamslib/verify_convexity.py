@@ -418,6 +418,7 @@ def save_catalog(catalog: dict) -> None:
     try:
         with open(CATALOG_PATH, "w") as f:
             json.dump(catalog, f, indent=2)
+            f.write("\n")
         logger.info(f"Catalog saved to: {CATALOG_PATH}")
     except OSError as e:
         logger.error(f"Failed to save catalog: {e}")
