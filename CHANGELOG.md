@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 14 Prep Task 3: Survey JSON Schema Best Practices - 2026-01-01
+
+**Branch:** `planning/sprint14-prep-task3`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Researched JSON Schema best practices to inform Sprint 14 database schema design. Established key design decisions and verified Unknowns 2.1, 2.2, 2.7.
+
+#### Changes
+
+**New Files:**
+- `docs/research/JSON_SCHEMA_BEST_PRACTICES.md` - Comprehensive research document
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_14/KNOWN_UNKNOWNS.md` - Verified Unknowns 2.1, 2.2, 2.7
+- `docs/planning/EPIC_3/SPRINT_14/PREP_PLAN.md` - Task 3 marked complete
+
+#### Key Recommendations
+
+| Decision | Recommendation | Rationale |
+|----------|----------------|-----------|
+| Schema Draft | **Draft-07** | Simpler syntax, full Python support, no advanced features needed |
+| Naming | **snake_case** | Consistency with catalog.json, Python alignment |
+| Structure | **Moderate nesting (2 levels)** | Pipeline stages as nested objects |
+| Versioning | **Semantic (MAJOR.MINOR.PATCH)** | Industry standard |
+| Migration | **Eager migration** | Small database, one-time cutover |
+| Validation | **Strict** | `additionalProperties: false` prevents drift |
+
+#### Unknowns Verified
+
+- **Unknown 2.1:** Draft version - Use Draft-07 for compatibility and simplicity
+- **Unknown 2.2:** Nested vs flat - Use moderate nesting (2 levels) for pipeline stages
+- **Unknown 2.7:** Schema migrations - Use semantic versioning with eager migration
+
+#### Draft Schema Structure
+
+```json
+{
+  "model_id": "trnsport",
+  "convexity": {"status": "verified_convex", ...},
+  "nlp2mcp_parse": {"status": "success", ...},
+  "nlp2mcp_translate": {"status": "not_tested"},
+  "mcp_solve": {"status": "not_tested"}
+}
+```
+
+---
+
 ### Sprint 14 Prep Task 2: Review Sprint 13 Catalog Quality - 2026-01-01
 
 **Branch:** `sprint14-prep-task2`  
