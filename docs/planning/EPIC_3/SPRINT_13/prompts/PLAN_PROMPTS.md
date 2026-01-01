@@ -104,7 +104,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 82-98)
+- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 81-92)
 - `docs/infrastructure/GAMSLIB_CATALOG_SCHEMA.md`
 - `data/gamslib/catalog_example.json`
 
@@ -544,7 +544,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 145-159)
+- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 139-150)
 - `docs/research/CONVEXITY_VERIFICATION_DESIGN.md`
 - `docs/testing/GAMS_ENVIRONMENT_STATUS.md`
 - `docs/planning/EPIC_3/SPRINT_13/KNOWN_UNKNOWNS.md` (Unknowns 3.1-3.4)
@@ -650,7 +650,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 160-172)
+- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 152-163)
 - `docs/research/CONVEXITY_VERIFICATION_DESIGN.md`
 - `tests/fixtures/gamslib_test_models/MANIFEST.md`
 - `docs/planning/EPIC_3/SPRINT_13/KNOWN_UNKNOWNS.md` (Unknowns 3.1, 3.5, 3.7)
@@ -761,7 +761,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 176-189)
+- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 169-180)
 
 ---
 
@@ -773,14 +773,14 @@ After committing and pushing all changes:
 
 **Prerequisites:**
 - Read `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 190-203) - Day 8 tasks
-- Review `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 260-305) - Acceptance Criteria
+- Review `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 271-303) - Acceptance Criteria
 - Verify Day 7 deliverables are complete (all models verified)
 
 **Tasks to Complete (2-3 hours):**
 
-1. **Create GAMSLIB_MODEL_TYPES.md** (1 hour)
-   - Create `docs/research/GAMSLIB_MODEL_TYPES.md`
-   - Document all GAMS model types:
+1. **Review and enhance GAMSLIB_MODEL_TYPES.md** (1 hour)
+   - Review and update `docs/research/GAMSLIB_MODEL_TYPES.md` (created in Sprint 13 Prep Task 4)
+   - Ensure it documents all GAMS model types:
      - LP, NLP, QCP (included)
      - MIP, MINLP, MIQCP (excluded - integer)
      - MCP, MPEC (excluded - complementarity)
@@ -869,7 +869,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 190-203, 260-305)
+- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 182-193, 271-303)
 
 ---
 
@@ -964,7 +964,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 207-218)
+- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 199-208)
 - Day 7-8 PR comments
 
 ---
@@ -1078,7 +1078,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 219-232, 260-305)
+- `docs/planning/EPIC_3/SPRINT_13/PLAN.md` (lines 210-221, 271-303)
 
 ---
 
