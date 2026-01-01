@@ -80,14 +80,14 @@ Sprint 13 successfully established the GAMSLIB model corpus infrastructure for n
 | verified_convex | 57 | 26.0% | LP models with optimal solution |
 | likely_convex | 103 | 47.0% | NLP/QCP with locally optimal solution |
 | excluded | 4 | 1.8% | Infeasible or unbounded |
-| error | 48 | 21.9% | License limits, compilation errors, etc. |
+| errors | 48 | 21.9% | License limits, compilation errors, etc. |
 | unknown | 7 | 3.2% | Unexpected status combinations |
 | **Total** | **219** | **100%** | |
 
 ### Convexity by Model Type
 
-| Type | verified_convex | likely_convex | excluded | error | unknown |
-|------|-----------------|---------------|----------|-------|---------|
+| Type | verified_convex | likely_convex | excluded | errors | unknown |
+|------|-----------------|---------------|----------|--------|---------|
 | LP | 57 | - | 1 | 24 | 4 |
 | NLP | - | 94 | 3 | 21 | 2 |
 | QCP | - | 9 | - | 3 | 1 |
