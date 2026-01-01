@@ -64,12 +64,15 @@ Timing for full pipeline (parse + translate):
 | himmel11 | QCP | 1,130 | 0.93s | success (warnings) |
 | trnsport | LP | ~1,000 | 0.81s | failure (parse) |
 
-### Parse Rate Analysis (from Task 6)
+### Parse Timing (parse-only, from Task 6)
+
+Note: These are parse-only times (not including translation). The 0.97s average is used
+for batch projections as it represents the minimum time per model attempt.
 
 | Metric | Value |
 |--------|-------|
-| Average parse time (all models) | 0.97 seconds |
-| Average parse time (successful) | 0.95 seconds |
+| Average parse-only time (all models) | 0.97 seconds |
+| Average parse-only time (successful) | 0.95 seconds |
 | Minimum parse time | 0.71 seconds |
 | Maximum parse time | 2.58 seconds |
 | Timeouts (60s limit) | 0/30 |
@@ -204,12 +207,15 @@ None of these apply to Sprint 14.
 ### Progress Reporting Format
 
 ```
-[  1/160]  3% Processing prodmix...
+[  1/160]  1% Processing prodmix...
 [ 10/160]  6% Processing model10... (10 complete, 0.97s avg)
 [ 50/160] 31% Processing model50... (50 complete, 0.98s avg)
-[100/160] 63% Processing model100... (100 complete, 0.99s avg)
+[100/160] 62% Processing model100... (100 complete, 0.99s avg)
 [160/160] 100% Complete. 160 models in 2m 35s (0.97s avg)
 ```
+
+Note: The example above shows an ideal run without overhead. With the 20% safety margin,
+projected worst-case batch time is ~3 minutes (186 seconds).
 
 ---
 
