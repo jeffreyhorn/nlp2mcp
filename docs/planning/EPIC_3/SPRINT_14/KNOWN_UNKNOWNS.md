@@ -814,7 +814,45 @@ Each pipeline stage should have a status enum with consistent values across stag
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from Schema Design (Task 5):**
+
+1. **Status enums defined per stage:**
+
+   | Stage | Status Values |
+   |-------|---------------|
+   | convexity | verified_convex, likely_convex, locally_optimal, infeasible, unbounded, error, excluded, license_limited, unknown, not_tested |
+   | nlp2mcp_parse | success, failure, partial, not_tested |
+   | nlp2mcp_translate | success, failure, not_tested |
+   | mcp_solve | success, failure, mismatch, not_tested |
+
+2. **Common values across all stages:**
+   - `success` - Operation completed successfully
+   - `failure` - Operation failed
+   - `not_tested` - Not yet tested
+
+3. **Stage-specific values:**
+   - `partial` (parse only) - Partial parse with some unsupported features
+   - `mismatch` (solve only) - MCP solved but objectives don't match original
+   - Various convexity states - Based on GAMS model/solver status codes
+
+4. **"Skipped due to prior failure":**
+   - Represented as `not_tested` (stage not executed)
+   - Alternatively, pipeline can stop at first failure
+
+5. **String vs numeric:**
+   - Using **strings** for human readability and JSON serialization
+   - Enum validation catches invalid values
+
+6. **Success rate calculation:**
+   - Parse: `success / (success + failure + partial)` (partial is not full success)
+   - Translate: `success / (success + failure)` (binary outcome)
+   - Solve: `success / (success + failure + mismatch)` (mismatch is not success)
+
+**Decision:** ✅ Use stage-specific enums as defined in DRAFT_SCHEMA.json
+
+**Evidence:** See `docs/planning/EPIC_3/SPRINT_14/DRAFT_SCHEMA.json` and `SCHEMA_DESIGN_NOTES.md`
 
 ---
 
@@ -1011,7 +1049,43 @@ commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()[
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from Schema Design (Task 5):**
+
+1. **Version tracking in schema:**
+   - `nlp2mcp_version` field included in `parse_result` and `translate_result`
+   - Pattern: `"^\\d+\\.\\d+\\.\\d+$"` (semantic versioning)
+   - Optional field (not required for every stage result)
+
+2. **Per-stage versioning:**
+   - Each pipeline stage tracks its own `nlp2mcp_version`
+   - Allows tracking when different versions were used at different stages
+   - More granular than top-level version
+
+3. **Schema fields defined:**
+   ```json
+   {
+     "nlp2mcp_parse": {
+       "nlp2mcp_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"}
+     },
+     "nlp2mcp_translate": {
+       "nlp2mcp_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"}
+     }
+   }
+   ```
+
+4. **Git commit tracking:** Deferred for Sprint 14
+   - Not critical for initial implementation
+   - Can be added as `git_commit` field in future minor version
+
+5. **Version changes during batch:**
+   - Each entry records the version used at time of processing
+   - If nlp2mcp is updated mid-batch, entries reflect actual version used
+
+**Decision:** ✅ Include `nlp2mcp_version` per pipeline stage (parse, translate)
+
+**Evidence:** See `docs/planning/EPIC_3/SPRINT_14/DRAFT_SCHEMA.json`
 
 ---
 
@@ -1635,7 +1709,52 @@ for entry in database["models"]:
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from Schema Design (Task 5):**
+
+1. **File organization confirmed:**
+   ```
+   data/gamslib/
+     catalog.json          # Sprint 13 archive (read-only, v1.0.0)
+     gamslib_status.json   # Sprint 14 database (v2.0.0)
+     schema.json           # JSON Schema definition (Draft-07)
+     archive/              # Timestamped backups
+   ```
+
+2. **Schema location:**
+   - `data/gamslib/schema.json` (same directory as database)
+   - Draft CREATED: `docs/planning/EPIC_3/SPRINT_14/DRAFT_SCHEMA.json`
+   - Will be copied to `data/gamslib/schema.json` during Sprint 14 implementation
+
+3. **Schema loading pattern (from Task 4):**
+   ```python
+   SCHEMA_PATH = Path(__file__).parent / "../../data/gamslib/schema.json"
+   
+   def load_schema() -> dict:
+       with open(SCHEMA_PATH) as f:
+           schema = json.load(f)
+       Draft7Validator.check_schema(schema)  # Validate schema itself
+       return schema
+   ```
+
+4. **Sync mechanism:**
+   - Schema `$id` field references final location
+   - Database `schema_version` field must match schema version
+   - `db_manager.py` validates on load
+
+5. **Version relationship:**
+   - Schema version = Database schema_version
+   - Both use semantic versioning (MAJOR.MINOR.PATCH)
+   - Schema file is the source of truth for structure
+
+6. **MCP output organization (related):**
+   - `output_file` field in `translate_result` stores relative path
+   - Example: `data/gamslib/mcp/trnsport_mcp.gms`
+
+**Decision:** ✅ Separate schema.json file in `data/gamslib/`
+
+**Evidence:** See `docs/planning/EPIC_3/SPRINT_14/DRAFT_SCHEMA.json` and `SCHEMA_DESIGN_NOTES.md`
 
 ---
 

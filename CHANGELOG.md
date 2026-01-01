@@ -7,6 +7,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 14 Prep Task 5: Design Database Schema Draft - 2026-01-01
+
+**Branch:** `planning/sprint14-prep-task5`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive draft JSON Schema (Draft-07) for the Sprint 14 gamslib_status.json database. The schema defines the structure for tracking models through the nlp2mcp pipeline with nested objects for each processing stage. Verified Unknowns 2.4, 2.6, 4.3.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_14/DRAFT_SCHEMA.json` - Complete JSON Schema (Draft-07)
+- `docs/planning/EPIC_3/SPRINT_14/SCHEMA_DESIGN_NOTES.md` - Design rationale and field documentation
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_14/KNOWN_UNKNOWNS.md` - Verified Unknowns 2.4, 2.6, 4.3
+- `docs/planning/EPIC_3/SPRINT_14/PREP_PLAN.md` - Task 5 marked complete
+
+#### Schema Structure
+
+| Component | Fields | Required |
+|-----------|--------|----------|
+| Top-level database | 6 | schema_version, models |
+| model_entry | 17 | model_id, model_name, gamslib_type |
+| convexity_result | 8 | status |
+| parse_result | 7 | status |
+| translate_result | 8 | status |
+| solve_result | 10 | status |
+| error_detail | 5 | category, message |
+
+#### Key Design Decisions
+
+1. **Draft-07** - Maximum Python jsonschema compatibility
+2. **Moderate nesting** - 2 levels for pipeline stages (convexity, parse, translate, solve)
+3. **Strict validation** - `additionalProperties: false` at all levels
+4. **Stage-specific enums** - Different status values per pipeline stage
+5. **Structured errors** - Category, message, optional line/column fields
+6. **nlp2mcp_version tracking** - Per-stage version field for reproducibility
+
+#### Status Enums by Stage
+
+| Stage | Status Values |
+|-------|---------------|
+| convexity | verified_convex, likely_convex, locally_optimal, infeasible, unbounded, error, excluded, license_limited, unknown, not_tested |
+| nlp2mcp_parse | success, failure, partial, not_tested |
+| nlp2mcp_translate | success, failure, not_tested |
+| mcp_solve | success, failure, mismatch, not_tested |
+
+#### Unknowns Verified
+
+- **Unknown 2.4:** Status enums - Defined stage-specific enums with common values (success, failure, not_tested)
+- **Unknown 2.6:** Version tracking - Include `nlp2mcp_version` per pipeline stage (parse, translate)
+- **Unknown 4.3:** Schema location - Separate `schema.json` file in `data/gamslib/`
+
+#### Validation Tests
+
+Schema validated with Draft7Validator and tested with 6 scenarios:
+- Minimal valid entry (3 required fields only)
+- Full entry with all nested objects
+- Entry with structured error details
+- Unknown field rejection (additionalProperties: false works)
+- Wrong enum value rejection
+- Missing nested required field rejection
+
+All tests passed.
+
+---
+
 ### Sprint 14 Prep Task 4: Research jsonschema Library Usage - 2026-01-01
 
 **Branch:** `planning/sprint14-prep-task4`  
