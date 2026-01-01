@@ -1,6 +1,6 @@
 # GAMSLIB Model Types Survey
 
-**Date:** December 30, 2025  
+**Date:** December 30, 2025 (Updated: January 1, 2026)  
 **Sprint 13 Prep Task 4:** Survey GAMSLIB Model Types  
 **Purpose:** Establish inclusion/exclusion criteria for Sprint 13 model catalog
 
@@ -10,10 +10,21 @@
 
 GAMSLIB contains 437 models across 15 model type categories. For Sprint 13 convexity verification:
 
-- **Include:** 119 models (57 LP + 51 NLP + 11 QCP)
-- **Exclude:** 318 models (MIP, MINLP, MCP, CNS, DNLP, MPEC, MPSGE, EMP, etc.)
+- **Discovered:** 219 models (86 LP + 120 NLP + 13 QCP)
+- **Successfully Classified:** 164 models (57 verified_convex + 103 likely_convex + 4 excluded)
+- **Errors:** 55 models (license limits, compilation errors, special workflows)
 
-This exceeds the 50+ model target for corpus creation.
+This significantly exceeds the 50+ model target for corpus creation.
+
+### Sprint 13 Results Summary
+
+| Classification | Count | Percentage |
+|---------------|-------|------------|
+| Verified Convex (LP) | 57 | 26.0% |
+| Likely Convex (NLP/QCP) | 103 | 47.0% |
+| Excluded (Infeasible) | 4 | 1.8% |
+| Errors | 55 | 25.1% |
+| **Total** | **219** | **100%** |
 
 ---
 
@@ -81,16 +92,21 @@ This exceeds the 50+ model target for corpus creation.
 | MPEC | 1 | 0.2% | ❌ Excluded |
 | **Total** | **437** | 100% | |
 
-### 2.2 Corpus Size Estimate
+### 2.2 Actual Corpus (Sprint 13 Results)
 
-| Category | Count | Notes |
-|----------|-------|-------|
-| LP models | 57 | All convex by definition |
-| NLP models | 51 | Need convexity verification |
-| QCP models | 11 | Need convexity verification |
-| **Total Candidates** | **119** | Exceeds 50+ target |
+| Category | Discovered | Verified/Likely | Excluded | Errors |
+|----------|-----------|-----------------|----------|--------|
+| LP | 86 | 57 verified_convex | 0 | 29 |
+| NLP | 120 | 97 likely_convex | 4 | 19 |
+| QCP | 13 | 6 likely_convex | 0 | 7 |
+| **Total** | **219** | **160 (57 verified + 103 likely)** | **4** | **55** |
 
-**Note:** Some models may fail execution or have other issues, so actual corpus may be smaller. The 119 candidates provide sufficient margin.
+**Note:** The 55 errors are expected edge cases:
+- License limits (11): Models exceed GAMS demo license size limits
+- No solve summary (15): Models with special workflows (async, grid, scenario solves)
+- Compilation errors (18): Missing include files or external dependencies
+- Unexpected status (7): Unusual solver/model status combinations
+- Solver errors (4): Solver did not complete normally
 
 ---
 
