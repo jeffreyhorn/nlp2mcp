@@ -493,7 +493,8 @@ except SchemaError as e:
 
 import json
 from pathlib import Path
-from jsonschema import Draft7Validator, ValidationError
+from jsonschema import Draft7Validator
+from jsonschema import ValidationError as JsonSchemaValidationError
 
 # Load schema once at module level
 SCHEMA_PATH = Path(__file__).parent / "../../data/gamslib/schema.json"
@@ -519,8 +520,11 @@ def get_entry_validator() -> Draft7Validator:
     return _entry_validator
 
 
-class ValidationError(Exception):
-    """Database validation error with structured details."""
+class DatabaseValidationError(Exception):
+    """Database validation error with structured details.
+    
+    Named to avoid collision with jsonschema.ValidationError.
+    """
     
     def __init__(self, message: str, errors: list[dict]):
         super().__init__(message)
@@ -528,7 +532,7 @@ class ValidationError(Exception):
 
 
 def validate_entry(entry: dict) -> None:
-    """Validate a model entry. Raises ValidationError if invalid."""
+    """Validate a model entry. Raises DatabaseValidationError if invalid."""
     validator = get_entry_validator()
     errors = []
     
@@ -541,20 +545,60 @@ def validate_entry(entry: dict) -> None:
     
     if errors:
         fields = ", ".join(e["field"] for e in errors)
-        raise ValidationError(f"Invalid entry: errors in {fields}", errors)
+        raise DatabaseValidationError(f"Invalid entry: errors in {fields}", errors)
 
 
 def add_model(entry: dict) -> None:
     """Add a new model to the database."""
-    validate_entry(entry)  # Raises ValidationError if invalid
+    validate_entry(entry)  # Raises DatabaseValidationError if invalid
     # ... proceed with adding to database
 
 
+# Schema for partial updates (no required fields). See section 6.
+UPDATE_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "model_name": {"type": "string"},
+        "gamslib_type": {"type": "string"},
+        "convexity": {"type": "object"},
+        "nlp2mcp_parse": {"type": "object"},
+        "nlp2mcp_translate": {"type": "object"},
+        "mcp_solve": {"type": "object"}
+    }
+}
+
+_update_validator = None
+
+def get_update_validator() -> Draft7Validator:
+    """Get or create the update validator (lazy singleton)."""
+    global _update_validator
+    if _update_validator is None:
+        _update_validator = Draft7Validator(UPDATE_SCHEMA)
+    return _update_validator
+
+
 def update_model(model_id: str, updates: dict) -> None:
-    """Update an existing model."""
-    # For updates, validate individual fields rather than full entry
-    # or use a separate UPDATE_SCHEMA without required fields
-    # ... proceed with update
+    """Update an existing model.
+    
+    See section 6: Partial Validation for Updates.
+    """
+    validator = get_update_validator()
+    errors = []
+    
+    for error in validator.iter_errors(updates):
+        errors.append({
+            "field": ".".join(str(p) for p in error.absolute_path) or "(root)",
+            "message": error.message,
+            "validator": error.validator
+        })
+    
+    if errors:
+        fields = ", ".join(e["field"] for e in errors)
+        raise DatabaseValidationError(
+            f"Invalid update for {model_id}: errors in {fields}", errors
+        )
+    # ... proceed with applying updates to database
 ```
 
 ---
