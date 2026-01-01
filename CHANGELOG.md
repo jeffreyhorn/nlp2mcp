@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 14 Prep Task 6: Analyze Parse Rate for Verified Models - 2026-01-01
+
+**Branch:** `planning/sprint14-prep-task6`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Established baseline parse success rate for nlp2mcp on GAMSLIB models. Tested 30 models (stratified by type and file size) to determine parse rate and failure categories. Found 13.3% success rate, below the assumed 30%, which informs Sprint 14 KPIs.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_14/PARSE_RATE_BASELINE.md` - Comprehensive parse analysis
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_14/KNOWN_UNKNOWNS.md` - Verified Unknowns 1.1, 1.2, 1.3
+- `docs/planning/EPIC_3/SPRINT_14/PREP_PLAN.md` - Task 6 marked complete
+
+#### Key Metrics
+
+| Metric | Value |
+|--------|-------|
+| Models tested | 30 |
+| Parse success rate | 13.3% (4/30) |
+| Average parse time | 0.97 seconds |
+| Projected batch time | ~3 minutes |
+
+#### Parse Rate by Type
+
+| Type | Tested | Success Rate |
+|------|--------|--------------|
+| LP | 15 | 6.7% |
+| NLP | 12 | 16.7% |
+| QCP | 3 | 33.3% |
+
+#### Failure Categories
+
+| Category | Count | Percentage |
+|----------|-------|------------|
+| syntax_error | 20 | 77% |
+| no_objective | 2 | 8% |
+| unsupported_function | 2 | 8% |
+| domain_error | 1 | 4% |
+| undefined_variable | 1 | 4% |
+
+#### Unknowns Verified
+
+- **Unknown 1.1:** Batch time ~3 minutes for 160 models (well under 2-hour concern)
+- **Unknown 1.2:** Parse success rate 13.3% (assumption of 30% was wrong)
+- **Unknown 1.3:** Confirmed parsing does not trigger license limits
+
+---
+
 ### Sprint 14 Prep Task 5: Design Database Schema Draft - 2026-01-01
 
 **Branch:** `planning/sprint14-prep-task5`  
