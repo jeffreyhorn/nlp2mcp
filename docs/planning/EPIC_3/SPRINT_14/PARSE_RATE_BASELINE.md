@@ -1,7 +1,7 @@
 # Parse Rate Baseline for Sprint 14
 
 **Task:** Sprint 14 Prep Task 6 - Analyze Parse Rate for Verified Models  
-**Created:** January 1, 2026  
+**Created:** 2026-01-01  
 **Sample Size:** 30 models (stratified by type and file size)
 
 ---
@@ -12,7 +12,7 @@ This document establishes the baseline parse success rate for nlp2mcp on GAMSLIB
 
 **Key Findings:**
 - **Parse success rate:** 13.3% (4/30 models)
-- **Average parse time:** 0.95 seconds per model
+- **Average parse time:** 0.97 seconds per model
 - **Primary blocker:** Syntax errors (77% of failures)
 - **Projected batch time:** ~2.5 minutes for 160 models
 
@@ -274,4 +274,4 @@ This analysis verifies the following unknowns from KNOWN_UNKNOWNS.md:
 
 ## Document History
 
-- January 1, 2026: Initial creation (Sprint 14 Prep Task 6)
+- 2026-01-01: Initial creation (Sprint 14 Prep Task 6)
