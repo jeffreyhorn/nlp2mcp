@@ -138,8 +138,9 @@ def parse_gams_listing(lst_content: str) -> dict:
         result["error_type"] = "missing_file"
         return result
 
-    # Check for execution errors
-    if "*** Execution error" in lst_content or "*** Error" in lst_content:
+    # Check for execution errors (lines starting with exactly three asterisks)
+    # Use regex to avoid matching **** MODEL STATUS lines containing "Error"
+    if re.search(r"^\*\*\* (Execution error|Error)", lst_content, re.MULTILINE):
         result["error_type"] = "execution_error"
         return result
 

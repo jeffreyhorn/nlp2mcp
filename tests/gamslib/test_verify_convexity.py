@@ -177,6 +177,27 @@ solve model using lp;
         result = parse_gams_listing(lst_content)
         assert result["objective_value"] == -42.5
 
+    def test_parse_error_status_not_misclassified(self) -> None:
+        """Test that error status codes in solve summary are not misclassified as execution errors.
+
+        Model status 12 is "Error Unknown" which contains "Error" in its description.
+        This should NOT be detected as an execution error - it's a valid solve summary.
+        """
+        lst_content = """
+               S O L V E      S U M M A R Y
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS     12 Error Unknown
+**** OBJECTIVE VALUE               0.0
+
+"""
+        result = parse_gams_listing(lst_content)
+        # Should parse as valid solve summary, not as execution error
+        assert result["has_solve_summary"] is True
+        assert result["error_type"] is None
+        assert result["solver_status"] == 1
+        assert result["model_status"] == 12
+
 
 class TestClassifyResult:
     """Tests for classify_result function."""
