@@ -166,7 +166,7 @@ python scripts/gamslib/db_manager.py init [--force] [--dry-run]
 1. Check if gamslib_status.json exists (fail if exists and no --force)
 2. Load catalog.json
 3. Transform entries to new schema format
-4. Create backup of catalog.json before writing
+4. Create backup of existing gamslib_status.json before overwriting (when --force is used)
 5. Write gamslib_status.json with schema_version 2.0.0
 
 **Output:**
@@ -498,6 +498,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import shutil
 import sys
 from dataclasses import dataclass
 from datetime import datetime
@@ -519,15 +520,38 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# Subcommand implementations
-def cmd_init(args: argparse.Namespace) -> int: ...
-def cmd_get(args: argparse.Namespace) -> int: ...
-def cmd_update(args: argparse.Namespace) -> int: ...
-def cmd_query(args: argparse.Namespace) -> int: ...
-def cmd_list(args: argparse.Namespace) -> int: ...
-def cmd_validate(args: argparse.Namespace) -> int: ...
-def cmd_export(args: argparse.Namespace) -> int: ...
-def cmd_stats(args: argparse.Namespace) -> int: ...
+# Subcommand implementations (placeholders - actual implementation in Sprint 14)
+def cmd_init(args: argparse.Namespace) -> int:
+    """Initialize database from catalog.json."""
+    pass  # TODO: Implement in Sprint 14
+
+def cmd_get(args: argparse.Namespace) -> int:
+    """Get model details."""
+    pass  # TODO: Implement in Sprint 14
+
+def cmd_update(args: argparse.Namespace) -> int:
+    """Update model field(s)."""
+    pass  # TODO: Implement in Sprint 14
+
+def cmd_query(args: argparse.Namespace) -> int:
+    """Query models by criteria."""
+    pass  # TODO: Implement in Sprint 14
+
+def cmd_list(args: argparse.Namespace) -> int:
+    """List all models."""
+    pass  # TODO: Implement in Sprint 14
+
+def cmd_validate(args: argparse.Namespace) -> int:
+    """Validate database against schema."""
+    pass  # TODO: Implement in Sprint 14
+
+def cmd_export(args: argparse.Namespace) -> int:
+    """Export to CSV/Markdown."""
+    pass  # TODO: Implement in Sprint 14
+
+def cmd_stats(args: argparse.Namespace) -> int:
+    """Show statistics."""
+    pass  # TODO: Implement in Sprint 14
 
 
 def main() -> None:
