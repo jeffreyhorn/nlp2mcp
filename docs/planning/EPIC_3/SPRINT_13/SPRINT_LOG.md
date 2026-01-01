@@ -231,14 +231,14 @@ Daily progress log for Sprint 13: GAMSLIB Discovery, Download Infrastructure & C
 | QCP | 13 | Quadratically Constrained (requires verification) |
 
 **Largest Models:**
-1. `ggspec.gms` - 81,197 bytes (79.29 KB)
-2. `qp6.gms` - 79,262 bytes (77.40 KB)
-3. `phase.gms` - 68,920 bytes (67.30 KB)
+1. `indus89.gms` - 258,054 bytes (252.0 KB)
+2. `saras.gms` - 119,925 bytes (117.1 KB)
+3. `gancnsx.gms` - 72,387 bytes (70.7 KB)
 
 **Smallest Models:**
-1. `himmel16.gms` - 572 bytes
-2. `bidsos.gms` - 631 bytes
-3. `nash.gms` - 764 bytes
+1. `rbrock.gms` - 531 bytes
+2. `trig.gms` - 660 bytes
+3. `mhw4d.gms` - 664 bytes
 
 ### Validation Results
 
