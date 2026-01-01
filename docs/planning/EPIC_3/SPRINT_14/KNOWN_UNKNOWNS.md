@@ -506,7 +506,7 @@ Development team
    - $ref for definitions ✓ (both drafts)
    - **No advanced features needed** that require Draft 2020-12
 
-4. **Ecosystem status (2025):**
+4. **Current ecosystem status:**
    - Draft-07 and Draft 2020-12 are both LTS (long-term support)
    - OpenAPI 3.1 uses Draft 2020-12, but OpenAPI 3.0 uses Draft-07
    - Most Python tools default to Draft-07

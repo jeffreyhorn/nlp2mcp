@@ -21,7 +21,7 @@ This document summarizes JSON Schema best practices researched for the Sprint 14
 
 ### Overview
 
-JSON Schema has multiple draft versions. The two most relevant for 2025 projects are:
+JSON Schema has multiple draft versions. The two most relevant for current projects are:
 
 | Feature | Draft-07 | Draft 2020-12 |
 |---------|----------|---------------|
@@ -332,6 +332,11 @@ Rationale:
 ```python
 # scripts/gamslib/migrate_schema.py
 
+import json
+from datetime import datetime, UTC
+from pathlib import Path
+
+
 def migrate_v1_to_v2(old_entry: dict) -> dict:
     """Migrate catalog.json entry to gamslib_status.json format."""
     return {
@@ -500,9 +505,9 @@ Error categories for parsing:
 - `timeout` - Parsing exceeded time limit
 - `internal_error` - Unexpected parser error
 
-### Multiple Errors
+### Multiple Errors (Future Consideration)
 
-For stages that can have multiple errors, use an array:
+For Sprint 14, we use singular `error` for simplicity. If future requirements need multiple errors per stage, the schema can be extended to use an `errors` array:
 
 ```json
 {
@@ -515,6 +520,8 @@ For stages that can have multiple errors, use an array:
   }
 }
 ```
+
+**Note:** The Appendix schema template uses singular `error` (object) for consistency with the primary recommendation. Multiple errors support can be added in a future minor version if needed.
 
 ---
 
@@ -647,11 +654,21 @@ data/gamslib/
       "additionalProperties": false,
       "properties": {
         "model_id": {"type": "string"},
+        "sequence_number": {"type": "integer"},
         "model_name": {"type": "string"},
         "gamslib_type": {
           "type": "string",
           "enum": ["LP", "NLP", "QCP", "MIP", "MINLP", "MIQCP"]
         },
+        "source_url": {"type": "string", "format": "uri"},
+        "web_page_url": {"type": "string", "format": "uri"},
+        "description": {"type": "string"},
+        "keywords": {"type": "array", "items": {"type": "string"}},
+        "download_status": {"type": "string"},
+        "download_date": {"type": "string", "format": "date-time"},
+        "file_path": {"type": "string"},
+        "file_size_bytes": {"type": "integer"},
+        "notes": {"type": "string"},
         "convexity": {"$ref": "#/definitions/convexity_result"},
         "nlp2mcp_parse": {"$ref": "#/definitions/parse_result"},
         "nlp2mcp_translate": {"$ref": "#/definitions/translate_result"},
