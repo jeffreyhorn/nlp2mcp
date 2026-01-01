@@ -82,23 +82,19 @@ def get_utc_timestamp() -> str:
 def download_model(
     model: ModelEntry,
     target_dir: Path,
-    force: bool = False,
 ) -> tuple[bool, str | None]:
     """Download a single model using the gamslib command.
 
     Args:
         model: ModelEntry to download
         target_dir: Directory to extract the model to
-        force: If True, re-download even if file exists
 
     Returns:
-        Tuple of (success, error_message)
+        Tuple of (success, error_message). Success is True if the model was
+        downloaded successfully. The caller should check file existence before
+        calling this function if skip behavior is desired.
     """
     gms_file = target_dir / f"{model.model_id}.gms"
-
-    # Check if file already exists
-    if gms_file.exists() and not force:
-        return True, None  # Already exists, treated as success (skip)
 
     # Ensure target directory exists
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -154,7 +150,12 @@ def update_model_status(
         gms_file = target_dir / f"{model.model_id}.gms"
         model.download_status = "downloaded"
         model.download_date = get_utc_timestamp()
-        model.file_path = f"data/gamslib/raw/{model.model_id}.gms"
+        # Store path relative to project root when possible
+        try:
+            model.file_path = str(gms_file.relative_to(PROJECT_ROOT))
+        except ValueError:
+            # Fallback to absolute path if not under PROJECT_ROOT
+            model.file_path = str(gms_file)
         if gms_file.exists():
             model.file_size_bytes = gms_file.stat().st_size
     else:
@@ -241,15 +242,12 @@ def download_models(
             if i % 10 == 0 or i == len(models_to_download):
                 logger.info(f"Progress: {i}/{len(models_to_download)} models processed")
 
-        success, error = download_model(model, RAW_DIR, force=force)
+        success, error = download_model(model, RAW_DIR)
 
         if success:
-            if error is None:  # Actually downloaded (not just skipped)
-                result.add_success()
-                update_model_status(model, success=True, target_dir=RAW_DIR)
-                downloads_since_save += 1
-            else:
-                result.add_skip()
+            result.add_success()
+            update_model_status(model, success=True, target_dir=RAW_DIR)
+            downloads_since_save += 1
         else:
             result.add_failure(model.model_id, error or "Unknown error")
             update_model_status(model, success=False, target_dir=RAW_DIR)
@@ -258,10 +256,11 @@ def download_models(
 
         # Save catalog periodically
         if downloads_since_save >= batch_size:
+            saved_count = downloads_since_save
             catalog.save(CATALOG_PATH)
             downloads_since_save = 0
             if verbose:
-                logger.info(f"Catalog saved (batch checkpoint)")
+                logger.info(f"Catalog saved (batch checkpoint after {saved_count} downloads)")
 
     # Final save
     if downloads_since_save > 0:
@@ -347,6 +346,9 @@ Examples:
     # Validate arguments
     if not args.models and not args.all_pending:
         parser.error("Must specify --model MODEL_ID or --all")
+
+    if args.batch_size < 1:
+        parser.error("--batch-size must be a positive integer")
 
     # Load catalog
     if not CATALOG_PATH.exists():
