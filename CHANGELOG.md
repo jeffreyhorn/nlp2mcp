@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 13 Day 2: Model List Population - 2026-01-01
+
+**Branch:** `sprint13-day2-model-discovery`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created model discovery script that scans GAMSLIB for LP/NLP/QCP models and populates the catalog. Discovered 219 models (86 LP, 120 NLP, 13 QCP), far exceeding the 50+ target.
+
+#### Changes
+
+**New Files:**
+- `scripts/gamslib/discover_models.py` (~280 lines)
+  - Parses GAMSLIB index via `gamslib -g` command
+  - Extracts model types from solve statements in .gms files
+  - Filters for LP/NLP/QCP models (excludes MIP, MINLP, MCP, etc.)
+  - Populates catalog with model entries
+  - Generates discovery report with statistics
+
+- `data/gamslib/discovery_report.md`
+  - Summary statistics (219 total: 86 LP, 120 NLP, 13 QCP)
+  - Breakdown by model type
+  - List of all discovered models with descriptions
+
+**Modified Files:**
+- `data/gamslib/catalog.json`
+  - Populated with 219 model entries
+  - Schema version 1.0.0
+
+#### Key Features
+
+**Model Discovery:**
+- Parses `gamslib -g` output to get model index
+- Extracts model type from solve statement: `solve <model> [minimizing|maximizing <var>] using <type>;`
+- Regex pattern: `r"solve\s+\w+.*?using\s+(\w+)"` (handles optional minimizing/maximizing clause)
+
+**Filtering Logic:**
+- Included: LP (always convex), NLP (requires verification), QCP (requires verification)
+- Excluded: MIP, MINLP, MIQCP, MCP, MPEC, CNS, DNLP, EMP, MPSGE, GAMS, DECIS
+
+#### Results
+
+| Model Type | Count | Status |
+|------------|-------|--------|
+| LP | 86 | Included (verified convex) |
+| NLP | 120 | Included (requires verification) |
+| QCP | 13 | Included (requires verification) |
+| **Total** | **219** | **Exceeds 50+ target** |
+
+#### Quality Checks
+
+- ✅ `make typecheck` - Passed
+- ✅ `make lint` - Passed
+- ✅ `make test` - All 2477 tests passed
+
+---
+
 ### Sprint 13 Day 1: Directory Structure & Catalog Schema Implementation - 2026-01-01
 
 **Branch:** `sprint13-day1-catalog-schema`  
