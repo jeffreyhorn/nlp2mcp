@@ -722,7 +722,7 @@ def main() -> None:
             if r.convexity_status in (ConvexityStatus.ERROR.value, ConvexityStatus.UNKNOWN.value):
                 # Categorize errors by type
                 msg = r.error_message or "Unknown error"
-                if "license limits" in msg.lower():
+                if "license limits" in msg.lower() or "licensing problem" in msg.lower():
                     category = "License limits"
                 elif "compilation error" in msg.lower():
                     category = "Compilation errors"
