@@ -115,13 +115,10 @@ def download_model(
 
         # Verify the file was created
         if not gms_file.exists():
-            # gamslib might create a file with different name, check for any .gms
-            gms_files = list(target_dir.glob(f"{model.model_id}*.gms"))
-            if gms_files:
-                # Rename to expected name if needed
-                if gms_files[0] != gms_file:
-                    gms_files[0].rename(gms_file)
-            else:
+            # gamslib might create a file with different name, check for exact match
+            # Use exact model_id + ".gms" to avoid matching similar names (e.g., "test" vs "test2")
+            expected_file = target_dir / f"{model.model_id}.gms"
+            if not expected_file.exists():
                 return False, "gamslib completed but no .gms file created"
 
         return True, None
@@ -237,16 +234,20 @@ def download_models(
                     f"[{i}/{len(models_to_download)}] Skipping {model.model_id} (already exists)"
                 )
             result.add_skip()
-            # Ensure catalog reflects that the file is already present on disk
-            update_model_status(model, success=True, target_dir=RAW_DIR)
-            downloads_since_save += 1
-            # Save catalog periodically even when skipping existing files
-            if downloads_since_save >= batch_size:
-                saved_count = downloads_since_save
-                catalog.save(CATALOG_PATH)
-                downloads_since_save = 0
-                if verbose:
-                    logger.info(f"Catalog saved (batch checkpoint after {saved_count} updates)")
+            # Only update catalog if the model was still pending to avoid
+            # overwriting an existing download_date when merely verifying a file
+            if model.download_status == "pending":
+                update_model_status(model, success=True, target_dir=RAW_DIR)
+                downloads_since_save += 1
+                # Save catalog periodically even when skipping existing files
+                if downloads_since_save >= batch_size:
+                    saved_count = downloads_since_save
+                    catalog.save(CATALOG_PATH)
+                    downloads_since_save = 0
+                    if verbose:
+                        logger.info(
+                            f"Catalog saved (batch checkpoint after {saved_count} operations)"
+                        )
             continue
 
         # Download the model
@@ -275,7 +276,7 @@ def download_models(
             catalog.save(CATALOG_PATH)
             downloads_since_save = 0
             if verbose:
-                logger.info(f"Catalog saved (batch checkpoint after {saved_count} downloads)")
+                logger.info(f"Catalog saved (batch checkpoint after {saved_count} operations)")
 
     # Final save
     if downloads_since_save > 0:
