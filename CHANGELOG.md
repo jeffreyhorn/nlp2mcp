@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 13 Day 3: Download Script Development - 2026-01-01
+
+**Branch:** `sprint13-day3-download-script`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created download script that uses the `gamslib` command to extract models to the local filesystem. Supports idempotent downloads, error handling, and catalog status updates.
+
+#### Changes
+
+**New Files:**
+- `scripts/gamslib/download_models.py` (~280 lines)
+  - Uses `gamslib` command to extract models to `data/gamslib/raw/`
+  - Idempotent downloads (skips existing files)
+  - `--force` flag to re-download existing files
+  - `--dry-run` to preview downloads
+  - Updates catalog with download status, date, file path, and size
+  - Batch saving to catalog (every N downloads)
+  - Error logging to `data/gamslib/download_errors.log`
+
+**Modified Files:**
+- `data/gamslib/catalog.json`
+  - 3 test models downloaded: trnsport, blend, circle
+  - Download status updated with timestamps and file sizes
+
+#### Key Features
+
+**CLI Interface:**
+```bash
+python scripts/gamslib/download_models.py --all           # Download all pending
+python scripts/gamslib/download_models.py --model MODEL   # Download specific model
+python scripts/gamslib/download_models.py --all --force   # Re-download all
+python scripts/gamslib/download_models.py --dry-run       # Preview downloads
+```
+
+**Idempotent Operation:**
+- Checks if file exists before downloading
+- Skips existing files with informative logging
+- `--force` flag re-downloads even if file exists
+
+**Error Handling:**
+- 60-second timeout per model
+- Captures gamslib command failures
+- Logs errors to download_errors.log
+- Updates catalog status to "failed" on error
+
+#### Quality Checks
+
+- ✅ `make typecheck` - Passed
+- ✅ `make lint` - Passed
+- ✅ `make test` - All 2477 tests passed
+
+---
+
 ### Sprint 13 Day 2: Model List Population - 2026-01-01
 
 **Branch:** `sprint13-day2-model-discovery`  

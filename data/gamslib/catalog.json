@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "created_date": "2026-01-01T06:56:29Z",
-  "updated_date": "2026-01-01T06:57:12Z",
+  "updated_date": "2026-01-01T07:12:51Z",
   "gams_version": "51.3.0",
   "total_models": 219,
   "models": [
@@ -224,10 +224,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_blend.html",
       "description": "Blending Problem I",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:12:24Z",
+      "file_path": "data/gamslib/raw/blend.gms",
+      "file_size_bytes": 1699,
       "notes": ""
     },
     {
@@ -419,10 +419,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_circle.html",
       "description": "Circle Enclosing Points - SNOPT Example",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:12:24Z",
+      "file_path": "data/gamslib/raw/circle.gms",
+      "file_size_bytes": 1297,
       "notes": ""
     },
     {
@@ -3119,10 +3119,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnsport.html",
       "description": "A Transportation Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:12:51Z",
+      "file_path": "data/gamslib/raw/trnsport.gms",
+      "file_size_bytes": 1751,
       "notes": ""
     },
     {
