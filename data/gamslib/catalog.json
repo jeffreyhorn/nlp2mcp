@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "created_date": "2026-01-01T06:56:29Z",
-  "updated_date": "2026-01-01T07:12:51Z",
+  "updated_date": "2026-01-01T07:55:20Z",
   "gams_version": "51.3.0",
   "total_models": 219,
   "models": [
@@ -14,10 +14,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_abel.html",
       "description": "Linear Quadratic Control Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:03Z",
+      "file_path": "data/gamslib/raw/abel.gms",
+      "file_size_bytes": 2493,
       "notes": ""
     },
     {
@@ -29,10 +29,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_agreste.html",
       "description": "Agricultural Farm Level Model of NE Brazil",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:03Z",
+      "file_path": "data/gamslib/raw/agreste.gms",
+      "file_size_bytes": 13310,
       "notes": ""
     },
     {
@@ -44,10 +44,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_aircraft.html",
       "description": "Aircraft Allocation Under Uncertain Demand",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:03Z",
+      "file_path": "data/gamslib/raw/aircraft.gms",
+      "file_size_bytes": 3696,
       "notes": ""
     },
     {
@@ -59,10 +59,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_airsp.html",
       "description": "Aircraft Allocation",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:03Z",
+      "file_path": "data/gamslib/raw/airsp.gms",
+      "file_size_bytes": 5121,
       "notes": ""
     },
     {
@@ -74,10 +74,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_airsp2.html",
       "description": "Aircraft Allocation - stochastic optimization with DECIS",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:03Z",
+      "file_path": "data/gamslib/raw/airsp2.gms",
+      "file_size_bytes": 9240,
       "notes": ""
     },
     {
@@ -89,10 +89,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ajax.html",
       "description": "Ajax Paper Company Production Schedule",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:03Z",
+      "file_path": "data/gamslib/raw/ajax.gms",
+      "file_size_bytes": 2651,
       "notes": ""
     },
     {
@@ -104,10 +104,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_alan.html",
       "description": "A Quadratic Programming Model for Portfolio Analysis",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/alan.gms",
+      "file_size_bytes": 3938,
       "notes": ""
     },
     {
@@ -119,10 +119,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_alkyl.html",
       "description": "Simplified Alkylation Process",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/alkyl.gms",
+      "file_size_bytes": 3047,
       "notes": ""
     },
     {
@@ -134,10 +134,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ampl.html",
       "description": "AMPL Sample Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/ampl.gms",
+      "file_size_bytes": 1668,
       "notes": ""
     },
     {
@@ -149,10 +149,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_andean.html",
       "description": "Andean Fertilizer Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/andean.gms",
+      "file_size_bytes": 59292,
       "notes": ""
     },
     {
@@ -164,10 +164,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_apl1p.html",
       "description": "Stochastic Programming Example for DECIS",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/apl1p.gms",
+      "file_size_bytes": 4343,
       "notes": ""
     },
     {
@@ -179,10 +179,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_apl1pca.html",
       "description": "Stochastic Programming Example for DECIS",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/apl1pca.gms",
+      "file_size_bytes": 3841,
       "notes": ""
     },
     {
@@ -194,10 +194,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_asyncloop.html",
       "description": "Transportation Problem with async loop body execution",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/asyncloop.gms",
+      "file_size_bytes": 4793,
       "notes": ""
     },
     {
@@ -209,10 +209,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_bearing.html",
       "description": "Hydrostatic Thrust Bearing Design for a Turbogenerator",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/bearing.gms",
+      "file_size_bytes": 5468,
       "notes": ""
     },
     {
@@ -239,10 +239,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_camcge.html",
       "description": "Cameroon General Equilibrium Model Using NLP",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/camcge.gms",
+      "file_size_bytes": 22507,
       "notes": ""
     },
     {
@@ -254,10 +254,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_camshape.html",
       "description": "Shape optimization of a cam COPS 2.0 #4",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/camshape.gms",
+      "file_size_bytes": 2665,
       "notes": ""
     },
     {
@@ -269,10 +269,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_catmix.html",
       "description": "Catalyst Mixing COPS 2.0 #14",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/catmix.gms",
+      "file_size_bytes": 1845,
       "notes": ""
     },
     {
@@ -284,10 +284,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cclinpts.html",
       "description": "Finding Optimal Breakpoints when linearizing a power utility function",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/cclinpts.gms",
+      "file_size_bytes": 1858,
       "notes": ""
     },
     {
@@ -299,10 +299,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cesam.html",
       "description": "Cross Entropy SAM Estimation",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:04Z",
+      "file_path": "data/gamslib/raw/cesam.gms",
+      "file_size_bytes": 25745,
       "notes": ""
     },
     {
@@ -314,10 +314,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cesam2.html",
       "description": "Cross Entropy SAM Estimation",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/cesam2.gms",
+      "file_size_bytes": 20952,
       "notes": ""
     },
     {
@@ -329,10 +329,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chain.html",
       "description": "Hanging Chain COPS 2.0 #3",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/chain.gms",
+      "file_size_bytes": 1815,
       "notes": ""
     },
     {
@@ -344,10 +344,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chakra.html",
       "description": "Optimal Growth Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/chakra.gms",
+      "file_size_bytes": 2139,
       "notes": ""
     },
     {
@@ -359,10 +359,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chance.html",
       "description": "Chance Constrained Feed Mix Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/chance.gms",
+      "file_size_bytes": 1966,
       "notes": ""
     },
     {
@@ -374,10 +374,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chem.html",
       "description": "Chemical Equilibrium Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/chem.gms",
+      "file_size_bytes": 1625,
       "notes": ""
     },
     {
@@ -389,10 +389,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chenery.html",
       "description": "Substitution and Structural Change",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/chenery.gms",
+      "file_size_bytes": 7342,
       "notes": ""
     },
     {
@@ -404,10 +404,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_china.html",
       "description": "Organic Fertilizer Use in Intensive Farming",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/china.gms",
+      "file_size_bytes": 18309,
       "notes": ""
     },
     {
@@ -434,10 +434,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_circpack.html",
       "description": "Pack circles in the smallest possible rectangle",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/circpack.gms",
+      "file_size_bytes": 5248,
       "notes": ""
     },
     {
@@ -449,10 +449,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_clearlak.html",
       "description": "Scenario Reduction: ClearLake exercise",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/clearlak.gms",
+      "file_size_bytes": 6509,
       "notes": ""
     },
     {
@@ -464,10 +464,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cpack.html",
       "description": "Packing identical size circles in the unit circle",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/cpack.gms",
+      "file_size_bytes": 1407,
       "notes": ""
     },
     {
@@ -479,10 +479,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_danwolfe.html",
       "description": "Dantzig Wolfe Decomposition and Grid Computing",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/danwolfe.gms",
+      "file_size_bytes": 6337,
       "notes": ""
     },
     {
@@ -494,10 +494,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_decomp.html",
       "description": "Decomposition Principle - Animated",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/decomp.gms",
+      "file_size_bytes": 3380,
       "notes": ""
     },
     {
@@ -509,10 +509,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_demo1.html",
       "description": "Simple Farm Level Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:05Z",
+      "file_path": "data/gamslib/raw/demo1.gms",
+      "file_size_bytes": 5202,
       "notes": ""
     },
     {
@@ -524,10 +524,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_demo7.html",
       "description": "Nonlinear Simple Agricultural Sector Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/demo7.gms",
+      "file_size_bytes": 10332,
       "notes": ""
     },
     {
@@ -539,10 +539,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_dinam.html",
       "description": "DINAMICO  A Dynamic Multi-Sectoral  Multi-Skill Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/dinam.gms",
+      "file_size_bytes": 45806,
       "notes": ""
     },
     {
@@ -554,10 +554,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_dispatch.html",
       "description": "Economic Load Dispatch Including Transmission Losses",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/dispatch.gms",
+      "file_size_bytes": 3105,
       "notes": ""
     },
     {
@@ -569,10 +569,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_dqq.html",
       "description": "Warm-starting quad-precision MINOS",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/dqq.gms",
+      "file_size_bytes": 4394,
       "notes": ""
     },
     {
@@ -584,10 +584,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_dyncge.html",
       "description": "A Recursive-Dynamic Standard CGE Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/dyncge.gms",
+      "file_size_bytes": 29542,
       "notes": ""
     },
     {
@@ -599,10 +599,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_egypt.html",
       "description": "Egypt Agricultural Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/egypt.gms",
+      "file_size_bytes": 41444,
       "notes": ""
     },
     {
@@ -614,10 +614,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_elec.html",
       "description": "Distribution of electrons on a sphere COPS 2.0 #2",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/elec.gms",
+      "file_size_bytes": 1938,
       "notes": ""
     },
     {
@@ -629,10 +629,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_embmiex1.html",
       "description": "Simple Embedded Code ModelInstance example",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/embmiex1.gms",
+      "file_size_bytes": 5635,
       "notes": ""
     },
     {
@@ -644,10 +644,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_emfl.html",
       "description": "Existing Multi Facility Location Problem - Cone Format",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/emfl.gms",
+      "file_size_bytes": 3500,
       "notes": ""
     },
     {
@@ -659,10 +659,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_epscm.html",
       "description": "eps-Constraint Method for Multiobjective Optimization",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/epscm.gms",
+      "file_size_bytes": 11095,
       "notes": ""
     },
     {
@@ -674,10 +674,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_etamac.html",
       "description": "ETA-MACRO Energy Model for the USA",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/etamac.gms",
+      "file_size_bytes": 9592,
       "notes": ""
     },
     {
@@ -689,10 +689,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fawley.html",
       "description": "Platoform Example Refinery",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:06Z",
+      "file_path": "data/gamslib/raw/fawley.gms",
+      "file_size_bytes": 12600,
       "notes": ""
     },
     {
@@ -704,10 +704,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fdesign.html",
       "description": "Linear Phase Lowpass Filter Design",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/fdesign.gms",
+      "file_size_bytes": 2498,
       "notes": ""
     },
     {
@@ -719,10 +719,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_feasopt1.html",
       "description": "An Infeasible Transportation Problem analyzed with Cplex option FeasOpt",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/feasopt1.gms",
+      "file_size_bytes": 5599,
       "notes": ""
     },
     {
@@ -734,10 +734,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_feedtray.html",
       "description": "Optimum Feed Plate Location",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/feedtray.gms",
+      "file_size_bytes": 12940,
       "notes": ""
     },
     {
@@ -749,10 +749,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ferts.html",
       "description": "Egypt - Static Fertilizer Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/ferts.gms",
+      "file_size_bytes": 18981,
       "notes": ""
     },
     {
@@ -764,10 +764,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gancnsx.html",
       "description": "Macro-Economic Framework for India - Tracking CNS",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/gancnsx.gms",
+      "file_size_bytes": 72387,
       "notes": ""
     },
     {
@@ -779,10 +779,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ganges.html",
       "description": "Macroeconomic Framework for India",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/ganges.gms",
+      "file_size_bytes": 59311,
       "notes": ""
     },
     {
@@ -794,10 +794,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gangesx.html",
       "description": "Economic Framework for India - Tracking",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/gangesx.gms",
+      "file_size_bytes": 72142,
       "notes": ""
     },
     {
@@ -809,10 +809,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gasoil.html",
       "description": "Catalytic cracking of gas oil COPS 2.0 #12",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/gasoil.gms",
+      "file_size_bytes": 2911,
       "notes": ""
     },
     {
@@ -824,10 +824,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gastrans.html",
       "description": "Gas Transmission Problem - Belgium",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/gastrans.gms",
+      "file_size_bytes": 7865,
       "notes": ""
     },
     {
@@ -839,10 +839,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_glider.html",
       "description": "Hang glider COPS 2.0 #11",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/glider.gms",
+      "file_size_bytes": 3892,
       "notes": ""
     },
     {
@@ -854,10 +854,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gqapsdp.html",
       "description": "SDP Convexifications of the Generalized Quadratic Assignment Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/gqapsdp.gms",
+      "file_size_bytes": 4761,
       "notes": ""
     },
     {
@@ -869,10 +869,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gtm.html",
       "description": "International Gas Trade Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:07Z",
+      "file_path": "data/gamslib/raw/gtm.gms",
+      "file_size_bytes": 7449,
       "notes": ""
     },
     {
@@ -884,10 +884,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_guss2dim.html",
       "description": "Two dimensional scenario GUSS Example",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/guss2dim.gms",
+      "file_size_bytes": 3540,
       "notes": ""
     },
     {
@@ -899,10 +899,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gussex1.html",
       "description": "Simple GUSS example",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/gussex1.gms",
+      "file_size_bytes": 6343,
       "notes": ""
     },
     {
@@ -914,10 +914,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gussgrid.html",
       "description": "Simple GUSS Grid example",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/gussgrid.gms",
+      "file_size_bytes": 4953,
       "notes": ""
     },
     {
@@ -929,10 +929,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gussrisk.html",
       "description": "Simple investment example with varying weight for risk using GUSS",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/gussrisk.gms",
+      "file_size_bytes": 4420,
       "notes": ""
     },
     {
@@ -944,10 +944,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_harker.html",
       "description": "Models of Spatial Competition",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/harker.gms",
+      "file_size_bytes": 5640,
       "notes": ""
     },
     {
@@ -959,10 +959,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hhfair.html",
       "description": "Household Optimization Problem by Fair",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/hhfair.gms",
+      "file_size_bytes": 3045,
       "notes": ""
     },
     {
@@ -974,10 +974,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hhmax.html",
       "description": "A Household Maximization Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/hhmax.gms",
+      "file_size_bytes": 1130,
       "notes": ""
     },
     {
@@ -989,10 +989,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_himmel11.html",
       "description": "Himmelblau Test Problem Number 11",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/himmel11.gms",
+      "file_size_bytes": 1130,
       "notes": ""
     },
     {
@@ -1004,10 +1004,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_himmel16.html",
       "description": "Area of Hexagon Test Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/himmel16.gms",
+      "file_size_bytes": 2329,
       "notes": ""
     },
     {
@@ -1019,10 +1019,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_house.html",
       "description": "House Plan Design",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/house.gms",
+      "file_size_bytes": 1510,
       "notes": ""
     },
     {
@@ -1034,10 +1034,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hs62.html",
       "description": "Hock - Schittkowski Problem 62",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/hs62.gms",
+      "file_size_bytes": 1233,
       "notes": ""
     },
     {
@@ -1049,10 +1049,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hydro.html",
       "description": "Hydrothermal Scheduling Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/hydro.gms",
+      "file_size_bytes": 2170,
       "notes": ""
     },
     {
@@ -1064,10 +1064,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ibm1.html",
       "description": "Aluminum Alloy Smelter Sample Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:08Z",
+      "file_path": "data/gamslib/raw/ibm1.gms",
+      "file_size_bytes": 3794,
       "notes": ""
     },
     {
@@ -1079,10 +1079,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_immun.html",
       "description": "Financial Optimization: Risk Management",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/immun.gms",
+      "file_size_bytes": 11364,
       "notes": ""
     },
     {
@@ -1094,10 +1094,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_imsl.html",
       "description": "Piecewise Linear Approximation",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/imsl.gms",
+      "file_size_bytes": 3287,
       "notes": ""
     },
     {
@@ -1109,10 +1109,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_indus.html",
       "description": "Indus Agricultural Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/indus.gms",
+      "file_size_bytes": 63021,
       "notes": ""
     },
     {
@@ -1124,10 +1124,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_indus89.html",
       "description": "Indus Basin Water Resource Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/indus89.gms",
+      "file_size_bytes": 258054,
       "notes": ""
     },
     {
@@ -1139,10 +1139,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_iobalance.html",
       "description": "Updating and Projecting Coefficients: The RAS Approach",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/iobalance.gms",
+      "file_size_bytes": 4776,
       "notes": ""
     },
     {
@@ -1154,10 +1154,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_irscge.html",
       "description": "A CGE Model with Scale Economy",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/irscge.gms",
+      "file_size_bytes": 11624,
       "notes": ""
     },
     {
@@ -1169,10 +1169,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_iswnm.html",
       "description": "Indus Surface Water Network Submodule",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/iswnm.gms",
+      "file_size_bytes": 35933,
       "notes": ""
     },
     {
@@ -1184,10 +1184,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_jbearing.html",
       "description": "Journal bearing COPS 2.0 #16",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/jbearing.gms",
+      "file_size_bytes": 2237,
       "notes": ""
     },
     {
@@ -1199,10 +1199,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_jobt.html",
       "description": "On-the-Job Training",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/jobt.gms",
+      "file_size_bytes": 2101,
       "notes": ""
     },
     {
@@ -1214,10 +1214,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_kand.html",
       "description": "Stochastic Programming",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/kand.gms",
+      "file_size_bytes": 2918,
       "notes": ""
     },
     {
@@ -1229,10 +1229,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_korcge.html",
       "description": "General Equilibrium Model for Korea - NLP",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/korcge.gms",
+      "file_size_bytes": 15822,
       "notes": ""
     },
     {
@@ -1244,10 +1244,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_kqkpsdp.html",
       "description": "SDP Convexifications of the Cardinality constraint Quadratic Knapsack Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/kqkpsdp.gms",
+      "file_size_bytes": 4436,
       "notes": ""
     },
     {
@@ -1259,10 +1259,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lands.html",
       "description": "Optimal Investment",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:09Z",
+      "file_path": "data/gamslib/raw/lands.gms",
+      "file_size_bytes": 3006,
       "notes": ""
     },
     {
@@ -1274,10 +1274,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_launch.html",
       "description": "Launch Vehicle Design and Costing",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/launch.gms",
+      "file_size_bytes": 6234,
       "notes": ""
     },
     {
@@ -1289,10 +1289,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_least.html",
       "description": "Nonlinear Regression Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/least.gms",
+      "file_size_bytes": 1216,
       "notes": ""
     },
     {
@@ -1304,10 +1304,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_like.html",
       "description": "Maximum Likelihood Estimation",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/like.gms",
+      "file_size_bytes": 1991,
       "notes": ""
     },
     {
@@ -1319,10 +1319,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lmp1.html",
       "description": "Linear Multiplicative Model - Type 1",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/lmp1.gms",
+      "file_size_bytes": 2796,
       "notes": ""
     },
     {
@@ -1334,10 +1334,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lmp2.html",
       "description": "Linear Multiplicative Model - Type 2",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/lmp2.gms",
+      "file_size_bytes": 2653,
       "notes": ""
     },
     {
@@ -1349,10 +1349,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lmp3.html",
       "description": "Linear Multiplicative Model - Type 3",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/lmp3.gms",
+      "file_size_bytes": 2956,
       "notes": ""
     },
     {
@@ -1364,10 +1364,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lnts.html",
       "description": "Particle steering COPS 2.0 #9",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/lnts.gms",
+      "file_size_bytes": 2057,
       "notes": ""
     },
     {
@@ -1379,10 +1379,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lop.html",
       "description": "Line Optimization",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/lop.gms",
+      "file_size_bytes": 14849,
       "notes": ""
     },
     {
@@ -1394,10 +1394,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lrgcge.html",
       "description": "A Large Country CGE Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/lrgcge.gms",
+      "file_size_bytes": 11721,
       "notes": ""
     },
     {
@@ -1409,10 +1409,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_marco.html",
       "description": "Mini Oil Refining Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/marco.gms",
+      "file_size_bytes": 8289,
       "notes": ""
     },
     {
@@ -1424,10 +1424,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_markov.html",
       "description": "Strategic Petroleum Reserve",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/markov.gms",
+      "file_size_bytes": 2662,
       "notes": ""
     },
     {
@@ -1439,10 +1439,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mathopt1.html",
       "description": "MathOptimizer Example 1",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:10Z",
+      "file_path": "data/gamslib/raw/mathopt1.gms",
+      "file_size_bytes": 1442,
       "notes": ""
     },
     {
@@ -1454,10 +1454,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mathopt2.html",
       "description": "MathOptimizer Example 2",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/mathopt2.gms",
+      "file_size_bytes": 1358,
       "notes": ""
     },
     {
@@ -1469,10 +1469,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mathopt3.html",
       "description": "MathOptimizer Example 3",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/mathopt3.gms",
+      "file_size_bytes": 1815,
       "notes": ""
     },
     {
@@ -1484,10 +1484,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mathopt4.html",
       "description": "MathOptimizer Example 4",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/mathopt4.gms",
+      "file_size_bytes": 2209,
       "notes": ""
     },
     {
@@ -1499,10 +1499,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_maxcut.html",
       "description": "Goemans/Williamson Randomized Approximation Algorithm for MaxCut",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/maxcut.gms",
+      "file_size_bytes": 4421,
       "notes": ""
     },
     {
@@ -1514,10 +1514,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_maxmin.html",
       "description": "Max Min Location of Points in Unit Square",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/maxmin.gms",
+      "file_size_bytes": 3350,
       "notes": ""
     },
     {
@@ -1529,10 +1529,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_meanvar.html",
       "description": "Financial Optimization: Risk Management",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/meanvar.gms",
+      "file_size_bytes": 4372,
       "notes": ""
     },
     {
@@ -1544,10 +1544,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_methanol.html",
       "description": "Methanol to hydrocarbons COPS 2.0 #13",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/methanol.gms",
+      "file_size_bytes": 3966,
       "notes": ""
     },
     {
@@ -1559,10 +1559,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mexls.html",
       "description": "Mexico Steel - Large Static",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/mexls.gms",
+      "file_size_bytes": 50082,
       "notes": ""
     },
     {
@@ -1574,10 +1574,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mexss.html",
       "description": "Mexico Steel - Small Static",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/mexss.gms",
+      "file_size_bytes": 7511,
       "notes": ""
     },
     {
@@ -1589,10 +1589,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mhw4d.html",
       "description": "Nonlinear Test Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/mhw4d.gms",
+      "file_size_bytes": 664,
       "notes": ""
     },
     {
@@ -1604,10 +1604,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mhw4dx.html",
       "description": "MHW4D with additional Tests",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/mhw4dx.gms",
+      "file_size_bytes": 2920,
       "notes": ""
     },
     {
@@ -1619,10 +1619,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mhw4dxx.html",
       "description": "MHW4DX with multiple solutions",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/mhw4dxx.gms",
+      "file_size_bytes": 2305,
       "notes": ""
     },
     {
@@ -1634,10 +1634,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mine.html",
       "description": "Opencast Mining",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:11Z",
+      "file_path": "data/gamslib/raw/mine.gms",
+      "file_size_bytes": 1951,
       "notes": ""
     },
     {
@@ -1649,10 +1649,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mingamma.html",
       "description": "Minimal y of GAMMA(x)",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/mingamma.gms",
+      "file_size_bytes": 1376,
       "notes": ""
     },
     {
@@ -1664,10 +1664,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minlphi.html",
       "description": "Heat Integrated Distillation Sequences",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/minlphi.gms",
+      "file_size_bytes": 33099,
       "notes": ""
     },
     {
@@ -1679,10 +1679,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minsurf.html",
       "description": "Minimal surface with obstacle COPS 2.0 #17",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/minsurf.gms",
+      "file_size_bytes": 2035,
       "notes": ""
     },
     {
@@ -1694,10 +1694,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mlbeta.html",
       "description": "Fitting of beta distribution through maximum likelihood",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/mlbeta.gms",
+      "file_size_bytes": 2880,
       "notes": ""
     },
     {
@@ -1709,10 +1709,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mlgamma.html",
       "description": "Maximum Likelihood estimation of parameters of the gamma distribution",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/mlgamma.gms",
+      "file_size_bytes": 1707,
       "notes": ""
     },
     {
@@ -1724,10 +1724,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_moncge.html",
       "description": "A Monopoly CGE Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/moncge.gms",
+      "file_size_bytes": 11664,
       "notes": ""
     },
     {
@@ -1739,10 +1739,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_msm.html",
       "description": "Morocco Fertilizer Distribution - Mode Selection",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/msm.gms",
+      "file_size_bytes": 11276,
       "notes": ""
     },
     {
@@ -1754,10 +1754,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_nebrazil.html",
       "description": "North-East Brazil Regional Agricultural Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/nebrazil.gms",
+      "file_size_bytes": 60664,
       "notes": ""
     },
     {
@@ -1769,10 +1769,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_nemhaus.html",
       "description": "Scheduling to Minimize Interaction Cost",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/nemhaus.gms",
+      "file_size_bytes": 5604,
       "notes": ""
     },
     {
@@ -1784,10 +1784,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_netgen.html",
       "description": "Min Cost Flow with an Instance generated by NETGEN",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/netgen.gms",
+      "file_size_bytes": 3208,
       "notes": ""
     },
     {
@@ -1799,10 +1799,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_nonsharp.html",
       "description": "Synthesis of General Distillation Sequences",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/nonsharp.gms",
+      "file_size_bytes": 21751,
       "notes": ""
     },
     {
@@ -1814,10 +1814,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_orani.html",
       "description": "A Miniature Version of Orani 78",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:12Z",
+      "file_path": "data/gamslib/raw/orani.gms",
+      "file_size_bytes": 8542,
       "notes": ""
     },
     {
@@ -1829,10 +1829,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_otpop.html",
       "description": "OPEC Trade and Production",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/otpop.gms",
+      "file_size_bytes": 4474,
       "notes": ""
     },
     {
@@ -1844,10 +1844,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_pak.html",
       "description": "Optimal Patterns of Growth and Aid",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/pak.gms",
+      "file_size_bytes": 4523,
       "notes": ""
     },
     {
@@ -1859,10 +1859,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_paklive.html",
       "description": "Pakistan Punjab Livestock Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/paklive.gms",
+      "file_size_bytes": 8411,
       "notes": ""
     },
     {
@@ -1874,10 +1874,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_paperco.html",
       "description": "Vertically Integrated Company",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/paperco.gms",
+      "file_size_bytes": 3803,
       "notes": ""
     },
     {
@@ -1889,10 +1889,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_partssupply.html",
       "description": "Parts Supply Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/partssupply.gms",
+      "file_size_bytes": 6325,
       "notes": ""
     },
     {
@@ -1904,10 +1904,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_pdi.html",
       "description": "ARCNET - Production Distribution and Inventory",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/pdi.gms",
+      "file_size_bytes": 3991,
       "notes": ""
     },
     {
@@ -1919,10 +1919,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_phosdis.html",
       "description": "Sea Distances for World Phosphate Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/phosdis.gms",
+      "file_size_bytes": 19958,
       "notes": ""
     },
     {
@@ -1934,10 +1934,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_pindyck.html",
       "description": "Optimal Pricing and Extraction for OPEC",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/pindyck.gms",
+      "file_size_bytes": 1980,
       "notes": ""
     },
     {
@@ -1949,10 +1949,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_pinene.html",
       "description": "Isometrization of alpha-pinene COPS 2.0 #5",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/pinene.gms",
+      "file_size_bytes": 3309,
       "notes": ""
     },
     {
@@ -1964,10 +1964,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_pollut.html",
       "description": "Industrial Pollution Control",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/pollut.gms",
+      "file_size_bytes": 3512,
       "notes": ""
     },
     {
@@ -1979,10 +1979,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_polygon.html",
       "description": "Largest small polygon COPS 2.0 #1",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/polygon.gms",
+      "file_size_bytes": 1503,
       "notes": ""
     },
     {
@@ -1994,10 +1994,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_pool.html",
       "description": "Pooling problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/pool.gms",
+      "file_size_bytes": 24825,
       "notes": ""
     },
     {
@@ -2009,10 +2009,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_popdynm.html",
       "description": "Marine population dynamics COPS 2.0 #6",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:13Z",
+      "file_path": "data/gamslib/raw/popdynm.gms",
+      "file_size_bytes": 3675,
       "notes": ""
     },
     {
@@ -2024,10 +2024,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_port.html",
       "description": "Simple Portfolio Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/port.gms",
+      "file_size_bytes": 1541,
       "notes": ""
     },
     {
@@ -2039,10 +2039,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_process.html",
       "description": "Alkylation Process Optimization",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/process.gms",
+      "file_size_bytes": 3086,
       "notes": ""
     },
     {
@@ -2054,10 +2054,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_procmean.html",
       "description": "Optimal Process Mean",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/procmean.gms",
+      "file_size_bytes": 1903,
       "notes": ""
     },
     {
@@ -2069,10 +2069,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_prodmix.html",
       "description": "A Production Mix Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/prodmix.gms",
+      "file_size_bytes": 1222,
       "notes": ""
     },
     {
@@ -2084,10 +2084,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_prodsp.html",
       "description": "Stochastic Programming Example",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/prodsp.gms",
+      "file_size_bytes": 2055,
       "notes": ""
     },
     {
@@ -2099,10 +2099,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_prodsp2.html",
       "description": "Stochastic Programming Example - reformulated for DECIS",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/prodsp2.gms",
+      "file_size_bytes": 4987,
       "notes": ""
     },
     {
@@ -2114,10 +2114,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_prolog.html",
       "description": "Market Equilibrium and Activity Analysis",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/prolog.gms",
+      "file_size_bytes": 6080,
       "notes": ""
     },
     {
@@ -2129,10 +2129,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps10_s.html",
       "description": "Parts Supply Problem w/ 10 Types and w/ Asymmetric Information",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/ps10_s.gms",
+      "file_size_bytes": 1702,
       "notes": ""
     },
     {
@@ -2144,10 +2144,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps10_s_mn.html",
       "description": "Parts Supply Problem w/ 10 Types w/ Random p(i)",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/ps10_s_mn.gms",
+      "file_size_bytes": 4117,
       "notes": ""
     },
     {
@@ -2159,10 +2159,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps2_f.html",
       "description": "Parts Supply Problem w/ 2 Types w/o Asymmetric Information",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/ps2_f.gms",
+      "file_size_bytes": 1238,
       "notes": ""
     },
     {
@@ -2174,10 +2174,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps2_f_eff.html",
       "description": "Parts Supply Problem w/ Efficient Type w/o Asymmetric Information",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/ps2_f_eff.gms",
+      "file_size_bytes": 1247,
       "notes": ""
     },
     {
@@ -2189,10 +2189,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps2_f_inf.html",
       "description": "Parts Supply Problem w/ Inefficient Type w/o Asymmetric Information",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:14Z",
+      "file_path": "data/gamslib/raw/ps2_f_inf.gms",
+      "file_size_bytes": 1211,
       "notes": ""
     },
     {
@@ -2204,10 +2204,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps2_f_s.html",
       "description": "Parts Supply Problem w/ 2 Types w/o and w/ Asymmetric Information",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/ps2_f_s.gms",
+      "file_size_bytes": 1438,
       "notes": ""
     },
     {
@@ -2219,10 +2219,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps2_s.html",
       "description": "Parts Supply Problem w/ 2 Types w/ Asymmetric Information",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/ps2_s.gms",
+      "file_size_bytes": 1349,
       "notes": ""
     },
     {
@@ -2234,10 +2234,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps3_f.html",
       "description": "Parts Supply Problem w/ 3 Types w/o Asymmetric Information",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/ps3_f.gms",
+      "file_size_bytes": 1243,
       "notes": ""
     },
     {
@@ -2249,10 +2249,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps3_s.html",
       "description": "Parts Supply Problem w/ 3 Types w/ Asymmetric Information",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/ps3_s.gms",
+      "file_size_bytes": 1358,
       "notes": ""
     },
     {
@@ -2264,10 +2264,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps3_s_gic.html",
       "description": "Parts Supply Problem w/ 3 Types w/ Global Incentive Comp. Const.",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/ps3_s_gic.gms",
+      "file_size_bytes": 1371,
       "notes": ""
     },
     {
@@ -2279,10 +2279,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps3_s_mn.html",
       "description": "Parts Supply Problem w/ 3 Types w/ Monotonicity Constraint",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/ps3_s_mn.gms",
+      "file_size_bytes": 1794,
       "notes": ""
     },
     {
@@ -2294,10 +2294,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps3_s_scp.html",
       "description": "Parts Supply Problem w/ 3 Types w/o and w/ SCP",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/ps3_s_scp.gms",
+      "file_size_bytes": 1966,
       "notes": ""
     },
     {
@@ -2309,10 +2309,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps5_s_mn.html",
       "description": "Parts Supply Problem w/ 5 Types w/ Random p(i)",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/ps5_s_mn.gms",
+      "file_size_bytes": 4123,
       "notes": ""
     },
     {
@@ -2324,10 +2324,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qabel.html",
       "description": "Linear Quadratic Control Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/qabel.gms",
+      "file_size_bytes": 2692,
       "notes": ""
     },
     {
@@ -2339,10 +2339,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qalan.html",
       "description": "A Quadratic Programming Model for Portfolio Analysis QCP",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/qalan.gms",
+      "file_size_bytes": 2586,
       "notes": ""
     },
     {
@@ -2354,10 +2354,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qcp1.html",
       "description": "Standard QP Model QCP",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/qcp1.gms",
+      "file_size_bytes": 1804,
       "notes": ""
     },
     {
@@ -2369,10 +2369,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qdemo7.html",
       "description": "Nonlinear Simple Agricultural Sector Model QCP",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:15Z",
+      "file_path": "data/gamslib/raw/qdemo7.gms",
+      "file_size_bytes": 8333,
       "notes": ""
     },
     {
@@ -2384,10 +2384,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qfilter.html",
       "description": "Audio filter design using quad-precision MINOS",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/qfilter.gms",
+      "file_size_bytes": 4920,
       "notes": ""
     },
     {
@@ -2399,10 +2399,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp1.html",
       "description": "Standard QP Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/qp1.gms",
+      "file_size_bytes": 1723,
       "notes": ""
     },
     {
@@ -2414,10 +2414,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp1x.html",
       "description": "Standard QP Model with GDX data input",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/qp1x.gms",
+      "file_size_bytes": 3345,
       "notes": ""
     },
     {
@@ -2429,10 +2429,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp2.html",
       "description": "Standard QP Model - symmetry exploitations",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/qp2.gms",
+      "file_size_bytes": 1611,
       "notes": ""
     },
     {
@@ -2444,10 +2444,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp3.html",
       "description": "Standard QP Model - intermediate variables",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/qp3.gms",
+      "file_size_bytes": 2050,
       "notes": ""
     },
     {
@@ -2459,10 +2459,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp4.html",
       "description": "Standard QP Model - no covariance matrix",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/qp4.gms",
+      "file_size_bytes": 1319,
       "notes": ""
     },
     {
@@ -2474,10 +2474,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp5.html",
       "description": "Standard QP Model - linear approximation",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/qp5.gms",
+      "file_size_bytes": 1394,
       "notes": ""
     },
     {
@@ -2489,10 +2489,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp7.html",
       "description": "Standard QP Model - conic programming formulation",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/qp7.gms",
+      "file_size_bytes": 2421,
       "notes": ""
     },
     {
@@ -2504,10 +2504,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qsambal.html",
       "description": "Social Accounting Matrix Balancing Problem QCP",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/qsambal.gms",
+      "file_size_bytes": 1797,
       "notes": ""
     },
     {
@@ -2519,10 +2519,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_quocge.html",
       "description": "A CGE Model with Quotas",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/quocge.gms",
+      "file_size_bytes": 11937,
       "notes": ""
     },
     {
@@ -2534,10 +2534,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ramsey.html",
       "description": "Savings Model by Ramsey",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:16Z",
+      "file_path": "data/gamslib/raw/ramsey.gms",
+      "file_size_bytes": 5525,
       "notes": ""
     },
     {
@@ -2549,10 +2549,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_rbrock.html",
       "description": "Rosenbrock Test Function",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/rbrock.gms",
+      "file_size_bytes": 531,
       "notes": ""
     },
     {
@@ -2564,10 +2564,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_robert.html",
       "description": "Elementary Production and Inventory Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/robert.gms",
+      "file_size_bytes": 1650,
       "notes": ""
     },
     {
@@ -2579,10 +2579,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_robot.html",
       "description": "Robot arm COPS 2.0 #8",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/robot.gms",
+      "file_size_bytes": 2900,
       "notes": ""
     },
     {
@@ -2594,10 +2594,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_robustlp.html",
       "description": "Robust linear programming as an SOCP",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/robustlp.gms",
+      "file_size_bytes": 3143,
       "notes": ""
     },
     {
@@ -2609,10 +2609,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_rocket.html",
       "description": "Goddard rocket COPS 2.0 #10",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/rocket.gms",
+      "file_size_bytes": 2635,
       "notes": ""
     },
     {
@@ -2624,10 +2624,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sambal.html",
       "description": "Social Accounting Matrix Balancing Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/sambal.gms",
+      "file_size_bytes": 1642,
       "notes": ""
     },
     {
@@ -2639,10 +2639,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sample.html",
       "description": "Stratified Sample Design",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/sample.gms",
+      "file_size_bytes": 1944,
       "notes": ""
     },
     {
@@ -2654,10 +2654,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_saras.html",
       "description": "South African Regionalised Farm-level Resource Use and Output Supply Response (SARAS) model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/saras.gms",
+      "file_size_bytes": 119925,
       "notes": ""
     },
     {
@@ -2669,10 +2669,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sarf.html",
       "description": "Farm Credit and Income Distribution Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/sarf.gms",
+      "file_size_bytes": 25746,
       "notes": ""
     },
     {
@@ -2684,10 +2684,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_scenmerge.html",
       "description": "Combining scenario results in a directory tree with gdxmerge",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/scenmerge.gms",
+      "file_size_bytes": 4061,
       "notes": ""
     },
     {
@@ -2699,10 +2699,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sddp.html",
       "description": "Multi-stage Stochastic Water Reservoir Model solved with SDDP",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/sddp.gms",
+      "file_size_bytes": 11914,
       "notes": ""
     },
     {
@@ -2714,10 +2714,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_senstran.html",
       "description": "Sensitivity analysis using LOOPS",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:17Z",
+      "file_path": "data/gamslib/raw/senstran.gms",
+      "file_size_bytes": 3402,
       "notes": ""
     },
     {
@@ -2729,10 +2729,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_shale.html",
       "description": "Investment Planning in the Oil Shale Industry",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/shale.gms",
+      "file_size_bytes": 32735,
       "notes": ""
     },
     {
@@ -2744,10 +2744,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ship.html",
       "description": "Structural Optimization",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/ship.gms",
+      "file_size_bytes": 3364,
       "notes": ""
     },
     {
@@ -2759,10 +2759,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sipres.html",
       "description": "Global optimization of semi-infinite programs via restriction of the right-hand side",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/sipres.gms",
+      "file_size_bytes": 8496,
       "notes": ""
     },
     {
@@ -2774,10 +2774,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_solveopt.html",
       "description": "Option solveopt explained",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/solveopt.gms",
+      "file_size_bytes": 2417,
       "notes": ""
     },
     {
@@ -2789,10 +2789,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sparta.html",
       "description": "Military Manpower Planning from Wagner",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/sparta.gms",
+      "file_size_bytes": 2686,
       "notes": ""
     },
     {
@@ -2804,10 +2804,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_spatequ.html",
       "description": "Spatial Equilibrium",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/spatequ.gms",
+      "file_size_bytes": 5262,
       "notes": ""
     },
     {
@@ -2819,10 +2819,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_spbenders1.html",
       "description": "Stochastic Benders - Sequential GAMS Loop",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/spbenders1.gms",
+      "file_size_bytes": 4750,
       "notes": ""
     },
     {
@@ -2834,10 +2834,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_spbenders2.html",
       "description": "Stochastic Benders - Async Subsolve GAMS Loop",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/spbenders2.gms",
+      "file_size_bytes": 5148,
       "notes": ""
     },
     {
@@ -2849,10 +2849,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_spbenders4.html",
       "description": "Stochastic Benders - Parallel MPI",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/spbenders4.gms",
+      "file_size_bytes": 8257,
       "notes": ""
     },
     {
@@ -2864,10 +2864,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_splcge.html",
       "description": "A Simple CGE Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/splcge.gms",
+      "file_size_bytes": 2712,
       "notes": ""
     },
     {
@@ -2879,10 +2879,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_springchain.html",
       "description": "Equilibrium of System with Piecewise Linear Springs",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/springchain.gms",
+      "file_size_bytes": 2270,
       "notes": ""
     },
     {
@@ -2894,10 +2894,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_srcpm.html",
       "description": "Single-Region Contingency Planning Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/srcpm.gms",
+      "file_size_bytes": 9491,
       "notes": ""
     },
     {
@@ -2909,10 +2909,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_srkandw.html",
       "description": "Stochastic Programming Scenario Reduction",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:18Z",
+      "file_path": "data/gamslib/raw/srkandw.gms",
+      "file_size_bytes": 6277,
       "notes": ""
     },
     {
@@ -2924,10 +2924,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sroute.html",
       "description": "The Shortest Route Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/sroute.gms",
+      "file_size_bytes": 1795,
       "notes": ""
     },
     {
@@ -2939,10 +2939,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_srpchase.html",
       "description": "Scenario Tree Construction Example",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/srpchase.gms",
+      "file_size_bytes": 2819,
       "notes": ""
     },
     {
@@ -2954,10 +2954,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_stdcge.html",
       "description": "A Standard CGE Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/stdcge.gms",
+      "file_size_bytes": 11838,
       "notes": ""
     },
     {
@@ -2969,10 +2969,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_t1000.html",
       "description": "LGO Test t1000_10",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/t1000.gms",
+      "file_size_bytes": 4430,
       "notes": ""
     },
     {
@@ -2984,10 +2984,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tabora.html",
       "description": "Tabora Rural Development - Fuelwood Production",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/tabora.gms",
+      "file_size_bytes": 7025,
       "notes": ""
     },
     {
@@ -2999,10 +2999,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tfordy.html",
       "description": "Antalya Forestry Model - Dynamic",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/tfordy.gms",
+      "file_size_bytes": 10696,
       "notes": ""
     },
     {
@@ -3014,10 +3014,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tforss.html",
       "description": "Antalya Forestry Model - Steady State",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/tforss.gms",
+      "file_size_bytes": 6390,
       "notes": ""
     },
     {
@@ -3029,10 +3029,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tgridmix.html",
       "description": "Grid Transportation Problem with Single Submit and Collect Loop",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/tgridmix.gms",
+      "file_size_bytes": 4346,
       "notes": ""
     },
     {
@@ -3044,10 +3044,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_torsion.html",
       "description": "Elastic-plastic torsion COPS 2.0 #15",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/torsion.gms",
+      "file_size_bytes": 3035,
       "notes": ""
     },
     {
@@ -3059,10 +3059,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tricp.html",
       "description": "Triangular Graph Circle Packing",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/tricp.gms",
+      "file_size_bytes": 5060,
       "notes": ""
     },
     {
@@ -3074,10 +3074,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trig.html",
       "description": "Simple Trigonometric Example",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/trig.gms",
+      "file_size_bytes": 660,
       "notes": ""
     },
     {
@@ -3089,10 +3089,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trigx.html",
       "description": "Another Trigonometric Example",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/trigx.gms",
+      "file_size_bytes": 1844,
       "notes": ""
     },
     {
@@ -3104,10 +3104,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnsgrid.html",
       "description": "Grid Transportation Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:19Z",
+      "file_path": "data/gamslib/raw/trnsgrid.gms",
+      "file_size_bytes": 3381,
       "notes": ""
     },
     {
@@ -3134,10 +3134,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnspwl.html",
       "description": "A Transportation Problem with discretized economies of scale",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/trnspwl.gms",
+      "file_size_bytes": 7623,
       "notes": ""
     },
     {
@@ -3149,10 +3149,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnspwlx.html",
       "description": "A Transportation Problem with Piecewise Linear Functions",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/trnspwlx.gms",
+      "file_size_bytes": 5079,
       "notes": ""
     },
     {
@@ -3164,10 +3164,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trussm.html",
       "description": "Truss Toplogy Design with Multiple Loads",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/trussm.gms",
+      "file_size_bytes": 3777,
       "notes": ""
     },
     {
@@ -3179,10 +3179,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_turkey.html",
       "description": "Turkey Agricultural Model with Risk",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/turkey.gms",
+      "file_size_bytes": 63704,
       "notes": ""
     },
     {
@@ -3194,10 +3194,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_turkpow.html",
       "description": "Turkey Power Planning Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/turkpow.gms",
+      "file_size_bytes": 11106,
       "notes": ""
     },
     {
@@ -3209,10 +3209,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_twocge.html",
       "description": "A Two Country CGE Model",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/twocge.gms",
+      "file_size_bytes": 13559,
       "notes": ""
     },
     {
@@ -3224,10 +3224,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_uimp.html",
       "description": "UIMP - Production Scheduling Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/uimp.gms",
+      "file_size_bytes": 3059,
       "notes": ""
     },
     {
@@ -3239,10 +3239,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_wall.html",
       "description": "Chemical Equilibrium Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/wall.gms",
+      "file_size_bytes": 1194,
       "notes": ""
     },
     {
@@ -3254,10 +3254,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_weapons.html",
       "description": "Weapons Assignment",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/weapons.gms",
+      "file_size_bytes": 2877,
       "notes": ""
     },
     {
@@ -3269,10 +3269,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_whouse.html",
       "description": "Simple Warehouse Problem",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/whouse.gms",
+      "file_size_bytes": 1299,
       "notes": ""
     },
     {
@@ -3284,10 +3284,10 @@
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_worst.html",
       "description": "Financial Optimization: Risk Management",
       "keywords": [],
-      "download_status": "pending",
-      "download_date": null,
-      "file_path": null,
-      "file_size_bytes": null,
+      "download_status": "downloaded",
+      "download_date": "2026-01-01T07:55:20Z",
+      "file_path": "data/gamslib/raw/worst.gms",
+      "file_size_bytes": 4339,
       "notes": ""
     }
   ]
