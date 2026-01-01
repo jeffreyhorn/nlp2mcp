@@ -195,7 +195,7 @@ Sprint 14 builds on the GAMSLIB corpus infrastructure from Sprint 13 (219 models
 - [ ] 160 models attempted (skip 10 license-limited)
 - [ ] Parse status recorded for each model
 - [ ] Error categories assigned
-- [ ] ~15-25 models parse successfully (13-15% rate)
+- [ ] ~15-25 models parse successfully (~13% rate; range allows for variance around 13.3% baseline)
 
 #### Day 7: Batch Translate and Results Integration
 
