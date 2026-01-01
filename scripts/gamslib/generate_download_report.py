@@ -2,6 +2,7 @@
 """Generate download report for GAMSLIB models."""
 
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -12,20 +13,27 @@ REPORT_PATH = PROJECT_ROOT / "data" / "gamslib" / "download_report.md"
 
 def generate_report() -> None:
     """Generate the download report."""
-    # Load catalog
-    with open(CATALOG_PATH) as f:
-        data = json.load(f)
+    # Load catalog with error handling
+    try:
+        with open(CATALOG_PATH) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: Catalog file not found: {CATALOG_PATH}", file=sys.stderr)
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"Error: Invalid JSON in catalog: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Gather statistics
-    models = data["models"]
-    downloaded = [m for m in models if m["download_status"] == "downloaded"]
-    pending = [m for m in models if m["download_status"] == "pending"]
-    failed = [m for m in models if m["download_status"] == "failed"]
+    models = data.get("models", [])
+    downloaded = [m for m in models if m.get("download_status") == "downloaded"]
+    pending = [m for m in models if m.get("download_status") == "pending"]
+    failed = [m for m in models if m.get("download_status") == "failed"]
 
     # Count by type
     by_type: dict[str, int] = {}
     for m in downloaded:
-        t = m["gamslib_type"]
+        t = m.get("gamslib_type", "unknown")
         by_type[t] = by_type.get(t, 0) + 1
 
     # Calculate total size
@@ -34,7 +42,7 @@ def generate_report() -> None:
     # Find largest and smallest
     sorted_by_size = sorted(downloaded, key=lambda m: m.get("file_size_bytes", 0), reverse=True)
     largest = sorted_by_size[:5]
-    smallest = sorted_by_size[-5:]
+    smallest = list(reversed(sorted_by_size[-5:]))
 
     report = f"""# GAMSLIB Download Report
 
@@ -75,7 +83,7 @@ def generate_report() -> None:
 """
 
     for m in largest:
-        report += f"| {m['model_id']} | {m['gamslib_type']} | {m.get('file_size_bytes', 0):,} |\n"
+        report += f"| {m.get('model_id', 'unknown')} | {m.get('gamslib_type', 'unknown')} | {m.get('file_size_bytes', 0):,} |\n"
 
     report += """
 ## Smallest Models
@@ -85,7 +93,7 @@ def generate_report() -> None:
 """
 
     for m in smallest:
-        report += f"| {m['model_id']} | {m['gamslib_type']} | {m.get('file_size_bytes', 0):,} |\n"
+        report += f"| {m.get('model_id', 'unknown')} | {m.get('gamslib_type', 'unknown')} | {m.get('file_size_bytes', 0):,} |\n"
 
     if failed:
         report += """
@@ -95,7 +103,7 @@ def generate_report() -> None:
 |-------|-------|
 """
         for m in failed:
-            report += f"| {m['model_id']} | {m.get('notes', 'Unknown')} |\n"
+            report += f"| {m.get('model_id', 'unknown')} | {m.get('notes', 'Unknown')} |\n"
     else:
         report += """
 ## Failed Downloads
@@ -115,8 +123,13 @@ None - all downloads successful!
 - NLP and QCP models require convexity verification (Sprint 13 Days 5-6)
 """
 
-    with open(REPORT_PATH, "w") as f:
-        f.write(report)
+    # Write report with error handling
+    try:
+        with open(REPORT_PATH, "w") as f:
+            f.write(report)
+    except OSError as e:
+        print(f"Error: Failed to write report: {e}", file=sys.stderr)
+        sys.exit(1)
 
     print(f"Download report created: {REPORT_PATH}")
 

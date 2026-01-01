@@ -1,6 +1,6 @@
 # GAMSLIB Download Report
 
-**Generated:** 2026-01-01 01:56:52
+**Generated:** 2026-01-01 02:44:43
 
 ---
 
@@ -44,11 +44,11 @@
 
 | Model | Type | Size (bytes) |
 |-------|------|--------------|
-| hhmax | NLP | 1,130 |
-| himmel11 | QCP | 1,130 |
-| mhw4d | NLP | 664 |
-| trig | NLP | 660 |
 | rbrock | NLP | 531 |
+| trig | NLP | 660 |
+| mhw4d | NLP | 664 |
+| himmel11 | QCP | 1,130 |
+| hhmax | NLP | 1,130 |
 
 ## Failed Downloads
 
