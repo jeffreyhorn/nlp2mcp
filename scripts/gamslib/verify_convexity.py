@@ -434,12 +434,33 @@ def update_catalog_entry(
         model: The catalog model entry to update
         result: The verification result
     """
+    # Always record convexity status and verification timestamp (UTC with Z suffix)
     model["convexity_status"] = result.convexity_status
-    model["verification_date"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-    model["solver_status"] = result.solver_status
-    model["model_status"] = result.model_status
-    model["objective_value"] = result.objective_value
-    model["solve_time_seconds"] = round(result.solve_time_seconds, 3)
+    model["verification_date"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    # Only persist solver-related details when available to avoid polluting
+    # the catalog with null values for non-applicable models.
+    if result.solver_status is not None:
+        model["solver_status"] = result.solver_status
+    elif "solver_status" in model:
+        del model["solver_status"]
+
+    if result.model_status is not None:
+        model["model_status"] = result.model_status
+    elif "model_status" in model:
+        del model["model_status"]
+
+    if result.objective_value is not None:
+        model["objective_value"] = result.objective_value
+    elif "objective_value" in model:
+        del model["objective_value"]
+
+    if result.solve_time_seconds > 0:
+        model["solve_time_seconds"] = round(result.solve_time_seconds, 3)
+    elif "solve_time_seconds" in model:
+        del model["solve_time_seconds"]
+
+    # Record or clear any verification error message
     if result.error_message:
         model["verification_error"] = result.error_message
     elif "verification_error" in model:

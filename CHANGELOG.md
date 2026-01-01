@@ -27,7 +27,7 @@ Completed the classification logic implementation and validated against the 13-m
 
 **Updated Catalog Fields:**
 - `convexity_status` - Classification result (verified_convex, likely_convex, excluded, error)
-- `verification_date` - ISO 8601 timestamp
+- `verification_date` - UTC timestamp with Z suffix (ISO 8601 format)
 - `solver_status` - GAMS solver status code
 - `model_status` - GAMS model status code
 - `objective_value` - Objective function value
