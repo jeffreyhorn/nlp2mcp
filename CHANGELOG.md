@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 14 Prep Task 4: Research jsonschema Library Usage - 2026-01-01
+
+**Branch:** `planning/sprint14-prep-task4`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Researched the Python jsonschema library (v4.25.1) to understand validation capabilities and integration patterns for Sprint 14 db_manager.py. Verified Unknowns 2.1, 2.3, 2.5.
+
+#### Changes
+
+**New Files:**
+- `docs/research/JSONSCHEMA_LIBRARY_GUIDE.md` - Comprehensive usage guide with examples
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_14/KNOWN_UNKNOWNS.md` - Verified Unknowns 2.1, 2.3, 2.5
+- `docs/planning/EPIC_3/SPRINT_14/PREP_PLAN.md` - Task 4 marked complete
+
+#### Key Findings
+
+| Finding | Details |
+|---------|---------|
+| Library Version | jsonschema 4.25.1 |
+| Validators | `Draft7Validator`, `Draft202012Validator` both available |
+| Performance | ~10,000 validations/sec (~0.1 ms each) |
+| Error Handling | Rich error objects with path, message, validator |
+| Required Fields | Fields in `required` array must be present |
+| Strict Mode | Use `additionalProperties: false` |
+
+#### Unknowns Verified
+
+- **Unknown 2.1:** Added library-specific findings (4.25.1 version, Draft7Validator performance)
+- **Unknown 2.3:** Required vs optional - confirmed approach with separate CREATE/UPDATE schemas
+- **Unknown 2.5:** Error storage - use structured objects with field, message, validator, expected
+
+#### Integration Pattern
+
+```python
+from jsonschema import Draft7Validator
+
+validator = Draft7Validator(schema)
+errors = list(validator.iter_errors(entry))
+structured = [{"field": ".".join(str(p) for p in e.absolute_path), 
+               "message": e.message} for e in errors]
+```
+
+---
+
 ### Sprint 14 Prep Task 3: Survey JSON Schema Best Practices - 2026-01-01
 
 **Branch:** `planning/sprint14-prep-task3`  
