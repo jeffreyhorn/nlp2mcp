@@ -45,6 +45,47 @@ class ConvexityStatus(Enum):
     ERROR = "error"  # Solve failed
 
 
+# GAMS model status descriptions for better error messages
+MODEL_STATUS_DESCRIPTIONS = {
+    1: "Optimal",
+    2: "Locally Optimal",
+    3: "Unbounded",
+    4: "Infeasible",
+    5: "Locally Infeasible",
+    6: "Intermediate Infeasible",
+    7: "Intermediate Non-Optimal",
+    8: "Integer Solution",
+    9: "Intermediate Non-Integer",
+    10: "Integer Infeasible",
+    11: "Licensing Problem",
+    12: "Error Unknown",
+    13: "Error No Solution",
+    14: "No Solution Returned",
+    15: "Solved Unique",
+    16: "Solved",
+    17: "Solved Singular",
+    18: "Unbounded - No Solution",
+    19: "Infeasible - No Solution",
+}
+
+# GAMS solver status descriptions
+SOLVER_STATUS_DESCRIPTIONS = {
+    1: "Normal Completion",
+    2: "Iteration Interrupt",
+    3: "Resource Interrupt",
+    4: "Terminated by Solver",
+    5: "Evaluation Error Limit",
+    6: "Capability Problem",
+    7: "Licensing Problem",
+    8: "User Interrupt",
+    9: "Error Setup Failure",
+    10: "Error Solver Failure",
+    11: "Error Internal Solver Error",
+    12: "Solve Processing Skipped",
+    13: "Error System Failure",
+}
+
+
 @dataclass
 class VerificationResult:
     """Result of convexity verification for a single model."""
@@ -73,7 +114,7 @@ def parse_gams_listing(lst_content: str) -> dict:
     Returns:
         dict with keys: solver_status, solver_status_text,
                        model_status, model_status_text, objective_value,
-                       has_solve_summary
+                       has_solve_summary, error_type
     """
     result = {
         "solver_status": None,
@@ -82,10 +123,31 @@ def parse_gams_listing(lst_content: str) -> dict:
         "model_status_text": None,
         "objective_value": None,
         "has_solve_summary": False,
+        "error_type": None,
     }
+
+    # Check for specific error conditions before looking for solve summary
+
+    # Check for compilation errors (indicated by **** markers)
+    if re.search(r"\*\*\*\* \$\d+", lst_content):
+        result["error_type"] = "compilation_error"
+        return result
+
+    # Check for missing include files or data
+    if "could not be opened" in lst_content.lower():
+        result["error_type"] = "missing_file"
+        return result
+
+    # Check for execution errors
+    if "*** Execution error" in lst_content or "*** Error" in lst_content:
+        result["error_type"] = "execution_error"
+        return result
 
     # Validate that the listing file contains expected SOLVE SUMMARY content
     if "S O L V E      S U M M A R Y" not in lst_content:
+        # Check if there's a SOLVE statement at all
+        if not re.search(r"(?i)\bsolve\b", lst_content):
+            result["error_type"] = "no_solve_statement"
         return result
 
     result["has_solve_summary"] = True
@@ -144,6 +206,7 @@ def classify_result(
     """
     # Check for solver failure
     if solver_status is None or solver_status != 1:
+        solver_desc = SOLVER_STATUS_DESCRIPTIONS.get(solver_status, "Unknown")
         return VerificationResult(
             model_id=model_id,
             model_path=model_path,
@@ -153,7 +216,7 @@ def classify_result(
             objective_value=objective_value,
             solve_time_seconds=solve_time,
             timed_out=False,
-            error_message=f"Solver did not complete normally (status={solver_status})",
+            error_message=f"Solver did not complete normally: {solver_desc} (status={solver_status})",
         )
 
     # Check for no model status
@@ -194,6 +257,7 @@ def classify_result(
 
     # Error status codes
     if model_status in (11, 12, 13, 14, 17):
+        model_desc = MODEL_STATUS_DESCRIPTIONS.get(model_status, "Unknown")
         return VerificationResult(
             model_id=model_id,
             model_path=model_path,
@@ -203,7 +267,7 @@ def classify_result(
             objective_value=objective_value,
             solve_time_seconds=solve_time,
             timed_out=False,
-            error_message=f"Solver error (model status={model_status})",
+            error_message=f"Solver error: {model_desc} (model status={model_status})",
         )
 
     # LP with optimal status
@@ -374,6 +438,28 @@ def verify_model(
             )
 
         parsed = parse_gams_listing(lst_content)
+
+        # Handle specific error types detected during parsing
+        if parsed.get("error_type"):
+            error_messages = {
+                "compilation_error": "GAMS compilation error in model file",
+                "missing_file": "Model references missing include file or data",
+                "execution_error": "GAMS execution error during model run",
+                "no_solve_statement": "Model has no SOLVE statement",
+            }
+            return VerificationResult(
+                model_id=model_id,
+                model_path=str(model_path),
+                convexity_status=ConvexityStatus.ERROR.value,
+                model_status=None,
+                solver_status=None,
+                objective_value=None,
+                solve_time_seconds=solve_time,
+                timed_out=False,
+                error_message=error_messages.get(
+                    parsed["error_type"], f"Unknown error type: {parsed['error_type']}"
+                ),
+            )
 
         if not parsed["has_solve_summary"]:
             return VerificationResult(
@@ -587,7 +673,10 @@ def main() -> None:
             logger.warning(f"Model file not found: {model_path}")
             continue
 
-        logger.info(f"[{i}/{len(models_to_verify)}] Verifying {model_id} ({model_type})...")
+        pct = (i / len(models_to_verify)) * 100
+        logger.info(
+            f"[{i}/{len(models_to_verify)} {pct:.0f}%] Verifying {model_id} ({model_type})..."
+        )
 
         result = verify_model(
             model_id=model_id,
@@ -624,6 +713,40 @@ def main() -> None:
     logger.info(f"  Likely convex (NLP/QCP): {likely_count}")
     logger.info(f"  Excluded: {excluded_count}")
     logger.info(f"  Errors: {error_count}")
+
+    # Error breakdown if there are errors
+    if error_count > 0:
+        error_categories: dict[str, int] = {}
+        for r in results:
+            if r.convexity_status in (ConvexityStatus.ERROR.value, ConvexityStatus.UNKNOWN.value):
+                # Categorize errors by type
+                msg = r.error_message or "Unknown error"
+                if "license limits" in msg.lower():
+                    category = "License limits"
+                elif "compilation error" in msg.lower():
+                    category = "Compilation errors"
+                elif "no solve summary" in msg.lower():
+                    category = "No solve summary"
+                elif "no solve statement" in msg.lower():
+                    category = "No solve statement"
+                elif "missing" in msg.lower() and "file" in msg.lower():
+                    category = "Missing files"
+                elif "execution error" in msg.lower():
+                    category = "Execution errors"
+                elif "timeout" in msg.lower():
+                    category = "Timeouts"
+                elif "solver did not complete" in msg.lower():
+                    category = "Solver failures"
+                elif "unexpected status" in msg.lower():
+                    category = "Unexpected status"
+                else:
+                    category = "Other errors"
+                error_categories[category] = error_categories.get(category, 0) + 1
+
+        logger.info("")
+        logger.info("Error Breakdown:")
+        for category, count in sorted(error_categories.items(), key=lambda x: -x[1]):
+            logger.info(f"  {category}: {count}")
 
     # Save catalog if requested
     if args.update_catalog:
