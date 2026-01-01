@@ -18,7 +18,13 @@
       "download_date": "2026-01-01T07:55:03Z",
       "file_path": "data/gamslib/raw/abel.gms",
       "file_size_bytes": 2493,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:27Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 225.1946,
+      "solve_time_seconds": 0.373
     },
     {
       "model_id": "agreste",
@@ -33,7 +39,13 @@
       "download_date": "2026-01-01T07:55:03Z",
       "file_path": "data/gamslib/raw/agreste.gms",
       "file_size_bytes": 13310,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:28Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 17706.43,
+      "solve_time_seconds": 0.549
     },
     {
       "model_id": "aircraft",
@@ -48,7 +60,13 @@
       "download_date": "2026-01-01T07:55:03Z",
       "file_path": "data/gamslib/raw/aircraft.gms",
       "file_size_bytes": 3696,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:28Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 1566.0422,
+      "solve_time_seconds": 0.452
     },
     {
       "model_id": "airsp",
@@ -63,7 +81,11 @@
       "download_date": "2026-01-01T07:55:03Z",
       "file_path": "data/gamslib/raw/airsp.gms",
       "file_size_bytes": 5121,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:57:29Z",
+      "solve_time_seconds": 0.497,
+      "verification_error": "Model exceeds demo license limits"
     },
     {
       "model_id": "airsp2",
@@ -78,7 +100,11 @@
       "download_date": "2026-01-01T07:55:03Z",
       "file_path": "data/gamslib/raw/airsp2.gms",
       "file_size_bytes": 9240,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:57:29Z",
+      "solve_time_seconds": 0.501,
+      "verification_error": "Model exceeds demo license limits"
     },
     {
       "model_id": "ajax",
@@ -93,7 +119,13 @@
       "download_date": "2026-01-01T07:55:03Z",
       "file_path": "data/gamslib/raw/ajax.gms",
       "file_size_bytes": 2651,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:30Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 441003.5953,
+      "solve_time_seconds": 0.326
     },
     {
       "model_id": "alan",
@@ -108,7 +140,14 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/alan.gms",
       "file_size_bytes": 3938,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "excluded",
+      "verification_date": "2026-01-01T14:57:33Z",
+      "solver_status": 1,
+      "model_status": 4,
+      "objective_value": 2.9821,
+      "solve_time_seconds": 3.004,
+      "verification_error": "Model is Infeasible"
     },
     {
       "model_id": "alkyl",
@@ -123,7 +162,13 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/alkyl.gms",
       "file_size_bytes": 3047,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:33Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -1.765,
+      "solve_time_seconds": 0.383
     },
     {
       "model_id": "ampl",
@@ -138,7 +183,13 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/ampl.gms",
       "file_size_bytes": 1668,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:34Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 79.3413,
+      "solve_time_seconds": 0.319
     },
     {
       "model_id": "andean",
@@ -153,7 +204,11 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/andean.gms",
       "file_size_bytes": 59292,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:57:34Z",
+      "solve_time_seconds": 0.657,
+      "verification_error": "Model exceeds demo license limits"
     },
     {
       "model_id": "apl1p",
@@ -168,7 +223,13 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/apl1p.gms",
       "file_size_bytes": 4343,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:35Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 24515.6483,
+      "solve_time_seconds": 1.21
     },
     {
       "model_id": "apl1pca",
@@ -183,7 +244,13 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/apl1pca.gms",
       "file_size_bytes": 3841,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:36Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 15902.4936,
+      "solve_time_seconds": 1.095
     },
     {
       "model_id": "asyncloop",
@@ -198,7 +265,11 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/asyncloop.gms",
       "file_size_bytes": 4793,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:57:39Z",
+      "solve_time_seconds": 2.142,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "bearing",
@@ -213,7 +284,13 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/bearing.gms",
       "file_size_bytes": 5468,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:39Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 19517.3319,
+      "solve_time_seconds": 0.334
     },
     {
       "model_id": "blend",
@@ -230,11 +307,11 @@
       "file_size_bytes": 1699,
       "notes": "",
       "convexity_status": "verified_convex",
-      "verification_date": "2026-01-01T03:02:07Z",
+      "verification_date": "2026-01-01T14:57:39Z",
       "solver_status": 1,
       "model_status": 1,
       "objective_value": 4.98,
-      "solve_time_seconds": 0.679
+      "solve_time_seconds": 0.476
     },
     {
       "model_id": "camcge",
@@ -249,7 +326,13 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/camcge.gms",
       "file_size_bytes": 22507,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:40Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 191.7346,
+      "solve_time_seconds": 0.356
     },
     {
       "model_id": "camshape",
@@ -264,7 +347,13 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/camshape.gms",
       "file_size_bytes": 2665,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:40Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 4.2841,
+      "solve_time_seconds": 0.327
     },
     {
       "model_id": "catmix",
@@ -279,7 +368,13 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/catmix.gms",
       "file_size_bytes": 1845,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:41Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -0.0481,
+      "solve_time_seconds": 0.352
     },
     {
       "model_id": "cclinpts",
@@ -294,7 +389,13 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/cclinpts.gms",
       "file_size_bytes": 1858,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:41Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -3.0011,
+      "solve_time_seconds": 0.329
     },
     {
       "model_id": "cesam",
@@ -309,7 +410,13 @@
       "download_date": "2026-01-01T07:55:04Z",
       "file_path": "data/gamslib/raw/cesam.gms",
       "file_size_bytes": 25745,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:41Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 0.0096,
+      "solve_time_seconds": 0.529
     },
     {
       "model_id": "cesam2",
@@ -324,7 +431,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/cesam2.gms",
       "file_size_bytes": 20952,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:42Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.508,
+      "solve_time_seconds": 0.35
     },
     {
       "model_id": "chain",
@@ -339,7 +452,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/chain.gms",
       "file_size_bytes": 1815,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:42Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 5.0723,
+      "solve_time_seconds": 0.351
     },
     {
       "model_id": "chakra",
@@ -354,7 +473,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/chakra.gms",
       "file_size_bytes": 2139,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:42Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 179.1336,
+      "solve_time_seconds": 0.333
     },
     {
       "model_id": "chance",
@@ -369,7 +494,14 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/chance.gms",
       "file_size_bytes": 1966,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "unknown",
+      "verification_date": "2026-01-01T14:57:43Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 29.8944,
+      "solve_time_seconds": 0.475,
+      "verification_error": "Unexpected status combination"
     },
     {
       "model_id": "chem",
@@ -384,7 +516,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/chem.gms",
       "file_size_bytes": 1625,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:43Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -47.7065,
+      "solve_time_seconds": 0.308
     },
     {
       "model_id": "chenery",
@@ -399,7 +537,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/chenery.gms",
       "file_size_bytes": 7342,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:44Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1058.9199,
+      "solve_time_seconds": 0.313
     },
     {
       "model_id": "china",
@@ -414,7 +558,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/china.gms",
       "file_size_bytes": 18309,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:44Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 40561.5739,
+      "solve_time_seconds": 0.335
     },
     {
       "model_id": "circle",
@@ -431,11 +581,11 @@
       "file_size_bytes": 1297,
       "notes": "",
       "convexity_status": "likely_convex",
-      "verification_date": "2026-01-01T03:02:06Z",
+      "verification_date": "2026-01-01T14:57:44Z",
       "solver_status": 1,
       "model_status": 2,
       "objective_value": 4.5742,
-      "solve_time_seconds": 0.467
+      "solve_time_seconds": 0.312
     },
     {
       "model_id": "circpack",
@@ -450,7 +600,14 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/circpack.gms",
       "file_size_bytes": 5248,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "excluded",
+      "verification_date": "2026-01-01T14:57:45Z",
+      "solver_status": 1,
+      "model_status": 5,
+      "objective_value": 9.1606,
+      "solve_time_seconds": 0.316,
+      "verification_error": "Model is Locally Infeasible"
     },
     {
       "model_id": "clearlak",
@@ -465,7 +622,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/clearlak.gms",
       "file_size_bytes": 6509,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:45Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 93.75,
+      "solve_time_seconds": 0.605
     },
     {
       "model_id": "cpack",
@@ -480,7 +643,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/cpack.gms",
       "file_size_bytes": 1407,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:45Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.3702,
+      "solve_time_seconds": 0.314
     },
     {
       "model_id": "danwolfe",
@@ -495,7 +664,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/danwolfe.gms",
       "file_size_bytes": 6337,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:55Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 3359.4684,
+      "solve_time_seconds": 9.54
     },
     {
       "model_id": "decomp",
@@ -510,7 +685,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/decomp.gms",
       "file_size_bytes": 3380,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:56Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 60.0,
+      "solve_time_seconds": 1.445
     },
     {
       "model_id": "demo1",
@@ -525,7 +706,13 @@
       "download_date": "2026-01-01T07:55:05Z",
       "file_path": "data/gamslib/raw/demo1.gms",
       "file_size_bytes": 5202,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:57Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 1898.52,
+      "solve_time_seconds": 0.34
     },
     {
       "model_id": "demo7",
@@ -540,7 +727,14 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/demo7.gms",
       "file_size_bytes": 10332,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "unknown",
+      "verification_date": "2026-01-01T14:57:57Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1589042.3862,
+      "solve_time_seconds": 0.481,
+      "verification_error": "Unexpected status combination"
     },
     {
       "model_id": "dinam",
@@ -555,7 +749,13 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/dinam.gms",
       "file_size_bytes": 45806,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:57:58Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 251.366,
+      "solve_time_seconds": 0.387
     },
     {
       "model_id": "dispatch",
@@ -570,7 +770,13 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/dispatch.gms",
       "file_size_bytes": 3105,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:57:59Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 7.9546,
+      "solve_time_seconds": 0.936
     },
     {
       "model_id": "dqq",
@@ -585,7 +791,11 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/dqq.gms",
       "file_size_bytes": 4394,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:57:59Z",
+      "solve_time_seconds": 0.212,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "dyncge",
@@ -600,7 +810,13 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/dyncge.gms",
       "file_size_bytes": 29542,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:00Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 539570.5027,
+      "solve_time_seconds": 0.894
     },
     {
       "model_id": "egypt",
@@ -615,7 +831,13 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/egypt.gms",
       "file_size_bytes": 41444,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:00Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 4134175.7019,
+      "solve_time_seconds": 0.36
     },
     {
       "model_id": "elec",
@@ -630,7 +852,13 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/elec.gms",
       "file_size_bytes": 1938,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:00Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 243.8128,
+      "solve_time_seconds": 0.347
     },
     {
       "model_id": "embmiex1",
@@ -645,7 +873,11 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/embmiex1.gms",
       "file_size_bytes": 5635,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:02Z",
+      "solve_time_seconds": 1.798,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "emfl",
@@ -660,7 +892,11 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/emfl.gms",
       "file_size_bytes": 3500,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:03Z",
+      "solve_time_seconds": 0.278,
+      "verification_error": "Model exceeds demo license limits"
     },
     {
       "model_id": "epscm",
@@ -675,7 +911,14 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/epscm.gms",
       "file_size_bytes": 11095,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "excluded",
+      "verification_date": "2026-01-01T14:58:18Z",
+      "solver_status": 1,
+      "model_status": 4,
+      "objective_value": -3315000.0001,
+      "solve_time_seconds": 15.813,
+      "verification_error": "Model is Infeasible"
     },
     {
       "model_id": "etamac",
@@ -690,7 +933,13 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/etamac.gms",
       "file_size_bytes": 9592,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:19Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 15.2947,
+      "solve_time_seconds": 0.332
     },
     {
       "model_id": "fawley",
@@ -705,7 +954,13 @@
       "download_date": "2026-01-01T07:55:06Z",
       "file_path": "data/gamslib/raw/fawley.gms",
       "file_size_bytes": 12600,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:19Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 2899.2528,
+      "solve_time_seconds": 0.338
     },
     {
       "model_id": "fdesign",
@@ -720,7 +975,13 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/fdesign.gms",
       "file_size_bytes": 2498,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:19Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1.0465,
+      "solve_time_seconds": 0.345
     },
     {
       "model_id": "feasopt1",
@@ -735,7 +996,13 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/feasopt1.gms",
       "file_size_bytes": 5599,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:21Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 96.75,
+      "solve_time_seconds": 1.127
     },
     {
       "model_id": "feedtray",
@@ -750,7 +1017,13 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/feedtray.gms",
       "file_size_bytes": 12940,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:21Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 13.406,
+      "solve_time_seconds": 0.497
     },
     {
       "model_id": "ferts",
@@ -765,7 +1038,13 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/ferts.gms",
       "file_size_bytes": 18981,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:22Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 58793.8227,
+      "solve_time_seconds": 0.472
     },
     {
       "model_id": "gancnsx",
@@ -780,7 +1059,13 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/gancnsx.gms",
       "file_size_bytes": 72387,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "unknown",
+      "verification_date": "2026-01-01T14:58:22Z",
+      "solver_status": 1,
+      "model_status": 16,
+      "solve_time_seconds": 0.441,
+      "verification_error": "Unexpected status combination"
     },
     {
       "model_id": "ganges",
@@ -795,7 +1080,13 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/ganges.gms",
       "file_size_bytes": 59311,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:22Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 6395.5444,
+      "solve_time_seconds": 0.368
     },
     {
       "model_id": "gangesx",
@@ -810,7 +1101,13 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/gangesx.gms",
       "file_size_bytes": 72142,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:23Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 6395.5444,
+      "solve_time_seconds": 0.372
     },
     {
       "model_id": "gasoil",
@@ -825,7 +1122,11 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/gasoil.gms",
       "file_size_bytes": 2911,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:23Z",
+      "solve_time_seconds": 0.211,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "gastrans",
@@ -840,7 +1141,13 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/gastrans.gms",
       "file_size_bytes": 7865,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:23Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 89.0858,
+      "solve_time_seconds": 0.352
     },
     {
       "model_id": "glider",
@@ -855,7 +1162,13 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/glider.gms",
       "file_size_bytes": 3892,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:24Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1282.3997,
+      "solve_time_seconds": 1.043
     },
     {
       "model_id": "gqapsdp",
@@ -870,7 +1183,11 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/gqapsdp.gms",
       "file_size_bytes": 4761,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:25Z",
+      "solve_time_seconds": 0.219,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "gtm",
@@ -885,7 +1202,13 @@
       "download_date": "2026-01-01T07:55:07Z",
       "file_path": "data/gamslib/raw/gtm.gms",
       "file_size_bytes": 7449,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:25Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -543.5651,
+      "solve_time_seconds": 0.341
     },
     {
       "model_id": "guss2dim",
@@ -900,7 +1223,14 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/guss2dim.gms",
       "file_size_bytes": 3540,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:26Z",
+      "solver_status": 1,
+      "model_status": 14,
+      "objective_value": 0.0,
+      "solve_time_seconds": 0.962,
+      "verification_error": "Solver error (model status=14)"
     },
     {
       "model_id": "gussex1",
@@ -915,7 +1245,14 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/gussex1.gms",
       "file_size_bytes": 6343,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:26Z",
+      "solver_status": 1,
+      "model_status": 14,
+      "objective_value": 0.0,
+      "solve_time_seconds": 0.539,
+      "verification_error": "Solver error (model status=14)"
     },
     {
       "model_id": "gussgrid",
@@ -930,7 +1267,11 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/gussgrid.gms",
       "file_size_bytes": 4953,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:29Z",
+      "solve_time_seconds": 2.354,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "gussrisk",
@@ -945,7 +1286,13 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/gussrisk.gms",
       "file_size_bytes": 4420,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:29Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 148.2143,
+      "solve_time_seconds": 0.507
     },
     {
       "model_id": "harker",
@@ -960,7 +1307,13 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/harker.gms",
       "file_size_bytes": 5640,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:32Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 706.3091,
+      "solve_time_seconds": 2.259
     },
     {
       "model_id": "hhfair",
@@ -975,7 +1328,13 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/hhfair.gms",
       "file_size_bytes": 3045,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:32Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 87.159,
+      "solve_time_seconds": 0.335
     },
     {
       "model_id": "hhmax",
@@ -990,7 +1349,13 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/hhmax.gms",
       "file_size_bytes": 1130,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:32Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 13.9288,
+      "solve_time_seconds": 0.388
     },
     {
       "model_id": "himmel11",
@@ -1005,7 +1370,13 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/himmel11.gms",
       "file_size_bytes": 1130,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:33Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -30665.5387,
+      "solve_time_seconds": 0.449
     },
     {
       "model_id": "himmel16",
@@ -1020,7 +1391,13 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/himmel16.gms",
       "file_size_bytes": 2329,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:33Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.675,
+      "solve_time_seconds": 0.412
     },
     {
       "model_id": "house",
@@ -1035,7 +1412,13 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/house.gms",
       "file_size_bytes": 1510,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:34Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 4500.0,
+      "solve_time_seconds": 0.428
     },
     {
       "model_id": "hs62",
@@ -1050,7 +1433,13 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/hs62.gms",
       "file_size_bytes": 1233,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:34Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -26272.5168,
+      "solve_time_seconds": 0.344
     },
     {
       "model_id": "hydro",
@@ -1065,7 +1454,13 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/hydro.gms",
       "file_size_bytes": 2170,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:34Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 4366944.1598,
+      "solve_time_seconds": 0.347
     },
     {
       "model_id": "ibm1",
@@ -1080,7 +1475,13 @@
       "download_date": "2026-01-01T07:55:08Z",
       "file_path": "data/gamslib/raw/ibm1.gms",
       "file_size_bytes": 3794,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:35Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 287.1357,
+      "solve_time_seconds": 0.954
     },
     {
       "model_id": "immun",
@@ -1095,7 +1496,14 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/immun.gms",
       "file_size_bytes": 11364,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "unknown",
+      "verification_date": "2026-01-01T14:58:37Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.0,
+      "solve_time_seconds": 1.679,
+      "verification_error": "Unexpected status combination"
     },
     {
       "model_id": "imsl",
@@ -1110,7 +1518,13 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/imsl.gms",
       "file_size_bytes": 3287,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:37Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 1.1317,
+      "solve_time_seconds": 0.491
     },
     {
       "model_id": "indus",
@@ -1125,7 +1539,13 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/indus.gms",
       "file_size_bytes": 63021,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:38Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 901.1615,
+      "solve_time_seconds": 0.39
     },
     {
       "model_id": "indus89",
@@ -1140,7 +1560,11 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/indus89.gms",
       "file_size_bytes": 258054,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:38Z",
+      "solve_time_seconds": 0.335,
+      "verification_error": "Model exceeds demo license limits"
     },
     {
       "model_id": "iobalance",
@@ -1155,7 +1579,13 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/iobalance.gms",
       "file_size_bytes": 4776,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:39Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 7.6203,
+      "solve_time_seconds": 1.188
     },
     {
       "model_id": "irscge",
@@ -1170,7 +1600,13 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/irscge.gms",
       "file_size_bytes": 11624,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:40Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 26.0914,
+      "solve_time_seconds": 0.455
     },
     {
       "model_id": "iswnm",
@@ -1185,7 +1621,13 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/iswnm.gms",
       "file_size_bytes": 35933,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:40Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 114.0397,
+      "solve_time_seconds": 0.358
     },
     {
       "model_id": "jbearing",
@@ -1200,7 +1642,11 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/jbearing.gms",
       "file_size_bytes": 2237,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:40Z",
+      "solve_time_seconds": 0.243,
+      "verification_error": "Model exceeds demo license limits"
     },
     {
       "model_id": "jobt",
@@ -1215,7 +1661,13 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/jobt.gms",
       "file_size_bytes": 2101,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:41Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 21343.0556,
+      "solve_time_seconds": 0.351
     },
     {
       "model_id": "kand",
@@ -1230,7 +1682,13 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/kand.gms",
       "file_size_bytes": 2918,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:41Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 2613.0,
+      "solve_time_seconds": 0.477
     },
     {
       "model_id": "korcge",
@@ -1245,7 +1703,13 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/korcge.gms",
       "file_size_bytes": 15822,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:42Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 339.213,
+      "solve_time_seconds": 0.341
     },
     {
       "model_id": "kqkpsdp",
@@ -1260,7 +1724,11 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/kqkpsdp.gms",
       "file_size_bytes": 4436,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:42Z",
+      "solve_time_seconds": 0.238,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "lands",
@@ -1275,7 +1743,13 @@
       "download_date": "2026-01-01T07:55:09Z",
       "file_path": "data/gamslib/raw/lands.gms",
       "file_size_bytes": 3006,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:58:43Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 381.8533,
+      "solve_time_seconds": 0.784
     },
     {
       "model_id": "launch",
@@ -1290,7 +1764,13 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/launch.gms",
       "file_size_bytes": 6234,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:43Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 2257.7976,
+      "solve_time_seconds": 0.328
     },
     {
       "model_id": "least",
@@ -1305,7 +1785,13 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/least.gms",
       "file_size_bytes": 1216,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:44Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 14085.1398,
+      "solve_time_seconds": 0.454
     },
     {
       "model_id": "like",
@@ -1320,7 +1806,13 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/like.gms",
       "file_size_bytes": 1991,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:58:44Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -1138.4106,
+      "solve_time_seconds": 0.331
     },
     {
       "model_id": "lmp1",
@@ -1335,7 +1827,14 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/lmp1.gms",
       "file_size_bytes": 2796,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:58:53Z",
+      "solver_status": 5,
+      "model_status": 6,
+      "objective_value": 0.0,
+      "solve_time_seconds": 8.661,
+      "verification_error": "Solver did not complete normally (status=5)"
     },
     {
       "model_id": "lmp2",
@@ -1350,7 +1849,13 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/lmp2.gms",
       "file_size_bytes": 2653,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:00Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 4024.3928,
+      "solve_time_seconds": 7.14
     },
     {
       "model_id": "lmp3",
@@ -1365,7 +1870,14 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/lmp3.gms",
       "file_size_bytes": 2956,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:08Z",
+      "solver_status": 5,
+      "model_status": 6,
+      "objective_value": 0.0,
+      "solve_time_seconds": 8.201,
+      "verification_error": "Solver did not complete normally (status=5)"
     },
     {
       "model_id": "lnts",
@@ -1380,7 +1892,13 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/lnts.gms",
       "file_size_bytes": 2057,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:08Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.5547,
+      "solve_time_seconds": 0.34
     },
     {
       "model_id": "lop",
@@ -1395,7 +1913,13 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/lop.gms",
       "file_size_bytes": 14849,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:20Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 20244.0,
+      "solve_time_seconds": 11.461
     },
     {
       "model_id": "lrgcge",
@@ -1410,7 +1934,13 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/lrgcge.gms",
       "file_size_bytes": 11721,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:20Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 25.7679,
+      "solve_time_seconds": 0.48
     },
     {
       "model_id": "marco",
@@ -1425,7 +1955,13 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/marco.gms",
       "file_size_bytes": 8289,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:21Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 0.0,
+      "solve_time_seconds": 0.529
     },
     {
       "model_id": "markov",
@@ -1440,7 +1976,13 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/markov.gms",
       "file_size_bytes": 2662,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:21Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 2401.5773,
+      "solve_time_seconds": 0.349
     },
     {
       "model_id": "mathopt1",
@@ -1455,7 +1997,13 @@
       "download_date": "2026-01-01T07:55:10Z",
       "file_path": "data/gamslib/raw/mathopt1.gms",
       "file_size_bytes": 1442,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:21Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1.0,
+      "solve_time_seconds": 0.319
     },
     {
       "model_id": "mathopt2",
@@ -1470,7 +2018,13 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/mathopt2.gms",
       "file_size_bytes": 1358,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:22Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.0,
+      "solve_time_seconds": 0.313
     },
     {
       "model_id": "mathopt3",
@@ -1485,7 +2039,13 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/mathopt3.gms",
       "file_size_bytes": 1815,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:22Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.0,
+      "solve_time_seconds": 0.346
     },
     {
       "model_id": "mathopt4",
@@ -1500,7 +2060,13 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/mathopt4.gms",
       "file_size_bytes": 2209,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:23Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.0,
+      "solve_time_seconds": 0.75
     },
     {
       "model_id": "maxcut",
@@ -1515,7 +2081,11 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/maxcut.gms",
       "file_size_bytes": 4421,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:23Z",
+      "solve_time_seconds": 0.244,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "maxmin",
@@ -1530,7 +2100,13 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/maxmin.gms",
       "file_size_bytes": 3350,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:23Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.3528,
+      "solve_time_seconds": 0.353
     },
     {
       "model_id": "meanvar",
@@ -1545,7 +2121,13 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/meanvar.gms",
       "file_size_bytes": 4372,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:25Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.0308,
+      "solve_time_seconds": 1.509
     },
     {
       "model_id": "methanol",
@@ -1560,7 +2142,11 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/methanol.gms",
       "file_size_bytes": 3966,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:25Z",
+      "solve_time_seconds": 0.213,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "mexls",
@@ -1575,7 +2161,13 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/mexls.gms",
       "file_size_bytes": 50082,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:26Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 27569.5989,
+      "solve_time_seconds": 0.403
     },
     {
       "model_id": "mexss",
@@ -1590,7 +2182,13 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/mexss.gms",
       "file_size_bytes": 7511,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:26Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 538.8112,
+      "solve_time_seconds": 0.358
     },
     {
       "model_id": "mhw4d",
@@ -1605,7 +2203,13 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/mhw4d.gms",
       "file_size_bytes": 664,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:26Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 27.8719,
+      "solve_time_seconds": 0.359
     },
     {
       "model_id": "mhw4dx",
@@ -1620,7 +2224,13 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/mhw4dx.gms",
       "file_size_bytes": 2920,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:27Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 27.8719,
+      "solve_time_seconds": 0.347
     },
     {
       "model_id": "mhw4dxx",
@@ -1635,7 +2245,11 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/mhw4dxx.gms",
       "file_size_bytes": 2305,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:27Z",
+      "solve_time_seconds": 0.203,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "mine",
@@ -1650,7 +2264,13 @@
       "download_date": "2026-01-01T07:55:11Z",
       "file_path": "data/gamslib/raw/mine.gms",
       "file_size_bytes": 1951,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:27Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 17500.0,
+      "solve_time_seconds": 0.357
     },
     {
       "model_id": "mingamma",
@@ -1665,7 +2285,13 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/mingamma.gms",
       "file_size_bytes": 1376,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:28Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -0.1215,
+      "solve_time_seconds": 0.482
     },
     {
       "model_id": "minlphi",
@@ -1680,7 +2306,14 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/minlphi.gms",
       "file_size_bytes": 33099,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "unknown",
+      "verification_date": "2026-01-01T14:59:29Z",
+      "solver_status": 1,
+      "model_status": 10,
+      "objective_value": 316.6927,
+      "solve_time_seconds": 0.969,
+      "verification_error": "Unexpected status combination"
     },
     {
       "model_id": "minsurf",
@@ -1695,7 +2328,11 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/minsurf.gms",
       "file_size_bytes": 2035,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:29Z",
+      "solve_time_seconds": 0.278,
+      "verification_error": "Model exceeds demo license limits"
     },
     {
       "model_id": "mlbeta",
@@ -1710,7 +2347,13 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/mlbeta.gms",
       "file_size_bytes": 2880,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:29Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 25.3176,
+      "solve_time_seconds": 0.337
     },
     {
       "model_id": "mlgamma",
@@ -1725,7 +2368,13 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/mlgamma.gms",
       "file_size_bytes": 1707,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:30Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -155.3468,
+      "solve_time_seconds": 0.341
     },
     {
       "model_id": "moncge",
@@ -1740,7 +2389,13 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/moncge.gms",
       "file_size_bytes": 11664,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:30Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 25.9819,
+      "solve_time_seconds": 0.5
     },
     {
       "model_id": "msm",
@@ -1755,7 +2410,11 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/msm.gms",
       "file_size_bytes": 11276,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:30Z",
+      "solve_time_seconds": 0.248,
+      "verification_error": "Model exceeds demo license limits"
     },
     {
       "model_id": "nebrazil",
@@ -1770,7 +2429,13 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/nebrazil.gms",
       "file_size_bytes": 60664,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:31Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 3385.433,
+      "solve_time_seconds": 1.023
     },
     {
       "model_id": "nemhaus",
@@ -1785,7 +2450,13 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/nemhaus.gms",
       "file_size_bytes": 5604,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:33Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 0.0,
+      "solve_time_seconds": 1.462
     },
     {
       "model_id": "netgen",
@@ -1800,7 +2471,11 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/netgen.gms",
       "file_size_bytes": 3208,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:34Z",
+      "solve_time_seconds": 0.724,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "nonsharp",
@@ -1815,7 +2490,13 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/nonsharp.gms",
       "file_size_bytes": 21751,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:35Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 0.8938,
+      "solve_time_seconds": 1.303
     },
     {
       "model_id": "orani",
@@ -1830,7 +2511,13 @@
       "download_date": "2026-01-01T07:55:12Z",
       "file_path": "data/gamslib/raw/orani.gms",
       "file_size_bytes": 8542,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:35Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": -1.6032,
+      "solve_time_seconds": 0.364
     },
     {
       "model_id": "otpop",
@@ -1845,7 +2532,13 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/otpop.gms",
       "file_size_bytes": 4474,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:36Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 4217.7978,
+      "solve_time_seconds": 0.635
     },
     {
       "model_id": "pak",
@@ -1860,7 +2553,13 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/pak.gms",
       "file_size_bytes": 4523,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:36Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 1075.5471,
+      "solve_time_seconds": 0.345
     },
     {
       "model_id": "paklive",
@@ -1875,7 +2574,13 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/paklive.gms",
       "file_size_bytes": 8411,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:37Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 19468.0877,
+      "solve_time_seconds": 0.341
     },
     {
       "model_id": "paperco",
@@ -1890,7 +2595,13 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/paperco.gms",
       "file_size_bytes": 3803,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:37Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 4615.4242,
+      "solve_time_seconds": 0.633
     },
     {
       "model_id": "partssupply",
@@ -1905,7 +2616,13 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/partssupply.gms",
       "file_size_bytes": 6325,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:38Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.9167,
+      "solve_time_seconds": 0.435
     },
     {
       "model_id": "pdi",
@@ -1920,7 +2637,13 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/pdi.gms",
       "file_size_bytes": 3991,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:38Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 294070.0,
+      "solve_time_seconds": 0.327
     },
     {
       "model_id": "phosdis",
@@ -1935,7 +2658,11 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/phosdis.gms",
       "file_size_bytes": 19958,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:38Z",
+      "solve_time_seconds": 0.243,
+      "verification_error": "Model exceeds demo license limits"
     },
     {
       "model_id": "pindyck",
@@ -1950,7 +2677,13 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/pindyck.gms",
       "file_size_bytes": 1980,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:39Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1170.4863,
+      "solve_time_seconds": 0.359
     },
     {
       "model_id": "pinene",
@@ -1965,7 +2698,11 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/pinene.gms",
       "file_size_bytes": 3309,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:39Z",
+      "solve_time_seconds": 0.209,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "pollut",
@@ -1980,7 +2717,13 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/pollut.gms",
       "file_size_bytes": 3512,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:39Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 5353268.6287,
+      "solve_time_seconds": 0.34
     },
     {
       "model_id": "polygon",
@@ -1995,7 +2738,13 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/polygon.gms",
       "file_size_bytes": 1503,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:40Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.7797,
+      "solve_time_seconds": 0.368
     },
     {
       "model_id": "pool",
@@ -2010,7 +2759,11 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/pool.gms",
       "file_size_bytes": 24825,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:40Z",
+      "solve_time_seconds": 0.21,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "popdynm",
@@ -2025,7 +2778,11 @@
       "download_date": "2026-01-01T07:55:13Z",
       "file_path": "data/gamslib/raw/popdynm.gms",
       "file_size_bytes": 3675,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:40Z",
+      "solve_time_seconds": 0.201,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "port",
@@ -2040,7 +2797,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/port.gms",
       "file_size_bytes": 1541,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:40Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 0.2984,
+      "solve_time_seconds": 0.337
     },
     {
       "model_id": "process",
@@ -2055,7 +2818,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/process.gms",
       "file_size_bytes": 3086,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:41Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 2410.8283,
+      "solve_time_seconds": 0.487
     },
     {
       "model_id": "procmean",
@@ -2070,7 +2839,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/procmean.gms",
       "file_size_bytes": 1903,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:41Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 14.1661,
+      "solve_time_seconds": 0.335
     },
     {
       "model_id": "prodmix",
@@ -2085,7 +2860,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/prodmix.gms",
       "file_size_bytes": 1222,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:42Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 18666.6667,
+      "solve_time_seconds": 0.368
     },
     {
       "model_id": "prodsp",
@@ -2100,7 +2881,11 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/prodsp.gms",
       "file_size_bytes": 2055,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T14:59:42Z",
+      "solve_time_seconds": 0.368,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "prodsp2",
@@ -2115,7 +2900,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/prodsp2.gms",
       "file_size_bytes": 4987,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T14:59:46Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 17845.6087,
+      "solve_time_seconds": 3.897
     },
     {
       "model_id": "prolog",
@@ -2130,7 +2921,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/prolog.gms",
       "file_size_bytes": 6080,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:47Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -0.0,
+      "solve_time_seconds": 0.627
     },
     {
       "model_id": "ps10_s",
@@ -2145,7 +2942,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/ps10_s.gms",
       "file_size_bytes": 1702,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T14:59:47Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.5333,
+      "solve_time_seconds": 0.334
     },
     {
       "model_id": "ps10_s_mn",
@@ -2160,7 +2963,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/ps10_s_mn.gms",
       "file_size_bytes": 4117,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:18Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.4035,
+      "solve_time_seconds": 31.068
     },
     {
       "model_id": "ps2_f",
@@ -2175,7 +2984,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/ps2_f.gms",
       "file_size_bytes": 1238,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:18Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.9167,
+      "solve_time_seconds": 0.336
     },
     {
       "model_id": "ps2_f_eff",
@@ -2190,7 +3005,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/ps2_f_eff.gms",
       "file_size_bytes": 1247,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:19Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1.25,
+      "solve_time_seconds": 0.329
     },
     {
       "model_id": "ps2_f_inf",
@@ -2205,7 +3026,13 @@
       "download_date": "2026-01-01T07:55:14Z",
       "file_path": "data/gamslib/raw/ps2_f_inf.gms",
       "file_size_bytes": 1211,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:19Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.8333,
+      "solve_time_seconds": 0.335
     },
     {
       "model_id": "ps2_f_s",
@@ -2220,7 +3047,13 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/ps2_f_s.gms",
       "file_size_bytes": 1438,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:19Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.8654,
+      "solve_time_seconds": 0.446
     },
     {
       "model_id": "ps2_s",
@@ -2235,7 +3068,13 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/ps2_s.gms",
       "file_size_bytes": 1349,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:20Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.8654,
+      "solve_time_seconds": 0.331
     },
     {
       "model_id": "ps3_f",
@@ -2250,7 +3089,13 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/ps3_f.gms",
       "file_size_bytes": 1243,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:20Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1.375,
+      "solve_time_seconds": 0.33
     },
     {
       "model_id": "ps3_s",
@@ -2265,7 +3110,13 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/ps3_s.gms",
       "file_size_bytes": 1358,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:20Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1.1615,
+      "solve_time_seconds": 0.322
     },
     {
       "model_id": "ps3_s_gic",
@@ -2280,7 +3131,13 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/ps3_s_gic.gms",
       "file_size_bytes": 1371,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:21Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1.1615,
+      "solve_time_seconds": 0.351
     },
     {
       "model_id": "ps3_s_mn",
@@ -2295,7 +3152,13 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/ps3_s_mn.gms",
       "file_size_bytes": 1794,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:21Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1.0517,
+      "solve_time_seconds": 0.597
     },
     {
       "model_id": "ps3_s_scp",
@@ -2310,7 +3173,13 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/ps3_s_scp.gms",
       "file_size_bytes": 1966,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:22Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -0.607,
+      "solve_time_seconds": 0.494
     },
     {
       "model_id": "ps5_s_mn",
@@ -2325,7 +3194,13 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/ps5_s_mn.gms",
       "file_size_bytes": 4123,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:53Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.4254,
+      "solve_time_seconds": 30.877
     },
     {
       "model_id": "qabel",
@@ -2340,7 +3215,13 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/qabel.gms",
       "file_size_bytes": 2692,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:53Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 46965.0362,
+      "solve_time_seconds": 0.351
     },
     {
       "model_id": "qalan",
@@ -2355,7 +3236,14 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/qalan.gms",
       "file_size_bytes": 2586,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "unknown",
+      "verification_date": "2026-01-01T15:00:54Z",
+      "solver_status": 1,
+      "model_status": 8,
+      "objective_value": 2.925,
+      "solve_time_seconds": 0.784,
+      "verification_error": "Unexpected status combination"
     },
     {
       "model_id": "qcp1",
@@ -2370,7 +3258,11 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/qcp1.gms",
       "file_size_bytes": 1804,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:00:54Z",
+      "solve_time_seconds": 0.195,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "qdemo7",
@@ -2385,7 +3277,13 @@
       "download_date": "2026-01-01T07:55:15Z",
       "file_path": "data/gamslib/raw/qdemo7.gms",
       "file_size_bytes": 8333,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:55Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1589042.3862,
+      "solve_time_seconds": 0.326
     },
     {
       "model_id": "qfilter",
@@ -2400,7 +3298,11 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/qfilter.gms",
       "file_size_bytes": 4920,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:00:57Z",
+      "solve_time_seconds": 2.714,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "qp1",
@@ -2415,7 +3317,11 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/qp1.gms",
       "file_size_bytes": 1723,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:00:57Z",
+      "solve_time_seconds": 0.207,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "qp1x",
@@ -2430,7 +3336,11 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/qp1x.gms",
       "file_size_bytes": 3345,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:00:58Z",
+      "solve_time_seconds": 0.404,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "qp2",
@@ -2445,7 +3355,11 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/qp2.gms",
       "file_size_bytes": 1611,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:00:58Z",
+      "solve_time_seconds": 0.206,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "qp3",
@@ -2460,7 +3374,11 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/qp3.gms",
       "file_size_bytes": 2050,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:00:58Z",
+      "solve_time_seconds": 0.207,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "qp4",
@@ -2475,7 +3393,11 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/qp4.gms",
       "file_size_bytes": 1319,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:00:58Z",
+      "solve_time_seconds": 0.219,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "qp5",
@@ -2490,7 +3412,11 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/qp5.gms",
       "file_size_bytes": 1394,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:00:59Z",
+      "solve_time_seconds": 0.213,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "qp7",
@@ -2505,7 +3431,11 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/qp7.gms",
       "file_size_bytes": 2421,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:00:59Z",
+      "solve_time_seconds": 0.218,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "qsambal",
@@ -2520,7 +3450,13 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/qsambal.gms",
       "file_size_bytes": 1797,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:00:59Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 3.9682,
+      "solve_time_seconds": 0.341
     },
     {
       "model_id": "quocge",
@@ -2535,7 +3471,13 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/quocge.gms",
       "file_size_bytes": 11937,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:00Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 25.6834,
+      "solve_time_seconds": 0.495
     },
     {
       "model_id": "ramsey",
@@ -2550,7 +3492,13 @@
       "download_date": "2026-01-01T07:55:16Z",
       "file_path": "data/gamslib/raw/ramsey.gms",
       "file_size_bytes": 5525,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:00Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 2.4875,
+      "solve_time_seconds": 0.34
     },
     {
       "model_id": "rbrock",
@@ -2565,7 +3513,13 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/rbrock.gms",
       "file_size_bytes": 531,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:00Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.0,
+      "solve_time_seconds": 0.336
     },
     {
       "model_id": "robert",
@@ -2580,7 +3534,13 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/robert.gms",
       "file_size_bytes": 1650,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:01Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 11025.0,
+      "solve_time_seconds": 0.356
     },
     {
       "model_id": "robot",
@@ -2595,7 +3555,13 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/robot.gms",
       "file_size_bytes": 2900,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:01Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 9.1469,
+      "solve_time_seconds": 0.464
     },
     {
       "model_id": "robustlp",
@@ -2610,7 +3576,13 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/robustlp.gms",
       "file_size_bytes": 3143,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:02Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": -2.3296,
+      "solve_time_seconds": 0.675
     },
     {
       "model_id": "rocket",
@@ -2625,7 +3597,13 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/rocket.gms",
       "file_size_bytes": 2635,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:02Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1.0128,
+      "solve_time_seconds": 0.46
     },
     {
       "model_id": "sambal",
@@ -2640,7 +3618,13 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/sambal.gms",
       "file_size_bytes": 1642,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:03Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 3.9682,
+      "solve_time_seconds": 0.41
     },
     {
       "model_id": "sample",
@@ -2655,7 +3639,13 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/sample.gms",
       "file_size_bytes": 1944,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:03Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 726.6794,
+      "solve_time_seconds": 0.488
     },
     {
       "model_id": "saras",
@@ -2670,7 +3660,13 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/saras.gms",
       "file_size_bytes": 119925,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:06Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 4351376.5614,
+      "solve_time_seconds": 2.552
     },
     {
       "model_id": "sarf",
@@ -2685,7 +3681,13 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/sarf.gms",
       "file_size_bytes": 25746,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:06Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 79122.6599,
+      "solve_time_seconds": 0.415
     },
     {
       "model_id": "scenmerge",
@@ -2700,7 +3702,11 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/scenmerge.gms",
       "file_size_bytes": 4061,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:01:23Z",
+      "solve_time_seconds": 16.441,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "sddp",
@@ -2715,7 +3721,11 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/sddp.gms",
       "file_size_bytes": 11914,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:01:32Z",
+      "solve_time_seconds": 9.525,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "senstran",
@@ -2730,7 +3740,13 @@
       "download_date": "2026-01-01T07:55:17Z",
       "file_path": "data/gamslib/raw/senstran.gms",
       "file_size_bytes": 3402,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:34Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 163.98,
+      "solve_time_seconds": 2.117
     },
     {
       "model_id": "shale",
@@ -2745,7 +3761,13 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/shale.gms",
       "file_size_bytes": 32735,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:35Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 9354.8644,
+      "solve_time_seconds": 0.394
     },
     {
       "model_id": "ship",
@@ -2760,7 +3782,13 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/ship.gms",
       "file_size_bytes": 3364,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:35Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 5.5409,
+      "solve_time_seconds": 0.448
     },
     {
       "model_id": "sipres",
@@ -2775,7 +3803,11 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/sipres.gms",
       "file_size_bytes": 8496,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:01:36Z",
+      "solve_time_seconds": 0.217,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "solveopt",
@@ -2790,7 +3822,13 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/solveopt.gms",
       "file_size_bytes": 2417,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:36Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 6.0,
+      "solve_time_seconds": 0.706
     },
     {
       "model_id": "sparta",
@@ -2805,7 +3843,13 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/sparta.gms",
       "file_size_bytes": 2686,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:37Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 3466.38,
+      "solve_time_seconds": 0.878
     },
     {
       "model_id": "spatequ",
@@ -2820,7 +3864,13 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/spatequ.gms",
       "file_size_bytes": 5262,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:38Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 7906.9463,
+      "solve_time_seconds": 0.848
     },
     {
       "model_id": "spbenders1",
@@ -2835,7 +3885,11 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/spbenders1.gms",
       "file_size_bytes": 4750,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:01:40Z",
+      "solve_time_seconds": 1.604,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "spbenders2",
@@ -2850,7 +3904,11 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/spbenders2.gms",
       "file_size_bytes": 5148,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:01:41Z",
+      "solve_time_seconds": 1.117,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "spbenders4",
@@ -2865,7 +3923,11 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/spbenders4.gms",
       "file_size_bytes": 8257,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:01:41Z",
+      "solve_time_seconds": 0.242,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "splcge",
@@ -2880,7 +3942,13 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/splcge.gms",
       "file_size_bytes": 2712,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:41Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 27.1441,
+      "solve_time_seconds": 0.442
     },
     {
       "model_id": "springchain",
@@ -2895,7 +3963,13 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/springchain.gms",
       "file_size_bytes": 2270,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:42Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -185.4461,
+      "solve_time_seconds": 0.439
     },
     {
       "model_id": "srcpm",
@@ -2910,7 +3984,14 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/srcpm.gms",
       "file_size_bytes": 9491,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "unknown",
+      "verification_date": "2026-01-01T15:01:42Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": -2109.7818,
+      "solve_time_seconds": 0.594,
+      "verification_error": "Unexpected status combination"
     },
     {
       "model_id": "srkandw",
@@ -2925,7 +4006,13 @@
       "download_date": "2026-01-01T07:55:18Z",
       "file_path": "data/gamslib/raw/srkandw.gms",
       "file_size_bytes": 6277,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:57Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 2613.0,
+      "solve_time_seconds": 14.042
     },
     {
       "model_id": "sroute",
@@ -2940,7 +4027,13 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/sroute.gms",
       "file_size_bytes": 1795,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:57Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 6468.0,
+      "solve_time_seconds": 0.368
     },
     {
       "model_id": "srpchase",
@@ -2955,7 +4048,13 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/srpchase.gms",
       "file_size_bytes": 2819,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:58Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 0.4001,
+      "solve_time_seconds": 0.746
     },
     {
       "model_id": "stdcge",
@@ -2970,7 +4069,13 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/stdcge.gms",
       "file_size_bytes": 11838,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:01:58Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 26.0926,
+      "solve_time_seconds": 0.486
     },
     {
       "model_id": "t1000",
@@ -2985,7 +4090,11 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/t1000.gms",
       "file_size_bytes": 4430,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:01:58Z",
+      "solve_time_seconds": 0.201,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "tabora",
@@ -3000,7 +4109,13 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/tabora.gms",
       "file_size_bytes": 7025,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:59Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 8471.9573,
+      "solve_time_seconds": 0.373
     },
     {
       "model_id": "tfordy",
@@ -3015,7 +4130,13 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/tfordy.gms",
       "file_size_bytes": 10696,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:01:59Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 102.0362,
+      "solve_time_seconds": 0.572
     },
     {
       "model_id": "tforss",
@@ -3030,7 +4151,13 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/tforss.gms",
       "file_size_bytes": 6390,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:02:00Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 2177.796,
+      "solve_time_seconds": 0.807
     },
     {
       "model_id": "tgridmix",
@@ -3045,7 +4172,11 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/tgridmix.gms",
       "file_size_bytes": 4346,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:02:06Z",
+      "solve_time_seconds": 5.376,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "torsion",
@@ -3060,7 +4191,11 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/torsion.gms",
       "file_size_bytes": 3035,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:02:06Z",
+      "solve_time_seconds": 0.307,
+      "verification_error": "Model exceeds demo license limits"
     },
     {
       "model_id": "tricp",
@@ -3075,7 +4210,13 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/tricp.gms",
       "file_size_bytes": 5060,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:02:07Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 3838.2686,
+      "solve_time_seconds": 1.105
     },
     {
       "model_id": "trig",
@@ -3090,7 +4231,13 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/trig.gms",
       "file_size_bytes": 660,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:02:07Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.0,
+      "solve_time_seconds": 0.349
     },
     {
       "model_id": "trigx",
@@ -3105,7 +4252,14 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/trigx.gms",
       "file_size_bytes": 1844,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "excluded",
+      "verification_date": "2026-01-01T15:02:08Z",
+      "solver_status": 1,
+      "model_status": 5,
+      "objective_value": 0.1052,
+      "solve_time_seconds": 0.5,
+      "verification_error": "Model is Locally Infeasible"
     },
     {
       "model_id": "trnsgrid",
@@ -3120,7 +4274,11 @@
       "download_date": "2026-01-01T07:55:19Z",
       "file_path": "data/gamslib/raw/trnsgrid.gms",
       "file_size_bytes": 3381,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:02:11Z",
+      "solve_time_seconds": 2.949,
+      "verification_error": "No solve summary found in listing file"
     },
     {
       "model_id": "trnsport",
@@ -3137,11 +4295,11 @@
       "file_size_bytes": 1751,
       "notes": "",
       "convexity_status": "verified_convex",
-      "verification_date": "2026-01-01T03:02:06Z",
+      "verification_date": "2026-01-01T15:02:11Z",
       "solver_status": 1,
       "model_status": 1,
       "objective_value": 153.675,
-      "solve_time_seconds": 0.544
+      "solve_time_seconds": 0.383
     },
     {
       "model_id": "trnspwl",
@@ -3156,7 +4314,13 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/trnspwl.gms",
       "file_size_bytes": 7623,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:02:12Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 8.7958,
+      "solve_time_seconds": 1.311
     },
     {
       "model_id": "trnspwlx",
@@ -3171,7 +4335,11 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/trnspwlx.gms",
       "file_size_bytes": 5079,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "error",
+      "verification_date": "2026-01-01T15:02:13Z",
+      "solve_time_seconds": 0.212,
+      "verification_error": "GAMS compilation error"
     },
     {
       "model_id": "trussm",
@@ -3186,7 +4354,13 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/trussm.gms",
       "file_size_bytes": 3777,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:02:13Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 0.4499,
+      "solve_time_seconds": 0.531
     },
     {
       "model_id": "turkey",
@@ -3201,7 +4375,13 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/turkey.gms",
       "file_size_bytes": 63704,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:02:14Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 29078.2106,
+      "solve_time_seconds": 0.674
     },
     {
       "model_id": "turkpow",
@@ -3216,7 +4396,13 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/turkpow.gms",
       "file_size_bytes": 11106,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:02:14Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 12657.7708,
+      "solve_time_seconds": 0.392
     },
     {
       "model_id": "twocge",
@@ -3231,7 +4417,13 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/twocge.gms",
       "file_size_bytes": 13559,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:02:15Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 56.7778,
+      "solve_time_seconds": 0.5
     },
     {
       "model_id": "uimp",
@@ -3246,7 +4438,13 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/uimp.gms",
       "file_size_bytes": 3059,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:02:15Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 1571.0476,
+      "solve_time_seconds": 0.489
     },
     {
       "model_id": "wall",
@@ -3261,7 +4459,13 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/wall.gms",
       "file_size_bytes": 1194,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:02:16Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1.0,
+      "solve_time_seconds": 0.332
     },
     {
       "model_id": "weapons",
@@ -3276,7 +4480,13 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/weapons.gms",
       "file_size_bytes": 2877,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:02:16Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 1735.5696,
+      "solve_time_seconds": 0.341
     },
     {
       "model_id": "whouse",
@@ -3291,7 +4501,13 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/whouse.gms",
       "file_size_bytes": 1299,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T15:02:16Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": -600.0,
+      "solve_time_seconds": 0.348
     },
     {
       "model_id": "worst",
@@ -3306,7 +4522,13 @@
       "download_date": "2026-01-01T07:55:20Z",
       "file_path": "data/gamslib/raw/worst.gms",
       "file_size_bytes": 4339,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T15:02:17Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 20941621.7948,
+      "solve_time_seconds": 0.478
     }
   ]
 }
