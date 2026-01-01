@@ -7,7 +7,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.gamslib.verify_convexity import (
+from scripts.gamslib.verify_convexity import (  # noqa: E402
     MODEL_STATUS_DESCRIPTIONS,
     SOLVER_STATUS_DESCRIPTIONS,
     ConvexityStatus,
