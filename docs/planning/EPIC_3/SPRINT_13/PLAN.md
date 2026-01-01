@@ -1,7 +1,7 @@
 # Sprint 13 Plan: GAMSLIB Discovery, Download Infrastructure & Convexity Verification Foundation
 
 **Sprint Duration:** 10 working days  
-**Estimated Effort:** 22-27 hours  
+**Estimated Effort:** 29-39 hours  
 **Risk Level:** LOW (infrastructure work with clear deliverables)  
 **Created:** December 31, 2025
 
@@ -102,7 +102,7 @@ Sprint 13 initiates EPIC 3, establishing the infrastructure to discover, downloa
 | 2.4 | Filter by inclusion criteria | 50+ models in catalog |
 | 2.5 | Generate discovery report | `data/gamslib/discovery_report.md` |
 
-**Checkpoint:** Catalog contains 50+ candidate model entries
+**Checkpoint Day 2:** Catalog contains 50+ candidate model entries
 
 ---
 
@@ -119,7 +119,7 @@ Sprint 13 initiates EPIC 3, establishing the infrastructure to discover, downloa
 | 3.4 | Add error handling and logging | Robust extraction |
 | 3.5 | Update catalog with download status | Status tracking |
 
-**Checkpoint:** Download script functional, can extract models
+**Checkpoint Day 3:** Download script functional, can extract models
 
 #### Day 4: Full Model Set Download & Validation
 **Effort:** 2-3 hours
@@ -131,8 +131,6 @@ Sprint 13 initiates EPIC 3, establishing the infrastructure to discover, downloa
 | 4.3 | Handle edge cases (missing, errors) | Error log generated |
 | 4.4 | Update catalog with file sizes | Metadata complete |
 | 4.5 | Create download summary report | `data/gamslib/download_report.md` |
-
-**Checkpoint Day 3:** Model catalog populated with 50+ entries
 
 ---
 
@@ -149,7 +147,7 @@ Sprint 13 initiates EPIC 3, establishing the infrastructure to discover, downloa
 | 5.4 | Add timeout handling (60s default) | Prevent hangs |
 | 5.5 | Capture solve results (status, objective, time) | Result dataclass |
 
-**Checkpoint Day 5:** Download script functional
+**Checkpoint Day 5:** GAMS execution framework ready
 
 #### Day 6: Classification Logic & Initial Run
 **Effort:** 3-4 hours
@@ -228,8 +226,9 @@ Sprint 13 initiates EPIC 3, establishing the infrastructure to discover, downloa
 
 | Checkpoint | Day | Criteria | Success Indicator |
 |------------|-----|----------|-------------------|
-| **Catalog Populated** | 3 | 50+ model entries in catalog.json | Count >= 50 |
-| **Download Functional** | 5 | Download script extracts models | All test models downloaded |
+| **Catalog Populated** | 2 | 50+ model entries in catalog.json | Count >= 50 |
+| **Download Functional** | 3 | Download script extracts models | All test models downloaded |
+| **Execution Framework** | 5 | GAMS execution framework ready | Can run and parse .lst files |
 | **Verification Working** | 7 | Convexity classification running | Test models classified |
 | **Sprint Complete** | 10 | All acceptance criteria met | 100% criteria checked |
 
