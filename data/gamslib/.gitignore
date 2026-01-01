@@ -1,0 +1,14 @@
+# GAMSLIB Data Directory
+# Downloaded .gms files (too large for version control)
+raw/*.gms
+
+# Generated MCP files
+mcp/*.mcp
+mcp/*.json
+
+# Archive snapshots (historical versions)
+archive/
+
+# Keep catalog.json and example in version control
+!catalog.json
+!catalog_example.json
