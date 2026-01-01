@@ -1483,7 +1483,9 @@ parallel -j4 "python db_manager.py update model_{} status success" ::: 1 2 3 4
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⏸️ **Status:** DEFERRED to Sprint 14 implementation
+
+**Decision:** Sequential file-level access is sufficient for Sprint 14. Database is small (~110KB) and single-user. Concurrent access handling deferred - will implement if needed during sprint.
 
 ---
 
@@ -1537,7 +1539,9 @@ python db_manager.py query --parse-status=success --output=table
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⏸️ **Status:** DEFERRED to Sprint 14 implementation
+
+**Decision:** Simple key-value filtering (--field=value) confirmed sufficient for Sprint 14. Output formats: table (default), JSON, count. Implementation on Day 5.
 
 ---
 
@@ -1587,7 +1591,9 @@ python db_manager.py export --format=csv --fields=model_id,parse_status,translat
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⏸️ **Status:** DEFERRED to Sprint 14 implementation
+
+**Decision:** CSV and Markdown export confirmed sufficient. CSV uses dot-notation for nested fields. Implementation on Day 5.
 
 ---
 
@@ -1837,7 +1843,9 @@ The database file (gamslib_status.json) should be version controlled in git for 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⏸️ **Status:** DEFERRED to Sprint 14 implementation
+
+**Decision:** Yes, gamslib_status.json will be version controlled. File size ~110KB is acceptable. Diffs are readable (JSON with indent=2). CI validation via `db_manager.py validate`.
 
 ---
 
@@ -1891,7 +1899,9 @@ Database updates should be committed alongside code changes in the same PR for a
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⏸️ **Status:** DEFERRED to Sprint 14 implementation
+
+**Decision:** Database updates committed alongside code changes in same PR. CI runs `db_manager.py validate`. Merge conflicts resolved by regenerating database if needed.
 
 ---
 
@@ -2041,7 +2051,9 @@ python db_manager.py snapshot
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⏸️ **Status:** DEFERRED to Sprint 14 implementation
+
+**Decision:** Timestamped snapshots in archive/ directory. Created automatically before destructive operations. Keep last 10 backups. No compression needed (small files).
 
 ---
 
@@ -2094,7 +2106,9 @@ solve model using NLP minimizing obj;
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⏸️ **Status:** DEFERRED to Sprint 14 implementation
+
+**Decision:** Multi-solver validation is optional for Sprint 14. Will check GAMS installation for available solvers during implementation if time permits. Focus on single-solver verification first.
 
 ---
 
@@ -2148,7 +2162,9 @@ def solutions_match(obj1, obj2, rtol=1e-6, atol=1e-8):
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⏸️ **Status:** DEFERRED to Sprint 14 implementation
+
+**Decision:** Tolerance-based comparison confirmed: relative tolerance 1e-6, absolute tolerance 1e-8. Compare objective values only (not solution vectors). Status mismatches flagged for review.
 
 ---
 
@@ -2287,7 +2303,9 @@ python db_manager.py query --multi-solver-status=disagreement
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⏸️ **Status:** DEFERRED to Sprint 14 implementation
+
+**Decision:** Disagreements flagged in database with both solver results recorded. Manual review during Day 8 integration testing. Schema includes multi_solver nested object for this purpose.
 
 ---
 
