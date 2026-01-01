@@ -228,7 +228,13 @@
       "download_date": "2026-01-01T07:12:24Z",
       "file_path": "data/gamslib/raw/blend.gms",
       "file_size_bytes": 1699,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T03:02:07Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 4.98,
+      "solve_time_seconds": 0.679
     },
     {
       "model_id": "camcge",
@@ -423,7 +429,13 @@
       "download_date": "2026-01-01T07:12:24Z",
       "file_path": "data/gamslib/raw/circle.gms",
       "file_size_bytes": 1297,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "likely_convex",
+      "verification_date": "2026-01-01T03:02:06Z",
+      "solver_status": 1,
+      "model_status": 2,
+      "objective_value": 4.5742,
+      "solve_time_seconds": 0.467
     },
     {
       "model_id": "circpack",
@@ -3123,7 +3135,13 @@
       "download_date": "2026-01-01T07:12:51Z",
       "file_path": "data/gamslib/raw/trnsport.gms",
       "file_size_bytes": 1751,
-      "notes": ""
+      "notes": "",
+      "convexity_status": "verified_convex",
+      "verification_date": "2026-01-01T03:02:06Z",
+      "solver_status": 1,
+      "model_status": 1,
+      "objective_value": 153.675,
+      "solve_time_seconds": 0.544
     },
     {
       "model_id": "trnspwl",

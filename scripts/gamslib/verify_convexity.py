@@ -279,6 +279,9 @@ def verify_model(
             error_message=f"Model type {model_type} excluded from corpus",
         )
 
+    # Ensure model_path is absolute for GAMS execution
+    model_path_abs = Path(model_path).absolute()
+
     # Create temp directory for output
     with tempfile.TemporaryDirectory() as tmpdir:
         lst_path = os.path.join(tmpdir, "output.lst")
@@ -293,7 +296,7 @@ def verify_model(
         start_time = time.time()
         try:
             result = subprocess.run(
-                ["gams", str(model_path), f"o={lst_path}", "lo=3", solver_option],
+                ["gams", str(model_path_abs), f"o={lst_path}", "lo=3", solver_option],
                 capture_output=True,
                 text=True,
                 timeout=timeout_seconds,
@@ -410,6 +413,61 @@ def load_catalog() -> dict:
         sys.exit(1)
 
 
+def save_catalog(catalog: dict) -> None:
+    """Save the GAMSLIB catalog."""
+    try:
+        with open(CATALOG_PATH, "w") as f:
+            json.dump(catalog, f, indent=2)
+            f.write("\n")
+        logger.info(f"Catalog saved to: {CATALOG_PATH}")
+    except OSError as e:
+        logger.error(f"Failed to save catalog: {e}")
+        sys.exit(1)
+
+
+def update_catalog_entry(
+    model: dict,
+    result: VerificationResult,
+) -> None:
+    """Update a catalog entry with verification results.
+
+    Args:
+        model: The catalog model entry to update
+        result: The verification result
+    """
+    # Always record convexity status and verification timestamp (UTC with Z suffix)
+    model["convexity_status"] = result.convexity_status
+    model["verification_date"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    # Only persist solver-related details when available to avoid polluting
+    # the catalog with null values for non-applicable models.
+    if result.solver_status is not None:
+        model["solver_status"] = result.solver_status
+    elif "solver_status" in model:
+        del model["solver_status"]
+
+    if result.model_status is not None:
+        model["model_status"] = result.model_status
+    elif "model_status" in model:
+        del model["model_status"]
+
+    if result.objective_value is not None:
+        model["objective_value"] = result.objective_value
+    elif "objective_value" in model:
+        del model["objective_value"]
+
+    if result.solve_time_seconds > 0:
+        model["solve_time_seconds"] = round(result.solve_time_seconds, 3)
+    elif "solve_time_seconds" in model:
+        del model["solve_time_seconds"]
+
+    # Record or clear any verification error message
+    if result.error_message:
+        model["verification_error"] = result.error_message
+    elif "verification_error" in model:
+        del model["verification_error"]
+
+
 def get_model_type(model: dict) -> str:
     """Extract model type from catalog entry."""
     return model.get("gamslib_type", "UNKNOWN")
@@ -453,6 +511,12 @@ def main() -> None:
         "-o",
         type=str,
         help="Output file for results (JSON format)",
+    )
+    parser.add_argument(
+        "--update-catalog",
+        "-u",
+        action="store_true",
+        help="Update catalog with verification results",
     )
 
     args = parser.parse_args()
@@ -534,6 +598,10 @@ def main() -> None:
 
         results.append(result)
 
+        # Update catalog entry if requested
+        if args.update_catalog:
+            update_catalog_entry(model, result)
+
         # Track counts
         if result.convexity_status == ConvexityStatus.VERIFIED_CONVEX.value:
             verified_count += 1
@@ -556,6 +624,10 @@ def main() -> None:
     logger.info(f"  Likely convex (NLP/QCP): {likely_count}")
     logger.info(f"  Excluded: {excluded_count}")
     logger.info(f"  Errors: {error_count}")
+
+    # Save catalog if requested
+    if args.update_catalog:
+        save_catalog(catalog)
 
     # Output results
     if args.output:
