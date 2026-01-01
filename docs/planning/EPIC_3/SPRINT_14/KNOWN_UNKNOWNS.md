@@ -484,7 +484,43 @@ from jsonschema import validate
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from JSON Schema Best Practices Research (Task 3):**
+
+1. **Python jsonschema library support:**
+   - Current version: 4.25.x
+   - Full support for both Draft-07 and Draft 2020-12
+   - Both `Draft7Validator` and `Draft202012Validator` classes available
+
+2. **Key differences between drafts:**
+   - **Array/Tuple handling:** Draft 2020-12 replaces `items`/`additionalItems` with `prefixItems`/`items` (breaking change)
+   - **Dynamic references:** Draft 2020-12 adds `$dynamicRef`/`$dynamicAnchor` (not needed for our use case)
+   - **Unevaluated properties:** Draft 2020-12 adds `unevaluatedProperties`/`unevaluatedItems` (adds overhead)
+
+3. **Features needed for nlp2mcp:**
+   - Basic type validation ✓ (both drafts)
+   - Required/optional fields ✓ (both drafts)
+   - Enum values ✓ (both drafts)
+   - Nested object validation ✓ (both drafts)
+   - $ref for definitions ✓ (both drafts)
+   - **No advanced features needed** that require Draft 2020-12
+
+4. **Current ecosystem status:**
+   - Draft-07 and Draft 2020-12 are both LTS (long-term support)
+   - OpenAPI 3.1 uses Draft 2020-12, but OpenAPI 3.0 uses Draft-07
+   - Most Python tools default to Draft-07
+
+**Decision:** ✅ Use **Draft-07** for nlp2mcp database schema
+
+**Rationale:**
+- Simpler syntax, no breaking changes from tuple handling
+- Wider compatibility with existing tools
+- Python jsonschema library defaults to Draft-07
+- No advanced features (dynamic refs, unevaluated properties) needed
+- Lower validation overhead
+
+**Evidence:** See `docs/research/JSON_SCHEMA_BEST_PRACTICES.md` for full analysis
 
 ---
 
@@ -546,7 +582,68 @@ Convexity data should be a nested object (as shown in PROJECT_PLAN.md) for bette
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from JSON Schema Best Practices Research (Task 3):**
+
+1. **Trade-off analysis:**
+
+   | Aspect | Nested Structure | Flat Structure |
+   |--------|-----------------|----------------|
+   | Readability | Better grouping | More verbose |
+   | Query Access | `entry["convexity"]["status"]` | `entry["convexity_status"]` |
+   | CSV Export | Requires flattening | Direct mapping |
+   | Extensibility | Easy to add fields to groups | Pollutes namespace |
+   | Validation | Can validate sub-objects independently | All at same level |
+
+2. **Best practice guidelines:**
+   - Limit nesting to 3-4 levels maximum
+   - Group logically related fields together
+   - Keep independent data flat
+   - Consider access patterns when designing structure
+
+3. **nlp2mcp-specific considerations:**
+   - Pipeline has distinct stages (convexity, parse, translate, solve)
+   - Each stage has related fields (status, date, version, time, error)
+   - Future stages may be added
+   - CSV export needed but not primary use case
+
+4. **Existing catalog.json uses flat structure:**
+   - All 20 fields at top level with prefixes (`convexity_status`, `verification_date`)
+   - Works but clutters namespace as fields grow
+
+**Decision:** ✅ Use **moderate nesting (2 levels)** for pipeline stages
+
+**Recommended structure:**
+```json
+{
+  "model_id": "trnsport",
+  "model_name": "A Transportation Problem",
+  "gamslib_type": "LP",
+  
+  "convexity": {
+    "status": "verified_convex",
+    "verification_date": "2026-01-01T12:00:00Z",
+    "solver_status": 1,
+    "model_status": 1
+  },
+  
+  "nlp2mcp_parse": {
+    "status": "success",
+    "parse_date": "2026-01-02T10:00:00Z",
+    "nlp2mcp_version": "0.10.0"
+  }
+}
+```
+
+**Rationale:**
+- Clear separation between pipeline stages
+- Easy to add new fields within each stage
+- Query pattern `model["nlp2mcp_parse"]["status"]` is intuitive
+- CSV export: flatten with dot notation (`nlp2mcp_parse.status`)
+- Validation: can validate each stage object independently
+
+**Evidence:** See `docs/research/JSON_SCHEMA_BEST_PRACTICES.md` for full analysis
 
 ---
 
@@ -856,7 +953,73 @@ def load_database(path):
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from JSON Schema Best Practices Research (Task 3):**
+
+1. **Versioning strategy options:**
+
+   | Approach | Format | Use Case |
+   |----------|--------|----------|
+   | Semantic Versioning | MAJOR.MINOR.PATCH | Standard, well-understood |
+   | SchemaVer | MODEL-REVISION-ADDITION | Schema-specific, less common |
+   | Date-based | YYYY.MM.DD | Simple, chronological |
+   | Integer | 1, 2, 3... | Minimal, for simple schemas |
+
+2. **Migration strategy options:**
+
+   | Strategy | Description | Use Case |
+   |----------|-------------|----------|
+   | Eager Migration | Migrate all entries at schema change | Small databases |
+   | Lazy Migration | Migrate entries on read/write | Large databases |
+   | Dual-Write | Write to both old and new formats | Zero-downtime |
+
+3. **Best practices for schema evolution:**
+   - Never remove required fields without major version bump
+   - Add new fields as optional with default values
+   - Deprecate before removing
+   - Provide migration scripts for major changes
+   - Document all changes in CHANGELOG.md
+
+4. **nlp2mcp-specific considerations:**
+   - Small database (219 models, <200KB)
+   - Schema changes only at sprint boundaries (infrequent)
+   - Single-user access (no concurrent migrations needed)
+   - Sprint 14 is first major schema change (v1.0.0 → v2.0.0)
+
+**Decision:** ✅ Use **semantic versioning** with **eager migration**
+
+**Implementation approach:**
+1. **Version field:** Top-level `schema_version` field (not per-entry)
+   ```json
+   {
+     "schema_version": "2.0.0",
+     "models": [...]
+   }
+   ```
+
+2. **Migration script:** `scripts/gamslib/migrate_schema.py`
+   - One function per version transition: `migrate_v1_to_v2()`
+   - Migrate entire database at once (eager)
+   - Create backup before migration
+   - Validate after migration
+
+3. **Version history:**
+   - 1.0.0: catalog.json (Sprint 13)
+   - 2.0.0: gamslib_status.json with nested pipeline stages (Sprint 14)
+
+4. **Backward compatibility:**
+   - Keep catalog.json as read-only archive
+   - New gamslib_status.json is authoritative after migration
+   - No dual-write needed (clean cutover)
+
+**Rationale:**
+- Semantic versioning is industry standard
+- Eager migration is appropriate for small, single-user database
+- Top-level version simplifies validation (no mixed versions)
+- One-time migration aligns with Sprint 14 schedule
+
+**Evidence:** See `docs/research/JSON_SCHEMA_BEST_PRACTICES.md` for full analysis
 
 ---
 

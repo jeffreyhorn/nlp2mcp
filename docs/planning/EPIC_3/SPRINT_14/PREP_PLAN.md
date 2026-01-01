@@ -283,7 +283,7 @@ print(f'Missing convexity_status: {len(missing)}')
 
 ## Task 3: Survey JSON Schema Best Practices
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 2-3 hours  
 **Deadline:** Before Sprint 14 Day 1  
@@ -333,11 +333,38 @@ PROJECT_PLAN.md specifies a comprehensive schema with nested objects for:
 
 ### Changes
 
-*To be completed*
+- Created `docs/research/JSON_SCHEMA_BEST_PRACTICES.md` with comprehensive research
+- Updated `docs/planning/EPIC_3/SPRINT_14/KNOWN_UNKNOWNS.md` with verification results for Unknowns 2.1, 2.2, 2.7
 
 ### Result
 
-*To be completed*
+**Key Recommendations for Sprint 14:**
+
+1. **Schema Draft Version:** Use **Draft-07**
+   - Full support in Python jsonschema library (v4.25+)
+   - Simpler syntax, no advanced features needed
+   - Wider compatibility with existing tools
+
+2. **Naming Convention:** Use **snake_case**
+   - Consistency with existing catalog.json (20 fields)
+   - Alignment with Python PEP 8 conventions
+
+3. **Structure:** Use **moderate nesting (2 levels)**
+   - Nested objects for pipeline stages: `convexity`, `nlp2mcp_parse`, `nlp2mcp_translate`, `mcp_solve`
+   - Core identification fields at top level
+   - Easy to extend within each stage
+
+4. **Versioning:** Use **semantic versioning** (MAJOR.MINOR.PATCH)
+   - Top-level `schema_version` field
+   - Migration from 1.0.0 (catalog.json) to 2.0.0 (gamslib_status.json)
+
+5. **Migration Strategy:** Use **eager migration**
+   - One-time migration from catalog.json to gamslib_status.json
+   - Keep catalog.json as read-only archive
+
+6. **Validation:** Use **strict validation** with `additionalProperties: false`
+   - Prevents schema drift
+   - Catches typos in field names
 
 ### Verification
 
@@ -348,19 +375,19 @@ cat docs/research/JSON_SCHEMA_BEST_PRACTICES.md | head -30
 
 ### Deliverables
 
-- `docs/research/JSON_SCHEMA_BEST_PRACTICES.md`
-- Recommended schema draft version
-- Field naming convention guide
-- Nested vs flat structure recommendation
-- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.7
+- [x] `docs/research/JSON_SCHEMA_BEST_PRACTICES.md`
+- [x] Recommended schema draft version (Draft-07)
+- [x] Field naming convention guide (snake_case)
+- [x] Nested vs flat structure recommendation (moderate nesting)
+- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.7
 
 ### Acceptance Criteria
 
-- [ ] JSON Schema specification reviewed
-- [ ] Versioning strategy documented
-- [ ] Best practices documented
-- [ ] Recommendations for Sprint 14 schema provided
-- [ ] Unknowns 2.1, 2.2, 2.7 verified and updated in KNOWN_UNKNOWNS.md
+- [x] JSON Schema specification reviewed
+- [x] Versioning strategy documented
+- [x] Best practices documented
+- [x] Recommendations for Sprint 14 schema provided
+- [x] Unknowns 2.1, 2.2, 2.7 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -986,7 +1013,7 @@ grep -c "Day [0-9]" docs/planning/EPIC_3/SPRINT_14/PLAN.md
 All prep tasks complete when:
 - [x] Known Unknowns document created with 15+ unknowns (26 created)
 - [x] Catalog quality validated, no blocking issues
-- [ ] JSON Schema best practices researched
+- [x] JSON Schema best practices researched
 - [ ] jsonschema library validated
 - [ ] Draft database schema created
 - [ ] Parse rate baseline established
