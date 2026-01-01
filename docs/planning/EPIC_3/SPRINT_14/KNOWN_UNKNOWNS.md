@@ -135,7 +135,35 @@ time python3 -m src.cli data/gamslib/raw/trnsport.gms -o /tmp/output.gms
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings from Parse Rate Analysis (Task 6):**
+
+1. **Average parse time per model:** 0.97 seconds
+   - Minimum: 0.71 seconds
+   - Maximum: 2.58 seconds
+   - No timeouts observed (60s limit)
+
+2. **Projected batch time for 160 models:**
+   - 160 models × 0.97s = 155 seconds (~2.6 minutes)
+   - With 10% overhead: ~3 minutes
+   - **Well under the 2-hour concern**
+
+3. **Parallelization:** Not needed
+   - Sequential execution is fast enough
+   - No resource contention issues observed
+
+4. **GAMS license impact:** None on parsing
+   - nlp2mcp parsing does not invoke GAMS
+   - License limits only affect GAMS solve (convexity verification)
+
+5. **Timeout strategy:** 60 seconds is adequate
+   - Largest model (45KB) parsed in 0.85 seconds
+   - No models approached timeout
+
+**Decision:** ✅ Batch verification will complete in ~3 minutes. No special scheduling or parallelization needed.
+
+**Evidence:** See `docs/planning/EPIC_3/SPRINT_14/PARSE_RATE_BASELINE.md`
 
 ---
 
@@ -187,7 +215,47 @@ python3 -m src.cli data/gamslib/raw/problem.gms 2>&1 | grep -i "error"
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Assumption was WRONG)
+
+**Findings from Parse Rate Analysis (Task 6):**
+
+1. **Actual parse success rate:** 13.3% (4/30 models in sample)
+   - **Below the assumed 30%**
+   - Projected for full corpus: ~14% (~23 models out of 160)
+
+2. **Parse rate by model type:**
+   | Type | Sample Rate | Population | Projected Success |
+   |------|-------------|------------|-------------------|
+   | LP | 6.7% | 57 | ~4 models |
+   | NLP | 16.7% | 94 | ~16 models |
+   | QCP | 33.3% | 9 | ~3 models |
+
+3. **Successful models characteristics:**
+   - All small files (≤1,233 bytes)
+   - Simple syntax structures
+   - Models: prodmix, rbrock, hs62, himmel11
+
+4. **Top 5 parse failure reasons:**
+   | Category | Count | Percentage |
+   |----------|-------|------------|
+   | syntax_error | 20 | 77% |
+   | no_objective | 2 | 8% |
+   | unsupported_function | 2 | 8% |
+   | domain_error | 1 | 4% |
+   | undefined_variable | 1 | 4% |
+
+5. **LP vs NLP success:** NLP slightly higher (16.7% vs 6.7%)
+   - Contrary to assumption that LP would be easier
+   - May be due to sample selection (stratified by size)
+
+**Decision:** ❌ Assumption was wrong (30% assumed, 13% actual). Adjust Sprint 14 KPIs to expect ~15-25 models parsing successfully.
+
+**Implications for Sprint 14:**
+- Focus on successfully parsed models for full pipeline testing
+- Track all parse failures by category in database
+- Parser improvement is a future sprint opportunity
+
+**Evidence:** See `docs/planning/EPIC_3/SPRINT_14/PARSE_RATE_BASELINE.md`
 
 ---
 
@@ -266,6 +334,11 @@ Development team
 **Decision:** ✅ Mark as `license_limited` in database, skip during batch verification, track separately for future full-license testing
 
 **Evidence:** See `docs/planning/EPIC_3/SPRINT_14/CATALOG_QUALITY_REPORT.md` for full analysis
+
+**Additional Finding from Task 6 (Parse Rate Analysis):**
+- Confirmed: nlp2mcp parsing does NOT trigger license limits
+- Tested 30 models (including large files up to 45KB) with no license errors
+- License limits only affect GAMS solve operations, not nlp2mcp parsing
 
 ---
 
