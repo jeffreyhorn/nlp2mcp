@@ -355,6 +355,12 @@ Development team
 - Tested 30 models (including large files up to 45KB) with no license errors
 - License limits only affect GAMS solve operations, not nlp2mcp parsing
 
+**Sprint 13 Retrospective Insight (Task 9):**
+- Sprint 13 noted "License limit handling - 11 models hit demo limits (could filter earlier)"
+- Corrected count is 10 models (Task 2 analysis)
+- Lesson learned: Filter license-limited models at the start of batch operations
+- Already implemented in gamslib_status.json schema with `license_limited` field
+
 ---
 
 ## Unknown 1.4: How should models with missing $include files be handled?
@@ -433,6 +439,13 @@ Development team
 **Decision:** ✅ Only 2 models have true missing includes. Mark as `dependency_missing`, no action needed (already classified as errors).
 
 **Evidence:** See `docs/planning/EPIC_3/SPRINT_14/CATALOG_QUALITY_REPORT.md` for full analysis
+
+**Sprint 13 Retrospective Insight (Task 9):**
+- Sprint 13 noted "Missing dependencies - 18 models have missing $include files"
+- Task 2 analysis corrected this to only 2 models with truly missing includes
+- The 18 count conflated multiple error types (compilation errors, missing includes, etc.)
+- Lesson learned: Categorize errors more precisely from the start
+- Already addressed: DRAFT_SCHEMA.json includes structured error categories
 
 ---
 
@@ -515,6 +528,13 @@ Development team
 **Decision:** ✅ Create new gamslib_status.json, one-time migration from catalog.json, no dual-write. catalog.json remains as Sprint 13 archive.
 
 **Evidence:** See `docs/planning/EPIC_3/SPRINT_14/CATALOG_QUALITY_REPORT.md` for full analysis
+
+**Sprint 13 Retrospective Insight (Task 9):**
+- Sprint 13 recommendation: "Add convert_status to catalog schema"
+- This is addressed in DRAFT_SCHEMA.json with nested pipeline stage objects
+- catalog.json remains as Sprint 13 archive (read-only)
+- New gamslib_status.json becomes authoritative for Sprint 14
+- db_manager.py `init` subcommand will handle migration (Task 7 design)
 
 ---
 
