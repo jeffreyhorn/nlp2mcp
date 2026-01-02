@@ -24,7 +24,6 @@ Examples:
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import sys
 import time
@@ -72,8 +71,8 @@ def get_nlp2mcp_version() -> str:
         from importlib.metadata import version
 
         return version("nlp2mcp")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"importlib.metadata version lookup failed: {e}")
 
     # Fallback: try reading from pyproject.toml
     try:
@@ -87,8 +86,8 @@ def get_nlp2mcp_version() -> str:
                     if len(parts) == 2:
                         ver = parts[1].strip().strip('"').strip("'")
                         return ver
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"pyproject.toml version lookup failed: {e}")
 
     return "unknown"
 
@@ -109,10 +108,11 @@ def categorize_error(error_message: str) -> str:
     - validation_error: Model structure validation failures
     - internal_error: Other/unknown errors
 
-    Additional categories from baseline analysis:
-    - no_objective: Model has no objective function
-    - domain_error: Variable domain issues
-    - undefined_variable: Objective variable not defined
+    Additional error patterns from baseline analysis
+    (mapped to the schema-defined categories above):
+    - no_objective: Model has no objective function -> syntax_error
+    - domain_error: Variable domain issues -> validation_error
+    - undefined_variable: Objective variable not defined -> validation_error
 
     Args:
         error_message: The error message string
@@ -307,7 +307,7 @@ def run_batch_parse(
         # Progress reporting every 10 models
         if i % 10 == 0 or i == 1:
             elapsed = time.perf_counter() - stats["start_time"]
-            avg_time = elapsed / i if i > 0 else 0
+            avg_time = elapsed / i
             remaining = (len(candidates) - i) * avg_time
             logger.info(
                 f"[{i:3d}/{len(candidates)}] {i * 100 // len(candidates):3d}% "
