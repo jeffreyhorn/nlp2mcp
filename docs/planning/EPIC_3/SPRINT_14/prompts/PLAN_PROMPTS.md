@@ -117,7 +117,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 53-75) - Day 1 tasks
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 52-72) - Day 1 tasks
 - `docs/planning/EPIC_3/SPRINT_14/DRAFT_SCHEMA.json` - Draft schema
 - `docs/planning/EPIC_3/SPRINT_14/KNOWN_UNKNOWNS.md` (Category 2) - Schema unknowns
 
@@ -223,7 +223,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 77-99) - Day 2 tasks
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 74-98) - Day 2 tasks
 - `docs/planning/EPIC_3/SPRINT_14/CATALOG_QUALITY_REPORT.md` - Source data analysis
 
 ---
@@ -360,7 +360,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 105-139) - Day 3 tasks
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 100-124) - Day 3 tasks
 - `docs/planning/EPIC_3/SPRINT_14/DB_MANAGER_DESIGN.md` - Full specification
 - `docs/planning/EPIC_3/SPRINT_14/KNOWN_UNKNOWNS.md` (Category 3) - db_manager unknowns
 
@@ -470,7 +470,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 141-161) - Day 4 tasks
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 126-145) - Day 4 tasks
 - `docs/planning/EPIC_3/SPRINT_14/DB_MANAGER_DESIGN.md` - get/update specifications
 
 ---
@@ -593,7 +593,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 163-189) - Day 5 tasks
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 147-174) - Day 5 tasks
 - `docs/planning/EPIC_3/SPRINT_14/DB_MANAGER_DESIGN.md` - query/export/stats specifications
 
 ---
@@ -719,7 +719,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 197-224) - Day 6 tasks
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 176-198) - Day 6 tasks
 - `docs/planning/EPIC_3/SPRINT_14/PARSE_RATE_BASELINE.md` - Expected results
 - `docs/planning/EPIC_3/SPRINT_14/PERFORMANCE_BASELINES.md` - Timing expectations
 
@@ -836,7 +836,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 226-255) - Day 7 tasks
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 200-227) - Day 7 tasks
 - `docs/planning/EPIC_3/SPRINT_14/PARSE_RATE_BASELINE.md` - Parse expectations
 
 ---
@@ -946,7 +946,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 263-285) - Day 8 tasks
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 230-251) - Day 8 tasks
 
 ---
 
@@ -1045,7 +1045,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 287-310) - Day 9 tasks
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 253-276) - Day 9 tasks
 - `docs/planning/EPIC_3/SPRINT_14/SCHEMA_DESIGN_NOTES.md` - Design rationale
 
 ---
@@ -1183,7 +1183,7 @@ After committing and pushing all changes:
 4. Once approved, merge the PR
 
 **Reference Documents:**
-- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 318-350) - Day 10 tasks
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` (lines 280-310) - Day 10 tasks
 - `docs/planning/EPIC_3/PROJECT_PLAN.md` (lines 92-223) - Sprint 14 acceptance criteria
 
 ---
