@@ -89,9 +89,9 @@ Sprint 14 builds on the GAMSLIB corpus infrastructure from Sprint 13 (219 models
 - `data/gamslib/gamslib_status.json` (v2.0.0)
 
 **Acceptance Criteria:**
-- [ ] All 219 models migrated
-- [ ] No data loss from catalog.json
-- [ ] Database validates against schema.json
+- [x] All 219 models migrated
+- [x] No data loss from catalog.json
+- [x] Database validates against schema.json
 
 ---
 
