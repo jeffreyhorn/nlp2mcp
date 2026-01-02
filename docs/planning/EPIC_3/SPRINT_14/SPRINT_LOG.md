@@ -5,6 +5,55 @@
 
 ---
 
+## Day 4 - January 2, 2026
+
+### Completed
+- Implemented `get` subcommand:
+  - Returns full model details by model_id
+  - --format option (table, json)
+  - --field option for extracting specific fields (supports dot notation)
+  - Clear error message when model not found
+- Implemented `update` subcommand:
+  - Updates model fields with validation before saving
+  - Supports dot notation for nested fields (e.g., `nlp2mcp_parse.status`)
+  - Creates backup before modifying database
+  - --set option for multiple field=value pairs
+  - Validates updated model against schema
+  - Rejects invalid updates with clear error messages
+- Added helper functions:
+  - `find_model()` - Find model by ID in database
+  - `get_nested_value()` - Get value using dot notation path
+  - `set_nested_value()` - Set value using dot notation path
+  - `parse_value()` - Parse string to appropriate type (int, float, bool, null, JSON)
+  - `validate_model_entry()` - Validate single model against schema
+- Created comprehensive unit tests:
+  - Tests for get subcommand (4 tests)
+  - Tests for helper functions (15 tests)
+  - Tests for validate_model_entry (3 tests)
+  - Total: 25 new tests
+
+### Deliverables
+- Updated `scripts/gamslib/db_manager.py` with get and update subcommands
+- Updated `tests/gamslib/test_db_manager.py` with 25 new tests (44 total)
+
+### Acceptance Criteria Status
+- [x] `db_manager.py get trnsport` returns model details
+- [x] `db_manager.py update trnsport nlp2mcp_parse.status success` works
+- [x] Invalid updates rejected with clear error
+- [x] Nested field updates work correctly
+- [x] All unit tests pass (44 db_manager tests, 2549 total)
+
+### Blockers
+None
+
+### Notes
+- Subcommands ready: init, validate, list, get, update (5 of 8 planned)
+- Used full schema validation instead of deprecated RefResolver
+- Update creates backup automatically before modifying database
+- Value parsing handles JSON types: strings, numbers, booleans, null, arrays, objects
+
+---
+
 ## Day 3 - January 1, 2026
 
 ### Completed

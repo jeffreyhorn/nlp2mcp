@@ -140,9 +140,9 @@ Sprint 14 builds on the GAMSLIB corpus infrastructure from Sprint 13 (219 models
 - Unit tests for CRUD operations
 
 **Acceptance Criteria:**
-- [ ] `db_manager.py get trnsport` returns model details
-- [ ] `db_manager.py update trnsport nlp2mcp_parse.status success` works
-- [ ] Invalid updates rejected with clear error
+- [x] `db_manager.py get trnsport` returns model details
+- [x] `db_manager.py update trnsport nlp2mcp_parse.status success` works
+- [x] Invalid updates rejected with clear error
 
 #### Day 5: Query and Export Subcommands
 
