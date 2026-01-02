@@ -5,7 +5,7 @@
 
 ---
 
-## Day 3 - January 2, 2026
+## Day 3 - January 1, 2026
 
 ### Completed
 - Created `scripts/gamslib/db_manager.py` with core infrastructure:

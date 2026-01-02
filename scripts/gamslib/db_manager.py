@@ -362,7 +362,9 @@ def cmd_list(args: argparse.Namespace) -> int:
     # Apply limit
     if args.limit is not None:
         if args.limit < 0:
-            logger.error(f"Invalid limit value: {args.limit}. Limit must be non-negative.")
+            logger.error(
+                f"Invalid limit value: {args.limit}. Limit must be a non-negative integer (0 means no limit)."
+            )
             return 1
         if args.limit > 0:
             models = models[: args.limit]

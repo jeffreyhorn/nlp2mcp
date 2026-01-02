@@ -152,9 +152,16 @@ class TestSaveDatabase:
 # =============================================================================
 
 
-pytest.importorskip("jsonschema", reason="jsonschema not installed")
+# Check if jsonschema is available for conditional skipping
+try:
+    import jsonschema  # noqa: F401
+
+    HAS_JSONSCHEMA = True
+except ImportError:
+    HAS_JSONSCHEMA = False
 
 
+@pytest.mark.skipif(not HAS_JSONSCHEMA, reason="jsonschema not installed")
 class TestValidateDatabase:
     """Tests for validate_database function."""
 
@@ -274,9 +281,9 @@ class TestBackupFunctions:
 class TestCLICommands:
     """Integration tests for CLI commands."""
 
+    @pytest.mark.skipif(not HAS_JSONSCHEMA, reason="jsonschema not installed")
     def test_validate_command(self) -> None:
         """Test validate command runs successfully."""
-        pytest.importorskip("jsonschema", reason="jsonschema not installed")
         import subprocess
 
         result = subprocess.run(
