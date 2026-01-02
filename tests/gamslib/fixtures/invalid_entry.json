@@ -1,0 +1,10 @@
+{
+  "model_id": "badmodel",
+  "model_name": "Invalid Model Entry",
+  "gamslib_type": "INVALID_TYPE",
+  "unknown_field": "this should cause validation error",
+  "convexity": {
+    "status": "invalid_status",
+    "solver_status": -999
+  }
+}
