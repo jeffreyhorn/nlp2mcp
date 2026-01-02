@@ -5,6 +5,6 @@
   "unknown_field": "this should cause validation error",
   "convexity": {
     "status": "invalid_status",
-    "solver_status": -1
+    "solver_status": -999
   }
 }

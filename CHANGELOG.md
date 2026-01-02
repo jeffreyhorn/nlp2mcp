@@ -23,10 +23,10 @@ Finalized schema.json from the draft created in prep phase. Added migration meta
 - `tests/gamslib/fixtures/minimal_valid_entry.json` - Minimal valid entry (3 required fields)
 - `tests/gamslib/fixtures/full_valid_entry.json` - Full entry with all fields populated
 - `tests/gamslib/fixtures/invalid_entry.json` - Invalid entry for validation testing
+- `docs/planning/EPIC_3/SPRINT_14/SPRINT_LOG.md` - Day 1 progress logged
 
 **Modified Files:**
 - `docs/planning/EPIC_3/SPRINT_14/PLAN.md` - Day 1 acceptance criteria marked complete
-- `docs/planning/EPIC_3/SPRINT_14/SPRINT_LOG.md` - Day 1 progress logged
 
 #### Schema Updates
 

@@ -63,7 +63,20 @@
         },
         "gamslib_type": {
           "type": "string",
-          "enum": ["LP", "NLP", "QCP", "MIP", "MINLP", "MIQCP", "MCP", "CNS", "DNLP", "MPEC", "RMPEC", "EMP"],
+          "enum": [
+            "LP",
+            "NLP",
+            "QCP",
+            "MIP",
+            "MINLP",
+            "MIQCP",
+            "MCP",
+            "CNS",
+            "DNLP",
+            "MPEC",
+            "RMPEC",
+            "EMP"
+          ],
           "description": "GAMS model type classification"
         },
         "source_url": {
@@ -170,12 +183,10 @@
         },
         "solver_status": {
           "type": "integer",
-          "minimum": 1,
           "description": "GAMS solver status code (1=normal completion)"
         },
         "model_status": {
           "type": "integer",
-          "minimum": 1,
           "description": "GAMS model status code (1=optimal, 2=locally optimal)"
         },
         "objective_value": {
@@ -303,12 +314,10 @@
         },
         "solver_status": {
           "type": "integer",
-          "minimum": 1,
           "description": "GAMS solver status code"
         },
         "model_status": {
           "type": "integer",
-          "minimum": 1,
           "description": "GAMS model status code"
         },
         "objective_value": {
