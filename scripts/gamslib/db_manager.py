@@ -26,6 +26,7 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import logging
 import shutil
@@ -33,6 +34,9 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+# Sentinel value to distinguish "field not found" from "field value is None"
+_NOT_FOUND = object()
 
 # Add project root to path for imports
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -464,15 +468,16 @@ def find_model(database: dict[str, Any], model_id: str) -> dict[str, Any] | None
     return None
 
 
-def get_nested_value(data: dict[str, Any], field_path: str) -> Any:
+def get_nested_value(data: dict[str, Any], field_path: str, default: Any = _NOT_FOUND) -> Any:
     """Get a value from a nested dictionary using dot notation.
 
     Args:
         data: The dictionary to search
         field_path: Dot-separated path (e.g., "convexity.status")
+        default: Value to return if path not found (default: _NOT_FOUND sentinel)
 
     Returns:
-        The value at the path, or None if not found
+        The value at the path, or default if not found
     """
     parts = field_path.split(".")
     current = data
@@ -480,7 +485,7 @@ def get_nested_value(data: dict[str, Any], field_path: str) -> Any:
         if isinstance(current, dict) and part in current:
             current = current[part]
         else:
-            return None
+            return default
     return current
 
 
@@ -577,7 +582,7 @@ def cmd_get(args: argparse.Namespace) -> int:
     # If --field specified, get only that field
     if args.field:
         value = get_nested_value(model, args.field)
-        if value is None:
+        if value is _NOT_FOUND:
             logger.error(f"Field not found: {args.field}")
             return 1
 
@@ -587,6 +592,8 @@ def cmd_get(args: argparse.Namespace) -> int:
             # For simple values, just print them
             if isinstance(value, (dict, list)):
                 print(json.dumps(value, indent=2))
+            elif value is None:
+                print("null")
             else:
                 print(value)
         return 0
@@ -718,14 +725,7 @@ def cmd_update(args: argparse.Namespace) -> int:
         logger.error(f"Model not found: {args.model_id}")
         return 1
 
-    # Create backup before modifying
-    backup_path = create_backup()
-    if backup_path:
-        logger.debug(f"Backup created before update: {backup_path}")
-
     # Make a copy of the model for modification
-    import copy
-
     original_model = database["models"][model_index]
     updated_model = copy.deepcopy(original_model)
 
@@ -768,6 +768,11 @@ def cmd_update(args: argparse.Namespace) -> int:
     except Exception as e:
         logger.error(f"Schema validation error: {e}")
         return 1
+
+    # Create backup after validation succeeds, before modifying database
+    backup_path = create_backup()
+    if backup_path:
+        logger.debug(f"Backup created before update: {backup_path}")
 
     # Update the database
     database["models"][model_index] = updated_model

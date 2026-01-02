@@ -14,6 +14,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.gamslib.db_manager import (  # noqa: E402
+    _NOT_FOUND,
     create_backup,
     find_model,
     get_nested_value,
@@ -500,10 +501,10 @@ class TestGetNestedValue:
         assert value == "deep_value"
 
     def test_get_nonexistent_field(self, sample_database: dict) -> None:
-        """Test getting a nonexistent field returns None."""
+        """Test getting a nonexistent field returns _NOT_FOUND sentinel."""
         model = sample_database["models"][0]
         value = get_nested_value(model, "nonexistent.field")
-        assert value is None
+        assert value is _NOT_FOUND
 
 
 class TestSetNestedValue:
