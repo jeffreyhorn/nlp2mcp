@@ -47,12 +47,13 @@ BACKUP_DIR = PROJECT_ROOT / "data" / "gamslib" / "archive"
 # Backup settings
 MAX_BACKUPS = 10
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+# Configure logging defensively: only if no handlers are configured yet
+if not logging.getLogger().handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 logger = logging.getLogger(__name__)
 
 
@@ -349,19 +350,33 @@ def cmd_list(args: argparse.Namespace) -> int:
         logger.error(f"Invalid JSON in database: {e}")
         return 1
 
-    models = database.get("models", [])
+    all_models = database.get("models", [])
+    models = all_models
+    is_filtered = False
 
     # Filter by type if specified
     if args.type:
         models = [m for m in models if m.get("gamslib_type") == args.type]
+        is_filtered = True
 
     # Apply limit
-    if args.limit and args.limit > 0:
-        models = models[: args.limit]
+    if args.limit is not None:
+        if args.limit < 0:
+            logger.error(f"Invalid limit value: {args.limit}. Limit must be non-negative.")
+            return 1
+        if args.limit > 0:
+            models = models[: args.limit]
 
     if args.format == "json":
-        # JSON output
-        output = {"total": len(models), "models": models}
+        # JSON output with clear field names
+        total_in_database = len(all_models)
+        filtered_count = len(models)
+        output = {
+            "total": filtered_count,
+            "filtered_count": filtered_count,
+            "total_in_database": total_in_database,
+            "models": models,
+        }
         print(json.dumps(output, indent=2))
 
     elif args.format == "count":
@@ -370,18 +385,21 @@ def cmd_list(args: argparse.Namespace) -> int:
 
     else:
         # Table output (default)
-        print(f"\nGAMSLIB Status Database: {len(database.get('models', []))} models")
+        print(f"\nGAMSLIB Status Database: {len(all_models)} models")
         print(f"Schema version: {database.get('schema_version', 'unknown')}")
         print("=" * 70)
 
-        if args.type:
+        if is_filtered:
             print(f"Filtered by type: {args.type}")
-            print(f"Showing: {len(models)} models")
+            print(f"Showing: {len(models)} of {len(all_models)} models")
             print("-" * 70)
+
+        # Use filtered models for stats when filter is active
+        stats_models = models if is_filtered else all_models
 
         # Count by type
         type_counts: dict[str, int] = {}
-        for m in database.get("models", []):
+        for m in stats_models:
             t = m.get("gamslib_type", "unknown")
             type_counts[t] = type_counts.get(t, 0) + 1
 
@@ -391,7 +409,7 @@ def cmd_list(args: argparse.Namespace) -> int:
 
         # Count by convexity status
         convexity_counts: dict[str, int] = {}
-        for m in database.get("models", []):
+        for m in stats_models:
             status = m.get("convexity", {}).get("status", "not_tested")
             convexity_counts[status] = convexity_counts.get(status, 0) + 1
 
@@ -401,7 +419,7 @@ def cmd_list(args: argparse.Namespace) -> int:
 
         # Count by parse status
         parse_counts: dict[str, int] = {}
-        for m in database.get("models", []):
+        for m in stats_models:
             status = m.get("nlp2mcp_parse", {}).get("status", "not_tested")
             parse_counts[status] = parse_counts.get(status, 0) + 1
 
@@ -514,12 +532,6 @@ Examples:
         "-l",
         type=int,
         help="Limit number of results",
-    )
-    list_parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Show individual model list",
     )
 
     args = parser.parse_args()

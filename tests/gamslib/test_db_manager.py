@@ -251,9 +251,9 @@ class TestBackupFunctions:
         backup_dir = tmp_path / "archive"
         backup_dir.mkdir()
 
-        # Create 15 backup files
-        for i in range(15):
-            (backup_dir / f"2026010{i:02d}_100000_gamslib_status.json").write_text("{}")
+        # Create 15 backup files with valid consecutive dates (2026-01-01 to 2026-01-15)
+        for day in range(1, 16):
+            (backup_dir / f"202601{day:02d}_100000_gamslib_status.json").write_text("{}")
 
         with patch("scripts.gamslib.db_manager.BACKUP_DIR", backup_dir):
             pruned = prune_backups(keep_count=10)
