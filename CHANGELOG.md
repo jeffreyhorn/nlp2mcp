@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 14 Day 6: Batch Parse Script - 2026-01-02
+
+**Branch:** `sprint14-day6-batch-parse`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created batch_parse.py to run nlp2mcp parse on all 160 candidate models (verified_convex + likely_convex) and update the database with results. Parse rate of 21.2% (34 models) exceeded the 13% baseline.
+
+#### Changes
+
+**New Files:**
+- `scripts/gamslib/batch_parse.py` - Batch parse script with progress reporting and error categorization
+
+**Modified Files:**
+- `data/gamslib/gamslib_status.json` - Updated with parse results for 160 models
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` - Day 6 acceptance criteria marked complete
+- `docs/planning/EPIC_3/SPRINT_14/SPRINT_LOG.md` - Day 6 progress logged
+
+#### Parse Results
+
+| Metric | Value |
+|--------|-------|
+| Models processed | 160 |
+| Success | 34 (21.2%) |
+| Failure | 126 |
+| Total time | 151.6s (~2.5 min) |
+
+#### Parse Rate by Model Type
+
+| Type | Success | Total | Rate |
+|------|---------|-------|------|
+| LP | 5 | 57 | 8.8% |
+| NLP | 26 | 94 | 27.7% |
+| QCP | 3 | 9 | 33.3% |
+
+#### Error Categories
+
+| Category | Count | Percentage |
+|----------|-------|------------|
+| syntax_error | 121 | 96% |
+| internal_error | 4 | 3% |
+| validation_error | 1 | 1% |
+
+#### Acceptance Criteria
+
+- [x] 160 models attempted
+- [x] Parse status recorded for each model in database
+- [x] Error categories assigned to failures
+- [x] ~15-25 models parse successfully - **Actual: 34 (21.2%)**
+
+---
+
 ### Sprint 14 Day 4: CRUD Subcommands - 2026-01-02
 
 **Branch:** `sprint14-day4-crud-subcommands`  
