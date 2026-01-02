@@ -15,11 +15,16 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.gamslib.db_manager import (  # noqa: E402
     create_backup,
+    find_model,
+    get_nested_value,
     list_backups,
     load_database,
+    parse_value,
     prune_backups,
     save_database,
+    set_nested_value,
     validate_database,
+    validate_model_entry,
 )
 
 # =============================================================================
@@ -372,3 +377,232 @@ class TestCLICommands:
         )
         assert result.returncode == 1
         assert "Use --force" in result.stderr
+
+    def test_get_command(self) -> None:
+        """Test get command returns model details."""
+        import subprocess
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(PROJECT_ROOT / "scripts" / "gamslib" / "db_manager.py"),
+                "get",
+                "trnsport",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=PROJECT_ROOT,
+        )
+        assert result.returncode == 0
+        assert "trnsport" in result.stdout
+        assert "Transportation" in result.stdout
+
+    def test_get_command_json_format(self) -> None:
+        """Test get command with JSON format."""
+        import subprocess
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(PROJECT_ROOT / "scripts" / "gamslib" / "db_manager.py"),
+                "get",
+                "trnsport",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=PROJECT_ROOT,
+        )
+        assert result.returncode == 0
+        data = json.loads(result.stdout)
+        assert data["model_id"] == "trnsport"
+        assert data["gamslib_type"] == "LP"
+
+    def test_get_command_field(self) -> None:
+        """Test get command with --field option."""
+        import subprocess
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(PROJECT_ROOT / "scripts" / "gamslib" / "db_manager.py"),
+                "get",
+                "trnsport",
+                "--field",
+                "convexity.status",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=PROJECT_ROOT,
+        )
+        assert result.returncode == 0
+        assert "verified_convex" in result.stdout
+
+    def test_get_command_not_found(self) -> None:
+        """Test get command with invalid model_id."""
+        import subprocess
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(PROJECT_ROOT / "scripts" / "gamslib" / "db_manager.py"),
+                "get",
+                "nonexistent_model",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=PROJECT_ROOT,
+        )
+        assert result.returncode == 1
+        assert "not found" in result.stderr.lower()
+
+
+# =============================================================================
+# Test get/update helper functions
+# =============================================================================
+
+
+class TestFindModel:
+    """Tests for find_model function."""
+
+    def test_find_existing_model(self, sample_database: dict) -> None:
+        """Test finding an existing model."""
+        model = find_model(sample_database, "trnsport")
+        assert model is not None
+        assert model["model_id"] == "trnsport"
+
+    def test_find_nonexistent_model(self, sample_database: dict) -> None:
+        """Test finding a nonexistent model returns None."""
+        model = find_model(sample_database, "nonexistent")
+        assert model is None
+
+
+class TestGetNestedValue:
+    """Tests for get_nested_value function."""
+
+    def test_get_top_level_field(self, sample_database: dict) -> None:
+        """Test getting a top-level field."""
+        model = sample_database["models"][0]
+        value = get_nested_value(model, "model_id")
+        assert value == "trnsport"
+
+    def test_get_nested_field(self, sample_database: dict) -> None:
+        """Test getting a nested field with dot notation."""
+        model = sample_database["models"][0]
+        value = get_nested_value(model, "convexity.status")
+        assert value == "verified_convex"
+
+    def test_get_deeply_nested_field(self) -> None:
+        """Test getting a deeply nested field."""
+        data = {"a": {"b": {"c": "deep_value"}}}
+        value = get_nested_value(data, "a.b.c")
+        assert value == "deep_value"
+
+    def test_get_nonexistent_field(self, sample_database: dict) -> None:
+        """Test getting a nonexistent field returns None."""
+        model = sample_database["models"][0]
+        value = get_nested_value(model, "nonexistent.field")
+        assert value is None
+
+
+class TestSetNestedValue:
+    """Tests for set_nested_value function."""
+
+    def test_set_top_level_field(self) -> None:
+        """Test setting a top-level field."""
+        data: dict = {"existing": "value"}
+        set_nested_value(data, "new_field", "new_value")
+        assert data["new_field"] == "new_value"
+
+    def test_set_nested_field_existing_path(self) -> None:
+        """Test setting a nested field in existing structure."""
+        data: dict = {"convexity": {"status": "old_status"}}
+        set_nested_value(data, "convexity.status", "new_status")
+        assert data["convexity"]["status"] == "new_status"
+
+    def test_set_nested_field_creates_path(self) -> None:
+        """Test setting a nested field creates intermediate dicts."""
+        data: dict = {}
+        set_nested_value(data, "nlp2mcp_parse.status", "success")
+        assert data["nlp2mcp_parse"]["status"] == "success"
+
+    def test_set_deeply_nested_field(self) -> None:
+        """Test setting a deeply nested field."""
+        data: dict = {}
+        set_nested_value(data, "a.b.c.d", "deep_value")
+        assert data["a"]["b"]["c"]["d"] == "deep_value"
+
+
+class TestParseValue:
+    """Tests for parse_value function."""
+
+    def test_parse_string(self) -> None:
+        """Test parsing a regular string."""
+        assert parse_value("hello") == "hello"
+
+    def test_parse_integer(self) -> None:
+        """Test parsing an integer."""
+        assert parse_value("42") == 42
+
+    def test_parse_float(self) -> None:
+        """Test parsing a float."""
+        assert parse_value("3.14") == 3.14
+
+    def test_parse_boolean_true(self) -> None:
+        """Test parsing boolean true."""
+        assert parse_value("true") is True
+
+    def test_parse_boolean_false(self) -> None:
+        """Test parsing boolean false."""
+        assert parse_value("false") is False
+
+    def test_parse_null(self) -> None:
+        """Test parsing null."""
+        assert parse_value("null") is None
+
+    def test_parse_json_array(self) -> None:
+        """Test parsing a JSON array."""
+        assert parse_value('["a", "b"]') == ["a", "b"]
+
+    def test_parse_json_object(self) -> None:
+        """Test parsing a JSON object."""
+        assert parse_value('{"key": "value"}') == {"key": "value"}
+
+
+@pytest.mark.skipif(not HAS_JSONSCHEMA, reason="jsonschema not installed")
+class TestValidateModelEntry:
+    """Tests for validate_model_entry function."""
+
+    def test_valid_model_entry(self, sample_database: dict, sample_schema: dict) -> None:
+        """Test validating a valid model entry."""
+        model = sample_database["models"][0]
+        errors = validate_model_entry(model, sample_schema)
+        assert len(errors) == 0
+
+    def test_invalid_convexity_status(self, sample_schema: dict) -> None:
+        """Test validation fails for invalid convexity status."""
+        invalid_model = {
+            "model_id": "test",
+            "model_name": "Test Model",
+            "gamslib_type": "LP",
+            "convexity": {
+                "status": "invalid_status",
+            },
+        }
+        errors = validate_model_entry(invalid_model, sample_schema)
+        assert len(errors) > 0
+        assert any("invalid_status" in e["message"] for e in errors)
+
+    def test_invalid_parse_status(self, sample_schema: dict) -> None:
+        """Test validation fails for invalid parse status."""
+        invalid_model = {
+            "model_id": "test",
+            "model_name": "Test Model",
+            "gamslib_type": "LP",
+            "nlp2mcp_parse": {
+                "status": "bad_status",
+            },
+        }
+        errors = validate_model_entry(invalid_model, sample_schema)
+        assert len(errors) > 0

@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 14 Day 4: CRUD Subcommands - 2026-01-02
+
+**Branch:** `sprint14-day4-crud-subcommands`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented get and update subcommands for db_manager.py with full nested field support and schema validation before saving updates.
+
+#### Changes
+
+**Modified Files:**
+- `scripts/gamslib/db_manager.py` - Added get and update subcommands with helper functions
+- `tests/gamslib/test_db_manager.py` - Added 25 new tests (44 total)
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` - Day 4 acceptance criteria marked complete
+- `docs/planning/EPIC_3/SPRINT_14/SPRINT_LOG.md` - Day 4 progress logged
+
+#### Subcommand Status
+
+| Subcommand | Status | Description |
+|------------|--------|-------------|
+| init | ✅ Done | Initialize database from migration or empty |
+| validate | ✅ Done | Validate against schema.json |
+| list | ✅ Done | List all models with summary |
+| get | ✅ Done | Get model details |
+| update | ✅ Done | Update model field(s) |
+| query | Day 5 | Query models by criteria |
+| export | Day 5 | Export to CSV/Markdown |
+| stats | Day 5 | Show statistics |
+
+#### Features
+
+- **get subcommand:** Returns model details by ID with --format (table/json) and --field options
+- **update subcommand:** Updates fields with dot notation for nested paths (e.g., `nlp2mcp_parse.status`)
+- **Schema validation:** Validates model against schema before saving
+- **Auto-backup:** Creates backup before any update operation
+- **Value parsing:** Automatically parses JSON types (strings, numbers, booleans, null, arrays, objects)
+
+#### Acceptance Criteria
+
+- [x] `db_manager.py get trnsport` returns model details
+- [x] `db_manager.py update trnsport nlp2mcp_parse.status success` works
+- [x] Invalid updates rejected with clear error message
+- [x] Nested field updates work correctly
+- [x] All unit tests pass (25 new tests, 2549 total)
+
+---
+
 ### Sprint 14 Day 3: Core Infrastructure and Basic Subcommands [Checkpoint 1] - 2026-01-02
 
 **Branch:** `sprint14-day3-db-manager-core`  
