@@ -1,0 +1,54 @@
+{
+  "model_id": "trnsport",
+  "sequence_number": 218,
+  "model_name": "A Transportation Problem",
+  "gamslib_type": "LP",
+  "source_url": "https://www.gams.com/latest/gamslib_ml/trnsport.218",
+  "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnsport.html",
+  "description": "This problem finds a least cost shipping schedule that meets requirements at markets and supplies at factories.",
+  "keywords": ["linear programming", "transportation", "scheduling"],
+  "download_status": "downloaded",
+  "download_date": "2026-01-01T10:00:00Z",
+  "file_path": "data/gamslib/models/trnsport.gms",
+  "file_size_bytes": 2847,
+  "notes": "Classic GAMS example model",
+  "migrated_from": "catalog.json",
+  "migration_date": "2026-01-01T12:00:00Z",
+  "convexity": {
+    "status": "verified_convex",
+    "verification_date": "2026-01-01T14:00:00Z",
+    "solver": "CONOPT",
+    "solver_status": 1,
+    "model_status": 1,
+    "objective_value": 153.675,
+    "solve_time_seconds": 0.12
+  },
+  "nlp2mcp_parse": {
+    "status": "success",
+    "parse_date": "2026-01-02T10:00:00Z",
+    "nlp2mcp_version": "0.10.0",
+    "parse_time_seconds": 0.05,
+    "variables_count": 6,
+    "equations_count": 5
+  },
+  "nlp2mcp_translate": {
+    "status": "success",
+    "translate_date": "2026-01-02T10:01:00Z",
+    "nlp2mcp_version": "0.10.0",
+    "translate_time_seconds": 0.02,
+    "mcp_variables_count": 11,
+    "mcp_equations_count": 11,
+    "output_file": "data/gamslib/mcp/trnsport_mcp.gms"
+  },
+  "mcp_solve": {
+    "status": "success",
+    "solve_date": "2026-01-02T10:02:00Z",
+    "solver": "PATH",
+    "solver_status": 1,
+    "model_status": 1,
+    "objective_value": 153.675,
+    "solve_time_seconds": 0.08,
+    "objective_match": true,
+    "tolerance": 1e-6
+  }
+}

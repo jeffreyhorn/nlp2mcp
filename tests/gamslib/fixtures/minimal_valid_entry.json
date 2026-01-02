@@ -1,0 +1,5 @@
+{
+  "model_id": "trnsport",
+  "model_name": "A Transportation Problem",
+  "gamslib_type": "LP"
+}

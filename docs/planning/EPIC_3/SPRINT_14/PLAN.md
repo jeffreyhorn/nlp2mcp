@@ -67,9 +67,9 @@ Sprint 14 builds on the GAMSLIB corpus infrastructure from Sprint 13 (219 models
 - Test entry files for validation
 
 **Acceptance Criteria:**
-- [ ] Schema passes Draft7Validator.check_schema()
-- [ ] All 3 test entries validate correctly
-- [ ] Field descriptions complete
+- [x] Schema passes Draft7Validator.check_schema()
+- [x] All 3 test entries validate correctly
+- [x] Field descriptions complete
 
 #### Day 2: Migration Script and Database Initialization
 
