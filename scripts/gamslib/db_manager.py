@@ -368,13 +368,10 @@ def cmd_list(args: argparse.Namespace) -> int:
             models = models[: args.limit]
 
     if args.format == "json":
-        # JSON output with clear field names
-        total_in_database = len(all_models)
-        filtered_count = len(models)
+        # JSON output
         output = {
-            "total": filtered_count,
-            "filtered_count": filtered_count,
-            "total_in_database": total_in_database,
+            "total": len(models),
+            "total_in_database": len(all_models),
             "models": models,
         }
         print(json.dumps(output, indent=2))

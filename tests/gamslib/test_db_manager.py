@@ -152,10 +152,9 @@ class TestSaveDatabase:
 # =============================================================================
 
 
-@pytest.mark.skipif(
-    not pytest.importorskip("jsonschema", reason="jsonschema not installed"),
-    reason="jsonschema not installed",
-)
+pytest.importorskip("jsonschema", reason="jsonschema not installed")
+
+
 class TestValidateDatabase:
     """Tests for validate_database function."""
 
@@ -275,12 +274,9 @@ class TestBackupFunctions:
 class TestCLICommands:
     """Integration tests for CLI commands."""
 
-    @pytest.mark.skipif(
-        not pytest.importorskip("jsonschema", reason="jsonschema not installed"),
-        reason="jsonschema not installed",
-    )
     def test_validate_command(self) -> None:
         """Test validate command runs successfully."""
+        pytest.importorskip("jsonschema", reason="jsonschema not installed")
         import subprocess
 
         result = subprocess.run(
