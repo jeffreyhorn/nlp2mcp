@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 14 Day 3: Core Infrastructure and Basic Subcommands [Checkpoint 1] - 2026-01-02
+
+**Branch:** `sprint14-day3-db-manager-core`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created db_manager.py with core infrastructure (argparse, logging, database I/O) and implemented init, validate, and list subcommands. This marks Checkpoint 1: Schema complete and validated.
+
+#### Checkpoint 1: Schema Complete and Validated
+
+- [x] schema.json finalized and in data/gamslib/
+- [x] gamslib_status.json created with all 219 models
+- [x] All entries validate against schema
+- [x] db_manager.py validate confirms all entries valid
+
+#### Changes
+
+**New Files:**
+- `scripts/gamslib/db_manager.py` - Database manager with init, validate, list subcommands
+- `tests/gamslib/test_db_manager.py` - 19 unit tests for core functions
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` - Day 3 acceptance criteria marked complete
+- `docs/planning/EPIC_3/SPRINT_14/SPRINT_LOG.md` - Day 3 progress logged
+
+#### Subcommand Status
+
+| Subcommand | Status | Description |
+|------------|--------|-------------|
+| init | ✅ Done | Initialize database from migration or empty |
+| validate | ✅ Done | Validate against schema.json |
+| list | ✅ Done | List all models with summary |
+| get | Day 4 | Get model details |
+| update | Day 4 | Update model field(s) |
+| query | Day 5 | Query models by criteria |
+| export | Day 5 | Export to CSV/Markdown |
+| stats | Day 5 | Show statistics |
+
+#### Features
+
+- **Database I/O:** Atomic writes with temp file + rename
+- **Backup System:** Timestamped backups in archive/, auto-prune to 10
+- **Validation:** Full schema validation with error reporting
+- **Output Formats:** table, json, count for list subcommand
+
+#### Acceptance Criteria
+
+- [x] `db_manager.py validate` works
+- [x] `db_manager.py list` shows all 219 models
+- [x] `db_manager.py init` creates valid database
+- [x] Backups created in archive/ directory
+- [x] All unit tests pass (19 new tests)
+
+---
+
 ### Sprint 14 Day 2: Migration Script and Database Initialization - 2026-01-02
 
 **Branch:** `sprint14-day2-migration-script`  
