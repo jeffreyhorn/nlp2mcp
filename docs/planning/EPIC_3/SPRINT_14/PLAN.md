@@ -116,10 +116,10 @@ Sprint 14 builds on the GAMSLIB corpus infrastructure from Sprint 13 (219 models
 - Unit tests for core functions
 
 **Acceptance Criteria:**
-- [ ] `db_manager.py validate` works
-- [ ] `db_manager.py list` shows all 219 models
-- [ ] `db_manager.py init` creates valid database
-- [ ] Backups created in archive/ directory
+- [x] `db_manager.py validate` works
+- [x] `db_manager.py list` shows all 219 models
+- [x] `db_manager.py init` creates valid database
+- [x] Backups created in archive/ directory
 
 **Checkpoint (Day 3):** Schema complete and validated ✓
 
