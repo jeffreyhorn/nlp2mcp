@@ -1,0 +1,506 @@
+#!/usr/bin/env python3
+"""Batch translate script for GAMSLIB models.
+
+Runs nlp2mcp translation on all successfully parsed models and generates
+MCP output files.
+
+Usage:
+    python scripts/gamslib/batch_translate.py [OPTIONS]
+
+Options:
+    --dry-run      Show what would be done without making changes
+    --limit N      Process only first N models (for testing)
+    --model ID     Process a single model by ID
+    --verbose      Show detailed output for each model
+    --save-every N Save database every N models (default: 5)
+
+Examples:
+    python scripts/gamslib/batch_translate.py
+    python scripts/gamslib/batch_translate.py --dry-run
+    python scripts/gamslib/batch_translate.py --limit 5 --verbose
+    python scripts/gamslib/batch_translate.py --model alkyl
+"""
+
+from __future__ import annotations
+
+import argparse
+import logging
+import subprocess
+import sys
+import time
+import traceback
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+# Add project root to path for imports
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.gamslib.db_manager import (
+    DATABASE_PATH,
+    create_backup,
+    load_database,
+    save_database,
+)
+
+# Paths
+RAW_MODELS_DIR = PROJECT_ROOT / "data" / "gamslib" / "raw"
+MCP_OUTPUT_DIR = PROJECT_ROOT / "data" / "gamslib" / "mcp"
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Version Detection
+# =============================================================================
+
+
+def get_nlp2mcp_version() -> str:
+    """Get the current nlp2mcp version from package metadata.
+
+    Returns:
+        Version string (e.g., "0.1.0") or "unknown" if not found
+    """
+    try:
+        # Try importlib.metadata first (Python 3.8+)
+        from importlib.metadata import version
+
+        return version("nlp2mcp")
+    except Exception as e:
+        logger.debug(f"importlib.metadata version lookup failed: {e}")
+
+    # Fallback: try reading from pyproject.toml
+    try:
+        pyproject = PROJECT_ROOT / "pyproject.toml"
+        if pyproject.exists():
+            content = pyproject.read_text()
+            for line in content.splitlines():
+                if line.strip().startswith("version"):
+                    # Parse: version = "0.1.0"
+                    parts = line.split("=", 1)
+                    if len(parts) == 2:
+                        ver = parts[1].strip().strip('"').strip("'")
+                        return ver
+    except Exception as e:
+        logger.debug(f"pyproject.toml version lookup failed: {e}")
+
+    return "unknown"
+
+
+# =============================================================================
+# Error Categorization
+# =============================================================================
+
+
+def categorize_translation_error(error_message: str) -> str:
+    """Categorize a translation error into one of the defined categories.
+
+    Categories from schema.json:
+    - syntax_error: Parser/syntax issues
+    - unsupported_feature: Unsupported GAMS functions or features
+    - validation_error: Model structure validation failures
+    - timeout: Translation timeout
+    - internal_error: Other/unknown errors
+
+    Args:
+        error_message: The error message string
+
+    Returns:
+        Error category string
+    """
+    msg_lower = error_message.lower()
+
+    # Timeout
+    if "timeout" in msg_lower:
+        return "timeout"
+
+    # Unsupported features
+    if any(
+        phrase in msg_lower
+        for phrase in [
+            "not yet implemented",
+            "not yet supported",
+            "unsupported",
+            "not supported",
+        ]
+    ):
+        return "unsupported_feature"
+
+    # Validation errors
+    if any(
+        phrase in msg_lower
+        for phrase in [
+            "invalid model",
+            "not defined",
+            "undefined",
+            "validation",
+            "incompatible",
+        ]
+    ):
+        return "validation_error"
+
+    # Syntax errors
+    if any(
+        phrase in msg_lower
+        for phrase in [
+            "parse error",
+            "syntax error",
+            "unexpected",
+        ]
+    ):
+        return "syntax_error"
+
+    # Default to internal_error for unknown issues
+    return "internal_error"
+
+
+# =============================================================================
+# Translation Functions
+# =============================================================================
+
+
+def translate_single_model(model_path: Path, output_path: Path) -> dict[str, Any]:
+    """Translate a single GAMS model to MCP format.
+
+    Args:
+        model_path: Path to the .gms file
+        output_path: Path where MCP output should be written
+
+    Returns:
+        Dictionary with translation results:
+        - status: "success" or "failure"
+        - translate_time_seconds: Time taken to translate
+        - output_file: Path to output file (if successful)
+        - error: Error details dict (if failed)
+    """
+    start_time = time.perf_counter()
+    result: dict[str, Any] = {}
+
+    try:
+        # Ensure output directory exists
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Run nlp2mcp via subprocess
+        cmd = [
+            sys.executable,
+            "-m",
+            "src.cli",
+            str(model_path),
+            "-o",
+            str(output_path),
+            "--quiet",
+        ]
+
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=60,  # 60 second timeout
+        )
+
+        elapsed = time.perf_counter() - start_time
+
+        if proc.returncode == 0:
+            # Success
+            result = {
+                "status": "success",
+                "translate_time_seconds": round(elapsed, 3),
+                "output_file": str(output_path.relative_to(PROJECT_ROOT)),
+            }
+        else:
+            # Translation failed
+            error_msg = proc.stderr if proc.stderr else proc.stdout
+            category = categorize_translation_error(error_msg)
+            result = {
+                "status": "failure",
+                "translate_time_seconds": round(elapsed, 3),
+                "error": {
+                    "category": category,
+                    "message": error_msg[:500],  # Truncate long messages
+                },
+            }
+
+    except subprocess.TimeoutExpired:
+        elapsed = time.perf_counter() - start_time
+        result = {
+            "status": "failure",
+            "translate_time_seconds": round(elapsed, 3),
+            "error": {
+                "category": "timeout",
+                "message": "Translation timeout after 60 seconds",
+            },
+        }
+
+    except Exception as e:
+        elapsed = time.perf_counter() - start_time
+        error_msg = str(e)
+        category = categorize_translation_error(error_msg)
+
+        result = {
+            "status": "failure",
+            "translate_time_seconds": round(elapsed, 3),
+            "error": {
+                "category": category,
+                "message": error_msg[:500],  # Truncate long messages
+            },
+        }
+
+    return result
+
+
+# =============================================================================
+# Batch Processing
+# =============================================================================
+
+
+def get_parsed_models(database: dict[str, Any]) -> list[dict[str, Any]]:
+    """Get list of successfully parsed models for translation.
+
+    Args:
+        database: Loaded database dictionary
+
+    Returns:
+        List of model entries with nlp2mcp_parse.status == "success"
+    """
+    parsed = []
+    for model in database.get("models", []):
+        parse_status = model.get("nlp2mcp_parse", {}).get("status")
+        if parse_status == "success":
+            parsed.append(model)
+    return parsed
+
+
+def run_batch_translate(
+    args: argparse.Namespace,
+) -> dict[str, Any]:
+    """Run batch translate on successfully parsed models.
+
+    Args:
+        args: Parsed command line arguments
+
+    Returns:
+        Summary statistics dictionary
+    """
+    # Load database
+    logger.info(f"Loading database from {DATABASE_PATH}")
+    database = load_database()
+
+    # Get successfully parsed models
+    candidates = get_parsed_models(database)
+    logger.info(f"Found {len(candidates)} successfully parsed models")
+
+    # Filter for single model if specified
+    if args.model:
+        candidates = [m for m in candidates if m.get("model_id") == args.model]
+        if not candidates:
+            logger.error(f"Model not found or not successfully parsed: {args.model}")
+            return {"error": f"Model not found: {args.model}"}
+
+    # Apply limit
+    if args.limit:
+        candidates = candidates[: args.limit]
+        logger.info(f"Limited to first {args.limit} models")
+
+    # Get version
+    nlp2mcp_version = get_nlp2mcp_version()
+    logger.info(f"nlp2mcp version: {nlp2mcp_version}")
+
+    # Create backup before batch operation
+    if not args.dry_run:
+        backup_path = create_backup()
+        if backup_path:
+            logger.info(f"Created backup: {backup_path}")
+
+    # Statistics
+    stats = {
+        "total": len(candidates),
+        "processed": 0,
+        "success": 0,
+        "failure": 0,
+        "skipped": 0,
+        "successful_models": [],
+        "start_time": time.perf_counter(),
+    }
+
+    # Process each model
+    for i, model in enumerate(candidates, 1):
+        model_id = model.get("model_id", "unknown")
+        model_path = RAW_MODELS_DIR / f"{model_id}.gms"
+        output_path = MCP_OUTPUT_DIR / f"{model_id}_mcp.gms"
+
+        # Progress reporting
+        if i % 5 == 0 or i == 1:
+            elapsed = time.perf_counter() - stats["start_time"]
+            avg_time = elapsed / i
+            remaining = (len(candidates) - i) * avg_time
+            logger.info(
+                f"[{i:3d}/{len(candidates)}] {i * 100 // len(candidates):3d}% "
+                f"Translating {model_id}... "
+                f"({stats['success']} success, {stats['failure']} failure, "
+                f"~{remaining:.0f}s remaining)"
+            )
+
+        # Check if file exists
+        if not model_path.exists():
+            logger.warning(f"Model file not found: {model_path}")
+            stats["skipped"] += 1
+            continue
+
+        if args.dry_run:
+            if args.verbose:
+                logger.info(f"  [DRY-RUN] Would translate {model_id}")
+            stats["processed"] += 1
+            continue
+
+        # Translate the model
+        if args.verbose:
+            logger.info(f"  Translating {model_id}...")
+
+        result = translate_single_model(model_path, output_path)
+        stats["processed"] += 1
+
+        # Update statistics
+        if result["status"] == "success":
+            stats["success"] += 1
+            stats["successful_models"].append(model_id)
+            if args.verbose:
+                logger.info(
+                    f"    SUCCESS: {result['translate_time_seconds']:.2f}s, "
+                    f"output: {result['output_file']}"
+                )
+        else:
+            stats["failure"] += 1
+            if args.verbose:
+                error_msg = result.get("error", {}).get("message", "")
+                logger.info(f"    FAILURE: {error_msg[:80]}")
+
+        # Update database entry
+        translate_date = datetime.now(UTC).isoformat()
+        translate_entry = {
+            "status": result["status"],
+            "translate_date": translate_date,
+            "nlp2mcp_version": nlp2mcp_version,
+            "translate_time_seconds": result.get("translate_time_seconds"),
+        }
+        if result["status"] == "success":
+            translate_entry["output_file"] = result.get("output_file")
+        else:
+            translate_entry["error"] = result.get("error")
+
+        # Find and update model in database
+        for db_model in database.get("models", []):
+            if db_model.get("model_id") == model_id:
+                db_model["nlp2mcp_translate"] = translate_entry
+                break
+
+        # Save periodically
+        if stats["processed"] % args.save_every == 0:
+            save_database(database)
+            if args.verbose:
+                logger.info(f"  Saved database ({stats['processed']} models processed)")
+
+    # Final save
+    if not args.dry_run:
+        save_database(database)
+        logger.info("Final database save complete")
+
+    # Calculate final stats
+    stats["end_time"] = time.perf_counter()
+    stats["total_time"] = stats["end_time"] - stats["start_time"]
+    stats["success_rate"] = (
+        (stats["success"] / stats["processed"] * 100) if stats["processed"] > 0 else 0
+    )
+
+    return stats
+
+
+def print_summary(stats: dict[str, Any]) -> None:
+    """Print summary of batch translate results.
+
+    Args:
+        stats: Statistics dictionary from run_batch_translate
+    """
+    print("\n" + "=" * 60)
+    print("BATCH TRANSLATE SUMMARY")
+    print("=" * 60)
+
+    print(f"\nModels processed: {stats['processed']}/{stats['total']}")
+    print(f"  Success: {stats['success']} ({stats['success_rate']:.1f}%)")
+    print(f"  Failure: {stats['failure']}")
+    print(f"  Skipped: {stats['skipped']}")
+    print(f"\nTotal time: {stats['total_time']:.1f}s")
+    if stats["processed"] > 0:
+        print(f"Average time per model: {stats['total_time'] / stats['processed']:.2f}s")
+
+    if stats["successful_models"]:
+        print(f"\nSuccessful translations ({len(stats['successful_models'])}):")
+        for model_id in sorted(stats["successful_models"]):
+            print(f"  - {model_id}")
+
+    print("=" * 60)
+
+
+# =============================================================================
+# CLI
+# =============================================================================
+
+
+def main() -> int:
+    """Main entry point for batch translate script."""
+    parser = argparse.ArgumentParser(
+        description="Batch translate GAMSLIB models with nlp2mcp",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be done without making changes",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help="Process only first N models",
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        help="Process a single model by ID",
+    )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Show detailed output for each model",
+    )
+    parser.add_argument(
+        "--save-every",
+        type=int,
+        default=5,
+        help="Save database every N models (default: 5)",
+    )
+
+    args = parser.parse_args()
+
+    try:
+        stats = run_batch_translate(args)
+        if "error" in stats:
+            logger.error(stats["error"])
+            return 1
+        print_summary(stats)
+        return 0
+    except Exception as e:
+        logger.error(f"Batch translate failed: {e}")
+        traceback.print_exc()
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

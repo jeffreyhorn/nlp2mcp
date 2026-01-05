@@ -231,6 +231,16 @@
         "parse_time_seconds": 1.531,
         "variables_count": 15,
         "equations_count": 8
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:37:52.846846+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.367,
+        "error": {
+          "category": "validation_error",
+          "message": "Error: Invalid model - Objective variable 'f' is not defined by any equation. ObjectiveIR.expr is None and no defining equation found. Available equations: ['objective', 'alkylshrnk', 'acidbal', 'isobutbal', 'alkyldef', 'octdef', 'aciddef', 'f4def']\n"
+        }
       }
     },
     {
@@ -403,6 +413,16 @@
         "parse_time_seconds": 2.782,
         "variables_count": 14,
         "equations_count": 13
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:37:54.248951+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.402,
+        "error": {
+          "category": "validation_error",
+          "message": "Error: Invalid model - Objective variable 'pl' is not defined by any equation. ObjectiveIR.expr is None and no defining equation found. Available equations: ['power_loss', 'pumping_energy', 'friction', 'temp_rise', 'load_capacity', 'inlet_pressure', 'oil_viscosity', 'temperature', 'radius', 'limit1', 'limit2', 'temp1', 'temp2']\n"
+        }
       }
     },
     {
@@ -755,6 +775,13 @@
         "parse_time_seconds": 1.05,
         "variables_count": 3,
         "equations_count": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:37:55.240151+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.991,
+        "output_file": "data/gamslib/mcp/chem_mcp.gms"
       }
     },
     {
@@ -786,6 +813,16 @@
         "parse_time_seconds": 4.53,
         "variables_count": 15,
         "equations_count": 14
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:37:57.440412+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.2,
+        "error": {
+          "category": "validation_error",
+          "message": "Error: Invalid model - Unknown expression type: DollarConditional\n"
+        }
       }
     },
     {
@@ -850,6 +887,16 @@
         "parse_time_seconds": 1.134,
         "variables_count": 3,
         "equations_count": 1
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:37:58.352380+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.911,
+        "error": {
+          "category": "validation_error",
+          "message": "Error: Invalid model - Objective variable 'r' is not defined by any equation. ObjectiveIR.expr is None and no defining equation found. Available equations: ['e']\n"
+        }
       }
     },
     {
@@ -938,6 +985,16 @@
         "parse_time_seconds": 0.745,
         "variables_count": 3,
         "equations_count": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:37:59.264938+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.899,
+        "error": {
+          "category": "validation_error",
+          "message": "Error: Invalid model - Objective variable 'r' is not defined by any equation. ObjectiveIR.expr is None and no defining equation found. Available equations: ['circumscribe', 'nooverlap']\n"
+        }
       }
     },
     {
@@ -1125,6 +1182,13 @@
         "parse_time_seconds": 1.418,
         "variables_count": 3,
         "equations_count": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:00.387546+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.122,
+        "output_file": "data/gamslib/mcp/dispatch_mcp.gms"
       }
     },
     {
@@ -1342,6 +1406,16 @@
         "parse_time_seconds": 7.4,
         "variables_count": 12,
         "equations_count": 13
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:04.153722+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 3.766,
+        "error": {
+          "category": "unsupported_feature",
+          "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='t', offset=SymbolRef(+), circular=False)\n"
+        }
       }
     },
     {
@@ -1648,6 +1722,16 @@
         "parse_time_seconds": 5.588,
         "variables_count": 7,
         "equations_count": 11
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:06.528961+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.375,
+        "error": {
+          "category": "syntax_error",
+          "message": "Error: Unexpected error - Error: Numerical error in parameter 'Ndata[Antwerpen,slo]': Invalid value (value is -Inf)\n\nSuggestion: Check your GAMS model or data file for:\n  - Uninitialized parameters\n  - Division by zero in parameter calculations\n  - Invalid mathematical operations\n  - Correct definition of parameter 'Ndata'\n"
+        }
       }
     },
     {
@@ -1967,6 +2051,13 @@
         "parse_time_seconds": 0.892,
         "variables_count": 10,
         "equations_count": 5
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:07.490441+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.961,
+        "output_file": "data/gamslib/mcp/himmel11_mcp.gms"
       }
     },
     {
@@ -1998,6 +2089,16 @@
         "parse_time_seconds": 0.746,
         "variables_count": 4,
         "equations_count": 4
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:08.611203+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.107,
+        "error": {
+          "category": "validation_error",
+          "message": "Error: Invalid model - Incompatible domains for summation: variable domain ('i',), multiplier domain ('i', 'j'). Multiplier domain must be either a subset of variable domain or completely disjoint.\n"
+        }
       }
     },
     {
@@ -2029,6 +2130,13 @@
         "parse_time_seconds": 0.638,
         "variables_count": 9,
         "equations_count": 9
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:09.513272+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.902,
+        "output_file": "data/gamslib/mcp/house_mcp.gms"
       }
     },
     {
@@ -2060,6 +2168,13 @@
         "parse_time_seconds": 0.647,
         "variables_count": 4,
         "equations_count": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:10.406443+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.893,
+        "output_file": "data/gamslib/mcp/hs62_mcp.gms"
       }
     },
     {
@@ -2091,6 +2206,16 @@
         "parse_time_seconds": 0.912,
         "variables_count": 6,
         "equations_count": 5
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:11.370450+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.964,
+        "error": {
+          "category": "unsupported_feature",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'card'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
       }
     },
     {
@@ -2572,6 +2697,13 @@
         "parse_time_seconds": 0.655,
         "variables_count": 5,
         "equations_count": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:12.258517+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.887,
+        "output_file": "data/gamslib/mcp/least_mcp.gms"
       }
     },
     {
@@ -2603,6 +2735,16 @@
         "parse_time_seconds": 1.323,
         "variables_count": 4,
         "equations_count": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:13.357150+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.085,
+        "error": {
+          "category": "unsupported_feature",
+          "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='g', offset=SymbolRef(+), circular=False)\n"
+        }
       }
     },
     {
@@ -2847,6 +2989,16 @@
         "parse_time_seconds": 1.099,
         "variables_count": 2,
         "equations_count": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:14.723664+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.366,
+        "error": {
+          "category": "unsupported_feature",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'ord'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
       }
     },
     {
@@ -2878,6 +3030,13 @@
         "parse_time_seconds": 0.655,
         "variables_count": 3,
         "equations_count": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:15.604091+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.88,
+        "output_file": "data/gamslib/mcp/mathopt1_mcp.gms"
       }
     },
     {
@@ -2909,6 +3068,13 @@
         "parse_time_seconds": 0.452,
         "variables_count": 3,
         "equations_count": 5
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:16.503011+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.898,
+        "output_file": "data/gamslib/mcp/mathopt2_mcp.gms"
       }
     },
     {
@@ -3027,6 +3193,16 @@
         "parse_time_seconds": 1.192,
         "variables_count": 3,
         "equations_count": 5
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:17.590186+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.087,
+        "error": {
+          "category": "unsupported_feature",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'smin'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
       }
     },
     {
@@ -3178,6 +3354,13 @@
         "parse_time_seconds": 0.58,
         "variables_count": 6,
         "equations_count": 4
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:18.483746+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.88,
+        "output_file": "data/gamslib/mcp/mhw4d_mcp.gms"
       }
     },
     {
@@ -3209,6 +3392,13 @@
         "parse_time_seconds": 1.942,
         "variables_count": 6,
         "equations_count": 4
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:20.013671+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.529,
+        "output_file": "data/gamslib/mcp/mhw4dx_mcp.gms"
       }
     },
     {
@@ -3294,6 +3484,16 @@
         "parse_time_seconds": 0.704,
         "variables_count": 4,
         "equations_count": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:20.926378+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.912,
+        "error": {
+          "category": "unsupported_feature",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'loggamma'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
       }
     },
     {
@@ -3610,6 +3810,16 @@
         "parse_time_seconds": 4.903,
         "variables_count": 25,
         "equations_count": 19
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:23.304585+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.378,
+        "error": {
+          "category": "unsupported_feature",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'gamma'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
       }
     },
     {
@@ -4022,6 +4232,13 @@
         "parse_time_seconds": 1.017,
         "variables_count": 3,
         "equations_count": 5
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:24.208346+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.903,
+        "output_file": "data/gamslib/mcp/port_mcp.gms"
       }
     },
     {
@@ -4053,6 +4270,13 @@
         "parse_time_seconds": 1.527,
         "variables_count": 15,
         "equations_count": 12
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:25.434556+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.212,
+        "output_file": "data/gamslib/mcp/process_mcp.gms"
       }
     },
     {
@@ -4117,6 +4341,13 @@
         "parse_time_seconds": 0.513,
         "variables_count": 2,
         "equations_count": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:26.272588+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.838,
+        "output_file": "data/gamslib/mcp/prodmix_mcp.gms"
       }
     },
     {
@@ -4367,6 +4598,13 @@
         "parse_time_seconds": 0.523,
         "variables_count": 4,
         "equations_count": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:27.158484+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.885,
+        "output_file": "data/gamslib/mcp/ps2_f_inf_mcp.gms"
       }
     },
     {
@@ -5007,6 +5245,16 @@
         "parse_time_seconds": 1.077,
         "variables_count": 4,
         "equations_count": 4
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:28.287071+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.128,
+        "error": {
+          "category": "unsupported_feature",
+          "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='t', offset=SymbolRef(+), circular=False)\n"
+        }
       }
     },
     {
@@ -5038,6 +5286,13 @@
         "parse_time_seconds": 0.422,
         "variables_count": 3,
         "equations_count": 1
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:29.093784+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.806,
+        "output_file": "data/gamslib/mcp/rbrock_mcp.gms"
       }
     },
     {
@@ -5069,6 +5324,16 @@
         "parse_time_seconds": 0.786,
         "variables_count": 3,
         "equations_count": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:30.105745+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.956,
+        "error": {
+          "category": "validation_error",
+          "message": "Error: Invalid model - Incompatible domains for summation: variable domain ('p', 'tt'), multiplier domain ('r', 'tt'). Multiplier domain must be either a subset of variable domain or completely disjoint.\n"
+        }
       }
     },
     {
@@ -5232,6 +5497,13 @@
         "parse_time_seconds": 0.927,
         "variables_count": 3,
         "equations_count": 4
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:31.125101+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.019,
+        "output_file": "data/gamslib/mcp/sample_mcp.gms"
       }
     },
     {
@@ -6070,6 +6342,13 @@
         "parse_time_seconds": 0.396,
         "variables_count": 2,
         "equations_count": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-05T08:38:31.959295+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 0.834,
+        "output_file": "data/gamslib/mcp/trig_mcp.gms"
       }
     },
     {
@@ -6233,6 +6512,16 @@
         "parse_time_seconds": 1.289,
         "variables_count": 5,
         "equations_count": 5
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-05T08:38:32.991811+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.032,
+        "error": {
+          "category": "validation_error",
+          "message": "Error: Invalid model - Objective variable 'tau' is not defined by any equation. ObjectiveIR.expr is None and no defining equation found. Available equations: ['volumeeq', 'deftk', 'reseq', 'trusscomp', 'stiffness']\n"
+        }
       }
     },
     {
