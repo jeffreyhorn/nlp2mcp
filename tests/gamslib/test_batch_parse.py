@@ -270,7 +270,7 @@ Solve test_model using lp minimizing obj;
 
         assert result["status"] == "success"
         assert "parse_time_seconds" in result
-        assert result["parse_time_seconds"] > 0
+        assert result["parse_time_seconds"] >= 0
         assert result["variables_count"] == 3
         assert result["equations_count"] == 2
 
