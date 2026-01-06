@@ -54,9 +54,6 @@ Positive Variables
     lam_vbal(j)
     lam_vbalr(j)
     piL_n(h)
-    piL_n(h)
-    piL_n(h)
-    piL_n(h)
 ;
 
 * ============================================

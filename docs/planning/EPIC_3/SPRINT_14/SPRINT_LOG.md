@@ -59,7 +59,6 @@ chem, dispatch, himmel11, house, hs62, least, mathopt1, mathopt2, mhw4d, mhw4dx,
 ### MCP Output Files
 - Generated 17 MCP files in `data/gamslib/mcp/` directory
 - File sizes range from 2.6 KB to 9.9 KB
-- All files contain valid GAMS syntax
 - Files include:
   - Original model declarations (sets, parameters)
   - Primal variables and multipliers (λ, ν, π)
@@ -117,7 +116,7 @@ None
 - Most failures are due to unsupported GAMS features (can be added incrementally)
 - Objective variable definition issue affects 5 models (parser needs enhancement)
 - 17 successful end-to-end translations provide good validation dataset
-- All MCP files are syntactically valid GAMS code
+- MCP files generated with standard GAMS structure
 - Ready for future GAMS solver validation with PATH
 
 ---

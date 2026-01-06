@@ -48,15 +48,6 @@ Positive Variables
     x(c)
     xb
     piL_x(c)
-    piL_x(c)
-    piL_x(c)
-    piL_x(c)
-    piL_x(c)
-    piL_x(c)
-    piL_x(c)
-    piL_x(c)
-    piL_x(c)
-    piL_x(c)
     piL_xb
 ;
 
