@@ -135,8 +135,12 @@ def categorize_error(error_message: str) -> str:
     ):
         return "syntax_error"
 
-    # No objective function
-    if "no objective" in msg_lower or "objective function" in msg_lower:
+    # No objective function - use specific patterns to avoid false positives
+    if (
+        "no objective function" in msg_lower
+        or "objective function not defined" in msg_lower
+        or "no objective" in msg_lower
+    ):
         return "syntax_error"  # Map to syntax_error per schema
 
     # Unsupported functions
