@@ -260,6 +260,13 @@ def _build_element_to_set_mapping(
     Example:
         For model with h = {1, 2, 3, 4} and j = {a, b}:
         Returns: {"1": "h", "2": "h", "3": "h", "4": "h", "a": "j", "b": "j"}
+
+    Note:
+        If two different sets contain the same element label (e.g., both set h
+        and set i contain "1"), the first set encountered wins. This depends on
+        dictionary iteration order (insertion order in Python 3.7+). In practice,
+        this ambiguity is rare in well-formed GAMS models since set elements are
+        typically unique across sets.
     """
     element_to_set: dict[str, str] = {}
 
@@ -366,7 +373,8 @@ def _replace_matching_indices(
 
     Args:
         indices: Original indices (e.g., ("1", "a") or ("1", "cost"))
-        domain: Variable domain (e.g., ("h",)) - not used for filtering anymore
+        domain: Variable domain (e.g., ("h",)); currently unused, retained for
+            API consistency with callers and potential future use.
         element_to_set: Mapping from element labels to set names
 
     Returns:

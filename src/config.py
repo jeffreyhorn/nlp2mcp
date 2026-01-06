@@ -6,7 +6,7 @@ NLP to MCP conversion pipeline.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 
@@ -51,3 +51,23 @@ class Config:
             raise ValueError(
                 f"simplification must be 'none', 'basic', 'advanced', or 'aggressive', got '{self.simplification}'"
             )
+
+
+def ensure_config_with_model_ir(config: Config | None, model_ir: Any) -> Config:
+    """Ensure config has model_ir for set membership lookups during differentiation.
+
+    This enables proper handling of arbitrary set element labels (e.g., "1", "2"
+    for set "h") instead of relying on naming heuristics.
+
+    Args:
+        config: Existing config or None
+        model_ir: ModelIR instance to attach
+
+    Returns:
+        Config with model_ir set
+    """
+    if config is None:
+        return Config(model_ir=model_ir)
+    elif config.model_ir is None:
+        return replace(config, model_ir=model_ir)
+    return config

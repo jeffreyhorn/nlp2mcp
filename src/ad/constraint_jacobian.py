@@ -101,19 +101,9 @@ def compute_constraint_jacobian(
         >>> J_g.get_derivative(0, 0)  # ∂g_0/∂x = 1
     """
     # Ensure config has model_ir for set membership lookups during differentiation
-    # This enables proper handling of arbitrary element labels (e.g., "1", "2" for set "h")
-    from ..config import Config as ConfigClass
+    from ..config import ensure_config_with_model_ir
 
-    if config is None:
-        config = ConfigClass(model_ir=model_ir)
-    elif config.model_ir is None:
-        config = ConfigClass(
-            smooth_abs=config.smooth_abs,
-            smooth_abs_epsilon=config.smooth_abs_epsilon,
-            scale=config.scale,
-            simplification=config.simplification,
-            model_ir=model_ir,
-        )
+    config = ensure_config_with_model_ir(config, model_ir)
 
     # Build index mapping for variables (shared across both Jacobians)
     base_index_mapping = build_index_mapping(model_ir)

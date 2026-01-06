@@ -1313,7 +1313,7 @@ def _is_concrete_instance_of(concrete: str, symbolic: str, config: Config | None
                 return True
         # Also check aliases
         if symbolic in model_ir.aliases:
-            from src.ad.index_mapping import resolve_set_members
+            from .index_mapping import resolve_set_members
 
             try:
                 members, _ = resolve_set_members(symbolic, model_ir)
