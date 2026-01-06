@@ -43,6 +43,7 @@ from scripts.gamslib.db_manager import (
     load_database,
     save_database,
 )
+from scripts.gamslib.utils import get_nlp2mcp_version
 
 # Paths
 RAW_MODELS_DIR = PROJECT_ROOT / "data" / "gamslib" / "raw"
@@ -55,43 +56,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
-
-
-# =============================================================================
-# Version Detection
-# =============================================================================
-
-
-def get_nlp2mcp_version() -> str:
-    """Get the current nlp2mcp version from package metadata.
-
-    Returns:
-        Version string (e.g., "0.1.0") or "unknown" if not found
-    """
-    try:
-        # Try importlib.metadata first (Python 3.8+)
-        from importlib.metadata import version
-
-        return version("nlp2mcp")
-    except Exception as e:
-        logger.debug(f"importlib.metadata version lookup failed: {e}")
-
-    # Fallback: try reading from pyproject.toml
-    try:
-        pyproject = PROJECT_ROOT / "pyproject.toml"
-        if pyproject.exists():
-            content = pyproject.read_text()
-            for line in content.splitlines():
-                if line.strip().startswith("version"):
-                    # Parse: version = "0.1.0"
-                    parts = line.split("=", 1)
-                    if len(parts) == 2:
-                        ver = parts[1].strip().strip('"').strip("'")
-                        return ver
-    except Exception as e:
-        logger.debug(f"pyproject.toml version lookup failed: {e}")
-
-    return "unknown"
 
 
 # =============================================================================
@@ -198,45 +162,49 @@ def translate_single_model(model_path: Path, output_path: Path) -> dict[str, Any
             "--quiet",
         ]
 
-        proc = subprocess.run(
+        proc = subprocess.Popen(
             cmd,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=60,  # 60 second timeout
         )
 
-        elapsed = time.perf_counter() - start_time
+        try:
+            stdout, stderr = proc.communicate(timeout=60)  # 60 second timeout
+            elapsed = time.perf_counter() - start_time
 
-        if proc.returncode == 0:
-            # Success
-            result = {
-                "status": "success",
-                "translate_time_seconds": round(elapsed, 3),
-                "output_file": str(output_path.relative_to(PROJECT_ROOT)),
-            }
-        else:
-            # Translation failed
-            error_msg = proc.stderr if proc.stderr else proc.stdout
-            category = categorize_translation_error(error_msg)
+            if proc.returncode == 0:
+                # Success
+                result = {
+                    "status": "success",
+                    "translate_time_seconds": round(elapsed, 3),
+                    "output_file": str(output_path.relative_to(PROJECT_ROOT)),
+                }
+            else:
+                # Translation failed
+                error_msg = stderr if stderr else stdout
+                category = categorize_translation_error(error_msg)
+                result = {
+                    "status": "failure",
+                    "translate_time_seconds": round(elapsed, 3),
+                    "error": {
+                        "category": category,
+                        "message": error_msg[:500],  # Truncate long messages
+                    },
+                }
+        except subprocess.TimeoutExpired:
+            # Kill the subprocess on timeout to prevent orphaned processes
+            proc.kill()
+            proc.communicate()  # Clean up the process
+            elapsed = time.perf_counter() - start_time
             result = {
                 "status": "failure",
                 "translate_time_seconds": round(elapsed, 3),
                 "error": {
-                    "category": category,
-                    "message": error_msg[:500],  # Truncate long messages
+                    "category": "timeout",
+                    "message": "Translation timeout after 60 seconds",
                 },
             }
-
-    except subprocess.TimeoutExpired:
-        elapsed = time.perf_counter() - start_time
-        result = {
-            "status": "failure",
-            "translate_time_seconds": round(elapsed, 3),
-            "error": {
-                "category": "timeout",
-                "message": "Translation timeout after 60 seconds",
-            },
-        }
 
     except Exception as e:
         elapsed = time.perf_counter() - start_time

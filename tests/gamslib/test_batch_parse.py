@@ -13,11 +13,11 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from scripts.gamslib.batch_parse import (  # noqa: E402
     categorize_error,
     get_candidate_models,
-    get_nlp2mcp_version,
     parse_single_model,
     print_summary,
     run_batch_parse,
 )
+from scripts.gamslib.utils import get_nlp2mcp_version  # noqa: E402
 
 
 class TestGetNlp2mcpVersion:
