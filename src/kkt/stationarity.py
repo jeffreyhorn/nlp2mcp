@@ -282,9 +282,12 @@ def _build_element_to_set_mapping(
     # This handles parameters like k1(h,j) where both indices need replacement,
     # while preserving any mappings already established from instances.
     for set_name, set_def in model_ir.sets.items():
-        # Handle both SetDef objects (normal case) and plain lists
+        # Handle both SetDef objects (normal case) and plain containers
         # (e.g., when model_ir.sets is constructed programmatically in tests)
-        members = set_def.members if hasattr(set_def, "members") else set_def
+        if isinstance(set_def, (list, tuple, set, frozenset)):
+            members = set_def
+        else:
+            members = set_def.members
         for member in members:
             # Only add if not already mapped (instance/domain-based mapping wins)
             if member not in element_to_set:
@@ -365,7 +368,7 @@ def _replace_indices_in_expr(
 
 
 def _replace_matching_indices(
-    indices: tuple[str, ...], domain: tuple[str, ...], element_to_set: dict[str, str]
+    indices: tuple[str, ...], _domain: tuple[str, ...], element_to_set: dict[str, str]
 ) -> tuple[str, ...]:
     """Replace element labels with their corresponding set names.
 
@@ -375,7 +378,7 @@ def _replace_matching_indices(
 
     Args:
         indices: Original indices (e.g., ("1", "a") or ("1", "cost"))
-        domain: Variable domain (e.g., ("h",)). This parameter is intentionally
+        _domain: Variable domain (e.g., ("h",)). This parameter is intentionally
             unused in the current implementation and is retained solely for
             backward compatibility with existing callers and to allow future
             extensions where the replacement logic may depend on the domain.

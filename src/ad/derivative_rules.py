@@ -1307,21 +1307,24 @@ def _is_concrete_instance_of(concrete: str, symbolic: str, config: Config | None
         # Check if symbolic is a set name and concrete is a member
         if symbolic in model_ir.sets:
             set_def = model_ir.sets[symbolic]
-            # Handle both SetDef objects (normal case) and plain lists
+            # Handle both SetDef objects (normal case) and plain containers
             # (e.g., when model_ir.sets is constructed programmatically in tests)
-            members = set_def.members if hasattr(set_def, "members") else set_def
-            if concrete in members:
-                return True
+            if isinstance(set_def, (list, tuple, set, frozenset)):
+                members = set_def
+            else:
+                members = set_def.members
+            # If symbolic is a known set, membership is definitive
+            return concrete in members
         # Also check aliases
         if symbolic in model_ir.aliases:
             from .index_mapping import resolve_set_members
 
             try:
                 members, _ = resolve_set_members(symbolic, model_ir)
-                if concrete in members:
-                    return True
+                # If symbolic is a known alias with resolvable members, membership is definitive
+                return concrete in members
             except ValueError:
-                pass  # Fall through to heuristic
+                pass  # Fall through to heuristic if alias cannot be resolved
 
     # Strategy 2: Fallback heuristic (for backward compatibility)
     return (
