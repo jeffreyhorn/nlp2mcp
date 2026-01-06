@@ -61,13 +61,11 @@ def ensure_config_with_model_ir(config: Config | None, model_ir: Any) -> Config:
 
     Args:
         config: Existing config or None
-        model_ir: ModelIR instance to attach
+        model_ir: ModelIR instance to attach (always set, even if config already has one)
 
     Returns:
-        Config with model_ir set
+        Config with model_ir set to the provided value
     """
     if config is None:
         return Config(model_ir=model_ir)
-    elif config.model_ir is None:
-        return replace(config, model_ir=model_ir)
-    return config
+    return replace(config, model_ir=model_ir)

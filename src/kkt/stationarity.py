@@ -265,7 +265,9 @@ def _build_element_to_set_mapping(
         If two different sets contain the same element label (e.g., both set h
         and set i contain "1"), mappings inferred from the variable's own
         instances and domain take precedence. Global set definitions are only
-        used as a fallback for elements that have not been mapped yet.
+        used as a fallback for elements that have not been mapped yet. To avoid
+        ambiguous mappings for parameters indexed by multiple sets, users should
+        avoid reusing the same element label in different sets.
     """
     element_to_set: dict[str, str] = {}
 
@@ -323,7 +325,7 @@ def _replace_indices_in_expr(
                 if element_to_set:
                     # Replace each index that maps to a set in the domain
                     str_indices = var_ref.indices_as_strings()
-                    new_indices = _replace_matching_indices(str_indices, domain, element_to_set)
+                    new_indices = _replace_matching_indices(str_indices, element_to_set)
                     return VarRef(var_ref.name, new_indices)
                 elif len(var_ref.indices) == len(domain):
                     # Fallback: Replace all indices if lengths match
@@ -333,7 +335,7 @@ def _replace_indices_in_expr(
             if param_ref.indices and domain:
                 if element_to_set:
                     str_indices = param_ref.indices_as_strings()
-                    new_indices = _replace_matching_indices(str_indices, domain, element_to_set)
+                    new_indices = _replace_matching_indices(str_indices, element_to_set)
                     return ParamRef(param_ref.name, new_indices)
                 elif len(param_ref.indices) == len(domain):
                     return ParamRef(param_ref.name, domain)
@@ -342,7 +344,7 @@ def _replace_indices_in_expr(
             if mult_ref.indices and domain:
                 if element_to_set:
                     str_indices = mult_ref.indices_as_strings()
-                    new_indices = _replace_matching_indices(str_indices, domain, element_to_set)
+                    new_indices = _replace_matching_indices(str_indices, element_to_set)
                     return MultiplierRef(mult_ref.name, new_indices)
                 elif len(mult_ref.indices) == len(domain):
                     return MultiplierRef(mult_ref.name, domain)
@@ -368,7 +370,7 @@ def _replace_indices_in_expr(
 
 
 def _replace_matching_indices(
-    indices: tuple[str, ...], _domain: tuple[str, ...], element_to_set: dict[str, str]
+    indices: tuple[str, ...], element_to_set: dict[str, str]
 ) -> tuple[str, ...]:
     """Replace element labels with their corresponding set names.
 
@@ -378,19 +380,15 @@ def _replace_matching_indices(
 
     Args:
         indices: Original indices (e.g., ("1", "a") or ("1", "cost"))
-        _domain: Variable domain (e.g., ("h",)). This parameter is intentionally
-            unused in the current implementation and is retained solely for
-            backward compatibility with existing callers and to allow future
-            extensions where the replacement logic may depend on the domain.
         element_to_set: Mapping from element labels to set names
 
     Returns:
         New indices with element labels replaced by set names
 
     Example:
-        >>> _replace_matching_indices(("1", "a"), ("h",), {"1": "h", "a": "j"})
+        >>> _replace_matching_indices(("1", "a"), {"1": "h", "a": "j"})
         ("h", "j")  # Both "1" and "a" replaced with their set names
-        >>> _replace_matching_indices(("1", "cost"), ("h",), {"1": "h"})
+        >>> _replace_matching_indices(("1", "cost"), {"1": "h"})
         ("h", "cost")  # "1" replaced with "h", "cost" unchanged (not in mapping)
     """
     new_indices = []
