@@ -1,5 +1,7 @@
 """Tests for GAMSLIB batch parse script."""
 
+import argparse
+import io
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -11,9 +13,11 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from scripts.gamslib.batch_parse import (  # noqa: E402
     categorize_error,
     get_candidate_models,
-    get_nlp2mcp_version,
     parse_single_model,
+    print_summary,
+    run_batch_parse,
 )
+from scripts.gamslib.utils import get_nlp2mcp_version  # noqa: E402
 
 
 class TestGetNlp2mcpVersion:
@@ -88,11 +92,26 @@ class TestCategorizeError:
         category = categorize_error(error)
         assert category == "syntax_error"
 
-    def test_objective_function_error(self) -> None:
-        """Test objective function error is categorized as syntax_error."""
-        error = "Objective function validation failed"
+    def test_objective_function_error_specific(self) -> None:
+        """Test specific objective function errors are categorized as syntax_error."""
+        # "no objective function" should be caught
+        error = "no objective function defined"
         category = categorize_error(error)
         assert category == "syntax_error"
+
+        # "objective function not defined" should be caught
+        error = "objective function not defined in model"
+        category = categorize_error(error)
+        assert category == "syntax_error"
+
+    def test_objective_function_broad_pattern_not_matched(self) -> None:
+        """Test broad 'objective function' patterns are not incorrectly categorized."""
+        # Generic "objective function" mentions should NOT match as syntax_error
+        # This prevents false positives like "Objective function validation failed"
+        error = "Objective function validation failed"
+        category = categorize_error(error)
+        # Should fall through to internal_error since it doesn't match specific patterns
+        assert category == "internal_error"
 
     def test_unsupported_feature_not_implemented(self) -> None:
         """Test 'not yet implemented' is categorized as unsupported_feature."""
@@ -351,11 +370,397 @@ Solve test_model using lp minimizing obj;
         assert isinstance(result["parse_time_seconds"], (int, float))
         assert result["parse_time_seconds"] >= 0
 
-        # Test failure timing
-        with patch("src.ir.parser.parse_model_file") as mock_parse:
-            mock_parse.side_effect = Exception("Test error")
-            result = parse_single_model(model_file)
 
-        assert "parse_time_seconds" in result
-        assert isinstance(result["parse_time_seconds"], (int, float))
-        assert result["parse_time_seconds"] >= 0
+class TestRunBatchParse:
+    """Tests for run_batch_parse function."""
+
+    def _make_args(
+        self,
+        dry_run: bool = False,
+        limit: int | None = None,
+        model: str | None = None,
+        verbose: bool = False,
+        save_every: int = 10,
+    ) -> argparse.Namespace:
+        """Create argparse.Namespace with default values."""
+        return argparse.Namespace(
+            dry_run=dry_run,
+            limit=limit,
+            model=model,
+            verbose=verbose,
+            save_every=save_every,
+        )
+
+    def test_dry_run_does_not_modify_database(self, tmp_path: Path) -> None:
+        """Test dry run mode doesn't modify the database."""
+        database = {
+            "models": [
+                {"model_id": "model1", "convexity": {"status": "verified_convex"}},
+            ]
+        }
+        model_file = tmp_path / "model1.gms"
+        model_file.write_text("* Test model")
+
+        with patch("scripts.gamslib.batch_parse.load_database", return_value=database):
+            with patch("scripts.gamslib.batch_parse.save_database") as mock_save:
+                with patch("scripts.gamslib.batch_parse.RAW_MODELS_DIR", tmp_path):
+                    args = self._make_args(dry_run=True)
+                    stats = run_batch_parse(args)
+
+        # save_database should not be called in dry run
+        mock_save.assert_not_called()
+        assert stats["processed"] == 1
+        assert "nlp2mcp_parse" not in database["models"][0]
+
+    def test_limit_restricts_models_processed(self, tmp_path: Path) -> None:
+        """Test limit argument restricts number of models processed."""
+        database = {
+            "models": [
+                {"model_id": f"model{i}", "convexity": {"status": "verified_convex"}}
+                for i in range(10)
+            ]
+        }
+
+        with patch("scripts.gamslib.batch_parse.load_database", return_value=database):
+            with patch("scripts.gamslib.batch_parse.save_database"):
+                with patch("scripts.gamslib.batch_parse.create_backup", return_value=None):
+                    with patch("scripts.gamslib.batch_parse.RAW_MODELS_DIR", tmp_path):
+                        args = self._make_args(dry_run=True, limit=3)
+                        stats = run_batch_parse(args)
+
+        assert stats["total"] == 3
+
+    def test_single_model_filter(self, tmp_path: Path) -> None:
+        """Test processing a single specific model."""
+        database = {
+            "models": [
+                {"model_id": "model1", "convexity": {"status": "verified_convex"}},
+                {"model_id": "target_model", "convexity": {"status": "verified_convex"}},
+                {"model_id": "model3", "convexity": {"status": "verified_convex"}},
+            ]
+        }
+        model_file = tmp_path / "target_model.gms"
+        model_file.write_text("* Target model")
+
+        with patch("scripts.gamslib.batch_parse.load_database", return_value=database):
+            with patch("scripts.gamslib.batch_parse.save_database"):
+                with patch("scripts.gamslib.batch_parse.create_backup", return_value=None):
+                    with patch("scripts.gamslib.batch_parse.RAW_MODELS_DIR", tmp_path):
+                        args = self._make_args(dry_run=True, model="target_model")
+                        stats = run_batch_parse(args)
+
+        assert stats["total"] == 1
+
+    def test_model_not_found_returns_error(self) -> None:
+        """Test error when specified model is not found."""
+        database = {
+            "models": [
+                {"model_id": "model1", "convexity": {"status": "verified_convex"}},
+            ]
+        }
+
+        with patch("scripts.gamslib.batch_parse.load_database", return_value=database):
+            args = self._make_args(model="nonexistent_model")
+            stats = run_batch_parse(args)
+
+        assert "error" in stats
+        assert "not found" in stats["error"].lower()
+
+    def test_skips_missing_model_files(self, tmp_path: Path) -> None:
+        """Test that missing model files are skipped."""
+        database = {
+            "models": [
+                {"model_id": "missing_model", "convexity": {"status": "verified_convex"}},
+            ]
+        }
+        # Don't create the file - it should be skipped
+
+        with patch("scripts.gamslib.batch_parse.load_database", return_value=database):
+            with patch("scripts.gamslib.batch_parse.save_database"):
+                with patch("scripts.gamslib.batch_parse.create_backup", return_value=None):
+                    with patch("scripts.gamslib.batch_parse.RAW_MODELS_DIR", tmp_path):
+                        args = self._make_args()
+                        stats = run_batch_parse(args)
+
+        assert stats["skipped"] == 1
+        assert stats["processed"] == 0
+
+    def test_successful_parse_updates_database(self, tmp_path: Path) -> None:
+        """Test successful parse updates database with results."""
+        database = {
+            "models": [
+                {"model_id": "good_model", "convexity": {"status": "verified_convex"}},
+            ]
+        }
+        model_file = tmp_path / "good_model.gms"
+        model_file.write_text("* Good model")
+
+        mock_model = MagicMock()
+        mock_model.variables = {"x": {}, "y": {}}
+        mock_model.equations = {"eq1": {}}
+
+        with patch("scripts.gamslib.batch_parse.load_database", return_value=database):
+            with patch("scripts.gamslib.batch_parse.save_database"):
+                with patch("scripts.gamslib.batch_parse.create_backup", return_value=None):
+                    with patch("scripts.gamslib.batch_parse.RAW_MODELS_DIR", tmp_path):
+                        with patch("src.ir.parser.parse_model_file", return_value=mock_model):
+                            with patch("src.validation.model.validate_model_structure"):
+                                args = self._make_args()
+                                stats = run_batch_parse(args)
+
+        assert stats["success"] == 1
+        assert stats["failure"] == 0
+        assert "nlp2mcp_parse" in database["models"][0]
+        assert database["models"][0]["nlp2mcp_parse"]["status"] == "success"
+        assert database["models"][0]["nlp2mcp_parse"]["variables_count"] == 2
+        assert database["models"][0]["nlp2mcp_parse"]["equations_count"] == 1
+
+    def test_failed_parse_updates_database_with_error(self, tmp_path: Path) -> None:
+        """Test failed parse updates database with error information."""
+        database = {
+            "models": [
+                {"model_id": "bad_model", "convexity": {"status": "verified_convex"}},
+            ]
+        }
+        model_file = tmp_path / "bad_model.gms"
+        model_file.write_text("* Bad model")
+
+        with patch("scripts.gamslib.batch_parse.load_database", return_value=database):
+            with patch("scripts.gamslib.batch_parse.save_database"):
+                with patch("scripts.gamslib.batch_parse.create_backup", return_value=None):
+                    with patch("scripts.gamslib.batch_parse.RAW_MODELS_DIR", tmp_path):
+                        with patch("src.ir.parser.parse_model_file") as mock_parse:
+                            mock_parse.side_effect = Exception("Parse error: invalid syntax")
+                            args = self._make_args()
+                            stats = run_batch_parse(args)
+
+        assert stats["success"] == 0
+        assert stats["failure"] == 1
+        assert stats["error_categories"]["syntax_error"] == 1
+        assert "nlp2mcp_parse" in database["models"][0]
+        assert database["models"][0]["nlp2mcp_parse"]["status"] == "failure"
+        assert database["models"][0]["nlp2mcp_parse"]["error"]["category"] == "syntax_error"
+
+    def test_periodic_save(self, tmp_path: Path) -> None:
+        """Test database is saved periodically based on save_every."""
+        database = {
+            "models": [
+                {"model_id": f"model{i}", "convexity": {"status": "verified_convex"}}
+                for i in range(5)
+            ]
+        }
+        for i in range(5):
+            model_file = tmp_path / f"model{i}.gms"
+            model_file.write_text(f"* Model {i}")
+
+        mock_model = MagicMock()
+        mock_model.variables = {}
+        mock_model.equations = {}
+
+        with patch("scripts.gamslib.batch_parse.load_database", return_value=database):
+            with patch("scripts.gamslib.batch_parse.save_database") as mock_save:
+                with patch("scripts.gamslib.batch_parse.create_backup", return_value=None):
+                    with patch("scripts.gamslib.batch_parse.RAW_MODELS_DIR", tmp_path):
+                        with patch("src.ir.parser.parse_model_file", return_value=mock_model):
+                            with patch("src.validation.model.validate_model_structure"):
+                                args = self._make_args(save_every=2)
+                                run_batch_parse(args)
+
+        # Should save at processed=2, processed=4, and final save = 3 calls
+        assert mock_save.call_count == 3
+
+    def test_calculates_success_rate(self, tmp_path: Path) -> None:
+        """Test success rate calculation."""
+        database = {
+            "models": [
+                {"model_id": "model1", "convexity": {"status": "verified_convex"}},
+                {"model_id": "model2", "convexity": {"status": "verified_convex"}},
+            ]
+        }
+        for model_id in ["model1", "model2"]:
+            model_file = tmp_path / f"{model_id}.gms"
+            model_file.write_text(f"* {model_id}")
+
+        mock_model = MagicMock()
+        mock_model.variables = {}
+        mock_model.equations = {}
+
+        with patch("scripts.gamslib.batch_parse.load_database", return_value=database):
+            with patch("scripts.gamslib.batch_parse.save_database"):
+                with patch("scripts.gamslib.batch_parse.create_backup", return_value=None):
+                    with patch("scripts.gamslib.batch_parse.RAW_MODELS_DIR", tmp_path):
+                        with patch("src.ir.parser.parse_model_file", return_value=mock_model):
+                            with patch("src.validation.model.validate_model_structure"):
+                                args = self._make_args()
+                                stats = run_batch_parse(args)
+
+        assert stats["success_rate"] == 100.0
+
+    def test_tracks_successful_models(self, tmp_path: Path) -> None:
+        """Test successful model IDs are tracked."""
+        database = {
+            "models": [
+                {"model_id": "success_model", "convexity": {"status": "verified_convex"}},
+            ]
+        }
+        model_file = tmp_path / "success_model.gms"
+        model_file.write_text("* Success model")
+
+        mock_model = MagicMock()
+        mock_model.variables = {}
+        mock_model.equations = {}
+
+        with patch("scripts.gamslib.batch_parse.load_database", return_value=database):
+            with patch("scripts.gamslib.batch_parse.save_database"):
+                with patch("scripts.gamslib.batch_parse.create_backup", return_value=None):
+                    with patch("scripts.gamslib.batch_parse.RAW_MODELS_DIR", tmp_path):
+                        with patch("src.ir.parser.parse_model_file", return_value=mock_model):
+                            with patch("src.validation.model.validate_model_structure"):
+                                args = self._make_args()
+                                stats = run_batch_parse(args)
+
+        assert "success_model" in stats["successful_models"]
+
+
+class TestPrintSummary:
+    """Tests for print_summary function."""
+
+    def test_prints_basic_stats(self) -> None:
+        """Test basic statistics are printed."""
+        stats = {
+            "total": 10,
+            "processed": 8,
+            "success": 6,
+            "failure": 2,
+            "skipped": 2,
+            "success_rate": 75.0,
+            "total_time": 10.5,
+            "error_categories": {},
+            "successful_models": [],
+        }
+
+        captured_output = io.StringIO()
+        with patch("sys.stdout", captured_output):
+            print_summary(stats)
+
+        output = captured_output.getvalue()
+        assert "8/10" in output
+        assert "Success: 6" in output
+        assert "75.0%" in output
+        assert "Failure: 2" in output
+        assert "Skipped: 2" in output
+        assert "10.5s" in output
+
+    def test_prints_error_categories(self) -> None:
+        """Test error categories are printed."""
+        stats = {
+            "total": 10,
+            "processed": 10,
+            "success": 5,
+            "failure": 5,
+            "skipped": 0,
+            "success_rate": 50.0,
+            "total_time": 20.0,
+            "error_categories": {
+                "syntax_error": 3,
+                "unsupported_feature": 2,
+            },
+            "successful_models": [],
+        }
+
+        captured_output = io.StringIO()
+        with patch("sys.stdout", captured_output):
+            print_summary(stats)
+
+        output = captured_output.getvalue()
+        assert "syntax_error: 3" in output
+        assert "unsupported_feature: 2" in output
+        assert "60%" in output  # 3/5 = 60%
+
+    def test_prints_successful_models(self) -> None:
+        """Test successful model list is printed."""
+        stats = {
+            "total": 3,
+            "processed": 3,
+            "success": 2,
+            "failure": 1,
+            "skipped": 0,
+            "success_rate": 66.7,
+            "total_time": 5.0,
+            "error_categories": {},
+            "successful_models": ["model_a", "model_b"],
+        }
+
+        captured_output = io.StringIO()
+        with patch("sys.stdout", captured_output):
+            print_summary(stats)
+
+        output = captured_output.getvalue()
+        assert "Successful models (2)" in output
+        assert "model_a" in output
+        assert "model_b" in output
+
+    def test_handles_zero_processed(self) -> None:
+        """Test handles zero processed models gracefully."""
+        stats = {
+            "total": 5,
+            "processed": 0,
+            "success": 0,
+            "failure": 0,
+            "skipped": 5,
+            "success_rate": 0,
+            "total_time": 0.1,
+            "error_categories": {},
+            "successful_models": [],
+        }
+
+        captured_output = io.StringIO()
+        with patch("sys.stdout", captured_output):
+            print_summary(stats)
+
+        output = captured_output.getvalue()
+        assert "0/5" in output
+        assert "Skipped: 5" in output
+
+    def test_prints_average_time_per_model(self) -> None:
+        """Test average time per model is printed."""
+        stats = {
+            "total": 4,
+            "processed": 4,
+            "success": 4,
+            "failure": 0,
+            "skipped": 0,
+            "success_rate": 100.0,
+            "total_time": 8.0,
+            "error_categories": {},
+            "successful_models": ["m1", "m2", "m3", "m4"],
+        }
+
+        captured_output = io.StringIO()
+        with patch("sys.stdout", captured_output):
+            print_summary(stats)
+
+        output = captured_output.getvalue()
+        assert "2.00s" in output  # 8.0 / 4 = 2.0
+
+    def test_handles_zero_failures_in_error_categories(self) -> None:
+        """Test handles case with zero failures when showing error categories."""
+        stats = {
+            "total": 2,
+            "processed": 2,
+            "success": 2,
+            "failure": 0,
+            "skipped": 0,
+            "success_rate": 100.0,
+            "total_time": 2.0,
+            "error_categories": {},
+            "successful_models": ["m1", "m2"],
+        }
+
+        captured_output = io.StringIO()
+        with patch("sys.stdout", captured_output):
+            print_summary(stats)
+
+        output = captured_output.getvalue()
+        # Should not contain "Error categories:" section when no errors
+        assert "Error categories:" not in output

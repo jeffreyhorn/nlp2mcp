@@ -1,30 +1,31 @@
 #!/usr/bin/env python3
-"""Batch parse script for GAMSLIB models.
+"""Batch translate script for GAMSLIB models.
 
-Runs nlp2mcp parse on all candidate models (verified_convex + likely_convex)
-and updates the database with results.
+Runs nlp2mcp translation on all successfully parsed models and generates
+MCP output files.
 
 Usage:
-    python scripts/gamslib/batch_parse.py [OPTIONS]
+    python scripts/gamslib/batch_translate.py [OPTIONS]
 
 Options:
     --dry-run      Show what would be done without making changes
     --limit N      Process only first N models (for testing)
     --model ID     Process a single model by ID
     --verbose      Show detailed output for each model
-    --save-every N Save database every N models (default: 10)
+    --save-every N Save database every N models (default: 5)
 
 Examples:
-    python scripts/gamslib/batch_parse.py
-    python scripts/gamslib/batch_parse.py --dry-run
-    python scripts/gamslib/batch_parse.py --limit 10 --verbose
-    python scripts/gamslib/batch_parse.py --model prodmix
+    python scripts/gamslib/batch_translate.py
+    python scripts/gamslib/batch_translate.py --dry-run
+    python scripts/gamslib/batch_translate.py --limit 5 --verbose
+    python scripts/gamslib/batch_translate.py --model alkyl
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
+import subprocess
 import sys
 import time
 import traceback
@@ -46,6 +47,7 @@ from scripts.gamslib.utils import get_nlp2mcp_version
 
 # Paths
 RAW_MODELS_DIR = PROJECT_ROOT / "data" / "gamslib" / "raw"
+MCP_OUTPUT_DIR = PROJECT_ROOT / "data" / "gamslib" / "mcp"
 
 # Configure logging
 logging.basicConfig(
@@ -61,22 +63,15 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-def categorize_error(error_message: str) -> str:
-    """Categorize a parse error into one of the defined categories.
+def categorize_translation_error(error_message: str) -> str:
+    """Categorize a translation error into one of the defined categories.
 
-    Categories from schema.json and PARSE_RATE_BASELINE.md:
-    - syntax_error: Parser grammar failures
-    - unsupported_feature: Unsupported GAMS functions (gamma, smin, etc.)
-    - missing_include: Include file issues
-    - timeout: Parse timeout
+    Categories from schema.json:
+    - syntax_error: Parser/syntax issues
+    - unsupported_feature: Unsupported GAMS functions or features
     - validation_error: Model structure validation failures
+    - timeout: Translation timeout
     - internal_error: Other/unknown errors
-
-    Additional error patterns from baseline analysis
-    (mapped to the schema-defined categories above):
-    - no_objective: Model has no objective function -> syntax_error
-    - domain_error: Variable domain issues -> validation_error
-    - undefined_variable: Objective variable not defined -> validation_error
 
     Args:
         error_message: The error message string
@@ -86,101 +81,139 @@ def categorize_error(error_message: str) -> str:
     """
     msg_lower = error_message.lower()
 
-    # Syntax errors (most common - 77% from baseline)
+    # Timeout
+    if "timeout" in msg_lower:
+        return "timeout"
+
+    # Unsupported features
+    if any(
+        phrase in msg_lower
+        for phrase in [
+            "not yet implemented",
+            "not yet supported",
+            "unsupported",
+            "not supported",
+        ]
+    ):
+        return "unsupported_feature"
+
+    # Validation errors
+    if any(
+        phrase in msg_lower
+        for phrase in [
+            "invalid model",
+            "not defined",
+            "undefined",
+            "validation",
+            "incompatible",
+        ]
+    ):
+        return "validation_error"
+
+    # Syntax errors
     if any(
         phrase in msg_lower
         for phrase in [
             "parse error",
-            "unexpected character",
-            "unexpected token",
             "syntax error",
-            "unexpected eof",
+            "unexpected",
         ]
     ):
         return "syntax_error"
-
-    # No objective function - use specific patterns to avoid false positives
-    if (
-        "no objective function" in msg_lower
-        or "objective function not defined" in msg_lower
-        or "no objective" in msg_lower
-    ):
-        return "syntax_error"  # Map to syntax_error per schema
-
-    # Unsupported functions
-    if "not yet implemented" in msg_lower or "unsupported" in msg_lower:
-        return "unsupported_feature"
-
-    # Domain errors
-    if "domain" in msg_lower or "incompatible" in msg_lower:
-        return "validation_error"
-
-    # Undefined variable
-    if "not defined" in msg_lower or "undefined" in msg_lower:
-        return "validation_error"
-
-    # Include file issues
-    if "include" in msg_lower or "file not found" in msg_lower:
-        return "missing_include"
-
-    # Timeout
-    if "timeout" in msg_lower:
-        return "timeout"
 
     # Default to internal_error for unknown issues
     return "internal_error"
 
 
 # =============================================================================
-# Parse Functions
+# Translation Functions
 # =============================================================================
 
 
-def parse_single_model(model_path: Path) -> dict[str, Any]:
-    """Parse a single GAMS model and return results.
+def translate_single_model(model_path: Path, output_path: Path) -> dict[str, Any]:
+    """Translate a single GAMS model to MCP format.
 
     Args:
         model_path: Path to the .gms file
+        output_path: Path where MCP output should be written
 
     Returns:
-        Dictionary with parse results:
+        Dictionary with translation results:
         - status: "success" or "failure"
-        - parse_time_seconds: Time taken to parse
-        - variables_count: Number of variables (if successful)
-        - equations_count: Number of equations (if successful)
+        - translate_time_seconds: Time taken to translate
+        - output_file: Path to output file (if successful)
         - error: Error details dict (if failed)
     """
     start_time = time.perf_counter()
     result: dict[str, Any] = {}
 
     try:
-        # Import here to avoid loading parser until needed
-        from src.ir.parser import parse_model_file
-        from src.validation.model import validate_model_structure
+        # Ensure output directory exists
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Parse the model
-        model = parse_model_file(model_path)
+        # Run nlp2mcp via subprocess
+        cmd = [
+            sys.executable,
+            "-m",
+            "src.cli",
+            str(model_path),
+            "-o",
+            str(output_path),
+            "--quiet",
+        ]
 
-        # Validate structure
-        validate_model_structure(model)
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
 
-        # Success
-        elapsed = time.perf_counter() - start_time
-        result = {
-            "status": "success",
-            "parse_time_seconds": round(elapsed, 3),
-            "variables_count": len(model.variables),
-            "equations_count": len(model.equations),
-        }
+        try:
+            stdout, stderr = proc.communicate(timeout=60)  # 60 second timeout
+            elapsed = time.perf_counter() - start_time
+
+            if proc.returncode == 0:
+                # Success
+                result = {
+                    "status": "success",
+                    "translate_time_seconds": round(elapsed, 3),
+                    "output_file": str(output_path.relative_to(PROJECT_ROOT)),
+                }
+            else:
+                # Translation failed
+                error_msg = stderr if stderr else stdout
+                category = categorize_translation_error(error_msg)
+                result = {
+                    "status": "failure",
+                    "translate_time_seconds": round(elapsed, 3),
+                    "error": {
+                        "category": category,
+                        "message": error_msg[:500],  # Truncate long messages
+                    },
+                }
+        except subprocess.TimeoutExpired:
+            # Kill the subprocess on timeout to prevent orphaned processes
+            proc.kill()
+            proc.communicate()  # Clean up the process
+            elapsed = time.perf_counter() - start_time
+            result = {
+                "status": "failure",
+                "translate_time_seconds": round(elapsed, 3),
+                "error": {
+                    "category": "timeout",
+                    "message": "Translation timeout after 60 seconds",
+                },
+            }
 
     except Exception as e:
         elapsed = time.perf_counter() - start_time
         error_msg = str(e)
-        category = categorize_error(error_msg)
+        category = categorize_translation_error(error_msg)
 
         result = {
             "status": "failure",
-            "parse_time_seconds": round(elapsed, 3),
+            "translate_time_seconds": round(elapsed, 3),
             "error": {
                 "category": category,
                 "message": error_msg[:500],  # Truncate long messages
@@ -195,29 +228,27 @@ def parse_single_model(model_path: Path) -> dict[str, Any]:
 # =============================================================================
 
 
-def get_candidate_models(database: dict[str, Any]) -> list[dict[str, Any]]:
-    """Get list of candidate models for parsing.
-
-    Candidates are models with convexity.status = 'verified_convex' or 'likely_convex'.
+def get_parsed_models(database: dict[str, Any]) -> list[dict[str, Any]]:
+    """Get list of successfully parsed models for translation.
 
     Args:
         database: Loaded database dictionary
 
     Returns:
-        List of model entries
+        List of model entries with nlp2mcp_parse.status == "success"
     """
-    candidates = []
+    parsed = []
     for model in database.get("models", []):
-        status = model.get("convexity", {}).get("status")
-        if status in ("verified_convex", "likely_convex"):
-            candidates.append(model)
-    return candidates
+        parse_status = model.get("nlp2mcp_parse", {}).get("status")
+        if parse_status == "success":
+            parsed.append(model)
+    return parsed
 
 
-def run_batch_parse(
+def run_batch_translate(
     args: argparse.Namespace,
 ) -> dict[str, Any]:
-    """Run batch parse on candidate models.
+    """Run batch translate on successfully parsed models.
 
     Args:
         args: Parsed command line arguments
@@ -229,15 +260,15 @@ def run_batch_parse(
     logger.info(f"Loading database from {DATABASE_PATH}")
     database = load_database()
 
-    # Get candidate models
-    candidates = get_candidate_models(database)
-    logger.info(f"Found {len(candidates)} candidate models (verified_convex + likely_convex)")
+    # Get successfully parsed models
+    candidates = get_parsed_models(database)
+    logger.info(f"Found {len(candidates)} successfully parsed models")
 
     # Filter for single model if specified
     if args.model:
         candidates = [m for m in candidates if m.get("model_id") == args.model]
         if not candidates:
-            logger.error(f"Model not found or not a candidate: {args.model}")
+            logger.error(f"Model not found or not successfully parsed: {args.model}")
             return {"error": f"Model not found: {args.model}"}
 
     # Apply limit
@@ -262,7 +293,6 @@ def run_batch_parse(
         "success": 0,
         "failure": 0,
         "skipped": 0,
-        "error_categories": {},
         "successful_models": [],
         "start_time": time.perf_counter(),
     }
@@ -271,15 +301,16 @@ def run_batch_parse(
     for i, model in enumerate(candidates, 1):
         model_id = model.get("model_id", "unknown")
         model_path = RAW_MODELS_DIR / f"{model_id}.gms"
+        output_path = MCP_OUTPUT_DIR / f"{model_id}_mcp.gms"
 
-        # Progress reporting every 10 models
-        if i % 10 == 0 or i == 1:
+        # Progress reporting
+        if i % 5 == 0 or i == 1:
             elapsed = time.perf_counter() - stats["start_time"]
             avg_time = elapsed / i
             remaining = (len(candidates) - i) * avg_time
             logger.info(
                 f"[{i:3d}/{len(candidates)}] {i * 100 // len(candidates):3d}% "
-                f"Processing {model_id}... "
+                f"Translating {model_id}... "
                 f"({stats['success']} success, {stats['failure']} failure, "
                 f"~{remaining:.0f}s remaining)"
             )
@@ -292,15 +323,15 @@ def run_batch_parse(
 
         if args.dry_run:
             if args.verbose:
-                logger.info(f"  [DRY-RUN] Would parse {model_id}")
+                logger.info(f"  [DRY-RUN] Would translate {model_id}")
             stats["processed"] += 1
             continue
 
-        # Parse the model
+        # Translate the model
         if args.verbose:
-            logger.info(f"  Parsing {model_id}...")
+            logger.info(f"  Translating {model_id}...")
 
-        result = parse_single_model(model_path)
+        result = translate_single_model(model_path, output_path)
         stats["processed"] += 1
 
         # Update statistics
@@ -309,37 +340,32 @@ def run_batch_parse(
             stats["successful_models"].append(model_id)
             if args.verbose:
                 logger.info(
-                    f"    SUCCESS: {result['variables_count']} vars, "
-                    f"{result['equations_count']} eqs, "
-                    f"{result['parse_time_seconds']:.2f}s"
+                    f"    SUCCESS: {result['translate_time_seconds']:.2f}s, "
+                    f"output: {result['output_file']}"
                 )
         else:
             stats["failure"] += 1
-            category = result.get("error", {}).get("category", "unknown")
-            stats["error_categories"][category] = stats["error_categories"].get(category, 0) + 1
             if args.verbose:
-                logger.info(
-                    f"    FAILURE ({category}): {result.get('error', {}).get('message', '')[:80]}"
-                )
+                error_msg = result.get("error", {}).get("message", "")
+                logger.info(f"    FAILURE: {error_msg[:80]}")
 
         # Update database entry
-        parse_date = datetime.now(UTC).isoformat()
-        parse_entry = {
+        translate_date = datetime.now(UTC).isoformat()
+        translate_entry = {
             "status": result["status"],
-            "parse_date": parse_date,
+            "translate_date": translate_date,
             "nlp2mcp_version": nlp2mcp_version,
-            "parse_time_seconds": result.get("parse_time_seconds"),
+            "translate_time_seconds": result.get("translate_time_seconds"),
         }
         if result["status"] == "success":
-            parse_entry["variables_count"] = result.get("variables_count")
-            parse_entry["equations_count"] = result.get("equations_count")
+            translate_entry["output_file"] = result.get("output_file")
         else:
-            parse_entry["error"] = result.get("error")
+            translate_entry["error"] = result.get("error")
 
         # Find and update model in database
         for db_model in database.get("models", []):
             if db_model.get("model_id") == model_id:
-                db_model["nlp2mcp_parse"] = parse_entry
+                db_model["nlp2mcp_translate"] = translate_entry
                 break
 
         # Save periodically
@@ -364,13 +390,13 @@ def run_batch_parse(
 
 
 def print_summary(stats: dict[str, Any]) -> None:
-    """Print summary of batch parse results.
+    """Print summary of batch translate results.
 
     Args:
-        stats: Statistics dictionary from run_batch_parse
+        stats: Statistics dictionary from run_batch_translate
     """
     print("\n" + "=" * 60)
-    print("BATCH PARSE SUMMARY")
+    print("BATCH TRANSLATE SUMMARY")
     print("=" * 60)
 
     print(f"\nModels processed: {stats['processed']}/{stats['total']}")
@@ -381,14 +407,8 @@ def print_summary(stats: dict[str, Any]) -> None:
     if stats["processed"] > 0:
         print(f"Average time per model: {stats['total_time'] / stats['processed']:.2f}s")
 
-    if stats["error_categories"]:
-        print("\nError categories:")
-        for category, count in sorted(stats["error_categories"].items(), key=lambda x: -x[1]):
-            pct = count / stats["failure"] * 100 if stats["failure"] > 0 else 0
-            print(f"  {category}: {count} ({pct:.0f}%)")
-
     if stats["successful_models"]:
-        print(f"\nSuccessful models ({len(stats['successful_models'])}):")
+        print(f"\nSuccessful translations ({len(stats['successful_models'])}):")
         for model_id in sorted(stats["successful_models"]):
             print(f"  - {model_id}")
 
@@ -401,9 +421,9 @@ def print_summary(stats: dict[str, Any]) -> None:
 
 
 def main() -> int:
-    """Main entry point for batch parse script."""
+    """Main entry point for batch translate script."""
     parser = argparse.ArgumentParser(
-        description="Batch parse GAMSLIB models with nlp2mcp",
+        description="Batch translate GAMSLIB models with nlp2mcp",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -431,21 +451,21 @@ def main() -> int:
     parser.add_argument(
         "--save-every",
         type=int,
-        default=10,
-        help="Save database every N models (default: 10)",
+        default=5,
+        help="Save database every N models (default: 5)",
     )
 
     args = parser.parse_args()
 
     try:
-        stats = run_batch_parse(args)
+        stats = run_batch_translate(args)
         if "error" in stats:
             logger.error(stats["error"])
             return 1
         print_summary(stats)
         return 0
     except Exception as e:
-        logger.error(f"Batch parse failed: {e}")
+        logger.error(f"Batch translate failed: {e}")
         traceback.print_exc()
         return 1
 

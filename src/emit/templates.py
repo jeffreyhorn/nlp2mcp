@@ -63,11 +63,21 @@ def emit_variables(kkt: KKTSystem) -> str:
         var_groups[VarKind.POSITIVE].append((mult_name, mult_def.domain))
 
     # Bound multipliers use tuple keys (var_name, indices)
+    # Deduplicate by collecting unique (name, domain) pairs to avoid
+    # emitting the same indexed variable declaration multiple times
+    seen_bound_multipliers: set[tuple[str, tuple[str, ...]]] = set()
+
     for (_var_name, _indices), mult_def in kkt.multipliers_bounds_lo.items():
-        var_groups[VarKind.POSITIVE].append((mult_def.name, mult_def.domain))
+        key = (mult_def.name, mult_def.domain)
+        if key not in seen_bound_multipliers:
+            seen_bound_multipliers.add(key)
+            var_groups[VarKind.POSITIVE].append(key)
 
     for (_var_name, _indices), mult_def in kkt.multipliers_bounds_up.items():
-        var_groups[VarKind.POSITIVE].append((mult_def.name, mult_def.domain))
+        key = (mult_def.name, mult_def.domain)
+        if key not in seen_bound_multipliers:
+            seen_bound_multipliers.add(key)
+            var_groups[VarKind.POSITIVE].append(key)
 
     # Note: Min/max complementarity multipliers are added automatically as part of
     # kkt.multipliers_ineq (they're regular inequality multipliers)
