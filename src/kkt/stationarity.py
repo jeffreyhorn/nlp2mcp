@@ -263,30 +263,32 @@ def _build_element_to_set_mapping(
 
     Note:
         If two different sets contain the same element label (e.g., both set h
-        and set i contain "1"), the first set encountered wins. This depends on
-        dictionary iteration order (insertion order in Python 3.7+). In practice,
-        this ambiguity is rare in well-formed GAMS models since set elements are
-        typically unique across sets.
+        and set i contain "1"), mappings inferred from the variable's own
+        instances and domain take precedence. Global set definitions are only
+        used as a fallback for elements that have not been mapped yet.
     """
     element_to_set: dict[str, str] = {}
 
-    # Map elements from ALL sets in the model
-    # This handles parameters like k1(h,j) where both indices need replacement
-    for set_name, set_def in model_ir.sets.items():
-        # Handle both SetDef objects and plain lists (used in tests)
-        members = set_def.members if hasattr(set_def, "members") else set_def
-        for member in members:
-            # Only add if not already mapped (first set wins for ambiguous elements)
-            if member not in element_to_set:
-                element_to_set[member] = set_name
-
-    # Also use instances to infer element-set relationships for the variable's domain
-    # This handles cases where set definition might not be available
+    # First, use instances to infer element-set relationships for the variable's domain.
+    # This ensures that, for ambiguous elements, the variable-specific domain wins.
+    # It also handles cases where set definitions might not be available.
     for _col_id, var_indices in instances:
         if len(var_indices) == len(domain):
             for elem, set_name in zip(var_indices, domain, strict=True):
                 if elem not in element_to_set:
                     element_to_set[elem] = set_name
+
+    # Then, map elements from ALL sets in the model as a fallback.
+    # This handles parameters like k1(h,j) where both indices need replacement,
+    # while preserving any mappings already established from instances.
+    for set_name, set_def in model_ir.sets.items():
+        # Handle both SetDef objects (normal case) and plain lists
+        # (e.g., when model_ir.sets is constructed programmatically in tests)
+        members = set_def.members if hasattr(set_def, "members") else set_def
+        for member in members:
+            # Only add if not already mapped (instance/domain-based mapping wins)
+            if member not in element_to_set:
+                element_to_set[member] = set_name
 
     return element_to_set
 
@@ -373,8 +375,10 @@ def _replace_matching_indices(
 
     Args:
         indices: Original indices (e.g., ("1", "a") or ("1", "cost"))
-        domain: Variable domain (e.g., ("h",)); currently unused, retained for
-            API consistency with callers and potential future use.
+        domain: Variable domain (e.g., ("h",)). This parameter is intentionally
+            unused in the current implementation and is retained solely for
+            backward compatibility with existing callers and to allow future
+            extensions where the replacement logic may depend on the domain.
         element_to_set: Mapping from element labels to set names
 
     Returns:
