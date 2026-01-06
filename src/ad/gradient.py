@@ -174,6 +174,8 @@ def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) 
 
     Args:
         model_ir: Model IR with objective, variables, and equations
+        config: Optional configuration (will be augmented with model_ir for
+                set membership lookups during differentiation)
 
     Returns:
         GradientVector with gradient components for all variables
@@ -203,6 +205,21 @@ def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) 
 
     # Get objective sense
     sense = model_ir.objective.sense if model_ir.objective else ObjSense.MIN
+
+    # Ensure config has model_ir for set membership lookups during differentiation
+    # This enables proper handling of arbitrary element labels (e.g., "1", "2" for set "h")
+    from ..config import Config
+
+    if config is None:
+        config = Config(model_ir=model_ir)
+    elif config.model_ir is None:
+        config = Config(
+            smooth_abs=config.smooth_abs,
+            smooth_abs_epsilon=config.smooth_abs_epsilon,
+            scale=config.scale,
+            simplification=config.simplification,
+            model_ir=model_ir,
+        )
 
     # Differentiate objective w.r.t. each variable
     for var_name in sorted(model_ir.variables.keys()):
@@ -248,6 +265,8 @@ def compute_gradient_for_expression(
         expr: Expression to differentiate
         model_ir: Model IR with variables
         negate: If True, negate the gradient
+        config: Optional configuration (will be augmented with model_ir for
+                set membership lookups during differentiation)
 
     Returns:
         GradientVector with gradient components
@@ -264,6 +283,20 @@ def compute_gradient_for_expression(
 
     # Create gradient vector
     gradient = GradientVector(index_mapping=index_mapping, num_cols=index_mapping.num_vars)
+
+    # Ensure config has model_ir for set membership lookups during differentiation
+    from ..config import Config
+
+    if config is None:
+        config = Config(model_ir=model_ir)
+    elif config.model_ir is None:
+        config = Config(
+            smooth_abs=config.smooth_abs,
+            smooth_abs_epsilon=config.smooth_abs_epsilon,
+            scale=config.scale,
+            simplification=config.simplification,
+            model_ir=model_ir,
+        )
 
     # Differentiate w.r.t. each variable
     for var_name in sorted(model_ir.variables.keys()):

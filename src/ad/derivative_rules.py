@@ -1213,7 +1213,7 @@ def _diff_sum(
     # Check if sum should collapse (special case for index-aware differentiation)
     # When differentiating sum(i, x(i)) w.r.t. x(i1), the sum collapses because
     # only the term where i=i1 contributes, so result is just the collapsed expression
-    if wrt_indices is not None and _sum_should_collapse(expr.index_sets, wrt_indices):
+    if wrt_indices is not None and _sum_should_collapse(expr.index_sets, wrt_indices, config):
         # Differentiate symbolically using sum's index variables (e.g., ("i",))
         # This makes x(i) match when we differentiate w.r.t. x with indices ("i",)
         body_derivative = differentiate_expr(expr.body, wrt_var, expr.index_sets, config)
@@ -1227,61 +1227,72 @@ def _diff_sum(
     return Sum(expr.index_sets, body_derivative)
 
 
-def _sum_should_collapse(sum_index_sets: tuple[str, ...], wrt_indices: tuple[str, ...]) -> bool:
+def _sum_should_collapse(
+    sum_index_sets: tuple[str, ...],
+    wrt_indices: tuple[str, ...],
+    config: Config | None = None,
+) -> bool:
     """
     Check if a sum should collapse when differentiating w.r.t. concrete indices.
 
     A sum should collapse when:
     1. The sum has symbolic bound variables (e.g., "i", "j")
-    2. We're differentiating w.r.t. concrete instances (e.g., "i1", "i2")
-    3. The concrete indices are instances of the symbolic variables
+    2. We're differentiating w.r.t. concrete instances (e.g., "i1", "i2" or "1", "2")
+    3. The concrete indices are members of the sets corresponding to symbolic variables
 
     This implements the mathematical rule:
     ∂(sum(i, x(i)))/∂x(i1) = sum(i, ∂x(i)/∂x(i1)) = sum(i, [1 if i=i1 else 0]) = 1
 
     Args:
         sum_index_sets: Tuple of index names from Sum (e.g., ("i",) or ("i", "j"))
-        wrt_indices: Tuple of concrete index names (e.g., ("i1",) or ("i1", "j2"))
+        wrt_indices: Tuple of concrete index names (e.g., ("i1",) or ("1", "2"))
+        config: Optional config with model_ir for set membership lookups
 
     Returns:
         True if sum should collapse, False otherwise
 
     Examples:
-        >>> _sum_should_collapse(("i",), ("i1",))
+        >>> _sum_should_collapse(("i",), ("i1",))  # Heuristic match
+        True
+        >>> _sum_should_collapse(("h",), ("1",), config_with_model_ir)  # Set membership match
         True
         >>> _sum_should_collapse(("i", "j"), ("i1", "j2"))
         True
         >>> _sum_should_collapse(("i",), ("j1",))
-        False
-        >>> _sum_should_collapse(("i",), ("k",))
         False
     """
     if len(sum_index_sets) != len(wrt_indices):
         return False
 
     for sum_idx, wrt_idx in zip(sum_index_sets, wrt_indices, strict=True):
-        if not _is_concrete_instance_of(wrt_idx, sum_idx):
+        if not _is_concrete_instance_of(wrt_idx, sum_idx, config):
             return False
 
     return True
 
 
-def _is_concrete_instance_of(concrete: str, symbolic: str) -> bool:
+def _is_concrete_instance_of(concrete: str, symbolic: str, config: Config | None = None) -> bool:
     """
     Check if a concrete index is an instance of a symbolic index.
 
-    Uses heuristic: concrete index should start with symbolic index name
-    followed by digits (e.g., "i1" is instance of "i", "j23" is instance of "j").
+    Uses two strategies:
+    1. If config.model_ir is available: Check if concrete is a member of the
+       set named symbolic (handles arbitrary element labels like "1", "2", "a", "b")
+    2. Fallback heuristic: concrete index should start with symbolic index name
+       followed by digits (e.g., "i1" is instance of "i", "j23" is instance of "j")
 
     Args:
-        concrete: Concrete index name (e.g., "i1", "j2")
-        symbolic: Symbolic index name (e.g., "i", "j")
+        concrete: Concrete index name (e.g., "i1", "j2", "1", "a")
+        symbolic: Symbolic index name (e.g., "i", "j", "h")
+        config: Optional config with model_ir for set membership lookups
 
     Returns:
         True if concrete is an instance of symbolic, False otherwise
 
     Examples:
-        >>> _is_concrete_instance_of("i1", "i")
+        >>> _is_concrete_instance_of("i1", "i")  # Heuristic
+        True
+        >>> _is_concrete_instance_of("1", "h", config_with_model_ir)  # Set lookup
         True
         >>> _is_concrete_instance_of("j23", "j")
         True
@@ -1290,6 +1301,28 @@ def _is_concrete_instance_of(concrete: str, symbolic: str) -> bool:
         >>> _is_concrete_instance_of("j1", "i")
         False
     """
+    # Strategy 1: Use model_ir for set membership lookup if available
+    if config is not None and config.model_ir is not None:
+        model_ir = config.model_ir
+        # Check if symbolic is a set name and concrete is a member
+        if symbolic in model_ir.sets:
+            set_def = model_ir.sets[symbolic]
+            # Handle both SetDef objects and plain lists (used in tests)
+            members = set_def.members if hasattr(set_def, "members") else set_def
+            if concrete in members:
+                return True
+        # Also check aliases
+        if symbolic in model_ir.aliases:
+            from src.ad.index_mapping import resolve_set_members
+
+            try:
+                members, _ = resolve_set_members(symbolic, model_ir)
+                if concrete in members:
+                    return True
+            except ValueError:
+                pass  # Fall through to heuristic
+
+    # Strategy 2: Fallback heuristic (for backward compatibility)
     return (
         concrete.startswith(symbolic)
         and len(concrete) > len(symbolic)
