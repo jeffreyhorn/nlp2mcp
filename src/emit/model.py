@@ -132,8 +132,14 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         for _key, comp_pair in sorted(kkt.complementarity_bounds_lo.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            # GAMS MCP syntax: list without indices - indexing is implicit
-            pairs.append(f"    {eq_def.name}.{var_name}")
+            # Format variable with indices if present
+            if comp_pair.variable_indices:
+                # Convert indices tuple to GAMS index syntax: piL_n("1", "2")
+                indices_str = ", ".join(f'"{idx}"' for idx in comp_pair.variable_indices)
+                var_with_indices = f"{var_name}({indices_str})"
+            else:
+                var_with_indices = var_name
+            pairs.append(f"    {eq_def.name}.{var_with_indices}")
 
     # 5. Upper bound complementarities
     if kkt.complementarity_bounds_up:
@@ -142,8 +148,14 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         for _key, comp_pair in sorted(kkt.complementarity_bounds_up.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            # GAMS MCP syntax: list without indices - indexing is implicit
-            pairs.append(f"    {eq_def.name}.{var_name}")
+            # Format variable with indices if present
+            if comp_pair.variable_indices:
+                # Convert indices tuple to GAMS index syntax: piU_n("1", "2")
+                indices_str = ", ".join(f'"{idx}"' for idx in comp_pair.variable_indices)
+                var_with_indices = f"{var_name}({indices_str})"
+            else:
+                var_with_indices = var_name
+            pairs.append(f"    {eq_def.name}.{var_with_indices}")
 
     # Build the model declaration
     # GAMS does not allow comments inside the Model / ... / block
