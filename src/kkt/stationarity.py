@@ -267,7 +267,9 @@ def _build_element_to_set_mapping(
         instances and domain take precedence. Global set definitions are only
         used as a fallback for elements that have not been mapped yet. To avoid
         ambiguous mappings for parameters indexed by multiple sets, users should
-        avoid reusing the same element label in different sets.
+        avoid reusing the same element label in different sets. In future
+        enhancements, parameter domains could be leveraged to further disambiguate
+        such cases.
     """
     element_to_set: dict[str, str] = {}
 
@@ -285,7 +287,7 @@ def _build_element_to_set_mapping(
     # while preserving any mappings already established from instances.
     for set_name, set_def in model_ir.sets.items():
         # Handle both SetDef objects (normal case) and plain containers
-        # (e.g., when model_ir.sets is constructed programmatically in tests)
+        # (e.g., when model_ir.sets is constructed programmatically without SetDef)
         if isinstance(set_def, (list, tuple, set, frozenset)):
             members = set_def
         else:
