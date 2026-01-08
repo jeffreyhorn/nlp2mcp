@@ -29,6 +29,32 @@ def _should_pair_with_objvar(
     return eq_name == obj_info.defining_equation and not strategy1_applied
 
 
+def _format_variable_with_indices(var_name: str, indices: tuple[str, ...]) -> str:
+    """Format a variable name with indices for GAMS MCP syntax.
+
+    Args:
+        var_name: Base variable name (e.g., "piL_n")
+        indices: Tuple of index values (e.g., ("1", "2"))
+
+    Returns:
+        Formatted variable string for GAMS (e.g., 'piL_n("1", "2")')
+
+    Examples:
+        >>> _format_variable_with_indices("piL_n", ("1",))
+        'piL_n("1")'
+        >>> _format_variable_with_indices("piU_x", ())
+        'piU_x'
+        >>> _format_variable_with_indices("piL_y", ("i1", "j2"))
+        'piL_y("i1", "j2")'
+    """
+    if indices:
+        # Convert indices tuple to GAMS index syntax: var("1", "2")
+        indices_str = ", ".join(f'"{idx}"' for idx in indices)
+        return f"{var_name}({indices_str})"
+    else:
+        return var_name
+
+
 def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
     """Emit Model MCP declaration with complementarity pairs.
 
@@ -132,13 +158,7 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         for _key, comp_pair in sorted(kkt.complementarity_bounds_lo.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            # Format variable with indices if present
-            if comp_pair.variable_indices:
-                # Convert indices tuple to GAMS index syntax: piL_n("1", "2")
-                indices_str = ", ".join(f'"{idx}"' for idx in comp_pair.variable_indices)
-                var_with_indices = f"{var_name}({indices_str})"
-            else:
-                var_with_indices = var_name
+            var_with_indices = _format_variable_with_indices(var_name, comp_pair.variable_indices)
             pairs.append(f"    {eq_def.name}.{var_with_indices}")
 
     # 5. Upper bound complementarities
@@ -148,13 +168,7 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         for _key, comp_pair in sorted(kkt.complementarity_bounds_up.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            # Format variable with indices if present
-            if comp_pair.variable_indices:
-                # Convert indices tuple to GAMS index syntax: piU_n("1", "2")
-                indices_str = ", ".join(f'"{idx}"' for idx in comp_pair.variable_indices)
-                var_with_indices = f"{var_name}({indices_str})"
-            else:
-                var_with_indices = var_name
+            var_with_indices = _format_variable_with_indices(var_name, comp_pair.variable_indices)
             pairs.append(f"    {eq_def.name}.{var_with_indices}")
 
     # Build the model declaration
