@@ -226,55 +226,182 @@ def _build_indexed_gradient_term(
         return Const(0.0)
 
     # Get gradient from first instance
-    col_id, _ = instances[0]
+    col_id, var_indices = instances[0]
     grad_component = kkt.gradient.get_derivative(col_id)
 
     if grad_component is None:
         return Const(0.0)
 
+    # Build element-to-set mapping from all instances
+    # This maps each element label to its corresponding set name
+    element_to_set = _build_element_to_set_mapping(kkt.model_ir, domain, instances)
+
     # Replace element-specific indices with domain indices in the gradient
-    return _replace_indices_in_expr(grad_component, domain)
+    return _replace_indices_in_expr(grad_component, domain, element_to_set)
 
 
-def _replace_indices_in_expr(expr: Expr, domain: tuple[str, ...]) -> Expr:
+def _build_element_to_set_mapping(
+    model_ir, domain: tuple[str, ...], instances: list[tuple[int, tuple[str, ...]]]
+) -> dict[str, str]:
+    """Build a mapping from element labels to set names.
+
+    Maps element labels from ALL sets in the model to their set names,
+    not just the variable's domain. This enables proper index replacement
+    for parameters that have indices from multiple sets.
+
+    Args:
+        model_ir: Model IR containing set definitions
+        domain: Variable domain (tuple of set names) - used for instance inference
+        instances: Variable instances (used to infer element-set relationships)
+
+    Returns:
+        Dictionary mapping element labels to set names
+
+    Example:
+        For model with h = {1, 2, 3, 4} and j = {a, b}:
+        Returns: {"1": "h", "2": "h", "3": "h", "4": "h", "a": "j", "b": "j"}
+
+    Note:
+        If two different sets contain the same element label (e.g., both set h
+        and set i contain "1"), mappings inferred from the variable's own
+        instances and domain take precedence. Global set definitions are only
+        used as a fallback for elements that have not been mapped yet. To avoid
+        ambiguous mappings for parameters indexed by multiple sets, users should
+        avoid reusing the same element label in different sets. In future
+        enhancements, parameter domains could be leveraged to further disambiguate
+        such cases.
+    """
+    element_to_set: dict[str, str] = {}
+
+    # First, use instances to infer element-set relationships for the variable's domain.
+    # This ensures that, for ambiguous elements, the variable-specific domain wins.
+    # It also handles cases where set definitions might not be available.
+    for _col_id, var_indices in instances:
+        if len(var_indices) == len(domain):
+            for elem, set_name in zip(var_indices, domain, strict=True):
+                if elem not in element_to_set:
+                    element_to_set[elem] = set_name
+
+    # Then, map elements from ALL sets in the model as a fallback.
+    # This handles parameters like k1(h,j) where both indices need replacement,
+    # while preserving any mappings already established from instances.
+    for set_name, set_def in model_ir.sets.items():
+        # Handle both SetDef objects (normal case) and plain containers
+        # (e.g., when model_ir.sets is constructed programmatically without SetDef)
+        if isinstance(set_def, (list, tuple, set, frozenset)):
+            members = set_def
+        else:
+            members = set_def.members
+        for member in members:
+            # Only add if not already mapped (instance/domain-based mapping wins)
+            if member not in element_to_set:
+                element_to_set[member] = set_name
+
+    return element_to_set
+
+
+def _replace_indices_in_expr(
+    expr: Expr, domain: tuple[str, ...], element_to_set: dict[str, str] | None = None
+) -> Expr:
     """Replace element-specific indices with domain indices in expression.
 
-    For example, converts a("i1") to a(i) where domain = ("i",)
+    For example, converts data("1", "cost") to data(h, "cost") where:
+    - domain = ("h",)
+    - element_to_set = {"1": "h", "2": "h", "3": "h", "4": "h"}
+
+    This handles cases where:
+    - Parameters have more indices than the variable domain (e.g., data(h, *))
+    - Only some indices should be replaced (element labels vs literal strings)
+
+    Args:
+        expr: Expression to process
+        domain: Variable domain (e.g., ("h",) or ("i", "j"))
+        element_to_set: Mapping from element labels to set names. If None,
+                        falls back to simple length-based matching for backward compatibility.
     """
     match expr:
         case Const(_):
             return expr
-        case VarRef(name, indices):
-            if indices and domain and len(indices) == len(domain):
-                # Replace element labels with domain indices
-                return VarRef(name, domain)
+        case VarRef() as var_ref:
+            if var_ref.indices and domain:
+                if element_to_set:
+                    # Replace each index that maps to a set in the domain
+                    str_indices = var_ref.indices_as_strings()
+                    new_indices = _replace_matching_indices(str_indices, element_to_set)
+                    return VarRef(var_ref.name, new_indices)
+                elif len(var_ref.indices) == len(domain):
+                    # Fallback: Replace all indices if lengths match
+                    return VarRef(var_ref.name, domain)
             return expr
-        case ParamRef(name, indices):
-            if indices and domain and len(indices) == len(domain):
-                return ParamRef(name, domain)
+        case ParamRef() as param_ref:
+            if param_ref.indices and domain:
+                if element_to_set:
+                    str_indices = param_ref.indices_as_strings()
+                    new_indices = _replace_matching_indices(str_indices, element_to_set)
+                    return ParamRef(param_ref.name, new_indices)
+                elif len(param_ref.indices) == len(domain):
+                    return ParamRef(param_ref.name, domain)
             return expr
-        case MultiplierRef(name, indices):
-            if indices and domain and len(indices) == len(domain):
-                return MultiplierRef(name, domain)
+        case MultiplierRef() as mult_ref:
+            if mult_ref.indices and domain:
+                if element_to_set:
+                    str_indices = mult_ref.indices_as_strings()
+                    new_indices = _replace_matching_indices(str_indices, element_to_set)
+                    return MultiplierRef(mult_ref.name, new_indices)
+                elif len(mult_ref.indices) == len(domain):
+                    return MultiplierRef(mult_ref.name, domain)
             return expr
         case Binary(op, left, right):
-            new_left = _replace_indices_in_expr(left, domain)
-            new_right = _replace_indices_in_expr(right, domain)
+            new_left = _replace_indices_in_expr(left, domain, element_to_set)
+            new_right = _replace_indices_in_expr(right, domain, element_to_set)
             return Binary(op, new_left, new_right)
         case Unary(op, child):
-            new_child = _replace_indices_in_expr(child, domain)
+            new_child = _replace_indices_in_expr(child, domain, element_to_set)
             return Unary(op, new_child)
         case Call(func, args):
-            new_args = tuple(_replace_indices_in_expr(arg, domain) for arg in args)
+            new_args = tuple(_replace_indices_in_expr(arg, domain, element_to_set) for arg in args)
             return Call(func, new_args)
         case Sum(index_sets, body):
             # Recursively process body to replace any element-specific indices
-            new_body = _replace_indices_in_expr(body, domain)
+            new_body = _replace_indices_in_expr(body, domain, element_to_set)
             if new_body is not body:
                 return Sum(index_sets, new_body)
             return expr
         case _:
             return expr
+
+
+def _replace_matching_indices(
+    indices: tuple[str, ...], element_to_set: dict[str, str]
+) -> tuple[str, ...]:
+    """Replace element labels with their corresponding set names.
+
+    For each index in indices, if it's an element label that maps to a set,
+    replace it with the set name. This handles parameters indexed by multiple
+    sets (e.g., k1(h,j) where we need to replace both "1"->h and "a"->j).
+
+    Args:
+        indices: Original indices (e.g., ("1", "a") or ("1", "cost"))
+        element_to_set: Mapping from element labels to set names
+
+    Returns:
+        New indices with element labels replaced by set names
+
+    Example:
+        >>> _replace_matching_indices(("1", "a"), {"1": "h", "a": "j"})
+        ("h", "j")  # Both "1" and "a" replaced with their set names
+        >>> _replace_matching_indices(("1", "cost"), {"1": "h"})
+        ("h", "cost")  # "1" replaced with "h", "cost" unchanged (not in mapping)
+    """
+    new_indices = []
+    for idx in indices:
+        if idx in element_to_set:
+            # Replace element with its set name
+            new_indices.append(element_to_set[idx])
+        else:
+            # Keep the index unchanged (it's a literal like "cost" or already a set name)
+            new_indices.append(idx)
+    return tuple(new_indices)
 
 
 def _add_indexed_jacobian_terms(
@@ -294,6 +421,9 @@ def _add_indexed_jacobian_terms(
     """
     if jacobian.index_mapping is None:
         return expr
+
+    # Build element-to-set mapping for index replacement
+    element_to_set = _build_element_to_set_mapping(kkt.model_ir, var_domain, instances)
 
     # Collect all constraints that depend on this variable
     constraint_entries: dict[str, list[tuple[int, int]]] = {}  # eq_name -> [(row_id, col_id)]
@@ -328,8 +458,8 @@ def _add_indexed_jacobian_terms(
             mult_domain = _get_constraint_domain(kkt, eq_name_base)
 
             if mult_domain:
-                # Replace indices in derivative expression
-                indexed_deriv = _replace_indices_in_expr(derivative, var_domain)
+                # Replace indices in derivative expression using element_to_set mapping
+                indexed_deriv = _replace_indices_in_expr(derivative, var_domain, element_to_set)
 
                 # Get base multiplier name (without element suffixes)
                 mult_base_name = name_func(eq_name_base)
@@ -362,8 +492,8 @@ def _add_indexed_jacobian_terms(
 
             if mult_name in multipliers:
                 mult_ref = MultiplierRef(mult_name, ())
-                # Replace indices in derivative
-                indexed_deriv = _replace_indices_in_expr(derivative, var_domain)
+                # Replace indices in derivative using element_to_set mapping
+                indexed_deriv = _replace_indices_in_expr(derivative, var_domain, element_to_set)
                 term = Binary("*", indexed_deriv, mult_ref)
                 expr = Binary("+", expr, term)
 

@@ -82,7 +82,8 @@ def compute_constraint_jacobian(
     Args:
         model_ir: Model IR with constraints, variables, and normalized bounds
         normalized_eqs: Dictionary of normalized equations (optional for backward compatibility)
-        config: Configuration for differentiation
+        config: Configuration for differentiation (will be augmented with model_ir
+                for set membership lookups during differentiation)
 
     Returns:
         Tuple of (J_h, J_g):
@@ -99,6 +100,11 @@ def compute_constraint_jacobian(
         >>> J_h, J_g = compute_constraint_jacobian(model_ir)
         >>> J_g.get_derivative(0, 0)  # ∂g_0/∂x = 1
     """
+    # Ensure config has model_ir for set membership lookups during differentiation
+    from ..config import ensure_config_with_model_ir
+
+    config = ensure_config_with_model_ir(config, model_ir)
+
     # Build index mapping for variables (shared across both Jacobians)
     base_index_mapping = build_index_mapping(model_ir)
 
