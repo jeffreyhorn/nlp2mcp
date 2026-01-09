@@ -770,17 +770,17 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-02T16:53:06.164428+00:00",
-        "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.05,
+        "parse_date": "2026-01-09T06:10:52.326649+00:00",
+        "nlp2mcp_version": "0.1.0",
+        "parse_time_seconds": 1.24,
         "variables_count": 3,
         "equations_count": 3
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-01-05T08:37:55.240151+00:00",
-        "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.991,
+        "translate_date": "2026-01-09T06:10:56.463213+00:00",
+        "nlp2mcp_version": "0.1.0",
+        "translate_time_seconds": 1.833,
         "output_file": "data/gamslib/mcp/chem_mcp.gms"
       }
     },
@@ -1177,17 +1177,17 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-02T16:53:17.308820+00:00",
-        "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.418,
+        "parse_date": "2026-01-09T06:10:54.074872+00:00",
+        "nlp2mcp_version": "0.1.0",
+        "parse_time_seconds": 1.227,
         "variables_count": 3,
         "equations_count": 3
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-01-05T08:38:00.387546+00:00",
-        "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.122,
+        "translate_date": "2026-01-09T06:10:58.945447+00:00",
+        "nlp2mcp_version": "0.1.0",
+        "translate_time_seconds": 1.972,
         "output_file": "data/gamslib/mcp/dispatch_mcp.gms"
       }
     },
