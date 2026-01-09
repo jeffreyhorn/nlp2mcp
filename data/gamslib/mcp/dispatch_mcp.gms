@@ -84,7 +84,7 @@ Equations
 
 * Stationarity equations
 stat_cost.. 100 * sum(i, 0) / 10000 + 100 * sum((i,j), 0) / 10000 + (1 - sum((i,cg), 0)) * nu_costfn + (-sum(i, 0)) * lam_demcons =E= 0;
-stat_p(i).. 100 * sum(i, 0) / 10000 + 100 * sum((i,j), 0) / 10000 + (-sum((i,cg), 0)) * nu_costfn + (-sum(i, 0)) * lam_demcons =E= 0;
+stat_p(i).. 100 * b0(i) / 10000 + 100 * sum((i,j), 0) / 10000 + (-sum((i,cg), 0)) * nu_costfn + (-1) * lam_demcons =E= 0;
 
 * Inequality complementarity equations
 comp_demcons.. sum(i, p(i)) =G= 0;

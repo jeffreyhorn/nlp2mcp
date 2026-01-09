@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 14 Day 8: Integration Testing and Edge Cases - 2026-01-09
+
+**Branch:** `sprint14-day8-integration-testing`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive integration testing suite including end-to-end workflow tests, error recovery tests, and edge case tests. All tests pass (185 GAMSLIB tests, 2661 total tests). Verified complete pipeline works correctly and error handling is robust.
+
+#### Changes
+
+**New Files:**
+- `scripts/gamslib/test_e2e_workflow.py` - End-to-end workflow integration test (init → parse → translate → query)
+- `scripts/gamslib/test_error_recovery.py` - Error recovery and edge case tests (6 tests)
+- `tests/gamslib/test_edge_cases.py` - Database operation edge cases (34 tests)
+
+**Modified Files:**
+- `data/gamslib/gamslib_status.json` - Updated with test runs (chem and dispatch re-parsed and re-translated)
+- `data/gamslib/mcp/chem_mcp.gms` - Regenerated with current version
+- `data/gamslib/mcp/dispatch_mcp.gms` - Regenerated with current version
+- `docs/planning/EPIC_3/SPRINT_14/PLAN.md` - Day 8 acceptance criteria marked complete
+- `docs/planning/EPIC_3/SPRINT_14/SPRINT_LOG.md` - Day 8 progress logged
+
+#### Test Results
+
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| End-to-end workflow | 1 | ✓ All steps pass (10.2s) |
+| Error recovery | 6 | ✓ 6/6 pass |
+| Edge cases | 34 | ✓ 34/34 pass |
+| GAMSLIB (total) | 185 | ✓ 185/185 pass |
+| **Project total** | **2661** | **✓ 2661/2661 pass** |
+
+#### Features
+
+**End-to-End Workflow Test:**
+- Tests complete pipeline: database init → parse → translate → query
+- Validates all 4 workflow stages
+- Tests with 2 models (chem, dispatch) completing in 10.2 seconds
+- Supports --no-reinit to use existing database
+
+**Error Recovery Tests:**
+- Backup creation and listing
+- Backup restoration
+- Corrupted database detection
+- Invalid update rejection
+- Backup pruning (MAX_BACKUPS=10)
+- Concurrent read access
+
+**Edge Case Tests:**
+- get_nested_value edge cases (6 tests): None, empty string, zero, missing fields
+- set_nested_value edge cases (7 tests): overwrites, creates paths, various types
+- parse_value edge cases (12 tests): empty, negative, scientific notation, JSON types
+- Database validation edge cases (6 tests): minimal fields, empty arrays, negative values
+- CLI limit parameter edge cases (3 tests): zero, negative, exceeding total
+
+#### Quality Checks
+
+- Typecheck: ✓ (81 source files)
+- Lint: ✓ (auto-fixed 3 issues)
+- Format: ✓ (1 file reformatted)
+- Tests: ✓ (2661 tests pass)
+
+---
+
 ### Sprint 14 Day 7: Batch Translate and Results Integration - 2026-01-05
 
 **Branch:** `sprint14-day7-batch-translate`  
