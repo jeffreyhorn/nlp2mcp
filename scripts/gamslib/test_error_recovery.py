@@ -2,11 +2,12 @@
 """Error recovery and edge case testing for GAMSLIB database.
 
 Tests:
-1. Backup creation and restoration
-2. Invalid database corruption detection
-3. Invalid update rejection
-4. Interrupted batch operation recovery
+1. Backup creation and listing
+2. Backup restoration
+3. Corrupted database detection
+4. Invalid update rejection
 5. Backup pruning
+6. Concurrent read access
 
 This script performs non-destructive tests on backup/restore functionality.
 """
@@ -105,8 +106,8 @@ def test_backup_restoration() -> bool:
     with tempfile.TemporaryDirectory() as tmpdir:
         temp_db_path = Path(tmpdir) / "test_db.json"
 
-        # Save current database to temp location
-        current_db = load_database()
+        # Save current database to temp location (ensure it can be loaded)
+        load_database()
         shutil.copy(DATABASE_PATH, temp_db_path)
         print(f"✓ Saved current database to temp location")
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -185,12 +186,7 @@ class TestParseValueEdgeCases:
 # =============================================================================
 
 
-try:
-    import jsonschema  # noqa: F401
-
-    HAS_JSONSCHEMA = True
-except ImportError:
-    HAS_JSONSCHEMA = False
+HAS_JSONSCHEMA = importlib.util.find_spec("jsonschema") is not None
 
 
 @pytest.mark.skipif(not HAS_JSONSCHEMA, reason="jsonschema not installed")

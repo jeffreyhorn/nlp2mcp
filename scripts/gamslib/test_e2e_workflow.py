@@ -28,7 +28,6 @@ from scripts.gamslib.db_manager import DATABASE_PATH, create_backup, load_databa
 
 # Test configuration
 TEST_MODELS = ["chem", "dispatch"]  # Small, fast models that parse successfully
-BACKUP_DIR = PROJECT_ROOT / "data" / "gamslib" / "archive"
 
 
 def run_command(cmd: list[str], description: str) -> tuple[int, str, str]:
