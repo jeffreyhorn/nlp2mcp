@@ -34,6 +34,8 @@ Epic 1 (Sprints 1-5) is complete, delivering core NLP to MCP transformation capa
 
 Epic 2 (Sprints 6-12) is complete, expanding parser coverage to 100% (28/28 models), adding aggressive simplification with 26.19% term reduction, and establishing comprehensive CI infrastructure. For detailed sprint summaries, see [docs/planning/EPIC_2/SUMMARY.md](docs/planning/EPIC_2/SUMMARY.md).
 
+Epic 3 (Sprints 13-17) is in progress, building GAMSLIB testing infrastructure with 219 models cataloged, JSON database with schema validation, and batch parse/translate pipelines achieving 21.3% parse success and 94.1% translation success. Sprints 13-14 are complete. For detailed sprint summaries, see [docs/planning/EPIC_3/SUMMARY.md](docs/planning/EPIC_3/SUMMARY.md).
+
 ## Installation
 
 ### Requirements
