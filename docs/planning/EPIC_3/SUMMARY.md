@@ -28,7 +28,7 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 **Status:** ✅ Complete
 
 **Key Achievements:**
-- ✅ 219 models cataloged (LP: 57, NLP: 49, QCP: 9, excluded: 104)
+- ✅ 219 models cataloged (LP: 86, NLP: 120, QCP: 13)
 - ✅ 100% download success rate (219/219 models)
 - ✅ 160 models verified as convex/likely convex (73%)
 - ✅ Automated discovery, download, and verification infrastructure
@@ -96,20 +96,21 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 | Metric | Value |
 |--------|-------|
 | Total models cataloged | 219 |
-| LP models | 57 |
-| NLP models | 49 |
-| QCP models | 9 |
-| Excluded models | 104 |
+| LP models | 86 |
+| NLP models | 120 |
+| QCP models | 13 |
 | Download success rate | 100% (219/219) |
-| Verified convex | 87 (LP models) |
-| Likely convex | 73 (NLP/QCP models) |
-| Excluded from testing | 59 |
+| Verified convex | 57 (LP with optimal solution) |
+| Likely convex | 103 (NLP/QCP with locally optimal) |
+| Excluded | 4 (infeasible/unbounded) |
+| Errors | 48 (license/compilation) |
+| Unknown | 7 |
 
 ---
 
 ### Sprint 14: JSON Database Infrastructure ✅ COMPLETE
 
-**Duration:** 10 days (Jan 1-9, 2026)  
+**Duration:** 10 days (Jan 10-21, 2026)  
 **Status:** ✅ Complete
 
 **Key Achievements:**
@@ -312,7 +313,7 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 
 ## Release History
 
-### v2.0.0 - Sprint 14 Complete (January 9, 2026)
+### v2.0.0 - Sprint 14 Complete (January 21, 2026)
 - JSON database infrastructure with schema validation
 - Batch parse/translate pipelines
 - Database management CLI with 5 subcommands
@@ -399,5 +400,5 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 ---
 
 *Epic 3 initiated: December 31, 2025*  
-*Last updated: January 9, 2026*  
+*Last updated: January 21, 2026*  
 *Status: Sprints 13-14 complete, Sprints 15-17 planned*
