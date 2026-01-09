@@ -22,7 +22,7 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 13–17 (
   - Scrape/parse GAMSLIB documentation pages for model listings
   - Extract metadata: model name, declared type, description, author, source URL
   - Filter to NLP and LP candidates (exclude specialized types)
-  - Store in `data/gamslib/catalog.json`
+  - Store in `data/gamslib/gamslib_status.json` (formerly `catalog.json`)
   - Target: 50+ candidate models identified
   - **Deliverable:** Initial catalog with metadata
 
@@ -59,20 +59,22 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 13–17 (
 - Create `data/gamslib/` directory structure:
   ```
   data/gamslib/
-    ├── raw/           # Downloaded .gms files (gitignored)
-    ├── mcp/           # Generated MCP files (gitignored)
-    ├── catalog.json   # Model metadata (version controlled)
-    └── archive/       # Historical snapshots
+    ├── raw/                    # Downloaded .gms files (gitignored)
+    ├── mcp/                    # Generated MCP files (gitignored)
+    ├── gamslib_status.json     # Model status database v2.0.0 (version controlled)
+    ├── catalog.json            # Legacy catalog v1.0.0 (version controlled)
+    ├── schema.json             # JSON Schema for validation
+    └── archive/                # Database backups
   ```
 - Create `.gitignore` entries for raw files and generated MCPs
-- Initialize empty catalog.json with schema
+- Initialize empty database with schema v2.0.0
 - **Deliverable:** Directory structure ready for use
 
 ## Deliverables
 - `docs/research/GAMSLIB_MODEL_TYPES.md` - Model type documentation
 - `scripts/gamslib/download_models.py` - Download automation
 - `scripts/gamslib/verify_convexity.py` - Initial convexity verification
-- `data/gamslib/catalog.json` - Initial model catalog (50+ candidates)
+- `data/gamslib/gamslib_status.json` - Model status database (50+ candidates)
 - `data/gamslib/` directory structure with gitignore
 - 50+ models downloaded and cataloged
 
@@ -110,7 +112,7 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 13–17 (
   - **Note:** Optional based on solver availability
 
 - **Verification Results Integration (3h)**
-  - Update catalog.json with convexity status for all models
+  - Update database with convexity status for all models
   - Record: solver used, solve time, objective value, termination status
   - Create summary report of verification results
   - **Deliverable:** Updated catalog with convexity data
@@ -612,9 +614,9 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 13–17 (
 data/gamslib/
   ├── raw/                    # Downloaded .gms files (gitignored)
   ├── mcp/                    # Generated MCP files (gitignored)
-  ├── catalog.json            # Model metadata (version controlled)
-  ├── schema.json             # JSON schema for validation
-  ├── gamslib_status.json     # Test status database (version controlled)
+  ├── gamslib_status.json     # Model status database v2.0.0 (version controlled)
+  ├── catalog.json            # Legacy catalog v1.0.0 (version controlled)
+  ├── schema.json             # JSON Schema for validation
   ├── progress_history.json   # Historical metrics (version controlled)
   ├── GAMSLIB_STATUS.md       # Summary report (version controlled)
   ├── FAILURE_ANALYSIS.md     # Failure analysis (version controlled)

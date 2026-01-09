@@ -18,20 +18,28 @@ gamslib --help
 
 ```
 data/gamslib/
-├── catalog.json          # Model catalog with metadata
+├── gamslib_status.json   # Model status database (v2.0.0, replaces catalog.json)
+├── catalog.json          # Legacy catalog (v1.0.0, migrated to gamslib_status.json)
+├── schema.json           # JSON Schema for database validation
 ├── convexity_report.md   # Summary report of verification results
 ├── verification_results.json  # Detailed verification output
 ├── raw/                  # Downloaded .gms files
 │   ├── trnsport.gms
 │   ├── blend.gms
 │   └── ...
-└── mcp/                  # Generated MCP files (future)
+├── mcp/                  # Generated MCP files
+└── archive/              # Database backups
 
 scripts/gamslib/
+├── db_manager.py         # Database management CLI (v2.0.0)
+├── batch_parse.py        # Batch parsing with nlp2mcp
+├── batch_translate.py    # Batch MCP translation
 ├── discover_models.py    # Discover LP/NLP/QCP models
 ├── download_models.py    # Download models from GAMSLIB
 └── verify_convexity.py   # Verify model convexity
 ```
+
+**Note:** As of Sprint 14 (January 2026), `catalog.json` has been replaced by `gamslib_status.json` with an enhanced schema (v2.0.0) that tracks the full nlp2mcp pipeline. See `docs/infrastructure/GAMSLIB_DATABASE_SCHEMA.md` for details.
 
 ## 1. Discover Models
 
@@ -52,7 +60,7 @@ python scripts/gamslib/discover_models.py --verbose
 
 ### Output
 
-- Updates `data/gamslib/catalog.json` with discovered models
+- Updates `data/gamslib/gamslib_status.json` (or legacy `catalog.json`) with discovered models
 - Generates `data/gamslib/discovery_report.md` with statistics
 
 ### Example Output
@@ -178,9 +186,30 @@ Verification Summary:
   Errors: 55
 ```
 
-## 4. Query the Catalog
+## 4. Query the Database
 
-The catalog is a JSON file that can be queried programmatically.
+The database (`gamslib_status.json`) can be queried using the CLI or programmatically.
+
+### CLI Examples
+
+```bash
+# List all models with statistics
+python scripts/gamslib/db_manager.py list
+
+# Filter by type
+python scripts/gamslib/db_manager.py list --type NLP
+
+# Get specific model details
+python scripts/gamslib/db_manager.py get trnsport
+
+# Get specific field (supports dot notation)
+python scripts/gamslib/db_manager.py get trnsport --field convexity.status
+python scripts/gamslib/db_manager.py get trnsport --field nlp2mcp_parse.variables_count
+
+# JSON output for scripting
+python scripts/gamslib/db_manager.py list --format json
+python scripts/gamslib/db_manager.py get trnsport --format json
+```
 
 ### Python Example
 
@@ -188,12 +217,12 @@ The catalog is a JSON file that can be queried programmatically.
 import json
 from pathlib import Path
 
-# Load catalog
-with open("data/gamslib/catalog.json") as f:
-    catalog = json.load(f)
+# Load database
+with open("data/gamslib/gamslib_status.json") as f:
+    database = json.load(f)
 
 # Get all models
-models = catalog["models"]
+models = database["models"]
 print(f"Total models: {len(models)}")
 
 # Filter by type
@@ -202,34 +231,41 @@ nlp_models = [m for m in models if m["gamslib_type"] == "NLP"]
 print(f"LP models: {len(lp_models)}")
 print(f"NLP models: {len(nlp_models)}")
 
-# Filter by convexity status
-verified = [m for m in models if m.get("convexity_status") == "verified_convex"]
-likely = [m for m in models if m.get("convexity_status") == "likely_convex"]
+# Filter by convexity status (note: nested structure in v2.0.0)
+verified = [m for m in models if m.get("convexity", {}).get("status") == "verified_convex"]
+likely = [m for m in models if m.get("convexity", {}).get("status") == "likely_convex"]
 print(f"Verified convex: {len(verified)}")
 print(f"Likely convex: {len(likely)}")
+
+# Filter by parse status
+parsed = [m for m in models if m.get("nlp2mcp_parse", {}).get("status") == "success"]
+print(f"Successfully parsed: {len(parsed)}")
 
 # Get specific model
 trnsport = next((m for m in models if m["model_id"] == "trnsport"), None)
 if trnsport:
-    print(f"trnsport objective: {trnsport.get('objective_value')}")
+    print(f"trnsport objective: {trnsport.get('convexity', {}).get('objective_value')}")
 ```
 
-### Using the Catalog Dataclass
+### Using the Database Manager API
 
 ```python
-from scripts.gamslib.catalog import GamslibCatalog
+from scripts.gamslib.db_manager import load_database, save_database, find_model
 
-# Load catalog
-catalog = GamslibCatalog.load(Path("data/gamslib/catalog.json"))
+# Load database
+database = load_database()
 
-# Query methods
-lp_models = catalog.get_models_by_type("LP")
-downloaded = catalog.get_models_by_status("downloaded")
-trnsport = catalog.get_model_by_id("trnsport")
+# Find specific model
+model = find_model(database, "trnsport")
+if model:
+    print(f"Model: {model['model_name']}")
+    print(f"Type: {model['gamslib_type']}")
+    print(f"Convexity: {model.get('convexity', {}).get('status')}")
 
-# Update model
-catalog.update_model("trnsport", notes="Classic transportation problem")
-catalog.save(Path("data/gamslib/catalog.json"))
+# Query with list comprehensions
+nlp_models = [m for m in database["models"] if m["gamslib_type"] == "NLP"]
+parsed_models = [m for m in database["models"] 
+                 if m.get("nlp2mcp_parse", {}).get("status") == "success"]
 ```
 
 ## 5. Common Workflows
