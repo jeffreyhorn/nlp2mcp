@@ -325,9 +325,6 @@ def test_concurrent_read_access() -> bool:
         db2 = load_database()
         db3 = load_database()
 
-        if db1 is db2:  # They should be different objects
-            print("⚠ WARNING: Multiple reads returned same object (caching?)")
-
         # Verify all reads returned the same data
         if (db1["schema_version"] != db2["schema_version"] or
             db2["schema_version"] != db3["schema_version"]):

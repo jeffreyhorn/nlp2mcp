@@ -368,7 +368,12 @@ class TestCLILimitEdgeCases:
         )
         assert result.returncode == 0
         count = int(result.stdout.strip())
-        assert count == 219  # All models
+        # Load actual database to get current model count
+        from scripts.gamslib.db_manager import load_database
+
+        db = load_database()
+        expected_count = len(db.get("models", []))
+        assert count == expected_count  # All models
 
     def test_list_with_negative_limit(self) -> None:
         """Test list command with negative limit (should error)."""
@@ -409,4 +414,10 @@ class TestCLILimitEdgeCases:
         )
         assert result.returncode == 0
         count = int(result.stdout.strip())
-        assert count == 219  # Only 219 models exist
+        # Load actual database to get current model count
+        from scripts.gamslib.db_manager import load_database
+
+        db = load_database()
+        expected_count = len(db.get("models", []))
+        assert count == expected_count  # Limited by actual model count
+        assert count < 1000  # Verify limit was higher than actual count
