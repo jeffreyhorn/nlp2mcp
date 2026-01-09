@@ -114,7 +114,10 @@
   - ✓ All fields described with valid values
   - ✓ Usage examples for all subcommands
   - ✓ Workflow guide complete
-| **Project total** | **2661** | **✓ 2661/2661 pass** |
+
+---
+
+## Day 8 Summary
 
 ### Key Findings
 

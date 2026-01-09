@@ -93,7 +93,7 @@ These fields describe the database as a whole.
 
 ## Model Entry Fields
 
-Each model entry has **17 possible fields**, with only 3 required at creation time.
+Each model entry has **19 possible fields**, with only 3 required at creation time.
 
 ### Core Fields
 
