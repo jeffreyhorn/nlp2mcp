@@ -152,9 +152,13 @@ def build_complementarity_pairs(
         piL_name = create_bound_lo_multiplier_name(var_name)
 
         # Create complementarity equation
+        # NOTE: Domain is empty () for element-specific bounds. Each element gets
+        # its own scalar equation (comp_lo_x_1, comp_lo_x_2, etc.)
+        # This avoids creating equations like comp_lo_x(i).. x("1") - lo =G= 0
+        # which mixes parameterization (domain i) with element reference ("1")
         comp_eq = EquationDef(
             name=f"comp_lo_{var_name}{'_' + '_'.join(indices) if indices else ''}",
-            domain=bound_def.domain,
+            domain=(),
             relation=Rel.GE,
             lhs_rhs=(F_piL, Const(0.0)),
         )
@@ -173,9 +177,13 @@ def build_complementarity_pairs(
         piU_name = create_bound_up_multiplier_name(var_name)
 
         # Create complementarity equation
+        # NOTE: Domain is empty () for element-specific bounds. Each element gets
+        # its own scalar equation (comp_up_x_1, comp_up_x_2, etc.)
+        # This avoids creating equations like comp_up_x(i).. up - x("1") =G= 0
+        # which mixes parameterization (domain i) with element reference ("1")
         comp_eq = EquationDef(
             name=f"comp_up_{var_name}{'_' + '_'.join(indices) if indices else ''}",
-            domain=bound_def.domain,
+            domain=(),
             relation=Rel.GE,
             lhs_rhs=(F_piU, Const(0.0)),
         )

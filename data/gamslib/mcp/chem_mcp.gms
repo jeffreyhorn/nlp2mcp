@@ -62,16 +62,16 @@ Positive Variables
 Equations
     stat_x(c)
     stat_xb
-    comp_lo_x_H(c)
-    comp_lo_x_H2(c)
-    comp_lo_x_H2O(c)
-    comp_lo_x_N(c)
-    comp_lo_x_N2(c)
-    comp_lo_x_NH(c)
-    comp_lo_x_NO(c)
-    comp_lo_x_O(c)
-    comp_lo_x_O2(c)
-    comp_lo_x_OH(c)
+    comp_lo_x_H
+    comp_lo_x_H2
+    comp_lo_x_H2O
+    comp_lo_x_N
+    comp_lo_x_N2
+    comp_lo_x_NH
+    comp_lo_x_NO
+    comp_lo_x_O
+    comp_lo_x_O2
+    comp_lo_x_OH
     comp_lo_xb
     cdef(i)
     edef
@@ -83,20 +83,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(c).. sum(c, 0) + sum(i, sum(c, 0) * nu_cdef(i)) + (-sum(c, 0)) * nu_xdef - piL_x(c) =E= 0;
+stat_x(c).. gplus(c) + log(x(c) / xb) + x(c) * 1 / (x(c) / xb) * 1 / xb ** 1 + sum(i, a(c,c) * nu_cdef(i)) + (-1) * nu_xdef - piL_x(c) =E= 0;
 stat_xb.. sum(c, x(c) * 1 / (x(c) / xb) * (-x(c)) / xb ** 2) + sum(c, 0) * nu_cdef(H) + sum(c, 0) * nu_cdef(N) + sum(c, 0) * nu_cdef(O) + (1 - sum(c, 0)) * nu_xdef - piL_xb =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_x_H(c).. x(H) - 0.001 =G= 0;
-comp_lo_x_H2(c).. x("H2") - 0.001 =G= 0;
-comp_lo_x_H2O(c).. x("H2O") - 0.001 =G= 0;
-comp_lo_x_N(c).. x(N) - 0.001 =G= 0;
-comp_lo_x_N2(c).. x("N2") - 0.001 =G= 0;
-comp_lo_x_NH(c).. x(NH) - 0.001 =G= 0;
-comp_lo_x_NO(c).. x(NO) - 0.001 =G= 0;
-comp_lo_x_O(c).. x(O) - 0.001 =G= 0;
-comp_lo_x_O2(c).. x("O2") - 0.001 =G= 0;
-comp_lo_x_OH(c).. x(OH) - 0.001 =G= 0;
+comp_lo_x_H.. x(H) - 0.001 =G= 0;
+comp_lo_x_H2.. x("H2") - 0.001 =G= 0;
+comp_lo_x_H2O.. x("H2O") - 0.001 =G= 0;
+comp_lo_x_N.. x(N) - 0.001 =G= 0;
+comp_lo_x_N2.. x("N2") - 0.001 =G= 0;
+comp_lo_x_NH.. x(NH) - 0.001 =G= 0;
+comp_lo_x_NO.. x(NO) - 0.001 =G= 0;
+comp_lo_x_O.. x(O) - 0.001 =G= 0;
+comp_lo_x_O2.. x("O2") - 0.001 =G= 0;
+comp_lo_x_OH.. x(OH) - 0.001 =G= 0;
 comp_lo_xb.. xb - 0.01 =G= 0;
 
 * Original equality equations
@@ -124,16 +124,16 @@ Model mcp_model /
     cdef.nu_cdef,
     edef.energy,
     xdef.nu_xdef,
-    comp_lo_x_H.piL_x,
-    comp_lo_x_H2.piL_x,
-    comp_lo_x_H2O.piL_x,
-    comp_lo_x_N.piL_x,
-    comp_lo_x_N2.piL_x,
-    comp_lo_x_NH.piL_x,
-    comp_lo_x_NO.piL_x,
-    comp_lo_x_O.piL_x,
-    comp_lo_x_O2.piL_x,
-    comp_lo_x_OH.piL_x,
+    comp_lo_x_H.piL_x("H"),
+    comp_lo_x_H2.piL_x("H2"),
+    comp_lo_x_H2O.piL_x("H2O"),
+    comp_lo_x_N.piL_x("N"),
+    comp_lo_x_N2.piL_x("N2"),
+    comp_lo_x_NH.piL_x("NH"),
+    comp_lo_x_NO.piL_x("NO"),
+    comp_lo_x_O.piL_x("O"),
+    comp_lo_x_O2.piL_x("O2"),
+    comp_lo_x_OH.piL_x("OH"),
     comp_lo_xb.piL_xb
 /;
 
