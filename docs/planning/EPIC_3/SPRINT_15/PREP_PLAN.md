@@ -259,7 +259,7 @@ grep "^**Priority:**" docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md | sort | 
 
 ## Task 2: Assess Existing Batch Infrastructure
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 2-3 hours  
 **Deadline:** Before Sprint 15 Day 1  
@@ -420,11 +420,22 @@ Create `docs/planning/EPIC_3/SPRINT_15/prep-tasks/batch_infrastructure_assessmen
 
 ### Changes
 
-To be completed during task execution.
+- Created `docs/planning/EPIC_3/SPRINT_15/prep-tasks/batch_infrastructure_assessment.md`
+- Updated `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.1, 1.2, 2.1, 2.2
 
 ### Result
 
-To be completed during task execution.
+**Key Findings:**
+1. **batch_parse.py** provides robust infrastructure: direct parser import, error categorization (6 categories), CLI with --model/--limit/--dry-run, database integration via db_manager, progress reporting with ETA
+2. **batch_translate.py** mirrors batch_parse.py patterns: subprocess isolation (60s timeout), MCP output management, consistent CLI
+3. **Recommendation:** Extend existing scripts rather than create new ones. Add filter flags (--only-failing, --error-category, --parse-success/failure)
+4. **Effort Savings:** 12-16 hours saved by reusing infrastructure vs. building from scratch
+
+**Unknown Verifications:**
+- Unknown 1.1: VERIFIED - batch_parse.py should be extended
+- Unknown 1.2: VERIFIED - syntax_error (77%) needs subcategorization
+- Unknown 2.1: VERIFIED - batch_translate.py should be extended
+- Unknown 2.2: VERIFIED - GAMS `action=c` enables syntax validation without solving
 
 ### Verification
 
@@ -451,13 +462,13 @@ ls -lh docs/planning/EPIC_3/SPRINT_15/prep-tasks/batch_infrastructure_assessment
 
 ### Acceptance Criteria
 
-- [ ] batch_parse.py fully documented (functionality, options, integration)
-- [ ] batch_translate.py fully documented (functionality, options, integration)
-- [ ] Strengths and limitations identified for each
-- [ ] Recommendation for Sprint 15 approach (extend vs. new scripts)
-- [ ] Code reuse opportunities identified
-- [ ] Effort savings estimated
-- [ ] Unknowns 1.1, 1.2, 2.1, 2.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] batch_parse.py fully documented (functionality, options, integration)
+- [x] batch_translate.py fully documented (functionality, options, integration)
+- [x] Strengths and limitations identified for each
+- [x] Recommendation for Sprint 15 approach (extend vs. new scripts)
+- [x] Code reuse opportunities identified
+- [x] Effort savings estimated
+- [x] Unknowns 1.1, 1.2, 2.1, 2.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

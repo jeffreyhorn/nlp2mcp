@@ -154,7 +154,25 @@ python scripts/gamslib/batch_parse.py --model trnsport
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 2)
+
+**Finding:** batch_parse.py should be **extended** rather than replaced. Analysis shows it provides:
+- Robust batch processing with progress reporting (every 10 models with ETA)
+- Database integration via db_manager module (load, save, backup)
+- Error categorization infrastructure (6 categories)
+- CLI with useful filters (--model, --limit, --dry-run, --verbose)
+- Direct parser import for fast execution (uses `src.ir.parser.parse_model_file`)
+- Timing measurement with `time.perf_counter()`
+- Periodic saves to prevent data loss
+
+**Recommendation:** Add new filter flags to batch_parse.py:
+- `--only-failing` - re-run only failed models
+- `--error-category=X` - filter by specific error type
+- `--parse-success/--parse-failure` - status-based filtering
+
+**Effort Saved:** 8-10 hours by extending vs. creating from scratch.
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/batch_infrastructure_assessment.md` for full analysis.
 
 ---
 
@@ -207,7 +225,27 @@ done
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 2)
+
+**Finding:** The current 6 error categories (syntax_error, unsupported_feature, validation_error, missing_include, timeout, internal_error) are well-structured, but "syntax_error" at 77% is a catch-all that needs subcategorization.
+
+**Current categorize_error() patterns in batch_parse.py:**
+- syntax_error: parse error, unexpected character/token, syntax error, unexpected eof
+- unsupported_feature: not yet implemented, unsupported
+- validation_error: domain, incompatible, not defined, undefined
+- missing_include: include, file not found
+- timeout: timeout
+- internal_error: default fallback
+
+**Recommendation:** Refine syntax_error into subcategories in Task 4 (Error Taxonomy):
+- `lexer_unknown_character` - unexpected character errors
+- `parser_equation_syntax` - equation parsing failures
+- `parser_expression_syntax` - expression parsing failures
+- `parser_unsupported_construct` - valid GAMS but not in our grammar
+
+These can be implemented as `error.details` field or as new enum values in schema v2.1.0.
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/batch_infrastructure_assessment.md` Section 1.4 for details.
 
 ---
 
@@ -400,7 +438,28 @@ python scripts/gamslib/batch_translate.py --model trnsport
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 2)
+
+**Finding:** batch_translate.py should be **extended** rather than replaced. It provides:
+- Consistent patterns with batch_parse.py (same CLI structure, progress reporting)
+- Subprocess isolation for translation safety (60s timeout with proper cleanup)
+- MCP file output management (writes to `data/gamslib/mcp/{model_id}_mcp.gms`)
+- Database integration via db_manager module
+- Error categorization (5 categories: timeout, unsupported_feature, validation_error, syntax_error, internal_error)
+
+**Key Implementation Details:**
+- Uses subprocess to call `python -m src.cli model.gms -o output.gms --quiet`
+- Only processes models where `nlp2mcp_parse.status == "success"`
+- 60-second timeout with proper process cleanup on timeout
+- Progress reporting every 5 models
+
+**Recommendation:** Add same filter flags as batch_parse.py for consistency:
+- `--only-failing` - re-run only failed translations
+- `--translate-success/--translate-failure` - status-based filtering
+
+**Effort Saved:** 6-8 hours by extending vs. creating from scratch.
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/batch_infrastructure_assessment.md` Section 2 for full analysis.
 
 ---
 
@@ -451,7 +510,25 @@ jq '.models[] | select(.nlp2mcp_translate.status=="failure") | .nlp2mcp_translat
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 2)
+
+**Finding:** GAMS supports compilation without solving using `action=c`:
+```bash
+gams generated_mcp.gms action=c
+```
+
+This compiles the model and checks syntax without invoking any solver. If there are syntax errors, they will be reported in the .lst file.
+
+**Recommendation:** Add optional syntax validation step in test_solve.py before PATH solve:
+1. Run `gams model.gms action=c` to check syntax
+2. If syntax check fails, categorize as `codegen_syntax_error`
+3. If syntax check passes, proceed to PATH solve
+
+This prevents wasting solver time on syntactically invalid MCP files and helps distinguish translation/codegen errors from solve errors.
+
+**Implementation Note:** This validation is optional and adds ~1-2 seconds per model. May want to make it configurable via `--skip-syntax-check` flag.
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/batch_infrastructure_assessment.md` Section 6 for details.
 
 ---
 

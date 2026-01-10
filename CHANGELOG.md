@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Prep Task 2: Assess Existing Batch Infrastructure - 2026-01-09
+
+**Branch:** `planning/sprint15-prep-task2`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Analyzed batch_parse.py and batch_translate.py from Sprint 14 to determine reuse strategy for Sprint 15. Recommendation: extend existing scripts rather than create new ones, saving 12-16 hours of effort.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_15/prep-tasks/batch_infrastructure_assessment.md` - Full analysis of batch infrastructure
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` - Verified Unknowns 1.1, 1.2, 2.1, 2.2
+- `docs/planning/EPIC_3/SPRINT_15/PREP_PLAN.md` - Marked Task 2 complete with results
+
+#### Key Findings
+
+| Script | Key Features | Recommendation |
+|--------|--------------|----------------|
+| batch_parse.py | Direct parser import, 6 error categories, CLI with --model/--limit, db_manager integration | Extend with --only-failing, --error-category filters |
+| batch_translate.py | Subprocess isolation (60s timeout), MCP output management, consistent patterns | Extend with --translate-success/failure filters |
+
+#### Unknown Verifications
+
+- **1.1:** ✅ VERIFIED - batch_parse.py should be extended (not replaced)
+- **1.2:** ✅ VERIFIED - syntax_error (77%) needs subcategorization into lexer/parser/semantic
+- **2.1:** ✅ VERIFIED - batch_translate.py should be extended (not replaced)
+- **2.2:** ✅ VERIFIED - GAMS `action=c` enables syntax validation without solving
+
+---
+
 ### Sprint 15 Prep Task 1: Create Known Unknowns List - 2026-01-09
 
 **Branch:** `planning/sprint15-prep`  
