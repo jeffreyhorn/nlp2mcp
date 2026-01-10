@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Prep Task 1: Create Known Unknowns List - 2026-01-09
+
+**Branch:** `planning/sprint15-prep`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive Known Unknowns document for Sprint 15 with 26 unknowns across 6 categories. Established Task-to-Unknown mapping for prep tasks 2-10. Updated PREP_PLAN.md with "Unknowns Verified" metadata for all tasks.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` - 26 unknowns with verification plans
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_15/PREP_PLAN.md` - Added Unknowns Verified metadata to Tasks 2-10, marked Task 1 complete
+
+#### Known Unknowns Summary
+
+| Category | Unknowns | Priority Distribution |
+|----------|----------|----------------------|
+| 1. Parse Testing Infrastructure | 5 | 2 High, 2 Medium, 1 Low |
+| 2. Translation Testing Infrastructure | 4 | 2 High, 1 Medium, 1 Low |
+| 3. MCP Solve Testing | 7 | 4 Critical, 2 High, 1 Medium |
+| 4. Database Schema Extensions | 4 | 2 Critical, 1 High, 1 Medium |
+| 5. Pipeline Orchestration & Filtering | 3 | 1 High, 1 Medium, 1 Low |
+| 6. Performance & Baseline Metrics | 3 | 3 Medium |
+| **Total** | **26** | 7 Critical, 10 High, 6 Medium, 3 Low |
+
+#### Task-to-Unknown Mapping
+
+| Prep Task | Unknowns Verified |
+|-----------|-------------------|
+| Task 2: Batch Infrastructure | 1.1, 1.2, 2.1, 2.2 |
+| Task 3: Solution Comparison | 3.1, 3.2, 3.3, 3.4 |
+| Task 4: Error Taxonomy | 1.3, 1.4, 2.3, 3.5 |
+| Task 5: PATH Solver | 3.6, 3.7 |
+| Task 6: Schema Extensions | 4.1, 4.2, 4.3, 4.4 |
+| Task 7: Filtering Requirements | 5.1, 5.2, 5.3 |
+| Task 8: Performance Measurement | 6.1, 6.2 |
+| Task 9: Tolerance Research | 3.1, 3.2 |
+| Task 10: Detailed Schedule | All unknowns |
+
+#### Deliverables
+
+- ✅ KNOWN_UNKNOWNS.md created with 26 unknowns (target: 22+)
+- ✅ Task-to-Unknown mapping table in KNOWN_UNKNOWNS.md
+- ✅ PREP_PLAN.md updated with "Unknowns Verified" for Tasks 2-10
+- ✅ PREP_PLAN.md Task 1 status → COMPLETE, all acceptance criteria checked
+- ✅ CHANGELOG.md updated with Task 1 completion entry
+
+#### Quality Metrics
+
+- Total unknowns: 26 (target: 22-30) ✓
+- Priority distribution: 27% Critical, 38% High, 23% Medium, 12% Low ✓
+- Categories: 6 (target: 5+) ✓
+- Estimated research time: 28-36 hours ✓
+
+---
+
 ### Sprint 14 Complete: JSON Database Infrastructure - 2026-01-09
 
 **Sprint:** 14  
