@@ -8,12 +8,12 @@
 
 ## Executive Summary
 
-This document defines a comprehensive error and outcome taxonomy for all three nlp2mcp pipeline stages. The taxonomy refines Sprint 14's 6 broad categories into 44 specific outcome types (38 error types + 6 success outcomes) that enable targeted analysis and improvement.
+This document defines a comprehensive error and outcome taxonomy for all three nlp2mcp pipeline stages. The taxonomy refines Sprint 14's 6 broad categories into 44 specific outcome types (40 error types + 4 success outcomes) that enable targeted analysis and improvement.
 
 **Key Changes from Sprint 14:**
 - Parse errors: 6 categories → 16 refined categories
 - Translation errors: 3 categories → 12 refined categories
-- Solve outcomes: New stage with 16 categories (10 error types + 6 success outcomes)
+- Solve outcomes: New stage with 16 categories (12 error types + 4 success outcomes)
 
 **Benefits:**
 1. Identify specific failure patterns for targeted fixes
@@ -68,8 +68,8 @@ Errors during grammar parsing - valid tokens but invalid syntax structure.
 | `parser_unexpected_token` | Unexpected Token | Token not expected at this position | `"Unexpected token"` or `"expected"` |
 | `parser_missing_semicolon` | Missing Semicolon | Statement not terminated with semicolon | `"Missing semicolon"` |
 | `parser_unmatched_paren` | Unmatched Parenthesis | Parentheses/brackets not balanced | `"unmatched"` and (`"("` or `")"` or `"["` or `"]"`) |
-| `parser_invalid_declaration` | Invalid Declaration | Malformed set/parameter/variable/equation declaration | `"declaration"` in context |
-| `parser_invalid_expression` | Invalid Expression | Malformed mathematical expression | `"expression"` in context |
+| `parser_invalid_declaration` | Invalid Declaration | Malformed set/parameter/variable/equation declaration | (manual classification - no auto-detect) |
+| `parser_invalid_expression` | Invalid Expression | Malformed mathematical expression | (manual classification - no auto-detect) |
 | `parser_unexpected_eof` | Unexpected End of File | File ended unexpectedly | `"unexpected eof"` or `"unexpected end"` |
 
 **Example Error Messages:**
@@ -181,10 +181,7 @@ def categorize_parse_error(error_message: str) -> str:
         if "not found" in msg_lower or "could not" in msg_lower:
             return "include_file_not_found"
     
-    # Fallback to generic syntax error
-    if "parse error" in msg_lower or "syntax" in msg_lower:
-        return "parser_syntax_error"
-    
+    # Fallback: route generic parse/syntax errors to internal_error (no dedicated schema category)
     return "internal_error"
 ```
 
@@ -323,7 +320,7 @@ def categorize_translation_error(error_message: str) -> str:
     if ("numerical error" in msg_lower or "nan" in msg_lower or "inf" in msg_lower) and "differentiation" not in msg_lower:
         return "codegen_numerical_error"
     
-    return "translation_internal_error"
+    return "internal_error"
 ```
 
 ---
@@ -434,8 +431,8 @@ def categorize_solve_result(
     if nlp_optimal != mcp_optimal:
         return "compare_status_mismatch"
     
-    # Fallback for unexpected combinations
-    return "solve_status_unknown"
+    # Fallback for unexpected combinations: use generic status mismatch category
+    return "compare_status_mismatch"
 ```
 
 ---
@@ -610,12 +607,14 @@ When adding a new error category:
 
 ### 7.1 Category Counts
 
-| Stage | Categories | Subcategories |
-|-------|------------|---------------|
-| Parse | 4 | 16 |
-| Translation | 4 | 12 |
-| Solve | 3 | 16 |
-| **Total** | **11** | **44** |
+| Stage | Categories | Subcategories | Success Outcomes | Error Types |
+|-------|------------|---------------|------------------|-------------|
+| Parse | 4 | 16 | 0 | 16 |
+| Translation | 4 | 12 | 0 | 12 |
+| Solve | 3 | 16 | 4 | 12 |
+| **Total** | **11** | **44** | **4** | **40** |
+
+**Note:** The 4 success outcomes are: `path_solve_normal`, `model_optimal`, `model_locally_optimal`, and `compare_objective_match`. All other outcomes are error types.
 
 ### 7.2 Sprint 15 Priorities
 

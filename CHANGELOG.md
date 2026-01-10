@@ -27,12 +27,12 @@ Designed comprehensive error classification taxonomy for all three pipeline stag
 
 #### Error Taxonomy Summary
 
-| Stage | Categories | Subcategories |
-|-------|------------|---------------|
-| Parse | 4 | 16 |
-| Translation | 4 | 12 |
-| Solve | 3 | 10 |
-| **Total** | **11** | **38** |
+| Stage | Categories | Subcategories | Success | Errors |
+|-------|------------|---------------|---------|--------|
+| Parse | 4 | 16 | 0 | 16 |
+| Translation | 4 | 12 | 0 | 12 |
+| Solve | 3 | 16 | 4 | 12 |
+| **Total** | **11** | **44** | **4** | **40** |
 
 #### Parse Error Categories (16)
 

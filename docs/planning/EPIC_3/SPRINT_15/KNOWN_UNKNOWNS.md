@@ -981,24 +981,24 @@ Development team
 
 **Finding:** Comprehensive solve outcome categories designed based on PATH solver status codes and comparison outcomes.
 
-**Solve Outcome Taxonomy (16 categories total: 10 error types + 6 success outcomes):**
+**Solve Outcome Taxonomy (16 categories total: 12 error types + 4 success outcomes):**
 
-**PATH Solver Status Outcomes (6):**
-- `path_solve_normal` - Solver completed normally (success)
+**PATH Solver Status Outcomes (6: 1 success, 5 errors):**
+- `path_solve_normal` - Solver completed normally (SUCCESS)
 - `path_solve_iteration_limit` - Solver hit iteration limit (solver_status=2)
 - `path_solve_time_limit` - Solver hit time limit (solver_status=3)
 - `path_solve_terminated` - Solver terminated by error (solver_status=4)
 - `path_solve_eval_error` - Function evaluation errors (solver_status=5)
 - `path_solve_license` - GAMS/PATH license issue (solver_status=7)
 
-**Model Status Outcomes (4):**
-- `model_optimal` - Model solved optimally (success)
-- `model_locally_optimal` - Locally optimal solution found (success)
+**Model Status Outcomes (4: 2 success, 2 errors):**
+- `model_optimal` - Model solved optimally (SUCCESS)
+- `model_locally_optimal` - Locally optimal solution found (SUCCESS)
 - `model_infeasible` - Model is infeasible (model_status=4 or 5)
 - `model_unbounded` - Model is unbounded (model_status=3)
 
-**Solution Comparison Outcomes (6):**
-- `compare_objective_match` - Objectives match within tolerance (success)
+**Solution Comparison Outcomes (6: 1 success, 5 errors):**
+- `compare_objective_match` - Objectives match within tolerance (SUCCESS)
 - `compare_objective_mismatch` - Objectives differ beyond tolerance (INVESTIGATE)
 - `compare_status_mismatch` - NLP and MCP have different solve status (INVESTIGATE)
 - `compare_nlp_failed` - Could not solve original NLP
