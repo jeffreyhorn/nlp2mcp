@@ -634,6 +634,7 @@ Development team
 
 **Code Generation Errors:**
 - `codegen_equation_error` - Failed to generate equation GAMS code
+- `codegen_variable_error` - Failed to generate variable GAMS code
 - `codegen_numerical_error` - NaN/Inf in generated code
 
 **Sprint 14 Error Mapping:**

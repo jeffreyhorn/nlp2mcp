@@ -46,20 +46,20 @@ Designed comprehensive error classification taxonomy for all three pipeline stag
 - **Differentiation Errors (3):** unsupported_func, chain_rule_error, numerical_error
 - **Model Structure Errors (3):** no_objective_def, domain_mismatch, missing_bounds
 - **Unsupported Construct Errors (4):** index_offset, dollar_cond, expression_type, special_ordered
-- **Code Generation Errors (2):** equation_error, numerical_error
+- **Code Generation Errors (3):** equation_error, variable_error, numerical_error
 
-#### Solve Error Categories (10)
+#### Solve Outcome Categories (16)
 
-- **PATH Solver Status (5):** iteration_limit, time_limit, terminated, eval_error, license
-- **Model Status (2):** infeasible, unbounded
-- **Comparison Errors (3):** objective_mismatch, status_mismatch, both_infeasible
+- **PATH Solver Status (6):** normal, iteration_limit, time_limit, terminated, eval_error, license
+- **Model Status (4):** optimal, locally_optimal, infeasible, unbounded
+- **Comparison Outcomes (6):** objective_match, objective_mismatch, status_mismatch, nlp_failed, mcp_failed, both_infeasible
 
 #### Unknown Verifications
 
 - **1.3:** ✅ VERIFIED - Binary pass/fail status for parse (partial tracking deferred)
 - **1.4:** ✅ VERIFIED - Model statistics can be extracted from IR after successful parse
 - **2.3:** ✅ VERIFIED - 12 translation error categories covering all failure modes
-- **3.5:** ✅ VERIFIED - 10 solve error categories with priority of investigation
+- **3.5:** ✅ VERIFIED - 16 solve outcome categories (includes success and error states)
 
 ---
 

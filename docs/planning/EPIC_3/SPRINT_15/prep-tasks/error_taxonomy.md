@@ -315,30 +315,30 @@ def categorize_translation_error(error_message: str) -> str:
     if "sos" in msg_lower or "special ordered" in msg_lower:
         return "unsup_special_ordered"
     
-    # Code generation errors
-    if "numerical error" in msg_lower or "nan" in msg_lower or "inf" in msg_lower:
-        return "codegen_numerical_error"
+    # Code generation errors (check specific patterns before general numerical)
     if "equation" in msg_lower and "generation" in msg_lower:
         return "codegen_equation_error"
     if "variable" in msg_lower and "generation" in msg_lower:
         return "codegen_variable_error"
+    if ("numerical error" in msg_lower or "nan" in msg_lower or "inf" in msg_lower) and "differentiation" not in msg_lower:
+        return "codegen_numerical_error"
     
     return "translation_internal_error"
 ```
 
 ---
 
-## Section 3: Solve Error Taxonomy
+## Section 3: Solve Outcome Taxonomy
 
 ### 3.1 Overview
 
 This is a new stage for Sprint 15 - comparing MCP solutions with original NLP solutions.
 
-### 3.2 Solve Error Categories
+### 3.2 Solve Outcome Categories
 
-#### Category 3.2.1: PATH Solver Status Errors
+#### Category 3.2.1: PATH Solver Status Outcomes
 
-Errors from PATH solver execution.
+Outcomes from PATH solver execution (includes both success and error states).
 
 | Error Code | Name | Description | Detection Pattern |
 |------------|------|-------------|-------------------|
@@ -349,9 +349,9 @@ Errors from PATH solver execution.
 | `path_solve_eval_error` | Evaluation Error | Function evaluation errors | solver_status == 5 |
 | `path_solve_license` | License Error | GAMS/PATH license issue | solver_status == 7 |
 
-#### Category 3.2.2: Model Status Errors
+#### Category 3.2.2: Model Status Outcomes
 
-MCP model status from solve.
+MCP model status from solve (includes both success and error states).
 
 | Error Code | Name | Description | Detection Pattern |
 |------------|------|-------------|-------------------|
@@ -360,18 +360,20 @@ MCP model status from solve.
 | `model_infeasible` | Infeasible | Model is infeasible | model_status == 4 or 5 |
 | `model_unbounded` | Unbounded | Model is unbounded | model_status == 3 |
 
-#### Category 3.2.3: Solution Comparison Errors
+#### Category 3.2.3: Solution Comparison Outcomes
 
-Errors comparing NLP and MCP solutions.
+Outcomes from comparing NLP and MCP solutions.
 
 | Error Code | Name | Description | Detection Pattern |
 |------------|------|-------------|-------------------|
 | `compare_objective_match` | Objective Match | Objectives match within tolerance | comparison result |
 | `compare_objective_mismatch` | Objective Mismatch | Objectives differ beyond tolerance | comparison result |
 | `compare_status_mismatch` | Status Mismatch | NLP and MCP have different solve status | comparison result |
-| `compare_nlp_failed` | NLP Solve Failed | Could not solve original NLP | nlp solver_status != 1 |
-| `compare_mcp_failed` | MCP Solve Failed | Could not solve generated MCP | mcp solver_status != 1 |
+| `compare_nlp_failed` | NLP Solve Failed | NLP solver failed (pre-comparison) | nlp solver_status != 1 |
+| `compare_mcp_failed` | MCP Solve Failed | MCP solver failed unexpectedly (pre-comparison) | mcp solver_status not in (1,2,3,4,5,7) |
 | `compare_both_infeasible` | Both Infeasible | Both NLP and MCP infeasible | both model_status in (4,5) |
+
+Note: `compare_nlp_failed` and `compare_mcp_failed` are pre-comparison outcomes that prevent objective comparison. Specific PATH solver failures (iteration limit, time limit, etc.) are categorized in 3.2.1.
 
 ### 3.3 Solve Error Detection
 
@@ -385,39 +387,54 @@ def categorize_solve_result(
 ) -> str:
     """Categorize solve result based on status codes and comparison."""
     
-    # Check solver status first
+    # Check solver status first (NLP)
     if nlp_solver_status != 1:
         return "compare_nlp_failed"
+    
+    # Check solver status (MCP/PATH)
     if mcp_solver_status != 1:
         if mcp_solver_status == 2:
             return "path_solve_iteration_limit"
         if mcp_solver_status == 3:
             return "path_solve_time_limit"
+        if mcp_solver_status == 4:
+            return "path_solve_terminated"
+        if mcp_solver_status == 5:
+            return "path_solve_eval_error"
         if mcp_solver_status == 7:
             return "path_solve_license"
         return "compare_mcp_failed"
     
-    # Check model status
+    # Both solvers completed normally - check model status
     nlp_optimal = nlp_model_status in (1, 2)
     mcp_optimal = mcp_model_status in (1, 2)
     nlp_infeasible = nlp_model_status in (4, 5)
     mcp_infeasible = mcp_model_status in (4, 5)
+    nlp_unbounded = nlp_model_status == 3
+    mcp_unbounded = mcp_model_status == 3
     
+    # Both optimal - compare objectives
     if nlp_optimal and mcp_optimal:
         if objective_match:
             return "compare_objective_match"
         else:
             return "compare_objective_mismatch"
     
+    # Both infeasible
     if nlp_infeasible and mcp_infeasible:
         return "compare_both_infeasible"
     
-    if nlp_optimal and not mcp_optimal:
+    # MCP-specific model status outcomes
+    if mcp_infeasible:
+        return "model_infeasible"
+    if mcp_unbounded:
+        return "model_unbounded"
+    
+    # Status mismatch (different model statuses)
+    if nlp_optimal != mcp_optimal:
         return "compare_status_mismatch"
     
-    if mcp_optimal and not nlp_optimal:
-        return "compare_status_mismatch"
-    
+    # Fallback for unexpected combinations
     return "solve_status_unknown"
 ```
 
@@ -447,14 +464,15 @@ def categorize_solve_result(
 
 Categories follow a hierarchical naming convention:
 - **Stage prefix:** `parse_`, `translate_`, `solve_`
-- **Substage:** `lexer_`, `parser_`, `semantic_`, `diff_`, `model_`, `unsup_`, `codegen_`, `path_`, `compare_`
+- **Substages:** `lexer_`, `parser_`, `semantic_`, `diff_`, `model_`, `unsup_`, `codegen_`, `path_`, `compare_`
 - **Specific error:** descriptive name
 
-### 4.3 Schema Extension for Error Categories
+### 4.3 Schema Extension for Outcome Categories
 
 ```json
 {
-  "error_category": {
+  "outcome_category": {
+    "description": "Category for both error and success outcomes",
     "type": "string",
     "enum": [
       "lexer_invalid_char",
@@ -486,11 +504,14 @@ Categories follow a hierarchical naming convention:
       "codegen_equation_error",
       "codegen_variable_error",
       "codegen_numerical_error",
+      "path_solve_normal",
       "path_solve_iteration_limit",
       "path_solve_time_limit",
       "path_solve_terminated",
       "path_solve_eval_error",
       "path_solve_license",
+      "model_optimal",
+      "model_locally_optimal",
       "model_infeasible",
       "model_unbounded",
       "compare_objective_match",
@@ -593,8 +614,8 @@ When adding a new error category:
 |-------|------------|---------------|
 | Parse | 4 | 16 |
 | Translation | 4 | 12 |
-| Solve | 3 | 10 |
-| **Total** | **11** | **38** |
+| Solve | 3 | 16 |
+| **Total** | **11** | **44** |
 
 ### 7.2 Sprint 15 Priorities
 
