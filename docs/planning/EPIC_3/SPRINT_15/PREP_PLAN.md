@@ -753,7 +753,7 @@ grep "Recommendation" docs/planning/EPIC_3/SPRINT_15/prep-tasks/solution_compari
 
 ## Task 4: Design Comprehensive Error Taxonomy
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Sprint 15 Day 1  
@@ -973,11 +973,28 @@ Create `docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md` with:
 
 ### Changes
 
-To be completed during task execution.
+- Created `docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md`
+- Updated `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.3, 1.4, 2.3, 3.5
 
 ### Result
 
-To be completed during task execution.
+**Key Findings:**
+1. **Parse Error Taxonomy (16 categories):** Refined from 6 broad categories into specific subcategories:
+   - Lexer errors (4): invalid_char, unclosed_string, invalid_number, encoding_error
+   - Parser errors (6): unexpected_token, missing_semicolon, unmatched_paren, invalid_declaration, invalid_expression, unexpected_eof
+   - Semantic errors (4): undefined_symbol, type_mismatch, domain_error, duplicate_def
+   - Include errors (2): file_not_found, circular
+2. **Translation Error Taxonomy (12 categories):** Covers differentiation, model structure, unsupported constructs, and code generation
+3. **Solve Error Taxonomy (10 categories):** Covers PATH solver status, model status, and solution comparison
+4. **Total: 38 error categories** across all pipeline stages
+5. **Detection Algorithm:** Python functions for automatic categorization based on error message patterns
+6. **Migration Plan:** Re-process Sprint 14 error messages with new categorization function, preserve legacy_category field
+
+**Unknown Verifications:**
+- Unknown 1.3: VERIFIED - Binary pass/fail status for parse (partial tracking deferred)
+- Unknown 1.4: VERIFIED - Model statistics can be extracted from IR after successful parse
+- Unknown 2.3: VERIFIED - 12 translation error categories covering all failure modes
+- Unknown 3.5: VERIFIED - 10 solve error categories with priority of investigation
 
 ### Verification
 
@@ -1007,14 +1024,14 @@ grep -i "solve" docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md
 
 ### Acceptance Criteria
 
-- [ ] Parse error taxonomy refines Sprint 14's 7 categories
-- [ ] Translation error taxonomy covers all translation stages
-- [ ] Solve error taxonomy covers PATH solver statuses and comparison
-- [ ] Each category has description and example
-- [ ] Detection patterns defined for automatic categorization
-- [ ] Database storage format specified
-- [ ] Migration plan for Sprint 14 data created
-- [ ] Unknowns 1.3, 1.4, 2.3, 3.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Parse error taxonomy refines Sprint 14's 7 categories
+- [x] Translation error taxonomy covers all translation stages
+- [x] Solve error taxonomy covers PATH solver statuses and comparison
+- [x] Each category has description and example
+- [x] Detection patterns defined for automatic categorization
+- [x] Database storage format specified
+- [x] Migration plan for Sprint 14 data created
+- [x] Unknowns 1.3, 1.4, 2.3, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
