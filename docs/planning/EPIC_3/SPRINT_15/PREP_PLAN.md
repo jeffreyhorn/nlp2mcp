@@ -985,8 +985,8 @@ Create `docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md` with:
    - Semantic errors (4): undefined_symbol, type_mismatch, domain_error, duplicate_def
    - Include errors (2): file_not_found, circular
 2. **Translation Error Taxonomy (12 categories):** Covers differentiation, model structure, unsupported constructs, and code generation
-3. **Solve Error Taxonomy (10 categories):** Covers PATH solver status, model status, and solution comparison
-4. **Total: 38 error categories** across all pipeline stages
+3. **Solve Outcome Taxonomy (16 categories):** Covers PATH solver status (6), model status (4), and solution comparison (6) - includes both error and success outcomes
+4. **Total: 44 outcome categories** across all pipeline stages (38 error types + 6 success outcomes)
 5. **Detection Algorithm:** Python functions for automatic categorization based on error message patterns
 6. **Migration Plan:** Re-process Sprint 14 error messages with new categorization function, preserve legacy_category field
 
@@ -994,7 +994,7 @@ Create `docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md` with:
 - Unknown 1.3: VERIFIED - Binary pass/fail status for parse (partial tracking deferred)
 - Unknown 1.4: VERIFIED - Model statistics can be extracted from IR after successful parse
 - Unknown 2.3: VERIFIED - 12 translation error categories covering all failure modes
-- Unknown 3.5: VERIFIED - 10 solve error categories with priority of investigation
+- Unknown 3.5: VERIFIED - 16 solve outcome categories (10 error + 6 success) with priority of investigation
 
 ### Verification
 

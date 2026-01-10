@@ -8,12 +8,12 @@
 
 ## Executive Summary
 
-This document defines a comprehensive error taxonomy for all three nlp2mcp pipeline stages. The taxonomy refines Sprint 14's 6 broad categories into 38 specific error types that enable targeted analysis and improvement.
+This document defines a comprehensive error and outcome taxonomy for all three nlp2mcp pipeline stages. The taxonomy refines Sprint 14's 6 broad categories into 44 specific outcome types (38 error types + 6 success outcomes) that enable targeted analysis and improvement.
 
 **Key Changes from Sprint 14:**
 - Parse errors: 6 categories → 16 refined categories
 - Translation errors: 3 categories → 12 refined categories
-- Solve errors: New stage with 10 categories
+- Solve outcomes: New stage with 16 categories (10 error types + 6 success outcomes)
 
 **Benefits:**
 1. Identify specific failure patterns for targeted fixes
