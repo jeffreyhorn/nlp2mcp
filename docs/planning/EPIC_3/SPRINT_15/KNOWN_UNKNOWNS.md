@@ -674,7 +674,26 @@ jq '.models[] | select(.convexity.objective_value != null) | .convexity.objectiv
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 3)
+
+**Finding:** Default tolerances of rtol=1e-6 and atol=1e-8 are appropriate:
+
+**Solver Tolerance Survey:**
+| Solver | Parameter | Default |
+|--------|-----------|---------|
+| CONOPT | RTREDG | 1e-7 |
+| IPOPT | tol | 1e-8 |
+| PATH | convergence_tolerance | 1e-6 |
+| CPLEX | optimality_tolerance | 1e-6 |
+
+**Recommendation:**
+- rtol=1e-6 (relative) - matches PATH/CPLEX defaults
+- atol=1e-8 (absolute) - matches IPOPT default
+- Combined formula: `|a - b| <= atol + rtol * |b|`
+
+**Existing nlp2mcp usage:** `tests/validation/test_path_solver.py` uses 1e-6 for KKT residual checking, confirming alignment.
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/solution_comparison_research.md` Section 2 for full analysis.
 
 ---
 
@@ -727,7 +746,24 @@ elif nlp_status == optimal and mcp_status != optimal:
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 3)
+
+**Finding:** Use decision tree approach with ComparisonResult enum:
+
+**Decision Tree:**
+1. NLP solve failed → `nlp_solve_failed`
+2. MCP solve failed → `mcp_solve_failed` (possible nlp2mcp bug)
+3. Both optimal (status 1 or 2) → compare objectives → `objective_match` or `objective_mismatch`
+4. Both infeasible (status 4 or 5) → `both_infeasible` (agreement)
+5. NLP optimal, MCP not → `status_mismatch_nlp_optimal` (INVESTIGATE)
+6. MCP optimal, NLP not → `status_mismatch_mcp_optimal` (INVESTIGATE)
+
+**Priority of Investigation:**
+- `objective_mismatch` and `status_mismatch_*` are Critical (likely nlp2mcp bugs)
+- `mcp_solve_failed` is High (check MCP syntax, PATH config)
+- `both_infeasible` is expected for infeasible models
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/solution_comparison_research.md` Section 3 for full decision tree.
 
 ---
 
@@ -770,7 +806,22 @@ jq '.models[] | select(.gamslib_type == "LP")' data/gamslib/gamslib_status.json
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 3)
+
+**Finding:** Compare objective values only, not primal variables:
+
+**Rationale:**
+1. For problems with multiple optima, primal variables may legitimately differ
+2. Objective values should be identical at all optima
+3. Objective comparison is sufficient to detect nlp2mcp bugs (wrong gradients, sign errors, constraint handling)
+4. Primal comparison requires variable name mapping (complex due to added multipliers)
+
+**Strategy:**
+- Accept matching objectives regardless of primal variable differences
+- Do not explicitly detect multiple optima in Sprint 15
+- Future enhancement (Sprint 16+): Flag models where primals differ despite matching objectives
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/solution_comparison_research.md` Section 4 for full analysis.
 
 ---
 

@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Prep Task 3: Research Solution Comparison Strategies - 2026-01-09
+
+**Branch:** `planning/sprint15-prep-task3`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Researched and validated strategies for comparing NLP solutions with MCP solutions. Established tolerance values (rtol=1e-6, atol=1e-8), designed status comparison decision tree, and defined multiple optima handling strategy. Recommendation: compare objectives only for Sprint 15, using combined tolerance formula.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_15/prep-tasks/solution_comparison_research.md` - Comprehensive research on solution comparison strategies
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` - Verified Unknowns 3.1, 3.2, 3.3, 3.4
+- `docs/planning/EPIC_3/SPRINT_15/PREP_PLAN.md` - Marked Task 3 complete with results
+
+#### Key Findings
+
+| Topic | Recommendation |
+|-------|----------------|
+| Tolerance Values | rtol=1e-6, atol=1e-8 (matches CPLEX/numpy defaults) |
+| Tolerance Formula | Combined: `|a - b| <= atol + rtol * |b|` |
+| Status Comparison | 7-outcome decision tree for optimal/infeasible/timeout |
+| Multiple Optima | Compare objectives only, not primal variables |
+| Sprint 15 Scope | Objective-only comparison (variable comparison deferred) |
+| Implementation | Reuse .lst parsing from verify_convexity.py |
+
+#### Solver Tolerance Survey
+
+| Solver | Default Tolerance |
+|--------|------------------|
+| CONOPT | 1e-7 |
+| IPOPT | 1e-8 |
+| PATH | 1e-6 |
+| CPLEX | 1e-6 |
+
+#### Unknown Verifications
+
+- **3.1:** ✅ VERIFIED - rtol=1e-6, atol=1e-8 with combined formula
+- **3.2:** ✅ VERIFIED - 7-outcome decision tree for status handling
+- **3.3:** ✅ VERIFIED - Compare objectives only for multiple optima
+- **3.4:** ✅ VERIFIED - Objective-only comparison for Sprint 15
+
+#### Code Reuse Identified
+
+- `verify_convexity.py` - Objective value extraction from .lst files
+- `test_path_solver.py` - `_check_kkt_residuals()` uses tolerance=1e-6
+
+---
+
 ### Sprint 15 Prep Task 2: Assess Existing Batch Infrastructure - 2026-01-09
 
 **Branch:** `planning/sprint15-prep-task2`  

@@ -474,7 +474,7 @@ ls -lh docs/planning/EPIC_3/SPRINT_15/prep-tasks/batch_infrastructure_assessment
 
 ## Task 3: Research Solution Comparison Strategies
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Critical  
 **Estimated Time:** 4-5 hours  
 **Deadline:** Before Sprint 15 Day 1  
@@ -693,11 +693,24 @@ Create `docs/planning/EPIC_3/SPRINT_15/prep-tasks/solution_comparison_research.m
 
 ### Changes
 
-To be completed during task execution.
+- Created `docs/planning/EPIC_3/SPRINT_15/prep-tasks/solution_comparison_research.md`
+- Updated `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` with verification results for Unknowns 3.1, 3.2, 3.3, 3.4
 
 ### Result
 
-To be completed during task execution.
+**Key Findings:**
+1. **Tolerance Selection:** Combined tolerance formula `|a - b| <= atol + rtol * |b|` with rtol=1e-6 (matches CPLEX), atol=1e-8 (matches numpy). Validated against solver defaults (CONOPT 1e-7, IPOPT 1e-8, PATH 1e-6, CPLEX 1e-6).
+2. **Decision Tree for Status Comparison:** 7-outcome decision tree covering optimal/optimal (compare objectives), infeasible/infeasible (both agree), mismatches (flag as errors), and timeouts.
+3. **Multiple Optima Strategy:** Compare objectives only, not primal variables. Multiple solutions may have identical objective values but different variable values.
+4. **Comparison Scope:** Objectives only for Sprint 15 (sufficient for validation). Variable comparison deferred to Sprint 16+.
+5. **Implementation Approach:** Reuse .lst parsing from verify_convexity.py (objective extraction pattern), tolerance utilities from test_path_solver.py.
+6. **Code Reuse Identified:** `_check_kkt_residuals()` in test_path_solver.py uses tolerance=1e-6, verify_convexity.py has objective value extraction from .lst files.
+
+**Unknown Verifications:**
+- Unknown 3.1: VERIFIED - rtol=1e-6, atol=1e-8 with combined formula
+- Unknown 3.2: VERIFIED - 7-outcome decision tree for status handling
+- Unknown 3.3: VERIFIED - Compare objectives only for multiple optima
+- Unknown 3.4: VERIFIED - Objective-only comparison for Sprint 15
 
 ### Verification
 
@@ -726,15 +739,15 @@ grep "Recommendation" docs/planning/EPIC_3/SPRINT_15/prep-tasks/solution_compari
 
 ### Acceptance Criteria
 
-- [ ] Theoretical foundation documented
-- [ ] Tolerance values recommended (relative and absolute)
-- [ ] Status comparison decision tree complete
-- [ ] Multiple optima handling defined
-- [ ] Comparison scope decided (objective only vs. variables vs. duals)
-- [ ] Implementation approach selected (.lst vs. GDX vs. API)
-- [ ] Code reuse opportunities identified
-- [ ] Sprint 15 recommendations clear and actionable
-- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Theoretical foundation documented
+- [x] Tolerance values recommended (relative and absolute)
+- [x] Status comparison decision tree complete
+- [x] Multiple optima handling defined
+- [x] Comparison scope decided (objective only vs. variables vs. duals)
+- [x] Implementation approach selected (.lst vs. GDX vs. API)
+- [x] Code reuse opportunities identified
+- [x] Sprint 15 recommendations clear and actionable
+- [x] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
