@@ -30,7 +30,7 @@ Researched and validated strategies for comparing NLP solutions with MCP solutio
 | Topic | Recommendation |
 |-------|----------------|
 | Tolerance Values | rtol=1e-6, atol=1e-8 (matches CPLEX/numpy defaults) |
-| Tolerance Formula | Combined: `\|a - b\| <= atol + rtol * \|b\|` |
+| Tolerance Formula | Combined: `|a - b| <= atol + rtol * |b|` |
 | Status Comparison | 7-outcome decision tree for optimal/infeasible/timeout |
 | Multiple Optima | Compare objectives only, not primal variables |
 | Sprint 15 Scope | Objective-only comparison (variable comparison deferred) |

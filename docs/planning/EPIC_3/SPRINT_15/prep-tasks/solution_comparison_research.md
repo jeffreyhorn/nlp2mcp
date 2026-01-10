@@ -105,10 +105,11 @@ The existing codebase uses **1e-6** for KKT residual checking.
 
 **Combined Tolerance (recommended):**
 ```python
-|a - b| <= atol + rtol * |b|
+|a - b| <= atol + rtol * max(|a|, |b|)
 ```
 - Handles both edge cases
-- Used by NumPy `allclose()`, SciPy, and most numerical libraries
+- Symmetric comparison (order of arguments doesn't matter)
+- Similar to NumPy `allclose()`, SciPy, and most numerical libraries
 
 ### 2.4 Recommended Tolerance Values
 
@@ -121,7 +122,7 @@ The existing codebase uses **1e-6** for KKT residual checking.
 ```python
 def objectives_match(nlp_obj: float, mcp_obj: float, rtol: float = 1e-6, atol: float = 1e-8) -> bool:
     """Check if NLP and MCP objectives match within tolerance."""
-    return abs(nlp_obj - mcp_obj) <= atol + rtol * abs(nlp_obj)
+    return abs(nlp_obj - mcp_obj) <= atol + rtol * max(abs(nlp_obj), abs(mcp_obj))
 ```
 
 ### 2.5 Edge Cases
@@ -387,7 +388,7 @@ def compare_solutions(
     """
     # Check if both optimal
     if nlp_model_status in (1, 2) and mcp_model_status in (1, 2):
-        if abs(nlp_objective - mcp_objective) <= atol + rtol * abs(nlp_objective):
+        if abs(nlp_objective - mcp_objective) <= atol + rtol * max(abs(nlp_objective), abs(mcp_objective)):
             return ComparisonResult.OBJECTIVE_MATCH
         else:
             return ComparisonResult.OBJECTIVE_MISMATCH
