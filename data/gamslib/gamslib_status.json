@@ -6420,9 +6420,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-10T00:51:41.914459+00:00",
-        "nlp2mcp_version": "0.1.0",
-        "parse_time_seconds": 1.514,
+        "parse_date": "2026-01-02T16:55:09.546483+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "parse_time_seconds": 0.182,
         "error": {
           "category": "syntax_error",
           "message": "Error: Parse error at line 31, column 16: Unexpected character: '3'\n  / 'new-york'   325,\n                 ^\n\nSuggestion: This character is not valid in this context"

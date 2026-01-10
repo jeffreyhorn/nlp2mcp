@@ -83,7 +83,7 @@ Current categories (from `categorize_error()` function):
 
 | Category | Detection Patterns | Sprint 14 % |
 |----------|-------------------|-------------|
-| `syntax_error` | parse error, unexpected character/token, syntax error | 77% |
+| `syntax_error` | parse error, unexpected character/token, syntax error, unexpected eof | 77% |
 | `unsupported_feature` | not yet implemented, unsupported | 14.3% |
 | `validation_error` | domain, incompatible, not defined, undefined | 5.6% |
 | `missing_include` | include, file not found | 2.4% |
@@ -391,7 +391,7 @@ def run_full_pipeline(args):
 - `--error-category=X` - filter by specific error type
 - `--parse-success/--parse-failure` - status-based filtering
 
-### Unknown 1.2: What additional error categories are needed beyond Sprint 14's 7 categories?
+### Unknown 1.2: What additional error categories are needed beyond Sprint 14's 6 categories?
 
 **Status:** ✅ VERIFIED
 
