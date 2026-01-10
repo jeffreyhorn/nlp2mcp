@@ -24,7 +24,7 @@
 
 ### Prompt
 
-You are working on branch `planning/sprint15-prep`. Complete Sprint 15 Prep Task 2: Assess Existing Batch Infrastructure.
+You are working on branch `planning/sprint15-prep-task2`. Complete Sprint 15 Prep Task 2: Assess Existing Batch Infrastructure.
 
 **Objective:** Thoroughly analyze `scripts/gamslib/batch_parse.py` and `scripts/gamslib/batch_translate.py` from Sprint 14 to understand what functionality already exists and what needs to be added/changed for Sprint 15 testing infrastructure.
 
@@ -86,7 +86,7 @@ Complete Sprint 15 Prep Task 2: Assess Existing Batch Infrastructure
 ```
 
 **After Commit:**
-1. Push changes: `git push origin planning/sprint15-prep`
+1. Push changes: `git push origin planning/sprint15-prep-task2`
 2. Create PR: `gh pr create --title "Sprint 15 Prep Task 2: Assess Existing Batch Infrastructure" --body "Completes Task 2 of Sprint 15 prep plan. See docs/planning/EPIC_3/SPRINT_15/prep-tasks/batch_infrastructure_assessment.md for full analysis."`
 3. Wait for reviewer comments before proceeding
 
@@ -96,7 +96,7 @@ Complete Sprint 15 Prep Task 2: Assess Existing Batch Infrastructure
 
 ### Prompt
 
-You are working on branch `planning/sprint15-prep`. Complete Sprint 15 Prep Task 3: Research Solution Comparison Strategies.
+You are working on branch `planning/sprint15-prep-task3`. Complete Sprint 15 Prep Task 3: Research Solution Comparison Strategies.
 
 **Objective:** Research and validate strategies for comparing NLP solutions with MCP solutions to ensure the KKT reformulation produces mathematically equivalent results.
 
@@ -164,7 +164,7 @@ Complete Sprint 15 Prep Task 3: Research Solution Comparison Strategies
 ```
 
 **After Commit:**
-1. Push changes: `git push origin planning/sprint15-prep`
+1. Push changes: `git push origin planning/sprint15-prep-task3`
 2. Create PR: `gh pr create --title "Sprint 15 Prep Task 3: Research Solution Comparison Strategies" --body "Completes Task 3 of Sprint 15 prep plan. See docs/planning/EPIC_3/SPRINT_15/prep-tasks/solution_comparison_research.md for full research."`
 3. Wait for reviewer comments before proceeding
 
@@ -174,7 +174,7 @@ Complete Sprint 15 Prep Task 3: Research Solution Comparison Strategies
 
 ### Prompt
 
-You are working on branch `planning/sprint15-prep`. Complete Sprint 15 Prep Task 4: Design Comprehensive Error Taxonomy.
+You are working on branch `planning/sprint15-prep-task4`. Complete Sprint 15 Prep Task 4: Design Comprehensive Error Taxonomy.
 
 **Objective:** Design comprehensive error classification taxonomy for all three pipeline stages (parse, translate, solve) to enable systematic analysis of failure modes and targeted improvements.
 
@@ -243,7 +243,7 @@ Complete Sprint 15 Prep Task 4: Design Comprehensive Error Taxonomy
 ```
 
 **After Commit:**
-1. Push changes: `git push origin planning/sprint15-prep`
+1. Push changes: `git push origin planning/sprint15-prep-task4`
 2. Create PR: `gh pr create --title "Sprint 15 Prep Task 4: Design Comprehensive Error Taxonomy" --body "Completes Task 4 of Sprint 15 prep plan. See docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md for full taxonomy."`
 3. Wait for reviewer comments before proceeding
 
@@ -253,7 +253,7 @@ Complete Sprint 15 Prep Task 4: Design Comprehensive Error Taxonomy
 
 ### Prompt
 
-You are working on branch `planning/sprint15-prep`. Complete Sprint 15 Prep Task 5: Validate PATH Solver Integration.
+You are working on branch `planning/sprint15-prep-task5`. Complete Sprint 15 Prep Task 5: Validate PATH Solver Integration.
 
 **Objective:** Validate that PATH solver is available, properly configured, and can be invoked from Python scripts for MCP solving.
 
@@ -328,7 +328,7 @@ Complete Sprint 15 Prep Task 5: Validate PATH Solver Integration
 ```
 
 **After Commit:**
-1. Push changes: `git push origin planning/sprint15-prep`
+1. Push changes: `git push origin planning/sprint15-prep-task5`
 2. Create PR: `gh pr create --title "Sprint 15 Prep Task 5: Validate PATH Solver Integration" --body "Completes Task 5 of Sprint 15 prep plan. See docs/planning/EPIC_3/SPRINT_15/prep-tasks/path_solver_integration.md for integration guide."`
 3. Wait for reviewer comments before proceeding
 
@@ -338,7 +338,7 @@ Complete Sprint 15 Prep Task 5: Validate PATH Solver Integration
 
 ### Prompt
 
-You are working on branch `planning/sprint15-prep`. Complete Sprint 15 Prep Task 6: Design Database Schema Extensions.
+You are working on branch `planning/sprint15-prep-task6`. Complete Sprint 15 Prep Task 6: Design Database Schema Extensions.
 
 **Objective:** Design extensions to `data/gamslib/schema.json` (v2.0.0) to support solve results, solution comparison, and refined error categorization for Sprint 15.
 
@@ -415,7 +415,7 @@ Complete Sprint 15 Prep Task 6: Design Database Schema Extensions
 ```
 
 **After Commit:**
-1. Push changes: `git push origin planning/sprint15-prep`
+1. Push changes: `git push origin planning/sprint15-prep-task6`
 2. Create PR: `gh pr create --title "Sprint 15 Prep Task 6: Design Database Schema Extensions" --body "Completes Task 6 of Sprint 15 prep plan. See docs/planning/EPIC_3/SPRINT_15/prep-tasks/ for schema draft and documentation."`
 3. Wait for reviewer comments before proceeding
 
@@ -425,7 +425,7 @@ Complete Sprint 15 Prep Task 6: Design Database Schema Extensions
 
 ### Prompt
 
-You are working on branch `planning/sprint15-prep`. Complete Sprint 15 Prep Task 7: Define Test Filtering Requirements.
+You are working on branch `planning/sprint15-prep-task7`. Complete Sprint 15 Prep Task 7: Define Test Filtering Requirements.
 
 **Objective:** Define comprehensive filtering requirements for `run_full_test.py` to enable selective testing during development and debugging.
 
@@ -503,7 +503,7 @@ Complete Sprint 15 Prep Task 7: Define Test Filtering Requirements
 ```
 
 **After Commit:**
-1. Push changes: `git push origin planning/sprint15-prep`
+1. Push changes: `git push origin planning/sprint15-prep-task7`
 2. Create PR: `gh pr create --title "Sprint 15 Prep Task 7: Define Test Filtering Requirements" --body "Completes Task 7 of Sprint 15 prep plan. See docs/planning/EPIC_3/SPRINT_15/prep-tasks/test_filtering_requirements.md for filter API."`
 3. Wait for reviewer comments before proceeding
 
@@ -513,7 +513,7 @@ Complete Sprint 15 Prep Task 7: Define Test Filtering Requirements
 
 ### Prompt
 
-You are working on branch `planning/sprint15-prep`. Complete Sprint 15 Prep Task 8: Research Performance Measurement Approach.
+You are working on branch `planning/sprint15-prep-task8`. Complete Sprint 15 Prep Task 8: Research Performance Measurement Approach.
 
 **Objective:** Research and define approach for accurately measuring parse, translate, and solve times to establish baseline metrics and detect performance regressions.
 
@@ -586,7 +586,7 @@ Complete Sprint 15 Prep Task 8: Research Performance Measurement Approach
 ```
 
 **After Commit:**
-1. Push changes: `git push origin planning/sprint15-prep`
+1. Push changes: `git push origin planning/sprint15-prep-task8`
 2. Create PR: `gh pr create --title "Sprint 15 Prep Task 8: Research Performance Measurement Approach" --body "Completes Task 8 of Sprint 15 prep plan. See docs/planning/EPIC_3/SPRINT_15/prep-tasks/performance_measurement.md for methodology."`
 3. Wait for reviewer comments before proceeding
 
@@ -596,7 +596,7 @@ Complete Sprint 15 Prep Task 8: Research Performance Measurement Approach
 
 ### Prompt
 
-You are working on branch `planning/sprint15-prep`. Complete Sprint 15 Prep Task 9: Research Numerical Tolerance Best Practices.
+You are working on branch `planning/sprint15-prep-task9`. Complete Sprint 15 Prep Task 9: Research Numerical Tolerance Best Practices.
 
 **Objective:** Research appropriate numerical tolerance values for comparing NLP and MCP solutions, with justification from optimization literature and solver defaults.
 
@@ -677,7 +677,7 @@ Complete Sprint 15 Prep Task 9: Research Numerical Tolerance Best Practices
 ```
 
 **After Commit:**
-1. Push changes: `git push origin planning/sprint15-prep`
+1. Push changes: `git push origin planning/sprint15-prep-task9`
 2. Create PR: `gh pr create --title "Sprint 15 Prep Task 9: Research Numerical Tolerance Best Practices" --body "Completes Task 9 of Sprint 15 prep plan. See docs/planning/EPIC_3/SPRINT_15/prep-tasks/numerical_tolerance_research.md for research."`
 3. Wait for reviewer comments before proceeding
 
@@ -687,7 +687,7 @@ Complete Sprint 15 Prep Task 9: Research Numerical Tolerance Best Practices
 
 ### Prompt
 
-You are working on branch `planning/sprint15-prep`. Complete Sprint 15 Prep Task 10: Plan Sprint 15 Detailed Schedule.
+You are working on branch `planning/sprint15-prep-task10`. Complete Sprint 15 Prep Task 10: Plan Sprint 15 Detailed Schedule.
 
 **Objective:** Create detailed day-by-day plan for Sprint 15 incorporating all research findings from prep tasks and defining specific deliverables for each day.
 
@@ -773,7 +773,7 @@ Sprint 15 prep phase complete. Ready to begin Sprint 15 execution.
 ```
 
 **After Commit:**
-1. Push changes: `git push origin planning/sprint15-prep`
+1. Push changes: `git push origin planning/sprint15-prep-task10`
 2. Create PR: `gh pr create --title "Sprint 15 Prep Task 10: Plan Sprint 15 Detailed Schedule - PREP COMPLETE" --body "Completes final Task 10 of Sprint 15 prep plan. Creates comprehensive PLAN.md with 10-day schedule. Sprint 15 prep phase is now complete and ready for sprint execution."`
 3. Wait for reviewer comments before proceeding
 
