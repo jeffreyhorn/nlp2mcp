@@ -317,7 +317,14 @@ def categorize_translation_error(error_message: str) -> str:
         return "codegen_equation_error"
     if "variable" in msg_lower and "generation" in msg_lower:
         return "codegen_variable_error"
-    if ("numerical error" in msg_lower or "nan" in msg_lower or "inf" in msg_lower) and "differentiation" not in msg_lower:
+    # Check for numerical errors with word boundaries to avoid false positives
+    # "inf" appears in words like "infeasible", "information", "infinite"
+    import re
+    if "numerical error" in msg_lower:
+        return "codegen_numerical_error"
+    if re.search(r'\bnan\b', msg_lower) and "differentiation" not in msg_lower:
+        return "codegen_numerical_error"
+    if re.search(r'\b-?inf\b', msg_lower) and "differentiation" not in msg_lower:
         return "codegen_numerical_error"
     
     return "internal_error"
@@ -412,10 +419,13 @@ def categorize_solve_result(
     
     # Both optimal - compare objectives
     if nlp_optimal and mcp_optimal:
-        if objective_match:
+        if objective_match is True:
             return "compare_objective_match"
-        else:
+        elif objective_match is False:
             return "compare_objective_mismatch"
+        else:
+            # objective_match is None - comparison not performed or unavailable
+            return "compare_status_mismatch"
     
     # Both infeasible
     if nlp_infeasible and mcp_infeasible:
@@ -557,6 +567,17 @@ def migrate_error_categories():
             
             model['nlp2mcp_translate']['error']['category'] = new_category
             model['nlp2mcp_translate']['error']['legacy_category'] = old_category
+        
+        # Initialize solve outcome tracking for Sprint 14 models
+        # Sprint 14 did not track solve stage - mark as not_tracked for reporting
+        if 'nlp2mcp_solve' not in model:
+            model['nlp2mcp_solve'] = {
+                'status': 'not_tested',
+                'outcome': {
+                    'category': None,
+                    'note': 'Solve stage tracking added in Sprint 15'
+                }
+            }
     
     save_database(db)
 ```
