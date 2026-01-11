@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Prep Task 4: Design Comprehensive Error Taxonomy - 2026-01-10
+
+**Branch:** `planning/sprint15-prep-task4`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Designed comprehensive error classification taxonomy for all three pipeline stages (parse, translate, solve). Refined Sprint 14's 6 broad categories into 44 outcome types (40 error types + 4 success outcomes) to enable systematic analysis and targeted improvements.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md` - Comprehensive error taxonomy with detection patterns
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` - Verified Unknowns 1.3, 1.4, 2.3, 3.5
+- `docs/planning/EPIC_3/SPRINT_15/PREP_PLAN.md` - Marked Task 4 complete with results
+
+#### Error Taxonomy Summary
+
+| Stage | Categories | Subcategories | Success | Errors |
+|-------|------------|---------------|---------|--------|
+| Parse | 4 | 16 | 0 | 16 |
+| Translation | 4 | 12 | 0 | 12 |
+| Solve | 3 | 16 | 4 | 12 |
+| **Total** | **11** | **44** | **4** | **40** |
+
+#### Parse Error Categories (16)
+
+- **Lexer Errors (4):** invalid_char, unclosed_string, invalid_number, encoding_error
+- **Parser Errors (6):** unexpected_token, missing_semicolon, unmatched_paren, invalid_declaration, invalid_expression, unexpected_eof
+- **Semantic Errors (4):** undefined_symbol, type_mismatch, domain_error, duplicate_def
+- **Include Errors (2):** file_not_found, circular
+
+#### Translation Error Categories (12)
+
+- **Differentiation Errors (3):** unsupported_func, chain_rule_error, numerical_error
+- **Model Structure Errors (3):** no_objective_def, domain_mismatch, missing_bounds
+- **Unsupported Construct Errors (4):** index_offset, dollar_cond, expression_type, special_ordered
+- **Code Generation Errors (3):** equation_error, variable_error, numerical_error
+
+#### Solve Outcome Categories (16)
+
+- **PATH Solver Status (6):** normal, iteration_limit, time_limit, terminated, eval_error, license
+- **Model Status (4):** optimal, locally_optimal, infeasible, unbounded
+- **Comparison Outcomes (6):** objective_match, objective_mismatch, status_mismatch, nlp_failed, mcp_failed, both_infeasible
+
+#### Unknown Verifications
+
+- **1.3:** ✅ VERIFIED - Binary pass/fail status for parse (partial tracking deferred)
+- **1.4:** ✅ VERIFIED - Model statistics can be extracted from IR after successful parse
+- **2.3:** ✅ VERIFIED - 12 translation error categories covering all failure modes
+- **3.5:** ✅ VERIFIED - 16 solve outcome categories (includes success and error states)
+
+---
+
 ### Sprint 15 Prep Task 3: Research Solution Comparison Strategies - 2026-01-09
 
 **Branch:** `planning/sprint15-prep-task3`  
