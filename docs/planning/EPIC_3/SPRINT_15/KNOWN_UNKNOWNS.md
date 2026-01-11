@@ -293,7 +293,17 @@ except Exception as e:
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 4)
+
+**Finding:** The current parser fails completely on errors rather than providing partial results. The IR is not populated if parsing fails.
+
+**Recommendation:** For Sprint 15, continue using binary pass/fail status. Partial parse tracking is complex and low-value. If a model fails to parse, the whole model is marked as failed with the error location and message.
+
+**Future Enhancement (Sprint 16+):** Could add progress tracking (e.g., "declarations parsed: 5, failed at equation 'balance'") but this requires significant parser refactoring.
+
+**Impact on Error Taxonomy:** Error location (line, column) is already captured in error messages. The refined error categories (lexer, parser, semantic) provide sufficient granularity for targeted improvements.
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md` Section 1 for parse error taxonomy.
 
 ---
 
@@ -341,7 +351,34 @@ jq '.properties.nlp2mcp_parse.properties' data/gamslib/schema.json
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 4)
+
+**Finding:** After successful parsing, the IR contains model statistics that can be extracted:
+- Variables: `len(model.variables)`
+- Equations: `len(model.equations)`
+- Parameters: `len(model.parameters)`
+- Sets: `len(model.sets)`
+
+**Recommendation:** Record model statistics for successfully parsed models in the database. Add optional fields to `nlp2mcp_parse` object:
+```json
+{
+  "model_stats": {
+    "variables": 10,
+    "equations": 5,
+    "parameters": 3,
+    "sets": 2
+  }
+}
+```
+
+**Use Cases:**
+1. Filter by model size: `--max-variables=100`
+2. Baseline analysis: "Average parse time by model complexity"
+3. Performance regression: "Parse time per equation"
+
+**Implementation:** Add statistics extraction after successful parse in batch_parse.py. Low overhead (~1ms per model).
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md` Section 4.1 for database storage format.
 
 ---
 
@@ -573,7 +610,39 @@ jq '.models[] | select(.nlp2mcp_translate.status=="failure") | .nlp2mcp_translat
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 4)
+
+**Finding:** Based on Sprint 14 translation errors (17 failures), comprehensive translation error categories are:
+
+**Translation Error Taxonomy (12 categories):**
+
+**Differentiation Errors:**
+- `diff_unsupported_func` - Function not implemented (card, ord, gamma, smin, loggamma)
+- `diff_chain_rule_error` - Chain rule application failure
+- `diff_numerical_error` - NaN/Inf during differentiation
+
+**Model Structure Errors:**
+- `model_no_objective_def` - Objective variable has no defining equation
+- `model_domain_mismatch` - Incompatible domains in summation/product
+- `model_missing_bounds` - Required bounds not specified
+
+**Unsupported Construct Errors:**
+- `unsup_index_offset` - Lead/lag indexing not supported
+- `unsup_dollar_cond` - Dollar conditional not supported in context
+- `unsup_expression_type` - Unrecognized expression type
+- `unsup_special_ordered` - SOS not supported
+
+**Code Generation Errors:**
+- `codegen_equation_error` - Failed to generate equation GAMS code
+- `codegen_variable_error` - Failed to generate variable GAMS code
+- `codegen_numerical_error` - NaN/Inf in generated code
+
+**Sprint 14 Error Mapping:**
+- `unsupported_feature` (8 failures) → `diff_unsupported_func`, `unsup_index_offset`, `unsup_dollar_cond`
+- `validation_error` (8 failures) → `model_no_objective_def`, `model_domain_mismatch`
+- `syntax_error` (1 failure) → `codegen_numerical_error`
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md` Section 2 for full translation error taxonomy.
 
 ---
 
@@ -908,7 +977,45 @@ PATH solver status codes (from GAMS documentation):
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 4)
+
+**Finding:** Comprehensive solve outcome categories designed based on PATH solver status codes and comparison outcomes.
+
+**Solve Outcome Taxonomy (16 categories total: 12 error types + 4 success outcomes):**
+
+**PATH Solver Status Outcomes (6: 1 success, 5 errors):**
+- `path_solve_normal` - Solver completed normally (SUCCESS)
+- `path_solve_iteration_limit` - Solver hit iteration limit (solver_status=2)
+- `path_solve_time_limit` - Solver hit time limit (solver_status=3)
+- `path_solve_terminated` - Solver terminated by error (solver_status=4)
+- `path_solve_eval_error` - Function evaluation errors (solver_status=5)
+- `path_solve_license` - GAMS/PATH license issue (solver_status=7)
+
+**Model Status Outcomes (4: 2 success, 2 errors):**
+- `model_optimal` - Model solved optimally (SUCCESS)
+- `model_locally_optimal` - Locally optimal solution found (SUCCESS)
+- `model_infeasible` - Model is infeasible (model_status=4 or 5)
+- `model_unbounded` - Model is unbounded (model_status=3)
+
+**Solution Comparison Outcomes (6: 1 success, 5 errors):**
+- `compare_objective_match` - Objectives match within tolerance (SUCCESS)
+- `compare_objective_mismatch` - Objectives differ beyond tolerance (INVESTIGATE)
+- `compare_status_mismatch` - NLP and MCP have different solve status (INVESTIGATE)
+- `compare_nlp_failed` - Could not solve original NLP
+- `compare_mcp_failed` - Could not solve generated MCP
+- `compare_both_infeasible` - Both NLP and MCP infeasible (expected)
+
+**Priority of Investigation:**
+| Result | Priority | Action |
+|--------|----------|--------|
+| `compare_objective_mismatch` | Critical | Investigate nlp2mcp formulation |
+| `compare_status_mismatch` | Critical | Investigate nlp2mcp formulation |
+| `compare_mcp_failed` | High | Check generated MCP syntax, PATH config |
+| `compare_nlp_failed` | Medium | Model may be genuinely problematic |
+| `compare_both_infeasible` | Low | Expected for infeasible models |
+| `compare_objective_match` | None | Success! |
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md` Section 3 for full solve error taxonomy.
 
 ---
 
