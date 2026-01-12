@@ -1069,7 +1069,36 @@ cat test_mcp.lst | grep "SOLVER STATUS"
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 5)
+
+**Finding:** PATH solver is available and properly configured:
+
+**Environment:**
+- GAMS Version: 51.3.0 (38407a9b, Oct 27, 2025)
+- PATH Version: 5.2.01 (Mon Oct 27 13:31:58 2025)
+- Platform: macOS x86 64bit
+- License: Demo license valid until Jan 23, 2026
+- Location: `/Library/Frameworks/GAMS.framework/Versions/51/Resources/`
+
+**Validation Tests Passed:**
+1. Simple MCP solve: SOLVER STATUS 1, MODEL STATUS 1 (Optimal)
+2. Generated MCP (hs62_mcp.gms): Successfully solved
+3. Infeasible MCP: Correctly detected (MODEL STATUS 4)
+4. Iteration limit: Correctly detected (SOLVER STATUS 2)
+5. Time limit: Correctly detected (SOLVER STATUS 3)
+6. Compilation error: Correctly detected via `**** $NNN` pattern
+
+**Invocation:**
+```bash
+gams model_mcp.gms lo=3 o=output.lst
+```
+
+**MCP-Specific Options:**
+- `option mcp = path;` - Select PATH solver
+- `option reslim = 60;` - Time limit (recommended: 60s)
+- `option iterlim = 1000000;` - Iteration limit (default sufficient)
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/path_solver_integration.md` for full integration guide.
 
 ---
 
@@ -1114,7 +1143,54 @@ grep -A20 "parse.*lst" scripts/gamslib/verify_convexity.py
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 5)
+
+**Finding:** Solve results can be reliably extracted from GAMS .lst files using regex patterns. Existing code in `verify_convexity.py` provides comprehensive parsing.
+
+**.lst File Structure for MCP Solve:**
+```
+S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  105
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+ RESOURCE USAGE, LIMIT          0.155 10000000000.000
+ ITERATION COUNT, LIMIT        27    2147483647
+
+---- VAR x1                  .             0.6178        +INF      -3.37423E-10
+```
+
+**Extraction Patterns (validated):**
+```python
+import re
+
+# SOLVER STATUS (1=normal, 2=iteration limit, 3=time limit, etc.)
+solver_pattern = re.compile(r"\*\*\*\* SOLVER STATUS\s+(\d+)", re.MULTILINE)
+
+# MODEL STATUS (1=optimal, 2=locally optimal, 4=infeasible, etc.)
+model_pattern = re.compile(r"\*\*\*\* MODEL STATUS\s+(\d+)", re.MULTILINE)
+
+# ITERATIONS
+iter_pattern = re.compile(r"ITERATION COUNT, LIMIT\s+(\d+)", re.MULTILINE)
+
+# RESOURCE (solve time)
+resource_pattern = re.compile(r"RESOURCE USAGE, LIMIT\s+([\d.]+)", re.MULTILINE)
+
+# COMPILATION ERROR (syntax errors)
+error_pattern = re.compile(r"\*\*\*\* \$\d+")
+```
+
+**Existing Code to Reuse:**
+- `scripts/gamslib/verify_convexity.py::parse_gams_listing()` - Comprehensive parser
+- `tests/validation/test_path_solver.py::_extract_model_status()` - Simple extractor
+
+**Note:** MCP .lst files do not include `**** OBJECTIVE VALUE` line (unlike LP/NLP). Objective must be extracted from variable solution section if needed.
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/path_solver_integration.md` Section 3 for full extraction patterns.
 
 ---
 

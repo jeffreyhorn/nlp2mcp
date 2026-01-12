@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Prep Task 5: Validate PATH Solver Integration - 2026-01-11
+
+**Branch:** `planning/sprint15-prep-task5`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Validated PATH solver availability, invocation, solution extraction, and error handling for Sprint 15 solve testing infrastructure. Confirmed GAMS 51.3.0 with PATH 5.2.01 is properly configured with demo license valid until Jan 23, 2026.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_15/prep-tasks/path_solver_integration.md` - Comprehensive integration guide
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` - Verified Unknowns 3.6, 3.7
+- `docs/planning/EPIC_3/SPRINT_15/PREP_PLAN.md` - Marked Task 5 complete with results
+
+#### Environment Validated
+
+| Component | Version/Details |
+|-----------|-----------------|
+| GAMS | 51.3.0 (38407a9b, Oct 27, 2025) |
+| PATH Solver | 5.2.01 (Mon Oct 27 13:31:58 2025) |
+| Platform | macOS x86 64bit |
+| License | Demo license valid until Jan 23, 2026 |
+
+#### Test Results
+
+| Scenario | SOLVER STATUS | MODEL STATUS | Detection |
+|----------|---------------|--------------|-----------|
+| Optimal solve | 1 | 1 | ✅ Success |
+| Infeasible | 1 | 4 | ✅ Detected |
+| Iteration limit | 2 | 6 | ✅ Detected |
+| Time limit | 3 | 6 | ✅ Detected |
+| Compilation error | N/A | N/A | ✅ Detected via `**** $NNN` pattern |
+
+#### Key Findings
+
+- **Invocation:** `gams model_mcp.gms lo=3 o=output.lst` with `option mcp = path;`
+- **Timeout:** Recommended 60 seconds for most models
+- **Extraction Patterns:** SOLVER STATUS, MODEL STATUS, ITERATION COUNT, RESOURCE USAGE
+- **Existing Code Reuse:** `verify_convexity.py::parse_gams_listing()` provides comprehensive .lst parsing
+- **MCP Note:** .lst files don't include OBJECTIVE VALUE line; extract from variable section if needed
+
+#### Unknown Verifications
+
+- **3.6:** ✅ VERIFIED - PATH solver available with demo license, tested successfully
+- **3.7:** ✅ VERIFIED - .lst file extraction patterns validated with regex
+
+---
+
 ### Sprint 15 Prep Task 4: Design Comprehensive Error Taxonomy - 2026-01-10
 
 **Branch:** `planning/sprint15-prep-task4`  
