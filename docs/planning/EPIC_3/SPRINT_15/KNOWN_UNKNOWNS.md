@@ -1238,7 +1238,39 @@ jq '.properties.nlp2mcp_translate.properties | keys' data/gamslib/schema.json
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 6)
+
+**Finding:** The `mcp_solve_result` object has been designed with 14 fields that capture all essential PATH solver outputs while maintaining consistency with existing schema objects.
+
+**Designed Fields (14 total):**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `status` | enum | Yes | "success", "failure", "timeout", "not_tested" |
+| `solve_date` | date-time | No | ISO 8601 timestamp |
+| `solver` | string | No | Solver name (default: "PATH") |
+| `solver_version` | string | No | Version (e.g., "PATH 5.2.01") |
+| `solver_status` | integer | No | GAMS solver status code (1=normal, etc.) |
+| `solver_status_text` | string | No | Human-readable solver status |
+| `model_status` | integer | No | GAMS model status code (1=optimal, etc.) |
+| `model_status_text` | string | No | Human-readable model status |
+| `objective_value` | number/null | No | Objective from MCP solve |
+| `solve_time_seconds` | number | No | Time to solve in seconds |
+| `iterations` | integer/null | No | Solver iteration count |
+| `mcp_file_used` | string | No | Path to MCP file that was solved |
+| `outcome_category` | enum | No | Categorized outcome (uses `solve_outcome_category`) |
+| `error` | object | No | Structured error details (uses `error_detail`) |
+
+**Alignment with Existing Objects:**
+- Follows same patterns as `convexity_result`, `parse_result`, `translate_result`
+- Uses shared `error_detail` object for consistent error reporting
+- Status enum mirrors other stages ("success", "failure", "not_tested") with added "timeout"
+
+**Decision on Raw .lst Excerpts:**
+- NOT included in schema (too verbose, storage overhead)
+- Error details capture key information; full .lst files stored separately if needed
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_v2.1.0_draft.json` for full schema.
 
 ---
 
@@ -1283,7 +1315,47 @@ jq '.models[0].convexity.objective_value' data/gamslib/gamslib_status.json
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 6)
+
+**Finding:** A separate `solution_comparison_result` object is preferred over embedding comparison fields in `mcp_solve`. This provides cleaner separation of concerns and makes comparison optional (can be skipped if NLP data unavailable).
+
+**Designed Fields (16 total):**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `comparison_status` | enum | Yes | "match", "mismatch", "skipped", "error", "not_tested" |
+| `comparison_date` | date-time | No | ISO 8601 timestamp |
+| `nlp_objective` | number/null | No | From `convexity.objective_value` |
+| `mcp_objective` | number/null | No | From `mcp_solve.objective_value` |
+| `absolute_difference` | number/null | No | \|nlp - mcp\| |
+| `relative_difference` | number/null | No | \|nlp - mcp\| / max(\|nlp\|, 1e-10) |
+| `objective_match` | boolean/null | No | True if within tolerance |
+| `tolerance_absolute` | number | No | Default 1e-8 |
+| `tolerance_relative` | number | No | Default 1e-6 |
+| `nlp_solver_status` | integer/null | No | From convexity verification |
+| `nlp_model_status` | integer/null | No | From convexity verification |
+| `mcp_solver_status` | integer/null | No | From mcp_solve |
+| `mcp_model_status` | integer/null | No | From mcp_solve |
+| `status_match` | boolean/null | No | True if both have compatible status |
+| `comparison_result` | enum | No | Detailed result category |
+| `notes` | string/null | No | Explanation (e.g., why skipped) |
+
+**Decision: Separate Object vs. Embedded:**
+- **Separate object chosen** - Allows comparison to be optional/skipped cleanly
+- NLP data (objectives, status) is referenced from `convexity` object, not duplicated
+- MCP data is referenced from `mcp_solve` object
+- Comparison can be performed later without re-solving
+
+**Comparison Result Categories (7 values):**
+- `compare_objective_match` - Success: objectives match within tolerance
+- `compare_objective_mismatch` - Investigate: objectives differ
+- `compare_status_mismatch` - Investigate: different solve status
+- `compare_nlp_failed` - NLP solve failed, no comparison possible
+- `compare_mcp_failed` - MCP solve failed, no comparison possible
+- `compare_both_infeasible` - Expected: both infeasible
+- `compare_not_performed` - Comparison not yet performed
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_v2.1.0_draft.json` for full schema.
 
 ---
 
@@ -1327,7 +1399,46 @@ from jsonschema import Draft7Validator
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 6)
+
+**Finding:** Schema version **2.1.0 (minor)** is correct. The changes are backward-compatible per semantic versioning rules.
+
+**Backward Compatibility Analysis:**
+
+| Change | Breaking? | Reason |
+|--------|-----------|--------|
+| New `mcp_solve` object | No | Optional property (not in `required`) |
+| New `solution_comparison` object | No | Optional property (not in `required`) |
+| New `model_statistics` object | No | Optional property in `parse_result` |
+| Extended `error_category` enum | No | Additive: all old values still valid |
+| New `solve_outcome_category` enum | No | New enum, no existing data uses it |
+| New `comparison_result_category` enum | No | New enum, no existing data uses it |
+
+**Semantic Versioning Justification:**
+- **MAJOR (3.0.0)** - Required if removing fields, changing required fields, or restricting enum values
+- **MINOR (2.1.0)** - Appropriate for adding new optional fields/objects and extending enums
+- **PATCH (2.0.1)** - For bug fixes, clarifications, no functional changes
+
+**Migration Requirements:**
+- None required for existing data
+- Sprint 14 data will validate against v2.1.0 without modification
+- New fields will be absent from old data (allowed because optional)
+
+**Validation Test:**
+```python
+# Existing Sprint 14 data structure (simplified):
+{
+  "nlp2mcp_parse": {"status": "success", ...},
+  "nlp2mcp_translate": {"status": "success", ...}
+  # No mcp_solve or solution_comparison
+}
+# ✅ Validates against v2.1.0 (new objects are optional)
+```
+
+**Preserved v2.0.0 Enum Values:**
+All original `error_category` values are preserved: `syntax_error`, `unsupported_feature`, `validation_error`, `missing_include`, `timeout`, `internal_error`, `solver_error`.
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_extensions.md` Section 1 for migration notes.
 
 ---
 
@@ -1373,7 +1484,42 @@ jq '.definitions.error_category.enum' data/gamslib/schema.json
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 6)
+
+**Finding:** Enum extension is backward-compatible in JSON Schema. Adding new enum values does NOT break validation of existing data using old values.
+
+**Approach Chosen: Strict Enum with Legacy Preservation**
+
+The `error_category` enum has been extended from 7 to 36 values:
+
+**Original v2.0.0 Values (7 - all preserved):**
+- `syntax_error`, `unsupported_feature`, `validation_error`, `missing_include`, `timeout`, `internal_error`, `solver_error`
+
+**New v2.1.0 Values (29 additions):**
+- **Lexer errors (4):** `lexer_invalid_char`, `lexer_unclosed_string`, `lexer_invalid_number`, `lexer_encoding_error`
+- **Parser errors (6):** `parser_unexpected_token`, `parser_missing_semicolon`, `parser_unmatched_paren`, `parser_invalid_declaration`, `parser_invalid_expression`, `parser_unexpected_eof`
+- **Semantic errors (4):** `semantic_undefined_symbol`, `semantic_type_mismatch`, `semantic_domain_error`, `semantic_duplicate_def`
+- **Include errors (2):** `include_file_not_found`, `include_circular`
+- **Differentiation errors (3):** `diff_unsupported_func`, `diff_chain_rule_error`, `diff_numerical_error`
+- **Model structure errors (3):** `model_no_objective_def`, `model_domain_mismatch`, `model_missing_bounds`
+- **Unsupported construct errors (4):** `unsup_index_offset`, `unsup_dollar_cond`, `unsup_expression_type`, `unsup_special_ordered`
+- **Code generation errors (3):** `codegen_equation_error`, `codegen_variable_error`, `codegen_numerical_error`
+
+**Migration Support:**
+- Added `legacy_category` field in `error_detail` to track original Sprint 14 category
+- Existing data continues to use original categories (still valid)
+- New processing can use refined categories
+
+**Decision: Strict Enum vs. Open String:**
+- **Strict enum chosen** - Provides validation, IDE support, and consistency
+- Future extensions follow same additive pattern
+- If new category needed during implementation, add to schema before use
+
+**Namespacing Decision:**
+- Categories are namespaced by prefix (e.g., `lexer_*`, `parser_*`, `diff_*`)
+- NOT namespaced by stage (no `parse_syntax_error`) - categories reused across stages where applicable
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_v2.1.0_draft.json` definitions section and `docs/planning/EPIC_3/SPRINT_15/prep-tasks/error_taxonomy.md` for complete taxonomy.
 
 ---
 

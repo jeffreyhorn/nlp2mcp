@@ -7,6 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Prep Task 6: Design Database Schema Extensions - 2026-01-12
+
+**Branch:** `planning/sprint15-prep-task6`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Designed extensions to database schema v2.0.0 for Sprint 15 solve testing infrastructure. Created schema v2.1.0 draft with new `mcp_solve_result` object (14 fields), `solution_comparison_result` object (16 fields), `model_statistics` object (4 fields), extended `error_category` enum (from 7 to 36 values), and new enums for solve outcomes and comparison results.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_v2.1.0_draft.json` - Complete schema draft with all extensions
+- `docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_extensions.md` - Documentation for schema changes
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` - Verified Unknowns 4.1, 4.2, 4.3, 4.4
+- `docs/planning/EPIC_3/SPRINT_15/PREP_PLAN.md` - Marked Task 6 complete with results
+
+#### Schema Extensions Summary
+
+| Component | Fields | Description |
+|-----------|--------|-------------|
+| `mcp_solve_result` | 14 | PATH solver results, status codes, timing, iterations |
+| `solution_comparison_result` | 16 | NLP/MCP objective comparison, tolerances, status match |
+| `model_statistics` | 4 | Variables, equations, parameters, sets from IR |
+| `error_category` enum | 36 | Extended from 7 Sprint 14 categories |
+| `solve_outcome_category` enum | 10 | PATH solver and model status outcomes |
+| `comparison_result_category` enum | 7 | Solution comparison result types |
+
+#### Key Design Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Schema version | 2.1.0 (minor) | Backward-compatible, all changes are additive |
+| Separate comparison object | Yes | Clean separation of concerns, optional comparison |
+| Error enum extension | Strict with legacy | All 7 original values preserved, 29 new added |
+| New objects required | No | Optional properties for backward compatibility |
+
+#### mcp_solve_result Fields (14)
+
+- `status` (required): enum ["success", "failure", "timeout", "not_tested"]
+- `solve_date`, `solver`, `solver_version`: Metadata
+- `solver_status`, `solver_status_text`: GAMS solver status (1=normal, etc.)
+- `model_status`, `model_status_text`: GAMS model status (1=optimal, etc.)
+- `objective_value`: MCP solve objective
+- `solve_time_seconds`, `iterations`: Performance metrics
+- `mcp_file_used`, `outcome_category`, `error`: Additional details
+
+#### solution_comparison_result Fields (16)
+
+- `comparison_status` (required): enum ["match", "mismatch", "skipped", "error", "not_tested"]
+- `nlp_objective`, `mcp_objective`: Values to compare
+- `absolute_difference`, `relative_difference`: Computed differences
+- `objective_match`, `tolerance_absolute`, `tolerance_relative`: Tolerance-based match
+- `nlp_solver_status`, `nlp_model_status`: From convexity verification
+- `mcp_solver_status`, `mcp_model_status`: From mcp_solve
+- `status_match`, `comparison_result`, `notes`: Result categorization
+
+#### Unknown Verifications
+
+- **4.1:** ✅ VERIFIED - 14-field mcp_solve_result object captures all PATH solver outputs
+- **4.2:** ✅ VERIFIED - 16-field solution_comparison_result as separate object for clean design
+- **4.3:** ✅ VERIFIED - Schema version 2.1.0 (minor) is backward-compatible
+- **4.4:** ✅ VERIFIED - Enum extension is backward-compatible; strict enum with legacy preservation
+
+#### Backward Compatibility
+
+Sprint 14 data validates against v2.1.0 without modification:
+- All new objects are optional (not in `required` arrays)
+- All original enum values preserved
+- No field removals or type changes
+
+---
+
 ### Sprint 15 Prep Task 5: Validate PATH Solver Integration - 2026-01-11
 
 **Branch:** `planning/sprint15-prep-task5`  

@@ -1,0 +1,614 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/jeffreyhorn/nlp2mcp/data/gamslib/schema.json",
+  "title": "GAMSLIB Model Status Database",
+  "description": "Schema for tracking GAMSLIB model status through the nlp2mcp pipeline (v2.1.0)",
+  "type": "object",
+  "required": ["schema_version", "models"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the database schema (MAJOR.MINOR.PATCH)"
+    },
+    "created_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when database was first created"
+    },
+    "updated_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of last modification"
+    },
+    "gams_version": {
+      "type": "string",
+      "description": "GAMS version used to source the models (e.g., '51.3.0')"
+    },
+    "total_models": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total count of models in the database"
+    },
+    "models": {
+      "type": "array",
+      "description": "Array of model entries",
+      "items": {
+        "$ref": "#/definitions/model_entry"
+      }
+    }
+  },
+  "definitions": {
+    "model_entry": {
+      "type": "object",
+      "description": "Complete entry for a single GAMSLIB model",
+      "required": ["model_id", "model_name", "gamslib_type"],
+      "additionalProperties": false,
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique identifier for the model (matches filename without extension)"
+        },
+        "sequence_number": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Original sequence number in GAMSLIB"
+        },
+        "model_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable name of the model"
+        },
+        "gamslib_type": {
+          "type": "string",
+          "enum": [
+            "LP",
+            "NLP",
+            "QCP",
+            "MIP",
+            "MINLP",
+            "MIQCP",
+            "MCP",
+            "CNS",
+            "DNLP",
+            "MPEC",
+            "RMPEC",
+            "EMP"
+          ],
+          "description": "GAMS model type classification"
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to download the raw .gms file"
+        },
+        "web_page_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the GAMSLIB documentation page for this model"
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of the model"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Keywords/tags for the model"
+        },
+        "download_status": {
+          "type": "string",
+          "enum": ["downloaded", "failed", "pending"],
+          "description": "Status of model file download"
+        },
+        "download_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when model was downloaded"
+        },
+        "file_path": {
+          "type": "string",
+          "description": "Relative path to the downloaded .gms file"
+        },
+        "file_size_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of the .gms file in bytes"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free-form notes about the model"
+        },
+        "migrated_from": {
+          "type": "string",
+          "description": "Source file from which this entry was migrated (e.g., 'catalog.json')"
+        },
+        "migration_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when entry was migrated from source"
+        },
+        "convexity": {
+          "$ref": "#/definitions/convexity_result",
+          "description": "Results from convexity verification (Sprint 13)"
+        },
+        "nlp2mcp_parse": {
+          "$ref": "#/definitions/parse_result",
+          "description": "Results from nlp2mcp parsing stage"
+        },
+        "nlp2mcp_translate": {
+          "$ref": "#/definitions/translate_result",
+          "description": "Results from nlp2mcp MCP translation stage"
+        },
+        "mcp_solve": {
+          "$ref": "#/definitions/mcp_solve_result",
+          "description": "Results from solving the MCP reformulation with PATH solver"
+        },
+        "solution_comparison": {
+          "$ref": "#/definitions/solution_comparison_result",
+          "description": "Comparison between original NLP solution and MCP solution"
+        }
+      }
+    },
+    "convexity_result": {
+      "type": "object",
+      "description": "Convexity verification results for an NLP/QCP model",
+      "required": ["status"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "verified_convex",
+            "likely_convex",
+            "locally_optimal",
+            "infeasible",
+            "unbounded",
+            "error",
+            "excluded",
+            "license_limited",
+            "unknown",
+            "not_tested"
+          ],
+          "description": "Convexity verification status"
+        },
+        "verification_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when verification was performed"
+        },
+        "solver": {
+          "type": "string",
+          "description": "Solver used for verification (e.g., 'CONOPT', 'IPOPT')"
+        },
+        "solver_status": {
+          "type": "integer",
+          "description": "GAMS solver status code (1=normal completion)"
+        },
+        "model_status": {
+          "type": "integer",
+          "description": "GAMS model status code (1=optimal, 2=locally optimal)"
+        },
+        "objective_value": {
+          "type": "number",
+          "description": "Optimal objective value from solve"
+        },
+        "solve_time_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Time to solve in seconds"
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message if status is 'error' or 'license_limited'"
+        }
+      }
+    },
+    "parse_result": {
+      "type": "object",
+      "description": "Results from nlp2mcp parsing stage",
+      "required": ["status"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["success", "failure", "partial", "not_tested"],
+          "description": "Parse operation status"
+        },
+        "parse_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when parsing was performed"
+        },
+        "nlp2mcp_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Version of nlp2mcp used for parsing"
+        },
+        "parse_time_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Time to parse in seconds"
+        },
+        "variables_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of variables extracted"
+        },
+        "equations_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of equations extracted"
+        },
+        "model_stats": {
+          "$ref": "#/definitions/model_statistics",
+          "description": "Model statistics extracted from IR (Sprint 15)"
+        },
+        "error": {
+          "$ref": "#/definitions/error_detail",
+          "description": "Structured error details if status is 'failure' or 'partial'"
+        }
+      }
+    },
+    "translate_result": {
+      "type": "object",
+      "description": "Results from nlp2mcp MCP translation stage",
+      "required": ["status"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["success", "failure", "not_tested"],
+          "description": "Translation operation status"
+        },
+        "translate_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when translation was performed"
+        },
+        "nlp2mcp_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Version of nlp2mcp used for translation"
+        },
+        "translate_time_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Time to translate in seconds"
+        },
+        "mcp_variables_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of variables in MCP formulation"
+        },
+        "mcp_equations_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of equations in MCP formulation"
+        },
+        "output_file": {
+          "type": "string",
+          "description": "Relative path to the generated MCP .gms file"
+        },
+        "error": {
+          "$ref": "#/definitions/error_detail",
+          "description": "Structured error details if status is 'failure'"
+        }
+      }
+    },
+    "mcp_solve_result": {
+      "type": "object",
+      "description": "Results from solving the MCP reformulation with PATH solver (Sprint 15)",
+      "required": ["status"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["success", "failure", "timeout", "not_tested"],
+          "description": "MCP solve operation status"
+        },
+        "solve_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when solve was performed"
+        },
+        "solver": {
+          "type": "string",
+          "default": "PATH",
+          "description": "MCP solver used (typically 'PATH')"
+        },
+        "solver_version": {
+          "type": "string",
+          "description": "Version of the solver (e.g., 'PATH 5.2.01')"
+        },
+        "solver_status": {
+          "type": "integer",
+          "description": "GAMS solver status code (1=normal, 2=iteration limit, 3=time limit, etc.)"
+        },
+        "solver_status_text": {
+          "type": "string",
+          "description": "Human-readable solver status description"
+        },
+        "model_status": {
+          "type": "integer",
+          "description": "GAMS model status code (1=optimal, 2=locally optimal, 4=infeasible, etc.)"
+        },
+        "model_status_text": {
+          "type": "string",
+          "description": "Human-readable model status description"
+        },
+        "objective_value": {
+          "type": ["number", "null"],
+          "description": "Objective value from MCP solve (null if not available or solve failed)"
+        },
+        "solve_time_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Time to solve MCP in seconds"
+        },
+        "iterations": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Number of solver iterations (null if not available)"
+        },
+        "mcp_file_used": {
+          "type": "string",
+          "description": "Relative path to the MCP file that was solved"
+        },
+        "outcome_category": {
+          "$ref": "#/definitions/solve_outcome_category",
+          "description": "Categorized outcome from solve (success or error type)"
+        },
+        "error": {
+          "$ref": "#/definitions/error_detail",
+          "description": "Structured error details if status is 'failure'"
+        }
+      }
+    },
+    "solution_comparison_result": {
+      "type": "object",
+      "description": "Comparison between original NLP solution and MCP solution (Sprint 15)",
+      "required": ["comparison_status"],
+      "additionalProperties": false,
+      "properties": {
+        "comparison_status": {
+          "type": "string",
+          "enum": ["match", "mismatch", "skipped", "error", "not_tested"],
+          "description": "Overall comparison result status"
+        },
+        "comparison_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when comparison was performed"
+        },
+        "nlp_objective": {
+          "type": ["number", "null"],
+          "description": "Objective value from original NLP solve (from convexity.objective_value)"
+        },
+        "mcp_objective": {
+          "type": ["number", "null"],
+          "description": "Objective value from MCP solve (from mcp_solve.objective_value)"
+        },
+        "absolute_difference": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Absolute difference |nlp_objective - mcp_objective|"
+        },
+        "relative_difference": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Relative difference |nlp - mcp| / max(|nlp|, 1e-10)"
+        },
+        "objective_match": {
+          "type": ["boolean", "null"],
+          "description": "True if objectives match within tolerance"
+        },
+        "tolerance_absolute": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1e-8,
+          "description": "Absolute tolerance used for comparison"
+        },
+        "tolerance_relative": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1e-6,
+          "description": "Relative tolerance used for comparison"
+        },
+        "nlp_solver_status": {
+          "type": ["integer", "null"],
+          "description": "NLP solver status from convexity verification"
+        },
+        "nlp_model_status": {
+          "type": ["integer", "null"],
+          "description": "NLP model status from convexity verification"
+        },
+        "mcp_solver_status": {
+          "type": ["integer", "null"],
+          "description": "MCP solver status from mcp_solve"
+        },
+        "mcp_model_status": {
+          "type": ["integer", "null"],
+          "description": "MCP model status from mcp_solve"
+        },
+        "status_match": {
+          "type": ["boolean", "null"],
+          "description": "True if both NLP and MCP have compatible solve status"
+        },
+        "comparison_result": {
+          "$ref": "#/definitions/comparison_result_category",
+          "description": "Detailed categorization of comparison outcome"
+        },
+        "notes": {
+          "type": ["string", "null"],
+          "description": "Notes about comparison (e.g., why skipped, special conditions)"
+        }
+      }
+    },
+    "model_statistics": {
+      "type": "object",
+      "description": "Model statistics extracted from IR after successful parse",
+      "additionalProperties": false,
+      "properties": {
+        "variables": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of variables in the model"
+        },
+        "equations": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of equations in the model"
+        },
+        "parameters": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of parameters in the model"
+        },
+        "sets": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of sets in the model"
+        }
+      }
+    },
+    "error_detail": {
+      "type": "object",
+      "description": "Structured error information for pipeline stages",
+      "required": ["category", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "$ref": "#/definitions/error_category",
+          "description": "Error category for classification and filtering"
+        },
+        "legacy_category": {
+          "type": "string",
+          "description": "Original Sprint 14 error category (for migration tracking)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error message"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line number where error occurred (for parse errors)"
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Column number where error occurred (for parse errors)"
+        },
+        "source_line": {
+          "type": "string",
+          "description": "The source line where error occurred"
+        },
+        "suggestion": {
+          "type": "string",
+          "description": "Actionable suggestion for fixing the error"
+        },
+        "details": {
+          "type": "string",
+          "description": "Additional error details or stack trace"
+        }
+      }
+    },
+    "error_category": {
+      "type": "string",
+      "description": "Comprehensive error category enum covering all pipeline stages (Sprint 15 taxonomy)",
+      "enum": [
+        "lexer_invalid_char",
+        "lexer_unclosed_string",
+        "lexer_invalid_number",
+        "lexer_encoding_error",
+        "parser_unexpected_token",
+        "parser_missing_semicolon",
+        "parser_unmatched_paren",
+        "parser_invalid_declaration",
+        "parser_invalid_expression",
+        "parser_unexpected_eof",
+        "semantic_undefined_symbol",
+        "semantic_type_mismatch",
+        "semantic_domain_error",
+        "semantic_duplicate_def",
+        "include_file_not_found",
+        "include_circular",
+        "diff_unsupported_func",
+        "diff_chain_rule_error",
+        "diff_numerical_error",
+        "model_no_objective_def",
+        "model_domain_mismatch",
+        "model_missing_bounds",
+        "unsup_index_offset",
+        "unsup_dollar_cond",
+        "unsup_expression_type",
+        "unsup_special_ordered",
+        "codegen_equation_error",
+        "codegen_variable_error",
+        "codegen_numerical_error",
+        "timeout",
+        "internal_error",
+        "syntax_error",
+        "unsupported_feature",
+        "missing_include",
+        "solver_error",
+        "validation_error"
+      ]
+    },
+    "solve_outcome_category": {
+      "type": "string",
+      "description": "Categorized outcome from MCP solve stage (includes success and error outcomes)",
+      "enum": [
+        "path_solve_normal",
+        "path_solve_iteration_limit",
+        "path_solve_time_limit",
+        "path_solve_terminated",
+        "path_solve_eval_error",
+        "path_solve_license",
+        "model_optimal",
+        "model_locally_optimal",
+        "model_infeasible",
+        "model_unbounded"
+      ]
+    },
+    "comparison_result_category": {
+      "type": "string",
+      "description": "Detailed categorization of solution comparison outcome",
+      "enum": [
+        "compare_objective_match",
+        "compare_objective_mismatch",
+        "compare_status_mismatch",
+        "compare_nlp_failed",
+        "compare_mcp_failed",
+        "compare_both_infeasible",
+        "compare_not_performed"
+      ]
+    }
+  }
+}
