@@ -29,11 +29,11 @@ Defined comprehensive filtering requirements for Sprint 15 pipeline testing infr
 
 | Category | Filters | Description |
 |----------|---------|-------------|
-| Model Selection | 7 | `--model`, `--type`, `--convexity`, `--limit`, `--random`, `--exclude-model`, `--models-from-file` |
-| Status Filtering | 8 | `--parse-success/failure`, `--translate-success/failure`, `--solve-success/failure`, `--compare-match/mismatch` |
-| Error Filtering | 4 | `--error-category`, `--parse-error`, `--translate-error`, `--solve-error` |
-| Stage Control | 7 | `--only-parse/translate/solve/compare`, `--skip-parse/translate/solve` |
-| Output Control | 4 | `--verbose`, `--quiet`, `--json`, `--dry-run` |
+| Model Selection | 6 | `--model`, `--type`, `--convexity`, `--limit`, `--random`, `--exclude` |
+| Status Filtering | 7 | `--parse-success/failure`, `--translate-success/failure`, `--solve-success/failure`, `--not-tested` |
+| Error Filtering | 6 | `--error-category`, `--parse-error`, `--translate-error`, `--solve-error`, `--comparison-match/mismatch` |
+| Stage Control | 8 | `--only-parse/translate/solve/compare`, `--skip-parse/translate/solve/compare` |
+| Output Control | 5 | `--verbose`, `--quiet`, `--json`, `--dry-run`, `--save-every` |
 | Convenience | 4 | `--only-failing`, `--skip-completed`, `--force`, `--quick` |
 
 #### Key Design Decisions

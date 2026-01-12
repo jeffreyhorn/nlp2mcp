@@ -53,7 +53,7 @@ This document specifies the filtering capabilities needed for Sprint 15's `run_f
 | Use Case | Description | Proposed Filter |
 |----------|-------------|-----------------|
 | I1: Skip completed | Don't re-test successful models | `--skip-completed` |
-| I2: Only untested | Run models never tested | `--status=not_tested` |
+| I2: Only untested | Run models never tested | `--not-tested` |
 | I3: Re-run with new version | Force re-run all models | `--force` |
 | I4: Continue partial run | Resume from where we left off | `--skip-completed` |
 
@@ -188,7 +188,13 @@ The following filter combinations are conflicts and should produce an error:
 | `--only-parse --only-translate` | Can only run one stage with --only-* |
 | `--only-parse --only-solve` | Can only run one stage with --only-* |
 | `--only-translate --only-solve` | Can only run one stage with --only-* |
+| `--only-parse --only-compare` | Can only run one stage with --only-* |
+| `--only-translate --only-compare` | Can only run one stage with --only-* |
+| `--only-solve --only-compare` | Can only run one stage with --only-* |
 | `--skip-parse --only-parse` | Cannot skip and only-run same stage |
+| `--skip-translate --only-translate` | Cannot skip and only-run same stage |
+| `--skip-solve --only-solve` | Cannot skip and only-run same stage |
+| `--skip-compare --only-compare` | Cannot skip and only-run same stage |
 | `--comparison-match --comparison-mismatch` | Mutually exclusive |
 
 ### 3.4 Filter Precedence
@@ -318,6 +324,8 @@ def validate_filters(args: argparse.Namespace) -> None:
         conflicts.append("Cannot use --skip-translate with --only-translate")
     if args.skip_solve and args.only_solve:
         conflicts.append("Cannot use --skip-solve with --only-solve")
+    if args.skip_compare and args.only_compare:
+        conflicts.append("Cannot use --skip-compare with --only-compare")
     
     if conflicts:
         raise ValueError("Filter conflicts:\n" + "\n".join(f"  - {c}" for c in conflicts))
