@@ -743,7 +743,7 @@ jq '.models[] | select(.convexity.objective_value != null) | .convexity.objectiv
 Development team
 
 ### Verification Results
-✅ VERIFIED (Task 3)
+✅ VERIFIED (Task 3, expanded in Task 9)
 
 **Finding:** Default tolerances of rtol=1e-6 and atol=1e-8 are appropriate:
 
@@ -754,15 +754,35 @@ Development team
 | IPOPT | tol | 1e-8 |
 | PATH | convergence_tolerance | 1e-6 |
 | CPLEX | optimality_tolerance | 1e-6 |
+| GUROBI | OptimalityTol | 1e-6 |
+
+**Testing Practice Survey (Task 9):**
+| Tool | rtol | atol | Notes |
+|------|------|------|-------|
+| NumPy allclose | 1e-5 | 1e-8 | General-purpose comparison |
+| CUTEst benchmarks | 1e-6 | - | Optimization testing standard |
+| SciPy linprog | 1e-12 | - | LP solver (very tight) |
+
+**GAMSLIB Objective Analysis (Task 9):**
+- 174 models with known objectives
+- Range: -3.3M to +20.9M
+- 13 models (7.5%) have objective exactly 0
+- 37 models (21.3%) have objective near zero (-1 to 1)
+- Combined tolerance formula handles all cases
 
 **Recommendation:**
-- rtol=1e-6 (relative) - matches PATH/CPLEX defaults
-- atol=1e-8 (absolute) - matches IPOPT default
-- Combined formula: `|a - b| <= atol + rtol * |b|`
+- rtol=1e-6 (relative) - matches PATH/CPLEX/CUTEst defaults
+- atol=1e-8 (absolute) - matches IPOPT/NumPy defaults; handles zero objectives
+- Combined formula: `|a - b| <= atol + rtol * max(|a|, |b|)`
+
+**Edge Case Handling (Task 9):**
+- Objective = 0: atol applies (tolerance = 1e-8)
+- Very large objective (>1e6): rtol dominates
+- NaN/Infinity: Report as comparison failure
 
 **Existing nlp2mcp usage:** `tests/validation/test_path_solver.py` uses 1e-6 for KKT residual checking, confirming alignment.
 
-See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/solution_comparison_research.md` Section 2 for full analysis.
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/numerical_tolerance_research.md` for comprehensive research.
 
 ---
 
