@@ -1811,7 +1811,36 @@ wall_time = time.perf_counter() - start
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 8)
+
+**Finding:** Use `time.perf_counter()` for wall time measurement around GAMS subprocess. This captures full solve time including subprocess creation, model compilation, PATH solver execution, and cleanup.
+
+**Timing Methodology:**
+- **Timer:** `time.perf_counter()` (highest resolution, monotonic, already used in batch_parse.py/batch_translate.py)
+- **Start point:** Before `subprocess.run()` call
+- **End point:** After subprocess completes or timeout
+- **Precision:** 4 decimal places (0.0001s = 0.1ms)
+
+**GAMS-Reported Time (Optional):**
+- Available via `RESOURCE USAGE, LIMIT` line in .lst file
+- Pattern: `re.search(r"RESOURCE USAGE, LIMIT\s+([\d.]+)", content)`
+- Captures solver-only time (excludes GAMS startup)
+- Useful for detailed analysis but not required for baseline
+
+**Timeout Handling:**
+- Default timeout: 60 seconds (consistent with batch_translate.py)
+- On timeout: record elapsed time (60.0s) with status="timeout"
+- Always record timing, even for failures
+
+**Subprocess Overhead:**
+- GAMS startup adds ~0.5-1.0s overhead
+- Acceptable for baseline metrics (consistent overhead)
+- Wall time preferred for consistency with parse/translate timing
+
+**Consistency Update Needed:**
+- `verify_convexity.py` uses `time.time()` - should update to `time.perf_counter()` during Sprint 15
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/performance_measurement.md` Section 1.4 for full solve timing methodology.
 
 ---
 
@@ -1857,7 +1886,47 @@ Sprint 14 baselines:
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 8)
+
+**Finding:** Sprint 15 should establish comprehensive baseline metrics in both JSON (machine-readable) and Markdown (human-readable) formats.
+
+**Baseline Metrics (per stage):**
+
+| Metric Category | Metrics |
+|-----------------|---------|
+| **Success Rates** | attempted, success, failure, timeout, success_rate |
+| **Timing Statistics** | mean, median, stddev, min, max, p25, p75, p90, p99 |
+| **By Model Type** | LP, NLP, QCP breakdowns with per-type success rates and timing |
+| **Error Distribution** | Count and percentage by error category |
+| **Outliers** | Models > 2 stddev above mean time |
+
+**Per-Stage Metrics:**
+1. **Parse:** 160 models, success rate, timing stats, error distribution
+2. **Translate:** Models with parse success, success rate, timing stats
+3. **Solve:** Models with translate success, success rate, timing stats
+4. **Compare:** Models with solve success, match/mismatch rate
+5. **Full Pipeline:** End-to-end success count and rate
+
+**Documentation Format:**
+- **JSON:** `data/gamslib/baseline_metrics.json` - machine-readable for regression detection
+- **Markdown:** `docs/planning/EPIC_3/SPRINT_15/SPRINT_BASELINE.md` - human-readable summary
+
+**Statistical Measures:**
+- Mean and median (central tendency)
+- Stddev (variability)
+- Percentiles: P25, P75 (IQR), P90, P99 (tail behavior)
+- Outlier detection: > mean + 2*stddev
+
+**Environment Documentation:**
+- Machine specs, OS version, Python version
+- nlp2mcp version, GAMS version, PATH solver version
+
+**Baseline Recording Plan:**
+1. Initial baseline: Sprint 15 Day 5-6 (after infrastructure complete)
+2. Final baseline: Sprint 15 Day 10 (end of sprint)
+3. Store in version control for historical comparison
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/performance_measurement.md` Section 3-5 for full baseline format and plan.
 
 ---
 

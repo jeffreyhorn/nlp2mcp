@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Prep Task 8: Research Performance Measurement Approach - 2026-01-12
+
+**Branch:** `planning/sprint15-prep-task8`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Researched and defined approach for accurately measuring parse, translate, and solve times to establish baseline metrics and detect performance regressions. Selected `time.perf_counter()` for all timing, defined statistical analysis approach, and created baseline documentation format templates.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_15/prep-tasks/performance_measurement.md` - Comprehensive performance measurement guide
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` - Verified Unknowns 6.1, 6.2
+- `docs/planning/EPIC_3/SPRINT_15/PREP_PLAN.md` - Marked Task 8 complete with results
+
+#### Key Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Timer function | `time.perf_counter()` | Highest resolution, monotonic, already used in batch scripts |
+| Timing scope | Wall time (full operation) | Captures subprocess overhead, consistent across stages |
+| Failure timing | Always record | Enables slow-failure analysis, timeout tracking |
+| Baseline format | JSON + Markdown | Machine-readable for automation + human-readable for review |
+
+#### Timing Methodology
+
+| Stage | Start Point | End Point | Includes |
+|-------|-------------|-----------|----------|
+| Parse | Before `parse_model_file()` | After return/exception | Lexing, parsing, IR construction |
+| Translate | Before subprocess creation | After subprocess completion | Subprocess overhead, translation, file I/O |
+| Solve | Before GAMS subprocess | After subprocess completion | GAMS startup, PATH solver, file I/O |
+
+#### Statistical Analysis
+
+- **Summary stats:** count, mean, median, stddev, min, max, percentiles (P25, P75, P90, P99)
+- **Outlier detection:** Models > mean + 2*stddev
+- **By-type analysis:** Separate statistics for LP, NLP, QCP
+
+#### Baseline Documentation Format
+
+- **JSON:** `data/gamslib/baseline_metrics.json` - machine-readable
+- **Markdown:** `docs/planning/EPIC_3/SPRINT_15/SPRINT_BASELINE.md` - human-readable
+
+#### Unknown Verifications
+
+- **6.1:** ✅ VERIFIED - Use `time.perf_counter()` for wall time; optionally extract GAMS `RESOURCE USAGE` for solver-only time
+- **6.2:** ✅ VERIFIED - Comprehensive baseline metrics with per-stage and per-type breakdowns in dual format
+
+---
+
 ### Sprint 15 Prep Task 7: Define Test Filtering Requirements - 2026-01-12
 
 **Branch:** `planning/sprint15-prep-task7`  
