@@ -1303,7 +1303,7 @@ python -c "import subprocess; subprocess.run(['gams', '--help'])"
 
 ## Task 6: Design Database Schema Extensions
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Sprint 15 Day 1  
@@ -1558,11 +1558,28 @@ Create `docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_extensions.md` with:
 
 ### Changes
 
-To be completed during task execution.
+- Created `docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_v2.1.0_draft.json`
+- Created `docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_extensions.md`
+- Updated `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` with verification results for Unknowns 4.1, 4.2, 4.3, 4.4
 
 ### Result
 
-To be completed during task execution.
+**Key Findings:**
+1. **mcp_solve_result object (14 fields):** Designed to capture all PATH solver outputs including status, solver_status, model_status, objective_value, solve_time_seconds, iterations, solver version, and outcome categorization
+2. **solution_comparison_result object (16 fields):** Designed as separate object for clean separation of concerns, capturing NLP/MCP objectives, tolerances, differences, status comparison, and detailed result categorization
+3. **model_statistics object (4 fields):** New object for tracking variables, equations, parameters, sets extracted from IR after successful parse
+4. **error_category enum extended:** From 7 to 35 values, preserving all original Sprint 14 categories while adding 28 refined categories from Task 4 error taxonomy
+5. **New enums created:**
+   - `solve_outcome_category` (10 values): PATH solver outcomes and model status
+   - `comparison_result_category` (7 values): Solution comparison outcomes
+6. **Schema version:** v2.1.0 (minor) confirmed as correct - all changes are backward-compatible
+7. **Backward compatibility:** Sprint 14 data validates against v2.1.0 without modification (new objects are optional)
+
+**Unknown Verifications:**
+- Unknown 4.1: VERIFIED - 14-field mcp_solve_result object designed with all essential PATH solver outputs
+- Unknown 4.2: VERIFIED - 16-field solution_comparison_result object designed as separate object for clean separation
+- Unknown 4.3: VERIFIED - Schema version 2.1.0 (minor) is correct; all changes are backward-compatible
+- Unknown 4.4: VERIFIED - Enum extension is backward-compatible; strict enum with legacy preservation approach chosen
 
 ### Verification
 
@@ -1598,15 +1615,15 @@ jq '.properties | keys' docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_v2.1.0_
 
 ### Acceptance Criteria
 
-- [ ] mcp_solve object fully defined with all fields
-- [ ] solution_comparison object fully defined with all fields
-- [ ] Error category enums updated with Task 4 taxonomy
-- [ ] Schema version decided (2.1.0 or 3.0.0)
-- [ ] Draft schema validates (JSON Schema Draft-07)
-- [ ] Backward compatibility with Sprint 14 data ensured
-- [ ] Migration plan documented
-- [ ] Documentation complete
-- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] mcp_solve object fully defined with all fields
+- [x] solution_comparison object fully defined with all fields
+- [x] Error category enums updated with Task 4 taxonomy
+- [x] Schema version decided (2.1.0 or 3.0.0)
+- [x] Draft schema validates (JSON Schema Draft-07)
+- [x] Backward compatibility with Sprint 14 data ensured
+- [x] Migration plan documented
+- [x] Documentation complete
+- [x] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
