@@ -123,7 +123,7 @@ variables lambda_eq1, mu_ineq1;
 equations stat_x1, stat_x2, eq1, ineq1;
 
 stat_x1.. <gradient of Lagrangian w.r.t. x1> =n= 0;
-stat_y1.. <gradient of Lagrangian w.r.t. x2> =n= 0;
+stat_x2.. <gradient of Lagrangian w.r.t. x2> =n= 0;
 eq1..     <equality constraint> =n= 0;
 ineq1..   <inequality constraint> =n= 0;
 
