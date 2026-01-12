@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Prep Task 7: Define Test Filtering Requirements - 2026-01-12
+
+**Branch:** `planning/sprint15-prep-task7`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Defined comprehensive filtering requirements for Sprint 15 pipeline testing infrastructure. Created filter API specification with 25+ command-line arguments covering development, debugging, incremental testing, and stage-specific use cases. Documented AND combination logic, conflict detection rules, cascade handling for pipeline stages, and summary statistics design.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_15/prep-tasks/test_filtering_requirements.md` - Comprehensive filter API specification
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` - Verified Unknowns 5.1, 5.2, 5.3
+- `docs/planning/EPIC_3/SPRINT_15/PREP_PLAN.md` - Marked Task 7 complete with results
+
+#### Filter API Summary
+
+| Category | Filters | Description |
+|----------|---------|-------------|
+| Model Selection | 7 | `--model`, `--type`, `--convexity`, `--limit`, `--random`, `--exclude-model`, `--models-from-file` |
+| Status Filtering | 8 | `--parse-success/failure`, `--translate-success/failure`, `--solve-success/failure`, `--compare-match/mismatch` |
+| Error Filtering | 4 | `--error-category`, `--parse-error`, `--translate-error`, `--solve-error` |
+| Stage Control | 7 | `--only-parse/translate/solve/compare`, `--skip-parse/translate/solve` |
+| Output Control | 4 | `--verbose`, `--quiet`, `--json`, `--dry-run` |
+| Convenience | 4 | `--only-failing`, `--skip-completed`, `--force`, `--quick` |
+
+#### Key Design Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Combination logic | AND | Multiple filters must all match for model inclusion |
+| Conflict detection | Error on mutual exclusion | `--parse-success` + `--parse-failure` is invalid |
+| Cascade handling | `not_tested` status | Upstream failures mark downstream as not_tested |
+| Stage dependencies | Implicit | `--only-translate` requires parse success |
+
+#### Use Cases Documented (20 total)
+
+- **Development (6):** Single model, small subset, by type, convex models, random sample, parse only
+- **Debugging (5):** Re-run failures, debug parse errors, specific error, compare stages, investigate mismatch
+- **Incremental (4):** Skip completed, only untested, force re-run, continue partial
+- **Stage-specific (5):** Parse only, translate only, solve only, skip solve, compare only
+
+#### Sprint 15 MVP Filter Set (14 essential)
+
+| Filter | Priority | Purpose |
+|--------|----------|---------|
+| `--model=NAME` | Critical | Debug single model |
+| `--limit=N` | Critical | Quick testing |
+| `--dry-run` | Critical | Preview without executing |
+| `--verbose` | Critical | Detailed output |
+| `--type=TYPE` | High | Filter by model type |
+| `--only-parse/translate/solve` | High | Stage-specific testing |
+| `--only-failing` | High | Re-run failures |
+| `--skip-completed` | High | Incremental testing |
+| `--parse-success/failure` | High | Status filtering |
+| `--translate-success/failure` | High | Status filtering |
+
+#### Summary Statistics Design
+
+- Per-run statistics: Models processed, time elapsed, per-stage results
+- Output formats: Table (default), JSON, Quiet, Verbose
+- Statistics by model type: Breakdown by LP/NLP/QCP
+
+#### Unknown Verifications
+
+- **5.1:** ✅ VERIFIED - MVP filter set with 14 essential filters for development/debugging workflows
+- **5.2:** ✅ VERIFIED - Cascading failure handling with `not_tested` status and implicit requirements for `--only-*` flags
+- **5.3:** ✅ VERIFIED - Summary statistics covering per-stage breakdown, comparison results, error categories, and multiple output formats
+
+---
+
 ### Sprint 15 Prep Task 6: Design Database Schema Extensions - 2026-01-12
 
 **Branch:** `planning/sprint15-prep-task6`  
