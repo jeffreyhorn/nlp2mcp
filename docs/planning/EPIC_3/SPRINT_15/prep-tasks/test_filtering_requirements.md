@@ -65,7 +65,7 @@ This document specifies the filtering capabilities needed for Sprint 15's `run_f
 | S2: Translate only | Run only translate stage | `--only-translate` |
 | S3: Solve only | Run only solve stage | `--only-solve` |
 | S4: Skip solve | Run parse + translate, skip solve | `--skip-solve` |
-| S5: Compare only | Run solution comparison on existing results | `--only-compare` |
+| S5: Compare only | Run solution comparison only for models with both NLP and MCP results; models missing either result are skipped with a warning | `--only-compare` |
 
 ### 1.5 Combination Use Cases
 
@@ -121,7 +121,7 @@ This document specifies the filtering capabilities needed for Sprint 15's `run_f
 | `--only-parse` | flag | False | Run only parse stage |
 | `--only-translate` | flag | False | Run only translate stage (requires parse success) |
 | `--only-solve` | flag | False | Run only solve stage (requires translate success) |
-| `--only-compare` | flag | False | Run only comparison (requires both NLP and MCP solutions) |
+| `--only-compare` | flag | False | Run only comparison (requires NLP solution from convexity AND MCP solution); models missing either are skipped with warning |
 | `--skip-parse` | flag | False | Skip parse stage (use existing results) |
 | `--skip-translate` | flag | False | Skip translate stage |
 | `--skip-solve` | flag | False | Skip solve stage |
@@ -172,9 +172,9 @@ Some filters imply requirements from earlier stages:
 |--------|---------------------|
 | `--only-translate` | Model must have parse success |
 | `--only-solve` | Model must have translate success |
-| `--only-compare` | Model must have NLP solution (from convexity) AND MCP solution |
-| `--translate-failure` | Model must have been attempted (parse success) |
-| `--solve-failure` | Model must have been attempted (translate success) |
+| `--only-compare` | Model must have NLP solution (from convexity) AND MCP solution; models missing either are skipped with warning |
+| `--translate-failure` | Parse status must be `success`; translate status must be `failure` (models with parse failure have translate status `not_tested` and do not match) |
+| `--solve-failure` | Translate status must be `success`; solve status must be `failure` (models with translate failure have solve status `not_tested` and do not match) |
 
 ### 3.3 Conflict Detection
 
@@ -249,6 +249,10 @@ def filter_models(db: dict, args: argparse.Namespace) -> list[dict]:
     # Phase 4: Limit/random (applied last)
     if args.random:
         import random
+        # Optionally seed RNG for reproducible random selection if args.seed is provided
+        seed = getattr(args, 'seed', None)
+        if seed is not None:
+            random.seed(seed)
         models = random.sample(models, min(args.random, len(models)))
     elif args.limit:
         models = models[:args.limit]
@@ -272,7 +276,13 @@ def _has_any_failure(model: dict) -> bool:
 
 
 def _is_fully_completed(model: dict) -> bool:
-    """Check if all stages completed successfully."""
+    """Check if all stages completed successfully.
+    
+    Note: A model is considered "fully completed" only when all stages succeeded
+    AND comparison resulted in a match. Models where comparison was 'skipped'
+    (due to missing NLP or MCP solution) are NOT considered fully completed,
+    even if all other stages succeeded.
+    """
     parse = model.get('nlp2mcp_parse', {}).get('status')
     translate = model.get('nlp2mcp_translate', {}).get('status')
     solve = model.get('mcp_solve', {}).get('status')
@@ -282,7 +292,7 @@ def _is_fully_completed(model: dict) -> bool:
         parse == 'success',
         translate == 'success',
         solve == 'success',
-        compare == 'match'
+        compare == 'match'  # 'skipped' does not count as fully completed
     ])
 
 
@@ -425,22 +435,24 @@ Translate Results:
   Skipped: 0 (0.0%)
   Avg time: 0.32s
 
-Solve Results:
-  Success: 30 (93.8%)
-  Failure: 2 (6.3%)
-  Skipped: 2 (parse/translate failed)
+Solve Results (of 32 that reached solve stage):
+  Success: 30 (93.8% of 32 attempted)
+  Failure: 2 (6.3% of 32 attempted)
+  Skipped: 2 (parse/translate failed; excluded from percentages above)
   Avg time: 0.15s
 
-Comparison Results:
-  Match: 28 (93.3%)
-  Mismatch: 2 (6.7%)
-  Skipped: 4 (no NLP/MCP solution)
+Comparison Results (of 30 that reached comparison stage):
+  Match: 28 (93.3% of 30 attempted)
+  Mismatch: 2 (6.7% of 30 attempted)
+  Skipped: 4 (no NLP/MCP solution; excluded from percentages above)
 
 Top Error Categories:
   1. syntax_error: 2 models
   2. unsupported_feature: 1 model
 
-Full pipeline success: 28/34 (82.4%)
+Full pipeline success: 28/34 (82.4%) — counts only models where all stages,
+including comparison, succeeded with a match; models where comparison was
+skipped are not counted as full-pipeline successes.
 ```
 
 ### 6.2 Output Formats
@@ -539,10 +551,11 @@ python run_full_test.py --limit=20 --save-every=5
 # Runs 20 models, saves every 5
 ```
 
-### Example 13: Translate and solve only
+### Example 13: Translate and solve only on previously parsed successes
 ```bash
 python run_full_test.py --skip-parse --parse-success
-# Skips parse, runs translate+solve on previously parsed models
+# Does not re-run parse; uses existing parse results and runs translate+solve
+# only for models whose previous parse status was "success"
 ```
 
 ### Example 14: Force re-run all
