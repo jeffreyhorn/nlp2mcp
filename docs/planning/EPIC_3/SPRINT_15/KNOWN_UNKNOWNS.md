@@ -1490,12 +1490,12 @@ Development team
 
 **Approach Chosen: Strict Enum with Legacy Preservation**
 
-The `error_category` enum has been extended from 7 to 35 values:
+The `error_category` enum has been extended from 7 to 36 values:
 
 **Original v2.0.0 Values (7 - all preserved):**
 - `syntax_error`, `unsupported_feature`, `validation_error`, `missing_include`, `timeout`, `internal_error`, `solver_error`
 
-**New v2.1.0 Values (28 additions):**
+**New v2.1.0 Values (29 additions):**
 - **Lexer errors (4):** `lexer_invalid_char`, `lexer_unclosed_string`, `lexer_invalid_number`, `lexer_encoding_error`
 - **Parser errors (6):** `parser_unexpected_token`, `parser_missing_semicolon`, `parser_unmatched_paren`, `parser_invalid_declaration`, `parser_invalid_expression`, `parser_unexpected_eof`
 - **Semantic errors (4):** `semantic_undefined_symbol`, `semantic_type_mismatch`, `semantic_domain_error`, `semantic_duplicate_def`

@@ -13,7 +13,7 @@ This document describes extensions to the GAMSLIB database schema from v2.0.0 to
 **Key Changes:**
 - Version: 2.0.0 → 2.1.0 (minor version, backward compatible)
 - New objects: `mcp_solve_result`, `solution_comparison_result`, `model_statistics`
-- Extended enums: Error categories expanded from 7 to 35 (Task 4 taxonomy)
+- Extended enums: Error categories expanded from 7 to 36 (Task 4 taxonomy)
 - New enums: `solve_outcome_category`, `comparison_result_category`
 
 **Backward Compatibility:** Sprint 14 data validates against v2.1.0 schema without modification. New objects are optional.
@@ -44,7 +44,7 @@ Per [Semantic Versioning](https://semver.org/):
 | mcp_solve object | Basic (10 fields) | Enhanced (14 fields) | Enhanced |
 | solution_comparison | Not present | New (16 fields) | Added |
 | model_statistics | Not present | New (4 fields) | Added |
-| error_category enum | 7 values | 35 values | Extended |
+| error_category enum | 7 values | 36 values | Extended |
 | solve_outcome_category | Not present | New (10 values) | Added |
 | comparison_result_category | Not present | New (7 values) | Added |
 
@@ -232,7 +232,7 @@ Stores model statistics extracted from the IR after successful parsing. Enables 
 
 ### 5.1 Extended error_category Enum
 
-The error_category enum expands from 7 to 35 values based on Task 4's comprehensive taxonomy.
+The error_category enum expands from 7 to 36 values based on Task 4's comprehensive taxonomy.
 
 **Parse Errors (16 categories):**
 
@@ -376,7 +376,7 @@ def migrate_to_v2_1_0():
 - [x] Define mcp_solve_result object (14 fields)
 - [x] Define solution_comparison_result object (16 fields)
 - [x] Define model_statistics object (4 fields)
-- [x] Extend error_category enum (35 values)
+- [x] Extend error_category enum (36 values)
 - [x] Add solve_outcome_category enum (10 values)
 - [x] Add comparison_result_category enum (7 values)
 - [x] Validate schema syntax
@@ -418,7 +418,7 @@ def migrate_to_v2_1_0():
 
 ## Appendix A: Complete Enum Values
 
-### A.1 error_category (35 values)
+### A.1 error_category (36 values)
 
 ```
 lexer_invalid_char, lexer_unclosed_string, lexer_invalid_number, 

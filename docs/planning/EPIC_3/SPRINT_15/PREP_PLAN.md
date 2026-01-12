@@ -1568,7 +1568,7 @@ Create `docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_extensions.md` with:
 1. **mcp_solve_result object (14 fields):** Designed to capture all PATH solver outputs including status, solver_status, model_status, objective_value, solve_time_seconds, iterations, solver version, and outcome categorization
 2. **solution_comparison_result object (16 fields):** Designed as separate object for clean separation of concerns, capturing NLP/MCP objectives, tolerances, differences, status comparison, and detailed result categorization
 3. **model_statistics object (4 fields):** New object for tracking variables, equations, parameters, sets extracted from IR after successful parse
-4. **error_category enum extended:** From 7 to 35 values, preserving all original Sprint 14 categories while adding 28 refined categories from Task 4 error taxonomy
+4. **error_category enum extended:** From 7 to 36 values, preserving all original Sprint 14 categories while adding 29 refined categories from Task 4 error taxonomy
 5. **New enums created:**
    - `solve_outcome_category` (10 values): PATH solver outcomes and model status
    - `comparison_result_category` (7 values): Solution comparison outcomes

@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Designed extensions to database schema v2.0.0 for Sprint 15 solve testing infrastructure. Created schema v2.1.0 draft with new `mcp_solve_result` object (14 fields), `solution_comparison_result` object (16 fields), `model_statistics` object (4 fields), extended `error_category` enum (from 7 to 35 values), and new enums for solve outcomes and comparison results.
+Designed extensions to database schema v2.0.0 for Sprint 15 solve testing infrastructure. Created schema v2.1.0 draft with new `mcp_solve_result` object (14 fields), `solution_comparison_result` object (16 fields), `model_statistics` object (4 fields), extended `error_category` enum (from 7 to 36 values), and new enums for solve outcomes and comparison results.
 
 #### Changes
 
@@ -33,7 +33,7 @@ Designed extensions to database schema v2.0.0 for Sprint 15 solve testing infras
 | `mcp_solve_result` | 14 | PATH solver results, status codes, timing, iterations |
 | `solution_comparison_result` | 16 | NLP/MCP objective comparison, tolerances, status match |
 | `model_statistics` | 4 | Variables, equations, parameters, sets from IR |
-| `error_category` enum | 35 | Extended from 7 Sprint 14 categories |
+| `error_category` enum | 36 | Extended from 7 Sprint 14 categories |
 | `solve_outcome_category` enum | 10 | PATH solver and model status outcomes |
 | `comparison_result_category` enum | 7 | Solution comparison result types |
 
@@ -43,7 +43,7 @@ Designed extensions to database schema v2.0.0 for Sprint 15 solve testing infras
 |----------|--------|-----------|
 | Schema version | 2.1.0 (minor) | Backward-compatible, all changes are additive |
 | Separate comparison object | Yes | Clean separation of concerns, optional comparison |
-| Error enum extension | Strict with legacy | All 7 original values preserved, 28 new added |
+| Error enum extension | Strict with legacy | All 7 original values preserved, 29 new added |
 | New objects required | No | Optional properties for backward compatibility |
 
 #### mcp_solve_result Fields (14)
