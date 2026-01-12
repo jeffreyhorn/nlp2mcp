@@ -351,8 +351,15 @@
           "description": "Time to solve MCP in seconds"
         },
         "iterations": {
-          "type": ["integer", "null"],
-          "minimum": 0,
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
           "description": "Number of solver iterations (null if not available)"
         },
         "mcp_file_used": {
@@ -394,13 +401,27 @@
           "description": "Objective value from MCP solve (from mcp_solve.objective_value)"
         },
         "absolute_difference": {
-          "type": ["number", "null"],
-          "minimum": 0,
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
           "description": "Absolute difference |nlp_objective - mcp_objective|"
         },
         "relative_difference": {
-          "type": ["number", "null"],
-          "minimum": 0,
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
           "description": "Relative difference |nlp - mcp| / max(|nlp|, 1e-10)"
         },
         "objective_match": {
