@@ -1901,7 +1901,7 @@ grep "Example:" docs/planning/EPIC_3/SPRINT_15/prep-tasks/test_filtering_require
 
 ## Task 8: Research Performance Measurement Approach
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** Medium  
 **Estimated Time:** 2-3 hours  
 **Deadline:** Before Sprint 15 Day 1  
@@ -2103,11 +2103,27 @@ Create `docs/planning/EPIC_3/SPRINT_15/prep-tasks/performance_measurement.md` wi
 
 ### Changes
 
-To be completed during task execution.
+- Created `docs/planning/EPIC_3/SPRINT_15/prep-tasks/performance_measurement.md`
+- Updated `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` with verification results for Unknowns 6.1, 6.2
 
 ### Result
 
-To be completed during task execution.
+**Key Findings:**
+1. **Timer Selection:** `time.perf_counter()` chosen for all timing (highest resolution, monotonic, already used in batch_parse.py/batch_translate.py)
+2. **Timing Methodology:** Wall time around full operation (parse function, translation subprocess, GAMS subprocess) including overhead
+3. **Failure Timing:** Always record timing, even for failures and timeouts (enables slow-failure analysis)
+4. **Statistical Analysis:** count, mean, median, stddev, min, max, percentiles (P25, P75, P90, P99), outlier detection (>2 stddev)
+5. **Baseline Format:** Dual format - JSON (machine-readable for regression detection) and Markdown (human-readable summary)
+6. **Per-Stage Metrics:** Parse, translate, solve, compare - each with success rates, timing stats, error distribution
+7. **By-Type Analysis:** Separate statistics for LP, NLP, QCP model types
+8. **Baseline Plan:** Record initial baseline Sprint 15 Day 5-6, final baseline Day 10
+
+**Consistency Finding:**
+- `verify_convexity.py` uses `time.time()` (inconsistent) - should update to `time.perf_counter()` during Sprint 15
+
+**Unknown Verifications:**
+- Unknown 6.1: VERIFIED - Use `time.perf_counter()` for wall time around GAMS subprocess; optionally extract GAMS-reported time from .lst `RESOURCE USAGE` line
+- Unknown 6.2: VERIFIED - Comprehensive baseline metrics defined with dual JSON/Markdown format, per-stage and per-type breakdowns
 
 ### Verification
 
@@ -2133,13 +2149,13 @@ grep -i "mean\|median\|stddev" docs/planning/EPIC_3/SPRINT_15/prep-tasks/perform
 
 ### Acceptance Criteria
 
-- [ ] Timing methodology defined for parse, translate, solve
-- [ ] Timer function selected (`perf_counter`)
-- [ ] Statistical analysis approach specified
-- [ ] Outlier detection defined
-- [ ] Baseline documentation format created
-- [ ] Sprint 15 baseline plan outlined
-- [ ] Unknowns 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Timing methodology defined for parse, translate, solve
+- [x] Timer function selected (`perf_counter`)
+- [x] Statistical analysis approach specified
+- [x] Outlier detection defined
+- [x] Baseline documentation format created
+- [x] Sprint 15 baseline plan outlined
+- [x] Unknowns 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
