@@ -1629,7 +1629,7 @@ jq '.properties | keys' docs/planning/EPIC_3/SPRINT_15/prep-tasks/schema_v2.1.0_
 
 ## Task 7: Define Test Filtering Requirements
 
-**Status:** 🔵 NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Priority:** High  
 **Estimated Time:** 2-3 hours  
 **Deadline:** Before Sprint 15 Day 1  
@@ -1842,11 +1842,24 @@ Create `docs/planning/EPIC_3/SPRINT_15/prep-tasks/test_filtering_requirements.md
 
 ### Changes
 
-To be completed during task execution.
+- Created `docs/planning/EPIC_3/SPRINT_15/prep-tasks/test_filtering_requirements.md`
+- Updated `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` with verification results for Unknowns 5.1, 5.2, 5.3
 
 ### Result
 
-To be completed during task execution.
+**Key Findings:**
+1. **Existing Filters (Sprint 14):** batch_parse.py and batch_translate.py provide `--model`, `--limit`, `--dry-run`, `--verbose`, `--save-every`
+2. **Use Cases Documented:** 20 use cases across 5 categories (Development, Debugging, Incremental, Stage-specific, Combination)
+3. **Filter API Designed:** 25+ command-line arguments organized into 6 groups (Model Selection, Status, Error, Stage Control, Output, Convenience)
+4. **Combination Logic:** AND behavior for multiple filters with conflict detection for mutually exclusive flags
+5. **Cascade Handling:** Pipeline stage dependencies (Parse → Translate → Solve → Compare) with `not_tested` vs `skipped` status semantics
+6. **Summary Statistics:** Per-run stats, 4 output formats (Table, JSON, Quiet, Verbose), statistics by model type
+7. **Sprint 15 MVP Filter Set:** 14 essential filters identified; nice-to-have filters (11) deferred
+
+**Unknown Verifications:**
+- Unknown 5.1: VERIFIED - MVP filter set with 14 essential filters for development/debugging workflows
+- Unknown 5.2: VERIFIED - Cascading failure handling with `not_tested` status for skipped stages, implicit requirements for `--only-*` flags
+- Unknown 5.3: VERIFIED - Summary statistics covering per-stage breakdown, comparison results, error categories, and multiple output formats
 
 ### Verification
 
@@ -1875,14 +1888,14 @@ grep "Example:" docs/planning/EPIC_3/SPRINT_15/prep-tasks/test_filtering_require
 
 ### Acceptance Criteria
 
-- [ ] All use cases from Step 2 documented
-- [ ] Command-line arguments defined with descriptions
-- [ ] Filter combination logic specified (AND/OR)
-- [ ] Conflict detection rules defined
-- [ ] Implementation approach outlined
-- [ ] 10+ usage examples provided
-- [ ] Sprint 15 minimum viable set identified
-- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All use cases from Step 2 documented
+- [x] Command-line arguments defined with descriptions
+- [x] Filter combination logic specified (AND/OR)
+- [x] Conflict detection rules defined
+- [x] Implementation approach outlined
+- [x] 10+ usage examples provided
+- [x] Sprint 15 minimum viable set identified
+- [x] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

@@ -1565,7 +1565,45 @@ python scripts/gamslib/batch_translate.py --help
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 7)
+
+**Finding:** Comprehensive filter API designed with 25+ command-line arguments covering all essential use cases.
+
+**Existing Filters (Sprint 14):**
+- `batch_parse.py`: `--model`, `--limit`, `--dry-run`, `--verbose`, `--save-every`
+- `batch_translate.py`: Same pattern as batch_parse.py
+
+**Sprint 15 MVP Filter Set (14 filters):**
+
+| Filter | Priority | Purpose |
+|--------|----------|---------|
+| `--model=NAME` | Critical | Debug single model (existing) |
+| `--limit=N` | Critical | Quick testing (existing) |
+| `--dry-run` | Critical | Preview without executing (existing) |
+| `--verbose` | Critical | Detailed output (existing) |
+| `--type=TYPE` | High | Filter by model type (LP/NLP/QCP) |
+| `--only-parse` | High | Stage-specific testing |
+| `--only-translate` | High | Stage-specific testing |
+| `--only-solve` | High | Stage-specific testing |
+| `--only-failing` | High | Re-run failures |
+| `--skip-completed` | High | Incremental testing |
+| `--parse-success` | High | Filter by status |
+| `--parse-failure` | High | Filter by status |
+| `--translate-success` | High | Filter by status |
+| `--translate-failure` | High | Filter by status |
+
+**Filter Combination Logic:**
+- Multiple filters combine with AND logic
+- Conflict detection for mutually exclusive flags
+- Filters applied in order: model selection → status → error → limit/random
+
+**Use Cases Documented (20 total):**
+- Development (6): single model, small subset, by type, convex models, random sample, parse only
+- Debugging (5): re-run failures, debug parse errors, specific error, compare stages, investigate mismatch
+- Incremental (4): skip completed, only untested, force re-run, continue partial
+- Stage-specific (5): parse only, translate only, solve only, skip solve, compare only
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/test_filtering_requirements.md` for full specification.
 
 ---
 
@@ -1611,7 +1649,38 @@ if parse_status == "failure":
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 7)
+
+**Finding:** Cascading failure handling designed with clear status semantics and resumption behavior.
+
+**Pipeline Stage Dependencies:**
+```
+Parse → Translate → Solve → Compare
+```
+
+**Cascade Behavior:**
+
+| Upstream Status | Downstream Behavior |
+|-----------------|---------------------|
+| `parse.status = failure` | `translate.status = not_tested`, `solve.status = not_tested` |
+| `translate.status = failure` | `solve.status = not_tested` |
+| NLP solution not available | `comparison.status = skipped` |
+| MCP solution not available | `comparison.status = skipped` |
+
+**Status Semantics:**
+- `not_tested`: Stage was never attempted (upstream failed or not run yet)
+- `skipped`: Stage was intentionally skipped (e.g., comparison when NLP unavailable)
+
+**Implicit Requirements with --only-* Flags:**
+- `--only-translate`: Requires `parse.status = success`
+- `--only-solve`: Requires `translate.status = success`
+- `--only-compare`: Requires both NLP solution AND MCP solution
+
+**Resumption Behavior:**
+- `--skip-completed`: Models with all stages successful are skipped; partial completion continues from last failed stage
+- `--force`: Re-runs all models regardless of previous status
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/test_filtering_requirements.md` Section 5 for full cascade design.
 
 ---
 
@@ -1656,7 +1725,42 @@ python scripts/gamslib/batch_parse.py --all 2>&1 | tail -30
 Development team
 
 ### Verification Results
-🔍 INCOMPLETE
+✅ VERIFIED (Task 7)
+
+**Finding:** Comprehensive summary statistics designed covering per-run metrics, multiple output formats, and type-based breakdowns.
+
+**Per-Run Statistics (all stages):**
+- Models processed count and elapsed time
+- Per-stage results: Success/Failure/Skipped counts with percentages
+- Per-stage timing: Average time per model
+- Comparison results: Match/Mismatch/Skipped with percentages
+- Top error categories with model counts
+- Full pipeline success rate (end-to-end)
+
+**Output Formats (4 modes):**
+
+| Format | Flag | Description |
+|--------|------|-------------|
+| Table | (default) | Human-readable table format |
+| JSON | `--json` | Machine-readable JSON output |
+| Quiet | `--quiet` | Only final success rate |
+| Verbose | `--verbose` | Per-model details |
+
+**Statistics by Model Type:**
+When filtering by type, results include breakdown by LP/NLP/QCP showing success rates per type.
+
+**Existing batch_parse.py Output:**
+- Progress reporting every 10 models with ETA
+- Final summary: processed count, success count, failure count, time elapsed
+- Error category counts on verbose mode
+
+**Recommendation:** Extend existing summary output pattern with:
+1. Per-stage breakdown (Parse → Translate → Solve → Compare)
+2. Comparison results (Match/Mismatch/Skipped)
+3. Top error categories (up to 5)
+4. `--json` flag for machine-readable output
+
+See `docs/planning/EPIC_3/SPRINT_15/prep-tasks/test_filtering_requirements.md` Section 6 for full specification.
 
 ---
 
