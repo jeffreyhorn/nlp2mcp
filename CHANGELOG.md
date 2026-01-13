@@ -41,10 +41,10 @@ Researched appropriate numerical tolerance values for comparing NLP and MCP solu
 | Metric | Value |
 |--------|-------|
 | Models analyzed | 174 |
-| Minimum objective | -3,340,000 |
-| Maximum objective | 20,900,000 |
+| Minimum objective | -3,315,000.0 |
+| Maximum objective | 20,941,621.8 |
 | Models with objective=0 | 13 (7.5%) |
-| Median objective | ~100 |
+| Median objective | 27.1 |
 
 #### Tolerance Recommendations
 

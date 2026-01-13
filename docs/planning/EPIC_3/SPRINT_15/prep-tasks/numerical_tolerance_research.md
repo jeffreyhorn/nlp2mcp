@@ -511,11 +511,11 @@ def test_exact_match():
     assert objectives_match(100.0, 100.0) == True
 
 def test_within_relative_tolerance():
-    # 0.00001% difference should match with rtol=1e-6
+    # 0.00005% difference (5e-7) should match with rtol=1e-6
     assert objectives_match(1000000.0, 1000000.5) == True
 
 def test_outside_relative_tolerance():
-    # 0.001% difference should fail with rtol=1e-6
+    # 0.1% difference should fail with rtol=1e-6
     assert objectives_match(1000.0, 1001.0) == False
 
 def test_zero_objective_within_atol():
