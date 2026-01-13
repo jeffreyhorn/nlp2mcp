@@ -2738,7 +2738,7 @@ grep -i "total.*hour" docs/planning/EPIC_3/SPRINT_15/PLAN.md
 
 - [x] All 10 days planned with tasks, deliverables, acceptance criteria
 - [x] 5 checkpoints defined with validation criteria
-- [x] Effort estimates total 26-33 hours
+- [x] Effort estimates total 41-46 hours with reuse savings (raw: 57.5h; PROJECT_PLAN.md range was pre-prep estimate)
 - [x] All prep task findings incorporated
 - [x] Risks identified with mitigation strategies
 - [x] Dependencies clearly documented

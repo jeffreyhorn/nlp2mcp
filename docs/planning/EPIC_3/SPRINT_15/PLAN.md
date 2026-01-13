@@ -556,7 +556,7 @@ All 26 unknowns verified during prep phase:
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Tolerance formula | `\|a-b\| <= atol + rtol*max(\|a\|,\|b\|)` | Industry standard (NumPy) |
+| Tolerance formula | `|a-b| <= atol + rtol*max(|a|,|b|)` | Industry standard (NumPy) |
 | rtol value | 1e-6 | Matches PATH, CPLEX, GUROBI |
 | atol value | 1e-8 | Handles objective=0 (7.5% of models) |
 | Schema version | 2.1.0 (minor) | Backward compatible |
