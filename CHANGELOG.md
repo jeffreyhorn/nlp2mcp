@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Prep Task 9: Research Numerical Tolerance Best Practices - 2026-01-12
+
+**Branch:** `planning/sprint15-prep-task9`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Researched appropriate numerical tolerance values for comparing NLP and MCP solutions. Surveyed GAMS solver tolerances (CONOPT, IPOPT, PATH, CPLEX), analyzed optimization testing practices (NumPy, pytest, CUTEst), and examined GAMSLIB objective value ranges. Recommended rtol=1e-6, atol=1e-8 with combined tolerance formula.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_15/prep-tasks/numerical_tolerance_research.md` - Comprehensive tolerance research document
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_15/KNOWN_UNKNOWNS.md` - Expanded Unknown 3.1 verification with Task 9 findings
+- `docs/planning/EPIC_3/SPRINT_15/PREP_PLAN.md` - Marked Task 9 complete with results
+
+#### Key Findings
+
+| Topic | Finding |
+|-------|---------|
+| CONOPT tolerance | 1e-7 (optimality) |
+| IPOPT tolerance | 1e-8 (optimality) |
+| PATH tolerance | 1e-6 (convergence) |
+| CPLEX tolerance | 1e-6 (optimality) |
+| NumPy allclose | rtol=1e-5, atol=1e-8 |
+| pytest approx | rel=1e-6 |
+
+#### GAMSLIB Objective Value Analysis
+
+| Metric | Value |
+|--------|-------|
+| Models analyzed | 174 |
+| Minimum objective | -3,315,000.0 |
+| Maximum objective | 20,941,621.8 |
+| Models with objective=0 | 13 (7.5%) |
+| Median objective | 27.1 |
+
+#### Tolerance Recommendations
+
+| Parameter | Value | Justification |
+|-----------|-------|---------------|
+| rtol | 1e-6 | Balances CONOPT (1e-7), IPOPT (1e-8), PATH/CPLEX (1e-6) |
+| atol | 1e-8 | Matches NumPy default, handles objective=0 cases (7.5% of models) |
+| Formula | `|a - b| <= atol + rtol * max(|a|, |b|)` | Industry standard combined tolerance |
+
+#### Edge Cases Documented
+
+| Edge Case | Handling |
+|-----------|----------|
+| objective = 0 | Absolute tolerance only (rtol contribution is 0) |
+| Very large (>1e6) | Relative tolerance dominates appropriately |
+| Mixed sign | Use max(abs(a), abs(b)) for scale |
+| NaN/Infinity | Explicit check before tolerance comparison |
+
+#### Configuration Approach
+
+- **Environment variables:** `NLP2MCP_RTOL`, `NLP2MCP_ATOL`
+- **CLI arguments:** `--rtol`, `--atol`
+- **Defaults in code:** rtol=1e-6, atol=1e-8
+
+#### Unknown Verifications
+
+- **3.1:** ✅ EXPANDED - Added testing practices survey, GAMSLIB analysis, edge case handling to existing Task 3 verification
+- **3.2:** Already verified in Task 3 (infeasibility handling via decision tree)
+
+#### Existing Code Alignment
+
+- `test_path_solver.py` uses tolerance=1e-6, consistent with recommended rtol
+
+---
+
 ### Sprint 15 Prep Task 8: Research Performance Measurement Approach - 2026-01-12
 
 **Branch:** `planning/sprint15-prep-task8`  
