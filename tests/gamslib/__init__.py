@@ -1,1 +1,1 @@
-# Tests for gamslib scripts
+"""Tests for gamslib scripts."""

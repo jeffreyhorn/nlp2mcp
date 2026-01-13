@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Comprehensive error taxonomy for nlp2mcp pipeline stages.
 
-This module defines 44 outcome categories for the parse, translate, and solve
+This module defines 47 outcome categories for the parse, translate, and solve
 pipeline stages. It provides categorization functions to classify error messages
 and solve outcomes into specific categories.
 
 Categories:
 - 16 parse error categories (lexer, parser, semantic, include)
-- 12 translation error categories (diff, model, unsupported, codegen)
+- 13 translation error categories (diff, model, unsupported, codegen)
 - 16 solve outcome categories (PATH status, model status, comparison)
+- 2 generic categories (timeout, internal_error)
 
 Usage:
     from scripts.gamslib.error_taxonomy import (
@@ -58,7 +59,7 @@ INCLUDE_FILE_NOT_FOUND = "include_file_not_found"
 INCLUDE_CIRCULAR = "include_circular"
 
 # =============================================================================
-# Translation Error Categories (12 total)
+# Translation Error Categories (13 total)
 # =============================================================================
 
 # Differentiation errors
@@ -249,6 +250,10 @@ def categorize_parse_error(error_message: str) -> str:
         c in msg_lower for c in ["(", ")", "[", "]", "paren", "bracket"]
     ):
         return PARSER_UNMATCHED_PAREN
+    if "invalid declaration" in msg_lower or "malformed declaration" in msg_lower:
+        return PARSER_INVALID_DECLARATION
+    if "invalid expression" in msg_lower or "malformed expression" in msg_lower:
+        return PARSER_INVALID_EXPRESSION
     if "unexpected token" in msg_lower or ("expected" in msg_lower and "got" in msg_lower):
         return PARSER_UNEXPECTED_TOKEN
 
@@ -289,7 +294,7 @@ def categorize_translate_error(error_message: str) -> str:
     """Categorize a translation error into the refined taxonomy.
 
     This function analyzes the error message to determine the specific
-    error category from the 12 translation error categories.
+    error category from the 13 translation error categories.
 
     Args:
         error_message: The error message string from the translator

@@ -1,7 +1,7 @@
 """Unit tests for error_taxonomy module.
 
 Tests the categorization functions for parse, translate, and solve outcomes.
-Covers all 44 outcome categories with sample error messages.
+Covers all 47 outcome categories with sample error messages.
 """
 
 from __future__ import annotations
@@ -38,6 +38,8 @@ from scripts.gamslib.error_taxonomy import (
     MODEL_UNBOUNDED,
     # Lists
     PARSE_ERROR_CATEGORIES,
+    PARSER_INVALID_DECLARATION,
+    PARSER_INVALID_EXPRESSION,
     PARSER_MISSING_SEMICOLON,
     PARSER_UNEXPECTED_EOF,
     PARSER_UNEXPECTED_TOKEN,
@@ -145,6 +147,26 @@ class TestCategorizeParseError:
         """Test unmatched bracket variant."""
         msg = "Unmatched bracket ']' found"
         assert categorize_parse_error(msg) == PARSER_UNMATCHED_PAREN
+
+    def test_parser_invalid_declaration(self) -> None:
+        """Test detection of invalid declaration errors."""
+        msg = "Invalid declaration of parameter 'p'"
+        assert categorize_parse_error(msg) == PARSER_INVALID_DECLARATION
+
+    def test_parser_malformed_declaration(self) -> None:
+        """Test malformed declaration variant."""
+        msg = "Malformed declaration at line 20"
+        assert categorize_parse_error(msg) == PARSER_INVALID_DECLARATION
+
+    def test_parser_invalid_expression(self) -> None:
+        """Test detection of invalid expression errors."""
+        msg = "Invalid expression in equation 'eq1'"
+        assert categorize_parse_error(msg) == PARSER_INVALID_EXPRESSION
+
+    def test_parser_malformed_expression(self) -> None:
+        """Test malformed expression variant."""
+        msg = "Malformed expression at line 30"
+        assert categorize_parse_error(msg) == PARSER_INVALID_EXPRESSION
 
     def test_parser_unexpected_token(self) -> None:
         """Test detection of unexpected token errors."""

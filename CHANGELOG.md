@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Implemented comprehensive error taxonomy module with 45 outcome categories (16 parse + 13 translate + 16 solve). Integrated into batch_parse.py and batch_translate.py. Created extensive unit tests (92 test cases).
+Implemented comprehensive error taxonomy module with 47 outcome categories (16 parse + 13 translate + 16 solve + 2 generic). Integrated into batch_parse.py and batch_translate.py. Created extensive unit tests (92 test cases).
 
 #### Changes
 
@@ -32,9 +32,9 @@ Implemented comprehensive error taxonomy module with 45 outcome categories (16 p
 
 | Category Group | Count | Description |
 |---------------|-------|-------------|
-| Parse Errors | 16 | Lexer (4), Parser (4), Semantic (6), Include (2) |
+| Parse Errors | 16 | Lexer (4), Parser (6), Semantic (4), Include (2) |
 | Translate Errors | 13 | Diff (3), Model (3), Unsupported (4), Codegen (3) |
-| Solve Outcomes | 16 | PATH status (7), Model status (5), Comparison (4) |
+| Solve Outcomes | 16 | PATH status (6), Model status (4), Comparison (6) |
 | Common | 2 | timeout, internal_error |
 
 ---

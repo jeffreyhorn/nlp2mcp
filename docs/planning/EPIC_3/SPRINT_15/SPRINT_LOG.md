@@ -140,7 +140,7 @@
 **Tasks Completed:**
 
 1. **Created error_taxonomy.py module** (2h)
-   - Defined 45 category constants (16 parse + 13 translate + 16 solve)
+   - Defined 47 category constants (16 parse + 13 translate + 16 solve + 2 generic)
    - Implemented `categorize_parse_error()` with regex-based detection
    - Implemented `categorize_translate_error()` with pattern matching
    - Implemented `categorize_solve_outcome()` for PATH solver results
@@ -179,16 +179,16 @@
 | Category Group | Count | Examples |
 |---------------|-------|----------|
 | Parse - Lexer | 4 | invalid_char, unclosed_string, invalid_number, encoding_error |
-| Parse - Parser | 4 | missing_semicolon, unexpected_eof, unmatched_paren, unexpected_token |
-| Parse - Semantic | 6 | domain_error, duplicate_def, type_mismatch, undefined_symbol, circular_ref, scope_error |
+| Parse - Parser | 6 | missing_semicolon, unexpected_eof, unmatched_paren, invalid_declaration, invalid_expression, unexpected_token |
+| Parse - Semantic | 4 | domain_error, duplicate_def, type_mismatch, undefined_symbol |
 | Parse - Include | 2 | file_not_found, circular |
 | Translate - Diff | 3 | unsupported_func, chain_rule_error, numerical_error |
 | Translate - Model | 3 | no_objective_def, domain_mismatch, missing_bounds |
 | Translate - Unsup | 4 | index_offset, dollar_cond, expression_type, special_ordered |
 | Translate - Codegen | 3 | equation_error, variable_error, numerical_error |
-| Solve - PATH | 7 | normal, iteration_limit, time_limit, terminated, eval_error, no_progress, fatal_error |
-| Solve - Model | 5 | optimal, locally_optimal, unbounded, infeasible, unknown |
-| Solve - Comparison | 4 | obj_match, obj_mismatch, missing_nlp, missing_mcp |
+| Solve - PATH | 6 | normal, iteration_limit, time_limit, terminated, eval_error, license |
+| Solve - Model | 4 | optimal, locally_optimal, unbounded, infeasible |
+| Solve - Comparison | 6 | obj_match, obj_mismatch, status_mismatch, nlp_failed, mcp_failed, both_infeasible |
 | Common | 2 | timeout, internal_error |
 
 **Deliverables:**
