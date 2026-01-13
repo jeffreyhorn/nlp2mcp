@@ -2068,8 +2068,75 @@ Development team
 
 Sprint 15 prep is complete when:
 - [x] KNOWN_UNKNOWNS.md created with 25+ unknowns
-- [ ] All Critical unknowns verified or mitigated
-- [ ] All High unknowns verified or deferred with rationale
-- [ ] Task-to-Unknown mapping complete
-- [ ] PREP_PLAN.md updated with "Unknowns Verified" for Tasks 2-10
-- [ ] PLAN.md created with day-by-day breakdown
+- [x] All Critical unknowns verified or mitigated
+- [x] All High unknowns verified or deferred with rationale
+- [x] Task-to-Unknown mapping complete
+- [x] PREP_PLAN.md updated with "Unknowns Verified" for Tasks 2-10
+- [x] PLAN.md created with day-by-day breakdown
+
+---
+
+# Resolution Summary (Task 10 Completion)
+
+**Date:** January 13, 2026  
+**Status:** ALL 26 UNKNOWNS VERIFIED ✅
+
+## Final Resolution Status
+
+| Category | Unknowns | Verified | Status |
+|----------|----------|----------|--------|
+| 1. Parse Testing Infrastructure | 5 | 5 | ✅ Complete |
+| 2. Translation Testing Infrastructure | 4 | 4 | ✅ Complete |
+| 3. MCP Solve Testing | 7 | 7 | ✅ Complete |
+| 4. Database Schema Extensions | 4 | 4 | ✅ Complete |
+| 5. Pipeline Orchestration & Filtering | 3 | 3 | ✅ Complete |
+| 6. Performance & Baseline Metrics | 3 | 3 | ✅ Complete |
+| **Total** | **26** | **26** | **100%** |
+
+## Key Decisions Made
+
+| Unknown | Decision | Verified In |
+|---------|----------|-------------|
+| 1.1 | Extend batch_parse.py (not replace) | Task 2 |
+| 1.2 | Subcategorize syntax_error (77% of failures) | Task 2 |
+| 1.3 | Binary pass/fail for parse status | Task 4 |
+| 1.4 | Extract model statistics from IR | Task 4 |
+| 2.1 | Extend batch_translate.py (not replace) | Task 2 |
+| 2.2 | GAMS action=c for syntax validation | Task 2 |
+| 2.3 | 12 translation error categories | Task 4 |
+| 3.1 | rtol=1e-6, atol=1e-8 with combined formula | Tasks 3, 9 |
+| 3.2 | 7-outcome decision tree for status handling | Task 3 |
+| 3.3 | Compare objectives only (not primal variables) | Task 3 |
+| 3.4 | Objective-only comparison for Sprint 15 | Task 3 |
+| 3.5 | 16 solve outcome categories | Task 4 |
+| 3.6 | PATH solver validated (GAMS 51.3.0, PATH 5.2.01) | Task 5 |
+| 3.7 | .lst file extraction patterns validated | Task 5 |
+| 4.1 | 14-field mcp_solve_result object | Task 6 |
+| 4.2 | 16-field solution_comparison_result object | Task 6 |
+| 4.3 | Schema version 2.1.0 (minor, backward compatible) | Task 6 |
+| 4.4 | Enum extension backward compatible | Task 6 |
+| 5.1 | 14 MVP filters defined | Task 7 |
+| 5.2 | Cascade failure handling with not_tested status | Task 7 |
+| 5.3 | Summary statistics design complete | Task 7 |
+| 6.1 | Use time.perf_counter() for timing | Task 8 |
+| 6.2 | Dual JSON/Markdown baseline format | Task 8 |
+| 6.3 | Statistical analysis approach defined | Task 8 |
+
+## Prep Phase Complete
+
+All 10 prep tasks completed successfully:
+
+| Task | Deliverable | Status |
+|------|-------------|--------|
+| 1 | KNOWN_UNKNOWNS.md | ✅ Complete |
+| 2 | batch_infrastructure_assessment.md | ✅ Complete |
+| 3 | solution_comparison_research.md | ✅ Complete |
+| 4 | error_taxonomy.md | ✅ Complete |
+| 5 | path_solver_integration.md | ✅ Complete |
+| 6 | schema_v2.1.0_draft.json, schema_extensions.md | ✅ Complete |
+| 7 | test_filtering_requirements.md | ✅ Complete |
+| 8 | performance_measurement.md | ✅ Complete |
+| 9 | numerical_tolerance_research.md | ✅ Complete |
+| 10 | PLAN.md | ✅ Complete |
+
+**Sprint 15 is ready to begin execution.**
