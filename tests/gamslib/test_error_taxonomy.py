@@ -1,7 +1,7 @@
 """Unit tests for error_taxonomy module.
 
 Tests the categorization functions for parse, translate, and solve outcomes.
-Covers all 47 outcome categories with sample error messages.
+Covers all 47 outcome categories with 96 test cases including variants and edge cases.
 """
 
 from __future__ import annotations
@@ -198,7 +198,12 @@ class TestCategorizeParseError:
 
     def test_semantic_type_mismatch(self) -> None:
         """Test detection of type mismatch errors."""
-        msg = "Type mismatch in assignment"
+        msg = "Type mismatch in assignment of variable 'x'"
+        assert categorize_parse_error(msg) == SEMANTIC_TYPE_MISMATCH
+
+    def test_semantic_type_mismatch_incompatible(self) -> None:
+        """Test incompatible types variant."""
+        msg = "Incompatible types: scalar and vector cannot be combined"
         assert categorize_parse_error(msg) == SEMANTIC_TYPE_MISMATCH
 
     def test_semantic_domain_error(self) -> None:
@@ -208,7 +213,7 @@ class TestCategorizeParseError:
 
     def test_semantic_domain_error_variant(self) -> None:
         """Test domain error variant."""
-        msg = "Domain error in expression"
+        msg = "Domain error in expression evaluation"
         assert categorize_parse_error(msg) == SEMANTIC_DOMAIN_ERROR
 
     def test_semantic_duplicate_def(self) -> None:
@@ -295,7 +300,12 @@ class TestCategorizeTranslateError:
 
     def test_model_missing_bounds(self) -> None:
         """Test detection of missing bounds errors."""
-        msg = "Variable 'x' is missing required bounds specification"
+        msg = "Variable 'x' has missing bounds specification"
+        assert categorize_translate_error(msg) == MODEL_MISSING_BOUNDS
+
+    def test_model_bounds_missing_variant(self) -> None:
+        """Test bounds missing variant."""
+        msg = "Error: bounds missing for variable 'y'"
         assert categorize_translate_error(msg) == MODEL_MISSING_BOUNDS
 
     # Unsupported construct errors

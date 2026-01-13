@@ -6,9 +6,9 @@ pipeline stages. It provides categorization functions to classify error messages
 and solve outcomes into specific categories.
 
 Categories:
-- 16 parse error categories (lexer, parser, semantic, include)
-- 13 translation error categories (diff, model, unsupported, codegen)
-- 16 solve outcome categories (PATH status, model status, comparison)
+- 16 parse error categories (4 lexer, 6 parser, 4 semantic, 2 include)
+- 13 translation error categories (3 diff, 3 model, 4 unsupported, 3 codegen)
+- 16 solve outcome categories (6 PATH status, 4 model status, 6 comparison)
 - 2 generic categories (timeout, internal_error)
 
 Usage:
@@ -254,15 +254,17 @@ def categorize_parse_error(error_message: str) -> str:
         return PARSER_INVALID_DECLARATION
     if "invalid expression" in msg_lower or "malformed expression" in msg_lower:
         return PARSER_INVALID_EXPRESSION
+    # Note: "expected...got" pattern is checked after more specific patterns above
+    # to avoid false positives from generic messages containing these words
     if "unexpected token" in msg_lower or ("expected" in msg_lower and "got" in msg_lower):
         return PARSER_UNEXPECTED_TOKEN
 
     # Semantic errors - meaning-level issues
-    if "incompatible domains" in msg_lower or ("domain" in msg_lower and "error" in msg_lower):
+    if "incompatible domains" in msg_lower or "domain error" in msg_lower:
         return SEMANTIC_DOMAIN_ERROR
-    if "duplicate" in msg_lower or "already defined" in msg_lower:
+    if "duplicate definition" in msg_lower or "already defined" in msg_lower:
         return SEMANTIC_DUPLICATE_DEF
-    if "type" in msg_lower and ("mismatch" in msg_lower or "expected" in msg_lower):
+    if "type mismatch" in msg_lower or "incompatible types" in msg_lower:
         return SEMANTIC_TYPE_MISMATCH
     if (
         "not defined" in msg_lower or "undefined" in msg_lower
@@ -330,7 +332,7 @@ def categorize_translate_error(error_message: str) -> str:
         return MODEL_NO_OBJECTIVE_DEF
     if "incompatible domains" in msg_lower:
         return MODEL_DOMAIN_MISMATCH
-    if "bounds" in msg_lower and "missing" in msg_lower:
+    if "missing bounds" in msg_lower or "bounds missing" in msg_lower:
         return MODEL_MISSING_BOUNDS
 
     # Unsupported construct errors
@@ -340,13 +342,14 @@ def categorize_translate_error(error_message: str) -> str:
         return UNSUP_DOLLAR_COND
     if "unknown expression type" in msg_lower:
         return UNSUP_EXPRESSION_TYPE
-    if "sos" in msg_lower or "special ordered" in msg_lower:
+    # Use word boundary for "sos" to avoid matching words like "those", "also"
+    if re.search(r"\bsos[12]?\b", msg_lower) or "special ordered" in msg_lower:
         return UNSUP_SPECIAL_ORDERED
 
     # Code generation errors - check specific patterns before general numerical
-    if "equation" in msg_lower and "generation" in msg_lower:
+    if "equation generation" in msg_lower or "generating equation" in msg_lower:
         return CODEGEN_EQUATION_ERROR
-    if "variable" in msg_lower and "generation" in msg_lower:
+    if "variable generation" in msg_lower or "generating variable" in msg_lower:
         return CODEGEN_VARIABLE_ERROR
 
     # Check for numerical errors with word boundaries to avoid false positives
