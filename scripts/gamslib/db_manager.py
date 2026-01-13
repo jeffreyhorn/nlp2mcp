@@ -249,7 +249,7 @@ def cmd_init(args: argparse.Namespace) -> int:
     if args.empty:
         # Create empty database
         database = {
-            "schema_version": "2.0.0",
+            "schema_version": "2.1.0",
             "created_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "updated_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "total_models": 0,
@@ -430,6 +430,30 @@ def cmd_list(args: argparse.Namespace) -> int:
         for status, count in sorted(parse_counts.items()):
             print(f"  {status}: {count}")
 
+        # Count by MCP solve status (Sprint 15)
+        solve_counts: dict[str, int] = {}
+        for m in stats_models:
+            status = m.get("mcp_solve", {}).get("status", "not_tested")
+            solve_counts[status] = solve_counts.get(status, 0) + 1
+
+        # Only show if any models have been tested
+        if any(s != "not_tested" for s in solve_counts.keys()):
+            print("\nBy MCP Solve Status:")
+            for status, count in sorted(solve_counts.items()):
+                print(f"  {status}: {count}")
+
+        # Count by solution comparison status (Sprint 15)
+        comp_counts: dict[str, int] = {}
+        for m in stats_models:
+            status = m.get("solution_comparison", {}).get("comparison_status", "not_tested")
+            comp_counts[status] = comp_counts.get(status, 0) + 1
+
+        # Only show if any models have been compared
+        if any(s != "not_tested" for s in comp_counts.keys()):
+            print("\nBy Solution Comparison Status:")
+            for status, count in sorted(comp_counts.items()):
+                print(f"  {status}: {count}")
+
         # Show model list if requested or if filtering
         if args.verbose or args.type or args.limit:
             print("\n" + "-" * 70)
@@ -548,14 +572,46 @@ def format_model_table(model: dict[str, Any]) -> str:
         trans = model["nlp2mcp_translate"]
         lines.append(f"  status:        {trans.get('status', 'not_tested')}")
 
-    # Solve section
+    # MCP Solve section (Sprint 15)
     if "mcp_solve" in model:
         lines.append("")
-        lines.append("Solve:")
+        lines.append("MCP Solve:")
         solve = model["mcp_solve"]
         lines.append(f"  status:        {solve.get('status', 'not_tested')}")
         if solve.get("solver"):
             lines.append(f"  solver:        {solve.get('solver')}")
+        if solve.get("solver_version"):
+            lines.append(f"  version:       {solve.get('solver_version')}")
+        if solve.get("solver_status") is not None:
+            lines.append(f"  solver_status: {solve.get('solver_status')}")
+        if solve.get("model_status") is not None:
+            lines.append(f"  model_status:  {solve.get('model_status')}")
+        if solve.get("objective_value") is not None:
+            lines.append(f"  objective:     {solve.get('objective_value')}")
+        if solve.get("solve_time_seconds") is not None:
+            lines.append(f"  solve_time:    {solve.get('solve_time_seconds'):.4f}s")
+        if solve.get("outcome_category"):
+            lines.append(f"  outcome:       {solve.get('outcome_category')}")
+
+    # Solution Comparison section (Sprint 15)
+    if "solution_comparison" in model:
+        lines.append("")
+        lines.append("Solution Comparison:")
+        comp = model["solution_comparison"]
+        lines.append(f"  status:        {comp.get('comparison_status', 'not_tested')}")
+        if comp.get("objective_match") is not None:
+            match_str = "YES" if comp.get("objective_match") else "NO"
+            lines.append(f"  objective_match: {match_str}")
+        if comp.get("nlp_objective") is not None:
+            lines.append(f"  nlp_objective:   {comp.get('nlp_objective')}")
+        if comp.get("mcp_objective") is not None:
+            lines.append(f"  mcp_objective:   {comp.get('mcp_objective')}")
+        if comp.get("absolute_difference") is not None:
+            lines.append(f"  abs_diff:        {comp.get('absolute_difference'):.2e}")
+        if comp.get("relative_difference") is not None:
+            lines.append(f"  rel_diff:        {comp.get('relative_difference'):.2e}")
+        if comp.get("comparison_result"):
+            lines.append(f"  result:          {comp.get('comparison_result')}")
 
     return "\n".join(lines)
 
