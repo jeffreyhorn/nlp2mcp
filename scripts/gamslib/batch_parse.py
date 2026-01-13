@@ -42,6 +42,7 @@ from scripts.gamslib.db_manager import (
     load_database,
     save_database,
 )
+from scripts.gamslib.error_taxonomy import categorize_parse_error
 from scripts.gamslib.utils import get_nlp2mcp_version
 
 # Paths
@@ -54,81 +55,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
-
-
-# =============================================================================
-# Error Categorization
-# =============================================================================
-
-
-def categorize_error(error_message: str) -> str:
-    """Categorize a parse error into one of the defined categories.
-
-    Categories from schema.json and PARSE_RATE_BASELINE.md:
-    - syntax_error: Parser grammar failures
-    - unsupported_feature: Unsupported GAMS functions (gamma, smin, etc.)
-    - missing_include: Include file issues
-    - timeout: Parse timeout
-    - validation_error: Model structure validation failures
-    - internal_error: Other/unknown errors
-
-    Additional error patterns from baseline analysis
-    (mapped to the schema-defined categories above):
-    - no_objective: Model has no objective function -> syntax_error
-    - domain_error: Variable domain issues -> validation_error
-    - undefined_variable: Objective variable not defined -> validation_error
-
-    Args:
-        error_message: The error message string
-
-    Returns:
-        Error category string
-    """
-    msg_lower = error_message.lower()
-
-    # Syntax errors (most common - 77% from baseline)
-    if any(
-        phrase in msg_lower
-        for phrase in [
-            "parse error",
-            "unexpected character",
-            "unexpected token",
-            "syntax error",
-            "unexpected eof",
-        ]
-    ):
-        return "syntax_error"
-
-    # No objective function - use specific patterns to avoid false positives
-    if (
-        "no objective function" in msg_lower
-        or "objective function not defined" in msg_lower
-        or "no objective" in msg_lower
-    ):
-        return "syntax_error"  # Map to syntax_error per schema
-
-    # Unsupported functions
-    if "not yet implemented" in msg_lower or "unsupported" in msg_lower:
-        return "unsupported_feature"
-
-    # Domain errors
-    if "domain" in msg_lower or "incompatible" in msg_lower:
-        return "validation_error"
-
-    # Undefined variable
-    if "not defined" in msg_lower or "undefined" in msg_lower:
-        return "validation_error"
-
-    # Include file issues
-    if "include" in msg_lower or "file not found" in msg_lower:
-        return "missing_include"
-
-    # Timeout
-    if "timeout" in msg_lower:
-        return "timeout"
-
-    # Default to internal_error for unknown issues
-    return "internal_error"
 
 
 # =============================================================================
@@ -176,7 +102,7 @@ def parse_single_model(model_path: Path) -> dict[str, Any]:
     except Exception as e:
         elapsed = time.perf_counter() - start_time
         error_msg = str(e)
-        category = categorize_error(error_msg)
+        category = categorize_parse_error(error_msg)
 
         result = {
             "status": "failure",

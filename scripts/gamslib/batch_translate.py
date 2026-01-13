@@ -43,6 +43,7 @@ from scripts.gamslib.db_manager import (
     load_database,
     save_database,
 )
+from scripts.gamslib.error_taxonomy import categorize_translate_error
 from scripts.gamslib.utils import get_nlp2mcp_version
 
 # Paths
@@ -56,73 +57,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
-
-
-# =============================================================================
-# Error Categorization
-# =============================================================================
-
-
-def categorize_translation_error(error_message: str) -> str:
-    """Categorize a translation error into one of the defined categories.
-
-    Categories from schema.json:
-    - syntax_error: Parser/syntax issues
-    - unsupported_feature: Unsupported GAMS functions or features
-    - validation_error: Model structure validation failures
-    - timeout: Translation timeout
-    - internal_error: Other/unknown errors
-
-    Args:
-        error_message: The error message string
-
-    Returns:
-        Error category string
-    """
-    msg_lower = error_message.lower()
-
-    # Timeout
-    if "timeout" in msg_lower:
-        return "timeout"
-
-    # Unsupported features
-    if any(
-        phrase in msg_lower
-        for phrase in [
-            "not yet implemented",
-            "not yet supported",
-            "unsupported",
-            "not supported",
-        ]
-    ):
-        return "unsupported_feature"
-
-    # Validation errors
-    if any(
-        phrase in msg_lower
-        for phrase in [
-            "invalid model",
-            "not defined",
-            "undefined",
-            "validation",
-            "incompatible",
-        ]
-    ):
-        return "validation_error"
-
-    # Syntax errors
-    if any(
-        phrase in msg_lower
-        for phrase in [
-            "parse error",
-            "syntax error",
-            "unexpected",
-        ]
-    ):
-        return "syntax_error"
-
-    # Default to internal_error for unknown issues
-    return "internal_error"
 
 
 # =============================================================================
@@ -183,7 +117,7 @@ def translate_single_model(model_path: Path, output_path: Path) -> dict[str, Any
             else:
                 # Translation failed
                 error_msg = stderr if stderr else stdout
-                category = categorize_translation_error(error_msg)
+                category = categorize_translate_error(error_msg)
                 result = {
                     "status": "failure",
                     "translate_time_seconds": round(elapsed, 3),
@@ -209,7 +143,7 @@ def translate_single_model(model_path: Path, output_path: Path) -> dict[str, Any
     except Exception as e:
         elapsed = time.perf_counter() - start_time
         error_msg = str(e)
-        category = categorize_translation_error(error_msg)
+        category = categorize_translate_error(error_msg)
 
         result = {
             "status": "failure",
