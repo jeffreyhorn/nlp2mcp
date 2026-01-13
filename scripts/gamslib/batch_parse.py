@@ -104,8 +104,8 @@ def parse_single_model(model_path: Path) -> dict[str, Any]:
         model_statistics = {
             "variables": len(model.variables),
             "equations": len(model.equations),
-            "parameters": len(getattr(model, "parameters", {})),
-            "sets": len(getattr(model, "sets", {})),
+            "parameters": len(getattr(model, "parameters", {}) or {}),
+            "sets": len(getattr(model, "sets", {}) or {}),
         }
 
         # Success - use 4 decimal precision for timing
@@ -162,6 +162,13 @@ def validate_filter_args(args: argparse.Namespace) -> None:
     if conflicts:
         raise ValueError("Filter conflicts:\n" + "\n".join(f"  - {c}" for c in conflicts))
 
+    # Warn if --error-category used without failure filter (will likely return empty results)
+    if args.error_category and not (args.parse_failure or args.only_failing):
+        logger.warning(
+            "--error-category specified without --parse-failure or --only-failing. "
+            "This may return empty results since error categories only exist on failed models."
+        )
+
 
 def apply_filters(models: list[dict[str, Any]], args: argparse.Namespace) -> list[dict[str, Any]]:
     """Apply filter arguments to model list.
@@ -195,8 +202,9 @@ def apply_filters(models: list[dict[str, Any]], args: argparse.Namespace) -> lis
     if args.parse_failure:
         filtered = [m for m in filtered if m.get("nlp2mcp_parse", {}).get("status") == "failure"]
 
-    if args.only_failing:
+    if args.only_failing and not args.parse_failure:
         # For batch_parse, "failing" means parse status is failure
+        # Skip if --parse-failure already set (would be redundant)
         filtered = [m for m in filtered if m.get("nlp2mcp_parse", {}).get("status") == "failure"]
 
     # Phase 3: Error filters
