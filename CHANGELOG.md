@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Day 1: Schema Update and Migration - 2026-01-13
+
+**Branch:** `sprint15-day1-schema-migration`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Updated database schema from v2.0.0 to v2.1.0 with new objects for MCP solve results and solution comparison. Created migration script with backup support. Updated db_manager.py to display new objects. All 219 models migrated and validated successfully.
+
+#### Changes
+
+**New Files:**
+- `scripts/gamslib/migrate_schema_v2.1.0.py` - Schema migration script with --dry-run, --validate flags
+
+**Modified Files:**
+- `data/gamslib/schema.json` - Updated to v2.1.0
+- `data/gamslib/gamslib_status.json` - Migrated to v2.1.0
+- `scripts/gamslib/db_manager.py` - Added mcp_solve and solution_comparison display support
+
+**Backup Created:**
+- `data/gamslib/archive/gamslib_status_v2.0.0_backup_20260113_151104.json`
+
+#### Schema v2.1.0 Changes
+
+| Addition | Description |
+|----------|-------------|
+| `mcp_solve_result` | PATH solver results (status, objective, timing) |
+| `solution_comparison_result` | Objective comparison (match, tolerances, differences) |
+| `model_statistics` | Model stats from IR (variables, equations, parameters, sets) |
+| `error_category` | Extended from 7 to 36 values (Sprint 15 taxonomy) |
+| `solve_outcome_category` | 10 values for MCP solve outcomes |
+| `comparison_result_category` | 7 values for comparison results |
+
+---
+
 ### Sprint 15 Day 0: Sprint Setup and Preparation - 2026-01-13
 
 **Branch:** `sprint15-day0-setup`  

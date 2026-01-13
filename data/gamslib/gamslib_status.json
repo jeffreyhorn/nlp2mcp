@@ -1,7 +1,7 @@
 {
-  "schema_version": "2.0.0",
+  "schema_version": "2.1.0",
   "created_date": "2026-01-02T04:36:53Z",
-  "updated_date": "2026-01-02T04:36:53Z",
+  "updated_date": "2026-01-13T15:12:19Z",
   "total_models": 219,
   "models": [
     {
@@ -6427,6 +6427,9 @@
           "category": "syntax_error",
           "message": "Error: Parse error at line 31, column 16: Unexpected character: '3'\n  / 'new-york'   325,\n                 ^\n\nSuggestion: This character is not valid in this context"
         }
+      },
+      "mcp_solve": {
+        "status": "not_tested"
       }
     },
     {
