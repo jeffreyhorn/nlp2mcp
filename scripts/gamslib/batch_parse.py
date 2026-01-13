@@ -8,17 +8,27 @@ Usage:
     python scripts/gamslib/batch_parse.py [OPTIONS]
 
 Options:
-    --dry-run      Show what would be done without making changes
-    --limit N      Process only first N models (for testing)
-    --model ID     Process a single model by ID
-    --verbose      Show detailed output for each model
-    --save-every N Save database every N models (default: 10)
+    --dry-run           Show what would be done without making changes
+    --limit N           Process only first N models (for testing)
+    --model ID          Process a single model by ID
+    --verbose           Show detailed output for each model
+    --save-every N      Save database every N models (default: 10)
+
+Filter Options:
+    --only-failing      Only process models with parse failure status
+    --parse-success     Only process models with parse success status
+    --parse-failure     Only process models with parse failure status
+    --error-category C  Only process models with specific error category
+    --type TYPE         Only process models of specific type (LP, NLP, QCP, etc.)
 
 Examples:
     python scripts/gamslib/batch_parse.py
     python scripts/gamslib/batch_parse.py --dry-run
     python scripts/gamslib/batch_parse.py --limit 10 --verbose
     python scripts/gamslib/batch_parse.py --model prodmix
+    python scripts/gamslib/batch_parse.py --only-failing --limit 10
+    python scripts/gamslib/batch_parse.py --type NLP --limit 10
+    python scripts/gamslib/batch_parse.py --error-category parser_unexpected_token --limit 5
 """
 
 from __future__ import annotations
@@ -71,9 +81,8 @@ def parse_single_model(model_path: Path) -> dict[str, Any]:
     Returns:
         Dictionary with parse results:
         - status: "success" or "failure"
-        - parse_time_seconds: Time taken to parse
-        - variables_count: Number of variables (if successful)
-        - equations_count: Number of equations (if successful)
+        - parse_time_seconds: Time taken to parse (4 decimal precision)
+        - model_statistics: Dict with variables, equations, parameters, sets counts
         - error: Error details dict (if failed)
     """
     start_time = time.perf_counter()
@@ -90,13 +99,23 @@ def parse_single_model(model_path: Path) -> dict[str, Any]:
         # Validate structure
         validate_model_structure(model)
 
-        # Success
+        # Extract model statistics
         elapsed = time.perf_counter() - start_time
+        model_statistics = {
+            "variables": len(model.variables),
+            "equations": len(model.equations),
+            "parameters": len(getattr(model, "parameters", {})),
+            "sets": len(getattr(model, "sets", {})),
+        }
+
+        # Success - use 4 decimal precision for timing
         result = {
             "status": "success",
-            "parse_time_seconds": round(elapsed, 3),
-            "variables_count": len(model.variables),
-            "equations_count": len(model.equations),
+            "parse_time_seconds": round(elapsed, 4),
+            "model_statistics": model_statistics,
+            # Keep these for backward compatibility
+            "variables_count": model_statistics["variables"],
+            "equations_count": model_statistics["equations"],
         }
 
     except Exception as e:
@@ -106,7 +125,7 @@ def parse_single_model(model_path: Path) -> dict[str, Any]:
 
         result = {
             "status": "failure",
-            "parse_time_seconds": round(elapsed, 3),
+            "parse_time_seconds": round(elapsed, 4),
             "error": {
                 "category": category,
                 "message": error_msg[:500],  # Truncate long messages
@@ -114,6 +133,123 @@ def parse_single_model(model_path: Path) -> dict[str, Any]:
         }
 
     return result
+
+
+# =============================================================================
+# Filter Functions
+# =============================================================================
+
+
+def validate_filter_args(args: argparse.Namespace) -> None:
+    """Validate filter arguments for conflicts.
+
+    Args:
+        args: Parsed command line arguments
+
+    Raises:
+        ValueError: If conflicting filter arguments are specified
+    """
+    conflicts = []
+
+    # Check mutually exclusive status flags
+    if args.parse_success and args.parse_failure:
+        conflicts.append("--parse-success and --parse-failure are mutually exclusive")
+
+    # --only-failing implies --parse-failure for parse stage
+    if args.only_failing and args.parse_success:
+        conflicts.append("--only-failing and --parse-success are mutually exclusive")
+
+    if conflicts:
+        raise ValueError("Filter conflicts:\n" + "\n".join(f"  - {c}" for c in conflicts))
+
+
+def apply_filters(models: list[dict[str, Any]], args: argparse.Namespace) -> list[dict[str, Any]]:
+    """Apply filter arguments to model list.
+
+    Filters are applied in order:
+    1. Model selection (--model, --type)
+    2. Status filters (--parse-success, --parse-failure, --only-failing)
+    3. Error filters (--error-category)
+    4. Limit (--limit) - applied last
+
+    Args:
+        models: List of candidate model entries
+        args: Parsed command line arguments
+
+    Returns:
+        Filtered list of model entries
+    """
+    filtered = models.copy()
+
+    # Phase 1: Model selection
+    if args.model:
+        filtered = [m for m in filtered if m.get("model_id") == args.model]
+
+    if args.type:
+        filtered = [m for m in filtered if m.get("gamslib_type") == args.type]
+
+    # Phase 2: Status filters
+    if args.parse_success:
+        filtered = [m for m in filtered if m.get("nlp2mcp_parse", {}).get("status") == "success"]
+
+    if args.parse_failure:
+        filtered = [m for m in filtered if m.get("nlp2mcp_parse", {}).get("status") == "failure"]
+
+    if args.only_failing:
+        # For batch_parse, "failing" means parse status is failure
+        filtered = [m for m in filtered if m.get("nlp2mcp_parse", {}).get("status") == "failure"]
+
+    # Phase 3: Error filters
+    if args.error_category:
+        filtered = [
+            m
+            for m in filtered
+            if m.get("nlp2mcp_parse", {}).get("error", {}).get("category") == args.error_category
+        ]
+
+    # Phase 4: Limit (applied last)
+    if args.limit:
+        filtered = filtered[: args.limit]
+
+    return filtered
+
+
+def report_filter_summary(
+    filtered: list[dict[str, Any]],
+    total: int,
+    args: argparse.Namespace,
+) -> None:
+    """Report filter results before processing.
+
+    Args:
+        filtered: List of filtered models
+        total: Total number of candidate models before filtering
+        args: Parsed command line arguments
+    """
+    filters_applied = []
+
+    if args.model:
+        filters_applied.append(f"model={args.model}")
+    if args.type:
+        filters_applied.append(f"type={args.type}")
+    if args.parse_success:
+        filters_applied.append("parse-success")
+    if args.parse_failure:
+        filters_applied.append("parse-failure")
+    if args.only_failing:
+        filters_applied.append("only-failing")
+    if args.error_category:
+        filters_applied.append(f"error-category={args.error_category}")
+    if args.limit:
+        filters_applied.append(f"limit={args.limit}")
+
+    if filters_applied:
+        logger.info(f"Filters applied: {', '.join(filters_applied)}")
+
+    logger.info(f"Selected {len(filtered)} of {total} candidate models")
+
+    if total - len(filtered) > 0 and not args.limit:
+        logger.info(f"Skipped {total - len(filtered)} models due to filters")
 
 
 # =============================================================================
@@ -151,25 +287,31 @@ def run_batch_parse(
     Returns:
         Summary statistics dictionary
     """
+    # Validate filter arguments
+    validate_filter_args(args)
+
     # Load database
     logger.info(f"Loading database from {DATABASE_PATH}")
     database = load_database()
 
     # Get candidate models
     candidates = get_candidate_models(database)
-    logger.info(f"Found {len(candidates)} candidate models (verified_convex + likely_convex)")
+    total_candidates = len(candidates)
+    logger.info(f"Found {total_candidates} candidate models (verified_convex + likely_convex)")
 
-    # Filter for single model if specified
-    if args.model:
-        candidates = [m for m in candidates if m.get("model_id") == args.model]
-        if not candidates:
+    # Apply filters (includes --model, --type, status filters, --limit)
+    candidates = apply_filters(candidates, args)
+
+    # Check if any models match filters
+    if not candidates:
+        if args.model:
             logger.error(f"Model not found or not a candidate: {args.model}")
             return {"error": f"Model not found: {args.model}"}
+        logger.warning("No models match the specified filters")
+        return {"error": "No models match filters", "total": 0, "processed": 0}
 
-    # Apply limit
-    if args.limit:
-        candidates = candidates[: args.limit]
-        logger.info(f"Limited to first {args.limit} models")
+    # Report filter summary
+    report_filter_summary(candidates, total_candidates, args)
 
     # Get version
     nlp2mcp_version = get_nlp2mcp_version()
@@ -257,6 +399,7 @@ def run_batch_parse(
             "parse_time_seconds": result.get("parse_time_seconds"),
         }
         if result["status"] == "success":
+            # Keep variables_count/equations_count for backward compatibility
             parse_entry["variables_count"] = result.get("variables_count")
             parse_entry["equations_count"] = result.get("equations_count")
         else:
@@ -266,6 +409,9 @@ def run_batch_parse(
         for db_model in database.get("models", []):
             if db_model.get("model_id") == model_id:
                 db_model["nlp2mcp_parse"] = parse_entry
+                # Store model_statistics as separate object on success
+                if result["status"] == "success" and "model_statistics" in result:
+                    db_model["model_statistics"] = result["model_statistics"]
                 break
 
         # Save periodically
@@ -359,6 +505,36 @@ def main() -> int:
         type=int,
         default=10,
         help="Save database every N models (default: 10)",
+    )
+
+    # Filter arguments
+    filter_group = parser.add_argument_group("Filter Options")
+    filter_group.add_argument(
+        "--only-failing",
+        action="store_true",
+        help="Only process models with parse failure status",
+    )
+    filter_group.add_argument(
+        "--parse-success",
+        action="store_true",
+        help="Only process models with parse success status",
+    )
+    filter_group.add_argument(
+        "--parse-failure",
+        action="store_true",
+        help="Only process models with parse failure status",
+    )
+    filter_group.add_argument(
+        "--error-category",
+        type=str,
+        metavar="CATEGORY",
+        help="Only process models with specific error category",
+    )
+    filter_group.add_argument(
+        "--type",
+        type=str,
+        metavar="TYPE",
+        help="Only process models of specific type (LP, NLP, QCP, etc.)",
     )
 
     args = parser.parse_args()

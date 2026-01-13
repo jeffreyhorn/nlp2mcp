@@ -6,15 +6,19 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 # Add project root to path so we can import from scripts/
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.gamslib.batch_parse import (  # noqa: E402
+    apply_filters,
     get_candidate_models,
     parse_single_model,
     print_summary,
     run_batch_parse,
+    validate_filter_args,
 )
 from scripts.gamslib.error_taxonomy import categorize_parse_error  # noqa: E402
 from scripts.gamslib.utils import get_nlp2mcp_version  # noqa: E402
@@ -318,6 +322,11 @@ class TestRunBatchParse:
         model: str | None = None,
         verbose: bool = False,
         save_every: int = 10,
+        parse_success: bool = False,
+        parse_failure: bool = False,
+        only_failing: bool = False,
+        error_category: str | None = None,
+        type: str | None = None,
     ) -> argparse.Namespace:
         """Create argparse.Namespace with default values."""
         return argparse.Namespace(
@@ -326,6 +335,11 @@ class TestRunBatchParse:
             model=model,
             verbose=verbose,
             save_every=save_every,
+            parse_success=parse_success,
+            parse_failure=parse_failure,
+            only_failing=only_failing,
+            error_category=error_category,
+            type=type,
         )
 
     def test_dry_run_does_not_modify_database(self, tmp_path: Path) -> None:
@@ -701,3 +715,220 @@ class TestPrintSummary:
         output = captured_output.getvalue()
         # Should not contain "Error categories:" section when no errors
         assert "Error categories:" not in output
+
+
+class TestValidateFilterArgs:
+    """Tests for validate_filter_args function."""
+
+    def _make_args(
+        self,
+        parse_success: bool = False,
+        parse_failure: bool = False,
+        only_failing: bool = False,
+        error_category: str | None = None,
+        type: str | None = None,
+        model: str | None = None,
+        limit: int | None = None,
+    ) -> argparse.Namespace:
+        """Create argparse.Namespace with filter arguments."""
+        return argparse.Namespace(
+            parse_success=parse_success,
+            parse_failure=parse_failure,
+            only_failing=only_failing,
+            error_category=error_category,
+            type=type,
+            model=model,
+            limit=limit,
+        )
+
+    def test_no_conflicts_passes(self) -> None:
+        """Test valid arguments pass validation."""
+        args = self._make_args(parse_failure=True)
+        # Should not raise
+        validate_filter_args(args)
+
+    def test_parse_success_and_failure_conflict(self) -> None:
+        """Test --parse-success and --parse-failure conflict."""
+        args = self._make_args(parse_success=True, parse_failure=True)
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            validate_filter_args(args)
+
+    def test_only_failing_and_parse_success_conflict(self) -> None:
+        """Test --only-failing and --parse-success conflict."""
+        args = self._make_args(only_failing=True, parse_success=True)
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            validate_filter_args(args)
+
+    def test_only_failing_and_parse_failure_no_conflict(self) -> None:
+        """Test --only-failing and --parse-failure don't conflict."""
+        args = self._make_args(only_failing=True, parse_failure=True)
+        # Should not raise - both filter for failures
+        validate_filter_args(args)
+
+
+class TestApplyFilters:
+    """Tests for apply_filters function."""
+
+    def _make_args(
+        self,
+        parse_success: bool = False,
+        parse_failure: bool = False,
+        only_failing: bool = False,
+        error_category: str | None = None,
+        type: str | None = None,
+        model: str | None = None,
+        limit: int | None = None,
+    ) -> argparse.Namespace:
+        """Create argparse.Namespace with filter arguments."""
+        return argparse.Namespace(
+            parse_success=parse_success,
+            parse_failure=parse_failure,
+            only_failing=only_failing,
+            error_category=error_category,
+            type=type,
+            model=model,
+            limit=limit,
+        )
+
+    def test_no_filters_returns_all(self) -> None:
+        """Test no filters returns all models."""
+        models = [
+            {"model_id": "m1"},
+            {"model_id": "m2"},
+            {"model_id": "m3"},
+        ]
+        args = self._make_args()
+        result = apply_filters(models, args)
+        assert len(result) == 3
+
+    def test_model_filter(self) -> None:
+        """Test --model filter selects single model."""
+        models = [
+            {"model_id": "m1"},
+            {"model_id": "m2"},
+            {"model_id": "m3"},
+        ]
+        args = self._make_args(model="m2")
+        result = apply_filters(models, args)
+        assert len(result) == 1
+        assert result[0]["model_id"] == "m2"
+
+    def test_type_filter(self) -> None:
+        """Test --type filter selects by gamslib_type."""
+        models = [
+            {"model_id": "m1", "gamslib_type": "LP"},
+            {"model_id": "m2", "gamslib_type": "NLP"},
+            {"model_id": "m3", "gamslib_type": "LP"},
+        ]
+        args = self._make_args(type="LP")
+        result = apply_filters(models, args)
+        assert len(result) == 2
+        assert all(m["gamslib_type"] == "LP" for m in result)
+
+    def test_parse_success_filter(self) -> None:
+        """Test --parse-success filter."""
+        models = [
+            {"model_id": "m1", "nlp2mcp_parse": {"status": "success"}},
+            {"model_id": "m2", "nlp2mcp_parse": {"status": "failure"}},
+            {"model_id": "m3", "nlp2mcp_parse": {"status": "success"}},
+        ]
+        args = self._make_args(parse_success=True)
+        result = apply_filters(models, args)
+        assert len(result) == 2
+        assert all(m["nlp2mcp_parse"]["status"] == "success" for m in result)
+
+    def test_parse_failure_filter(self) -> None:
+        """Test --parse-failure filter."""
+        models = [
+            {"model_id": "m1", "nlp2mcp_parse": {"status": "success"}},
+            {"model_id": "m2", "nlp2mcp_parse": {"status": "failure"}},
+            {"model_id": "m3", "nlp2mcp_parse": {"status": "success"}},
+        ]
+        args = self._make_args(parse_failure=True)
+        result = apply_filters(models, args)
+        assert len(result) == 1
+        assert result[0]["model_id"] == "m2"
+
+    def test_only_failing_filter(self) -> None:
+        """Test --only-failing filter."""
+        models = [
+            {"model_id": "m1", "nlp2mcp_parse": {"status": "success"}},
+            {"model_id": "m2", "nlp2mcp_parse": {"status": "failure"}},
+            {"model_id": "m3"},  # No parse status
+        ]
+        args = self._make_args(only_failing=True)
+        result = apply_filters(models, args)
+        assert len(result) == 1
+        assert result[0]["model_id"] == "m2"
+
+    def test_error_category_filter(self) -> None:
+        """Test --error-category filter."""
+        models = [
+            {
+                "model_id": "m1",
+                "nlp2mcp_parse": {
+                    "status": "failure",
+                    "error": {"category": "parser_unexpected_token"},
+                },
+            },
+            {
+                "model_id": "m2",
+                "nlp2mcp_parse": {
+                    "status": "failure",
+                    "error": {"category": "semantic_undefined_symbol"},
+                },
+            },
+            {
+                "model_id": "m3",
+                "nlp2mcp_parse": {
+                    "status": "failure",
+                    "error": {"category": "parser_unexpected_token"},
+                },
+            },
+        ]
+        args = self._make_args(error_category="parser_unexpected_token")
+        result = apply_filters(models, args)
+        assert len(result) == 2
+        assert all(
+            m["nlp2mcp_parse"]["error"]["category"] == "parser_unexpected_token" for m in result
+        )
+
+    def test_limit_filter(self) -> None:
+        """Test --limit filter is applied last."""
+        models = [{"model_id": f"m{i}"} for i in range(10)]
+        args = self._make_args(limit=3)
+        result = apply_filters(models, args)
+        assert len(result) == 3
+        assert [m["model_id"] for m in result] == ["m0", "m1", "m2"]
+
+    def test_combined_filters(self) -> None:
+        """Test multiple filters combined with AND logic."""
+        models = [
+            {"model_id": "m1", "gamslib_type": "LP", "nlp2mcp_parse": {"status": "failure"}},
+            {"model_id": "m2", "gamslib_type": "NLP", "nlp2mcp_parse": {"status": "failure"}},
+            {"model_id": "m3", "gamslib_type": "LP", "nlp2mcp_parse": {"status": "success"}},
+            {"model_id": "m4", "gamslib_type": "LP", "nlp2mcp_parse": {"status": "failure"}},
+        ]
+        # Filter: type=LP AND parse_failure=True
+        args = self._make_args(type="LP", parse_failure=True)
+        result = apply_filters(models, args)
+        assert len(result) == 2
+        assert result[0]["model_id"] == "m1"
+        assert result[1]["model_id"] == "m4"
+
+    def test_limit_applied_after_other_filters(self) -> None:
+        """Test --limit is applied after other filters."""
+        models = [
+            {"model_id": "m1", "gamslib_type": "LP"},
+            {"model_id": "m2", "gamslib_type": "NLP"},
+            {"model_id": "m3", "gamslib_type": "LP"},
+            {"model_id": "m4", "gamslib_type": "LP"},
+            {"model_id": "m5", "gamslib_type": "LP"},
+        ]
+        # Filter: type=LP, limit=2
+        args = self._make_args(type="LP", limit=2)
+        result = apply_filters(models, args)
+        assert len(result) == 2
+        # Should be first 2 LP models
+        assert result[0]["model_id"] == "m1"
+        assert result[1]["model_id"] == "m3"
