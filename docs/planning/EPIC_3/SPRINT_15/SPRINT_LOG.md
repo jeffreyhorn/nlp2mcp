@@ -24,7 +24,7 @@
 
 | Checkpoint | Day | Status | Date |
 |------------|-----|--------|------|
-| CP1: Schema migrated | 2 | Pending | - |
+| CP1: Schema migrated | 2 | ✅ Complete | 2026-01-13 |
 | CP2: Enhanced testing | 4 | Pending | - |
 | CP3: Solve testing | 7 | Pending | - |
 | CP4: Pipeline complete | 9 | Pending | - |
@@ -128,5 +128,78 @@
 - [x] Backup created before migration
 
 **Next Steps:** Day 2 - Error Taxonomy Implementation
+
+---
+
+### Day 2: Error Taxonomy Integration
+
+**Date:** January 13, 2026
+
+**Objective:** Implement comprehensive error taxonomy module and integrate into batch scripts
+
+**Tasks Completed:**
+
+1. **Created error_taxonomy.py module** (2h)
+   - Defined 47 category constants (16 parse + 13 translate + 16 solve + 2 generic)
+   - Implemented `categorize_parse_error()` with regex-based detection
+   - Implemented `categorize_translate_error()` with pattern matching
+   - Implemented `categorize_solve_outcome()` for PATH solver results
+   - Added legacy mapping helpers for migration
+
+2. **Integrated into batch_parse.py** (0.5h)
+   - Imported `categorize_parse_error` from error_taxonomy
+   - Removed legacy `categorize_error` function
+   - Updated categorization call
+
+3. **Integrated into batch_translate.py** (0.5h)
+   - Imported `categorize_translate_error` from error_taxonomy
+   - Removed legacy `categorize_translation_error` function
+   - Updated categorization calls
+
+4. **Created unit tests** (1.5h)
+   - Created `tests/gamslib/test_error_taxonomy.py`
+   - 92 test cases covering all categorization functions
+   - Tests for parse errors (16 categories)
+   - Tests for translate errors (13 categories)
+   - Tests for solve outcomes (16 categories)
+   - Tests for edge cases and category listings
+
+5. **Updated existing tests** (0.5h)
+   - Updated `tests/gamslib/test_batch_parse.py` for new taxonomy
+   - Updated `tests/gamslib/test_batch_translate.py` for new taxonomy
+
+**Quality Checks:**
+- `make typecheck`: PASSED
+- `make lint`: PASSED
+- `make format`: Applied
+- `make test`: 2744 passed, 10 skipped, 1 xfailed
+
+**Error Taxonomy Summary:**
+
+| Category Group | Count | Examples |
+|---------------|-------|----------|
+| Parse - Lexer | 4 | invalid_char, unclosed_string, invalid_number, encoding_error |
+| Parse - Parser | 6 | missing_semicolon, unexpected_eof, unmatched_paren, invalid_declaration, invalid_expression, unexpected_token |
+| Parse - Semantic | 4 | domain_error, duplicate_def, type_mismatch, undefined_symbol |
+| Parse - Include | 2 | file_not_found, circular |
+| Translate - Diff | 3 | unsupported_func, chain_rule_error, numerical_error |
+| Translate - Model | 3 | no_objective_def, domain_mismatch, missing_bounds |
+| Translate - Unsup | 4 | index_offset, dollar_cond, expression_type, special_ordered |
+| Translate - Codegen | 3 | equation_error, variable_error, numerical_error |
+| Solve - PATH | 6 | normal, iteration_limit, time_limit, terminated, eval_error, license |
+| Solve - Model | 4 | optimal, locally_optimal, unbounded, infeasible |
+| Solve - Comparison | 6 | obj_match, obj_mismatch, status_mismatch, nlp_failed, mcp_failed, both_infeasible |
+| Common | 2 | timeout, internal_error |
+
+**Deliverables:**
+- [x] `scripts/gamslib/error_taxonomy.py` - Central taxonomy module
+- [x] `tests/gamslib/test_error_taxonomy.py` - 92 unit tests
+- [x] Updated `scripts/gamslib/batch_parse.py`
+- [x] Updated `scripts/gamslib/batch_translate.py`
+- [x] Updated test files for new taxonomy
+
+**Checkpoint 1 Status:** ✅ COMPLETE (Schema migrated + Error taxonomy integrated)
+
+**Next Steps:** Day 3 - Solve Script with PATH Integration
 
 ---

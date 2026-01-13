@@ -11,12 +11,12 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.gamslib.batch_parse import (  # noqa: E402
-    categorize_error,
     get_candidate_models,
     parse_single_model,
     print_summary,
     run_batch_parse,
 )
+from scripts.gamslib.error_taxonomy import categorize_parse_error  # noqa: E402
 from scripts.gamslib.utils import get_nlp2mcp_version  # noqa: E402
 
 
@@ -59,125 +59,62 @@ description = "Test"
                 assert version == "unknown"
 
 
-class TestCategorizeError:
-    """Tests for categorize_error function."""
+class TestCategorizeParseError:
+    """Tests for categorize_parse_error function (Sprint 15 taxonomy)."""
 
-    def test_syntax_error_parse_error(self) -> None:
-        """Test parse error is categorized as syntax_error."""
-        error = "Parse error at line 10: unexpected token"
-        category = categorize_error(error)
-        assert category == "syntax_error"
+    def test_lexer_invalid_char(self) -> None:
+        """Test unexpected character is categorized as lexer_invalid_char."""
+        error = "Unexpected character: '#' at position 5"
+        category = categorize_parse_error(error)
+        assert category == "lexer_invalid_char"
 
-    def test_syntax_error_unexpected_character(self) -> None:
-        """Test unexpected character is categorized as syntax_error."""
-        error = "Unexpected character '#' at position 5"
-        category = categorize_error(error)
-        assert category == "syntax_error"
-
-    def test_syntax_error_unexpected_token(self) -> None:
-        """Test unexpected token is categorized as syntax_error."""
+    def test_parser_unexpected_token(self) -> None:
+        """Test unexpected token is categorized as parser_unexpected_token."""
         error = "Unexpected token 'END' on line 42"
-        category = categorize_error(error)
-        assert category == "syntax_error"
+        category = categorize_parse_error(error)
+        assert category == "parser_unexpected_token"
 
-    def test_syntax_error_unexpected_eof(self) -> None:
-        """Test unexpected EOF is categorized as syntax_error."""
+    def test_parser_unexpected_eof(self) -> None:
+        """Test unexpected EOF is categorized as parser_unexpected_eof."""
         error = "Unexpected EOF while parsing model"
-        category = categorize_error(error)
-        assert category == "syntax_error"
+        category = categorize_parse_error(error)
+        assert category == "parser_unexpected_eof"
 
-    def test_no_objective_as_syntax_error(self) -> None:
-        """Test no objective function is mapped to syntax_error."""
-        error = "Model has no objective function defined"
-        category = categorize_error(error)
-        assert category == "syntax_error"
-
-    def test_objective_function_error_specific(self) -> None:
-        """Test specific objective function errors are categorized as syntax_error."""
-        # "no objective function" should be caught
-        error = "no objective function defined"
-        category = categorize_error(error)
-        assert category == "syntax_error"
-
-        # "objective function not defined" should be caught
-        error = "objective function not defined in model"
-        category = categorize_error(error)
-        assert category == "syntax_error"
-
-    def test_objective_function_broad_pattern_not_matched(self) -> None:
-        """Test broad 'objective function' patterns are not incorrectly categorized."""
-        # Generic "objective function" mentions should NOT match as syntax_error
-        # This prevents false positives like "Objective function validation failed"
-        error = "Objective function validation failed"
-        category = categorize_error(error)
-        # Should fall through to internal_error since it doesn't match specific patterns
-        assert category == "internal_error"
-
-    def test_unsupported_feature_not_implemented(self) -> None:
-        """Test 'not yet implemented' is categorized as unsupported_feature."""
-        error = "Function 'gamma' is not yet implemented"
-        category = categorize_error(error)
-        assert category == "unsupported_feature"
-
-    def test_unsupported_feature_unsupported(self) -> None:
-        """Test 'unsupported' is categorized as unsupported_feature."""
-        error = "Unsupported GAMS function: smin"
-        category = categorize_error(error)
-        assert category == "unsupported_feature"
-
-    def test_validation_error_domain(self) -> None:
-        """Test domain error is categorized as validation_error."""
-        error = "Variable domain incompatible with constraint"
-        category = categorize_error(error)
-        assert category == "validation_error"
-
-    def test_validation_error_incompatible(self) -> None:
-        """Test incompatible error is categorized as validation_error."""
-        error = "Incompatible types in expression"
-        category = categorize_error(error)
-        assert category == "validation_error"
-
-    def test_validation_error_not_defined(self) -> None:
-        """Test 'not defined' is categorized as validation_error."""
+    def test_semantic_undefined_symbol(self) -> None:
+        """Test 'not defined' is categorized as semantic_undefined_symbol."""
         error = "Variable 'x' is not defined in this scope"
-        category = categorize_error(error)
-        assert category == "validation_error"
+        category = categorize_parse_error(error)
+        assert category == "semantic_undefined_symbol"
 
-    def test_validation_error_undefined(self) -> None:
-        """Test 'undefined' is categorized as validation_error."""
+    def test_semantic_undefined_variant(self) -> None:
+        """Test 'undefined' is categorized as semantic_undefined_symbol."""
         error = "Undefined variable reference in objective"
-        category = categorize_error(error)
-        assert category == "validation_error"
+        category = categorize_parse_error(error)
+        assert category == "semantic_undefined_symbol"
 
-    def test_missing_include(self) -> None:
-        """Test include file error is categorized as missing_include."""
+    def test_include_file_not_found(self) -> None:
+        """Test include file error is categorized as include_file_not_found."""
         error = "Include file 'data.inc' not found"
-        category = categorize_error(error)
-        assert category == "missing_include"
-
-    def test_missing_include_file_not_found(self) -> None:
-        """Test file not found is categorized as missing_include."""
-        error = "File not found: /path/to/model.gms"
-        category = categorize_error(error)
-        assert category == "missing_include"
+        category = categorize_parse_error(error)
+        assert category == "include_file_not_found"
 
     def test_timeout(self) -> None:
         """Test timeout is categorized as timeout."""
         error = "Parse timeout after 60 seconds"
-        category = categorize_error(error)
+        category = categorize_parse_error(error)
         assert category == "timeout"
 
     def test_internal_error_unknown(self) -> None:
         """Test unknown error is categorized as internal_error."""
         error = "Something went wrong in the parser"
-        category = categorize_error(error)
+        category = categorize_parse_error(error)
         assert category == "internal_error"
 
     def test_case_insensitive_matching(self) -> None:
         """Test error categorization is case-insensitive."""
-        error = "PARSE ERROR at line 5"
-        category = categorize_error(error)
-        assert category == "syntax_error"
+        error = "UNEXPECTED CHARACTER: 'x'"
+        category = categorize_parse_error(error)
+        assert category == "lexer_invalid_char"
 
 
 class TestGetCandidateModels:
@@ -294,7 +231,7 @@ Solve test_model using lp minimizing obj;
         assert result["equations_count"] == 2
 
     def test_parse_failure_syntax_error(self, tmp_path: Path) -> None:
-        """Test parse failure due to syntax error."""
+        """Test parse failure due to syntax error (unexpected token)."""
         model_file = tmp_path / "bad_model.gms"
         model_file.write_text("Invalid GAMS syntax $$$ ###")
 
@@ -304,11 +241,11 @@ Solve test_model using lp minimizing obj;
 
         assert result["status"] == "failure"
         assert "parse_time_seconds" in result
-        assert result["error"]["category"] == "syntax_error"
+        assert result["error"]["category"] == "parser_unexpected_token"
         assert "Parse error" in result["error"]["message"]
 
     def test_parse_failure_validation_error(self, tmp_path: Path) -> None:
-        """Test parse failure due to validation error."""
+        """Test parse failure due to undefined symbol error."""
         model_file = tmp_path / "invalid_model.gms"
         model_file.write_text("* Model with validation issues")
 
@@ -322,11 +259,11 @@ Solve test_model using lp minimizing obj;
                 result = parse_single_model(model_file)
 
         assert result["status"] == "failure"
-        assert result["error"]["category"] == "validation_error"
+        assert result["error"]["category"] == "semantic_undefined_symbol"
         assert "not defined" in result["error"]["message"]
 
     def test_parse_failure_unsupported_feature(self, tmp_path: Path) -> None:
-        """Test parse failure due to unsupported feature."""
+        """Test parse failure due to unknown error falls back to internal_error."""
         model_file = tmp_path / "unsupported_model.gms"
         model_file.write_text("* Model with unsupported functions")
 
@@ -335,7 +272,7 @@ Solve test_model using lp minimizing obj;
             result = parse_single_model(model_file)
 
         assert result["status"] == "failure"
-        assert result["error"]["category"] == "unsupported_feature"
+        assert result["error"]["category"] == "internal_error"
         assert "not yet implemented" in result["error"]["message"]
 
     def test_parse_truncates_long_error_messages(self, tmp_path: Path) -> None:
@@ -536,10 +473,10 @@ class TestRunBatchParse:
 
         assert stats["success"] == 0
         assert stats["failure"] == 1
-        assert stats["error_categories"]["syntax_error"] == 1
+        assert stats["error_categories"]["internal_error"] == 1
         assert "nlp2mcp_parse" in database["models"][0]
         assert database["models"][0]["nlp2mcp_parse"]["status"] == "failure"
-        assert database["models"][0]["nlp2mcp_parse"]["error"]["category"] == "syntax_error"
+        assert database["models"][0]["nlp2mcp_parse"]["error"]["category"] == "internal_error"
 
     def test_periodic_save(self, tmp_path: Path) -> None:
         """Test database is saved periodically based on save_every."""

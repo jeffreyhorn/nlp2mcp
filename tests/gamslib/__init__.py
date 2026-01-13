@@ -1,1 +1,1 @@
-"""Tests for GAMSLIB scripts."""
+"""Tests for gamslib scripts."""

@@ -12,81 +12,75 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.gamslib.batch_translate import (  # noqa: E402
-    categorize_translation_error,
     get_parsed_models,
     print_summary,
     run_batch_translate,
     translate_single_model,
 )
+from scripts.gamslib.error_taxonomy import categorize_translate_error  # noqa: E402
 
 
-class TestCategorizeTranslationError:
-    """Tests for categorize_translation_error function."""
+class TestCategorizeTranslateError:
+    """Tests for categorize_translate_error function (Sprint 15 taxonomy)."""
 
     def test_timeout_error(self) -> None:
         """Test timeout is categorized correctly."""
         error = "Translation timeout after 60 seconds"
-        category = categorize_translation_error(error)
+        category = categorize_translate_error(error)
         assert category == "timeout"
 
-    def test_unsupported_feature_not_implemented(self) -> None:
-        """Test 'not yet implemented' is categorized as unsupported_feature."""
-        error = "Function 'gamma' is not yet implemented"
-        category = categorize_translation_error(error)
-        assert category == "unsupported_feature"
+    def test_diff_unsupported_func(self) -> None:
+        """Test differentiation not implemented is categorized correctly."""
+        error = "Differentiation not yet implemented for function 'gamma'"
+        category = categorize_translate_error(error)
+        assert category == "diff_unsupported_func"
 
-    def test_unsupported_feature_not_supported(self) -> None:
-        """Test 'not supported' is categorized as unsupported_feature."""
-        error = "IndexOffset not supported in this context"
-        category = categorize_translation_error(error)
-        assert category == "unsupported_feature"
+    def test_unsup_index_offset(self) -> None:
+        """Test 'IndexOffset not yet supported' is categorized correctly."""
+        error = "IndexOffset not yet supported in this context"
+        category = categorize_translate_error(error)
+        assert category == "unsup_index_offset"
 
-    def test_unsupported_feature_unsupported(self) -> None:
-        """Test 'unsupported' is categorized as unsupported_feature."""
-        error = "Unsupported GAMS function: smin"
-        category = categorize_translation_error(error)
-        assert category == "unsupported_feature"
+    def test_model_no_objective_def(self) -> None:
+        """Test objective not defined by equation is categorized correctly."""
+        error = "Objective variable 'z' is not defined by any equation"
+        category = categorize_translate_error(error)
+        assert category == "model_no_objective_def"
 
-    def test_validation_error_not_defined(self) -> None:
-        """Test 'not defined' is categorized as validation_error."""
-        error = "Objective variable 'z' is not defined"
-        category = categorize_translation_error(error)
-        assert category == "validation_error"
-
-    def test_validation_error_undefined(self) -> None:
-        """Test 'undefined' is categorized as validation_error."""
-        error = "Undefined variable reference in expression"
-        category = categorize_translation_error(error)
-        assert category == "validation_error"
-
-    def test_validation_error_incompatible(self) -> None:
-        """Test 'incompatible' is categorized as validation_error."""
-        error = "Incompatible domains for summation"
-        category = categorize_translation_error(error)
-        assert category == "validation_error"
-
-    def test_syntax_error_parse_error(self) -> None:
-        """Test 'parse error' is categorized as syntax_error."""
-        error = "Parse error at line 10"
-        category = categorize_translation_error(error)
-        assert category == "syntax_error"
-
-    def test_syntax_error_unexpected(self) -> None:
-        """Test 'unexpected' is categorized as syntax_error."""
-        error = "Unexpected token in expression"
-        category = categorize_translation_error(error)
-        assert category == "syntax_error"
+    def test_model_domain_mismatch(self) -> None:
+        """Test incompatible domains is categorized correctly."""
+        error = "Incompatible domains for variable indexing"
+        category = categorize_translate_error(error)
+        assert category == "model_domain_mismatch"
 
     def test_internal_error_unknown(self) -> None:
-        """Test unknown error is categorized as internal_error."""
-        error = "Something went wrong during translation"
-        category = categorize_translation_error(error)
+        """Test unknown error falls back to internal_error."""
+        error = "Some unknown translation error"
+        category = categorize_translate_error(error)
         assert category == "internal_error"
+
+    def test_diff_chain_rule_error(self) -> None:
+        """Test chain rule errors are categorized correctly."""
+        error = "Error applying chain rule in derivative"
+        category = categorize_translate_error(error)
+        assert category == "diff_chain_rule_error"
+
+    def test_model_missing_bounds(self) -> None:
+        """Test model missing bounds errors are categorized correctly."""
+        error = "Variable has missing bounds specification"
+        category = categorize_translate_error(error)
+        assert category == "model_missing_bounds"
+
+    def test_unsupported_dollar_cond(self) -> None:
+        """Test unsupported dollar conditional errors are categorized correctly."""
+        error = "DollarConditional expressions not supported"
+        category = categorize_translate_error(error)
+        assert category == "unsup_dollar_cond"
 
     def test_case_insensitive_matching(self) -> None:
         """Test error categorization is case-insensitive."""
         error = "TIMEOUT exceeded"
-        category = categorize_translation_error(error)
+        category = categorize_translate_error(error)
         assert category == "timeout"
 
 
@@ -159,21 +153,24 @@ class TestTranslateSingleModel:
         assert result["translate_time_seconds"] >= 0
 
     def test_translation_failure(self, tmp_path: Path) -> None:
-        """Test translation failure."""
+        """Test translation failure with differentiation error."""
         model_file = tmp_path / "bad_model.gms"
         model_file.write_text("* Bad model")
         output_file = tmp_path / "output" / "bad_model_mcp.gms"
 
         mock_proc = MagicMock()
-        mock_proc.communicate.return_value = ("", "Error: Variable 'x' is not defined")
+        mock_proc.communicate.return_value = (
+            "",
+            "Error: Differentiation not yet implemented for function 'gamma'",
+        )
         mock_proc.returncode = 1
 
         with patch("scripts.gamslib.batch_translate.subprocess.Popen", return_value=mock_proc):
             result = translate_single_model(model_file, output_file)
 
         assert result["status"] == "failure"
-        assert result["error"]["category"] == "validation_error"
-        assert "not defined" in result["error"]["message"]
+        assert result["error"]["category"] == "diff_unsupported_func"
+        assert "Differentiation" in result["error"]["message"]
 
     def test_translation_timeout(self, tmp_path: Path) -> None:
         """Test translation timeout handling."""
