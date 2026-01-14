@@ -223,6 +223,8 @@ Solve test_model using lp minimizing obj;
         mock_model = MagicMock()
         mock_model.variables = {"x": {}, "y": {}, "obj": {}}
         mock_model.equations = {"objective": {}, "constraint": {}}
+        mock_model.parameters = {"param1": {}, "param2": {}}
+        mock_model.sets = {"i": {}}
 
         with patch("src.ir.parser.parse_model_file", return_value=mock_model):
             with patch("src.validation.model.validate_model_structure"):
@@ -231,8 +233,16 @@ Solve test_model using lp minimizing obj;
         assert result["status"] == "success"
         assert "parse_time_seconds" in result
         assert result["parse_time_seconds"] >= 0
+        # Check backward-compatible fields
         assert result["variables_count"] == 3
         assert result["equations_count"] == 2
+        # Check new model_statistics object
+        assert "model_statistics" in result
+        stats = result["model_statistics"]
+        assert stats["variables"] == 3
+        assert stats["equations"] == 2
+        assert stats["parameters"] == 2
+        assert stats["sets"] == 1
 
     def test_parse_failure_syntax_error(self, tmp_path: Path) -> None:
         """Test parse failure due to syntax error (unexpected token)."""
@@ -326,7 +336,7 @@ class TestRunBatchParse:
         parse_failure: bool = False,
         only_failing: bool = False,
         error_category: str | None = None,
-        type: str | None = None,
+        model_type: str | None = None,
     ) -> argparse.Namespace:
         """Create argparse.Namespace with default values."""
         return argparse.Namespace(
@@ -339,7 +349,7 @@ class TestRunBatchParse:
             parse_failure=parse_failure,
             only_failing=only_failing,
             error_category=error_category,
-            type=type,
+            model_type=model_type,
         )
 
     def test_dry_run_does_not_modify_database(self, tmp_path: Path) -> None:
@@ -726,7 +736,7 @@ class TestValidateFilterArgs:
         parse_failure: bool = False,
         only_failing: bool = False,
         error_category: str | None = None,
-        type: str | None = None,
+        model_type: str | None = None,
         model: str | None = None,
         limit: int | None = None,
     ) -> argparse.Namespace:
@@ -736,7 +746,7 @@ class TestValidateFilterArgs:
             parse_failure=parse_failure,
             only_failing=only_failing,
             error_category=error_category,
-            type=type,
+            model_type=model_type,
             model=model,
             limit=limit,
         )
@@ -775,7 +785,7 @@ class TestApplyFilters:
         parse_failure: bool = False,
         only_failing: bool = False,
         error_category: str | None = None,
-        type: str | None = None,
+        model_type: str | None = None,
         model: str | None = None,
         limit: int | None = None,
     ) -> argparse.Namespace:
@@ -785,7 +795,7 @@ class TestApplyFilters:
             parse_failure=parse_failure,
             only_failing=only_failing,
             error_category=error_category,
-            type=type,
+            model_type=model_type,
             model=model,
             limit=limit,
         )
@@ -820,7 +830,7 @@ class TestApplyFilters:
             {"model_id": "m2", "gamslib_type": "NLP"},
             {"model_id": "m3", "gamslib_type": "LP"},
         ]
-        args = self._make_args(type="LP")
+        args = self._make_args(model_type="LP")
         result = apply_filters(models, args)
         assert len(result) == 2
         assert all(m["gamslib_type"] == "LP" for m in result)
@@ -909,8 +919,8 @@ class TestApplyFilters:
             {"model_id": "m3", "gamslib_type": "LP", "nlp2mcp_parse": {"status": "success"}},
             {"model_id": "m4", "gamslib_type": "LP", "nlp2mcp_parse": {"status": "failure"}},
         ]
-        # Filter: type=LP AND parse_failure=True
-        args = self._make_args(type="LP", parse_failure=True)
+        # Filter: model_type=LP AND parse_failure=True
+        args = self._make_args(model_type="LP", parse_failure=True)
         result = apply_filters(models, args)
         assert len(result) == 2
         assert result[0]["model_id"] == "m1"
@@ -925,8 +935,8 @@ class TestApplyFilters:
             {"model_id": "m4", "gamslib_type": "LP"},
             {"model_id": "m5", "gamslib_type": "LP"},
         ]
-        # Filter: type=LP, limit=2
-        args = self._make_args(type="LP", limit=2)
+        # Filter: model_type=LP, limit=2
+        args = self._make_args(model_type="LP", limit=2)
         result = apply_filters(models, args)
         assert len(result) == 2
         # Should be first 2 LP models

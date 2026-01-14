@@ -19,7 +19,7 @@ Filter Options:
     --parse-success     Only process models with parse success status
     --parse-failure     Only process models with parse failure status
     --error-category C  Only process models with specific error category
-    --type TYPE         Only process models of specific type (LP, NLP, QCP, etc.)
+    --model-type TYPE   Only process models of specific type (LP, NLP, QCP, etc.)
 
 Examples:
     python scripts/gamslib/batch_parse.py
@@ -27,7 +27,7 @@ Examples:
     python scripts/gamslib/batch_parse.py --limit 10 --verbose
     python scripts/gamslib/batch_parse.py --model prodmix
     python scripts/gamslib/batch_parse.py --only-failing --limit 10
-    python scripts/gamslib/batch_parse.py --type NLP --limit 10
+    python scripts/gamslib/batch_parse.py --model-type NLP --limit 10
     python scripts/gamslib/batch_parse.py --error-category parser_unexpected_token --limit 5
 """
 
@@ -174,7 +174,7 @@ def apply_filters(models: list[dict[str, Any]], args: argparse.Namespace) -> lis
     """Apply filter arguments to model list.
 
     Filters are applied in order:
-    1. Model selection (--model, --type)
+    1. Model selection (--model, --model-type)
     2. Status filters (--parse-success, --parse-failure, --only-failing)
     3. Error filters (--error-category)
     4. Limit (--limit) - applied last
@@ -192,8 +192,8 @@ def apply_filters(models: list[dict[str, Any]], args: argparse.Namespace) -> lis
     if args.model:
         filtered = [m for m in filtered if m.get("model_id") == args.model]
 
-    if args.type:
-        filtered = [m for m in filtered if m.get("gamslib_type") == args.type]
+    if args.model_type:
+        filtered = [m for m in filtered if m.get("gamslib_type") == args.model_type]
 
     # Phase 2: Status filters
     if args.parse_success:
@@ -238,8 +238,8 @@ def report_filter_summary(
 
     if args.model:
         filters_applied.append(f"model={args.model}")
-    if args.type:
-        filters_applied.append(f"type={args.type}")
+    if args.model_type:
+        filters_applied.append(f"model_type={args.model_type}")
     if args.parse_success:
         filters_applied.append("parse-success")
     if args.parse_failure:
@@ -539,7 +539,8 @@ def main() -> int:
         help="Only process models with specific error category",
     )
     filter_group.add_argument(
-        "--type",
+        "--model-type",
+        dest="model_type",
         type=str,
         metavar="TYPE",
         help="Only process models of specific type (LP, NLP, QCP, etc.)",
