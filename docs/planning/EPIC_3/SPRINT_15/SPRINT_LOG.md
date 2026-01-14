@@ -25,7 +25,7 @@
 | Checkpoint | Day | Status | Date |
 |------------|-----|--------|------|
 | CP1: Schema migrated | 2 | ✅ Complete | 2026-01-13 |
-| CP2: Enhanced testing | 4 | Pending | - |
+| CP2: Enhanced testing | 4 | ✅ Complete | 2026-01-13 |
 | CP3: Solve testing | 7 | Pending | - |
 | CP4: Pipeline complete | 9 | Pending | - |
 | CP5: Baseline recorded | 10 | Pending | - |
@@ -267,5 +267,95 @@
 - [x] 14 new unit tests in `tests/gamslib/test_batch_parse.py`
 
 **Next Steps:** Day 4 - Translate Enhancement
+
+---
+
+### Day 4: Translate Enhancement
+
+**Date:** January 13, 2026
+
+**Objective:** Enhance batch_translate.py with filter flags, MCP validation, and timing improvements
+
+**Tasks Completed:**
+
+1. **Added filter functions** (1h)
+   - Implemented `validate_filter_args()` for conflict detection
+   - Implemented `apply_filters()` with phase-based filtering
+   - Implemented `report_filter_summary()` for logging
+
+2. **Added CLI filter arguments** (0.5h)
+   - `--parse-success`: Process models with prior parse success
+   - `--translate-success`: Process models with prior translation success
+   - `--translate-failure`: Process models with prior translation failure
+   - `--skip-completed`: Skip models already successfully translated
+   - `--error-category`: Filter by specific error category
+   - `--model-type`: Filter by model type (NLP, MCP, QCP, etc.)
+
+3. **Added MCP file validation** (0.5h)
+   - Implemented `validate_mcp_file()` using GAMS action=c (compile-only)
+   - Added `--validate` CLI flag to enable validation
+   - Returns validation status, time, and error message
+   - Integrated into print_summary() for validation statistics
+
+4. **Improved timing precision** (0.25h)
+   - Changed timing from 3 to 4 decimal places
+   - Uses `time.perf_counter()` for high precision
+
+5. **Updated run_batch_translate()** (0.5h)
+   - Added `validate_filter_args()` call at entry
+   - Replaced manual filtering with `apply_filters()` function
+   - Added `report_filter_summary()` call for transparency
+   - Added error_categories tracking in statistics
+   - Added validation stats tracking when --validate is set
+
+6. **Created unit tests** (1h)
+   - Added `TestValidateFilterArgs` class (3 tests)
+   - Added `TestApplyFilters` class (11 tests)
+   - Added `TestValidateMcpFile` class (4 tests)
+   - Updated existing `_make_args` helper with new filter attributes
+
+7. **Ran batch translate on all 34 parsed models** (1.5min)
+   - Command: `python scripts/gamslib/batch_translate.py --parse-success`
+   - Results: 17 success (50%), 17 failure
+
+**Quality Checks:**
+- `make typecheck`: PASSED
+- `make lint`: PASSED
+- `make test`: 2792 passed, 10 skipped, 1 xfailed
+
+**Translation Results:**
+
+| Metric | Value |
+|--------|-------|
+| Models processed | 34 |
+| Success | 17 (50.0%) |
+| Failure | 17 |
+| Total time | 85.8s |
+
+**Error Categories Breakdown:**
+
+| Category | Count |
+|----------|-------|
+| model_no_objective_def | 5 |
+| diff_unsupported_func | 5 |
+| unsup_index_offset | 3 |
+| model_domain_mismatch | 2 |
+| unsup_dollar_cond | 1 |
+| codegen_numerical_error | 1 |
+
+**Successful Translations (17 models):**
+chem, dispatch, himmel11, house, hs62, least, mathopt1, mathopt2, mhw4d, mhw4dx, port, process, prodmix, ps2_f_inf, rbrock, sample, trig
+
+**Deliverables:**
+- [x] Filter functions in `scripts/gamslib/batch_translate.py`
+- [x] CLI arguments for all filter flags
+- [x] MCP file validation with `--validate` flag
+- [x] 4-decimal timing precision
+- [x] Error category tracking in statistics
+- [x] 18 new unit tests in `tests/gamslib/test_batch_translate.py`
+
+**Checkpoint 2 Status:** ✅ COMPLETE (Parse and translate testing enhanced with filters)
+
+**Next Steps:** Day 5 - Solve Testing Infrastructure
 
 ---

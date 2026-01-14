@@ -65,7 +65,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_mix(desk).. (-sum(desk, 0)) + sum(shop, sum(desk, 0) * lam_cap(shop)) =E= 0;
+stat_mix(desk).. (-price(desk)) + sum(shop, labor(shop,desk) * lam_cap(shop)) =E= 0;
 
 * Inequality complementarity equations
 comp_cap(shop).. -sum(desk, labor(shop,desk) * mix(desk)) =G= 0;

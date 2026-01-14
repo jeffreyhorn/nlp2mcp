@@ -62,7 +62,7 @@ Equations
     stat_c(i)
     stat_util
     stat_x(i)
-    comp_lo_x_inf(i)
+    comp_lo_x_inf
     obj
     pc(i)
     rev(i)
@@ -73,13 +73,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. (-sum(i, 0)) + 1 * nu_rev(i) + 0 * nu_pc(i) =E= 0;
-stat_c(i).. (-sum(i, 0)) + 0 * nu_rev(i) + 1 * nu_pc(i) =E= 0;
+stat_b(i).. -1 + 1 * nu_rev(i) + 0 * nu_pc(i) =E= 0;
+stat_c(i).. 1 + 0 * nu_rev(i) + 1 * nu_pc(i) =E= 0;
 stat_util.. (-sum(i, 0)) + 0 * nu_rev(inf) + 0 * nu_pc(inf) =E= 0;
-stat_x(i).. (-sum(i, 0)) + -(0.5 * power(x(i), -0.5)) * nu_rev(i) + (-theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
+stat_x(i).. 0 + -(0.5 * power(x(i), -0.5)) * nu_rev(i) + (-theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_x_inf(i).. x(inf) - 0.0001 =G= 0;
+comp_lo_x_inf.. x(inf) - 0.0001 =G= 0;
 
 * Original equality equations
 obj.. Util =E= sum(i, b(i) - c(i));
@@ -108,7 +108,7 @@ Model mcp_model /
     obj.Util,
     pc.nu_pc,
     rev.nu_rev,
-    comp_lo_x_inf.piL_x
+    comp_lo_x_inf.piL_x("inf")
 /;
 
 * ============================================
