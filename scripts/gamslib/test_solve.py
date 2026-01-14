@@ -2,6 +2,7 @@
 """MCP solve testing script for GAMSLIB models.
 
 Runs PATH solver on generated MCP files and records solve results.
+Optionally compares NLP and MCP objective values using tolerance-based matching.
 
 Usage:
     python scripts/gamslib/test_solve.py [OPTIONS]
@@ -17,10 +18,17 @@ Filter Options:
     --translate-success  Only process models with successful translation
     --model-type TYPE    Only process models of specific type (LP, NLP, QCP, etc.)
 
+Comparison Options:
+    --compare      Compare NLP and MCP solutions after solving
+    --rtol FLOAT   Relative tolerance for objective comparison (default: 1e-6)
+    --atol FLOAT   Absolute tolerance for objective comparison (default: 1e-8)
+
 Examples:
     python scripts/gamslib/test_solve.py --translate-success
     python scripts/gamslib/test_solve.py --model chem --verbose
     python scripts/gamslib/test_solve.py --translate-success --limit 5 --dry-run
+    python scripts/gamslib/test_solve.py --translate-success --compare --verbose
+    python scripts/gamslib/test_solve.py --compare --rtol 1e-5 --atol 1e-7
 """
 
 from __future__ import annotations
@@ -42,6 +50,8 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+import math
+
 from scripts.gamslib.error_taxonomy import (
     MODEL_INFEASIBLE,
     MODEL_LOCALLY_OPTIMAL,
@@ -54,6 +64,19 @@ from scripts.gamslib.error_taxonomy import (
     PATH_SOLVE_TIME_LIMIT,
     PATH_SYNTAX_ERROR,
 )
+
+# Comparison result categories (must match schema.json comparison_result_category enum)
+COMPARE_OBJECTIVE_MATCH = "compare_objective_match"
+COMPARE_OBJECTIVE_MISMATCH = "compare_objective_mismatch"
+COMPARE_STATUS_MISMATCH = "compare_status_mismatch"
+COMPARE_NLP_FAILED = "compare_nlp_failed"
+COMPARE_MCP_FAILED = "compare_mcp_failed"
+COMPARE_BOTH_INFEASIBLE = "compare_both_infeasible"
+COMPARE_NOT_PERFORMED = "compare_not_performed"
+
+# Default tolerance values (based on solver defaults research)
+DEFAULT_RTOL = 1e-6  # Relative tolerance (matches PATH, CPLEX, GUROBI)
+DEFAULT_ATOL = 1e-8  # Absolute tolerance (matches IPOPT)
 
 # Database paths
 DATABASE_PATH = PROJECT_ROOT / "data" / "gamslib" / "gamslib_status.json"
@@ -342,6 +365,222 @@ def categorize_solve_outcome(
         return MODEL_INFEASIBLE
 
     return PATH_SOLVE_TERMINATED
+
+
+def objectives_match(
+    nlp_obj: float,
+    mcp_obj: float,
+    rtol: float = DEFAULT_RTOL,
+    atol: float = DEFAULT_ATOL,
+) -> tuple[bool, str]:
+    """Check if NLP and MCP objectives match within tolerance.
+
+    Uses combined tolerance formula: |a - b| <= atol + rtol * max(|a|, |b|)
+
+    This formula is the NumPy/SciPy standard and handles:
+    - Values near zero (absolute tolerance dominates)
+    - Large values (relative tolerance dominates)
+    - Symmetric comparison (order doesn't matter)
+
+    Args:
+        nlp_obj: Objective value from NLP solve
+        mcp_obj: Objective value from MCP solve
+        rtol: Relative tolerance (default 1e-6, matches PATH/CPLEX/GUROBI)
+        atol: Absolute tolerance (default 1e-8, matches IPOPT)
+
+    Returns:
+        Tuple of (match: bool, reason: str)
+        - match: True if objectives match within tolerance
+        - reason: Human-readable description of result
+    """
+    # Handle NaN values
+    if math.isnan(nlp_obj) or math.isnan(mcp_obj):
+        return (False, "NaN in objective value")
+
+    # Handle Infinity values
+    if math.isinf(nlp_obj) or math.isinf(mcp_obj):
+        # Both infinite with same sign is a match
+        if math.isinf(nlp_obj) and math.isinf(mcp_obj):
+            if (nlp_obj > 0) == (mcp_obj > 0):
+                return (True, "Both objectives are infinite with same sign")
+        return (False, "Infinity in objective value")
+
+    # Calculate difference and tolerance
+    diff = abs(nlp_obj - mcp_obj)
+    max_abs = max(abs(nlp_obj), abs(mcp_obj))
+    tolerance = atol + rtol * max_abs
+
+    if diff <= tolerance:
+        return (True, f"Match within tolerance (diff={diff:.2e}, tol={tolerance:.2e})")
+    else:
+        return (False, f"Mismatch: diff={diff:.2e} > tolerance={tolerance:.2e}")
+
+
+def compare_solutions(
+    model: dict[str, Any],
+    rtol: float = DEFAULT_RTOL,
+    atol: float = DEFAULT_ATOL,
+) -> dict[str, Any]:
+    """Compare NLP and MCP solutions using decision tree.
+
+    Decision tree with 7 outcomes:
+    1. objective_match - Both solved optimally, objectives match
+    2. objective_mismatch - Both solved optimally, objectives differ
+    3. both_infeasible - Both NLP and MCP are infeasible
+    4. status_mismatch (nlp_optimal) - NLP optimal but MCP failed/infeasible
+    5. status_mismatch (mcp_optimal) - MCP optimal but NLP failed/infeasible
+    6. nlp_solve_failed - NLP solve failed (no valid reference)
+    7. mcp_solve_failed - MCP solve failed
+
+    Args:
+        model: Model dictionary with convexity and mcp_solve results
+        rtol: Relative tolerance for objective comparison
+        atol: Absolute tolerance for objective comparison
+
+    Returns:
+        Dictionary with comparison results matching solution_comparison_result schema
+    """
+    from datetime import UTC, datetime
+
+    result: dict[str, Any] = {
+        "comparison_status": "not_tested",
+        "comparison_date": datetime.now(UTC).isoformat(),
+        "nlp_objective": None,
+        "mcp_objective": None,
+        "absolute_difference": None,
+        "relative_difference": None,
+        "objective_match": None,
+        "tolerance_absolute": atol,
+        "tolerance_relative": rtol,
+        "nlp_solver_status": None,
+        "nlp_model_status": None,
+        "mcp_solver_status": None,
+        "mcp_model_status": None,
+        "status_match": None,
+        "comparison_result": COMPARE_NOT_PERFORMED,
+        "notes": None,
+    }
+
+    # Get convexity (NLP) results
+    convexity = model.get("convexity", {})
+    nlp_solver_status = convexity.get("solver_status")
+    nlp_model_status = convexity.get("model_status")
+    nlp_objective = convexity.get("objective_value")
+
+    result["nlp_solver_status"] = nlp_solver_status
+    result["nlp_model_status"] = nlp_model_status
+    result["nlp_objective"] = nlp_objective
+
+    # Get MCP solve results
+    mcp_solve = model.get("mcp_solve", {})
+    mcp_solver_status = mcp_solve.get("solver_status")
+    mcp_model_status = mcp_solve.get("model_status")
+    mcp_objective = mcp_solve.get("objective_value")
+
+    result["mcp_solver_status"] = mcp_solver_status
+    result["mcp_model_status"] = mcp_model_status
+    result["mcp_objective"] = mcp_objective
+
+    # Check if NLP solve was successful (solver status 1, model status 1 or 2)
+    nlp_solved = nlp_solver_status == 1 and nlp_model_status in (1, 2)
+    nlp_infeasible = nlp_model_status in (4, 5, 6, 19)
+
+    # Check if MCP solve was successful
+    mcp_solved = mcp_solver_status == 1 and mcp_model_status in (1, 2)
+    mcp_infeasible = mcp_model_status in (4, 5, 6, 19)
+
+    # Decision tree
+    # Case 7: NLP solve failed (no convexity data or failed solve)
+    if not convexity or convexity.get("status") in ("error", "excluded", "license_limited"):
+        result["comparison_status"] = "skipped"
+        result["comparison_result"] = COMPARE_NLP_FAILED
+        result["notes"] = f"NLP convexity status: {convexity.get('status', 'missing')}"
+        return result
+
+    # Case 6: MCP solve failed
+    if not mcp_solve or mcp_solve.get("status") == "failure":
+        result["comparison_status"] = "skipped"
+        result["comparison_result"] = COMPARE_MCP_FAILED
+        result["notes"] = f"MCP solve status: {mcp_solve.get('status', 'missing')}"
+        return result
+
+    # Case 3: Both infeasible
+    if nlp_infeasible and mcp_infeasible:
+        result["comparison_status"] = "match"
+        result["comparison_result"] = COMPARE_BOTH_INFEASIBLE
+        result["status_match"] = True
+        result["notes"] = "Both NLP and MCP are infeasible (consistent result)"
+        return result
+
+    # Case 4: NLP optimal but MCP not optimal
+    if nlp_solved and not mcp_solved:
+        result["comparison_status"] = "mismatch"
+        result["comparison_result"] = COMPARE_STATUS_MISMATCH
+        result["status_match"] = False
+        result["notes"] = (
+            f"NLP optimal (status {nlp_model_status}) but MCP not optimal (status {mcp_model_status})"
+        )
+        return result
+
+    # Case 5: MCP optimal but NLP not optimal
+    if mcp_solved and not nlp_solved:
+        result["comparison_status"] = "mismatch"
+        result["comparison_result"] = COMPARE_STATUS_MISMATCH
+        result["status_match"] = False
+        result["notes"] = (
+            f"MCP optimal (status {mcp_model_status}) but NLP not optimal (status {nlp_model_status})"
+        )
+        return result
+
+    # Both solved optimally - compare objectives
+    if nlp_solved and mcp_solved:
+        result["status_match"] = True
+
+        # Check if objectives are available
+        if nlp_objective is None:
+            result["comparison_status"] = "error"
+            result["comparison_result"] = COMPARE_NOT_PERFORMED
+            result["notes"] = "NLP objective value not available"
+            return result
+
+        if mcp_objective is None:
+            result["comparison_status"] = "error"
+            result["comparison_result"] = COMPARE_NOT_PERFORMED
+            result["notes"] = "MCP objective value not available"
+            return result
+
+        # Calculate differences
+        diff = abs(nlp_objective - mcp_objective)
+        result["absolute_difference"] = diff
+
+        # Relative difference (protect against division by zero)
+        max_abs = max(abs(nlp_objective), abs(mcp_objective), 1e-10)
+        result["relative_difference"] = diff / max_abs
+
+        # Compare objectives
+        match, reason = objectives_match(nlp_objective, mcp_objective, rtol, atol)
+        result["objective_match"] = match
+
+        if match:
+            # Case 1: Objectives match
+            result["comparison_status"] = "match"
+            result["comparison_result"] = COMPARE_OBJECTIVE_MATCH
+            result["notes"] = reason
+        else:
+            # Case 2: Objectives mismatch
+            result["comparison_status"] = "mismatch"
+            result["comparison_result"] = COMPARE_OBJECTIVE_MISMATCH
+            result["notes"] = reason
+
+        return result
+
+    # Fallback: neither optimal nor infeasible in expected pattern
+    result["comparison_status"] = "error"
+    result["comparison_result"] = COMPARE_NOT_PERFORMED
+    result["notes"] = (
+        f"Unexpected status combination: NLP({nlp_solver_status}/{nlp_model_status}), MCP({mcp_solver_status}/{mcp_model_status})"
+    )
+    return result
 
 
 def solve_mcp(mcp_path: Path, timeout: int = 60) -> dict[str, Any]:
@@ -643,6 +882,30 @@ def print_summary(stats: dict[str, Any]) -> None:
         for model_id in sorted(stats["successful_models"]):
             print(f"  - {model_id}")
 
+    # Print comparison results if enabled
+    if stats.get("comparison_enabled"):
+        print("\n" + "-" * 40)
+        print("SOLUTION COMPARISON RESULTS")
+        print("-" * 40)
+
+        if stats.get("comparison_results"):
+            print("\nComparison outcomes:")
+            for cat, count in sorted(
+                stats["comparison_results"].items(),
+                key=lambda x: -x[1],
+            ):
+                print(f"  {cat}: {count}")
+
+        if stats.get("objective_matches"):
+            print(f"\nObjective matches ({len(stats['objective_matches'])}):")
+            for model_id in sorted(stats["objective_matches"]):
+                print(f"  - {model_id}")
+
+        if stats.get("objective_mismatches"):
+            print(f"\nObjective MISMATCHES ({len(stats['objective_mismatches'])}):")
+            for model_id in sorted(stats["objective_mismatches"]):
+                print(f"  - {model_id}")
+
     print("=" * 60)
 
 
@@ -680,6 +943,11 @@ def run_batch_solve(args: argparse.Namespace) -> int:
         "total_time": 0.0,
         "outcome_categories": {},
         "successful_models": [],
+        # Comparison stats (only populated if --compare is used)
+        "comparison_enabled": args.compare,
+        "comparison_results": {},
+        "objective_matches": [],
+        "objective_mismatches": [],
     }
 
     start_time = time.perf_counter()
@@ -725,9 +993,11 @@ def run_batch_solve(args: argparse.Namespace) -> int:
 
         # Update model in database
         # Find the model in all_models (not just translated)
+        target_model = None
         for m in all_models:
             if m.get("model_id") == model_id:
                 update_model_solve_result(m, result)
+                target_model = m
                 break
 
         # Update stats
@@ -739,6 +1009,31 @@ def run_batch_solve(args: argparse.Namespace) -> int:
 
         outcome = result.get("outcome_category", "unknown")
         stats["outcome_categories"][outcome] = stats["outcome_categories"].get(outcome, 0) + 1
+
+        # Run solution comparison if enabled
+        if args.compare and target_model:
+            comparison = compare_solutions(target_model, rtol=args.rtol, atol=args.atol)
+            target_model["solution_comparison"] = comparison
+
+            # Log comparison result
+            comp_result = comparison.get("comparison_result", "unknown")
+            stats["comparison_results"][comp_result] = (
+                stats["comparison_results"].get(comp_result, 0) + 1
+            )
+
+            if comp_result == COMPARE_OBJECTIVE_MATCH:
+                stats["objective_matches"].append(model_id)
+            elif comp_result == COMPARE_OBJECTIVE_MISMATCH:
+                stats["objective_mismatches"].append(model_id)
+
+            if args.verbose:
+                logger.info(f"  Comparison: {comparison['comparison_status']}")
+                if comparison.get("nlp_objective") is not None:
+                    logger.info(f"  NLP objective: {comparison['nlp_objective']}")
+                if comparison.get("mcp_objective") is not None:
+                    logger.info(f"  MCP objective: {comparison['mcp_objective']}")
+                if comparison.get("notes"):
+                    logger.info(f"  Notes: {comparison['notes']}")
 
         # Periodic save
         save_counter += 1
@@ -807,6 +1102,26 @@ def main() -> int:
         type=str,
         default=None,
         help="Only process models of specific type (LP, NLP, QCP, etc.)",
+    )
+
+    # Comparison arguments
+    compare_group = parser.add_argument_group("Comparison Options")
+    compare_group.add_argument(
+        "--compare",
+        action="store_true",
+        help="Compare NLP and MCP solutions after solving",
+    )
+    compare_group.add_argument(
+        "--rtol",
+        type=float,
+        default=DEFAULT_RTOL,
+        help=f"Relative tolerance for objective comparison (default: {DEFAULT_RTOL})",
+    )
+    compare_group.add_argument(
+        "--atol",
+        type=float,
+        default=DEFAULT_ATOL,
+        help=f"Absolute tolerance for objective comparison (default: {DEFAULT_ATOL})",
     )
 
     args = parser.parse_args()

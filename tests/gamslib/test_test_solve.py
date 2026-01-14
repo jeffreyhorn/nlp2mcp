@@ -17,11 +17,22 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.gamslib.error_taxonomy import PATH_SYNTAX_ERROR  # noqa: E402
 from scripts.gamslib.test_solve import (  # noqa: E402
+    COMPARE_BOTH_INFEASIBLE,
+    COMPARE_MCP_FAILED,
+    COMPARE_NLP_FAILED,
+    COMPARE_NOT_PERFORMED,
+    COMPARE_OBJECTIVE_MATCH,
+    COMPARE_OBJECTIVE_MISMATCH,
+    COMPARE_STATUS_MISMATCH,
+    DEFAULT_ATOL,
+    DEFAULT_RTOL,
     apply_filters,
     categorize_solve_outcome,
+    compare_solutions,
     extract_objective_from_variables,
     extract_path_version,
     get_translated_models,
+    objectives_match,
     parse_gams_listing,
     solve_mcp,
     update_model_solve_result,
@@ -513,3 +524,341 @@ S O L V E      S U M M A R Y
 
         assert result["status"] == "failure"
         assert "No .lst file generated" in result["error"]
+
+
+class TestObjectivesMatch:
+    """Tests for objectives_match tolerance comparison function."""
+
+    def test_exact_match(self):
+        """Test exact match returns True."""
+        match, reason = objectives_match(100.0, 100.0)
+        assert match is True
+        assert "Match" in reason
+
+    def test_within_relative_tolerance(self):
+        """Test values within relative tolerance match."""
+        # For large values, rtol=1e-6 allows diff of ~1 for obj=1e6
+        # 1000000.0 vs 1000000.5 -> diff=0.5, tol = 1e-8 + 1e-6 * 1e6 = 1.00001
+        match, reason = objectives_match(1000000.0, 1000000.5)
+        assert match is True
+
+    def test_outside_relative_tolerance(self):
+        """Test values outside relative tolerance don't match."""
+        # 1000.0 vs 1001.0 -> diff=1.0, tol = 1e-8 + 1e-6 * 1001 = 0.001001
+        match, reason = objectives_match(1000.0, 1001.0)
+        assert match is False
+        assert "Mismatch" in reason
+
+    def test_zero_objective_within_atol(self):
+        """Test zero objective with value within atol matches."""
+        # 0 vs 1e-9 -> diff=1e-9, tol = 1e-8 + 1e-6 * 1e-9 ≈ 1e-8
+        match, reason = objectives_match(0.0, 1e-9)
+        assert match is True
+
+    def test_zero_objective_outside_atol(self):
+        """Test zero objective with value outside atol doesn't match."""
+        # 0 vs 1e-7 -> diff=1e-7, tol = 1e-8 + 1e-6 * 1e-7 ≈ 1e-8
+        match, reason = objectives_match(0.0, 1e-7)
+        assert match is False
+
+    def test_negative_objectives_match(self):
+        """Test negative objectives that match within tolerance."""
+        # -1000.0 vs -1000.0005 -> diff=0.0005, tol = 1e-8 + 1e-6 * 1000.0005 ≈ 0.001
+        match, reason = objectives_match(-1000.0, -1000.0005)
+        assert match is True
+
+    def test_negative_objectives_mismatch(self):
+        """Test negative objectives that don't match."""
+        match, reason = objectives_match(-1000.0, -1001.0)
+        assert match is False
+
+    def test_nan_handling(self):
+        """Test NaN values return False with appropriate message."""
+        match, reason = objectives_match(float("nan"), 100.0)
+        assert match is False
+        assert "NaN" in reason
+
+        match, reason = objectives_match(100.0, float("nan"))
+        assert match is False
+        assert "NaN" in reason
+
+    def test_infinity_handling(self):
+        """Test Infinity values return False."""
+        match, reason = objectives_match(float("inf"), 100.0)
+        assert match is False
+        assert "Infinity" in reason
+
+        match, reason = objectives_match(100.0, float("-inf"))
+        assert match is False
+
+    def test_both_positive_infinity_match(self):
+        """Test both positive infinity values match."""
+        match, reason = objectives_match(float("inf"), float("inf"))
+        assert match is True
+        assert "infinite" in reason.lower()
+
+    def test_both_negative_infinity_match(self):
+        """Test both negative infinity values match."""
+        match, reason = objectives_match(float("-inf"), float("-inf"))
+        assert match is True
+
+    def test_opposite_infinity_mismatch(self):
+        """Test opposite infinity values don't match."""
+        match, reason = objectives_match(float("inf"), float("-inf"))
+        assert match is False
+
+    def test_custom_tolerances(self):
+        """Test with custom tolerance values."""
+        # With rtol=1e-3, 1000.0 vs 1001.0 should match (diff=1, tol=1.001)
+        match, reason = objectives_match(1000.0, 1001.0, rtol=1e-3, atol=1e-8)
+        assert match is True
+
+        # With very tight tolerance, should not match
+        match, reason = objectives_match(100.0, 100.001, rtol=1e-10, atol=1e-10)
+        assert match is False
+
+    def test_very_small_values(self):
+        """Test comparison of very small non-zero values."""
+        # Both near zero - should match if within atol
+        match, reason = objectives_match(1e-10, -1e-10)
+        assert match is True  # diff=2e-10 < atol=1e-8
+
+    def test_default_tolerance_values(self):
+        """Test that default tolerance values are as expected."""
+        assert DEFAULT_RTOL == 1e-6
+        assert DEFAULT_ATOL == 1e-8
+
+
+class TestCompareSolutions:
+    """Tests for compare_solutions decision tree function."""
+
+    def _make_model(
+        self,
+        nlp_solver_status: int | None = 1,
+        nlp_model_status: int | None = 1,
+        nlp_objective: float | None = 100.0,
+        nlp_convexity_status: str = "verified_convex",
+        mcp_solver_status: int | None = 1,
+        mcp_model_status: int | None = 1,
+        mcp_objective: float | None = 100.0,
+        mcp_solve_status: str = "success",
+    ) -> dict[str, Any]:
+        """Create a model dict for testing."""
+        model: dict[str, Any] = {"model_id": "test"}
+
+        if nlp_convexity_status:
+            model["convexity"] = {
+                "status": nlp_convexity_status,
+                "solver_status": nlp_solver_status,
+                "model_status": nlp_model_status,
+                "objective_value": nlp_objective,
+            }
+
+        if mcp_solve_status:
+            model["mcp_solve"] = {
+                "status": mcp_solve_status,
+                "solver_status": mcp_solver_status,
+                "model_status": mcp_model_status,
+                "objective_value": mcp_objective,
+            }
+
+        return model
+
+    def test_objective_match(self):
+        """Test Case 1: Both optimal, objectives match."""
+        model = self._make_model(
+            nlp_objective=225.1946,
+            mcp_objective=225.1946,
+        )
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "match"
+        assert result["comparison_result"] == COMPARE_OBJECTIVE_MATCH
+        assert result["objective_match"] is True
+        assert result["status_match"] is True
+        assert result["nlp_objective"] == 225.1946
+        assert result["mcp_objective"] == 225.1946
+        assert result["absolute_difference"] == 0.0
+
+    def test_objective_mismatch(self):
+        """Test Case 2: Both optimal, objectives differ."""
+        model = self._make_model(
+            nlp_objective=100.0,
+            mcp_objective=200.0,  # Large difference
+        )
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "mismatch"
+        assert result["comparison_result"] == COMPARE_OBJECTIVE_MISMATCH
+        assert result["objective_match"] is False
+        assert result["status_match"] is True
+        assert result["absolute_difference"] == 100.0
+
+    def test_both_infeasible(self):
+        """Test Case 3: Both NLP and MCP are infeasible."""
+        model = self._make_model(
+            nlp_model_status=4,  # Infeasible
+            nlp_objective=None,
+            mcp_model_status=4,  # Infeasible
+            mcp_objective=None,
+        )
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "match"
+        assert result["comparison_result"] == COMPARE_BOTH_INFEASIBLE
+        assert result["status_match"] is True
+
+    def test_status_mismatch_nlp_optimal(self):
+        """Test Case 4: NLP optimal but MCP not optimal."""
+        model = self._make_model(
+            nlp_solver_status=1,
+            nlp_model_status=1,  # Optimal
+            nlp_objective=100.0,
+            mcp_solver_status=1,
+            mcp_model_status=4,  # Infeasible
+            mcp_objective=None,
+        )
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "mismatch"
+        assert result["comparison_result"] == COMPARE_STATUS_MISMATCH
+        assert result["status_match"] is False
+        assert "NLP optimal" in result["notes"]
+
+    def test_status_mismatch_mcp_optimal(self):
+        """Test Case 5: MCP optimal but NLP not optimal."""
+        model = self._make_model(
+            nlp_solver_status=1,
+            nlp_model_status=4,  # Infeasible
+            nlp_objective=None,
+            mcp_solver_status=1,
+            mcp_model_status=1,  # Optimal
+            mcp_objective=100.0,
+        )
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "mismatch"
+        assert result["comparison_result"] == COMPARE_STATUS_MISMATCH
+        assert result["status_match"] is False
+        assert "MCP optimal" in result["notes"]
+
+    def test_nlp_solve_failed_no_convexity(self):
+        """Test Case 6: NLP solve failed (no convexity data)."""
+        model: dict[str, Any] = {
+            "model_id": "test",
+            "mcp_solve": {
+                "status": "success",
+                "solver_status": 1,
+                "model_status": 1,
+                "objective_value": 100.0,
+            },
+        }
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "skipped"
+        assert result["comparison_result"] == COMPARE_NLP_FAILED
+
+    def test_nlp_solve_failed_error_status(self):
+        """Test Case 6: NLP convexity status is error."""
+        model = self._make_model(nlp_convexity_status="error")
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "skipped"
+        assert result["comparison_result"] == COMPARE_NLP_FAILED
+
+    def test_mcp_solve_failed(self):
+        """Test Case 7: MCP solve failed."""
+        model = self._make_model(mcp_solve_status="failure")
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "skipped"
+        assert result["comparison_result"] == COMPARE_MCP_FAILED
+
+    def test_mcp_solve_missing(self):
+        """Test when mcp_solve is missing."""
+        model: dict[str, Any] = {
+            "model_id": "test",
+            "convexity": {
+                "status": "verified_convex",
+                "solver_status": 1,
+                "model_status": 1,
+                "objective_value": 100.0,
+            },
+        }
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "skipped"
+        assert result["comparison_result"] == COMPARE_MCP_FAILED
+
+    def test_nlp_objective_missing(self):
+        """Test when NLP objective is None but solve succeeded."""
+        model = self._make_model(nlp_objective=None)
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "error"
+        assert result["comparison_result"] == COMPARE_NOT_PERFORMED
+        assert "NLP objective value not available" in result["notes"]
+
+    def test_mcp_objective_missing(self):
+        """Test when MCP objective is None but solve succeeded."""
+        model = self._make_model(mcp_objective=None)
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "error"
+        assert result["comparison_result"] == COMPARE_NOT_PERFORMED
+        assert "MCP objective value not available" in result["notes"]
+
+    def test_custom_tolerances(self):
+        """Test comparison with custom tolerances."""
+        model = self._make_model(
+            nlp_objective=1000.0,
+            mcp_objective=1001.0,
+        )
+
+        # With tight default tolerance, should mismatch
+        result_tight = compare_solutions(model, rtol=1e-6, atol=1e-8)
+        assert result_tight["comparison_result"] == COMPARE_OBJECTIVE_MISMATCH
+
+        # With looser tolerance, should match
+        result_loose = compare_solutions(model, rtol=1e-2, atol=1e-8)
+        assert result_loose["comparison_result"] == COMPARE_OBJECTIVE_MATCH
+
+    def test_tolerance_values_stored(self):
+        """Test that tolerance values are stored in result."""
+        model = self._make_model()
+        result = compare_solutions(model, rtol=1e-5, atol=1e-7)
+
+        assert result["tolerance_relative"] == 1e-5
+        assert result["tolerance_absolute"] == 1e-7
+
+    def test_comparison_date_set(self):
+        """Test that comparison_date is set."""
+        model = self._make_model()
+        result = compare_solutions(model)
+
+        assert result["comparison_date"] is not None
+        assert "T" in result["comparison_date"]  # ISO format
+
+    def test_locally_optimal_treated_as_optimal(self):
+        """Test that locally optimal (status 2) is treated as optimal."""
+        model = self._make_model(
+            nlp_model_status=2,  # Locally optimal
+            mcp_model_status=2,  # Locally optimal
+        )
+        result = compare_solutions(model)
+
+        assert result["comparison_status"] == "match"
+        assert result["comparison_result"] == COMPARE_OBJECTIVE_MATCH
+        assert result["status_match"] is True
+
+    def test_relative_difference_calculated(self):
+        """Test that relative difference is calculated correctly."""
+        model = self._make_model(
+            nlp_objective=1000.0,
+            mcp_objective=1010.0,
+        )
+        result = compare_solutions(model)
+
+        assert result["absolute_difference"] == 10.0
+        # relative = 10 / max(1000, 1010, 1e-10) = 10/1010 ≈ 0.0099
+        assert result["relative_difference"] == pytest.approx(10.0 / 1010.0)

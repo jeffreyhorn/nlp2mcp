@@ -449,3 +449,93 @@ chem, dispatch, himmel11, house, hs62, least, mathopt1, mathopt2, mhw4d, mhw4dx,
 **Next Steps:** Day 6 - Solution Comparison Implementation
 
 ---
+
+### Day 6: Solution Comparison Implementation
+
+**Date:** January 14, 2026
+
+**Objective:** Implement solution comparison logic with tolerance-based matching
+
+**Tasks Completed:**
+
+1. **Created objectives_match() function** (1h)
+   - Implemented combined tolerance formula: `|a - b| <= atol + rtol * max(|a|, |b|)`
+   - Default tolerances: rtol=1e-6 (PATH/CPLEX/GUROBI), atol=1e-8 (IPOPT)
+   - Edge case handling: NaN, Infinity (same sign = match), zero objectives
+   - Returns tuple (match: bool, reason: str) for detailed feedback
+
+2. **Created compare_solutions() decision tree** (1.5h)
+   - Implemented 7 comparison outcomes:
+     1. `compare_objective_match` - Both optimal, objectives match
+     2. `compare_objective_mismatch` - Both optimal, objectives differ
+     3. `compare_both_infeasible` - Both NLP and MCP are infeasible
+     4. `compare_status_mismatch` - One optimal, one not
+     5. `compare_nlp_failed` - NLP solve failed (no valid reference)
+     6. `compare_mcp_failed` - MCP solve failed
+     7. `compare_not_performed` - Error or missing data
+   - Retrieves NLP objective from convexity.objective_value
+   - Retrieves MCP objective from mcp_solve.objective_value
+
+3. **Added CLI tolerance arguments** (0.5h)
+   - `--compare` flag to enable solution comparison after solving
+   - `--rtol` for relative tolerance (default 1e-6)
+   - `--atol` for absolute tolerance (default 1e-8)
+
+4. **Integrated into run_batch_solve()** (1h)
+   - Added comparison execution after each solve
+   - Updated model with solution_comparison result
+   - Added comparison statistics tracking
+   - Updated print_summary() with comparison results
+
+5. **Created unit tests** (1.5h)
+   - Added TestObjectivesMatch class (15 tests)
+   - Added TestCompareSolutions class (16 tests)
+   - Tests cover all 7 outcomes, edge cases, custom tolerances
+
+6. **Tested on 10 MCP files** (0.5h)
+   - Command: `python scripts/gamslib/test_solve.py --translate-success --limit 10 --compare --verbose`
+   - Result: 1 success (hs62), 9 compilation errors
+   - hs62: NLP=-26272.5168, MCP=-26272.5145, diff=2.30e-03, MATCH
+
+**Quality Checks:**
+- `make typecheck`: PASSED
+- `make lint`: PASSED
+- `make format`: Applied
+- `make test`: 70 tests pass in test_test_solve.py
+
+**Comparison Test Results:**
+
+| Metric | Value |
+|--------|-------|
+| Models processed | 10 |
+| MCP success | 1 (10.0%) |
+| MCP failure | 9 |
+| Objective matches | 1 |
+| Objective mismatches | 0 |
+
+**Sample Comparison Output (hs62):**
+```
+Comparison: match
+NLP objective: -26272.5168
+MCP objective: -26272.5145
+Notes: Match within tolerance (diff=2.30e-03, tol=2.63e-02)
+```
+
+**Deliverables:**
+- [x] `objectives_match()` function with combined tolerance formula
+- [x] `compare_solutions()` decision tree (7 outcomes)
+- [x] CLI arguments for --compare, --rtol, --atol
+- [x] Database storage of solution_comparison_result
+- [x] 31 new unit tests (15 + 16)
+- [x] Tested on 10 models
+
+**Acceptance Criteria:**
+- [x] objectives_match() handles edge cases (NaN, Inf, zero)
+- [x] compare_solutions() implements all 7 outcomes
+- [x] Tolerance values configurable via CLI
+- [x] Results stored in database
+- [x] Unit tests cover all comparison scenarios
+
+**Next Steps:** Day 7 - Pipeline Integration and Summary Reports
+
+---
