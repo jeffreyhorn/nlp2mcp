@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Day 4: Translate Enhancement - 2026-01-13
+
+**Branch:** `sprint15-day4-translate-enhancement`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Enhanced batch_translate.py with comprehensive filter flags (--parse-success, --translate-success, --translate-failure, --skip-completed, --error-category, --model-type), MCP file validation via GAMS action=c, and improved timing precision. Added 18 new unit tests for filter and validation functionality. Ran on all 34 parsed models achieving 50% translation success rate (17 models).
+
+#### Changes
+
+**Modified Files:**
+- `scripts/gamslib/batch_translate.py` - Added filter flags, MCP validation, 4-decimal timing
+- `tests/gamslib/test_batch_translate.py` - Added TestValidateFilterArgs (3 tests), TestApplyFilters (11 tests), TestValidateMcpFile (4 tests)
+
+#### New Filter Flags
+
+| Flag | Description |
+|------|-------------|
+| `--parse-success` | Process only models with prior parse success |
+| `--translate-success` | Process only models with prior translation success |
+| `--translate-failure` | Process only models with prior translation failure |
+| `--skip-completed` | Skip models that have already been successfully translated |
+| `--error-category` | Filter by specific error category (e.g., diff_unsupported_func) |
+| `--model-type` | Filter by model type (NLP, MCP, QCP, etc.) |
+
+#### MCP File Validation
+
+Added `--validate` flag that validates generated MCP files using GAMS action=c (compile-only check):
+- Returns validation status (valid/invalid), time, and any error messages
+- Integrated into print_summary() for validation statistics
+
+#### Translation Results (Full Run)
+
+| Metric | Value |
+|--------|-------|
+| Models processed | 34 |
+| Success | 17 (50.0%) |
+| Failure | 17 |
+| Total time | 85.8s |
+
+#### Error Categories Breakdown
+
+| Category | Count |
+|----------|-------|
+| model_no_objective_def | 5 |
+| diff_unsupported_func | 5 |
+| unsup_index_offset | 3 |
+| model_domain_mismatch | 2 |
+| unsup_dollar_cond | 1 |
+| codegen_numerical_error | 1 |
+
+#### Other Improvements
+
+- Timing precision increased from 3 to 4 decimal places
+- Filter argument validation with conflict detection
+- Phase-based filter application (model selection → parse status → translate status → error → limit)
+- Filter summary logging for transparency
+- Error category tracking in statistics
+
+---
+
 ### Sprint 15 Day 3: Parse Enhancement - 2026-01-13
 
 **Branch:** `sprint15-day3-parse-enhancement`  

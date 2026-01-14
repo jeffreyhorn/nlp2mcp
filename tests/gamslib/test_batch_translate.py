@@ -7,15 +7,20 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 # Add project root to path so we can import from scripts/
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.gamslib.batch_translate import (  # noqa: E402
+    apply_filters,
     get_parsed_models,
     print_summary,
     run_batch_translate,
     translate_single_model,
+    validate_filter_args,
+    validate_mcp_file,
 )
 from scripts.gamslib.error_taxonomy import categorize_translate_error  # noqa: E402
 
@@ -218,6 +223,13 @@ class TestRunBatchTranslate:
         model: str | None = None,
         verbose: bool = False,
         save_every: int = 5,
+        parse_success: bool = False,
+        translate_success: bool = False,
+        translate_failure: bool = False,
+        skip_completed: bool = False,
+        error_category: str | None = None,
+        model_type: str | None = None,
+        validate: bool = False,
     ) -> argparse.Namespace:
         """Create argparse.Namespace with default values."""
         return argparse.Namespace(
@@ -226,6 +238,13 @@ class TestRunBatchTranslate:
             model=model,
             verbose=verbose,
             save_every=save_every,
+            parse_success=parse_success,
+            translate_success=translate_success,
+            translate_failure=translate_failure,
+            skip_completed=skip_completed,
+            error_category=error_category,
+            model_type=model_type,
+            validate=validate,
         )
 
     def test_dry_run_does_not_translate(self, tmp_path: Path) -> None:
@@ -471,3 +490,288 @@ class TestPrintSummary:
 
         output = captured_output.getvalue()
         assert "2.00s" in output  # 8.0 / 4 = 2.0
+
+
+class TestValidateFilterArgs:
+    """Tests for validate_filter_args function."""
+
+    def _make_args(
+        self,
+        parse_success: bool = False,
+        translate_success: bool = False,
+        translate_failure: bool = False,
+        skip_completed: bool = False,
+        error_category: str | None = None,
+        model_type: str | None = None,
+        model: str | None = None,
+        limit: int | None = None,
+    ) -> argparse.Namespace:
+        """Create argparse.Namespace with filter arguments."""
+        return argparse.Namespace(
+            parse_success=parse_success,
+            translate_success=translate_success,
+            translate_failure=translate_failure,
+            skip_completed=skip_completed,
+            error_category=error_category,
+            model_type=model_type,
+            model=model,
+            limit=limit,
+        )
+
+    def test_no_conflicts_passes(self) -> None:
+        """Test valid filter combinations pass validation."""
+        args = self._make_args()
+        # Should not raise
+        validate_filter_args(args)
+
+    def test_translate_success_and_failure_conflict(self) -> None:
+        """Test --translate-success and --translate-failure conflict."""
+        args = self._make_args(translate_success=True, translate_failure=True)
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            validate_filter_args(args)
+
+    def test_skip_completed_and_translate_failure_no_conflict(self) -> None:
+        """Test --skip-completed and --translate-failure don't conflict."""
+        args = self._make_args(skip_completed=True, translate_failure=True)
+        # Should not raise - these serve different purposes
+        validate_filter_args(args)
+
+
+class TestApplyFilters:
+    """Tests for apply_filters function."""
+
+    def _make_args(
+        self,
+        parse_success: bool = False,
+        translate_success: bool = False,
+        translate_failure: bool = False,
+        skip_completed: bool = False,
+        error_category: str | None = None,
+        model_type: str | None = None,
+        model: str | None = None,
+        limit: int | None = None,
+    ) -> argparse.Namespace:
+        """Create argparse.Namespace with filter arguments."""
+        return argparse.Namespace(
+            parse_success=parse_success,
+            translate_success=translate_success,
+            translate_failure=translate_failure,
+            skip_completed=skip_completed,
+            error_category=error_category,
+            model_type=model_type,
+            model=model,
+            limit=limit,
+        )
+
+    def test_no_filters_returns_all(self) -> None:
+        """Test no filters returns all models."""
+        models = [
+            {"model_id": "m1"},
+            {"model_id": "m2"},
+            {"model_id": "m3"},
+        ]
+        args = self._make_args()
+        result = apply_filters(models, args)
+        assert len(result) == 3
+
+    def test_model_filter(self) -> None:
+        """Test --model filter."""
+        models = [
+            {"model_id": "m1"},
+            {"model_id": "m2"},
+            {"model_id": "m3"},
+        ]
+        args = self._make_args(model="m2")
+        result = apply_filters(models, args)
+        assert len(result) == 1
+        assert result[0]["model_id"] == "m2"
+
+    def test_model_type_filter(self) -> None:
+        """Test --model-type filter."""
+        models = [
+            {"model_id": "m1", "gamslib_type": "LP"},
+            {"model_id": "m2", "gamslib_type": "NLP"},
+            {"model_id": "m3", "gamslib_type": "LP"},
+        ]
+        args = self._make_args(model_type="LP")
+        result = apply_filters(models, args)
+        assert len(result) == 2
+        assert all(m["gamslib_type"] == "LP" for m in result)
+
+    def test_parse_success_filter(self) -> None:
+        """Test --parse-success filter."""
+        models = [
+            {"model_id": "m1", "nlp2mcp_parse": {"status": "success"}},
+            {"model_id": "m2", "nlp2mcp_parse": {"status": "failure"}},
+            {"model_id": "m3", "nlp2mcp_parse": {"status": "success"}},
+        ]
+        args = self._make_args(parse_success=True)
+        result = apply_filters(models, args)
+        assert len(result) == 2
+
+    def test_translate_success_filter(self) -> None:
+        """Test --translate-success filter."""
+        models = [
+            {"model_id": "m1", "nlp2mcp_translate": {"status": "success"}},
+            {"model_id": "m2", "nlp2mcp_translate": {"status": "failure"}},
+            {"model_id": "m3", "nlp2mcp_translate": {"status": "success"}},
+        ]
+        args = self._make_args(translate_success=True)
+        result = apply_filters(models, args)
+        assert len(result) == 2
+
+    def test_translate_failure_filter(self) -> None:
+        """Test --translate-failure filter."""
+        models = [
+            {"model_id": "m1", "nlp2mcp_translate": {"status": "success"}},
+            {"model_id": "m2", "nlp2mcp_translate": {"status": "failure"}},
+            {"model_id": "m3", "nlp2mcp_translate": {"status": "failure"}},
+        ]
+        args = self._make_args(translate_failure=True)
+        result = apply_filters(models, args)
+        assert len(result) == 2
+
+    def test_skip_completed_filter(self) -> None:
+        """Test --skip-completed filter."""
+        models = [
+            {"model_id": "m1", "nlp2mcp_translate": {"status": "success"}},
+            {"model_id": "m2", "nlp2mcp_translate": {"status": "failure"}},
+            {"model_id": "m3"},  # No translate status
+        ]
+        args = self._make_args(skip_completed=True)
+        result = apply_filters(models, args)
+        assert len(result) == 2
+        assert result[0]["model_id"] == "m2"
+        assert result[1]["model_id"] == "m3"
+
+    def test_error_category_filter(self) -> None:
+        """Test --error-category filter."""
+        models = [
+            {
+                "model_id": "m1",
+                "nlp2mcp_translate": {
+                    "status": "failure",
+                    "error": {"category": "diff_unsupported_func"},
+                },
+            },
+            {
+                "model_id": "m2",
+                "nlp2mcp_translate": {
+                    "status": "failure",
+                    "error": {"category": "timeout"},
+                },
+            },
+            {
+                "model_id": "m3",
+                "nlp2mcp_translate": {
+                    "status": "failure",
+                    "error": {"category": "diff_unsupported_func"},
+                },
+            },
+        ]
+        args = self._make_args(error_category="diff_unsupported_func")
+        result = apply_filters(models, args)
+        assert len(result) == 2
+
+    def test_limit_filter(self) -> None:
+        """Test --limit filter."""
+        models = [{"model_id": f"m{i}"} for i in range(10)]
+        args = self._make_args(limit=3)
+        result = apply_filters(models, args)
+        assert len(result) == 3
+
+    def test_combined_filters(self) -> None:
+        """Test combining multiple filters."""
+        models = [
+            {
+                "model_id": "m1",
+                "gamslib_type": "LP",
+                "nlp2mcp_translate": {"status": "failure"},
+            },
+            {
+                "model_id": "m2",
+                "gamslib_type": "NLP",
+                "nlp2mcp_translate": {"status": "failure"},
+            },
+            {
+                "model_id": "m3",
+                "gamslib_type": "LP",
+                "nlp2mcp_translate": {"status": "success"},
+            },
+            {
+                "model_id": "m4",
+                "gamslib_type": "LP",
+                "nlp2mcp_translate": {"status": "failure"},
+            },
+        ]
+        # Filter: model_type=LP AND translate_failure=True
+        args = self._make_args(model_type="LP", translate_failure=True)
+        result = apply_filters(models, args)
+        assert len(result) == 2
+        assert result[0]["model_id"] == "m1"
+        assert result[1]["model_id"] == "m4"
+
+
+class TestValidateMcpFile:
+    """Tests for validate_mcp_file function."""
+
+    def test_gams_not_found(self, tmp_path: Path) -> None:
+        """Test handling when GAMS is not found."""
+        mcp_file = tmp_path / "test.gms"
+        mcp_file.write_text("* Test")
+
+        with patch("shutil.which", return_value=None):
+            with patch("pathlib.Path.exists", return_value=False):
+                result = validate_mcp_file(mcp_file)
+
+        assert result["valid"] is False
+        assert "GAMS executable not found" in result["error"]
+
+    def test_successful_validation(self, tmp_path: Path) -> None:
+        """Test successful MCP validation."""
+        mcp_file = tmp_path / "test.gms"
+        mcp_file.write_text("* Test")
+
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stderr = ""
+        mock_result.stdout = ""
+
+        with patch("shutil.which", return_value="/usr/bin/gams"):
+            with patch("subprocess.run", return_value=mock_result):
+                result = validate_mcp_file(mcp_file)
+
+        assert result["valid"] is True
+        assert "validation_time_seconds" in result
+
+    def test_failed_validation(self, tmp_path: Path) -> None:
+        """Test failed MCP validation."""
+        mcp_file = tmp_path / "test.gms"
+        mcp_file.write_text("* Test")
+
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_result.stderr = "Syntax error on line 1"
+        mock_result.stdout = ""
+
+        with patch("shutil.which", return_value="/usr/bin/gams"):
+            with patch("subprocess.run", return_value=mock_result):
+                result = validate_mcp_file(mcp_file)
+
+        assert result["valid"] is False
+        assert "Syntax error" in result["error"]
+
+    def test_validation_timeout(self, tmp_path: Path) -> None:
+        """Test validation timeout handling."""
+        mcp_file = tmp_path / "test.gms"
+        mcp_file.write_text("* Test")
+
+        with patch("shutil.which", return_value="/usr/bin/gams"):
+            with patch(
+                "subprocess.run",
+                side_effect=subprocess.TimeoutExpired(cmd="gams", timeout=30),
+            ):
+                result = validate_mcp_file(mcp_file)
+
+        assert result["valid"] is False
+        assert "timeout" in result["error"].lower()
