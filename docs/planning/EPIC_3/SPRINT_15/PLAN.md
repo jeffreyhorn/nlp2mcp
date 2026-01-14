@@ -199,11 +199,11 @@ Sprint 15 builds on the JSON database infrastructure from Sprint 14 (219 models,
 - Solve results in database
 
 **Acceptance Criteria:**
-- [ ] Can solve MCP file with PATH solver
-- [ ] Extracts solver status and model status
-- [ ] Extracts objective value (or handles MCP case)
-- [ ] Updates database with mcp_solve_result
-- [ ] 60-second timeout implemented
+- [x] Can solve MCP file with PATH solver
+- [x] Extracts solver status and model status
+- [x] Extracts objective value (or handles MCP case)
+- [x] Updates database with mcp_solve_result
+- [x] 60-second timeout implemented
 
 **Time Estimate:** 6 hours
 
