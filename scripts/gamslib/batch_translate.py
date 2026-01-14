@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import subprocess
 import sys
 import time
@@ -355,7 +356,7 @@ def validate_mcp_file(mcp_path: Path) -> dict[str, Any]:
             str(mcp_path),
             "action=c",  # Compile only, don't execute
             "lo=0",  # Suppress log output
-            "o=/dev/null",  # Suppress listing file (Unix)
+            f"o={os.devnull}",  # Suppress listing file (cross-platform)
         ]
 
         proc = subprocess.run(
