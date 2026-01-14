@@ -7,6 +7,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Day 5: Create test_solve.py Core - 2026-01-13
+
+**Branch:** `sprint15-day5-solve-core`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created test_solve.py with PATH solver integration for MCP solve testing. Implemented MCP solving with 60-second timeout, .lst file parsing for solver/model status extraction, objective value extraction, and database updates. Added 35 unit tests covering all solve functionality. Tested on 3 MCP files - all showed compilation errors due to pre-existing GAMS syntax issues in generated MCP files.
+
+#### Changes
+
+**New Files:**
+- `scripts/gamslib/test_solve.py` - MCP solve testing with PATH solver integration
+- `tests/gamslib/test_test_solve.py` - 35 unit tests for solve functionality
+
+#### Key Features
+
+**PATH Solver Invocation:**
+- Subprocess execution with 60-second timeout
+- GAMS lo=3 output for detailed .lst files
+- Automatic GAMS path detection (env var or fallback paths)
+
+**Status Extraction from .lst Files:**
+- SOLVER STATUS codes (1=Normal, 2=Iteration Limit, 3=Time Limit, etc.)
+- MODEL STATUS codes (1=Optimal, 2=Locally Optimal, 4=Infeasible, etc.)
+- Compilation error detection via `**** NNN ERROR` patterns
+
+**Objective Value Extraction:**
+- From OBJECTIVE VALUE line in solve summary
+- Fallback to variable section parsing for MCP files
+
+**Database Update:**
+- Stores `mcp_solve` object with status, timing, iterations
+- Uses error taxonomy categories for outcome classification
+
+#### CLI Arguments
+
+| Flag | Description |
+|------|-------------|
+| `--model=NAME` | Process single model by name |
+| `--limit=N` | Limit number of models to process |
+| `--verbose` | Enable verbose logging |
+| `--dry-run` | Preview without executing |
+| `--translate-success` | Process only models with translation success |
+| `--model-type=TYPE` | Filter by model type (NLP, MCP, QCP, etc.) |
+
+#### Test Results
+
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| TestParseGamsListing | 6 | ✓ Pass |
+| TestExtractObjectiveFromVariables | 4 | ✓ Pass |
+| TestCategorizeSolveOutcome | 11 | ✓ Pass |
+| TestGetTranslatedModels | 3 | ✓ Pass |
+| TestApplyFilters | 5 | ✓ Pass |
+| TestUpdateModelSolveResult | 2 | ✓ Pass |
+| TestSolveMcp | 4 | ✓ Pass |
+| **Total** | **35** | **✓ Pass** |
+
+#### MCP File Test Results
+
+| Metric | Value |
+|--------|-------|
+| Models processed | 3 |
+| Success | 0 (0.0%) |
+| Failure | 3 |
+| Outcome categories | path_syntax_error: 3 |
+
+Note: All 3 MCP files failed with compilation errors due to pre-existing GAMS syntax issues in the generated MCP files (element quoting problems). This is a known issue with the nlp2mcp code generation, not with test_solve.py.
+
+---
+
 ### Sprint 15 Day 4: Translate Enhancement - 2026-01-13
 
 **Branch:** `sprint15-day4-translate-enhancement`  

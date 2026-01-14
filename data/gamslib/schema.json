@@ -322,24 +322,24 @@
           "description": "MCP solver used (typically 'PATH')"
         },
         "solver_version": {
-          "type": "string",
-          "description": "Version of the solver (e.g., 'PATH 5.2.01')"
+          "type": ["string", "null"],
+          "description": "Version of the solver extracted from .lst file (e.g., '5.2.01'). Null if not found."
         },
         "solver_status": {
-          "type": "integer",
-          "description": "GAMS solver status code (1=normal, 2=iteration limit, 3=time limit, etc.)"
+          "type": ["integer", "null"],
+          "description": "GAMS solver status code (1=normal, 2=iteration limit, 3=time limit, etc.). Null if compilation error."
         },
         "solver_status_text": {
-          "type": "string",
-          "description": "Human-readable solver status description"
+          "type": ["string", "null"],
+          "description": "Human-readable solver status description. Null if compilation error."
         },
         "model_status": {
-          "type": "integer",
-          "description": "GAMS model status code (1=optimal, 2=locally optimal, 4=infeasible, etc.)"
+          "type": ["integer", "null"],
+          "description": "GAMS model status code (1=optimal, 2=locally optimal, 4=infeasible, etc.). Null if compilation error."
         },
         "model_status_text": {
-          "type": "string",
-          "description": "Human-readable model status description"
+          "type": ["string", "null"],
+          "description": "Human-readable model status description. Null if compilation error."
         },
         "objective_value": {
           "type": ["number", "null"],
@@ -578,7 +578,18 @@
         "unsupported_feature",
         "missing_include",
         "solver_error",
-        "validation_error"
+        "validation_error",
+        "path_solve_normal",
+        "path_solve_iteration_limit",
+        "path_solve_time_limit",
+        "path_solve_terminated",
+        "path_solve_eval_error",
+        "path_solve_license",
+        "path_syntax_error",
+        "model_optimal",
+        "model_locally_optimal",
+        "model_infeasible",
+        "model_unbounded"
       ]
     },
     "solve_outcome_category": {
@@ -591,6 +602,7 @@
         "path_solve_terminated",
         "path_solve_eval_error",
         "path_solve_license",
+        "path_syntax_error",
         "model_optimal",
         "model_locally_optimal",
         "model_infeasible",

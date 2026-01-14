@@ -782,6 +782,24 @@
         "nlp2mcp_version": "0.1.0",
         "translate_time_seconds": 2.1069,
         "output_file": "data/gamslib/mcp/chem_mcp.gms"
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-14T03:32:00.314618+00:00",
+        "solver": "PATH",
+        "solver_version": "5.2.01",
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.3587,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
@@ -1189,6 +1207,24 @@
         "nlp2mcp_version": "0.1.0",
         "translate_time_seconds": 2.3277,
         "output_file": "data/gamslib/mcp/dispatch_mcp.gms"
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-14T03:32:00.705213+00:00",
+        "solver": "PATH",
+        "solver_version": "5.2.01",
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.3789,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
@@ -2058,6 +2094,24 @@
         "nlp2mcp_version": "0.1.0",
         "translate_time_seconds": 2.0404,
         "output_file": "data/gamslib/mcp/himmel11_mcp.gms"
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-14T03:32:01.072449+00:00",
+        "solver": "PATH",
+        "solver_version": "5.2.01",
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.3561,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
