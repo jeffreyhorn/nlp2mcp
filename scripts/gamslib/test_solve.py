@@ -28,8 +28,8 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -43,7 +43,6 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.gamslib.error_taxonomy import (
-    COMPARE_MCP_FAILED,
     MODEL_INFEASIBLE,
     MODEL_LOCALLY_OPTIMAL,
     MODEL_OPTIMAL,
@@ -53,6 +52,7 @@ from scripts.gamslib.error_taxonomy import (
     PATH_SOLVE_LICENSE,
     PATH_SOLVE_TERMINATED,
     PATH_SOLVE_TIME_LIMIT,
+    PATH_SYNTAX_ERROR,
 )
 
 # Database paths
@@ -159,7 +159,7 @@ def parse_gams_listing(lst_content: str) -> dict[str, Any]:
     # Check for compilation errors (indicated by **** NNN or ERROR(S) count)
     if (
         re.search(r"\*\*\*\* \d+ ERROR", lst_content)  # **** 74 ERROR(S)
-        or re.search(r"\*\*\*\*\s+\d+\s+\w", lst_content)  # **** 171 Domain...
+        or re.search(r"\*\*\*\*\s+\d+\s+\S+.*(domain|symbol|error)", lst_content, re.IGNORECASE)
         or re.search(r"\*\*\*\* \$\d+", lst_content)  # **** $NNN (older format)
     ):
         result["error_type"] = "compilation_error"
@@ -287,7 +287,7 @@ def categorize_solve_outcome(
     """
     # Handle error types from parsing
     if error_type == "compilation_error":
-        return "path_syntax_error"
+        return PATH_SYNTAX_ERROR
     if error_type == "license_limit":
         return PATH_SOLVE_LICENSE
     if error_type in ("missing_file", "execution_error", "no_solve_summary"):
@@ -344,8 +344,6 @@ def solve_mcp(mcp_path: Path, timeout: int = 60) -> dict[str, Any]:
         - outcome_category: Error taxonomy category
         - error: Error message (if failed)
     """
-    import shutil
-
     start_time = time.perf_counter()
 
     # Find GAMS executable
@@ -390,7 +388,7 @@ def solve_mcp(mcp_path: Path, timeout: int = 60) -> dict[str, Any]:
                 f"reslim={timeout}",  # Time limit
             ]
 
-            proc = subprocess.run(
+            subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
@@ -498,6 +496,8 @@ def update_model_solve_result(
         "status": solve_result["status"],
         "solve_date": datetime.now(UTC).isoformat(),
         "solver": "PATH",
+        # NOTE: PATH solver version is hardcoded based on current GAMS 51.3.0 installation.
+        # Update this value if the underlying GAMS/PATH installation uses a different version.
         "solver_version": "5.2.01",
         "solver_status": solve_result["solver_status"],
         "solver_status_text": solve_result["solver_status_text"],
@@ -510,7 +510,10 @@ def update_model_solve_result(
     }
 
     if "error" in solve_result:
-        model["mcp_solve"]["error"] = solve_result["error"]
+        model["mcp_solve"]["error"] = {
+            "category": solve_result["outcome_category"],
+            "message": solve_result["error"],
+        }
 
 
 def apply_filters(

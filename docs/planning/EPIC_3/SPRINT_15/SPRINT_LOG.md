@@ -392,7 +392,7 @@ chem, dispatch, himmel11, house, hs62, least, mathopt1, mathopt2, mhw4d, mhw4dx,
 
 5. **Added database update for solve results** (1h)
    - Created `update_model_solve_result()` function
-   - Stores `mcp_solve_result` object with status, timing, iterations
+   - Stores `mcp_solve` object with status, timing, iterations
    - Uses `categorize_solve_outcome()` from error taxonomy
 
 6. **Created unit tests** (1.5h)
@@ -437,13 +437,13 @@ chem, dispatch, himmel11, house, hs62, least, mathopt1, mathopt2, mhw4d, mhw4dx,
 - [x] PATH solver integration working
 - [x] Status code extraction from .lst files
 - [x] Objective value extraction
-- [x] Database update with mcp_solve_result
+- [x] Database update with mcp_solve
 
 **Acceptance Criteria:**
 - [x] Can solve MCP file with PATH solver
 - [x] Extracts solver status and model status
 - [x] Extracts objective value (or handles MCP case)
-- [x] Updates database with mcp_solve_result
+- [x] Updates database with mcp_solve
 - [x] 60-second timeout implemented
 
 **Next Steps:** Day 6 - Solution Comparison Implementation

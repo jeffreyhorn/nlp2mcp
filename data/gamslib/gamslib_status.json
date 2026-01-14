@@ -796,7 +796,10 @@
         "solve_time_seconds": 0.3587,
         "iterations": null,
         "outcome_category": "path_syntax_error",
-        "error": "Parse error: compilation_error"
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
@@ -1218,7 +1221,10 @@
         "solve_time_seconds": 0.3789,
         "iterations": null,
         "outcome_category": "path_syntax_error",
-        "error": "Parse error: compilation_error"
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
@@ -2102,7 +2108,10 @@
         "solve_time_seconds": 0.3561,
         "iterations": null,
         "outcome_category": "path_syntax_error",
-        "error": "Parse error: compilation_error"
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {

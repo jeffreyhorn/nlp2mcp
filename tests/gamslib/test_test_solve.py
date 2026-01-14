@@ -15,6 +15,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from scripts.gamslib.error_taxonomy import PATH_SYNTAX_ERROR  # noqa: E402
 from scripts.gamslib.test_solve import (  # noqa: E402
     apply_filters,
     categorize_solve_outcome,
@@ -216,7 +217,7 @@ class TestCategorizeSolveOutcome:
     def test_compilation_error(self):
         """Test categorization of compilation error."""
         result = categorize_solve_outcome(None, None, "compilation_error")
-        assert result == "path_syntax_error"
+        assert result == PATH_SYNTAX_ERROR
 
     def test_license_limit_error_type(self):
         """Test categorization of license limit from error type."""
@@ -384,7 +385,10 @@ class TestUpdateModelSolveResult:
         update_model_solve_result(model, solve_result)
 
         assert model["mcp_solve"]["status"] == "failure"
-        assert model["mcp_solve"]["error"] == "Timeout after 60 seconds"
+        assert model["mcp_solve"]["error"] == {
+            "category": "path_solve_time_limit",
+            "message": "Timeout after 60 seconds",
+        }
 
 
 class TestSolveMcp:

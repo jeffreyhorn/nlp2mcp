@@ -94,6 +94,7 @@ PATH_SOLVE_TIME_LIMIT = "path_solve_time_limit"
 PATH_SOLVE_TERMINATED = "path_solve_terminated"
 PATH_SOLVE_EVAL_ERROR = "path_solve_eval_error"
 PATH_SOLVE_LICENSE = "path_solve_license"
+PATH_SYNTAX_ERROR = "path_syntax_error"  # MCP file has GAMS syntax/compilation errors
 
 # Model status outcomes
 MODEL_OPTIMAL = "model_optimal"
@@ -162,6 +163,7 @@ SOLVE_OUTCOME_CATEGORIES = [
     PATH_SOLVE_TERMINATED,
     PATH_SOLVE_EVAL_ERROR,
     PATH_SOLVE_LICENSE,
+    PATH_SYNTAX_ERROR,
     MODEL_OPTIMAL,
     MODEL_LOCALLY_OPTIMAL,
     MODEL_INFEASIBLE,

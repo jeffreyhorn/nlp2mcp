@@ -39,7 +39,7 @@ Created test_solve.py with PATH solver integration for MCP solve testing. Implem
 - Fallback to variable section parsing for MCP files
 
 **Database Update:**
-- Stores `mcp_solve_result` object with status, timing, iterations
+- Stores `mcp_solve` object with status, timing, iterations
 - Uses error taxonomy categories for outcome classification
 
 #### CLI Arguments
