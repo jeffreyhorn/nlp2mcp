@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Day 3: Parse Enhancement - 2026-01-13
+
+**Branch:** `sprint15-day3-parse-enhancement`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Enhanced batch_parse.py with comprehensive filter flags (--only-failing, --error-category, --type, --parse-success, --parse-failure), model statistics extraction, and improved timing precision. Added 14 new unit tests for filter functionality.
+
+#### Changes
+
+**Modified Files:**
+- `scripts/gamslib/batch_parse.py` - Added filter flags, model statistics extraction, 4-decimal timing
+- `tests/gamslib/test_batch_parse.py` - Added TestValidateFilterArgs (4 tests) and TestApplyFilters (10 tests)
+
+#### New Filter Flags
+
+| Flag | Description |
+|------|-------------|
+| `--only-failing` | Process only models with prior parse failures |
+| `--parse-success` | Process only models with prior parse success |
+| `--parse-failure` | Process only models with prior parse failure |
+| `--error-category` | Filter by specific error category (e.g., lexer_invalid_char) |
+| `--model-type` | Filter by model type (NLP, MCP, QCP, etc.) |
+
+#### Model Statistics
+
+Added extraction of model statistics from parsed IR:
+- `variables` - Count of model variables
+- `equations` - Count of model equations  
+- `parameters` - Count of model parameters
+- `sets` - Count of model sets
+
+#### Other Improvements
+
+- Timing precision increased from 3 to 4 decimal places
+- Filter argument validation with conflict detection
+- Phase-based filter application (model selection → status → error → limit)
+- Filter summary logging for transparency
+
+---
+
 ### Sprint 15 Day 2: Error Taxonomy Integration - 2026-01-13
 
 **Branch:** `sprint15-day2-error-taxonomy`  

@@ -200,6 +200,72 @@
 
 **Checkpoint 1 Status:** ✅ COMPLETE (Schema migrated + Error taxonomy integrated)
 
-**Next Steps:** Day 3 - Solve Script with PATH Integration
+**Next Steps:** Day 3 - Parse Enhancement
+
+---
+
+### Day 3: Parse Enhancement
+
+**Date:** January 13, 2026
+
+**Objective:** Enhance batch_parse.py with filter flags, model statistics, and timing improvements
+
+**Tasks Completed:**
+
+1. **Added filter functions** (1h)
+   - Implemented `validate_filter_args()` for conflict detection
+   - Implemented `apply_filters()` with phase-based filtering
+   - Implemented `report_filter_summary()` for logging
+
+2. **Added CLI filter arguments** (0.5h)
+   - `--only-failing`: Process models with prior parse failures
+   - `--parse-success`: Process models with prior success
+   - `--parse-failure`: Process models with prior failure
+   - `--error-category`: Filter by specific error category
+   - `--model-type`: Filter by model type (NLP, MCP, QCP, etc.)
+
+3. **Added model statistics extraction** (0.5h)
+   - Extract variables, equations, parameters, sets counts from IR
+   - Store in database under `model_statistics` object
+   - Part of `parse_single_model()` success path
+
+4. **Improved timing precision** (0.25h)
+   - Changed timing from 3 to 4 decimal places
+   - Already uses `time.perf_counter()` for high precision
+
+5. **Updated run_batch_parse()** (0.5h)
+   - Added `validate_filter_args()` call at entry
+   - Replaced manual filtering with `apply_filters()` function
+   - Added `report_filter_summary()` call for transparency
+
+6. **Created unit tests** (1h)
+   - Added `TestValidateFilterArgs` class (4 tests)
+   - Added `TestApplyFilters` class (10 tests)
+   - Updated existing `_make_args` helper with new filter attributes
+
+**Quality Checks:**
+- `make typecheck`: PASSED
+- `make lint`: PASSED
+- `make test`: 2764 passed, 10 skipped, 1 xfailed
+
+**Filter Phase Application Order:**
+1. Phase 1: Model selection (`--model`, `--model-type`)
+2. Phase 2: Status filters (`--parse-success`, `--parse-failure`, `--only-failing`)
+3. Phase 3: Error filters (`--error-category`)
+4. Phase 4: Limit (`--limit`) - applied last
+
+**Conflict Detection:**
+- `--parse-success` and `--parse-failure` are mutually exclusive
+- `--only-failing` and `--parse-success` are mutually exclusive
+- `--only-failing` and `--parse-failure` allowed (both filter for failures)
+
+**Deliverables:**
+- [x] Filter functions in `scripts/gamslib/batch_parse.py`
+- [x] CLI arguments for all filter flags
+- [x] Model statistics extraction
+- [x] 4-decimal timing precision
+- [x] 14 new unit tests in `tests/gamslib/test_batch_parse.py`
+
+**Next Steps:** Day 4 - Translate Enhancement
 
 ---
