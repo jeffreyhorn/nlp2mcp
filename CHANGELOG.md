@@ -7,6 +7,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Day 6: Solution Comparison Implementation - 2026-01-14
+
+**Branch:** `sprint15-day6-solution-comparison`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented solution comparison logic to compare NLP and MCP objective values using tolerance-based matching. Created `objectives_match()` function with combined tolerance formula (|a - b| <= atol + rtol * max(|a|, |b|)), and `compare_solutions()` decision tree with 7 outcomes. Added CLI tolerance arguments (--rtol, --atol) and --compare flag. Database now stores solution_comparison_result with comparison status, differences, and tolerance values. Added 31 new unit tests for comparison logic.
+
+#### Changes
+
+**Modified Files:**
+- `scripts/gamslib/test_solve.py` - Added comparison functions, CLI arguments, database storage
+- `tests/gamslib/test_test_solve.py` - Added TestObjectivesMatch (15 tests), TestCompareSolutions (16 tests)
+
+#### Key Features
+
+**Tolerance Comparison (`objectives_match`):**
+- Combined tolerance formula: `|a - b| <= atol + rtol * max(|a|, |b|)`
+- Default tolerances: rtol=1e-6 (PATH/CPLEX/GUROBI), atol=1e-8 (IPOPT)
+- Edge case handling: NaN, Infinity (same sign = match), zero objectives
+- Returns tuple (match: bool, reason: str)
+
+**Decision Tree (`compare_solutions`):**
+7 possible outcomes:
+1. `compare_objective_match` - Both optimal, objectives match
+2. `compare_objective_mismatch` - Both optimal, objectives differ
+3. `compare_both_infeasible` - Both NLP and MCP are infeasible
+4. `compare_status_mismatch` - One optimal, one not (NLP or MCP)
+5. `compare_nlp_failed` - NLP solve failed (no valid reference)
+6. `compare_mcp_failed` - MCP solve failed
+7. `compare_not_performed` - Error or missing data
+
+**Database Storage (`solution_comparison_result`):**
+- `comparison_status`: match/mismatch/skipped/error
+- `nlp_objective`, `mcp_objective`: objective values
+- `absolute_difference`, `relative_difference`: difference metrics
+- `tolerance_absolute`, `tolerance_relative`: tolerance values used
+- `objective_match`, `status_match`: boolean results
+- `comparison_result`: detailed outcome category
+
+#### New CLI Arguments
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--compare` | Enable solution comparison after solving | False |
+| `--rtol` | Relative tolerance for objective comparison | 1e-6 |
+| `--atol` | Absolute tolerance for objective comparison | 1e-8 |
+
+#### Test Results
+
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| TestObjectivesMatch | 15 | ✓ Pass |
+| TestCompareSolutions | 16 | ✓ Pass |
+| **Total (new)** | **31** | **✓ Pass** |
+| **Total (all)** | **70** | **✓ Pass** |
+
+#### Example Usage
+
+```bash
+# Solve and compare with default tolerances
+python scripts/gamslib/test_solve.py --translate-success --compare --verbose
+
+# Solve with custom tolerances
+python scripts/gamslib/test_solve.py --compare --rtol 1e-5 --atol 1e-7
+```
+
+#### Sample Output
+
+```
+Model: hs62
+  Comparison: match
+  NLP objective: -26272.5168
+  MCP objective: -26272.5145
+  Notes: Match within tolerance (diff=2.30e-03, tol=2.63e-02)
+```
+
+---
+
 ### Sprint 15 Day 5: Create test_solve.py Core - 2026-01-13
 
 **Branch:** `sprint15-day5-solve-core`  
