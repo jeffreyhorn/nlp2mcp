@@ -30,7 +30,7 @@ Enhanced batch_parse.py with comprehensive filter flags (--only-failing, --error
 | `--parse-success` | Process only models with prior parse success |
 | `--parse-failure` | Process only models with prior parse failure |
 | `--error-category` | Filter by specific error category (e.g., lexer_invalid_char) |
-| `--type` | Filter by model type (NLP, MCP, QCP, etc.) |
+| `--model-type` | Filter by model type (NLP, MCP, QCP, etc.) |
 
 #### Model Statistics
 

@@ -222,7 +222,7 @@
    - `--parse-success`: Process models with prior success
    - `--parse-failure`: Process models with prior failure
    - `--error-category`: Filter by specific error category
-   - `--type`: Filter by model type (NLP, MCP, QCP, etc.)
+   - `--model-type`: Filter by model type (NLP, MCP, QCP, etc.)
 
 3. **Added model statistics extraction** (0.5h)
    - Extract variables, equations, parameters, sets counts from IR
@@ -249,7 +249,7 @@
 - `make test`: 2764 passed, 10 skipped, 1 xfailed
 
 **Filter Phase Application Order:**
-1. Phase 1: Model selection (`--model`, `--type`)
+1. Phase 1: Model selection (`--model`, `--model-type`)
 2. Phase 2: Status filters (`--parse-success`, `--parse-failure`, `--only-failing`)
 3. Phase 3: Error filters (`--error-category`)
 4. Phase 4: Limit (`--limit`) - applied last
