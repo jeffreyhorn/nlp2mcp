@@ -20,6 +20,7 @@ from scripts.gamslib.test_solve import (  # noqa: E402
     apply_filters,
     categorize_solve_outcome,
     extract_objective_from_variables,
+    extract_path_version,
     get_translated_models,
     parse_gams_listing,
     solve_mcp,
@@ -169,6 +170,45 @@ class TestExtractObjectiveFromVariables:
 """
         result = extract_objective_from_variables(lst_content)
         assert result is None
+
+
+class TestExtractPathVersion:
+    """Tests for extract_path_version function."""
+
+    def test_extract_version_standard_format(self):
+        """Test extracting PATH version from standard .lst format."""
+        lst_content = """
+PATH Version: 5.2.01 (Mon Oct 27 13:31:58 2025)
+Authors: Todd Munson, Steven Dirkse, Youngdae Kim, and Michael Ferris
+"""
+        result = extract_path_version(lst_content)
+        assert result == "5.2.01"
+
+    def test_extract_version_two_part(self):
+        """Test extracting PATH version with two-part version number."""
+        lst_content = """
+PATH Version: 5.2 (Some date)
+"""
+        result = extract_path_version(lst_content)
+        assert result == "5.2"
+
+    def test_no_version_found(self):
+        """Test when no PATH version found in .lst file."""
+        lst_content = """
+S O L V E      S U M M A R Y
+
+**** SOLVER STATUS     1 Normal Completion
+"""
+        result = extract_path_version(lst_content)
+        assert result is None
+
+    def test_version_with_extra_whitespace(self):
+        """Test extracting version with extra whitespace."""
+        lst_content = """
+PATH  Version:   5.2.01   (date info)
+"""
+        result = extract_path_version(lst_content)
+        assert result == "5.2.01"
 
 
 class TestCategorizeSolveOutcome:
@@ -346,6 +386,7 @@ class TestUpdateModelSolveResult:
         model: dict[str, Any] = {"model_id": "test"}
         solve_result = {
             "status": "success",
+            "solver_version": "5.2.01",
             "solver_status": 1,
             "solver_status_text": "Normal Completion",
             "model_status": 1,
@@ -360,6 +401,7 @@ class TestUpdateModelSolveResult:
 
         assert "mcp_solve" in model
         assert model["mcp_solve"]["status"] == "success"
+        assert model["mcp_solve"]["solver_version"] == "5.2.01"
         assert model["mcp_solve"]["solver_status"] == 1
         assert model["mcp_solve"]["model_status"] == 1
         assert model["mcp_solve"]["objective_value"] == 123.456

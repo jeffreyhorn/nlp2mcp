@@ -322,8 +322,8 @@
           "description": "MCP solver used (typically 'PATH')"
         },
         "solver_version": {
-          "type": "string",
-          "description": "Version of the solver (e.g., 'PATH 5.2.01')"
+          "type": ["string", "null"],
+          "description": "Version of the solver extracted from .lst file (e.g., '5.2.01'). Null if not found."
         },
         "solver_status": {
           "type": ["integer", "null"],

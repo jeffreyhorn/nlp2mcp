@@ -270,6 +270,26 @@ def extract_objective_from_variables(lst_content: str) -> float | None:
     return None
 
 
+def extract_path_version(lst_content: str) -> str | None:
+    """Extract PATH solver version from .lst file.
+
+    Looks for version string in the format "PATH Version: X.X.XX"
+    that appears in the solver output section of the .lst file.
+
+    Args:
+        lst_content: Contents of the .lst file
+
+    Returns:
+        Version string (e.g., "5.2.01") if found, None otherwise
+    """
+    # Look for PATH version in solver output
+    # Format: "PATH Version: 5.2.01 (Mon Oct 27 13:31:58 2025)"
+    match = re.search(r"PATH\s+Version:\s*(\d+\.\d+(?:\.\d+)?)", lst_content)
+    if match:
+        return match.group(1)
+    return None
+
+
 def categorize_solve_outcome(
     solver_status: int | None,
     model_status: int | None,
@@ -430,6 +450,9 @@ def solve_mcp(mcp_path: Path, timeout: int = 60) -> dict[str, Any]:
         lst_content = lst_path.read_text()
         parsed = parse_gams_listing(lst_content)
 
+        # Extract PATH solver version from .lst file
+        path_version = extract_path_version(lst_content)
+
         # Get objective value (try explicit line first, then variable extraction)
         objective = parsed.get("objective_value")
         if objective is None:
@@ -453,6 +476,7 @@ def solve_mcp(mcp_path: Path, timeout: int = 60) -> dict[str, Any]:
 
         result: dict[str, Any] = {
             "status": "success" if is_success else "failure",
+            "solver_version": path_version,
             "solver_status": solver_status,
             "solver_status_text": (
                 SOLVER_STATUS_DESCRIPTIONS.get(solver_status, "Unknown") if solver_status else None
@@ -496,9 +520,7 @@ def update_model_solve_result(
         "status": solve_result["status"],
         "solve_date": datetime.now(UTC).isoformat(),
         "solver": "PATH",
-        # NOTE: PATH solver version is hardcoded based on current GAMS 51.3.0 installation.
-        # Update this value if the underlying GAMS/PATH installation uses a different version.
-        "solver_version": "5.2.01",
+        "solver_version": solve_result.get("solver_version"),
         "solver_status": solve_result["solver_status"],
         "solver_status_text": solve_result["solver_status_text"],
         "model_status": solve_result["model_status"],
