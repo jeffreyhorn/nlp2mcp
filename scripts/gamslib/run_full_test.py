@@ -35,6 +35,7 @@ Output:
     --dry-run            Preview without execution
     --verbose, -v        Show detailed output for each model
     --quiet, -q          Suppress progress output, show only summary
+    --json               Output results as JSON (machine-readable)
 
 Examples:
     python scripts/gamslib/run_full_test.py --model trnsport --verbose
@@ -42,15 +43,20 @@ Examples:
     python scripts/gamslib/run_full_test.py --only-parse --limit 5
     python scripts/gamslib/run_full_test.py --only-failing
     python scripts/gamslib/run_full_test.py --type LP --only-translate
+    python scripts/gamslib/run_full_test.py --dry-run --type LP
+    python scripts/gamslib/run_full_test.py --json > results.json
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import random
+import statistics
 import sys
 import time
+from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -380,6 +386,12 @@ def run_parse_stage(
         "parse_time_seconds": result.get("parse_time_seconds"),
     }
 
+    # Collect timing data
+    model_id = model.get("model_id", "unknown")
+    parse_time = result.get("parse_time_seconds")
+    if parse_time is not None:
+        stats["parse_times"].append((model_id, parse_time))
+
     if result["status"] == "success":
         parse_entry["variables_count"] = result.get("variables_count")
         parse_entry["equations_count"] = result.get("equations_count")
@@ -392,8 +404,9 @@ def run_parse_stage(
     else:
         parse_entry["error"] = result.get("error")
         stats["parse_failure"] += 1
+        error_cat = result.get("error", {}).get("category", "unknown")
+        stats["parse_errors"].append(error_cat)
         if args.verbose:
-            error_cat = result.get("error", {}).get("category", "unknown")
             logger.info(f"    [PARSE] FAILURE: {error_cat}")
 
     model["nlp2mcp_parse"] = parse_entry
@@ -442,6 +455,12 @@ def run_translate_stage(
         "translate_time_seconds": result.get("translate_time_seconds"),
     }
 
+    # Collect timing data
+    model_id = model.get("model_id", "unknown")
+    translate_time = result.get("translate_time_seconds")
+    if translate_time is not None:
+        stats["translate_times"].append((model_id, translate_time))
+
     if result["status"] == "success":
         translate_entry["output_file"] = result.get("output_file")
         stats["translate_success"] += 1
@@ -450,8 +469,9 @@ def run_translate_stage(
     else:
         translate_entry["error"] = result.get("error")
         stats["translate_failure"] += 1
+        error_cat = result.get("error", {}).get("category", "unknown")
+        stats["translate_errors"].append(error_cat)
         if args.verbose:
-            error_cat = result.get("error", {}).get("category", "unknown")
             logger.info(f"    [TRANSLATE] FAILURE: {error_cat}")
 
     model["nlp2mcp_translate"] = translate_entry
@@ -499,6 +519,12 @@ def run_solve_stage(
         "outcome_category": result.get("outcome_category"),
     }
 
+    # Collect timing data
+    model_id = model.get("model_id", "unknown")
+    solve_time = result.get("solve_time_seconds")
+    if solve_time is not None:
+        stats["solve_times"].append((model_id, solve_time))
+
     if result["status"] == "success":
         stats["solve_success"] += 1
         if args.verbose:
@@ -511,8 +537,10 @@ def run_solve_stage(
             "message": result.get("error", "Unknown error"),
         }
         stats["solve_failure"] += 1
+        error_cat = result.get("outcome_category", "unknown")
+        stats["solve_errors"].append(error_cat)
         if args.verbose:
-            logger.info(f"    [SOLVE] FAILURE: {result.get('outcome_category')}")
+            logger.info(f"    [SOLVE] FAILURE: {error_cat}")
 
     model["mcp_solve"] = solve_entry
     return result
@@ -802,11 +830,44 @@ def run_full_test(args: argparse.Namespace) -> dict[str, Any]:
 
     # Dry run mode
     if args.dry_run:
-        logger.info("\n[DRY RUN] Would process the following models:")
         stages = _determine_stages(args)
+        stage_str = " → ".join(s.capitalize() for s in stages)
+
+        # Count models by type
+        type_counts: dict[str, int] = {}
         for model in filtered:
-            model_id = model.get("model_id", "unknown")
-            logger.info(f"  - {model_id}: {' → '.join(stages)}")
+            model_type = model.get("gamslib_type", "Unknown")
+            type_counts[model_type] = type_counts.get(model_type, 0) + 1
+
+        print("\n" + "=" * 60)
+        print("[DRY RUN] Pipeline Preview")
+        print("=" * 60)
+        print(f"\nWould process {len(filtered)} models through: {stage_str}")
+        print("\nModels by type:")
+        for t, count in sorted(type_counts.items(), key=lambda x: -x[1]):
+            print(f"  {t}: {count}")
+
+        if args.verbose or len(filtered) <= 20:
+            print("\nModels to process:")
+            for model in filtered:
+                model_id = model.get("model_id", "unknown")
+                model_type = model.get("gamslib_type", "?")
+                print(f"  - {model_id} ({model_type})")
+        else:
+            print(f"\n(Use --verbose to see all {len(filtered)} model names)")
+
+        print("=" * 60)
+
+        if args.json:
+            dry_run_result = {
+                "dry_run": True,
+                "models": len(filtered),
+                "stages": stages,
+                "by_type": type_counts,
+                "model_ids": [m.get("model_id", "unknown") for m in filtered],
+            }
+            print(json.dumps(dry_run_result, indent=2))
+
         return {"dry_run": True, "models": len(filtered)}
 
     # Create backup before batch operation
@@ -822,14 +883,20 @@ def run_full_test(args: argparse.Namespace) -> dict[str, Any]:
         # Parse stats
         "parse_success": 0,
         "parse_failure": 0,
+        "parse_times": [],  # List of (model_id, time) for timing stats
+        "parse_errors": [],  # List of error categories
         # Translate stats
         "translate_success": 0,
         "translate_failure": 0,
         "translate_cascade_skip": 0,
+        "translate_times": [],
+        "translate_errors": [],
         # Solve stats
         "solve_success": 0,
         "solve_failure": 0,
         "solve_cascade_skip": 0,
+        "solve_times": [],
+        "solve_errors": [],
         # Compare stats
         "compare_match": 0,
         "compare_mismatch": 0,
@@ -883,6 +950,126 @@ def run_full_test(args: argparse.Namespace) -> dict[str, Any]:
     return stats
 
 
+def compute_timing_stats(times: list[tuple[str, float]]) -> dict[str, Any]:
+    """Compute timing statistics from a list of (model_id, time) tuples.
+
+    Args:
+        times: List of (model_id, time_seconds) tuples
+
+    Returns:
+        Dictionary with timing statistics (mean, median, stddev, min, max, p90, p99)
+    """
+    if not times:
+        return {}
+
+    values = [t for _, t in times]
+    sorted_values = sorted(values)
+    n = len(values)
+
+    def percentile(p: float) -> float:
+        """Calculate percentile value."""
+        k = (n - 1) * p / 100
+        f = int(k)
+        c = min(f + 1, n - 1)
+        return sorted_values[f] + (k - f) * (sorted_values[c] - sorted_values[f])
+
+    return {
+        "count": n,
+        "mean": round(statistics.mean(values), 4),
+        "median": round(statistics.median(values), 4),
+        "stddev": round(statistics.pstdev(values), 4) if n > 1 else 0.0,
+        "min": round(min(values), 4),
+        "max": round(max(values), 4),
+        "p90": round(percentile(90), 4),
+        "p99": round(percentile(99), 4),
+    }
+
+
+def generate_summary(stats: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
+    """Generate comprehensive summary statistics.
+
+    Args:
+        stats: Raw statistics dictionary from run_full_test
+        args: Command line arguments
+
+    Returns:
+        Structured summary dictionary suitable for JSON output
+    """
+    summary: dict[str, Any] = {
+        "run_date": datetime.now(UTC).isoformat(),
+        "total_models": stats["total"],
+        "processed": stats["processed"],
+        "skipped": stats["skipped"],
+        "total_time_seconds": round(stats.get("total_time", 0), 2),
+    }
+
+    # Parse statistics
+    if not args.only_translate and not args.only_solve:
+        parse_total = stats["parse_success"] + stats["parse_failure"]
+        if parse_total > 0:
+            summary["parse"] = {
+                "attempted": parse_total,
+                "success": stats["parse_success"],
+                "failure": stats["parse_failure"],
+                "success_rate": round(stats["parse_success"] / parse_total, 4),
+                "timing": compute_timing_stats(stats.get("parse_times", [])),
+                "error_breakdown": dict(Counter(stats.get("parse_errors", []))),
+            }
+
+    # Translate statistics
+    if not args.only_parse and not args.only_solve:
+        translate_total = stats["translate_success"] + stats["translate_failure"]
+        if translate_total > 0:
+            summary["translate"] = {
+                "attempted": translate_total,
+                "success": stats["translate_success"],
+                "failure": stats["translate_failure"],
+                "cascade_skip": stats["translate_cascade_skip"],
+                "success_rate": round(stats["translate_success"] / translate_total, 4),
+                "timing": compute_timing_stats(stats.get("translate_times", [])),
+                "error_breakdown": dict(Counter(stats.get("translate_errors", []))),
+            }
+
+    # Solve statistics
+    if not args.only_parse and not args.only_translate:
+        solve_total = stats["solve_success"] + stats["solve_failure"]
+        if solve_total > 0:
+            summary["solve"] = {
+                "attempted": solve_total,
+                "success": stats["solve_success"],
+                "failure": stats["solve_failure"],
+                "cascade_skip": stats["solve_cascade_skip"],
+                "success_rate": round(stats["solve_success"] / solve_total, 4),
+                "timing": compute_timing_stats(stats.get("solve_times", [])),
+                "error_breakdown": dict(Counter(stats.get("solve_errors", []))),
+            }
+
+        # Compare statistics
+        compare_total = stats["compare_match"] + stats["compare_mismatch"]
+        summary["compare"] = {
+            "attempted": compare_total,
+            "match": stats["compare_match"],
+            "mismatch": stats["compare_mismatch"],
+            "skipped": stats["compare_skipped"],
+            "cascade_skip": stats["compare_cascade_skip"],
+            "match_rate": (
+                round(stats["compare_match"] / compare_total, 4) if compare_total > 0 else 0.0
+            ),
+        }
+
+    # Full pipeline success
+    if not args.only_parse and not args.only_translate and not args.only_solve:
+        full_success = stats["compare_match"]
+        processed = stats["processed"]
+        summary["full_pipeline"] = {
+            "success": full_success,
+            "total": processed,
+            "success_rate": round(full_success / processed, 4) if processed > 0 else 0.0,
+        }
+
+    return summary
+
+
 def print_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
     """Print summary of pipeline results.
 
@@ -890,75 +1077,105 @@ def print_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
         stats: Statistics dictionary from run_full_test
         args: Command line arguments
     """
+    summary = generate_summary(stats, args)
+
     print("\n" + "=" * 60)
     print("PIPELINE SUMMARY")
     print("=" * 60)
 
-    total = stats["total"]
-    processed = stats["processed"]
-    skipped = stats["skipped"]
+    print(f"\nModels processed: {summary['processed']}/{summary['total_models']}")
+    if summary["skipped"] > 0:
+        print(f"Models skipped: {summary['skipped']}")
 
-    print(f"\nModels processed: {processed}/{total}")
-    if skipped > 0:
-        print(f"Models skipped: {skipped}")
+    # Parse results
+    if "parse" in summary:
+        p = summary["parse"]
+        print("\nParse Results:")
+        print(f"  Success: {p['success']} ({p['success_rate'] * 100:.1f}%)")
+        print(f"  Failure: {p['failure']}")
+        if p.get("timing"):
+            t = p["timing"]
+            print(
+                f"  Timing: mean={t['mean']:.2f}s, median={t['median']:.2f}s, p90={t['p90']:.2f}s"
+            )
+        if p.get("error_breakdown"):
+            print("  Error breakdown:")
+            for cat, count in sorted(p["error_breakdown"].items(), key=lambda x: -x[1]):
+                print(f"    {cat}: {count}")
 
-    # Parse results (if parse was run)
-    if not args.only_translate and not args.only_solve:
-        parse_total = stats["parse_success"] + stats["parse_failure"]
-        if parse_total > 0:
-            parse_pct = stats["parse_success"] / parse_total * 100
-            print("\nParse Results:")
-            print(f"  Success: {stats['parse_success']} ({parse_pct:.1f}%)")
-            print(f"  Failure: {stats['parse_failure']}")
+    # Translate results
+    if "translate" in summary:
+        tr = summary["translate"]
+        print("\nTranslate Results:")
+        print(f"  Success: {tr['success']} ({tr['success_rate'] * 100:.1f}%)")
+        print(f"  Failure: {tr['failure']}")
+        if tr["cascade_skip"] > 0:
+            print(f"  Cascade skipped: {tr['cascade_skip']}")
+        if tr.get("timing"):
+            tm = tr["timing"]
+            print(
+                f"  Timing: mean={tm['mean']:.2f}s, median={tm['median']:.2f}s, p90={tm['p90']:.2f}s"
+            )
+        if tr.get("error_breakdown"):
+            print("  Error breakdown:")
+            for cat, count in sorted(tr["error_breakdown"].items(), key=lambda x: -x[1]):
+                print(f"    {cat}: {count}")
 
-    # Translate results (if translate was run)
-    if not args.only_parse and not args.only_solve:
-        translate_total = stats["translate_success"] + stats["translate_failure"]
-        if translate_total > 0:
-            translate_pct = stats["translate_success"] / translate_total * 100
-            print("\nTranslate Results:")
-            print(f"  Success: {stats['translate_success']} ({translate_pct:.1f}%)")
-            print(f"  Failure: {stats['translate_failure']}")
-        if stats["translate_cascade_skip"] > 0:
-            print(f"  Cascade skipped: {stats['translate_cascade_skip']}")
+    # Solve results
+    if "solve" in summary:
+        s = summary["solve"]
+        print("\nSolve Results:")
+        print(f"  Success: {s['success']} ({s['success_rate'] * 100:.1f}%)")
+        print(f"  Failure: {s['failure']}")
+        if s["cascade_skip"] > 0:
+            print(f"  Cascade skipped: {s['cascade_skip']}")
+        if s.get("timing"):
+            tm = s["timing"]
+            print(
+                f"  Timing: mean={tm['mean']:.2f}s, median={tm['median']:.2f}s, p90={tm['p90']:.2f}s"
+            )
+        if s.get("error_breakdown"):
+            print("  Error breakdown:")
+            for cat, count in sorted(s["error_breakdown"].items(), key=lambda x: -x[1]):
+                print(f"    {cat}: {count}")
 
-    # Solve results (if solve was run)
-    if not args.only_parse and not args.only_translate:
-        solve_total = stats["solve_success"] + stats["solve_failure"]
-        if solve_total > 0:
-            solve_pct = stats["solve_success"] / solve_total * 100
-            print("\nSolve Results:")
-            print(f"  Success: {stats['solve_success']} ({solve_pct:.1f}%)")
-            print(f"  Failure: {stats['solve_failure']}")
-        if stats["solve_cascade_skip"] > 0:
-            print(f"  Cascade skipped: {stats['solve_cascade_skip']}")
-
-        # Compare results
-        compare_total = stats["compare_match"] + stats["compare_mismatch"]
-        if compare_total > 0:
-            compare_pct = stats["compare_match"] / compare_total * 100
+    # Compare results
+    if "compare" in summary:
+        c = summary["compare"]
+        if c["attempted"] > 0:
             print("\nComparison Results:")
-            print(f"  Match: {stats['compare_match']} ({compare_pct:.1f}%)")
-            print(f"  Mismatch: {stats['compare_mismatch']}")
-        if stats["compare_skipped"] > 0:
-            print(f"  Skipped: {stats['compare_skipped']}")
-        if stats["compare_cascade_skip"] > 0:
-            print(f"  Cascade skipped: {stats['compare_cascade_skip']}")
+            print(f"  Match: {c['match']} ({c['match_rate'] * 100:.1f}%)")
+            print(f"  Mismatch: {c['mismatch']}")
+        if c["skipped"] > 0:
+            print(f"  Skipped: {c['skipped']}")
+        if c["cascade_skip"] > 0:
+            print(f"  Cascade skipped: {c['cascade_skip']}")
 
-    # Overall pipeline success
-    if not args.only_parse and not args.only_translate and not args.only_solve:
-        full_success = stats["compare_match"]
-        if processed > 0:
-            full_pct = full_success / processed * 100
-            print(f"\nFull pipeline success: {full_success}/{processed} ({full_pct:.1f}%)")
+    # Full pipeline success
+    if "full_pipeline" in summary:
+        fp = summary["full_pipeline"]
+        print(
+            f"\nFull pipeline success: {fp['success']}/{fp['total']} ({fp['success_rate'] * 100:.1f}%)"
+        )
 
     # Timing
-    print(f"\nTotal time: {stats['total_time']:.1f}s")
-    if processed > 0:
-        avg_time = stats["total_time"] / processed
+    print(f"\nTotal time: {summary['total_time_seconds']:.1f}s")
+    if summary["processed"] > 0:
+        avg_time = summary["total_time_seconds"] / summary["processed"]
         print(f"Average time per model: {avg_time:.2f}s")
 
     print("=" * 60)
+
+
+def print_json_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
+    """Print summary as JSON.
+
+    Args:
+        stats: Statistics dictionary from run_full_test
+        args: Command line arguments
+    """
+    summary = generate_summary(stats, args)
+    print(json.dumps(summary, indent=2))
 
 
 # =============================================================================
@@ -1086,17 +1303,32 @@ def main() -> int:
         action="store_true",
         help="Suppress progress output, show only summary",
     )
+    output_group.add_argument(
+        "--json",
+        action="store_true",
+        help="Output results as JSON (machine-readable)",
+    )
 
     args = parser.parse_args()
+
+    # JSON mode implies quiet (no progress logging)
+    if args.json:
+        args.quiet = True
 
     # Run pipeline
     try:
         stats = run_full_test(args)
         if "error" in stats:
-            logger.error(stats["error"])
+            if args.json:
+                print(json.dumps({"error": stats["error"]}))
+            else:
+                logger.error(stats["error"])
             return 1
         if not stats.get("dry_run"):
-            print_summary(stats, args)
+            if args.json:
+                print_json_summary(stats, args)
+            else:
+                print_summary(stats, args)
         return 0
     except ValueError as e:
         logger.error(str(e))
