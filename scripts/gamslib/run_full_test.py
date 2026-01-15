@@ -631,7 +631,7 @@ def run_pipeline(
 
     Args:
         model: Model dictionary from database
-        database: Full database (for finding model by ID)
+        database: Full database (reserved for future cross-model lookups)
         args: Command line arguments
         stats: Statistics dictionary to update
     """
@@ -677,15 +677,12 @@ def run_pipeline(
         run_compare = True
 
     # Run stages with cascade handling
-    parse_ok = True
-    translate_ok = True
     solve_ok = True
 
     # Stage 1: Parse
     if run_parse:
         result = run_parse_stage(model, model_path, args, stats)
         if result["status"] != "success":
-            parse_ok = False
             if run_translate or run_solve or run_compare:
                 mark_cascade_not_tested(model, "parse", stats)
                 if args.verbose:
@@ -696,7 +693,6 @@ def run_pipeline(
     if run_translate:
         result = run_translate_stage(model, model_path, mcp_path, args, stats)
         if result["status"] != "success":
-            translate_ok = False
             if run_solve or run_compare:
                 mark_cascade_not_tested(model, "translate", stats)
                 if args.verbose:
@@ -715,7 +711,7 @@ def run_pipeline(
         if not mcp_path.exists():
             if args.verbose:
                 logger.info("    [SOLVE] Skipped: MCP file not found")
-            stats["solve_cascade_skip"] += 1
+            # mark_cascade_not_tested increments solve_cascade_skip
             mark_cascade_not_tested(model, "solve", stats)
             return
 
