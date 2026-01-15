@@ -1,7 +1,7 @@
 # Epic 3 Summary: GAMSLIB Testing Infrastructure
 
 **Epic Duration:** Sprints 13-17 (50 working days planned)  
-**Status:** IN PROGRESS (Sprints 13-14 complete)  
+**Status:** IN PROGRESS (Sprints 13-15 complete)  
 **Goal:** Build comprehensive GAMSLIB testing infrastructure to validate nlp2mcp against industry-standard optimization models
 
 ---
@@ -204,17 +204,119 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 
 ---
 
-### Sprint 15: Parser Improvements & MCP Solve Integration (PLANNED)
+### Sprint 15: Pipeline Testing Infrastructure & Baseline ✅ COMPLETE
 
-**Duration:** 10 days (planned)  
-**Status:** 🔜 Not Started
+**Duration:** 10 days (Jan 13-15, 2026)  
+**Status:** ✅ Complete
 
-**Planned Objectives:**
-- Address top syntax error patterns to improve parse rate
-- Implement missing GAMS functions (gamma, smin, smax)
-- Add MCP solve verification to database schema
-- Implement objective value comparison
-- Target: 40%+ parse success rate
+**Key Achievements:**
+- ✅ Schema v2.1.0 with mcp_solve and solution_comparison objects
+- ✅ Error taxonomy module with 47 outcome categories (16 parse + 13 translate + 16 solve + 2 generic)
+- ✅ Enhanced batch_parse.py and batch_translate.py with filter flags
+- ✅ test_solve.py with PATH solver integration and solution comparison
+- ✅ run_full_test.py pipeline orchestrator with 14 MVP filter arguments
+- ✅ Baseline metrics established for all 160 models
+
+**Day-by-Day Completion:**
+
+- [x] **Day 0:** Sprint setup and preparation
+  - Verified Sprint 14 deliverables (219 models, schema v2.0.0)
+  - Confirmed PATH solver availability (GAMS 51.3.0, PATH 5.2.01)
+  - Reviewed all prep task outputs
+
+- [x] **Day 1:** Schema update and migration
+  - Updated schema.json to v2.1.0 with new objects
+  - Created migration script with backup support
+  - Migrated all 219 models successfully
+
+- [x] **Day 2:** Error taxonomy integration
+  - Created error_taxonomy.py with 47 outcome categories
+  - Integrated into batch_parse.py and batch_translate.py
+  - Added 92 unit tests for categorization functions
+
+- [x] **Day 3:** Parse enhancement
+  - Added filter flags (--only-failing, --error-category, --type)
+  - Added model statistics extraction from IR
+  - Added 14 new unit tests
+
+- [x] **Day 4:** Translate enhancement
+  - Added filter flags (--parse-success, --translate-failure, --skip-completed)
+  - Added MCP file validation with GAMS action=c
+  - Ran on all 34 parsed models: 17 success (50%)
+
+- [x] **Day 5:** Solve testing core
+  - Created test_solve.py with PATH solver invocation
+  - Implemented .lst file parsing for status extraction
+  - Added 35 unit tests
+
+- [x] **Day 6:** Solution comparison implementation
+  - Implemented objectives_match() with combined tolerance formula
+  - Created compare_solutions() decision tree (7 outcomes)
+  - Added CLI tolerance arguments (--rtol, --atol)
+
+- [x] **Day 7:** Solve testing complete [Checkpoint 3]
+  - Ran solve test on all 17 MCPs
+  - Results: 3 success (17.6%), 1 match, 2 mismatches
+  - Identified path_syntax_error as primary blocker
+
+- [x] **Day 8:** Pipeline orchestrator
+  - Created run_full_test.py with 14 MVP filter arguments
+  - Implemented AND filter logic with conflict detection
+  - Added cascade failure handling
+
+- [x] **Day 9:** Pipeline integration [Checkpoint 4]
+  - Added summary generation with timing statistics
+  - Added JSON output format (--json flag)
+  - Ran full pipeline on all 160 models
+
+- [x] **Day 10:** Baseline and documentation [Checkpoint 5]
+  - Created baseline_metrics.json (machine-readable)
+  - Created SPRINT_BASELINE.md (human-readable)
+  - Updated GAMSLIB_CONVERSION_STATUS.md and GAMSLIB_TESTING.md
+
+**Deliverables:**
+- `data/gamslib/schema.json` - Schema v2.1.0
+- `data/gamslib/baseline_metrics.json` - Machine-readable baseline
+- `scripts/gamslib/error_taxonomy.py` - 47 error categories
+- `scripts/gamslib/test_solve.py` - MCP solve testing with PATH solver
+- `scripts/gamslib/run_full_test.py` - Pipeline orchestrator with filters
+- `scripts/gamslib/migrate_schema_v2.1.0.py` - Schema migration
+- `docs/planning/EPIC_3/SPRINT_15/SPRINT_BASELINE.md` - Baseline documentation
+- `docs/guides/GAMSLIB_TESTING.md` - Comprehensive testing guide
+
+**Baseline Metrics:**
+
+| Stage | Attempted | Success | Rate |
+|-------|-----------|---------|------|
+| Parse | 160 | 34 | 21.3% |
+| Translate | 34 | 17 | 50.0% |
+| Solve | 17 | 3 | 17.6% |
+| Compare | 3 | 1 match | 33.3% |
+| **Full Pipeline** | **160** | **1** | **0.6%** |
+
+**Full Pipeline Success:** hs62 (NLP model)
+
+**Timing Statistics (successful models):**
+
+| Stage | Mean | Median | P90 | P99 |
+|-------|------|--------|-----|-----|
+| Parse | 141.5 ms | 125.8 ms | 248.9 ms | 421.4 ms |
+| Translate | 3.7 ms | 3.7 ms | 5.3 ms | 5.8 ms |
+| Solve | 172.7 ms | 170.4 ms | 182.5 ms | 184.0 ms |
+
+**Error Distribution:**
+
+| Stage | Primary Blocker | Count | % of Failures |
+|-------|-----------------|-------|---------------|
+| Parse | lexer_invalid_char | 109 | 86.5% |
+| Translate | model_no_objective_def | 5 | 29.4% |
+| Solve | path_syntax_error | 14 | 100.0% |
+
+**New Tests Added:** 196 total
+- error_taxonomy: 92
+- batch_parse: 14
+- batch_translate: 18
+- test_solve: 72
 
 ---
 
@@ -254,24 +356,26 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 |--------|--------|---------------|-----------------|
 | Sprint 13 | ✅ Complete | 10/10 | GAMSLIB catalog with 219 models |
 | Sprint 14 | ✅ Complete | 10/10 | JSON database infrastructure |
-| Sprint 15 | 🔜 Planned | 0/10 | Parser improvements |
+| Sprint 15 | ✅ Complete | 10/10 | Pipeline testing & baseline |
 | Sprint 16 | 🔜 Planned | 0/10 | Query enhancements |
 | Sprint 17 | 🔜 Planned | 0/10 | Production readiness |
-| **Total** | **40% Complete** | **20/50** | **2/5 sprints** |
+| **Total** | **60% Complete** | **30/50** | **3/5 sprints** |
 
 ### Cumulative Metrics
 
-| Metric | Sprint 13 | Sprint 14 | Total |
-|--------|-----------|-----------|-------|
-| Models cataloged | 219 | 219 | 219 |
-| Models downloaded | 219 | 219 | 219 |
-| Convexity verified | 160 | 160 | 160 |
-| Parse attempts | 0 | 160 | 160 |
-| Parse success | 0 | 34 | 34 (21.3%) |
-| Translate success | 0 | 32 | 32 (94.1% of parsed) |
-| Scripts created | 3 | 4 | 7 |
-| Tests added | 45 | 185 | 230 |
-| Documentation (lines) | ~500 | ~1500 | ~2000 |
+| Metric | Sprint 13 | Sprint 14 | Sprint 15 | Total |
+|--------|-----------|-----------|-----------|-------|
+| Models cataloged | 219 | 219 | 219 | 219 |
+| Models downloaded | 219 | 219 | 219 | 219 |
+| Convexity verified | 160 | 160 | 160 | 160 |
+| Parse attempts | 0 | 160 | 160 | 160 |
+| Parse success | 0 | 34 | 34 | 34 (21.3%) |
+| Translate success | 0 | 32 | 17 | 17 (50.0% of parsed) |
+| Solve success | 0 | 0 | 3 | 3 (17.6% of translated) |
+| Full pipeline success | 0 | 0 | 1 | 1 (0.6%) |
+| Scripts created | 3 | 4 | 4 | 11 |
+| Tests added | 45 | 185 | 196 | 426 |
+| Documentation (lines) | ~500 | ~1500 | ~1000 | ~3000 |
 
 ---
 
@@ -309,9 +413,46 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 3. Add MCP solve verification with objective comparison
 4. Parallelize batch operations for performance
 
+### Sprint 15 Learnings
+
+**What Went Well:**
+- Comprehensive prep phase (10 tasks) provided clear implementation path
+- PATH solver integration worked smoothly (validated in prep)
+- Error taxonomy (47 categories) enables precise debugging
+- Filter framework (14 MVP filters) provides flexible testing
+
+**Challenges Overcome:**
+- Timing statistics scope clarification (successful models vs all attempted)
+- Solution comparison tolerance tuning (rtol=1e-6, atol=1e-8)
+- Cascade failure handling for multi-stage pipeline
+
+**Key Findings:**
+- Primary parse blocker: `lexer_invalid_char` (109/126 = 86.5%)
+- Primary solve blocker: `path_syntax_error` (14/14 = 100%)
+- Full pipeline success limited to 1 model (hs62) due to cascading failures
+
+**Recommendations for Epic 4:**
+1. Fix lexer to handle extended GAMS syntax (unblock 109 models)
+2. Debug MCP code generation for proper element quoting
+3. Handle models without explicit objective definitions
+4. Implement missing differentiation functions
+
 ---
 
 ## Release History
+
+### v2.1.0 - Sprint 15 Complete (January 15, 2026)
+- Full pipeline testing infrastructure (parse → translate → solve → compare)
+- PATH solver integration with solution comparison
+- Error taxonomy module with 47 outcome categories
+- Pipeline orchestrator with 14 MVP filter arguments
+- Baseline metrics established:
+  - Parse: 34/160 (21.3%)
+  - Translate: 17/34 (50.0%)
+  - Solve: 3/17 (17.6%)
+  - Full pipeline: 1/160 (0.6%) - hs62
+- 196 new tests (total GAMSLIB tests: 426)
+- Comprehensive testing guide (GAMSLIB_TESTING.md)
 
 ### v2.0.0 - Sprint 14 Complete (January 21, 2026)
 - JSON database infrastructure with schema validation
@@ -400,5 +541,5 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 ---
 
 *Epic 3 initiated: December 31, 2025*  
-*Last updated: January 21, 2026*  
-*Status: Sprints 13-14 complete, Sprints 15-17 planned*
+*Last updated: January 15, 2026*  
+*Status: Sprints 13-15 complete, Sprints 16-17 planned*
