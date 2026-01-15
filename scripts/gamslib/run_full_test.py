@@ -228,7 +228,10 @@ def apply_filters(
 
     # Phase 3: Limit/random (applied last)
     if args.random:
-        filtered = random.sample(filtered, min(args.random, len(filtered)))
+        # Use deterministic seed based on filtered model IDs for reproducibility
+        seed_basis = tuple(m.get("model_id", "") for m in filtered)
+        rng = random.Random(hash(seed_basis))
+        filtered = rng.sample(filtered, min(args.random, len(filtered)))
     elif args.limit:
         filtered = filtered[: args.limit]
 
@@ -735,7 +738,7 @@ def run_pipeline(
         if not mcp_path.exists():
             if args.verbose:
                 logger.info("    [SOLVE] Skipped: MCP file not found")
-            # mark_cascade_not_tested increments solve_cascade_skip
+            # mark_cascade_not_tested increments compare_cascade_skip
             mark_cascade_not_tested(model, "solve", stats)
             return
 
