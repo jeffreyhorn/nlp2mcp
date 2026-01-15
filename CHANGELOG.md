@@ -7,6 +7,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Day 9: Pipeline Integration Complete [Checkpoint 4] - 2026-01-15
+
+**Branch:** `sprint15-day9-pipeline-complete`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Enhanced `run_full_test.py` with comprehensive summary generation including timing statistics (mean, median, p90), JSON output format for machine-readable results, and improved dry-run mode. Ran full pipeline on all 160 models to establish baseline metrics. Checkpoint 4 completed.
+
+#### Changes
+
+**Modified Files:**
+- `scripts/gamslib/run_full_test.py` - Added summary generation, JSON output, enhanced dry-run
+
+#### Key Features
+
+**Summary Generation:**
+- `compute_timing_stats()` - Calculates mean, median, stddev, min, max, p90, p99
+- `generate_summary()` - Produces structured dictionary for reporting
+- Per-stage timing and error tracking
+- Error category breakdown per stage
+
+**Output Formats:**
+- `--json` flag for machine-readable JSON output
+- JSON includes full timing stats, error breakdowns, success rates
+- JSON mode implies quiet mode (no progress logging)
+
+**Enhanced Dry-Run:**
+- Shows models by type (NLP: 94, LP: 57, QCP: 9)
+- Shows pipeline stages that would run
+- Lists models when verbose or <=20 models
+- Supports JSON output for dry-run
+
+#### Full Pipeline Results (160 models)
+
+| Stage | Attempted | Success | Failure | Rate |
+|-------|-----------|---------|---------|------|
+| Parse | 160 | 34 | 126 | 21.3% |
+| Translate | 34 | 17 | 17 | 50.0% |
+| Solve | 17 | 3 | 14 | 17.6% |
+| Compare | 3 | 1 match | 2 mismatch | 33.3% |
+
+**Full Pipeline Success:** 1/160 (0.6%) - hs62
+
+#### Timing Statistics
+
+| Stage | Mean | Median | P90 | Max |
+|-------|------|--------|-----|-----|
+| Parse | 0.30s | 0.17s | 0.66s | 2.32s |
+| Translate | 1.35s | 1.14s | 2.09s | 4.10s |
+| Solve | 0.21s | 0.18s | 0.32s | 0.38s |
+
+#### Error Breakdown
+
+**Parse Errors (126):**
+- lexer_invalid_char: 109
+- internal_error: 17
+
+**Translate Errors (17):**
+- model_no_objective_def: 5
+- diff_unsupported_func: 5
+- unsup_index_offset: 3
+- model_domain_mismatch: 2
+- unsup_dollar_cond: 1
+- codegen_numerical_error: 1
+
+**Solve Errors (14):**
+- path_syntax_error: 14
+
+#### Usage Examples
+
+```bash
+# Run full pipeline with JSON output
+python scripts/gamslib/run_full_test.py --json > results.json
+
+# Preview what would run
+python scripts/gamslib/run_full_test.py --dry-run
+
+# Dry-run for LP models only
+python scripts/gamslib/run_full_test.py --type LP --dry-run
+```
+
+---
+
 ### Sprint 15 Day 8: Pipeline Orchestrator - 2026-01-15
 
 **Branch:** `sprint15-day8-pipeline-orchestrator`  

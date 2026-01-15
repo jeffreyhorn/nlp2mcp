@@ -26,8 +26,8 @@
 |------------|-----|--------|------|
 | CP1: Schema migrated | 2 | ✅ Complete | 2026-01-13 |
 | CP2: Enhanced testing | 4 | ✅ Complete | 2026-01-13 |
-| CP3: Solve testing | 7 | Pending | - |
-| CP4: Pipeline complete | 9 | Pending | - |
+| CP3: Solve testing | 7 | ✅ Complete | 2026-01-14 |
+| CP4: Pipeline complete | 9 | ✅ Complete | 2026-01-15 |
 | CP5: Baseline recorded | 10 | Pending | - |
 
 ---
@@ -768,5 +768,99 @@ Average time per model: 2.21s
 - [x] Cascade failures mark downstream stages correctly
 
 **Next Steps:** Day 9 - Pipeline Integration and Summary
+
+---
+
+### Day 9: Pipeline Integration and Summary [Checkpoint 4]
+
+**Date:** January 15, 2026
+
+**Objective:** Complete pipeline runner with summary statistics and run full pipeline on all models
+
+**Tasks Completed:**
+
+1. **Added summary generation with timing statistics** (1.5h)
+   - Created `compute_timing_stats()` function with mean, median, stddev, min, max, p90, p99
+   - Created `generate_summary()` function returning structured dictionary
+   - Enhanced statistics collection: parse_times, translate_times, solve_times
+   - Enhanced error tracking: parse_errors, translate_errors, solve_errors
+
+2. **Added JSON output format** (1h)
+   - Added `--json` CLI flag for machine-readable output
+   - Created `print_json_summary()` function
+   - JSON includes full timing stats, error breakdowns, success rates
+   - JSON mode implies quiet mode (no progress logging)
+
+3. **Enhanced --dry-run mode** (0.5h)
+   - Shows count of models by type (NLP, LP, QCP)
+   - Shows pipeline stages that would run
+   - Lists models when verbose or <=20 models
+   - Supports JSON output for dry-run
+
+4. **Ran full pipeline on all 160 models** (2h)
+   - Command: `python scripts/gamslib/run_full_test.py --verbose`
+   - Processed all 160 verified_convex + likely_convex models
+   - Results stored in database
+
+**Quality Checks:**
+- `make typecheck`: PASSED
+- `make lint`: PASSED
+- `make format`: Applied
+- `make test`: 2853 passed, 10 skipped, 1 xfailed
+
+**Full Pipeline Results (160 models):**
+
+| Stage | Attempted | Success | Failure | Rate |
+|-------|-----------|---------|---------|------|
+| Parse | 160 | 34 | 126 | 21.3% |
+| Translate | 34 | 17 | 17 | 50.0% |
+| Solve | 17 | 3 | 14 | 17.6% |
+| Compare | 3 | 1 match | 2 mismatch | 33.3% |
+
+**Full Pipeline Success:** 1/160 (0.6%) - hs62
+
+**Timing Statistics:**
+
+| Stage | Mean | Median | P90 | Max |
+|-------|------|--------|-----|-----|
+| Parse | 0.30s | 0.17s | 0.66s | 2.32s |
+| Translate | 1.35s | 1.14s | 2.09s | 4.10s |
+| Solve | 0.21s | 0.18s | 0.32s | 0.38s |
+
+**Error Breakdown:**
+
+Parse Errors (126):
+- lexer_invalid_char: 109
+- internal_error: 17
+
+Translate Errors (17):
+- model_no_objective_def: 5
+- diff_unsupported_func: 5
+- unsup_index_offset: 3
+- model_domain_mismatch: 2
+- unsup_dollar_cond: 1
+- codegen_numerical_error: 1
+
+Solve Errors (14):
+- path_syntax_error: 14
+
+**Deliverables:**
+- [x] Summary generation with per-stage timing stats
+- [x] JSON output format (`--json` flag)
+- [x] Enhanced dry-run mode with type breakdown
+- [x] Full pipeline run on 160 models
+- [x] Baseline metrics recorded
+
+**Checkpoint 4 Status:** ✅ COMPLETE
+
+- [x] Full pipeline runs on all 160 models
+- [x] Summary shows parse/translate/solve/compare stats
+- [x] `--dry-run` previews filter results
+- [x] `--verbose` shows detailed progress
+- [x] `--json` outputs machine-readable results
+- [x] Filters work with AND logic
+- [x] Cascade handling correct
+
+**Next Steps:** Day 10 - Baseline Recording and Documentation
 
 ---
