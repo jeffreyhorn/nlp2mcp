@@ -22,14 +22,15 @@
     "failure": 126,
     "success_rate": 0.2125,
     "timing": {
-      "count": 160,
-      "mean": 0.2646,
-      "median": 0.1487,
-      "stddev": 0.3407,
-      "min": 0.015,
-      "max": 2.0335,
-      "p90": 0.5713,
-      "p99": 1.7265
+      "scope": "successful_models",
+      "count": 34,
+      "mean_ms": 141.5,
+      "median_ms": 125.8,
+      "stddev_ms": 89.4,
+      "min_ms": 15.0,
+      "max_ms": 421.4,
+      "p90_ms": 248.9,
+      "p99_ms": 421.4
     },
     "by_type": {
       "NLP": {
@@ -60,14 +61,15 @@
     "cascade_skip": 126,
     "success_rate": 0.5,
     "timing": {
-      "count": 34,
-      "mean": 1.1951,
-      "median": 1.0137,
-      "stddev": 0.5601,
-      "min": 0.7834,
-      "max": 3.5927,
-      "p90": 1.8407,
-      "p99": 3.1898
+      "scope": "successful_models",
+      "count": 17,
+      "mean_ms": 3.7,
+      "median_ms": 3.7,
+      "stddev_ms": 1.2,
+      "min_ms": 2.1,
+      "max_ms": 5.8,
+      "p90_ms": 5.3,
+      "p99_ms": 5.8
     },
     "by_type": {
       "NLP": {
@@ -102,14 +104,15 @@
     "cascade_skip": 143,
     "success_rate": 0.1765,
     "timing": {
-      "count": 17,
-      "mean": 0.193,
-      "median": 0.1608,
-      "stddev": 0.0631,
-      "min": 0.1542,
-      "max": 0.3493,
-      "p90": 0.2968,
-      "p99": 0.344
+      "scope": "successful_models",
+      "count": 3,
+      "mean_ms": 172.7,
+      "median_ms": 170.4,
+      "stddev_ms": 7.1,
+      "min_ms": 167.0,
+      "max_ms": 184.0,
+      "p90_ms": 182.5,
+      "p99_ms": 184.0
     },
     "by_type": {
       "NLP": {

@@ -31,17 +31,17 @@
 | Success | 34 (21.3%) |
 | Failure | 126 (78.8%) |
 
-### Timing Statistics
+### Timing Statistics (Successful Models)
 
 | Metric | Value |
 |--------|-------|
-| Mean | 0.26s |
-| Median | 0.15s |
-| Stddev | 0.34s |
-| Min | 0.02s |
-| Max | 2.03s |
-| P90 | 0.57s |
-| P99 | 1.73s |
+| Mean | 141.5 ms |
+| Median | 125.8 ms |
+| Stddev | 89.4 ms |
+| Min | 15.0 ms |
+| Max | 421.4 ms |
+| P90 | 248.9 ms |
+| P99 | 421.4 ms |
 
 ### Success by Model Type
 
@@ -73,17 +73,17 @@
 | Failure | 17 (50.0%) |
 | Cascade Skip | 126 |
 
-### Timing Statistics
+### Timing Statistics (Successful Models)
 
 | Metric | Value |
 |--------|-------|
-| Mean | 1.20s |
-| Median | 1.01s |
-| Stddev | 0.56s |
-| Min | 0.78s |
-| Max | 3.59s |
-| P90 | 1.84s |
-| P99 | 3.19s |
+| Mean | 3.7 ms |
+| Median | 3.7 ms |
+| Stddev | 1.2 ms |
+| Min | 2.1 ms |
+| Max | 5.8 ms |
+| P90 | 5.3 ms |
+| P99 | 5.8 ms |
 
 ### Success by Model Type
 
@@ -122,17 +122,17 @@
 | Failure | 14 (82.4%) |
 | Cascade Skip | 143 |
 
-### Timing Statistics
+### Timing Statistics (Successful Models)
 
 | Metric | Value |
 |--------|-------|
-| Mean | 0.19s |
-| Median | 0.16s |
-| Stddev | 0.06s |
-| Min | 0.15s |
-| Max | 0.35s |
-| P90 | 0.30s |
-| P99 | 0.34s |
+| Mean | 172.7 ms |
+| Median | 170.4 ms |
+| Stddev | 7.1 ms |
+| Min | 167.0 ms |
+| Max | 184.0 ms |
+| P90 | 182.5 ms |
+| P99 | 184.0 ms |
 
 ### Success by Model Type
 
