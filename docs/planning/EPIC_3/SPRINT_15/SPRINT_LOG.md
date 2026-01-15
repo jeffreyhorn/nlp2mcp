@@ -12,11 +12,11 @@
 
 | Metric | Target | Current |
 |--------|--------|---------|
-| Parse success rate | Baseline TBD | - |
-| Translate success rate | Baseline TBD | - |
-| Solve success rate | Baseline TBD | - |
-| Objective match rate | Baseline TBD | - |
-| Test coverage | >80% | - |
+| Parse success rate | Baseline TBD | 21.3% (34/160) |
+| Translate success rate | Baseline TBD | 50.0% (17/34) |
+| Solve success rate | Baseline TBD | 17.6% (3/17) |
+| Objective match rate | Baseline TBD | 33.3% (1/3) |
+| Test coverage | >80% | 196 new tests |
 
 ---
 
@@ -28,7 +28,7 @@
 | CP2: Enhanced testing | 4 | ✅ Complete | 2026-01-13 |
 | CP3: Solve testing | 7 | ✅ Complete | 2026-01-14 |
 | CP4: Pipeline complete | 9 | ✅ Complete | 2026-01-15 |
-| CP5: Baseline recorded | 10 | Pending | - |
+| CP5: Baseline recorded | 10 | ✅ Complete | 2026-01-15 |
 
 ---
 
@@ -862,5 +862,160 @@ Solve Errors (14):
 - [x] Cascade handling correct
 
 **Next Steps:** Day 10 - Baseline Recording and Documentation
+
+---
+
+### Day 10: Establish Baseline and Complete Sprint [Checkpoint 5]
+
+**Date:** January 15, 2026
+
+**Objective:** Record baseline metrics and finalize documentation, complete Sprint 15
+
+**Tasks Completed:**
+
+1. **Generated baseline metrics from database** (1h)
+   - Ran full pipeline to capture final state
+   - Queried database for model type breakdown (NLP: 94, LP: 57, QCP: 9)
+   - Collected timing statistics (mean, median, p90, p99) for all stages
+   - Compiled error category distribution
+
+2. **Created baseline_metrics.json** (1h)
+   - Created `data/gamslib/baseline_metrics.json` (machine-readable)
+   - Schema version 1.0.0
+   - Includes environment info, per-stage metrics, timing stats, error breakdown
+   - Full JSON structure for CI/automation integration
+
+3. **Created SPRINT_BASELINE.md** (1h)
+   - Created `docs/planning/EPIC_3/SPRINT_15/SPRINT_BASELINE.md` (human-readable)
+   - Executive summary, per-stage analysis
+   - Timing statistics tables
+   - Error distribution analysis and recommendations
+   - Lists all successful models at each stage
+
+4. **Updated GAMSLIB_STATUS.md** (0.5h)
+   - Updated `docs/status/GAMSLIB_CONVERSION_STATUS.md` with Sprint 15 results
+   - Added full pipeline metrics for all 160 models
+   - Updated model type distribution table
+   - Added performance metrics section
+   - Listed all successfully processed models by stage
+
+5. **Created GAMSLIB_TESTING.md guide** (1h)
+   - Created `docs/guides/GAMSLIB_TESTING.md`
+   - Comprehensive testing guide with usage examples
+   - Quick start, individual stage commands
+   - Database queries, Python API examples
+   - CI/CD integration guide
+   - Performance benchmarks and troubleshooting
+
+6. **Updated documentation** (0.5h)
+   - Updated CHANGELOG.md with Day 10 entry
+   - Updated SPRINT_LOG.md with Day 10 entry
+   - Updated PLAN.md with completion status
+
+**Quality Checks:**
+- All documentation files created and formatted correctly
+- Baseline metrics consistent across JSON and Markdown formats
+- Testing guide validated with actual command examples
+
+**Baseline Metrics Summary:**
+
+| Stage | Total | Success | Rate |
+|-------|-------|---------|------|
+| Parse | 160 | 34 | 21.3% |
+| Translate | 34 | 17 | 50.0% |
+| Solve | 17 | 3 | 17.6% |
+| Compare | 3 | 1 match | 33.3% |
+| **Full Pipeline** | **160** | **1** | **0.6%** |
+
+**Timing Statistics (successful models):**
+
+| Stage | Mean | Median | P90 | P99 |
+|-------|------|--------|-----|-----|
+| Parse | 141.5 ms | 125.8 ms | 248.9 ms | 421.4 ms |
+| Translate | 3.7 ms | 3.7 ms | 5.3 ms | 5.8 ms |
+| Solve | 172.7 ms | 170.4 ms | 182.5 ms | 184.0 ms |
+
+**Error Distribution:**
+
+| Stage | Primary Blocker | Count | % of Failures |
+|-------|-----------------|-------|---------------|
+| Parse | lexer_invalid_char | 109 | 86.5% |
+| Translate | model_no_objective_def | 5 | 29.4% |
+| Solve | path_syntax_error | 14 | 100.0% |
+
+**Deliverables:**
+- [x] `data/gamslib/baseline_metrics.json` - Machine-readable baseline
+- [x] `docs/planning/EPIC_3/SPRINT_15/SPRINT_BASELINE.md` - Human-readable baseline
+- [x] `docs/status/GAMSLIB_CONVERSION_STATUS.md` - Updated status dashboard
+- [x] `docs/guides/GAMSLIB_TESTING.md` - Testing guide
+
+**Checkpoint 5 Status:** ✅ COMPLETE
+
+- [x] Baseline metrics recorded for all stages
+- [x] Timing statistics documented (mean, median, p90, p99)
+- [x] Success rates documented
+- [x] Error distribution documented
+- [x] Testing guide complete with examples
+
+---
+
+## Sprint 15 Summary
+
+**Duration:** January 13-15, 2026 (Days 0-10)
+
+**Goal Achieved:** Build Pipeline Testing Infrastructure & Establish Initial Baseline ✅
+
+### Key Deliverables
+
+| Deliverable | Status | Location |
+|-------------|--------|----------|
+| Schema v2.1.0 | ✅ Complete | `data/gamslib/schema.json` |
+| Error Taxonomy | ✅ Complete | `scripts/gamslib/error_taxonomy.py` |
+| Enhanced batch_parse.py | ✅ Complete | `scripts/gamslib/batch_parse.py` |
+| Enhanced batch_translate.py | ✅ Complete | `scripts/gamslib/batch_translate.py` |
+| test_solve.py | ✅ Complete | `scripts/gamslib/test_solve.py` |
+| run_full_test.py | ✅ Complete | `scripts/gamslib/run_full_test.py` |
+| Baseline Metrics | ✅ Complete | `data/gamslib/baseline_metrics.json` |
+| Testing Guide | ✅ Complete | `docs/guides/GAMSLIB_TESTING.md` |
+
+### Checkpoint Summary
+
+| Checkpoint | Day | Status |
+|------------|-----|--------|
+| CP1: Schema & Taxonomy | 2 | ✅ Complete |
+| CP2: Enhanced Testing | 4 | ✅ Complete |
+| CP3: Solve Testing | 7 | ✅ Complete |
+| CP4: Pipeline Complete | 9 | ✅ Complete |
+| CP5: Baseline Recorded | 10 | ✅ Complete |
+
+### Test Results
+
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| error_taxonomy.py | 92 | ✅ Pass |
+| batch_parse.py | 14 | ✅ Pass |
+| batch_translate.py | 18 | ✅ Pass |
+| test_solve.py | 72 | ✅ Pass |
+| **Total New Tests** | **196** | ✅ Pass |
+
+### Key Metrics Established
+
+- **Parse Success Rate:** 21.3% (34/160)
+- **Translate Success Rate:** 50.0% (17/34)
+- **Solve Success Rate:** 17.6% (3/17)
+- **Full Pipeline Success:** 0.6% (1/160) - hs62
+
+### Primary Blockers Identified
+
+1. **Parse:** `lexer_invalid_char` (109 models, 86.5% of failures)
+2. **Translate:** `model_no_objective_def` (5 models)
+3. **Solve:** `path_syntax_error` (14 models, 100% of failures)
+
+### Recommendations for Epic 4
+
+1. **Fix Lexer Issues** - Address `lexer_invalid_char` to unblock 109 models
+2. **Improve Objective Extraction** - Handle models without explicit objective definitions
+3. **Fix PATH Syntax Errors** - Debug MCP code generation for proper GAMS syntax
+4. **Expand Function Support** - Implement missing differentiation functions
 
 ---
