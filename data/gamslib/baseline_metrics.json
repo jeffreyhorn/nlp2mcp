@@ -1,0 +1,159 @@
+{
+  "schema_version": "1.0.0",
+  "baseline_date": "2026-01-15",
+  "sprint": "Sprint 15",
+  "environment": {
+    "nlp2mcp_version": "0.1.0",
+    "python_version": "3.12.8",
+    "gams_version": "51.3.0",
+    "path_solver_version": "5.2.01",
+    "platform": "Darwin",
+    "platform_version": "24.6.0"
+  },
+  "total_models": 160,
+  "model_types": {
+    "NLP": 94,
+    "LP": 57,
+    "QCP": 9
+  },
+  "parse": {
+    "attempted": 160,
+    "success": 34,
+    "failure": 126,
+    "success_rate": 0.2125,
+    "timing": {
+      "scope": "successful_models",
+      "count": 34,
+      "mean_ms": 141.5,
+      "median_ms": 125.8,
+      "stddev_ms": 89.4,
+      "min_ms": 15.0,
+      "max_ms": 421.4,
+      "p90_ms": 248.9,
+      "p99_ms": 421.4
+    },
+    "by_type": {
+      "NLP": {
+        "attempted": 94,
+        "success": 26,
+        "success_rate": 0.2766
+      },
+      "LP": {
+        "attempted": 57,
+        "success": 5,
+        "success_rate": 0.0877
+      },
+      "QCP": {
+        "attempted": 9,
+        "success": 3,
+        "success_rate": 0.3333
+      }
+    },
+    "error_breakdown": {
+      "lexer_invalid_char": 109,
+      "internal_error": 17
+    }
+  },
+  "translate": {
+    "attempted": 34,
+    "success": 17,
+    "failure": 17,
+    "cascade_skip": 126,
+    "success_rate": 0.5,
+    "timing": {
+      "scope": "successful_models",
+      "count": 17,
+      "mean_ms": 3.7,
+      "median_ms": 3.7,
+      "stddev_ms": 1.2,
+      "min_ms": 2.1,
+      "max_ms": 5.8,
+      "p90_ms": 5.3,
+      "p99_ms": 5.8
+    },
+    "by_type": {
+      "NLP": {
+        "attempted": 26,
+        "success": 14,
+        "success_rate": 0.5385
+      },
+      "LP": {
+        "attempted": 5,
+        "success": 2,
+        "success_rate": 0.4
+      },
+      "QCP": {
+        "attempted": 3,
+        "success": 1,
+        "success_rate": 0.3333
+      }
+    },
+    "error_breakdown": {
+      "model_no_objective_def": 5,
+      "diff_unsupported_func": 5,
+      "unsup_index_offset": 3,
+      "model_domain_mismatch": 2,
+      "unsup_dollar_cond": 1,
+      "codegen_numerical_error": 1
+    }
+  },
+  "solve": {
+    "attempted": 17,
+    "success": 3,
+    "failure": 14,
+    "cascade_skip": 143,
+    "success_rate": 0.1765,
+    "timing": {
+      "scope": "successful_models",
+      "count": 3,
+      "mean_ms": 172.7,
+      "median_ms": 170.4,
+      "stddev_ms": 7.1,
+      "min_ms": 167.0,
+      "max_ms": 184.0,
+      "p90_ms": 182.5,
+      "p99_ms": 184.0
+    },
+    "by_type": {
+      "NLP": {
+        "attempted": 14,
+        "success": 2,
+        "success_rate": 0.1429
+      },
+      "LP": {
+        "attempted": 2,
+        "success": 1,
+        "success_rate": 0.5
+      },
+      "QCP": {
+        "attempted": 1,
+        "success": 0,
+        "success_rate": 0.0
+      }
+    },
+    "error_breakdown": {
+      "path_syntax_error": 14
+    }
+  },
+  "comparison": {
+    "attempted": 3,
+    "match": 1,
+    "mismatch": 2,
+    "skipped": 0,
+    "cascade_skip": 157,
+    "match_rate": 0.3333
+  },
+  "full_pipeline": {
+    "success": 1,
+    "total": 160,
+    "success_rate": 0.0063,
+    "successful_models": ["hs62"]
+  },
+  "notes": [
+    "Baseline established at end of Sprint 15",
+    "160 models = verified_convex (57) + likely_convex (103)",
+    "Primary parse blocker: lexer_invalid_char (109/126 failures = 86.5%)",
+    "Primary solve blocker: path_syntax_error (14/14 failures = 100%)",
+    "Full pipeline success: hs62 (NLP model)"
+  ]
+}

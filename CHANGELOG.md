@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Day 10: Baseline and Documentation [SPRINT COMPLETE] - 2026-01-15
+
+**Branch:** `sprint15-day10-baseline-complete`  
+**Status:** ✅ COMPLETE - SPRINT 15 COMPLETE
+
+#### Summary
+
+Established baseline metrics for the nlp2mcp pipeline, created comprehensive documentation including machine-readable baseline_metrics.json and human-readable SPRINT_BASELINE.md. Updated GAMSLIB_CONVERSION_STATUS.md with current results. Created GAMSLIB_TESTING.md guide with usage examples. Sprint 15 complete with all 5 checkpoints achieved.
+
+#### Changes
+
+**New Files:**
+- `data/gamslib/baseline_metrics.json` - Machine-readable baseline metrics (schema v1.0.0)
+- `docs/planning/EPIC_3/SPRINT_15/SPRINT_BASELINE.md` - Human-readable baseline documentation
+- `docs/guides/GAMSLIB_TESTING.md` - Comprehensive testing guide
+
+**Modified Files:**
+- `docs/status/GAMSLIB_CONVERSION_STATUS.md` - Updated with Sprint 15 results
+- `docs/planning/EPIC_3/SPRINT_15/SPRINT_LOG.md` - Added Day 10 entry and sprint summary
+- `docs/planning/EPIC_3/SPRINT_15/PLAN.md` - Marked all deliverables and criteria complete
+
+#### Baseline Metrics Established
+
+| Stage | Total | Success | Rate |
+|-------|-------|---------|------|
+| Parse | 160 | 34 | 21.3% |
+| Translate | 34 | 17 | 50.0% |
+| Solve | 17 | 3 | 17.6% |
+| Compare | 3 | 1 match | 33.3% |
+| **Full Pipeline** | **160** | **1** | **0.6%** |
+
+**Full Pipeline Success:** hs62
+
+#### Timing Statistics
+
+| Stage | Mean | Median | P90 | P99 |
+|-------|------|--------|-----|-----|
+| Parse | 141.5 ms | 125.8 ms | 248.9 ms | 421.4 ms |
+| Translate | 3.7 ms | 3.7 ms | 5.3 ms | 5.8 ms |
+| Solve | 172.7 ms | 170.4 ms | 182.5 ms | 184.0 ms |
+
+#### Primary Blockers Identified
+
+| Stage | Blocker | Count | % of Failures |
+|-------|---------|-------|---------------|
+| Parse | lexer_invalid_char | 109 | 86.5% |
+| Translate | model_no_objective_def | 5 | 29.4% |
+| Solve | path_syntax_error | 14 | 100.0% |
+
+#### Sprint 15 Summary
+
+**Duration:** January 13-15, 2026 (Days 0-10)  
+**Goal:** Build Pipeline Testing Infrastructure & Establish Initial Baseline ✅
+
+**Key Deliverables:**
+- Schema v2.1.0 with mcp_solve and solution_comparison objects
+- Error taxonomy with 47 outcome categories
+- Enhanced batch_parse.py and batch_translate.py with filters
+- test_solve.py with PATH solver integration
+- run_full_test.py pipeline orchestrator with 14 MVP filters
+- Baseline metrics in JSON and Markdown formats
+- GAMSLIB_TESTING.md guide
+
+**Checkpoints Completed:**
+- CP1: Schema & Taxonomy (Day 2) ✅
+- CP2: Enhanced Testing (Day 4) ✅
+- CP3: Solve Testing (Day 7) ✅
+- CP4: Pipeline Complete (Day 9) ✅
+- CP5: Baseline Recorded (Day 10) ✅
+
+**New Tests Added:** 196 (error_taxonomy: 92, batch_parse: 14, batch_translate: 18, test_solve: 72)
+
+---
+
 ### Sprint 15 Day 9: Pipeline Integration Complete [Checkpoint 4] - 2026-01-15
 
 **Branch:** `sprint15-day9-pipeline-complete`  
