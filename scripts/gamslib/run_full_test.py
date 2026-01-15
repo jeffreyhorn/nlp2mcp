@@ -250,12 +250,12 @@ def _has_any_failure(model: dict[str, Any]) -> bool:
     compare_status = model.get("solution_comparison", {}).get("comparison_status")
 
     return any(
-        [
+        (
             parse_status == "failure",
             translate_status == "failure",
             solve_status == "failure",
             compare_status == "mismatch",
-        ]
+        )
     )
 
 
@@ -278,12 +278,12 @@ def _is_fully_completed(model: dict[str, Any]) -> bool:
     compare_status = model.get("solution_comparison", {}).get("comparison_status")
 
     return all(
-        [
+        (
             parse_status == "success",
             translate_status == "success",
             solve_status == "success",
             compare_status == "match",
-        ]
+        )
     )
 
 
@@ -619,6 +619,26 @@ def mark_cascade_not_tested(
         stats["compare_cascade_skip"] += 1
 
 
+def _determine_stages(args: argparse.Namespace) -> list[str]:
+    """Determine which pipeline stages to run based on --only-* flags.
+
+    Args:
+        args: Parsed command line arguments
+
+    Returns:
+        List of stage names to run
+    """
+    stages: list[str] = []
+    if not args.only_translate and not args.only_solve:
+        stages.append("parse")
+    if not args.only_parse and not args.only_solve:
+        stages.append("translate")
+    if not args.only_parse and not args.only_translate:
+        stages.append("solve")
+        stages.append("compare")
+    return stages
+
+
 def run_pipeline(
     model: dict[str, Any],
     database: dict[str, Any],
@@ -649,35 +669,39 @@ def run_pipeline(
         stats["skipped"] += 1
         return
 
-    # Determine which stages to run
-    run_parse = not args.only_translate and not args.only_solve
-    run_translate = not args.only_parse and not args.only_solve
-    run_solve = not args.only_parse and not args.only_translate
-    run_compare = run_solve  # Compare only if solve is run
-
-    # For --only-translate: require existing parse success
+    # Determine which stages to run based on --only-* flags
     if args.only_translate:
+        # For --only-translate: require existing parse success
         if model.get("nlp2mcp_parse", {}).get("status") != "success":
             if args.verbose:
                 logger.info("  Skipped: requires parse success for --only-translate")
             stats["skipped"] += 1
             return
+        run_parse = False
         run_translate = True
         run_solve = False
         run_compare = False
-
-    # For --only-solve: require existing translate success
-    if args.only_solve:
+    elif args.only_solve:
+        # For --only-solve: require existing translate success
         if model.get("nlp2mcp_translate", {}).get("status") != "success":
             if args.verbose:
                 logger.info("  Skipped: requires translate success for --only-solve")
             stats["skipped"] += 1
             return
+        run_parse = False
+        run_translate = False
         run_solve = True
         run_compare = True
-
-    # Run stages with cascade handling
-    solve_ok = True
+    elif args.only_parse:
+        run_parse = True
+        run_translate = False
+        run_solve = False
+        run_compare = False
+    else:
+        run_parse = True
+        run_translate = True
+        run_solve = True
+        run_compare = True  # Compare only if solve is run
 
     # Stage 1: Parse
     if run_parse:
@@ -717,13 +741,12 @@ def run_pipeline(
 
         result = run_solve_stage(model, mcp_path, args, stats)
         if result["status"] != "success":
-            solve_ok = False
             if run_compare:
                 mark_cascade_not_tested(model, "solve", stats)
             return
 
     # Stage 4: Compare
-    if run_compare and solve_ok:
+    if run_compare:
         run_compare_stage(model, args, stats)
 
 
@@ -777,16 +800,9 @@ def run_full_test(args: argparse.Namespace) -> dict[str, Any]:
     # Dry run mode
     if args.dry_run:
         logger.info("\n[DRY RUN] Would process the following models:")
+        stages = _determine_stages(args)
         for model in filtered:
             model_id = model.get("model_id", "unknown")
-            stages = []
-            if not args.only_translate and not args.only_solve:
-                stages.append("parse")
-            if not args.only_parse and not args.only_solve:
-                stages.append("translate")
-            if not args.only_parse and not args.only_translate:
-                stages.append("solve")
-                stages.append("compare")
             logger.info(f"  - {model_id}: {' → '.join(stages)}")
         return {"dry_run": True, "models": len(filtered)}
 
@@ -821,14 +837,7 @@ def run_full_test(args: argparse.Namespace) -> dict[str, Any]:
     }
 
     # Determine active stages for progress reporting
-    active_stages = []
-    if not args.only_translate and not args.only_solve:
-        active_stages.append("Parse")
-    if not args.only_parse and not args.only_solve:
-        active_stages.append("Translate")
-    if not args.only_parse and not args.only_translate:
-        active_stages.append("Solve")
-        active_stages.append("Compare")
+    active_stages = [s.capitalize() for s in _determine_stages(args)]
 
     if not args.quiet:
         logger.info(f"\nPipeline stages: {' → '.join(active_stages)}")
