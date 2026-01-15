@@ -59,7 +59,7 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.gamslib.db_manager import (
+from scripts.gamslib.db_manager import (  # noqa: E402
     DATABASE_PATH,
     create_backup,
     load_database,
@@ -907,7 +907,7 @@ def print_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
         parse_total = stats["parse_success"] + stats["parse_failure"]
         if parse_total > 0:
             parse_pct = stats["parse_success"] / parse_total * 100
-            print(f"\nParse Results:")
+            print("\nParse Results:")
             print(f"  Success: {stats['parse_success']} ({parse_pct:.1f}%)")
             print(f"  Failure: {stats['parse_failure']}")
 
@@ -916,7 +916,7 @@ def print_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
         translate_total = stats["translate_success"] + stats["translate_failure"]
         if translate_total > 0:
             translate_pct = stats["translate_success"] / translate_total * 100
-            print(f"\nTranslate Results:")
+            print("\nTranslate Results:")
             print(f"  Success: {stats['translate_success']} ({translate_pct:.1f}%)")
             print(f"  Failure: {stats['translate_failure']}")
         if stats["translate_cascade_skip"] > 0:
@@ -927,7 +927,7 @@ def print_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
         solve_total = stats["solve_success"] + stats["solve_failure"]
         if solve_total > 0:
             solve_pct = stats["solve_success"] / solve_total * 100
-            print(f"\nSolve Results:")
+            print("\nSolve Results:")
             print(f"  Success: {stats['solve_success']} ({solve_pct:.1f}%)")
             print(f"  Failure: {stats['solve_failure']}")
         if stats["solve_cascade_skip"] > 0:
@@ -937,7 +937,7 @@ def print_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
         compare_total = stats["compare_match"] + stats["compare_mismatch"]
         if compare_total > 0:
             compare_pct = stats["compare_match"] / compare_total * 100
-            print(f"\nComparison Results:")
+            print("\nComparison Results:")
             print(f"  Match: {stats['compare_match']} ({compare_pct:.1f}%)")
             print(f"  Mismatch: {stats['compare_mismatch']}")
         if stats["compare_skipped"] > 0:
