@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Day 8: Pipeline Orchestrator - 2026-01-15
+
+**Branch:** `sprint15-day8-pipeline-orchestrator`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created `run_full_test.py` - a comprehensive pipeline orchestrator that runs models through the complete Parse → Translate → Solve → Compare pipeline. Implements 14 MVP filter arguments with AND combination logic and conflict detection. Features cascade failure handling (upstream failures mark downstream stages as not_tested) and detailed progress reporting.
+
+#### Changes
+
+**New Files:**
+- `scripts/gamslib/run_full_test.py` - Pipeline orchestrator with full filtering framework
+
+#### Key Features
+
+**14 MVP Filter Arguments:**
+- Model selection: `--model`, `--type`, `--limit`, `--random`
+- Status filters: `--parse-success/failure`, `--translate-success/failure`, `--solve-success/failure`
+- Stage control: `--only-parse`, `--only-translate`, `--only-solve`
+- Convenience: `--only-failing`, `--skip-completed`, `--quick`
+- Output: `--dry-run`, `--verbose`, `--quiet`
+
+**Filter Conflict Detection:**
+- Mutually exclusive status pairs detected (e.g., `--parse-success` + `--parse-failure`)
+- Only one `--only-*` stage flag allowed at a time
+- Clear error messages for conflicts
+
+**Cascade Failure Handling:**
+- Parse failure → translate, solve, compare marked `not_tested`
+- Translate failure → solve, compare marked `not_tested`
+- Solve failure → compare marked `not_tested`
+
+**Stage Orchestration:**
+- Full pipeline: Parse → Translate → Solve → Compare
+- Stage-specific: `--only-parse`, `--only-translate`, `--only-solve`
+- Implicit requirements: `--only-translate` requires parse success
+
+**Progress Reporting:**
+- Per-model progress with ETA
+- Per-stage success/failure counts
+- Summary with percentages and timing
+
+#### Usage Examples
+
+```bash
+# Run single model through full pipeline
+python scripts/gamslib/run_full_test.py --model hs62 --verbose
+
+# Quick test (first 10 models)
+python scripts/gamslib/run_full_test.py --quick
+
+# Parse only, limited to 5 models
+python scripts/gamslib/run_full_test.py --only-parse --limit 5
+
+# Re-run failed models
+python scripts/gamslib/run_full_test.py --only-failing
+
+# Preview what would run (dry run)
+python scripts/gamslib/run_full_test.py --type LP --limit 5 --dry-run
+```
+
+#### Tested Scenarios
+
+1. `--model trnsport --verbose` - Single model full pipeline ✅
+2. `--quick` - First 10 models with all stages ✅
+3. `--only-parse --limit 5` - Parse-only mode ✅
+4. `--model hs62 --verbose` - Full pipeline success (match) ✅
+5. `--parse-success --parse-failure` - Conflict detection ✅
+6. `--only-parse --only-translate` - Stage conflict detection ✅
+7. `--type LP --limit 5 --dry-run` - Dry run preview ✅
+
+---
+
 ### Sprint 15 Day 7: Solve Testing Complete [Checkpoint 3] - 2026-01-14
 
 **Branch:** `sprint15-day7-solve-complete`  

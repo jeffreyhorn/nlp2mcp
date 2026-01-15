@@ -637,3 +637,136 @@ Notes: Match within tolerance (diff=2.30e-03, tol=2.63e-02)
 **Next Steps:** Day 8 - Pipeline Integration (run_full_test.py)
 
 ---
+
+### Day 8: Pipeline Orchestrator (run_full_test.py)
+
+**Date:** January 15, 2026
+
+**Objective:** Build pipeline orchestrator with filtering framework
+
+**Tasks Completed:**
+
+1. **Created run_full_test.py skeleton** (1h)
+   - Set up argparse with 14 MVP filter arguments
+   - Model selection: `--model`, `--type`, `--limit`, `--random`
+   - Status filters: `--parse-success/failure`, `--translate-success/failure`, `--solve-success/failure`
+   - Stage control: `--only-parse`, `--only-translate`, `--only-solve`
+   - Convenience: `--only-failing`, `--skip-completed`, `--quick`
+   - Output: `--dry-run`, `--verbose`, `--quiet`
+
+2. **Implemented filter logic** (2h)
+   - Created `validate_filters()` for conflict detection
+   - Created `apply_filters()` with AND combination logic
+   - Created `report_filter_summary()` for logging
+   - Filters applied in order: model selection → status → limit/random
+
+3. **Implemented stage orchestration** (1.5h)
+   - Created stage runner functions: `run_parse_stage()`, `run_translate_stage()`, `run_solve_stage()`, `run_compare_stage()`
+   - Stage selection via `--only-*` flags
+   - Implicit requirements: `--only-translate` requires parse success, `--only-solve` requires translate success
+   - Full pipeline: Parse → Translate → Solve → Compare
+
+4. **Added cascade failure handling** (1h)
+   - Created `mark_cascade_not_tested()` function
+   - Parse failure → translate, solve, compare marked `not_tested`
+   - Translate failure → solve, compare marked `not_tested`
+   - Solve failure → compare marked `not_tested`
+   - Uses `notes` field in solution_comparison for cascade reason
+
+5. **Added progress reporting** (0.5h)
+   - Per-model progress with ETA: `[1/10] 10% Processing model... (~5s remaining)`
+   - Per-stage logging with verbose mode
+   - Summary with per-stage statistics and percentages
+
+6. **Tested with subset of models** (0.5h)
+   - `--model trnsport --verbose`: Single model full pipeline ✅
+   - `--quick`: First 10 models with all stages ✅
+   - `--only-parse --limit 5`: Parse-only mode ✅
+   - `--model hs62 --verbose`: Full pipeline success with match ✅
+   - Conflict detection tests ✅
+   - Dry-run mode tests ✅
+
+**Quality Checks:**
+- `make typecheck`: PASSED
+- `make lint`: PASSED
+- `make format`: Applied
+- `make test`: 2853 passed, 10 skipped, 1 xfailed
+
+**Filter Conflict Detection:**
+
+| Conflict | Error Message |
+|----------|---------------|
+| `--parse-success --parse-failure` | Mutually exclusive |
+| `--translate-success --translate-failure` | Mutually exclusive |
+| `--solve-success --solve-failure` | Mutually exclusive |
+| `--only-parse --only-translate` | Only one --only-* flag allowed |
+| `--only-parse --only-solve` | Only one --only-* flag allowed |
+| `--only-translate --only-solve` | Only one --only-* flag allowed |
+
+**Cascade Behavior:**
+
+| Failed Stage | Downstream Marked |
+|--------------|-------------------|
+| Parse | translate, solve, compare = not_tested |
+| Translate | solve, compare = not_tested |
+| Solve | compare = not_tested |
+
+**Sample Output (hs62 full pipeline):**
+```
+[  1/1] 100% Processing hs62... (~0s remaining)
+    [PARSE] Starting...
+    [PARSE] SUCCESS: 4 vars, 3 eqs
+    [TRANSLATE] Starting...
+    [TRANSLATE] SUCCESS: data/gamslib/mcp/hs62_mcp.gms
+    [SOLVE] Starting...
+    [SOLVE] SUCCESS: objective=-26272.5
+    [COMPARE] Starting...
+    [COMPARE] MATCH
+
+============================================================
+PIPELINE SUMMARY
+============================================================
+
+Models processed: 1/1
+
+Parse Results:
+  Success: 1 (100.0%)
+  Failure: 0
+
+Translate Results:
+  Success: 1 (100.0%)
+  Failure: 0
+
+Solve Results:
+  Success: 1 (100.0%)
+  Failure: 0
+
+Comparison Results:
+  Match: 1 (100.0%)
+  Mismatch: 0
+
+Full pipeline success: 1/1 (100.0%)
+
+Total time: 2.2s
+Average time per model: 2.21s
+============================================================
+```
+
+**Deliverables:**
+- [x] `scripts/gamslib/run_full_test.py` - Pipeline orchestrator
+- [x] 14 MVP filter arguments implemented
+- [x] AND filter logic with conflict detection
+- [x] Stage orchestration (Parse → Translate → Solve → Compare)
+- [x] Cascade failure handling
+- [x] Progress reporting with ETA
+
+**Acceptance Criteria:**
+- [x] `--model=trnsport` runs single model through pipeline
+- [x] `--only-parse` runs parse stage only
+- [x] `--only-failing` re-runs failed models
+- [x] Filter conflicts detected and reported
+- [x] Cascade failures mark downstream stages correctly
+
+**Next Steps:** Day 9 - Pipeline Integration and Summary
+
+---

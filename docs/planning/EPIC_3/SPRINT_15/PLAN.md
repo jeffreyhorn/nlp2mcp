@@ -286,11 +286,11 @@ Sprint 15 builds on the JSON database infrastructure from Sprint 14 (219 models,
 - Cascade handling working
 
 **Acceptance Criteria:**
-- [ ] `--model=trnsport` runs single model through pipeline
-- [ ] `--only-parse` runs parse stage only
-- [ ] `--only-failing` re-runs failed models
-- [ ] Filter conflicts detected and reported
-- [ ] Cascade failures mark downstream stages correctly
+- [x] `--model=trnsport` runs single model through pipeline
+- [x] `--only-parse` runs parse stage only
+- [x] `--only-failing` re-runs failed models
+- [x] Filter conflicts detected and reported
+- [x] Cascade failures mark downstream stages correctly
 
 **Time Estimate:** 6.5 hours
 
