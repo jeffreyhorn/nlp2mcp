@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 15 Day 7: Solve Testing Complete [Checkpoint 3] - 2026-01-14
+
+**Branch:** `sprint15-day7-solve-complete`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed solve testing on all 17 translated MCP files. Imported comparison constants from error_taxonomy.py for consistency. Enhanced objective value extraction to recognize more variable names (profit, cost, etc.). Generated solve summary report with baseline metrics. Identified 2 objective mismatches for future investigation.
+
+#### Changes
+
+**Modified Files:**
+- `scripts/gamslib/test_solve.py` - Import comparison constants from error_taxonomy, enhance objective extraction
+- `tests/gamslib/test_test_solve.py` - Added 2 new tests for profit/cost variable extraction (72 total)
+
+#### Key Enhancements
+
+**Comparison Constants Consolidation:**
+- Now imports `COMPARE_*` constants from `error_taxonomy.py` instead of defining locally
+- Single source of truth for all outcome categories
+
+**Enhanced Objective Extraction:**
+- Added support for additional objective variable names: `profit`, `cost`, `objective`, `total_cost`, `totalcost`, `total`, `f`, `fobj`
+- Enables comparison for models with non-standard objective variable names
+
+#### Solve Test Results (Baseline)
+
+| Metric | Value |
+|--------|-------|
+| Models processed | 17 |
+| MCP solve success | 3 (17.6%) |
+| MCP solve failure | 14 (82.4%) |
+| Objective matches | 1 |
+| Objective mismatches | 2 |
+| Comparison skipped | 14 |
+
+**Outcome Categories:**
+- `path_syntax_error`: 14 (compilation errors in generated MCP files)
+- `model_optimal`: 3
+
+**Successful Solves:**
+- hs62: ✅ Objective match (NLP: -26272.5168, MCP: -26272.5145)
+- prodmix: ⚠️ Objective mismatch (NLP: 18666.67, MCP: 0.0)
+- trig: ⚠️ Objective mismatch (NLP: 0.0, MCP: -2.479)
+
+**Mismatches Flagged for Investigation:**
+1. **prodmix**: MCP file compiles but objective variable `profit` returns 0.0 instead of expected value
+2. **trig**: Different local optima - NLP found 0.0 (locally optimal), MCP found -2.479 (optimal)
+
+#### Checkpoint 3 Status: ✅ COMPLETE
+
+- [x] PATH solver working
+- [x] Solution comparison functional
+- [x] All 17 MCPs tested
+- [x] Mismatches flagged for investigation
+- [x] Summary report generated
+
+---
+
 ### Sprint 15 Day 6: Solution Comparison Implementation - 2026-01-14
 
 **Branch:** `sprint15-day6-solution-comparison`  

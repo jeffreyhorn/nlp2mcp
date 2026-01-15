@@ -174,6 +174,22 @@ class TestExtractObjectiveFromVariables:
         result = extract_objective_from_variables(lst_content)
         assert result == 0.0
 
+    def test_extract_profit_variable(self):
+        """Test extracting objective from profit variable."""
+        lst_content = """
+---- VAR profit            -INF        18666.667        +INF             .
+"""
+        result = extract_objective_from_variables(lst_content)
+        assert result == pytest.approx(18666.667)
+
+    def test_extract_cost_variable(self):
+        """Test extracting objective from cost variable."""
+        lst_content = """
+---- VAR cost              -INF          500.123        +INF             .
+"""
+        result = extract_objective_from_variables(lst_content)
+        assert result == pytest.approx(500.123)
+
     def test_no_objective_found(self):
         """Test when no objective variable found."""
         lst_content = """

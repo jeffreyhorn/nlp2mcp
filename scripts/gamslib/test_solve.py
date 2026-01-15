@@ -53,6 +53,12 @@ sys.path.insert(0, str(PROJECT_ROOT))
 import math
 
 from scripts.gamslib.error_taxonomy import (
+    COMPARE_BOTH_INFEASIBLE,
+    COMPARE_MCP_FAILED,
+    COMPARE_NLP_FAILED,
+    COMPARE_OBJECTIVE_MATCH,
+    COMPARE_OBJECTIVE_MISMATCH,
+    COMPARE_STATUS_MISMATCH,
     MODEL_INFEASIBLE,
     MODEL_LOCALLY_OPTIMAL,
     MODEL_OPTIMAL,
@@ -65,13 +71,7 @@ from scripts.gamslib.error_taxonomy import (
     PATH_SYNTAX_ERROR,
 )
 
-# Comparison result categories (must match schema.json comparison_result_category enum)
-COMPARE_OBJECTIVE_MATCH = "compare_objective_match"
-COMPARE_OBJECTIVE_MISMATCH = "compare_objective_mismatch"
-COMPARE_STATUS_MISMATCH = "compare_status_mismatch"
-COMPARE_NLP_FAILED = "compare_nlp_failed"
-COMPARE_MCP_FAILED = "compare_mcp_failed"
-COMPARE_BOTH_INFEASIBLE = "compare_both_infeasible"
+# Additional comparison result category not in error_taxonomy (error state)
 COMPARE_NOT_PERFORMED = "compare_not_performed"
 
 # Default tolerance values (based on solver defaults research)
@@ -271,12 +271,29 @@ def extract_objective_from_variables(lst_content: str) -> float | None:
     """
     # Look for ---- VAR obj or similar patterns
     # Format: ---- VAR varname    LOWER     LEVEL     UPPER    MARGINAL
-    obj_patterns = [
-        r"---- VAR obj\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)",
-        r"---- VAR z\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)\s+([\-+\.\dEeINF]+)",
+    # Common objective variable names in GAMS models
+    obj_var_names = [
+        "obj",
+        "z",
+        "objective",
+        "cost",
+        "profit",
+        "total_cost",
+        "totalcost",
+        "total",
+        "f",
+        "fobj",
     ]
 
-    for pattern in obj_patterns:
+    for var_name in obj_var_names:
+        # Match the variable name (case-insensitive) with the standard GAMS output format
+        pattern = (
+            rf"---- VAR {var_name}\s+"
+            r"([\-+\.\dEeINF]+)\s+"  # LOWER
+            r"([\-+\.\dEeINF]+)\s+"  # LEVEL
+            r"([\-+\.\dEeINF]+)\s+"  # UPPER
+            r"([\-+\.\dEeINF]+)"  # MARGINAL
+        )
         match = re.search(pattern, lst_content, re.IGNORECASE)
         if match:
             level_str = match.group(2)
