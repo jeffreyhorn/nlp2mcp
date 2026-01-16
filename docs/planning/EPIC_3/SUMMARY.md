@@ -370,12 +370,14 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 | Convexity verified | 160 | 160 | 160 | 160 |
 | Parse attempts | 0 | 160 | 160 | 160 |
 | Parse success | 0 | 34 | 34 | 34 (21.3%) |
-| Translate success | 0 | 32 | 17 | 17 (50.0% of parsed) |
+| Translate success | 0 | 32* | 17 | 17 (50.0% of parsed) |
 | Solve success | 0 | 0 | 3 | 3 (17.6% of translated) |
 | Full pipeline success | 0 | 0 | 1 | 1 (0.6%) |
 | Scripts created | 3 | 4 | 4 | 11 |
 | Tests added | 45 | 185 | 196 | 426 |
 | Documentation (lines) | ~500 | ~1500 | ~1000 | ~3000 |
+
+**\*Note on translate success change:** Sprint 14 reported 32 successful translations (94.1%) using basic error detection. Sprint 15 introduced a refined 47-category error taxonomy with stricter validation, which reclassified 15 models from "success" to specific error categories (model_no_objective_def, diff_unsupported_func, unsup_index_offset, etc.). The Sprint 15 count of 17 represents models that pass all validation checks and produce valid MCP files suitable for solving.
 
 ---
 
