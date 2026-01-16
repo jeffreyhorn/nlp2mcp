@@ -34,7 +34,16 @@ Epic 1 (Sprints 1-5) is complete, delivering core NLP to MCP transformation capa
 
 Epic 2 (Sprints 6-12) is complete, expanding parser coverage to 100% (28/28 models), adding aggressive simplification with 26.19% term reduction, and establishing comprehensive CI infrastructure. For detailed sprint summaries, see [docs/planning/EPIC_2/SUMMARY.md](docs/planning/EPIC_2/SUMMARY.md).
 
-Epic 3 (Sprints 13-17) is in progress, building GAMSLIB testing infrastructure with 219 models cataloged, JSON database with schema validation, and batch parse/translate pipelines achieving 21.3% parse success and 94.1% translation success. Sprints 13-14 are complete. For detailed sprint summaries, see [docs/planning/EPIC_3/SUMMARY.md](docs/planning/EPIC_3/SUMMARY.md).
+Epic 3 (Sprints 13-17) is in progress, building GAMSLIB testing infrastructure with 219 models cataloged. Sprints 13-15 are complete:
+- **Sprint 13:** GAMSLIB catalog with 219 models (LP: 57, NLP: 94, QCP: 9), automated discovery/download, convexity verification (160 models verified)
+- **Sprint 14:** JSON database (schema v2.0.0), db_manager CLI, batch parse/translate pipelines
+- **Sprint 15:** Full pipeline testing infrastructure with PATH solver integration, solution comparison, and baseline metrics:
+  - Parse: 34/160 (21.3%), Translate: 17/34 (50.0%), Solve: 3/17 (17.6%), Compare: 1/3 match
+  - Full pipeline success: 1/160 (0.6%) - model hs62
+  - 47 error taxonomy categories, 14 MVP filter arguments, timing statistics
+  - Primary blockers identified: lexer_invalid_char (109), path_syntax_error (14), model_no_objective_def (5)
+
+For detailed sprint summaries, see [docs/planning/EPIC_3/SUMMARY.md](docs/planning/EPIC_3/SUMMARY.md).
 
 ## Installation
 
