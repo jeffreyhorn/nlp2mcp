@@ -23,7 +23,7 @@ This document contains comprehensive prompts for executing each Sprint 16 prepar
 ## Prompt
 
 ```
-On branch `planning/sprint16-prep`, complete Sprint 16 Prep Task 2: Assess Current Baseline Metrics and Blockers.
+On branch `planning/sprint16-prep-task2`, complete Sprint 16 Prep Task 2: Assess Current Baseline Metrics and Blockers.
 
 ## Task Overview
 
@@ -140,7 +140,7 @@ Add entry under `## [Unreleased]`:
 ```markdown
 ### Sprint 16 Prep Task 2: Assess Current Baseline Metrics and Blockers - YYYY-MM-DD
 
-**Branch:** `planning/sprint16-prep`  
+**Branch:** `planning/sprint16-prep-task2`  
 **Status:** ✅ COMPLETE
 
 #### Summary
@@ -224,7 +224,7 @@ gh pr view --comments
 ## Prompt
 
 ```
-On branch `planning/sprint16-prep`, complete Sprint 16 Prep Task 3: Research Report Generation Approaches.
+On branch `planning/sprint16-prep-task3`, complete Sprint 16 Prep Task 3: Research Report Generation Approaches.
 
 ## Task Overview
 
@@ -350,7 +350,7 @@ Add entry under `## [Unreleased]`:
 ```markdown
 ### Sprint 16 Prep Task 3: Research Report Generation Approaches - YYYY-MM-DD
 
-**Branch:** `planning/sprint16-prep`  
+**Branch:** `planning/sprint16-prep-task3`  
 **Status:** ✅ COMPLETE
 
 #### Summary
@@ -433,7 +433,7 @@ gh pr view --comments
 ## Prompt
 
 ```
-On branch `planning/sprint16-prep`, complete Sprint 16 Prep Task 4: Design Failure Analysis Report Schema.
+On branch `planning/sprint16-prep-task4`, complete Sprint 16 Prep Task 4: Design Failure Analysis Report Schema.
 
 ## Task Overview
 
@@ -541,7 +541,7 @@ Add entry under `## [Unreleased]`:
 ```markdown
 ### Sprint 16 Prep Task 4: Design Failure Analysis Report Schema - YYYY-MM-DD
 
-**Branch:** `planning/sprint16-prep`  
+**Branch:** `planning/sprint16-prep-task4`  
 **Status:** ✅ COMPLETE
 
 #### Summary
@@ -620,7 +620,7 @@ gh pr view --comments
 ## Prompt
 
 ```
-On branch `planning/sprint16-prep`, complete Sprint 16 Prep Task 5: Survey GAMS Grammar Extension Patterns.
+On branch `planning/sprint16-prep-task5`, complete Sprint 16 Prep Task 5: Survey GAMS Grammar Extension Patterns.
 
 ## Task Overview
 
@@ -724,7 +724,7 @@ Add entry under `## [Unreleased]`:
 ```markdown
 ### Sprint 16 Prep Task 5: Survey GAMS Grammar Extension Patterns - YYYY-MM-DD
 
-**Branch:** `planning/sprint16-prep`  
+**Branch:** `planning/sprint16-prep-task5`  
 **Status:** ✅ COMPLETE
 
 #### Summary
@@ -804,7 +804,7 @@ gh pr view --comments
 ## Prompt
 
 ```
-On branch `planning/sprint16-prep`, complete Sprint 16 Prep Task 6: Analyze Top Parse Blockers (lexer_invalid_char).
+On branch `planning/sprint16-prep-task6`, complete Sprint 16 Prep Task 6: Analyze Top Parse Blockers (lexer_invalid_char).
 
 ## Task Overview
 
@@ -916,7 +916,7 @@ Add entry under `## [Unreleased]`:
 ```markdown
 ### Sprint 16 Prep Task 6: Analyze Top Parse Blockers (lexer_invalid_char) - YYYY-MM-DD
 
-**Branch:** `planning/sprint16-prep`  
+**Branch:** `planning/sprint16-prep-task6`  
 **Status:** ✅ COMPLETE
 
 #### Summary
@@ -1001,7 +1001,7 @@ gh pr view --comments
 ## Prompt
 
 ```
-On branch `planning/sprint16-prep`, complete Sprint 16 Prep Task 7: Research PATH Syntax Error Patterns.
+On branch `planning/sprint16-prep-task7`, complete Sprint 16 Prep Task 7: Research PATH Syntax Error Patterns.
 
 ## Task Overview
 
@@ -1090,7 +1090,7 @@ Add entry under `## [Unreleased]`:
 ```markdown
 ### Sprint 16 Prep Task 7: Research PATH Syntax Error Patterns - YYYY-MM-DD
 
-**Branch:** `planning/sprint16-prep`  
+**Branch:** `planning/sprint16-prep-task7`  
 **Status:** ✅ COMPLETE
 
 #### Summary
@@ -1169,7 +1169,7 @@ gh pr view --comments
 ## Prompt
 
 ```
-On branch `planning/sprint16-prep`, complete Sprint 16 Prep Task 8: Design Progress Tracking Schema.
+On branch `planning/sprint16-prep-task8`, complete Sprint 16 Prep Task 8: Design Progress Tracking Schema.
 
 ## Task Overview
 
@@ -1265,7 +1265,7 @@ Add entry under `## [Unreleased]`:
 ```markdown
 ### Sprint 16 Prep Task 8: Design Progress Tracking Schema - YYYY-MM-DD
 
-**Branch:** `planning/sprint16-prep`  
+**Branch:** `planning/sprint16-prep-task8`  
 **Status:** ✅ COMPLETE
 
 #### Summary
@@ -1342,7 +1342,7 @@ gh pr view --comments
 ## Prompt
 
 ```
-On branch `planning/sprint16-prep`, complete Sprint 16 Prep Task 9: Review Sprint 15 Deliverables and Learnings.
+On branch `planning/sprint16-prep-task9`, complete Sprint 16 Prep Task 9: Review Sprint 15 Deliverables and Learnings.
 
 ## Task Overview
 
@@ -1437,7 +1437,7 @@ Add entry under `## [Unreleased]`:
 ```markdown
 ### Sprint 16 Prep Task 9: Review Sprint 15 Deliverables and Learnings - YYYY-MM-DD
 
-**Branch:** `planning/sprint16-prep`  
+**Branch:** `planning/sprint16-prep-task9`  
 **Status:** ✅ COMPLETE
 
 #### Summary
@@ -1517,7 +1517,7 @@ gh pr view --comments
 ## Prompt
 
 ```
-On branch `planning/sprint16-prep`, complete Sprint 16 Prep Task 10: Plan Sprint 16 Detailed Schedule.
+On branch `planning/sprint16-prep-task10`, complete Sprint 16 Prep Task 10: Plan Sprint 16 Detailed Schedule.
 
 ## Task Overview
 
@@ -1625,7 +1625,7 @@ Add entry under `## [Unreleased]`:
 ```markdown
 ### Sprint 16 Prep Task 10: Plan Sprint 16 Detailed Schedule - YYYY-MM-DD
 
-**Branch:** `planning/sprint16-prep`  
+**Branch:** `planning/sprint16-prep-task10`  
 **Status:** ✅ COMPLETE
 
 #### Summary

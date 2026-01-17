@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Prep Task 2: Assess Current Baseline Metrics and Blockers - 2026-01-16
+
+**Branch:** `planning/sprint16-prep-task2`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Deep-dive analysis of Sprint 15 baseline metrics to identify highest-impact improvement targets for Sprint 16. Created comprehensive BASELINE_ANALYSIS.md documenting parse/translate/solve failure distributions. Verified 5 unknowns from KNOWN_UNKNOWNS.md, correcting one incorrect assumption about path_syntax_error location.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_16/BASELINE_ANALYSIS.md` - Comprehensive baseline analysis with failure distributions and improvement recommendations
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_16/KNOWN_UNKNOWNS.md` - Verified unknowns 4.1, 4.2, 5.1, 6.1, 8.1
+- `docs/planning/EPIC_3/SPRINT_16/PREP_PLAN.md` - Task 2 marked complete with summary
+
+#### Key Findings
+
+| Stage | Failures | Primary Cause | % of Failures |
+|-------|----------|---------------|---------------|
+| Parse | 126 | lexer_invalid_char | 86.5% (109) |
+| Translate | 17 | Diverse (6 categories) | N/A |
+| Solve | 14 | path_syntax_error | 100% |
+
+**Critical Insight:** `path_syntax_error` occurs at SOLVE stage (not parse), affecting MCP file syntax. This corrects Unknown 4.2's incorrect assumption.
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 4.1 | ✅ PARTIAL | 109 lexer_invalid_char (86.5%), subcategories need Task 6 |
+| 4.2 | ❌ CORRECTED | path_syntax_error is SOLVE stage, not parse |
+| 5.1 | ✅ VERIFIED | 6 translation error categories, no dominant cause |
+| 6.1 | ✅ VERIFIED | 100% solve failures are path_syntax_error |
+| 8.1 | ✅ VERIFIED | Target dollar control for Sprint 16 improvements |
+
+#### Sprint 16 Improvement Targets
+
+- **Minimum:** +10% parse rate (21.3% → 31.3%, +16 models)
+- **Target:** +20% parse rate (21.3% → 41.3%, +32 models)
+- **Stretch:** +30% parse rate (21.3% → 51.3%, +48 models)
+
+---
+
 ### Sprint 16 Prep Task 1: Create Known Unknowns List - 2026-01-16
 
 **Branch:** `planning/sprint16-prep`  
