@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Prep Task 3: Research Report Generation Approaches - 2026-01-16
+
+**Branch:** `planning/sprint16-prep-task3`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Researched report generation approaches for Sprint 16 Reporting Infrastructure. Created comprehensive REPORT_DESIGN.md with library comparison, architecture design, template mockups, and implementation plan. Verified 4 unknowns (1.1, 1.2, 1.3, 2.1).
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_16/REPORT_DESIGN.md` - Report generation architecture and design
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_16/KNOWN_UNKNOWNS.md` - Verified unknowns 1.1, 1.2, 1.3, 2.1
+- `docs/planning/EPIC_3/SPRINT_16/PREP_PLAN.md` - Task 3 marked complete
+
+#### Key Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Output Formats | Markdown + JSON | Human-readable + CI integration |
+| Template System | Jinja2 + tabulate | Separation of concerns, maintainability |
+| Architecture | Modular analyzers + renderers | Extensibility, testability |
+| Failure Grouping | Stage → Category (47 types) | Full granularity preserved |
+
+#### Implementation Estimate
+
+17 hours across 4 days for Sprint 16 reporting infrastructure.
+
+---
+
 ### Sprint 16 Prep Task 2: Assess Current Baseline Metrics and Blockers - 2026-01-16
 
 **Branch:** `planning/sprint16-prep-task2`  
