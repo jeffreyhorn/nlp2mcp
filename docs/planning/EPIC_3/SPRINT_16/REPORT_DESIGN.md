@@ -317,7 +317,7 @@ No models currently pass the full pipeline.
 ## Error Distribution Overview
 
 | Stage | Total Failures | Unique Error Types | Dominant Error |
-|-------|----------------|--------------------| ---------------|
+|-------|----------------|--------------------|----------------|
 {% for stage in stages %}
 | {{ stage.name }} | {{ stage.failures }} | {{ stage.error_types }} | {{ stage.dominant_error }} ({{ "%.1f"|format(stage.dominant_pct * 100) }}%) |
 {% endfor %}
