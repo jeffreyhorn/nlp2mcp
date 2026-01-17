@@ -164,7 +164,22 @@ print(template.render(parse_rate=21.3))
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 3)
+
+**Verified Date:** January 16, 2026
+
+**Decision:** Markdown (primary) + JSON (secondary)
+
+**Rationale:**
+- Markdown is human-readable, renders on GitHub, familiar to developers
+- JSON enables CI integration, dashboards, programmatic analysis
+- HTML deferred (can generate from Markdown if needed later)
+
+**Libraries Selected:**
+- Jinja2 for template-based Markdown generation
+- tabulate for table formatting within templates
+
+**Reference:** See `REPORT_DESIGN.md` for full library comparison.
 
 ---
 
@@ -217,7 +232,42 @@ From PROJECT_PLAN.md Sprint 16:
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 3)
+
+**Verified Date:** January 16, 2026
+
+**Decision:** Include the following metrics in priority order:
+
+1. **Pipeline Summary**
+   - Total models in corpus
+   - Full pipeline success count and rate (headline metric)
+   - Per-stage success rates
+
+2. **Stage Breakdown**
+   - Attempted, success, failure counts per stage
+   - Success rate percentage
+   - Cascade skip count (for translate/solve)
+
+3. **Model Type Analysis**
+   - NLP, LP, QCP breakdown
+   - Per-type success rates at each stage
+
+4. **Top Blockers**
+   - Error category name
+   - Affected model count
+   - Percentage of stage failures
+
+5. **Environment Info**
+   - nlp2mcp version, GAMS version, PATH solver version
+   - Generation timestamp
+
+6. **Historical Comparison** (when available)
+   - Delta vs. previous baseline
+   - Trend indicators
+
+**Ordering Rationale:** Most important first (full pipeline success), then drill-down pattern (summary → stage → type → error details), actionable recommendations last.
+
+**Reference:** See `REPORT_DESIGN.md` "Metrics for GAMSLIB_STATUS.md" section.
 
 ---
 
@@ -271,7 +321,34 @@ report = f"# Status\n- Parse: {parse_rate}%\n"
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 3)
+
+**Verified Date:** January 16, 2026
+
+**Decision:** Jinja2 templates with tabulate for table generation
+
+**Rationale:**
+1. **Separation of Concerns:** Templates separate content structure from data logic
+2. **Maintainability:** Non-developers can modify report format without changing Python code
+3. **Flexibility:** Jinja2 supports conditionals, loops, filters, and template inheritance
+4. **Proven Pattern:** Used by Ansible, Flask, Django, and many documentation tools
+5. **Dynamic Tables:** tabulate library handles table formatting within templates
+
+**Comparison:**
+| Approach | Pros | Cons | Verdict |
+|----------|------|------|---------|
+| f-strings | Simple, no deps | Hard to maintain, no separation | Rejected |
+| Jinja2 | Flexible, maintainable | Learning curve | Selected |
+
+**Implementation:**
+```python
+from jinja2 import Environment, FileSystemLoader
+from tabulate import tabulate
+env = Environment(loader=FileSystemLoader('templates'))
+env.filters['tabulate'] = lambda data, headers: tabulate(data, headers, tablefmt='github')
+```
+
+**Reference:** See `REPORT_DESIGN.md` "Library Comparison" section.
 
 ---
 
@@ -370,7 +447,36 @@ From PROJECT_PLAN.md:
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 3)
+
+**Verified Date:** January 16, 2026
+
+**Decision:** Two-level hierarchy (Stage → Error Category)
+
+**Grouping Structure:**
+1. **Level 1: Pipeline Stage** (Parse, Translate, Solve, Compare)
+   - Provides immediate context for where issues occur
+2. **Level 2: Error Category** (47-category taxonomy)
+   - Full granularity preserved for actionability
+
+**Grouping Rules:**
+1. Show all categories (don't hide low-count errors)
+2. Sort by count (highest-impact first)
+3. Include both % of stage failures and % of total models
+4. One representative error message per category
+5. Include fix complexity and recommendation for each
+
+**Example Output:**
+```markdown
+## Parse Failures (126 models, 78.8% of total)
+
+### lexer_invalid_char (109 models, 86.5% of parse failures)
+- Primary cause: Dollar control options ($ontext, $include)
+- Fix complexity: Medium
+- Recommendation: Implement lexer mode for region skipping
+```
+
+**Reference:** See `REPORT_DESIGN.md` "Failure Grouping Strategy" section.
 
 ---
 

@@ -305,13 +305,33 @@ Clear understanding of where to focus Sprint 16 efforts for maximum impact.
 
 ## Task 3: Research Report Generation Approaches
 
-**Status:** Not Started  
+**Status:** ✅ COMPLETE  
+**Completed:** January 16, 2026  
 **Priority:** High  
 **Estimated Time:** 3 hours  
+**Actual Time:** ~2.5 hours  
 **Deadline:** Before Sprint 16 Day 1  
 **Owner:** Development team  
 **Dependencies:** Task 2 (Baseline Analysis)  
 **Unknowns Verified:** 1.1, 1.2, 1.3, 2.1
+
+### Completion Summary
+
+**Deliverable Created:** `docs/planning/EPIC_3/SPRINT_16/REPORT_DESIGN.md`
+
+**Key Decisions:**
+1. **Output Formats:** Markdown (primary) + JSON (secondary), HTML deferred
+2. **Template System:** Jinja2 for flexibility with tabulate for table generation
+3. **Architecture:** Modular analyzers (status, failure, progress) with pluggable renderers
+4. **Failure Grouping:** Two-level hierarchy (Stage → Error Category, full 47-category taxonomy)
+
+**Unknowns Verified:**
+- ✅ 1.1: Report format - Markdown + JSON
+- ✅ 1.2: Status metrics - 6 priority-ordered sections defined
+- ✅ 1.3: Template system - Jinja2 selected over f-strings
+- ✅ 2.1: Failure grouping - Stage → Category with all errors shown
+
+**Implementation Estimate:** 17 hours across 4 days
 
 ### Objective
 
