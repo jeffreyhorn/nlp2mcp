@@ -1503,7 +1503,6 @@ Development team
    - Unknown 8.2: Grammar extension safety
    - Unknown 8.3: Dollar control approach
    - Unknown 9.1: Grammar change for $ontext/$offtext
-   - Unknown 3.5: Solve error categories (if any solve work planned)
 
 2. **High (verify in first days of sprint):**
    - Unknown 1.1: Report format

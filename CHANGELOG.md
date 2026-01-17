@@ -69,7 +69,6 @@ Created comprehensive Known Unknowns document for Sprint 16 (Reporting, Gap Anal
 4. **Unknown 8.2:** Can grammar extensions be made without breaking existing parses?
 5. **Unknown 8.3:** What is the correct approach to handle dollar control options?
 6. **Unknown 9.1:** What is the correct grammar change for dollar control comment blocks?
-7. **Unknown 3.5:** What solve error categories are needed? (if solve work planned)
 
 ---
 
