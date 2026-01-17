@@ -474,13 +474,36 @@ Clear design for reporting infrastructure ready for Sprint 16 implementation.
 
 ## Task 4: Design Failure Analysis Report Schema
 
-**Status:** Not Started  
+**Status:** ✅ COMPLETE  
+**Completed:** January 16, 2026  
 **Priority:** High  
 **Estimated Time:** 2-3 hours  
+**Actual Time:** ~2 hours  
 **Deadline:** Before Sprint 16 Day 1  
 **Owner:** Development team  
 **Dependencies:** Task 2 (Baseline Analysis)  
 **Unknowns Verified:** 2.2, 2.3, 4.3
+
+### Completion Summary
+
+**Deliverable Created:** `docs/planning/EPIC_3/SPRINT_16/FAILURE_REPORT_SCHEMA.md`
+
+**Key Decisions:**
+1. **Error Examples:** Include ONE representative error per category (200 char limit)
+2. **Recommendations:** Semi-automated with pattern-to-recommendation mapping
+3. **Prioritization:** Score = Models / Effort Hours (fixability filter applied)
+4. **Progress Tracking:** Sprint-over-sprint delta comparison with newly passing/failing lists
+
+**Schema Highlights:**
+- Complete JSON Schema for failure analysis data
+- Pattern detection rules for lexer/translate/solve errors
+- Improvement roadmap template with priority scoring
+- Progress comparison format for regression detection
+
+**Unknowns Verified:**
+- ✅ 2.2: Include one error example per category
+- ✅ 2.3: Semi-automated recommendations via pattern mapping
+- ✅ 4.3: Priority formula: Models/Effort with fixability filter
 
 ### Objective
 

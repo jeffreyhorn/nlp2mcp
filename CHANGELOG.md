@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Prep Task 4: Design Failure Analysis Report Schema - 2026-01-16
+
+**Branch:** `planning/sprint16-prep-task4`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Designed comprehensive schema and content structure for FAILURE_ANALYSIS.md report. Created JSON schema, pattern detection rules, prioritization formula, and progress tracking format. Verified 3 unknowns (2.2, 2.3, 4.3).
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_16/FAILURE_REPORT_SCHEMA.md` - Failure analysis schema and templates
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_16/KNOWN_UNKNOWNS.md` - Verified unknowns 2.2, 2.3, 4.3
+- `docs/planning/EPIC_3/SPRINT_16/PREP_PLAN.md` - Task 4 marked complete
+
+#### Schema Highlights
+
+| Component | Description |
+|-----------|-------------|
+| JSON Schema | Complete schema for failure analysis data with definitions |
+| Pattern Detection | Regex rules for lexer/translate/solve error subcategorization |
+| Error Examples | One representative error per category (200 char limit) |
+| Recommendations | Semi-automated via pattern-to-recommendation mapping |
+| Prioritization | Score = Models / Effort Hours (fixable errors only) |
+| Progress Tracking | Sprint-over-sprint delta with regression detection |
+
+---
+
 ### Sprint 16 Prep Task 3: Research Report Generation Approaches - 2026-01-16
 
 **Branch:** `planning/sprint16-prep-task3`  
