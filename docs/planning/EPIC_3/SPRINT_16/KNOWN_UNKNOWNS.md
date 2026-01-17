@@ -520,7 +520,29 @@ cat tests/output/pipeline_results.json | jq -r '.models[] | .parse_error // empt
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 4)
+
+**Verified Date:** January 16, 2026
+
+**Decision:** Yes, include ONE representative error message per category
+
+**Rationale:**
+1. Helps developers understand error context without running models
+2. Single example per category prevents report bloat
+3. Message truncated to 200 characters for readability
+4. Source context included when available (up to 3 lines)
+5. Line number included for quick navigation
+
+**Format Designed:**
+```yaml
+example_error:
+  model: "aircraft"
+  message: "Unexpected character '$' at line 15..."
+  context: "$ontext\nComment block\n$offtext"
+  line: 15
+```
+
+**Reference:** See `FAILURE_REPORT_SCHEMA.md` "Error Message Examples" section.
 
 ---
 
@@ -567,7 +589,39 @@ wc -l src/nlp2mcp/parser/gams.lark
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 4)
+
+**Verified Date:** January 16, 2026
+
+**Decision:** Semi-automated with pattern-to-recommendation mapping
+
+**Approach:**
+1. **Pattern Detection:** Regex patterns classify errors into subcategories
+2. **Default Recommendations:** Each pattern has predefined recommendation
+3. **Auto-Generation:** Recommendations generated from pattern rules
+4. **Manual Override:** Metadata file allows expert annotation
+5. **Flagged:** `auto_generated: true/false` indicates source
+
+**Recommendation Format:**
+```yaml
+recommendation:
+  action: "Implement lexer mode for region skipping"
+  complexity: "medium"
+  effort_hours: 8
+  sprint_target: "Sprint 16"
+  auto_generated: true
+```
+
+**Pattern-to-Recommendation Example:**
+```python
+'dollar_control': {
+    'regex': r'\$(?:ontext|offtext|include|...)',
+    'recommendation': 'Implement lexer mode for region skipping',
+    'fix_complexity': 'medium',
+}
+```
+
+**Reference:** See `FAILURE_REPORT_SCHEMA.md` "Improvement Recommendation System" section.
 
 ---
 
@@ -839,7 +893,42 @@ model_no_obj_def  | 5      | N/A (model)    | Skip
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 4)
+
+**Verified Date:** January 16, 2026
+
+**Decision:** Priority Score = (Models Affected × Fixability) / Effort Hours
+
+**Formula Details:**
+- `Models Affected`: Count of models blocked by this error
+- `Fixability`: 1.0 if fixable, 0.0 if not (acts as multiplier)
+- `Effort Hours`: Estimated implementation time
+
+**Example Priority Ranking:**
+
+| Error | Models | Fixable | Effort | Score |
+|-------|--------|---------|--------|-------|
+| lexer_invalid_char (dollar) | 87 | Yes | 8h | 10.88 |
+| special_chars | 10 | Yes | 2h | 5.00 |
+| path_syntax_error | 14 | Yes | 6h | 2.33 |
+| internal_error | 17 | Yes | 12h | 1.42 |
+| embedded_code | 12 | No | N/A | 0.00 |
+
+**Rationale:**
+1. Simple, transparent formula
+2. Prioritizes high-impact, low-effort fixes
+3. Excludes unfixable issues automatically (score = 0)
+4. Can be extended with model type weights if needed
+
+**Implementation:**
+```python
+def calculate_priority_score(models, fixable, effort):
+    if not fixable or effort <= 0:
+        return 0.0
+    return round(models / effort, 2)
+```
+
+**Reference:** See `FAILURE_REPORT_SCHEMA.md` "Prioritization Formula" section.
 
 ---
 
