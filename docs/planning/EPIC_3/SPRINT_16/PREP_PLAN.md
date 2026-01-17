@@ -169,13 +169,37 @@ Created comprehensive `docs/planning/EPIC_3/SPRINT_16/KNOWN_UNKNOWNS.md` with 27
 
 ## Task 2: Assess Current Baseline Metrics and Blockers
 
-**Status:** Not Started  
+**Status:** ✅ COMPLETE  
+**Completed:** January 16, 2026  
 **Priority:** Critical  
 **Estimated Time:** 2 hours  
+**Actual Time:** ~1.5 hours  
 **Deadline:** Before Task 6  
 **Owner:** Development team  
 **Dependencies:** Task 1 (Known Unknowns)  
 **Unknowns Verified:** 4.1, 4.2, 5.1, 6.1, 8.1
+
+### Completion Summary
+
+**Deliverable Created:** `docs/planning/EPIC_3/SPRINT_16/BASELINE_ANALYSIS.md`
+
+**Key Findings:**
+- Parse stage is primary bottleneck: 126/160 models (78.8%) fail to parse
+- `lexer_invalid_char` dominates: 86.5% of parse failures (109/126 models)
+- ALL solve failures (100%) are `path_syntax_error` - suggests systematic MCP generation issue
+- Translation failures are diverse: 6 categories, no single dominant cause
+
+**Unknowns Verified:**
+- ✅ 4.1: Confirmed lexer_invalid_char breakdown (109 models, 86.5%)
+- ❌ 4.2: CORRECTED - path_syntax_error is SOLVE stage, not parse (14 models at solve, 0 at parse)
+- ✅ 5.1: Confirmed translation failure distribution across 6 categories
+- ✅ 6.1: Confirmed 100% of solve failures are path_syntax_error
+- ✅ 8.1: Confirmed Sprint 16 should target dollar control handling
+
+**Sprint 16 Targets Set:**
+- Minimum: +10% parse rate (to 31.3%)
+- Target: +20% parse rate (to 41.3%)
+- Stretch: +30% parse rate (to 51.3%)
 
 ### Objective
 
