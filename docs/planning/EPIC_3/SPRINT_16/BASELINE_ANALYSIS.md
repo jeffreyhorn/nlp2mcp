@@ -232,7 +232,7 @@ This analysis verifies the following unknowns from KNOWN_UNKNOWNS.md:
 **Key Insight:** The 86.5% concentration in a single error category suggests focused improvement is possible.
 
 ### Unknown 4.2: path_syntax_error causes  
-**Status:** ✅ PARTIALLY VERIFIED
+**Status:** ❌ CORRECTED
 
 **Finding:** baseline_metrics.json shows 0 models with parse-stage `path_syntax_error` (contrary to earlier assumptions). All 14 `path_syntax_error` occurrences are at the SOLVE stage, not parse stage. This indicates PATH solver communication issues, not GAMS file path issues.
 
