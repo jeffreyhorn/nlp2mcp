@@ -241,25 +241,51 @@ This document defines the data schema, pattern detection rules, and report templ
       "properties": {
         "previous_sprint": { "type": "string" },
         "current_sprint": { "type": "string" },
+        "comparison_date": { "type": "string", "format": "date" },
         "parse_delta": { "$ref": "#/definitions/StageDelta" },
         "translate_delta": { "$ref": "#/definitions/StageDelta" },
         "solve_delta": { "$ref": "#/definitions/StageDelta" },
         "newly_passing": {
-          "type": "array",
-          "items": { "type": "string" }
+          "type": "object",
+          "properties": {
+            "parse": { "type": "array", "items": { "type": "string" } },
+            "translate": { "type": "array", "items": { "type": "string" } },
+            "solve": { "type": "array", "items": { "type": "string" } }
+          }
         },
         "newly_failing": {
+          "type": "object",
+          "properties": {
+            "parse": { "type": "array", "items": { "type": "string" } },
+            "translate": { "type": "array", "items": { "type": "string" } },
+            "solve": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "error_changes": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "$ref": "#/definitions/ErrorChange" }
         }
+      }
+    },
+    "ErrorChange": {
+      "type": "object",
+      "properties": {
+        "category": { "type": "string" },
+        "previous_count": { "type": "integer" },
+        "current_count": { "type": "integer" },
+        "delta": { "type": "integer" },
+        "note": { "type": "string" }
       }
     },
     "StageDelta": {
       "type": "object",
       "properties": {
+        "previous_success": { "type": "integer" },
+        "current_success": { "type": "integer" },
         "previous_rate": { "type": "number" },
         "current_rate": { "type": "number" },
         "delta": { "type": "number" },
+        "delta_models": { "type": "integer" },
         "trend": {
           "type": "string",
           "enum": ["improved", "regressed", "unchanged"]
@@ -413,26 +439,42 @@ roadmap:
 comparison:
   previous_sprint: "Sprint 14"
   current_sprint: "Sprint 15"
+  comparison_date: "2026-01-15"
   parse_delta:
+    previous_success: 24
+    current_success: 34
     previous_rate: 0.15
     current_rate: 0.213
     delta: 0.063
+    delta_models: 10
     trend: "improved"
   translate_delta:
+    previous_success: 15
+    current_success: 17
     previous_rate: 0.45
     current_rate: 0.50
     delta: 0.05
+    delta_models: 2
     trend: "improved"
   solve_delta:
+    previous_success: 4
+    current_success: 3
     previous_rate: 0.20
     current_rate: 0.176
     delta: -0.024
+    delta_models: -1
     trend: "regressed"
   newly_passing:
-    - "hs62"
-    - "trig"
+    parse:
+      - "hs62"
+      - "trig"
+    translate: []
+    solve: []
   newly_failing:
-    - "complex_model_1"
+    parse: []
+    translate: []
+    solve:
+      - "complex_model_1"
 ```
 
 ---
@@ -744,12 +786,12 @@ def generate_recommendation(
 
 ### Priority Score Calculation
 
-**Formula:** `Priority Score = (Models Affected × Fixability Weight) / Effort Hours`
+**Formula:** `Priority Score = Models Affected / Effort Hours` (only for fixable errors)
 
 Where:
 - `Models Affected`: Number of models blocked by this error
-- `Fixability Weight`: 1.0 if fixable, 0.0 if not fixable
 - `Effort Hours`: Estimated implementation hours
+- Non-fixable errors return score of 0.0 (excluded from prioritization)
 
 ### Priority Score Implementation
 
@@ -758,7 +800,6 @@ def calculate_priority_score(
     models_affected: int,
     fixable: bool,
     effort_hours: float,
-    model_type_weights: dict | None = None
 ) -> float:
     """
     Calculate improvement priority score.
@@ -767,27 +808,18 @@ def calculate_priority_score(
         models_affected: Number of models with this error
         fixable: Whether the error is fixable in nlp2mcp
         effort_hours: Estimated hours to fix
-        model_type_weights: Optional weights by model type (NLP, LP, QCP)
         
     Returns:
         Priority score (higher = higher priority)
     """
+    # Non-fixable errors are excluded from prioritization
     if not fixable or effort_hours <= 0:
         return 0.0
     
-    # Base score: models per hour of effort
-    base_score = models_affected / effort_hours
+    # Score: models per hour of effort
+    score = models_affected / effort_hours
     
-    # Optional: Apply model type weighting
-    # (e.g., convex models worth more than non-convex)
-    if model_type_weights:
-        weighted_models = sum(
-            count * model_type_weights.get(mtype, 1.0)
-            for mtype, count in models_affected.items()
-        )
-        base_score = weighted_models / effort_hours
-    
-    return round(base_score, 2)
+    return round(score, 2)
 
 
 # Example priority calculation
@@ -935,7 +967,8 @@ comparison:
 
 ### Regressions
 
-{% if comparison.newly_failing|sum(attribute='length') > 0 %}
+{% set has_regressions = comparison.newly_failing.parse|length + comparison.newly_failing.translate|length + comparison.newly_failing.solve|length > 0 %}
+{% if has_regressions %}
 ⚠️ **Regressions detected:**
 {% for stage, models in comparison.newly_failing.items() %}
 {% for model in models %}
