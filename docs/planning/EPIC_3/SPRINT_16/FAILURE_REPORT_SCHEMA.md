@@ -13,7 +13,7 @@ This document defines the data schema, pattern detection rules, and report templ
 **Key Design Decisions:**
 1. **Error Examples:** Include one representative error message per category
 2. **Recommendations:** Semi-automated using pattern-to-recommendation mapping
-3. **Prioritization:** Impact × Fixability / Effort scoring formula
+3. **Prioritization:** Models Affected / Effort Hours (only for fixable errors; non-fixable errors have score 0.0)
 4. **Progress Tracking:** Sprint-over-sprint delta comparison
 
 ---

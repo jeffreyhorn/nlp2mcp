@@ -33,7 +33,7 @@ Designed comprehensive schema and content structure for FAILURE_ANALYSIS.md repo
 | Pattern Detection | Regex rules for lexer/translate/solve error subcategorization |
 | Error Examples | One representative error per category (200 char limit) |
 | Recommendations | Semi-automated via pattern-to-recommendation mapping |
-| Prioritization | Score = (Models × Fixability) / Effort Hours |
+| Prioritization | Score = Models / Effort Hours (fixable errors only) |
 | Progress Tracking | Sprint-over-sprint delta with regression detection |
 
 ---
