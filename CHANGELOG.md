@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Prep Task 1: Create Known Unknowns List - 2026-01-16
+
+**Branch:** `planning/sprint16-prep`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive Known Unknowns document for Sprint 16 (Reporting, Gap Analysis & Targeted Parser Improvements) with 27 unknowns across 9 categories. Established task-to-unknown mapping linking each prep task to the unknowns it will verify. Updated PREP_PLAN.md with "Unknowns Verified" metadata for Tasks 2-10.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_16/KNOWN_UNKNOWNS.md` - 27 unknowns across 9 categories
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_16/PREP_PLAN.md` - Task 1 marked complete, Tasks 2-10 updated with Unknowns Verified metadata
+
+#### Known Unknowns Statistics
+
+| Category | Count |
+|----------|-------|
+| 1: Status Summary Report Generator | 4 |
+| 2: Failure Analysis Report | 3 |
+| 3: Progress Tracking | 2 |
+| 4: Parse Failure Gap Analysis | 4 |
+| 5: Translation Failure Gap Analysis | 3 |
+| 6: Solve Failure Gap Analysis | 2 |
+| 7: Improvement Roadmap | 2 |
+| 8: Identify Top Parse Blockers | 4 |
+| 9: Implement Priority Parser Features | 3 |
+| **Total** | **27** |
+
+**Priority Distribution:**
+- Critical: 7 (26%)
+- High: 11 (41%)
+- Medium: 7 (26%)
+- Low: 2 (7%)
+
+**Estimated Research Time:** 28-36 hours
+
+#### Task-to-Unknown Mapping
+
+| Prep Task | Unknowns Verified |
+|-----------|-------------------|
+| Task 2: Assess Baseline Metrics | 4.1, 4.2, 5.1, 6.1, 8.1 |
+| Task 3: Report Generation Research | 1.1, 1.2, 1.3, 2.1 |
+| Task 4: Failure Analysis Schema | 2.2, 2.3, 4.3 |
+| Task 5: Grammar Extension Patterns | 8.2, 9.1, 9.2 |
+| Task 6: Lexer Error Analysis | 4.4, 8.1, 8.3, 8.4 |
+| Task 7: PATH Error Analysis | 4.2, 6.2 |
+| Task 8: Progress Tracking Schema | 1.4, 3.1, 3.2 |
+| Task 9: Sprint 15 Review | 5.2, 5.3, 7.1, 7.2 |
+| Task 10: Sprint Schedule | All unknowns (integration) |
+
+#### Key Critical Unknowns
+
+1. **Unknown 4.1:** What is the actual breakdown of lexer_invalid_char errors?
+2. **Unknown 4.4:** Are lexer_invalid_char errors from syntax we should support or intentionally exclude?
+3. **Unknown 8.1:** Which parse blockers should be targeted in Sprint 16?
+4. **Unknown 8.2:** Can grammar extensions be made without breaking existing parses?
+5. **Unknown 8.3:** What is the correct approach to handle dollar control options?
+6. **Unknown 9.1:** What is the correct grammar change for dollar control comment blocks?
+
+---
+
 ### Sprint 15 Day 10: Baseline and Documentation [SPRINT COMPLETE] - 2026-01-15
 
 **Branch:** `sprint15-day10-baseline-complete`  
