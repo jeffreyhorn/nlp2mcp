@@ -491,7 +491,7 @@ Clear design for reporting infrastructure ready for Sprint 16 implementation.
 **Key Decisions:**
 1. **Error Examples:** Include ONE representative error per category (200 char limit)
 2. **Recommendations:** Semi-automated with pattern-to-recommendation mapping
-3. **Prioritization:** Score = (Models × Fixability) / Effort Hours
+3. **Prioritization:** Score = Models / Effort Hours (fixability filter applied)
 4. **Progress Tracking:** Sprint-over-sprint delta comparison with newly passing/failing lists
 
 **Schema Highlights:**

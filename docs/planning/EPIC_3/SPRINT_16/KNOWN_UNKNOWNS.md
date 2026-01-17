@@ -897,11 +897,11 @@ Development team
 
 **Verified Date:** January 16, 2026
 
-**Decision:** Priority Score = (Models Affected × Fixability) / Effort Hours
+**Decision:** Priority Score = Models Affected / Effort Hours (only for fixable errors)
 
 **Formula Details:**
 - `Models Affected`: Count of models blocked by this error
-- `Fixability`: 1.0 if fixable, 0.0 if not (acts as multiplier)
+- `Fixability`: Boolean filter; non-fixable errors are excluded (scored as 0.0)
 - `Effort Hours`: Estimated implementation time
 
 **Example Priority Ranking:**
