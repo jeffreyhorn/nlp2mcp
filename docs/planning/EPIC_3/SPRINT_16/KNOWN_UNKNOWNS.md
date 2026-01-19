@@ -58,11 +58,14 @@ This document identifies all assumptions and unknowns for Sprint 16 features **b
 ## Summary Statistics
 
 **Total Unknowns:** 27  
+**Verified:** 19 (70%)  
+**Remaining:** 8 (30%)
+
 **By Priority:**
-- Critical: 7 (26%)
-- High: 11 (41%)
-- Medium: 7 (26%)
-- Low: 2 (7%)
+- Critical: 7 (26%) - 6 verified, 1 remaining
+- High: 11 (41%) - 8 verified, 3 remaining
+- Medium: 7 (26%) - 3 verified, 4 remaining
+- Low: 2 (7%) - 2 remaining
 
 **By Category:**
 - Category 1 (Status Summary Report Generator): 4 unknowns
@@ -978,7 +981,42 @@ Execute-needed (can skip):
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 6)
+
+**Verified Date:** January 18, 2026
+
+**Critical Finding:** The original assumption was INCORRECT. Analysis of 153 lexer_invalid_char errors reveals:
+
+**Dollar control is NOT the primary cause.** The grammar already handles `$ontext/$offtext` correctly via:
+```lark
+%ignore /(?si)\$ontext.*?\$offtext/    // Block comments
+%ignore /\$(?![\(\s])[a-z]+[^\n]*/i    // Other $ directives
+```
+
+**Actual Causes - Syntax We SHOULD Support:**
+
+| Cause | Models | Should Support? | Reason |
+|-------|--------|-----------------|--------|
+| Hyphenated set elements | 91+ | **YES** | Core GAMS data syntax |
+| Tuple expansion `(a,b).c` | 12 | **YES** | Standard GAMS feature |
+| Numeric context in data | 11 | **YES** | Common parameter syntax |
+| Keyword case (`Free Variable`) | 9 | **YES** | GAMS is case-insensitive |
+| Quoted set descriptions | 7 | **YES** | Standard set declaration |
+
+**Syntax to Intentionally Exclude:**
+
+| Syntax | Reason |
+|--------|--------|
+| `%variable%` compile-time | Requires GAMS preprocessor execution |
+| `$include` content | Cannot follow external files |
+| `$call`, `$execute` | Runtime commands, not model definition |
+
+**Correction to Assumption:** The vast majority of lexer errors (>90%) are from GAMS syntax we SHOULD support, not features to exclude. The fix strategy should focus on:
+1. Extending `SET_ELEMENT_ID` to handle hyphenated elements with numbers
+2. Adding tuple expansion syntax support
+3. Improving keyword case handling
+
+**Reference:** See `LEXER_ERROR_ANALYSIS.md` for complete subcategory breakdown and fix strategies.
 
 ---
 
@@ -1407,6 +1445,24 @@ Development team
 
 **Key Insight:** Focused effort on dollar control ($ontext/$offtext, $include) could yield 50-80 additional parsing models. This is the highest-ROI improvement for Sprint 16.
 
+**Update from Task 6:** Analysis reveals dollar control is already handled. The actual targets should be:
+
+| Priority | Target | Models | Effort | Days |
+|----------|--------|--------|--------|------|
+| 1 | Keyword case (`Free Variable`) | 9 | Low | 0.5 |
+| 1 | Hyphenated elements (number-start) | 3 | Low | 0.5 |
+| 1 | Abort statement syntax | 3 | Low | 0.5 |
+| 1 | Numeric context in param data | 11 | Medium | 1 |
+| 2 | Tuple expansion syntax | 12 | Medium | 1.5 |
+| 2 | Quoted set descriptions | 7 | Medium | 1 |
+
+**Revised Improvement Targets:**
+- Minimum: +26 models (Priority 1), parse rate to 39%
+- Target: +45 models (P1 + P2), parse rate to 47%
+- Stretch: +55 models, parse rate to 52%
+
+**Reference:** See `LEXER_ERROR_ANALYSIS.md` for detailed analysis.
+
 ---
 
 ## Unknown 8.2: Can grammar extensions be made without breaking existing parses?
@@ -1535,7 +1591,55 @@ grep -rh '^\$' data/gamslib/raw/*.gms | sed 's/ .*//' | sort | uniq -c | sort -r
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 6)
+
+**Verified Date:** January 18, 2026
+
+**Critical Finding:** Dollar control is ALREADY HANDLED correctly in the grammar!
+
+**Current Implementation (gams_grammar.lark):**
+```lark
+%ignore /(?si)\$ontext.*?\$offtext/    // Block comments (case insensitive, dotall)
+%ignore /\$(?![\(\s])[a-z]+[^\n]*/i    // Other $ directives (skip to EOL)
+```
+
+**Verification:** All 219 models in GAMSLIB contain `$ontext/$offtext` blocks. The grammar successfully skips them - errors occur AFTER the dollar control blocks, in regular GAMS syntax.
+
+**Analysis of Actual Blockers:**
+
+The 153 lexer errors are caused by GAMS data syntax, NOT dollar control:
+
+| Root Cause | Models | Example |
+|------------|--------|---------|
+| Hyphenated set elements with numbers | 91+ | `/ 1964-i, route-1 /` |
+| Tuple expansion syntax | 12 | `(a,b).c` |
+| Numeric values in set context | 11 | `/ plant-1 9 /` |
+| Keyword case variations | 9 | `Free Variable` |
+| Quoted descriptions after hyphens | 7 | `/ cotton-h 'cotton' /` |
+
+**Updated Approach for Sprint 16:**
+
+Instead of enhancing dollar control handling, focus on:
+
+1. **Extend SET_ELEMENT_ID pattern** to handle number-hyphen-letter sequences:
+   ```lark
+   // Current: /[a-zA-Z_][a-zA-Z0-9_+\-]*/
+   // Enhanced: /[a-zA-Z0-9_][a-zA-Z0-9_+\-]*/  // Allow number start
+   ```
+
+2. **Add tuple expansion rule:**
+   ```lark
+   tuple_expansion: "(" id_list ")" ("." ID)?
+   ```
+
+3. **Add combined keywords:**
+   ```lark
+   free_var_decl: "Free"i "Variable"i var_list
+   ```
+
+**Correction to Assumption:** Dollar control is NOT the blocker. The assumption was fundamentally wrong. The correct approach targets GAMS data syntax extensions.
+
+**Reference:** See `LEXER_ERROR_ANALYSIS.md` for complete analysis and `GRAMMAR_EXTENSION_GUIDE.md` for implementation patterns.
 
 ---
 
@@ -1583,7 +1687,43 @@ done
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 6)
+
+**Verified Date:** January 18, 2026
+
+**Finding:** Complete character analysis of 153 lexer errors. NO encoding issues found - all errors are from standard ASCII characters in valid GAMS syntax contexts.
+
+**Character Distribution:**
+
+| Character | Count | Primary Cause | Fix Strategy |
+|-----------|-------|---------------|--------------|
+| `'` (quote) | 25 | Inline descriptions in set data | Extend set_member rule |
+| `,` (comma) | 20 | Abort syntax, tuple data | Fix abort_stmt, tuples |
+| `1`-`9` (digits) | 25+ | Numeric values in set context | Improve num/id disambiguation |
+| `(` (paren) | 14 | Tuple expansion `(a,b).c` | Add tuple_expansion rule |
+| `/` (slash) | 7 | Data delimiters in unexpected context | Case-by-case |
+| `*` (asterisk) | 6 | Operator/range in data context | Case-by-case |
+| `V`, `F` (letters) | 10 | `Variable`, `Free` keyword case | Add combined keywords |
+| `.` (dot) | 5 | Dot notation variations | Case-by-case |
+| `-` (hyphen) | 4 | Hyphenated identifiers | Extend SET_ELEMENT_ID |
+
+**Key Insights:**
+
+1. **No encoding issues:** All characters are standard ASCII (0x00-0x7F)
+2. **No extended ASCII/Unicode:** No special characters or foreign text
+3. **Context matters:** The same character (`,`, `.`) fails in different contexts for different reasons
+
+**Quick Wins Identified:**
+
+| Fix | Characters | Models | Effort |
+|-----|------------|--------|--------|
+| Keyword case (`Free Variable`) | `V`, `F` | 9 | Low |
+| Hyphenated number-start | `-`, digits | 6 | Low |
+| Abort syntax | `,` | 3 | Low |
+
+**Correction to Assumption:** The assumption about extended ASCII/Unicode was INCORRECT. All errors are from standard ASCII characters appearing in valid GAMS syntax that the grammar doesn't fully support. The issue is grammar coverage, not character encoding.
+
+**Reference:** See `LEXER_ERROR_ANALYSIS.md` "Character Analysis" section for complete breakdown.
 
 ---
 
