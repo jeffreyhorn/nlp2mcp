@@ -651,13 +651,54 @@ Clear schema enabling automated failure analysis report generation.
 
 ## Task 5: Survey GAMS Grammar Extension Patterns
 
-**Status:** Not Started  
+**Status:** ✅ COMPLETE  
+**Time Spent:** ~2 hours  
 **Priority:** High  
 **Estimated Time:** 3-4 hours  
 **Deadline:** Before Task 6  
 **Owner:** Development team  
 **Dependencies:** None  
 **Unknowns Verified:** 8.2, 9.1, 9.2
+
+### What Was Done
+
+1. **Analyzed GAMS grammar structure** (`src/gams/gams_grammar.lark`)
+   - 604 lines, ~80 rules, ~50 terminals
+   - Uses Earley parser with `ambiguity="resolve"`
+   - Well-organized sections: blocks, declarations, expressions, tokens
+
+2. **Identified 5 extension patterns:**
+   - Pattern 1: Adding new `%ignore` patterns (lowest risk)
+   - Pattern 2: Adding new terminals with priorities
+   - Pattern 3: Adding statement alternatives
+   - Pattern 4: Extending existing rules
+   - Pattern 5: Adding optional elements
+
+3. **Researched Lark best practices:**
+   - Terminal priorities (`.N` suffix) control matching order
+   - Tree aliases (`-> name`) normalize different syntaxes
+   - `%ignore` directive for content skipping at lexer level
+   - Earley parser handles ambiguity gracefully
+
+4. **Created comprehensive testing checklist:**
+   - 4-layer testing approach (unit, regression, integration, IR validation)
+   - Regression detection protocol
+   - CI integration recommendations
+
+5. **Analyzed dollar control handling:**
+   - Grammar ALREADY has `%ignore /(?si)\$ontext.*?\$offtext/`
+   - Issue likely: edge cases with whitespace, encoding
+   - Recommended: Enhanced pattern or preprocessing approach
+
+### Result
+
+**Key Patterns Identified:**
+1. **`%ignore` pattern enhancement** - Lowest risk approach for dollar control
+2. **Statement alternatives** - Add new statements at end of `?stmt` rule
+3. **Terminal priorities** - Use `.N` suffix to control matching order
+4. **Preprocessing** - Python preprocessing before parsing for full control
+
+**Critical Finding:** The grammar already handles `$ontext/$offtext` via `%ignore`. Sprint 16 should focus on enhancing the pattern or adding preprocessing, not grammar restructuring.
 
 ### Objective
 
@@ -673,8 +714,8 @@ Sprint 16 Priority 3 will modify the GAMS parser to handle more model syntax. Ne
 
 ### Background
 
-Current grammar location: `src/nlp2mcp/parser/gams.lark`
-Current lexer: Lark-based with LALR(1) parsing
+Current grammar location: `src/gams/gams_grammar.lark`
+Current lexer: Lark-based with Earley parsing (not LALR)
 
 Known issues to address:
 - Dollar control options ($ontext, $offtext, etc.)
@@ -761,11 +802,11 @@ Guide enabling safe, systematic grammar improvements in Sprint 16.
 
 ### Verification
 
-- [ ] Current grammar analyzed and documented
-- [ ] Extension patterns identified and documented
-- [ ] Lark best practices researched
-- [ ] Testing checklist created
-- [ ] Guide ready for Sprint 16 use
+- [x] Current grammar analyzed and documented
+- [x] Extension patterns identified and documented
+- [x] Lark best practices researched
+- [x] Testing checklist created
+- [x] Guide ready for Sprint 16 use
 
 ### Deliverables
 
@@ -774,12 +815,12 @@ Guide enabling safe, systematic grammar improvements in Sprint 16.
 
 ### Acceptance Criteria
 
-- [ ] Grammar structure documented (rules, terminals, sections)
-- [ ] At least 3 extension patterns with examples
-- [ ] Lark-specific considerations documented
-- [ ] Testing checklist comprehensive
-- [ ] Potential risks/pitfalls identified
-- [ ] Unknowns 8.2, 9.1, 9.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Grammar structure documented (rules, terminals, sections)
+- [x] At least 3 extension patterns with examples
+- [x] Lark-specific considerations documented
+- [x] Testing checklist comprehensive
+- [x] Potential risks/pitfalls identified
+- [x] Unknowns 8.2, 9.1, 9.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
