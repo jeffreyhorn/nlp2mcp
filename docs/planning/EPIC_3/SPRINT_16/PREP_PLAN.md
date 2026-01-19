@@ -994,13 +994,43 @@ Clear understanding of lexer errors and actionable fix strategies for Sprint 16.
 
 ## Task 7: Research PATH Syntax Error Patterns
 
-**Status:** Not Started  
+**Status:** ✅ COMPLETE  
+**Completed:** January 19, 2026  
 **Priority:** High  
 **Estimated Time:** 2-3 hours  
+**Actual Time:** ~2 hours  
 **Deadline:** Before Sprint 16 Day 1  
 **Owner:** Development team  
 **Dependencies:** Task 2 (Baseline Analysis)  
 **Unknowns Verified:** 4.2, 6.2
+
+### Completion Summary
+
+**Deliverable Created:** `docs/planning/EPIC_3/SPRINT_16/PATH_ERROR_ANALYSIS.md`
+
+**Critical Finding:** The `path_syntax_error` name is misleading - these are NOT PATH solver errors or file path issues. They are **GAMS compilation errors** in generated MCP files caused by bugs in `src/emit/emit_gams.py`.
+
+**Key Results:**
+- Analyzed all 14 models with solve-stage path_syntax_error
+- ALL 14 failures (100%) are addressable nlp2mcp code generation bugs
+- 0 failures are due to PATH solver issues or inherent model difficulties
+
+**Error Pattern Distribution:**
+
+| Pattern | Count | Root Cause |
+|---------|-------|------------|
+| Unary minus before parens | 10 | `-(expr)` should be `(-1)*(expr)` |
+| Set element quoting | 3 | Inconsistent quoting in generated code |
+| Scalar declaration | 1 | Missing identifier name |
+
+**Sprint 16 Fix Impact:**
+- Current solve rate: 17.6% (3/17 translated models)
+- Expected after fixes: 76-100% (13-17/17 translated models)
+- Implementation effort: 9-15 hours total
+
+**Unknowns Verified:**
+- ✅ 4.2: VERIFIED - path_syntax_error is code generation bug, not file paths
+- ✅ 6.2: VERIFIED - ALL solve failures are addressable nlp2mcp bugs
 
 ### Objective
 
@@ -1012,10 +1042,12 @@ path_syntax_error affects 14 models (8.8% of total). While smaller than lexer_in
 
 ### Background
 
-path_syntax_error typically indicates:
-- File path issues in GAMS code
-- Include statement problems
-- Reference to external files
+path_syntax_error was originally (incorrectly) thought to indicate:
+- ~~File path issues in GAMS code~~
+- ~~Include statement problems~~
+- ~~Reference to external files~~
+
+**CORRECTED:** path_syntax_error actually indicates GAMS compilation errors in generated MCP files - bugs in nlp2mcp's code generation, not PATH solver or file path issues.
 
 ### What Needs to Be Done
 
@@ -1062,10 +1094,10 @@ Understanding of path errors and strategies for fixing or working around them.
 
 ### Verification
 
-- [ ] All 14 models examined
-- [ ] Error patterns identified
-- [ ] Fix strategies documented
-- [ ] Effort estimates provided
+- [x] All 14 models examined
+- [x] Error patterns identified (3 distinct patterns)
+- [x] Fix strategies documented
+- [x] Effort estimates provided (9-15 hours total)
 
 ### Deliverables
 
@@ -1074,11 +1106,11 @@ Understanding of path errors and strategies for fixing or working around them.
 
 ### Acceptance Criteria
 
-- [ ] All path_syntax_error models analyzed
-- [ ] At least 2 distinct patterns identified
-- [ ] Fix strategy for each pattern
-- [ ] Clear recommendation for Sprint 16 scope
-- [ ] Unknowns 4.2, 6.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All path_syntax_error models analyzed (14 models)
+- [x] At least 2 distinct patterns identified (3 patterns: unary minus, set quoting, scalar declaration)
+- [x] Fix strategy for each pattern (targeting `src/emit/emit_gams.py`)
+- [x] Clear recommendation for Sprint 16 scope (9-15 hours, 76-100% solve rate expected)
+- [x] Unknowns 4.2, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

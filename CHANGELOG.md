@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Prep Task 7: Research PATH Syntax Error Patterns - 2026-01-19
+
+**Branch:** `planning/sprint16-prep-task7`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Analyzed all 14 models with solve-stage `path_syntax_error` failures to understand patterns and develop fix strategies for Sprint 16. Critical finding: the `path_syntax_error` name is misleading - these are NOT PATH solver errors or file path issues. They are **GAMS compilation errors** in generated MCP files caused by bugs in `src/emit/emit_gams.py`.
+
+#### Critical Finding
+
+ALL 14 solve-stage failures (100%) are addressable nlp2mcp code generation bugs. Zero failures are due to PATH solver issues or inherent model difficulties. Fixing these bugs in `emit_gams.py` would improve solve rate from 17.6% to 76-100%.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_16/PATH_ERROR_ANALYSIS.md` - Comprehensive error analysis with patterns and fix strategies
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_16/KNOWN_UNKNOWNS.md` - Verified unknowns 4.2 and 6.2 with corrected findings
+- `docs/planning/EPIC_3/SPRINT_16/PREP_PLAN.md` - Task 7 marked complete
+
+#### Error Pattern Distribution
+
+| Pattern | Count | Root Cause | Fix Location |
+|---------|-------|------------|--------------|
+| Unary minus before parens | 10 | `-(expr)` should be `(-1)*(expr)` | `emit_gams.py` |
+| Set element quoting | 3 | Inconsistent quoting in generated code | `emit_gams.py` |
+| Scalar declaration | 1 | Missing identifier name | `emit_gams.py` |
+
+#### Sprint 16 Fix Impact
+
+| Metric | Current | After Fixes |
+|--------|---------|-------------|
+| Solve rate | 17.6% (3/17) | 76-100% (13-17/17) |
+| Implementation effort | - | 9-15 hours |
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 4.2 | ✅ VERIFIED | path_syntax_error is code generation bug, not file paths |
+| 6.2 | ✅ VERIFIED | ALL solve failures are addressable nlp2mcp bugs (0 from PATH solver) |
+
+---
+
 ### Sprint 16 Prep Task 6: Analyze Top Parse Blockers (lexer_invalid_char) - 2026-01-18
 
 **Branch:** `planning/sprint16-prep-task6`  
