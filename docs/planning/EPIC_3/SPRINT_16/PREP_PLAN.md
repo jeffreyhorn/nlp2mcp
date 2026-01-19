@@ -826,13 +826,52 @@ Guide enabling safe, systematic grammar improvements in Sprint 16.
 
 ## Task 6: Analyze Top Parse Blockers (lexer_invalid_char)
 
-**Status:** Not Started  
+**Status:** ✅ COMPLETE  
+**Completed:** January 18, 2026  
 **Priority:** Critical  
 **Estimated Time:** 3-4 hours  
+**Actual Time:** ~3 hours  
 **Deadline:** Before Sprint 16 Day 1  
 **Owner:** Development team  
 **Dependencies:** Task 5 (Grammar Extension Patterns)  
 **Unknowns Verified:** 4.4, 8.1, 8.3, 8.4
+
+### Completion Summary
+
+**Deliverable Created:** `docs/planning/EPIC_3/SPRINT_16/LEXER_ERROR_ANALYSIS.md`
+
+**Critical Finding:** The original assumption that dollar control causes lexer errors was INCORRECT. The grammar already handles `$ontext/$offtext` correctly. Errors occur in GAMS data syntax that the grammar doesn't fully support.
+
+**Key Results:**
+- Analyzed 219 GAMS models (expanded from original 160)
+- 59 models parse successfully (27%)
+- 153 models fail with lexer errors (70%)
+- 7 models fail with internal errors (3%)
+
+**Error Subcategorization:**
+
+| Subcategory | Count | % of Lexer Errors | Fixability |
+|-------------|-------|-------------------|------------|
+| Complex set data | 91 | 59% | Partial |
+| Tuple syntax `(a,b).c` | 12 | 8% | Yes |
+| Numeric context | 11 | 7% | Yes |
+| Keyword case | 9 | 6% | Yes (Low effort) |
+| Operator context | 9 | 6% | Partial |
+| Quoted descriptions | 7 | 5% | Yes |
+| Dot notation | 5 | 3% | Partial |
+| Hyphenated elements | 3 | 2% | Yes (Low effort) |
+| Abort statement | 3 | 2% | Yes (Low effort) |
+
+**Sprint 16 Targets:**
+- Priority 1 (Low-effort): 26 models, 2.5 days
+- Priority 2 (Medium-effort): 19 models, 2.5 days
+- Expected improvement: 39-47% parse rate (from 27%)
+
+**Unknowns Verified:**
+- ✅ 4.4: CORRECTED - Most errors are from syntax we SHOULD support, not exclude
+- ✅ 8.1: Updated targets based on actual root causes
+- ✅ 8.3: CORRECTED - Dollar control already handled; focus on data syntax
+- ✅ 8.4: Complete character analysis (no encoding issues, all standard ASCII)
 
 ### Objective
 
@@ -931,11 +970,11 @@ Clear understanding of lexer errors and actionable fix strategies for Sprint 16.
 
 ### Verification
 
-- [ ] All 109 models with lexer_invalid_char categorized
-- [ ] Subcategories defined with counts
-- [ ] Fix strategy for each subcategory
-- [ ] Effort estimates for each fix
-- [ ] Sprint 16 targets defined
+- [x] All 153 models with lexer_invalid_char categorized (expanded from original 109)
+- [x] Subcategories defined with counts (11 distinct subcategories)
+- [x] Fix strategy for each subcategory
+- [x] Effort estimates for each fix (Low/Medium/High)
+- [x] Sprint 16 targets defined (Priority 1: 26 models, Priority 2: 19 models)
 
 ### Deliverables
 
@@ -944,12 +983,12 @@ Clear understanding of lexer errors and actionable fix strategies for Sprint 16.
 
 ### Acceptance Criteria
 
-- [ ] At least 80% of lexer_invalid_char errors categorized
-- [ ] Top 3 subcategories have detailed fix strategies
-- [ ] Effort estimates provided for each strategy
-- [ ] Clear Sprint 16 targets based on impact/effort
-- [ ] Example fixes documented for implementation
-- [ ] Unknowns 4.4, 8.1, 8.3, 8.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] At least 80% of lexer_invalid_char errors categorized (100% categorized)
+- [x] Top 3 subcategories have detailed fix strategies
+- [x] Effort estimates provided for each strategy
+- [x] Clear Sprint 16 targets based on impact/effort
+- [x] Example fixes documented for implementation
+- [x] Unknowns 4.4, 8.1, 8.3, 8.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

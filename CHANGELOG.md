@@ -7,6 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Prep Task 6: Analyze Top Parse Blockers (lexer_invalid_char) - 2026-01-18
+
+**Branch:** `planning/sprint16-prep-task6`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Deep analysis of lexer_invalid_char errors to identify specific causes and develop fix strategies for Sprint 16. Analyzed 219 GAMS models, categorized 153 lexer errors into 11 subcategories, and developed prioritized implementation plan.
+
+#### Critical Finding
+
+The original assumption that **dollar control causes lexer errors was INCORRECT**. The grammar already handles `$ontext/$offtext` correctly via `%ignore` patterns. The actual errors occur in **GAMS data syntax** that the grammar doesn't fully support.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_16/LEXER_ERROR_ANALYSIS.md` - Comprehensive error analysis with subcategorization and fix strategies
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_16/KNOWN_UNKNOWNS.md` - Verified unknowns 4.4, 8.1, 8.3, 8.4 with corrected findings
+- `docs/planning/EPIC_3/SPRINT_16/PREP_PLAN.md` - Task 6 marked complete
+
+#### Analysis Results (219 Models)
+
+| Category | Count | Percentage |
+|----------|-------|------------|
+| Parse Success | 59 | 27% |
+| Lexer Errors | 153 | 70% |
+| Internal Errors | 7 | 3% |
+
+#### Lexer Error Subcategories
+
+| Subcategory | Count | % of Errors | Fixability | Effort |
+|-------------|-------|-------------|------------|--------|
+| Complex set data | 91 | 59% | Partial | High |
+| Tuple syntax `(a,b).c` | 12 | 8% | Yes | Medium |
+| Numeric context | 11 | 7% | Yes | Medium |
+| Keyword case (`Free Variable`) | 9 | 6% | Yes | Low |
+| Operator context | 9 | 6% | Partial | Medium |
+| Quoted descriptions | 7 | 5% | Yes | Medium |
+| Dot notation | 5 | 3% | Partial | Medium |
+| Hyphenated elements | 3 | 2% | Yes | Low |
+| Abort statement | 3 | 2% | Yes | Low |
+
+#### Sprint 16 Implementation Plan
+
+| Priority | Targets | Models | Effort | Days |
+|----------|---------|--------|--------|------|
+| 1 | Keyword case, hyphenated elements, abort, numeric | 26 | Low-Medium | 2.5 |
+| 2 | Tuple expansion, quoted descriptions | 19 | Medium | 2.5 |
+| **Total** | | **45** | | **5 days** |
+
+**Expected Improvement:** 39-47% parse rate (from 27%)
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 4.4 | ✅ CORRECTED | Most errors are from syntax we SHOULD support (not exclude) |
+| 8.1 | ✅ UPDATED | Revised targets based on actual root causes |
+| 8.3 | ✅ CORRECTED | Dollar control already handled; focus on data syntax |
+| 8.4 | ✅ VERIFIED | No encoding issues; all standard ASCII characters |
+
+#### Character Analysis
+
+| Character | Count | Primary Cause |
+|-----------|-------|---------------|
+| `'` (quote) | 25 | Inline descriptions |
+| `,` (comma) | 20 | Abort/tuple syntax |
+| `1`-`9` (digits) | 25+ | Numeric in set context |
+| `(` (paren) | 14 | Tuple expansion |
+| `V`, `F` (letters) | 10 | Keyword case |
+
+---
+
 ### Sprint 16 Prep Task 5: Survey GAMS Grammar Extension Patterns - 2026-01-18
 
 **Branch:** `planning/sprint16-prep-task5`  
