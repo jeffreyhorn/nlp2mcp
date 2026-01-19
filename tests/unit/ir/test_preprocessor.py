@@ -338,12 +338,10 @@ class TestPreprocessGamsFile:
         """Test preprocessing a simple file without includes."""
         # Create a test file
         test_file = tmp_path / "test.gms"
-        test_file.write_text(
-            """$title Test Model
+        test_file.write_text("""$title Test Model
 $if not set N $set N 10
 Set i /1*%N%/;
-Variables x;"""
-        )
+Variables x;""")
 
         result = preprocess_gams_file(test_file)
 
@@ -356,11 +354,9 @@ Variables x;"""
     def test_preprocessing_with_eolcom(self, tmp_path: Path):
         """Test preprocessing a file with $eolCom directive."""
         test_file = tmp_path / "test.gms"
-        test_file.write_text(
-            """$eolCom //
+        test_file.write_text("""$eolCom //
 Set i /1*10/;  // This is a comment
-Variables x;   // Another comment"""
-        )
+Variables x;   // Another comment""")
 
         result = preprocess_gams_file(test_file)
 
@@ -373,13 +369,11 @@ Variables x;   // Another comment"""
     def test_preprocessing_with_multiple_macros(self, tmp_path: Path):
         """Test preprocessing with multiple macro definitions."""
         test_file = tmp_path / "test.gms"
-        test_file.write_text(
-            """$if not set N $set N 10
+        test_file.write_text("""$if not set N $set N 10
 $if not set M $set M 5
 Set i /1*%N%/;
 Set j /1*%M%/;
-Parameter p(%N%, %M%);"""
-        )
+Parameter p(%N%, %M%);""")
 
         result = preprocess_gams_file(test_file)
 
@@ -391,14 +385,12 @@ Parameter p(%N%, %M%);"""
     def test_preprocessing_with_ontext_offtext(self, tmp_path: Path):
         """Test preprocessing with comment blocks."""
         test_file = tmp_path / "test.gms"
-        test_file.write_text(
-            """Set i /1*10/;
+        test_file.write_text("""Set i /1*10/;
 $ontext
 This is a documentation block
 that should be removed
 $offtext
-Variables x;"""
-        )
+Variables x;""")
 
         result = preprocess_gams_file(test_file)
 
@@ -414,12 +406,10 @@ Variables x;"""
     def test_preprocessing_preserves_line_structure(self, tmp_path: Path):
         """Test that preprocessing preserves line structure for error reporting."""
         test_file = tmp_path / "test.gms"
-        test_file.write_text(
-            """$title Test
+        test_file.write_text("""$title Test
 $if not set N $set N 10
 Set i /1*%N%/;
-Variables x;"""
-        )
+Variables x;""")
 
         result = preprocess_gams_file(test_file)
         lines = result.split("\n")
@@ -431,18 +421,14 @@ Variables x;"""
         """Test preprocessing with $include directives."""
         # Create an included file
         included = tmp_path / "data.gms"
-        included.write_text(
-            """$if not set size $set size 5
-Set k /1*%size%/;"""
-        )
+        included.write_text("""$if not set size $set size 5
+Set k /1*%size%/;""")
 
         # Create main file
         main_file = tmp_path / "main.gms"
-        main_file.write_text(
-            """$title Main Model
+        main_file.write_text("""$title Main Model
 $include data.gms
-Variables x;"""
-        )
+Variables x;""")
 
         result = preprocess_gams_file(main_file)
 
@@ -458,15 +444,12 @@ Variables x;"""
         """Test preprocessing with all features combined."""
         # Create included file with macros
         included = tmp_path / "defs.gms"
-        included.write_text(
-            """$if not set N $set N 10
-$if not set tol $set tol 1e-6"""
-        )
+        included.write_text("""$if not set N $set N 10
+$if not set tol $set tol 1e-6""")
 
         # Create main file
         main_file = tmp_path / "main.gms"
-        main_file.write_text(
-            """$title Complex Model
+        main_file.write_text("""$title Complex Model
 $eolCom //
 $include defs.gms
 Set i /1*%N%/;  // Index set
@@ -474,8 +457,7 @@ Parameter epsilon /%tol%/;  // Tolerance
 $ontext
 Documentation block
 $offtext
-Variables x;"""
-        )
+Variables x;""")
 
         result = preprocess_gams_file(main_file)
 
@@ -515,11 +497,9 @@ Variables x;"""
     def test_maxmin_gms_real_world_pattern(self, tmp_path: Path):
         """Test pattern from actual maxmin.gms GAMSLib model."""
         test_file = tmp_path / "maxmin.gms"
-        test_file.write_text(
-            """$eolCom //
+        test_file.write_text("""$eolCom //
 $if not set points $set points 13
-Set k number of points / 1*%points% /;"""
-        )
+Set k number of points / 1*%points% /;""")
 
         result = preprocess_gams_file(test_file)
 
@@ -535,10 +515,8 @@ class TestDynamicSetRanges:
     def test_chain_gms_pattern(self, tmp_path: Path):
         """Test dynamic set range from chain.gms: i0*i%nh%."""
         test_file = tmp_path / "chain.gms"
-        test_file.write_text(
-            """$if not set nh $set nh 50
-Set nh / i0*i%nh% /;"""
-        )
+        test_file.write_text("""$if not set nh $set nh 50
+Set nh / i0*i%nh% /;""")
 
         result = preprocess_gams_file(test_file)
 
@@ -549,10 +527,8 @@ Set nh / i0*i%nh% /;"""
     def test_elec_gms_pattern(self, tmp_path: Path):
         """Test dynamic set range from elec.gms: i1*i%np%."""
         test_file = tmp_path / "elec.gms"
-        test_file.write_text(
-            """$if not set np $set np 50
-Set i 'electrons' /i1*i%np%/;"""
-        )
+        test_file.write_text("""$if not set np $set np 50
+Set i 'electrons' /i1*i%np%/;""")
 
         result = preprocess_gams_file(test_file)
 
@@ -563,10 +539,8 @@ Set i 'electrons' /i1*i%np%/;"""
     def test_polygon_gms_pattern(self, tmp_path: Path):
         """Test dynamic set range from polygon.gms: i1*i%nv%."""
         test_file = tmp_path / "polygon.gms"
-        test_file.write_text(
-            """$if not set nv $set nv 5
-Set i 'sides' / i1*i%nv% /;"""
-        )
+        test_file.write_text("""$if not set nv $set nv 5
+Set i 'sides' / i1*i%nv% /;""")
 
         result = preprocess_gams_file(test_file)
 
@@ -577,10 +551,8 @@ Set i 'sides' / i1*i%nv% /;"""
     def test_zero_indexed_range(self, tmp_path: Path):
         """Test zero-indexed dynamic range (i0*i%n%)."""
         test_file = tmp_path / "test.gms"
-        test_file.write_text(
-            """$set n 10
-Set i / i0*i%n% /;"""
-        )
+        test_file.write_text("""$set n 10
+Set i / i0*i%n% /;""")
 
         result = preprocess_gams_file(test_file)
 
@@ -589,10 +561,8 @@ Set i / i0*i%n% /;"""
     def test_one_indexed_range(self, tmp_path: Path):
         """Test one-indexed dynamic range (i1*i%n%)."""
         test_file = tmp_path / "test.gms"
-        test_file.write_text(
-            """$set n 100
-Set i / i1*i%n% /;"""
-        )
+        test_file.write_text("""$set n 100
+Set i / i1*i%n% /;""")
 
         result = preprocess_gams_file(test_file)
 
@@ -601,10 +571,8 @@ Set i / i1*i%n% /;"""
     def test_custom_prefix_range(self, tmp_path: Path):
         """Test dynamic range with custom prefix (node1*node%count%)."""
         test_file = tmp_path / "test.gms"
-        test_file.write_text(
-            """$set count 25
-Set nodes / node1*node%count% /;"""
-        )
+        test_file.write_text("""$set count 25
+Set nodes / node1*node%count% /;""")
 
         result = preprocess_gams_file(test_file)
 
@@ -613,12 +581,10 @@ Set nodes / node1*node%count% /;"""
     def test_multiple_dynamic_sets(self, tmp_path: Path):
         """Test multiple sets with different dynamic ranges."""
         test_file = tmp_path / "test.gms"
-        test_file.write_text(
-            """$set m 10
+        test_file.write_text("""$set m 10
 $set n 20
 Set i / i1*i%m% /;
-Set j / j1*j%n% /;"""
-        )
+Set j / j1*j%n% /;""")
 
         result = preprocess_gams_file(test_file)
 
@@ -628,11 +594,9 @@ Set j / j1*j%n% /;"""
     def test_nested_macro_reference(self, tmp_path: Path):
         """Test macro referencing another macro."""
         test_file = tmp_path / "test.gms"
-        test_file.write_text(
-            """$set base 10
+        test_file.write_text("""$set base 10
 $set derived %base%
-Set i / i1*i%derived% /;"""
-        )
+Set i / i1*i%derived% /;""")
 
         result = preprocess_gams_file(test_file)
 

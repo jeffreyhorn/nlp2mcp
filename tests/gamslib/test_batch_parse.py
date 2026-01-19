@@ -201,8 +201,7 @@ class TestParseSingleModel:
         """Test successful model parse."""
         # Create a simple test model file
         model_file = tmp_path / "test_model.gms"
-        model_file.write_text(
-            """
+        model_file.write_text("""
 * Simple test model
 Variables x, y, obj;
 Positive Variables x, y;
@@ -216,8 +215,7 @@ constraint.. x + y =l= 10;
 
 Model test_model /all/;
 Solve test_model using lp minimizing obj;
-"""
-        )
+""")
 
         # Mock the parser and validator
         mock_model = MagicMock()

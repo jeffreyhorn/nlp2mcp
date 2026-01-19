@@ -190,12 +190,10 @@ def test_batinclude_gasoil_pattern(tmp_path):
     """Test actual pattern from gasoil.gms with copspart.inc."""
     # Create simplified copspart.inc
     cops_file = tmp_path / "copspart.inc"
-    cops_file.write_text(
-        """* Collocation points: %1
+    cops_file.write_text("""* Collocation points: %1
 * Measurements: %2
 Set nh / 1*%2 /;
-Parameter rho('%1');"""
-    )
+Parameter rho('%1');""")
 
     # Create main file
     main_file = tmp_path / "main.gms"

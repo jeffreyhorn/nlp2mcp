@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Prep Task 5: Survey GAMS Grammar Extension Patterns - 2026-01-18
+
+**Branch:** `planning/sprint16-prep-task5`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Surveyed GAMS grammar (`src/gams/gams_grammar.lark`) to understand extension patterns and prepare for Sprint 16 parser improvements. Created comprehensive GRAMMAR_EXTENSION_GUIDE.md with grammar analysis, 5 extension patterns, Lark best practices, and testing checklist. Verified 3 unknowns (8.2, 9.1, 9.2).
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_16/GRAMMAR_EXTENSION_GUIDE.md` - Grammar extension patterns and testing guide
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_16/KNOWN_UNKNOWNS.md` - Verified unknowns 8.2, 9.1, 9.2
+- `docs/planning/EPIC_3/SPRINT_16/PREP_PLAN.md` - Task 5 marked complete
+
+#### Key Findings
+
+| Finding | Details |
+|---------|---------|
+| Grammar Size | 604 lines, ~80 rules, ~50 terminals |
+| Parser Type | Earley with `ambiguity="resolve"` |
+| Dollar Control | Already handled via `%ignore /(?si)\$ontext.*?\$offtext/` |
+| Extension Risk | Low - `%ignore` patterns don't affect parse rules |
+
+#### Extension Patterns Identified
+
+1. **`%ignore` pattern enhancement** - Lowest risk for dollar control (operates at lexer level)
+2. **Statement alternatives** - Add new statements at end of `?stmt` rule
+3. **Terminal priorities** - Use `.N` suffix to control matching order
+4. **Rule extension** - Use tree aliases (`-> name`) for semantic equivalence
+5. **Preprocessing** - Python preprocessing before parsing for full control
+
+#### Testing Strategy (4-Layer Approach)
+
+| Layer | Purpose | Frequency |
+|-------|---------|-----------|
+| Unit Tests | Verify syntax features | Every commit |
+| Regression Baseline | No existing models break | Before/after changes |
+| GAMSLIB Integration | Measure improvement | Before merge |
+| IR Validation | Correct parse tree output | Spot check |
+
+#### Critical Finding
+
+The grammar ALREADY handles `$ontext/$offtext` via `%ignore`. Sprint 16 should focus on:
+- Enhancing the existing pattern (handle whitespace, edge cases)
+- Adding preprocessing if pattern enhancement insufficient
+
+---
+
 ### Sprint 16 Prep Task 4: Design Failure Analysis Report Schema - 2026-01-16
 
 **Branch:** `planning/sprint16-prep-task4`  

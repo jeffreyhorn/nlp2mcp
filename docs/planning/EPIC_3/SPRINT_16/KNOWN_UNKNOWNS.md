@@ -1457,7 +1457,37 @@ pytest tests/ir/test_parser.py -v
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 5)
+
+**Verified Date:** January 18, 2026
+
+**Finding:** YES - Grammar extensions can be made safely without breaking existing parses.
+
+**Key Evidence:**
+
+1. **Parser Configuration:** The grammar uses Earley parser with `ambiguity="resolve"`, which gracefully handles ambiguous grammars by automatically selecting the simplest derivation.
+
+2. **Extension Patterns Identified:**
+   - **Pattern 1 (Lowest Risk):** Add new `%ignore` patterns for content skipping - lexer-level, doesn't affect parse rules
+   - **Pattern 2 (Low Risk):** Add new statement types at end of `?stmt` alternatives - minimal precedence impact
+   - **Pattern 3 (Medium Risk):** Extend existing rules with additional alternatives using same tree alias
+
+3. **Current Grammar Structure:**
+   - 604 lines, ~80 rules, ~50 terminals
+   - Well-organized sections (blocks, declarations, expressions, tokens)
+   - Already handles `$ontext/$offtext` via `%ignore /(?si)\$ontext.*?\$offtext/`
+
+4. **Safety Mechanisms:**
+   - Terminal priorities (`.N` suffix) control matching order
+   - Tree aliases (`-> name`) normalize different syntaxes
+   - Earley parser tolerates ambiguity without failing
+
+**Recommendation:** Use `%ignore` pattern enhancement (lowest risk) for dollar control improvements. This approach:
+- Operates at lexer level, before parsing
+- Cannot break existing parse rules
+- Easy to test and revert if needed
+
+**Reference:** See `GRAMMAR_EXTENSION_GUIDE.md` for detailed patterns and testing checklist.
 
 ---
 
@@ -1611,7 +1641,55 @@ python -m src.cli data/gamslib/raw/MODEL_WITH_ONTEXT.gms -o /dev/null
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 5)
+
+**Verified Date:** January 18, 2026
+
+**Finding:** The grammar ALREADY handles `$ontext/$offtext` via an `%ignore` directive. The issue is likely pattern edge cases.
+
+**Current Implementation (gams_grammar.lark line ~597):**
+```lark
+%ignore /(?si)\$ontext.*?\$offtext/    // Block comments (case insensitive)
+```
+
+**Pattern Analysis:**
+- `(?si)` - Case insensitive (`i`) and dotall mode (`s` - dot matches newlines)
+- `\$ontext` - Literal dollar sign followed by "ontext"
+- `.*?` - Non-greedy match of any characters (including newlines due to `s` flag)
+- `\$offtext` - Literal dollar sign followed by "offtext"
+
+**Why Models May Still Fail:**
+
+1. **Whitespace before `$`:** Pattern requires `$` at exact position; leading whitespace not handled
+2. **Line-start anchoring:** Some GAMS files may have `$ontext` not at line start
+3. **Encoding issues:** Non-ASCII characters in skipped content may cause lexer errors
+4. **Other dollar directives:** `$include`, `$call`, `$if` etc. handled by separate pattern that may miss variations
+
+**Recommended Enhancement (Option A - Enhanced Pattern):**
+```lark
+// Handle whitespace before $ontext
+%ignore /(?sim)^\s*\$ontext.*?\$offtext/
+```
+
+**Recommended Enhancement (Option B - Preprocessing):**
+```python
+def preprocess_gams(source: str) -> str:
+    """Remove dollar control blocks before parsing."""
+    import re
+    # Remove $ontext...$offtext blocks (case insensitive, multiline)
+    source = re.sub(r'(?si)\$ontext.*?\$offtext', '', source)
+    return source
+```
+
+**Edge Cases to Test:**
+1. `$ONTEXT` / `$OFFTEXT` (uppercase) - Should work with `(?i)` flag
+2. `  $ontext` (indented) - May need `^\s*` prefix
+3. Nested `$if` inside `$ontext` - Should be skipped entirely
+4. Unclosed `$ontext` - Should fail gracefully (lexer error)
+
+**Sprint 16 Recommendation:** Start with Option A (pattern enhancement). If insufficient, implement Option B (preprocessing) which provides full control.
+
+**Reference:** See `GRAMMAR_EXTENSION_GUIDE.md` "Dollar Control Handling" section.
 
 ---
 
@@ -1664,7 +1742,84 @@ def check_regression(before_json, after_json):
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 5)
+
+**Verified Date:** January 18, 2026
+
+**Finding:** Comprehensive testing strategy defined with 4-layer approach.
+
+**Testing Strategy:**
+
+**Layer 1: Unit Tests (Fast - Run on Every Change)**
+```bash
+pytest tests/parser/ tests/unit/gams/test_parser.py -v
+```
+- 19 parser feature test files in `tests/parser/`
+- Core parser tests in `tests/unit/gams/test_parser.py`
+- Performance tests in `tests/unit/gams/test_parser_performance.py`
+- **Purpose:** Verify specific syntax features work correctly
+
+**Layer 2: Regression Baseline (Medium - Run Before/After)**
+```bash
+# Before change
+python scripts/gamslib/batch_parse.py --json > baseline.json
+
+# After change  
+python scripts/gamslib/batch_parse.py --json > after.json
+
+# Compare - NO previously-passing models should fail
+python -c "
+import json
+before = json.load(open('baseline.json'))
+after = json.load(open('after.json'))
+for model in before['models']:
+    if before['models'][model]['parse_success'] and not after['models'][model]['parse_success']:
+        print(f'REGRESSION: {model}')
+"
+```
+- **Purpose:** Ensure no existing functionality breaks
+
+**Layer 3: GAMSLIB Integration (Slow - Run Before Merge)**
+```bash
+python scripts/gamslib/batch_parse.py --verbose
+```
+- Full 160-model test on GAMSLIB corpus
+- Records parse success/failure for each model
+- **Purpose:** Measure real-world improvement
+
+**Layer 4: IR Validation (Spot Check)**
+```bash
+# For newly-passing models, verify IR is reasonable
+python -c "from src.ir.parser import parse_model_file; m = parse_model_file('model.gms'); print(m.sets, m.variables)"
+```
+- **Purpose:** Ensure parsing produces correct intermediate representation
+
+**Regression Detection Protocol:**
+
+| Check | Frequency | Failure Action |
+|-------|-----------|----------------|
+| Unit tests pass | Every commit | Block merge |
+| No regressions in baseline | Before PR | Block merge |
+| Parse rate improves | Before merge | Informational |
+| IR spot-check | New models | Informational |
+
+**Existing Test Coverage:**
+- `tests/parser/` - 19 feature-specific test files
+- `tests/unit/gams/test_parser.py` - Core parsing tests
+- `tests/unit/gams/test_parser_performance.py` - Performance benchmarks
+
+**CI Integration Recommendation:**
+```yaml
+# Add to CI pipeline
+- name: Parser Regression Check
+  run: |
+    python scripts/gamslib/batch_parse.py --limit 34 --parse-success --json > baseline.json
+    # (Make changes)
+    python scripts/gamslib/batch_parse.py --limit 34 --parse-success --json > after.json
+    python scripts/check_regression.py baseline.json after.json
+```
+
+**Reference:** See `GRAMMAR_EXTENSION_GUIDE.md` "Testing Checklist" section.
 
 ---
 

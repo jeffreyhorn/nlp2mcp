@@ -65,8 +65,7 @@ class TestHighRiskInteractions:
             Expected: Parse succeeds, Call node with sum expression
             """
             test_file = tmp_path / "test_indexed_arg.gms"
-            test_file.write_text(
-                """
+            test_file.write_text("""
 Sets i / i1*i3 /;
 Parameters
     data(i)
@@ -79,8 +78,7 @@ data('i3') = 30;
 
 * Function with sum containing indexed parameter
 result = sqrt(sum(i, data(i)));
-"""
-            )
+""")
 
             model = parse_model_file(test_file)
 
@@ -117,16 +115,14 @@ result = sqrt(sum(i, data(i)));
             Expected: Parse succeeds, bounds applied correctly
             """
             test_file = tmp_path / "test_simple_bounds.gms"
-            test_file.write_text(
-                """
+            test_file.write_text("""
 Sets i / i1*i3 /;
 Variables x(i);
 
 * Bounds with simple index
 x.lo(i) = 0;
 x.up(i) = 100;
-"""
-            )
+""")
 
             model = parse_model_file(test_file)
 
@@ -156,8 +152,7 @@ class TestMediumRiskInteractions:
             Expected: Call node preserved (simplification happens in Sprint 11)
             """
             test_file = tmp_path / "test_call_preserve.gms"
-            test_file.write_text(
-                """
+            test_file.write_text("""
 Parameters
     x
     y
@@ -167,8 +162,7 @@ y = 3;
 
 * Function with arithmetic expression
 result = sqrt(2*x + 2*y);
-"""
-            )
+""")
 
             model = parse_model_file(test_file)
 
@@ -199,14 +193,12 @@ result = sqrt(2*x + 2*y);
             Expected: Parse succeeds, all scalars created with values
             """
             test_file = tmp_path / "test_comma_basic.gms"
-            test_file.write_text(
-                """
+            test_file.write_text("""
 * Comma-separated with literal values
 Scalar a /5/, b /10/, c /1/;
 
 Display a, b, c;
-"""
-            )
+""")
 
             model = parse_model_file(test_file)
 
