@@ -234,7 +234,7 @@ sum(i, a(i,c) * nu_cdef(i))
 ### Priority 1: Error 445 - Unary Minus (10 models)
 
 **Impact:** Fixes 10/14 models (71%)  
-**Effort:** Low (2-4 hours)  
+**Effort:** Low (2-4h)  
 **Location:** `src/emit/emit_gams.py`
 
 **Fix Approach:**
@@ -245,7 +245,7 @@ sum(i, a(i,c) * nu_cdef(i))
 ### Priority 2: Set Element Quoting (3 models)
 
 **Impact:** Fixes 3/14 models (21%)  
-**Effort:** Medium (4-6 hours)  
+**Effort:** Medium (4-6h)  
 **Location:** `src/emit/emit_gams.py`
 
 **Fix Approach:**
@@ -256,7 +256,7 @@ sum(i, a(i,c) * nu_cdef(i))
 ### Priority 3: Scalar Declaration (1 model)
 
 **Impact:** Fixes 1/14 models (7%)  
-**Effort:** Low (1-2 hours)  
+**Effort:** Low (1-2h)  
 **Location:** `src/emit/emit_gams.py`
 
 **Fix Approach:**
