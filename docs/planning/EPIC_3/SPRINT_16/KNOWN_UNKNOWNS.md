@@ -58,14 +58,14 @@ This document identifies all assumptions and unknowns for Sprint 16 features **b
 ## Summary Statistics
 
 **Total Unknowns:** 27  
-**Verified:** 19 (70%)  
-**Remaining:** 8 (30%)
+**Verified:** 22 (81%)  
+**Remaining:** 5 (19%)
 
 **By Priority:**
 - Critical: 7 (26%) - 6 verified, 1 remaining
 - High: 11 (41%) - 8 verified, 3 remaining
-- Medium: 7 (26%) - 3 verified, 4 remaining
-- Low: 2 (7%) - 2 remaining
+- Medium: 7 (26%) - 6 verified, 1 remaining
+- Low: 2 (7%) - 2 verified, 0 remaining
 
 **By Category:**
 - Category 1 (Status Summary Report Generator): 4 unknowns
@@ -396,7 +396,35 @@ grep -i "generated\|version\|date" docs/testing/SPRINT_BASELINE.md
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 8)
+
+**Verified Date:** January 19, 2026
+
+**Decision:**
+- **Timestamp format:** ISO 8601 with timezone (`YYYY-MM-DDTHH:MM:SSZ`)
+- **Snapshot ID:** `sprint{N}_{YYYYMMDD}` format (e.g., `sprint15_20260115`)
+- **Version tracking:** Three versions tracked:
+  1. Schema version for progress_history.json evolution
+  2. nlp2mcp version from `importlib.metadata.version("nlp2mcp")`
+  3. Git commit hash from `git rev-parse HEAD` for exact reproducibility
+
+**Implementation:**
+```python
+from datetime import datetime, timezone
+from importlib.metadata import version
+import subprocess
+
+timestamp = datetime.now(timezone.utc).isoformat()
+nlp2mcp_version = version("nlp2mcp")
+git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+```
+
+**Rationale:**
+- ISO 8601 is sortable, unambiguous, internationally recognized
+- Git commit hash enables exact reproducibility
+- Snapshot ID is human-readable and unique per sprint-date
+
+**Reference:** See `REPORT_DESIGN.md` "Progress Tracking Design" section.
 
 ---
 
@@ -679,7 +707,45 @@ progress_history.json should store timestamped snapshots with success rates, err
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 8)
+
+**Verified Date:** January 19, 2026
+
+**Decision:** JSON Schema (v1.0.0) with the following structure:
+
+**Top-Level:**
+- `schema_version`: Semantic version string for forward compatibility
+- `snapshots`: Array of progress snapshots (newest first)
+
+**Per-Snapshot:**
+- `snapshot_id`: Unique identifier (`sprint{N}_{YYYYMMDD}` format)
+- `timestamp`: ISO 8601 timestamp
+- `nlp2mcp_version`: Version at time of snapshot
+- `git_commit`: 40-character commit hash for reproducibility
+- `sprint`: Integer sprint number
+- `label`: Human-readable label (e.g., "Sprint 15 Baseline")
+- `metrics`: Stage-by-stage success rates and error breakdowns
+- `model_status`: Per-model outcomes for change tracking
+- `notes`: Optional array of notes
+
+**Metrics Structure:**
+```json
+{
+  "total_models": 160,
+  "parse": { "attempted": 160, "success": 34, "failure": 126, "rate": 0.213, "error_breakdown": {...} },
+  "translate": { "attempted": 34, "success": 17, "failure": 17, "rate": 0.500, "error_breakdown": {...} },
+  "solve": { "attempted": 17, "success": 3, "failure": 14, "rate": 0.176, "error_breakdown": {...} },
+  "full_pipeline": { "success": 1, "rate": 0.0063 }
+}
+```
+
+**Storage Estimate:**
+- ~8KB per snapshot (160 models × ~50 bytes each)
+- 50 snapshots = ~400KB (acceptable for JSON)
+
+**Compatibility:** Designed to be compatible with existing `baseline_metrics.json`. Includes conversion utility `baseline_to_snapshot()`.
+
+**Reference:** See `REPORT_DESIGN.md` "progress_history.json Schema" section for complete JSON Schema.
 
 ---
 
@@ -723,7 +789,46 @@ def is_regression(current, baseline, threshold=0.02):
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 8)
+
+**Verified Date:** January 19, 2026
+
+**Decision:** Three-tier regression detection with configurable thresholds:
+
+**Detection Criteria:**
+1. **Rate regression:** Success rate decreases by more than threshold
+2. **Model regression:** A previously passing model now fails
+3. **Error increase:** An error category count increases significantly
+
+**Threshold Configuration:**
+```python
+REGRESSION_THRESHOLDS = {
+    "parse_rate": 0.02,           # 2% regression triggers alert
+    "translate_rate": 0.02,
+    "solve_rate": 0.02,
+    "full_pipeline_rate": 0.01,   # More sensitive for full pipeline
+    "max_model_regressions": 0,   # Any model regression is flagged
+    "error_increase_threshold": 5  # Flag if error category increases by >5
+}
+```
+
+**Rationale for Thresholds:**
+- **2% rate threshold:** Balances sensitivity vs. noise; 3-4 model changes
+- **0 model regressions:** Any previously passing model regressing is important
+- **5 error increase:** Small variations expected; flag significant changes only
+
+**Alert Mechanisms:**
+1. **Console output:** Clear formatting with icons (⚠️, ✅, ➡️)
+2. **CI integration:** Non-zero exit code via `--fail-on-regression` flag
+3. **Detailed report:** Model-level change report for debugging
+
+**CLI Support:**
+```bash
+python -m nlp2mcp.reporting.generate_report --compare --check-regressions
+python -m nlp2mcp.reporting.generate_report --check-regressions --fail-on-regression
+```
+
+**Reference:** See `REPORT_DESIGN.md` "Regression Detection" section for detection algorithm.
 
 ---
 

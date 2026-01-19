@@ -616,3 +616,734 @@ The proposed architecture provides:
 - **Efficiency:** 17 hours estimated implementation time
 
 Sprint 16 should proceed with Jinja2 + tabulate approach, implementing the core status and failure reports first, with progress tracking as a follow-on enhancement.
+
+---
+
+# Progress Tracking Design
+
+**Added:** January 19, 2026  
+**Purpose:** Design schema and approach for tracking pipeline progress over time  
+**Related Task:** Sprint 16 Prep Task 8
+
+---
+
+## Overview
+
+Progress tracking enables:
+1. **Sprint-over-sprint comparison:** Measure improvement from baseline
+2. **Impact analysis:** Identify which fixes had most impact
+3. **Regression detection:** Alert when success rates decrease
+4. **Trend analysis:** Visualize progress over multiple sprints
+
+---
+
+## progress_history.json Schema
+
+### Schema Version: 1.0.0
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Progress History",
+  "description": "Schema for tracking nlp2mcp pipeline progress over time",
+  "type": "object",
+  "required": ["schema_version", "snapshots"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version for forward compatibility",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "snapshots": {
+      "type": "array",
+      "description": "Ordered list of progress snapshots (newest first)",
+      "items": { "$ref": "#/definitions/snapshot" }
+    }
+  },
+  "definitions": {
+    "snapshot": {
+      "type": "object",
+      "required": ["snapshot_id", "timestamp", "nlp2mcp_version", "metrics"],
+      "properties": {
+        "snapshot_id": {
+          "type": "string",
+          "description": "Unique identifier (sprint_date format)",
+          "pattern": "^sprint\\d+_\\d{8}$"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when snapshot was taken"
+        },
+        "nlp2mcp_version": {
+          "type": "string",
+          "description": "nlp2mcp version at time of snapshot"
+        },
+        "git_commit": {
+          "type": "string",
+          "description": "Git commit hash for exact reproducibility",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "sprint": {
+          "type": "integer",
+          "description": "Sprint number"
+        },
+        "label": {
+          "type": "string",
+          "description": "Human-readable label (e.g., 'Sprint 15 Baseline')"
+        },
+        "metrics": { "$ref": "#/definitions/metrics" },
+        "model_status": { "$ref": "#/definitions/model_status" },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional notes about this snapshot"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["total_models", "parse", "translate", "solve", "full_pipeline"],
+      "properties": {
+        "total_models": { "type": "integer" },
+        "parse": { "$ref": "#/definitions/stage_metrics" },
+        "translate": { "$ref": "#/definitions/stage_metrics" },
+        "solve": { "$ref": "#/definitions/stage_metrics" },
+        "full_pipeline": {
+          "type": "object",
+          "properties": {
+            "success": { "type": "integer" },
+            "rate": { "type": "number" }
+          }
+        }
+      }
+    },
+    "stage_metrics": {
+      "type": "object",
+      "required": ["attempted", "success", "failure", "rate"],
+      "properties": {
+        "attempted": { "type": "integer" },
+        "success": { "type": "integer" },
+        "failure": { "type": "integer" },
+        "rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "error_breakdown": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        }
+      }
+    },
+    "model_status": {
+      "type": "object",
+      "description": "Per-model status for tracking individual progress",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "parse": { "type": "string" },
+          "translate": { "type": "string" },
+          "solve": { "type": "string" },
+          "full_pipeline": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}
+```
+
+### Example progress_history.json
+
+```json
+{
+  "schema_version": "1.0.0",
+  "snapshots": [
+    {
+      "snapshot_id": "sprint16_20260120",
+      "timestamp": "2026-01-20T15:30:00Z",
+      "nlp2mcp_version": "0.5.0",
+      "git_commit": "abc123def456789...",
+      "sprint": 16,
+      "label": "Sprint 16 - After Parser Improvements",
+      "metrics": {
+        "total_models": 160,
+        "parse": {
+          "attempted": 160,
+          "success": 55,
+          "failure": 105,
+          "rate": 0.344,
+          "error_breakdown": {
+            "lexer_invalid_char": 85,
+            "internal_error": 20
+          }
+        },
+        "translate": {
+          "attempted": 55,
+          "success": 30,
+          "failure": 25,
+          "rate": 0.545
+        },
+        "solve": {
+          "attempted": 30,
+          "success": 15,
+          "failure": 15,
+          "rate": 0.500
+        },
+        "full_pipeline": {
+          "success": 10,
+          "rate": 0.0625
+        }
+      },
+      "model_status": {
+        "hs62": { "parse": "success", "translate": "success", "solve": "success", "full_pipeline": true },
+        "trnsport": { "parse": "success", "translate": "success", "solve": "failure", "full_pipeline": false },
+        "aircraft": { "parse": "lexer_invalid_char", "translate": null, "solve": null, "full_pipeline": false }
+      },
+      "notes": [
+        "Parser improvements: keyword case handling, hyphenated elements",
+        "21 additional models now parsing successfully"
+      ]
+    },
+    {
+      "snapshot_id": "sprint15_20260115",
+      "timestamp": "2026-01-15T12:00:00Z",
+      "nlp2mcp_version": "0.4.0",
+      "git_commit": "def456abc789012...",
+      "sprint": 15,
+      "label": "Sprint 15 Baseline",
+      "metrics": {
+        "total_models": 160,
+        "parse": {
+          "attempted": 160,
+          "success": 34,
+          "failure": 126,
+          "rate": 0.213,
+          "error_breakdown": {
+            "lexer_invalid_char": 109,
+            "internal_error": 17
+          }
+        },
+        "translate": {
+          "attempted": 34,
+          "success": 17,
+          "failure": 17,
+          "rate": 0.500
+        },
+        "solve": {
+          "attempted": 17,
+          "success": 3,
+          "failure": 14,
+          "rate": 0.176
+        },
+        "full_pipeline": {
+          "success": 1,
+          "rate": 0.0063
+        }
+      },
+      "notes": [
+        "Initial baseline established",
+        "Primary blocker: lexer_invalid_char (109 models)"
+      ]
+    }
+  ]
+}
+```
+
+---
+
+## Timestamp and Versioning
+
+### Timestamp Format
+
+**Decision:** ISO 8601 format with timezone (`YYYY-MM-DDTHH:MM:SSZ`)
+
+**Rationale:**
+- Internationally recognized standard
+- Sortable as strings
+- Unambiguous timezone handling
+- Native Python support via `datetime.isoformat()`
+
+**Implementation:**
+```python
+from datetime import datetime, timezone
+
+timestamp = datetime.now(timezone.utc).isoformat()
+# Output: "2026-01-19T15:30:00+00:00"
+```
+
+### Version Tracking
+
+**Tracked Versions:**
+1. **Schema version:** For progress_history.json schema evolution
+2. **nlp2mcp version:** From `importlib.metadata.version("nlp2mcp")`
+3. **Git commit hash:** From `git rev-parse HEAD` for exact reproducibility
+
+**Version Access:**
+```python
+from importlib.metadata import version
+import subprocess
+
+nlp2mcp_version = version("nlp2mcp")
+git_commit = subprocess.check_output(
+    ["git", "rev-parse", "HEAD"], text=True
+).strip()
+```
+
+### Snapshot ID Convention
+
+**Format:** `sprint{N}_{YYYYMMDD}`
+
+**Examples:**
+- `sprint15_20260115` - Sprint 15 baseline
+- `sprint16_20260120` - Sprint 16 post-improvement
+- `sprint16_20260118` - Sprint 16 mid-sprint checkpoint
+
+**Rationale:**
+- Human-readable
+- Sortable
+- Unique (one snapshot per sprint-date combination)
+- Allows multiple snapshots per sprint for mid-sprint checkpoints
+
+---
+
+## Comparison Report Format
+
+### PROGRESS_REPORT.md Template
+
+```jinja2
+# Pipeline Progress Report
+
+**Generated:** {{ timestamp }}  
+**Comparing:** {{ current.label }} vs {{ baseline.label }}
+
+---
+
+## Summary
+
+| Metric | Baseline | Current | Change | Trend |
+|--------|----------|---------|--------|-------|
+| Parse Rate | {{ "%.1f"|format(baseline.parse.rate * 100) }}% | {{ "%.1f"|format(current.parse.rate * 100) }}% | {{ "%+.1f"|format((current.parse.rate - baseline.parse.rate) * 100) }}% | {{ trend_icon(current.parse.rate, baseline.parse.rate) }} |
+| Translate Rate | {{ "%.1f"|format(baseline.translate.rate * 100) }}% | {{ "%.1f"|format(current.translate.rate * 100) }}% | {{ "%+.1f"|format((current.translate.rate - baseline.translate.rate) * 100) }}% | {{ trend_icon(current.translate.rate, baseline.translate.rate) }} |
+| Solve Rate | {{ "%.1f"|format(baseline.solve.rate * 100) }}% | {{ "%.1f"|format(current.solve.rate * 100) }}% | {{ "%+.1f"|format((current.solve.rate - baseline.solve.rate) * 100) }}% | {{ trend_icon(current.solve.rate, baseline.solve.rate) }} |
+| Full Pipeline | {{ "%.1f"|format(baseline.full_pipeline.rate * 100) }}% | {{ "%.1f"|format(current.full_pipeline.rate * 100) }}% | {{ "%+.1f"|format((current.full_pipeline.rate - baseline.full_pipeline.rate) * 100) }}% | {{ trend_icon(current.full_pipeline.rate, baseline.full_pipeline.rate) }} |
+
+**Trend Icons:** ✅ Improved | ⚠️ Regressed | ➡️ Unchanged
+
+---
+
+## Stage Details
+
+### Parse Stage
+
+| Metric | Baseline | Current | Delta |
+|--------|----------|---------|-------|
+| Attempted | {{ baseline.parse.attempted }} | {{ current.parse.attempted }} | {{ current.parse.attempted - baseline.parse.attempted }} |
+| Success | {{ baseline.parse.success }} | {{ current.parse.success }} | **{{ "%+d"|format(current.parse.success - baseline.parse.success) }}** |
+| Failure | {{ baseline.parse.failure }} | {{ current.parse.failure }} | {{ current.parse.failure - baseline.parse.failure }} |
+| Rate | {{ "%.1f"|format(baseline.parse.rate * 100) }}% | {{ "%.1f"|format(current.parse.rate * 100) }}% | **{{ "%+.1f"|format((current.parse.rate - baseline.parse.rate) * 100) }}%** |
+
+{% if parse_changes.improved %}
+**Newly Passing ({{ parse_changes.improved|length }} models):**
+{% for model in parse_changes.improved[:10] %}
+- {{ model }}
+{% endfor %}
+{% if parse_changes.improved|length > 10 %}
+- ... and {{ parse_changes.improved|length - 10 }} more
+{% endif %}
+{% endif %}
+
+{% if parse_changes.regressed %}
+**⚠️ Regressions ({{ parse_changes.regressed|length }} models):**
+{% for model in parse_changes.regressed %}
+- {{ model.name }}: {{ model.previous }} → {{ model.current }}
+{% endfor %}
+{% endif %}
+
+[Similar sections for Translate and Solve stages]
+
+---
+
+## Error Category Changes
+
+### Parse Error Distribution
+
+| Error Category | Baseline | Current | Change |
+|----------------|----------|---------|--------|
+{% for error in parse_error_changes %}
+| `{{ error.category }}` | {{ error.baseline }} | {{ error.current }} | {{ "%+d"|format(error.delta) }} |
+{% endfor %}
+
+---
+
+## Model-Level Changes
+
+### Full Pipeline Status Changes
+
+| Model | Baseline | Current | Notes |
+|-------|----------|---------|-------|
+{% for change in pipeline_changes %}
+| {{ change.model }} | {{ change.baseline }} | {{ change.current }} | {{ change.notes }} |
+{% endfor %}
+
+---
+
+*Report generated by `generate_report.py --compare`*
+```
+
+### Trend Icons Implementation
+
+```python
+def trend_icon(current: float, baseline: float, threshold: float = 0.001) -> str:
+    """Return trend icon based on rate change."""
+    delta = current - baseline
+    if delta > threshold:
+        return "✅"  # Improved
+    elif delta < -threshold:
+        return "⚠️"  # Regressed
+    else:
+        return "➡️"  # Unchanged
+```
+
+---
+
+## Model-Level Tracking
+
+### Purpose
+
+Track individual model outcomes across sprints to:
+1. **Identify improvements:** Which models started passing after fixes
+2. **Detect regressions:** Which models stopped passing
+3. **Debug issues:** Correlate model changes with code changes
+4. **Validate fixes:** Confirm targeted models now succeed
+
+### Schema
+
+```json
+{
+  "model_status": {
+    "hs62": {
+      "parse": "success",
+      "translate": "success", 
+      "solve": "success",
+      "full_pipeline": true
+    },
+    "trnsport": {
+      "parse": "success",
+      "translate": "success",
+      "solve": "path_syntax_error",
+      "full_pipeline": false
+    },
+    "aircraft": {
+      "parse": "lexer_invalid_char",
+      "translate": null,
+      "solve": null,
+      "full_pipeline": false
+    }
+  }
+}
+```
+
+### Change Detection
+
+```python
+def detect_model_changes(current: dict, baseline: dict) -> dict:
+    """Detect model-level changes between snapshots."""
+    changes = {
+        "parse": {"improved": [], "regressed": [], "unchanged": []},
+        "translate": {"improved": [], "regressed": [], "unchanged": []},
+        "solve": {"improved": [], "regressed": [], "unchanged": []},
+        "full_pipeline": {"improved": [], "regressed": [], "unchanged": []}
+    }
+    
+    all_models = set(current.keys()) | set(baseline.keys())
+    
+    for model in all_models:
+        curr = current.get(model, {})
+        base = baseline.get(model, {})
+        
+        for stage in ["parse", "translate", "solve"]:
+            curr_status = curr.get(stage)
+            base_status = base.get(stage)
+            
+            if curr_status == "success" and base_status != "success":
+                changes[stage]["improved"].append(model)
+            elif curr_status != "success" and base_status == "success":
+                changes[stage]["regressed"].append({
+                    "name": model,
+                    "previous": base_status,
+                    "current": curr_status
+                })
+            else:
+                changes[stage]["unchanged"].append(model)
+        
+        # Full pipeline
+        curr_full = curr.get("full_pipeline", False)
+        base_full = base.get("full_pipeline", False)
+        if curr_full and not base_full:
+            changes["full_pipeline"]["improved"].append(model)
+        elif not curr_full and base_full:
+            changes["full_pipeline"]["regressed"].append(model)
+    
+    return changes
+```
+
+### Storage Considerations
+
+**Full model_status in every snapshot?**
+- **Pros:** Self-contained, easy comparison
+- **Cons:** Redundant data, larger file size
+
+**Decision:** Store full model_status for each snapshot
+- 160 models × ~50 bytes each = ~8KB per snapshot
+- 50 snapshots = ~400KB total (acceptable)
+- Simplifies comparison logic
+- Enables offline analysis without needing multiple files
+
+---
+
+## Regression Detection
+
+### Detection Criteria
+
+A **regression** occurs when:
+1. **Rate regression:** Success rate decreases by more than threshold
+2. **Model regression:** A previously passing model now fails
+3. **Error increase:** An error category count increases
+
+### Threshold Configuration
+
+```python
+REGRESSION_THRESHOLDS = {
+    # Rate-based thresholds (relative change)
+    "parse_rate": 0.02,      # 2% regression triggers alert
+    "translate_rate": 0.02,
+    "solve_rate": 0.02,
+    "full_pipeline_rate": 0.01,  # More sensitive for full pipeline
+    
+    # Model-based thresholds (absolute count)
+    "max_model_regressions": 0,  # Any model regression is flagged
+    
+    # Error category thresholds
+    "error_increase_threshold": 5,  # Flag if any error category increases by >5
+}
+```
+
+### Detection Algorithm
+
+```python
+def detect_regressions(current: dict, baseline: dict, thresholds: dict) -> dict:
+    """Detect regressions between current and baseline snapshots."""
+    regressions = {
+        "rate_regressions": [],
+        "model_regressions": [],
+        "error_increases": [],
+        "has_regressions": False
+    }
+    
+    # Check rate regressions
+    for stage in ["parse", "translate", "solve"]:
+        curr_rate = current["metrics"][stage]["rate"]
+        base_rate = baseline["metrics"][stage]["rate"]
+        threshold = thresholds.get(f"{stage}_rate", 0.02)
+        
+        if (base_rate - curr_rate) > threshold:
+            regressions["rate_regressions"].append({
+                "stage": stage,
+                "baseline": base_rate,
+                "current": curr_rate,
+                "delta": curr_rate - base_rate,
+                "threshold": threshold
+            })
+            regressions["has_regressions"] = True
+    
+    # Check full pipeline rate
+    curr_full = current["metrics"]["full_pipeline"]["rate"]
+    base_full = baseline["metrics"]["full_pipeline"]["rate"]
+    if (base_full - curr_full) > thresholds.get("full_pipeline_rate", 0.01):
+        regressions["rate_regressions"].append({
+            "stage": "full_pipeline",
+            "baseline": base_full,
+            "current": curr_full,
+            "delta": curr_full - base_full
+        })
+        regressions["has_regressions"] = True
+    
+    # Check model regressions
+    model_changes = detect_model_changes(
+        current.get("model_status", {}),
+        baseline.get("model_status", {})
+    )
+    
+    for stage in ["parse", "translate", "solve", "full_pipeline"]:
+        regressed = model_changes[stage]["regressed"]
+        if len(regressed) > thresholds.get("max_model_regressions", 0):
+            regressions["model_regressions"].extend([
+                {"stage": stage, **r} if isinstance(r, dict) else {"stage": stage, "model": r}
+                for r in regressed
+            ])
+            regressions["has_regressions"] = True
+    
+    # Check error category increases
+    for stage in ["parse", "translate", "solve"]:
+        curr_errors = current["metrics"][stage].get("error_breakdown", {})
+        base_errors = baseline["metrics"][stage].get("error_breakdown", {})
+        
+        for error, curr_count in curr_errors.items():
+            base_count = base_errors.get(error, 0)
+            if (curr_count - base_count) > thresholds.get("error_increase_threshold", 5):
+                regressions["error_increases"].append({
+                    "stage": stage,
+                    "error": error,
+                    "baseline": base_count,
+                    "current": curr_count,
+                    "delta": curr_count - base_count
+                })
+                regressions["has_regressions"] = True
+    
+    return regressions
+```
+
+### Alert Output
+
+**Console Output:**
+```
+⚠️ REGRESSIONS DETECTED
+
+Rate Regressions:
+  - Parse: 21.3% → 19.5% (-1.8%) [threshold: 2.0%]
+
+Model Regressions:
+  - trnsport: parse success → lexer_invalid_char
+  - hs62: solve success → path_syntax_error
+
+Error Increases:
+  - Parse/internal_error: 17 → 25 (+8) [threshold: 5]
+
+Run with --details for full analysis.
+```
+
+**CI Integration:**
+```python
+def check_regressions_exit_code(regressions: dict) -> int:
+    """Return exit code for CI integration."""
+    if regressions["has_regressions"]:
+        return 1  # Non-zero exit code fails CI
+    return 0
+```
+
+### CLI Support
+
+```bash
+# Compare to previous snapshot and check for regressions
+python -m nlp2mcp.reporting.generate_report --compare --check-regressions
+
+# Compare to specific baseline
+python -m nlp2mcp.reporting.generate_report --compare --baseline sprint15_20260115
+
+# Fail CI on regression
+python -m nlp2mcp.reporting.generate_report --check-regressions --fail-on-regression
+```
+
+---
+
+## Integration with Existing Infrastructure
+
+### Compatibility with baseline_metrics.json
+
+The progress_history.json schema is designed to be compatible with the existing `baseline_metrics.json` format:
+
+| baseline_metrics.json Field | progress_history.json Equivalent |
+|-----------------------------|----------------------------------|
+| `schema_version` | `schema_version` (different versioning) |
+| `baseline_date` | `snapshots[].timestamp` |
+| `sprint` | `snapshots[].sprint` |
+| `environment` | Stored separately, referenced by `nlp2mcp_version` |
+| `total_models` | `snapshots[].metrics.total_models` |
+| `parse.*` | `snapshots[].metrics.parse.*` |
+| `translate.*` | `snapshots[].metrics.translate.*` |
+| `solve.*` | `snapshots[].metrics.solve.*` |
+| `full_pipeline.*` | `snapshots[].metrics.full_pipeline.*` |
+
+### Conversion Utility
+
+```python
+def baseline_to_snapshot(baseline: dict, snapshot_id: str) -> dict:
+    """Convert baseline_metrics.json to progress_history snapshot format."""
+    return {
+        "snapshot_id": snapshot_id,
+        "timestamp": f"{baseline['baseline_date']}T12:00:00Z",
+        "nlp2mcp_version": baseline["environment"]["nlp2mcp_version"],
+        "sprint": int(baseline["sprint"].replace("Sprint ", "")),
+        "label": f"{baseline['sprint']} Baseline",
+        "metrics": {
+            "total_models": baseline["total_models"],
+            "parse": {
+                "attempted": baseline["parse"]["attempted"],
+                "success": baseline["parse"]["success"],
+                "failure": baseline["parse"]["failure"],
+                "rate": baseline["parse"]["success_rate"],
+                "error_breakdown": baseline["parse"].get("error_breakdown", {})
+            },
+            "translate": {
+                "attempted": baseline["translate"]["attempted"],
+                "success": baseline["translate"]["success"],
+                "failure": baseline["translate"]["failure"],
+                "rate": baseline["translate"]["success_rate"],
+                "error_breakdown": baseline["translate"].get("error_breakdown", {})
+            },
+            "solve": {
+                "attempted": baseline["solve"]["attempted"],
+                "success": baseline["solve"]["success"],
+                "failure": baseline["solve"]["failure"],
+                "rate": baseline["solve"]["success_rate"],
+                "error_breakdown": baseline["solve"].get("error_breakdown", {})
+            },
+            "full_pipeline": {
+                "success": baseline["full_pipeline"]["success"],
+                "rate": baseline["full_pipeline"]["success_rate"]
+            }
+        },
+        "notes": baseline.get("notes", [])
+    }
+```
+
+---
+
+## Unknown Verification Summary
+
+### Unknown 1.4: How should report timestamps and versioning be handled?
+
+**Status:** ✅ VERIFIED (Task 8)
+
+**Decision:**
+- **Timestamp format:** ISO 8601 with timezone (`YYYY-MM-DDTHH:MM:SSZ`)
+- **Snapshot ID:** `sprint{N}_{YYYYMMDD}` format
+- **Version tracking:** Schema version, nlp2mcp version, and git commit hash
+
+**Rationale:**
+- ISO 8601 is sortable, unambiguous, internationally recognized
+- Git commit hash enables exact reproducibility
+- Schema versioning enables forward compatibility
+
+### Unknown 3.1: What schema should progress_history.json follow?
+
+**Status:** ✅ VERIFIED (Task 8)
+
+**Decision:** JSON Schema with:
+- Top-level: `schema_version`, `snapshots` array
+- Per-snapshot: `snapshot_id`, `timestamp`, `nlp2mcp_version`, `git_commit`, `metrics`, `model_status`
+- Metrics: `parse`, `translate`, `solve`, `full_pipeline` with rates and error breakdowns
+- Model status: Per-model outcomes for change tracking
+
+**Storage:** ~8KB per snapshot, acceptable for JSON storage
+
+### Unknown 3.2: How to detect and alert on regressions?
+
+**Status:** ✅ VERIFIED (Task 8)
+
+**Decision:**
+- **Rate thresholds:** 2% for stage rates, 1% for full pipeline
+- **Model regressions:** Any model regression is flagged (threshold: 0)
+- **Error increases:** Flag if any error category increases by >5
+
+**Alert mechanisms:**
+- Console output with clear formatting
+- Non-zero exit code for CI integration (`--fail-on-regression`)
+- Detailed model-level change report
