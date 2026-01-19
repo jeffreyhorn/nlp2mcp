@@ -524,7 +524,7 @@ For the planned dollar control improvements:
 |----------|---------|-------------|
 | `ID` | `/[a-zA-Z_][a-zA-Z0-9_]*/` | Identifier |
 | `NUMBER` | `SIGNED_NUMBER` | Numeric literal |
-| `STRING` | `/"[^"]*"\|'[^']*'/` | Quoted string |
+| `STRING` | `/"[^"]*"\\|'[^']*'/` | Quoted string |
 | `SEMI` | `;` | Statement terminator |
 | `DOLLAR` | `$` | Dollar operator (priority 10) |
 
