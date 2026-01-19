@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive analysis of the 153 models (69% of 219) that fail with `lexer_invalid_char` errors. The analysis reveals that the errors are **NOT primarily caused by dollar control directives** (which are already handled), but by **advanced GAMS data syntax** that the grammar doesn't fully support.
+This document provides a comprehensive analysis of the 153 models (70% of 219) that fail with `lexer_invalid_char` errors. The analysis reveals that the errors are **NOT primarily caused by dollar control directives** (which are already handled), but by **advanced GAMS data syntax** that the grammar doesn't fully support.
 
 **Key Finding:** The grammar's `$ontext/$offtext` handling works correctly. The lexer errors occur in regular GAMS syntax that uses features like:
 - Hyphenated identifiers in set elements (`1964-i`, `route-1`)
@@ -255,7 +255,7 @@ This document provides a comprehensive analysis of the 153 models (69% of 219) t
 
 ## Sprint 16 Implementation Plan
 
-### Priority 1: Low-Effort, High-Impact (25 models)
+### Priority 1: Low-Effort, High-Impact (26 models)
 
 | Fix | Models | Effort | Days |
 |-----|--------|--------|------|
@@ -284,11 +284,13 @@ This document provides a comprehensive analysis of the 153 models (69% of 219) t
 
 ### Expected Improvement
 
-| Scenario | Models Fixed | New Parse Rate |
-|----------|--------------|----------------|
+| Scenario | Issue Instances Fixed | New Parse Rate |
+|----------|----------------------|----------------|
 | **Minimum (Priority 1)** | +26 | 39% (85/219) |
 | **Target (P1 + P2)** | +45 | 47% (104/219) |
 | **Stretch** | +55 | 52% (114/219) |
+
+_Note: "Issue instances fixed" may include multiple issues from the same model (e.g., srcpm appears in both Tuple Syntax and Quoted Description categories). Actual unique model counts may be slightly lower due to overlaps._
 
 ---
 
