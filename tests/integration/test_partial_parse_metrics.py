@@ -18,13 +18,11 @@ class TestPartialParseMetricsIntegration:
         """Successful parse should report 100% progress."""
         # Create a simple valid GAMS model
         model_file = tmp_path / "test.gms"
-        model_file.write_text(
-            """
+        model_file.write_text("""
 Set i / 1*10 /;
 Parameter x(i);
 Variable y;
-"""
-        )
+""")
 
         # Parse should succeed
         parse_model_file(model_file)
@@ -40,13 +38,11 @@ Variable y;
         """Failed parse should report partial progress."""
         # Create a model that fails mid-file
         model_file = tmp_path / "test.gms"
-        model_file.write_text(
-            """
+        model_file.write_text("""
 Set i / 1*10 /;
 Set j / a, b, c /;
 Invalid syntax here @@@
-"""
-        )
+""")
 
         # Parse should fail
         error = None
@@ -71,16 +67,14 @@ Invalid syntax here @@@
     def test_parse_progress_with_comments(self, tmp_path: Path):
         """Parse progress should skip comments correctly."""
         model_file = tmp_path / "test.gms"
-        model_file.write_text(
-            """
+        model_file.write_text("""
 * This is a comment
 Set i / 1*10 /;
 * Another comment
 Set j / a, b, c /;
 
 Parameter x(i);
-"""
-        )
+""")
 
         parse_model_file(model_file)
         progress = calculate_parse_progress_from_file(model_file, error=None)
@@ -93,16 +87,14 @@ Parameter x(i);
     def test_parse_progress_with_multiline_comments(self, tmp_path: Path):
         """Parse progress should handle multiline comments."""
         model_file = tmp_path / "test.gms"
-        model_file.write_text(
-            """
+        model_file.write_text("""
 Set i / 1*10 /;
 $ontext
 This is a long comment
 spanning multiple lines
 $offtext
 Parameter x(i);
-"""
-        )
+""")
 
         parse_model_file(model_file)
         progress = calculate_parse_progress_from_file(model_file, error=None)
@@ -115,15 +107,13 @@ Parameter x(i);
     def test_missing_features_extracted_for_lead_lag(self, tmp_path: Path):
         """Lead/lag indexing now supported (Sprint 9)."""
         model_file = tmp_path / "test.gms"
-        model_file.write_text(
-            """
+        model_file.write_text("""
 Set i / 1*10 /;
 Parameter x(i);
 Variable y(i);
 Equation eq(i);
 eq(i).. y(i) =e= x(i++1);
-"""
-        )
+""")
 
         # Sprint 9: i++1 is now supported, should parse successfully
         model = parse_model_file(model_file)
@@ -154,8 +144,7 @@ eq(i).. y(i) =e= x(i++1);
     def test_parse_comments_only_file(self, tmp_path: Path):
         """File with only comments should parse successfully."""
         model_file = tmp_path / "comments.gms"
-        model_file.write_text(
-            """
+        model_file.write_text("""
 * This is a comment
 * Another comment
 
@@ -164,8 +153,7 @@ Multiline comment
 $offtext
 
 * Final comment
-"""
-        )
+""")
 
         parse_model_file(model_file)
         progress = calculate_parse_progress_from_file(model_file, error=None)

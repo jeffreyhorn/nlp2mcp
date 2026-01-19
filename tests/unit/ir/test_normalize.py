@@ -21,8 +21,7 @@ def test_model_ir_loads_without_side_effects():
 
 
 def test_normalize_includes_variable_bounds():
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1, i2/ ;
 
@@ -42,8 +41,7 @@ def test_normalize_includes_variable_bounds():
 
         Model m / e / ;
         Solve m using NLP minimizing y;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
     equations, bounds = normalize_model(model)
     assert model.normalized_bounds == bounds
@@ -72,8 +70,7 @@ def test_normalize_includes_variable_bounds():
 
 
 def test_ge_relation_flips_to_le():
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
         ;
@@ -86,8 +83,7 @@ def test_ge_relation_flips_to_le():
 
         Model m / g / ;
         Solve m using NLP minimizing x;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
     equations, _ = normalize_model(model)
     norm = equations["g"]
@@ -98,8 +94,7 @@ def test_ge_relation_flips_to_le():
 
 
 def test_equality_remains_eq():
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
         ;
@@ -112,16 +107,14 @@ def test_equality_remains_eq():
 
         Model m / g / ;
         Solve m using NLP minimizing x;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
     equations, _ = normalize_model(model)
     assert equations["g"].relation == Rel.EQ
 
 
 def test_scalar_bounds_normalized():
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
         ;
@@ -129,8 +122,7 @@ def test_scalar_bounds_normalized():
         x.lo = 0;
         x.up = 10;
         x.fx = 3;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
     _, bounds = normalize_model(model)
     assert set(bounds) == {"x_lo", "x_up", "x_fx"}
@@ -140,8 +132,7 @@ def test_scalar_bounds_normalized():
 
 
 def test_no_bounds_returns_empty():
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
         ;
@@ -154,31 +145,27 @@ def test_no_bounds_returns_empty():
 
         Model m / g / ;
         Solve m using NLP minimizing x;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
     _, bounds = normalize_model(model)
     assert bounds == {}
 
 
 def test_infinite_bounds_ignored():
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x ;
 
         x.lo = -INF;
         x.up = +INF;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
     _, bounds = normalize_model(model)
     assert bounds == {}
 
 
 def test_scalar_equation_domain_metadata():
-    text = dedent(
-        """
+    text = dedent("""
         Scalars a / 1 /;
 
         Variables
@@ -193,8 +180,7 @@ def test_scalar_equation_domain_metadata():
 
         Model m / e / ;
         Solve m using NLP minimizing x;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
     equations, _ = normalize_model(model)
     eq = equations["e"]
@@ -204,8 +190,7 @@ def test_scalar_equation_domain_metadata():
 
 
 def test_normalized_bounds_metadata():
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1, i2/ ;
 
@@ -215,8 +200,7 @@ def test_normalized_bounds_metadata():
 
         x.lo(i) = 0;
         x.up(i) = 10;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
     _, bounds = normalize_model(model)
     for eq in bounds.values():
@@ -230,8 +214,7 @@ def test_normalized_bounds_metadata():
 
 def test_normalize_extracts_objective_expression_lhs():
     """Test that normalize_model() populates ObjectiveIR.expr when objvar is on LHS."""
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
             obj ;
@@ -243,8 +226,7 @@ def test_normalize_extracts_objective_expression_lhs():
 
         Model test /all/;
         Solve test using NLP minimizing obj;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
 
     # Before normalization: expr should be None
@@ -263,8 +245,7 @@ def test_normalize_extracts_objective_expression_lhs():
 
 def test_normalize_extracts_objective_expression_rhs():
     """Test that normalize_model() populates ObjectiveIR.expr when objvar is on RHS."""
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
             obj ;
@@ -276,8 +257,7 @@ def test_normalize_extracts_objective_expression_rhs():
 
         Model test /all/;
         Solve test using NLP minimizing obj;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
 
     # Before normalization: expr should be None
@@ -294,8 +274,7 @@ def test_normalize_extracts_objective_expression_rhs():
 
 def test_normalize_extracts_complex_objective_expression():
     """Test objective extraction with complex expressions."""
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
             y
@@ -308,8 +287,7 @@ def test_normalize_extracts_complex_objective_expression():
 
         Model test /all/;
         Solve test using NLP minimizing obj;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
 
     # Before normalization: expr should be None
@@ -326,8 +304,7 @@ def test_normalize_extracts_complex_objective_expression():
 
 def test_normalize_preserves_existing_objective_expr():
     """Test that normalize_model() doesn't overwrite existing ObjectiveIR.expr."""
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
             obj ;
@@ -339,8 +316,7 @@ def test_normalize_preserves_existing_objective_expr():
 
         Model test /all/;
         Solve test using NLP minimizing obj;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
 
     # Manually set objective.expr before normalization
@@ -359,8 +335,7 @@ def test_normalize_handles_objective_without_defining_equation():
     like 'obj =e= expr'. This is valid - the objective expression remains None and
     will be handled by the AD code as a simple variable reference.
     """
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
             obj ;
@@ -372,8 +347,7 @@ def test_normalize_handles_objective_without_defining_equation():
 
         Model test /all/;
         Solve test using NLP minimizing obj;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
 
     # Before normalization: objective.expr should be None
@@ -390,8 +364,7 @@ def test_normalize_handles_objective_without_defining_equation():
 
 def test_normalize_skips_indexed_objective_equations():
     """Test that objective extraction skips indexed equations."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1, i2/ ;
 
@@ -408,8 +381,7 @@ def test_normalize_skips_indexed_objective_equations():
 
         Model test /all/;
         Solve test using NLP minimizing obj;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
 
     # After normalization: should use scalar_eq, not indexed_eq

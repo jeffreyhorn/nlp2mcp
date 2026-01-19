@@ -24,16 +24,14 @@ class TestMathematicalFunctions:
         Simplified version without variable attributes for Day 5.
         """
         test_file = tmp_path / "test_pythagorean.gms"
-        test_file.write_text(
-            """
+        test_file.write_text("""
 Parameter a, b, xmin, ymin, r;
 a = 3;
 b = 4;
 xmin = 1;
 ymin = 2;
 r = sqrt(sqr(a - xmin) + sqr(b - ymin));
-"""
-        )
+""")
         model = parse_model_file(test_file)
 
         # Simple parameters should have values
@@ -58,13 +56,11 @@ r = sqrt(sqr(a - xmin) + sqr(b - ymin));
     def test_nested_mathematical_functions(self, tmp_path):
         """Test nested mathematical function calls."""
         test_file = tmp_path / "test_nested_math.gms"
-        test_file.write_text(
-            """
+        test_file.write_text("""
 Parameter x, result;
 x = 2;
 result = log(exp(sqrt(x)));
-"""
-        )
+""")
         model = parse_model_file(test_file)
 
         assert "result" in model.params
@@ -81,14 +77,12 @@ result = log(exp(sqrt(x)));
     def test_power_function(self, tmp_path):
         """Test power function in parameter assignment."""
         test_file = tmp_path / "test_power.gms"
-        test_file.write_text(
-            """
+        test_file.write_text("""
 Parameter base, exponent, result;
 base = 2;
 exponent = 3;
 result = power(base, exponent);
-"""
-        )
+""")
         model = parse_model_file(test_file)
 
         assert "result" in model.params
@@ -107,15 +101,13 @@ class TestMixedAssignments:
     def test_mixed_simple_and_function_calls(self, tmp_path):
         """Test that simple assignments and function calls coexist properly."""
         test_file = tmp_path / "test_mixed.gms"
-        test_file.write_text(
-            """
+        test_file.write_text("""
 Parameter a, b, c, d;
 a = 10;
 b = 20;
 c = sqrt(a);
 d = log(b);
-"""
-        )
+""")
         model = parse_model_file(test_file)
 
         # Simple assignments should be in values
@@ -136,14 +128,12 @@ d = log(b);
     def test_function_call_with_simple_expression(self, tmp_path):
         """Test function calls mixed with arithmetic expressions."""
         test_file = tmp_path / "test_mixed_expr.gms"
-        test_file.write_text(
-            """
+        test_file.write_text("""
 Parameter a, b, c;
 a = 5;
 b = 3;
 c = sqrt(a + b);
-"""
-        )
+""")
         model = parse_model_file(test_file)
 
         assert "c" in model.params
@@ -163,13 +153,11 @@ class TestRoundModCeilFunctions:
     def test_round_function(self, tmp_path):
         """Test round function in parameter assignment."""
         test_file = tmp_path / "test_round.gms"
-        test_file.write_text(
-            """
+        test_file.write_text("""
 Parameter x, rounded;
 x = 3.7;
 rounded = round(x);
-"""
-        )
+""")
         model = parse_model_file(test_file)
 
         assert "rounded" in model.params
@@ -183,14 +171,12 @@ rounded = round(x);
     def test_mod_function(self, tmp_path):
         """Test mod function in parameter assignment."""
         test_file = tmp_path / "test_mod.gms"
-        test_file.write_text(
-            """
+        test_file.write_text("""
 Parameter a, b, remainder;
 a = 10;
 b = 3;
 remainder = mod(a, b);
-"""
-        )
+""")
         model = parse_model_file(test_file)
 
         assert "remainder" in model.params
@@ -205,13 +191,11 @@ remainder = mod(a, b);
     def test_ceil_function(self, tmp_path):
         """Test ceil function in parameter assignment."""
         test_file = tmp_path / "test_ceil.gms"
-        test_file.write_text(
-            """
+        test_file.write_text("""
 Parameter x, ceiling;
 x = 3.2;
 ceiling = ceil(x);
-"""
-        )
+""")
         model = parse_model_file(test_file)
 
         assert "ceiling" in model.params
@@ -229,14 +213,12 @@ class TestBackwardCompatibility:
     def test_simple_scalar_assignments_unchanged(self, tmp_path):
         """Verify simple scalar assignments continue to work as before."""
         test_file = tmp_path / "test_backward_compat.gms"
-        test_file.write_text(
-            """
+        test_file.write_text("""
 Scalar a /10/, b /20/;
 Parameter c, d;
 c = 30;
 d = 40;
-"""
-        )
+""")
         model = parse_model_file(test_file)
 
         # All should be simple value assignments
@@ -252,15 +234,13 @@ d = 40;
     def test_indexed_parameter_simple_values(self, tmp_path):
         """Verify indexed parameters with simple values work correctly."""
         test_file = tmp_path / "test_indexed_simple.gms"
-        test_file.write_text(
-            """
+        test_file.write_text("""
 Set i / i1*i3 /;
 Parameter x(i);
 x('i1') = 10;
 x('i2') = 20;
 x('i3') = 30;
-"""
-        )
+""")
         model = parse_model_file(test_file)
 
         param = model.params["x"]

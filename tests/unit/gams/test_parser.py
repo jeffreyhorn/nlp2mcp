@@ -58,8 +58,7 @@ def test_parse_model_file_populates_model_ir():
 
 
 def test_undefined_symbol_raises():
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
         ;
@@ -73,8 +72,7 @@ def test_undefined_symbol_raises():
 
         Model m / all / ;
         Solve m using NLP minimizing x;
-        """
-    )
+        """)
 
     with pytest.raises(ParseError, match="Undefined symbol 'y'") as excinfo:
         parser.parse_model_text(text)
@@ -83,8 +81,7 @@ def test_undefined_symbol_raises():
 
 
 def test_parameter_domain_requires_known_set():
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             z
         ;
@@ -102,16 +99,14 @@ def test_parameter_domain_requires_known_set():
 
         Model m / obj / ;
         Solve m using NLP minimizing z;
-        """
-    )
+        """)
 
     with pytest.raises(parser.ParserSemanticError, match="parameter 'p' domain"):
         parser.parse_model_text(text)
 
 
 def test_model_references_unknown_equation():
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             z
         ;
@@ -125,16 +120,14 @@ def test_model_references_unknown_equation():
 
         Model m / obj, missing / ;
         Solve m using NLP minimizing z;
-        """
-    )
+        """)
 
     with pytest.raises(parser.ParserSemanticError, match="unknown equation 'missing'"):
         parser.parse_model_text(text)
 
 
 def test_alias_expansion_allows_domain_usage():
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1, i2/ ;
 
@@ -158,8 +151,7 @@ def test_alias_expansion_allows_domain_usage():
 
         Model sample / objective, balance / ;
         Solve sample using NLP minimizing obj;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.aliases["j"].target == "i"
@@ -169,8 +161,7 @@ def test_alias_expansion_allows_domain_usage():
 
 
 def test_variable_bounds_and_scalar_param_assignment():
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1, i2/ ;
 
@@ -196,8 +187,7 @@ def test_variable_bounds_and_scalar_param_assignment():
 
         Model test / e, f / ;
         Solve test using NLP minimizing y;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
 
@@ -216,8 +206,7 @@ def test_variable_bounds_and_scalar_param_assignment():
 
 
 def test_parameter_data_block_for_indexed_param():
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1/ ;
 
@@ -235,8 +224,7 @@ def test_parameter_data_block_for_indexed_param():
 
         Model sample / eq / ;
         Solve sample using NLP minimizing y;
-        """
-    )
+        """)
     model = parser.parse_model_text(text)
     assert model.params["beta"].domain == ("i",)
     assert model.params["beta"].values[("i1",)] == 4.0
@@ -255,8 +243,7 @@ def _collect(expr: Expr, cls):
 
 
 def test_expression_ast_covers_functions_and_ops():
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
             y
@@ -275,8 +262,7 @@ def test_expression_ast_covers_functions_and_ops():
 
         Model m / expr, logic / ;
         Solve m using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     expr_eq = model.equations["expr"]
@@ -296,8 +282,7 @@ def test_expression_ast_covers_functions_and_ops():
 
 
 def test_scalar_block_ingestion():
-    text = dedent(
-        """
+    text = dedent("""
         Scalars pi / 3.14 /;
 
         Variables
@@ -310,16 +295,14 @@ def test_scalar_block_ingestion():
 
         Model sample / eq / ;
         Solve sample using NLP minimizing y;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.params["pi"].values[()] == 3.14
 
 
 def test_expression_metadata_domains():
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1, i2/ ;
 
@@ -336,8 +319,7 @@ def test_expression_metadata_domains():
 
         Model sample / balance / ;
         Solve sample using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     lhs, rhs = model.equations["balance"].lhs_rhs
@@ -347,8 +329,7 @@ def test_expression_metadata_domains():
 
 
 def test_sum_metadata_preserves_indices():
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1, i2/ ;
 
@@ -362,8 +343,7 @@ def test_sum_metadata_preserves_indices():
 
         Model sample / obj / ;
         Solve sample using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     lhs, _ = model.equations["obj"].lhs_rhs
@@ -393,8 +373,7 @@ def test_example_files_parse():
 
 
 def test_indexed_equation_requires_declared_set():
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x(j) ;
 
@@ -405,8 +384,7 @@ def test_indexed_equation_requires_declared_set():
 
         Model m / g / ;
         Solve m using NLP minimizing x;
-        """
-    )
+        """)
 
     with pytest.raises(parser.ParserSemanticError, match="equation domain"):
         parser.parse_model_text(text)
@@ -414,8 +392,7 @@ def test_indexed_equation_requires_declared_set():
 
 def test_indexed_parameter_assignment_supported():
     """Test that indexed parameter assignments are now supported (Sprint 8 Day 3)."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1/ ;
 
@@ -424,8 +401,7 @@ def test_indexed_parameter_assignment_supported():
         ;
 
         alpha('i1') = 2;
-        """
-    )
+        """)
 
     # This should parse successfully now (Sprint 8 Day 3 feature)
     model = parser.parse_model_text(text)
@@ -439,8 +415,7 @@ def test_non_constant_bound_expression_rejected():
     Previously these were rejected, but now we allow them (parse and continue without storing).
     This supports patterns like circle.gms: a.l = (xmin + xmax)/2
     """
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1/ ;
 
@@ -452,8 +427,7 @@ def test_non_constant_bound_expression_rejected():
         ;
 
         x.lo(i) = alpha;
-        """
-    )
+        """)
 
     # Sprint 10 Day 6: Variable bounds with expressions now parse successfully
     # (mock/store approach - parse and continue without storing the expression)
@@ -462,8 +436,7 @@ def test_non_constant_bound_expression_rejected():
 
 
 def test_conflicting_bounds_raise_error():
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1/ ;
 
@@ -473,8 +446,7 @@ def test_conflicting_bounds_raise_error():
 
         x.lo(i) = 1;
         x.lo(i) = 2;
-        """
-    )
+        """)
 
     with pytest.raises(parser.ParserSemanticError, match="Conflicting lower bound") as excinfo:
         parser.parse_model_text(text)
@@ -482,8 +454,7 @@ def test_conflicting_bounds_raise_error():
 
 
 def test_alias_cycle_detected():
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1/ ;
 
@@ -492,8 +463,7 @@ def test_alias_cycle_detected():
             k, j
             j, k
         ;
-        """
-    )
+        """)
 
     with pytest.raises(
         parser.ParserSemanticError, match="duplicates an existing set or alias"
@@ -508,16 +478,14 @@ def test_unsupported_statement_rejected():
     Note: Loop statements are now supported (Sprint 11 Day 2 Extended).
     This test now checks for a different unsupported construct.
     """
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1/ ;
 
         while(i < 10,
             display i;
         );
-        """
-    )
+        """)
 
     with pytest.raises(ParseError):
         parser.parse_model_text(text)
@@ -525,8 +493,7 @@ def test_unsupported_statement_rejected():
 
 def test_power_operator_double_star_syntax():
     """Test that ** operator is supported for exponentiation."""
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
             y
@@ -539,8 +506,7 @@ def test_power_operator_double_star_syntax():
 
         Model power_nlp / objective /;
         Solve power_nlp using NLP minimizing obj;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     objective = model.equations["objective"]
@@ -570,8 +536,7 @@ def test_power_operator_double_star_syntax():
 
 def test_power_operator_mixed_syntax():
     """Test that both ** and ^ operators work and can be mixed."""
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             x
             y
@@ -585,8 +550,7 @@ def test_power_operator_mixed_syntax():
 
         Model power_nlp / objective /;
         Solve power_nlp using NLP minimizing obj;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     objective = model.equations["objective"]
@@ -606,8 +570,7 @@ def test_power_operator_mixed_syntax():
 
 def test_asterisk_range_notation_basic():
     """Test basic asterisk notation for set ranges (e.g., i1*i10)."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1*i10/ ;
 
@@ -622,8 +585,7 @@ def test_asterisk_range_notation_basic():
 
         Model test / objective / ;
         Solve test using NLP minimizing obj;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.sets["i"].members == [
@@ -642,8 +604,7 @@ def test_asterisk_range_notation_basic():
 
 def test_asterisk_range_notation_with_regular_members():
     """Test asterisk notation mixed with regular set members."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1*i3, special, i5*i7/ ;
 
@@ -657,8 +618,7 @@ def test_asterisk_range_notation_with_regular_members():
 
         Model test / eq / ;
         Solve test using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.sets["i"].members == ["i1", "i2", "i3", "special", "i5", "i6", "i7"]
@@ -666,8 +626,7 @@ def test_asterisk_range_notation_with_regular_members():
 
 def test_asterisk_range_notation_single_element():
     """Test asterisk notation with start and end being the same."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i5*i5/ ;
 
@@ -681,8 +640,7 @@ def test_asterisk_range_notation_single_element():
 
         Model test / eq / ;
         Solve test using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.sets["i"].members == ["i5"]
@@ -690,8 +648,7 @@ def test_asterisk_range_notation_single_element():
 
 def test_asterisk_range_notation_large_range():
     """Test asterisk notation with a large range (i1*i100)."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1*i100/ ;
 
@@ -706,8 +663,7 @@ def test_asterisk_range_notation_large_range():
 
         Model test / objective / ;
         Solve test using NLP minimizing obj;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     expected_members = [f"i{j}" for j in range(1, 101)]
@@ -717,8 +673,7 @@ def test_asterisk_range_notation_large_range():
 
 def test_asterisk_range_notation_different_prefix():
     """Test asterisk notation with different prefixes like node1*node10."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             nodes /node1*node5/ ;
 
@@ -732,8 +687,7 @@ def test_asterisk_range_notation_different_prefix():
 
         Model test / balance / ;
         Solve test using NLP minimizing flow;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.sets["nodes"].members == ["node1", "node2", "node3", "node4", "node5"]
@@ -741,12 +695,10 @@ def test_asterisk_range_notation_different_prefix():
 
 def test_asterisk_range_notation_invalid_mismatched_prefix():
     """Test that asterisk notation raises error for mismatched prefixes."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1*j10/ ;
-        """
-    )
+        """)
 
     with pytest.raises(parser.ParserSemanticError, match="Range base mismatch.*different prefixes"):
         parser.parse_model_text(text)
@@ -754,12 +706,10 @@ def test_asterisk_range_notation_invalid_mismatched_prefix():
 
 def test_asterisk_range_notation_invalid_reversed_range():
     """Test that asterisk notation raises error for reversed ranges."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i10*i1/ ;
-        """
-    )
+        """)
 
     with pytest.raises(parser.ParserSemanticError, match="Invalid range.*greater than end index"):
         parser.parse_model_text(text)
@@ -767,12 +717,10 @@ def test_asterisk_range_notation_invalid_reversed_range():
 
 def test_asterisk_range_notation_invalid_no_number():
     """Test that asterisk notation raises error when identifier has no number."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /abc*def/ ;
-        """
-    )
+        """)
 
     with pytest.raises(
         parser.ParserSemanticError,
@@ -783,8 +731,7 @@ def test_asterisk_range_notation_invalid_no_number():
 
 def test_positive_variables_block_scalar():
     """Test block-level Positive Variables keyword with scalar variables."""
-    text = dedent(
-        """
+    text = dedent("""
         Positive Variables
             x
             y ;
@@ -796,8 +743,7 @@ def test_positive_variables_block_scalar():
 
         Model test / eq / ;
         Solve test using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.variables["x"].kind == VarKind.POSITIVE
@@ -806,8 +752,7 @@ def test_positive_variables_block_scalar():
 
 def test_positive_variables_block_indexed():
     """Test block-level Positive Variables keyword with indexed variables."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1, i2, i3/ ;
 
@@ -822,8 +767,7 @@ def test_positive_variables_block_indexed():
 
         Model test / objective / ;
         Solve test using NLP minimizing obj;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.variables["x"].kind == VarKind.POSITIVE
@@ -832,8 +776,7 @@ def test_positive_variables_block_indexed():
 
 def test_negative_variables_block():
     """Test block-level Negative Variables keyword."""
-    text = dedent(
-        """
+    text = dedent("""
         Negative Variables
             x
             y ;
@@ -845,8 +788,7 @@ def test_negative_variables_block():
 
         Model test / eq / ;
         Solve test using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.variables["x"].kind == VarKind.NEGATIVE
@@ -855,8 +797,7 @@ def test_negative_variables_block():
 
 def test_binary_variables_block():
     """Test block-level Binary Variables keyword."""
-    text = dedent(
-        """
+    text = dedent("""
         Binary Variables
             x
             y ;
@@ -868,8 +809,7 @@ def test_binary_variables_block():
 
         Model test / eq / ;
         Solve test using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.variables["x"].kind == VarKind.BINARY
@@ -878,8 +818,7 @@ def test_binary_variables_block():
 
 def test_integer_variables_block():
     """Test block-level Integer Variables keyword."""
-    text = dedent(
-        """
+    text = dedent("""
         Integer Variables
             x
             y ;
@@ -891,8 +830,7 @@ def test_integer_variables_block():
 
         Model test / eq / ;
         Solve test using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.variables["x"].kind == VarKind.INTEGER
@@ -901,8 +839,7 @@ def test_integer_variables_block():
 
 def test_mixed_variable_blocks():
     """Test multiple variable blocks with different kinds."""
-    text = dedent(
-        """
+    text = dedent("""
         Variables
             obj ;
 
@@ -920,8 +857,7 @@ def test_mixed_variable_blocks():
 
         Model test / eq / ;
         Solve test using NLP minimizing obj;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.variables["obj"].kind == VarKind.CONTINUOUS
@@ -932,8 +868,7 @@ def test_mixed_variable_blocks():
 
 def test_declaration_level_kind_takes_precedence():
     """Test that declaration-level kind overrides block-level kind."""
-    text = dedent(
-        """
+    text = dedent("""
         Positive Variables
             binary x
             y ;
@@ -945,8 +880,7 @@ def test_declaration_level_kind_takes_precedence():
 
         Model test / eq / ;
         Solve test using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     # x should be binary because declaration-level kind takes precedence
@@ -957,8 +891,7 @@ def test_declaration_level_kind_takes_precedence():
 
 def test_positive_variables_case_insensitive():
     """Test that variable kind keywords are case-insensitive."""
-    text = dedent(
-        """
+    text = dedent("""
         POSITIVE VARIABLES
             x ;
 
@@ -975,8 +908,7 @@ def test_positive_variables_case_insensitive():
 
         Model test / eq / ;
         Solve test using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.variables["x"].kind == VarKind.POSITIVE
@@ -986,8 +918,7 @@ def test_positive_variables_case_insensitive():
 
 def test_positive_variables_with_bounds():
     """Test Positive Variables with explicit bounds."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1, i2/ ;
 
@@ -1004,8 +935,7 @@ def test_positive_variables_with_bounds():
 
         Model test / eq / ;
         Solve test using NLP minimizing x;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.variables["x"].kind == VarKind.POSITIVE
@@ -1017,8 +947,7 @@ def test_positive_variables_with_bounds():
 
 def test_issue_140_example():
     """Test the exact example from Issue #140."""
-    text = dedent(
-        """
+    text = dedent("""
         Sets
             i /i1*i3/ ;
 
@@ -1035,8 +964,7 @@ def test_issue_140_example():
 
         Model sample / all / ;
         Solve sample using NLP minimizing obj;
-        """
-    )
+        """)
 
     model = parser.parse_model_text(text)
     assert model.sets["i"].members == ["i1", "i2", "i3"]
@@ -1051,8 +979,7 @@ class TestVariableAttributes:
 
     def test_variable_level_attribute_scalar(self):
         """Test .l (level/initial value) attribute on scalar variable."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y;
             Equations eq;
 
@@ -1063,16 +990,14 @@ class TestVariableAttributes:
 
             Model m /all/;
             Solve m using nlp minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.variables["x"].l == 1.5
         assert model.variables["y"].l == 2.0
 
     def test_variable_level_attribute_indexed(self):
         """Test .l attribute on indexed variable."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i /i1, i2, i3/;
             Variables x(i);
             Equations eq(i);
@@ -1083,8 +1008,7 @@ class TestVariableAttributes:
 
             Model m /all/;
             Solve m using nlp minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.variables["x"].l_map[("i1",)] == 10.0
         assert model.variables["x"].l_map[("i2",)] == 10.0
@@ -1092,8 +1016,7 @@ class TestVariableAttributes:
 
     def test_variable_all_attributes_combined(self):
         """Test combining .l, .lo, .up, .fx attributes."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y, z;
             Equations eq;
 
@@ -1110,8 +1033,7 @@ class TestVariableAttributes:
 
             Model m /all/;
             Solve m using nlp minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
 
         # Variable x
@@ -1128,8 +1050,7 @@ class TestVariableAttributes:
 
     def test_variable_level_indexed_all_elements(self):
         """Test .l attribute sets all indexed variable elements."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i /i1, i2/;
             Variables x(i);
             Equations eq(i);
@@ -1142,8 +1063,7 @@ class TestVariableAttributes:
 
             Model m /all/;
             Solve m using nlp minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
 
         # Check level values
@@ -1156,8 +1076,7 @@ class TestVariableAttributes:
 
     def test_gamslib_trig_example(self):
         """Test the exact syntax from GAMSLib trig.gms model."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x1, x2, fv;
             Equations trigfv;
 
@@ -1173,8 +1092,7 @@ class TestVariableAttributes:
 
             Model trigm /all/;
             Solve trigm using nlp minimizing fv;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
 
         # Verify x1 attributes
@@ -1193,15 +1111,13 @@ class TestCommaSeparatedDeclarations:
 
     def test_comma_separated_variables(self):
         """Test comma-separated variable declarations."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y, z;
             Equations eq;
             eq.. x + y + z =e= 10;
             Model m /all/;
             Solve m using nlp minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert "y" in model.variables
@@ -1210,8 +1126,7 @@ class TestCommaSeparatedDeclarations:
 
     def test_comma_separated_equations(self):
         """Test comma-separated equation declarations."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y, obj;
             Equations eq1, eq2, objdef;
             eq1.. x =e= 1;
@@ -1219,8 +1134,7 @@ class TestCommaSeparatedDeclarations:
             objdef.. obj =e= x + y;
             Model m /all/;
             Solve m using nlp minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "eq1" in model.equations
         assert "eq2" in model.equations
@@ -1228,15 +1142,13 @@ class TestCommaSeparatedDeclarations:
 
     def test_comma_separated_with_variable_kind(self):
         """Test comma-separated variables with kind modifier."""
-        text = dedent(
-            """
+        text = dedent("""
             Positive Variables x, y, z;
             Equations eq;
             eq.. x + y + z =e= 10;
             Model m /all/;
             Solve m using nlp minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert "y" in model.variables
@@ -1245,22 +1157,19 @@ class TestCommaSeparatedDeclarations:
 
     def test_comma_separated_binary_variables(self):
         """Test comma-separated binary variables."""
-        text = dedent(
-            """
+        text = dedent("""
             Binary Variables b1, b2, b3;
             Equations eq;
             eq.. b1 + b2 + b3 =e= 2;
             Model m /all/;
             Solve m using nlp minimizing b1;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert all(model.variables[v].kind == VarKind.BINARY for v in ["b1", "b2", "b3"])
 
     def test_mixed_single_and_comma_separated(self):
         """Test mixing single and comma-separated declarations."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x;
             Variables y, z;
             Variables w;
@@ -1268,30 +1177,26 @@ class TestCommaSeparatedDeclarations:
             eq.. x + y + z + w =e= 10;
             Model m /all/;
             Solve m using nlp minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert len(model.variables) == 4
         assert all(v in model.variables for v in ["x", "y", "z", "w"])
 
     def test_comma_separated_single_variable(self):
         """Test that single variable without comma still works."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x;
             Equations eq;
             eq.. x =e= 5;
             Model m /all/;
             Solve m using nlp minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
 
     def test_comma_separated_with_indexed_variable(self):
         """Test comma-separated alongside indexed variables."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i /i1, i2/;
             Variables x, y;
             Variables z(i);
@@ -1299,8 +1204,7 @@ class TestCommaSeparatedDeclarations:
             eq.. x + y =e= 10;
             Model m /all/;
             Solve m using nlp minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert "y" in model.variables
@@ -1311,8 +1215,7 @@ class TestCommaSeparatedDeclarations:
 
     def test_convexity_fixture_style(self):
         """Test the exact style used in convexity fixtures."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y, obj;
             Equations objdef, linear_constr;
 
@@ -1326,8 +1229,7 @@ class TestCommaSeparatedDeclarations:
 
             Model m /all/;
             Solve m using nlp minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert "y" in model.variables
@@ -1337,16 +1239,14 @@ class TestCommaSeparatedDeclarations:
 
     def test_comma_separated_with_obj_variable(self):
         """Test that objective variable works in comma-separated list."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y, z, obj;
             Equations eq, objdef;
             eq.. x + y + z =e= 10;
             objdef.. obj =e= x**2 + y**2 + z**2;
             Model m /all/;
             Solve m using nlp minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.objective is not None
         assert model.objective.objvar == "obj"
@@ -1357,8 +1257,7 @@ class TestModelEquationListSyntax:
 
     def test_single_equation_model(self):
         """Test model with single equation in list."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, obj;
             Equations eq1, eq2;
 
@@ -1367,8 +1266,7 @@ class TestModelEquationListSyntax:
 
             Model m1 / eq1 /;
             Solve m1 using nlp minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.declared_model == "m1"
         assert model.model_equations == ["eq1"]
@@ -1376,8 +1274,7 @@ class TestModelEquationListSyntax:
 
     def test_multiple_equations_model(self):
         """Test model with multiple equations in list."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y, obj;
             Equations eq1, eq2, eq3, objdef;
 
@@ -1388,8 +1285,7 @@ class TestModelEquationListSyntax:
 
             Model m1 / eq1, eq2, objdef /;
             Solve m1 using nlp minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.declared_model == "m1"
         assert model.model_equations == ["eq1", "eq2", "objdef"]
@@ -1397,8 +1293,7 @@ class TestModelEquationListSyntax:
 
     def test_all_keyword_vs_explicit_list(self):
         """Test that /all/ behaves differently from explicit list."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y, obj;
             Equations eq1, eq2, eq3;
 
@@ -1408,8 +1303,7 @@ class TestModelEquationListSyntax:
 
             Model m_all / all /;
             Solve m_all using nlp minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.declared_model == "m_all"
         assert model.model_equations == []
@@ -1417,8 +1311,7 @@ class TestModelEquationListSyntax:
 
     def test_gamslib_hs62_syntax(self):
         """Test syntax from GAMSLib hs62.gms model."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x1, x2, x3, obj;
             Equations objdef, eq1x;
 
@@ -1427,8 +1320,7 @@ class TestModelEquationListSyntax:
 
             Model mx / objdef, eq1x /;
             Solve mx using nlp minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.declared_model == "mx"
         assert model.model_equations == ["objdef", "eq1x"]
@@ -1436,8 +1328,7 @@ class TestModelEquationListSyntax:
 
     def test_gamslib_mingamma_syntax(self):
         """Test syntax from GAMSLib mingamma.gms model."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y1, y2;
             Equations y1def, y2def;
 
@@ -1446,8 +1337,7 @@ class TestModelEquationListSyntax:
 
             Model m2 / y2def /;
             Solve m2 using nlp minimizing y2;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.declared_model == "m2"
         assert model.model_equations == ["y2def"]
@@ -1455,8 +1345,7 @@ class TestModelEquationListSyntax:
 
     def test_model_subset_equations(self):
         """Test model using subset of declared equations."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y, z, obj;
             Equations eq1, eq2, eq3, eq4, objdef;
 
@@ -1468,8 +1357,7 @@ class TestModelEquationListSyntax:
 
             Model subset_model / objdef, eq1, eq3 /;
             Solve subset_model using nlp minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.model_equations == ["objdef", "eq1", "eq3"]
         assert len(model.model_equations) == 3
@@ -1479,8 +1367,7 @@ class TestModelEquationListSyntax:
 
     def test_indexed_equations_in_list(self):
         """Test that indexed equations can be referenced in model list."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i /i1, i2/;
             Variables x(i);
             Variables obj;
@@ -1492,8 +1379,7 @@ class TestModelEquationListSyntax:
 
             Model m / objdef, balance /;
             Solve m using nlp minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.model_equations == ["objdef", "balance"]
 
@@ -1508,71 +1394,57 @@ class TestSetRangeSyntax:
 
     def test_numeric_range_basic(self):
         """Test basic numeric range expansion."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / 1*6 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["1", "2", "3", "4", "5", "6"]
 
     def test_numeric_range_single_element(self):
         """Test numeric range with single element (start equals end)."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / 5*5 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["5"]
 
     def test_numeric_range_large(self):
         """Test numeric range with larger numbers."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / 100*105 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["100", "101", "102", "103", "104", "105"]
 
     def test_symbolic_range_basic(self):
         """Test basic symbolic range expansion."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / s1*s5 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["s1", "s2", "s3", "s4", "s5"]
 
     def test_symbolic_range_different_prefix(self):
         """Test symbolic range with different prefix."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / plant1*plant3 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["plant1", "plant2", "plant3"]
 
     def test_symbolic_range_with_underscore(self):
         """Test symbolic range with underscore in prefix."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / item_1*item_4 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["item_1", "item_2", "item_3", "item_4"]
 
     def test_mixed_range_and_explicit_elements(self):
         """Test mixing range notation with explicit elements."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / 1*3, extra, special, 7*9 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == [
             "1",
@@ -1587,14 +1459,12 @@ class TestSetRangeSyntax:
 
     def test_multiple_sets_with_ranges(self):
         """Test multiple sets using different range types."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i / 1*10 /
                 j / a1*a3 /
                 k / x, y, z /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == [
             "1",
@@ -1613,12 +1483,10 @@ class TestSetRangeSyntax:
 
     def test_range_in_parameter_definition(self):
         """Test using range-defined set in parameter."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / i1*i3 /;
             Parameters p(i) / i1 10, i2 20, i3 30 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["i1", "i2", "i3"]
         assert model.params["p"].values == {
@@ -1629,53 +1497,43 @@ class TestSetRangeSyntax:
 
     def test_range_in_variable_definition(self):
         """Test using range-defined set in variable."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / 1*3 /;
             Variables x(i);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["1", "2", "3"]
         assert model.variables["x"].domain == ("i",)
 
     def test_numeric_range_invalid_direction(self):
         """Test that reversed numeric range raises error."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / 10*1 /;
-            """
-        )
+            """)
         with pytest.raises(parser.ParserSemanticError, match="Invalid range"):
             parser.parse_model_text(text)
 
     def test_symbolic_range_invalid_direction(self):
         """Test that reversed symbolic range raises error."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / i10*i1 /;
-            """
-        )
+            """)
         with pytest.raises(parser.ParserSemanticError, match="start.*greater than.*end"):
             parser.parse_model_text(text)
 
     def test_symbolic_range_mismatched_prefix(self):
         """Test that mismatched prefixes raise error."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / a1*b10 /;
-            """
-        )
+            """)
         with pytest.raises(parser.ParserSemanticError, match="base mismatch"):
             parser.parse_model_text(text)
 
     def test_range_with_string_elements(self):
         """Test mixing range with quoted string elements."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / 1*3, "special item", 5*6 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         # Note: String elements have quotes stripped by the parser
         assert model.sets["i"].members == [
@@ -1689,11 +1547,9 @@ class TestSetRangeSyntax:
 
     def test_maxmin_gms_pattern(self):
         """Test pattern from maxmin.gms GAMSLib model."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets k / 1*13 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["k"].members == [
             "1",
@@ -1713,12 +1569,10 @@ class TestSetRangeSyntax:
 
     def test_range_with_alias(self):
         """Test range-defined set can be aliased."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / 1*5 /;
             Aliases ii, i;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["1", "2", "3", "4", "5"]
         assert "ii" in model.aliases
@@ -1726,88 +1580,72 @@ class TestSetRangeSyntax:
 
     def test_numeric_range_zero_start(self):
         """Test numeric range starting from zero."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / 0*5 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["0", "1", "2", "3", "4", "5"]
 
     def test_symbolic_range_zero_start(self):
         """Test symbolic range starting from index 0."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / t0*t3 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["t0", "t1", "t2", "t3"]
 
     def test_set_singular_keyword(self):
         """Test that 'Set' (singular) keyword is supported (Sprint 7 Day 3)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*3 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["1", "2", "3"]
 
     def test_sets_plural_keyword(self):
         """Test that 'Sets' (plural) keyword still works."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i / 1*3 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["1", "2", "3"]
 
     def test_set_with_description(self):
         """Test set with optional description (Sprint 7 Day 3)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i 'indices for points' / 1*6 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["1", "2", "3", "4", "5", "6"]
 
     def test_sets_with_description(self):
         """Test sets (plural) with optional description."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets i 'my set' / a, b, c /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["a", "b", "c"]
 
     def test_alias_singular_keyword(self):
         """Test that 'Alias' (singular) keyword is supported (Sprint 7 Day 3)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*3 /;
             Alias (i,j);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["1", "2", "3"]
 
     def test_aliases_plural_keyword(self):
         """Test that 'Aliases' (plural) keyword still works."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*3 /;
             Aliases j, i;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert "j" in model.aliases
@@ -1815,36 +1653,30 @@ class TestSetRangeSyntax:
 
     def test_alias_with_parentheses(self):
         """Test Alias (i,j) syntax with parentheses (Sprint 7 Day 3)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*5 /;
             Alias (i,j);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["1", "2", "3", "4", "5"]
 
     def test_alias_without_parentheses(self):
         """Test traditional Alias j, i syntax still works."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*5 /;
             Aliases j, i;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert "j" in model.aliases
 
     def test_set_singular_with_range_and_description(self):
         """Test all Day 3 features together: Set singular + description + range."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i 'indices for the 6 points' / 1*6 /;
             Alias (i,j);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["1", "2", "3", "4", "5", "6"]
@@ -1855,24 +1687,21 @@ class TestConditionalEquations:
 
     def test_scalar_equation_with_condition(self):
         """Test scalar equation with conditional."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable x;
             Equation balance;
 
             balance$(1 > 0).. x =e= 1;
 
             Model test / all /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "balance" in model.equations
         assert model.equations["balance"].domain == ()
 
     def test_indexed_equation_with_condition(self):
         """Test indexed equation with conditional (basic)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*5 /;
             Variable x(i);
             Equation balance(i);
@@ -1880,16 +1709,14 @@ class TestConditionalEquations:
             balance(i)$(ord(i) > 2).. x(i) =e= 1;
 
             Model test / all /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "balance" in model.equations
         assert model.equations["balance"].domain == ("i",)
 
     def test_multi_index_equation_with_condition(self):
         """Test multi-index equation with conditional (himmel16.gms pattern)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*6 /;
             Alias (i,j);
             Variable x(i);
@@ -1899,8 +1726,7 @@ class TestConditionalEquations:
             maxdist(i,j)$(ord(i) < ord(j)).. x(i) + y(j) =l= 1;
 
             Model test / all /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "maxdist" in model.equations
         assert model.equations["maxdist"].domain == ("i", "j")
@@ -1908,8 +1734,7 @@ class TestConditionalEquations:
 
     def test_equation_without_condition_still_works(self):
         """Test that equations without conditions still work."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*3 /;
             Variable x(i);
             Equation balance(i);
@@ -1917,16 +1742,14 @@ class TestConditionalEquations:
             balance(i).. x(i) =e= 1;
 
             Model test / all /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "balance" in model.equations
         assert model.equations["balance"].domain == ("i",)
 
     def test_condition_with_parameter_comparison(self):
         """Test conditional with parameter comparison."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / i1*i5 /;
             Parameter demand(i) / i1 10, i2 0, i3 5, i4 0, i5 8 /;
             Variable x(i);
@@ -1935,16 +1758,14 @@ class TestConditionalEquations:
             supply(i)$(demand(i) > 0).. x(i) =e= demand(i);
 
             Model test / all /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "supply" in model.equations
         assert model.equations["supply"].domain == ("i",)
 
     def test_condition_with_set_comparison(self):
         """Test conditional with set element comparison."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*5 /;
             Alias (i,j);
             Variable x(i,j);
@@ -1953,16 +1774,14 @@ class TestConditionalEquations:
             offdiag(i,j)$(i <> j).. x(i,j) =e= 0;
 
             Model test / all /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "offdiag" in model.equations
         assert model.equations["offdiag"].domain == ("i", "j")
 
     def test_condition_with_complex_expression(self):
         """Test conditional with complex expression."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Variable x(i);
             Equation firsthalf(i);
@@ -1970,8 +1789,7 @@ class TestConditionalEquations:
             firsthalf(i)$(ord(i) <= 5 and ord(i) > 0).. x(i) =e= 1;
 
             Model test / all /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "firsthalf" in model.equations
         assert model.equations["firsthalf"].domain == ("i",)
@@ -1982,8 +1800,7 @@ class TestLagLeadOperators:
 
     def test_lead_operator_in_sum_expression(self):
         """Test linear lead operator i+1 in sum expression."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i5/ ;
 
@@ -1998,8 +1815,7 @@ class TestLagLeadOperators:
 
             Model test / all / ;
             Solve test using NLP minimizing energy;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "objective" in model.equations
         # Verify the equation parsed successfully
@@ -2007,8 +1823,7 @@ class TestLagLeadOperators:
 
     def test_lag_operator_in_sum_expression(self):
         """Test linear lag operator i-1 in sum expression."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i5/ ;
 
@@ -2023,15 +1838,13 @@ class TestLagLeadOperators:
 
             Model test / all / ;
             Solve test using NLP minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "objective" in model.equations
 
     def test_lead_operator_in_equation_domain(self):
         """Test lead operator in equation domain declaration."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i5/ ;
 
@@ -2045,8 +1858,7 @@ class TestLagLeadOperators:
 
             Model test / all / ;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "balance" in model.equations
         # Domain should be extracted as just 'i' (base identifier)
@@ -2054,8 +1866,7 @@ class TestLagLeadOperators:
 
     def test_lag_operator_in_equation_domain(self):
         """Test lag operator in equation domain declaration."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i5/ ;
 
@@ -2069,16 +1880,14 @@ class TestLagLeadOperators:
 
             Model test / all / ;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "balance" in model.equations
         assert model.equations["balance"].domain == ("i",)
 
     def test_lead_operator_in_filtered_set(self):
         """Test lead operator inside filtered set like nh(i+1)."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i5/
                 nh(i) /i2*i4/ ;
@@ -2094,15 +1903,13 @@ class TestLagLeadOperators:
 
             Model test / all / ;
             Solve test using NLP minimizing energy;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "objective" in model.equations
 
     def test_chain_gms_pattern(self):
         """Test the specific pattern from chain.gms (Tier 2 model)."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i6/
                 nh(i) /i2*i6/ ;
@@ -2127,8 +1934,7 @@ class TestLagLeadOperators:
 
             Model chain / all / ;
             Solve chain using NLP minimizing energy;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "energy_def" in model.equations
         assert "x_eqn" in model.equations
@@ -2136,8 +1942,7 @@ class TestLagLeadOperators:
 
     def test_circular_lead_operator(self):
         """Test circular lead operator i++1."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i5/ ;
 
@@ -2152,15 +1957,13 @@ class TestLagLeadOperators:
 
             Model test / all / ;
             Solve test using NLP minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "circular" in model.equations
 
     def test_circular_lag_operator(self):
         """Test circular lag operator i--1."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i5/ ;
 
@@ -2175,15 +1978,13 @@ class TestLagLeadOperators:
 
             Model test / all / ;
             Solve test using NLP minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "circular" in model.equations
 
     def test_multiple_lag_lead_operators(self):
         """Test multiple lag/lead operators in same expression."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i10/ ;
 
@@ -2198,15 +1999,13 @@ class TestLagLeadOperators:
 
             Model test / all / ;
             Solve test using NLP minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "balance" in model.equations
 
     def test_lag_lead_with_variable_offset(self):
         """Test lag/lead with variable offset (not just numeric)."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i5/ ;
 
@@ -2224,15 +2023,13 @@ class TestLagLeadOperators:
 
             Model test / all / ;
             Solve test using NLP minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "balance" in model.equations
 
     def test_nested_domain_with_lag_lead(self):
         """Test nested domain indexing with lag/lead operators."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1*i5/
                 j /j1*j3/
@@ -2248,8 +2045,7 @@ class TestLagLeadOperators:
 
             Model test / all / ;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "balance" in model.equations
         # Domain should extract both i and j
@@ -2257,8 +2053,7 @@ class TestLagLeadOperators:
 
     def test_polygon_gms_pattern(self):
         """Test pattern from polygon.gms (Tier 2 model)."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 k /1*8/ ;
 
@@ -2278,8 +2073,7 @@ class TestLagLeadOperators:
 
             Model polygon / all / ;
             Solve polygon using NLP minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "fxsum" in model.equations
         assert "defr" in model.equations
@@ -2291,8 +2085,7 @@ class TestMultiDimensionalParameters:
 
     def test_2d_parameter_dotted_notation(self):
         """Test 2D parameter with dotted notation (i.j)."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1, i2/
                 j /j1, j2/
@@ -2312,8 +2105,7 @@ class TestMultiDimensionalParameters:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "a" in model.params
         assert model.params["a"].domain == ("i", "j")
@@ -2326,8 +2118,7 @@ class TestMultiDimensionalParameters:
 
     def test_3d_parameter_dotted_notation(self):
         """Test 3D parameter with dotted notation (i.j.k)."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1, i2/
                 j /j1, j2/
@@ -2347,8 +2138,7 @@ class TestMultiDimensionalParameters:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "a" in model.params
         assert model.params["a"].domain == ("i", "j", "k")
@@ -2360,8 +2150,7 @@ class TestMultiDimensionalParameters:
 
     def test_2d_parameter_sparse_data(self):
         """Test 2D parameter with sparse data (not all combinations specified)."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1, i2, i3/
                 j /j1, j2, j3/
@@ -2380,8 +2169,7 @@ class TestMultiDimensionalParameters:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["cost"].values == {
             ("i1", "j1"): 10.0,
@@ -2394,8 +2182,7 @@ class TestMultiDimensionalParameters:
 
     def test_2d_parameter_in_equation(self):
         """Test using 2D parameter in equation."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1, i2/
                 j /j1, j2/
@@ -2423,16 +2210,14 @@ class TestMultiDimensionalParameters:
 
             Model test /all/;
             Solve test using NLP minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "cost" in model.params
         assert len(model.params["cost"].values) == 4
 
     def test_2d_parameter_transportation_problem(self):
         """Test realistic transportation problem with cost matrix."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 sources /s1, s2/
                 destinations /d1, d2, d3/
@@ -2465,8 +2250,7 @@ class TestMultiDimensionalParameters:
 
             Model transport /all/;
             Solve transport using NLP minimizing total_cost;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert len(model.params["cost"].values) == 6
         assert model.params["cost"].values[("s1", "d1")] == 10.0
@@ -2474,8 +2258,7 @@ class TestMultiDimensionalParameters:
 
     def test_2d_parameter_validation_invalid_index(self):
         """Test that invalid indices are caught."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1, i2/
                 j /j1, j2/
@@ -2493,15 +2276,13 @@ class TestMultiDimensionalParameters:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         with pytest.raises(parser.ParserSemanticError, match="not present in set"):
             parser.parse_model_text(text)
 
     def test_2d_parameter_validation_dimension_mismatch(self):
         """Test that dimension mismatch is caught."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1, i2/
                 j /j1, j2/
@@ -2518,15 +2299,13 @@ class TestMultiDimensionalParameters:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         with pytest.raises(parser.ParserSemanticError, match="index mismatch"):
             parser.parse_model_text(text)
 
     def test_4d_parameter(self):
         """Test 4D parameter to ensure arbitrary dimensions work."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1/
                 j /j1/
@@ -2545,8 +2324,7 @@ class TestMultiDimensionalParameters:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["a"].domain == ("i", "j", "k", "l")
         assert model.params["a"].values[("i1", "j1", "k1", "l1")] == 42.0
@@ -2557,12 +2335,10 @@ class TestParameterDataRangeNotation:
 
     def test_range_notation_basic(self):
         """Test basic range notation a*c expands to a, b, c."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /a, b, c, d, e/;
             Parameter p(i) / a*c 10, d 20, e 30 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].values == {
             ("a",): 10.0,
@@ -2574,12 +2350,10 @@ class TestParameterDataRangeNotation:
 
     def test_range_notation_numeric_elements(self):
         """Test range notation with numeric set elements."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /1, 2, 3, 4, 5/;
             Parameter p(i) / 1*3 100, 4 200, 5 300 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].values == {
             ("1",): 100.0,
@@ -2591,12 +2365,10 @@ class TestParameterDataRangeNotation:
 
     def test_range_notation_symbolic_elements(self):
         """Test range notation with symbolic identifiers."""
-        text = dedent(
-            """
+        text = dedent("""
             Set case /haverly1, haverly2, haverly3, foulds2, foulds3/;
             Parameter sol(case) / haverly1*haverly3 -400, foulds2 -1100, foulds3 -8 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["sol"].values == {
             ("haverly1",): -400.0,
@@ -2608,12 +2380,10 @@ class TestParameterDataRangeNotation:
 
     def test_range_notation_negative_value(self):
         """Test range notation with negative values."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /x, y, z/;
             Parameter p(i) / x*z -5.5 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].values == {
             ("x",): -5.5,
@@ -2623,12 +2393,10 @@ class TestParameterDataRangeNotation:
 
     def test_range_notation_multiple_ranges(self):
         """Test multiple range expressions in same parameter."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /a, b, c, d, e, f/;
             Parameter p(i) / a*b 1, c*d 2, e*f 3 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].values == {
             ("a",): 1.0,
@@ -2641,12 +2409,10 @@ class TestParameterDataRangeNotation:
 
     def test_range_notation_single_element(self):
         """Test range where start equals end (single element)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /a, b, c/;
             Parameter p(i) / a*a 10, b 20, c 30 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].values == {
             ("a",): 10.0,
@@ -2656,34 +2422,28 @@ class TestParameterDataRangeNotation:
 
     def test_range_notation_error_start_not_found(self):
         """Test error when range start not in set."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /a, b, c/;
             Parameter p(i) / x*c 10 /;
-            """
-        )
+            """)
         with pytest.raises(parser.ParserSemanticError, match="Range start 'x' not found"):
             parser.parse_model_text(text)
 
     def test_range_notation_error_end_not_found(self):
         """Test error when range end not in set."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /a, b, c/;
             Parameter p(i) / a*z 10 /;
-            """
-        )
+            """)
         with pytest.raises(parser.ParserSemanticError, match="Range end 'z' not found"):
             parser.parse_model_text(text)
 
     def test_range_notation_error_reversed(self):
         """Test error when range end comes before start."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /a, b, c/;
             Parameter p(i) / c*a 10 /;
-            """
-        )
+            """)
         with pytest.raises(parser.ParserSemanticError, match="comes before start"):
             parser.parse_model_text(text)
 
@@ -2693,26 +2453,22 @@ class TestWildcardDomain:
 
     def test_wildcard_domain_basic(self):
         """Test parameter with wildcard domain."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /a, b, c/;
             Parameter p(i,*);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "p" in model.params
         assert model.params["p"].domain == ("i", "*")
 
     def test_wildcard_domain_with_assignment(self):
         """Test parameter with wildcard domain and assignment."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /a, b, c/;
             Parameter p(i,*);
             p('a', 'x') = 10;
             p('b', 'y') = 20;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].domain == ("i", "*")
         assert model.params["p"].values[("a", "x")] == 10.0
@@ -2720,71 +2476,59 @@ class TestWildcardDomain:
 
     def test_wildcard_domain_first_position(self):
         """Test wildcard in first position of domain."""
-        text = dedent(
-            """
+        text = dedent("""
             Set j /x, y, z/;
             Parameter p(*,j);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].domain == ("*", "j")
 
     def test_wildcard_domain_only(self):
         """Test parameter with only wildcard domain."""
-        text = dedent(
-            """
+        text = dedent("""
             Parameter p(*);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].domain == ("*",)
 
     def test_wildcard_domain_multiple(self):
         """Test parameter with multiple wildcards."""
-        text = dedent(
-            """
+        text = dedent("""
             Parameter p(*,*);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].domain == ("*", "*")
 
     def test_wildcard_domain_pool_pattern(self):
         """Test pool.gms pattern with wildcard report parameters."""
-        text = dedent(
-            """
+        text = dedent("""
             Set case /a, b, c/;
             Parameter
                rep1(case,*) 'problem characteristics'
                rep2(case,*) 'solution summary';
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["rep1"].domain == ("case", "*")
         assert model.params["rep2"].domain == ("case", "*")
 
     def test_wildcard_domain_index_validation(self):
         """Test that wildcard domains accept any second index."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /a, b/;
             Parameter p(i,*);
             p('a', 'foo') = 1;
             p('a', 'bar') = 2;
             p('b', 'baz') = 3;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert len(model.params["p"].values) == 3
 
     def test_wildcard_domain_with_inline_data(self):
         """Test wildcard domain with inline parameter data."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /a, b/;
             Parameter p(i,*) / a.x 10, a.y 20, b.z 30 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].values == {
             ("a", "x"): 10.0,
@@ -2798,8 +2542,7 @@ class TestCaseInsensitivity:
 
     def test_parameter_case_insensitive_reference(self):
         """Test parameter declared with one case, referenced with another."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1, i2/
             ;
@@ -2820,8 +2563,7 @@ class TestCaseInsensitivity:
 
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "myparam" in model.params  # Case-insensitive lookup
         assert model.params["myParam"].domain == ("i",)  # Case-insensitive lookup
@@ -2829,8 +2571,7 @@ class TestCaseInsensitivity:
 
     def test_variable_case_insensitive_reference(self):
         """Test variable declared and referenced with different cases."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables
                 myVar
                 obj
@@ -2844,8 +2585,7 @@ class TestCaseInsensitivity:
 
             Model test /all/;
             Solve test using NLP minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "myvar" in model.variables
         # All references should resolve to same variable
@@ -2854,8 +2594,7 @@ class TestCaseInsensitivity:
 
     def test_set_case_insensitive_reference(self):
         """Test set declared and referenced with different cases."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 mySet /s1, s2, s3/
             ;
@@ -2869,8 +2608,7 @@ class TestCaseInsensitivity:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "myset" in model.sets
         assert "p" in model.params
@@ -2878,8 +2616,7 @@ class TestCaseInsensitivity:
 
     def test_equation_case_insensitive_reference(self):
         """Test equation declared and referenced with different cases."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x;
 
             Equations
@@ -2890,16 +2627,14 @@ class TestCaseInsensitivity:
 
             Model test / MyEquation /;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "myequation" in model.equations
         assert model.model_equations == ["MyEquation"]  # Case preserved from Model statement
 
     def test_alias_case_insensitive(self):
         """Test alias with different cases."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1, i2/
             ;
@@ -2915,16 +2650,14 @@ class TestCaseInsensitivity:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "j" in model.aliases
         assert model.aliases["J"].target == "i"  # Case-insensitive
 
     def test_table_case_insensitive_reference(self):
         """Test table declared and referenced with different cases."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1, i2/
                 j /j1, j2/
@@ -2947,16 +2680,14 @@ class TestCaseInsensitivity:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "mytable" in model.params
         assert len(model.params["MYTABLE"].values) == 4
 
     def test_mixed_case_in_expressions(self):
         """Test multiple symbols with mixed cases in same expression."""
-        text = dedent(
-            """
+        text = dedent("""
             Parameters
                 alpha
                 beta
@@ -2979,8 +2710,7 @@ class TestCaseInsensitivity:
 
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "alpha" in model.params
         assert "beta" in model.params
@@ -2988,8 +2718,7 @@ class TestCaseInsensitivity:
 
     def test_case_preservation_in_output(self):
         """Test that original casing is preserved for display."""
-        text = dedent(
-            """
+        text = dedent("""
             Parameters
                 MyParameter
             ;
@@ -3001,8 +2730,7 @@ class TestCaseInsensitivity:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         # Check that we can get the original name
         original_name = model.params.get_original_name("myparameter")
@@ -3010,8 +2738,7 @@ class TestCaseInsensitivity:
 
     def test_haverly_pattern(self):
         """Test the exact pattern from haverly.gms."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 f /f1, f2/
             ;
@@ -3033,8 +2760,7 @@ class TestCaseInsensitivity:
             eq.. x =e= 0;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data_f" in model.params
         # This should not fail with "Undefined symbol 'data_F'"
@@ -3042,8 +2768,7 @@ class TestCaseInsensitivity:
 
     def test_no_redeclaration_error_different_case(self):
         """Test that same symbol with different case is not a redeclaration error."""
-        text = dedent(
-            """
+        text = dedent("""
             Parameters
                 myParam
             ;
@@ -3059,8 +2784,7 @@ class TestCaseInsensitivity:
             eq.. x =e= myParam;
             Model test /all/;
             Solve test using NLP minimizing x;
-            """
-        )
+            """)
         # Should parse without redeclaration errors
         model = parser.parse_model_text(text)
         assert "myparam" in model.params
@@ -3071,8 +2795,7 @@ class TestDescriptionText:
 
     def test_equation_with_hyphenated_description(self):
         """Test equation declaration with hyphenated description text."""
-        text = dedent(
-            """
+        text = dedent("""
             Sets
                 i /i1, i2/
             ;
@@ -3092,8 +2815,7 @@ class TestDescriptionText:
 
             Model test /all/;
             Solve test using NLP minimizing obj;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "objdef" in model.equations
         assert "non_negative" in model.equations
@@ -3102,38 +2824,33 @@ class TestDescriptionText:
 
     def test_equation_scalar_with_description(self):
         """Test scalar equation with multi-word description."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y;
             Equations balance supply demand balance;
 
             balance.. x + y =e= 10;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "balance" in model.equations
 
     def test_equation_indexed_with_description(self):
         """Test indexed equation with description containing hyphens."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /i1, i2/;
             Variables x(i);
             Equations flow_limit(i) arc-capacity constraint;
 
             flow_limit(i).. x(i) =l= 100;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "flow_limit" in model.equations
         assert model.equations["flow_limit"].domain == ("i",)
 
     def test_table_with_hyphenated_description(self):
         """Test table declaration with hyphenated description text."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / i1, i2 /;
             Set j / j1, j2 /;
 
@@ -3147,8 +2864,7 @@ class TestDescriptionText:
 
             Variables x;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         # Tables are stored as params in ModelIR
         assert "data" in model.params
@@ -3156,8 +2872,7 @@ class TestDescriptionText:
 
     def test_description_does_not_match_short_identifiers(self):
         """Ensure DESCRIPTION doesn't match short identifier sequences like 'i j'."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / i1, i2 /;
             Set j / j1, j2 /;
 
@@ -3168,8 +2883,7 @@ class TestDescriptionText:
 
             Variables x;
             Model m /all/;
-            """
-        )
+            """)
         # Should parse successfully - 'j1 j2' is table header, not description
         model = parser.parse_model_text(text)
         # Tables are stored as params in ModelIR
@@ -3177,8 +2891,7 @@ class TestDescriptionText:
 
     def test_description_does_not_match_comma_separated_ids(self):
         """Ensure DESCRIPTION doesn't consume comma-separated equation lists."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y, z;
             Equations eq1, eq2, eq3;
 
@@ -3187,8 +2900,7 @@ class TestDescriptionText:
             eq3.. z =e= 3;
 
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "eq1" in model.equations
         assert "eq2" in model.equations
@@ -3207,52 +2919,44 @@ class TestVariableIndexingSyntax:
 
     def test_single_index_variable(self):
         """Test variable with single index."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Variable x(i);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert model.variables["x"].domain == ("i",)
 
     def test_two_dimensional_variable(self):
         """Test variable with two indices."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*5 /;
             Set j / 1*5 /;
             Variable flow(i,j);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "flow" in model.variables
         assert model.variables["flow"].domain == ("i", "j")
 
     def test_three_dimensional_variable(self):
         """Test variable with three indices."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i, j, k;
             Variable cube(i,j,k);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "cube" in model.variables
         assert model.variables["cube"].domain == ("i", "j", "k")
 
     def test_mixed_scalar_and_indexed(self):
         """Test comma-separated list with both scalar and indexed variables."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Variables
                 total        "total cost",
                 x(i)         "decision variable",
                 y(i)         "allocation variable";
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "total" in model.variables
         assert model.variables["total"].domain == ()
@@ -3263,16 +2967,14 @@ class TestVariableIndexingSyntax:
 
     def test_inscribedsquare_pattern(self):
         """Test exact pattern from inscribedsquare.gms (Issue #391)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i "corner points" / 1*4 /;
             Variables
               z     "area of square",
               t(i)  "position of corner points",
               x     "x-coordinate",
               y     "y-coordinate";
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "z" in model.variables
         assert model.variables["z"].domain == ()
@@ -3285,12 +2987,10 @@ class TestVariableIndexingSyntax:
 
     def test_positive_variable_with_domain(self):
         """Test positive variable with domain specification."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Positive Variable x(i);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert model.variables["x"].domain == ("i",)
@@ -3298,12 +2998,10 @@ class TestVariableIndexingSyntax:
 
     def test_binary_variable_with_domain(self):
         """Test binary variable with domain specification."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Binary Variable b(i);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "b" in model.variables
         assert model.variables["b"].domain == ("i",)
@@ -3311,12 +3009,10 @@ class TestVariableIndexingSyntax:
 
     def test_integer_variable_with_domain(self):
         """Test integer variable with domain specification."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Integer Variable n(i);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "n" in model.variables
         assert model.variables["n"].domain == ("i",)
@@ -3324,12 +3020,10 @@ class TestVariableIndexingSyntax:
 
     def test_negative_variable_with_domain(self):
         """Test negative variable with domain specification."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Negative Variable y(i);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "y" in model.variables
         assert model.variables["y"].domain == ("i",)
@@ -3337,14 +3031,12 @@ class TestVariableIndexingSyntax:
 
     def test_block_level_kind_with_indexed_variables(self):
         """Test block-level variable kind with indexed variables."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Positive Variables
                 x(i)  "first positive variable",
                 y(i)  "second positive variable";
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert model.variables["x"].domain == ("i",)
@@ -3355,14 +3047,12 @@ class TestVariableIndexingSyntax:
 
     def test_declaration_kind_overrides_block_kind(self):
         """Test declaration-level kind overrides block-level kind."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Positive Variables
                 x(i)           "uses block kind (positive)",
                 Binary y(i)    "overrides with binary";
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert model.variables["x"].kind == VarKind.POSITIVE
@@ -3371,16 +3061,14 @@ class TestVariableIndexingSyntax:
 
     def test_multiple_variables_with_descriptions(self):
         """Test multiple indexed variables with descriptions."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Set j / 1*5 /;
             Variables
                 x(i)     "indexed by i",
                 y(i,j)   "indexed by i and j",
                 z        "scalar variable";
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert model.variables["x"].domain == ("i",)
@@ -3391,39 +3079,33 @@ class TestVariableIndexingSyntax:
 
     def test_four_dimensional_variable(self):
         """Test variable with four indices."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i, j, k, t;
             Variable x(i,j,k,t);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert model.variables["x"].domain == ("i", "j", "k", "t")
 
     def test_variable_without_description(self):
         """Test indexed variable without description."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Variable x(i);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert model.variables["x"].domain == ("i",)
 
     def test_newline_separated_variables(self):
         """Test variables separated by newlines (original syntax still works)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1*10 /;
             Variables
                 x(i)
                 y
                 z(i);
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert model.variables["x"].domain == ("i",)
@@ -3452,120 +3134,98 @@ class TestHyphenatedIdentifiers:
 
     def test_simple_hyphenated_identifier(self):
         """Test single hyphenated identifier in set."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / light-ind /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["light-ind"]
 
     def test_simple_plus_identifier(self):
         """Test single plus-sign identifier in set."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / food+agr /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["food+agr"]
 
     def test_multiple_hyphenated_identifiers(self):
         """Test multiple hyphenated identifiers in same set."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / light-ind, heavy-ind, semi-auto /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["light-ind", "heavy-ind", "semi-auto"]
 
     def test_chenery_sectors(self):
         """Test exact pattern from chenery.gms line 17."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i 'sectors' / light-ind, food+agr, heavy-ind, services /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["light-ind", "food+agr", "heavy-ind", "services"]
 
     def test_hyphenated_with_descriptions(self):
         """Test hyphenated identifiers with element descriptions."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i 'sectors' /
                 light-ind 'light industry',
                 food+agr  'food and agriculture',
                 heavy-ind 'heavy industry'
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["light-ind", "food+agr", "heavy-ind"]
 
     def test_mixed_regular_and_hyphenated(self):
         """Test mix of regular and hyphenated identifiers."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b-c, d, e+f, g /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a", "b-c", "d", "e+f", "g"]
 
     def test_multiple_hyphens(self):
         """Test identifier with multiple hyphens."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / light-semi-auto-ind /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["light-semi-auto-ind"]
 
     def test_multiple_plus_signs(self):
         """Test identifier with multiple plus signs."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / food+agr+services /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["food+agr+services"]
 
     def test_mixed_hyphens_and_plus(self):
         """Test identifier with both hyphens and plus signs."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / light-ind+services /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["light-ind+services"]
 
     def test_hyphenated_with_underscore(self):
         """Test identifier with hyphens and underscores."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / light_semi-auto /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["light_semi-auto"]
 
     def test_operators_still_work_in_expressions(self):
         """Test that minus and plus still work as operators in expressions."""
-        text = dedent(
-            """
+        text = dedent("""
             Scalar a / 10 /;
             Scalar b / 5 /;
             Scalar c;
             c = a - b + 2;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "c" in model.params
         # Verify the assignment parsed (no exception means success)
@@ -3578,15 +3238,13 @@ class TestHyphenatedIdentifiers:
         The grammar correctly disambiguates based on context: SET_ELEMENT_ID
         is only used in set/data contexts, while expressions use ID tokens.
         """
-        text = dedent(
-            """
+        text = dedent("""
             Scalar a / 10 /;
             Scalar b / 5 /;
             Scalar d / 3 /;
             Scalar c;
             c=a-b+d;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "c" in model.params
         assert "a" in model.params
@@ -3596,12 +3254,10 @@ class TestHyphenatedIdentifiers:
 
     def test_hyphenated_in_parameter_indexing(self):
         """Test using hyphenated set elements in parameter indexing."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / light-ind, heavy-ind /;
             Parameter cost(i) / light-ind 100, heavy-ind 200 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["light-ind", "heavy-ind"]
@@ -3616,14 +3272,12 @@ class TestHyphenatedIdentifiers:
         limitation: index_expr uses ID tokens, not SET_ELEMENT_ID tokens.
         Users must use quotes: x.lo('light-ind').
         """
-        text = dedent(
-            """
+        text = dedent("""
             Set i / light-ind, heavy-ind /;
             Variable x(i);
             x.lo('light-ind') = 0;
             x.up('heavy-ind') = 100;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert model.sets["i"].members == ["light-ind", "heavy-ind"]
@@ -3635,28 +3289,24 @@ class TestHyphenatedIdentifiers:
         Verifies that the hyphen operator works correctly in scalar expressions.
         This is separate from hyphenated identifiers in set contexts.
         """
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a /;
             Scalar x;
             x = 10 - 5;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a"]
         assert "x" in model.params
 
     def test_hyphenated_multiline(self):
         """Test hyphenated identifiers across multiple lines."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /
                 light-ind,
                 food+agr,
                 heavy-ind
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["light-ind", "food+agr", "heavy-ind"]
 
@@ -3670,27 +3320,23 @@ class TestAttributeAssignments:
 
     def test_variable_scale_attribute(self):
         """Test variable scaling attribute (bearing.gms pattern)."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable mu;
             mu.scale = 1.0e-6;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "mu" in model.variables
 
     def test_multiple_variable_scales(self):
         """Test multiple variable scaling attributes (bearing.gms pattern)."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable mu, h, W;
             mu.scale = 1.0e-6;
             h.scale  = 0.001;
             W.scale  = 1000;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "mu" in model.variables
         assert "h" in model.variables
@@ -3698,14 +3344,12 @@ class TestAttributeAssignments:
 
     def test_variable_bounds_lo_up(self):
         """Test variable bounds (.lo, .up) assignments."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable x;
             x.lo = 0;
             x.up = 100;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         # Note: bounds are stored in VariableDef
@@ -3714,26 +3358,22 @@ class TestAttributeAssignments:
 
     def test_variable_initial_value(self):
         """Test variable initial value (.l) assignment."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable z;
             z.l = 50;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "z" in model.variables
         assert model.variables["z"].l == 50
 
     def test_variable_fixed_value(self):
         """Test variable fixed value (.fx) assignment."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable x;
             x.fx = 42;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         # .fx sets both lo and up
@@ -3741,27 +3381,23 @@ class TestAttributeAssignments:
 
     def test_variable_prior_attribute(self):
         """Test branching priority (.prior) attribute."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable z;
             z.prior = 1;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "z" in model.variables
 
     def test_model_scaleopt_attribute(self):
         """Test model scaleOpt attribute (bearing.gms pattern)."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable x;
             Equations obj;
             obj.. x =e= 1;
             Model m /all/;
             m.scaleOpt = 1;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         # Model attributes are parsed but not stored in IR
         assert "x" in model.variables
@@ -3772,8 +3408,7 @@ class TestAttributeAssignments:
         Scalar parameters with assigned values can be resolved at parse time
         and used for variable bounds.
         """
-        text = dedent(
-            """
+        text = dedent("""
             Parameter lower, upper;
             lower = 10;
             upper = 20;
@@ -3781,8 +3416,7 @@ class TestAttributeAssignments:
             x.lo = lower;
             x.up = upper;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         # Scalar parameters with values are resolved at parse time
@@ -3791,8 +3425,7 @@ class TestAttributeAssignments:
 
     def test_bracket_expressions(self):
         """Test bracket expressions in equations (bearing.gms uses [(expr)])."""
-        text = dedent(
-            """
+        text = dedent("""
             Parameter pi, mu;
             pi = 3.14159;
             mu = 0.000006;
@@ -3800,15 +3433,13 @@ class TestAttributeAssignments:
             Equations test;
             test.. h =e= [2*pi*mu];
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "test" in model.equations
 
     def test_bearing_gms_attribute_pattern(self):
         """Test exact pattern from bearing.gms."""
-        text = dedent(
-            """
+        text = dedent("""
             Parameter hmin, Ws;
             hmin = 0.001;
             Ws = 1000;
@@ -3822,8 +3453,7 @@ class TestAttributeAssignments:
             Ef.scale = 1.0e4;
 
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "mu" in model.variables
         assert "h" in model.variables
@@ -3834,30 +3464,26 @@ class TestAttributeAssignments:
 
     def test_variable_attribute_with_expression(self):
         """Test variable attribute assigned with expression."""
-        text = dedent(
-            """
+        text = dedent("""
             Parameter scale_factor;
             scale_factor = 1000;
             Variable x;
             x.scale = 2 * scale_factor;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
 
     def test_multiple_attributes_same_variable(self):
         """Test multiple attributes on same variable."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable x;
             x.lo = 0;
             x.up = 100;
             x.l = 50;
             x.scale = 100;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert model.variables["x"].lo == 0
@@ -3876,67 +3502,57 @@ class TestMultiLineDeclarations:
 
     def test_multiline_set_with_commas_gastrans_style(self):
         """Test multi-line set with commas (gastrans.gms pattern)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /
                 a, b,
                 c
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a", "b", "c"]
 
     def test_multiline_set_with_commas(self):
         """Test multi-line set with commas."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /
                 a, b, c,
                 d, e, f
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a", "b", "c", "d", "e", "f"]
 
     def test_multiline_set_mixed_commas(self):
         """Test multi-line set with commas on different lines."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /
                 a, b,
                 c, d
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a", "b", "c", "d"]
 
     def test_multiline_set_with_descriptions(self):
         """Test multi-line set with element descriptions (water.gms pattern)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n 'nodes' /
                 nw 'north west reservoir', e  'east reservoir',
                 cc 'central city',         w  'west'
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["n"].members == ["nw", "e", "cc", "w"]
 
     def test_multiline_set_gastrans_pattern(self):
         """Test exact multi-line pattern from gastrans.gms."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i 'towns'
               / Anderlues, Antwerpen, Arlon,   Berneau,   Blaregnies,
                 Brugge,    Dudzele,   Gent,    Liege,     Loenhout,
                 Mons,      Namur,     Petange, Peronnes,  Sinsin,
                 Voeren,    Wanze,     Warnand, Zeebrugge, Zomergem   /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         expected = [
             "Anderlues",
@@ -3964,15 +3580,13 @@ class TestMultiLineDeclarations:
 
     def test_multiline_parameter_1d(self):
         """Test multi-line 1D parameter (chem.gms pattern)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set c / H, H2, NH /;
             Parameter gibbs(c) 'gibbs free energy' /
                 H   -10.021, H2  -21.096,
                 NH  -18.918
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["gibbs"].values == {
             ("H",): -10.021,
@@ -3982,15 +3596,13 @@ class TestMultiLineDeclarations:
 
     def test_multiline_parameter_with_commas(self):
         """Test multi-line parameter with commas."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b, c /;
             Parameter p(i) /
                 a 1.5, b 2.7,
                 c 3.9
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["p"].values == {
             ("a",): 1.5,
@@ -4000,16 +3612,14 @@ class TestMultiLineDeclarations:
 
     def test_multiline_parameter_2d(self):
         """Test multi-line 2D parameter."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b /;
             Set j / x, y /;
             Parameter cost(i,j) /
                 a.x  10, a.y  20,
                 b.x  30, b.y  40
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["cost"].values == {
             ("a", "x"): 10.0,
@@ -4020,15 +3630,13 @@ class TestMultiLineDeclarations:
 
     def test_multiline_scalar_declarations(self):
         """Test multi-line scalar declarations (commas optional per scalar_item grammar)."""
-        text = dedent(
-            """
+        text = dedent("""
             Scalar
                 a / 1.5 /
                 b / 2.7 /
                 c / 3.9 /
             ;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["a"].values == {(): 1.5}
         assert model.params["b"].values == {(): 2.7}
@@ -4036,15 +3644,13 @@ class TestMultiLineDeclarations:
 
     def test_multiline_scalar_with_commas(self):
         """Test multi-line scalar declarations with commas."""
-        text = dedent(
-            """
+        text = dedent("""
             Scalar
                 a / 1.5 /,
                 b / 2.7 /,
                 c / 3.9 /
             ;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["a"].values == {(): 1.5}
         assert model.params["b"].values == {(): 2.7}
@@ -4052,22 +3658,19 @@ class TestMultiLineDeclarations:
 
     def test_multiline_set_trailing_comma(self):
         """Test multi-line set with trailing comma on last line."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /
                 a,
                 b,
                 c
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a", "b", "c"]
 
     def test_multiline_set_blank_lines(self):
         """Test multi-line set with blank lines (newlines are ignored as whitespace)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /
                 a,
 
@@ -4075,15 +3678,13 @@ class TestMultiLineDeclarations:
 
                 c
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a", "b", "c"]
 
     def test_mixed_singleline_multiline_sets(self):
         """Test mixing single-line and multi-line set declarations in same file."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b /;
             Set j /
                 x,
@@ -4091,8 +3692,7 @@ class TestMultiLineDeclarations:
                 z
             /;
             Set k / p, q, r /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a", "b"]
         assert model.sets["j"].members == ["x", "y", "z"]
@@ -4100,43 +3700,37 @@ class TestMultiLineDeclarations:
 
     def test_multiline_set_with_range(self):
         """Test multi-line set containing range notation."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /
                 i1*i5,
                 i10*i12
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["i1", "i2", "i3", "i4", "i5", "i10", "i11", "i12"]
 
     def test_multiline_set_mixed_elements_and_ranges(self):
         """Test multi-line set with mix of explicit elements and ranges."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /
                 a, b,
                 i1*i3,
                 c, d
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a", "b", "i1", "i2", "i3", "c", "d"]
 
     def test_multiline_parameter_numeric_indices(self):
         """Test multi-line parameter with numeric indices."""
-        text = dedent(
-            """
+        text = dedent("""
             Set nm / 1, 2, 3 /;
             Parameter tau(nm) /
                 1 0.000,
                 2 0.025,
                 3 0.050
             /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["tau"].values == {
             ("1",): 0.0,
@@ -4146,8 +3740,7 @@ class TestMultiLineDeclarations:
 
     def test_description_does_not_match_across_newlines(self):
         """Ensure DESCRIPTION doesn't match across newlines in multi-line declarations."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables
                 x
                 y
@@ -4163,59 +3756,51 @@ class TestMultiLineDeclarations:
             constraint.. x + y =e= 10;
 
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "objective" in model.equations
         assert "constraint" in model.equations
 
     def test_equation_with_quoted_description_still_works(self):
         """Ensure quoted string descriptions still work (existing feature)."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x;
             Equations eq "This is a quoted description";
 
             eq.. x =e= 1;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
 
     def test_description_with_multiple_hyphens(self):
         """Test description with multiple hyphenated words."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x;
             Equations eq piece-wise linear-approximation function;
 
             eq.. x =e= 1;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
 
     def test_description_requires_meaningful_words(self):
         """Test that description requires at least one word with 4+ chars."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /i1, i2/;
             Variables x(i);
             Equations eq(i) this equation has meaningful words;
 
             eq(i).. x(i) =e= 1;
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
 
     def test_mixed_declarations_with_and_without_descriptions(self):
         """Test mixing equations with and without descriptions."""
-        text = dedent(
-            """
+        text = dedent("""
             Variables x, y, z;
             Equations
                 eq1 first equation
@@ -4228,8 +3813,7 @@ class TestMultiLineDeclarations:
             eq3.. z =e= 3;
 
             Model m /all/;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "eq1" in model.equations
         assert "eq2" in model.equations
@@ -4247,13 +3831,11 @@ class TestNewlineSeparatedSetDeclarations:
 
     def test_two_sets_newline_separated(self):
         """Test two sets separated by newline with descriptions."""
-        text = dedent(
-            """
+        text = dedent("""
             Set
                comp_ 'components' / c1*c32 /
                pro_  'products'   / p1*p16 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "comp_" in model.sets
         assert "pro_" in model.sets
@@ -4265,8 +3847,7 @@ class TestNewlineSeparatedSetDeclarations:
 
     def test_multiple_sets_newline_separated_pool_pattern(self):
         """Test pool.gms pattern with multiple newline-separated sets."""
-        text = dedent(
-            """
+        text = dedent("""
             Set
                comp_ 'components and raw materials' / c1*c32 /
                pro_  'products'                     / p1*p16 /
@@ -4275,8 +3856,7 @@ class TestNewlineSeparatedSetDeclarations:
                case  'case index'
                       / haverly1*haverly3, foulds2*foulds5 /
                labels / lo, up, price /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "comp_" in model.sets
         assert "pro_" in model.sets
@@ -4293,26 +3873,22 @@ class TestNewlineSeparatedSetDeclarations:
 
     def test_set_with_multiline_members(self):
         """Test set with description and members on separate line."""
-        text = dedent(
-            """
+        text = dedent("""
             Set case  'case index'
                       / haverly1, haverly2, haverly3 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "case" in model.sets
         assert model.sets["case"].members == ["haverly1", "haverly2", "haverly3"]
 
     def test_mixed_with_and_without_descriptions(self):
         """Test mixing sets with and without descriptions."""
-        text = dedent(
-            """
+        text = dedent("""
             Set
                i 'first set' / a, b, c /
                j              / x, y, z /
                k 'third set' / 1, 2, 3 /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a", "b", "c"]
         assert model.sets["j"].members == ["x", "y", "z"]
@@ -4320,14 +3896,12 @@ class TestNewlineSeparatedSetDeclarations:
 
     def test_empty_sets_newline_separated(self):
         """Test empty sets (no members) separated by newlines."""
-        text = dedent(
-            """
+        text = dedent("""
             Set
                i 'first set'
                j
                k 'third set';
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "i" in model.sets
         assert "j" in model.sets
@@ -4338,13 +3912,11 @@ class TestNewlineSeparatedSetDeclarations:
 
     def test_quoted_description_not_set_name(self):
         """Verify quoted strings are descriptions, not set names."""
-        text = dedent(
-            """
+        text = dedent("""
             Set
                x 'description one' / a /
                y 'description two' / b /;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         # Only x and y should be sets
         assert set(model.sets.keys()) == {"x", "y"}
@@ -4358,15 +3930,13 @@ class TestTableContinuation:
 
     def test_basic_header_continuation(self):
         """Test basic header continuation with plus sign."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i;
             Table data(i,*)
                    a  b
                +   c  d
             row1   1  2  3  4;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         # Check that values are properly indexed
@@ -4377,15 +3947,13 @@ class TestTableContinuation:
 
     def test_basic_data_continuation(self):
         """Test basic data continuation with plus sign."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i;
             Table data(i,*)
                    a  b  c  d
             row1   1  2
                +   3  4;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         assert model.params["data"].values[("row1", "a")] == 1
@@ -4395,16 +3963,14 @@ class TestTableContinuation:
 
     def test_both_header_and_data_continuation(self):
         """Test continuation in both header and data rows."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i;
             Table data(i,*)
                    a  b
                +   c  d
             row1   1  2
                +   3  4;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         assert model.params["data"].values[("row1", "a")] == 1
@@ -4414,8 +3980,7 @@ class TestTableContinuation:
 
     def test_multiple_rows_with_continuation(self):
         """Test multiple data rows each with continuation."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i;
             Table data(i,*)
                    a  b
@@ -4424,8 +3989,7 @@ class TestTableContinuation:
                +   3  4
             row2   5  6
                +   7  8;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         assert model.params["data"].values[("row1", "a")] == 1
@@ -4435,16 +3999,14 @@ class TestTableContinuation:
 
     def test_multiple_continuation_lines(self):
         """Test multiple consecutive continuation lines."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i;
             Table data(i,*)
                    a  b
                +   c  d
                +   e  f
             row1   1  2  3  4  5  6;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         assert model.params["data"].values[("row1", "a")] == 1
@@ -4478,14 +4040,12 @@ class TestTableContinuation:
 
     def test_no_continuation_baseline(self):
         """Test table without continuation (baseline for comparison)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i;
             Table data(i,*)
                    a  b  c
             row1   1  2  3;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         assert model.params["data"].values[("row1", "a")] == 1
@@ -4493,30 +4053,26 @@ class TestTableContinuation:
 
     def test_only_header_continuation(self):
         """Test continuation only in header."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i;
             Table data(i,*)
                    a  b
                +   c  d
             row1   1  2  3  4;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         assert len([k for k in model.params["data"].values.keys() if k[0] == "row1"]) == 4
 
     def test_only_data_continuation(self):
         """Test continuation only in data rows."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i;
             Table data(i,*)
                    a  b  c  d
             row1   1  2
                +   3  4;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         assert model.params["data"].values[("row1", "a")] == 1
@@ -4524,16 +4080,14 @@ class TestTableContinuation:
 
     def test_sparse_continuation(self):
         """Test continuation with sparse data."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i;
             Table data(i,*)
                    a  b  c  d  e  f
             row1   1  2
                +   3  4
                +   5  6;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         assert model.params["data"].values[("row1", "a")] == 1
@@ -4542,15 +4096,13 @@ class TestTableContinuation:
 
     def test_continuation_with_description(self):
         """Test table with description and continuation."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i;
             Table data(i,*) 'test table with description'
                    a  b
                +   c  d
             row1   1  2  3  4;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         assert model.params["data"].values[("row1", "a")] == 1
@@ -4558,14 +4110,12 @@ class TestTableContinuation:
 
     def test_continuation_with_wildcard_domain(self):
         """Test table continuation with wildcard domain."""
-        text = dedent(
-            """
+        text = dedent("""
             Table data(*,*)
                    col1  col2
                +   col3  col4
             row1   1     2     3     4;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         assert model.params["data"].values[("row1", "col1")] == 1
@@ -4581,16 +4131,14 @@ class TestNegativeInfinityInTables:
 
     def test_negative_inf_in_table(self):
         """Test -inf in table data (gastrans.gms pattern)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / item1, item2, item3 /;
             Table data(i,*)
                        lower    upper
                 item1   -inf     100
                 item2      0     inf
                 item3   -inf     inf ;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "data" in model.params
         # Check -inf values
@@ -4605,16 +4153,14 @@ class TestNegativeInfinityInTables:
 
     def test_negative_inf_case_insensitive(self):
         """Test that -inf is case-insensitive."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b, c /;
             Table data(i,*)
                    lower
                 a  -inf
                 b  -INF
                 c  -Inf ;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["data"].values[("a", "lower")] == float("-inf")
         assert model.params["data"].values[("b", "lower")] == float("-inf")
@@ -4622,8 +4168,7 @@ class TestNegativeInfinityInTables:
 
     def test_mixed_special_values_in_table(self):
         """Test mix of special values in table."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b, c, d /;
             Table data(i,*)
                    lo       up
@@ -4631,8 +4176,7 @@ class TestNegativeInfinityInTables:
                 b     0    100
                 c   eps      1
                 d    na     na ;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         # -inf and inf
         assert model.params["data"].values[("a", "lo")] == float("-inf")
@@ -4648,14 +4192,12 @@ class TestNegativeInfinityInTables:
 
     def test_negative_inf_first_column(self):
         """Test -inf as the first value in a data row."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / x /;
             Table data(i,*)
                    a    b    c
                 x  -inf  5   10 ;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["data"].values[("x", "a")] == float("-inf")
         assert model.params["data"].values[("x", "b")] == 5.0
@@ -4663,14 +4205,12 @@ class TestNegativeInfinityInTables:
 
     def test_negative_inf_last_column(self):
         """Test -inf as the last value in a data row."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / x /;
             Table data(i,*)
                    a    b    c
                 x  10   5   -inf ;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert model.params["data"].values[("x", "a")] == 10.0
         assert model.params["data"].values[("x", "b")] == 5.0
@@ -4678,8 +4218,7 @@ class TestNegativeInfinityInTables:
 
     def test_gastrans_pattern(self):
         """Test pattern from gastrans.gms (supply lower/upper bounds)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / Anderlues, Antwerpen, Arlon, Berneau /;
             Table slb(i,*)
                           slo       sup   plo    pup   c
@@ -4687,8 +4226,7 @@ class TestNegativeInfinityInTables:
                Antwerpen -inf    -4.034    30   80.0   0
                Arlon     -inf    -0.222     0   66.2   0
                Berneau      0     0         0   66.2   0 ;
-            """
-        )
+            """)
         model = parser.parse_model_text(text)
         assert "slb" in model.params
         # Check -inf values
@@ -4705,8 +4243,7 @@ class TestCurlyBraceSumComplexIndexing:
 
     def test_curly_brace_sum_with_tuple_domain(self):
         """Test sum{(i,j), expr} with tuple domain syntax."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /1*3/;
             Set j /1*3/;
             Parameter x(i,j);
@@ -4714,8 +4251,7 @@ class TestCurlyBraceSumComplexIndexing:
 
             Equation eq;
             eq.. obj =e= sum{(i,j), x(i,j)};
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
         assert model.equations["eq"].relation == Rel.EQ
@@ -4726,8 +4262,7 @@ class TestCurlyBraceSumComplexIndexing:
 
     def test_curly_brace_sum_with_subset_indexing(self):
         """Test sum{(nx(i),ny(j)), expr} with subset indexing."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /1*5/;
             Set j /1*5/;
             Set nx(i);
@@ -4737,8 +4272,7 @@ class TestCurlyBraceSumComplexIndexing:
 
             Equation eq;
             eq.. obj =e= sum{(nx(i),ny(j)), wq(i,j)};
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
         assert model.equations["eq"].relation == Rel.EQ
@@ -4749,8 +4283,7 @@ class TestCurlyBraceSumComplexIndexing:
 
     def test_curly_brace_sum_with_arithmetic_in_subset(self):
         """Test sum{(nx(i+1),ny(j+1)), expr} pattern from jbearing.gms."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /1*5/;
             Set j /1*5/;
             Set nx(i);
@@ -4760,8 +4293,7 @@ class TestCurlyBraceSumComplexIndexing:
 
             Equation eq;
             eq.. obj =e= sum{(nx(i+1),ny(j+1)), wq(i)};
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
         assert model.equations["eq"].relation == Rel.EQ
@@ -4772,16 +4304,14 @@ class TestCurlyBraceSumComplexIndexing:
 
     def test_curly_brace_sum_simple_backward_compat(self):
         """Test that simple sum{i, expr} still works."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /1*5/;
             Parameter x(i);
             Variable obj;
 
             Equation eq;
             eq.. obj =e= sum{i, x(i)};
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
         # Verify sum structure and indices
@@ -4791,8 +4321,7 @@ class TestCurlyBraceSumComplexIndexing:
 
     def test_parenthesis_sum_with_tuple_domain(self):
         """Test sum((i,j), expr) with parentheses also works."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /1*3/;
             Set j /1*3/;
             Parameter x(i,j);
@@ -4800,8 +4329,7 @@ class TestCurlyBraceSumComplexIndexing:
 
             Equation eq;
             eq.. obj =e= sum((i,j), x(i,j));
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
         # Verify sum structure and indices
@@ -4811,8 +4339,7 @@ class TestCurlyBraceSumComplexIndexing:
 
     def test_curly_brace_sum_with_lag_in_subset(self):
         """Test sum{(nx(i-1)), expr} with lag operator in subset."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /1*5/;
             Set nx(i);
             Parameter wq(i);
@@ -4820,8 +4347,7 @@ class TestCurlyBraceSumComplexIndexing:
 
             Equation eq;
             eq.. obj =e= sum{(nx(i-1)), wq(i)};
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
         # Verify sum structure and indices
@@ -4831,8 +4357,7 @@ class TestCurlyBraceSumComplexIndexing:
 
     def test_curly_brace_sum_triple_tuple(self):
         """Test sum{(i,j,k), expr} with three-element tuple."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i /1*2/;
             Set j /1*2/;
             Set k /1*2/;
@@ -4841,8 +4366,7 @@ class TestCurlyBraceSumComplexIndexing:
 
             Equation eq;
             eq.. obj =e= sum{(i,j,k), x(i,j,k)};
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
         # Verify sum structure and indices
@@ -4861,36 +4385,31 @@ class TestPredefinedConstants:
 
     def test_yes_constant_in_parameter_assignment(self):
         """Test yes constant (boolean true = 1.0) in parameter assignment."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b, c /;
             Parameter flag(i);
 
             flag('a') = yes;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "flag" in model.params
         assert model.params["flag"].values[("a",)] == 1.0
 
     def test_no_constant_in_parameter_assignment(self):
         """Test no constant (boolean false = 0.0) in parameter assignment."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b, c /;
             Parameter flag(i);
 
             flag('b') = no;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "flag" in model.params
         assert model.params["flag"].values[("b",)] == 0.0
 
     def test_yes_no_case_insensitive(self):
         """Test yes/no constants are case-insensitive."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b, c, d /;
             Parameter flag(i);
 
@@ -4898,8 +4417,7 @@ class TestPredefinedConstants:
             flag('b') = YES;
             flag('c') = Yes;
             flag('d') = NO;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert model.params["flag"].values[("a",)] == 1.0
         assert model.params["flag"].values[("b",)] == 1.0
@@ -4908,13 +4426,11 @@ class TestPredefinedConstants:
 
     def test_inf_constant_in_variable_bounds(self):
         """Test inf constant (positive infinity) in variable bounds."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable x;
             x.lo = 0;
             x.up = inf;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         # Verify actual bound values
@@ -4924,13 +4440,11 @@ class TestPredefinedConstants:
 
     def test_negative_inf_in_variable_bounds(self):
         """Test -inf (negative infinity) in variable bounds."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable x;
             x.lo = -inf;
             x.up = inf;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         # Verify that -inf/inf bounds are stored as None (default unbounded)
@@ -4940,14 +4454,12 @@ class TestPredefinedConstants:
 
     def test_inf_case_insensitive(self):
         """Test inf constant is case-insensitive."""
-        text = dedent(
-            """
+        text = dedent("""
             Variable x, y, z;
             x.up = inf;
             y.up = INF;
             z.up = Inf;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "x" in model.variables
         assert "y" in model.variables
@@ -4959,14 +4471,12 @@ class TestPredefinedConstants:
 
     def test_eps_constant(self):
         """Test eps constant (machine epsilon)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a /;
             Parameter tolerance(i);
 
             tolerance('a') = eps;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         # eps should be approximately 2.22e-16
         assert "tolerance" in model.params
@@ -4974,14 +4484,12 @@ class TestPredefinedConstants:
 
     def test_na_constant(self):
         """Test na constant (not available marker)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a /;
             Parameter missing(i);
 
             missing('a') = na;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "missing" in model.params
         # na is represented as NaN
@@ -4989,14 +4497,12 @@ class TestPredefinedConstants:
 
     def test_undf_constant(self):
         """Test undf constant (undefined value marker)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a /;
             Parameter undef(i);
 
             undef('a') = undf;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "undef" in model.params
         # undf is represented as NaN
@@ -5004,26 +4510,22 @@ class TestPredefinedConstants:
 
     def test_predefined_constants_in_scalar_parameter(self):
         """Test predefined constants assigned to scalar parameters."""
-        text = dedent(
-            """
+        text = dedent("""
             Scalar use_feature;
             use_feature = yes;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "use_feature" in model.params
         assert model.params["use_feature"].values[()] == 1.0
 
     def test_predefined_pi_constant(self):
         """Test pi constant (predefined as scalar parameter)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a /;
             Parameter angle(i);
 
             angle('a') = pi;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "angle" in model.params
         assert model.params["angle"].values[("a",)] == pytest.approx(3.141592653589793)
@@ -5038,16 +4540,14 @@ class TestSubsetIndexingAssignments:
 
     def test_simple_subset_as_index(self):
         """Test using a simple subset name as index: flag(sub) = value."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b, c, d /;
             Set sub(i) / b, c /;
             Parameter flag(i);
 
             flag(i) = 1;
             flag(sub) = 0;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "flag" in model.params
         # All elements set to 1, then b and c overwritten to 0
@@ -5058,15 +4558,13 @@ class TestSubsetIndexingAssignments:
 
     def test_subset_indexing_with_domain_indices(self):
         """Test subset indexing with explicit domain indices: dist(arc(n,np)) = value."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / a, b, c, d /;
             Set arc(n,n) / a.b, b.c, c.d /;
             Parameter dist(n,n);
 
             dist(arc(n,np)) = 10;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "dist" in model.params
         # Should expand to all arc members
@@ -5078,16 +4576,14 @@ class TestSubsetIndexingAssignments:
 
     def test_subset_with_predefined_constants(self):
         """Test subset indexing with yes/no constants (water.gms pattern)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / nw, e, cc, w, sw, s, se /;
             Set rn(n) / nw, e /;
             Parameter dn(n);
 
             dn(n) = yes;
             dn(rn) = no;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "dn" in model.params
         # Reservoir nodes should be 0 (no)
@@ -5102,16 +4598,14 @@ class TestSubsetIndexingAssignments:
 
     def test_subset_overwrites_previous_values(self):
         """Test that subset assignment overwrites previous values."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / 1, 2, 3, 4, 5 /;
             Set odds(i) / 1, 3, 5 /;
             Parameter p(i);
 
             p(i) = 100;
             p(odds) = 1;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         # Odd indices should be 1, even indices should be 100
         assert model.params["p"].values[("1",)] == 1.0
@@ -5122,16 +4616,14 @@ class TestSubsetIndexingAssignments:
 
     def test_multi_dimensional_subset(self):
         """Test subset indexing for multi-dimensional sets."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b /;
             Set j / x, y /;
             Set pairs(i,j) / a.x, b.y /;
             Parameter cost(i,j);
 
             cost(pairs(i,j)) = 50;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "cost" in model.params
         assert model.params["cost"].values[("a", "x")] == 50.0
@@ -5151,8 +4643,7 @@ class TestSubsetReferenceInExpressions:
 
     def test_subset_as_variable_index_in_sum(self):
         """Test using subset name as variable index: q(arc) in sum."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / a, b, c /;
             Alias(n, np);
             Set arc(n,n) / a.b, b.c /;
@@ -5160,8 +4651,7 @@ class TestSubsetReferenceInExpressions:
 
             Equation test;
             test.. sum(arc(np,n), q(arc)) =e= 0;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "test" in model.equations
         # Verify the equation structure - LHS should be a Sum containing a VarRef
@@ -5175,8 +4665,7 @@ class TestSubsetReferenceInExpressions:
 
     def test_subset_as_parameter_index_in_sum(self):
         """Test using subset name as parameter index: dist(arc) in sum."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / a, b, c /;
             Alias(n, np);
             Set arc(n,n) / a.b, b.c /;
@@ -5184,8 +4673,7 @@ class TestSubsetReferenceInExpressions:
 
             Equation test;
             test.. sum(arc(np,n), dist(arc)) =e= 0;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "test" in model.equations
         # Verify the equation structure - LHS should be a Sum containing a ParamRef
@@ -5201,16 +4689,14 @@ class TestSubsetReferenceInExpressions:
 
     def test_set_membership_test_in_conditional(self):
         """Test set membership test: rn(n) in conditional."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / a, b, c /;
             Set rn(n) / a, b /;
             Variable s(n);
 
             Equation test(n);
             test(n).. s(n)$rn(n) =e= 0;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "test" in model.equations
         # Verify the LHS is a DollarConditional with SetMembershipTest as condition
@@ -5224,8 +4710,7 @@ class TestSubsetReferenceInExpressions:
 
     def test_multiple_subset_references_in_expression(self):
         """Test multiple subset references: dist(arc) * q(arc)."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / a, b, c /;
             Alias(n, np);
             Set arc(n,n) / a.b, b.c /;
@@ -5234,15 +4719,13 @@ class TestSubsetReferenceInExpressions:
 
             Equation test;
             test.. sum(arc(np,n), dist(arc) * q(arc)) =e= 0;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "test" in model.equations
 
     def test_subset_without_explicit_members(self):
         """Test subset reference when subset has domain indices as members."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / a, b, c /;
             Alias(n, np);
             Set arc(n,n);
@@ -5250,15 +4733,13 @@ class TestSubsetReferenceInExpressions:
 
             Equation test;
             test.. sum(arc(np,n), q(arc)) =e= 0;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "test" in model.equations
 
     def test_subset_in_equation_domain(self):
         """Test subset reference in equation with domain: loss(arc(n,np))."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / a, b, c /;
             Alias(n, np);
             Set arc(n,n) / a.b, b.c /;
@@ -5267,8 +4748,7 @@ class TestSubsetReferenceInExpressions:
 
             Equation loss(n,n);
             loss(arc(n,np)).. h(n) - h(np) =e= dist(arc);
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "loss" in model.equations
 
@@ -5285,8 +4765,7 @@ class TestSumDomainMismatch:
 
     def test_sum_with_outer_domain_index(self):
         """Test sum where outer domain index appears in sum indices."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / a, b, c /;
             Alias(n, np);
             Set arc(n,n) / a.b, b.c /;
@@ -5294,16 +4773,14 @@ class TestSumDomainMismatch:
 
             Equation test(n);
             test(n).. sum(arc(np,n), q(np,n)) + s(n) =e= 0;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "test" in model.equations
         assert model.equations["test"].domain == ("n",)
 
     def test_sum_difference_different_order(self):
         """Test sum(a(np,n), ...) - sum(a(n,np), ...) with same result domain."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / a, b, c /;
             Alias(n, np);
             Set a(n,n) / a.b, b.c /;
@@ -5311,16 +4788,14 @@ class TestSumDomainMismatch:
 
             Equation cont(n);
             cont(n).. sum(a(np,n), q(a)) - sum(a(n,np), q(a)) + s(n) =e= 0;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "cont" in model.equations
         assert model.equations["cont"].domain == ("n",)
 
     def test_scalar_sum_with_multidim_set(self):
         """Test scalar sum over multi-dimensional set: sum(a, dist(a))."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / nw, e, cc /;
             Alias(n, np);
             Set a(n,n) / nw.cc, e.cc /;
@@ -5329,8 +4804,7 @@ class TestSumDomainMismatch:
 
             Equation deq;
             deq.. dcost =e= sum(a, dist(a)*d(a));
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "deq" in model.equations
         # Scalar equation - domain should be empty
@@ -5338,8 +4812,7 @@ class TestSumDomainMismatch:
 
     def test_water_gms_cont_equation(self):
         """Test the actual cont equation from water.gms."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / nw, e, cc, w, sw, s, se /;
             Set a(n,n) / nw.w, nw.cc, e.cc, e.s /;
             Set rn(n) / nw, e /;
@@ -5349,16 +4822,14 @@ class TestSumDomainMismatch:
 
             Equation cont(n);
             cont(n).. sum(a(np,n), q(a)) - sum(a(n,np), q(a)) + s(n)$rn(n) =e= node(n,"demand");
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "cont" in model.equations
         assert model.equations["cont"].domain == ("n",)
 
     def test_water_gms_deq_equation(self):
         """Test the actual deq equation from water.gms."""
-        text = dedent(
-            """
+        text = dedent("""
             Set n / nw, e, cc /;
             Alias(n, np);
             Set a(n,n) / nw.cc, e.cc /;
@@ -5367,15 +4838,13 @@ class TestSumDomainMismatch:
 
             Equation deq;
             deq.. dcost =e= dprc*sum(a, dist(a)*d(a)**cpow);
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "deq" in model.equations
 
     def test_nested_sum_with_shared_indices(self):
         """Test nested sums with shared outer indices."""
-        text = dedent(
-            """
+        text = dedent("""
             Set i / a, b /;
             Set j / x, y /;
             Alias(i, ip);
@@ -5383,8 +4852,7 @@ class TestSumDomainMismatch:
 
             Equation test(j);
             test(j).. sum(i, sum(ip, x(i,j) + x(ip,j))) =e= 0;
-        """
-        )
+        """)
         model = parser.parse_model_text(text)
         assert "test" in model.equations
         assert model.equations["test"].domain == ("j",)
