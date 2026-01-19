@@ -10,7 +10,7 @@
 
 This document analyzes the 14 models that fail with `path_syntax_error` at the SOLVE stage. Despite the name, these are **NOT PATH solver errors** - they are **GAMS compilation errors** in the generated MCP files.
 
-**Critical Finding:** The errors are caused by bugs in nlp2mcp's MCP code generation (`emit_gams_mcp.py`), not issues with the PATH solver or the original GAMS models. All 14 failures are due to invalid GAMS syntax in the generated MCP files.
+**Critical Finding:** The errors are caused by bugs in nlp2mcp's MCP code generation (`emit_gams.py`), not issues with the PATH solver or the original GAMS models. All 14 failures are due to invalid GAMS syntax in the generated MCP files.
 
 **Key Insight:** These errors are **highly addressable** in Sprint 16 because they represent code generation bugs that can be systematically fixed.
 
@@ -270,11 +270,13 @@ sum(i, a(i,c) * nu_cdef(i))
 | Scenario | Models Fixed | New Solve Rate |
 |----------|--------------|----------------|
 | **Priority 1 only** | +10 | 76% (13/17) |
-| **P1 + P2** | +13 | 94% (16/17) |
-| **All fixes** | +14 | 100% (17/17) |
+| **P1 + P2** | +12 | 88% (15/17) |
+| **P1 + P2 + P3** | +13 | 94% (16/17) |
 
 **Current:** 3/17 translated models solve (17.6%)  
-**Target:** 13-17/17 translated models solve (76-100%)
+**Target:** 13-16/17 translated models solve (76-94%)
+
+**Note:** Pattern 5 (Domain Index Errors) affects chem and ps2_f_inf, which are already counted in other patterns. The remaining model (ps2_f_inf unique errors) requires additional investigation to determine full fix scope.
 
 ---
 

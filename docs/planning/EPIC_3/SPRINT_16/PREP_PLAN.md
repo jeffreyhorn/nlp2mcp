@@ -1042,10 +1042,10 @@ path_syntax_error affects 14 models (8.8% of total). While smaller than lexer_in
 
 ### Background
 
-~~path_syntax_error typically indicates:~~
-~~- File path issues in GAMS code~~
-~~- Include statement problems~~
-~~- Reference to external files~~
+path_syntax_error was originally (incorrectly) thought to indicate:
+- ~~File path issues in GAMS code~~
+- ~~Include statement problems~~
+- ~~Reference to external files~~
 
 **CORRECTED:** path_syntax_error actually indicates GAMS compilation errors in generated MCP files - bugs in nlp2mcp's code generation, not PATH solver or file path issues.
 
