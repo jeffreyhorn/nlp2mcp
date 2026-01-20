@@ -1557,7 +1557,7 @@ Development team
 
 ## Sprint 16 Improvements
 
-### HIGH Priority (Score > 5.0)
+### HIGH Priority (Score > 2.0)
 
 | ID | Issue | Models | Effort | Score | Target | Status |
 |----|-------|--------|--------|-------|--------|--------|
@@ -1565,7 +1565,7 @@ Development team
 | P-2 | Hyphenated set elements | 6 | 4h | 1.50 | Sprint 16 | Planned |
 | S-1 | Unary minus formatting | 10 | 4h | 2.50 | Sprint 16 | Planned |
 
-### MEDIUM Priority (Score 2.0-5.0)
+### MEDIUM Priority (Score 1.0-2.0)
 
 | ID | Issue | Models | Effort | Score | Target | Status |
 |----|-------|--------|--------|-------|--------|--------|
