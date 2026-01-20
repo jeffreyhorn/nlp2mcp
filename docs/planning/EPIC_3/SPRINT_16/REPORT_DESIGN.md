@@ -757,9 +757,9 @@ Progress tracking enables:
   "snapshots": [
     {
       "snapshot_id": "sprint16_20260120",
-      "timestamp": "2026-01-20T15:30:00Z",
+      "timestamp": "2026-01-20T15:30:00+00:00",
       "nlp2mcp_version": "0.5.0",
-      "git_commit": "abc123def456789...",
+      "git_commit": "abc123def4567890abc123def4567890abc123de",
       "sprint": 16,
       "label": "Sprint 16 - After Parser Improvements",
       "metrics": {
@@ -792,6 +792,7 @@ Progress tracking enables:
         }
       },
       "model_status": {
+        "// NOTE": "Truncated for brevity - actual snapshot contains all 160 models (~8KB)",
         "hs62": { "parse": "success", "translate": "success", "solve": "success", "full_pipeline": true },
         "trnsport": { "parse": "success", "translate": "success", "solve": "failure", "full_pipeline": false },
         "aircraft": { "parse": "lexer_invalid_char", "translate": null, "solve": null, "full_pipeline": false }
@@ -803,9 +804,9 @@ Progress tracking enables:
     },
     {
       "snapshot_id": "sprint15_20260115",
-      "timestamp": "2026-01-15T12:00:00Z",
+      "timestamp": "2026-01-15T12:00:00+00:00",
       "nlp2mcp_version": "0.4.0",
-      "git_commit": "def456abc789012...",
+      "git_commit": "def456abc7890120def456abc7890120def456ab",
       "sprint": 15,
       "label": "Sprint 15 Baseline",
       "metrics": {
@@ -1065,6 +1066,8 @@ def detect_model_changes(current: dict, baseline: dict) -> dict:
             if curr_status == "success" and base_status != "success":
                 changes[stage]["improved"].append(model)
             elif curr_status != "success" and base_status == "success":
+                # Only count as regression if model previously existed AND was successful
+                # (base_status == "success" already ensures it existed and was successful)
                 changes[stage]["regressed"].append({
                     "name": model,
                     "previous": base_status,
@@ -1173,7 +1176,8 @@ def detect_regressions(current: dict, baseline: dict, thresholds: dict) -> dict:
     
     for stage in ["parse", "translate", "solve", "full_pipeline"]:
         regressed = model_changes[stage]["regressed"]
-        if len(regressed) > thresholds.get("max_model_regressions", 0):
+        # Use >= to ensure any regression is flagged when max_model_regressions=0
+        if len(regressed) >= thresholds.get("max_model_regressions", 0) and len(regressed) > 0:
             regressions["model_regressions"].extend([
                 {"stage": stage, **r} if isinstance(r, dict) else {"stage": stage, "model": r}
                 for r in regressed
@@ -1254,7 +1258,7 @@ The progress_history.json schema is designed to be compatible with the existing 
 | `schema_version` | `schema_version` (different versioning) |
 | `baseline_date` | `snapshots[].timestamp` |
 | `sprint` | `snapshots[].sprint` |
-| `environment` | Stored separately, referenced by `nlp2mcp_version` |
+| `environment` | Snapshot-level fields: `nlp2mcp_version` and `git_commit` |
 | `total_models` | `snapshots[].metrics.total_models` |
 | `parse.*` | `snapshots[].metrics.parse.*` |
 | `translate.*` | `snapshots[].metrics.translate.*` |
@@ -1264,14 +1268,47 @@ The progress_history.json schema is designed to be compatible with the existing 
 ### Conversion Utility
 
 ```python
+def _parse_sprint(sprint_value) -> int:
+    """
+    Robustly parse a sprint identifier from baseline_metrics.json.
+    
+    Supports:
+    - integer values (returned as-is)
+    - strings like "Sprint 15" (case-insensitive)
+    - strings containing just the numeric sprint, e.g. "15"
+    """
+    if isinstance(sprint_value, int):
+        return sprint_value
+    
+    if isinstance(sprint_value, str):
+        raw = sprint_value.strip()
+        # Handle strings starting with "Sprint" (any case)
+        if raw.lower().startswith("sprint"):
+            parts = raw.split()
+            if parts:
+                candidate = parts[-1].rstrip(".,;:)")
+                if candidate.isdigit():
+                    return int(candidate)
+        # Fallback: raw numeric string
+        if raw.isdigit():
+            return int(raw)
+    
+    raise ValueError(f"Unsupported sprint format: {sprint_value!r}")
+
+
 def baseline_to_snapshot(baseline: dict, snapshot_id: str) -> dict:
     """Convert baseline_metrics.json to progress_history snapshot format."""
+    # NOTE: baseline['baseline_date'] is expected to be a date-only string (YYYY-MM-DD).
+    # If your baseline data already includes a time component, adjust this logic.
+    baseline_date = baseline['baseline_date']
+    timestamp = f"{baseline_date}T12:00:00+00:00"
+    
     return {
         "snapshot_id": snapshot_id,
-        "timestamp": f"{baseline['baseline_date']}T12:00:00Z",
+        "timestamp": timestamp,
         "nlp2mcp_version": baseline["environment"]["nlp2mcp_version"],
-        "sprint": int(baseline["sprint"].replace("Sprint ", "")),
-        "label": f"{baseline['sprint']} Baseline",
+        "sprint": _parse_sprint(baseline.get("sprint")),
+        "label": f"{baseline.get('sprint', 'Unknown')} Baseline",
         "metrics": {
             "total_models": baseline["total_models"],
             "parse": {
