@@ -663,6 +663,7 @@ Progress tracking enables:
   "definitions": {
     "snapshot": {
       "type": "object",
+      "description": "A progress snapshot. Fields not listed in 'required' are optional.",
       "required": ["snapshot_id", "timestamp", "nlp2mcp_version", "metrics"],
       "properties": {
         "snapshot_id": {
@@ -854,7 +855,7 @@ Progress tracking enables:
 
 ### Timestamp Format
 
-**Decision:** ISO 8601 format with timezone (`YYYY-MM-DDTHH:MM:SSZ`)
+**Decision:** ISO 8601 format with timezone (`YYYY-MM-DDTHH:MM:SS+00:00`)
 
 **Rationale:**
 - Internationally recognized standard
@@ -1115,8 +1116,8 @@ def detect_model_changes(current: dict, baseline: dict) -> dict:
             if curr_status == "success" and base_status != "success":
                 changes[stage]["improved"].append(model)
             elif curr_status != "success" and base_status == "success":
-                # Only count as regression if model previously existed AND was successful
-                # (base_status == "success" already ensures it existed and was successful)
+                # Regression: model was previously successful but now fails
+                # (models that were already failing are not counted as regressions)
                 changes[stage]["regressed"].append({
                     "name": model,
                     "previous": base_status,
@@ -1225,8 +1226,8 @@ def detect_regressions(current: dict, baseline: dict, thresholds: dict) -> dict:
     
     for stage in ["parse", "translate", "solve", "full_pipeline"]:
         regressed = model_changes[stage]["regressed"]
-        # Flag regressions if count exceeds threshold (default 0 means any regression is flagged)
-        if len(regressed) > thresholds.get("max_model_regressions", 0):
+        # Flag regressions if count meets or exceeds threshold (default 0 means any regression is flagged)
+        if len(regressed) >= thresholds.get("max_model_regressions", 0) and len(regressed) > 0:
             regressions["model_regressions"].extend([
                 {"stage": stage, **r} if isinstance(r, dict) else {"stage": stage, "model": r}
                 for r in regressed
@@ -1338,7 +1339,7 @@ def _parse_sprint(sprint_value) -> int:
                 candidate = parts[-1].rstrip(".,;:)")
                 if candidate.isdigit():
                     return int(candidate)
-        # Fallback: raw numeric string
+        # Fallback: handle raw numeric string (e.g., "15")
         if raw.isdigit():
             return int(raw)
     
@@ -1363,9 +1364,9 @@ def baseline_to_snapshot(baseline: dict, snapshot_id: str) -> dict:
     return {
         "snapshot_id": snapshot_id,
         "timestamp": timestamp,
-        "nlp2mcp_version": baseline["environment"]["nlp2mcp_version"],
+        "nlp2mcp_version": baseline.get("environment", {}).get("nlp2mcp_version"),
         "sprint": _parse_sprint(baseline.get("sprint")),
-        "label": f"{baseline.get('sprint', 'Unknown')} Baseline",
+        "label": f"Sprint {_parse_sprint(baseline.get('sprint')) or 'Unknown'} Baseline",
         "metrics": {
             "total_models": baseline["total_models"],
             "parse": {
