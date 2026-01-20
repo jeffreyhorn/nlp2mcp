@@ -751,6 +751,8 @@ Progress tracking enables:
 
 ### Example progress_history.json
 
+> **Note:** The `model_status` object in this example shows only 3 models for brevity. In practice, the actual snapshot contains all 160 models (~8KB).
+
 ```json
 {
   "schema_version": "1.0.0",
@@ -792,7 +794,6 @@ Progress tracking enables:
         }
       },
       "model_status": {
-        "// NOTE": "Truncated for brevity - actual snapshot contains all 160 models (~8KB)",
         "hs62": { "parse": "success", "translate": "success", "solve": "success", "full_pipeline": true },
         "trnsport": { "parse": "success", "translate": "success", "solve": "failure", "full_pipeline": false },
         "aircraft": { "parse": "lexer_invalid_char", "translate": null, "solve": null, "full_pipeline": false }
@@ -1225,7 +1226,7 @@ def detect_regressions(current: dict, baseline: dict, thresholds: dict) -> dict:
     for stage in ["parse", "translate", "solve", "full_pipeline"]:
         regressed = model_changes[stage]["regressed"]
         # Flag regressions if count exceeds threshold (default 0 means any regression is flagged)
-        if len(regressed) > 0 and len(regressed) >= thresholds.get("max_model_regressions", 0):
+        if len(regressed) > thresholds.get("max_model_regressions", 0):
             regressions["model_regressions"].extend([
                 {"stage": stage, **r} if isinstance(r, dict) else {"stage": stage, "model": r}
                 for r in regressed

@@ -401,7 +401,7 @@ Development team
 **Verified Date:** January 19, 2026
 
 **Decision:**
-- **Timestamp format:** ISO 8601 with timezone (`YYYY-MM-DDTHH:MM:SSZ`)
+- **Timestamp format:** ISO 8601 with timezone (`YYYY-MM-DDTHH:MM:SS+00:00`)
 - **Snapshot ID:** `sprint{N}_{YYYYMMDD}` format (e.g., `sprint15_20260115`)
 - **Version tracking:** Three versions tracked:
   1. Schema version for progress_history.json evolution
