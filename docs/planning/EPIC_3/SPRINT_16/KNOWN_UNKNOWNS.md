@@ -64,8 +64,8 @@ This document identifies all assumptions and unknowns for Sprint 16 features **b
 **By Priority:**
 - Critical: 7 (26%) - 6 verified, 1 remaining
 - High: 11 (41%) - 8 verified, 3 remaining
-- Medium: 7 (26%) - 6 verified, 1 remaining
-- Low: 2 (7%) - 2 verified, 0 remaining
+- Medium: 7 (26%) - 6 verified, 1 remaining *(includes 1 Medium unknown verified in a separate maintenance task outside this PR)*
+- Low: 2 (7%) - 2 verified, 0 remaining *(includes 1 Low unknown verified in a separate maintenance task outside this PR)*
 
 **By Category:**
 - Category 1 (Status Summary Report Generator): 4 unknowns

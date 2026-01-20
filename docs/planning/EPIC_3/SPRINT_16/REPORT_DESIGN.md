@@ -681,7 +681,7 @@ Progress tracking enables:
         },
         "git_commit": {
           "type": "string",
-          "description": "Git commit hash for exact reproducibility",
+          "description": "Git commit hash for exact reproducibility (optional - may be omitted for development snapshots with uncommitted changes)",
           "pattern": "^[0-9a-f]{40}$"
         },
         "sprint": {
@@ -957,7 +957,55 @@ git_commit = subprocess.check_output(
 {% endfor %}
 {% endif %}
 
-[Similar sections for Translate and Solve stages]
+### Translate Stage
+
+| Metric | Baseline | Current | Change |
+|--------|----------|---------|--------|
+| Success | {{ baseline.translate.success }} | {{ current.translate.success }} | {{ current.translate.success - baseline.translate.success }} |
+| Failure | {{ baseline.translate.failure }} | {{ current.translate.failure }} | {{ current.translate.failure - baseline.translate.failure }} |
+| Rate | {{ "%.1f"|format(baseline.translate.rate * 100) }}% | {{ "%.1f"|format(current.translate.rate * 100) }}% | **{{ "%+.1f"|format((current.translate.rate - baseline.translate.rate) * 100) }}%** |
+
+{% if translate_changes.improved %}
+**Newly Passing ({{ translate_changes.improved|length }} models):**
+{% for model in translate_changes.improved[:10] %}
+- {{ model }}
+{% endfor %}
+{% if translate_changes.improved|length > 10 %}
+- ... and {{ translate_changes.improved|length - 10 }} more
+{% endif %}
+{% endif %}
+
+{% if translate_changes.regressed %}
+**⚠️ Regressions ({{ translate_changes.regressed|length }} models):**
+{% for model in translate_changes.regressed %}
+- {{ model.name }}: {{ model.previous }} → {{ model.current }}
+{% endfor %}
+{% endif %}
+
+### Solve Stage
+
+| Metric | Baseline | Current | Change |
+|--------|----------|---------|--------|
+| Success | {{ baseline.solve.success }} | {{ current.solve.success }} | {{ current.solve.success - baseline.solve.success }} |
+| Failure | {{ baseline.solve.failure }} | {{ current.solve.failure }} | {{ current.solve.failure - baseline.solve.failure }} |
+| Rate | {{ "%.1f"|format(baseline.solve.rate * 100) }}% | {{ "%.1f"|format(current.solve.rate * 100) }}% | **{{ "%+.1f"|format((current.solve.rate - baseline.solve.rate) * 100) }}%** |
+
+{% if solve_changes.improved %}
+**Newly Passing ({{ solve_changes.improved|length }} models):**
+{% for model in solve_changes.improved[:10] %}
+- {{ model }}
+{% endfor %}
+{% if solve_changes.improved|length > 10 %}
+- ... and {{ solve_changes.improved|length - 10 }} more
+{% endif %}
+{% endif %}
+
+{% if solve_changes.regressed %}
+**⚠️ Regressions ({{ solve_changes.regressed|length }} models):**
+{% for model in solve_changes.regressed %}
+- {{ model.name }}: {{ model.previous }} → {{ model.current }}
+{% endfor %}
+{% endif %}
 
 ---
 
@@ -1176,8 +1224,8 @@ def detect_regressions(current: dict, baseline: dict, thresholds: dict) -> dict:
     
     for stage in ["parse", "translate", "solve", "full_pipeline"]:
         regressed = model_changes[stage]["regressed"]
-        # Use >= to ensure any regression is flagged when max_model_regressions=0
-        if len(regressed) >= thresholds.get("max_model_regressions", 0) and len(regressed) > 0:
+        # Flag regressions if count exceeds threshold (default 0 means any regression is flagged)
+        if len(regressed) > 0 and len(regressed) >= thresholds.get("max_model_regressions", 0):
             regressions["model_regressions"].extend([
                 {"stage": stage, **r} if isinstance(r, dict) else {"stage": stage, "model": r}
                 for r in regressed
@@ -1298,10 +1346,18 @@ def _parse_sprint(sprint_value) -> int:
 
 def baseline_to_snapshot(baseline: dict, snapshot_id: str) -> dict:
     """Convert baseline_metrics.json to progress_history snapshot format."""
-    # NOTE: baseline['baseline_date'] is expected to be a date-only string (YYYY-MM-DD).
-    # If your baseline data already includes a time component, adjust this logic.
     baseline_date = baseline['baseline_date']
-    timestamp = f"{baseline_date}T12:00:00+00:00"
+    
+    # Handle both date-only (YYYY-MM-DD) and datetime strings
+    if 'T' in baseline_date:
+        # Already has time component - ensure timezone
+        if '+' not in baseline_date and 'Z' not in baseline_date:
+            timestamp = f"{baseline_date}+00:00"
+        else:
+            timestamp = baseline_date.replace('Z', '+00:00')
+    else:
+        # Date-only string - add default noon UTC time
+        timestamp = f"{baseline_date}T12:00:00+00:00"
     
     return {
         "snapshot_id": snapshot_id,
