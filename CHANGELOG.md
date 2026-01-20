@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Prep Task 9: Review Sprint 15 Deliverables and Learnings - 2026-01-20
+
+**Branch:** `planning/sprint16-prep-task9`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Consolidated learnings from Sprint 15 to inform Sprint 16 approach. Reviewed all major Sprint 15 deliverables, identified 7 key learnings, extracted 5 actionable recommendations for Sprint 16, and documented 3 technical debt items.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_16/SPRINT_15_REVIEW.md` - Comprehensive Sprint 15 review with learnings and recommendations
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_16/KNOWN_UNKNOWNS.md` - Verified unknowns 5.2, 5.3, 7.1, 7.2
+- `docs/planning/EPIC_3/SPRINT_16/PREP_PLAN.md` - Task 9 marked complete
+
+#### Key Learnings
+
+1. **Cascade failures dominate:** 78.8% fail at parse, preventing all downstream stages
+2. **Single error category dominates:** `lexer_invalid_char` is 86.5% of parse failures
+3. **PATH solver integration works reliably:** Consistent timing, robust `.lst` parsing
+4. **MCP code generation has systematic issues:** 100% of solve failures are code gen bugs
+5. **Filter framework enables efficient debugging:** 14 MVP filters prove invaluable
+6. **Timing statistics require scope clarity:** Statistics are for successful models only
+7. **Translation success rate higher than expected:** 50% is acceptable for Sprint 16
+
+#### Recommendations for Sprint 16
+
+1. Prioritize parse stage improvements (highest leverage)
+2. Fix MCP code generation bugs (unary minus, quoting)
+3. Leverage error taxonomy for gap analysis
+4. Build on filter framework for reporting
+5. Defer translation improvements to Sprint 17
+
+#### Technical Debt Identified
+
+- TD-1: Translate success rate discrepancy (Sprint 14 vs 15 reporting)
+- TD-2: `path_syntax_error` naming is misleading (should be `gams_compilation_error`)
+- TD-3: Missing model type analysis for LP low parse rate (8.8% vs NLP 27.7%)
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 5.2 | ✅ VERIFIED | Defer all translation fixes to Sprint 17 |
+| 5.3 | ✅ VERIFIED | Yes, translation correlates with model type and features |
+| 7.1 | ✅ VERIFIED | Table-based format grouped by priority with status tracking |
+| 7.2 | ✅ VERIFIED | Score = Models Affected / Effort Hours |
+
+---
+
 ### Sprint 16 Prep Task 8: Design Progress Tracking Schema - 2026-01-19
 
 **Branch:** `planning/sprint16-prep-task8`  

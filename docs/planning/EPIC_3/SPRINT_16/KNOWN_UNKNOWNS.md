@@ -58,13 +58,13 @@ This document identifies all assumptions and unknowns for Sprint 16 features **b
 ## Summary Statistics
 
 **Total Unknowns:** 27  
-**Verified:** 22 (81%)  
-**Remaining:** 5 (19%)
+**Verified:** 26 (96%)  
+**Remaining:** 1 (4%)
 
 **By Priority:**
 - Critical: 7 (26%) - 6 verified, 1 remaining
-- High: 11 (41%) - 8 verified, 3 remaining
-- Medium: 7 (26%) - 6 verified, 1 remaining
+- High: 11 (41%) - 11 verified, 0 remaining
+- Medium: 7 (26%) - 7 verified, 0 remaining
 - Low: 2 (7%) - 2 verified, 0 remaining
 
 **By Category:**
@@ -1255,7 +1255,35 @@ From PROJECT_PLAN.md Sprint 17:
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 9)
+
+**Verified Date:** January 20, 2026
+
+**Decision:** Translation improvements should be deferred to Sprint 17 with specific exceptions.
+
+**Sprint 16 Scope (Quick Wins Only):**
+- None identified. All translation fixes require significant effort or depend on parser improvements first.
+
+**Sprint 17 Scope (Major Efforts):**
+
+| Fix | Models | Effort | Rationale |
+|-----|--------|--------|-----------|
+| `model_no_objective_def` | 5 | High | Requires feasibility reformulation design |
+| `diff_unsupported_func` | 5 | High | Requires new derivative rules (gamma, etc.) |
+| `unsup_index_offset` | 3 | Medium | Requires domain arithmetic analysis |
+| `model_domain_mismatch` | 2 | Medium | Requires improved domain propagation |
+| `unsup_dollar_cond` | 1 | Medium | Requires conditional expression handling |
+| `codegen_numerical_error` | 1 | Low | Edge case fix |
+
+**Rationale for Deferral:**
+1. **Cascade effect:** Parser improvements in Sprint 16 will change which models reach translation
+2. **ROI:** Parse improvements unblock 109+ models vs. translation fixes affecting 17 models
+3. **Dependencies:** Some translation issues may resolve with better parsing
+4. **Sprint scope:** Sprint 16 already has reporting infrastructure + parse improvements
+
+**Sprint 15 Learning:** Translation success rate (50%) is acceptable for Sprint 16. Focus effort on parse stage where failure rate is 78.8%.
+
+**Reference:** See `SPRINT_15_REVIEW.md` Recommendation 5 for detailed rationale.
 
 ---
 
@@ -1300,7 +1328,40 @@ cat tests/output/pipeline_results.json | jq '.models[] | select(.translate_outco
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 9)
+
+**Verified Date:** January 20, 2026
+
+**Finding:** YES - Translation failures correlate with model type and specific GAMS features.
+
+**Correlation Analysis from Sprint 15 Baseline:**
+
+| Model Type | Parse Attempts | Parse Success | Translate Attempts | Translate Success | Translate Rate |
+|------------|----------------|---------------|---------------------|-------------------|----------------|
+| NLP | 94 | 26 (27.7%) | 26 | 14 (53.8%) | Higher |
+| LP | 57 | 5 (8.8%) | 5 | 2 (40.0%) | Lower |
+| QCP | 9 | 3 (33.3%) | 3 | 1 (33.3%) | Lowest |
+
+**Key Correlations Identified:**
+
+1. **Model Type → Translation Success:**
+   - NLP models translate better (53.8%) than LP (40.0%) or QCP (33.3%)
+   - Likely because NLP models in GAMSLIB are simpler/more standardized
+
+2. **Feature → Failure Category:**
+   - Models using `card()`, `ord()` → `diff_unsupported_func`
+   - Models with complex indexing → `unsup_index_offset`
+   - Models without explicit minimize/maximize → `model_no_objective_def`
+
+3. **Complexity → Translation:**
+   - Models that parse successfully tend to be simpler
+   - Simpler models also translate better (selection bias)
+
+**Actionable Insight:** As Sprint 16 parser improvements enable more complex models to parse, expect translation success rate to DECREASE initially (more complex models entering translation stage).
+
+**Sprint 16 Implication:** Monitor translation rate closely after parser improvements. A temporary drop is expected and acceptable.
+
+**Reference:** See `baseline_metrics.json` for raw data and `SPRINT_15_REVIEW.md` Learning 7.
 
 ---
 
@@ -1483,7 +1544,64 @@ Improvement roadmap should list gaps prioritized by impact and effort, with clea
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 9)
+
+**Verified Date:** January 20, 2026
+
+**Decision:** Use table-based format grouped by priority, with status tracking.
+
+**Recommended Format:**
+
+```markdown
+# IMPROVEMENT_ROADMAP.md
+
+## Sprint 16 Improvements
+
+### HIGH Priority (Score > 2.0)
+
+| ID | Issue | Models | Effort | Score | Target | Status |
+|----|-------|--------|--------|-------|--------|--------|
+| P-1 | Keyword case handling | 9 | 4h | 2.25 | Sprint 16 | Planned |
+| P-2 | Hyphenated set elements | 6 | 4h | 1.50 | Sprint 16 | Planned |
+| S-1 | Unary minus formatting | 10 | 4h | 2.50 | Sprint 16 | Planned |
+
+### MEDIUM Priority (Score 1.0-2.0)
+
+| ID | Issue | Models | Effort | Score | Target | Status |
+|----|-------|--------|--------|-------|--------|--------|
+| P-3 | Tuple expansion syntax | 12 | 12h | 1.00 | Sprint 16 | Planned |
+
+### LOW Priority / Deferred
+
+| ID | Issue | Models | Reason | Target |
+|----|-------|--------|--------|--------|
+| T-1 | Unsupported functions | 5 | High complexity | Sprint 17 |
+```
+
+**Field Definitions:**
+- **ID:** Prefix indicates stage (P=Parse, T=Translate, S=Solve)
+- **Issue:** Brief description of the problem
+- **Models:** Count of models affected
+- **Effort:** Estimated hours to implement
+- **Score:** Priority score = Models / Effort
+- **Target:** Target sprint for implementation
+- **Status:** Planned → In Progress → Done
+
+**Grouping Rationale:**
+1. Group by priority (HIGH/MEDIUM/LOW) for quick scanning
+2. Within priority, sort by score descending
+3. Deferred items in separate section with reason
+
+**Linking to Error Categories:**
+- Each roadmap item links to error taxonomy category
+- Example: "P-1: Keyword case handling" → `lexer_invalid_char` → `keyword_case` subcategory
+
+**Progress Tracking:**
+- Status field updated during sprint
+- Completion marked with date in Notes column
+- Metrics updated in progress_history.json after implementation
+
+**Reference:** See Sprint 15 pattern in `SPRINT_BASELINE.md` "Recommendations" section.
 
 ---
 
@@ -1533,7 +1651,41 @@ score_path = priority_score(14, 0.5, 2)  # = 10.5
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 9)
+
+**Verified Date:** January 20, 2026
+
+**Decision:** Use simplified formula: **Score = Models Affected / Effort Hours**
+
+**Rationale for Simplicity:**
+1. **Convex weight unnecessary:** All 160 target models are already verified_convex or likely_convex
+2. **Linear scaling sufficient:** Non-linear formulas add complexity without clear benefit
+3. **Subjective factors:** Include as tiebreakers, not in formula
+4. **Uncertainty handling:** Use effort ranges (e.g., 4-8h) and take midpoint
+
+**Priority Bands:**
+- **HIGH (Score > 2.0):** Immediate Sprint 16 focus
+- **MEDIUM (Score 1.0-2.0):** Sprint 16 if time permits
+- **LOW (Score < 1.0):** Defer to Sprint 17
+
+**Example Application (from Sprint 15 data):**
+
+| Issue | Models | Effort | Score | Priority |
+|-------|--------|--------|-------|----------|
+| Keyword case | 9 | 4h | 2.25 | HIGH |
+| Unary minus (emit) | 10 | 4h | 2.50 | HIGH |
+| Hyphenated elements | 6 | 4h | 1.50 | MEDIUM |
+| Tuple expansion | 12 | 12h | 1.00 | MEDIUM |
+| Unsupported functions | 5 | 16h | 0.31 | LOW |
+
+**Tiebreaker Factors (when scores are equal):**
+1. **Risk:** Lower risk wins
+2. **Dependencies:** Fewer dependencies wins
+3. **Confidence:** Higher confidence effort estimate wins
+
+**Sprint 15 Learning:** The assumption that convexity weighting matters was INCORRECT. Since we filter to convex models upfront, all models in scope have equal value.
+
+**Reference:** See `FAILURE_REPORT_SCHEMA.md` for full prioritization framework and Task 4 verification results.
 
 ---
 
