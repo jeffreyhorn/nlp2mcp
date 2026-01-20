@@ -1116,13 +1116,43 @@ Understanding of path errors and strategies for fixing or working around them.
 
 ## Task 8: Design Progress Tracking Schema
 
-**Status:** Not Started  
+**Status:** ✅ COMPLETE  
+**Completed:** January 19, 2026  
 **Priority:** Medium  
 **Estimated Time:** 2 hours  
+**Actual Time:** ~1.5 hours  
 **Deadline:** Before Sprint 16 Day 1  
 **Owner:** Development team  
 **Dependencies:** Task 3 (Report Generation Research)  
 **Unknowns Verified:** 1.4, 3.1, 3.2
+
+### Completion Summary
+
+**Deliverable Updated:** `docs/planning/EPIC_3/SPRINT_16/REPORT_DESIGN.md` - Added comprehensive "Progress Tracking Design" section
+
+**Key Decisions:**
+1. **Schema:** JSON Schema v1.0.0 with `snapshots` array containing metrics and model_status
+2. **Timestamp:** ISO 8601 format with timezone
+3. **Snapshot ID:** `sprint{N}_{YYYYMMDD}` format for human readability
+4. **Version tracking:** Schema version, nlp2mcp version, git commit hash
+5. **Model tracking:** Full model_status in each snapshot (~8KB per snapshot)
+6. **Regression detection:** Three-tier (rate, model, error) with configurable thresholds
+
+**Schema Highlights:**
+- Compatible with existing `baseline_metrics.json`
+- Includes conversion utility `baseline_to_snapshot()`
+- Supports ~50 snapshots in ~400KB (acceptable JSON size)
+- Per-model status enables change detection and debugging
+
+**Regression Thresholds:**
+- Rate: 2% for stages, 1% for full pipeline
+- Model: Any regression flagged (threshold: 0)
+- Error: Flag if category increases by >5
+
+**Unknowns Verified:**
+- ✅ 1.4: Timestamp/versioning - ISO 8601, snapshot IDs, three-version tracking
+- ✅ 3.1: Schema design - Complete JSON Schema with examples
+- ✅ 3.2: Regression detection - Three-tier with CI integration
 
 ### Objective
 
@@ -1204,14 +1234,18 @@ Add to `docs/planning/EPIC_3/SPRINT_16/REPORT_DESIGN.md`:
 
 ### Result
 
-Schema enabling automated progress tracking across sprints.
+Comprehensive progress tracking design enabling automated sprint-over-sprint comparison with:
+- JSON Schema v1.0.0 for `progress_history.json`
+- Comparison report template (PROGRESS_REPORT.md)
+- Model-level change detection algorithm
+- Three-tier regression detection with CI integration
 
 ### Verification
 
-- [ ] Progress database schema defined
-- [ ] Comparison report format designed
-- [ ] Model-level tracking approach defined
-- [ ] Integration with reporting infrastructure planned
+- [x] Progress database schema defined (JSON Schema v1.0.0)
+- [x] Comparison report format designed (Jinja2 template with trend icons)
+- [x] Model-level tracking approach defined (full status per snapshot)
+- [x] Integration with reporting infrastructure planned (CLI flags, conversion utilities)
 
 ### Deliverables
 
@@ -1220,11 +1254,11 @@ Schema enabling automated progress tracking across sprints.
 
 ### Acceptance Criteria
 
-- [ ] Schema supports multi-sprint history
-- [ ] Comparison metrics clearly defined
-- [ ] Model-level tracking enables debugging
-- [ ] Schema compatible with existing baseline_metrics.json
-- [ ] Unknowns 1.4, 3.1, 3.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Schema supports multi-sprint history (snapshots array, unlimited history)
+- [x] Comparison metrics clearly defined (rate deltas, trend icons, model changes)
+- [x] Model-level tracking enables debugging (per-model status, change detection)
+- [x] Schema compatible with existing baseline_metrics.json (includes conversion utility)
+- [x] Unknowns 1.4, 3.1, 3.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

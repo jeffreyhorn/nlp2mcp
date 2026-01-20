@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Prep Task 8: Design Progress Tracking Schema - 2026-01-19
+
+**Branch:** `planning/sprint16-prep-task8`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Designed comprehensive schema and approach for tracking pipeline progress over time, enabling sprint-over-sprint comparison, model-level change detection, and regression alerting with CI integration.
+
+#### Changes
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_16/REPORT_DESIGN.md` - Added "Progress Tracking Design" section with JSON Schema, comparison templates, and regression detection
+- `docs/planning/EPIC_3/SPRINT_16/KNOWN_UNKNOWNS.md` - Verified unknowns 1.4, 3.1, 3.2
+- `docs/planning/EPIC_3/SPRINT_16/PREP_PLAN.md` - Task 8 marked complete
+
+#### Schema Design (progress_history.json v1.0.0)
+
+**Structure:**
+- Top-level: `schema_version`, `snapshots` array
+- Per-snapshot: `snapshot_id`, `timestamp`, `nlp2mcp_version`, `git_commit`, `metrics`, `model_status`
+- Metrics: Parse, translate, solve, full_pipeline with rates and error breakdowns
+
+**Key Features:**
+- ISO 8601 timestamps with timezone
+- Snapshot ID format: `sprint{N}_{YYYYMMDD}`
+- Full model_status per snapshot (~8KB each, ~400KB for 50 snapshots)
+- Compatible with existing `baseline_metrics.json`
+
+#### Regression Detection
+
+**Thresholds:**
+- Rate: 2% for stages, 1% for full pipeline
+- Model: Any regression flagged (threshold: 0)
+- Error: Flag if category increases by >5
+
+**CI Integration:**
+- `--check-regressions` flag for comparison
+- `--fail-on-regression` returns non-zero exit code
+- Console output with trend icons (✅ ⚠️ ➡️)
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 1.4 | ✅ VERIFIED | ISO 8601 timestamps, snapshot IDs, three-version tracking |
+| 3.1 | ✅ VERIFIED | Complete JSON Schema with examples and conversion utility |
+| 3.2 | ✅ VERIFIED | Three-tier regression detection with CI integration |
+
+---
+
 ### Sprint 16 Prep Task 7: Research PATH Syntax Error Patterns - 2026-01-19
 
 **Branch:** `planning/sprint16-prep-task7`  
