@@ -58,11 +58,11 @@ This document identifies all assumptions and unknowns for Sprint 16 features **b
 ## Summary Statistics
 
 **Total Unknowns:** 27  
-**Verified:** 26 (96%)  
-**Remaining:** 1 (4%)
+**Verified:** 27 (100%)  
+**Remaining:** 0 (0%)
 
 **By Priority:**
-- Critical: 7 (26%) - 6 verified, 1 remaining
+- Critical: 7 (26%) - 7 verified, 0 remaining
 - High: 11 (41%) - 11 verified, 0 remaining
 - Medium: 7 (26%) - 7 verified, 0 remaining
 - Low: 2 (7%) - 2 verified, 0 remaining
@@ -2273,6 +2273,28 @@ python -c "from src.ir.parser import parse_model_file; m = parse_model_file('mod
 
 **Reference:** See `GRAMMAR_EXTENSION_GUIDE.md` "Testing Checklist" section.
 
+### Verification Results
+✅ Status: VERIFIED (Task 10)
+
+**Verified Date:** January 20, 2026
+
+**Decision:** Four-layer testing strategy with regression detection protocol.
+
+**Testing Layers:**
+1. **Unit Tests (Fast):** Run after every change via `pytest tests/parser/`
+2. **Regression Tests (Medium):** Compare before/after on 34 baseline-passing models
+3. **GAMSLIB Integration (Slow):** Full 160-model test before PR merge
+4. **IR Validation (Spot Check):** Verify parsed IR for newly-passing models
+
+**Regression Detection:**
+- Unit tests must pass (block merge if fail)
+- No baseline models can regress (block merge if any regression)
+- Parse rate improvement is informational (not blocking)
+
+**CI Integration:** Add regression check to CI pipeline comparing baseline.json to after.json.
+
+**Reference:** See `GRAMMAR_EXTENSION_GUIDE.md` "Testing Checklist" section and `SPRINT_SCHEDULE.md` Day 6-7 checkpoints.
+
 ---
 
 ## Unknown 9.3: How many models can realistically be unblocked in Sprint 16?
@@ -2325,7 +2347,49 @@ Stretch: +30% parse rate (from 21.3% to 51.3%, +48 models)
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Task 10)
+
+**Verified Date:** January 20, 2026
+
+**Decision:** Based on Task 6 (LEXER_ERROR_ANALYSIS.md) and Task 7 (PATH_ERROR_ANALYSIS.md) findings:
+
+**Parse Improvement Targets:**
+
+| Priority | Fix | Models | Effort | Confidence |
+|----------|-----|--------|--------|------------|
+| P1 | Keyword case (`Free Variable`) | 9 | 0.5 days | High |
+| P1 | Hyphenated set elements | 3 | 0.5 days | High |
+| P1 | Abort statement syntax | 3 | 0.5 days | High |
+| P2 | Tuple expansion `(a,b).c` | 12 | 1.5 days | Medium |
+| P2 | Quoted set descriptions | 7 | 1 day | Medium |
+| **Total** | | **34** | **4 days** | |
+
+**Solve Improvement Targets:**
+
+| Fix | Models | Effort | Confidence |
+|-----|--------|--------|------------|
+| Unary minus formatting | 10 | 0.5 days | High |
+| Set element quoting | 3 | 0.5 days | High |
+| Scalar declaration | 1 | 0.25 days | High |
+| **Total** | **14** | **1.25 days** | |
+
+**Sprint 16 Success Criteria:**
+
+| Level | Parse Rate | Parse Improvement | Solve Rate | Full Pipeline |
+|-------|------------|-------------------|------------|---------------|
+| **Minimum** | 31.3% | +16 models | 60% | 3% (5/160) |
+| **Target** | 37.5% | +26 models | 76% | 5% (8/160) |
+| **Stretch** | 49.4% | +45 models | 100% | 8% (13/160) |
+
+**Rationale:**
+- P1 parse fixes are well-understood, low-risk (+15 models, high confidence)
+- Solve fixes are code generation bugs with clear patterns (+10-14 models)
+- P2 parse fixes have medium confidence due to grammar complexity
+- Even minimum targets represent significant improvement over Sprint 15
+
+**Correction to Assumption:** Original assumption was "30-50 additional models through dollar control." CORRECTED: Dollar control already works. Target is 15-45 models through grammar extensions for data syntax, plus 10-14 models through emit_gams.py fixes.
+
+**Reference:** See `SPRINT_SCHEDULE.md` for detailed day-by-day implementation plan.
 
 ---
 
