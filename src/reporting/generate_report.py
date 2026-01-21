@@ -73,6 +73,8 @@ Examples:
         "--format",
         choices=["markdown"],
         default="markdown",
+        # Note: Currently only markdown is supported. This argument is reserved
+        # for future expansion to support additional formats (json, html).
         help="Output format (default: markdown)",
     )
 

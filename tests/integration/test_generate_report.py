@@ -176,7 +176,7 @@ class TestCLIAllReports:
         assert status_file.exists()
         assert failure_file.exists()
 
-    def test_verbose_output(self, output_dir: Path, capsys) -> None:
+    def test_verbose_output(self, output_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test verbose output mode."""
         if not BASELINE_PATH.exists():
             pytest.skip("Baseline metrics file not found")
