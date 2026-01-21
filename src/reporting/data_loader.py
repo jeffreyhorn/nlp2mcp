@@ -16,8 +16,6 @@ from typing import Any
 class DataLoadError(Exception):
     """Exception raised when data loading fails."""
 
-    pass
-
 
 @dataclass
 class TimingStats:
