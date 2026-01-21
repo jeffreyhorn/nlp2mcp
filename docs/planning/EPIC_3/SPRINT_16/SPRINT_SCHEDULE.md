@@ -33,8 +33,8 @@ Sprint 16 focuses on three priorities: Reporting Infrastructure, Gap Analysis, a
 ### Unknowns Status
 
 - **Total:** 27 unknowns
-- **Verified:** 26 (96%)
-- **Remaining:** 1 (9.3 - realistic model count, addressed below)
+- **Verified:** 27 (100%)
+- **Remaining:** 0 (all unknowns verified, including 9.3 addressed below)
 
 ### Unknown 9.3 Resolution
 
@@ -338,9 +338,9 @@ Sprint 16 is **COMPLETE** when:
 |-------|------|-------|-------------|
 | Reporting Infrastructure | 1-3 | 17 | 50% |
 | Gap Analysis | 4-5 | 11 | 32% |
-| Targeted Improvements | 6-8 | 17.5 | 52% |
-| Retest and Documentation | 9-10 | 9 | 26% |
-| **Total** | 10 | **54.5** | - |
+| Targeted Improvements | 6-8 | 18 | 52% |
+| Retest and Documentation | 9-10 | 10 | 26% |
+| **Total** | 10 | **56** | - |
 
 **Note:** Some overlap expected; actual hours ~30-35.
 
@@ -371,7 +371,7 @@ For each day, answer:
 
 | Task | Deliverable | Key Insight |
 |------|-------------|-------------|
-| 1 | KNOWN_UNKNOWNS.md | 27 unknowns, 26 verified |
+| 1 | KNOWN_UNKNOWNS.md | 27 unknowns, 27 verified |
 | 2 | BASELINE_ANALYSIS.md | Parse bottleneck (78.8% failure) |
 | 3 | REPORT_DESIGN.md | Jinja2 + tabulate, 17h estimate |
 | 4 | FAILURE_REPORT_SCHEMA.md | Priority = Models / Effort |
