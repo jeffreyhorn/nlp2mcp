@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Day 2: Analyzers and Jinja2 Templates - 2026-01-21
+
+**Branch:** `sprint16-day2-analyzers-templates`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented FailureAnalyzer and ProgressAnalyzer classes with comprehensive dataclasses for error categorization, priority scoring, and sprint-over-sprint comparison. Created Jinja2 templates for status and failure reports with tabulate table generation.
+
+#### Changes
+
+**New Files:**
+- `src/reporting/analyzers/failure_analyzer.py` - Error breakdown by category with priority scoring
+- `src/reporting/analyzers/progress_analyzer.py` - Historical comparison and regression detection
+- `src/reporting/templates/__init__.py` - Template loading utilities
+- `src/reporting/templates/status_report.md.j2` - Status summary report template
+- `src/reporting/templates/failure_report.md.j2` - Failure analysis report template
+- `tests/unit/reporting/test_failure_analyzer.py` - 13 tests for failure analyzer
+- `tests/unit/reporting/test_progress_analyzer.py` - 18 tests for progress analyzer
+
+**Modified Files:**
+- `src/reporting/analyzers/__init__.py` - Added exports for new classes
+- `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 2 entry added
+- `docs/planning/EPIC_3/SPRINT_16/PLAN.md` - Day 2 marked complete
+
+#### Key Features
+
+- **FailureAnalyzer**: Groups errors by stage and category, calculates priority scores (Models/Effort), generates improvement recommendations
+- **ProgressAnalyzer**: Computes rate deltas between snapshots, detects regressions using configurable thresholds (2% for stages, 1% for pipeline, 5 for error increases)
+- **Priority Score Formula**: `Models Affected / Effort Hours` (non-fixable categories return 0.0)
+- **Jinja2 Templates**: Modular templates with tabulate for table generation, optional progress comparison sections
+
+#### Quality Checks
+
+- `make typecheck`: PASSED (88 source files)
+- `make lint`: PASSED
+- `make test`: 2911 passed (31 new), 1 pre-existing failure, 10 skipped
+
+---
+
 ### Sprint 16 Day 1: Module Setup and Data Loading - 2026-01-21
 
 **Branch:** `sprint16-day1-reporting-module`  

@@ -113,13 +113,15 @@ Sprint 16 builds on Sprint 15's comprehensive baseline (21.3% parse, 17.6% solve
 - `src/nlp2mcp/reporting/templates/failure_report.md.j2`
 
 **Acceptance Criteria:**
-- [ ] FailureAnalyzer groups errors by category
-- [ ] FailureAnalyzer calculates priority scores (models/effort)
-- [ ] ProgressAnalyzer computes deltas between snapshots
-- [ ] Templates render sample data correctly
-- [ ] Templates use tabulate for tables
+- [x] FailureAnalyzer groups errors by category
+- [x] FailureAnalyzer calculates priority scores (models/effort)
+- [x] ProgressAnalyzer computes deltas between snapshots
+- [x] Templates render sample data correctly
+- [x] Templates use tabulate for tables
 
 **Time Estimate:** 6.5 hours
+
+**Status:** ✅ Complete (January 21, 2026)
 
 ---
 
