@@ -333,14 +333,18 @@ class TestLoadGamslibStatus:
     def test_load_valid_file(self) -> None:
         """Test loading a valid gamslib_status.json file."""
         data = {
-            "models": {
-                "hs62": {
-                    "status": "success",
-                    "parse": "success",
-                    "translate": "success",
-                    "solve": "success",
+            "schema_version": "2.1.0",
+            "total_models": 1,
+            "models": [
+                {
+                    "model_id": "hs62",
+                    "model_name": "Test Model",
+                    "gamslib_type": "NLP",
+                    "parse_status": "success",
+                    "translate_status": "success",
+                    "solve_status": "success",
                 }
-            }
+            ],
         }
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
@@ -351,8 +355,9 @@ class TestLoadGamslibStatus:
             status = load_gamslib_status(temp_path)
 
             assert "models" in status
-            assert "hs62" in status["models"]
-            assert status["models"]["hs62"]["status"] == "success"
+            assert len(status["models"]) == 1
+            assert status["models"][0]["model_id"] == "hs62"
+            assert status["models"][0]["parse_status"] == "success"
         finally:
             temp_path.unlink()
 
