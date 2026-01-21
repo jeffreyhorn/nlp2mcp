@@ -1,6 +1,6 @@
 # GAMSLIB Pipeline Status Report
 
-**Generated:** 2026-01-21 18:16:58 UTC
+**Generated:** 2026-01-21 18:30:47 UTC
 **nlp2mcp Version:** 0.1.0
 **Data Source:** baseline_metrics.json
 
@@ -10,7 +10,7 @@
 
 The nlp2mcp pipeline was tested against **160** GAMSLIB models on **2026-01-15** (Sprint 15).
 
-- **Full Pipeline Success:** 1 models (0.6%)
+- **Full Pipeline Success:** 1 model (0.6%)
 - **Parse Success:** 34/160 (21.2%)
 - **Translate Success:** 17/34 (50.0%)
 - **Solve Success:** 3/17 (17.6%)

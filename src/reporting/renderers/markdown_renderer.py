@@ -217,23 +217,29 @@ class MarkdownRenderer:
         )
         solve_top = max(solve_errors, key=lambda k: solve_errors[k]) if solve_errors else "N/A"
 
+        # Calculate percentages safely (avoid division by zero)
+        total = summary.total_models if summary.total_models > 0 else 1
+        parse_pct = summary.parse_failures / total * 100
+        translate_pct = summary.translate_failures / total * 100
+        solve_pct = summary.solve_failures / total * 100
+
         data = [
             [
                 "Parse",
                 summary.parse_failures,
-                f"{summary.parse_failures / summary.total_models * 100:.1f}%",
+                f"{parse_pct:.1f}%",
                 f"`{parse_top}`",
             ],
             [
                 "Translate",
                 summary.translate_failures,
-                f"{summary.translate_failures / summary.total_models * 100:.1f}%",
+                f"{translate_pct:.1f}%",
                 f"`{translate_top}`",
             ],
             [
                 "Solve",
                 summary.solve_failures,
-                f"{summary.solve_failures / summary.total_models * 100:.1f}%",
+                f"{solve_pct:.1f}%",
                 f"`{solve_top}`",
             ],
         ]
@@ -279,8 +285,9 @@ class MarkdownRenderer:
             f"GAMSLIB models on **{summary.baseline_date}** ({summary.sprint})."
         )
         lines.append("")
+        pipeline_models_label = "model" if summary.pipeline_success == 1 else "models"
         lines.append(
-            f"- **Full Pipeline Success:** {summary.pipeline_success} models "
+            f"- **Full Pipeline Success:** {summary.pipeline_success} {pipeline_models_label} "
             f"({summary.pipeline_rate * 100:.1f}%)"
         )
         lines.append(
