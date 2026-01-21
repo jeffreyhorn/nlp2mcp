@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Day 3: CLI and Integration [Checkpoint 1] - 2026-01-21
+
+**Branch:** `sprint16-day3-cli-integration`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed reporting infrastructure with MarkdownRenderer and generate_report.py CLI. Generated first automated reports: GAMSLIB_STATUS.md and FAILURE_ANALYSIS.md. This completes Checkpoint 1 of Sprint 16.
+
+#### Changes
+
+**New Files:**
+- `src/reporting/renderers/markdown_renderer.py` - Jinja2-based markdown rendering with tabulate tables
+- `src/reporting/generate_report.py` - CLI tool with argparse (--type, --output, --baseline, etc.)
+- `tests/integration/test_generate_report.py` - 13 integration tests for CLI
+- `docs/testing/GAMSLIB_STATUS.md` - Generated status summary report
+- `docs/testing/FAILURE_ANALYSIS.md` - Generated failure analysis report
+
+**Modified Files:**
+- `src/reporting/renderers/__init__.py` - Added MarkdownRenderer export
+- `pyproject.toml` - Added nlp2mcp-report CLI entry point, tabulate mypy override
+- `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 3 entry added
+- `docs/planning/EPIC_3/SPRINT_16/PLAN.md` - Day 3 and Checkpoint 1 marked complete
+
+#### Key Features
+
+- **MarkdownRenderer**: Renders status and failure reports using Jinja2 templates with tabulate for GitHub-flavored markdown tables
+- **generate_report.py CLI**: `--type=status|failure|all`, `--output`, `--baseline`, `--verbose`, `--dry-run`
+- **CLI Entry Point**: `nlp2mcp-report --help` works after `pip install -e .`
+- **Generated Reports**: GAMSLIB_STATUS.md (21.2% parse, 17.6% solve) and FAILURE_ANALYSIS.md (9 error types)
+
+#### Quality Checks
+
+- `make typecheck`: PASSED (91 source files)
+- `make lint`: PASSED
+- `make test`: 2924 passed (72 reporting tests), 1 pre-existing failure, 10 skipped
+
+#### Checkpoint 1 Complete
+
+- Reporting infrastructure functional
+- First automated reports generated
+- Ready for Phase 2: Gap Analysis
+
+---
+
 ### Sprint 16 Day 2: Analyzers and Jinja2 Templates - 2026-01-21
 
 **Branch:** `sprint16-day2-analyzers-templates`  

@@ -5,4 +5,9 @@ Renderers transform analyzed data into various output formats
 such as Markdown and JSON.
 """
 
-__all__: list[str] = []
+from src.reporting.renderers.markdown_renderer import MarkdownRenderer, RenderError
+
+__all__ = [
+    "MarkdownRenderer",
+    "RenderError",
+]

@@ -72,6 +72,7 @@ docs = [
 
 [project.scripts]
 nlp2mcp = "src.cli:main"
+nlp2mcp-report = "src.reporting.generate_report:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -143,6 +144,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "numpy.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tabulate.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
