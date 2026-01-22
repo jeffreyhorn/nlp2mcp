@@ -178,12 +178,14 @@ Sprint 16 builds on Sprint 15's comprehensive baseline (21.3% parse, 17.6% solve
 - `docs/planning/EPIC_3/SPRINT_16/IMPROVEMENT_ROADMAP.md` (draft)
 
 **Acceptance Criteria:**
-- [ ] Parse failures categorized by subcategory (keyword case, hyphenated, etc.)
-- [ ] Each error category has fix strategy and effort estimate
-- [ ] Translation failures documented with Sprint 17 deferral rationale
-- [ ] IMPROVEMENT_ROADMAP.md draft with top 10 improvements
+- [x] Parse failures categorized by subcategory (keyword case, hyphenated, etc.)
+- [x] Each error category has fix strategy and effort estimate
+- [x] Translation failures documented with Sprint 17 deferral rationale
+- [x] IMPROVEMENT_ROADMAP.md draft with top 10 improvements
 
 **Time Estimate:** 6 hours
+
+**Status:** ✅ Complete (January 22, 2026)
 
 ---
 

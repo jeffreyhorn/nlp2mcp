@@ -345,6 +345,104 @@
 
 ---
 
+### Day 4: Parse and Translate Gap Analysis
+
+**Date:** January 22, 2026
+
+**Objective:** Deep-dive into parse failures, categorize by root cause, and create IMPROVEMENT_ROADMAP.md
+
+**Tasks Completed:**
+
+1. **Detailed Parse Failure Report Generated**
+   - Ran `python -m src.reporting.generate_report --type=failure --verbose`
+   - Cross-referenced with LEXER_ERROR_ANALYSIS.md for subcategory breakdown
+   - Confirmed 109 lexer_invalid_char errors with 11 subcategories:
+     - Complex Set Data (91 models, 59%)
+     - Tuple expansion (12 models, 8%)
+     - Numeric context (11 models, 7%)
+     - Keyword case (9 models, 6%)
+     - Operator context (9 models, 6%)
+     - Quoted descriptions (7 models, 5%)
+     - Dot notation (5 models, 3%)
+     - Hyphenated elements (3 models, 2%)
+     - Abort syntax (3 models, 2%)
+     - Slash syntax (2 models, 1%)
+     - Hyphenated identifiers (1 model, 1%)
+
+2. **Lexer Error Subcategories Analyzed**
+   - Documented fix strategy for each subcategory
+   - Estimated effort (in days) for each fix
+   - Calculated priority scores: Models / Effort
+   - Key finding: Dollar control already handled; errors are GAMS data syntax issues
+
+3. **Translation Failure Patterns Documented**
+   - Analyzed 17 translation failures from baseline
+   - Grouped by error category:
+     - model_no_objective_def: 5 models (29.4%)
+     - diff_unsupported_func: 5 models (29.4%)
+     - unsup_index_offset: 3 models (17.6%)
+     - model_domain_mismatch: 2 models (11.8%)
+     - unsup_dollar_cond: 1 model (5.9%)
+     - codegen_numerical_error: 1 model (5.9%)
+   - Documented Sprint 17 deferral rationale:
+     1. Cascade effect from parse improvements
+     2. Higher ROI on parse fixes (109+ models vs 17)
+     3. Dependencies on parsing quality
+     4. Sprint scope already includes reporting + parse + solve
+
+4. **IMPROVEMENT_ROADMAP.md Created**
+   - Priority 1 (High Confidence): +15 parse models, +14 solve models
+     - P-1: Keyword case (9 parse models, 0.5d, score 18.0)
+     - P-2: Hyphenated elements (3 parse models, 0.5d, score 6.0)
+     - P-3: Abort syntax (3 parse models, 0.5d, score 6.0)
+     - S-1: Unary minus (10 solve models, 0.5d, score 20.0)
+     - S-2/S-3: Quoting fixes (4 solve models, 0.75d, score ~7.0)
+   - Priority 2 (Medium Confidence): +19 parse models
+     - P-4: Tuple expansion (12 models, 1.5d, score 8.0)
+     - P-5: Quoted descriptions (7 models, 1d, score 7.0)
+   - Deferred items documented with rationale
+
+5. **FAILURE_ANALYSIS.md Updated**
+   - Added detailed subcategory breakdown for lexer_invalid_char
+   - Added character analysis with counts and causes
+   - Added example errors by subcategory with model lists
+   - Added internal_error subcategory analysis
+   - Added translation failure details with Sprint 17 rationale
+   - Added solve failure root cause analysis from PATH_ERROR_ANALYSIS.md
+   - Added improvement roadmap summary
+   - Added success targets table
+   - Added appendix with model lists by error category
+
+6. **PLAN.md Updated**
+   - Marked Day 4 acceptance criteria as complete
+
+**Files Created:**
+- `docs/planning/EPIC_3/SPRINT_16/IMPROVEMENT_ROADMAP.md`
+
+**Files Modified:**
+- `docs/testing/FAILURE_ANALYSIS.md` - Detailed subcategory analysis
+- `docs/planning/EPIC_3/SPRINT_16/PLAN.md` - Day 4 marked complete
+
+**Key Findings:**
+1. **Parse errors are NOT dollar control issues** - grammar already handles $ontext/$offtext
+2. **109 lexer errors caused by GAMS data syntax** - hyphenated elements, tuple expansion, keyword case
+3. **14 solve failures are 100% emit_gams.py bugs** - unary minus, quoting, scalar declaration
+4. **Translation deferred to Sprint 17** - higher ROI on parse/solve fixes
+
+**Categorization Methodology:**
+- Used LEXER_ERROR_ANALYSIS.md subcategory breakdown
+- Verified against character-level error messages
+- Cross-referenced with PATH_ERROR_ANALYSIS.md for solve errors
+- Applied Priority Score formula: Models / Effort (days)
+
+**Surprises/New Findings:**
+- None - analysis confirmed prep phase findings
+- High confidence in Priority 1 fixes based on clear patterns
+
+**Next Steps:** Day 5 - Solve Gap Analysis and Roadmap Finalization
+
+---
+
 ## Appendix: Key Reference Documents
 
 | Document | Purpose |
