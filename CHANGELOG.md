@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Day 4: Parse and Translate Gap Analysis - 2026-01-22
+
+**Branch:** `sprint16-day4-gap-analysis-parse`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Deep-dive into parse failures with detailed subcategory analysis. Created IMPROVEMENT_ROADMAP.md with prioritized fixes. Updated FAILURE_ANALYSIS.md with comprehensive subcategory breakdown, example errors, and Sprint 17 deferral rationale for translation fixes.
+
+#### Changes
+
+**New Files:**
+- `docs/planning/EPIC_3/SPRINT_16/IMPROVEMENT_ROADMAP.md` - Prioritized improvement list with fix strategies and effort estimates
+
+**Modified Files:**
+- `docs/testing/FAILURE_ANALYSIS.md` - Added detailed subcategory analysis, example errors, model lists
+- `docs/planning/EPIC_3/SPRINT_16/PLAN.md` - Day 4 marked complete
+- `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 4 entry added
+
+#### Key Findings
+
+1. **Parse errors are NOT dollar control issues** - grammar already handles $ontext/$offtext
+2. **109 lexer errors caused by GAMS data syntax** - hyphenated elements, tuple expansion, keyword case
+3. **14 solve failures are 100% emit_gams.py bugs** - unary minus, quoting, scalar declaration
+4. **Translation deferred to Sprint 17** - higher ROI on parse/solve fixes
+
+#### Subcategory Analysis (109 lexer_invalid_char errors)
+
+| Subcategory | Count | Priority | Effort |
+|-------------|-------|----------|--------|
+| Complex set data | 91 | P3 (Defer) | High |
+| Tuple expansion | 12 | P2 | 1.5d |
+| Numeric context | 11 | P2 | 1d |
+| Keyword case | 9 | P1 | 0.5d |
+| Quoted descriptions | 7 | P2 | 1d |
+| Hyphenated elements | 3 | P1 | 0.5d |
+| Abort syntax | 3 | P1 | 0.5d |
+
+#### IMPROVEMENT_ROADMAP.md Created
+
+**Priority 1 (High Confidence):** +26 models
+- P-1: Keyword case (9 models, score 18.0)
+- P-2: Hyphenated elements (3 models, score 6.0)
+- P-3: Abort syntax (3 models, score 6.0)
+- S-1: Unary minus (10 models, score 20.0)
+- S-2/S-3: Quoting fixes (4 models, score ~7.0)
+
+**Priority 2 (Medium Confidence):** +19 models
+- P-4: Tuple expansion (12 models, score 8.0)
+- P-5: Quoted descriptions (7 models, score 7.0)
+
+#### Success Targets
+
+| Level | Parse Rate | Solve Rate | Full Pipeline |
+|-------|------------|------------|---------------|
+| Minimum | 31% (+16) | 60% | 3% (5/160) |
+| Target | 43% (+35) | 100% | 8% (13/160) |
+
+---
+
 ### Sprint 16 Day 3: CLI and Integration [Checkpoint 1] - 2026-01-21
 
 **Branch:** `sprint16-day3-cli-integration`  
