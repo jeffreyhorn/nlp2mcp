@@ -268,7 +268,7 @@ Based on impact analysis (Priority Score = Models Affected / Effort Hours):
 
 | Level | Parse Rate | Improvement | Solve Rate | Full Pipeline |
 |-------|------------|-------------|------------|---------------|
-| **Minimum (P1)** | 31% | +16 models | 76% | 5% (8/160) |
+| **Minimum (P1)** | 31% | +15 models | 76% | 5% (8/160) |
 | **Target (P1+P2)** | 43% | +34 models | 100% | 8% (13/160) |
 | **Stretch** | 47% | +41 models | 100% | 10% (16/160) |
 
