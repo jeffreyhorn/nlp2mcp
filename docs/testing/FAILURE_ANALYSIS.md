@@ -42,6 +42,8 @@
 
 **Critical Finding:** The grammar's `$ontext/$offtext` handling already works correctly. These 109 errors occur in **regular GAMS syntax** that uses features the grammar doesn't fully support.
 
+**Note:** A single model can appear in multiple subcategories when it exhibits multiple distinct syntax issues. Subcategory counts and percentages therefore reflect the distribution of error types, and their totals can exceed the number of unique models with `lexer_invalid_char` errors (109).
+
 | Subcategory | Count | % of Lexer Errors | Fixability | Effort | Fix Strategy |
 |-------------|-------|-------------------|------------|--------|--------------|
 | Complex Set Data (hyphenated+numeric) | 91 | 59% | Partial | High | Extend SET_ELEMENT_ID |
@@ -243,7 +245,7 @@ Based on impact analysis (Priority Score = Models Affected / Effort Hours):
 | 1 | Unary minus formatting | Solve | 10 | 0.5d | 20.0 | High |
 | 2 | Tuple expansion syntax | Parse | 12 | 1.5d | 8.0 | Medium |
 | 2 | Quoted set descriptions | Parse | 7 | 1d | 7.0 | Medium |
-| 2 | Numeric context in param data | Parse | 11 | 1d | 11.0 | Medium |
+| 3 | Numeric context in param data | Parse | 11 | 1d | 11.0 | Medium |
 | 3 | Set element quoting | Solve | 3 | 0.5d | 6.0 | High |
 | 3 | Scalar declaration fix | Solve | 1 | 0.25d | 4.0 | High |
 
@@ -266,9 +268,9 @@ Based on impact analysis (Priority Score = Models Affected / Effort Hours):
 
 | Level | Parse Rate | Improvement | Solve Rate | Full Pipeline |
 |-------|------------|-------------|------------|---------------|
-| **Minimum** | 31.3% | +16 models | 60% | 3% (5/160) |
-| **Target** | 37.5% | +26 models | 76% | 5% (8/160) |
-| **Stretch** | 49.4% | +45 models | 100% | 8% (13/160) |
+| **Minimum (P1)** | 31% | +16 models | 76% | 5% (8/160) |
+| **Target (P1+P2)** | 43% | +34 models | 100% | 8% (13/160) |
+| **Stretch** | 47% | +41 models | 100% | 10% (16/160) |
 
 ---
 

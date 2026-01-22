@@ -15,9 +15,9 @@ This roadmap identifies and prioritizes improvements to the nlp2mcp pipeline bas
 2. **Solve stage:** MCP code generation bugs in emit_gams.py (unary minus, quoting)
 
 **Sprint 16 Focus:**
-- Priority 1 (High Confidence): +26 models through 5 targeted fixes
-- Priority 2 (Medium Confidence): +19 models through 2 additional fixes
-- Total potential: +45 models (parse) + 14 models (solve)
+- Priority 1 (High Confidence): +15 parse models through 3 targeted grammar fixes, +14 solve models through 3 emit_gams.py fixes
+- Priority 2 (Medium Confidence): +19 parse models through 2 additional grammar fixes
+- Total potential: +34 parse models + 14 solve models (note: some model overlaps exist between subcategories)
 
 ---
 
@@ -304,7 +304,7 @@ set_member: SET_ELEMENT_ID (STRING)?
 | Level | Parse Rate | Parse Improvement | Solve Rate | Full Pipeline |
 |-------|------------|-------------------|------------|---------------|
 | **P1 Only (Min)** | 31% (50/160) | +16 models | 76% (13/17) | 5% (8/160) |
-| **P1 + P2 (Target)** | 43% (69/160) | +35 models | 100% (17/17) | 8% (13/160) |
+| **P1 + P2 (Target)** | 43% (68/160) | +34 models | 100% (17/17) | 8% (13/160) |
 | **All Sprint 16** | 47% (75/160) | +41 models | 100% | 10% (16/160) |
 
 ### Regression Safeguards

@@ -391,13 +391,13 @@
      4. Sprint scope already includes reporting + parse + solve
 
 4. **IMPROVEMENT_ROADMAP.md Created**
-   - Priority 1 (High Confidence): 5 targeted fixes for +26 models
-     - P-1: Keyword case (9 models, 0.5d, score 18.0)
-     - P-2: Hyphenated elements (3 models, 0.5d, score 6.0)
-     - P-3: Abort syntax (3 models, 0.5d, score 6.0)
-     - S-1: Unary minus (10 models, 0.5d, score 20.0)
-     - S-2/S-3: Quoting fixes (4 models, 0.75d, score ~7.0)
-   - Priority 2 (Medium Confidence): 2 fixes for +19 models
+   - Priority 1 (High Confidence): +15 parse models, +14 solve models
+     - P-1: Keyword case (9 parse models, 0.5d, score 18.0)
+     - P-2: Hyphenated elements (3 parse models, 0.5d, score 6.0)
+     - P-3: Abort syntax (3 parse models, 0.5d, score 6.0)
+     - S-1: Unary minus (10 solve models, 0.5d, score 20.0)
+     - S-2/S-3: Quoting fixes (4 solve models, 0.75d, score ~7.0)
+   - Priority 2 (Medium Confidence): +19 parse models
      - P-4: Tuple expansion (12 models, 1.5d, score 8.0)
      - P-5: Quoted descriptions (7 models, 1d, score 7.0)
    - Deferred items documented with rationale

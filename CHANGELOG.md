@@ -47,14 +47,14 @@ Deep-dive into parse failures with detailed subcategory analysis. Created IMPROV
 
 #### IMPROVEMENT_ROADMAP.md Created
 
-**Priority 1 (High Confidence):** +26 models
+**Priority 1 (High Confidence):** +15 parse models, +14 solve models
 - P-1: Keyword case (9 models, score 18.0)
 - P-2: Hyphenated elements (3 models, score 6.0)
 - P-3: Abort syntax (3 models, score 6.0)
-- S-1: Unary minus (10 models, score 20.0)
-- S-2/S-3: Quoting fixes (4 models, score ~7.0)
+- S-1: Unary minus (10 solve models, score 20.0)
+- S-2/S-3: Quoting fixes (4 solve models, score ~7.0)
 
-**Priority 2 (Medium Confidence):** +19 models
+**Priority 2 (Medium Confidence):** +19 parse models
 - P-4: Tuple expansion (12 models, score 8.0)
 - P-5: Quoted descriptions (7 models, score 7.0)
 
@@ -62,8 +62,8 @@ Deep-dive into parse failures with detailed subcategory analysis. Created IMPROV
 
 | Level | Parse Rate | Solve Rate | Full Pipeline |
 |-------|------------|------------|---------------|
-| Minimum | 31% (+16) | 60% | 3% (5/160) |
-| Target | 43% (+35) | 100% | 8% (13/160) |
+| Minimum (P1) | 31% (+16) | 76% | 5% (8/160) |
+| Target (P1+P2) | 43% (+34) | 100% | 8% (13/160) |
 
 ---
 
