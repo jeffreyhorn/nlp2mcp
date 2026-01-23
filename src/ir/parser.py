@@ -3784,11 +3784,22 @@ class _ModelBuilder:
                                 child,
                             )
             # Standard case: extract tokens directly
-            return [
-                _token_text(tok)
-                for tok in node.children
-                if isinstance(tok, Token) and tok.type in ("ID", "NUMBER", "SET_ELEMENT_ID")
-            ]
+            # Issue #555: Handle data_index wrapper nodes and STRING tokens
+            result = []
+            for child in node.children:
+                if isinstance(child, Token) and child.type in (
+                    "ID",
+                    "NUMBER",
+                    "SET_ELEMENT_ID",
+                    "STRING",
+                ):
+                    result.append(_token_text(child))
+                elif isinstance(child, Tree) and child.data == "data_index":
+                    # Extract the token from the data_index wrapper
+                    for tok in child.children:
+                        if isinstance(tok, Token):
+                            result.append(_token_text(tok))
+            return result
         return [_token_text(node)]
 
     def _expand_range_in_set(

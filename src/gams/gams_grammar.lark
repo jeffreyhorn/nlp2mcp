@@ -158,8 +158,11 @@ param_data_item: data_matrix_row                         -> param_data_matrix_ro
 // data_indices can be numeric (e.g., parameter tau(nm) / 1 0.000, 2 0.025 /)
 // Also allows hyphenated identifiers (e.g., parameter cost(i) / light-ind 100 /)
 // Sprint 12 Day 5: Support range notation (e.g., foulds3*foulds5 -8)
+// Issue #555: Support quoted strings as indices (e.g., / 'gov-expend' 110.5 /)
 data_indices: range_expr
-            | (SET_ELEMENT_ID | NUMBER) ("." (SET_ELEMENT_ID | NUMBER))*
+            | data_index ("." data_index)*
+
+data_index: SET_ELEMENT_ID | NUMBER | STRING
 // Matrix row must have at least 2 values (data_indices followed by 2+ NUMBERs) to disambiguate from scalar
 data_matrix_row: data_indices NUMBER NUMBER+
 data_matrix_values: NUMBER (NUMBER)*
