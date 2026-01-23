@@ -27,9 +27,9 @@ Analyzed solve failures in detail, documented emit_gams.py fix requirements with
 
 | Fix | Models | Root Cause Location | Fix Strategy |
 |-----|--------|---------------------|--------------|
-| S-1: Unary minus | 10 | `expr_to_gams.py:128-137` | `-(expr)` → `((-1) * expr)` |
-| S-2: Set quoting | 3 | `expr_to_gams.py:45-72` | Always quote with single quotes |
-| S-3: Scalar names | 1 | `original_symbols.py:87-109` | Filter description-only scalars |
+| S-1: Unary minus | 10 | `expr_to_gams.py:185-197` | `-(expr)` → `((-1) * expr)` |
+| S-2: Set quoting | 3 | `expr_to_gams.py:62-94` | Always quote set elements consistently |
+| S-3: Scalar names | 1 | `original_symbols.py:79-158` | Filter description-only scalars |
 
 #### Implementation Task List Created
 

@@ -199,10 +199,12 @@ The heuristic quotes identifiers containing digits but leaves single letters unq
 # In expr_to_gams.py, change _quote_indices to always quote set elements:
 def _quote_indices(indices: tuple[str, ...]) -> list[str]:
     """Quote all element labels in index tuples for GAMS syntax."""
-    return [f"'{idx}'" for idx in indices]
+    return [f'"{idx}"' for idx in indices]
 ```
 
-Also fix in `src/emit/model.py` function `_format_variable_with_indices()` (lines 36-56) to use single quotes consistently.
+Also fix in `src/emit/model.py` function `_format_variable_with_indices()` (lines 36-56) to always quote consistently.
+
+**Note:** GAMS supports both single and double quotes for set elements. The key issue is consistency - currently some elements are quoted (`x("H2")`) while others are not (`x(H)`). The fix will quote ALL set element references using double quotes to match GAMS conventions and ensure consistent parsing.
 
 **Effort:** 0.5 days (4 hours)
 - Code change in expr_to_gams.py: 1 hour
