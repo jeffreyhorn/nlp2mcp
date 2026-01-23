@@ -202,7 +202,7 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
     return [f'"{idx}"' for idx in indices]
 ```
 
-Also fix in `src/emit/model.py` function `_format_variable_with_indices()` (lines 36-56) to always quote consistently.
+Also fix in `src/emit/model.py` function `_format_variable_with_indices()` (lines 32-56) to always quote consistently.
 
 **Note:** GAMS supports both single and double quotes for set elements. The key issue is consistency - currently some elements are quoted (`x("H2")`) while others are not (`x(H)`). The fix will quote ALL set element references using double quotes to match GAMS conventions and ensure consistent parsing.
 
@@ -463,7 +463,7 @@ set_member: SET_ELEMENT_ID (STRING)?
 
 | Task | File | Description | Est. |
 |------|------|-------------|------|
-| 8.2.1 | `src/emit/expr_to_gams.py` | Modify `_quote_indices` to always quote with single quotes | 0.5h |
+| 8.2.1 | `src/emit/expr_to_gams.py` | Modify `_quote_indices` to always quote with double quotes | 0.5h |
 | 8.2.2 | `src/emit/model.py` | Update `_format_variable_with_indices` for consistent quoting | 0.5h |
 | 8.2.3 | `tests/emit/test_*.py` | Update emit tests for new quoting style | 0.5h |
 | 8.2.4 | - | Regenerate and test chem, dispatch, port | 0.5h |
@@ -472,7 +472,7 @@ set_member: SET_ELEMENT_ID (STRING)?
 | 8.3.3 | - | Full test suite: `make test && make typecheck` | 0.5h |
 | 8.3.4 | - | Full GAMSLIB integration test, update metrics | 0.5h |
 
-**Day 8 Checkpoint:** +14 solve successes expected (13-14/17 models solving)
+**Day 8 Checkpoint:** Up to +14 additional solve successes expected (projected 13-14/17 models solving; actual gain depends on overlap across S-1, S-2, and S-3)
 
 ---
 
@@ -524,7 +524,7 @@ set_member: SET_ELEMENT_ID (STRING)?
 **Key Emit Observations:**
 1. `expr_to_gams.py:185-197` - `Unary` case needs `((-1) * expr)` rewrite for unary minus
 2. `expr_to_gams.py:62-94` - `_quote_indices()` heuristic uses digit detection; needs always-quote
-3. `model.py:36-56` - `_format_variable_with_indices()` uses double quotes; should use single quotes
+3. `model.py:32-56` - `_format_variable_with_indices()` should always quote set elements consistently
 4. `original_symbols.py:79-158` - `emit_original_parameters()` doesn't validate scalar names
 
 ### Test Dependencies

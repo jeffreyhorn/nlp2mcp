@@ -522,7 +522,7 @@
 1. **All 14 solve failures are emit_gams.py bugs** - not PATH solver issues
 2. **S-1 (unary minus) is highest impact** - 10 models, score 20.0
 3. **Fixes are straightforward** - clear patterns with specific code locations
-4. **Expected outcome: 76-94% solve rate** - up from 17.6%
+4. **Expected outcome: minimum 76% solve rate (P1 only: 13/17), target 100% (P1+P2: 17/17)** - up from 17.6%
 
 **Next Steps:** Day 6 - Parse Improvements (Priority 1)
 
