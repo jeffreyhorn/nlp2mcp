@@ -154,10 +154,11 @@ The `Unary` case handling adds parentheses when there's a parent operator, but t
 # In expr_to_gams.py, Unary case:
 case Unary(op, child):
     child_str = expr_to_gams(child, parent_op=op)
-    if isinstance(child, Binary):
-        child_str = f"({child_str})"
     # ALWAYS wrap unary minus as multiplication to avoid GAMS error 445
     if op == "-":
+        # Binary children need parentheses, but avoid double-wrapping
+        if isinstance(child, Binary) and not (child_str.startswith("(") and child_str.endswith(")")):
+            child_str = f"({child_str})"
         return f"((-1) * {child_str})"
     return f"{op}{child_str}"
 ```
