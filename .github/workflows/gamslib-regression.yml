@@ -187,24 +187,18 @@ jobs:
             docs/status/GAMSLIB_CONVERSION_STATUS.md
           retention-days: 30
 
-      - name: Check dashboard is up-to-date
-        if: github.event_name == 'pull_request'
-        run: |
-          # Check if there are meaningful changes (not just timestamp)
-          # Count lines changed excluding the Generated timestamp line and diff headers
-          MEANINGFUL_CHANGES=$(git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep '^[+-]' | grep -v '^[+-].*Generated:' | grep -v '^+++' | grep -v '^---' | grep -v '^@@' | wc -l)
-
-          if [ "$MEANINGFUL_CHANGES" -gt 0 ]; then
-            echo "❌ Dashboard has $MEANINGFUL_CHANGES meaningful changes (excluding timestamp)"
-            echo ""
-            echo "Please commit the updated dashboard:"
-            echo "  make ingest-gamslib"
-            echo "  git add docs/status/GAMSLIB_CONVERSION_STATUS.md"
-            echo "  git commit -m 'Update GAMSLib dashboard'"
-            echo ""
-            echo "Dashboard diff (meaningful changes only):"
-            git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | grep '^[+-]' | grep -v '^[+-].*Generated:' | grep -v '^+++' | grep -v '^---' | grep -v '^@@'
-            exit 1
-          else
-            echo "✅ Dashboard is up-to-date (only timestamp changed)"
-          fi
+      # NOTE: Dashboard check disabled because CI only has access to 10 test models
+      # (downloaded via download_gamslib_nlp.sh) while the committed dashboard is
+      # generated from the full 160-model dataset in data/gamslib/raw/. The check
+      # would always fail due to this mismatch.
+      #
+      # To update the dashboard locally, use the full dataset:
+      #   python scripts/ingest_gamslib.py --input data/gamslib/raw \
+      #     --output reports/gamslib_full.json \
+      #     --dashboard docs/status/GAMSLIB_CONVERSION_STATUS.md
+      #
+      # - name: Check dashboard is up-to-date
+      #   if: github.event_name == 'pull_request'
+      #   run: |
+      #     MEANINGFUL_CHANGES=$(git diff docs/status/GAMSLIB_CONVERSION_STATUS.md | ...)
+      #     ...
