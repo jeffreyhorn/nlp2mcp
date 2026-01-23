@@ -128,52 +128,142 @@ display_item: ID | expression
 
 #### S-1: Unary Minus Formatting
 
-**Problem:** `emit_gams.py` generates `-(expr)` which GAMS rejects. Should be `(-1)*(expr)`.
+**Problem:** `expr_to_gams.py` generates `-(expr)` at equation start which GAMS rejects as two operators in a row (`..` then `-`).
 
 **Affected Models (10):** himmel11, house, least, mathopt1, mathopt2, mhw4d, mhw4dx, process, rbrock, sample
 
-**GAMS Error 445:** "Operand expected after - operator"
+**GAMS Error 445:** "More than one operator in a row"
+
+**Actual Error Example (from house_mcp.gms):**
+```gams
+* Current output (FAILS):
+stat_x.. ... + -(y * -1) * lam_minp + ...
+stat_y.. ... + -(b - x) * lam_minp + ...
+
+* Should be:
+stat_x.. ... + ((-1) * (y * -1)) * lam_minp + ...
+stat_y.. ... + ((-1) * (b - x)) * lam_minp + ...
+```
+
+**Root Cause Location:** `src/emit/expr_to_gams.py` lines 128-137
+
+The `Unary` case handling adds parentheses when there's a parent operator, but the issue occurs at equation definition start where the unary minus follows `..` which GAMS treats as an operator context.
 
 **Fix Strategy:**
 ```python
-# In emit_gams.py, change:
-def emit_unary_minus(expr):
-    return f"-({emit_expr(expr)})"
-
-# To:
-def emit_unary_minus(expr):
-    return f"((-1)*({emit_expr(expr)}))"
+# In expr_to_gams.py, Unary case:
+case Unary(op, child):
+    child_str = expr_to_gams(child, parent_op=op)
+    if isinstance(child, Binary):
+        child_str = f"({child_str})"
+    # ALWAYS wrap unary minus as multiplication to avoid GAMS error 445
+    if op == "-":
+        return f"((-1) * {child_str})"
+    return f"{op}{child_str}"
 ```
 
 **Effort:** 0.5 days (4 hours)
-- Code change: 1 hour
-- Testing: 3 hours
+- Code change in expr_to_gams.py: 1 hour
+- Update golden files: 1 hour
+- Testing with all 10 affected models: 2 hours
 
 ---
 
 #### S-2: Set Element Quoting Consistency
 
-**Problem:** Generated MCP files have inconsistent quoting of set elements, causing GAMS errors 171/340.
+**Problem:** Generated MCP files have inconsistent quoting of set elements. Single-letter elements are unquoted while multi-character elements with digits are quoted.
 
 **Affected Models (3):** chem, dispatch, port
 
+**GAMS Errors:** 171 (Domain violation), 340 (Label/element name conflict)
+
+**Actual Error Example (from chem_mcp.gms):**
+```gams
+* Current output (INCONSISTENT):
+comp_lo_x_H.. x(H) - 0.001 =G= 0;           * unquoted
+comp_lo_x_H2.. x("H2") - 0.001 =G= 0;       * quoted
+...
+stat_x(c).. ... + sum(i, a(c,c) * nu_cdef(i)) ...  * should be a(i,c)
+
+* Model statement also inconsistent:
+comp_lo_x_H.piL_x("H"),    * quoted
+comp_lo_x_N.piL_x("N"),    * quoted but x(N) above was unquoted
+```
+
+**Root Cause Location:** `src/emit/expr_to_gams.py` function `_quote_indices()` (lines 45-72)
+
+The heuristic quotes identifiers containing digits but leaves single letters unquoted. GAMS requires consistent quoting.
+
 **Fix Strategy:**
-- Ensure all set elements with special characters are quoted
-- Use consistent quoting style throughout emit_gams.py
+```python
+# In expr_to_gams.py, change _quote_indices to always quote set elements:
+def _quote_indices(indices: tuple[str, ...]) -> list[str]:
+    """Quote all element labels in index tuples for GAMS syntax."""
+    return [f"'{idx}'" for idx in indices]
+```
+
+Also fix in `src/emit/model.py` function `_format_variable_with_indices()` (lines 36-56) to use single quotes consistently.
 
 **Effort:** 0.5 days (4 hours)
+- Code change in expr_to_gams.py: 1 hour
+- Code change in model.py: 0.5 hours
+- Update golden files: 0.5 hours
+- Testing with chem, dispatch, port: 2 hours
 
 ---
 
 #### S-3: Scalar Declaration Fix
 
-**Problem:** Missing identifier name in scalar declarations.
+**Problem:** Scalars with descriptions but no identifier names are emitted incorrectly.
 
 **Affected Model (1):** dispatch
 
-**Fix Strategy:** Minor fix in scalar emission code.
+**GAMS Errors:** 409 (Unrecognizable item), 191 (Closing quote missing)
+
+**Actual Error Example (from dispatch_mcp.gms):**
+```gams
+* Current output (FAILS):
+Scalars
+    b00 /0.0/
+    'loss equation constant' /0.040357/     * ERROR: no identifier!
+    demand /0.0/
+    'total power demand in MW' /210.0/      * ERROR: no identifier!
+    trace /0.0/
+;
+
+* Should be (option 1 - skip description-only scalars):
+Scalars
+    b00 /0.0/
+    demand /0.0/
+    trace /0.0/
+;
+
+* Or (option 2 - generate synthetic names):
+Scalars
+    b00 /0.0/
+    loss_eq_const 'loss equation constant' /0.040357/
+    demand /0.0/
+    power_demand 'total power demand in MW' /210.0/
+    trace /0.0/
+;
+```
+
+**Root Cause Location:** `src/emit/original_symbols.py` function `emit_original_parameters()` (lines 87-109)
+
+The IR is storing description strings as scalar names when parsing GAMS files with description-only declarations. This is a parse/IR issue, not just emit.
+
+**Fix Strategy (Option 1 - Filter):**
+```python
+# In original_symbols.py, emit_original_parameters():
+# Skip scalars whose names look like descriptions (contain spaces or quotes)
+if " " in scalar_name or "'" in scalar_name:
+    continue  # Skip description-only entries
+```
 
 **Effort:** 0.25 days (2 hours)
+- Diagnose exact IR issue: 0.5 hours
+- Code fix: 0.5 hours
+- Testing with dispatch: 1 hour
 
 ---
 
@@ -297,6 +387,93 @@ set_member: SET_ELEMENT_ID (STRING)?
 
 ---
 
+## Detailed Implementation Task List (Days 6-8)
+
+### Day 6: Priority 1 Parser Fixes
+
+#### Morning (4 hours): P-1 Keyword Case Handling
+
+| Task | File | Description | Est. |
+|------|------|-------------|------|
+| 6.1.1 | `src/parser/gams.lark` | Add `free_var_decl`, `positive_var_decl`, `negative_var_decl` rules | 1h |
+| 6.1.2 | `src/parser/gams.lark` | Ensure case-insensitive matching with `"Free"i` syntax | 0.5h |
+| 6.1.3 | `tests/parser/test_keywords.py` | Add tests for `Free Variable`, `Positive Variable` | 1h |
+| 6.1.4 | - | Run against 9 affected models: ampl, apl1p, apl1pca, jobt, moncge, nemhaus, qfilter, wall, worst | 1h |
+| 6.1.5 | - | Run `make test` and `make typecheck` | 0.5h |
+
+#### Afternoon (4 hours): P-2 and P-3
+
+| Task | File | Description | Est. |
+|------|------|-------------|------|
+| 6.2.1 | `src/parser/gams.lark` | Enhance `SET_ELEMENT_ID` to allow number-start: `/[a-zA-Z0-9_][a-zA-Z0-9_+\-]*/` | 0.5h |
+| 6.2.2 | `tests/parser/test_set_elements.py` | Add tests for `1964-i`, `89-07` style elements | 0.5h |
+| 6.2.3 | - | Verify no conflicts with numeric literals (disambiguation testing) | 1h |
+| 6.2.4 | - | Run against 3 models: abel, ajax, immun | 0.5h |
+| 6.3.1 | `src/parser/gams.lark` | Enhance `abort_stmt` to support `abort$(cond) 'msg', var;` | 1h |
+| 6.3.2 | `tests/parser/test_abort.py` | Add tests for dollar-conditioned abort with display list | 0.5h |
+| 6.3.3 | - | Run against 3 models: cclinpts, imsl, trigx | 0.5h |
+| 6.3.4 | - | Full test suite: `make test && make typecheck` | 0.5h |
+
+**Day 6 Checkpoint:** +15 parse models expected
+
+---
+
+### Day 7: Priority 2 Parser Fixes
+
+#### Morning (4 hours): P-4 Tuple Expansion (Part 1)
+
+| Task | File | Description | Est. |
+|------|------|-------------|------|
+| 7.1.1 | `src/parser/gams.lark` | Design `tuple_expansion` grammar rule | 1h |
+| 7.1.2 | `src/parser/gams.lark` | Integrate with `set_data` and `param_data` rules | 1h |
+| 7.1.3 | `src/parser/transformer.py` | Handle `tuple_expansion` AST transformation | 1h |
+| 7.1.4 | `tests/parser/test_tuple_expansion.py` | Add tests for `(a,b).c` expansion | 1h |
+
+#### Afternoon (4 hours): P-4 Complete + P-5
+
+| Task | File | Description | Est. |
+|------|------|-------------|------|
+| 7.2.1 | - | Run tuple expansion against 12 models: aircraft, airsp, clearlak, mine, pdi, pinene, pollut, qsambal, ramsey, srcpm, synheat, turkey | 1h |
+| 7.2.2 | - | Debug and fix edge cases | 1h |
+| 7.3.1 | `src/parser/gams.lark` | Extend `set_member` to allow quoted descriptions: `SET_ELEMENT_ID (STRING)?` | 0.5h |
+| 7.3.2 | - | Ensure interaction with P-2 (hyphenated elements) works | 0.5h |
+| 7.3.3 | - | Run against 7 models: agreste, camcge, egypt, fawley, korcge, nebrazil, srcpm | 0.5h |
+| 7.3.4 | - | Full test suite and GAMSLIB integration test | 0.5h |
+
+**Day 7 Checkpoint:** +19 additional parse models expected (total +34)
+
+---
+
+### Day 8: Solve Stage Fixes
+
+#### Morning (4 hours): S-1 Unary Minus Formatting
+
+| Task | File | Description | Est. |
+|------|------|-------------|------|
+| 8.1.1 | `src/emit/expr_to_gams.py` | Modify `Unary` case to always emit `((-1) * expr)` for minus | 0.5h |
+| 8.1.2 | `tests/emit/test_expr_to_gams.py` | Add/update tests for unary minus handling | 0.5h |
+| 8.1.3 | `tests/golden/*.gms` | Update golden files with new unary minus format | 0.5h |
+| 8.1.4 | - | Regenerate MCP files for 10 affected models | 0.5h |
+| 8.1.5 | - | Compile each with `gams model.gms action=c` to verify no Error 445 | 1h |
+| 8.1.6 | - | Run full solve on 10 models, capture results | 1h |
+
+#### Afternoon (4 hours): S-2 and S-3
+
+| Task | File | Description | Est. |
+|------|------|-------------|------|
+| 8.2.1 | `src/emit/expr_to_gams.py` | Modify `_quote_indices` to always quote with single quotes | 0.5h |
+| 8.2.2 | `src/emit/model.py` | Update `_format_variable_with_indices` for consistent quoting | 0.5h |
+| 8.2.3 | `tests/emit/test_*.py` | Update emit tests for new quoting style | 0.5h |
+| 8.2.4 | - | Regenerate and test chem, dispatch, port | 0.5h |
+| 8.3.1 | `src/emit/original_symbols.py` | Filter out description-only scalars in `emit_original_parameters` | 0.5h |
+| 8.3.2 | - | Test with dispatch model | 0.5h |
+| 8.3.3 | - | Full test suite: `make test && make typecheck` | 0.5h |
+| 8.3.4 | - | Full GAMSLIB integration test, update metrics | 0.5h |
+
+**Day 8 Checkpoint:** +14 solve successes expected (13-14/17 models solving)
+
+---
+
 ## Success Metrics
 
 ### Expected Outcomes by Priority Level
@@ -315,6 +492,50 @@ set_member: SET_ELEMENT_ID (STRING)?
 
 ---
 
+## Phase 3 Implementation Dependencies
+
+### Parser Dependencies (Days 6-7)
+
+| File | Purpose | Verified |
+|------|---------|----------|
+| `src/gams/gams_grammar.lark` | Main GAMS grammar (592 lines) | ✓ |
+| `src/gams/transformer.py` | AST transformation (not read) | Pending |
+| `tests/parser/` | Parser test suite | Pending |
+
+**Key Grammar Observations:**
+1. `var_kind` already handles `POSITIVE_K`, `NEGATIVE_K`, `BINARY_K`, `INTEGER_K` but not space-separated variants like `Free Variable`
+2. `SET_ELEMENT_ID` pattern: `/[a-zA-Z_][a-zA-Z0-9_+\-]*/` - needs extension to allow number-start
+3. `abort_stmt` supports `abort$`, `abort$ STRING` but not `abort$(cond) msg, var;` format
+4. Grammar has `desc_text` and `DESC_TEXT` handling for inline descriptions
+
+### Emit Dependencies (Day 8)
+
+| File | Purpose | Lines | Key Functions |
+|------|---------|-------|---------------|
+| `src/emit/expr_to_gams.py` | Expression → GAMS syntax | 254 | `expr_to_gams()`, `_quote_indices()` |
+| `src/emit/model.py` | MCP model emission | 211 | `emit_model_mcp()`, `_format_variable_with_indices()` |
+| `src/emit/original_symbols.py` | Sets/Params/Scalars emission | 109 | `emit_original_parameters()` |
+| `src/emit/emit_gams.py` | Main orchestrator | 160 | `emit_gams_mcp()` |
+| `src/emit/templates.py` | Variables/Equations blocks | 208 | `emit_variables()`, `emit_equations()` |
+| `src/emit/equations.py` | Equation definitions | 130 | `emit_equation_definitions()` |
+
+**Key Emit Observations:**
+1. `expr_to_gams.py:128-137` - `Unary` case needs `((-1) * expr)` rewrite for unary minus
+2. `expr_to_gams.py:45-72` - `_quote_indices()` heuristic uses digit detection; needs always-quote
+3. `model.py:36-56` - `_format_variable_with_indices()` uses double quotes; should use single quotes
+4. `original_symbols.py:87-109` - `emit_original_parameters()` doesn't validate scalar names
+
+### Test Dependencies
+
+| Directory | Purpose |
+|-----------|---------|
+| `tests/emit/test_expr_to_gams.py` | Expression conversion tests |
+| `tests/emit/test_model.py` | MCP model emission tests |
+| `tests/golden/*.gms` | Golden file comparisons |
+| `data/gamslib/mcp/*.gms` | Generated MCP files for 17 models |
+
+---
+
 ## References
 
 - `docs/planning/EPIC_3/SPRINT_16/LEXER_ERROR_ANALYSIS.md` - Detailed parse error analysis
@@ -330,7 +551,8 @@ set_member: SET_ELEMENT_ID (STRING)?
 | Date | Change |
 |------|--------|
 | 2026-01-22 | Initial roadmap created based on Day 4 gap analysis |
+| 2026-01-22 | Day 5: Added detailed solve fix documentation with actual error examples, root cause locations, and specific fix strategies for S-1, S-2, S-3 |
 
 ---
 
-*Roadmap created as part of Sprint 16 Day 4: Parse and Translate Gap Analysis*
+*Roadmap finalized as part of Sprint 16 Day 5: Solve Gap Analysis and Roadmap Finalization*

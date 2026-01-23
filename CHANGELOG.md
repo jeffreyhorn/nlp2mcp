@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Day 5: Solve Gap Analysis and Roadmap Finalization [Checkpoint 2] - 2026-01-22
+
+**Branch:** `sprint16-day5-gap-analysis-solve`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Analyzed solve failures in detail, documented emit_gams.py fix requirements with specific code locations, and finalized IMPROVEMENT_ROADMAP.md with detailed implementation task list for Days 6-8. This completes Checkpoint 2 of Sprint 16.
+
+#### Changes
+
+**Modified Files:**
+- `docs/planning/EPIC_3/SPRINT_16/IMPROVEMENT_ROADMAP.md` - Added detailed solve fixes, implementation task list, Phase 3 dependencies
+- `docs/planning/EPIC_3/SPRINT_16/PLAN.md` - Day 5 and Checkpoint 2 marked complete
+- `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 5 entry added
+
+#### Solve Fix Requirements Documented
+
+| Fix | Models | Root Cause Location | Fix Strategy |
+|-----|--------|---------------------|--------------|
+| S-1: Unary minus | 10 | `expr_to_gams.py:128-137` | `-(expr)` → `((-1) * expr)` |
+| S-2: Set quoting | 3 | `expr_to_gams.py:45-72` | Always quote with single quotes |
+| S-3: Scalar names | 1 | `original_symbols.py:87-109` | Filter description-only scalars |
+
+#### Implementation Task List Created
+
+- **Day 6:** P-1, P-2, P-3 parser fixes (+15 models)
+- **Day 7:** P-4, P-5 parser fixes (+19 models)
+- **Day 8:** S-1, S-2, S-3 solve fixes (+14 solve successes)
+
+#### Key Findings
+
+1. **All 14 solve failures are emit_gams.py bugs** - not PATH solver issues
+2. **S-1 (unary minus) is highest impact** - 10 models, priority score 20.0
+3. **Fixes are straightforward** - clear patterns with specific code locations
+4. **Expected outcome: 76-94% solve rate** - up from 17.6%
+
+---
+
 ### Sprint 16 Day 4: Parse and Translate Gap Analysis - 2026-01-22
 
 **Branch:** `sprint16-day4-gap-analysis-parse`  

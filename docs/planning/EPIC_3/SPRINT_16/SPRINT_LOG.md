@@ -31,8 +31,8 @@
 
 | Checkpoint | Day | Status | Date |
 |------------|-----|--------|------|
-| CP1: Reporting infrastructure complete | 3 | Pending | - |
-| CP2: Gap analysis complete | 5 | Pending | - |
+| CP1: Reporting infrastructure complete | 3 | ✅ Complete | Jan 21, 2026 |
+| CP2: Gap analysis complete | 5 | ✅ Complete | Jan 22, 2026 |
 | CP3: Improvements complete | 8 | Pending | - |
 | CP4: Sprint complete | 10 | Pending | - |
 
@@ -440,6 +440,91 @@
 - High confidence in Priority 1 fixes based on clear patterns
 
 **Next Steps:** Day 5 - Solve Gap Analysis and Roadmap Finalization
+
+---
+
+### Day 5: Solve Gap Analysis and Roadmap Finalization [Checkpoint 2]
+
+**Date:** January 22, 2026
+
+**Objective:** Analyze solve failures in detail, document emit_gams.py fix requirements, finalize IMPROVEMENT_ROADMAP.md
+
+**Tasks Completed:**
+
+1. **Solve Failure Patterns Analyzed**
+   - Reviewed all 14 path_syntax_error failures in detail
+   - Cross-referenced with PATH_ERROR_ANALYSIS.md
+   - Examined actual generated MCP files:
+     - `house_mcp.gms` - Unary minus pattern: `-(y * -1)` → Error 445
+     - `chem_mcp.gms` - Inconsistent quoting: `x(H)` vs `x("H2")` → Errors 171, 340
+     - `dispatch_mcp.gms` - Missing scalar names: `'loss equation constant' /0.040357/` → Errors 409, 191
+   - Confirmed 100% of solve failures are emit_gams.py bugs
+
+2. **emit_gams.py Fix Requirements Documented**
+   - **S-1: Unary Minus Formatting** (10 models)
+     - Root cause: `src/emit/expr_to_gams.py` lines 128-137, `Unary` case
+     - Current: `-(expr)` after `..` triggers GAMS Error 445
+     - Fix: Change to `((-1) * expr)` for all unary minus
+     - Files: `expr_to_gams.py`, golden files, tests
+     
+   - **S-2: Set Element Quoting Consistency** (3 models)
+     - Root cause: `src/emit/expr_to_gams.py` function `_quote_indices()` lines 45-72
+     - Current: Heuristic quotes digits but not single letters
+     - Fix: Always quote with single quotes for consistency
+     - Files: `expr_to_gams.py`, `model.py`, tests
+     
+   - **S-3: Scalar Declaration Fix** (1 model)
+     - Root cause: `src/emit/original_symbols.py` function `emit_original_parameters()` lines 87-109
+     - Current: Description-only scalars emitted without identifier
+     - Fix: Filter out scalars whose names contain spaces/quotes
+     - Files: `original_symbols.py`, tests
+
+3. **IMPROVEMENT_ROADMAP.md Finalized**
+   - Added detailed solve fix documentation with:
+     - Actual error examples from generated MCP files
+     - Root cause locations with line numbers
+     - Specific fix strategies with code snippets
+     - Effort breakdown for each fix
+   - Added Implementation Task List for Days 6-8:
+     - Day 6: P-1, P-2, P-3 parser fixes (15 models)
+     - Day 7: P-4, P-5 parser fixes (19 models)
+     - Day 8: S-1, S-2, S-3 solve fixes (14 models)
+   - Added Phase 3 Implementation Dependencies section:
+     - Parser dependencies: gams_grammar.lark, transformer.py
+     - Emit dependencies: expr_to_gams.py, model.py, original_symbols.py
+     - Key observations for each file
+
+4. **Dependencies Reviewed for Phase 3**
+   - Verified `src/gams/gams_grammar.lark` exists (592 lines)
+   - Key grammar observations:
+     - `var_kind` handles POSITIVE_K, NEGATIVE_K, BINARY_K, INTEGER_K
+     - `SET_ELEMENT_ID` pattern needs number-start extension
+     - `abort_stmt` needs enhanced format support
+   - Verified emit module structure (6 files in src/emit/)
+   - Documented key functions and line numbers for each fix
+
+5. **Quality Checks Passed**
+   - All changes are documentation updates
+   - No code changes in Day 5
+
+**Files Modified:**
+- `docs/planning/EPIC_3/SPRINT_16/IMPROVEMENT_ROADMAP.md` - Detailed solve fixes, task list, dependencies
+- `docs/planning/EPIC_3/SPRINT_16/PLAN.md` - Day 5 marked complete
+- `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 5 entry
+
+**Checkpoint 2 Complete:**
+- [x] All solve failures mapped to emit_gams.py bugs (with file/line locations)
+- [x] IMPROVEMENT_ROADMAP.md complete with priority scores and detailed fixes
+- [x] Implementation tasks defined for each Day 6-8 fix (with file/task breakdown)
+- [x] Clear handoff to improvement phase (dependencies documented)
+
+**Key Findings:**
+1. **All 14 solve failures are emit_gams.py bugs** - not PATH solver issues
+2. **S-1 (unary minus) is highest impact** - 10 models, score 20.0
+3. **Fixes are straightforward** - clear patterns with specific code locations
+4. **Expected outcome: 76-94% solve rate** - up from 17.6%
+
+**Next Steps:** Day 6 - Parse Improvements (Priority 1)
 
 ---
 
