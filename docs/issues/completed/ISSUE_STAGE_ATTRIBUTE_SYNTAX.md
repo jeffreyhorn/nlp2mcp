@@ -6,9 +6,10 @@
 **Discovered:** Sprint 16 Day 6 (2026-01-23)  
 **Affected Models:** apl1p, apl1pca
 
-**Note:** The `.stage()` syntax now parses via the `attr_access` rule (ID "." ID pattern).
-The IR builder treats these as generic attribute accesses and does not process them,
-which is acceptable since stochastic programming semantics are not modeled by nlp2mcp.
+**Note:** The `.stage()` syntax now parses via the `attr_access_indexed` rule for indexed forms
+like `x.stage(g)` and via `attr_access` for scalar forms like `tcost.stage`. The IR builder
+treats these as generic attribute accesses and does not process them, which is acceptable
+since stochastic programming semantics are not modeled by nlp2mcp.
 
 ---
 

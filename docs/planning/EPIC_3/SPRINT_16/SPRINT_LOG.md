@@ -544,8 +544,9 @@
    - Models with secondary issues: apl1p, apl1pca (x.stage() parses via attr_access but IR builder ignores it)
 
 2. **Hyphenated Set Elements (Number-Start)**
-   - Extended `SET_ELEMENT_ID` pattern: `/[a-zA-Z0-9_][a-zA-Z0-9_+\-]*/`
-   - Allows elements like `1964-i`, `89-07` that start with numbers
+   - Extended `SET_ELEMENT_ID` pattern: `/(?:[a-zA-Z_][a-zA-Z0-9_+\-]*|[0-9][0-9_]*[a-zA-Z_+\-][a-zA-Z0-9_+\-]*)/`
+   - First alternative: traditional identifiers starting with letter/underscore
+   - Second alternative: identifiers starting with digits but requiring a non-digit after numeric prefix (e.g., `1964-i`, `89-07`)
    - Fix verified: abel error moved from line 18 to line 54 (different issue)
    - Models with secondary issues: abel, ajax, immun (numeric set data not supported)
 

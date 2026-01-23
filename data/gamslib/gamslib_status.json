@@ -27,14 +27,12 @@
         "solve_time_seconds": 0.373
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-01-23T22:04:40.516933+00:00",
+        "status": "success",
+        "parse_date": "2026-01-23T23:27:45.064044+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.9854,
-        "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 54, column 49: Unexpected character: '1'\n  uinit(m)    'initial controls'   / 'gov-expend' 110.5, money   147.1 /\n                                                  ^\n\nSuggestion: This character is not valid in this context"
-        }
+        "parse_time_seconds": 2.4027,
+        "variables_count": 3,
+        "equations_count": 2
       },
       "nlp2mcp_translate": {
         "status": "not_tested",
@@ -48,6 +46,12 @@
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:37:51.707809+00:00",
         "notes": "Skipped due to parse failure"
+      },
+      "model_statistics": {
+        "variables": 3,
+        "equations": 2,
+        "parameters": 0,
+        "sets": 6
       }
     },
     {
@@ -74,9 +78,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:40.555504+00:00",
+        "parse_date": "2026-01-23T23:27:45.123434+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0384,
+        "parse_time_seconds": 0.0591,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 17, column 46: Unexpected character: '''\n  c       'crops'               / 'cotton-h'   'cotton-herbaceo',\n                                               ^\n\nSuggestion: This character is not valid in this context"
@@ -120,9 +124,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:40.875065+00:00",
+        "parse_date": "2026-01-23T23:27:45.665617+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3194,
+        "parse_time_seconds": 0.542,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 54, column 51: Unexpected character: '('\n  k(j)       'revenue lost (1000 per 100 bumped)' / ('route-1','route-2') 13,\n                                                    ^\n\nSuggestion: This character is not valid in this context"
@@ -207,14 +211,12 @@
         "solve_time_seconds": 0.326
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-01-23T22:04:41.050819+00:00",
+        "status": "success",
+        "parse_date": "2026-01-23T23:27:46.581722+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1755,
-        "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 43, column 16: Unexpected character: '6'\n  / 'machine-1'  672, 'machine-2'  600, 'machine-3'  480 /;\n                 ^\n\nSuggestion: This character is not valid in this context"
-        }
+        "parse_time_seconds": 0.9159,
+        "variables_count": 2,
+        "equations_count": 3
       },
       "nlp2mcp_translate": {
         "status": "not_tested",
@@ -228,6 +230,12 @@
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:37:51.915256+00:00",
         "notes": "Skipped due to parse failure"
+      },
+      "model_statistics": {
+        "variables": 2,
+        "equations": 3,
+        "parameters": 0,
+        "sets": 2
       }
     },
     {
@@ -278,9 +286,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:04:41.916048+00:00",
+        "parse_date": "2026-01-23T23:27:48.031415+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.8648,
+        "parse_time_seconds": 1.4428,
         "variables_count": 15,
         "equations_count": 8
       },
@@ -334,9 +342,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:42.269962+00:00",
+        "parse_date": "2026-01-23T23:27:48.621657+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3536,
+        "parse_time_seconds": 0.5898,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 58, column 1: Unexpected character: 'M'\n  Model ampl 'maximum revenue production problem' / all /;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -401,12 +409,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:43.021734+00:00",
+        "parse_date": "2026-01-23T23:27:51.036832+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7515,
+        "parse_time_seconds": 2.4146,
         "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 122, column 36: Unexpected character: ','\n  loop(omega1, put \"x g1  omax g1   \", v1(\"out\", omega1), \" period2 \", v1(\"pro\", omega1) /;);\n                                     ^\n\nSuggestion: This character is not valid in this context"
+          "category": "internal_error",
+          "message": "Symbol 'cmin' not declared as a variable, parameter, or model [context: expression] (line 77, column 1)"
         }
       },
       "nlp2mcp_translate": {
@@ -447,12 +455,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:43.684167+00:00",
+        "parse_date": "2026-01-23T23:27:52.127224+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6621,
+        "parse_time_seconds": 1.0901,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 119, column 21: Unexpected character: ','\n  put \"BL v1 period2 \", v1(\"pro\", omega1)/;\n                      ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 121, column 4: Unexpected character: '='\n  h1 = hm1(dl) * v1(\"out\", omega1);\n     ^\n\nSuggestion: This character is not valid in this context"
         }
       },
       "nlp2mcp_translate": {
@@ -514,9 +522,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:04:45.023188+00:00",
+        "parse_date": "2026-01-23T23:27:54.475929+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.3387,
+        "parse_time_seconds": 2.3483,
         "variables_count": 14,
         "equations_count": 13
       },
@@ -570,9 +578,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:45.619089+00:00",
+        "parse_date": "2026-01-23T23:27:55.485214+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5953,
+        "parse_time_seconds": 1.0079,
         "error": {
           "category": "internal_error",
           "message": "Invalid range start 'a': must be a number (e.g., 1) or identifier followed by number (e.g., i1) [context: expression] (line 15, column 37)"
@@ -616,9 +624,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:45.690409+00:00",
+        "parse_date": "2026-01-23T23:27:55.605750+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0371,
+        "parse_time_seconds": 0.0638,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 18, column 41: Unexpected character: '''\n  i     'sectors'          / 'ag-subsist' 'food crops',\n                                          ^\n\nSuggestion: This character is not valid in this context"
@@ -662,9 +670,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:46.482491+00:00",
+        "parse_date": "2026-01-23T23:27:57.021830+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7918,
+        "parse_time_seconds": 1.4157,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -708,9 +716,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:46.562831+00:00",
+        "parse_date": "2026-01-23T23:27:57.161615+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0801,
+        "parse_time_seconds": 0.1395,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -754,9 +762,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:04:47.009554+00:00",
+        "parse_date": "2026-01-23T23:27:58.044067+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4465,
+        "parse_time_seconds": 0.8822,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -804,9 +812,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:49.732411+00:00",
+        "parse_date": "2026-01-23T23:28:02.568880+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 2.7226,
+        "parse_time_seconds": 4.5238,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 362, column 1: Unexpected character: 'T'\n  TSAM(ii,jj) =e= A(ii,jj)*(X(jj) + ERR1(jj));\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -850,9 +858,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:50.272107+00:00",
+        "parse_date": "2026-01-23T23:28:03.201611+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5395,
+        "parse_time_seconds": 0.6325,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 108, column 67: Unexpected character: '/'\n  stderr1  'standard error of measurement for column sums'   / .05  /\n                                                                    ^\n\nSuggestion: This character is not valid in this context"
@@ -896,9 +904,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:50.891830+00:00",
+        "parse_date": "2026-01-23T23:28:04.550860+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6194,
+        "parse_time_seconds": 1.3489,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -942,9 +950,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:51.938499+00:00",
+        "parse_date": "2026-01-23T23:28:06.144982+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.0461,
+        "parse_time_seconds": 1.5938,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'y' and 'k' define each other\n\nSuggestion: Equations 'yd' and 'kb' create a circular definition:\n  yd: y depends on k\n  kb: k depends on y\n\nReformulate your model to break the cycle."
@@ -1012,9 +1020,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:04:52.513135+00:00",
+        "parse_date": "2026-01-23T23:28:07.007182+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5741,
+        "parse_time_seconds": 0.8619,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1079,9 +1087,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:04:55.519498+00:00",
+        "parse_date": "2026-01-23T23:28:10.948608+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 3.0058,
+        "parse_time_seconds": 3.9407,
         "variables_count": 15,
         "equations_count": 14
       },
@@ -1135,9 +1143,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:55.608104+00:00",
+        "parse_date": "2026-01-23T23:28:11.058550+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.049,
+        "parse_time_seconds": 0.0595,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 20, column 13: Unexpected character: '''\n  'e-rice'    'early rice',            'amm-water'  'ammonia water',\n              ^\n\nSuggestion: This character is not valid in this context"
@@ -1181,9 +1189,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:04:56.160071+00:00",
+        "parse_date": "2026-01-23T23:28:11.735482+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5517,
+        "parse_time_seconds": 0.6766,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -1261,9 +1269,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:56.433289+00:00",
+        "parse_date": "2026-01-23T23:28:11.937430+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.273,
+        "parse_time_seconds": 0.2017,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 42, column 50: Unexpected character: '('\n  tw(t,w)  'relates months to weather conditions' /(jan,feb).wet,\n                                                   ^\n\nSuggestion: This character is not valid in this context"
@@ -1307,9 +1315,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:04:56.829663+00:00",
+        "parse_date": "2026-01-23T23:28:12.702620+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3961,
+        "parse_time_seconds": 0.7649,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -1363,9 +1371,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:57.120503+00:00",
+        "parse_date": "2026-01-23T23:28:13.136152+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2906,
+        "parse_time_seconds": 0.4332,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -1409,12 +1417,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:57.237797+00:00",
+        "parse_date": "2026-01-23T23:28:14.998900+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.117,
+        "parse_time_seconds": 1.8621,
         "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 33, column 36: Unexpected character: '9'\n  a(i)   'availability'  / 'plant-1' 9, 'plant-2' 8 /\n                                     ^\n\nSuggestion: This character is not valid in this context"
+          "category": "internal_error",
+          "message": "Invalid range start ''term-1'': must be a number (e.g., 1) or identifier followed by number (e.g., i1) [context: expression] (line 20, column 20)"
         }
       },
       "nlp2mcp_translate": {
@@ -1455,9 +1463,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:58.599070+00:00",
+        "parse_date": "2026-01-23T23:28:17.109282+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.361,
+        "parse_time_seconds": 2.11,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 135, column 1: Unexpected character: '\"'\n  \"output  -- tons     \"\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -1525,9 +1533,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:04:58.663622+00:00",
+        "parse_date": "2026-01-23T23:28:17.213174+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0641,
+        "parse_time_seconds": 0.1028,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 20, column 17: Unexpected character: '''\n  / 'agri-ka'     'agriculture - capital-labor substitution',\n                  ^\n\nSuggestion: This character is not valid in this context"
@@ -1571,9 +1579,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:04:59.554379+00:00",
+        "parse_date": "2026-01-23T23:28:18.493731+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.8904,
+        "parse_time_seconds": 1.28,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1659,9 +1667,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:03.792871+00:00",
+        "parse_date": "2026-01-23T23:28:25.192539+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 4.2378,
+        "parse_time_seconds": 6.6982,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 301, column 33: Unexpected character: '*'\n  a         = CC00/prod(j, Xp00(j)**alpha(j));\n                                  ^\n\nSuggestion: This character is not valid in this context"
@@ -1705,9 +1713,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:04.020738+00:00",
+        "parse_date": "2026-01-23T23:28:25.486877+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1883,
+        "parse_time_seconds": 0.2419,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 32, column 46: Unexpected character: '''\n  zr(z,r) 'map from zones to regions'  / upper.'u-egypt',\n                                               ^\n\nSuggestion: This character is not valid in this context"
@@ -1751,9 +1759,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:04.109380+00:00",
+        "parse_date": "2026-01-23T23:28:25.608827+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0883,
+        "parse_time_seconds": 0.1217,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -1863,9 +1871,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:05:08.506450+00:00",
+        "parse_date": "2026-01-23T23:28:31.634840+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 4.3967,
+        "parse_time_seconds": 6.0252,
         "variables_count": 12,
         "equations_count": 13
       },
@@ -1919,9 +1927,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:08.555472+00:00",
+        "parse_date": "2026-01-23T23:28:31.714834+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0488,
+        "parse_time_seconds": 0.0797,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 23, column 38: Unexpected character: '''\n  c       'commodities' / 'arabian-l'  'crude',\n                                       ^\n\nSuggestion: This character is not valid in this context"
@@ -1965,9 +1973,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:08.914726+00:00",
+        "parse_date": "2026-01-23T23:28:32.226250+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.359,
+        "parse_time_seconds": 0.5111,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 66, column 1: Unexpected character: '2'\n  2*sum(k$[ord(k) < card(k)], h(k)*cosomega(i,k)) =l= t;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -2011,9 +2019,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:09.120431+00:00",
+        "parse_date": "2026-01-23T23:28:32.562054+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2054,
+        "parse_time_seconds": 0.3355,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -2057,9 +2065,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:11.581964+00:00",
+        "parse_date": "2026-01-23T23:28:36.613152+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 2.4613,
+        "parse_time_seconds": 4.0507,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 259, column 1: Unexpected character: '-'\n  -  v(i-1)*y(i-1,j) - (feed(i)*xf(j))$floc(i)    =e= 0;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -2103,9 +2111,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:11.661083+00:00",
+        "parse_date": "2026-01-23T23:28:36.738820+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0789,
+        "parse_time_seconds": 0.1245,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 27, column 15: Unexpected character: '''\n  'kafr-el-sh'  'kare el-sheikh',\n                ^\n\nSuggestion: This character is not valid in this context"
@@ -2172,9 +2180,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:11.721945+00:00",
+        "parse_date": "2026-01-23T23:28:36.834180+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0606,
+        "parse_time_seconds": 0.095,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 18, column 13: Unexpected character: '''\n  'cons-good' 'consumer goods sector',\n              ^\n\nSuggestion: This character is not valid in this context"
@@ -2218,9 +2226,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:11.847212+00:00",
+        "parse_date": "2026-01-23T23:28:37.031921+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1249,
+        "parse_time_seconds": 0.1973,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 72, column 14: Unexpected character: '''\n  'cons-good'  'consumer goods sector',\n               ^\n\nSuggestion: This character is not valid in this context"
@@ -2285,9 +2293,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:05:15.208920+00:00",
+        "parse_date": "2026-01-23T23:28:41.636323+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 3.3165,
+        "parse_time_seconds": 4.558,
         "variables_count": 7,
         "equations_count": 11
       },
@@ -2341,9 +2349,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:17.134006+00:00",
+        "parse_date": "2026-01-23T23:28:44.228071+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.9247,
+        "parse_time_seconds": 2.5913,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'v_dot' and 'vel' define each other\n\nSuggestion: Equations 'vy_dot_def' and 'vel_eqn' create a circular definition:\n  vy_dot_def: v_dot depends on vel\n  vel_eqn: vel depends on v_dot\n\nReformulate your model to break the cycle."
@@ -2408,9 +2416,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:19.819686+00:00",
+        "parse_date": "2026-01-23T23:28:47.443041+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 2.6854,
+        "parse_time_seconds": 3.2143,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 157, column 1: Unexpected character: 'x'\n  x.up(i,j) = pc(i,j);\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -2523,9 +2531,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:19.964234+00:00",
+        "parse_date": "2026-01-23T23:28:47.583585+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1443,
+        "parse_time_seconds": 0.1403,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 21, column 38: Unexpected character: '/'\n  funds 'total investable funds' / 500 /;\n                                       ^\n\nSuggestion: This character is not valid in this context"
@@ -2569,9 +2577,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:22.149040+00:00",
+        "parse_date": "2026-01-23T23:28:50.234602+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 2.184,
+        "parse_time_seconds": 2.6504,
         "error": {
           "category": "internal_error",
           "message": "Variable 't' expects 2 indices but received 1 [context: equation 'nbal' LHS] [domain: ('n',)] (line 88, column 38)"
@@ -2615,9 +2623,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:22.642612+00:00",
+        "parse_date": "2026-01-23T23:28:50.831482+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4932,
+        "parse_time_seconds": 0.5966,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 62, column 39: Unexpected character: '*'\n  objective..    obj    =e= prod(t, u(t)**ufact(t));\n                                        ^\n\nSuggestion: This character is not valid in this context"
@@ -2661,9 +2669,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:23.079530+00:00",
+        "parse_date": "2026-01-23T23:28:51.357167+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4366,
+        "parse_time_seconds": 0.5253,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 34, column 31: Unexpected character: '*'\n  obj..    UU   =e= prod(i, X(i)**alpha(i));\n                                ^\n\nSuggestion: This character is not valid in this context"
@@ -2707,9 +2715,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:05:23.614169+00:00",
+        "parse_date": "2026-01-23T23:28:52.008741+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5344,
+        "parse_time_seconds": 0.6512,
         "variables_count": 10,
         "equations_count": 5
       },
@@ -2774,9 +2782,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:05:24.165738+00:00",
+        "parse_date": "2026-01-23T23:28:52.625491+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5512,
+        "parse_time_seconds": 0.6164,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -2830,9 +2838,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:05:24.732397+00:00",
+        "parse_date": "2026-01-23T23:28:53.412426+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5662,
+        "parse_time_seconds": 0.7864,
         "variables_count": 9,
         "equations_count": 9
       },
@@ -2897,9 +2905,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:05:25.112143+00:00",
+        "parse_date": "2026-01-23T23:28:53.950676+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3405,
+        "parse_time_seconds": 0.4535,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -2973,9 +2981,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:05:25.621971+00:00",
+        "parse_date": "2026-01-23T23:28:54.614583+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5095,
+        "parse_time_seconds": 0.6635,
         "variables_count": 6,
         "equations_count": 5
       },
@@ -3029,9 +3037,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:26.956623+00:00",
+        "parse_date": "2026-01-23T23:28:56.333444+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.3334,
+        "parse_time_seconds": 1.718,
         "error": {
           "category": "internal_error",
           "message": "Invalid range start ''bin-1'': must be a number (e.g., 1) or identifier followed by number (e.g., i1) [context: expression] (line 14, column 40)"
@@ -3099,9 +3107,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:27.385721+00:00",
+        "parse_date": "2026-01-23T23:28:56.728774+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4288,
+        "parse_time_seconds": 0.395,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 40, column 13: Unexpected character: '('\n  w('m+floor'((ord(n)-1)/k),n)$(ord(m) = 1) = 1 - mod(ord(n)-1,k)/k;\n              ^\n\nSuggestion: This character is not valid in this context"
@@ -3145,9 +3153,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:27.469672+00:00",
+        "parse_date": "2026-01-23T23:28:56.828301+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0836,
+        "parse_time_seconds": 0.0991,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 28, column 12: Unexpected character: '''\n  'sc-mill'  'sugar cane for mill',\n             ^\n\nSuggestion: This character is not valid in this context"
@@ -3212,9 +3220,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:27.756501+00:00",
+        "parse_date": "2026-01-23T23:28:57.190381+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2865,
+        "parse_time_seconds": 0.3619,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 58, column 1: Unexpected character: 'o'\n  oldr(i)  = r(i);\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -3258,9 +3266,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:28.941782+00:00",
+        "parse_date": "2026-01-23T23:28:58.966091+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.185,
+        "parse_time_seconds": 1.7755,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 88, column 1: Unexpected character: 'F'\n  FF, Sf, tauz, taum;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -3304,9 +3312,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:29.118441+00:00",
+        "parse_date": "2026-01-23T23:28:59.050365+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1763,
+        "parse_time_seconds": 0.0835,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 19, column 16: Unexpected character: '''\n  / 'feroz-b'    'ferozepur barrage                 - sutlej river',\n                 ^\n\nSuggestion: This character is not valid in this context"
@@ -3371,9 +3379,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T22:05:29.616067+00:00",
+        "parse_date": "2026-01-23T23:28:59.733640+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4972,
+        "parse_time_seconds": 0.683,
         "variables_count": 7,
         "equations_count": 4
       },
@@ -3421,12 +3429,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T22:05:29.729473+00:00",
+        "parse_date": "2026-01-23T23:29:00.490224+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1121,
+        "parse_time_seconds": 0.7561,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 25, column 58: Unexpected character: '2'\n  Parameter c(i) 'present cost of raw materials' / 'raw-1' 2, 'raw-2' 3 /;\n                                                           ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 55, column 39: Unexpected character: '.'\n  tn(t,n) 'time node mapping' / 'time-1'.('n-1'*'n-3'), 'time-2'.('n-4'*'n-12') /\n                                        ^\n\nSuggestion: This character is not valid in this context"
         }
       },
       "nlp2mcp_translate": {
@@ -3467,9 +3475,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:10.591442+00:00",
+        "parse_date": "2026-01-23T23:29:00.629118+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2124,
+        "parse_time_seconds": 0.0869,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 21, column 39: Unexpected character: '''\n  hh    'household type'   / 'lab-hh'   'labor households',\n                                        ^\n\nSuggestion: This character is not valid in this context"
@@ -3534,12 +3542,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:10.692900+00:00",
+        "parse_date": "2026-01-23T23:29:00.758514+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1012,
+        "parse_time_seconds": 0.1291,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 30, column 36: Unexpected character: '1'\n  c(i) 'investment cost' / 'plant-1' 10, 'plant-2' 7, 'plant-3' 16, 'plant-4' 6 /\n                                     ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 31, column 36: Unexpected character: 'n'\n  d(j) 'energy demand'   / 'mode-1'  na, 'mode-2' 3,  'mode-3' 2              /;\n                                     ^\n\nSuggestion: This character is not valid in this context"
         }
       },
       "nlp2mcp_translate": {
@@ -3580,12 +3588,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:10.909738+00:00",
+        "parse_date": "2026-01-23T23:29:01.039008+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2166,
+        "parse_time_seconds": 0.2802,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 37, column 43: Unexpected character: '.'\n  iwf(s)  'weight fraction'    /  'stage-1' .5, 'stage-2' .6, 'stage-3' .7           /\n                                            ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 38, column 32: Unexpected character: '('\n  nume(s) 'number of engines'  / ('stage-1','stage-2') 5, 'stage-3' 1                /\n                                 ^\n\nSuggestion: This character is not valid in this context"
         }
       },
       "nlp2mcp_translate": {
@@ -3626,9 +3634,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:11.309667+00:00",
+        "parse_date": "2026-01-23T23:29:01.509247+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3996,
+        "parse_time_seconds": 0.4699,
         "variables_count": 5,
         "equations_count": 3
       },
@@ -3693,9 +3701,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:12.069943+00:00",
+        "parse_date": "2026-01-23T23:29:02.547785+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7599,
+        "parse_time_seconds": 1.0382,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -3773,9 +3781,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:12.614948+00:00",
+        "parse_date": "2026-01-23T23:29:03.338751+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5447,
+        "parse_time_seconds": 0.7905,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 88, column 9: Unexpected character: '='\n  f(p)    =  uniform(0,1);\n          ^\n\nSuggestion: This character is not valid in this context"
@@ -3843,9 +3851,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:13.369929+00:00",
+        "parse_date": "2026-01-23T23:29:04.274495+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7538,
+        "parse_time_seconds": 0.9345,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -3889,9 +3897,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:14.087884+00:00",
+        "parse_date": "2026-01-23T23:29:05.235053+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7177,
+        "parse_time_seconds": 0.9601,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 57, column 3: Unexpected character: '('\n  / (Ehv,Gn,Gvc,Hgl,Lls,Rsdg,Std)       5.0,\n    ^\n\nSuggestion: This character is not valid in this context"
@@ -3935,9 +3943,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:15.469471+00:00",
+        "parse_date": "2026-01-23T23:29:06.880922+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.3813,
+        "parse_time_seconds": 1.6455,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 84, column 1: Unexpected character: 'F'\n  FF, Sf, tauz, taum;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -3981,9 +3989,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:15.532806+00:00",
+        "parse_date": "2026-01-23T23:29:06.966583+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0628,
+        "parse_time_seconds": 0.085,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 21, column 15: Unexpected character: '''\n  'mid-c'       'mid continent crude',\n                ^\n\nSuggestion: This character is not valid in this context"
@@ -4027,9 +4035,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:16.451195+00:00",
+        "parse_date": "2026-01-23T23:29:08.294112+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.8802,
+        "parse_time_seconds": 1.2725,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -4083,9 +4091,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:17.018563+00:00",
+        "parse_date": "2026-01-23T23:29:08.815031+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.567,
+        "parse_time_seconds": 0.5206,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -4150,9 +4158,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:17.388507+00:00",
+        "parse_date": "2026-01-23T23:29:09.303673+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3696,
+        "parse_time_seconds": 0.4883,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -4217,9 +4225,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:17.571197+00:00",
+        "parse_date": "2026-01-23T23:29:09.521066+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1817,
+        "parse_time_seconds": 0.2163,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 27, column 23: Unexpected character: '+'\n  +  10*sqr(sin[x5 - x6 + x1]);\n                        ^\n\nSuggestion: This character is not valid in this context"
@@ -4263,9 +4271,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:18.297161+00:00",
+        "parse_date": "2026-01-23T23:29:10.478072+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7256,
+        "parse_time_seconds": 0.9567,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 81, column 9: Unexpected character: 'g'\n  Acronym global;\n          ^\n\nSuggestion: This character is not valid in this context"
@@ -4330,9 +4338,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:19.255082+00:00",
+        "parse_date": "2026-01-23T23:29:11.620225+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.9572,
+        "parse_time_seconds": 1.1418,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -4386,9 +4394,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:20.314000+00:00",
+        "parse_date": "2026-01-23T23:29:12.668030+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.0586,
+        "parse_time_seconds": 1.0475,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 136, column 12: Unexpected character: 'm'\n  solve var1 maximize m using nlp;\n             ^\n\nSuggestion: This character is not valid in this context"
@@ -4453,9 +4461,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:20.500103+00:00",
+        "parse_date": "2026-01-23T23:29:12.985426+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1857,
+        "parse_time_seconds": 0.317,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 84, column 18: Unexpected character: '''\n  / 'p-colorada'   'pena colorada colima',\n                   ^\n\nSuggestion: This character is not valid in this context"
@@ -4499,9 +4507,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:20.607678+00:00",
+        "parse_date": "2026-01-23T23:29:13.089662+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1073,
+        "parse_time_seconds": 0.104,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 30, column 14: Unexpected character: '''\n  'nat-gas'    'natural gas - 1000 n cubic meters',\n               ^\n\nSuggestion: This character is not valid in this context"
@@ -4545,9 +4553,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:21.121043+00:00",
+        "parse_date": "2026-01-23T23:29:13.529097+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5129,
+        "parse_time_seconds": 0.4389,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -4612,9 +4620,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:22.963326+00:00",
+        "parse_date": "2026-01-23T23:29:15.532033+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.8017,
+        "parse_time_seconds": 1.9538,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -4700,9 +4708,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:23.187653+00:00",
+        "parse_date": "2026-01-23T23:29:15.750170+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2237,
+        "parse_time_seconds": 0.2179,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 39, column 26: Unexpected character: '('\n  li(k)    'lead for i'  / (se,sw)   1 /\n                           ^\n\nSuggestion: This character is not valid in this context"
@@ -4746,9 +4754,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:23.792744+00:00",
+        "parse_date": "2026-01-23T23:29:16.667044+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6047,
+        "parse_time_seconds": 0.9166,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -4847,9 +4855,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:24.500752+00:00",
+        "parse_date": "2026-01-23T23:29:17.362335+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7066,
+        "parse_time_seconds": 0.6945,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 74, column 19: Unexpected character: 'm'\n  solve m using nlp maximimizing like;\n                    ^\n\nSuggestion: This character is not valid in this context"
@@ -4893,9 +4901,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:24.908951+00:00",
+        "parse_date": "2026-01-23T23:29:17.866644+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4056,
+        "parse_time_seconds": 0.504,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 60, column 19: Unexpected character: 'm'\n  solve m using nlp maximimizing like;\n                    ^\n\nSuggestion: This character is not valid in this context"
@@ -4939,9 +4947,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:26.352146+00:00",
+        "parse_date": "2026-01-23T23:29:19.878299+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.4429,
+        "parse_time_seconds": 2.0112,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 97, column 1: Unexpected character: 'T'\n  Tm0, RT0, FF, Sf, tauz, taum;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -5006,9 +5014,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:26.508267+00:00",
+        "parse_date": "2026-01-23T23:29:20.099860+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1475,
+        "parse_time_seconds": 0.2213,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 23, column 37: Unexpected character: '''\n  f       'farm types' / 'fam-farm'   'family farms  10-30 ha',\n                                      ^\n\nSuggestion: This character is not valid in this context"
@@ -5052,9 +5060,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:26.987354+00:00",
+        "parse_date": "2026-01-23T23:29:20.565912+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4786,
+        "parse_time_seconds": 0.4657,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 60, column 1: Parse error at line 60, column 1: Unexpected character: 'S'\n  Set\n  ^\n  Set\n  ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 59. Add ';' after: * original data"
@@ -5119,12 +5127,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:27.909984+00:00",
+        "parse_date": "2026-01-23T23:29:25.371737+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.9219,
+        "parse_time_seconds": 4.805,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 150, column 42: Unexpected character: '0'\n  cost(col)   'alpha coeff.' / 'col-1'     0.23947,   'col-2'  0.75835   /\n                                           ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 427, column 1: Unexpected character: 'i'\n  iter      = iter + 1;              //  update iteration number\n  ^\n\nSuggestion: This character is not valid in this context"
         }
       },
       "nlp2mcp_translate": {
@@ -5165,9 +5173,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:31.628325+00:00",
+        "parse_date": "2026-01-23T23:29:30.247412+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 3.7176,
+        "parse_time_seconds": 4.8749,
         "variables_count": 25,
         "equations_count": 19
       },
@@ -5221,9 +5229,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:32.914666+00:00",
+        "parse_date": "2026-01-23T23:29:31.827654+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.2479,
+        "parse_time_seconds": 1.5289,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 97, column 1: Unexpected character: 'p'\n  pdef(tt).. pd(tt) =e= sum(n, alpha(n)*p(tt-(ord(n) - 1)));\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -5266,14 +5274,12 @@
         "solve_time_seconds": 0.345
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-01-23T21:53:33.504904+00:00",
+        "status": "success",
+        "parse_date": "2026-01-23T23:29:34.459567+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5898,
-        "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 48, column 47: Unexpected character: '3'\n  k(j)    'capital output ratio' / 'non-traded' 3.0, traded 4.5 /\n                                                ^\n\nSuggestion: This character is not valid in this context"
-        }
+        "parse_time_seconds": 2.6315,
+        "variables_count": 11,
+        "equations_count": 15
       },
       "nlp2mcp_translate": {
         "status": "not_tested",
@@ -5287,6 +5293,12 @@
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:38:54.285980+00:00",
         "notes": "Skipped due to parse failure"
+      },
+      "model_statistics": {
+        "variables": 11,
+        "equations": 15,
+        "parameters": 0,
+        "sets": 3
       }
     },
     {
@@ -5313,9 +5325,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:34.186850+00:00",
+        "parse_date": "2026-01-23T23:29:35.423427+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6816,
+        "parse_time_seconds": 0.9635,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 96, column 5: Unexpected character: '('\n  tdn.(kharif,rabi)         1550          1050       750\n      ^\n\nSuggestion: This character is not valid in this context"
@@ -5359,9 +5371,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:34.445393+00:00",
+        "parse_date": "2026-01-23T23:29:35.610317+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2582,
+        "parse_time_seconds": 0.1866,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 39, column 1: Unexpected character: 'c'\n  chips )        40      55;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -5405,9 +5417,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:34.810417+00:00",
+        "parse_date": "2026-01-23T23:29:36.165309+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3647,
+        "parse_time_seconds": 0.5547,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -5451,9 +5463,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:35.288391+00:00",
+        "parse_date": "2026-01-23T23:29:36.622444+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4777,
+        "parse_time_seconds": 0.4569,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 71, column 30: Unexpected character: '('\n  revfac(m) 'revenue factor' / (january,february) 1,  (march,april) 1.1 /;\n                               ^\n\nSuggestion: This character is not valid in this context"
@@ -5518,9 +5530,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:35.843626+00:00",
+        "parse_date": "2026-01-23T23:29:37.428695+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.555,
+        "parse_time_seconds": 0.8059,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 71, column 1: Unexpected character: 'd'\n  display td.l, s.l, cs.l, d.l, r.l;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -5585,9 +5597,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:37.134906+00:00",
+        "parse_date": "2026-01-23T23:29:38.958188+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.291,
+        "parse_time_seconds": 1.5291,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 72, column 43: Unexpected character: '('\n  Parameter tau(i) / cod .153e6, so2 .12e6, (land, water) .25e6 /;\n                                            ^\n\nSuggestion: This character is not valid in this context"
@@ -5631,9 +5643,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:37.598996+00:00",
+        "parse_date": "2026-01-23T23:29:39.708583+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4629,
+        "parse_time_seconds": 0.7497,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -5719,9 +5731,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:38.016947+00:00",
+        "parse_date": "2026-01-23T23:29:40.233032+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4171,
+        "parse_time_seconds": 0.5239,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -5786,9 +5798,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:39.193284+00:00",
+        "parse_date": "2026-01-23T23:29:41.607989+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.1415,
+        "parse_time_seconds": 1.3264,
         "variables_count": 15,
         "equations_count": 12
       },
@@ -5853,9 +5865,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:39.435321+00:00",
+        "parse_date": "2026-01-23T23:29:41.911404+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2417,
+        "parse_time_seconds": 0.3031,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 46, column 7: Unexpected character: '{'\n  -  k1*{(delta + a)*betareg(y,alpha,beta)\n        ^\n\nSuggestion: This character is not valid in this context"
@@ -5899,9 +5911,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:39.786115+00:00",
+        "parse_date": "2026-01-23T23:29:42.289355+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3505,
+        "parse_time_seconds": 0.3776,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -5996,12 +6008,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:39.890872+00:00",
+        "parse_date": "2026-01-23T23:29:43.491459+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1044,
+        "parse_time_seconds": 1.2018,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 32, column 31: Unexpected character: '1'\n  c(i)     'profit' / 'class-1' 12, 'class-2' 20, 'class-3' 18, 'class-4' 40 /\n                                ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 112, column 37: Unexpected character: ':'\n  put 'BL BLOCK1 PERIOD2 ',(1/card(s)):8:6/;\n                                      ^\n\nSuggestion: This character is not valid in this context"
         }
       },
       "nlp2mcp_translate": {
@@ -6042,12 +6054,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:40.178879+00:00",
+        "parse_date": "2026-01-23T23:29:44.577344+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2875,
+        "parse_time_seconds": 1.0856,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 55, column 63: Unexpected character: '1'\n  p0(i) 'initial prices'           / food  .5942, 'h-industry'  1.6167, 'l-industry'  1.31077 /\n                                                                ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 92, column 36: Unexpected character: '*'\n  an(g,h)   = x0(g,h)/prod(gp, p0(gp)**eta(g,gp,h))/y0(h)**epsi(g,h);\n                                     ^\n\nSuggestion: This character is not valid in this context"
         }
       },
       "nlp2mcp_translate": {
@@ -6088,9 +6100,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:40.316487+00:00",
+        "parse_date": "2026-01-23T23:29:44.753639+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1373,
+        "parse_time_seconds": 0.176,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 29, column 18: Parse error at line 29, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 28. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6134,9 +6146,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:40.763685+00:00",
+        "parse_date": "2026-01-23T23:29:45.399042+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4469,
+        "parse_time_seconds": 0.6451,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 46, column 18: Parse error at line 46, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 45. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6180,9 +6192,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:40.870780+00:00",
+        "parse_date": "2026-01-23T23:29:45.521209+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1068,
+        "parse_time_seconds": 0.1218,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 26, column 18: Parse error at line 26, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 25. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6226,9 +6238,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:40.942212+00:00",
+        "parse_date": "2026-01-23T23:29:45.606098+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0711,
+        "parse_time_seconds": 0.0846,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 20, column 18: Parse error at line 20, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 19. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6272,9 +6284,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:41.312748+00:00",
+        "parse_date": "2026-01-23T23:29:46.137361+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.37,
+        "parse_time_seconds": 0.5306,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -6339,9 +6351,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:41.443389+00:00",
+        "parse_date": "2026-01-23T23:29:46.312806+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0965,
+        "parse_time_seconds": 0.133,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 26, column 18: Parse error at line 26, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 25. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6385,9 +6397,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:41.546036+00:00",
+        "parse_date": "2026-01-23T23:29:46.417943+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1024,
+        "parse_time_seconds": 0.1048,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 26, column 18: Parse error at line 26, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 25. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6431,9 +6443,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:41.717738+00:00",
+        "parse_date": "2026-01-23T23:29:46.620444+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1714,
+        "parse_time_seconds": 0.2022,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 26, column 18: Parse error at line 26, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 25. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6477,9 +6489,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:41.819003+00:00",
+        "parse_date": "2026-01-23T23:29:46.740773+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.101,
+        "parse_time_seconds": 0.12,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 26, column 18: Parse error at line 26, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 25. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6523,9 +6535,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:41.927712+00:00",
+        "parse_date": "2026-01-23T23:29:46.899811+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1084,
+        "parse_time_seconds": 0.1587,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 26, column 18: Parse error at line 26, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 25. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6569,9 +6581,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:42.038882+00:00",
+        "parse_date": "2026-01-23T23:29:47.023047+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1101,
+        "parse_time_seconds": 0.122,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 26, column 18: Parse error at line 26, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 25. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6615,9 +6627,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:42.146056+00:00",
+        "parse_date": "2026-01-23T23:29:47.137274+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1066,
+        "parse_time_seconds": 0.1139,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 26, column 18: Parse error at line 26, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 25. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6661,9 +6673,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:42.515867+00:00",
+        "parse_date": "2026-01-23T23:29:47.607344+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3694,
+        "parse_time_seconds": 0.4697,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 46, column 18: Parse error at line 46, column 18: Unexpected character: ','\n  Positive Variable,\n                   ^\n  Positive Variable,\n                   ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 45. Add ';' after: * Definition of Primal/Dual Variables,"
@@ -6706,14 +6718,12 @@
         "solve_time_seconds": 0.351
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-01-23T21:53:42.891789+00:00",
+        "status": "success",
+        "parse_date": "2026-01-23T23:29:48.820940+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3755,
-        "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 59, column 47: Unexpected character: '1'\n  uinit(m)    'initial controls' / 'gov-expend' 110.5, money   147.1 /\n                                                ^\n\nSuggestion: This character is not valid in this context"
-        }
+        "parse_time_seconds": 1.2132,
+        "variables_count": 3,
+        "equations_count": 2
       },
       "nlp2mcp_translate": {
         "status": "not_tested",
@@ -6727,6 +6737,12 @@
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:39:03.325716+00:00",
         "notes": "Skipped due to parse failure"
+      },
+      "model_statistics": {
+        "variables": 3,
+        "equations": 2,
+        "parameters": 0,
+        "sets": 6
       }
     },
     {
@@ -6798,9 +6814,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:44.992295+00:00",
+        "parse_date": "2026-01-23T23:29:51.538565+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 2.1,
+        "parse_time_seconds": 2.7171,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 191, column 1: Unexpected character: 'a'\n  acost,   dem,      proc,   amisc\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -7012,9 +7028,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:45.177954+00:00",
+        "parse_date": "2026-01-23T23:29:51.733439+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.152,
+        "parse_time_seconds": 0.156,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 32, column 41: Unexpected character: '('\n  tb(i)   'original totals'    / lab 220, (h1,h2) na, p1 190, p2 105 /\n                                          ^\n\nSuggestion: This character is not valid in this context"
@@ -7058,9 +7074,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:46.365475+00:00",
+        "parse_date": "2026-01-23T23:29:53.273922+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.1872,
+        "parse_time_seconds": 1.5402,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 86, column 1: Unexpected character: 'F'\n  FF, Sf, tauz, taum;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -7104,9 +7120,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:47.160913+00:00",
+        "parse_date": "2026-01-23T23:29:54.452509+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7951,
+        "parse_time_seconds": 1.1781,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -7160,9 +7176,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:47.439362+00:00",
+        "parse_date": "2026-01-23T23:29:54.672606+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2781,
+        "parse_time_seconds": 0.2198,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -7227,9 +7243,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:47.887534+00:00",
+        "parse_date": "2026-01-23T23:29:55.392984+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4478,
+        "parse_time_seconds": 0.7199,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -7283,9 +7299,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:48.047160+00:00",
+        "parse_date": "2026-01-23T23:29:55.560856+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1584,
+        "parse_time_seconds": 0.1666,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -7329,9 +7345,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:48.358414+00:00",
+        "parse_date": "2026-01-23T23:29:55.928937+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3108,
+        "parse_time_seconds": 0.3678,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 71, column 19: Unexpected character: ','\n  Equation lpcons(i), defdual(j);\n                    ^\n\nSuggestion: This character is not valid in this context"
@@ -7375,9 +7391,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:49.389135+00:00",
+        "parse_date": "2026-01-23T23:29:57.368304+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.0302,
+        "parse_time_seconds": 1.439,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -7421,9 +7437,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:49.525889+00:00",
+        "parse_date": "2026-01-23T23:29:57.551679+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1364,
+        "parse_time_seconds": 0.1831,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 30, column 40: Unexpected character: '('\n  tb(i)   'original totals'   / lab 220, (h1,h2) na, p1 190, p2 105 /\n                                         ^\n\nSuggestion: This character is not valid in this context"
@@ -7467,9 +7483,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:50.255422+00:00",
+        "parse_date": "2026-01-23T23:29:58.620502+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7289,
+        "parse_time_seconds": 1.0683,
         "variables_count": 3,
         "equations_count": 4
       },
@@ -7534,9 +7550,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:50.500282+00:00",
+        "parse_date": "2026-01-23T23:29:58.956289+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2116,
+        "parse_time_seconds": 0.2917,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 111, column 1: Unexpected character: '/'\n  /\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -7580,9 +7596,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:50.613404+00:00",
+        "parse_date": "2026-01-23T23:29:59.107913+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1127,
+        "parse_time_seconds": 0.1513,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 33, column 16: Unexpected character: '''\n  'beet-lift'    'ing',\n                 ^\n\nSuggestion: This character is not valid in this context"
@@ -7668,12 +7684,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:50.711498+00:00",
+        "parse_date": "2026-01-23T23:29:59.704472+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0978,
+        "parse_time_seconds": 0.5963,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 30, column 16: Unexpected character: '3'\n  / 'new-york'   325,\n                 ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 74, column 18: Unexpected character: '''\n  File      repdat 'sensitivity data report file';\n                   ^\n\nSuggestion: This character is not valid in this context"
         }
       },
       "nlp2mcp_translate": {
@@ -7714,9 +7730,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:50.821247+00:00",
+        "parse_date": "2026-01-23T23:29:59.794569+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1094,
+        "parse_time_seconds": 0.0898,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 25, column 15: Unexpected character: '''\n  'shale-25'    'shale in place assaying 25 gallons per ton - gpt (mil tons)',\n                ^\n\nSuggestion: This character is not valid in this context"
@@ -7760,9 +7776,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:50.910254+00:00",
+        "parse_date": "2026-01-23T23:29:59.890243+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0887,
+        "parse_time_seconds": 0.0954,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 23, column 50: Unexpected character: 'n'\n  ca       'corrosion allowance            (cm)' / na    /\n                                                   ^\n\nSuggestion: This character is not valid in this context"
@@ -7827,9 +7843,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:51.015398+00:00",
+        "parse_date": "2026-01-23T23:30:00.071620+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1044,
+        "parse_time_seconds": 0.1807,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 38, column 23: Unexpected character: ','\n  Equation defobj, e1(i), e2(i), e3(i);\n                        ^\n\nSuggestion: This character is not valid in this context"
@@ -7873,12 +7889,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:51.254774+00:00",
+        "parse_date": "2026-01-23T23:30:00.557129+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2391,
+        "parse_time_seconds": 0.4852,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 39, column 39: Unexpected character: '5'\n  clen(l) 'cost of service'   / 'len-1' 50, 'len-2' 85, 'len-3' 115, 'len-4' 143 /;\n                                        ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 57, column 27: Unexpected character: '('\n  bal1(t).. sum((l,lp), x(t-(ord(l)-1),lp+(ord(l)-1))) =g= req(t);\n                            ^\n\nSuggestion: This character is not valid in this context"
         }
       },
       "nlp2mcp_translate": {
@@ -7919,9 +7935,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:52.337679+00:00",
+        "parse_date": "2026-01-23T23:30:02.119027+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.0826,
+        "parse_time_seconds": 1.5615,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 155, column 35: Unexpected character: '.'\n  P2R3_MCP        / DEM, SUP, IN_OUT.P, DOM_TRAD.X /;\n                                    ^\n\nSuggestion: This character is not valid in this context"
@@ -8028,9 +8044,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:52.849512+00:00",
+        "parse_date": "2026-01-23T23:30:02.750815+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5115,
+        "parse_time_seconds": 0.6315,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 52, column 34: Unexpected character: '*'\n  b(j)      = Z0(j)/prod(h, F0(h,j)**beta(h,j));\n                                   ^\n\nSuggestion: This character is not valid in this context"
@@ -8074,9 +8090,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:53.006519+00:00",
+        "parse_date": "2026-01-23T23:30:02.873379+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1552,
+        "parse_time_seconds": 0.1213,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 31, column 43: Unexpected character: '['\n  L0    \"rest length of each spring\"     /  [2*sqrt(sqr(a_x-b_x) + sqr(a_y-b_y))/10]/\n                                            ^\n\nSuggestion: This character is not valid in this context"
@@ -8144,9 +8160,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:53.551303+00:00",
+        "parse_date": "2026-01-23T23:30:03.401950+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4902,
+        "parse_time_seconds": 0.4691,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 56, column 41: Unexpected character: '.'\n  tn(t,n)   'time node mapping' / 'time-1'.('n-1'*'n-3'), 'time-2'.('n-4'*'n-12')      /\n                                          ^\n\nSuggestion: This character is not valid in this context"
@@ -8190,9 +8206,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:53.592986+00:00",
+        "parse_date": "2026-01-23T23:30:03.452032+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0414,
+        "parse_time_seconds": 0.0498,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 15, column 69: Unexpected character: ','\n  i      'cities' / boston, chicago, dallas, 'kansas-cty', losangeles,,\n                                                                      ^\n\nSuggestion: This character is not valid in this context"
@@ -8236,9 +8252,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:53.732468+00:00",
+        "parse_date": "2026-01-23T23:30:03.675750+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1391,
+        "parse_time_seconds": 0.2234,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -8282,9 +8298,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:54.910493+00:00",
+        "parse_date": "2026-01-23T23:30:05.002548+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.1776,
+        "parse_time_seconds": 1.3265,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 84, column 1: Unexpected character: 'F'\n  FF, Sf, tauz, taum;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -8349,9 +8365,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:55.739419+00:00",
+        "parse_date": "2026-01-23T23:30:05.966948+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.8285,
+        "parse_time_seconds": 0.9639,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 64, column 54: Unexpected character: '('\n  yv(a)    'yield of planted timber     (m3 per ha)' / (a08,a16,a24) 120 /\n                                                       ^\n\nSuggestion: This character is not valid in this context"
@@ -8395,9 +8411,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:56.023098+00:00",
+        "parse_date": "2026-01-23T23:30:06.296608+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2834,
+        "parse_time_seconds": 0.3292,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 37, column 30: Unexpected character: '2'\n  ('a-10','a-20','a-30')      .2      .2\n                               ^\n\nSuggestion: This character is not valid in this context"
@@ -8441,9 +8457,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:56.604562+00:00",
+        "parse_date": "2026-01-23T23:30:07.010496+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5803,
+        "parse_time_seconds": 0.7132,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 70, column 48: Unexpected character: '('\n  pc(p)   'process cost     (us$ per m3 input)' /('pulp-pl','pulp-sl','pulp-rs') 5.96, sawing 6 /\n                                                 ^\n\nSuggestion: This character is not valid in this context"
@@ -8529,9 +8545,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:56.874355+00:00",
+        "parse_date": "2026-01-23T23:30:07.356732+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2695,
+        "parse_time_seconds": 0.3458,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 73, column 36: Unexpected character: ','\n  x.up(n,k)         = myScale*smax((i,kp),fx(i,kp));\n                                     ^\n\nSuggestion: This character is not valid in this context"
@@ -8575,9 +8591,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:57.108950+00:00",
+        "parse_date": "2026-01-23T23:30:07.646473+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2342,
+        "parse_time_seconds": 0.2893,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -8695,14 +8711,12 @@
         "solve_time_seconds": 0.383
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-01-23T21:53:57.215188+00:00",
+        "status": "success",
+        "parse_date": "2026-01-23T23:30:08.207185+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1047,
-        "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 31, column 16: Unexpected character: '3'\n  / 'new-york'   325,\n                 ^\n\nSuggestion: This character is not valid in this context"
-        }
+        "parse_time_seconds": 0.5592,
+        "variables_count": 2,
+        "equations_count": 3
       },
       "mcp_solve": {
         "status": "not_tested",
@@ -8716,6 +8730,12 @@
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:39:15.643761+00:00",
         "notes": "Skipped due to parse failure"
+      },
+      "model_statistics": {
+        "variables": 2,
+        "equations": 3,
+        "parameters": 0,
+        "sets": 2
       }
     },
     {
@@ -8742,12 +8762,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:57.415639+00:00",
+        "parse_date": "2026-01-23T23:30:08.855262+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1658,
+        "parse_time_seconds": 0.6081,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 76, column 16: Unexpected character: '3'\n  / 'new-york'   325,\n                 ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 134, column 16: Unexpected character: '/'\n  xlow     /  50 /\n                 ^\n\nSuggestion: This character is not valid in this context"
         }
       },
       "nlp2mcp_translate": {
@@ -8809,9 +8829,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-23T21:53:58.120261+00:00",
+        "parse_date": "2026-01-23T23:30:09.804043+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7043,
+        "parse_time_seconds": 0.9483,
         "variables_count": 5,
         "equations_count": 5
       },
@@ -8865,9 +8885,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:58.493638+00:00",
+        "parse_date": "2026-01-23T23:30:10.335832+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3721,
+        "parse_time_seconds": 0.5306,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 55, column 14: Unexpected character: '''\n  / 'irr-good' 'irrigated good land', 'irr-poor' 'irrigated poor land',\n               ^\n\nSuggestion: This character is not valid in this context"
@@ -8911,9 +8931,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:58.791736+00:00",
+        "parse_date": "2026-01-23T23:30:10.687793+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2978,
+        "parse_time_seconds": 0.3517,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 35, column 13: Unexpected character: '''\n  'e-fact'    'energy factor for hydro plants',\n              ^\n\nSuggestion: This character is not valid in this context"
@@ -8957,9 +8977,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:53:59.886446+00:00",
+        "parse_date": "2026-01-23T23:30:12.081096+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.0944,
+        "parse_time_seconds": 1.393,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 117, column 1: Unexpected character: 'F'\n  FF, Sf, tauz, taum;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -9003,9 +9023,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:54:00.523912+00:00",
+        "parse_date": "2026-01-23T23:30:12.777685+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6371,
+        "parse_time_seconds": 0.6963,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 77, column 27: Unexpected character: '('\n  s(k) 'storage cost'     / (nuts,bolts,washers) 1  /\n                            ^\n\nSuggestion: This character is not valid in this context"
@@ -9049,9 +9069,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:54:00.565497+00:00",
+        "parse_date": "2026-01-23T23:30:12.830867+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0413,
+        "parse_time_seconds": 0.0529,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 19, column 13: Parse error at line 19, column 13: Unexpected character: 'V'\n  Nonnegative Variables so4, baoh, oh, hso4, h;\n              ^\n  Nonnegative Variables so4, baoh, oh, hso4, h;\n              ^\n\nSuggestion: This character is not valid in this context\n\nDid you mean 'Negative'?"
@@ -9095,9 +9115,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:54:00.601119+00:00",
+        "parse_date": "2026-01-23T23:30:12.881280+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0353,
+        "parse_time_seconds": 0.0501,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 18, column 13: Unexpected character: '''\n  'MRBM-1'    'Medium-Range Ballistic Missiles from first area',\n              ^\n\nSuggestion: This character is not valid in this context"
@@ -9141,12 +9161,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:54:00.652403+00:00",
+        "parse_date": "2026-01-23T23:30:13.224101+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.051,
+        "parse_time_seconds": 0.3425,
         "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 18, column 48: Unexpected character: '1'\n  price(t)  'selling price ($ per unit)' / 'q-1' 10, 'q-2' 12, 'q-3' 8, 'q-4' 9 /\n                                                 ^\n\nSuggestion: This character is not valid in this context"
+          "category": "internal_error",
+          "message": "Invalid range start ''q-1'': must be a number (e.g., 1) or identifier followed by number (e.g., i1) [context: expression] (line 15, column 28)"
         }
       },
       "nlp2mcp_translate": {
@@ -9187,9 +9207,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-01-23T21:54:00.820615+00:00",
+        "parse_date": "2026-01-23T23:30:13.436540+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1678,
+        "parse_time_seconds": 0.2119,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 41, column 10: Unexpected character: 'f'\n  Acronym  future, call, puto;\n           ^\n\nSuggestion: This character is not valid in this context"
