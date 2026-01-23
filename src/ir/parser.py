@@ -2809,6 +2809,21 @@ class _ModelBuilder:
                         target,
                     )
                 return
+            if target.data == "attr_access_indexed":
+                # Handle indexed attribute access: x.stage(g), var.scale(i), etc.
+                # Issue #554: Parse but don't process - stochastic programming not modeled
+                # Validate that the base object exists (variable, parameter, or model)
+                base_name = _token_text(target.children[0])
+                if (
+                    base_name not in self.model.variables
+                    and base_name not in self.model.params
+                    and base_name != self.model.declared_model
+                ):
+                    raise self._error(
+                        f"Symbol '{base_name}' not declared as a variable, parameter, or model",
+                        target,
+                    )
+                return
             if target.data == "symbol_indexed":
                 # Handle indexed assignment: p('i1') = 10, report('x1','global') = 1, or low(n,nn) = ...
                 symbol_name = _token_text(target.children[0])

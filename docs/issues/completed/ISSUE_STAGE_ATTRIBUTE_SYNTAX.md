@@ -1,10 +1,14 @@
 # Issue: x.stage() Stochastic Attribute Syntax Not Supported
 
 **GitHub Issue:** [#554](https://github.com/jeffreyhorn/nlp2mcp/issues/554)  
-**Status:** Closed (Fixed)  
+**Status:** Closed (Parsing Fixed - IR builder skips stage assignments)  
 **Priority:** Medium  
 **Discovered:** Sprint 16 Day 6 (2026-01-23)  
 **Affected Models:** apl1p, apl1pca
+
+**Note:** The `.stage()` syntax now parses via the `attr_access` rule (ID "." ID pattern).
+The IR builder treats these as generic attribute accesses and does not process them,
+which is acceptable since stochastic programming semantics are not modeled by nlp2mcp.
 
 ---
 

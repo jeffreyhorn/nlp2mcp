@@ -541,7 +541,7 @@
    - Added `FREE_K` terminal: `/(?i:free)\b/`
    - Added to `var_kind` rule: `POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K | FREE_K`
    - Models unlocked: jobt
-   - Models with secondary issues: apl1p, apl1pca (x.stage() syntax not supported)
+   - Models with secondary issues: apl1p, apl1pca (x.stage() parses via attr_access but IR builder ignores it)
 
 2. **Hyphenated Set Elements (Number-Start)**
    - Extended `SET_ELEMENT_ID` pattern: `/[a-zA-Z0-9_][a-zA-Z0-9_+\-]*/`
@@ -572,7 +572,7 @@
 1. **P1 fixes work as designed** - grammar changes correctly handle targeted syntax
 2. **Models have multiple blocking issues** - fixing one reveals the next
 3. **Target models need additional fixes:**
-   - apl1p, apl1pca: Need x.stage() stochastic syntax support
+   - apl1p, apl1pca: x.stage() parses but IR builder skips the assignment (stochastic programming not modeled)
    - abel, ajax, immun: Need numeric values in set data context
    - Other keyword case models: Need investigation for secondary issues
 

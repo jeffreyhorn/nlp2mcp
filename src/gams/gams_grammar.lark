@@ -259,10 +259,14 @@ lvalue: ref_bound | ref_indexed | ID
 ref_bound: ID "." BOUND_K "(" index_list ")"   -> bound_indexed
          | ID "." BOUND_K "[" index_list "]"   -> bound_indexed
          | ID "." BOUND_K                      -> bound_scalar
-         | ID "." ID                            -> attr_access
+         | ID "." ID "(" index_list ")"        -> attr_access_indexed
+         | ID "." ID "[" index_list "]"        -> attr_access_indexed
+         | ID "." ID                           -> attr_access
 
-// Sprint 16 Day 6: Added 'stage' for stochastic programming support (Issue #554)
-BOUND_K: /(lo|up|fx|l|m|stage)/i
+// Note: 'stage' is NOT included as a bound keyword so that x.stage(...) parses as
+// attr_access/attr_access_indexed, avoiding it being interpreted as a variable bound
+// in the ModelIR builder. The IR builder ignores these assignments (Issue #554).
+BOUND_K: /(lo|up|fx|l|m)/i
 
 ref_indexed.2: ID "(" index_list ")"             -> symbol_indexed
              | ID "[" index_list "]"             -> symbol_indexed
@@ -562,9 +566,10 @@ OPTION_K: /(?i:options?)\b/
 ON: /(?i:on)\b/
 OFF: /(?i:off)\b/
 // Sprint 16 Day 6: Extended to allow number-start elements like "1964-i", "89-07"
-// Pattern allows: letter/number start, then any combination of letters, numbers, _, +, -
+// Pattern allows: letter/underscore start, or digit start followed by at least one non-digit
+// This prevents stealing NUMBER tokens (e.g., "1", "10") while allowing "1964-i", "89-07"
 // Priority 2 ensures it matches before plain ID but after keywords
-SET_ELEMENT_ID.2: /[a-zA-Z0-9_][a-zA-Z0-9_+\-]*/
+SET_ELEMENT_ID.2: /(?:[a-zA-Z_][a-zA-Z0-9_+\-]*|[0-9][0-9_]*[a-zA-Z_+\-][a-zA-Z0-9_+\-]*)/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
 // Issue #424: SYMBOL_NAME matches only unquoted identifiers for use as set/param/var names
 // This prevents quoted strings like 'products' from being parsed as symbol names
