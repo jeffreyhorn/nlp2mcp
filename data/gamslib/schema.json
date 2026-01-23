@@ -151,6 +151,10 @@
         "solution_comparison": {
           "$ref": "#/definitions/solution_comparison_result",
           "description": "Comparison between original NLP solution and MCP solution"
+        },
+        "model_statistics": {
+          "$ref": "#/definitions/model_statistics",
+          "description": "Model statistics extracted from IR (variables, equations, parameters, sets)"
         }
       }
     },
