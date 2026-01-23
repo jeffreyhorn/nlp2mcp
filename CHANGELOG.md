@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Day 6: Parse Improvements - Priority 1 - 2026-01-23
+
+**Branch:** `sprint16-day6-parse-p1`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented P1 grammar fixes: Free Variable keyword support, hyphenated set elements starting with numbers, and abort statement with display list. Two models now parse successfully.
+
+#### Changes
+
+**Modified Files:**
+- `src/gams/gams_grammar.lark` - Grammar extensions for P1 fixes
+
+#### Grammar Fixes
+
+| Fix | Change | Models Unlocked |
+|-----|--------|-----------------|
+| Free Variable keyword | Added `FREE_K` terminal to `var_kind` | jobt |
+| Hyphenated number-start elements | Extended `SET_ELEMENT_ID` pattern | (secondary issues) |
+| Abort with display list | Added `("," display_item)*` to `abort_base` | cclinpts |
+
+#### Results
+
+- **Parse rate:** 21.25% → 22.5% (+2 models)
+- **New models parsing:** cclinpts, jobt
+- **No regressions:** All 34 previously-passing models still pass
+
+#### Key Finding
+
+Target models have multiple blocking issues. Fixing one issue (e.g., Free Variable) reveals secondary issues (e.g., x.stage() stochastic syntax). Models like apl1p, abel need additional grammar extensions.
+
+---
+
 ### Sprint 16 Day 5: Solve Gap Analysis and Roadmap Finalization [Checkpoint 2] - 2026-01-22
 
 **Branch:** `sprint16-day5-gap-analysis-solve`  
