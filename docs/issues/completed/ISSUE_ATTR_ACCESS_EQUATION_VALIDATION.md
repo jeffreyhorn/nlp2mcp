@@ -1,7 +1,7 @@
 # Issue: attr_access/attr_access_indexed Does Not Validate Equations
 
 **GitHub Issue:** [#558](https://github.com/jeffreyhorn/nlp2mcp/issues/558)  
-**Status:** Open  
+**Status:** Closed (Fixed)  
 **Priority:** Medium  
 **Discovered:** Sprint 16 Day 6 (2026-01-23)  
 **Affected Models:** apl1p

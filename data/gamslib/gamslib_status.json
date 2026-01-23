@@ -408,14 +408,12 @@
         "solve_time_seconds": 1.21
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-01-23T23:27:51.036832+00:00",
+        "status": "success",
+        "parse_date": "2026-01-23T23:41:52.333555+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 2.4146,
-        "error": {
-          "category": "internal_error",
-          "message": "Symbol 'cmin' not declared as a variable, parameter, or model [context: expression] (line 77, column 1)"
-        }
+        "parse_time_seconds": 4.1378,
+        "variables_count": 4,
+        "equations_count": 5
       },
       "nlp2mcp_translate": {
         "status": "not_tested",
@@ -429,6 +427,12 @@
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:37:53.786311+00:00",
         "notes": "Skipped due to parse failure"
+      },
+      "model_statistics": {
+        "variables": 4,
+        "equations": 5,
+        "parameters": 0,
+        "sets": 5
       }
     },
     {
