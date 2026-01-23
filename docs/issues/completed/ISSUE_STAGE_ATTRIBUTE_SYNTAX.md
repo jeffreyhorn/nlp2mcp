@@ -1,7 +1,7 @@
 # Issue: x.stage() Stochastic Attribute Syntax Not Supported
 
 **GitHub Issue:** [#554](https://github.com/jeffreyhorn/nlp2mcp/issues/554)  
-**Status:** Open  
+**Status:** Closed (Fixed)  
 **Priority:** Medium  
 **Discovered:** Sprint 16 Day 6 (2026-01-23)  
 **Affected Models:** apl1p, apl1pca

@@ -258,7 +258,8 @@ ref_bound: ID "." BOUND_K "(" index_list ")"   -> bound_indexed
          | ID "." BOUND_K                      -> bound_scalar
          | ID "." ID                            -> attr_access
 
-BOUND_K: /(lo|up|fx|l|m)/i
+// Sprint 16 Day 6: Added 'stage' for stochastic programming support (Issue #554)
+BOUND_K: /(lo|up|fx|l|m|stage)/i
 
 ref_indexed.2: ID "(" index_list ")"             -> symbol_indexed
              | ID "[" index_list "]"             -> symbol_indexed
