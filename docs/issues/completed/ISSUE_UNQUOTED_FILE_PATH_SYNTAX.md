@@ -1,7 +1,7 @@
 # Issue: Unquoted File Path Syntax Not Supported
 
 **GitHub Issue:** [#556](https://github.com/jeffreyhorn/nlp2mcp/issues/556)  
-**Status:** Open  
+**Status:** Closed (Fixed)  
 **Priority:** Medium  
 **Discovered:** Sprint 16 Day 6 (2026-01-23)  
 **Affected Models:** apl1p, apl1pca

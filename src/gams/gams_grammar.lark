@@ -403,12 +403,18 @@ loop_body: exec_stmt* exec_stmt_final
 // ---------------------------
 
 // File statement declares a file handle for output operations
-// Syntax: file <name> / '<path>' /;
+// Syntax: file <name> / '<path>' /;  or  file <name> / path.ext /;
 // We parse but don't process since file I/O is not relevant for NLP model extraction
 file_stmt: "file"i ID "/" file_path "/" SEMI
 
+// Sprint 16 Day 6: Added FILE_PATH_UNQUOTED for unquoted paths like MODEL.STG (Issue #556)
 file_path: STRING
          | compile_time_const
+         | FILE_PATH_UNQUOTED
+
+// Pattern for unquoted file paths: allows letters, numbers, dots, underscores, hyphens
+// Examples: MODEL.STG, output.txt, results_2024.dat
+FILE_PATH_UNQUOTED: /[a-zA-Z0-9_][a-zA-Z0-9_.\-]*/
 
 // ---------------------------
 // Put Statement (Sprint 12 - Issue #447 - mock/skip for file I/O)
