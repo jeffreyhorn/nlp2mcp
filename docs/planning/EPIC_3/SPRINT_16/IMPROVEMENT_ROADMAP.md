@@ -145,7 +145,7 @@ stat_x.. ... + ((-1) * (y * -1)) * lam_minp + ...
 stat_y.. ... + ((-1) * (b - x)) * lam_minp + ...
 ```
 
-**Root Cause Location:** `src/emit/expr_to_gams.py` lines 128-137
+**Root Cause Location:** `src/emit/expr_to_gams.py` lines 185-197
 
 The `Unary` case handling adds parentheses when there's a parent operator, but the issue occurs at equation definition start where the unary minus follows `..` which GAMS treats as an operator context.
 
@@ -190,7 +190,7 @@ comp_lo_x_H.piL_x("H"),    * quoted
 comp_lo_x_N.piL_x("N"),    * quoted but x(N) above was unquoted
 ```
 
-**Root Cause Location:** `src/emit/expr_to_gams.py` function `_quote_indices()` (lines 45-72)
+**Root Cause Location:** `src/emit/expr_to_gams.py` function `_quote_indices()` (lines 62-94)
 
 The heuristic quotes identifiers containing digits but leaves single letters unquoted. GAMS requires consistent quoting.
 
@@ -248,7 +248,7 @@ Scalars
 ;
 ```
 
-**Root Cause Location:** `src/emit/original_symbols.py` function `emit_original_parameters()` (lines 87-109)
+**Root Cause Location:** `src/emit/original_symbols.py` function `emit_original_parameters()` (lines 79-158)
 
 The IR is storing description strings as scalar names when parsing GAMS files with description-only declarations. This is a parse/IR issue, not just emit.
 
@@ -395,9 +395,9 @@ set_member: SET_ELEMENT_ID (STRING)?
 
 | Task | File | Description | Est. |
 |------|------|-------------|------|
-| 6.1.1 | `src/parser/gams.lark` | Add `free_var_decl`, `positive_var_decl`, `negative_var_decl` rules | 1h |
-| 6.1.2 | `src/parser/gams.lark` | Ensure case-insensitive matching with `"Free"i` syntax | 0.5h |
-| 6.1.3 | `tests/parser/test_keywords.py` | Add tests for `Free Variable`, `Positive Variable` | 1h |
+| 6.1.1 | `src/gams/gams_grammar.lark` | Add `free_var_decl`, `positive_var_decl`, `negative_var_decl` rules | 1h |
+| 6.1.2 | `src/gams/gams_grammar.lark` | Ensure case-insensitive matching with `"Free"i` syntax | 0.5h |
+| 6.1.3 | `tests/gams/test_keywords.py` | Add tests for `Free Variable`, `Positive Variable` | 1h |
 | 6.1.4 | - | Run against 9 affected models: ampl, apl1p, apl1pca, jobt, moncge, nemhaus, qfilter, wall, worst | 1h |
 | 6.1.5 | - | Run `make test` and `make typecheck` | 0.5h |
 
@@ -405,12 +405,12 @@ set_member: SET_ELEMENT_ID (STRING)?
 
 | Task | File | Description | Est. |
 |------|------|-------------|------|
-| 6.2.1 | `src/parser/gams.lark` | Enhance `SET_ELEMENT_ID` to allow number-start: `/[a-zA-Z0-9_][a-zA-Z0-9_+\-]*/` | 0.5h |
-| 6.2.2 | `tests/parser/test_set_elements.py` | Add tests for `1964-i`, `89-07` style elements | 0.5h |
+| 6.2.1 | `src/gams/gams_grammar.lark` | Enhance `SET_ELEMENT_ID` to allow number-start: `/[a-zA-Z0-9_][a-zA-Z0-9_+\-]*/` | 0.5h |
+| 6.2.2 | `tests/gams/test_set_elements.py` | Add tests for `1964-i`, `89-07` style elements | 0.5h |
 | 6.2.3 | - | Verify no conflicts with numeric literals (disambiguation testing) | 1h |
 | 6.2.4 | - | Run against 3 models: abel, ajax, immun | 0.5h |
-| 6.3.1 | `src/parser/gams.lark` | Enhance `abort_stmt` to support `abort$(cond) 'msg', var;` | 1h |
-| 6.3.2 | `tests/parser/test_abort.py` | Add tests for dollar-conditioned abort with display list | 0.5h |
+| 6.3.1 | `src/gams/gams_grammar.lark` | Enhance `abort_stmt` to support `abort$(cond) 'msg', var;` | 1h |
+| 6.3.2 | `tests/gams/test_abort.py` | Add tests for dollar-conditioned abort with display list | 0.5h |
 | 6.3.3 | - | Run against 3 models: cclinpts, imsl, trigx | 0.5h |
 | 6.3.4 | - | Full test suite: `make test && make typecheck` | 0.5h |
 
@@ -424,10 +424,10 @@ set_member: SET_ELEMENT_ID (STRING)?
 
 | Task | File | Description | Est. |
 |------|------|-------------|------|
-| 7.1.1 | `src/parser/gams.lark` | Design `tuple_expansion` grammar rule | 1h |
-| 7.1.2 | `src/parser/gams.lark` | Integrate with `set_data` and `param_data` rules | 1h |
-| 7.1.3 | `src/parser/transformer.py` | Handle `tuple_expansion` AST transformation | 1h |
-| 7.1.4 | `tests/parser/test_tuple_expansion.py` | Add tests for `(a,b).c` expansion | 1h |
+| 7.1.1 | `src/gams/gams_grammar.lark` | Design `tuple_expansion` grammar rule | 1h |
+| 7.1.2 | `src/gams/gams_grammar.lark` | Integrate with `set_data` and `param_data` rules | 1h |
+| 7.1.3 | `src/ir/parser.py` | Handle `tuple_expansion` AST transformation | 1h |
+| 7.1.4 | `tests/gams/test_tuple_expansion.py` | Add tests for `(a,b).c` expansion | 1h |
 
 #### Afternoon (4 hours): P-4 Complete + P-5
 
@@ -435,7 +435,7 @@ set_member: SET_ELEMENT_ID (STRING)?
 |------|------|-------------|------|
 | 7.2.1 | - | Run tuple expansion against 12 models: aircraft, airsp, clearlak, mine, pdi, pinene, pollut, qsambal, ramsey, srcpm, synheat, turkey | 1h |
 | 7.2.2 | - | Debug and fix edge cases | 1h |
-| 7.3.1 | `src/parser/gams.lark` | Extend `set_member` to allow quoted descriptions: `SET_ELEMENT_ID (STRING)?` | 0.5h |
+| 7.3.1 | `src/gams/gams_grammar.lark` | Extend `set_member` to allow quoted descriptions: `SET_ELEMENT_ID (STRING)?` | 0.5h |
 | 7.3.2 | - | Ensure interaction with P-2 (hyphenated elements) works | 0.5h |
 | 7.3.3 | - | Run against 7 models: agreste, camcge, egypt, fawley, korcge, nebrazil, srcpm | 0.5h |
 | 7.3.4 | - | Full test suite and GAMSLIB integration test | 0.5h |
@@ -498,9 +498,9 @@ set_member: SET_ELEMENT_ID (STRING)?
 
 | File | Purpose | Verified |
 |------|---------|----------|
-| `src/gams/gams_grammar.lark` | Main GAMS grammar (592 lines) | ✓ |
-| `src/gams/transformer.py` | AST transformation (not read) | Pending |
-| `tests/parser/` | Parser test suite | Pending |
+| `src/gams/gams_grammar.lark` | Main GAMS grammar (604 lines) | ✓ |
+| `src/ir/parser.py` | AST transformation and parsing | ✓ |
+| `tests/gams/` | Grammar test suite | Pending |
 
 **Key Grammar Observations:**
 1. `var_kind` already handles `POSITIVE_K`, `NEGATIVE_K`, `BINARY_K`, `INTEGER_K` but not space-separated variants like `Free Variable`
@@ -512,18 +512,18 @@ set_member: SET_ELEMENT_ID (STRING)?
 
 | File | Purpose | Lines | Key Functions |
 |------|---------|-------|---------------|
-| `src/emit/expr_to_gams.py` | Expression → GAMS syntax | 254 | `expr_to_gams()`, `_quote_indices()` |
-| `src/emit/model.py` | MCP model emission | 211 | `emit_model_mcp()`, `_format_variable_with_indices()` |
-| `src/emit/original_symbols.py` | Sets/Params/Scalars emission | 109 | `emit_original_parameters()` |
-| `src/emit/emit_gams.py` | Main orchestrator | 160 | `emit_gams_mcp()` |
-| `src/emit/templates.py` | Variables/Equations blocks | 208 | `emit_variables()`, `emit_equations()` |
-| `src/emit/equations.py` | Equation definitions | 130 | `emit_equation_definitions()` |
+| `src/emit/expr_to_gams.py` | Expression → GAMS syntax | 260 | `expr_to_gams()`, `_quote_indices()` |
+| `src/emit/model.py` | MCP model emission | 216 | `emit_model_mcp()`, `_format_variable_with_indices()` |
+| `src/emit/original_symbols.py` | Sets/Params/Scalars emission | 158 | `emit_original_parameters()` |
+| `src/emit/emit_gams.py` | Main orchestrator | 184 | `emit_gams_mcp()` |
+| `src/emit/templates.py` | Variables/Equations blocks | 278 | `emit_variables()`, `emit_equations()` |
+| `src/emit/equations.py` | Equation definitions | 154 | `emit_equation_definitions()` |
 
 **Key Emit Observations:**
-1. `expr_to_gams.py:128-137` - `Unary` case needs `((-1) * expr)` rewrite for unary minus
-2. `expr_to_gams.py:45-72` - `_quote_indices()` heuristic uses digit detection; needs always-quote
+1. `expr_to_gams.py:185-197` - `Unary` case needs `((-1) * expr)` rewrite for unary minus
+2. `expr_to_gams.py:62-94` - `_quote_indices()` heuristic uses digit detection; needs always-quote
 3. `model.py:36-56` - `_format_variable_with_indices()` uses double quotes; should use single quotes
-4. `original_symbols.py:87-109` - `emit_original_parameters()` doesn't validate scalar names
+4. `original_symbols.py:79-158` - `emit_original_parameters()` doesn't validate scalar names
 
 ### Test Dependencies
 

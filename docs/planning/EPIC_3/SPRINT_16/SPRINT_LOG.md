@@ -462,19 +462,19 @@
 
 2. **emit_gams.py Fix Requirements Documented**
    - **S-1: Unary Minus Formatting** (10 models)
-     - Root cause: `src/emit/expr_to_gams.py` lines 128-137, `Unary` case
+     - Root cause: `src/emit/expr_to_gams.py` lines 185-197, `Unary` case
      - Current: `-(expr)` after `..` triggers GAMS Error 445
      - Fix: Change to `((-1) * expr)` for all unary minus
      - Files: `expr_to_gams.py`, golden files, tests
      
    - **S-2: Set Element Quoting Consistency** (3 models)
-     - Root cause: `src/emit/expr_to_gams.py` function `_quote_indices()` lines 45-72
+     - Root cause: `src/emit/expr_to_gams.py` function `_quote_indices()` lines 62-94
      - Current: Heuristic quotes digits but not single letters
      - Fix: Always quote with single quotes for consistency
      - Files: `expr_to_gams.py`, `model.py`, tests
      
    - **S-3: Scalar Declaration Fix** (1 model)
-     - Root cause: `src/emit/original_symbols.py` function `emit_original_parameters()` lines 87-109
+     - Root cause: `src/emit/original_symbols.py` function `emit_original_parameters()` lines 79-158
      - Current: Description-only scalars emitted without identifier
      - Fix: Filter out scalars whose names contain spaces/quotes
      - Files: `original_symbols.py`, tests
@@ -490,12 +490,12 @@
      - Day 7: P-4, P-5 parser fixes (19 models)
      - Day 8: S-1, S-2, S-3 solve fixes (14 models)
    - Added Phase 3 Implementation Dependencies section:
-     - Parser dependencies: gams_grammar.lark, transformer.py
+     - Parser dependencies: gams_grammar.lark, parser.py
      - Emit dependencies: expr_to_gams.py, model.py, original_symbols.py
      - Key observations for each file
 
 4. **Dependencies Reviewed for Phase 3**
-   - Verified `src/gams/gams_grammar.lark` exists (592 lines)
+   - Verified `src/gams/gams_grammar.lark` exists (604 lines)
    - Key grammar observations:
      - `var_kind` handles POSITIVE_K, NEGATIVE_K, BINARY_K, INTEGER_K
      - `SET_ELEMENT_ID` pattern needs number-start extension
