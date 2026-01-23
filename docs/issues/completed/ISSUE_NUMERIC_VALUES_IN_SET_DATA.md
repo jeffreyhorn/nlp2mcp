@@ -1,7 +1,7 @@
 # Issue: Numeric Values in Parameter/Set Data Context Not Supported
 
 **GitHub Issue:** [#555](https://github.com/jeffreyhorn/nlp2mcp/issues/555)  
-**Status:** Open  
+**Status:** Completed  
 **Priority:** Medium  
 **Discovered:** Sprint 16 Day 6 (2026-01-23)  
 **Affected Models:** abel, ajax, immun, and potentially others
@@ -60,28 +60,35 @@ Set elements like `89-07` start with numbers and contain hyphens.
 
 ## Root Cause Analysis
 
-The grammar has two related issues:
+The grammar had two related issues that have been fixed:
 
-### Issue 1: Parameter Data Parsing
+### Issue 1: Parameter Data Parsing (Fixed)
 
-The `param_data_item` rule expects:
+The `param_data_item` rule now uses a `data_index` wrapper to handle various index types:
 ```lark
 param_data_item: data_matrix_row                         -> param_data_matrix_row
                | data_indices NUMBER                     -> param_data_scalar
 
 data_indices: range_expr
-            | (SET_ELEMENT_ID | NUMBER) ("." (SET_ELEMENT_ID | NUMBER))*
+            | data_index ("." data_index)*
+
+data_index: SET_ELEMENT_ID | NUMBER | STRING
 ```
 
-When parsing `gov-expend 110.5`, the grammar tries to match `SET_ELEMENT_ID NUMBER` but the space between identifier and number causes issues with tokenization.
+The `data_index` rule explicitly supports `STRING` for quoted identifiers like `'gov-expend'`.
 
-### Issue 2: SET_ELEMENT_ID vs NUMBER Disambiguation
+### Issue 2: SET_ELEMENT_ID vs NUMBER Disambiguation (Fixed)
 
-After Sprint 16 Day 6, `SET_ELEMENT_ID` was extended to `/[a-zA-Z0-9_][a-zA-Z0-9_+\-]*/` to support `1964-i`. However, this can conflict with `NUMBER` in certain contexts.
+The `SET_ELEMENT_ID` pattern was carefully designed to avoid stealing `NUMBER` tokens:
+```lark
+SET_ELEMENT_ID.2: /(?:[a-zA-Z_][a-zA-Z0-9_+\-]*|[0-9][0-9_]*[a-zA-Z_+\-][a-zA-Z0-9_+\-]*)/
+```
 
-The pattern `89-07` could be interpreted as:
-- A `SET_ELEMENT_ID` (intended): `89-07` as a single identifier
-- Or incorrectly as: `NUMBER` (`89`) followed by something
+This pattern uses two alternatives:
+- First alternative: traditional identifiers starting with letter/underscore
+- Second alternative: identifiers starting with digits but **requiring a non-digit after numeric prefix** (e.g., `1964-i`, `89-07`)
+
+Pure numeric tokens like `1`, `10`, or `89` will correctly match as `NUMBER`, not `SET_ELEMENT_ID`.
 
 ## Proposed Fix
 
