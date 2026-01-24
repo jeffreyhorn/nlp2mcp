@@ -566,10 +566,11 @@ OPTION_K: /(?i:options?)\b/
 ON: /(?i:on)\b/
 OFF: /(?i:off)\b/
 // Sprint 16 Day 6: Extended to allow number-start elements like "1964-i", "89-07"
-// Pattern allows: letter/underscore start, or digit start followed by at least one non-digit
-// This prevents stealing NUMBER tokens (e.g., "1", "10") while allowing "1964-i", "89-07"
+// Pattern allows: letter/underscore start, or digit start followed by '-'/'_' separator
+// This prevents stealing NUMBER tokens (e.g., "1", "10", "1e-3") while allowing "1964-i", "89-07"
+// The digit-start branch requires explicit '-' or '_' separator to avoid matching scientific notation
 // Priority 2 ensures it matches before plain ID but after keywords
-SET_ELEMENT_ID.2: /(?:[a-zA-Z_][a-zA-Z0-9_+\-]*|[0-9][0-9_]*[a-zA-Z_+\-][a-zA-Z0-9_+\-]*)/
+SET_ELEMENT_ID.2: /(?:[a-zA-Z_][a-zA-Z0-9_+\-]*|[0-9][0-9_]*[\-_][a-zA-Z0-9_+\-]*)/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
 // Issue #424: SYMBOL_NAME matches only unquoted identifiers for use as set/param/var names
 // This prevents quoted strings like 'products' from being parsed as symbol names
