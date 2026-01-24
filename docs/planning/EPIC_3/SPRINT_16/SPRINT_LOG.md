@@ -24,6 +24,7 @@
 | Day | Parse Rate | Models | Event |
 |-----|------------|--------|-------|
 | 0 | 21.25% | 34/160 | Sprint 15 baseline |
+| 6 | 22.50% | 36/160 | P1 grammar fixes (+2: cclinpts, jobt) |
 
 ---
 
@@ -525,6 +526,59 @@
 4. **Expected outcome: minimum 76% solve rate (P1 only: 13/17), target 100% (P1+P2: 17/17)** - up from 17.6%
 
 **Next Steps:** Day 6 - Parse Improvements (Priority 1)
+
+---
+
+### Day 6: Parse Improvements - Priority 1
+
+**Date:** January 23, 2026
+
+**Objective:** Implement low-effort, high-confidence grammar fixes to unblock models
+
+**Tasks Completed:**
+
+1. **Free Variable Keyword Support**
+   - Added `FREE_K` terminal: `/(?i:free)\b/`
+   - Added to `var_kind` rule: `POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K | FREE_K`
+   - Models unlocked: jobt
+   - Models with secondary issues: apl1p, apl1pca (x.stage() parses via attr_access but IR builder ignores it)
+
+2. **Hyphenated Set Elements (Number-Start)**
+   - Extended `SET_ELEMENT_ID` pattern: `/(?:[a-zA-Z_][a-zA-Z0-9_+\-]*|[0-9][0-9_]*[a-zA-Z_+\-][a-zA-Z0-9_+\-]*)/`
+   - First alternative: traditional identifiers starting with letter/underscore
+   - Second alternative: identifiers starting with digits but requiring a non-digit after numeric prefix (e.g., `1964-i`, `89-07`)
+   - Fix verified: abel now parses successfully after Issue #555 (quoted/string indices)
+   - Models with secondary issues: ajax, immun (numeric set data not yet supported)
+
+3. **Abort Statement with Display List**
+   - Extended `abort_base` rule to support `("," display_item)*` after STRING
+   - Syntax: `abort$(cond) 'message', var1, var2;`
+   - Models unlocked: cclinpts
+
+4. **Quality Checks Passed**
+   - `make typecheck`: PASSED (91 source files)
+   - `make lint`: PASSED (all checks passed)
+   - `make test`: 2924 passed, 1 pre-existing failure, 10 skipped, 1 xfailed
+
+**Files Modified:**
+- `src/gams/gams_grammar.lark` - Grammar extensions for P1 fixes
+
+**Results:**
+- Baseline: 34/160 models parsing (21.25%)
+- After P1: 36/160 models parsing (22.5%)
+- New models: cclinpts, jobt
+- No regressions: all 34 previously-passing models still pass
+
+**Key Findings:**
+1. **P1 fixes work as designed** - grammar changes correctly handle targeted syntax
+2. **Models have multiple blocking issues** - fixing one reveals the next
+3. **Target models need additional fixes:**
+   - apl1p, apl1pca: x.stage() parses but IR builder skips the assignment (stochastic programming not modeled)
+   - abel: Now parses successfully after Issue #555 (quoted/string indices in parameter data)
+   - ajax, immun: Still blocked on "Need numeric values in set data context" errors
+   - Other keyword case models: Need investigation for secondary issues
+
+**Next Steps:** Day 7 - Parse Improvements (Priority 2)
 
 ---
 

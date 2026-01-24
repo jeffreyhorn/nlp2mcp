@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Day 6: Parse Improvements - Priority 1 - 2026-01-23
+
+**Branch:** `sprint16-day6-parse-p1`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented P1 grammar fixes: Free Variable keyword support, hyphenated set elements starting with numbers, abort statement with display list, attr_access_indexed for stochastic attributes, comma-separated put items, unquoted file paths, and quoted string indices in parameter data.
+
+#### Changes
+
+**Modified Files:**
+- `src/gams/gams_grammar.lark` - Grammar extensions for P1 fixes (FREE_K, SET_ELEMENT_ID, abort_base, attr_access_indexed, put_items, FILE_PATH_UNQUOTED, data_index)
+- `src/ir/parser.py` - attr_access/attr_access_indexed validation (variables, parameters, equations, models), data_index handling for STRING
+- `tests/unit/gams/test_parser.py` - Added Sprint 16 grammar feature tests (12+ tests)
+- `data/gamslib/gamslib_status.json` - Regenerated parse status
+- `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 6 log entry
+- `docs/issues/completed/ISSUE_STAGE_ATTRIBUTE_SYNTAX.md` - Issue #554 documentation
+- `docs/issues/completed/ISSUE_NUMERIC_VALUES_IN_SET_DATA.md` - Issue #555 documentation
+- `docs/issues/completed/ISSUE_ATTR_ACCESS_EQUATION_VALIDATION.md` - Issue #558 documentation
+
+#### Grammar Fixes
+
+| Fix | Change | Models Unlocked |
+|-----|--------|-----------------|
+| Free Variable keyword | Added `FREE_K` terminal to `var_kind` | jobt |
+| Hyphenated number-start elements | Extended `SET_ELEMENT_ID` pattern | (enables other fixes) |
+| Abort with display list | Added `("," display_item)*` to `abort_base` | cclinpts |
+| attr_access_indexed | Added `ID "." ID "(" index_list ")"` rule | apl1p, apl1pca |
+| Comma-separated put items | Added `put_items` with optional comma | (Issue #557) |
+| Unquoted file paths | Added `FILE_PATH_UNQUOTED` terminal | (Issue #556) |
+| Quoted string indices | Added `STRING` to `data_index` rule | abel (Issue #555) |
+| Equation attr validation | Added equations to attr_access_indexed validation | (Issue #558) |
+
+#### Results
+
+- **Parse rate (160 model sample):** 21.25% → 22.5% (34/160 → 36/160)
+- **New models parsing:** cclinpts, jobt
+- **Models with secondary issues resolved:** apl1p, apl1pca (x.stage() now parses), abel (quoted indices)
+- **No regressions:** All 34 previously-passing models still pass
+- **Tests:** 2924 passed, 1 pre-existing failure, 10 skipped, 1 xfailed
+
+**Note:** Additional grammar fixes (attr_access_indexed, put_items, FILE_PATH_UNQUOTED, data_index STRING) resolve secondary issues in models that had multiple blockers. Full gamslib (574 models) shows 147 parsing (25.62%) but the 160-model sample is used for sprint metrics consistency.
+
+#### Key Finding
+
+Target models have multiple blocking issues. Fixing one issue reveals secondary issues. The attr_access_indexed handler validates base symbols (variables, parameters, equations, models) and ignores assignments for stochastic programming attributes not modeled by nlp2mcp.
+
+---
+
 ### Sprint 16 Day 5: Solve Gap Analysis and Roadmap Finalization [Checkpoint 2] - 2026-01-22
 
 **Branch:** `sprint16-day5-gap-analysis-solve`  

@@ -158,8 +158,11 @@ param_data_item: data_matrix_row                         -> param_data_matrix_ro
 // data_indices can be numeric (e.g., parameter tau(nm) / 1 0.000, 2 0.025 /)
 // Also allows hyphenated identifiers (e.g., parameter cost(i) / light-ind 100 /)
 // Sprint 12 Day 5: Support range notation (e.g., foulds3*foulds5 -8)
+// Issue #555: Support quoted strings as indices (e.g., / 'gov-expend' 110.5 /)
 data_indices: range_expr
-            | (SET_ELEMENT_ID | NUMBER) ("." (SET_ELEMENT_ID | NUMBER))*
+            | data_index ("." data_index)*
+
+data_index: SET_ELEMENT_ID | NUMBER | STRING
 // Matrix row must have at least 2 values (data_indices followed by 2+ NUMBERs) to disambiguate from scalar
 data_matrix_row: data_indices NUMBER NUMBER+
 data_matrix_values: NUMBER (NUMBER)*
@@ -177,12 +180,13 @@ var_single_item: var_kind? ID "(" id_list ")" (STRING | desc_text)? -> var_item_
 var_item: var_kind? ID "(" id_list ")" STRING?               -> var_item_indexed
         | var_kind? ID STRING?                               -> var_item_scalar
 
-var_kind: POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K
+var_kind: POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K | FREE_K
 
 POSITIVE_K: /(?i:positive)\b/
 NEGATIVE_K: /(?i:negative)\b/
 BINARY_K  : /(?i:binary)\b/
 INTEGER_K : /(?i:integer)\b/
+FREE_K    : /(?i:free)\b/
 
 // NOTE: eqn_head_domain_list allows comma-separated equation names with domains,
 // e.g., "Equations eq1, eq2(i,j);". This is NOT valid GAMS syntax according to
@@ -255,8 +259,13 @@ lvalue: ref_bound | ref_indexed | ID
 ref_bound: ID "." BOUND_K "(" index_list ")"   -> bound_indexed
          | ID "." BOUND_K "[" index_list "]"   -> bound_indexed
          | ID "." BOUND_K                      -> bound_scalar
-         | ID "." ID                            -> attr_access
+         | ID "." ID "(" index_list ")"        -> attr_access_indexed
+         | ID "." ID "[" index_list "]"        -> attr_access_indexed
+         | ID "." ID                           -> attr_access
 
+// Note: 'stage' is NOT included as a bound keyword so that x.stage(...) parses as
+// attr_access/attr_access_indexed, avoiding it being interpreted as a variable bound
+// in the ModelIR builder. The IR builder ignores these assignments (Issue #554).
 BOUND_K: /(lo|up|fx|l|m)/i
 
 ref_indexed.2: ID "(" index_list ")"             -> symbol_indexed
@@ -401,12 +410,18 @@ loop_body: exec_stmt* exec_stmt_final
 // ---------------------------
 
 // File statement declares a file handle for output operations
-// Syntax: file <name> / '<path>' /;
+// Syntax: file <name> / '<path>' /;  or  file <name> / path.ext /;
 // We parse but don't process since file I/O is not relevant for NLP model extraction
 file_stmt: "file"i ID "/" file_path "/" SEMI
 
+// Sprint 16 Day 6: Added FILE_PATH_UNQUOTED for unquoted paths like MODEL.STG (Issue #556)
 file_path: STRING
          | compile_time_const
+         | FILE_PATH_UNQUOTED
+
+// Pattern for unquoted file paths: allows letters, numbers, dots, underscores, hyphens
+// Examples: MODEL.STG, output.txt, results_2024.dat
+FILE_PATH_UNQUOTED: /[a-zA-Z0-9_][a-zA-Z0-9_.\-]*/
 
 // ---------------------------
 // Put Statement (Sprint 12 - Issue #447 - mock/skip for file I/O)
@@ -417,10 +432,15 @@ file_path: STRING
 //   put f;                    - select file handle
 //   put 'text' /;             - write string with newline
 //   put x.l;                  - write expression
-//   put 'x = ' x.l /;         - write multiple items with newline
+//   put 'x = ' x.l /;         - write multiple items with newline (space-separated)
+//   put "text", v1("out", omega1), " more" /;  - comma-separated items with indexed expressions
 // We parse but don't process since file I/O is not relevant for NLP model extraction
-put_stmt: "put"i put_item* SEMI
-        | "put"i put_item* "/" SEMI
+// Issue #557: Use optional comma separation to handle indexed expressions like v1("out", omega1)
+// GAMS allows both space-separated and comma-separated put items
+put_stmt: "put"i put_items? SEMI
+        | "put"i put_items "/" SEMI
+
+put_items: put_item (","? put_item)*
 
 put_item: STRING
         | "/" -> put_newline
@@ -445,14 +465,15 @@ execute_stmt: "execute"i ("." ID)? STRING SEMI?
 // ---------------------------
 
 // Abort statement base rule (no SEMI)
-abort_base: "abort"i DOLLAR "[" expr "]" STRING     -> abort_cond_square_msg
-          | "abort"i DOLLAR "[" expr "]"             -> abort_cond_square
-          | "abort"i DOLLAR "(" expr ")" STRING      -> abort_cond_paren_msg
-          | "abort"i DOLLAR "(" expr ")"             -> abort_cond_paren
-          | "abort"i DOLLAR expr STRING              -> abort_cond_plain_msg
-          | "abort"i DOLLAR expr                     -> abort_cond_plain
-          | "abort"i STRING                       -> abort_msg
-          | "abort"i                              -> abort_plain
+// Sprint 16 Day 6: Extended to support display list after message (e.g., abort$(cond) 'msg', var1, var2)
+abort_base: "abort"i DOLLAR "[" expr "]" STRING ("," display_item)*  -> abort_cond_square_msg
+          | "abort"i DOLLAR "[" expr "]"                              -> abort_cond_square
+          | "abort"i DOLLAR "(" expr ")" STRING ("," display_item)*   -> abort_cond_paren_msg
+          | "abort"i DOLLAR "(" expr ")"                              -> abort_cond_paren
+          | "abort"i DOLLAR expr STRING ("," display_item)*           -> abort_cond_plain_msg
+          | "abort"i DOLLAR expr                                      -> abort_cond_plain
+          | "abort"i STRING ("," display_item)*                       -> abort_msg
+          | "abort"i                                                  -> abort_plain
 
 // Top-level statements (with SEMI)
 display_stmt: "display"i display_item ("," display_item)* SEMI
@@ -544,7 +565,12 @@ LOOP_K: /(?i:loop)\b/
 OPTION_K: /(?i:options?)\b/
 ON: /(?i:on)\b/
 OFF: /(?i:off)\b/
-SET_ELEMENT_ID.2: /[a-zA-Z_][a-zA-Z0-9_+\-]*/
+// Sprint 16 Day 6: Extended to allow number-start elements like "1964-i", "89-07"
+// Pattern allows: letter/underscore start, or digit start followed by '-'/'_' separator
+// This prevents stealing NUMBER tokens (e.g., "1", "10", "1e-3") while allowing "1964-i", "89-07"
+// The digit-start branch requires explicit '-' or '_' separator to avoid matching scientific notation
+// Priority 2 ensures it matches before plain ID but after keywords
+SET_ELEMENT_ID.2: /(?:[a-zA-Z_][a-zA-Z0-9_+\-]*|[0-9][0-9_]*[\-_][a-zA-Z0-9_+\-]*)/
 ID: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
 // Issue #424: SYMBOL_NAME matches only unquoted identifiers for use as set/param/var names
 // This prevents quoted strings like 'products' from being parsed as symbol names

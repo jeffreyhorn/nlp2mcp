@@ -4856,3 +4856,233 @@ class TestSumDomainMismatch:
         model = parser.parse_model_text(text)
         assert "test" in model.equations
         assert model.equations["test"].domain == ("j",)
+
+
+# ==============================================================================
+# Sprint 16 Day 6 Grammar Features (PR #553)
+# ==============================================================================
+
+
+class TestSprint16GrammarFeatures:
+    """Tests for Sprint 16 Day 6 grammar improvements (PR #553)."""
+
+    def test_abort_with_display_list(self):
+        """Test abort statement with display list after message (Issue #cclinpts pattern).
+
+        Syntax: abort$(cond) 'message', var1, var2;
+        """
+        text = dedent("""
+            Variables x, y;
+            Scalars flag /1/;
+
+            abort$(flag > 0) 'Error occurred', x, y;
+            """)
+        # This should parse successfully (abort_cond_plain_msg rule)
+        tree = parser.parse_text(text)
+        assert tree.data == "program"
+
+    def test_abort_with_display_list_multiple_items(self):
+        """Test abort with multiple display items."""
+        text = dedent("""
+            Variables x, y, z;
+            Parameters a, b;
+
+            abort$(1 > 0) 'Debug info', x, y, z, a, b;
+            """)
+        tree = parser.parse_text(text)
+        assert tree.data == "program"
+
+    def test_abort_with_parenthesized_condition_and_display(self):
+        """Test abort$(...) 'msg', vars syntax."""
+        text = dedent("""
+            Variables x;
+            Scalars check /0/;
+
+            abort$(check = 0) 'Value is zero', x;
+            """)
+        tree = parser.parse_text(text)
+        assert tree.data == "program"
+
+    def test_file_path_unquoted(self):
+        """Test FILE_PATH_UNQUOTED terminal for unquoted file paths (Issue #556).
+
+        Syntax: file f / MODEL.STG /;
+        """
+        text = dedent("""
+            file results / output.txt /;
+            file model_file / MODEL.STG /;
+            file data_2024 / results_2024.dat /;
+            """)
+        tree = parser.parse_text(text)
+        assert tree.data == "program"
+
+    def test_file_path_with_quoted_string(self):
+        """Test file statement with quoted path (original syntax)."""
+        text = dedent("""
+            file results / 'output.txt' /;
+            file data / "path/to/data.gms" /;
+            """)
+        tree = parser.parse_text(text)
+        assert tree.data == "program"
+
+    def test_put_items_comma_separated(self):
+        """Test comma-separated put items with indexed expressions (Issue #557).
+
+        Syntax: put "text", v1("out", omega1), " more" /;
+        """
+        text = dedent("""
+            Sets i /a, b/;
+            Variables v(i);
+            file f / output.txt /;
+
+            put "Value: ", v("a"), ", other: ", v("b") /;
+            """)
+        tree = parser.parse_text(text)
+        assert tree.data == "program"
+
+    def test_put_items_space_separated(self):
+        """Test space-separated put items (original syntax)."""
+        text = dedent("""
+            Variables x, y;
+            file f / output.txt /;
+
+            put 'x = ' x.l /;
+            put 'y = ' y.l /;
+            """)
+        tree = parser.parse_text(text)
+        assert tree.data == "program"
+
+    def test_put_items_mixed_separation(self):
+        """Test mixed comma and space separated put items."""
+        text = dedent("""
+            Sets omega /o1, o2/;
+            Variables v1(omega);
+            file f / out.txt /;
+
+            put "text", v1("o1") " more text" /;
+            """)
+        tree = parser.parse_text(text)
+        assert tree.data == "program"
+
+    def test_number_start_set_element_id(self):
+        """Test SET_ELEMENT_ID starting with numbers (hyphenated elements).
+
+        Pattern: digits followed by non-digit, e.g., 1964-i, 89-07
+        """
+        text = dedent("""
+            Sets
+                years / 1964-i, 1965-i, 1966-i /
+                periods / 89-01, 89-02, 89-03 /
+            ;
+            """)
+        model = parser.parse_model_text(text)
+        assert "years" in model.sets
+        assert model.sets["years"].members == ["1964-i", "1965-i", "1966-i"]
+        assert "periods" in model.sets
+        assert model.sets["periods"].members == ["89-01", "89-02", "89-03"]
+
+    def test_attr_access_indexed_stage(self):
+        """Test attr_access_indexed rule for .stage() syntax (Issue #554).
+
+        Syntax: x.stage(g) = 1;
+        The IR builder validates base symbol exists then ignores assignment.
+        """
+        text = dedent("""
+            Sets g /g1, g2/;
+            Variables x(g), y;
+            Equations eq;
+
+            eq.. x(g) + y =e= 0;
+
+            x.stage(g) = 1;
+            y.stage = 2;
+
+            Model m /all/;
+            Solve m using NLP minimizing y;
+            """)
+        # This should parse and build IR successfully via attr_access_indexed
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert "y" in model.variables
+
+    def test_attr_access_indexed_generic_attribute(self):
+        """Test attr_access_indexed for generic attribute access."""
+        text = dedent("""
+            Sets i /i1, i2/;
+            Variables x(i), obj;
+            Equations eq;
+
+            eq.. obj =e= sum(i, x(i));
+
+            x.prior(i) = 1;
+            x.scale(i) = 100;
+
+            Model m /all/;
+            Solve m using NLP minimizing obj;
+            """)
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+
+    def test_attr_access_indexed_equation_stage(self):
+        """Test attr_access_indexed for equation .stage() syntax (Issue #558).
+
+        In GAMS stochastic programming, equations can have .stage attributes.
+        The IR builder validates base symbol exists (including equations) then ignores.
+        """
+        text = dedent("""
+            Sets g /g1, g2/;
+            Variables x(g), obj;
+            Equations
+                cmin(g)
+                objdef;
+
+            objdef.. obj =e= sum(g, x(g));
+            cmin(g).. x(g) =g= 0;
+
+            cmin.stage(g) = 1;
+            objdef.stage = 2;
+
+            Model m /all/;
+            Solve m using NLP minimizing obj;
+            """)
+        # This should parse and build IR successfully - equations allowed in attr_access
+        model = parser.parse_model_text(text)
+        assert "cmin" in model.equations
+        assert "objdef" in model.equations
+
+    def test_free_variables_keyword(self):
+        """Test FREE_K terminal for 'free' variable kind."""
+        text = dedent("""
+            Free Variables
+                x
+                y
+            ;
+
+            Equations eq;
+            eq.. x + y =e= 0;
+
+            Model m /all/;
+            Solve m using NLP minimizing x;
+            """)
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert "y" in model.variables
+        # Free variables should be continuous (no bounds)
+        assert model.variables["x"].kind == VarKind.CONTINUOUS
+        assert model.variables["y"].kind == VarKind.CONTINUOUS
+
+    def test_quoted_string_indices_in_parameter_data(self):
+        """Test Issue #555: Quoted STRING indices in parameter/set data blocks.
+
+        Syntax: Parameter p(i) / 'gov-expend' 110.5, 'money' 147.1 /;
+        The quoted strings should be stored under unquoted keys.
+        """
+        text = dedent("""
+            Set m 'controls' / gov-expend, money /;
+            Parameter uinit(m) 'initial controls' / 'gov-expend' 110.5, 'money' 147.1 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "uinit" in model.params
+        # Values should be stored under unquoted keys
+        assert model.params["uinit"].values[("gov-expend",)] == 110.5
+        assert model.params["uinit"].values[("money",)] == 147.1
