@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/jeffreyhorn/nlp2mcp/data/gamslib/schema.json",
   "title": "GAMSLIB Model Status Database",
-  "description": "Schema for tracking GAMSLIB model status through the nlp2mcp pipeline (v2.1.0)",
+  "description": "Schema for tracking GAMSLIB model status through the nlp2mcp pipeline (v2.2.0)",
   "type": "object",
   "required": ["schema_version", "models"],
   "additionalProperties": false,

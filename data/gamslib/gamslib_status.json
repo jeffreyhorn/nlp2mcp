@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.1.0",
+  "schema_version": "2.2.0",
   "created_date": "2026-01-02T04:36:53Z",
   "updated_date": "2026-01-13T15:12:19Z",
   "total_models": 219,
@@ -45,7 +45,7 @@
       "solution_comparison": {
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:37:51.707809+00:00",
-        "notes": "Skipped due to parse failure"
+        "notes": "Not run"
       },
       "model_statistics": {
         "variables": 3,
@@ -229,7 +229,7 @@
       "solution_comparison": {
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:37:51.915256+00:00",
-        "notes": "Skipped due to parse failure"
+        "notes": "Not run"
       },
       "model_statistics": {
         "variables": 2,
@@ -426,7 +426,7 @@
       "solution_comparison": {
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:37:53.786311+00:00",
-        "notes": "Skipped due to parse failure"
+        "notes": "Not run"
       },
       "model_statistics": {
         "variables": 4,
@@ -783,7 +783,7 @@
       "solution_comparison": {
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:37:56.739577+00:00",
-        "notes": "Skipped due to parse failure"
+        "notes": "Not run"
       },
       "model_statistics": {
         "variables": 3,
@@ -3400,7 +3400,7 @@
       "solution_comparison": {
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:38:33.348753+00:00",
-        "notes": "Skipped due to parse failure"
+        "notes": "Not run"
       },
       "model_statistics": {
         "variables": 7,
@@ -5296,7 +5296,7 @@
       "solution_comparison": {
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:38:54.285980+00:00",
-        "notes": "Skipped due to parse failure"
+        "notes": "Not run"
       },
       "model_statistics": {
         "variables": 11,
@@ -6740,7 +6740,7 @@
       "solution_comparison": {
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:39:03.325716+00:00",
-        "notes": "Skipped due to parse failure"
+        "notes": "Not run"
       },
       "model_statistics": {
         "variables": 3,
@@ -8733,7 +8733,7 @@
       "solution_comparison": {
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:39:15.643761+00:00",
-        "notes": "Skipped due to parse failure"
+        "notes": "Not run"
       },
       "model_statistics": {
         "variables": 2,
