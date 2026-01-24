@@ -4985,30 +4985,70 @@ class TestSprint16GrammarFeatures:
         """Test attr_access_indexed rule for .stage() syntax (Issue #554).
 
         Syntax: x.stage(g) = 1;
-        The IR builder ignores these (stochastic programming not modeled).
+        The IR builder validates base symbol exists then ignores assignment.
         """
         text = dedent("""
             Sets g /g1, g2/;
             Variables x(g), y;
+            Equations eq;
+
+            eq.. x(g) + y =e= 0;
 
             x.stage(g) = 1;
             y.stage = 2;
+
+            Model m /all/;
+            Solve m using NLP minimizing y;
             """)
-        # This should parse successfully via attr_access_indexed
-        tree = parser.parse_text(text)
-        assert tree.data == "program"
+        # This should parse and build IR successfully via attr_access_indexed
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+        assert "y" in model.variables
 
     def test_attr_access_indexed_generic_attribute(self):
         """Test attr_access_indexed for generic attribute access."""
         text = dedent("""
             Sets i /i1, i2/;
-            Variables x(i);
+            Variables x(i), obj;
+            Equations eq;
+
+            eq.. obj =e= sum(i, x(i));
 
             x.prior(i) = 1;
             x.scale(i) = 100;
+
+            Model m /all/;
+            Solve m using NLP minimizing obj;
             """)
-        tree = parser.parse_text(text)
-        assert tree.data == "program"
+        model = parser.parse_model_text(text)
+        assert "x" in model.variables
+
+    def test_attr_access_indexed_equation_stage(self):
+        """Test attr_access_indexed for equation .stage() syntax (Issue #558).
+
+        In GAMS stochastic programming, equations can have .stage attributes.
+        The IR builder validates base symbol exists (including equations) then ignores.
+        """
+        text = dedent("""
+            Sets g /g1, g2/;
+            Variables x(g), obj;
+            Equations
+                cmin(g)
+                objdef;
+
+            objdef.. obj =e= sum(g, x(g));
+            cmin(g).. x(g) =g= 0;
+
+            cmin.stage(g) = 1;
+            objdef.stage = 2;
+
+            Model m /all/;
+            Solve m using NLP minimizing obj;
+            """)
+        # This should parse and build IR successfully - equations allowed in attr_access
+        model = parser.parse_model_text(text)
+        assert "cmin" in model.equations
+        assert "objdef" in model.equations
 
     def test_free_variables_keyword(self):
         """Test FREE_K terminal for 'free' variable kind."""
