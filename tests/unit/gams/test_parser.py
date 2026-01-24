@@ -5070,3 +5070,19 @@ class TestSprint16GrammarFeatures:
         # Free variables should be continuous (no bounds)
         assert model.variables["x"].kind == VarKind.CONTINUOUS
         assert model.variables["y"].kind == VarKind.CONTINUOUS
+
+    def test_quoted_string_indices_in_parameter_data(self):
+        """Test Issue #555: Quoted STRING indices in parameter/set data blocks.
+
+        Syntax: Parameter p(i) / 'gov-expend' 110.5, 'money' 147.1 /;
+        The quoted strings should be stored under unquoted keys.
+        """
+        text = dedent("""
+            Set m 'controls' / gov-expend, money /;
+            Parameter uinit(m) 'initial controls' / 'gov-expend' 110.5, 'money' 147.1 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "uinit" in model.params
+        # Values should be stored under unquoted keys
+        assert model.params["uinit"].values[("gov-expend",)] == 110.5
+        assert model.params["uinit"].values[("money",)] == 147.1

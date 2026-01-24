@@ -547,8 +547,8 @@
    - Extended `SET_ELEMENT_ID` pattern: `/(?:[a-zA-Z_][a-zA-Z0-9_+\-]*|[0-9][0-9_]*[a-zA-Z_+\-][a-zA-Z0-9_+\-]*)/`
    - First alternative: traditional identifiers starting with letter/underscore
    - Second alternative: identifiers starting with digits but requiring a non-digit after numeric prefix (e.g., `1964-i`, `89-07`)
-   - Fix verified: abel error moved from line 18 to line 54 (different issue)
-   - Models with secondary issues: abel, ajax, immun (numeric set data not supported)
+   - Fix verified: abel now parses successfully after Issue #555 (quoted/string indices)
+   - Models with secondary issues: ajax, immun (numeric set data not yet supported)
 
 3. **Abort Statement with Display List**
    - Extended `abort_base` rule to support `("," display_item)*` after STRING
@@ -574,7 +574,8 @@
 2. **Models have multiple blocking issues** - fixing one reveals the next
 3. **Target models need additional fixes:**
    - apl1p, apl1pca: x.stage() parses but IR builder skips the assignment (stochastic programming not modeled)
-   - abel, ajax, immun: Need numeric values in set data context
+   - abel: Now parses successfully after Issue #555 (quoted/string indices in parameter data)
+   - ajax, immun: Still blocked on "Need numeric values in set data context" errors
    - Other keyword case models: Need investigation for secondary issues
 
 **Next Steps:** Day 7 - Parse Improvements (Priority 2)
