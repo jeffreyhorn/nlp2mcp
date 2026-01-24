@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Implemented P1 grammar fixes: Free Variable keyword support, hyphenated set elements starting with numbers, abort statement with display list, attr_access_indexed for stochastic attributes, comma-separated put items, unquoted file paths, and quoted string indices in parameter data. Parse rate improved to 25.62%.
+Implemented P1 grammar fixes: Free Variable keyword support, hyphenated set elements starting with numbers, abort statement with display list, attr_access_indexed for stochastic attributes, comma-separated put items, unquoted file paths, and quoted string indices in parameter data.
 
 #### Changes
 
@@ -43,10 +43,13 @@ Implemented P1 grammar fixes: Free Variable keyword support, hyphenated set elem
 
 #### Results
 
-- **Parse rate:** 21.25% → 25.62% (147/574 models)
-- **New models parsing:** cclinpts, jobt, apl1p, abel, and others
-- **No regressions:** All previously-passing models still pass
-- **All 2938 tests passing**
+- **Parse rate (160 model sample):** 21.25% → 22.5% (34/160 → 36/160)
+- **New models parsing:** cclinpts, jobt
+- **Models with secondary issues resolved:** apl1p, apl1pca (x.stage() now parses), abel (quoted indices)
+- **No regressions:** All 34 previously-passing models still pass
+- **Tests:** 2924 passed, 1 pre-existing failure, 10 skipped, 1 xfailed
+
+**Note:** Additional grammar fixes (attr_access_indexed, put_items, FILE_PATH_UNQUOTED, data_index STRING) resolve secondary issues in models that had multiple blockers. Full gamslib (574 models) shows 147 parsing (25.62%) but the 160-model sample is used for sprint metrics consistency.
 
 #### Key Finding
 
