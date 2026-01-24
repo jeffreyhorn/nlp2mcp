@@ -152,8 +152,16 @@ scalar_data_item: NUMBER
 
 param_default: ASSIGN expr
 param_data_items: param_data_item ("," param_data_item)*
+// Sprint 16 Day 7: Added param_data_tuple_expansion for (a,b) value syntax (Issue P-4)
+// Example: k(j) / (route-1,route-2) 13, route-5 1 / expands to route-1=13, route-2=13, route-5=1
 param_data_item: data_matrix_row                         -> param_data_matrix_row
+                 | "(" set_element_id_list ")" NUMBER    -> param_data_tuple_expansion
                  | data_indices NUMBER                   -> param_data_scalar
+
+// Set element ID list for tuple expansion - comma-separated list of SET_ELEMENT_IDs or quoted strings
+// Note: Preprocessor quotes hyphenated identifiers like route-1 to 'route-1', so we must accept STRING
+set_element_id_list: set_element_id_or_string ("," set_element_id_or_string)*
+set_element_id_or_string: SET_ELEMENT_ID | STRING
 
 // data_indices can be numeric (e.g., parameter tau(nm) / 1 0.000, 2 0.025 /)
 // Also allows hyphenated identifiers (e.g., parameter cost(i) / light-ind 100 /)
@@ -205,18 +213,23 @@ id_or_wildcard: ID | WILDCARD
 WILDCARD: "*"
 
 set_members: set_member ("," set_member)*
+// Sprint 16 Day 7: Added STRING STRING for quoted elements with descriptions (P-5)
+// Preprocessor quotes hyphenated IDs, so 'cotton-h' 'cotton-herbaceo' is STRING STRING
 ?set_member: range_expr                          -> set_range
            | SET_ELEMENT_ID "." "(" id_list ")"  -> set_tuple_expansion
            | SET_ELEMENT_ID "." SET_ELEMENT_ID STRING -> set_tuple_with_desc
            | SET_ELEMENT_ID "." SET_ELEMENT_ID   -> set_tuple
            | SET_ELEMENT_ID STRING               -> set_element_with_desc
+           | STRING STRING                       -> set_element_with_desc
            | NUMBER                              -> set_element
            | SET_ELEMENT_ID                      -> set_element
            | STRING                              -> set_element
 
 // Range expression: supports both numeric (1*10) and symbolic (s1*s10) ranges
+// Sprint 16 Day 7: Added SET_ELEMENT_ID and STRING for hyphenated ranges (e.g., route-1*route-5)
+// STRING supports quoted identifiers from preprocessor (e.g., 'route-1'*'route-5')
 range_expr: range_bound TIMES range_bound
-range_bound: NUMBER | ID
+range_bound: NUMBER | SET_ELEMENT_ID | STRING | ID
 
 
 

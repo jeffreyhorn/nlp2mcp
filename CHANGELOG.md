@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Day 7: Parse Improvements - Priority 2 - 2026-01-24
+
+**Branch:** `sprint16-day7-parse-p2`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented P2 grammar fixes: tuple expansion syntax for parameter data blocks, extended range expressions for hyphenated identifiers and alphabetic ranges, and quoted set element descriptions.
+
+#### Changes
+
+**Modified Files:**
+- `src/gams/gams_grammar.lark` - Grammar extensions for P2 fixes (param_data_tuple_expansion, set_element_id_list, range_bound extensions, STRING STRING set_member)
+- `src/ir/parser.py` - Tuple expansion handling (_parse_set_element_id_list), extended range support (_expand_range for hyphenated/alphabetic), quote stripping for STRING tokens
+- `tests/unit/gams/test_parser.py` - Added Sprint 16 Day 7 tests (10 new tests in 3 test classes)
+- `docs/planning/EPIC_3/SPRINT_16/PLAN.md` - Day 7 marked complete
+- `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 7 entry added
+
+#### Grammar Fixes
+
+| Fix | Change | Models Unlocked |
+|-----|--------|-----------------|
+| Tuple expansion (P-4) | Added `param_data_tuple_expansion` rule for `(elem1,elem2) value` | pollut |
+| Hyphenated range bounds | Extended `range_bound` to include `SET_ELEMENT_ID`, `STRING` | (enables hyphenated ranges) |
+| Alphabetic ranges | Extended `_expand_range()` for single-letter ranges `a*d` | (aircraft, etc.) |
+| Quoted set descriptions (P-5) | Added `STRING STRING` to `set_member` rule | (agreste, etc.) |
+
+#### Results
+
+- **Parse rate (160 model sample):** 22.5% → 23.13% (36/160 → 37/160)
+- **New models parsing:** pollut
+- **No regressions:** All 36 previously-passing models still pass
+- **Tests:** 2949 passed, 10 skipped, 1 xfailed (+10 new tests)
+
+**Note:** Many target models have multiple blocking issues. Fixing tuple expansion and quoted descriptions reveals secondary issues (alias resolution in dollar conditions, multi-line equation continuation, etc.) that require additional parser work.
+
+---
+
 ### Sprint 16 Day 6: Parse Improvements - Priority 1 - 2026-01-23
 
 **Branch:** `sprint16-day6-parse-p1`  

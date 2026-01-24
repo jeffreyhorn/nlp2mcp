@@ -5086,3 +5086,135 @@ class TestSprint16GrammarFeatures:
         # Values should be stored under unquoted keys
         assert model.params["uinit"].values[("gov-expend",)] == 110.5
         assert model.params["uinit"].values[("money",)] == 147.1
+
+
+# Sprint 16 Day 7 Grammar Features
+# ============================================================================
+
+
+class TestSprint16Day7TupleExpansion:
+    """Tests for Sprint 16 Day 7: Tuple expansion syntax in parameter data (P-4)."""
+
+    def test_tuple_expansion_basic(self):
+        """Test basic tuple expansion: (a,b) value expands to a=value, b=value.
+
+        Syntax: Parameter k(j) / (route-1,route-2) 13 /;
+        This should expand to k('route-1')=13, k('route-2')=13.
+        """
+        text = dedent("""
+            Set j / route-1, route-2, route-3, route-4, route-5 /;
+            Parameter k(j) / (route-1,route-2) 13, (route-3,route-4) 7, route-5 1 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "k" in model.params
+        assert model.params["k"].values[("route-1",)] == 13.0
+        assert model.params["k"].values[("route-2",)] == 13.0
+        assert model.params["k"].values[("route-3",)] == 7.0
+        assert model.params["k"].values[("route-4",)] == 7.0
+        assert model.params["k"].values[("route-5",)] == 1.0
+
+    def test_tuple_expansion_with_hyphenated_ids(self):
+        """Test tuple expansion with hyphenated identifiers (preprocessor quotes these).
+
+        After preprocessing, (route-1,route-2) becomes ('route-1','route-2').
+        The parser should strip quotes and match against set members.
+        """
+        # Simulate preprocessed text
+        text = dedent("""
+            Set j / 'route-1'*'route-5' /;
+            Parameter k(j) / ('route-1','route-2') 13 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["j"].members == ["route-1", "route-2", "route-3", "route-4", "route-5"]
+        assert model.params["k"].values[("route-1",)] == 13.0
+        assert model.params["k"].values[("route-2",)] == 13.0
+
+    def test_tuple_expansion_mixed_with_scalar(self):
+        """Test tuple expansion mixed with regular scalar data items."""
+        text = dedent("""
+            Set i / a, b, c, d, e /;
+            Parameter p(i) / (a,b) 10, c 20, (d,e) 30 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 10.0
+        assert model.params["p"].values[("b",)] == 10.0
+        assert model.params["p"].values[("c",)] == 20.0
+        assert model.params["p"].values[("d",)] == 30.0
+        assert model.params["p"].values[("e",)] == 30.0
+
+
+class TestSprint16Day7RangeExpansion:
+    """Tests for Sprint 16 Day 7: Extended range expression support."""
+
+    def test_hyphenated_range_expansion(self):
+        """Test range expansion with hyphenated identifiers: route-1*route-5.
+
+        This should expand to route-1, route-2, route-3, route-4, route-5.
+        """
+        text = dedent("""
+            Set j / route-1*route-5 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["j"].members == ["route-1", "route-2", "route-3", "route-4", "route-5"]
+
+    def test_alphabetic_range_expansion(self):
+        """Test single-letter alphabetic range: a*d -> a, b, c, d."""
+        text = dedent("""
+            Set i / a*d /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c", "d"]
+
+    def test_uppercase_alphabetic_range(self):
+        """Test uppercase alphabetic range: A*D -> A, B, C, D."""
+        text = dedent("""
+            Set i / A*D /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["A", "B", "C", "D"]
+
+    def test_quoted_hyphenated_range(self):
+        """Test range with quoted hyphenated identifiers (from preprocessor)."""
+        text = dedent("""
+            Set j / 'data-1'*'data-3' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["j"].members == ["data-1", "data-2", "data-3"]
+
+
+class TestSprint16Day7QuotedSetDescriptions:
+    """Tests for Sprint 16 Day 7: Quoted set element descriptions (P-5)."""
+
+    def test_quoted_element_with_description(self):
+        """Test quoted element ID followed by quoted description: 'cotton-h' 'cotton-herbaceo'.
+
+        This pattern occurs after preprocessing hyphenated element IDs.
+        """
+        text = dedent("""
+            Set c / 'cotton-h' 'cotton-herbaceo', 'banana' 'banana fruit' /;
+            """)
+        model = parser.parse_model_text(text)
+        # Quotes should be stripped from element IDs
+        assert model.sets["c"].members == ["cotton-h", "banana"]
+
+    def test_mixed_quoted_and_unquoted_elements(self):
+        """Test mix of quoted and unquoted elements with descriptions."""
+        text = dedent("""
+            Set p / crop-01 'first crop', 'crop-02' 'second crop', crop-03 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["p"].members == ["crop-01", "crop-02", "crop-03"]
+
+    def test_agreste_style_set_declaration(self):
+        """Test set declaration pattern from agreste.gms model.
+
+        After preprocessing, hyphenated IDs are quoted, creating STRING STRING patterns.
+        """
+        text = dedent("""
+            Set c 'crops' / 'cotton-h' 'cotton-herbaceo',
+                            banana 'banana',
+                            'sugar-cane' 'sugar-cane',
+                            'beans-arr' 'beans-de-arranca' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["c"].members == ["cotton-h", "banana", "sugar-cane", "beans-arr"]

@@ -12,7 +12,7 @@
 
 | Metric | Baseline (Sprint 15) | Minimum | Target | Stretch | Current |
 |--------|----------------------|---------|--------|---------|---------|
-| Parse success rate | 21.25% (34/160) | 31.25% (+16) | 37.5% (+26) | 49.38% (+45) | 21.25% |
+| Parse success rate | 21.25% (34/160) | 31.25% (+16) | 37.5% (+26) | 49.38% (+45) | 23.13% (37/160) |
 | Translate success rate | 50.0% (17/34) | 50.0% | 50.0% | 50.0% | 50.0% |
 | Solve success rate | 17.65% (3/17) | 58.82% (10/17) | 76.47% (13/17) | 100% (17/17) | 17.65% |
 | Full pipeline success | 0.63% (1/160) | 3.13% (5/160) | 5.0% (8/160) | 8.13% (13/160) | 0.63% |
@@ -25,6 +25,7 @@
 |-----|------------|--------|-------|
 | 0 | 21.25% | 34/160 | Sprint 15 baseline |
 | 6 | 22.50% | 36/160 | P1 grammar fixes (+2: cclinpts, jobt) |
+| 7 | 23.13% | 37/160 | P2 grammar fixes (+1: pollut) |
 
 ---
 
@@ -579,6 +580,70 @@
    - Other keyword case models: Need investigation for secondary issues
 
 **Next Steps:** Day 7 - Parse Improvements (Priority 2)
+
+---
+
+### Day 7: Parse Improvements - Priority 2
+
+**Date:** January 24, 2026
+
+**Objective:** Implement P-4 (tuple expansion) and P-5 (quoted set descriptions)
+
+**Tasks Completed:**
+
+1. **Added tuple expansion syntax for parameter data blocks (P-4):**
+   - Grammar: Added `param_data_tuple_expansion` rule for `(elem1,elem2) value` syntax
+   - Grammar: Added `set_element_id_list` and `set_element_id_or_string` rules
+   - Parser: Added `_parse_set_element_id_list()` method to expand tuples
+   - Handles both quoted and unquoted element IDs (preprocessor quotes hyphenated IDs)
+
+2. **Extended range expression support:**
+   - Grammar: Extended `range_bound` to include `SET_ELEMENT_ID` and `STRING`
+   - Parser: Extended `_expand_range()` to handle hyphenated ranges (`route-1*route-5`)
+   - Parser: Added single-letter alphabetic range support (`a*d` → a, b, c, d)
+   - Parser: Added quote stripping for range bounds
+
+3. **Fixed quoted set descriptions (P-5):**
+   - Grammar: Added `STRING STRING` alternative to `set_member` rule
+   - Parser: Updated `_expand_set_members()` to strip quotes from STRING tokens
+   - Handles preprocessor output where `cotton-h 'desc'` becomes `'cotton-h' 'desc'`
+
+4. **Unit tests (10 new tests):**
+   - `TestSprint16Day7TupleExpansion`: 3 tests for tuple expansion
+   - `TestSprint16Day7RangeExpansion`: 4 tests for range expression extensions
+   - `TestSprint16Day7QuotedSetDescriptions`: 3 tests for quoted descriptions
+
+**Quality Gate Results:**
+- Typecheck: ✅ Pass
+- Lint: ✅ Pass
+- Format: ✅ Pass
+- Tests: ✅ 2949 passed, 10 skipped, 1 xfailed
+
+**Parse Rate Progression:**
+- Before: 22.50% (36/160) - Sprint 16 Day 6
+- After: 23.13% (37/160) - +1 model (pollut)
+
+**Models Tested:**
+
+P-4 Tuple Expansion targets (12 models):
+- ✓ pollut: SUCCESS (was failing on tuple expansion, now parses)
+- ✓ ramsey: SUCCESS (was already passing)
+- ✗ aircraft: Blocked by alias resolution in dollar conditions (unrelated)
+- ✗ airsp, clearlak, mine, pdi, pinene, qsambal, srcpm, turkey: Various unrelated errors
+- ✗ synheat: File not found
+
+P-5 Quoted Set Descriptions targets (7 models):
+- All models now parse the set declarations correctly
+- But hit unrelated errors later (multi-line equations, continuation lines)
+
+**Lessons Learned:**
+
+1. **Tuple expansion syntax works:** The grammar and parser correctly handle `(a,b) value` patterns
+2. **Preprocessor complicates things:** Hyphenated IDs get quoted, requiring quote stripping in multiple places
+3. **Target models have multiple issues:** Most models have 2+ parse issues; fixing one reveals another
+4. **Range expressions needed extension:** Supporting `a*d` and `route-1*route-5` required grammar and parser changes
+
+**Next Steps:** Day 8 - Solve Improvements (emit_gams.py fixes)
 
 ---
 

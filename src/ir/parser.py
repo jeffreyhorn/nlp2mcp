@@ -840,9 +840,19 @@ class _ModelBuilder:
                     # Simple element: ID or STRING
                     result.append(_token_text(child.children[0]))
                 elif child.data == "set_element_with_desc":
-                    # Element with inline description: ID STRING
-                    # Take first token (ID), ignore description (STRING)
-                    result.append(_token_text(child.children[0]))
+                    # Element with inline description: SET_ELEMENT_ID STRING or STRING STRING
+                    # Take first token, ignore description (second token)
+                    # Sprint 16 Day 7: Handle STRING STRING case (preprocessor quotes hyphenated IDs)
+                    first_token = child.children[0]
+                    text = _token_text(first_token)
+                    # Strip quotes if it's a STRING token (quoted element ID)
+                    if isinstance(first_token, Token) and first_token.type == "STRING":
+                        if len(text) >= 2 and (
+                            (text[0] == "'" and text[-1] == "'")
+                            or (text[0] == '"' and text[-1] == '"')
+                        ):
+                            text = text[1:-1]
+                    result.append(text)
                 elif child.data == "set_tuple":
                     # Basic tuple notation: ID.ID (e.g., a.b)
                     prefix = _token_text(child.children[0])
@@ -903,9 +913,11 @@ class _ModelBuilder:
     def _expand_range(self, start_bound: str, end_bound: str, node: Tree) -> list[str]:
         """Expand a range into a list of elements.
 
-        Supports two range types:
+        Supports multiple range types:
         1. Numeric ranges: 1*10 -> ['1', '2', '3', ..., '10']
         2. Symbolic ranges: i1*i100 -> ['i1', 'i2', ..., 'i100']
+        3. Pure alphabetic ranges: a*d -> ['a', 'b', 'c', 'd']
+        4. Hyphenated ranges: route-1*route-5 -> ['route-1', 'route-2', ..., 'route-5']
 
         Args:
             start_bound: Start of range (either a number or identifier with number)
@@ -915,6 +927,15 @@ class _ModelBuilder:
         Returns:
             List of expanded range elements as strings
         """
+        # Sprint 16 Day 7: Strip quotes from bounds (preprocessor quotes hyphenated IDs)
+        if (start_bound.startswith("'") and start_bound.endswith("'")) or (
+            start_bound.startswith('"') and start_bound.endswith('"')
+        ):
+            start_bound = start_bound[1:-1]
+        if (end_bound.startswith("'") and end_bound.endswith("'")) or (
+            end_bound.startswith('"') and end_bound.endswith('"')
+        ):
+            end_bound = end_bound[1:-1]
         # Check if this is a pure numeric range (e.g., 1*10)
         try:
             num_start = int(start_bound)
@@ -930,23 +951,47 @@ class _ModelBuilder:
             return [str(i) for i in range(num_start, num_end + 1)]
 
         except ValueError:
-            # Not a pure numeric range, try symbolic range (e.g., i1*i100)
+            # Not a pure numeric range, try other patterns
             pass
 
+        # Sprint 16 Day 7: Check for pure single-letter alphabetic range (e.g., a*d)
+        if len(start_bound) == 1 and len(end_bound) == 1:
+            if start_bound.isalpha() and end_bound.isalpha():
+                start_ord = ord(start_bound.lower())
+                end_ord = ord(end_bound.lower())
+                if start_ord > end_ord:
+                    raise self._error(
+                        f"Invalid range: '{start_bound}' comes after '{end_bound}'", node
+                    )
+                # Preserve case of start bound
+                if start_bound.isupper():
+                    return [chr(i).upper() for i in range(start_ord, end_ord + 1)]
+                else:
+                    return [chr(i) for i in range(start_ord, end_ord + 1)]
+
         # Parse symbolic range: identifier followed by number
-        match_start = re.match(r"^([a-zA-Z_]+)(\d+)$", start_bound)
+        # Sprint 16 Day 7: Extended pattern to support hyphenated identifiers like route-1
+        # Pattern matches: prefix (letters, digits, underscores, hyphens) followed by number
+        # Examples: i1, route-1, data-set-2, item_3
+        match_start = re.match(r"^([a-zA-Z_][a-zA-Z0-9_-]*[^0-9])?(\d+)$", start_bound)
+        if not match_start:
+            # Try alternate pattern for pure letter prefix (e.g., a1, i1)
+            match_start = re.match(r"^([a-zA-Z_]+)(\d+)$", start_bound)
         if not match_start:
             raise self._error(
                 f"Invalid range start '{start_bound}': must be a number (e.g., 1) "
-                f"or identifier followed by number (e.g., i1)",
+                f"or identifier followed by number (e.g., i1, route-1)",
                 node,
             )
 
-        match_end = re.match(r"^([a-zA-Z_]+)(\d+)$", end_bound)
+        match_end = re.match(r"^([a-zA-Z_][a-zA-Z0-9_-]*[^0-9])?(\d+)$", end_bound)
+        if not match_end:
+            # Try alternate pattern for pure letter prefix
+            match_end = re.match(r"^([a-zA-Z_]+)(\d+)$", end_bound)
         if not match_end:
             raise self._error(
                 f"Invalid range end '{end_bound}': must be a number (e.g., 100) "
-                f"or identifier followed by number (e.g., i100)",
+                f"or identifier followed by number (e.g., i100, route-5)",
                 node,
             )
 
@@ -3697,11 +3742,28 @@ class _ModelBuilder:
         self, node: Tree, domain: tuple[str, ...], param_name: str
     ) -> dict[tuple[str, ...], float]:
         # Multi-dimensional parameter data is now supported via dotted notation (e.g., i1.j1)
+        # Sprint 16 Day 7: Also supports tuple expansion (e.g., (route-1,route-2) 13)
         values: dict[tuple[str, ...], float] = {}
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
-            if child.data == "param_data_scalar":
+            if child.data == "param_data_tuple_expansion":
+                # Sprint 16 Day 7: Handle tuple expansion like (route-1,route-2) 13
+                # Expands to route-1=13, route-2=13
+                elements = self._parse_set_element_id_list(child.children[0])
+                value_token = child.children[-1]
+                value = float(_token_text(value_token))
+                for elem in elements:
+                    key_tuple = (elem,)
+                    if len(key_tuple) != len(domain):
+                        raise self._error(
+                            f"Parameter '{param_name}' tuple expansion requires 1-D domain, got {len(domain)}",
+                            child,
+                        )
+                    if domain:
+                        self._verify_member_in_domain(param_name, domain[0], elem, child)
+                    values[key_tuple] = value
+            elif child.data == "param_data_scalar":
                 key = self._parse_data_indices(child.children[0])
                 value_token = child.children[-1]
                 value = float(_token_text(value_token))
@@ -3771,6 +3833,36 @@ class _ModelBuilder:
                     key_tuple = tuple(row_indices + [col_member])
                     values[key_tuple] = col_value
         return values
+
+    def _parse_set_element_id_list(self, node: Tree) -> list[str]:
+        """Parse a set_element_id_list node for tuple expansion.
+
+        Sprint 16 Day 7: Added for parsing (elem1,elem2) syntax in param data.
+        Returns list of element identifiers from the comma-separated list.
+        Handles both SET_ELEMENT_ID and STRING tokens (preprocessor quotes hyphenated IDs).
+        """
+        elements = []
+        for child in node.children:
+            if isinstance(child, Tree) and child.data == "set_element_id_or_string":
+                # Extract the token from the wrapper node
+                for token in child.children:
+                    if isinstance(token, Token):
+                        text = _token_text(token)
+                        # Strip quotes from STRING tokens (preprocessor quotes hyphenated IDs)
+                        if token.type == "STRING" and len(text) >= 2:
+                            if (text[0] == "'" and text[-1] == "'") or (
+                                text[0] == '"' and text[-1] == '"'
+                            ):
+                                text = text[1:-1]
+                        elements.append(text)
+            elif isinstance(child, Token) and child.type in ("SET_ELEMENT_ID", "STRING"):
+                text = _token_text(child)
+                # Strip quotes from STRING tokens
+                if child.type == "STRING" and len(text) >= 2:
+                    if (text[0] == "'" and text[-1] == "'") or (text[0] == '"' and text[-1] == '"'):
+                        text = text[1:-1]
+                elements.append(text)
+        return elements
 
     def _parse_data_indices(self, node: Tree | Token) -> list[str]:
         """Parse data indices from a data_indices node.
