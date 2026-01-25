@@ -18,6 +18,7 @@ import pytest
 from src.ir.preprocessor import (
     expand_macros,
     extract_conditional_sets,
+    join_multiline_equations,
     preprocess_gams_file,
     strip_conditional_directives,
     strip_unsupported_directives,
@@ -602,3 +603,121 @@ Set i / i1*i%derived% /;""")
 
         # Both macros should be expanded
         assert "Set i / i1*i10 /;" in result
+
+
+class TestJoinMultilineEquations:
+    """Test join_multiline_equations() function (Issue #561)."""
+
+    def test_single_line_equation_unchanged(self):
+        """Single-line equations should remain unchanged."""
+        source = "eq.. x + y =e= 10;"
+        result = join_multiline_equations(source)
+        assert result == source
+
+    def test_multiline_equation_with_plus_continuation(self):
+        """Equation with + continuation on next line."""
+        source = """labc(tm).. sum((p,s), labor(p,tm)*xcrop(p,s))
+            + sum(r, llab(tm,r)*xliver(r))
+           =l= flab(tm) + tlab(tm);"""
+        result = join_multiline_equations(source)
+        # Should be joined into single line
+        assert ".." in result
+        assert "=l=" in result
+        assert result.count("\n") < source.count("\n")
+        # Verify the equation is properly joined
+        assert "sum((p,s), labor(p,tm)*xcrop(p,s)) + sum(r, llab(tm,r)*xliver(r))" in result
+
+    def test_multiline_equation_with_minus_continuation(self):
+        """Equation with - continuation on next line."""
+        source = """cost.. totalcost
+            - savings
+            =e= 100;"""
+        result = join_multiline_equations(source)
+        assert "totalcost - savings =e= 100;" in result
+
+    def test_multiline_equation_with_relational_on_new_line(self):
+        """Equation with relational operator on its own line."""
+        source = """balance(i).. supply(i) + imports(i)
+            =g=
+            demand(i);"""
+        result = join_multiline_equations(source)
+        assert "supply(i) + imports(i) =g= demand(i);" in result
+
+    def test_multiple_continuation_lines(self):
+        """Equation spanning multiple continuation lines."""
+        source = """income.. yfarm =e= revenue
+            + vsc*sum(dr, cons(dr))
+            - labcost
+            - rationr
+            - vetcost;"""
+        result = join_multiline_equations(source)
+        # All lines should be joined
+        lines = [line for line in result.split("\n") if line.strip()]
+        assert len(lines) == 1
+        assert "=e=" in lines[0]
+        assert lines[0].endswith(";")
+
+    def test_comments_preserved_in_equation(self):
+        """Comments during multi-line equation should be preserved."""
+        source = """eq.. x
+* this is a comment
+            + y =e= z;"""
+        result = join_multiline_equations(source)
+        assert "* this is a comment" in result
+
+    def test_multiple_equations(self):
+        """Multiple equations in sequence."""
+        source = """eq1.. x
+            + y =e= 10;
+eq2.. a
+            - b =g= 0;"""
+        result = join_multiline_equations(source)
+        assert "x + y =e= 10;" in result
+        assert "a - b =g= 0;" in result
+
+    def test_non_equation_code_unchanged(self):
+        """Non-equation code should remain unchanged."""
+        source = """Set i / a, b /;
+Parameter p(i);
+Variable x(i);"""
+        result = join_multiline_equations(source)
+        assert result == source
+
+    def test_equation_followed_by_model_statement(self):
+        """Equation followed by Model statement should not merge them."""
+        source = """eq.. x + y
+            =e= 10;
+Model m / all /;"""
+        result = join_multiline_equations(source)
+        assert "x + y =e= 10;" in result
+        assert "Model m / all /;" in result
+
+    def test_agreste_style_equation(self):
+        """Test actual equation pattern from agreste.gms model."""
+        source = """labc(tm)..     sum((p,s)$ps(p,s), labor(p,tm)*xcrop(p,s))
+            +  sum(r, llab(tm,r)*xliver(r))
+           =l= flab(tm) + tlab(tm) + dpm*plab;"""
+        result = join_multiline_equations(source)
+        # Should be a single line equation
+        lines = [line for line in result.split("\n") if line.strip()]
+        assert len(lines) == 1
+        assert "labc(tm).." in lines[0]
+        assert "=l=" in lines[0]
+        assert lines[0].endswith(";")
+
+    def test_parenthesized_domain_equation(self):
+        """Equation with domain in parentheses."""
+        source = """mbalc(c)..     sum((s,p), yield(p,c,s)*xcrop(p,s))/1000
+           =g= sales(c) + sum(dr, cbndl(c,dr)*cons(dr));"""
+        result = join_multiline_equations(source)
+        lines = [line for line in result.split("\n") if line.strip()]
+        assert len(lines) == 1
+        assert "mbalc(c).." in lines[0]
+
+    def test_equation_with_conditional(self):
+        """Equation with $ conditional operator."""
+        source = """eq(i)$valid(i).. x(i)
+            + y(i) =e= 0;"""
+        result = join_multiline_equations(source)
+        assert "eq(i)$valid(i).." in result
+        assert "x(i) + y(i) =e= 0;" in result
