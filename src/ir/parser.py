@@ -3673,6 +3673,12 @@ class _ModelBuilder:
         if not idx_tuple and name in free_domain:
             # It's a reference to a domain index variable
             return self._attach_domain(SymbolRef(name), free_domain)
+        # Issue #560: Check if it's an alias that's in free_domain
+        # When an alias like 'hp' is used as a sum domain (sum(hp$..., expr)),
+        # references to 'hp' inside the expression should resolve correctly
+        if not idx_tuple and name in self.model.aliases:
+            # It's an alias - treat as a domain index reference
+            return self._attach_domain(SymbolRef(name), free_domain)
         # Check if it's a GAMS predefined constant (yes, no, inf, eps, na, undf)
         # These are case-insensitive
         name_lower = name.lower()
@@ -3680,7 +3686,8 @@ class _ModelBuilder:
             return self._attach_domain(Const(_PREDEFINED_CONSTANTS[name_lower]), free_domain)
         # Issue #428: Check if it's a set membership test (e.g., rn(n) in a condition)
         # In GAMS, set(index) in a conditional context returns 1 if index is in set, 0 otherwise
-        if name in self.model.sets and idx_tuple:
+        # Issue #560: Also check aliases - they can be used like sets
+        if (name in self.model.sets or name in self.model.aliases) and idx_tuple:
             # Set membership test - use dedicated SetMembershipTest node
             # This represents the boolean check "is idx_tuple in set 'name'"
             from src.ir.ast import SetMembershipTest

@@ -5218,3 +5218,67 @@ class TestSprint16Day7QuotedSetDescriptions:
             """)
         model = parser.parse_model_text(text)
         assert model.sets["c"].members == ["cotton-h", "banana", "sugar-cane", "beans-arr"]
+
+
+class TestAliasInDollarCondition:
+    """Tests for Issue #560: Alias resolution in dollar conditions."""
+
+    def test_alias_in_sum_dollar_condition(self):
+        """Test alias resolution in dollar condition within sum (aircraft.gms pattern)."""
+        text = dedent("""
+            Set h / 1*5 /;
+            Alias (h, hp);
+            Parameter gamma(h);
+            gamma(h) = sum(hp$(ord(hp) >= ord(h)), 1);
+            """)
+        model = parser.parse_model_text(text)
+        assert "gamma" in model.params
+        assert "hp" in model.aliases
+        assert model.aliases["hp"].target == "h"
+
+    def test_alias_in_nested_dollar_condition(self):
+        """Test alias in nested dollar conditions."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Alias (i, j);
+            Parameter p(i);
+            p(i) = sum(j$(ord(j) > ord(i)), ord(j));
+            """)
+        model = parser.parse_model_text(text)
+        assert "p" in model.params
+
+    def test_multiple_aliases_in_expression(self):
+        """Test multiple aliases in the same expression."""
+        text = dedent("""
+            Set s / 1*3 /;
+            Alias (s, sp, spp);
+            Parameter q(s);
+            q(s) = sum(sp$(ord(sp) >= ord(s)), sum(spp$(ord(spp) <= ord(sp)), 1));
+            """)
+        model = parser.parse_model_text(text)
+        assert "q" in model.params
+        assert "sp" in model.aliases
+        assert "spp" in model.aliases
+
+    def test_alias_as_simple_symbol_reference(self):
+        """Test alias used as simple symbol reference (not in dollar condition)."""
+        text = dedent("""
+            Set t / 1*10 /;
+            Alias (t, tp);
+            Parameter val(t);
+            val(t) = sum(tp, ord(tp));
+            """)
+        model = parser.parse_model_text(text)
+        assert "val" in model.params
+
+    def test_alias_in_equation_with_dollar_condition(self):
+        """Test alias in equation with dollar condition."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Alias (i, ip);
+            Variable x(i), z;
+            Equation eq;
+            eq.. z =e= sum(i, sum(ip$(ord(ip) > ord(i)), x(i)));
+            """)
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
