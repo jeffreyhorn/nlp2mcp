@@ -1227,6 +1227,42 @@ class _ModelBuilder:
         # Default to 0.0 for unrecognized values
         return 0.0
 
+    def _parse_param_data_value(self, value_node: Tree | Token) -> float:
+        """Parse a param_data_value node, handling numbers and special GAMS values.
+
+        Issue #564: Handles the grammar rule:
+            param_data_value: NUMBER | SPECIAL_VALUE | MINUS SPECIAL_VALUE
+
+        Args:
+            value_node: Either a Tree (param_data_value) or Token (NUMBER/SPECIAL_VALUE)
+
+        Returns:
+            The parsed float value (na/undf become NaN, inf becomes infinity)
+        """
+        if isinstance(value_node, Token):
+            # Direct token (NUMBER or SPECIAL_VALUE)
+            return self._parse_table_value(_token_text(value_node))
+
+        # Tree node - could be param_data_value with children
+        if value_node.data == "param_data_value":
+            children = [c for c in value_node.children if isinstance(c, Token)]
+            if len(children) == 1:
+                # Single token: NUMBER or SPECIAL_VALUE
+                return self._parse_table_value(_token_text(children[0]))
+            elif len(children) == 2:
+                # MINUS SPECIAL_VALUE (e.g., -inf)
+                sign = _token_text(children[0])
+                value = _token_text(children[1])
+                return self._parse_table_value(sign + value)
+
+        # Fallback: try to get the last token
+        if value_node.children:
+            last_child = value_node.children[-1]
+            if isinstance(last_child, Token):
+                return self._parse_table_value(_token_text(last_child))
+
+        return 0.0
+
     def _combine_signed_special_tokens(self, tokens: list[Token]) -> list[Token]:
         """Combine MINUS/PLUS + ID tokens for special values like -inf, +inf, -eps.
 
@@ -3795,9 +3831,10 @@ class _ModelBuilder:
             if child.data == "param_data_tuple_expansion":
                 # Sprint 16 Day 7: Handle tuple expansion like (route-1,route-2) 13
                 # Expands to route-1=13, route-2=13
+                # Issue #564: Also handles special values like (h1,h2) na
                 elements = self._parse_set_element_id_list(child.children[0])
-                value_token = child.children[-1]
-                value = float(_token_text(value_token))
+                value_node = child.children[-1]
+                value = self._parse_param_data_value(value_node)
                 for elem in elements:
                     key_tuple = (elem,)
                     if len(key_tuple) != len(domain):
@@ -3811,14 +3848,15 @@ class _ModelBuilder:
             elif child.data == "param_data_range_expansion":
                 # Issue #563: Handle range expansion like (ne2*ne5) 0
                 # Expands to ne2=0, ne3=0, ne4=0, ne5=0
+                # Issue #564: Also handles special values like (ne2*ne5) na
                 if len(domain) != 1:
                     raise self._error(
                         f"Parameter '{param_name}' range expansion only supported for 1-D parameters",
                         child,
                     )
                 range_expr_node = child.children[0]
-                value_token = child.children[-1]
-                value = float(_token_text(value_token))
+                value_node = child.children[-1]
+                value = self._parse_param_data_value(value_node)
 
                 # Extract the two range bounds from range_expr
                 bounds = [

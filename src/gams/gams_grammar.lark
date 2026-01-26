@@ -155,10 +155,16 @@ param_data_items: param_data_item ("," param_data_item)*
 // Sprint 16 Day 7: Added param_data_tuple_expansion for (a,b) value syntax (Issue P-4)
 // Example: k(j) / (route-1,route-2) 13, route-5 1 / expands to route-1=13, route-2=13, route-5=1
 // Issue #563: Added param_data_range_expansion for (ne2*ne5) 0 syntax
-param_data_item: data_matrix_row                         -> param_data_matrix_row
-                 | "(" range_expr ")" NUMBER             -> param_data_range_expansion
-                 | "(" set_element_id_list ")" NUMBER    -> param_data_tuple_expansion
-                 | data_indices NUMBER                   -> param_data_scalar
+// Issue #564: Support special values (na, inf, eps) via param_data_value rule
+param_data_item: data_matrix_row                              -> param_data_matrix_row
+                 | "(" range_expr ")" param_data_value        -> param_data_range_expansion
+                 | "(" set_element_id_list ")" param_data_value -> param_data_tuple_expansion
+                 | data_indices NUMBER                        -> param_data_scalar
+
+// Issue #564: Parameter data values can be numbers or special GAMS values (na, inf, eps, undf)
+// Also handles signed special values like -inf
+param_data_value: NUMBER | SPECIAL_VALUE | MINUS SPECIAL_VALUE
+SPECIAL_VALUE: /(?i:na|inf|eps|undf)\b/
 
 // Set element ID list for tuple expansion - comma-separated list of SET_ELEMENT_IDs or quoted strings
 // Note: Preprocessor quotes hyphenated identifiers like route-1 to 'route-1', so we must accept STRING

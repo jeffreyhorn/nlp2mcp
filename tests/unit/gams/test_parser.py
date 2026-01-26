@@ -1,6 +1,7 @@
 """Parser smoke tests covering tree output and ModelIR synthesis."""
 
 import math
+import sys
 from pathlib import Path
 from textwrap import dedent
 
@@ -5629,3 +5630,89 @@ class TestRangeInTupleExpansion:
         assert model.params["p"].values[("a",)] == 1.0
         assert model.params["p"].values[("b",)] == 1.0
         assert model.params["p"].values[("c",)] == 2.0
+
+
+class TestSpecialValuesInTupleExpansion:
+    """Tests for Issue #564: Special values (na, inf, eps) in tuple expansion."""
+
+    def test_na_in_tuple_expansion(self):
+        """Test NA special value in tuple expansion (qsambal.gms pattern)."""
+        text = dedent("""
+            Set i / lab, h1, h2, p1, p2 /;
+            Parameter tb(i) / lab 220, (h1,h2) na, p1 190, p2 105 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["tb"].values[("lab",)] == 220.0
+        assert math.isnan(model.params["tb"].values[("h1",)])
+        assert math.isnan(model.params["tb"].values[("h2",)])
+        assert model.params["tb"].values[("p1",)] == 190.0
+        assert model.params["tb"].values[("p2",)] == 105.0
+
+    def test_inf_in_tuple_expansion(self):
+        """Test inf special value in tuple expansion."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / a 1, (b,c) inf /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert model.params["p"].values[("b",)] == math.inf
+        assert model.params["p"].values[("c",)] == math.inf
+
+    def test_negative_inf_in_tuple_expansion(self):
+        """Test -inf special value in tuple expansion."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / a 1, (b,c) -inf /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert model.params["p"].values[("b",)] == -math.inf
+        assert model.params["p"].values[("c",)] == -math.inf
+
+    def test_eps_in_tuple_expansion(self):
+        """Test eps special value in tuple expansion."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / a 1, (b,c) eps /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        # eps is machine epsilon
+        assert model.params["p"].values[("b",)] == sys.float_info.epsilon
+        assert model.params["p"].values[("c",)] == sys.float_info.epsilon
+
+    def test_na_in_range_expansion(self):
+        """Test NA special value in range expansion."""
+        text = dedent("""
+            Set i / a, b, c, d /;
+            Parameter p(i) / a 1, (b*d) na /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert math.isnan(model.params["p"].values[("b",)])
+        assert math.isnan(model.params["p"].values[("c",)])
+        assert math.isnan(model.params["p"].values[("d",)])
+
+    def test_qsambal_model_pattern(self):
+        """Test the exact pattern from qsambal.gms model."""
+        text = dedent("""
+            Set i 'account elements' / lab, h1, h2, p1, p2 /;
+            Parameter tb(i) 'original totals' / lab 220, (h1,h2) na, p1 190, p2 105 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "tb" in model.params
+        assert model.params["tb"].values[("lab",)] == 220.0
+        assert math.isnan(model.params["tb"].values[("h1",)])
+        assert math.isnan(model.params["tb"].values[("h2",)])
+
+    def test_number_values_still_work(self):
+        """Ensure regular number values still work in tuple expansion."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / (a,b) 42.5, c -10 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 42.5
+        assert model.params["p"].values[("b",)] == 42.5
+        assert model.params["p"].values[("c",)] == -10.0
