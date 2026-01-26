@@ -30,7 +30,7 @@ from .ast import (
     VarRef,
 )
 from .model_ir import ModelIR, ObjectiveIR
-from .preprocessor import preprocess_gams_file
+from .preprocessor import normalize_double_commas, preprocess_gams_file
 from .symbols import (
     AliasDef,
     ConditionalStatement,
@@ -233,6 +233,14 @@ def parse_text(source: str) -> Tree:
     Raises:
         ParseError: If syntax errors are found (wraps Lark exceptions)
     """
+    # Issue #565: Normalize double commas to single commas before parsing.
+    # This handles GAMS visual alignment syntax like: Set l / a,, b /;.
+    # NOTE: The same normalization is also performed in `preprocess_gams_file()`.
+    # It is intentionally duplicated here so that callers which invoke `parse_text`
+    # directly on raw GAMS source (bypassing preprocessing) still get correct
+    # handling of visual-alignment double commas.
+    source = normalize_double_commas(source)
+
     parser = _build_lark()
     try:
         raw = parser.parse(source)
@@ -453,7 +461,7 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
         if isinstance(child, Token):
             identifiers.append(_token_text(child))
         elif isinstance(child, Tree):
-            # index_list contains index_expr nodes, which are transformed to index_simple or index_subset
+            # index_list contains index_expr nodes, which are transformed to index_simple, index_subset, or index_string
             if child.data == "index_simple":
                 # index_simple: ID lag_lead_suffix?
                 # First child is the base ID
@@ -465,6 +473,10 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
                 for subchild in child.children:
                     if isinstance(subchild, Tree) and subchild.data == "index_list":
                         identifiers.extend(_extract_domain_indices(subchild))
+            elif child.data == "index_string":
+                # Issue #566: index_string: STRING (quoted index like 'route-1')
+                if child.children and isinstance(child.children[0], Token):
+                    identifiers.append(_strip_quotes(child.children[0]))
     return identifiers
 
 
@@ -487,8 +499,10 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
             "index_expr",
             "index_simple",
             "index_subset",
+            "index_string",
         ):
             # Sprint 11 Day 2: Grammar now produces index_simple and index_subset
+            # Issue #566: Grammar now also produces index_string for quoted indices
             if child.data == "index_simple":
                 # index_simple: ID lag_lead_suffix?
                 id_token = child.children[0]
@@ -511,6 +525,10 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
                         domain_indices = _extract_domain_indices(subchild)
                         indices.extend(domain_indices)
                         break
+            elif child.data == "index_string":
+                # Issue #566: index_string: STRING (quoted index like 'route-1')
+                string_token = child.children[0]
+                indices.append(_strip_quotes(string_token))
             else:
                 # Old index_expr from legacy grammar
                 # Only support plain ID (no lag/lead for parameter assignments)
@@ -551,6 +569,7 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
             "index_expr",
             "index_simple",
             "index_subset",
+            "index_string",
         ):
             if child.data == "index_simple":
                 id_token = child.children[0]
@@ -569,6 +588,10 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
                         domain_indices = _extract_domain_indices(subchild)
                         indices.extend(domain_indices)
                         break
+            elif child.data == "index_string":
+                # Issue #566: index_string: STRING (quoted index like 'route-1')
+                string_token = child.children[0]
+                indices.append(_strip_quotes(string_token))
             else:
                 if len(child.children) == 1:
                     id_token = child.children[0]
@@ -595,6 +618,11 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
     For subset indexing like low(n,nn), we return a SubsetIndex that preserves
     both the subset name and the inner indices for proper bounds validation.
     """
+    # Issue #566: Handle index_string: STRING (quoted index like 'route-1')
+    if index_node.data == "index_string":
+        string_token = index_node.children[0]
+        return _strip_quotes(string_token)
+
     # Handle index_subset: ID "(" index_list ")" lag_lead_suffix?
     if index_node.data == "index_subset":
         # For subset indexing like aij(as,i,j), return SubsetIndex
@@ -610,6 +638,9 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
                 if child.data == "index_simple":
                     # index_simple has ID as first child
                     inner_indices.append(_token_text(child.children[0]))
+                elif child.data == "index_string":
+                    # Issue #566: index_string has STRING as first child
+                    inner_indices.append(_strip_quotes(child.children[0]))
                 elif child.data == "index_expr":
                     # Recursively process index_expr
                     result = _process_index_expr(child)
@@ -707,9 +738,11 @@ def _process_index_list(node: Tree) -> tuple[str | IndexOffset | SubsetIndex, ..
             "index_expr",
             "index_simple",
             "index_subset",
+            "index_string",
         ):
             # New-style: index_expr tree (from index_list in references)
             # Sprint 11 Day 2: Grammar now produces index_simple and index_subset
+            # Issue #566: Grammar now also produces index_string for quoted indices
             indices.append(_process_index_expr(child))
         else:
             # Fallback for unknown nodes
@@ -840,28 +873,43 @@ class _ModelBuilder:
                     # Simple element: ID or STRING
                     result.append(_token_text(child.children[0]))
                 elif child.data == "set_element_with_desc":
-                    # Element with inline description: ID STRING
-                    # Take first token (ID), ignore description (STRING)
+                    # Element with inline description: SET_ELEMENT_ID STRING or STRING STRING
+                    # Take first token, ignore description (second token)
+                    # Sprint 16 Day 7: Handle STRING STRING case (preprocessor quotes hyphenated IDs)
+                    # Note: _token_text() already strips quotes from STRING tokens
                     result.append(_token_text(child.children[0]))
                 elif child.data == "set_tuple":
-                    # Basic tuple notation: ID.ID (e.g., a.b)
+                    # Issue #567: Tuple notation with optional quoted parts
+                    # ID.ID, ID.STRING, STRING.ID, STRING.STRING
+                    # e.g., a.b, upper.'u-egypt', 'a'.b, 'a'.'b'
                     prefix = _token_text(child.children[0])
                     suffix = _token_text(child.children[1])
                     result.append(f"{prefix}.{suffix}")
                 elif child.data == "set_tuple_with_desc":
-                    # Tuple with description: ID.ID STRING (e.g., a.b "description")
+                    # Issue #567: Tuple with description - all quote combinations
+                    # ID.ID STRING, ID.STRING STRING, STRING.ID STRING, STRING.STRING STRING
+                    # e.g., a.b "desc", upper.'u-egypt' "desc"
                     prefix = _token_text(child.children[0])
                     suffix = _token_text(child.children[1])
                     # Ignore description (third child)
                     result.append(f"{prefix}.{suffix}")
                 elif child.data == "set_tuple_expansion":
-                    # Tuple expansion: ID.(id1,id2,...) (e.g., nw.(w,cc,n))
-                    # Expands to: nw.w, nw.cc, nw.n
+                    # Issue #568: Tuple expansion with optional quoted prefix/suffixes
+                    # ID.(id1,id2,...) or STRING.(id1,id2,...) or ID.('s-1','s-2',...)
+                    # e.g., nw.(w,cc,n) or 'c-cracker'.('ho-low-s','ho-high-s')
                     prefix = _token_text(child.children[0])
-                    # Second child is id_list node
+                    # Second child is set_element_id_list node (handles both ID and STRING)
                     id_list_node = child.children[1]
-                    suffixes = _id_list(id_list_node)
+                    suffixes = self._parse_set_element_id_list(id_list_node)
                     for suffix in suffixes:
+                        result.append(f"{prefix}.{suffix}")
+                elif child.data == "set_tuple_prefix_expansion":
+                    # Issue #562: Tuple prefix expansion: (id1,id2).suffix (e.g., (jan,feb).wet)
+                    # Expands to: jan.wet, feb.wet
+                    # First child is set_element_id_list, second child is the suffix token
+                    prefixes = self._parse_set_element_id_list(child.children[0])
+                    suffix = _token_text(child.children[1])
+                    for prefix in prefixes:
                         result.append(f"{prefix}.{suffix}")
                 elif child.data == "set_range":
                     # Range notation: can be symbolic (i1*i100) or numeric (1*10)
@@ -895,7 +943,7 @@ class _ModelBuilder:
                     raise self._error(
                         f"Unexpected set member node type: '{child.data}'. "
                         f"Expected 'set_element', 'set_element_with_desc', 'set_tuple', "
-                        f"'set_tuple_with_desc', 'set_tuple_expansion', or 'set_range'.",
+                        f"'set_tuple_with_desc', 'set_tuple_expansion', 'set_tuple_prefix_expansion', or 'set_range'.",
                         child,
                     )
         return result
@@ -903,9 +951,11 @@ class _ModelBuilder:
     def _expand_range(self, start_bound: str, end_bound: str, node: Tree) -> list[str]:
         """Expand a range into a list of elements.
 
-        Supports two range types:
+        Supports multiple range types:
         1. Numeric ranges: 1*10 -> ['1', '2', '3', ..., '10']
         2. Symbolic ranges: i1*i100 -> ['i1', 'i2', ..., 'i100']
+        3. Pure alphabetic ranges: a*d -> ['a', 'b', 'c', 'd']
+        4. Hyphenated ranges: route-1*route-5 -> ['route-1', 'route-2', ..., 'route-5']
 
         Args:
             start_bound: Start of range (either a number or identifier with number)
@@ -914,6 +964,10 @@ class _ModelBuilder:
 
         Returns:
             List of expanded range elements as strings
+
+        Note:
+            Callers should use _token_text() before passing bounds to this method,
+            which already strips quotes from STRING tokens.
         """
         # Check if this is a pure numeric range (e.g., 1*10)
         try:
@@ -930,23 +984,47 @@ class _ModelBuilder:
             return [str(i) for i in range(num_start, num_end + 1)]
 
         except ValueError:
-            # Not a pure numeric range, try symbolic range (e.g., i1*i100)
+            # Not a pure numeric range, try other patterns
             pass
 
+        # Sprint 16 Day 7: Check for pure single-letter alphabetic range (e.g., a*d)
+        if len(start_bound) == 1 and len(end_bound) == 1:
+            if start_bound.isalpha() and end_bound.isalpha():
+                start_ord = ord(start_bound.lower())
+                end_ord = ord(end_bound.lower())
+                if start_ord > end_ord:
+                    raise self._error(
+                        f"Invalid range: '{start_bound}' comes after '{end_bound}'", node
+                    )
+                # Preserve case of start bound
+                if start_bound.isupper():
+                    return [chr(i).upper() for i in range(start_ord, end_ord + 1)]
+                else:
+                    return [chr(i) for i in range(start_ord, end_ord + 1)]
+
         # Parse symbolic range: identifier followed by number
-        match_start = re.match(r"^([a-zA-Z_]+)(\d+)$", start_bound)
+        # Sprint 16 Day 7: Extended pattern to support hyphenated identifiers like route-1
+        # Pattern matches: prefix (letters, digits, underscores, hyphens) followed by trailing number
+        # Examples: i1, route-1, data-set-2, item_3, item2-1 (digit before hyphen is allowed)
+        # The pattern uses non-greedy matching (*?) for the prefix:
+        # - Prefix: starts with letter/underscore, followed by any identifier chars (non-greedy)
+        # - Number: trailing digits (greedy, implicitly matches as many as possible)
+        # Non-greedy means "item21" splits as ("item", "21") - prefix takes minimum chars
+        # This is correct for GAMS range notation where we want the trailing number sequence
+        symbolic_pattern = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_-]*?)(\d+)$")
+        match_start = symbolic_pattern.match(start_bound)
         if not match_start:
             raise self._error(
                 f"Invalid range start '{start_bound}': must be a number (e.g., 1) "
-                f"or identifier followed by number (e.g., i1)",
+                f"or identifier followed by number (e.g., i1, route-1)",
                 node,
             )
 
-        match_end = re.match(r"^([a-zA-Z_]+)(\d+)$", end_bound)
+        match_end = symbolic_pattern.match(end_bound)
         if not match_end:
             raise self._error(
                 f"Invalid range end '{end_bound}': must be a number (e.g., 100) "
-                f"or identifier followed by number (e.g., i100)",
+                f"or identifier followed by number (e.g., i100, route-5)",
                 node,
             )
 
@@ -1142,6 +1220,42 @@ class _ModelBuilder:
             return _PREDEFINED_CONSTANTS[value_lower]
 
         # Default to 0.0 for unrecognized values
+        return 0.0
+
+    def _parse_param_data_value(self, value_node: Tree | Token) -> float:
+        """Parse a param_data_value node, handling numbers and special GAMS values.
+
+        Issue #564: Handles the grammar rule:
+            param_data_value: NUMBER | SPECIAL_VALUE | MINUS SPECIAL_VALUE | PLUS SPECIAL_VALUE
+
+        Args:
+            value_node: Either a Tree (param_data_value) or Token (NUMBER/SPECIAL_VALUE)
+
+        Returns:
+            The parsed float value (na/undf become NaN, inf becomes infinity)
+        """
+        if isinstance(value_node, Token):
+            # Direct token (NUMBER or SPECIAL_VALUE)
+            return self._parse_table_value(_token_text(value_node))
+
+        # Tree node - could be param_data_value with children
+        if value_node.data == "param_data_value":
+            children = [c for c in value_node.children if isinstance(c, Token)]
+            if len(children) == 1:
+                # Single token: NUMBER or SPECIAL_VALUE
+                return self._parse_table_value(_token_text(children[0]))
+            elif len(children) == 2:
+                # MINUS/PLUS SPECIAL_VALUE (e.g., -inf, +inf)
+                sign = _token_text(children[0])
+                value = _token_text(children[1])
+                return self._parse_table_value(sign + value)
+
+        # Fallback: try to get the last token
+        if value_node.children:
+            last_child = value_node.children[-1]
+            if isinstance(last_child, Token):
+                return self._parse_table_value(_token_text(last_child))
+
         return 0.0
 
     def _combine_signed_special_tokens(self, tokens: list[Token]) -> list[Token]:
@@ -3628,6 +3742,12 @@ class _ModelBuilder:
         if not idx_tuple and name in free_domain:
             # It's a reference to a domain index variable
             return self._attach_domain(SymbolRef(name), free_domain)
+        # Issue #560: Check if it's an alias that's in free_domain
+        # When an alias like 'hp' is used as a sum domain (sum(hp$..., expr)),
+        # references to 'hp' inside the expression should resolve correctly
+        if not idx_tuple and name in self.model.aliases:
+            # It's an alias - treat as a domain index reference
+            return self._attach_domain(SymbolRef(name), free_domain)
         # Check if it's a GAMS predefined constant (yes, no, inf, eps, na, undf)
         # These are case-insensitive
         name_lower = name.lower()
@@ -3635,7 +3755,8 @@ class _ModelBuilder:
             return self._attach_domain(Const(_PREDEFINED_CONSTANTS[name_lower]), free_domain)
         # Issue #428: Check if it's a set membership test (e.g., rn(n) in a condition)
         # In GAMS, set(index) in a conditional context returns 1 if index is in set, 0 otherwise
-        if name in self.model.sets and idx_tuple:
+        # Issue #560: Also check aliases - they can be used like sets
+        if (name in self.model.sets or name in self.model.aliases) and idx_tuple:
             # Set membership test - use dedicated SetMembershipTest node
             # This represents the boolean check "is idx_tuple in set 'name'"
             from src.ir.ast import SetMembershipTest
@@ -3697,11 +3818,75 @@ class _ModelBuilder:
         self, node: Tree, domain: tuple[str, ...], param_name: str
     ) -> dict[tuple[str, ...], float]:
         # Multi-dimensional parameter data is now supported via dotted notation (e.g., i1.j1)
+        # Sprint 16 Day 7: Also supports tuple expansion (e.g., (route-1,route-2) 13)
         values: dict[tuple[str, ...], float] = {}
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
-            if child.data == "param_data_scalar":
+            if child.data == "param_data_tuple_expansion":
+                # Sprint 16 Day 7: Handle tuple expansion like (route-1,route-2) 13
+                # Expands to route-1=13, route-2=13
+                # Issue #564: Also handles special values like (h1,h2) na
+                # Note: Tuple expansion is only supported for 1-D parameters.
+                # Multi-dimensional parameters require explicit dotted notation (e.g., i.j value).
+                elements = self._parse_set_element_id_list(child.children[0])
+                value_node = child.children[-1]
+                value = self._parse_param_data_value(value_node)
+                # Validate domain dimensionality before processing elements
+                if len(domain) == 0:
+                    raise self._error(
+                        f"Parameter '{param_name}' tuple expansion syntax (elem1,elem2) requires a 1-D parameter domain, "
+                        f"but '{param_name}' is scalar (no domain)",
+                        child,
+                    )
+                elif len(domain) > 1:
+                    raise self._error(
+                        f"Parameter '{param_name}' tuple expansion syntax (elem1,elem2) requires a 1-D parameter domain, "
+                        f"but '{param_name}' has {len(domain)}-D domain {domain}",
+                        child,
+                    )
+                # First, validate all elements against the domain without mutating `values`
+                for elem in elements:
+                    self._verify_member_in_domain(param_name, domain[0], elem, child)
+                # Only after successful validation, update `values` for all elements
+                for elem in elements:
+                    key_tuple = (elem,)
+                    values[key_tuple] = value
+            elif child.data == "param_data_range_expansion":
+                # Issue #563: Handle range expansion like (ne2*ne5) 0
+                # Expands to ne2=0, ne3=0, ne4=0, ne5=0
+                # Issue #564: Also handles special values like (ne2*ne5) na
+                if len(domain) != 1:
+                    raise self._error(
+                        f"Parameter '{param_name}' range expansion only supported for 1-D parameters",
+                        child,
+                    )
+                range_expr_node = child.children[0]
+                value_node = child.children[-1]
+                value = self._parse_param_data_value(value_node)
+
+                # Extract the two range bounds from range_expr
+                bounds = [
+                    node.children[0]
+                    for node in range_expr_node.children
+                    if isinstance(node, Tree) and node.data == "range_bound"
+                ]
+                if len(bounds) != 2:
+                    raise self._error(
+                        f"Range expression requires exactly two bounds, got {len(bounds)}",
+                        child,
+                    )
+                start_bound = _token_text(bounds[0])
+                end_bound = _token_text(bounds[1])
+
+                # Expand range using the set membership
+                expanded_members = self._expand_range_in_set(
+                    start_bound, end_bound, domain[0], child
+                )
+                for member in expanded_members:
+                    key_tuple = (member,)
+                    values[key_tuple] = value
+            elif child.data == "param_data_scalar":
                 key = self._parse_data_indices(child.children[0])
                 value_token = child.children[-1]
                 value = float(_token_text(value_token))
@@ -3771,6 +3956,25 @@ class _ModelBuilder:
                     key_tuple = tuple(row_indices + [col_member])
                     values[key_tuple] = col_value
         return values
+
+    def _parse_set_element_id_list(self, node: Tree) -> list[str]:
+        """Parse a set_element_id_list node for tuple expansion.
+
+        Sprint 16 Day 7: Added for parsing (elem1,elem2) syntax in param data.
+        Returns list of element identifiers from the comma-separated list.
+        Handles both SET_ELEMENT_ID and STRING tokens (preprocessor quotes hyphenated IDs).
+        Note: _token_text() already strips quotes from STRING tokens.
+        """
+        elements = []
+        for child in node.children:
+            if isinstance(child, Tree) and child.data == "set_element_id_or_string":
+                # Extract the token from the wrapper node
+                for token in child.children:
+                    if isinstance(token, Token):
+                        elements.append(_token_text(token))
+            elif isinstance(child, Token) and child.type in ("SET_ELEMENT_ID", "STRING"):
+                elements.append(_token_text(child))
+        return elements
 
     def _parse_data_indices(self, node: Tree | Token) -> list[str]:
         """Parse data indices from a data_indices node.

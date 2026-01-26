@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Day 7: Parse Improvements - Priority 2 - 2026-01-24
+
+**Branch:** `sprint16-day7-parse-p2`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented P2 grammar fixes: tuple expansion syntax for parameter data blocks, extended range expressions for hyphenated identifiers and alphabetic ranges, and quoted set element descriptions.
+
+#### Changes
+
+**Modified Files:**
+- `src/gams/gams_grammar.lark` - Grammar extensions for P2 fixes (param_data_tuple_expansion, set_element_id_list, range_bound extensions, STRING STRING set_member, PLUS SPECIAL_VALUE)
+- `src/ir/parser.py` - Tuple expansion handling (_parse_set_element_id_list), extended range support (_expand_range for hyphenated/alphabetic), quote stripping for STRING tokens, improved error messages
+- `src/ir/preprocessor.py` - Added `join_multiline_equations()` for multi-line equation support, `normalize_double_commas()` with string boundary awareness
+- `src/emit/original_symbols.py` - Added `_sanitize_set_element()` for DSL injection protection
+- `tests/unit/gams/test_parser.py` - Added Sprint 16 Day 7 tests (10+ new tests in 3 test classes)
+- `tests/unit/ir/test_preprocessor.py` - Added `TestJoinMultilineEquations` test class with 13 new tests
+- `docs/issues/completed/` - Updated 9 issue documents status to Resolved
+- `data/gamslib/gamslib_status.json` - Regenerated parse status (48/219 models, 21.9%)
+- `docs/planning/EPIC_3/SPRINT_16/PLAN.md` - Day 7 marked complete
+- `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 7 entry added
+
+#### Grammar Fixes
+
+| Fix | Change | Models Unlocked |
+|-----|--------|-----------------|
+| Tuple expansion (P-4) | Added `param_data_tuple_expansion` rule for `(elem1,elem2) value` | pollut |
+| Hyphenated range bounds | Extended `range_bound` to include `SET_ELEMENT_ID`, `STRING` | (enables hyphenated ranges) |
+| Alphabetic ranges | Extended `_expand_range()` for single-letter ranges `a*d` | (aircraft, etc.) |
+| Quoted set descriptions (P-5) | Added `STRING STRING` to `set_member` rule | (agreste, etc.) |
+
+#### Results
+
+- **Parse rate (160 model sample):** 22.5% → 23.1% (36/160 → 37/160)
+- **Parse rate (219 model full set):** 48/219 (21.9%)
+- **New models parsing:** pollut (+1 in 160 sample), aircraft and others in full set
+- **No regressions:** All previously-passing models still pass
+- **Tests:** 2949+ passed, 10 skipped, 1 xfailed
+
+**Note:** Aircraft model now parses successfully after implementing tuple expansion, range expansion, and multi-line equation continuation fixes.
+
+---
+
 ### Sprint 16 Day 6: Parse Improvements - Priority 1 - 2026-01-23
 
 **Branch:** `sprint16-day6-parse-p1`  

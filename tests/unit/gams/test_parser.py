@@ -1,6 +1,7 @@
 """Parser smoke tests covering tree output and ModelIR synthesis."""
 
 import math
+import sys
 from pathlib import Path
 from textwrap import dedent
 
@@ -5086,3 +5087,722 @@ class TestSprint16GrammarFeatures:
         # Values should be stored under unquoted keys
         assert model.params["uinit"].values[("gov-expend",)] == 110.5
         assert model.params["uinit"].values[("money",)] == 147.1
+
+
+# Sprint 16 Day 7 Grammar Features
+# ============================================================================
+
+
+class TestSprint16Day7TupleExpansion:
+    """Tests for Sprint 16 Day 7: Tuple expansion syntax in parameter data (P-4)."""
+
+    def test_tuple_expansion_basic(self):
+        """Test basic tuple expansion: (a,b) value expands to a=value, b=value.
+
+        Syntax: Parameter k(j) / (route-1,route-2) 13 /;
+        This should expand to k('route-1')=13, k('route-2')=13.
+        """
+        text = dedent("""
+            Set j / route-1, route-2, route-3, route-4, route-5 /;
+            Parameter k(j) / (route-1,route-2) 13, (route-3,route-4) 7, route-5 1 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "k" in model.params
+        assert model.params["k"].values[("route-1",)] == 13.0
+        assert model.params["k"].values[("route-2",)] == 13.0
+        assert model.params["k"].values[("route-3",)] == 7.0
+        assert model.params["k"].values[("route-4",)] == 7.0
+        assert model.params["k"].values[("route-5",)] == 1.0
+
+    def test_tuple_expansion_with_hyphenated_ids(self):
+        """Test tuple expansion with hyphenated identifiers (preprocessor quotes these).
+
+        After preprocessing, (route-1,route-2) becomes ('route-1','route-2').
+        The parser should strip quotes and match against set members.
+        """
+        # Simulate preprocessed text
+        text = dedent("""
+            Set j / 'route-1'*'route-5' /;
+            Parameter k(j) / ('route-1','route-2') 13 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["j"].members == ["route-1", "route-2", "route-3", "route-4", "route-5"]
+        assert model.params["k"].values[("route-1",)] == 13.0
+        assert model.params["k"].values[("route-2",)] == 13.0
+
+    def test_tuple_expansion_mixed_with_scalar(self):
+        """Test tuple expansion mixed with regular scalar data items."""
+        text = dedent("""
+            Set i / a, b, c, d, e /;
+            Parameter p(i) / (a,b) 10, c 20, (d,e) 30 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 10.0
+        assert model.params["p"].values[("b",)] == 10.0
+        assert model.params["p"].values[("c",)] == 20.0
+        assert model.params["p"].values[("d",)] == 30.0
+        assert model.params["p"].values[("e",)] == 30.0
+
+
+class TestSprint16Day7RangeExpansion:
+    """Tests for Sprint 16 Day 7: Extended range expression support."""
+
+    def test_hyphenated_range_expansion(self):
+        """Test range expansion with hyphenated identifiers: route-1*route-5.
+
+        This should expand to route-1, route-2, route-3, route-4, route-5.
+        """
+        text = dedent("""
+            Set j / route-1*route-5 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["j"].members == ["route-1", "route-2", "route-3", "route-4", "route-5"]
+
+    def test_alphabetic_range_expansion(self):
+        """Test single-letter alphabetic range: a*d -> a, b, c, d."""
+        text = dedent("""
+            Set i / a*d /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c", "d"]
+
+    def test_uppercase_alphabetic_range(self):
+        """Test uppercase alphabetic range: A*D -> A, B, C, D."""
+        text = dedent("""
+            Set i / A*D /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["A", "B", "C", "D"]
+
+    def test_mixed_case_alphabetic_range_lowercase_start(self):
+        """Test mixed-case alphabetic range with lowercase start: a*D.
+
+        The implementation preserves the case of the start bound.
+        So a*D produces lowercase letters ['a', 'b', 'c', 'd'].
+        """
+        text = dedent("""
+            Set i / a*D /;
+            """)
+        model = parser.parse_model_text(text)
+        # Start bound is lowercase, so output is lowercase
+        assert model.sets["i"].members == ["a", "b", "c", "d"]
+
+    def test_mixed_case_alphabetic_range_uppercase_start(self):
+        """Test mixed-case alphabetic range with uppercase start: A*d.
+
+        The implementation preserves the case of the start bound.
+        So A*d produces uppercase letters ['A', 'B', 'C', 'D'].
+        """
+        text = dedent("""
+            Set i / A*d /;
+            """)
+        model = parser.parse_model_text(text)
+        # Start bound is uppercase, so output is uppercase
+        assert model.sets["i"].members == ["A", "B", "C", "D"]
+
+    def test_quoted_hyphenated_range(self):
+        """Test range with quoted hyphenated identifiers (from preprocessor)."""
+        text = dedent("""
+            Set j / 'data-1'*'data-3' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["j"].members == ["data-1", "data-2", "data-3"]
+
+
+class TestSprint16Day7QuotedSetDescriptions:
+    """Tests for Sprint 16 Day 7: Quoted set element descriptions (P-5)."""
+
+    def test_quoted_element_with_description(self):
+        """Test quoted element ID followed by quoted description: 'cotton-h' 'cotton-herbaceo'.
+
+        This pattern occurs after preprocessing hyphenated element IDs.
+        """
+        text = dedent("""
+            Set c / 'cotton-h' 'cotton-herbaceo', 'banana' 'banana fruit' /;
+            """)
+        model = parser.parse_model_text(text)
+        # Quotes should be stripped from element IDs
+        assert model.sets["c"].members == ["cotton-h", "banana"]
+
+    def test_mixed_quoted_and_unquoted_elements(self):
+        """Test mix of quoted and unquoted elements with descriptions."""
+        text = dedent("""
+            Set p / crop-01 'first crop', 'crop-02' 'second crop', crop-03 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["p"].members == ["crop-01", "crop-02", "crop-03"]
+
+    def test_agreste_style_set_declaration(self):
+        """Test set declaration pattern from agreste.gms model.
+
+        After preprocessing, hyphenated IDs are quoted, creating STRING STRING patterns.
+        """
+        text = dedent("""
+            Set c 'crops' / 'cotton-h' 'cotton-herbaceo',
+                            banana 'banana',
+                            'sugar-cane' 'sugar-cane',
+                            'beans-arr' 'beans-de-arranca' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["c"].members == ["cotton-h", "banana", "sugar-cane", "beans-arr"]
+
+
+class TestAliasInDollarCondition:
+    """Tests for Issue #560: Alias resolution in dollar conditions."""
+
+    def test_alias_in_sum_dollar_condition(self):
+        """Test alias resolution in dollar condition within sum (aircraft.gms pattern)."""
+        text = dedent("""
+            Set h / 1*5 /;
+            Alias (h, hp);
+            Parameter gamma(h);
+            gamma(h) = sum(hp$(ord(hp) >= ord(h)), 1);
+            """)
+        model = parser.parse_model_text(text)
+        assert "gamma" in model.params
+        assert "hp" in model.aliases
+        assert model.aliases["hp"].target == "h"
+
+    def test_alias_in_nested_dollar_condition(self):
+        """Test alias in nested dollar conditions."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Alias (i, j);
+            Parameter p(i);
+            p(i) = sum(j$(ord(j) > ord(i)), ord(j));
+            """)
+        model = parser.parse_model_text(text)
+        assert "p" in model.params
+
+    def test_multiple_aliases_in_expression(self):
+        """Test multiple aliases in the same expression."""
+        text = dedent("""
+            Set s / 1*3 /;
+            Alias (s, sp, spp);
+            Parameter q(s);
+            q(s) = sum(sp$(ord(sp) >= ord(s)), sum(spp$(ord(spp) <= ord(sp)), 1));
+            """)
+        model = parser.parse_model_text(text)
+        assert "q" in model.params
+        assert "sp" in model.aliases
+        assert "spp" in model.aliases
+
+    def test_alias_as_simple_symbol_reference(self):
+        """Test alias used as simple symbol reference (not in dollar condition)."""
+        text = dedent("""
+            Set t / 1*10 /;
+            Alias (t, tp);
+            Parameter val(t);
+            val(t) = sum(tp, ord(tp));
+            """)
+        model = parser.parse_model_text(text)
+        assert "val" in model.params
+
+    def test_alias_in_equation_with_dollar_condition(self):
+        """Test alias in equation with dollar condition."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Alias (i, ip);
+            Variable x(i), z;
+            Equation eq;
+            eq.. z =e= sum(i, sum(ip$(ord(ip) > ord(i)), x(i)));
+            """)
+        model = parser.parse_model_text(text)
+        assert "eq" in model.equations
+
+
+class TestSetTuplePrefixExpansion:
+    """Tests for Issue #562: Tuple prefix expansion (a,b).c in set definitions."""
+
+    def test_tuple_prefix_expansion_basic(self):
+        """Test basic tuple prefix expansion: (a,b).c -> a.c, b.c."""
+        text = dedent("""
+            Set tw / (jan,feb).wet, mar.dry /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["tw"].members == ["jan.wet", "feb.wet", "mar.dry"]
+
+    def test_tuple_prefix_expansion_clearlak_pattern(self):
+        """Test clearlak.gms pattern: (jan,feb).wet, mar.dry."""
+        text = dedent("""
+            Set w / wet, dry /;
+            Set t / jan, feb, mar /;
+            Set tw(t,w) / (jan,feb).wet, mar.dry /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["tw"].members == ["jan.wet", "feb.wet", "mar.dry"]
+
+    def test_tuple_prefix_expansion_with_quoted_ids(self):
+        """Test tuple expansion with quoted identifiers (turkey.gms pattern)."""
+        text = dedent("""
+            Set lsq / ('irr-good','irr-poor').irrigated, ('dry-good','dry-poor').dry /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["lsq"].members == [
+            "irr-good.irrigated",
+            "irr-poor.irrigated",
+            "dry-good.dry",
+            "dry-poor.dry",
+        ]
+
+    def test_tuple_prefix_expansion_multiple(self):
+        """Test multiple tuple prefix expansions in one set."""
+        text = dedent("""
+            Set s / (a,b,c).x, (d,e).y /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["s"].members == ["a.x", "b.x", "c.x", "d.y", "e.y"]
+
+    def test_tuple_prefix_expansion_mixed_with_simple(self):
+        """Test tuple prefix expansion mixed with simple tuples."""
+        text = dedent("""
+            Set s / (a,b).x, c.y, d.z /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["s"].members == ["a.x", "b.x", "c.y", "d.z"]
+
+    def test_both_tuple_expansion_patterns(self):
+        """Test both prefix and suffix tuple expansion patterns together."""
+        text = dedent("""
+            Set s1 / (a,b).x /;
+            Set s2 / x.(a,b) /;
+            """)
+        model = parser.parse_model_text(text)
+        # Prefix expansion: (a,b).x -> a.x, b.x
+        assert model.sets["s1"].members == ["a.x", "b.x"]
+        # Suffix expansion: x.(a,b) -> x.a, x.b
+        assert model.sets["s2"].members == ["x.a", "x.b"]
+
+
+class TestQuotedIndexInAssignment:
+    """Tests for Issue #566: Quoted string indices in assignments."""
+
+    def test_quoted_index_in_parameter_assignment(self):
+        """Test assignment with quoted string index (airsp.gms pattern)."""
+        text = dedent("""
+            Set j / route-1 /;
+            Set s / s1 /;
+            Parameter dd(j,s) / 'route-1'.s1 10 /;
+            Parameter drand(j,s);
+            drand('route-1',s) = dd('route-1',s);
+            """)
+        model = parser.parse_model_text(text)
+        assert "drand" in model.params
+
+    def test_multiple_quoted_indices(self):
+        """Test assignment with multiple quoted indices."""
+        text = dedent("""
+            Set i / item-1, item-2 /;
+            Set j / cat-a, cat-b /;
+            Parameter p(i,j);
+            p('item-1','cat-a') = 10;
+            """)
+        model = parser.parse_model_text(text)
+        assert "p" in model.params
+
+    def test_mixed_quoted_and_unquoted_indices(self):
+        """Test assignment with mix of quoted and unquoted indices."""
+        text = dedent("""
+            Set i / item-1 /;
+            Set j / a, b /;
+            Parameter p(i,j);
+            p('item-1',j) = 5;
+            """)
+        model = parser.parse_model_text(text)
+        assert "p" in model.params
+
+    def test_quoted_index_in_rhs_expression(self):
+        """Test quoted index used in right-hand side expression."""
+        text = dedent("""
+            Set i / x-1, x-2 /;
+            Parameter a(i) / 'x-1' 1, 'x-2' 2 /;
+            Parameter b(i);
+            b(i) = a('x-1') + a('x-2');
+            """)
+        model = parser.parse_model_text(text)
+        assert "b" in model.params
+
+    def test_quoted_index_with_hyphen(self):
+        """Test quoted index containing hyphen character."""
+        text = dedent("""
+            Set route / route-1, route-2, route-3 /;
+            Parameter cost(route);
+            cost('route-1') = 100;
+            cost('route-2') = 200;
+            """)
+        model = parser.parse_model_text(text)
+        assert "cost" in model.params
+
+
+class TestQuotedStringInTuple:
+    """Tests for Issue #567: Quoted strings in tuple dot notation."""
+
+    def test_quoted_suffix_in_tuple(self):
+        """Test quoted string as tuple suffix (egypt.gms pattern)."""
+        text = dedent("""
+            Set z / upper, middle, lower /;
+            Set r / u-egypt, m-egypt, l-egypt /;
+            Set zr(z,r) / upper.'u-egypt', middle.'m-egypt', lower.'l-egypt' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["zr"].members == [
+            "upper.u-egypt",
+            "middle.m-egypt",
+            "lower.l-egypt",
+        ]
+
+    def test_quoted_prefix_in_tuple(self):
+        """Test quoted string as tuple prefix."""
+        text = dedent("""
+            Set a / x-1, y-1 /;
+            Set b / a, b /;
+            Set ab(a,b) / 'x-1'.a, 'y-1'.b /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["ab"].members == ["x-1.a", "y-1.b"]
+
+    def test_both_quoted_in_tuple(self):
+        """Test both prefix and suffix quoted in tuple."""
+        text = dedent("""
+            Set i / item-1, item-2 /;
+            Set j / cat-a, cat-b /;
+            Set ij(i,j) / 'item-1'.'cat-a', 'item-2'.'cat-b' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["ij"].members == ["item-1.cat-a", "item-2.cat-b"]
+
+    def test_quoted_suffix_with_description(self):
+        """Test quoted suffix with inline description."""
+        text = dedent("""
+            Set z / upper, lower /;
+            Set r / u-egypt, l-egypt /;
+            Set zr(z,r) / upper.'u-egypt' 'upper region', lower.'l-egypt' 'lower region' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["zr"].members == ["upper.u-egypt", "lower.l-egypt"]
+
+    def test_mixed_quoted_and_unquoted_tuples(self):
+        """Test mix of quoted and unquoted tuple elements."""
+        text = dedent("""
+            Set a / x, y-1 /;
+            Set b / p, q-1 /;
+            Set ab(a,b) / x.p, 'y-1'.p, x.'q-1', 'y-1'.'q-1' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["ab"].members == ["x.p", "y-1.p", "x.q-1", "y-1.q-1"]
+
+    def test_egypt_model_pattern(self):
+        """Test the exact pattern from egypt.gms model."""
+        text = dedent("""
+            Set z zones / upper, middle, lower /;
+            Set r regions / u-egypt, m-egypt, l-egypt /;
+            Set zr(z,r) 'map from zones to regions' / upper.'u-egypt', middle.'m-egypt', lower.'l-egypt' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "zr" in model.sets
+        assert model.sets["zr"].members == [
+            "upper.u-egypt",
+            "middle.m-egypt",
+            "lower.l-egypt",
+        ]
+
+
+class TestHyphenatedTupleExpansion:
+    """Tests for Issue #568: Hyphenated identifiers in tuple expansion."""
+
+    def test_hyphenated_prefix_in_tuple_expansion(self):
+        """Test hyphenated identifier as tuple expansion prefix (fawley.gms pattern)."""
+        text = dedent("""
+            Set c / c-cracker /;
+            Set o / ho-low-s, ho-high-s /;
+            Set co(c,o) / c-cracker.(ho-low-s,ho-high-s) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["co"].members == ["c-cracker.ho-low-s", "c-cracker.ho-high-s"]
+
+    def test_hyphenated_suffixes_in_tuple_expansion(self):
+        """Test hyphenated identifiers as tuple expansion suffixes."""
+        text = dedent("""
+            Set p / plant /;
+            Set m / mode-1, mode-2, mode-3 /;
+            Set pm(p,m) / plant.(mode-1,mode-2,mode-3) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["pm"].members == [
+            "plant.mode-1",
+            "plant.mode-2",
+            "plant.mode-3",
+        ]
+
+    def test_both_hyphenated_in_tuple_expansion(self):
+        """Test both prefix and suffixes hyphenated in tuple expansion."""
+        text = dedent("""
+            Set c / c-cracker /;
+            Set o / vd-low-s, vd-high-s /;
+            Set co(c,o) / c-cracker.(vd-low-s,vd-high-s) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["co"].members == ["c-cracker.vd-low-s", "c-cracker.vd-high-s"]
+
+    def test_mixed_hyphenated_and_simple_suffixes(self):
+        """Test mix of hyphenated and simple identifiers in suffixes."""
+        text = dedent("""
+            Set a / base /;
+            Set b / x, y-1, z /;
+            Set ab(a,b) / base.(x,y-1,z) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["ab"].members == ["base.x", "base.y-1", "base.z"]
+
+    def test_fawley_model_pattern(self):
+        """Test the exact pattern from fawley.gms model."""
+        text = dedent("""
+            Set c 'cracking units' / c-cracker /;
+            Set o 'operating modes' / ho-low-s, ho-high-s, vd-low-s, vd-high-s /;
+            Set co(c,o) 'cracker operating modes' / c-cracker.(ho-low-s,ho-high-s,vd-low-s,vd-high-s) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "co" in model.sets
+        assert model.sets["co"].members == [
+            "c-cracker.ho-low-s",
+            "c-cracker.ho-high-s",
+            "c-cracker.vd-low-s",
+            "c-cracker.vd-high-s",
+        ]
+
+    def test_simple_tuple_expansion_still_works(self):
+        """Ensure simple (non-hyphenated) tuple expansion still works."""
+        text = dedent("""
+            Set a / x /;
+            Set b / p, q, r /;
+            Set ab(a,b) / x.(p,q,r) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["ab"].members == ["x.p", "x.q", "x.r"]
+
+
+class TestRangeInTupleExpansion:
+    """Tests for Issue #563: Range expression in tuple expansion."""
+
+    def test_range_in_param_tuple_expansion(self):
+        """Test range expression inside parameter tuple expansion (pinene.gms pattern)."""
+        text = dedent("""
+            Set ne / ne1, ne2, ne3, ne4, ne5 /;
+            Parameter bc(ne) / ne1 100, (ne2*ne5) 0 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["bc"].values[("ne1",)] == 100.0
+        assert model.params["bc"].values[("ne2",)] == 0.0
+        assert model.params["bc"].values[("ne3",)] == 0.0
+        assert model.params["bc"].values[("ne4",)] == 0.0
+        assert model.params["bc"].values[("ne5",)] == 0.0
+
+    def test_numeric_range_in_tuple_expansion(self):
+        """Test numeric range inside tuple expansion."""
+        text = dedent("""
+            Set i / 1, 2, 3, 4, 5 /;
+            Parameter p(i) / 1 10, (2*5) 0 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("1",)] == 10.0
+        assert model.params["p"].values[("2",)] == 0.0
+        assert model.params["p"].values[("5",)] == 0.0
+
+    def test_hyphenated_range_in_tuple_expansion(self):
+        """Test hyphenated identifiers in range inside tuple expansion."""
+        text = dedent("""
+            Set r / route-1, route-2, route-3, route-4 /;
+            Parameter cost(r) / route-1 100, (route-2*route-4) 50 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["cost"].values[("route-1",)] == 100.0
+        assert model.params["cost"].values[("route-2",)] == 50.0
+        assert model.params["cost"].values[("route-3",)] == 50.0
+        assert model.params["cost"].values[("route-4",)] == 50.0
+
+    def test_multiple_range_expansions(self):
+        """Test multiple range expansions in same parameter."""
+        text = dedent("""
+            Set i / a, b, c, d, e, f /;
+            Parameter p(i) / (a*c) 1, (d*f) 2 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert model.params["p"].values[("b",)] == 1.0
+        assert model.params["p"].values[("c",)] == 1.0
+        assert model.params["p"].values[("d",)] == 2.0
+        assert model.params["p"].values[("e",)] == 2.0
+        assert model.params["p"].values[("f",)] == 2.0
+
+    def test_pinene_model_pattern(self):
+        """Test the exact pattern from pinene.gms model."""
+        text = dedent("""
+            Set ne 'ode states' / ne1*ne5 /;
+            Parameter bc(ne) 'ODE initial conditions' / ne1 100, (ne2*ne5) 0 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "bc" in model.params
+        assert model.params["bc"].values[("ne1",)] == 100.0
+        assert model.params["bc"].values[("ne2",)] == 0.0
+        assert model.params["bc"].values[("ne5",)] == 0.0
+
+    def test_tuple_expansion_still_works(self):
+        """Ensure regular tuple expansion still works alongside range expansion."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / (a,b) 1, c 2 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert model.params["p"].values[("b",)] == 1.0
+        assert model.params["p"].values[("c",)] == 2.0
+
+
+class TestSpecialValuesInTupleExpansion:
+    """Tests for Issue #564: Special values (na, inf, eps) in tuple expansion."""
+
+    def test_na_in_tuple_expansion(self):
+        """Test NA special value in tuple expansion (qsambal.gms pattern)."""
+        text = dedent("""
+            Set i / lab, h1, h2, p1, p2 /;
+            Parameter tb(i) / lab 220, (h1,h2) na, p1 190, p2 105 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["tb"].values[("lab",)] == 220.0
+        assert math.isnan(model.params["tb"].values[("h1",)])
+        assert math.isnan(model.params["tb"].values[("h2",)])
+        assert model.params["tb"].values[("p1",)] == 190.0
+        assert model.params["tb"].values[("p2",)] == 105.0
+
+    def test_inf_in_tuple_expansion(self):
+        """Test inf special value in tuple expansion."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / a 1, (b,c) inf /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert model.params["p"].values[("b",)] == math.inf
+        assert model.params["p"].values[("c",)] == math.inf
+
+    def test_negative_inf_in_tuple_expansion(self):
+        """Test -inf special value in tuple expansion."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / a 1, (b,c) -inf /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert model.params["p"].values[("b",)] == -math.inf
+        assert model.params["p"].values[("c",)] == -math.inf
+
+    def test_eps_in_tuple_expansion(self):
+        """Test eps special value in tuple expansion."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / a 1, (b,c) eps /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        # eps is machine epsilon
+        assert model.params["p"].values[("b",)] == sys.float_info.epsilon
+        assert model.params["p"].values[("c",)] == sys.float_info.epsilon
+
+    def test_na_in_range_expansion(self):
+        """Test NA special value in range expansion."""
+        text = dedent("""
+            Set i / a, b, c, d /;
+            Parameter p(i) / a 1, (b*d) na /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert math.isnan(model.params["p"].values[("b",)])
+        assert math.isnan(model.params["p"].values[("c",)])
+        assert math.isnan(model.params["p"].values[("d",)])
+
+    def test_qsambal_model_pattern(self):
+        """Test the exact pattern from qsambal.gms model."""
+        text = dedent("""
+            Set i 'account elements' / lab, h1, h2, p1, p2 /;
+            Parameter tb(i) 'original totals' / lab 220, (h1,h2) na, p1 190, p2 105 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "tb" in model.params
+        assert model.params["tb"].values[("lab",)] == 220.0
+        assert math.isnan(model.params["tb"].values[("h1",)])
+        assert math.isnan(model.params["tb"].values[("h2",)])
+
+    def test_number_values_still_work(self):
+        """Ensure regular number values still work in tuple expansion."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / (a,b) 42.5, c -10 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 42.5
+        assert model.params["p"].values[("b",)] == 42.5
+        assert model.params["p"].values[("c",)] == -10.0
+
+
+class TestDoubleCommaSyntax:
+    """Tests for Issue #565: Double comma in set/parameter data."""
+
+    def test_double_comma_in_set_data(self):
+        """Test double comma treated as single separator in set (srcpm.gms pattern)."""
+        text = dedent("""
+            Set l / b 'base or low cost',, c 'competitive' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["l"].members == ["b", "c"]
+
+    def test_double_comma_in_simple_set(self):
+        """Test double comma in simple set without descriptions."""
+        text = dedent("""
+            Set i / a,, b, c /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c"]
+
+    def test_multiple_double_commas(self):
+        """Test multiple double commas in same data block."""
+        text = dedent("""
+            Set i / a,, b,, c,, d /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c", "d"]
+
+    def test_triple_comma_normalized(self):
+        """Test triple comma reduced to single."""
+        text = dedent("""
+            Set i / a,,, b /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b"]
+
+    def test_double_comma_in_parameter_data(self):
+        """Test double comma in parameter data."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / a 1,, b 2, c 3 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert model.params["p"].values[("b",)] == 2.0
+        assert model.params["p"].values[("c",)] == 3.0
+
+    def test_srcpm_model_pattern(self):
+        """Test the exact pattern from srcpm.gms model."""
+        text = dedent("""
+            Set l 'cost levels' / b 'base or low cost',, c 'competitive' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "l" in model.sets
+        assert model.sets["l"].members == ["b", "c"]
+
+    def test_single_comma_still_works(self):
+        """Ensure single commas still work normally."""
+        text = dedent("""
+            Set i / a, b, c /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c"]

@@ -1547,6 +1547,159 @@ def _quote_special_in_line(line: str) -> str:
     return processed
 
 
+def join_multiline_equations(source: str) -> str:
+    """Join multi-line equation definitions into single logical lines.
+
+    GAMS allows equations to span multiple lines without explicit continuation
+    characters. This function detects equation definitions (identified by `..`)
+    and joins continuation lines until the equation ends with a semicolon.
+
+    The function handles:
+    - Equations spanning multiple lines (common in GAMS models)
+    - Continuation lines starting with operators (+, -, *, /)
+    - Continuation lines starting with relational operators (=e=, =l=, =g=)
+    - Preserves comments and handles quoted strings
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with multi-line equations joined into single lines
+
+    Example:
+        >>> source = '''labc(tm)..     sum((p,s), labor(p,tm)*xcrop(p,s))
+        ...             +  sum(r, llab(tm,r)*xliver(r))
+        ...            =l= flab(tm) + tlab(tm) + dpm*plab;'''
+        >>> result = join_multiline_equations(source)
+        >>> # Result: 'labc(tm).. sum((p,s), labor(p,tm)*xcrop(p,s)) + sum(r, llab(tm,r)*xliver(r)) =l= flab(tm) + tlab(tm) + dpm*plab;'
+
+    Notes:
+        - Only processes lines within equation definitions (after ..)
+        - Stops joining when a semicolon is encountered
+        - Skips comment lines (starting with *)
+        - Preserves line structure for non-equation code
+        - Comment reordering: Comments that appear in the middle of a multi-line
+          equation are preserved but may appear BEFORE the joined equation in the
+          output. For example, if a comment appears between equation continuation
+          lines, it will be output before the complete joined equation. This is
+          acceptable because comments in the middle of equations are rare in
+          practice, and the comment content is preserved.
+    """
+    lines = source.split("\n")
+    result = []
+    in_equation = False
+    equation_buffer = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Skip empty lines and comments - preserve them as-is
+        if not stripped or stripped.startswith("*"):
+            # Append empty/comment line to result and continue
+            result.append(line)
+            continue
+
+        # Check if this line starts an equation definition (contains ..)
+        # Must have identifier followed by optional domain, then ..
+        if not in_equation and ".." in stripped:
+            # Check if this is actually an equation definition (not string or comment)
+            # Pattern: identifier with optional domain, followed by ..
+            # Avoid matching things like "foo.bar" or strings containing ".."
+            dot_dot_idx = stripped.find("..")
+            if dot_dot_idx > 0:
+                before_dots = stripped[:dot_dot_idx].rstrip()
+                # Should end with ) for domain or identifier char
+                if before_dots and (
+                    before_dots[-1] == ")" or before_dots[-1].isalnum() or before_dots[-1] == "_"
+                ):
+                    # This looks like an equation definition
+                    # Check if it has a semicolon (complete on one line)
+                    if _has_statement_ending_semicolon(stripped):
+                        # Complete equation on one line
+                        result.append(line)
+                    else:
+                        # Multi-line equation starts
+                        in_equation = True
+                        equation_buffer = [stripped]
+                    continue
+
+        # If we're inside an equation, check for continuation
+        if in_equation:
+            # Check if this line continues the equation
+            # Continuation lines typically start with:
+            # - Operators: +, -, *, /
+            # - Relational operators: =e=, =l=, =g=, =n=
+            # - Opening parenthesis or other expression parts
+            # Or they can be any expression that doesn't start a new statement
+
+            # Check if line ends the equation (has semicolon)
+            if _has_statement_ending_semicolon(stripped):
+                # End of equation - join and output
+                equation_buffer.append(stripped)
+                joined = " ".join(equation_buffer)
+                result.append(joined)
+                in_equation = False
+                equation_buffer = []
+            else:
+                # Check if this is a continuation or a new statement
+                # A new statement would start with a keyword or identifier followed by specific patterns
+                # For now, we consider lines starting with operators as continuations
+                first_char = stripped[0] if stripped else ""
+                first_word = stripped.split()[0].lower() if stripped.split() else ""
+
+                # Check for common continuation patterns
+                is_continuation = (
+                    first_char in ("+", "-", "*", "/", "(", ")", ",")
+                    or stripped.lower().startswith("=e=")
+                    or stripped.lower().startswith("=l=")
+                    or stripped.lower().startswith("=g=")
+                    or stripped.lower().startswith("=n=")
+                    # Check if it looks like an expression continuation (not a new statement)
+                    # New statements typically start with keywords
+                    # Only check keyword membership if first_word exists to avoid false positives
+                    or (
+                        first_word
+                        and first_word
+                        not in (
+                            BLOCK_KEYWORDS
+                            + [
+                                "model",
+                                "solve",
+                                "display",
+                                "abort",
+                                "option",
+                                "if",
+                                "loop",
+                                "while",
+                                "for",
+                                "equation",
+                                "equations",
+                            ]
+                        )
+                    )
+                )
+
+                if is_continuation:
+                    equation_buffer.append(stripped)
+                else:
+                    # This looks like a new statement - output buffered equation and process this line
+                    if equation_buffer:
+                        joined = " ".join(equation_buffer)
+                        result.append(joined)
+                    in_equation = False
+                    equation_buffer = []
+                    result.append(line)
+        else:
+            result.append(line)
+
+    # Handle case where equation wasn't closed (missing semicolon at end of file)
+    if equation_buffer:
+        joined = " ".join(equation_buffer)
+        result.append(joined)
+
+    return "\n".join(result)
+
+
 def insert_missing_semicolons(source: str) -> str:
     """Insert missing semicolons before block keywords.
 
@@ -1607,6 +1760,64 @@ def insert_missing_semicolons(source: str) -> str:
     return "\n".join(result)
 
 
+def normalize_double_commas(source: str) -> str:
+    """Replace double commas with single commas in data blocks.
+
+    Issue #565: GAMS allows double commas in set/parameter data as visual
+    alignment or placeholder. This function normalizes them to single commas.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with double commas replaced by single commas
+
+    Example:
+        Set l / b 'base',, c 'competitive' /;
+        →
+        Set l / b 'base', c 'competitive' /;
+
+    Notes:
+        - Replaces all occurrences of two-or-more consecutive commas with a single comma
+          when they appear outside of quoted strings
+        - Leaves commas inside single-quoted strings unchanged
+        - Runs before full parsing, using a simple single-quote aware scan to respect
+          string boundaries
+    """
+    # Perform a single-pass scan, collapsing comma runs only outside of strings.
+    result: list[str] = []
+    in_string = False
+    i = 0
+    length = len(source)
+
+    while i < length:
+        ch = source[i]
+
+        if ch == "'":
+            # Handle GAMS-style escaped quote inside strings: '' -> literal '
+            if in_string and i + 1 < length and source[i + 1] == "'":
+                result.append("''")
+                i += 2
+                continue
+            in_string = not in_string
+            result.append(ch)
+            i += 1
+            continue
+
+        if not in_string and ch == ",":
+            # Collapse any run of commas outside strings to a single comma.
+            result.append(",")
+            i += 1
+            while i < length and source[i] == ",":
+                i += 1
+            continue
+
+        result.append(ch)
+        i += 1
+
+    return "".join(result)
+
+
 def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
@@ -1624,10 +1835,12 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     10. Strip $set directives
     11. Strip $macro directives
     12. Strip other unsupported directives ($title, $ontext, etc.)
-    13. Remove table continuation markers (+)
-    14. Normalize multi-line continuations (add missing commas)
-    15. Insert missing semicolons before block keywords (fixes #418)
-    16. Quote identifiers with special characters (-, +) in data blocks
+    13. Join multi-line equations into single lines (fixes #561)
+    14. Remove table continuation markers (+)
+    15. Normalize multi-line continuations (add missing commas)
+    16. Insert missing semicolons before block keywords (fixes #418)
+    17. Quote identifiers with special characters (-, +) in data blocks
+    18. Normalize double commas to single commas (fixes #565)
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -1692,16 +1905,25 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     # Step 12: Strip other unsupported directives ($title, $ontext, etc.)
     content = strip_unsupported_directives(content)
 
-    # Step 13: Remove table continuation markers (+)
+    # Step 13: Join multi-line equations into single lines
+    # This must happen before table continuation normalization to avoid
+    # confusing equation continuation with table continuation markers
+    content = join_multiline_equations(content)
+
+    # Step 14: Remove table continuation markers (+)
     content = normalize_table_continuations(content)
 
-    # Step 14: Normalize multi-line continuations (add missing commas)
+    # Step 15: Normalize multi-line continuations (add missing commas)
     content = normalize_multi_line_continuations(content)
 
-    # Step 15: Insert missing semicolons before block keywords
+    # Step 16: Insert missing semicolons before block keywords
     # This fixes issue #418 where variables from include files weren't recognized
     # because previous blocks (sets, parameters) were missing semicolons
     content = insert_missing_semicolons(content)
 
-    # Step 16: Quote identifiers with special characters (-, +) in data blocks
-    return normalize_special_identifiers(content)
+    # Step 17: Quote identifiers with special characters (-, +) in data blocks
+    content = normalize_special_identifiers(content)
+
+    # Step 18: Normalize double commas to single commas (Issue #565)
+    # This must happen after all other data normalization
+    return normalize_double_commas(content)
