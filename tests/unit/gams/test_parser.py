@@ -5716,3 +5716,67 @@ class TestSpecialValuesInTupleExpansion:
         assert model.params["p"].values[("a",)] == 42.5
         assert model.params["p"].values[("b",)] == 42.5
         assert model.params["p"].values[("c",)] == -10.0
+
+
+class TestDoubleCommaSyntax:
+    """Tests for Issue #565: Double comma in set/parameter data."""
+
+    def test_double_comma_in_set_data(self):
+        """Test double comma treated as single separator in set (srcpm.gms pattern)."""
+        text = dedent("""
+            Set l / b 'base or low cost',, c 'competitive' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["l"].members == ["b", "c"]
+
+    def test_double_comma_in_simple_set(self):
+        """Test double comma in simple set without descriptions."""
+        text = dedent("""
+            Set i / a,, b, c /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c"]
+
+    def test_multiple_double_commas(self):
+        """Test multiple double commas in same data block."""
+        text = dedent("""
+            Set i / a,, b,, c,, d /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c", "d"]
+
+    def test_triple_comma_normalized(self):
+        """Test triple comma reduced to single."""
+        text = dedent("""
+            Set i / a,,, b /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b"]
+
+    def test_double_comma_in_parameter_data(self):
+        """Test double comma in parameter data."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / a 1,, b 2, c 3 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert model.params["p"].values[("b",)] == 2.0
+        assert model.params["p"].values[("c",)] == 3.0
+
+    def test_srcpm_model_pattern(self):
+        """Test the exact pattern from srcpm.gms model."""
+        text = dedent("""
+            Set l 'cost levels' / b 'base or low cost',, c 'competitive' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "l" in model.sets
+        assert model.sets["l"].members == ["b", "c"]
+
+    def test_single_comma_still_works(self):
+        """Ensure single commas still work normally."""
+        text = dedent("""
+            Set i / a, b, c /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["i"].members == ["a", "b", "c"]

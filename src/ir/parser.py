@@ -233,6 +233,11 @@ def parse_text(source: str) -> Tree:
     Raises:
         ParseError: If syntax errors are found (wraps Lark exceptions)
     """
+    # Issue #565: Normalize double commas to single commas before parsing
+    # This handles GAMS visual alignment syntax like: Set l / a,, b /;
+    while ",," in source:
+        source = source.replace(",,", ",")
+
     parser = _build_lark()
     try:
         raw = parser.parse(source)

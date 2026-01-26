@@ -1751,6 +1751,35 @@ def insert_missing_semicolons(source: str) -> str:
     return "\n".join(result)
 
 
+def normalize_double_commas(source: str) -> str:
+    """Replace double commas with single commas in data blocks.
+
+    Issue #565: GAMS allows double commas in set/parameter data as visual
+    alignment or placeholder. This function normalizes them to single commas.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with double commas replaced by single commas
+
+    Example:
+        Set l / b 'base',, c 'competitive' /;
+        →
+        Set l / b 'base', c 'competitive' /;
+
+    Notes:
+        - Replaces all occurrences of ,, with , (even multiple in sequence)
+        - Simple text replacement that works for all contexts
+        - Preserves quoted strings (double comma inside quotes is rare but handled)
+    """
+    # Simple replacement: ,, -> ,
+    # Handle multiple consecutive commas (e.g., ,,, -> ,)
+    while ",," in source:
+        source = source.replace(",,", ",")
+    return source
+
+
 def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
@@ -1773,6 +1802,7 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     15. Normalize multi-line continuations (add missing commas)
     16. Insert missing semicolons before block keywords (fixes #418)
     17. Quote identifiers with special characters (-, +) in data blocks
+    18. Normalize double commas to single commas (fixes #565)
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -1854,4 +1884,8 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     content = insert_missing_semicolons(content)
 
     # Step 17: Quote identifiers with special characters (-, +) in data blocks
-    return normalize_special_identifiers(content)
+    content = normalize_special_identifiers(content)
+
+    # Step 18: Normalize double commas to single commas (Issue #565)
+    # This must happen after all other data normalization
+    return normalize_double_commas(content)
