@@ -4,7 +4,7 @@ import pytest
 
 from src.ad.gradient import GradientVector
 from src.ad.jacobian import JacobianStructure
-from src.ir.ast import Binary, Const, VarRef
+from src.ir.ast import Binary, Call, Const, Expr, ParamRef, Sum, Unary, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
 from src.ir.symbols import EquationDef, ObjSense, Rel, VariableDef
 from src.kkt.kkt_system import KKTSystem, MultiplierDef
@@ -551,3 +551,133 @@ class TestStationarityObjectiveVariable:
         # Only x should have stationarity
         assert len(stationarity) == 1
         assert "stat_x" in stationarity
+
+
+@pytest.mark.integration
+class TestStationarityIndexDisambiguation:
+    """Test correct index disambiguation when elements belong to multiple sets.
+
+    GitHub Issue #572: KKT Incorrect Index References
+    When an element (e.g., 'H') belongs to multiple sets (e.g., both 'i' and 'c'),
+    the stationarity builder must use the parameter's declared domain to determine
+    the correct index mapping, not just the element-to-set mapping.
+    """
+
+    def test_parameter_domain_disambiguation(self, manual_index_mapping):
+        """Test that parameter domain is used to disambiguate index references.
+
+        Simulates the chem model case where:
+        - Element 'H' belongs to both set 'i' and set 'c'
+        - Parameter a(i,c) should become a(i,c), not a(c,c)
+
+        When generating stationarity for x(c), the Jacobian term contains a('H','c')
+        (where 'H' was substituted for the element). Without disambiguation, both
+        indices would map to 'c'. With proper disambiguation using a's declared
+        domain (i,c), the first index maps to 'i' and second to 'c'.
+        """
+        from src.ir.symbols import ParameterDef, SetDef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        # Sets where 'H' belongs to both 'i' and 'c'
+        model.sets["i"] = SetDef(name="i", members=["H", "N", "O"])
+        model.sets["c"] = SetDef(name="c", members=["H", "N", "O"])
+
+        # Parameter a(i,c) - the domain is crucial for disambiguation
+        model.params["a"] = ParameterDef(name="a", domain=("i", "c"))
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ("c",))),
+        )
+
+        # Constraint cdef(i) that references a(i,c) and x(c)
+        model.equations["cdef"] = EquationDef(
+            name="cdef",
+            domain=("i",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                Binary("*", ParamRef("a", ("i", "c")), VarRef("x", ("c",))),
+                Const(1.0),
+            ),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=("c",))
+
+        model.equalities = ["objdef", "cdef"]
+
+        # Set up KKT system with instances for x(c) where c in {H, N, O}
+        index_mapping = manual_index_mapping(
+            [("obj", ()), ("x", ("H",)), ("x", ("N",)), ("x", ("O",))],
+            [("objdef", ()), ("cdef", ("H",)), ("cdef", ("N",)), ("cdef", ("O",))],
+        )
+
+        gradient = GradientVector(num_cols=4, index_mapping=index_mapping)
+        gradient.set_derivative(0, Const(1.0))
+        # Gradient for x(H), x(N), x(O) - simple for this test
+        gradient.set_derivative(1, Const(1.0))
+        gradient.set_derivative(2, Const(1.0))
+        gradient.set_derivative(3, Const(1.0))
+
+        J_eq = JacobianStructure(num_rows=4, num_cols=4, index_mapping=index_mapping)
+        J_eq.set_derivative(0, 0, Const(1.0))  # ∂objdef/∂obj
+
+        # Jacobian entries for cdef(i) w.r.t. x(c)
+        # When i=H and c=H: ∂cdef(H)/∂x(H) = a('H', 'H')
+        # The key test: this should become a(i,c), not a(c,c)
+        J_eq.set_derivative(1, 1, ParamRef("a", ("H", "H")))  # cdef(H) w.r.t. x(H)
+        J_eq.set_derivative(2, 2, ParamRef("a", ("N", "N")))  # cdef(N) w.r.t. x(N)
+        J_eq.set_derivative(3, 3, ParamRef("a", ("O", "O")))  # cdef(O) w.r.t. x(O)
+
+        J_ineq = JacobianStructure(num_rows=0, num_cols=4, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        kkt.multipliers_eq["nu_cdef"] = MultiplierDef(
+            name="nu_cdef", domain=("i",), kind="eq", associated_constraint="cdef"
+        )
+
+        # Build stationarity
+        stationarity = build_stationarity_equations(kkt)
+
+        assert "stat_x" in stationarity
+        stat_eq = stationarity["stat_x"]
+
+        # The stationarity equation for x(c) should reference a(i,c), not a(c,c)
+        # We check by examining the AST for ParamRef nodes
+        def find_param_refs(expr: Expr) -> list[ParamRef]:
+            """Recursively find all ParamRef nodes in expression."""
+            refs = []
+            match expr:
+                case ParamRef():
+                    refs.append(expr)
+                case Binary(_, left, right):
+                    refs.extend(find_param_refs(left))
+                    refs.extend(find_param_refs(right))
+                case Unary(_, child):
+                    refs.extend(find_param_refs(child))
+                case Call(_, args):
+                    for arg in args:
+                        refs.extend(find_param_refs(arg))
+                case Sum(_, body):
+                    refs.extend(find_param_refs(body))
+            return refs
+
+        lhs = stat_eq.lhs_rhs[0]
+        param_refs = find_param_refs(lhs)
+
+        # Find references to parameter 'a'
+        a_refs = [ref for ref in param_refs if ref.name == "a"]
+        assert len(a_refs) > 0, "Expected parameter 'a' in stationarity equation"
+
+        # Check that a(i,c) is used, not a(c,c)
+        for ref in a_refs:
+            indices = ref.indices_as_strings()
+            assert indices == (
+                "i",
+                "c",
+            ), f"Expected a(i,c) but got a{indices}. Parameter domain disambiguation failed."

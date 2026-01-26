@@ -1000,15 +1000,10 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-01-26T18:27:59.586270+00:00",
+        "translate_date": "2026-01-26T22:36:31.374849+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.6995,
-        "output_file": "data/gamslib/mcp/chem_mcp.gms",
-        "validation": {
-          "valid": false,
-          "validation_time_seconds": 0.2521,
-          "error": "Compilation failed"
-        }
+        "translate_time_seconds": 1.5296,
+        "output_file": "data/gamslib/mcp/chem_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
@@ -5138,15 +5133,10 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-01-26T18:29:19.982720+00:00",
+        "translate_date": "2026-01-26T22:36:19.227710+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.6567,
-        "output_file": "data/gamslib/mcp/prodmix_mcp.gms",
-        "validation": {
-          "valid": false,
-          "validation_time_seconds": 0.303,
-          "error": "Compilation failed"
-        }
+        "translate_time_seconds": 1.2189,
+        "output_file": "data/gamslib/mcp/prodmix_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
