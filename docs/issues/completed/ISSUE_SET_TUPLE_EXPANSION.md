@@ -1,6 +1,6 @@
 # Issue: Tuple Expansion in Set Definition Not Supported
 
-**Status:** Open  
+**Status:** Resolved  
 **Category:** Parser Grammar  
 **Affected Models:** clearlak, turkey  
 **Priority:** Medium  

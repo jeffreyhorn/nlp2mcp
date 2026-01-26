@@ -162,8 +162,8 @@ param_data_item: data_matrix_row                              -> param_data_matr
                  | data_indices NUMBER                        -> param_data_scalar
 
 // Issue #564: Parameter data values can be numbers or special GAMS values (na, inf, eps, undf)
-// Also handles signed special values like -inf
-param_data_value: NUMBER | SPECIAL_VALUE | MINUS SPECIAL_VALUE
+// Also handles signed special values like -inf and +inf
+param_data_value: NUMBER | SPECIAL_VALUE | MINUS SPECIAL_VALUE | PLUS SPECIAL_VALUE
 SPECIAL_VALUE: /(?i:na|inf|eps|undf)\b/
 
 // Set element ID list for tuple expansion - comma-separated list of SET_ELEMENT_IDs or quoted strings

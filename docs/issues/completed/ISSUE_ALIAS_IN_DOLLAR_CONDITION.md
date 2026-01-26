@@ -1,6 +1,6 @@
 # Issue: Alias Not Resolved in Dollar Condition Within Sum
 
-**Status:** Open  
+**Status:** Resolved  
 **Category:** Parser Semantic  
 **Affected Models:** aircraft  
 **Priority:** Medium  

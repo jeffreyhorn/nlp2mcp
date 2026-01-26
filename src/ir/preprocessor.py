@@ -1650,21 +1650,27 @@ def join_multiline_equations(source: str) -> str:
                     or stripped.lower().startswith("=n=")
                     # Check if it looks like an expression continuation (not a new statement)
                     # New statements typically start with keywords
-                    or first_word
-                    not in BLOCK_KEYWORDS
-                    + [
-                        "model",
-                        "solve",
-                        "display",
-                        "abort",
-                        "option",
-                        "if",
-                        "loop",
-                        "while",
-                        "for",
-                        "equation",
-                        "equations",
-                    ]
+                    # Only check keyword membership if first_word exists to avoid false positives
+                    or (
+                        first_word
+                        and first_word
+                        not in (
+                            BLOCK_KEYWORDS
+                            + [
+                                "model",
+                                "solve",
+                                "display",
+                                "abort",
+                                "option",
+                                "if",
+                                "loop",
+                                "while",
+                                "for",
+                                "equation",
+                                "equations",
+                            ]
+                        )
+                    )
                 )
 
                 if is_continuation:

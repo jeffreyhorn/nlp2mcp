@@ -1,6 +1,6 @@
 # Issue: Double Comma in Set Data Not Supported
 
-**Status:** Open  
+**Status:** Resolved  
 **Category:** Parser Grammar  
 **Affected Models:** srcpm  
 **Priority:** Low  

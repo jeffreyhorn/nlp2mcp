@@ -1006,14 +1006,13 @@ class _ModelBuilder:
         # Sprint 16 Day 7: Extended pattern to support hyphenated identifiers like route-1
         # Pattern matches: prefix (letters, digits, underscores, hyphens) followed by trailing number
         # Examples: i1, route-1, data-set-2, item_3, item2-1 (digit before hyphen is allowed)
-        # The pattern requires:
-        # - Optional prefix starting with letter/underscore, ending with non-digit (letter, underscore, hyphen)
-        # - This allows digits in the middle of the prefix (e.g., item2-1 has prefix "item2-")
-        # - Trailing number is the range index
-        match_start = re.match(r"^([a-zA-Z_](?:[a-zA-Z0-9_-]*[a-zA-Z_-])?)(\d+)$", start_bound)
-        if not match_start:
-            # Try alternate pattern for pure letter prefix (e.g., a1, i1)
-            match_start = re.match(r"^([a-zA-Z_]+)(\d+)$", start_bound)
+        # The pattern uses non-greedy matching to split on the LAST digit sequence:
+        # - Prefix: starts with letter/underscore, followed by any identifier chars (non-greedy)
+        # - Number: trailing digits (greedy)
+        # This ensures "item21" splits as ("item2", "1") not ("item", "21")
+        # We use two patterns: one for identifiers with non-digit before number, one for pure letters
+        symbolic_pattern = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_-]*?)(\d+)$")
+        match_start = symbolic_pattern.match(start_bound)
         if not match_start:
             raise self._error(
                 f"Invalid range start '{start_bound}': must be a number (e.g., 1) "
@@ -1021,10 +1020,7 @@ class _ModelBuilder:
                 node,
             )
 
-        match_end = re.match(r"^([a-zA-Z_](?:[a-zA-Z0-9_-]*[a-zA-Z_-])?)(\d+)$", end_bound)
-        if not match_end:
-            # Try alternate pattern for pure letter prefix
-            match_end = re.match(r"^([a-zA-Z_]+)(\d+)$", end_bound)
+        match_end = symbolic_pattern.match(end_bound)
         if not match_end:
             raise self._error(
                 f"Invalid range end '{end_bound}': must be a number (e.g., 100) "
@@ -1230,7 +1226,7 @@ class _ModelBuilder:
         """Parse a param_data_value node, handling numbers and special GAMS values.
 
         Issue #564: Handles the grammar rule:
-            param_data_value: NUMBER | SPECIAL_VALUE | MINUS SPECIAL_VALUE
+            param_data_value: NUMBER | SPECIAL_VALUE | MINUS SPECIAL_VALUE | PLUS SPECIAL_VALUE
 
         Args:
             value_node: Either a Tree (param_data_value) or Token (NUMBER/SPECIAL_VALUE)
@@ -1249,7 +1245,7 @@ class _ModelBuilder:
                 # Single token: NUMBER or SPECIAL_VALUE
                 return self._parse_table_value(_token_text(children[0]))
             elif len(children) == 2:
-                # MINUS SPECIAL_VALUE (e.g., -inf)
+                # MINUS/PLUS SPECIAL_VALUE (e.g., -inf, +inf)
                 sign = _token_text(children[0])
                 value = _token_text(children[1])
                 return self._parse_table_value(sign + value)
@@ -3849,9 +3845,12 @@ class _ModelBuilder:
                         f"but '{param_name}' has {len(domain)}-D domain {domain}",
                         child,
                     )
+                # First, validate all elements against the domain without mutating `values`
+                for elem in elements:
+                    self._verify_member_in_domain(param_name, domain[0], elem, child)
+                # Only after successful validation, update `values` for all elements
                 for elem in elements:
                     key_tuple = (elem,)
-                    self._verify_member_in_domain(param_name, domain[0], elem, child)
                     values[key_tuple] = value
             elif child.data == "param_data_range_expansion":
                 # Issue #563: Handle range expansion like (ne2*ne5) 0

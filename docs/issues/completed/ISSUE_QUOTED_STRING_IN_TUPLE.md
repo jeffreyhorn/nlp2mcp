@@ -1,6 +1,6 @@
 # Issue: Quoted String in Tuple Dot Notation Not Supported
 
-**Status:** Open  
+**Status:** Resolved  
 **Category:** Parser Grammar  
 **Affected Models:** egypt  
 **Priority:** Medium  

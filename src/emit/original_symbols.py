@@ -19,6 +19,8 @@ from src.ir.model_ir import ModelIR
 # Regex pattern for valid GAMS set element identifiers
 # Allows: letters, digits, underscores, hyphens, dots (for tuples like a.b)
 # Must start with letter or digit
+# Note: Dots are allowed because they represent tuple notation in GAMS (e.g., upper.egypt).
+# Dots alone cannot break out of the /.../ block - that requires / or ; which are blocked.
 _VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.]*$")
 
 

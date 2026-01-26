@@ -1,6 +1,6 @@
 # Issue: NA Special Value in Tuple Expansion Not Supported
 
-**Status:** Open  
+**Status:** Resolved  
 **Category:** Parser Grammar  
 **Affected Models:** qsambal  
 **Priority:** Low  

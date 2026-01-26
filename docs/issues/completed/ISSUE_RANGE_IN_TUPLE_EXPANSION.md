@@ -1,6 +1,6 @@
 # Issue: Range Expression in Tuple Expansion Not Supported
 
-**Status:** Open  
+**Status:** Resolved  
 **Category:** Parser Grammar  
 **Affected Models:** pinene  
 **Priority:** Low  

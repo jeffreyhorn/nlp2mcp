@@ -1,6 +1,6 @@
 # Issue: Multi-line Equation Continuation Not Supported
 
-**Status:** Open  
+**Status:** Resolved  
 **Category:** Parser Grammar  
 **Affected Models:** agreste, mine, pdi, korcge, nebrazil  
 **Priority:** High  

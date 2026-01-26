@@ -1,6 +1,6 @@
 # Issue: Assignment to Complex Indexed Expression Not Supported
 
-**Status:** Open  
+**Status:** Resolved  
 **Category:** Parser Grammar  
 **Affected Models:** airsp  
 **Priority:** Medium  

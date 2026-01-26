@@ -1,6 +1,6 @@
 # Issue: Hyphenated Identifier as Tuple Prefix Not Supported
 
-**Status:** Open  
+**Status:** Resolved  
 **Category:** Parser Grammar  
 **Affected Models:** fawley  
 **Priority:** Medium  
