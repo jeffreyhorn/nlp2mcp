@@ -5345,3 +5345,63 @@ class TestSetTuplePrefixExpansion:
         assert model.sets["s1"].members == ["a.x", "b.x"]
         # Suffix expansion: x.(a,b) -> x.a, x.b
         assert model.sets["s2"].members == ["x.a", "x.b"]
+
+
+class TestQuotedIndexInAssignment:
+    """Tests for Issue #566: Quoted string indices in assignments."""
+
+    def test_quoted_index_in_parameter_assignment(self):
+        """Test assignment with quoted string index (airsp.gms pattern)."""
+        text = dedent("""
+            Set j / route-1 /;
+            Set s / s1 /;
+            Parameter dd(j,s) / 'route-1'.s1 10 /;
+            Parameter drand(j,s);
+            drand('route-1',s) = dd('route-1',s);
+            """)
+        model = parser.parse_model_text(text)
+        assert "drand" in model.params
+
+    def test_multiple_quoted_indices(self):
+        """Test assignment with multiple quoted indices."""
+        text = dedent("""
+            Set i / item-1, item-2 /;
+            Set j / cat-a, cat-b /;
+            Parameter p(i,j);
+            p('item-1','cat-a') = 10;
+            """)
+        model = parser.parse_model_text(text)
+        assert "p" in model.params
+
+    def test_mixed_quoted_and_unquoted_indices(self):
+        """Test assignment with mix of quoted and unquoted indices."""
+        text = dedent("""
+            Set i / item-1 /;
+            Set j / a, b /;
+            Parameter p(i,j);
+            p('item-1',j) = 5;
+            """)
+        model = parser.parse_model_text(text)
+        assert "p" in model.params
+
+    def test_quoted_index_in_rhs_expression(self):
+        """Test quoted index used in right-hand side expression."""
+        text = dedent("""
+            Set i / x-1, x-2 /;
+            Parameter a(i) / 'x-1' 1, 'x-2' 2 /;
+            Parameter b(i);
+            b(i) = a('x-1') + a('x-2');
+            """)
+        model = parser.parse_model_text(text)
+        assert "b" in model.params
+
+    def test_quoted_index_with_hyphen(self):
+        """Test quoted index containing hyphen character."""
+        text = dedent("""
+            Set route / route-1, route-2, route-3 /;
+            Parameter cost(route);
+            cost('route-1') = 100;
+            cost('route-2') = 200;
+            """)
+        model = parser.parse_model_text(text)
+        assert "cost" in model.params

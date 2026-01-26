@@ -453,7 +453,7 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
         if isinstance(child, Token):
             identifiers.append(_token_text(child))
         elif isinstance(child, Tree):
-            # index_list contains index_expr nodes, which are transformed to index_simple or index_subset
+            # index_list contains index_expr nodes, which are transformed to index_simple, index_subset, or index_string
             if child.data == "index_simple":
                 # index_simple: ID lag_lead_suffix?
                 # First child is the base ID
@@ -465,6 +465,10 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
                 for subchild in child.children:
                     if isinstance(subchild, Tree) and subchild.data == "index_list":
                         identifiers.extend(_extract_domain_indices(subchild))
+            elif child.data == "index_string":
+                # Issue #566: index_string: STRING (quoted index like 'route-1')
+                if child.children and isinstance(child.children[0], Token):
+                    identifiers.append(_strip_quotes(child.children[0]))
     return identifiers
 
 
@@ -487,8 +491,10 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
             "index_expr",
             "index_simple",
             "index_subset",
+            "index_string",
         ):
             # Sprint 11 Day 2: Grammar now produces index_simple and index_subset
+            # Issue #566: Grammar now also produces index_string for quoted indices
             if child.data == "index_simple":
                 # index_simple: ID lag_lead_suffix?
                 id_token = child.children[0]
@@ -511,6 +517,10 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
                         domain_indices = _extract_domain_indices(subchild)
                         indices.extend(domain_indices)
                         break
+            elif child.data == "index_string":
+                # Issue #566: index_string: STRING (quoted index like 'route-1')
+                string_token = child.children[0]
+                indices.append(_strip_quotes(string_token))
             else:
                 # Old index_expr from legacy grammar
                 # Only support plain ID (no lag/lead for parameter assignments)
@@ -551,6 +561,7 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
             "index_expr",
             "index_simple",
             "index_subset",
+            "index_string",
         ):
             if child.data == "index_simple":
                 id_token = child.children[0]
@@ -569,6 +580,10 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
                         domain_indices = _extract_domain_indices(subchild)
                         indices.extend(domain_indices)
                         break
+            elif child.data == "index_string":
+                # Issue #566: index_string: STRING (quoted index like 'route-1')
+                string_token = child.children[0]
+                indices.append(_strip_quotes(string_token))
             else:
                 if len(child.children) == 1:
                     id_token = child.children[0]
@@ -595,6 +610,11 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
     For subset indexing like low(n,nn), we return a SubsetIndex that preserves
     both the subset name and the inner indices for proper bounds validation.
     """
+    # Issue #566: Handle index_string: STRING (quoted index like 'route-1')
+    if index_node.data == "index_string":
+        string_token = index_node.children[0]
+        return _strip_quotes(string_token)
+
     # Handle index_subset: ID "(" index_list ")" lag_lead_suffix?
     if index_node.data == "index_subset":
         # For subset indexing like aij(as,i,j), return SubsetIndex
@@ -610,6 +630,9 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
                 if child.data == "index_simple":
                     # index_simple has ID as first child
                     inner_indices.append(_token_text(child.children[0]))
+                elif child.data == "index_string":
+                    # Issue #566: index_string has STRING as first child
+                    inner_indices.append(_strip_quotes(child.children[0]))
                 elif child.data == "index_expr":
                     # Recursively process index_expr
                     result = _process_index_expr(child)
@@ -707,9 +730,11 @@ def _process_index_list(node: Tree) -> tuple[str | IndexOffset | SubsetIndex, ..
             "index_expr",
             "index_simple",
             "index_subset",
+            "index_string",
         ):
             # New-style: index_expr tree (from index_list in references)
             # Sprint 11 Day 2: Grammar now produces index_simple and index_subset
+            # Issue #566: Grammar now also produces index_string for quoted indices
             indices.append(_process_index_expr(child))
         else:
             # Fallback for unknown nodes

@@ -297,9 +297,11 @@ index_list: index_expr ("," index_expr)*
 // Sprint 11 Day 2 Extended: Support subset indexing like low(n,nn)
 // Also support lag/lead inside subset like nh(i+1)
 // Sprint 12 Day 5: Support square brackets [] in addition to parentheses ()
+// Issue #566: Support STRING for quoted indices like drand('route-1',s)
 index_expr: ID "(" index_list ")" lag_lead_suffix?  -> index_subset
           | ID "[" index_list "]" lag_lead_suffix?  -> index_subset
           | ID lag_lead_suffix?                   -> index_simple
+          | STRING                                -> index_string
 
 lag_lead_suffix: CIRCULAR_LEAD offset_expr   -> circular_lead
                | CIRCULAR_LAG offset_expr    -> circular_lag
