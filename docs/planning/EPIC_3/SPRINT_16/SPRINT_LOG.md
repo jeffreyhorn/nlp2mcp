@@ -13,9 +13,9 @@
 | Metric | Baseline (Sprint 15) | Minimum | Target | Stretch | Current |
 |--------|----------------------|---------|--------|---------|---------|
 | Parse success rate | 21.25% (34/160) | 31.25% (+16) | 37.5% (+26) | 49.38% (+45) | 23.13% (37/160) |
-| Translate success rate | 50.0% (17/34) | 50.0% | 50.0% | 50.0% | 50.0% |
-| Solve success rate | 17.65% (3/17) | 58.82% (10/17) | 76.47% (13/17) | 100% (17/17) | 17.65% |
-| Full pipeline success | 0.63% (1/160) | 3.13% (5/160) | 5.0% (8/160) | 8.13% (13/160) | 0.63% |
+| Translate success rate | 50.0% (17/34) | 50.0% | 50.0% | 50.0% | 56.8% (21/37) |
+| Solve success rate | 17.65% (3/17) | 58.82% (10/17) | 76.47% (13/17) | 100% (17/17) | 38.1% (8/21) |
+| Full pipeline success | 0.63% (1/160) | 3.13% (5/160) | 5.0% (8/160) | 8.13% (13/160) | 5.0% (8/160) |
 
 ---
 
@@ -644,6 +644,82 @@ P-5 Quoted Set Descriptions targets (7 models):
 4. **Range expressions needed extension:** Supporting `a*d` and `route-1*route-5` required grammar and parser changes
 
 **Next Steps:** Day 8 - Solve Improvements (emit_gams.py fixes)
+
+---
+
+### Day 8: Solve Improvements
+
+**Date:** January 26, 2026
+
+**Objective:** Fix MCP code generation bugs in emit_gams.py to improve solve rate
+
+**Branch:** `sprint16-day8-solve-fixes`
+**PR:** #569
+
+**Tasks Completed:**
+
+1. **S-1 Fix: Unary minus formatting (GAMS Error 445)**
+   - Problem: `-(expr)` after operators like `..` causes "More than one operator in a row"
+   - Solution: Convert `-(expr)` to `((-1) * (expr))` which GAMS parses correctly
+   - Added handling for both Binary and Call children
+
+2. **S-1b Fix: Negative constants in binary operations**
+   - Problem: `y * -1` as right operand also causes Error 445
+   - Solution: Wrap negative constants in parentheses: `y * (-1)`
+   - Applies to both left and right operands of `*` and `/`
+
+3. **S-2 Fix: Set element quoting consistency (GAMS Errors 171, 340)**
+   - Problem: Inconsistent quoting of indices caused domain violations
+   - Solution: Implemented `_quote_indices()` heuristic:
+     - Single lowercase letters (a-z) are domain variables → unquoted
+     - Everything else (digits, uppercase, multi-char) is an element → quoted
+
+4. **S-3 Fix: Scalar declaration edge case (GAMS Error 409)**
+   - Problem: Description-only scalars (names with spaces/quotes) caused parse errors
+   - Solution: Added `is_valid_scalar_name()` validation to filter invalid names
+
+5. **Unit tests added/updated:**
+   - `test_unary_minus`, `test_unary_minus_complex_expr`, `test_unary_minus_function_call`
+   - `test_multiplication_negative_right_operand`, `test_multiplication_negative_left_operand`
+   - `test_division_negative_right_operand`
+   - `test_var_ref_element_label`, `test_multiplier_ref_element_label`
+
+6. **Golden files regenerated:**
+   - `tests/golden/simple_nlp_mcp.gms`
+   - `tests/golden/indexed_balance_mcp.gms`
+
+**Quality Gate Results:**
+- Typecheck: ✅ Pass
+- Lint: ✅ Pass
+- Format: ✅ Pass
+- Tests: ✅ 3014+ passed
+
+**Solve Rate Progression:**
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Models compiling | ~3 | 10/21 |
+| Models solving | 3/17 (17.6%) | 8/21 (38.1%) |
+| Error 445 occurrences | ~10 models | 0 |
+
+**Successfully Solving Models (8):**
+- himmel11, hs62, mathopt1, mathopt2, mhw4d, mhw4dx, rbrock, trig
+
+**Remaining Issues:**
+- 11 models still have compilation errors, but from different causes:
+  - Error 125 "Set is under control already" (index reuse in sum)
+  - Error 171 domain mismatch (incorrect index references)
+  - These are KKT transformation bugs, not emit formatting issues
+
+**Files Modified:**
+- `src/emit/expr_to_gams.py` - All S-1, S-1b, S-2 fixes
+- `src/emit/original_symbols.py` - S-3 fix
+- `tests/unit/emit/test_expr_to_gams.py` - 48 tests
+- `tests/unit/emit/test_equations.py` - Updated tests
+- `tests/golden/simple_nlp_mcp.gms` - Regenerated
+- `tests/golden/indexed_balance_mcp.gms` - Regenerated
+
+**Next Steps:** Day 9 - Additional solve improvements or parse improvements
 
 ---
 
