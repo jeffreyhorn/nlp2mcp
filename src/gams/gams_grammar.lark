@@ -154,7 +154,9 @@ param_default: ASSIGN expr
 param_data_items: param_data_item ("," param_data_item)*
 // Sprint 16 Day 7: Added param_data_tuple_expansion for (a,b) value syntax (Issue P-4)
 // Example: k(j) / (route-1,route-2) 13, route-5 1 / expands to route-1=13, route-2=13, route-5=1
+// Issue #563: Added param_data_range_expansion for (ne2*ne5) 0 syntax
 param_data_item: data_matrix_row                         -> param_data_matrix_row
+                 | "(" range_expr ")" NUMBER             -> param_data_range_expansion
                  | "(" set_element_id_list ")" NUMBER    -> param_data_tuple_expansion
                  | data_indices NUMBER                   -> param_data_scalar
 

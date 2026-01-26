@@ -5552,3 +5552,80 @@ class TestHyphenatedTupleExpansion:
             """)
         model = parser.parse_model_text(text)
         assert model.sets["ab"].members == ["x.p", "x.q", "x.r"]
+
+
+class TestRangeInTupleExpansion:
+    """Tests for Issue #563: Range expression in tuple expansion."""
+
+    def test_range_in_param_tuple_expansion(self):
+        """Test range expression inside parameter tuple expansion (pinene.gms pattern)."""
+        text = dedent("""
+            Set ne / ne1, ne2, ne3, ne4, ne5 /;
+            Parameter bc(ne) / ne1 100, (ne2*ne5) 0 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["bc"].values[("ne1",)] == 100.0
+        assert model.params["bc"].values[("ne2",)] == 0.0
+        assert model.params["bc"].values[("ne3",)] == 0.0
+        assert model.params["bc"].values[("ne4",)] == 0.0
+        assert model.params["bc"].values[("ne5",)] == 0.0
+
+    def test_numeric_range_in_tuple_expansion(self):
+        """Test numeric range inside tuple expansion."""
+        text = dedent("""
+            Set i / 1, 2, 3, 4, 5 /;
+            Parameter p(i) / 1 10, (2*5) 0 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("1",)] == 10.0
+        assert model.params["p"].values[("2",)] == 0.0
+        assert model.params["p"].values[("5",)] == 0.0
+
+    def test_hyphenated_range_in_tuple_expansion(self):
+        """Test hyphenated identifiers in range inside tuple expansion."""
+        text = dedent("""
+            Set r / route-1, route-2, route-3, route-4 /;
+            Parameter cost(r) / route-1 100, (route-2*route-4) 50 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["cost"].values[("route-1",)] == 100.0
+        assert model.params["cost"].values[("route-2",)] == 50.0
+        assert model.params["cost"].values[("route-3",)] == 50.0
+        assert model.params["cost"].values[("route-4",)] == 50.0
+
+    def test_multiple_range_expansions(self):
+        """Test multiple range expansions in same parameter."""
+        text = dedent("""
+            Set i / a, b, c, d, e, f /;
+            Parameter p(i) / (a*c) 1, (d*f) 2 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert model.params["p"].values[("b",)] == 1.0
+        assert model.params["p"].values[("c",)] == 1.0
+        assert model.params["p"].values[("d",)] == 2.0
+        assert model.params["p"].values[("e",)] == 2.0
+        assert model.params["p"].values[("f",)] == 2.0
+
+    def test_pinene_model_pattern(self):
+        """Test the exact pattern from pinene.gms model."""
+        text = dedent("""
+            Set ne 'ode states' / ne1*ne5 /;
+            Parameter bc(ne) 'ODE initial conditions' / ne1 100, (ne2*ne5) 0 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "bc" in model.params
+        assert model.params["bc"].values[("ne1",)] == 100.0
+        assert model.params["bc"].values[("ne2",)] == 0.0
+        assert model.params["bc"].values[("ne5",)] == 0.0
+
+    def test_tuple_expansion_still_works(self):
+        """Ensure regular tuple expansion still works alongside range expansion."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter p(i) / (a,b) 1, c 2 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("a",)] == 1.0
+        assert model.params["p"].values[("b",)] == 1.0
+        assert model.params["p"].values[("c",)] == 2.0

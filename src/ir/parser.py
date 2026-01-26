@@ -3808,6 +3808,39 @@ class _ModelBuilder:
                     if domain:
                         self._verify_member_in_domain(param_name, domain[0], elem, child)
                     values[key_tuple] = value
+            elif child.data == "param_data_range_expansion":
+                # Issue #563: Handle range expansion like (ne2*ne5) 0
+                # Expands to ne2=0, ne3=0, ne4=0, ne5=0
+                if len(domain) != 1:
+                    raise self._error(
+                        f"Parameter '{param_name}' range expansion only supported for 1-D parameters",
+                        child,
+                    )
+                range_expr_node = child.children[0]
+                value_token = child.children[-1]
+                value = float(_token_text(value_token))
+
+                # Extract the two range bounds from range_expr
+                bounds = [
+                    node.children[0]
+                    for node in range_expr_node.children
+                    if isinstance(node, Tree) and node.data == "range_bound"
+                ]
+                if len(bounds) != 2:
+                    raise self._error(
+                        f"Range expression requires exactly two bounds, got {len(bounds)}",
+                        child,
+                    )
+                start_bound = _token_text(bounds[0])
+                end_bound = _token_text(bounds[1])
+
+                # Expand range using the set membership
+                expanded_members = self._expand_range_in_set(
+                    start_bound, end_bound, domain[0], child
+                )
+                for member in expanded_members:
+                    key_tuple = (member,)
+                    values[key_tuple] = value
             elif child.data == "param_data_scalar":
                 key = self._parse_data_indices(child.children[0])
                 value_token = child.children[-1]
