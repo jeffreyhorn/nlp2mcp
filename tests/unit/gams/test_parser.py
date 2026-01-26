@@ -5282,3 +5282,66 @@ class TestAliasInDollarCondition:
             """)
         model = parser.parse_model_text(text)
         assert "eq" in model.equations
+
+
+class TestSetTuplePrefixExpansion:
+    """Tests for Issue #562: Tuple prefix expansion (a,b).c in set definitions."""
+
+    def test_tuple_prefix_expansion_basic(self):
+        """Test basic tuple prefix expansion: (a,b).c -> a.c, b.c."""
+        text = dedent("""
+            Set tw / (jan,feb).wet, mar.dry /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["tw"].members == ["jan.wet", "feb.wet", "mar.dry"]
+
+    def test_tuple_prefix_expansion_clearlak_pattern(self):
+        """Test clearlak.gms pattern: (jan,feb).wet, mar.dry."""
+        text = dedent("""
+            Set w / wet, dry /;
+            Set t / jan, feb, mar /;
+            Set tw(t,w) / (jan,feb).wet, mar.dry /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["tw"].members == ["jan.wet", "feb.wet", "mar.dry"]
+
+    def test_tuple_prefix_expansion_with_quoted_ids(self):
+        """Test tuple expansion with quoted identifiers (turkey.gms pattern)."""
+        text = dedent("""
+            Set lsq / ('irr-good','irr-poor').irrigated, ('dry-good','dry-poor').dry /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["lsq"].members == [
+            "irr-good.irrigated",
+            "irr-poor.irrigated",
+            "dry-good.dry",
+            "dry-poor.dry",
+        ]
+
+    def test_tuple_prefix_expansion_multiple(self):
+        """Test multiple tuple prefix expansions in one set."""
+        text = dedent("""
+            Set s / (a,b,c).x, (d,e).y /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["s"].members == ["a.x", "b.x", "c.x", "d.y", "e.y"]
+
+    def test_tuple_prefix_expansion_mixed_with_simple(self):
+        """Test tuple prefix expansion mixed with simple tuples."""
+        text = dedent("""
+            Set s / (a,b).x, c.y, d.z /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["s"].members == ["a.x", "b.x", "c.y", "d.z"]
+
+    def test_both_tuple_expansion_patterns(self):
+        """Test both prefix and suffix tuple expansion patterns together."""
+        text = dedent("""
+            Set s1 / (a,b).x /;
+            Set s2 / x.(a,b) /;
+            """)
+        model = parser.parse_model_text(text)
+        # Prefix expansion: (a,b).x -> a.x, b.x
+        assert model.sets["s1"].members == ["a.x", "b.x"]
+        # Suffix expansion: x.(a,b) -> x.a, x.b
+        assert model.sets["s2"].members == ["x.a", "x.b"]

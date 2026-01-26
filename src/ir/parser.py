@@ -873,6 +873,14 @@ class _ModelBuilder:
                     suffixes = _id_list(id_list_node)
                     for suffix in suffixes:
                         result.append(f"{prefix}.{suffix}")
+                elif child.data == "set_tuple_prefix_expansion":
+                    # Issue #562: Tuple prefix expansion: (id1,id2).suffix (e.g., (jan,feb).wet)
+                    # Expands to: jan.wet, feb.wet
+                    # First child is set_element_id_list, second child is the suffix token
+                    prefixes = self._parse_set_element_id_list(child.children[0])
+                    suffix = _token_text(child.children[1])
+                    for prefix in prefixes:
+                        result.append(f"{prefix}.{suffix}")
                 elif child.data == "set_range":
                     # Range notation: can be symbolic (i1*i100) or numeric (1*10)
                     # The grammar now produces range_expr with range_bound children
@@ -905,7 +913,7 @@ class _ModelBuilder:
                     raise self._error(
                         f"Unexpected set member node type: '{child.data}'. "
                         f"Expected 'set_element', 'set_element_with_desc', 'set_tuple', "
-                        f"'set_tuple_with_desc', 'set_tuple_expansion', or 'set_range'.",
+                        f"'set_tuple_with_desc', 'set_tuple_expansion', 'set_tuple_prefix_expansion', or 'set_range'.",
                         child,
                     )
         return result
