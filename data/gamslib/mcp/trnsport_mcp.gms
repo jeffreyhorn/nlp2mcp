@@ -16,13 +16,19 @@ $offText
 * ============================================
 
 Sets
-    i /inf/
+    i /seattle, san-diego/
+    j /new-york, chicago, topeka/
 ;
 
 Parameters
-    theta(i) /inf 0.3/
-    db(i)
-    w(i)
+    a(i) /seattle 350.0, san-diego 600.0/
+    b(j) /new-york 325.0, chicago 300.0, topeka 275.0/
+    d(i,j) /seattle.chicago 1.7, seattle.topeka 1.8, 'san-diego'.chicago 2.5, 'san-diego'.topeka 1.8/
+    c(i,j)
+;
+
+Scalars
+    f /0.0/
 ;
 
 * ============================================
@@ -37,16 +43,13 @@ Parameters
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    Util
-    nu_rev(i)
-    nu_pc(i)
+    z
 ;
 
 Positive Variables
-    x(i)
-    b(i)
-    c(i)
-    piL_x(i)
+    x(i,j)
+    lam_supply(i)
+    lam_demand(j)
 ;
 
 * ============================================
@@ -58,14 +61,10 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_b(i)
-    stat_c(i)
-    stat_util
-    stat_x(i)
-    comp_lo_x_inf
-    obj
-    pc(i)
-    rev(i)
+    stat_x(i,j)
+    comp_demand(j)
+    comp_supply(i)
+    cost
 ;
 
 * ============================================
@@ -73,18 +72,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. -1 + 1 * nu_rev(i) + 0 * nu_pc(i) =E= 0;
-stat_c(i).. 1 + 0 * nu_rev(i) + 1 * nu_pc(i) =E= 0;
-stat_util.. ((-1) * sum(i, 0)) + 0 * nu_rev("inf") + 0 * nu_pc("inf") =E= 0;
-stat_x(i).. 0 + ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + ((-1) * theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
+stat_x(i,j).. c(i,j) + sum(i, sum(j, 0) * lam_supply(i)) + sum(j, ((-1) * sum(i, 0)) * lam_demand(j)) =E= 0;
 
-* Lower bound complementarity equations
-comp_lo_x_inf.. x("inf") - 0.0001 =G= 0;
+* Inequality complementarity equations
+comp_demand(j).. sum(i, x(i,j)) =G= 0;
+comp_supply(i).. ((-1) * sum(j, x(i,j))) =G= 0;
 
 * Original equality equations
-obj.. Util =E= sum(i, b(i) - c(i));
-rev(i).. b(i) =E= x(i) ** 0.5;
-pc(i).. c(i) - theta(i) * x(i) =E= 0;
+cost.. z =E= sum((i,j), c(i,j) * x(i,j));
 
 
 * ============================================
@@ -101,14 +96,10 @@ pc(i).. c(i) - theta(i) * x(i) =E= 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_b.b,
-    stat_c.c,
-    stat_util.util,
     stat_x.x,
-    obj.Util,
-    pc.nu_pc,
-    rev.nu_rev,
-    comp_lo_x_inf.piL_x("inf")
+    comp_demand.lam_demand,
+    comp_supply.lam_supply,
+    cost.z
 /;
 
 * ============================================

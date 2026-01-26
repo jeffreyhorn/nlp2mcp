@@ -2,43 +2,66 @@
 
 This module emits GAMS equation definitions from KKT system equations.
 Each equation is emitted in the form: eq_name(indices).. lhs =E= rhs;
+
+Handles index aliasing to avoid GAMS Error 125 ("Set is under control already")
+when an equation's domain index is reused in a nested sum expression.
 """
 
-from src.emit.expr_to_gams import expr_to_gams
+from src.emit.expr_to_gams import (
+    collect_index_aliases,
+    expr_to_gams,
+    resolve_index_conflicts,
+)
 from src.ir.normalize import NormalizedEquation
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
 
 
-def emit_equation_def(eq_name: str, eq_def: EquationDef) -> str:
+def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]:
     """Emit a single equation definition in GAMS syntax.
+
+    Handles index aliasing to avoid GAMS Error 125 when an equation's domain
+    index is reused inside a sum expression.
 
     Args:
         eq_name: Name of the equation
         eq_def: Equation definition with domain, relation, and LHS/RHS
 
     Returns:
-        GAMS equation definition string
+        Tuple of (GAMS equation definition string, set of indices needing aliases)
 
     Examples:
         >>> # balance(i).. x(i) + y(i) =E= 10;
         >>> # objective.. obj =E= sum(i, c(i) * x(i));
     """
-    # Convert LHS and RHS to GAMS
     lhs, rhs = eq_def.lhs_rhs
-    lhs_gams = expr_to_gams(lhs)
-    rhs_gams = expr_to_gams(rhs)
+    domain = eq_def.domain
+
+    # Collect aliases needed from both LHS and RHS
+    aliases_needed: set[str] = set()
+    aliases_needed.update(collect_index_aliases(lhs, domain))
+    aliases_needed.update(collect_index_aliases(rhs, domain))
+
+    # Resolve index conflicts in expressions
+    resolved_lhs = resolve_index_conflicts(lhs, domain)
+    resolved_rhs = resolve_index_conflicts(rhs, domain)
+
+    # Convert to GAMS
+    lhs_gams = expr_to_gams(resolved_lhs)
+    rhs_gams = expr_to_gams(resolved_rhs)
 
     # Determine relation
     rel_map = {Rel.EQ: "=E=", Rel.LE: "=L=", Rel.GE: "=G="}
     rel_gams = rel_map[eq_def.relation]
 
     # Build equation string
-    if eq_def.domain:
-        indices_str = ",".join(eq_def.domain)
-        return f"{eq_name}({indices_str}).. {lhs_gams} {rel_gams} {rhs_gams};"
+    if domain:
+        indices_str = ",".join(domain)
+        eq_str = f"{eq_name}({indices_str}).. {lhs_gams} {rel_gams} {rhs_gams};"
     else:
-        return f"{eq_name}.. {lhs_gams} {rel_gams} {rhs_gams};"
+        eq_str = f"{eq_name}.. {lhs_gams} {rel_gams} {rhs_gams};"
+
+    return eq_str, aliases_needed
 
 
 def emit_normalized_equation_def(eq_name: str, norm_eq: NormalizedEquation) -> str:
@@ -72,7 +95,7 @@ def emit_normalized_equation_def(eq_name: str, norm_eq: NormalizedEquation) -> s
         return f"{eq_name}.. {expr_gams} {rel_gams} 0;"
 
 
-def emit_equation_definitions(kkt: KKTSystem) -> str:
+def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
     """Emit all equation definitions from KKT system.
 
     Emits equation definitions for:
@@ -81,11 +104,14 @@ def emit_equation_definitions(kkt: KKTSystem) -> str:
     - Complementarity equations for bounds
     - Original equality equations
 
+    Handles index aliasing to avoid GAMS Error 125 ("Set is under control already")
+    when an equation's domain index is reused in a nested sum expression.
+
     Args:
         kkt: KKT system containing all equations
 
     Returns:
-        GAMS equation definitions as string
+        Tuple of (GAMS equation definitions as string, set of indices needing aliases)
 
     Example output:
         * Stationarity equations
@@ -102,13 +128,16 @@ def emit_equation_definitions(kkt: KKTSystem) -> str:
         balance(i).. x(i) + y(i) =E= demand(i);
     """
     lines: list[str] = []
+    all_aliases: set[str] = set()
 
     # Stationarity equations
     if kkt.stationarity:
         lines.append("* Stationarity equations")
         for eq_name in sorted(kkt.stationarity.keys()):
             eq_def = kkt.stationarity[eq_name]
-            lines.append(emit_equation_def(eq_name, eq_def))
+            eq_str, aliases = emit_equation_def(eq_name, eq_def)
+            lines.append(eq_str)
+            all_aliases.update(aliases)
         lines.append("")
 
     # Inequality complementarity equations (includes min/max complementarity)
@@ -116,7 +145,9 @@ def emit_equation_definitions(kkt: KKTSystem) -> str:
         lines.append("* Inequality complementarity equations")
         for eq_name in sorted(kkt.complementarity_ineq.keys()):
             comp_pair = kkt.complementarity_ineq[eq_name]
-            lines.append(emit_equation_def(comp_pair.equation.name, comp_pair.equation))
+            eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
+            lines.append(eq_str)
+            all_aliases.update(aliases)
         lines.append("")
 
     # Lower bound complementarity equations
@@ -124,7 +155,9 @@ def emit_equation_definitions(kkt: KKTSystem) -> str:
         lines.append("* Lower bound complementarity equations")
         for key in sorted(kkt.complementarity_bounds_lo.keys()):
             comp_pair = kkt.complementarity_bounds_lo[key]
-            lines.append(emit_equation_def(comp_pair.equation.name, comp_pair.equation))
+            eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
+            lines.append(eq_str)
+            all_aliases.update(aliases)
         lines.append("")
 
     # Upper bound complementarity equations
@@ -132,7 +165,9 @@ def emit_equation_definitions(kkt: KKTSystem) -> str:
         lines.append("* Upper bound complementarity equations")
         for key in sorted(kkt.complementarity_bounds_up.keys()):
             comp_pair = kkt.complementarity_bounds_up[key]
-            lines.append(emit_equation_def(comp_pair.equation.name, comp_pair.equation))
+            eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
+            lines.append(eq_str)
+            all_aliases.update(aliases)
         lines.append("")
 
     # Original equality equations (from model_ir)
@@ -145,10 +180,12 @@ def emit_equation_definitions(kkt: KKTSystem) -> str:
             # Fixed variables (.fx) create equalities stored in normalized_bounds
             if eq_name in kkt.model_ir.equations:
                 eq_def = kkt.model_ir.equations[eq_name]
-                lines.append(emit_equation_def(eq_name, eq_def))
+                eq_str, aliases = emit_equation_def(eq_name, eq_def)
+                lines.append(eq_str)
+                all_aliases.update(aliases)
             elif eq_name in kkt.model_ir.normalized_bounds:
                 norm_eq = kkt.model_ir.normalized_bounds[eq_name]
                 lines.append(emit_normalized_equation_def(eq_name, norm_eq))
         lines.append("")
 
-    return "\n".join(lines)
+    return "\n".join(lines), all_aliases

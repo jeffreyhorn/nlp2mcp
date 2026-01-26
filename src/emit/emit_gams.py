@@ -147,7 +147,19 @@ def emit_gams_mcp(
         sections.append("* ============================================")
         sections.append("")
 
-    eq_defs_code = emit_equation_definitions(kkt)
+    eq_defs_code, index_aliases = emit_equation_definitions(kkt)
+
+    # Emit index aliases if any are needed (to avoid GAMS Error 125)
+    # These must be declared before the equation definitions that use them
+    if index_aliases:
+        if add_comments:
+            sections.append("* Index aliases to avoid 'Set is under control already' error")
+            sections.append("* (GAMS Error 125 when equation domain index is reused in sum)")
+        for idx in sorted(index_aliases):
+            alias_name = f"{idx}__"
+            sections.append(f"Alias({idx}, {alias_name});")
+        sections.append("")
+
     sections.append(eq_defs_code)
     sections.append("")
 

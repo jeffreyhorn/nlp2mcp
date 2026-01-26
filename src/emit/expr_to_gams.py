@@ -2,6 +2,10 @@
 
 This module converts IR expression AST nodes to GAMS syntax strings.
 Handles operator precedence, function calls, and all AST node types including MultiplierRef.
+
+Also handles index aliasing for sum expressions to avoid GAMS Error 125
+("Set is under control already") when an equation's domain index is reused
+in a nested sum.
 """
 
 from src.ir.ast import (
@@ -10,6 +14,7 @@ from src.ir.ast import (
     Const,
     EquationRef,
     Expr,
+    IndexOffset,
     MultiplierRef,
     ParamRef,
     Sum,
@@ -279,3 +284,195 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
         case _:
             # Fallback for unknown node types
             raise ValueError(f"Unknown expression type: {type(expr).__name__}")
+
+
+def _make_alias_name(index: str) -> str:
+    """Create an alias name for an index to avoid conflicts.
+
+    Uses double underscore suffix to create unique alias names that are
+    unlikely to conflict with user-defined sets.
+
+    Args:
+        index: Original index name
+
+    Returns:
+        Aliased index name
+
+    Examples:
+        >>> _make_alias_name("i")
+        'i__'
+        >>> _make_alias_name("nodes")
+        'nodes__'
+    """
+    return f"{index}__"
+
+
+def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[str]:
+    """Collect all indices that need aliases due to conflicts with equation domain.
+
+    Recursively traverses the expression tree to find Sum nodes whose indices
+    conflict with the equation's domain indices.
+
+    Args:
+        expr: Expression to analyze
+        equation_domain: Tuple of index names used in the equation's domain
+
+    Returns:
+        Set of original index names that need aliases
+
+    Examples:
+        >>> from src.ir.ast import Sum, Const
+        >>> expr = Sum(("i",), Const(0))
+        >>> collect_index_aliases(expr, ("i", "j"))
+        {'i'}
+        >>> collect_index_aliases(expr, ("k",))
+        set()
+    """
+    if not equation_domain:
+        return set()
+
+    domain_set = set(equation_domain)
+    aliases_needed: set[str] = set()
+
+    def _collect(e: Expr) -> None:
+        match e:
+            case Sum(index_sets, body):
+                # Check for conflicts
+                for idx in index_sets:
+                    if idx in domain_set:
+                        aliases_needed.add(idx)
+                # Recurse into body
+                _collect(body)
+
+            case Binary(_, left, right):
+                _collect(left)
+                _collect(right)
+
+            case Unary(_, child):
+                _collect(child)
+
+            case Call(_, args):
+                for arg in args:
+                    _collect(arg)
+
+            case VarRef() | ParamRef() | MultiplierRef() | EquationRef() | Const() | SymbolRef():
+                # Leaf nodes - no nested sums
+                pass
+
+            case _:
+                pass
+
+    _collect(expr)
+    return aliases_needed
+
+
+def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Expr:
+    """Resolve index conflicts by replacing conflicting sum indices with aliases.
+
+    Creates a new expression tree where any Sum index that conflicts with the
+    equation's domain is replaced with an aliased version (e.g., "i" -> "i__").
+
+    Also replaces any references to the original index within the sum body
+    (in VarRef, ParamRef, MultiplierRef indices) with the aliased version.
+
+    Args:
+        expr: Expression to transform
+        equation_domain: Tuple of index names used in the equation's domain
+
+    Returns:
+        New expression with conflicts resolved
+
+    Examples:
+        >>> from src.ir.ast import Sum, VarRef, Const
+        >>> expr = Sum(("i",), VarRef("x", ("i",)))
+        >>> result = resolve_index_conflicts(expr, ("i",))
+        >>> # Result: Sum(("i__",), VarRef("x", ("i__",)))
+    """
+    if not equation_domain:
+        return expr
+
+    domain_set = set(equation_domain)
+
+    def _resolve(e: Expr, active_aliases: dict[str, str]) -> Expr:
+        """Recursively resolve conflicts, tracking active alias substitutions."""
+        match e:
+            case Sum(index_sets, body):
+                # Check which indices conflict and need aliasing
+                sum_indices: list[str] = []
+                new_aliases = dict(active_aliases)  # Copy current aliases
+
+                for idx in index_sets:
+                    if idx in domain_set:
+                        # This index conflicts - use alias
+                        alias = _make_alias_name(idx)
+                        sum_indices.append(alias)
+                        new_aliases[idx] = alias
+                    else:
+                        sum_indices.append(idx)
+
+                # Recurse into body with updated aliases
+                new_body = _resolve(body, new_aliases)
+                return Sum(tuple(sum_indices), new_body)
+
+            case Binary(op, left, right):
+                new_left = _resolve(left, active_aliases)
+                new_right = _resolve(right, active_aliases)
+                return Binary(op, new_left, new_right)
+
+            case Unary(op, child):
+                new_child = _resolve(child, active_aliases)
+                return Unary(op, new_child)
+
+            case Call(func, args):
+                new_args = tuple(_resolve(arg, active_aliases) for arg in args)
+                return Call(func, new_args)
+
+            case VarRef() as var_ref:
+                if var_ref.indices and active_aliases:
+                    # Replace any aliased indices (only strings, not IndexOffset)
+                    var_indices: tuple[str | IndexOffset, ...] = tuple(
+                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        for idx in var_ref.indices
+                    )
+                    if var_indices != var_ref.indices:
+                        return VarRef(var_ref.name, var_indices)
+                return var_ref
+
+            case ParamRef() as param_ref:
+                if param_ref.indices and active_aliases:
+                    param_indices: tuple[str | IndexOffset, ...] = tuple(
+                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        for idx in param_ref.indices
+                    )
+                    if param_indices != param_ref.indices:
+                        return ParamRef(param_ref.name, param_indices)
+                return param_ref
+
+            case MultiplierRef() as mult_ref:
+                if mult_ref.indices and active_aliases:
+                    mult_indices: tuple[str | IndexOffset, ...] = tuple(
+                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        for idx in mult_ref.indices
+                    )
+                    if mult_indices != mult_ref.indices:
+                        return MultiplierRef(mult_ref.name, mult_indices)
+                return mult_ref
+
+            case EquationRef() as eq_ref:
+                if eq_ref.indices and active_aliases:
+                    eq_indices: tuple[str | IndexOffset, ...] = tuple(
+                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        for idx in eq_ref.indices
+                    )
+                    if eq_indices != eq_ref.indices:
+                        return EquationRef(eq_ref.name, eq_indices, eq_ref.attribute)
+                return eq_ref
+
+            case Const() | SymbolRef():
+                # Leaf nodes with no indices
+                return e
+
+            case _:
+                return e
+
+    return _resolve(expr, {})

@@ -63,10 +63,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 11 * cos(11 * x1) + 13 * (-sin(13 * x1)) - cos(17 * x1) * 17 - (-sin(19 * x1)) * 19 - (-1 + 5 * cos(x1)) * lam_ineq1 - piL_x1 + piU_x1 =E= 0;
+stat_x1.. 11 * cos(11 * x1) + 13 * ((-1) * (sin(13 * x1))) - cos(17 * x1) * 17 - ((-1) * (sin(19 * x1))) * 19 - (-1 + 5 * cos(x1)) * lam_ineq1 - piL_x1 + piU_x1 =E= 0;
 
 * Inequality complementarity equations
-comp_ineq1.. -((-x1) + 5 * sin(x1)) =G= 0;
+comp_ineq1.. ((-1) * (((-1) * x1) + 5 * sin(x1))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x1.. x1 + 2 =G= 0;

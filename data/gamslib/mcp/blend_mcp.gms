@@ -16,13 +16,15 @@ $offText
 * ============================================
 
 Sets
-    i /inf/
+    alloy /a, b, c, d, e, f, g, h, i/
+    elem /lead, zinc, tin/
 ;
 
 Parameters
-    theta(i) /inf 0.3/
-    db(i)
-    w(i)
+    compdat(*,alloy) /lead.a 10.0, lead.b 10.0, lead.c 40.0, lead.d 60.0, lead.e 30.0, lead.f 30.0, lead.g 30.0, lead.h 50.0, lead.i 20.0, zinc.a 10.0, zinc.b 30.0, zinc.c 50.0, zinc.d 30.0, zinc.e 30.0, zinc.f 40.0, zinc.g 20.0, zinc.h 40.0, zinc.i 30.0, tin.a 80.0, tin.b 60.0, tin.c 10.0, tin.d 10.0, tin.e 40.0, tin.f 30.0, tin.g 50.0, tin.h 10.0, tin.i 50.0, price.a 4.1, price.b 4.3, price.c 5.8, price.d 6.0, price.e 7.6, price.f 7.5, price.g 7.3, price.h 6.9, price.i 7.3/
+    rb(elem) /lead 30.0, zinc 30.0, tin 40.0/
+    ce(alloy)
+    report(alloy,*)
 ;
 
 * ============================================
@@ -37,16 +39,13 @@ Parameters
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    Util
-    nu_rev(i)
-    nu_pc(i)
+    phi
+    nu_pc(elem)
+    nu_mb
 ;
 
 Positive Variables
-    x(i)
-    b(i)
-    c(i)
-    piL_x(i)
+    v(alloy)
 ;
 
 * ============================================
@@ -58,14 +57,10 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_b(i)
-    stat_c(i)
-    stat_util
-    stat_x(i)
-    comp_lo_x_inf
-    obj
-    pc(i)
-    rev(i)
+    stat_v(alloy)
+    ac
+    mb
+    pc(elem)
 ;
 
 * ============================================
@@ -73,18 +68,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. -1 + 1 * nu_rev(i) + 0 * nu_pc(i) =E= 0;
-stat_c(i).. 1 + 0 * nu_rev(i) + 1 * nu_pc(i) =E= 0;
-stat_util.. ((-1) * sum(i, 0)) + 0 * nu_rev("inf") + 0 * nu_pc("inf") =E= 0;
-stat_x(i).. 0 + ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + ((-1) * theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
-
-* Lower bound complementarity equations
-comp_lo_x_inf.. x("inf") - 0.0001 =G= 0;
+stat_v(alloy).. compdat(""price"","alloy") + sum(elem, compdat("elem","alloy") * nu_pc("elem")) + 1 * nu_mb =E= 0;
 
 * Original equality equations
-obj.. Util =E= sum(i, b(i) - c(i));
-rev(i).. b(i) =E= x(i) ** 0.5;
-pc(i).. c(i) - theta(i) * x(i) =E= 0;
+pc(elem).. sum(alloy, compdat("elem","alloy") * v("alloy")) =E= rb("elem");
+mb.. sum(alloy, v("alloy")) =E= 1;
+ac.. phi =E= sum(alloy, compdat(""price"","alloy") * v("alloy"));
 
 
 * ============================================
@@ -101,14 +90,10 @@ pc(i).. c(i) - theta(i) * x(i) =E= 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_b.b,
-    stat_c.c,
-    stat_util.util,
-    stat_x.x,
-    obj.Util,
-    pc.nu_pc,
-    rev.nu_rev,
-    comp_lo_x_inf.piL_x("inf")
+    stat_v.v,
+    ac.phi,
+    mb.nu_mb,
+    pc.nu_pc
 /;
 
 * ============================================

@@ -16,13 +16,17 @@ $offText
 * ============================================
 
 Sets
-    i /inf/
+    m /machine-1, machine-2, machine-3/
+    g /20-, 25-, c-bond-ext, tissue-wrp/
 ;
 
 Parameters
-    theta(i) /inf 0.3/
-    db(i)
-    w(i)
+    prate(g,m)
+    pcost(g,m)
+    dempr(g,*) /'c-bond-ext'.demand 12000.0, 'c-bond-ext'.price 99.0, 'tissue-wrp'.demand 8000.0, 'tissue-wrp'.price 105.0/
+    avail(m) /machine-1 672.0, machine-2 600.0, machine-3 480.0/
+    mtr(m,*)
+    par(g,*)
 ;
 
 * ============================================
@@ -37,16 +41,13 @@ Parameters
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    Util
-    nu_rev(i)
-    nu_pc(i)
+    profit
+    nu_dem(g)
 ;
 
 Positive Variables
-    x(i)
-    b(i)
-    c(i)
-    piL_x(i)
+    outp(g,m)
+    lam_cap(m)
 ;
 
 * ============================================
@@ -58,14 +59,10 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_b(i)
-    stat_c(i)
-    stat_util
-    stat_x(i)
-    comp_lo_x_inf
-    obj
-    pc(i)
-    rev(i)
+    stat_outp(g,m)
+    comp_cap(m)
+    dem(g)
+    pdef
 ;
 
 * ============================================
@@ -73,18 +70,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. -1 + 1 * nu_rev(i) + 0 * nu_pc(i) =E= 0;
-stat_c(i).. 1 + 0 * nu_rev(i) + 1 * nu_pc(i) =E= 0;
-stat_util.. ((-1) * sum(i, 0)) + 0 * nu_rev("inf") + 0 * nu_pc("inf") =E= 0;
-stat_x(i).. 0 + ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + ((-1) * theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
+stat_outp(g,m).. ((-1) * (sum(g, 0) - pcost(g,m))) + sum(g, sum(m, 0) * nu_dem(g)) + sum(m, sum(g, 0) * lam_cap(m)) =E= 0;
 
-* Lower bound complementarity equations
-comp_lo_x_inf.. x("inf") - 0.0001 =G= 0;
+* Inequality complementarity equations
+comp_cap(m).. ((-1) * sum(g, outp(g,m) / prate(g,m))) =G= 0;
 
 * Original equality equations
-obj.. Util =E= sum(i, b(i) - c(i));
-rev(i).. b(i) =E= x(i) ** 0.5;
-pc(i).. c(i) - theta(i) * x(i) =E= 0;
+dem(g).. sum(m, outp(g,m)) =E= dempr(g,""demand"");
+pdef.. profit =E= sum(g, dempr(g,""demand"") * dempr(g,""price"")) - sum((g,m), pcost(g,m) * outp(g,m));
 
 
 * ============================================
@@ -101,14 +94,10 @@ pc(i).. c(i) - theta(i) * x(i) =E= 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_b.b,
-    stat_c.c,
-    stat_util.util,
-    stat_x.x,
-    obj.Util,
-    pc.nu_pc,
-    rev.nu_rev,
-    comp_lo_x_inf.piL_x("inf")
+    stat_outp.outp,
+    comp_cap.lam_cap,
+    dem.nu_dem,
+    pdef.profit
 /;
 
 * ============================================

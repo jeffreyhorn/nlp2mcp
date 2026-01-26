@@ -28,9 +28,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:22.942691+00:00",
+        "parse_date": "2026-01-26T18:19:51.110605+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.5207,
+        "parse_time_seconds": 0.7406,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -39,6 +39,25 @@
         "equations": 2,
         "parameters": 0,
         "sets": 6
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:27:45.117366+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.8694,
+        "error": {
+          "category": "model_domain_mismatch",
+          "message": "Error: Invalid model - Incompatible domains for summation: variable domain ('m', 'k'), multiplier domain ('n', 'k'). Multiplier domain must be either a subset of variable domain or completely disjoint.\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:19:52.348828+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:19:52.348828+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -98,9 +117,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:27.074312+00:00",
+        "parse_date": "2026-01-26T18:19:52.861789+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.2754,
+        "parse_time_seconds": 0.5126,
         "variables_count": 6,
         "equations_count": 8
       },
@@ -109,6 +128,25 @@
         "equations": 8,
         "parameters": 0,
         "sets": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:27:47.185756+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.0676,
+        "error": {
+          "category": "diff_unsupported_func",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'gamma'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:19:54.264421+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:19:54.264421+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -177,9 +215,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:27.634687+00:00",
+        "parse_date": "2026-01-26T18:20:40.826339+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.56,
+        "parse_time_seconds": 0.6256,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -188,6 +226,41 @@
         "equations": 3,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:27:48.841857+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.451,
+        "output_file": "data/gamslib/mcp/ajax_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.2043,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:31:51.799987+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2903,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:42.080093+00:00",
+        "notes": "Skipped due to solve failure"
       }
     },
     {
@@ -238,9 +311,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:28.284646+00:00",
+        "parse_date": "2026-01-26T18:19:56.885727+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6498,
+        "parse_time_seconds": 0.5833,
         "variables_count": 15,
         "equations_count": 8
       },
@@ -249,6 +322,25 @@
         "equations": 8,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:27:50.381453+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.5392,
+        "error": {
+          "category": "model_no_objective_def",
+          "message": "Error: Invalid model - Objective variable 'f' is not defined by any equation. ObjectiveIR.expr is None and no defining equation found. Available equations: ['objective', 'alkylshrnk', 'acidbal', 'isobutbal', 'alkyldef', 'octdef', 'aciddef', 'f4def']\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:19:58.397819+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:19:58.397819+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -329,9 +421,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:29.943446+00:00",
+        "parse_date": "2026-01-26T18:20:42.805352+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.2959,
+        "parse_time_seconds": 0.7249,
         "variables_count": 4,
         "equations_count": 5
       },
@@ -340,6 +432,41 @@
         "equations": 5,
         "parameters": 0,
         "sets": 5
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:27:52.738934+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.1397,
+        "output_file": "data/gamslib/mcp/apl1p_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.2166,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:31:52.082385+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2739,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:44.555273+00:00",
+        "notes": "Skipped due to solve failure"
       }
     },
     {
@@ -420,9 +547,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:31.721498+00:00",
+        "parse_date": "2026-01-26T18:20:01.874686+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.1455,
+        "parse_time_seconds": 0.6784,
         "variables_count": 14,
         "equations_count": 13
       },
@@ -431,6 +558,25 @@
         "equations": 13,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:27:54.675035+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.9187,
+        "error": {
+          "category": "model_no_objective_def",
+          "message": "Error: Invalid model - Objective variable 'pl' is not defined by any equation. ObjectiveIR.expr is None and no defining equation found. Available equations: ['power_loss', 'pumping_energy', 'friction', 'temp_rise', 'load_capacity', 'inlet_pressure', 'oil_viscosity', 'temperature', 'radius', 'limit1', 'limit2', 'temp1', 'temp2']\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:20:03.543115+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:03.543115+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -457,9 +603,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:32.275199+00:00",
+        "parse_date": "2026-01-26T18:20:44.942676+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5535,
+        "parse_time_seconds": 0.3871,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -468,6 +614,41 @@
         "equations": 3,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:27:56.246850+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.3557,
+        "output_file": "data/gamslib/mcp/blend_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.2155,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:31:52.352684+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2638,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:46.125227+00:00",
+        "notes": "Skipped due to solve failure"
       }
     },
     {
@@ -593,9 +774,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:36.685667+00:00",
+        "parse_date": "2026-01-26T18:20:05.750824+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.38,
+        "parse_time_seconds": 0.259,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -604,6 +785,25 @@
         "equations": 2,
         "parameters": 0,
         "sets": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:27:57.633794+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.3861,
+        "error": {
+          "category": "internal_error",
+          "message": "Error: Invalid model - Unsupported unary operation 'not' for differentiation. Supported operations: +, -\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:20:07.108732+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:07.108732+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -786,9 +986,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:40.971005+00:00",
+        "parse_date": "2026-01-26T18:20:46.342868+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3981,
+        "parse_time_seconds": 0.2173,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -797,6 +997,41 @@
         "equations": 3,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:27:59.586270+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.6995,
+        "output_file": "data/gamslib/mcp/chem_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.2521,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:31:52.629943+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2698,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:47.437569+00:00",
+        "notes": "Skipped due to solve failure"
       }
     },
     {
@@ -823,9 +1058,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:42.639680+00:00",
+        "parse_date": "2026-01-26T18:20:11.116856+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.6683,
+        "parse_time_seconds": 1.8281,
         "variables_count": 15,
         "equations_count": 14
       },
@@ -834,6 +1069,25 @@
         "equations": 14,
         "parameters": 0,
         "sets": 4
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:03.273955+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 3.6869,
+        "error": {
+          "category": "internal_error",
+          "message": "Error: Invalid model - Set element 'food+agr' contains invalid characters. Set elements must start with a letter or digit and contain only letters, digits, underscores, hyphens, and dots.\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:20:13.310550+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:13.310550+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -893,9 +1147,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:43.109236+00:00",
+        "parse_date": "2026-01-26T18:20:13.660682+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3804,
+        "parse_time_seconds": 0.3353,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -904,6 +1158,25 @@
         "equations": 1,
         "parameters": 0,
         "sets": 1
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:04.638386+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.3452,
+        "error": {
+          "category": "model_no_objective_def",
+          "message": "Error: Invalid model - Objective variable 'r' is not defined by any equation. ObjectiveIR.expr is None and no defining equation found. Available equations: ['e']\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:20:14.548427+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:14.548427+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -987,9 +1260,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:43.505248+00:00",
+        "parse_date": "2026-01-26T18:20:14.759825+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2547,
+        "parse_time_seconds": 0.2108,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -998,6 +1271,25 @@
         "equations": 2,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:06.020733+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.382,
+        "error": {
+          "category": "model_no_objective_def",
+          "message": "Error: Invalid model - Objective variable 'r' is not defined by any equation. ObjectiveIR.expr is None and no defining equation found. Available equations: ['circumscribe', 'nooverlap']\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:20:15.895142+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:15.895142+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -1057,9 +1349,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:44.363346+00:00",
+        "parse_date": "2026-01-26T18:20:16.629678+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6643,
+        "parse_time_seconds": 0.734,
         "variables_count": 6,
         "equations_count": 8
       },
@@ -1068,6 +1360,25 @@
         "equations": 8,
         "parameters": 0,
         "sets": 4
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:07.890788+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.8696,
+        "error": {
+          "category": "codegen_numerical_error",
+          "message": "Error: Unexpected error - Error: Numerical error in parameter 'rep[2,gap]': Invalid value (value is +Inf)\n\nSuggestion: Check your GAMS model or data file for:\n  - Uninitialized parameters\n  - Division by zero in parameter calculations\n  - Invalid mathematical operations\n  - Correct definition of parameter 'rep'\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:20:18.248792+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:18.248792+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -1184,9 +1495,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:07:46.244544+00:00",
+        "parse_date": "2026-01-26T18:20:47.830117+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5736,
+        "parse_time_seconds": 0.3922,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1195,6 +1506,41 @@
         "equations": 3,
         "parameters": 0,
         "sets": 5
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:28:09.862261+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.7243,
+        "output_file": "data/gamslib/mcp/dispatch_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.246,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:31:52.912442+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.274,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:49.019379+00:00",
+        "notes": "Skipped due to solve failure"
       }
     },
     {
@@ -1715,9 +2061,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:08:05.862219+00:00",
+        "parse_date": "2026-01-26T18:20:22.601098+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.6427,
+        "parse_time_seconds": 2.0028,
         "variables_count": 7,
         "equations_count": 11
       },
@@ -1726,6 +2072,25 @@
         "equations": 11,
         "parameters": 0,
         "sets": 7
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:13.412319+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 3.5492,
+        "error": {
+          "category": "codegen_numerical_error",
+          "message": "Error: Unexpected error - Error: Numerical error in parameter 'Ndata[Antwerpen,slo]': Invalid value (value is -Inf)\n\nSuggestion: Check your GAMS model or data file for:\n  - Uninitialized parameters\n  - Division by zero in parameter calculations\n  - Invalid mathematical operations\n  - Correct definition of parameter 'Ndata'\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:20:24.805621+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:24.805621+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -2040,9 +2405,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:08:09.658846+00:00",
+        "parse_date": "2026-01-26T18:20:49.306909+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3003,
+        "parse_time_seconds": 0.2871,
         "variables_count": 10,
         "equations_count": 5
       },
@@ -2051,6 +2416,49 @@
         "equations": 5,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:28:15.242899+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.5683,
+        "output_file": "data/gamslib/mcp/himmel11_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.2407
+        }
+      },
+      "mcp_solve": {
+        "status": "success",
+        "solve_date": "2026-01-26T18:31:53.579175+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": -30665.5387,
+        "solve_time_seconds": 0.6354,
+        "iterations": 1377,
+        "outcome_category": "model_optimal"
+      },
+      "solution_comparison": {
+        "comparison_status": "match",
+        "comparison_date": "2026-01-26T18:20:50.723782+00:00",
+        "nlp_objective": -30665.5387,
+        "mcp_objective": -30665.5387,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0,
+        "objective_match": true,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 1e-06,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_match",
+        "notes": "Match within tolerance (diff=0.00e+00, tol=3.07e-02)"
       }
     },
     {
@@ -2077,9 +2485,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:08:09.906717+00:00",
+        "parse_date": "2026-01-26T18:20:26.879403+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2477,
+        "parse_time_seconds": 0.4237,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -2088,6 +2496,25 @@
         "equations": 4,
         "parameters": 0,
         "sets": 1
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:16.741336+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.498,
+        "error": {
+          "category": "model_domain_mismatch",
+          "message": "Error: Invalid model - Incompatible domains for summation: variable domain ('i',), multiplier domain ('i', 'j'). Multiplier domain must be either a subset of variable domain or completely disjoint.\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:20:28.181091+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:28.181091+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -2114,9 +2541,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:08:10.113441+00:00",
+        "parse_date": "2026-01-26T18:20:50.899779+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2065,
+        "parse_time_seconds": 0.1756,
         "variables_count": 9,
         "equations_count": 9
       },
@@ -2125,6 +2552,40 @@
         "equations": 9,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:28:18.372738+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.3998,
+        "output_file": "data/gamslib/mcp/house_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.2308
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:32:13.512668+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 5,
+        "model_status_text": "Locally Infeasible",
+        "objective_value": 27.7055,
+        "solve_time_seconds": 1.2692,
+        "iterations": 1201,
+        "outcome_category": "model_infeasible",
+        "error": {
+          "category": "model_infeasible",
+          "message": "Model: Locally Infeasible"
+        }
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:51.922894+00:00",
+        "notes": "Skipped due to solve failure"
       }
     },
     {
@@ -2151,9 +2612,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:08:10.309084+00:00",
+        "parse_date": "2026-01-26T18:20:52.069300+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1855,
+        "parse_time_seconds": 0.1461,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -2162,6 +2623,49 @@
         "equations": 3,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:28:20.013418+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.3953,
+        "output_file": "data/gamslib/mcp/hs62_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.2446
+        }
+      },
+      "mcp_solve": {
+        "status": "success",
+        "solve_date": "2026-01-26T18:31:55.464463+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": -26272.5145,
+        "solve_time_seconds": 0.5504,
+        "iterations": 27,
+        "outcome_category": "model_optimal"
+      },
+      "solution_comparison": {
+        "comparison_status": "match",
+        "comparison_date": "2026-01-26T18:20:53.354726+00:00",
+        "nlp_objective": -26272.5168,
+        "mcp_objective": -26272.5145,
+        "absolute_difference": 0.002300000000104774,
+        "relative_difference": 8.754395392011981e-08,
+        "objective_match": true,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 1e-06,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_match",
+        "notes": "Match within tolerance (diff=2.30e-03, tol=2.63e-02)"
       }
     },
     {
@@ -2188,9 +2692,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-01-26T16:08:10.576042+00:00",
+        "parse_date": "2026-01-26T18:20:32.213477+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2668,
+        "parse_time_seconds": 0.4535,
         "variables_count": 6,
         "equations_count": 5
       },
@@ -2199,6 +2703,25 @@
         "equations": 5,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:21.569741+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.5556,
+        "error": {
+          "category": "diff_unsupported_func",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'card'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-01-26T18:20:33.582434+00:00"
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-01-26T18:20:33.582434+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -2236,6 +2759,16 @@
         "equations": 3,
         "parameters": 0,
         "sets": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:23.901477+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.3102,
+        "error": {
+          "category": "codegen_numerical_error",
+          "message": "Error: Unexpected error - Error: Numerical error in parameter 'bspec[aluminum,maximum]': Invalid value (value is +Inf)\n\nSuggestion: Check your GAMS model or data file for:\n  - Uninitialized parameters\n  - Division by zero in parameter calculations\n  - Invalid mathematical operations\n  - Correct definition of parameter 'bspec'\n"
+        }
       }
     },
     {
@@ -2504,6 +3037,16 @@
         "equations": 4,
         "parameters": 0,
         "sets": 1
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:25.565377+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.6632,
+        "error": {
+          "category": "unsup_index_offset",
+          "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='t', offset=Unary(-, SymbolRef(-)), circular=False)\n"
+        }
       }
     },
     {
@@ -2694,6 +3237,36 @@
         "equations": 3,
         "parameters": 0,
         "sets": 1
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:28:27.324760+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.5038,
+        "output_file": "data/gamslib/mcp/least_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.2547,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:31:55.735063+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2636,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
@@ -2731,6 +3304,16 @@
         "equations": 3,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:29.028514+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.7033,
+        "error": {
+          "category": "unsup_index_offset",
+          "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='g', offset=SymbolRef(+), circular=False)\n"
+        }
       }
     },
     {
@@ -2981,6 +3564,16 @@
         "equations": 3,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:31.362178+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.3328,
+        "error": {
+          "category": "diff_unsupported_func",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'ord'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
       }
     },
     {
@@ -3018,6 +3611,31 @@
         "equations": 3,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:28:32.987484+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.3517,
+        "output_file": "data/gamslib/mcp/mathopt1_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.2488
+        }
+      },
+      "mcp_solve": {
+        "status": "success",
+        "solve_date": "2026-01-26T18:31:56.225637+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 1.0,
+        "solve_time_seconds": 0.4825,
+        "iterations": 0,
+        "outcome_category": "model_optimal"
       }
     },
     {
@@ -3055,6 +3673,31 @@
         "equations": 5,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:28:34.564112+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.3073,
+        "output_file": "data/gamslib/mcp/mathopt2_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.2685
+        }
+      },
+      "mcp_solve": {
+        "status": "success",
+        "solve_date": "2026-01-26T18:31:56.682835+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 0.0,
+        "solve_time_seconds": 0.428,
+        "iterations": 0,
+        "outcome_category": "model_optimal"
       }
     },
     {
@@ -3179,6 +3822,16 @@
         "equations": 5,
         "parameters": 0,
         "sets": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:36.593946+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.0292,
+        "error": {
+          "category": "diff_unsupported_func",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'smin'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
       }
     },
     {
@@ -3303,6 +3956,16 @@
         "equations": 11,
         "parameters": 0,
         "sets": 8
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:41.175667+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 4.5811,
+        "error": {
+          "category": "model_domain_mismatch",
+          "message": "Error: Invalid model - Incompatible domains for summation: variable domain ('c', 'i'), multiplier domain ('cf', 'i'). Multiplier domain must be either a subset of variable domain or completely disjoint.\n"
+        }
       }
     },
     {
@@ -3340,6 +4003,31 @@
         "equations": 4,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:28:42.824713+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.4079,
+        "output_file": "data/gamslib/mcp/mhw4d_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.2398
+        }
+      },
+      "mcp_solve": {
+        "status": "success",
+        "solve_date": "2026-01-26T18:31:57.187169+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": null,
+        "solve_time_seconds": 0.497,
+        "iterations": 17,
+        "outcome_category": "model_optimal"
       }
     },
     {
@@ -3377,6 +4065,31 @@
         "equations": 4,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:28:45.965141+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.779,
+        "output_file": "data/gamslib/mcp/mhw4dx_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.3381
+        }
+      },
+      "mcp_solve": {
+        "status": "success",
+        "solve_date": "2026-01-26T18:31:57.661572+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": null,
+        "solve_time_seconds": 0.4664,
+        "iterations": 17,
+        "outcome_category": "model_optimal"
       }
     },
     {
@@ -3468,6 +4181,16 @@
         "equations": 2,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:48.099007+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.1333,
+        "error": {
+          "category": "diff_unsupported_func",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'loggamma'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
       }
     },
     {
@@ -3790,6 +4513,16 @@
         "equations": 19,
         "parameters": 0,
         "sets": 8
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:28:53.649745+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 5.5501,
+        "error": {
+          "category": "diff_unsupported_func",
+          "message": "Error: Invalid model - Differentiation not yet implemented for function 'gamma'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
+        }
       }
     },
     {
@@ -3860,6 +4593,16 @@
         "equations": 15,
         "parameters": 0,
         "sets": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:29:09.063618+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 15.4129,
+        "error": {
+          "category": "model_domain_mismatch",
+          "message": "Error: Invalid model - Incompatible domains for summation: variable domain ('te',), multiplier domain ('te', 'j'). Multiplier domain must be either a subset of variable domain or completely disjoint.\n"
+        }
       }
     },
     {
@@ -4104,6 +4847,16 @@
         "equations": 6,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:29:12.833566+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 3.7688,
+        "error": {
+          "category": "internal_error",
+          "message": "Error: Invalid model - Set element 'pulp+paper' contains invalid characters. Set elements must start with a letter or digit and contain only letters, digits, underscores, hyphens, and dots.\n"
+        }
       }
     },
     {
@@ -4216,6 +4969,36 @@
         "equations": 5,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:29:15.090289+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.7987,
+        "output_file": "data/gamslib/mcp/port_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.4249,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:31:57.926857+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2578,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
@@ -4253,6 +5036,35 @@
         "equations": 12,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:29:18.021776+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.6284,
+        "output_file": "data/gamslib/mcp/process_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.3021
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:32:07.895196+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2633,
+        "iterations": null,
+        "outcome_category": "path_solve_terminated",
+        "error": {
+          "category": "path_solve_terminated",
+          "message": "Parse error: no_solve_summary"
+        }
       }
     },
     {
@@ -4323,6 +5135,36 @@
         "equations": 2,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:29:19.982720+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.6567,
+        "output_file": "data/gamslib/mcp/prodmix_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.303,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:31:58.461300+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2393,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
@@ -4579,6 +5421,36 @@
         "equations": 3,
         "parameters": 0,
         "sets": 1
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:29:22.200117+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.8974,
+        "output_file": "data/gamslib/mcp/ps2_f_inf_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.319,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:31:58.796886+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.3183,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
@@ -4880,6 +5752,16 @@
         "equations": 2,
         "parameters": 0,
         "sets": 6
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:29:40.397341+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 18.1964,
+        "error": {
+          "category": "model_domain_mismatch",
+          "message": "Error: Invalid model - Incompatible domains for summation: variable domain ('m', 'k'), multiplier domain ('n', 'k'). Multiplier domain must be either a subset of variable domain or completely disjoint.\n"
+        }
       }
     },
     {
@@ -5229,6 +6111,16 @@
         "equations": 4,
         "parameters": 0,
         "sets": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:29:42.656814+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.2325,
+        "error": {
+          "category": "unsup_index_offset",
+          "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='t', offset=SymbolRef(+), circular=False)\n"
+        }
       }
     },
     {
@@ -5266,6 +6158,31 @@
         "equations": 1,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:29:44.501351+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.5613,
+        "output_file": "data/gamslib/mcp/rbrock_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.2822
+        }
+      },
+      "mcp_solve": {
+        "status": "success",
+        "solve_date": "2026-01-26T18:31:59.306462+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 2.353296e-21,
+        "solve_time_seconds": 0.4993,
+        "iterations": 10,
+        "outcome_category": "model_optimal"
       }
     },
     {
@@ -5303,6 +6220,16 @@
         "equations": 3,
         "parameters": 0,
         "sets": 4
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:29:46.344459+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.8424,
+        "error": {
+          "category": "model_domain_mismatch",
+          "message": "Error: Invalid model - Incompatible domains for summation: variable domain ('p', 'tt'), multiplier domain ('r', 'tt'). Multiplier domain must be either a subset of variable domain or completely disjoint.\n"
+        }
       }
     },
     {
@@ -5472,6 +6399,36 @@
         "equations": 4,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:29:48.738323+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 2.0924,
+        "output_file": "data/gamslib/mcp/sample_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.3003,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:31:59.586406+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2728,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
@@ -6316,6 +7273,31 @@
         "equations": 2,
         "parameters": 0,
         "sets": 0
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:29:50.575376+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.5498,
+        "output_file": "data/gamslib/mcp/trig_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.2857
+        }
+      },
+      "mcp_solve": {
+        "status": "success",
+        "solve_date": "2026-01-26T18:32:00.173570+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": -2.479,
+        "solve_time_seconds": 0.5793,
+        "iterations": 88,
+        "outcome_category": "model_optimal"
       }
     },
     {
@@ -6398,6 +7380,36 @@
         "equations": 3,
         "parameters": 0,
         "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-01-26T18:29:52.619424+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.7227,
+        "output_file": "data/gamslib/mcp/trnsport_mcp.gms",
+        "validation": {
+          "valid": false,
+          "validation_time_seconds": 0.2941,
+          "error": "Compilation failed"
+        }
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-01-26T18:32:00.461418+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2558,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       }
     },
     {
@@ -6489,6 +7501,16 @@
         "equations": 5,
         "parameters": 0,
         "sets": 3
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:29:54.579383+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.9592,
+        "error": {
+          "category": "model_no_objective_def",
+          "message": "Error: Invalid model - Objective variable 'tau' is not defined by any equation. ObjectiveIR.expr is None and no defining equation found. Available equations: ['volumeeq', 'deftk', 'reseq', 'trusscomp', 'stiffness']\n"
+        }
       }
     },
     {
@@ -6724,6 +7746,16 @@
         "equations": 2,
         "parameters": 0,
         "sets": 1
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-01-26T18:29:56.294505+00:00",
+        "nlp2mcp_version": "0.7.0",
+        "translate_time_seconds": 1.7144,
+        "error": {
+          "category": "unsup_index_offset",
+          "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='t', offset=Unary(-, SymbolRef(-)), circular=False)\n"
+        }
       }
     },
     {

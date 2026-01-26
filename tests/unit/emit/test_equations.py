@@ -8,7 +8,8 @@ import pytest
 from src.ad.gradient import GradientVector
 from src.ad.jacobian import JacobianStructure
 from src.emit.equations import emit_equation_def, emit_equation_definitions
-from src.ir.ast import Binary, Const, VarRef
+from src.emit.expr_to_gams import collect_index_aliases, resolve_index_conflicts
+from src.ir.ast import Binary, Const, Sum, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
@@ -34,8 +35,9 @@ class TestEmitEquationDef:
             relation=Rel.EQ,
             lhs_rhs=(VarRef("x", ()), Const(10)),
         )
-        result = emit_equation_def("balance", eq_def)
+        result, aliases = emit_equation_def("balance", eq_def)
         assert result == "balance.. x =E= 10;"
+        assert aliases == set()
 
     def test_indexed_equation(self):
         """Test indexed equation.
@@ -48,8 +50,9 @@ class TestEmitEquationDef:
             relation=Rel.EQ,
             lhs_rhs=(VarRef("x", ("i",)), Const(10)),
         )
-        result = emit_equation_def("balance", eq_def)
+        result, aliases = emit_equation_def("balance", eq_def)
         assert result == "balance(i).. x(i) =E= 10;"
+        assert aliases == set()
 
     def test_multi_indexed_equation(self):
         """Test multi-indexed equation.
@@ -62,8 +65,9 @@ class TestEmitEquationDef:
             relation=Rel.EQ,
             lhs_rhs=(VarRef("x", ("i", "j")), VarRef("y", ("j", "i"))),
         )
-        result = emit_equation_def("flow", eq_def)
+        result, aliases = emit_equation_def("flow", eq_def)
         assert result == "flow(i,j).. x(i,j) =E= y(j,i);"
+        assert aliases == set()
 
     def test_equation_le_relation(self):
         """Test equation with =L= (less than or equal) relation."""
@@ -73,8 +77,9 @@ class TestEmitEquationDef:
             relation=Rel.LE,
             lhs_rhs=(VarRef("x", ()), Const(100)),
         )
-        result = emit_equation_def("capacity", eq_def)
+        result, aliases = emit_equation_def("capacity", eq_def)
         assert result == "capacity.. x =L= 100;"
+        assert aliases == set()
 
     def test_equation_ge_relation(self):
         """Test equation with =G= (greater than or equal) relation."""
@@ -84,8 +89,9 @@ class TestEmitEquationDef:
             relation=Rel.GE,
             lhs_rhs=(VarRef("x", ()), Const(5)),
         )
-        result = emit_equation_def("demand", eq_def)
+        result, aliases = emit_equation_def("demand", eq_def)
         assert result == "demand.. x =G= 5;"
+        assert aliases == set()
 
     def test_equation_with_binary_expression(self):
         """Test equation with binary expression on LHS."""
@@ -93,16 +99,18 @@ class TestEmitEquationDef:
         eq_def = EquationDef(
             name="sum_constraint", domain=(), relation=Rel.EQ, lhs_rhs=(lhs, Const(10))
         )
-        result = emit_equation_def("sum_constraint", eq_def)
+        result, aliases = emit_equation_def("sum_constraint", eq_def)
         assert result == "sum_constraint.. x + y =E= 10;"
+        assert aliases == set()
 
     def test_equation_with_complex_expression(self):
         """Test equation with complex expression."""
         lhs = Binary("^", VarRef("x", ()), Const(2))
         rhs = Binary("*", Const(2), VarRef("y", ()))
         eq_def = EquationDef(name="nonlinear", domain=(), relation=Rel.EQ, lhs_rhs=(lhs, rhs))
-        result = emit_equation_def("nonlinear", eq_def)
+        result, aliases = emit_equation_def("nonlinear", eq_def)
         assert result == "nonlinear.. x ** 2 =E= 2 * y;"
+        assert aliases == set()
 
 
 @pytest.mark.unit
@@ -113,8 +121,9 @@ class TestEmitEquationDefinitions:
         """Test with empty KKT system."""
         model_ir = ModelIR()
         kkt = _create_minimal_kkt(model_ir)
-        result = emit_equation_definitions(kkt)
+        result, aliases = emit_equation_definitions(kkt)
         assert result == ""
+        assert aliases == set()
 
     def test_stationarity_equations_only(self):
         """Test with only stationarity equations."""
@@ -129,9 +138,10 @@ class TestEmitEquationDefinitions:
             lhs_rhs=(Binary("*", Const(2), VarRef("x", ())), Const(0)),
         )
 
-        result = emit_equation_definitions(kkt)
+        result, aliases = emit_equation_definitions(kkt)
         assert "* Stationarity equations" in result
         assert "stat_x.. 2 * x =E= 0;" in result
+        assert aliases == set()
 
     def test_multiple_stationarity_equations(self):
         """Test with multiple stationarity equations."""
@@ -151,9 +161,10 @@ class TestEmitEquationDefinitions:
             lhs_rhs=(VarRef("y", ()), Const(0)),
         )
 
-        result = emit_equation_definitions(kkt)
+        result, aliases = emit_equation_definitions(kkt)
         assert "stat_x.. x =E= 0;" in result
         assert "stat_y.. y =E= 0;" in result
+        assert aliases == set()
 
     def test_inequality_complementarity(self):
         """Test with inequality complementarity equations."""
@@ -170,9 +181,10 @@ class TestEmitEquationDefinitions:
             equation=comp_eq, variable="lambda_g1", variable_indices=()
         )
 
-        result = emit_equation_definitions(kkt)
+        result, aliases = emit_equation_definitions(kkt)
         assert "* Inequality complementarity equations" in result
         assert "comp_g1.. slack_g1 =E= 0;" in result
+        assert aliases == set()
 
     def test_bound_complementarity(self):
         """Test with bound complementarity equations."""
@@ -201,11 +213,12 @@ class TestEmitEquationDefinitions:
             equation=comp_up, variable="piU_x", variable_indices=()
         )
 
-        result = emit_equation_definitions(kkt)
+        result, aliases = emit_equation_definitions(kkt)
         assert "* Lower bound complementarity equations" in result
         assert "comp_lo_x.. x - 0 =E= 0;" in result
         assert "* Upper bound complementarity equations" in result
         assert "comp_up_x.. 10 - x =E= 0;" in result
+        assert aliases == set()
 
     def test_equality_equations(self):
         """Test with original equality equations."""
@@ -219,10 +232,11 @@ class TestEmitEquationDefinitions:
         model_ir.equalities = ["balance"]
 
         kkt = _create_minimal_kkt(model_ir)
-        result = emit_equation_definitions(kkt)
+        result, aliases = emit_equation_definitions(kkt)
 
         assert "* Original equality equations" in result
         assert "balance.. x =E= 10;" in result
+        assert aliases == set()
 
     def test_all_equation_types(self):
         """Test with all types of equations."""
@@ -267,7 +281,7 @@ class TestEmitEquationDefinitions:
             equation=comp_lo, variable="piL_x", variable_indices=()
         )
 
-        result = emit_equation_definitions(kkt)
+        result, aliases = emit_equation_definitions(kkt)
 
         # Verify all sections present
         assert "* Stationarity equations" in result
@@ -280,3 +294,134 @@ class TestEmitEquationDefinitions:
         assert "comp_g1.." in result
         assert "comp_lo_x.." in result
         assert "objdef.." in result
+        assert aliases == set()
+
+
+@pytest.mark.unit
+class TestIndexAliasing:
+    """Test index aliasing to avoid GAMS Error 125.
+
+    GAMS Error 125 "Set is under control already" occurs when an equation's
+    domain index is reused inside a sum expression. These tests verify that
+    conflicting indices are detected and replaced with aliases.
+    """
+
+    def test_collect_index_aliases_no_conflict(self):
+        """Test that non-conflicting sum indices don't need aliases."""
+        # sum(j, x(j)) with equation domain (i,)
+        expr = Sum(("j",), VarRef("x", ("j",)))
+        aliases = collect_index_aliases(expr, ("i",))
+        assert aliases == set()
+
+    def test_collect_index_aliases_with_conflict(self):
+        """Test that conflicting sum indices are detected."""
+        # sum(i, x(i)) with equation domain (i,)
+        expr = Sum(("i",), VarRef("x", ("i",)))
+        aliases = collect_index_aliases(expr, ("i",))
+        assert aliases == {"i"}
+
+    def test_collect_index_aliases_multiple_conflicts(self):
+        """Test detection of multiple conflicting indices."""
+        # sum(i, sum(j, x(i,j))) with equation domain (i, j)
+        inner_sum = Sum(("j",), VarRef("x", ("i", "j")))
+        outer_sum = Sum(("i",), inner_sum)
+        aliases = collect_index_aliases(outer_sum, ("i", "j"))
+        assert aliases == {"i", "j"}
+
+    def test_collect_index_aliases_nested_sum(self):
+        """Test detection of conflicts in nested sums."""
+        # sum(i, sum(i, x(i))) - inner i conflicts with equation domain (i,)
+        inner_sum = Sum(("i",), VarRef("x", ("i",)))
+        outer_sum = Sum(("k",), inner_sum)
+        aliases = collect_index_aliases(outer_sum, ("i",))
+        assert aliases == {"i"}
+
+    def test_resolve_index_conflicts_no_conflict(self):
+        """Test that non-conflicting expressions are unchanged."""
+        # sum(j, x(j)) with equation domain (i,)
+        expr = Sum(("j",), VarRef("x", ("j",)))
+        result = resolve_index_conflicts(expr, ("i",))
+        # Should be unchanged
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("j",)
+        assert result.body.indices == ("j",)
+
+    def test_resolve_index_conflicts_simple(self):
+        """Test resolution of simple index conflict."""
+        # sum(i, x(i)) with equation domain (i,)
+        # Should become sum(i__, x(i__))
+        expr = Sum(("i",), VarRef("x", ("i",)))
+        result = resolve_index_conflicts(expr, ("i",))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("i__",)
+        assert result.body.indices == ("i__",)
+
+    def test_resolve_index_conflicts_multiple_indices(self):
+        """Test resolution with multiple conflicting indices."""
+        # sum((i, j), x(i,j)) with equation domain (i, j)
+        # Should become sum((i__, j__), x(i__, j__))
+        expr = Sum(("i", "j"), VarRef("x", ("i", "j")))
+        result = resolve_index_conflicts(expr, ("i", "j"))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("i__", "j__")
+        assert result.body.indices == ("i__", "j__")
+
+    def test_resolve_index_conflicts_partial(self):
+        """Test resolution when only some indices conflict."""
+        # sum((i, k), x(i,k)) with equation domain (i,)
+        # Should become sum((i__, k), x(i__, k))
+        expr = Sum(("i", "k"), VarRef("x", ("i", "k")))
+        result = resolve_index_conflicts(expr, ("i",))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("i__", "k")
+        assert result.body.indices == ("i__", "k")
+
+    def test_resolve_index_conflicts_nested(self):
+        """Test resolution in nested binary expressions."""
+        # sum(i, x(i) + y(i)) with equation domain (i,)
+        expr = Sum(("i",), Binary("+", VarRef("x", ("i",)), VarRef("y", ("i",))))
+        result = resolve_index_conflicts(expr, ("i",))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("i__",)
+        body = result.body
+        assert isinstance(body, Binary)
+        assert body.left.indices == ("i__",)
+        assert body.right.indices == ("i__",)
+
+    def test_emit_equation_def_with_index_conflict(self):
+        """Test that emit_equation_def detects and resolves index conflicts."""
+        # stat_x(i).. sum(i, x(i)) =E= 0
+        # Should become stat_x(i).. sum(i__, x(i__)) =E= 0
+        # and return {"i"} as aliases needed
+        eq_def = EquationDef(
+            name="stat_x",
+            domain=("i",),
+            relation=Rel.EQ,
+            lhs_rhs=(Sum(("i",), VarRef("x", ("i",))), Const(0)),
+        )
+        result, aliases = emit_equation_def("stat_x", eq_def)
+        assert "stat_x(i).." in result
+        assert "sum(i__," in result
+        assert "x(i__)" in result
+        assert aliases == {"i"}
+
+    def test_emit_equation_def_multi_index_conflict(self):
+        """Test emit_equation_def with multiple conflicting indices."""
+        # stat_outp(g,m).. sum(g, p(g)) + sum(m, q(m)) =E= 0
+        # Should use g__ and m__ in the sums
+        lhs = Binary(
+            "+",
+            Sum(("g",), VarRef("p", ("g",))),
+            Sum(("m",), VarRef("q", ("m",))),
+        )
+        eq_def = EquationDef(
+            name="stat_outp",
+            domain=("g", "m"),
+            relation=Rel.EQ,
+            lhs_rhs=(lhs, Const(0)),
+        )
+        result, aliases = emit_equation_def("stat_outp", eq_def)
+        assert "stat_outp(g,m).." in result
+        assert "sum(g__," in result
+        assert "sum(m__," in result
+        assert aliases == {"g", "m"}

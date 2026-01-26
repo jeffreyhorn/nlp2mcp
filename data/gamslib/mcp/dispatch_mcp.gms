@@ -34,9 +34,7 @@ Parameters
 
 Scalars
     b00 /0.0/
-    'loss equation constant' /0.040357/
     demand /0.0/
-    'total power demand in MW' /210.0/
     trace /0.0/
 ;
 
@@ -83,14 +81,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. 100 * sum(i, 0) / 10000 + 100 * sum((i,j), 0) / 10000 + (1 - sum((i,cg), 0)) * nu_costfn + (-sum(i, 0)) * lam_demcons =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * sum((i,j), 0) / 10000 + (-sum((i,cg), 0)) * nu_costfn + (-1) * lam_demcons =E= 0;
+stat_cost.. 100 * sum(i, 0) / 10000 + 100 * sum((i,j), 0) / 10000 + (1 - sum((i,cg), 0)) * nu_costfn + ((-1) * sum(i, 0)) * lam_demcons =E= 0;
+stat_p(i).. 100 * b0(i) / 10000 + 100 * sum((i,j), 0) / 10000 + ((-1) * sum((i,cg), 0)) * nu_costfn + (-1) * lam_demcons =E= 0;
 
 * Inequality complementarity equations
 comp_demcons.. sum(i, p(i)) =G= 0;
 
 * Original equality equations
-costfn.. cost =E= sum((i,cg), gendata(i,cg) * power(p(i), pexp(cg)));
+costfn.. cost =E= sum((i,cg), gendata(i,"cg") * power(p(i), pexp("cg")));
 lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * p(j)) / 100;
 
 

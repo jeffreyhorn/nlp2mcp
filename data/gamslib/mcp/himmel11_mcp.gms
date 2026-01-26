@@ -113,15 +113,15 @@ Equations
 stat_g2.. 0 + 1 * nu_e2 + 0 * nu_e3 + 0 * nu_e4 + 0 * lam_e1 - piL_g2 + piU_g2 =E= 0;
 stat_g3.. 0 + 0 * nu_e2 + 1 * nu_e3 + 0 * nu_e4 + 0 * lam_e1 - piL_g3 + piU_g3 =E= 0;
 stat_g4.. 0 + 0 * nu_e2 + 0 * nu_e3 + 1 * nu_e4 + 0 * lam_e1 - piL_g4 + piU_g4 =E= 0;
-stat_x1.. 0.8356891 * x5 + 37.293239 + -(x4 * 0.0006262) * nu_e2 + -(x2 * 0.0029955) * nu_e3 + -(x3 * 0.0012547) * nu_e4 + 1 * lam_e1 - piL_x1 + piU_x1 =E= 0;
-stat_x2.. 0 + -(x5 * 0.0056858) * nu_e2 + -(0.0071317 * x5 + 0.0029955 * x1) * nu_e3 + 0 * nu_e4 + 0 * lam_e1 - piL_x2 + piU_x2 =E= 0;
-stat_x3.. 5.3578547 * 2 * x3 + x5 * 0.0022053 * nu_e2 + -(0.0021813 * 2 * x3) * nu_e3 + -(0.0047026 * x5 + 0.0012547 * x1 + 0.0019085 * x4) * nu_e4 + (-7) * lam_e1 - piL_x3 + piU_x3 =E= 0;
-stat_x4.. 0 + -(0.0006262 * x1) * nu_e2 + 0 * nu_e3 + -(0.0019085 * x3) * nu_e4 + 0 * lam_e1 - piL_x4 + piU_x4 =E= 0;
-stat_x5.. 0.8356891 * x1 + -(0.0056858 * x2 - 0.0022053 * x3) * nu_e2 + -(0.0071317 * x2) * nu_e3 + -(0.0047026 * x3) * nu_e4 + 1 * lam_e1 - piL_x5 + piU_x5 =E= 0;
+stat_x1.. 0.8356891 * x5 + 37.293239 + ((-1) * (x4 * 0.0006262)) * nu_e2 + ((-1) * (x2 * 0.0029955)) * nu_e3 + ((-1) * (x3 * 0.0012547)) * nu_e4 + 1 * lam_e1 - piL_x1 + piU_x1 =E= 0;
+stat_x2.. 0 + ((-1) * (x5 * 0.0056858)) * nu_e2 + ((-1) * (0.0071317 * x5 + 0.0029955 * x1)) * nu_e3 + 0 * nu_e4 + 0 * lam_e1 - piL_x2 + piU_x2 =E= 0;
+stat_x3.. 5.3578547 * 2 * x3 + x5 * 0.0022053 * nu_e2 + ((-1) * (0.0021813 * 2 * x3)) * nu_e3 + ((-1) * (0.0047026 * x5 + 0.0012547 * x1 + 0.0019085 * x4)) * nu_e4 + (-7) * lam_e1 - piL_x3 + piU_x3 =E= 0;
+stat_x4.. 0 + ((-1) * (0.0006262 * x1)) * nu_e2 + 0 * nu_e3 + ((-1) * (0.0019085 * x3)) * nu_e4 + 0 * lam_e1 - piL_x4 + piU_x4 =E= 0;
+stat_x5.. 0.8356891 * x1 + ((-1) * (0.0056858 * x2 - 0.0022053 * x3)) * nu_e2 + ((-1) * (0.0071317 * x2)) * nu_e3 + ((-1) * (0.0047026 * x3)) * nu_e4 + 1 * lam_e1 - piL_x5 + piU_x5 =E= 0;
 stat_xl.. 5000 + 2 * nu_e2 + 0 * nu_e3 + 4 * nu_e4 + (-5) * lam_e1 - piL_xl =E= 0;
 
 * Inequality complementarity equations
-comp_e1.. (-x1) - x5 + 5 * xl + 7 * x3 =G= 0;
+comp_e1.. ((-1) * x1) - x5 + 5 * xl + 7 * x3 =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_g2.. g2 - 0 =G= 0;
