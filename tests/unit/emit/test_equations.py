@@ -38,7 +38,10 @@ class TestEmitEquationDef:
         assert result == "balance.. x =E= 10;"
 
     def test_indexed_equation(self):
-        """Test indexed equation."""
+        """Test indexed equation.
+
+        Single lowercase letters are domain variables and not quoted.
+        """
         eq_def = EquationDef(
             name="balance",
             domain=("i",),
@@ -49,7 +52,10 @@ class TestEmitEquationDef:
         assert result == "balance(i).. x(i) =E= 10;"
 
     def test_multi_indexed_equation(self):
-        """Test multi-indexed equation."""
+        """Test multi-indexed equation.
+
+        Single lowercase letters are domain variables and not quoted.
+        """
         eq_def = EquationDef(
             name="flow",
             domain=("i", "j"),

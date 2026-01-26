@@ -185,13 +185,28 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 lines.append(f"    {param_name}({domain_str})")
         lines.append(";")
 
-    # Emit Scalars (skip predefined GAMS constants)
+    # Emit Scalars (skip predefined GAMS constants and description-only entries)
     if scalars:
-        # Filter out predefined constants
+        # Filter out predefined constants and description-only entries
+        # Description-only entries occur when the parser stores description strings
+        # as scalar names (e.g., 'loss equation constant' instead of a proper identifier).
+        # These contain spaces, quotes, or other invalid identifier characters.
+        def is_valid_scalar_name(name: str) -> bool:
+            """Check if scalar name is a valid GAMS identifier."""
+            # Valid GAMS identifiers: start with letter, contain only letters/digits/underscores
+            # Invalid: contains spaces, quotes, or starts with digit
+            if not name:
+                return False
+            if " " in name or "'" in name or '"' in name:
+                return False
+            if not name[0].isalpha() and name[0] != "_":
+                return False
+            return True
+
         user_scalars = {
             name: param_def
             for name, param_def in scalars.items()
-            if name not in PREDEFINED_GAMS_CONSTANTS
+            if name not in PREDEFINED_GAMS_CONSTANTS and is_valid_scalar_name(name)
         }
         if user_scalars:
             if lines:  # Add blank line if parameters were emitted

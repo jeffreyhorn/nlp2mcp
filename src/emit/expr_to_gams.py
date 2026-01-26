@@ -62,21 +62,21 @@ def _format_numeric(value: int | float) -> str:
 def _quote_indices(indices: tuple[str, ...]) -> list[str]:
     """Quote element labels in index tuples for GAMS syntax.
 
-    This function distinguishes between set indices and element labels using
-    a heuristic: identifiers containing digits are assumed to be element labels
-    and are quoted, while identifiers without digits are assumed to be set indices
-    and are left unquoted.
+    This function uses a heuristic to distinguish between domain variables
+    (set indices like 'i', 'j') and element labels (specific values like 'i1', 'H2').
 
-    **Limitation**: This heuristic may fail if set indices legitimately contain
-    digits (e.g., 'i2' as a set name, not an element). In such cases, the set
-    index would be incorrectly quoted. A more robust solution would require
-    access to the symbol table to determine the actual type.
+    Heuristic:
+    - Single lowercase letters (a-z) are assumed to be domain variables → unquoted
+    - Everything else (contains digits, uppercase, multi-char, etc.) is an element → quoted
+
+    This addresses GAMS compilation errors from inconsistent quoting (Error 171,
+    Error 340) while preserving correct behavior for indexed equations.
 
     Args:
         indices: Tuple of index identifiers
 
     Returns:
-        List of appropriately quoted indices
+        List of appropriately quoted/unquoted indices
 
     Examples:
         >>> _quote_indices(("i",))
@@ -85,13 +85,23 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
         ['"i1"']
         >>> _quote_indices(("i", "j"))
         ['i', 'j']
-        >>> _quote_indices(("i1", "j2"))
-        ['"i1"', '"j2"']
-        >>> # LIMITATION: This would fail for a set named "i2"
-        >>> _quote_indices(("i2",))  # Incorrectly quotes if i2 is a set index
-        ['"i2"']
+        >>> _quote_indices(("H", "H2", "H2O"))
+        ['"H"', '"H2"', '"H2O"']
+        >>> _quote_indices(("c",))
+        ['c']
+        >>> _quote_indices(("OH",))
+        ['"OH"']
     """
-    return [f'"{idx}"' if any(c.isdigit() for c in idx) else idx for idx in indices]
+    result = []
+    for idx in indices:
+        # Single lowercase letter = domain variable, don't quote
+        # This handles common patterns like sum(i, ...) and eq(i).. x(i)
+        if len(idx) == 1 and idx.islower():
+            result.append(idx)
+        else:
+            # Everything else is an element label, quote it for consistency
+            result.append(f'"{idx}"')
+    return result
 
 
 def _needs_parens(parent_op: str | None, child_op: str | None, is_right: bool = False) -> bool:
@@ -185,15 +195,18 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
         case Unary(op, child):
             child_str = expr_to_gams(child, parent_op=op)
             # GAMS unary operators: +, -
-            # Add parentheses if child is a binary expression to preserve correctness
-            # e.g., -(x - 10) not -x - 10
-            if isinstance(child, Binary):
-                return f"{op}({child_str})"
-            # Parenthesize negative unary to avoid double operator issues
-            # ONLY when there's a parent operator (e.g., x + -sin(y) becomes x + (-sin(y)))
-            # Standalone negative (e.g., -x) doesn't need parentheses
-            if op == "-" and parent_op is not None:
-                return f"({op}{child_str})"
+            # For unary minus, ALWAYS convert to multiplication form to avoid GAMS Error 445
+            # ("More than one operator in a row"). This happens when unary minus follows
+            # other operators like ".." (equation definition), "+", "-", etc.
+            # Solution: -(expr) becomes ((-1) * (expr)) which GAMS parses correctly.
+            if op == "-":
+                # Wrap child in parentheses if it's a complex expression (Binary or Call)
+                # Simple cases like -x become (-1) * x, complex like -(a+b) become (-1) * (a+b)
+                if isinstance(child, (Binary, Call)):
+                    return f"((-1) * ({child_str}))"
+                else:
+                    return f"((-1) * {child_str})"
+            # Unary plus can be passed through directly
             return f"{op}{child_str}"
 
         case Binary(op, left, right):

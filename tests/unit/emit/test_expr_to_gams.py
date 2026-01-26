@@ -50,12 +50,18 @@ class TestBasicNodes:
         assert result == "x"
 
     def test_var_ref_indexed(self):
-        """Test indexed variable reference."""
+        """Test indexed variable reference.
+
+        Single lowercase letters are domain variables and not quoted.
+        """
         result = expr_to_gams(VarRef("x", ("i",)))
         assert result == "x(i)"
 
     def test_var_ref_multi_indexed(self):
-        """Test multi-indexed variable reference."""
+        """Test multi-indexed variable reference.
+
+        Single lowercase letters are domain variables and not quoted.
+        """
         result = expr_to_gams(VarRef("x", ("i", "j", "k")))
         assert result == "x(i,j,k)"
 
@@ -65,9 +71,24 @@ class TestBasicNodes:
         assert result == "c"
 
     def test_param_ref_indexed(self):
-        """Test indexed parameter reference."""
+        """Test indexed parameter reference.
+
+        Single lowercase letters are domain variables and not quoted.
+        """
         result = expr_to_gams(ParamRef("c", ("i",)))
         assert result == "c(i)"
+
+    def test_var_ref_element_label(self):
+        """Test variable reference with element labels (not domain vars).
+
+        Multi-char or uppercase indices are element labels and should be quoted.
+        """
+        result = expr_to_gams(VarRef("x", ("H",)))
+        assert result == 'x("H")'
+        result = expr_to_gams(VarRef("x", ("H2",)))
+        assert result == 'x("H2")'
+        result = expr_to_gams(VarRef("x", ("i1",)))
+        assert result == 'x("i1")'
 
     def test_multiplier_ref_scalar(self):
         """Test scalar multiplier reference."""
@@ -75,7 +96,10 @@ class TestBasicNodes:
         assert result == "lambda_g1"
 
     def test_multiplier_ref_indexed(self):
-        """Test indexed multiplier reference with set index."""
+        """Test indexed multiplier reference.
+
+        Single lowercase letters are domain variables and not quoted.
+        """
         result = expr_to_gams(MultiplierRef("nu_balance", ("i",)))
         assert result == "nu_balance(i)"
 
@@ -87,26 +111,50 @@ class TestBasicNodes:
 
 @pytest.mark.unit
 class TestUnaryOperators:
-    """Test unary operators."""
+    """Test unary operators.
+
+    Note: Unary minus is converted to multiplication form ((-1) * expr) to avoid
+    GAMS Error 445 ("More than one operator in a row"). This happens when unary
+    minus follows operators like ".." in equation definitions.
+    """
 
     def test_unary_minus(self):
-        """Test unary minus."""
+        """Test unary minus converts to multiplication form.
+
+        GAMS Error 445 occurs when unary minus follows operators like ".."
+        in equation definitions. Converting to ((-1) * expr) avoids this.
+        """
         result = expr_to_gams(Unary("-", VarRef("x", ())))
-        assert result == "-x"
+        assert result == "((-1) * x)"
 
     def test_unary_plus(self):
-        """Test unary plus."""
+        """Test unary plus passes through."""
         result = expr_to_gams(Unary("+", VarRef("x", ())))
         assert result == "+x"
 
     def test_unary_nested(self):
         """Test nested unary operators.
 
-        Nested negative unary operators are parenthesized to avoid ambiguity.
-        This prevents potential double-operator issues in GAMS.
+        Double negation becomes ((-1) * ((-1) * x)).
         """
         result = expr_to_gams(Unary("-", Unary("-", VarRef("x", ()))))
-        assert result == "-(-x)"
+        assert result == "((-1) * ((-1) * x))"
+
+    def test_unary_minus_complex_expr(self):
+        """Test unary minus on complex expression wraps the child.
+
+        For Binary/Call children, the child is wrapped in parentheses
+        to ensure correct mathematical interpretation.
+        """
+        # -(x + y) becomes ((-1) * (x + y))
+        result = expr_to_gams(Unary("-", Binary("+", VarRef("x", ()), VarRef("y", ()))))
+        assert result == "((-1) * (x + y))"
+
+    def test_unary_minus_function_call(self):
+        """Test unary minus on function call."""
+        # -sin(x) becomes ((-1) * sin(x))
+        result = expr_to_gams(Unary("-", Call("sin", (VarRef("x", ()),))))
+        assert result == "((-1) * (sin(x)))"
 
 
 @pytest.mark.unit
@@ -243,7 +291,10 @@ class TestSumExpression:
     """Test sum expression conversion."""
 
     def test_sum_single_index(self):
-        """Test sum with single index set."""
+        """Test sum with single index set.
+
+        Single lowercase letters are domain variables and not quoted.
+        """
         body = Binary("*", ParamRef("c", ("i",)), VarRef("x", ("i",)))
         result = expr_to_gams(Sum(("i",), body))
         assert result == "sum(i, c(i) * x(i))"
@@ -307,9 +358,12 @@ class TestComplexExpressions:
         assert result == "sum(i, a(i) * x(i) ** 2)"
 
     def test_complementarity_slack(self):
-        """Test complementarity slack: -g(x) where g(x) = x - 10."""
+        """Test complementarity slack: -g(x) where g(x) = x - 10.
+
+        Unary minus is converted to multiplication form ((-1) * (x - 10))
+        to avoid GAMS Error 445.
+        """
         expr = Unary("-", Binary("-", VarRef("x", ()), Const(10)))
         result = expr_to_gams(expr)
-        # Parentheses required to preserve mathematical correctness
-        # -(x - 10) = -x + 10, not -x - 10
-        assert result == "-(x - 10)"
+        # Unary minus converted to multiplication to avoid GAMS Error 445
+        assert result == "((-1) * (x - 10))"
