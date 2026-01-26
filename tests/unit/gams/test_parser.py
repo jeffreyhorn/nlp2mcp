@@ -5405,3 +5405,76 @@ class TestQuotedIndexInAssignment:
             """)
         model = parser.parse_model_text(text)
         assert "cost" in model.params
+
+
+class TestQuotedStringInTuple:
+    """Tests for Issue #567: Quoted strings in tuple dot notation."""
+
+    def test_quoted_suffix_in_tuple(self):
+        """Test quoted string as tuple suffix (egypt.gms pattern)."""
+        text = dedent("""
+            Set z / upper, middle, lower /;
+            Set r / u-egypt, m-egypt, l-egypt /;
+            Set zr(z,r) / upper.'u-egypt', middle.'m-egypt', lower.'l-egypt' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["zr"].members == [
+            "upper.u-egypt",
+            "middle.m-egypt",
+            "lower.l-egypt",
+        ]
+
+    def test_quoted_prefix_in_tuple(self):
+        """Test quoted string as tuple prefix."""
+        text = dedent("""
+            Set a / x-1, y-1 /;
+            Set b / a, b /;
+            Set ab(a,b) / 'x-1'.a, 'y-1'.b /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["ab"].members == ["x-1.a", "y-1.b"]
+
+    def test_both_quoted_in_tuple(self):
+        """Test both prefix and suffix quoted in tuple."""
+        text = dedent("""
+            Set i / item-1, item-2 /;
+            Set j / cat-a, cat-b /;
+            Set ij(i,j) / 'item-1'.'cat-a', 'item-2'.'cat-b' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["ij"].members == ["item-1.cat-a", "item-2.cat-b"]
+
+    def test_quoted_suffix_with_description(self):
+        """Test quoted suffix with inline description."""
+        text = dedent("""
+            Set z / upper, lower /;
+            Set r / u-egypt, l-egypt /;
+            Set zr(z,r) / upper.'u-egypt' 'upper region', lower.'l-egypt' 'lower region' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["zr"].members == ["upper.u-egypt", "lower.l-egypt"]
+
+    def test_mixed_quoted_and_unquoted_tuples(self):
+        """Test mix of quoted and unquoted tuple elements."""
+        text = dedent("""
+            Set a / x, y-1 /;
+            Set b / p, q-1 /;
+            Set ab(a,b) / x.p, 'y-1'.p, x.'q-1', 'y-1'.'q-1' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["ab"].members == ["x.p", "y-1.p", "x.q-1", "y-1.q-1"]
+
+    def test_egypt_model_pattern(self):
+        """Test the exact pattern from egypt.gms model."""
+        text = dedent("""
+            Set z zones / upper, middle, lower /;
+            Set r regions / u-egypt, m-egypt, l-egypt /;
+            Set zr(z,r) 'map from zones to regions' / upper.'u-egypt', middle.'m-egypt', lower.'l-egypt' /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "zr" in model.sets
+        assert model.sets["zr"].members == [
+            "upper.u-egypt",
+            "middle.m-egypt",
+            "lower.l-egypt",
+        ]

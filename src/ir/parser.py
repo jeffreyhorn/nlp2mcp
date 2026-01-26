@@ -879,12 +879,16 @@ class _ModelBuilder:
                             text = text[1:-1]
                     result.append(text)
                 elif child.data == "set_tuple":
-                    # Basic tuple notation: ID.ID (e.g., a.b)
+                    # Issue #567: Tuple notation with optional quoted parts
+                    # ID.ID, ID.STRING, STRING.ID, STRING.STRING
+                    # e.g., a.b, upper.'u-egypt', 'a'.b, 'a'.'b'
                     prefix = _token_text(child.children[0])
                     suffix = _token_text(child.children[1])
                     result.append(f"{prefix}.{suffix}")
                 elif child.data == "set_tuple_with_desc":
-                    # Tuple with description: ID.ID STRING (e.g., a.b "description")
+                    # Issue #567: Tuple with description - all quote combinations
+                    # ID.ID STRING, ID.STRING STRING, STRING.ID STRING, STRING.STRING STRING
+                    # e.g., a.b "desc", upper.'u-egypt' "desc"
                     prefix = _token_text(child.children[0])
                     suffix = _token_text(child.children[1])
                     # Ignore description (third child)
