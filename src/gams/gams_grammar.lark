@@ -217,9 +217,11 @@ set_members: set_member ("," set_member)*
 // Preprocessor quotes hyphenated IDs, so 'cotton-h' 'cotton-herbaceo' is STRING STRING
 // Issue #562: Added set_tuple_prefix_expansion for (a,b).c syntax
 // Issue #567: Support quoted strings in tuple dot notation (e.g., upper.'u-egypt')
+// Issue #568: Support hyphenated (quoted) prefix and suffixes in tuple expansion
 ?set_member: range_expr                          -> set_range
            | "(" set_element_id_list ")" "." SET_ELEMENT_ID  -> set_tuple_prefix_expansion
-           | SET_ELEMENT_ID "." "(" id_list ")"  -> set_tuple_expansion
+           | SET_ELEMENT_ID "." "(" set_element_id_list ")"  -> set_tuple_expansion
+           | STRING "." "(" set_element_id_list ")"          -> set_tuple_expansion
            | SET_ELEMENT_ID "." SET_ELEMENT_ID STRING -> set_tuple_with_desc
            | SET_ELEMENT_ID "." STRING STRING    -> set_tuple_with_desc
            | STRING "." SET_ELEMENT_ID STRING    -> set_tuple_with_desc

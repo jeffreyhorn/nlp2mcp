@@ -894,12 +894,13 @@ class _ModelBuilder:
                     # Ignore description (third child)
                     result.append(f"{prefix}.{suffix}")
                 elif child.data == "set_tuple_expansion":
-                    # Tuple expansion: ID.(id1,id2,...) (e.g., nw.(w,cc,n))
-                    # Expands to: nw.w, nw.cc, nw.n
+                    # Issue #568: Tuple expansion with optional quoted prefix/suffixes
+                    # ID.(id1,id2,...) or STRING.(id1,id2,...) or ID.('s-1','s-2',...)
+                    # e.g., nw.(w,cc,n) or 'c-cracker'.('ho-low-s','ho-high-s')
                     prefix = _token_text(child.children[0])
-                    # Second child is id_list node
+                    # Second child is set_element_id_list node (handles both ID and STRING)
                     id_list_node = child.children[1]
-                    suffixes = _id_list(id_list_node)
+                    suffixes = self._parse_set_element_id_list(id_list_node)
                     for suffix in suffixes:
                         result.append(f"{prefix}.{suffix}")
                 elif child.data == "set_tuple_prefix_expansion":

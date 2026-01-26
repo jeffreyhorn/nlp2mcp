@@ -5478,3 +5478,77 @@ class TestQuotedStringInTuple:
             "middle.m-egypt",
             "lower.l-egypt",
         ]
+
+
+class TestHyphenatedTupleExpansion:
+    """Tests for Issue #568: Hyphenated identifiers in tuple expansion."""
+
+    def test_hyphenated_prefix_in_tuple_expansion(self):
+        """Test hyphenated identifier as tuple expansion prefix (fawley.gms pattern)."""
+        text = dedent("""
+            Set c / c-cracker /;
+            Set o / ho-low-s, ho-high-s /;
+            Set co(c,o) / c-cracker.(ho-low-s,ho-high-s) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["co"].members == ["c-cracker.ho-low-s", "c-cracker.ho-high-s"]
+
+    def test_hyphenated_suffixes_in_tuple_expansion(self):
+        """Test hyphenated identifiers as tuple expansion suffixes."""
+        text = dedent("""
+            Set p / plant /;
+            Set m / mode-1, mode-2, mode-3 /;
+            Set pm(p,m) / plant.(mode-1,mode-2,mode-3) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["pm"].members == [
+            "plant.mode-1",
+            "plant.mode-2",
+            "plant.mode-3",
+        ]
+
+    def test_both_hyphenated_in_tuple_expansion(self):
+        """Test both prefix and suffixes hyphenated in tuple expansion."""
+        text = dedent("""
+            Set c / c-cracker /;
+            Set o / vd-low-s, vd-high-s /;
+            Set co(c,o) / c-cracker.(vd-low-s,vd-high-s) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["co"].members == ["c-cracker.vd-low-s", "c-cracker.vd-high-s"]
+
+    def test_mixed_hyphenated_and_simple_suffixes(self):
+        """Test mix of hyphenated and simple identifiers in suffixes."""
+        text = dedent("""
+            Set a / base /;
+            Set b / x, y-1, z /;
+            Set ab(a,b) / base.(x,y-1,z) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["ab"].members == ["base.x", "base.y-1", "base.z"]
+
+    def test_fawley_model_pattern(self):
+        """Test the exact pattern from fawley.gms model."""
+        text = dedent("""
+            Set c 'cracking units' / c-cracker /;
+            Set o 'operating modes' / ho-low-s, ho-high-s, vd-low-s, vd-high-s /;
+            Set co(c,o) 'cracker operating modes' / c-cracker.(ho-low-s,ho-high-s,vd-low-s,vd-high-s) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "co" in model.sets
+        assert model.sets["co"].members == [
+            "c-cracker.ho-low-s",
+            "c-cracker.ho-high-s",
+            "c-cracker.vd-low-s",
+            "c-cracker.vd-high-s",
+        ]
+
+    def test_simple_tuple_expansion_still_works(self):
+        """Ensure simple (non-hyphenated) tuple expansion still works."""
+        text = dedent("""
+            Set a / x /;
+            Set b / p, q, r /;
+            Set ab(a,b) / x.(p,q,r) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["ab"].members == ["x.p", "x.q", "x.r"]
