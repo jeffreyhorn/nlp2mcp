@@ -73,9 +73,13 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
     Heuristic:
     - All-lowercase identifier-like names (letters/underscores only) are domain variables → unquoted
     - Names containing digits, uppercase letters, or special chars are element labels → quoted
+    - Indices that arrive already quoted (e.g., "demand") are always element labels → quoted
 
     This addresses GAMS compilation errors from inconsistent quoting (Error 171,
     Error 340) while preserving correct behavior for indexed equations.
+
+    Also handles indices that may already be quoted from the parser (e.g., "demand")
+    by stripping existing quotes before re-quoting to avoid double-quoting.
 
     Args:
         indices: Tuple of index identifiers
@@ -100,17 +104,35 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
         ['c']
         >>> _quote_indices(("OH",))
         ['"OH"']
+        >>> _quote_indices(('"demand"',))
+        ['"demand"']
+        >>> _quote_indices(('"x"', '"y"'))
+        ['"x"', '"y"']
     """
     result = []
     for idx in indices:
+        # Check if the index was already quoted (from parser storing string literals)
+        # If so, it's definitely an element label, not a domain variable
+        was_quoted = False
+        idx_clean = idx
+        if idx.startswith('"') and idx.endswith('"') and len(idx) >= 2:
+            idx_clean = idx[1:-1]
+            was_quoted = True
+        elif idx.startswith("'") and idx.endswith("'") and len(idx) >= 2:
+            idx_clean = idx[1:-1]
+            was_quoted = True
+
+        # If it was quoted, it's an element label - always quote it
+        if was_quoted:
+            result.append(f'"{idx_clean}"')
         # All-lowercase identifier (letters and underscores only) = domain variable, don't quote
         # This handles patterns like sum(i, ...), x(nodes), flow(years)
         # Element labels typically contain digits (i1, H2) or uppercase (H, OH, H2O)
-        if idx.replace("_", "").isalpha() and idx.islower():
-            result.append(idx)
+        elif idx_clean.replace("_", "").isalpha() and idx_clean.islower():
+            result.append(idx_clean)
         else:
             # Everything else is an element label, quote it for consistency
-            result.append(f'"{idx}"')
+            result.append(f'"{idx_clean}"')
     return result
 
 

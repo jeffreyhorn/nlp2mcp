@@ -6,7 +6,7 @@ including operator precedence, function calls, and MultiplierRef support.
 
 import pytest
 
-from src.emit.expr_to_gams import expr_to_gams
+from src.emit.expr_to_gams import _quote_indices, expr_to_gams
 from src.ir.ast import (
     Binary,
     Call,
@@ -405,3 +405,89 @@ class TestComplexExpressions:
         result = expr_to_gams(expr)
         # Unary minus converted to multiplication to avoid GAMS Error 445
         assert result == "((-1) * (x - 10))"
+
+
+@pytest.mark.unit
+class TestQuoteIndices:
+    """Test the _quote_indices function for index quoting behavior.
+
+    This function distinguishes between domain variables (unquoted) and
+    element labels (quoted), and also handles indices that may already
+    be quoted from the parser.
+    """
+
+    def test_single_lowercase_letter_not_quoted(self):
+        """Single lowercase letters are domain variables, not quoted."""
+        assert _quote_indices(("i",)) == ["i"]
+        assert _quote_indices(("j",)) == ["j"]
+        assert _quote_indices(("i", "j")) == ["i", "j"]
+
+    def test_multi_letter_lowercase_not_quoted(self):
+        """Multi-letter lowercase identifiers are domain variables, not quoted."""
+        assert _quote_indices(("nodes",)) == ["nodes"]
+        assert _quote_indices(("years",)) == ["years"]
+        assert _quote_indices(("flow_var",)) == ["flow_var"]
+
+    def test_element_labels_quoted(self):
+        """Element labels (containing digits or uppercase) are quoted."""
+        assert _quote_indices(("i1",)) == ['"i1"']
+        assert _quote_indices(("H",)) == ['"H"']
+        assert _quote_indices(("H2",)) == ['"H2"']
+        assert _quote_indices(("H2O",)) == ['"H2O"']
+
+    def test_mixed_indices(self):
+        """Mixed domain variables and element labels."""
+        assert _quote_indices(("i", "j1")) == ["i", '"j1"']
+        assert _quote_indices(("nodes", "H2O")) == ["nodes", '"H2O"']
+
+    def test_already_double_quoted_no_double_quoting(self):
+        """Indices already quoted with double quotes should not be double-quoted.
+
+        This is the main fix for GAMS Error 409 where parser stores
+        indices like "demand" and emission would produce ""demand"".
+        """
+        assert _quote_indices(('"demand"',)) == ['"demand"']
+        assert _quote_indices(('"x"',)) == ['"x"']
+        assert _quote_indices(('"y"',)) == ['"y"']
+        assert _quote_indices(('"x"', '"y"')) == ['"x"', '"y"']
+
+    def test_already_single_quoted_no_double_quoting(self):
+        """Indices already quoted with single quotes should be re-quoted with double quotes."""
+        assert _quote_indices(("'demand'",)) == ['"demand"']
+        assert _quote_indices(("'x'",)) == ['"x"']
+
+    def test_quoted_lowercase_word_still_quoted(self):
+        """A quoted string like "demand" (lowercase word) should stay quoted.
+
+        Even though "demand" looks like a domain variable when unquoted,
+        if it was explicitly quoted in the source, it's an element label.
+        """
+        # "demand" is stored as '"demand"' by the parser
+        assert _quote_indices(('"demand"',)) == ['"demand"']
+
+    def test_quoted_index_stays_quoted_even_if_looks_like_domain(self):
+        """A quoted index stays quoted even if the inner value looks like a domain variable.
+
+        If the original GAMS code had a quoted string like "i" or "nodes",
+        it's an element label, not a domain variable - keep it quoted.
+        """
+        # Even though 'i' looks like a domain variable, "i" was explicitly quoted
+        assert _quote_indices(('"i"',)) == ['"i"']
+        assert _quote_indices(('"nodes"',)) == ['"nodes"']
+
+    def test_param_ref_with_quoted_string_index(self):
+        """Test ParamRef with a string literal index from the parser.
+
+        This is the actual use case: dempr(g,"demand") parsed with "demand" stored.
+        """
+        # The parser stores the index including the quotes
+        result = expr_to_gams(ParamRef("dempr", ("g", '"demand"')))
+        assert result == 'dempr(g,"demand")'
+        # Should NOT produce 'dempr(g,""demand"")'
+        assert '""' not in result
+
+    def test_var_ref_with_quoted_string_index(self):
+        """Test VarRef with a string literal index."""
+        result = expr_to_gams(VarRef("dat", ("i", '"y"')))
+        assert result == 'dat(i,"y")'
+        assert '""' not in result
