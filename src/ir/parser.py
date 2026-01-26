@@ -239,8 +239,7 @@ def parse_text(source: str) -> Tree:
     # It is intentionally duplicated here so that callers which invoke `parse_text`
     # directly on raw GAMS source (bypassing preprocessing) still get correct
     # handling of visual-alignment double commas.
-    while ",," in source:
-        source = source.replace(",,", ",")
+    source = re.sub(r",{2,}", ",", source)
 
     parser = _build_lark()
     try:

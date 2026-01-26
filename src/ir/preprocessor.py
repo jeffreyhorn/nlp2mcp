@@ -1773,11 +1773,8 @@ def normalize_double_commas(source: str) -> str:
         - Simple text replacement applied globally, including inside quoted strings
         - Runs before parsing, so string boundaries are not yet known
     """
-    # Simple replacement: ,, -> ,
-    # Handle multiple consecutive commas (e.g., ,,, -> ,)
-    while ",," in source:
-        source = source.replace(",,", ",")
-    return source
+    # Use regex for efficient single-pass replacement of 2+ commas
+    return re.sub(r",{2,}", ",", source)
 
 
 def preprocess_gams_file(file_path: Path | str) -> str:
