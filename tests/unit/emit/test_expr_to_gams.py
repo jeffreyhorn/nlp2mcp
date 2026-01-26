@@ -181,6 +181,21 @@ class TestBinaryOperators:
         result = expr_to_gams(Binary("/", Const(10), Const(2)))
         assert result == "10 / 2"
 
+    def test_multiplication_negative_right_operand(self):
+        """Test that y * -1 becomes y * (-1) to avoid GAMS Error 445."""
+        result = expr_to_gams(Binary("*", VarRef("y", ()), Const(-1)))
+        assert result == "y * (-1)"
+
+    def test_multiplication_negative_left_operand(self):
+        """Test that -1 * y becomes (-1) * y to avoid GAMS Error 445."""
+        result = expr_to_gams(Binary("*", Const(-1), VarRef("y", ())))
+        assert result == "(-1) * y"
+
+    def test_division_negative_right_operand(self):
+        """Test that x / -2 becomes x / (-2) to avoid GAMS Error 445."""
+        result = expr_to_gams(Binary("/", VarRef("x", ()), Const(-2)))
+        assert result == "x / (-2)"
+
     def test_power_operator(self):
         """Test power operator conversion to GAMS ** syntax."""
         result = expr_to_gams(Binary("^", VarRef("x", ()), Const(2)))
