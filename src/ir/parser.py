@@ -1006,11 +1006,11 @@ class _ModelBuilder:
         # Sprint 16 Day 7: Extended pattern to support hyphenated identifiers like route-1
         # Pattern matches: prefix (letters, digits, underscores, hyphens) followed by trailing number
         # Examples: i1, route-1, data-set-2, item_3, item2-1 (digit before hyphen is allowed)
-        # The pattern uses non-greedy matching to split on the LAST digit sequence:
+        # The pattern uses non-greedy matching (*?) for the prefix:
         # - Prefix: starts with letter/underscore, followed by any identifier chars (non-greedy)
-        # - Number: trailing digits (greedy)
-        # This ensures "item21" splits as ("item2", "1") not ("item", "21")
-        # We use two patterns: one for identifiers with non-digit before number, one for pure letters
+        # - Number: trailing digits (greedy, implicitly matches as many as possible)
+        # Non-greedy means "item21" splits as ("item", "21") - prefix takes minimum chars
+        # This is correct for GAMS range notation where we want the trailing number sequence
         symbolic_pattern = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_-]*?)(\d+)$")
         match_start = symbolic_pattern.match(start_bound)
         if not match_start:

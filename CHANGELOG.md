@@ -19,9 +19,14 @@ Implemented P2 grammar fixes: tuple expansion syntax for parameter data blocks, 
 #### Changes
 
 **Modified Files:**
-- `src/gams/gams_grammar.lark` - Grammar extensions for P2 fixes (param_data_tuple_expansion, set_element_id_list, range_bound extensions, STRING STRING set_member)
-- `src/ir/parser.py` - Tuple expansion handling (_parse_set_element_id_list), extended range support (_expand_range for hyphenated/alphabetic), quote stripping for STRING tokens
-- `tests/unit/gams/test_parser.py` - Added Sprint 16 Day 7 tests (10 new tests in 3 test classes)
+- `src/gams/gams_grammar.lark` - Grammar extensions for P2 fixes (param_data_tuple_expansion, set_element_id_list, range_bound extensions, STRING STRING set_member, PLUS SPECIAL_VALUE)
+- `src/ir/parser.py` - Tuple expansion handling (_parse_set_element_id_list), extended range support (_expand_range for hyphenated/alphabetic), quote stripping for STRING tokens, improved error messages
+- `src/ir/preprocessor.py` - Added `join_multiline_equations()` for multi-line equation support, `normalize_double_commas()` with string boundary awareness
+- `src/emit/original_symbols.py` - Added `_sanitize_set_element()` for DSL injection protection
+- `tests/unit/gams/test_parser.py` - Added Sprint 16 Day 7 tests (10+ new tests in 3 test classes)
+- `tests/unit/ir/test_preprocessor.py` - Added `TestJoinMultilineEquations` test class with 13 new tests
+- `docs/issues/completed/` - Updated 9 issue documents status to Resolved
+- `data/gamslib/gamslib_status.json` - Regenerated parse status (48/160 models, 30%)
 - `docs/planning/EPIC_3/SPRINT_16/PLAN.md` - Day 7 marked complete
 - `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 7 entry added
 
@@ -36,12 +41,12 @@ Implemented P2 grammar fixes: tuple expansion syntax for parameter data blocks, 
 
 #### Results
 
-- **Parse rate (160 model sample):** 22.5% → 23.13% (36/160 → 37/160)
-- **New models parsing:** pollut
-- **No regressions:** All 36 previously-passing models still pass
-- **Tests:** 2949 passed, 10 skipped, 1 xfailed (+10 new tests)
+- **Parse rate (160 model sample):** 22.5% → 30% (36/160 → 48/160)
+- **New models parsing:** pollut, aircraft, and 10 others
+- **No regressions:** All previously-passing models still pass
+- **Tests:** 2949+ passed, 10 skipped, 1 xfailed
 
-**Note:** Many target models have multiple blocking issues. Fixing tuple expansion and quoted descriptions reveals secondary issues (alias resolution in dollar conditions, multi-line equation continuation, etc.) that require additional parser work.
+**Note:** Aircraft model now parses successfully after implementing tuple expansion, range expansion, and multi-line equation continuation fixes.
 
 ---
 
