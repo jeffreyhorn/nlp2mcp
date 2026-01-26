@@ -123,14 +123,12 @@
         "solve_time_seconds": 0.452
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-01-24T20:24:39.830316+00:00",
+        "status": "success",
+        "parse_date": "2026-01-26T14:51:19.783752+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.3705,
-        "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 54, column 51: Unexpected character: '('\n  k(j)       'revenue lost (1000 per 100 bumped)' / ('route-1','route-2') 13,\n                                                    ^\n\nSuggestion: This character is not valid in this context"
-        }
+        "parse_time_seconds": 1.1061,
+        "variables_count": 6,
+        "equations_count": 8
       },
       "nlp2mcp_translate": {
         "status": "not_tested",
@@ -144,6 +142,12 @@
         "comparison_status": "not_tested",
         "comparison_date": "2026-01-15T20:37:51.892925+00:00",
         "notes": "Skipped due to parse failure"
+      },
+      "model_statistics": {
+        "variables": 6,
+        "equations": 8,
+        "parameters": 0,
+        "sets": 3
       }
     },
     {

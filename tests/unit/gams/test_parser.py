@@ -5174,6 +5174,32 @@ class TestSprint16Day7RangeExpansion:
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["A", "B", "C", "D"]
 
+    def test_mixed_case_alphabetic_range_lowercase_start(self):
+        """Test mixed-case alphabetic range with lowercase start: a*D.
+
+        The implementation preserves the case of the start bound.
+        So a*D produces lowercase letters ['a', 'b', 'c', 'd'].
+        """
+        text = dedent("""
+            Set i / a*D /;
+            """)
+        model = parser.parse_model_text(text)
+        # Start bound is lowercase, so output is lowercase
+        assert model.sets["i"].members == ["a", "b", "c", "d"]
+
+    def test_mixed_case_alphabetic_range_uppercase_start(self):
+        """Test mixed-case alphabetic range with uppercase start: A*d.
+
+        The implementation preserves the case of the start bound.
+        So A*d produces uppercase letters ['A', 'B', 'C', 'D'].
+        """
+        text = dedent("""
+            Set i / A*d /;
+            """)
+        model = parser.parse_model_text(text)
+        # Start bound is uppercase, so output is uppercase
+        assert model.sets["i"].members == ["A", "B", "C", "D"]
+
     def test_quoted_hyphenated_range(self):
         """Test range with quoted hyphenated identifiers (from preprocessor)."""
         text = dedent("""

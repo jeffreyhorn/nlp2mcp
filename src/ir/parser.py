@@ -873,16 +873,8 @@ class _ModelBuilder:
                     # Element with inline description: SET_ELEMENT_ID STRING or STRING STRING
                     # Take first token, ignore description (second token)
                     # Sprint 16 Day 7: Handle STRING STRING case (preprocessor quotes hyphenated IDs)
-                    first_token = child.children[0]
-                    text = _token_text(first_token)
-                    # Strip quotes if it's a STRING token (quoted element ID)
-                    if isinstance(first_token, Token) and first_token.type == "STRING":
-                        if len(text) >= 2 and (
-                            (text[0] == "'" and text[-1] == "'")
-                            or (text[0] == '"' and text[-1] == '"')
-                        ):
-                            text = text[1:-1]
-                    result.append(text)
+                    # Note: _token_text() already strips quotes from STRING tokens
+                    result.append(_token_text(child.children[0]))
                 elif child.data == "set_tuple":
                     # Issue #567: Tuple notation with optional quoted parts
                     # ID.ID, ID.STRING, STRING.ID, STRING.STRING
@@ -969,16 +961,11 @@ class _ModelBuilder:
 
         Returns:
             List of expanded range elements as strings
+
+        Note:
+            Callers should use _token_text() before passing bounds to this method,
+            which already strips quotes from STRING tokens.
         """
-        # Sprint 16 Day 7: Strip quotes from bounds (preprocessor quotes hyphenated IDs)
-        if (start_bound.startswith("'") and start_bound.endswith("'")) or (
-            start_bound.startswith('"') and start_bound.endswith('"')
-        ):
-            start_bound = start_bound[1:-1]
-        if (end_bound.startswith("'") and end_bound.endswith("'")) or (
-            end_bound.startswith('"') and end_bound.endswith('"')
-        ):
-            end_bound = end_bound[1:-1]
         # Check if this is a pure numeric range (e.g., 1*10)
         try:
             num_start = int(start_bound)
@@ -3837,18 +3824,27 @@ class _ModelBuilder:
                 # Sprint 16 Day 7: Handle tuple expansion like (route-1,route-2) 13
                 # Expands to route-1=13, route-2=13
                 # Issue #564: Also handles special values like (h1,h2) na
+                # Note: Tuple expansion is only supported for 1-D parameters.
+                # Multi-dimensional parameters require explicit dotted notation (e.g., i.j value).
                 elements = self._parse_set_element_id_list(child.children[0])
                 value_node = child.children[-1]
                 value = self._parse_param_data_value(value_node)
+                # Validate domain dimensionality before processing elements
+                if len(domain) == 0:
+                    raise self._error(
+                        f"Parameter '{param_name}' tuple expansion syntax (elem1,elem2) requires a 1-D parameter domain, "
+                        f"but '{param_name}' is scalar (no domain)",
+                        child,
+                    )
+                elif len(domain) > 1:
+                    raise self._error(
+                        f"Parameter '{param_name}' tuple expansion syntax (elem1,elem2) requires a 1-D parameter domain, "
+                        f"but '{param_name}' has {len(domain)}-D domain {domain}",
+                        child,
+                    )
                 for elem in elements:
                     key_tuple = (elem,)
-                    if len(key_tuple) != len(domain):
-                        raise self._error(
-                            f"Parameter '{param_name}' tuple expansion requires 1-D domain, got {len(domain)}",
-                            child,
-                        )
-                    if domain:
-                        self._verify_member_in_domain(param_name, domain[0], elem, child)
+                    self._verify_member_in_domain(param_name, domain[0], elem, child)
                     values[key_tuple] = value
             elif child.data == "param_data_range_expansion":
                 # Issue #563: Handle range expansion like (ne2*ne5) 0
@@ -3961,6 +3957,7 @@ class _ModelBuilder:
         Sprint 16 Day 7: Added for parsing (elem1,elem2) syntax in param data.
         Returns list of element identifiers from the comma-separated list.
         Handles both SET_ELEMENT_ID and STRING tokens (preprocessor quotes hyphenated IDs).
+        Note: _token_text() already strips quotes from STRING tokens.
         """
         elements = []
         for child in node.children:
@@ -3968,21 +3965,9 @@ class _ModelBuilder:
                 # Extract the token from the wrapper node
                 for token in child.children:
                     if isinstance(token, Token):
-                        text = _token_text(token)
-                        # Strip quotes from STRING tokens (preprocessor quotes hyphenated IDs)
-                        if token.type == "STRING" and len(text) >= 2:
-                            if (text[0] == "'" and text[-1] == "'") or (
-                                text[0] == '"' and text[-1] == '"'
-                            ):
-                                text = text[1:-1]
-                        elements.append(text)
+                        elements.append(_token_text(token))
             elif isinstance(child, Token) and child.type in ("SET_ELEMENT_ID", "STRING"):
-                text = _token_text(child)
-                # Strip quotes from STRING tokens
-                if child.type == "STRING" and len(text) >= 2:
-                    if (text[0] == "'" and text[-1] == "'") or (text[0] == '"' and text[-1] == '"'):
-                        text = text[1:-1]
-                elements.append(text)
+                elements.append(_token_text(child))
         return elements
 
     def _parse_data_indices(self, node: Tree | Token) -> list[str]:
