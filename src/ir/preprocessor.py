@@ -1578,6 +1578,12 @@ def join_multiline_equations(source: str) -> str:
         - Stops joining when a semicolon is encountered
         - Skips comment lines (starting with *)
         - Preserves line structure for non-equation code
+        - Comment reordering: Comments that appear in the middle of a multi-line
+          equation are preserved but may appear BEFORE the joined equation in the
+          output. For example, if a comment appears between equation continuation
+          lines, it will be output before the complete joined equation. This is
+          acceptable because comments in the middle of equations are rare in
+          practice, and the comment content is preserved.
     """
     lines = source.split("\n")
     result = []

@@ -26,7 +26,7 @@ Implemented P2 grammar fixes: tuple expansion syntax for parameter data blocks, 
 - `tests/unit/gams/test_parser.py` - Added Sprint 16 Day 7 tests (10+ new tests in 3 test classes)
 - `tests/unit/ir/test_preprocessor.py` - Added `TestJoinMultilineEquations` test class with 13 new tests
 - `docs/issues/completed/` - Updated 9 issue documents status to Resolved
-- `data/gamslib/gamslib_status.json` - Regenerated parse status (48/160 models, 30%)
+- `data/gamslib/gamslib_status.json` - Regenerated parse status (48/219 models, 21.9%)
 - `docs/planning/EPIC_3/SPRINT_16/PLAN.md` - Day 7 marked complete
 - `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 7 entry added
 
@@ -41,8 +41,9 @@ Implemented P2 grammar fixes: tuple expansion syntax for parameter data blocks, 
 
 #### Results
 
-- **Parse rate (160 model sample):** 22.5% → 30% (36/160 → 48/160)
-- **New models parsing:** pollut, aircraft, and 10 others
+- **Parse rate (160 model sample):** 22.5% → 23.1% (36/160 → 37/160)
+- **Parse rate (219 model full set):** 48/219 (21.9%)
+- **New models parsing:** pollut (+1 in 160 sample), aircraft and others in full set
 - **No regressions:** All previously-passing models still pass
 - **Tests:** 2949+ passed, 10 skipped, 1 xfailed
 
