@@ -1770,8 +1770,8 @@ def normalize_double_commas(source: str) -> str:
 
     Notes:
         - Replaces all occurrences of ,, with , (even multiple in sequence)
-        - Simple text replacement that works for all contexts
-        - Preserves quoted strings (double comma inside quotes is rare but handled)
+        - Simple text replacement applied globally, including inside quoted strings
+        - Runs before parsing, so string boundaries are not yet known
     """
     # Simple replacement: ,, -> ,
     # Handle multiple consecutive commas (e.g., ,,, -> ,)

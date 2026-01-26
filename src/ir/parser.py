@@ -233,8 +233,12 @@ def parse_text(source: str) -> Tree:
     Raises:
         ParseError: If syntax errors are found (wraps Lark exceptions)
     """
-    # Issue #565: Normalize double commas to single commas before parsing
-    # This handles GAMS visual alignment syntax like: Set l / a,, b /;
+    # Issue #565: Normalize double commas to single commas before parsing.
+    # This handles GAMS visual alignment syntax like: Set l / a,, b /;.
+    # NOTE: The same normalization is also performed in `preprocess_gams_file()`.
+    # It is intentionally duplicated here so that callers which invoke `parse_text`
+    # directly on raw GAMS source (bypassing preprocessing) still get correct
+    # handling of visual-alignment double commas.
     while ",," in source:
         source = source.replace(",,", ",")
 
@@ -1001,9 +1005,13 @@ class _ModelBuilder:
 
         # Parse symbolic range: identifier followed by number
         # Sprint 16 Day 7: Extended pattern to support hyphenated identifiers like route-1
-        # Pattern matches: prefix (letters, digits, underscores, hyphens) followed by number
-        # Examples: i1, route-1, data-set-2, item_3
-        match_start = re.match(r"^([a-zA-Z_][a-zA-Z0-9_-]*[^0-9])?(\d+)$", start_bound)
+        # Pattern matches: prefix (letters, digits, underscores, hyphens) followed by trailing number
+        # Examples: i1, route-1, data-set-2, item_3, item2-1 (digit before hyphen is allowed)
+        # The pattern requires:
+        # - Optional prefix starting with letter/underscore, ending with non-digit (letter, underscore, hyphen)
+        # - This allows digits in the middle of the prefix (e.g., item2-1 has prefix "item2-")
+        # - Trailing number is the range index
+        match_start = re.match(r"^([a-zA-Z_](?:[a-zA-Z0-9_-]*[a-zA-Z_-])?)(\d+)$", start_bound)
         if not match_start:
             # Try alternate pattern for pure letter prefix (e.g., a1, i1)
             match_start = re.match(r"^([a-zA-Z_]+)(\d+)$", start_bound)
@@ -1014,7 +1022,7 @@ class _ModelBuilder:
                 node,
             )
 
-        match_end = re.match(r"^([a-zA-Z_][a-zA-Z0-9_-]*[^0-9])?(\d+)$", end_bound)
+        match_end = re.match(r"^([a-zA-Z_](?:[a-zA-Z0-9_-]*[a-zA-Z_-])?)(\d+)$", end_bound)
         if not match_end:
             # Try alternate pattern for pure letter prefix
             match_end = re.match(r"^([a-zA-Z_]+)(\d+)$", end_bound)
