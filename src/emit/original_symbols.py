@@ -192,14 +192,23 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
         # as scalar names (e.g., 'loss equation constant' instead of a proper identifier).
         # These contain spaces, quotes, or other invalid identifier characters.
         def is_valid_scalar_name(name: str) -> bool:
-            """Check if scalar name is a valid GAMS identifier."""
-            # Valid GAMS identifiers: start with letter, contain only letters/digits/underscores
-            # Invalid: contains spaces, quotes, or starts with digit
+            """Check if scalar name is a valid GAMS identifier.
+
+            Valid GAMS identifiers:
+            - Start with a letter or underscore
+            - Contain only letters, digits, and underscores
+            Additionally, reject any whitespace, newlines, or GAMS delimiters.
+            """
             if not name:
                 return False
-            if " " in name or "'" in name or '"' in name:
+            # Reject any whitespace (including spaces, tabs, newlines) or quote characters
+            if re.search(r"\s", name) or "'" in name or '"' in name:
                 return False
-            if not name[0].isalpha() and name[0] != "_":
+            # Explicitly reject GAMS delimiters that could break syntax blocks
+            if "/" in name or ";" in name:
+                return False
+            # Full-pattern check: first char letter or underscore, rest letters/digits/underscores
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
                 return False
             return True
 
