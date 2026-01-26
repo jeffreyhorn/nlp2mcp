@@ -81,7 +81,7 @@ class TestBasicNodes:
     def test_var_ref_element_label(self):
         """Test variable reference with element labels (not domain vars).
 
-        Multi-char or uppercase indices are element labels and should be quoted.
+        Uppercase or digit-containing indices are element labels and should be quoted.
         """
         result = expr_to_gams(VarRef("x", ("H",)))
         assert result == 'x("H")'
@@ -89,6 +89,18 @@ class TestBasicNodes:
         assert result == 'x("H2")'
         result = expr_to_gams(VarRef("x", ("i1",)))
         assert result == 'x("i1")'
+
+    def test_var_ref_multi_letter_domain(self):
+        """Test variable reference with multi-letter domain names.
+
+        All-lowercase identifier names like 'nodes', 'years' are domain variables.
+        """
+        result = expr_to_gams(VarRef("flow", ("nodes",)))
+        assert result == "flow(nodes)"
+        result = expr_to_gams(VarRef("x", ("years",)))
+        assert result == "x(years)"
+        result = expr_to_gams(VarRef("y", ("flow_var",)))
+        assert result == "y(flow_var)"
 
     def test_multiplier_ref_scalar(self):
         """Test scalar multiplier reference."""
@@ -139,6 +151,17 @@ class TestUnaryOperators:
         """
         result = expr_to_gams(Unary("-", Unary("-", VarRef("x", ()))))
         assert result == "((-1) * ((-1) * x))"
+
+    def test_unary_minus_negative_constant(self):
+        """Test unary minus applied to a negative constant.
+
+        -(-5) should become ((-1) * (-5)), not ((-1) * -5) which would
+        have two operators in a row.
+        """
+        result = expr_to_gams(Unary("-", Const(-5)))
+        assert result == "((-1) * (-5))"
+        # Verify no "* -" pattern (two operators in a row)
+        assert "* -" not in result
 
     def test_unary_minus_complex_expr(self):
         """Test unary minus on complex expression wraps the child.

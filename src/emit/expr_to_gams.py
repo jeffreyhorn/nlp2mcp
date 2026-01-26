@@ -63,11 +63,11 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
     """Quote element labels in index tuples for GAMS syntax.
 
     This function uses a heuristic to distinguish between domain variables
-    (set indices like 'i', 'j') and element labels (specific values like 'i1', 'H2').
+    (set indices like 'i', 'j', 'nodes') and element labels (specific values like 'i1', 'H2').
 
     Heuristic:
-    - Single lowercase letters (a-z) are assumed to be domain variables → unquoted
-    - Everything else (contains digits, uppercase, multi-char, etc.) is an element → quoted
+    - All-lowercase identifier-like names (letters/underscores only) are domain variables → unquoted
+    - Names containing digits, uppercase letters, or special chars are element labels → quoted
 
     This addresses GAMS compilation errors from inconsistent quoting (Error 171,
     Error 340) while preserving correct behavior for indexed equations.
@@ -85,6 +85,10 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
         ['"i1"']
         >>> _quote_indices(("i", "j"))
         ['i', 'j']
+        >>> _quote_indices(("nodes",))
+        ['nodes']
+        >>> _quote_indices(("flow_var",))
+        ['flow_var']
         >>> _quote_indices(("H", "H2", "H2O"))
         ['"H"', '"H2"', '"H2O"']
         >>> _quote_indices(("c",))
@@ -94,9 +98,10 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
     """
     result = []
     for idx in indices:
-        # Single lowercase letter = domain variable, don't quote
-        # This handles common patterns like sum(i, ...) and eq(i).. x(i)
-        if len(idx) == 1 and idx.islower():
+        # All-lowercase identifier (letters and underscores only) = domain variable, don't quote
+        # This handles patterns like sum(i, ...), x(nodes), flow(years)
+        # Element labels typically contain digits (i1, H2) or uppercase (H, OH, H2O)
+        if idx.replace("_", "").isalpha() and idx.islower():
             result.append(idx)
         else:
             # Everything else is an element label, quote it for consistency
@@ -201,8 +206,10 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
             # Solution: -(expr) becomes ((-1) * (expr)) which GAMS parses correctly.
             if op == "-":
                 # Wrap child in parentheses if it's a complex expression (Binary or Call)
+                # or a negative constant (to avoid ((-1) * -5) which has two operators in a row)
                 # Simple cases like -x become (-1) * x, complex like -(a+b) become (-1) * (a+b)
-                if isinstance(child, (Binary, Call)):
+                is_negative_const = isinstance(child, Const) and child.value < 0
+                if isinstance(child, (Binary, Call)) or is_negative_const:
                     return f"((-1) * ({child_str}))"
                 else:
                     return f"((-1) * {child_str})"
