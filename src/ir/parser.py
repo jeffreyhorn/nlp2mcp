@@ -30,7 +30,7 @@ from .ast import (
     VarRef,
 )
 from .model_ir import ModelIR, ObjectiveIR
-from .preprocessor import preprocess_gams_file
+from .preprocessor import normalize_double_commas, preprocess_gams_file
 from .symbols import (
     AliasDef,
     ConditionalStatement,
@@ -239,7 +239,7 @@ def parse_text(source: str) -> Tree:
     # It is intentionally duplicated here so that callers which invoke `parse_text`
     # directly on raw GAMS source (bypassing preprocessing) still get correct
     # handling of visual-alignment double commas.
-    source = re.sub(r",{2,}", ",", source)
+    source = normalize_double_commas(source)
 
     parser = _build_lark()
     try:

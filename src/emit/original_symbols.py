@@ -11,8 +11,52 @@ Key principles:
 - Multi-dimensional parameter keys formatted as GAMS syntax: ("i1", "j2") → "i1.j2"
 """
 
+import re
+
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
+
+# Regex pattern for valid GAMS set element identifiers
+# Allows: letters, digits, underscores, hyphens, dots (for tuples like a.b)
+# Must start with letter or digit
+_VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.]*$")
+
+
+def _sanitize_set_element(element: str) -> str:
+    """Sanitize a set element name for safe GAMS emission.
+
+    Validates that the element contains only safe characters to prevent
+    DSL injection attacks. Elements that could break out of the /.../ block
+    or inject GAMS statements are rejected.
+
+    Args:
+        element: Set element identifier
+
+    Returns:
+        The element if valid, or a safely quoted version
+
+    Raises:
+        ValueError: If the element contains characters that cannot be safely emitted
+    """
+    # Check for obviously dangerous characters that could break GAMS syntax
+    # These characters could allow escaping the /.../ block or injecting statements
+    dangerous_chars = {"/", ";", "*", "$", '"', "'", "(", ")", "[", "]", "=", "<", ">"}
+
+    if any(c in element for c in dangerous_chars):
+        raise ValueError(
+            f"Set element '{element}' contains unsafe characters that could cause "
+            f"GAMS injection. Dangerous characters: {dangerous_chars & set(element)}"
+        )
+
+    # Validate against safe pattern
+    if not _VALID_SET_ELEMENT_PATTERN.match(element):
+        raise ValueError(
+            f"Set element '{element}' contains invalid characters. "
+            f"Set elements must start with a letter or digit and contain only "
+            f"letters, digits, underscores, hyphens, and dots."
+        )
+
+    return element
 
 
 def emit_original_sets(model_ir: ModelIR) -> str:
@@ -39,8 +83,10 @@ def emit_original_sets(model_ir: ModelIR) -> str:
     for set_name, set_def in model_ir.sets.items():
         # Use SetDef.members (Finding #3)
         # Members are stored as a list of strings in SetDef
+        # Sanitize each member to prevent DSL injection attacks
         if set_def.members:
-            members = ", ".join(set_def.members)
+            sanitized_members = [_sanitize_set_element(m) for m in set_def.members]
+            members = ", ".join(sanitized_members)
             lines.append(f"    {set_name} /{members}/")
         else:
             # Empty set or universe

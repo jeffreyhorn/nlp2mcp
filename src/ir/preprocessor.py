@@ -1589,11 +1589,8 @@ def join_multiline_equations(source: str) -> str:
 
         # Skip empty lines and comments - preserve them as-is
         if not stripped or stripped.startswith("*"):
-            if in_equation:
-                # If in equation, append empty/comment line to result but continue collecting
-                result.append(line)
-            else:
-                result.append(line)
+            # Append empty/comment line to result and continue
+            result.append(line)
             continue
 
         # Check if this line starts an equation definition (contains ..)
@@ -1769,12 +1766,44 @@ def normalize_double_commas(source: str) -> str:
         Set l / b 'base', c 'competitive' /;
 
     Notes:
-        - Replaces all occurrences of ,, with , (even multiple in sequence)
-        - Simple text replacement applied globally, including inside quoted strings
-        - Runs before parsing, so string boundaries are not yet known
+        - Replaces all occurrences of two-or-more consecutive commas with a single comma
+          when they appear outside of quoted strings
+        - Leaves commas inside single-quoted strings unchanged
+        - Runs before full parsing, using a simple single-quote aware scan to respect
+          string boundaries
     """
-    # Use regex for efficient single-pass replacement of 2+ commas
-    return re.sub(r",{2,}", ",", source)
+    # Perform a single-pass scan, collapsing comma runs only outside of strings.
+    result: list[str] = []
+    in_string = False
+    i = 0
+    length = len(source)
+
+    while i < length:
+        ch = source[i]
+
+        if ch == "'":
+            # Handle GAMS-style escaped quote inside strings: '' -> literal '
+            if in_string and i + 1 < length and source[i + 1] == "'":
+                result.append("''")
+                i += 2
+                continue
+            in_string = not in_string
+            result.append(ch)
+            i += 1
+            continue
+
+        if not in_string and ch == ",":
+            # Collapse any run of commas outside strings to a single comma.
+            result.append(",")
+            i += 1
+            while i < length and source[i] == ",":
+                i += 1
+            continue
+
+        result.append(ch)
+        i += 1
+
+    return "".join(result)
 
 
 def preprocess_gams_file(file_path: Path | str) -> str:
