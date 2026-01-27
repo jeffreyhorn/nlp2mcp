@@ -145,19 +145,27 @@ def build_complementarity_pairs(
     # Build lower bound complementarity: (x - lo) ≥ 0 ⊥ π^L ≥ 0
     # Note: partition.bounds_lo only contains finite bounds (Finding #2)
     #
-    # For indexed variables, we create a SINGLE indexed equation comp_lo_x(i)
-    # instead of element-specific equations (comp_lo_x_1, comp_lo_x_2, etc.).
-    # This allows proper GAMS MCP model statement syntax: comp_lo_x.piL_x
-    # (GAMS doesn't allow quoted indices in model statement like piL_x("H"))
+    # Strategy for indexed variables:
+    # - If variable has UNIFORM bounds (only base bound, no per-element overrides):
+    #   Create a single indexed equation comp_lo_x(i).. x(i) - lo =G= 0
+    #   This allows proper GAMS MCP model statement syntax: comp_lo_x.piL_x
+    # - If variable has NON-UNIFORM bounds (has lo_map overrides):
+    #   Create per-instance equations to handle different bound values per element
     #
-    # Group bounds by variable name to create one equation per variable
-    lo_vars_seen: set[str] = set()
-    for (var_name, _indices), bound_def in partition.bounds_lo.items():
-        # Skip if we already created the equation for this variable
-        if var_name in lo_vars_seen:
-            continue
-        lo_vars_seen.add(var_name)
+    # First, identify which variables have uniform vs non-uniform bounds
+    lo_vars_with_overrides: set[str] = set()
+    lo_vars_base_bound: dict[str, float] = {}
+    for (var_name, indices), bound_def in partition.bounds_lo.items():
+        if indices == ():
+            # Base bound for all elements
+            lo_vars_base_bound[var_name] = bound_def.value
+        else:
+            # Per-element override
+            lo_vars_with_overrides.add(var_name)
 
+    # Process lower bounds
+    lo_vars_seen: set[str] = set()
+    for (var_name, indices), bound_def in partition.bounds_lo.items():
         # Get variable domain from model_ir
         var_def = kkt.model_ir.variables.get(var_name)
         var_domain = var_def.domain if var_def else ()
@@ -165,44 +173,83 @@ def build_complementarity_pairs(
         # Create multiplier name
         piL_name = create_bound_lo_multiplier_name(var_name)
 
-        if var_domain:
-            # Indexed variable: create indexed equation comp_lo_x(i).. x(i) - lo =G= 0
-            # Use domain indices, not element values
-            F_piL = Binary("-", VarRef(var_name, var_domain), Const(bound_def.value))
+        # Check if this variable has per-element overrides (non-uniform bounds)
+        has_overrides = var_name in lo_vars_with_overrides
+
+        if has_overrides:
+            # Non-uniform bounds: create per-instance equations
+            # This handles cases where bounds vary by element
+            if indices == ():
+                # Skip the base bound entry - we'll use per-instance equations
+                # Only process if there are no element-specific entries for this var
+                # (In practice, if has_overrides is True, there ARE element-specific entries)
+                continue
+            # Create per-instance equation: comp_lo_x_i1.. x("i1") - lo_i1 =G= 0
+            indices_str = "_".join(indices) if indices else ""
+            eq_name = f"comp_lo_{var_name}_{indices_str}" if indices_str else f"comp_lo_{var_name}"
+            F_piL = Binary("-", VarRef(var_name, indices), Const(bound_def.value))
             comp_eq = EquationDef(
-                name=f"comp_lo_{var_name}",
-                domain=var_domain,
-                relation=Rel.GE,
-                lhs_rhs=(F_piL, Const(0.0)),
-            )
-            # Key by variable name only (single equation for all instances)
-            comp_bounds_lo[(var_name, ())] = ComplementarityPair(
-                equation=comp_eq, variable=piL_name, variable_indices=var_domain
-            )
-        else:
-            # Scalar variable: create scalar equation comp_lo_x.. x - lo =G= 0
-            F_piL = Binary("-", VarRef(var_name, ()), Const(bound_def.value))
-            comp_eq = EquationDef(
-                name=f"comp_lo_{var_name}",
+                name=eq_name,
                 domain=(),
                 relation=Rel.GE,
                 lhs_rhs=(F_piL, Const(0.0)),
             )
-            comp_bounds_lo[(var_name, ())] = ComplementarityPair(
-                equation=comp_eq, variable=piL_name, variable_indices=()
+            comp_bounds_lo[(var_name, indices)] = ComplementarityPair(
+                equation=comp_eq, variable=piL_name, variable_indices=indices
             )
+        else:
+            # Uniform bounds: create single indexed equation (or scalar equation)
+            # Skip if we already created the equation for this variable
+            if var_name in lo_vars_seen:
+                continue
+            lo_vars_seen.add(var_name)
+
+            if var_domain:
+                # Indexed variable: create indexed equation comp_lo_x(i).. x(i) - lo =G= 0
+                # Use domain indices, not element values
+                F_piL = Binary("-", VarRef(var_name, var_domain), Const(bound_def.value))
+                comp_eq = EquationDef(
+                    name=f"comp_lo_{var_name}",
+                    domain=var_domain,
+                    relation=Rel.GE,
+                    lhs_rhs=(F_piL, Const(0.0)),
+                )
+                # Key by variable name only (single equation for all instances)
+                comp_bounds_lo[(var_name, ())] = ComplementarityPair(
+                    equation=comp_eq, variable=piL_name, variable_indices=var_domain
+                )
+            else:
+                # Scalar variable: create scalar equation comp_lo_x.. x - lo =G= 0
+                F_piL = Binary("-", VarRef(var_name, ()), Const(bound_def.value))
+                comp_eq = EquationDef(
+                    name=f"comp_lo_{var_name}",
+                    domain=(),
+                    relation=Rel.GE,
+                    lhs_rhs=(F_piL, Const(0.0)),
+                )
+                comp_bounds_lo[(var_name, ())] = ComplementarityPair(
+                    equation=comp_eq, variable=piL_name, variable_indices=()
+                )
 
     # Build upper bound complementarity: (up - x) ≥ 0 ⊥ π^U ≥ 0
     # Note: partition.bounds_up only contains finite bounds (Finding #2)
     #
-    # Same approach: create indexed equations for indexed variables
-    up_vars_seen: set[str] = set()
-    for (var_name, _indices), bound_def in partition.bounds_up.items():
-        # Skip if we already created the equation for this variable
-        if var_name in up_vars_seen:
-            continue
-        up_vars_seen.add(var_name)
+    # Same strategy as lower bounds: uniform vs non-uniform handling
+    #
+    # First, identify which variables have uniform vs non-uniform bounds
+    up_vars_with_overrides: set[str] = set()
+    up_vars_base_bound: dict[str, float] = {}
+    for (var_name, indices), bound_def in partition.bounds_up.items():
+        if indices == ():
+            # Base bound for all elements
+            up_vars_base_bound[var_name] = bound_def.value
+        else:
+            # Per-element override
+            up_vars_with_overrides.add(var_name)
 
+    # Process upper bounds
+    up_vars_seen: set[str] = set()
+    for (var_name, indices), bound_def in partition.bounds_up.items():
         # Get variable domain from model_ir
         var_def = kkt.model_ir.variables.get(var_name)
         var_domain = var_def.domain if var_def else ()
@@ -210,30 +257,58 @@ def build_complementarity_pairs(
         # Create multiplier name
         piU_name = create_bound_up_multiplier_name(var_name)
 
-        if var_domain:
-            # Indexed variable: create indexed equation comp_up_x(i).. up - x(i) =G= 0
-            F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, var_domain))
+        # Check if this variable has per-element overrides (non-uniform bounds)
+        has_overrides = var_name in up_vars_with_overrides
+
+        if has_overrides:
+            # Non-uniform bounds: create per-instance equations
+            if indices == ():
+                # Skip the base bound entry - we'll use per-instance equations
+                continue
+            # Create per-instance equation: comp_up_x_i1.. up_i1 - x("i1") =G= 0
+            indices_str = "_".join(indices) if indices else ""
+            eq_name = f"comp_up_{var_name}_{indices_str}" if indices_str else f"comp_up_{var_name}"
+            F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, indices))
             comp_eq = EquationDef(
-                name=f"comp_up_{var_name}",
-                domain=var_domain,
-                relation=Rel.GE,
-                lhs_rhs=(F_piU, Const(0.0)),
-            )
-            # Key by variable name only (single equation for all instances)
-            comp_bounds_up[(var_name, ())] = ComplementarityPair(
-                equation=comp_eq, variable=piU_name, variable_indices=var_domain
-            )
-        else:
-            # Scalar variable: create scalar equation comp_up_x.. up - x =G= 0
-            F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, ()))
-            comp_eq = EquationDef(
-                name=f"comp_up_{var_name}",
+                name=eq_name,
                 domain=(),
                 relation=Rel.GE,
                 lhs_rhs=(F_piU, Const(0.0)),
             )
-            comp_bounds_up[(var_name, ())] = ComplementarityPair(
-                equation=comp_eq, variable=piU_name, variable_indices=()
+            comp_bounds_up[(var_name, indices)] = ComplementarityPair(
+                equation=comp_eq, variable=piU_name, variable_indices=indices
             )
+        else:
+            # Uniform bounds: create single indexed equation (or scalar equation)
+            # Skip if we already created the equation for this variable
+            if var_name in up_vars_seen:
+                continue
+            up_vars_seen.add(var_name)
+
+            if var_domain:
+                # Indexed variable: create indexed equation comp_up_x(i).. up - x(i) =G= 0
+                F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, var_domain))
+                comp_eq = EquationDef(
+                    name=f"comp_up_{var_name}",
+                    domain=var_domain,
+                    relation=Rel.GE,
+                    lhs_rhs=(F_piU, Const(0.0)),
+                )
+                # Key by variable name only (single equation for all instances)
+                comp_bounds_up[(var_name, ())] = ComplementarityPair(
+                    equation=comp_eq, variable=piU_name, variable_indices=var_domain
+                )
+            else:
+                # Scalar variable: create scalar equation comp_up_x.. up - x =G= 0
+                F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, ()))
+                comp_eq = EquationDef(
+                    name=f"comp_up_{var_name}",
+                    domain=(),
+                    relation=Rel.GE,
+                    lhs_rhs=(F_piU, Const(0.0)),
+                )
+                comp_bounds_up[(var_name, ())] = ComplementarityPair(
+                    equation=comp_eq, variable=piU_name, variable_indices=()
+                )
 
     return comp_ineq, comp_bounds_lo, comp_bounds_up, equality_eqs
