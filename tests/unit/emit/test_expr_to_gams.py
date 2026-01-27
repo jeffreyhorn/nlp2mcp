@@ -52,7 +52,7 @@ class TestBasicNodes:
     def test_var_ref_indexed(self):
         """Test indexed variable reference.
 
-        Single lowercase letters are domain variables and not quoted.
+        All-lowercase identifiers (letters/underscores) are domain variables and not quoted.
         """
         result = expr_to_gams(VarRef("x", ("i",)))
         assert result == "x(i)"
@@ -60,7 +60,7 @@ class TestBasicNodes:
     def test_var_ref_multi_indexed(self):
         """Test multi-indexed variable reference.
 
-        Single lowercase letters are domain variables and not quoted.
+        All-lowercase identifiers (letters/underscores) are domain variables and not quoted.
         """
         result = expr_to_gams(VarRef("x", ("i", "j", "k")))
         assert result == "x(i,j,k)"
@@ -73,7 +73,7 @@ class TestBasicNodes:
     def test_param_ref_indexed(self):
         """Test indexed parameter reference.
 
-        Single lowercase letters are domain variables and not quoted.
+        All-lowercase identifiers (letters/underscores) are domain variables and not quoted.
         """
         result = expr_to_gams(ParamRef("c", ("i",)))
         assert result == "c(i)"
@@ -110,7 +110,7 @@ class TestBasicNodes:
     def test_multiplier_ref_indexed(self):
         """Test indexed multiplier reference.
 
-        Single lowercase letters are domain variables and not quoted.
+        All-lowercase identifiers (letters/underscores) are domain variables and not quoted.
         """
         result = expr_to_gams(MultiplierRef("nu_balance", ("i",)))
         assert result == "nu_balance(i)"
@@ -331,7 +331,7 @@ class TestSumExpression:
     def test_sum_single_index(self):
         """Test sum with single index set.
 
-        Single lowercase letters are domain variables and not quoted.
+        All-lowercase identifiers (letters/underscores) are domain variables and not quoted.
         """
         body = Binary("*", ParamRef("c", ("i",)), VarRef("x", ("i",)))
         result = expr_to_gams(Sum(("i",), body))
@@ -417,7 +417,11 @@ class TestQuoteIndices:
     """
 
     def test_single_lowercase_letter_not_quoted(self):
-        """Single lowercase letters are domain variables, not quoted."""
+        """Single lowercase letters are domain variables, not quoted.
+
+        This is a subset of the general rule: all-lowercase identifiers
+        (letters and underscores only) are treated as domain variables.
+        """
         assert _quote_indices(("i",)) == ["i"]
         assert _quote_indices(("j",)) == ["j"]
         assert _quote_indices(("i", "j")) == ["i", "j"]
