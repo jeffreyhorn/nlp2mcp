@@ -74,9 +74,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b1.. sum(i, 0) + (-1) * nu_ddev("1") + (-1) * nu_ddev("2") + (-1) * nu_ddev("3") + (-1) * nu_ddev("4") + (-1) * nu_ddev("5") + (-1) * nu_ddev("6") + ((-1) * sum(i, 2 * (dat(i,""y"") - b1 - b2 * exp(b3 * dat(i,""x""))) * (-1))) * nu_sequ =E= 0;
-stat_b2.. sum(i, 0) + ((-1) * (exp(b3 * dat("1",""x"")))) * nu_ddev("1") + ((-1) * (exp(b3 * dat("2",""x"")))) * nu_ddev("2") + ((-1) * (exp(b3 * dat("3",""x"")))) * nu_ddev("3") + ((-1) * (exp(b3 * dat("4",""x"")))) * nu_ddev("4") + ((-1) * (exp(b3 * dat("5",""x"")))) * nu_ddev("5") + ((-1) * (exp(b3 * dat("6",""x"")))) * nu_ddev("6") + ((-1) * sum(i, 2 * (dat(i,""y"") - b1 - b2 * exp(b3 * dat(i,""x""))) * ((-1) * (exp(b3 * dat(i,""x"")))))) * nu_sequ =E= 0;
-stat_b3.. sum(i, 0) + ((-1) * (b2 * exp(b3 * dat("1",""x"")) * dat("1",""x""))) * nu_ddev("1") + ((-1) * (b2 * exp(b3 * dat("2",""x"")) * dat("2",""x""))) * nu_ddev("2") + ((-1) * (b2 * exp(b3 * dat("3",""x"")) * dat("3",""x""))) * nu_ddev("3") + ((-1) * (b2 * exp(b3 * dat("4",""x"")) * dat("4",""x""))) * nu_ddev("4") + ((-1) * (b2 * exp(b3 * dat("5",""x"")) * dat("5",""x""))) * nu_ddev("5") + ((-1) * (b2 * exp(b3 * dat("6",""x"")) * dat("6",""x""))) * nu_ddev("6") + ((-1) * sum(i, 2 * (dat(i,""y"") - b1 - b2 * exp(b3 * dat(i,""x""))) * ((-1) * (b2 * exp(b3 * dat(i,""x"")) * dat(i,""x""))))) * nu_sequ - piL_b3 + piU_b3 =E= 0;
+stat_b1.. sum(i, 0) + (-1) * nu_ddev("1") + (-1) * nu_ddev("2") + (-1) * nu_ddev("3") + (-1) * nu_ddev("4") + (-1) * nu_ddev("5") + (-1) * nu_ddev("6") + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * (-1))) * nu_sequ =E= 0;
+stat_b2.. sum(i, 0) + ((-1) * (exp(b3 * dat("1","x")))) * nu_ddev("1") + ((-1) * (exp(b3 * dat("2","x")))) * nu_ddev("2") + ((-1) * (exp(b3 * dat("3","x")))) * nu_ddev("3") + ((-1) * (exp(b3 * dat("4","x")))) * nu_ddev("4") + ((-1) * (exp(b3 * dat("5","x")))) * nu_ddev("5") + ((-1) * (exp(b3 * dat("6","x")))) * nu_ddev("6") + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * ((-1) * (exp(b3 * dat(i,"x")))))) * nu_sequ =E= 0;
+stat_b3.. sum(i, 0) + ((-1) * (b2 * exp(b3 * dat("1","x")) * dat("1","x"))) * nu_ddev("1") + ((-1) * (b2 * exp(b3 * dat("2","x")) * dat("2","x"))) * nu_ddev("2") + ((-1) * (b2 * exp(b3 * dat("3","x")) * dat("3","x"))) * nu_ddev("3") + ((-1) * (b2 * exp(b3 * dat("4","x")) * dat("4","x"))) * nu_ddev("4") + ((-1) * (b2 * exp(b3 * dat("5","x")) * dat("5","x"))) * nu_ddev("5") + ((-1) * (b2 * exp(b3 * dat("6","x")) * dat("6","x"))) * nu_ddev("6") + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * ((-1) * (b2 * exp(b3 * dat(i,"x")) * dat(i,"x"))))) * nu_sequ - piL_b3 + piU_b3 =E= 0;
 stat_dev(i).. 2 * dev(i) + (-1) * nu_ddev(i) + 0 * nu_sequ =E= 0;
 
 * Lower bound complementarity equations
@@ -87,8 +87,8 @@ comp_up_b3.. 5 - b3 =G= 0;
 
 * Original equality equations
 dols.. ols =E= sum(i, sqr(dev(i)));
-ddev(i).. dat(i,""y"") =E= b1 + b2 * exp(b3 * dat(i,""x"")) + dev(i);
-sequ.. ols =E= sum(i, sqr(dat(i,""y"") - b1 - b2 * exp(b3 * dat(i,""x""))));
+ddev(i).. dat(i,"y") =E= b1 + b2 * exp(b3 * dat(i,"x")) + dev(i);
+sequ.. ols =E= sum(i, sqr(dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))));
 
 
 * ============================================

@@ -69,15 +69,20 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(g, g__);
+Alias(m, m__);
+
 * Stationarity equations
-stat_outp(g,m).. ((-1) * (sum(g, 0) - pcost(g,m))) + sum(g, sum(m, 0) * nu_dem(g)) + sum(m, sum(g, 0) * lam_cap(m)) =E= 0;
+stat_outp(g,m).. pcost(g,m) + sum(g__, 0 * nu_dem(g__)) + sum(m__, 1 / prate(g,m__) ** 1 * lam_cap(m__)) =E= 0;
 
 * Inequality complementarity equations
 comp_cap(m).. ((-1) * sum(g, outp(g,m) / prate(g,m))) =G= 0;
 
 * Original equality equations
-dem(g).. sum(m, outp(g,m)) =E= dempr(g,""demand"");
-pdef.. profit =E= sum(g, dempr(g,""demand"") * dempr(g,""price"")) - sum((g,m), pcost(g,m) * outp(g,m));
+dem(g).. sum(m, outp(g,m)) =E= dempr(g,"demand");
+pdef.. profit =E= sum(g, dempr(g,"demand") * dempr(g,"price")) - sum((g,m), pcost(g,m) * outp(g,m));
 
 
 * ============================================
