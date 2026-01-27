@@ -68,7 +68,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_v(alloy).. compdat("*",alloy) + sum(elem, compdat("*",alloy) * nu_pc(elem)) + 1 * nu_mb =E= 0;
+stat_v(alloy).. compdat("price",alloy) + sum(elem, compdat(elem,alloy) * nu_pc(elem)) + 1 * nu_mb =E= 0;
 
 * Original equality equations
 pc(elem).. sum(alloy, compdat(elem,alloy) * v(alloy)) =E= rb(elem);

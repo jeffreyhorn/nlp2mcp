@@ -643,15 +643,10 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-01-26T18:27:56.246850+00:00",
+        "translate_date": "2026-01-27T00:26:42.405758+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3557,
-        "output_file": "data/gamslib/mcp/blend_mcp.gms",
-        "validation": {
-          "valid": false,
-          "validation_time_seconds": 0.2155,
-          "error": "Compilation failed"
-        }
+        "translate_time_seconds": 1.0277,
+        "output_file": "data/gamslib/mcp/blend_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",

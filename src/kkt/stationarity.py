@@ -428,6 +428,12 @@ def _replace_matching_indices(
     if element 'H' belongs to both set 'c' and set 'i', and the parameter domain
     is ('i', 'c'), the first 'H' should map to 'i', not 'c'.
 
+    Special handling for wildcard domains: If a parameter is declared with a
+    wildcard domain like compdat(*,alloy), the "*" in the declared domain means
+    "accept any element". In this case, we should NOT replace the concrete index
+    (like "price") with "*". Instead, we preserve the original index if it's not
+    in element_to_set, or replace it with its set name if it is an element.
+
     Args:
         indices: Original indices (e.g., ("1", "a") or ("1", "cost"))
         element_to_set: Mapping from element labels to set names
@@ -444,14 +450,28 @@ def _replace_matching_indices(
         >>> # With declared_domain for disambiguation:
         >>> _replace_matching_indices(("H", "c"), {"H": "c", "c": "c"}, declared_domain=("i", "c"))
         ("i", "c")  # 'H' maps to 'i' (from declared_domain), 'c' stays as 'c'
+        >>> # With wildcard domain - preserve concrete indices:
+        >>> _replace_matching_indices(("price", "a"), {"a": "alloy"}, declared_domain=("*", "alloy"))
+        ("price", "alloy")  # "price" preserved (wildcard domain), "a" replaced
     """
     new_indices = []
     for i, idx in enumerate(indices):
         # If we have a declared domain, use it to determine the target set
         if declared_domain and i < len(declared_domain):
             target_set = declared_domain[i]
-            # The index should map to the target set from the declared domain
-            new_indices.append(target_set)
+            # Special case: wildcard "*" means the parameter accepts any element
+            # at this position. Don't replace with "*" - instead, fall back to
+            # element_to_set mapping or preserve the original index.
+            if target_set == "*":
+                if idx in element_to_set:
+                    # The index is an element from a known set - replace it
+                    new_indices.append(element_to_set[idx])
+                else:
+                    # The index is a concrete literal (like "price") - preserve it
+                    new_indices.append(idx)
+            else:
+                # The index should map to the target set from the declared domain
+                new_indices.append(target_set)
         elif idx in element_to_set:
             # Replace element with its set name
             new_indices.append(element_to_set[idx])
