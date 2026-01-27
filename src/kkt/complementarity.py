@@ -20,7 +20,9 @@ from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
 from src.kkt.naming import (
     create_bound_lo_multiplier_name,
+    create_bound_lo_multiplier_name_indexed,
     create_bound_up_multiplier_name,
+    create_bound_up_multiplier_name_indexed,
     create_ineq_multiplier_name,
 )
 from src.kkt.partition import partition_constraints
@@ -170,20 +172,19 @@ def build_complementarity_pairs(
         var_def = kkt.model_ir.variables.get(var_name)
         var_domain = var_def.domain if var_def else ()
 
-        # Create multiplier name
-        piL_name = create_bound_lo_multiplier_name(var_name)
-
         # Check if this variable has per-element overrides (non-uniform bounds)
         has_overrides = var_name in lo_vars_with_overrides
 
         if has_overrides:
-            # Non-uniform bounds: create per-instance equations
+            # Non-uniform bounds: create per-instance equations with scalar multipliers
             # This handles cases where bounds vary by element
             if indices == ():
                 # Skip the base bound entry - we'll use per-instance equations
                 # Only process if there are no element-specific entries for this var
                 # (In practice, if has_overrides is True, there ARE element-specific entries)
                 continue
+            # Create per-instance scalar multiplier name: piL_x_i1
+            piL_name = create_bound_lo_multiplier_name_indexed(var_name, indices)
             # Create per-instance equation: comp_lo_x_i1.. x("i1") - lo_i1 =G= 0
             indices_str = "_".join(indices) if indices else ""
             eq_name = f"comp_lo_{var_name}_{indices_str}" if indices_str else f"comp_lo_{var_name}"
@@ -194,8 +195,9 @@ def build_complementarity_pairs(
                 relation=Rel.GE,
                 lhs_rhs=(F_piL, Const(0.0)),
             )
+            # Both equation and multiplier are scalar - no variable_indices needed
             comp_bounds_lo[(var_name, indices)] = ComplementarityPair(
-                equation=comp_eq, variable=piL_name, variable_indices=indices
+                equation=comp_eq, variable=piL_name, variable_indices=()
             )
         else:
             # Uniform bounds: create single indexed equation (or scalar equation)
@@ -203,6 +205,9 @@ def build_complementarity_pairs(
             if var_name in lo_vars_seen:
                 continue
             lo_vars_seen.add(var_name)
+
+            # Create indexed multiplier name for uniform bounds
+            piL_name = create_bound_lo_multiplier_name(var_name)
 
             if var_domain:
                 # Indexed variable: create indexed equation comp_lo_x(i).. x(i) - lo =G= 0
@@ -254,17 +259,16 @@ def build_complementarity_pairs(
         var_def = kkt.model_ir.variables.get(var_name)
         var_domain = var_def.domain if var_def else ()
 
-        # Create multiplier name
-        piU_name = create_bound_up_multiplier_name(var_name)
-
         # Check if this variable has per-element overrides (non-uniform bounds)
         has_overrides = var_name in up_vars_with_overrides
 
         if has_overrides:
-            # Non-uniform bounds: create per-instance equations
+            # Non-uniform bounds: create per-instance equations with scalar multipliers
             if indices == ():
                 # Skip the base bound entry - we'll use per-instance equations
                 continue
+            # Create per-instance scalar multiplier name: piU_x_i1
+            piU_name = create_bound_up_multiplier_name_indexed(var_name, indices)
             # Create per-instance equation: comp_up_x_i1.. up_i1 - x("i1") =G= 0
             indices_str = "_".join(indices) if indices else ""
             eq_name = f"comp_up_{var_name}_{indices_str}" if indices_str else f"comp_up_{var_name}"
@@ -275,8 +279,9 @@ def build_complementarity_pairs(
                 relation=Rel.GE,
                 lhs_rhs=(F_piU, Const(0.0)),
             )
+            # Both equation and multiplier are scalar - no variable_indices needed
             comp_bounds_up[(var_name, indices)] = ComplementarityPair(
-                equation=comp_eq, variable=piU_name, variable_indices=indices
+                equation=comp_eq, variable=piU_name, variable_indices=()
             )
         else:
             # Uniform bounds: create single indexed equation (or scalar equation)
@@ -284,6 +289,9 @@ def build_complementarity_pairs(
             if var_name in up_vars_seen:
                 continue
             up_vars_seen.add(var_name)
+
+            # Create indexed multiplier name for uniform bounds
+            piU_name = create_bound_up_multiplier_name(var_name)
 
             if var_domain:
                 # Indexed variable: create indexed equation comp_up_x(i).. up - x(i) =G= 0

@@ -620,13 +620,19 @@ def _build_stationarity_expr(
     # Subtract π^L (lower bound multiplier, if exists)
     key = (var_name, var_indices)
     if key in kkt.multipliers_bounds_lo:
-        piL_name = create_bound_lo_multiplier_name(var_name)
-        expr = Binary("-", expr, MultiplierRef(piL_name, var_indices))
+        mult_def = kkt.multipliers_bounds_lo[key]
+        # Use the actual multiplier name from the definition (handles both indexed and scalar cases)
+        piL_name = mult_def.name
+        # Use the multiplier's domain for the indices (empty for scalar multipliers)
+        expr = Binary("-", expr, MultiplierRef(piL_name, mult_def.domain))
 
     # Add π^U (upper bound multiplier, if exists)
     if key in kkt.multipliers_bounds_up:
-        piU_name = create_bound_up_multiplier_name(var_name)
-        expr = Binary("+", expr, MultiplierRef(piU_name, var_indices))
+        mult_def = kkt.multipliers_bounds_up[key]
+        # Use the actual multiplier name from the definition (handles both indexed and scalar cases)
+        piU_name = mult_def.name
+        # Use the multiplier's domain for the indices (empty for scalar multipliers)
+        expr = Binary("+", expr, MultiplierRef(piU_name, mult_def.domain))
 
     return expr
 

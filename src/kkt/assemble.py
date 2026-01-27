@@ -22,7 +22,9 @@ from src.kkt.complementarity import build_complementarity_pairs
 from src.kkt.kkt_system import KKTSystem, MultiplierDef
 from src.kkt.naming import (
     create_bound_lo_multiplier_name,
+    create_bound_lo_multiplier_name_indexed,
     create_bound_up_multiplier_name,
+    create_bound_up_multiplier_name_indexed,
     create_eq_multiplier_name,
     create_ineq_multiplier_name,
 )
@@ -272,28 +274,88 @@ def _create_ineq_multipliers(
 
 
 def _create_bound_lo_multipliers(bounds_lo: dict) -> dict[tuple, MultiplierDef]:
-    """Create multiplier definitions for lower bounds (indexed support)."""
+    """Create multiplier definitions for lower bounds (indexed support).
+
+    For uniform bounds (same value for all elements), creates indexed multipliers.
+    For non-uniform bounds (per-element values), creates scalar multipliers per instance.
+    """
     multipliers = {}
+
+    # First pass: identify variables with per-element overrides (non-uniform bounds)
+    vars_with_overrides: set[str] = set()
+    for (var_name, indices), _bound_def in bounds_lo.items():
+        if indices != ():
+            vars_with_overrides.add(var_name)
+
+    # Second pass: create multipliers
+    vars_seen: set[str] = set()
     for (var_name, indices), bound_def in bounds_lo.items():
-        mult_name = create_bound_lo_multiplier_name(var_name)
-        multipliers[(var_name, indices)] = MultiplierDef(
-            name=mult_name,
-            domain=bound_def.domain,
-            kind="bound_lo",
-            associated_constraint=var_name,
-        )
+        if var_name in vars_with_overrides:
+            # Non-uniform bounds: create per-instance scalar multipliers
+            if indices == ():
+                # Skip base bound - will be handled by per-instance entries
+                continue
+            mult_name = create_bound_lo_multiplier_name_indexed(var_name, indices)
+            multipliers[(var_name, indices)] = MultiplierDef(
+                name=mult_name,
+                domain=(),  # Scalar multiplier
+                kind="bound_lo",
+                associated_constraint=var_name,
+            )
+        else:
+            # Uniform bounds: create single indexed (or scalar) multiplier
+            if var_name in vars_seen:
+                continue
+            vars_seen.add(var_name)
+            mult_name = create_bound_lo_multiplier_name(var_name)
+            multipliers[(var_name, indices)] = MultiplierDef(
+                name=mult_name,
+                domain=bound_def.domain,
+                kind="bound_lo",
+                associated_constraint=var_name,
+            )
     return multipliers
 
 
 def _create_bound_up_multipliers(bounds_up: dict) -> dict[tuple, MultiplierDef]:
-    """Create multiplier definitions for upper bounds (indexed support)."""
+    """Create multiplier definitions for upper bounds (indexed support).
+
+    For uniform bounds (same value for all elements), creates indexed multipliers.
+    For non-uniform bounds (per-element values), creates scalar multipliers per instance.
+    """
     multipliers = {}
+
+    # First pass: identify variables with per-element overrides (non-uniform bounds)
+    vars_with_overrides: set[str] = set()
+    for (var_name, indices), _bound_def in bounds_up.items():
+        if indices != ():
+            vars_with_overrides.add(var_name)
+
+    # Second pass: create multipliers
+    vars_seen: set[str] = set()
     for (var_name, indices), bound_def in bounds_up.items():
-        mult_name = create_bound_up_multiplier_name(var_name)
-        multipliers[(var_name, indices)] = MultiplierDef(
-            name=mult_name,
-            domain=bound_def.domain,
-            kind="bound_up",
-            associated_constraint=var_name,
-        )
+        if var_name in vars_with_overrides:
+            # Non-uniform bounds: create per-instance scalar multipliers
+            if indices == ():
+                # Skip base bound - will be handled by per-instance entries
+                continue
+            mult_name = create_bound_up_multiplier_name_indexed(var_name, indices)
+            multipliers[(var_name, indices)] = MultiplierDef(
+                name=mult_name,
+                domain=(),  # Scalar multiplier
+                kind="bound_up",
+                associated_constraint=var_name,
+            )
+        else:
+            # Uniform bounds: create single indexed (or scalar) multiplier
+            if var_name in vars_seen:
+                continue
+            vars_seen.add(var_name)
+            mult_name = create_bound_up_multiplier_name(var_name)
+            multipliers[(var_name, indices)] = MultiplierDef(
+                name=mult_name,
+                domain=bound_def.domain,
+                kind="bound_up",
+                associated_constraint=var_name,
+            )
     return multipliers

@@ -1324,61 +1324,6 @@ def _partial_index_match(
     return tuple(matched), remaining
 
 
-def _build_symbolic_wrt_indices(
-    sum_index_sets: tuple[str, ...],
-    wrt_indices: tuple[str, ...],
-    matched_indices: tuple[str, ...],
-    remaining_indices: tuple[str, ...],
-) -> tuple[str, ...]:
-    """
-    Build new wrt_indices with symbolic indices for matched positions.
-
-    Replaces matched concrete indices with their symbolic equivalents,
-    preserving remaining indices.
-
-    Args:
-        sum_index_sets: Sum's symbolic indices
-        wrt_indices: Original concrete indices
-        matched_indices: Which symbolic indices matched
-        remaining_indices: Remaining concrete indices
-
-    Returns:
-        New wrt_indices with symbolic indices for matched positions
-
-    Example:
-        >>> _build_symbolic_wrt_indices(("g",), ("g1", "dl1"), ("g",), ("dl1",))
-        ("g", "dl1")  # "g1" replaced with "g", "dl1" kept
-    """
-    # Replace matched concrete indices with symbolic ones
-    result = list(matched_indices) + list(remaining_indices)
-    return tuple(result)
-
-
-def _extract_matched_concrete(
-    wrt_indices: tuple[str, ...],
-    matched_indices: tuple[str, ...],
-    sum_index_sets: tuple[str, ...],
-    config: Config | None = None,
-) -> tuple[str, ...]:
-    """
-    Extract concrete index values for matched symbolic indices.
-
-    Args:
-        wrt_indices: Original concrete indices (e.g., ("g1", "dl1"))
-        matched_indices: Symbolic indices that matched (e.g., ("g",))
-        sum_index_sets: Sum's symbolic indices (same as matched_indices for prefix match)
-        config: Optional config
-
-    Returns:
-        Concrete values corresponding to matched symbolic indices
-
-    Example:
-        >>> _extract_matched_concrete(("g1", "dl1"), ("g",), ("g",), config)
-        ("g1",)  # Returns the concrete "g1" for symbolic "g"
-    """
-    return wrt_indices[: len(matched_indices)]
-
-
 def _sum_should_collapse(
     sum_index_sets: tuple[str, ...],
     wrt_indices: tuple[str, ...],

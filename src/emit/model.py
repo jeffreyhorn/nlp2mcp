@@ -152,25 +152,19 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                 pairs.append(f"    {eq_name}.{mult_name}")
 
     # 4. Lower bound complementarities
-    # For indexed equations (uniform bounds): use implicit domain matching
+    # For uniform bounds: indexed equation paired with indexed multiplier
     #   comp_lo_x.piL_x (GAMS matches indices automatically)
-    # For scalar equations (non-uniform/per-instance bounds): use explicit indices
-    #   comp_lo_x_i1.piL_x("i1") (scalar equation paired with specific multiplier element)
+    # For non-uniform bounds: scalar equation paired with scalar multiplier
+    #   comp_lo_x_i1.piL_x_i1 (both are scalar, no indices needed)
     if kkt.complementarity_bounds_lo:
         pairs.append("")
         pairs.append("    * Lower bound complementarities")
         for _key, comp_pair in sorted(kkt.complementarity_bounds_lo.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            # Check if equation is scalar but multiplier has specific indices
-            # This happens for non-uniform bounds (per-instance equations)
-            if eq_def.domain == () and comp_pair.variable_indices:
-                # Scalar equation with specific indices - use explicit indexed multiplier
-                var_str = _format_variable_with_indices(var_name, comp_pair.variable_indices)
-                pairs.append(f"    {eq_def.name}.{var_str}")
-            else:
-                # Indexed equation or scalar with no indices - use implicit matching
-                pairs.append(f"    {eq_def.name}.{var_name}")
+            # Both uniform (indexed) and non-uniform (scalar) cases use simple pairing
+            # GAMS handles domain matching for indexed cases
+            pairs.append(f"    {eq_def.name}.{var_name}")
 
     # 5. Upper bound complementarities
     # Same approach as lower bounds
@@ -180,14 +174,8 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         for _key, comp_pair in sorted(kkt.complementarity_bounds_up.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            # Check if equation is scalar but multiplier has specific indices
-            if eq_def.domain == () and comp_pair.variable_indices:
-                # Scalar equation with specific indices - use explicit indexed multiplier
-                var_str = _format_variable_with_indices(var_name, comp_pair.variable_indices)
-                pairs.append(f"    {eq_def.name}.{var_str}")
-            else:
-                # Indexed equation or scalar with no indices - use implicit matching
-                pairs.append(f"    {eq_def.name}.{var_name}")
+            # Both uniform (indexed) and non-uniform (scalar) cases use simple pairing
+            pairs.append(f"    {eq_def.name}.{var_name}")
 
     # Build the model declaration
     # GAMS does not allow comments inside the Model / ... / block

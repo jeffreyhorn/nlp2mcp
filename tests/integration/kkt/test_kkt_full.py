@@ -275,6 +275,7 @@ class TestKKTFullAssembly:
 
         # Complementarity is per-instance because bounds are non-uniform
         # Each element has its own bound value, so we need separate equations
+        # and separate scalar multipliers (e.g., piL_x_i1, piL_x_i2)
         assert len(kkt.complementarity_bounds_lo) == 2
         assert ("x", ("i1",)) in kkt.complementarity_bounds_lo
         assert ("x", ("i2",)) in kkt.complementarity_bounds_lo
@@ -283,8 +284,9 @@ class TestKKTFullAssembly:
         comp_i2 = kkt.complementarity_bounds_lo[("x", ("i2",))]
         assert comp_i1.equation.domain == ()  # Per-instance (scalar) equation
         assert comp_i2.equation.domain == ()
-        assert comp_i1.variable == "piL_x"
-        assert comp_i2.variable == "piL_x"
+        # Per-instance scalar multipliers for GAMS MCP model statement syntax
+        assert comp_i1.variable == "piL_x_i1"
+        assert comp_i2.variable == "piL_x_i2"
 
     def test_indexed_bounds_assembly_uniform(self, manual_index_mapping):
         """Test KKT assembly with uniform indexed variable bounds.

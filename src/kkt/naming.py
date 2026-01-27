@@ -114,6 +114,56 @@ def create_bound_up_multiplier_name(var_name: str) -> str:
     return f"piU_{var_name}"
 
 
+def create_bound_lo_multiplier_name_indexed(var_name: str, indices: tuple[str, ...]) -> str:
+    """Create per-instance multiplier name for a lower bound constraint.
+
+    Format: piL_<varname>_<idx1>_<idx2>...
+
+    Used for non-uniform bounds where each element has a different bound value.
+    Creates a scalar multiplier for each specific element.
+
+    Args:
+        var_name: Name of the variable
+        indices: Tuple of index values for this instance
+
+    Returns:
+        Per-instance multiplier variable name
+
+    Example:
+        >>> create_bound_lo_multiplier_name_indexed("x", ("i1",))
+        'piL_x_i1'
+        >>> create_bound_lo_multiplier_name_indexed("y", ("a", "b"))
+        'piL_y_a_b'
+    """
+    indices_str = "_".join(indices)
+    return f"piL_{var_name}_{indices_str}"
+
+
+def create_bound_up_multiplier_name_indexed(var_name: str, indices: tuple[str, ...]) -> str:
+    """Create per-instance multiplier name for an upper bound constraint.
+
+    Format: piU_<varname>_<idx1>_<idx2>...
+
+    Used for non-uniform bounds where each element has a different bound value.
+    Creates a scalar multiplier for each specific element.
+
+    Args:
+        var_name: Name of the variable
+        indices: Tuple of index values for this instance
+
+    Returns:
+        Per-instance multiplier variable name
+
+    Example:
+        >>> create_bound_up_multiplier_name_indexed("x", ("i1",))
+        'piU_x_i1'
+        >>> create_bound_up_multiplier_name_indexed("y", ("a", "b"))
+        'piU_y_a_b'
+    """
+    indices_str = "_".join(indices)
+    return f"piU_{var_name}_{indices_str}"
+
+
 def detect_naming_collision(multiplier_names: set[str], variable_names: set[str]) -> list[str]:
     """Detect naming collisions between multipliers and existing variables.
 
