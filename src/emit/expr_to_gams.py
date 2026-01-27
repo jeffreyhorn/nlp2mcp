@@ -111,18 +111,21 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
     """
     result = []
     for idx in indices:
-        # Check if the index was already quoted (from parser storing string literals)
-        # If so, it's definitely an element label, not a domain variable
+        # Strip ALL layers of quotes to handle double-quoted indices like ""cost""
+        # This can happen when indices pass through multiple transformations
         was_quoted = False
         idx_clean = idx
-        if idx.startswith('"') and idx.endswith('"') and len(idx) >= 2:
-            idx_clean = idx[1:-1]
-            was_quoted = True
-        elif idx.startswith("'") and idx.endswith("'") and len(idx) >= 2:
-            idx_clean = idx[1:-1]
-            was_quoted = True
+        while True:
+            if idx_clean.startswith('"') and idx_clean.endswith('"') and len(idx_clean) >= 2:
+                idx_clean = idx_clean[1:-1]
+                was_quoted = True
+            elif idx_clean.startswith("'") and idx_clean.endswith("'") and len(idx_clean) >= 2:
+                idx_clean = idx_clean[1:-1]
+                was_quoted = True
+            else:
+                break
 
-        # If it was quoted, it's an element label - always quote it
+        # If it was quoted, it's an element label - always quote it (single layer)
         if was_quoted:
             result.append(f'"{idx_clean}"')
         # All-lowercase identifier (letters and underscores only) = domain variable, don't quote

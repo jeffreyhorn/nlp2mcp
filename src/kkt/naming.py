@@ -17,6 +17,32 @@ For indexed multipliers, the indices are preserved:
 
 from __future__ import annotations
 
+import re
+
+
+def _sanitize_index_for_identifier(index: str) -> str:
+    """Sanitize an index value for use in a GAMS identifier.
+
+    GAMS identifiers can only contain letters, digits, and underscores.
+    This function replaces invalid characters with underscores.
+
+    Args:
+        index: Raw index value (e.g., "i-1", "node.1", "H2O")
+
+    Returns:
+        Sanitized index safe for use in identifiers
+
+    Example:
+        >>> _sanitize_index_for_identifier("i-1")
+        'i_1'
+        >>> _sanitize_index_for_identifier("node.1")
+        'node_1'
+        >>> _sanitize_index_for_identifier("H2O")
+        'H2O'
+    """
+    # Replace any character that's not alphanumeric or underscore with underscore
+    return re.sub(r"[^A-Za-z0-9_]", "_", index)
+
 
 def create_eq_multiplier_name(eq_name: str) -> str:
     """Create multiplier name for an equality constraint.
@@ -122,6 +148,9 @@ def create_bound_lo_multiplier_name_indexed(var_name: str, indices: tuple[str, .
     Used for non-uniform bounds where each element has a different bound value.
     Creates a scalar multiplier for each specific element.
 
+    Index values are sanitized to ensure valid GAMS identifiers (replacing
+    characters like '-' and '.' with underscores).
+
     Args:
         var_name: Name of the variable
         indices: Tuple of index values for this instance
@@ -134,8 +163,11 @@ def create_bound_lo_multiplier_name_indexed(var_name: str, indices: tuple[str, .
         'piL_x_i1'
         >>> create_bound_lo_multiplier_name_indexed("y", ("a", "b"))
         'piL_y_a_b'
+        >>> create_bound_lo_multiplier_name_indexed("z", ("i-1",))
+        'piL_z_i_1'
     """
-    indices_str = "_".join(indices)
+    sanitized_indices = [_sanitize_index_for_identifier(idx) for idx in indices]
+    indices_str = "_".join(sanitized_indices)
     return f"piL_{var_name}_{indices_str}"
 
 
@@ -146,6 +178,9 @@ def create_bound_up_multiplier_name_indexed(var_name: str, indices: tuple[str, .
 
     Used for non-uniform bounds where each element has a different bound value.
     Creates a scalar multiplier for each specific element.
+
+    Index values are sanitized to ensure valid GAMS identifiers (replacing
+    characters like '-' and '.' with underscores).
 
     Args:
         var_name: Name of the variable
@@ -159,8 +194,11 @@ def create_bound_up_multiplier_name_indexed(var_name: str, indices: tuple[str, .
         'piU_x_i1'
         >>> create_bound_up_multiplier_name_indexed("y", ("a", "b"))
         'piU_y_a_b'
+        >>> create_bound_up_multiplier_name_indexed("z", ("i-1",))
+        'piU_z_i_1'
     """
-    indices_str = "_".join(indices)
+    sanitized_indices = [_sanitize_index_for_identifier(idx) for idx in indices]
+    indices_str = "_".join(sanitized_indices)
     return f"piU_{var_name}_{indices_str}"
 
 

@@ -1,6 +1,6 @@
 # Issue: Double-Quoted String Indices in Generated MCP Code
 
-**Status:** Open  
+**Status: Completed  
 **Category:** Code Generation / Emit  
 **Affected Models:** ajax, least, port, sample (4+ models)  
 **Priority:** High  

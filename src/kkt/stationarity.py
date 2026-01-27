@@ -21,8 +21,6 @@ from src.ir.ast import Binary, Call, Const, Expr, MultiplierRef, ParamRef, Sum, 
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
-    create_bound_lo_multiplier_name,
-    create_bound_up_multiplier_name,
     create_eq_multiplier_name,
     create_ineq_multiplier_name,
 )
@@ -196,17 +194,19 @@ def _build_indexed_stationarity_expr(
     )
 
     # Add bound multiplier terms if they exist
-    # Check if any instance has bounds
-    has_lower = any((var_name, indices) in kkt.multipliers_bounds_lo for _, indices in instances)
-    has_upper = any((var_name, indices) in kkt.multipliers_bounds_up for _, indices in instances)
+    # Check for uniform bounds (stored under (var_name, ())) or per-instance bounds
+    # Uniform bounds: single indexed multiplier for all instances
+    # Non-uniform bounds: per-instance scalar multipliers (handled in scalar stationarity)
+    has_lower_uniform = (var_name, ()) in kkt.multipliers_bounds_lo
+    has_upper_uniform = (var_name, ()) in kkt.multipliers_bounds_up
 
-    if has_lower:
-        piL_name = create_bound_lo_multiplier_name(var_name)
-        expr = Binary("-", expr, MultiplierRef(piL_name, domain))
+    if has_lower_uniform:
+        mult_def = kkt.multipliers_bounds_lo[(var_name, ())]
+        expr = Binary("-", expr, MultiplierRef(mult_def.name, mult_def.domain))
 
-    if has_upper:
-        piU_name = create_bound_up_multiplier_name(var_name)
-        expr = Binary("+", expr, MultiplierRef(piU_name, domain))
+    if has_upper_uniform:
+        mult_def = kkt.multipliers_bounds_up[(var_name, ())]
+        expr = Binary("+", expr, MultiplierRef(mult_def.name, mult_def.domain))
 
     return expr
 

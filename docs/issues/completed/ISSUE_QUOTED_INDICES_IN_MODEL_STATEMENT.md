@@ -1,6 +1,6 @@
 # Issue: Quoted Indices in MCP Model Statement Pairings
 
-**Status:** Open  
+**Status: Completed  
 **Category:** Code Generation / MCP Model Statement  
 **Affected Models:** chem, ps2_f_inf, and models with indexed bound multipliers  
 **Priority:** High  

@@ -1,6 +1,6 @@
 # Issue: KKT Transformation Generates Incorrect Index References
 
-**Status:** Open  
+**Status: Completed  
 **Category:** KKT Transformation / Code Generation  
 **Affected Models:** chem, prodmix, blend, apl1p, dispatch (5+ models)  
 **Priority:** High  

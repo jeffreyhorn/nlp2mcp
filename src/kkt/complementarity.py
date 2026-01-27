@@ -19,6 +19,7 @@ from src.ir.ast import Binary, Const, Unary, VarRef
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
 from src.kkt.naming import (
+    _sanitize_index_for_identifier,
     create_bound_lo_multiplier_name,
     create_bound_lo_multiplier_name_indexed,
     create_bound_up_multiplier_name,
@@ -154,15 +155,11 @@ def build_complementarity_pairs(
     # - If variable has NON-UNIFORM bounds (has lo_map overrides):
     #   Create per-instance equations to handle different bound values per element
     #
-    # First, identify which variables have uniform vs non-uniform bounds
+    # First, identify which variables have non-uniform bounds (per-element overrides)
     lo_vars_with_overrides: set[str] = set()
-    lo_vars_base_bound: dict[str, float] = {}
-    for (var_name, indices), bound_def in partition.bounds_lo.items():
-        if indices == ():
-            # Base bound for all elements
-            lo_vars_base_bound[var_name] = bound_def.value
-        else:
-            # Per-element override
+    for (var_name, indices), _bound_def in partition.bounds_lo.items():
+        if indices != ():
+            # Per-element override indicates non-uniform bounds
             lo_vars_with_overrides.add(var_name)
 
     # Process lower bounds
@@ -186,7 +183,9 @@ def build_complementarity_pairs(
             # Create per-instance scalar multiplier name: piL_x_i1
             piL_name = create_bound_lo_multiplier_name_indexed(var_name, indices)
             # Create per-instance equation: comp_lo_x_i1.. x("i1") - lo_i1 =G= 0
-            indices_str = "_".join(indices) if indices else ""
+            # Sanitize indices for valid GAMS equation names (replace '-', '.', etc. with '_')
+            sanitized_indices = [_sanitize_index_for_identifier(idx) for idx in indices]
+            indices_str = "_".join(sanitized_indices) if sanitized_indices else ""
             eq_name = f"comp_lo_{var_name}_{indices_str}" if indices_str else f"comp_lo_{var_name}"
             F_piL = Binary("-", VarRef(var_name, indices), Const(bound_def.value))
             comp_eq = EquationDef(
@@ -241,15 +240,11 @@ def build_complementarity_pairs(
     #
     # Same strategy as lower bounds: uniform vs non-uniform handling
     #
-    # First, identify which variables have uniform vs non-uniform bounds
+    # First, identify which variables have non-uniform bounds (per-element overrides)
     up_vars_with_overrides: set[str] = set()
-    up_vars_base_bound: dict[str, float] = {}
-    for (var_name, indices), bound_def in partition.bounds_up.items():
-        if indices == ():
-            # Base bound for all elements
-            up_vars_base_bound[var_name] = bound_def.value
-        else:
-            # Per-element override
+    for (var_name, indices), _bound_def in partition.bounds_up.items():
+        if indices != ():
+            # Per-element override indicates non-uniform bounds
             up_vars_with_overrides.add(var_name)
 
     # Process upper bounds
@@ -270,7 +265,9 @@ def build_complementarity_pairs(
             # Create per-instance scalar multiplier name: piU_x_i1
             piU_name = create_bound_up_multiplier_name_indexed(var_name, indices)
             # Create per-instance equation: comp_up_x_i1.. up_i1 - x("i1") =G= 0
-            indices_str = "_".join(indices) if indices else ""
+            # Sanitize indices for valid GAMS equation names (replace '-', '.', etc. with '_')
+            sanitized_indices = [_sanitize_index_for_identifier(idx) for idx in indices]
+            indices_str = "_".join(sanitized_indices) if sanitized_indices else ""
             eq_name = f"comp_up_{var_name}_{indices_str}" if indices_str else f"comp_up_{var_name}"
             F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, indices))
             comp_eq = EquationDef(

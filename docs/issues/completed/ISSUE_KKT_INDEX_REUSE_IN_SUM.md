@@ -1,6 +1,6 @@
 # Issue: KKT Transformation Generates Invalid Index Reuse in Sum Expressions
 
-**Status:** Open  
+**Status: Completed  
 **Category:** KKT Transformation / Code Generation  
 **Affected Models:** ajax, apl1p, dispatch, trnsport (4+ models)  
 **Priority:** High  

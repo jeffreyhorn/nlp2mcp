@@ -1,6 +1,6 @@
 # Issue: Wildcard Parameter Index Incorrectly Emitted in Stationarity Equations
 
-**Status:** Open  
+**Status: Completed  
 **Category:** KKT Transformation / Stationarity Generation  
 **Affected Models:** blend, and models with wildcard (*) parameter domains  
 **Priority:** Medium  
