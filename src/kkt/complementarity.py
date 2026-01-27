@@ -144,52 +144,96 @@ def build_complementarity_pairs(
 
     # Build lower bound complementarity: (x - lo) ≥ 0 ⊥ π^L ≥ 0
     # Note: partition.bounds_lo only contains finite bounds (Finding #2)
-    for (var_name, indices), bound_def in partition.bounds_lo.items():
-        # F_π^L = x(i) - lo
-        F_piL = Binary("-", VarRef(var_name, indices), Const(bound_def.value))
+    #
+    # For indexed variables, we create a SINGLE indexed equation comp_lo_x(i)
+    # instead of element-specific equations (comp_lo_x_1, comp_lo_x_2, etc.).
+    # This allows proper GAMS MCP model statement syntax: comp_lo_x.piL_x
+    # (GAMS doesn't allow quoted indices in model statement like piL_x("H"))
+    #
+    # Group bounds by variable name to create one equation per variable
+    lo_vars_seen: set[str] = set()
+    for (var_name, _indices), bound_def in partition.bounds_lo.items():
+        # Skip if we already created the equation for this variable
+        if var_name in lo_vars_seen:
+            continue
+        lo_vars_seen.add(var_name)
+
+        # Get variable domain from model_ir
+        var_def = kkt.model_ir.variables.get(var_name)
+        var_domain = var_def.domain if var_def else ()
 
         # Create multiplier name
         piL_name = create_bound_lo_multiplier_name(var_name)
 
-        # Create complementarity equation
-        # NOTE: Domain is empty () for element-specific bounds. Each element gets
-        # its own scalar equation (comp_lo_x_1, comp_lo_x_2, etc.)
-        # This avoids creating equations like comp_lo_x(i).. x("1") - lo =G= 0
-        # which mixes parameterization (domain i) with element reference ("1")
-        comp_eq = EquationDef(
-            name=f"comp_lo_{var_name}{'_' + '_'.join(indices) if indices else ''}",
-            domain=(),
-            relation=Rel.GE,
-            lhs_rhs=(F_piL, Const(0.0)),
-        )
-
-        comp_bounds_lo[(var_name, indices)] = ComplementarityPair(
-            equation=comp_eq, variable=piL_name, variable_indices=indices
-        )
+        if var_domain:
+            # Indexed variable: create indexed equation comp_lo_x(i).. x(i) - lo =G= 0
+            # Use domain indices, not element values
+            F_piL = Binary("-", VarRef(var_name, var_domain), Const(bound_def.value))
+            comp_eq = EquationDef(
+                name=f"comp_lo_{var_name}",
+                domain=var_domain,
+                relation=Rel.GE,
+                lhs_rhs=(F_piL, Const(0.0)),
+            )
+            # Key by variable name only (single equation for all instances)
+            comp_bounds_lo[(var_name, ())] = ComplementarityPair(
+                equation=comp_eq, variable=piL_name, variable_indices=var_domain
+            )
+        else:
+            # Scalar variable: create scalar equation comp_lo_x.. x - lo =G= 0
+            F_piL = Binary("-", VarRef(var_name, ()), Const(bound_def.value))
+            comp_eq = EquationDef(
+                name=f"comp_lo_{var_name}",
+                domain=(),
+                relation=Rel.GE,
+                lhs_rhs=(F_piL, Const(0.0)),
+            )
+            comp_bounds_lo[(var_name, ())] = ComplementarityPair(
+                equation=comp_eq, variable=piL_name, variable_indices=()
+            )
 
     # Build upper bound complementarity: (up - x) ≥ 0 ⊥ π^U ≥ 0
     # Note: partition.bounds_up only contains finite bounds (Finding #2)
-    for (var_name, indices), bound_def in partition.bounds_up.items():
-        # F_π^U = up - x(i)
-        F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, indices))
+    #
+    # Same approach: create indexed equations for indexed variables
+    up_vars_seen: set[str] = set()
+    for (var_name, _indices), bound_def in partition.bounds_up.items():
+        # Skip if we already created the equation for this variable
+        if var_name in up_vars_seen:
+            continue
+        up_vars_seen.add(var_name)
+
+        # Get variable domain from model_ir
+        var_def = kkt.model_ir.variables.get(var_name)
+        var_domain = var_def.domain if var_def else ()
 
         # Create multiplier name
         piU_name = create_bound_up_multiplier_name(var_name)
 
-        # Create complementarity equation
-        # NOTE: Domain is empty () for element-specific bounds. Each element gets
-        # its own scalar equation (comp_up_x_1, comp_up_x_2, etc.)
-        # This avoids creating equations like comp_up_x(i).. up - x("1") =G= 0
-        # which mixes parameterization (domain i) with element reference ("1")
-        comp_eq = EquationDef(
-            name=f"comp_up_{var_name}{'_' + '_'.join(indices) if indices else ''}",
-            domain=(),
-            relation=Rel.GE,
-            lhs_rhs=(F_piU, Const(0.0)),
-        )
-
-        comp_bounds_up[(var_name, indices)] = ComplementarityPair(
-            equation=comp_eq, variable=piU_name, variable_indices=indices
-        )
+        if var_domain:
+            # Indexed variable: create indexed equation comp_up_x(i).. up - x(i) =G= 0
+            F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, var_domain))
+            comp_eq = EquationDef(
+                name=f"comp_up_{var_name}",
+                domain=var_domain,
+                relation=Rel.GE,
+                lhs_rhs=(F_piU, Const(0.0)),
+            )
+            # Key by variable name only (single equation for all instances)
+            comp_bounds_up[(var_name, ())] = ComplementarityPair(
+                equation=comp_eq, variable=piU_name, variable_indices=var_domain
+            )
+        else:
+            # Scalar variable: create scalar equation comp_up_x.. up - x =G= 0
+            F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, ()))
+            comp_eq = EquationDef(
+                name=f"comp_up_{var_name}",
+                domain=(),
+                relation=Rel.GE,
+                lhs_rhs=(F_piU, Const(0.0)),
+            )
+            comp_bounds_up[(var_name, ())] = ComplementarityPair(
+                equation=comp_eq, variable=piU_name, variable_indices=()
+            )
 
     return comp_ineq, comp_bounds_lo, comp_bounds_up, equality_eqs

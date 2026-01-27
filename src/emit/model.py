@@ -152,24 +152,28 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                 pairs.append(f"    {eq_name}.{mult_name}")
 
     # 4. Lower bound complementarities
+    # Note: For indexed variables, we now have a single indexed equation (comp_lo_x)
+    # paired with the indexed multiplier (piL_x). GAMS MCP syntax uses implicit
+    # domain matching: comp_lo_x.piL_x (not comp_lo_x_H.piL_x("H"))
     if kkt.complementarity_bounds_lo:
         pairs.append("")
         pairs.append("    * Lower bound complementarities")
         for _key, comp_pair in sorted(kkt.complementarity_bounds_lo.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            var_with_indices = _format_variable_with_indices(var_name, comp_pair.variable_indices)
-            pairs.append(f"    {eq_def.name}.{var_with_indices}")
+            # Use simple pairing without indices - GAMS handles domain matching
+            pairs.append(f"    {eq_def.name}.{var_name}")
 
     # 5. Upper bound complementarities
+    # Same approach: indexed equations paired with indexed multipliers
     if kkt.complementarity_bounds_up:
         pairs.append("")
         pairs.append("    * Upper bound complementarities")
         for _key, comp_pair in sorted(kkt.complementarity_bounds_up.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            var_with_indices = _format_variable_with_indices(var_name, comp_pair.variable_indices)
-            pairs.append(f"    {eq_def.name}.{var_with_indices}")
+            # Use simple pairing without indices - GAMS handles domain matching
+            pairs.append(f"    {eq_def.name}.{var_name}")
 
     # Build the model declaration
     # GAMS does not allow comments inside the Model / ... / block

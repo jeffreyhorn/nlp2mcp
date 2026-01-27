@@ -222,9 +222,9 @@ class TestKKTFullAssembly:
             s.t. x(i) ≥ 0 for specific instances
 
         KKT components:
-            - Per-instance stationarity equations
-            - Per-instance bound multipliers
-            - Per-instance complementarity pairs
+            - Single indexed stationarity equation stat_x(i)
+            - Per-instance bound multipliers (for KKT solution)
+            - Single indexed complementarity equation (for GAMS model statement syntax)
         """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -267,13 +267,19 @@ class TestKKTFullAssembly:
         assert "stat_x" in kkt.stationarity
         assert kkt.stationarity["stat_x"].domain == ("i",)
 
+        # Multipliers are still per-element (for KKT solution)
         assert len(kkt.multipliers_bounds_lo) == 2
         assert ("x", ("i1",)) in kkt.multipliers_bounds_lo
         assert ("x", ("i2",)) in kkt.multipliers_bounds_lo
 
-        assert len(kkt.complementarity_bounds_lo) == 2
-        assert ("x", ("i1",)) in kkt.complementarity_bounds_lo
-        assert ("x", ("i2",)) in kkt.complementarity_bounds_lo
+        # Complementarity is now a single indexed equation (for GAMS model statement)
+        # Key is (var_name, ()) to indicate it's an indexed equation covering all elements
+        assert len(kkt.complementarity_bounds_lo) == 1
+        assert ("x", ()) in kkt.complementarity_bounds_lo
+        comp_pair = kkt.complementarity_bounds_lo[("x", ())]
+        assert comp_pair.equation.domain == ("i",)  # Indexed equation
+        assert comp_pair.variable == "piL_x"
+        assert comp_pair.variable_indices == ("i",)  # Indexed multiplier
 
     def test_infinite_bounds_filtered(self, manual_index_mapping):
         """Test that infinite bounds are filtered out.
