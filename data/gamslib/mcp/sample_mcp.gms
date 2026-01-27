@@ -53,7 +53,10 @@ Variables
 Positive Variables
     lam_vbal(j)
     lam_vbalr(j)
-    piL_n(h)
+    piL_n_1
+    piL_n_2
+    piL_n_3
+    piL_n_4
 ;
 
 * ============================================
@@ -82,8 +85,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_n(h).. data(h,""cost"") + 0 * nu_cbalr + sum(j, ((-1) * k1(h,j)) / n(h) ** 2 * lam_vbal(j)) + sum(j, 0 * lam_vbalr(j)) - piL_n(h) =E= 0;
-stat_nr(h).. 0 + ((-1) * (((-1) * data(h,""cost"")) / nr(h) ** 2)) * nu_cbalr + sum(j, 0 * lam_vbal(j)) + sum(j, k1(h,j) * lam_vbalr(j)) =E= 0;
+stat_n(h).. data(h,"cost") + 0 * nu_cbalr + sum(j, ((-1) * k1(h,j)) / n(h) ** 2 * lam_vbal(j)) + sum(j, 0 * lam_vbalr(j)) - piL_n(h) =E= 0;
+stat_nr(h).. 0 + ((-1) * (((-1) * data(h,"cost")) / nr(h) ** 2)) * nu_cbalr + sum(j, 0 * lam_vbal(j)) + sum(j, k1(h,j) * lam_vbalr(j)) =E= 0;
 
 * Inequality complementarity equations
 comp_vbal(j).. ((-1) * (sum(h, k1(h,j) / n(h)) - k2(j))) =G= 0;
@@ -96,8 +99,8 @@ comp_lo_n_3.. n("3") - 100 =G= 0;
 comp_lo_n_4.. n("4") - 100 =G= 0;
 
 * Original equality equations
-cbal.. c =E= sum(h, data(h,""cost"") * n(h));
-cbalr.. c =E= sum(h, data(h,""cost"") / nr(h));
+cbal.. c =E= sum(h, data(h,"cost") * n(h));
+cbalr.. c =E= sum(h, data(h,"cost") / nr(h));
 
 
 * ============================================
@@ -120,10 +123,10 @@ Model mcp_model /
     comp_vbalr.lam_vbalr,
     cbal.c,
     cbalr.nu_cbalr,
-    comp_lo_n_1.piL_n("1"),
-    comp_lo_n_2.piL_n("2"),
-    comp_lo_n_3.piL_n("3"),
-    comp_lo_n_4.piL_n("4")
+    comp_lo_n_1.piL_n_1,
+    comp_lo_n_2.piL_n_2,
+    comp_lo_n_3.piL_n_3,
+    comp_lo_n_4.piL_n_4
 /;
 
 * ============================================

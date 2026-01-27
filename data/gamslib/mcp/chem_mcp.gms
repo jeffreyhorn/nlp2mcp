@@ -47,7 +47,16 @@ Variables
 Positive Variables
     x(c)
     xb
-    piL_x(c)
+    piL_x_H
+    piL_x_H2
+    piL_x_H2O
+    piL_x_N
+    piL_x_N2
+    piL_x_NH
+    piL_x_NO
+    piL_x_O
+    piL_x_O2
+    piL_x_OH
     piL_xb
 ;
 
@@ -124,16 +133,16 @@ Model mcp_model /
     cdef.nu_cdef,
     edef.energy,
     xdef.nu_xdef,
-    comp_lo_x_H.piL_x("H"),
-    comp_lo_x_H2.piL_x("H2"),
-    comp_lo_x_H2O.piL_x("H2O"),
-    comp_lo_x_N.piL_x("N"),
-    comp_lo_x_N2.piL_x("N2"),
-    comp_lo_x_NH.piL_x("NH"),
-    comp_lo_x_NO.piL_x("NO"),
-    comp_lo_x_O.piL_x("O"),
-    comp_lo_x_O2.piL_x("O2"),
-    comp_lo_x_OH.piL_x("OH"),
+    comp_lo_x_H.piL_x_H,
+    comp_lo_x_H2.piL_x_H2,
+    comp_lo_x_H2O.piL_x_H2O,
+    comp_lo_x_N.piL_x_N,
+    comp_lo_x_N2.piL_x_N2,
+    comp_lo_x_NH.piL_x_NH,
+    comp_lo_x_NO.piL_x_NO,
+    comp_lo_x_O.piL_x_O,
+    comp_lo_x_O2.piL_x_O2,
+    comp_lo_x_OH.piL_x_OH,
     comp_lo_xb.piL_xb
 /;
 
