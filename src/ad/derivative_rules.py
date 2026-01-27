@@ -1186,6 +1186,12 @@ def _diff_sum(
       - Only x(i1) contributes 1, others contribute 0
       - Result: sum(i, [1 if i==i1 else 0])
 
+    Nested sum handling:
+    - For nested sums like sum(g, sum(dl, f(g,dl)*y(g,dl))) w.r.t. y(g1,dl1):
+      - Partial index matching: if some wrt_indices match sum's indices, we extract
+        those and pass remaining indices to the body differentiation
+      - This allows proper handling of multi-indexed variables split across nested sums
+
     Args:
         expr: Sum expression with index_sets (tuple of index names) and body (expression)
         wrt_var: Variable to differentiate with respect to
@@ -1220,11 +1226,157 @@ def _diff_sum(
         # Substitute sum indices with concrete indices in result
         return _substitute_sum_indices(body_derivative, expr.index_sets, wrt_indices)
 
+    # Check for partial index match (nested sum case)
+    # For sum(g, sum(dl, y(g,dl))) w.r.t. y(g1,h):
+    # - Outer sum has ("g",), wrt_indices is ("g1", "h")
+    # - We match "g" with "g1"
+    # - We differentiate body symbolically using ("g",) + remaining ("h",)
+    #   to get ("g", "h") as wrt_indices for the body
+    # - Inner sum sees ("g", "h"), but only matches "dl" with "h"
+    #   It differentiates with ("g", "dl") - both symbolic
+    # - y(g,dl) matches with ("g", "dl") → returns 1
+    # - Result is substituted: g→g1, dl→h
+    if wrt_indices is not None and len(wrt_indices) > len(expr.index_sets):
+        matched_indices, remaining_indices = _partial_index_match(
+            expr.index_sets, wrt_indices, config
+        )
+        if matched_indices and remaining_indices:
+            # Some indices matched, some remain - this is a nested sum case
+            # Differentiate body with symbolic indices for matched positions
+            # plus remaining concrete indices
+            # This allows nested sums to accumulate symbolic indices
+            symbolic_wrt = matched_indices + remaining_indices
+            body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_wrt, config)
+            # Substitute matched sum indices with their concrete values in the result
+            matched_concrete = wrt_indices[: len(matched_indices)]
+            result_body = _substitute_sum_indices(
+                body_derivative, matched_indices, matched_concrete
+            )
+            return result_body
+
     # Normal case: differentiate the body expression, passing wrt_indices through
     body_derivative = differentiate_expr(expr.body, wrt_var, wrt_indices, config)
 
     # Return a new Sum with the same index sets and the differentiated body
     return Sum(expr.index_sets, body_derivative)
+
+
+def _partial_index_match(
+    sum_index_sets: tuple[str, ...],
+    wrt_indices: tuple[str, ...],
+    config: Config | None = None,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """
+    Check for partial index match between sum indices and wrt_indices.
+
+    For nested sums, the wrt_indices may have more indices than the current sum.
+    This function identifies which wrt_indices correspond to the current sum's
+    index sets and returns the matched symbolic indices and remaining indices.
+
+    The matching can occur at any position in wrt_indices, not just prefix.
+    For nested sums like sum(g, sum(dl, ...)) w.r.t. y(g1,h):
+    - After outer sum: wrt_indices = ("g", "h") (symbolic g, concrete h)
+    - Inner sum matches "dl" with "h" (at position 1, not 0)
+
+    Args:
+        sum_index_sets: Tuple of symbolic index names from Sum (e.g., ("dl",))
+        wrt_indices: Tuple of indices, may be symbolic or concrete (e.g., ("g", "h"))
+        config: Optional config with model_ir for set membership lookups
+
+    Returns:
+        Tuple of (matched_symbolic_indices, remaining_indices)
+        - matched_symbolic_indices: Sum indices that match some wrt_indices
+        - remaining_indices: wrt_indices with matched positions replaced by symbolic
+
+    Examples:
+        >>> _partial_index_match(("g",), ("g1", "h"), config)
+        (("g",), ("h",))  # "g" matches "g1", "h" remains
+        >>> _partial_index_match(("dl",), ("g", "h"), config)
+        (("dl",), ("g",))  # "dl" matches "h" (set membership), "g" remains
+    """
+    if len(sum_index_sets) > len(wrt_indices):
+        return (), wrt_indices
+
+    # For single-index sums, try to find a matching index anywhere in wrt_indices
+    # This handles nested sums where outer sums have already added symbolic indices
+    if len(sum_index_sets) == 1:
+        sum_idx = sum_index_sets[0]
+        for i, wrt_idx in enumerate(wrt_indices):
+            # Check if wrt_idx is a concrete instance of sum_idx
+            if _is_concrete_instance_of(wrt_idx, sum_idx, config):
+                # Found a match - return remaining indices (without matched position)
+                remaining = wrt_indices[:i] + wrt_indices[i + 1 :]
+                return (sum_idx,), remaining
+        # No match found
+        return (), wrt_indices
+
+    # For multi-index sums, try prefix matching (original behavior)
+    matched = []
+    for i, sum_idx in enumerate(sum_index_sets):
+        wrt_idx = wrt_indices[i]
+        if _is_concrete_instance_of(wrt_idx, sum_idx, config):
+            matched.append(sum_idx)
+        else:
+            # Prefix match broken - no partial match
+            return (), wrt_indices
+
+    remaining = wrt_indices[len(sum_index_sets) :]
+    return tuple(matched), remaining
+
+
+def _build_symbolic_wrt_indices(
+    sum_index_sets: tuple[str, ...],
+    wrt_indices: tuple[str, ...],
+    matched_indices: tuple[str, ...],
+    remaining_indices: tuple[str, ...],
+) -> tuple[str, ...]:
+    """
+    Build new wrt_indices with symbolic indices for matched positions.
+
+    Replaces matched concrete indices with their symbolic equivalents,
+    preserving remaining indices.
+
+    Args:
+        sum_index_sets: Sum's symbolic indices
+        wrt_indices: Original concrete indices
+        matched_indices: Which symbolic indices matched
+        remaining_indices: Remaining concrete indices
+
+    Returns:
+        New wrt_indices with symbolic indices for matched positions
+
+    Example:
+        >>> _build_symbolic_wrt_indices(("g",), ("g1", "dl1"), ("g",), ("dl1",))
+        ("g", "dl1")  # "g1" replaced with "g", "dl1" kept
+    """
+    # Replace matched concrete indices with symbolic ones
+    result = list(matched_indices) + list(remaining_indices)
+    return tuple(result)
+
+
+def _extract_matched_concrete(
+    wrt_indices: tuple[str, ...],
+    matched_indices: tuple[str, ...],
+    sum_index_sets: tuple[str, ...],
+    config: Config | None = None,
+) -> tuple[str, ...]:
+    """
+    Extract concrete index values for matched symbolic indices.
+
+    Args:
+        wrt_indices: Original concrete indices (e.g., ("g1", "dl1"))
+        matched_indices: Symbolic indices that matched (e.g., ("g",))
+        sum_index_sets: Sum's symbolic indices (same as matched_indices for prefix match)
+        config: Optional config
+
+    Returns:
+        Concrete values corresponding to matched symbolic indices
+
+    Example:
+        >>> _extract_matched_concrete(("g1", "dl1"), ("g",), ("g",), config)
+        ("g1",)  # Returns the concrete "g1" for symbolic "g"
+    """
+    return wrt_indices[: len(matched_indices)]
 
 
 def _sum_should_collapse(
