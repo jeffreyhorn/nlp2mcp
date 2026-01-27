@@ -19,12 +19,12 @@ from src.ir.ast import Binary, Const, Unary, VarRef
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
 from src.kkt.naming import (
-    _sanitize_index_for_identifier,
     create_bound_lo_multiplier_name,
     create_bound_lo_multiplier_name_indexed,
     create_bound_up_multiplier_name,
     create_bound_up_multiplier_name_indexed,
     create_ineq_multiplier_name,
+    sanitize_index_for_identifier,
 )
 from src.kkt.partition import partition_constraints
 from src.kkt.reformulation import MINMAX_MAX_CONSTRAINT_PREFIX
@@ -184,7 +184,7 @@ def build_complementarity_pairs(
             piL_name = create_bound_lo_multiplier_name_indexed(var_name, indices)
             # Create per-instance equation: comp_lo_x_i1.. x("i1") - lo_i1 =G= 0
             # Sanitize indices for valid GAMS equation names (replace '-', '.', etc. with '_')
-            sanitized_indices = [_sanitize_index_for_identifier(idx) for idx in indices]
+            sanitized_indices = [sanitize_index_for_identifier(idx) for idx in indices]
             indices_str = "_".join(sanitized_indices) if sanitized_indices else ""
             eq_name = f"comp_lo_{var_name}_{indices_str}" if indices_str else f"comp_lo_{var_name}"
             F_piL = Binary("-", VarRef(var_name, indices), Const(bound_def.value))
@@ -266,7 +266,7 @@ def build_complementarity_pairs(
             piU_name = create_bound_up_multiplier_name_indexed(var_name, indices)
             # Create per-instance equation: comp_up_x_i1.. up_i1 - x("i1") =G= 0
             # Sanitize indices for valid GAMS equation names (replace '-', '.', etc. with '_')
-            sanitized_indices = [_sanitize_index_for_identifier(idx) for idx in indices]
+            sanitized_indices = [sanitize_index_for_identifier(idx) for idx in indices]
             indices_str = "_".join(sanitized_indices) if sanitized_indices else ""
             eq_name = f"comp_up_{var_name}_{indices_str}" if indices_str else f"comp_up_{var_name}"
             F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, indices))

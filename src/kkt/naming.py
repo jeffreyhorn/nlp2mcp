@@ -20,11 +20,14 @@ from __future__ import annotations
 import re
 
 
-def _sanitize_index_for_identifier(index: str) -> str:
+def sanitize_index_for_identifier(index: str) -> str:
     """Sanitize an index value for use in a GAMS identifier.
 
     GAMS identifiers can only contain letters, digits, and underscores.
     This function replaces invalid characters with underscores.
+
+    This is a public utility function used by multiple modules for consistent
+    identifier sanitization (multiplier names, equation names, etc.).
 
     Args:
         index: Raw index value (e.g., "i-1", "node.1", "H2O")
@@ -33,11 +36,11 @@ def _sanitize_index_for_identifier(index: str) -> str:
         Sanitized index safe for use in identifiers
 
     Example:
-        >>> _sanitize_index_for_identifier("i-1")
+        >>> sanitize_index_for_identifier("i-1")
         'i_1'
-        >>> _sanitize_index_for_identifier("node.1")
+        >>> sanitize_index_for_identifier("node.1")
         'node_1'
-        >>> _sanitize_index_for_identifier("H2O")
+        >>> sanitize_index_for_identifier("H2O")
         'H2O'
     """
     # Replace any character that's not alphanumeric or underscore with underscore
@@ -166,7 +169,7 @@ def create_bound_lo_multiplier_name_indexed(var_name: str, indices: tuple[str, .
         >>> create_bound_lo_multiplier_name_indexed("z", ("i-1",))
         'piL_z_i_1'
     """
-    sanitized_indices = [_sanitize_index_for_identifier(idx) for idx in indices]
+    sanitized_indices = [sanitize_index_for_identifier(idx) for idx in indices]
     indices_str = "_".join(sanitized_indices)
     return f"piL_{var_name}_{indices_str}"
 
@@ -197,7 +200,7 @@ def create_bound_up_multiplier_name_indexed(var_name: str, indices: tuple[str, .
         >>> create_bound_up_multiplier_name_indexed("z", ("i-1",))
         'piU_z_i_1'
     """
-    sanitized_indices = [_sanitize_index_for_identifier(idx) for idx in indices]
+    sanitized_indices = [sanitize_index_for_identifier(idx) for idx in indices]
     indices_str = "_".join(sanitized_indices)
     return f"piU_{var_name}_{indices_str}"
 

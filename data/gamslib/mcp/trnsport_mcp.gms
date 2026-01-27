@@ -71,8 +71,13 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(i, i__);
+Alias(j, j__);
+
 * Stationarity equations
-stat_x(i,j).. c(i,j) + sum(i, sum(j, 0) * lam_supply(i)) + sum(j, ((-1) * sum(i, 0)) * lam_demand(j)) =E= 0;
+stat_x(i,j).. c(i,j) + sum(i__, 0 * lam_supply(i__)) + sum(j__, (-1) * lam_demand(j__)) =E= 0;
 
 * Inequality complementarity equations
 comp_demand(j).. sum(i, x(i,j)) =G= 0;
