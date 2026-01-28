@@ -29,17 +29,17 @@ Sprint 17 is the final sprint of Epic 3, focused on addressing remaining transla
 
 ## Prep Task Overview
 
-| # | Task | Priority | Est. Time | Dependencies |
-|---|------|----------|-----------|--------------|
-| 1 | Create Sprint 17 Known Unknowns List | P0 | 2h | None |
-| 2 | Detailed Error Analysis | P0 | 3h | Task 1 |
-| 3 | Translation Deep Dive | P1 | 3h | Task 2 |
-| 4 | MCP Compilation Analysis | P1 | 2h | Task 2 |
-| 5 | Lexer/Parser Improvement Plan | P1 | 2h | Tasks 2, 3 |
-| 6 | Solve Failure Investigation Plan | P1 | 2h | Task 2 |
-| 7 | Documentation Inventory | P2 | 1h | None |
-| 8 | Release Checklist | P2 | 1h | Task 7 |
-| 9 | Plan Sprint 17 Detailed Schedule | P0 | 2h | Tasks 1-8 |
+| # | Task | Priority | Est. Time | Dependencies | Unknowns Verified |
+|---|------|----------|-----------|--------------|-------------------|
+| 1 | Create Sprint 17 Known Unknowns List | P0 | 2h | None | - |
+| 2 | Detailed Error Analysis | P0 | 3h | Task 1 | 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5 |
+| 3 | Translation Deep Dive | P1 | 3h | Task 2 | 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 |
+| 4 | MCP Compilation Analysis | P1 | 2h | Task 2 | 2.1, 2.4 |
+| 5 | Lexer/Parser Improvement Plan | P1 | 2h | Tasks 2, 3 | 3.1, 3.2, 3.4, 3.5 |
+| 6 | Solve Failure Investigation Plan | P1 | 2h | Task 2 | 2.2, 2.3, 2.5 |
+| 7 | Documentation Inventory | P2 | 1h | None | - |
+| 8 | Release Checklist | P2 | 1h | Task 7 | 5.1, 5.2, 5.3, 5.4 |
+| 9 | Plan Sprint 17 Detailed Schedule | P0 | 2h | Tasks 1-8 | 3.5, 3.6 |
 
 **Total Estimated Prep Time:** 18 hours
 
@@ -49,7 +49,7 @@ Sprint 17 is the final sprint of Epic 3, focused on addressing remaining transla
 
 ### Task 1: Create Sprint 17 Known Unknowns List
 
-**Status:** Not Started  
+**Status:** COMPLETE  
 **Priority:** P0 - Critical  
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 17 Day 1  
@@ -89,17 +89,20 @@ A comprehensive list of unknowns categorized by:
 - Infrastructure/tooling uncertainties
 
 #### Verification
-- [ ] All error categories from Sprint 16 reviewed
-- [ ] Each unknown has estimated impact documented
-- [ ] Unknowns prioritized for investigation
+- [x] All error categories from Sprint 16 reviewed
+- [x] Each unknown has estimated impact documented
+- [x] Unknowns prioritized for investigation
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/KNOWN_UNKNOWNS.md`
 
 #### Acceptance Criteria
-- Document covers all pipeline stages
-- Each unknown has clear description and potential impact
-- Unknowns linked to specific error categories where applicable
+- [x] Document covers all pipeline stages
+- [x] Each unknown has clear description and potential impact
+- [x] Unknowns linked to specific error categories where applicable
+- [x] Task-to-Unknown mapping table created
+- [x] 27 unknowns documented (target 22-30)
+- [x] Priority distribution: 7 Critical (26%), 11 High (41%), 7 Medium (26%), 2 Low (7%)
 
 ---
 
@@ -110,7 +113,8 @@ A comprehensive list of unknowns categorized by:
 **Estimated Time:** 3 hours  
 **Deadline:** Before Sprint 17 Day 2  
 **Owner:** TBD  
-**Dependencies:** Task 1
+**Dependencies:** Task 1  
+**Unknowns Verified:** 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5
 
 #### Objective
 Analyze remaining error categories to understand patterns and fix complexity.
@@ -149,14 +153,17 @@ For each error category:
 - [ ] Sample errors extracted for each category
 - [ ] Complexity estimates provided
 - [ ] Patterns identified and documented
+- [ ] Unknowns 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/ERROR_ANALYSIS.md`
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5
 
 #### Acceptance Criteria
 - At least 3 sample errors per major category
 - Complexity rated as: trivial (<1h), moderate (1-4h), complex (>4h)
 - Clear patterns identified for categories with 5+ models
+- [ ] Unknowns 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -167,7 +174,8 @@ For each error category:
 **Estimated Time:** 3 hours  
 **Deadline:** Before Sprint 17 Day 3  
 **Owner:** TBD  
-**Dependencies:** Task 2
+**Dependencies:** Task 2  
+**Unknowns Verified:** 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7
 
 #### Objective
 Categorize and prioritize the 27 translation failures for targeted fixes.
@@ -206,14 +214,17 @@ A prioritized list of translation issues with:
 - [ ] Root causes identified
 - [ ] Fix locations determined (AD/emit/other)
 - [ ] Priority ranking established
+- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/TRANSLATION_ANALYSIS.md`
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7
 
 #### Acceptance Criteria
 - All 27 failures accounted for
 - At least top 5 issues have detailed analysis
 - Quick wins clearly identified
+- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -224,7 +235,8 @@ A prioritized list of translation issues with:
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 17 Day 3  
 **Owner:** TBD  
-**Dependencies:** Task 2
+**Dependencies:** Task 2  
+**Unknowns Verified:** 2.1, 2.4
 
 #### Objective
 Investigate the 8 `path_syntax_error` models to understand MCP compilation failures.
@@ -259,15 +271,18 @@ For each of 8 models:
 - [ ] MCP files generated and saved
 - [ ] GAMS errors captured
 - [ ] Root causes in emit_gams.py identified
+- [ ] Unknowns 2.1, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/MCP_COMPILATION_ANALYSIS.md`
 - Generated MCP files for affected models (if useful for debugging)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.4
 
 #### Acceptance Criteria
 - All 8 path_syntax_error models analyzed
 - Error patterns documented
 - emit_gams.py locations identified
+- [ ] Unknowns 2.1, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -278,7 +293,8 @@ For each of 8 models:
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 17 Day 4  
 **Owner:** TBD  
-**Dependencies:** Tasks 2, 3
+**Dependencies:** Tasks 2, 3  
+**Unknowns Verified:** 3.1, 3.2, 3.4, 3.5
 
 #### Objective
 Create a prioritized plan for addressing remaining `lexer_invalid_char` errors (97 models).
@@ -317,14 +333,17 @@ A prioritized plan targeting:
 - [ ] Subcategories identified with counts
 - [ ] Fixability assessed for each
 - [ ] Plan targets +15-25 models
+- [ ] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/LEXER_IMPROVEMENT_PLAN.md`
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.4, 3.5
 
 #### Acceptance Criteria
 - All lexer failures categorized
 - Clear priority ranking
 - Realistic +15-25 model target plan
+- [ ] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -335,7 +354,8 @@ A prioritized plan targeting:
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 17 Day 4  
 **Owner:** TBD  
-**Dependencies:** Task 2
+**Dependencies:** Task 2  
+**Unknowns Verified:** 2.2, 2.3, 2.5
 
 #### Objective
 Plan investigation and fixes for solve failures and mismatches.
@@ -375,14 +395,17 @@ A plan covering:
 - [ ] Root causes identified
 - [ ] Fix options evaluated
 - [ ] Impact estimates provided
+- [ ] Unknowns 2.2, 2.3, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/SOLVE_INVESTIGATION_PLAN.md`
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.2, 2.3, 2.5
 
 #### Acceptance Criteria
 - All 10 solve mismatches analyzed
 - Fix options prioritized by impact/effort
 - Clear plan for reaching 80% target
+- [ ] Unknowns 2.2, 2.3, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -393,7 +416,8 @@ A plan covering:
 **Estimated Time:** 1 hour  
 **Deadline:** Before Sprint 17 Day 5  
 **Owner:** TBD  
-**Dependencies:** None
+**Dependencies:** None  
+**Unknowns Verified:** -
 
 #### Objective
 Inventory existing documentation and identify gaps for v1.1.0 release.
@@ -449,7 +473,8 @@ A documentation plan with:
 **Estimated Time:** 1 hour  
 **Deadline:** Before Sprint 17 Day 5  
 **Owner:** TBD  
-**Dependencies:** Task 7
+**Dependencies:** Task 7  
+**Unknowns Verified:** 5.1, 5.2, 5.3, 5.4
 
 #### Objective
 Create comprehensive checklist for v1.1.0 release.
@@ -490,14 +515,17 @@ A comprehensive checklist covering:
 - [ ] Quality gates defined
 - [ ] Step-by-step process documented
 - [ ] Blockers identified
+- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/RELEASE_CHECKLIST.md`
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3, 5.4
 
 #### Acceptance Criteria
 - Checklist covers all release aspects
 - Quality gates clearly defined
 - Process is repeatable
+- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -508,7 +536,8 @@ A comprehensive checklist covering:
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 17 Day 1  
 **Owner:** TBD  
-**Dependencies:** Tasks 1-8
+**Dependencies:** Tasks 1-8  
+**Unknowns Verified:** 3.5, 3.6
 
 #### Objective
 Create detailed day-by-day schedule for Sprint 17 based on prep findings.
@@ -548,15 +577,18 @@ A detailed schedule with:
 - [ ] Dependencies respected
 - [ ] Total hours realistic (26-34h)
 - [ ] Contingency included
+- [ ] Unknowns 3.5, 3.6 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/SPRINT_LOG.md` (template with day plan)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.5, 3.6
 
 #### Acceptance Criteria
 - 10-day schedule complete
 - Daily deliverables defined
 - Schedule accounts for prep findings
 - Release day clearly identified
+- [ ] Unknowns 3.5, 3.6 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -567,6 +599,7 @@ A detailed schedule with:
 - [SPRINT_RETROSPECTIVE.md](../SPRINT_16/SPRINT_RETROSPECTIVE.md) - Recommendations (lines 222-299)
 - [SPRINT_LOG.md](../SPRINT_16/SPRINT_LOG.md) - Sprint 16 results
 - [SPRINT_BASELINE.md](../../testing/SPRINT_BASELINE.md) - Sprint 16 baseline metrics
+- [KNOWN_UNKNOWNS.md](KNOWN_UNKNOWNS.md) - Sprint 17 Known Unknowns
 
 ### Related Research
 - [GAMSLIB_STATUS.md](../../testing/GAMSLIB_STATUS.md) - Current model status
@@ -603,7 +636,7 @@ A detailed schedule with:
 ## Success Criteria for Prep Phase
 
 ### Required Before Sprint Start
-- [ ] Known Unknowns document complete
+- [x] Known Unknowns document complete
 - [ ] Error analysis complete
 - [ ] Translation failures categorized
 - [ ] MCP compilation issues documented
