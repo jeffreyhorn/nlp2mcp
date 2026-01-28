@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Prep Task 1: Known Unknowns List - 2026-01-28
+
+**Branch:** `planning/sprint17-prep`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive Known Unknowns document for Sprint 17 with 27 unknowns across 5 categories. This task proactively documents all assumptions and uncertainties that could affect Sprint 17 success, following the established pattern from Sprints 14-16.
+
+#### Deliverables
+
+- `docs/planning/EPIC_3/SPRINT_17/KNOWN_UNKNOWNS.md` - 27 unknowns documented
+- `docs/planning/EPIC_3/SPRINT_17/PREP_PLAN.md` - Updated with Task-to-Unknown mappings
+
+#### Known Unknowns Summary
+
+| Category | Count | Priority Distribution |
+|----------|-------|----------------------|
+| Translation Improvements | 7 | 2 Critical, 2 High, 2 Medium, 1 Low |
+| Solve Improvements | 5 | 1 Critical, 2 High, 2 Medium |
+| Parse Improvements | 6 | 1 Critical, 2 High, 3 Medium |
+| Detailed Error Analysis | 5 | 1 High, 3 Medium, 1 Low |
+| Fix Complexity Estimation | 4 | 1 High, 2 Medium, 1 Low |
+| **Total** | **27** | 4 Critical (15%), 8 High (30%), 12 Medium (44%), 3 Low (11%) |
+
+#### Task-to-Unknown Mapping
+
+| Prep Task | Unknowns Verified |
+|-----------|-------------------|
+| Task 2: Detailed Error Analysis | 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5 |
+| Task 3: Translation Deep Dive | 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 |
+| Task 4: MCP Compilation Analysis | 2.1, 2.4 |
+| Task 5: Lexer/Parser Improvement Plan | 3.1, 3.2, 3.4, 3.5 |
+| Task 6: Solve Failure Investigation Plan | 2.2, 2.3, 2.5 |
+| Task 8: Release Checklist | 5.1, 5.2, 5.3, 5.4 |
+| Task 9: Plan Sprint 17 Detailed Schedule | 3.5, 3.6 |
+
+#### PREP_PLAN.md Updates
+
+- Added "Unknowns Verified" column to task overview table
+- Added "Unknowns Verified" metadata to each task (Tasks 2-9)
+- Added verification deliverables for each task
+- Added acceptance criteria for unknown verification
+- Updated Task 1 status to COMPLETE with all acceptance criteria checked
+- Added cross-reference to KNOWN_UNKNOWNS.md
+
+#### Key Focus Areas for Prep Research
+
+1. **Critical Priority (4 unknowns):**
+   - Unknown 1.1: Missing AD functions for diff_unsupported_func
+   - Unknown 1.2: Domain mismatch root causes
+   - Unknown 2.1: Path syntax error patterns
+   - Unknown 3.1: Lexer_invalid_char subcategories
+
+2. **Estimated Research Time:** 30-38 hours across prep phase
+
+---
+
 ### Sprint 16 Day 10: Documentation and Retrospective [SPRINT COMPLETE] - 2026-01-28
 
 **Branch:** `sprint16-day10-retrospective`  
