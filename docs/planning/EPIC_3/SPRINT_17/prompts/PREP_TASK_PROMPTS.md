@@ -1189,14 +1189,16 @@ Execute tasks in this order (respecting dependencies):
 
 | Task | Unknowns Verified |
 |------|-------------------|
-| Task 2 | 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5 |
+| Task 2 | 3.1*, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5 |
 | Task 3 | 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 |
 | Task 4 | 2.1, 2.4 |
-| Task 5 | 3.1, 3.2, 3.4, 3.5 |
+| Task 5 | 3.1 (primary), 3.2, 3.4, 3.5* |
 | Task 6 | 2.2, 2.3, 2.5 |
 | Task 7 | - |
 | Task 8 | 5.1, 5.2, 5.3, 5.4 |
-| Task 9 | 3.5, 3.6 |
+| Task 9 | 3.5 (finalized), 3.6 |
+
+*Note: Unknown 3.1 is partially verified by Task 2 and primarily verified by Task 5. Unknown 3.5 is partially verified by Task 5 and finalized by Task 9.
 
 **Total Unknowns:** 27  
-**Verified by Tasks 2-9:** 27 (100%)
+**Verified by Tasks 2-9:** 27 unique unknowns (100%, some verified across multiple tasks)

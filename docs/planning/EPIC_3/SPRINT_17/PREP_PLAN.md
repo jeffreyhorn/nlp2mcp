@@ -32,14 +32,16 @@ Sprint 17 is the final sprint of Epic 3, focused on addressing remaining transla
 | # | Task | Priority | Est. Time | Dependencies | Unknowns Verified |
 |---|------|----------|-----------|--------------|-------------------|
 | 1 | Create Sprint 17 Known Unknowns List | P0 | 2h | None | - |
-| 2 | Detailed Error Analysis | P0 | 3h | Task 1 | 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5 |
-| 3 | Translation Deep Dive | P1 | 3h | Task 2 | 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 |
+| 2 | Detailed Error Analysis | P0 | 3h | Task 1 | 3.3, 4.1-4.5, 3.1* |
+| 3 | Translation Deep Dive | P1 | 3h | Task 2 | 1.1-1.7 |
 | 4 | MCP Compilation Analysis | P1 | 2h | Task 2 | 2.1, 2.4 |
-| 5 | Lexer/Parser Improvement Plan | P1 | 2h | Tasks 2, 3 | 3.1, 3.2, 3.4, 3.5 |
+| 5 | Lexer/Parser Improvement Plan | P1 | 2h | Tasks 2, 3 | 3.1, 3.2, 3.4, 3.5* |
 | 6 | Solve Failure Investigation Plan | P1 | 2h | Task 2 | 2.2, 2.3, 2.5 |
 | 7 | Documentation Inventory | P2 | 1h | None | - |
-| 8 | Release Checklist | P2 | 1h | Task 7 | 5.1, 5.2, 5.3, 5.4 |
+| 8 | Release Checklist | P2 | 1h | Task 7 | 5.1-5.4 |
 | 9 | Plan Sprint 17 Detailed Schedule | P0 | 2h | Tasks 1-8 | 3.5, 3.6 |
+
+*Note: Unknown 3.1 is partially verified by Task 2 (initial extraction) and primarily verified by Task 5 (complete analysis). Unknown 3.5 is partially verified by Task 5 and finalized by Task 9.
 
 **Total Estimated Prep Time:** 18 hours
 
@@ -114,7 +116,8 @@ A comprehensive list of unknowns categorized by:
 **Deadline:** Before Sprint 17 Day 2  
 **Owner:** TBD  
 **Dependencies:** Task 1  
-**Unknowns Verified:** 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5
+**Unknowns Verified:** 3.3, 4.1, 4.2, 4.3, 4.4, 4.5  
+**Unknowns Partially Verified:** 3.1 (initial extraction; primary verification in Task 5)
 
 #### Objective
 Analyze remaining error categories to understand patterns and fix complexity.
@@ -294,7 +297,8 @@ For each of 8 models:
 **Deadline:** Before Sprint 17 Day 4  
 **Owner:** TBD  
 **Dependencies:** Tasks 2, 3  
-**Unknowns Verified:** 3.1, 3.2, 3.4, 3.5
+**Unknowns Verified:** 3.1 (primary), 3.2, 3.4  
+**Unknowns Partially Verified:** 3.5 (initial assessment; finalized in Task 9)
 
 #### Objective
 Create a prioritized plan for addressing remaining `lexer_invalid_char` errors (97 models).
@@ -537,7 +541,7 @@ A comprehensive checklist covering:
 **Deadline:** Before Sprint 17 Day 1  
 **Owner:** TBD  
 **Dependencies:** Tasks 1-8  
-**Unknowns Verified:** 3.5, 3.6
+**Unknowns Verified:** 3.5 (finalized), 3.6
 
 #### Objective
 Create detailed day-by-day schedule for Sprint 17 based on prep findings.
