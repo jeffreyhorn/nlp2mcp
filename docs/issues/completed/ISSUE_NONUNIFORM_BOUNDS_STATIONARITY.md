@@ -1,6 +1,6 @@
 # Issue: Non-Uniform Bound Multipliers Not Included in Indexed Stationarity Equations
 
-**Status:** Open  
+**Status:** Completed  
 **Category:** KKT System Assembly  
 **Affected Components:** `src/kkt/assemble.py`, `src/kkt/stationarity.py`  
 **Priority:** Medium  
