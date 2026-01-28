@@ -1203,7 +1203,7 @@ Cascade Factors:
 **Application to Quick Wins:**
 | Fix | Models | Effort | Cascade | Score |
 |-----|--------|--------|---------|-------|
-| Unary minus (solve) | 10 | 2h | 2.0 | 10.0 |
+| Unary minus (solve) | 5-6 | 2h | 2.0 | 5.0-6.0 |
 | MCP separator (solve) | 3 | 1h | 2.0 | 6.0 |
 | Keyword case (parse) | 9 | 2h | 1.0 | 4.5 |
 | Feasibility (translate) | 5 | 4h | 1.5 | 1.9 |

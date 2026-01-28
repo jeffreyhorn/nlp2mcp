@@ -410,7 +410,7 @@ These fixes offer high ROI (models fixed per hour of effort):
 | Phase 2 | 30h | 55% (~88) | 55% (~48/88) | 44% (~21/48) |
 | Phase 3 | 50h | 65% (~104) | 60% (~62/104) | 45% (~28/62) |
 
-**Note:** Rates are estimates; actual improvements depend on fix overlap and cascading effects. Solve rate (solves/translated) may appear to decrease in early phases because more models translate (larger denominator) before solve fixes take full effect. This is expected behavior - the absolute number of successful solves still increases.
+**Note:** Rates are estimates; actual improvements depend on fix overlap and cascading effects. Solve rate (solves/translated) may decrease in intermediate phases when translation fixes outpace solve-focused work - newly translated models are often harder to solve initially. The Phase 3 slight recovery reflects the point where targeted solve fixes begin to take effect. Throughout all phases, the absolute number of successful solves increases even when the rate dips.
 
 ---
 
