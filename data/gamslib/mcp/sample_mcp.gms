@@ -123,10 +123,10 @@ cbalr.. c =E= sum(h, data(h,"cost") / nr(h));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_n_1.n_1,
-    stat_n_2.n_2,
-    stat_n_3.n_3,
-    stat_n_4.n_4,
+    stat_n_1.n,
+    stat_n_2.n,
+    stat_n_3.n,
+    stat_n_4.n,
     stat_nr.nr,
     comp_vbal.lam_vbal,
     comp_vbalr.lam_vbalr,

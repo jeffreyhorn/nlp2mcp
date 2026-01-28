@@ -104,7 +104,7 @@ Model mcp_model /
     stat_b.b,
     stat_c.c,
     stat_util.util,
-    stat_x_inf.x_inf,
+    stat_x_inf.x,
     obj.Util,
     pc.nu_pc,
     rev.nu_rev,
