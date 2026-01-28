@@ -25,12 +25,12 @@ Created comprehensive Known Unknowns document for Sprint 17 with 27 unknowns acr
 
 | Category | Count | Priority Distribution |
 |----------|-------|----------------------|
-| Translation Improvements | 7 | 2 Critical, 3 High, 2 Medium |
+| Translation Improvements | 7 | 2 Critical, 2 High, 2 Medium, 1 Low |
 | Solve Improvements | 5 | 1 Critical, 2 High, 2 Medium |
-| Parse Improvements | 6 | 1 Critical, 2 High, 2 Medium, 1 Low |
-| Detailed Error Analysis | 5 | 0 Critical, 2 High, 2 Medium, 1 Low |
-| Fix Complexity Estimation | 4 | 0 Critical, 2 High, 1 Medium, 1 Low |
-| **Total** | **27** | 7 Critical (26%), 11 High (41%), 7 Medium (26%), 2 Low (7%) |
+| Parse Improvements | 6 | 1 Critical, 2 High, 3 Medium |
+| Detailed Error Analysis | 5 | 1 High, 3 Medium, 1 Low |
+| Fix Complexity Estimation | 4 | 1 High, 2 Medium, 1 Low |
+| **Total** | **27** | 4 Critical (15%), 8 High (30%), 12 Medium (44%), 3 Low (11%) |
 
 #### Task-to-Unknown Mapping
 

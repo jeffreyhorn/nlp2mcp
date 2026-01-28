@@ -32,7 +32,7 @@ Sprint 17 is the final sprint of Epic 3, focused on addressing remaining transla
 | # | Task | Priority | Est. Time | Dependencies | Unknowns Verified |
 |---|------|----------|-----------|--------------|-------------------|
 | 1 | Create Sprint 17 Known Unknowns List | P0 | 2h | None | - |
-| 2 | Detailed Error Analysis | P0 | 3h | Task 1 | 3.3, 4.1-4.5, 3.1* |
+| 2 | Detailed Error Analysis | P0 | 3h | Task 1 | 3.1*, 3.3, 4.1-4.5 |
 | 3 | Translation Deep Dive | P1 | 3h | Task 2 | 1.1-1.7 |
 | 4 | MCP Compilation Analysis | P1 | 2h | Task 2 | 2.1, 2.4 |
 | 5 | Lexer/Parser Improvement Plan | P1 | 2h | Tasks 2, 3 | 3.1, 3.2, 3.4, 3.5* |
@@ -104,7 +104,7 @@ A comprehensive list of unknowns categorized by:
 - [x] Unknowns linked to specific error categories where applicable
 - [x] Task-to-Unknown mapping table created
 - [x] 27 unknowns documented (target 22-30)
-- [x] Priority distribution: 7 Critical (26%), 11 High (41%), 7 Medium (26%), 2 Low (7%)
+- [x] Priority distribution: 4 Critical (15%), 8 High (30%), 12 Medium (44%), 3 Low (11%)
 
 ---
 
