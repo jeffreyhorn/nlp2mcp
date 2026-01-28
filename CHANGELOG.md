@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Prep Task 2: Detailed Error Analysis - 2026-01-28
+
+**Branch:** `planning/sprint17-task2`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed comprehensive error analysis across all pipeline stages from Sprint 16 baseline (160 models). Identified patterns, fix complexity, and prioritized improvements for Sprint 17.
+
+#### Deliverables
+
+- `docs/planning/EPIC_3/SPRINT_17/ERROR_ANALYSIS.md` - Complete error analysis document
+- Updated `KNOWN_UNKNOWNS.md` with 7 verified unknowns (3.1 partial, 3.3, 4.1-4.5)
+- Updated `PREP_PLAN.md` with Task 2 status COMPLETE
+
+#### Error Analysis Summary
+
+| Stage | Success | Failure | Primary Blockers |
+|-------|---------|---------|------------------|
+| Parse | 48 | 112 | lexer_invalid_char (97), internal_error (14) |
+| Translate | 21 | 27 | domain_mismatch (6), unsupported_func (6), no_objective (5) |
+| Solve | 11 | 10 | path_syntax_error (8), infeasible (1), terminated (1) |
+
+#### Key Findings
+
+1. **Parse Stage:** 97 lexer_invalid_char errors break into 11 subcategories; ~30% fixable with targeted effort
+2. **Translate Stage:** Domain mismatches and unsupported functions dominate (6 models each)
+3. **Solve Stage:** path_syntax_error is 80% of failures - fixable emit_gams.py bugs
+
+#### Quick Wins Identified
+
+| Fix | Stage | Effort | Models | ROI Score |
+|-----|-------|--------|--------|-----------|
+| Keyword case fixes | Parse | 2h | ~9 | 4.5 |
+| Unary minus formatting | Solve | 2h | 5-6 | 2.5-3.0 |
+| MCP separator syntax | Solve | 1h | 2-3 | 2.0-3.0 |
+| Hyphenated elements | Parse | 2h | ~3 | 1.5 |
+| Abort syntax | Parse | 2h | ~3 | 1.5 |
+| Feasibility handling | Translate | 4h | 5 | 1.25 |
+
+**Total Quick Wins:** 13h effort, ~25-29 models potentially fixed (with overlap)
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 3.1 | Partially Verified | 11 lexer subcategories identified; ~30% fixable |
+| 3.3 | Verified | 14 internal errors in 4 subcategories |
+| 4.1 | Verified | 80%+ errors auto-categorizable via regex |
+| 4.2 | Verified | Current capture adequate; add source context |
+| 4.3 | Verified | QCP models have higher success (44% vs 30%) |
+| 4.4 | Verified | Priority formula: (Models × Cascade) / Effort |
+| 4.5 | Verified | 3-5 samples sufficient for pattern identification |
+
+---
+
 ### Sprint 17 Prep Task 1: Known Unknowns List - 2026-01-28
 
 **Branch:** `planning/sprint17-prep`  
