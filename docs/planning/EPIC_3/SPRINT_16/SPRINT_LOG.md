@@ -12,7 +12,7 @@
 
 | Metric | Baseline (Sprint 15) | Minimum | Target | Stretch | Current |
 |--------|----------------------|---------|--------|---------|---------|
-| Parse success rate | 21.25% (34/160) | 31.25% (+16) | 37.5% (+26) | 49.38% (+45) | **30.0% (48/160)** ✅ |
+| Parse success rate | 21.25% (34/160) | 31.25% (+16) | 37.5% (+26) | 49.38% (+45) | **30.0% (48/160)** |
 | Translate success rate | 50.0% (17/34) | 50.0% | 50.0% | 50.0% | **43.8% (21/48)** |
 | Solve success rate | 17.65% (3/17) | 58.82% (10/17) | 76.47% (13/17) | 100% (17/17) | **52.4% (11/21)** |
 | Full pipeline success | 0.63% (1/160) | 3.13% (5/160) | 5.0% (8/160) | 8.13% (13/160) | **3.1% (5/160)** ✅ |
@@ -791,12 +791,12 @@ P-5 Quoted Set Descriptions targets (7 models):
 
 | Metric | Baseline | Target | Final | Status |
 |--------|----------|--------|-------|--------|
-| Parse | 21.2% | 37.5% | **30.0%** | ✅ Exceeded Minimum (31.25%) |
+| Parse | 21.2% | 37.5% | **30.0%** | Significant improvement (+14 models), slightly below minimum (+16) |
 | Solve | 17.6% | 76.5% | **52.4%** | ✅ Improved significantly |
 | Full Pipeline | 0.6% | 5.0% | **3.1%** | ✅ Met Minimum (3.13%) |
 
 **Sprint 16 is a SUCCESS:**
-- ✅ Parse: +14 models (+41% growth) - exceeded minimum target
+- ✅ Parse: +14 models (+41% growth) - significant improvement, slightly below minimum target (+16 models)
 - ✅ Translate: +4 models (+24% growth)
 - ✅ Solve: +8 models (+267% growth)
 - ✅ Full Pipeline: +4 models (+400% growth) - met minimum target
