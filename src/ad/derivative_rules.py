@@ -1237,7 +1237,7 @@ def _diff_sum(
     # - y(g,dl) matches with ("g", "dl") → returns 1
     # - Result is substituted: g→g1, dl→h
     if wrt_indices is not None and len(wrt_indices) > len(expr.index_sets):
-        matched_indices, remaining_indices = _partial_index_match(
+        matched_indices, matched_concrete, remaining_indices = _partial_index_match(
             expr.index_sets, wrt_indices, config
         )
         if matched_indices and remaining_indices:
@@ -1248,7 +1248,7 @@ def _diff_sum(
             symbolic_wrt = matched_indices + remaining_indices
             body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_wrt, config)
             # Substitute matched sum indices with their concrete values in the result
-            matched_concrete = wrt_indices[: len(matched_indices)]
+            # Use matched_concrete from _partial_index_match (not prefix of wrt_indices)
             result_body = _substitute_sum_indices(
                 body_derivative, matched_indices, matched_concrete
             )
@@ -1265,13 +1265,14 @@ def _partial_index_match(
     sum_index_sets: tuple[str, ...],
     wrt_indices: tuple[str, ...],
     config: Config | None = None,
-) -> tuple[tuple[str, ...], tuple[str, ...]]:
+) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
     """
     Check for partial index match between sum indices and wrt_indices.
 
     For nested sums, the wrt_indices may have more indices than the current sum.
     This function identifies which wrt_indices correspond to the current sum's
-    index sets and returns the matched symbolic indices and remaining indices.
+    index sets and returns the matched symbolic indices, matched concrete values,
+    and remaining indices.
 
     The matching can occur at any position in wrt_indices, not just prefix.
     For nested sums like sum(g, sum(dl, ...)) w.r.t. y(g1,h):
@@ -1284,18 +1285,19 @@ def _partial_index_match(
         config: Optional config with model_ir for set membership lookups
 
     Returns:
-        Tuple of (matched_symbolic_indices, remaining_indices)
+        Tuple of (matched_symbolic_indices, matched_concrete_indices, remaining_indices)
         - matched_symbolic_indices: Sum indices that match some wrt_indices
-        - remaining_indices: wrt_indices with matched positions replaced by symbolic
+        - matched_concrete_indices: The concrete wrt_indices values that were matched
+        - remaining_indices: wrt_indices with matched positions removed
 
     Examples:
         >>> _partial_index_match(("g",), ("g1", "h"), config)
-        (("g",), ("h",))  # "g" matches "g1", "h" remains
+        (("g",), ("g1",), ("h",))  # "g" matches "g1", "h" remains
         >>> _partial_index_match(("dl",), ("g", "h"), config)
-        (("dl",), ("g",))  # "dl" matches "h" (set membership), "g" remains
+        (("dl",), ("h",), ("g",))  # "dl" matches "h" (set membership), "g" remains
     """
     if len(sum_index_sets) > len(wrt_indices):
-        return (), wrt_indices
+        return (), (), wrt_indices
 
     # For single-index sums, try to find a matching index anywhere in wrt_indices
     # This handles nested sums where outer sums have already added symbolic indices
@@ -1304,24 +1306,26 @@ def _partial_index_match(
         for i, wrt_idx in enumerate(wrt_indices):
             # Check if wrt_idx is a concrete instance of sum_idx
             if _is_concrete_instance_of(wrt_idx, sum_idx, config):
-                # Found a match - return remaining indices (without matched position)
+                # Found a match - return matched concrete value and remaining indices
                 remaining = wrt_indices[:i] + wrt_indices[i + 1 :]
-                return (sum_idx,), remaining
+                return (sum_idx,), (wrt_idx,), remaining
         # No match found
-        return (), wrt_indices
+        return (), (), wrt_indices
 
     # For multi-index sums, try prefix matching (original behavior)
-    matched = []
+    matched_symbolic = []
+    matched_concrete = []
     for i, sum_idx in enumerate(sum_index_sets):
         wrt_idx = wrt_indices[i]
         if _is_concrete_instance_of(wrt_idx, sum_idx, config):
-            matched.append(sum_idx)
+            matched_symbolic.append(sum_idx)
+            matched_concrete.append(wrt_idx)
         else:
             # Prefix match broken - no partial match
-            return (), wrt_indices
+            return (), (), wrt_indices
 
     remaining = wrt_indices[len(sum_index_sets) :]
-    return tuple(matched), remaining
+    return tuple(matched_symbolic), tuple(matched_concrete), remaining
 
 
 def _sum_should_collapse(
