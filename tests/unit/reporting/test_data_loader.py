@@ -321,10 +321,11 @@ class TestLoadBaselineMetrics:
 
         assert metrics.schema_version == "1.0.0"
         assert metrics.total_models == 160
-        assert metrics.parse.success == 34
-        assert metrics.translate.success == 17
-        assert metrics.solve.success == 3
-        assert metrics.full_pipeline.success == 1
+        # Sprint 16 baseline values (updated from Sprint 15)
+        assert metrics.parse.success == 48
+        assert metrics.translate.success == 21
+        assert metrics.solve.success == 11
+        assert metrics.full_pipeline.success == 5
 
 
 class TestLoadGamslibStatus:

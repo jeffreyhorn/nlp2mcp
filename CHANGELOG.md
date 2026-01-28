@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Day 9: Full Pipeline Retest [Sprint Complete] - 2026-01-28
+
+**Branch:** `sprint16-day9-retest`  
+**Status:** ✅ COMPLETE - Sprint 16 Final
+
+#### Summary
+
+Ran complete pipeline on all 160 convex models, generated Sprint 15 vs Sprint 16 comparison using ProgressAnalyzer, and created new baseline snapshot. Sprint 16 achieved significant improvements across all stages.
+
+#### Sprint 16 Final Results
+
+| Stage | Sprint 15 | Sprint 16 | Delta | Growth |
+|-------|-----------|-----------|-------|--------|
+| Parse | 34/160 (21.2%) | 48/160 (30.0%) | +14 | +41% |
+| Translate | 17/34 (50.0%) | 21/48 (43.8%) | +4 | +24% |
+| Solve | 3/17 (17.6%) | 11/21 (52.4%) | +8 | +267% |
+| Full Pipeline | 1/160 (0.6%) | 5/160 (3.1%) | +4 | +400% |
+
+#### New Successful Models
+
+- **himmel11** (NEW) - NLP model, objective=-30665.5
+- **hs62** (existing from Sprint 15)
+- **mathopt1** (NEW) - NLP model, objective=1
+- **mathopt2** (NEW) - NLP model, objective=0
+- **rbrock** (NEW) - NLP model, Rosenbrock function
+
+#### Files Created/Modified
+
+- `data/gamslib/baseline_metrics.json` - Updated to Sprint 16 metrics
+- `data/gamslib/sprint16_baseline_metrics.json` - New Sprint 16 snapshot
+- `data/gamslib/archive/sprint15_baseline_metrics.json` - Archived Sprint 15 baseline
+- `docs/planning/EPIC_3/SPRINT_16/SPRINT_LOG.md` - Day 9 entry, final metrics
+- `tests/output/sprint16_pipeline_run.log` - Full pipeline run output
+
+#### Key Findings
+
+1. **Translate rate "regression" is not a real regression** - rate dropped from 50% to 43.8% because we now parse 14 additional (harder) models that also fail translation. Absolute count improved from 17 to 21.
+
+2. **Error category improvements:**
+   - lexer_invalid_char: 109 → 97 (-12 errors)
+   - internal_error (parse): 17 → 14 (-3 errors)
+   - path_syntax_error: 14 → 8 (-6 errors)
+
+3. **Remaining blockers:**
+   - Parse: lexer_invalid_char (97), internal_error (14)
+   - Translate: model_domain_mismatch (6), diff_unsupported_func (6)
+   - Solve: path_syntax_error (8)
+
+#### Sprint 16 Success Criteria
+
+- Parse: 30.0% (48 models) - significant improvement (+14 models), slightly below minimum (+16 models)
+- ✅ Full Pipeline: 3.1% (met minimum 3.13% threshold)
+- ✅ Reporting infrastructure complete
+- ✅ All quality gates passing (3043+ tests)
+
+---
+
 ### Sprint 16 Day 8: Solve Improvements - 2026-01-26
 
 **Branch:** `sprint16-day8-solve-fixes`  
