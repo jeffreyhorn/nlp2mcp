@@ -20,6 +20,7 @@ Special handling:
 from __future__ import annotations
 
 from src.ir.ast import Binary, Call, Const, Expr, MultiplierRef, ParamRef, Sum, Unary, VarRef
+from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
@@ -383,7 +384,7 @@ def _replace_indices_in_expr(
     expr: Expr,
     domain: tuple[str, ...],
     element_to_set: dict[str, str] | None = None,
-    model_ir=None,
+    model_ir: ModelIR | None = None,
 ) -> Expr:
     """Replace element-specific indices with domain indices in expression.
 

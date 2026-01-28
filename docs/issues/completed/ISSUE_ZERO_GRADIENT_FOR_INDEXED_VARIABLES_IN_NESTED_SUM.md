@@ -1,6 +1,6 @@
 # Issue: Zero Gradient for Indexed Variables in Nested Sums
 
-**Status: Completed  
+**Status:** Completed  
 **Category:** KKT Transformation / Gradient Computation  
 **Affected Models:** apl1p, and models with indexed variables in nested sums  
 **Priority:** High  
