@@ -1,21 +1,21 @@
 # GAMSLIB Pipeline Status Report
 
-**Generated:** 2026-01-21 18:30:47 UTC
-**nlp2mcp Version:** 0.1.0
+**Generated:** 2026-01-28 08:18:00 UTC
+**nlp2mcp Version:** 0.7.0
 **Data Source:** baseline_metrics.json
 
 ---
 
 ## Executive Summary
 
-The nlp2mcp pipeline was tested against **160** GAMSLIB models on **2026-01-15** (Sprint 15).
+The nlp2mcp pipeline was tested against **160** GAMSLIB models on **2026-01-28** (Sprint 16).
 
-- **Full Pipeline Success:** 1 model (0.6%)
-- **Parse Success:** 34/160 (21.2%)
-- **Translate Success:** 17/34 (50.0%)
-- **Solve Success:** 3/17 (17.6%)
+- **Full Pipeline Success:** 5 models (3.1%)
+- **Parse Success:** 48/160 (30.0%)
+- **Translate Success:** 21/48 (43.8%)
+- **Solve Success:** 11/21 (52.4%)
 
-**Key Bottleneck:** Solve stage (17.6% success rate)
+**Key Bottleneck:** Parse stage (30.0% success rate)
 
 ---
 
@@ -23,10 +23,10 @@ The nlp2mcp pipeline was tested against **160** GAMSLIB models on **2026-01-15**
 
 | Stage             | Attempted   | Success   | Failure   | Success Rate   |
 |-------------------|-------------|-----------|-----------|----------------|
-| Parse             | 160         | 34        | 126       | 21.2%          |
-| Translate         | 34          | 17        | 17        | 50.0%          |
-| Solve             | 17          | 3         | 14        | 17.6%          |
-| **Full Pipeline** | **160**     | **1**     | **159**   | **0.6%**       |
+| Parse             | 160         | 48        | 112       | 30.0%          |
+| Translate         | 48          | 21        | 27        | 43.8%          |
+| Solve             | 21          | 11        | 10        | 52.4%          |
+| **Full Pipeline** | **160**     | **5**     | **155**   | **3.1%**       |
 
 ---
 
@@ -34,21 +34,21 @@ The nlp2mcp pipeline was tested against **160** GAMSLIB models on **2026-01-15**
 
 | Type   |   Count | Parse Rate   | Translate Rate   | Solve Rate   |
 |--------|---------|--------------|------------------|--------------|
-| NLP    |      94 | 27.7%        | 53.8%            | 14.3%        |
-| LP     |      57 | 8.8%         | 40.0%            | 50.0%        |
-| QCP    |       9 | 33.3%        | 33.3%            | 0.0%         |
+| NLP    |      94 | 29.8%        | 50.0%            | 50.0%        |
+| LP     |      57 | 28.1%        | 37.5%            | 50.0%        |
+| QCP    |       9 | 44.4%        | 25.0%            | 100.0%       |
 
 ---
 
 ## Top Blockers
 
-|   Rank | Error Category           |   Count | Stage     |   Priority Score |
-|--------|--------------------------|---------|-----------|------------------|
-|      1 | `lexer_invalid_char`     |     109 | parse     |            13.62 |
-|      2 | `internal_error`         |      17 | parse     |             1.42 |
-|      3 | `path_syntax_error`      |      14 | solve     |             2.33 |
-|      4 | `model_no_objective_def` |       5 | translate |             5    |
-|      5 | `diff_unsupported_func`  |       5 | translate |             0.83 |
+|   Rank | Error Category          |   Count | Stage     |   Priority Score |
+|--------|-------------------------|---------|-----------|------------------|
+|      1 | `lexer_invalid_char`    |      97 | parse     |            12.12 |
+|      2 | `internal_error`        |      14 | parse     |             1.17 |
+|      3 | `path_syntax_error`     |       8 | solve     |             1.33 |
+|      4 | `model_domain_mismatch` |       6 | translate |             1    |
+|      5 | `diff_unsupported_func` |       6 | translate |             1    |
 
 See [FAILURE_ANALYSIS.md](FAILURE_ANALYSIS.md) for detailed breakdown.
 
@@ -56,43 +56,47 @@ See [FAILURE_ANALYSIS.md](FAILURE_ANALYSIS.md) for detailed breakdown.
 
 ## Successful Models
 
-The following 1 model(s) complete the full pipeline successfully:
+The following 5 model(s) complete the full pipeline successfully:
 
+- **himmel11**
 - **hs62**
+- **mathopt1**
+- **mathopt2**
+- **rbrock**
 
 ---
 
 ## Timing Statistics
 
 ### Parse Stage
-| Metric   | Value    |
-|----------|----------|
-| Mean     | 141.5 ms |
-| Median   | 125.8 ms |
-| P90      | 248.9 ms |
-| P99      | 421.4 ms |
-| Min      | 15.0 ms  |
-| Max      | 421.4 ms |
+| Metric   | Value     |
+|----------|-----------|
+| Mean     | 560.0 ms  |
+| Median   | 310.0 ms  |
+| P90      | 1230.0 ms |
+| P99      | 2000.0 ms |
+| Min      | 100.0 ms  |
+| Max      | 2000.0 ms |
 
 ### Translate Stage
-| Metric   | Value   |
-|----------|---------|
-| Mean     | 3.7 ms  |
-| Median   | 3.7 ms  |
-| P90      | 5.3 ms  |
-| P99      | 5.8 ms  |
-| Min      | 2.1 ms  |
-| Max      | 5.8 ms  |
+| Metric   | Value     |
+|----------|-----------|
+| Mean     | 1670.0 ms |
+| Median   | 1240.0 ms |
+| P90      | 2260.0 ms |
+| P99      | 3500.0 ms |
+| Min      | 500.0 ms  |
+| Max      | 3500.0 ms |
 
 ### Solve Stage
 | Metric   | Value    |
 |----------|----------|
-| Mean     | 172.7 ms |
-| Median   | 170.4 ms |
-| P90      | 182.5 ms |
-| P99      | 184.0 ms |
-| Min      | 167.0 ms |
-| Max      | 184.0 ms |
+| Mean     | 290.0 ms |
+| Median   | 300.0 ms |
+| P90      | 350.0 ms |
+| P99      | 400.0 ms |
+| Min      | 200.0 ms |
+| Max      | 400.0 ms |
 
 ---
 
