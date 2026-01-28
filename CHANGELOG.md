@@ -44,8 +44,10 @@ Completed comprehensive error analysis across all pipeline stages from Sprint 16
 | Unary minus formatting | Solve | 2h | 5-6 | 2.5-3.0 |
 | MCP separator syntax | Solve | 1h | 2-3 | 2.0-3.0 |
 | Hyphenated elements | Parse | 2h | ~3 | 1.5 |
+| Abort syntax | Parse | 2h | ~3 | 1.5 |
+| Feasibility handling | Translate | 4h | 5 | 1.25 |
 
-**Total Quick Wins:** 13h effort, ~25-29 models potentially fixed
+**Total Quick Wins:** 13h effort, ~25-29 models potentially fixed (with overlap)
 
 #### Unknowns Verified
 
