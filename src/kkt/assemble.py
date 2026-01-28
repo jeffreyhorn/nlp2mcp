@@ -283,13 +283,11 @@ def _create_bound_lo_multipliers(bounds_lo: dict, model_ir: ModelIR) -> dict[tup
     When a variable has mixed bounds (base bound + per-element overrides), we enumerate
     ALL variable instances and create per-instance scalar multipliers for each.
 
-    DESIGN NOTE: For non-uniform bounds, scalar multipliers are created per-instance.
-    These scalar multipliers are used in per-instance complementarity equations but
-    are NOT included in indexed stationarity equations (which only reference uniform
-    bound multipliers). This is a known limitation - fully correct handling would
-    require either (a) per-instance stationarity equations for non-uniform bounds,
-    or (b) indexed multipliers with bound values represented via indexed parameters.
-    The current gamslib models use uniform bounds, so this limitation doesn't affect them.
+    NOTE: For non-uniform bounds, scalar multipliers are created per-instance.
+    These scalar multipliers are used in per-instance complementarity equations AND
+    in per-instance stationarity equations. The stationarity builder detects non-uniform
+    bounds and generates per-instance stationarity equations (stat_x_i1, stat_x_i2, etc.)
+    instead of a single indexed equation, ensuring bound multipliers are properly included.
     """
     multipliers = {}
 
@@ -366,8 +364,8 @@ def _create_bound_up_multipliers(bounds_up: dict, model_ir: ModelIR) -> dict[tup
     When a variable has mixed bounds (base bound + per-element overrides), we enumerate
     ALL variable instances and create per-instance scalar multipliers for each.
 
-    DESIGN NOTE: See _create_bound_lo_multipliers for explanation of known limitation
-    with non-uniform bounds and indexed stationarity equations.
+    NOTE: See _create_bound_lo_multipliers for explanation of how non-uniform bounds
+    are handled with per-instance stationarity equations.
     """
     multipliers = {}
 

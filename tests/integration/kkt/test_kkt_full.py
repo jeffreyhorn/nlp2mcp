@@ -263,10 +263,19 @@ class TestKKTFullAssembly:
         # Assemble KKT
         kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
 
-        # Verify indexed bounds - stationarity is still indexed
-        assert len(kkt.stationarity) == 1  # stat_x(i)
-        assert "stat_x" in kkt.stationarity
-        assert kkt.stationarity["stat_x"].domain == ("i",)
+        # Verify non-uniform bounds: stationarity is per-instance (not indexed)
+        # This ensures bound multipliers (piL_x_i1, piL_x_i2) are included
+        assert len(kkt.stationarity) == 2  # stat_x_i1, stat_x_i2
+        assert "stat_x_i1" in kkt.stationarity
+        assert "stat_x_i2" in kkt.stationarity
+        assert kkt.stationarity["stat_x_i1"].domain == ()  # Scalar
+        assert kkt.stationarity["stat_x_i2"].domain == ()  # Scalar
+
+        # Verify bound multipliers are included in stationarity expressions
+        stat_i1_str = str(kkt.stationarity["stat_x_i1"].lhs_rhs[0])
+        stat_i2_str = str(kkt.stationarity["stat_x_i2"].lhs_rhs[0])
+        assert "piL_x_i1" in stat_i1_str, "Lower bound multiplier missing from stat_x_i1"
+        assert "piL_x_i2" in stat_i2_str, "Lower bound multiplier missing from stat_x_i2"
 
         # Multipliers are per-element (for KKT solution)
         assert len(kkt.multipliers_bounds_lo) == 2

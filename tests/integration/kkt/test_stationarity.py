@@ -276,10 +276,12 @@ class TestStationarityIndexed:
         assert "stat_x" in stationarity
         assert stationarity["stat_x"].domain == ("i",)
 
-    def test_indexed_bounds_stationarity(self, manual_index_mapping):
-        """Test stationarity with indexed bounds.
+    def test_indexed_bounds_stationarity_uniform(self, manual_index_mapping):
+        """Test stationarity with uniform indexed bounds.
 
-        Each x(i) with a finite lower bound should have π^L term in stationarity.
+        When all x(i) have the same bound value (uniform bounds), a single
+        indexed stationarity equation stat_x(i) is generated with the indexed
+        π^L term.
         """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -313,11 +315,9 @@ class TestStationarityIndexed:
 
         kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
 
-        # Add indexed bound multipliers
-        kkt.multipliers_bounds_lo[("x", ("i1",))] = MultiplierDef(
-            name="piL_x", domain=("i",), kind="bound_lo", associated_constraint="x"
-        )
-        kkt.multipliers_bounds_lo[("x", ("i2",))] = MultiplierDef(
+        # Add UNIFORM indexed bound multiplier (stored under empty indices key)
+        # This represents x(i) >= 0 for all i (same bound value)
+        kkt.multipliers_bounds_lo[("x", ())] = MultiplierDef(
             name="piL_x", domain=("i",), kind="bound_lo", associated_constraint="x"
         )
 
@@ -329,8 +329,73 @@ class TestStationarityIndexed:
         assert "stat_x" in stationarity
         assert stationarity["stat_x"].domain == ("i",)
 
-        # Stationarity equations should be generated with correct structure
-        # (Expression checking would require AST traversal, omitted for brevity)
+        # Verify bound multiplier is included in stationarity expression
+        stat_str = str(stationarity["stat_x"].lhs_rhs[0])
+        assert "piL_x" in stat_str, "Bound multiplier missing from stationarity"
+
+    def test_indexed_bounds_stationarity_nonuniform(self, manual_index_mapping):
+        """Test stationarity with non-uniform indexed bounds.
+
+        When x(i) has different bound values per element (non-uniform bounds),
+        per-instance stationarity equations are generated to ensure bound
+        multipliers are properly included.
+        """
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ("i",))),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=("i",))
+
+        model.equalities = ["objdef"]
+
+        model.sets["i"] = ["i1", "i2"]
+
+        # Set up KKT system
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ("i1",)), ("x", ("i2",))])
+
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        gradient.set_derivative(0, Const(1.0))
+        gradient.set_derivative(1, Const(1.0))
+        gradient.set_derivative(2, Const(1.0))
+
+        J_eq = JacobianStructure(num_rows=1, num_cols=3, index_mapping=index_mapping)
+        J_eq.set_derivative(0, 0, Const(1.0))
+
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        # Add NON-UNIFORM per-instance bound multipliers (different values)
+        # This represents x("i1") >= 0, x("i2") >= 1
+        kkt.multipliers_bounds_lo[("x", ("i1",))] = MultiplierDef(
+            name="piL_x_i1", domain=(), kind="bound_lo", associated_constraint="x"
+        )
+        kkt.multipliers_bounds_lo[("x", ("i2",))] = MultiplierDef(
+            name="piL_x_i2", domain=(), kind="bound_lo", associated_constraint="x"
+        )
+
+        # Build stationarity
+        stationarity = build_stationarity_equations(kkt)
+
+        # Should have per-instance stationarity equations
+        assert len(stationarity) == 2
+        assert "stat_x_i1" in stationarity
+        assert "stat_x_i2" in stationarity
+        assert stationarity["stat_x_i1"].domain == ()
+        assert stationarity["stat_x_i2"].domain == ()
+
+        # Verify bound multipliers are included in stationarity expressions
+        stat_i1_str = str(stationarity["stat_x_i1"].lhs_rhs[0])
+        stat_i2_str = str(stationarity["stat_x_i2"].lhs_rhs[0])
+        assert "piL_x_i1" in stat_i1_str, "Bound multiplier missing from stat_x_i1"
+        assert "piL_x_i2" in stat_i2_str, "Bound multiplier missing from stat_x_i2"
 
 
 @pytest.mark.integration

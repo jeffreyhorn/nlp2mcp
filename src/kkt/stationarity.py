@@ -13,6 +13,8 @@ Special handling:
 - Handle indexed bounds correctly (per-instance π terms)
 - No π terms for infinite bounds
 - Group variable instances to generate indexed equations
+- For non-uniform bounds (different values per element), generate per-instance
+  stationarity equations to ensure bound multipliers are properly included
 """
 
 from __future__ import annotations
@@ -23,8 +25,45 @@ from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
     create_eq_multiplier_name,
     create_ineq_multiplier_name,
+    sanitize_index_for_identifier,
 )
 from src.kkt.objective import extract_objective_info
+
+
+def _has_nonuniform_bounds(kkt: KKTSystem, var_name: str) -> bool:
+    """Check if a variable has non-uniform bounds (per-instance multipliers).
+
+    Non-uniform bounds occur when:
+    - The variable has per-instance bound multipliers (stored with non-empty indices)
+    - AND no uniform bound multiplier (stored with empty indices)
+
+    This indicates the variable has different bound values for different elements,
+    requiring per-instance stationarity equations to include the bound multiplier terms.
+
+    Args:
+        kkt: KKT system with multiplier definitions
+        var_name: Variable name to check
+
+    Returns:
+        True if variable has non-uniform bounds requiring per-instance stationarity
+    """
+    # Check lower bounds
+    has_uniform_lo = (var_name, ()) in kkt.multipliers_bounds_lo
+    has_perinstance_lo = any(
+        key[0] == var_name and key[1] != () for key in kkt.multipliers_bounds_lo.keys()
+    )
+
+    # Check upper bounds
+    has_uniform_up = (var_name, ()) in kkt.multipliers_bounds_up
+    has_perinstance_up = any(
+        key[0] == var_name and key[1] != () for key in kkt.multipliers_bounds_up.keys()
+    )
+
+    # Non-uniform if we have per-instance multipliers without uniform multipliers
+    nonuniform_lo = has_perinstance_lo and not has_uniform_lo
+    nonuniform_up = has_perinstance_up and not has_uniform_up
+
+    return nonuniform_lo or nonuniform_up
 
 
 def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
@@ -73,17 +112,39 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
         skip_eq = obj_info.defining_equation if not kkt.model_ir.strategy1_applied else None
 
         if var_def.domain:
-            # Indexed variable: generate indexed stationarity equation
-            stat_name = f"stat_{var_name}"
-            stat_expr = _build_indexed_stationarity_expr(
-                kkt, var_name, var_def.domain, instances, skip_eq
-            )
-            stationarity[stat_name] = EquationDef(
-                name=stat_name,
-                domain=var_def.domain,  # Use same domain as variable
-                relation=Rel.EQ,
-                lhs_rhs=(stat_expr, Const(0.0)),
-            )
+            # Indexed variable: check if it has non-uniform bounds
+            if _has_nonuniform_bounds(kkt, var_name):
+                # Non-uniform bounds: generate per-instance stationarity equations
+                # This ensures bound multipliers (piL_x_i1, piL_x_i2, etc.) are included
+                for col_id, var_indices in instances:
+                    # Create per-instance equation name: stat_x_i1, stat_x_i2, etc.
+                    sanitized = [sanitize_index_for_identifier(idx) for idx in var_indices]
+                    indices_str = "_".join(sanitized) if sanitized else ""
+                    stat_name = (
+                        f"stat_{var_name}_{indices_str}" if indices_str else f"stat_{var_name}"
+                    )
+
+                    stat_expr = _build_stationarity_expr(
+                        kkt, col_id, var_name, var_indices, skip_eq
+                    )
+                    stationarity[stat_name] = EquationDef(
+                        name=stat_name,
+                        domain=(),  # Scalar equation for this specific instance
+                        relation=Rel.EQ,
+                        lhs_rhs=(stat_expr, Const(0.0)),
+                    )
+            else:
+                # Uniform bounds: generate single indexed stationarity equation
+                stat_name = f"stat_{var_name}"
+                stat_expr = _build_indexed_stationarity_expr(
+                    kkt, var_name, var_def.domain, instances, skip_eq
+                )
+                stationarity[stat_name] = EquationDef(
+                    name=stat_name,
+                    domain=var_def.domain,  # Use same domain as variable
+                    relation=Rel.EQ,
+                    lhs_rhs=(stat_expr, Const(0.0)),
+                )
         else:
             # Scalar variable: generate scalar stationarity equation
             if len(instances) != 1:
