@@ -16,12 +16,19 @@ $offText
 * ============================================
 
 Sets
-    b /municip-a, municip-b, corporate, us-ser-e, us-ser-f/
-    g /corporate, us-ser-e, us-ser-f/
+    i /seattle, san-diego/
+    j /new-york, chicago, topeka/
 ;
 
 Parameters
-    ydat(b,*) /'municip-a'.maturity 2.0, 'municip-a'.yield 9.0, 'municip-b'.maturity 5.0, 'municip-b'.yield 2.0, corporate.maturity 2.0, corporate.yield 15.0, 'us-ser-e'.maturity 1.0, 'us-ser-e'.yield 4.0, 'us-ser-f'.maturity 1.0, 'us-ser-f'.yield 3.0, 'municip-a'.rating 0.0, 'municip-b'.rating 0.0, corporate.rating 0.0, 'us-ser-f'.rating 0.0, 'us-ser-e'.rating 0.0/
+    a(i) /seattle 350.0, san-diego 600.0/
+    b(j) /new-york 325.0, chicago 300.0, topeka 275.0/
+    d(i,j) /seattle.chicago 1.7, seattle.topeka 1.8, 'san-diego'.chicago 2.5, 'san-diego'.topeka 1.8/
+    c(i,j)
+;
+
+Scalars
+    f /0.0/
 ;
 
 * ============================================
@@ -36,17 +43,13 @@ Parameters
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    tinvest
-    return
-    nu_tdef
+    z
 ;
 
 Positive Variables
-    investment(b)
-    lam_groupmin
-    lam_rdef
-    lam_mdef
-    piU_tinvest
+    x(i,j)
+    lam_supply(i)
+    lam_demand(j)
 ;
 
 * ============================================
@@ -58,35 +61,30 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_investment(b)
-    stat_tinvest
-    comp_groupmin
-    comp_mdef
-    comp_rdef
-    comp_up_tinvest
-    idef
-    tdef
+    stat_x(i,j)
+    comp_demand(j)
+    comp_supply(i)
+    cost
 ;
 
 * ============================================
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(i, i__);
+Alias(j, j__);
+
 * Stationarity equations
-stat_investment(b).. ((-1) * (ydat(b,"yield") / 100 * (1 - ydat(b,"tax-rate")))) + (-1) * nu_tdef + (-1) * lam_groupmin + ydat(b,"rating  ") * lam_rdef + ydat(b,"maturity") * lam_mdef =E= 0;
-stat_tinvest.. ((-1) * sum(b, 0)) + (1 - sum(b, 0)) * nu_tdef + ((-1) * sum(g, 0)) * lam_groupmin - (sum(b, 0) - 1.4) * lam_rdef - (sum(b, 0) - 5) * lam_mdef + piU_tinvest =E= 0;
+stat_x(i,j).. c(i,j) + sum(i__, 0 * lam_supply(i__)) + sum(j__, (-1) * lam_demand(j__)) =E= 0;
 
 * Inequality complementarity equations
-comp_groupmin.. sum(g, investment(g)) =G= 0;
-comp_mdef.. ((-1) * sum(b, ydat(b,"maturity") * investment(b))) =G= 0;
-comp_rdef.. ((-1) * sum(b, ydat(b,"rating  ") * investment(b))) =G= 0;
-
-* Upper bound complementarity equations
-comp_up_tinvest.. 10 - tinvest =G= 0;
+comp_demand(j).. sum(i, x(i,j)) =G= 0;
+comp_supply(i).. ((-1) * sum(j, x(i,j))) =G= 0;
 
 * Original equality equations
-tdef.. tinvest =E= sum(b, investment(b));
-idef.. return =E= sum(b, ydat(b,"yield") / 100 * (1 - ydat(b,"tax-rate")) * investment(b));
+cost.. z =E= sum((i,j), c(i,j) * x(i,j));
 
 
 * ============================================
@@ -103,14 +101,10 @@ idef.. return =E= sum(b, ydat(b,"yield") / 100 * (1 - ydat(b,"tax-rate")) * inve
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_investment.investment,
-    stat_tinvest.tinvest,
-    comp_groupmin.lam_groupmin,
-    comp_mdef.lam_mdef,
-    comp_rdef.lam_rdef,
-    idef.return,
-    tdef.nu_tdef,
-    comp_up_tinvest.piU_tinvest
+    stat_x.x,
+    comp_demand.lam_demand,
+    comp_supply.lam_supply,
+    cost.z
 /;
 
 * ============================================

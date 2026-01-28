@@ -147,18 +147,25 @@ def find_objective_expression(model_ir: ModelIR) -> Expr:
 
 def _is_symbol_ref(expr: Expr, name: str) -> bool:
     """
-    Check if expression is a SymbolRef with given name.
+    Check if expression is a SymbolRef or scalar VarRef with given name.
+
+    The parser may produce either SymbolRef or VarRef (with empty indices)
+    for scalar variable references depending on context.
 
     Args:
         expr: Expression to check
         name: Symbol name to match
 
     Returns:
-        True if expr is SymbolRef(name)
+        True if expr is SymbolRef(name) or VarRef(name, ())
     """
-    from ..ir.ast import SymbolRef
+    from ..ir.ast import SymbolRef, VarRef
 
-    return isinstance(expr, SymbolRef) and expr.name == name
+    if isinstance(expr, SymbolRef) and expr.name == name:
+        return True
+    if isinstance(expr, VarRef) and expr.name == name and expr.indices == ():
+        return True
+    return False
 
 
 def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) -> GradientVector:

@@ -16,13 +16,16 @@ from __future__ import annotations
 import logging
 
 from src.ad.gradient import GradientVector
+from src.ad.index_mapping import enumerate_variable_instances
 from src.ad.jacobian import JacobianStructure
 from src.ir.model_ir import ModelIR
 from src.kkt.complementarity import build_complementarity_pairs
 from src.kkt.kkt_system import KKTSystem, MultiplierDef
 from src.kkt.naming import (
     create_bound_lo_multiplier_name,
+    create_bound_lo_multiplier_name_indexed,
     create_bound_up_multiplier_name,
+    create_bound_up_multiplier_name_indexed,
     create_eq_multiplier_name,
     create_ineq_multiplier_name,
 )
@@ -114,8 +117,8 @@ def assemble_kkt_system(
     skip_defining_eq = obj_info.defining_equation if not model_ir.strategy1_applied else None
     multipliers_eq = _create_eq_multipliers(partition.equalities, model_ir, skip_defining_eq)
     multipliers_ineq = _create_ineq_multipliers(partition.inequalities, model_ir)
-    multipliers_bounds_lo = _create_bound_lo_multipliers(partition.bounds_lo)
-    multipliers_bounds_up = _create_bound_up_multipliers(partition.bounds_up)
+    multipliers_bounds_lo = _create_bound_lo_multipliers(partition.bounds_lo, model_ir)
+    multipliers_bounds_up = _create_bound_up_multipliers(partition.bounds_up, model_ir)
 
     logger.info(
         f"Created multipliers: {len(multipliers_eq)} equality, "
@@ -271,29 +274,160 @@ def _create_ineq_multipliers(
     return multipliers
 
 
-def _create_bound_lo_multipliers(bounds_lo: dict) -> dict[tuple, MultiplierDef]:
-    """Create multiplier definitions for lower bounds (indexed support)."""
+def _create_bound_lo_multipliers(bounds_lo: dict, model_ir: ModelIR) -> dict[tuple, MultiplierDef]:
+    """Create multiplier definitions for lower bounds (indexed support).
+
+    For uniform bounds (same value for all elements), creates indexed multipliers.
+    For non-uniform bounds (per-element values), creates scalar multipliers per instance.
+
+    When a variable has mixed bounds (base bound + per-element overrides), we enumerate
+    ALL variable instances and create per-instance scalar multipliers for each.
+
+    NOTE: For non-uniform bounds, scalar multipliers are created per-instance.
+    These scalar multipliers are used in per-instance complementarity equations AND
+    in per-instance stationarity equations. The stationarity builder detects non-uniform
+    bounds and generates per-instance stationarity equations (stat_x_i1, stat_x_i2, etc.)
+    instead of a single indexed equation, ensuring bound multipliers are properly included.
+    """
     multipliers = {}
+
+    # First pass: identify variables with per-element overrides (non-uniform bounds)
+    # and collect base bounds
+    vars_with_overrides: set[str] = set()
+    vars_base_bound: dict[str, float] = {}
     for (var_name, indices), bound_def in bounds_lo.items():
-        mult_name = create_bound_lo_multiplier_name(var_name)
-        multipliers[(var_name, indices)] = MultiplierDef(
-            name=mult_name,
-            domain=bound_def.domain,
-            kind="bound_lo",
-            associated_constraint=var_name,
-        )
+        if indices == ():
+            vars_base_bound[var_name] = bound_def.value
+        else:
+            vars_with_overrides.add(var_name)
+
+    # Second pass: create multipliers
+    vars_seen: set[str] = set()
+    for (var_name, indices), bound_def in bounds_lo.items():
+        if var_name in vars_with_overrides:
+            # Non-uniform bounds: create per-instance scalar multipliers for ALL instances
+            if var_name in vars_seen:
+                continue
+            vars_seen.add(var_name)
+
+            # Get base bound value (if any) for elements without explicit overrides
+            base_bound = vars_base_bound.get(var_name)
+
+            # Get variable definition to enumerate instances
+            var_def = model_ir.variables.get(var_name)
+            if var_def and var_def.domain:
+                all_instances = enumerate_variable_instances(var_def, model_ir)
+            else:
+                all_instances = [()]
+
+            # Create multiplier for each instance
+            for inst_indices in all_instances:
+                # Determine if this instance has a bound (override or base)
+                if (var_name, inst_indices) in bounds_lo:
+                    # Has explicit override
+                    pass
+                elif base_bound is not None:
+                    # Use base bound
+                    pass
+                else:
+                    # No bound for this instance - skip
+                    continue
+
+                mult_name = create_bound_lo_multiplier_name_indexed(var_name, inst_indices)
+                multipliers[(var_name, inst_indices)] = MultiplierDef(
+                    name=mult_name,
+                    domain=(),  # Scalar multiplier
+                    kind="bound_lo",
+                    associated_constraint=var_name,
+                )
+        else:
+            # Uniform bounds: create single indexed (or scalar) multiplier
+            if var_name in vars_seen:
+                continue
+            vars_seen.add(var_name)
+            mult_name = create_bound_lo_multiplier_name(var_name)
+            multipliers[(var_name, indices)] = MultiplierDef(
+                name=mult_name,
+                domain=bound_def.domain,
+                kind="bound_lo",
+                associated_constraint=var_name,
+            )
     return multipliers
 
 
-def _create_bound_up_multipliers(bounds_up: dict) -> dict[tuple, MultiplierDef]:
-    """Create multiplier definitions for upper bounds (indexed support)."""
+def _create_bound_up_multipliers(bounds_up: dict, model_ir: ModelIR) -> dict[tuple, MultiplierDef]:
+    """Create multiplier definitions for upper bounds (indexed support).
+
+    For uniform bounds (same value for all elements), creates indexed multipliers.
+    For non-uniform bounds (per-element values), creates scalar multipliers per instance.
+
+    When a variable has mixed bounds (base bound + per-element overrides), we enumerate
+    ALL variable instances and create per-instance scalar multipliers for each.
+
+    NOTE: See _create_bound_lo_multipliers for explanation of how non-uniform bounds
+    are handled with per-instance stationarity equations.
+    """
     multipliers = {}
+
+    # First pass: identify variables with per-element overrides (non-uniform bounds)
+    # and collect base bounds
+    vars_with_overrides: set[str] = set()
+    vars_base_bound: dict[str, float] = {}
     for (var_name, indices), bound_def in bounds_up.items():
-        mult_name = create_bound_up_multiplier_name(var_name)
-        multipliers[(var_name, indices)] = MultiplierDef(
-            name=mult_name,
-            domain=bound_def.domain,
-            kind="bound_up",
-            associated_constraint=var_name,
-        )
+        if indices == ():
+            vars_base_bound[var_name] = bound_def.value
+        else:
+            vars_with_overrides.add(var_name)
+
+    # Second pass: create multipliers
+    vars_seen: set[str] = set()
+    for (var_name, indices), bound_def in bounds_up.items():
+        if var_name in vars_with_overrides:
+            # Non-uniform bounds: create per-instance scalar multipliers for ALL instances
+            if var_name in vars_seen:
+                continue
+            vars_seen.add(var_name)
+
+            # Get base bound value (if any) for elements without explicit overrides
+            base_bound = vars_base_bound.get(var_name)
+
+            # Get variable definition to enumerate instances
+            var_def = model_ir.variables.get(var_name)
+            if var_def and var_def.domain:
+                all_instances = enumerate_variable_instances(var_def, model_ir)
+            else:
+                all_instances = [()]
+
+            # Create multiplier for each instance
+            for inst_indices in all_instances:
+                # Determine if this instance has a bound (override or base)
+                if (var_name, inst_indices) in bounds_up:
+                    # Has explicit override
+                    pass
+                elif base_bound is not None:
+                    # Use base bound
+                    pass
+                else:
+                    # No bound for this instance - skip
+                    continue
+
+                mult_name = create_bound_up_multiplier_name_indexed(var_name, inst_indices)
+                multipliers[(var_name, inst_indices)] = MultiplierDef(
+                    name=mult_name,
+                    domain=(),  # Scalar multiplier
+                    kind="bound_up",
+                    associated_constraint=var_name,
+                )
+        else:
+            # Uniform bounds: create single indexed (or scalar) multiplier
+            if var_name in vars_seen:
+                continue
+            vars_seen.add(var_name)
+            mult_name = create_bound_up_multiplier_name(var_name)
+            multipliers[(var_name, indices)] = MultiplierDef(
+                name=mult_name,
+                domain=bound_def.domain,
+                kind="bound_up",
+                associated_constraint=var_name,
+            )
     return multipliers

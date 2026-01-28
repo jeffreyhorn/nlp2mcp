@@ -16,12 +16,17 @@ $offText
 * ============================================
 
 Sets
-    b /municip-a, municip-b, corporate, us-ser-e, us-ser-f/
-    g /corporate, us-ser-e, us-ser-f/
+    m /machine-1, machine-2, machine-3/
+    g /20-, 25-, c-bond-ext, tissue-wrp/
 ;
 
 Parameters
-    ydat(b,*) /'municip-a'.maturity 2.0, 'municip-a'.yield 9.0, 'municip-b'.maturity 5.0, 'municip-b'.yield 2.0, corporate.maturity 2.0, corporate.yield 15.0, 'us-ser-e'.maturity 1.0, 'us-ser-e'.yield 4.0, 'us-ser-f'.maturity 1.0, 'us-ser-f'.yield 3.0, 'municip-a'.rating 0.0, 'municip-b'.rating 0.0, corporate.rating 0.0, 'us-ser-f'.rating 0.0, 'us-ser-e'.rating 0.0/
+    prate(g,m)
+    pcost(g,m)
+    dempr(g,*) /'c-bond-ext'.demand 12000.0, 'c-bond-ext'.price 99.0, 'tissue-wrp'.demand 8000.0, 'tissue-wrp'.price 105.0/
+    avail(m) /machine-1 672.0, machine-2 600.0, machine-3 480.0/
+    mtr(m,*)
+    par(g,*)
 ;
 
 * ============================================
@@ -36,17 +41,13 @@ Parameters
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    tinvest
-    return
-    nu_tdef
+    profit
+    nu_dem(g)
 ;
 
 Positive Variables
-    investment(b)
-    lam_groupmin
-    lam_rdef
-    lam_mdef
-    piU_tinvest
+    outp(g,m)
+    lam_cap(m)
 ;
 
 * ============================================
@@ -58,35 +59,30 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_investment(b)
-    stat_tinvest
-    comp_groupmin
-    comp_mdef
-    comp_rdef
-    comp_up_tinvest
-    idef
-    tdef
+    stat_outp(g,m)
+    comp_cap(m)
+    dem(g)
+    pdef
 ;
 
 * ============================================
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(g, g__);
+Alias(m, m__);
+
 * Stationarity equations
-stat_investment(b).. ((-1) * (ydat(b,"yield") / 100 * (1 - ydat(b,"tax-rate")))) + (-1) * nu_tdef + (-1) * lam_groupmin + ydat(b,"rating  ") * lam_rdef + ydat(b,"maturity") * lam_mdef =E= 0;
-stat_tinvest.. ((-1) * sum(b, 0)) + (1 - sum(b, 0)) * nu_tdef + ((-1) * sum(g, 0)) * lam_groupmin - (sum(b, 0) - 1.4) * lam_rdef - (sum(b, 0) - 5) * lam_mdef + piU_tinvest =E= 0;
+stat_outp(g,m).. pcost(g,m) + sum(g__, 0 * nu_dem(g__)) + sum(m__, 1 / prate(g,m__) ** 1 * lam_cap(m__)) =E= 0;
 
 * Inequality complementarity equations
-comp_groupmin.. sum(g, investment(g)) =G= 0;
-comp_mdef.. ((-1) * sum(b, ydat(b,"maturity") * investment(b))) =G= 0;
-comp_rdef.. ((-1) * sum(b, ydat(b,"rating  ") * investment(b))) =G= 0;
-
-* Upper bound complementarity equations
-comp_up_tinvest.. 10 - tinvest =G= 0;
+comp_cap(m).. ((-1) * sum(g, outp(g,m) / prate(g,m))) =G= 0;
 
 * Original equality equations
-tdef.. tinvest =E= sum(b, investment(b));
-idef.. return =E= sum(b, ydat(b,"yield") / 100 * (1 - ydat(b,"tax-rate")) * investment(b));
+dem(g).. sum(m, outp(g,m)) =E= dempr(g,"demand");
+pdef.. profit =E= sum(g, dempr(g,"demand") * dempr(g,"price")) - sum((g,m), pcost(g,m) * outp(g,m));
 
 
 * ============================================
@@ -103,14 +99,10 @@ idef.. return =E= sum(b, ydat(b,"yield") / 100 * (1 - ydat(b,"tax-rate")) * inve
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_investment.investment,
-    stat_tinvest.tinvest,
-    comp_groupmin.lam_groupmin,
-    comp_mdef.lam_mdef,
-    comp_rdef.lam_rdef,
-    idef.return,
-    tdef.nu_tdef,
-    comp_up_tinvest.piU_tinvest
+    stat_outp.outp,
+    comp_cap.lam_cap,
+    dem.nu_dem,
+    pdef.profit
 /;
 
 * ============================================

@@ -2,6 +2,10 @@
 
 This module converts IR expression AST nodes to GAMS syntax strings.
 Handles operator precedence, function calls, and all AST node types including MultiplierRef.
+
+Also handles index aliasing for sum expressions to avoid GAMS Error 125
+("Set is under control already") when an equation's domain index is reused
+in a nested sum.
 """
 
 from src.ir.ast import (
@@ -10,6 +14,7 @@ from src.ir.ast import (
     Const,
     EquationRef,
     Expr,
+    IndexOffset,
     MultiplierRef,
     ParamRef,
     Sum,
@@ -62,21 +67,25 @@ def _format_numeric(value: int | float) -> str:
 def _quote_indices(indices: tuple[str, ...]) -> list[str]:
     """Quote element labels in index tuples for GAMS syntax.
 
-    This function distinguishes between set indices and element labels using
-    a heuristic: identifiers containing digits are assumed to be element labels
-    and are quoted, while identifiers without digits are assumed to be set indices
-    and are left unquoted.
+    This function uses a heuristic to distinguish between domain variables
+    (set indices like 'i', 'j', 'nodes') and element labels (specific values like 'i1', 'H2').
 
-    **Limitation**: This heuristic may fail if set indices legitimately contain
-    digits (e.g., 'i2' as a set name, not an element). In such cases, the set
-    index would be incorrectly quoted. A more robust solution would require
-    access to the symbol table to determine the actual type.
+    Heuristic:
+    - All-lowercase identifier-like names (letters/underscores only) are domain variables → unquoted
+    - Names containing digits, uppercase letters, or special chars are element labels → quoted
+    - Indices that arrive already quoted (e.g., "demand") are always element labels → quoted
+
+    This addresses GAMS compilation errors from inconsistent quoting (Error 171,
+    Error 340) while preserving correct behavior for indexed equations.
+
+    Also handles indices that may already be quoted from the parser (e.g., "demand")
+    by stripping existing quotes before re-quoting to avoid double-quoting.
 
     Args:
         indices: Tuple of index identifiers
 
     Returns:
-        List of appropriately quoted indices
+        List of appropriately quoted/unquoted indices
 
     Examples:
         >>> _quote_indices(("i",))
@@ -85,13 +94,49 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
         ['"i1"']
         >>> _quote_indices(("i", "j"))
         ['i', 'j']
-        >>> _quote_indices(("i1", "j2"))
-        ['"i1"', '"j2"']
-        >>> # LIMITATION: This would fail for a set named "i2"
-        >>> _quote_indices(("i2",))  # Incorrectly quotes if i2 is a set index
-        ['"i2"']
+        >>> _quote_indices(("nodes",))
+        ['nodes']
+        >>> _quote_indices(("flow_var",))
+        ['flow_var']
+        >>> _quote_indices(("H", "H2", "H2O"))
+        ['"H"', '"H2"', '"H2O"']
+        >>> _quote_indices(("c",))
+        ['c']
+        >>> _quote_indices(("OH",))
+        ['"OH"']
+        >>> _quote_indices(('"demand"',))
+        ['"demand"']
+        >>> _quote_indices(('"x"', '"y"'))
+        ['"x"', '"y"']
     """
-    return [f'"{idx}"' if any(c.isdigit() for c in idx) else idx for idx in indices]
+    result = []
+    for idx in indices:
+        # Strip ALL layers of quotes to handle double-quoted indices like ""cost""
+        # This can happen when indices pass through multiple transformations
+        was_quoted = False
+        idx_clean = idx
+        while True:
+            if idx_clean.startswith('"') and idx_clean.endswith('"') and len(idx_clean) >= 2:
+                idx_clean = idx_clean[1:-1]
+                was_quoted = True
+            elif idx_clean.startswith("'") and idx_clean.endswith("'") and len(idx_clean) >= 2:
+                idx_clean = idx_clean[1:-1]
+                was_quoted = True
+            else:
+                break
+
+        # If it was quoted, it's an element label - always quote it (single layer)
+        if was_quoted:
+            result.append(f'"{idx_clean}"')
+        # All-lowercase identifier (letters and underscores only) = domain variable, don't quote
+        # This handles patterns like sum(i, ...), x(nodes), flow(years)
+        # Element labels typically contain digits (i1, H2) or uppercase (H, OH, H2O)
+        elif idx_clean.replace("_", "").isalpha() and idx_clean.islower():
+            result.append(idx_clean)
+        else:
+            # Everything else is an element label, quote it for consistency
+            result.append(f'"{idx_clean}"')
+    return result
 
 
 def _needs_parens(parent_op: str | None, child_op: str | None, is_right: bool = False) -> bool:
@@ -185,15 +230,20 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
         case Unary(op, child):
             child_str = expr_to_gams(child, parent_op=op)
             # GAMS unary operators: +, -
-            # Add parentheses if child is a binary expression to preserve correctness
-            # e.g., -(x - 10) not -x - 10
-            if isinstance(child, Binary):
-                return f"{op}({child_str})"
-            # Parenthesize negative unary to avoid double operator issues
-            # ONLY when there's a parent operator (e.g., x + -sin(y) becomes x + (-sin(y)))
-            # Standalone negative (e.g., -x) doesn't need parentheses
-            if op == "-" and parent_op is not None:
-                return f"({op}{child_str})"
+            # For unary minus, ALWAYS convert to multiplication form to avoid GAMS Error 445
+            # ("More than one operator in a row"). This happens when unary minus follows
+            # other operators like ".." (equation definition), "+", "-", etc.
+            # Solution: -(expr) becomes ((-1) * (expr)) which GAMS parses correctly.
+            if op == "-":
+                # Wrap child in parentheses if it's a complex expression (Binary or Call)
+                # or a negative constant (to avoid ((-1) * -5) which has two operators in a row)
+                # Simple cases like -x become (-1) * x, complex like -(a+b) become (-1) * (a+b)
+                is_negative_const = isinstance(child, Const) and child.value < 0
+                if isinstance(child, (Binary, Call)) or is_negative_const:
+                    return f"((-1) * ({child_str}))"
+                else:
+                    return f"((-1) * {child_str})"
+            # Unary plus can be passed through directly
             return f"{op}{child_str}"
 
         case Binary(op, left, right):
@@ -225,17 +275,18 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
             left_str = expr_to_gams(left, parent_op=op, is_right=False)
             right_str = expr_to_gams(right, parent_op=op, is_right=True)
 
-            # Special handling: wrap negative constant in parentheses if it's the left operand
-            # of multiplication/division to avoid GAMS "more than one operator in a row" error
-            # e.g., "a + -1 * b" becomes "a + (-1) * b"
+            # Special handling: wrap negative constants in parentheses to avoid GAMS Error 445
+            # ("More than one operator in a row").
             #
-            # Only multiplication (*) and division (/) require this treatment in GAMS because
-            # GAMS parses "-1 * b" without parentheses as two operators in a row, which is invalid.
-            # Other operators, such as exponentiation (**), do not currently require this fix.
-            # If GAMS syntax changes or other operators are found to have similar issues,
-            # consider extending this handling accordingly.
+            # For multiplication/division, GAMS cannot parse negative constants without parens:
+            # - Left operand: "a + -1 * b" is invalid → becomes "a + (-1) * b"
+            # - Right operand: "y * -1" is invalid → becomes "y * (-1)"
+            #
+            # Other operators like exponentiation (**) don't currently need this fix.
             if op in ("*", "/") and isinstance(left, Const) and left.value < 0:
                 left_str = f"({left_str})"
+            if op in ("*", "/") and isinstance(right, Const) and right.value < 0:
+                right_str = f"({right_str})"
 
             # Determine if we need parentheses
             needs_parens = _needs_parens(parent_op, op, is_right)
@@ -258,3 +309,195 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
         case _:
             # Fallback for unknown node types
             raise ValueError(f"Unknown expression type: {type(expr).__name__}")
+
+
+def _make_alias_name(index: str) -> str:
+    """Create an alias name for an index to avoid conflicts.
+
+    Uses double underscore suffix to create unique alias names that are
+    unlikely to conflict with user-defined sets.
+
+    Args:
+        index: Original index name
+
+    Returns:
+        Aliased index name
+
+    Examples:
+        >>> _make_alias_name("i")
+        'i__'
+        >>> _make_alias_name("nodes")
+        'nodes__'
+    """
+    return f"{index}__"
+
+
+def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[str]:
+    """Collect all indices that need aliases due to conflicts with equation domain.
+
+    Recursively traverses the expression tree to find Sum nodes whose indices
+    conflict with the equation's domain indices.
+
+    Args:
+        expr: Expression to analyze
+        equation_domain: Tuple of index names used in the equation's domain
+
+    Returns:
+        Set of original index names that need aliases
+
+    Examples:
+        >>> from src.ir.ast import Sum, Const
+        >>> expr = Sum(("i",), Const(0))
+        >>> collect_index_aliases(expr, ("i", "j"))
+        {'i'}
+        >>> collect_index_aliases(expr, ("k",))
+        set()
+    """
+    if not equation_domain:
+        return set()
+
+    domain_set = set(equation_domain)
+    aliases_needed: set[str] = set()
+
+    def _collect(e: Expr) -> None:
+        match e:
+            case Sum(index_sets, body):
+                # Check for conflicts
+                for idx in index_sets:
+                    if idx in domain_set:
+                        aliases_needed.add(idx)
+                # Recurse into body
+                _collect(body)
+
+            case Binary(_, left, right):
+                _collect(left)
+                _collect(right)
+
+            case Unary(_, child):
+                _collect(child)
+
+            case Call(_, args):
+                for arg in args:
+                    _collect(arg)
+
+            case VarRef() | ParamRef() | MultiplierRef() | EquationRef() | Const() | SymbolRef():
+                # Leaf nodes - no nested sums
+                pass
+
+            case _:
+                pass
+
+    _collect(expr)
+    return aliases_needed
+
+
+def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Expr:
+    """Resolve index conflicts by replacing conflicting sum indices with aliases.
+
+    Creates a new expression tree where any Sum index that conflicts with the
+    equation's domain is replaced with an aliased version (e.g., "i" -> "i__").
+
+    Also replaces any references to the original index within the sum body
+    (in VarRef, ParamRef, MultiplierRef indices) with the aliased version.
+
+    Args:
+        expr: Expression to transform
+        equation_domain: Tuple of index names used in the equation's domain
+
+    Returns:
+        New expression with conflicts resolved
+
+    Examples:
+        >>> from src.ir.ast import Sum, VarRef, Const
+        >>> expr = Sum(("i",), VarRef("x", ("i",)))
+        >>> result = resolve_index_conflicts(expr, ("i",))
+        >>> # Result: Sum(("i__",), VarRef("x", ("i__",)))
+    """
+    if not equation_domain:
+        return expr
+
+    domain_set = set(equation_domain)
+
+    def _resolve(e: Expr, active_aliases: dict[str, str]) -> Expr:
+        """Recursively resolve conflicts, tracking active alias substitutions."""
+        match e:
+            case Sum(index_sets, body):
+                # Check which indices conflict and need aliasing
+                sum_indices: list[str] = []
+                new_aliases = dict(active_aliases)  # Copy current aliases
+
+                for idx in index_sets:
+                    if idx in domain_set:
+                        # This index conflicts - use alias
+                        alias = _make_alias_name(idx)
+                        sum_indices.append(alias)
+                        new_aliases[idx] = alias
+                    else:
+                        sum_indices.append(idx)
+
+                # Recurse into body with updated aliases
+                new_body = _resolve(body, new_aliases)
+                return Sum(tuple(sum_indices), new_body)
+
+            case Binary(op, left, right):
+                new_left = _resolve(left, active_aliases)
+                new_right = _resolve(right, active_aliases)
+                return Binary(op, new_left, new_right)
+
+            case Unary(op, child):
+                new_child = _resolve(child, active_aliases)
+                return Unary(op, new_child)
+
+            case Call(func, args):
+                new_args = tuple(_resolve(arg, active_aliases) for arg in args)
+                return Call(func, new_args)
+
+            case VarRef() as var_ref:
+                if var_ref.indices and active_aliases:
+                    # Replace any aliased indices (only strings, not IndexOffset)
+                    var_indices: tuple[str | IndexOffset, ...] = tuple(
+                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        for idx in var_ref.indices
+                    )
+                    if var_indices != var_ref.indices:
+                        return VarRef(var_ref.name, var_indices)
+                return var_ref
+
+            case ParamRef() as param_ref:
+                if param_ref.indices and active_aliases:
+                    param_indices: tuple[str | IndexOffset, ...] = tuple(
+                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        for idx in param_ref.indices
+                    )
+                    if param_indices != param_ref.indices:
+                        return ParamRef(param_ref.name, param_indices)
+                return param_ref
+
+            case MultiplierRef() as mult_ref:
+                if mult_ref.indices and active_aliases:
+                    mult_indices: tuple[str | IndexOffset, ...] = tuple(
+                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        for idx in mult_ref.indices
+                    )
+                    if mult_indices != mult_ref.indices:
+                        return MultiplierRef(mult_ref.name, mult_indices)
+                return mult_ref
+
+            case EquationRef() as eq_ref:
+                if eq_ref.indices and active_aliases:
+                    eq_indices: tuple[str | IndexOffset, ...] = tuple(
+                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        for idx in eq_ref.indices
+                    )
+                    if eq_indices != eq_ref.indices:
+                        return EquationRef(eq_ref.name, eq_indices, eq_ref.attribute)
+                return eq_ref
+
+            case Const() | SymbolRef():
+                # Leaf nodes with no indices
+                return e
+
+            case _:
+                return e
+
+    return _resolve(expr, {})

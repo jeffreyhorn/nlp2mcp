@@ -231,17 +231,24 @@ def emit_equations(kkt: KKTSystem) -> str:
     return "\n".join(lines)
 
 
-def emit_equation_definitions(kkt: KKTSystem) -> str:
+def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
     """Emit equation definitions (eq_name.. lhs =E= rhs;).
 
-    This function is now implemented in src.emit.equations.
-    This wrapper maintained for backwards compatibility.
+    Delegates to src.emit.equations for the actual implementation.
+
+    Handles index aliasing to avoid GAMS Error 125 ("Set is under control already")
+    when an equation's domain index is reused in a nested sum expression.
 
     Args:
         kkt: KKT system
 
     Returns:
-        GAMS equation definitions
+        Tuple of (GAMS equation definitions string, set of indices needing aliases)
+
+    Note:
+        The return type is `tuple[str, set[str]]` to support index aliasing.
+        Callers must unpack the tuple:
+        `equations_str, aliases = emit_equation_definitions(kkt)`
     """
     from src.emit.equations import emit_equation_definitions as _emit_eq_defs
 

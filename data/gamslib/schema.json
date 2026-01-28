@@ -298,6 +298,10 @@
           "type": "string",
           "description": "Relative path to the generated MCP .gms file"
         },
+        "validation": {
+          "$ref": "#/definitions/gams_validation_result",
+          "description": "Results from GAMS compile check validation of the generated MCP file"
+        },
         "error": {
           "$ref": "#/definitions/error_detail",
           "description": "Structured error details if status is 'failure'"
@@ -498,6 +502,27 @@
           "type": "integer",
           "minimum": 0,
           "description": "Number of sets in the model"
+        }
+      }
+    },
+    "gams_validation_result": {
+      "type": "object",
+      "description": "Results from GAMS compile check validation of generated MCP file",
+      "required": ["valid"],
+      "additionalProperties": false,
+      "properties": {
+        "valid": {
+          "type": "boolean",
+          "description": "True if the generated MCP file compiles without errors"
+        },
+        "validation_time_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Time to run GAMS compile check in seconds"
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message if validation failed"
         }
       }
     },

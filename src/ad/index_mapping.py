@@ -150,6 +150,9 @@ def resolve_set_members(set_or_alias_name: str, model_ir: ModelIR) -> tuple[list
     # Direct set lookup
     if set_or_alias_name in model_ir.sets:
         set_def = model_ir.sets[set_or_alias_name]
+        # Handle both SetDef objects and plain lists (for test compatibility)
+        if isinstance(set_def, (list, tuple, set, frozenset)):
+            return (list(set_def), set_or_alias_name)
         return (set_def.members, set_or_alias_name)
 
     raise ValueError(
@@ -198,7 +201,12 @@ def _resolve_alias(
         target_members, final_set = _resolve_alias(model_ir.aliases[target_name], model_ir, visited)
     # If target is a set, get its members
     elif target_name in model_ir.sets:
-        target_members = model_ir.sets[target_name].members
+        set_def = model_ir.sets[target_name]
+        # Handle both SetDef objects and plain lists (for test compatibility)
+        if isinstance(set_def, (list, tuple, set, frozenset)):
+            target_members = list(set_def)
+        else:
+            target_members = set_def.members
         final_set = target_name
     else:
         raise ValueError(

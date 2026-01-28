@@ -62,7 +62,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 200 * (x2 - sqr(x1)) * -(2 * x1) + (-2) * (1 - x1) - piL_x1 + piU_x1 =E= 0;
+stat_x1.. 200 * (x2 - sqr(x1)) * ((-1) * (2 * x1)) + (-2) * (1 - x1) - piL_x1 + piU_x1 =E= 0;
 stat_x2.. 100 * 2 * (x2 - sqr(x1)) - piL_x2 + piU_x2 =E= 0;
 
 * Lower bound complementarity equations

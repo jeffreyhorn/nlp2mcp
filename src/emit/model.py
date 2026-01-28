@@ -3,9 +3,57 @@
 This module generates the Model MCP declaration with complementarity pairs.
 """
 
+from src.ir.model_ir import ModelIR
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import create_eq_multiplier_name
 from src.kkt.objective import ObjectiveInfo, extract_objective_info
+
+
+def _extract_variable_name_from_stationarity(suffix: str, model_ir: ModelIR) -> str:
+    """Extract the actual variable name from a stationarity equation suffix.
+
+    Stationarity equations are named:
+    - stat_x for scalar variables or indexed variables with uniform bounds
+    - stat_x_i1 for per-instance equations (non-uniform bounds)
+
+    This function finds the actual variable name by checking which model variable
+    matches the prefix of the suffix.
+
+    Args:
+        suffix: The part after "stat_" (e.g., "x", "x_i1", "flow_node1")
+        model_ir: Model IR containing variable definitions
+
+    Returns:
+        The actual variable name from the model
+
+    Examples:
+        >>> _extract_variable_name_from_stationarity("x", model_ir)  # has var "x"
+        "x"
+        >>> _extract_variable_name_from_stationarity("x_i1", model_ir)  # has var "x"
+        "x"
+        >>> _extract_variable_name_from_stationarity("flow_node1", model_ir)  # has var "flow"
+        "flow"
+    """
+    # First, try exact match (most common case for indexed/scalar equations)
+    if suffix in model_ir.variables:
+        return suffix
+
+    # For per-instance equations, the suffix is var_name + "_" + sanitized_indices
+    # Find the longest variable name that is a prefix of the suffix
+    # This handles cases like "x_i1" -> "x" and "flow_node1" -> "flow"
+    best_match = ""
+    for var_name in model_ir.variables:
+        # Check if suffix starts with var_name followed by underscore
+        if suffix.startswith(var_name + "_") and len(var_name) > len(best_match):
+            best_match = var_name
+        # Also check exact prefix match for edge cases
+        elif suffix.startswith(var_name) and len(var_name) > len(best_match):
+            # Only accept if the next char is underscore or end of string
+            remaining = suffix[len(var_name) :]
+            if remaining == "" or remaining.startswith("_"):
+                best_match = var_name
+
+    return best_match if best_match else suffix
 
 
 def _should_pair_with_objvar(
@@ -27,32 +75,6 @@ def _should_pair_with_objvar(
         True if equation should be paired with objvar, False if with multiplier
     """
     return eq_name == obj_info.defining_equation and not strategy1_applied
-
-
-def _format_variable_with_indices(var_name: str, indices: tuple[str, ...]) -> str:
-    """Format a variable name with indices for GAMS MCP syntax.
-
-    Args:
-        var_name: Base variable name (e.g., "piL_n")
-        indices: Tuple of index values (e.g., ("1", "2"))
-
-    Returns:
-        Formatted variable string for GAMS (e.g., 'piL_n("1", "2")')
-
-    Examples:
-        >>> _format_variable_with_indices("piL_n", ("1",))
-        'piL_n("1")'
-        >>> _format_variable_with_indices("piU_x", ())
-        'piU_x'
-        >>> _format_variable_with_indices("piL_y", ("i1", "j2"))
-        'piL_y("i1", "j2")'
-    """
-    if indices:
-        # Convert indices tuple to GAMS index syntax: var("1", "2")
-        indices_str = ", ".join(f'"{idx}"' for idx in indices)
-        return f"{var_name}({indices_str})"
-    else:
-        return var_name
 
 
 def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
@@ -109,15 +131,21 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         for eq_name in sorted(kkt.stationarity.keys()):
             # Extract variable name from stationarity equation name
             # stat_x -> x (scalar or indexed)
+            # stat_x_i1 -> x (per-instance for non-uniform bounds)
             if eq_name.startswith("stat_"):
-                # Extract base variable name
-                var_name = eq_name[5:]  # Remove "stat_" prefix
+                # Extract base variable name by finding it in the model's variables
+                # For per-instance equations (stat_x_i1), we need to find the actual
+                # variable name (x) not the full suffix (x_i1)
+                suffix = eq_name[5:]  # Remove "stat_" prefix
+                var_name = _extract_variable_name_from_stationarity(suffix, kkt.model_ir)
 
                 # Skip objective variable UNLESS Strategy 1 was applied
                 skip_objvar = not kkt.model_ir.strategy1_applied
                 if var_name and (not skip_objvar or var_name != obj_info.objvar):
                     # GAMS MCP syntax: indexed equations listed without indices
                     # stat_x.x (not stat_x(i).x(i)) - indexing is implicit
+                    # For per-instance stationarity (stat_x_i1.x), we pair scalar
+                    # equation with indexed variable - GAMS handles the element selection
                     pairs.append(f"    {eq_name}.{var_name}")
 
     # 2. Inequality complementarities (includes min/max complementarity)
@@ -152,24 +180,30 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                 pairs.append(f"    {eq_name}.{mult_name}")
 
     # 4. Lower bound complementarities
+    # For uniform bounds: indexed equation paired with indexed multiplier
+    #   comp_lo_x.piL_x (GAMS matches indices automatically)
+    # For non-uniform bounds: scalar equation paired with scalar multiplier
+    #   comp_lo_x_i1.piL_x_i1 (both are scalar, no indices needed)
     if kkt.complementarity_bounds_lo:
         pairs.append("")
         pairs.append("    * Lower bound complementarities")
         for _key, comp_pair in sorted(kkt.complementarity_bounds_lo.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            var_with_indices = _format_variable_with_indices(var_name, comp_pair.variable_indices)
-            pairs.append(f"    {eq_def.name}.{var_with_indices}")
+            # Both uniform (indexed) and non-uniform (scalar) cases use simple pairing
+            # GAMS handles domain matching for indexed cases
+            pairs.append(f"    {eq_def.name}.{var_name}")
 
     # 5. Upper bound complementarities
+    # Same approach as lower bounds
     if kkt.complementarity_bounds_up:
         pairs.append("")
         pairs.append("    * Upper bound complementarities")
         for _key, comp_pair in sorted(kkt.complementarity_bounds_up.items()):
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
-            var_with_indices = _format_variable_with_indices(var_name, comp_pair.variable_indices)
-            pairs.append(f"    {eq_def.name}.{var_with_indices}")
+            # Both uniform (indexed) and non-uniform (scalar) cases use simple pairing
+            pairs.append(f"    {eq_def.name}.{var_name}")
 
     # Build the model declaration
     # GAMS does not allow comments inside the Model / ... / block

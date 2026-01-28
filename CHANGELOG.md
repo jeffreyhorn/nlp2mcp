@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 16 Day 8: Solve Improvements - 2026-01-26
+
+**Branch:** `sprint16-day8-solve-fixes`  
+**PR:** #569  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Fixed MCP code generation bugs in emit_gams.py to improve solve rate. Addressed GAMS Error 445 (unary minus and negative constant formatting), Error 171/340 (set element quoting), and Error 409 (scalar declaration edge cases).
+
+#### Changes
+
+**Modified Files:**
+- `src/emit/expr_to_gams.py` - S-1 fix: unary minus converted to multiplication form `((-1) * expr)`; S-1b: negative constants as operands wrapped in parentheses; S-2 fix: `_quote_indices()` heuristic for domain variables vs element labels
+- `src/emit/original_symbols.py` - S-3 fix: `is_valid_scalar_name()` filters out description-only scalars
+- `tests/unit/emit/test_expr_to_gams.py` - Updated and added tests for new behavior (48 tests)
+- `tests/unit/emit/test_equations.py` - Updated equation tests
+- `tests/golden/simple_nlp_mcp.gms` - Regenerated golden file
+- `tests/golden/indexed_balance_mcp.gms` - Regenerated golden file
+
+#### Fixes
+
+| Fix | Error | Change | Impact |
+|-----|-------|--------|--------|
+| S-1 | 445 | `-(expr)` → `((-1) * (expr))` | ~10 models |
+| S-1b | 445 | `y * -1` → `y * (-1)` | Additional patterns |
+| S-2 | 171, 340 | Single lowercase = domain var (unquoted), else quoted | 3 models |
+| S-3 | 409 | Filter invalid scalar names (spaces, quotes) | 1 model |
+
+#### Results
+
+- **Models compiling:** 10/21 translated models (up from ~3)
+- **Models solving:** 8/21 models solve successfully (38.1%)
+- **Error 445 occurrences:** 0 (all eliminated)
+- **Tests:** 3014+ passed
+
+#### Successful Solves
+
+himmel11, hs62, mathopt1, mathopt2, mhw4d, mhw4dx, rbrock, trig
+
+#### Notes
+
+Remaining 11 models with compilation errors have different issues (Error 125 "Set under control", Error 171 domain mismatch) that are related to KKT transformation bugs, not emit formatting.
+
+---
+
 ### Sprint 16 Day 7: Parse Improvements - Priority 2 - 2026-01-24
 
 **Branch:** `sprint16-day7-parse-p2`  

@@ -6,7 +6,7 @@ including operator precedence, function calls, and MultiplierRef support.
 
 import pytest
 
-from src.emit.expr_to_gams import expr_to_gams
+from src.emit.expr_to_gams import _quote_indices, expr_to_gams
 from src.ir.ast import (
     Binary,
     Call,
@@ -50,12 +50,18 @@ class TestBasicNodes:
         assert result == "x"
 
     def test_var_ref_indexed(self):
-        """Test indexed variable reference."""
+        """Test indexed variable reference.
+
+        All-lowercase identifiers (letters/underscores) are domain variables and not quoted.
+        """
         result = expr_to_gams(VarRef("x", ("i",)))
         assert result == "x(i)"
 
     def test_var_ref_multi_indexed(self):
-        """Test multi-indexed variable reference."""
+        """Test multi-indexed variable reference.
+
+        All-lowercase identifiers (letters/underscores) are domain variables and not quoted.
+        """
         result = expr_to_gams(VarRef("x", ("i", "j", "k")))
         assert result == "x(i,j,k)"
 
@@ -65,9 +71,36 @@ class TestBasicNodes:
         assert result == "c"
 
     def test_param_ref_indexed(self):
-        """Test indexed parameter reference."""
+        """Test indexed parameter reference.
+
+        All-lowercase identifiers (letters/underscores) are domain variables and not quoted.
+        """
         result = expr_to_gams(ParamRef("c", ("i",)))
         assert result == "c(i)"
+
+    def test_var_ref_element_label(self):
+        """Test variable reference with element labels (not domain vars).
+
+        Uppercase or digit-containing indices are element labels and should be quoted.
+        """
+        result = expr_to_gams(VarRef("x", ("H",)))
+        assert result == 'x("H")'
+        result = expr_to_gams(VarRef("x", ("H2",)))
+        assert result == 'x("H2")'
+        result = expr_to_gams(VarRef("x", ("i1",)))
+        assert result == 'x("i1")'
+
+    def test_var_ref_multi_letter_domain(self):
+        """Test variable reference with multi-letter domain names.
+
+        All-lowercase identifier names like 'nodes', 'years' are domain variables.
+        """
+        result = expr_to_gams(VarRef("flow", ("nodes",)))
+        assert result == "flow(nodes)"
+        result = expr_to_gams(VarRef("x", ("years",)))
+        assert result == "x(years)"
+        result = expr_to_gams(VarRef("y", ("flow_var",)))
+        assert result == "y(flow_var)"
 
     def test_multiplier_ref_scalar(self):
         """Test scalar multiplier reference."""
@@ -75,7 +108,10 @@ class TestBasicNodes:
         assert result == "lambda_g1"
 
     def test_multiplier_ref_indexed(self):
-        """Test indexed multiplier reference with set index."""
+        """Test indexed multiplier reference.
+
+        All-lowercase identifiers (letters/underscores) are domain variables and not quoted.
+        """
         result = expr_to_gams(MultiplierRef("nu_balance", ("i",)))
         assert result == "nu_balance(i)"
 
@@ -87,26 +123,61 @@ class TestBasicNodes:
 
 @pytest.mark.unit
 class TestUnaryOperators:
-    """Test unary operators."""
+    """Test unary operators.
+
+    Note: Unary minus is converted to multiplication form ((-1) * expr) to avoid
+    GAMS Error 445 ("More than one operator in a row"). This happens when unary
+    minus follows operators like ".." in equation definitions.
+    """
 
     def test_unary_minus(self):
-        """Test unary minus."""
+        """Test unary minus converts to multiplication form.
+
+        GAMS Error 445 occurs when unary minus follows operators like ".."
+        in equation definitions. Converting to ((-1) * expr) avoids this.
+        """
         result = expr_to_gams(Unary("-", VarRef("x", ())))
-        assert result == "-x"
+        assert result == "((-1) * x)"
 
     def test_unary_plus(self):
-        """Test unary plus."""
+        """Test unary plus passes through."""
         result = expr_to_gams(Unary("+", VarRef("x", ())))
         assert result == "+x"
 
     def test_unary_nested(self):
         """Test nested unary operators.
 
-        Nested negative unary operators are parenthesized to avoid ambiguity.
-        This prevents potential double-operator issues in GAMS.
+        Double negation becomes ((-1) * ((-1) * x)).
         """
         result = expr_to_gams(Unary("-", Unary("-", VarRef("x", ()))))
-        assert result == "-(-x)"
+        assert result == "((-1) * ((-1) * x))"
+
+    def test_unary_minus_negative_constant(self):
+        """Test unary minus applied to a negative constant.
+
+        -(-5) should become ((-1) * (-5)), not ((-1) * -5) which would
+        have two operators in a row.
+        """
+        result = expr_to_gams(Unary("-", Const(-5)))
+        assert result == "((-1) * (-5))"
+        # Verify no "* -" pattern (two operators in a row)
+        assert "* -" not in result
+
+    def test_unary_minus_complex_expr(self):
+        """Test unary minus on complex expression wraps the child.
+
+        For Binary/Call children, the child is wrapped in parentheses
+        to ensure correct mathematical interpretation.
+        """
+        # -(x + y) becomes ((-1) * (x + y))
+        result = expr_to_gams(Unary("-", Binary("+", VarRef("x", ()), VarRef("y", ()))))
+        assert result == "((-1) * (x + y))"
+
+    def test_unary_minus_function_call(self):
+        """Test unary minus on function call."""
+        # -sin(x) becomes ((-1) * sin(x))
+        result = expr_to_gams(Unary("-", Call("sin", (VarRef("x", ()),))))
+        assert result == "((-1) * (sin(x)))"
 
 
 @pytest.mark.unit
@@ -132,6 +203,21 @@ class TestBinaryOperators:
         """Test division."""
         result = expr_to_gams(Binary("/", Const(10), Const(2)))
         assert result == "10 / 2"
+
+    def test_multiplication_negative_right_operand(self):
+        """Test that y * -1 becomes y * (-1) to avoid GAMS Error 445."""
+        result = expr_to_gams(Binary("*", VarRef("y", ()), Const(-1)))
+        assert result == "y * (-1)"
+
+    def test_multiplication_negative_left_operand(self):
+        """Test that -1 * y becomes (-1) * y to avoid GAMS Error 445."""
+        result = expr_to_gams(Binary("*", Const(-1), VarRef("y", ())))
+        assert result == "(-1) * y"
+
+    def test_division_negative_right_operand(self):
+        """Test that x / -2 becomes x / (-2) to avoid GAMS Error 445."""
+        result = expr_to_gams(Binary("/", VarRef("x", ()), Const(-2)))
+        assert result == "x / (-2)"
 
     def test_power_operator(self):
         """Test power operator conversion to GAMS ** syntax."""
@@ -243,7 +329,10 @@ class TestSumExpression:
     """Test sum expression conversion."""
 
     def test_sum_single_index(self):
-        """Test sum with single index set."""
+        """Test sum with single index set.
+
+        All-lowercase identifiers (letters/underscores) are domain variables and not quoted.
+        """
         body = Binary("*", ParamRef("c", ("i",)), VarRef("x", ("i",)))
         result = expr_to_gams(Sum(("i",), body))
         assert result == "sum(i, c(i) * x(i))"
@@ -307,9 +396,102 @@ class TestComplexExpressions:
         assert result == "sum(i, a(i) * x(i) ** 2)"
 
     def test_complementarity_slack(self):
-        """Test complementarity slack: -g(x) where g(x) = x - 10."""
+        """Test complementarity slack: -g(x) where g(x) = x - 10.
+
+        Unary minus is converted to multiplication form ((-1) * (x - 10))
+        to avoid GAMS Error 445.
+        """
         expr = Unary("-", Binary("-", VarRef("x", ()), Const(10)))
         result = expr_to_gams(expr)
-        # Parentheses required to preserve mathematical correctness
-        # -(x - 10) = -x + 10, not -x - 10
-        assert result == "-(x - 10)"
+        # Unary minus converted to multiplication to avoid GAMS Error 445
+        assert result == "((-1) * (x - 10))"
+
+
+@pytest.mark.unit
+class TestQuoteIndices:
+    """Test the _quote_indices function for index quoting behavior.
+
+    This function distinguishes between domain variables (unquoted) and
+    element labels (quoted), and also handles indices that may already
+    be quoted from the parser.
+    """
+
+    def test_single_lowercase_letter_not_quoted(self):
+        """Single lowercase letters are domain variables, not quoted.
+
+        This is a subset of the general rule: all-lowercase identifiers
+        (letters and underscores only) are treated as domain variables.
+        """
+        assert _quote_indices(("i",)) == ["i"]
+        assert _quote_indices(("j",)) == ["j"]
+        assert _quote_indices(("i", "j")) == ["i", "j"]
+
+    def test_multi_letter_lowercase_not_quoted(self):
+        """Multi-letter lowercase identifiers are domain variables, not quoted."""
+        assert _quote_indices(("nodes",)) == ["nodes"]
+        assert _quote_indices(("years",)) == ["years"]
+        assert _quote_indices(("flow_var",)) == ["flow_var"]
+
+    def test_element_labels_quoted(self):
+        """Element labels (containing digits or uppercase) are quoted."""
+        assert _quote_indices(("i1",)) == ['"i1"']
+        assert _quote_indices(("H",)) == ['"H"']
+        assert _quote_indices(("H2",)) == ['"H2"']
+        assert _quote_indices(("H2O",)) == ['"H2O"']
+
+    def test_mixed_indices(self):
+        """Mixed domain variables and element labels."""
+        assert _quote_indices(("i", "j1")) == ["i", '"j1"']
+        assert _quote_indices(("nodes", "H2O")) == ["nodes", '"H2O"']
+
+    def test_already_double_quoted_no_double_quoting(self):
+        """Indices already quoted with double quotes should not be double-quoted.
+
+        This is the main fix for GAMS Error 409 where parser stores
+        indices like "demand" and emission would produce ""demand"".
+        """
+        assert _quote_indices(('"demand"',)) == ['"demand"']
+        assert _quote_indices(('"x"',)) == ['"x"']
+        assert _quote_indices(('"y"',)) == ['"y"']
+        assert _quote_indices(('"x"', '"y"')) == ['"x"', '"y"']
+
+    def test_already_single_quoted_no_double_quoting(self):
+        """Indices already quoted with single quotes should be re-quoted with double quotes."""
+        assert _quote_indices(("'demand'",)) == ['"demand"']
+        assert _quote_indices(("'x'",)) == ['"x"']
+
+    def test_quoted_lowercase_word_still_quoted(self):
+        """A quoted string like "demand" (lowercase word) should stay quoted.
+
+        Even though "demand" looks like a domain variable when unquoted,
+        if it was explicitly quoted in the source, it's an element label.
+        """
+        # "demand" is stored as '"demand"' by the parser
+        assert _quote_indices(('"demand"',)) == ['"demand"']
+
+    def test_quoted_index_stays_quoted_even_if_looks_like_domain(self):
+        """A quoted index stays quoted even if the inner value looks like a domain variable.
+
+        If the original GAMS code had a quoted string like "i" or "nodes",
+        it's an element label, not a domain variable - keep it quoted.
+        """
+        # Even though 'i' looks like a domain variable, "i" was explicitly quoted
+        assert _quote_indices(('"i"',)) == ['"i"']
+        assert _quote_indices(('"nodes"',)) == ['"nodes"']
+
+    def test_param_ref_with_quoted_string_index(self):
+        """Test ParamRef with a string literal index from the parser.
+
+        This is the actual use case: dempr(g,"demand") parsed with "demand" stored.
+        """
+        # The parser stores the index including the quotes
+        result = expr_to_gams(ParamRef("dempr", ("g", '"demand"')))
+        assert result == 'dempr(g,"demand")'
+        # Should NOT produce 'dempr(g,""demand"")'
+        assert '""' not in result
+
+    def test_var_ref_with_quoted_string_index(self):
+        """Test VarRef with a string literal index."""
+        result = expr_to_gams(VarRef("dat", ("i", '"y"')))
+        assert result == 'dat(i,"y")'
+        assert '""' not in result

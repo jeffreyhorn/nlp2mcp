@@ -34,9 +34,7 @@ Parameters
 
 Scalars
     b00 /0.0/
-    'loss equation constant' /0.040357/
     demand /0.0/
-    'total power demand in MW' /210.0/
     trace /0.0/
 ;
 
@@ -82,9 +80,13 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(i, i__);
+
 * Stationarity equations
-stat_cost.. 100 * sum(i, 0) / 10000 + 100 * sum((i,j), 0) / 10000 + (1 - sum((i,cg), 0)) * nu_costfn + (-sum(i, 0)) * lam_demcons =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * sum((i,j), 0) / 10000 + (-sum((i,cg), 0)) * nu_costfn + (-1) * lam_demcons =E= 0;
+stat_cost.. 100 * sum(i, 0) / 10000 + 100 * sum((i,j), 0) / 10000 + (1 - sum((i,cg), 0)) * nu_costfn + ((-1) * sum(i, 0)) * lam_demcons =E= 0;
+stat_p(i).. 100 * b0(i) / 10000 + 100 * sum((i__,j), 0) / 10000 + ((-1) * sum((i__,cg), 0)) * nu_costfn + (-1) * lam_demcons =E= 0;
 
 * Inequality complementarity equations
 comp_demcons.. sum(i, p(i)) =G= 0;

@@ -13,20 +13,58 @@ Special handling:
 - Handle indexed bounds correctly (per-instance π terms)
 - No π terms for infinite bounds
 - Group variable instances to generate indexed equations
+- For non-uniform bounds (different values per element), generate per-instance
+  stationarity equations to ensure bound multipliers are properly included
 """
 
 from __future__ import annotations
 
 from src.ir.ast import Binary, Call, Const, Expr, MultiplierRef, ParamRef, Sum, Unary, VarRef
+from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
-    create_bound_lo_multiplier_name,
-    create_bound_up_multiplier_name,
     create_eq_multiplier_name,
     create_ineq_multiplier_name,
+    sanitize_index_for_identifier,
 )
 from src.kkt.objective import extract_objective_info
+
+
+def _has_nonuniform_bounds(kkt: KKTSystem, var_name: str) -> bool:
+    """Check if a variable has non-uniform bounds (per-instance multipliers).
+
+    Non-uniform bounds occur when:
+    - The variable has per-instance bound multipliers (stored with non-empty indices)
+    - AND no uniform bound multiplier (stored with empty indices)
+
+    This indicates the variable has different bound values for different elements,
+    requiring per-instance stationarity equations to include the bound multiplier terms.
+
+    Args:
+        kkt: KKT system with multiplier definitions
+        var_name: Variable name to check
+
+    Returns:
+        True if variable has non-uniform bounds requiring per-instance stationarity
+    """
+    # Check lower bounds
+    has_uniform_lo = (var_name, ()) in kkt.multipliers_bounds_lo
+    has_perinstance_lo = any(
+        key[0] == var_name and key[1] != () for key in kkt.multipliers_bounds_lo.keys()
+    )
+
+    # Check upper bounds
+    has_uniform_up = (var_name, ()) in kkt.multipliers_bounds_up
+    has_perinstance_up = any(
+        key[0] == var_name and key[1] != () for key in kkt.multipliers_bounds_up.keys()
+    )
+
+    # Non-uniform if we have per-instance multipliers without uniform multipliers
+    nonuniform_lo = has_perinstance_lo and not has_uniform_lo
+    nonuniform_up = has_perinstance_up and not has_uniform_up
+
+    return nonuniform_lo or nonuniform_up
 
 
 def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
@@ -75,17 +113,39 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
         skip_eq = obj_info.defining_equation if not kkt.model_ir.strategy1_applied else None
 
         if var_def.domain:
-            # Indexed variable: generate indexed stationarity equation
-            stat_name = f"stat_{var_name}"
-            stat_expr = _build_indexed_stationarity_expr(
-                kkt, var_name, var_def.domain, instances, skip_eq
-            )
-            stationarity[stat_name] = EquationDef(
-                name=stat_name,
-                domain=var_def.domain,  # Use same domain as variable
-                relation=Rel.EQ,
-                lhs_rhs=(stat_expr, Const(0.0)),
-            )
+            # Indexed variable: check if it has non-uniform bounds
+            if _has_nonuniform_bounds(kkt, var_name):
+                # Non-uniform bounds: generate per-instance stationarity equations
+                # This ensures bound multipliers (piL_x_i1, piL_x_i2, etc.) are included
+                for col_id, var_indices in instances:
+                    # Create per-instance equation name: stat_x_i1, stat_x_i2, etc.
+                    sanitized = [sanitize_index_for_identifier(idx) for idx in var_indices]
+                    indices_str = "_".join(sanitized) if sanitized else ""
+                    stat_name = (
+                        f"stat_{var_name}_{indices_str}" if indices_str else f"stat_{var_name}"
+                    )
+
+                    stat_expr = _build_stationarity_expr(
+                        kkt, col_id, var_name, var_indices, skip_eq
+                    )
+                    stationarity[stat_name] = EquationDef(
+                        name=stat_name,
+                        domain=(),  # Scalar equation for this specific instance
+                        relation=Rel.EQ,
+                        lhs_rhs=(stat_expr, Const(0.0)),
+                    )
+            else:
+                # Uniform bounds: generate single indexed stationarity equation
+                stat_name = f"stat_{var_name}"
+                stat_expr = _build_indexed_stationarity_expr(
+                    kkt, var_name, var_def.domain, instances, skip_eq
+                )
+                stationarity[stat_name] = EquationDef(
+                    name=stat_name,
+                    domain=var_def.domain,  # Use same domain as variable
+                    relation=Rel.EQ,
+                    lhs_rhs=(stat_expr, Const(0.0)),
+                )
         else:
             # Scalar variable: generate scalar stationarity equation
             if len(instances) != 1:
@@ -196,17 +256,19 @@ def _build_indexed_stationarity_expr(
     )
 
     # Add bound multiplier terms if they exist
-    # Check if any instance has bounds
-    has_lower = any((var_name, indices) in kkt.multipliers_bounds_lo for _, indices in instances)
-    has_upper = any((var_name, indices) in kkt.multipliers_bounds_up for _, indices in instances)
+    # Check for uniform bounds (stored under (var_name, ())) or per-instance bounds
+    # Uniform bounds: single indexed multiplier for all instances
+    # Non-uniform bounds: per-instance scalar multipliers (handled in scalar stationarity)
+    has_lower_uniform = (var_name, ()) in kkt.multipliers_bounds_lo
+    has_upper_uniform = (var_name, ()) in kkt.multipliers_bounds_up
 
-    if has_lower:
-        piL_name = create_bound_lo_multiplier_name(var_name)
-        expr = Binary("-", expr, MultiplierRef(piL_name, domain))
+    if has_lower_uniform:
+        mult_def = kkt.multipliers_bounds_lo[(var_name, ())]
+        expr = Binary("-", expr, MultiplierRef(mult_def.name, mult_def.domain))
 
-    if has_upper:
-        piU_name = create_bound_up_multiplier_name(var_name)
-        expr = Binary("+", expr, MultiplierRef(piU_name, domain))
+    if has_upper_uniform:
+        mult_def = kkt.multipliers_bounds_up[(var_name, ())]
+        expr = Binary("+", expr, MultiplierRef(mult_def.name, mult_def.domain))
 
     return expr
 
@@ -237,7 +299,7 @@ def _build_indexed_gradient_term(
     element_to_set = _build_element_to_set_mapping(kkt.model_ir, domain, instances)
 
     # Replace element-specific indices with domain indices in the gradient
-    return _replace_indices_in_expr(grad_component, domain, element_to_set)
+    return _replace_indices_in_expr(grad_component, domain, element_to_set, kkt.model_ir)
 
 
 def _build_element_to_set_mapping(
@@ -249,6 +311,10 @@ def _build_element_to_set_mapping(
     not just the variable's domain. This enables proper index replacement
     for parameters that have indices from multiple sets.
 
+    Also maps set names to themselves, so that domain variables like "desk"
+    in price(desk) are preserved as-is rather than being treated as element
+    labels that need quoting.
+
     Args:
         model_ir: Model IR containing set definitions
         domain: Variable domain (tuple of set names) - used for instance inference
@@ -258,8 +324,12 @@ def _build_element_to_set_mapping(
         Dictionary mapping element labels to set names
 
     Example:
-        For model with h = {1, 2, 3, 4} and j = {a, b}:
-        Returns: {"1": "h", "2": "h", "3": "h", "4": "h", "a": "j", "b": "j"}
+        For model with desk = {d1, d2, d3, d4} and shop = {carpentry, finishing}:
+        Returns: {
+            "d1": "desk", "d2": "desk", "d3": "desk", "d4": "desk",
+            "carpentry": "shop", "finishing": "shop",
+            "desk": "desk", "shop": "shop"  # Set names map to themselves
+        }
 
     Note:
         If two different sets contain the same element label (e.g., both set h
@@ -273,7 +343,17 @@ def _build_element_to_set_mapping(
     """
     element_to_set: dict[str, str] = {}
 
-    # First, use instances to infer element-set relationships for the variable's domain.
+    # First, map set names to themselves.
+    # This ensures that domain variables like "desk" in price(desk) are recognized
+    # as set names (not element labels) and are preserved as unquoted identifiers.
+    for set_name in model_ir.sets.keys():
+        element_to_set[set_name] = set_name
+
+    # Also map alias names to themselves
+    for alias_name in model_ir.aliases.keys():
+        element_to_set[alias_name] = alias_name
+
+    # Then, use instances to infer element-set relationships for the variable's domain.
     # This ensures that, for ambiguous elements, the variable-specific domain wins.
     # It also handles cases where set definitions might not be available.
     for _col_id, var_indices in instances:
@@ -301,7 +381,10 @@ def _build_element_to_set_mapping(
 
 
 def _replace_indices_in_expr(
-    expr: Expr, domain: tuple[str, ...], element_to_set: dict[str, str] | None = None
+    expr: Expr,
+    domain: tuple[str, ...],
+    element_to_set: dict[str, str] | None = None,
+    model_ir: ModelIR | None = None,
 ) -> Expr:
     """Replace element-specific indices with domain indices in expression.
 
@@ -313,11 +396,17 @@ def _replace_indices_in_expr(
     - Parameters have more indices than the variable domain (e.g., data(h, *))
     - Only some indices should be replaced (element labels vs literal strings)
 
+    For parameters, uses the parameter's declared domain to disambiguate when
+    an element belongs to multiple sets. For example, if parameter a(i,c) has
+    indices ('H', 'c') where 'H' belongs to both set i and c, we use the declared
+    domain to know that the first index should map to set 'i'.
+
     Args:
         expr: Expression to process
         domain: Variable domain (e.g., ("h",) or ("i", "j"))
         element_to_set: Mapping from element labels to set names. If None,
                         falls back to simple length-based matching for backward compatibility.
+        model_ir: Model IR for looking up parameter domains (optional but recommended)
     """
     match expr:
         case Const(_):
@@ -327,7 +416,13 @@ def _replace_indices_in_expr(
                 if element_to_set:
                     # Replace each index that maps to a set in the domain
                     str_indices = var_ref.indices_as_strings()
-                    new_indices = _replace_matching_indices(str_indices, element_to_set)
+                    # Use variable domain for disambiguation if available
+                    var_domain = None
+                    if model_ir and var_ref.name in model_ir.variables:
+                        var_domain = model_ir.variables[var_ref.name].domain
+                    new_indices = _replace_matching_indices(
+                        str_indices, element_to_set, declared_domain=var_domain
+                    )
                     return VarRef(var_ref.name, new_indices)
                 elif len(var_ref.indices) == len(domain):
                     # Fallback: Replace all indices if lengths match
@@ -337,7 +432,13 @@ def _replace_indices_in_expr(
             if param_ref.indices and domain:
                 if element_to_set:
                     str_indices = param_ref.indices_as_strings()
-                    new_indices = _replace_matching_indices(str_indices, element_to_set)
+                    # Use parameter domain for disambiguation
+                    param_domain = None
+                    if model_ir and param_ref.name in model_ir.params:
+                        param_domain = model_ir.params[param_ref.name].domain
+                    new_indices = _replace_matching_indices(
+                        str_indices, element_to_set, declared_domain=param_domain
+                    )
                     return ParamRef(param_ref.name, new_indices)
                 elif len(param_ref.indices) == len(domain):
                     return ParamRef(param_ref.name, domain)
@@ -352,18 +453,20 @@ def _replace_indices_in_expr(
                     return MultiplierRef(mult_ref.name, domain)
             return expr
         case Binary(op, left, right):
-            new_left = _replace_indices_in_expr(left, domain, element_to_set)
-            new_right = _replace_indices_in_expr(right, domain, element_to_set)
+            new_left = _replace_indices_in_expr(left, domain, element_to_set, model_ir)
+            new_right = _replace_indices_in_expr(right, domain, element_to_set, model_ir)
             return Binary(op, new_left, new_right)
         case Unary(op, child):
-            new_child = _replace_indices_in_expr(child, domain, element_to_set)
+            new_child = _replace_indices_in_expr(child, domain, element_to_set, model_ir)
             return Unary(op, new_child)
         case Call(func, args):
-            new_args = tuple(_replace_indices_in_expr(arg, domain, element_to_set) for arg in args)
+            new_args = tuple(
+                _replace_indices_in_expr(arg, domain, element_to_set, model_ir) for arg in args
+            )
             return Call(func, new_args)
         case Sum(index_sets, body):
             # Recursively process body to replace any element-specific indices
-            new_body = _replace_indices_in_expr(body, domain, element_to_set)
+            new_body = _replace_indices_in_expr(body, domain, element_to_set, model_ir)
             if new_body is not body:
                 return Sum(index_sets, new_body)
             return expr
@@ -372,7 +475,9 @@ def _replace_indices_in_expr(
 
 
 def _replace_matching_indices(
-    indices: tuple[str, ...], element_to_set: dict[str, str]
+    indices: tuple[str, ...],
+    element_to_set: dict[str, str],
+    declared_domain: tuple[str, ...] | None = None,
 ) -> tuple[str, ...]:
     """Replace element labels with their corresponding set names.
 
@@ -380,9 +485,21 @@ def _replace_matching_indices(
     replace it with the set name. This handles parameters indexed by multiple
     sets (e.g., k1(h,j) where we need to replace both "1"->h and "a"->j).
 
+    When a declared_domain is provided (e.g., from a parameter's domain definition),
+    it's used to disambiguate when an element belongs to multiple sets. For example,
+    if element 'H' belongs to both set 'c' and set 'i', and the parameter domain
+    is ('i', 'c'), the first 'H' should map to 'i', not 'c'.
+
+    Special handling for wildcard domains: If a parameter is declared with a
+    wildcard domain like compdat(*,alloy), the "*" in the declared domain means
+    "accept any element". In this case, we should NOT replace the concrete index
+    (like "price") with "*". Instead, we preserve the original index if it's not
+    in element_to_set, or replace it with its set name if it is an element.
+
     Args:
         indices: Original indices (e.g., ("1", "a") or ("1", "cost"))
         element_to_set: Mapping from element labels to set names
+        declared_domain: The declared domain of the symbol (for disambiguation)
 
     Returns:
         New indices with element labels replaced by set names
@@ -392,10 +509,32 @@ def _replace_matching_indices(
         ("h", "j")  # Both "1" and "a" replaced with their set names
         >>> _replace_matching_indices(("1", "cost"), {"1": "h"})
         ("h", "cost")  # "1" replaced with "h", "cost" unchanged (not in mapping)
+        >>> # With declared_domain for disambiguation:
+        >>> _replace_matching_indices(("H", "c"), {"H": "c", "c": "c"}, declared_domain=("i", "c"))
+        ("i", "c")  # 'H' maps to 'i' (from declared_domain), 'c' stays as 'c'
+        >>> # With wildcard domain - preserve concrete indices:
+        >>> _replace_matching_indices(("price", "a"), {"a": "alloy"}, declared_domain=("*", "alloy"))
+        ("price", "alloy")  # "price" preserved (wildcard domain), "a" replaced
     """
     new_indices = []
-    for idx in indices:
-        if idx in element_to_set:
+    for i, idx in enumerate(indices):
+        # If we have a declared domain, use it to determine the target set
+        if declared_domain and i < len(declared_domain):
+            target_set = declared_domain[i]
+            # Special case: wildcard "*" means the parameter accepts any element
+            # at this position. Don't replace with "*" - instead, fall back to
+            # element_to_set mapping or preserve the original index.
+            if target_set == "*":
+                if idx in element_to_set:
+                    # The index is an element from a known set - replace it
+                    new_indices.append(element_to_set[idx])
+                else:
+                    # The index is a concrete literal (like "price") - preserve it
+                    new_indices.append(idx)
+            else:
+                # The index should map to the target set from the declared domain
+                new_indices.append(target_set)
+        elif idx in element_to_set:
             # Replace element with its set name
             new_indices.append(element_to_set[idx])
         else:
@@ -459,7 +598,9 @@ def _add_indexed_jacobian_terms(
 
             if mult_domain:
                 # Replace indices in derivative expression using element_to_set mapping
-                indexed_deriv = _replace_indices_in_expr(derivative, var_domain, element_to_set)
+                indexed_deriv = _replace_indices_in_expr(
+                    derivative, var_domain, element_to_set, kkt.model_ir
+                )
 
                 # Get base multiplier name (without element suffixes)
                 mult_base_name = name_func(eq_name_base)
@@ -493,7 +634,9 @@ def _add_indexed_jacobian_terms(
             if mult_name in multipliers:
                 mult_ref = MultiplierRef(mult_name, ())
                 # Replace indices in derivative using element_to_set mapping
-                indexed_deriv = _replace_indices_in_expr(derivative, var_domain, element_to_set)
+                indexed_deriv = _replace_indices_in_expr(
+                    derivative, var_domain, element_to_set, kkt.model_ir
+                )
                 term = Binary("*", indexed_deriv, mult_ref)
                 expr = Binary("+", expr, term)
 
@@ -539,13 +682,19 @@ def _build_stationarity_expr(
     # Subtract π^L (lower bound multiplier, if exists)
     key = (var_name, var_indices)
     if key in kkt.multipliers_bounds_lo:
-        piL_name = create_bound_lo_multiplier_name(var_name)
-        expr = Binary("-", expr, MultiplierRef(piL_name, var_indices))
+        mult_def = kkt.multipliers_bounds_lo[key]
+        # Use the actual multiplier name from the definition (handles both indexed and scalar cases)
+        piL_name = mult_def.name
+        # Use the multiplier's domain for the indices (empty for scalar multipliers)
+        expr = Binary("-", expr, MultiplierRef(piL_name, mult_def.domain))
 
     # Add π^U (upper bound multiplier, if exists)
     if key in kkt.multipliers_bounds_up:
-        piU_name = create_bound_up_multiplier_name(var_name)
-        expr = Binary("+", expr, MultiplierRef(piU_name, var_indices))
+        mult_def = kkt.multipliers_bounds_up[key]
+        # Use the actual multiplier name from the definition (handles both indexed and scalar cases)
+        piU_name = mult_def.name
+        # Use the multiplier's domain for the indices (empty for scalar multipliers)
+        expr = Binary("+", expr, MultiplierRef(piU_name, mult_def.domain))
 
     return expr
 
