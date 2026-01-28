@@ -21,7 +21,7 @@ Sets
 ;
 
 Parameters
-    a(i,c) /H.H 1.0, H.H2 2.0, H.H2O 2.0, H.NH 1.0, H.OH 1.0, N.N 1.0, N.N2 2.0, N.NH 1.0, N.NO 1.0, O.H2O 1.0, O.NO 1.0, O.O 1.0, O.O2 2.0, O.OH 1.0, O.H 0.0, O.H2 0.0, O.N 0.0, O.N2 0.0, O.NH 0.0, H.N 0.0, H.N2 0.0, H.NO 0.0, H.O 0.0, H.O2 0.0, N.H 0.0, N.H2 0.0, N.H2O 0.0, N.O 0.0, N.O2 0.0, N.OH 0.0/
+    a(i,c) /H.H 1.0, H.H2 2.0, H.H2O 2.0, H.NH 1.0, H.OH 1.0, N.N 1.0, N.N2 2.0, N.NH 1.0, N.NO 1.0, O.H2O 1.0, O.NO 1.0, O.O 1.0, O.O2 2.0, O.OH 1.0, N.H 0.0, N.H2 0.0, N.H2O 0.0, N.O 0.0, N.O2 0.0, N.OH 0.0, H.N 0.0, H.N2 0.0, H.NO 0.0, H.O 0.0, H.O2 0.0, O.H 0.0, O.H2 0.0, O.N 0.0, O.N2 0.0, O.NH 0.0/
     mix(i) /h 2.0, n 1.0, o 1.0/
     gibbs(c) /H -10.021, H2 -21.096, H2O -37.986, N -9.846, N2 -28.653, NH -18.918, NO -28.032, O -14.64, o2 -30.594, OH -26.11/
     gplus(c)
@@ -69,7 +69,16 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x(c)
+    stat_x_H
+    stat_x_H2
+    stat_x_H2O
+    stat_x_N
+    stat_x_N2
+    stat_x_NH
+    stat_x_NO
+    stat_x_O
+    stat_x_O2
+    stat_x_OH
     stat_xb
     comp_lo_x_H
     comp_lo_x_H2
@@ -92,7 +101,16 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(c).. gplus(c) + log(x(c) / xb) + x(c) * 1 / (x(c) / xb) * 1 / xb ** 1 + sum(i, a(i,c) * nu_cdef(i)) + (-1) * nu_xdef - piL_x(c) =E= 0;
+stat_x_H.. gplus("H") + log(x("H") / xb) + x("H") * 1 / (x("H") / xb) * 1 / xb ** 1 + a("H","H") * nu_cdef("H") + a("N","H") * nu_cdef("N") + a("O","H") * nu_cdef("O") + (-1) * nu_xdef - piL_x_H =E= 0;
+stat_x_H2.. gplus("H2") + log(x("H2") / xb) + x("H2") * 1 / (x("H2") / xb) * 1 / xb ** 1 + a("H","H2") * nu_cdef("H") + a("N","H2") * nu_cdef("N") + a("O","H2") * nu_cdef("O") + (-1) * nu_xdef - piL_x_H2 =E= 0;
+stat_x_H2O.. gplus("H2O") + log(x("H2O") / xb) + x("H2O") * 1 / (x("H2O") / xb) * 1 / xb ** 1 + a("H","H2O") * nu_cdef("H") + a("N","H2O") * nu_cdef("N") + a("O","H2O") * nu_cdef("O") + (-1) * nu_xdef - piL_x_H2O =E= 0;
+stat_x_N.. gplus("N") + log(x("N") / xb) + x("N") * 1 / (x("N") / xb) * 1 / xb ** 1 + a("H","N") * nu_cdef("H") + a("N","N") * nu_cdef("N") + a("O","N") * nu_cdef("O") + (-1) * nu_xdef - piL_x_N =E= 0;
+stat_x_N2.. gplus("N2") + log(x("N2") / xb) + x("N2") * 1 / (x("N2") / xb) * 1 / xb ** 1 + a("H","N2") * nu_cdef("H") + a("N","N2") * nu_cdef("N") + a("O","N2") * nu_cdef("O") + (-1) * nu_xdef - piL_x_N2 =E= 0;
+stat_x_NH.. gplus("NH") + log(x("NH") / xb) + x("NH") * 1 / (x("NH") / xb) * 1 / xb ** 1 + a("H","NH") * nu_cdef("H") + a("N","NH") * nu_cdef("N") + a("O","NH") * nu_cdef("O") + (-1) * nu_xdef - piL_x_NH =E= 0;
+stat_x_NO.. gplus("NO") + log(x("NO") / xb) + x("NO") * 1 / (x("NO") / xb) * 1 / xb ** 1 + a("H","NO") * nu_cdef("H") + a("N","NO") * nu_cdef("N") + a("O","NO") * nu_cdef("O") + (-1) * nu_xdef - piL_x_NO =E= 0;
+stat_x_O.. gplus("O") + log(x("O") / xb) + x("O") * 1 / (x("O") / xb) * 1 / xb ** 1 + a("H","O") * nu_cdef("H") + a("N","O") * nu_cdef("N") + a("O","O") * nu_cdef("O") + (-1) * nu_xdef - piL_x_O =E= 0;
+stat_x_O2.. gplus("O2") + log(x("O2") / xb) + x("O2") * 1 / (x("O2") / xb) * 1 / xb ** 1 + a("H","O2") * nu_cdef("H") + a("N","O2") * nu_cdef("N") + a("O","O2") * nu_cdef("O") + (-1) * nu_xdef - piL_x_O2 =E= 0;
+stat_x_OH.. gplus("OH") + log(x("OH") / xb) + x("OH") * 1 / (x("OH") / xb) * 1 / xb ** 1 + a("H","OH") * nu_cdef("H") + a("N","OH") * nu_cdef("N") + a("O","OH") * nu_cdef("O") + (-1) * nu_xdef - piL_x_OH =E= 0;
 stat_xb.. sum(c, x(c) * 1 / (x(c) / xb) * ((-1) * x(c)) / xb ** 2) + sum(c, 0) * nu_cdef("H") + sum(c, 0) * nu_cdef("N") + sum(c, 0) * nu_cdef("O") + (1 - sum(c, 0)) * nu_xdef - piL_xb =E= 0;
 
 * Lower bound complementarity equations
@@ -128,7 +146,16 @@ edef.. energy =E= sum(c, x(c) * (gplus(c) + log(x(c) / xb)));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x.x,
+    stat_x_H.x_H,
+    stat_x_H2.x_H2,
+    stat_x_H2O.x_H2O,
+    stat_x_N.x_N,
+    stat_x_N2.x_N2,
+    stat_x_NH.x_NH,
+    stat_x_NO.x_NO,
+    stat_x_O.x_O,
+    stat_x_O2.x_O2,
+    stat_x_OH.x_OH,
     stat_xb.xb,
     cdef.nu_cdef,
     edef.energy,
