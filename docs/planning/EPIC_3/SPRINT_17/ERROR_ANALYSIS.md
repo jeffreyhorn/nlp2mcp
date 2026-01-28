@@ -149,8 +149,10 @@ Source: /1*6/ interpreted as division
 | P2 | Range syntax in sets | 2h | 2+ |
 | P3 | Complex set data (defer) | 8h+ | 91 |
 
-**P1 Total:** 10h, ~26 models potentially fixed  
-**P1+P2 Total:** 20h, ~45 models potentially fixed (with overlap)
+**P1 Total:** 10h effort targeting fixes that affect ~26 models (with overlap between fixes)  
+**P1+P2 Total:** 20h effort targeting fixes that affect ~45 models (with overlap between fixes)
+
+**Note:** Model counts have overlap - the same model may be blocked by multiple issues. The actual number of newly-parsing models will be lower than the sum of individual fix impacts.
 
 ---
 
@@ -363,7 +365,9 @@ These fixes offer high ROI (models fixed per hour of effort):
 | Abort syntax | Parse | 2h | ~3 | 1.5 |
 | Feasibility handling | Translate | 4h | 5 | 1.25 |
 
-**Total Quick Wins:** 13h effort, ~25-29 models potentially fixed (accounting for overlaps)
+**Total Quick Wins:** 13h effort, ~25-29 models potentially fixed
+
+**Note:** Individual fix counts have overlap (same model may have multiple issues). The 25-29 estimate accounts for this overlap - it is NOT a simple sum of the "Models" column.
 
 ---
 
@@ -406,7 +410,7 @@ These fixes offer high ROI (models fixed per hour of effort):
 | Phase 2 | 30h | 55% (~88) | 55% (~48/88) | 44% (~21/48) |
 | Phase 3 | 50h | 65% (~104) | 60% (~62/104) | 45% (~28/62) |
 
-**Note:** Rates are estimates; actual improvements depend on fix overlap and cascading effects. Solve rate is calculated as solves/translated, not as a cumulative improvement target. The solve rate may decrease initially as more models translate but before solve fixes take effect.
+**Note:** Rates are estimates; actual improvements depend on fix overlap and cascading effects. Solve rate (solves/translated) may appear to decrease in early phases because more models translate (larger denominator) before solve fixes take full effect. This is expected behavior - the absolute number of successful solves still increases.
 
 ---
 
@@ -524,7 +528,7 @@ Cascade Factors:
 **Application to Quick Wins:**
 | Fix | Models | Effort | Cascade | Score |
 |-----|--------|--------|---------|-------|
-| Unary minus (solve) | 10 | 2h | 2.0 | 10.0 |
+| Unary minus (solve) | 5-6 | 2h | 2.0 | 5.0-6.0 |
 | Keyword case (parse) | 9 | 2h | 1.0 | 4.5 |
 | MCP separator (solve) | 3 | 1h | 2.0 | 6.0 |
 
@@ -565,7 +569,7 @@ Models with index domain alignment issues.
 Models using gamma, card, ord, or other unsupported functions.
 
 ### A.5 Solve: path_syntax_error (8 models)
-himmel11, house, least, mathopt1, mathopt2, mhw4d, mhw4dx, process, rbrock, sample (overlap - 10 affected by Error 445)
+Models with path_syntax_error in Sprint 16 baseline. Note: 5-6 of these 8 models are affected by the unary minus pattern (Error 445).
 
 ---
 
