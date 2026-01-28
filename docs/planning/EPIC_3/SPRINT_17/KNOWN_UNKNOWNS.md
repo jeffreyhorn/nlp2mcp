@@ -64,14 +64,14 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 ## Summary Statistics
 
 **Total Unknowns:** 27  
-**Verified:** 7 (26%)  
+**Verified:** 14 (52%)  
 **Partially Verified:** 1 (4%)  
-**Remaining:** 19 (70%)
+**Remaining:** 12 (44%)
 
 **By Priority:**
-- Critical: 4 (15%) - 1 partially verified, 3 remaining
-- High: 8 (30%) - 1 verified, 7 remaining
-- Medium: 12 (44%) - 5 verified, 7 remaining
+- Critical: 4 (15%) - 3 verified, 1 partially verified
+- High: 8 (30%) - 4 verified, 4 remaining
+- Medium: 12 (44%) - 6 verified, 6 remaining
 - Low: 3 (11%) - 1 verified, 2 remaining
 
 **By Category:**
@@ -145,7 +145,26 @@ grep -n "def diff_" src/ad/*.py | head -30
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** The 6 models with `diff_unsupported_func` errors use 5 distinct functions:
+
+| Function | Models | Differentiable? | Derivative Formula |
+|----------|--------|-----------------|-------------------|
+| gamma | aircraft, orani | Yes | Γ(x)·ψ(x) where ψ is digamma |
+| loggamma | mingamma | Yes | ψ(x) (digamma function) |
+| card | hydro | No | Set cardinality - not differentiable |
+| ord | markov | No | Element ordinal - not differentiable |
+| smin | maxmin | Yes | Smooth approximation via LogSumExp |
+
+**Key Insight:** 3 functions (gamma, loggamma, smin) are mathematically differentiable and can be added to the AD module. 2 functions (card, ord) are structural/discrete and cannot be differentiated - models using these for optimization require reformulation.
+
+**Implementation Notes:**
+- gamma/loggamma require digamma function (available in scipy.special or polynomial approximation)
+- smin can use LogSumExp: `smin(a,b) ≈ -τ·ln(exp(-a/τ) + exp(-b/τ))`
+- Estimated effort: 4h for gamma/loggamma, 2h for smin
+
+**See:** TRANSLATION_ANALYSIS.md Section 1.1
 
 ---
 
@@ -192,7 +211,26 @@ cat tests/output/pipeline_results.json | jq '.models[] | select(.translate_outco
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** Domain mismatch errors occur in `src/kkt/stationarity.py` (lines 613-627) during KKT construction. The 6 affected models have **partial index overlap** between variable and multiplier domains:
+
+| Model | Variable Domain | Multiplier Domain | Issue |
+|-------|-----------------|-------------------|-------|
+| abel | (m, k) | (n, k) | Share 'k', differ in m/n |
+| himmel16 | (i,) | (i, j) | Multiplier is superset |
+| mexss | (c, i) | (c, j) | Share 'c', differ in i/j |
+| pak | (te,) | (te, tf) | Multiplier is superset |
+| qabel | (m, k) | (n, k) | Share 'k', differ in m/n |
+| robert | (p, tt) | (p, tf) | Share 'p', differ in tt/tf |
+
+**Root Cause:** The stationarity equation builder requires multiplier domains to be either a **subset** of variable domains or **completely disjoint**. Partial overlaps (sharing some indices but not others) are rejected.
+
+**Key Insight:** This is NOT an IR domain propagation bug - domain information is correctly tracked. The issue is in KKT construction logic that doesn't handle partial overlaps. Fix requires improving `stationarity.py` to introduce intermediate summation indices.
+
+**Estimated effort:** 6h (requires careful analysis of mathematical correctness)
+
+**See:** TRANSLATION_ANALYSIS.md Section 1.2
 
 ---
 
@@ -241,7 +279,30 @@ done
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** The 5 models with `model_no_objective_def` errors have MINIMIZE/MAXIMIZE statements but the objective variable is not defined by a simple equation of the form `objvar =e= expression`:
+
+| Model | Obj Var | Pattern | Issue |
+|-------|---------|---------|-------|
+| alkyl | f | Has 'objective' equation | Equation name differs from objvar |
+| bearing | pl | Has 'power_loss' equation | Related but different name |
+| circle | r | No defining equation | True feasibility-style problem |
+| cpack | r | No defining equation | True feasibility-style problem |
+| trussm | tau | No defining equation | True feasibility-style problem |
+
+**Root Cause:** The `find_objective_expression()` function in `src/ad/gradient.py` looks for equations where the objective variable appears on LHS or RHS exactly. Some models define objectives indirectly or use feasibility-style formulations.
+
+**Key Insight:** These are NOT true feasibility problems in most cases - the models have objectives but the extraction logic is too strict. Enhanced extraction should:
+1. Search all equations for objective variable
+2. Extract expression from any equation containing objective
+3. For true feasibility problems, add dummy objective
+
+**Recommended Fix:** Enhance `find_objective_expression()` to search for any equation containing the objective variable (not just exact LHS/RHS matches).
+
+**Estimated effort:** 4h
+
+**See:** TRANSLATION_ANALYSIS.md Section 1.3
 
 ---
 
@@ -289,7 +350,29 @@ cat tests/output/pipeline_results.json | jq '.models[] | select(.translate_outco
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** There are actually **4 models** (not 3) with `unsup_index_offset` errors. The patterns found:
+
+| Model | Type | Index Pattern | Context |
+|-------|------|---------------|---------|
+| jobt | LP | t-1 | Time lag `X(t-1)` |
+| like | NLP | g+ | Lead operator |
+| ramsey | NLP | t+ | Lead operator |
+| whouse | LP | t-1 | Time lag in warehouse model |
+
+**Root Cause:** The parser correctly creates `IndexOffset` AST nodes, but `src/ir/ast.py` raises `NotImplementedError` in multiple visitor methods (lines 50, 71, 97, 119) when processing these nodes.
+
+**Key Insight:** IndexOffset support requires changes in:
+1. `src/ir/ast.py` - Handle IndexOffset in index extraction
+2. Code generation - Translate to proper GAMS syntax
+3. Differentiation - Handle `∂/∂X(t)` when expression contains `X(t-1)` (evaluates to 0 when indices differ)
+
+**Implementation Complexity:** High - requires coordinated changes across multiple modules and careful handling of derivative semantics.
+
+**Estimated effort:** 8h
+
+**See:** TRANSLATION_ANALYSIS.md Section 1.4
 
 ---
 
@@ -332,7 +415,15 @@ grep '\$' data/gamslib/raw/$model.gms | head -20
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** There are **0 models** with `unsup_dollar_cond` errors in the current Sprint 16 baseline. This error category exists in the taxonomy but doesn't appear in the 27 translation failures.
+
+**Key Insight:** Dollar conditional handling may have been addressed in earlier sprints, or the current test models don't use complex dollar conditionals in ways that trigger this error.
+
+**Recommendation:** No action needed for Sprint 17. Keep the error category in taxonomy for future detection.
+
+**See:** TRANSLATION_ANALYSIS.md (confirms 0 occurrences)
 
 ---
 
@@ -373,7 +464,27 @@ cat tests/output/pipeline_results.json | jq '.models[] | select(.translate_outco
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** There are **3 models** with `codegen_numerical_error` (not 1 as originally estimated). All are caused by **invalid parameter values** in the model data:
+
+| Model | Parameter | Invalid Value | Likely Cause |
+|-------|-----------|---------------|--------------|
+| decomp | rep[2,gap] | +Inf | Division by zero in data |
+| gastrans | Ndata[Antwerpen,slo] | -Inf | Log of zero or negative |
+| ibm1 | bspec[aluminum,maximum] | +Inf | Uninitialized parameter |
+
+**Root Cause:** These are **model data issues**, not nlp2mcp bugs. The GAMS models contain parameter calculations or data that produce infinite or undefined values.
+
+**Key Insight:** These models are fundamentally broken - no code fix can make them work correctly. They should be:
+1. Excluded from success metrics, OR
+2. Reported with clear error messages pointing to the problematic parameter
+
+**Recommendation:** Improve error messages to identify which GAMS line caused the invalid value, but do not count these as fixable translation failures.
+
+**Estimated effort:** 1h (improved error reporting only)
+
+**See:** TRANSLATION_ANALYSIS.md Section 1.6
 
 ---
 
@@ -414,7 +525,34 @@ Fixing the identified translation issues will improve translate success rate tow
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** Analysis of the 27 translation failures shows they are **largely independent** - fixing one category doesn't affect others. Here's the breakdown by fixability:
+
+| Category | Models | Fixable? | Independence |
+|----------|--------|----------|--------------|
+| diff_unsupported_func | 6 | 4 yes, 2 no | Independent |
+| model_domain_mismatch | 6 | Yes | Independent |
+| model_no_objective_def | 5 | Yes | Independent |
+| unsup_index_offset | 4 | Yes | Independent |
+| internal_error | 3 | 2 maybe | Independent |
+| codegen_numerical_error | 3 | No (data) | Independent |
+
+**Key Insight:** 
+1. Issues are independent - each model has exactly one translation error category
+2. No model fails multiple translation stages
+3. ~21 models are potentially fixable with code changes
+4. 6 models are unfixable (data issues, non-differentiable functions, boolean logic)
+
+**Expected Translation Improvement:**
+- Current: 21/48 (43.8%)
+- After P1 fixes: ~32/48 (66.7%) - +11 models
+- After P1+P2 fixes: ~38/48 (79.2%) - +17 models total
+- Maximum achievable: ~42/48 (87.5%) - excludes 6 unfixable
+
+**Conclusion:** 60% translate rate is realistic and achievable with P1 quick wins alone.
+
+**See:** TRANSLATION_ANALYSIS.md Section 4
 
 ---
 
