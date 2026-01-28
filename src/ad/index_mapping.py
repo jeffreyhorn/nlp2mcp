@@ -150,6 +150,9 @@ def resolve_set_members(set_or_alias_name: str, model_ir: ModelIR) -> tuple[list
     # Direct set lookup
     if set_or_alias_name in model_ir.sets:
         set_def = model_ir.sets[set_or_alias_name]
+        # Handle both SetDef objects and plain lists (for test compatibility)
+        if isinstance(set_def, (list, tuple, set, frozenset)):
+            return (list(set_def), set_or_alias_name)
         return (set_def.members, set_or_alias_name)
 
     raise ValueError(

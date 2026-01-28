@@ -15,6 +15,7 @@ Key features:
 
 from __future__ import annotations
 
+from src.ad.index_mapping import enumerate_variable_instances
 from src.ir.ast import Binary, Const, Unary, VarRef
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
@@ -153,18 +154,23 @@ def build_complementarity_pairs(
     #   Create a single indexed equation comp_lo_x(i).. x(i) - lo =G= 0
     #   This allows proper GAMS MCP model statement syntax: comp_lo_x.piL_x
     # - If variable has NON-UNIFORM bounds (has lo_map overrides):
-    #   Create per-instance equations to handle different bound values per element
+    #   Create per-instance equations for ALL variable instances, using override
+    #   values where present and base bound values otherwise
     #
     # First, identify which variables have non-uniform bounds (per-element overrides)
+    # and collect their base bounds
     lo_vars_with_overrides: set[str] = set()
-    for (var_name, indices), _bound_def in partition.bounds_lo.items():
-        if indices != ():
+    lo_vars_base_bound: dict[str, float] = {}
+    for (var_name, indices), bound_def in partition.bounds_lo.items():
+        if indices == ():
+            lo_vars_base_bound[var_name] = bound_def.value
+        else:
             # Per-element override indicates non-uniform bounds
             lo_vars_with_overrides.add(var_name)
 
     # Process lower bounds
     lo_vars_seen: set[str] = set()
-    for (var_name, indices), bound_def in partition.bounds_lo.items():
+    for (var_name, _indices), bound_def in partition.bounds_lo.items():
         # Get variable domain from model_ir
         var_def = kkt.model_ir.variables.get(var_name)
         var_domain = var_def.domain if var_def else ()
@@ -174,30 +180,51 @@ def build_complementarity_pairs(
 
         if has_overrides:
             # Non-uniform bounds: create per-instance equations with scalar multipliers
-            # This handles cases where bounds vary by element
-            if indices == ():
-                # Skip the base bound entry - we'll use per-instance equations
-                # Only process if there are no element-specific entries for this var
-                # (In practice, if has_overrides is True, there ARE element-specific entries)
+            # Skip if we already processed this variable (we handle all instances at once)
+            if var_name in lo_vars_seen:
                 continue
-            # Create per-instance scalar multiplier name: piL_x_i1
-            piL_name = create_bound_lo_multiplier_name_indexed(var_name, indices)
-            # Create per-instance equation: comp_lo_x_i1.. x("i1") - lo_i1 =G= 0
-            # Sanitize indices for valid GAMS equation names (replace '-', '.', etc. with '_')
-            sanitized_indices = [sanitize_index_for_identifier(idx) for idx in indices]
-            indices_str = "_".join(sanitized_indices) if sanitized_indices else ""
-            eq_name = f"comp_lo_{var_name}_{indices_str}" if indices_str else f"comp_lo_{var_name}"
-            F_piL = Binary("-", VarRef(var_name, indices), Const(bound_def.value))
-            comp_eq = EquationDef(
-                name=eq_name,
-                domain=(),
-                relation=Rel.GE,
-                lhs_rhs=(F_piL, Const(0.0)),
-            )
-            # Both equation and multiplier are scalar - no variable_indices needed
-            comp_bounds_lo[(var_name, indices)] = ComplementarityPair(
-                equation=comp_eq, variable=piL_name, variable_indices=()
-            )
+            lo_vars_seen.add(var_name)
+
+            # Get base bound value (if any) for elements without explicit overrides
+            base_bound = lo_vars_base_bound.get(var_name)
+
+            # Enumerate ALL variable instances
+            if var_def and var_domain:
+                all_instances = enumerate_variable_instances(var_def, kkt.model_ir)
+            else:
+                all_instances = [()]
+
+            # Create per-instance equation for each instance
+            for inst_indices in all_instances:
+                # Determine bound value: use override if present, otherwise base bound
+                if (var_name, inst_indices) in partition.bounds_lo:
+                    bound_value = partition.bounds_lo[(var_name, inst_indices)].value
+                elif base_bound is not None:
+                    bound_value = base_bound
+                else:
+                    # No bound for this instance (shouldn't happen if partition is correct)
+                    continue
+
+                # Create per-instance scalar multiplier name: piL_x_i1
+                piL_name = create_bound_lo_multiplier_name_indexed(var_name, inst_indices)
+                # Create per-instance equation: comp_lo_x_i1.. x("i1") - lo_i1 =G= 0
+                # Sanitize indices for valid GAMS equation names (replace '-', '.', etc. with '_')
+                sanitized_indices = [sanitize_index_for_identifier(idx) for idx in inst_indices]
+                indices_str = "_".join(sanitized_indices) if sanitized_indices else ""
+                eq_name = (
+                    f"comp_lo_{var_name}_{indices_str}" if indices_str else f"comp_lo_{var_name}"
+                )
+                F_piL = Binary("-", VarRef(var_name, inst_indices), Const(bound_value))
+                comp_eq = EquationDef(
+                    name=eq_name,
+                    domain=(),
+                    relation=Rel.GE,
+                    lhs_rhs=(F_piL, Const(0.0)),
+                )
+                # Both equation and multiplier are scalar - no variable_indices needed
+                comp_bounds_lo[(var_name, inst_indices)] = ComplementarityPair(
+                    equation=comp_eq, variable=piL_name, variable_indices=()
+                )
         else:
             # Uniform bounds: create single indexed equation (or scalar equation)
             # Skip if we already created the equation for this variable
@@ -241,15 +268,19 @@ def build_complementarity_pairs(
     # Same strategy as lower bounds: uniform vs non-uniform handling
     #
     # First, identify which variables have non-uniform bounds (per-element overrides)
+    # and collect their base bounds
     up_vars_with_overrides: set[str] = set()
-    for (var_name, indices), _bound_def in partition.bounds_up.items():
-        if indices != ():
+    up_vars_base_bound: dict[str, float] = {}
+    for (var_name, indices), bound_def in partition.bounds_up.items():
+        if indices == ():
+            up_vars_base_bound[var_name] = bound_def.value
+        else:
             # Per-element override indicates non-uniform bounds
             up_vars_with_overrides.add(var_name)
 
     # Process upper bounds
     up_vars_seen: set[str] = set()
-    for (var_name, indices), bound_def in partition.bounds_up.items():
+    for (var_name, _indices), bound_def in partition.bounds_up.items():
         # Get variable domain from model_ir
         var_def = kkt.model_ir.variables.get(var_name)
         var_domain = var_def.domain if var_def else ()
@@ -259,27 +290,51 @@ def build_complementarity_pairs(
 
         if has_overrides:
             # Non-uniform bounds: create per-instance equations with scalar multipliers
-            if indices == ():
-                # Skip the base bound entry - we'll use per-instance equations
+            # Skip if we already processed this variable (we handle all instances at once)
+            if var_name in up_vars_seen:
                 continue
-            # Create per-instance scalar multiplier name: piU_x_i1
-            piU_name = create_bound_up_multiplier_name_indexed(var_name, indices)
-            # Create per-instance equation: comp_up_x_i1.. up_i1 - x("i1") =G= 0
-            # Sanitize indices for valid GAMS equation names (replace '-', '.', etc. with '_')
-            sanitized_indices = [sanitize_index_for_identifier(idx) for idx in indices]
-            indices_str = "_".join(sanitized_indices) if sanitized_indices else ""
-            eq_name = f"comp_up_{var_name}_{indices_str}" if indices_str else f"comp_up_{var_name}"
-            F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, indices))
-            comp_eq = EquationDef(
-                name=eq_name,
-                domain=(),
-                relation=Rel.GE,
-                lhs_rhs=(F_piU, Const(0.0)),
-            )
-            # Both equation and multiplier are scalar - no variable_indices needed
-            comp_bounds_up[(var_name, indices)] = ComplementarityPair(
-                equation=comp_eq, variable=piU_name, variable_indices=()
-            )
+            up_vars_seen.add(var_name)
+
+            # Get base bound value (if any) for elements without explicit overrides
+            base_bound = up_vars_base_bound.get(var_name)
+
+            # Enumerate ALL variable instances
+            if var_def and var_domain:
+                all_instances = enumerate_variable_instances(var_def, kkt.model_ir)
+            else:
+                all_instances = [()]
+
+            # Create per-instance equation for each instance
+            for inst_indices in all_instances:
+                # Determine bound value: use override if present, otherwise base bound
+                if (var_name, inst_indices) in partition.bounds_up:
+                    bound_value = partition.bounds_up[(var_name, inst_indices)].value
+                elif base_bound is not None:
+                    bound_value = base_bound
+                else:
+                    # No bound for this instance (shouldn't happen if partition is correct)
+                    continue
+
+                # Create per-instance scalar multiplier name: piU_x_i1
+                piU_name = create_bound_up_multiplier_name_indexed(var_name, inst_indices)
+                # Create per-instance equation: comp_up_x_i1.. up_i1 - x("i1") =G= 0
+                # Sanitize indices for valid GAMS equation names (replace '-', '.', etc. with '_')
+                sanitized_indices = [sanitize_index_for_identifier(idx) for idx in inst_indices]
+                indices_str = "_".join(sanitized_indices) if sanitized_indices else ""
+                eq_name = (
+                    f"comp_up_{var_name}_{indices_str}" if indices_str else f"comp_up_{var_name}"
+                )
+                F_piU = Binary("-", Const(bound_value), VarRef(var_name, inst_indices))
+                comp_eq = EquationDef(
+                    name=eq_name,
+                    domain=(),
+                    relation=Rel.GE,
+                    lhs_rhs=(F_piU, Const(0.0)),
+                )
+                # Both equation and multiplier are scalar - no variable_indices needed
+                comp_bounds_up[(var_name, inst_indices)] = ComplementarityPair(
+                    equation=comp_eq, variable=piU_name, variable_indices=()
+                )
         else:
             # Uniform bounds: create single indexed equation (or scalar equation)
             # Skip if we already created the equation for this variable
