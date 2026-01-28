@@ -55,7 +55,7 @@ Created comprehensive Known Unknowns document for Sprint 17 with 27 unknowns acr
 
 #### Key Focus Areas for Prep Research
 
-1. **Critical Priority (7 unknowns):**
+1. **Critical Priority (4 unknowns):**
    - Unknown 1.1: Missing AD functions for diff_unsupported_func
    - Unknown 1.2: Domain mismatch root causes
    - Unknown 2.1: Path syntax error patterns
