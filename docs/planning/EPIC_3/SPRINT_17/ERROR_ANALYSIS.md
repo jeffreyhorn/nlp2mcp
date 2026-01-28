@@ -55,23 +55,23 @@ This document provides a comprehensive analysis of errors across all pipeline st
 
 ### 1.2 lexer_invalid_char Subcategory Analysis
 
-Based on Sprint 16 LEXER_ERROR_ANALYSIS.md and baseline metrics:
+Based on Sprint 16 LEXER_ERROR_ANALYSIS.md (which analyzed 153 lexer error instances across 219 models), the error patterns can be grouped into these subcategories:
 
-| Subcategory | Count | % of Lexer Errors | Effort | Priority |
-|-------------|-------|-------------------|--------|----------|
-| Complex set data syntax | 91 | 59% | High | P3 (defer most) |
-| Tuple expansion `(a,b).c` | 12 | 8% | Medium | P2 |
-| Numeric context issues | 11 | 7% | Medium | P1 |
-| Keyword case (`Model` vs `model`) | 9 | 6% | Low | P1 |
-| Operator context | 9 | 6% | Medium | P2 |
-| Quoted set descriptions | 7 | 5% | Medium | P2 |
-| Dot notation issues | 5 | 3% | Medium | P3 |
-| Hyphenated set elements | 3 | 2% | Low | P1 |
-| Abort statement syntax | 3 | 2% | Low | P1 |
-| Slash/division syntax | 2 | 1% | Low | P2 |
-| Hyphenated identifiers | 1 | 1% | Low | P1 |
+| Subcategory | Relative Frequency | Effort | Priority |
+|-------------|-------------------|--------|----------|
+| Complex set data syntax | Largest (~60%) | High | P3 (defer most) |
+| Tuple expansion `(a,b).c` | ~8% | Medium | P2 |
+| Numeric context issues | ~7% | Medium | P1 |
+| Keyword case (`Model` vs `model`) | ~6% | Low | P1 |
+| Operator context | ~6% | Medium | P2 |
+| Quoted set descriptions | ~5% | Medium | P2 |
+| Dot notation issues | ~3% | Medium | P3 |
+| Hyphenated set elements | ~2% | Low | P1 |
+| Abort statement syntax | ~2% | Low | P1 |
+| Slash/division syntax | ~1% | Low | P2 |
+| Hyphenated identifiers | ~1% | Low | P1 |
 
-**Note:** Subcategory totals may exceed 97 due to models having multiple issues.
+**Note:** The 97 lexer_invalid_char errors in Sprint 16 baseline exhibit these same patterns. Relative frequencies are from the detailed LEXER_ERROR_ANALYSIS.md. Many models have multiple error instances.
 
 ### 1.3 Sample Errors by Subcategory
 
@@ -248,21 +248,22 @@ IndexOffset(base='t', offset=SymbolRef(+), circular=False)
 
 ### 3.2 path_syntax_error Analysis (8 models)
 
-Based on Sprint 16 PATH_ERROR_ANALYSIS.md:
+Based on Sprint 16 PATH_ERROR_ANALYSIS.md (which analyzed 14 models with 154 error instances), the primary error patterns are:
 
-| GAMS Error Code | Count | Description | Root Cause |
-|-----------------|-------|-------------|------------|
-| 445 | 46 | More than one operator | Unary minus before parentheses |
-| 924 | 24 | MCP separator issue | Wrong `.` vs `|` in model statement |
-| 2 | 24 | Identifier expected | Various syntax issues |
-| 171 | 10 | Domain violation | Set element quoting |
-| Other | 50+ | Various | Edge cases |
+| Error Pattern | Dominant Code | Description | Primary Root Cause |
+|---------------|---------------|-------------|-------------------|
+| Unary minus | 445 | More than one operator | Negative coefficients at equation start |
+| MCP separator | 924 | Separator issue | Wrong `.` vs `|` in model statement |
+| Set quoting | 171 | Domain violation | Inconsistent element quoting |
+| Identifier | 2 | Expected identifier | Various syntax issues |
+
+**Note:** Error code counts from PATH_ERROR_ANALYSIS.md represent error instances across all affected models. The 8 models in Sprint 16 baseline exhibit these same patterns.
 
 **Critical Finding:** These are NOT PATH solver errors - they are GAMS compilation errors in generated MCP files.
 
 ### 3.3 Sample Errors by Pattern
 
-#### Sample 1: Unary Minus (Error 445) - 10 models
+#### Sample 1: Unary Minus (Error 445) - Primary pattern
 ```gams
 * Generated MCP code (incorrect):
 stat_x1.. -(x4 * 0.0006262) * nu_e2 =E= 0;
@@ -273,7 +274,7 @@ stat_x1.. (-(x4 * 0.0006262)) * nu_e2 =E= 0;
 **Pattern:** Negative coefficient expressions at start of equation.  
 **Fix:** Wrap negative expressions in parentheses in emit_gams.py  
 **Effort:** Low (2h)  
-**Impact:** 10 models (71% of path_syntax_error)
+**Impact:** Most of the 8 path_syntax_error models (dominant pattern)
 
 #### Sample 2: Set Element Quoting (Error 171) - 3 models
 ```gams
@@ -315,13 +316,15 @@ Model mcp_model /
 
 | Priority | Fix | Estimated Effort | Models Affected |
 |----------|-----|------------------|-----------------|
-| P1 | Unary minus formatting | 2h | 10 |
-| P1 | MCP separator syntax | 1h | 3 |
-| P2 | Set element quoting | 3h | 3 |
+| P1 | Unary minus formatting | 2h | 5-6 (dominant pattern) |
+| P1 | MCP separator syntax | 1h | 2-3 |
+| P2 | Set element quoting | 3h | 2-3 |
 | P3 | PATH solver config tuning | 2h | 1-2 |
 
-**P1 Total:** 3h, ~10 models potentially fixed  
-**P1+P2 Total:** 6h, ~12-13 models potentially fixed (with overlap)
+**Note:** Model counts have overlap since multiple errors can affect the same model.
+
+**P1 Total:** 3h, ~6-7 models potentially fixed (of 8 path_syntax_error)  
+**P1+P2 Total:** 6h, ~7-8 models potentially fixed (capped by 8 path_syntax_error total)
 
 ---
 
@@ -353,14 +356,14 @@ These fixes offer high ROI (models fixed per hour of effort):
 
 | Fix | Stage | Effort | Models | ROI |
 |-----|-------|--------|--------|-----|
-| Keyword case | Parse | 2h | 9 | 4.5 |
-| Unary minus | Solve | 2h | 10 | 5.0 |
-| MCP separator | Solve | 1h | 3 | 3.0 |
-| Hyphenated elements | Parse | 2h | 3 | 1.5 |
-| Abort syntax | Parse | 2h | 3 | 1.5 |
+| Keyword case | Parse | 2h | ~9 | 4.5 |
+| Unary minus | Solve | 2h | 5-6 | 2.5-3.0 |
+| MCP separator | Solve | 1h | 2-3 | 2.0-3.0 |
+| Hyphenated elements | Parse | 2h | ~3 | 1.5 |
+| Abort syntax | Parse | 2h | ~3 | 1.5 |
 | Feasibility handling | Translate | 4h | 5 | 1.25 |
 
-**Total Quick Wins:** 13h effort, ~33 models potentially fixed
+**Total Quick Wins:** 13h effort, ~25-29 models potentially fixed (accounting for overlaps)
 
 ---
 
@@ -369,14 +372,14 @@ These fixes offer high ROI (models fixed per hour of effort):
 ### 5.1 Sprint 17 Recommended Priority Order
 
 #### Phase 1: Quick Wins (13h)
-1. **Solve: Unary minus fix** - 2h, +10 models
-2. **Solve: MCP separator fix** - 1h, +3 models  
-3. **Parse: Keyword case fixes** - 2h, +9 models
-4. **Parse: Hyphenated elements** - 2h, +3 models
-5. **Parse: Abort syntax** - 2h, +3 models
+1. **Solve: Unary minus fix** - 2h, +5-6 models
+2. **Solve: MCP separator fix** - 1h, +2-3 models  
+3. **Parse: Keyword case fixes** - 2h, +~9 models
+4. **Parse: Hyphenated elements** - 2h, +~3 models
+5. **Parse: Abort syntax** - 2h, +~3 models
 6. **Translate: Feasibility handling** - 4h, +5 models
 
-**Expected Result:** ~33 new models (accounting for overlap)
+**Expected Result:** ~25-29 new models (accounting for overlap)
 
 #### Phase 2: Medium Effort (17h)
 1. **Parse: Numeric context** - 4h, +11 models
@@ -398,12 +401,12 @@ These fixes offer high ROI (models fixed per hour of effort):
 
 | Phase | Cumulative Effort | Parse Rate | Translate Rate | Solve Rate |
 |-------|-------------------|------------|----------------|------------|
-| Baseline | 0h | 30.0% (48) | 43.8% (21) | 52.4% (11) |
-| Phase 1 | 13h | 42% (~67) | 50% (~34) | 85% (~17) |
-| Phase 2 | 30h | 55% (~88) | 55% (~48) | 88% (~21) |
-| Phase 3 | 50h | 65% (~104) | 60% (~62) | 90% (~28) |
+| Baseline | 0h | 30.0% (48) | 43.8% (21/48) | 52.4% (11/21) |
+| Phase 1 | 13h | 42% (~67) | 50% (~34/67) | 50% (~17/34) |
+| Phase 2 | 30h | 55% (~88) | 55% (~48/88) | 44% (~21/48) |
+| Phase 3 | 50h | 65% (~104) | 60% (~62/104) | 45% (~28/62) |
 
-**Note:** Rates are estimates; actual improvements depend on fix overlap and cascading effects.
+**Note:** Rates are estimates; actual improvements depend on fix overlap and cascading effects. Solve rate is calculated as solves/translated, not as a cumulative improvement target. The solve rate may decrease initially as more models translate but before solve fixes take effect.
 
 ---
 

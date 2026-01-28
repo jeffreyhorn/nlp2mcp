@@ -703,22 +703,20 @@ Development team
 ### Verification Results
 ✅ Status: PARTIALLY VERIFIED (Initial extraction complete; primary verification in Task 5)
 
-**Finding:** The 97 lexer_invalid_char errors break down into 11 distinct subcategories:
-- Complex set data syntax: 91 (59%) - requires grammar restructuring
-- Tuple expansion `(a,b).c`: 12 (8%) - medium effort
-- Numeric context issues: 11 (7%) - medium effort
-- Keyword case issues: 9 (6%) - low effort, high ROI
-- Operator context: 9 (6%) - medium effort
-- Quoted set descriptions: 7 (5%) - medium effort
-- Dot notation issues: 5 (3%) - medium effort
-- Hyphenated set elements: 3 (2%) - low effort
-- Abort statement syntax: 3 (2%) - low effort
-- Slash/division syntax: 2 (1%) - low effort
-- Hyphenated identifiers: 1 (1%) - low effort
+**Finding:** The 97 lexer_invalid_char errors in Sprint 16 baseline fall into 11 distinct subcategories (based on patterns from LEXER_ERROR_ANALYSIS.md which analyzed 153 error instances):
+- Complex set data syntax - largest category (~60%) - requires grammar restructuring
+- Tuple expansion `(a,b).c` - ~8% - medium effort
+- Numeric context issues - ~7% - medium effort
+- Keyword case issues - ~6% - low effort, high ROI
+- Operator context - ~6% - medium effort
+- Quoted set descriptions - ~5% - medium effort
+- Dot notation issues - ~3% - medium effort
+- Hyphenated set elements - ~2% - low effort
+- Abort statement syntax - ~2% - low effort
+- Slash/division syntax - ~1% - low effort
+- Hyphenated identifiers - ~1% - low effort
 
-**Key Insight:** ~30% of lexer errors (26+ models) are fixable with targeted effort; ~60% require significant grammar work.
-
-**Character Distribution:** Quote (25), Comma (20), Digit (25), Paren (14), Slash (7), Asterisk (6)
+**Key Insight:** A substantial subset of lexer errors are fixable with targeted effort, while the majority (~60%) require significant grammar work.
 
 **See:** ERROR_ANALYSIS.md Section 1.2 for complete breakdown
 

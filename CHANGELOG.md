@@ -40,12 +40,12 @@ Completed comprehensive error analysis across all pipeline stages from Sprint 16
 
 | Fix | Stage | Effort | Models | ROI Score |
 |-----|-------|--------|--------|-----------|
-| Unary minus formatting | Solve | 2h | 10 | 10.0 |
-| MCP separator syntax | Solve | 1h | 3 | 6.0 |
-| Keyword case fixes | Parse | 2h | 9 | 4.5 |
-| Hyphenated elements | Parse | 2h | 3 | 1.5 |
+| Keyword case fixes | Parse | 2h | ~9 | 4.5 |
+| Unary minus formatting | Solve | 2h | 5-6 | 2.5-3.0 |
+| MCP separator syntax | Solve | 1h | 2-3 | 2.0-3.0 |
+| Hyphenated elements | Parse | 2h | ~3 | 1.5 |
 
-**Total Quick Wins:** 13h effort, ~33 models potentially fixed
+**Total Quick Wins:** 13h effort, ~25-29 models potentially fixed
 
 #### Unknowns Verified
 
