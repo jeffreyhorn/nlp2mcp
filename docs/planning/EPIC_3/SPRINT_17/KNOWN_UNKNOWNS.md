@@ -82,6 +82,8 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 - Category 4 (Detailed Error Analysis): 5 unknowns
 - Category 5 (Fix Complexity Estimation): 4 unknowns
 
+_Note: These percentages are based on 27 unknowns total. For this summary, each unknown is assigned to a single primary difficulty/effort category; in `LEXER_IMPROVEMENT_PLAN.md`, similar counting methodology is used where models are assigned to primary subcategories based on their most significant blocking issue._
+
 **Estimated Research Time:** 30-38 hours (spread across prep phase)
 
 ---

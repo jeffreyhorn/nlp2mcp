@@ -64,7 +64,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | 12 | Other/miscellaneous | 8 | 8% | Varies | 4h | P3 |
 | **Total** | | **97** | **100%** | | | |
 
-**Note:** Some models appear in multiple subcategories due to having multiple distinct issues. The counts above represent issue instances; the 97 total reflects unique models with lexer errors.
+**Note:** Each of the 97 models is assigned to exactly one primary subcategory based on its most significant blocking issue. Some models have secondary issues in other categories (noted in detailed analysis below), but counts here represent unique models with no double-counting.
 
 ### By Fixability
 
@@ -74,6 +74,8 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | Medium (2-4h each) | 29 | 30% | Grammar rule extensions, multi-file changes |
 | Hard (4h+ each) | 35 | 36% | Complex set data, requires grammar restructuring |
 | Unfixable | 4 | 4% | Model-specific edge cases |
+
+**Note:** For this fixability breakdown, each model is assigned to a single primary fixability category based on its most difficult issue. The 97 models are partitioned with no overlaps.
 
 ---
 
