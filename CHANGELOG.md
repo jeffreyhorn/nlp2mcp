@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Prep Task 4: MCP Compilation Analysis - 2026-01-28
+
+**Branch:** `planning/sprint17-task4`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Analyzed all 8 `path_syntax_error` models that successfully translate but fail GAMS compilation. Identified 4 distinct error patterns with root causes in emit_gams.py modules.
+
+#### Deliverables
+
+- `docs/planning/EPIC_3/SPRINT_17/MCP_COMPILATION_ANALYSIS.md` - Complete MCP compilation analysis
+- Updated `KNOWN_UNKNOWNS.md` with verified unknowns (2.1 verified, 2.4 deferred to Task 6)
+- Updated `PREP_PLAN.md` with Task 4 status COMPLETE
+
+#### Error Pattern Summary
+
+| Pattern | GAMS Codes | Models | Root Cause |
+|---------|------------|--------|------------|
+| Missing Table/computed param data | 66, 256 | ajax, chem, least, trnsport | Parameter values not emitted |
+| Subset relationship lost | 171, 257 | dispatch, port | `cg(genchar)` emitted as `cg` |
+| Reserved word as set element | 145, 148, 257 | ps2_f_inf | `inf` needs quoting |
+| Unquoted set element refs | 120, 149, 171, 340, 257 | sample | `lam_vbal(a)` needs `'a'` |
+
+#### Root Causes Identified
+
+| Code Location | Issue | Models Affected |
+|---------------|-------|-----------------|
+| `src/emit/original_symbols.py:130-185` | Table/computed param data not emitted | 4 |
+| `src/emit/original_symbols.py:63-89` | Subset relationships lost | 2 |
+| `src/emit/original_symbols.py:63-89` | Reserved words not quoted | 1 |
+| `src/emit/expr_to_gams.py` | Set element refs not quoted | 1 |
+
+#### Proposed Fixes
+
+| Fix | Effort | Models Fixed |
+|-----|--------|--------------|
+| Emit Table data | 6h | 2 (ajax, least) |
+| Emit computed params | 4h | 2 (chem, trnsport) |
+| Preserve subset relationships | 4h | 2 (dispatch, port) |
+| Quote reserved words | 2h | 1 (ps2_f_inf) |
+| Quote set element refs | 3h | 1 (sample) |
+
+**Total:** ~19h for +8 models
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 2.1 | Verified | 4 distinct error patterns; root causes in emit_gams.py identified |
+| 2.4 | Deferred | Objective mismatch analysis requires models that compile successfully; deferred to Task 6 |
+
+---
+
 ### Sprint 17 Prep Task 3: Translation Deep Dive - 2026-01-28
 
 **Branch:** `planning/sprint17-task3`  

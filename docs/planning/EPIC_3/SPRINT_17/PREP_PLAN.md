@@ -233,13 +233,14 @@ A prioritized list of translation issues with:
 
 ### Task 4: MCP Compilation Analysis
 
-**Status:** Not Started  
+**Status:** COMPLETE  
 **Priority:** P1 - High  
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 17 Day 3  
 **Owner:** TBD  
 **Dependencies:** Task 2  
-**Unknowns Verified:** 2.1, 2.4
+**Unknowns Verified:** 2.1  
+**Unknowns Deferred:** 2.4 (to Task 6 - requires solve output comparison)
 
 #### Objective
 Investigate the 8 `path_syntax_error` models to understand MCP compilation failures.
@@ -270,22 +271,24 @@ For each of 8 models:
 - Root cause in emit_gams.py
 
 #### Verification
-- [ ] All 8 models analyzed
-- [ ] MCP files generated and saved
-- [ ] GAMS errors captured
-- [ ] Root causes in emit_gams.py identified
-- [ ] Unknowns 2.1, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 8 models analyzed
+- [x] MCP files generated and saved
+- [x] GAMS errors captured
+- [x] Root causes in emit_gams.py identified
+- [x] Unknown 2.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Unknown 2.4 deferred to Task 6 and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/MCP_COMPILATION_ANALYSIS.md`
 - Generated MCP files for affected models (if useful for debugging)
-- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.4
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 2.1 and deferral note for 2.4
 
 #### Acceptance Criteria
-- All 8 path_syntax_error models analyzed
-- Error patterns documented
-- emit_gams.py locations identified
-- [ ] Unknowns 2.1, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 8 path_syntax_error models analyzed
+- [x] Error patterns documented
+- [x] emit_gams.py locations identified
+- [x] Unknown 2.1 verified in KNOWN_UNKNOWNS.md
+- [x] Unknown 2.4 deferred to Task 6 in KNOWN_UNKNOWNS.md
 
 ---
 

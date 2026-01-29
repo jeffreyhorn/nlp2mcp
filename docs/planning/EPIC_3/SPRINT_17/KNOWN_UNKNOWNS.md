@@ -66,12 +66,13 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 **Total Unknowns:** 27  
 **Verified:** 14 (52%)  
 **Partially Verified:** 1 (4%)  
-**Remaining:** 12 (44%)
+**Deferred:** 1 (4%)  
+**Remaining:** 11 (41%)
 
 **By Priority:**
 - Critical: 4 (15%) - 3 verified, 1 partially verified
 - High: 8 (30%) - 4 verified, 4 remaining
-- Medium: 12 (44%) - 6 verified, 6 remaining
+- Medium: 12 (44%) - 6 verified, 1 deferred, 5 remaining
 - Low: 3 (11%) - 1 verified, 2 remaining
 
 **By Category:**
@@ -605,7 +606,42 @@ done
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** All 8 path_syntax_error models were analyzed. The GAMS compilation errors fall into 4 distinct patterns:
+
+| Error Pattern | GAMS Codes | Models | Root Cause |
+|---------------|------------|--------|------------|
+| Missing Table/computed param data | 66, 256 | ajax, chem, least, trnsport | Parameter values not emitted |
+| Subset relationship lost | 171, 257 | dispatch, port | `cg(genchar)` emitted as `cg` |
+| Reserved word as set element | 145, 148, 257 | ps2_f_inf | `inf` needs quoting |
+| Unquoted set element refs | 120, 149, 171, 340, 257 | sample | `lam_vbal(a)` needs `'a'` |
+
+**Root Causes in emit_gams.py:**
+
+1. **`src/emit/original_symbols.py:130-185`** - At emission time, the IR is missing:
+   - Table data values (`ParameterDef.values` is empty, so no table data is emitted)
+   - Computed parameter assignments (e.g., `c(i,j) = f*d(i,j)/1000;` are not present in `ParameterDef.values`, so nothing is emitted)
+
+2. **`src/emit/original_symbols.py:63-89`** - Set emission loses:
+   - Subset relationships (`cg(genchar)` becomes just `cg`)
+   - Reserved word quoting (`inf` should be `'inf'`)
+
+3. **`src/emit/expr_to_gams.py`** - Expression emission:
+   - Set element references not quoted (`a` should be `'a'`)
+
+**Proposed Fixes:**
+| Fix | Effort | Models Fixed |
+|-----|--------|--------------|
+| Emit Table data | 6h | 2 (ajax, least) |
+| Emit computed params | 4h | 2 (chem, trnsport) |
+| Preserve subset relationships | 4h | 2 (dispatch, port) |
+| Quote reserved words | 2h | 1 (ps2_f_inf) |
+| Quote set element refs | 3h | 1 (sample) |
+
+**Total:** ~19h for +8 models
+
+**See:** MCP_COMPILATION_ANALYSIS.md for detailed error messages and generated MCP file analysis
 
 ---
 
@@ -747,7 +783,21 @@ cat tests/output/pipeline_results.json | jq '.models[] | select(.solve_outcome =
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+⏳ Status: DEFERRED TO TASK 6
+
+**Finding:** During MCP compilation analysis (Task 4), no objective mismatch data was directly observable since all 8 `path_syntax_error` models fail at GAMS compilation before reaching the solve stage.
+
+**Partial Observations:**
+- The 8 path_syntax_error models cannot provide objective comparison data until compilation errors are fixed
+- Sprint 16 baseline shows 10 models with solve failures/mismatches after translation success
+- Objective mismatch analysis requires models that successfully compile and solve
+
+**Deferred Analysis:** Full objective mismatch investigation for Unknown 2.4 will be conducted in **Task 6 (Solve Failure Investigation Plan)**, which focuses on:
+- Models that translate AND compile successfully but have solve issues
+- Comparing NLP vs MCP objective values
+- Determining if differences are tolerance issues or bugs
+
+**See:** Task 4 provides only preliminary observations; verification of Unknown 2.4 is explicitly **deferred to Task 6**, which will verify this unknown with actual solve output comparison
 
 ---
 
@@ -1671,9 +1721,9 @@ This table shows which prep tasks verify which unknowns:
 |-----------|-------------------|-------|
 | Task 2: Detailed Error Analysis | 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5 | Error extraction and categorization |
 | Task 3: Translation Deep Dive | 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 | All translation improvement unknowns |
-| Task 4: MCP Compilation Analysis | 2.1, 2.4 | Path syntax errors and output validation |
+| Task 4: MCP Compilation Analysis | 2.1 | Path syntax errors; 2.4 deferred to Task 6 |
 | Task 5: Lexer/Parser Improvement Plan | 3.1, 3.2, 3.4, 3.5 | Lexer subcategories and fix planning |
-| Task 6: Solve Failure Investigation Plan | 2.2, 2.3, 2.5 | Solve failures and PATH configuration |
+| Task 6: Solve Failure Investigation Plan | 2.2, 2.3, 2.4, 2.5 | Solve failures, objective mismatches (2.4 deferred from Task 4), PATH config |
 | Task 7: Documentation Inventory | - | No unknowns; documentation-focused |
 | Task 8: Release Checklist | 5.1, 5.2, 5.3, 5.4 | Fix complexity and scheduling estimation |
 | Task 9: Plan Sprint 17 Detailed Schedule | 3.5, 3.6 | Integrates all findings into schedule |
