@@ -42,6 +42,8 @@ This document analyzes all 8 models that successfully translate to MCP but fail 
 2. [Model-Level Details](#2-model-level-details)
 3. [Root Cause Summary](#3-root-cause-summary)
 4. [Proposed Fixes](#4-proposed-fixes)
+5. [Priority Ordering](#5-priority-ordering)
+6. [Appendices](#appendices)
 
 ---
 
@@ -476,19 +478,39 @@ stat_n_1.. ... - ((-1) * k1("1",'a')) / n("1") ** 2 * lam_vbal('a') - ((-1) * k1
 
 ---
 
-## Appendix A: Generated MCP File Locations
+## Appendices
 
-All generated MCP files are available for reference:
-- `/tmp/mcp_analysis/ajax_mcp.gms`
-- `/tmp/mcp_analysis/chem_mcp.gms`
-- `/tmp/mcp_analysis/dispatch_mcp.gms`
-- `/tmp/mcp_analysis/least_mcp.gms`
-- `/tmp/mcp_analysis/port_mcp.gms`
-- `/tmp/mcp_analysis/ps2_f_inf_mcp.gms`
-- `/tmp/mcp_analysis/sample_mcp.gms`
-- `/tmp/mcp_analysis/trnsport_mcp.gms`
+### Appendix A: Reproducing Generated MCP Files
 
-## Appendix B: GAMS Error Code Reference
+The MCP files used in this analysis were generated into a local temporary directory during the investigation. To reproduce them, run the following commands:
+
+```bash
+# Create output directory
+mkdir -p mcp_analysis
+
+# Generate MCP for each model
+for model in ajax chem dispatch least port ps2_f_inf sample trnsport; do
+    python src/cli.py data/gamslib/raw/${model}.gms -o mcp_analysis/${model}_mcp.gms
+done
+
+# Compile with GAMS to see errors
+for model in ajax chem dispatch least port ps2_f_inf sample trnsport; do
+    echo "=== $model ==="
+    gams mcp_analysis/${model}_mcp.gms lo=2
+done
+```
+
+Expected output files:
+- `mcp_analysis/ajax_mcp.gms`
+- `mcp_analysis/chem_mcp.gms`
+- `mcp_analysis/dispatch_mcp.gms`
+- `mcp_analysis/least_mcp.gms`
+- `mcp_analysis/port_mcp.gms`
+- `mcp_analysis/ps2_f_inf_mcp.gms`
+- `mcp_analysis/sample_mcp.gms`
+- `mcp_analysis/trnsport_mcp.gms`
+
+### Appendix B: GAMS Error Code Reference
 
 | Code | Description |
 |------|-------------|
