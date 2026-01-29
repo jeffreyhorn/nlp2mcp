@@ -35,8 +35,8 @@ This document provides a comprehensive analysis of all 27 translation failures f
 4. **Index Arithmetic:** 4 models use lead/lag indexing (t-1, t+1) not yet supported
 
 **Estimated Fix Impact:**
-- Quick Wins (P1): 8-11 models fixable with ~10h effort
-- Medium Effort (P2): 6-10 models fixable with ~14h additional effort
+- Quick Wins (P1): 8-11 models fixable with ~12h effort
+- Medium Effort (P2): 6 models fixable with ~6h additional effort
 - Total Potential: 60-75% translation success rate achievable
 
 ---
@@ -355,8 +355,8 @@ These are model data issues, not nlp2mcp bugs. The models contain parameter calc
 | P1 | Objective extraction enhancement | 4h | 5 | 1.25 |
 | P1 | gamma/loggamma derivative rules | 4h | 3 | 0.75 |
 | P1 | smin smooth approximation | 2h | 1 | 0.50 |
+| P1 | Set element sanitization | 2h | 2 | 1.00 |
 | P2 | Domain mismatch handling | 6h | 6 | 1.00 |
-| P2 | Set element sanitization | 2h | 2 | 1.00 |
 | P3 | IndexOffset support | 8h | 4 | 0.50 |
 | -- | card/ord (not differentiable) | -- | 2 | N/A |
 | -- | Numerical errors (data issues) | -- | 3 | N/A |
@@ -364,14 +364,14 @@ These are model data issues, not nlp2mcp bugs. The models contain parameter calc
 
 ### Recommended Sprint 17 Order
 
-**Phase 1: Quick Wins (10h, +9 models)**
+**Phase 1: Quick Wins (12h, +11 models)**
 1. Objective extraction enhancement - 4h, +5 models
 2. gamma/loggamma derivatives - 4h, +3 models  
 3. smin smooth approximation - 2h, +1 model
+4. Set element sanitization - 2h, +2 models
 
-**Phase 2: Medium Effort (8h, +8 models)**
+**Phase 2: Medium Effort (6h, +6 models)**
 1. Domain mismatch handling - 6h, +6 models
-2. Set element sanitization - 2h, +2 models
 
 **Phase 3: Higher Effort (8h, +4 models)**
 1. IndexOffset support - 8h, +4 models
@@ -390,7 +390,7 @@ These are model data issues, not nlp2mcp bugs. The models contain parameter calc
 | Fix | Effort | Models Fixed | Implementation Notes |
 |-----|--------|--------------|---------------------|
 | **Objective extraction** | 4h | 5 | Enhance `find_objective_expression()` to search for any equation containing objective variable |
-| **gamma derivative** | 3h | 3 | Add `_diff_gamma()` using digamma: d/dx Γ(x) = Γ(x)·ψ(x) |
+| **gamma derivative** | 4h | 3 | Add `_diff_gamma()` using digamma: d/dx Γ(x) = Γ(x)·ψ(x) |
 | **smin approximation** | 2h | 1 | Use LogSumExp: smin(a,b) ≈ -log(exp(-a/τ) + exp(-b/τ))·τ |
 | **Set element fix** | 2h | 2 | Sanitize or allow '+' in set element names |
 
