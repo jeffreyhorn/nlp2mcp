@@ -21,14 +21,14 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 2. **12 models** fail due to multi-line statement continuation issues (medium fix)
 3. **6 models** fail due to display statement continuation (easy fix)
 4. **~25 models** are fixable with targeted lexer/grammar changes
-5. **~39 models** require complex set data syntax overhaul or case-by-case analysis (defer to future)
+5. **~37 models** require complex set data syntax overhaul or case-by-case analysis (defer to future)
 
 **Recommended Sprint 17 Focus:**
 | Priority | Models | Hours | Approach |
 |----------|--------|-------|----------|
 | Quick wins | 20-25 | 12h | Lexer regex + grammar rules |
 | Medium effort | 10-15 | 10h | Grammar extensions |
-| Deferred | ~39 | 20h+ | Complex set data + misc (future sprint) |
+| Deferred | ~37 | 20h+ | Complex set data + misc (future sprint) |
 
 **Target:** +20-22 models parsing with Phase 1 (12h effort)
 
@@ -58,7 +58,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | 6 | Curly brace expressions | 1 | 1% | Easy | 1h | P2 |
 | 7 | Solve keyword spelling/case issues | 5 | 5% | Easy | 2h | P1 |
 | 8 | Acronym statement | 2 | 2% | Easy | 1h | P2 |
-| 9 | Complex set data syntax | 35 | 36% | Hard | 12h+ | P3 |
+| 9 | Complex set data syntax | 33 | 34% | Hard | 12h+ | P3 |
 | 10 | Numeric parameter data | 3 | 3% | Medium | 3h | P2 |
 | 11 | Range syntax in data | 2 | 2% | Medium | 3h | P2 |
 | 12 | Other/miscellaneous | 8 | 8% | Varies | 4h | P3 |
@@ -72,7 +72,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 |----------|--------|---|-------|
 | Easy (typical 1-2h per pattern) | 29 | 30% | Lexer regex changes, simple grammar additions |
 | Medium (typical 2-4h per pattern) | 29 | 30% | Grammar rule extensions, multi-file changes |
-| Hard (typical 4h+ per pattern) | 35 | 36% | Complex set data, requires grammar restructuring |
+| Hard (typical 4h+ per pattern) | 33 | 34% | Complex set data, requires grammar restructuring |
 | Unfixable | 4 | 4% | Model-specific edge cases |
 
 **Note:** For this fixability breakdown, each model is assigned to a single primary fixability category based on its most difficult issue. Effort ranges are typical implementation effort per fix/pattern, not per model. The 97 models are partitioned with no overlaps.
@@ -306,9 +306,11 @@ Acronym future, call, puto;
 
 ---
 
-### 2.9 Complex Set Data Syntax - 35 models
+### 2.9 Complex Set Data Syntax - 33 models
 
-**Models:** camcge, cesam2, china, dyncge, etamac, feedtray, ferts, ganges, gangesx, gussrisk, harker, hhfair, hhmax, iswnm, kand, korcge, lands, launch, lop, nonsharp, prolog, robustlp, sarf, senstran, ship, solveopt, splcge, srkandw, tabora, tfordy, tforss, tricp, trnspwl, turkpow, weapons
+**Models:** camcge, cesam2, china, dyncge, etamac, feedtray, ferts, ganges, gangesx, gussrisk, harker, hhfair, hhmax, iswnm, korcge, lands, launch, lop, nonsharp, prolog, robustlp, sarf, senstran, ship, solveopt, splcge, tabora, tfordy, tforss, tricp, trnspwl, turkpow, weapons
+
+**Note:** `kand` and `srkandw` have range syntax as their primary blocking issue and are counted under subcategory 2.11 instead.
 
 **Error Patterns:**
 1. Quoted set element descriptions: `/ cotton-h 'cotton description' /`
@@ -333,7 +335,7 @@ Acronym future, call, puto;
 
 **Effort:** 12h+ (recommend deferring most)  
 **Fixability:** Hard  
-**Impact:** 35 models (but high effort)
+**Impact:** 33 models (but high effort)
 
 **Recommendation:** Defer to future sprint, focus on simpler subcategories first.
 
@@ -437,15 +439,15 @@ These 8 models have unique issues requiring case-by-case analysis:
 
 **Note:** After overlap accounting, ~10-12 additional unique models.
 
-### Phase 3: Deferred (20h+, ~39 models)
+### Phase 3: Deferred (20h+, ~37 models)
 
 | Category | Models | Reason for Deferral |
 |----------|--------|---------------------|
-| Complex set data syntax | 35 | Requires major grammar restructuring |
+| Complex set data syntax | 33 | Requires major grammar restructuring |
 | Miscellaneous (deferred subset) | 4 | Case-by-case analysis needed |
-| **Total** | **39** | |
+| **Total** | **37** | |
 
-**Clarification:** Of the 8 models in subcategory 12 (Other/Miscellaneous), 4 are addressable in Phase 1-2; the remaining 4 are deferred here. The 39 deferred models = 35 (complex set data) + 4 (misc deferred).
+**Clarification:** Of the 8 models in subcategory 12 (Other/Miscellaneous), 4 are addressable in Phase 1-2; the remaining 4 are deferred here. The 37 deferred models = 33 (complex set data) + 4 (misc deferred).
 
 **Recommendation:** Defer to Sprint 18 or later. Focus Sprint 17 on Phase 1 and Phase 2.
 
@@ -502,12 +504,12 @@ These 8 models have unique issues requiring case-by-case analysis:
 6. Curly brace expressions (1 model, 1%)
 7. Keyword case issues (5 models, 5%)
 8. Acronym statement (2 models, 2%)
-9. Complex set data syntax (35 models, 36%)
+9. Complex set data syntax (33 models, 34%)
 10. Numeric parameter data (3 models, 3%)
 11. Range syntax in data (2 models, 2%)
 12. Other/miscellaneous (8 models, 8%)
 
-**Key Insight:** ~30% of errors are easily fixable (subcategories 1-8), ~30% are medium difficulty (9-11), and ~36% require significant grammar work (category 9).
+**Key Insight:** ~30% of errors are easily fixable (subcategories 1-8), ~8% are medium difficulty (subcategories 10-11), and ~34% require significant grammar work (subcategory 9).
 
 ---
 
@@ -608,8 +610,8 @@ ampl, meanvar, mlbeta, mlgamma, nemhaus
 ### A.8 Acronym Statement (2 models)
 mathopt4, worst
 
-### A.9 Complex Set Data Syntax (35 models)
-camcge, cesam2, china, dyncge, etamac, feedtray, ferts, ganges, gangesx, gussrisk, harker, hhfair, hhmax, iswnm, kand, korcge, lands, launch, lop, nonsharp, prolog, robustlp, sarf, senstran, ship, solveopt, splcge, srkandw, tabora, tfordy, tforss, tricp, trnspwl, turkpow, weapons
+### A.9 Complex Set Data Syntax (33 models)
+camcge, cesam2, china, dyncge, etamac, feedtray, ferts, ganges, gangesx, gussrisk, harker, hhfair, hhmax, iswnm, korcge, lands, launch, lop, nonsharp, prolog, robustlp, sarf, senstran, ship, solveopt, splcge, tabora, tfordy, tforss, tricp, trnspwl, turkpow, weapons
 
 ### A.10 Numeric Parameter Data (3 models)
 apl1pca, lmp2, prodsp2
@@ -618,7 +620,7 @@ apl1pca, lmp2, prodsp2
 kand, srkandw
 
 ### A.12 Other/Miscellaneous (8 models)
-demo1, qdemo7, saras, spatequ (plus 4 models with overlapping issues from categories 10-11)
+demo1, qdemo7, saras, spatequ, plus 4 additional miscellaneous models
 
 ---
 
