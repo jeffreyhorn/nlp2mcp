@@ -70,9 +70,9 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 **Remaining:** 11 (41%)
 
 **By Priority:**
-- Critical: 4 (15%) - 4 verified
+- Critical: 4 (15%) - 3 verified, 1 partial
 - High: 8 (30%) - 4 verified, 4 remaining
-- Medium: 12 (44%) - 5 verified, 1 partial, 1 deferred, 5 remaining
+- Medium: 12 (44%) - 6 verified, 1 deferred, 5 remaining
 - Low: 3 (11%) - 1 verified, 2 remaining
 
 **By Category:**
