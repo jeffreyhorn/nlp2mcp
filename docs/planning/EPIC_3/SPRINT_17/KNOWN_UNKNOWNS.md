@@ -904,9 +904,9 @@ Development team
 | Keyword case issues | 5 | 5% | Easy | 2h |
 | Acronym statement | 2 | 2% | Easy | 1h |
 | Complex set data syntax | 35 | 36% | Hard | 12h+ |
-| Numeric parameter data | 5 | 5% | Medium | 3h |
-| Range syntax in data | 4 | 4% | Medium | 3h |
-| Other/miscellaneous | 4 | 4% | Varies | 4h |
+| Numeric parameter data | 3 | 3% | Medium | 3h |
+| Range syntax in data | 2 | 2% | Medium | 3h |
+| Other/miscellaneous | 8 | 8% | Varies | 4h |
 
 **Key Insight:** 
 - ~30% of errors (29 models) are easily fixable with lexer/grammar changes

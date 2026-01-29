@@ -61,8 +61,10 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | 9 | Complex set data syntax | 35 | 36% | Hard | 12h+ | P3 |
 | 10 | Numeric parameter data | 3 | 3% | Medium | 3h | P2 |
 | 11 | Range syntax in data | 2 | 2% | Medium | 3h | P2 |
-| 12 | Other/miscellaneous | 4 | 4% | Varies | 4h | P3 |
+| 12 | Other/miscellaneous | 8 | 8% | Varies | 4h | P3 |
 | **Total** | | **97** | **100%** | | | |
+
+**Note:** Some models appear in multiple subcategories due to having multiple distinct issues. The counts above represent issue instances; the 97 total reflects unique models with lexer errors.
 
 ### By Fixability
 
@@ -379,19 +381,20 @@ tn(t,n) 'time node mapping' / 'time-1'.('n-1'*'n-3'), 'time-2'.('n-4'*'n-12') /
 
 ---
 
-### 2.12 Other/Miscellaneous - 4 models
+### 2.12 Other/Miscellaneous - 8 models
 
-**Models:** demo1, qdemo7, saras, spatequ
+**Models:** demo1, qdemo7, saras, spatequ, plus 4 models with overlapping issues from other categories
 
 These have unique issues requiring case-by-case analysis:
 - `demo1`: Double-quoted output format strings
 - `qdemo7`: Continuation in display statement
 - `saras`: Standalone slash in data
 - `spatequ`: MCP model syntax with dots
+- Additional models have secondary issues that overlap with categories 10-11
 
 **Effort:** 4h total  
 **Fixability:** Varies  
-**Impact:** 4 models
+**Impact:** 8 models (includes overlaps)
 
 ---
 
@@ -488,7 +491,7 @@ These have unique issues requiring case-by-case analysis:
 9. Complex set data syntax (35 models, 36%)
 10. Numeric parameter data (3 models, 3%)
 11. Range syntax in data (2 models, 2%)
-12. Other/miscellaneous (4 models, 4%)
+12. Other/miscellaneous (8 models, 8%)
 
 **Key Insight:** ~30% of errors are easily fixable (subcategories 1-8), ~30% are medium difficulty (9-11), and ~36% require significant grammar work (category 9).
 
@@ -600,8 +603,8 @@ apl1pca, lmp2, prodsp2
 ### A.11 Range Syntax in Data (2 models)
 kand, srkandw
 
-### A.12 Other/Miscellaneous (4 models)
-demo1, qdemo7, saras, spatequ
+### A.12 Other/Miscellaneous (8 models)
+demo1, qdemo7, saras, spatequ (plus 4 models with overlapping issues from categories 10-11)
 
 ---
 
