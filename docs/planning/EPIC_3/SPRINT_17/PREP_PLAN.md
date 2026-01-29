@@ -294,14 +294,13 @@ For each of 8 models:
 
 ### Task 5: Lexer/Parser Improvement Plan
 
-**Status:** Not Started  
+**Status:** COMPLETE  
 **Priority:** P1 - High  
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 17 Day 4  
 **Owner:** TBD  
 **Dependencies:** Tasks 2, 3  
-**Unknowns Verified:** 3.1 (primary), 3.2, 3.4  
-**Unknowns Partially Verified:** 3.5 (initial assessment; finalized in Task 9)
+**Unknowns Verified:** 3.1, 3.2, 3.4, 3.5
 
 #### Objective
 Create a prioritized plan for addressing remaining `lexer_invalid_char` errors (97 models).
@@ -336,21 +335,21 @@ A prioritized plan targeting:
 - Complex changes (4h+, assessed for ROI)
 
 #### Verification
-- [ ] All 97 failures reviewed
-- [ ] Subcategories identified with counts
-- [ ] Fixability assessed for each
-- [ ] Plan targets +15-25 models
-- [ ] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 97 failures reviewed
+- [x] Subcategories identified with counts
+- [x] Fixability assessed for each
+- [x] Plan targets +15-25 models
+- [x] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/LEXER_IMPROVEMENT_PLAN.md`
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.4, 3.5
 
 #### Acceptance Criteria
-- All lexer failures categorized
-- Clear priority ranking
-- Realistic +15-25 model target plan
-- [ ] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All lexer failures categorized
+- [x] Clear priority ranking
+- [x] Realistic +15-25 model target plan
+- [x] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
