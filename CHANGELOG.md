@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Prep Task 3: Translation Deep Dive - 2026-01-28
+
+**Branch:** `planning/sprint17-task3`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed deep dive analysis of all 27 translation failures from Sprint 16 baseline. Categorized by root cause, identified code locations, and created prioritized fix plan with quick wins.
+
+#### Deliverables
+
+- `docs/planning/EPIC_3/SPRINT_17/TRANSLATION_ANALYSIS.md` - Complete translation failure analysis
+- Updated `KNOWN_UNKNOWNS.md` with 7 verified unknowns (1.1-1.7)
+- Updated `PREP_PLAN.md` with Task 3 status COMPLETE
+
+#### Translation Failure Summary
+
+| Category | Count | Fix Location | Fixable? |
+|----------|-------|--------------|----------|
+| model_domain_mismatch | 6 | src/kkt/stationarity.py | Yes |
+| diff_unsupported_func | 6 | src/ad/derivative_rules.py | 4 yes, 2 no |
+| model_no_objective_def | 5 | src/ad/gradient.py | Yes |
+| unsup_index_offset | 4 | src/ir/ast.py | Yes (complex) |
+| internal_error | 3 | Various | 2 maybe |
+| codegen_numerical_error | 3 | Model data | No (data issues) |
+
+#### Key Findings
+
+1. **diff_unsupported_func:** Missing derivatives for gamma, loggamma, smin (fixable); card, ord (not differentiable)
+2. **model_domain_mismatch:** Partial index overlap in KKT construction; requires stationarity.py improvements
+3. **model_no_objective_def:** Objective extraction too strict; enhance find_objective_expression()
+4. **unsup_index_offset:** Lead/lag indexing (t-1, t+1) not yet supported in IR
+
+#### Quick Wins Identified
+
+| Fix | Effort | Models | ROI |
+|-----|--------|--------|-----|
+| Objective extraction enhancement | 4h | 5 | 1.25 |
+| gamma/loggamma derivatives | 4h | 3 | 0.75 |
+| smin smooth approximation | 2h | 1 | 0.50 |
+| Set element sanitization | 2h | 2 | 1.00 |
+
+**Total Quick Wins:** 12h effort, +11 models (43.8% → 66.7% translate rate)
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 1.1 | Verified | 5 functions missing: gamma, loggamma, card, ord, smin |
+| 1.2 | Verified | Domain mismatch in KKT; partial index overlap causes errors |
+| 1.3 | Verified | 5 models lack objective-defining equations |
+| 1.4 | Verified | 4 models use IndexOffset (t-1, t+1) |
+| 1.5 | Verified | No unsup_dollar_cond errors in current baseline |
+| 1.6 | Verified | 3 models have ±Inf/NaN parameters (data issues) |
+| 1.7 | Verified | ~21 models fixable; 60% target achievable |
+
+---
+
 ### Sprint 17 Prep Task 2: Detailed Error Analysis - 2026-01-28
 
 **Branch:** `planning/sprint17-task2`  
