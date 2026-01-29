@@ -490,7 +490,7 @@ mkdir -p mcp_analysis
 
 # Generate MCP for each model
 for model in ajax chem dispatch least port ps2_f_inf sample trnsport; do
-    python src/cli.py data/gamslib/raw/${model}.gms -o mcp_analysis/${model}_mcp.gms
+    python -m src.cli data/gamslib/raw/${model}.gms -o mcp_analysis/${model}_mcp.gms
 done
 
 # Compile with GAMS to see errors

@@ -239,7 +239,8 @@ A prioritized list of translation issues with:
 **Deadline:** Before Sprint 17 Day 3  
 **Owner:** TBD  
 **Dependencies:** Task 2  
-**Unknowns Addressed:** 2.1 (verified), 2.4 (deferred to Task 6)
+**Unknowns Verified:** 2.1
+**Unknowns Deferred:** 2.4 (to Task 6 - requires solve output comparison)
 
 #### Objective
 Investigate the 8 `path_syntax_error` models to understand MCP compilation failures.
