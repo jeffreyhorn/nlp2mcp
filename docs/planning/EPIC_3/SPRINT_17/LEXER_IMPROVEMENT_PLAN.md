@@ -21,14 +21,14 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 2. **12 models** fail due to multi-line statement continuation issues (medium fix)
 3. **6 models** fail due to display statement continuation (easy fix)
 4. **~25 models** are fixable with targeted lexer/grammar changes
-5. **~50+ models** require complex set data syntax overhaul (defer to future)
+5. **~39 models** require complex set data syntax overhaul or case-by-case analysis (defer to future)
 
 **Recommended Sprint 17 Focus:**
 | Priority | Models | Hours | Approach |
 |----------|--------|-------|----------|
 | Quick wins | 20-25 | 12h | Lexer regex + grammar rules |
 | Medium effort | 10-15 | 10h | Grammar extensions |
-| Deferred | 50+ | 20h+ | Complex set data (future sprint) |
+| Deferred | ~39 | 20h+ | Complex set data + misc (future sprint) |
 
 **Target:** +20-22 models parsing with Phase 1 (12h effort)
 
@@ -56,7 +56,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | 4 | Square bracket conditionals | 3 | 3% | Easy | 2h | P1 |
 | 5 | Tuple expansion syntax | 8 | 8% | Medium | 4h | P2 |
 | 6 | Curly brace expressions | 1 | 1% | Easy | 1h | P2 |
-| 7 | Keyword case issues | 5 | 5% | Easy | 2h | P1 |
+| 7 | Solve keyword spelling/case issues | 5 | 5% | Easy | 2h | P1 |
 | 8 | Acronym statement | 2 | 2% | Easy | 1h | P2 |
 | 9 | Complex set data syntax | 35 | 36% | Hard | 12h+ | P3 |
 | 10 | Numeric parameter data | 3 | 3% | Medium | 3h | P2 |
@@ -70,12 +70,12 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 
 | Category | Models | % | Notes |
 |----------|--------|---|-------|
-| Easy (1-2h each) | 29 | 30% | Lexer regex changes, simple grammar additions |
-| Medium (2-4h each) | 29 | 30% | Grammar rule extensions, multi-file changes |
-| Hard (4h+ each) | 35 | 36% | Complex set data, requires grammar restructuring |
+| Easy (typical 1-2h per pattern) | 29 | 30% | Lexer regex changes, simple grammar additions |
+| Medium (typical 2-4h per pattern) | 29 | 30% | Grammar rule extensions, multi-file changes |
+| Hard (typical 4h+ per pattern) | 35 | 36% | Complex set data, requires grammar restructuring |
 | Unfixable | 4 | 4% | Model-specific edge cases |
 
-**Note:** For this fixability breakdown, each model is assigned to a single primary fixability category based on its most difficult issue. The 97 models are partitioned with no overlaps.
+**Note:** For this fixability breakdown, each model is assigned to a single primary fixability category based on its most difficult issue. Effort ranges are typical implementation effort per fix/pattern, not per model. The 97 models are partitioned with no overlaps.
 
 ---
 
@@ -240,7 +240,7 @@ tcdef.. tc =e= k1*T*betareg(y,alpha,beta) - k1*{(delta + a)*...}
 
 ---
 
-### 2.7 Keyword Case Issues - 5 models
+### 2.7 Solve Keyword Spelling/Case Issues - 5 models
 
 **Models:** ampl, meanvar, mlbeta, mlgamma, nemhaus
 
@@ -248,21 +248,28 @@ tcdef.. tc =e= k1*T*betareg(y,alpha,beta) - k1*{(delta + a)*...}
 ```gams
 * ampl - Error at line 55
 Model ampl 'maximum revenue production problem' / all /;
-^ Unexpected character 'M'
+^ Unexpected character 'M' (capitalization issue)
 
 * mlbeta - Error at line 71
 solve m using nlp maximimizing like;
-                  ^ 'maximimizing' typo, but case also an issue
+                  ^ 'maximimizing' is a typo for 'maximizing'
+
+* meanvar - Error at line 98
+solve ... maximize ...;
+          ^ 'maximize' instead of 'maximizing'
 ```
 
-**Root Cause:** Keywords like `Model`, `Solve` with capital letters are not recognized due to lexer patterns.
+**Root Cause:** This category includes two related issues:
+1. **Capitalization:** Keywords like `Model`, `Solve` with non-standard case
+2. **Spelling variants/typos:** `maximimizing` (typo), `maximize` (variant of `maximizing`)
 
 **Fix Approach:**
 - Ensure all keywords use case-insensitive matching (`"Model"i`)
-- Fix any missing case-insensitive flags
+- Add recognized spelling variants for solve direction keywords (`maximize`/`maximizing`)
+- Consider whether to accept obvious typos or report clearer errors
 
 **Files to Modify:**
-- `src/gams/gams_grammar.lark` - Verify all keyword rules have `i` flag
+- `src/gams/gams_grammar.lark` - Verify all keyword rules have `i` flag; add `maximize`/`minimize` as aliases
 
 **Effort:** 2h  
 **Fixability:** Easy  
@@ -385,18 +392,20 @@ tn(t,n) 'time node mapping' / 'time-1'.('n-1'*'n-3'), 'time-2'.('n-4'*'n-12') /
 
 ### 2.12 Other/Miscellaneous - 8 models
 
-**Models:** demo1, qdemo7, saras, spatequ, plus 4 models with overlapping issues from other categories
+**Models:** demo1, qdemo7, saras, spatequ, plus 4 additional miscellaneous models
 
-These have unique issues requiring case-by-case analysis:
+These 8 models have unique issues requiring case-by-case analysis:
 - `demo1`: Double-quoted output format strings
 - `qdemo7`: Continuation in display statement
 - `saras`: Standalone slash in data
 - `spatequ`: MCP model syntax with dots
-- Additional models have secondary issues that overlap with categories 10-11
+- 4 additional models have miscellaneous issues not fitting other categories
+
+**Clarification:** Each of these 8 models is assigned here as their primary subcategory (no double-counting with other subcategories). Of these 8, 4 may be addressable in Phase 1-2 with targeted fixes; the remaining 4 are deferred to Phase 3.
 
 **Effort:** 4h total  
 **Fixability:** Varies  
-**Impact:** 8 models (includes overlaps)
+**Impact:** 8 models
 
 ---
 
@@ -408,7 +417,7 @@ These have unique issues requiring case-by-case analysis:
 |---|-----|--------|--------|-----|
 | 1 | Reserved word conflicts (`inf`/`na`) | 2h | 12 | 6.0 |
 | 2 | Display statement continuation | 2h | 6 | 3.0 |
-| 3 | Keyword case fixes | 2h | 5 | 2.5 |
+| 3 | Solve keyword spelling/case fixes | 2h | 5 | 2.5 |
 | 4 | Square bracket conditionals | 2h | 3 | 1.5 |
 | 5 | Acronym statement | 1h | 2 | 2.0 |
 | 6 | Curly brace expressions | 1h | 1 | 1.0 |
@@ -428,12 +437,15 @@ These have unique issues requiring case-by-case analysis:
 
 **Note:** After overlap accounting, ~10-12 additional unique models.
 
-### Phase 3: Deferred (20h+, ~35 models)
+### Phase 3: Deferred (20h+, ~39 models)
 
 | Category | Models | Reason for Deferral |
 |----------|--------|---------------------|
 | Complex set data syntax | 35 | Requires major grammar restructuring |
-| Miscellaneous | 4 | Case-by-case analysis needed |
+| Miscellaneous (deferred subset) | 4 | Case-by-case analysis needed |
+| **Total** | **39** | |
+
+**Clarification:** Of the 8 models in subcategory 12 (Other/Miscellaneous), 4 are addressable in Phase 1-2; the remaining 4 are deferred here. The 39 deferred models = 35 (complex set data) + 4 (misc deferred).
 
 **Recommendation:** Defer to Sprint 18 or later. Focus Sprint 17 on Phase 1 and Phase 2.
 
@@ -590,7 +602,7 @@ dinam, egypt, indus, marco, paklive, shale, sparta, turkey
 ### A.6 Curly Brace Expressions (1 model)
 procmean
 
-### A.7 Keyword Case Issues (5 models)
+### A.7 Solve Keyword Spelling/Case Issues (5 models)
 ampl, meanvar, mlbeta, mlgamma, nemhaus
 
 ### A.8 Acronym Statement (2 models)

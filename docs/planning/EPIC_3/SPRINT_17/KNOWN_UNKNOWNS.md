@@ -903,7 +903,7 @@ Development team
 | Square bracket conditionals | 3 | 3% | Easy | 2h |
 | Tuple expansion syntax | 8 | 8% | Medium | 4h |
 | Curly brace expressions | 1 | 1% | Easy | 1h |
-| Keyword case issues | 5 | 5% | Easy | 2h |
+| Solve keyword spelling/case issues | 5 | 5% | Easy | 2h |
 | Acronym statement | 2 | 2% | Easy | 1h |
 | Complex set data syntax | 35 | 36% | Hard | 12h+ |
 | Numeric parameter data | 3 | 3% | Medium | 3h |
