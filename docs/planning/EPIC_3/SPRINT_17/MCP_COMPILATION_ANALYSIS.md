@@ -375,15 +375,15 @@ stat_n_1.. ... - ((-1) * k1("1",'a')) / n("1") ** 2 * lam_vbal('a') - ((-1) * k1
 
 ### Fix 1: Emit Table Data (6h, +2 models: ajax, least)
 
-**Problem:** Table data is not preserved in IR or emitted.
+**Problem:** Table data is not preserved in IR and therefore is not emitted.
 
 **Solution:**
-1. Ensure parser stores Table data in `ParameterDef.values`
-2. Update `emit_original_parameters()` to emit all stored values
+1. Investigate and fix parsing / preprocessing / normalization so that all Table data is stored in `ParameterDef.values` (or equivalent IR), including any special cases (e.g., Table vs Parameter syntax paths).
+2. Verify that `emit_original_parameters()` correctly serializes all entries in `ParameterDef.values` for Table-backed parameters, and only introduce emitter changes if a specific serialization gap is identified (e.g., wildcard domains, key formatting).
 
 **Files to modify:**
-- `src/ir/parser.py` - Verify Table parsing stores values
-- `src/emit/original_symbols.py` - Verify emission handles all values
+- `src/ir/parser.py` - Ensure Table parsing and normalization populate `ParameterDef.values`
+- `src/emit/original_symbols.py` - Verify serialization of `ParameterDef.values` for Table-backed parameters; address only concrete gaps if found
 
 **Effort:** 6h (investigation + implementation + testing)
 

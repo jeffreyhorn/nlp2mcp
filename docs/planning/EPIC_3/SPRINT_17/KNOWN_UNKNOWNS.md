@@ -619,9 +619,9 @@ Development team
 
 **Root Causes in emit_gams.py:**
 
-1. **`src/emit/original_symbols.py:130-185`** - Parameter emission doesn't include:
-   - Table data values (only declares parameter, doesn't emit data)
-   - Computed parameter assignments (e.g., `c(i,j) = f*d(i,j)/1000;`)
+1. **`src/emit/original_symbols.py:130-185`** - At emission time, the IR is missing:
+   - Table data values (`ParameterDef.values` is empty, so no table data is emitted)
+   - Computed parameter assignments (e.g., `c(i,j) = f*d(i,j)/1000;` are not present in `ParameterDef.values`, so nothing is emitted)
 
 2. **`src/emit/original_symbols.py:63-89`** - Set emission loses:
    - Subset relationships (`cg(genchar)` becomes just `cg`)
