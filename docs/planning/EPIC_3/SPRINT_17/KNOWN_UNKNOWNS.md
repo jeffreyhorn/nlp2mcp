@@ -905,15 +905,15 @@ Development team
 | Curly brace expressions | 1 | 1% | Easy | 1h |
 | Solve keyword spelling/case issues | 5 | 5% | Easy | 2h |
 | Acronym statement | 2 | 2% | Easy | 1h |
-| Complex set data syntax | 35 | 36% | Hard | 12h+ |
+| Complex set data syntax | 33 | 34% | Hard | 12h+ |
 | Numeric parameter data | 3 | 3% | Medium | 3h |
 | Range syntax in data | 2 | 2% | Medium | 3h |
-| Other/miscellaneous | 8 | 8% | Varies | 4h |
+| Other/miscellaneous | 10 | 10% | Varies | 4h |
 
 **Key Insight:** 
 - ~30% of errors (29 models) are easily fixable with lexer/grammar changes
 - ~30% (29 models) require medium effort grammar extensions
-- ~36% (35 models) require significant grammar restructuring (recommend deferring)
+- ~34% (33 models) require significant grammar restructuring (recommend deferring)
 
 **Target:** +20-22 models with Phase 1 quick wins (12h effort)
 

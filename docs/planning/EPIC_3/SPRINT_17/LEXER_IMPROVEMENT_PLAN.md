@@ -61,7 +61,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | 9 | Complex set data syntax | 33 | 34% | Hard | 12h+ | P3 |
 | 10 | Numeric parameter data | 3 | 3% | Medium | 3h | P2 |
 | 11 | Range syntax in data | 2 | 2% | Medium | 3h | P2 |
-| 12 | Other/miscellaneous | 8 | 8% | Varies | 4h | P3 |
+| 12 | Other/miscellaneous | 10 | 10% | Varies | 4h | P3 |
 | **Total** | | **97** | **100%** | | | |
 
 **Note:** Each of the 97 models is assigned to exactly one primary subcategory based on its most significant blocking issue. Some models have secondary issues in other categories (noted in detailed analysis below), but counts here represent unique models with no double-counting.
@@ -73,7 +73,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | Easy (typical 1-2h per pattern) | 29 | 30% | Lexer regex changes, simple grammar additions |
 | Medium (typical 2-4h per pattern) | 29 | 30% | Grammar rule extensions, multi-file changes |
 | Hard (typical 4h+ per pattern) | 33 | 34% | Complex set data, requires grammar restructuring |
-| Unfixable | 4 | 4% | Model-specific edge cases |
+| Unfixable | 6 | 6% | Model-specific edge cases |
 
 **Note:** For this fixability breakdown, each model is assigned to a single primary fixability category based on its most difficult issue. Effort ranges are typical implementation effort per fix/pattern, not per model. The 97 models are partitioned with no overlaps.
 
@@ -537,19 +537,19 @@ These 8 models have unique issues requiring case-by-case analysis:
 
 **Status:** ✅ VERIFIED (Decision: Partial defer)
 
-**Finding:** The 35 models with complex set data syntax errors exhibit these patterns:
+**Finding:** The 33 models with complex set data syntax errors exhibit these patterns:
 
 | Pattern | Count | Fixability | Decision |
 |---------|-------|------------|----------|
 | Quoted descriptions | 7 | Medium | Fix in Sprint 17 Phase 2 |
 | Tuple expansion | 8 | Medium | Fix in Sprint 17 Phase 2 |
 | Range notation | 4 | Medium | Fix in Sprint 17 Phase 2 |
-| Mixed alphanumeric | 10 | Hard | Defer |
+| Mixed alphanumeric | 8 | Hard | Defer |
 | Multi-dimensional tables | 6 | Hard | Defer |
 
 **Decision Rationale:**
 - ~19 models fixable with targeted grammar extensions (Phase 2)
-- ~16 models require comprehensive data syntax overhaul (defer)
+- ~14 models require comprehensive data syntax overhaul (defer)
 - ROI favors fixing simpler patterns first
 
 **Recommendation:** Fix quoted descriptions, tuple expansion, and range notation in Sprint 17. Defer mixed alphanumeric and multi-dimensional table patterns to future sprint.
@@ -619,8 +619,8 @@ apl1pca, lmp2, prodsp2
 ### A.11 Range Syntax in Data (2 models)
 kand, srkandw
 
-### A.12 Other/Miscellaneous (8 models)
-demo1, qdemo7, saras, spatequ, plus 4 additional miscellaneous models
+### A.12 Other/Miscellaneous (10 models)
+demo1, qdemo7, saras, spatequ, plus 6 additional miscellaneous models
 
 ---
 
