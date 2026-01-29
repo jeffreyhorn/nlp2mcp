@@ -239,7 +239,7 @@ A prioritized list of translation issues with:
 **Deadline:** Before Sprint 17 Day 3  
 **Owner:** TBD  
 **Dependencies:** Task 2  
-**Unknowns Verified:** 2.1
+**Unknowns Verified:** 2.1  
 **Unknowns Deferred:** 2.4 (to Task 6 - requires solve output comparison)
 
 #### Objective
