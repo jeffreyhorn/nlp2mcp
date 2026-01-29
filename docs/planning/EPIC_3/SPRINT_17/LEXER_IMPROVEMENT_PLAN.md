@@ -392,22 +392,22 @@ tn(t,n) 'time node mapping' / 'time-1'.('n-1'*'n-3'), 'time-2'.('n-4'*'n-12') /
 
 ---
 
-### 2.12 Other/Miscellaneous - 8 models
+### 2.12 Other/Miscellaneous - 10 models
 
-**Models:** demo1, qdemo7, saras, spatequ, plus 4 additional miscellaneous models
+**Models:** demo1, qdemo7, saras, spatequ, plus 6 additional miscellaneous models
 
-These 8 models have unique issues requiring case-by-case analysis:
+These 10 models have unique issues requiring case-by-case analysis:
 - `demo1`: Double-quoted output format strings
 - `qdemo7`: Continuation in display statement
 - `saras`: Standalone slash in data
 - `spatequ`: MCP model syntax with dots
-- 4 additional models have miscellaneous issues not fitting other categories
+- 6 additional models have miscellaneous issues not fitting other categories
 
-**Clarification:** Each of these 8 models is assigned here as their primary subcategory (no double-counting with other subcategories). Of these 8, 4 may be addressable in Phase 1-2 with targeted fixes; the remaining 4 are deferred to Phase 3.
+**Clarification:** Each of these 10 models is assigned here as their primary subcategory (no double-counting with other subcategories). Of these 10, 6 may be addressable in Phase 1-2 with targeted fixes; the remaining 4 are deferred to Phase 3.
 
 **Effort:** 4h total  
 **Fixability:** Varies  
-**Impact:** 8 models
+**Impact:** 10 models
 
 ---
 
@@ -447,7 +447,7 @@ These 8 models have unique issues requiring case-by-case analysis:
 | Miscellaneous (deferred subset) | 4 | Case-by-case analysis needed |
 | **Total** | **37** | |
 
-**Clarification:** Of the 8 models in subcategory 12 (Other/Miscellaneous), 4 are addressable in Phase 1-2; the remaining 4 are deferred here. The 37 deferred models = 33 (complex set data) + 4 (misc deferred).
+**Clarification:** Of the 10 models in subcategory 12 (Other/Miscellaneous), 6 are addressable in Phase 1-2; the remaining 4 are deferred here. The 37 deferred models = 33 (complex set data) + 4 (misc deferred).
 
 **Recommendation:** Defer to Sprint 18 or later. Focus Sprint 17 on Phase 1 and Phase 2.
 
@@ -507,9 +507,9 @@ These 8 models have unique issues requiring case-by-case analysis:
 9. Complex set data syntax (33 models, 34%)
 10. Numeric parameter data (3 models, 3%)
 11. Range syntax in data (2 models, 2%)
-12. Other/miscellaneous (8 models, 8%)
+12. Other/miscellaneous (10 models, 10%)
 
-**Key Insight:** ~30% of errors are easily fixable (subcategories 1-8), ~8% are medium difficulty (subcategories 10-11), and ~34% require significant grammar work (subcategory 9).
+**Key Insight:** ~30% of errors are easily fixable (subcategories 1-8), ~5% are medium difficulty (subcategories 10-11), ~34% require significant grammar work (subcategory 9), and ~10% are miscellaneous/edge cases (subcategory 12).
 
 ---
 
@@ -517,7 +517,7 @@ These 8 models have unique issues requiring case-by-case analysis:
 
 **Status:** ✅ VERIFIED
 
-**Finding:** Most remaining hyphenated identifier issues are part of the "complex set data syntax" category (35 models) and require grammar changes, not just lexer changes.
+**Finding:** Most remaining hyphenated identifier issues are part of the "complex set data syntax" category (33 models) and require grammar changes, not just lexer changes.
 
 **Specific Patterns:**
 - Number-prefixed hyphenated elements (`1964-i`): Requires lexer pattern extension

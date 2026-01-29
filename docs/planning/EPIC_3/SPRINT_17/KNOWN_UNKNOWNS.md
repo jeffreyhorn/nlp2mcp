@@ -1088,19 +1088,19 @@ Development team
 ### Verification Results
 ✅ Status: VERIFIED (Decision: Partial fix, partial defer)
 
-**Finding:** The 35 models with complex set data syntax errors exhibit these patterns:
+**Finding:** The 33 models with complex set data syntax errors exhibit these patterns:
 
 | Pattern | Count | Fixability | Sprint 17 Decision |
 |---------|-------|------------|-------------------|
 | Quoted set descriptions | 7 | Medium | Fix (Phase 2) |
 | Tuple expansion | 8 | Medium | Fix (Phase 2) |
 | Range notation (`'n-1'*'n-3'`) | 4 | Medium | Fix (Phase 2) |
-| Mixed alphanumeric data | 10 | Hard | Defer |
+| Mixed alphanumeric data | 8 | Hard | Defer |
 | Multi-dimensional tables | 6 | Hard | Defer |
 
 **Decision Rationale:**
 1. **Fix in Sprint 17 (~19 models):** Quoted descriptions, tuple expansion, and range notation have well-defined syntax that can be added with targeted grammar rules (10h effort).
-2. **Defer to future sprint (~16 models):** Mixed alphanumeric and multi-dimensional table patterns require comprehensive data syntax overhaul (12h+ effort, high regression risk).
+2. **Defer to future sprint (~14 models):** Mixed alphanumeric and multi-dimensional table patterns require comprehensive data syntax overhaul (12h+ effort, high regression risk).
 
 **ROI Analysis:**
 - Fixing simpler patterns: 10h → +10-12 models (ROI: 1.0-1.2)
