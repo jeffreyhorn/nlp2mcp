@@ -26,12 +26,13 @@ This document analyzes all 8 models that successfully translate to MCP but fail 
 **Error Pattern Summary:**
 | Pattern | Models | Effort | Description |
 |---------|--------|--------|-------------|
-| Missing Table/computed parameter data | 4 | 6h | ajax, chem, least, trnsport |
+| Missing Table data | 2 | 6h | ajax, least |
+| Missing computed parameter data | 2 | 4h | chem, trnsport |
 | Subset relationship lost | 2 | 4h | dispatch, port |
 | Reserved word as set element | 1 | 2h | ps2_f_inf |
 | Unquoted set element references | 1 | 3h | sample |
 
-**Total Estimated Fix Effort:** ~15h for +8 models
+**Total Estimated Fix Effort:** ~19h for +8 models
 
 ---
 

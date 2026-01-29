@@ -274,18 +274,20 @@ For each of 8 models:
 - [x] MCP files generated and saved
 - [x] GAMS errors captured
 - [x] Root causes in emit_gams.py identified
-- [x] Unknowns 2.1, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Unknown 2.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Unknown 2.4 deferred to Task 6 and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/MCP_COMPILATION_ANALYSIS.md`
 - Generated MCP files for affected models (if useful for debugging)
-- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.4
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 2.1 and deferral note for 2.4
 
 #### Acceptance Criteria
 - All 8 path_syntax_error models analyzed
 - Error patterns documented
 - emit_gams.py locations identified
-- [x] Unknowns 2.1, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Unknown 2.1 verified in KNOWN_UNKNOWNS.md
+- [x] Unknown 2.4 deferred to Task 6 in KNOWN_UNKNOWNS.md
 
 ---
 
