@@ -792,12 +792,12 @@ Development team
 - Sprint 16 baseline shows 10 models with solve failures/mismatches after translation success
 - Objective mismatch analysis requires models that successfully compile and solve
 
-**Deferred Analysis:** Full objective mismatch investigation will be conducted in Task 6 (Solve Failure Investigation Plan) which focuses on:
+**Deferred Analysis:** Full objective mismatch investigation for Unknown 2.4 will be conducted in **Task 6 (Solve Failure Investigation Plan)**, which focuses on:
 - Models that translate AND compile successfully but have solve issues
 - Comparing NLP vs MCP objective values
 - Determining if differences are tolerance issues or bugs
 
-**See:** Task 6 will verify this unknown with actual solve output comparison
+**See:** Task 4 provides only preliminary observations; verification of Unknown 2.4 is explicitly **deferred to Task 6**, which will verify this unknown with actual solve output comparison
 
 ---
 
@@ -1721,9 +1721,9 @@ This table shows which prep tasks verify which unknowns:
 |-----------|-------------------|-------|
 | Task 2: Detailed Error Analysis | 3.1, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5 | Error extraction and categorization |
 | Task 3: Translation Deep Dive | 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 | All translation improvement unknowns |
-| Task 4: MCP Compilation Analysis | 2.1, 2.4 | Path syntax errors and output validation |
+| Task 4: MCP Compilation Analysis | 2.1 | Path syntax errors; 2.4 deferred to Task 6 |
 | Task 5: Lexer/Parser Improvement Plan | 3.1, 3.2, 3.4, 3.5 | Lexer subcategories and fix planning |
-| Task 6: Solve Failure Investigation Plan | 2.2, 2.3, 2.5 | Solve failures and PATH configuration |
+| Task 6: Solve Failure Investigation Plan | 2.2, 2.3, 2.4, 2.5 | Solve failures, objective mismatches (2.4 deferred from Task 4), PATH config |
 | Task 7: Documentation Inventory | - | No unknowns; documentation-focused |
 | Task 8: Release Checklist | 5.1, 5.2, 5.3, 5.4 | Fix complexity and scheduling estimation |
 | Task 9: Plan Sprint 17 Detailed Schedule | 3.5, 3.6 | Integrates all findings into schedule |

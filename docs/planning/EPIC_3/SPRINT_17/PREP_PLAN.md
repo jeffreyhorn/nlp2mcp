@@ -284,9 +284,9 @@ For each of 8 models:
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknown 2.1 and deferral note for 2.4
 
 #### Acceptance Criteria
-- All 8 path_syntax_error models analyzed
-- Error patterns documented
-- emit_gams.py locations identified
+- [x] All 8 path_syntax_error models analyzed
+- [x] Error patterns documented
+- [x] emit_gams.py locations identified
 - [x] Unknown 2.1 verified in KNOWN_UNKNOWNS.md
 - [x] Unknown 2.4 deferred to Task 6 in KNOWN_UNKNOWNS.md
 
