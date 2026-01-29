@@ -323,7 +323,7 @@ See: [PROJECT_PLAN.md](../PROJECT_PLAN.md) § "Sprint 17"
 2. Estimate fixability of each subcategory
 3. Identify patterns that can be addressed with lexer changes
 4. Identify patterns requiring deeper parser changes
-5. Create prioritized fix plan (targeting +15-25 models)
+5. Create prioritized fix plan (targeting +20-22 models)
 
 #### Changes
 - Create `docs/planning/EPIC_3/SPRINT_17/LEXER_IMPROVEMENT_PLAN.md`
@@ -338,7 +338,7 @@ A prioritized plan targeting:
 - [x] All 97 failures reviewed
 - [x] Subcategories identified with counts
 - [x] Fixability assessed for each
-- [x] Plan targets +15-25 models
+- [x] Plan targets +20-22 models
 - [x] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
@@ -348,7 +348,7 @@ A prioritized plan targeting:
 #### Acceptance Criteria
 - [x] All lexer failures categorized
 - [x] Clear priority ranking
-- [x] Realistic +15-25 model target plan
+- [x] Realistic +20-22 model target plan
 - [x] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---

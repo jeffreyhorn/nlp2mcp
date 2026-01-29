@@ -913,7 +913,7 @@ Development team
 - ~30% (29 models) require medium effort grammar extensions
 - ~36% (35 models) require significant grammar restructuring (recommend deferring)
 
-**Target:** +20-25 models with Phase 1 quick wins (12h effort)
+**Target:** +20-22 models with Phase 1 quick wins (12h effort)
 
 **See:** LEXER_IMPROVEMENT_PLAN.md for complete breakdown and fix plan
 

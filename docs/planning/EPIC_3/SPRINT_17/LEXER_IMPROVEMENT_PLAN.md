@@ -14,7 +14,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 **Sprint 16 Baseline:**
 - Parse success: 48/160 (30.0%)
 - lexer_invalid_char failures: 97 models (86.6% of parse failures)
-- Target: +15-25 models parsing (achieving ~40-45% parse rate)
+- Target: +20-22 models parsing (achieving ~42-44% parse rate)
 
 **Key Findings:**
 1. **12 models** fail due to `inf`/`na` reserved word conflicts (easy fix, high impact)
@@ -30,7 +30,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | Medium effort | 10-15 | 10h | Grammar extensions |
 | Deferred | 50+ | 20h+ | Complex set data (future sprint) |
 
-**Target:** +18-22 models parsing with 22h effort
+**Target:** +20-22 models parsing with Phase 1 (12h effort)
 
 ---
 
@@ -39,7 +39,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 1. [Subcategory Breakdown](#1-subcategory-breakdown)
 2. [Detailed Subcategory Analysis](#2-detailed-subcategory-analysis)
 3. [Prioritized Fix Plan](#3-prioritized-fix-plan)
-4. [Grammar/Lexer File Locations](#4-grammarLexer-file-locations)
+4. [Grammar/Lexer File Locations](#4-grammarlexer-file-locations)
 5. [Unknown Verification Summary](#5-unknown-verification-summary)
 
 ---
@@ -59,8 +59,8 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | 7 | Keyword case issues | 5 | 5% | Easy | 2h | P1 |
 | 8 | Acronym statement | 2 | 2% | Easy | 1h | P2 |
 | 9 | Complex set data syntax | 35 | 36% | Hard | 12h+ | P3 |
-| 10 | Numeric parameter data | 5 | 5% | Medium | 3h | P2 |
-| 11 | Range syntax in data | 4 | 4% | Medium | 3h | P2 |
+| 10 | Numeric parameter data | 3 | 3% | Medium | 3h | P2 |
+| 11 | Range syntax in data | 2 | 2% | Medium | 3h | P2 |
 | 12 | Other/miscellaneous | 4 | 4% | Varies | 4h | P3 |
 | **Total** | | **97** | **100%** | | | |
 
@@ -95,8 +95,8 @@ Positive Variable,    <-- Parser confused by `inf` as reserved word
 - Alternative: Quote detection - allow unquoted `inf`/`na` in data
 
 **Files to Modify:**
-- `src/parser/gams_lexer.py` - Add context state for data sections
-- `src/parser/gams_grammar.lark` - Update `set_element` rule
+- `src/gams/gams_lexer.py` - Add context state for data sections
+- `src/gams/gams_grammar.lark` - Update `set_element` rule
 
 **Effort:** 2h  
 **Fixability:** Easy  
@@ -123,7 +123,7 @@ display Y0, F0, X0, Z0, Xp0, Xg0, Xv0, E0, M0, Q0, D0, Sp0, Sg0, Td0, Tz0, Tm0
 - Allow whitespace-only lines followed by identifier continuation
 
 **Files to Modify:**
-- `src/parser/gams_grammar.lark` - Update `display_stmt` rule
+- `src/gams/gams_grammar.lark` - Update `display_stmt` rule
 
 **Effort:** 2h  
 **Fixability:** Easy  
@@ -133,7 +133,7 @@ display Y0, F0, X0, Z0, Xp0, Xg0, Xv0, E0, M0, Q0, D0, Sp0, Sg0, Td0, Tz0, Tm0
 
 ### 2.3 Multi-line Statement Continuation - 12 models
 
-**Models:** agreste, cesam, fawley, fdesign, gtm, iobalance, mine, nebrazil, otpop, pdi, pindyck, qsambal, sambal, uimp (some overlap with other categories)
+**Models:** agreste, cesam, fawley, fdesign, gtm, iobalance, mine, nebrazil, otpop, pdi, pindyck, uimp
 
 **Error Pattern:**
 ```gams
@@ -150,8 +150,8 @@ arev..   revenue  =e= lprice*xlive + ...;
 - Better statement boundary detection
 
 **Files to Modify:**
-- `src/parser/gams_grammar.lark` - Statement separation rules
-- `src/parser/gams_parser.py` - Statement boundary logic
+- `src/gams/gams_grammar.lark` - Statement separation rules
+- `src/ir/parser.py` - Statement boundary logic
 
 **Effort:** 4h  
 **Fixability:** Medium  
@@ -176,7 +176,7 @@ np(n,p)$[mod(ord(n) - 2, card(p)) = ord(p) - 1] = yes;
 - Add `"[" condition "]"` as alternative to `"(" condition ")"` in dollar conditionals
 
 **Files to Modify:**
-- `src/parser/gams_grammar.lark` - Add square bracket alternative in conditional rules
+- `src/gams/gams_grammar.lark` - Add square bracket alternative in conditional rules
 
 **Effort:** 2h  
 **Fixability:** Easy  
@@ -202,8 +202,8 @@ np(n,p)$[mod(ord(n) - 2, card(p)) = ord(p) - 1] = yes;
 - Rule: `"(" id_list ")" "." "(" id_list ")"` or `"(" id_list ")" "." id`
 
 **Files to Modify:**
-- `src/parser/gams_grammar.lark` - Add `tuple_expansion` rule
-- `src/parser/gams_parser.py` - Handle tuple expansion AST
+- `src/gams/gams_grammar.lark` - Add `tuple_expansion` rule
+- `src/ir/parser.py` - Handle tuple expansion AST
 
 **Effort:** 4h  
 **Fixability:** Medium  
@@ -228,7 +228,7 @@ tcdef.. tc =e= k1*T*betareg(y,alpha,beta) - k1*{(delta + a)*...}
 - Add `"{" expr "}"` as alternative to `"(" expr ")"` in expression rules
 
 **Files to Modify:**
-- `src/parser/gams_grammar.lark` - Add curly brace alternative
+- `src/gams/gams_grammar.lark` - Add curly brace alternative
 
 **Effort:** 1h  
 **Fixability:** Easy  
@@ -258,7 +258,7 @@ solve m using nlp maximimizing like;
 - Fix any missing case-insensitive flags
 
 **Files to Modify:**
-- `src/parser/gams_grammar.lark` - Verify all keyword rules have `i` flag
+- `src/gams/gams_grammar.lark` - Verify all keyword rules have `i` flag
 
 **Effort:** 2h  
 **Fixability:** Easy  
@@ -287,7 +287,7 @@ Acronym future, call, puto;
 - Add `acronym_stmt` rule: `"Acronym"i id_list ";"`
 
 **Files to Modify:**
-- `src/parser/gams_grammar.lark` - Add `acronym_stmt` rule
+- `src/gams/gams_grammar.lark` - Add `acronym_stmt` rule
 
 **Effort:** 1h  
 **Fixability:** Easy  
@@ -317,8 +317,8 @@ Acronym future, call, puto;
   - Dot notation for tuples
 
 **Files to Modify:**
-- `src/parser/gams_grammar.lark` - Major updates to data parsing rules
-- `src/parser/gams_lexer.py` - Context-aware tokenization
+- `src/gams/gams_grammar.lark` - Major updates to data parsing rules
+- `src/gams/gams_lexer.py` - Context-aware tokenization
 
 **Effort:** 12h+ (recommend deferring most)  
 **Fixability:** Hard  
@@ -328,7 +328,7 @@ Acronym future, call, puto;
 
 ---
 
-### 2.10 Numeric Parameter Data - 5 models
+### 2.10 Numeric Parameter Data - 3 models
 
 **Models:** apl1pca, lmp2, prodsp2
 
@@ -346,17 +346,17 @@ h1 = hm1(dl) * v1("out", omega1);
 - Handle implicit parameter assignments
 
 **Files to Modify:**
-- `src/parser/gams_grammar.lark` - Assignment statement rules
+- `src/gams/gams_grammar.lark` - Assignment statement rules
 
 **Effort:** 3h  
 **Fixability:** Medium  
-**Impact:** 5 models
+**Impact:** 3 models
 
 ---
 
-### 2.11 Range Syntax in Data - 4 models
+### 2.11 Range Syntax in Data - 2 models
 
-**Models:** kand, srkandw (overlap with complex set data)
+**Models:** kand, srkandw
 
 **Error Pattern:**
 ```gams
@@ -371,11 +371,11 @@ tn(t,n) 'time node mapping' / 'time-1'.('n-1'*'n-3'), 'time-2'.('n-4'*'n-12') /
 - Add range notation support in set data: `element "*" element`
 
 **Files to Modify:**
-- `src/parser/gams_grammar.lark` - Add range support in data rules
+- `src/gams/gams_grammar.lark` - Add range support in data rules
 
 **Effort:** 3h  
 **Fixability:** Medium  
-**Impact:** 4 models
+**Impact:** 2 models
 
 ---
 
@@ -417,9 +417,9 @@ These have unique issues requiring case-by-case analysis:
 | # | Fix | Effort | Models | ROI |
 |---|-----|--------|--------|-----|
 | 1 | Tuple expansion syntax | 4h | 8 | 2.0 |
-| 2 | Numeric parameter data | 3h | 5 | 1.7 |
-| 3 | Range syntax in data | 3h | 4 | 1.3 |
-| **Subtotal** | | **10h** | **~15** | |
+| 2 | Numeric parameter data | 3h | 3 | 1.0 |
+| 3 | Range syntax in data | 3h | 2 | 0.7 |
+| **Subtotal** | | **10h** | **~13** | |
 
 **Note:** After overlap accounting, ~10-12 additional unique models.
 
@@ -441,7 +441,7 @@ These have unique issues requiring case-by-case analysis:
 | Phase 1+2 | 22h | 48-50% | 77-80 |
 | Full (incl. Phase 3) | 42h+ | 55-60% | 88-96 |
 
-**Sprint 17 Target:** Phase 1 + Phase 2 = 22h effort, +25-32 models, ~48-50% parse rate
+**Sprint 17 Target:** Phase 1 = 12h effort, +20-22 models, ~42-44% parse rate (Phase 2 adds +10-12 more with 10h additional effort)
 
 ---
 
@@ -451,22 +451,22 @@ These have unique issues requiring case-by-case analysis:
 
 | File | Purpose | Fixes Applied |
 |------|---------|---------------|
-| `src/parser/gams_grammar.lark` | Grammar rules | Display, conditionals, acronym, tuple expansion |
-| `src/parser/gams_lexer.py` | Lexer patterns | Reserved words context, identifier patterns |
-| `src/parser/gams_parser.py` | Parser logic | Statement boundaries, AST construction |
+| `src/gams/gams_grammar.lark` | Grammar rules | Display, conditionals, acronym, tuple expansion |
+| `src/gams/gams_lexer.py` | Lexer patterns | Reserved words context, identifier patterns |
+| `src/ir/parser.py` | Parser logic | Statement boundaries, AST construction |
 
 ### Specific Locations for Each Fix
 
 | Fix | File | Location/Rule |
 |-----|------|---------------|
-| Reserved words | `gams_lexer.py` | `RESERVED_WORDS`, token context |
-| Display continuation | `gams_grammar.lark` | `display_stmt` rule |
-| Keyword case | `gams_grammar.lark` | All keyword rules (`"Model"i`, etc.) |
-| Square brackets | `gams_grammar.lark` | `dollar_cond` rule |
-| Acronym | `gams_grammar.lark` | New `acronym_stmt` rule |
-| Curly braces | `gams_grammar.lark` | `expr` rule alternatives |
-| Tuple expansion | `gams_grammar.lark` | `set_data`, `param_data` rules |
-| Range syntax | `gams_grammar.lark` | `set_element_range` rule |
+| Reserved words | `src/gams/gams_lexer.py` | `RESERVED_WORDS`, token context |
+| Display continuation | `src/gams/gams_grammar.lark` | `display_stmt` rule |
+| Keyword case | `src/gams/gams_grammar.lark` | All keyword rules (`"Model"i`, etc.) |
+| Square brackets | `src/gams/gams_grammar.lark` | `dollar_cond` rule |
+| Acronym | `src/gams/gams_grammar.lark` | New `acronym_stmt` rule |
+| Curly braces | `src/gams/gams_grammar.lark` | `expr` rule alternatives |
+| Tuple expansion | `src/gams/gams_grammar.lark` | `set_data`, `param_data` rules |
+| Range syntax | `src/gams/gams_grammar.lark` | `set_element_range` rule |
 
 ---
 
@@ -486,8 +486,8 @@ These have unique issues requiring case-by-case analysis:
 7. Keyword case issues (5 models, 5%)
 8. Acronym statement (2 models, 2%)
 9. Complex set data syntax (35 models, 36%)
-10. Numeric parameter data (5 models, 5%)
-11. Range syntax in data (4 models, 4%)
+10. Numeric parameter data (3 models, 3%)
+11. Range syntax in data (2 models, 2%)
 12. Other/miscellaneous (4 models, 4%)
 
 **Key Insight:** ~30% of errors are easily fixable (subcategories 1-8), ~30% are medium difficulty (9-11), and ~36% require significant grammar work (category 9).
@@ -574,7 +574,7 @@ ps10_s, ps10_s_mn, ps2_f, ps2_f_eff, ps2_f_s, ps2_s, ps3_f, ps3_s, ps3_s_gic, ps
 irscge, lrgcge, moncge, quocge, stdcge, twocge
 
 ### A.3 Multi-line Statement Continuation (12 models)
-agreste, cesam, fawley, fdesign, gtm, iobalance, mine, nebrazil, otpop, pdi, pindyck, qsambal, sambal, uimp
+agreste, cesam, fawley, fdesign, gtm, iobalance, mine, nebrazil, otpop, pdi, pindyck, uimp
 
 ### A.4 Square Bracket Conditionals (3 models)
 clearlak, procmean, springchain
@@ -594,11 +594,11 @@ mathopt4, worst
 ### A.9 Complex Set Data Syntax (35 models)
 camcge, cesam2, china, dyncge, etamac, feedtray, ferts, ganges, gangesx, gussrisk, harker, hhfair, hhmax, iswnm, kand, korcge, lands, launch, lop, nonsharp, prolog, robustlp, sarf, senstran, ship, solveopt, splcge, srkandw, tabora, tfordy, tforss, tricp, trnspwl, turkpow, weapons
 
-### A.10 Numeric Parameter Data (5 models)
-apl1pca, lmp2, prodsp2 (+ others with overlap)
+### A.10 Numeric Parameter Data (3 models)
+apl1pca, lmp2, prodsp2
 
-### A.11 Range Syntax in Data (4 models)
-kand, srkandw (+ others with overlap)
+### A.11 Range Syntax in Data (2 models)
+kand, srkandw
 
 ### A.12 Other/Miscellaneous (4 models)
 demo1, qdemo7, saras, spatequ

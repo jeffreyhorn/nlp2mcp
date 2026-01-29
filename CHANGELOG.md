@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Created prioritized plan for addressing 97 `lexer_invalid_char` errors. Identified 12 distinct subcategories with varying fixability and effort. Targeting +20-25 models with 22h effort.
+Created prioritized plan for addressing 97 `lexer_invalid_char` errors. Identified 12 distinct subcategories with varying fixability and effort. Targeting +20-22 models with Phase 1 (12h effort).
 
 #### Deliverables
 
@@ -47,7 +47,7 @@ Created prioritized plan for addressing 97 `lexer_invalid_char` errors. Identifi
 | Phase 2 (Medium) | 10h | +10-12 | Tuple expansion, numeric data, range syntax |
 | Phase 3 (Deferred) | 20h+ | +35 | Complex set data (future sprint) |
 
-**Sprint 17 Target:** Phase 1 + Phase 2 = 22h, +25-32 models, ~48-50% parse rate
+**Sprint 17 Target:** Phase 1 = 12h, +20-22 models, ~42-44% parse rate (Phase 2 adds +10-12 more with 10h additional effort)
 
 #### Key Decisions
 
