@@ -433,15 +433,15 @@ These 10 models have unique issues requiring case-by-case analysis:
 
 ### Phase 2: Medium Effort (13h, +10-12 models)
 
-| # | Fix | Effort | Models | ROI |
-|---|-----|--------|--------|-----|
+| # | Fix | Effort | Models (raw occurrences) | ROI |
+|---|-----|--------|--------------------------|-----|
 | 1 | Tuple expansion syntax | 4h | 8 | 2.0 |
 | 2 | Quoted set descriptions | 3h | 7 | 2.3 |
 | 3 | Implicit assignment statements | 3h | 3 | 1.0 |
 | 4 | Range syntax in data | 3h | 4 | 1.3 |
 | **Subtotal** | | **13h** | **~22** | |
 
-**Note:** After overlap accounting, ~10-12 additional unique models. The 19 models from complex set data that are fixable in Phase 2 (7 quoted descriptions + 8 tuple expansion + 4 range notation) overlap with subcategory 9.
+**Note:** The Phase 2 "Models (raw occurrences)" counts include both primary and secondary occurrences (for example, tuple expansion or range notation inside complex set data) and therefore overlap with earlier subcategory totals. Of the 22 raw occurrences listed here, 19 are within complex set data and correspond to subcategory 9 (7 quoted descriptions + 8 tuple expansion + 4 range notation), and 3 are standalone implicit-assignment cases. After deduplicating across Phases 1-2 and across primary vs secondary occurrences, this translates to ~10-12 additional unique models.
 
 ### Phase 3: Deferred (20h+, 18 models)
 
