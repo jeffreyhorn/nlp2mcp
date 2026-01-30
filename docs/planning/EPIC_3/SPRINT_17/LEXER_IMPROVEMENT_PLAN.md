@@ -438,8 +438,8 @@ These 10 models have unique issues requiring case-by-case analysis:
 | 1 | Tuple expansion syntax | 4h | 8 | 2.0 |
 | 2 | Quoted set descriptions | 3h | 7 | 2.3 |
 | 3 | Numeric parameter data | 3h | 3 | 1.0 |
-| 4 | Range syntax in data | 3h | 2 | 0.7 |
-| **Subtotal** | | **13h** | **~20** | |
+| 4 | Range syntax in data | 3h | 4 | 1.3 |
+| **Subtotal** | | **13h** | **~22** | |
 
 **Note:** After overlap accounting, ~10-12 additional unique models. The 19 models from complex set data that are fixable in Phase 2 (7 quoted descriptions + 8 tuple expansion + 4 range notation) overlap with subcategory 9.
 
@@ -488,7 +488,7 @@ These 10 models have unique issues requiring case-by-case analysis:
 |-----|------|---------------|
 | Reserved words | `src/gams/gams_lexer.py` (planned) | `RESERVED_WORDS`, token context (to be implemented) |
 | Display continuation | `src/gams/gams_grammar.lark` | `display_stmt` rule |
-| Keyword case | `src/gams/gams_grammar.lark` | All keyword rules (`"Model"i`, etc.) |
+| Solve direction / statement boundaries | `src/gams/gams_grammar.lark` | Solve-direction handling, statement-boundary rules |
 | Square brackets | `src/gams/gams_grammar.lark` | `dollar_cond` rule |
 | Acronym | `src/gams/gams_grammar.lark` | New `acronym_stmt` rule |
 | Curly braces | `src/gams/gams_grammar.lark` | `expr` rule alternatives |
@@ -510,7 +510,7 @@ These 10 models have unique issues requiring case-by-case analysis:
 4. Square bracket conditionals (3 models, 3%)
 5. Tuple expansion syntax (8 models, 8%)
 6. Curly brace expressions (1 model, 1%)
-7. Keyword case issues (5 models, 5%)
+7. Keyword variants & statement-boundary issues (5 models, 5%)
 8. Acronym statement (2 models, 2%)
 9. Complex set data syntax (33 models, 34%)
 10. Numeric parameter data (3 models, 3%)
