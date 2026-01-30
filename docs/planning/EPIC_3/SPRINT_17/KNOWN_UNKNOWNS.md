@@ -910,6 +910,8 @@ Development team
 | Range syntax in data | 2 | 2% | Medium | 3h |
 | Other/miscellaneous | 10 | 10% | Varies | 4h |
 
+_Note: These counts represent 97 unique models. Each model is assigned to exactly one primary subcategory based on its most significant blocking issue (no double-counting). See LEXER_IMPROVEMENT_PLAN.md for details on secondary issues some models may have._
+
 **Key Insight:** 
 - ~30% of errors (29 models) are easily fixable with lexer/grammar changes
 - ~30% (29 models) require medium effort grammar extensions

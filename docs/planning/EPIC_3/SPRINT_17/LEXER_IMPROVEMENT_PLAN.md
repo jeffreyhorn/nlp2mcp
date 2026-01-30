@@ -64,7 +64,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | 12 | Other/miscellaneous | 10 | 10% | Varies | 4h | P3 |
 | **Total** | | **97** | **100%** | | | |
 
-**Note:** Each of the 97 models is assigned to exactly one primary subcategory based on its most significant blocking issue. Some models have secondary issues in other categories (noted in detailed analysis below), but counts here represent unique models with no double-counting.
+**Note:** Each of the 97 models is assigned to exactly one primary subcategory based on its most significant blocking issue. Counts here represent unique models with no double-counting. Some models have secondary issues that appear in the detailed analysis below, but for summary purposes each model is counted only once in its primary category.
 
 ### By Fixability
 
@@ -75,7 +75,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | Hard (typical 4h+ per pattern) | 33 | 34% | Complex set data, requires grammar restructuring |
 | Unfixable | 6 | 6% | Model-specific edge cases |
 
-**Note:** For this fixability breakdown, each model is assigned to a single primary fixability category based on its most difficult issue. Effort ranges are typical implementation effort per fix/pattern, not per model. The 97 models are partitioned with no overlaps.
+**Note:** For this fixability breakdown, each of the 97 models is assigned to exactly one primary fixability category based on its most difficult issue (no overlaps). This matches the subcategory table above where each model is counted once. Effort ranges are typical implementation effort per fix/pattern, not per model.
 
 ---
 
