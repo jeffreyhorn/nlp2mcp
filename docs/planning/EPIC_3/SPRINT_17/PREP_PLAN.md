@@ -309,11 +309,13 @@ Create a prioritized plan for addressing remaining `lexer_invalid_char` errors (
 Lexer/parser errors are the largest blocker. Even partial success here significantly increases the model pool available for translation and solve.
 
 #### Background
-Sprint 16 made substantial progress on lexer issues. Remaining categories:
-- Complex set data syntax (largest subcategory)
-- Numeric context in parameter data
-- Operator context issues
-- Hyphenated identifier patterns (some remain)
+Sprint 16 made substantial progress on lexer issues. The completed analysis identified 12 subcategories of lexer_invalid_char errors across 97 models:
+
+**See:** [LEXER_IMPROVEMENT_PLAN.md](./LEXER_IMPROVEMENT_PLAN.md) for the full 12-subcategory breakdown, including:
+- Reserved word conflicts (12 models) - Easy fix, highest ROI
+- Display/multi-line continuation (18 models) - Easy/Medium fix
+- Complex set data syntax (33 models) - Hard, deferred to future sprint
+- Other subcategories detailed in the plan
 
 See: [SPRINT_RETROSPECTIVE.md](../SPRINT_16/SPRINT_RETROSPECTIVE.md) § "Priority 1: Continue Lexer/Parser Improvements"
 See: [PROJECT_PLAN.md](../PROJECT_PLAN.md) § "Sprint 17"

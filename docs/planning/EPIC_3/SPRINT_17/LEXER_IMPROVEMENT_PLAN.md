@@ -20,8 +20,8 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 1. **12 models** fail due to `inf`/`na` reserved word conflicts (easy fix, high impact)
 2. **12 models** fail due to multi-line statement continuation issues (medium fix)
 3. **6 models** fail due to display statement continuation (easy fix)
-4. **~25 models** are fixable with targeted lexer/grammar changes
-5. **~37 models** require complex set data syntax overhaul or case-by-case analysis (defer to future)
+4. **58 models** are fixable with targeted lexer/grammar changes (29 Easy + 29 Medium in detailed breakdown)
+5. **~39 models** are hard or unfixable (33 complex set data + 6 structurally incompatible; defer to future)
 
 **Recommended Sprint 17 Focus:**
 | Priority | Models | Hours | Approach |

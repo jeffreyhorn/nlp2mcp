@@ -82,7 +82,7 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 - Category 4 (Detailed Error Analysis): 5 unknowns
 - Category 5 (Fix Complexity Estimation): 4 unknowns
 
-_Note: These percentages are based on 27 unknowns total. For this summary, each unknown is assigned to a single primary difficulty/effort category; in `LEXER_IMPROVEMENT_PLAN.md`, similar counting methodology is used where models are assigned to primary subcategories based on their most significant blocking issue._
+_Note: These percentages are based on 27 unknowns total. For this summary, each unknown is assigned to a single primary category (Translation, Solve, Parse, etc.); in `LEXER_IMPROVEMENT_PLAN.md`, a similar counting methodology is used where models are assigned to primary subcategories based on their most significant blocking issue._
 
 **Estimated Research Time:** 30-38 hours (spread across prep phase)
 
@@ -967,7 +967,7 @@ Development team
 ### Verification Results
 ✅ Status: VERIFIED
 
-**Finding:** Most remaining hyphenated identifier issues are part of the "complex set data syntax" category (35 models) and **require grammar changes, not just lexer changes**.
+**Finding:** Most remaining hyphenated identifier issues fall within the verified "Complex set data syntax" subcategory (33 models) plus the closely related "Range syntax in data" subcategory (2 models); together these 35 models **require grammar changes, not just lexer changes**.
 
 **Specific Patterns Analyzed:**
 
@@ -1177,11 +1177,11 @@ Development team
 | Complex restructuring | 16-20 | 25-31% |
 
 **Conclusion:** 
-- **70% is optimistic** with current approach
-- **Realistic target:** 55% (88 models) achievable with 22h effort (Phase 1 + Phase 2)
-- **Stretch target:** 60% (96 models) with Phase 3 partial work
+- **70% is an aspirational/stretch goal** with current approach
+- **Realistic Sprint 17 working target:** 55% (88 models) achievable with 22h effort (Phase 1 + Phase 2)
+- **Upper stretch target:** 60% (96 models) with Phase 3 partial work
 
-**Recommendation:** Revise Sprint 17 parse target from 70% to 55%, which is achievable with reasonable effort and low regression risk.
+**Recommendation:** For Sprint 17 planning and reporting, treat 55% parse as the revised working target, with 70% retained as an aspirational/stretch goal.
 
 **See:** LEXER_IMPROVEMENT_PLAN.md Section 3 for detailed fix plan
 
