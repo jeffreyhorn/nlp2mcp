@@ -67,7 +67,7 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 **Verified:** 18 (67%)  
 **Partially Verified:** 0 (0%)  
 **Deferred:** 1 (4%)  
-**Remaining:** 8 (30%)
+**Remaining:** 8 (29%)
 
 **By Priority:**
 - Critical: 4 (15%) - 4 verified
