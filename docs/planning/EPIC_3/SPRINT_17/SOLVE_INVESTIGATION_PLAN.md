@@ -47,7 +47,7 @@ This document provides a comprehensive investigation plan for the 10 solve failu
 | `path_syntax_error` | 8 | 80% | Yes | emit_gams.py bugs |
 | `model_infeasible` | 1 | 10% | Maybe | Model or KKT issue |
 | `path_solve_terminated` | 1 | 10% | Maybe | Investigation needed |
-| **Total** | **10** | **100%** | | |
+| **Total** | **10** | **100%** | N/A | N/A |
 
 ### Models by Failure Category
 

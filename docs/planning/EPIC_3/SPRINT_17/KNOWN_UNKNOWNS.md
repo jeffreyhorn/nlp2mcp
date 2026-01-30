@@ -694,7 +694,7 @@ cat tests/output/pipeline_results.json | jq '.models[] | select(.solve_outcome !
 Development team
 
 ### Verification Results
-✅ Status: VERIFIED
+Status: VERIFIED
 
 **Finding:** The 10 solve failures break down into three categories:
 
