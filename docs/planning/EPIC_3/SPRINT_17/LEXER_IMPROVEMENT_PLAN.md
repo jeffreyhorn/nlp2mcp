@@ -99,7 +99,7 @@ Positive Variable,    <-- Parser confused by `inf` as reserved word
 - Alternative: Quote detection - allow unquoted `inf`/`na` in data
 
 **Files to Modify:**
-- `src/gams/gams_lexer.py` - Add context state for data sections
+- `src/gams/gams_lexer.py` (to be created) - Add context state for data sections
 - `src/gams/gams_grammar.lark` - Update `set_element` rule
 
 **Effort:** 2h  
@@ -331,7 +331,7 @@ Acronym future, call, puto;
 
 **Files to Modify:**
 - `src/gams/gams_grammar.lark` - Major updates to data parsing rules
-- `src/gams/gams_lexer.py` - Context-aware tokenization
+- `src/gams/gams_lexer.py` (to be created) or Lark setup in `src/ir/parser.py` - Context-aware tokenization
 
 **Effort:** 12h+ (recommend deferring most)  
 **Fixability:** Hard  
@@ -424,9 +424,9 @@ These 10 models have unique issues requiring case-by-case analysis:
 | 5 | Acronym statement | 1h | 2 | 2.0 |
 | 6 | Curly brace expressions | 1h | 1 | 1.0 |
 | 7 | Multi-line continuation (partial) | 2h | 3 | 1.5 |
-| **Subtotal** | | **12h** | **~25** | |
+| **Subtotal** | | **12h** | **32** | |
 
-**Note:** Some models have multiple issues; actual unique model count is ~20-22.
+**Note:** The 32 models above is a raw count; some models have multiple issues. After overlap accounting, the actual unique model count is ~20-22.
 
 ### Phase 2: Medium Effort (10h, +10-12 models)
 
@@ -471,14 +471,14 @@ These 10 models have unique issues requiring case-by-case analysis:
 | File | Purpose | Fixes Applied |
 |------|---------|---------------|
 | `src/gams/gams_grammar.lark` | Grammar rules | Display, conditionals, acronym, tuple expansion |
-| `src/gams/gams_lexer.py` | Lexer patterns | Reserved words context, identifier patterns |
+| `src/gams/gams_lexer.py` (planned) | Lexer patterns module to be added | Reserved words context, identifier patterns |
 | `src/ir/parser.py` | Parser logic | Statement boundaries, AST construction |
 
 ### Specific Locations for Each Fix
 
 | Fix | File | Location/Rule |
 |-----|------|---------------|
-| Reserved words | `src/gams/gams_lexer.py` | `RESERVED_WORDS`, token context |
+| Reserved words | `src/gams/gams_lexer.py` (planned) | `RESERVED_WORDS`, token context (to be implemented) |
 | Display continuation | `src/gams/gams_grammar.lark` | `display_stmt` rule |
 | Keyword case | `src/gams/gams_grammar.lark` | All keyword rules (`"Model"i`, etc.) |
 | Square brackets | `src/gams/gams_grammar.lark` | `dollar_cond` rule |
