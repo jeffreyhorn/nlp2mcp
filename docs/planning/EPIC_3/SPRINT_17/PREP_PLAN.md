@@ -357,11 +357,11 @@ A prioritized plan targeting:
 
 ### Task 6: Solve Failure Investigation Plan
 
-**Status:** Not Started  
+**Status:** COMPLETE  
 **Priority:** P1 - High  
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 17 Day 4  
-**Owner:** TBD  
+**Owner:** N/A (completed)  
 **Dependencies:** Task 2  
 **Unknowns Verified:** 2.2, 2.3, 2.5
 
@@ -372,48 +372,48 @@ Plan investigation and fixes for solve failures and mismatches.
 Sprint 17 targets 80% solve success (currently 52.4%). Understanding solve failures enables targeted improvements to reach this goal.
 
 #### Background
-Solve failure categories to investigate:
-- PATH solver configuration issues
-- Initial point problems
-- Scaling/conditioning problems
-- Numerical tolerance mismatches
-- Actual nlp2mcp bugs
+Solve failure categories investigated:
+- PATH solver configuration issues - Not the limiting factor
+- Initial point problems - Not observed
+- Scaling/conditioning problems - Not observed
+- Numerical tolerance mismatches - Current tolerances appropriate
+- Actual nlp2mcp bugs - **8/10 failures are emit_gams.py bugs**
 
 See: [PROJECT_PLAN.md](../PROJECT_PLAN.md) § "Sprint 17 - Solve Improvements"
+See: [SOLVE_INVESTIGATION_PLAN.md](./SOLVE_INVESTIGATION_PLAN.md) for complete analysis
 
-#### What Needs to Be Done
-1. Categorize all solve failures by root cause
-2. Identify PATH solver configuration opportunities
-3. Assess initial point handling improvements
-4. Evaluate tolerance adjustment options
-5. Create investigation and fix plan
+#### What Was Done
+1. Categorized all 10 solve failures by root cause
+2. Analyzed PATH solver configuration (not limiting factor)
+3. Assessed tolerance settings (current values appropriate)
+4. Identified 5 distinct emit_gams.py bug patterns
+5. Created prioritized fix plan targeting 90%+ solve success
 
 #### Changes
-- Create `docs/planning/EPIC_3/SPRINT_17/SOLVE_INVESTIGATION_PLAN.md`
+- Created `docs/planning/EPIC_3/SPRINT_17/SOLVE_INVESTIGATION_PLAN.md`
 
 #### Result
-A plan covering:
-- Failure categories with counts
-- Investigation priorities
-- Potential fixes to try
-- Expected impact per fix
+- **8/10 failures:** path_syntax_error (fixable emit_gams.py bugs)
+- **1/10 failures:** model_infeasible (investigation needed)
+- **1/10 failures:** path_solve_terminated (investigation needed)
+- **80% target:** ACHIEVABLE (likely exceeded at 90%+)
 
 #### Verification
-- [ ] All solve failures categorized
-- [ ] Root causes identified
-- [ ] Fix options evaluated
-- [ ] Impact estimates provided
-- [ ] Unknowns 2.2, 2.3, 2.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All solve failures categorized
+- [x] Root causes identified
+- [x] Fix options evaluated
+- [x] Impact estimates provided
+- [x] Unknowns 2.2, 2.3, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/SOLVE_INVESTIGATION_PLAN.md`
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.2, 2.3, 2.5
 
 #### Acceptance Criteria
-- All 10 solve mismatches analyzed
-- Fix options prioritized by impact/effort
-- Clear plan for reaching 80% target
-- [ ] Unknowns 2.2, 2.3, 2.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 10 solve mismatches analyzed
+- [x] Fix options prioritized by impact/effort
+- [x] Clear plan for reaching 80% target
+- [x] Unknowns 2.2, 2.3, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
