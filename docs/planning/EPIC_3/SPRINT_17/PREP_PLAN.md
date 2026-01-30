@@ -325,7 +325,7 @@ See: [PROJECT_PLAN.md](../PROJECT_PLAN.md) § "Sprint 17"
 2. Estimate fixability of each subcategory
 3. Identify patterns that can be addressed with lexer changes
 4. Identify patterns requiring deeper parser changes
-5. Create prioritized fix plan (targeting +20-22 models)
+5. Create prioritized fix plan (targeting +20-22 models in Phase 1, +30-34 total with Phase 2)
 
 #### Changes
 - Create `docs/planning/EPIC_3/SPRINT_17/LEXER_IMPROVEMENT_PLAN.md`

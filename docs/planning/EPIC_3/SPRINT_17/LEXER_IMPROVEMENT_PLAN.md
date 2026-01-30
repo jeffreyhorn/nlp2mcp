@@ -24,13 +24,15 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 5. **~39 models** are hard or unfixable (33 complex set data + 6 structurally incompatible; defer to future)
 
 **Recommended Sprint 17 Focus:**
-| Priority | Models | Hours | Approach |
-|----------|--------|-------|----------|
-| Quick wins | 20-25 | 12h | Lexer regex + grammar rules |
-| Medium effort | 10-15 | 10h | Grammar extensions |
-| Deferred | ~37 | 20h+ | Complex set data + misc (future sprint) |
+| Priority | Models (raw) | Models (unique) | Hours | Approach |
+|----------|--------------|-----------------|-------|----------|
+| Quick wins | 32 | 20-22 | 12h | Lexer regex + grammar rules |
+| Medium effort | 13 | 10-12 | 10h | Grammar extensions |
+| Deferred | ~37 | ~37 | 20h+ | Complex set data + misc (future sprint) |
 
-**Target:** +20-22 models parsing with Phase 1 (12h effort)
+_Note: "Models (raw)" is the sum of per-fix counts; "Models (unique)" accounts for overlap where one model has multiple issues._
+
+**Target:** +20-22 unique models parsing with Phase 1 (12h effort)
 
 ---
 
