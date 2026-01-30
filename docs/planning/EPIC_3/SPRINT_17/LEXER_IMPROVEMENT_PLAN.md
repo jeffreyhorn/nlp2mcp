@@ -58,7 +58,7 @@ _Note: "Models (raw)" is the sum of per-fix counts; "Models (unique)" accounts f
 | 4 | Square bracket conditionals | 3 | 3% | Easy | 2h | P1 |
 | 5 | Tuple expansion syntax | 8 | 8% | Medium | 4h | P2 |
 | 6 | Curly brace expressions | 1 | 1% | Easy | 1h | P2 |
-| 7 | Solve keyword spelling/case issues | 5 | 5% | Easy | 2h | P1 |
+| 7 | Solve keyword variants & statement-boundary issues | 5 | 5% | Easy | 2h | P1 |
 | 8 | Acronym statement | 2 | 2% | Easy | 1h | P2 |
 | 9 | Complex set data syntax | 33 | 34% | Hard | 12h+ | P3 |
 | 10 | Numeric parameter data | 3 | 3% | Medium | 3h | P2 |
