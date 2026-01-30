@@ -262,16 +262,17 @@ solve ... maximize ...;
 ```
 
 **Root Cause:** This category includes two related issues:
-1. **Capitalization:** Keywords like `Model`, `Solve` with non-standard case
-2. **Spelling variants/typos:** `maximimizing` (typo), `maximize` (variant of `maximizing`)
+1. **Spelling variants/typos in solve direction:** `maximimizing` (typo), `maximize` (variant of `maximizing`)
+2. **Statement-boundary/unterminated construct issues:** `Model`/`Solve` reported as "unexpected" are likely caused by a missing statement terminator or an unfinished construct before them, not by keyword capitalization (the grammar already treats these keywords case-insensitively via `"Model"i` and `"Solve"i`)
 
 **Fix Approach:**
-- Ensure all keywords use case-insensitive matching (`"Model"i`)
-- Add recognized spelling variants for solve direction keywords (`maximize`/`maximizing`)
-- Consider whether to accept obvious typos or report clearer errors
+- Analyze representative failing models (e.g., `mlbeta`, `meanvar`, `ampl`) to see what syntactic pattern makes `Model`/`Solve` "unexpected" (e.g., missing `;`, unterminated equation, stray characters)
+- Adjust the grammar or lexer to ensure preceding constructs can terminate cleanly and to emit clearer diagnostics when they do not
+- Add recognized spelling variants for solve direction keywords (`maximize`/`minimize` alongside `maximizing`/`minimizing`)
+- Keep obvious typos like `maximimizing` as errors but improve the error message to hint at the likely intended keyword
 
 **Files to Modify:**
-- `src/gams/gams_grammar.lark` - Verify all keyword rules have `i` flag; add `maximize`/`minimize` as aliases
+- `src/gams/gams_grammar.lark` - Refine solve-direction handling and, if needed, adjust statement-boundary rules or error productions to better explain "unexpected `Model`/`Solve`" cases
 
 **Effort:** 2h  
 **Fixability:** Easy  
@@ -445,13 +446,17 @@ These 10 models have unique issues requiring case-by-case analysis:
 
 | Category | Models | Reason for Deferral |
 |----------|--------|---------------------|
-| Complex set data syntax | 33 | Requires major grammar restructuring |
+| Complex set data syntax (hard subset) | 14 | Mixed alphanumeric (8) + multi-dimensional tables (6) |
 | Miscellaneous (deferred subset) | 4 | Case-by-case analysis needed |
-| **Total** | **37** | |
+| **Total** | **18** | |
 
-**Clarification:** Of the 10 models in subcategory 12 (Other/Miscellaneous), 6 are addressable in Phase 1-2; the remaining 4 are deferred here. The 37 deferred models = 33 (complex set data) + 4 (misc deferred).
+**Clarification:** 
+- Of the 33 models in subcategory 9 (Complex set data syntax), 19 are addressable in Phase 2 (quoted descriptions, tuple expansion, range notation); the remaining 14 are deferred here.
+- Of the 10 models in subcategory 12 (Other/Miscellaneous), 6 are addressable in Phase 1-2; the remaining 4 are deferred here.
+- The 18 deferred models = 14 (complex set data hard subset) + 4 (misc deferred).
+- For subcategory 2.3 (multi-line continuation, 12 models), Phase 1 targets the 3 easiest; the remaining 9 have overlap with other subcategories and are counted in their primary categories.
 
-**Recommendation:** Defer to Sprint 18 or later. Focus Sprint 17 on Phase 1 and Phase 2.
+**Recommendation:** Focus Sprint 17 on Phase 1 and Phase 2. Defer hard complex set data patterns to Sprint 18 or later.
 
 ### Expected Improvement
 
@@ -459,7 +464,7 @@ These 10 models have unique issues requiring case-by-case analysis:
 |-------|-------------------|----------------|----------------|
 | Baseline | 0h | 30.0% | 48 |
 | Phase 1 | 12h | 42-44% | 68-70 |
-| Phase 1+2 | 22h | 48-50% | 77-80 |
+| Phase 1+2 | 22h | 49-51% | 78-82 |
 | Full (incl. Phase 3) | 42h+ | 55-60% | 88-96 |
 
 **Sprint 17 Target:** Phase 1 = 12h effort, +20-22 models, ~42-44% parse rate (Phase 2 adds +10-12 more with 10h additional effort)

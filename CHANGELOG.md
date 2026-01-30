@@ -61,7 +61,7 @@ Created prioritized plan for addressing 97 `lexer_invalid_char` errors. Identifi
 |---------|--------|---------|
 | 3.1 | Verified | 12 distinct subcategories identified with counts |
 | 3.2 | Verified | Only 3-5 models fixable with lexer-only changes; rest need grammar |
-| 3.4 | Verified | ~19 models fixable in Sprint 17; ~16 deferred to future |
+| 3.4 | Verified | ~19 models fixable in Sprint 17; ~14 deferred to future |
 | 3.5 | Verified | 70% optimistic; 55% realistic with Phase 1+2 effort |
 
 ---
