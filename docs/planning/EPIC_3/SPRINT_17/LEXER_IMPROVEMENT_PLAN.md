@@ -27,7 +27,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | Priority | Models (raw) | Models (unique) | Hours | Approach |
 |----------|--------------|-----------------|-------|----------|
 | Quick wins | 32 | 20-22 | 12h | Lexer regex + grammar rules |
-| Medium effort | 20 | 10-12 | 13h | Grammar extensions |
+| Medium effort | 22 | 10-12 | 13h | Grammar extensions |
 | Deferred (Phase 3) | 18 | 18 | 20h+ | Complex set data hard subset (14) + misc (4) |
 
 _Note: "Models (raw)" is the sum of per-fix counts; "Models (unique)" accounts for overlap where one model has multiple issues._
@@ -61,7 +61,7 @@ _Note: "Models (raw)" is the sum of per-fix counts; "Models (unique)" accounts f
 | 7 | Solve keyword variants & statement-boundary issues | 5 | 5% | Easy | 2h | P1 |
 | 8 | Acronym statement | 2 | 2% | Easy | 1h | P2 |
 | 9 | Complex set data syntax | 33 | 34% | Hard | 12h+ | P3 |
-| 10 | Numeric parameter data | 3 | 3% | Medium | 3h | P2 |
+| 10 | Implicit assignment statements | 3 | 3% | Medium | 3h | P2 |
 | 11 | Range syntax in data | 2 | 2% | Medium | 3h | P2 |
 | 12 | Other/miscellaneous | 10 | 10% | Varies | 4h | P3 |
 | **Total** | | **97** | **100%** | | | |
@@ -344,7 +344,7 @@ Acronym future, call, puto;
 
 ---
 
-### 2.10 Numeric Parameter Data - 3 models
+### 2.10 Implicit Assignment Statements - 3 models
 
 **Models:** apl1pca, lmp2, prodsp2
 
@@ -437,7 +437,7 @@ These 10 models have unique issues requiring case-by-case analysis:
 |---|-----|--------|--------|-----|
 | 1 | Tuple expansion syntax | 4h | 8 | 2.0 |
 | 2 | Quoted set descriptions | 3h | 7 | 2.3 |
-| 3 | Numeric parameter data | 3h | 3 | 1.0 |
+| 3 | Implicit assignment statements | 3h | 3 | 1.0 |
 | 4 | Range syntax in data | 3h | 4 | 1.3 |
 | **Subtotal** | | **13h** | **~22** | |
 
@@ -513,7 +513,7 @@ These 10 models have unique issues requiring case-by-case analysis:
 7. Keyword variants & statement-boundary issues (5 models, 5%)
 8. Acronym statement (2 models, 2%)
 9. Complex set data syntax (33 models, 34%)
-10. Numeric parameter data (3 models, 3%)
+10. Implicit assignment statements (3 models, 3%)
 11. Range syntax in data (2 models, 2%)
 12. Other/miscellaneous (10 models, 10%)
 
@@ -621,7 +621,7 @@ mathopt4, worst
 ### A.9 Complex Set Data Syntax (33 models)
 camcge, cesam2, china, dyncge, etamac, feedtray, ferts, ganges, gangesx, gussrisk, harker, hhfair, hhmax, iswnm, korcge, lands, launch, lop, nonsharp, prolog, robustlp, sarf, senstran, ship, solveopt, splcge, tabora, tfordy, tforss, tricp, trnspwl, turkpow, weapons
 
-### A.10 Numeric Parameter Data (3 models)
+### A.10 Implicit Assignment Statements (3 models)
 apl1pca, lmp2, prodsp2
 
 ### A.11 Range Syntax in Data (2 models)

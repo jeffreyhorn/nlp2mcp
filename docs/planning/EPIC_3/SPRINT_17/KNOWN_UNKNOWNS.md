@@ -906,7 +906,7 @@ Development team
 | Solve keyword spelling/case issues | 5 | 5% | Easy | 2h |
 | Acronym statement | 2 | 2% | Easy | 1h |
 | Complex set data syntax | 33 | 34% | Hard | 12h+ |
-| Numeric parameter data | 3 | 3% | Medium | 3h |
+| Implicit assignment statements | 3 | 3% | Medium | 3h |
 | Range syntax in data | 2 | 2% | Medium | 3h |
 | Other/miscellaneous | 10 | 10% | Varies | 4h |
 
@@ -1106,7 +1106,7 @@ Development team
 
 **ROI Analysis:**
 - Fixing simpler patterns: 13h → +10-12 models (ROI: 0.8-0.9)
-- Fixing complex patterns: 12h+ → +16 models (ROI: 1.3, but high risk)
+- Fixing complex patterns: 12h+ → +14 models (ROI: 1.2, but high risk)
 
 **Recommendation:** Fix Phase 2 patterns in Sprint 17; defer complex patterns to Sprint 18.
 
