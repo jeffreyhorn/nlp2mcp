@@ -294,14 +294,13 @@ For each of 8 models:
 
 ### Task 5: Lexer/Parser Improvement Plan
 
-**Status:** Not Started  
+**Status:** COMPLETE  
 **Priority:** P1 - High  
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 17 Day 4  
-**Owner:** TBD  
+**Owner:** N/A (completed)  
 **Dependencies:** Tasks 2, 3  
-**Unknowns Verified:** 3.1 (primary), 3.2, 3.4  
-**Unknowns Partially Verified:** 3.5 (initial assessment; finalized in Task 9)
+**Unknowns Verified:** 3.1, 3.2, 3.4, 3.5
 
 #### Objective
 Create a prioritized plan for addressing remaining `lexer_invalid_char` errors (97 models).
@@ -310,11 +309,13 @@ Create a prioritized plan for addressing remaining `lexer_invalid_char` errors (
 Lexer/parser errors are the largest blocker. Even partial success here significantly increases the model pool available for translation and solve.
 
 #### Background
-Sprint 16 made substantial progress on lexer issues. Remaining categories:
-- Complex set data syntax (largest subcategory)
-- Numeric context in parameter data
-- Operator context issues
-- Hyphenated identifier patterns (some remain)
+Sprint 16 made substantial progress on lexer issues. The completed analysis identified 12 subcategories of lexer_invalid_char errors across 97 models:
+
+**See:** [LEXER_IMPROVEMENT_PLAN.md](./LEXER_IMPROVEMENT_PLAN.md) for the full 12-subcategory breakdown, including:
+- Reserved word conflicts (12 models) - Easy fix, highest ROI
+- Display/multi-line continuation (18 models) - Easy/Medium fix
+- Complex set data syntax (33 models) - Hard, partially addressed in Phase 2 (~19/33 via quoted descriptions, tuple expansion, range notation); remaining 14 deferred
+- Other subcategories detailed in the plan
 
 See: [SPRINT_RETROSPECTIVE.md](../SPRINT_16/SPRINT_RETROSPECTIVE.md) § "Priority 1: Continue Lexer/Parser Improvements"
 See: [PROJECT_PLAN.md](../PROJECT_PLAN.md) § "Sprint 17"
@@ -324,7 +325,7 @@ See: [PROJECT_PLAN.md](../PROJECT_PLAN.md) § "Sprint 17"
 2. Estimate fixability of each subcategory
 3. Identify patterns that can be addressed with lexer changes
 4. Identify patterns requiring deeper parser changes
-5. Create prioritized fix plan (targeting +15-25 models)
+5. Create prioritized fix plan (targeting +20-22 models in Phase 1; Phase 1+2 together: +30-34 models, ~49-51% parse rate, 25h total)
 
 #### Changes
 - Create `docs/planning/EPIC_3/SPRINT_17/LEXER_IMPROVEMENT_PLAN.md`
@@ -336,21 +337,21 @@ A prioritized plan targeting:
 - Complex changes (4h+, assessed for ROI)
 
 #### Verification
-- [ ] All 97 failures reviewed
-- [ ] Subcategories identified with counts
-- [ ] Fixability assessed for each
-- [ ] Plan targets +15-25 models
-- [ ] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 97 failures reviewed
+- [x] Subcategories identified with counts
+- [x] Fixability assessed for each
+- [x] Plan targets +20-22 models (Phase 1); Phase 1+2 together targets +30-34 models (~49-51% parse rate)
+- [x] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
 - `docs/planning/EPIC_3/SPRINT_17/LEXER_IMPROVEMENT_PLAN.md`
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.4, 3.5
 
 #### Acceptance Criteria
-- All lexer failures categorized
-- Clear priority ranking
-- Realistic +15-25 model target plan
-- [ ] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All lexer failures categorized
+- [x] Clear priority ranking
+- [x] Realistic Phase 1 target (+20-22 models, 12h); Phase 1+2 target (+30-34 models, 25h total, ~49-51% parse rate)
+- [x] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

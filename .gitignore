@@ -63,3 +63,5 @@ results/
 [0-9][0-9][0-9][a-z]/
 **/gamsnext.sh
 **/gmsprmun.dat
+
+.pr-bot.env

@@ -64,14 +64,16 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 ## Summary Statistics
 
 **Total Unknowns:** 27  
-**Verified:** 14 (52%)  
-**Partially Verified:** 1 (4%)  
+**Verified:** 18 (67%)  
+**Partially Verified:** 0 (0%)  
 **Deferred:** 1 (4%)  
-**Remaining:** 11 (41%)
+**Remaining:** 8 (30%)
+
+_Note: Percentages use nearest-integer rounding and may sum to 101% due to rounding._
 
 **By Priority:**
-- Critical: 4 (15%) - 3 verified, 1 partially verified
-- High: 8 (30%) - 4 verified, 4 remaining
+- Critical: 4 (15%) - 4 verified
+- High: 8 (30%) - 7 verified, 1 remaining
 - Medium: 12 (44%) - 6 verified, 1 deferred, 5 remaining
 - Low: 3 (11%) - 1 verified, 2 remaining
 
@@ -81,6 +83,8 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 - Category 3 (Parse Improvements): 6 unknowns
 - Category 4 (Detailed Error Analysis): 5 unknowns
 - Category 5 (Fix Complexity Estimation): 4 unknowns
+
+_Note: These percentages are based on 27 unknowns total. For this summary, each unknown is assigned to a single primary category (Translation, Solve, Parse, etc.); in `LEXER_IMPROVEMENT_PLAN.md`, a similar counting methodology is used where models are assigned to primary subcategories based on their most significant blocking issue._
 
 **Estimated Research Time:** 30-38 hours (spread across prep phase)
 
@@ -889,24 +893,35 @@ cat tests/output/pipeline_results.json | jq -r '.models[] | select(.parse_outcom
 Development team
 
 ### Verification Results
-✅ Status: PARTIALLY VERIFIED (Initial extraction complete; primary verification in Task 5)
+✅ Status: VERIFIED
 
-**Finding:** The 97 lexer_invalid_char errors in Sprint 16 baseline fall into 11 distinct subcategories (based on patterns from LEXER_ERROR_ANALYSIS.md which analyzed 153 error instances):
-- Complex set data syntax - largest category (~60%) - requires grammar restructuring
-- Tuple expansion `(a,b).c` - ~8% - medium effort
-- Numeric context issues - ~7% - medium effort
-- Keyword case issues - ~6% - low effort, high ROI
-- Operator context - ~6% - medium effort
-- Quoted set descriptions - ~5% - medium effort
-- Dot notation issues - ~3% - medium effort
-- Hyphenated set elements - ~2% - low effort
-- Abort statement syntax - ~2% - low effort
-- Slash/division syntax - ~1% - low effort
-- Hyphenated identifiers - ~1% - low effort
+**Finding:** The 97 lexer_invalid_char errors in Sprint 16 baseline fall into **12 distinct subcategories** (verified via fresh analysis of gamslib_status.json):
 
-**Key Insight:** A substantial subset of lexer errors are fixable with targeted effort, while the majority (~60%) require significant grammar work.
+| Subcategory | Count | % | Fixability | Effort |
+|-------------|-------|---|------------|--------|
+| Reserved word conflicts (`inf`, `na`) | 12 | 12% | Easy | 2h |
+| Display statement continuation | 6 | 6% | Easy | 2h |
+| Multi-line statement continuation | 12 | 12% | Medium | 4h |
+| Square bracket conditionals | 3 | 3% | Easy | 2h |
+| Tuple expansion syntax | 8 | 8% | Medium | 4h |
+| Curly brace expressions | 1 | 1% | Easy | 1h |
+| Solve keyword spelling/case issues | 5 | 5% | Easy | 2h |
+| Acronym statement | 2 | 2% | Easy | 1h |
+| Complex set data syntax | 33 | 34% | Hard | 12h+ |
+| Implicit assignment statements | 3 | 3% | Medium | 3h |
+| Range syntax in data | 2 | 2% | Medium | 3h |
+| Other/miscellaneous | 10 | 10% | Varies | 4h |
 
-**See:** ERROR_ANALYSIS.md Section 1.2 for complete breakdown
+_Note: These counts represent 97 unique models. Each model is assigned to exactly one primary subcategory based on its most significant blocking issue (no double-counting). See LEXER_IMPROVEMENT_PLAN.md for details on secondary issues some models may have._
+
+**Key Insight:** 
+- ~30% of errors (29 models) are easily fixable with lexer/grammar changes
+- ~30% (29 models) require medium effort grammar extensions
+- ~34% (33 models) require significant grammar restructuring (recommend deferring)
+
+**Target:** +20-22 models with Phase 1 quick wins (12h effort)
+
+**See:** LEXER_IMPROVEMENT_PLAN.md for complete breakdown and fix plan
 
 ---
 
@@ -954,7 +969,27 @@ done
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** Most remaining hyphenated identifier issues fall within the verified "Complex set data syntax" subcategory (33 models) plus the closely related "Range syntax in data" subcategory (2 models); together these 35 models **require grammar changes, not just lexer changes**.
+
+**Specific Patterns Analyzed:**
+
+| Pattern | Example | Fix Type | Lexer-Only? |
+|---------|---------|----------|-------------|
+| Number-prefixed hyphen | `1964-i`, `route-1` | Lexer regex | Yes (3-5 models) |
+| Hyphen with quoted description | `cotton-h 'desc'` | Grammar rule | No |
+| Hyphen in tuple notation | `(a,b).(c-1,c-2)` | Grammar rule | No |
+| Hyphen with numeric value | `mode-1 250` | Grammar rule | No |
+
+**Risk Assessment:**
+- **Low risk** for lexer-only changes (number-prefix patterns) - 3-5 models
+- **Medium risk** for grammar changes - may affect existing parsing
+- **Recommendation:** Test each change against full model suite
+
+**Conclusion:** Only ~3-5 models can be fixed with lexer changes alone. The remaining ~30 models with hyphenated identifiers require grammar extensions for proper handling.
+
+**See:** LEXER_IMPROVEMENT_PLAN.md Section 2.9 for detailed analysis
 
 ---
 
@@ -1055,7 +1090,29 @@ Complex set data syntax (nested structures, special formatting) can be handled b
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Decision: Partial fix, partial defer)
+
+**Finding:** The 33 models with complex set data syntax errors exhibit these patterns:
+
+| Pattern | Count | Fixability | Sprint 17 Decision |
+|---------|-------|------------|-------------------|
+| Quoted set descriptions | 7 | Medium | Fix (Phase 2) |
+| Tuple expansion | 8 | Medium | Fix (Phase 2) |
+| Range notation (`'n-1'*'n-3'`) | 4 | Medium | Fix (Phase 2) |
+| Mixed alphanumeric data | 8 | Hard | Defer |
+| Multi-dimensional tables | 6 | Hard | Defer |
+
+**Decision Rationale:**
+1. **Fix in Sprint 17 (~19 models):** Quoted descriptions, tuple expansion, and range notation have well-defined syntax that can be added with targeted grammar rules (13h effort).
+2. **Defer to future sprint (~14 models):** Mixed alphanumeric and multi-dimensional table patterns require comprehensive data syntax overhaul (12h+ effort, high regression risk).
+
+**ROI Analysis:**
+- Fixing simpler patterns: 13h → +10-12 models (ROI: 0.8-0.9)
+- Fixing complex patterns: 12h+ → +14 models (ROI: 1.2, but high risk)
+
+**Recommendation:** Fix Phase 2 patterns in Sprint 17; defer complex patterns to Sprint 18.
+
+**See:** LEXER_IMPROVEMENT_PLAN.md Section 2.9 and Section 3
 
 ---
 
@@ -1098,7 +1155,40 @@ Reaching 70% parse rate (from 30%) requires +64 models, primarily achievable thr
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** Achieving 70% parse rate (112 models) breakdown analysis:
+
+| Source | Models | Cumulative | Notes |
+|--------|--------|------------|-------|
+| Current baseline | 48 | 48 (30%) | Sprint 16 result |
+| Lexer Phase 1 (quick wins) | +20-22 | 68-70 (42-44%) | Reserved words, display, keywords |
+| Lexer Phase 2 (medium) | +10-12 | 78-82 (49-51%) | Tuple expansion, range syntax |
+| Internal error fixes | +5-7 | 83-89 (52-56%) | Bug fixes, edge cases |
+| Lexer Phase 3 (complex) | +5-7 | 88-96 (55-60%) | Complex set data hard subset (deferred) |
+
+**Gap Analysis:**
+- 70% target = 112 models
+- Achievable with Phase 1 + Phase 2 + internal fixes = 83-89 models (52-56%)
+- Phase 3 (18 deferred models, hard subset) adds +5-7 models → 88-96 models total (55-60%)
+- Remaining gap to 70% after Phase 3 = 16-24 models
+
+**Breakdown by Fix Type:**
+| Fix Type | Models | % of Target |
+|----------|--------|-------------|
+| Lexer regex changes | 15-18 | 23-28% |
+| Grammar rule additions | 25-30 | 39-47% |
+| Parser logic changes | 5-7 | 8-11% |
+| Complex restructuring | 16-20 | 25-31% |
+
+**Conclusion:** 
+- **70% is an aspirational/stretch goal** with current approach
+- **Realistic Sprint 17 working target:** 55% (88 models) achievable with 25h effort (Phase 1 + Phase 2)
+- **Upper stretch target:** 60% (96 models) with Phase 3 partial work
+
+**Recommendation:** For Sprint 17 planning and reporting, treat 55% parse as the revised working target, with 70% parse (≥112 models) retained as the aspirational/stretch goal as stated in the Executive Summary targets.
+
+**See:** LEXER_IMPROVEMENT_PLAN.md Section 3 for detailed fix plan
 
 ---
 

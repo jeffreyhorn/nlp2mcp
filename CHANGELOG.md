@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Prep Task 5: Lexer/Parser Improvement Plan - 2026-01-29
+
+**Branch:** `planning/sprint17-task5`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created prioritized plan for addressing 97 `lexer_invalid_char` errors. Identified 12 distinct subcategories with varying fixability and effort. Targeting +20-22 models with Phase 1 (12h effort).
+
+#### Deliverables
+
+- `docs/planning/EPIC_3/SPRINT_17/LEXER_IMPROVEMENT_PLAN.md` - Complete lexer improvement plan
+- Updated `KNOWN_UNKNOWNS.md` with 4 verified unknowns (3.1, 3.2, 3.4, 3.5)
+- Updated `PREP_PLAN.md` with Task 5 status COMPLETE
+
+#### Subcategory Breakdown (97 models)
+
+| Subcategory | Count | Fixability | Priority |
+|-------------|-------|------------|----------|
+| Reserved word conflicts (`inf`, `na`) | 12 | Easy | P1 |
+| Display statement continuation | 6 | Easy | P1 |
+| Multi-line statement continuation | 12 | Medium | P1 |
+| Square bracket conditionals | 3 | Easy | P1 |
+| Tuple expansion syntax | 8 | Medium | P2 |
+| Curly brace expressions | 1 | Easy | P2 |
+| Keyword variants & statement-boundary issues | 5 | Easy | P1 |
+| Acronym statement | 2 | Easy | P2 |
+| Complex set data syntax | 33 | Hard | P3 (defer) |
+| Implicit assignment statements | 3 | Medium | P2 |
+| Range syntax in data | 2 | Medium | P2 |
+| Other/miscellaneous | 10 | Varies | P3 |
+
+#### Fix Plan Summary
+
+| Phase | Effort | Models | Description |
+|-------|--------|--------|-------------|
+| Phase 1 (Quick Wins) | 12h | +20-22 | Reserved words, display, keywords, brackets |
+| Phase 2 (Medium) | 13h | +10-12 | Tuple expansion, quoted set descriptions, numeric data, range syntax |
+| Phase 3 (Deferred) | 20h+ | 18 | Complex set data hard subset (14) + misc (4) |
+
+**Sprint 17 Target:** Phase 1 = 12h, +20-22 models, ~42-44% parse rate (Phase 2 adds +10-12 more with 13h additional effort)
+
+#### Key Decisions
+
+1. **70% parse target is optimistic** - Realistic target is 55% (88 models)
+2. **Complex set data partially addressed** - 19/33 models targeted in Phase 2 via grammar extensions (quoted descriptions, tuple expansion, range syntax); remaining 14 hard cases deferred
+3. **Reserved word fix has highest ROI** - 12 models with 2h effort (ROI: 6.0)
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 3.1 | Verified | 12 distinct subcategories identified with counts |
+| 3.2 | Verified | Only 3-5 models fixable with lexer-only changes; rest need grammar |
+| 3.4 | Verified | ~19 models fixable in Sprint 17; ~14 deferred to future |
+| 3.5 | Verified | 70% optimistic; 55% realistic with Phase 1+2 effort |
+
+---
+
 ### Sprint 17 Prep Task 4: MCP Compilation Analysis - 2026-01-28
 
 **Branch:** `planning/sprint17-task4`  
