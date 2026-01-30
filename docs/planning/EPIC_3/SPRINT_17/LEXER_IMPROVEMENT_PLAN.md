@@ -612,7 +612,7 @@ dinam, egypt, indus, marco, paklive, shale, sparta, turkey
 ### A.6 Curly Brace Expressions (1 model)
 procmean
 
-### A.7 Solve Keyword Spelling/Case Issues (5 models)
+### A.7 Solve keyword variants & statement-boundary issues (5 models)
 ampl, meanvar, mlbeta, mlgamma, nemhaus
 
 ### A.8 Acronym Statement (2 models)

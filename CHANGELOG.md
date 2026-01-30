@@ -52,7 +52,7 @@ Created prioritized plan for addressing 97 `lexer_invalid_char` errors. Identifi
 #### Key Decisions
 
 1. **70% parse target is optimistic** - Realistic target is 55% (88 models)
-2. **Complex set data deferred** - 33 models require major grammar restructuring
+2. **Complex set data partially addressed** - 19/33 models targeted in Phase 2 via grammar extensions (quoted descriptions, tuple expansion, range syntax); remaining 14 hard cases deferred
 3. **Reserved word fix has highest ROI** - 12 models with 2h effort (ROI: 6.0)
 
 #### Unknowns Verified
