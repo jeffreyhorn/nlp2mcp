@@ -340,7 +340,7 @@ A prioritized plan targeting:
 - [x] All 97 failures reviewed
 - [x] Subcategories identified with counts
 - [x] Fixability assessed for each
-- [x] Plan targets +20-22 models
+- [x] Plan targets +20-22 models (Phase 1); Phase 1+2 together targets +30-34 models (~49-51% parse rate)
 - [x] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
@@ -350,7 +350,7 @@ A prioritized plan targeting:
 #### Acceptance Criteria
 - [x] All lexer failures categorized
 - [x] Clear priority ranking
-- [x] Realistic +20-22 model target plan
+- [x] Realistic Phase 1 target (+20-22 models, 12h); Phase 1+2 target (+30-34 models, 25h total, ~49-51% parse rate)
 - [x] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
