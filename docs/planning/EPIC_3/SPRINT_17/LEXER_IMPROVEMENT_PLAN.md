@@ -250,7 +250,7 @@ tcdef.. tc =e= k1*T*betareg(y,alpha,beta) - k1*{(delta + a)*...}
 ```gams
 * ampl - Error at line 55
 Model ampl 'maximum revenue production problem' / all /;
-^ Unexpected character 'M' (capitalization issue)
+^ Unexpected character 'M' (likely due to preceding unterminated statement, not capitalization)
 
 * mlbeta - Error at line 71
 solve m using nlp maximimizing like;
@@ -436,13 +436,14 @@ These 10 models have unique issues requiring case-by-case analysis:
 | # | Fix | Effort | Models | ROI |
 |---|-----|--------|--------|-----|
 | 1 | Tuple expansion syntax | 4h | 8 | 2.0 |
-| 2 | Numeric parameter data | 3h | 3 | 1.0 |
-| 3 | Range syntax in data | 3h | 2 | 0.7 |
-| **Subtotal** | | **10h** | **~13** | |
+| 2 | Quoted set descriptions | 3h | 7 | 2.3 |
+| 3 | Numeric parameter data | 3h | 3 | 1.0 |
+| 4 | Range syntax in data | 3h | 2 | 0.7 |
+| **Subtotal** | | **13h** | **~20** | |
 
-**Note:** After overlap accounting, ~10-12 additional unique models.
+**Note:** After overlap accounting, ~10-12 additional unique models. The 19 models from complex set data that are fixable in Phase 2 (7 quoted descriptions + 8 tuple expansion + 4 range notation) overlap with subcategory 9.
 
-### Phase 3: Deferred (20h+, ~37 models)
+### Phase 3: Deferred (20h+, 18 models)
 
 | Category | Models | Reason for Deferral |
 |----------|--------|---------------------|
