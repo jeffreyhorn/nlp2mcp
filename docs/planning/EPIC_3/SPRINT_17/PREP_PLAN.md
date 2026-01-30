@@ -314,7 +314,7 @@ Sprint 16 made substantial progress on lexer issues. The completed analysis iden
 **See:** [LEXER_IMPROVEMENT_PLAN.md](./LEXER_IMPROVEMENT_PLAN.md) for the full 12-subcategory breakdown, including:
 - Reserved word conflicts (12 models) - Easy fix, highest ROI
 - Display/multi-line continuation (18 models) - Easy/Medium fix
-- Complex set data syntax (33 models) - Hard, deferred to future sprint
+- Complex set data syntax (33 models) - Hard, mostly deferred to future sprint (Phase 2 addresses ~7 via quoted set descriptions)
 - Other subcategories detailed in the plan
 
 See: [SPRINT_RETROSPECTIVE.md](../SPRINT_16/SPRINT_RETROSPECTIVE.md) § "Priority 1: Continue Lexer/Parser Improvements"
@@ -325,7 +325,7 @@ See: [PROJECT_PLAN.md](../PROJECT_PLAN.md) § "Sprint 17"
 2. Estimate fixability of each subcategory
 3. Identify patterns that can be addressed with lexer changes
 4. Identify patterns requiring deeper parser changes
-5. Create prioritized fix plan (targeting +20-22 models in Phase 1, +30-34 total with Phase 2)
+5. Create prioritized fix plan (targeting +20-22 models in Phase 1; Phase 1+2 together: +30-34 models, ~49-51% parse rate, 25h total)
 
 #### Changes
 - Create `docs/planning/EPIC_3/SPRINT_17/LEXER_IMPROVEMENT_PLAN.md`

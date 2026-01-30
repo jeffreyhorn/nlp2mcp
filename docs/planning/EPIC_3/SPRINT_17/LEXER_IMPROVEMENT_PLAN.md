@@ -27,12 +27,12 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 | Priority | Models (raw) | Models (unique) | Hours | Approach |
 |----------|--------------|-----------------|-------|----------|
 | Quick wins | 32 | 20-22 | 12h | Lexer regex + grammar rules |
-| Medium effort | 13 | 10-12 | 10h | Grammar extensions |
+| Medium effort | 20 | 10-12 | 13h | Grammar extensions |
 | Deferred | ~37 | ~37 | 20h+ | Complex set data + misc (future sprint) |
 
 _Note: "Models (raw)" is the sum of per-fix counts; "Models (unique)" accounts for overlap where one model has multiple issues._
 
-**Target:** +20-22 unique models parsing with Phase 1 (12h effort)
+**Target:** +20-22 unique models parsing with Phase 1 (12h effort); Phase 1+2 together achieves +30-34 models (~49-51% parse rate) with 25h total effort
 
 ---
 
@@ -242,7 +242,7 @@ tcdef.. tc =e= k1*T*betareg(y,alpha,beta) - k1*{(delta + a)*...}
 
 ---
 
-### 2.7 Solve Keyword Spelling/Case Issues - 5 models
+### 2.7 Solve Keyword Variants & Statement-Boundary Issues - 5 models
 
 **Models:** ampl, meanvar, mlbeta, mlgamma, nemhaus
 
@@ -431,7 +431,7 @@ These 10 models have unique issues requiring case-by-case analysis:
 
 **Note:** The 32 models above is a raw count; some models have multiple issues. After overlap accounting, the actual unique model count is ~20-22.
 
-### Phase 2: Medium Effort (10h, +10-12 models)
+### Phase 2: Medium Effort (13h, +10-12 models)
 
 | # | Fix | Effort | Models | ROI |
 |---|-----|--------|--------|-----|
@@ -465,10 +465,10 @@ These 10 models have unique issues requiring case-by-case analysis:
 |-------|-------------------|----------------|----------------|
 | Baseline | 0h | 30.0% | 48 |
 | Phase 1 | 12h | 42-44% | 68-70 |
-| Phase 1+2 | 22h | 49-51% | 78-82 |
+| Phase 1+2 | 25h | 49-51% | 78-82 |
 | Full (incl. Phase 3) | 42h+ | 55-60% | 88-96 |
 
-**Sprint 17 Target:** Phase 1 = 12h effort, +20-22 models, ~42-44% parse rate (Phase 2 adds +10-12 more with 10h additional effort)
+**Sprint 17 Target:** Phase 1 = 12h effort, +20-22 models, ~42-44% parse rate (Phase 2 adds +10-12 more with 13h additional effort)
 
 ---
 

@@ -1101,11 +1101,11 @@ Development team
 | Multi-dimensional tables | 6 | Hard | Defer |
 
 **Decision Rationale:**
-1. **Fix in Sprint 17 (~19 models):** Quoted descriptions, tuple expansion, and range notation have well-defined syntax that can be added with targeted grammar rules (10h effort).
+1. **Fix in Sprint 17 (~19 models):** Quoted descriptions, tuple expansion, and range notation have well-defined syntax that can be added with targeted grammar rules (13h effort).
 2. **Defer to future sprint (~14 models):** Mixed alphanumeric and multi-dimensional table patterns require comprehensive data syntax overhaul (12h+ effort, high regression risk).
 
 **ROI Analysis:**
-- Fixing simpler patterns: 10h → +10-12 models (ROI: 1.0-1.2)
+- Fixing simpler patterns: 13h → +10-12 models (ROI: 0.8-0.9)
 - Fixing complex patterns: 12h+ → +16 models (ROI: 1.3, but high risk)
 
 **Recommendation:** Fix Phase 2 patterns in Sprint 17; defer complex patterns to Sprint 18.
@@ -1180,7 +1180,7 @@ Development team
 
 **Conclusion:** 
 - **70% is an aspirational/stretch goal** with current approach
-- **Realistic Sprint 17 working target:** 55% (88 models) achievable with 22h effort (Phase 1 + Phase 2)
+- **Realistic Sprint 17 working target:** 55% (88 models) achievable with 25h effort (Phase 1 + Phase 2)
 - **Upper stretch target:** 60% (96 models) with Phase 3 partial work
 
 **Recommendation:** For Sprint 17 planning and reporting, treat 55% parse as the revised working target, with 70% retained as an aspirational/stretch goal.
