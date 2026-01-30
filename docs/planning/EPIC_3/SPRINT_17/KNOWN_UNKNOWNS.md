@@ -1163,12 +1163,13 @@ Development team
 | Lexer Phase 1 (quick wins) | +20-22 | 68-70 (42-44%) | Reserved words, display, keywords |
 | Lexer Phase 2 (medium) | +10-12 | 78-82 (49-51%) | Tuple expansion, range syntax |
 | Internal error fixes | +5-7 | 83-89 (52-56%) | Bug fixes, edge cases |
-| Lexer Phase 3 (complex) | +16-20 | 99-109 (62-68%) | Complex set data (deferred) |
+| Lexer Phase 3 (complex) | +5-7 | 88-96 (55-60%) | Complex set data hard subset (deferred) |
 
 **Gap Analysis:**
 - 70% target = 112 models
 - Achievable with Phase 1 + Phase 2 + internal fixes = 83-89 models (52-56%)
-- Gap to 70% = 23-29 models (requires Phase 3 complex work)
+- Phase 3 (18 deferred models, hard subset) adds +5-7 models → 88-96 models total (55-60%)
+- Remaining gap to 70% after Phase 3 = 16-24 models
 
 **Breakdown by Fix Type:**
 | Fix Type | Models | % of Target |

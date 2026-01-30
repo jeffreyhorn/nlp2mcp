@@ -28,7 +28,7 @@ This document provides a comprehensive analysis and prioritized fix plan for the
 |----------|--------------|-----------------|-------|----------|
 | Quick wins | 32 | 20-22 | 12h | Lexer regex + grammar rules |
 | Medium effort | 20 | 10-12 | 13h | Grammar extensions |
-| Deferred | ~37 | ~37 | 20h+ | Complex set data + misc (future sprint) |
+| Deferred (Phase 3) | 18 | 18 | 20h+ | Complex set data hard subset (14) + misc (4) |
 
 _Note: "Models (raw)" is the sum of per-fix counts; "Models (unique)" accounts for overlap where one model has multiple issues._
 
@@ -381,13 +381,13 @@ tn(t,n) 'time node mapping' / 'time-1'.('n-1'*'n-3'), 'time-2'.('n-4'*'n-12') /
                                             ^ Unexpected character '*'
 ```
 
-**Root Cause:** Range notation `'n-1'*'n-3'` meaning `'n-1', 'n-2', 'n-3'` not supported.
+**Root Cause:** While `range_expr` is already supported in `set_members` (e.g., for ranges in plain set data), these models use range expressions like `'n-1'*'n-3'` inside tuple-expansion lists following `STRING "." "(" ... ")"`, and the current grammar does not allow `range_expr` in that tuple-expansion context.
 
 **Fix Approach:**
-- Add range notation support in set data: `element "*" element`
+- Extend the grammar for tuple-expansion lists (used in constructs like `STRING "." "(" ... ")"`) to allow `range_expr` entries, not just simple elements.
 
 **Files to Modify:**
-- `src/gams/gams_grammar.lark` - Add range support in data rules
+- `src/gams/gams_grammar.lark` - Update the tuple-expansion/`STRING "." "(" ... ")"` rule(s) to accept `range_expr` within the list
 
 **Effort:** 3h  
 **Fixability:** Medium  
@@ -455,7 +455,7 @@ These 10 models have unique issues requiring case-by-case analysis:
 - Of the 33 models in subcategory 9 (Complex set data syntax), 19 are addressable in Phase 2 (quoted descriptions, tuple expansion, range notation); the remaining 14 are deferred here.
 - Of the 10 models in subcategory 12 (Other/Miscellaneous), 6 are addressable in Phase 1-2; the remaining 4 are deferred here.
 - The 18 deferred models = 14 (complex set data hard subset) + 4 (misc deferred).
-- For subcategory 2.3 (multi-line continuation, 12 models), Phase 1 targets the 3 easiest; the remaining 9 have overlap with other subcategories and are counted in their primary categories.
+- For subcategory 2.3 (multi-line continuation, 12 models), Phase 1 targets the 3 easiest; the remaining 9 also exhibit secondary issues covered by other subcategories but are still counted under 2.3 as their primary category (no double-counting).
 
 **Recommendation:** Focus Sprint 17 on Phase 1 and Phase 2. Defer hard complex set data patterns to Sprint 18 or later.
 

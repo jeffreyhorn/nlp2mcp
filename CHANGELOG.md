@@ -45,7 +45,7 @@ Created prioritized plan for addressing 97 `lexer_invalid_char` errors. Identifi
 |-------|--------|--------|-------------|
 | Phase 1 (Quick Wins) | 12h | +20-22 | Reserved words, display, keywords, brackets |
 | Phase 2 (Medium) | 13h | +10-12 | Tuple expansion, quoted set descriptions, numeric data, range syntax |
-| Phase 3 (Deferred) | 20h+ | ~37 | Complex set data + misc (future sprint) |
+| Phase 3 (Deferred) | 20h+ | 18 | Complex set data hard subset (14) + misc (4) |
 
 **Sprint 17 Target:** Phase 1 = 12h, +20-22 models, ~42-44% parse rate (Phase 2 adds +10-12 more with 13h additional effort)
 
