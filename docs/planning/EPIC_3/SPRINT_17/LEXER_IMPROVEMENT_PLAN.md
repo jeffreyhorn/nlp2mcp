@@ -422,7 +422,7 @@ These 10 models have unique issues requiring case-by-case analysis:
 |---|-----|--------|--------|-----|
 | 1 | Reserved word conflicts (`inf`/`na`) | 2h | 12 | 6.0 |
 | 2 | Display statement continuation | 2h | 6 | 3.0 |
-| 3 | Solve keyword spelling/case fixes | 2h | 5 | 2.5 |
+| 3 | Keyword variants & statement-boundary issues | 2h | 5 | 2.5 |
 | 4 | Square bracket conditionals | 2h | 3 | 1.5 |
 | 5 | Acronym statement | 1h | 2 | 2.0 |
 | 6 | Curly brace expressions | 1h | 1 | 1.0 |

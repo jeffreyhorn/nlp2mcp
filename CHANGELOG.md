@@ -32,7 +32,7 @@ Created prioritized plan for addressing 97 `lexer_invalid_char` errors. Identifi
 | Square bracket conditionals | 3 | Easy | P1 |
 | Tuple expansion syntax | 8 | Medium | P2 |
 | Curly brace expressions | 1 | Easy | P2 |
-| Solve keyword spelling/case issues | 5 | Easy | P1 |
+| Keyword variants & statement-boundary issues | 5 | Easy | P1 |
 | Acronym statement | 2 | Easy | P2 |
 | Complex set data syntax | 33 | Hard | P3 (defer) |
 | Numeric parameter data | 3 | Medium | P2 |
