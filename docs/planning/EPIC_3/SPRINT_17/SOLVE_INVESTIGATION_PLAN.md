@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive investigation plan for the 10 solve failures in the Sprint 16 baseline. The analysis reveals that **all 10 failures are due to fixable nlp2mcp bugs** in MCP code generation (`emit_gams.py`), not PATH solver limitations or inherent model issues.
+This document provides a comprehensive investigation plan for the 10 solve failures in the Sprint 16 baseline. The analysis reveals that **8 of the 10 failures are confirmed to be fixable nlp2mcp bugs** in MCP code generation (`emit_gams.py`), with the remaining 2 still under investigation (1 `model_infeasible`, 1 `path_solve_terminated`).
 
 **Sprint 16 Solve Baseline:**
 - Solve attempted: 21 models (those that translated successfully)
@@ -433,5 +433,5 @@ These fixes address all 8 `path_syntax_error` failures:
 
 - [MCP_COMPILATION_ANALYSIS.md](./MCP_COMPILATION_ANALYSIS.md) - Detailed analysis of 8 path_syntax_error models
 - [PATH_ERROR_ANALYSIS.md](../SPRINT_16/PATH_ERROR_ANALYSIS.md) - Sprint 16 PATH error analysis
-- [FAILURE_ANALYSIS.md](../../testing/FAILURE_ANALYSIS.md) - Overall pipeline failure analysis
+- [FAILURE_ANALYSIS.md](../../../testing/FAILURE_ANALYSIS.md) - Overall pipeline failure analysis
 - [KNOWN_UNKNOWNS.md](./KNOWN_UNKNOWNS.md) - Sprint 17 unknowns verification
