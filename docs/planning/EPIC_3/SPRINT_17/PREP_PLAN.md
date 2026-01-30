@@ -314,7 +314,7 @@ Sprint 16 made substantial progress on lexer issues. The completed analysis iden
 **See:** [LEXER_IMPROVEMENT_PLAN.md](./LEXER_IMPROVEMENT_PLAN.md) for the full 12-subcategory breakdown, including:
 - Reserved word conflicts (12 models) - Easy fix, highest ROI
 - Display/multi-line continuation (18 models) - Easy/Medium fix
-- Complex set data syntax (33 models) - Hard, mostly deferred to future sprint (Phase 2 addresses ~7 via quoted set descriptions)
+- Complex set data syntax (33 models) - Hard, partially addressed in Phase 2 (~19/33 via quoted descriptions, tuple expansion, range notation); remaining 14 deferred
 - Other subcategories detailed in the plan
 
 See: [SPRINT_RETROSPECTIVE.md](../SPRINT_16/SPRINT_RETROSPECTIVE.md) § "Priority 1: Continue Lexer/Parser Improvements"

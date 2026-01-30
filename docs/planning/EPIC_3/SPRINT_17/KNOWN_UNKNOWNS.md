@@ -1184,7 +1184,7 @@ Development team
 - **Realistic Sprint 17 working target:** 55% (88 models) achievable with 25h effort (Phase 1 + Phase 2)
 - **Upper stretch target:** 60% (96 models) with Phase 3 partial work
 
-**Recommendation:** For Sprint 17 planning and reporting, treat 55% parse as the revised working target, with 70% retained as an aspirational/stretch goal.
+**Recommendation:** For Sprint 17 planning and reporting, treat 55% parse as the revised working target, with 70% parse (≥112 models) retained as the aspirational/stretch goal as stated in the Executive Summary targets.
 
 **See:** LEXER_IMPROVEMENT_PLAN.md Section 3 for detailed fix plan
 
