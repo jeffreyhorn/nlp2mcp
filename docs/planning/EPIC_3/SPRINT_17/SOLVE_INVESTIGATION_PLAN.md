@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive investigation plan for the 10 solve failures in the Sprint 16 baseline. The analysis reveals that **8 of the 10 failures are confirmed to be fixable nlp2mcp bugs** in MCP code generation (`emit_gams.py`), with the remaining 2 still under investigation (1 `model_infeasible`, 1 `path_solve_terminated`).
+This document provides a comprehensive investigation plan for the 10 solve failures in the Sprint 16 baseline. The analysis finds that **8 of the 10 failures are due to fixable nlp2mcp bugs** in MCP code generation (`emit_gams.py`), with the remaining 2 still under investigation and potentially involving inherent model issues or PATH solver behavior.
 
 **Sprint 16 Solve Baseline:**
 - Solve attempted: 21 models (those that translated successfully)
@@ -90,11 +90,11 @@ All 8 `path_syntax_error` failures are due to bugs in `src/emit/emit_gams.py` an
 
 | Root Cause | Models | Code Location | Fix Type |
 |------------|--------|---------------|----------|
-| Missing Table data | 2 (ajax, least) | `emit/original_symbols.py:130-185` | IR/Emit |
-| Missing computed params | 2 (chem, trnsport) | `emit/original_symbols.py:130-185` | IR/Emit |
-| Subset relationship lost | 2 (dispatch, port) | `emit/original_symbols.py:63-89` | IR/Emit |
-| Reserved word not quoted | 1 (ps2_f_inf) | `emit/original_symbols.py`, `emit/expr_to_gams.py` | Emit |
-| Set elements unquoted | 1 (sample) | `emit/expr_to_gams.py` | Emit |
+| Missing Table data | 2 (ajax, least) | `src/emit/original_symbols.py:130-185` | IR/Emit |
+| Missing computed params | 2 (chem, trnsport) | `src/emit/original_symbols.py:130-185` | IR/Emit |
+| Subset relationship lost | 2 (dispatch, port) | `src/emit/original_symbols.py:63-89` | IR/Emit |
+| Reserved word not quoted | 1 (ps2_f_inf) | `src/emit/original_symbols.py`, `src/emit/expr_to_gams.py` | Emit |
+| Set elements unquoted | 1 (sample) | `src/emit/expr_to_gams.py` | Emit |
 
 **Key Insight:** These are emit_gams.py bugs that can be systematically fixed. The PATH solver works correctly when given valid GAMS code.
 

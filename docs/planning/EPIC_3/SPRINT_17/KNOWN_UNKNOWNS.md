@@ -705,11 +705,11 @@ Development team
 | path_solve_terminated | 1 | TBD (needs investigation) | Maybe |
 
 **Specific root causes for path_syntax_error (8 models):**
-1. **Missing Table data emission** (ajax, least) - `emit/original_symbols.py:130-185`
-2. **Missing computed parameter assignments** (chem, trnsport) - `emit/original_symbols.py:130-185`
-3. **Subset relationships not preserved** (dispatch, port) - `emit/original_symbols.py:63-89`
-4. **GAMS reserved words not quoted** (ps2_f_inf) - `emit/original_symbols.py`, `emit/expr_to_gams.py`
-5. **Set element references not quoted** (sample) - `emit/expr_to_gams.py`
+1. **Missing Table data emission** (ajax, least) - `src/emit/original_symbols.py:130-185`
+2. **Missing computed parameter assignments** (chem, trnsport) - `src/emit/original_symbols.py:130-185`
+3. **Subset relationships not preserved** (dispatch, port) - `src/emit/original_symbols.py:63-89`
+4. **GAMS reserved words not quoted** (ps2_f_inf) - `src/emit/original_symbols.py`, `src/emit/expr_to_gams.py`
+5. **Set element references not quoted** (sample) - `src/emit/expr_to_gams.py`
 
 **Key insight:** 80% of failures are fixable code generation bugs in emit_gams.py, not solver or model issues. The PATH solver is never invoked for these models because GAMS compilation fails first.
 
