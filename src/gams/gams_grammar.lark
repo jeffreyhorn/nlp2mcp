@@ -132,11 +132,12 @@ scalar_item: ID "/" scalar_data_items "/" (ASSIGN expr)?                -> scala
            | ID ASSIGN expr                                             -> scalar_with_assign
            | ID                                                         -> scalar_plain
 
-// For single scalar declarations: allow optional scalar_desc_text
+// For single scalar declarations: allow optional description (quoted STRING or unquoted DESC_TEXT)
 // Sprint 12 Day 5 (Issue #417): Made DESC_TEXT optional with ? since terminal can't match empty
-scalar_single_item: ID DESC_TEXT? "/" scalar_data_items "/" (ASSIGN expr)?  -> scalar_with_data
-                  | ID DESC_TEXT? ASSIGN expr                               -> scalar_with_assign
-                  | ID DESC_TEXT?                                           -> scalar_plain
+// Sprint 17 Day 4: Added STRING as alternative to DESC_TEXT to support quoted descriptions like 'freight cost'
+scalar_single_item: ID (STRING | DESC_TEXT)? "/" scalar_data_items "/" (ASSIGN expr)?  -> scalar_with_data
+                  | ID (STRING | DESC_TEXT)? ASSIGN expr                               -> scalar_with_assign
+                  | ID (STRING | DESC_TEXT)?                                           -> scalar_plain
 
 // Optional inline description text for variables/sets/params
 // Sprint 12 Day 5: Require at least 2 words to avoid consuming variable names on subsequent lines

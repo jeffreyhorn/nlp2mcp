@@ -2869,6 +2869,10 @@ class _ModelBuilder:
         # If so, store as expression instead of trying to evaluate
         has_function_call = self._contains_function_call(expr)
 
+        # Sprint 17 Day 4: Check if expression contains variable references
+        # Variable references (like x.l) are runtime values that cannot be stored
+        has_variable_reference = self._contains_variable_reference(expr)
+
         # Try to extract a constant value. If the expression is non-constant
         # (e.g., contains variable attributes like x.l or function calls), we handle specially
         # (Sprint 8 mock/store approach - we don't execute expressions)
@@ -2877,18 +2881,22 @@ class _ModelBuilder:
             value = self._extract_constant(expr, "assignment")
         except ParserSemanticError:
             # Non-constant expressions:
-            # - For parameters with function calls: store as expression (Sprint 10 Day 4)
             # - For variable bounds with expressions: parse and continue (Sprint 10 Day 6)
-            # - For other non-constant parameters: just parse and validate but don't store
-            # (e.g., trig.gms: xdiff = 2.66695657 - x1.l, circle.gms: xmin = smin(i, x(i)))
+            # - For parameters with function calls: store as expression (Sprint 10 Day 4)
+            # - For parameters with only param refs: store as expression (Sprint 17 Day 4)
+            # - For parameters with variable refs: skip (runtime values, can't store)
+            # (e.g., trig.gms: xdiff = 2.66695657 - x1.l uses x1.l which is runtime)
             if is_variable_bound:
                 # Variable bounds with expressions (circle.gms: a.l = (xmin + xmax)/2)
                 # Parse and continue without storing (mock/store approach)
                 return
-            # For parameters with function calls, continue to store as expression
-            # For other non-constant parameters, just parse and validate but don't store
-            if not has_function_call:
+            # Sprint 17 Day 4: Store parameter expressions that don't reference variables
+            # This enables computed parameters like c(i,j) = f*d(i,j)/1000 to be emitted
+            if has_variable_reference:
+                # Expression references variable attributes - skip (runtime value)
                 return
+            # Expression contains only parameters/constants - store as expression
+            has_function_call = True  # Treat as expression to store
 
         if isinstance(target, Tree):
             if target.data == "bound_indexed":
@@ -2982,6 +2990,9 @@ class _ModelBuilder:
 
                 # Handle simple subset name as index: flag(sub) where sub is a subset of i
                 # Check if a single index is actually a subset name that should be expanded
+                # Sprint 17 Day 4: Only expand for constant values, not for expressions
+                # For expressions like gplus(c) = gibbs(c) + log(...), we store once with index
+                # and emit as a single GAMS assignment statement
                 if subset_name is None and len(indices) == 1 and indices[0] in self.model.sets:
                     simple_subset = self.model.sets[indices[0]]
                     # Note: SetDef currently doesn't store domain information (the parent set).
@@ -2989,12 +3000,13 @@ class _ModelBuilder:
                     # Future enhancement: add domain field to SetDef to enable validation that
                     # subset domain is compatible with parameter domain (e.g., reject p(sub_j)
                     # when p is defined over domain i but sub_j is a subset of j).
-                    # Check if this set has members to expand
-                    if simple_subset.members:
+                    # Check if this set has members to expand (only for constant values)
+                    if simple_subset.members and not has_function_call and value is not None:
                         self._expand_subset_assignment(
                             simple_subset, param, has_function_call, expr, value, target
                         )
                         return
+                    # For expressions, fall through to store with the index name
 
                 # Only validate index count if the parameter has an explicit domain declaration.
                 # For parameters without an explicit domain, index count is not validated.
@@ -4116,6 +4128,34 @@ class _ModelBuilder:
             for idx in expr.indices:  # type: ignore[attr-defined]
                 if isinstance(idx, IndexOffset) and self._contains_function_call(idx):
                     return True
+        return False
+
+    def _contains_variable_reference(self, expr: Expr) -> bool:
+        """Check if an expression contains any variable references (recursively).
+
+        Sprint 17 Day 4: Used to detect when parameter assignments contain variable
+        references (like x.l or x(i)) which are runtime values that cannot be stored
+        as computed parameter expressions.
+
+        Expressions that only contain parameter references (like f*d(i,j)/1000) can be
+        stored and emitted as GAMS assignment statements.
+        """
+        if isinstance(expr, VarRef):
+            return True
+        if isinstance(expr, (Binary, Unary)):
+            # Check children recursively
+            for child in expr.children():
+                if self._contains_variable_reference(child):
+                    return True
+        if isinstance(expr, Sum):
+            # Check the summation body
+            if self._contains_variable_reference(expr.body):
+                return True
+        if isinstance(expr, IndexOffset):
+            # Check the offset expression recursively
+            if self._contains_variable_reference(expr.offset):
+                return True
+        # ParamRef is OK - it's a parameter, not a variable
         return False
 
     def _extract_constant(self, expr: Expr, context: str) -> float:

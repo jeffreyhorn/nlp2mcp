@@ -9,10 +9,12 @@ Key principles:
 - Use AliasDef.target and .universe
 - Scalars have empty domain () and values[()] = value
 - Multi-dimensional parameter keys formatted as GAMS syntax: ("i1", "j2") → "i1.j2"
+- Emit computed parameter assignments as GAMS statements (Sprint 17 Day 4)
 """
 
 import re
 
+from src.emit.expr_to_gams import expr_to_gams
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 
@@ -227,5 +229,51 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 value = scalar_def.values.get((), 0.0)
                 lines.append(f"    {scalar_name} /{value}/")
             lines.append(";")
+
+    return "\n".join(lines)
+
+
+def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
+    """Emit computed parameter assignment statements.
+
+    Sprint 17 Day 4: Emit expressions stored in ParameterDef.expressions as
+    GAMS assignment statements. These are computed parameters like:
+        c(i,j) = f*d(i,j)/1000;
+        gplus(c) = gibbs(c) + log(750*.07031);
+
+    Args:
+        model_ir: Model IR containing parameter definitions with expressions
+
+    Returns:
+        GAMS assignment statements as string
+
+    Example output:
+        c(i,j) = f * d(i,j) / 1000;
+        gplus(c) = gibbs(c) + log(750 * 0.07031);
+    """
+    lines: list[str] = []
+
+    for param_name, param_def in model_ir.params.items():
+        # Skip predefined constants
+        if param_name in PREDEFINED_GAMS_CONSTANTS:
+            continue
+
+        # Check if this parameter has expressions (computed values)
+        if not param_def.expressions:
+            continue
+
+        # Emit each expression assignment
+        for key_tuple, expr in param_def.expressions.items():
+            # Convert expression to GAMS syntax
+            expr_str = expr_to_gams(expr)
+
+            # Format the LHS with indices
+            if key_tuple and key_tuple != ():
+                # Indexed parameter: c(i,j) = expr
+                index_str = ",".join(key_tuple)
+                lines.append(f"{param_name}({index_str}) = {expr_str};")
+            else:
+                # Scalar parameter: f = expr
+                lines.append(f"{param_name} = {expr_str};")
 
     return "\n".join(lines)
