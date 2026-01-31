@@ -18,7 +18,7 @@ Created detailed 10-day schedule for Sprint 17 and verified unknowns 3.5-3.6 (ca
 
 #### Deliverables
 
-- `docs/planning/EPIC_3/SPRINT_17/SPRINT_LOG.md` - Complete 10-day schedule
+- `docs/planning/EPIC_3/SPRINT_17/SPRINT_SCHEDULE.md` - Complete 10-day schedule
 - Updated `KNOWN_UNKNOWNS.md` with 2 verified unknowns (3.5, 3.6) - now 96% complete (26/27)
 - Updated `PREP_PLAN.md` with Task 9 status COMPLETE and prep phase complete
 

@@ -577,7 +577,7 @@ See: [SPRINT_LOG.md](./SPRINT_LOG.md) for the complete schedule
 6. Created SPRINT_LOG.md with day-by-day plan
 
 #### Changes
-- Created `docs/planning/EPIC_3/SPRINT_17/SPRINT_LOG.md`
+- Created `docs/planning/EPIC_3/SPRINT_17/SPRINT_SCHEDULE.md`
 - Updated KNOWN_UNKNOWNS.md with final verification for Unknowns 3.5, 3.6
 
 #### Result
@@ -599,7 +599,7 @@ _Note: Final total (42h) supersedes the earlier 26-34h estimate from PROJECT_PLA
 - [x] Unknowns 3.5, 3.6 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
-- `docs/planning/EPIC_3/SPRINT_17/SPRINT_LOG.md` - Complete 10-day schedule
+- `docs/planning/EPIC_3/SPRINT_17/SPRINT_SCHEDULE.md` - Complete 10-day schedule
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.5, 3.6
 
 #### Acceptance Criteria

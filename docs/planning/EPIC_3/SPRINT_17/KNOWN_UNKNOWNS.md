@@ -1272,7 +1272,7 @@ Development team
 - Expected outcome: +26-29 models parsing (~48% parse rate)
 - Remaining complex fixes (Phase 2/3 from LEXER_IMPROVEMENT_PLAN.md) deferred to Sprint 18
 
-**See:** LEXER_IMPROVEMENT_PLAN.md Section 3 for detailed fix plan, SPRINT_LOG.md for schedule
+**See:** LEXER_IMPROVEMENT_PLAN.md Section 3 for detailed fix plan, SPRINT_SCHEDULE.md for schedule
 
 ---
 
@@ -1362,7 +1362,7 @@ Development team
 - This ensures newly-parsing models benefit from translation fixes
 - emit_gams.py fixes (Days 4-5) improve solve success for all models
 
-**See:** SPRINT_LOG.md for schedule, TRANSLATION_ANALYSIS.md Section 4
+**See:** SPRINT_SCHEDULE.md for schedule, TRANSLATION_ANALYSIS.md Section 4
 
 ---
 
