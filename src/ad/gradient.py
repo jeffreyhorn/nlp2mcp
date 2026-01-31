@@ -87,6 +87,9 @@ def find_objective_expression(model_ir: ModelIR) -> Expr:
     2. If ObjectiveIR.expr is None: Find defining equation
        - Look for equation that defines ObjectiveIR.objvar
        - Extract expression from equation
+    3. If no defining equation found: Check if objvar is a valid variable
+       - If so, use VarRef(objvar) as the objective expression
+       - This handles "minimize x" where x is a free variable
 
     Args:
         model_ir: Model IR containing objective and equations
@@ -106,6 +109,11 @@ def find_objective_expression(model_ir: ModelIR) -> Expr:
         >>> model_ir.objective = ObjectiveIR(ObjSense.MIN, "obj", expr=None)
         >>> model_ir.equations["obj_def"] = EquationDef("obj_def", (), Rel.EQ, (SymbolRef("obj"), expr))
         >>> find_objective_expression(model_ir)  # Returns expr from equation RHS
+
+        >>> # Simple variable objective (e.g., "minimize r" where r is a variable)
+        >>> model_ir.objective = ObjectiveIR(ObjSense.MIN, "r", expr=None)
+        >>> model_ir.variables["r"] = VarDef("r", (), ...)
+        >>> find_objective_expression(model_ir)  # Returns VarRef("r")
     """
     if model_ir.objective is None:
         raise ValueError("ModelIR has no objective defined")
@@ -137,11 +145,25 @@ def find_objective_expression(model_ir: ModelIR) -> Expr:
         if _is_symbol_ref(rhs, objvar):
             return lhs
 
-    # No defining equation found
+    # Case 3: No defining equation found - check if objvar is a valid variable
+    # This handles "minimize x" where x is a free variable with no defining equation
+    # GAMS is case-insensitive, so we need to find the variable with case-insensitive match
+    from ..ir.ast import VarRef
+
+    objvar_lower = objvar.lower()
+    for var_name in model_ir.variables:
+        if var_name.lower() == objvar_lower:
+            # Found the variable - return a VarRef to it
+            # Use the actual variable name from the model (preserves original case)
+            return VarRef(var_name, ())
+
+    # No variable found either
     raise ValueError(
-        f"Objective variable '{objvar}' is not defined by any equation. "
+        f"Objective variable '{objvar}' is not defined by any equation "
+        f"and is not a declared variable. "
         f"ObjectiveIR.expr is None and no defining equation found. "
-        f"Available equations: {list(model_ir.equations.keys())}"
+        f"Available equations: {list(model_ir.equations.keys())}. "
+        f"Available variables: {list(model_ir.variables.keys())}"
     )
 
 
@@ -152,18 +174,22 @@ def _is_symbol_ref(expr: Expr, name: str) -> bool:
     The parser may produce either SymbolRef or VarRef (with empty indices)
     for scalar variable references depending on context.
 
+    Note: GAMS is case-insensitive, so we compare names case-insensitively.
+
     Args:
         expr: Expression to check
         name: Symbol name to match
 
     Returns:
-        True if expr is SymbolRef(name) or VarRef(name, ())
+        True if expr is SymbolRef(name) or VarRef(name, ()) (case-insensitive)
     """
     from ..ir.ast import SymbolRef, VarRef
 
-    if isinstance(expr, SymbolRef) and expr.name == name:
+    # GAMS is case-insensitive, so compare names case-insensitively
+    name_lower = name.lower()
+    if isinstance(expr, SymbolRef) and expr.name.lower() == name_lower:
         return True
-    if isinstance(expr, VarRef) and expr.name == name and expr.indices == ():
+    if isinstance(expr, VarRef) and expr.name.lower() == name_lower and expr.indices == ():
         return True
     return False
 

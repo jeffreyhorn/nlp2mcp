@@ -2,9 +2,9 @@
 
 import pytest
 
-from src.ir.ast import Binary, Const, VarRef
+from src.ir.ast import Binary, Const, SymbolRef, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
-from src.ir.symbols import EquationDef, ObjSense, Rel
+from src.ir.symbols import EquationDef, ObjSense, Rel, VariableDef
 from src.kkt.objective import extract_objective_info
 
 
@@ -158,3 +158,90 @@ class TestExtractObjectiveInfo:
         result = extract_objective_info(model)
 
         assert result.needs_stationarity is False
+
+    def test_case_insensitive_objvar_lhs(self):
+        """GAMS is case-insensitive - 'f' should match equation with 'F'.
+
+        This pattern appears in models like alkyl (objvar='f', equation LHS='F').
+        """
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="f")  # lowercase
+
+        # F =E= x^2 (uppercase in equation using SymbolRef)
+        model.equations["obj_def"] = EquationDef(
+            name="obj_def",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                SymbolRef("F"),  # uppercase
+                Binary("*", VarRef("x", ()), VarRef("x", ())),
+            ),
+        )
+
+        result = extract_objective_info(model)
+
+        assert result.objvar == "f"
+        assert result.defining_equation == "obj_def"
+
+    def test_case_insensitive_objvar_rhs(self):
+        """GAMS is case-insensitive - should also work when objvar is on RHS."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")  # lowercase
+
+        # x^2 =E= OBJ (uppercase in equation)
+        model.equations["obj_def"] = EquationDef(
+            name="obj_def",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                Binary("*", VarRef("x", ()), VarRef("x", ())),
+                SymbolRef("OBJ"),  # uppercase
+            ),
+        )
+
+        result = extract_objective_info(model)
+
+        assert result.objvar == "obj"
+        assert result.defining_equation == "obj_def"
+
+    def test_simple_variable_objective(self):
+        """Objective that is just a variable with no defining equation.
+
+        This handles 'minimize r' where r is a free variable with no equation
+        defining it. Common in models like circle, cpack.
+        """
+        model = ModelIR()
+        model.add_var(VariableDef("r", ()))
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="r")
+        # No equations defining r
+
+        result = extract_objective_info(model)
+
+        assert result.objvar == "r"
+        assert result.defining_equation == ""  # No defining equation
+        assert result.needs_stationarity is True  # Stationarity needed for simple var
+
+    def test_simple_variable_objective_case_insensitive(self):
+        """Simple variable objective with case mismatch.
+
+        Handles 'minimize RADIUS' when variable is declared as 'radius'.
+        """
+        model = ModelIR()
+        model.add_var(VariableDef("radius", ()))  # lowercase
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="RADIUS")  # uppercase
+
+        result = extract_objective_info(model)
+
+        assert result.objvar == "RADIUS"  # Preserves original objvar case
+        assert result.defining_equation == ""
+        assert result.needs_stationarity is True
+
+    def test_objvar_not_variable_raises_error(self):
+        """Error when objvar is neither defined by equation nor a variable."""
+        model = ModelIR()
+        model.add_var(VariableDef("x", ()))  # Different variable
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        # obj is not defined by equation and not a declared variable
+
+        with pytest.raises(ValueError, match="Could not find defining equation"):
+            extract_objective_info(model)

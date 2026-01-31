@@ -115,6 +115,85 @@ class TestFindObjectiveExpression:
         except ValueError as e:
             assert "not defined" in str(e).lower()
 
+    def test_case_insensitive_objvar_lhs(self):
+        """Test case-insensitive matching for objvar on LHS.
+
+        GAMS is case-insensitive, so 'f' should match equation with 'F'.
+        This pattern appears in models like alkyl (objvar='f', equation LHS='F').
+        """
+        model_ir = ModelIR()
+        # F =e= x^2 (uppercase in equation)
+        obj_expr = Call("power", (VarRef("x"), Const(2.0)))
+        model_ir.add_equation(EquationDef("obj_def", (), Rel.EQ, (SymbolRef("F"), obj_expr)))
+        # min f (lowercase objvar)
+        model_ir.objective = ObjectiveIR(ObjSense.MIN, "f", expr=None)
+
+        result = find_objective_expression(model_ir)
+
+        assert result is obj_expr
+
+    def test_case_insensitive_objvar_rhs(self):
+        """Test case-insensitive matching for objvar on RHS."""
+        model_ir = ModelIR()
+        # x^2 =e= OBJ (uppercase in equation)
+        obj_expr = Call("power", (VarRef("x"), Const(2.0)))
+        model_ir.add_equation(EquationDef("obj_def", (), Rel.EQ, (obj_expr, SymbolRef("OBJ"))))
+        # min obj (lowercase objvar)
+        model_ir.objective = ObjectiveIR(ObjSense.MIN, "obj", expr=None)
+
+        result = find_objective_expression(model_ir)
+
+        assert result is obj_expr
+
+    def test_simple_variable_objective(self):
+        """Test objective that is just a variable with no defining equation.
+
+        This handles 'minimize r' where r is a free variable with no equation
+        defining it. Common in models like circle, cpack, trussm.
+        """
+        model_ir = ModelIR()
+        model_ir.add_var(VariableDef("r", ()))
+        # min r (r is just a variable, no defining equation)
+        model_ir.objective = ObjectiveIR(ObjSense.MIN, "r", expr=None)
+
+        result = find_objective_expression(model_ir)
+
+        # Should return a VarRef to r
+        assert isinstance(result, VarRef)
+        assert result.name == "r"
+        assert result.indices == ()
+
+    def test_simple_variable_objective_case_insensitive(self):
+        """Test simple variable objective with case mismatch.
+
+        Handles 'minimize R' when variable is declared as 'r'.
+        """
+        model_ir = ModelIR()
+        model_ir.add_var(VariableDef("radius", ()))  # lowercase
+        # min RADIUS (uppercase objvar)
+        model_ir.objective = ObjectiveIR(ObjSense.MIN, "RADIUS", expr=None)
+
+        result = find_objective_expression(model_ir)
+
+        # Should return VarRef with original variable name (preserves case from declaration)
+        assert isinstance(result, VarRef)
+        assert result.name == "radius"
+        assert result.indices == ()
+
+    def test_objvar_not_variable_raises_error(self):
+        """Test error when objvar is neither defined by equation nor a variable."""
+        model_ir = ModelIR()
+        model_ir.add_var(VariableDef("x", ()))  # Different variable
+        # min obj (obj is not defined by equation and not a declared variable)
+        model_ir.objective = ObjectiveIR(ObjSense.MIN, "obj", expr=None)
+
+        try:
+            find_objective_expression(model_ir)
+            raise AssertionError("Should have raised ValueError")
+        except ValueError as e:
+            assert "not defined" in str(e).lower()
+            assert "obj" in str(e)
+
 
 # ============================================================================
 # Test Gradient Computation - Minimization
