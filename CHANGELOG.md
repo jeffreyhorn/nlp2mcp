@@ -36,7 +36,7 @@ Created detailed 10-day schedule for Sprint 17 and verified unknowns 3.5-3.6 (ca
 
 | Unknown | Status | Finding |
 |---------|--------|---------|
-| 3.5 | Verified | 70% parse is stretch goal; 55% (88 models) realistic target |
+| 3.5 | Verified | 70% parse is aspirational; 48% (77 models) committed, 55% stretch |
 | 3.6 | Verified | Cascade effects factored in; ~40% of new parse → translate |
 
 #### Key Scheduling Decisions

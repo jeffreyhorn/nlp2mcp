@@ -22,10 +22,11 @@
 |--------|-------------------|---------------------|--------------|
 | Parse Rate | 30.0% (48/160) | ≥48% (77/160) | ≥55% (88/160) |
 | Translate Rate | 43.8% (21/48) | ≥57% of parsed (44/77) | ≥65% of parsed |
-| Solve Rate | 52.4% (11/21) | ≥71% of original 21 (15/21) | ≥80% of translated |
+| Solve Rate (original 21) | 52.4% (11/21) | ≥71% (15/21) | ≥71% (15/21) |
+| Solve Rate (all translated) | 52.4% (11/21) | ≥43% (19/44) | ≥80% of translated |
 | Full Pipeline | 3.1% (5/160) | ≥12% (19/160) | ≥25% (40/160) |
 
-**Note:** Parse target revised from 70% to 48% based on prep analysis (Phase 1 quick wins only). Translate/Solve targets are committed minimums based on scheduled work. Solve target (15/21) applies to original 21 translated models; cascade solves from newly translated models are treated as upside. See Expected Progression table for detailed day-by-day projections.
+**Note:** Parse target revised from 70% to 48% based on prep analysis (Phase 1 quick wins only). Solve metrics split into two rows: "original 21" tracks emit_gams.py fix effectiveness on baseline translated models (CP3 = 15/21); "all translated" includes cascade effects from newly translated models. See Expected Progression table for detailed day-by-day projections.
 
 ---
 
