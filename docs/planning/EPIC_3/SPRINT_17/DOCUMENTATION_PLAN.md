@@ -9,10 +9,10 @@
 
 ## Executive Summary
 
-This document provides a comprehensive inventory of the 497 documentation files in the nlp2mcp project, identifies gaps requiring attention for the v1.1.0 release, and prioritizes documentation tasks for Sprint 17.
+This document provides a comprehensive inventory of the 498 documentation files in the nlp2mcp project, identifies gaps requiring attention for the v1.1.0 release, and prioritizes documentation tasks for Sprint 17.
 
 **Key Findings:**
-- **497 total documentation files** across 30 directories
+- **498 total documentation files** across 30 directories
 - **User documentation is comprehensive** - USER_GUIDE.md, TUTORIAL.md, FAQ.md, TROUBLESHOOTING.md all exist
 - **GAMSLIB documentation is strong** - GAMSLIB_TESTING.md and GAMSLIB_USAGE.md are complete and current
 - **Main gaps:** Outdated version references, missing v1.1.0 release notes, DOCUMENTATION_INDEX.md needs update
@@ -26,20 +26,30 @@ This document provides a comprehensive inventory of the 497 documentation files 
 
 | Directory | File Count | Category | Status |
 |-----------|------------|----------|--------|
-| `docs/planning/` | 280 | Internal/Planning | Complete |
+| `docs/planning/` | 281 | Internal/Planning | Complete |
 | `docs/issues/` | 115 | Issue Tracking | Complete |
 | `docs/research/` | 26 | Research | Complete |
 | `docs/testing/` | 10 | Testing | Current |
 | `docs/infrastructure/` | 4 | Infrastructure | Current |
+| `docs/ad/` | 4 | AD Module | Complete |
+| `docs/sprints/` | 4 | Sprint Summaries | Complete |
+| `docs/release/` | 3 | Release | Complete |
+| `docs/demos/` | 3 | Demos | Complete |
+| `docs/performance/` | 3 | Performance | Complete |
 | `docs/guides/` | 2 | User Guides | Current |
 | `docs/architecture/` | 2 | Architecture | Needs Update |
-| `docs/ad/` | 4 | AD Module | Complete |
-| `docs/kkt/` | 1 | KKT Module | Complete |
-| `docs/emit/` | 1 | Emit Module | Complete |
-| `docs/release/` | 3 | Release | Complete |
-| **Root docs/** | 12 | User-Facing | Mixed |
+| `docs/concepts/` | 2 | Concepts | Complete |
+| `docs/design/` | 2 | Design | Complete |
+| `docs/development/` | 2 | Development | Complete |
+| `docs/errors/` | 2 | Errors | Complete |
+| `docs/features/` | 2 | Features | Complete |
+| `docs/api/` | 2 | API Reference | Complete |
+| Other subdirs | 11 | Various (1 file each) | Complete |
+| **Root docs/** | 18 | User-Facing | Mixed |
 
-**Total: 497 markdown files**
+**Total: 498 markdown files**
+
+_Note: "Other subdirs" includes benchmarks, blockers, ci, emit, ir, kkt, migration, process, releases, status, validation (1 file each)._
 
 ---
 
@@ -232,7 +242,7 @@ Recent documentation added during Sprint 16/17 prep:
 
 ## Verification Checklist
 
-- [x] All docs directories scanned (30 directories, 497 files)
+- [x] All docs directories scanned (30 directories, 498 files)
 - [x] Gaps identified (3 P0, 3 P1, 3 P2)
 - [x] Priority ranking established (P0 → P1 → P2)
 - [x] Effort estimates provided (5.5h P0+P1, 7.5h total)
@@ -265,10 +275,10 @@ docs/
 ├── kkt/                (1 file)  - KKT module docs
 ├── migration/          (1 file)  - Migration docs
 ├── performance/        (3 files) - Performance docs
-├── planning/           (280 files) - Sprint planning
+├── planning/           (281 files) - Sprint planning
 │   ├── EPIC_1/         (62 files)
 │   ├── EPIC_2/         (149 files)
-│   └── EPIC_3/         (68 files)
+│   └── EPIC_3/         (69 files)
 ├── process/            (1 file)  - Process docs
 ├── release/            (3 files) - Release docs
 ├── releases/           (1 file)  - Release notes

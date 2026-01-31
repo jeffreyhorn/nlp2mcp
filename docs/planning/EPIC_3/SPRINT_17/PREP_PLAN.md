@@ -425,7 +425,7 @@ See: [SOLVE_INVESTIGATION_PLAN.md](./SOLVE_INVESTIGATION_PLAN.md) for complete a
 **Deadline:** Before Sprint 17 Day 5  
 **Owner:** N/A (completed)  
 **Dependencies:** None  
-**Unknowns Verified:** -
+**Unknowns Verified:** N/A
 
 #### Objective
 Inventory existing documentation and identify gaps for v1.1.0 release.
