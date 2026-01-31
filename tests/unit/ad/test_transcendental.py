@@ -653,6 +653,140 @@ class TestLogGammaDifferentiation:
 
 
 # ============================================================================
+# Smooth Min/Max Function Tests
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestSminDifferentiation:
+    """Tests for smin(a, b) differentiation.
+
+    The smin function uses a smooth LogSumExp approximation:
+    smin(a, b) ≈ -τ · ln(exp(-a/τ) + exp(-b/τ))
+
+    Derivatives:
+    ∂/∂a smin ≈ exp(-a/τ) / (exp(-a/τ) + exp(-b/τ))
+    ∂/∂b smin ≈ exp(-b/τ) / (exp(-a/τ) + exp(-b/τ))
+    """
+
+    def test_smin_first_variable(self):
+        """Test d(smin(x, y))/dx has correct structure"""
+        # smin(x, y)
+        expr = Call("smin", (VarRef("x"), VarRef("y")))
+        result = differentiate_expr(expr, "x")
+
+        # Result should be: dsmin_da * 1 + dsmin_db * 0 = dsmin_da
+        # Structure: (exp(-x/τ) / (exp(-x/τ) + exp(-y/τ))) * 1 + (...) * 0
+        assert isinstance(result, Binary)
+        assert result.op == "+"  # Sum of two terms
+
+    def test_smin_second_variable(self):
+        """Test d(smin(x, y))/dy has correct structure"""
+        # smin(x, y)
+        expr = Call("smin", (VarRef("x"), VarRef("y")))
+        result = differentiate_expr(expr, "y")
+
+        # Result should be: dsmin_da * 0 + dsmin_db * 1 = dsmin_db
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+    def test_smin_both_same_variable(self):
+        """Test d(smin(x, x))/dx has correct structure"""
+        # smin(x, x)
+        expr = Call("smin", (VarRef("x"), VarRef("x")))
+        result = differentiate_expr(expr, "x")
+
+        # Both partial derivatives contribute
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+    def test_smin_constants(self):
+        """Test d(smin(2, 3))/dx = 0"""
+        # smin(2, 3)
+        expr = Call("smin", (Const(2.0), Const(3.0)))
+        result = differentiate_expr(expr, "x")
+
+        # Both da/dx and db/dx are 0
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+    def test_smin_different_variable(self):
+        """Test d(smin(x, y))/dz = 0"""
+        # smin(x, y)
+        expr = Call("smin", (VarRef("x"), VarRef("y")))
+        result = differentiate_expr(expr, "z")
+
+        # Both partial derivatives contribute 0
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+    def test_smin_chain_rule(self):
+        """Test d(smin(x^2, y))/dx uses chain rule"""
+        # smin(x^2, y)
+        inner = Call("power", (VarRef("x"), Const(2.0)))
+        expr = Call("smin", (inner, VarRef("y")))
+        result = differentiate_expr(expr, "x")
+
+        # Chain rule: dsmin_da * d(x^2)/dx + dsmin_db * 0
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+
+@pytest.mark.unit
+class TestSmaxDifferentiation:
+    """Tests for smax(a, b) differentiation.
+
+    The smax function uses a smooth LogSumExp approximation:
+    smax(a, b) ≈ τ · ln(exp(a/τ) + exp(b/τ))
+
+    Derivatives:
+    ∂/∂a smax ≈ exp(a/τ) / (exp(a/τ) + exp(b/τ))
+    ∂/∂b smax ≈ exp(b/τ) / (exp(a/τ) + exp(b/τ))
+    """
+
+    def test_smax_first_variable(self):
+        """Test d(smax(x, y))/dx has correct structure"""
+        # smax(x, y)
+        expr = Call("smax", (VarRef("x"), VarRef("y")))
+        result = differentiate_expr(expr, "x")
+
+        # Result should be: dsmax_da * 1 + dsmax_db * 0
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+    def test_smax_second_variable(self):
+        """Test d(smax(x, y))/dy has correct structure"""
+        # smax(x, y)
+        expr = Call("smax", (VarRef("x"), VarRef("y")))
+        result = differentiate_expr(expr, "y")
+
+        # Result should be: dsmax_da * 0 + dsmax_db * 1
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+    def test_smax_constants(self):
+        """Test d(smax(2, 3))/dx = 0"""
+        # smax(2, 3)
+        expr = Call("smax", (Const(2.0), Const(3.0)))
+        result = differentiate_expr(expr, "x")
+
+        # Both da/dx and db/dx are 0
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+    def test_smax_chain_rule(self):
+        """Test d(smax(x^2, y))/dx uses chain rule"""
+        # smax(x^2, y)
+        inner = Call("power", (VarRef("x"), Const(2.0)))
+        expr = Call("smax", (inner, VarRef("y")))
+        result = differentiate_expr(expr, "x")
+
+        # Chain rule: dsmax_da * d(x^2)/dx + dsmax_db * 0
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+
+
+# ============================================================================
 # Error Handling Tests
 # ============================================================================
 
@@ -701,6 +835,20 @@ class TestTranscendentalErrors:
         # loggamma() - no args
         expr = Call("loggamma", ())
         with pytest.raises(ValueError, match="loggamma\\(\\) expects 1 argument"):
+            differentiate_expr(expr, "x")
+
+    def test_smin_wrong_arg_count(self):
+        """Test smin() with wrong number of arguments raises error"""
+        # smin(x) - only 1 arg
+        expr = Call("smin", (VarRef("x"),))
+        with pytest.raises(ValueError, match="smin\\(\\) expects 2 arguments"):
+            differentiate_expr(expr, "x")
+
+    def test_smax_wrong_arg_count(self):
+        """Test smax() with wrong number of arguments raises error"""
+        # smax(x, y, z) - too many args
+        expr = Call("smax", (VarRef("x"), VarRef("y"), VarRef("z")))
+        with pytest.raises(ValueError, match="smax\\(\\) expects 2 arguments"):
             differentiate_expr(expr, "x")
 
     def test_unsupported_function(self):

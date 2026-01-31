@@ -561,11 +561,15 @@ def _diff_call(
         return _diff_gamma(expr, wrt_var, wrt_indices, config)
     elif func == "loggamma":
         return _diff_loggamma(expr, wrt_var, wrt_indices, config)
+    elif func == "smin":
+        return _diff_smin(expr, wrt_var, wrt_indices, config)
+    elif func == "smax":
+        return _diff_smax(expr, wrt_var, wrt_indices, config)
     else:
         # Future: Other functions
         raise ValueError(
             f"Differentiation not yet implemented for function '{func}'. "
-            f"Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr, gamma, loggamma. "
+            f"Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr, gamma, loggamma, smin, smax. "
             f"Note: abs() requires --smooth-abs flag (non-differentiable at x=0)."
         )
 
@@ -1217,6 +1221,158 @@ def _diff_loggamma(
 
     # psi(arg) * darg/dx
     return Binary("*", psi_arg, darg_dx)
+
+
+def _diff_smin(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of smooth minimum function: smin(a, b).
+
+    The smin function is non-differentiable at a=b. We use a smooth approximation
+    based on the LogSumExp trick with a softening parameter τ (tau):
+
+    smin(a, b) ≈ -τ · ln(exp(-a/τ) + exp(-b/τ))
+
+    The partial derivatives are:
+    ∂/∂a smin ≈ exp(-a/τ) / (exp(-a/τ) + exp(-b/τ))
+    ∂/∂b smin ≈ exp(-b/τ) / (exp(-a/τ) + exp(-b/τ))
+
+    Note: As τ → 0, this approaches the true min function.
+    We use τ = 0.01 as a reasonable default for optimization.
+
+    The derivative w.r.t. a general variable x uses the chain rule:
+    d/dx smin(a,b) = (∂smin/∂a) · (da/dx) + (∂smin/∂b) · (db/dx)
+
+    Args:
+        expr: Call("smin", [a, b])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+        config: Optional configuration
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(smin(x, y))/dx = exp(-x/τ) / (exp(-x/τ) + exp(-y/τ)) * 1
+        >>> _diff_smin(Call("smin", (VarRef("x"), VarRef("y"))), "x", None)
+        # Returns smooth derivative approximation
+    """
+    if len(expr.args) != 2:
+        raise ValueError(f"smin() expects 2 arguments, got {len(expr.args)}")
+
+    a = expr.args[0]
+    b = expr.args[1]
+    da_dx = differentiate_expr(a, wrt_var, wrt_indices, config)
+    db_dx = differentiate_expr(b, wrt_var, wrt_indices, config)
+
+    # Smoothing parameter τ (smaller = closer to true min, but less smooth)
+    tau = Const(0.01)
+
+    # -a/τ and -b/τ
+    neg_a_over_tau = Binary("/", Unary("-", a), tau)
+    neg_b_over_tau = Binary("/", Unary("-", b), tau)
+
+    # exp(-a/τ) and exp(-b/τ)
+    exp_neg_a = Call("exp", (neg_a_over_tau,))
+    exp_neg_b = Call("exp", (neg_b_over_tau,))
+
+    # exp(-a/τ) + exp(-b/τ)
+    sum_exp = Binary("+", exp_neg_a, exp_neg_b)
+
+    # ∂smin/∂a = exp(-a/τ) / (exp(-a/τ) + exp(-b/τ))
+    dsmin_da = Binary("/", exp_neg_a, sum_exp)
+
+    # ∂smin/∂b = exp(-b/τ) / (exp(-a/τ) + exp(-b/τ))
+    dsmin_db = Binary("/", exp_neg_b, sum_exp)
+
+    # (∂smin/∂a) · (da/dx)
+    term1 = Binary("*", dsmin_da, da_dx)
+
+    # (∂smin/∂b) · (db/dx)
+    term2 = Binary("*", dsmin_db, db_dx)
+
+    # (∂smin/∂a) · (da/dx) + (∂smin/∂b) · (db/dx)
+    return Binary("+", term1, term2)
+
+
+def _diff_smax(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of smooth maximum function: smax(a, b).
+
+    The smax function is non-differentiable at a=b. We use a smooth approximation
+    based on the LogSumExp trick with a softening parameter τ (tau):
+
+    smax(a, b) ≈ τ · ln(exp(a/τ) + exp(b/τ))
+
+    The partial derivatives are:
+    ∂/∂a smax ≈ exp(a/τ) / (exp(a/τ) + exp(b/τ))
+    ∂/∂b smax ≈ exp(b/τ) / (exp(a/τ) + exp(b/τ))
+
+    Note: As τ → 0, this approaches the true max function.
+    We use τ = 0.01 as a reasonable default for optimization.
+
+    The derivative w.r.t. a general variable x uses the chain rule:
+    d/dx smax(a,b) = (∂smax/∂a) · (da/dx) + (∂smax/∂b) · (db/dx)
+
+    Args:
+        expr: Call("smax", [a, b])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+        config: Optional configuration
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(smax(x, y))/dx = exp(x/τ) / (exp(x/τ) + exp(y/τ)) * 1
+        >>> _diff_smax(Call("smax", (VarRef("x"), VarRef("y"))), "x", None)
+        # Returns smooth derivative approximation
+    """
+    if len(expr.args) != 2:
+        raise ValueError(f"smax() expects 2 arguments, got {len(expr.args)}")
+
+    a = expr.args[0]
+    b = expr.args[1]
+    da_dx = differentiate_expr(a, wrt_var, wrt_indices, config)
+    db_dx = differentiate_expr(b, wrt_var, wrt_indices, config)
+
+    # Smoothing parameter τ (smaller = closer to true max, but less smooth)
+    tau = Const(0.01)
+
+    # a/τ and b/τ
+    a_over_tau = Binary("/", a, tau)
+    b_over_tau = Binary("/", b, tau)
+
+    # exp(a/τ) and exp(b/τ)
+    exp_a = Call("exp", (a_over_tau,))
+    exp_b = Call("exp", (b_over_tau,))
+
+    # exp(a/τ) + exp(b/τ)
+    sum_exp = Binary("+", exp_a, exp_b)
+
+    # ∂smax/∂a = exp(a/τ) / (exp(a/τ) + exp(b/τ))
+    dsmax_da = Binary("/", exp_a, sum_exp)
+
+    # ∂smax/∂b = exp(b/τ) / (exp(a/τ) + exp(b/τ))
+    dsmax_db = Binary("/", exp_b, sum_exp)
+
+    # (∂smax/∂a) · (da/dx)
+    term1 = Binary("*", dsmax_da, da_dx)
+
+    # (∂smax/∂b) · (db/dx)
+    term2 = Binary("*", dsmax_db, db_dx)
+
+    # (∂smax/∂a) · (da/dx) + (∂smax/∂b) · (db/dx)
+    return Binary("+", term1, term2)
 
 
 # ============================================================================
