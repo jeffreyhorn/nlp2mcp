@@ -140,12 +140,12 @@ cmd = [
 ]
 ```
 
-**Current defaults used:**
+**Current configuration in test_solve.py:**
 - Time limit: 60 seconds (`reslim=60`)
-- Iteration limit: PATH default (10000)
-- Tolerances: PATH defaults
-- Pivoting: PATH defaults
-- Preprocessing: PATH defaults
+- Iteration limit: not explicitly set (GAMS/PATH defaults)
+- Tolerances: not explicitly set (GAMS/PATH defaults)
+- Pivoting: not explicitly set (GAMS/PATH defaults)
+- Preprocessing: not explicitly set (GAMS/PATH defaults)
 
 ### 3.2 Available PATH Options
 
@@ -153,14 +153,14 @@ PATH solver supports numerous configuration options that could improve solve rat
 
 | Option | Current | Available Settings | Potential Impact |
 |--------|---------|-------------------|------------------|
-| `iterlim` | 10000 | 1-1000000 | More iterations for difficult problems |
+| `iterlim` | Not set (PATH default) | 1-1000000 | More iterations for difficult problems |
 | `reslim` | 60s | Any | More time for large problems |
-| `convergence_tolerance` | 1e-6 | 1e-4 to 1e-10 | Trade accuracy for convergence |
-| `crash_method` | Default | 0-4 | Different starting basis strategies |
-| `crash_nbchange` | Default | Integer | Neighborhood size for crash |
-| `lemke_start` | Default | 0-2 | Lemke algorithm starting strategy |
-| `nms` | Default | 0-1 | Non-monotone stabilization |
-| `proximal_perturbation` | Default | Float | Perturbation for singular problems |
+| `convergence_tolerance` | Not set (PATH default) | 1e-4 to 1e-10 | Trade accuracy for convergence |
+| `crash_method` | Not set (PATH default) | 0-4 | Different starting basis strategies |
+| `crash_nbchange` | Not set (PATH default) | Integer | Neighborhood size for crash |
+| `lemke_start` | Not set (PATH default) | 0-2 | Lemke algorithm starting strategy |
+| `nms` | Not set (PATH default) | 0-1 | Non-monotone stabilization |
+| `proximal_perturbation` | Not set (PATH default) | Float | Perturbation for singular problems |
 
 ### 3.3 PATH Configuration Recommendations
 

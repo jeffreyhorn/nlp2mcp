@@ -768,19 +768,19 @@ Development team
 ```python
 cmd = [gams_exe, str(mcp_path), f"o={lst_path}", "lo=3", f"reslim={timeout}"]
 ```
-- Time limit: 60 seconds
-- Iteration limit: PATH default (10000)
-- Tolerances: PATH defaults (convergence_tolerance=1e-6)
-- No custom pivoting or crash strategies
+- Time limit: 60 seconds (`reslim=60`)
+- Iteration limit: not explicitly set (GAMS/PATH defaults)
+- Tolerances: not explicitly set (GAMS/PATH defaults)
+- No custom pivoting or crash strategies explicitly configured
 
 **Available PATH options researched:**
 | Option | Current | Available Settings | Potential Impact |
 |--------|---------|-------------------|------------------|
-| `iterlim` | 10000 | 1-1000000 | More iterations for difficult problems |
-| `convergence_tolerance` | 1e-6 | 1e-4 to 1e-10 | Trade accuracy for convergence |
-| `crash_method` | Default | 0-4 | Different starting basis strategies |
-| `nms` | Default (0) | 0-1 | Non-monotone stabilization |
-| `proximal_perturbation` | Default | Float | Perturbation for singular problems |
+| `iterlim` | Not set (PATH default) | 1-1000000 | More iterations for difficult problems |
+| `convergence_tolerance` | Not set (PATH default) | 1e-4 to 1e-10 | Trade accuracy for convergence |
+| `crash_method` | Not set (PATH default) | 0-4 | Different starting basis strategies |
+| `nms` | Not set (PATH default) | 0-1 | Non-monotone stabilization |
+| `proximal_perturbation` | Not set (PATH default) | Float | Perturbation for singular problems |
 
 **Impact assessment:**
 - For 8 path_syntax_error models: **No impact** (fail before PATH runs)
