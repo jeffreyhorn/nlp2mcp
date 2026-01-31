@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Prep Task 8: Release Checklist - 2026-01-30
+
+**Branch:** `planning/sprint17-task8`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive v1.1.0 release checklist and verified unknowns 5.1-5.4 (fix complexity estimation). Key finding: **Sprint 16 estimates were ~80% accurate** with testing overhead of 25-40%.
+
+#### Deliverables
+
+- `docs/planning/EPIC_3/SPRINT_17/RELEASE_CHECKLIST.md` - Complete release checklist
+- Updated `KNOWN_UNKNOWNS.md` with 4 verified unknowns (5.1, 5.2, 5.3, 5.4)
+- Updated `PREP_PLAN.md` with Task 8 status COMPLETE
+
+#### Release Checklist Contents
+
+| Section | Contents |
+|---------|----------|
+| Pre-release verification | Code quality gates, test requirements, metrics targets, documentation |
+| Artifact preparation | Version bump (pyproject.toml), CHANGELOG, release notes |
+| Release execution | Final verification, commit, tag, GitHub release |
+| Post-release verification | Smoke tests, documentation check |
+| Rollback plan | Steps for critical issue recovery |
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 5.1 | Verified | Sprint 16 estimates ~80% accurate; parse fixes underestimated by 30-50% |
+| 5.2 | Verified | Testing overhead 25-40% of implementation time |
+| 5.3 | Verified | Most fixes independent; file-level batching recommended |
+| 5.4 | Verified | Major refactoring (>8h, >5 files, core changes) should be deferred |
+
+#### Key Findings
+
+1. **Effort estimates validated** - Grammar/emit fixes match estimates; parse fixes need buffer
+2. **Testing standards defined** - 30% overhead for grammar, 25% for emit, 35% for translation
+3. **Fix dependencies mapped** - Lexer→Grammar within phases; Parse→Translate→Solve cascade
+4. **Deferral criteria established** - 18 models deferred (complex set data, edge cases)
+
+---
+
 ### Sprint 17 Prep Task 7: Documentation Inventory - 2026-01-30
 
 **Branch:** `planning/sprint17-task7`  

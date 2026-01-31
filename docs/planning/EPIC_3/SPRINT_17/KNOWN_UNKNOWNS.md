@@ -64,17 +64,17 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 ## Summary Statistics
 
 **Total Unknowns:** 27  
-**Verified:** 21 (78%)  
+**Verified:** 23 (85%)  
 **Partially Verified:** 0 (0%)  
 **Deferred:** 1 (4%)  
-**Remaining:** 5 (19%)
+**Remaining:** 3 (11%)
 
 _Note: Percentages use nearest-integer rounding and may sum to 101% due to rounding._
 
 **By Priority:**
 - Critical: 4 (15%) - 4 verified
 - High: 8 (30%) - 8 verified
-- Medium: 12 (44%) - 8 verified, 1 deferred, 3 remaining
+- Medium: 12 (44%) - 10 verified, 1 deferred, 1 remaining
 - Low: 3 (11%) - 1 verified, 2 remaining
 
 **By Category:**
@@ -1668,7 +1668,31 @@ Grammar and lexer changes can be estimated at 1-2 hours for simple fixes, 2-4 ho
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** Sprint 16 estimates were approximately 80% accurate, with systematic underestimation of parse fix complexity.
+
+**Sprint 16 Analysis:**
+| Fix Type | Estimated | Actual | Accuracy |
+|----------|-----------|--------|----------|
+| Grammar extensions (FREE_K, abort) | 2-3h | 2h | 100% (on target) |
+| Tuple expansion | 2h | 3h | 67% (underestimate) |
+| emit_gams.py fixes | 2-3h | 2h | 100% (on target) |
+| Reporting infrastructure | 8-10h | 10h | 90% (slight under) |
+
+**Key Insights:**
+1. **Simple grammar fixes:** Estimates are accurate (±20%)
+2. **Complex parser changes:** Underestimated by ~30-50% due to hidden interactions
+3. **emit_gams.py fixes:** Estimates accurate once root cause identified
+4. **Testing overhead:** Not included in original estimates (add 30%)
+
+**Recommendations for Sprint 17:**
+1. Add 30% buffer for testing time to all estimates
+2. Assume parse fixes with "secondary issues" will take 50% longer
+3. emit_gams.py fixes are well-understood - estimates reliable
+4. Bundle related fixes to reduce context-switching overhead
+
+**See:** [SPRINT_RETROSPECTIVE.md](../SPRINT_16/SPRINT_RETROSPECTIVE.md) § "What Could Be Improved"
 
 ---
 
@@ -1711,7 +1735,40 @@ Testing overhead is approximately 30-50% of implementation time: 30% for simple 
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** Testing overhead is 25-40% of implementation time, with standards established for Sprint 17.
+
+**Sprint 16 Testing Analysis:**
+| Fix Type | New Tests | Test Time | Overhead % |
+|----------|-----------|-----------|------------|
+| Grammar extensions | 10 tests | 1h | 33% |
+| emit_gams.py fixes | 6 tests | 0.5h | 25% |
+| Reporting module | 72 tests | 4h | 40% |
+
+**Testing Standards Defined:**
+
+1. **Grammar/Lexer Fixes:**
+   - Minimum 2 unit tests per new grammar rule
+   - 1 integration test with real GAMS model
+   - Overhead: ~30% of implementation time
+
+2. **emit_gams.py Fixes:**
+   - Minimum 1 unit test per fix pattern
+   - 1 integration test verifying GAMS compilation
+   - Overhead: ~25% of implementation time
+
+3. **Translation/AD Fixes:**
+   - Minimum 2 unit tests for derivative correctness
+   - 1 integration test with known model
+   - Overhead: ~35% of implementation time
+
+4. **All Fixes:**
+   - Run `make typecheck && make lint && make format && make test` before commit
+   - CI must pass before PR merge
+   - No regressions in previously-passing models
+
+**Recommendation:** Include 30% testing overhead in all Sprint 17 estimates.
 
 ---
 
@@ -1753,7 +1810,46 @@ Most fixes are independent and can be parallelized, with only a few dependencies
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** Most fixes are independent within phases. Dependencies exist primarily between phases and across pipeline stages.
+
+**Dependency Analysis:**
+
+| Fix Category | Dependencies | Can Parallelize? |
+|--------------|--------------|------------------|
+| Lexer Phase 1 fixes | None (independent) | Yes |
+| Lexer Phase 2 fixes | Depends on Phase 1 grammar infrastructure | Partially |
+| emit_gams.py fixes | Independent of lexer/parse fixes | Yes |
+| Translation fixes | Requires model to parse successfully | Sequential |
+| Solve fixes | Requires model to translate successfully | Sequential |
+
+**Key Dependencies Identified:**
+
+1. **Lexer → Grammar dependency:** Some lexer changes (e.g., reserved word context) require corresponding grammar rule updates. These should be done together.
+
+2. **Parse → Translate → Solve cascade:** Pipeline stages are inherently sequential per model. However, fixes to each stage can be developed in parallel.
+
+3. **File-level conflicts:** Multiple fixes touch the same files:
+   - `src/gams/gams_grammar.lark`: 6+ fixes (coordinate changes)
+   - `src/emit/original_symbols.py`: 4 fixes (batch if possible)
+   - `src/emit/expr_to_gams.py`: 2 fixes (low conflict risk)
+
+**Critical Path:**
+```
+Day 1-3: Translation fixes (AD + KKT)  ─┐
+Day 2-4: emit_gams.py fixes (solve)    ─┼─> Day 6-8: Parse fixes
+Day 4-5: Investigation phase           ─┘    (lexer/grammar)
+```
+
+**Batching Recommendations:**
+1. Batch all `gams_grammar.lark` changes in one session to avoid merge conflicts
+2. Batch `original_symbols.py` and `expr_to_gams.py` fixes together (related emit logic)
+3. Run full test suite after each batch, not after each fix
+
+**Conflicts Identified:** None that block parallelization. All fixes touch different parts of the grammar/emit logic.
+
+**See:** [LEXER_IMPROVEMENT_PLAN.md](./LEXER_IMPROVEMENT_PLAN.md) Section 3, [SOLVE_INVESTIGATION_PLAN.md](./SOLVE_INVESTIGATION_PLAN.md) Section 5
 
 ---
 
@@ -1796,7 +1892,50 @@ If a fix requires major refactoring (>8 hours), it should be deferred to future 
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** Major refactoring criteria defined and applied to Sprint 17 fixes. One category meets deferral criteria.
+
+**Major Refactoring Criteria Defined:**
+
+A fix requires "major refactoring" if it meets **2 or more** of these criteria:
+1. Estimated effort >8 hours
+2. Touches >5 files with interconnected changes
+3. Changes core abstractions (IR structure, AST nodes, grammar architecture)
+4. Requires regression testing across entire model suite
+5. High risk of breaking existing functionality
+
+**Sprint 17 Fix Assessment:**
+
+| Fix | Hours | Files | Core Change? | Regression Risk | Defer? |
+|-----|-------|-------|--------------|-----------------|--------|
+| Complex set data syntax | 12h+ | 3-4 | Yes (grammar) | High | **YES** |
+| Tuple expansion | 4h | 2 | No | Medium | No |
+| Reserved words context | 2h | 2 | No | Low | No |
+| emit_gams.py fixes | 19h total | 2 | No | Medium | No |
+| AD function additions | 4-6h | 1-2 | No | Low | No |
+| Domain mismatch fix | 6h | 1-2 | Yes (KKT) | Medium | No |
+
+**Deferral Decision:**
+
+| Category | Models | Decision | Rationale |
+|----------|--------|----------|-----------|
+| Complex set data (hard subset) | 14 | Defer | 12h+, changes grammar architecture, high regression risk |
+| Miscellaneous edge cases | 4 | Defer | Case-by-case, low ROI |
+| **Total deferred** | **18** | | |
+
+**Technical Debt Documentation:**
+
+Deferred fixes documented in:
+- [LEXER_IMPROVEMENT_PLAN.md](./LEXER_IMPROVEMENT_PLAN.md) Section 3 "Phase 3: Deferred"
+- Future sprint backlog item to be created
+
+**Risk Assessment:**
+- **Deferral impact:** 18 models remain unparseable (11% of total)
+- **Technical debt:** Moderate - grammar restructuring eventually needed
+- **Mitigation:** Clear documentation, backlog tracking, no workarounds that would complicate future fix
+
+**Recommendation:** Defer complex set data and miscellaneous edge cases to Sprint 18 or later. Focus Sprint 17 on achievable fixes with clear ROI.
 
 ---
 
