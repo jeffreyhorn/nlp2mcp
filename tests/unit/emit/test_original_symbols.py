@@ -63,6 +63,54 @@ class TestEmitOriginalSets:
         assert "universe" in result
         # Empty sets just have the name, no slash notation
 
+    def test_subset_with_domain(self):
+        """Test emission of subset with parent set relationship.
+
+        Sprint 17 Day 5: Verify subset relationships are preserved.
+        E.g., cg(genchar) /a, b, c/ should emit with domain.
+        """
+        model = ModelIR()
+        model.sets["genchar"] = SetDef(name="genchar", members=["a", "b", "c", "upplim", "lowlim"])
+        model.sets["cg"] = SetDef(name="cg", members=["a", "b", "c"], domain=("genchar",))
+
+        result = emit_original_sets(model)
+        assert "Sets" in result
+        assert "genchar /a, b, c, upplim, lowlim/" in result
+        assert "cg(genchar) /a, b, c/" in result
+        assert result.endswith(";")
+
+    def test_subset_without_members(self):
+        """Test emission of subset without explicit members.
+
+        Sprint 17 Day 5: Verify subset declarations without members are preserved.
+        E.g., sub(parent) should emit as sub(parent).
+        """
+        model = ModelIR()
+        model.sets["parent"] = SetDef(name="parent", members=["x", "y", "z"])
+        model.sets["sub"] = SetDef(name="sub", members=[], domain=("parent",))
+
+        result = emit_original_sets(model)
+        assert "Sets" in result
+        assert "parent /x, y, z/" in result
+        assert "sub(parent)" in result
+        assert result.endswith(";")
+
+    def test_multi_dimensional_subset(self):
+        """Test emission of multi-dimensional subset.
+
+        Sprint 17 Day 5: Verify multi-dimensional domain is preserved.
+        E.g., arc(n,np) should emit with both domain sets.
+        """
+        model = ModelIR()
+        model.sets["n"] = SetDef(name="n", members=["n1", "n2"])
+        model.sets["arc"] = SetDef(name="arc", members=["n1.n2"], domain=("n", "n"))
+
+        result = emit_original_sets(model)
+        assert "Sets" in result
+        assert "n /n1, n2/" in result
+        assert "arc(n,n) /n1.n2/" in result
+        assert result.endswith(";")
+
 
 @pytest.mark.unit
 class TestEmitOriginalAliases:

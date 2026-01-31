@@ -47,6 +47,9 @@ class SetDef:
     name: str
     members: list[str] = field(default_factory=list)  # canonical member strings
     # If empty, could indicate universe or defined elsewhere.
+    domain: tuple[
+        str, ...
+    ] = ()  # Parent set(s) for subsets, e.g., cg(genchar) has domain=('genchar',)
 
 
 @dataclass
