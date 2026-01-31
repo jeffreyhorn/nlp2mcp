@@ -127,17 +127,72 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
             result.bounds_fx[(var_name, ())] = BoundDef("fx", var_def.fx, var_def.domain)
 
         # Indexed bounds (Finding #2 fix)
-        for indices, lo_val in var_def.lo_map.items():
-            if lo_val == float("-inf"):
-                result.skipped_infinite.append((var_name, indices, "lo"))
-            else:
-                result.bounds_lo[(var_name, indices)] = BoundDef("lo", lo_val, var_def.domain)
+        # Check if all lo_map values are uniform (same finite value for ALL instances)
+        # If so, consolidate to a single indexed bound entry with () indices.
+        # Otherwise, create per-instance entries.
+        #
+        # Uniform consolidation is ONLY applied when:
+        # 1. ALL values in lo_map are the same finite value (no infinite bounds)
+        # 2. There is no scalar bound (var_def.lo) - otherwise keep entries separate
+        if var_def.lo_map:
+            lo_values = list(var_def.lo_map.values())
+            finite_values = [v for v in lo_values if v != float("-inf")]
+            has_infinite = len(finite_values) < len(lo_values)
+            has_scalar_bound = var_def.lo is not None
 
-        for indices, up_val in var_def.up_map.items():
-            if up_val == float("inf"):
-                result.skipped_infinite.append((var_name, indices, "up"))
-            else:
-                result.bounds_up[(var_name, indices)] = BoundDef("up", up_val, var_def.domain)
+            # Track infinite bounds
+            for indices, lo_val in var_def.lo_map.items():
+                if lo_val == float("-inf"):
+                    result.skipped_infinite.append((var_name, indices, "lo"))
+
+            if finite_values:
+                # Check if all finite values are the same AND no infinite bounds AND no scalar bound
+                # Only then can we consolidate to a single indexed entry
+                all_same = all(v == finite_values[0] for v in finite_values)
+                can_consolidate = all_same and not has_infinite and not has_scalar_bound
+
+                if can_consolidate:
+                    # Uniform: create single indexed entry with () indices
+                    result.bounds_lo[(var_name, ())] = BoundDef(
+                        "lo", finite_values[0], var_def.domain
+                    )
+                else:
+                    # Non-uniform: create per-instance entries
+                    for indices, lo_val in var_def.lo_map.items():
+                        if lo_val != float("-inf"):
+                            result.bounds_lo[(var_name, indices)] = BoundDef(
+                                "lo", lo_val, var_def.domain
+                            )
+
+        # Same logic for upper bounds
+        if var_def.up_map:
+            up_values = list(var_def.up_map.values())
+            finite_values = [v for v in up_values if v != float("inf")]
+            has_infinite = len(finite_values) < len(up_values)
+            has_scalar_bound = var_def.up is not None
+
+            # Track infinite bounds
+            for indices, up_val in var_def.up_map.items():
+                if up_val == float("inf"):
+                    result.skipped_infinite.append((var_name, indices, "up"))
+
+            if finite_values:
+                # Check if all finite values are the same AND no infinite bounds AND no scalar bound
+                all_same = all(v == finite_values[0] for v in finite_values)
+                can_consolidate = all_same and not has_infinite and not has_scalar_bound
+
+                if can_consolidate:
+                    # Uniform: create single indexed entry with () indices
+                    result.bounds_up[(var_name, ())] = BoundDef(
+                        "up", finite_values[0], var_def.domain
+                    )
+                else:
+                    # Non-uniform: create per-instance entries
+                    for indices, up_val in var_def.up_map.items():
+                        if up_val != float("inf"):
+                            result.bounds_up[(var_name, indices)] = BoundDef(
+                                "up", up_val, var_def.domain
+                            )
 
         for indices, fx_val in var_def.fx_map.items():
             result.bounds_fx[(var_name, indices)] = BoundDef("fx", fx_val, var_def.domain)
