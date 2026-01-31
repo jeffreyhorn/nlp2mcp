@@ -839,18 +839,24 @@ class _ModelBuilder:
             # Note: desc_text is now allowed but we ignore it (no description field in SetDef yet)
             self.model.add_set(SetDef(name=name))
         elif item.data == "set_domain":
+            # Subset without explicit members: cg(genchar)
+            # Sprint 17 Day 5: Store domain (parent set) for subset relationships
             name = _token_text(item.children[0])
-            domain = _id_list(item.children[1])
+            domain = tuple(_id_list(item.children[1]))
             # Note: desc_text is now allowed but we ignore it
-            self.model.add_set(SetDef(name=name, members=list(domain)))
+            # A set with domain but no members is a subset declaration (members inherited from parent)
+            self.model.add_set(SetDef(name=name, members=[], domain=domain))
         elif item.data == "set_domain_with_members":
-            # Set with domain and members: ID(id_list) STRING? / set_members /
+            # Subset with explicit members: cg(genchar) / a, b, c /
+            # Sprint 17 Day 5: Store domain (parent set) for subset relationships
             name = _token_text(item.children[0])
+            # Extract domain from id_list (the parent set(s))
+            domain = tuple(_id_list(item.children[1]))
             members_node = next(
                 c for c in item.children if isinstance(c, Tree) and c.data == "set_members"
             )
             members = self._expand_set_members(members_node)
-            self.model.add_set(SetDef(name=name, members=members))
+            self.model.add_set(SetDef(name=name, members=members, domain=domain))
         elif item.data == "set_aliased":
             # Set with alias: ID STRING? alias_opt / set_members /
             name = _token_text(item.children[0])
@@ -3684,6 +3690,11 @@ class _ModelBuilder:
                     and all(m in self.model.sets for m in set_def.members)
                 )
 
+                # Sprint 17 Day 5: Check if this is a subset with multi-dimensional domain
+                # E.g., arc(n,n) without explicit members has domain=('n', 'n')
+                # When q(arc) is used, expand to q(n, n) using domain
+                has_multidim_domain = set_def.domain is not None and len(set_def.domain) > 1
+
                 # Issue #428: Check if members are multi-dimensional (dot-separated values)
                 # E.g., arc(n,n) / a.b, b.c / has members ['a.b', 'b.c'] - 2D element values
                 # When q(arc) is used, expand to q(np, n) using free_domain indices
@@ -3698,6 +3709,16 @@ class _ModelBuilder:
                     # Multi-dimensional set with domain indices - always expand
                     # E.g., low(n,n) expands to (n, n)
                     expanded_indices.extend(set_def.members)
+                elif has_multidim_domain and free_domain:
+                    # Sprint 17 Day 5: Multi-dimensional subset via domain field
+                    # E.g., arc(n,n) without members expands using domain
+                    # Use free_domain to map to actual indices
+                    dim = len(set_def.domain)
+                    if len(free_domain) >= dim:
+                        expanded_indices.extend(free_domain[-dim:])
+                    else:
+                        # Fall back to domain itself
+                        expanded_indices.extend(set_def.domain)
                 elif members_are_multidim and free_domain:
                     # Multi-dimensional set with element values (e.g., arc with members 'a.b')
                     # Infer dimensionality from first member and expand using free_domain

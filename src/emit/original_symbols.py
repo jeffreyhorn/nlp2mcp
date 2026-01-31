@@ -67,7 +67,8 @@ def _sanitize_set_element(element: str) -> str:
 def emit_original_sets(model_ir: ModelIR) -> str:
     """Emit Sets block from original model.
 
-    Uses SetDef.members (Finding #3: actual IR field).
+    Uses SetDef.members and SetDef.domain (Finding #3: actual IR fields).
+    Sprint 17 Day 5: Now preserves subset relationships by emitting domain.
 
     Args:
         model_ir: Model IR containing set definitions
@@ -78,7 +79,8 @@ def emit_original_sets(model_ir: ModelIR) -> str:
     Example output:
         Sets
             i /i1, i2, i3/
-            j /j1, j2/
+            genchar /a, b, c, upplim, lowlim/
+            cg(genchar) /a, b, c/
         ;
     """
     if not model_ir.sets:
@@ -86,16 +88,24 @@ def emit_original_sets(model_ir: ModelIR) -> str:
 
     lines: list[str] = ["Sets"]
     for set_name, set_def in model_ir.sets.items():
+        # Sprint 17 Day 5: Format set declaration with optional domain (subset relationship)
+        # E.g., cg(genchar) for subset cg of genchar
+        if set_def.domain:
+            domain_str = ",".join(set_def.domain)
+            set_decl = f"{set_name}({domain_str})"
+        else:
+            set_decl = set_name
+
         # Use SetDef.members (Finding #3)
         # Members are stored as a list of strings in SetDef
         # Sanitize each member to prevent DSL injection attacks
         if set_def.members:
             sanitized_members = [_sanitize_set_element(m) for m in set_def.members]
             members = ", ".join(sanitized_members)
-            lines.append(f"    {set_name} /{members}/")
+            lines.append(f"    {set_decl} /{members}/")
         else:
-            # Empty set or universe
-            lines.append(f"    {set_name}")
+            # Empty set or universe (or subset with inherited members)
+            lines.append(f"    {set_decl}")
     lines.append(";")
 
     return "\n".join(lines)
