@@ -21,11 +21,11 @@
 | Metric | Sprint 16 Baseline | Sprint 17 Target | Stretch Goal |
 |--------|-------------------|------------------|--------------|
 | Parse Rate | 30.0% (48/160) | ≥55% (88/160) | ≥70% (112/160) |
-| Translate Rate | 43.8% (21/48) | ≥60% of parsed | ≥70% of parsed |
-| Solve Rate | 52.4% (11/21) | ≥80% of translated | ≥90% of translated |
+| Translate Rate | 43.8% (21/48) | ≥60% of parsed (~53/88) | ≥70% of parsed (~62/88) |
+| Solve Rate | 52.4% (11/21) | ≥80% of translated (~42/53) | ≥90% of translated (~56/62) |
 | Full Pipeline | 3.1% (5/160) | ≥25% (40/160) | ≥50% (80/160) |
 
-**Note:** Parse target revised from 70% to 55% based on prep analysis. 70% retained as stretch goal. See Unknown 3.5 verification.
+**Note:** Parse target revised from 70% to 55% based on prep analysis. 70% retained as stretch goal. Translate/Solve targets expressed as percentages of their upstream stage (parsed/translated respectively). Absolute counts shown assume target parse rate. See Unknown 3.5 verification and Expected Progression table below for detailed projections.
 
 ---
 
@@ -39,7 +39,7 @@
 | Phase 4 | 9-10 | Documentation & Release | 9h |
 | **Total** | **10** | | **42h** |
 
-**Contingency:** 4h buffer included in Phase 3 (Day 8) and Phase 4 totals. Core work is 38h.
+**Contingency:** 4h buffer = 2h explicit on Day 8 + 2h from scope reduction options (see Contingency Plan below). Core work is 38h.
 
 ---
 
@@ -266,12 +266,12 @@
 | Day | Parse | Translate | Solve | Notes |
 |-----|-------|-----------|-------|-------|
 | Baseline | 48 (30%) | 21/48 (44%) | 11/21 (52%) | Starting point |
-| Day 3 | 48 (30%) | 32/48 (67%) | 11/21 (52%) | Translation +11 |
-| Day 5 | 48 (30%) | 32/48 (67%) | 15/21 (71%) | Solve +4 |
-| Day 8 | 77 (48%) | ~33/77 (43%) | ~16/33 (48%) | Parse +29 |
-| Day 10 | 77+ (48%+) | ~35/77 (45%+) | ~17/35 (49%+) | Final |
+| Day 3 | 48 (30%) | 32/48 (67%) | 11/32 (34%) | Translation +11 (fixes) |
+| Day 5 | 48 (30%) | 32/48 (67%) | 26/32 (81%) | Solve +15 (emit_gams fixes) |
+| Day 8 | 77 (48%) | 44/77 (57%) | 35/44 (80%) | Parse +29, cascade +12 translate |
+| Day 10 | 77+ (48%+) | 53/77+ (69%+) | 42/53 (79%+) | Final targets |
 
-**Note:** Parse improvements affect denominator for translate/solve rates. Actual numbers depend on how newly-parsing models fare in translation and solve stages.
+**Note:** Translate rate = translated/parsed. Solve rate = solved/translated. Day 3 solve count stays at 11 (no solve work yet) but denominator increases. Days 4-5 emit_gams.py fixes target ≥80% solve rate. Parse improvements (Day 8) add ~12 translations via cascade (~40% of +29 new parses).
 
 ---
 

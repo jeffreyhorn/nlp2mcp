@@ -595,7 +595,7 @@ _Note: Final total (42h) supersedes the earlier 26-34h estimate from PROJECT_PLA
 - [x] All Sprint 17 work items scheduled
 - [x] Dependencies respected
 - [x] Total hours realistic (42h = 38h core + 4h contingency)
-- [x] Contingency included (4h buffer in Phase 3 and 4)
+- [x] Contingency included (2h explicit buffer on Day 8, plus 2h of scope reduction options)
 - [x] Unknowns 3.5, 3.6 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables

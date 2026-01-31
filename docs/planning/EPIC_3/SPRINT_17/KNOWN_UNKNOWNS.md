@@ -1336,21 +1336,23 @@ Development team
 
 **Sprint 17 Cascade Projection:**
 
-| Stage | Baseline | After Fixes | New Models | Expected Cascade |
-|-------|----------|-------------|------------|------------------|
-| Parse | 48 | 77 | +29 | N/A |
-| Translate | 21/48 | ~33/77 | +12 | ~40% of new |
-| Solve | 11/21 | ~17/33 | +6 | ~50% of new translated |
+| Stage | Baseline | After All Fixes | Breakdown | Notes |
+|-------|----------|-----------------|-----------|-------|
+| Parse | 48 | 77 | +29 from parse fixes | Days 6-8 |
+| Translate | 21/48 | 44/77 | +11 from translation fixes, +12 from cascade | Days 1-3 fixes + 40% cascade |
+| Solve | 11/21 | 35/44 | +15 from emit_gams fixes, +9 from cascade | Days 4-5 fixes + 80% cascade |
 
 **Projection Methodology:**
-1. **Parse → Translate:** Based on Sprint 16 cascade (29%) plus translation fixes (+11), expect ~40% of newly-parsing models to translate
-2. **Translate → Solve:** Based on emit_gams.py fixes (+8) plus cascade, expect ~50% of new translations to solve
-3. **Rate vs Count:** Rates may appear to drop while absolute counts increase
+1. **Translation Fixes (Days 1-3):** +11 models from AD module, derivative rules, smin, set sanitization
+2. **Parse → Translate Cascade:** ~40% of newly-parsing models translate (~12 of 29)
+3. **Solve Fixes (Days 4-5):** emit_gams.py fixes enable ≥80% solve rate of translated models
+4. **Translate → Solve Cascade:** Newly translated models benefit from solve fixes (~80% solve rate)
+5. **Rate vs Count:** Absolute translate count increases from 21 → 44; solve from 11 → 35
 
 **Impact on Sprint 17 Metrics:**
-- Translate rate may drop from 44% to ~43% (more models in pool)
-- Solve rate should stay stable or improve (emit_gams.py fixes)
-- Full pipeline count more meaningful than stage-by-stage rates
+- Translate rate improves from 44% to ~57% (44/77) due to fixes + cascade
+- Solve rate improves from 52% to ~80% (35/44) due to emit_gams.py fixes
+- Full pipeline success: ~35/160 (22%) → target ≥25% (40/160) achievable with stretch
 
 **Recommendation:** Track both rates and absolute counts. Focus on full pipeline success (models that parse, translate, AND solve) as the key metric.
 
