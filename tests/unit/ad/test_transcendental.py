@@ -455,6 +455,204 @@ class TestSqrtDifferentiation:
 
 
 # ============================================================================
+# Gamma Function Tests
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestGammaDifferentiation:
+    """Tests for gamma(x) differentiation.
+
+    The gamma function derivative uses the digamma (psi) function:
+    d(gamma(x))/dx = gamma(x) * digamma(x)
+    """
+
+    def test_gamma_variable(self):
+        """Test d(gamma(x))/dx = gamma(x) * digamma(x)"""
+        # gamma(x)
+        expr = Call("gamma", (VarRef("x"),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: gamma(x) * digamma(x) * 1
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left should be gamma(x) * digamma(x)
+        assert isinstance(result.left, Binary)
+        assert result.left.op == "*"
+
+        assert isinstance(result.left.left, Call)
+        assert result.left.left.func == "gamma"
+
+        assert isinstance(result.left.right, Call)
+        assert result.left.right.func == "digamma"
+
+        # Right should be dx/dx = 1
+        assert isinstance(result.right, Const)
+        assert result.right.value == 1.0
+
+    def test_gamma_constant(self):
+        """Test d(gamma(5))/dx = 0"""
+        # gamma(5)
+        expr = Call("gamma", (Const(5.0),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: gamma(5) * digamma(5) * 0
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        assert isinstance(result.right, Const)
+        assert result.right.value == 0.0
+
+    def test_gamma_different_variable(self):
+        """Test d(gamma(y))/dx = 0"""
+        # gamma(y)
+        expr = Call("gamma", (VarRef("y"),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: gamma(y) * digamma(y) * 0
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        assert isinstance(result.right, Const)
+        assert result.right.value == 0.0
+
+    def test_gamma_chain_rule(self):
+        """Test d(gamma(x^2))/dx = gamma(x^2) * digamma(x^2) * 2x"""
+        # gamma(x^2)
+        inner = Call("power", (VarRef("x"), Const(2.0)))
+        expr = Call("gamma", (inner,))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: gamma(x^2) * digamma(x^2) * d(x^2)/dx
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left should be gamma(x^2) * digamma(x^2)
+        assert isinstance(result.left, Binary)
+        assert result.left.op == "*"
+
+        assert isinstance(result.left.left, Call)
+        assert result.left.left.func == "gamma"
+
+        assert isinstance(result.left.right, Call)
+        assert result.left.right.func == "digamma"
+
+        # Right should be d(x^2)/dx (not 0 or 1)
+        assert isinstance(result.right, Binary)
+
+    def test_gamma_nested_expression(self):
+        """Test d(gamma(2*x + 1))/dx uses chain rule correctly"""
+        # gamma(2*x + 1)
+        inner = Binary("+", Binary("*", Const(2.0), VarRef("x")), Const(1.0))
+        expr = Call("gamma", (inner,))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: gamma(2*x + 1) * digamma(2*x + 1) * d(2*x + 1)/dx
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left should be gamma(...) * digamma(...)
+        assert isinstance(result.left, Binary)
+        assert result.left.op == "*"
+        assert isinstance(result.left.left, Call)
+        assert result.left.left.func == "gamma"
+        assert isinstance(result.left.right, Call)
+        assert result.left.right.func == "digamma"
+
+
+# ============================================================================
+# LogGamma Function Tests
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestLogGammaDifferentiation:
+    """Tests for loggamma(x) differentiation.
+
+    The loggamma function is ln(gamma(x)), and its derivative is the digamma function:
+    d(loggamma(x))/dx = digamma(x)
+    """
+
+    def test_loggamma_variable(self):
+        """Test d(loggamma(x))/dx = digamma(x)"""
+        # loggamma(x)
+        expr = Call("loggamma", (VarRef("x"),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: digamma(x) * 1
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left should be digamma(x)
+        assert isinstance(result.left, Call)
+        assert result.left.func == "digamma"
+
+        # Right should be dx/dx = 1
+        assert isinstance(result.right, Const)
+        assert result.right.value == 1.0
+
+    def test_loggamma_constant(self):
+        """Test d(loggamma(5))/dx = 0"""
+        # loggamma(5)
+        expr = Call("loggamma", (Const(5.0),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: digamma(5) * 0
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        assert isinstance(result.right, Const)
+        assert result.right.value == 0.0
+
+    def test_loggamma_different_variable(self):
+        """Test d(loggamma(y))/dx = 0"""
+        # loggamma(y)
+        expr = Call("loggamma", (VarRef("y"),))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: digamma(y) * 0
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        assert isinstance(result.right, Const)
+        assert result.right.value == 0.0
+
+    def test_loggamma_chain_rule(self):
+        """Test d(loggamma(x^2))/dx = digamma(x^2) * 2x"""
+        # loggamma(x^2)
+        inner = Call("power", (VarRef("x"), Const(2.0)))
+        expr = Call("loggamma", (inner,))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: digamma(x^2) * d(x^2)/dx
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left should be digamma(x^2)
+        assert isinstance(result.left, Call)
+        assert result.left.func == "digamma"
+
+        # Right should be d(x^2)/dx (not 0 or 1)
+        assert isinstance(result.right, Binary)
+
+    def test_loggamma_nested_expression(self):
+        """Test d(loggamma(2*x + 1))/dx uses chain rule correctly"""
+        # loggamma(2*x + 1)
+        inner = Binary("+", Binary("*", Const(2.0), VarRef("x")), Const(1.0))
+        expr = Call("loggamma", (inner,))
+        result = differentiate_expr(expr, "x")
+
+        # Should be: digamma(2*x + 1) * d(2*x + 1)/dx
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left should be digamma(2*x + 1)
+        assert isinstance(result.left, Call)
+        assert result.left.func == "digamma"
+
+
+# ============================================================================
 # Error Handling Tests
 # ============================================================================
 
@@ -489,6 +687,20 @@ class TestTranscendentalErrors:
         # sqrt(x, y) - too many args
         expr = Call("sqrt", (VarRef("x"), VarRef("y")))
         with pytest.raises(ValueError, match="sqrt\\(\\) expects 1 argument"):
+            differentiate_expr(expr, "x")
+
+    def test_gamma_wrong_arg_count(self):
+        """Test gamma() with wrong number of arguments raises error"""
+        # gamma(x, y) - too many args
+        expr = Call("gamma", (VarRef("x"), VarRef("y")))
+        with pytest.raises(ValueError, match="gamma\\(\\) expects 1 argument"):
+            differentiate_expr(expr, "x")
+
+    def test_loggamma_wrong_arg_count(self):
+        """Test loggamma() with wrong number of arguments raises error"""
+        # loggamma() - no args
+        expr = Call("loggamma", ())
+        with pytest.raises(ValueError, match="loggamma\\(\\) expects 1 argument"):
             differentiate_expr(expr, "x")
 
     def test_unsupported_function(self):

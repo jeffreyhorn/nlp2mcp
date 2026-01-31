@@ -557,11 +557,15 @@ def _diff_call(
         return _diff_abs(expr, wrt_var, wrt_indices, config)
     elif func == "sqr":
         return _diff_sqr(expr, wrt_var, wrt_indices, config)
+    elif func == "gamma":
+        return _diff_gamma(expr, wrt_var, wrt_indices, config)
+    elif func == "loggamma":
+        return _diff_loggamma(expr, wrt_var, wrt_indices, config)
     else:
         # Future: Other functions
         raise ValueError(
             f"Differentiation not yet implemented for function '{func}'. "
-            f"Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr. "
+            f"Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr, gamma, loggamma. "
             f"Note: abs() requires --smooth-abs flag (non-differentiable at x=0)."
         )
 
@@ -1106,6 +1110,109 @@ def _diff_abs(
 
     # (x / sqrt(x² + ε)) * darg/dx
     return Binary("*", derivative_without_chain, darg_dx)
+
+
+# ============================================================================
+# Sprint 17: Gamma Function Derivatives
+# ============================================================================
+
+
+def _diff_gamma(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of gamma function: gamma(x).
+
+    Formula: d(gamma(a))/dx = gamma(a) * digamma(a) * da/dx
+
+    The digamma function (also called psi function) is the logarithmic derivative
+    of the gamma function: digamma(x) = d/dx ln(gamma(x)) = gamma'(x) / gamma(x)
+
+    Therefore: gamma'(x) = gamma(x) * digamma(x)
+
+    Args:
+        expr: Call("gamma", [arg])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+        config: Optional configuration
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(gamma(x))/dx = gamma(x) * digamma(x) * 1
+        >>> _diff_gamma(Call("gamma", (VarRef("x"),)), "x", None)
+        Binary("*", Binary("*", Call("gamma", (VarRef("x"),)), Call("digamma", (VarRef("x"),))), Const(1.0))
+
+        >>> # d(gamma(x^2))/dx = gamma(x^2) * digamma(x^2) * 2x (chain rule)
+        >>> _diff_gamma(Call("gamma", (Call("power", (VarRef("x"), Const(2.0))),)), "x", None)
+        # Returns: gamma(x^2) * digamma(x^2) * d(x^2)/dx
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"gamma() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+
+    # gamma(arg)
+    gamma_arg = Call("gamma", (arg,))
+
+    # digamma(arg)
+    digamma_arg = Call("digamma", (arg,))
+
+    # gamma(arg) * digamma(arg)
+    gamma_times_digamma = Binary("*", gamma_arg, digamma_arg)
+
+    # gamma(arg) * digamma(arg) * darg/dx
+    return Binary("*", gamma_times_digamma, darg_dx)
+
+
+def _diff_loggamma(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of log-gamma function: loggamma(x) = ln(gamma(x)).
+
+    Formula: d(loggamma(a))/dx = digamma(a) * da/dx
+
+    The digamma function is defined as the derivative of loggamma:
+    digamma(x) = d/dx ln(gamma(x)) = d/dx loggamma(x)
+
+    Args:
+        expr: Call("loggamma", [arg])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+        config: Optional configuration
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(loggamma(x))/dx = digamma(x) * 1
+        >>> _diff_loggamma(Call("loggamma", (VarRef("x"),)), "x", None)
+        Binary("*", Call("digamma", (VarRef("x"),)), Const(1.0))
+
+        >>> # d(loggamma(x^2))/dx = digamma(x^2) * 2x (chain rule)
+        >>> _diff_loggamma(Call("loggamma", (Call("power", (VarRef("x"), Const(2.0))),)), "x", None)
+        # Returns: digamma(x^2) * d(x^2)/dx
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"loggamma() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+
+    # digamma(arg)
+    digamma_arg = Call("digamma", (arg,))
+
+    # digamma(arg) * darg/dx
+    return Binary("*", digamma_arg, darg_dx)
 
 
 # ============================================================================
