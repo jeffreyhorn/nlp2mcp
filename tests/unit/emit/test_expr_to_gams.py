@@ -11,8 +11,10 @@ from src.ir.ast import (
     Binary,
     Call,
     Const,
+    DollarConditional,
     MultiplierRef,
     ParamRef,
+    SetMembershipTest,
     Sum,
     SymbolRef,
     Unary,
@@ -495,3 +497,148 @@ class TestQuoteIndices:
         result = expr_to_gams(VarRef("dat", ("i", '"y"')))
         assert result == 'dat(i,"y")'
         assert '""' not in result
+
+
+@pytest.mark.unit
+class TestDollarConditional:
+    """Test DollarConditional expression conversion.
+
+    Dollar conditional: expr$condition evaluates to expr if condition is
+    non-zero (true), otherwise 0.
+    """
+
+    def test_simple_dollar_conditional(self):
+        """Test simple x$y."""
+        expr = DollarConditional(VarRef("x", ()), VarRef("y", ()))
+        result = expr_to_gams(expr)
+        assert result == "x$y"
+
+    def test_dollar_conditional_with_indexed_vars(self):
+        """Test s(n)$rn(n) from transportation problem."""
+        expr = DollarConditional(
+            VarRef("s", ("n",)),
+            ParamRef("rn", ("n",)),
+        )
+        result = expr_to_gams(expr)
+        assert result == "s(n)$rn(n)"
+
+    def test_dollar_conditional_with_binary_value(self):
+        """Test (e - m)$t from chenery model.
+
+        Binary expressions in the value position need parentheses.
+        """
+        expr = DollarConditional(
+            Binary("-", VarRef("e", ("i",)), VarRef("m", ("i",))),
+            VarRef("t", ("i",)),
+        )
+        result = expr_to_gams(expr)
+        assert result == "(e(i) - m(i))$t(i)"
+
+    def test_dollar_conditional_with_comparison_condition(self):
+        """Test expr$(sig(i) <> 0) from chenery model."""
+        expr = DollarConditional(
+            VarRef("vv", ("i",)),
+            Binary("<>", ParamRef("sig", ("i",)), Const(0)),
+        )
+        result = expr_to_gams(expr)
+        assert result == "vv(i)$sig(i) <> 0"
+
+    def test_dollar_conditional_with_complex_value(self):
+        """Test complex expression like ((a/b + c)**d)$cond."""
+        inner_expr = Binary(
+            "^",
+            Binary("+", Binary("/", VarRef("a", ()), VarRef("b", ())), VarRef("c", ())),
+            VarRef("d", ()),
+        )
+        expr = DollarConditional(inner_expr, VarRef("cond", ()))
+        result = expr_to_gams(expr)
+        assert result == "((a / b + c) ** d)$cond"
+
+    def test_dollar_conditional_with_unary_value(self):
+        """Test unary minus in value position needs parens."""
+        expr = DollarConditional(
+            Unary("-", VarRef("x", ())),
+            VarRef("y", ()),
+        )
+        result = expr_to_gams(expr)
+        # Unary minus becomes ((-1) * x), which is then wrapped for dollar conditional
+        assert result == "(((-1) * x))$y"
+
+    def test_dollar_conditional_const_value(self):
+        """Test 1$cond (constant as value)."""
+        expr = DollarConditional(Const(1), ParamRef("sig", ("i",)))
+        result = expr_to_gams(expr)
+        assert result == "1$sig(i)"
+
+    def test_dollar_conditional_nested(self):
+        """Test nested dollar conditionals: (x$a)$b."""
+        inner = DollarConditional(VarRef("x", ()), VarRef("a", ()))
+        expr = DollarConditional(inner, VarRef("b", ()))
+        result = expr_to_gams(expr)
+        # Inner dollar conditional needs parens
+        assert result == "(x$a)$b"
+
+    def test_dollar_conditional_in_sum(self):
+        """Test sum(i, x(i)$a(i))."""
+        body = DollarConditional(VarRef("x", ("i",)), ParamRef("a", ("i",)))
+        expr = Sum(("i",), body)
+        result = expr_to_gams(expr)
+        assert result == "sum(i, x(i)$a(i))"
+
+    def test_dollar_conditional_addition(self):
+        """Test expr1$cond1 + expr2$cond2 from chenery dl equation.
+
+        This pattern appears in CES production function conditionals.
+        """
+        left = DollarConditional(
+            Binary(
+                "^",
+                Binary("+", VarRef("a", ()), VarRef("b", ())),
+                VarRef("rho", ()),
+            ),
+            Binary("<>", ParamRef("sig", ()), Const(0)),
+        )
+        right = DollarConditional(Const(1), Binary("=", ParamRef("sig", ()), Const(0)))
+        expr = Binary("+", left, right)
+        result = expr_to_gams(expr)
+        assert "((a + b) ** rho)$sig <> 0" in result
+        assert "1$sig = 0" in result
+
+
+@pytest.mark.unit
+class TestSetMembershipTest:
+    """Test SetMembershipTest expression conversion.
+
+    In GAMS, set membership tests appear in conditional contexts like
+    s(n)$rn(n) where rn(n) tests if n is in the set rn.
+    """
+
+    def test_simple_set_membership(self):
+        """Test simple t(i) set membership."""
+        expr = SetMembershipTest("t", (SymbolRef("i"),))
+        result = expr_to_gams(expr)
+        assert result == "t(i)"
+
+    def test_set_membership_multi_index(self):
+        """Test set membership with multiple indices: arc(i,j)."""
+        expr = SetMembershipTest("arc", (SymbolRef("i"), SymbolRef("j")))
+        result = expr_to_gams(expr)
+        assert result == "arc(i,j)"
+
+    def test_set_membership_in_dollar_conditional(self):
+        """Test s(n)$rn(n) pattern from transportation."""
+        expr = DollarConditional(
+            VarRef("s", ("n",)),
+            SetMembershipTest("rn", (SymbolRef("n"),)),
+        )
+        result = expr_to_gams(expr)
+        assert result == "s(n)$rn(n)"
+
+    def test_set_membership_with_expression_in_condition(self):
+        """Test (e - m)$t(i) from chenery model."""
+        expr = DollarConditional(
+            Binary("-", VarRef("e", ("i",)), VarRef("m", ("i",))),
+            SetMembershipTest("t", (SymbolRef("i"),)),
+        )
+        result = expr_to_gams(expr)
+        assert result == "(e(i) - m(i))$t(i)"
