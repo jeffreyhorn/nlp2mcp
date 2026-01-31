@@ -20,9 +20,11 @@ from .ast import (
     Binary,
     Call,
     Const,
+    DollarConditional,
     Expr,
     IndexOffset,
     ParamRef,
+    SetMembershipTest,
     SubsetIndex,
     Sum,
     SymbolRef,
@@ -4141,6 +4143,11 @@ class _ModelBuilder:
         stored and emitted as GAMS assignment statements.
         """
         if isinstance(expr, VarRef):
+            # VarRef itself is a variable reference. Also check if its indices contain
+            # variable references inside IndexOffset expressions (e.g., x(i + y.l)).
+            for idx in expr.indices:
+                if isinstance(idx, IndexOffset) and self._contains_variable_reference(idx):
+                    return True
             return True
         if isinstance(expr, (Binary, Unary)):
             # Check children recursively
@@ -4161,8 +4168,20 @@ class _ModelBuilder:
                 if self._contains_variable_reference(arg):
                     return True
         # ParamRef is OK - it's a parameter, not a variable, but its indices may
-        # contain variable references (e.g., d(i, x.l)), so we need to inspect them.
+        # contain variable references inside IndexOffset (e.g., d(i+x.l, j)).
+        # Note: indices can be strings (e.g., "i", "j") or IndexOffset expressions.
         if isinstance(expr, ParamRef):
+            for idx in expr.indices:
+                if isinstance(idx, IndexOffset) and self._contains_variable_reference(idx):
+                    return True
+        # DollarConditional has value_expr and condition that may contain variable refs
+        if isinstance(expr, DollarConditional):
+            if self._contains_variable_reference(expr.value_expr):
+                return True
+            if self._contains_variable_reference(expr.condition):
+                return True
+        # SetMembershipTest indices may contain variable references
+        if isinstance(expr, SetMembershipTest):
             for idx in expr.indices:
                 if self._contains_variable_reference(idx):
                     return True
