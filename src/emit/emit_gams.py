@@ -7,6 +7,7 @@ GAMS MCP file from a KKT system.
 from src.config import Config
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
+    emit_computed_parameter_assignments,
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
@@ -86,6 +87,12 @@ def emit_gams_mcp(
     params_code = emit_original_parameters(kkt.model_ir)
     if params_code:
         sections.append(params_code)
+        sections.append("")
+
+    # Sprint 17 Day 4: Emit computed parameter assignments
+    computed_params_code = emit_computed_parameter_assignments(kkt.model_ir)
+    if computed_params_code:
+        sections.append(computed_params_code)
         sections.append("")
 
     # Variables (primal + multipliers)

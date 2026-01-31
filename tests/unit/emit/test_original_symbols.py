@@ -11,10 +11,12 @@ Tests verify correct usage of actual IR fields (Finding #3):
 import pytest
 
 from src.emit.original_symbols import (
+    emit_computed_parameter_assignments,
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
 )
+from src.ir.ast import Binary, Call, Const, ParamRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import AliasDef, ParameterDef, SetDef
 
@@ -197,3 +199,118 @@ class TestEmitOriginalParameters:
         assert "Scalars" in result
         assert "alpha /0.1/" in result
         assert "beta /0.2/" in result
+
+
+@pytest.mark.unit
+class TestEmitComputedParameterAssignments:
+    """Test emission of computed parameter assignment statements.
+
+    Sprint 17 Day 4: Tests for the new emit_computed_parameter_assignments function
+    that emits expressions stored in ParameterDef.expressions as GAMS statements.
+    """
+
+    def test_empty_expressions(self):
+        """Test emission with no expressions."""
+        model = ModelIR()
+        result = emit_computed_parameter_assignments(model)
+        assert result == ""
+
+    def test_no_expressions_in_parameters(self):
+        """Test emission when parameters have values but no expressions."""
+        model = ModelIR()
+        model.params["cost"] = ParameterDef(name="cost", domain=("i",), values={("i1",): 10.0})
+        result = emit_computed_parameter_assignments(model)
+        assert result == ""
+
+    def test_indexed_parameter_expression(self):
+        """Test emission of indexed computed parameter like c(i,j) = f*d(i,j)/1000."""
+        model = ModelIR()
+        # Create expression: f * d(i,j) / 1000
+        expr = Binary(
+            "/",
+            Binary("*", ParamRef("f", ()), ParamRef("d", ("i", "j"))),
+            Const(1000.0),
+        )
+        model.params["c"] = ParameterDef(
+            name="c", domain=("i", "j"), expressions={("i", "j"): expr}
+        )
+
+        result = emit_computed_parameter_assignments(model)
+        assert "c(i,j) =" in result
+        assert "f * d(i,j) / 1000" in result
+        assert result.endswith(";")
+
+    def test_parameter_with_function_call(self):
+        """Test emission of parameter with function call like gplus(c) = gibbs(c) + log(...)."""
+        model = ModelIR()
+        # Create expression: gibbs(c) + log(750 * 0.07031)
+        expr = Binary(
+            "+",
+            ParamRef("gibbs", ("c",)),
+            Call("log", (Binary("*", Const(750.0), Const(0.07031)),)),
+        )
+        model.params["gplus"] = ParameterDef(
+            name="gplus", domain=("c",), expressions={("c",): expr}
+        )
+
+        result = emit_computed_parameter_assignments(model)
+        assert "gplus(c) =" in result
+        assert "gibbs(c)" in result
+        assert "log(" in result
+        assert result.endswith(";")
+
+    def test_scalar_expression(self):
+        """Test emission of scalar computed parameter."""
+        model = ModelIR()
+        # Create expression: 2 * pi
+        expr = Binary("*", Const(2.0), ParamRef("pi", ()))
+        model.params["two_pi"] = ParameterDef(name="two_pi", domain=(), expressions={(): expr})
+
+        result = emit_computed_parameter_assignments(model)
+        assert "two_pi =" in result
+        assert "2 * pi" in result
+        assert result.endswith(";")
+
+    def test_multiple_computed_parameters(self):
+        """Test emission with multiple computed parameters."""
+        model = ModelIR()
+        # First parameter
+        expr1 = Binary("*", ParamRef("a", ()), Const(2.0))
+        model.params["double_a"] = ParameterDef(name="double_a", domain=(), expressions={(): expr1})
+        # Second parameter
+        expr2 = Binary("+", ParamRef("b", ("i",)), Const(1.0))
+        model.params["b_plus_one"] = ParameterDef(
+            name="b_plus_one", domain=("i",), expressions={("i",): expr2}
+        )
+
+        result = emit_computed_parameter_assignments(model)
+        assert "double_a =" in result
+        assert "b_plus_one(i) =" in result
+        # Multiple lines
+        assert result.count(";") == 2
+
+    def test_skips_predefined_constants(self):
+        """Test that predefined GAMS constants are skipped."""
+        model = ModelIR()
+        # This shouldn't be emitted since 'pi' is a predefined constant
+        expr = Binary("*", Const(2.0), Const(3.14159))
+        model.params["pi"] = ParameterDef(name="pi", domain=(), expressions={(): expr})
+
+        result = emit_computed_parameter_assignments(model)
+        assert result == ""
+
+    def test_mixed_values_and_expressions(self):
+        """Test parameter with both values and expressions (only expressions emitted)."""
+        model = ModelIR()
+        expr = Binary("+", ParamRef("x", ("i",)), Const(1.0))
+        model.params["y"] = ParameterDef(
+            name="y",
+            domain=("i",),
+            values={("a",): 5.0},  # Static value
+            expressions={("i",): expr},  # Computed expression
+        )
+
+        result = emit_computed_parameter_assignments(model)
+        # Only the expression should be emitted
+        assert "y(i) =" in result
+        assert "x(i) + 1" in result
