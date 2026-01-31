@@ -21,8 +21,10 @@ from .ast import (
     Call,
     Const,
     DollarConditional,
+    EquationRef,
     Expr,
     IndexOffset,
+    MultiplierRef,
     ParamRef,
     SetMembershipTest,
     SubsetIndex,
@@ -4185,6 +4187,9 @@ class _ModelBuilder:
             for idx in expr.indices:
                 if self._contains_variable_reference(idx):
                     return True
+        # EquationRef (eq.m, eq.l) and MultiplierRef are runtime values like variables
+        if isinstance(expr, (EquationRef, MultiplierRef)):
+            return True
         return False
 
     def _extract_constant(self, expr: Expr, context: str) -> float:

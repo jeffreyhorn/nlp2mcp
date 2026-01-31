@@ -268,7 +268,7 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
             expr_str = expr_to_gams(expr)
 
             # Format the LHS with indices
-            if key_tuple and key_tuple != ():
+            if key_tuple:
                 # Indexed parameter: c(i,j) = expr
                 index_str = ",".join(key_tuple)
                 lines.append(f"{param_name}({index_str}) = {expr_str};")
