@@ -93,7 +93,11 @@ python scripts/gamslib/run_full_test.py --json
 **Command:**
 ```bash
 # Edit pyproject.toml manually or use version script if available
+# macOS / BSD:
 sed -i '' 's/version = "1.0.0"/version = "1.1.0"/' pyproject.toml
+
+# GNU/Linux:
+sed -i 's/version = "1.0.0"/version = "1.1.0"/' pyproject.toml
 ```
 
 **Verification:**
