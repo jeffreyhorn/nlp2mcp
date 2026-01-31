@@ -25,13 +25,13 @@ Inventoried all 497 documentation files and identified gaps for v1.1.0 release. 
 
 | Category | Files | Status |
 |----------|-------|--------|
-| Planning docs | 280 | Complete |
+| Planning docs | 281 | Complete |
 | Issue tracking | 115 | Complete |
 | Research docs | 26 | Complete |
 | User guides | 2 | Current |
 | Testing docs | 10 | Current |
 | Other | 64 | Mixed |
-| **Total** | **497** | N/A |
+| **Total** | **498** | N/A |
 
 #### Gap Analysis
 

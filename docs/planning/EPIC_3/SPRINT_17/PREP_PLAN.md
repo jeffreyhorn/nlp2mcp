@@ -443,7 +443,7 @@ See: [PROJECT_PLAN.md](../PROJECT_PLAN.md) § "Sprint 17 - Documentation & Relea
 See: [DOCUMENTATION_PLAN.md](./DOCUMENTATION_PLAN.md) for complete inventory and gap analysis
 
 #### What Was Done
-1. Scanned all 30 docs directories (497 total markdown files)
+1. Scanned all 30 docs directories (498 total markdown files)
 2. Assessed completeness of user-facing documentation
 3. Identified 9 gaps (3 P0, 3 P1, 3 P2)
 4. Prioritized documentation tasks
@@ -453,7 +453,7 @@ See: [DOCUMENTATION_PLAN.md](./DOCUMENTATION_PLAN.md) for complete inventory and
 - Created `docs/planning/EPIC_3/SPRINT_17/DOCUMENTATION_PLAN.md`
 
 #### Result
-- **497 documentation files** inventoried across 30 directories
+- **498 markdown files** inventoried across 30 directories
 - **User docs are comprehensive** - USER_GUIDE.md, FAQ.md, TROUBLESHOOTING.md all exist
 - **GAMSLIB docs are strong** - GAMSLIB_TESTING.md and GAMSLIB_USAGE.md are complete
 - **Main gaps:** Outdated version refs, missing v1.1.0 release notes, DOCUMENTATION_INDEX.md needs update
