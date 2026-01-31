@@ -64,18 +64,18 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 ## Summary Statistics
 
 **Total Unknowns:** 27  
-**Verified:** 24 (89%)  
+**Verified:** 26 (96%)  
 **Partially Verified:** 0 (0%)  
 **Deferred:** 1 (4%)  
-**Remaining:** 2 (7%)
+**Remaining:** 0 (0%)
 
 _Note: Percentages use nearest-integer rounding and may sum to 101% due to rounding._
 
 **By Priority:**
 - Critical: 4 (15%) - 4 verified
-- High: 8 (30%) - 8 verified
-- Medium: 12 (44%) - 11 verified, 1 deferred
-- Low: 3 (11%) - 1 verified, 2 remaining
+- High: 8 (30%) - 7 verified, 1 deferred
+- Medium: 12 (44%) - 12 verified
+- Low: 3 (11%) - 3 verified
 
 **By Category:**
 - Category 1 (Translation Improvements): 7 unknowns
