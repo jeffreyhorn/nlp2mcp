@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Prep Task 6: Solve Failure Investigation Plan - 2026-01-30
+
+**Branch:** `planning/sprint17-task6`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created investigation plan for solve failures and assessed 80% solve target feasibility. Key finding: **80% target is achievable and likely exceeded** (90%+ expected) because 8/10 failures are fixable emit_gams.py bugs.
+
+#### Deliverables
+
+- `docs/planning/EPIC_3/SPRINT_17/SOLVE_INVESTIGATION_PLAN.md` - Complete solve failure investigation plan
+- Updated `KNOWN_UNKNOWNS.md` with 3 verified unknowns (2.2, 2.3, 2.5)
+- Updated `PREP_PLAN.md` with Task 6 status COMPLETE
+
+#### Solve Failure Breakdown (10 models)
+
+| Category | Count | Root Cause | Fixable |
+|----------|-------|------------|---------|
+| path_syntax_error | 8 | emit_gams.py bugs (5 patterns) | Yes |
+| model_infeasible | 1 | TBD (investigation needed) | Maybe |
+| path_solve_terminated | 1 | TBD (investigation needed) | Maybe |
+
+#### Key Findings
+
+1. **PATH solver is NOT the limiting factor** - 8/10 failures occur at GAMS compilation, before PATH runs
+2. **All major failures are fixable** - 5 distinct emit_gams.py bug patterns identified
+3. **Current tolerances appropriate** - rtol=1e-6, atol=1e-8 match industry standards
+4. **11 models solve successfully** - PATH integration proven working
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 2.2 | Verified | 8 path_syntax_error (emit_gams.py bugs), 1 infeasible, 1 terminated |
+| 2.3 | Verified | PATH config not limiting factor; retry strategy low priority |
+| 2.5 | Verified | 80% achievable; 90%+ expected after emit_gams.py fixes |
+
+---
+
 ### Sprint 17 Prep Task 5: Lexer/Parser Improvement Plan - 2026-01-29
 
 **Branch:** `planning/sprint17-task5`  

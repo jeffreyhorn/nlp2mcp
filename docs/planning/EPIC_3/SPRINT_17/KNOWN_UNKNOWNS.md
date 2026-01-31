@@ -64,17 +64,17 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 ## Summary Statistics
 
 **Total Unknowns:** 27  
-**Verified:** 18 (67%)  
+**Verified:** 21 (78%)  
 **Partially Verified:** 0 (0%)  
 **Deferred:** 1 (4%)  
-**Remaining:** 8 (30%)
+**Remaining:** 5 (19%)
 
 _Note: Percentages use nearest-integer rounding and may sum to 101% due to rounding._
 
 **By Priority:**
 - Critical: 4 (15%) - 4 verified
-- High: 8 (30%) - 7 verified, 1 remaining
-- Medium: 12 (44%) - 6 verified, 1 deferred, 5 remaining
+- High: 8 (30%) - 8 verified
+- Medium: 12 (44%) - 8 verified, 1 deferred, 3 remaining
 - Low: 3 (11%) - 1 verified, 2 remaining
 
 **By Category:**
@@ -694,7 +694,26 @@ cat tests/output/pipeline_results.json | jq '.models[] | select(.solve_outcome !
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** The 10 solve failures break down into three categories:
+
+| Category | Count | Root Cause | Fixable |
+|----------|-------|------------|---------|
+| path_syntax_error | 8 | emit_gams.py bugs (5 distinct patterns) | Yes |
+| model_infeasible | 1 | TBD (needs investigation) | Maybe |
+| path_solve_terminated | 1 | TBD (needs investigation) | Maybe |
+
+**Specific root causes for path_syntax_error (8 models):**
+1. **Missing Table data emission** (ajax, least) - `src/emit/original_symbols.py:130-185`
+2. **Missing computed parameter assignments** (chem, trnsport) - `src/emit/original_symbols.py:130-185`
+3. **Subset relationships not preserved** (dispatch, port) - `src/emit/original_symbols.py:63-89`
+4. **GAMS reserved words not quoted** (ps2_f_inf) - `src/emit/original_symbols.py`, `src/emit/expr_to_gams.py`
+5. **Set element references not quoted** (sample) - `src/emit/expr_to_gams.py`
+
+**Key insight:** 80% of failures are fixable code generation bugs in emit_gams.py, not solver or model issues. The PATH solver is never invoked for these models because GAMS compilation fails first.
+
+**See:** [SOLVE_INVESTIGATION_PLAN.md](./SOLVE_INVESTIGATION_PLAN.md) for complete analysis
 
 ---
 
@@ -741,7 +760,36 @@ grep -r "path\|PATH" src/solve/*.py
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** PATH solver configuration is **not the limiting factor** for current failures.
+
+**Current configuration (from `scripts/gamslib/test_solve.py`):**
+```python
+cmd = [gams_exe, str(mcp_path), f"o={lst_path}", "lo=3", f"reslim={timeout}"]
+```
+- Time limit: 60 seconds (`reslim=60`)
+- Iteration limit: not explicitly set (GAMS/PATH defaults)
+- Tolerances: not explicitly set (GAMS/PATH defaults)
+- No custom pivoting or crash strategies explicitly configured
+
+**Available PATH options researched:**
+| Option | Current | Available Settings | Potential Impact |
+|--------|---------|-------------------|------------------|
+| `iterlim` | Not set (PATH default) | 1-1000000 | More iterations for difficult problems |
+| `convergence_tolerance` | Not set (PATH default) | 1e-4 to 1e-10 | Trade accuracy for convergence |
+| `crash_method` | Not set (PATH default) | 0-4 | Different starting basis strategies |
+| `nms` | Not set (PATH default) | 0-1 | Non-monotone stabilization |
+| `proximal_perturbation` | Not set (PATH default) | Float | Perturbation for singular problems |
+
+**Impact assessment:**
+- For 8 path_syntax_error models: **No impact** (fail before PATH runs)
+- For 1 model_infeasible: **Possible** benefit from relaxed tolerance
+- For 1 path_solve_terminated: **Possible** benefit from increased iterations
+
+**Recommendation:** PATH configuration improvements are low priority. Focus on emit_gams.py fixes first. Implement retry strategy after code generation bugs are fixed, expected to help 0-1 additional models.
+
+**See:** [SOLVE_INVESTIGATION_PLAN.md](./SOLVE_INVESTIGATION_PLAN.md) Section 3 for detailed configuration analysis
 
 ---
 
@@ -843,7 +891,37 @@ The 80% solve success target is achievable because remaining failures are primar
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** Yes, 80% solve success is **achievable and will likely be exceeded**.
+
+**Assessment breakdown:**
+
+| Models | Count | After Fixes | Notes |
+|--------|-------|-------------|-------|
+| Currently solving | 11 | 11 | Maintained |
+| path_syntax_error (fixable) | 8 | +8 | emit_gams.py fixes |
+| model_infeasible | 1 | +0-1 | Investigation needed |
+| path_solve_terminated | 1 | +0-1 | Investigation needed |
+| **Total** | **21** | **19-21** | **90-100%** |
+
+**Why 80% is achievable:**
+1. **No failures due to inherent model complexity** - All 8 path_syntax_error failures are emit_gams.py bugs
+2. **All major failures have identified, fixable root causes** - 5 distinct code generation patterns
+3. **PATH solver integration is proven** - 11 models solve successfully, demonstrating working infrastructure
+4. **Conservative math:** Even worst case (2 unfixable models) yields 19/21 = 90% success
+
+**Recommended target adjustment:**
+- Minimum: 80% (17/21) - conservative, easily met with emit_gams.py fixes
+- Target: 85-90% (18-19/21) - realistic after Phase 1 fixes
+- Stretch: 95-100% (20-21/21) - optimistic, requires investigation phase success
+
+**Risk assessment:**
+- Low risk: emit_gams.py fixes are well-defined with clear patterns
+- Medium risk: 2 non-syntax-error failures may prove inherent
+- Even worst case exceeds 80% target
+
+**See:** [SOLVE_INVESTIGATION_PLAN.md](./SOLVE_INVESTIGATION_PLAN.md) Section 6 for detailed feasibility analysis
 
 ---
 
