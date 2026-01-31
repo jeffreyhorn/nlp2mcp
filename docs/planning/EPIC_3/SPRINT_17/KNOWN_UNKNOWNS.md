@@ -1267,10 +1267,10 @@ Development team
 **Recommendation:** For Sprint 17 planning and reporting, treat 55% parse as the revised working target, with 70% parse (≥112 models) retained as the aspirational/stretch goal as stated in the Executive Summary targets.
 
 **Sprint 17 Schedule Integration (Task 9):**
-- Days 6-8 allocated for parse improvements (10h)
-- Focus on Phase 1 quick wins: reserved words, display continuation, solve keywords
+- Days 6-8 allocated for parse improvements (12h total)
+- Focus on Phase 1 quick wins: reserved words, display continuation, solve keywords, acronym, curly braces
 - Expected outcome: +26-29 models parsing (~48% parse rate)
-- Phase 2 and Phase 3 deferred to Sprint 18
+- Remaining complex fixes (Phase 2/3 from LEXER_IMPROVEMENT_PLAN.md) deferred to Sprint 18
 
 **See:** LEXER_IMPROVEMENT_PLAN.md Section 3 for detailed fix plan, SPRINT_LOG.md for schedule
 
