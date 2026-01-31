@@ -17,11 +17,12 @@ from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 
 # Regex pattern for valid GAMS set element identifiers
-# Allows: letters, digits, underscores, hyphens, dots (for tuples like a.b)
+# Allows: letters, digits, underscores, hyphens, dots (for tuples like a.b), plus signs
 # Must start with letter or digit
 # Note: Dots are allowed because they represent tuple notation in GAMS (e.g., upper.egypt).
-# Dots alone cannot break out of the /.../ block - that requires / or ; which are blocked.
-_VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.]*$")
+# Plus signs are allowed because GAMS uses them in composite names (e.g., food+agr, pulp+paper).
+# These characters cannot break out of the /.../ block - that requires / or ; which are blocked.
+_VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.+]*$")
 
 
 def _sanitize_set_element(element: str) -> str:
@@ -55,7 +56,7 @@ def _sanitize_set_element(element: str) -> str:
         raise ValueError(
             f"Set element '{element}' contains invalid characters. "
             f"Set elements must start with a letter or digit and contain only "
-            f"letters, digits, underscores, hyphens, and dots."
+            f"letters, digits, underscores, hyphens, dots, and plus signs."
         )
 
     return element
