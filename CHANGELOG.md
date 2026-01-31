@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Prep Task 9: Plan Sprint 17 Detailed Schedule - 2026-01-30
+
+**Branch:** `planning/sprint17-task9`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created detailed 10-day schedule for Sprint 17 and verified unknowns 3.5-3.6 (cascade effects). Key finding: **All 9 prep tasks complete** - Sprint 17 ready to begin.
+
+#### Deliverables
+
+- `docs/planning/EPIC_3/SPRINT_17/SPRINT_LOG.md` - Complete 10-day schedule
+- Updated `KNOWN_UNKNOWNS.md` with 2 verified unknowns (3.5, 3.6) - now 89% complete (24/27)
+- Updated `PREP_PLAN.md` with Task 9 status COMPLETE and prep phase complete
+
+#### Schedule Summary
+
+| Phase | Days | Focus | Hours |
+|-------|------|-------|-------|
+| Phase 1 | 1-3 | Translation Quick Wins | 12h |
+| Phase 2 | 4-5 | emit_gams.py Fixes | 8h |
+| Phase 3 | 6-8 | Parse Improvements | 10h |
+| Phase 4 | 9-10 | Documentation & Release | 6h |
+| **Total** | **10** | | **36h** |
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 3.5 | Verified | 70% parse is stretch goal; 55% (88 models) realistic target |
+| 3.6 | Verified | Cascade effects factored in; ~40% of new parse → translate |
+
+#### Key Scheduling Decisions
+
+1. **Translation before Parse** - Fixes benefit newly-parsing models
+2. **emit_gams.py before Parse** - Solve improvements ready for all models
+3. **5 checkpoints** - CP1-CP5 for progress verification
+4. **4h contingency** - Buffer on Day 8 for blockers
+
+#### Prep Phase Complete
+
+All 9 prep tasks complete. Sprint 17 ready to begin:
+- 24/27 unknowns verified (89%)
+- 36h of work scheduled across 10 days
+- v1.1.0 release targeted for Day 10
+
+---
+
 ### Sprint 17 Prep Task 8: Release Checklist - 2026-01-30
 
 **Branch:** `planning/sprint17-task8`  

@@ -64,17 +64,17 @@ This document identifies all assumptions and unknowns for Sprint 17 features **b
 ## Summary Statistics
 
 **Total Unknowns:** 27  
-**Verified:** 23 (85%)  
+**Verified:** 24 (89%)  
 **Partially Verified:** 0 (0%)  
 **Deferred:** 1 (4%)  
-**Remaining:** 3 (11%)
+**Remaining:** 2 (7%)
 
 _Note: Percentages use nearest-integer rounding and may sum to 101% due to rounding._
 
 **By Priority:**
 - Critical: 4 (15%) - 4 verified
 - High: 8 (30%) - 8 verified
-- Medium: 12 (44%) - 10 verified, 1 deferred, 1 remaining
+- Medium: 12 (44%) - 11 verified, 1 deferred
 - Low: 3 (11%) - 1 verified, 2 remaining
 
 **By Category:**
@@ -1266,7 +1266,13 @@ Development team
 
 **Recommendation:** For Sprint 17 planning and reporting, treat 55% parse as the revised working target, with 70% parse (≥112 models) retained as the aspirational/stretch goal as stated in the Executive Summary targets.
 
-**See:** LEXER_IMPROVEMENT_PLAN.md Section 3 for detailed fix plan
+**Sprint 17 Schedule Integration (Task 9):**
+- Days 6-8 allocated for parse improvements (10h)
+- Focus on Phase 1 quick wins: reserved words, display continuation, solve keywords
+- Expected outcome: +26-29 models parsing (~48% parse rate)
+- Phase 2 and Phase 3 deferred to Sprint 18
+
+**See:** LEXER_IMPROVEMENT_PLAN.md Section 3 for detailed fix plan, SPRINT_LOG.md for schedule
 
 ---
 
@@ -1310,7 +1316,50 @@ As more models parse successfully, some will have new translation or solve issue
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Finding:** Yes, parse improvements will reveal new translation and solve issues, but the overall trajectory remains positive. Historical data and prep analysis provide cascade projections.
+
+**Historical Cascade Analysis (Sprint 16):**
+
+| Stage | Before | After | New Models | Cascade Rate |
+|-------|--------|-------|------------|--------------|
+| Parse | 34 | 48 | +14 | N/A |
+| Translate | 17/34 (50%) | 21/48 (44%) | +4 of 14 | 29% |
+| Solve | 3/17 (18%) | 11/21 (52%) | +8 | 67% (of translated) |
+
+**Key Insight:** Sprint 16 saw:
+- Only 29% of newly-parsing models translated successfully
+- Translate *rate* dropped (50% → 44%) as harder models entered the pool
+- However, absolute translate count increased (+4 models)
+- Solve success improved significantly due to emit_gams.py fixes
+
+**Sprint 17 Cascade Projection:**
+
+| Stage | Baseline | After Fixes | New Models | Expected Cascade |
+|-------|----------|-------------|------------|------------------|
+| Parse | 48 | 77 | +29 | N/A |
+| Translate | 21/48 | ~33/77 | +12 | ~40% of new |
+| Solve | 11/21 | ~17/33 | +6 | ~50% of new translated |
+
+**Projection Methodology:**
+1. **Parse → Translate:** Based on Sprint 16 cascade (29%) plus translation fixes (+11), expect ~40% of newly-parsing models to translate
+2. **Translate → Solve:** Based on emit_gams.py fixes (+8) plus cascade, expect ~50% of new translations to solve
+3. **Rate vs Count:** Rates may appear to drop while absolute counts increase
+
+**Impact on Sprint 17 Metrics:**
+- Translate rate may drop from 44% to ~43% (more models in pool)
+- Solve rate should stay stable or improve (emit_gams.py fixes)
+- Full pipeline count more meaningful than stage-by-stage rates
+
+**Recommendation:** Track both rates and absolute counts. Focus on full pipeline success (models that parse, translate, AND solve) as the key metric.
+
+**Schedule Integration:**
+- Translation fixes scheduled before parse improvements (Days 1-3)
+- This ensures newly-parsing models benefit from translation fixes
+- emit_gams.py fixes (Days 4-5) improve solve success for all models
+
+**See:** SPRINT_LOG.md for schedule, TRANSLATION_ANALYSIS.md Section 4
 
 ---
 
