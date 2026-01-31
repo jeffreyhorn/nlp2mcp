@@ -463,21 +463,21 @@ class TestSqrtDifferentiation:
 class TestGammaDifferentiation:
     """Tests for gamma(x) differentiation.
 
-    The gamma function derivative uses the digamma (psi) function:
-    d(gamma(x))/dx = gamma(x) * digamma(x)
+    The gamma function derivative uses the psi (digamma) function:
+    d(gamma(x))/dx = gamma(x) * psi(x)
     """
 
     def test_gamma_variable(self):
-        """Test d(gamma(x))/dx = gamma(x) * digamma(x)"""
+        """Test d(gamma(x))/dx = gamma(x) * psi(x)"""
         # gamma(x)
         expr = Call("gamma", (VarRef("x"),))
         result = differentiate_expr(expr, "x")
 
-        # Should be: gamma(x) * digamma(x) * 1
+        # Should be: gamma(x) * psi(x) * 1
         assert isinstance(result, Binary)
         assert result.op == "*"
 
-        # Left should be gamma(x) * digamma(x)
+        # Left should be gamma(x) * psi(x)
         assert isinstance(result.left, Binary)
         assert result.left.op == "*"
 
@@ -485,7 +485,7 @@ class TestGammaDifferentiation:
         assert result.left.left.func == "gamma"
 
         assert isinstance(result.left.right, Call)
-        assert result.left.right.func == "digamma"
+        assert result.left.right.func == "psi"
 
         # Right should be dx/dx = 1
         assert isinstance(result.right, Const)
@@ -497,7 +497,7 @@ class TestGammaDifferentiation:
         expr = Call("gamma", (Const(5.0),))
         result = differentiate_expr(expr, "x")
 
-        # Should be: gamma(5) * digamma(5) * 0
+        # Should be: gamma(5) * psi(5) * 0
         assert isinstance(result, Binary)
         assert result.op == "*"
 
@@ -510,7 +510,7 @@ class TestGammaDifferentiation:
         expr = Call("gamma", (VarRef("y"),))
         result = differentiate_expr(expr, "x")
 
-        # Should be: gamma(y) * digamma(y) * 0
+        # Should be: gamma(y) * psi(y) * 0
         assert isinstance(result, Binary)
         assert result.op == "*"
 
@@ -518,17 +518,17 @@ class TestGammaDifferentiation:
         assert result.right.value == 0.0
 
     def test_gamma_chain_rule(self):
-        """Test d(gamma(x^2))/dx = gamma(x^2) * digamma(x^2) * 2x"""
+        """Test d(gamma(x^2))/dx = gamma(x^2) * psi(x^2) * 2x"""
         # gamma(x^2)
         inner = Call("power", (VarRef("x"), Const(2.0)))
         expr = Call("gamma", (inner,))
         result = differentiate_expr(expr, "x")
 
-        # Should be: gamma(x^2) * digamma(x^2) * d(x^2)/dx
+        # Should be: gamma(x^2) * psi(x^2) * d(x^2)/dx
         assert isinstance(result, Binary)
         assert result.op == "*"
 
-        # Left should be gamma(x^2) * digamma(x^2)
+        # Left should be gamma(x^2) * psi(x^2)
         assert isinstance(result.left, Binary)
         assert result.left.op == "*"
 
@@ -536,7 +536,7 @@ class TestGammaDifferentiation:
         assert result.left.left.func == "gamma"
 
         assert isinstance(result.left.right, Call)
-        assert result.left.right.func == "digamma"
+        assert result.left.right.func == "psi"
 
         # Right should be d(x^2)/dx (not 0 or 1)
         assert isinstance(result.right, Binary)
@@ -548,17 +548,17 @@ class TestGammaDifferentiation:
         expr = Call("gamma", (inner,))
         result = differentiate_expr(expr, "x")
 
-        # Should be: gamma(2*x + 1) * digamma(2*x + 1) * d(2*x + 1)/dx
+        # Should be: gamma(2*x + 1) * psi(2*x + 1) * d(2*x + 1)/dx
         assert isinstance(result, Binary)
         assert result.op == "*"
 
-        # Left should be gamma(...) * digamma(...)
+        # Left should be gamma(...) * psi(...)
         assert isinstance(result.left, Binary)
         assert result.left.op == "*"
         assert isinstance(result.left.left, Call)
         assert result.left.left.func == "gamma"
         assert isinstance(result.left.right, Call)
-        assert result.left.right.func == "digamma"
+        assert result.left.right.func == "psi"
 
 
 # ============================================================================
@@ -570,23 +570,23 @@ class TestGammaDifferentiation:
 class TestLogGammaDifferentiation:
     """Tests for loggamma(x) differentiation.
 
-    The loggamma function is ln(gamma(x)), and its derivative is the digamma function:
-    d(loggamma(x))/dx = digamma(x)
+    The loggamma function is ln(gamma(x)), and its derivative is the psi function:
+    d(loggamma(x))/dx = psi(x)
     """
 
     def test_loggamma_variable(self):
-        """Test d(loggamma(x))/dx = digamma(x)"""
+        """Test d(loggamma(x))/dx = psi(x)"""
         # loggamma(x)
         expr = Call("loggamma", (VarRef("x"),))
         result = differentiate_expr(expr, "x")
 
-        # Should be: digamma(x) * 1
+        # Should be: psi(x) * 1
         assert isinstance(result, Binary)
         assert result.op == "*"
 
-        # Left should be digamma(x)
+        # Left should be psi(x)
         assert isinstance(result.left, Call)
-        assert result.left.func == "digamma"
+        assert result.left.func == "psi"
 
         # Right should be dx/dx = 1
         assert isinstance(result.right, Const)
@@ -598,7 +598,7 @@ class TestLogGammaDifferentiation:
         expr = Call("loggamma", (Const(5.0),))
         result = differentiate_expr(expr, "x")
 
-        # Should be: digamma(5) * 0
+        # Should be: psi(5) * 0
         assert isinstance(result, Binary)
         assert result.op == "*"
 
@@ -611,7 +611,7 @@ class TestLogGammaDifferentiation:
         expr = Call("loggamma", (VarRef("y"),))
         result = differentiate_expr(expr, "x")
 
-        # Should be: digamma(y) * 0
+        # Should be: psi(y) * 0
         assert isinstance(result, Binary)
         assert result.op == "*"
 
@@ -619,19 +619,19 @@ class TestLogGammaDifferentiation:
         assert result.right.value == 0.0
 
     def test_loggamma_chain_rule(self):
-        """Test d(loggamma(x^2))/dx = digamma(x^2) * 2x"""
+        """Test d(loggamma(x^2))/dx = psi(x^2) * 2x"""
         # loggamma(x^2)
         inner = Call("power", (VarRef("x"), Const(2.0)))
         expr = Call("loggamma", (inner,))
         result = differentiate_expr(expr, "x")
 
-        # Should be: digamma(x^2) * d(x^2)/dx
+        # Should be: psi(x^2) * d(x^2)/dx
         assert isinstance(result, Binary)
         assert result.op == "*"
 
-        # Left should be digamma(x^2)
+        # Left should be psi(x^2)
         assert isinstance(result.left, Call)
-        assert result.left.func == "digamma"
+        assert result.left.func == "psi"
 
         # Right should be d(x^2)/dx (not 0 or 1)
         assert isinstance(result.right, Binary)
@@ -643,13 +643,13 @@ class TestLogGammaDifferentiation:
         expr = Call("loggamma", (inner,))
         result = differentiate_expr(expr, "x")
 
-        # Should be: digamma(2*x + 1) * d(2*x + 1)/dx
+        # Should be: psi(2*x + 1) * d(2*x + 1)/dx
         assert isinstance(result, Binary)
         assert result.op == "*"
 
-        # Left should be digamma(2*x + 1)
+        # Left should be psi(2*x + 1)
         assert isinstance(result.left, Call)
-        assert result.left.func == "digamma"
+        assert result.left.func == "psi"
 
 
 # ============================================================================
