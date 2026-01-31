@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Inventoried all 497 documentation files and identified gaps for v1.1.0 release. Key finding: **User documentation is comprehensive** - main gaps are version updates and release notes.
+Inventoried all 498 markdown files and identified gaps for v1.1.0 release. Key finding: **User documentation is comprehensive** - main gaps are version updates and release notes.
 
 #### Deliverables
 

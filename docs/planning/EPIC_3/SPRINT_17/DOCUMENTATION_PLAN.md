@@ -49,7 +49,7 @@ This document provides a comprehensive inventory of the 498 documentation files 
 
 **Total: 498 markdown files**
 
-_Note: "Other subdirs" includes benchmarks, blockers, ci, emit, ir, kkt, migration, process, releases, status, validation (1 file each)._
+_Note: "Other subdirs" includes benchmarks, blockers, ci, emit, ir, kkt, migration, process, releases, status, validation (1 markdown file each). The `docs/schemas/` directory contains JSON schema files only (no markdown) and is excluded from this count._
 
 ---
 
@@ -283,7 +283,7 @@ docs/
 ├── release/            (3 files) - Release docs
 ├── releases/           (1 file)  - Release notes
 ├── research/           (26 files) - Research docs
-├── schemas/            (0 files) - Schema docs
+├── schemas/            (0 markdown files) - JSON schema files only
 ├── sprints/            (4 files) - Sprint summaries
 ├── status/             (1 file)  - Status dashboard
 ├── testing/            (10 files) - Testing docs

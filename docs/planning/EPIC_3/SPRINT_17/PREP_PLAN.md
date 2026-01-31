@@ -469,7 +469,7 @@ See: [DOCUMENTATION_PLAN.md](./DOCUMENTATION_PLAN.md) for complete inventory and
 - `docs/planning/EPIC_3/SPRINT_17/DOCUMENTATION_PLAN.md`
 
 #### Acceptance Criteria
-- [x] Complete inventory of existing docs (497 files)
+- [x] Complete inventory of existing docs (498 markdown files)
 - [x] Clear gap identification (9 gaps across P0/P1/P2)
 - [x] Actionable documentation task list with day allocation
 
