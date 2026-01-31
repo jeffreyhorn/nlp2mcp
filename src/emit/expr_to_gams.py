@@ -12,11 +12,13 @@ from src.ir.ast import (
     Binary,
     Call,
     Const,
+    DollarConditional,
     EquationRef,
     Expr,
     IndexOffset,
     MultiplierRef,
     ParamRef,
+    SetMembershipTest,
     Sum,
     SymbolRef,
     Unary,
@@ -306,6 +308,24 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
             args_str = ", ".join(expr_to_gams(arg) for arg in args)
             return f"{func}({args_str})"
 
+        case DollarConditional(value_expr, condition):
+            # Dollar conditional: value_expr$condition
+            # Evaluates to value_expr if condition is non-zero, otherwise 0
+            value_str = expr_to_gams(value_expr)
+            condition_str = expr_to_gams(condition)
+            # Parenthesize value if it's a complex expression to avoid precedence issues
+            if isinstance(value_expr, (Binary, Unary, DollarConditional)):
+                value_str = f"({value_str})"
+            return f"{value_str}${condition_str}"
+
+        case SetMembershipTest(set_name, indices):
+            # Set membership test: set_name(indices)
+            # In GAMS conditional context, tests if index combination is in set
+            if indices:
+                indices_str = ",".join(expr_to_gams(idx) for idx in indices)
+                return f"{set_name}({indices_str})"
+            return set_name
+
         case _:
             # Fallback for unknown node types
             raise ValueError(f"Unknown expression type: {type(expr).__name__}")
@@ -380,6 +400,14 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
                 for arg in args:
                     _collect(arg)
 
+            case DollarConditional(value_expr, condition):
+                _collect(value_expr)
+                _collect(condition)
+
+            case SetMembershipTest() as smt:
+                for smt_idx in smt.indices:
+                    _collect(smt_idx)
+
             case VarRef() | ParamRef() | MultiplierRef() | EquationRef() | Const() | SymbolRef():
                 # Leaf nodes - no nested sums
                 pass
@@ -451,6 +479,15 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
             case Call(func, args):
                 new_args = tuple(_resolve(arg, active_aliases) for arg in args)
                 return Call(func, new_args)
+
+            case DollarConditional(value_expr, condition):
+                new_value = _resolve(value_expr, active_aliases)
+                new_condition = _resolve(condition, active_aliases)
+                return DollarConditional(new_value, new_condition)
+
+            case SetMembershipTest(set_name, indices):
+                new_indices = tuple(_resolve(idx, active_aliases) for idx in indices)
+                return SetMembershipTest(set_name, new_indices)
 
             case VarRef() as var_ref:
                 if var_ref.indices and active_aliases:
