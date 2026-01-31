@@ -3,7 +3,7 @@
 **Sprint:** 17 (Weeks 9-10)  
 **Goal:** Translation/Solve Improvements, Final Assessment & Release v1.1.0  
 **Created:** 2026-01-28  
-**Status:** Planning
+**Status:** Complete - Ready for Sprint 17
 
 ---
 
@@ -544,11 +544,11 @@ A comprehensive checklist covering:
 
 ### Task 9: Plan Sprint 17 Detailed Schedule
 
-**Status:** Not Started  
+**Status:** COMPLETE  
 **Priority:** P0 - Critical  
 **Estimated Time:** 2 hours  
 **Deadline:** Before Sprint 17 Day 1  
-**Owner:** TBD  
+**Owner:** N/A (completed)  
 **Dependencies:** Tasks 1-8  
 **Unknowns Verified:** 3.5 (finalized), 3.6
 
@@ -556,7 +556,7 @@ A comprehensive checklist covering:
 Create detailed day-by-day schedule for Sprint 17 based on prep findings.
 
 #### Why This Matters
-Sprint 17 is ambitious with 26-34 hours of planned work. A detailed schedule ensures efficient execution and proper prioritization.
+Sprint 17 is ambitious (originally estimated at 26-34 hours; finalized at 42h after detailed analysis). A detailed schedule ensures efficient execution and proper prioritization.
 
 #### Background
 Sprint 17 components from PROJECT_PLAN.md:
@@ -566,42 +566,48 @@ Sprint 17 components from PROJECT_PLAN.md:
 - Documentation & Release (~6-8h)
 
 See: [PROJECT_PLAN.md](../PROJECT_PLAN.md) § "Sprint 17"
+See: [SPRINT_LOG.md](./SPRINT_LOG.md) for the complete schedule
 
-#### What Needs to Be Done
-1. Review all prep task findings
-2. Prioritize Sprint 17 work based on discoveries
-3. Allocate tasks to sprint days
-4. Identify dependencies and sequencing
-5. Build in contingency for unknowns
-6. Create SPRINT_LOG.md template
+#### What Was Done
+1. Reviewed all prep task findings (Tasks 1-8)
+2. Prioritized Sprint 17 work based on ROI analysis
+3. Created 10-day schedule with 4 phases
+4. Identified dependencies and sequencing
+5. Built in 4h contingency buffer
+6. Created SPRINT_LOG.md with day-by-day plan
 
 #### Changes
-- Create `docs/planning/EPIC_3/SPRINT_17/SPRINT_LOG.md` (template)
+- Created `docs/planning/EPIC_3/SPRINT_17/SPRINT_SCHEDULE.md`
+- Updated KNOWN_UNKNOWNS.md with final verification for Unknowns 3.5, 3.6
 
 #### Result
 A detailed schedule with:
-- Day-by-day task allocation
-- Clear deliverables per day
-- Dependencies mapped
-- Contingency buffers
+- Phase 1 (Days 1-3): Translation quick wins (12h)
+- Phase 2 (Days 4-5): emit_gams.py fixes (9h)
+- Phase 3 (Days 6-8): Parse improvements (12h)
+- Phase 4 (Days 9-10): Documentation & Release (9h)
+- Total: 42h (38h core work + 4h contingency buffer)
+- 5 checkpoints for progress verification
+
+_Note: Final total (42h) supersedes the earlier 26-34h estimate from PROJECT_PLAN.md, which was a pre-analysis projection._
 
 #### Verification
-- [ ] All Sprint 17 work items scheduled
-- [ ] Dependencies respected
-- [ ] Total hours realistic (26-34h)
-- [ ] Contingency included
-- [ ] Unknowns 3.5, 3.6 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All Sprint 17 work items scheduled
+- [x] Dependencies respected
+- [x] Total hours realistic (42h = 38h core + 4h contingency)
+- [x] Contingency included (2h explicit buffer on Day 8, plus 2h of scope reduction options)
+- [x] Unknowns 3.5, 3.6 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
-- `docs/planning/EPIC_3/SPRINT_17/SPRINT_LOG.md` (template with day plan)
+- `docs/planning/EPIC_3/SPRINT_17/SPRINT_SCHEDULE.md` - Complete 10-day schedule
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.5, 3.6
 
 #### Acceptance Criteria
-- 10-day schedule complete
-- Daily deliverables defined
-- Schedule accounts for prep findings
-- Release day clearly identified
-- [ ] Unknowns 3.5, 3.6 verified and updated in KNOWN_UNKNOWNS.md
+- [x] 10-day schedule complete
+- [x] Daily deliverables defined
+- [x] Schedule accounts for prep findings
+- [x] Release day clearly identified (Day 10)
+- [x] Unknowns 3.5, 3.6 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -657,7 +663,7 @@ A detailed schedule with:
 - [x] Solve investigation plan ready
 - [x] Documentation inventory complete
 - [x] Release checklist created
-- [ ] Detailed schedule in SPRINT_LOG.md
+- [x] Detailed schedule in SPRINT_LOG.md
 
 ### Quality Gates
 - All prep documents reviewed

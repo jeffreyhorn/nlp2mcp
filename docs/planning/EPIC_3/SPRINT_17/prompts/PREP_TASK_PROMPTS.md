@@ -451,142 +451,19 @@ Wait for reviewer comments before merging.
 ### Prompt
 
 ```
-On a new branch `planning/sprint17-task5`, complete Sprint 17 Prep Task 5: Lexer/Parser Improvement Plan.
+I requested another review on PR #585...
 
-## Task Objectives
+PR #585 (https://github.com/jeffreyhorn/nlp2mcp/pull/585) has review comments. Use gh to:
 
-**Status:** Not Started → COMPLETE  
-**Priority:** P1 - High  
-**Estimated Time:** 2 hours  
-**Dependencies:** Tasks 2, 3  
-**Unknowns to Verify:** 3.1, 3.2, 3.4, 3.5
+1. Fetch and list all review comments
+2. Fix each issue in the code
+3. **Run quality checks: make typecheck && make lint && make format && make testif any code (python) files were modified.  You don't need to run these quality checks if only documentation has changed.**
+4. **All must pass before proceeding**
+5. Commit fixes: "Address PR #585 review comments" (single commit, list all fixes in body)
+6. Push changes
+7. Reply to each comment with: "Fixed in <commit_sha>. [specific explanation]"
 
-### Objective
-Create a prioritized plan for addressing remaining `lexer_invalid_char` errors (97 models).
-
-### Why This Matters
-Lexer/parser errors are the largest blocker. Even partial success here significantly increases the model pool available for translation and solve.
-
-### Background
-Sprint 16 made substantial progress on lexer issues. Remaining categories:
-- Complex set data syntax (largest subcategory)
-- Numeric context in parameter data
-- Operator context issues
-- Hyphenated identifier patterns (some remain)
-
-### What Needs to Be Done
-1. Categorize 97 lexer failures by subcategory
-2. Estimate fixability of each subcategory
-3. Identify patterns that can be addressed with lexer changes
-4. Identify patterns requiring deeper parser changes
-5. Create prioritized fix plan (targeting +15-25 models)
-
-## Deliverables
-
-1. **Create `docs/planning/EPIC_3/SPRINT_17/LEXER_IMPROVEMENT_PLAN.md`** containing:
-   - Complete subcategory breakdown of 97 lexer failures
-   - For each subcategory:
-     - Count of models affected
-     - Example error messages
-     - Fix approach (lexer regex vs grammar rule vs parser change)
-     - Fixability assessment (easy/medium/hard/unfixable)
-     - Effort estimate in hours
-   - Prioritized fix plan:
-     - Quick wins (1-2h fixes, multiple models)
-     - Medium effort (2-4h fixes, good model count)
-     - Complex changes (4h+, assessed for ROI)
-   - Target: +15-25 models with realistic effort
-   - Grammar/lexer file locations for each fix
-
-2. **Update `docs/planning/EPIC_3/SPRINT_17/KNOWN_UNKNOWNS.md`** with verification results for:
-
-   **Unknown 3.1: What subcategories exist within the 97 `lexer_invalid_char` errors?**
-   - Update status: 🔍 INCOMPLETE → ✅ VERIFIED
-   - Provide complete subcategory breakdown with counts
-   - Note: This unknown may have been partially verified in Task 2; complete the verification here
-
-   **Unknown 3.2: Can remaining hyphenated identifier patterns be fixed with lexer changes alone?**
-   - Update status based on analysis
-   - Document which patterns need grammar vs lexer changes
-   - Assess risk of breaking existing patterns
-
-   **Unknown 3.4: Are complex set data syntax patterns fixable or should they be deferred?**
-   - Update status with decision
-   - Document which patterns are fixable
-   - Provide rationale for defer decisions
-
-   **Unknown 3.5: How much of the 70% parse target depends on lexer fixes vs other improvements?**
-   - Provide breakdown: lexer fixes → X models, other → Y models
-   - Assess if 70% is realistic
-
-3. **Update `docs/planning/EPIC_3/SPRINT_17/PREP_PLAN.md`:**
-   - Change Task 5 status: `Not Started` → `COMPLETE`
-   - Check off all verification items:
-     - [x] All 97 failures reviewed
-     - [x] Subcategories identified with counts
-     - [x] Fixability assessed for each
-     - [x] Plan targets +15-25 models
-     - [x] Unknowns 3.1, 3.2, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
-
-4. **Update `CHANGELOG.md`** with task summary
-
-## Quality Gate
-
-Before committing, run:
-```bash
-make typecheck && make lint && make format && make test
-```
-
-## Commit and PR
-
-### Commit Message Format
-```
-Complete Sprint 17 Prep Task 5: Lexer/Parser Improvement Plan
-
-Created LEXER_IMPROVEMENT_PLAN.md with prioritized fix plan:
-- Total subcategories identified: X
-- Quick wins: Y models, Z hours
-- Medium effort: A models, B hours
-- Complex/deferred: C models
-
-Target: +15-25 models parsing
-
-Verified Unknowns: 3.1, 3.2, 3.4, 3.5
-
-Key decisions:
-- [List key fixability decisions]
-
-Updated PREP_PLAN.md Task 5 status to COMPLETE.
-```
-
-### Create Pull Request
-```bash
-gh pr create --title "Sprint 17 Prep Task 5: Lexer/Parser Improvement Plan" \
-  --body "## Summary
-Created prioritized plan for addressing 97 lexer_invalid_char errors.
-
-## Deliverables
-- [ ] LEXER_IMPROVEMENT_PLAN.md created
-- [ ] KNOWN_UNKNOWNS.md updated (4 unknowns verified)
-- [ ] PREP_PLAN.md Task 5 marked COMPLETE
-- [ ] CHANGELOG.md updated
-
-## Unknowns Verified
-- 3.1: Lexer error subcategories (complete)
-- 3.2: Hyphenated identifier fixability
-- 3.4: Complex set data fixability
-- 3.5: Parse target breakdown
-
-## Fix Plan Summary
-| Priority | Models | Hours | Approach |
-|----------|--------|-------|----------|
-| Quick wins | X | Y | [approach] |
-| Medium | A | B | [approach] |
-| Complex | C | D | [approach] |
-" --base main
-```
-
-Wait for reviewer comments before merging.
+If any comment is unclear or quality checks fail, stop and ask me.
 ```
 
 ---
@@ -1056,7 +933,7 @@ Before starting this task, ensure Tasks 2-8 are complete and their findings are 
 
 ## Deliverables
 
-1. **Create `docs/planning/EPIC_3/SPRINT_17/SPRINT_LOG.md`** containing:
+1. **Create `docs/planning/EPIC_3/SPRINT_17/SPRINT_SCHEDULE.md`** containing:
    - Sprint 17 header with goals and targets
    - Day-by-day schedule (Days 1-10):
      - Each day's focus area
