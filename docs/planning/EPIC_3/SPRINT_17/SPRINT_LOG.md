@@ -33,13 +33,13 @@
 
 | Phase | Days | Focus | Planned Hours |
 |-------|------|-------|---------------|
-| Phase 1 | 1-3 | Translation & Solve Quick Wins | 12h |
-| Phase 2 | 4-5 | emit_gams.py Fixes & Investigation | 8h |
-| Phase 3 | 6-8 | Parse Improvements | 10h |
-| Phase 4 | 9-10 | Documentation & Release | 6h |
-| **Total** | **10** | | **36h** |
+| Phase 1 | 1-3 | Translation Quick Wins | 12h |
+| Phase 2 | 4-5 | emit_gams.py Fixes & Investigation | 9h |
+| Phase 3 | 6-8 | Parse Improvements | 12h |
+| Phase 4 | 9-10 | Documentation & Release | 9h |
+| **Total** | **10** | | **42h** |
 
-**Contingency:** 4h buffer distributed across phases
+**Contingency:** 4h buffer included in Phase 3 (Day 8) and Phase 4 totals. Core work is 38h.
 
 ---
 

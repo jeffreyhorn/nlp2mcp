@@ -27,10 +27,10 @@ Created detailed 10-day schedule for Sprint 17 and verified unknowns 3.5-3.6 (ca
 | Phase | Days | Focus | Hours |
 |-------|------|-------|-------|
 | Phase 1 | 1-3 | Translation Quick Wins | 12h |
-| Phase 2 | 4-5 | emit_gams.py Fixes | 8h |
-| Phase 3 | 6-8 | Parse Improvements | 10h |
-| Phase 4 | 9-10 | Documentation & Release | 6h |
-| **Total** | **10** | | **36h** |
+| Phase 2 | 4-5 | emit_gams.py Fixes | 9h |
+| Phase 3 | 6-8 | Parse Improvements | 12h |
+| Phase 4 | 9-10 | Documentation & Release | 9h |
+| **Total** | **10** | | **42h** |
 
 #### Unknowns Verified
 
@@ -50,7 +50,7 @@ Created detailed 10-day schedule for Sprint 17 and verified unknowns 3.5-3.6 (ca
 
 All 9 prep tasks complete. Sprint 17 ready to begin:
 - 26/27 unknowns verified (96%), 1 deferred
-- 36h of work scheduled across 10 days
+- 42h of work scheduled across 10 days (38h core + 4h contingency)
 - v1.1.0 release targeted for Day 10
 
 ---

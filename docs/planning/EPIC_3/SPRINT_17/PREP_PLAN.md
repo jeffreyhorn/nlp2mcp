@@ -583,17 +583,19 @@ See: [SPRINT_LOG.md](./SPRINT_LOG.md) for the complete schedule
 #### Result
 A detailed schedule with:
 - Phase 1 (Days 1-3): Translation quick wins (12h)
-- Phase 2 (Days 4-5): emit_gams.py fixes (8h)
-- Phase 3 (Days 6-8): Parse improvements (10h)
-- Phase 4 (Days 9-10): Documentation & Release (6h)
-- Total: 36h with 4h contingency buffer
+- Phase 2 (Days 4-5): emit_gams.py fixes (9h)
+- Phase 3 (Days 6-8): Parse improvements (12h)
+- Phase 4 (Days 9-10): Documentation & Release (9h)
+- Total: 42h (38h core work + 4h contingency buffer)
 - 5 checkpoints for progress verification
+
+_Note: Final total (42h) supersedes the earlier 26-34h estimate from PROJECT_PLAN.md, which was a pre-analysis projection._
 
 #### Verification
 - [x] All Sprint 17 work items scheduled
 - [x] Dependencies respected
-- [x] Total hours realistic (36h within capacity)
-- [x] Contingency included (4h buffer)
+- [x] Total hours realistic (42h = 38h core + 4h contingency)
+- [x] Contingency included (4h buffer in Phase 3 and 4)
 - [x] Unknowns 3.5, 3.6 verified and updated in KNOWN_UNKNOWNS.md
 
 #### Deliverables
