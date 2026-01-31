@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from src.ir.ast import Expr, VarRef
+from src.ir.ast import Expr, SymbolRef, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef
 
@@ -84,6 +84,20 @@ def extract_objective_info(model_ir: ModelIR) -> ObjectiveInfo:
             break
 
     if defining_eq is None:
+        # Check if objvar is a simple variable (no defining equation needed)
+        # This handles "minimize r" where r is just a free variable
+        # model_ir.variables is a CaseInsensitiveDict, so membership checks
+        # handle GAMS's case-insensitivity automatically.
+        if objvar in model_ir.variables:
+            # Simple variable objective - no defining equation, stationarity needed
+            # For "minimize r", the gradient is just 1 (or -1 for maximize)
+            return ObjectiveInfo(
+                objvar=objvar,
+                objvar_indices=(),
+                defining_equation="",  # No defining equation
+                needs_stationarity=True,  # Stationarity is needed for simple var objective
+            )
+
         raise ValueError(
             f"Could not find defining equation for objective variable '{objvar}'. "
             f"Expected an equation with '{objvar}' on the LHS. "
@@ -133,15 +147,27 @@ def _is_objective_defining_equation(eq_def: EquationDef, objvar: str) -> bool:
 
 
 def _is_var_ref(expr: Expr, var_name: str) -> bool:
-    """Check if expression is a variable reference to var_name (any indices).
+    """Check if expression is a variable or symbol reference to var_name.
+
+    Note: GAMS is case-insensitive, so we compare names case-insensitively.
+    Also checks for SymbolRef since objective variables may be represented
+    as symbols in equations (e.g., F =e= expr where F is the objective var).
 
     Args:
         expr: AST expression
         var_name: Variable name to check
 
     Returns:
-        True if expr is VarRef(var_name, ...) with any indices
+        True if expr is VarRef(var_name, ...) or SymbolRef(var_name)
     """
+    var_name_lower = var_name.lower()
+
     if isinstance(expr, VarRef):
-        return expr.name == var_name
+        # GAMS is case-insensitive
+        return expr.name.lower() == var_name_lower
+
+    if isinstance(expr, SymbolRef):
+        # Also check SymbolRef - objective vars may appear as symbols in equations
+        return expr.name.lower() == var_name_lower
+
     return False
