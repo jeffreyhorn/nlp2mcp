@@ -147,15 +147,15 @@ def find_objective_expression(model_ir: ModelIR) -> Expr:
 
     # Case 3: No defining equation found - check if objvar is a valid variable
     # This handles "minimize x" where x is a free variable with no defining equation
-    # GAMS is case-insensitive, so we need to find the variable with case-insensitive match
+    # model_ir.variables is a CaseInsensitiveDict, so membership checks handle
+    # GAMS's case-insensitivity automatically.
     from ..ir.ast import VarRef
 
-    objvar_lower = objvar.lower()
-    for var_name in model_ir.variables:
-        if var_name.lower() == objvar_lower:
-            # Found the variable - return a VarRef to it
-            # Use the actual variable name from the model (preserves original case)
-            return VarRef(var_name, ())
+    if objvar in model_ir.variables:
+        # Found the variable - return a VarRef to it
+        # Use get_original_name to preserve the original declaration casing
+        original_name = model_ir.variables.get_original_name(objvar)
+        return VarRef(original_name, ())
 
     # No variable found either
     raise ValueError(
@@ -163,7 +163,7 @@ def find_objective_expression(model_ir: ModelIR) -> Expr:
         f"and is not a declared variable. "
         f"ObjectiveIR.expr is None and no defining equation found. "
         f"Available equations: {list(model_ir.equations.keys())}. "
-        f"Available variables: {list(model_ir.variables.keys())}"
+        f"Available variables: {list(model_ir.variables.original_keys())}"
     )
 
 

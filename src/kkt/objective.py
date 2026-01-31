@@ -86,13 +86,9 @@ def extract_objective_info(model_ir: ModelIR) -> ObjectiveInfo:
     if defining_eq is None:
         # Check if objvar is a simple variable (no defining equation needed)
         # This handles "minimize r" where r is just a free variable
-        # GAMS is case-insensitive, so find the variable with case-insensitive match
-        objvar_lower = objvar.lower()
-        objvar_is_variable = any(
-            var_name.lower() == objvar_lower for var_name in model_ir.variables
-        )
-
-        if objvar_is_variable:
+        # model_ir.variables is a CaseInsensitiveDict, so membership checks
+        # handle GAMS's case-insensitivity automatically.
+        if objvar in model_ir.variables:
             # Simple variable objective - no defining equation, stationarity needed
             # For "minimize r", the gradient is just 1 (or -1 for maximize)
             return ObjectiveInfo(

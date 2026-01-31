@@ -96,8 +96,11 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
         raise ValueError("Gradient must have index_mapping set")
 
     # Group variable instances by base variable name
-    # Skip objective variable UNLESS Strategy 1 was applied
-    objvar_to_skip = obj_info.objvar if not kkt.model_ir.strategy1_applied else None
+    # Skip objective variable UNLESS:
+    # - Strategy 1 was applied, OR
+    # - This is a simple variable objective (needs_stationarity=True)
+    should_skip_objvar = not kkt.model_ir.strategy1_applied and not obj_info.needs_stationarity
+    objvar_to_skip = obj_info.objvar if should_skip_objvar else None
     var_groups = _group_variables_by_name(kkt, objvar_to_skip)
 
     # For each variable, generate either indexed or scalar stationarity equation
