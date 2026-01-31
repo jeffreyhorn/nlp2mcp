@@ -4155,7 +4155,17 @@ class _ModelBuilder:
             # Check the offset expression recursively
             if self._contains_variable_reference(expr.offset):
                 return True
-        # ParamRef is OK - it's a parameter, not a variable
+        if isinstance(expr, Call):
+            # Check function call arguments for variable references (e.g., log(x.l + 5))
+            for arg in expr.args:
+                if self._contains_variable_reference(arg):
+                    return True
+        # ParamRef is OK - it's a parameter, not a variable, but its indices may
+        # contain variable references (e.g., d(i, x.l)), so we need to inspect them.
+        if isinstance(expr, ParamRef):
+            for idx in expr.indices:
+                if self._contains_variable_reference(idx):
+                    return True
         return False
 
     def _extract_constant(self, expr: Expr, context: str) -> float:
