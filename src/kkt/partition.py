@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from src.ad.index_mapping import enumerate_variable_instances
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef
 
@@ -142,26 +141,22 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
             has_infinite = len(finite_values) < len(lo_values)
             has_scalar_bound = var_def.lo is not None
 
-            # Check if lo_map covers all variable instances
-            # If we can't enumerate instances (missing set definitions), don't consolidate
-            try:
-                all_instances = set(enumerate_variable_instances(var_def, model_ir))
-                map_keys = set(var_def.lo_map.keys())
-                covers_all_instances = map_keys == all_instances
-            except ValueError:
-                # Set not defined - can't verify coverage, don't consolidate
-                covers_all_instances = False
-
-            # Track infinite bounds
+            # Track infinite bounds (always do this; it is cheap and required for diagnostics)
             for indices, lo_val in var_def.lo_map.items():
                 if lo_val == float("-inf"):
                     result.skipped_infinite.append((var_name, indices, "lo"))
 
             if finite_values:
-                # Check if all finite values are the same AND no infinite bounds AND no scalar bound
-                # AND the map covers all variable instances
-                # Only then can we consolidate to a single indexed entry
+                # Check if all finite values are the same
                 all_same = all(v == finite_values[0] for v in finite_values)
+
+                # Only attempt expensive coverage check when consolidation is otherwise possible
+                covers_all_instances = False
+                if all_same and not has_infinite and not has_scalar_bound:
+                    covers_all_instances = _check_covers_all_instances(
+                        var_def, var_def.lo_map, model_ir
+                    )
+
                 can_consolidate = (
                     all_same and not has_infinite and not has_scalar_bound and covers_all_instances
                 )
@@ -186,25 +181,22 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
             has_infinite = len(finite_values) < len(up_values)
             has_scalar_bound = var_def.up is not None
 
-            # Check if up_map covers all variable instances
-            # If we can't enumerate instances (missing set definitions), don't consolidate
-            try:
-                all_instances = set(enumerate_variable_instances(var_def, model_ir))
-                map_keys = set(var_def.up_map.keys())
-                covers_all_instances = map_keys == all_instances
-            except ValueError:
-                # Set not defined - can't verify coverage, don't consolidate
-                covers_all_instances = False
-
-            # Track infinite bounds
+            # Track infinite bounds (always do this; it is cheap and required for diagnostics)
             for indices, up_val in var_def.up_map.items():
                 if up_val == float("inf"):
                     result.skipped_infinite.append((var_name, indices, "up"))
 
             if finite_values:
-                # Check if all finite values are the same AND no infinite bounds AND no scalar bound
-                # AND the map covers all variable instances
+                # Check if all finite values are the same
                 all_same = all(v == finite_values[0] for v in finite_values)
+
+                # Only attempt expensive coverage check when consolidation is otherwise possible
+                covers_all_instances = False
+                if all_same and not has_infinite and not has_scalar_bound:
+                    covers_all_instances = _check_covers_all_instances(
+                        var_def, var_def.up_map, model_ir
+                    )
+
                 can_consolidate = (
                     all_same and not has_infinite and not has_scalar_bound and covers_all_instances
                 )
@@ -226,6 +218,66 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
             result.bounds_fx[(var_name, indices)] = BoundDef("fx", fx_val, var_def.domain)
 
     return result
+
+
+def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> bool:
+    """Check if a bound map covers all instances of an indexed variable.
+
+    Uses an efficient two-step approach:
+    1. First, do a cheap cardinality check: compare len(bound_map) to the
+       product of set sizes. If they don't match, return False immediately.
+    2. If cardinalities match, verify that each key in bound_map corresponds
+       to a valid instance (uses short-circuiting iteration).
+
+    This avoids materializing all instances into a set, which can be expensive
+    or cause OOM for variables with large domains.
+
+    Args:
+        var_def: Variable definition with domain info
+        bound_map: The lo_map or up_map to check
+        model_ir: Model IR (for set definitions)
+
+    Returns:
+        True if bound_map covers all variable instances, False otherwise
+    """
+    if not var_def.domain:
+        # Scalar variable: bound_map should have exactly one entry with () key
+        return len(bound_map) == 1 and () in bound_map
+
+    # Step 1: Cheap cardinality check
+    # Compute expected instance count from set sizes
+    try:
+        expected_count = 1
+        for set_name in var_def.domain:
+            if set_name not in model_ir.sets:
+                # Set not defined; can't verify coverage
+                return False
+            set_def = model_ir.sets[set_name]
+            if not set_def.members:
+                # Empty set means no instances expected
+                return len(bound_map) == 0
+            expected_count *= len(set_def.members)
+
+        # If counts don't match, it's definitely not full coverage
+        if len(bound_map) != expected_count:
+            return False
+
+        # Step 2: Verify all bound_map keys are valid instances
+        # Use short-circuiting: check each key exists in the Cartesian product
+        # without materializing the full product
+        for indices in bound_map.keys():
+            if len(indices) != len(var_def.domain):
+                return False
+            for i, set_name in enumerate(var_def.domain):
+                set_def = model_ir.sets[set_name]
+                if indices[i] not in set_def.members:
+                    return False
+
+        return True
+
+    except (KeyError, AttributeError):
+        # If we can't access set information, assume not full coverage
+        return False
 
 
 def _is_user_authored_bound(eq_def: EquationDef) -> bool:
