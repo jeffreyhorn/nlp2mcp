@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from src.ad.index_mapping import resolve_set_members
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef
 
@@ -232,6 +233,8 @@ def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> 
     This avoids materializing all instances into a set, which can be expensive
     or cause OOM for variables with large domains.
 
+    Handles aliases and list/tuple-backed sets via resolve_set_members().
+
     Args:
         var_def: Variable definition with domain info
         bound_map: The lo_map or up_map to check
@@ -245,18 +248,18 @@ def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> 
         return len(bound_map) == 1 and () in bound_map
 
     # Step 1: Cheap cardinality check
-    # Compute expected instance count from set sizes
+    # Compute expected instance count from set sizes using resolve_set_members
+    # which handles aliases and list/tuple-backed sets
     try:
         expected_count = 1
+        resolved_members: list[list[str]] = []
         for set_name in var_def.domain:
-            if set_name not in model_ir.sets:
-                # Set not defined; can't verify coverage
-                return False
-            set_def = model_ir.sets[set_name]
-            if not set_def.members:
+            members, _ = resolve_set_members(set_name, model_ir)
+            if not members:
                 # Empty set means no instances expected
                 return len(bound_map) == 0
-            expected_count *= len(set_def.members)
+            expected_count *= len(members)
+            resolved_members.append(members)
 
         # If counts don't match, it's definitely not full coverage
         if len(bound_map) != expected_count:
@@ -268,14 +271,13 @@ def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> 
         for indices in bound_map.keys():
             if len(indices) != len(var_def.domain):
                 return False
-            for i, set_name in enumerate(var_def.domain):
-                set_def = model_ir.sets[set_name]
-                if indices[i] not in set_def.members:
+            for i, members in enumerate(resolved_members):
+                if indices[i] not in members:
                     return False
 
         return True
 
-    except (KeyError, AttributeError):
+    except (KeyError, AttributeError, ValueError):
         # If we can't access set information, assume not full coverage
         return False
 

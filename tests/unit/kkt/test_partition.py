@@ -283,3 +283,59 @@ class TestPartitionConstraints:
         assert result.bounds_up[("y", ())].value == 100.0
         assert ("y", ("a",)) not in result.bounds_up
         assert ("y", ("b",)) not in result.bounds_up
+
+    def test_alias_indexed_uniform_bounds_consolidate(self):
+        """Uniform bounds on alias-indexed variable should consolidate.
+
+        When a variable is indexed over an alias (not a direct set), the
+        coverage check should still work correctly via resolve_set_members().
+        """
+        model = ModelIR()
+        from src.ir.symbols import AliasDef, SetDef
+
+        # Define base set
+        model.sets["i"] = SetDef(name="i", members=["a", "b", "c"])
+        # Define alias over the set
+        model.aliases["j"] = AliasDef(name="j", target="i")
+
+        # Create variable indexed over the ALIAS (not the set directly)
+        var = VariableDef(name="x", domain=("j",))
+        var.lo_map[("a",)] = 0.5
+        var.lo_map[("b",)] = 0.5
+        var.lo_map[("c",)] = 0.5
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Should consolidate to single indexed entry even though domain is alias
+        assert ("x", ()) in result.bounds_lo
+        assert result.bounds_lo[("x", ())].value == 0.5
+        assert result.bounds_lo[("x", ())].domain == ("j",)
+        # Should NOT have per-instance entries
+        assert ("x", ("a",)) not in result.bounds_lo
+        assert ("x", ("b",)) not in result.bounds_lo
+        assert ("x", ("c",)) not in result.bounds_lo
+
+    def test_list_backed_set_uniform_bounds_consolidate(self):
+        """Uniform bounds with list-backed set should consolidate.
+
+        Some tests use plain lists instead of SetDef objects for sets.
+        The coverage check should handle this via resolve_set_members().
+        """
+        model = ModelIR()
+
+        # Use a plain list instead of SetDef (as some tests do)
+        model.sets["i"] = ["x1", "x2"]
+
+        var = VariableDef(name="y", domain=("i",))
+        var.lo_map[("x1",)] = 1.0
+        var.lo_map[("x2",)] = 1.0
+        model.variables["y"] = var
+
+        result = partition_constraints(model)
+
+        # Should consolidate to single indexed entry
+        assert ("y", ()) in result.bounds_lo
+        assert result.bounds_lo[("y", ())].value == 1.0
+        assert ("y", ("x1",)) not in result.bounds_lo
+        assert ("y", ("x2",)) not in result.bounds_lo
