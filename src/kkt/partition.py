@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from src.ad.index_mapping import enumerate_variable_instances
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef
 
@@ -134,11 +135,22 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
         # Uniform consolidation is ONLY applied when:
         # 1. ALL values in lo_map are the same finite value (no infinite bounds)
         # 2. There is no scalar bound (var_def.lo) - otherwise keep entries separate
+        # 3. The lo_map covers ALL variable instances (not a subset)
         if var_def.lo_map:
             lo_values = list(var_def.lo_map.values())
             finite_values = [v for v in lo_values if v != float("-inf")]
             has_infinite = len(finite_values) < len(lo_values)
             has_scalar_bound = var_def.lo is not None
+
+            # Check if lo_map covers all variable instances
+            # If we can't enumerate instances (missing set definitions), don't consolidate
+            try:
+                all_instances = set(enumerate_variable_instances(var_def, model_ir))
+                map_keys = set(var_def.lo_map.keys())
+                covers_all_instances = map_keys == all_instances
+            except ValueError:
+                # Set not defined - can't verify coverage, don't consolidate
+                covers_all_instances = False
 
             # Track infinite bounds
             for indices, lo_val in var_def.lo_map.items():
@@ -147,9 +159,12 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 
             if finite_values:
                 # Check if all finite values are the same AND no infinite bounds AND no scalar bound
+                # AND the map covers all variable instances
                 # Only then can we consolidate to a single indexed entry
                 all_same = all(v == finite_values[0] for v in finite_values)
-                can_consolidate = all_same and not has_infinite and not has_scalar_bound
+                can_consolidate = (
+                    all_same and not has_infinite and not has_scalar_bound and covers_all_instances
+                )
 
                 if can_consolidate:
                     # Uniform: create single indexed entry with () indices
@@ -171,6 +186,16 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
             has_infinite = len(finite_values) < len(up_values)
             has_scalar_bound = var_def.up is not None
 
+            # Check if up_map covers all variable instances
+            # If we can't enumerate instances (missing set definitions), don't consolidate
+            try:
+                all_instances = set(enumerate_variable_instances(var_def, model_ir))
+                map_keys = set(var_def.up_map.keys())
+                covers_all_instances = map_keys == all_instances
+            except ValueError:
+                # Set not defined - can't verify coverage, don't consolidate
+                covers_all_instances = False
+
             # Track infinite bounds
             for indices, up_val in var_def.up_map.items():
                 if up_val == float("inf"):
@@ -178,8 +203,11 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 
             if finite_values:
                 # Check if all finite values are the same AND no infinite bounds AND no scalar bound
+                # AND the map covers all variable instances
                 all_same = all(v == finite_values[0] for v in finite_values)
-                can_consolidate = all_same and not has_infinite and not has_scalar_bound
+                can_consolidate = (
+                    all_same and not has_infinite and not has_scalar_bound and covers_all_instances
+                )
 
                 if can_consolidate:
                     # Uniform: create single indexed entry with () indices

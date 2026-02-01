@@ -205,3 +205,81 @@ class TestPartitionConstraints:
         assert result.inequalities == ["capacity"]
         assert "x_lo_bound" not in result.inequalities
         assert "x_up_bound" not in result.inequalities
+
+    def test_uniform_bounds_consolidate_to_indexed(self):
+        """Uniform bounds covering all instances should consolidate to (var, ()).
+
+        When all elements of an indexed variable have the same bound value
+        (e.g., x.lo(c) = 0.001 for all c), consolidate to a single indexed entry.
+        """
+        model = ModelIR()
+        # Define set with members
+        from src.ir.symbols import SetDef
+
+        model.sets["c"] = SetDef(name="c", members=["H", "H2", "H2O"])
+
+        # Create variable with uniform lower bounds for all instances
+        var = VariableDef(name="x", domain=("c",))
+        var.lo_map[("H",)] = 0.001
+        var.lo_map[("H2",)] = 0.001
+        var.lo_map[("H2O",)] = 0.001
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Should consolidate to single indexed entry with () indices
+        assert ("x", ()) in result.bounds_lo
+        assert result.bounds_lo[("x", ())].value == 0.001
+        assert result.bounds_lo[("x", ())].domain == ("c",)
+        # Should NOT have per-instance entries
+        assert ("x", ("H",)) not in result.bounds_lo
+        assert ("x", ("H2",)) not in result.bounds_lo
+        assert ("x", ("H2O",)) not in result.bounds_lo
+
+    def test_partial_bounds_not_consolidated(self):
+        """Partial bounds (subset of instances) should NOT consolidate.
+
+        When only some elements have bounds (e.g., x.lo(subset) = 0.001),
+        do NOT consolidate - keep per-instance entries.
+        """
+        model = ModelIR()
+        # Define set with 3 members
+        from src.ir.symbols import SetDef
+
+        model.sets["c"] = SetDef(name="c", members=["H", "H2", "H2O"])
+
+        # Create variable with bounds only for a subset of instances
+        var = VariableDef(name="x", domain=("c",))
+        var.lo_map[("H",)] = 0.001
+        var.lo_map[("H2",)] = 0.001
+        # H2O is NOT bounded
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Should NOT consolidate - keep per-instance entries
+        assert ("x", ()) not in result.bounds_lo
+        assert ("x", ("H",)) in result.bounds_lo
+        assert ("x", ("H2",)) in result.bounds_lo
+        assert result.bounds_lo[("x", ("H",))].value == 0.001
+        assert result.bounds_lo[("x", ("H2",))].value == 0.001
+
+    def test_uniform_upper_bounds_consolidate(self):
+        """Uniform upper bounds covering all instances should consolidate."""
+        model = ModelIR()
+        from src.ir.symbols import SetDef
+
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+
+        var = VariableDef(name="y", domain=("i",))
+        var.up_map[("a",)] = 100.0
+        var.up_map[("b",)] = 100.0
+        model.variables["y"] = var
+
+        result = partition_constraints(model)
+
+        # Should consolidate to single indexed entry
+        assert ("y", ()) in result.bounds_up
+        assert result.bounds_up[("y", ())].value == 100.0
+        assert ("y", ("a",)) not in result.bounds_up
+        assert ("y", ("b",)) not in result.bounds_up
