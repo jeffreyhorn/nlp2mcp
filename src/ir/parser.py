@@ -3215,10 +3215,6 @@ class _ModelBuilder:
                 if members_are_domain_sets:
                     expanded_indices.extend(set_def.members)
                 elif expand_multidim:
-                    # Heuristic expansion for multi-dimensional sets.
-                    # When expand_multidim is True, we try to infer base sets from multi-dimensional
-                    # set members. Both sum and prod use this heuristic to handle cases like
-                    # sum(ij, x(ij)) where ij contains "i.j" tuples that should expand to (i, j).
                     members_are_multidim = (
                         set_def.members is not None
                         and len(set_def.members) > 0
@@ -3277,9 +3273,11 @@ class _ModelBuilder:
 
         expr = aggregation_class(indices, body)
 
-        # For Sum, add sum_indices attribute for backwards compatibility with tests
+        # Add index attributes for backwards compatibility with tests
         if aggregation_class == Sum:
             object.__setattr__(expr, "sum_indices", tuple(indices))
+        elif aggregation_class == Prod:
+            object.__setattr__(expr, "prod_indices", tuple(indices))
 
         return self._attach_domain(expr, remaining_domain)
 
