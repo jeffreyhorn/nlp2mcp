@@ -1919,8 +1919,11 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         new_args = tuple(_apply_index_substitution(arg, substitution) for arg in expr.args)
         return Call(expr.func, new_args)
     elif isinstance(expr, (Sum, Prod)):
-        # Don't substitute the aggregation's bound variables themselves, but do substitute
-        # in the body expression while filtering out bound variables from the substitution map.
+        # The aggregation's bound variables are the index variables defined by its
+        # `index_sets` attribute; these indices themselves must not be substituted
+        # when they appear in the body. Instead, we substitute only in the body
+        # expression after filtering those bound index variables out of the
+        # substitution map.
         filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
         new_body = _apply_index_substitution(expr.body, filtered_sub)
         # Reconstruct the same aggregation type explicitly (Sum or Prod)

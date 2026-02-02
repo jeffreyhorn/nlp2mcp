@@ -3216,7 +3216,9 @@ class _ModelBuilder:
                 if members_are_domain_sets:
                     expanded_indices.extend(set_def.members)
                 elif expand_multidim:
-                    # Heuristic expansion for multi-dimensional sets (sum only)
+                    # Heuristic expansion for multi-dimensional sets.
+                    # This is only applied when expand_multidim is True (e.g. for sum);
+                    # callers such as prod pass expand_multidim=False, so they skip this block.
                     members_are_multidim = (
                         set_def.members is not None
                         and len(set_def.members) > 0
