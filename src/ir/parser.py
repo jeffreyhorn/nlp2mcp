@@ -3200,13 +3200,8 @@ class _ModelBuilder:
         else:
             indices = tuple(_extract_domain_indices(index_list_node))
 
-        # Use explicit names for error messages instead of relying on class name
-        if aggregation_class is Sum:
-            aggregation_name = "sum"
-        elif aggregation_class is Prod:
-            aggregation_name = "prod"
-        else:
-            aggregation_name = aggregation_class.__name__.lower()
+        # Use explicit names for error messages
+        aggregation_name = "sum" if aggregation_class is Sum else "prod"
 
         self._ensure_sets(indices, f"{aggregation_name} indices", node)
 
