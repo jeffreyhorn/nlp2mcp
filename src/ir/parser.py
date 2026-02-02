@@ -3198,7 +3198,7 @@ class _ModelBuilder:
         else:
             indices = tuple(_extract_domain_indices(index_list_node))
 
-        agg_name = "sum" if aggregation_class == Sum else "prod"
+        agg_name = aggregation_class.__name__.lower()
         self._ensure_sets(indices, f"{agg_name} indices", node)
 
         # Expand indices based on set definitions

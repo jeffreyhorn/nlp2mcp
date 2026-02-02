@@ -1923,8 +1923,11 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         # in the body expression while filtering out bound variables from the substitution map.
         filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
         new_body = _apply_index_substitution(expr.body, filtered_sub)
-        # Use type(expr) to construct the same aggregation type (Sum or Prod)
-        return type(expr)(expr.index_sets, new_body)
+        # Reconstruct the same aggregation type explicitly (Sum or Prod)
+        if isinstance(expr, Sum):
+            return Sum(expr.index_sets, new_body)
+        else:
+            return Prod(expr.index_sets, new_body)
     else:
         # Unknown expression type, return as-is
         return expr
