@@ -397,6 +397,116 @@ class TestStationarityIndexed:
         assert "piL_x_i1" in stat_i1_str, "Bound multiplier missing from stat_x_i1"
         assert "piL_x_i2" in stat_i2_str, "Bound multiplier missing from stat_x_i2"
 
+    def test_cross_domain_summation_partial_overlap(self, manual_index_mapping):
+        """Test stationarity with partial domain overlap (trussm pattern).
+
+        GitHub Issue #594: Cross-domain summation in constraints.
+
+        When a constraint sums over a variable using different index sets:
+        - Variable s(i,k) has domain ('i', 'k')
+        - Constraint stiffness(j,k) has domain ('j', 'k')
+        - Equation: sum(i, s(i,k)*b(j,i)) =E= f(j,k)
+
+        The domains partially overlap (share 'k') but each has unique indices
+        ('i' in variable, 'j' in constraint). The stationarity term should
+        sum over the extra multiplier indices:
+            sum(j, derivative * nu_stiffness(j,k))
+        """
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        model.sets["i"] = ["i1", "i2"]  # bars
+        model.sets["j"] = ["j1", "j2"]  # nodes
+        model.sets["k"] = ["k1"]  # load scenarios (single for simplicity)
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), Const(0.0)),
+        )
+
+        # stiffness(j,k).. sum(i, s(i,k)*b(j,i)) =E= f(j,k)
+        model.equations["stiffness"] = EquationDef(
+            name="stiffness",
+            domain=("j", "k"),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                Sum(("i",), Binary("*", VarRef("s", ("i", "k")), ParamRef("b", ("j", "i")))),
+                ParamRef("f", ("j", "k")),
+            ),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["s"] = VariableDef(name="s", domain=("i", "k"))
+
+        model.equalities = ["objdef", "stiffness"]
+
+        # Set up KKT system with s(i,k) instances
+        index_mapping = manual_index_mapping(
+            [("obj", ()), ("s", ("i1", "k1")), ("s", ("i2", "k1"))],
+            [
+                ("objdef", ()),
+                ("stiffness", ("j1", "k1")),
+                ("stiffness", ("j2", "k1")),
+            ],
+        )
+
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        gradient.set_derivative(0, Const(1.0))
+        gradient.set_derivative(1, Const(0.0))  # ∂obj/∂s(i1,k1) = 0
+        gradient.set_derivative(2, Const(0.0))  # ∂obj/∂s(i2,k1) = 0
+
+        J_eq = JacobianStructure(num_rows=3, num_cols=3, index_mapping=index_mapping)
+        J_eq.set_derivative(0, 0, Const(1.0))  # ∂objdef/∂obj
+        # ∂stiffness(j1,k1)/∂s(i1,k1) = b(j1,i1)
+        J_eq.set_derivative(1, 1, ParamRef("b", ("j1", "i1")))
+        # ∂stiffness(j1,k1)/∂s(i2,k1) = b(j1,i2)
+        J_eq.set_derivative(1, 2, ParamRef("b", ("j1", "i2")))
+        # ∂stiffness(j2,k1)/∂s(i1,k1) = b(j2,i1)
+        J_eq.set_derivative(2, 1, ParamRef("b", ("j2", "i1")))
+        # ∂stiffness(j2,k1)/∂s(i2,k1) = b(j2,i2)
+        J_eq.set_derivative(2, 2, ParamRef("b", ("j2", "i2")))
+
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        # Add equality multiplier for stiffness(j,k)
+        kkt.multipliers_eq["nu_stiffness"] = MultiplierDef(
+            name="nu_stiffness", domain=("j", "k"), kind="eq", associated_constraint="stiffness"
+        )
+
+        # Build stationarity
+        stationarity = build_stationarity_equations(kkt)
+
+        # Should have one indexed stationarity equation stat_s(i,k)
+        assert "stat_s" in stationarity
+        stat_eq = stationarity["stat_s"]
+        assert stat_eq.domain == ("i", "k")
+
+        # The stationarity expression should contain Sum(('j',), ...)
+        # because we sum over the extra multiplier index 'j'
+        lhs = stat_eq.lhs_rhs[0]
+
+        def contains_sum_over_j(expr: Expr) -> bool:
+            """Check if expression contains Sum with index 'j'."""
+            match expr:
+                case Sum(index_sets, body):
+                    if "j" in index_sets:
+                        return True
+                    return contains_sum_over_j(body)
+                case Binary(_, left, right):
+                    return contains_sum_over_j(left) or contains_sum_over_j(right)
+                case Unary(_, child):
+                    return contains_sum_over_j(child)
+                case _:
+                    return False
+
+        assert contains_sum_over_j(
+            lhs
+        ), f"Expected stationarity to contain sum over 'j' for cross-domain summation. Got: {lhs}"
+
 
 @pytest.mark.integration
 class TestStationarityBounds:

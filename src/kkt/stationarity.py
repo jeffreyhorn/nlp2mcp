@@ -646,7 +646,7 @@ def _add_indexed_jacobian_terms(
                     #   - Constraint stiffness has domain ('j', 'k')
                     #   - Shared: 'k', Extra in mult: 'j', Extra in var: 'i'
                     # The stationarity term should sum over the extra multiplier indices:
-                    #   sum(j, derivative * lambda_stiffness(j,k))
+                    #   sum(j, derivative * nu_stiffness(j,k))
                     extra_mult_indices = mult_domain_set - var_domain_set
                     sum_indices = tuple(idx for idx in mult_domain if idx in extra_mult_indices)
                     if sum_indices:
