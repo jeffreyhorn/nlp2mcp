@@ -258,14 +258,15 @@ def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> 
     # which handles aliases and list/tuple-backed sets
     try:
         expected_count = 1
-        resolved_members: list[list[str]] = []
+        resolved_members: list[set[str]] = []
         for set_name in var_def.domain:
             members, _ = resolve_set_members(set_name, model_ir)
             if not members:
                 # Empty set means no instances expected
                 return len(bound_map) == 0
             expected_count *= len(members)
-            resolved_members.append(members)
+            # Convert to set for O(1) membership checks
+            resolved_members.append(set(members))
 
         # If counts don't match, it's definitely not full coverage
         if len(bound_map) != expected_count:
@@ -277,8 +278,8 @@ def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> 
         for indices in bound_map.keys():
             if len(indices) != len(var_def.domain):
                 return False
-            for i, members in enumerate(resolved_members):
-                if indices[i] not in members:
+            for i, members_set in enumerate(resolved_members):
+                if indices[i] not in members_set:
                     return False
 
         return True
