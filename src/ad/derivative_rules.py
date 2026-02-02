@@ -1875,21 +1875,6 @@ def _substitute_sum_indices(
     return _apply_index_substitution(expr, substitution)
 
 
-def _substitute_aggregation_body(expr: Sum | Prod, substitution: dict[str, str]) -> Expr:
-    """
-    Substitute indices in an aggregation body, filtering out bound variables.
-
-    Args:
-        expr: Sum or Prod aggregation expression
-        substitution: Mapping from symbolic to concrete indices
-
-    Returns:
-        The body expression with substituted indices (bound variables excluded)
-    """
-    filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
-    return _apply_index_substitution(expr.body, filtered_sub)
-
-
 def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
     """
     Recursively apply index substitution to an expression.
@@ -1936,7 +1921,8 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
     elif isinstance(expr, (Sum, Prod)):
         # Don't substitute aggregation's own bound variables, but substitute in body.
         # Filter out bound variables from substitution to avoid capturing.
-        new_body = _substitute_aggregation_body(expr, substitution)
+        filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
+        new_body = _apply_index_substitution(expr.body, filtered_sub)
         if isinstance(expr, Sum):
             return Sum(expr.index_sets, new_body)
         else:
@@ -1960,20 +1946,20 @@ def _diff_prod(
     """
     Differentiate a product aggregation: prod(i, f(i)).
 
-    Mathematical Background:
-    -----------------------
-    For P = prod(i, f(i)), using the logarithmic derivative:
+    Implementation:
+    --------------
+    This function uses the logarithmic derivative approach for numerical stability:
 
         d(P)/dx = P * d(log(P))/dx
                 = P * d(sum(i, log(f(i))))/dx
-                = P * sum(i, (1/f(i)) * df(i)/dx)
+                = P * sum(i, df(i)/dx / f(i))
 
-    This is equivalent to the generalized product rule:
+    This is mathematically equivalent to the generalized product rule:
 
         d(prod(i, f(i)))/dx = sum(j, df(j)/dx * prod(i!=j, f(i)))
 
-    We use the logarithmic form because it's more compact and numerically
-    stable (avoids computing large intermediate products).
+    but the logarithmic form is more compact and avoids computing large
+    intermediate products that could cause numerical overflow.
 
     Args:
         expr: Prod expression with index_sets (tuple of index names) and body (expression)
