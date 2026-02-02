@@ -49,7 +49,18 @@ if TYPE_CHECKING:
     from ..config import Config
     from ..ir.ast import Expr
 
-from ..ir.ast import Binary, Call, Const, DollarConditional, ParamRef, Sum, SymbolRef, Unary, VarRef
+from ..ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    ParamRef,
+    Prod,
+    Sum,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 
 
 def differentiate_expr(
@@ -145,6 +156,10 @@ def differentiate_expr(
     # Day 5: Sum aggregations
     elif isinstance(expr, Sum):
         return _diff_sum(expr, wrt_var, wrt_indices, config)
+
+    # Sprint 17 Day 6: Prod aggregations
+    elif isinstance(expr, Prod):
+        return _diff_prod(expr, wrt_var, wrt_indices, config)
 
     raise TypeError(
         f"Differentiation not yet implemented for {type(expr).__name__}. "
@@ -1903,12 +1918,87 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         # Recursively substitute in all arguments
         new_args = tuple(_apply_index_substitution(arg, substitution) for arg in expr.args)
         return Call(expr.func, new_args)
-    elif isinstance(expr, Sum):
-        # Don't substitute sum's own bound variables, but substitute in body
-        # Filter out sum's bound variables from substitution
+    elif isinstance(expr, (Sum, Prod)):
+        # The aggregation's bound variables are the index variables defined by its
+        # `index_sets` attribute; these indices themselves must not be substituted
+        # when they appear in the body. Instead, we substitute only in the body
+        # expression after filtering those bound index variables out of the
+        # substitution map.
         filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
         new_body = _apply_index_substitution(expr.body, filtered_sub)
-        return Sum(expr.index_sets, new_body)
+        # Reconstruct the same aggregation type (Sum or Prod). This works because both
+        # Sum and Prod currently have identical constructors of the form
+        # (index_sets, body); if their constructors change or diverge, this code must
+        # be updated accordingly.
+        return type(expr)(expr.index_sets, new_body)
     else:
         # Unknown expression type, return as-is
         return expr
+
+
+# ============================================================================
+# Sprint 17 Day 6: Prod Aggregations
+# ============================================================================
+
+
+def _diff_prod(
+    expr: Prod,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Differentiate a product aggregation: prod(i, f(i)).
+
+    Implementation:
+    --------------
+    This function uses the logarithmic derivative approach for numerical stability:
+
+        d(P)/dx = P * d(log(P))/dx
+                = P * d(sum(i, log(f(i))))/dx
+                = P * sum(i, df(i)/dx / f(i))
+
+    This is mathematically equivalent to the generalized product rule:
+
+        d(prod(i, f(i)))/dx = sum(j, df(j)/dx * prod(i!=j, f(i)))
+
+    but the logarithmic form is more compact and avoids computing large
+    intermediate products that could cause numerical overflow.
+
+    Args:
+        expr: Prod expression with index_sets (tuple of index names) and body (expression)
+        wrt_var: Name of the variable to differentiate with respect to
+        wrt_indices: Optional tuple of concrete index values for the variable
+        config: Optional config with model_ir
+
+    Returns:
+        Differentiated expression representing d(prod)/dx
+
+    Examples:
+        >>> # prod(i, x(i)) -> prod(i, x(i)) * sum(i, 1/x(i))
+        >>> expr = Prod(("i",), VarRef("x", ("i",)))
+        >>> result = _diff_prod(expr, "x", None)
+
+        >>> # prod(i, x(i)**alpha(i)) -> prod(...) * sum(i, alpha(i)/x(i))
+        >>> # This is the Cobb-Douglas form common in CGE models
+
+    Notes:
+        - If body doesn't depend on wrt_var, derivative is 0
+        - Uses logarithmic derivative for numerical stability
+        - Result is: prod(i, f(i)) * sum(i, df(i)/dx / f(i))
+    """
+    # Differentiate the body expression
+    body_derivative = differentiate_expr(expr.body, wrt_var, wrt_indices, config)
+
+    # If body derivative is zero, the whole product derivative is zero
+    if isinstance(body_derivative, Const) and body_derivative.value == 0.0:
+        return Const(0.0)
+
+    # Build the logarithmic derivative: sum(i, df(i)/dx / f(i))
+    # This is: sum(index_sets, body_derivative / body)
+    log_derivative_body = Binary("/", body_derivative, expr.body)
+    log_derivative = Sum(expr.index_sets, log_derivative_body)
+
+    # Result: prod(i, f(i)) * sum(i, df(i)/dx / f(i))
+    # Which is: expr * log_derivative
+    return Binary("*", expr, log_derivative)

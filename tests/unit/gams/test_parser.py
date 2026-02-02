@@ -349,7 +349,7 @@ def test_sum_metadata_preserves_indices():
     model = parser.parse_model_text(text)
     lhs, _ = model.equations["obj"].lhs_rhs
     assert isinstance(lhs, Sum)
-    assert lhs.sum_indices == ("i",)
+    assert lhs.index_sets == ("i",)
     assert lhs.domain == ()
 
 
@@ -4259,7 +4259,7 @@ class TestCurlyBraceSumComplexIndexing:
         # Verify sum structure and indices
         _, rhs = model.equations["eq"].lhs_rhs
         assert isinstance(rhs, Sum)
-        assert rhs.sum_indices == ("i", "j")
+        assert rhs.index_sets == ("i", "j")
 
     def test_curly_brace_sum_with_subset_indexing(self):
         """Test sum{(nx(i),ny(j)), expr} with subset indexing."""
@@ -4280,7 +4280,7 @@ class TestCurlyBraceSumComplexIndexing:
         # Verify sum structure and indices
         _, rhs = model.equations["eq"].lhs_rhs
         assert isinstance(rhs, Sum)
-        assert rhs.sum_indices == ("i", "j")
+        assert rhs.index_sets == ("i", "j")
 
     def test_curly_brace_sum_with_arithmetic_in_subset(self):
         """Test sum{(nx(i+1),ny(j+1)), expr} pattern from jbearing.gms."""
@@ -4301,7 +4301,7 @@ class TestCurlyBraceSumComplexIndexing:
         # Verify sum structure and indices
         _, rhs = model.equations["eq"].lhs_rhs
         assert isinstance(rhs, Sum)
-        assert rhs.sum_indices == ("i", "j")
+        assert rhs.index_sets == ("i", "j")
 
     def test_curly_brace_sum_simple_backward_compat(self):
         """Test that simple sum{i, expr} still works."""
@@ -4318,7 +4318,7 @@ class TestCurlyBraceSumComplexIndexing:
         # Verify sum structure and indices
         _, rhs = model.equations["eq"].lhs_rhs
         assert isinstance(rhs, Sum)
-        assert rhs.sum_indices == ("i",)
+        assert rhs.index_sets == ("i",)
 
     def test_parenthesis_sum_with_tuple_domain(self):
         """Test sum((i,j), expr) with parentheses also works."""
@@ -4336,7 +4336,7 @@ class TestCurlyBraceSumComplexIndexing:
         # Verify sum structure and indices
         _, rhs = model.equations["eq"].lhs_rhs
         assert isinstance(rhs, Sum)
-        assert rhs.sum_indices == ("i", "j")
+        assert rhs.index_sets == ("i", "j")
 
     def test_curly_brace_sum_with_lag_in_subset(self):
         """Test sum{(nx(i-1)), expr} with lag operator in subset."""
@@ -4354,7 +4354,7 @@ class TestCurlyBraceSumComplexIndexing:
         # Verify sum structure and indices
         _, rhs = model.equations["eq"].lhs_rhs
         assert isinstance(rhs, Sum)
-        assert rhs.sum_indices == ("i",)
+        assert rhs.index_sets == ("i",)
 
     def test_curly_brace_sum_triple_tuple(self):
         """Test sum{(i,j,k), expr} with three-element tuple."""
@@ -4373,7 +4373,7 @@ class TestCurlyBraceSumComplexIndexing:
         # Verify sum structure and indices
         _, rhs = model.equations["eq"].lhs_rhs
         assert isinstance(rhs, Sum)
-        assert rhs.sum_indices == ("i", "j", "k")
+        assert rhs.index_sets == ("i", "j", "k")
 
 
 class TestPredefinedConstants:

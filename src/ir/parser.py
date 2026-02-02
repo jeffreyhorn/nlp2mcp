@@ -26,6 +26,7 @@ from .ast import (
     IndexOffset,
     MultiplierRef,
     ParamRef,
+    Prod,
     SetMembershipTest,
     SubsetIndex,
     Sum,
@@ -3156,6 +3157,130 @@ class _ModelBuilder:
         # This handles the actual data assignment in the "then" branch
         self._handle_assign(assign_node)
 
+    def _handle_aggregation(
+        self,
+        node: Tree,
+        aggregation_class: type[Sum] | type[Prod],
+        free_domain: tuple[str, ...],
+    ) -> Expr:
+        """
+        Handle sum/prod aggregation expressions with shared logic.
+
+        Args:
+            node: Parse tree node for sum or prod expression
+            aggregation_class: Sum or Prod class to instantiate
+            free_domain: Current free domain from enclosing scope
+
+        Returns:
+            Aggregation expression with attached domain
+
+        Note:
+            This method applies heuristic expansion for multi-dimensional sets.
+            When a set contains "i.j" style tuples, it attempts to infer the base
+            sets (e.g., expanding set "ij" to indices "i" and "j").
+        """
+        # Extract base identifiers from sum_domain (shared grammar rule for sum/prod)
+        sum_domain_node = node.children[1]
+
+        # Handle sum_domain which can be index_spec or tuple_domain
+        condition_expr = None
+        if sum_domain_node.data == "tuple_domain":
+            index_spec_node = sum_domain_node.children[0]
+        else:
+            index_spec_node = sum_domain_node.children[0]
+
+        index_list_node = index_spec_node.children[0]
+
+        # Check if there's a conditional (DOLLAR expr) - initially parse with free_domain
+        if len(index_spec_node.children) > 1:
+            condition_expr = self._expr(index_spec_node.children[2], free_domain)
+
+        if index_list_node.data == "id_list":
+            indices = _id_list(index_list_node)
+        else:
+            indices = tuple(_extract_domain_indices(index_list_node))
+
+        # Use explicit names for error messages
+        aggregation_name = "sum" if aggregation_class is Sum else "prod"
+
+        self._ensure_sets(indices, f"{aggregation_name} indices", node)
+
+        # Expand indices based on set definitions
+        expanded_indices: list[str] = []
+        for idx in indices:
+            if isinstance(idx, str) and idx in self.model.sets:
+                set_def = self.model.sets[idx]
+                members_are_domain_sets = (
+                    set_def.members is not None
+                    and len(set_def.members) > 1
+                    and all(
+                        m in self.model.sets or m in self.model.aliases for m in set_def.members
+                    )
+                )
+                if members_are_domain_sets:
+                    expanded_indices.extend(set_def.members)
+                else:
+                    # Heuristic expansion for multi-dimensional sets
+                    members_are_multidim = (
+                        set_def.members is not None
+                        and len(set_def.members) > 0
+                        and any("." in m for m in set_def.members)
+                    )
+                    if members_are_multidim:
+                        first_member = set_def.members[0]
+                        dim = len(first_member.split("."))
+                        if dim == 2:
+                            base_sets = [
+                                s
+                                for s in self.model.sets
+                                if s != idx and len(self.model.sets[s].members) > 0
+                            ]
+                            for bs_name in base_sets:
+                                bs = self.model.sets[bs_name]
+                                if bs.members and not any("." in m for m in bs.members):
+                                    alias_name = None
+                                    for a_name, a_def in self.model.aliases.items():
+                                        if a_def.target == bs_name:
+                                            alias_name = a_name
+                                            break
+                                    if alias_name:
+                                        expanded_indices.extend([bs_name, alias_name])
+                                        break
+                            else:
+                                expanded_indices.append(idx)
+                        else:
+                            expanded_indices.append(idx)
+                    else:
+                        expanded_indices.append(idx)
+            else:
+                expanded_indices.append(idx)
+
+        # Calculate domains
+        new_agg_indices = set(expanded_indices) - set(free_domain)
+        remaining_domain = tuple(d for d in free_domain if d not in new_agg_indices)
+        seen: set[str] = set()
+        body_domain = tuple(
+            x
+            for x in list(expanded_indices) + list(remaining_domain)
+            if not (x in seen or seen.add(x))  # type: ignore[func-returns-value]
+        )
+
+        # Re-evaluate condition in body_domain if present
+        if condition_expr is not None:
+            condition_expr = self._expr(index_spec_node.children[2], body_domain)
+
+        body = self._expr(node.children[2], body_domain)
+
+        # Apply condition by multiplying: sum(i$cond, expr) => sum(i, cond * expr)
+        if condition_expr is not None:
+            body = Binary("*", condition_expr, body)
+
+        # Note: this assumes all aggregation classes (Sum, Prod) share the same
+        # constructor signature: (index_sets, body). Keep constructors aligned.
+        expr = aggregation_class(indices, body)
+
+        return self._attach_domain(expr, remaining_domain)
+
     def _expr(self, node: Tree | Token, free_domain: tuple[str, ...]) -> Expr:
         if isinstance(node, Token):
             if node.type == "NUMBER":
@@ -3217,139 +3342,10 @@ class _ModelBuilder:
             return self._attach_domain(Const(float(node.children[0])), free_domain)
 
         if node.data == "sum":
-            # Extract base identifiers from sum_domain (supporting lag/lead operators, tuples, and conditionals)
-            sum_domain_node = node.children[1]
+            return self._handle_aggregation(node, Sum, free_domain)
 
-            # Handle sum_domain which can be index_spec or tuple_domain
-            condition_expr = None
-            if sum_domain_node.data == "tuple_domain":
-                # Tuple notation: sum{(i,j), expr} or sum{(i,j)$cond, expr}
-                index_spec_node = sum_domain_node.children[0]
-            else:
-                # Plain sum_domain -> index_spec
-                index_spec_node = sum_domain_node.children[0]
-
-            # index_spec contains: index_list (DOLLAR expr)?
-            index_list_node = index_spec_node.children[0]
-
-            # Check if there's a conditional (DOLLAR expr)
-            if len(index_spec_node.children) > 1:
-                # There's a conditional: extract it
-                # Children are: index_list, DOLLAR token, expr
-                condition_expr = self._expr(index_spec_node.children[2], free_domain)
-
-            if index_list_node.data == "id_list":
-                # Legacy path for old grammar (if any old tests use it)
-                indices = _id_list(index_list_node)
-            else:
-                # New path: extract base identifiers from index_list
-                indices = tuple(_extract_domain_indices(index_list_node))
-            self._ensure_sets(indices, "sum indices", node)
-
-            # Expand multi-dimensional set indices to their domain components
-            # E.g., sum(a, ...) where a(n,n) expands body_domain to include (n, n)
-            # This allows expressions like dist(a) to be expanded to dist(n, np)
-            expanded_indices: list[str] = []
-            for idx in indices:
-                if isinstance(idx, str) and idx in self.model.sets:
-                    set_def = self.model.sets[idx]
-                    # Check if this set has a multi-dimensional domain (members are set names)
-                    members_are_domain_sets = (
-                        set_def.members is not None
-                        and len(set_def.members) > 1
-                        and all(
-                            m in self.model.sets or m in self.model.aliases for m in set_def.members
-                        )
-                    )
-                    # Check if members are multi-dimensional values (e.g., 'a.b')
-                    members_are_multidim = (
-                        set_def.members is not None
-                        and len(set_def.members) > 0
-                        and any("." in m for m in set_def.members)
-                    )
-                    if members_are_domain_sets:
-                        # Expand to domain indices: a(n,n) -> (n, n)
-                        expanded_indices.extend(set_def.members)
-                    elif members_are_multidim:
-                        # HEURISTIC: Infer domain indices for multi-dimensional sets with
-                        # dot-separated element values (e.g., arc with members ['nw.w', 'e.cc']).
-                        #
-                        # Assumptions:
-                        # 1. Only 2D sets are expanded; higher dimensions fall back to original
-                        # 2. The base set has simple (non-dot) element names
-                        # 3. There exists an alias of that base set for the second dimension
-                        # 4. The pattern follows common GAMS convention: (base_set, alias)
-                        #
-                        # Limitations:
-                        # - May not find correct expansion if multiple candidate base sets exist
-                        # - Does not handle 3D+ sets
-                        # - Relies on alias existence; fails gracefully if no alias found
-                        #
-                        # If expansion fails, the original index is kept and downstream
-                        # processing may raise a more specific error.
-                        first_member = set_def.members[0]
-                        dim = len(first_member.split("."))
-                        if dim == 2:
-                            # Look for aliases of a base set with simple elements
-                            base_sets = [
-                                s
-                                for s in self.model.sets
-                                if s != idx and len(self.model.sets[s].members) > 0
-                            ]
-                            # Find a base set that has simple elements (not dots)
-                            for bs_name in base_sets:
-                                bs = self.model.sets[bs_name]
-                                if bs.members and not any("." in m for m in bs.members):
-                                    # Found a base set, check if there's an alias
-                                    alias_name = None
-                                    for a_name, a_def in self.model.aliases.items():
-                                        if a_def.target == bs_name:
-                                            alias_name = a_name
-                                            break
-                                    if alias_name:
-                                        expanded_indices.extend([bs_name, alias_name])
-                                        break
-                            else:
-                                # No suitable expansion found, keep original
-                                expanded_indices.append(idx)
-                        else:
-                            # Non-2D sets: keep original (no heuristic for 3D+)
-                            expanded_indices.append(idx)
-                    else:
-                        expanded_indices.append(idx)
-                else:
-                    expanded_indices.append(idx)
-
-            # Only sum out indices that are NEW (not already in free_domain)
-            # Indices already in free_domain are bound from outer scope, not summed out
-            # Example: sum(arc(np,n), q(np,n)) in equation test(n)
-            #   - n is in free_domain (outer equation index), stays in result
-            #   - np is new to sum, gets summed out
-            new_sum_indices = set(expanded_indices) - set(free_domain)
-            remaining_domain = tuple(d for d in free_domain if d not in new_sum_indices)
-            # Build body_domain without duplicates, preserving order
-            # Use a set to track seen indices and filter duplicates
-            seen: set[str] = set()
-            body_domain = tuple(
-                x
-                for x in list(expanded_indices) + list(remaining_domain)
-                if not (x in seen or seen.add(x))  # type: ignore[func-returns-value]
-            )
-
-            # If there's a condition, evaluate it in the body domain
-            if condition_expr is not None:
-                # Re-evaluate condition in body_domain since it may reference sum indices
-                condition_expr = self._expr(index_spec_node.children[2], body_domain)
-
-            body = self._expr(node.children[2], body_domain)
-
-            # Apply condition by multiplying: sum(i$cond, expr) => sum(i, cond * expr)
-            if condition_expr is not None:
-                body = Binary("*", condition_expr, body)
-
-            expr = Sum(indices, body)
-            object.__setattr__(expr, "sum_indices", tuple(indices))
-            return self._attach_domain(expr, remaining_domain)
+        if node.data == "prod":
+            return self._handle_aggregation(node, Prod, free_domain)
 
         if node.data == "binop":
             left = self._expr(node.children[0], free_domain)

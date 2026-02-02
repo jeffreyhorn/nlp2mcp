@@ -1261,6 +1261,14 @@ def normalize_multi_line_continuations(source: str) -> str:
     for i, line in enumerate(lines):
         stripped = line.strip()
 
+        # Sprint 17 Day 6: Skip comment lines early - they should never trigger
+        # data block detection or have commas added. This fixes issues where
+        # comments containing "/" (e.g., "* Primal/Dual Variables") were being
+        # treated as data block openings.
+        if stripped.startswith("*"):
+            result.append(line)
+            continue
+
         # Track if we're entering a declaration block
         if re.match(f"^\\s*{DECLARATION_KEYWORDS_PATTERN}", stripped, re.IGNORECASE):
             in_declaration = True

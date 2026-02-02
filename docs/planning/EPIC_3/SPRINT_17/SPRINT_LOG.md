@@ -116,11 +116,49 @@ apl1p, blend, himmel11, hs62, mathopt1, mathopt2, mhw4d, mhw4dx, prodmix, rbrock
 
 ### Day 6: Parse Improvements (Part 1)
 
-**Status:** Not started
+**Status:** Complete ✅
 
 **Planned:**
-- [ ] Reserved word conflicts (`inf`/`na`) (2h) - Expected: +12 models
-- [ ] Display statement continuation (2h) - Expected: +6 models
+- [x] Reserved word conflicts (`inf`/`na`) (2h) - Expected: +12 models
+- [x] Display statement continuation (2h) - Expected: +6 models
+
+**Completed:**
+- [x] Fixed preprocessor comment handling bug (2h)
+  - Root cause: Comments containing `/` (e.g., "* Primal/Dual Variables") were triggering data block detection
+  - Fix: Skip comment lines early in `normalize_multi_line_continuations()`
+  - Result: 9/12 reserved word conflict models now parse (3 have secondary put statement issues)
+- [x] Made display statement comma optional (1h)
+  - Updated `display_stmt` and `display_stmt_nosemi` grammar rules
+  - GAMS allows: `display a, b, c;` OR `display a b c;` OR multi-line without commas
+  - Result: 5/6 display continuation models now parse (1 has secondary put statement issue)
+- [x] Added `prod` aggregation function support (1h) - BONUS
+  - Grammar: Added `PROD_K` terminal and `prod_expr` rule
+  - AST: Added `Prod` class to `src/ir/ast.py`
+  - Parser: Added `prod` node handler in `_expr()` method
+  - Result: Enabled display continuation models (irscge, etc.) to fully parse
+
+**Models Fixed (14 total):**
+- Reserved word (9): ps2_f, ps2_f_eff, ps2_f_s, ps2_s, ps3_f, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp
+- Display continuation (5): irscge, lrgcge, moncge, quocge, twocge
+
+**Models Still Failing (4 - secondary issues):**
+- ps5_s_mn, ps10_s, ps10_s_mn: Put statement format syntax (`:10:5`)
+- stdcge: Put statement `.tl` attribute
+
+**Metrics:**
+- Parse: 100/219 (45.7%) - up from baseline
+
+**Files Changed:**
+- `src/ir/preprocessor.py` - Comment skip fix in normalize_multi_line_continuations()
+- `src/gams/gams_grammar.lark` - Optional comma in display_stmt, added prod_expr
+- `src/ir/ast.py` - Added Prod class
+- `src/ir/parser.py` - Added Prod import and handler
+
+**Quality Gates:**
+- `make typecheck` - passed ✅
+- `make lint` - passed ✅
+- `make format` - passed ✅
+- `make test` - passed (3109 passed, 10 skipped, 1 xfailed) ✅
 
 ---
 
