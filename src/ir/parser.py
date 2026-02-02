@@ -3412,7 +3412,8 @@ class _ModelBuilder:
                 body = Binary("*", condition_expr, body)
 
             expr = Prod(indices, body)
-            object.__setattr__(expr, "prod_indices", tuple(indices))
+            # Note: index_sets field already stores the indices; no additional attribute needed.
+            # (Sum has sum_indices for backwards compatibility with existing tests.)
             return self._attach_domain(expr, remaining_domain)
 
         if node.data == "binop":
