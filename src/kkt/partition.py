@@ -128,97 +128,103 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
             result.bounds_fx[(var_name, ())] = BoundDef("fx", var_def.fx, var_def.domain)
 
         # Indexed bounds (Finding #2 fix)
-        # Check if all lo_map values are uniform (same finite value for ALL instances)
-        # If so, consolidate to a single indexed bound entry with () indices.
-        # Otherwise, create per-instance entries.
-        #
-        # Uniform consolidation is ONLY applied when:
-        # 1. ALL values in lo_map are the same finite value (no infinite bounds)
-        # 2. There is no scalar bound (var_def.lo) - otherwise keep entries separate
-        # 3. The lo_map covers ALL variable instances (not a subset)
-        if var_def.lo_map:
-            lo_values = list(var_def.lo_map.values())
-            finite_values = [v for v in lo_values if v != float("-inf")]
-            has_infinite = len(finite_values) < len(lo_values)
-            has_scalar_bound = var_def.lo is not None
-
-            # Track infinite bounds (always do this; it is cheap and required for diagnostics)
-            for indices, lo_val in var_def.lo_map.items():
-                if lo_val == float("-inf"):
-                    result.skipped_infinite.append((var_name, indices, "lo"))
-
-            if finite_values:
-                # Check if all finite values are the same
-                all_same = all(v == finite_values[0] for v in finite_values)
-
-                # Only attempt expensive coverage check when consolidation is otherwise possible
-                covers_all_instances = False
-                if all_same and not has_infinite and not has_scalar_bound:
-                    covers_all_instances = _check_covers_all_instances(
-                        var_def, var_def.lo_map, model_ir
-                    )
-
-                can_consolidate = (
-                    all_same and not has_infinite and not has_scalar_bound and covers_all_instances
-                )
-
-                if can_consolidate:
-                    # Uniform: create single indexed entry with () indices
-                    result.bounds_lo[(var_name, ())] = BoundDef(
-                        "lo", finite_values[0], var_def.domain
-                    )
-                else:
-                    # Non-uniform: create per-instance entries
-                    for indices, lo_val in var_def.lo_map.items():
-                        if lo_val != float("-inf"):
-                            result.bounds_lo[(var_name, indices)] = BoundDef(
-                                "lo", lo_val, var_def.domain
-                            )
-
-        # Same logic for upper bounds
-        if var_def.up_map:
-            up_values = list(var_def.up_map.values())
-            finite_values = [v for v in up_values if v != float("inf")]
-            has_infinite = len(finite_values) < len(up_values)
-            has_scalar_bound = var_def.up is not None
-
-            # Track infinite bounds (always do this; it is cheap and required for diagnostics)
-            for indices, up_val in var_def.up_map.items():
-                if up_val == float("inf"):
-                    result.skipped_infinite.append((var_name, indices, "up"))
-
-            if finite_values:
-                # Check if all finite values are the same
-                all_same = all(v == finite_values[0] for v in finite_values)
-
-                # Only attempt expensive coverage check when consolidation is otherwise possible
-                covers_all_instances = False
-                if all_same and not has_infinite and not has_scalar_bound:
-                    covers_all_instances = _check_covers_all_instances(
-                        var_def, var_def.up_map, model_ir
-                    )
-
-                can_consolidate = (
-                    all_same and not has_infinite and not has_scalar_bound and covers_all_instances
-                )
-
-                if can_consolidate:
-                    # Uniform: create single indexed entry with () indices
-                    result.bounds_up[(var_name, ())] = BoundDef(
-                        "up", finite_values[0], var_def.domain
-                    )
-                else:
-                    # Non-uniform: create per-instance entries
-                    for indices, up_val in var_def.up_map.items():
-                        if up_val != float("inf"):
-                            result.bounds_up[(var_name, indices)] = BoundDef(
-                                "up", up_val, var_def.domain
-                            )
+        # Process lower and upper bound maps with shared helper
+        _process_indexed_bounds(
+            var_name=var_name,
+            var_def=var_def,
+            bound_map=var_def.lo_map,
+            scalar_bound=var_def.lo,
+            inf_sentinel=float("-inf"),
+            kind="lo",
+            target_dict=result.bounds_lo,
+            skipped_infinite=result.skipped_infinite,
+            model_ir=model_ir,
+        )
+        _process_indexed_bounds(
+            var_name=var_name,
+            var_def=var_def,
+            bound_map=var_def.up_map,
+            scalar_bound=var_def.up,
+            inf_sentinel=float("inf"),
+            kind="up",
+            target_dict=result.bounds_up,
+            skipped_infinite=result.skipped_infinite,
+            model_ir=model_ir,
+        )
 
         for indices, fx_val in var_def.fx_map.items():
             result.bounds_fx[(var_name, indices)] = BoundDef("fx", fx_val, var_def.domain)
 
     return result
+
+
+def _process_indexed_bounds(
+    var_name: str,
+    var_def,
+    bound_map: dict,
+    scalar_bound: float | None,
+    inf_sentinel: float,
+    kind: str,
+    target_dict: dict,
+    skipped_infinite: list,
+    model_ir: ModelIR,
+) -> None:
+    """Process indexed bounds with uniform consolidation logic.
+
+    Check if all bound_map values are uniform (same finite value for ALL instances).
+    If so, consolidate to a single indexed bound entry with () indices.
+    Otherwise, create per-instance entries.
+
+    Uniform consolidation is ONLY applied when:
+    1. ALL values in bound_map are the same finite value (no infinite bounds)
+    2. There is no scalar bound - otherwise keep entries separate
+    3. The bound_map covers ALL variable instances (not a subset)
+
+    Args:
+        var_name: Variable name
+        var_def: Variable definition with domain info
+        bound_map: The lo_map or up_map to process
+        scalar_bound: Scalar bound value (var_def.lo or var_def.up)
+        inf_sentinel: Infinity value to filter (-inf for lo, +inf for up)
+        kind: Bound kind ('lo' or 'up')
+        target_dict: Target dictionary to store bounds (bounds_lo or bounds_up)
+        skipped_infinite: List to append skipped infinite bounds
+        model_ir: Model IR (for set definitions)
+    """
+    if not bound_map:
+        return
+
+    values = list(bound_map.values())
+    finite_values = [v for v in values if v != inf_sentinel]
+    has_infinite = len(finite_values) < len(values)
+    has_scalar_bound = scalar_bound is not None
+
+    # Track infinite bounds (always do this; it is cheap and required for diagnostics)
+    for indices, val in bound_map.items():
+        if val == inf_sentinel:
+            skipped_infinite.append((var_name, indices, kind))
+
+    if finite_values:
+        # Check if all finite values are the same
+        all_same = all(v == finite_values[0] for v in finite_values)
+
+        # Only attempt expensive coverage check when consolidation is otherwise possible
+        covers_all_instances = False
+        if all_same and not has_infinite and not has_scalar_bound:
+            covers_all_instances = _check_covers_all_instances(var_def, bound_map, model_ir)
+
+        can_consolidate = (
+            all_same and not has_infinite and not has_scalar_bound and covers_all_instances
+        )
+
+        if can_consolidate:
+            # Uniform: create single indexed entry with () indices
+            target_dict[(var_name, ())] = BoundDef(kind, finite_values[0], var_def.domain)
+        else:
+            # Non-uniform: create per-instance entries
+            for indices, val in bound_map.items():
+                if val != inf_sentinel:
+                    target_dict[(var_name, indices)] = BoundDef(kind, val, var_def.domain)
 
 
 def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> bool:
