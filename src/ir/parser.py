@@ -3353,8 +3353,8 @@ class _ModelBuilder:
             return self._attach_domain(expr, remaining_domain)
 
         # Sprint 17 Day 6: Added prod handler (same logic as sum, but creates Prod)
-        # TODO: Consider extracting shared logic with sum handler into a helper function
-        # like _handle_aggregation(node, aggregation_type) to reduce duplication.
+        # TODO: Extract shared aggregation logic into _handle_aggregation(node, aggregation_class, free_domain)
+        # to eliminate the 64 lines of duplication between sum and prod handlers.
         if node.data == "prod":
             # Extract base identifiers from the shared `sum_domain` grammar rule.
             # In the grammar, `sum_domain` is the common domain/index specification
