@@ -26,6 +26,7 @@ from .ast import (
     IndexOffset,
     MultiplierRef,
     ParamRef,
+    Prod,
     SetMembershipTest,
     SubsetIndex,
     Sum,
@@ -3349,6 +3350,70 @@ class _ModelBuilder:
 
             expr = Sum(indices, body)
             object.__setattr__(expr, "sum_indices", tuple(indices))
+            return self._attach_domain(expr, remaining_domain)
+
+        # Sprint 17 Day 6: Added prod handler (same logic as sum, but creates Prod)
+        if node.data == "prod":
+            # Extract base identifiers from sum_domain (reusing sum_domain rule)
+            sum_domain_node = node.children[1]
+
+            # Handle sum_domain which can be index_spec or tuple_domain
+            condition_expr = None
+            if sum_domain_node.data == "tuple_domain":
+                index_spec_node = sum_domain_node.children[0]
+            else:
+                index_spec_node = sum_domain_node.children[0]
+
+            index_list_node = index_spec_node.children[0]
+
+            # Check if there's a conditional (DOLLAR expr)
+            if len(index_spec_node.children) > 1:
+                condition_expr = self._expr(index_spec_node.children[2], free_domain)
+
+            if index_list_node.data == "id_list":
+                indices = _id_list(index_list_node)
+            else:
+                indices = tuple(_extract_domain_indices(index_list_node))
+            self._ensure_sets(indices, "prod indices", node)
+
+            # Simplified expansion for prod (same logic as sum but condensed)
+            expanded_indices: list[str] = []
+            for idx in indices:
+                if isinstance(idx, str) and idx in self.model.sets:
+                    set_def = self.model.sets[idx]
+                    members_are_domain_sets = (
+                        set_def.members is not None
+                        and len(set_def.members) > 1
+                        and all(
+                            m in self.model.sets or m in self.model.aliases for m in set_def.members
+                        )
+                    )
+                    if members_are_domain_sets:
+                        expanded_indices.extend(set_def.members)
+                    else:
+                        expanded_indices.append(idx)
+                else:
+                    expanded_indices.append(idx)
+
+            new_prod_indices = set(expanded_indices) - set(free_domain)
+            remaining_domain = tuple(d for d in free_domain if d not in new_prod_indices)
+            seen: set[str] = set()
+            body_domain = tuple(
+                x
+                for x in list(expanded_indices) + list(remaining_domain)
+                if not (x in seen or seen.add(x))  # type: ignore[func-returns-value]
+            )
+
+            if condition_expr is not None:
+                condition_expr = self._expr(index_spec_node.children[2], body_domain)
+
+            body = self._expr(node.children[2], body_domain)
+
+            if condition_expr is not None:
+                body = Binary("*", condition_expr, body)
+
+            expr = Prod(indices, body)
+            object.__setattr__(expr, "prod_indices", tuple(indices))
             return self._attach_domain(expr, remaining_domain)
 
         if node.data == "binop":

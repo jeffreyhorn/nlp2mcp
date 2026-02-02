@@ -131,16 +131,21 @@
 ### Day 6: Parse Improvements (Part 1)
 **Focus:** Lexer quick wins
 
-- [ ] Reserved word conflicts (`inf`/`na`) (2h)
-  - Context-aware lexing in data sections
-  - **Expected:** +12 models parsing
-- [ ] Display statement continuation (2h)
-  - Multi-line display support
-  - **Expected:** +6 models parsing
+- [x] Reserved word conflicts (`inf`/`na`) (2h) ✅
+  - Fixed preprocessor bug: comments with `/` (e.g., "Primal/Dual") were triggering data block detection
+  - **Actual:** +9 models parsing (3 have secondary put statement issues)
+- [x] Display statement continuation (2h) ✅
+  - Made comma optional in display_stmt grammar rule
+  - **Actual:** +5 models parsing (1 has secondary put statement issue)
+- [x] Bonus: Added `prod` aggregation function support
+  - Grammar: Added PROD_K and prod_expr rules
+  - Parser: Added Prod AST node and handler
+  - **Impact:** Enabled display continuation models to fully parse
 
 **Deliverables:**
-- Reserved word handling improved
-- Display statement fixes
+- Reserved word handling improved via preprocessor comment fix
+- Display statement comma now optional
+- `prod()` function support added
 
 ---
 

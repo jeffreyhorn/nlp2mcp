@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Day 6: Parse Improvements (Part 1) - 2026-02-02
+
+**Branch:** `sprint17-day6-lexer-quick-wins`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Implemented lexer quick wins: fixed preprocessor comment handling bug that affected reserved word models, made display statement commas optional, and added `prod` aggregation function support as a bonus. **+14 models now parsing**.
+
+#### Changes
+
+##### Fixed
+- **Preprocessor comment handling bug** - Comments containing `/` (e.g., "* Primal/Dual Variables") were incorrectly triggering data block detection and adding commas to subsequent lines
+  - Fix: Skip comment lines early in `normalize_multi_line_continuations()` function
+  - Impact: 9 models from reserved word conflict category now parse
+
+##### Added
+- **Optional commas in display statements** - GAMS allows display items separated by whitespace, not just commas
+  - Updated `display_stmt` and `display_stmt_nosemi` grammar rules to use `","?`
+  - Impact: 5 models from display continuation category now parse
+
+- **`prod` aggregation function support** - Added product aggregation (like `sum` but multiplicative)
+  - Grammar: `PROD_K` terminal and `prod_expr` rule
+  - AST: New `Prod` class in `src/ir/ast.py`
+  - Parser: Handler for `prod` node in `_expr()` method
+  - Impact: Enabled display continuation models that use `prod()` to fully parse
+
+#### Models Now Parsing (14 total)
+
+**Reserved word category (9):**
+- ps2_f, ps2_f_eff, ps2_f_s, ps2_s, ps3_f, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp
+
+**Display continuation category (5):**
+- irscge, lrgcge, moncge, quocge, twocge
+
+#### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/ir/preprocessor.py` | Skip comments early in normalize_multi_line_continuations() |
+| `src/gams/gams_grammar.lark` | Optional comma in display_stmt, added PROD_K and prod_expr |
+| `src/ir/ast.py` | Added Prod class |
+| `src/ir/parser.py` | Added Prod import and handler |
+
+#### Metrics
+
+- Parse: 100/219 (45.7%) - improved from baseline
+- All quality checks pass (typecheck, lint, format, test)
+
+---
+
 ### Sprint 17 Day 0: Sprint Setup & Verification - 2026-01-31
 
 **Branch:** `sprint17-day0-setup`  

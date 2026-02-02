@@ -511,7 +511,9 @@ abort_base: "abort"i DOLLAR "[" expr "]" STRING ("," display_item)*  -> abort_co
           | "abort"i                                                  -> abort_plain
 
 // Top-level statements (with SEMI)
-display_stmt: "display"i display_item ("," display_item)* SEMI
+// Sprint 17 Day 6: Made comma optional to support whitespace/newline separation
+// GAMS allows: display a, b, c; OR display a b c; OR display a b\n c d;
+display_stmt: "display"i display_item (","? display_item)* SEMI
 
 display_item: expr
             | STRING
@@ -519,7 +521,8 @@ display_item: expr
 abort_stmt: abort_base SEMI
 
 // Variants for use in if-statements (without SEMI)
-display_stmt_nosemi: "display"i display_item ("," display_item)*
+// Sprint 17 Day 6: Made comma optional to support whitespace/newline separation
+display_stmt_nosemi: "display"i display_item (","? display_item)*
 
 abort_stmt_nosemi: abort_base
 
@@ -530,6 +533,8 @@ abort_stmt_nosemi: abort_base
 ?expr: or_expr
 
 SUM_K: "sum"i
+// Sprint 17 Day 6: Added prod as aggregation function (like sum)
+PROD_K: "prod"i
 
 ?or_expr: and_expr
         | or_expr OR and_expr          -> binop
@@ -566,6 +571,7 @@ symbol_plain: ID
 ?atom: NUMBER                             -> number
      | func_call                          -> funccall
      | sum_expr
+     | prod_expr
      | compile_time_const                 -> compile_const
      | ref_bound
      | ref_indexed
@@ -579,6 +585,10 @@ compile_const_path: ID ("." ID)*
 
 sum_expr: SUM_K "(" sum_domain "," expr ")"   -> sum
         | SUM_K "{" sum_domain "," expr "}"   -> sum
+
+// Sprint 17 Day 6: Added prod aggregation function (like sum but for products)
+prod_expr: PROD_K "(" sum_domain "," expr ")"   -> prod
+         | PROD_K "{" sum_domain "," expr "}"   -> prod
 
 sum_domain: index_spec
           | "(" index_spec ")"  -> tuple_domain

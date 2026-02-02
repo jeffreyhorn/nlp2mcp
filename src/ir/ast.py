@@ -167,6 +167,24 @@ class Sum(Expr):
 
 
 @dataclass(frozen=True)
+class Prod(Expr):
+    """prod(i,j, body) — product over indices (like sum but multiplicative).
+
+    Sprint 17 Day 6: Added for GAMS prod() aggregation function support.
+    """
+
+    index_sets: tuple[str, ...]
+    body: Expr
+
+    def children(self) -> Iterable[Expr]:
+        yield self.body
+
+    def __repr__(self) -> str:
+        idx = ",".join(self.index_sets)
+        return f"Prod(({idx}), {self.body!r})"
+
+
+@dataclass(frozen=True)
 class Call(Expr):
     """Function call: exp(x), log(x), power(x,y), etc."""
 
