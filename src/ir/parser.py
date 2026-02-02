@@ -3275,6 +3275,8 @@ class _ModelBuilder:
         if condition_expr is not None:
             body = Binary("*", condition_expr, body)
 
+        # Note: this assumes all aggregation classes (Sum, Prod) share the same
+        # constructor signature: (index_sets, body). Keep constructors aligned.
         expr = aggregation_class(indices, body)
 
         return self._attach_domain(expr, remaining_domain)
