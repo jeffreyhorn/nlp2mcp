@@ -1653,27 +1653,49 @@ def _partial_collapse_sum(
     matched_concrete: list[str] = []
     remaining_sum_indices: list[str] = []
 
-    # Try to match each wrt_index to a sum_index
-    wrt_indices_used = [False] * len(wrt_indices)
-
-    for sum_idx in sum_index_sets:
-        found_match = False
-        for i, wrt_idx in enumerate(wrt_indices):
-            if not wrt_indices_used[i] and _is_concrete_instance_of(wrt_idx, sum_idx, config):
-                matched_sum_indices.append(sum_idx)
-                matched_concrete.append(wrt_idx)
-                wrt_indices_used[i] = True
-                found_match = True
+    # First, try positional matching (most common case in GAMS models).
+    # This handles cases where sum indices are ordered to match variable indices,
+    # e.g., sum((i,j), x(i,j)) w.r.t. x('p1','q1') -> i matches p1, j matches q1.
+    # Positional matching avoids ambiguity when multiple indices could match.
+    positional_match = True
+    for i, wrt_idx in enumerate(wrt_indices):
+        if i < len(sum_index_sets):
+            if not _is_concrete_instance_of(wrt_idx, sum_index_sets[i], config):
+                positional_match = False
                 break
-        if not found_match:
-            remaining_sum_indices.append(sum_idx)
+        else:
+            positional_match = False
+            break
+
+    if positional_match:
+        # Use positional matching
+        matched_sum_indices = list(sum_index_sets[: len(wrt_indices)])
+        matched_concrete = list(wrt_indices)
+        remaining_sum_indices = list(sum_index_sets[len(wrt_indices) :])
+    else:
+        # Fall back to searching for matches (handles reordered indices)
+        wrt_indices_used = [False] * len(wrt_indices)
+
+        for sum_idx in sum_index_sets:
+            found_match = False
+            for i, wrt_idx in enumerate(wrt_indices):
+                if not wrt_indices_used[i] and _is_concrete_instance_of(wrt_idx, sum_idx, config):
+                    matched_sum_indices.append(sum_idx)
+                    matched_concrete.append(wrt_idx)
+                    wrt_indices_used[i] = True
+                    found_match = True
+                    break
+            if not found_match:
+                remaining_sum_indices.append(sum_idx)
 
     # If no matches found, return None to fall through to normal case
     if not matched_sum_indices:
         return None
 
     # All wrt_indices should have been matched
-    if not all(wrt_indices_used):
+    # For positional matching, this is guaranteed if we got here
+    # For fallback matching, check that all wrt_indices were used
+    if len(matched_concrete) != len(wrt_indices):
         # Some wrt_indices didn't match any sum index - this shouldn't happen
         # for valid differentiation, but fall through to normal case
         return None
