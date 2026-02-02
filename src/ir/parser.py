@@ -3358,11 +3358,9 @@ class _ModelBuilder:
             sum_domain_node = node.children[1]
 
             # Handle sum_domain which can be index_spec or tuple_domain
+            # Note: Both cases extract the first child - tuple_domain wraps index_spec
             condition_expr = None
-            if sum_domain_node.data == "tuple_domain":
-                index_spec_node = sum_domain_node.children[0]
-            else:
-                index_spec_node = sum_domain_node.children[0]
+            index_spec_node = sum_domain_node.children[0]
 
             index_list_node = index_spec_node.children[0]
 
