@@ -639,12 +639,18 @@ def _add_indexed_jacobian_terms(
                     # Need to sum over the constraint's domain
                     term = Sum(mult_domain, term)
                 else:
-                    # Partial overlap that's not a subset - incompatible
-                    raise ValueError(
-                        f"Incompatible domains for stationarity: variable domain {var_domain}, "
-                        f"multiplier domain {mult_domain}. Multiplier domain must be either "
-                        f"a subset of variable domain or completely disjoint."
-                    )
+                    # Partial overlap: domains share some indices but each has unique ones
+                    # This happens when a constraint sums over a variable using different indices.
+                    # Example: stiffness(j,k).. sum(i, s(i,k)*b(j,i)) =E= f(j,k)
+                    #   - Variable s has domain ('i', 'k')
+                    #   - Constraint stiffness has domain ('j', 'k')
+                    #   - Shared: 'k', Extra in mult: 'j', Extra in var: 'i'
+                    # The stationarity term should sum over the extra multiplier indices:
+                    #   sum(j, derivative * lambda_stiffness(j,k))
+                    extra_mult_indices = mult_domain_set - var_domain_set
+                    sum_indices = tuple(idx for idx in mult_domain if idx in extra_mult_indices)
+                    if sum_indices:
+                        term = Sum(sum_indices, term)
 
                 expr = Binary("+", expr, term)
         else:
