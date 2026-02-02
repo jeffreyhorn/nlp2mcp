@@ -3160,7 +3160,7 @@ class _ModelBuilder:
     def _handle_aggregation(
         self,
         node: Tree,
-        aggregation_class: type,
+        aggregation_class: type[Sum] | type[Prod],
         free_domain: tuple[str, ...],
         expand_multidim: bool = False,
     ) -> Expr:
