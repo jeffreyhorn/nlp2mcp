@@ -3412,8 +3412,8 @@ class _ModelBuilder:
                 body = Binary("*", condition_expr, body)
 
             expr = Prod(indices, body)
-            # Note: index_sets field already stores the indices; no additional attribute needed.
-            # (Sum has sum_indices for backwards compatibility with existing tests.)
+            # Note: the index_sets field on Prod (and Sum) already stores the indices; no
+            # additional compatibility attribute is required.
             return self._attach_domain(expr, remaining_domain)
 
         if node.data == "binop":

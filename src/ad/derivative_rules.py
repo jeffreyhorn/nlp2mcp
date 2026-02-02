@@ -1875,6 +1875,21 @@ def _substitute_sum_indices(
     return _apply_index_substitution(expr, substitution)
 
 
+def _substitute_aggregation_body(expr: Sum | Prod, substitution: dict[str, str]) -> Expr:
+    """
+    Substitute indices in an aggregation body, filtering out bound variables.
+
+    Args:
+        expr: Sum or Prod aggregation expression
+        substitution: Mapping from symbolic to concrete indices
+
+    Returns:
+        The body expression with substituted indices (bound variables excluded)
+    """
+    filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
+    return _apply_index_substitution(expr.body, filtered_sub)
+
+
 def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
     """
     Recursively apply index substitution to an expression.
@@ -1918,18 +1933,14 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         # Recursively substitute in all arguments
         new_args = tuple(_apply_index_substitution(arg, substitution) for arg in expr.args)
         return Call(expr.func, new_args)
-    elif isinstance(expr, Sum):
+    elif isinstance(expr, (Sum, Prod)):
         # Don't substitute aggregation's own bound variables, but substitute in body.
         # Filter out bound variables from substitution to avoid capturing.
-        filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
-        new_body = _apply_index_substitution(expr.body, filtered_sub)
-        return Sum(expr.index_sets, new_body)
-    elif isinstance(expr, Prod):
-        # Don't substitute aggregation's own bound variables, but substitute in body.
-        # Filter out bound variables from substitution to avoid capturing.
-        filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
-        new_body = _apply_index_substitution(expr.body, filtered_sub)
-        return Prod(expr.index_sets, new_body)
+        new_body = _substitute_aggregation_body(expr, substitution)
+        if isinstance(expr, Sum):
+            return Sum(expr.index_sets, new_body)
+        else:
+            return Prod(expr.index_sets, new_body)
     else:
         # Unknown expression type, return as-is
         return expr
