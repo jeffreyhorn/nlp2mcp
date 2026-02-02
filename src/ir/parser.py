@@ -3354,19 +3354,17 @@ class _ModelBuilder:
 
         # Sprint 17 Day 6: Added prod handler (same logic as sum, but creates Prod)
         if node.data == "prod":
-            # Extract base identifiers from sum_domain (reusing sum_domain rule)
+            # Extract base identifiers from the shared `sum_domain` grammar rule.
+            # In the grammar, `sum_domain` is the common domain/index specification
+            # used by both sum and prod expressions, so we reuse it here instead of
+            # introducing a separate `prod_domain` rule.
             sum_domain_node = node.children[1]
 
-            # Handle sum_domain which can be index_spec or tuple_domain
-            # Note: Both cases extract the first child - tuple_domain wraps index_spec
-            condition_expr = None
+            # Handle sum_domain which can be index_spec or tuple_domain; in both cases
+            # we work with the underlying index_spec node (tuple_domain wraps index_spec).
             index_spec_node = sum_domain_node.children[0]
 
             index_list_node = index_spec_node.children[0]
-
-            # Check if there's a conditional (DOLLAR expr)
-            if len(index_spec_node.children) > 1:
-                condition_expr = self._expr(index_spec_node.children[2], free_domain)
 
             if index_list_node.data == "id_list":
                 indices = _id_list(index_list_node)
@@ -3402,7 +3400,10 @@ class _ModelBuilder:
                 if not (x in seen or seen.add(x))  # type: ignore[func-returns-value]
             )
 
-            if condition_expr is not None:
+            # Check if there's a conditional (DOLLAR expr) - parse with body_domain
+            # so condition can reference prod indices
+            condition_expr = None
+            if len(index_spec_node.children) > 1:
                 condition_expr = self._expr(index_spec_node.children[2], body_domain)
 
             body = self._expr(node.children[2], body_domain)
