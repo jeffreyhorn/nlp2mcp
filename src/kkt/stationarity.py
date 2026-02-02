@@ -610,24 +610,35 @@ def _add_indexed_jacobian_terms(
                 mult_ref = MultiplierRef(mult_base_name, mult_domain)
                 term: Expr = Binary("*", indexed_deriv, mult_ref)
 
-                # Only use sum if constraint domain is different from variable domain
-                # If domains match, it's a direct term: deriv(i) * mult(i)
-                # If domains differ and compatible, we need sum: sum(j, deriv * mult(j))
-                if mult_domain != var_domain and len(mult_domain) > 0:
-                    # Check domain compatibility: mult_domain should be subset of var_domain
-                    # or they should be disjoint (independent indexing)
-                    mult_domain_set = set(mult_domain)
-                    var_domain_set = set(var_domain)
-                    if not mult_domain_set.issubset(
-                        var_domain_set
-                    ) and mult_domain_set.intersection(var_domain_set):
-                        # Domains overlap but aren't compatible for summation
-                        raise ValueError(
-                            f"Incompatible domains for summation: variable domain {var_domain}, "
-                            f"multiplier domain {mult_domain}. Multiplier domain must be either "
-                            f"a subset of variable domain or completely disjoint."
-                        )
+                # Determine if we need a sum or a direct term:
+                # - If domains match exactly: direct term deriv(i) * mult(i)
+                # - If mult_domain is subset of var_domain: direct term deriv(i,j) * mult(i)
+                #   (the multiplier indices are shared with the variable - no summation needed)
+                # - If mult_domain is disjoint from var_domain: sum over mult_domain
+                #   (e.g., sum(k, deriv * mult(k)) where k is independent of variable indices)
+                # - If mult_domain partially overlaps var_domain but is not a subset: error
+                mult_domain_set = set(mult_domain)
+                var_domain_set = set(var_domain)
+
+                if mult_domain == var_domain:
+                    # Exact match: direct term, no sum needed
+                    pass
+                elif mult_domain_set.issubset(var_domain_set):
+                    # Subset: constraint domain is contained in variable domain
+                    # e.g., supply(i) contributes to stat_x(i,j) with direct term lam_supply(i)
+                    # No sum needed - the i index is shared
+                    pass
+                elif not mult_domain_set.intersection(var_domain_set):
+                    # Disjoint: constraint has indices independent of variable
+                    # Need to sum over the constraint's domain
                     term = Sum(mult_domain, term)
+                else:
+                    # Partial overlap that's not a subset - incompatible
+                    raise ValueError(
+                        f"Incompatible domains for stationarity: variable domain {var_domain}, "
+                        f"multiplier domain {mult_domain}. Multiplier domain must be either "
+                        f"a subset of variable domain or completely disjoint."
+                    )
 
                 expr = Binary("+", expr, term)
         else:
