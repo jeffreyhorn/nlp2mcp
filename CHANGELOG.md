@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Day 7: Grammar Additions - 2026-02-02
+
+**Branch:** `sprint17-day7-grammar-additions`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Added square bracket conditional support and solve keyword variants. Grammar now supports `$[cond]` syntax and `minimize`/`maximize` keywords (without -ing suffix).
+
+#### Changes
+
+##### Added
+- **Square bracket conditionals** - GAMS allows `$[condition]` as alternative to `$(condition)`
+  - Updated grammar rules: condition, dollar_expr, assignment_stmt, assignment_nosemi, loop_stmt filters, index_spec
+  - All contexts now support both `$[cond]` and `$(cond)` syntax
+  
+- **Solve keyword variants** - Added minimize/maximize without -ing suffix
+  - MINIMIZING_K: now matches `minimizing|minimize|min`
+  - MAXIMIZING_K: now matches `maximizing|maximize|max`
+
+##### Tests
+- Added 16 unit tests in `tests/unit/gams/test_grammar_additions.py`
+- Tests cover square bracket conditionals in assignments, equations, sum/prod, loops, abort
+- Tests cover all solve keyword variants
+
+#### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/gams/gams_grammar.lark` | Added square bracket alternatives and solve keyword variants |
+| `tests/unit/gams/test_grammar_additions.py` | New test file with 16 tests |
+| `docs/planning/EPIC_3/SPRINT_17/SPRINT_SCHEDULE.md` | Marked Day 7 complete |
+
+#### Note
+
+Target models from the improvement plan (clearlak, procmean, springchain, ampl, meanvar, etc.) have other unrelated parsing issues (tuple expansion syntax, curly braces, compile-time constants in ranges) that prevent them from parsing. The grammar changes are working correctly as verified by the comprehensive unit tests.
+
+---
+
 ### Sprint 17 Day 6: Parse Improvements (Part 1) - 2026-02-02
 
 **Branch:** `sprint17-day6-lexer-quick-wins`  
