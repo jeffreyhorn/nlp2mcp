@@ -3277,12 +3277,6 @@ class _ModelBuilder:
 
         expr = aggregation_class(indices, body)
 
-        # Add index attributes for backwards compatibility with tests
-        if aggregation_class == Sum:
-            object.__setattr__(expr, "sum_indices", tuple(indices))
-        elif aggregation_class == Prod:
-            object.__setattr__(expr, "prod_indices", tuple(indices))
-
         return self._attach_domain(expr, remaining_domain)
 
     def _expr(self, node: Tree | Token, free_domain: tuple[str, ...]) -> Expr:
