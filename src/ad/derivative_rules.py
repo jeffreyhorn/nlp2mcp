@@ -1974,17 +1974,17 @@ def _diff_prod(
         Differentiated expression representing d(prod)/dx
 
     Examples:
-        >>> # prod(i, x(i)) -> prod(i, x(i)) * sum(i, 1/x(i) * 1)
+        >>> # prod(i, x(i)) -> prod(i, x(i)) * sum(i, 1/x(i))
         >>> expr = Prod(("i",), VarRef("x", ("i",)))
         >>> result = _diff_prod(expr, "x", None)
 
-        >>> # prod(i, x(i)**alpha(i)) -> prod(...) * sum(i, alpha(i)/x(i) * 1)
+        >>> # prod(i, x(i)**alpha(i)) -> prod(...) * sum(i, alpha(i)/x(i))
         >>> # This is the Cobb-Douglas form common in CGE models
 
     Notes:
         - If body doesn't depend on wrt_var, derivative is 0
         - Uses logarithmic derivative for numerical stability
-        - Result is: prod(i, f(i)) * sum(i, (1/f(i)) * df(i)/dx)
+        - Result is: prod(i, f(i)) * sum(i, df(i)/dx / f(i))
     """
     # Differentiate the body expression
     body_derivative = differentiate_expr(expr.body, wrt_var, wrt_indices, config)
@@ -1993,11 +1993,11 @@ def _diff_prod(
     if isinstance(body_derivative, Const) and body_derivative.value == 0.0:
         return Const(0.0)
 
-    # Build the logarithmic derivative: sum(i, (1/f(i)) * df(i)/dx)
+    # Build the logarithmic derivative: sum(i, df(i)/dx / f(i))
     # This is: sum(index_sets, body_derivative / body)
     log_derivative_body = Binary("/", body_derivative, expr.body)
     log_derivative = Sum(expr.index_sets, log_derivative_body)
 
-    # Result: prod(i, f(i)) * sum(i, (1/f(i)) * df(i)/dx)
+    # Result: prod(i, f(i)) * sum(i, df(i)/dx / f(i))
     # Which is: expr * log_derivative
     return Binary("*", expr, log_derivative)

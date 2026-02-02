@@ -173,7 +173,7 @@ class Prod(Expr):
     Sprint 17 Day 6: Added for GAMS prod() aggregation function support.
     """
 
-    index_sets: tuple[str, ...]
+    index_sets: tuple[str, ...]  # Symbolic set names to iterate over (e.g., ("i", "j"))
     body: Expr
 
     def children(self) -> Iterable[Expr]:
