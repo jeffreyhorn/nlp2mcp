@@ -536,7 +536,13 @@ def _replace_matching_indices(
                     new_indices.append(idx)
             else:
                 # The index should map to the target set from the declared domain
-                new_indices.append(target_set)
+                # BUT: if idx is already a set name (self-mapping in element_to_set),
+                # it's a symbolic index that should be preserved, not replaced with
+                # the parent set. E.g., 'cg' is a subset of 'genchar' - keep 'cg'.
+                if idx in element_to_set and element_to_set[idx] == idx:
+                    new_indices.append(idx)
+                else:
+                    new_indices.append(target_set)
         elif idx in element_to_set:
             # Replace element with its set name
             new_indices.append(element_to_set[idx])

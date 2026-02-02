@@ -1523,6 +1523,18 @@ def _diff_sum(
             )
             return result_body
 
+    # Check for partial collapse (sum has more indices than wrt_indices)
+    # For sum((i, cg), x(i) * y(cg)) w.r.t. x('p1'):
+    # - Sum has ("i", "cg"), wrt_indices is ("p1",)
+    # - The variable x(i) only uses index "i", not "cg"
+    # - We match "i" with "p1", "cg" remains as a sum dimension
+    # - Differentiate body using symbolic "i" for matched dimension
+    # - Result: sum(cg, y(cg) * 1) with i->p1 substituted
+    if wrt_indices is not None and len(wrt_indices) < len(expr.index_sets):
+        result = _partial_collapse_sum(expr, wrt_var, wrt_indices, config)
+        if result is not None:
+            return result
+
     # Normal case: differentiate the body expression, passing wrt_indices through
     body_derivative = differentiate_expr(expr.body, wrt_var, wrt_indices, config)
 
@@ -1603,6 +1615,84 @@ def _partial_index_match(
     # For prefix matching, symbolic_wrt is just sum_index_sets + remaining
     symbolic_wrt = tuple(matched_symbolic) + remaining
     return tuple(matched_symbolic), tuple(matched_concrete), remaining, symbolic_wrt
+
+
+def _partial_collapse_sum(
+    expr: Sum,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...],
+    config: Config | None = None,
+) -> Expr | None:
+    """
+    Handle partial collapse when sum has more indices than wrt_indices.
+
+    For sum((i, cg), x(i) * y(cg)) w.r.t. x('p1'):
+    - Sum has ("i", "cg"), wrt_indices is ("p1",)
+    - Find which sum indices match wrt_indices: "i" matches "p1"
+    - Remaining sum indices: ("cg",)
+    - Differentiate body using symbolic indices for matched dimensions
+    - Result: sum(cg, [differentiated body with i->p1])
+
+    Args:
+        expr: Sum expression with more indices than wrt_indices
+        wrt_var: Variable name to differentiate with respect to
+        wrt_indices: Concrete indices (fewer than sum's indices)
+        config: Optional config with model_ir for set membership lookups
+
+    Returns:
+        Differentiated expression with partial collapse, or None if no match found
+
+    Examples:
+        >>> # sum((i, cg), x(i) * y(cg)) w.r.t. x('p1')
+        >>> # Returns: sum(cg, y(cg) * 1) after substituting i->p1
+    """
+    sum_index_sets = expr.index_sets
+
+    # Find which sum indices match wrt_indices
+    matched_sum_indices: list[str] = []
+    matched_concrete: list[str] = []
+    remaining_sum_indices: list[str] = []
+
+    # Try to match each wrt_index to a sum_index
+    wrt_indices_used = [False] * len(wrt_indices)
+
+    for sum_idx in sum_index_sets:
+        found_match = False
+        for i, wrt_idx in enumerate(wrt_indices):
+            if not wrt_indices_used[i] and _is_concrete_instance_of(wrt_idx, sum_idx, config):
+                matched_sum_indices.append(sum_idx)
+                matched_concrete.append(wrt_idx)
+                wrt_indices_used[i] = True
+                found_match = True
+                break
+        if not found_match:
+            remaining_sum_indices.append(sum_idx)
+
+    # If no matches found, return None to fall through to normal case
+    if not matched_sum_indices:
+        return None
+
+    # All wrt_indices should have been matched
+    if not all(wrt_indices_used):
+        # Some wrt_indices didn't match any sum index - this shouldn't happen
+        # for valid differentiation, but fall through to normal case
+        return None
+
+    # Differentiate the body using symbolic indices for matched dimensions
+    # This allows x(i) to match when we use ('i',) as wrt_indices
+    symbolic_wrt = tuple(matched_sum_indices)
+    body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_wrt, config)
+
+    # Substitute matched sum indices with their concrete values
+    result_body = _substitute_sum_indices(
+        body_derivative, tuple(matched_sum_indices), tuple(matched_concrete)
+    )
+
+    # If there are remaining sum indices, wrap in a Sum
+    if remaining_sum_indices:
+        return Sum(tuple(remaining_sum_indices), result_body)
+    else:
+        return result_body
 
 
 def _sum_should_collapse(
