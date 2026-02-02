@@ -3172,7 +3172,9 @@ class _ModelBuilder:
             aggregation_class: Sum or Prod class to instantiate
             free_domain: Current free domain from enclosing scope
             expand_multidim: If True, apply heuristic expansion for multi-dimensional
-                sets (used by both sum and prod)
+                sets. When a set contains "i.j" style tuples, this heuristic attempts
+                to infer the base sets (e.g., expanding set "ij" to indices "i" and "j").
+                Currently used by both sum and prod aggregations.
 
         Returns:
             Aggregation expression with attached domain
@@ -3198,7 +3200,15 @@ class _ModelBuilder:
         else:
             indices = tuple(_extract_domain_indices(index_list_node))
 
-        self._ensure_sets(indices, f"{aggregation_class.__name__.lower()} indices", node)
+        # Use explicit names for error messages instead of relying on class name
+        if aggregation_class is Sum:
+            aggregation_name = "sum"
+        elif aggregation_class is Prod:
+            aggregation_name = "prod"
+        else:
+            aggregation_name = aggregation_class.__name__.lower()
+
+        self._ensure_sets(indices, f"{aggregation_name} indices", node)
 
         # Expand indices based on set definitions
         expanded_indices: list[str] = []
