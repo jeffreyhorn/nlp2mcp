@@ -3172,7 +3172,7 @@ class _ModelBuilder:
             aggregation_class: Sum or Prod class to instantiate
             free_domain: Current free domain from enclosing scope
             expand_multidim: If True, apply heuristic expansion for multi-dimensional
-                sets (used by sum, not prod)
+                sets (used by both sum and prod)
 
         Returns:
             Aggregation expression with attached domain
@@ -3215,10 +3215,10 @@ class _ModelBuilder:
                 if members_are_domain_sets:
                     expanded_indices.extend(set_def.members)
                 elif expand_multidim:
-                    # Heuristic expansion for multi-dimensional sets used by sum-like callers.
-                    # When expand_multidim is True (e.g. for sum), we try to infer base sets from
-                    # multi-dimensional set members; callers such as prod pass expand_multidim=False
-                    # because they do not rely on this heuristic expansion and instead use explicit domains.
+                    # Heuristic expansion for multi-dimensional sets.
+                    # When expand_multidim is True, we try to infer base sets from multi-dimensional
+                    # set members. Both sum and prod use this heuristic to handle cases like
+                    # sum(ij, x(ij)) where ij contains "i.j" tuples that should expand to (i, j).
                     members_are_multidim = (
                         set_def.members is not None
                         and len(set_def.members) > 0
@@ -3348,8 +3348,8 @@ class _ModelBuilder:
             return self._handle_aggregation(node, Sum, free_domain, expand_multidim=True)
 
         if node.data == "prod":
-            # Prod uses the same logic but without multi-dimensional heuristic expansion
-            return self._handle_aggregation(node, Prod, free_domain, expand_multidim=False)
+            # Prod uses the same heuristic expansion as sum for multi-dimensional sets
+            return self._handle_aggregation(node, Prod, free_domain, expand_multidim=True)
 
         if node.data == "binop":
             left = self._expr(node.children[0], free_domain)
