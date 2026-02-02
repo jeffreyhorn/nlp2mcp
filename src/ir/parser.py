@@ -3162,7 +3162,6 @@ class _ModelBuilder:
         node: Tree,
         aggregation_class: type[Sum] | type[Prod],
         free_domain: tuple[str, ...],
-        expand_multidim: bool = False,
     ) -> Expr:
         """
         Handle sum/prod aggregation expressions with shared logic.
@@ -3171,13 +3170,14 @@ class _ModelBuilder:
             node: Parse tree node for sum or prod expression
             aggregation_class: Sum or Prod class to instantiate
             free_domain: Current free domain from enclosing scope
-            expand_multidim: If True, apply heuristic expansion for multi-dimensional
-                sets. When a set contains "i.j" style tuples, this heuristic attempts
-                to infer the base sets (e.g., expanding set "ij" to indices "i" and "j").
-                Currently used by both sum and prod aggregations.
 
         Returns:
             Aggregation expression with attached domain
+
+        Note:
+            This method applies heuristic expansion for multi-dimensional sets.
+            When a set contains "i.j" style tuples, it attempts to infer the base
+            sets (e.g., expanding set "ij" to indices "i" and "j").
         """
         # Extract base identifiers from sum_domain (shared grammar rule for sum/prod)
         sum_domain_node = node.children[1]
@@ -3224,7 +3224,8 @@ class _ModelBuilder:
                 )
                 if members_are_domain_sets:
                     expanded_indices.extend(set_def.members)
-                elif expand_multidim:
+                else:
+                    # Heuristic expansion for multi-dimensional sets
                     members_are_multidim = (
                         set_def.members is not None
                         and len(set_def.members) > 0
@@ -3256,8 +3257,6 @@ class _ModelBuilder:
                             expanded_indices.append(idx)
                     else:
                         expanded_indices.append(idx)
-                else:
-                    expanded_indices.append(idx)
             else:
                 expanded_indices.append(idx)
 
@@ -3352,12 +3351,10 @@ class _ModelBuilder:
             return self._attach_domain(Const(float(node.children[0])), free_domain)
 
         if node.data == "sum":
-            # Sum uses expand_multidim=True for heuristic expansion of multi-dimensional sets
-            return self._handle_aggregation(node, Sum, free_domain, expand_multidim=True)
+            return self._handle_aggregation(node, Sum, free_domain)
 
         if node.data == "prod":
-            # Prod uses the same heuristic expansion as sum for multi-dimensional sets
-            return self._handle_aggregation(node, Prod, free_domain, expand_multidim=True)
+            return self._handle_aggregation(node, Prod, free_domain)
 
         if node.data == "binop":
             left = self._expr(node.children[0], free_domain)
