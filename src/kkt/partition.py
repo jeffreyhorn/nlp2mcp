@@ -197,7 +197,9 @@ def _process_indexed_bounds(
     values = list(bound_map.values())
     finite_values = [v for v in values if v != inf_sentinel]
     has_infinite = len(finite_values) < len(values)
-    has_scalar_bound = scalar_bound is not None
+    # Treat explicit infinite scalar bounds the same as no scalar bound,
+    # since partition_constraints() skips infinite scalar bounds anyway
+    has_scalar_bound = scalar_bound is not None and scalar_bound != inf_sentinel
 
     # Track infinite bounds (always do this; it is cheap and required for diagnostics)
     for indices, val in bound_map.items():

@@ -339,3 +339,31 @@ class TestPartitionConstraints:
         assert result.bounds_lo[("y", ())].value == 1.0
         assert ("y", ("x1",)) not in result.bounds_lo
         assert ("y", ("x2",)) not in result.bounds_lo
+
+    def test_infinite_scalar_bound_allows_consolidation(self):
+        """Infinite scalar bound should not block uniform consolidation.
+
+        When a variable has an infinite scalar bound (e.g., lo=-inf),
+        it is skipped by partition_constraints(). The indexed bounds
+        should still consolidate if they are uniform.
+        """
+        model = ModelIR()
+        from src.ir.symbols import SetDef
+
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+
+        # Variable with infinite scalar lower bound AND uniform indexed lower bounds
+        var = VariableDef(name="x", domain=("i",), lo=float("-inf"))
+        var.lo_map[("a",)] = 0.5
+        var.lo_map[("b",)] = 0.5
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Scalar -inf bound should be skipped
+        assert ("x", (), "lo") in result.skipped_infinite
+        # Indexed bounds should consolidate (infinite scalar doesn't block it)
+        assert ("x", ()) in result.bounds_lo
+        assert result.bounds_lo[("x", ())].value == 0.5
+        assert ("x", ("a",)) not in result.bounds_lo
+        assert ("x", ("b",)) not in result.bounds_lo
