@@ -3198,8 +3198,7 @@ class _ModelBuilder:
         else:
             indices = tuple(_extract_domain_indices(index_list_node))
 
-        agg_name = aggregation_class.__name__.lower()
-        self._ensure_sets(indices, f"{agg_name} indices", node)
+        self._ensure_sets(indices, f"{aggregation_class.__name__.lower()} indices", node)
 
         # Expand indices based on set definitions
         expanded_indices: list[str] = []
