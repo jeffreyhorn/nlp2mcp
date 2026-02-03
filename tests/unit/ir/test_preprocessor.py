@@ -901,13 +901,22 @@ Parameter p / 1 /;"""
 
     def test_include_like_identifier_not_stripped(self):
         """Test that identifiers like $include_foo are not misdetected as include directives."""
-        source = """$set include_path "some/path"
+        # This tests that the word-boundary check correctly handles underscore.
+        # $include_data and $batInclude_file should NOT be detected as $include/$batInclude.
+        # But a real $include directive should still be stripped.
+        source = """$include_data is not a real directive
+$batInclude_file also not a directive
+$include "real_include.gms"
 Parameter p / 1 /;"""
         result = preprocess_text(source)
-        # $set include_path should be processed normally, not stripped as $include
-        # The $set directive itself will be stripped by strip_set_directives
         lines = result.split("\n")
-        # First line should be a stripped $set, not a stripped $include
-        assert "include_path" in lines[0] or "* [Stripped:" in lines[0]
+        # Lines 1 and 2 should NOT be stripped (they contain $include_data and $batInclude_file)
+        assert "$include_data" in lines[0]
+        assert not lines[0].strip().startswith("* [Stripped:")
+        assert "$batInclude_file" in lines[1] or "$batinclude_file" in lines[1].lower()
+        assert not lines[1].strip().startswith("* [Stripped:")
+        # Line 3 should BE stripped (it's a real $include directive)
+        assert lines[2].strip().startswith("* [Stripped:")
+        assert "real_include.gms" in lines[2]
         # Parameter line should be intact
         assert "Parameter p" in result
