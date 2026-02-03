@@ -942,3 +942,29 @@ Parameter p / 1 /;"""
         # Should NOT be stripped - the $include is inside quoted string
         assert "Parameter q" in result_double
         assert not result_double.strip().startswith("* [Stripped:")
+
+    def test_include_after_multiplication_stripped(self):
+        """Test that $include after multiplication operator is still detected.
+
+        The '*' character can be either a multiplication operator or an inline
+        comment marker. When it appears in an expression like 'a*b', scanning
+        should continue to detect any $include directive later on the line.
+        """
+        # Include after multiplication should be stripped
+        source = 'eq.. a*b =e= 1; $include "x.gms"'
+        result = preprocess_text(source)
+        # The line should be stripped because it contains a real $include
+        assert result.strip().startswith("* [Stripped:")
+        assert "x.gms" in result
+
+    def test_include_in_inline_comment_after_semicolon_not_stripped(self):
+        """Test that $include in inline comment after semicolon is not stripped.
+
+        When '*' appears after ';', it starts an inline comment and any
+        $include inside should not cause the line to be stripped.
+        """
+        source = "Set i /a,b/; * This mentions $include for docs"
+        result = preprocess_text(source)
+        # Should NOT be stripped - the $include is in a comment after ;
+        assert "Set i" in result
+        assert not result.strip().startswith("* [Stripped:")
