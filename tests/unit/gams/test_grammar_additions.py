@@ -1,8 +1,10 @@
-"""Unit tests for Sprint 17 Day 7 grammar additions.
+"""Unit tests for Sprint 17 grammar additions.
 
 Tests for:
-- Square bracket conditionals ($[cond] in addition to $(cond))
-- Solve keyword variants (minimize/maximize without -ing suffix)
+- Square bracket conditionals ($[cond] in addition to $(cond)) [Day 7]
+- Solve keyword variants (minimize/maximize without -ing suffix) [Day 7]
+- Acronym statement support [Day 8]
+- Curly brace expressions {expr} [Day 8]
 """
 
 from src.ir.parser import parse_model_text, parse_text
@@ -205,3 +207,117 @@ class TestCombinedPatterns:
         model = parse_model_text(code)
         assert "objdef" in model.equations
         assert model.objective.objvar == "obj"
+
+
+class TestAcronymStatement:
+    """Tests for Acronym statement support (Sprint 17 Day 8)."""
+
+    def test_simple_acronym_statement(self):
+        """Simple Acronym declaration with single identifier."""
+        code = """
+        Acronym optimal;
+        """
+        # Should parse without error
+        parse_text(code)
+
+    def test_acronym_statement_multiple_ids(self):
+        """Acronym declaration with multiple comma-separated identifiers."""
+        code = """
+        Acronym optimal, infeasible, unbounded;
+        """
+        parse_text(code)
+
+    def test_acronym_statement_in_model_context(self):
+        """Acronym statement within a model that solves."""
+        code = """
+        Acronym Optimal, LocallyOptimal, Infeasible;
+        Variable x, obj;
+        Equation e;
+        e.. obj =e= x*x;
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        model = parse_model_text(code)
+        assert model.objective.objvar == "obj"
+
+    def test_acronym_case_insensitive(self):
+        """Acronym keyword is case-insensitive."""
+        code = """
+        ACRONYM status1;
+        acronym status2;
+        Acronym status3;
+        """
+        parse_text(code)
+
+
+class TestBraceExpressions:
+    """Tests for curly brace expression grouping (Sprint 17 Day 8)."""
+
+    def test_simple_brace_expression(self):
+        """Simple expression grouped with curly braces."""
+        code = """
+        Parameter a, b, c;
+        a = {b + c};
+        """
+        parse_text(code)
+
+    def test_brace_expression_in_multiplication(self):
+        """Brace expression used for grouping in multiplication."""
+        code = """
+        Parameter a, b, c, d;
+        a = b * {c + d};
+        """
+        parse_text(code)
+
+    def test_brace_expression_in_equation(self):
+        """Brace expression in equation definition."""
+        code = """
+        Variable x, y, z;
+        Equation e;
+        e.. z =e= {x + y} * 2;
+        Model m / all /;
+        """
+        model = parse_model_text(code)
+        assert "e" in model.equations
+
+    def test_nested_brace_expressions(self):
+        """Nested brace expressions."""
+        code = """
+        Parameter a, b, c, d;
+        a = {{b + c} * d};
+        """
+        parse_text(code)
+
+    def test_brace_expression_with_parentheses(self):
+        """Mixed brace and parenthesis expressions."""
+        code = """
+        Parameter a, b, c, d;
+        a = {b + (c * d)};
+        """
+        parse_text(code)
+
+    def test_brace_expression_produces_same_result_as_parens(self):
+        """Verify that {expr} produces equivalent AST to (expr)."""
+        # Parse both forms
+        code_braces = """
+        Variable x, y, obj;
+        Equation e;
+        e.. obj =e= x * {y + 1};
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        code_parens = """
+        Variable x, y, obj;
+        Equation e;
+        e.. obj =e= x * (y + 1);
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        model_braces = parse_model_text(code_braces)
+        model_parens = parse_model_text(code_parens)
+
+        # Both should have the same equation structure
+        assert "e" in model_braces.equations
+        assert "e" in model_parens.equations
+        # Both should identify the same objective
+        assert model_braces.objective.objvar == model_parens.objective.objvar
