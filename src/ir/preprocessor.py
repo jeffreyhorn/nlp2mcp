@@ -1843,8 +1843,10 @@ def _strip_include_directives(source: str) -> str:
     result = []
     for line in lines:
         if include_pattern.match(line):
-            # Replace with comment to preserve line numbers
-            result.append(f"* [stripped] {line}")
+            # Replace with comment to preserve line numbers, preserving original indentation
+            stripped = line.strip()
+            leading_ws = line[: len(line) - len(line.lstrip())]
+            result.append(f"{leading_ws}* [Stripped: {stripped}]")
         else:
             result.append(line)
     return "\n".join(result)

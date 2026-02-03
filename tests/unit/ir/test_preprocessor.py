@@ -760,10 +760,10 @@ Scalar factor / 1.0 / %N% /;"""
 $include "somefile.gms"
 Set i / i1*i%N% /;"""
         result = preprocess_text(source)
-        # $include should be converted to comment (not processed as include)
+        # $include should be converted to comment (stripped marker)
         lines = result.split("\n")
         include_line = [line for line in lines if "somefile.gms" in line][0]
-        assert include_line.startswith("* [stripped]")
+        assert include_line.startswith("* [Stripped:")
         # But %N% should still be expanded
         assert "i1*i5" in result
 
@@ -773,9 +773,10 @@ Set i / i1*i%N% /;"""
 $batInclude "somefile.gms" arg1 arg2
 Set i / i1*i%N% /;"""
         result = preprocess_text(source)
-        # $batInclude should be converted to comment
-        assert "$batInclude" not in result.lower()
-        assert "* [stripped]" in result
+        # $batInclude should be converted to comment (stripped marker)
+        lines = result.split("\n")
+        batinclude_line = [line for line in lines if "somefile.gms" in line][0]
+        assert batinclude_line.startswith("* [Stripped:")
         # But %N% should still be expanded
         assert "i1*i5" in result
 
@@ -785,10 +786,17 @@ Set i / i1*i%N% /;"""
 $if set DEBUG Parameter debug_mode / 1 /;
 $if not set DEBUG Parameter debug_mode / 0 /;"""
         result = preprocess_text(source)
-        # Since DEBUG is set, first branch should be kept
-        # This depends on the conditional processing implementation
-        # At minimum, the $set should be processed
-        assert "%DEBUG%" not in result
+        # Since DEBUG is set, the "$if set DEBUG" branch should be kept
+        # and the "$if not set DEBUG" branch should be removed/stripped
+        # Check that the "set" branch content is present (in a comment or as code)
+        assert "debug_mode / 1 /" in result
+        # Check that all $if directives are converted to comments (not raw directives)
+        lines = result.split("\n")
+        for line in lines:
+            # Lines starting with $if should not exist (they should be commented)
+            stripped = line.strip()
+            if stripped and not stripped.startswith("*"):
+                assert not stripped.lower().startswith("$if")
 
     def test_unsupported_directives_stripped(self):
         """Test that unsupported directives are stripped."""
