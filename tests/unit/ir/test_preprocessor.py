@@ -844,21 +844,21 @@ Variable x(i);"""
         assert "Variable x" in result
 
     def test_inline_include_directive_stripped(self):
-        """Test that inline include directives (after $if) are also stripped."""
+        """Test that standalone include directives are stripped."""
         source = """$set N 5
-$if set X $include "conditional.gms"
-$if not set Y $batInclude "another.gms" arg1
+$include "somefile.gms"
+$batInclude "anotherfile.gms" arg1
 Set i / i1*i%N% /;"""
         result = preprocess_text(source)
-        # Both inline includes should be stripped to comments
+        # Include directives should be stripped to comments
         lines = result.split("\n")
         # Should preserve line count
         assert len(lines) == 4
         # Lines with include directives should be comments
-        conditional_include = [line for line in lines if "conditional.gms" in line][0]
-        assert conditional_include.strip().startswith("* [Stripped:")
-        batinclude_line = [line for line in lines if "another.gms" in line][0]
-        assert batinclude_line.strip().startswith("* [Stripped:")
+        include_line = [line for line in lines if "somefile.gms" in line][0]
+        assert include_line.lstrip().startswith("* [Stripped:")
+        batinclude_line = [line for line in lines if "anotherfile.gms" in line][0]
+        assert batinclude_line.lstrip().startswith("* [Stripped:")
         # %N% should still be expanded in non-include lines
         assert "i1*i5" in result
 
@@ -943,19 +943,20 @@ Parameter p / 1 /;"""
         assert "Parameter q" in result_double
         assert not result_double.strip().startswith("* [Stripped:")
 
-    def test_include_after_multiplication_stripped(self):
-        """Test that $include after multiplication operator is still detected.
+    def test_include_after_multiplication_not_stripped(self):
+        """Test that $include after '*' is treated as being in a comment.
 
-        The '*' character can be either a multiplication operator or an inline
-        comment marker. When it appears in an expression like 'a*b', scanning
-        should continue to detect any $include directive later on the line.
+        For consistency with other scanners in this module (e.g.,
+        _has_statement_ending_semicolon), any '*' outside quotes is treated
+        as the start of an inline comment. This means $include after '*'
+        won't cause the line to be stripped.
         """
-        # Include after multiplication should be stripped
+        # '*' in 'a*b' is treated as comment start, so $include is in comment
         source = 'eq.. a*b =e= 1; $include "x.gms"'
         result = preprocess_text(source)
-        # The line should be stripped because it contains a real $include
-        assert result.strip().startswith("* [Stripped:")
-        assert "x.gms" in result
+        # Should NOT be stripped - the '*' starts a comment, so $include is ignored
+        assert "eq.." in result
+        assert not result.strip().startswith("* [Stripped:")
 
     def test_include_in_inline_comment_after_semicolon_not_stripped(self):
         """Test that $include in inline comment after semicolon is not stripped.

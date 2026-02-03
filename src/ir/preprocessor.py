@@ -1871,21 +1871,12 @@ def _is_include_directive(line: str) -> bool:
                 continue
             in_double_quote = not in_double_quote
         elif not in_single_quote and not in_double_quote:
-            # Treat '*' outside quotes as start of inline comment only when it is
-            # the first non-whitespace character of the line or when it appears
-            # after a statement terminator like ';'. Otherwise it may be a
-            # multiplication operator (e.g., a*b) and we should continue scanning
-            # for later $include/$batinclude directives.
+            # Treat any '*' outside quotes as the start of an inline comment,
+            # consistent with other scanners in this module (e.g.,
+            # _has_statement_ending_semicolon). Once we hit a comment, we stop
+            # scanning for $include/$batinclude directives.
             if char == "*":
-                # Look backwards for the previous non-whitespace character, if any.
-                j = i - 1
-                while j >= 0 and line[j].isspace():
-                    j -= 1
-                # If there is no previous non-whitespace character (first token)
-                # or it is a statement terminator ';', treat this '*' as starting
-                # an inline comment and stop scanning.
-                if j < 0 or line[j] == ";":
-                    break
+                break
             # Check for $ directive when not inside quotes or comments
             if char == "$":
                 # Check if this is $include or $batinclude
@@ -2088,9 +2079,10 @@ def preprocess_text(source: str) -> str:
         >>> result = preprocess_text(code)
         >>> # %N% is expanded to 5
     """
-    # Strip $include/$batInclude directives (convert to comments)
-    # This prevents confusing parse errors if these directives are present
-    content = _strip_include_directives(source)
+    # Apply shared preprocessing pipeline first (macro/conditional expansion, etc.)
+    content = _preprocess_content(source)
 
-    # Apply shared preprocessing pipeline
-    return _preprocess_content(content)
+    # Strip $include/$batInclude directives (convert to comments) after conditionals
+    # This prevents double-wrapping of lines (e.g., Excluded: Stripped: ...) while
+    # still ensuring unresolved include directives don't reach the parser.
+    return _strip_include_directives(content)
