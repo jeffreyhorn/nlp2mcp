@@ -5,8 +5,6 @@ Tests for:
 - Solve keyword variants (minimize/maximize without -ing suffix)
 """
 
-import pytest
-
 from src.ir.parser import parse_model_text, parse_text
 
 
