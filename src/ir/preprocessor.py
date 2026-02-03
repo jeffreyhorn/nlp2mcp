@@ -1850,14 +1850,25 @@ def _is_include_directive(line: str) -> bool:
     in_double_quote = False
     i = 0
     line_lower = line.lower()
+    length = len(line)
 
-    while i < len(line):
+    while i < length:
         char = line[i]
 
-        # Handle quote state changes (simple toggle, no escape handling needed for GAMS)
+        # Handle quote state changes with escaped quote handling ('' and "")
         if char == "'" and not in_double_quote:
+            # Check for escaped single quote ('') inside single-quoted string
+            if in_single_quote and i + 1 < length and line[i + 1] == "'":
+                # Skip both quotes - this is an escaped literal quote
+                i += 2
+                continue
             in_single_quote = not in_single_quote
         elif char == '"' and not in_single_quote:
+            # Check for escaped double quote ("") inside double-quoted string
+            if in_double_quote and i + 1 < length and line[i + 1] == '"':
+                # Skip both quotes - this is an escaped literal quote
+                i += 2
+                continue
             in_double_quote = not in_double_quote
         elif not in_single_quote and not in_double_quote:
             # Treat '*' outside quotes as start of inline comment - stop scanning

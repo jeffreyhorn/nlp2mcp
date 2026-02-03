@@ -920,3 +920,25 @@ Parameter p / 1 /;"""
         assert "real_include.gms" in lines[2]
         # Parameter line should be intact
         assert "Parameter p" in result
+
+    def test_include_in_escaped_quote_not_stripped(self):
+        """Test that $include inside strings with escaped quotes is NOT stripped.
+
+        GAMS uses doubled quotes to escape literal quotes inside strings.
+        The _is_include_directive() scanner must handle these correctly.
+        """
+        # Test escaped single quote with $include after it
+        # 'it''s $include text' represents the string "it's $include text"
+        source_single = "Parameter p / 'it''s $include text' /;"
+        result_single = preprocess_text(source_single)
+        # Should NOT be stripped - the $include is inside quoted string
+        assert "Parameter p" in result_single
+        assert not result_single.strip().startswith("* [Stripped:")
+
+        # Test escaped double quote with $include after it
+        # "say ""hello"" $include here" represents 'say "hello" $include here'
+        source_double = 'Parameter q / "say ""hello"" $include here" /;'
+        result_double = preprocess_text(source_double)
+        # Should NOT be stripped - the $include is inside quoted string
+        assert "Parameter q" in result_double
+        assert not result_double.strip().startswith("* [Stripped:")
