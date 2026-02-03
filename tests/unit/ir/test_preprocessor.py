@@ -861,3 +861,29 @@ Set i / i1*i%N% /;"""
         assert batinclude_line.strip().startswith("* [Stripped:")
         # %N% should still be expanded in non-include lines
         assert "i1*i5" in result
+
+    def test_include_in_quoted_string_not_stripped(self):
+        """Test that $include inside quoted strings is NOT stripped."""
+        source = """Set i / i1, i2 /;
+Parameter p / "contains $include text" /;
+Scalar s / 1 /;"""
+        result = preprocess_text(source)
+        # The line with $include in quotes should NOT be stripped
+        lines = result.split("\n")
+        param_line = [line for line in lines if "Parameter p" in line][0]
+        # Should still contain the original quoted text, not be a stripped comment
+        assert "Parameter p" in param_line
+        assert '"contains $include text"' in param_line
+        assert not param_line.strip().startswith("* [Stripped:")
+
+    def test_include_in_comment_not_stripped(self):
+        """Test that $include in comment lines is left alone."""
+        source = """* This comment mentions $include for documentation
+Set i / i1, i2 /;"""
+        result = preprocess_text(source)
+        lines = result.split("\n")
+        # Comment line should be unchanged (not double-stripped)
+        comment_line = lines[0]
+        assert comment_line.startswith("* This comment mentions $include")
+        # Should NOT have [Stripped: marker
+        assert "[Stripped:" not in comment_line

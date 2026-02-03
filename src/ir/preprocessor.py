@@ -1826,6 +1826,53 @@ def normalize_double_commas(source: str) -> str:
     return "".join(result)
 
 
+def _is_include_directive(line: str) -> bool:
+    """Check if a line contains an actual $include/$batInclude directive.
+
+    Returns True only if the directive appears as actual code, not inside
+    quoted strings or comments. Handles:
+    - Standalone directives: `$include "file.gms"`
+    - Inline after conditionals: `$if set X $include "file.gms"`
+
+    Args:
+        line: A single line of GAMS source code
+
+    Returns:
+        True if the line contains an actual include directive to strip
+    """
+    # Check if line is already a comment
+    stripped = line.lstrip()
+    if stripped.startswith("*"):
+        return False
+
+    # Scan through the line, tracking whether we're inside quotes
+    in_single_quote = False
+    in_double_quote = False
+    i = 0
+    line_lower = line.lower()
+
+    while i < len(line):
+        char = line[i]
+
+        # Handle quote state changes (simple toggle, no escape handling needed for GAMS)
+        if char == "'" and not in_double_quote:
+            in_single_quote = not in_single_quote
+        elif char == '"' and not in_single_quote:
+            in_double_quote = not in_double_quote
+        # Check for $ directive when not inside quotes
+        elif char == "$" and not in_single_quote and not in_double_quote:
+            # Check if this is $include or $batinclude
+            remaining = line_lower[i:]
+            if remaining.startswith("$include") or remaining.startswith("$batinclude"):
+                # Verify it's a word boundary (not $includefoo)
+                directive_len = 8 if remaining.startswith("$include") else 11
+                if len(remaining) == directive_len or not remaining[directive_len].isalnum():
+                    return True
+        i += 1
+
+    return False
+
+
 def _strip_include_directives(source: str) -> str:
     """Strip $include and $batInclude directives to comments.
 
@@ -1835,17 +1882,19 @@ def _strip_include_directives(source: str) -> str:
     Handles both standalone include directives and inline includes (e.g.,
     after $if conditionals like `$if set X $include "file.gms"`).
 
+    Only strips actual directive usage - ignores matches inside quoted strings
+    or comments.
+
     Args:
         source: GAMS source code
 
     Returns:
-        Source with lines containing $include/$batInclude replaced by comments
+        Source with lines containing $include/$batInclude directives replaced by comments
     """
-    include_pattern = re.compile(r"\$(include|batinclude)\b", re.IGNORECASE)
     lines = source.split("\n")
     result = []
     for line in lines:
-        if include_pattern.search(line):
+        if _is_include_directive(line):
             # Replace with comment to preserve line numbers, preserving original indentation
             stripped = line.strip()
             leading_ws = line[: len(line) - len(line.lstrip())]
