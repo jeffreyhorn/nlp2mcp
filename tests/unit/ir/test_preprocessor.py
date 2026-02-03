@@ -943,20 +943,20 @@ Parameter p / 1 /;"""
         assert "Parameter q" in result_double
         assert not result_double.strip().startswith("* [Stripped:")
 
-    def test_include_after_multiplication_not_stripped(self):
-        """Test that $include after '*' is treated as being in a comment.
+    def test_include_after_multiplication_is_stripped(self):
+        """Test that $include after '*' in an expression is still stripped.
 
-        For consistency with other scanners in this module (e.g.,
-        _has_statement_ending_semicolon), any '*' outside quotes is treated
-        as the start of an inline comment. This means $include after '*'
-        won't cause the line to be stripped.
+        Since '*' is a valid operator in GAMS (e.g., in 'a*b'), it must not
+        be treated as starting an inline comment in this context. A $include
+        that appears later on the same line should still be detected and the
+        line should be stripped by the preprocessor.
         """
-        # '*' in 'a*b' is treated as comment start, so $include is in comment
+        # In 'a*b', '*' is a multiplication operator, so $include must be seen
         source = 'eq.. a*b =e= 1; $include "x.gms"'
         result = preprocess_text(source)
-        # Should NOT be stripped - the '*' starts a comment, so $include is ignored
-        assert "eq.." in result
-        assert not result.strip().startswith("* [Stripped:")
+        # Should BE stripped - the $include after the expression is a real directive
+        assert result.strip().startswith("* [Stripped:")
+        assert "x.gms" in result
 
     def test_include_in_inline_comment_after_semicolon_not_stripped(self):
         """Test that $include in inline comment after semicolon is not stripped.

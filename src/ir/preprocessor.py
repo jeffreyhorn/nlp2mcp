@@ -1871,12 +1871,18 @@ def _is_include_directive(line: str) -> bool:
                 continue
             in_double_quote = not in_double_quote
         elif not in_single_quote and not in_double_quote:
-            # Treat any '*' outside quotes as the start of an inline comment,
-            # consistent with other scanners in this module (e.g.,
-            # _has_statement_ending_semicolon). Once we hit a comment, we stop
-            # scanning for $include/$batinclude directives.
+            # Only treat '*' as starting an inline comment in valid comment
+            # positions: first non-whitespace character, or after a statement
+            # terminator ';'. In other positions (e.g., 'a*b'), it's a
+            # multiplication operator and we must continue scanning.
             if char == "*":
-                break
+                # Look backwards for the previous non-whitespace character
+                j = i - 1
+                while j >= 0 and line[j].isspace():
+                    j -= 1
+                # Comment start if: first token (j < 0) or after ';'
+                if j < 0 or line[j] == ";":
+                    break
             # Check for $ directive when not inside quotes or comments
             if char == "$":
                 # Check if this is $include or $batinclude
