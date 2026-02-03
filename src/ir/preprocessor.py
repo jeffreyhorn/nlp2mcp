@@ -1826,6 +1826,122 @@ def normalize_double_commas(source: str) -> str:
     return "".join(result)
 
 
+def _strip_include_directives(source: str) -> str:
+    """Strip $include and $batInclude directives to comments.
+
+    This preserves line numbers while preventing parse errors when these
+    directives appear in source strings passed to preprocess_text().
+
+    Args:
+        source: GAMS source code
+
+    Returns:
+        Source with $include/$batInclude lines replaced by comments
+    """
+    include_pattern = re.compile(r"^\s*\$(include|batinclude)\b", re.IGNORECASE)
+    lines = source.split("\n")
+    result = []
+    for line in lines:
+        if include_pattern.match(line):
+            # Replace with comment to preserve line numbers
+            result.append(f"* [stripped] {line}")
+        else:
+            result.append(line)
+    return "\n".join(result)
+
+
+def _preprocess_content(content: str) -> str:
+    """Shared preprocessing pipeline for GAMS content.
+
+    This is the core preprocessing logic used by both preprocess_gams_file()
+    and preprocess_text(). It performs all preprocessing steps except for
+    file-based operations ($include, $batInclude).
+
+    Preprocessing steps:
+    1. Extract macro defaults from $if not set directives
+    2. Extract general $set directives
+    3. Process $if/$else/$endif conditional blocks
+    4. Expand %variable% references
+    5. Extract $macro definitions
+    6. Expand macro function calls
+    7. Strip conditional directives ($if not set)
+    8. Strip $set directives
+    9. Strip $macro directives
+    10. Strip other unsupported directives ($title, $ontext, etc.)
+    11. Join multi-line equations into single lines
+    12. Remove table continuation markers (+)
+    13. Normalize multi-line continuations (add missing commas)
+    14. Insert missing semicolons before block keywords
+    15. Quote identifiers with special characters (-, +) in data blocks
+    16. Normalize double commas to single commas
+
+    Args:
+        content: GAMS source code (after $include expansion if applicable)
+
+    Returns:
+        Preprocessed source code ready for parsing
+    """
+    # Step 1: Extract macro defaults from $if not set directives
+    macros = extract_conditional_sets(content)
+
+    # Step 2: Extract general $set directives (merge with conditional sets)
+    # Pass existing macros so that $set can reference earlier macros
+    set_macros = extract_set_directives(content, macros)
+    macros.update(set_macros)  # $set directives override conditional defaults
+
+    # Step 3: Process $if/$else/$endif conditional blocks
+    # This must happen after extracting macros so conditionals can test variable definitions
+    # but before expanding %variable% so conditional blocks are removed first
+    content = process_conditionals(content, macros)
+
+    # Step 4: Expand %variable% references with their values
+    content = expand_macros(content, macros)
+
+    # Step 5: Extract $macro function definitions
+    # This must happen after %variable% expansion so that macro bodies have variables expanded
+    # For example: $macro fx(t) %fx% becomes $macro fx(t) sin(t) * cos(t-t*t)
+    macro_defs = extract_macro_definitions(content)
+
+    # Step 6: Expand macro function calls
+    # Replace fx(t('1')) with sin(t('1')) * cos(t('1')-t('1')*t('1'))
+    content = expand_macro_calls(content, macro_defs)
+
+    # Step 7: Strip $if not set directives (replaced with comments)
+    content = strip_conditional_directives(content)
+
+    # Step 8: Strip $set directives (replaced with comments)
+    content = strip_set_directives(content)
+
+    # Step 9: Strip $macro directives (replaced with comments)
+    content = strip_macro_directives(content)
+
+    # Step 10: Strip other unsupported directives ($title, $ontext, etc.)
+    content = strip_unsupported_directives(content)
+
+    # Step 11: Join multi-line equations into single lines
+    # This must happen before table continuation normalization to avoid
+    # confusing equation continuation with table continuation markers
+    content = join_multiline_equations(content)
+
+    # Step 12: Remove table continuation markers (+)
+    content = normalize_table_continuations(content)
+
+    # Step 13: Normalize multi-line continuations (add missing commas)
+    content = normalize_multi_line_continuations(content)
+
+    # Step 14: Insert missing semicolons before block keywords
+    # This fixes issue #418 where variables from include files weren't recognized
+    # because previous blocks (sets, parameters) were missing semicolons
+    content = insert_missing_semicolons(content)
+
+    # Step 15: Quote identifiers with special characters (-, +) in data blocks
+    content = normalize_special_identifiers(content)
+
+    # Step 16: Normalize double commas to single commas (Issue #565)
+    # This must happen after all other data normalization
+    return normalize_double_commas(content)
+
+
 def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
@@ -1833,22 +1949,7 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     It performs preprocessing in the following order:
     1. Expand $include directives recursively
     2. Expand $batInclude directives with argument substitution
-    3. Extract macro defaults from $if not set directives
-    4. Extract general $set directives
-    5. Process $if/$else/$endif conditional blocks
-    6. Expand %variable% references
-    7. Extract $macro definitions
-    8. Expand macro function calls
-    9. Strip conditional directives ($if not set)
-    10. Strip $set directives
-    11. Strip $macro directives
-    12. Strip other unsupported directives ($title, $ontext, etc.)
-    13. Join multi-line equations into single lines (fixes #561)
-    14. Remove table continuation markers (+)
-    15. Normalize multi-line continuations (add missing commas)
-    16. Insert missing semicolons before block keywords (fixes #418)
-    17. Quote identifiers with special characters (-, +) in data blocks
-    18. Normalize double commas to single commas (fixes #565)
+    3-18. See _preprocess_content() for remaining steps
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -1876,65 +1977,8 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     # files that were themselves included via $include
     content = preprocess_bat_includes(file_path, content)
 
-    # Step 3: Extract macro defaults from $if not set directives
-    macros = extract_conditional_sets(content)
-
-    # Step 4: Extract general $set directives (merge with conditional sets)
-    # Pass existing macros so that $set can reference earlier macros
-    set_macros = extract_set_directives(content, macros)
-    macros.update(set_macros)  # $set directives override conditional defaults
-
-    # Step 5: Process $if/$else/$endif conditional blocks
-    # This must happen after extracting macros so conditionals can test variable definitions
-    # but before expanding %variable% so conditional blocks are removed first
-    content = process_conditionals(content, macros)
-
-    # Step 6: Expand %variable% references with their values
-    content = expand_macros(content, macros)
-
-    # Step 7: Extract $macro function definitions
-    # This must happen after %variable% expansion so that macro bodies have variables expanded
-    # For example: $macro fx(t) %fx% becomes $macro fx(t) sin(t) * cos(t-t*t)
-    macro_defs = extract_macro_definitions(content)
-
-    # Step 8: Expand macro function calls
-    # Replace fx(t('1')) with sin(t('1')) * cos(t('1')-t('1')*t('1'))
-    content = expand_macro_calls(content, macro_defs)
-
-    # Step 9: Strip $if not set directives (replaced with comments)
-    content = strip_conditional_directives(content)
-
-    # Step 10: Strip $set directives (replaced with comments)
-    content = strip_set_directives(content)
-
-    # Step 11: Strip $macro directives (replaced with comments)
-    content = strip_macro_directives(content)
-
-    # Step 12: Strip other unsupported directives ($title, $ontext, etc.)
-    content = strip_unsupported_directives(content)
-
-    # Step 13: Join multi-line equations into single lines
-    # This must happen before table continuation normalization to avoid
-    # confusing equation continuation with table continuation markers
-    content = join_multiline_equations(content)
-
-    # Step 14: Remove table continuation markers (+)
-    content = normalize_table_continuations(content)
-
-    # Step 15: Normalize multi-line continuations (add missing commas)
-    content = normalize_multi_line_continuations(content)
-
-    # Step 16: Insert missing semicolons before block keywords
-    # This fixes issue #418 where variables from include files weren't recognized
-    # because previous blocks (sets, parameters) were missing semicolons
-    content = insert_missing_semicolons(content)
-
-    # Step 17: Quote identifiers with special characters (-, +) in data blocks
-    content = normalize_special_identifiers(content)
-
-    # Step 18: Normalize double commas to single commas (Issue #565)
-    # This must happen after all other data normalization
-    return normalize_double_commas(content)
+    # Steps 3-18: Shared preprocessing pipeline
+    return _preprocess_content(content)
 
 
 def preprocess_text(source: str) -> str:
@@ -1944,23 +1988,9 @@ def preprocess_text(source: str) -> str:
     but skips file-based operations ($include, $batInclude). Use this for
     preprocessing raw GAMS source strings that don't require file inclusion.
 
-    Preprocessing steps:
-    1. Extract macro defaults from $if not set directives
-    2. Extract general $set directives
-    3. Process $if/$else/$endif conditional blocks
-    4. Expand %variable% references
-    5. Extract $macro definitions
-    6. Expand macro function calls
-    7. Strip conditional directives ($if not set)
-    8. Strip $set directives
-    9. Strip $macro directives
-    10. Strip other unsupported directives ($title, $ontext, etc.)
-    11. Join multi-line equations into single lines
-    12. Remove table continuation markers (+)
-    13. Normalize multi-line continuations (add missing commas)
-    14. Insert missing semicolons before block keywords
-    15. Quote identifiers with special characters (-, +) in data blocks
-    16. Normalize double commas to single commas
+    Any $include or $batInclude directives in the source will be stripped
+    (converted to comments) to prevent parse errors. If you need to process
+    files with includes, use preprocess_gams_file() instead.
 
     Args:
         source: GAMS source code to preprocess
@@ -1973,57 +2003,9 @@ def preprocess_text(source: str) -> str:
         >>> result = preprocess_text(code)
         >>> # %N% is expanded to 5
     """
-    content = source
+    # Strip $include/$batInclude directives (convert to comments)
+    # This prevents confusing parse errors if these directives are present
+    content = _strip_include_directives(source)
 
-    # Step 1: Extract macro defaults from $if not set directives
-    macros = extract_conditional_sets(content)
-
-    # Step 2: Extract general $set directives (merge with conditional sets)
-    # Pass existing macros so that $set can reference earlier macros
-    set_macros = extract_set_directives(content, macros)
-    macros.update(set_macros)  # $set directives override conditional defaults
-
-    # Step 3: Process $if/$else/$endif conditional blocks
-    # This must happen after extracting macros so conditionals can test variable definitions
-    # but before expanding %variable% so conditional blocks are removed first
-    content = process_conditionals(content, macros)
-
-    # Step 4: Expand %variable% references with their values
-    content = expand_macros(content, macros)
-
-    # Step 5: Extract $macro function definitions
-    # This must happen after %variable% expansion so that macro bodies have variables expanded
-    macro_defs = extract_macro_definitions(content)
-
-    # Step 6: Expand macro function calls
-    content = expand_macro_calls(content, macro_defs)
-
-    # Step 7: Strip $if not set directives (replaced with comments)
-    content = strip_conditional_directives(content)
-
-    # Step 8: Strip $set directives (replaced with comments)
-    content = strip_set_directives(content)
-
-    # Step 9: Strip $macro directives (replaced with comments)
-    content = strip_macro_directives(content)
-
-    # Step 10: Strip other unsupported directives ($title, $ontext, etc.)
-    content = strip_unsupported_directives(content)
-
-    # Step 11: Join multi-line equations into single lines
-    content = join_multiline_equations(content)
-
-    # Step 12: Remove table continuation markers (+)
-    content = normalize_table_continuations(content)
-
-    # Step 13: Normalize multi-line continuations (add missing commas)
-    content = normalize_multi_line_continuations(content)
-
-    # Step 14: Insert missing semicolons before block keywords
-    content = insert_missing_semicolons(content)
-
-    # Step 15: Quote identifiers with special characters (-, +) in data blocks
-    content = normalize_special_identifiers(content)
-
-    # Step 16: Normalize double commas to single commas
-    return normalize_double_commas(content)
+    # Apply shared preprocessing pipeline
+    return _preprocess_content(content)

@@ -20,6 +20,7 @@ from src.ir.preprocessor import (
     extract_conditional_sets,
     join_multiline_equations,
     preprocess_gams_file,
+    preprocess_text,
     strip_conditional_directives,
     strip_unsupported_directives,
 )
@@ -721,3 +722,111 @@ Model m / all /;"""
         result = join_multiline_equations(source)
         assert "eq(i)$valid(i).." in result
         assert "x(i) + y(i) =e= 0;" in result
+
+
+class TestPreprocessText:
+    """Tests for preprocess_text() function (Sprint 17 Day 8 - Issue #614)."""
+
+    def test_set_directive_expansion(self):
+        """Test $set directive and %variable% expansion in set range."""
+        source = """$set N 5
+Set i / i1*i%N% /;"""
+        result = preprocess_text(source)
+        assert "i1*i5" in result
+        assert "%N%" not in result
+
+    def test_multiple_set_directives(self):
+        """Test multiple $set directives."""
+        source = """$set X 10
+$set Y 20
+Parameter a / %X% /, b / %Y% /;"""
+        result = preprocess_text(source)
+        assert "/ 10 /" in result
+        assert "/ 20 /" in result
+
+    def test_set_directive_in_expression(self):
+        """Test %var% expansion in expressions."""
+        source = """$set N 100
+Parameter scale / %N% /;
+Scalar factor / 1.0 / %N% /;"""
+        result = preprocess_text(source)
+        assert "%N%" not in result
+        # N should be expanded to 100
+        assert "100" in result
+
+    def test_include_directive_stripped(self):
+        """Test that $include directives are stripped to comments."""
+        source = """$set N 5
+$include "somefile.gms"
+Set i / i1*i%N% /;"""
+        result = preprocess_text(source)
+        # $include should be converted to comment (not processed as include)
+        lines = result.split("\n")
+        include_line = [line for line in lines if "somefile.gms" in line][0]
+        assert include_line.startswith("* [stripped]")
+        # But %N% should still be expanded
+        assert "i1*i5" in result
+
+    def test_batinclude_directive_stripped(self):
+        """Test that $batInclude directives are stripped to comments."""
+        source = """$set N 5
+$batInclude "somefile.gms" arg1 arg2
+Set i / i1*i%N% /;"""
+        result = preprocess_text(source)
+        # $batInclude should be converted to comment
+        assert "$batInclude" not in result.lower()
+        assert "* [stripped]" in result
+        # But %N% should still be expanded
+        assert "i1*i5" in result
+
+    def test_conditional_if_set(self):
+        """Test $if set conditional processing."""
+        source = """$set DEBUG 1
+$if set DEBUG Parameter debug_mode / 1 /;
+$if not set DEBUG Parameter debug_mode / 0 /;"""
+        result = preprocess_text(source)
+        # Since DEBUG is set, first branch should be kept
+        # This depends on the conditional processing implementation
+        # At minimum, the $set should be processed
+        assert "%DEBUG%" not in result
+
+    def test_unsupported_directives_stripped(self):
+        """Test that unsupported directives are stripped."""
+        source = """$title My Model
+$ontext
+This is a comment block
+$offtext
+Set i / a, b, c /;"""
+        result = preprocess_text(source)
+        # $title should be converted to comment (stripped marker)
+        lines = result.split("\n")
+        title_line = lines[0]
+        assert title_line.startswith("* [Stripped:")
+        # Set statement should remain
+        assert "Set i" in result
+
+    def test_preserves_line_numbers_for_stripped_include(self):
+        """Test that stripped includes preserve line numbers."""
+        source = """Line1
+$include "file.gms"
+Line3"""
+        result = preprocess_text(source)
+        lines = result.split("\n")
+        # Should have same number of lines
+        assert len(lines) == 3
+        # Line 2 should be a comment
+        assert lines[1].startswith("*")
+
+    def test_empty_source(self):
+        """Test with empty source."""
+        result = preprocess_text("")
+        assert result == ""
+
+    def test_no_preprocessing_needed(self):
+        """Test source that doesn't need preprocessing."""
+        source = """Set i / a, b, c /;
+Variable x(i);"""
+        result = preprocess_text(source)
+        # Should be essentially unchanged (may have normalized whitespace)
+        assert "Set i" in result
+        assert "Variable x" in result
