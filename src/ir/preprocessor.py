@@ -1868,9 +1868,13 @@ def _is_include_directive(line: str) -> bool:
                 # Check if this is $include or $batinclude
                 remaining = line_lower[i:]
                 if remaining.startswith("$include") or remaining.startswith("$batinclude"):
-                    # Verify it's a word boundary (not $includefoo)
+                    # Verify it's a word boundary (not $includefoo or $include_foo)
                     directive_len = 8 if remaining.startswith("$include") else 11
-                    if len(remaining) == directive_len or not remaining[directive_len].isalnum():
+                    if len(remaining) == directive_len:
+                        return True
+                    next_char = remaining[directive_len]
+                    # Treat '_' as an identifier character to avoid misdetecting $include_foo
+                    if not (next_char.isalnum() or next_char == "_"):
                         return True
         i += 1
 

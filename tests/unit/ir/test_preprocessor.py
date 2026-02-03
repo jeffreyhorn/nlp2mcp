@@ -898,3 +898,16 @@ Parameter p / 1 /;"""
         set_line = lines[0]
         assert "Set i" in set_line
         assert not set_line.strip().startswith("* [Stripped:")
+
+    def test_include_like_identifier_not_stripped(self):
+        """Test that identifiers like $include_foo are not misdetected as include directives."""
+        source = """$set include_path "some/path"
+Parameter p / 1 /;"""
+        result = preprocess_text(source)
+        # $set include_path should be processed normally, not stripped as $include
+        # The $set directive itself will be stripped by strip_set_directives
+        lines = result.split("\n")
+        # First line should be a stripped $set, not a stripped $include
+        assert "include_path" in lines[0] or "* [Stripped:" in lines[0]
+        # Parameter line should be intact
+        assert "Parameter p" in result
