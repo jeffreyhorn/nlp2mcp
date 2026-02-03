@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Day 8: Additional Parse Fixes - 2026-02-02
+
+**Branch:** `sprint17-day8-additional-fixes`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Added acronym statement support and curly brace expression support. These grammar additions enable additional models to parse that use these GAMS language features.
+
+#### Changes
+
+##### Added
+- **Acronym statement support** - GAMS `Acronym` declarations are now parsed
+  - Grammar: Added `acronym_stmt` rule: `"Acronym"i id_list SEMI`
+  - Parser: Statement is parsed but not processed (just declarations)
+
+- **Curly brace expressions** - GAMS allows `{expr}` as grouping alternative to `(expr)`
+  - Grammar: Added `"{" expr "}"` to atom rule as `brace_expr`
+  - Parser: Handler unwraps and processes inner expression (treats `{expr}` like `(expr)`)
+
+##### Fixed
+- Fixed unused `pytest` import in `tests/unit/gams/test_grammar_additions.py`
+
+#### Target Model Results
+
+| Model | Result |
+|-------|--------|
+| mathopt4.gms | Now parses ✅ |
+| procmean.gms | Now parses ✅ |
+| worst.gms | Has separate tuple expansion issue (GitHub #612) |
+
+#### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/gams/gams_grammar.lark` | Added acronym_stmt rule and brace_expr to atom |
+| `src/ir/parser.py` | Added brace_expr handler |
+| `tests/unit/gams/test_grammar_additions.py` | Fixed unused import |
+
+---
+
 ### Sprint 17 Day 7: Grammar Additions - 2026-02-02
 
 **Branch:** `sprint17-day7-grammar-additions`  

@@ -27,6 +27,7 @@ start: stmt*  -> program
      | put_stmt
      | putclose_stmt
      | execute_stmt
+     | acronym_stmt
      | assignment_stmt
      | equation_def
      | solve_stmt
@@ -507,6 +508,14 @@ putclose_stmt: "putclose"i ID? SEMI
 execute_stmt: "execute"i ("." ID)? STRING SEMI?
 
 // ---------------------------
+// Acronym Statement (Sprint 17 Day 8)
+// ---------------------------
+
+// Acronym statement declares symbolic constants (not used in NLP extraction but parsed for compatibility)
+// Syntax: Acronym id1, id2, id3;
+acronym_stmt: "Acronym"i id_list SEMI
+
+// ---------------------------
 // Display and Abort Statements (Sprint 8 Day 2 - mock/skip)
 // ---------------------------
 
@@ -581,6 +590,7 @@ comp_op: ASSIGN | LE | GE | LT | GT | NE
 
 symbol_plain: ID
 
+// Sprint 17 Day 8: Added curly brace expression support for GAMS compatibility
 ?atom: NUMBER                             -> number
      | func_call                          -> funccall
      | sum_expr
@@ -591,6 +601,7 @@ symbol_plain: ID
      | symbol_plain
      | "(" expr ")"
      | "[" expr "]"                       -> bracket_expr
+     | "{" expr "}"                       -> brace_expr
 
 // Compile-time constants: %identifier% or %path.to.value%
 compile_time_const: "%" compile_const_path "%"

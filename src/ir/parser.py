@@ -3513,6 +3513,13 @@ class _ModelBuilder:
                 return self._expr(node.children[0], free_domain)
             raise self._error("Empty bracket expression", node)
 
+        # Sprint 17 Day 8: Support brace expressions: {expr} is treated like (expr)
+        if node.data == "brace_expr":
+            # Just unwrap and process the inner expression
+            if len(node.children) > 0:
+                return self._expr(node.children[0], free_domain)
+            raise self._error("Empty brace expression", node)
+
         raise self._error(
             f"Unsupported expression type: {node.data}. "
             f"This may be a parser bug or unsupported GAMS syntax. "

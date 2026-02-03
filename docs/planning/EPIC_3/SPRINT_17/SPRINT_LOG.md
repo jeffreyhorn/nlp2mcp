@@ -189,14 +189,35 @@ Target models from improvement plan have other unrelated parsing issues (tuple e
 
 ---
 
-### Day 8: Parse Improvements (Part 3) + Buffer
+### Day 8: Parse Improvements (Part 3) + Buffer ✅
 
-**Status:** Not started
+**Status:** Complete
 
-**Planned:**
-- [ ] Acronym statement support (1h) - Expected: +2 models
-- [ ] Curly brace expressions (1h) - Expected: +1 model
-- [ ] Contingency buffer (2h)
+**Completed:**
+- [x] Acronym statement support (0.5h)
+  - Added `acronym_stmt` rule to grammar: `"Acronym"i id_list SEMI`
+  - Parsed but not processed (statements are just declarations)
+- [x] Curly brace expressions (0.5h)
+  - Added `"{" expr "}"` to atom rule as `brace_expr`
+  - Added handler in parser: treats `{expr}` like `(expr)` (unwrap and process inner expression)
+- [x] Contingency buffer (used)
+  - Verified target models from LEXER_IMPROVEMENT_PLAN.md
+  - mathopt4.gms: Now parses successfully ✅
+  - procmean.gms: Now parses successfully ✅
+  - worst.gms: Has separate tuple expansion issue (GitHub #612)
+
+**Files Changed:**
+- `src/gams/gams_grammar.lark` - Added acronym_stmt and brace_expr
+- `src/ir/parser.py` - Added brace_expr handler
+- `tests/unit/gams/test_grammar_additions.py` - Fixed unused import
+
+**Quality Gates:**
+- `make typecheck` - passed ✅
+- `make lint` - passed ✅ (after fixing unused import)
+- `make format` - passed ✅
+- `make test` - passed (3158 tests) ✅
+
+**PR:** TBD
 
 ---
 
