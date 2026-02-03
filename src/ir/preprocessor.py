@@ -1832,17 +1832,20 @@ def _strip_include_directives(source: str) -> str:
     This preserves line numbers while preventing parse errors when these
     directives appear in source strings passed to preprocess_text().
 
+    Handles both standalone include directives and inline includes (e.g.,
+    after $if conditionals like `$if set X $include "file.gms"`).
+
     Args:
         source: GAMS source code
 
     Returns:
-        Source with $include/$batInclude lines replaced by comments
+        Source with lines containing $include/$batInclude replaced by comments
     """
-    include_pattern = re.compile(r"^\s*\$(include|batinclude)\b", re.IGNORECASE)
+    include_pattern = re.compile(r"\$(include|batinclude)\b", re.IGNORECASE)
     lines = source.split("\n")
     result = []
     for line in lines:
-        if include_pattern.match(line):
+        if include_pattern.search(line):
             # Replace with comment to preserve line numbers, preserving original indentation
             stripped = line.strip()
             leading_ws = line[: len(line) - len(line.lstrip())]

@@ -751,8 +751,11 @@ Parameter scale / %N% /;
 Scalar factor / 1.0 / %N% /;"""
         result = preprocess_text(source)
         assert "%N%" not in result
-        # N should be expanded to 100
-        assert "100" in result
+        # N should be expanded to 100 in the actual code lines (not just in stripped comment)
+        lines = [line for line in result.split("\n") if not line.strip().startswith("*")]
+        code_text = "\n".join(lines)
+        assert "Parameter scale / 100 /" in code_text
+        assert "Scalar factor / 1.0 / 100 /" in code_text
 
     def test_include_directive_stripped(self):
         """Test that $include directives are stripped to comments."""
@@ -839,3 +842,22 @@ Variable x(i);"""
         # Should be essentially unchanged (may have normalized whitespace)
         assert "Set i" in result
         assert "Variable x" in result
+
+    def test_inline_include_directive_stripped(self):
+        """Test that inline include directives (after $if) are also stripped."""
+        source = """$set N 5
+$if set X $include "conditional.gms"
+$if not set Y $batInclude "another.gms" arg1
+Set i / i1*i%N% /;"""
+        result = preprocess_text(source)
+        # Both inline includes should be stripped to comments
+        lines = result.split("\n")
+        # Should preserve line count
+        assert len(lines) == 4
+        # Lines with include directives should be comments
+        conditional_include = [line for line in lines if "conditional.gms" in line][0]
+        assert conditional_include.strip().startswith("* [Stripped:")
+        batinclude_line = [line for line in lines if "another.gms" in line][0]
+        assert batinclude_line.strip().startswith("* [Stripped:")
+        # %N% should still be expanded in non-include lines
+        assert "i1*i5" in result
