@@ -2,13 +2,24 @@
 
 **GitHub Issue:** #613
 **GitHub URL:** https://github.com/jeffreyhorn/nlp2mcp/issues/613
-**Status:** Open
+**Status:** Resolved
 **Priority:** Low
 **Category:** Parser/Grammar
+**Resolution:** Fixed in PR #615 (Sprint 17 Day 8)
 
 ## Summary
 
 The parser does not support curly braces `{...}` as an alternative grouping syntax to parentheses `(...)` in arithmetic expressions. GAMS allows curly braces for grouping in certain contexts.
+
+## Resolution
+
+Fixed in PR #615 by adding:
+1. `brace_expr` rule to the `atom` production in `src/gams/gams_grammar.lark`
+2. Handler for `brace_expr` in `src/ir/parser.py` that unwraps the inner expression
+
+The fix treats `{expr}` identically to `(expr)` for expression grouping.
+
+**Note:** The procmean.gms model now parses past the curly braces but encounters a different error related to the external function `betareg` which is not defined in the model. This is a separate issue unrelated to curly brace support.
 
 ## Affected Models
 
