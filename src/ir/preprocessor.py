@@ -1951,7 +1951,7 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     It performs preprocessing in the following order:
     1. Expand $include directives recursively
     2. Expand $batInclude directives with argument substitution
-    3-18. See _preprocess_content() for remaining steps
+    3. Run _preprocess_content() (macro/conditional expansion, stripping, normalization)
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -1979,7 +1979,7 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     # files that were themselves included via $include
     content = preprocess_bat_includes(file_path, content)
 
-    # Steps 3-18: Shared preprocessing pipeline
+    # Step 3: Shared preprocessing pipeline (macro/conditional expansion, stripping, normalization)
     return _preprocess_content(content)
 
 
