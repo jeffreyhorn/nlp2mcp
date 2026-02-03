@@ -781,22 +781,23 @@ Set i / i1*i%N% /;"""
         assert "i1*i5" in result
 
     def test_conditional_if_set(self):
-        """Test $if set conditional processing."""
+        """Test $if set conditional processing with block-form conditionals."""
         source = """$set DEBUG 1
-$if set DEBUG Parameter debug_mode / 1 /;
-$if not set DEBUG Parameter debug_mode / 0 /;"""
+$if set DEBUG
+Parameter debug_mode / 1 /;
+$endif
+$if not set DEBUG
+Parameter debug_mode / 0 /;
+$endif"""
         result = preprocess_text(source)
-        # Since DEBUG is set, the "$if set DEBUG" branch should be kept
-        # and the "$if not set DEBUG" branch should be removed/stripped
-        # Check that the "set" branch content is present (in a comment or as code)
-        assert "debug_mode / 1 /" in result
-        # Check that all $if directives are converted to comments (not raw directives)
-        lines = result.split("\n")
-        for line in lines:
-            # Lines starting with $if should not exist (they should be commented)
-            stripped = line.strip()
-            if stripped and not stripped.startswith("*"):
-                assert not stripped.lower().startswith("$if")
+        # Since DEBUG is set, the "$if set DEBUG" branch content should be kept
+        # and the "$if not set DEBUG" branch content should be removed
+        # The kept branch should appear as actual code, not just in a comment
+        lines = [line for line in result.split("\n") if not line.strip().startswith("*")]
+        code_text = "\n".join(lines)
+        assert "debug_mode / 1 /" in code_text
+        # The "not set" branch should NOT appear as code (only in stripped comments)
+        assert "debug_mode / 0 /" not in code_text
 
     def test_unsupported_directives_stripped(self):
         """Test that unsupported directives are stripped."""
