@@ -887,3 +887,14 @@ Set i / i1, i2 /;"""
         assert comment_line.startswith("* This comment mentions $include")
         # Should NOT have [Stripped: marker
         assert "[Stripped:" not in comment_line
+
+    def test_include_in_inline_comment_not_stripped(self):
+        """Test that $include in inline comments doesn't cause line to be stripped."""
+        source = """Set i / i1, i2 /; * mentions $include in comment
+Parameter p / 1 /;"""
+        result = preprocess_text(source)
+        lines = result.split("\n")
+        # Line with inline comment should NOT be stripped - it's valid code
+        set_line = lines[0]
+        assert "Set i" in set_line
+        assert not set_line.strip().startswith("* [Stripped:")

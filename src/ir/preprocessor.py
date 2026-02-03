@@ -1859,15 +1859,19 @@ def _is_include_directive(line: str) -> bool:
             in_single_quote = not in_single_quote
         elif char == '"' and not in_single_quote:
             in_double_quote = not in_double_quote
-        # Check for $ directive when not inside quotes
-        elif char == "$" and not in_single_quote and not in_double_quote:
-            # Check if this is $include or $batinclude
-            remaining = line_lower[i:]
-            if remaining.startswith("$include") or remaining.startswith("$batinclude"):
-                # Verify it's a word boundary (not $includefoo)
-                directive_len = 8 if remaining.startswith("$include") else 11
-                if len(remaining) == directive_len or not remaining[directive_len].isalnum():
-                    return True
+        elif not in_single_quote and not in_double_quote:
+            # Treat '*' outside quotes as start of inline comment - stop scanning
+            if char == "*":
+                break
+            # Check for $ directive when not inside quotes or comments
+            if char == "$":
+                # Check if this is $include or $batinclude
+                remaining = line_lower[i:]
+                if remaining.startswith("$include") or remaining.startswith("$batinclude"):
+                    # Verify it's a word boundary (not $includefoo)
+                    directive_len = 8 if remaining.startswith("$include") else 11
+                    if len(remaining) == directive_len or not remaining[directive_len].isalnum():
+                        return True
         i += 1
 
     return False
