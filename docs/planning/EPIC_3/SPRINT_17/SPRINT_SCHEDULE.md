@@ -174,22 +174,24 @@ are working correctly as verified by unit tests.
 
 ---
 
-### Day 8: Parse Improvements (Part 3) + Buffer
+### Day 8: Parse Improvements (Part 3) + Buffer ✅
 **Focus:** Additional parse fixes + contingency
 
-- [ ] Acronym statement support (1h)
-  - Add `acronym_stmt` rule
-  - **Expected:** +2 models parsing
-- [ ] Curly brace expressions (1h)
-  - Add `"{" expr "}"` alternative
-  - **Expected:** +1 model parsing
-- [ ] Contingency buffer (2h)
-  - Address any blockers from earlier days
-  - Additional testing
+- [x] Acronym statement support (0.5h)
+  - Added `acronym_stmt` rule: `"Acronym"i id_list SEMI`
+  - Parsed but not processed (statements are just declarations)
+- [x] Curly brace expressions (0.5h)
+  - Added `"{" expr "}"` to atom rule as `brace_expr`
+  - Handler treats `{expr}` like `(expr)` (unwrap inner expression)
+- [x] Contingency buffer (used)
+  - Verified target models from LEXER_IMPROVEMENT_PLAN.md
+  - mathopt4.gms: Now parses successfully ✅
+  - procmean.gms: Now parses successfully ✅
+  - worst.gms: Has separate tuple expansion issue (GitHub #612)
 
 **Deliverables:**
-- Acronym and curly brace support
-- All code fixes complete
+- Acronym and curly brace support ✅
+- All code fixes complete ✅
 
 ---
 
