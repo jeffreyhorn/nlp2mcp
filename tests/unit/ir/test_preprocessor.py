@@ -763,10 +763,10 @@ Scalar factor / 1.0 / %N% /;"""
 $include "somefile.gms"
 Set i / i1*i%N% /;"""
         result = preprocess_text(source)
-        # $include should be converted to comment (stripped marker)
+        # $include should be converted to comment (stripped marker, allowing for preserved indentation)
         lines = result.split("\n")
         include_line = [line for line in lines if "somefile.gms" in line][0]
-        assert include_line.startswith("* [Stripped:")
+        assert include_line.lstrip().startswith("* [Stripped:")
         # But %N% should still be expanded
         assert "i1*i5" in result
 
@@ -776,10 +776,10 @@ Set i / i1*i%N% /;"""
 $batInclude "somefile.gms" arg1 arg2
 Set i / i1*i%N% /;"""
         result = preprocess_text(source)
-        # $batInclude should be converted to comment (stripped marker)
+        # $batInclude should be converted to comment (stripped marker, allowing for preserved indentation)
         lines = result.split("\n")
         batinclude_line = [line for line in lines if "somefile.gms" in line][0]
-        assert batinclude_line.startswith("* [Stripped:")
+        assert batinclude_line.lstrip().startswith("* [Stripped:")
         # But %N% should still be expanded
         assert "i1*i5" in result
 
@@ -826,8 +826,8 @@ Line3"""
         lines = result.split("\n")
         # Should have same number of lines
         assert len(lines) == 3
-        # Line 2 should be a comment
-        assert lines[1].startswith("*")
+        # Line 2 should be a comment (allowing for preserved indentation)
+        assert lines[1].lstrip().startswith("*")
 
     def test_empty_source(self):
         """Test with empty source."""
