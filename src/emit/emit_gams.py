@@ -7,6 +7,7 @@ GAMS MCP file from a KKT system.
 from src.config import Config
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
+    _compute_set_alias_phases,
     emit_computed_parameter_assignments,
     emit_original_aliases,
     emit_original_parameters,
@@ -78,8 +79,10 @@ def emit_gams_mcp(
     # Correct emit order ensures all dependencies are declared before use.
     # For each phase p: emit phase p sets, then phase p aliases.
     # Supports N phases dynamically based on dependency depth.
-    sets_by_phase = emit_original_sets(kkt.model_ir)
-    aliases_by_phase = emit_original_aliases(kkt.model_ir)
+    # Compute phases once and pass to both emitters to avoid redundant work.
+    phases = _compute_set_alias_phases(kkt.model_ir)
+    sets_by_phase = emit_original_sets(kkt.model_ir, precomputed_phases=phases)
+    aliases_by_phase = emit_original_aliases(kkt.model_ir, precomputed_phases=phases)
 
     # Ensure both lists have the same length by padding with empty strings
     max_phases = max(len(sets_by_phase), len(aliases_by_phase))

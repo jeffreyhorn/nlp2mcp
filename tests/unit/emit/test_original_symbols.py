@@ -258,6 +258,32 @@ class TestEmitOriginalSets:
         assert "xyz" not in phase1
         assert "xyz" not in phase2
 
+    def test_set_depending_on_alias_chain(self):
+        """Test that a set depending on a chained alias is placed correctly.
+
+        If alias i2 targets alias i1 (not a set directly), and a set uses i2
+        in its domain, the set must be emitted after i2 is declared.
+        """
+        model = ModelIR()
+        # Phase 1: base set
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+        # Phase 1 alias: j targets set i
+        model.aliases["j"] = AliasDef(name="j", target="i")
+        # Phase 2 alias: k targets alias j (alias chain)
+        model.aliases["k"] = AliasDef(name="k", target="j")
+        # Set that depends on alias k (a chained alias)
+        model.sets["ik"] = SetDef(name="ik", members=[], domain=("i", "k"))
+
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
+
+        # Set i should be in phase 1
+        assert "i /i1, i2/" in phase1
+        # Set ik depends on alias k (phase 2), so it must be in phase 3
+        # (aliases in phase p are emitted AFTER phase p sets)
+        assert "ik(i,k)" in phase3
+        assert "ik" not in phase1
+        assert "ik" not in phase2
+
     def test_set_depending_on_both_phase1_and_phase2_aliases(self):
         """Test that a set depending on both phase-1 and phase-2 aliases goes to phase 3.
 
@@ -402,6 +428,30 @@ class TestEmitOriginalAliases:
         assert "Alias(xyz, xyzp);" in phase3
         assert "xyzp" not in phase1
         assert "xyzp" not in phase2
+
+    def test_alias_chain(self):
+        """Test emission of alias chains where an alias targets another alias.
+
+        Alias chains like Alias(i, i1), Alias(i1, i2) where i2's target is i1
+        (another alias, not a set). The algorithm must look up alias_phases
+        as a fallback when the target is not found in set_phases.
+        """
+        model = ModelIR()
+        # Phase 1: base set
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+        # Phase 1 alias: i1 targets set i
+        model.aliases["i1"] = AliasDef(name="i1", target="i")
+        # Alias chain: i2 targets alias i1 (not a set)
+        model.aliases["i2"] = AliasDef(name="i2", target="i1")
+
+        phase1, phase2, phase3 = _get_phases(emit_original_aliases(model))
+
+        # Alias i1 targets phase 1 set i → phase 1
+        assert "Alias(i, i1);" in phase1
+        # Alias i2 targets alias i1 (phase 1) → phase 2 (must wait for i1)
+        assert "Alias(i1, i2);" in phase2
+        assert "i2" not in phase1
+        assert phase3 == ""
 
 
 @pytest.mark.unit

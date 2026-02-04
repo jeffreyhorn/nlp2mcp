@@ -176,10 +176,14 @@ def _compute_set_alias_phases(
         while progressed:
             progressed = False
 
-            # Assign aliases whose target set is already in a phase <= current phase
+            # Assign aliases whose target is already in a phase <= current phase.
+            # The target may be a set OR another alias (alias chains).
             for alias_name_lower in list(unassigned_aliases):
                 target_lower = alias_targets[alias_name_lower]
                 target_phase = set_phases.get(target_lower)
+                if target_phase is None:
+                    # Target might be another alias (alias chain)
+                    target_phase = alias_phases.get(target_lower)
                 if target_phase is not None and target_phase <= phase:
                     alias_phases[alias_name_lower] = phase
                     unassigned_aliases.remove(alias_name_lower)
@@ -221,7 +225,10 @@ def _compute_set_alias_phases(
     return set_phases, alias_phases
 
 
-def emit_original_sets(model_ir: ModelIR) -> list[str]:
+def emit_original_sets(
+    model_ir: ModelIR,
+    precomputed_phases: tuple[dict[str, int], dict[str, int]] | None = None,
+) -> list[str]:
     """Emit Sets blocks from original model, split by alias dependencies.
 
     Uses SetDef.members and SetDef.domain (Finding #3: actual IR fields).
@@ -238,6 +245,8 @@ def emit_original_sets(model_ir: ModelIR) -> list[str]:
 
     Args:
         model_ir: Model IR containing set definitions
+        precomputed_phases: Optional pre-computed (set_phases, alias_phases) tuple
+            from _compute_set_alias_phases to avoid redundant computation.
 
     Returns:
         List of GAMS code strings, one per phase, indexed from 0.
@@ -251,8 +260,11 @@ def emit_original_sets(model_ir: ModelIR) -> list[str]:
     if not model_ir.sets:
         return []
 
-    # Compute which sets go in each phase
-    set_phases, _ = _compute_set_alias_phases(model_ir)
+    # Compute which sets go in each phase (or use pre-computed result)
+    if precomputed_phases is not None:
+        set_phases, _ = precomputed_phases
+    else:
+        set_phases, _ = _compute_set_alias_phases(model_ir)
 
     if not set_phases:
         return []
@@ -280,7 +292,10 @@ def emit_original_sets(model_ir: ModelIR) -> list[str]:
     return [build_sets_block(sets_list) for sets_list in phase_sets]
 
 
-def emit_original_aliases(model_ir: ModelIR) -> list[str]:
+def emit_original_aliases(
+    model_ir: ModelIR,
+    precomputed_phases: tuple[dict[str, int], dict[str, int]] | None = None,
+) -> list[str]:
     """Emit Alias declarations, split by target set dependencies.
 
     Uses AliasDef.target and .universe (Finding #3: actual IR fields).
@@ -290,6 +305,8 @@ def emit_original_aliases(model_ir: ModelIR) -> list[str]:
 
     Args:
         model_ir: Model IR containing alias definitions
+        precomputed_phases: Optional pre-computed (set_phases, alias_phases) tuple
+            from _compute_set_alias_phases to avoid redundant computation.
 
     Returns:
         List of GAMS code strings, one per phase, indexed from 0.
@@ -302,8 +319,11 @@ def emit_original_aliases(model_ir: ModelIR) -> list[str]:
     if not model_ir.aliases:
         return []
 
-    # Get phase assignments
-    set_phases, alias_phases = _compute_set_alias_phases(model_ir)
+    # Get phase assignments (or use pre-computed result)
+    if precomputed_phases is not None:
+        set_phases, alias_phases = precomputed_phases
+    else:
+        set_phases, alias_phases = _compute_set_alias_phases(model_ir)
 
     if not alias_phases:
         return []
