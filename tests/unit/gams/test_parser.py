@@ -4719,6 +4719,23 @@ class TestDomainOverAssignments:
         assert model.params["f"].values[("j1", "k2")] == 5.0
         assert len(model.params["f"].values) == 1
 
+    def test_alias_domain_index_expansion(self):
+        """Test that domain-over expansion works when domain uses an alias."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Alias(i, j);
+            Parameter f(j);
+
+            f(j) = 5;
+        """)
+        model = parser.parse_model_text(text)
+        assert "f" in model.params
+        # j is an alias of i; should expand over i's members
+        assert model.params["f"].values[("a",)] == 5.0
+        assert model.params["f"].values[("b",)] == 5.0
+        assert model.params["f"].values[("c",)] == 5.0
+        assert ("j",) not in model.params["f"].values
+
     @pytest.mark.skipif(
         not Path("data/gamslib/raw/trussm.gms").exists(),
         reason="trussm.gms not available (GAMSLIB files are gitignored)",

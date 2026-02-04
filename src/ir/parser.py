@@ -3055,12 +3055,18 @@ class _ModelBuilder:
                     and len(param.domain) > 0
                     and len(indices) == len(param.domain)
                 ):
-                    # Check which indices match their corresponding domain set name
+                    # Check which indices match their corresponding domain set name.
+                    # Use _resolve_set_def to handle aliases (e.g., Alias(i,j); Parameter f(j);
+                    # then f(j) = 0 should expand over the aliased set's members).
                     expand_positions: list[int] = []
+                    expand_set_defs: dict[int, SetDef] = {}
                     for pos, idx in enumerate(indices):
                         domain_name = param.domain[pos]
-                        if idx.lower() == domain_name.lower() and idx in self.model.sets:
-                            expand_positions.append(pos)
+                        if idx.lower() == domain_name.lower():
+                            resolved = self._resolve_set_def(idx)
+                            if resolved is not None:
+                                expand_positions.append(pos)
+                                expand_set_defs[pos] = resolved
 
                     if expand_positions:
                         # Build list of member lists for positions that need expansion
@@ -3068,7 +3074,7 @@ class _ModelBuilder:
                         dim_values: list[list[str]] = []
                         for pos, idx in enumerate(indices):
                             if pos in expand_positions:
-                                members = self.model.sets[idx].members
+                                members = expand_set_defs[pos].members
                                 if not members:
                                     # Empty set: nothing to expand, skip entire assignment
                                     return
