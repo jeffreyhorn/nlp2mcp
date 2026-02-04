@@ -78,8 +78,7 @@ In the parameter emission code:
 ## Reproduction Steps
 
 ```bash
-# 1. Parse and translate trussm.gms
-cd /Users/jeff/experiments/nlp2mcp
+# 1. Parse and translate trussm.gms (from repo root)
 python -m src.cli data/gamslib/raw/trussm.gms -o /tmp/trussm_mcp.gms
 
 # 2. Inspect the generated file

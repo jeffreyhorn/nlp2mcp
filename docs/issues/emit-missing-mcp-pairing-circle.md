@@ -73,8 +73,7 @@ In the MCP model declaration emission:
 ## Reproduction Steps
 
 ```bash
-# 1. Parse and translate circle.gms
-cd /Users/jeff/experiments/nlp2mcp
+# 1. Parse and translate circle.gms (from repo root)
 python -m src.cli data/gamslib/raw/circle.gms -o /tmp/circle_mcp.gms
 
 # 2. Examine the generated MCP file

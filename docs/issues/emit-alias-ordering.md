@@ -79,8 +79,7 @@ In the emit module:
 ## Reproduction Steps
 
 ```bash
-# 1. Parse and translate cpack.gms
-cd /Users/jeff/experiments/nlp2mcp
+# 1. Parse and translate cpack.gms (from repo root)
 python -m src.cli data/gamslib/raw/cpack.gms -o /tmp/cpack_mcp.gms
 
 # 2. Attempt to run with GAMS (will fail)

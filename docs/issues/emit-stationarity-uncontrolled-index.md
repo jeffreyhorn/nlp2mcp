@@ -71,8 +71,7 @@ In the stationarity equation generator:
 ## Reproduction Steps
 
 ```bash
-# 1. Parse and translate meanvar.gms
-cd /Users/jeff/experiments/nlp2mcp
+# 1. Parse and translate meanvar.gms (from repo root)
 python -m src.cli data/gamslib/raw/meanvar.gms -o /tmp/meanvar_mcp.gms
 
 # 2. Attempt to run with GAMS (will fail)
