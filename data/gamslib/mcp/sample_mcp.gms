@@ -32,8 +32,8 @@ Scalars
     tpop /0.0/
 ;
 
-w(h) = data(h,"pop") / tpop;
 tpop = sum(h, data(h,"pop"));
+w(h) = data(h,"pop") / tpop;
 k1(h,j) = sqr(w(h)) * data(h,j);
 k2(j) = sum(h, w(h) * data(h,j) / data(h,"pop"));
 

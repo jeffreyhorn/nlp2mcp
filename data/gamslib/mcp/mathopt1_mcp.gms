@@ -15,13 +15,6 @@ $offText
 * Original Model Declarations
 * ============================================
 
-Scalars
-    report /0.0/
-;
-
-report(x1,diff) = report("x1","global") - report("x1","solver");
-report(x2,diff) = report("x2","global") - report("x2","solver");
-
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

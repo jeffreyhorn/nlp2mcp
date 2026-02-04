@@ -26,6 +26,11 @@ Completed documentation updates for v1.1.0 release. Created release notes, updat
 - **CHANGELOG.md** - Documented all Sprint 17 changes
 - **Version References** - Updated version from 0.5.0-beta to 1.1.0 in documentation
 
+##### Fixed
+- **MCP file fixes** - Corrected issues in generated MCP files:
+  - `mathopt1_mcp.gms`: Removed erroneous post-solve `report` scalar and assignments
+  - `sample_mcp.gms`: Fixed parameter assignment ordering (`tpop` now computed before `w(h)`)
+
 #### Pre-Release Verification
 
 - All quality checks pass (typecheck, lint, format, test)

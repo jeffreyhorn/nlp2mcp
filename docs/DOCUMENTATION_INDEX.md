@@ -206,7 +206,7 @@ New to nlp2mcp? Start here:
 ## Release & Packaging
 
 - **[v1.1.0 Release Notes](releases/v1.1.0.md)** - Current release (Sprint 17)
-- **[v0.6.0 Release Notes](releases/v0.6.0.md)** - Previous release (Sprint 6)
+- **[v0.6.0 Release Notes](releases/v0.6.0.md)** - Previous release (Sprint 5)
 - **[VERSIONING.md](release/VERSIONING.md)** - Version numbering strategy
 - **[PYPI_PACKAGING_PLAN.md](release/PYPI_PACKAGING_PLAN.md)** - PyPI packaging plan
 - **[TESTPYPI_PUBLISH.md](release/TESTPYPI_PUBLISH.md)** - TestPyPI publishing guide
