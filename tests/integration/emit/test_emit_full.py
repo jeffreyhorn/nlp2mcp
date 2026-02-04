@@ -318,3 +318,64 @@ class TestFullGAMSEmission:
         # Should pair correctly: stat_x.x and stat_xy.xy
         assert "stat_x.x" in output
         assert "stat_xy.xy" in output
+
+    def test_emit_alias_ordering(self, manual_index_mapping):
+        """Test that sets and aliases are emitted in correct order.
+
+        Sprint 17 Day 10 (Issue #621): Verify the full emission correctly
+        orders sets and aliases to avoid undefined symbol errors.
+        Order follows the emitter's 6-phase sequence:
+        1. Phase 1 sets (sets with no alias dependencies)
+        2. Phase 1 aliases (aliases targeting phase 1 sets)
+        3. Phase 2 sets (sets depending on phase 1 aliases)
+        4. Phase 2 aliases (aliases targeting phase 2 sets)
+        5. Phase 3 sets (sets depending on phase 2 aliases)
+        6. Phase 3 aliases (aliases targeting phase 3 sets)
+        """
+        from src.ir.symbols import AliasDef, SetDef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        # Set i is pre-alias (no alias dependency)
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2", "i3"])
+        # Set ij depends on alias j, so it's post-alias
+        model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
+        # Alias j targets pre-alias set i
+        model.aliases["j"] = AliasDef(name="j", target="i")
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ())),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=())
+
+        model.equalities = ["objdef"]
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
+
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+
+        output = emit_gams_mcp(kkt)
+
+        # Find positions of key elements in the output
+        pos_set_i = output.find("i /i1, i2, i3/")
+        pos_alias_j = output.find("Alias(i, j);")
+        pos_set_ij = output.find("ij(i,j)")
+
+        # Verify all elements are present
+        assert pos_set_i != -1, "Set i should be in output"
+        assert pos_alias_j != -1, "Alias j should be in output"
+        assert pos_set_ij != -1, "Set ij should be in output"
+
+        # Verify correct ordering: set i -> Alias j -> set ij
+        assert pos_set_i < pos_alias_j, "Set i must come before Alias j"
+        assert pos_alias_j < pos_set_ij, "Alias j must come before set ij"

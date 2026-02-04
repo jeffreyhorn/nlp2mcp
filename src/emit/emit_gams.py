@@ -7,6 +7,7 @@ GAMS MCP file from a KKT system.
 from src.config import Config
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
+    _compute_set_alias_phases,
     emit_computed_parameter_assignments,
     emit_original_aliases,
     emit_original_parameters,
@@ -74,15 +75,33 @@ def emit_gams_mcp(
         sections.append("* ============================================")
         sections.append("")
 
-    sets_code = emit_original_sets(kkt.model_ir)
-    if sets_code:
-        sections.append(sets_code)
-        sections.append("")
+    # Sprint 17 Day 10 (Issue #621): Split sets and aliases into phases
+    # Correct emit order ensures all dependencies are declared before use.
+    # For each phase p: emit phase p sets, then phase p aliases.
+    # Supports N phases dynamically based on dependency depth.
+    # Compute phases once and pass to both emitters to avoid redundant work.
+    phases = _compute_set_alias_phases(kkt.model_ir)
+    sets_by_phase = emit_original_sets(kkt.model_ir, precomputed_phases=phases)
+    aliases_by_phase = emit_original_aliases(kkt.model_ir, precomputed_phases=phases)
 
-    aliases_code = emit_original_aliases(kkt.model_ir)
-    if aliases_code:
-        sections.append(aliases_code)
-        sections.append("")
+    # Ensure both lists have the same length by padding with empty strings
+    if sets_by_phase or aliases_by_phase:
+        max_phases = max(len(sets_by_phase), len(aliases_by_phase))
+    else:
+        max_phases = 0
+    while len(sets_by_phase) < max_phases:
+        sets_by_phase.append("")
+    while len(aliases_by_phase) < max_phases:
+        aliases_by_phase.append("")
+
+    # Emit each phase: sets first, then aliases
+    for phase_idx in range(max_phases):
+        if sets_by_phase[phase_idx]:
+            sections.append(sets_by_phase[phase_idx])
+            sections.append("")
+        if aliases_by_phase[phase_idx]:
+            sections.append(aliases_by_phase[phase_idx])
+            sections.append("")
 
     params_code = emit_original_parameters(kkt.model_ir)
     if params_code:

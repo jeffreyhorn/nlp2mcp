@@ -17,6 +17,7 @@ import re
 from src.emit.expr_to_gams import expr_to_gams
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
+from src.ir.symbols import SetDef
 
 # Regex pattern for valid GAMS set element identifiers
 # Allows: letters, digits, underscores, hyphens, dots (for tuples like a.b), plus signs
@@ -64,77 +65,299 @@ def _sanitize_set_element(element: str) -> str:
     return element
 
 
-def emit_original_sets(model_ir: ModelIR) -> str:
-    """Emit Sets block from original model.
+def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
+    """Format a single set declaration line.
+
+    Args:
+        set_name: Name of the set
+        set_def: SetDef object with members and domain
+
+    Returns:
+        Formatted set declaration line (without leading spaces)
+    """
+    # Format set declaration with optional domain (subset relationship)
+    # E.g., cg(genchar) for subset cg of genchar
+    if set_def.domain:
+        domain_str = ",".join(set_def.domain)
+        set_decl = f"{set_name}({domain_str})"
+    else:
+        set_decl = set_name
+
+    # Use SetDef.members
+    # Members are stored as a list of strings in SetDef
+    # Sanitize each member to prevent DSL injection attacks
+    if set_def.members:
+        sanitized_members = [_sanitize_set_element(m) for m in set_def.members]
+        members = ", ".join(sanitized_members)
+        return f"{set_decl} /{members}/"
+    else:
+        # Empty set or universe (or subset with inherited members)
+        return set_decl
+
+
+def _compute_set_alias_phases(
+    model_ir: ModelIR,
+) -> tuple[dict[str, int], dict[str, int]]:
+    """Compute emission phases for sets and aliases based on dependencies.
+
+    This function assigns phases to sets and aliases to ensure correct declaration
+    order. A set must be declared before it can be referenced. Uses an iterative,
+    dependency-aware algorithm that assigns phases based on actual dependencies.
+
+    Emission order for each phase p:
+    1. Phase p sets
+    2. Phase p aliases (targeting phase p sets)
+
+    The algorithm iteratively assigns phases such that:
+    - An alias can be assigned to phase p if its target set is in a phase <= p.
+    - A set can be assigned to phase p if all its domain indices refer only to
+      sets/aliases already assigned to phases < p (for aliases) or <= p (for sets).
+
+    Args:
+        model_ir: Model IR containing set and alias definitions
+
+    Returns:
+        Tuple of (set_phases, alias_phases) as dicts mapping lowercase names to phase numbers.
+    """
+    if not model_ir.sets:
+        return {}, {}
+
+    # Map: alias_name (lower) -> target_set_name (lower)
+    alias_targets: dict[str, str] = {}
+    if model_ir.aliases:
+        for alias_name, alias_def in model_ir.aliases.items():
+            alias_targets[alias_name.lower()] = alias_def.target.lower()
+
+    # Build a map of set name (lowercase) -> domain indices (lowercase)
+    set_domains: dict[str, set[str]] = {}
+    for set_name, set_def in model_ir.sets.items():
+        set_domains[set_name.lower()] = {idx.lower() for idx in set_def.domain}
+
+    all_set_names = set(set_domains.keys())
+    alias_names_lower = set(alias_targets.keys())
+
+    # Validate that all alias targets refer to existing sets or other aliases.
+    # Without this check, an alias targeting a non-existent symbol would remain
+    # unassigned and trigger a misleading "Circular dependency" error.
+    all_known_symbols = all_set_names | alias_names_lower
+    for alias_name_lower, target_lower in alias_targets.items():
+        if target_lower not in all_known_symbols:
+            raise ValueError(
+                f"Alias '{alias_name_lower}' targets non-existent symbol '{target_lower}'. "
+                f"Expected a set or another alias."
+            )
+
+    # Phase 1 sets: Sets with no alias dependencies (directly or transitively)
+    # First, identify sets that directly depend on aliases
+    sets_with_alias_deps: set[str] = set()
+    for set_name_lower, domain_indices in set_domains.items():
+        if domain_indices & alias_names_lower:
+            sets_with_alias_deps.add(set_name_lower)
+
+    # Compute transitive closure: sets depending on alias-dependent sets
+    changed = True
+    while changed:
+        changed = False
+        for set_name_lower, domain_indices in set_domains.items():
+            if set_name_lower not in sets_with_alias_deps:
+                if domain_indices & sets_with_alias_deps:
+                    sets_with_alias_deps.add(set_name_lower)
+                    changed = True
+
+    phase1_sets = all_set_names - sets_with_alias_deps
+
+    # Initialize phase tracking for iterative assignment
+    set_phases: dict[str, int] = dict.fromkeys(phase1_sets, 1)
+    alias_phases: dict[str, int] = {}
+
+    # Phase 1 aliases: aliases targeting phase 1 sets
+    for alias_name_lower, target_lower in alias_targets.items():
+        if target_lower in phase1_sets:
+            alias_phases[alias_name_lower] = 1
+
+    unassigned_sets = all_set_names - phase1_sets
+    unassigned_aliases = alias_names_lower - set(alias_phases.keys())
+
+    # Iterative, dependency-aware phase assignment
+    # Upper bound: each symbol can require at most one additional phase
+    max_phases = len(all_set_names) + len(alias_names_lower) + 1
+    phase = 2
+    while (unassigned_sets or unassigned_aliases) and phase <= max_phases:
+        progressed = True
+        while progressed:
+            progressed = False
+
+            # Assign aliases whose target is already in a phase <= current phase.
+            # The target may be a set OR another alias (alias chains).
+            for alias_name_lower in list(unassigned_aliases):
+                target_lower = alias_targets[alias_name_lower]
+                target_phase = set_phases.get(target_lower)
+                if target_phase is None:
+                    # Target might be another alias (alias chain)
+                    target_phase = alias_phases.get(target_lower)
+                if target_phase is not None and target_phase <= phase:
+                    alias_phases[alias_name_lower] = phase
+                    unassigned_aliases.remove(alias_name_lower)
+                    progressed = True
+
+            # Assign sets whose domain indices only reference resolved deps
+            for set_name_lower in list(unassigned_sets):
+                domain_indices = set_domains.get(set_name_lower, set())
+
+                def _index_resolved(idx: str, current_phase: int = phase) -> bool:
+                    # Resolution order: check sets first, then aliases.
+                    # GAMS enforces that set and alias names are unique within a
+                    # model, so an index cannot match both set_phases and
+                    # alias_targets simultaneously.
+                    if idx in set_phases:
+                        return set_phases[idx] <= current_phase
+                    # If index is an alias, it must be in a STRICTLY EARLIER phase
+                    # because aliases in phase p are emitted AFTER phase p sets,
+                    # so sets depending on phase p aliases must be in phase p+1 or later
+                    if idx in alias_targets:
+                        alias_phase = alias_phases.get(idx)
+                        return alias_phase is not None and alias_phase < current_phase
+                    # Unrecognized indices are conservatively treated as resolved
+                    # (they may be predefined GAMS sets or external references)
+                    return True
+
+                if all(_index_resolved(idx) for idx in domain_indices):
+                    set_phases[set_name_lower] = phase
+                    unassigned_sets.remove(set_name_lower)
+                    progressed = True
+
+        phase += 1
+
+    # If any symbols remain unassigned, there's a circular dependency
+    if unassigned_sets or unassigned_aliases:
+        raise ValueError(
+            f"Circular dependency detected in sets/aliases; "
+            f"cannot safely order GAMS emission. "
+            f"Unassigned sets: {unassigned_sets}, aliases: {unassigned_aliases}"
+        )
+
+    return set_phases, alias_phases
+
+
+def emit_original_sets(
+    model_ir: ModelIR,
+    precomputed_phases: tuple[dict[str, int], dict[str, int]] | None = None,
+) -> list[str]:
+    """Emit Sets blocks from original model, split by alias dependencies.
 
     Uses SetDef.members and SetDef.domain (Finding #3: actual IR fields).
     Sprint 17 Day 5: Now preserves subset relationships by emitting domain.
+    Sprint 17 Day 10: Splits sets into phases to handle complex alias
+    dependencies (GitHub Issue #621). Supports N phases dynamically.
+
+    Emission order ensures all dependencies are declared before use:
+    - Phase 1 sets: Sets with no alias dependencies
+    - Phase 1 aliases (emitted by emit_original_aliases)
+    - Phase 2 sets: Sets depending on phase 1 aliases
+    - Phase 2 aliases (emitted by emit_original_aliases)
+    - ... continues for all phases as needed
 
     Args:
         model_ir: Model IR containing set definitions
+        precomputed_phases: Optional pre-computed (set_phases, alias_phases) tuple
+            from _compute_set_alias_phases to avoid redundant computation.
 
     Returns:
-        GAMS Sets block as string
+        List of GAMS code strings, one per phase, indexed from 0.
+        Index 0 = phase 1 sets, index 1 = phase 2 sets, etc.
 
-    Example output:
+    Example output for phase 1:
         Sets
             i /i1, i2, i3/
-            genchar /a, b, c, upplim, lowlim/
-            cg(genchar) /a, b, c/
         ;
     """
     if not model_ir.sets:
-        return ""
+        return []
 
-    lines: list[str] = ["Sets"]
+    # Compute which sets go in each phase (or use pre-computed result)
+    if precomputed_phases is not None:
+        set_phases, _ = precomputed_phases
+    else:
+        set_phases, _ = _compute_set_alias_phases(model_ir)
+
+    if not set_phases:
+        return []
+
+    # Determine number of phases (set_phases is guaranteed non-empty by early return above)
+    max_phase = max(set_phases.values())
+
+    # Partition sets into lists by phase, preserving original order
+    phase_sets: list[list[tuple[str, SetDef]]] = [[] for _ in range(max_phase)]
+
     for set_name, set_def in model_ir.sets.items():
-        # Sprint 17 Day 5: Format set declaration with optional domain (subset relationship)
-        # E.g., cg(genchar) for subset cg of genchar
-        if set_def.domain:
-            domain_str = ",".join(set_def.domain)
-            set_decl = f"{set_name}({domain_str})"
-        else:
-            set_decl = set_name
+        set_name_lower = set_name.lower()
+        phase = set_phases.get(set_name_lower, 1)
+        phase_sets[phase - 1].append((set_name, set_def))
 
-        # Use SetDef.members (Finding #3)
-        # Members are stored as a list of strings in SetDef
-        # Sanitize each member to prevent DSL injection attacks
-        if set_def.members:
-            sanitized_members = [_sanitize_set_element(m) for m in set_def.members]
-            members = ", ".join(sanitized_members)
-            lines.append(f"    {set_decl} /{members}/")
-        else:
-            # Empty set or universe (or subset with inherited members)
-            lines.append(f"    {set_decl}")
-    lines.append(";")
+    def build_sets_block(sets_list: list[tuple[str, SetDef]]) -> str:
+        if not sets_list:
+            return ""
+        lines: list[str] = ["Sets"]
+        for set_name, set_def in sets_list:
+            lines.append(f"    {_format_set_declaration(set_name, set_def)}")
+        lines.append(";")
+        return "\n".join(lines)
 
-    return "\n".join(lines)
+    return [build_sets_block(sets_list) for sets_list in phase_sets]
 
 
-def emit_original_aliases(model_ir: ModelIR) -> str:
-    """Emit Alias declarations.
+def emit_original_aliases(
+    model_ir: ModelIR,
+    precomputed_phases: tuple[dict[str, int], dict[str, int]] | None = None,
+) -> list[str]:
+    """Emit Alias declarations, split by target set dependencies.
 
     Uses AliasDef.target and .universe (Finding #3: actual IR fields).
 
+    Sprint 17 Day 10: Splits aliases into phases matching the set phases:
+    - Phase p aliases: Aliases targeting phase p sets (emitted after phase p sets)
+
     Args:
         model_ir: Model IR containing alias definitions
+        precomputed_phases: Optional pre-computed (set_phases, alias_phases) tuple
+            from _compute_set_alias_phases to avoid redundant computation.
 
     Returns:
-        GAMS Alias declarations as string
+        List of GAMS code strings, one per phase, indexed from 0.
+        Index 0 = phase 1 aliases, index 1 = phase 2 aliases, etc.
 
     Example output:
         Alias(i, ip);
         Alias(j, jp);
     """
     if not model_ir.aliases:
-        return ""
+        return []
 
-    lines = []
+    # Get phase assignments (or use pre-computed result)
+    if precomputed_phases is not None:
+        set_phases, alias_phases = precomputed_phases
+    else:
+        set_phases, alias_phases = _compute_set_alias_phases(model_ir)
+
+    if not alias_phases:
+        return []
+
+    # Determine number of phases (use set_phases to include all phases)
+    max_phase = max(
+        max(set_phases.values()) if set_phases else 0,
+        max(alias_phases.values()) if alias_phases else 0,
+    )
+
+    # Partition aliases into lists by phase
+    phase_aliases: list[list[str]] = [[] for _ in range(max_phase)]
+
     for alias_name, alias_def in model_ir.aliases.items():
-        # Use AliasDef.target (Finding #3)
-        lines.append(f"Alias({alias_def.target}, {alias_name});")
+        alias_line = f"Alias({alias_def.target}, {alias_name});"
+        alias_name_lower = alias_name.lower()
+        phase = alias_phases.get(alias_name_lower, 1)
+        phase_aliases[phase - 1].append(alias_line)
 
-    return "\n".join(lines)
+    return ["\n".join(aliases) if aliases else "" for aliases in phase_aliases]
 
 
 def emit_original_parameters(model_ir: ModelIR) -> str:

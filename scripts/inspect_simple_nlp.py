@@ -62,19 +62,28 @@ def main():
     print("*" * 80)
     print()
 
-    sets_code = emit_original_sets(model_ir)
-    if sets_code:
-        print("* Sets from original model")
-        print("* Uses: SetDef.members (actual IR field)")
-        print(sets_code)
-        print()
+    sets_by_phase = emit_original_sets(model_ir)
+    aliases_by_phase = emit_original_aliases(model_ir)
 
-    aliases_code = emit_original_aliases(model_ir)
-    if aliases_code:
-        print("* Aliases from original model")
-        print("* Uses: AliasDef.target and .universe (actual IR fields)")
-        print(aliases_code)
-        print()
+    # Emit sets and aliases in phase order
+    max_phases = (
+        max(len(sets_by_phase), len(aliases_by_phase)) if sets_by_phase or aliases_by_phase else 0
+    )
+    for phase_idx in range(max_phases):
+        sets_code = sets_by_phase[phase_idx] if phase_idx < len(sets_by_phase) else ""
+        aliases_code = aliases_by_phase[phase_idx] if phase_idx < len(aliases_by_phase) else ""
+
+        if sets_code:
+            print(f"* Sets from original model (phase {phase_idx + 1})")
+            print("* Uses: SetDef.members (actual IR field)")
+            print(sets_code)
+            print()
+
+        if aliases_code:
+            print(f"* Aliases from original model (phase {phase_idx + 1})")
+            print("* Uses: AliasDef.target and .universe (actual IR fields)")
+            print(aliases_code)
+            print()
 
     params_code = emit_original_parameters(model_ir)
     if params_code:
@@ -112,7 +121,7 @@ def main():
     print("=" * 80)
     print()
     print("✓ Finding #3 (Actual IR Fields) - VERIFIED:")
-    print(f"  ✓ Sets emitted using SetDef.members: {bool(sets_code)}")
+    print(f"  ✓ Sets emitted using SetDef.members: {bool(sets_by_phase)}")
     print(f"  ✓ Parameters emitted using ParameterDef.domain/.values: {bool(params_code)}")
     if model_ir.params:
         for param_name, param_def in model_ir.params.items():
