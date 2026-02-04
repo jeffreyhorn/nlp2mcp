@@ -146,7 +146,7 @@ def _compute_post_alias_sets(
     return pre_alias_names, post_alias_names
 
 
-def emit_original_sets(model_ir: ModelIR, alias_names: set[str] | None = None) -> tuple[str, str]:
+def emit_original_sets(model_ir: ModelIR) -> tuple[str, str]:
     """Emit Sets blocks from original model, split by alias dependencies.
 
     Uses SetDef.members and SetDef.domain (Finding #3: actual IR fields).
@@ -159,8 +159,6 @@ def emit_original_sets(model_ir: ModelIR, alias_names: set[str] | None = None) -
 
     Args:
         model_ir: Model IR containing set definitions
-        alias_names: Set of alias names to check dependencies against.
-                    If None, extracts from model_ir.aliases.
 
     Returns:
         Tuple of (pre_alias_sets, post_alias_sets) as GAMS code strings.
@@ -182,18 +180,6 @@ def emit_original_sets(model_ir: ModelIR, alias_names: set[str] | None = None) -
 
     # Compute which sets go in each group (with transitive closure)
     pre_alias_names, post_alias_names = _compute_post_alias_sets(model_ir)
-
-    # If alias_names is explicitly provided, use simple logic (for backward compat in tests)
-    if alias_names is not None:
-        alias_names_lower = {name.lower() for name in alias_names}
-        pre_alias_names = set()
-        post_alias_names = set()
-        for set_name, set_def in model_ir.sets.items():
-            depends_on_alias = any(idx.lower() in alias_names_lower for idx in set_def.domain)
-            if depends_on_alias:
-                post_alias_names.add(set_name.lower())
-            else:
-                pre_alias_names.add(set_name.lower())
 
     # Partition sets into lists preserving original order
     pre_alias_sets: list[tuple[str, SetDef]] = []

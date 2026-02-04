@@ -255,6 +255,31 @@ class TestEmitOriginalAliases:
         # Universe is stored but doesn't affect GAMS Alias syntax
         assert "Alias(i, subset);" in pre_set
 
+    def test_alias_targeting_post_alias_set(self):
+        """Test emission of alias that targets a post-alias set.
+
+        Sprint 17 Day 10: If an alias targets a set that is in the post-alias
+        group (because that set depends on another alias), the alias must be
+        emitted after all sets, not between the set blocks.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+        # ij depends on alias j, so it's a post-alias set
+        model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
+        # j is an alias of i
+        model.aliases["j"] = AliasDef(name="j", target="i")
+        # ijp targets ij (a post-alias set), so it must be a post-set alias
+        model.aliases["ijp"] = AliasDef(name="ijp", target="ij")
+
+        pre_set, post_set = emit_original_aliases(model)
+
+        # Alias j targets pre-alias set i, so it's a pre-set alias
+        assert "Alias(i, j);" in pre_set
+
+        # Alias ijp targets post-alias set ij, so it's a post-set alias
+        assert "Alias(ij, ijp);" in post_set
+        assert "ijp" not in pre_set
+
 
 @pytest.mark.unit
 class TestEmitOriginalParameters:
