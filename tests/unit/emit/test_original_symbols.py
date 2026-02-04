@@ -180,43 +180,80 @@ class TestEmitOriginalSets:
         assert "ij(i,J)" in post_alias
         assert "ij" not in pre_alias
 
+    def test_transitive_dependency(self):
+        """Test that sets with transitive alias dependencies are post-alias.
+
+        Sprint 17 Day 10: If set A depends on alias J, and set B depends on A,
+        then B must also be in the post-alias group.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+        # ij depends on alias j (direct dependency)
+        model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
+        # triple depends on ij (transitive dependency through ij)
+        model.sets["triple"] = SetDef(name="triple", members=[], domain=("ij", "i"))
+        model.aliases["j"] = AliasDef(name="j", target="i")
+
+        pre_alias, post_alias = emit_original_sets(model)
+
+        # Set i should be in pre-alias (no alias dependency)
+        assert "i /i1, i2/" in pre_alias
+
+        # Both ij and triple should be in post-alias
+        assert "ij(i,j)" in post_alias
+        assert "triple(ij,i)" in post_alias
+        assert "ij" not in pre_alias
+        assert "triple" not in pre_alias
+
 
 @pytest.mark.unit
 class TestEmitOriginalAliases:
-    """Test emission of original Alias declarations."""
+    """Test emission of original Alias declarations.
+
+    Sprint 17 Day 10: emit_original_aliases now returns a tuple
+    (pre_set_aliases, post_set_aliases) to handle aliases that target
+    post-alias sets.
+    """
 
     def test_empty_aliases(self):
         """Test emission with no aliases."""
         model = ModelIR()
-        result = emit_original_aliases(model)
-        assert result == ""
+        pre_set, post_set = emit_original_aliases(model)
+        assert pre_set == ""
+        assert post_set == ""
 
     def test_single_alias(self):
-        """Test emission with single alias."""
+        """Test emission with single alias targeting a regular set."""
         model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
         model.aliases["ip"] = AliasDef(name="ip", target="i")
 
-        result = emit_original_aliases(model)
-        assert "Alias(i, ip);" in result
+        pre_set, post_set = emit_original_aliases(model)
+        assert "Alias(i, ip);" in pre_set
+        assert post_set == ""
 
     def test_multiple_aliases(self):
         """Test emission with multiple aliases."""
         model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["i1"])
+        model.sets["j"] = SetDef(name="j", members=["j1"])
         model.aliases["ip"] = AliasDef(name="ip", target="i")
         model.aliases["jp"] = AliasDef(name="jp", target="j")
 
-        result = emit_original_aliases(model)
-        assert "Alias(i, ip);" in result
-        assert "Alias(j, jp);" in result
+        pre_set, post_set = emit_original_aliases(model)
+        assert "Alias(i, ip);" in pre_set
+        assert "Alias(j, jp);" in pre_set
+        assert post_set == ""
 
     def test_alias_with_universe(self):
         """Test emission with alias that has universe constraint."""
         model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["i1"])
         model.aliases["subset"] = AliasDef(name="subset", target="i", universe="all")
 
-        result = emit_original_aliases(model)
+        pre_set, post_set = emit_original_aliases(model)
         # Universe is stored but doesn't affect GAMS Alias syntax
-        assert "Alias(i, subset);" in result
+        assert "Alias(i, subset);" in pre_set
 
 
 @pytest.mark.unit

@@ -74,22 +74,31 @@ def emit_gams_mcp(
         sections.append("* ============================================")
         sections.append("")
 
-    # Sprint 17 Day 10 (Issue #621): Split sets into pre-alias and post-alias groups
-    # Sets that depend on aliases must be emitted after the Alias declarations
+    # Sprint 17 Day 10 (Issue #621): Split sets and aliases into ordered groups
+    # Correct emit order:
+    #   1. Pre-alias sets (sets that don't depend on aliases)
+    #   2. Pre-set aliases (aliases targeting pre-alias sets)
+    #   3. Post-alias sets (sets that depend on aliases, directly or transitively)
+    #   4. Post-set aliases (aliases targeting post-alias sets)
     pre_alias_sets, post_alias_sets = emit_original_sets(kkt.model_ir)
+    pre_set_aliases, post_set_aliases = emit_original_aliases(kkt.model_ir)
 
     if pre_alias_sets:
         sections.append(pre_alias_sets)
         sections.append("")
 
-    aliases_code = emit_original_aliases(kkt.model_ir)
-    if aliases_code:
-        sections.append(aliases_code)
+    if pre_set_aliases:
+        sections.append(pre_set_aliases)
         sections.append("")
 
     # Emit sets that depend on aliases (after Alias declarations)
     if post_alias_sets:
         sections.append(post_alias_sets)
+        sections.append("")
+
+    # Emit aliases that target post-alias sets (after those sets are declared)
+    if post_set_aliases:
+        sections.append(post_set_aliases)
         sections.append("")
 
     params_code = emit_original_parameters(kkt.model_ir)

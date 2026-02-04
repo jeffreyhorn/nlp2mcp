@@ -95,6 +95,57 @@ def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
         return set_decl
 
 
+def _compute_post_alias_sets(
+    model_ir: ModelIR,
+) -> tuple[set[str], set[str]]:
+    """Compute which sets must be emitted after aliases (with transitive closure).
+
+    This function identifies sets that depend on aliases either directly or
+    transitively through other post-alias sets.
+
+    Args:
+        model_ir: Model IR containing set and alias definitions
+
+    Returns:
+        Tuple of (pre_alias_set_names, post_alias_set_names) as lowercase name sets.
+    """
+    if not model_ir.sets:
+        return set(), set()
+
+    # Get alias names (lowercase for case-insensitive comparison)
+    alias_names_lower = (
+        {name.lower() for name in model_ir.aliases.keys()} if model_ir.aliases else set()
+    )
+
+    # Build a map of set name (lowercase) -> domain indices (lowercase)
+    set_domains: dict[str, set[str]] = {}
+    for set_name, set_def in model_ir.sets.items():
+        set_domains[set_name.lower()] = {idx.lower() for idx in set_def.domain}
+
+    # Initialize post-alias sets with those directly depending on aliases
+    post_alias_names: set[str] = set()
+    for set_name_lower, domain_indices in set_domains.items():
+        if domain_indices & alias_names_lower:  # Any intersection means dependency
+            post_alias_names.add(set_name_lower)
+
+    # Compute transitive closure: if a set depends on a post-alias set, it's also post-alias
+    changed = True
+    while changed:
+        changed = False
+        for set_name_lower, domain_indices in set_domains.items():
+            if set_name_lower not in post_alias_names:
+                # Check if any domain index is a post-alias set
+                if domain_indices & post_alias_names:
+                    post_alias_names.add(set_name_lower)
+                    changed = True
+
+    # Pre-alias sets are all sets not in post-alias
+    all_set_names = set(set_domains.keys())
+    pre_alias_names = all_set_names - post_alias_names
+
+    return pre_alias_names, post_alias_names
+
+
 def emit_original_sets(model_ir: ModelIR, alias_names: set[str] | None = None) -> tuple[str, str]:
     """Emit Sets blocks from original model, split by alias dependencies.
 
@@ -103,6 +154,9 @@ def emit_original_sets(model_ir: ModelIR, alias_names: set[str] | None = None) -
     Sprint 17 Day 10: Splits sets into pre-alias and post-alias groups to handle
     sets that reference aliased indices (GitHub Issue #621).
 
+    The partitioning handles transitive dependencies: if set A depends on alias J,
+    and set B depends on set A, then B is also placed in the post-alias group.
+
     Args:
         model_ir: Model IR containing set definitions
         alias_names: Set of alias names to check dependencies against.
@@ -110,7 +164,7 @@ def emit_original_sets(model_ir: ModelIR, alias_names: set[str] | None = None) -
 
     Returns:
         Tuple of (pre_alias_sets, post_alias_sets) as GAMS code strings.
-        Pre-alias sets don't depend on any aliases.
+        Pre-alias sets don't depend on any aliases (directly or transitively).
         Post-alias sets depend on at least one alias and must be emitted after aliases.
 
     Example output for pre_alias_sets:
@@ -126,24 +180,27 @@ def emit_original_sets(model_ir: ModelIR, alias_names: set[str] | None = None) -
     if not model_ir.sets:
         return "", ""
 
-    # Get alias names from model_ir if not provided
-    # Normalize to lowercase for case-insensitive comparison (GAMS is case-insensitive)
-    if alias_names is None:
-        alias_names_lower = (
-            {name.lower() for name in model_ir.aliases.keys()} if model_ir.aliases else set()
-        )
-    else:
-        alias_names_lower = {name.lower() for name in alias_names}
+    # Compute which sets go in each group (with transitive closure)
+    pre_alias_names, post_alias_names = _compute_post_alias_sets(model_ir)
 
-    # Partition sets into those that depend on aliases and those that don't
+    # If alias_names is explicitly provided, use simple logic (for backward compat in tests)
+    if alias_names is not None:
+        alias_names_lower = {name.lower() for name in alias_names}
+        pre_alias_names = set()
+        post_alias_names = set()
+        for set_name, set_def in model_ir.sets.items():
+            depends_on_alias = any(idx.lower() in alias_names_lower for idx in set_def.domain)
+            if depends_on_alias:
+                post_alias_names.add(set_name.lower())
+            else:
+                pre_alias_names.add(set_name.lower())
+
+    # Partition sets into lists preserving original order
     pre_alias_sets: list[tuple[str, SetDef]] = []
     post_alias_sets: list[tuple[str, SetDef]] = []
 
     for set_name, set_def in model_ir.sets.items():
-        # Check if any domain index is an alias (case-insensitive comparison)
-        depends_on_alias = any(idx.lower() in alias_names_lower for idx in set_def.domain)
-
-        if depends_on_alias:
+        if set_name.lower() in post_alias_names:
             post_alias_sets.append((set_name, set_def))
         else:
             pre_alias_sets.append((set_name, set_def))
@@ -169,30 +226,48 @@ def emit_original_sets(model_ir: ModelIR, alias_names: set[str] | None = None) -
     return pre_alias_code, post_alias_code
 
 
-def emit_original_aliases(model_ir: ModelIR) -> str:
-    """Emit Alias declarations.
+def emit_original_aliases(model_ir: ModelIR) -> tuple[str, str]:
+    """Emit Alias declarations, split by target set dependencies.
 
     Uses AliasDef.target and .universe (Finding #3: actual IR fields).
+
+    Sprint 17 Day 10: Splits aliases into two groups:
+    - Pre-set aliases: Target is a pre-alias set (can be emitted between set blocks)
+    - Post-set aliases: Target is a post-alias set (must be emitted after all sets)
 
     Args:
         model_ir: Model IR containing alias definitions
 
     Returns:
-        GAMS Alias declarations as string
+        Tuple of (pre_set_aliases, post_set_aliases) as GAMS code strings.
+        Pre-set aliases target sets in the pre-alias group.
+        Post-set aliases target sets in the post-alias group.
 
     Example output:
         Alias(i, ip);
         Alias(j, jp);
     """
     if not model_ir.aliases:
-        return ""
+        return "", ""
 
-    lines = []
+    # Get post-alias set names to determine which aliases need to come after all sets
+    _, post_alias_set_names = _compute_post_alias_sets(model_ir)
+
+    pre_set_aliases: list[str] = []
+    post_set_aliases: list[str] = []
+
     for alias_name, alias_def in model_ir.aliases.items():
-        # Use AliasDef.target (Finding #3)
-        lines.append(f"Alias({alias_def.target}, {alias_name});")
+        alias_line = f"Alias({alias_def.target}, {alias_name});"
+        # Check if the alias target is a post-alias set (case-insensitive)
+        if alias_def.target.lower() in post_alias_set_names:
+            post_set_aliases.append(alias_line)
+        else:
+            pre_set_aliases.append(alias_line)
 
-    return "\n".join(lines)
+    pre_code = "\n".join(pre_set_aliases) if pre_set_aliases else ""
+    post_code = "\n".join(post_set_aliases) if post_set_aliases else ""
+
+    return pre_code, post_code
 
 
 def emit_original_parameters(model_ir: ModelIR) -> str:
