@@ -81,8 +81,9 @@ def emit_gams_mcp(
     #   3. Phase 2 sets (sets depending on phase 1 aliases)
     #   4. Phase 2 aliases (aliases targeting phase 2 sets)
     #   5. Phase 3 sets (sets depending on phase 2 aliases)
+    #   6. Phase 3 aliases (aliases targeting phase 3 sets)
     phase1_sets, phase2_sets, phase3_sets = emit_original_sets(kkt.model_ir)
-    phase1_aliases, phase2_aliases = emit_original_aliases(kkt.model_ir)
+    phase1_aliases, phase2_aliases, phase3_aliases = emit_original_aliases(kkt.model_ir)
 
     if phase1_sets:
         sections.append(phase1_sets)
@@ -102,6 +103,10 @@ def emit_gams_mcp(
 
     if phase3_sets:
         sections.append(phase3_sets)
+        sections.append("")
+
+    if phase3_aliases:
+        sections.append(phase3_aliases)
         sections.append("")
 
     params_code = emit_original_parameters(kkt.model_ir)

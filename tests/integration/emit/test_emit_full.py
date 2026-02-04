@@ -324,11 +324,13 @@ class TestFullGAMSEmission:
 
         Sprint 17 Day 10 (Issue #621): Verify the full emission correctly
         orders sets and aliases to avoid undefined symbol errors.
-        Order should be:
-        1. Pre-alias sets (sets that don't depend on aliases)
-        2. Pre-set aliases (aliases targeting pre-alias sets)
-        3. Post-alias sets (sets that depend on aliases)
-        4. Post-set aliases (aliases targeting post-alias sets)
+        Order follows the emitter's 6-phase sequence:
+        1. Phase 1 sets (sets with no alias dependencies)
+        2. Phase 1 aliases (aliases targeting phase 1 sets)
+        3. Phase 2 sets (sets depending on phase 1 aliases)
+        4. Phase 2 aliases (aliases targeting phase 2 sets)
+        5. Phase 3 sets (sets depending on phase 2 aliases)
+        6. Phase 3 aliases (aliases targeting phase 3 sets)
         """
         from src.ir.symbols import AliasDef, SetDef
 

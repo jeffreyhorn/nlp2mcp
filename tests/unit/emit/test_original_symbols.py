@@ -260,16 +260,17 @@ class TestEmitOriginalAliases:
     """Test emission of original Alias declarations.
 
     Sprint 17 Day 10: emit_original_aliases now returns a tuple
-    (phase1_aliases, phase2_aliases) to handle aliases that target
-    phase 2 sets (sets depending on phase 1 aliases).
+    (phase1_aliases, phase2_aliases, phase3_aliases) to handle aliases that
+    target sets in each phase.
     """
 
     def test_empty_aliases(self):
         """Test emission with no aliases."""
         model = ModelIR()
-        phase1, phase2 = emit_original_aliases(model)
+        phase1, phase2, phase3 = emit_original_aliases(model)
         assert phase1 == ""
         assert phase2 == ""
+        assert phase3 == ""
 
     def test_single_alias(self):
         """Test emission with single alias targeting a regular set."""
@@ -277,9 +278,10 @@ class TestEmitOriginalAliases:
         model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
         model.aliases["ip"] = AliasDef(name="ip", target="i")
 
-        phase1, phase2 = emit_original_aliases(model)
+        phase1, phase2, phase3 = emit_original_aliases(model)
         assert "Alias(i, ip);" in phase1
         assert phase2 == ""
+        assert phase3 == ""
 
     def test_multiple_aliases(self):
         """Test emission with multiple aliases."""
@@ -289,10 +291,11 @@ class TestEmitOriginalAliases:
         model.aliases["ip"] = AliasDef(name="ip", target="i")
         model.aliases["jp"] = AliasDef(name="jp", target="j")
 
-        phase1, phase2 = emit_original_aliases(model)
+        phase1, phase2, phase3 = emit_original_aliases(model)
         assert "Alias(i, ip);" in phase1
         assert "Alias(j, jp);" in phase1
         assert phase2 == ""
+        assert phase3 == ""
 
     def test_alias_with_universe(self):
         """Test emission with alias that has universe constraint."""
@@ -300,7 +303,7 @@ class TestEmitOriginalAliases:
         model.sets["i"] = SetDef(name="i", members=["i1"])
         model.aliases["subset"] = AliasDef(name="subset", target="i", universe="all")
 
-        phase1, phase2 = emit_original_aliases(model)
+        phase1, phase2, phase3 = emit_original_aliases(model)
         # Universe is stored but doesn't affect GAMS Alias syntax
         assert "Alias(i, subset);" in phase1
 
@@ -320,7 +323,7 @@ class TestEmitOriginalAliases:
         # ijp targets ij (a phase 2 set), so it must be a phase 2 alias
         model.aliases["ijp"] = AliasDef(name="ijp", target="ij")
 
-        phase1, phase2 = emit_original_aliases(model)
+        phase1, phase2, phase3 = emit_original_aliases(model)
 
         # Alias j targets phase 1 set i, so it's a phase 1 alias
         assert "Alias(i, j);" in phase1
@@ -328,6 +331,39 @@ class TestEmitOriginalAliases:
         # Alias ijp targets phase 2 set ij, so it's a phase 2 alias
         assert "Alias(ij, ijp);" in phase2
         assert "ijp" not in phase1
+        assert phase3 == ""
+
+    def test_alias_targeting_phase3_set(self):
+        """Test emission of alias that targets a phase 3 set.
+
+        Sprint 17 Day 10: If an alias targets a set that is in phase 3
+        (because that set depends on a phase 2 alias), the alias must be
+        emitted after phase 3 sets.
+        """
+        model = ModelIR()
+        # Phase 1: base set
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+        # Phase 1 alias: j is alias of i
+        model.aliases["j"] = AliasDef(name="j", target="i")
+        # Phase 2: ij depends on alias j
+        model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
+        # Phase 2 alias: k is alias of ij (a phase 2 set)
+        model.aliases["k"] = AliasDef(name="k", target="ij")
+        # Phase 3: xyz depends on alias k (which targets phase 2 set)
+        model.sets["xyz"] = SetDef(name="xyz", members=[], domain=("i", "k"))
+        # Phase 3 alias: xyzp targets xyz (a phase 3 set)
+        model.aliases["xyzp"] = AliasDef(name="xyzp", target="xyz")
+
+        phase1, phase2, phase3 = emit_original_aliases(model)
+
+        # Alias j targets phase 1 set i
+        assert "Alias(i, j);" in phase1
+        # Alias k targets phase 2 set ij
+        assert "Alias(ij, k);" in phase2
+        # Alias xyzp targets phase 3 set xyz
+        assert "Alias(xyz, xyzp);" in phase3
+        assert "xyzp" not in phase1
+        assert "xyzp" not in phase2
 
 
 @pytest.mark.unit
