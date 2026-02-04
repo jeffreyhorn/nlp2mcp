@@ -4634,6 +4634,144 @@ class TestSubsetIndexingAssignments:
         assert ("b", "x") not in model.params["cost"].values
 
 
+class TestDomainOverAssignments:
+    """Test domain-over parameter assignments (Issue #622).
+
+    In GAMS, f(j,"k2") = 0 where f has domain (j,k) means
+    "for all elements e in set j, set f(e, k2) = 0". The parser
+    must expand domain set names used as indices into individual
+    entries for each set member.
+    """
+
+    def test_single_domain_index_expansion(self):
+        """Test f(j,"k2") = 0 expands over all members of set j."""
+        text = dedent("""
+            Set j / j1, j2, j3 /;
+            Set k / k1, k2, k3 /;
+            Parameter f(j,k);
+
+            f(j,"k2") = 0;
+        """)
+        model = parser.parse_model_text(text)
+        assert "f" in model.params
+        # Should expand j to j1, j2, j3
+        assert model.params["f"].values[("j1", "k2")] == 0.0
+        assert model.params["f"].values[("j2", "k2")] == 0.0
+        assert model.params["f"].values[("j3", "k2")] == 0.0
+        # Should NOT have the set name as an element
+        assert ("j", "k2") not in model.params["f"].values
+
+    def test_domain_over_overwrites_table_data(self):
+        """Test that domain-over assignment overwrites previous table values (trussm pattern)."""
+        text = dedent("""
+            Set j / j1, j2 /;
+            Set k / k1, k2 /;
+            Table f(j,k)
+                      k1    k2
+            j1       1.0   2.0
+            j2       3.0   4.0
+            ;
+
+            f(j,"k2") = 0;
+        """)
+        model = parser.parse_model_text(text)
+        # k1 values should be unchanged from table
+        assert model.params["f"].values[("j1", "k1")] == 1.0
+        assert model.params["f"].values[("j2", "k1")] == 3.0
+        # k2 values should be overwritten to 0
+        assert model.params["f"].values[("j1", "k2")] == 0.0
+        assert model.params["f"].values[("j2", "k2")] == 0.0
+        # No set-name-as-element entries
+        assert ("j", "k2") not in model.params["f"].values
+
+    def test_both_domain_indices_expanded(self):
+        """Test f(j,k) = 0 expands over all members of both sets."""
+        text = dedent("""
+            Set j / j1, j2 /;
+            Set k / k1, k2 /;
+            Table f(j,k)
+                      k1    k2
+            j1       1.0   2.0
+            j2       3.0   4.0
+            ;
+
+            f(j,k) = 0;
+        """)
+        model = parser.parse_model_text(text)
+        # All values should be overwritten to 0
+        assert model.params["f"].values[("j1", "k1")] == 0.0
+        assert model.params["f"].values[("j1", "k2")] == 0.0
+        assert model.params["f"].values[("j2", "k1")] == 0.0
+        assert model.params["f"].values[("j2", "k2")] == 0.0
+        assert ("j", "k") not in model.params["f"].values
+
+    def test_literal_index_not_expanded(self):
+        """Test that literal element indices are not expanded."""
+        text = dedent("""
+            Set j / j1, j2, j3 /;
+            Set k / k1, k2, k3 /;
+            Parameter f(j,k);
+
+            f("j1","k2") = 5.0;
+        """)
+        model = parser.parse_model_text(text)
+        # Only one entry should exist
+        assert model.params["f"].values[("j1", "k2")] == 5.0
+        assert len(model.params["f"].values) == 1
+
+    def test_quoted_set_name_not_expanded(self):
+        """Test that a quoted set name is treated as literal, not domain-over.
+
+        In GAMS, f("j","k2") should treat "j" as a literal element reference,
+        not as a domain-over expansion, even though j is a set name. This
+        matters when a set has an element with the same name as the set.
+        """
+        text = dedent("""
+            Set j / j, j1, j2 /;
+            Set k / k1, k2 /;
+            Parameter f(j,k);
+
+            f("j","k2") = 9.0;
+        """)
+        model = parser.parse_model_text(text)
+        # Quoted "j" should be treated as literal element, not expanded
+        assert model.params["f"].values[("j", "k2")] == 9.0
+        assert len(model.params["f"].values) == 1
+
+    def test_alias_domain_index_expansion(self):
+        """Test that domain-over expansion works when domain uses an alias."""
+        text = dedent("""
+            Set i / a, b, c /;
+            Alias(i, j);
+            Parameter f(j);
+
+            f(j) = 5;
+        """)
+        model = parser.parse_model_text(text)
+        assert "f" in model.params
+        # j is an alias of i; should expand over i's members
+        assert model.params["f"].values[("a",)] == 5.0
+        assert model.params["f"].values[("b",)] == 5.0
+        assert model.params["f"].values[("c",)] == 5.0
+        assert ("j",) not in model.params["f"].values
+
+    @pytest.mark.skipif(
+        not Path("data/gamslib/raw/trussm.gms").exists(),
+        reason="trussm.gms not available (GAMSLIB files are gitignored)",
+    )
+    def test_trussm_regression(self):
+        """Regression test: trussm.gms parameter f should not contain set-name entries."""
+        model = parser.parse_model_file("data/gamslib/raw/trussm.gms")
+        f_param = model.params["f"]
+        domain_names = {d.lower() for d in f_param.domain}
+        for key in f_param.values:
+            for element in key:
+                assert element.lower() not in domain_names, (
+                    f"Parameter f contains set name '{element}' as element in key {key}. "
+                    f"Domain-over assignment was not expanded."
+                )
+
+
 class TestSubsetReferenceInExpressions:
     """Test subset name as variable/parameter index in expressions.
 

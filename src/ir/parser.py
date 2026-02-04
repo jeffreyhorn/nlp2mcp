@@ -567,6 +567,63 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
     return tuple(indices)
 
 
+def _get_quoted_index_positions(node: Tree) -> set[int]:
+    """Determine which index positions in an index_list node were originally quoted.
+
+    In GAMS, f(j,"k2") has an unquoted j (domain-over) and a quoted "k2" (literal).
+    This function inspects the AST to identify quoted positions so the domain-over
+    expansion logic can skip them.
+
+    Args:
+        node: The index_list Tree node from the grammar.
+
+    Returns:
+        Set of 0-based positions that had quoted (string) tokens.
+    """
+    quoted: set[int] = set()
+    pos = 0
+    for child in node.children:
+        if isinstance(child, Token):
+            text = str(child)
+            if text.startswith('"') or text.startswith("'"):
+                quoted.add(pos)
+            pos += 1
+        elif isinstance(child, Tree) and child.data in (
+            "index_expr",
+            "index_simple",
+            "index_string",
+        ):
+            if child.data == "index_string":
+                quoted.add(pos)
+            elif child.data == "index_simple" and child.children:
+                token = child.children[0]
+                text = str(token)
+                if text.startswith('"') or text.startswith("'"):
+                    quoted.add(pos)
+            elif child.data == "index_expr" and len(child.children) == 1:
+                token = child.children[0]
+                text = str(token)
+                if text.startswith('"') or text.startswith("'"):
+                    quoted.add(pos)
+            pos += 1
+        elif isinstance(child, Tree) and child.data == "index_subset":
+            # Subset indexing like arc(n,np) — count inner indices
+            for subchild in child.children:
+                if isinstance(subchild, Tree) and subchild.data == "index_list":
+                    inner_count = sum(
+                        1
+                        for c in subchild.children
+                        if isinstance(c, Token)
+                        or (
+                            isinstance(c, Tree)
+                            and c.data in ("index_expr", "index_simple", "index_string")
+                        )
+                    )
+                    pos += inner_count
+                    break
+    return quoted
+
+
 def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | None]:
     """Extract indices from index_list along with any subset constraint.
 
@@ -3044,6 +3101,56 @@ class _ModelBuilder:
                         target,
                         suggestion=f"Provide exactly {len(param.domain)} {index_word} to match the parameter declaration",
                     )
+
+                # Issue #622: Handle domain-over assignments like f(j,"k2") = 0 where
+                # some indices are domain set names that should be expanded over all
+                # members of that set. In GAMS, f(j,"k2") = 0 means "for all elements
+                # e in set j, set f(e, k2) = 0".
+                # Quoted indices like f("j","k2") are literal element references and
+                # must NOT be expanded, even if they match a set name.
+                if (
+                    not has_function_call
+                    and value is not None
+                    and len(param.domain) > 0
+                    and len(indices) == len(param.domain)
+                    and len(target.children) > 1
+                ):
+                    # Determine which index positions were originally quoted (literal)
+                    quoted_positions = _get_quoted_index_positions(target.children[1])
+
+                    # Check which indices match their corresponding domain set name.
+                    # Use _resolve_set_def to handle aliases (e.g., Alias(i,j); Parameter f(j);
+                    # then f(j) = 0 should expand over the aliased set's members).
+                    # Skip quoted indices — they are literal element references.
+                    expand_positions: list[int] = []
+                    expand_set_defs: dict[int, SetDef] = {}
+                    for pos, idx in enumerate(indices):
+                        if pos in quoted_positions:
+                            continue
+                        domain_name = param.domain[pos]
+                        if idx.lower() == domain_name.lower():
+                            resolved = self._resolve_set_def(idx)
+                            if resolved is not None:
+                                expand_positions.append(pos)
+                                expand_set_defs[pos] = resolved
+
+                    if expand_positions:
+                        # Build list of member lists for positions that need expansion
+                        # For non-expanding positions, use the literal index
+                        dim_values: list[list[str]] = []
+                        for pos, idx in enumerate(indices):
+                            if pos in expand_positions:
+                                members = expand_set_defs[pos].members
+                                if not members:
+                                    # Empty set: nothing to expand, skip entire assignment
+                                    return
+                                dim_values.append(members)
+                            else:
+                                dim_values.append([idx])
+
+                        for combo in product(*dim_values):
+                            param.values[combo] = value
+                        return
 
                 # Sprint 10 Day 4: Store expression if it contains function calls, otherwise store value
                 if has_function_call:
