@@ -302,7 +302,10 @@ def _build_indexed_gradient_term(
     element_to_set = _build_element_to_set_mapping(kkt.model_ir, domain, instances)
 
     # Replace element-specific indices with domain indices in the gradient
-    return _replace_indices_in_expr(grad_component, domain, element_to_set, kkt.model_ir)
+    # Issue #620: Pass domain as equation_domain for subset/superset substitution
+    return _replace_indices_in_expr(
+        grad_component, domain, element_to_set, kkt.model_ir, equation_domain=domain
+    )
 
 
 def _build_element_to_set_mapping(
@@ -388,6 +391,7 @@ def _replace_indices_in_expr(
     domain: tuple[str, ...],
     element_to_set: dict[str, str] | None = None,
     model_ir: ModelIR | None = None,
+    equation_domain: tuple[str, ...] | None = None,
 ) -> Expr:
     """Replace element-specific indices with domain indices in expression.
 
@@ -410,6 +414,9 @@ def _replace_indices_in_expr(
         element_to_set: Mapping from element labels to set names. If None,
                         falls back to simple length-based matching for backward compatibility.
         model_ir: Model IR for looking up parameter domains (optional but recommended)
+        equation_domain: The stationarity equation's domain for subset substitution
+                         (Issue #620). When provided, superset indices are replaced
+                         with subset indices from the equation domain.
     """
     match expr:
         case Const(_):
@@ -424,7 +431,11 @@ def _replace_indices_in_expr(
                     if model_ir and var_ref.name in model_ir.variables:
                         var_domain = model_ir.variables[var_ref.name].domain
                     new_indices = _replace_matching_indices(
-                        str_indices, element_to_set, declared_domain=var_domain
+                        str_indices,
+                        element_to_set,
+                        declared_domain=var_domain,
+                        equation_domain=equation_domain,
+                        model_ir=model_ir,
                     )
                     return VarRef(var_ref.name, new_indices)
                 elif len(var_ref.indices) == len(domain):
@@ -440,7 +451,11 @@ def _replace_indices_in_expr(
                     if model_ir and param_ref.name in model_ir.params:
                         param_domain = model_ir.params[param_ref.name].domain
                     new_indices = _replace_matching_indices(
-                        str_indices, element_to_set, declared_domain=param_domain
+                        str_indices,
+                        element_to_set,
+                        declared_domain=param_domain,
+                        equation_domain=equation_domain,
+                        model_ir=model_ir,
                     )
                     return ParamRef(param_ref.name, new_indices)
                 elif len(param_ref.indices) == len(domain):
@@ -450,26 +465,40 @@ def _replace_indices_in_expr(
             if mult_ref.indices and domain:
                 if element_to_set:
                     str_indices = mult_ref.indices_as_strings()
-                    new_indices = _replace_matching_indices(str_indices, element_to_set)
+                    new_indices = _replace_matching_indices(
+                        str_indices,
+                        element_to_set,
+                        equation_domain=equation_domain,
+                        model_ir=model_ir,
+                    )
                     return MultiplierRef(mult_ref.name, new_indices)
                 elif len(mult_ref.indices) == len(domain):
                     return MultiplierRef(mult_ref.name, domain)
             return expr
         case Binary(op, left, right):
-            new_left = _replace_indices_in_expr(left, domain, element_to_set, model_ir)
-            new_right = _replace_indices_in_expr(right, domain, element_to_set, model_ir)
+            new_left = _replace_indices_in_expr(
+                left, domain, element_to_set, model_ir, equation_domain
+            )
+            new_right = _replace_indices_in_expr(
+                right, domain, element_to_set, model_ir, equation_domain
+            )
             return Binary(op, new_left, new_right)
         case Unary(op, child):
-            new_child = _replace_indices_in_expr(child, domain, element_to_set, model_ir)
+            new_child = _replace_indices_in_expr(
+                child, domain, element_to_set, model_ir, equation_domain
+            )
             return Unary(op, new_child)
         case Call(func, args):
             new_args = tuple(
-                _replace_indices_in_expr(arg, domain, element_to_set, model_ir) for arg in args
+                _replace_indices_in_expr(arg, domain, element_to_set, model_ir, equation_domain)
+                for arg in args
             )
             return Call(func, new_args)
         case Sum(index_sets, body):
             # Recursively process body to replace any element-specific indices
-            new_body = _replace_indices_in_expr(body, domain, element_to_set, model_ir)
+            new_body = _replace_indices_in_expr(
+                body, domain, element_to_set, model_ir, equation_domain
+            )
             if new_body is not body:
                 return Sum(index_sets, new_body)
             return expr
@@ -481,6 +510,8 @@ def _replace_matching_indices(
     indices: tuple[str, ...],
     element_to_set: dict[str, str],
     declared_domain: tuple[str, ...] | None = None,
+    equation_domain: tuple[str, ...] | None = None,
+    model_ir: ModelIR | None = None,
 ) -> tuple[str, ...]:
     """Replace element labels with their corresponding set names.
 
@@ -499,10 +530,18 @@ def _replace_matching_indices(
     (like "price") with "*". Instead, we preserve the original index if it's not
     in element_to_set, or replace it with its set name if it is an element.
 
+    When equation_domain and model_ir are provided, handles subset/superset
+    relationships. If a parameter is indexed over a superset (e.g., mu(s)) but
+    the stationarity equation is indexed over a subset (e.g., stat_x(i) where
+    i(s) is a subset of s), the superset index is replaced with the subset index.
+    This prevents GAMS Error 149 "Set is not under control".
+
     Args:
         indices: Original indices (e.g., ("1", "a") or ("1", "cost"))
         element_to_set: Mapping from element labels to set names
         declared_domain: The declared domain of the symbol (for disambiguation)
+        equation_domain: The domain of the stationarity equation (for subset substitution)
+        model_ir: Model IR for looking up subset relationships via SetDef.domain
 
     Returns:
         New indices with element labels replaced by set names
@@ -519,6 +558,18 @@ def _replace_matching_indices(
         >>> _replace_matching_indices(("price", "a"), {"a": "alloy"}, declared_domain=("*", "alloy"))
         ("price", "alloy")  # "price" preserved (wildcard domain), "a" replaced
     """
+    # Build superset-to-subset mapping from equation domain if available.
+    # For each set in the equation domain, check if it's a subset of another set.
+    # E.g., if equation domain is ("i",) and i has domain=("s",), then s -> i.
+    superset_to_subset: dict[str, str] = {}
+    if equation_domain and model_ir:
+        for eq_set in equation_domain:
+            eq_set_def = model_ir.sets.get(eq_set)
+            # Handle both SetDef objects and plain lists (from programmatic tests)
+            if eq_set_def and hasattr(eq_set_def, "domain") and eq_set_def.domain:
+                for parent_set in eq_set_def.domain:
+                    superset_to_subset[parent_set.lower()] = eq_set
+
     new_indices = []
     for i, idx in enumerate(indices):
         # If we have a declared domain, use it to determine the target set
@@ -540,9 +591,22 @@ def _replace_matching_indices(
                 # it's a symbolic index that should be preserved, not replaced with
                 # the parent set. E.g., 'cg' is a subset of 'genchar' - keep 'cg'.
                 if idx in element_to_set and element_to_set[idx] == idx:
-                    new_indices.append(idx)
+                    # Issue #620: Check if this set is a superset of an equation
+                    # domain set. If so, substitute the subset index.
+                    # E.g., mu(s) in stat_x(i) where i(s): replace s -> i.
+                    if idx.lower() in superset_to_subset:
+                        new_indices.append(superset_to_subset[idx.lower()])
+                    else:
+                        new_indices.append(idx)
                 else:
-                    new_indices.append(target_set)
+                    # Issue #620: Check if the target_set is a superset of an
+                    # equation domain set. If so, use the subset index instead.
+                    # E.g., mu("cn") with declared_domain=("s",) in stat_x(i)
+                    # where i(s): target_set "s" → substitute "i".
+                    if target_set.lower() in superset_to_subset:
+                        new_indices.append(superset_to_subset[target_set.lower()])
+                    else:
+                        new_indices.append(target_set)
         elif idx in element_to_set:
             # Replace element with its set name
             new_indices.append(element_to_set[idx])
@@ -607,8 +671,9 @@ def _add_indexed_jacobian_terms(
 
             if mult_domain:
                 # Replace indices in derivative expression using element_to_set mapping
+                # Issue #620: Pass var_domain as equation_domain for subset substitution
                 indexed_deriv = _replace_indices_in_expr(
-                    derivative, var_domain, element_to_set, kkt.model_ir
+                    derivative, var_domain, element_to_set, kkt.model_ir, equation_domain=var_domain
                 )
 
                 # Get base multiplier name (without element suffixes)
@@ -660,8 +725,9 @@ def _add_indexed_jacobian_terms(
             if mult_name in multipliers:
                 mult_ref = MultiplierRef(mult_name, ())
                 # Replace indices in derivative using element_to_set mapping
+                # Issue #620: Pass var_domain as equation_domain for subset substitution
                 indexed_deriv = _replace_indices_in_expr(
-                    derivative, var_domain, element_to_set, kkt.model_ir
+                    derivative, var_domain, element_to_set, kkt.model_ir, equation_domain=var_domain
                 )
                 term = Binary("*", indexed_deriv, mult_ref)
                 expr = Binary("+", expr, term)
