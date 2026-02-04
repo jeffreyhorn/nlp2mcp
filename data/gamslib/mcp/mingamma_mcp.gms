@@ -15,23 +15,19 @@ $offText
 * Original Model Declarations
 * ============================================
 
-Sets
-    i /seattle, san-diego/
-    j /new-york, chicago, topeka/
-;
-
-Parameters
-    a(i) /seattle 350.0, san-diego 600.0/
-    b(j) /new-york 325.0, chicago 300.0, topeka 275.0/
-    d(i,j) /seattle.chicago 1.7, seattle.topeka 1.8, 'san-diego'.chicago 2.5, 'san-diego'.topeka 1.8/
-    c(i,j)
-;
-
 Scalars
-    f /90.0/
+    x1opt /1.46163214496836/
+    x1delta /0.0/
+    x2delta /0.0/
+    y1opt /0.8856031944108887/
+    y1delta /0.0/
+    y2delta /0.0/
+    y2opt /0.0/
+    xtol /5e-05/
+    ytol /1e-06/
 ;
 
-c(i,j) = f * d(i,j) / 1000;
+y2opt = log(y1opt);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -45,13 +41,16 @@ c(i,j) = f * d(i,j) / 1000;
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    z
+    y1
+    y2
+    x1
+    x2
+    nu_y1def
 ;
 
 Positive Variables
-    x(i,j)
-    lam_supply(i)
-    lam_demand(j)
+    piL_x1
+    piL_x2
 ;
 
 * ============================================
@@ -63,10 +62,13 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x(i,j)
-    comp_demand(j)
-    comp_supply(i)
-    cost
+    stat_x1
+    stat_x2
+    stat_y1
+    comp_lo_x1
+    comp_lo_x2
+    y1def
+    y2def
 ;
 
 * ============================================
@@ -74,14 +76,17 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,j).. c(i,j) + 1 * lam_supply(i) + (-1) * lam_demand(j) =E= 0;
+stat_x1.. 0 + ((-1) * (gamma(x1) * psi(x1))) * nu_y1def - piL_x1 =E= 0;
+stat_x2.. psi(x2) + 0 * nu_y1def - piL_x2 =E= 0;
+stat_y1.. 0 + 1 * nu_y1def =E= 0;
 
-* Inequality complementarity equations
-comp_demand(j).. sum(i, x(i,j)) =G= 0;
-comp_supply(i).. ((-1) * sum(j, x(i,j))) =G= 0;
+* Lower bound complementarity equations
+comp_lo_x1.. x1 - 0.01 =G= 0;
+comp_lo_x2.. x2 - 0.01 =G= 0;
 
 * Original equality equations
-cost.. z =E= sum((i,j), c(i,j) * x(i,j));
+y1def.. y1 =E= gamma(x1);
+y2def.. y2 =E= loggamma(x2);
 
 
 * ============================================
@@ -98,10 +103,13 @@ cost.. z =E= sum((i,j), c(i,j) * x(i,j));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x.x,
-    comp_demand.lam_demand,
-    comp_supply.lam_supply,
-    cost.z
+    stat_x1.x1,
+    stat_x2.x2,
+    stat_y1.y1,
+    y1def.nu_y1def,
+    y2def.y2,
+    comp_lo_x1.piL_x1,
+    comp_lo_x2.piL_x2
 /;
 
 * ============================================

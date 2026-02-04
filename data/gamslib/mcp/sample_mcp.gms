@@ -32,6 +32,11 @@ Scalars
     tpop /0.0/
 ;
 
+tpop = sum(h, data(h,"pop"));
+w(h) = data(h,"pop") / tpop;
+k1(h,j) = sqr(w(h)) * data(h,j);
+k2(j) = sum(h, w(h) * data(h,j) / data(h,"pop"));
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -53,10 +58,7 @@ Variables
 Positive Variables
     lam_vbal(j)
     lam_vbalr(j)
-    piL_n_1
-    piL_n_2
-    piL_n_3
-    piL_n_4
+    piL_n(h)
 ;
 
 * ============================================
@@ -68,17 +70,11 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_n_1
-    stat_n_2
-    stat_n_3
-    stat_n_4
+    stat_n(h)
     stat_nr(h)
     comp_vbal(j)
     comp_vbalr(j)
-    comp_lo_n_1
-    comp_lo_n_2
-    comp_lo_n_3
-    comp_lo_n_4
+    comp_lo_n(h)
     cbal
     cbalr
 ;
@@ -88,10 +84,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_n_1.. data("1","cost") + 0 * nu_cbalr - ((-1) * k1("1",a)) / n("1") ** 2 * lam_vbal(a) - ((-1) * k1("1",b)) / n("1") ** 2 * lam_vbal(b) - 0 * lam_vbalr(a) - 0 * lam_vbalr(b) - piL_n_1 =E= 0;
-stat_n_2.. data("2","cost") + 0 * nu_cbalr - ((-1) * k1("2",a)) / n("2") ** 2 * lam_vbal(a) - ((-1) * k1("2",b)) / n("2") ** 2 * lam_vbal(b) - 0 * lam_vbalr(a) - 0 * lam_vbalr(b) - piL_n_2 =E= 0;
-stat_n_3.. data("3","cost") + 0 * nu_cbalr - ((-1) * k1("3",a)) / n("3") ** 2 * lam_vbal(a) - ((-1) * k1("3",b)) / n("3") ** 2 * lam_vbal(b) - 0 * lam_vbalr(a) - 0 * lam_vbalr(b) - piL_n_3 =E= 0;
-stat_n_4.. data("4","cost") + 0 * nu_cbalr - ((-1) * k1("4",a)) / n("4") ** 2 * lam_vbal(a) - ((-1) * k1("4",b)) / n("4") ** 2 * lam_vbal(b) - 0 * lam_vbalr(a) - 0 * lam_vbalr(b) - piL_n_4 =E= 0;
+stat_n(h).. data(h,"cost") + 0 * nu_cbalr + sum(j, ((-1) * k1(h,j)) / n(h) ** 2 * lam_vbal(j)) + sum(j, 0 * lam_vbalr(j)) - piL_n(h) =E= 0;
 stat_nr(h).. 0 + ((-1) * (((-1) * data(h,"cost")) / nr(h) ** 2)) * nu_cbalr + sum(j, 0 * lam_vbal(j)) + sum(j, k1(h,j) * lam_vbalr(j)) =E= 0;
 
 * Inequality complementarity equations
@@ -99,10 +92,7 @@ comp_vbal(j).. ((-1) * (sum(h, k1(h,j) / n(h)) - k2(j))) =G= 0;
 comp_vbalr(j).. ((-1) * (sum(h, k1(h,j) * nr(h)) - k2(j))) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_n_1.. n("1") - 100 =G= 0;
-comp_lo_n_2.. n("2") - 100 =G= 0;
-comp_lo_n_3.. n("3") - 100 =G= 0;
-comp_lo_n_4.. n("4") - 100 =G= 0;
+comp_lo_n(h).. n(h) - 100 =G= 0;
 
 * Original equality equations
 cbal.. c =E= sum(h, data(h,"cost") * n(h));
@@ -123,19 +113,13 @@ cbalr.. c =E= sum(h, data(h,"cost") / nr(h));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_n_1.n,
-    stat_n_2.n,
-    stat_n_3.n,
-    stat_n_4.n,
+    stat_n.n,
     stat_nr.nr,
     comp_vbal.lam_vbal,
     comp_vbalr.lam_vbalr,
     cbal.c,
     cbalr.nu_cbalr,
-    comp_lo_n_1.piL_n_1,
-    comp_lo_n_2.piL_n_2,
-    comp_lo_n_3.piL_n_3,
-    comp_lo_n_4.piL_n_4
+    comp_lo_n.piL_n
 /;
 
 * ============================================

@@ -2,8 +2,10 @@
 
 **Complete guide to all documentation resources**
 
-Version: 0.5.0-beta  
-Last Updated: 2025-11-08
+Version: 1.1.0 (planned release)  
+Last Updated: 2026-02-03
+
+*Note: This documentation is prepared for the v1.1.0 release. The package version in pyproject.toml (0.7.0) will be updated as part of the release process.*
 
 ---
 
@@ -63,6 +65,23 @@ New to nlp2mcp? Start here:
   - Model status codes
 - **[PATH_REQUIREMENTS.md](PATH_REQUIREMENTS.md)** - PATH installation and licensing
 
+### GAMSLIB Testing & Validation
+
+- **[GAMSLIB_TESTING.md](guides/GAMSLIB_TESTING.md)** - Comprehensive GAMSLIB testing guide
+  - Full pipeline testing
+  - Individual stage scripts
+  - Database queries
+  - Python API usage
+  - CI/CD integration
+  - Performance benchmarks
+  - Troubleshooting
+- **[GAMSLIB_USAGE.md](guides/GAMSLIB_USAGE.md)** - GAMSLIB usage workflows
+  - Discovery and download
+  - Database queries (CLI and Python)
+  - Common workflows
+- **[GAMSLIB_STATUS.md](testing/GAMSLIB_STATUS.md)** - Auto-generated status report
+- **[FAILURE_ANALYSIS.md](testing/FAILURE_ANALYSIS.md)** - Auto-generated failure analysis
+
 ### Project Information
 
 - **[LIMITATIONS.md](LIMITATIONS.md)** - Known limitations and workarounds
@@ -107,33 +126,48 @@ New to nlp2mcp? Start here:
 
 ## Sprint Documentation
 
-### Sprint 5 (Current - Hardening & Release)
+### Epic 3: GAMSLIB Validation Infrastructure
+
+#### Sprint 17 (Current - Release v1.1.0)
+
+- **[SPRINT_SCHEDULE.md](planning/EPIC_3/SPRINT_17/SPRINT_SCHEDULE.md)** - Sprint 17 detailed schedule
+- **[SPRINT_LOG.md](planning/EPIC_3/SPRINT_17/SPRINT_LOG.md)** - Daily progress log
+- **[KNOWN_UNKNOWNS.md](planning/EPIC_3/SPRINT_17/KNOWN_UNKNOWNS.md)** - Research findings (27 unknowns)
+- **[DOCUMENTATION_PLAN.md](planning/EPIC_3/SPRINT_17/DOCUMENTATION_PLAN.md)** - Documentation gaps and updates
+- **[RELEASE_CHECKLIST.md](planning/EPIC_3/SPRINT_17/RELEASE_CHECKLIST.md)** - v1.1.0 release checklist
+
+#### Sprint 16 (Reporting Infrastructure)
+
+- **[SPRINT_SCHEDULE.md](planning/EPIC_3/SPRINT_16/SPRINT_SCHEDULE.md)** - Sprint 16 detailed schedule
+- **[SPRINT_LOG.md](planning/EPIC_3/SPRINT_16/SPRINT_LOG.md)** - Daily progress log
+- **[IMPROVEMENT_ROADMAP.md](planning/EPIC_3/SPRINT_16/IMPROVEMENT_ROADMAP.md)** - Prioritized improvements
+- **[SPRINT_RETROSPECTIVE.md](planning/EPIC_3/SPRINT_16/SPRINT_RETROSPECTIVE.md)** - Sprint 16 retrospective
+
+### Epic 2: Advanced Features & Hardening
+
+#### Sprint 5 (Hardening & Release)
 
 - **[PLAN.md](planning/SPRINT_5/PLAN.md)** - Sprint 5 detailed plan
 - **[KNOWN_UNKNOWNS.md](planning/SPRINT_5/KNOWN_UNKNOWNS.md)** - Research findings
-- **[CHECKPOINT_1_REPORT.md](planning/SPRINT_5/CHECKPOINT_1_REPORT.md)** - Min/max fix checkpoint
-- **[CHECKPOINT_2_REPORT.md](planning/SPRINT_5/CHECKPOINT_2_REPORT.md)** - Hardening checkpoint
-- **[CHECKPOINT_3.md](planning/SPRINT_5/CHECKPOINT_3.md)** - Release readiness checkpoint
 
-### Sprint 4 (Advanced Features)
+#### Sprint 4 (Advanced Features)
 
 - **[PLAN.md](planning/SPRINT_4/PLAN.md)** - Sprint 4 plan
 - **[RETROSPECTIVE.md](planning/SPRINT_4/RETROSPECTIVE.md)** - Sprint 4 retrospective
-- **[KNOWN_UNKNOWNS.md](planning/SPRINT_4/KNOWN_UNKNOWNS.md)** - Sprint 4 research
 
-### Sprint 3 (Testing & Validation)
+### Epic 1: Foundation
+
+#### Sprint 3 (Testing & Validation)
 
 - **[PLAN.md](planning/SPRINT_3/PLAN.md)** - Sprint 3 plan
 - **[RETROSPECTIVE.md](planning/SPRINT_3/RETROSPECTIVE.md)** - Sprint 3 retrospective
-- **[SUMMARY.md](planning/SPRINT_3/SUMMARY.md)** - Sprint 3 summary
 
-### Sprint 2 (Jacobian & Differentiation)
+#### Sprint 2 (Jacobian & Differentiation)
 
 - **[PLAN.md](planning/SPRINT_2/PLAN.md)** - Sprint 2 plan
 - **[RETROSPECTIVE.md](planning/SPRINT_2/RETROSPECTIVE.md)** - Sprint 2 retrospective
-- **[SUMMARY.md](planning/SPRINT_2/SUMMARY.md)** - Sprint 2 summary
 
-### Sprint 1 (Foundation)
+#### Sprint 1 (Foundation)
 
 - **[SUMMARY.md](planning/SPRINT_1/SUMMARY.md)** - Sprint 1 summary
 
@@ -173,6 +207,8 @@ New to nlp2mcp? Start here:
 
 ## Release & Packaging
 
+- **[v1.1.0 Release Notes](releases/v1.1.0.md)** - Current release (Sprint 17)
+- **[v0.6.0 Release Notes](releases/v0.6.0.md)** - Previous release (Sprint 5)
 - **[VERSIONING.md](release/VERSIONING.md)** - Version numbering strategy
 - **[PYPI_PACKAGING_PLAN.md](release/PYPI_PACKAGING_PLAN.md)** - PyPI packaging plan
 - **[TESTPYPI_PUBLISH.md](release/TESTPYPI_PUBLISH.md)** - TestPyPI publishing guide
@@ -252,19 +288,21 @@ See [issues/completed/](issues/completed/) directory for resolved issues.
 
 ## Documentation Quality
 
-This documentation index was last updated: **November 8, 2025**
+This documentation index was last updated: **February 3, 2026**
 
 **Coverage:**
 - ✅ User documentation (Tutorial, User Guide, FAQ, Troubleshooting)
 - ✅ Developer documentation (Architecture, API reference)
 - ✅ Solver integration (PATH guide)
-- ✅ Sprint plans and retrospectives
+- ✅ GAMSLIB testing and validation guides
+- ✅ Sprint plans and retrospectives (Epics 1-3)
 - ✅ Research and design documents
 - ✅ Testing and validation reports
+- ✅ Automated status and failure reports
 
 **Verification:**
-- All links verified: November 8, 2025
-- Sphinx builds successfully: Yes (144 warnings - docstring formatting)
+- All links verified: February 3, 2026
+- Sphinx builds successfully: Yes
 - Examples tested: Yes (using `examples/` directory)
 - Cross-linking complete: Yes
 
@@ -279,4 +317,4 @@ Found a broken link or missing documentation?
 
 ---
 
-**Last updated:** November 8, 2025
+**Last updated:** February 3, 2026

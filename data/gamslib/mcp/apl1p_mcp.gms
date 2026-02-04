@@ -91,15 +91,10 @@ Equations
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(dl, dl__);
-Alias(g, g__);
-
 * Stationarity equations
 stat_s(dl).. 2 * sum(g, 0) + us(dl) + sum(g, 0 * lam_cmin(g)) + sum(g, 0 * lam_cmax(g)) + sum(g, 0 * lam_omax(g)) + ((-1) * (sum(g, 0) + 1)) * lam_demand(dl) =E= 0;
 stat_x(g).. c(g) + 2 * sum(dl, 0) + (-1) * lam_cmin(g) + 1 * lam_cmax(g) + (sum(dl, 0) - alpha(g)) * lam_omax(g) + sum(dl, 0 * lam_demand(dl)) =E= 0;
-stat_y(g,dl).. 0 + sum(g__, 0 * lam_cmin(g__)) + sum(g__, 0 * lam_cmax(g__)) + sum(g__, 0 * lam_omax(g__)) + sum(dl__, (-1) * lam_demand(dl__)) =E= 0;
+stat_y(g,dl).. f(g,dl) + 0 * lam_cmin(g) + 0 * lam_cmax(g) + 1 * lam_omax(g) + (-1) * lam_demand(dl) =E= 0;
 
 * Inequality complementarity equations
 comp_cmax(g).. ((-1) * x(g)) =G= 0;

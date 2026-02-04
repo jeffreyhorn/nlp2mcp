@@ -46,7 +46,7 @@ Positive Variables
     x(i)
     b(i)
     c(i)
-    piL_x_inf
+    piL_x(i)
 ;
 
 * ============================================
@@ -61,8 +61,8 @@ Equations
     stat_b(i)
     stat_c(i)
     stat_util
-    stat_x_inf
-    comp_lo_x_inf
+    stat_x(i)
+    comp_lo_x(i)
     obj
     pc(i)
     rev(i)
@@ -76,10 +76,10 @@ Equations
 stat_b(i).. -1 + 1 * nu_rev(i) + 0 * nu_pc(i) =E= 0;
 stat_c(i).. 1 + 0 * nu_rev(i) + 1 * nu_pc(i) =E= 0;
 stat_util.. ((-1) * sum(i, 0)) + 0 * nu_rev(inf) + 0 * nu_pc(inf) =E= 0;
-stat_x_inf.. 0 + ((-1) * (0.5 * power(x(inf), -0.5))) * nu_rev(inf) + ((-1) * theta(inf)) * nu_pc(inf) - piL_x_inf =E= 0;
+stat_x(i).. 0 + ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + ((-1) * theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_x_inf.. x(inf) - 0.0001 =G= 0;
+comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 
 * Original equality equations
 obj.. Util =E= sum(i, b(i) - c(i));
@@ -104,11 +104,11 @@ Model mcp_model /
     stat_b.b,
     stat_c.c,
     stat_util.util,
-    stat_x_inf.x,
+    stat_x.x,
     obj.Util,
     pc.nu_pc,
     rev.nu_rev,
-    comp_lo_x_inf.piL_x_inf
+    comp_lo_x.piL_x
 /;
 
 * ============================================

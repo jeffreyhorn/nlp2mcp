@@ -18,9 +18,9 @@ $offText
 Sets
     i /p1, p2, p3/
     genchar /a, b, c, upplim, lowlim/
-    cg /a, b, c/
+    cg(genchar) /a, b, c/
     s /min-loss, s1, s2, s3, s4, min-cost/
-    st /s1, s2, s3, s4/
+    st(s) /s1, s2, s3, s4/
 ;
 
 Alias(i, j);
@@ -80,13 +80,9 @@ Equations
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(i, i__);
-
 * Stationarity equations
 stat_cost.. 100 * sum(i, 0) / 10000 + 100 * sum((i,j), 0) / 10000 + (1 - sum((i,cg), 0)) * nu_costfn + ((-1) * sum(i, 0)) * lam_demcons =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * sum((i__,j), 0) / 10000 + ((-1) * sum((i__,cg), 0)) * nu_costfn + (-1) * lam_demcons =E= 0;
+stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * power(p(i), pexp(cg)) * pexp(cg) / p(i))) * nu_costfn + (-1) * lam_demcons =E= 0;
 
 * Inequality complementarity equations
 comp_demcons.. sum(i, p(i)) =G= 0;

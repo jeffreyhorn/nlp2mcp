@@ -27,6 +27,8 @@ Parameters
     report(alloy,*)
 ;
 
+ce(alloy) = sum(elem, compdat(elem,alloy)) - 100;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

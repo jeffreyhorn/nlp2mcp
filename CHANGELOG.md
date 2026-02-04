@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 17 Day 9: Documentation & Pre-Release - 2026-02-03
+
+**Branch:** `sprint17-day9-documentation`  
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Completed documentation updates for v1.1.0 release. Created release notes, updated DOCUMENTATION_INDEX.md, and verified pre-release readiness.
+
+#### Changes
+
+##### Added
+- **v1.1.0 Release Notes** - Created `docs/releases/v1.1.0.md` with comprehensive release documentation
+- **DOCUMENTATION_INDEX.md Update** - Refreshed for v1.1.0 with current documentation links
+
+##### Updated
+- **CHANGELOG.md** - Documented all Sprint 17 changes
+- **Version References** - Updated version from 0.5.0-beta to 1.1.0 in documentation
+
+##### Fixed
+- **MCP file fixes** - Corrected issues in generated MCP files:
+  - `mathopt1_mcp.gms`: Removed erroneous post-solve `report` scalar and assignments
+  - `sample_mcp.gms`: Fixed parameter assignment ordering (`tpop` now computed before `w(h)`)
+
+#### Pre-Release Verification
+
+- All quality checks pass (typecheck, lint, format, test)
+- Documentation links verified
+- Sprint 17 objectives met
+
+---
+
+### Issue #612 Fix: Tuple Prefix Expansion - 2026-02-03
+
+**Branch:** `fix/issue-612-tuple-expansion`  
+**PR:** #618  
+**Status:** ✅ MERGED
+
+#### Summary
+
+Fixed parser failing on multiline set definitions with tuple prefix expansion `(a,b).c` syntax.
+
+#### Changes
+
+##### Fixed
+- **Tuple prefix expansion in parse_text()** - Added `normalize_multi_line_continuations()` call
+  - Root cause: `parse_text()` wasn't calling the normalization that `preprocess_gams_file()` uses
+  - Fix: Added import and call in `src/ir/parser.py`
+- **Idempotent normalization** - Made `normalize_multi_line_continuations()` idempotent
+  - Checks if line already ends with comma before appending one
+  - Prevents double-comma introduction on repeated calls
+
+##### Tests
+- Added 5 tests in `tests/unit/test_tuple_notation.py` for tuple prefix expansion
+- Added 2 tests in `tests/unit/test_multi_line_continuations.py` for idempotency
+
+#### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/ir/parser.py` | Added normalize_multi_line_continuations import and call |
+| `src/ir/preprocessor.py` | Made data-after-slash case idempotent |
+| `tests/unit/test_tuple_notation.py` | Added 5 new tests |
+| `tests/unit/test_multi_line_continuations.py` | Added 2 idempotency tests |
+
+---
+
 ### Sprint 17 Day 8: Additional Parse Fixes - 2026-02-02
 
 **Branch:** `sprint17-day8-additional-fixes`  

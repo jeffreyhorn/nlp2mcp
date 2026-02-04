@@ -16,22 +16,19 @@ $offText
 * ============================================
 
 Sets
-    i /seattle, san-diego/
-    j /new-york, chicago, topeka/
+    i /i1, i2, i3, i4, i5/
+    j /j1, j2, j3, j4/
+    k /k1, k2, k3/
 ;
 
 Parameters
-    a(i) /seattle 350.0, san-diego 600.0/
-    b(j) /new-york 325.0, chicago 300.0, topeka 275.0/
-    d(i,j) /seattle.chicago 1.7, seattle.topeka 1.8, 'san-diego'.chicago 2.5, 'san-diego'.topeka 1.8/
-    c(i,j)
+    f(j,k) /j1.k1 0.0008, j1.k2 1.0668, j1.k3 0.2944, j2.k1 0.0003, j2.k2 0.0593, j2.k3 -1.3362, j3.k1 -0.0006, j3.k2 -0.0956, j3.k3 0.7143, j4.k1 -1.0003, j4.k2 -0.8323, j4.k3 1.6236, j.k2 0.0, j.k3 0.0/
+    b(j,i) /j1.i1 1.0, j1.i2 0.0, j1.i3 0.5, j1.i4 0.0, j1.i5 0.0, j2.i1 0.0, j2.i2 0.0, j2.i3 -0.5, j2.i4 -1.0, j2.i5 0.0, j3.i1 0.0, j3.i2 0.5, j3.i3 0.0, j3.i4 0.0, j3.i5 1.0, j4.i1 0.0, j4.i2 0.5, j4.i3 0.0, j4.i4 1.0, j4.i5 0.0/
 ;
 
 Scalars
-    f /90.0/
+    maxvolume /10.0/
 ;
-
-c(i,j) = f * d(i,j) / 1000;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -45,13 +42,19 @@ c(i,j) = f * d(i,j) / 1000;
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    z
+    tau
+    s(i,k)
+    nu_deftk(i,k)
+    nu_stiffness(j,k)
 ;
 
 Positive Variables
-    x(i,j)
-    lam_supply(i)
-    lam_demand(j)
+    tk(i,k)
+    t(i)
+    sigma(i,k)
+    lam_volumeeq(i,k)
+    lam_reseq(k)
+    lam_trusscomp
 ;
 
 * ============================================
@@ -63,10 +66,15 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x(i,j)
-    comp_demand(j)
-    comp_supply(i)
-    cost
+    stat_s(i,k)
+    stat_sigma(i,k)
+    stat_t(i)
+    stat_tk(i,k)
+    comp_reseq(k)
+    comp_trusscomp
+    comp_volumeeq(i,k)
+    deftk(i,k)
+    stiffness(j,k)
 ;
 
 * ============================================
@@ -74,14 +82,19 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,j).. c(i,j) + 1 * lam_supply(i) + (-1) * lam_demand(j) =E= 0;
+stat_s(i,k).. 0 + 0 * nu_deftk(i,k) + sum(j, b(j,i) * nu_stiffness(j,k)) + 2 * s(i,k) * lam_volumeeq(i,k) + 0 * lam_reseq(k) + 0 * lam_trusscomp =E= 0;
+stat_sigma(i,k).. 0 + 0 * nu_deftk(i,k) + sum(j, 0 * nu_stiffness(j,k)) + ((-1) * (2 * tk(i,k))) * lam_volumeeq(i,k) + 1 * lam_reseq(k) + 0 * lam_trusscomp =E= 0;
+stat_t(i).. 0 + sum(k, (-1) * nu_deftk(i,k)) + sum((j,k), 0 * nu_stiffness(j,k)) + sum(k, 0 * lam_volumeeq(i,k)) + sum(k, 0 * lam_reseq(k)) + 1 * lam_trusscomp =E= 0;
+stat_tk(i,k).. 0 + 1 * nu_deftk(i,k) + sum(j, 0 * nu_stiffness(j,k)) + ((-1) * (sigma(i,k) * 2)) * lam_volumeeq(i,k) + 0 * lam_reseq(k) + 0 * lam_trusscomp =E= 0;
 
 * Inequality complementarity equations
-comp_demand(j).. sum(i, x(i,j)) =G= 0;
-comp_supply(i).. ((-1) * sum(j, x(i,j))) =G= 0;
+comp_reseq(k).. ((-1) * sum(i, sigma(i,k))) =G= 0;
+comp_trusscomp.. ((-1) * sum(i, t(i))) =G= 0;
+comp_volumeeq(i,k).. 2 * tk(i,k) * sigma(i,k) =G= 0;
 
 * Original equality equations
-cost.. z =E= sum((i,j), c(i,j) * x(i,j));
+deftk(i,k).. tk(i,k) =E= t(i);
+stiffness(j,k).. sum(i, s(i,k) * b(j,i)) =E= f(j,k);
 
 
 * ============================================
@@ -98,10 +111,15 @@ cost.. z =E= sum((i,j), c(i,j) * x(i,j));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x.x,
-    comp_demand.lam_demand,
-    comp_supply.lam_supply,
-    cost.z
+    stat_s.s,
+    stat_sigma.sigma,
+    stat_t.t,
+    stat_tk.tk,
+    comp_reseq.lam_reseq,
+    comp_trusscomp.lam_trusscomp,
+    comp_volumeeq.lam_volumeeq,
+    deftk.nu_deftk,
+    stiffness.nu_stiffness
 /;
 
 * ============================================
