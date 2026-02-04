@@ -127,16 +127,21 @@ def emit_original_sets(model_ir: ModelIR, alias_names: set[str] | None = None) -
         return "", ""
 
     # Get alias names from model_ir if not provided
+    # Normalize to lowercase for case-insensitive comparison (GAMS is case-insensitive)
     if alias_names is None:
-        alias_names = set(model_ir.aliases.keys()) if model_ir.aliases else set()
+        alias_names_lower = (
+            {name.lower() for name in model_ir.aliases.keys()} if model_ir.aliases else set()
+        )
+    else:
+        alias_names_lower = {name.lower() for name in alias_names}
 
     # Partition sets into those that depend on aliases and those that don't
     pre_alias_sets: list[tuple[str, SetDef]] = []
     post_alias_sets: list[tuple[str, SetDef]] = []
 
     for set_name, set_def in model_ir.sets.items():
-        # Check if any domain index is an alias
-        depends_on_alias = any(idx in alias_names for idx in set_def.domain)
+        # Check if any domain index is an alias (case-insensitive comparison)
+        depends_on_alias = any(idx.lower() in alias_names_lower for idx in set_def.domain)
 
         if depends_on_alias:
             post_alias_sets.append((set_name, set_def))

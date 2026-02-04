@@ -159,6 +159,27 @@ class TestEmitOriginalSets:
         assert "ij(i,j)" in post_alias
         assert "ij" not in pre_alias
 
+    def test_case_insensitive_alias_detection(self):
+        """Test that alias dependency detection is case-insensitive.
+
+        Sprint 17 Day 10: GAMS is case-insensitive, so alias detection must
+        handle different casing between alias names and domain indices.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+        # Set domain uses uppercase J, but alias is lowercase j
+        model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "J"))
+        model.aliases["j"] = AliasDef(name="j", target="i")
+
+        pre_alias, post_alias = emit_original_sets(model)
+
+        # Set i should be in pre-alias
+        assert "i /i1, i2/" in pre_alias
+
+        # Set ij(i,J) should be in post-alias despite case difference
+        assert "ij(i,J)" in post_alias
+        assert "ij" not in pre_alias
+
 
 @pytest.mark.unit
 class TestEmitOriginalAliases:
