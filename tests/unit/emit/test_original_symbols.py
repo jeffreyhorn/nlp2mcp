@@ -335,6 +335,8 @@ class TestEmitOriginalAliases:
     def test_alias_with_universe(self):
         """Test emission with alias that has universe constraint."""
         model = ModelIR()
+        # Define the universe set to keep IR consistent with parser invariants
+        model.sets["all"] = SetDef(name="all", members=[])
         model.sets["i"] = SetDef(name="i", members=["i1"])
         model.aliases["subset"] = AliasDef(name="subset", target="i", universe="all")
 

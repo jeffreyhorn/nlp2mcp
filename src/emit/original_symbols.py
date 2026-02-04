@@ -101,29 +101,34 @@ def _compute_set_alias_phases(
     """Compute emission phases for sets based on dependencies.
 
     This function partitions sets into phases to ensure correct declaration order.
-    A set must be declared before it can be referenced.
+    A set must be declared before it can be referenced. Uses an iterative,
+    dependency-aware algorithm that assigns phases based on actual dependencies.
 
     Emission order:
     1. Phase 1 sets: Sets with no alias dependencies (directly or transitively)
     2. Phase 1 aliases: Aliases targeting phase 1 sets
-    3. Phase 2 sets: Sets depending on phase 1 aliases but NOT phase 2 aliases
+    3. Phase 2 sets: Sets depending on phase 1 aliases
     4. Phase 2 aliases: Aliases targeting phase 2 sets
-    5. Phase 3 sets: Sets depending on phase 2 aliases (directly or transitively)
+    5. Phase 3 sets: Sets depending on phase 2 aliases
     6. Phase 3 aliases: Aliases targeting phase 3 sets
+
+    The algorithm iteratively assigns phases such that:
+    - An alias can be assigned to phase p if its target set is in a phase <= p.
+    - A set can be assigned to phase p if all its domain indices refer only to
+      sets/aliases already assigned to phases <= p.
 
     Args:
         model_ir: Model IR containing set and alias definitions
 
     Returns:
         Tuple of (phase1_sets, phase2_sets, phase3_sets) as lowercase name sets.
+
+    Raises:
+        ValueError: If the model requires more than 3 phases for safe ordering.
     """
     if not model_ir.sets:
         return set(), set(), set()
 
-    # Get all alias names and build alias target map (lowercase for case-insensitive comparison)
-    alias_names_lower = (
-        {name.lower() for name in model_ir.aliases.keys()} if model_ir.aliases else set()
-    )
     # Map: alias_name (lower) -> target_set_name (lower)
     alias_targets: dict[str, str] = {}
     if model_ir.aliases:
@@ -136,67 +141,89 @@ def _compute_set_alias_phases(
         set_domains[set_name.lower()] = {idx.lower() for idx in set_def.domain}
 
     all_set_names = set(set_domains.keys())
+    alias_names_lower = set(alias_targets.keys())
 
+    # Phase 1 sets: Sets with no alias dependencies (directly or transitively)
     # First, identify sets that directly depend on aliases
     sets_with_alias_deps: set[str] = set()
     for set_name_lower, domain_indices in set_domains.items():
         if domain_indices & alias_names_lower:
             sets_with_alias_deps.add(set_name_lower)
 
-    # Compute transitive closure: sets depending on alias-dependent sets are also alias-dependent
+    # Compute transitive closure: sets depending on alias-dependent sets
     changed = True
     while changed:
         changed = False
         for set_name_lower, domain_indices in set_domains.items():
             if set_name_lower not in sets_with_alias_deps:
-                # Check if depends on any alias-dependent set
                 if domain_indices & sets_with_alias_deps:
                     sets_with_alias_deps.add(set_name_lower)
                     changed = True
 
-    # Phase 1: Sets with no alias dependencies (directly or transitively)
     phase1_sets = all_set_names - sets_with_alias_deps
 
-    # Phase 1 aliases: Aliases targeting phase 1 sets
-    phase1_alias_names: set[str] = set()
+    # Initialize phase tracking for iterative assignment
+    set_phases: dict[str, int] = dict.fromkeys(phase1_sets, 1)
+    alias_phases: dict[str, int] = {}
+
+    # Phase 1 aliases: aliases targeting phase 1 sets
     for alias_name_lower, target_lower in alias_targets.items():
         if target_lower in phase1_sets:
-            phase1_alias_names.add(alias_name_lower)
+            alias_phases[alias_name_lower] = 1
 
-    # Phase 2 aliases: Aliases targeting non-phase-1 sets (initially computed,
-    # may be refined as we determine which sets are in phase 2 vs phase 3)
-    # We need to identify phase 2 alias names BEFORE assigning sets to phase 2
-    # so we can correctly classify sets that depend on phase 2 aliases into phase 3.
-    phase2_alias_names: set[str] = set()
-    for alias_name_lower, target_lower in alias_targets.items():
-        if target_lower not in phase1_sets:
-            phase2_alias_names.add(alias_name_lower)
+    unassigned_sets = all_set_names - phase1_sets
+    unassigned_aliases = alias_names_lower - set(alias_phases.keys())
 
-    # Phase 3 sets: Sets that depend on phase 2 aliases (directly or transitively)
-    # Must be computed BEFORE phase 2 sets to exclude them properly
-    phase3_sets: set[str] = set()
-    for set_name_lower, domain_indices in set_domains.items():
-        if set_name_lower in phase1_sets:
-            continue
-        # Check if depends on any phase 2 alias
-        if domain_indices & phase2_alias_names:
-            phase3_sets.add(set_name_lower)
+    # Iterative, dependency-aware phase assignment for phases 2 and 3
+    max_phases = 3
+    for phase in range(2, max_phases + 1):
+        progressed = True
+        while progressed:
+            progressed = False
 
-    # Compute transitive closure for phase 3
-    changed = True
-    while changed:
-        changed = False
-        for set_name_lower, domain_indices in set_domains.items():
-            if set_name_lower in phase1_sets or set_name_lower in phase3_sets:
-                continue
-            # Check if depends on any phase 3 set
-            if domain_indices & phase3_sets:
-                phase3_sets.add(set_name_lower)
-                changed = True
+            # Assign aliases whose target set is already in a phase <= current phase
+            for alias_name_lower in list(unassigned_aliases):
+                target_lower = alias_targets[alias_name_lower]
+                target_phase = set_phases.get(target_lower)
+                if target_phase is not None and target_phase <= phase:
+                    alias_phases[alias_name_lower] = phase
+                    unassigned_aliases.remove(alias_name_lower)
+                    progressed = True
 
-    # Phase 2 sets: Sets depending on phase 1 aliases but NOT in phase 3
-    # These are the sets that depend only on phase 1 aliases (not phase 2 aliases)
-    phase2_sets = all_set_names - phase1_sets - phase3_sets
+            # Assign sets whose domain indices only reference resolved deps
+            for set_name_lower in list(unassigned_sets):
+                domain_indices = set_domains.get(set_name_lower, set())
+
+                def _index_resolved(idx: str, current_phase: int = phase) -> bool:
+                    # If index is a set name, it must already have a phase <= current
+                    if idx in set_phases:
+                        return set_phases[idx] <= current_phase
+                    # If index is an alias, it must be in a STRICTLY EARLIER phase
+                    # because aliases in phase p are emitted AFTER phase p sets,
+                    # so sets depending on phase p aliases must be in phase p+1 or later
+                    if idx in alias_targets:
+                        alias_phase = alias_phases.get(idx)
+                        return alias_phase is not None and alias_phase < current_phase
+                    # Unrecognized indices are conservatively treated as resolved
+                    # (they may be predefined GAMS sets or external references)
+                    return True
+
+                if all(_index_resolved(idx) for idx in domain_indices):
+                    set_phases[set_name_lower] = phase
+                    unassigned_sets.remove(set_name_lower)
+                    progressed = True
+
+    # After attempting phases 1-3, any remaining unassigned symbols would
+    # require more than 3 phases to emit safely
+    if unassigned_sets or unassigned_aliases:
+        raise ValueError(
+            "Model requires more than 3 dependency phases for sets/aliases; "
+            "cannot safely order GAMS emission."
+        )
+
+    # Derive set name sets by phase
+    phase2_sets = {name for name, p in set_phases.items() if p == 2}
+    phase3_sets = {name for name, p in set_phases.items() if p == 3}
 
     return phase1_sets, phase2_sets, phase3_sets
 
