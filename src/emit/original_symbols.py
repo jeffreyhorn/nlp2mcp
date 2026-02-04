@@ -179,7 +179,7 @@ def emit_original_sets(model_ir: ModelIR) -> tuple[str, str]:
         return "", ""
 
     # Compute which sets go in each group (with transitive closure)
-    pre_alias_names, post_alias_names = _compute_post_alias_sets(model_ir)
+    _, post_alias_names = _compute_post_alias_sets(model_ir)
 
     # Partition sets into lists preserving original order
     pre_alias_sets: list[tuple[str, SetDef]] = []
