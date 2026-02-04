@@ -342,3 +342,42 @@ def test_table_continuation_empty_lines():
     row1  1     2
 ;"""
     assert result == expected
+
+
+def test_normalize_idempotent_with_trailing_comma():
+    """Test that normalize_multi_line_continuations is idempotent (Issue #618).
+
+    When the line after the opening '/' already ends with a comma,
+    running normalization again should not add another comma.
+    """
+    # Source with data after opening / that already has a comma
+    source = """Set i / a,
+    b
+/;"""
+    result = normalize_multi_line_continuations(source)
+    expected = """Set i / a,
+    b
+/;"""
+    assert result == expected
+    # Verify no double commas were introduced
+    assert ",," not in result
+
+    # Run again to verify idempotency
+    result2 = normalize_multi_line_continuations(result)
+    assert result2 == expected
+    assert ",," not in result2
+
+
+def test_normalize_idempotent_data_after_slash():
+    """Test idempotency specifically for data-after-opening-slash case (Issue #618).
+
+    The fix ensures that when data appears on the same line as the opening /,
+    we don't add a comma if one already exists.
+    """
+    # Already normalized source (comma after 'jan.wet')
+    source = """Set tw / (jan,feb).wet,
+             (mar,apr).dry /;"""
+    result = normalize_multi_line_continuations(source)
+    # Should be unchanged - no extra comma added
+    assert result == source
+    assert ",," not in result
