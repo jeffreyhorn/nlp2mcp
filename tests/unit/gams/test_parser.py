@@ -4719,6 +4719,25 @@ class TestDomainOverAssignments:
         assert model.params["f"].values[("j1", "k2")] == 5.0
         assert len(model.params["f"].values) == 1
 
+    def test_quoted_set_name_not_expanded(self):
+        """Test that a quoted set name is treated as literal, not domain-over.
+
+        In GAMS, f("j","k2") should treat "j" as a literal element reference,
+        not as a domain-over expansion, even though j is a set name. This
+        matters when a set has an element with the same name as the set.
+        """
+        text = dedent("""
+            Set j / j, j1, j2 /;
+            Set k / k1, k2 /;
+            Parameter f(j,k);
+
+            f("j","k2") = 9.0;
+        """)
+        model = parser.parse_model_text(text)
+        # Quoted "j" should be treated as literal element, not expanded
+        assert model.params["f"].values[("j", "k2")] == 9.0
+        assert len(model.params["f"].values) == 1
+
     def test_alias_domain_index_expansion(self):
         """Test that domain-over expansion works when domain uses an alias."""
         text = dedent("""
