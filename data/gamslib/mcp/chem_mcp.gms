@@ -27,6 +27,8 @@ Parameters
     gplus(c)
 ;
 
+gplus(c) = gibbs(c) + log(750 * 0.07031);
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -47,16 +49,7 @@ Variables
 Positive Variables
     x(c)
     xb
-    piL_x_H
-    piL_x_H2
-    piL_x_H2O
-    piL_x_N
-    piL_x_N2
-    piL_x_NH
-    piL_x_NO
-    piL_x_O
-    piL_x_O2
-    piL_x_OH
+    piL_x(c)
     piL_xb
 ;
 
@@ -69,27 +62,9 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x_H
-    stat_x_H2
-    stat_x_H2O
-    stat_x_N
-    stat_x_N2
-    stat_x_NH
-    stat_x_NO
-    stat_x_O
-    stat_x_O2
-    stat_x_OH
+    stat_x(c)
     stat_xb
-    comp_lo_x_H
-    comp_lo_x_H2
-    comp_lo_x_H2O
-    comp_lo_x_N
-    comp_lo_x_N2
-    comp_lo_x_NH
-    comp_lo_x_NO
-    comp_lo_x_O
-    comp_lo_x_O2
-    comp_lo_x_OH
+    comp_lo_x(c)
     comp_lo_xb
     cdef(i)
     edef
@@ -101,29 +76,11 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x_H.. gplus("H") + log(x("H") / xb) + x("H") * 1 / (x("H") / xb) * 1 / xb ** 1 + a("H","H") * nu_cdef("H") + a("N","H") * nu_cdef("N") + a("O","H") * nu_cdef("O") + (-1) * nu_xdef - piL_x_H =E= 0;
-stat_x_H2.. gplus("H2") + log(x("H2") / xb) + x("H2") * 1 / (x("H2") / xb) * 1 / xb ** 1 + a("H","H2") * nu_cdef("H") + a("N","H2") * nu_cdef("N") + a("O","H2") * nu_cdef("O") + (-1) * nu_xdef - piL_x_H2 =E= 0;
-stat_x_H2O.. gplus("H2O") + log(x("H2O") / xb) + x("H2O") * 1 / (x("H2O") / xb) * 1 / xb ** 1 + a("H","H2O") * nu_cdef("H") + a("N","H2O") * nu_cdef("N") + a("O","H2O") * nu_cdef("O") + (-1) * nu_xdef - piL_x_H2O =E= 0;
-stat_x_N.. gplus("N") + log(x("N") / xb) + x("N") * 1 / (x("N") / xb) * 1 / xb ** 1 + a("H","N") * nu_cdef("H") + a("N","N") * nu_cdef("N") + a("O","N") * nu_cdef("O") + (-1) * nu_xdef - piL_x_N =E= 0;
-stat_x_N2.. gplus("N2") + log(x("N2") / xb) + x("N2") * 1 / (x("N2") / xb) * 1 / xb ** 1 + a("H","N2") * nu_cdef("H") + a("N","N2") * nu_cdef("N") + a("O","N2") * nu_cdef("O") + (-1) * nu_xdef - piL_x_N2 =E= 0;
-stat_x_NH.. gplus("NH") + log(x("NH") / xb) + x("NH") * 1 / (x("NH") / xb) * 1 / xb ** 1 + a("H","NH") * nu_cdef("H") + a("N","NH") * nu_cdef("N") + a("O","NH") * nu_cdef("O") + (-1) * nu_xdef - piL_x_NH =E= 0;
-stat_x_NO.. gplus("NO") + log(x("NO") / xb) + x("NO") * 1 / (x("NO") / xb) * 1 / xb ** 1 + a("H","NO") * nu_cdef("H") + a("N","NO") * nu_cdef("N") + a("O","NO") * nu_cdef("O") + (-1) * nu_xdef - piL_x_NO =E= 0;
-stat_x_O.. gplus("O") + log(x("O") / xb) + x("O") * 1 / (x("O") / xb) * 1 / xb ** 1 + a("H","O") * nu_cdef("H") + a("N","O") * nu_cdef("N") + a("O","O") * nu_cdef("O") + (-1) * nu_xdef - piL_x_O =E= 0;
-stat_x_O2.. gplus("O2") + log(x("O2") / xb) + x("O2") * 1 / (x("O2") / xb) * 1 / xb ** 1 + a("H","O2") * nu_cdef("H") + a("N","O2") * nu_cdef("N") + a("O","O2") * nu_cdef("O") + (-1) * nu_xdef - piL_x_O2 =E= 0;
-stat_x_OH.. gplus("OH") + log(x("OH") / xb) + x("OH") * 1 / (x("OH") / xb) * 1 / xb ** 1 + a("H","OH") * nu_cdef("H") + a("N","OH") * nu_cdef("N") + a("O","OH") * nu_cdef("O") + (-1) * nu_xdef - piL_x_OH =E= 0;
+stat_x(c).. gplus(c) + log(x(c) / xb) + x(c) * 1 / (x(c) / xb) * 1 / xb ** 1 + sum(i, a(i,c) * nu_cdef(i)) + (-1) * nu_xdef - piL_x(c) =E= 0;
 stat_xb.. sum(c, x(c) * 1 / (x(c) / xb) * ((-1) * x(c)) / xb ** 2) + sum(c, 0) * nu_cdef("H") + sum(c, 0) * nu_cdef("N") + sum(c, 0) * nu_cdef("O") + (1 - sum(c, 0)) * nu_xdef - piL_xb =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_x_H.. x("H") - 0.001 =G= 0;
-comp_lo_x_H2.. x("H2") - 0.001 =G= 0;
-comp_lo_x_H2O.. x("H2O") - 0.001 =G= 0;
-comp_lo_x_N.. x("N") - 0.001 =G= 0;
-comp_lo_x_N2.. x("N2") - 0.001 =G= 0;
-comp_lo_x_NH.. x("NH") - 0.001 =G= 0;
-comp_lo_x_NO.. x("NO") - 0.001 =G= 0;
-comp_lo_x_O.. x("O") - 0.001 =G= 0;
-comp_lo_x_O2.. x("O2") - 0.001 =G= 0;
-comp_lo_x_OH.. x("OH") - 0.001 =G= 0;
+comp_lo_x(c).. x(c) - 0.001 =G= 0;
 comp_lo_xb.. xb - 0.01 =G= 0;
 
 * Original equality equations
@@ -146,30 +103,12 @@ edef.. energy =E= sum(c, x(c) * (gplus(c) + log(x(c) / xb)));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x_H.x,
-    stat_x_H2.x,
-    stat_x_H2O.x,
-    stat_x_N.x,
-    stat_x_N2.x,
-    stat_x_NH.x,
-    stat_x_NO.x,
-    stat_x_O.x,
-    stat_x_O2.x,
-    stat_x_OH.x,
+    stat_x.x,
     stat_xb.xb,
     cdef.nu_cdef,
     edef.energy,
     xdef.nu_xdef,
-    comp_lo_x_H.piL_x_H,
-    comp_lo_x_H2.piL_x_H2,
-    comp_lo_x_H2O.piL_x_H2O,
-    comp_lo_x_N.piL_x_N,
-    comp_lo_x_N2.piL_x_N2,
-    comp_lo_x_NH.piL_x_NH,
-    comp_lo_x_NO.piL_x_NO,
-    comp_lo_x_O.piL_x_O,
-    comp_lo_x_O2.piL_x_O2,
-    comp_lo_x_OH.piL_x_OH,
+    comp_lo_x.piL_x,
     comp_lo_xb.piL_xb
 /;
 

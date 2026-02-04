@@ -29,6 +29,9 @@ Parameters
     par(g,*)
 ;
 
+mtr(m,avail-h) = avail(m);
+par(g,demand) = dempr(g,"demand");
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -69,13 +72,8 @@ Equations
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(g, g__);
-Alias(m, m__);
-
 * Stationarity equations
-stat_outp(g,m).. pcost(g,m) + sum(g__, 0 * nu_dem(g__)) + sum(m__, 1 / prate(g,m__) ** 1 * lam_cap(m__)) =E= 0;
+stat_outp(g,m).. pcost(g,m) + 1 * nu_dem(g) + 1 / prate(g,m) ** 1 * lam_cap(m) =E= 0;
 
 * Inequality complementarity equations
 comp_cap(m).. ((-1) * sum(g, outp(g,m) / prate(g,m))) =G= 0;

@@ -16,22 +16,19 @@ $offText
 * ============================================
 
 Sets
-    i /seattle, san-diego/
-    j /new-york, chicago, topeka/
+    i /0, 1, 2/
 ;
 
+Alias(i, j);
+
 Parameters
-    a(i) /seattle 350.0, san-diego 600.0/
-    b(j) /new-york 325.0, chicago 300.0, topeka 275.0/
-    d(i,j) /seattle.chicago 1.7, seattle.topeka 1.8, 'san-diego'.chicago 2.5, 'san-diego'.topeka 1.8/
-    c(i,j)
+    theta(i) /0 0.1, 1 0.2, 2 0.3/
+    p(i) /0 0.2, 1 0.5, 2 0.3/
 ;
 
 Scalars
-    f /90.0/
+    ru /0.0/
 ;
-
-c(i,j) = f * d(i,j) / 1000;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -45,13 +42,17 @@ c(i,j) = f * d(i,j) / 1000;
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    z
+    Util
+    nu_rev(i)
 ;
 
 Positive Variables
-    x(i,j)
-    lam_supply(i)
-    lam_demand(j)
+    x(i)
+    b(i)
+    w(i)
+    lam_pc(i)
+    lam_ic(i,j)
+    piL_x(i)
 ;
 
 * ============================================
@@ -63,10 +64,15 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x(i,j)
-    comp_demand(j)
-    comp_supply(i)
-    cost
+    stat_b(i)
+    stat_util
+    stat_w(i)
+    stat_x(i)
+    comp_ic(i,j)
+    comp_pc(i)
+    comp_lo_x(i)
+    obj
+    rev(i)
 ;
 
 * ============================================
@@ -74,14 +80,21 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,j).. c(i,j) + 1 * lam_supply(i) + (-1) * lam_demand(j) =E= 0;
+stat_b(i).. ((-1) * p(i)) + 1 * nu_rev(i) + 0 * lam_pc(i) + sum(j, 0 * lam_ic(i,j)) =E= 0;
+stat_util.. ((-1) * sum(i, 0)) + 0 * nu_rev("0") + 0 * nu_rev("1") + 0 * nu_rev("2") + 0 * lam_pc("0") + 0 * lam_pc("1") + 0 * lam_pc("2") + 0 * lam_ic("0","0") + 0 * lam_ic("0","1") + 0 * lam_ic("0","2") + 0 * lam_ic("1","0") + 0 * lam_ic("1","1") + 0 * lam_ic("1","2") + 0 * lam_ic("2","0") + 0 * lam_ic("2","1") + 0 * lam_ic("2","2") =E= 0;
+stat_w(i).. ((-1) * (p(i) * (-1))) + 0 * nu_rev(i) + (-1) * lam_pc(i) + sum(j, 0 * lam_ic(i,j)) =E= 0;
+stat_x(i).. 0 + ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + sum(j, 0 * lam_ic(i,j)) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
-comp_demand(j).. sum(i, x(i,j)) =G= 0;
-comp_supply(i).. ((-1) * sum(j, x(i,j))) =G= 0;
+comp_ic(i,j).. w(i) - theta(i) * x(i) =G= 0;
+comp_pc(i).. w(i) - theta(i) * x(i) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 
 * Original equality equations
-cost.. z =E= sum((i,j), c(i,j) * x(i,j));
+obj.. Util =E= sum(i, p(i) * (b(i) - w(i)));
+rev(i).. b(i) =E= x(i) ** 0.5;
 
 
 * ============================================
@@ -98,10 +111,15 @@ cost.. z =E= sum((i,j), c(i,j) * x(i,j));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
+    stat_b.b,
+    stat_util.util,
+    stat_w.w,
     stat_x.x,
-    comp_demand.lam_demand,
-    comp_supply.lam_supply,
-    cost.z
+    comp_ic.lam_ic,
+    comp_pc.lam_pc,
+    obj.Util,
+    rev.nu_rev,
+    comp_lo_x.piL_x
 /;
 
 * ============================================
