@@ -23,23 +23,29 @@ from src.ir.symbols import AliasDef, ParameterDef, SetDef
 
 @pytest.mark.unit
 class TestEmitOriginalSets:
-    """Test emission of original Sets block."""
+    """Test emission of original Sets block.
+
+    Sprint 17 Day 10 (Issue #621): emit_original_sets now returns a tuple
+    (pre_alias_sets, post_alias_sets) to handle sets that depend on aliases.
+    """
 
     def test_empty_sets(self):
         """Test emission with no sets."""
         model = ModelIR()
-        result = emit_original_sets(model)
-        assert result == ""
+        pre_alias, post_alias = emit_original_sets(model)
+        assert pre_alias == ""
+        assert post_alias == ""
 
     def test_single_set(self):
         """Test emission with single set."""
         model = ModelIR()
         model.sets["i"] = SetDef(name="i", members=["i1", "i2", "i3"])
 
-        result = emit_original_sets(model)
-        assert "Sets" in result
-        assert "i /i1, i2, i3/" in result
-        assert result.endswith(";")
+        pre_alias, post_alias = emit_original_sets(model)
+        assert "Sets" in pre_alias
+        assert "i /i1, i2, i3/" in pre_alias
+        assert pre_alias.endswith(";")
+        assert post_alias == ""
 
     def test_multiple_sets(self):
         """Test emission with multiple sets."""
@@ -47,20 +53,21 @@ class TestEmitOriginalSets:
         model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
         model.sets["j"] = SetDef(name="j", members=["j1", "j2", "j3"])
 
-        result = emit_original_sets(model)
-        assert "Sets" in result
-        assert "i /i1, i2/" in result
-        assert "j /j1, j2, j3/" in result
-        assert result.endswith(";")
+        pre_alias, post_alias = emit_original_sets(model)
+        assert "Sets" in pre_alias
+        assert "i /i1, i2/" in pre_alias
+        assert "j /j1, j2, j3/" in pre_alias
+        assert pre_alias.endswith(";")
+        assert post_alias == ""
 
     def test_empty_set_members(self):
         """Test emission with set that has no members."""
         model = ModelIR()
         model.sets["universe"] = SetDef(name="universe", members=[])
 
-        result = emit_original_sets(model)
-        assert "Sets" in result
-        assert "universe" in result
+        pre_alias, post_alias = emit_original_sets(model)
+        assert "Sets" in pre_alias
+        assert "universe" in pre_alias
         # Empty sets just have the name, no slash notation
 
     def test_subset_with_domain(self):
@@ -73,11 +80,12 @@ class TestEmitOriginalSets:
         model.sets["genchar"] = SetDef(name="genchar", members=["a", "b", "c", "upplim", "lowlim"])
         model.sets["cg"] = SetDef(name="cg", members=["a", "b", "c"], domain=("genchar",))
 
-        result = emit_original_sets(model)
-        assert "Sets" in result
-        assert "genchar /a, b, c, upplim, lowlim/" in result
-        assert "cg(genchar) /a, b, c/" in result
-        assert result.endswith(";")
+        pre_alias, post_alias = emit_original_sets(model)
+        assert "Sets" in pre_alias
+        assert "genchar /a, b, c, upplim, lowlim/" in pre_alias
+        assert "cg(genchar) /a, b, c/" in pre_alias
+        assert pre_alias.endswith(";")
+        assert post_alias == ""
 
     def test_subset_without_members(self):
         """Test emission of subset without explicit members.
@@ -89,11 +97,12 @@ class TestEmitOriginalSets:
         model.sets["parent"] = SetDef(name="parent", members=["x", "y", "z"])
         model.sets["sub"] = SetDef(name="sub", members=[], domain=("parent",))
 
-        result = emit_original_sets(model)
-        assert "Sets" in result
-        assert "parent /x, y, z/" in result
-        assert "sub(parent)" in result
-        assert result.endswith(";")
+        pre_alias, post_alias = emit_original_sets(model)
+        assert "Sets" in pre_alias
+        assert "parent /x, y, z/" in pre_alias
+        assert "sub(parent)" in pre_alias
+        assert pre_alias.endswith(";")
+        assert post_alias == ""
 
     def test_multi_dimensional_subset(self):
         """Test emission of multi-dimensional subset.
@@ -105,11 +114,50 @@ class TestEmitOriginalSets:
         model.sets["n"] = SetDef(name="n", members=["n1", "n2"])
         model.sets["arc"] = SetDef(name="arc", members=["n1.n2"], domain=("n", "n"))
 
-        result = emit_original_sets(model)
-        assert "Sets" in result
-        assert "n /n1, n2/" in result
-        assert "arc(n,n) /n1.n2/" in result
-        assert result.endswith(";")
+        pre_alias, post_alias = emit_original_sets(model)
+        assert "Sets" in pre_alias
+        assert "n /n1, n2/" in pre_alias
+        assert "arc(n,n) /n1.n2/" in pre_alias
+        assert pre_alias.endswith(";")
+        assert post_alias == ""
+
+    def test_set_depends_on_alias(self):
+        """Test emission of set that depends on an alias.
+
+        Sprint 17 Day 10 (Issue #621): Sets that reference aliased indices
+        must be emitted after the Alias declarations.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2", "i3"])
+        model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
+        model.aliases["j"] = AliasDef(name="j", target="i")
+
+        pre_alias, post_alias = emit_original_sets(model)
+
+        # Set i should be in pre-alias (no alias dependency)
+        assert "i /i1, i2, i3/" in pre_alias
+
+        # Set ij(i,j) should be in post-alias (depends on alias j)
+        assert "ij(i,j)" in post_alias
+        assert "ij" not in pre_alias
+
+    def test_mixed_sets_with_and_without_alias_deps(self):
+        """Test emission with mix of alias-dependent and independent sets."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+        model.sets["k"] = SetDef(name="k", members=["k1", "k2"])
+        model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
+        model.aliases["j"] = AliasDef(name="j", target="i")
+
+        pre_alias, post_alias = emit_original_sets(model)
+
+        # Sets without alias deps in pre-alias
+        assert "i /i1, i2/" in pre_alias
+        assert "k /k1, k2/" in pre_alias
+
+        # Set with alias dep in post-alias
+        assert "ij(i,j)" in post_alias
+        assert "ij" not in pre_alias
 
 
 @pytest.mark.unit

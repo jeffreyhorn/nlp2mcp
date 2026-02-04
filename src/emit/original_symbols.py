@@ -17,6 +17,7 @@ import re
 from src.emit.expr_to_gams import expr_to_gams
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
+from src.ir.symbols import SetDef
 
 # Regex pattern for valid GAMS set element identifiers
 # Allows: letters, digits, underscores, hyphens, dots (for tuples like a.b), plus signs
@@ -64,51 +65,103 @@ def _sanitize_set_element(element: str) -> str:
     return element
 
 
-def emit_original_sets(model_ir: ModelIR) -> str:
-    """Emit Sets block from original model.
+def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
+    """Format a single set declaration line.
+
+    Args:
+        set_name: Name of the set
+        set_def: SetDef object with members and domain
+
+    Returns:
+        Formatted set declaration line (without leading spaces)
+    """
+    # Format set declaration with optional domain (subset relationship)
+    # E.g., cg(genchar) for subset cg of genchar
+    if set_def.domain:
+        domain_str = ",".join(set_def.domain)
+        set_decl = f"{set_name}({domain_str})"
+    else:
+        set_decl = set_name
+
+    # Use SetDef.members
+    # Members are stored as a list of strings in SetDef
+    # Sanitize each member to prevent DSL injection attacks
+    if set_def.members:
+        sanitized_members = [_sanitize_set_element(m) for m in set_def.members]
+        members = ", ".join(sanitized_members)
+        return f"{set_decl} /{members}/"
+    else:
+        # Empty set or universe (or subset with inherited members)
+        return set_decl
+
+
+def emit_original_sets(model_ir: ModelIR, alias_names: set[str] | None = None) -> tuple[str, str]:
+    """Emit Sets blocks from original model, split by alias dependencies.
 
     Uses SetDef.members and SetDef.domain (Finding #3: actual IR fields).
     Sprint 17 Day 5: Now preserves subset relationships by emitting domain.
+    Sprint 17 Day 10: Splits sets into pre-alias and post-alias groups to handle
+    sets that reference aliased indices (GitHub Issue #621).
 
     Args:
         model_ir: Model IR containing set definitions
+        alias_names: Set of alias names to check dependencies against.
+                    If None, extracts from model_ir.aliases.
 
     Returns:
-        GAMS Sets block as string
+        Tuple of (pre_alias_sets, post_alias_sets) as GAMS code strings.
+        Pre-alias sets don't depend on any aliases.
+        Post-alias sets depend on at least one alias and must be emitted after aliases.
 
-    Example output:
+    Example output for pre_alias_sets:
         Sets
             i /i1, i2, i3/
-            genchar /a, b, c, upplim, lowlim/
-            cg(genchar) /a, b, c/
+        ;
+
+    Example output for post_alias_sets:
+        Sets
+            ij(i,j)
         ;
     """
     if not model_ir.sets:
-        return ""
+        return "", ""
 
-    lines: list[str] = ["Sets"]
+    # Get alias names from model_ir if not provided
+    if alias_names is None:
+        alias_names = set(model_ir.aliases.keys()) if model_ir.aliases else set()
+
+    # Partition sets into those that depend on aliases and those that don't
+    pre_alias_sets: list[tuple[str, SetDef]] = []
+    post_alias_sets: list[tuple[str, SetDef]] = []
+
     for set_name, set_def in model_ir.sets.items():
-        # Sprint 17 Day 5: Format set declaration with optional domain (subset relationship)
-        # E.g., cg(genchar) for subset cg of genchar
-        if set_def.domain:
-            domain_str = ",".join(set_def.domain)
-            set_decl = f"{set_name}({domain_str})"
-        else:
-            set_decl = set_name
+        # Check if any domain index is an alias
+        depends_on_alias = any(idx in alias_names for idx in set_def.domain)
 
-        # Use SetDef.members (Finding #3)
-        # Members are stored as a list of strings in SetDef
-        # Sanitize each member to prevent DSL injection attacks
-        if set_def.members:
-            sanitized_members = [_sanitize_set_element(m) for m in set_def.members]
-            members = ", ".join(sanitized_members)
-            lines.append(f"    {set_decl} /{members}/")
+        if depends_on_alias:
+            post_alias_sets.append((set_name, set_def))
         else:
-            # Empty set or universe (or subset with inherited members)
-            lines.append(f"    {set_decl}")
-    lines.append(";")
+            pre_alias_sets.append((set_name, set_def))
 
-    return "\n".join(lines)
+    # Build pre-alias sets block
+    pre_alias_code = ""
+    if pre_alias_sets:
+        lines: list[str] = ["Sets"]
+        for set_name, set_def in pre_alias_sets:
+            lines.append(f"    {_format_set_declaration(set_name, set_def)}")
+        lines.append(";")
+        pre_alias_code = "\n".join(lines)
+
+    # Build post-alias sets block
+    post_alias_code = ""
+    if post_alias_sets:
+        lines = ["Sets"]
+        for set_name, set_def in post_alias_sets:
+            lines.append(f"    {_format_set_declaration(set_name, set_def)}")
+        lines.append(";")
+        post_alias_code = "\n".join(lines)
+
+    return pre_alias_code, post_alias_code
 
 
 def emit_original_aliases(model_ir: ModelIR) -> str:
