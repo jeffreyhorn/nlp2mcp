@@ -1,6 +1,6 @@
 # Emit: Stationarity Equation Uses Uncontrolled Index Variable
 
-**Status:** Open  
+**Status:** Completed  
 **Priority:** High  
 **Affects:** meanvar.gms, potentially other models with subset indexing  
 **GitHub Issue:** [#620](https://github.com/jeffreyhorn/nlp2mcp/issues/620)
