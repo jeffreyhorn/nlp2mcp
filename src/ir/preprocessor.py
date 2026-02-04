@@ -1326,7 +1326,8 @@ def normalize_multi_line_continuations(source: str) -> str:
                             # Next line has data without /, so current line needs comma
                             needs_comma = True
 
-                if needs_comma:
+                # Issue #618: Make idempotent - don't add comma if line already ends with one
+                if needs_comma and not after_slash.endswith(","):
                     result.append(line + ",")
                 else:
                     result.append(line)
