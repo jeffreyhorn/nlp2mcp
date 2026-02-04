@@ -136,6 +136,17 @@ def _compute_set_alias_phases(
     all_set_names = set(set_domains.keys())
     alias_names_lower = set(alias_targets.keys())
 
+    # Validate that all alias targets refer to existing sets or other aliases.
+    # Without this check, an alias targeting a non-existent symbol would remain
+    # unassigned and trigger a misleading "Circular dependency" error.
+    all_known_symbols = all_set_names | alias_names_lower
+    for alias_name_lower, target_lower in alias_targets.items():
+        if target_lower not in all_known_symbols:
+            raise ValueError(
+                f"Alias '{alias_name_lower}' targets non-existent symbol '{target_lower}'. "
+                f"Expected a set or another alias."
+            )
+
     # Phase 1 sets: Sets with no alias dependencies (directly or transitively)
     # First, identify sets that directly depend on aliases
     sets_with_alias_deps: set[str] = set()
@@ -194,7 +205,10 @@ def _compute_set_alias_phases(
                 domain_indices = set_domains.get(set_name_lower, set())
 
                 def _index_resolved(idx: str, current_phase: int = phase) -> bool:
-                    # If index is a set name, it must already have a phase <= current
+                    # Resolution order: check sets first, then aliases.
+                    # GAMS enforces that set and alias names are unique within a
+                    # model, so an index cannot match both set_phases and
+                    # alias_targets simultaneously.
                     if idx in set_phases:
                         return set_phases[idx] <= current_phase
                     # If index is an alias, it must be in a STRICTLY EARLIER phase
@@ -269,8 +283,8 @@ def emit_original_sets(
     if not set_phases:
         return []
 
-    # Determine number of phases
-    max_phase = max(set_phases.values()) if set_phases else 0
+    # Determine number of phases (set_phases is guaranteed non-empty by early return above)
+    max_phase = max(set_phases.values())
 
     # Partition sets into lists by phase, preserving original order
     phase_sets: list[list[tuple[str, SetDef]]] = [[] for _ in range(max_phase)]

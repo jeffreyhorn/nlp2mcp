@@ -85,7 +85,10 @@ def emit_gams_mcp(
     aliases_by_phase = emit_original_aliases(kkt.model_ir, precomputed_phases=phases)
 
     # Ensure both lists have the same length by padding with empty strings
-    max_phases = max(len(sets_by_phase), len(aliases_by_phase))
+    if sets_by_phase or aliases_by_phase:
+        max_phases = max(len(sets_by_phase), len(aliases_by_phase))
+    else:
+        max_phases = 0
     while len(sets_by_phase) < max_phases:
         sets_by_phase.append("")
     while len(aliases_by_phase) < max_phases:
