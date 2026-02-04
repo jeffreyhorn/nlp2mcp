@@ -3045,6 +3045,41 @@ class _ModelBuilder:
                         suggestion=f"Provide exactly {len(param.domain)} {index_word} to match the parameter declaration",
                     )
 
+                # Issue #622: Handle domain-over assignments like f(j,"k2") = 0 where
+                # some indices are domain set names that should be expanded over all
+                # members of that set. In GAMS, f(j,"k2") = 0 means "for all elements
+                # e in set j, set f(e, k2) = 0".
+                if (
+                    not has_function_call
+                    and value is not None
+                    and len(param.domain) > 0
+                    and len(indices) == len(param.domain)
+                ):
+                    # Check which indices match their corresponding domain set name
+                    expand_positions: list[int] = []
+                    for pos, idx in enumerate(indices):
+                        domain_name = param.domain[pos]
+                        if idx.lower() == domain_name.lower() and idx in self.model.sets:
+                            expand_positions.append(pos)
+
+                    if expand_positions:
+                        # Build list of member lists for positions that need expansion
+                        # For non-expanding positions, use the literal index
+                        dim_values: list[list[str]] = []
+                        for pos, idx in enumerate(indices):
+                            if pos in expand_positions:
+                                members = self.model.sets[idx].members
+                                if not members:
+                                    # Empty set: nothing to expand, skip entire assignment
+                                    return
+                                dim_values.append(members)
+                            else:
+                                dim_values.append([idx])
+
+                        for combo in product(*dim_values):
+                            param.values[combo] = value
+                        return
+
                 # Sprint 10 Day 4: Store expression if it contains function calls, otherwise store value
                 if has_function_call:
                     param.expressions[tuple(indices)] = expr
