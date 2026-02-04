@@ -1,6 +1,6 @@
 # Emit: Invalid Parameter Data Entries with Set Name as Element
 
-**Status:** Open  
+**Status:** Completed  
 **Priority:** High  
 **Affects:** trussm.gms, potentially other models with complex parameter initialization  
 **GitHub Issue:** [#622](https://github.com/jeffreyhorn/nlp2mcp/issues/622)
