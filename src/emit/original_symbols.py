@@ -97,37 +97,30 @@ def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
 
 def _compute_set_alias_phases(
     model_ir: ModelIR,
-) -> tuple[set[str], set[str], set[str]]:
-    """Compute emission phases for sets based on dependencies.
+) -> tuple[dict[str, int], dict[str, int]]:
+    """Compute emission phases for sets and aliases based on dependencies.
 
-    This function partitions sets into phases to ensure correct declaration order.
-    A set must be declared before it can be referenced. Uses an iterative,
+    This function assigns phases to sets and aliases to ensure correct declaration
+    order. A set must be declared before it can be referenced. Uses an iterative,
     dependency-aware algorithm that assigns phases based on actual dependencies.
 
-    Emission order:
-    1. Phase 1 sets: Sets with no alias dependencies (directly or transitively)
-    2. Phase 1 aliases: Aliases targeting phase 1 sets
-    3. Phase 2 sets: Sets depending on phase 1 aliases
-    4. Phase 2 aliases: Aliases targeting phase 2 sets
-    5. Phase 3 sets: Sets depending on phase 2 aliases
-    6. Phase 3 aliases: Aliases targeting phase 3 sets
+    Emission order for each phase p:
+    1. Phase p sets
+    2. Phase p aliases (targeting phase p sets)
 
     The algorithm iteratively assigns phases such that:
     - An alias can be assigned to phase p if its target set is in a phase <= p.
     - A set can be assigned to phase p if all its domain indices refer only to
-      sets/aliases already assigned to phases <= p.
+      sets/aliases already assigned to phases < p (for aliases) or <= p (for sets).
 
     Args:
         model_ir: Model IR containing set and alias definitions
 
     Returns:
-        Tuple of (phase1_sets, phase2_sets, phase3_sets) as lowercase name sets.
-
-    Raises:
-        ValueError: If the model requires more than 3 phases for safe ordering.
+        Tuple of (set_phases, alias_phases) as dicts mapping lowercase names to phase numbers.
     """
     if not model_ir.sets:
-        return set(), set(), set()
+        return {}, {}
 
     # Map: alias_name (lower) -> target_set_name (lower)
     alias_targets: dict[str, str] = {}
@@ -174,9 +167,11 @@ def _compute_set_alias_phases(
     unassigned_sets = all_set_names - phase1_sets
     unassigned_aliases = alias_names_lower - set(alias_phases.keys())
 
-    # Iterative, dependency-aware phase assignment for phases 2 and 3
-    max_phases = 3
-    for phase in range(2, max_phases + 1):
+    # Iterative, dependency-aware phase assignment
+    # Upper bound: each symbol can require at most one additional phase
+    max_phases = len(all_set_names) + len(alias_names_lower) + 1
+    phase = 2
+    while (unassigned_sets or unassigned_aliases) and phase <= max_phases:
         progressed = True
         while progressed:
             progressed = False
@@ -213,71 +208,65 @@ def _compute_set_alias_phases(
                     unassigned_sets.remove(set_name_lower)
                     progressed = True
 
-    # After attempting phases 1-3, any remaining unassigned symbols would
-    # require more than 3 phases to emit safely
+        phase += 1
+
+    # If any symbols remain unassigned, there's a circular dependency
     if unassigned_sets or unassigned_aliases:
         raise ValueError(
-            "Model requires more than 3 dependency phases for sets/aliases; "
-            "cannot safely order GAMS emission."
+            f"Circular dependency detected in sets/aliases; "
+            f"cannot safely order GAMS emission. "
+            f"Unassigned sets: {unassigned_sets}, aliases: {unassigned_aliases}"
         )
 
-    # Derive set name sets by phase
-    phase2_sets = {name for name, p in set_phases.items() if p == 2}
-    phase3_sets = {name for name, p in set_phases.items() if p == 3}
-
-    return phase1_sets, phase2_sets, phase3_sets
+    return set_phases, alias_phases
 
 
-def emit_original_sets(model_ir: ModelIR) -> tuple[str, str, str]:
+def emit_original_sets(model_ir: ModelIR) -> list[str]:
     """Emit Sets blocks from original model, split by alias dependencies.
 
     Uses SetDef.members and SetDef.domain (Finding #3: actual IR fields).
     Sprint 17 Day 5: Now preserves subset relationships by emitting domain.
-    Sprint 17 Day 10: Splits sets into three phases to handle complex alias
-    dependencies (GitHub Issue #621).
+    Sprint 17 Day 10: Splits sets into phases to handle complex alias
+    dependencies (GitHub Issue #621). Supports N phases dynamically.
 
     Emission order ensures all dependencies are declared before use:
-    1. Phase 1 sets: Sets with no alias dependencies
-    2. Phase 1 aliases (emitted by emit_original_aliases)
-    3. Phase 2 sets: Sets depending on phase 1 aliases
-    4. Phase 2 aliases (emitted by emit_original_aliases)
-    5. Phase 3 sets: Sets depending on phase 2 aliases
+    - Phase 1 sets: Sets with no alias dependencies
+    - Phase 1 aliases (emitted by emit_original_aliases)
+    - Phase 2 sets: Sets depending on phase 1 aliases
+    - Phase 2 aliases (emitted by emit_original_aliases)
+    - ... continues for all phases as needed
 
     Args:
         model_ir: Model IR containing set definitions
 
     Returns:
-        Tuple of (phase1_sets, phase2_sets, phase3_sets) as GAMS code strings.
+        List of GAMS code strings, one per phase, indexed from 0.
+        Index 0 = phase 1 sets, index 1 = phase 2 sets, etc.
 
-    Example output for phase1_sets:
+    Example output for phase 1:
         Sets
             i /i1, i2, i3/
         ;
-
-    Example output for phase2_sets:
-        Sets
-            ij(i,j)
-        ;
     """
     if not model_ir.sets:
-        return "", "", ""
+        return []
 
     # Compute which sets go in each phase
-    phase1_names, phase2_names, phase3_names = _compute_set_alias_phases(model_ir)
+    set_phases, _ = _compute_set_alias_phases(model_ir)
 
-    # Partition sets into lists preserving original order
-    phase1_sets: list[tuple[str, SetDef]] = []
-    phase2_sets: list[tuple[str, SetDef]] = []
-    phase3_sets: list[tuple[str, SetDef]] = []
+    if not set_phases:
+        return []
+
+    # Determine number of phases
+    max_phase = max(set_phases.values()) if set_phases else 0
+
+    # Partition sets into lists by phase, preserving original order
+    phase_sets: list[list[tuple[str, SetDef]]] = [[] for _ in range(max_phase)]
 
     for set_name, set_def in model_ir.sets.items():
         set_name_lower = set_name.lower()
-        if set_name_lower in phase1_names:
-            phase1_sets.append((set_name, set_def))
-        elif set_name_lower in phase2_names:
-            phase2_sets.append((set_name, set_def))
-        else:
-            phase3_sets.append((set_name, set_def))
+        phase = set_phases.get(set_name_lower, 1)
+        phase_sets[phase - 1].append((set_name, set_def))
 
     def build_sets_block(sets_list: list[tuple[str, SetDef]]) -> str:
         if not sets_list:
@@ -288,62 +277,53 @@ def emit_original_sets(model_ir: ModelIR) -> tuple[str, str, str]:
         lines.append(";")
         return "\n".join(lines)
 
-    return (
-        build_sets_block(phase1_sets),
-        build_sets_block(phase2_sets),
-        build_sets_block(phase3_sets),
-    )
+    return [build_sets_block(sets_list) for sets_list in phase_sets]
 
 
-def emit_original_aliases(model_ir: ModelIR) -> tuple[str, str, str]:
+def emit_original_aliases(model_ir: ModelIR) -> list[str]:
     """Emit Alias declarations, split by target set dependencies.
 
     Uses AliasDef.target and .universe (Finding #3: actual IR fields).
 
-    Sprint 17 Day 10: Splits aliases into three groups matching the set phases:
-    - Phase 1 aliases: Target is a phase 1 set (emitted after phase 1 sets)
-    - Phase 2 aliases: Target is a phase 2 set (emitted after phase 2 sets)
-    - Phase 3 aliases: Target is a phase 3 set (emitted after phase 3 sets)
+    Sprint 17 Day 10: Splits aliases into phases matching the set phases:
+    - Phase p aliases: Aliases targeting phase p sets (emitted after phase p sets)
 
     Args:
         model_ir: Model IR containing alias definitions
 
     Returns:
-        Tuple of (phase1_aliases, phase2_aliases, phase3_aliases) as GAMS code strings.
-        Phase 1 aliases target sets in phase 1 (no alias dependencies).
-        Phase 2 aliases target sets in phase 2 (depend on phase 1 aliases).
-        Phase 3 aliases target sets in phase 3 (depend on phase 2 aliases).
+        List of GAMS code strings, one per phase, indexed from 0.
+        Index 0 = phase 1 aliases, index 1 = phase 2 aliases, etc.
 
     Example output:
         Alias(i, ip);
         Alias(j, jp);
     """
     if not model_ir.aliases:
-        return "", "", ""
+        return []
 
-    # Get set names for each phase
-    phase1_set_names, phase2_set_names, phase3_set_names = _compute_set_alias_phases(model_ir)
+    # Get phase assignments
+    set_phases, alias_phases = _compute_set_alias_phases(model_ir)
 
-    phase1_aliases: list[str] = []
-    phase2_aliases: list[str] = []
-    phase3_aliases: list[str] = []
+    if not alias_phases:
+        return []
+
+    # Determine number of phases (use set_phases to include all phases)
+    max_phase = max(
+        max(set_phases.values()) if set_phases else 0,
+        max(alias_phases.values()) if alias_phases else 0,
+    )
+
+    # Partition aliases into lists by phase
+    phase_aliases: list[list[str]] = [[] for _ in range(max_phase)]
 
     for alias_name, alias_def in model_ir.aliases.items():
         alias_line = f"Alias({alias_def.target}, {alias_name});"
-        target_lower = alias_def.target.lower()
-        # Check which phase the alias target belongs to
-        if target_lower in phase3_set_names:
-            phase3_aliases.append(alias_line)
-        elif target_lower in phase2_set_names:
-            phase2_aliases.append(alias_line)
-        else:
-            phase1_aliases.append(alias_line)
+        alias_name_lower = alias_name.lower()
+        phase = alias_phases.get(alias_name_lower, 1)
+        phase_aliases[phase - 1].append(alias_line)
 
-    phase1_code = "\n".join(phase1_aliases) if phase1_aliases else ""
-    phase2_code = "\n".join(phase2_aliases) if phase2_aliases else ""
-    phase3_code = "\n".join(phase3_aliases) if phase3_aliases else ""
-
-    return phase1_code, phase2_code, phase3_code
+    return ["\n".join(aliases) if aliases else "" for aliases in phase_aliases]
 
 
 def emit_original_parameters(model_ir: ModelIR) -> str:

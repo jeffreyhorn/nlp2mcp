@@ -21,12 +21,18 @@ from src.ir.model_ir import ModelIR
 from src.ir.symbols import AliasDef, ParameterDef, SetDef
 
 
+def _get_phases(phase_list: list[str], num_phases: int = 3) -> tuple[str, ...]:
+    """Helper to extract phases from a list, padding with empty strings if needed."""
+    result = list(phase_list) + [""] * num_phases
+    return tuple(result[:num_phases])
+
+
 @pytest.mark.unit
 class TestEmitOriginalSets:
     """Test emission of original Sets block.
 
-    Sprint 17 Day 10 (Issue #621): emit_original_sets now returns a tuple
-    (phase1_sets, phase2_sets, phase3_sets) to handle complex alias dependencies.
+    Sprint 17 Day 10 (Issue #621): emit_original_sets now returns a list of
+    phase strings to handle complex alias dependencies with N phases.
 
     Emission phases:
     1. Phase 1: Sets with no alias dependencies
@@ -39,17 +45,15 @@ class TestEmitOriginalSets:
     def test_empty_sets(self):
         """Test emission with no sets."""
         model = ModelIR()
-        phase1, phase2, phase3 = emit_original_sets(model)
-        assert phase1 == ""
-        assert phase2 == ""
-        assert phase3 == ""
+        phases = emit_original_sets(model)
+        assert phases == []
 
     def test_single_set(self):
         """Test emission with single set."""
         model = ModelIR()
         model.sets["i"] = SetDef(name="i", members=["i1", "i2", "i3"])
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
         assert "Sets" in phase1
         assert "i /i1, i2, i3/" in phase1
         assert phase1.endswith(";")
@@ -62,7 +66,7 @@ class TestEmitOriginalSets:
         model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
         model.sets["j"] = SetDef(name="j", members=["j1", "j2", "j3"])
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
         assert "Sets" in phase1
         assert "i /i1, i2/" in phase1
         assert "j /j1, j2, j3/" in phase1
@@ -75,7 +79,7 @@ class TestEmitOriginalSets:
         model = ModelIR()
         model.sets["universe"] = SetDef(name="universe", members=[])
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
         assert "Sets" in phase1
         assert "universe" in phase1
         # Empty sets just have the name, no slash notation
@@ -90,7 +94,7 @@ class TestEmitOriginalSets:
         model.sets["genchar"] = SetDef(name="genchar", members=["a", "b", "c", "upplim", "lowlim"])
         model.sets["cg"] = SetDef(name="cg", members=["a", "b", "c"], domain=("genchar",))
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
         assert "Sets" in phase1
         assert "genchar /a, b, c, upplim, lowlim/" in phase1
         assert "cg(genchar) /a, b, c/" in phase1
@@ -108,7 +112,7 @@ class TestEmitOriginalSets:
         model.sets["parent"] = SetDef(name="parent", members=["x", "y", "z"])
         model.sets["sub"] = SetDef(name="sub", members=[], domain=("parent",))
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
         assert "Sets" in phase1
         assert "parent /x, y, z/" in phase1
         assert "sub(parent)" in phase1
@@ -126,7 +130,7 @@ class TestEmitOriginalSets:
         model.sets["n"] = SetDef(name="n", members=["n1", "n2"])
         model.sets["arc"] = SetDef(name="arc", members=["n1.n2"], domain=("n", "n"))
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
         assert "Sets" in phase1
         assert "n /n1, n2/" in phase1
         assert "arc(n,n) /n1.n2/" in phase1
@@ -145,7 +149,7 @@ class TestEmitOriginalSets:
         model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
         model.aliases["j"] = AliasDef(name="j", target="i")
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
 
         # Set i should be in phase 1 (no alias dependency)
         assert "i /i1, i2, i3/" in phase1
@@ -163,7 +167,7 @@ class TestEmitOriginalSets:
         model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
         model.aliases["j"] = AliasDef(name="j", target="i")
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
 
         # Sets without alias deps in phase 1
         assert "i /i1, i2/" in phase1
@@ -186,7 +190,7 @@ class TestEmitOriginalSets:
         model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "J"))
         model.aliases["j"] = AliasDef(name="j", target="i")
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
 
         # Set i should be in phase 1
         assert "i /i1, i2/" in phase1
@@ -209,7 +213,7 @@ class TestEmitOriginalSets:
         model.sets["triple"] = SetDef(name="triple", members=[], domain=("ij", "i"))
         model.aliases["j"] = AliasDef(name="j", target="i")
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
 
         # Set i should be in phase 1 (no alias dependency)
         assert "i /i1, i2/" in phase1
@@ -238,7 +242,7 @@ class TestEmitOriginalSets:
         # Phase 3: xyz depends on alias k (which targets phase 2 set)
         model.sets["xyz"] = SetDef(name="xyz", members=[], domain=("i", "k"))
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
 
         # Set i should be in phase 1
         assert "i /i1, i2/" in phase1
@@ -274,7 +278,7 @@ class TestEmitOriginalSets:
         # It must go to phase 3, not phase 2
         model.sets["mixed"] = SetDef(name="mixed", members=[], domain=("j", "k"))
 
-        phase1, phase2, phase3 = emit_original_sets(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_sets(model))
 
         # Set i should be in phase 1
         assert "i /i1, i2/" in phase1
@@ -294,18 +298,15 @@ class TestEmitOriginalSets:
 class TestEmitOriginalAliases:
     """Test emission of original Alias declarations.
 
-    Sprint 17 Day 10: emit_original_aliases now returns a tuple
-    (phase1_aliases, phase2_aliases, phase3_aliases) to handle aliases that
-    target sets in each phase.
+    Sprint 17 Day 10: emit_original_aliases now returns a list of phase strings
+    to handle aliases that target sets in each phase with N phases.
     """
 
     def test_empty_aliases(self):
         """Test emission with no aliases."""
         model = ModelIR()
-        phase1, phase2, phase3 = emit_original_aliases(model)
-        assert phase1 == ""
-        assert phase2 == ""
-        assert phase3 == ""
+        phases = emit_original_aliases(model)
+        assert phases == []
 
     def test_single_alias(self):
         """Test emission with single alias targeting a regular set."""
@@ -313,7 +314,7 @@ class TestEmitOriginalAliases:
         model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
         model.aliases["ip"] = AliasDef(name="ip", target="i")
 
-        phase1, phase2, phase3 = emit_original_aliases(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_aliases(model))
         assert "Alias(i, ip);" in phase1
         assert phase2 == ""
         assert phase3 == ""
@@ -326,7 +327,7 @@ class TestEmitOriginalAliases:
         model.aliases["ip"] = AliasDef(name="ip", target="i")
         model.aliases["jp"] = AliasDef(name="jp", target="j")
 
-        phase1, phase2, phase3 = emit_original_aliases(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_aliases(model))
         assert "Alias(i, ip);" in phase1
         assert "Alias(j, jp);" in phase1
         assert phase2 == ""
@@ -340,7 +341,7 @@ class TestEmitOriginalAliases:
         model.sets["i"] = SetDef(name="i", members=["i1"])
         model.aliases["subset"] = AliasDef(name="subset", target="i", universe="all")
 
-        phase1, phase2, phase3 = emit_original_aliases(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_aliases(model))
         # Universe is stored but doesn't affect GAMS Alias syntax
         assert "Alias(i, subset);" in phase1
 
@@ -360,7 +361,7 @@ class TestEmitOriginalAliases:
         # ijp targets ij (a phase 2 set), so it must be a phase 2 alias
         model.aliases["ijp"] = AliasDef(name="ijp", target="ij")
 
-        phase1, phase2, phase3 = emit_original_aliases(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_aliases(model))
 
         # Alias j targets phase 1 set i, so it's a phase 1 alias
         assert "Alias(i, j);" in phase1
@@ -391,7 +392,7 @@ class TestEmitOriginalAliases:
         # Phase 3 alias: xyzp targets xyz (a phase 3 set)
         model.aliases["xyzp"] = AliasDef(name="xyzp", target="xyz")
 
-        phase1, phase2, phase3 = emit_original_aliases(model)
+        phase1, phase2, phase3 = _get_phases(emit_original_aliases(model))
 
         # Alias j targets phase 1 set i
         assert "Alias(i, j);" in phase1

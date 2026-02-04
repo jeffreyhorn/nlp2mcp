@@ -75,39 +75,27 @@ def emit_gams_mcp(
         sections.append("")
 
     # Sprint 17 Day 10 (Issue #621): Split sets and aliases into phases
-    # Correct emit order ensures all dependencies are declared before use:
-    #   1. Phase 1 sets (sets with no alias dependencies)
-    #   2. Phase 1 aliases (aliases targeting phase 1 sets)
-    #   3. Phase 2 sets (sets depending on phase 1 aliases)
-    #   4. Phase 2 aliases (aliases targeting phase 2 sets)
-    #   5. Phase 3 sets (sets depending on phase 2 aliases)
-    #   6. Phase 3 aliases (aliases targeting phase 3 sets)
-    phase1_sets, phase2_sets, phase3_sets = emit_original_sets(kkt.model_ir)
-    phase1_aliases, phase2_aliases, phase3_aliases = emit_original_aliases(kkt.model_ir)
+    # Correct emit order ensures all dependencies are declared before use.
+    # For each phase p: emit phase p sets, then phase p aliases.
+    # Supports N phases dynamically based on dependency depth.
+    sets_by_phase = emit_original_sets(kkt.model_ir)
+    aliases_by_phase = emit_original_aliases(kkt.model_ir)
 
-    if phase1_sets:
-        sections.append(phase1_sets)
-        sections.append("")
+    # Ensure both lists have the same length by padding with empty strings
+    max_phases = max(len(sets_by_phase), len(aliases_by_phase))
+    while len(sets_by_phase) < max_phases:
+        sets_by_phase.append("")
+    while len(aliases_by_phase) < max_phases:
+        aliases_by_phase.append("")
 
-    if phase1_aliases:
-        sections.append(phase1_aliases)
-        sections.append("")
-
-    if phase2_sets:
-        sections.append(phase2_sets)
-        sections.append("")
-
-    if phase2_aliases:
-        sections.append(phase2_aliases)
-        sections.append("")
-
-    if phase3_sets:
-        sections.append(phase3_sets)
-        sections.append("")
-
-    if phase3_aliases:
-        sections.append(phase3_aliases)
-        sections.append("")
+    # Emit each phase: sets first, then aliases
+    for phase_idx in range(max_phases):
+        if sets_by_phase[phase_idx]:
+            sections.append(sets_by_phase[phase_idx])
+            sections.append("")
+        if aliases_by_phase[phase_idx]:
+            sections.append(aliases_by_phase[phase_idx])
+            sections.append("")
 
     params_code = emit_original_parameters(kkt.model_ir)
     if params_code:
