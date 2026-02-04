@@ -2,19 +2,45 @@
 
 **GitHub Issue:** #614
 **GitHub URL:** https://github.com/jeffreyhorn/nlp2mcp/issues/614
-**Status:** Open
+**Status:** Resolved
 **Priority:** Medium
 **Category:** Parser/Grammar
+**Resolution:** Already working via `preprocess_gams_file()`. Added `preprocess_text()` for string-based usage.
 
 ## Summary
 
 The parser does not support compile-time constants (e.g., `%N%`) within set range expressions. GAMS allows `$set` directives to define values that can be used in set ranges like `/n0*n%N%/`.
 
+## Resolution
+
+Upon investigation, the compile-time constant expansion **already works correctly** when using `parse_model_file()`, which calls `preprocess_gams_file()` to handle all preprocessing including `$set` directive expansion and `%variable%` substitution.
+
+The original error occurred because:
+1. The test was using `parse_model_text()` directly, which doesn't apply preprocessing
+2. Files parsed via `parse_model_file()` work correctly
+
+**Changes made:**
+- Added `preprocess_text()` function to `src/ir/preprocessor.py` for direct string preprocessing
+- This function performs the same preprocessing as `preprocess_gams_file()` but without file-based operations
+
+**Usage:**
+```python
+# For files (already worked):
+model = parse_model_file("model.gms")  # Preprocessing is automatic
+
+# For strings (use preprocess_text first):
+from src.ir.preprocessor import preprocess_text
+preprocessed = preprocess_text(raw_gams_code)
+model = parse_model_text(preprocessed)
+```
+
+**Note:** The `springchain.gms` model still fails to parse, but for a **different reason** - it uses square brackets `[...]` in parameter data blocks, which is a separate grammar limitation (not related to compile-time constants).
+
 ## Affected Models
 
 - `springchain.gms` - Uses `%N%` in set range and parameter data
 
-## Error Message
+## Original Error Message
 
 ```
 Error: Parse error at line 24, column 28: Unexpected character: '%'

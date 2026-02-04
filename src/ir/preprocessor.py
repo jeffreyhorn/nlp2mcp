@@ -1826,6 +1826,204 @@ def normalize_double_commas(source: str) -> str:
     return "".join(result)
 
 
+def _is_include_directive(line: str) -> bool:
+    """Check if a line contains an actual $include/$batInclude directive.
+
+    Returns True only if the directive appears as actual code, not inside
+    quoted strings or comments. Handles:
+    - Standalone directives: `$include "file.gms"`
+    - Inline after conditionals: `$if set X $include "file.gms"`
+
+    Args:
+        line: A single line of GAMS source code
+
+    Returns:
+        True if the line contains an actual include directive to strip
+    """
+    # Check if line is already a comment
+    stripped = line.lstrip()
+    if stripped.startswith("*"):
+        return False
+
+    # Scan through the line, tracking whether we're inside quotes
+    in_single_quote = False
+    in_double_quote = False
+    i = 0
+    line_lower = line.lower()
+    length = len(line)
+
+    while i < length:
+        char = line[i]
+
+        # Handle quote state changes with escaped quote handling ('' and "")
+        if char == "'" and not in_double_quote:
+            # Check for escaped single quote ('') inside single-quoted string
+            if in_single_quote and i + 1 < length and line[i + 1] == "'":
+                # Skip both quotes - this is an escaped literal quote
+                i += 2
+                continue
+            in_single_quote = not in_single_quote
+        elif char == '"' and not in_single_quote:
+            # Check for escaped double quote ("") inside double-quoted string
+            if in_double_quote and i + 1 < length and line[i + 1] == '"':
+                # Skip both quotes - this is an escaped literal quote
+                i += 2
+                continue
+            in_double_quote = not in_double_quote
+        elif not in_single_quote and not in_double_quote:
+            # Only treat '*' as starting an inline comment in valid comment
+            # positions: first non-whitespace character, or after a statement
+            # terminator ';'. In other positions (e.g., 'a*b'), it's a
+            # multiplication operator and we must continue scanning.
+            if char == "*":
+                # Look backwards for the previous non-whitespace character
+                j = i - 1
+                while j >= 0 and line[j].isspace():
+                    j -= 1
+                # Comment start if: first token (j < 0) or after ';'
+                if j < 0 or line[j] == ";":
+                    break
+            # Check for $ directive when not inside quotes or comments
+            if char == "$":
+                # Check if this is $include or $batinclude
+                remaining = line_lower[i:]
+                if remaining.startswith("$include") or remaining.startswith("$batinclude"):
+                    # Verify it's a word boundary (not $includefoo or $include_foo)
+                    directive_len = 8 if remaining.startswith("$include") else 11
+                    if len(remaining) == directive_len:
+                        return True
+                    next_char = remaining[directive_len]
+                    # Treat '_' as an identifier character to avoid misdetecting $include_foo
+                    if not (next_char.isalnum() or next_char == "_"):
+                        return True
+        i += 1
+
+    return False
+
+
+def _strip_include_directives(source: str) -> str:
+    """Strip $include and $batInclude directives to comments.
+
+    This preserves line numbers while preventing parse errors when these
+    directives appear in source strings passed to preprocess_text().
+
+    Handles both standalone include directives and inline includes (e.g.,
+    after $if conditionals like `$if set X $include "file.gms"`).
+
+    Only strips actual directive usage - ignores matches inside quoted strings
+    or comments.
+
+    Args:
+        source: GAMS source code
+
+    Returns:
+        Source with lines containing $include/$batInclude directives replaced by comments
+    """
+    lines = source.split("\n")
+    result = []
+    for line in lines:
+        if _is_include_directive(line):
+            # Replace with comment to preserve line numbers, preserving original indentation
+            stripped = line.strip()
+            leading_ws = line[: len(line) - len(line.lstrip())]
+            result.append(f"{leading_ws}* [Stripped: {stripped}]")
+        else:
+            result.append(line)
+    return "\n".join(result)
+
+
+def _preprocess_content(content: str) -> str:
+    """Shared preprocessing pipeline for GAMS content.
+
+    This is the core preprocessing logic used by both preprocess_gams_file()
+    and preprocess_text(). It performs all preprocessing steps except for
+    file-based operations ($include, $batInclude).
+
+    Preprocessing steps:
+    1. Extract macro defaults from $if not set directives
+    2. Extract general $set directives
+    3. Process $if/$else/$endif conditional blocks
+    4. Expand %variable% references
+    5. Extract $macro definitions
+    6. Expand macro function calls
+    7. Strip conditional directives ($if not set)
+    8. Strip $set directives
+    9. Strip $macro directives
+    10. Strip other unsupported directives ($title, $ontext, etc.)
+    11. Join multi-line equations into single lines
+    12. Remove table continuation markers (+)
+    13. Normalize multi-line continuations (add missing commas)
+    14. Insert missing semicolons before block keywords
+    15. Quote identifiers with special characters (-, +) in data blocks
+    16. Normalize double commas to single commas
+
+    Args:
+        content: GAMS source code (after $include expansion if applicable)
+
+    Returns:
+        Preprocessed source code ready for parsing
+    """
+    # Step 1: Extract macro defaults from $if not set directives
+    macros = extract_conditional_sets(content)
+
+    # Step 2: Extract general $set directives (merge with conditional sets)
+    # Pass existing macros so that $set can reference earlier macros
+    set_macros = extract_set_directives(content, macros)
+    macros.update(set_macros)  # $set directives override conditional defaults
+
+    # Step 3: Process $if/$else/$endif conditional blocks
+    # This must happen after extracting macros so conditionals can test variable definitions
+    # but before expanding %variable% so conditional blocks are removed first
+    content = process_conditionals(content, macros)
+
+    # Step 4: Expand %variable% references with their values
+    content = expand_macros(content, macros)
+
+    # Step 5: Extract $macro function definitions
+    # This must happen after %variable% expansion so that macro bodies have variables expanded
+    # For example: $macro fx(t) %fx% becomes $macro fx(t) sin(t) * cos(t-t*t)
+    macro_defs = extract_macro_definitions(content)
+
+    # Step 6: Expand macro function calls
+    # Replace fx(t('1')) with sin(t('1')) * cos(t('1')-t('1')*t('1'))
+    content = expand_macro_calls(content, macro_defs)
+
+    # Step 7: Strip $if not set directives (replaced with comments)
+    content = strip_conditional_directives(content)
+
+    # Step 8: Strip $set directives (replaced with comments)
+    content = strip_set_directives(content)
+
+    # Step 9: Strip $macro directives (replaced with comments)
+    content = strip_macro_directives(content)
+
+    # Step 10: Strip other unsupported directives ($title, $ontext, etc.)
+    content = strip_unsupported_directives(content)
+
+    # Step 11: Join multi-line equations into single lines
+    # This must happen before table continuation normalization to avoid
+    # confusing equation continuation with table continuation markers
+    content = join_multiline_equations(content)
+
+    # Step 12: Remove table continuation markers (+)
+    content = normalize_table_continuations(content)
+
+    # Step 13: Normalize multi-line continuations (add missing commas)
+    content = normalize_multi_line_continuations(content)
+
+    # Step 14: Insert missing semicolons before block keywords
+    # This fixes issue #418 where variables from include files weren't recognized
+    # because previous blocks (sets, parameters) were missing semicolons
+    content = insert_missing_semicolons(content)
+
+    # Step 15: Quote identifiers with special characters (-, +) in data blocks
+    content = normalize_special_identifiers(content)
+
+    # Step 16: Normalize double commas to single commas (Issue #565)
+    # This must happen after all other data normalization
+    return normalize_double_commas(content)
+
+
 def preprocess_gams_file(file_path: Path | str) -> str:
     """Preprocess a GAMS file, expanding all $include directives.
 
@@ -1833,22 +2031,7 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     It performs preprocessing in the following order:
     1. Expand $include directives recursively
     2. Expand $batInclude directives with argument substitution
-    3. Extract macro defaults from $if not set directives
-    4. Extract general $set directives
-    5. Process $if/$else/$endif conditional blocks
-    6. Expand %variable% references
-    7. Extract $macro definitions
-    8. Expand macro function calls
-    9. Strip conditional directives ($if not set)
-    10. Strip $set directives
-    11. Strip $macro directives
-    12. Strip other unsupported directives ($title, $ontext, etc.)
-    13. Join multi-line equations into single lines (fixes #561)
-    14. Remove table continuation markers (+)
-    15. Normalize multi-line continuations (add missing commas)
-    16. Insert missing semicolons before block keywords (fixes #418)
-    17. Quote identifiers with special characters (-, +) in data blocks
-    18. Normalize double commas to single commas (fixes #565)
+    3. Run _preprocess_content() (macro/conditional expansion, stripping, normalization)
 
     Args:
         file_path: Path to the GAMS file (Path object or string)
@@ -1876,62 +2059,36 @@ def preprocess_gams_file(file_path: Path | str) -> str:
     # files that were themselves included via $include
     content = preprocess_bat_includes(file_path, content)
 
-    # Step 3: Extract macro defaults from $if not set directives
-    macros = extract_conditional_sets(content)
+    # Step 3: Shared preprocessing pipeline (macro/conditional expansion, stripping, normalization)
+    return _preprocess_content(content)
 
-    # Step 4: Extract general $set directives (merge with conditional sets)
-    # Pass existing macros so that $set can reference earlier macros
-    set_macros = extract_set_directives(content, macros)
-    macros.update(set_macros)  # $set directives override conditional defaults
 
-    # Step 5: Process $if/$else/$endif conditional blocks
-    # This must happen after extracting macros so conditionals can test variable definitions
-    # but before expanding %variable% so conditional blocks are removed first
-    content = process_conditionals(content, macros)
+def preprocess_text(source: str) -> str:
+    """Preprocess GAMS source text without file-based operations.
 
-    # Step 6: Expand %variable% references with their values
-    content = expand_macros(content, macros)
+    This function performs the same preprocessing as preprocess_gams_file()
+    but skips file-based operations ($include, $batInclude). Use this for
+    preprocessing raw GAMS source strings that don't require file inclusion.
 
-    # Step 7: Extract $macro function definitions
-    # This must happen after %variable% expansion so that macro bodies have variables expanded
-    # For example: $macro fx(t) %fx% becomes $macro fx(t) sin(t) * cos(t-t*t)
-    macro_defs = extract_macro_definitions(content)
+    Any $include or $batInclude directives in the source will be stripped
+    (converted to comments) to prevent parse errors. If you need to process
+    files with includes, use preprocess_gams_file() instead.
 
-    # Step 8: Expand macro function calls
-    # Replace fx(t('1')) with sin(t('1')) * cos(t('1')-t('1')*t('1'))
-    content = expand_macro_calls(content, macro_defs)
+    Args:
+        source: GAMS source code to preprocess
 
-    # Step 9: Strip $if not set directives (replaced with comments)
-    content = strip_conditional_directives(content)
+    Returns:
+        Preprocessed source code ready for parsing
 
-    # Step 10: Strip $set directives (replaced with comments)
-    content = strip_set_directives(content)
+    Example:
+        >>> code = "$set N 5\\nSet i / i1*i%N% /;"
+        >>> result = preprocess_text(code)
+        >>> # %N% is expanded to 5
+    """
+    # Apply shared preprocessing pipeline first (macro/conditional expansion, etc.)
+    content = _preprocess_content(source)
 
-    # Step 11: Strip $macro directives (replaced with comments)
-    content = strip_macro_directives(content)
-
-    # Step 12: Strip other unsupported directives ($title, $ontext, etc.)
-    content = strip_unsupported_directives(content)
-
-    # Step 13: Join multi-line equations into single lines
-    # This must happen before table continuation normalization to avoid
-    # confusing equation continuation with table continuation markers
-    content = join_multiline_equations(content)
-
-    # Step 14: Remove table continuation markers (+)
-    content = normalize_table_continuations(content)
-
-    # Step 15: Normalize multi-line continuations (add missing commas)
-    content = normalize_multi_line_continuations(content)
-
-    # Step 16: Insert missing semicolons before block keywords
-    # This fixes issue #418 where variables from include files weren't recognized
-    # because previous blocks (sets, parameters) were missing semicolons
-    content = insert_missing_semicolons(content)
-
-    # Step 17: Quote identifiers with special characters (-, +) in data blocks
-    content = normalize_special_identifiers(content)
-
-    # Step 18: Normalize double commas to single commas (Issue #565)
-    # This must happen after all other data normalization
-    return normalize_double_commas(content)
+    # Strip $include/$batInclude directives (convert to comments) after conditionals
+    # This prevents double-wrapping of lines (e.g., Excluded: Stripped: ...) while
+    # still ensuring unresolved include directives don't reach the parser.
+    return _strip_include_directives(content)

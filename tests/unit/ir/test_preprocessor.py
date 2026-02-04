@@ -20,6 +20,7 @@ from src.ir.preprocessor import (
     extract_conditional_sets,
     join_multiline_equations,
     preprocess_gams_file,
+    preprocess_text,
     strip_conditional_directives,
     strip_unsupported_directives,
 )
@@ -721,3 +722,250 @@ Model m / all /;"""
         result = join_multiline_equations(source)
         assert "eq(i)$valid(i).." in result
         assert "x(i) + y(i) =e= 0;" in result
+
+
+class TestPreprocessText:
+    """Tests for preprocess_text() function (Sprint 17 Day 8 - Issue #614)."""
+
+    def test_set_directive_expansion(self):
+        """Test $set directive and %variable% expansion in set range."""
+        source = """$set N 5
+Set i / i1*i%N% /;"""
+        result = preprocess_text(source)
+        assert "i1*i5" in result
+        assert "%N%" not in result
+
+    def test_multiple_set_directives(self):
+        """Test multiple $set directives."""
+        source = """$set X 10
+$set Y 20
+Parameter a / %X% /, b / %Y% /;"""
+        result = preprocess_text(source)
+        assert "/ 10 /" in result
+        assert "/ 20 /" in result
+
+    def test_set_directive_in_expression(self):
+        """Test %var% expansion in expressions."""
+        source = """$set N 100
+Parameter scale / %N% /;
+Scalar factor / 1.0 / %N% /;"""
+        result = preprocess_text(source)
+        assert "%N%" not in result
+        # N should be expanded to 100 in the actual code lines (not just in stripped comment)
+        lines = [line for line in result.split("\n") if not line.strip().startswith("*")]
+        code_text = "\n".join(lines)
+        assert "Parameter scale / 100 /" in code_text
+        assert "Scalar factor / 1.0 / 100 /" in code_text
+
+    def test_include_directive_stripped(self):
+        """Test that $include directives are stripped to comments."""
+        source = """$set N 5
+$include "somefile.gms"
+Set i / i1*i%N% /;"""
+        result = preprocess_text(source)
+        # $include should be converted to comment (stripped marker, allowing for preserved indentation)
+        lines = result.split("\n")
+        include_line = [line for line in lines if "somefile.gms" in line][0]
+        assert include_line.lstrip().startswith("* [Stripped:")
+        # But %N% should still be expanded
+        assert "i1*i5" in result
+
+    def test_batinclude_directive_stripped(self):
+        """Test that $batInclude directives are stripped to comments."""
+        source = """$set N 5
+$batInclude "somefile.gms" arg1 arg2
+Set i / i1*i%N% /;"""
+        result = preprocess_text(source)
+        # $batInclude should be converted to comment (stripped marker, allowing for preserved indentation)
+        lines = result.split("\n")
+        batinclude_line = [line for line in lines if "somefile.gms" in line][0]
+        assert batinclude_line.lstrip().startswith("* [Stripped:")
+        # But %N% should still be expanded
+        assert "i1*i5" in result
+
+    def test_conditional_if_set(self):
+        """Test $if set conditional processing with block-form conditionals."""
+        source = """$set DEBUG 1
+$if set DEBUG
+Parameter debug_mode / 1 /;
+$endif
+$if not set DEBUG
+Parameter debug_mode / 0 /;
+$endif"""
+        result = preprocess_text(source)
+        # Since DEBUG is set, the "$if set DEBUG" branch content should be kept
+        # and the "$if not set DEBUG" branch content should be removed
+        # The kept branch should appear as actual code, not just in a comment
+        lines = [line for line in result.split("\n") if not line.strip().startswith("*")]
+        code_text = "\n".join(lines)
+        assert "debug_mode / 1 /" in code_text
+        # The "not set" branch should NOT appear as code (only in stripped comments)
+        assert "debug_mode / 0 /" not in code_text
+
+    def test_unsupported_directives_stripped(self):
+        """Test that unsupported directives are stripped."""
+        source = """$title My Model
+$ontext
+This is a comment block
+$offtext
+Set i / a, b, c /;"""
+        result = preprocess_text(source)
+        # $title should be converted to comment (stripped marker)
+        lines = result.split("\n")
+        title_line = lines[0]
+        assert title_line.startswith("* [Stripped:")
+        # Set statement should remain
+        assert "Set i" in result
+
+    def test_preserves_line_numbers_for_stripped_include(self):
+        """Test that stripped includes preserve line numbers."""
+        source = """Line1
+$include "file.gms"
+Line3"""
+        result = preprocess_text(source)
+        lines = result.split("\n")
+        # Should have same number of lines
+        assert len(lines) == 3
+        # Line 2 should be a comment (allowing for preserved indentation)
+        assert lines[1].lstrip().startswith("*")
+
+    def test_empty_source(self):
+        """Test with empty source."""
+        result = preprocess_text("")
+        assert result == ""
+
+    def test_no_preprocessing_needed(self):
+        """Test source that doesn't need preprocessing."""
+        source = """Set i / a, b, c /;
+Variable x(i);"""
+        result = preprocess_text(source)
+        # Should be essentially unchanged (may have normalized whitespace)
+        assert "Set i" in result
+        assert "Variable x" in result
+
+    def test_inline_include_directive_stripped(self):
+        """Test that standalone include directives are stripped."""
+        source = """$set N 5
+$include "somefile.gms"
+$batInclude "anotherfile.gms" arg1
+Set i / i1*i%N% /;"""
+        result = preprocess_text(source)
+        # Include directives should be stripped to comments
+        lines = result.split("\n")
+        # Should preserve line count
+        assert len(lines) == 4
+        # Lines with include directives should be comments
+        include_line = [line for line in lines if "somefile.gms" in line][0]
+        assert include_line.lstrip().startswith("* [Stripped:")
+        batinclude_line = [line for line in lines if "anotherfile.gms" in line][0]
+        assert batinclude_line.lstrip().startswith("* [Stripped:")
+        # %N% should still be expanded in non-include lines
+        assert "i1*i5" in result
+
+    def test_include_in_quoted_string_not_stripped(self):
+        """Test that $include inside quoted strings is NOT stripped."""
+        source = """Set i / i1, i2 /;
+Parameter p / "contains $include text" /;
+Scalar s / 1 /;"""
+        result = preprocess_text(source)
+        # The line with $include in quotes should NOT be stripped
+        lines = result.split("\n")
+        param_line = [line for line in lines if "Parameter p" in line][0]
+        # Should still contain the original quoted text, not be a stripped comment
+        assert "Parameter p" in param_line
+        assert '"contains $include text"' in param_line
+        assert not param_line.strip().startswith("* [Stripped:")
+
+    def test_include_in_comment_not_stripped(self):
+        """Test that $include in comment lines is left alone."""
+        source = """* This comment mentions $include for documentation
+Set i / i1, i2 /;"""
+        result = preprocess_text(source)
+        lines = result.split("\n")
+        # Comment line should be unchanged (not double-stripped)
+        comment_line = lines[0]
+        assert comment_line.startswith("* This comment mentions $include")
+        # Should NOT have [Stripped: marker
+        assert "[Stripped:" not in comment_line
+
+    def test_include_in_inline_comment_not_stripped(self):
+        """Test that $include in inline comments doesn't cause line to be stripped."""
+        source = """Set i / i1, i2 /; * mentions $include in comment
+Parameter p / 1 /;"""
+        result = preprocess_text(source)
+        lines = result.split("\n")
+        # Line with inline comment should NOT be stripped - it's valid code
+        set_line = lines[0]
+        assert "Set i" in set_line
+        assert not set_line.strip().startswith("* [Stripped:")
+
+    def test_include_like_identifier_not_stripped(self):
+        """Test that identifiers like $include_foo are not misdetected as include directives."""
+        # This tests that the word-boundary check correctly handles underscore.
+        # $include_data and $batInclude_file should NOT be detected as $include/$batInclude.
+        # But a real $include directive should still be stripped.
+        source = """$include_data is not a real directive
+$batInclude_file also not a directive
+$include "real_include.gms"
+Parameter p / 1 /;"""
+        result = preprocess_text(source)
+        lines = result.split("\n")
+        # Lines 1 and 2 should NOT be stripped (they contain $include_data and $batInclude_file)
+        assert "$include_data" in lines[0]
+        assert not lines[0].strip().startswith("* [Stripped:")
+        assert "$batInclude_file" in lines[1] or "$batinclude_file" in lines[1].lower()
+        assert not lines[1].strip().startswith("* [Stripped:")
+        # Line 3 should BE stripped (it's a real $include directive)
+        assert lines[2].strip().startswith("* [Stripped:")
+        assert "real_include.gms" in lines[2]
+        # Parameter line should be intact
+        assert "Parameter p" in result
+
+    def test_include_in_escaped_quote_not_stripped(self):
+        """Test that $include inside strings with escaped quotes is NOT stripped.
+
+        GAMS uses doubled quotes to escape literal quotes inside strings.
+        The _is_include_directive() scanner must handle these correctly.
+        """
+        # Test escaped single quote with $include after it
+        # 'it''s $include text' represents the string "it's $include text"
+        source_single = "Parameter p / 'it''s $include text' /;"
+        result_single = preprocess_text(source_single)
+        # Should NOT be stripped - the $include is inside quoted string
+        assert "Parameter p" in result_single
+        assert not result_single.strip().startswith("* [Stripped:")
+
+        # Test escaped double quote with $include after it
+        # "say ""hello"" $include here" represents 'say "hello" $include here'
+        source_double = 'Parameter q / "say ""hello"" $include here" /;'
+        result_double = preprocess_text(source_double)
+        # Should NOT be stripped - the $include is inside quoted string
+        assert "Parameter q" in result_double
+        assert not result_double.strip().startswith("* [Stripped:")
+
+    def test_include_after_multiplication_is_stripped(self):
+        """Test that $include after '*' in an expression is still stripped.
+
+        Since '*' is a valid operator in GAMS (e.g., in 'a*b'), it must not
+        be treated as starting an inline comment in this context. A $include
+        that appears later on the same line should still be detected and the
+        line should be stripped by the preprocessor.
+        """
+        # In 'a*b', '*' is a multiplication operator, so $include must be seen
+        source = 'eq.. a*b =e= 1; $include "x.gms"'
+        result = preprocess_text(source)
+        # Should BE stripped - the $include after the expression is a real directive
+        assert result.strip().startswith("* [Stripped:")
+        assert "x.gms" in result
+
+    def test_include_in_inline_comment_after_semicolon_not_stripped(self):
+        """Test that $include in inline comment after semicolon is not stripped.
+
+        When '*' appears after ';', it starts an inline comment and any
+        $include inside should not cause the line to be stripped.
+        """
+        source = "Set i /a,b/; * This mentions $include for docs"
+        result = preprocess_text(source)
+        # Should NOT be stripped - the $include is in a comment after ;
+        assert "Set i" in result
+        assert not result.strip().startswith("* [Stripped:")
