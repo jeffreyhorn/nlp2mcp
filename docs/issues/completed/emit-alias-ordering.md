@@ -1,9 +1,10 @@
 # Emit: Alias Statement Ordering Causes Undefined Set Reference
 
-**Status:** Open  
+**Status:** Fixed  
 **Priority:** High  
 **Affects:** cpack.gms, potentially other models using Alias with multi-dimensional sets  
-**GitHub Issue:** [#621](https://github.com/jeffreyhorn/nlp2mcp/issues/621)
+**GitHub Issue:** [#621](https://github.com/jeffreyhorn/nlp2mcp/issues/621)  
+**Fixed In:** Commit 20cb4c5
 
 ---
 
@@ -110,4 +111,11 @@ gams /tmp/cpack_mcp.gms
 ---
 
 **Created:** 2026-02-04  
-**Sprint:** Sprint 17 Day 9
+**Sprint:** Sprint 17 Day 9  
+**Fixed:** 2026-02-04  
+
+## Resolution
+
+Fixed by splitting `emit_original_sets()` into pre-alias and post-alias groups.
+Sets that depend on aliases (have alias names in their domain) are now emitted
+after the Alias declarations, ensuring all symbols are defined before use.
