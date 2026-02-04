@@ -4719,6 +4719,10 @@ class TestDomainOverAssignments:
         assert model.params["f"].values[("j1", "k2")] == 5.0
         assert len(model.params["f"].values) == 1
 
+    @pytest.mark.skipif(
+        not Path("data/gamslib/raw/trussm.gms").exists(),
+        reason="trussm.gms not available (GAMSLIB files are gitignored)",
+    )
     def test_trussm_regression(self):
         """Regression test: trussm.gms parameter f should not contain set-name entries."""
         model = parser.parse_model_file("data/gamslib/raw/trussm.gms")
