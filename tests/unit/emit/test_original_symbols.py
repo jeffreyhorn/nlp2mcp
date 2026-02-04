@@ -254,6 +254,41 @@ class TestEmitOriginalSets:
         assert "xyz" not in phase1
         assert "xyz" not in phase2
 
+    def test_set_depending_on_both_phase1_and_phase2_aliases(self):
+        """Test that a set depending on both phase-1 and phase-2 aliases goes to phase 3.
+
+        Sprint 17 Day 10: If a set's domain references both a phase-1 alias AND
+        a phase-2 alias, it must be placed in phase 3 (after phase-2 aliases),
+        not phase 2. This prevents GAMS Error 140 for the phase-2 alias symbol.
+        """
+        model = ModelIR()
+        # Phase 1: base set
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+        # Phase 1 alias: j is alias of i
+        model.aliases["j"] = AliasDef(name="j", target="i")
+        # Phase 2: ij depends on alias j
+        model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
+        # Phase 2 alias: k is alias of ij (a phase 2 set)
+        model.aliases["k"] = AliasDef(name="k", target="ij")
+        # This set depends on BOTH j (phase 1 alias) AND k (phase 2 alias)
+        # It must go to phase 3, not phase 2
+        model.sets["mixed"] = SetDef(name="mixed", members=[], domain=("j", "k"))
+
+        phase1, phase2, phase3 = emit_original_sets(model)
+
+        # Set i should be in phase 1
+        assert "i /i1, i2/" in phase1
+
+        # Set ij should be in phase 2
+        assert "ij(i,j)" in phase2
+
+        # Set mixed should be in phase 3 (depends on phase 2 alias k)
+        # Even though it also depends on phase 1 alias j, the phase 2 alias
+        # dependency takes precedence
+        assert "mixed(j,k)" in phase3
+        assert "mixed" not in phase1
+        assert "mixed" not in phase2
+
 
 @pytest.mark.unit
 class TestEmitOriginalAliases:

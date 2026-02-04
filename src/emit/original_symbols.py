@@ -106,7 +106,7 @@ def _compute_set_alias_phases(
     Emission order:
     1. Phase 1 sets: Sets with no alias dependencies (directly or transitively)
     2. Phase 1 aliases: Aliases targeting phase 1 sets
-    3. Phase 2 sets: Sets depending on phase 1 aliases (directly or transitively)
+    3. Phase 2 sets: Sets depending on phase 1 aliases but NOT phase 2 aliases
     4. Phase 2 aliases: Aliases targeting phase 2 sets
     5. Phase 3 sets: Sets depending on phase 2 aliases (directly or transitively)
     6. Phase 3 aliases: Aliases targeting phase 3 sets
@@ -163,29 +163,40 @@ def _compute_set_alias_phases(
         if target_lower in phase1_sets:
             phase1_alias_names.add(alias_name_lower)
 
-    # Phase 2 sets: Sets depending on phase 1 aliases (directly or transitively through other phase 2 sets)
-    phase2_sets: set[str] = set()
+    # Phase 2 aliases: Aliases targeting non-phase-1 sets (initially computed,
+    # may be refined as we determine which sets are in phase 2 vs phase 3)
+    # We need to identify phase 2 alias names BEFORE assigning sets to phase 2
+    # so we can correctly classify sets that depend on phase 2 aliases into phase 3.
+    phase2_alias_names: set[str] = set()
+    for alias_name_lower, target_lower in alias_targets.items():
+        if target_lower not in phase1_sets:
+            phase2_alias_names.add(alias_name_lower)
+
+    # Phase 3 sets: Sets that depend on phase 2 aliases (directly or transitively)
+    # Must be computed BEFORE phase 2 sets to exclude them properly
+    phase3_sets: set[str] = set()
     for set_name_lower, domain_indices in set_domains.items():
         if set_name_lower in phase1_sets:
             continue
-        # Check if depends on any phase 1 alias
-        if domain_indices & phase1_alias_names:
-            phase2_sets.add(set_name_lower)
+        # Check if depends on any phase 2 alias
+        if domain_indices & phase2_alias_names:
+            phase3_sets.add(set_name_lower)
 
-    # Compute transitive closure for phase 2
+    # Compute transitive closure for phase 3
     changed = True
     while changed:
         changed = False
         for set_name_lower, domain_indices in set_domains.items():
-            if set_name_lower in phase1_sets or set_name_lower in phase2_sets:
+            if set_name_lower in phase1_sets or set_name_lower in phase3_sets:
                 continue
-            # Check if depends on any phase 2 set
-            if domain_indices & phase2_sets:
-                phase2_sets.add(set_name_lower)
+            # Check if depends on any phase 3 set
+            if domain_indices & phase3_sets:
+                phase3_sets.add(set_name_lower)
                 changed = True
 
-    # Phase 3 sets: Everything else (depends on phase 2 aliases)
-    phase3_sets = all_set_names - phase1_sets - phase2_sets
+    # Phase 2 sets: Sets depending on phase 1 aliases but NOT in phase 3
+    # These are the sets that depend only on phase 1 aliases (not phase 2 aliases)
+    phase2_sets = all_set_names - phase1_sets - phase3_sets
 
     return phase1_sets, phase2_sets, phase3_sets
 
