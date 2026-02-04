@@ -95,121 +95,173 @@ def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
         return set_decl
 
 
-def _compute_post_alias_sets(
+def _compute_set_alias_phases(
     model_ir: ModelIR,
-) -> tuple[set[str], set[str]]:
-    """Compute which sets must be emitted after aliases (with transitive closure).
+) -> tuple[set[str], set[str], set[str], set[str]]:
+    """Compute emission phases for sets and aliases based on dependencies.
 
-    This function identifies sets that depend on aliases either directly or
-    transitively through other post-alias sets.
+    This function partitions sets and aliases into phases to ensure correct
+    declaration order. A set/alias must be declared before it can be referenced.
+
+    Emission order:
+    1. Phase 1 sets: Sets with no alias dependencies
+    2. Phase 1 aliases: Aliases targeting phase 1 sets
+    3. Phase 2 sets: Sets depending on phase 1 aliases (directly or transitively)
+    4. Phase 2 aliases: Aliases targeting phase 2 sets
+    5. Phase 3 sets: Sets depending on phase 2 aliases (directly or transitively)
 
     Args:
         model_ir: Model IR containing set and alias definitions
 
     Returns:
-        Tuple of (pre_alias_set_names, post_alias_set_names) as lowercase name sets.
+        Tuple of (phase1_sets, phase2_sets, phase3_sets, phase2_alias_names) as
+        lowercase name sets. phase2_alias_names contains alias names (not targets)
+        that target phase 2 sets.
     """
     if not model_ir.sets:
-        return set(), set()
+        return set(), set(), set(), set()
 
-    # Get alias names (lowercase for case-insensitive comparison)
+    # Get all alias names and build alias target map (lowercase for case-insensitive comparison)
     alias_names_lower = (
         {name.lower() for name in model_ir.aliases.keys()} if model_ir.aliases else set()
     )
+    # Map: alias_name (lower) -> target_set_name (lower)
+    alias_targets: dict[str, str] = {}
+    if model_ir.aliases:
+        for alias_name, alias_def in model_ir.aliases.items():
+            alias_targets[alias_name.lower()] = alias_def.target.lower()
 
     # Build a map of set name (lowercase) -> domain indices (lowercase)
     set_domains: dict[str, set[str]] = {}
     for set_name, set_def in model_ir.sets.items():
         set_domains[set_name.lower()] = {idx.lower() for idx in set_def.domain}
 
-    # Initialize post-alias sets with those directly depending on aliases
-    post_alias_names: set[str] = set()
-    for set_name_lower, domain_indices in set_domains.items():
-        if domain_indices & alias_names_lower:  # Any intersection means dependency
-            post_alias_names.add(set_name_lower)
+    all_set_names = set(set_domains.keys())
 
-    # Compute transitive closure: if a set depends on a post-alias set, it's also post-alias
+    # First, identify sets that directly depend on aliases
+    sets_with_alias_deps: set[str] = set()
+    for set_name_lower, domain_indices in set_domains.items():
+        if domain_indices & alias_names_lower:
+            sets_with_alias_deps.add(set_name_lower)
+
+    # Compute transitive closure: sets depending on alias-dependent sets are also alias-dependent
     changed = True
     while changed:
         changed = False
         for set_name_lower, domain_indices in set_domains.items():
-            if set_name_lower not in post_alias_names:
-                # Check if any domain index is a post-alias set
-                if domain_indices & post_alias_names:
-                    post_alias_names.add(set_name_lower)
+            if set_name_lower not in sets_with_alias_deps:
+                # Check if depends on any alias-dependent set
+                if domain_indices & sets_with_alias_deps:
+                    sets_with_alias_deps.add(set_name_lower)
                     changed = True
 
-    # Pre-alias sets are all sets not in post-alias
-    all_set_names = set(set_domains.keys())
-    pre_alias_names = all_set_names - post_alias_names
+    # Phase 1: Sets with no alias dependencies (directly or transitively)
+    phase1_sets = all_set_names - sets_with_alias_deps
 
-    return pre_alias_names, post_alias_names
+    # Phase 1 aliases: Aliases targeting phase 1 sets
+    phase1_alias_names: set[str] = set()
+    for alias_name_lower, target_lower in alias_targets.items():
+        if target_lower in phase1_sets:
+            phase1_alias_names.add(alias_name_lower)
+
+    # Phase 2 sets: Sets depending on phase 1 aliases (directly or transitively through other phase 2 sets)
+    phase2_sets: set[str] = set()
+    for set_name_lower, domain_indices in set_domains.items():
+        if set_name_lower in phase1_sets:
+            continue
+        # Check if depends on any phase 1 alias
+        if domain_indices & phase1_alias_names:
+            phase2_sets.add(set_name_lower)
+
+    # Compute transitive closure for phase 2
+    changed = True
+    while changed:
+        changed = False
+        for set_name_lower, domain_indices in set_domains.items():
+            if set_name_lower in phase1_sets or set_name_lower in phase2_sets:
+                continue
+            # Check if depends on any phase 2 set
+            if domain_indices & phase2_sets:
+                phase2_sets.add(set_name_lower)
+                changed = True
+
+    # Phase 2 aliases: Aliases targeting phase 2 sets
+    phase2_alias_names: set[str] = set()
+    for alias_name_lower, target_lower in alias_targets.items():
+        if target_lower in phase2_sets:
+            phase2_alias_names.add(alias_name_lower)
+
+    # Phase 3 sets: Everything else (depends on phase 2 aliases)
+    phase3_sets = all_set_names - phase1_sets - phase2_sets
+
+    return phase1_sets, phase2_sets, phase3_sets, phase2_alias_names
 
 
-def emit_original_sets(model_ir: ModelIR) -> tuple[str, str]:
+def emit_original_sets(model_ir: ModelIR) -> tuple[str, str, str]:
     """Emit Sets blocks from original model, split by alias dependencies.
 
     Uses SetDef.members and SetDef.domain (Finding #3: actual IR fields).
     Sprint 17 Day 5: Now preserves subset relationships by emitting domain.
-    Sprint 17 Day 10: Splits sets into pre-alias and post-alias groups to handle
-    sets that reference aliased indices (GitHub Issue #621).
+    Sprint 17 Day 10: Splits sets into three phases to handle complex alias
+    dependencies (GitHub Issue #621).
 
-    The partitioning handles transitive dependencies: if set A depends on alias J,
-    and set B depends on set A, then B is also placed in the post-alias group.
+    Emission order ensures all dependencies are declared before use:
+    1. Phase 1 sets: Sets with no alias dependencies
+    2. Phase 1 aliases (emitted by emit_original_aliases)
+    3. Phase 2 sets: Sets depending on phase 1 aliases
+    4. Phase 2 aliases (emitted by emit_original_aliases)
+    5. Phase 3 sets: Sets depending on phase 2 aliases
 
     Args:
         model_ir: Model IR containing set definitions
 
     Returns:
-        Tuple of (pre_alias_sets, post_alias_sets) as GAMS code strings.
-        Pre-alias sets don't depend on any aliases (directly or transitively).
-        Post-alias sets depend on at least one alias and must be emitted after aliases.
+        Tuple of (phase1_sets, phase2_sets, phase3_sets) as GAMS code strings.
 
-    Example output for pre_alias_sets:
+    Example output for phase1_sets:
         Sets
             i /i1, i2, i3/
         ;
 
-    Example output for post_alias_sets:
+    Example output for phase2_sets:
         Sets
             ij(i,j)
         ;
     """
     if not model_ir.sets:
-        return "", ""
+        return "", "", ""
 
-    # Compute which sets go in each group (with transitive closure)
-    _, post_alias_names = _compute_post_alias_sets(model_ir)
+    # Compute which sets go in each phase
+    phase1_names, phase2_names, phase3_names, _ = _compute_set_alias_phases(model_ir)
 
     # Partition sets into lists preserving original order
-    pre_alias_sets: list[tuple[str, SetDef]] = []
-    post_alias_sets: list[tuple[str, SetDef]] = []
+    phase1_sets: list[tuple[str, SetDef]] = []
+    phase2_sets: list[tuple[str, SetDef]] = []
+    phase3_sets: list[tuple[str, SetDef]] = []
 
     for set_name, set_def in model_ir.sets.items():
-        if set_name.lower() in post_alias_names:
-            post_alias_sets.append((set_name, set_def))
+        set_name_lower = set_name.lower()
+        if set_name_lower in phase1_names:
+            phase1_sets.append((set_name, set_def))
+        elif set_name_lower in phase2_names:
+            phase2_sets.append((set_name, set_def))
         else:
-            pre_alias_sets.append((set_name, set_def))
+            phase3_sets.append((set_name, set_def))
 
-    # Build pre-alias sets block
-    pre_alias_code = ""
-    if pre_alias_sets:
+    def build_sets_block(sets_list: list[tuple[str, SetDef]]) -> str:
+        if not sets_list:
+            return ""
         lines: list[str] = ["Sets"]
-        for set_name, set_def in pre_alias_sets:
+        for set_name, set_def in sets_list:
             lines.append(f"    {_format_set_declaration(set_name, set_def)}")
         lines.append(";")
-        pre_alias_code = "\n".join(lines)
+        return "\n".join(lines)
 
-    # Build post-alias sets block
-    post_alias_code = ""
-    if post_alias_sets:
-        lines = ["Sets"]
-        for set_name, set_def in post_alias_sets:
-            lines.append(f"    {_format_set_declaration(set_name, set_def)}")
-        lines.append(";")
-        post_alias_code = "\n".join(lines)
-
-    return pre_alias_code, post_alias_code
+    return (
+        build_sets_block(phase1_sets),
+        build_sets_block(phase2_sets),
+        build_sets_block(phase3_sets),
+    )
 
 
 def emit_original_aliases(model_ir: ModelIR) -> tuple[str, str]:
@@ -217,17 +269,17 @@ def emit_original_aliases(model_ir: ModelIR) -> tuple[str, str]:
 
     Uses AliasDef.target and .universe (Finding #3: actual IR fields).
 
-    Sprint 17 Day 10: Splits aliases into two groups:
-    - Pre-set aliases: Target is a pre-alias set (can be emitted between set blocks)
-    - Post-set aliases: Target is a post-alias set (must be emitted after all sets)
+    Sprint 17 Day 10: Splits aliases into two groups matching the set phases:
+    - Phase 1 aliases: Target is a phase 1 set (emitted after phase 1 sets)
+    - Phase 2 aliases: Target is a phase 2 set (emitted after phase 2 sets)
 
     Args:
         model_ir: Model IR containing alias definitions
 
     Returns:
-        Tuple of (pre_set_aliases, post_set_aliases) as GAMS code strings.
-        Pre-set aliases target sets in the pre-alias group.
-        Post-set aliases target sets in the post-alias group.
+        Tuple of (phase1_aliases, phase2_aliases) as GAMS code strings.
+        Phase 1 aliases target sets in phase 1 (no alias dependencies).
+        Phase 2 aliases target sets in phase 2 (depend on phase 1 aliases).
 
     Example output:
         Alias(i, ip);
@@ -236,24 +288,24 @@ def emit_original_aliases(model_ir: ModelIR) -> tuple[str, str]:
     if not model_ir.aliases:
         return "", ""
 
-    # Get post-alias set names to determine which aliases need to come after all sets
-    _, post_alias_set_names = _compute_post_alias_sets(model_ir)
+    # Get phase 2 alias names (aliases targeting phase 2 sets)
+    _, phase2_set_names, _, _ = _compute_set_alias_phases(model_ir)
 
-    pre_set_aliases: list[str] = []
-    post_set_aliases: list[str] = []
+    phase1_aliases: list[str] = []
+    phase2_aliases: list[str] = []
 
     for alias_name, alias_def in model_ir.aliases.items():
         alias_line = f"Alias({alias_def.target}, {alias_name});"
-        # Check if the alias target is a post-alias set (case-insensitive)
-        if alias_def.target.lower() in post_alias_set_names:
-            post_set_aliases.append(alias_line)
+        # Check if the alias target is a phase 2 set (case-insensitive)
+        if alias_def.target.lower() in phase2_set_names:
+            phase2_aliases.append(alias_line)
         else:
-            pre_set_aliases.append(alias_line)
+            phase1_aliases.append(alias_line)
 
-    pre_code = "\n".join(pre_set_aliases) if pre_set_aliases else ""
-    post_code = "\n".join(post_set_aliases) if post_set_aliases else ""
+    phase1_code = "\n".join(phase1_aliases) if phase1_aliases else ""
+    phase2_code = "\n".join(phase2_aliases) if phase2_aliases else ""
 
-    return pre_code, post_code
+    return phase1_code, phase2_code
 
 
 def emit_original_parameters(model_ir: ModelIR) -> str:

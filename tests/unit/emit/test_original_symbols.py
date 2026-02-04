@@ -26,26 +26,35 @@ class TestEmitOriginalSets:
     """Test emission of original Sets block.
 
     Sprint 17 Day 10 (Issue #621): emit_original_sets now returns a tuple
-    (pre_alias_sets, post_alias_sets) to handle sets that depend on aliases.
+    (phase1_sets, phase2_sets, phase3_sets) to handle complex alias dependencies.
+
+    Emission phases:
+    1. Phase 1: Sets with no alias dependencies
+    2. Phase 1 aliases (handled by emit_original_aliases)
+    3. Phase 2: Sets depending on phase 1 aliases
+    4. Phase 2 aliases (handled by emit_original_aliases)
+    5. Phase 3: Sets depending on phase 2 aliases
     """
 
     def test_empty_sets(self):
         """Test emission with no sets."""
         model = ModelIR()
-        pre_alias, post_alias = emit_original_sets(model)
-        assert pre_alias == ""
-        assert post_alias == ""
+        phase1, phase2, phase3 = emit_original_sets(model)
+        assert phase1 == ""
+        assert phase2 == ""
+        assert phase3 == ""
 
     def test_single_set(self):
         """Test emission with single set."""
         model = ModelIR()
         model.sets["i"] = SetDef(name="i", members=["i1", "i2", "i3"])
 
-        pre_alias, post_alias = emit_original_sets(model)
-        assert "Sets" in pre_alias
-        assert "i /i1, i2, i3/" in pre_alias
-        assert pre_alias.endswith(";")
-        assert post_alias == ""
+        phase1, phase2, phase3 = emit_original_sets(model)
+        assert "Sets" in phase1
+        assert "i /i1, i2, i3/" in phase1
+        assert phase1.endswith(";")
+        assert phase2 == ""
+        assert phase3 == ""
 
     def test_multiple_sets(self):
         """Test emission with multiple sets."""
@@ -53,21 +62,22 @@ class TestEmitOriginalSets:
         model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
         model.sets["j"] = SetDef(name="j", members=["j1", "j2", "j3"])
 
-        pre_alias, post_alias = emit_original_sets(model)
-        assert "Sets" in pre_alias
-        assert "i /i1, i2/" in pre_alias
-        assert "j /j1, j2, j3/" in pre_alias
-        assert pre_alias.endswith(";")
-        assert post_alias == ""
+        phase1, phase2, phase3 = emit_original_sets(model)
+        assert "Sets" in phase1
+        assert "i /i1, i2/" in phase1
+        assert "j /j1, j2, j3/" in phase1
+        assert phase1.endswith(";")
+        assert phase2 == ""
+        assert phase3 == ""
 
     def test_empty_set_members(self):
         """Test emission with set that has no members."""
         model = ModelIR()
         model.sets["universe"] = SetDef(name="universe", members=[])
 
-        pre_alias, post_alias = emit_original_sets(model)
-        assert "Sets" in pre_alias
-        assert "universe" in pre_alias
+        phase1, phase2, phase3 = emit_original_sets(model)
+        assert "Sets" in phase1
+        assert "universe" in phase1
         # Empty sets just have the name, no slash notation
 
     def test_subset_with_domain(self):
@@ -80,12 +90,13 @@ class TestEmitOriginalSets:
         model.sets["genchar"] = SetDef(name="genchar", members=["a", "b", "c", "upplim", "lowlim"])
         model.sets["cg"] = SetDef(name="cg", members=["a", "b", "c"], domain=("genchar",))
 
-        pre_alias, post_alias = emit_original_sets(model)
-        assert "Sets" in pre_alias
-        assert "genchar /a, b, c, upplim, lowlim/" in pre_alias
-        assert "cg(genchar) /a, b, c/" in pre_alias
-        assert pre_alias.endswith(";")
-        assert post_alias == ""
+        phase1, phase2, phase3 = emit_original_sets(model)
+        assert "Sets" in phase1
+        assert "genchar /a, b, c, upplim, lowlim/" in phase1
+        assert "cg(genchar) /a, b, c/" in phase1
+        assert phase1.endswith(";")
+        assert phase2 == ""
+        assert phase3 == ""
 
     def test_subset_without_members(self):
         """Test emission of subset without explicit members.
@@ -97,12 +108,13 @@ class TestEmitOriginalSets:
         model.sets["parent"] = SetDef(name="parent", members=["x", "y", "z"])
         model.sets["sub"] = SetDef(name="sub", members=[], domain=("parent",))
 
-        pre_alias, post_alias = emit_original_sets(model)
-        assert "Sets" in pre_alias
-        assert "parent /x, y, z/" in pre_alias
-        assert "sub(parent)" in pre_alias
-        assert pre_alias.endswith(";")
-        assert post_alias == ""
+        phase1, phase2, phase3 = emit_original_sets(model)
+        assert "Sets" in phase1
+        assert "parent /x, y, z/" in phase1
+        assert "sub(parent)" in phase1
+        assert phase1.endswith(";")
+        assert phase2 == ""
+        assert phase3 == ""
 
     def test_multi_dimensional_subset(self):
         """Test emission of multi-dimensional subset.
@@ -114,32 +126,34 @@ class TestEmitOriginalSets:
         model.sets["n"] = SetDef(name="n", members=["n1", "n2"])
         model.sets["arc"] = SetDef(name="arc", members=["n1.n2"], domain=("n", "n"))
 
-        pre_alias, post_alias = emit_original_sets(model)
-        assert "Sets" in pre_alias
-        assert "n /n1, n2/" in pre_alias
-        assert "arc(n,n) /n1.n2/" in pre_alias
-        assert pre_alias.endswith(";")
-        assert post_alias == ""
+        phase1, phase2, phase3 = emit_original_sets(model)
+        assert "Sets" in phase1
+        assert "n /n1, n2/" in phase1
+        assert "arc(n,n) /n1.n2/" in phase1
+        assert phase1.endswith(";")
+        assert phase2 == ""
+        assert phase3 == ""
 
     def test_set_depends_on_alias(self):
         """Test emission of set that depends on an alias.
 
         Sprint 17 Day 10 (Issue #621): Sets that reference aliased indices
-        must be emitted after the Alias declarations.
+        must be emitted after the Alias declarations (phase 2).
         """
         model = ModelIR()
         model.sets["i"] = SetDef(name="i", members=["i1", "i2", "i3"])
         model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
         model.aliases["j"] = AliasDef(name="j", target="i")
 
-        pre_alias, post_alias = emit_original_sets(model)
+        phase1, phase2, phase3 = emit_original_sets(model)
 
-        # Set i should be in pre-alias (no alias dependency)
-        assert "i /i1, i2, i3/" in pre_alias
+        # Set i should be in phase 1 (no alias dependency)
+        assert "i /i1, i2, i3/" in phase1
 
-        # Set ij(i,j) should be in post-alias (depends on alias j)
-        assert "ij(i,j)" in post_alias
-        assert "ij" not in pre_alias
+        # Set ij(i,j) should be in phase 2 (depends on alias j)
+        assert "ij(i,j)" in phase2
+        assert "ij" not in phase1
+        assert phase3 == ""
 
     def test_mixed_sets_with_and_without_alias_deps(self):
         """Test emission with mix of alias-dependent and independent sets."""
@@ -149,15 +163,16 @@ class TestEmitOriginalSets:
         model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
         model.aliases["j"] = AliasDef(name="j", target="i")
 
-        pre_alias, post_alias = emit_original_sets(model)
+        phase1, phase2, phase3 = emit_original_sets(model)
 
-        # Sets without alias deps in pre-alias
-        assert "i /i1, i2/" in pre_alias
-        assert "k /k1, k2/" in pre_alias
+        # Sets without alias deps in phase 1
+        assert "i /i1, i2/" in phase1
+        assert "k /k1, k2/" in phase1
 
-        # Set with alias dep in post-alias
-        assert "ij(i,j)" in post_alias
-        assert "ij" not in pre_alias
+        # Set with alias dep in phase 2
+        assert "ij(i,j)" in phase2
+        assert "ij" not in phase1
+        assert phase3 == ""
 
     def test_case_insensitive_alias_detection(self):
         """Test that alias dependency detection is case-insensitive.
@@ -171,20 +186,20 @@ class TestEmitOriginalSets:
         model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "J"))
         model.aliases["j"] = AliasDef(name="j", target="i")
 
-        pre_alias, post_alias = emit_original_sets(model)
+        phase1, phase2, phase3 = emit_original_sets(model)
 
-        # Set i should be in pre-alias
-        assert "i /i1, i2/" in pre_alias
+        # Set i should be in phase 1
+        assert "i /i1, i2/" in phase1
 
-        # Set ij(i,J) should be in post-alias despite case difference
-        assert "ij(i,J)" in post_alias
-        assert "ij" not in pre_alias
+        # Set ij(i,J) should be in phase 2 despite case difference
+        assert "ij(i,J)" in phase2
+        assert "ij" not in phase1
 
     def test_transitive_dependency(self):
-        """Test that sets with transitive alias dependencies are post-alias.
+        """Test that sets with transitive alias dependencies are in later phases.
 
         Sprint 17 Day 10: If set A depends on alias J, and set B depends on A,
-        then B must also be in the post-alias group.
+        then B must also be in phase 2 (after phase 1 aliases).
         """
         model = ModelIR()
         model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
@@ -194,16 +209,50 @@ class TestEmitOriginalSets:
         model.sets["triple"] = SetDef(name="triple", members=[], domain=("ij", "i"))
         model.aliases["j"] = AliasDef(name="j", target="i")
 
-        pre_alias, post_alias = emit_original_sets(model)
+        phase1, phase2, phase3 = emit_original_sets(model)
 
-        # Set i should be in pre-alias (no alias dependency)
-        assert "i /i1, i2/" in pre_alias
+        # Set i should be in phase 1 (no alias dependency)
+        assert "i /i1, i2/" in phase1
 
-        # Both ij and triple should be in post-alias
-        assert "ij(i,j)" in post_alias
-        assert "triple(ij,i)" in post_alias
-        assert "ij" not in pre_alias
-        assert "triple" not in pre_alias
+        # Both ij and triple should be in phase 2
+        assert "ij(i,j)" in phase2
+        assert "triple(ij,i)" in phase2
+        assert "ij" not in phase1
+        assert "triple" not in phase1
+
+    def test_three_phase_dependency(self):
+        """Test sets that depend on phase 2 aliases go to phase 3.
+
+        Sprint 17 Day 10: If an alias targets a phase 2 set, sets depending
+        on that alias must be in phase 3.
+        """
+        model = ModelIR()
+        # Phase 1: base set
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+        # Phase 1 alias: j is alias of i
+        model.aliases["j"] = AliasDef(name="j", target="i")
+        # Phase 2: ij depends on alias j
+        model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
+        # Phase 2 alias: k is alias of ij (a phase 2 set)
+        model.aliases["k"] = AliasDef(name="k", target="ij")
+        # Phase 3: xyz depends on alias k (which targets phase 2 set)
+        model.sets["xyz"] = SetDef(name="xyz", members=[], domain=("i", "k"))
+
+        phase1, phase2, phase3 = emit_original_sets(model)
+
+        # Set i should be in phase 1
+        assert "i /i1, i2/" in phase1
+        assert "i /i1, i2/" not in phase2
+        assert "i /i1, i2/" not in phase3
+
+        # Set ij should be in phase 2
+        assert "ij(i,j)" in phase2
+        assert "ij" not in phase1
+
+        # Set xyz should be in phase 3 (depends on phase 2 alias k)
+        assert "xyz(i,k)" in phase3
+        assert "xyz" not in phase1
+        assert "xyz" not in phase2
 
 
 @pytest.mark.unit
@@ -211,16 +260,16 @@ class TestEmitOriginalAliases:
     """Test emission of original Alias declarations.
 
     Sprint 17 Day 10: emit_original_aliases now returns a tuple
-    (pre_set_aliases, post_set_aliases) to handle aliases that target
-    post-alias sets.
+    (phase1_aliases, phase2_aliases) to handle aliases that target
+    phase 2 sets (sets depending on phase 1 aliases).
     """
 
     def test_empty_aliases(self):
         """Test emission with no aliases."""
         model = ModelIR()
-        pre_set, post_set = emit_original_aliases(model)
-        assert pre_set == ""
-        assert post_set == ""
+        phase1, phase2 = emit_original_aliases(model)
+        assert phase1 == ""
+        assert phase2 == ""
 
     def test_single_alias(self):
         """Test emission with single alias targeting a regular set."""
@@ -228,9 +277,9 @@ class TestEmitOriginalAliases:
         model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
         model.aliases["ip"] = AliasDef(name="ip", target="i")
 
-        pre_set, post_set = emit_original_aliases(model)
-        assert "Alias(i, ip);" in pre_set
-        assert post_set == ""
+        phase1, phase2 = emit_original_aliases(model)
+        assert "Alias(i, ip);" in phase1
+        assert phase2 == ""
 
     def test_multiple_aliases(self):
         """Test emission with multiple aliases."""
@@ -240,10 +289,10 @@ class TestEmitOriginalAliases:
         model.aliases["ip"] = AliasDef(name="ip", target="i")
         model.aliases["jp"] = AliasDef(name="jp", target="j")
 
-        pre_set, post_set = emit_original_aliases(model)
-        assert "Alias(i, ip);" in pre_set
-        assert "Alias(j, jp);" in pre_set
-        assert post_set == ""
+        phase1, phase2 = emit_original_aliases(model)
+        assert "Alias(i, ip);" in phase1
+        assert "Alias(j, jp);" in phase1
+        assert phase2 == ""
 
     def test_alias_with_universe(self):
         """Test emission with alias that has universe constraint."""
@@ -251,34 +300,34 @@ class TestEmitOriginalAliases:
         model.sets["i"] = SetDef(name="i", members=["i1"])
         model.aliases["subset"] = AliasDef(name="subset", target="i", universe="all")
 
-        pre_set, post_set = emit_original_aliases(model)
+        phase1, phase2 = emit_original_aliases(model)
         # Universe is stored but doesn't affect GAMS Alias syntax
-        assert "Alias(i, subset);" in pre_set
+        assert "Alias(i, subset);" in phase1
 
-    def test_alias_targeting_post_alias_set(self):
-        """Test emission of alias that targets a post-alias set.
+    def test_alias_targeting_phase2_set(self):
+        """Test emission of alias that targets a phase 2 set.
 
-        Sprint 17 Day 10: If an alias targets a set that is in the post-alias
-        group (because that set depends on another alias), the alias must be
-        emitted after all sets, not between the set blocks.
+        Sprint 17 Day 10: If an alias targets a set that is in phase 2
+        (because that set depends on another alias), the alias must be
+        emitted after phase 2 sets.
         """
         model = ModelIR()
         model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
-        # ij depends on alias j, so it's a post-alias set
+        # ij depends on alias j, so it's a phase 2 set
         model.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
         # j is an alias of i
         model.aliases["j"] = AliasDef(name="j", target="i")
-        # ijp targets ij (a post-alias set), so it must be a post-set alias
+        # ijp targets ij (a phase 2 set), so it must be a phase 2 alias
         model.aliases["ijp"] = AliasDef(name="ijp", target="ij")
 
-        pre_set, post_set = emit_original_aliases(model)
+        phase1, phase2 = emit_original_aliases(model)
 
-        # Alias j targets pre-alias set i, so it's a pre-set alias
-        assert "Alias(i, j);" in pre_set
+        # Alias j targets phase 1 set i, so it's a phase 1 alias
+        assert "Alias(i, j);" in phase1
 
-        # Alias ijp targets post-alias set ij, so it's a post-set alias
-        assert "Alias(ij, ijp);" in post_set
-        assert "ijp" not in pre_set
+        # Alias ijp targets phase 2 set ij, so it's a phase 2 alias
+        assert "Alias(ij, ijp);" in phase2
+        assert "ijp" not in phase1
 
 
 @pytest.mark.unit
