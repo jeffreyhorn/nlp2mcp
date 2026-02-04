@@ -141,3 +141,72 @@ def test_tuple_expansion_no_descriptions():
     model = parse_model_text(source)
     assert "pairs" in model.sets
     assert model.sets["pairs"].members == ["nw.w", "nw.cc", "e.cc"]
+
+
+# Issue #612: Tests for tuple prefix expansion (a,b).c syntax
+def test_tuple_prefix_expansion_simple():
+    """Test prefix tuple expansion: (jan,feb).wet"""
+    source = """
+    Set tw / (jan,feb).wet, (mar,apr).dry /;
+    """
+    model = parse_model_text(source)
+    assert "tw" in model.sets
+    assert model.sets["tw"].members == ["jan.wet", "feb.wet", "mar.dry", "apr.dry"]
+
+
+def test_tuple_prefix_expansion_multiline():
+    """Test tuple prefix expansion across multiple lines (Issue #612).
+
+    GAMS allows omitting commas between set members when they're on separate lines.
+    This test verifies that the parser handles this correctly for prefix tuple expansion.
+    """
+    source = """
+    Set tw / (jan,feb).wet
+             (mar,apr).dry /;
+    """
+    model = parse_model_text(source)
+    assert "tw" in model.sets
+    assert "jan.wet" in model.sets["tw"].members
+    assert "feb.wet" in model.sets["tw"].members
+    assert "mar.dry" in model.sets["tw"].members
+    assert "apr.dry" in model.sets["tw"].members
+
+
+def test_tuple_prefix_expansion_clearlak_pattern():
+    """Test exact pattern from clearlak.gms lines 42-43.
+
+    tw(t,w)  'relates months to weather conditions' /(jan,feb).wet
+                                                    (mar,apr).dry  /
+    """
+    source = """
+    Set t / jan, feb, mar, apr /;
+    Set w / wet, dry /;
+    Set tw(t,w) 'relates months to weather conditions' / (jan,feb).wet
+                                                         (mar,apr).dry /;
+    """
+    model = parse_model_text(source)
+    assert "tw" in model.sets
+    expected_members = ["jan.wet", "feb.wet", "mar.dry", "apr.dry"]
+    assert model.sets["tw"].members == expected_members
+
+
+def test_mixed_prefix_and_suffix_expansion():
+    """Test mixing prefix (a,b).c and suffix a.(b,c) expansion in same set."""
+    source = """
+    Set pairs / (a,b).x, y.(c,d) /;
+    """
+    model = parse_model_text(source)
+    assert "pairs" in model.sets
+    # (a,b).x expands to a.x, b.x
+    # y.(c,d) expands to y.c, y.d
+    assert model.sets["pairs"].members == ["a.x", "b.x", "y.c", "y.d"]
+
+
+def test_tuple_prefix_expansion_single_element():
+    """Test prefix expansion with single element: (a).b"""
+    source = """
+    Set pairs / (a).b /;
+    """
+    model = parse_model_text(source)
+    assert "pairs" in model.sets
+    assert model.sets["pairs"].members == ["a.b"]

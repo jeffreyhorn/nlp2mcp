@@ -35,7 +35,11 @@ from .ast import (
     VarRef,
 )
 from .model_ir import ModelIR, ObjectiveIR
-from .preprocessor import normalize_double_commas, preprocess_gams_file
+from .preprocessor import (
+    normalize_double_commas,
+    normalize_multi_line_continuations,
+    preprocess_gams_file,
+)
 from .symbols import (
     AliasDef,
     ConditionalStatement,
@@ -238,6 +242,17 @@ def parse_text(source: str) -> Tree:
     Raises:
         ParseError: If syntax errors are found (wraps Lark exceptions)
     """
+    # Issue #612: Normalize multi-line continuations to add missing commas.
+    # This handles GAMS syntax where set/parameter members on separate lines
+    # don't require explicit commas, e.g.:
+    #   Set tw / (jan,feb).wet
+    #            (mar,apr).dry /;
+    # NOTE: The same normalization is also performed in `preprocess_gams_file()`.
+    # It is intentionally duplicated here so that callers which invoke `parse_text`
+    # directly on raw GAMS source (bypassing preprocessing) still get correct
+    # handling of multi-line data blocks.
+    source = normalize_multi_line_continuations(source)
+
     # Issue #565: Normalize double commas to single commas before parsing.
     # This handles GAMS visual alignment syntax like: Set l / a,, b /;.
     # NOTE: The same normalization is also performed in `preprocess_gams_file()`.
