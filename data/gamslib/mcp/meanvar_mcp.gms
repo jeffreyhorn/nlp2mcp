@@ -102,7 +102,7 @@ Equations
 * Stationarity equations
 stat_m.. ((-1) * (1 / sqrt(v) ** 1)) + ((-1) * sum((i,j), 0)) * nu_vbal + (1 - sum(i, 0)) * nu_mbal + sum(i, 0) * nu_budget + sum(i, 0) * nu_riskless + (sum(i, x(i) * sf * sum(h, 0)) - 1) * nu_meanbal + 1 * nu_m_fx - piL_m =E= 0;
 stat_v.. ((-1) * (((-1) * (m * 1 / (2 * sqrt(v)))) / sqrt(v) ** 2)) + (1 - sum((i,j), 0)) * nu_vbal + ((-1) * sum(i, 0)) * nu_mbal + sum(i, 0) * nu_budget + sum(i, 0) * nu_riskless + sum(i, x(i) * sf * sum(h, 0)) * nu_meanbal + 0 * nu_m_fx - piL_v =E= 0;
-stat_x(i).. 0 + ((-1) * sum(j, x(j) * q(i,j))) * nu_vbal + ((-1) * mu(s)) * nu_mbal + 1 * nu_budget + (mu(s) - r) * nu_riskless + (sf * sum(h, mu(h)) + (1 - sf) * mu(s) + x(i) * sf * sum(h, 0)) * nu_meanbal + 0 * nu_m_fx + piU_x(i) =E= 0;
+stat_x(i).. 0 + ((-1) * sum(j, x(j) * q(i,j))) * nu_vbal + ((-1) * mu(i)) * nu_mbal + 1 * nu_budget + (mu(i) - r) * nu_riskless + (sf * sum(h, mu(h)) + (1 - sf) * mu(i) + x(i) * sf * sum(h, 0)) * nu_meanbal + 0 * nu_m_fx + piU_x(i) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_m.. m - 0 =G= 0;

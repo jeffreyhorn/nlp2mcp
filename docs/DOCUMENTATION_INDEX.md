@@ -2,8 +2,10 @@
 
 **Complete guide to all documentation resources**
 
-Version: 1.1.0  
+Version: 1.1.0 (planned release)  
 Last Updated: 2026-02-03
+
+*Note: This documentation is prepared for the v1.1.0 release. The package version in pyproject.toml (0.7.0) will be updated as part of the release process.*
 
 ---
 

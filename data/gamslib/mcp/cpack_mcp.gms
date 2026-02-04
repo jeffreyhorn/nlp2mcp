@@ -17,10 +17,13 @@ $offText
 
 Sets
     i /i1, i2, i3, i4, i5/
-    ij(i,j)
 ;
 
 Alias(i, j);
+
+Sets
+    ij(i,j)
+;
 
 * ============================================
 * Variables (Primal + Multipliers)
