@@ -166,10 +166,8 @@ def test_tuple_prefix_expansion_multiline():
     """
     model = parse_model_text(source)
     assert "tw" in model.sets
-    assert "jan.wet" in model.sets["tw"].members
-    assert "feb.wet" in model.sets["tw"].members
-    assert "mar.dry" in model.sets["tw"].members
-    assert "apr.dry" in model.sets["tw"].members
+    expected_members = ["jan.wet", "feb.wet", "mar.dry", "apr.dry"]
+    assert model.sets["tw"].members == expected_members
 
 
 def test_tuple_prefix_expansion_clearlak_pattern():
