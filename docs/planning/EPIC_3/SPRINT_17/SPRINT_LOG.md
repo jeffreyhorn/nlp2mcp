@@ -308,7 +308,7 @@ Target models from improvement plan have other unrelated parsing issues (tuple e
 | CP1 | 1 | +5 models translating | KKT fixes started | ✅ Complete |
 | CP2 | 3 | 32/48 translate (66.7%) | 42/61 (68.8%) | ✅ Exceeded |
 | CP3 | 5 | 15/21 solve (71.4%) | 11/42 (26.2%) | Partial (see notes) |
-| CP4 | 7 | 74/160 parse (46.3%) | 61/160 (38.1%) | ✅ Complete |
+| CP4 | 7 | 74/160 parse (46.3%) | 61/160 (38.1%) | Partial (below target) |
 | CP5 | 9 | All gates pass | 3182 tests pass | ✅ Complete |
 
 **CP3 Note:** Solve count stayed at 11 but translate count grew from 21→42. The KKT fixes enabled more models to translate, but these new models have remaining emit_gams.py issues (path_syntax_error). The original 21 translated models improved: trnsport now solves.
