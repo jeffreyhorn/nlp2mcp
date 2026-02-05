@@ -5,12 +5,14 @@ Tests that nlp2mcp can handle realistic large-scale problems.
 """
 
 import subprocess
+import sys
 import time
 from pathlib import Path
 
 import pytest
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "large_models"
+NLP2MCP_CMD = [sys.executable, "-m", "src.cli"]
 
 
 class TestLargeModelHandling:
@@ -23,7 +25,7 @@ class TestLargeModelHandling:
         output = tmp_path / "test_250_mcp.gms"
 
         result = subprocess.run(
-            ["nlp2mcp", str(model), "-o", str(output)],
+            [*NLP2MCP_CMD, str(model), "-o", str(output)],
             capture_output=True,
             text=True,
             timeout=60,
@@ -41,7 +43,7 @@ class TestLargeModelHandling:
 
         start = time.time()
         result = subprocess.run(
-            ["nlp2mcp", str(model), "-o", str(output)],
+            [*NLP2MCP_CMD, str(model), "-o", str(output)],
             capture_output=True,
             text=True,
             timeout=90,
@@ -62,7 +64,7 @@ class TestLargeModelHandling:
 
         start = time.time()
         result = subprocess.run(
-            ["nlp2mcp", str(model), "-o", str(output)],
+            [*NLP2MCP_CMD, str(model), "-o", str(output)],
             capture_output=True,
             text=True,
             timeout=120,
@@ -82,7 +84,7 @@ class TestLargeModelHandling:
         output = tmp_path / "test_1k_quality_mcp.gms"
 
         result = subprocess.run(
-            ["nlp2mcp", str(model), "-o", str(output)],
+            [*NLP2MCP_CMD, str(model), "-o", str(output)],
             capture_output=True,
             text=True,
             timeout=120,
