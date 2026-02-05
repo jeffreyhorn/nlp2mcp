@@ -146,12 +146,12 @@ A comprehensive Known Unknowns document that:
 
 ### Acceptance Criteria
 
-- [ ] Document created with 20+ unknowns across 4 categories
-- [ ] All unknowns have assumption, verification method, and priority
-- [ ] All Critical/High unknowns have verification plan with deadline
-- [ ] Unknowns cover all 3 Sprint 18 components plus infrastructure
-- [ ] Template for updates during sprint defined
-- [ ] Research time for verification estimated
+- [x] Document created with 20+ unknowns across 4 categories
+- [x] All unknowns have assumption, verification method, and priority
+- [x] All Critical/High unknowns have verification plan with deadline
+- [x] Unknowns cover all 3 Sprint 18 components plus infrastructure
+- [x] Template for updates during sprint defined
+- [x] Research time for verification estimated
 
 ---
 

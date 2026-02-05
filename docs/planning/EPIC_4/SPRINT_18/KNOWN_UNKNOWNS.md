@@ -54,10 +54,10 @@ This document identifies all assumptions and unknowns for Sprint 18 features **b
 
 **Total Unknowns:** 24
 **By Priority:**
-- Critical: 5 (unknowns that could derail sprint)
-- High: 10 (unknowns requiring upfront research)
-- Medium: 6 (unknowns that can be resolved during implementation)
-- Low: 3 (nice-to-know, low impact)
+- Critical: 4 (unknowns that could derail sprint)
+- High: 9 (unknowns requiring upfront research)
+- Medium: 7 (unknowns that can be resolved during implementation)
+- Low: 4 (nice-to-know, low impact)
 
 **By Category:**
 - Category 1 (GAMSLIB Syntactic Validation): 8 unknowns
