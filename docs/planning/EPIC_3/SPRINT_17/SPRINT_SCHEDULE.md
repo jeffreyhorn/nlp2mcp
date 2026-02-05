@@ -4,7 +4,7 @@
 **Goal:** Translation/Solve Improvements, Final Assessment & Release v1.1.0  
 **Duration:** 10 days  
 **Created:** January 30, 2026  
-**Status:** Ready to Begin
+**Status:** Complete (v1.1.0 Released)
 
 ---
 
@@ -49,7 +49,7 @@
 ### Day 1: Translation Quick Wins (Part 1)
 **Focus:** AD module enhancements
 
-- [ ] Objective extraction enhancement (4h)
+- [x] Objective extraction enhancement (4h)
   - Modify `src/ad/gradient.py` `find_objective_expression()`
   - Search any equation containing objective variable
   - **Expected:** +5 models translating
@@ -65,7 +65,7 @@
 ### Day 2: Translation Quick Wins (Part 2)
 **Focus:** Derivative rules and sanitization
 
-- [ ] gamma/loggamma derivative rules (4h)
+- [x] gamma/loggamma derivative rules (4h)
   - Add `_diff_gamma()` to `src/ad/derivative_rules.py`
   - Implement digamma using scipy or polynomial approximation
   - **Expected:** +3 models translating
@@ -79,10 +79,10 @@
 ### Day 3: Translation Quick Wins (Part 3)
 **Focus:** Complete translation quick wins
 
-- [ ] smin smooth approximation (2h)
+- [x] smin smooth approximation (2h)
   - LogSumExp: smin(a,b) ≈ -log(exp(-a/τ) + exp(-b/τ))·τ
   - **Expected:** +1 model translating
-- [ ] Set element sanitization (2h)
+- [x] Set element sanitization (2h)
   - Allow or sanitize '+' in set element names
   - **Expected:** +2 models translating
 
@@ -99,7 +99,7 @@
 ### Day 4: Solve Improvements (Part 1)
 **Focus:** emit_gams.py critical fixes
 
-- [ ] Emit computed parameter assignments (4h)
+- [x] Emit computed parameter assignments (4h)
   - Fix `src/emit/original_symbols.py:130-185`
   - **Expected:** +2 models solving (chem, trnsport)
 
@@ -112,10 +112,10 @@
 ### Day 5: Solve Improvements (Part 2)
 **Focus:** Continue emit_gams.py fixes
 
-- [ ] Preserve subset relationships (4h)
+- [x] Preserve subset relationships (4h)
   - Fix `src/emit/original_symbols.py:63-89`
   - **Expected:** +2 models solving (dispatch, port)
-- [ ] Investigation of non-syntax failures (1h)
+- [x] Investigation of non-syntax failures (1h)
   - model_infeasible case
   - path_solve_terminated case
 
@@ -235,9 +235,9 @@ are working correctly as verified by unit tests.
   - Metrics capture: 61/160 parse, 42/61 translate, 12/42 solve
 - [x] Version bump in pyproject.toml (0.5h) - `0.7.0` → `1.1.0`
 - [x] Create release commit (0.5h)
-- [ ] Create git tag v1.1.0 (0.5h) - post-merge
-- [ ] Create GitHub release (0.5h) - post-merge
-- [ ] Post-release verification (1h) - post-merge
+- [x] Create git tag v1.1.0 (0.5h) - post-merge
+- [x] Create GitHub release (0.5h) - post-merge
+- [x] Post-release verification (1h) - post-merge
 
 **Deliverables:**
 - v1.1.0 release commit created ✅
@@ -333,25 +333,7 @@ The following items are explicitly deferred to Sprint 18 or beyond:
 
 ## Daily Log Template
 
-### Day X: [Date]
-
-**Planned:**
-- [ ] Task 1
-- [ ] Task 2
-
-**Completed:**
-- [x] Task 1 (actual time vs estimate)
-
-**Blockers:**
-- None / Description
-
-**Metrics:**
-- Parse: X/160 (X%)
-- Translate: X/Y (X%)
-- Solve: X/Y (X%)
-
-**Notes:**
-- Observations and learnings
+_Sprint complete. See [SPRINT_LOG.md](./SPRINT_LOG.md) for daily entries._
 
 ---
 
