@@ -396,7 +396,8 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 | Full Pipeline | 1/160 (0.6%) | 5/160 (3.1%) | +4 models (+400%) |
 | Tests | 2662 | 3043 | +381 |
 
-**Solving Models (11):** apl1p, blend, himmel11, hs62, mathopt1, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig
+**Solve-Stage Success Models (11):** apl1p, blend, himmel11, hs62, mathopt1, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig
+**Full Pipeline Models (5, solve + comparison match):** himmel11, hs62, mathopt1, mathopt2, rbrock
 
 ---
 
@@ -408,7 +409,7 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 **Key Achievements:**
 - ✅ Translation breakthrough: 43.8% → 68.9% (+21 models, +25 percentage points)
 - ✅ Parse improvements: 30.0% → 38.1% (+13 models)
-- ✅ Solve: 11 → 12 models (trnsport, trussm added)
+- ✅ Solve-stage success: 11 → 12 models (trnsport, trussm added)
 - ✅ v1.1.0 released (tag + GitHub release)
 - ✅ 18 PRs merged, 3204 tests passing
 - ✅ Comprehensive documentation (release notes, CHANGELOG, retrospective)
@@ -483,11 +484,13 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 | Parse Success | 48/160 (30.0%) | 61/160 (38.1%) | +13 models |
 | Translate Success | 21/48 (43.8%) | 42/61 (68.9%) | +21 models |
 | Solve Success | 11/21 (52.4%) | 12/42 (28.6%) | +1 model (denominator grew) |
-| Full Pipeline | 11/160 (6.9%) | 12/160 (7.5%) | +1 model |
+| Full Pipeline | 5/160 (3.1%) | 12/160 (7.5%) | +7 models |
 | Tests | 3043 | 3204 | +161 |
 | PRs Merged | — | 18 | — |
 
-**Solving Models (12):** apl1p, blend, himmel11, hs62, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig, trnsport, trussm
+**Solve-Stage Success Models (12):** apl1p, blend, himmel11, hs62, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig, trnsport, trussm
+
+**Note:** Sprint 17 did not re-run the solution comparison stage. The 12/160 (7.5%) Full Pipeline figure represents solve-stage success (`model_optimal` outcome from PATH). Sprint 16's Full Pipeline of 5/160 included the comparison match stage; the remaining 6 Sprint 16 solving models (apl1p, blend, mhw4d, mhw4dx, prodmix, trig) solved but failed or were not tested at comparison.
 
 **Remaining Blockers (for Sprint 18):**
 
@@ -525,10 +528,12 @@ Epic 3 establishes a robust testing infrastructure using the GAMS Model Library 
 | Parse success | 0 | 34 | 34 | 48 | 61 | 61/160 (38.1%) |
 | Translate success | 0 | 32* | 17 | 21 | 42 | 42/61 (68.9%) |
 | Solve success | 0 | 0 | 3 | 11 | 12 | 12/42 (28.6%) |
-| Full pipeline | 0 | 0 | 1 | 11 | 12 | 12/160 (7.5%) |
+| Full pipeline | 0 | 0 | 1 | 5 | 12** | 12/160 (7.5%) |
 | Tests | 2477 | 2662 | 2858 | 3043 | 3204 | 3204 |
 
 **\*Note on translate success change:** Sprint 14 reported 32 successful translations (94.1%) using basic error detection. Sprint 15 introduced a refined 47-category error taxonomy with stricter validation, which reclassified 15 models from "success" to specific error categories (model_no_objective_def, diff_unsupported_func, unsup_index_offset, etc.). The Sprint 15 count of 17 represents models that pass all validation checks and produce valid MCP files suitable for solving.
+
+**\*\*Note on full pipeline metric:** Sprint 16's full pipeline count of 5 reflects models that passed all stages including solution comparison (match). Sprint 17 did not re-run the comparison stage; its count of 12 represents solve-stage success (`model_optimal`). The solve success row (11 for Sprint 16, 12 for Sprint 17) tracks all models where PATH found a solution, regardless of comparison outcome.
 
 ### Pipeline Progression Chart
 
@@ -643,7 +648,7 @@ Pipeline:  ████████ 12/160 (7.5%)
 - **Epic 3 culmination release**
 - Translation breakthrough: 43.8% → 68.9% (+21 models)
 - Parse improvements: 30.0% → 38.1% (+13 models)
-- Solve: 11 → 12 models (trnsport, trussm added)
+- Solve-stage success: 11 → 12 models (trnsport, trussm added)
 - KKT/stationarity root cause fixes (4 PRs)
 - Grammar extensions: square brackets, solve variants, acronym, curly braces, prod
 - Preprocessor fixes: comment handling, tuple expansion, idempotent normalization
