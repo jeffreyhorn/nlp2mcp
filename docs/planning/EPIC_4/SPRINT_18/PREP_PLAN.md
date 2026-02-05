@@ -35,7 +35,7 @@ This prep plan focuses on research, analysis, and setup tasks that must be compl
 | 9 | Verify Sprint 18 Baseline Metrics | High | 1-2 hours | None | All — ensure v1.1.0 baseline is accurate |
 | 10 | Plan Sprint 18 Detailed Schedule | Critical | 3-4 hours | All tasks | Sprint 18 planning |
 
-**Total Estimated Time:** 23-32 hours (~3-4 working days)
+**Total Estimated Time:** 22-32 hours (~3-4 working days)
 
 **Critical Path:** Tasks 1 → 4/5 → 10 (Known Unknowns must come first; emit_gams.py analysis informs schedule)
 
@@ -1093,16 +1093,16 @@ Tentative schedule (adjust based on prep findings):
 
 | Day | Focus | Deliverables | Hours |
 |-----|-------|-------------|-------|
-| 1 | test_syntax.py implementation | Script running on all 160 models | 4-5h |
-| 2 | SYNTAX_ERROR_REPORT.md + corpus reclassification | Report generated, schema updated | 4-5h |
-| 3 | Infeasible/unbounded docs + checkpoint | Exclusions documented, metrics recalculated | 2-3h |
-| 4 | emit_gams.py: table data emission | Fix implemented with tests | 4-5h |
-| 5 | emit_gams.py: computed parameter assignments | Fix implemented with tests | 4-5h |
-| 6 | Pipeline retest + checkpoint | Updated metrics, progress report | 2-3h |
+| 1 | test_syntax.py implementation | Script running on all 160 models | 3h |
+| 2 | SYNTAX_ERROR_REPORT.md + corpus reclassification | Report generated, schema updated | 3h |
+| 3 | Infeasible/unbounded docs + checkpoint | Exclusions documented, metrics recalculated | 2h |
+| 4 | emit_gams.py: table data emission | Fix implemented with tests | 3h |
+| 5 | emit_gams.py: computed parameter assignments | Fix implemented with tests | 3h |
+| 6 | Pipeline retest + checkpoint | Updated metrics, progress report | 2h |
 | 7 | Parse quick win: put statement format | Grammar extended, 4 models unblocked | 2h |
 | 8 | Integration testing + buffer | Full regression, fix any issues | 2-3h |
 | 9 | Documentation + checkpoint | Sprint 18 retrospective draft | 2h |
-| 10 | Release prep + final metrics | Sprint 18 complete | 1-2h |
+| 10 | Release prep + final metrics | Sprint 18 complete | 2h |
 
 #### Step 3: Define Checkpoints (30 min)
 
@@ -1177,7 +1177,7 @@ A complete Sprint 18 plan that:
 
 ## Summary
 
-### Total Estimated Time: 23-32 hours (~3-4 working days)
+### Total Estimated Time: 22-32 hours (~3-4 working days)
 
 ### Critical Path
 
