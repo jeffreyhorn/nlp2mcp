@@ -199,11 +199,9 @@ Beyond IndexOffset, there are additional translation failures including `interna
   - Fix or document each failure
 
 - **5.2 Derivative Rule Expansion**
-  - Implement missing derivative rules identified during Sprint 17:
-    - `gamma`/`loggamma` function derivatives
-    - `smin` smooth approximation
-    - Additional trigonometric/hyperbolic derivatives as needed
-  - Planned but unexecuted Sprint 17 quick wins
+  - Implement any missing derivative rules discovered as new models reach translation
+  - Additional trigonometric/hyperbolic derivatives as needed
+  - Note: `gamma`/`loggamma` and `smin`/`smax` derivatives were implemented in Epic 3
 
 - **5.3 Objective Extraction Enhancement**
   - Improve handling of models without explicit `minimize`/`maximize` statements
@@ -394,7 +392,7 @@ The final sprint consolidates all improvements, ensures quality, stabilizes perf
 ### Sprint 21 (Weeks 7-8): IndexOffset & Translation Improvements
 - Complete IndexOffset implementation (IR, derivatives, emit)
 - Address translation internal errors
-- Implement missing derivative rules (gamma, smin, etc.)
+- Implement any newly-discovered missing derivative rules
 - Objective extraction enhancement
 
 **Deliverables:**
@@ -614,16 +612,16 @@ The following items were identified in Sprint 16/17 retrospectives and Epic 3 su
 | Complex set data syntax (largest parse subcategory) | P1 | Goal 2.2 | 14+ |
 | Numeric context in parameter data | P2 | Goal 2.4 | ~5 |
 | Translation blockers: model_domain_mismatch | P3 | Goal 5 | 6 |
-| Translation blockers: diff_unsupported_func | P3 | Goal 5.2 | 6 |
+| Translation blockers: diff_unsupported_func | P3 | Goal 5 | 6 (some resolved by gamma/smin implementation) |
 | Translation blockers: model_no_objective_def | P3 | Goal 5.3 | 5 |
 
 ### Planned but Unexecuted Sprint 17 Work
 
 | Item | Priority | Goal Reference | Notes |
 |------|----------|----------------|-------|
-| gamma/loggamma derivative rules | P2 | Goal 5.2 | Superseded by KKT root cause fixes |
-| smin smooth approximation | P2 | Goal 5.2 | Superseded by KKT root cause fixes |
 | Objective extraction enhancement | P3 | Goal 5.3 | Deferred in favor of deeper KKT work |
+
+**Note:** gamma/loggamma derivative rules and smin/smax smooth approximation were implemented during Epic 3 and are no longer deferred.
 
 ---
 
