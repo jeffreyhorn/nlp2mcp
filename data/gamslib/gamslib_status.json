@@ -28,9 +28,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:33:30.573457+00:00",
+        "parse_date": "2026-02-05T00:27:50.103421+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.1238,
+        "parse_time_seconds": 0.838,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -42,9 +42,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:33:32.491740+00:00",
+        "translate_date": "2026-02-05T00:30:42.337441+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.838,
+        "translate_time_seconds": 1.8287,
         "error": {
           "category": "unsup_index_offset",
           "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='k', offset=SymbolRef(+), circular=False)\n"
@@ -84,9 +84,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:34.150695+00:00",
+        "parse_date": "2026-02-05T00:27:51.579887+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.6555,
+        "parse_time_seconds": 1.4149,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 271, column 1: Unexpected character: 'd'\n  ddev(ty).. sum(c, prdev(c,ty)*sales(c)) =e= pdev(ty) - ndev(ty); arev..   revenue  =e= lprice*xlive + 1000*sum(c, price(c)*sales(c)); acrop..  cropcost =e= sum((p,s)$ps(p,s), pcost(p)*xcrop(p,s)); alab..   labcost  =e= (fwage*sum(tm, flab(tm)) + twage*sum(tm, tlab(tm)))/dpm + pwage*plab; awcc..   cropcost + rationr + vetcost + twage/dpm*sum(tm, tlab(tm)) + pwage*plab =l= wcbar; avet..   vetcost =e= vetpr*xlive; income.. yfarm "
@@ -130,9 +130,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:33:34.887786+00:00",
+        "parse_date": "2026-02-05T00:27:52.269195+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7342,
+        "parse_time_seconds": 0.6876,
         "variables_count": 6,
         "equations_count": 8
       },
@@ -144,9 +144,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:33:36.258761+00:00",
+        "translate_date": "2026-02-05T00:30:44.354070+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3683,
+        "translate_time_seconds": 1.9181,
         "error": {
           "category": "internal_error",
           "message": "Error: Invalid model - gamma() expects 1 argument, got 2\n"
@@ -228,9 +228,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:33:36.659627+00:00",
+        "parse_date": "2026-02-05T00:27:52.646666+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3975,
+        "parse_time_seconds": 0.3756,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -242,14 +242,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:33:37.686160+00:00",
+        "translate_date": "2026-02-05T00:30:45.848927+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.0246,
+        "translate_time_seconds": 1.4912,
         "output_file": "data/gamslib/mcp/ajax_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:33:37.880445+00:00",
+        "solve_date": "2026-02-05T00:33:01.354973+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -257,7 +257,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1715,
+        "solve_time_seconds": 0.6383,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -267,7 +267,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:33:37.880525+00:00",
+        "comparison_date": "2026-02-05T00:33:01.355133+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -319,9 +319,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:33:38.327304+00:00",
+        "parse_date": "2026-02-05T00:27:53.052415+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4463,
+        "parse_time_seconds": 0.4034,
         "variables_count": 15,
         "equations_count": 8
       },
@@ -333,14 +333,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:33:39.562698+00:00",
+        "translate_date": "2026-02-05T00:30:47.512076+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.2328,
+        "translate_time_seconds": 1.6597,
         "output_file": "data/gamslib/mcp/alkyl_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:33:39.730945+00:00",
+        "solve_date": "2026-02-05T00:33:01.771473+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -348,7 +348,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1615,
+        "solve_time_seconds": 0.4074,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -358,7 +358,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:33:39.731021+00:00",
+        "comparison_date": "2026-02-05T00:33:01.771602+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -386,9 +386,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:39.996277+00:00",
+        "parse_date": "2026-02-05T00:27:53.275812+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.265,
+        "parse_time_seconds": 0.2216,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 55, column 1: Unexpected character: 'M'\n  Model ampl 'maximum revenue production problem' / all /;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -453,9 +453,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:33:40.843516+00:00",
+        "parse_date": "2026-02-05T00:27:54.084499+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.8451,
+        "parse_time_seconds": 0.8066,
         "variables_count": 4,
         "equations_count": 5
       },
@@ -467,14 +467,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:33:42.337594+00:00",
+        "translate_date": "2026-02-05T00:30:49.747893+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.4919,
+        "translate_time_seconds": 2.2323,
         "output_file": "data/gamslib/mcp/apl1p_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:33:42.624781+00:00",
+        "solve_date": "2026-02-05T00:33:02.546494+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -482,13 +482,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": null,
-        "solve_time_seconds": 0.2771,
+        "solve_time_seconds": 0.7592,
         "iterations": 0,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "error",
-        "comparison_date": "2026-02-04T01:33:42.624938+00:00",
+        "comparison_date": "2026-02-05T00:33:02.546636+00:00",
         "nlp_objective": 24515.6483,
         "mcp_objective": null,
         "absolute_difference": null,
@@ -529,9 +529,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:43.019614+00:00",
+        "parse_date": "2026-02-05T00:27:54.498985+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3944,
+        "parse_time_seconds": 0.4124,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 117, column 4: Unexpected character: '='\n  h1 = hm1(dl) * v1(\"out\", omega1);\n     ^\n\nSuggestion: This character is not valid in this context"
@@ -596,9 +596,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:33:43.695028+00:00",
+        "parse_date": "2026-02-05T00:27:55.282510+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6733,
+        "parse_time_seconds": 0.7811,
         "variables_count": 14,
         "equations_count": 13
       },
@@ -610,14 +610,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:33:45.190466+00:00",
+        "translate_date": "2026-02-05T00:30:51.773539+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.4929,
+        "translate_time_seconds": 2.0221,
         "output_file": "data/gamslib/mcp/bearing_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:33:45.367684+00:00",
+        "solve_date": "2026-02-05T00:33:02.909178+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -625,7 +625,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1696,
+        "solve_time_seconds": 0.3541,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -635,7 +635,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:33:45.367766+00:00",
+        "comparison_date": "2026-02-05T00:33:02.909342+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -663,9 +663,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:33:45.693721+00:00",
+        "parse_date": "2026-02-05T00:27:55.597757+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3257,
+        "parse_time_seconds": 0.3136,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -677,14 +677,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:33:46.678939+00:00",
+        "translate_date": "2026-02-05T00:30:53.175701+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.9825,
+        "translate_time_seconds": 1.3975,
         "output_file": "data/gamslib/mcp/blend_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:33:46.950253+00:00",
+        "solve_date": "2026-02-05T00:33:03.576602+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -692,13 +692,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": null,
-        "solve_time_seconds": 0.2637,
+        "solve_time_seconds": 0.6525,
         "iterations": 20,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "error",
-        "comparison_date": "2026-02-04T01:33:46.950359+00:00",
+        "comparison_date": "2026-02-05T00:33:03.576794+00:00",
         "nlp_objective": 4.98,
         "mcp_objective": null,
         "absolute_difference": null,
@@ -739,9 +739,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:48.882480+00:00",
+        "parse_date": "2026-02-05T00:27:57.502192+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.9177,
+        "parse_time_seconds": 1.8877,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 212, column 63: Unexpected character: ';'\n  at(it) = xd0(it)/(gamma(it)*e0(it)**rhot(it) + (1 - gamma(it));\n                                                                ^\n\nSuggestion: This character is not valid in this context"
@@ -785,9 +785,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:49.301006+00:00",
+        "parse_date": "2026-02-05T00:27:57.896002+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4168,
+        "parse_time_seconds": 0.3917,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -831,9 +831,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:49.347665+00:00",
+        "parse_date": "2026-02-05T00:27:57.937266+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0438,
+        "parse_time_seconds": 0.0395,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -877,9 +877,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:33:49.573748+00:00",
+        "parse_date": "2026-02-05T00:27:58.154323+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2246,
+        "parse_time_seconds": 0.2154,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -891,9 +891,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:33:50.582601+00:00",
+        "translate_date": "2026-02-05T00:30:54.528415+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.0066,
+        "translate_time_seconds": 1.3495,
         "error": {
           "category": "internal_error",
           "message": "Error: Invalid model - Unsupported unary operation 'not' for differentiation. Supported operations: +, -\n"
@@ -933,9 +933,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:52.266380+00:00",
+        "parse_date": "2026-02-05T00:27:59.875067+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.6794,
+        "parse_time_seconds": 1.7191,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 364, column 1: Unexpected character: 'E'\n  ENTROPY.. DENTROPY =e= sum((ii,jj)$nonzero(ii,jj), A(ii,jj)*(log(A(ii,jj) + epsilon) - log(Abar1(ii,jj) + epsilon))) +  sum((ii,jwt), W1(ii,jwt)*(log(W1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon))) +  sum((macro,jwt), W2(macro,jwt)*(log(W2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon)));\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -979,9 +979,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:52.442427+00:00",
+        "parse_date": "2026-02-05T00:28:00.062984+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.174,
+        "parse_time_seconds": 0.1856,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 108, column 67: Unexpected character: '/'\n  stderr1  'standard error of measurement for column sums'   / .05  /\n                                                                    ^\n\nSuggestion: This character is not valid in this context"
@@ -1025,9 +1025,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:52.731554+00:00",
+        "parse_date": "2026-02-05T00:28:00.353415+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2874,
+        "parse_time_seconds": 0.2881,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -1071,9 +1071,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:53.381559+00:00",
+        "parse_date": "2026-02-05T00:28:00.983407+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6482,
+        "parse_time_seconds": 0.6282,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'y' and 'k' define each other\n\nSuggestion: Equations 'yd' and 'kb' create a circular definition:\n  yd: y depends on k\n  kb: k depends on y\n\nReformulate your model to break the cycle."
@@ -1141,9 +1141,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:33:53.673112+00:00",
+        "parse_date": "2026-02-05T00:28:01.273576+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2899,
+        "parse_time_seconds": 0.2886,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1155,14 +1155,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:33:54.732825+00:00",
+        "translate_date": "2026-02-05T00:30:55.960453+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.0578,
+        "translate_time_seconds": 1.4284,
         "output_file": "data/gamslib/mcp/chem_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:33:54.898123+00:00",
+        "solve_date": "2026-02-05T00:33:03.959536+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1170,7 +1170,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1579,
+        "solve_time_seconds": 0.3698,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -1180,7 +1180,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:33:54.898204+00:00",
+        "comparison_date": "2026-02-05T00:33:03.959704+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -1208,9 +1208,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:33:56.204053+00:00",
+        "parse_date": "2026-02-05T00:28:02.537569+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.3055,
+        "parse_time_seconds": 1.262,
         "variables_count": 15,
         "equations_count": 14
       },
@@ -1222,14 +1222,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:33:58.470104+00:00",
+        "translate_date": "2026-02-05T00:30:59.236061+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.2632,
+        "translate_time_seconds": 3.2721,
         "output_file": "data/gamslib/mcp/chenery_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:33:58.655650+00:00",
+        "solve_date": "2026-02-05T00:33:04.359569+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1237,7 +1237,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1783,
+        "solve_time_seconds": 0.3897,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -1247,7 +1247,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:33:58.655753+00:00",
+        "comparison_date": "2026-02-05T00:33:04.359693+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -1275,9 +1275,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:33:59.916844+00:00",
+        "parse_date": "2026-02-05T00:28:03.781844+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.2439,
+        "parse_time_seconds": 1.2243,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 208, column 39: Unexpected character: '1'\n  ('c-straw','c-gm','c-hyacinth')       10       76             20            14          100\n                                        ^\n\nSuggestion: This character is not valid in this context"
@@ -1321,9 +1321,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:00.308837+00:00",
+        "parse_date": "2026-02-05T00:28:04.194462+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3897,
+        "parse_time_seconds": 0.4108,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -1335,32 +1335,32 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:34:01.308499+00:00",
+        "translate_date": "2026-02-05T00:31:00.706477+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.9978,
+        "translate_time_seconds": 1.4433,
         "output_file": "data/gamslib/mcp/circle_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:34:01.475044+00:00",
+        "solve_date": "2026-02-05T00:33:07.377708+00:00",
         "solver": "PATH",
         "solver_version": null,
-        "solver_status": null,
-        "solver_status_text": null,
-        "model_status": null,
-        "model_status_text": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 5,
+        "model_status_text": "Locally Infeasible",
         "objective_value": null,
-        "solve_time_seconds": 0.1597,
-        "iterations": null,
-        "outcome_category": "path_syntax_error",
+        "solve_time_seconds": 3.0059,
+        "iterations": 760,
+        "outcome_category": "model_infeasible",
         "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
+          "category": "model_infeasible",
+          "message": "Model: Locally Infeasible"
         }
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:34:01.475132+00:00",
+        "comparison_date": "2026-02-05T00:33:07.377935+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -1412,9 +1412,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:01.851172+00:00",
+        "parse_date": "2026-02-05T00:28:04.586453+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3757,
+        "parse_time_seconds": 0.3898,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 92, column 35: Unexpected character: '$'\n  ndelta(n) = sum{(tw(t,w), np(n,p))$[tn(t,n)], delta(w,p)};\n                                    ^\n\nSuggestion: This character is not valid in this context"
@@ -1458,9 +1458,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:02.053544+00:00",
+        "parse_date": "2026-02-05T00:28:04.798011+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1966,
+        "parse_time_seconds": 0.2075,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -1472,14 +1472,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:34:03.016956+00:00",
+        "translate_date": "2026-02-05T00:31:02.218056+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.9611,
+        "translate_time_seconds": 1.5074,
         "output_file": "data/gamslib/mcp/cpack_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:34:03.187700+00:00",
+        "solve_date": "2026-02-05T00:33:07.730681+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1487,17 +1487,17 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.164,
+        "solve_time_seconds": 0.3416,
         "iterations": null,
-        "outcome_category": "path_syntax_error",
+        "outcome_category": "path_solve_terminated",
         "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
+          "category": "path_solve_terminated",
+          "message": "Parse error: no_solve_summary"
         }
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:34:03.187777+00:00",
+        "comparison_date": "2026-02-05T00:33:07.730808+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -1525,9 +1525,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:03.313816+00:00",
+        "parse_date": "2026-02-05T00:28:04.916297+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1257,
+        "parse_time_seconds": 0.1168,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -1571,9 +1571,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:03.881265+00:00",
+        "parse_date": "2026-02-05T00:28:05.505281+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5655,
+        "parse_time_seconds": 0.5871,
         "variables_count": 6,
         "equations_count": 8
       },
@@ -1585,9 +1585,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:34:05.221634+00:00",
+        "translate_date": "2026-02-05T00:31:04.109744+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3386,
+        "translate_time_seconds": 1.8885,
         "error": {
           "category": "codegen_numerical_error",
           "message": "Error: Unexpected error - Error: Numerical error in parameter 'rep[2,gap]': Invalid value (value is +Inf)\n\nSuggestion: Check your GAMS model or data file for:\n  - Uninitialized parameters\n  - Division by zero in parameter calculations\n  - Invalid mathematical operations\n  - Correct definition of parameter 'rep'\n"
@@ -1627,22 +1627,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:06.138175+00:00",
+        "parse_date": "2026-02-05T00:28:06.402423+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.9128,
+        "parse_time_seconds": 0.8954,
         "variables_count": 9,
         "equations_count": 8
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:34:07.828042+00:00",
+        "translate_date": "2026-02-05T00:31:06.435791+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.6872,
+        "translate_time_seconds": 2.3223,
         "output_file": "data/gamslib/mcp/demo1_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:34:08.001447+00:00",
+        "solve_date": "2026-02-05T00:33:08.128861+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1650,7 +1650,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1672,
+        "solve_time_seconds": 0.3885,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -1660,7 +1660,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:34:08.001523+00:00",
+        "comparison_date": "2026-02-05T00:33:08.128992+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -1718,9 +1718,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:08.353966+00:00",
+        "parse_date": "2026-02-05T00:28:06.721201+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3517,
+        "parse_time_seconds": 0.3166,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 122, column 4: Unexpected character: '1'\n  / (1971,1974).(eng,tech,admin),\n     ^\n\nSuggestion: This character is not valid in this context"
@@ -1764,9 +1764,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:08.769256+00:00",
+        "parse_date": "2026-02-05T00:28:07.139229+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4133,
+        "parse_time_seconds": 0.4161,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1778,14 +1778,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:34:09.899982+00:00",
+        "translate_date": "2026-02-05T00:31:07.984689+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.1283,
+        "translate_time_seconds": 1.5453,
         "output_file": "data/gamslib/mcp/dispatch_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:34:10.074947+00:00",
+        "solve_date": "2026-02-05T00:33:08.576074+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1793,7 +1793,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1678,
+        "solve_time_seconds": 0.3984,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -1803,7 +1803,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:34:10.075025+00:00",
+        "comparison_date": "2026-02-05T00:33:08.576331+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -1852,9 +1852,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:14.367235+00:00",
+        "parse_date": "2026-02-05T00:28:11.556670+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 4.2916,
+        "parse_time_seconds": 4.4153,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'D' and 'Z' define each other\n\nSuggestion: Equations 'eqDs' and 'eqpzd' create a circular definition:\n  eqDs: D depends on Z\n  eqpzd: Z depends on D\n\nReformulate your model to break the cycle."
@@ -1898,9 +1898,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:19.063362+00:00",
+        "parse_date": "2026-02-05T00:28:16.655594+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 4.6766,
+        "parse_time_seconds": 5.0797,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 693, column 53: Unexpected character: '.'\n  Set cnc(c,c)    'crop reclassification' /(maize     .('n-maize', 's-maize'),\n                                                      ^\n\nSuggestion: This character is not valid in this context"
@@ -1944,9 +1944,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:19.140375+00:00",
+        "parse_date": "2026-02-05T00:28:16.730924+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0753,
+        "parse_time_seconds": 0.0734,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -2056,9 +2056,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:20.543829+00:00",
+        "parse_date": "2026-02-05T00:28:18.218540+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.4006,
+        "parse_time_seconds": 1.4857,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 187, column 149: Unexpected character: 'f'\n  newcap(t+1)..        kn(t+1)    =e= i(t)*ipm(t); newprod(t+1)..       yn(t+1)    =e= (aconst*(kn(t+1)**(rho*kpvs)) +   bconst*(en(t+1)**(rho*elvs)) fnewelec(tfirst)..   en(tfirst) =e= e(tfirst) - e0*(spda**nyper); newelec(t+1)..       en(t+1)    =e= e(t+1) - e(t)*(spda**nyper); fnewnon(tfirst)..    nn(tfirst) =e= n(tfirst) - n0*(spda**nyper); newnon(t+1)..        nn(t+1)    =e= n(t+1) - n(t)*(spda**nyper); totalcap(t+1)..   "
@@ -2102,9 +2102,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:21.332832+00:00",
+        "parse_date": "2026-02-05T00:28:19.091065+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7872,
+        "parse_time_seconds": 0.8697,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 179, column 1: Unexpected character: 'c'\n  cfq(cf)          = not cfr(cf);\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -2148,9 +2148,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:21.494086+00:00",
+        "parse_date": "2026-02-05T00:28:19.271734+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1598,
+        "parse_time_seconds": 0.1785,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 68, column 1: Unexpected character: 'c'\n  cone_lhs.. v3 =e= u + t;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -2194,9 +2194,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:21.692926+00:00",
+        "parse_date": "2026-02-05T00:28:19.471163+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1972,
+        "parse_time_seconds": 0.1975,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -2240,9 +2240,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:22.725893+00:00",
+        "parse_date": "2026-02-05T00:28:20.581272+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.0303,
+        "parse_time_seconds": 1.108,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 250, column 207: Unexpected character: ')'\n  phe(i,j)..    y(i,j)*p(i) - x(i,j)*prcon(j,'pc')*exp(prcon(j,'tc')/t(i) +  vpcon(j,'b')*(1 - t(i)/prcon(j,'tc'))**1.5 +  vpcon(j,'c')*(1 - t(i)/prcon(j,'tc'))**3 +  vpcon(j,'d')*(1 - t(i)/prcon(j,'tc'))**6)) =e= 0;\n                                                                                                                                                                                                                ^\n\nSu"
@@ -2286,9 +2286,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:24.284601+00:00",
+        "parse_date": "2026-02-05T00:28:22.366978+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.5563,
+        "parse_time_seconds": 1.7839,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 213, column 18: Unexpected character: '.'\n  'sulf-acid'    - .41                        -.76\n                   ^\n\nSuggestion: This character is not valid in this context"
@@ -2355,9 +2355,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:24.547648+00:00",
+        "parse_date": "2026-02-05T00:28:22.666075+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2609,
+        "parse_time_seconds": 0.2971,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 113, column 12: Unexpected character: '''\n  / 7374     '1973-74  --  base  year',\n             ^\n\nSuggestion: This character is not valid in this context"
@@ -2401,9 +2401,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:25.042383+00:00",
+        "parse_date": "2026-02-05T00:28:23.249337+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4931,
+        "parse_time_seconds": 0.5814,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 183, column 14: Unexpected character: '''\n  / 7374       '1973-74  --  base  year',\n               ^\n\nSuggestion: This character is not valid in this context"
@@ -2468,9 +2468,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:26.517004+00:00",
+        "parse_date": "2026-02-05T00:28:25.166403+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.4567,
+        "parse_time_seconds": 1.8931,
         "error": {
           "category": "internal_error",
           "message": "Error: Parse error at line 114, column 1: Parameter 'arep' expects 4 indices, got 2 [context: expression]\n  arep(aij,'lam') = lam(aij);\n  ^\n\nSuggestion: Provide exactly 4 indices to match the parameter declaration"
@@ -2520,9 +2520,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:27.458860+00:00",
+        "parse_date": "2026-02-05T00:28:26.256378+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.9398,
+        "parse_time_seconds": 1.0878,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'v_dot' and 'vel' define each other\n\nSuggestion: Equations 'vy_dot_def' and 'vel_eqn' create a circular definition:\n  vy_dot_def: v_dot depends on vel\n  vel_eqn: vel depends on v_dot\n\nReformulate your model to break the cycle."
@@ -2587,9 +2587,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:28.627110+00:00",
+        "parse_date": "2026-02-05T00:28:27.640697+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.1658,
+        "parse_time_seconds": 1.3823,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 155, column 1: Unexpected character: 'd'\n  d.lo(j)   = .2;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -2702,9 +2702,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:28.684718+00:00",
+        "parse_date": "2026-02-05T00:28:27.703118+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.056,
+        "parse_time_seconds": 0.0601,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 21, column 38: Unexpected character: '/'\n  funds 'total investable funds' / 500 /;\n                                       ^\n\nSuggestion: This character is not valid in this context"
@@ -2748,9 +2748,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:29.393174+00:00",
+        "parse_date": "2026-02-05T00:28:28.520308+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7062,
+        "parse_time_seconds": 0.8146,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 169, column 203: Unexpected character: ';'\n  objoli..  obj  =e= sum(l, coefs(l,\"rho\")*d(l) - pm*coefs(l,\"eta\") -  sum(l, coefs(l,\"alpha\")*s(l) + coefs(l,\"beta\")*sqr(s(l))) -  sum(arc, pairs(arc,\"kappa\")*t(arc) + tm*pairs(arc,\"nu\")*power(t(arc),3)); Model harkoli / nbal, sbal, dbal, in, objoli /;\n                                                                                                                                                                                "
@@ -2794,17 +2794,17 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:30.001892+00:00",
+        "parse_date": "2026-02-05T00:28:29.323865+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6069,
+        "parse_time_seconds": 0.801,
         "variables_count": 10,
         "equations_count": 10
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:34:31.425384+00:00",
+        "translate_date": "2026-02-05T00:31:10.005395+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.4212,
+        "translate_time_seconds": 2.0171,
         "error": {
           "category": "unsup_expression_type",
           "message": "Error: Invalid model - Unknown expression type: Prod\n"
@@ -2850,17 +2850,17 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:31.567565+00:00",
+        "parse_date": "2026-02-05T00:28:29.531576+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1393,
+        "parse_time_seconds": 0.2052,
         "variables_count": 2,
         "equations_count": 2
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:34:32.489804+00:00",
+        "translate_date": "2026-02-05T00:31:11.362359+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.92,
+        "translate_time_seconds": 1.3534,
         "error": {
           "category": "unsup_expression_type",
           "message": "Error: Invalid model - Unknown expression type: Prod\n"
@@ -2906,9 +2906,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:32.744047+00:00",
+        "parse_date": "2026-02-05T00:28:29.875924+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2513,
+        "parse_time_seconds": 0.3418,
         "variables_count": 10,
         "equations_count": 5
       },
@@ -2920,14 +2920,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:34:33.852532+00:00",
+        "translate_date": "2026-02-05T00:31:12.920373+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.1063,
+        "translate_time_seconds": 1.554,
         "output_file": "data/gamslib/mcp/himmel11_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:34:34.314471+00:00",
+        "solve_date": "2026-02-05T00:33:09.634530+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -2935,13 +2935,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": -30665.5387,
-        "solve_time_seconds": 0.452,
+        "solve_time_seconds": 1.0466,
         "iterations": 1377,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "match",
-        "comparison_date": "2026-02-04T01:34:34.314679+00:00",
+        "comparison_date": "2026-02-05T00:33:09.634746+00:00",
         "nlp_objective": -30665.5387,
         "mcp_objective": -30665.5387,
         "absolute_difference": 0.0,
@@ -2982,9 +2982,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:34.705437+00:00",
+        "parse_date": "2026-02-05T00:28:30.315362+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3903,
+        "parse_time_seconds": 0.4361,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -2996,9 +2996,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:34:36.021787+00:00",
+        "translate_date": "2026-02-05T00:31:14.651951+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3134,
+        "translate_time_seconds": 1.7281,
         "error": {
           "category": "unsup_index_offset",
           "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='i', offset=SymbolRef(++), circular=True)\n"
@@ -3038,9 +3038,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:36.326410+00:00",
+        "parse_date": "2026-02-05T00:28:30.618759+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3003,
+        "parse_time_seconds": 0.3013,
         "variables_count": 9,
         "equations_count": 9
       },
@@ -3052,14 +3052,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:34:37.413897+00:00",
+        "translate_date": "2026-02-05T00:31:16.201318+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.0843,
+        "translate_time_seconds": 1.5424,
         "output_file": "data/gamslib/mcp/house_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:34:38.310864+00:00",
+        "solve_date": "2026-02-05T00:33:11.640520+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -3067,7 +3067,7 @@
         "model_status": 5,
         "model_status_text": "Locally Infeasible",
         "objective_value": 27.7055,
-        "solve_time_seconds": 0.8887,
+        "solve_time_seconds": 1.9957,
         "iterations": 1201,
         "outcome_category": "model_infeasible",
         "error": {
@@ -3077,7 +3077,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:34:38.311007+00:00",
+        "comparison_date": "2026-02-05T00:33:11.640658+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -3105,9 +3105,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:38.514769+00:00",
+        "parse_date": "2026-02-05T00:28:30.894625+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1867,
+        "parse_time_seconds": 0.2496,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -3119,14 +3119,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:34:39.464740+00:00",
+        "translate_date": "2026-02-05T00:31:17.733031+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.9477,
+        "translate_time_seconds": 1.5015,
         "output_file": "data/gamslib/mcp/hs62_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:34:39.782498+00:00",
+        "solve_date": "2026-02-05T00:33:12.364394+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -3134,13 +3134,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": -26272.5145,
-        "solve_time_seconds": 0.3097,
+        "solve_time_seconds": 0.7119,
         "iterations": 27,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "match",
-        "comparison_date": "2026-02-04T01:34:39.782599+00:00",
+        "comparison_date": "2026-02-05T00:33:12.364543+00:00",
         "nlp_objective": -26272.5168,
         "mcp_objective": -26272.5145,
         "absolute_difference": 0.002300000000104774,
@@ -3181,9 +3181,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:40.116982+00:00",
+        "parse_date": "2026-02-05T00:28:31.277550+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.334,
+        "parse_time_seconds": 0.38,
         "variables_count": 6,
         "equations_count": 5
       },
@@ -3195,9 +3195,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:34:41.136096+00:00",
+        "translate_date": "2026-02-05T00:31:19.257452+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.0171,
+        "translate_time_seconds": 1.5209,
         "error": {
           "category": "diff_unsupported_func",
           "message": "Error: Invalid model - Differentiation not yet implemented for function 'card'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr, gamma, loggamma, smin, smax. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
@@ -3237,9 +3237,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:41.916904+00:00",
+        "parse_date": "2026-02-05T00:28:32.188988+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7761,
+        "parse_time_seconds": 0.9081,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -3251,9 +3251,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:34:43.593324+00:00",
+        "translate_date": "2026-02-05T00:31:21.364679+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.6744,
+        "translate_time_seconds": 2.103,
         "error": {
           "category": "codegen_numerical_error",
           "message": "Error: Unexpected error - Error: Numerical error in parameter 'bspec[aluminum,maximum]': Invalid value (value is +Inf)\n\nSuggestion: Check your GAMS model or data file for:\n  - Uninitialized parameters\n  - Division by zero in parameter calculations\n  - Invalid mathematical operations\n  - Correct definition of parameter 'bspec'\n"
@@ -3317,9 +3317,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:43.801513+00:00",
+        "parse_date": "2026-02-05T00:28:32.450510+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2038,
+        "parse_time_seconds": 0.2584,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 40, column 13: Unexpected character: '('\n  w('m+floor'((ord(n)-1)/k),n)$(ord(m) = 1) = 1 - mod(ord(n)-1,k)/k;\n              ^\n\nSuggestion: This character is not valid in this context"
@@ -3363,9 +3363,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:44.218841+00:00",
+        "parse_date": "2026-02-05T00:28:32.961116+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.414,
+        "parse_time_seconds": 0.5062,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 73, column 16: Unexpected character: '('\n  (basmati,irri).(bullock,'semi-mech')                               1     1     1     1     1     1\n                 ^\n\nSuggestion: This character is not valid in this context"
@@ -3430,9 +3430,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:44.437809+00:00",
+        "parse_date": "2026-02-05T00:28:33.194650+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2164,
+        "parse_time_seconds": 0.2301,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 58, column 1: Unexpected character: 'o'\n  oldr(i)  = r(i);\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -3476,9 +3476,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:48.910609+00:00",
+        "parse_date": "2026-02-05T00:28:39.026380+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 4.4695,
+        "parse_time_seconds": 5.828,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'D' and 'Z' define each other\n\nSuggestion: Equations 'eqDs' and 'eqpzd' create a circular definition:\n  eqDs: D depends on Z\n  eqpzd: Z depends on D\n\nReformulate your model to break the cycle."
@@ -3522,9 +3522,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:53.231983+00:00",
+        "parse_date": "2026-02-05T00:28:45.276647+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 4.3164,
+        "parse_time_seconds": 6.2473,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 674, column 1: Unexpected character: 'n'\n  nbal(n,m)$nb(n).. sum(i$ni(n,i), inflow(i,m)) + runoff(n,m)/1000 +  sum(n1, trib(n,n1,m)) +  sum(n1$nn(n,n1),f(n,n1,m)*coeffl(n1,n,m)$coeffl(n1,n,m) +  (f(n,n1,m) - seepage(n1,n,m)/1000 )$(coeffl(n1,n,m) eq 0)) -  sum(n1$nn(n1,n), f(n1,n,m)) + (rcont(n,m--1) - rcont(n,m) -  revapl(n,m)/1000)$rcap(n) - sum(c$nc(n,c), canaldiv(c,m)) =e= 0 ;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -3589,9 +3589,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:53.502599+00:00",
+        "parse_date": "2026-02-05T00:28:45.699541+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2685,
+        "parse_time_seconds": 0.4197,
         "variables_count": 7,
         "equations_count": 4
       },
@@ -3603,9 +3603,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:34:54.541105+00:00",
+        "translate_date": "2026-02-05T00:31:22.908346+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.0365,
+        "translate_time_seconds": 1.5389,
         "error": {
           "category": "unsup_index_offset",
           "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='t', offset=Unary(-, SymbolRef(-)), circular=False)\n"
@@ -3645,9 +3645,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:55.150380+00:00",
+        "parse_date": "2026-02-05T00:28:46.436126+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6064,
+        "parse_time_seconds": 0.7341,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 55, column 46: Unexpected character: '*'\n  tn(t,n) 'time node mapping' / 'time-1'.('n-1'*'n-3'), 'time-2'.('n-4'*'n-12') /\n                                               ^\n\nSuggestion: This character is not valid in this context"
@@ -3691,9 +3691,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:56.961412+00:00",
+        "parse_date": "2026-02-05T00:28:49.257686+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.7893,
+        "parse_time_seconds": 2.7893,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 347, column 196: Unexpected character: 'a'\n  cet(it)..         xd(it) =e=  at(it)*(gamma(it)*e(it)**rhot(it) +  (1 - gamma(it))*xxd(it)**rhot(it))**(1/rhot(it)); esupply(it)..     e(it)/xxd(it) =e= (pe(it)/pd(it)*(1 - gamma(it))/gamma(it)) armington(it)..   x(it) =e=  ac(it)*(delta(it)*m(it)**(-rhoc(it)) +  (1 - delta(it))*xxd(it)**(-rhoc(it)))**(-1/rhoc(it)); costmin(it)..     m(it)/xxd(it) =e= (pd(it)/pm(it)*delta(it)/(1 - delta(it))) xxdsn(in)..       xxd(in)       "
@@ -3758,9 +3758,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:57.027688+00:00",
+        "parse_date": "2026-02-05T00:28:49.356218+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0643,
+        "parse_time_seconds": 0.0959,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 31, column 36: Unexpected character: 'n'\n  d(j) 'energy demand'   / 'mode-1'  na, 'mode-2' 3,  'mode-3' 2              /;\n                                     ^\n\nSuggestion: This character is not valid in this context"
@@ -3804,9 +3804,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:34:57.791437+00:00",
+        "parse_date": "2026-02-05T00:28:50.507377+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.761,
+        "parse_time_seconds": 1.1479,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 111, column 522: Unexpected character: ';'\n  costdef..     cost =e= + 5272.77*sum(s, aweight(s)**1.2781*iweight(s)**(-0.1959) + .185214*sum(s, aweight(s)**0.3322*ms(s)**(-1.5935)*pweight(s)**0.2362 + sum(s, rde1(s) + rde2(s)*(ethrust(s)/1000)**rde3(s) + rde4(s)*(ethrust(s)/1000)**rde5(s)) + sum(s, (pre1(s)*(ethrust(s)/1000) + pre2(s)*(ethrust(s)/1000)**pre3(s) +  pre4(s)*(ethrust(s)/1000)**pre5(s))*(nume(s)*numl)**0.93) + 10.35*(15822e-6*(instweight*1000)**0.786 - 35.5"
@@ -3850,9 +3850,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:57.978086+00:00",
+        "parse_date": "2026-02-05T00:28:50.798491+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1849,
+        "parse_time_seconds": 0.2887,
         "variables_count": 5,
         "equations_count": 3
       },
@@ -3864,14 +3864,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:34:58.927008+00:00",
+        "translate_date": "2026-02-05T00:31:24.290649+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.9467,
+        "translate_time_seconds": 1.3779,
         "output_file": "data/gamslib/mcp/least_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:34:59.092622+00:00",
+        "solve_date": "2026-02-05T00:33:12.720440+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -3879,7 +3879,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1587,
+        "solve_time_seconds": 0.3475,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -3889,7 +3889,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:34:59.092702+00:00",
+        "comparison_date": "2026-02-05T00:33:12.720580+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -3917,9 +3917,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:34:59.515300+00:00",
+        "parse_date": "2026-02-05T00:28:51.386012+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4224,
+        "parse_time_seconds": 0.5842,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -3931,9 +3931,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:35:00.702895+00:00",
+        "translate_date": "2026-02-05T00:31:26.006497+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.1859,
+        "translate_time_seconds": 1.7123,
         "error": {
           "category": "unsup_index_offset",
           "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='g', offset=SymbolRef(+), circular=False)\n"
@@ -3997,9 +3997,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:01.034478+00:00",
+        "parse_date": "2026-02-05T00:28:51.833983+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3277,
+        "parse_time_seconds": 0.4453,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 86, column 9: Unexpected character: '='\n  f(p)    =  uniform(0,1);\n          ^\n\nSuggestion: This character is not valid in this context"
@@ -4067,9 +4067,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:01.310180+00:00",
+        "parse_date": "2026-02-05T00:28:52.255693+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2729,
+        "parse_time_seconds": 0.4192,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -4113,9 +4113,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:03.041327+00:00",
+        "parse_date": "2026-02-05T00:28:54.892951+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.7293,
+        "parse_time_seconds": 2.6346,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 104, column 36: Unexpected character: '''\n  lf 'line frequencies'          / 1 'every 60 minutes', 2 'every 30 minutes' /\n                                     ^\n\nSuggestion: This character is not valid in this context"
@@ -4159,9 +4159,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:06.800781+00:00",
+        "parse_date": "2026-02-05T00:29:00.681389+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 3.757,
+        "parse_time_seconds": 5.7852,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'D' and 'Z' define each other\n\nSuggestion: Equations 'eqDs' and 'eqpzd' create a circular definition:\n  eqDs: D depends on Z\n  eqpzd: Z depends on D\n\nReformulate your model to break the cycle."
@@ -4205,9 +4205,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:07.296667+00:00",
+        "parse_date": "2026-02-05T00:29:01.409191+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.494,
+        "parse_time_seconds": 0.7248,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 102, column 22: Unexpected character: '('\n  / (premium, regular).(butane, 'sr-gas', 'rf-gas', 'cc-gas', 'sr-naphtha'),\n                       ^\n\nSuggestion: This character is not valid in this context"
@@ -4251,9 +4251,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:07.717927+00:00",
+        "parse_date": "2026-02-05T00:29:02.173603+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4057,
+        "parse_time_seconds": 0.7305,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -4265,9 +4265,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:35:09.229180+00:00",
+        "translate_date": "2026-02-05T00:31:28.147105+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5093,
+        "translate_time_seconds": 2.1369,
         "error": {
           "category": "diff_unsupported_func",
           "message": "Error: Invalid model - Differentiation not yet implemented for function 'ord'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr, gamma, loggamma, smin, smax. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
@@ -4307,9 +4307,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:09.413025+00:00",
+        "parse_date": "2026-02-05T00:29:02.471798+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1801,
+        "parse_time_seconds": 0.2951,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -4321,14 +4321,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:10.380997+00:00",
+        "translate_date": "2026-02-05T00:31:29.511265+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.9655,
+        "translate_time_seconds": 1.3602,
         "output_file": "data/gamslib/mcp/mathopt1_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:35:10.561167+00:00",
+        "solve_date": "2026-02-05T00:33:13.119072+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -4336,7 +4336,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1724,
+        "solve_time_seconds": 0.3906,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -4346,7 +4346,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:35:10.561254+00:00",
+        "comparison_date": "2026-02-05T00:33:13.119202+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -4374,9 +4374,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:10.747843+00:00",
+        "parse_date": "2026-02-05T00:29:02.754906+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1863,
+        "parse_time_seconds": 0.28,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -4388,14 +4388,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:11.685108+00:00",
+        "translate_date": "2026-02-05T00:31:30.872846+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.9343,
+        "translate_time_seconds": 1.3579,
         "output_file": "data/gamslib/mcp/mathopt2_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:35:12.002680+00:00",
+        "solve_date": "2026-02-05T00:33:13.862654+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -4403,13 +4403,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": 0.0,
-        "solve_time_seconds": 0.3083,
+        "solve_time_seconds": 0.7318,
         "iterations": 0,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "match",
-        "comparison_date": "2026-02-04T01:35:12.002797+00:00",
+        "comparison_date": "2026-02-05T00:33:13.862806+00:00",
         "nlp_objective": 0.0,
         "mcp_objective": 0.0,
         "absolute_difference": 0.0,
@@ -4450,9 +4450,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:12.088467+00:00",
+        "parse_date": "2026-02-05T00:29:02.902647+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0851,
+        "parse_time_seconds": 0.1447,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 26, column 131: Unexpected character: '+'\n  defobj.. obj =e= sqr(x1 + x2) + sqr(x3 - x5) + sqr(x6 - x4) +  2*sqr(x1 + x3 - x4) + sqr(x2 - x1 + x3 - x4) +  10*sqr(sin[x5 - x6 + x1]); eq1..    sqr(x1) - sin[x2] - x4 + x5 + x6 =e= 0;\n                                                                                                                                    ^\n\nSuggestion: This character is not valid in this context"
@@ -4496,9 +4496,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:12.482979+00:00",
+        "parse_date": "2026-02-05T00:29:03.623296+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3918,
+        "parse_time_seconds": 0.7176,
         "error": {
           "category": "internal_error",
           "message": "Unsupported expression type: attr_access. This may be a parser bug or unsupported GAMS syntax. Supported: variables, parameters, numbers, operators (+, -, *, /, ^), functions (sqrt, exp, log, etc.), sum(). [context: assignment] [domain: ('one', 'modelstat')] (line 47, column 29)"
@@ -4563,9 +4563,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:12.954054+00:00",
+        "parse_date": "2026-02-05T00:29:04.387677+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4691,
+        "parse_time_seconds": 0.7615,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -4577,9 +4577,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:35:14.178126+00:00",
+        "translate_date": "2026-02-05T00:31:32.607267+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.221,
+        "translate_time_seconds": 1.731,
         "error": {
           "category": "internal_error",
           "message": "Error: Invalid model - Equation 'mindist1' uses domain set 'low' which has no members\n"
@@ -4619,22 +4619,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:14.876031+00:00",
+        "parse_date": "2026-02-05T00:29:05.585591+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6943,
+        "parse_time_seconds": 1.1947,
         "variables_count": 4,
         "equations_count": 6
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:16.366674+00:00",
+        "translate_date": "2026-02-05T00:31:34.728794+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.4884,
+        "translate_time_seconds": 2.0921,
         "output_file": "data/gamslib/mcp/meanvar_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:35:16.535463+00:00",
+        "solve_date": "2026-02-05T00:33:14.231231+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -4642,17 +4642,17 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1618,
+        "solve_time_seconds": 0.3553,
         "iterations": null,
-        "outcome_category": "path_syntax_error",
+        "outcome_category": "path_solve_terminated",
         "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
+          "category": "path_solve_terminated",
+          "message": "Parse error: no_solve_summary"
         }
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:35:16.535602+00:00",
+        "comparison_date": "2026-02-05T00:33:14.231368+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -4707,9 +4707,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:16.855517+00:00",
+        "parse_date": "2026-02-05T00:29:06.063279+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3196,
+        "parse_time_seconds": 0.475,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 198, column 6: Unexpected character: 'r'\n  wire rod     'rolling of wire rod',\n       ^\n\nSuggestion: This character is not valid in this context"
@@ -4753,9 +4753,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:17.721719+00:00",
+        "parse_date": "2026-02-05T00:29:07.548033+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.8623,
+        "parse_time_seconds": 1.4814,
         "variables_count": 10,
         "equations_count": 11
       },
@@ -4767,14 +4767,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:20.640201+00:00",
+        "translate_date": "2026-02-05T00:31:38.944743+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.9162,
+        "translate_time_seconds": 4.2118,
         "output_file": "data/gamslib/mcp/mexss_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:35:20.811334+00:00",
+        "solve_date": "2026-02-05T00:33:14.653109+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -4782,7 +4782,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1646,
+        "solve_time_seconds": 0.4115,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -4792,7 +4792,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:35:20.811412+00:00",
+        "comparison_date": "2026-02-05T00:33:14.653251+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -4820,9 +4820,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:21.072590+00:00",
+        "parse_date": "2026-02-05T00:29:07.980910+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2609,
+        "parse_time_seconds": 0.4297,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -4834,14 +4834,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:22.057807+00:00",
+        "translate_date": "2026-02-05T00:31:40.334531+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.9822,
+        "translate_time_seconds": 1.3861,
         "output_file": "data/gamslib/mcp/mhw4d_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:35:22.369393+00:00",
+        "solve_date": "2026-02-05T00:33:15.396004+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -4849,13 +4849,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": null,
-        "solve_time_seconds": 0.3022,
+        "solve_time_seconds": 0.7277,
         "iterations": 17,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "error",
-        "comparison_date": "2026-02-04T01:35:22.369515+00:00",
+        "comparison_date": "2026-02-05T00:33:15.396197+00:00",
         "nlp_objective": 27.8719,
         "mcp_objective": null,
         "absolute_difference": null,
@@ -4896,9 +4896,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:23.203461+00:00",
+        "parse_date": "2026-02-05T00:29:09.355689+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.8148,
+        "parse_time_seconds": 1.3413,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -4910,14 +4910,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:24.806719+00:00",
+        "translate_date": "2026-02-05T00:31:42.634708+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.6002,
+        "translate_time_seconds": 2.2966,
         "output_file": "data/gamslib/mcp/mhw4dx_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:35:25.146601+00:00",
+        "solve_date": "2026-02-05T00:33:16.127311+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -4925,13 +4925,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": null,
-        "solve_time_seconds": 0.3308,
+        "solve_time_seconds": 0.6803,
         "iterations": 17,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "error",
-        "comparison_date": "2026-02-04T01:35:25.146717+00:00",
+        "comparison_date": "2026-02-05T00:33:16.127510+00:00",
         "nlp_objective": 27.8719,
         "mcp_objective": null,
         "absolute_difference": null,
@@ -4993,9 +4993,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:25.385660+00:00",
+        "parse_date": "2026-02-05T00:29:09.784229+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2387,
+        "parse_time_seconds": 0.4256,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 63, column 1: Unexpected character: 'x'\n  x.up(l,i,j) = 1;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -5039,9 +5039,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:25.735471+00:00",
+        "parse_date": "2026-02-05T00:29:10.374312+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3472,
+        "parse_time_seconds": 0.5868,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -5053,14 +5053,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:26.831680+00:00",
+        "translate_date": "2026-02-05T00:31:44.146969+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.0941,
+        "translate_time_seconds": 1.5084,
         "output_file": "data/gamslib/mcp/mingamma_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:35:27.005887+00:00",
+        "solve_date": "2026-02-05T00:33:16.500035+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -5068,7 +5068,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1674,
+        "solve_time_seconds": 0.3589,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -5078,7 +5078,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:35:27.006037+00:00",
+        "comparison_date": "2026-02-05T00:33:16.500191+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -5151,9 +5151,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:27.261692+00:00",
+        "parse_date": "2026-02-05T00:29:10.853224+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2548,
+        "parse_time_seconds": 0.4761,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 71, column 19: Unexpected character: 'm'\n  solve m using nlp maximimizing like;\n                    ^\n\nSuggestion: This character is not valid in this context"
@@ -5197,9 +5197,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:27.482356+00:00",
+        "parse_date": "2026-02-05T00:29:11.235119+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2184,
+        "parse_time_seconds": 0.3781,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 57, column 19: Unexpected character: 'm'\n  solve m using nlp maximimizing like;\n                    ^\n\nSuggestion: This character is not valid in this context"
@@ -5243,9 +5243,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:31.737570+00:00",
+        "parse_date": "2026-02-05T00:29:17.058598+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 4.253,
+        "parse_time_seconds": 5.8202,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'D' and 'Z' define each other\n\nSuggestion: Equations 'eqDs' and 'eqpzd' create a circular definition:\n  eqDs: D depends on Z\n  eqpzd: Z depends on D\n\nReformulate your model to break the cycle."
@@ -5310,9 +5310,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:35.075845+00:00",
+        "parse_date": "2026-02-05T00:29:22.135468+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 3.3363,
+        "parse_time_seconds": 5.0736,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 612, column 1: Unexpected character: 'p'\n  pl(p)             = sum(cl,cpl(cl,p));\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -5356,9 +5356,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:35.535491+00:00",
+        "parse_date": "2026-02-05T00:29:22.413303+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4576,
+        "parse_time_seconds": 0.275,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 58, column 1: Parse error at line 58, column 1: Unexpected character: 'S'\n  Set\n  ^\n  Set\n  ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 57. Add ';' after: * original data"
@@ -5423,9 +5423,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:36.814427+00:00",
+        "parse_date": "2026-02-05T00:29:24.685117+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.2767,
+        "parse_time_seconds": 2.2686,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 310, column 233: Unexpected character: '='\n  lagrange(k)$(nfeas(k) = 1).. sum(col, (mcost(k,col)*y(col) + (ma1(k,col) + sum(savkey(col,stm,cp), ma2(k,col,stm)*reck(k,col,stm,cp)) + sum(cp, ma3(k,col,cp)*xkin(k,col,cp))) + sum(col, mint(k,col)*(fink(k,col) - totfeed*y(col))) =l= mu; // logical const. laerr(k)$(nfeas(k) = 0).. sum(col, mlint(k,col)*(fink(k,col) - totfeed*y(col))) =l= 0; // logical const. intcut(k).. sum(col, cutcol(k,col)*y(col)) =l= cut(k); totfeed   = "
@@ -5469,9 +5469,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:38.886222+00:00",
+        "parse_date": "2026-02-05T00:29:27.817714+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 2.0693,
+        "parse_time_seconds": 3.115,
         "variables_count": 25,
         "equations_count": 19
       },
@@ -5483,14 +5483,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:41.813546+00:00",
+        "translate_date": "2026-02-05T00:31:48.346630+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.925,
+        "translate_time_seconds": 4.1957,
         "output_file": "data/gamslib/mcp/orani_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:35:42.008932+00:00",
+        "solve_date": "2026-02-05T00:33:17.016097+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -5498,7 +5498,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1877,
+        "solve_time_seconds": 0.5053,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -5508,7 +5508,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:35:42.009016+00:00",
+        "comparison_date": "2026-02-05T00:33:17.016249+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -5536,9 +5536,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:42.675845+00:00",
+        "parse_date": "2026-02-05T00:29:28.838015+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6491,
+        "parse_time_seconds": 0.9897,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 99, column 1: Unexpected character: 'p'\n  ptrack..   pdev   =e= sum(t, sqr(ptr(t) - p(t)));\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -5582,9 +5582,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:43.662537+00:00",
+        "parse_date": "2026-02-05T00:29:30.450798+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.9843,
+        "parse_time_seconds": 1.6099,
         "variables_count": 11,
         "equations_count": 15
       },
@@ -5596,9 +5596,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:35:50.496759+00:00",
+        "translate_date": "2026-02-05T00:31:58.599281+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 6.832,
+        "translate_time_seconds": 10.2489,
         "error": {
           "category": "unsup_index_offset",
           "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='te', offset=SymbolRef(+), circular=False)\n"
@@ -5638,9 +5638,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:50.913378+00:00",
+        "parse_date": "2026-02-05T00:29:31.136843+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4132,
+        "parse_time_seconds": 0.6814,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 96, column 5: Unexpected character: '('\n  tdn.(kharif,rabi)         1550          1050       750\n      ^\n\nSuggestion: This character is not valid in this context"
@@ -5684,9 +5684,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:50.995068+00:00",
+        "parse_date": "2026-02-05T00:29:31.264349+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0799,
+        "parse_time_seconds": 0.1249,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 39, column 1: Unexpected character: 'c'\n  chips )        40      55;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -5730,9 +5730,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:51.172393+00:00",
+        "parse_date": "2026-02-05T00:29:31.550419+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1756,
+        "parse_time_seconds": 0.2823,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -5776,9 +5776,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:51.735418+00:00",
+        "parse_date": "2026-02-05T00:29:32.381110+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5601,
+        "parse_time_seconds": 0.8265,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 119, column 1: Unexpected character: 's'\n  s.lo(d,\"april\") = 200;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -5843,9 +5843,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:52.070577+00:00",
+        "parse_date": "2026-02-05T00:29:32.874243+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3329,
+        "parse_time_seconds": 0.4899,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 67, column 1: Unexpected character: 'd'\n  display td.l, s.l, cs.l, d.l, r.l;\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -5910,9 +5910,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:53.284712+00:00",
+        "parse_date": "2026-02-05T00:29:34.565237+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.2122,
+        "parse_time_seconds": 1.6877,
         "variables_count": 5,
         "equations_count": 6
       },
@@ -5924,14 +5924,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:55.590852+00:00",
+        "translate_date": "2026-02-05T00:32:01.274525+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.3038,
+        "translate_time_seconds": 2.6708,
         "output_file": "data/gamslib/mcp/pollut_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:35:55.780859+00:00",
+        "solve_date": "2026-02-05T00:33:17.390359+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -5939,7 +5939,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.183,
+        "solve_time_seconds": 0.3653,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -5949,7 +5949,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:35:55.780944+00:00",
+        "comparison_date": "2026-02-05T00:33:17.390505+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -5977,9 +5977,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:35:56.156708+00:00",
+        "parse_date": "2026-02-05T00:29:35.096496+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3748,
+        "parse_time_seconds": 0.5271,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -6065,9 +6065,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:56.385566+00:00",
+        "parse_date": "2026-02-05T00:29:35.437302+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2265,
+        "parse_time_seconds": 0.3377,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -6079,14 +6079,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:57.436901+00:00",
+        "translate_date": "2026-02-05T00:32:02.736215+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.0491,
+        "translate_time_seconds": 1.4573,
         "output_file": "data/gamslib/mcp/port_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:35:57.615939+00:00",
+        "solve_date": "2026-02-05T00:33:17.798993+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6094,7 +6094,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1717,
+        "solve_time_seconds": 0.3968,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6104,7 +6104,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:35:57.616023+00:00",
+        "comparison_date": "2026-02-05T00:33:17.799181+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -6132,9 +6132,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:35:58.309150+00:00",
+        "parse_date": "2026-02-05T00:29:36.382256+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6758,
+        "parse_time_seconds": 0.9141,
         "variables_count": 15,
         "equations_count": 12
       },
@@ -6146,14 +6146,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:35:59.764552+00:00",
+        "translate_date": "2026-02-05T00:32:04.666000+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.4514,
+        "translate_time_seconds": 1.9261,
         "output_file": "data/gamslib/mcp/process_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:35:59.956575+00:00",
+        "solve_date": "2026-02-05T00:33:18.179750+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6161,7 +6161,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1838,
+        "solve_time_seconds": 0.3688,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6171,7 +6171,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:35:59.956678+00:00",
+        "comparison_date": "2026-02-05T00:33:18.179944+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -6199,9 +6199,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:00.276405+00:00",
+        "parse_date": "2026-02-05T00:29:36.809883+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3193,
+        "parse_time_seconds": 0.4243,
         "error": {
           "category": "semantic_undefined_symbol",
           "message": "Error: Parse error at line 46, column 21: Undefined symbol 'betareg' with indices ('y', 'alpha', 'beta') referenced [context: equation 'tcdef' RHS]\n  tcdef.. tc =e= k1*T*betareg(y,alpha,beta) -  k1*{(delta + a)*betareg(y,alpha,beta) +(b - a)*betareg(y,alpha + 1,beta)*g3} +  k2*{(delta + a)*[1 - betareg(y,alpha,beta)] +(b - a)*[1 - betareg(y,alpha + 1,beta)*g3]} -  k2*T*[1 - betareg(y,alpha,beta)]; ydef..  y =e= (T - delta - a)/(b - a);\n                      ^\n\nSuggestion: Declare 'betareg' as a "
@@ -6245,9 +6245,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:00.452031+00:00",
+        "parse_date": "2026-02-05T00:29:37.033063+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1726,
+        "parse_time_seconds": 0.2203,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -6259,14 +6259,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:01.548219+00:00",
+        "translate_date": "2026-02-05T00:32:05.981424+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.0934,
+        "translate_time_seconds": 1.2866,
         "output_file": "data/gamslib/mcp/prodmix_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:36:01.894215+00:00",
+        "solve_date": "2026-02-05T00:33:18.817914+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -6274,13 +6274,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": 0.0,
-        "solve_time_seconds": 0.3348,
+        "solve_time_seconds": 0.6269,
         "iterations": 0,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
-        "comparison_date": "2026-02-04T01:36:01.894453+00:00",
+        "comparison_date": "2026-02-05T00:33:18.818066+00:00",
         "nlp_objective": 18666.6667,
         "mcp_objective": 0.0,
         "absolute_difference": 18666.6667,
@@ -6342,9 +6342,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:02.453736+00:00",
+        "parse_date": "2026-02-05T00:29:37.783228+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5589,
+        "parse_time_seconds": 0.7471,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 107, column 37: Unexpected character: ':'\n  put 'BL BLOCK1 PERIOD2 ',(1/card(s)):8:6/;\n                                      ^\n\nSuggestion: This character is not valid in this context"
@@ -6388,17 +6388,17 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:04.208033+00:00",
+        "parse_date": "2026-02-05T00:29:39.994750+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.7518,
+        "parse_time_seconds": 2.2076,
         "variables_count": 6,
         "equations_count": 9
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:36:07.142324+00:00",
+        "translate_date": "2026-02-05T00:32:09.015002+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.9315,
+        "translate_time_seconds": 3.0301,
         "error": {
           "category": "internal_error",
           "message": "Error: Unexpected error - Differentiation not yet implemented for SetMembershipTest. This will be added in subsequent days of Sprint 2.\n"
@@ -6444,9 +6444,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:07.468665+00:00",
+        "parse_date": "2026-02-05T00:29:40.406973+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3227,
+        "parse_time_seconds": 0.4089,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 59, column 24: Unexpected character: ':'\n  loop(i, put i.tl x.l(i):20:10 w.l(i):20:10 b.l(i):20:10 p(i):20:10 theta(i):20:10/;);\n                         ^\n\nSuggestion: This character is not valid in this context"
@@ -6490,9 +6490,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:08.689003+00:00",
+        "parse_date": "2026-02-05T00:29:42.041004+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.2176,
+        "parse_time_seconds": 1.6301,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 141, column 13: Unexpected character: 'p'\n  loop(i, put pt(i,t):10:5;);\n              ^\n\nSuggestion: This character is not valid in this context"
@@ -6536,22 +6536,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:08.903348+00:00",
+        "parse_date": "2026-02-05T00:29:42.316522+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2114,
+        "parse_time_seconds": 0.2726,
         "variables_count": 4,
         "equations_count": 3
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:10.108097+00:00",
+        "translate_date": "2026-02-05T00:32:10.354744+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.2022,
+        "translate_time_seconds": 1.3351,
         "output_file": "data/gamslib/mcp/ps2_f_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:10.319715+00:00",
+        "solve_date": "2026-02-05T00:33:19.183915+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6559,7 +6559,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2035,
+        "solve_time_seconds": 0.3558,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -6569,7 +6569,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:10.319813+00:00",
+        "comparison_date": "2026-02-05T00:33:19.184085+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -6603,22 +6603,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:10.688717+00:00",
+        "parse_date": "2026-02-05T00:29:42.796566+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3685,
+        "parse_time_seconds": 0.477,
         "variables_count": 4,
         "equations_count": 3
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:11.919797+00:00",
+        "translate_date": "2026-02-05T00:32:11.782081+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.2285,
+        "translate_time_seconds": 1.4234,
         "output_file": "data/gamslib/mcp/ps2_f_eff_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:12.128881+00:00",
+        "solve_date": "2026-02-05T00:33:19.543425+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6626,7 +6626,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2015,
+        "solve_time_seconds": 0.35,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -6636,7 +6636,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:12.129052+00:00",
+        "comparison_date": "2026-02-05T00:33:19.543584+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -6670,9 +6670,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:12.395017+00:00",
+        "parse_date": "2026-02-05T00:29:43.170653+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2656,
+        "parse_time_seconds": 0.3704,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -6684,14 +6684,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:13.634941+00:00",
+        "translate_date": "2026-02-05T00:32:13.192382+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.2364,
+        "translate_time_seconds": 1.4063,
         "output_file": "data/gamslib/mcp/ps2_f_inf_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:13.839695+00:00",
+        "solve_date": "2026-02-05T00:33:19.903047+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6699,7 +6699,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1972,
+        "solve_time_seconds": 0.3508,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -6709,7 +6709,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:13.839797+00:00",
+        "comparison_date": "2026-02-05T00:33:19.903188+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -6737,22 +6737,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:14.082623+00:00",
+        "parse_date": "2026-02-05T00:29:43.499825+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2209,
+        "parse_time_seconds": 0.2965,
         "variables_count": 4,
         "equations_count": 4
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:15.254684+00:00",
+        "translate_date": "2026-02-05T00:32:14.596867+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.1696,
+        "translate_time_seconds": 1.4006,
         "output_file": "data/gamslib/mcp/ps2_f_s_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:15.458426+00:00",
+        "solve_date": "2026-02-05T00:33:20.286331+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6760,7 +6760,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1958,
+        "solve_time_seconds": 0.3351,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -6770,7 +6770,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:15.458514+00:00",
+        "comparison_date": "2026-02-05T00:33:20.286479+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -6804,22 +6804,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:15.728953+00:00",
+        "parse_date": "2026-02-05T00:29:43.878126+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.27,
+        "parse_time_seconds": 0.3752,
         "variables_count": 4,
         "equations_count": 4
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:16.895819+00:00",
+        "translate_date": "2026-02-05T00:32:16.000182+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.1637,
+        "translate_time_seconds": 1.3991,
         "output_file": "data/gamslib/mcp/ps2_s_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:17.101886+00:00",
+        "solve_date": "2026-02-05T00:33:20.642219+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6827,7 +6827,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1977,
+        "solve_time_seconds": 0.3473,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -6837,7 +6837,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:17.102022+00:00",
+        "comparison_date": "2026-02-05T00:33:20.642359+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -6871,22 +6871,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:17.286076+00:00",
+        "parse_date": "2026-02-05T00:29:44.142516+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1837,
+        "parse_time_seconds": 0.2605,
         "variables_count": 4,
         "equations_count": 3
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:18.398500+00:00",
+        "translate_date": "2026-02-05T00:32:17.362831+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.1083,
+        "translate_time_seconds": 1.3589,
         "output_file": "data/gamslib/mcp/ps3_f_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:18.601937+00:00",
+        "solve_date": "2026-02-05T00:33:21.026138+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6894,7 +6894,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1951,
+        "solve_time_seconds": 0.3735,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6904,7 +6904,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:18.602031+00:00",
+        "comparison_date": "2026-02-05T00:33:21.026291+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -6938,22 +6938,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:18.824889+00:00",
+        "parse_date": "2026-02-05T00:29:44.448117+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2225,
+        "parse_time_seconds": 0.3022,
         "variables_count": 4,
         "equations_count": 4
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:19.967909+00:00",
+        "translate_date": "2026-02-05T00:32:18.735172+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.1394,
+        "translate_time_seconds": 1.3687,
         "output_file": "data/gamslib/mcp/ps3_s_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:20.167033+00:00",
+        "solve_date": "2026-02-05T00:33:21.391476+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6961,7 +6961,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.1903,
+        "solve_time_seconds": 0.3553,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6971,7 +6971,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:20.167173+00:00",
+        "comparison_date": "2026-02-05T00:33:21.391632+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -7005,22 +7005,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:20.445502+00:00",
+        "parse_date": "2026-02-05T00:29:44.823312+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.278,
+        "parse_time_seconds": 0.3715,
         "variables_count": 4,
         "equations_count": 4
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:21.593021+00:00",
+        "translate_date": "2026-02-05T00:32:20.198526+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.1444,
+        "translate_time_seconds": 1.4597,
         "output_file": "data/gamslib/mcp/ps3_s_gic_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:21.799671+00:00",
+        "solve_date": "2026-02-05T00:33:21.766090+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -7028,7 +7028,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.198,
+        "solve_time_seconds": 0.363,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -7038,7 +7038,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:21.799765+00:00",
+        "comparison_date": "2026-02-05T00:33:21.766221+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -7072,22 +7072,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:22.105775+00:00",
+        "parse_date": "2026-02-05T00:29:45.244913+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3052,
+        "parse_time_seconds": 0.4185,
         "variables_count": 4,
         "equations_count": 5
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:23.457828+00:00",
+        "translate_date": "2026-02-05T00:32:21.840154+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3481,
+        "translate_time_seconds": 1.6113,
         "output_file": "data/gamslib/mcp/ps3_s_mn_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:23.695298+00:00",
+        "solve_date": "2026-02-05T00:33:22.136178+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -7095,7 +7095,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2246,
+        "solve_time_seconds": 0.3592,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -7105,7 +7105,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:23.695394+00:00",
+        "comparison_date": "2026-02-05T00:33:22.136319+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -7139,22 +7139,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:24.262916+00:00",
+        "parse_date": "2026-02-05T00:29:45.946997+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5671,
+        "parse_time_seconds": 0.6993,
         "variables_count": 4,
         "equations_count": 6
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:25.812222+00:00",
+        "translate_date": "2026-02-05T00:32:23.698390+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5461,
+        "translate_time_seconds": 1.8543,
         "output_file": "data/gamslib/mcp/ps3_s_scp_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:26.032963+00:00",
+        "solve_date": "2026-02-05T00:33:22.497373+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -7162,7 +7162,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2116,
+        "solve_time_seconds": 0.3498,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -7172,7 +7172,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:26.033051+00:00",
+        "comparison_date": "2026-02-05T00:33:22.497511+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -7206,9 +7206,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:27.185055+00:00",
+        "parse_date": "2026-02-05T00:29:47.482211+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.1516,
+        "parse_time_seconds": 1.5316,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 145, column 13: Unexpected character: 'p'\n  loop(i, put pt(i,t):10:5;);\n              ^\n\nSuggestion: This character is not valid in this context"
@@ -7252,9 +7252,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:27.879858+00:00",
+        "parse_date": "2026-02-05T00:29:48.369680+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6919,
+        "parse_time_seconds": 0.8837,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -7266,9 +7266,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:36:37.890308+00:00",
+        "translate_date": "2026-02-05T00:32:35.830453+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 10.0073,
+        "translate_time_seconds": 12.1282,
         "error": {
           "category": "unsup_index_offset",
           "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='k', offset=SymbolRef(+), circular=False)\n"
@@ -7353,9 +7353,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:39.487659+00:00",
+        "parse_date": "2026-02-05T00:29:50.301371+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.5928,
+        "parse_time_seconds": 1.929,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 178, column 1: Unexpected character: 'a'\n  acost,   dem,      proc,   amisc\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -7567,9 +7567,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:39.751251+00:00",
+        "parse_date": "2026-02-05T00:29:50.720800+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2394,
+        "parse_time_seconds": 0.3889,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 60, column 1: Unexpected character: 'x'\n  x.l(i,j) = xb(i,j)$xw(i,j);\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -7613,9 +7613,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:44.017567+00:00",
+        "parse_date": "2026-02-05T00:29:57.319687+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 4.2634,
+        "parse_time_seconds": 6.5955,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'D' and 'Z' define each other\n\nSuggestion: Equations 'eqDs' and 'eqpzd' create a circular definition:\n  eqDs: D depends on Z\n  eqpzd: Z depends on D\n\nReformulate your model to break the cycle."
@@ -7659,9 +7659,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:44.476687+00:00",
+        "parse_date": "2026-02-05T00:29:58.040762+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.457,
+        "parse_time_seconds": 0.7181,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -7673,9 +7673,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:36:45.797963+00:00",
+        "translate_date": "2026-02-05T00:32:37.902134+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3192,
+        "translate_time_seconds": 2.0672,
         "error": {
           "category": "internal_error",
           "message": "Error: Invalid model - Equation 'tc' uses domain set 'tlast' which has no members\n"
@@ -7715,9 +7715,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:45.903282+00:00",
+        "parse_date": "2026-02-05T00:29:58.190490+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1015,
+        "parse_time_seconds": 0.1468,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -7729,14 +7729,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:46.857810+00:00",
+        "translate_date": "2026-02-05T00:32:39.272356+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 0.9518,
+        "translate_time_seconds": 1.3648,
         "output_file": "data/gamslib/mcp/rbrock_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:36:47.204872+00:00",
+        "solve_date": "2026-02-05T00:33:23.174500+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -7744,13 +7744,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": 2.353296e-21,
-        "solve_time_seconds": 0.3387,
+        "solve_time_seconds": 0.6659,
         "iterations": 10,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "match",
-        "comparison_date": "2026-02-04T01:36:47.204984+00:00",
+        "comparison_date": "2026-02-05T00:33:23.174664+00:00",
         "nlp_objective": 0.0,
         "mcp_objective": 2.353296e-21,
         "absolute_difference": 2.353296e-21,
@@ -7791,9 +7791,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:47.762046+00:00",
+        "parse_date": "2026-02-05T00:29:58.919330+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.5567,
+        "parse_time_seconds": 0.7259,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -7805,9 +7805,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:36:48.947012+00:00",
+        "translate_date": "2026-02-05T00:32:40.936184+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.1823,
+        "translate_time_seconds": 1.6594,
         "error": {
           "category": "unsup_index_offset",
           "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='tt', offset=SymbolRef(+), circular=False)\n"
@@ -7847,9 +7847,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:49.028095+00:00",
+        "parse_date": "2026-02-05T00:29:59.034088+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0765,
+        "parse_time_seconds": 0.1104,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -7893,9 +7893,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:49.191355+00:00",
+        "parse_date": "2026-02-05T00:29:59.275304+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1604,
+        "parse_time_seconds": 0.238,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 69, column 19: Unexpected character: ','\n  Equation lpcons(i), defdual(j);\n                    ^\n\nSuggestion: This character is not valid in this context"
@@ -7939,9 +7939,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:49.819562+00:00",
+        "parse_date": "2026-02-05T00:30:00.182978+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6256,
+        "parse_time_seconds": 0.9043,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -7985,9 +7985,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:50.099082+00:00",
+        "parse_date": "2026-02-05T00:30:00.589588+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2775,
+        "parse_time_seconds": 0.4033,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 58, column 1: Unexpected character: 'x'\n  x.l(i,j) = xb(i,j)$xw(i,j);\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -8031,9 +8031,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:36:50.477945+00:00",
+        "parse_date": "2026-02-05T00:30:01.166963+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3764,
+        "parse_time_seconds": 0.5744,
         "variables_count": 3,
         "equations_count": 4
       },
@@ -8045,14 +8045,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:36:51.699338+00:00",
+        "translate_date": "2026-02-05T00:32:42.763579+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.2185,
+        "translate_time_seconds": 1.8219,
         "output_file": "data/gamslib/mcp/sample_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-04T01:36:51.882069+00:00",
+        "solve_date": "2026-02-05T00:33:23.546414+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -8060,7 +8060,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.176,
+        "solve_time_seconds": 0.3614,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -8070,7 +8070,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:36:51.882150+00:00",
+        "comparison_date": "2026-02-05T00:33:23.546581+00:00",
         "notes": "Skipped due to solve failure"
       }
     },
@@ -8098,9 +8098,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:52.052544+00:00",
+        "parse_date": "2026-02-05T00:30:01.410677+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1515,
+        "parse_time_seconds": 0.2128,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 111, column 1: Unexpected character: '/'\n  /\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -8144,9 +8144,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:53.175529+00:00",
+        "parse_date": "2026-02-05T00:30:02.968951+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.121,
+        "parse_time_seconds": 1.555,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 222, column 7: Unexpected character: '('\n  wheat.(harrow,spray)                  18     19     19     20     20     18     18\n        ^\n\nSuggestion: This character is not valid in this context"
@@ -8232,9 +8232,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:53.386068+00:00",
+        "parse_date": "2026-02-05T00:30:03.267503+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2077,
+        "parse_time_seconds": 0.2952,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 73, column 18: Unexpected character: '''\n  File      repdat 'sensitivity data report file';\n                   ^\n\nSuggestion: This character is not valid in this context"
@@ -8278,9 +8278,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:57.165971+00:00",
+        "parse_date": "2026-02-05T00:30:08.150918+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 3.7777,
+        "parse_time_seconds": 4.8797,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 295, column 1: Unexpected character: '('\n  ('ret-25','ret-30','ret-35')           2.7,\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -8324,9 +8324,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:57.233032+00:00",
+        "parse_date": "2026-02-05T00:30:08.225679+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0647,
+        "parse_time_seconds": 0.0723,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 23, column 50: Unexpected character: 'n'\n  ca       'corrosion allowance            (cm)' / na    /\n                                                   ^\n\nSuggestion: This character is not valid in this context"
@@ -8391,9 +8391,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:57.301066+00:00",
+        "parse_date": "2026-02-05T00:30:08.306987+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0647,
+        "parse_time_seconds": 0.0781,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 38, column 23: Unexpected character: ','\n  Equation defobj, e1(i), e2(i), e3(i);\n                        ^\n\nSuggestion: This character is not valid in this context"
@@ -8437,9 +8437,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:57.527332+00:00",
+        "parse_date": "2026-02-05T00:30:08.595416+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2228,
+        "parse_time_seconds": 0.2846,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 56, column 79: Unexpected character: '('\n  cost..    z =e= sum((t,l), infl(t)*clen(l)*x(t,l)); bal1(t).. sum((l,lp), x(t-(ord(l)-1),lp+(ord(l)-1))) =g= req(t);\n                                                                                ^\n\nSuggestion: This character is not valid in this context"
@@ -8483,9 +8483,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:58.473618+00:00",
+        "parse_date": "2026-02-05T00:30:09.820113+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.9433,
+        "parse_time_seconds": 1.2215,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 148, column 35: Unexpected character: '.'\n  P2R3_MCP        / DEM, SUP, IN_OUT.P, DOM_TRAD.X /;\n                                    ^\n\nSuggestion: This character is not valid in this context"
@@ -8592,9 +8592,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:59.202111+00:00",
+        "parse_date": "2026-02-05T00:30:10.768712+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7259,
+        "parse_time_seconds": 0.946,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'Z' and 'F' define each other\n\nSuggestion: Equations 'eqpz' and 'eqF' create a circular definition:\n  eqpz: Z depends on F\n  eqF: F depends on Z\n\nReformulate your model to break the cycle."
@@ -8638,9 +8638,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:59.265508+00:00",
+        "parse_date": "2026-02-05T00:30:10.843199+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0601,
+        "parse_time_seconds": 0.0708,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 31, column 43: Unexpected character: '['\n  L0    \"rest length of each spring\"     /  [2*sqrt(sqr(a_x-b_x) + sqr(a_y-b_y))/10]/\n                                            ^\n\nSuggestion: This character is not valid in this context"
@@ -8708,9 +8708,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:59.500160+00:00",
+        "parse_date": "2026-02-05T00:30:11.152904+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2085,
+        "parse_time_seconds": 0.2774,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 56, column 48: Unexpected character: '*'\n  tn(t,n)   'time node mapping' / 'time-1'.('n-1'*'n-3'), 'time-2'.('n-4'*'n-12')      /\n                                                 ^\n\nSuggestion: This character is not valid in this context"
@@ -8754,9 +8754,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:59.812360+00:00",
+        "parse_date": "2026-02-05T00:30:11.578014+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3102,
+        "parse_time_seconds": 0.4203,
         "error": {
           "category": "semantic_undefined_symbol",
           "message": "Error: Parse error at line 49, column 15: Undefined symbol 'sameas' with indices ('i', 'ip') referenced [context: equation 'nb' condition] [domain: ('i', 'ip')]\n  nb(i,ip)$(not sameas(i,ip)).. sum(ipp$darc(ipp,ip), x(i,ipp,ip)) =g= sum(ipp$darc(ip,ipp), x(i,ip,ipp)) + 1;\n                ^\n\nSuggestion: Declare 'sameas' as a variable, parameter, or set before using it"
@@ -8800,9 +8800,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:36:59.888064+00:00",
+        "parse_date": "2026-02-05T00:30:11.675303+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0735,
+        "parse_time_seconds": 0.0931,
         "error": {
           "category": "internal_error",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -8846,9 +8846,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:03.494979+00:00",
+        "parse_date": "2026-02-05T00:30:16.359150+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 3.6047,
+        "parse_time_seconds": 4.6811,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 362, column 17: Unexpected character: ')'\n  loop(j, put j.tl);\n                  ^\n\nSuggestion: This character is not valid in this context"
@@ -8913,9 +8913,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:04.670715+00:00",
+        "parse_date": "2026-02-05T00:30:17.807960+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.1554,
+        "parse_time_seconds": 1.4257,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 120, column 54: Unexpected character: '('\n  wb(t)..      yw*sum(i, w(t,i)) + sum(a, yv(a)*v(t-ord(a))) =g= wrc*x(t,\"tobacco\") + dwr*nfam; wa(i)..      sum(t, w(t,i)) =l= fa(i);\n                                                       ^\n\nSuggestion: This character is not valid in this context"
@@ -8959,9 +8959,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:04.982030+00:00",
+        "parse_date": "2026-02-05T00:30:18.155509+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3094,
+        "parse_time_seconds": 0.3444,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 37, column 30: Unexpected character: '2'\n  ('a-10','a-20','a-30')      .2      .2\n                               ^\n\nSuggestion: This character is not valid in this context"
@@ -9005,9 +9005,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:05.325794+00:00",
+        "parse_date": "2026-02-05T00:30:18.573010+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.3405,
+        "parse_time_seconds": 0.4149,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 79, column 52: Unexpected character: 'n'\n  rho     'discount rate'                       /    na /;\n                                                     ^\n\nSuggestion: This character is not valid in this context"
@@ -9093,9 +9093,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:05.580922+00:00",
+        "parse_date": "2026-02-05T00:30:18.856766+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2529,
+        "parse_time_seconds": 0.2804,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 73, column 36: Unexpected character: ','\n  x.up(n,k)         = myScale*smax((i,kp),fx(i,kp));\n                                     ^\n\nSuggestion: This character is not valid in this context"
@@ -9139,9 +9139,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:37:05.740626+00:00",
+        "parse_date": "2026-02-05T00:30:19.052150+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.1565,
+        "parse_time_seconds": 0.1922,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -9153,14 +9153,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:37:06.842512+00:00",
+        "translate_date": "2026-02-05T00:32:44.195713+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.0994,
+        "translate_time_seconds": 1.4271,
         "output_file": "data/gamslib/mcp/trig_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:37:07.256139+00:00",
+        "solve_date": "2026-02-05T00:33:24.281045+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -9168,13 +9168,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": -2.479,
-        "solve_time_seconds": 0.4022,
+        "solve_time_seconds": 0.723,
         "iterations": 88,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
-        "comparison_date": "2026-02-04T01:37:07.256270+00:00",
+        "comparison_date": "2026-02-05T00:33:24.281202+00:00",
         "nlp_objective": 0.0,
         "mcp_objective": -2.479,
         "absolute_difference": 2.479,
@@ -9260,9 +9260,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:37:07.515842+00:00",
+        "parse_date": "2026-02-05T00:30:19.353703+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.2593,
+        "parse_time_seconds": 0.2989,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -9274,14 +9274,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:37:08.754618+00:00",
+        "translate_date": "2026-02-05T00:32:45.758039+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.2354,
+        "translate_time_seconds": 1.5583,
         "output_file": "data/gamslib/mcp/trnsport_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-04T01:37:09.120048+00:00",
+        "solve_date": "2026-02-05T00:33:25.034277+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -9289,13 +9289,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": 0.0,
-        "solve_time_seconds": 0.3564,
+        "solve_time_seconds": 0.7026,
         "iterations": 0,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
-        "comparison_date": "2026-02-04T01:37:09.120190+00:00",
+        "comparison_date": "2026-02-05T00:33:25.034548+00:00",
         "nlp_objective": 153.675,
         "mcp_objective": 0.0,
         "absolute_difference": 153.675,
@@ -9336,9 +9336,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:09.483225+00:00",
+        "parse_date": "2026-02-05T00:30:19.827872+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.337,
+        "parse_time_seconds": 0.4448,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 133, column 16: Unexpected character: '/'\n  xlow     /  50 /\n                 ^\n\nSuggestion: This character is not valid in this context"
@@ -9403,9 +9403,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:37:09.894059+00:00",
+        "parse_date": "2026-02-05T00:30:20.332874+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.4085,
+        "parse_time_seconds": 0.5024,
         "variables_count": 5,
         "equations_count": 5
       },
@@ -9417,33 +9417,42 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-04T01:37:11.343915+00:00",
+        "translate_date": "2026-02-05T00:32:48.148761+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.4471,
+        "translate_time_seconds": 2.3866,
         "output_file": "data/gamslib/mcp/trussm_mcp.gms"
       },
       "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-02-04T01:37:11.552698+00:00",
+        "status": "success",
+        "solve_date": "2026-02-05T00:33:26.137980+00:00",
         "solver": "PATH",
         "solver_version": null,
-        "solver_status": null,
-        "solver_status_text": null,
-        "model_status": null,
-        "model_status_text": null,
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
         "objective_value": null,
-        "solve_time_seconds": 0.2,
-        "iterations": null,
-        "outcome_category": "path_syntax_error",
-        "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
-        }
+        "solve_time_seconds": 1.083,
+        "iterations": 2,
+        "outcome_category": "model_optimal"
       },
       "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-02-04T01:37:11.552791+00:00",
-        "notes": "Skipped due to solve failure"
+        "comparison_status": "error",
+        "comparison_date": "2026-02-05T00:33:26.138218+00:00",
+        "nlp_objective": 0.4499,
+        "mcp_objective": null,
+        "absolute_difference": null,
+        "relative_difference": null,
+        "objective_match": null,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 1e-06,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_not_performed",
+        "notes": "MCP objective value not available"
       }
     },
     {
@@ -9470,9 +9479,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:12.943325+00:00",
+        "parse_date": "2026-02-05T00:30:21.918864+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 1.3897,
+        "parse_time_seconds": 1.583,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 201, column 54: Unexpected character: 's'\n  wheat  corn  rye  barley  (chickpea,drybean,lentil)  sugarbeet  alfalfa  fodder\n                                                       ^\n\nSuggestion: This character is not valid in this context"
@@ -9516,9 +9525,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:13.668169+00:00",
+        "parse_date": "2026-02-05T00:30:22.692959+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.722,
+        "parse_time_seconds": 0.7713,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 76, column 23: Unexpected character: ','\n  / ('hydro-1'*'hydro-3', 'hydro-5'*'hydro-7').(1978,1983)  inf,\n                        ^\n\nSuggestion: This character is not valid in this context"
@@ -9562,9 +9571,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:18.537562+00:00",
+        "parse_date": "2026-02-05T00:30:28.274873+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 4.8662,
+        "parse_time_seconds": 5.5788,
         "error": {
           "category": "internal_error",
           "message": "Error: Circular dependency detected: 'D' and 'Z' define each other\n\nSuggestion: Equations 'eqDs' and 'eqpzd' create a circular definition:\n  eqDs: D depends on Z\n  eqpzd: Z depends on D\n\nReformulate your model to break the cycle."
@@ -9608,9 +9617,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:19.243110+00:00",
+        "parse_date": "2026-02-05T00:30:29.100911+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.7034,
+        "parse_time_seconds": 0.823,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 104, column 1: Unexpected character: 'z'\n  z.lo(i,k) = d(i,k);\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -9654,9 +9663,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:19.272641+00:00",
+        "parse_date": "2026-02-05T00:30:29.134519+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.027,
+        "parse_time_seconds": 0.0303,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 19, column 13: Parse error at line 19, column 13: Unexpected character: 'V'\n  Nonnegative Variables so4, baoh, oh, hso4, h;\n              ^\n  Nonnegative Variables so4, baoh, oh, hso4, h;\n              ^\n\nSuggestion: This character is not valid in this context\n\nDid you mean 'Negative'?"
@@ -9700,9 +9709,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:19.315549+00:00",
+        "parse_date": "2026-02-05T00:30:29.182960+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.0406,
+        "parse_time_seconds": 0.0457,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 24, column 10: Unexpected character: '''\n  Table td 'target data'\n           ^\n\nSuggestion: This character is not valid in this context"
@@ -9746,9 +9755,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-04T01:37:19.553139+00:00",
+        "parse_date": "2026-02-05T00:30:29.466214+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.235,
+        "parse_time_seconds": 0.2803,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -9760,9 +9769,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-04T01:37:20.787217+00:00",
+        "translate_date": "2026-02-05T00:32:49.974386+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.2318,
+        "translate_time_seconds": 1.7911,
         "error": {
           "category": "unsup_index_offset",
           "message": "Error: Unexpected error - IndexOffset not yet supported in this context: IndexOffset(base='t', offset=Unary(-, SymbolRef(-)), circular=False)\n"
@@ -9802,9 +9811,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-04T01:37:21.437258+00:00",
+        "parse_date": "2026-02-05T00:30:30.211407+00:00",
         "nlp2mcp_version": "0.7.0",
-        "parse_time_seconds": 0.6464,
+        "parse_time_seconds": 0.7421,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 103, column 1: Unexpected character: 's'\n  solve riskmod using nlp minimizing pval;\n  ^\n\nSuggestion: This character is not valid in this context"
