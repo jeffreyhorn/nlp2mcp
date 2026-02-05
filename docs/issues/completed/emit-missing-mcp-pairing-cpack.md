@@ -1,6 +1,6 @@
 # Emit: Missing stat_r.r Pairing in MCP Model Declaration (cpack.gms)
 
-**Status:** Open  
+**Status:** Completed  
 **Priority:** High  
 **Affects:** cpack.gms (circle packing from GAMSLIB)  
 **GitHub Issue:** [#623](https://github.com/jeffreyhorn/nlp2mcp/issues/623)
