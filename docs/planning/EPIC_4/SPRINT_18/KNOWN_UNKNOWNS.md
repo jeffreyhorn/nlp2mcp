@@ -65,7 +65,7 @@ This document identifies all assumptions and unknowns for Sprint 18 features **b
 - Category 3 (Parse Quick Win): 4 unknowns
 - Category 4 (Infrastructure & Process): 4 unknowns
 
-**Estimated Research Time:** 22-32 hours (aligned with prep plan)
+**Estimated Research Time:** 22-32 hours (full range; prep plan uses 24-30 hour working range)
 
 ---
 
@@ -1092,8 +1092,8 @@ When new unknowns are discovered during Sprint 18, use this template:
 6. Review daily during standup
 
 **Success Criteria:**
-- All Critical unknowns (5) resolved before Day 1
-- All High unknowns (10) resolved before their implementation day
+- All Critical unknowns (4) resolved before Day 1
+- All High unknowns (9) resolved before their implementation day
 - Medium unknowns resolved during implementation
 - Low unknowns can be deferred or resolved opportunistically
 - Zero late-surprise discoveries that require >4 hours of unplanned work
