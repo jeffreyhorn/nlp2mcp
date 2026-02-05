@@ -17,8 +17,11 @@
 | Solve | 11/21 | 52.4% of translated |
 | Full Pipeline | 11/160 | 6.9% |
 
-**Successful Models (Full Pipeline):**
+**Successful Models (Full Pipeline) - Baseline:**
 apl1p, blend, himmel11, hs62, mathopt1, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig
+
+**Successful Models (Full Pipeline) - Sprint 17 Final (12):**
+apl1p, blend, himmel11, hs62, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig, trnsport, trussm
 
 ---
 
@@ -285,19 +288,39 @@ Target models from improvement plan have other unrelated parsing issues (tuple e
 
 ---
 
-### Day 10: Release Execution
+### Day 10: Release Execution (February 4, 2026) ✅
 
-**Status:** Not started
+**Status:** Complete
 
-**Planned:**
-- [ ] Final verification (1h)
-- [ ] Version bump in pyproject.toml (0.5h)
-- [ ] Create release commit (0.5h)
-- [ ] Create git tag v1.1.0 (0.5h)
-- [ ] Create GitHub release (0.5h)
-- [ ] Post-release verification (1h)
+**Completed:**
+- [x] Final verification (1h)
+  - `make typecheck` - passed (91 source files)
+  - `make lint` - passed
+  - `make format` - passed
+  - `make test` - passed (3204 tests, 10 skipped, 1 xfailed)
+- [x] Version bump in pyproject.toml (0.5h)
+  - `0.7.0` → `1.1.0`
+- [x] Update release notes with final metrics
+  - 12 solving models (was 11; trussm added)
+  - 3204 tests (was 3182)
+- [x] Update CHANGELOG.md with v1.1.0 release entry
+- [x] Update SPRINT_LOG.md with Day 10 entry
+- [x] Update SPRINT_SCHEDULE.md to mark Day 10 complete
+- [x] Create release commit
+- [ ] Create git tag v1.1.0 (post-merge)
+- [ ] Create GitHub release (post-merge)
+- [ ] Post-release verification (post-merge)
 
-**RELEASE DAY**
+**Final Metrics:**
+- Parse: 61/160 (38.1%)
+- Translate: 42/61 (68.9%)
+- Solve: 12/42 (28.6%)
+- Full Pipeline: 12/160 (7.5%)
+- Tests: 3204 passing
+
+**12 Solving Models:** apl1p, blend, himmel11, hs62, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig, trnsport, trussm
+
+**RELEASE DAY - v1.1.0**
 
 ---
 
@@ -326,8 +349,9 @@ Target models from improvement plan have other unrelated parsing issues (tuple e
 | Day 6 | +14 models | Cascade | Cascade | Preprocessor fix, display, prod |
 | Day 7 | Grammar added | - | - | Square brackets, solve variants |
 | Day 8 | +2 models | - | - | Acronym, curly braces |
-| Day 9 | 61/160 (38.1%) | 42/61 (68.8%) | 11/42 (26.2%) | Full retest |
-| Day 10 | | | | Final |
+| Day 9 | 61/160 (38.1%) | 42/61 (68.9%) | 11/42 (26.2%) | Pre-release verification |
+| Day 9+ | 61/160 (38.1%) | 42/61 (68.9%) | 12/42 (28.6%) | Bug fixes (#620, #621, #623, #624) |
+| Day 10 | 61/160 (38.1%) | 42/61 (68.9%) | 12/42 (28.6%) | **RELEASE v1.1.0** |
 
 ---
 
@@ -345,7 +369,13 @@ Target models from improvement plan have other unrelated parsing issues (tuple e
 | 8 | #616 | docs: Mark issue #613 (curly brace expressions) as resolved | ✅ Merged |
 | 8 | #617 | feat: Add preprocess_text() for string-based GAMS preprocessing | ✅ Merged |
 | 8 | #618 | fix: Support tuple prefix expansion in multiline set data (Issue #612) | ✅ Merged |
-| 9 | #619 | Sprint 17 Day 9: Documentation & Pre-Release Verification | Pending |
+| 9 | #619 | Sprint 17 Day 9: Documentation & Pre-Release Verification | ✅ Merged |
+| 9 | #625 | fix: Emit Alias statements before dependent Sets (Issue #621) | ✅ Merged |
+| 9 | #627 | fix: Stationarity uncontrolled index variable (Issue #620) | ✅ Merged |
+| 9 | #628 | fix: Missing MCP pairing for circle.gms (Issue #624) | ✅ Merged |
+| 9 | #629 | fix: Missing MCP pairing for cpack.gms (Issue #623) | ✅ Merged |
+| 9 | #630 | metrics: Sprint 17 Day 9 pipeline results | ✅ Merged |
+| 10 | TBD | release: v1.1.0 | Pending |
 
 ---
 
