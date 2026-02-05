@@ -35,9 +35,14 @@ This prep plan focuses on research, analysis, and setup tasks that must be compl
 | 9 | Verify Sprint 18 Baseline Metrics | High | 1-2 hours | None | All — ensure v1.1.0 baseline is accurate |
 | 10 | Plan Sprint 18 Detailed Schedule | Critical | 3-4 hours | All tasks | Sprint 18 planning |
 
-**Total Estimated Time:** 22-32 hours (~3-4 working days)
+**Total Estimated Time (roll-up):** 27 hours (P50), with a working range of 24-30 hours (~3 working days + up to ~1 extra day buffer)
 
-**Critical Path:** Tasks 1 → 4/5 → 10 (Known Unknowns must come first; emit_gams.py analysis informs schedule)
+**Variance Allocation / Critical Path:** The majority of the uncertainty is on the critical path — Tasks 1 → 4/5 → 10:
+- Task 1: ±1 hour depending on discovery scope
+- Tasks 4 & 5: ±1 hour each depending on complexity of emit_gams.py failures
+- Task 10: ±1 hour to incorporate findings from earlier analysis tasks
+
+This makes the schedule risk explicit while keeping the base plan at ~27 hours and a bounded variance of ±3 hours focused on critical-path work.
 
 ---
 
@@ -1195,7 +1200,7 @@ A complete Sprint 18 plan that:
 
 ## Summary
 
-### Total Estimated Time: 22-32 hours (~3-4 working days)
+### Total Estimated Time: 27 hours (P50), working range 24-30 hours (~3 working days + up to ~1 extra day buffer)
 
 ### Critical Path
 
