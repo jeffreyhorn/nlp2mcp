@@ -108,6 +108,7 @@ comp_lo_r.. r - 0 =G= 0;
 Model mcp_model /
     stat_a.a,
     stat_b.b,
+    stat_r.r,
     comp_e.lam_e,
     comp_lo_r.piL_r
 /;

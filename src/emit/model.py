@@ -140,7 +140,9 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                 var_name = _extract_variable_name_from_stationarity(suffix, kkt.model_ir)
 
                 # Skip objective variable UNLESS Strategy 1 was applied
-                skip_objvar = not kkt.model_ir.strategy1_applied
+                # or the objective is a simple variable that needs stationarity
+                # (Issue #624: must be consistent with build_stationarity_equations)
+                skip_objvar = not kkt.model_ir.strategy1_applied and not obj_info.needs_stationarity
                 if var_name and (not skip_objvar or var_name != obj_info.objvar):
                     # GAMS MCP syntax: indexed equations listed without indices
                     # stat_x.x (not stat_x(i).x(i)) - indexing is implicit

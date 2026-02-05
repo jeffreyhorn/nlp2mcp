@@ -1,6 +1,6 @@
 # Emit: Missing stat_r.r Pairing in MCP Model Declaration (circle.gms)
 
-**Status:** Open  
+**Status:** Completed  
 **Priority:** High  
 **Affects:** circle.gms (from GAMSLIB)  
 **GitHub Issue:** [#624](https://github.com/jeffreyhorn/nlp2mcp/issues/624)

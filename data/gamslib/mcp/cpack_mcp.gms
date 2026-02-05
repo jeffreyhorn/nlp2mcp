@@ -17,10 +17,13 @@ $offText
 
 Sets
     i /i1, i2, i3, i4, i5/
-    ij(i,j)
 ;
 
 Alias(i, j);
+
+Sets
+    ij(i,j)
+;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -110,6 +113,7 @@ comp_up_y(i).. 1 - y(i) =G= 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
+    stat_r.r,
     stat_x.x,
     stat_y.y,
     comp_circumscribe.lam_circumscribe,
