@@ -1,10 +1,12 @@
 # Issue: Mismatched Parentheses Detection
 
-**Status:** Open  
+**Status:** SUPERSEDED
 **Category:** Parser Error Reporting  
 **Affected Models:** camcge  
 **Priority:** Low  
-**GitHub Issue:** N/A (source model bug, not parser issue)
+**GitHub Issue:** N/A
+
+> **NOTE (February 5, 2026):** This issue was based on an incorrect diagnosis. The `camcge` model does NOT have a syntax error — it compiles successfully with GAMS (`gams action=c` returns exit code 0). The expression spans lines 212-213 with balanced parentheses across both lines. The actual issue is that nlp2mcp doesn't handle multi-line statement continuation. See **ISSUE_MULTILINE_CONTINUATION.md** and GitHub Issue #636 for the correct analysis.
 
 ## Summary
 
