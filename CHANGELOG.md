@@ -5,7 +5,63 @@ All notable changes to the nlp2mcp project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2026-02-04
+
+### Release v1.1.0 - Sprint 17 Complete
+
+**Epic 3 Final Release** — Translation/Solve Improvements, Parse Improvements & Release
+
+#### Sprint 17 Final Metrics
+
+| Metric | Sprint 16 Baseline | Sprint 17 Final | Change |
+|--------|-------------------|-----------------|--------|
+| Parse Rate | 30.0% (48/160) | 38.1% (61/160) | +13 models |
+| Translate Rate | 43.8% (21/48) | 68.9% (42/61) | +21 models |
+| Solve Rate | 52.4% (11/21) | 28.6% (12/42) | +1 solve, larger denominator |
+| Full Pipeline | 6.9% (11/160) | 7.5% (12/160) | +1 model |
+| Tests | 3043 | 3204 | +161 tests |
+
+**12 Solving Models:** apl1p, blend, himmel11, hs62, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig, trnsport, trussm
+
+---
+
+### Sprint 17 Day 10: Release Execution - 2026-02-04
+
+**Branch:** `sprint17-day10-release`
+**Status:** RELEASE
+
+#### Summary
+
+Executed v1.1.0 release: version bump, final metrics capture, documentation updates, release commit and tag.
+
+#### Changes
+
+##### Changed
+- **Version bump** - `pyproject.toml` version `0.7.0` → `1.1.0`
+- **Release notes** - Updated `docs/releases/v1.1.0.md` with final metrics (12 solves, 3204 tests)
+- **CHANGELOG.md** - Added v1.1.0 release entry with complete Sprint 17 summary
+- **SPRINT_LOG.md** - Added Day 10 entry with final metrics
+- **SPRINT_SCHEDULE.md** - Marked Day 10 complete
+
+---
+
+### Sprint 17 Day 9+: Bug Fixes - 2026-02-03 to 2026-02-04
+
+**Issues Fixed:** #620, #621, #623, #624
+
+#### Bug Fixes
+
+##### Fixed
+- **Stationarity uncontrolled index (Issue #620, PR #627)** - Superset indices in stationarity equations now correctly substitute to subset indices (e.g., `mu(s)` → `mu(i)` when `i(s)` is subset)
+- **Alias ordering (Issue #621, PR #625)** - Alias statements now emitted before dependent Set definitions in generated MCP code
+- **Missing MCP pairing - circle (Issue #624, PR #628)** - Simple variable objectives now correctly include stationarity equation pairing in Model MCP declaration
+- **Missing MCP pairing - cpack (Issue #623, PR #629)** - Same root cause as #624, fixed by same code change
+
+##### Tests Added
+- 2 integration tests for superset/subset index substitution in stationarity equations
+- 2 unit tests for MCP pairing with simple variable objectives
+
+---
 
 ### Sprint 17 Day 9: Documentation & Pre-Release - 2026-02-03
 
