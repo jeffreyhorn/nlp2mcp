@@ -43,7 +43,7 @@ This prep plan focuses on research, analysis, and setup tasks that must be compl
 
 ## Task 1: Create Sprint 18 Known Unknowns List
 
-**Status:** Not Started
+**Status:** ✅ **COMPLETED** (February 5, 2026)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** First prep task — complete before all others
@@ -158,6 +158,7 @@ A comprehensive Known Unknowns document that:
 **Deadline:** Before Task 8 (corpus reclassification design)
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** 1.1, 1.2, 1.3, 1.8
 
 ### Objective
 
@@ -239,6 +240,7 @@ A clear picture of the syntax validation landscape:
 - `docs/planning/EPIC_4/SPRINT_18/CORPUS_SURVEY.md` with survey results
 - List of sample models tested and their GAMS compilation outcomes
 - Estimated scope for `test_syntax.py` implementation
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.1, 1.2, 1.3, 1.8
 
 ### Acceptance Criteria
 
@@ -259,6 +261,7 @@ A clear picture of the syntax validation landscape:
 **Deadline:** Before Sprint 18 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** 1.1, 1.3, 1.7, 1.8
 
 ### Objective
 
@@ -348,6 +351,7 @@ A complete understanding of GAMS `action=c` behavior that enables confident impl
 - `docs/planning/EPIC_4/SPRINT_18/GAMS_ACTION_C_RESEARCH.md` with findings
 - Recommended `test_syntax.py` command-line interface
 - Error parsing strategy documented
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.1, 1.3, 1.7, 1.8
 
 ### Acceptance Criteria
 
@@ -368,6 +372,7 @@ A complete understanding of GAMS `action=c` behavior that enables confident impl
 **Deadline:** Before Sprint 18 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** 2.1, 2.3, 2.4, 2.6
 
 ### Objective
 
@@ -465,6 +470,7 @@ A complete diagnosis of table data emission failures:
 - List of confirmed affected models
 - Fix design with code sketches
 - Unit test case definitions
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 2.1, 2.3, 2.4, 2.6
 
 ### Acceptance Criteria
 
@@ -485,6 +491,7 @@ A complete diagnosis of table data emission failures:
 **Deadline:** Before Sprint 18 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** 2.2, 2.3, 2.5, 2.6
 
 ### Objective
 
@@ -568,6 +575,7 @@ A complete diagnosis of computed parameter emission failures:
 - List of confirmed affected models
 - Fix design with approach decision documented
 - Unit test case definitions
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 2.2, 2.3, 2.5, 2.6
 
 ### Acceptance Criteria
 
@@ -588,6 +596,7 @@ A complete diagnosis of computed parameter emission failures:
 **Deadline:** Before Sprint 18 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** 3.1, 3.2, 3.3, 3.4
 
 ### Objective
 
@@ -664,6 +673,7 @@ A clear understanding of the put statement format syntax:
 - Put statement format syntax summary (in Known Unknowns or sprint notes)
 - Confirmed list of affected models with specific failing lines
 - Grammar extension design for `gams_grammar.lark`
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 3.1, 3.2, 3.3, 3.4
 
 ### Acceptance Criteria
 
@@ -683,6 +693,7 @@ A clear understanding of the put statement format syntax:
 **Deadline:** Before Task 8 (corpus reclassification design)
 **Owner:** Development team
 **Dependencies:** Task 2 (corpus survey provides context)
+**Unknowns Verified:** 1.4, 1.5
 
 ### Objective
 
@@ -768,6 +779,7 @@ A clear determination for each infeasible/unbounded model:
 - Investigation report for each infeasible model (in Known Unknowns or separate doc)
 - Determination: exclude or keep (with rationale)
 - Unbounded model check results
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.4, 1.5
 
 ### Acceptance Criteria
 
@@ -788,6 +800,7 @@ A clear determination for each infeasible/unbounded model:
 **Deadline:** Before Sprint 18 Day 1
 **Owner:** Development team
 **Dependencies:** Task 2 (survey scope), Task 7 (infeasible/unbounded investigation)
+**Unknowns Verified:** 1.5, 1.6, 4.2
 
 ### Objective
 
@@ -906,6 +919,7 @@ A complete schema design that Sprint 18 can implement directly:
 - JSON schema examples for each exclusion category
 - Metrics recalculation rules
 - List of affected reporting scripts with required changes
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.5, 1.6, 4.2
 
 ### Acceptance Criteria
 
@@ -926,6 +940,7 @@ A complete schema design that Sprint 18 can implement directly:
 **Deadline:** Before Sprint 18 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** 4.1, 4.3, 4.4
 
 ### Objective
 
@@ -1021,6 +1036,7 @@ Confirmed, reproducible baseline metrics for Sprint 18:
 - Verified baseline record (counts, commit hash, date)
 - Discrepancy report (if any numbers don't match)
 - Confirmation that Sprint 18 acceptance criteria baselines are accurate
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 4.1, 4.3, 4.4
 
 ### Acceptance Criteria
 
@@ -1042,6 +1058,7 @@ Confirmed, reproducible baseline metrics for Sprint 18:
 **Deadline:** Final prep task — complete after all others
 **Owner:** Development team
 **Dependencies:** All preceding tasks (1-9)
+**Unknowns Verified:** 2.7, 2.8
 
 ### Objective
 
@@ -1162,6 +1179,7 @@ A complete Sprint 18 plan that:
 - Day-by-day schedule with deliverables
 - Checkpoint definitions
 - Contingency plans
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 2.7, 2.8
 
 ### Acceptance Criteria
 
