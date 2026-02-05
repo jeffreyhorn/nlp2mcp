@@ -856,3 +856,236 @@ class TestStationarityIndexDisambiguation:
                 "i",
                 "c",
             ), f"Expected a(i,c) but got a{indices}. Parameter domain disambiguation failed."
+
+
+@pytest.mark.integration
+class TestStationaritySubsetSupersetIndex:
+    """Test correct index substitution when variable domain is a subset of parameter domain.
+
+    GitHub Issue #620: Stationarity equation uses uncontrolled index variable.
+    When a variable x(i) has domain i(s) (subset of s), and a parameter mu(s)
+    is referenced in the stationarity equation stat_x(i), the index 's' must be
+    replaced with 'i' to avoid GAMS Error 149 "Set is not under control".
+    """
+
+    def test_superset_index_replaced_with_subset(self, manual_index_mapping):
+        """Test that mu(s) becomes mu(i) in stat_x(i) when i is a subset of s.
+
+        Simulates the meanvar model case:
+        - Set s: {cn, fr, gr, jp, sw, uk, us, wr}
+        - Set i(s): {cn, fr, gr, jp, sw, uk, us} (subset of s)
+        - Parameter mu(s): expected returns defined over superset
+        - Variable x(i): portfolio fractions defined over subset
+        - Constraint mbal.. m =e= sum(i, mu(i)*x(i))
+
+        The stationarity for x(i) includes terms from mbal with mu(s).
+        The fix must replace mu(s) → mu(i) since i ⊆ s.
+        """
+        from src.ir.symbols import ParameterDef, SetDef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        # Sets: s is superset, i(s) is subset
+        model.sets["s"] = SetDef(name="s", members=["cn", "fr", "us"])
+        model.sets["i"] = SetDef(name="i", members=["cn", "fr"], domain=("s",))
+
+        # Parameter mu(s) defined over superset
+        model.params["mu"] = ParameterDef(
+            name="mu",
+            domain=("s",),
+            values={("cn",): 0.1287, ("fr",): 0.1096, ("us",): 0.062},
+        )
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ("i",))),
+        )
+
+        # mbal.. m =e= sum(i, mu(i)*x(i))
+        model.equations["mbal"] = EquationDef(
+            name="mbal",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("m", ()),
+                Sum(("i",), Binary("*", ParamRef("mu", ("i",)), VarRef("x", ("i",)))),
+            ),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["m"] = VariableDef(name="m", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=("i",))
+
+        model.equalities = ["objdef", "mbal"]
+
+        # Set up KKT system
+        index_mapping = manual_index_mapping(
+            [("obj", ()), ("m", ()), ("x", ("cn",)), ("x", ("fr",))],
+            [("objdef", ()), ("mbal", ())],
+        )
+
+        gradient = GradientVector(num_cols=4, index_mapping=index_mapping)
+        gradient.set_derivative(0, Const(1.0))  # ∂obj/∂obj
+        gradient.set_derivative(1, Const(0.0))  # ∂obj/∂m
+        gradient.set_derivative(2, Const(0.0))  # ∂obj/∂x(cn)
+        gradient.set_derivative(3, Const(0.0))  # ∂obj/∂x(fr)
+
+        J_eq = JacobianStructure(num_rows=2, num_cols=4, index_mapping=index_mapping)
+        J_eq.set_derivative(0, 0, Const(1.0))  # ∂objdef/∂obj
+        # ∂mbal/∂x(cn) = mu("cn") - uses element label from the superset s
+        J_eq.set_derivative(1, 2, ParamRef("mu", ("cn",)))
+        # ∂mbal/∂x(fr) = mu("fr")
+        J_eq.set_derivative(1, 3, ParamRef("mu", ("fr",)))
+
+        J_ineq = JacobianStructure(num_rows=0, num_cols=4, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        kkt.multipliers_eq["nu_mbal"] = MultiplierDef(
+            name="nu_mbal", domain=(), kind="eq", associated_constraint="mbal"
+        )
+
+        # Build stationarity
+        stationarity = build_stationarity_equations(kkt)
+
+        assert "stat_x" in stationarity
+        stat_eq = stationarity["stat_x"]
+        assert stat_eq.domain == ("i",)
+
+        # Find all ParamRef nodes in the stationarity expression
+        def find_param_refs(expr: Expr) -> list[ParamRef]:
+            refs = []
+            match expr:
+                case ParamRef():
+                    refs.append(expr)
+                case Binary(_, left, right):
+                    refs.extend(find_param_refs(left))
+                    refs.extend(find_param_refs(right))
+                case Unary(_, child):
+                    refs.extend(find_param_refs(child))
+                case Call(_, args):
+                    for arg in args:
+                        refs.extend(find_param_refs(arg))
+                case Sum(_, body):
+                    refs.extend(find_param_refs(body))
+            return refs
+
+        lhs = stat_eq.lhs_rhs[0]
+        param_refs = find_param_refs(lhs)
+
+        # Find references to parameter 'mu'
+        mu_refs = [ref for ref in param_refs if ref.name == "mu"]
+        assert len(mu_refs) > 0, "Expected parameter 'mu' in stationarity equation"
+
+        # All mu references should use 'i' (subset), not 's' (superset)
+        for ref in mu_refs:
+            indices = ref.indices_as_strings()
+            assert indices == ("i",), (
+                f"Expected mu(i) but got mu{indices}. "
+                "Superset index 's' was not replaced with subset index 'i'. "
+                "This causes GAMS Error 149."
+            )
+
+    def test_non_subset_set_preserved(self, manual_index_mapping):
+        """Test that set names that are NOT supersets of the equation domain are preserved.
+
+        When a parameter uses a set that has no subset relationship with the
+        equation domain, the index should remain unchanged.
+        """
+        from src.ir.symbols import ParameterDef, SetDef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        # Sets: i and k are independent (no subset relationship)
+        model.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+        model.sets["k"] = SetDef(name="k", members=["k1", "k2"])
+
+        # Parameter p(k) defined over independent set k
+        model.params["p"] = ParameterDef(
+            name="p", domain=("k",), values={("k1",): 1.0, ("k2",): 2.0}
+        )
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ("i",))),
+        )
+
+        # constraint.. sum(i, p(k)*x(i)) would be unusual but tests preservation
+        model.equations["con"] = EquationDef(
+            name="con",
+            domain=("k",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                Sum(("i",), Binary("*", ParamRef("p", ("k",)), VarRef("x", ("i",)))),
+                Const(1.0),
+            ),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=("i",))
+
+        model.equalities = ["objdef", "con"]
+
+        index_mapping = manual_index_mapping(
+            [("obj", ()), ("x", ("i1",)), ("x", ("i2",))],
+            [("objdef", ()), ("con", ("k1",)), ("con", ("k2",))],
+        )
+
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        gradient.set_derivative(0, Const(1.0))
+        gradient.set_derivative(1, Const(0.0))
+        gradient.set_derivative(2, Const(0.0))
+
+        J_eq = JacobianStructure(num_rows=3, num_cols=3, index_mapping=index_mapping)
+        J_eq.set_derivative(0, 0, Const(1.0))
+        # ∂con(k1)/∂x(i1) = p("k1")
+        J_eq.set_derivative(1, 1, ParamRef("p", ("k1",)))
+        J_eq.set_derivative(1, 2, ParamRef("p", ("k1",)))
+        J_eq.set_derivative(2, 1, ParamRef("p", ("k2",)))
+        J_eq.set_derivative(2, 2, ParamRef("p", ("k2",)))
+
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        kkt.multipliers_eq["nu_con"] = MultiplierDef(
+            name="nu_con", domain=("k",), kind="eq", associated_constraint="con"
+        )
+
+        stationarity = build_stationarity_equations(kkt)
+
+        assert "stat_x" in stationarity
+
+        def find_param_refs(expr: Expr) -> list[ParamRef]:
+            refs = []
+            match expr:
+                case ParamRef():
+                    refs.append(expr)
+                case Binary(_, left, right):
+                    refs.extend(find_param_refs(left))
+                    refs.extend(find_param_refs(right))
+                case Unary(_, child):
+                    refs.extend(find_param_refs(child))
+                case Call(_, args):
+                    for arg in args:
+                        refs.extend(find_param_refs(arg))
+                case Sum(_, body):
+                    refs.extend(find_param_refs(body))
+            return refs
+
+        lhs = stationarity["stat_x"].lhs_rhs[0]
+        p_refs = [ref for ref in find_param_refs(lhs) if ref.name == "p"]
+
+        # p(k) should remain p(k), not be changed to p(i)
+        for ref in p_refs:
+            indices = ref.indices_as_strings()
+            assert "k" in indices, (
+                f"Expected p(k) to be preserved but got p{indices}. "
+                "Non-subset set 'k' should not be replaced."
+            )
