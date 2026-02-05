@@ -194,7 +194,7 @@ agreste, ampl, apl1pca, camcge, cesam, cesam2, china, clearlak, dinam, egypt, et
 camshape, catmix, chain, chakra, danwolfe, dyncge, elec, feasopt1, gastrans, glider, irscge, lnts, lrgcge, mathopt4, moncge, partssupply, polygon, quocge, robot, rocket, splcge, srpchase, twocge
 
 **semantic_undefined_symbol (2 models):**
-(2 models in this category)
+procmean, sroute
 
 ---
 
