@@ -5,6 +5,11 @@ All notable changes to the nlp2mcp project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Research
+- Survey GAMSLIB corpus for syntax error indicators — tested all 160 models with `gams action=c`, found zero GAMS syntax errors, documented .lst error format, updated Sprint 18 scope (Task 2 of Sprint 18 Prep)
+
 ## [1.1.0] - 2026-02-04
 
 ### Release v1.1.0 - Sprint 17 Complete
