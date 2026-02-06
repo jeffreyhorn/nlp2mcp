@@ -1044,9 +1044,10 @@ A complete schema design that Sprint 18 can implement directly:
 
 ## Task 9: Verify Sprint 18 Baseline Metrics
 
-**Status:** Not Started
+**Status:** ✅ **COMPLETED** (February 6, 2026)
 **Priority:** High
 **Estimated Time:** 1-2 hours
+**Actual Time:** 1.5 hours
 **Deadline:** Before Sprint 18 Day 1
 **Owner:** Development team
 **Dependencies:** None
@@ -1150,13 +1151,51 @@ Confirmed, reproducible baseline metrics for Sprint 18:
 
 ### Acceptance Criteria
 
-- [ ] Full test suite passes on main (3204+ tests)
-- [ ] Parse count verified: 61/160
-- [ ] Translate count verified: 42/61
-- [ ] Solve count verified: 12/42
-- [ ] Error category breakdown matches Sprint 17 retrospective
-- [ ] Any discrepancies documented and resolved
-- [ ] Baseline commit hash recorded
+- [x] Full test suite passes on main (3204+ tests, with expected skips/xfail)
+- [x] Parse count verified: 61/160
+- [x] Translate count verified: 42/61
+- [x] Solve count verified: 12/42
+- [x] Error category breakdown matches Sprint 17 retrospective (see error categories below)
+- [x] Any discrepancies documented and resolved
+- [x] Baseline commit hash recorded
+
+### Results
+
+**Task 9 completed February 6, 2026.**
+
+**Verified baseline metrics:**
+
+| Metric | Expected | Verified | Status |
+|--------|----------|----------|--------|
+| Test suite | 3204+ pass | 3204 passed, 10 skipped, 1 xfailed | ✅ |
+| Parse success | 61 | 61 | ✅ |
+| Parse failure | 99 | 99 | ✅ |
+| Translate success | 42 | 42 | ✅ |
+| Translate failure | 19 | 19 | ✅ |
+| Solve (model_optimal) | 12 | 12 | ✅ |
+| Convex models (corpus) | 160 | 160 | ✅ |
+
+**Error category breakdown (verified against gamslib_status.json):**
+- Parse errors: `lexer_invalid_char` (74), `internal_error` (23), `semantic_undefined_symbol` (2)
+- Translate errors: `unsup_index_offset` (8), `internal_error` (5), `codegen_numerical_error` (2), `unsup_expression_type` (2), `diff_unsupported_func` (2)
+- Solve outcomes: `model_optimal` (12), `path_syntax_error` (17), `path_solve_terminated` (11), `model_infeasible` (2)
+
+**Verified 12 model_optimal models:** apl1p, blend, himmel11, hs62, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig, trnsport, trussm
+
+**GAMS environment verified:**
+- GAMS Version: 51.3.0 (38407a9b, Oct 27, 2025)
+- PATH Solver: 103001 (libpath52.dylib)
+- Platform: macOS (DEX-DEG x86 64bit)
+
+**Baseline verification:**
+- Commit hash: `aed804ae50d2296464b17dfe22b6c8e69edf236d`
+- Verification date: February 6, 2026
+- Verification PR: #643
+
+**Unknowns verified:**
+- Unknown 4.1: v1.1.0 baseline is accurate and reproducible ✅
+- Unknown 4.3: Solution comparison not needed for baseline verification ✅
+- Unknown 4.4: GAMS environment unchanged since v1.1.0 ✅
 
 ---
 
