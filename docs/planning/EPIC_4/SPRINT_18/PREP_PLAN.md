@@ -232,7 +232,7 @@ Document:
 - All 160 models compile successfully with `gams action=c`
 - All 99 nlp2mcp parse failures are due to nlp2mcp grammar limitations, NOT GAMS issues
 - `camcge` compiles successfully — the `lexer_invalid_char` error is due to multi-line continuation nlp2mcp doesn't handle
-- The `excluded_syntax_error` category is not needed
+- The `syntax_error` exclusion reason currently has count 0 (no models require it), but remains supported in the schema for future discoveries
 - Sprint 18 syntactic validation component is ~50% simpler than originally planned
 - Corpus denominator remains 160 (no reduction)
 
@@ -767,7 +767,7 @@ Investigate the 2 models currently flagged as `model_infeasible` and check for a
 
 ### Why This Matters
 
-Sprint 18 will reclassify syntax-error models as `excluded_syntax_error` and infeasible/unbounded models as `excluded_infeasible`/`excluded_unbounded`. Before building the reclassification, we need to understand the current state: Are these 2 models truly infeasible, or are they infeasible due to KKT formulation bugs? Should they be excluded from the corpus or investigated further?
+Sprint 18 will reclassify syntax-error models with `exclusion.reason = "syntax_error"`. Excluding models based on infeasible/unbounded status would require a future schema change and is out of scope for Sprint 18. Before building the reclassification, we need to understand the current state: Are these 2 models truly infeasible, or are they infeasible due to KKT formulation bugs? Should they be excluded from the corpus or investigated further (outside the Sprint 18 schema work)?
 
 ### Background
 
@@ -842,9 +842,9 @@ For each infeasible/unbounded model:
 **Unbounded models:** None found in corpus
 
 **Exclusion categories needed (updated plan):**
-- `excluded_syntax_error` — Yes (for future syntax error discoveries)
-- `excluded_infeasible` — No (both infeasible models are MCP bugs, not inherently infeasible; this overturns the earlier Task 7 assumption that Sprint 18 would introduce an `excluded_infeasible` bucket)
-- `excluded_unbounded` — No (no unbounded models found; this likewise supersedes the earlier plan to add an `excluded_unbounded` bucket)
+- `exclusion.reason = "syntax_error"` — Yes (for future syntax error discoveries)
+- Add `infeasible` to enum? — No (both infeasible models are MCP bugs, not inherently infeasible; this overturns the earlier Task 7 assumption that Sprint 18 would introduce an infeasible exclusion bucket)
+- Add `unbounded` to enum? — No (no unbounded models found; this likewise supersedes the earlier plan to add an unbounded exclusion bucket)
 
 ### Verification
 
@@ -873,9 +873,10 @@ For each infeasible/unbounded model:
 
 ## Task 8: Design Corpus Reclassification Schema
 
-**Status:** Not Started
+**Status:** Complete
 **Priority:** High
 **Estimated Time:** 2-3 hours
+**Actual Time:** 2 hours
 **Deadline:** Before Sprint 18 Day 1
 **Owner:** Development team
 **Dependencies:** Task 2 (survey scope), Task 7 (infeasible/unbounded investigation)
@@ -885,9 +886,13 @@ For each infeasible/unbounded model:
 
 Design the database schema changes and reclassification logic for `gamslib_status.json` to support the new syntactic validation categories. This ensures Sprint 18 implementation proceeds smoothly without mid-sprint schema debates.
 
-### Why This Matters
+### Why This Matters (updated plan)
 
-Sprint 18 will add a `gams_syntax.status` field to the database and reclassify models as `excluded_syntax_error`, `excluded_infeasible`, or `excluded_unbounded`. The schema design affects:
+Sprint 18 will add a `gams_syntax` field to track GAMS compilation validation results. Based on Task 7 findings:
+- Only `syntax_error` as `exclusion.reason` is needed (not `infeasible` or `unbounded`)
+- Both `model_infeasible` models (circle, house) are MCP formulation bugs, not candidates for exclusion
+
+The schema design affects:
 - How metrics are calculated (valid corpus denominator)
 - How the reporting infrastructure handles excluded models
 - Whether existing scripts (generate_report.py, failure analysis) need updates
@@ -896,22 +901,27 @@ Getting the schema right during prep prevents rework during the sprint.
 
 ### Background
 
-Current `gamslib_status.json` structure (per model):
+Current `gamslib_status.json` structure (models array with entries):
 ```json
 {
-    "model_name": {
-        "metadata": { "type": "NLP", "convex": true, ... },
-        "pipeline": { "status": "path_syntax_error", "error_message": "..." },
-        "solution_comparison": { ... }
+  "models": [
+    {
+      "model_id": "example",
+      "model_name": "Example Model",
+      "gamslib_type": "NLP",
+      "nlp2mcp_parse": { "status": "success", ... },
+      "mcp_solve": { "status": "failure", "outcome_category": "path_syntax_error", ... },
+      "solution_comparison": { ... }
     }
+  ]
 }
 ```
 
-Sprint 18 needs to add:
-- `gams_syntax.status`: "valid", "syntax_error", "compilation_error"
-- `gams_syntax.error_message`: Error text from GAMS .lst file
-- `gams_syntax.error_line`: Line number of error
-- Exclusion category: "excluded_syntax_error", "excluded_infeasible", "excluded_unbounded"
+Sprint 18 needs to add (see SCHEMA_DESIGN.md for complete specification):
+- `gams_syntax.status`: "success", "failure", "not_tested"
+- `gams_syntax.errors[]`: Array of error details (code, message, line)
+- `exclusion.excluded`: Boolean flag for corpus exclusion
+- `exclusion.reason`: "syntax_error" (via `exclusion.reason` field)
 
 ### What Needs to Be Done
 
@@ -930,24 +940,22 @@ Design the new fields:
 - Should excluded models retain their pipeline status or be overwritten?
 - How should metrics scripts handle the reduced corpus?
 
-Proposed schema:
+Proposed schema (see SCHEMA_DESIGN.md for complete specification):
 ```json
 {
-    "model_name": {
-        "metadata": { "type": "NLP", "convex": true, ... },
-        "gams_syntax": {
-            "status": "valid|syntax_error|compilation_error",
-            "error_message": "...",
-            "error_line": 42,
-            "tested_date": "2026-02-XX"
-        },
-        "exclusion": {
-            "excluded": false,
-            "reason": null,
-            "category": null
-        },
-        "pipeline": { "status": "path_syntax_error", ... }
+  "models": [
+    {
+      "model_id": "example",
+      "gams_syntax": {
+        "status": "success|failure|not_tested",
+        "errors": [{ "code": 148, "message": "...", "line": 42 }]
+      },
+      "exclusion": {
+        "excluded": false
+      },
+      "nlp2mcp_parse": { "status": "success", ... }
     }
+  ]
 }
 ```
 
@@ -1002,12 +1010,35 @@ A complete schema design that Sprint 18 can implement directly:
 
 ### Acceptance Criteria
 
-- [ ] New `gams_syntax` fields defined with types and semantics
-- [ ] Exclusion mechanism designed (flag vs. status vs. separate field)
-- [ ] Metrics recalculation rules documented (valid corpus denominator)
-- [ ] All affected reporting scripts identified with change descriptions
-- [ ] Schema handles edge cases (excluded model with existing pipeline data)
-- [ ] Design reviewed for backward compatibility with existing tooling
+- [x] New `gams_syntax` fields defined with types and semantics
+- [x] Exclusion mechanism designed (flag vs. status vs. separate field)
+- [x] Metrics recalculation rules documented (valid corpus denominator)
+- [x] All affected reporting scripts identified with change descriptions
+- [x] Schema handles edge cases (excluded model with existing pipeline data)
+- [x] Design reviewed for backward compatibility with existing tooling
+
+### Results
+
+**Task 8 completed February 6, 2026.**
+
+**Key deliverables:**
+- `docs/planning/EPIC_4/SPRINT_18/SCHEMA_DESIGN.md` created with:
+  - `gams_syntax` field definition (status, validation_date, gams_version, errors array)
+  - `exclusion` field definition (excluded boolean, reason enum, details)
+  - Metrics recalculation rules (valid_corpus = total - excluded)
+  - Reporting script impact analysis (no immediate changes needed since 0 exclusions)
+  - Migration strategy and implementation checklist
+
+**Key findings:**
+1. Only `syntax_error` exclusion reason needed (not infeasible/unbounded per Task 7)
+2. Schema bump: `2.0.0` → `2.1.0` (minor, backward-compatible)
+3. No reporting script changes needed until exclusions are added
+4. `baseline_metrics.json` separate from `gamslib_status.json` — simplifies transition
+
+**Unknowns verified:**
+- Unknown 1.5: Only `syntax_error` exclusion reason needed ✅
+- Unknown 1.6: Metrics recalculation rules documented ✅
+- Unknown 4.2: Schema extensibility confirmed safe ✅
 
 ---
 

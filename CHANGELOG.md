@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Research
-- Review infeasible/unbounded model status — investigated 2 `model_infeasible` models (circle, house), confirmed both are MCP bugs not inherently infeasible, no unbounded models found, simplified exclusion categories to just `excluded_syntax_error` (Task 7 of Sprint 18 Prep)
+- Design corpus reclassification schema — created SCHEMA_DESIGN.md with `gams_syntax` and `exclusion` field definitions, metrics recalculation rules (valid_corpus denominator), reporting script impact analysis, verified Unknowns 1.5, 1.6, 4.2 (Task 8 of Sprint 18 Prep)
+- Review infeasible/unbounded model status — investigated 2 `model_infeasible` models (circle, house), confirmed both are MCP bugs not inherently infeasible, no unbounded models found, only `exclusion.reason = "syntax_error"` needed in schema (Task 7 of Sprint 18 Prep)
 - Audit put statement `:width:decimals` syntax — documented full format specifier syntax, verified 4 target models (3 blocked by format specifiers, 1 by different issue), designed grammar extension for `gams_grammar.lark` (Task 6 of Sprint 18 Prep)
 - Analyze emit_gams.py computed parameter failures — identified 5 affected models (ajax, demo1, mathopt1, mexss, sample), decided SKIP approach (not re-emit), designed 2h fix with code sketch (Task 5 of Sprint 18 Prep)
 - Analyze emit_gams.py table data failures — cataloged all 17 `path_syntax_error` models, found 0 table data failures (contrary to assumption), identified 6 distinct failure categories, designed fixes for top priorities (Task 4 of Sprint 18 Prep)

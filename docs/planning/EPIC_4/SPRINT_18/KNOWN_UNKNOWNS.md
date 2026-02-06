@@ -211,7 +211,7 @@ Development team
 
 **Impact:**
 - Corpus denominator remains 160 (no reduction)
-- `excluded_syntax_error` category not needed
+- `syntax_error` exclusion reason currently has count 0 (no models require it), but remains supported in schema for future discoveries
 - Sprint 18 syntactic validation component is simpler than planned (~50% time savings)
 
 **Evidence:** See `docs/planning/EPIC_4/SPRINT_18/CORPUS_SURVEY.md` for full test results.
@@ -328,7 +328,7 @@ gams <model>.gms
 # Check: Model Status 4 = infeasible (NLP truly infeasible)
 ```
 **Step 3:** If NLP is feasible but MCP is infeasible → KKT bug → keep in corpus
-**Step 4:** If NLP is infeasible → candidate for `excluded_infeasible`
+**Step 4:** If NLP is infeasible → would require future schema work to add `infeasible` exclusion reason (out of scope for Sprint 18)
 **Step 5:** Check for unbounded indicators across all models
 
 ### Risk if Wrong
@@ -367,7 +367,7 @@ Development team
 
 **Unbounded models check:** None found. All models with `mcp_solve` results have either `model_optimal` (12 models), `model_infeasible` (2 models), `path_syntax_error` (17 models), or `path_solve_terminated` (11 models).
 
-**Recommendation:** Keep both models in corpus as **bugs to fix**, not candidates for exclusion. The `excluded_infeasible` category is not needed for these models. However, `circle` may need special handling due to random data regeneration.
+**Recommendation:** Keep both models in corpus as **bugs to fix**, not candidates for exclusion. An `infeasible` exclusion reason is not needed for these models. However, `circle` may need special handling due to random data regeneration.
 
 ---
 
@@ -377,7 +377,7 @@ Development team
 **High** — Schema design for corpus reclassification
 
 ### Assumption
-Three exclusion categories are sufficient: `excluded_syntax_error`, `excluded_infeasible`, `excluded_unbounded`. These cover all reasons a model should be removed from the valid corpus.
+Three exclusion reasons were initially assumed: `syntax_error`, `infeasible`, `unbounded`. Investigation revealed only `syntax_error` is needed (see Verification Results below). The final schema supports: `syntax_error`, `data_dependency`, `license_restricted`, `other`.
 
 ### Research Questions
 1. Are three categories sufficient, or do we need more (e.g., `excluded_duplicate`, `excluded_nonconvex`)?
@@ -407,32 +407,35 @@ Development team
 ### Verification Results
 ✅ **Status:** VERIFIED
 
-**Finding:** Only **one exclusion category is currently needed**: `excluded_syntax_error`. The other two assumed categories (`excluded_infeasible`, `excluded_unbounded`) are not needed based on investigation.
+**Finding:** Only **one exclusion reason is currently needed**: `syntax_error`. The other two assumed reasons (`infeasible`, `unbounded`) are not needed based on investigation.
 
 **Analysis of exclusion needs:**
 
-| Category | Needed? | Evidence |
-|----------|---------|----------|
-| `excluded_syntax_error` | ✅ Yes | Task 2 found 0 GAMS syntax errors in current gamslib. Category needed for potential future discoveries or if GAMS team reports syntax issues. |
-| `excluded_infeasible` | ❌ No | Both `model_infeasible` models (circle, house) are MCP bugs, not inherently infeasible NLPs. Keep in corpus. |
-| `excluded_unbounded` | ❌ No | No unbounded models found in corpus. All solve attempts completed normally. |
+| Exclusion Reason | Needed? | Evidence |
+|------------------|---------|----------|
+| `syntax_error` | ✅ Yes | Task 2 found 0 GAMS syntax errors in current gamslib. Reason needed for potential future discoveries or if GAMS team reports syntax issues. |
+| `infeasible` | ❌ No | Both `model_infeasible` models (circle, house) are MCP bugs, not inherently infeasible NLPs. Keep in corpus. |
+| `unbounded` | ❌ No | No unbounded models found in corpus. All solve attempts completed normally. |
 
 **Revised recommendation:**
-1. Implement `excluded_syntax_error` for models with confirmed GAMS syntax errors
-2. Do NOT implement `excluded_infeasible` or `excluded_unbounded` at this time
-3. Keep a generic `exclusion_reason` field to allow future categories without schema changes
+1. Implement `exclusion.reason = "syntax_error"` for models with confirmed GAMS syntax errors
+2. Do NOT add `infeasible` or `unbounded` to the `reason` enum at this time
+3. Use `exclusion.reason = "other"` with `exclusion.details` for ad-hoc exclusions without schema changes
 
-**Schema suggestion:**
+**Schema suggestion (aligned with SCHEMA_DESIGN.md):**
 ```json
 {
   "model_id": "hypothetical_model",
-  "excluded": true,
-  "exclusion_reason": "syntax_error",
-  "exclusion_details": "GAMS compilation error: unmatched parenthesis"
+  "exclusion": {
+    "excluded": true,
+    "reason": "syntax_error",
+    "details": "GAMS compilation error: unmatched parenthesis",
+    "reversible": true
+  }
 }
 ```
 
-This design is extensible — new exclusion reasons can be added without schema changes.
+This design is extensible — new exclusion reasons can be added to the enum in future schema versions, or use `reason="other"` with `details` for ad-hoc cases.
 
 ---
 
@@ -470,7 +473,36 @@ All pipeline metrics (parse rate, translate rate, solve rate, full pipeline) sho
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**Decision:** Do NOT retroactively recalculate v1.1.0 baseline.
+
+**Metrics recalculation rules:**
+
+| Metric | Formula | Denominator |
+|--------|---------|-------------|
+| Parse Rate | parse_success / valid_corpus | valid_corpus |
+| Translate Rate | translate_success / parse_success | parse_success |
+| Solve Rate | solve_success / translate_success | translate_success |
+| Full Pipeline | full_success / valid_corpus | valid_corpus |
+
+**Key decisions:**
+1. Only Parse Rate and Full Pipeline use `valid_corpus` as denominator
+2. Translate and Solve rates are relative to previous stage (unchanged)
+3. Historical baseline NOT retroactively changed
+4. Store both `total_corpus` and `valid_corpus` in `baseline_metrics.json` for transparency
+
+**Reporting script impact:**
+- `data_loader.py`: No changes needed (uses `baseline_metrics.json`)
+- `status_analyzer.py`: Minor update to add `valid_corpus` to `StatusSummary`
+- `progress_analyzer.py`: Add `denominator_note` for sprint comparisons
+- `markdown_renderer.py`: Display valid corpus count in reports
+
+**Current situation:** Since Task 2 found 0 GAMS syntax errors, `valid_corpus = total_corpus = 160`. No immediate script changes are required.
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/SCHEMA_DESIGN.md` Section "Metrics Recalculation Rules".
 
 ---
 
@@ -1311,7 +1343,41 @@ Adding `gams_syntax` and `exclusion` fields to `gamslib_status.json` entries won
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**Adding new fields will NOT break existing tools.**
+
+**Evidence from code review:**
+
+1. **`src/reporting/data_loader.py`:**
+   - Uses `baseline_metrics.json`, not `gamslib_status.json`
+   - Uses `@dataclass` with `from_dict()` methods that explicitly extract known fields
+   - Unknown fields are silently ignored (not iterated over)
+
+2. **`src/reporting/analyzers/*.py`:**
+   - Access specific fields via `baseline.parse.success`, etc.
+   - No iteration over all model_entry fields
+   - No strict schema validation at runtime
+
+3. **`data/gamslib/schema.json`:**
+   - Uses `additionalProperties: false` for strict validation
+   - **DOES need updating** to add `gams_syntax` and `exclusion` definitions
+   - This is a documentation/validation concern, not a runtime crash risk
+
+4. **External tools:**
+   - No external notebooks or dashboards currently read `gamslib_status.json`
+   - `baseline_metrics.json` is the primary aggregated data source
+
+**Schema extensibility design:**
+- Add `gams_syntax` and `exclusion` as **optional** properties in `model_entry`
+- Bump `schema_version` to `"2.1.0"` (minor version = backward-compatible)
+- Existing tools ignore new fields; new tools can read them
+
+**Conclusion:** Schema changes are safe. Update `schema.json` to document the new fields for validation purposes.
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/SCHEMA_DESIGN.md` Section "Migration Strategy".
 
 ---
 
