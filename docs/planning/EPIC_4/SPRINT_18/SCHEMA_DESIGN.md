@@ -117,7 +117,9 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
     "required": ["status", "errors", "error_count"]
   },
   "else": {
-    "not": { "required": ["errors"] }
+    "properties": {
+      "errors": false
+    }
   }
 }
 ```
@@ -128,7 +130,7 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
 
 **Purpose:** Mark models as excluded from valid corpus with reason tracking
 
-**Design Decision:** Per Task 7 findings (Unknown 1.5), only `syntax_error` exclusion reason is currently needed. However, the schema supports extensibility for future categories.
+**Design Decision:** Per Task 7 findings (Unknown 1.5), only `syntax_error` exclusion reason is currently needed. The schema supports extensibility via: (1) adding new values to the `reason` enum in a future schema version, or (2) using `reason="other"` with a descriptive `details` field for ad-hoc exclusions without schema changes.
 
 **Schema Definition:**
 
@@ -173,7 +175,8 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
     "properties": {
       "reason": false,
       "exclusion_date": false,
-      "details": false
+      "details": false,
+      "reversible": false
     }
   },
   "allOf": [
@@ -610,7 +613,7 @@ If the schema changes cause issues:
 +      },
 +      "if": { "properties": { "status": { "const": "failure" } } },
 +      "then": { "required": ["status", "errors", "error_count"] },
-+      "else": { "not": { "required": ["errors"] } }
++      "else": { "properties": { "errors": false } }
 +    },
 +    "exclusion_status": {
 +      "type": "object",
@@ -626,7 +629,7 @@ If the schema changes cause issues:
 +      },
 +      "if": { "properties": { "excluded": { "const": true } } },
 +      "then": { "required": ["excluded", "reason"] },
-+      "else": { "properties": { "reason": false, "exclusion_date": false, "details": false } },
++      "else": { "properties": { "reason": false, "exclusion_date": false, "details": false, "reversible": false } },
 +      "allOf": [
 +        {
 +          "if": { "properties": { "reason": { "const": "other" } } },

@@ -843,8 +843,8 @@ For each infeasible/unbounded model:
 
 **Exclusion categories needed (updated plan):**
 - `exclusion.reason = "syntax_error"` — Yes (for future syntax error discoveries)
-- `exclusion.reason = "infeasible"` — No (both infeasible models are MCP bugs, not inherently infeasible; this overturns the earlier Task 7 assumption that Sprint 18 would introduce an infeasible exclusion bucket)
-- `exclusion.reason = "unbounded"` — No (no unbounded models found; this likewise supersedes the earlier plan to add an unbounded exclusion bucket)
+- Add `infeasible` to enum? — No (both infeasible models are MCP bugs, not inherently infeasible; this overturns the earlier Task 7 assumption that Sprint 18 would introduce an infeasible exclusion bucket)
+- Add `unbounded` to enum? — No (no unbounded models found; this likewise supersedes the earlier plan to add an unbounded exclusion bucket)
 
 ### Verification
 
