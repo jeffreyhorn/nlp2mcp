@@ -753,7 +753,7 @@ PUT_ALIGN: "<>" | "<" | ">"
 
 ## Task 7: Review Infeasible/Unbounded Model Status
 
-**Status:** Not Started
+**Status:** ✅ **COMPLETED** (February 6, 2026)
 **Priority:** High
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Task 8 (corpus reclassification design)
@@ -824,21 +824,34 @@ For each infeasible/unbounded model:
 
 ### Changes
 
-**File Updated:** `docs/planning/EPIC_4/SPRINT_18/KNOWN_UNKNOWNS.md` — Category 1 unknowns resolved
+- **Updated:** `docs/planning/EPIC_4/SPRINT_18/KNOWN_UNKNOWNS.md` — Unknowns 1.4, 1.5 verified
 
 ### Result
 
-A clear determination for each infeasible/unbounded model:
-- Confirmed inherently infeasible → exclude from corpus
-- Confirmed MCP bug → keep in corpus, track as solve-stage fix
-- No unbounded models found (or list of unbounded models)
+**Key Findings:**
+
+| Model | MCP Status | Original NLP Status | Determination |
+|-------|------------|---------------------|---------------|
+| circle | Locally Infeasible | **Optimal** (obj=5.277) | KKT bug - keep in corpus |
+| house | Locally Infeasible | **Optimal** (obj=4500) | KKT bug - keep in corpus |
+
+**Root causes:**
+- **circle:** Uses `uniform()` for random data — MCP regenerates different points than NLP
+- **house:** Likely constraint qualification failure or incorrect Lagrangian formulation
+
+**Unbounded models:** None found in corpus
+
+**Exclusion categories needed:**
+- `excluded_syntax_error` — Yes (for future syntax error discoveries)
+- `excluded_infeasible` — No (both infeasible models are MCP bugs, not inherently infeasible)
+- `excluded_unbounded` — No (no unbounded models found)
 
 ### Verification
 
-- Both `model_infeasible` models investigated
-- Original NLP solve status checked for each
-- Determination (inherent vs. bug) documented with evidence
-- Unbounded model check completed
+- [x] Both `model_infeasible` models investigated (circle, house)
+- [x] Original NLP solve status checked for each (both optimal)
+- [x] Determination (inherent vs. bug) documented with evidence
+- [x] Unbounded model check completed (none found)
 
 ### Deliverables
 
@@ -849,12 +862,12 @@ A clear determination for each infeasible/unbounded model:
 
 ### Acceptance Criteria
 
-- [ ] Both `model_infeasible` models identified by name
-- [ ] Original NLP solved with GAMS to confirm true feasibility status
-- [ ] Each model classified: inherently infeasible vs. MCP formulation bug
-- [ ] Exclusion/inclusion recommendation documented with rationale
-- [ ] Unbounded model check completed across full corpus
-- [ ] Findings integrated into Known Unknowns document
+- [x] Both `model_infeasible` models identified by name (circle, house)
+- [x] Original NLP solved with GAMS to confirm true feasibility status (both optimal)
+- [x] Each model classified: inherently infeasible vs. MCP formulation bug (both MCP bugs)
+- [x] Exclusion/inclusion recommendation documented with rationale (keep both in corpus)
+- [x] Unbounded model check completed across full corpus (none found)
+- [x] Findings integrated into Known Unknowns document (Unknowns 1.4, 1.5 verified)
 
 ---
 
