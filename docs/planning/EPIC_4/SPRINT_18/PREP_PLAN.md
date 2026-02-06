@@ -670,7 +670,7 @@ The current grammar in `src/gams/gams_grammar.lark` handles basic put statements
 #### Step 1: GAMS Put Statement Specification (30 min)
 
 Research the full put statement syntax from GAMS documentation:
-- All format specifier variants (`:width`, `:width:decimals`, `:width:decimals:exponent`)
+- All format specifier variants (`:width`, `:width:decimals`) — **verified: no `:width:decimals:exponent` variant exists**
 - Applicability to different put items (variables, parameters, text, expressions)
 - Any interaction with put_page, put_utility, etc.
 

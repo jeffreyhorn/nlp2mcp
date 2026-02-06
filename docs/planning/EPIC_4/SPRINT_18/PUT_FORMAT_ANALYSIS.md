@@ -26,7 +26,7 @@
 From GAMS documentation, the local item formatting syntax is:
 
 ```
-item:{<>}width:decimals
+item:{<|>|<>}width:decimals
 ```
 
 Where:
