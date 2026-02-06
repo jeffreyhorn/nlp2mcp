@@ -343,7 +343,31 @@ gams <model>.gms
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Finding:** Both `model_infeasible` models are **MCP formulation bugs**, NOT inherently infeasible NLPs.
+
+**Models identified:**
+| Model | MCP Status | Original NLP Status | Determination |
+|-------|------------|---------------------|---------------|
+| circle | Model Status 5 (Locally Infeasible) | **Optimal** (obj=5.277) | KKT bug |
+| house | Model Status 5 (Locally Infeasible) | **Optimal** (obj=4500) | KKT bug |
+
+**Investigation details:**
+
+1. **circle** - Smallest circle problem
+   - Original NLP: Solves optimally with CONOPT (r ≈ 5.277)
+   - MCP: PATH reports "Locally Infeasible" after 760 iterations
+   - **Root cause:** The original uses random data (`uniform(1,10)`), which generates different data each run. The MCP output re-runs `uniform()` generating different points than the NLP, causing infeasibility.
+
+2. **house** - House plan design
+   - Original NLP: Solves optimally with CONOPT (total area = 4500 sq ft)
+   - MCP: PATH reports "Locally Infeasible" but shows objective 27.7055 (incorrect)
+   - **Root cause:** Likely constraint qualification failure or incorrect Lagrangian formulation
+
+**Unbounded models check:** None found. All models with `mcp_solve` results have either `model_optimal` (12 models), `model_infeasible` (2 models), `path_syntax_error` (17 models), or `path_solve_terminated` (11 models).
+
+**Recommendation:** Keep both models in corpus as **bugs to fix**, not candidates for exclusion. The `excluded_infeasible` category is not needed for these models. However, `circle` may need special handling due to random data regeneration.
 
 ---
 
@@ -381,7 +405,34 @@ Three exclusion categories are sufficient: `excluded_syntax_error`, `excluded_in
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Finding:** Only **one exclusion category is currently needed**: `excluded_syntax_error`. The other two assumed categories (`excluded_infeasible`, `excluded_unbounded`) are not needed based on investigation.
+
+**Analysis of exclusion needs:**
+
+| Category | Needed? | Evidence |
+|----------|---------|----------|
+| `excluded_syntax_error` | ✅ Yes | Task 2 found 0 GAMS syntax errors in current gamslib. Category needed for potential future discoveries or if GAMS team reports syntax issues. |
+| `excluded_infeasible` | ❌ No | Both `model_infeasible` models (circle, house) are MCP bugs, not inherently infeasible NLPs. Keep in corpus. |
+| `excluded_unbounded` | ❌ No | No unbounded models found in corpus. All solve attempts completed normally. |
+
+**Revised recommendation:**
+1. Implement `excluded_syntax_error` for models with confirmed GAMS syntax errors
+2. Do NOT implement `excluded_infeasible` or `excluded_unbounded` at this time
+3. Keep a generic `exclusion_reason` field to allow future categories without schema changes
+
+**Schema suggestion:**
+```json
+{
+  "model_id": "hypothetical_model",
+  "excluded": true,
+  "exclusion_reason": "syntax_error",
+  "exclusion_details": "GAMS compilation error: unmatched parenthesis"
+}
+```
+
+This design is extensible — new exclusion reasons can be added without schema changes.
 
 ---
 
