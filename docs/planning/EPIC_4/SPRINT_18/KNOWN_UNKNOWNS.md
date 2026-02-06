@@ -1326,7 +1326,7 @@ Development team
 **Baseline verification:**
 - Commit hash: `aed804ae50d2296464b17dfe22b6c8e69edf236d`
 - Verification date: February 6, 2026
-- Branch: `planning/sprint18-task9`
+- Verification PR: #643
 
 **Note:** "Full Pipeline 12/160" refers to solve-stage success. Sprint 17 did not re-run the solution comparison stage, so this is a proxy metric. See Unknown 4.3 for comparison stage status.
 
@@ -1510,7 +1510,7 @@ Development team
 
 **Environment verification:**
 ```bash
-$ gams ?
+$ gams --version
 GAMS Base Module 51.3.0 38407a9b Oct 27, 2025 DEG x86 64bit/macOS
 
 $ which gams

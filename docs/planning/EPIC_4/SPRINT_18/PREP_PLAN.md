@@ -1155,7 +1155,7 @@ Confirmed, reproducible baseline metrics for Sprint 18:
 - [x] Parse count verified: 61/160
 - [x] Translate count verified: 42/61
 - [x] Solve count verified: 12/42
-- [x] Error category breakdown matches Sprint 17 retrospective
+- [x] Error category breakdown matches Sprint 17 retrospective (see error categories below)
 - [x] Any discrepancies documented and resolved
 - [x] Baseline commit hash recorded
 
@@ -1175,6 +1175,11 @@ Confirmed, reproducible baseline metrics for Sprint 18:
 | Solve (model_optimal) | 12 | 12 | ✅ |
 | Convex models (corpus) | 160 | 160 | ✅ |
 
+**Error category breakdown (verified against gamslib_status.json):**
+- Parse errors: `lexer_invalid_char` (74), `internal_error` (23), `semantic_undefined_symbol` (2)
+- Translate errors: `unsup_index_offset` (8), `internal_error` (5), `codegen_numerical_error` (2), `unsup_expression_type` (2), `diff_unsupported_func` (2)
+- Solve outcomes: `model_optimal` (12), `path_syntax_error` (17), `path_solve_terminated` (11), `model_infeasible` (2)
+
 **Verified 12 model_optimal models:** apl1p, blend, himmel11, hs62, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig, trnsport, trussm
 
 **GAMS environment verified:**
@@ -1185,7 +1190,7 @@ Confirmed, reproducible baseline metrics for Sprint 18:
 **Baseline verification:**
 - Commit hash: `aed804ae50d2296464b17dfe22b6c8e69edf236d`
 - Verification date: February 6, 2026
-- Branch: `planning/sprint18-task9`
+- Verification PR: #643
 
 **Unknowns verified:**
 - Unknown 4.1: v1.1.0 baseline is accurate and reproducible ✅
