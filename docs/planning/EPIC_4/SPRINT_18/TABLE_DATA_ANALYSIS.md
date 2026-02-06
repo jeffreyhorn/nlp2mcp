@@ -193,7 +193,7 @@ Set elements like `eff`, `inf` are used in equations without quotes:
 ```gams
 stat_util.. ((-1) * sum(i, 0)) + 0 * nu_rev(eff) + 0 * nu_rev(inf) ...
 !                                         ^^^           ^^^
-! 'eff' and 'inf' should be quoted as 'eff' and 'inf' (or "eff", "inf")
+! eff and inf should be quoted (e.g., 'eff' and 'inf', or "eff" and "inf")
 ```
 
 The issue is that `eff` looks like a variable name, and `inf` is a GAMS reserved constant.
