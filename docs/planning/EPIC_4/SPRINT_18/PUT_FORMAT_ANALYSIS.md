@@ -291,7 +291,7 @@ Scientific notation is controlled by global file settings (`.nr=2`), not per-ite
 
 **Status:** ✅ VERIFIED
 
-**Finding:** No conflict. The colon in format specifiers is only matched within `put_item` context, which is nested inside `put_stmt`. The only other colon usage in the grammar is `option_format` rule (`ID ":" NUMBER`), which is in a completely different statement context. Lark's context-sensitive parsing ensures no ambiguity.
+**Finding:** No conflict. The colon in format specifiers is only matched within `put_item` context, which is nested inside `put_stmt`. The only other colon usage in the grammar is the `option_format` rule (`ID ":" NUMBER`), which appears in a different statement context. Because `put_format` is only allowed inside `put_item`/`put_stmt`, the Earley parser with ambiguity resolution does not encounter ambiguous parses between these colon usages.
 
 ### Unknown 3.4: Are put statements semantically significant for MCP generation?
 

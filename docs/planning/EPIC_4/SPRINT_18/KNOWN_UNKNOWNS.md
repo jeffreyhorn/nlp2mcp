@@ -1122,7 +1122,7 @@ Development team
 1. Put format specifiers only match within `put_item` context
 2. `put_item` is only matched inside `put_stmt`
 3. `option_stmt` and `put_stmt` are separate statement rules
-4. Lark's context-sensitive parsing ensures no ambiguity
+4. The `:` format suffix is only parsed in `put_item` via `put_format`, so it can't be confused with `option_format` or other statement contexts
 
 **Grammar design:** Add `put_format` rule that only applies within `put_item`:
 ```lark
