@@ -12,10 +12,10 @@
 
 Analysis of all 17 `path_syntax_error` models reveals a different failure taxonomy than originally assumed:
 - **0 models** fail due to table data emission issues (tables are parsed as parameters and work correctly)
-- **6 models** fail due to computed parameter assignment emission issues
+- **5 models** fail due to computed parameter assignment emission issues
 - **5 models** fail due to missing bound multiplier variable declarations
 - **3 models** fail due to multi-dimensional parameter data emission (conflicting dimensions)
-- **2 models** fail due to set element quoting issues
+- **6 models** fail due to set element quoting issues (ps2_* family + pollut)
 - **1 model** fails due to undefined function reference in generated equations
 
 This significantly changes Sprint 18 scope for emit_gams.py fixes.
@@ -70,9 +70,9 @@ The KKT transformation creates bound multipliers for primal variables, but scala
 
 ---
 
-### Category 2: Computed Parameter Assignment Emission (6 models)
+### Category 2: Computed Parameter Assignment Emission (5 models)
 
-**Models:** ajax, demo1, mathopt1, mexss, pollut, sample
+**Models:** ajax, demo1, mathopt1, mexss, sample
 
 **Error Pattern:**
 ```
@@ -172,9 +172,9 @@ The parser stores all parameter data in `ParameterDef.values` but:
 
 ---
 
-### Category 4: Set Element Quoting (2 models + partial in others)
+### Category 4: Set Element Quoting (6 models)
 
-**Models:** ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s (all in ps2 family)
+**Models:** ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s, pollut
 
 **Error Pattern:**
 ```
@@ -265,9 +265,9 @@ The MCP solve statement has issues with equation-variable pairing:
 | Category | Models | Count | Primary Error Codes | Fix Location | Est. Hours |
 |----------|--------|-------|---------------------|--------------|------------|
 | Bound multiplier dimension | alkyl, bearing, (+3 partial) | 5 | 69, 483 | kkt/bound_multipliers.py | 4-5h |
-| Computed param assignment | ajax, demo1, mathopt1, mexss, pollut, sample | 6 | 121, 140, 141, 148 | emit/original_symbols.py | 3-4h |
+| Computed param assignment | ajax, demo1, mathopt1, mexss, sample | 5 | 121, 140, 141, 148 | emit/original_symbols.py | 3-4h |
 | Multi-dim parameter data | chenery, orani, (+1 partial) | 3 | 161, 170 | emit/original_symbols.py | 4-5h |
-| Set element quoting | ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s | 5 | 120, 145, 149, 340 | emit/expr_to_gams.py | 2-3h |
+| Set element quoting | ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s, pollut | 6 | 120, 145, 149, 340 | emit/expr_to_gams.py | 2-3h |
 | Undefined function (psi) | mingamma | 1 | 140, 121 | emit/expr_to_gams.py | 1-2h |
 | MCP mapping | least | 1 | 66, 256 | emit/model.py | 3-4h |
 
@@ -293,8 +293,8 @@ Based on ROI (models fixed / hours):
 
 | Priority | Fix | Models Fixed | Hours | ROI |
 |----------|-----|--------------|-------|-----|
-| 1 | Set element quoting | 5 (ps2_* family) | 2-3h | 2.0 |
-| 2 | Skip computed param assignments | 6 | 2h | 3.0 |
+| 1 | Set element quoting | 6 (ps2_* family + pollut) | 2-3h | 2.4 |
+| 2 | Skip computed param assignments | 5 | 2h | 2.5 |
 | 3 | Undefined function (psi→digamma) | 1 | 1-2h | 0.7 |
 | 4 | Bound multiplier dimension | 5 | 4-5h | 1.0 |
 | 5 | Multi-dim parameter data | 3 | 4-5h | 0.6 |

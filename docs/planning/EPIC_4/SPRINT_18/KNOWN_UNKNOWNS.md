@@ -671,17 +671,17 @@ Development team
 
 | Category | Models | Count | Top Blocker? |
 |----------|--------|-------|--------------|
-| Computed parameter assignment | ajax, demo1, mathopt1, mexss, pollut, sample | 6 | **#1 (tied)** |
-| Bound multiplier dimension | alkyl, bearing, + 3 partial | 5 | **#2** |
-| Set element quoting | ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s | 5 | **#1 (tied)** |
+| Set element quoting | ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s, pollut | 6 | **#1** |
+| Computed parameter assignment | ajax, demo1, mathopt1, mexss, sample | 5 | **#2** |
+| Bound multiplier dimension | alkyl, bearing, + 3 partial | 5 | **#3** |
 | Multi-dim parameter data | chenery, orani, + 1 partial | 3 | #4 |
 | Undefined function (psi) | mingamma | 1 | #5 |
 | MCP mapping issues | least | 1 | #6 |
 | **Table data emission** | **none** | **0** | **NOT A BLOCKER** |
 
 **Key insight:** The top blockers are:
-1. Set element quoting (5 models, 2-3h fix) - BEST ROI
-2. Computed parameter assignment (6 models, but skip is 2h fix)
+1. Set element quoting (6 models, 2-3h fix) - BEST ROI
+2. Computed parameter assignment (5 models, but skip is 2h fix)
 3. Bound multiplier dimension (5 models, 4-5h fix)
 
 Table data emission was assumed to be a top blocker but is actually not an issue at all.
@@ -824,9 +824,9 @@ The complete taxonomy of 17 `path_syntax_error` models has been established:
 
 | Category | Models | Count | GAMS Error Codes | Fix Location |
 |----------|--------|-------|------------------|--------------|
-| Computed param assignment | ajax, demo1, mathopt1, mexss, pollut, sample | 6 | 121, 140, 141, 148 | emit/original_symbols.py |
+| Set element quoting | ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s, pollut | 6 | 120, 145, 149, 340 | emit/expr_to_gams.py |
+| Computed param assignment | ajax, demo1, mathopt1, mexss, sample | 5 | 121, 140, 141, 148 | emit/original_symbols.py |
 | Bound multiplier dimension | alkyl, bearing (+ 3 partial) | 5 | 69, 483 | kkt/bound_multipliers.py |
-| Set element quoting | ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s | 5 | 120, 145, 149, 340 | emit/expr_to_gams.py |
 | Multi-dim parameter data | chenery, orani (+ 1 partial) | 3 | 161, 170 | emit/original_symbols.py |
 | Undefined function (psi) | mingamma | 1 | 140, 121 | emit/expr_to_gams.py |
 | MCP mapping issues | least | 1 | 66, 256 | emit/model.py |
@@ -834,13 +834,13 @@ The complete taxonomy of 17 `path_syntax_error` models has been established:
 **Key findings:**
 1. **6 distinct categories** (matches assumption of 4-6)
 2. **Table data is NOT a category** (contrary to original assumption)
-3. **Clustered failures:** ps2_* family (5 models) share identical root cause
-4. **Quick wins:** Set element quoting (2-3h for 5 models), skip computed params (2h for 6 models)
+3. **Clustered failures:** ps2_* family + pollut (6 models) share set element quoting root cause
+4. **Quick wins:** Set element quoting (2-3h for 6 models), skip computed params (2h for 5 models)
 5. **Taxonomy is stable:** Based on GAMS compilation errors, not nlp2mcp internals
 
 **Recommended Sprint 18 priorities by ROI:**
-1. Set element quoting: 5 models / 2.5h = 2.0 ROI
-2. Skip computed params: 6 models / 2h = 3.0 ROI
+1. Set element quoting: 6 models / 2.5h = 2.4 ROI
+2. Skip computed params: 5 models / 2h = 2.5 ROI
 3. psi→digamma: 1 model / 1.5h = 0.7 ROI
 
 **Evidence:** See `docs/planning/EPIC_4/SPRINT_18/TABLE_DATA_ANALYSIS.md` for detailed model-by-model analysis.
