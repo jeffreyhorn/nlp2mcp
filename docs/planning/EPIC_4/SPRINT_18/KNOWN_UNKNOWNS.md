@@ -142,7 +142,21 @@ gams <model_with_if>.gms action=c
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 5, 2026):**
+
+1. **Exit codes confirmed:** `gams action=c` returns exit code 0 for successful compilation, exit code 2 for compilation errors.
+
+2. **All 160 corpus models compile successfully.** Tested all models; zero GAMS syntax errors found.
+
+3. **Error detection is reliable:** Intentional syntax error test confirmed that `action=c` correctly identifies and reports errors with detailed messages in .lst file.
+
+4. **`camcge` compiles successfully** — contrary to the original assumption that it had mismatched parentheses. The nlp2mcp `lexer_invalid_char` error is due to multi-line expression continuation that nlp2mcp doesn't handle, not a GAMS syntax issue.
+
+5. **Conditional compilation:** Not tested in depth, but irrelevant since no models have syntax errors.
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/CORPUS_SURVEY.md` for full test results.
 
 ---
 
@@ -180,7 +194,27 @@ Between 5 and 15 of the 160 convex models have GAMS-level syntax errors, reducin
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings (February 5, 2026):**
+
+**Original assumption was WRONG.** The assumption was 5-15 models have GAMS syntax errors. The actual count is **ZERO**.
+
+| Test Category | Models Tested | GAMS Errors Found |
+|---------------|---------------|-------------------|
+| Full corpus | 160 | 0 |
+| lexer_invalid_char | 74 | 0 |
+| internal_error | 23 | 0 |
+| semantic_undefined_symbol | 2 | 0 |
+
+**Key insight:** ALL 99 nlp2mcp parse failures are due to nlp2mcp grammar/parser limitations, NOT GAMS-level syntax errors. The corpus does not need to be reduced.
+
+**Impact:**
+- Corpus denominator remains 160 (no reduction)
+- `excluded_syntax_error` category not needed
+- Sprint 18 syntactic validation component is simpler than planned (~50% time savings)
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/CORPUS_SURVEY.md` for full test results.
 
 ---
 
@@ -230,7 +264,42 @@ cat camcge.lst | grep -A5 "\*\*\*\*"
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 5, 2026):**
+
+The .lst file error format is consistent and parseable:
+
+**Error format structure:**
+```
+<line_number>  <source_code>
+****           $<error_code1>,<error_code2>,...
+**** <code>  <error_message>
+
+**** N ERROR(S)   M WARNING(S)
+```
+
+**Example (from intentional syntax error test):**
+```
+   4  a(i) = i + ;
+****           $148,119,133
+**** 119  Number (primary) expected
+**** 133  Incompatible operands for addition
+**** 148  Dimension different
+
+**** 3 ERROR(S)   0 WARNING(S)
+```
+
+**Regex patterns for parsing:**
+```python
+ERROR_CODE_LINE = r'^\*\*\*\*\s+\$[\d,]+$'
+ERROR_MESSAGE = r'^\*\*\*\*\s+(\d+)\s+(.+)$'
+ERROR_SUMMARY = r'^\*\*\*\*\s+(\d+)\s+ERROR\(S\)'
+```
+
+**Note:** While the format is parseable, no actual errors were found in the 160-model corpus, so this capability is not needed for Sprint 18.
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/CORPUS_SURVEY.md` Appendix B.
 
 ---
 
@@ -427,7 +496,25 @@ Extrapolate: 160 models × average_time = total_time
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 5, 2026):**
+
+| Metric | Value |
+|--------|-------|
+| Average compilation time per model | 0.16 seconds |
+| Total time for 160 models | 25.9 seconds |
+| Estimated with script overhead | ~30-45 seconds |
+
+**Key findings:**
+1. Sequential execution is fast enough — no parallelization needed
+2. GAMS startup time dominates (compilation itself is instantaneous for most models)
+3. No timeout handling needed — all models complete in <1 second
+4. A progress bar would be nice but not essential given the ~30 second total runtime
+
+**Conclusion:** The assumption is verified. `test_syntax.py` can use simple sequential execution.
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/CORPUS_SURVEY.md` Finding 4.
 
 ---
 

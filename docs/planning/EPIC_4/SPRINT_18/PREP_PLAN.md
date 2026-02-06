@@ -157,7 +157,7 @@ A comprehensive Known Unknowns document that:
 
 ## Task 2: Survey GAMSLIB Corpus for Syntax Error Indicators
 
-**Status:** Not Started
+**Status:** ✅ **COMPLETED** (February 5, 2026)
 **Priority:** High
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Task 8 (corpus reclassification design)
@@ -220,41 +220,45 @@ Document:
 **File Created:** `docs/planning/EPIC_4/SPRINT_18/CORPUS_SURVEY.md`
 
 **Contents:**
-- Sample compilation test results (12+ models tested)
+- Full corpus compilation test results (160 models tested, 160/160 OK)
 - Cross-reference of pipeline failures vs. GAMS compilation failures
-- Estimated syntax error count and types
-- Impact analysis on corpus denominator
+- Finding: Zero GAMS syntax errors in corpus
+- Impact analysis: No corpus reduction needed, Sprint 18 scope simplified
 
 ### Result
 
-A clear picture of the syntax validation landscape:
-- How many models to expect in the syntax error report
-- What GAMS error format looks like (for parsing in `test_syntax.py`)
-- Whether the estimated 10-12h for syntactic validation is realistic
-- Preliminary list of models likely to be reclassified
+**KEY FINDING: Zero GAMS syntax errors in the 160-model corpus.**
+
+- All 160 models compile successfully with `gams action=c`
+- All 99 nlp2mcp parse failures are due to nlp2mcp grammar limitations, NOT GAMS issues
+- `camcge` compiles successfully — the `lexer_invalid_char` error is due to multi-line continuation nlp2mcp doesn't handle
+- The `excluded_syntax_error` category is not needed
+- Sprint 18 syntactic validation component is ~50% simpler than originally planned
+- Corpus denominator remains 160 (no reduction)
 
 ### Verification
 
-- At least 12 models tested with `gams action=c`
-- Exit code and error output format documented
-- Estimated syntax error count established
-- Cross-reference with pipeline failures complete
+- All 160 models tested with `gams action=c` (exceeded 12+ requirement)
+- Exit code 0 for success, 2 for errors documented
+- .lst error format documented with regex patterns
+- Zero syntax errors found (not 5-15 as assumed)
+- Complete cross-reference with pipeline failures
 
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_18/CORPUS_SURVEY.md` with survey results
-- List of sample models tested and their GAMS compilation outcomes
-- Estimated scope for `test_syntax.py` implementation
+- Full test results (160/160 models compile OK)
+- Updated scope estimate for Sprint 18 syntactic validation component
 - Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.1, 1.2, 1.3, 1.8
 
 ### Acceptance Criteria
 
-- [ ] At least 12 models tested with `gams action=c` (stratified sample)
-- [ ] GAMS exit code behavior documented for success and failure
-- [ ] .lst file error format documented (for programmatic parsing)
-- [ ] Estimated number of syntax-error models (range)
-- [ ] Cross-reference with nlp2mcp pipeline failures complete
-- [ ] Impact on corpus denominator estimated
+- [x] At least 12 models tested with `gams action=c` (stratified sample) — **EXCEEDED: All 160 tested**
+- [x] GAMS exit code behavior documented for success and failure
+- [x] .lst file error format documented (for programmatic parsing)
+- [x] Estimated number of syntax-error models (range) — **FINDING: Zero errors**
+- [x] Cross-reference with nlp2mcp pipeline failures complete
+- [x] Impact on corpus denominator estimated — **No reduction needed**
 
 ---
 
