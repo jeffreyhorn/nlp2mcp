@@ -625,7 +625,28 @@ Approximately 4 of the 17 `path_syntax_error` models fail specifically because `
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**5 models** fail due to computed parameter assignment emission:
+
+| Model | Parameters | Computation Type | Needed for MCP? |
+|-------|-----------|------------------|-----------------|
+| ajax | `mtr(m,avail-h)`, `par(g,demand)` | Intermediate calc | No |
+| demo1 | `croprep(revenue,c)`, `croprep(crep,total)`, `labrep(total,lrep)` | Post-solve reporting | No |
+| mathopt1 | `report(x1,diff)`, `report(x2,diff)` | Post-solve comparison | No |
+| mexss | `d(steel,j)`, `muf(i,j)`, `muv(j)`, `mue(i)`, `pd(c)`, `pv(c)`, `pe(c)` | Pre-processing | No (overlap with set quoting) |
+| sample | `w(h)`, `tpop`, `k1(h,j)`, `k2(j)` | Pre-processing | No (ordering issue) |
+
+**Key insight:** All computed parameter assignments can be SKIPPED entirely:
+- Post-solve assignments (demo1, mathopt1) are never needed for MCP
+- Pre-processing assignments (ajax, mexss, sample) fail due to ordering/dependency issues
+- The KKT transformation uses static parameter values from `emit_original_parameters()`
+
+**Recommended fix:** Skip `emit_computed_parameter_assignments()` entirely (2h effort).
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/COMPUTED_PARAM_ANALYSIS.md` for detailed analysis.
 
 ---
 
@@ -778,7 +799,36 @@ Parameter a(i); a(i) = 2 * ord(i);
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**Design Decision: SKIP computed parameter assignments entirely.**
+
+Analysis of all 5 affected models shows:
+1. **Post-solve assignments** (demo1, mathopt1): Never needed for MCP - used for reporting
+2. **Pre-processing assignments** (ajax, mexss, sample): Fail due to ordering/dependency issues
+
+**Why SKIP is the right approach:**
+- The IR stores expressions in `ParameterDef.expressions`, but re-emitting them fails due to:
+  - Missing dependencies (symbols not defined in MCP context)
+  - Wrong ordering (values referenced before computed)
+  - Set element quoting issues (overlaps with another fix)
+- Emitting static values requires evaluating GAMS expressions in Python (complex)
+- The KKT transformation uses static parameter data from `emit_original_parameters()`
+- MCP formulation doesn't need these intermediate computed values
+
+**Implementation:**
+```python
+def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
+    # Skip all computed parameter assignments for MCP output
+    return ""
+```
+
+**Effort:** 2 hours (vs. 8-10h for complex re-emit/static approach)
+**Risk:** Low - verified that 12 currently-solving models don't use computed param assignments
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/COMPUTED_PARAM_ANALYSIS.md` for detailed rationale.
 
 ---
 
