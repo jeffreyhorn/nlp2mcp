@@ -1012,7 +1012,7 @@ Development team
 ### Verification Results
 ✅ **Status:** VERIFIED
 
-**Finding:** Yes, `:width:decimals` is the only format specifier syntax. There is NO `:width:decimals:exponent` variant.
+**Finding:** There is no `:width:decimals:exponent` variant. Supported per-item forms are `:width` and `:width:decimals` (optionally with alignment).
 
 **Full syntax specification:**
 - `item:width` - width only

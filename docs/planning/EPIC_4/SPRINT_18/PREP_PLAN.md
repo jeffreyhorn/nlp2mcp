@@ -708,7 +708,7 @@ Sketch the grammar change for `gams_grammar.lark`:
 
 | Finding | Details |
 |---------|---------|
-| Format syntax | `:width:decimals` only — NO `:width:decimals:exponent` variant |
+| Format syntax | Supports `:width` and `:width:decimals`; no `:width:decimals:exponent` variant |
 | Alignment option | Optional `<`, `>`, `<>` prefix: `item:<10:5` |
 | Models affected | **3 models** (not 4) — ps5_s_mn, ps10_s, ps10_s_mn |
 | stdcge issue | Different blocker: needs `put_stmt_nosemi` for loop context |
