@@ -72,9 +72,11 @@ Parse error at line 145, column 13: Unexpected character: 'p'
 **Blocking Issue:** `:width:decimals` format specifier
 **Secondary Issues:** None identified
 
-**Failing Lines:**
+**Failing Lines (source file):**
 - Line 151: `loop(i, put pt(i,t):10:5;);`
 - Line 152: `put noMHRC(t) Util_lic(t):20:10 Util_Lic2(t):20:10 Util_gap(t);`
+
+*Note: Parse error reports line 145 due to preprocessing (comment removal shifts line numbers).*
 
 ---
 
@@ -94,10 +96,12 @@ Parse error at line 59, column 24: Unexpected character: ':'
 **Blocking Issue:** `:width:decimals` format specifier
 **Secondary Issues:** None identified
 
-**Failing Lines:**
+**Failing Lines (source file):**
 - Line 63: `loop(i, put i.tl x.l(i):20:10 w.l(i):20:10 b.l(i):20:10 p(i):20:10 theta(i):20:10/;);`
 - Line 64: `put "Util" Util.l:20:10;`
 - Line 68: `loop(i, put i.tl licd.m(i):20:10; put /;);`
+
+*Note: Parse error reports line 59 due to preprocessing (comment removal shifts line numbers).*
 
 ---
 
@@ -117,9 +121,11 @@ Parse error at line 141, column 13: Unexpected character: 'p'
 **Blocking Issue:** `:width:decimals` format specifier
 **Secondary Issues:** None identified
 
-**Failing Lines:**
+**Failing Lines (source file):**
 - Line 147: `loop(i, put pt(i,t):10:5;);`
 - Line 148: `put noMHRC(t) Util_lic(t):20:10 Util_Lic2(t):20:10 Util_gap(t);`
+
+*Note: Parse error reports line 141 due to preprocessing (comment removal shifts line numbers).*
 
 ---
 
@@ -144,11 +150,13 @@ The grammar expects `put_stmt` which requires SEMI, but here the put is followed
 **Blocking Issue:** Missing `put_stmt_nosemi` variant for loop context
 **Secondary Issues:** None - the `:width:decimals` fix will NOT help this model
 
-**Failing Lines:**
+**Failing Lines (source file):**
 - Line 385: `loop(j, put j.tl);`
 - Line 388: `put h.tl;` (inside loop without semicolon before loop end)
 - Line 397: `loop(j, put j.tl);`
 - Line 400: `put h.tl;`
+
+*Note: Parse error reports line 362 due to preprocessing (comment removal shifts line numbers).*
 
 ---
 
