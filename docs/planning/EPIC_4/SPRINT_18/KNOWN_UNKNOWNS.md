@@ -1305,7 +1305,30 @@ The v1.1.0 baseline metrics (Parse 61/160, Translate 42/61, Solve 12/42, Full Pi
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**The v1.1.0 baseline is accurate and reproducible.**
+
+| Metric | Expected | Verified | Status |
+|--------|----------|----------|--------|
+| Test suite | 3204+ pass | 3204 passed, 10 skipped, 1 xfailed | ✅ |
+| Parse success | 61 | 61 | ✅ |
+| Parse failure | 99 | 99 | ✅ |
+| Translate success | 42 | 42 | ✅ |
+| Translate failure | 19 | 19 | ✅ |
+| Solve (model_optimal) | 12 | 12 | ✅ |
+| Convex models (corpus) | 160 | 160 | ✅ |
+
+**Verified 12 model_optimal models:** apl1p, blend, himmel11, hs62, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, trig, trnsport, trussm
+
+**Baseline verification:**
+- Commit hash: `aed804ae50d2296464b17dfe22b6c8e69edf236d`
+- Verification date: February 6, 2026
+- Branch: `planning/sprint18-task9`
+
+**Note:** "Full Pipeline 12/160" refers to solve-stage success. Sprint 17 did not re-run the solution comparison stage, so this is a proxy metric. See Unknown 4.3 for comparison stage status.
 
 ---
 
@@ -1415,7 +1438,27 @@ Sprint 18 should re-run the solution comparison stage during the Day 6 pipeline 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**Sprint 18 does NOT need to re-run the solution comparison stage for baseline verification.**
+
+**Rationale:**
+1. The current 12 `model_optimal` models have been verified to solve correctly with PATH
+2. Solution comparison was completed in Sprint 16 for those models
+3. Re-running comparison for baseline verification would not change the metrics
+4. Sprint 18 focus is on emit_gams.py fixes, not comparison infrastructure
+
+**Recommendation:**
+- For Sprint 18 Day 6 pipeline retest: Record solve stage success/failure
+- Newly-solving models (from emit_gams.py fixes) should be manually verified
+- Full comparison stage can be re-enabled in Sprint 19 if needed
+
+**Comparison infrastructure status:**
+- `src/pipeline/compare.py` exists and is functional
+- Last full comparison run: Sprint 16
+- Time estimate for full comparison: ~30 minutes for 12 models
 
 ---
 
@@ -1452,7 +1495,29 @@ which gams       # Expected: known location
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**GAMS environment is unchanged since v1.1.0.**
+
+| Component | Version | Status |
+|-----------|---------|--------|
+| GAMS Base Module | 51.3.0 (38407a9b, Oct 27, 2025) | ✅ Unchanged |
+| PATH Solver | 103001 (libpath52.dylib) | ✅ Unchanged |
+| GAMS Location | /Library/Frameworks/GAMS.framework/Versions/51/Resources/ | ✅ Standard |
+| Platform | macOS (DEX-DEG x86 64bit) | ✅ Compatible |
+
+**Environment verification:**
+```bash
+$ gams ?
+GAMS Base Module 51.3.0 38407a9b Oct 27, 2025 DEG x86 64bit/macOS
+
+$ which gams
+/Library/Frameworks/GAMS.framework/Versions/51/Resources/gams
+```
+
+**Conclusion:** The GAMS environment is stable. Results from Sprint 18 will be directly comparable to v1.1.0 baseline.
 
 ---
 
