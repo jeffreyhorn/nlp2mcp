@@ -413,7 +413,7 @@ Development team
 
 | Category | Needed? | Evidence |
 |----------|---------|----------|
-| `excluded_syntax_error` | ✅ Yes | Task 2 found 0 GAMS syntax errors in gamslib, but camcge has known issues. Category needed for future discoveries. |
+| `excluded_syntax_error` | ✅ Yes | Task 2 found 0 GAMS syntax errors in current gamslib. Category needed for potential future discoveries or if GAMS team reports syntax issues. |
 | `excluded_infeasible` | ❌ No | Both `model_infeasible` models (circle, house) are MCP bugs, not inherently infeasible NLPs. Keep in corpus. |
 | `excluded_unbounded` | ❌ No | No unbounded models found in corpus. All solve attempts completed normally. |
 
@@ -425,10 +425,10 @@ Development team
 **Schema suggestion:**
 ```json
 {
-  "model_id": "camcge",
+  "model_id": "hypothetical_model",
   "excluded": true,
   "exclusion_reason": "syntax_error",
-  "exclusion_details": "Unmatched parenthesis in equation definition"
+  "exclusion_details": "GAMS compilation error: unmatched parenthesis"
 }
 ```
 
