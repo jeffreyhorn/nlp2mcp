@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Research
+- Audit put statement `:width:decimals` syntax — documented full format specifier syntax, verified 4 target models (3 blocked by format specifiers, 1 by different issue), designed grammar extension for `gams_grammar.lark` (Task 6 of Sprint 18 Prep)
 - Analyze emit_gams.py computed parameter failures — identified 5 affected models (ajax, demo1, mathopt1, mexss, sample), decided SKIP approach (not re-emit), designed 2h fix with code sketch (Task 5 of Sprint 18 Prep)
 - Analyze emit_gams.py table data failures — cataloged all 17 `path_syntax_error` models, found 0 table data failures (contrary to assumption), identified 6 distinct failure categories, designed fixes for top priorities (Task 4 of Sprint 18 Prep)
 - Research GAMS `action=c` compilation mode — documented exit codes (0=success, 2=error), .lst error format with regex patterns, solver licensing not required, 10 test scenarios verified, complete test_syntax.py design (Task 3 of Sprint 18 Prep)
