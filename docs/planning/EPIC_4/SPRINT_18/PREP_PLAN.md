@@ -841,10 +841,10 @@ For each infeasible/unbounded model:
 
 **Unbounded models:** None found in corpus
 
-**Exclusion categories needed:**
+**Exclusion categories needed (updated plan):**
 - `excluded_syntax_error` — Yes (for future syntax error discoveries)
-- `excluded_infeasible` — No (both infeasible models are MCP bugs, not inherently infeasible)
-- `excluded_unbounded` — No (no unbounded models found)
+- `excluded_infeasible` — No (both infeasible models are MCP bugs, not inherently infeasible; this overturns the earlier Task 7 assumption that Sprint 18 would introduce an `excluded_infeasible` bucket)
+- `excluded_unbounded` — No (no unbounded models found; this likewise supersedes the earlier plan to add an `excluded_unbounded` bucket)
 
 ### Verification
 
