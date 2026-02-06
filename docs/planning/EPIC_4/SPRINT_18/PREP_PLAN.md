@@ -232,7 +232,7 @@ Document:
 - All 160 models compile successfully with `gams action=c`
 - All 99 nlp2mcp parse failures are due to nlp2mcp grammar limitations, NOT GAMS issues
 - `camcge` compiles successfully — the `lexer_invalid_char` error is due to multi-line continuation nlp2mcp doesn't handle
-- The `syntax_error` exclusion reason is not needed
+- The `syntax_error` exclusion reason currently has count 0 (no models require it), but remains supported in the schema for future discoveries
 - Sprint 18 syntactic validation component is ~50% simpler than originally planned
 - Corpus denominator remains 160 (no reduction)
 
@@ -767,7 +767,7 @@ Investigate the 2 models currently flagged as `model_infeasible` and check for a
 
 ### Why This Matters
 
-Sprint 18 will reclassify syntax-error models with `exclusion.reason = "syntax_error"` and potentially exclude infeasible/unbounded models. Before building the reclassification, we need to understand the current state: Are these 2 models truly infeasible, or are they infeasible due to KKT formulation bugs? Should they be excluded from the corpus or investigated further?
+Sprint 18 will reclassify syntax-error models with `exclusion.reason = "syntax_error"`. Excluding models based on infeasible/unbounded status would require a future schema change and is out of scope for Sprint 18. Before building the reclassification, we need to understand the current state: Are these 2 models truly infeasible, or are they infeasible due to KKT formulation bugs? Should they be excluded from the corpus or investigated further (outside the Sprint 18 schema work)?
 
 ### Background
 
