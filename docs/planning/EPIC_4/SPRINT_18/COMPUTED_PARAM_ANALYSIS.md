@@ -27,8 +27,8 @@ This significantly simplifies the Sprint 18 fix: **2 hours** (Option A: skip) in
 | ajax | `mtr(m,avail-h)`, `par(g,demand)` | Intermediate calc | No |
 | demo1 | `croprep(revenue,c)`, `croprep(crep,total)`, `labrep(total,lrep)` | Reporting after solve | No |
 | mathopt1 | `report(x1,diff)`, `report(x2,diff)` | Post-solve comparison | No |
-| mexss | `d(steel,j)`, `muf(i,j)`, `muv(j)`, `mue(i)`, `pd(c)`, `pv(c)`, `pe(c)` | Pre-processing | Maybe (see analysis) |
-| sample | `w(h)`, `tpop`, `k1(h,j)`, `k2(j)` | Pre-processing | Yes, but ordering issue |
+| mexss | `d(steel,j)`, `muf(i,j)`, `muv(j)`, `mue(i)`, `pd(c)`, `pv(c)`, `pe(c)` | Pre-processing | No |
+| sample | `w(h)`, `tpop`, `k1(h,j)`, `k2(j)` | Pre-processing | No |
 
 ---
 
@@ -333,6 +333,7 @@ def test_affected_models_compile_after_fix():
         # (may have other errors like set quoting, but not 121/141/148)
         assert 121 not in result.error_codes, f"{model}: Error 121 should be fixed"
         assert 141 not in result.error_codes, f"{model}: Error 141 should be fixed"
+        assert 148 not in result.error_codes, f"{model}: Error 148 should be fixed"
 ```
 
 ---
