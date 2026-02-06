@@ -940,24 +940,22 @@ Design the new fields:
 - Should excluded models retain their pipeline status or be overwritten?
 - How should metrics scripts handle the reduced corpus?
 
-Proposed schema:
+Proposed schema (see SCHEMA_DESIGN.md for complete specification):
 ```json
 {
-    "model_name": {
-        "metadata": { "type": "NLP", "convex": true, ... },
-        "gams_syntax": {
-            "status": "valid|syntax_error|compilation_error",
-            "error_message": "...",
-            "error_line": 42,
-            "tested_date": "2026-02-XX"
-        },
-        "exclusion": {
-            "excluded": false,
-            "reason": null,
-            "category": null
-        },
-        "pipeline": { "status": "path_syntax_error", ... }
+  "models": [
+    {
+      "model_id": "example",
+      "gams_syntax": {
+        "status": "success|failure|not_tested",
+        "errors": [{ "code": 148, "message": "...", "line": 42 }]
+      },
+      "exclusion": {
+        "excluded": false
+      },
+      "nlp2mcp_parse": { "status": "success", ... }
     }
+  ]
 }
 ```
 

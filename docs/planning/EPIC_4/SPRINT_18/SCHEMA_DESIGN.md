@@ -636,9 +636,8 @@ If the schema changes cause issues:
 +          "then": { "required": ["details"] }
 +        }
 +      ]
-+      }
 +    }
-   }
++  }
 }
 ```
 

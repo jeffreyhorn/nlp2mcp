@@ -377,7 +377,7 @@ Development team
 **High** — Schema design for corpus reclassification
 
 ### Assumption
-Three exclusion reasons are sufficient: `syntax_error`, `infeasible`, `unbounded`. These cover all reasons a model should be removed from the valid corpus.
+Three exclusion reasons were initially assumed: `syntax_error`, `infeasible`, `unbounded`. Investigation revealed only `syntax_error` is needed (see Verification Results below). The final schema supports: `syntax_error`, `data_dependency`, `license_restricted`, `other`.
 
 ### Research Questions
 1. Are three categories sufficient, or do we need more (e.g., `excluded_duplicate`, `excluded_nonconvex`)?
@@ -419,20 +419,23 @@ Development team
 
 **Revised recommendation:**
 1. Implement `exclusion.reason = "syntax_error"` for models with confirmed GAMS syntax errors
-2. Do NOT implement `infeasible` or `unbounded` exclusion reasons at this time
-3. Keep a generic `exclusion_reason` field to allow future categories without schema changes
+2. Do NOT add `infeasible` or `unbounded` to the `reason` enum at this time
+3. Use `exclusion.reason = "other"` with `exclusion.details` for ad-hoc exclusions without schema changes
 
-**Schema suggestion:**
+**Schema suggestion (aligned with SCHEMA_DESIGN.md):**
 ```json
 {
   "model_id": "hypothetical_model",
-  "excluded": true,
-  "exclusion_reason": "syntax_error",
-  "exclusion_details": "GAMS compilation error: unmatched parenthesis"
+  "exclusion": {
+    "excluded": true,
+    "reason": "syntax_error",
+    "details": "GAMS compilation error: unmatched parenthesis",
+    "reversible": true
+  }
 }
 ```
 
-This design is extensible — new exclusion reasons can be added without schema changes.
+This design is extensible — new exclusion reasons can be added to the enum in future schema versions, or use `reason="other"` with `details` for ad-hoc cases.
 
 ---
 
