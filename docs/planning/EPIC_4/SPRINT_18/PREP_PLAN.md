@@ -232,7 +232,7 @@ Document:
 - All 160 models compile successfully with `gams action=c`
 - All 99 nlp2mcp parse failures are due to nlp2mcp grammar limitations, NOT GAMS issues
 - `camcge` compiles successfully — the `lexer_invalid_char` error is due to multi-line continuation nlp2mcp doesn't handle
-- The `excluded_syntax_error` category is not needed
+- The `syntax_error` exclusion reason is not needed
 - Sprint 18 syntactic validation component is ~50% simpler than originally planned
 - Corpus denominator remains 160 (no reduction)
 
@@ -767,7 +767,7 @@ Investigate the 2 models currently flagged as `model_infeasible` and check for a
 
 ### Why This Matters
 
-Sprint 18 will reclassify syntax-error models as `excluded_syntax_error` and infeasible/unbounded models as `excluded_infeasible`/`excluded_unbounded`. Before building the reclassification, we need to understand the current state: Are these 2 models truly infeasible, or are they infeasible due to KKT formulation bugs? Should they be excluded from the corpus or investigated further?
+Sprint 18 will reclassify syntax-error models with `exclusion.reason = "syntax_error"` and potentially exclude infeasible/unbounded models. Before building the reclassification, we need to understand the current state: Are these 2 models truly infeasible, or are they infeasible due to KKT formulation bugs? Should they be excluded from the corpus or investigated further?
 
 ### Background
 
@@ -842,9 +842,9 @@ For each infeasible/unbounded model:
 **Unbounded models:** None found in corpus
 
 **Exclusion categories needed (updated plan):**
-- `excluded_syntax_error` — Yes (for future syntax error discoveries)
-- `excluded_infeasible` — No (both infeasible models are MCP bugs, not inherently infeasible; this overturns the earlier Task 7 assumption that Sprint 18 would introduce an `excluded_infeasible` bucket)
-- `excluded_unbounded` — No (no unbounded models found; this likewise supersedes the earlier plan to add an `excluded_unbounded` bucket)
+- `exclusion.reason = "syntax_error"` — Yes (for future syntax error discoveries)
+- `exclusion.reason = "infeasible"` — No (both infeasible models are MCP bugs, not inherently infeasible; this overturns the earlier Task 7 assumption that Sprint 18 would introduce an infeasible exclusion bucket)
+- `exclusion.reason = "unbounded"` — No (no unbounded models found; this likewise supersedes the earlier plan to add an unbounded exclusion bucket)
 
 ### Verification
 
@@ -889,7 +889,7 @@ Design the database schema changes and reclassification logic for `gamslib_statu
 ### Why This Matters (updated plan)
 
 Sprint 18 will add a `gams_syntax` field to track GAMS compilation validation results. Based on Task 7 findings:
-- Only `excluded_syntax_error` exclusion category is needed (not `excluded_infeasible` or `excluded_unbounded`)
+- Only `syntax_error` as `exclusion.reason` is needed (not `infeasible` or `unbounded`)
 - Both `model_infeasible` models (circle, house) are MCP formulation bugs, not candidates for exclusion
 
 The schema design affects:
@@ -916,7 +916,7 @@ Sprint 18 needs to add:
 - `gams_syntax.status`: "valid", "syntax_error", "compilation_error"
 - `gams_syntax.error_message`: Error text from GAMS .lst file
 - `gams_syntax.error_line`: Line number of error
-- Exclusion category: "excluded_syntax_error", "excluded_infeasible", "excluded_unbounded"
+- Exclusion reason: "syntax_error" (via `exclusion.reason` field)
 
 ### What Needs to Be Done
 
@@ -1033,7 +1033,7 @@ A complete schema design that Sprint 18 can implement directly:
 4. `baseline_metrics.json` separate from `gamslib_status.json` — simplifies transition
 
 **Unknowns verified:**
-- Unknown 1.5: Only `excluded_syntax_error` category needed ✅
+- Unknown 1.5: Only `syntax_error` exclusion reason needed ✅
 - Unknown 1.6: Metrics recalculation rules documented ✅
 - Unknown 4.2: Schema extensibility confirmed safe ✅
 

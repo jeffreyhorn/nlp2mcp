@@ -87,9 +87,11 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
     },
     "errors": {
       "type": "array",
-      "description": "Array of error details if status is 'error'",
+      "description": "Array of error details (only present when status='error')",
       "items": {
         "type": "object",
+        "required": ["code", "message", "line"],
+        "additionalProperties": false,
         "properties": {
           "code": {
             "type": "integer",
@@ -107,6 +109,15 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
         }
       }
     }
+  },
+  "if": {
+    "properties": { "status": { "const": "error" } }
+  },
+  "then": {
+    "required": ["status", "errors", "error_count"]
+  },
+  "else": {
+    "not": { "required": ["errors"] }
   }
 }
 ```
@@ -144,14 +155,30 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
     },
     "details": {
       "type": "string",
-      "description": "Human-readable explanation of exclusion"
+      "description": "Human-readable explanation of exclusion (required if reason='other')"
     },
     "reversible": {
       "type": "boolean",
       "default": true,
       "description": "True if exclusion can be reversed (e.g., GAMS team fixes syntax)"
     }
-  }
+  },
+  "if": {
+    "properties": { "excluded": { "const": true } }
+  },
+  "then": {
+    "required": ["excluded", "reason"]
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "reason": { "const": "other" } }
+      },
+      "then": {
+        "required": ["details"]
+      }
+    }
+  ]
 }
 ```
 
@@ -164,7 +191,7 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
 | `license_restricted` | Model requires licensed features not available in test environment | Reserved |
 | `other` | Other exclusion reason (requires details field) | Reserved |
 
-**Note:** `excluded_infeasible` and `excluded_unbounded` are intentionally NOT included per Task 7 findings. Models with `model_infeasible` or `model_unbounded` MCP results remain in the valid corpus as bugs to fix.
+**Note:** `infeasible` and `unbounded` exclusion reasons are intentionally NOT included per Task 7 findings. Models with `model_infeasible` or `model_unbounded` MCP results remain in the valid corpus as bugs to fix.
 
 ### 3. Schema Version Bump
 
@@ -553,10 +580,7 @@ If the schema changes cause issues:
 +      "required": ["status"],
 +      "additionalProperties": false,
 +      "properties": {
-+        "status": {
-+          "type": "string",
-+          "enum": ["valid", "error", "not_tested"]
-+        },
++        "status": { "type": "string", "enum": ["valid", "error", "not_tested"] },
 +        "validation_date": { "type": "string", "format": "date-time" },
 +        "gams_version": { "type": "string" },
 +        "validation_time_seconds": { "type": "number", "minimum": 0 },
@@ -567,6 +591,8 @@ If the schema changes cause issues:
 +          "type": "array",
 +          "items": {
 +            "type": "object",
++            "required": ["code", "message", "line"],
++            "additionalProperties": false,
 +            "properties": {
 +              "code": { "type": "integer" },
 +              "message": { "type": "string" },
@@ -574,7 +600,10 @@ If the schema changes cause issues:
 +            }
 +          }
 +        }
-+      }
++      },
++      "if": { "properties": { "status": { "const": "error" } } },
++      "then": { "required": ["status", "errors", "error_count"] },
++      "else": { "not": { "required": ["errors"] } }
 +    },
 +    "exclusion_status": {
 +      "type": "object",
@@ -583,13 +612,19 @@ If the schema changes cause issues:
 +      "additionalProperties": false,
 +      "properties": {
 +        "excluded": { "type": "boolean" },
-+        "reason": {
-+          "type": "string",
-+          "enum": ["syntax_error", "data_dependency", "license_restricted", "other"]
-+        },
++        "reason": { "type": "string", "enum": ["syntax_error", "data_dependency", "license_restricted", "other"] },
 +        "exclusion_date": { "type": "string", "format": "date-time" },
 +        "details": { "type": "string" },
 +        "reversible": { "type": "boolean", "default": true }
++      },
++      "if": { "properties": { "excluded": { "const": true } } },
++      "then": { "required": ["excluded", "reason"] },
++      "allOf": [
++        {
++          "if": { "properties": { "reason": { "const": "other" } } },
++          "then": { "required": ["details"] }
++        }
++      ]
 +      }
 +    }
    }
