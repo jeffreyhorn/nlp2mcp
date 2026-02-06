@@ -221,7 +221,7 @@ def check_syntax(model_path: Path) -> dict:
         if result.returncode == 0:
             return {'status': 'valid', 'exit_code': 0}
         elif result.returncode == 2:
-            errors = parse_lst_errors(lst_path)
+            errors = parse_gams_errors(lst_path)
             return {'status': 'syntax_error', 'exit_code': 2, 'errors': errors}
         else:
             return {'status': 'error', 'exit_code': result.returncode}
@@ -372,7 +372,7 @@ Task 2 (CORPUS_SURVEY.md) already confirmed all 160 models compile successfully.
 * test_error.gms - Intentional syntax error for testing
 set i /1*3/;
 parameter a(i);
-a(i) = i + ;  $syntax error: missing operand
+a(i) = i + ;  ! syntax error: missing operand
 ```
 
 ### Runtime Error Test (not detected by action=c)
@@ -380,7 +380,7 @@ a(i) = i + ;  $syntax error: missing operand
 * test_runtime.gms - Runtime error (compiles OK)
 scalar x / 0 /;
 scalar y;
-y = 1 / x;  $division by zero - not detected in compile-only
+y = 1 / x;  ! division by zero - not detected in compile-only
 ```
 
 ---
