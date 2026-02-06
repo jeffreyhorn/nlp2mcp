@@ -12,7 +12,7 @@
 This document specifies the schema changes required for Sprint 18 corpus reclassification. Based on findings from Tasks 2-7, the primary need is tracking GAMS syntax validation results. The originally anticipated exclusion categories (`excluded_infeasible`, `excluded_unbounded`) are **not needed** per Task 7 findings.
 
 **Key Findings from Prep Tasks:**
-- Task 2 (CORPUS_SURVEY.md): All 160 models compile successfully with GAMS - zero syntax errors found
+- Task 2 (CORPUS_SURVEY.md): All 160 convex models (the target subset of 219 total models in `gamslib_status.json`) compile successfully with GAMS - zero syntax errors found
 - Task 7 (KNOWN_UNKNOWNS.md Unknown 1.4, 1.5): Both `model_infeasible` models (circle, house) are MCP formulation bugs, not inherently infeasible NLPs
 - No unbounded models found in corpus
 
@@ -182,6 +182,7 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
   "allOf": [
     {
       "if": {
+        "required": ["reason"],
         "properties": { "reason": { "const": "other" } }
       },
       "then": {
@@ -632,7 +633,7 @@ If the schema changes cause issues:
 +      "else": { "properties": { "reason": false, "exclusion_date": false, "details": false, "reversible": false } },
 +      "allOf": [
 +        {
-+          "if": { "properties": { "reason": { "const": "other" } } },
++          "if": { "required": ["reason"], "properties": { "reason": { "const": "other" } } },
 +          "then": { "required": ["details"] }
 +        }
 +      ]
