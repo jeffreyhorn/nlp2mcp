@@ -1456,8 +1456,8 @@ Development team
 - Full comparison stage can be re-enabled in Sprint 19 if needed
 
 **Comparison infrastructure status:**
-- `src/pipeline/compare.py` exists and is functional
-- Last full comparison run: Sprint 16
+- Solution-comparison implementation lives under `scripts/gamslib/` (see `scripts/gamslib/test_solve.py` and `scripts/gamslib/run_full_test.py`)
+- Last full comparison run using this infrastructure: Sprint 16
 - Time estimate for full comparison: ~30 minutes for 12 models
 
 ---
@@ -1504,7 +1504,7 @@ Development team
 | Component | Version | Status |
 |-----------|---------|--------|
 | GAMS Base Module | 51.3.0 (38407a9b, Oct 27, 2025) | ✅ Unchanged |
-| PATH Solver | 103001 (libpath52.dylib) | ✅ Unchanged |
+| PATH Solver | 5.2.01 (internal version 103001, libpath52.dylib) | ✅ Unchanged |
 | GAMS Location | /Library/Frameworks/GAMS.framework/Versions/51/Resources/ | ✅ Standard |
 | Platform | macOS (DEX-DEG x86 64bit) | ✅ Compatible |
 

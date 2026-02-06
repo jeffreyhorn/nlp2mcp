@@ -1151,7 +1151,7 @@ Confirmed, reproducible baseline metrics for Sprint 18:
 
 ### Acceptance Criteria
 
-- [x] Full test suite passes on main (3204+ tests)
+- [x] Full test suite passes on main (3204+ tests, with expected skips/xfail)
 - [x] Parse count verified: 61/160
 - [x] Translate count verified: 42/61
 - [x] Solve count verified: 12/42

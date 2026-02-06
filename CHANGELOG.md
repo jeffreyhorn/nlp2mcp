@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Research
-- Verify Sprint 18 baseline metrics — confirmed v1.1.0 baseline (Parse 61/160, Translate 42/61, Solve 12/42), verified GAMS 51.3.0 environment, documented baseline commit hash aed804ae, verified Unknowns 4.1, 4.3, 4.4 (Task 9 of Sprint 18 Prep)
+- Verify Sprint 18 baseline metrics — confirmed v1.1.0 baseline (Parse 61/160, Translate 42/61, Solve 12/42), verified GAMS 51.3.0 environment, documented baseline commit hash `aed804ae50d2296464b17dfe22b6c8e69edf236d`, verified Unknowns 4.1, 4.3, 4.4 (Task 9 of Sprint 18 Prep)
 - Design corpus reclassification schema — created SCHEMA_DESIGN.md with `gams_syntax` and `exclusion` field definitions, metrics recalculation rules (valid_corpus denominator), reporting script impact analysis, verified Unknowns 1.5, 1.6, 4.2 (Task 8 of Sprint 18 Prep)
 - Review infeasible/unbounded model status — investigated 2 `model_infeasible` models (circle, house), confirmed both are MCP bugs not inherently infeasible, no unbounded models found, only `exclusion.reason = "syntax_error"` needed in schema (Task 7 of Sprint 18 Prep)
 - Audit put statement `:width:decimals` syntax — documented full format specifier syntax, verified 4 target models (3 blocked by format specifiers, 1 by different issue), designed grammar extension for `gams_grammar.lark` (Task 6 of Sprint 18 Prep)
