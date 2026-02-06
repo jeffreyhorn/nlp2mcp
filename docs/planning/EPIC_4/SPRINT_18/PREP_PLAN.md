@@ -1337,7 +1337,7 @@ A complete Sprint 18 plan that:
 - [x] Schedule incorporates findings from all 9 prep tasks
 - [x] 3 checkpoints defined with clear go/no-go criteria
 - [x] Contingency plans documented for top risks
-- [x] Total estimated hours match PROJECT_PLAN.md (22-26h) — adjusted to 16-20h based on removed items
+- [x] Total estimated hours revised to 16-20h based on removed items; PROJECT_PLAN.md (currently 22-26h) identified for update in Sprint 18
 - [x] References to all prep deliverables included
 - [x] Plan reviewed for feasibility within 10 working days
 

@@ -1023,7 +1023,7 @@ Development team
 ```bash
 # Quick regression check (run after each fix)
 for model in apl1p blend himmel11 hs62 mathopt2 mhw4d mhw4dx prodmix rbrock trig trnsport trussm; do
-    python scripts/gamslib/run_pipeline.py --model $model --stage solve
+    python scripts/gamslib/run_full_test.py --model "$model" --only-solve
 done
 ```
 
@@ -1086,8 +1086,8 @@ Development team
 
 **Scope:**
 - All 160 convex models (full corpus, no exclusions since none needed)
-- Stages: Parse → Translate → Solve
-- Comparison stage: Optional (can be re-enabled but not required for metrics)
+- Stages (as executed by `run_full_test.py`): Parse → Translate → Solve → Compare
+- Comparison stage: Always runs when Solve runs in `run_full_test.py` (no separate "skip compare" flag); comparison results are not part of the core Day 6 metrics.
 
 **Command:**
 ```bash

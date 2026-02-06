@@ -279,7 +279,7 @@ The 12 currently-solving models must be verified after each emit_gams.py change:
 ```bash
 # Quick regression check (run after each fix)
 for model in apl1p blend himmel11 hs62 mathopt2 mhw4d mhw4dx prodmix rbrock trig trnsport trussm; do
-    python scripts/gamslib/run_pipeline.py --model $model --stage solve
+    python scripts/gamslib/run_full_test.py --model "$model" --only-solve
 done
 ```
 
@@ -293,8 +293,10 @@ Run complete pipeline on all 160 models:
 python scripts/gamslib/run_full_test.py
 ```
 
+This command runs Parse, Translate, Solve, and Compare for all models; Compare is currently always executed whenever Solve runs in this script.
+
 **Scope:** All 160 convex models
-**Stages:** Parse → Translate → Solve (comparison stage optional)
+**Stages:** Parse → Translate → Solve → Compare
 **Success Criteria:**
 - Parse: ≥61 (no regressions)
 - Translate: ≥42 (no regressions)
