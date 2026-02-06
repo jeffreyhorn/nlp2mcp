@@ -518,7 +518,7 @@ Complete analysis revealed a different failure taxonomy than originally assumed:
 
 ## Task 5: Analyze emit_gams.py Computed Parameter Failures
 
-**Status:** Not Started
+**Status:** ✅ **COMPLETED** (February 6, 2026)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 18 Day 1
@@ -581,43 +581,56 @@ For each affected model:
 **File Created:** `docs/planning/EPIC_4/SPRINT_18/COMPUTED_PARAM_ANALYSIS.md`
 
 **Contents:**
-- List of models affected by computed parameter emission failures
-- Root cause analysis for each failure
-- Code-level diagnosis in `original_symbols.py`
-- Fix design with approach decision (re-emit expression vs. emit value)
-- Test case definitions
+- Complete analysis of 5 affected models (ajax, demo1, mathopt1, mexss, sample)
+- Root cause analysis: post-solve reporting (2 models), pre-processing with dependencies (3 models)
+- Code-level diagnosis in `emit_computed_parameter_assignments()`
+- Fix design: SKIP all computed parameter assignments (Option A)
+- 3 unit test case definitions
 
 ### Result
 
-A complete diagnosis of computed parameter emission failures:
-- Exact models affected (confirmed, not estimated)
-- Root cause understood at the code level
-- Fix approach chosen (re-emit expression vs. emit computed value)
-- Test cases prepared for regression prevention
+**KEY FINDING: Computed parameter assignments should be SKIPPED entirely.**
+
+Analysis of all 5 affected models reveals:
+- **All 5 models** use computed parameters for purposes NOT needed in MCP (reporting, pre-processing)
+- **The assignments fail** due to ordering issues, missing dependencies, or set element quoting
+- **The MCP model works correctly** without these assignments
+- **Recommended fix:** Skip `emit_computed_parameter_assignments()` entirely
+
+| Model | Parameters | Purpose | Needed for MCP? |
+|-------|-----------|---------|-----------------|
+| ajax | `mtr`, `par` | Intermediate calc | No |
+| demo1 | `croprep`, `labrep` | Post-solve reporting | No |
+| mathopt1 | `report` | Post-solve comparison | No |
+| mexss | `d`, `muf`, `muv`, `mue`, `pd`, `pv`, `pe` | Pre-processing | No |
+| sample | `w`, `tpop`, `k1`, `k2` | Pre-processing | No |
+
+**Sprint 18 fix:** 2 hours (skip function) instead of 8-10 hours (complex re-emit)
 
 ### Verification
 
-- Computed-parameter-specific failures isolated from Task 4's catalog
-- Root cause traced to specific code in `original_symbols.py`
-- Fix approach chosen with rationale documented
-- At least 2 unit test cases sketched
+- All 5 computed parameter models identified with exact parameter lists
+- Root cause traced to `emit_computed_parameter_assignments()` in `original_symbols.py`
+- Fix approach decided: SKIP (not re-emit or static values)
+- 3 unit test cases defined
+- Verified 12 currently-solving models don't use computed param assignments
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_18/COMPUTED_PARAM_ANALYSIS.md` with findings
-- List of confirmed affected models
-- Fix design with approach decision documented
-- Unit test case definitions
+- `docs/planning/EPIC_4/SPRINT_18/COMPUTED_PARAM_ANALYSIS.md` with complete findings
+- List of 5 confirmed affected models with parameter details
+- Fix design: SKIP approach with code sketch
+- 3 unit test case definitions
 - Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 2.2, 2.3, 2.5, 2.6
 
 ### Acceptance Criteria
 
-- [ ] Models failing due to computed parameter emission identified (exact list)
-- [ ] Root cause traced to specific functions in `original_symbols.py`
-- [ ] Fix approach decided: re-emit expression vs. emit computed value
-- [ ] Fix designed with code sketch and regression risk assessment
-- [ ] At least 2 unit test cases defined for the fix
-- [ ] Estimated fix time validated (confirm 4-5h is realistic)
+- [x] Models failing due to computed parameter emission identified (exact list)
+- [x] Root cause traced to specific functions in `original_symbols.py`
+- [x] Fix approach decided: re-emit expression vs. emit computed value — **Decision: SKIP**
+- [x] Fix designed with code sketch and regression risk assessment
+- [x] At least 2 unit test cases defined for the fix — **3 test cases defined**
+- [x] Estimated fix time validated — **2h (not 4-5h) due to simple skip approach**
 
 ---
 
