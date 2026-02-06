@@ -392,7 +392,7 @@ Complete research documenting GAMS `action=c` behavior:
 
 ## Task 4: Analyze emit_gams.py Table Data Failures
 
-**Status:** Not Started
+**Status:** ✅ **COMPLETED** (February 6, 2026)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 18 Day 1
@@ -468,44 +468,51 @@ For each affected model:
 **File Created:** `docs/planning/EPIC_4/SPRINT_18/TABLE_DATA_ANALYSIS.md`
 
 **Contents:**
-- List of models affected by table data emission failures
-- Root cause analysis for each failure
-- Code-level diagnosis in `original_symbols.py`
-- Fix design with code sketches
-- Test case definitions
+- Complete taxonomy of all 17 `path_syntax_error` models by failure category
+- Detailed GAMS compilation error analysis with error codes
+- 6 distinct failure categories identified (not 2 as originally assumed)
+- Root cause analysis traced to specific code locations
+- Fix designs with code sketches for top 3 priorities
+- 3 unit test case definitions
 
 ### Result
 
-A complete diagnosis of table data emission failures:
-- Exact models affected (confirmed, not estimated)
-- Root cause understood at the code level
-- Fix designed and ready for implementation
-- Test cases prepared for regression prevention
+**KEY FINDING: Table data emission is NOT a blocker.**
+
+Complete analysis revealed a different failure taxonomy than originally assumed:
+- **0 models** fail due to table data emission (tables work correctly)
+- **5 models** fail due to computed parameter assignment emission
+- **5 models** fail due to bound multiplier variable dimension issues
+- **6 models** fail due to set element quoting (ps2_* family + pollut)
+- **3 models** fail due to multi-dimensional parameter data
+- **1 model** fails due to undefined function reference (psi)
+- **1 model** fails due to MCP mapping issues
+
+**Sprint 18 scope adjustment recommended:** Drop table data fix (0h saved), prioritize set element quoting (2-3h, 6 models) and skip computed params (2h, 5 models).
 
 ### Verification
 
-- All 17 `path_syntax_error` models examined
-- Table-data-specific failures isolated (with model names)
-- Root cause traced to specific code in `original_symbols.py`
-- Fix design reviewed for regression risk
-- At least 2 unit test cases sketched
+- All 17 `path_syntax_error` models compiled with `gams action=c`
+- GAMS error codes extracted and categorized
+- Root causes traced to specific emit modules
+- Fix designs include code sketches and regression risk
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_18/TABLE_DATA_ANALYSIS.md` with findings
-- List of confirmed affected models
-- Fix design with code sketches
-- Unit test case definitions
+- `docs/planning/EPIC_4/SPRINT_18/TABLE_DATA_ANALYSIS.md` with complete findings
+- Full taxonomy of 17 models by 6 failure categories
+- Fix designs with code sketches for priorities 1-3
+- 3 unit test case definitions
 - Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 2.1, 2.3, 2.4, 2.6
 
 ### Acceptance Criteria
 
-- [ ] All 17 `path_syntax_error` models cataloged by failure subcategory
-- [ ] Models failing due to table data emission identified (exact list)
-- [ ] Root cause traced to specific functions in `original_symbols.py`
-- [ ] Fix designed with code sketch and regression risk assessment
-- [ ] At least 2 unit test cases defined for the fix
-- [ ] Estimated fix time validated (confirm 4-5h is realistic)
+- [x] All 17 `path_syntax_error` models cataloged by failure subcategory
+- [x] Models failing due to table data emission identified (exact list) — **FINDING: 0 models**
+- [x] Root cause traced to specific functions in `original_symbols.py` and other emit modules
+- [x] Fix designed with code sketch and regression risk assessment
+- [x] At least 2 unit test cases defined for the fix — **3 test cases defined**
+- [x] Estimated fix time validated — **Table fix: 0h (not needed); Computed param skip: 2h; Set quoting: 2-3h**
 
 ---
 
