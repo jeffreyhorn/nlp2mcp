@@ -211,7 +211,7 @@ Development team
 
 **Impact:**
 - Corpus denominator remains 160 (no reduction)
-- `syntax_error` exclusion reason not needed
+- `syntax_error` exclusion reason currently has count 0 (no models require it), but remains supported in schema for future discoveries
 - Sprint 18 syntactic validation component is simpler than planned (~50% time savings)
 
 **Evidence:** See `docs/planning/EPIC_4/SPRINT_18/CORPUS_SURVEY.md` for full test results.
@@ -328,7 +328,7 @@ gams <model>.gms
 # Check: Model Status 4 = infeasible (NLP truly infeasible)
 ```
 **Step 3:** If NLP is feasible but MCP is infeasible → KKT bug → keep in corpus
-**Step 4:** If NLP is infeasible → candidate for exclusion with `reason = "infeasible"`
+**Step 4:** If NLP is infeasible → would require future schema work to add `infeasible` exclusion reason (out of scope for Sprint 18)
 **Step 5:** Check for unbounded indicators across all models
 
 ### Risk if Wrong

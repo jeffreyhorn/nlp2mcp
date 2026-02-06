@@ -901,22 +901,27 @@ Getting the schema right during prep prevents rework during the sprint.
 
 ### Background
 
-Current `gamslib_status.json` structure (per model):
+Current `gamslib_status.json` structure (models array with entries):
 ```json
 {
-    "model_name": {
-        "metadata": { "type": "NLP", "convex": true, ... },
-        "pipeline": { "status": "path_syntax_error", "error_message": "..." },
-        "solution_comparison": { ... }
+  "models": [
+    {
+      "model_id": "example",
+      "model_name": "Example Model",
+      "gamslib_type": "NLP",
+      "nlp2mcp_parse": { "status": "success", ... },
+      "mcp_solve": { "status": "failure", "outcome_category": "path_syntax_error", ... },
+      "solution_comparison": { ... }
     }
+  ]
 }
 ```
 
-Sprint 18 needs to add:
-- `gams_syntax.status`: "valid", "syntax_error", "compilation_error"
-- `gams_syntax.error_message`: Error text from GAMS .lst file
-- `gams_syntax.error_line`: Line number of error
-- Exclusion reason: "syntax_error" (via `exclusion.reason` field)
+Sprint 18 needs to add (see SCHEMA_DESIGN.md for complete specification):
+- `gams_syntax.status`: "success", "failure", "not_tested"
+- `gams_syntax.errors[]`: Array of error details (code, message, line)
+- `exclusion.excluded`: Boolean flag for corpus exclusion
+- `exclusion.reason`: "syntax_error" (via `exclusion.reason` field)
 
 ### What Needs to Be Done
 

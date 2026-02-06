@@ -54,8 +54,8 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
   "properties": {
     "status": {
       "type": "string",
-      "enum": ["valid", "error", "not_tested"],
-      "description": "Syntax validation status"
+      "enum": ["success", "failure", "not_tested"],
+      "description": "Syntax validation status (success=compiles, failure=syntax error)"
     },
     "validation_date": {
       "type": "string",
@@ -87,7 +87,7 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
     },
     "errors": {
       "type": "array",
-      "description": "Array of error details (only present when status='error')",
+      "description": "Array of error details (only present when status='failure')",
       "items": {
         "type": "object",
         "required": ["code", "message", "line"],
@@ -111,7 +111,7 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
     }
   },
   "if": {
-    "properties": { "status": { "const": "error" } }
+    "properties": { "status": { "const": "failure" } }
   },
   "then": {
     "required": ["status", "errors", "error_count"]
@@ -169,6 +169,13 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
   "then": {
     "required": ["excluded", "reason"]
   },
+  "else": {
+    "properties": {
+      "reason": false,
+      "exclusion_date": false,
+      "details": false
+    }
+  },
   "allOf": [
     {
       "if": {
@@ -211,7 +218,7 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
   "model_name": "Chemical Equilibrium Problem",
   "gamslib_type": "NLP",
   "gams_syntax": {
-    "status": "valid",
+    "status": "success",
     "validation_date": "2026-02-06T10:30:00Z",
     "gams_version": "51.3.0",
     "validation_time_seconds": 0.15,
@@ -234,7 +241,7 @@ This document specifies the schema changes required for Sprint 18 corpus reclass
   "model_name": "Example Model with Syntax Error",
   "gamslib_type": "NLP",
   "gams_syntax": {
-    "status": "error",
+    "status": "failure",
     "validation_date": "2026-02-06T10:30:00Z",
     "gams_version": "51.3.0",
     "validation_time_seconds": 0.12,
@@ -272,7 +279,7 @@ Per Task 7 findings, models like `circle` and `house` remain in the valid corpus
   "model_name": "Smallest Circle Problem",
   "gamslib_type": "NLP",
   "gams_syntax": {
-    "status": "valid",
+    "status": "success",
     "validation_date": "2026-02-06T10:30:00Z",
     "gams_version": "51.3.0",
     "exit_code": 0,
@@ -580,7 +587,7 @@ If the schema changes cause issues:
 +      "required": ["status"],
 +      "additionalProperties": false,
 +      "properties": {
-+        "status": { "type": "string", "enum": ["valid", "error", "not_tested"] },
++        "status": { "type": "string", "enum": ["success", "failure", "not_tested"] },
 +        "validation_date": { "type": "string", "format": "date-time" },
 +        "gams_version": { "type": "string" },
 +        "validation_time_seconds": { "type": "number", "minimum": 0 },
@@ -601,7 +608,7 @@ If the schema changes cause issues:
 +          }
 +        }
 +      },
-+      "if": { "properties": { "status": { "const": "error" } } },
++      "if": { "properties": { "status": { "const": "failure" } } },
 +      "then": { "required": ["status", "errors", "error_count"] },
 +      "else": { "not": { "required": ["errors"] } }
 +    },
@@ -619,6 +626,7 @@ If the schema changes cause issues:
 +      },
 +      "if": { "properties": { "excluded": { "const": true } } },
 +      "then": { "required": ["excluded", "reason"] },
++      "else": { "properties": { "reason": false, "exclusion_date": false, "details": false } },
 +      "allOf": [
 +        {
 +          "if": { "properties": { "reason": { "const": "other" } } },
