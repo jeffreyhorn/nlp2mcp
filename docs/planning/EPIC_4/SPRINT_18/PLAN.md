@@ -121,10 +121,10 @@ The saved time can be used for buffer/contingency or to pull forward Sprint 19 w
 | **Checkpoint 1:** Syntactic validation complete | 0.5h | Go/no-go for emit fixes |
 
 **Checkpoint 1 Criteria:**
-- [x] test_syntax.py runs on all 160 models
-- [x] Schema updated with `gams_syntax` and `exclusion` fields
-- [x] Set element quoting fix merged
-- [x] 6 models unblocked (ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s, pollut)
+- [ ] test_syntax.py runs on all 160 models
+- [ ] Schema updated with `gams_syntax` and `exclusion` fields
+- [ ] Set element quoting fix merged
+- [ ] 6 models unblocked (ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s, pollut)
 
 ### Day 4: Computed Parameter Skip Fix (2h)
 
@@ -161,10 +161,10 @@ The saved time can be used for buffer/contingency or to pull forward Sprint 19 w
 | **Checkpoint 2:** emit_gams.py fixes complete | 1h | Progress report with new metrics |
 
 **Checkpoint 2 Criteria:**
-- [x] All emit_gams.py fixes merged (set quoting, computed params, bound multipliers)
-- [x] `path_syntax_error` reduced from 17 to ≤6
-- [x] 12 original solving models still solve (no regressions)
-- [x] New metrics recorded
+- [ ] All emit_gams.py fixes merged (set quoting, computed params, bound multipliers)
+- [ ] `path_syntax_error` reduced from 17 to ≤6
+- [ ] 12 original solving models still solve (no regressions)
+- [ ] New metrics recorded
 
 ### Day 7: Parse Quick Win - Put Statement Format (2.5h)
 
@@ -202,10 +202,10 @@ The saved time can be used for buffer/contingency or to pull forward Sprint 19 w
 | **Checkpoint 3:** All components complete | 0.5h | Final review |
 
 **Checkpoint 3 Criteria:**
-- [x] All Sprint 18 features merged
-- [x] Documentation updated
-- [x] Retrospective drafted
-- [x] Ready for release
+- [ ] All Sprint 18 features merged
+- [ ] Documentation updated
+- [ ] Retrospective drafted
+- [ ] Ready for release
 
 ### Day 10: Release Prep + Final Metrics (2h)
 
