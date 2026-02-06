@@ -721,7 +721,8 @@ put_item: STRING put_format?
         | "/" -> put_newline
         | expr put_format?
 
-put_format: ":" NUMBER (":" NUMBER)?
+put_format: ":" ALIGN? NUMBER (":" NUMBER)?
+ALIGN: "<>" | "<" | ">"
 ```
 
 **Additional Fix Needed:** `put_stmt_nosemi` variant for stdcge (~30 min extra)
