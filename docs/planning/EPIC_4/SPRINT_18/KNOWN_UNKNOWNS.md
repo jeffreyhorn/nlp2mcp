@@ -470,7 +470,36 @@ All pipeline metrics (parse rate, translate rate, solve rate, full pipeline) sho
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**Decision:** Do NOT retroactively recalculate v1.1.0 baseline.
+
+**Metrics recalculation rules:**
+
+| Metric | Formula | Denominator |
+|--------|---------|-------------|
+| Parse Rate | parse_success / valid_corpus | valid_corpus |
+| Translate Rate | translate_success / parse_success | parse_success |
+| Solve Rate | solve_success / translate_success | translate_success |
+| Full Pipeline | full_success / valid_corpus | valid_corpus |
+
+**Key decisions:**
+1. Only Parse Rate and Full Pipeline use `valid_corpus` as denominator
+2. Translate and Solve rates are relative to previous stage (unchanged)
+3. Historical baseline NOT retroactively changed
+4. Store both `total_corpus` and `valid_corpus` in `baseline_metrics.json` for transparency
+
+**Reporting script impact:**
+- `data_loader.py`: No changes needed (uses `baseline_metrics.json`)
+- `status_analyzer.py`: Minor update to add `valid_corpus` to `StatusSummary`
+- `progress_analyzer.py`: Add `denominator_note` for sprint comparisons
+- `markdown_renderer.py`: Display valid corpus count in reports
+
+**Current situation:** Since Task 2 found 0 GAMS syntax errors, `valid_corpus = total_corpus = 160`. No immediate script changes are required.
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/SCHEMA_DESIGN.md` Section "Metrics Recalculation Rules".
 
 ---
 
@@ -1311,7 +1340,41 @@ Adding `gams_syntax` and `exclusion` fields to `gamslib_status.json` entries won
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**Adding new fields will NOT break existing tools.**
+
+**Evidence from code review:**
+
+1. **`src/reporting/data_loader.py`:**
+   - Uses `baseline_metrics.json`, not `gamslib_status.json`
+   - Uses `@dataclass` with `from_dict()` methods that explicitly extract known fields
+   - Unknown fields are silently ignored (not iterated over)
+
+2. **`src/reporting/analyzers/*.py`:**
+   - Access specific fields via `baseline.parse.success`, etc.
+   - No iteration over all model_entry fields
+   - No strict schema validation at runtime
+
+3. **`data/gamslib/schema.json`:**
+   - Uses `additionalProperties: false` for strict validation
+   - **DOES need updating** to add `gams_syntax` and `exclusion` definitions
+   - This is a documentation/validation concern, not a runtime crash risk
+
+4. **External tools:**
+   - No external notebooks or dashboards currently read `gamslib_status.json`
+   - `baseline_metrics.json` is the primary aggregated data source
+
+**Schema extensibility design:**
+- Add `gams_syntax` and `exclusion` as **optional** properties in `model_entry`
+- Bump `schema_version` to `"2.1.0"` (minor version = backward-compatible)
+- Existing tools ignore new fields; new tools can read them
+
+**Conclusion:** Schema changes are safe. Update `schema.json` to document the new fields for validation purposes.
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/SCHEMA_DESIGN.md` Section "Migration Strategy".
 
 ---
 

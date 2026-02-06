@@ -873,9 +873,10 @@ For each infeasible/unbounded model:
 
 ## Task 8: Design Corpus Reclassification Schema
 
-**Status:** Not Started
+**Status:** Complete
 **Priority:** High
 **Estimated Time:** 2-3 hours
+**Actual Time:** 2 hours
 **Deadline:** Before Sprint 18 Day 1
 **Owner:** Development team
 **Dependencies:** Task 2 (survey scope), Task 7 (infeasible/unbounded investigation)
@@ -885,9 +886,13 @@ For each infeasible/unbounded model:
 
 Design the database schema changes and reclassification logic for `gamslib_status.json` to support the new syntactic validation categories. This ensures Sprint 18 implementation proceeds smoothly without mid-sprint schema debates.
 
-### Why This Matters
+### Why This Matters (updated plan)
 
-Sprint 18 will add a `gams_syntax.status` field to the database and reclassify models as `excluded_syntax_error`, `excluded_infeasible`, or `excluded_unbounded`. The schema design affects:
+Sprint 18 will add a `gams_syntax` field to track GAMS compilation validation results. Based on Task 7 findings:
+- Only `excluded_syntax_error` exclusion category is needed (not `excluded_infeasible` or `excluded_unbounded`)
+- Both `model_infeasible` models (circle, house) are MCP formulation bugs, not candidates for exclusion
+
+The schema design affects:
 - How metrics are calculated (valid corpus denominator)
 - How the reporting infrastructure handles excluded models
 - Whether existing scripts (generate_report.py, failure analysis) need updates
@@ -1002,12 +1007,35 @@ A complete schema design that Sprint 18 can implement directly:
 
 ### Acceptance Criteria
 
-- [ ] New `gams_syntax` fields defined with types and semantics
-- [ ] Exclusion mechanism designed (flag vs. status vs. separate field)
-- [ ] Metrics recalculation rules documented (valid corpus denominator)
-- [ ] All affected reporting scripts identified with change descriptions
-- [ ] Schema handles edge cases (excluded model with existing pipeline data)
-- [ ] Design reviewed for backward compatibility with existing tooling
+- [x] New `gams_syntax` fields defined with types and semantics
+- [x] Exclusion mechanism designed (flag vs. status vs. separate field)
+- [x] Metrics recalculation rules documented (valid corpus denominator)
+- [x] All affected reporting scripts identified with change descriptions
+- [x] Schema handles edge cases (excluded model with existing pipeline data)
+- [x] Design reviewed for backward compatibility with existing tooling
+
+### Results
+
+**Task 8 completed February 6, 2026.**
+
+**Key deliverables:**
+- `docs/planning/EPIC_4/SPRINT_18/SCHEMA_DESIGN.md` created with:
+  - `gams_syntax` field definition (status, validation_date, gams_version, errors array)
+  - `exclusion` field definition (excluded boolean, reason enum, details)
+  - Metrics recalculation rules (valid_corpus = total - excluded)
+  - Reporting script impact analysis (no immediate changes needed since 0 exclusions)
+  - Migration strategy and implementation checklist
+
+**Key findings:**
+1. Only `syntax_error` exclusion reason needed (not infeasible/unbounded per Task 7)
+2. Schema bump: `2.0.0` → `2.1.0` (minor, backward-compatible)
+3. No reporting script changes needed until exclusions are added
+4. `baseline_metrics.json` separate from `gamslib_status.json` — simplifies transition
+
+**Unknowns verified:**
+- Unknown 1.5: Only `excluded_syntax_error` category needed ✅
+- Unknown 1.6: Metrics recalculation rules documented ✅
+- Unknown 4.2: Schema extensibility confirmed safe ✅
 
 ---
 
