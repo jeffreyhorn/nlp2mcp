@@ -18,6 +18,8 @@ Analysis of all 17 `path_syntax_error` models reveals a different failure taxono
 - **6 models** fail due to set element quoting issues (ps2_* family + pollut)
 - **1 model** fails due to undefined function reference in generated equations
 
+**Note:** Some models appear in multiple failure categories (e.g., demo1 has both computed param and bound multiplier issues), so the counts above may sum to more than 17.
+
 This significantly changes Sprint 18 scope for emit_gams.py fixes.
 
 ---
@@ -280,8 +282,8 @@ The MCP solve statement has issues with equation-variable pairing:
 | Original Assumption | Actual Finding | Impact |
 |---------------------|----------------|--------|
 | ~4 models fail due to table data emission | 0 models (tables parsed as parameters, work correctly) | Table data fix NOT needed |
-| ~4 models fail due to computed parameters | 6 models fail due to computed param assignment | Higher count, but issue is emission, not parsing |
-| Table + computed = top 2 blockers | Bound multipliers (5) + Computed params (6) = top 2 | Different blockers than expected |
+| ~4 models fail due to computed parameters | 5 models fail due to computed param assignment | Higher count, but issue is emission, not parsing |
+| Table + computed = top 2 blockers | Set element quoting (6) + Bound multipliers/Computed params (5 each) = top blockers | Different blockers than expected |
 | 4-5h for table data fix | 0h (not needed) | Reallocate time |
 | 4-5h for computed param fix | 3-4h (simpler fix: skip assignments) | On target |
 
@@ -400,7 +402,7 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
 ```
 
 **Risk:** Low - MCP models don't need intermediate parameter values
-**Test:** Re-run pipeline on 6 affected models
+**Test:** Re-run pipeline on 5 affected models
 
 ### Fix 2: Set Element Quoting (Priority 1)
 

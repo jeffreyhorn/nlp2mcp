@@ -481,14 +481,14 @@ For each affected model:
 
 Complete analysis revealed a different failure taxonomy than originally assumed:
 - **0 models** fail due to table data emission (tables work correctly)
-- **6 models** fail due to computed parameter assignment emission
+- **5 models** fail due to computed parameter assignment emission
 - **5 models** fail due to bound multiplier variable dimension issues
-- **5 models** fail due to set element quoting (ps2_* family)
+- **6 models** fail due to set element quoting (ps2_* family + pollut)
 - **3 models** fail due to multi-dimensional parameter data
 - **1 model** fails due to undefined function reference (psi)
 - **1 model** fails due to MCP mapping issues
 
-**Sprint 18 scope adjustment recommended:** Drop table data fix (0h saved), prioritize set element quoting (2-3h, 5 models) and skip computed params (2h, 6 models).
+**Sprint 18 scope adjustment recommended:** Drop table data fix (0h saved), prioritize set element quoting (2-3h, 6 models) and skip computed params (2h, 5 models).
 
 ### Verification
 
