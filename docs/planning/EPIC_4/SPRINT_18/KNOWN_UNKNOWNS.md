@@ -1013,7 +1013,37 @@ Fixing table data emission and computed parameter assignments will not affect mo
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**Regression testing plan is defined in PLAN.md.**
+
+**After-each-fix regression check:**
+```bash
+# Quick regression check (run after each fix)
+for model in apl1p blend himmel11 hs62 mathopt2 mhw4d mhw4dx prodmix rbrock trig trnsport trussm; do
+    python scripts/gamslib/run_pipeline.py --model $model --stage solve
+done
+```
+
+**Schedule integration:**
+- Day 3: Verify 12 solving models after set element quoting fix
+- Day 4: Verify 12 solving models after computed param skip fix
+- Day 5-6: Verify 12 solving models after bound multiplier fix
+- Day 6: Full pipeline retest on all 160 models
+
+**Regression detection response:**
+1. Immediate rollback of offending fix
+2. Root cause analysis before re-attempting
+3. Block release until regression is resolved
+
+**Risk mitigation:**
+- The computed param skip fix is low risk (returns empty string, doesn't modify other code paths)
+- Set element quoting affects only expression emission (isolated code path)
+- Bound multiplier fix is scoped to scalar variable handling only
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/PLAN.md` "Regression Testing Plan" section.
 
 ---
 
@@ -1048,7 +1078,36 @@ The pipeline retest (Sprint 18 Day 6) will re-run the full pipeline on all valid
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**Day 6 retest plan is defined in PLAN.md.**
+
+**Scope:**
+- All 160 convex models (full corpus, no exclusions since none needed)
+- Stages: Parse → Translate → Solve
+- Comparison stage: Optional (can be re-enabled but not required for metrics)
+
+**Command:**
+```bash
+python scripts/gamslib/run_full_test.py
+```
+
+**Success criteria:**
+- Parse: ≥61 models (no regressions from baseline)
+- Translate: ≥42 models (no regressions from baseline)
+- Solve: ≥18 models (improvement from 12)
+- `path_syntax_error`: ≤6 models (reduced from 17)
+
+**Time estimate:** ~1 hour for full pipeline run
+
+**Output:**
+- Updated `gamslib_status.json` with new pipeline statuses
+- Progress report comparing to v1.1.0 baseline
+- Identification of any new blockers discovered
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/PLAN.md` "Day 6 Full Retest" section.
 
 ---
 

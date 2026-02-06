@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Research
+- Plan Sprint 18 detailed schedule — created PLAN.md with revised scope (removed table data fix, added set element quoting and bound multiplier fixes), defined 3 checkpoints, contingency plans, and regression testing strategy, verified Unknowns 2.7, 2.8 (Task 10 of Sprint 18 Prep)
 - Verify Sprint 18 baseline metrics — confirmed v1.1.0 baseline (Parse 61/160, Translate 42/61, Solve 12/42), verified GAMS 51.3.0 environment, documented baseline commit hash `aed804ae50d2296464b17dfe22b6c8e69edf236d`, verified Unknowns 4.1, 4.3, 4.4 (Task 9 of Sprint 18 Prep)
 - Design corpus reclassification schema — created SCHEMA_DESIGN.md with `gams_syntax` and `exclusion` field definitions, metrics recalculation rules (valid_corpus denominator), reporting script impact analysis, verified Unknowns 1.5, 1.6, 4.2 (Task 8 of Sprint 18 Prep)
 - Review infeasible/unbounded model status — investigated 2 `model_infeasible` models (circle, house), confirmed both are MCP bugs not inherently infeasible, no unbounded models found, only `exclusion.reason = "syntax_error"` needed in schema (Task 7 of Sprint 18 Prep)
