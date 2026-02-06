@@ -31,7 +31,7 @@ item:{<>}width:decimals
 
 Where:
 - `item` = the output item being formatted (expression, variable, parameter, text)
-- `{<>}` = optional alignment symbol (`<` left, `>` right, `<>` center)
+- `{<|>|<>}` = optional alignment symbol (`<` left, `>` right, `<>` center)
 - `width` = field width in characters (integer)
 - `decimals` = number of decimal places for numeric items (integer)
 
@@ -39,9 +39,11 @@ Where:
 
 1. **No three-part variant** - there is no `:width:decimals:exponent` syntax for scientific notation
 2. **Alignment is optional** - can be omitted: `item:10:5` or `item:<10:5`
-3. **Components can be omitted** - `item:10` (width only) or `item::5` (decimals only) are valid
+3. **Width can be omitted** - `item::5` (decimals only) is valid in GAMS, but rarely used
 4. **Applies to any put item** - numeric expressions, text strings, set labels
 5. **Zero means variable width** - `item:0:0` produces variable width with no decimals
+
+**Implementation note:** The proposed grammar (see below) supports `:width` and `:width:decimals` but not the rarely-used `:decimals` (omitted width) form. This covers all patterns found in the 4 target models.
 
 ### Examples from GAMS Documentation
 

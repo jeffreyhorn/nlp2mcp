@@ -650,7 +650,9 @@ Research the GAMS put statement `:width:decimals` format syntax, verify the affe
 
 ### Why This Matters
 
-Sprint 18 includes a parse quick win: adding `:width:decimals` format specifiers to put statements. This is estimated at ~2 hours of sprint time and should unblock ~4 models (ps5_s_mn, ps10_s, ps10_s_mn, stdcge). The prep task ensures the grammar change is well-understood before implementation.
+Sprint 18 includes a parse quick win: adding `:width:decimals` format specifiers to put statements. This is estimated at ~2 hours of sprint time. The prep task ensures the grammar change is well-understood before implementation.
+
+**Note:** Analysis revealed that 3 models (ps5_s_mn, ps10_s, ps10_s_mn) are blocked by `:width:decimals` syntax, while stdcge requires a separate `put_stmt_nosemi` fix. See Key Findings below for details.
 
 ### Background
 
