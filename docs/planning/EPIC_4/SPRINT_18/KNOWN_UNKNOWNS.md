@@ -1010,7 +1010,18 @@ put 'text':20 /;          * text with width
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Finding:** There is no `:width:decimals:exponent` variant. Supported per-item forms are `:width` and `:width:decimals` (optionally with alignment).
+
+**Full syntax specification:**
+- `item:width` - width only
+- `item:width:decimals` - width and decimals
+- `item:{<|>|<>}width:decimals` - with optional alignment prefix (`<` left, `>` right, `<>` center)
+
+Scientific notation is controlled by global file settings (`.nr=2`), not per-item format specifiers.
+
+**Source:** GAMS UG_Put documentation, verified February 6, 2026
 
 ---
 
@@ -1049,7 +1060,22 @@ The 4 target models (ps5_s_mn, ps10_s, ps10_s_mn, stdcge) fail ONLY because of t
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Finding:** 3 of 4 models fail due to `:width:decimals`. One model (stdcge) has a DIFFERENT blocking issue.
+
+**Per-model results:**
+
+| Model | Blocks on `:width:decimals`? | Secondary Issues | Fix Will Help? |
+|-------|------------------------------|------------------|----------------|
+| ps5_s_mn | ✅ Yes | None | ✅ Yes |
+| ps10_s | ✅ Yes | None | ✅ Yes |
+| ps10_s_mn | ✅ Yes | None | ✅ Yes |
+| stdcge | ❌ No | Missing `put_stmt_nosemi` | ❌ No (separate fix) |
+
+**stdcge issue:** Uses `loop(j, put j.tl);` without semicolon before loop close. Requires `put_stmt_nosemi` variant for `exec_stmt_final`.
+
+**Conclusion:** The `:width:decimals` fix will unblock **3 models**. stdcge needs a separate `put_stmt_nosemi` grammar fix (~30 min additional work).
 
 ---
 
@@ -1085,7 +1111,28 @@ Adding `:width:decimals` support to put statement rules won't create ambiguity w
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Finding:** No conflict. The colon in format specifiers is context-specific to `put_item`.
+
+**Existing colon usage in grammar:**
+- `option_format` rule: `ID ":" NUMBER (":" NUMBER)*` - e.g., `option decimals:8`
+
+**Why no conflict:**
+1. Put format specifiers only match within `put_item` context
+2. `put_item` is only matched inside `put_stmt`
+3. `option_stmt` and `put_stmt` are separate statement rules
+4. The `:` format suffix is only parsed in `put_item` via `put_format`, so it can't be confused with `option_format` or other statement contexts
+
+**Grammar design:** Add `put_format` rule that only applies within `put_item`:
+```lark
+put_item: STRING put_format?
+        | "/" -> put_newline
+        | expr put_format?
+
+put_format: ":" PUT_ALIGN? NUMBER (":" NUMBER)?
+PUT_ALIGN: "<>" | "<" | ">"
+```
 
 ---
 
@@ -1120,7 +1167,22 @@ Put statements are output/reporting statements with no effect on the mathematica
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Finding:** Put statements are output-only with no side effects on the mathematical model.
+
+**Put statement purposes:**
+- Writing results to CSV files
+- Generating reports after solve
+- Debugging output
+
+**Semantic significance:** None for MCP generation. Put statements:
+- Do not affect variable values
+- Do not modify equations
+- Do not influence the optimization problem
+- Are only used for post-solve reporting
+
+**Recommendation:** Parse and ignore put statements for MCP generation. The emitter does not need to include put statements in MCP output.
 
 ---
 

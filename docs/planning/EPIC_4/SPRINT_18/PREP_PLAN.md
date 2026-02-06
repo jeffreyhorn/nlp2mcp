@@ -636,7 +636,7 @@ Analysis of all 5 affected models reveals:
 
 ## Task 6: Audit Put Statement `:width:decimals` Syntax
 
-**Status:** Not Started
+**Status:** ✅ **COMPLETED** (February 6, 2026)
 **Priority:** Medium
 **Estimated Time:** 1-2 hours
 **Deadline:** Before Sprint 18 Day 1
@@ -650,7 +650,9 @@ Research the GAMS put statement `:width:decimals` format syntax, verify the affe
 
 ### Why This Matters
 
-Sprint 18 includes a parse quick win: adding `:width:decimals` format specifiers to put statements. This is estimated at ~2 hours of sprint time and should unblock ~4 models (ps5_s_mn, ps10_s, ps10_s_mn, stdcge). The prep task ensures the grammar change is well-understood before implementation.
+Sprint 18 includes a parse quick win: adding `:width:decimals` format specifiers to put statements. This is estimated at ~2 hours of sprint time. The prep task ensures the grammar change is well-understood before implementation.
+
+**Note:** Analysis revealed that 3 models (ps5_s_mn, ps10_s, ps10_s_mn) are blocked by `:width:decimals` syntax, while stdcge requires a separate `put_stmt_nosemi` fix. See Key Findings below for details.
 
 ### Background
 
@@ -668,7 +670,7 @@ The current grammar in `src/gams/gams_grammar.lark` handles basic put statements
 #### Step 1: GAMS Put Statement Specification (30 min)
 
 Research the full put statement syntax from GAMS documentation:
-- All format specifier variants (`:width`, `:width:decimals`, `:width:decimals:exponent`)
+- All format specifier variants (`:width`, `:width:decimals`) — **verified: no `:width:decimals:exponent` variant exists**
 - Applicability to different put items (variables, parameters, text, expressions)
 - Any interaction with put_page, put_utility, etc.
 
@@ -697,37 +699,55 @@ Sketch the grammar change for `gams_grammar.lark`:
 
 ### Changes
 
-**No files created** — findings documented in Known Unknowns (Task 1) and used directly during Sprint 18 implementation.
+- **Created:** `docs/planning/EPIC_4/SPRINT_18/PUT_FORMAT_ANALYSIS.md` — complete analysis document
+- **Updated:** `docs/planning/EPIC_4/SPRINT_18/KNOWN_UNKNOWNS.md` — Unknowns 3.1, 3.2, 3.3, 3.4 verified
 
 ### Result
 
-A clear understanding of the put statement format syntax:
-- Full syntax specification from GAMS docs
-- Confirmed affected models and their specific put statement patterns
-- Grammar extension design ready for implementation
-- Any secondary blocking issues in target models identified
+**Key Findings:**
+
+| Finding | Details |
+|---------|---------|
+| Format syntax | Supports `:width` and `:width:decimals`; no `:width:decimals:exponent` variant |
+| Alignment option | Optional `<`, `>`, `<>` prefix: `item:<10:5` |
+| Models affected | **3 models** (not 4) — ps5_s_mn, ps10_s, ps10_s_mn |
+| stdcge issue | Different blocker: needs `put_stmt_nosemi` for loop context |
+| Grammar conflict | None — colon is context-specific to put_item |
+| Semantic significance | None — put statements are output-only, safe to ignore for MCP |
+
+**Grammar Extension Design:**
+```lark
+put_item: STRING put_format?
+        | "/" -> put_newline
+        | expr put_format?
+
+put_format: ":" PUT_ALIGN? NUMBER (":" NUMBER)?
+PUT_ALIGN: "<>" | "<" | ">"
+```
+
+**Additional Fix Needed:** `put_stmt_nosemi` variant for stdcge (~30 min extra)
 
 ### Verification
 
-- GAMS put statement format syntax documented
-- All 4 target models verified to fail on `:width:decimals`
-- Grammar extension sketched in Lark syntax
-- Secondary blocking issues documented (if any)
+- [x] GAMS put statement format syntax documented
+- [x] All 4 target models verified — 3 blocked by `:width:decimals`, 1 (stdcge) blocked by different issue
+- [x] Grammar extension sketched in Lark syntax
+- [x] Secondary blocking issues documented (stdcge needs `put_stmt_nosemi`)
 
 ### Deliverables
 
-- Put statement format syntax summary (in Known Unknowns or sprint notes)
-- Confirmed list of affected models with specific failing lines
-- Grammar extension design for `gams_grammar.lark`
-- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 3.1, 3.2, 3.3, 3.4
+- [x] Put statement format syntax summary in `PUT_FORMAT_ANALYSIS.md`
+- [x] Confirmed list of affected models with specific failing lines
+- [x] Grammar extension design for `gams_grammar.lark`
+- [x] Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 3.1, 3.2, 3.3, 3.4
 
 ### Acceptance Criteria
 
-- [ ] GAMS put statement `:width:decimals` syntax fully documented
-- [ ] All 4 target models (ps5_s_mn, ps10_s, ps10_s_mn, stdcge) verified
-- [ ] Any secondary blocking issues in target models identified
-- [ ] Grammar extension designed for `gams_grammar.lark`
-- [ ] Estimated fix time confirmed (~2 hours)
+- [x] GAMS put statement `:width:decimals` syntax fully documented
+- [x] All 4 target models (ps5_s_mn, ps10_s, ps10_s_mn, stdcge) verified
+- [x] Any secondary blocking issues in target models identified
+- [x] Grammar extension designed for `gams_grammar.lark`
+- [x] Estimated fix time confirmed (~2 hours for both fixes)
 
 ---
 
