@@ -1087,7 +1087,7 @@ pytest tests/ -v --tb=short
 
 ```bash
 # Re-run pipeline metrics
-python scripts/gamslib/run_pipeline.py
+python scripts/gamslib/run_full_test.py
 # Verify parse/translate/solve counts match v1.1.0 numbers
 ```
 
@@ -1201,9 +1201,10 @@ Confirmed, reproducible baseline metrics for Sprint 18:
 
 ## Task 10: Plan Sprint 18 Detailed Schedule
 
-**Status:** Not Started
+**Status:** ✅ **COMPLETED** (February 6, 2026)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
+**Actual Time:** 2.5 hours
 **Deadline:** Final prep task — complete after all others
 **Owner:** Development team
 **Dependencies:** All preceding tasks (1-9)
@@ -1224,7 +1225,9 @@ Sprint 18 has 22-26 hours of estimated work across 3 components. A detailed sche
 
 ### Background
 
-From `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 18:
+> **Note (historical context):** This original background summary represents the initial PROJECT_PLAN.md scope before prep task findings. The final Sprint 18 scope was expanded to ~56h over 14 days based on scope changes (removed/adjusted items) and Sprint 19 items pulled forward. See PLAN.md for the current scope.
+
+From `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 18 (original scope):
 - **Component 1:** GAMSLIB Syntactic Correctness Validation (~10-12h)
   - test_syntax.py script (4-5h)
   - SYNTAX_ERROR_REPORT.md (2-3h)
@@ -1236,7 +1239,7 @@ From `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 18:
   - Pipeline retest (2h)
 - **Component 3:** Parse Quick Win: Put Statement Format (~2h)
 
-Total: 22-26 hours across 10 working days
+Original total: 22-26 hours across 10 working days (superseded — see PLAN.md)
 
 ### What Needs to Be Done
 
@@ -1270,12 +1273,16 @@ Tentative schedule (adjust based on prep findings):
 | 9 | Documentation + checkpoint | Sprint 18 retrospective draft | 2h |
 | 10 | Release prep + final metrics | Sprint 18 complete | 2h |
 
+> **Note (historical context):** This original 10-day schedule (and any earlier references in Task 10 to a "Total: 22–26 hours across 10 working days") was superseded by the final PLAN.md, which expands Sprint 18 to ~56h over 14 days based on prep task findings (scope changes and Sprint 19 items pulled forward). See the Results section below and the final PLAN.md for the current scope.
+
 #### Step 3: Define Checkpoints (30 min)
 
 Using checkpoint templates from Epic 1:
 - **Checkpoint 1 (Day 3):** Syntactic validation complete, corpus redefined
 - **Checkpoint 2 (Day 6):** emit_gams.py fixes complete, pipeline retested
-- **Checkpoint 3 (Day 9):** All components complete, documentation ready
+- **Checkpoint 3 (Day 11):** All components complete, documentation ready
+
+> **Note:** Checkpoint days were adjusted in final PLAN.md (Checkpoint 1: Day 3, Checkpoint 2: Day 6, Checkpoint 3: Day 11).
 
 #### Step 4: Define Contingency Plans (30 min)
 
@@ -1316,11 +1323,13 @@ A complete Sprint 18 plan that:
 
 ### Verification
 
-- Schedule totals 22-26 hours across 10 days
-- All 3 Sprint 18 components have scheduled days
-- Checkpoints are scheduled and have clear criteria
-- Contingency plans cover all identified risks
-- Prep task findings are integrated
+> **Note:** Original verification criteria below were superseded; see Acceptance Criteria for final verification.
+
+- ~~Schedule totals 22-26 hours across 10 days~~ → Final: ~56h over 14 days
+- All 3 Sprint 18 components have scheduled days ✓
+- Checkpoints are scheduled and have clear criteria ✓
+- Contingency plans cover all identified risks ✓
+- Prep task findings are integrated ✓
 
 ### Deliverables
 
@@ -1332,13 +1341,45 @@ A complete Sprint 18 plan that:
 
 ### Acceptance Criteria
 
-- [ ] Day-by-day schedule covers all 3 Sprint 18 components
-- [ ] Schedule incorporates findings from all 9 prep tasks
-- [ ] 3 checkpoints defined with clear go/no-go criteria
-- [ ] Contingency plans documented for top risks
-- [ ] Total estimated hours match PROJECT_PLAN.md (22-26h)
-- [ ] References to all prep deliverables included
-- [ ] Plan reviewed for feasibility within 10 working days
+- [x] Day-by-day schedule covers all 3 Sprint 18 components
+- [x] Schedule incorporates findings from all 9 prep tasks
+- [x] 3 checkpoints defined with clear go/no-go criteria
+- [x] Contingency plans documented for top risks
+- [x] Total estimated hours reconciled with `PLAN.md` (~56h over 14 days); `PROJECT_PLAN.md` updated to reflect this scope
+- [x] References to all prep deliverables included
+- [x] Plan reviewed for feasibility within 14 working days
+
+### Results
+
+**Task 10 completed February 6, 2026.**
+
+**Key scope changes identified:**
+
+| Category | Removed Items | Added Items |
+|----------|---------------|-------------|
+| Syntactic Validation | Syntax Error Report (2-3h), Infeasible/Unbounded Docs (2h) | — |
+| emit_gams.py | Table Data Emission (4-5h) | Set Element Quoting (2-3h), Bound Multiplier Dimension (4-5h) |
+| Parse Quick Win | — | stdcge `put_stmt_nosemi` (+0.5h) |
+
+**Removed items (not needed based on prep findings):**
+1. Table data emission fix — zero models fail due to table data (Task 4)
+2. Syntax Error Report with details — zero GAMS syntax errors found (Task 2)
+3. Infeasible/unbounded documentation — both are MCP bugs, not exclusions (Task 7)
+
+**Added items (new priorities from prep findings):**
+1. Set element quoting fix — 6 models blocked (Task 4), highest ROI
+2. Bound multiplier dimension fix — 5 models blocked (Task 4)
+3. stdcge `put_stmt_nosemi` — different issue than `:width:decimals` (Task 6)
+
+**Time impact:** ~6 hours of work were avoided relative to the original Sprint 18 prep scope, then reallocated to higher-ROI items; net Sprint 18 scope increased once additional work was pulled in from Sprint 19.
+
+**Deliverables:**
+- `docs/planning/EPIC_4/SPRINT_18/PLAN.md` — complete sprint plan with revised scope
+- Updated `KNOWN_UNKNOWNS.md` — Unknowns 2.7, 2.8 verified
+
+**Unknowns verified:**
+- Unknown 2.7: Regression testing plan defined (after-each-fix + Day 11 full retest) ✅
+- Unknown 2.8: Day 11 retest scope and success criteria defined ✅
 
 ---
 

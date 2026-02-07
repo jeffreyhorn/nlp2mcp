@@ -986,17 +986,18 @@ The complete taxonomy of 17 `path_syntax_error` models has been established:
 **Medium** — Regression risk assessment
 
 ### Assumption
-Fixing table data emission and computed parameter assignments will not affect models that currently solve successfully (the 12 `model_optimal` models).
+The emit_gams.py fixes (set element quoting, computed parameter skip, bound multiplier dimension, reserved word quoting, subset preservation) will not affect models that currently solve successfully (the 12 `model_optimal` models).
+
+**Note:** The original assumption mentioned "table data emission" but Task 4 findings confirmed zero models fail due to table data emission — this is no longer a Sprint 18 scope item.
 
 ### Research Questions
-1. Do any of the 12 currently-solving models use tables or computed parameters?
-2. If so, are they using the same code paths that will be modified?
-3. Can we run regression tests on all 12 solving models after each fix?
-4. Is there a risk that changing `original_symbols.py` affects models that don't use tables/params?
+1. Do any of the 12 currently-solving models use the code paths that will be modified?
+2. Can we run regression tests on all 12 solving models after each fix?
+3. Is there a risk that emit_gams.py changes affect models that don't use the specific patterns being fixed?
 
 ### How to Verify
 
-**Step 1:** Check whether any of the 12 solving models use tables or computed parameters
+**Step 1:** Check whether any of the 12 solving models use the emit_gams.py code paths being modified
 **Step 2:** After implementing fixes, re-run pipeline on all 12 solving models
 **Step 3:** Verify all 12 still achieve `model_optimal`
 **Step 4:** If any regress, roll back and investigate
@@ -1004,7 +1005,7 @@ Fixing table data emission and computed parameter assignments will not affect mo
 ### Risk if Wrong
 - **Regression:** Fixing new models breaks existing ones — net zero or negative progress
 - **Subtle bugs:** Fix passes for new models but introduces a subtle issue in existing ones
-- Medium risk — mitigated by running full pipeline retest (Sprint 18 Day 6)
+- Medium risk — mitigated by running full pipeline retest (Sprint 18 Day 11)
 
 ### Estimated Research Time
 1 hour
@@ -1013,7 +1014,37 @@ Fixing table data emission and computed parameter assignments will not affect mo
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**Regression testing plan is defined in PLAN.md.**
+
+**After-each-fix regression check:**
+```bash
+# Quick regression check (run after each fix)
+# Note: We run without --only-solve to ensure translate step re-emits MCP after emit_gams.py changes
+for model in apl1p blend himmel11 hs62 mathopt2 mhw4d mhw4dx prodmix rbrock trig trnsport trussm; do
+    python scripts/gamslib/run_full_test.py --model "$model"
+done
+```
+
+**Schedule integration (mirrors PLAN.md):**
+- Days 2–4: Verify newly-unblocked models only (no scheduled 12-model regression run after each fix)
+- Optional (Days 2–4): Use the 12-model quick regression check ad-hoc if there is suspicion of a regression
+- Day 11: Full pipeline retest on all 160 models
+
+**Regression detection response:**
+1. Immediate rollback of offending fix
+2. Root cause analysis before re-attempting
+3. Block release until regression is resolved
+
+**Risk mitigation:**
+- The computed param skip fix is low risk (returns empty string, doesn't modify other code paths)
+- Set element quoting affects only expression emission (isolated code path)
+- Bound multiplier fix is scoped to scalar variable handling only
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/PLAN.md` "Regression Testing Plan" section.
 
 ---
 
@@ -1023,7 +1054,7 @@ Development team
 **Low** — Process question, not blocking
 
 ### Assumption
-The pipeline retest (Sprint 18 Day 6) will re-run the full pipeline on all valid corpus models, recording updated metrics in `gamslib_status.json` and comparing to the v1.1.0 baseline.
+The pipeline retest (Sprint 18 Day 11) will re-run the full pipeline on all valid corpus models, recording updated metrics in `gamslib_status.json` and comparing to the v1.1.0 baseline.
 
 ### Research Questions
 1. Should the retest run on all 160 models or only the valid corpus?
@@ -1048,7 +1079,36 @@ The pipeline retest (Sprint 18 Day 6) will re-run the full pipeline on all valid
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings (February 6, 2026):**
+
+**Day 11 retest plan is defined in PLAN.md.**
+
+**Scope:**
+- All 160 convex models (full corpus, no exclusions since none needed)
+- Stages (as executed by `run_full_test.py`): Parse → Translate → Solve → Compare
+- Comparison stage: Always runs when Solve runs in `run_full_test.py` (no separate "skip compare" flag); comparison results are not part of the core Day 11 metrics.
+
+**Command:**
+```bash
+python scripts/gamslib/run_full_test.py
+```
+
+**Success criteria:**
+- Parse: ≥61 models (no regressions from baseline)
+- Translate: ≥42 models (no regressions from baseline)
+- Solve: ≥22 models (improvement from 12)
+- `path_syntax_error`: ≤2 models (reduced from 17)
+
+**Time estimate:** ~1 hour for full pipeline run
+
+**Output:**
+- Updated `gamslib_status.json` with new pipeline statuses
+- Progress report comparing to v1.1.0 baseline
+- Identification of any new blockers discovered
+
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/PLAN.md` "Day 11 Full Retest" section.
 
 ---
 
@@ -1410,7 +1470,7 @@ Development team
 **Medium** — Affects Full Pipeline metric accuracy
 
 ### Assumption
-Sprint 18 should re-run the solution comparison stage during the Day 6 pipeline retest, to establish a true Full Pipeline metric (not just solve-stage success as in Sprint 17).
+Sprint 18 should re-run the solution comparison stage during the Day 11 pipeline retest, to establish a true Full Pipeline metric (not just solve-stage success as in Sprint 17).
 
 ### Research Questions
 1. How long does the solution comparison stage take for all solving models?
@@ -1451,7 +1511,7 @@ Development team
 4. Sprint 18 focus is on emit_gams.py fixes, not comparison infrastructure
 
 **Recommendation:**
-- For Sprint 18 Day 6 pipeline retest: Record solve stage success/failure
+- For Sprint 18 Day 11 pipeline retest: Record solve stage success/failure
 - Newly-solving models (from emit_gams.py fixes) should be manually verified
 - Full comparison stage can be re-enabled in Sprint 19 if needed
 
