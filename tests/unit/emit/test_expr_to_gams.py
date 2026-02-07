@@ -713,6 +713,26 @@ class TestIndexOffset:
         result = expr_to_gams(VarRef("x", (IndexOffset("i", SymbolRef("j"), circular=True),)))
         assert result == "x(i++j)"
 
+    def test_symbolic_lag_linear(self):
+        """Test symbolic lag (i-j) for linear.
+
+        The parser produces Unary("-", SymbolRef("j")) for linear symbolic lag.
+        """
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("i", Unary("-", SymbolRef("j")), circular=False),))
+        )
+        assert result == "x(i-j)"
+
+    def test_symbolic_lag_circular(self):
+        """Test symbolic lag (i--j) for circular.
+
+        The parser produces Unary("-", SymbolRef("j")) for circular symbolic lag.
+        """
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("i", Unary("-", SymbolRef("j")), circular=True),))
+        )
+        assert result == "x(i--j)"
+
     def test_param_ref_with_index_offset(self):
         """Test ParamRef with IndexOffset."""
         result = expr_to_gams(ParamRef("a", (IndexOffset("i", Const(1), circular=True),)))

@@ -284,7 +284,7 @@ class IndexOffset(Expr):
         """Convert IndexOffset to GAMS syntax string.
 
         Returns:
-            GAMS-formatted string like 'i++1', 'i--2', 'i+1', 'i-3', 'i+j'
+            GAMS-formatted string like 'i++1', 'i--2', 'i+1', 'i-3', 'i+j', 'i-j', 'i--j'
 
         Examples:
             IndexOffset('i', Const(1), circular=True)  -> 'i++1'
@@ -292,10 +292,19 @@ class IndexOffset(Expr):
             IndexOffset('i', Const(1), circular=False) -> 'i+1'
             IndexOffset('i', Const(-3), circular=False) -> 'i-3'
             IndexOffset('i', SymbolRef('j'), circular=False) -> 'i+j'
+            IndexOffset('i', Unary('-', SymbolRef('j')), circular=False) -> 'i-j'
+            IndexOffset('i', Unary('-', SymbolRef('j')), circular=True) -> 'i--j'
+
+        Raises:
+            ValueError: If a constant offset is not an integer value.
+            NotImplementedError: If the offset expression type is not supported.
         """
         # Serialize the offset expression
         if isinstance(self.offset, Const):
             offset_val = self.offset.value
+            # Validate that offset is an integer (GAMS requires integer offsets)
+            if not float(offset_val).is_integer():
+                raise ValueError(f"IndexOffset requires integer offset, got {offset_val}")
             if self.circular:
                 # Circular: use ++ for positive, -- for negative
                 if offset_val >= 0:
@@ -309,14 +318,42 @@ class IndexOffset(Expr):
                 else:
                     return f"{self.base}{int(offset_val)}"  # Already has minus sign
         elif isinstance(self.offset, SymbolRef):
-            # Symbolic offset like i+j
+            # Symbolic offset like i+j (lead)
             if self.circular:
                 return f"{self.base}++{self.offset.name}"
             else:
                 return f"{self.base}+{self.offset.name}"
+        elif isinstance(self.offset, Unary) and self.offset.op == "-":
+            # Handle unary minus offsets produced by parser for lag operators
+            # e.g., Unary("-", SymbolRef("j")) for i-j or i--j
+            inner = self.offset.child
+            if isinstance(inner, SymbolRef):
+                # Symbolic lag: i-j or i--j
+                if self.circular:
+                    return f"{self.base}--{inner.name}"
+                else:
+                    return f"{self.base}-{inner.name}"
+            elif isinstance(inner, Const):
+                # Unary minus on constant: treat as negated constant
+                offset_val = -inner.value
+                if not float(offset_val).is_integer():
+                    raise ValueError(f"IndexOffset requires integer offset, got {offset_val}")
+                if self.circular:
+                    if offset_val >= 0:
+                        return f"{self.base}++{int(offset_val)}"
+                    else:
+                        return f"{self.base}--{int(abs(offset_val))}"
+                else:
+                    if offset_val >= 0:
+                        return f"{self.base}+{int(offset_val)}"
+                    else:
+                        return f"{self.base}{int(offset_val)}"
+            else:
+                raise NotImplementedError(
+                    f"Unary minus with complex operand not supported: {inner}"
+                )
         else:
-            # Complex expression - fall back to repr for now
-            # This handles Binary, Unary, etc.
+            # Complex expression - not supported
             raise NotImplementedError(
                 f"Complex offset expressions not yet supported: {self.offset}"
             )

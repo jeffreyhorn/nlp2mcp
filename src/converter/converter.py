@@ -170,10 +170,11 @@ class Converter:
         reserved words and already available in GAMS.
         """
         # Filter out predefined GAMS constants - they are reserved words
+        # Use case-insensitive comparison since GAMS identifiers are case-insensitive
         user_params = {
             name: param_def
             for name, param_def in self.ir.params.items()
-            if name not in PREDEFINED_GAMS_CONSTANTS
+            if name.casefold() not in PREDEFINED_GAMS_CONSTANTS
         }
 
         if not user_params:
