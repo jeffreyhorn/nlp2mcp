@@ -1,13 +1,15 @@
 # Sprint 18: GAMS Emission Fixes - Day-by-Day Execution Prompts
 
-> **Sprint Duration**: 14 working days (~56h)
+> **Sprint Duration**: 14 working days (~56h), plus Day 0 initialization
 > **Epic**: 4 - Production Readiness
 > **Baseline**: v1.1.0 — Parse 61/160, Translate 42/61, Solve 12/42
 > **Target**: Parse 65/160, Solve ≥22, path_syntax_error ≤2
 
+**Note:** Day 0 is sprint initialization (setup, baseline validation) and is not counted in the 14 working days. Days 1-14 are the actual sprint execution days.
+
 ---
 
-## Day 0: Sprint Initialization
+## Day 0: Sprint Initialization (Pre-Sprint)
 
 ### Branch
 ```
@@ -1105,7 +1107,7 @@ git tag -l | grep v1.2.0
 - **Labels**: `sprint-18`, `completion`
 
 ### Reference Documents
-- PLAN.md: Lines 581-620 (Day 14 details)
+- PLAN.md: "Day 14: Sprint Completion" section
 - PLAN.md: Full document for retrospective reference
 - KNOWN_UNKNOWNS.md: For retrospective on risk handling
 
@@ -1118,7 +1120,7 @@ git tag -l | grep v1.2.0
 |--------|----------|--------|
 | Parse | 61/160 | 65/160 |
 | Solve | 12/42 | ≥22 |
-| path_syntax_error | 6+ | ≤2 |
+| path_syntax_error | 17 | ≤2 |
 
 ### Checkpoint Schedule
 | Checkpoint | Day | Solve Target | path_syntax_error Target |

@@ -35,7 +35,7 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (
 
 - **Computed Parameter Skip (2h)**
   - Skip computed parameter assignments (emit empty string)
-  - Location: `src/emit/emit_gams.py`
+  - Location: `src/emit/original_symbols.py` (orchestrated by emit_gams.py)
   - Target: 5 models (ajax, demo1, mathopt1, mexss, sample)
   - **Deliverable:** Computed parameter skip with regression tests
 
