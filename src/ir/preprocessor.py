@@ -588,14 +588,22 @@ def preprocess_includes(
 
 
 def _has_statement_ending_semicolon(line: str) -> bool:
-    """Check if a line has a semicolon that ends a statement (not in string/comment).
+    """Check if a line has a semicolon that ends a statement (not in string).
 
     This handles:
     - Semicolons inside single or double quoted strings are ignored
     - Escaped quotes within strings (e.g., "test\\"quote" or 'test\\'quote')
-    - Semicolons after GAMS inline comments (*) are ignored
 
-    Note: This doesn't handle nested quotes, but works for typical GAMS code.
+    Note on comment/non-code handling in the surrounding preprocessor:
+    - `*` is treated as a line comment only when it appears in column 1; such
+      full-line comments are removed before this function is called.
+    - Anything after a statement-terminating `;` is treated as non-code and is
+      ignored for scanning (including any `*` that might appear there).
+
+    This helper only detects a semicolon that is outside of string literals. It
+    assumes that full-line comments and trailing non-code after `;` have already
+    been stripped. It does not handle nested quotes, but works for typical GAMS
+    code.
     """
     in_string = None
     i = 0
@@ -620,18 +628,13 @@ def _has_statement_ending_semicolon(line: str) -> bool:
             i += 1
             continue
 
-        # Check for comment start (inline comment with *)
-        if c == "*":
-            # GAMS inline comments start with * and go to end of line
-            return False
-
         # Check for string start
         if c in ('"', "'"):
             in_string = c
             i += 1
             continue
 
-        # Check for semicolon outside string/comment
+        # Check for semicolon outside string
         if c == ";":
             return True
 
@@ -1567,7 +1570,10 @@ def join_multiline_equations(source: str) -> str:
     - Equations spanning multiple lines (common in GAMS models)
     - Continuation lines starting with operators (+, -, *, /)
     - Continuation lines starting with relational operators (=e=, =l=, =g=)
-    - Preserves comments and handles quoted strings
+    - Column-1 comment lines (line starts with * at position 0) are preserved
+      as standalone lines without terminating the equation being joined
+    - Indented lines starting with * (e.g., "   * expr") are treated as
+      multiplication continuations, not comments
 
     Args:
         source: GAMS source code text
@@ -1585,26 +1591,36 @@ def join_multiline_equations(source: str) -> str:
     Notes:
         - Only processes lines within equation definitions (after ..)
         - Stops joining when a semicolon is encountered
-        - Skips comment lines (starting with *)
+        - Column-1 comment lines (starting with * at position 0) are preserved
+          as standalone lines but do not terminate the equation being joined
+        - Indented * lines are treated as multiplication, not comments
         - Preserves line structure for non-equation code
-        - Comment reordering: Comments that appear in the middle of a multi-line
-          equation are preserved but may appear BEFORE the joined equation in the
-          output. For example, if a comment appears between equation continuation
-          lines, it will be output before the complete joined equation. This is
-          acceptable because comments in the middle of equations are rare in
-          practice, and the comment content is preserved.
+        - Comment reordering: Column-1 comments that appear between continuation
+          lines are emitted immediately while the equation is still being
+          buffered, so they may appear BEFORE the joined equation in the output.
+          This is acceptable because comments in the middle of equations are
+          rare in practice, and the comment content is preserved.
     """
     lines = source.split("\n")
-    result = []
+    result: list[str] = []
     in_equation = False
-    equation_buffer = []
+    equation_buffer: list[str] = []
 
     for line in lines:
         stripped = line.strip()
 
-        # Skip empty lines and comments - preserve them as-is
-        if not stripped or stripped.startswith("*"):
-            # Append empty/comment line to result and continue
+        # Skip empty lines - preserve them as-is
+        if not stripped:
+            result.append(line)
+            continue
+
+        # Handle GAMS comment lines - these start with * at column 1 (no leading whitespace)
+        # Lines with leading whitespace before * are multiplication continuations, not comments
+        # This distinction is important: "* comment" vs "   * expr" (multiplication)
+        if line.startswith("*"):
+            # True comment line - preserve as-is but do NOT terminate ongoing equation.
+            # Comments can appear between continuation lines in GAMS. We emit the comment
+            # immediately but keep buffering the equation so it doesn't get split.
             result.append(line)
             continue
 
@@ -1705,6 +1721,124 @@ def join_multiline_equations(source: str) -> str:
     if equation_buffer:
         joined = " ".join(equation_buffer)
         result.append(joined)
+
+    return "\n".join(result)
+
+
+def join_multiline_assignments(source: str) -> str:
+    """Join multi-line parameter/scalar assignments into single logical lines.
+
+    GAMS allows assignments to span multiple lines without explicit continuation
+    characters. This function detects assignment statements that have unbalanced
+    parentheses at end of line and joins them with subsequent lines until
+    parentheses are balanced and the statement ends with a semicolon.
+
+    This handles cases like (Issue #636):
+        at(it) = xd0(it)/(gamma(it)*e0(it)**rhot(it) + (1 - gamma(it))
+               * xxd0(it)**rhot(it))**(1/rhot(it));
+
+    Which the parser would otherwise fail on because line 1 has unbalanced
+    parentheses (8 open, 7 close).
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with multi-line assignments joined into single lines
+
+    Notes:
+        - Only joins lines where parentheses are unbalanced
+        - Preserves comment lines (starting with *), but may reorder them
+        - Column-1 comment lines that appear between continuation lines are emitted
+          immediately while the assignment is still being buffered, so they can
+          appear before the final joined assignment line in the output (same
+          behavior as join_multiline_equations)
+        - Stops joining when parentheses are balanced AND line ends with semicolon
+        - Does not process lines that look like equation definitions (contain ..)
+    """
+    lines = source.split("\n")
+    result: list[str] = []
+    in_continuation = False
+    # Store tuples of (original_line, stripped_line) so we can join stripped
+    # content for successful continuations but preserve original formatting in flush paths
+    continuation_buffer: list[tuple[str, str]] = []
+    paren_depth = 0
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Skip empty lines - preserve them as-is
+        if not stripped:
+            result.append(line)
+            continue
+
+        # Handle GAMS comment lines - these start with * at column 1 (no leading whitespace)
+        # Lines with leading whitespace before * are multiplication continuations, not comments
+        # This distinction is important: "* comment" vs "   * expr" (multiplication)
+        if line.startswith("*"):
+            # True comment line - preserve as-is but do NOT terminate ongoing continuation.
+            # Comments can appear between continuation lines in GAMS. We emit the comment
+            # immediately but keep buffering the assignment so it doesn't get split.
+            result.append(line)
+            continue
+
+        # Skip lines that are equation definitions (handled by join_multiline_equations)
+        if ".." in stripped and not in_continuation:
+            result.append(line)
+            continue
+
+        if not in_continuation:
+            # Check if this line has an assignment and unbalanced parentheses
+            # Look for pattern: identifier(domain) = expression or identifier = expression
+            has_assignment = "=" in stripped and not stripped.startswith("=")
+
+            if has_assignment:
+                # Count parentheses
+                open_parens = stripped.count("(")
+                close_parens = stripped.count(")")
+                paren_depth = open_parens - close_parens
+
+                # Check if line ends with semicolon (complete statement)
+                ends_with_semi = _has_statement_ending_semicolon(stripped)
+
+                if paren_depth != 0 and not ends_with_semi:
+                    # Unbalanced parentheses and no semicolon - start continuation
+                    in_continuation = True
+                    continuation_buffer = [(line, stripped)]
+                else:
+                    # Balanced or complete - output as-is
+                    result.append(line)
+            else:
+                result.append(line)
+        else:
+            # We're in a continuation - add this line to buffer
+            continuation_buffer.append((line, stripped))
+
+            # Update parenthesis count
+            paren_depth += stripped.count("(") - stripped.count(")")
+
+            # Check if statement is complete (balanced parens and ends with semicolon)
+            ends_with_semi = _has_statement_ending_semicolon(stripped)
+
+            if paren_depth == 0 and ends_with_semi:
+                # Statement is complete - join stripped content and output
+                joined = " ".join(s for _, s in continuation_buffer)
+                result.append(joined)
+                in_continuation = False
+                continuation_buffer = []
+                paren_depth = 0
+            elif paren_depth < 0:
+                # More closing than opening - something is wrong, output original lines as-is
+                for orig, _ in continuation_buffer:
+                    result.append(orig)
+                in_continuation = False
+                continuation_buffer = []
+                paren_depth = 0
+
+    # Handle case where continuation wasn't closed at end of file
+    if continuation_buffer:
+        for orig, _ in continuation_buffer:
+            result.append(orig)
 
     return "\n".join(result)
 
@@ -1952,6 +2086,7 @@ def _preprocess_content(content: str) -> str:
     9. Strip $macro directives
     10. Strip other unsupported directives ($title, $ontext, etc.)
     11. Join multi-line equations into single lines
+    11b. Join multi-line assignments into single lines (Issue #636)
     12. Remove table continuation markers (+)
     13. Normalize multi-line continuations (add missing commas)
     14. Insert missing semicolons before block keywords
@@ -2005,6 +2140,13 @@ def _preprocess_content(content: str) -> str:
     # This must happen before table continuation normalization to avoid
     # confusing equation continuation with table continuation markers
     content = join_multiline_equations(content)
+
+    # Step 11b: Join multi-line assignments into single lines (Issue #636)
+    # This handles parameter/scalar assignments that span multiple lines
+    # due to unbalanced parentheses, like:
+    #   at(it) = xd0(it)/(gamma(it)*e0(it)**rhot(it) + (1 - gamma(it))
+    #          * xxd0(it)**rhot(it))**(1/rhot(it));
+    content = join_multiline_assignments(content)
 
     # Step 12: Remove table continuation markers (+)
     content = normalize_table_continuations(content)
