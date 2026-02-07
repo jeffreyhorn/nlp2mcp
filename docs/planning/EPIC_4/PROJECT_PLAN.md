@@ -41,7 +41,7 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (
 
 - **Bound Multiplier Dimension Fix (4h)**
   - Fix dimension handling for scalar variable bound multipliers
-  - Location: `src/kkt/bound_multipliers.py`, `src/emit/model.py`
+  - Location: `src/kkt/assemble.py`, `src/emit/model.py`
   - Target: 3-5 models (alkyl, bearing, + partial overlaps)
   - **Deliverable:** Bound multiplier fix with regression tests
 

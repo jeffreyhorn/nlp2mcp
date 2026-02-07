@@ -51,7 +51,7 @@ Initialize Sprint 18 infrastructure, validate baseline metrics, and prepare deve
 ### Quality Checks
 ```bash
 # Validate baseline
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Verify clean state
 git status
@@ -123,7 +123,7 @@ Analyze top 10 failing models to identify root causes and prioritize fixes for m
 ### Quality Checks
 ```bash
 # Run diagnostics
-python tests/gamslib/run_full_test.py --verbose
+python scripts/gamslib/run_full_test.py --verbose
 
 # Verify documentation
 cat docs/planning/EPIC_4/SPRINT_18/SPRINT_LOG.md
@@ -195,7 +195,7 @@ Implement straightforward fixes identified on Day 1 that have high impact with l
 ### Quality Checks
 ```bash
 # Run full test suite
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Check for regressions
 git diff --stat
@@ -221,7 +221,7 @@ python -m pytest tests/ -v
 
 ### Reference Documents
 - PLAN.md: Lines 151-200 (Day 2 details)
-- src/nlp2mcp/emit_gams.py (emission logic)
+- src/emit/emit_gams.py (emission logic)
 
 ---
 
@@ -270,10 +270,10 @@ First checkpoint - assess progress, validate approach, and adjust plan if needed
 ### Quality Checks
 ```bash
 # Full pipeline test
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Generate metrics report
-python tests/gamslib/run_full_test.py --report
+python scripts/gamslib/run_full_test.py --json
 ```
 
 ### Completion Criteria
@@ -342,13 +342,13 @@ Begin addressing path_syntax_error failures - the primary blocker for solve coun
 ### Quality Checks
 ```bash
 # Run full test suite
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Run path-specific tests
 python -m pytest tests/ -k "path" -v
 
 # Check path_syntax_error count
-python tests/gamslib/run_full_test.py | grep path_syntax_error
+python scripts/gamslib/run_full_test.py | grep path_syntax_error
 ```
 
 ### Completion Criteria
@@ -369,7 +369,7 @@ python tests/gamslib/run_full_test.py | grep path_syntax_error
 ### Reference Documents
 - PLAN.md: Lines 251-300 (Day 4 details)
 - KNOWN_UNKNOWNS.md: Lines 200-300 (path_syntax_error unknowns)
-- src/nlp2mcp/emit_gams.py: Path handling code
+- src/emit/emit_gams.py: Path handling code
 
 ---
 
@@ -418,10 +418,10 @@ Continue path_syntax_error fixes, targeting remaining patterns and edge cases.
 ### Quality Checks
 ```bash
 # Full pipeline test
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Verify path_syntax_error target
-python tests/gamslib/run_full_test.py | grep -E "(path_syntax_error|Solve:)"
+python scripts/gamslib/run_full_test.py | grep -E "(path_syntax_error|Solve:)"
 ```
 
 ### Completion Criteria
@@ -490,10 +490,10 @@ Mid-sprint checkpoint - comprehensive progress review and plan adjustment.
 ### Quality Checks
 ```bash
 # Full pipeline test
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Detailed failure report
-python tests/gamslib/run_full_test.py --failures-only
+python scripts/gamslib/run_full_test.py --only-failing --verbose
 ```
 
 ### Completion Criteria
@@ -563,7 +563,7 @@ Fix expression emission issues including operator precedence, function calls, an
 ### Quality Checks
 ```bash
 # Run full test suite
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Run expression-specific tests
 python -m pytest tests/ -k "expression" -v
@@ -586,7 +586,7 @@ python -m pytest tests/ -k "expression" -v
 
 ### Reference Documents
 - PLAN.md: Lines 401-430 (Day 7 details)
-- src/nlp2mcp/emit_gams.py: Expression emission code
+- src/emit/emit_gams.py: Expression emission code
 
 ---
 
@@ -635,7 +635,7 @@ Fix statement emission issues including SET, PARAMETER, and other GAMS statement
 ### Quality Checks
 ```bash
 # Run full test suite
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Check specific statement tests
 python -m pytest tests/ -k "statement" -v
@@ -658,7 +658,7 @@ python -m pytest tests/ -k "statement" -v
 
 ### Reference Documents
 - PLAN.md: Lines 431-450 (Day 8 details)
-- src/nlp2mcp/emit_gams.py: Statement emission code
+- src/emit/emit_gams.py: Statement emission code
 
 ---
 
@@ -707,10 +707,10 @@ Address edge cases and corner cases that weren't covered in earlier fixes.
 ### Quality Checks
 ```bash
 # Full pipeline test
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Verify solve count progress
-python tests/gamslib/run_full_test.py | grep "Solve:"
+python scripts/gamslib/run_full_test.py | grep "Solve:"
 ```
 
 ### Completion Criteria
@@ -779,7 +779,7 @@ Final implementation push - address any remaining fixable issues before final te
 ### Quality Checks
 ```bash
 # Full pipeline test
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Code quality check
 python -m pytest tests/ -v
@@ -852,10 +852,10 @@ Final checkpoint - comprehensive pipeline retest and success criteria validation
 ### Quality Checks
 ```bash
 # Full pipeline test - final
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Generate final report
-python tests/gamslib/run_full_test.py --report
+python scripts/gamslib/run_full_test.py --json
 
 # Verify targets
 echo "Target: Solve ≥22, path_syntax_error ≤2"
@@ -1010,7 +1010,7 @@ ruff check src/
 ruff format --check src/
 
 # Full pipeline
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 ```
 
 ### Completion Criteria
@@ -1082,7 +1082,7 @@ Complete Sprint 18, run retrospective, and prepare handoff to next sprint.
 # Verify main is clean
 git checkout main
 git pull
-python tests/gamslib/run_full_test.py
+python scripts/gamslib/run_full_test.py
 
 # Verify tag
 git tag -l | grep v1.2.0
@@ -1128,8 +1128,8 @@ git tag -l | grep v1.2.0
 | 3 | Day 11 | ≥22 | ≤2 |
 
 ### Key Files
-- `src/nlp2mcp/emit_gams.py` - Primary emission logic
-- `tests/gamslib/run_full_test.py` - Full pipeline test
+- `src/emit/emit_gams.py` - Primary emission logic
+- `scripts/gamslib/run_full_test.py` - Full pipeline test
 - `docs/planning/EPIC_4/SPRINT_18/SPRINT_LOG.md` - Sprint progress log
 - `docs/planning/EPIC_4/SPRINT_18/PLAN.md` - Sprint plan
 - `docs/planning/EPIC_4/SPRINT_18/KNOWN_UNKNOWNS.md` - Risk tracking

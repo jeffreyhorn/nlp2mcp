@@ -78,7 +78,7 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 ### 2. Bound Multiplier Dimension Fix
 **Source:** Task 4 analysis identified 5 models (alkyl, bearing, + 3 partial overlaps)
 **Problem:** Bound multiplier variables (`piL_*`, `piU_*`) have incorrect dimensions for scalar variables
-**Location:** `src/kkt/bound_multipliers.py`, `src/emit/model.py`
+**Location:** `src/kkt/assemble.py`, `src/emit/model.py`
 **Time:** 4-5 hours
 **ROI:** 5 models / 4.5h = **1.1 models/hour**
 
