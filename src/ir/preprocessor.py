@@ -1744,7 +1744,11 @@ def join_multiline_assignments(source: str) -> str:
 
     Notes:
         - Only joins lines where parentheses are unbalanced
-        - Preserves comment lines (starting with *)
+        - Preserves comment lines (starting with *), but may reorder them
+        - Column-1 comment lines that appear between continuation lines are emitted
+          immediately while the assignment is still being buffered, so they can
+          appear before the final joined assignment line in the output (same
+          behavior as join_multiline_equations)
         - Stops joining when parentheses are balanced AND line ends with semicolon
         - Does not process lines that look like equation definitions (contain ..)
     """
