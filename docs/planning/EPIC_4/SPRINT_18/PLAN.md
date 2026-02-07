@@ -30,9 +30,15 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 | emit_gams.py Fixes | 10-12h | 10-12h | 0h (rebalanced) |
 | Parse Quick Win | 2h | 2.5h | +0.5h |
 | MCP Bug Fixes (circle, house) | 0h | 3-4h | **+3.5h** (added) |
-| **Core Scope** | **22-26h** | **19-24h** | **-2.5h net saved** |
+| Subset Relationship Preservation | 0h | 4-5h | **+4.5h** (pulled from Sprint 19) |
+| Reserved Word Quoting | 0h | 2-3h | **+2.5h** (pulled from Sprint 19) |
+| path_syntax_error Investigation | 0h | 4h | **+4h** (pulled from Sprint 19) |
+| Lexer Error Deep Analysis | 0h | 5-6h | **+5.5h** (pulled from Sprint 19) |
+| Prioritized Fix Roadmap | 0h | 2-3h | **+2.5h** (pulled from Sprint 19) |
+| Complex Set Data Syntax (initial) | 0h | 2h | **+2h** (pulled from Sprint 19) |
+| **Total Sprint** | **22-26h** | **44-50h** | **+22h expanded scope** |
 
-**Note:** The day-by-day schedule below totals ~27h because it includes integration testing, documentation, and release prep beyond the core implementation scope. The MCP bug fixes for circle and house were added to eliminate the `model_infeasible` category entirely.
+**Note:** Sprint 18 has been expanded to include items originally planned for Sprint 19. The day-by-day schedule is balanced so no single day exceeds 10h of effort.
 
 ---
 
@@ -92,147 +98,246 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 **Time:** 3-4 hours (investigation + fix)
 **ROI:** 2 models / 3.5h = **0.6 models/hour** (lower ROI but moves models from infeasible to optimal)
 
+### 5. Subset Relationship Preservation (Pulled from Sprint 19)
+**Source:** Task 4 identified models failing due to subset relationships not preserved in emitted GAMS
+**Problem:** When a set is defined as a subset of another, the emitted GAMS loses this relationship
+**Location:** `src/emit/emit_gams.py`, `src/emit/model.py`
+**Time:** 4-5 hours
+**ROI:** ~3 models / 4.5h = **0.7 models/hour**
+
+### 6. Reserved Word Quoting (Pulled from Sprint 19)
+**Source:** Task 4 identified models using GAMS reserved words as identifiers
+**Problem:** Identifiers that are GAMS reserved words need quoting in emitted code
+**Location:** `src/emit/expr_to_gams.py`
+**Time:** 2-3 hours
+**ROI:** ~2 models / 2.5h = **0.8 models/hour**
+
+### 7. Remaining path_syntax_error Investigation (Pulled from Sprint 19)
+**Source:** After initial fixes, ~4-6 models may still have `path_syntax_error`
+**Problem:** Need to investigate and categorize remaining syntax errors
+**Location:** Various in `src/emit/`
+**Time:** 4 hours (investigation + fixes where tractable)
+**ROI:** ~4 models / 4h = **1.0 models/hour**
+
+### 8. Lexer Error Deep Analysis (Pulled from Sprint 19)
+**Source:** 99 models fail at parse stage with lexer errors
+**Problem:** Need to categorize and prioritize lexer error patterns for future fixes
+**Deliverable:** `LEXER_ERROR_ANALYSIS.md` with error categories and fix priorities
+**Time:** 5-6 hours
+**ROI:** Foundation for Sprint 19+ parse improvements
+
+### 9. Prioritized Fix Roadmap (Pulled from Sprint 19)
+**Source:** Need to plan future sprints based on analysis findings
+**Problem:** No consolidated view of remaining work prioritized by ROI
+**Deliverable:** `FIX_ROADMAP.md` with prioritized list of remaining fixes
+**Time:** 2-3 hours
+**ROI:** Planning efficiency for future sprints
+
+### 10. Initial Complex Set Data Syntax Work (Pulled from Sprint 19)
+**Source:** Task 4 identified complex set data syntax as a category
+**Problem:** Some models use advanced set data syntax not yet supported
+**Location:** `src/gams/gams_grammar.lark`
+**Time:** 2 hours (initial investigation + simple cases)
+**ROI:** Foundation for future parse improvements
+
 ---
 
 ## Revised Day-by-Day Schedule
 
-### Day 1: Syntactic Validation Infrastructure (3h)
+### Day 1: Syntactic Validation Infrastructure (4h)
 
-**Focus:** Create test_syntax.py and validate corpus
+**Focus:** Create test_syntax.py, validate corpus, begin schema work
 
 | Task | Time | Deliverable |
 |------|------|-------------|
 | Create `scripts/gamslib/test_syntax.py` | 2h | Script that runs `gams action=c` on all 160 models |
 | Run validation on full corpus | 0.5h | All models validated (expect 160/160 pass) |
 | Update `gamslib_status.json` schema | 0.5h | Add `gams_syntax` field to all entries |
-
-**Acceptance:** Script runs successfully, all 160 models confirmed valid
-
-### Day 2: Schema Updates + Set Element Quoting (3h)
-
-**Focus:** Implement schema changes and start highest-ROI emit fix
-
-| Task | Time | Deliverable |
-|------|------|-------------|
-| Add `gams_syntax` fields to schema.json | 0.5h | Schema version 2.1.0 |
 | Add `exclusion` fields to schema.json | 0.5h | Support future exclusions |
-| Implement set element quoting fix | 2h | Fix in `expr_to_gams.py` |
+| Schema version bump to 2.1.0 | 0.5h | Schema version 2.1.0 |
 
-**Acceptance:** Schema updated, set element quoting fix passes unit tests
+**Acceptance:** Script runs successfully, all 160 models confirmed valid, schema updated
 
-### Day 3: Set Element Quoting + Checkpoint 1 (2h)
+### Day 2: Set Element Quoting Fix (4h)
 
-**Focus:** Complete set element quoting, verify 6 models unblocked
+**Focus:** Implement highest-ROI emit fix
 
 | Task | Time | Deliverable |
 |------|------|-------------|
+| Implement set element quoting fix | 2.5h | Fix in `expr_to_gams.py` |
 | Complete set element quoting tests | 1h | Regression tests for ps2_* family + pollut |
 | Verify 6 models now compile | 0.5h | `gams action=c` passes on all 6 |
-| **Checkpoint 1:** Syntactic validation complete | 0.5h | Go/no-go for emit fixes |
 
-**Checkpoint 1 Criteria:**
-- [ ] test_syntax.py runs on all 160 models
-- [ ] Schema updated with `gams_syntax` and `exclusion` fields
-- [ ] Set element quoting fix merged
-- [ ] 6 models unblocked (ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s, pollut)
+**Acceptance:** Set element quoting fix merged, 6 models unblocked
 
-### Day 4: Computed Parameter Skip Fix (2h)
+### Day 3: Computed Parameter Skip + Checkpoint 1 (3h)
 
-**Focus:** Skip computed parameter assignments (simple fix per Task 5)
+**Focus:** Skip computed parameter assignments, first checkpoint
 
 | Task | Time | Deliverable |
 |------|------|-------------|
 | Implement skip in `emit_computed_parameter_assignments()` | 1h | Function returns empty string |
 | Add regression tests | 0.5h | Verify 12 solving models still work |
 | Verify 5 models now compile | 0.5h | ajax, demo1, mathopt1, mexss, sample |
+| **Checkpoint 1:** Syntactic validation + first fixes complete | 1h | Go/no-go for remaining emit fixes |
 
-**Acceptance:** Skip fix merged, 5 models unblocked, no regressions
+**Checkpoint 1 Criteria:**
+- [ ] test_syntax.py runs on all 160 models
+- [ ] Schema updated with `gams_syntax` and `exclusion` fields
+- [ ] Set element quoting fix merged (6 models unblocked)
+- [ ] Computed parameter skip fix merged (5 models unblocked)
 
-### Day 5: Bound Multiplier Dimension Fix (3h)
+### Day 4: Bound Multiplier Dimension Fix (4h)
 
 **Focus:** Fix bound multiplier variable dimensions
 
 | Task | Time | Deliverable |
 |------|------|-------------|
 | Analyze bound multiplier generation code | 0.5h | Understand issue in `bound_multipliers.py` |
-| Implement dimension fix | 2h | Handle scalar variable bound multipliers |
+| Implement dimension fix | 2.5h | Handle scalar variable bound multipliers |
 | Add regression tests | 0.5h | Test with alkyl, bearing models |
+| Verify models now compile | 0.5h | `gams action=c` passes on affected models |
 
-**Acceptance:** Bound multiplier fix passes tests
+**Acceptance:** Bound multiplier fix passes tests, 3-5 models unblocked
 
-### Day 6: Bound Multiplier Completion + Pipeline Retest + Checkpoint 2 (3h)
+### Day 5: Parse Quick Win + Reserved Word Quoting (4.5h)
 
-**Focus:** Complete bound multiplier fix, run full pipeline retest
-
-| Task | Time | Deliverable |
-|------|------|-------------|
-| Complete bound multiplier fix | 1h | Final testing and edge cases |
-| Run full pipeline on all 160 models | 1h | Updated `gamslib_status.json` |
-| **Checkpoint 2:** emit_gams.py fixes complete | 1h | Progress report with new metrics |
-
-**Checkpoint 2 Criteria:**
-- [ ] All emit_gams.py fixes merged (set quoting, computed params, bound multipliers)
-- [ ] `path_syntax_error` reduced from 17 to ≤6
-- [ ] 12 original solving models still solve (no regressions)
-- [ ] New metrics recorded
-
-### Day 7: Parse Quick Win - Put Statement Format (2.5h)
-
-**Focus:** Add `:width:decimals` support + stdcge fix
+**Focus:** Put statement format + reserved word handling
 
 | Task | Time | Deliverable |
 |------|------|-------------|
 | Add `put_format` rule to grammar | 1.5h | Support `:width:decimals` syntax |
 | Add `put_stmt_nosemi` variant for stdcge | 0.5h | Handle `loop(j, put j.tl)` |
 | Add unit tests for put statement parsing | 0.5h | Test all 4 models parse |
+| Implement reserved word quoting | 2h | Fix in `expr_to_gams.py` |
 
-**Acceptance:** ps5_s_mn, ps10_s, ps10_s_mn, stdcge all parse successfully
+**Acceptance:** ps5_s_mn, ps10_s, ps10_s_mn, stdcge parse; reserved words quoted
 
-### Day 8: MCP Infeasibility Bug Fixes (3.5h)
+### Day 6: Subset Relationship Preservation + Checkpoint 2 (5h)
+
+**Focus:** Preserve subset relationships in emitted GAMS
+
+| Task | Time | Deliverable |
+|------|------|-------------|
+| Analyze subset relationship handling | 1h | Understand current emission logic |
+| Implement subset preservation fix | 2.5h | Fix in `emit_gams.py`, `model.py` |
+| Add regression tests | 0.5h | Test affected models |
+| **Checkpoint 2:** emit_gams.py fixes complete | 1h | Progress report with new metrics |
+
+**Checkpoint 2 Criteria:**
+- [ ] All emit_gams.py fixes merged (set quoting, computed params, bound multipliers, reserved words, subsets)
+- [ ] `path_syntax_error` reduced from 17 to ≤4
+- [ ] 12 original solving models still solve (no regressions)
+- [ ] New metrics recorded
+
+### Day 7: MCP Infeasibility Bug Fixes (4h)
 
 **Focus:** Fix circle and house MCP formulation bugs
 
 | Task | Time | Deliverable |
 |------|------|-------------|
 | Investigate circle random data issue | 1h | Understand `uniform()` regeneration problem |
-| Fix circle: capture original random values | 1h | circle achieves `model_optimal` |
+| Fix circle: capture original random values | 1.5h | circle achieves `model_optimal` |
 | Investigate house constraint qualification | 1h | Identify Lagrangian formulation issue |
 | Fix house MCP formulation | 0.5h | house achieves `model_optimal` |
 
 **Acceptance:** Both circle and house move from `model_infeasible` to `model_optimal`
 
-### Day 9: Integration Testing + Documentation (3h)
+### Day 8: Remaining path_syntax_error Investigation (4h)
 
-**Focus:** Full regression testing, documentation updates
+**Focus:** Investigate and fix remaining syntax errors
 
 | Task | Time | Deliverable |
 |------|------|-------------|
+| Run pipeline and identify remaining errors | 0.5h | List of models still failing |
+| Categorize remaining `path_syntax_error` cases | 1h | Error taxonomy |
+| Fix tractable cases | 2h | Additional models unblocked |
+| Document intractable cases for future | 0.5h | Notes for future sprints |
+
+**Acceptance:** Remaining errors categorized, tractable cases fixed
+
+### Day 9: Lexer Error Deep Analysis (5.5h)
+
+**Focus:** Analyze 99 lexer error models for future fixes
+
+| Task | Time | Deliverable |
+|------|------|-------------|
+| Extract lexer error patterns from 99 models | 2h | Pattern frequency analysis |
+| Categorize by error type and complexity | 2h | Categories with model counts |
+| Identify quick wins vs complex fixes | 1h | Prioritized fix list |
+| Create `LEXER_ERROR_ANALYSIS.md` | 0.5h | Analysis document |
+
+**Acceptance:** Comprehensive lexer error analysis complete
+
+### Day 10: Complex Set Data Syntax + Prioritized Roadmap (4h)
+
+**Focus:** Initial complex set syntax work + planning document
+
+| Task | Time | Deliverable |
+|------|------|-------------|
+| Investigate complex set data syntax patterns | 1h | Pattern identification |
+| Implement simple cases in grammar | 1h | Initial grammar additions |
+| Create `FIX_ROADMAP.md` with prioritized fixes | 2h | Complete roadmap document |
+
+**Acceptance:** Initial complex set syntax support, roadmap complete
+
+### Day 11: Pipeline Retest + Checkpoint 3 (4h)
+
+**Focus:** Full pipeline retest, third checkpoint
+
+| Task | Time | Deliverable |
+|------|------|-------------|
+| Run full pipeline on all 160 models | 1.5h | Updated `gamslib_status.json` |
+| Analyze results and update metrics | 1h | New baseline numbers |
 | Run full test suite (3204+ tests) | 0.5h | All tests pass |
-| Run pipeline on newly-parsing models | 1h | Check translate/solve status |
-| Update GAMSLIB_STATUS.md | 0.5h | Reflect new metrics |
-| Update FAILURE_ANALYSIS.md | 0.5h | Updated error categories |
-| Draft Sprint 18 retrospective | 0.5h | Lessons learned |
-
-**Acceptance:** All tests pass, documentation updated
-
-### Day 10: Checkpoint 3 + Release Prep (2.5h)
-
-**Focus:** Final checkpoint and release
-
-| Task | Time | Deliverable |
-|------|------|-------------|
-| **Checkpoint 3:** All components complete | 0.5h | Final review |
-| Final pipeline metrics | 0.5h | Record final counts |
-| Version bump and release notes | 0.5h | v1.2.0 release |
-| Create release PR | 0.5h | PR ready for merge |
-| Sprint 18 complete | 0.5h | Tag and celebrate |
+| **Checkpoint 3:** All implementation complete | 1h | Go/no-go for release |
 
 **Checkpoint 3 Criteria:**
 - [ ] All Sprint 18 features merged
 - [ ] circle and house achieve `model_optimal`
-- [ ] Documentation updated
-- [ ] Retrospective drafted
-- [ ] Ready for release
+- [ ] `path_syntax_error` minimized
+- [ ] Lexer error analysis complete
+- [ ] Fix roadmap created
+
+### Day 12: Documentation Updates (4h)
+
+**Focus:** Update all documentation with sprint results
+
+| Task | Time | Deliverable |
+|------|------|-------------|
+| Update GAMSLIB_STATUS.md | 1h | Reflect new metrics |
+| Update FAILURE_ANALYSIS.md | 1h | Updated error categories |
+| Update PROJECT_PLAN.md for Sprint 19+ | 1h | Reflect completed work |
+| Review and update KNOWN_UNKNOWNS.md | 1h | Mark resolved unknowns |
+
+**Acceptance:** All documentation updated and consistent
+
+### Day 13: Sprint Retrospective + Release Prep (3.5h)
+
+**Focus:** Retrospective and release preparation
+
+| Task | Time | Deliverable |
+|------|------|-------------|
+| Draft Sprint 18 retrospective | 1.5h | Lessons learned, what worked, what didn't |
+| Version bump to v1.2.0 | 0.5h | Updated version numbers |
+| Create release notes | 1h | Comprehensive release notes |
+| Create release PR | 0.5h | PR ready for merge |
+
+**Acceptance:** Retrospective complete, release PR ready
+
+### Day 14: Final Review + Release (2.5h)
+
+**Focus:** Final review and release
+
+| Task | Time | Deliverable |
+|------|------|-------------|
+| Final review of all changes | 1h | Quality check |
+| Address any final issues | 1h | Bug fixes if needed |
+| Merge release PR and tag | 0.5h | v1.2.0 released |
+
+**Acceptance:** Sprint 18 complete, v1.2.0 released
+
+**Total Sprint Duration: ~47h** (balanced across 14 days, no day exceeds 6h)
 
 ---
 
@@ -244,11 +349,11 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 |--------|-------------------|-------------------|--------|
 | Parse Success | 61/160 (38.1%) | 65/160 (40.6%) | +4 models |
 | Translate Success | 42/61 (68.9%) | TBD | — |
-| Solve Success | 12/42 (28.6%) | ≥20/TBD | +8 models |
-| `path_syntax_error` | 17 | ≤6 | -11 models |
+| Solve Success | 12/42 (28.6%) | ≥22/TBD | +10 models |
+| `path_syntax_error` | 17 | ≤2 | -15 models |
 | `model_infeasible` | 2 | 0 | -2 models (fixed) |
 
-**Note:** Parse improvement is modest (+4 from put statement fix). The major gains are in solve stage from emit_gams.py fixes and MCP bug fixes.
+**Note:** Parse improvement is modest (+4 from put statement fix). The major gains are in solve stage from emit_gams.py fixes, MCP bug fixes, and additional investigation of remaining errors.
 
 ### Models Unblocked
 
@@ -258,9 +363,21 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 | Computed param skip | ajax, demo1, mathopt1, mexss, sample (5) |
 | Bound multiplier dimension | alkyl, bearing, + partial overlaps (3-5) |
 | Put statement format | ps5_s_mn, ps10_s, ps10_s_mn, stdcge (4) |
+| Reserved word quoting | ~2 models |
+| Subset relationship preservation | ~3 models |
+| Remaining path_syntax_error investigation | ~4 models |
 | MCP infeasibility fixes | circle, house (2) |
 
-**Total potential improvement:** 16-18 models unblocked from `path_syntax_error` + 2 from `model_infeasible`
+**Total potential improvement:** 22-26 models unblocked from `path_syntax_error` + 2 from `model_infeasible`
+
+### Analysis Deliverables
+
+| Document | Description |
+|----------|-------------|
+| `LEXER_ERROR_ANALYSIS.md` | Comprehensive analysis of 99 lexer error models with categories and priorities |
+| `FIX_ROADMAP.md` | Prioritized roadmap for remaining fixes in future sprints |
+
+These analysis deliverables provide the foundation for efficient Sprint 19+ planning.
 
 ---
 
@@ -290,6 +407,21 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 **Trigger:** circle or house require deeper KKT investigation (>4 hours combined)
 **Mitigation:** Fix one model fully, document root cause for other, defer to Sprint 19
 **Impact:** -1 model from solve count, but documented investigation accelerates future fix
+
+### Risk 6: Subset Relationship Preservation More Complex
+**Trigger:** Fix requires significant refactoring of emit infrastructure (>5 hours)
+**Mitigation:** Implement narrowly-scoped fix for most common pattern only
+**Impact:** May defer edge cases to Sprint 19
+
+### Risk 7: Reserved Word Conflicts with Existing Grammar
+**Trigger:** Quoting reserved words causes parse conflicts or breaks existing models
+**Mitigation:** Maintain list of safe-to-quote words vs unsafe words
+**Impact:** +1 hour debugging, may need to handle case-by-case
+
+### Risk 8: Lexer Error Analysis Uncovers Massive Scope
+**Trigger:** 99 models have >10 distinct error categories requiring major grammar work
+**Mitigation:** Focus analysis on highest-frequency categories, document others for future
+**Impact:** Analysis complete but roadmap may show longer timeline than expected
 
 ---
 
@@ -357,4 +489,6 @@ This command runs Parse, Translate, Solve, and Compare for all models; Compare i
 
 ## Document History
 
+- February 6, 2026: Expanded scope to 47h (14 days) by pulling in Sprint 19 items
+- February 6, 2026: Added MCP infeasibility bug fixes for circle/house
 - February 6, 2026: Initial creation (Task 10 of PREP_PLAN.md)
