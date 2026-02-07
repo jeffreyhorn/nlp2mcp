@@ -216,11 +216,13 @@ class TestParameterConversion:
         # Regular parameter should be present
         assert "Parameter cost / 100.0 /;" in result.output
         # Reserved words should NOT be present (any case variant)
-        output_lower = result.output.lower()
-        assert "parameter pi" not in output_lower
-        assert "parameter inf" not in output_lower
-        assert "parameter eps" not in output_lower
-        assert "parameter na " not in output_lower  # space to avoid matching 'name'
+        # Use regex with word boundaries to avoid false matches (e.g., 'name' vs 'na')
+        import re
+
+        assert not re.search(r"\bparameter\s+pi\b", result.output, re.IGNORECASE)
+        assert not re.search(r"\bparameter\s+inf\b", result.output, re.IGNORECASE)
+        assert not re.search(r"\bparameter\s+eps\b", result.output, re.IGNORECASE)
+        assert not re.search(r"\bparameter\s+na\b", result.output, re.IGNORECASE)
 
 
 class TestEquationConversion:
