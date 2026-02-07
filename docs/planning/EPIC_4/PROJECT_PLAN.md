@@ -139,7 +139,7 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (
 - **Metrics:** Solve ≥22 models (up from 12); `model_infeasible` at 0
 - **Quality:** All 3204+ tests pass; new fixes have regression tests
 
-**Estimated Effort:** 44-50 hours
+**Estimated Effort:** ~56 hours
 **Risk Level:** MEDIUM (expanded scope but well-analyzed; MCP bugs may require investigation)
 
 ---
