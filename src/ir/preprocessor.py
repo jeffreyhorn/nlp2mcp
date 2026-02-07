@@ -1592,9 +1592,9 @@ def join_multiline_equations(source: str) -> str:
           practice, and the comment content is preserved.
     """
     lines = source.split("\n")
-    result = []
+    result: list[str] = []
     in_equation = False
-    equation_buffer = []
+    equation_buffer: list[str] = []
 
     for line in lines:
         stripped = line.strip()
@@ -1604,9 +1604,15 @@ def join_multiline_equations(source: str) -> str:
             result.append(line)
             continue
 
-        # Handle lines starting with * - could be comment OR multiplication
-        # Only treat as comment if we're NOT in an equation continuation
-        if stripped.startswith("*") and not in_equation:
+        # Handle GAMS comment lines - these start with * at column 1 (no leading whitespace)
+        # Lines with leading whitespace before * are multiplication continuations, not comments
+        # This distinction is important: "* comment" vs "   * expr" (multiplication)
+        if line.startswith("*"):
+            # True comment line - always preserve as-is and flush any pending equation
+            if in_equation and equation_buffer:
+                result.append(" ".join(equation_buffer))
+                in_equation = False
+                equation_buffer = []
             result.append(line)
             continue
 
@@ -1752,9 +1758,17 @@ def join_multiline_assignments(source: str) -> str:
             result.append(line)
             continue
 
-        # Handle comment lines (starting with *)
-        # But only if we're NOT in a continuation - otherwise * might be multiplication
-        if stripped.startswith("*") and not in_continuation:
+        # Handle GAMS comment lines - these start with * at column 1 (no leading whitespace)
+        # Lines with leading whitespace before * are multiplication continuations, not comments
+        # This distinction is important: "* comment" vs "   * expr" (multiplication)
+        if line.startswith("*"):
+            # True comment line - always preserve as-is and flush any pending continuation
+            if in_continuation and continuation_buffer:
+                for buf_line in continuation_buffer:
+                    result.append(buf_line)
+                in_continuation = False
+                continuation_buffer = []
+                paren_depth = 0
             result.append(line)
             continue
 
