@@ -117,14 +117,16 @@ def _is_index_offset_syntax(s: str) -> bool:
 
     # Linear operators (+ and -) need stricter matching to avoid false positives
     # like "route-1" or "item-2" which are hyphenated element labels.
-    # Only match if base is a single lowercase letter (typical index variable)
-    # and offset is purely numeric OR a single lowercase letter.
-    linear_pattern = r"^[a-z](\+|-)[0-9]+$"  # i+1, i-3, j+10
+    # Only match if base is a single letter (case-insensitive, typical index variable)
+    # and offset is purely numeric.
+    linear_pattern = r"^[a-z](\+|-)[0-9]+$"  # i+1, i-3, j+10, T+5
     if re.match(linear_pattern, s, re.IGNORECASE):
         return True
 
-    # Symbolic linear offset: single-letter base + or - followed by identifier
-    # e.g., i+j, i-k, i+shift, t-offset1
+    # Symbolic linear offset: single-letter base (case-insensitive) followed by
+    # + or - and an identifier (letters, digits, underscores - no hyphens).
+    # e.g., i+j, i-k, i+shift, t-offset1, T+lag_var
+    # Uses re.IGNORECASE so base can be 'i' or 'I'.
     linear_symbolic_pattern = r"^[a-z](\+|-)[A-Za-z_][A-Za-z0-9_]*$"
     if re.match(linear_symbolic_pattern, s, re.IGNORECASE):
         return True
