@@ -12,6 +12,7 @@ from src.ir.ast import (
     Call,
     Const,
     DollarConditional,
+    IndexOffset,
     MultiplierRef,
     ParamRef,
     SetMembershipTest,
@@ -481,6 +482,18 @@ class TestQuoteIndices:
         assert _quote_indices(('"i"',)) == ['"i"']
         assert _quote_indices(('"nodes"',)) == ['"nodes"']
 
+    def test_hyphenated_labels_stay_quoted(self):
+        """Hyphenated element labels like 'route-1' must be quoted, not misidentified as IndexOffset.
+
+        The _is_index_offset_syntax() function must not match hyphenated labels,
+        as they would be parsed as arithmetic (route - 1) if left unquoted.
+        """
+        assert _quote_indices(("route-1",)) == ['"route-1"']
+        assert _quote_indices(("item-2",)) == ['"item-2"']
+        assert _quote_indices(("node-10",)) == ['"node-10"']
+        # Multi-word hyphenated should also be quoted
+        assert _quote_indices(("my-route-1",)) == ['"my-route-1"']
+
     def test_param_ref_with_quoted_string_index(self):
         """Test ParamRef with a string literal index from the parser.
 
@@ -642,3 +655,217 @@ class TestSetMembershipTest:
         )
         result = expr_to_gams(expr)
         assert result == "(e(i) - m(i))$t(i)"
+
+
+@pytest.mark.unit
+class TestIndexOffset:
+    """Test IndexOffset serialization in expr_to_gams.
+
+    IndexOffset represents lead/lag indexing (i++1, i--2, i+1, i-3, i+j).
+    These are used in equations and bounds for circular or linear offsets.
+    Issue #461: Support IndexOffset in expr_to_gams conversion.
+    """
+
+    def test_circular_lead_constant(self):
+        """Test circular lead with constant offset (i++1)."""
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", Const(1), circular=True),)))
+        assert result == "x(i++1)"
+
+    def test_circular_lead_larger_offset(self):
+        """Test circular lead with larger offset (i++5)."""
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", Const(5), circular=True),)))
+        assert result == "x(i++5)"
+
+    def test_circular_lag_constant(self):
+        """Test circular lag with constant offset (i--2).
+
+        Negative offset with circular=True uses -- operator.
+        """
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", Const(-2), circular=True),)))
+        assert result == "x(i--2)"
+
+    def test_circular_lag_larger_offset(self):
+        """Test circular lag with larger offset (i--10)."""
+        result = expr_to_gams(VarRef("x", (IndexOffset("t", Const(-10), circular=True),)))
+        assert result == "x(t--10)"
+
+    def test_linear_lead_constant(self):
+        """Test linear lead with constant offset (i+1).
+
+        Linear offset suppresses at boundaries rather than wrapping.
+        """
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", Const(1), circular=False),)))
+        assert result == "x(i+1)"
+
+    def test_linear_lag_constant(self):
+        """Test linear lag with constant offset (i-3).
+
+        Negative offset with circular=False uses - operator.
+        """
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", Const(-3), circular=False),)))
+        assert result == "x(i-3)"
+
+    def test_circular_zero_offset(self):
+        """Test zero offset (i++0)."""
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", Const(0), circular=True),)))
+        assert result == "x(i++0)"
+
+    def test_linear_zero_offset(self):
+        """Test linear zero offset (i+0)."""
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", Const(0), circular=False),)))
+        assert result == "x(i+0)"
+
+    def test_symbolic_offset_linear(self):
+        """Test symbolic offset (i+j) for linear."""
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", SymbolRef("j"), circular=False),)))
+        assert result == "x(i+j)"
+
+    def test_symbolic_offset_circular(self):
+        """Test symbolic offset (i++j) for circular."""
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", SymbolRef("j"), circular=True),)))
+        assert result == "x(i++j)"
+
+    def test_symbolic_lag_linear(self):
+        """Test symbolic lag (i-j) for linear.
+
+        The parser produces Unary("-", SymbolRef("j")) for linear symbolic lag.
+        """
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("i", Unary("-", SymbolRef("j")), circular=False),))
+        )
+        assert result == "x(i-j)"
+
+    def test_symbolic_lag_circular(self):
+        """Test symbolic lag (i--j) for circular.
+
+        The parser produces Unary("-", SymbolRef("j")) for circular symbolic lag.
+        """
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("i", Unary("-", SymbolRef("j")), circular=True),))
+        )
+        assert result == "x(i--j)"
+
+    def test_symbolic_offset_multi_char_linear(self):
+        """Test multi-character symbolic offset for linear (i+shift, t-offset1).
+
+        The parser can produce SymbolRef with multi-character names for offsets.
+        These must not be quoted by _quote_indices().
+        """
+        # Positive offset with multi-char identifier
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", SymbolRef("shift"), circular=False),)))
+        assert result == "x(i+shift)"
+
+        # Negative offset with multi-char identifier (Unary minus)
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("t", Unary("-", SymbolRef("offset1")), circular=False),))
+        )
+        assert result == "x(t-offset1)"
+
+    def test_symbolic_offset_multi_char_circular(self):
+        """Test multi-character symbolic offset for circular (i++shift, t--lag).
+
+        Circular offsets with multi-character symbolic names.
+        """
+        # Positive circular offset
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", SymbolRef("shift"), circular=True),)))
+        assert result == "x(i++shift)"
+
+        # Negative circular offset (Unary minus)
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("t", Unary("-", SymbolRef("lag")), circular=True),))
+        )
+        assert result == "x(t--lag)"
+
+    def test_symbolic_offset_with_underscores(self):
+        """Test symbolic offset identifiers containing underscores.
+
+        The grammar's ID token permits underscores, so offsets like shift_1 or lag_2
+        should serialize correctly and not be quoted by _quote_indices.
+        """
+        # Circular with underscore in offset
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", SymbolRef("shift_1"), circular=True),)))
+        assert result == "x(i++shift_1)"
+
+        # Circular lag with underscore
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("t", Unary("-", SymbolRef("lag_2")), circular=True),))
+        )
+        assert result == "x(t--lag_2)"
+
+        # Linear with underscore in offset
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("i", SymbolRef("offset_var"), circular=False),))
+        )
+        assert result == "x(i+offset_var)"
+
+        # Linear lag with underscore
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("t", Unary("-", SymbolRef("my_lag")), circular=False),))
+        )
+        assert result == "x(t-my_lag)"
+
+    def test_param_ref_with_index_offset(self):
+        """Test ParamRef with IndexOffset."""
+        result = expr_to_gams(ParamRef("a", (IndexOffset("i", Const(1), circular=True),)))
+        assert result == "a(i++1)"
+
+    def test_multiplier_ref_with_index_offset(self):
+        """Test MultiplierRef with IndexOffset."""
+        result = expr_to_gams(
+            MultiplierRef("lambda", (IndexOffset("t", Const(-1), circular=False),))
+        )
+        assert result == "lambda(t-1)"
+
+    def test_mixed_plain_and_offset_indices(self):
+        """Test mixing plain indices with offset indices: x(i, j++1, k)."""
+        result = expr_to_gams(VarRef("x", ("i", IndexOffset("j", Const(1), circular=True), "k")))
+        assert result == "x(i,j++1,k)"
+
+    def test_multi_dimensional_all_offsets(self):
+        """Test multi-dimensional with all offset indices: x(i++1, j--2)."""
+        result = expr_to_gams(
+            VarRef(
+                "x",
+                (
+                    IndexOffset("i", Const(1), circular=True),
+                    IndexOffset("j", Const(-2), circular=True),
+                ),
+            )
+        )
+        assert result == "x(i++1,j--2)"
+
+    def test_index_offset_in_sum(self):
+        """Test IndexOffset in sum body: sum(i, x(i++1))."""
+        body = VarRef("x", (IndexOffset("i", Const(1), circular=True),))
+        result = expr_to_gams(Sum(("i",), body))
+        assert result == "sum(i, x(i++1))"
+
+    def test_himmel16_pattern(self):
+        """Test himmel16 pattern: x(i)*y(i++1) - y(i)*x(i++1).
+
+        This is the actual pattern from himmel16.gms that prompted Issue #461.
+        """
+        expr = Binary(
+            "-",
+            Binary(
+                "*",
+                VarRef("x", ("i",)),
+                VarRef("y", (IndexOffset("i", Const(1), circular=True),)),
+            ),
+            Binary(
+                "*",
+                VarRef("y", ("i",)),
+                VarRef("x", (IndexOffset("i", Const(1), circular=True),)),
+            ),
+        )
+        result = expr_to_gams(expr)
+        assert result == "x(i) * y(i++1) - y(i) * x(i++1)"
+
+    def test_index_offset_in_dollar_conditional(self):
+        """Test IndexOffset in dollar conditional: x(i++1)$cond(i)."""
+        expr = DollarConditional(
+            VarRef("x", (IndexOffset("i", Const(1), circular=True),)),
+            ParamRef("cond", ("i",)),
+        )
+        result = expr_to_gams(expr)
+        assert result == "x(i++1)$cond(i)"

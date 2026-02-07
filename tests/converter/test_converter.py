@@ -189,6 +189,41 @@ class TestParameterConversion:
         assert "Parameter a / 10.0 /;" in result.output
         assert "Parameter b(i);" in result.output
 
+    def test_reserved_word_parameters_omitted(self):
+        """Test that GAMS reserved word parameters (pi, inf, eps, na) are omitted.
+
+        These are predefined GAMS constants and should not be emitted as parameters.
+        The filter should be case-insensitive (pi, PI, Pi all omitted).
+        """
+        ir = ModelIR()
+        # Add reserved words in various cases
+        ir.params["pi"] = ParameterDef(name="pi", values={(): 3.14159})
+        ir.params["PI"] = ParameterDef(name="PI", values={(): 3.14159})
+        ir.params["Pi"] = ParameterDef(name="Pi", values={(): 3.14159})
+        ir.params["inf"] = ParameterDef(name="inf", values={(): 1e30})
+        ir.params["INF"] = ParameterDef(name="INF", values={(): 1e30})
+        ir.params["eps"] = ParameterDef(name="eps", values={(): 1e-10})
+        ir.params["EPS"] = ParameterDef(name="EPS", values={(): 1e-10})
+        ir.params["na"] = ParameterDef(name="na", values={(): 0.0})
+        ir.params["NA"] = ParameterDef(name="NA", values={(): 0.0})
+        # Add a regular parameter that should be emitted
+        ir.params["cost"] = ParameterDef(name="cost", values={(): 100.0})
+
+        converter = Converter(ir)
+        result = converter.convert()
+
+        assert result.success is True
+        # Regular parameter should be present
+        assert "Parameter cost / 100.0 /;" in result.output
+        # Reserved words should NOT be present (any case variant)
+        # Use regex with word boundaries to avoid false matches (e.g., 'name' vs 'na')
+        import re
+
+        assert not re.search(r"\bparameter\s+pi\b", result.output, re.IGNORECASE)
+        assert not re.search(r"\bparameter\s+inf\b", result.output, re.IGNORECASE)
+        assert not re.search(r"\bparameter\s+eps\b", result.output, re.IGNORECASE)
+        assert not re.search(r"\bparameter\s+na\b", result.output, re.IGNORECASE)
+
 
 class TestEquationConversion:
     """Test equation IR → MCP GAMS mappings."""

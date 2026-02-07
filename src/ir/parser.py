@@ -757,8 +757,11 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
         return base
 
     # Has lag_lead_suffix
+    # Grammar: lag_lead_suffix: CIRCULAR_LEAD offset_expr -> circular_lead
+    # So suffix_node.children = [Token('CIRCULAR_LEAD', '++'), Tree('offset_number', ...)]
+    # The offset_expr is the SECOND child (index 1), not the first
     suffix_node = index_node.children[1]
-    offset_node = suffix_node.children[0]  # offset_expr
+    offset_node = suffix_node.children[1]  # offset_expr (second child after operator token)
 
     # Parse offset expression
     if isinstance(offset_node, Token):

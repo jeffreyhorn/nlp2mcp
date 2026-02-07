@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..emit.expr_to_gams import expr_to_gams
+from ..ir.constants import PREDEFINED_GAMS_CONSTANTS
 from ..ir.model_ir import ModelIR
 from ..ir.symbols import EquationDef, Rel, VariableDef, VarKind
 
@@ -165,14 +166,24 @@ class Converter:
 
         Generates GAMS parameter declarations with values.
         Handles both scalar and indexed parameters.
+        Skips predefined GAMS constants (pi, inf, eps, na) since they are
+        reserved words and already available in GAMS.
         """
-        if not self.ir.params:
+        # Filter out predefined GAMS constants - they are reserved words
+        # Use case-insensitive comparison since GAMS identifiers are case-insensitive
+        user_params = {
+            name: param_def
+            for name, param_def in self.ir.params.items()
+            if name.casefold() not in PREDEFINED_GAMS_CONSTANTS
+        }
+
+        if not user_params:
             return
 
         self.output.append("")
         self.output.append("* Parameter Declarations")
 
-        for param_name, param_def in self.ir.params.items():
+        for param_name, param_def in user_params.items():
             # Generate declaration
             if param_def.domain:
                 # Indexed parameter: Parameter p(i,j);

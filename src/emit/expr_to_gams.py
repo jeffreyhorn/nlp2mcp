@@ -66,6 +66,74 @@ def _format_numeric(value: int | float) -> str:
     return str(value)
 
 
+def _is_index_offset_syntax(s: str) -> bool:
+    """Check if a string looks like GAMS IndexOffset syntax (i++1, i--2, i+1, i-3, i+j).
+
+    These patterns are already valid GAMS index expressions and should NOT be quoted.
+    Must be careful not to match hyphenated element labels like "route-1" or "item-2".
+
+    Args:
+        s: String to check
+
+    Returns:
+        True if the string matches IndexOffset GAMS syntax patterns
+
+    Examples:
+        >>> _is_index_offset_syntax("i++1")
+        True
+        >>> _is_index_offset_syntax("t--10")
+        True
+        >>> _is_index_offset_syntax("i+j")
+        True
+        >>> _is_index_offset_syntax("i-3")
+        True
+        >>> _is_index_offset_syntax("i+shift")
+        True
+        >>> _is_index_offset_syntax("t-offset1")
+        True
+        >>> _is_index_offset_syntax("i++shift_1")
+        True
+        >>> _is_index_offset_syntax("t--lag_2")
+        True
+        >>> _is_index_offset_syntax("i1")
+        False
+        >>> _is_index_offset_syntax("H2O")
+        False
+        >>> _is_index_offset_syntax("route-1")
+        False
+        >>> _is_index_offset_syntax("item-2")
+        False
+    """
+    import re
+
+    # Circular operators (++ and --) are unambiguous IndexOffset syntax
+    # Pattern: single-letter base ++ or -- followed by either:
+    #   - a numeric offset (e.g., i++1, t--10), or
+    #   - an identifier offset matching the grammar's ID token
+    #     (e.g., i++shift, i++shift_1)
+    circular_pattern = r"^[a-z](\+\+|--)([0-9]+|[A-Za-z_][A-Za-z0-9_]*)$"
+    if re.match(circular_pattern, s, re.IGNORECASE):
+        return True
+
+    # Linear operators (+ and -) need stricter matching to avoid false positives
+    # like "route-1" or "item-2" which are hyphenated element labels.
+    # Only match if base is a single letter (case-insensitive, typical index variable)
+    # and offset is purely numeric.
+    linear_pattern = r"^[a-z](\+|-)[0-9]+$"  # i+1, i-3, j+10, T+5
+    if re.match(linear_pattern, s, re.IGNORECASE):
+        return True
+
+    # Symbolic linear offset: single-letter base (case-insensitive) followed by
+    # + or - and an identifier (letters, digits, underscores - no hyphens).
+    # e.g., i+j, i-k, i+shift, t-offset1, T+lag_var
+    # Uses re.IGNORECASE so base can be 'i' or 'I'.
+    linear_symbolic_pattern = r"^[a-z](\+|-)[A-Za-z_][A-Za-z0-9_]*$"
+    if re.match(linear_symbolic_pattern, s, re.IGNORECASE):
+        return True
+
+    return False
+
+
 def _quote_indices(indices: tuple[str, ...]) -> list[str]:
     """Quote element labels in index tuples for GAMS syntax.
 
@@ -74,6 +142,7 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
 
     Heuristic:
     - All-lowercase identifier-like names (letters/underscores only) are domain variables → unquoted
+    - IndexOffset syntax (i++1, i--2, i+1, i-3, i+j) are valid GAMS expressions → unquoted
     - Names containing digits, uppercase letters, or special chars are element labels → quoted
     - Indices that arrive already quoted (e.g., "demand") are always element labels → quoted
 
@@ -110,6 +179,12 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
         ['"demand"']
         >>> _quote_indices(('"x"', '"y"'))
         ['"x"', '"y"']
+        >>> _quote_indices(("i++1",))
+        ['i++1']
+        >>> _quote_indices(("t--10",))
+        ['t--10']
+        >>> _quote_indices(("i+j",))
+        ['i+j']
     """
     result = []
     for idx in indices:
@@ -130,6 +205,9 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
         # If it was quoted, it's an element label - always quote it (single layer)
         if was_quoted:
             result.append(f'"{idx_clean}"')
+        # IndexOffset syntax (i++1, i--2, i+1, i-3, i+j) is valid GAMS - don't quote
+        elif _is_index_offset_syntax(idx_clean):
+            result.append(idx_clean)
         # All-lowercase identifier (letters and underscores only) = domain variable, don't quote
         # This handles patterns like sum(i, ...), x(nodes), flow(years)
         # Element labels typically contain digits (i1, H2) or uppercase (H, OH, H2O)
