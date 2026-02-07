@@ -35,7 +35,7 @@ Full pipeline test executed against current main branch:
 |-------|----------|--------|-------|-------|
 | Parse | 61 | 62 | +1 | Improved from Sprint 17 prep work |
 | Translate | 42 | 50 | +8 | Significant improvement from prep tasks |
-| Solve | 13 | 13 | +1 | Slight improvement |
+| Solve | 12 | 13 | +1 | Slight improvement |
 | Full Pipeline | - | 4 | - | End-to-end success count |
 
 **Parse Error Breakdown**:
