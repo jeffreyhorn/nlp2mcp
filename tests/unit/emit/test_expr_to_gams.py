@@ -482,6 +482,18 @@ class TestQuoteIndices:
         assert _quote_indices(('"i"',)) == ['"i"']
         assert _quote_indices(('"nodes"',)) == ['"nodes"']
 
+    def test_hyphenated_labels_stay_quoted(self):
+        """Hyphenated element labels like 'route-1' must be quoted, not misidentified as IndexOffset.
+
+        The _is_index_offset_syntax() function must not match hyphenated labels,
+        as they would be parsed as arithmetic (route - 1) if left unquoted.
+        """
+        assert _quote_indices(("route-1",)) == ['"route-1"']
+        assert _quote_indices(("item-2",)) == ['"item-2"']
+        assert _quote_indices(("node-10",)) == ['"node-10"']
+        # Multi-word hyphenated should also be quoted
+        assert _quote_indices(("my-route-1",)) == ['"my-route-1"']
+
     def test_param_ref_with_quoted_string_index(self):
         """Test ParamRef with a string literal index from the parser.
 

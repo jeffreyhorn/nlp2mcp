@@ -70,6 +70,7 @@ def _is_index_offset_syntax(s: str) -> bool:
     """Check if a string looks like GAMS IndexOffset syntax (i++1, i--2, i+1, i-3, i+j).
 
     These patterns are already valid GAMS index expressions and should NOT be quoted.
+    Must be careful not to match hyphenated element labels like "route-1" or "item-2".
 
     Args:
         s: String to check
@@ -90,14 +91,32 @@ def _is_index_offset_syntax(s: str) -> bool:
         False
         >>> _is_index_offset_syntax("H2O")
         False
+        >>> _is_index_offset_syntax("route-1")
+        False
+        >>> _is_index_offset_syntax("item-2")
+        False
     """
     import re
 
-    # Match patterns: base++offset, base--offset, base+offset, base-offset
-    # where base is an identifier (lowercase letters and underscores)
-    # and offset is either a number or an identifier
-    pattern = r"^[a-z_]+(\+\+|--|\+|-)[a-z_0-9]+$"
-    return bool(re.match(pattern, s, re.IGNORECASE))
+    # Circular operators (++ and --) are unambiguous IndexOffset syntax
+    # Pattern: single-letter base ++ or -- followed by number or identifier
+    circular_pattern = r"^[a-z](\+\+|--)[a-z0-9]+$"
+    if re.match(circular_pattern, s, re.IGNORECASE):
+        return True
+
+    # Linear operators (+ and -) need stricter matching to avoid false positives
+    # like "route-1" or "item-2" which are hyphenated element labels.
+    # Only match if base is a single lowercase letter (typical index variable)
+    # and offset is purely numeric OR a single lowercase letter.
+    linear_pattern = r"^[a-z](\+|-)[0-9]+$"  # i+1, i-3, j+10
+    if re.match(linear_pattern, s, re.IGNORECASE):
+        return True
+
+    linear_symbolic_pattern = r"^[a-z](\+|-)[a-z]$"  # i+j, i-k (single letter offset)
+    if re.match(linear_symbolic_pattern, s, re.IGNORECASE):
+        return True
+
+    return False
 
 
 def _quote_indices(indices: tuple[str, ...]) -> list[str]:
