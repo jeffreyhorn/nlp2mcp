@@ -594,10 +594,16 @@ def _has_statement_ending_semicolon(line: str) -> bool:
     - Semicolons inside single or double quoted strings are ignored
     - Escaped quotes within strings (e.g., "test\\"quote" or 'test\\'quote')
 
-    Note: In GAMS, * is NOT an inline comment character - it's the multiplication
-    operator. Line comments start with * at the beginning of a line only, which
-    should be handled before calling this function. This function does not handle
-    nested quotes, but works for typical GAMS code.
+    Note on comment/non-code handling in the surrounding preprocessor:
+    - `*` is treated as a line comment only when it appears in column 1; such
+      full-line comments are removed before this function is called.
+    - Anything after a statement-terminating `;` is treated as non-code and is
+      ignored for scanning (including any `*` that might appear there).
+
+    This helper only detects a semicolon that is outside of string literals. It
+    assumes that full-line comments and trailing non-code after `;` have already
+    been stripped. It does not handle nested quotes, but works for typical GAMS
+    code.
     """
     in_string = None
     i = 0
