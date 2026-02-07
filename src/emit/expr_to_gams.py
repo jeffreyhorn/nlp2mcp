@@ -87,6 +87,10 @@ def _is_index_offset_syntax(s: str) -> bool:
         True
         >>> _is_index_offset_syntax("i-3")
         True
+        >>> _is_index_offset_syntax("i+shift")
+        True
+        >>> _is_index_offset_syntax("t-offset1")
+        True
         >>> _is_index_offset_syntax("i1")
         False
         >>> _is_index_offset_syntax("H2O")
@@ -112,7 +116,9 @@ def _is_index_offset_syntax(s: str) -> bool:
     if re.match(linear_pattern, s, re.IGNORECASE):
         return True
 
-    linear_symbolic_pattern = r"^[a-z](\+|-)[a-z]$"  # i+j, i-k (single letter offset)
+    # Symbolic linear offset: single-letter base + or - followed by identifier
+    # e.g., i+j, i-k, i+shift, t-offset1
+    linear_symbolic_pattern = r"^[a-z](\+|-)[A-Za-z_][A-Za-z0-9_]*$"
     if re.match(linear_symbolic_pattern, s, re.IGNORECASE):
         return True
 

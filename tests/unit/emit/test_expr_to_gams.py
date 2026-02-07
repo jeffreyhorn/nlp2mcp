@@ -745,6 +745,37 @@ class TestIndexOffset:
         )
         assert result == "x(i--j)"
 
+    def test_symbolic_offset_multi_char_linear(self):
+        """Test multi-character symbolic offset for linear (i+shift, t-offset1).
+
+        The parser can produce SymbolRef with multi-character names for offsets.
+        These must not be quoted by _quote_indices().
+        """
+        # Positive offset with multi-char identifier
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", SymbolRef("shift"), circular=False),)))
+        assert result == "x(i+shift)"
+
+        # Negative offset with multi-char identifier (Unary minus)
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("t", Unary("-", SymbolRef("offset1")), circular=False),))
+        )
+        assert result == "x(t-offset1)"
+
+    def test_symbolic_offset_multi_char_circular(self):
+        """Test multi-character symbolic offset for circular (i++shift, t--lag).
+
+        Circular offsets with multi-character symbolic names.
+        """
+        # Positive circular offset
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", SymbolRef("shift"), circular=True),)))
+        assert result == "x(i++shift)"
+
+        # Negative circular offset (Unary minus)
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("t", Unary("-", SymbolRef("lag")), circular=True),))
+        )
+        assert result == "x(t--lag)"
+
     def test_param_ref_with_index_offset(self):
         """Test ParamRef with IndexOffset."""
         result = expr_to_gams(ParamRef("a", (IndexOffset("i", Const(1), circular=True),)))
