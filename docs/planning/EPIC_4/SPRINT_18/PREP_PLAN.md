@@ -1225,7 +1225,9 @@ Sprint 18 has 22-26 hours of estimated work across 3 components. A detailed sche
 
 ### Background
 
-From `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 18:
+> **Note (historical context):** This original background summary represents the initial PROJECT_PLAN.md scope before prep task findings. The final Sprint 18 scope was expanded to ~56h over 14 days based on scope changes (removed/adjusted items) and Sprint 19 items pulled forward. See PLAN.md for the current scope.
+
+From `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 18 (original scope):
 - **Component 1:** GAMSLIB Syntactic Correctness Validation (~10-12h)
   - test_syntax.py script (4-5h)
   - SYNTAX_ERROR_REPORT.md (2-3h)
@@ -1237,7 +1239,7 @@ From `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 18:
   - Pipeline retest (2h)
 - **Component 3:** Parse Quick Win: Put Statement Format (~2h)
 
-Total: 22-26 hours across 10 working days
+Original total: 22-26 hours across 10 working days (superseded — see PLAN.md)
 
 ### What Needs to Be Done
 

@@ -997,7 +997,7 @@ The emit_gams.py fixes (set element quoting, computed parameter skip, bound mult
 
 ### How to Verify
 
-**Step 1:** Check whether any of the 12 solving models use tables or computed parameters
+**Step 1:** Check whether any of the 12 solving models use the emit_gams.py code paths being modified
 **Step 2:** After implementing fixes, re-run pipeline on all 12 solving models
 **Step 3:** Verify all 12 still achieve `model_optimal`
 **Step 4:** If any regress, roll back and investigate
@@ -1097,8 +1097,8 @@ python scripts/gamslib/run_full_test.py
 **Success criteria:**
 - Parse: ≥61 models (no regressions from baseline)
 - Translate: ≥42 models (no regressions from baseline)
-- Solve: ≥18 models (improvement from 12)
-- `path_syntax_error`: ≤6 models (reduced from 17)
+- Solve: ≥22 models (improvement from 12)
+- `path_syntax_error`: ≤2 models (reduced from 17)
 
 **Time estimate:** ~1 hour for full pipeline run
 

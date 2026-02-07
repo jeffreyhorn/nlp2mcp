@@ -120,8 +120,8 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 **ROI:** ~4 models / 4h = **1.0 models/hour**
 
 ### 8. Lexer Error Deep Analysis (Pulled from Sprint 19)
-**Source:** 99 models fail at parse stage with lexer errors
-**Problem:** Need to categorize and prioritize lexer error patterns for future fixes
+**Source:** 99 models fail at parse stage (includes lexer_invalid_char, internal_error, semantic_undefined_symbol)
+**Problem:** Need to categorize and prioritize parse error patterns for future fixes
 **Deliverable:** `LEXER_ERROR_ANALYSIS.md` with error categories and fix priorities
 **Time:** 5-6 hours
 **ROI:** Foundation for Sprint 19+ parse improvements
@@ -478,12 +478,12 @@ This command runs Parse, Translate, Solve, and Compare for all models; Compare i
 
 ### Sprint 18 Goals (from PROJECT_PLAN.md)
 
-- **Syntactic Validation:** All 160 models tested ✓ (adjusted: confirm all valid)
-- **Corpus Defined:** Valid corpus established ✓ (adjusted: no exclusions needed)
-- **emit_gams.py:** Fixes merged with tests ✓ (adjusted: different fixes than planned)
-- **Put Statement:** Format syntax supported ✓ (adjusted: 3+1 models)
-- **Metrics:** `path_syntax_error` reduced by ≥6 ✓ (target: reduce from 17 to ≤6)
-- **Quality:** All 3204+ tests pass ✓
+- **Syntactic Validation:** All 160 models tested (adjusted: confirm all valid)
+- **Corpus Defined:** Valid corpus established (adjusted: no exclusions needed)
+- **emit_gams.py:** Fixes merged with tests (adjusted: different fixes than planned)
+- **Put Statement:** Format syntax supported (adjusted: 3+1 models)
+- **Metrics:** `path_syntax_error` reduced (target: from 17 to ≤2)
+- **Quality:** All 3204+ tests pass
 
 ---
 

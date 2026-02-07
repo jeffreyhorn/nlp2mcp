@@ -83,10 +83,10 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (
   - Handle `loop(j, put j.tl)` pattern for stdcge
   - **Deliverable:** stdcge parses successfully
 
-### Lexer Error Deep Analysis (~5.5h)
-- **Full Subcategorization of 99 Failures (4h)**
-  - Run all 99 lexer error models with verbose output
-  - Group by specific character/pattern triggering the error
+### Parse Error Deep Analysis (~5.5h)
+- **Full Subcategorization of 99 Parse Failures (4h)**
+  - Run all 99 parse-stage failure models with verbose output
+  - Group by error type (lexer_invalid_char, internal_error, semantic_undefined_symbol)
   - Create subcategory clusters with model counts
   - **Deliverable:** `LEXER_ERROR_ANALYSIS.md`
 
