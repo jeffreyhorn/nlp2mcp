@@ -29,9 +29,9 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 | Syntactic Validation | 10-12h | 4-5h | **-6h** |
 | emit_gams.py Fixes | 10-12h | 10-12h | 0h (rebalanced) |
 | Parse Quick Win | 2h | 2.5h | +0.5h |
-| **Total** | **22-26h** | **16-20h** | **-6h saved** |
+| **Core Scope** | **22-26h** | **16-20h** | **-6h saved** |
 
-The saved time can be used for buffer/contingency or to pull forward Sprint 19 work.
+**Note:** The day-by-day schedule below totals ~24.5h because it includes buffer/contingency time, integration testing, documentation, and release prep beyond the core implementation scope. The 6 hours saved from removed items provides additional flexibility within this schedule.
 
 ---
 
