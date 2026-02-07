@@ -455,8 +455,8 @@ This command runs Parse, Translate, Solve, and Compare for all models; Compare i
 **Success Criteria:**
 - Parse: ≥61 (no regressions)
 - Translate: ≥42 (no regressions)
-- Solve: ≥18 (improvement from 12)
-- `path_syntax_error`: ≤6 (reduced from 17)
+- Solve: ≥22 (improvement from 12)
+- `path_syntax_error`: ≤2 (reduced from 17)
 
 ---
 

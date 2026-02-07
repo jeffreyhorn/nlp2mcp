@@ -986,13 +986,14 @@ The complete taxonomy of 17 `path_syntax_error` models has been established:
 **Medium** — Regression risk assessment
 
 ### Assumption
-Fixing table data emission and computed parameter assignments will not affect models that currently solve successfully (the 12 `model_optimal` models).
+The emit_gams.py fixes (set element quoting, computed parameter skip, bound multiplier dimension, reserved word quoting, subset preservation) will not affect models that currently solve successfully (the 12 `model_optimal` models).
+
+**Note:** The original assumption mentioned "table data emission" but Task 4 findings confirmed zero models fail due to table data emission — this is no longer a Sprint 18 scope item.
 
 ### Research Questions
-1. Do any of the 12 currently-solving models use tables or computed parameters?
-2. If so, are they using the same code paths that will be modified?
-3. Can we run regression tests on all 12 solving models after each fix?
-4. Is there a risk that changing `original_symbols.py` affects models that don't use tables/params?
+1. Do any of the 12 currently-solving models use the code paths that will be modified?
+2. Can we run regression tests on all 12 solving models after each fix?
+3. Is there a risk that emit_gams.py changes affect models that don't use the specific patterns being fixed?
 
 ### How to Verify
 

@@ -806,7 +806,7 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (
 ## Changelog
 
 - **2026-02-06:** Reorganized sprints 18-25 after Sprint 18 scope expansion
-  - Sprint 18 expanded to ~47h by pulling Sprint 19 items (emit_gams.py completion, lexer analysis, fix roadmap)
+  - Sprint 18 expanded to ~56h by pulling Sprint 19 items (emit_gams.py completion, lexer analysis, fix roadmap)
   - Content cascaded forward: S19←S20, S20←S21, S21←S22, S22←S23, S23←S24, S24←S25
   - Sprint 25 now includes Epic 5 planning as new content
   - Updated KPIs to reflect accelerated progress in Sprint 18
