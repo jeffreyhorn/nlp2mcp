@@ -1570,7 +1570,10 @@ def join_multiline_equations(source: str) -> str:
     - Equations spanning multiple lines (common in GAMS models)
     - Continuation lines starting with operators (+, -, *, /)
     - Continuation lines starting with relational operators (=e=, =l=, =g=)
-    - Preserves comments and handles quoted strings
+    - Column-1 comment lines (line starts with * at position 0) are preserved
+      as standalone lines without terminating the equation being joined
+    - Indented lines starting with * (e.g., "   * expr") are treated as
+      multiplication continuations, not comments
 
     Args:
         source: GAMS source code text
@@ -1588,14 +1591,15 @@ def join_multiline_equations(source: str) -> str:
     Notes:
         - Only processes lines within equation definitions (after ..)
         - Stops joining when a semicolon is encountered
-        - Skips comment lines (starting with *)
+        - Column-1 comment lines (starting with * at position 0) are preserved
+          as standalone lines but do not terminate the equation being joined
+        - Indented * lines are treated as multiplication, not comments
         - Preserves line structure for non-equation code
-        - Comment reordering: Comments that appear in the middle of a multi-line
-          equation are preserved but may appear BEFORE the joined equation in the
-          output. For example, if a comment appears between equation continuation
-          lines, it will be output before the complete joined equation. This is
-          acceptable because comments in the middle of equations are rare in
-          practice, and the comment content is preserved.
+        - Comment reordering: Column-1 comments that appear between continuation
+          lines are emitted immediately while the equation is still being
+          buffered, so they may appear BEFORE the joined equation in the output.
+          This is acceptable because comments in the middle of equations are
+          rare in practice, and the comment content is preserved.
     """
     lines = source.split("\n")
     result: list[str] = []
