@@ -1608,11 +1608,9 @@ def join_multiline_equations(source: str) -> str:
         # Lines with leading whitespace before * are multiplication continuations, not comments
         # This distinction is important: "* comment" vs "   * expr" (multiplication)
         if line.startswith("*"):
-            # True comment line - always preserve as-is and flush any pending equation
-            if in_equation and equation_buffer:
-                result.append(" ".join(equation_buffer))
-                in_equation = False
-                equation_buffer = []
+            # True comment line - preserve as-is but do NOT terminate ongoing equation.
+            # Comments can appear between continuation lines in GAMS. We emit the comment
+            # immediately but keep buffering the equation so it doesn't get split.
             result.append(line)
             continue
 
@@ -1745,9 +1743,11 @@ def join_multiline_assignments(source: str) -> str:
         - Does not process lines that look like equation definitions (contain ..)
     """
     lines = source.split("\n")
-    result = []
+    result: list[str] = []
     in_continuation = False
-    continuation_buffer: list[str] = []
+    # Store tuples of (original_line, stripped_line) so we can join stripped
+    # content for successful continuations but preserve original formatting in flush paths
+    continuation_buffer: list[tuple[str, str]] = []
     paren_depth = 0
 
     for line in lines:
@@ -1762,13 +1762,9 @@ def join_multiline_assignments(source: str) -> str:
         # Lines with leading whitespace before * are multiplication continuations, not comments
         # This distinction is important: "* comment" vs "   * expr" (multiplication)
         if line.startswith("*"):
-            # True comment line - always preserve as-is and flush any pending continuation
-            if in_continuation and continuation_buffer:
-                for buf_line in continuation_buffer:
-                    result.append(buf_line)
-                in_continuation = False
-                continuation_buffer = []
-                paren_depth = 0
+            # True comment line - preserve as-is but do NOT terminate ongoing continuation.
+            # Comments can appear between continuation lines in GAMS. We emit the comment
+            # immediately but keep buffering the assignment so it doesn't get split.
             result.append(line)
             continue
 
@@ -1794,7 +1790,7 @@ def join_multiline_assignments(source: str) -> str:
                 if paren_depth != 0 and not ends_with_semi:
                     # Unbalanced parentheses and no semicolon - start continuation
                     in_continuation = True
-                    continuation_buffer = [stripped]
+                    continuation_buffer = [(line, stripped)]
                 else:
                     # Balanced or complete - output as-is
                     result.append(line)
@@ -1802,7 +1798,7 @@ def join_multiline_assignments(source: str) -> str:
                 result.append(line)
         else:
             # We're in a continuation - add this line to buffer
-            continuation_buffer.append(stripped)
+            continuation_buffer.append((line, stripped))
 
             # Update parenthesis count
             paren_depth += stripped.count("(") - stripped.count(")")
@@ -1811,24 +1807,24 @@ def join_multiline_assignments(source: str) -> str:
             ends_with_semi = _has_statement_ending_semicolon(stripped)
 
             if paren_depth == 0 and ends_with_semi:
-                # Statement is complete - join and output
-                joined = " ".join(continuation_buffer)
+                # Statement is complete - join stripped content and output
+                joined = " ".join(s for _, s in continuation_buffer)
                 result.append(joined)
                 in_continuation = False
                 continuation_buffer = []
                 paren_depth = 0
             elif paren_depth < 0:
-                # More closing than opening - something is wrong, output as-is
-                for buf_line in continuation_buffer:
-                    result.append(buf_line)
+                # More closing than opening - something is wrong, output original lines as-is
+                for orig, _ in continuation_buffer:
+                    result.append(orig)
                 in_continuation = False
                 continuation_buffer = []
                 paren_depth = 0
 
     # Handle case where continuation wasn't closed at end of file
     if continuation_buffer:
-        for buf_line in continuation_buffer:
-            result.append(buf_line)
+        for orig, _ in continuation_buffer:
+            result.append(orig)
 
     return "\n".join(result)
 
