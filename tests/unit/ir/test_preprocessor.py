@@ -663,16 +663,21 @@ class TestJoinMultilineEquations:
         """Comments during multi-line equation should be preserved and equation still joined.
 
         Column-1 comments can appear between continuation lines in GAMS. The comment
-        should be preserved but should not split the equation.
+        should be preserved as a standalone line but should not split the equation.
+        Note: The comment line below starts with * at column 1 (no leading whitespace).
         """
         source = """eq.. x
 * this is a comment
             + y =e= z;"""
         result = join_multiline_equations(source)
-        # Comment should be preserved
-        assert "* this is a comment" in result
+        lines = result.split("\n")
+        # Comment should be preserved as a standalone line
+        assert any(line == "* this is a comment" for line in lines)
         # Equation should still be properly joined (comment doesn't split it)
-        assert any("x + y =e= z;" in line for line in result.split("\n"))
+        joined_eq = [line for line in lines if "x + y =e= z;" in line]
+        assert len(joined_eq) == 1
+        # The joined equation should NOT contain the comment text
+        assert "this is a comment" not in joined_eq[0]
 
     def test_multiple_equations(self):
         """Multiple equations in sequence."""
@@ -836,18 +841,21 @@ x = 10;"""
         """Column-1 comment inside continuation should not split the assignment.
 
         GAMS allows comment lines between continuation lines. The comment should
-        be preserved but the assignment should still be joined correctly.
+        be preserved as a standalone line but the assignment should still be joined.
+        Note: The comment line below starts with * at column 1 (no leading whitespace).
         """
         source = """y = (a + b
 * this is a mid-continuation comment
      + c);"""
         result = join_multiline_assignments(source)
         lines = result.split("\n")
-        # Comment should be preserved
-        assert any("* this is a mid-continuation comment" in line for line in lines)
+        # Comment should be preserved as a standalone line
+        assert any(line == "* this is a mid-continuation comment" for line in lines)
         # Assignment should still be joined (comment doesn't split it)
-        # The assignment parts should be joined into one line
-        assert any("a + b" in line and "+ c)" in line for line in lines)
+        joined_assign = [line for line in lines if "a + b" in line and "+ c)" in line]
+        assert len(joined_assign) == 1
+        # The joined assignment should NOT contain the comment text
+        assert "mid-continuation comment" not in joined_assign[0]
 
     def test_equation_definitions_skipped(self):
         """Lines with .. (equation definitions) should be skipped."""
