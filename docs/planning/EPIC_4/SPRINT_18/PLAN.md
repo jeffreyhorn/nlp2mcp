@@ -433,8 +433,9 @@ The 12 currently-solving models can be verified after each emit_gams.py change i
 
 ```bash
 # Quick regression check (run ad-hoc if regression suspected)
+# Note: We run without --only-solve to ensure translate step re-emits MCP after emit_gams.py changes
 for model in apl1p blend himmel11 hs62 mathopt2 mhw4d mhw4dx prodmix rbrock trig trnsport trussm; do
-    python scripts/gamslib/run_full_test.py --model "$model" --only-solve
+    python scripts/gamslib/run_full_test.py --model "$model"
 done
 ```
 

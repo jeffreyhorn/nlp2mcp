@@ -1023,8 +1023,9 @@ Development team
 **After-each-fix regression check:**
 ```bash
 # Quick regression check (run after each fix)
+# Note: We run without --only-solve to ensure translate step re-emits MCP after emit_gams.py changes
 for model in apl1p blend himmel11 hs62 mathopt2 mhw4d mhw4dx prodmix rbrock trig trnsport trussm; do
-    python scripts/gamslib/run_full_test.py --model "$model" --only-solve
+    python scripts/gamslib/run_full_test.py --model "$model"
 done
 ```
 
