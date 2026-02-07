@@ -1004,7 +1004,7 @@ Fixing table data emission and computed parameter assignments will not affect mo
 ### Risk if Wrong
 - **Regression:** Fixing new models breaks existing ones — net zero or negative progress
 - **Subtle bugs:** Fix passes for new models but introduces a subtle issue in existing ones
-- Medium risk — mitigated by running full pipeline retest (Sprint 18 Day 6)
+- Medium risk — mitigated by running full pipeline retest (Sprint 18 Day 11)
 
 ### Estimated Research Time
 1 hour
@@ -1468,7 +1468,7 @@ Development team
 **Medium** — Affects Full Pipeline metric accuracy
 
 ### Assumption
-Sprint 18 should re-run the solution comparison stage during the Day 6 pipeline retest, to establish a true Full Pipeline metric (not just solve-stage success as in Sprint 17).
+Sprint 18 should re-run the solution comparison stage during the Day 11 pipeline retest, to establish a true Full Pipeline metric (not just solve-stage success as in Sprint 17).
 
 ### Research Questions
 1. How long does the solution comparison stage take for all solving models?
@@ -1509,7 +1509,7 @@ Development team
 4. Sprint 18 focus is on emit_gams.py fixes, not comparison infrastructure
 
 **Recommendation:**
-- For Sprint 18 Day 6 pipeline retest: Record solve stage success/failure
+- For Sprint 18 Day 11 pipeline retest: Record solve stage success/failure
 - Newly-solving models (from emit_gams.py fixes) should be manually verified
 - Full comparison stage can be re-enabled in Sprint 19 if needed
 

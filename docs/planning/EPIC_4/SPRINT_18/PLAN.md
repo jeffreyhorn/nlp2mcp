@@ -489,6 +489,6 @@ This command runs Parse, Translate, Solve, and Compare for all models; Compare i
 
 ## Document History
 
-- February 6, 2026: Expanded scope to 47h (14 days) by pulling in Sprint 19 items
+- February 6, 2026: Expanded scope to ~56h (14 days) by pulling in Sprint 19 items
 - February 6, 2026: Added MCP infeasibility bug fixes for circle/house
 - February 6, 2026: Initial creation (Task 10 of PREP_PLAN.md)
