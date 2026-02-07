@@ -66,6 +66,40 @@ def _format_numeric(value: int | float) -> str:
     return str(value)
 
 
+def _is_index_offset_syntax(s: str) -> bool:
+    """Check if a string looks like GAMS IndexOffset syntax (i++1, i--2, i+1, i-3, i+j).
+
+    These patterns are already valid GAMS index expressions and should NOT be quoted.
+
+    Args:
+        s: String to check
+
+    Returns:
+        True if the string matches IndexOffset GAMS syntax patterns
+
+    Examples:
+        >>> _is_index_offset_syntax("i++1")
+        True
+        >>> _is_index_offset_syntax("t--10")
+        True
+        >>> _is_index_offset_syntax("i+j")
+        True
+        >>> _is_index_offset_syntax("i-3")
+        True
+        >>> _is_index_offset_syntax("i1")
+        False
+        >>> _is_index_offset_syntax("H2O")
+        False
+    """
+    import re
+
+    # Match patterns: base++offset, base--offset, base+offset, base-offset
+    # where base is an identifier (lowercase letters and underscores)
+    # and offset is either a number or an identifier
+    pattern = r"^[a-z_]+(\+\+|--|\+|-)[a-z_0-9]+$"
+    return bool(re.match(pattern, s, re.IGNORECASE))
+
+
 def _quote_indices(indices: tuple[str, ...]) -> list[str]:
     """Quote element labels in index tuples for GAMS syntax.
 
@@ -74,6 +108,7 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
 
     Heuristic:
     - All-lowercase identifier-like names (letters/underscores only) are domain variables → unquoted
+    - IndexOffset syntax (i++1, i--2, i+1, i-3, i+j) are valid GAMS expressions → unquoted
     - Names containing digits, uppercase letters, or special chars are element labels → quoted
     - Indices that arrive already quoted (e.g., "demand") are always element labels → quoted
 
@@ -110,6 +145,12 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
         ['"demand"']
         >>> _quote_indices(('"x"', '"y"'))
         ['"x"', '"y"']
+        >>> _quote_indices(("i++1",))
+        ['i++1']
+        >>> _quote_indices(("t--10",))
+        ['t--10']
+        >>> _quote_indices(("i+j",))
+        ['i+j']
     """
     result = []
     for idx in indices:
@@ -130,6 +171,9 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
         # If it was quoted, it's an element label - always quote it (single layer)
         if was_quoted:
             result.append(f'"{idx_clean}"')
+        # IndexOffset syntax (i++1, i--2, i+1, i-3, i+j) is valid GAMS - don't quote
+        elif _is_index_offset_syntax(idx_clean):
+            result.append(idx_clean)
         # All-lowercase identifier (letters and underscores only) = domain variable, don't quote
         # This handles patterns like sum(i, ...), x(nodes), flow(years)
         # Element labels typically contain digits (i1, H2) or uppercase (H, OH, H2O)

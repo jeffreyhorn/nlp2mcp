@@ -43,12 +43,13 @@ class VarRef(Expr):
     indices: tuple[str | IndexOffset, ...] = ()
 
     def indices_as_strings(self) -> tuple[str, ...]:
-        """Convert indices to strings, raising error if IndexOffset present."""
+        """Convert indices to strings, including IndexOffset in GAMS syntax."""
         result = []
         for idx in self.indices:
             if isinstance(idx, IndexOffset):
-                raise NotImplementedError(f"IndexOffset not yet supported in this context: {idx}")
-            result.append(idx)
+                result.append(idx.to_gams_string())
+            else:
+                result.append(idx)
         return tuple(result)
 
     def __repr__(self) -> str:
@@ -64,12 +65,13 @@ class ParamRef(Expr):
     indices: tuple[str | IndexOffset, ...] = ()
 
     def indices_as_strings(self) -> tuple[str, ...]:
-        """Convert indices to strings, raising error if IndexOffset present."""
+        """Convert indices to strings, including IndexOffset in GAMS syntax."""
         result = []
         for idx in self.indices:
             if isinstance(idx, IndexOffset):
-                raise NotImplementedError(f"IndexOffset not yet supported in this context: {idx}")
-            result.append(idx)
+                result.append(idx.to_gams_string())
+            else:
+                result.append(idx)
         return tuple(result)
 
     def __repr__(self) -> str:
@@ -90,12 +92,13 @@ class EquationRef(Expr):
     attribute: str = "l"  # Default to level attribute (.l)
 
     def indices_as_strings(self) -> tuple[str, ...]:
-        """Convert indices to strings, raising error if IndexOffset present."""
+        """Convert indices to strings, including IndexOffset in GAMS syntax."""
         result = []
         for idx in self.indices:
             if isinstance(idx, IndexOffset):
-                raise NotImplementedError(f"IndexOffset not yet supported in this context: {idx}")
-            result.append(idx)
+                result.append(idx.to_gams_string())
+            else:
+                result.append(idx)
         return tuple(result)
 
     def __repr__(self) -> str:
@@ -112,12 +115,13 @@ class MultiplierRef(Expr):
     indices: tuple[str | IndexOffset, ...] = ()
 
     def indices_as_strings(self) -> tuple[str, ...]:
-        """Convert indices to strings, raising error if IndexOffset present."""
+        """Convert indices to strings, including IndexOffset in GAMS syntax."""
         result = []
         for idx in self.indices:
             if isinstance(idx, IndexOffset):
-                raise NotImplementedError(f"IndexOffset not yet supported in this context: {idx}")
-            result.append(idx)
+                result.append(idx.to_gams_string())
+            else:
+                result.append(idx)
         return tuple(result)
 
     def __repr__(self) -> str:
@@ -275,6 +279,47 @@ class IndexOffset(Expr):
 
     def __repr__(self) -> str:
         return f"IndexOffset(base={self.base!r}, offset={self.offset!r}, circular={self.circular})"
+
+    def to_gams_string(self) -> str:
+        """Convert IndexOffset to GAMS syntax string.
+
+        Returns:
+            GAMS-formatted string like 'i++1', 'i--2', 'i+1', 'i-3', 'i+j'
+
+        Examples:
+            IndexOffset('i', Const(1), circular=True)  -> 'i++1'
+            IndexOffset('i', Const(-2), circular=True) -> 'i--2'
+            IndexOffset('i', Const(1), circular=False) -> 'i+1'
+            IndexOffset('i', Const(-3), circular=False) -> 'i-3'
+            IndexOffset('i', SymbolRef('j'), circular=False) -> 'i+j'
+        """
+        # Serialize the offset expression
+        if isinstance(self.offset, Const):
+            offset_val = self.offset.value
+            if self.circular:
+                # Circular: use ++ for positive, -- for negative
+                if offset_val >= 0:
+                    return f"{self.base}++{int(offset_val)}"
+                else:
+                    return f"{self.base}--{int(abs(offset_val))}"
+            else:
+                # Linear: use + for positive, - for negative
+                if offset_val >= 0:
+                    return f"{self.base}+{int(offset_val)}"
+                else:
+                    return f"{self.base}{int(offset_val)}"  # Already has minus sign
+        elif isinstance(self.offset, SymbolRef):
+            # Symbolic offset like i+j
+            if self.circular:
+                return f"{self.base}++{self.offset.name}"
+            else:
+                return f"{self.base}+{self.offset.name}"
+        else:
+            # Complex expression - fall back to repr for now
+            # This handles Binary, Unary, etc.
+            raise NotImplementedError(
+                f"Complex offset expressions not yet supported: {self.offset}"
+            )
 
 
 @dataclass(frozen=True)
