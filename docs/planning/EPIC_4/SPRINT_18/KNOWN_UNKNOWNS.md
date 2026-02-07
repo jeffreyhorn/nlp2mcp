@@ -1052,7 +1052,7 @@ done
 **Low** — Process question, not blocking
 
 ### Assumption
-The pipeline retest (Sprint 18 Day 6) will re-run the full pipeline on all valid corpus models, recording updated metrics in `gamslib_status.json` and comparing to the v1.1.0 baseline.
+The pipeline retest (Sprint 18 Day 11) will re-run the full pipeline on all valid corpus models, recording updated metrics in `gamslib_status.json` and comparing to the v1.1.0 baseline.
 
 ### Research Questions
 1. Should the retest run on all 160 models or only the valid corpus?
@@ -1106,7 +1106,7 @@ python scripts/gamslib/run_full_test.py
 - Progress report comparing to v1.1.0 baseline
 - Identification of any new blockers discovered
 
-**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/PLAN.md` "Day 6 Full Retest" section.
+**Evidence:** See `docs/planning/EPIC_4/SPRINT_18/PLAN.md` "Day 11 Full Retest" section.
 
 ---
 

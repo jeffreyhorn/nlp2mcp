@@ -6,11 +6,11 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (
 
 ---
 
-# Sprint 18 (Weeks 1–2): Syntactic Validation, emit_gams.py Solve Fixes, Parse Quick Wins & Lexer Analysis
+# Sprint 18 (Weeks 1–3): Syntactic Validation, emit_gams.py Solve Fixes, Parse Quick Wins & Lexer Analysis
 
 **Goal:** Validate GAMSLIB source correctness. Fix all emit_gams.py solve blockers including MCP formulation bugs. Pick up parse quick wins. Complete lexer error analysis and create prioritized fix roadmap.
 
-**Note:** Sprint 18 scope was expanded to ~47h by pulling items from Sprint 19 based on prep task findings that reduced original scope (zero syntax errors, zero table data issues).
+**Note:** Sprint 18 scope was expanded to ~56h across 14 working days (~3 weeks) by pulling items from Sprint 19 based on prep task findings that reduced original scope (zero syntax errors, zero table data issues).
 
 ## Components
 

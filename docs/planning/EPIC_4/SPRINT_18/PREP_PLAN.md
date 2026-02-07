@@ -1271,14 +1271,14 @@ Tentative schedule (adjust based on prep findings):
 | 9 | Documentation + checkpoint | Sprint 18 retrospective draft | 2h |
 | 10 | Release prep + final metrics | Sprint 18 complete | 2h |
 
-> **Note:** This tentative schedule was superseded by the final PLAN.md, which expands Sprint 18 to ~47h over 14 days based on prep task findings (scope changes and Sprint 19 items pulled forward). See Results section below for details.
+> **Note (historical context):** This original 10-day schedule (and any earlier references in Task 10 to a "Total: 22–26 hours across 10 working days") was superseded by the final PLAN.md, which expands Sprint 18 to ~56h over 14 days based on prep task findings (scope changes and Sprint 19 items pulled forward). See the Results section below and the final PLAN.md for the current scope.
 
 #### Step 3: Define Checkpoints (30 min)
 
 Using checkpoint templates from Epic 1:
 - **Checkpoint 1 (Day 3):** Syntactic validation complete, corpus redefined
 - **Checkpoint 2 (Day 6):** emit_gams.py fixes complete, pipeline retested
-- **Checkpoint 3 (Day 9):** All components complete, documentation ready
+- **Checkpoint 3 (Day 11):** All components complete, documentation ready
 
 > **Note:** Checkpoint days were adjusted in final PLAN.md (Checkpoint 1: Day 3, Checkpoint 2: Day 6, Checkpoint 3: Day 11).
 
@@ -1323,7 +1323,7 @@ A complete Sprint 18 plan that:
 
 > **Note:** Original verification criteria below were superseded; see Acceptance Criteria for final verification.
 
-- ~~Schedule totals 22-26 hours across 10 days~~ → Final: ~47h over 14 days
+- ~~Schedule totals 22-26 hours across 10 days~~ → Final: ~56h over 14 days
 - All 3 Sprint 18 components have scheduled days ✓
 - Checkpoints are scheduled and have clear criteria ✓
 - Contingency plans cover all identified risks ✓
@@ -1343,7 +1343,7 @@ A complete Sprint 18 plan that:
 - [x] Schedule incorporates findings from all 9 prep tasks
 - [x] 3 checkpoints defined with clear go/no-go criteria
 - [x] Contingency plans documented for top risks
-- [x] Total estimated hours reconciled with `PLAN.md` (~47h over 14 days, with 44-50h shown in the reallocation table); `PROJECT_PLAN.md` updated to reflect this scope
+- [x] Total estimated hours reconciled with `PLAN.md` (~56h over 14 days); `PROJECT_PLAN.md` updated to reflect this scope
 - [x] References to all prep deliverables included
 - [x] Plan reviewed for feasibility within 14 working days
 

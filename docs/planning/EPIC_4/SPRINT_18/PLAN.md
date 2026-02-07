@@ -36,9 +36,9 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 | Lexer Error Deep Analysis | 0h | 5-6h | **+5.5h** (pulled from Sprint 19) |
 | Prioritized Fix Roadmap | 0h | 2-3h | **+2.5h** (pulled from Sprint 19) |
 | Complex Set Data Syntax (initial) | 0h | 2h | **+2h** (pulled from Sprint 19) |
-| **Total Sprint** | **22-26h** | **44-50h** | **+22h expanded scope** |
+| **Total Sprint** | **22-26h** | **~56h** | **+30h expanded scope** |
 
-**Note:** Sprint 18 has been expanded to include items originally planned for Sprint 19. The day-by-day schedule is balanced so no single day exceeds 10h of effort.
+**Note:** Sprint 18 has been expanded to include items originally planned for Sprint 19. The day-by-day schedule totals ~56h balanced across 14 days (no single day exceeds 6h).
 
 ---
 
@@ -337,7 +337,7 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 
 **Acceptance:** Sprint 18 complete, v1.2.0 released
 
-**Total Sprint Duration: ~47h** (balanced across 14 days, no day exceeds 6h)
+**Total Sprint Duration: ~56h** (balanced across 14 days, no day exceeds 6h)
 
 ---
 
@@ -427,12 +427,12 @@ These analysis deliverables provide the foundation for efficient Sprint 19+ plan
 
 ## Regression Testing Plan
 
-### After Each Fix
+### After Each Fix (Optional)
 
-The 12 currently-solving models must be verified after each emit_gams.py change:
+The 12 currently-solving models can be verified after each emit_gams.py change if there is suspicion of a regression. This is not explicitly scheduled in the day-by-day plan but is available as an ad-hoc check:
 
 ```bash
-# Quick regression check (run after each fix)
+# Quick regression check (run ad-hoc if regression suspected)
 for model in apl1p blend himmel11 hs62 mathopt2 mhw4d mhw4dx prodmix rbrock trig trnsport trussm; do
     python scripts/gamslib/run_full_test.py --model "$model" --only-solve
 done
