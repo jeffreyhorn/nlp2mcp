@@ -57,7 +57,7 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 ### 3. Infeasible/Unbounded Documentation
 **Original:** 2 hours to document excluded infeasible/unbounded models
 **Finding:** Task 7 found both `model_infeasible` models (circle, house) are **MCP formulation bugs**, not inherently infeasible. No unbounded models exist.
-**Action:** Remove from Sprint 18. These are bugs to fix in later sprints, not exclusion candidates.
+**Action:** Remove *documentation of exclusions* from Sprint 18. Instead, these bugs are added to Sprint 18 scope as fix targets (see "Added Items" section #4 below).
 
 ### 4. Corpus Reclassification (Exclusions)
 **Original:** 2 hours to reclassify models as `excluded_syntax_error`, `excluded_infeasible`, `excluded_unbounded`

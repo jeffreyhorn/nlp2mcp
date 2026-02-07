@@ -423,7 +423,7 @@ Continue path_syntax_error fixes, targeting remaining patterns and edge cases.
 python scripts/gamslib/run_full_test.py
 
 # Verify path_syntax_error target
-python scripts/gamslib/run_full_test.py | grep -E "(path_syntax_error|Solve:)"
+python scripts/gamslib/run_full_test.py | grep -E "(path_syntax_error|Solve Results:)"
 ```
 
 ### Completion Criteria
@@ -712,7 +712,7 @@ Address edge cases and corner cases that weren't covered in earlier fixes.
 python scripts/gamslib/run_full_test.py
 
 # Verify solve count progress
-python scripts/gamslib/run_full_test.py | grep "Solve:"
+python scripts/gamslib/run_full_test.py | grep "Solve Results:"
 ```
 
 ### Completion Criteria

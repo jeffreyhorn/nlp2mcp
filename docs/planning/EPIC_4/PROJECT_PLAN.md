@@ -1,6 +1,6 @@
 # EPIC 4 Project Plan (Full GAMSLIB LP/NLP/QCP Coverage)
 
-This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (two weeks each).
+This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (two weeks each, with Sprint 18 expanded to three weeks based on prep task findings).
 
 **Baseline (v1.1.0 / Epic 3 Final):** Parse 61/160 (38.1%), Translate 42/61 (68.9%), Solve 12/42 (28.6%), Full Pipeline 12/160 (7.5%)
 
