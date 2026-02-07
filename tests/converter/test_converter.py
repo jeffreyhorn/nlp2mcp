@@ -189,6 +189,39 @@ class TestParameterConversion:
         assert "Parameter a / 10.0 /;" in result.output
         assert "Parameter b(i);" in result.output
 
+    def test_reserved_word_parameters_omitted(self):
+        """Test that GAMS reserved word parameters (pi, inf, eps, na) are omitted.
+
+        These are predefined GAMS constants and should not be emitted as parameters.
+        The filter should be case-insensitive (pi, PI, Pi all omitted).
+        """
+        ir = ModelIR()
+        # Add reserved words in various cases
+        ir.params["pi"] = ParameterDef(name="pi", values={(): 3.14159})
+        ir.params["PI"] = ParameterDef(name="PI", values={(): 3.14159})
+        ir.params["Pi"] = ParameterDef(name="Pi", values={(): 3.14159})
+        ir.params["inf"] = ParameterDef(name="inf", values={(): 1e30})
+        ir.params["INF"] = ParameterDef(name="INF", values={(): 1e30})
+        ir.params["eps"] = ParameterDef(name="eps", values={(): 1e-10})
+        ir.params["EPS"] = ParameterDef(name="EPS", values={(): 1e-10})
+        ir.params["na"] = ParameterDef(name="na", values={(): 0.0})
+        ir.params["NA"] = ParameterDef(name="NA", values={(): 0.0})
+        # Add a regular parameter that should be emitted
+        ir.params["cost"] = ParameterDef(name="cost", values={(): 100.0})
+
+        converter = Converter(ir)
+        result = converter.convert()
+
+        assert result.success is True
+        # Regular parameter should be present
+        assert "Parameter cost / 100.0 /;" in result.output
+        # Reserved words should NOT be present (any case variant)
+        output_lower = result.output.lower()
+        assert "parameter pi" not in output_lower
+        assert "parameter inf" not in output_lower
+        assert "parameter eps" not in output_lower
+        assert "parameter na " not in output_lower  # space to avoid matching 'name'
+
 
 class TestEquationConversion:
     """Test equation IR → MCP GAMS mappings."""

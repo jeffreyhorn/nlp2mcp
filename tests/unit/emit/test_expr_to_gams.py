@@ -776,6 +776,34 @@ class TestIndexOffset:
         )
         assert result == "x(t--lag)"
 
+    def test_symbolic_offset_with_underscores(self):
+        """Test symbolic offset identifiers containing underscores.
+
+        The grammar's ID token permits underscores, so offsets like shift_1 or lag_2
+        should serialize correctly and not be quoted by _quote_indices.
+        """
+        # Circular with underscore in offset
+        result = expr_to_gams(VarRef("x", (IndexOffset("i", SymbolRef("shift_1"), circular=True),)))
+        assert result == "x(i++shift_1)"
+
+        # Circular lag with underscore
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("t", Unary("-", SymbolRef("lag_2")), circular=True),))
+        )
+        assert result == "x(t--lag_2)"
+
+        # Linear with underscore in offset
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("i", SymbolRef("offset_var"), circular=False),))
+        )
+        assert result == "x(i+offset_var)"
+
+        # Linear lag with underscore
+        result = expr_to_gams(
+            VarRef("x", (IndexOffset("t", Unary("-", SymbolRef("my_lag")), circular=False),))
+        )
+        assert result == "x(t-my_lag)"
+
     def test_param_ref_with_index_offset(self):
         """Test ParamRef with IndexOffset."""
         result = expr_to_gams(ParamRef("a", (IndexOffset("i", Const(1), circular=True),)))

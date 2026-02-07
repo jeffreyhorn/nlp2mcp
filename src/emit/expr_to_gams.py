@@ -91,6 +91,10 @@ def _is_index_offset_syntax(s: str) -> bool:
         True
         >>> _is_index_offset_syntax("t-offset1")
         True
+        >>> _is_index_offset_syntax("i++shift_1")
+        True
+        >>> _is_index_offset_syntax("t--lag_2")
+        True
         >>> _is_index_offset_syntax("i1")
         False
         >>> _is_index_offset_syntax("H2O")
@@ -103,8 +107,11 @@ def _is_index_offset_syntax(s: str) -> bool:
     import re
 
     # Circular operators (++ and --) are unambiguous IndexOffset syntax
-    # Pattern: single-letter base ++ or -- followed by number or identifier
-    circular_pattern = r"^[a-z](\+\+|--)[a-z0-9]+$"
+    # Pattern: single-letter base ++ or -- followed by either:
+    #   - a numeric offset (e.g., i++1, t--10), or
+    #   - an identifier offset matching the grammar's ID token
+    #     (e.g., i++shift, i++shift_1)
+    circular_pattern = r"^[a-z](\+\+|--)([0-9]+|[A-Za-z_][A-Za-z0-9_]*)$"
     if re.match(circular_pattern, s, re.IGNORECASE):
         return True
 
