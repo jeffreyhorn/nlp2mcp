@@ -26,7 +26,7 @@ Alias(i, j);
 
 Parameters
     aio(i,i) /'food+agr'.services 0.0, 'heavy-ind'.services 0.0, services.services 0.0/
-    pdat(lmh,*,sde,i) /low.a.distr.services 0.8, low.a.effic.services 1.8, low.b.distr.services 0.77, low.b.effic.services 1.77, medium.a.subst.services 0.05, medium.a.distr.services 0.00798, medium.a.effic.services 1.84, medium.b.subst.services 0.1, medium.b.distr.services 0.08, medium.b.effic.services 1.89, high.a.subst.services 0.2, high.a.distr.services 0.23, high.a.effic.services 1.92, high.b.subst.services 0.4, high.b.distr.services 0.344, high.b.effic.services 1.96, low.services 0.0, high.services 0.0, medium.services 0.0/
+    pdat(lmh,*,sde,i) /low.a.distr.services 0.8, low.a.effic.services 1.8, low.b.distr.services 0.77, low.b.effic.services 1.77, medium.a.subst.services 0.05, medium.a.distr.services 0.00798, medium.a.effic.services 1.84, medium.b.subst.services 0.1, medium.b.distr.services 0.08, medium.b.effic.services 1.89, high.a.subst.services 0.2, high.a.distr.services 0.23, high.a.effic.services 1.92, high.b.subst.services 0.4, high.b.distr.services 0.344, high.b.effic.services 1.96, medium.services 0.0, high.services 0.0, low.services 0.0/
     ddat(lmh,*,i) /low.ynot.services 450.0, medium.ynot.services 450.0, high.ynot.services 450.0, medium.services -0.352, high.services -1.0, low.services 0.0/
     tdat(lmh,*,t)
     mew(t) /light-ind 1.0, food+agr 1.0, heavy-ind 1.0/

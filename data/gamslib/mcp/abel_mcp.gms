@@ -16,18 +16,34 @@ $offText
 * ============================================
 
 Sets
-    c /H, H2, H2O, N, N2, NH, NO, O, O2, OH/
-    i /H, N, O/
+    n /consumpt, invest/
+    m /gov-expend, money/
+    k /1964-i, 1964-ii, 1964-iii, 1964-iv, 1965-i, 1965-ii, 1965-iii, 1965-iv/
+    ku(k)
+    ki(k)
+    kt(k)
 ;
+
+Alias(n, np);
+Alias(m, mp);
 
 Parameters
-    a(i,c) /H.H 1.0, H.H2 2.0, H.H2O 2.0, H.NH 1.0, H.OH 1.0, N.N 1.0, N.N2 2.0, N.NH 1.0, N.NO 1.0, O.H2O 1.0, O.NO 1.0, O.O 1.0, O.O2 2.0, O.OH 1.0, N.H 0.0, N.H2 0.0, N.H2O 0.0, N.O 0.0, N.O2 0.0, N.OH 0.0, O.H 0.0, O.H2 0.0, O.N 0.0, O.N2 0.0, O.NH 0.0, H.N 0.0, H.N2 0.0, H.NO 0.0, H.O 0.0, H.O2 0.0/
-    mix(i) /h 2.0, n 1.0, o 1.0/
-    gibbs(c) /H -10.021, H2 -21.096, H2O -37.986, N -9.846, N2 -28.653, NH -18.918, NO -28.032, O -14.64, o2 -30.594, OH -26.11/
-    gplus(c)
+    a(n,np) /consumpt.consumpt 0.914, consumpt.invest -0.016, invest.consumpt 0.097, invest.invest 0.424/
+    b(n,m) /consumpt.money 0.424, invest.money 1.459/
+    wk(n,np) /consumpt.consumpt 0.0625, invest.invest 1.0, invest.consumpt 0.0, consumpt.invest 0.0/
+    lambda(m,mp) /'gov-expend'.money 1.0, money.money 0.444/
+    c(n) /consumpt -59.4, invest -184.7/
+    xinit(n) /consumpt 387.9, invest 85.3/
+    uinit(m) /gov-expend 110.5, money 147.1/
+    xtilde(n,k)
+    utilde(m,k)
+    w(n,np,k)
 ;
 
-gplus(c) = gibbs(c) + log(750 * 0.07031);
+xtilde(n,k) = xinit(n) * 1.0075 ** (ord(k) - 1);
+utilde(m,k) = uinit(m) * 1.0075 ** (ord(k) - 1);
+w(n,np,ku) = wk(n,np);
+w(n,np,kt) = 100 * wk(n,np);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -41,16 +57,10 @@ gplus(c) = gibbs(c) + log(750 * 0.07031);
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    energy
-    nu_cdef(i)
-    nu_xdef
-;
-
-Positive Variables
-    x(c)
-    xb
-    piL_x(c)
-    piL_xb
+    x(n,k)
+    u(m,k)
+    j
+    nu_stateq(n,k)
 ;
 
 * ============================================
@@ -62,31 +72,28 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x(c)
-    stat_xb
-    comp_lo_x(c)
-    comp_lo_xb
-    cdef(i)
-    edef
-    xdef
+    stat_u(m,k)
+    stat_x(n,k)
+    criterion
+    stateq(n,k)
 ;
 
 * ============================================
 * Equation Definitions
 * ============================================
 
-* Stationarity equations
-stat_x(c).. gplus(c) + log(x(c) / xb) + x(c) * 1 / (x(c) / xb) * 1 / xb ** 1 + sum(i, a(i,c) * nu_cdef(i)) + (-1) * nu_xdef - piL_x(c) =E= 0;
-stat_xb.. sum(c, x(c) * 1 / (x(c) / xb) * ((-1) * x(c)) / xb ** 2) + sum(c, 0) * nu_cdef("H") + sum(c, 0) * nu_cdef("N") + sum(c, 0) * nu_cdef("O") + (1 - sum(c, 0)) * nu_xdef - piL_xb =E= 0;
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(k, k__);
+Alias(m, m__);
 
-* Lower bound complementarity equations
-comp_lo_x(c).. x(c) - 0.001 =G= 0;
-comp_lo_xb.. xb - 0.01 =G= 0;
+* Stationarity equations
+stat_u(m,k).. 0.5 * sum((k__,n,np), 0) + 0.5 * sum((ku,m__,mp), 0) + sum(n, ((-1) * (sum(np, 0) + b(n,m))) * nu_stateq(n,k)) =E= 0;
+stat_x(n,k).. 0.5 * sum(np, 0) + 0.5 * sum((ku,m,mp), 0) + ((-1) * (a(n,np) + sum(m, 0))) * nu_stateq(n,k) =E= 0;
 
 * Original equality equations
-cdef(i).. sum(c, a(i,c) * x(c)) =E= mix(i);
-xdef.. xb =E= sum(c, x(c));
-edef.. energy =E= sum(c, x(c) * (gplus(c) + log(x(c) / xb)));
+criterion.. j =E= 0.5 * sum((k,n,np), (x(n,k) - xtilde(n,k)) * w(n,np,k) * (x(np,k) - xtilde(np,k))) + 0.5 * sum((ku,m,mp), (u(m,ku) - utilde(m,ku)) * lambda(m,mp) * (u(mp,ku) - utilde(mp,ku)));
+stateq(n,k).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + sum(m, b(n,m) * u(m,k)) + c(n);
 
 
 * ============================================
@@ -103,13 +110,10 @@ edef.. energy =E= sum(c, x(c) * (gplus(c) + log(x(c) / xb)));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
+    stat_u.u,
     stat_x.x,
-    stat_xb.xb,
-    cdef.nu_cdef,
-    edef.energy,
-    xdef.nu_xdef,
-    comp_lo_x.piL_x,
-    comp_lo_xb.piL_xb
+    criterion.j,
+    stateq.nu_stateq
 /;
 
 * ============================================
