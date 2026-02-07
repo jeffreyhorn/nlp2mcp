@@ -1027,10 +1027,9 @@ for model in apl1p blend himmel11 hs62 mathopt2 mhw4d mhw4dx prodmix rbrock trig
 done
 ```
 
-**Schedule integration:**
-- Day 2: Verify 12 solving models after set element quoting fix
-- Day 3: Verify 12 solving models after computed param skip fix
-- Day 4: Verify 12 solving models after bound multiplier fix
+**Schedule integration (mirrors PLAN.md):**
+- Days 2–4: Verify newly-unblocked models only (no scheduled 12-model regression run after each fix)
+- Optional (Days 2–4): Use the 12-model quick regression check ad-hoc if there is suspicion of a regression
 - Day 11: Full pipeline retest on all 160 models
 
 **Regression detection response:**
@@ -1082,12 +1081,12 @@ Development team
 
 **Findings (February 6, 2026):**
 
-**Day 6 retest plan is defined in PLAN.md.**
+**Day 11 retest plan is defined in PLAN.md.**
 
 **Scope:**
 - All 160 convex models (full corpus, no exclusions since none needed)
 - Stages (as executed by `run_full_test.py`): Parse → Translate → Solve → Compare
-- Comparison stage: Always runs when Solve runs in `run_full_test.py` (no separate "skip compare" flag); comparison results are not part of the core Day 6 metrics.
+- Comparison stage: Always runs when Solve runs in `run_full_test.py` (no separate "skip compare" flag); comparison results are not part of the core Day 11 metrics.
 
 **Command:**
 ```bash

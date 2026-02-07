@@ -1271,12 +1271,16 @@ Tentative schedule (adjust based on prep findings):
 | 9 | Documentation + checkpoint | Sprint 18 retrospective draft | 2h |
 | 10 | Release prep + final metrics | Sprint 18 complete | 2h |
 
+> **Note:** This tentative schedule was superseded by the final PLAN.md, which expands Sprint 18 to ~47h over 14 days based on prep task findings (scope changes and Sprint 19 items pulled forward). See Results section below for details.
+
 #### Step 3: Define Checkpoints (30 min)
 
 Using checkpoint templates from Epic 1:
 - **Checkpoint 1 (Day 3):** Syntactic validation complete, corpus redefined
 - **Checkpoint 2 (Day 6):** emit_gams.py fixes complete, pipeline retested
 - **Checkpoint 3 (Day 9):** All components complete, documentation ready
+
+> **Note:** Checkpoint days were adjusted in final PLAN.md (Checkpoint 1: Day 3, Checkpoint 2: Day 6, Checkpoint 3: Day 11).
 
 #### Step 4: Define Contingency Plans (30 min)
 
@@ -1317,11 +1321,13 @@ A complete Sprint 18 plan that:
 
 ### Verification
 
-- Schedule totals 22-26 hours across 10 days
-- All 3 Sprint 18 components have scheduled days
-- Checkpoints are scheduled and have clear criteria
-- Contingency plans cover all identified risks
-- Prep task findings are integrated
+> **Note:** Original verification criteria below were superseded; see Acceptance Criteria for final verification.
+
+- ~~Schedule totals 22-26 hours across 10 days~~ → Final: ~47h over 14 days
+- All 3 Sprint 18 components have scheduled days ✓
+- Checkpoints are scheduled and have clear criteria ✓
+- Contingency plans cover all identified risks ✓
+- Prep task findings are integrated ✓
 
 ### Deliverables
 
@@ -1370,8 +1376,8 @@ A complete Sprint 18 plan that:
 - Updated `KNOWN_UNKNOWNS.md` — Unknowns 2.7, 2.8 verified
 
 **Unknowns verified:**
-- Unknown 2.7: Regression testing plan defined (after-each-fix + Day 6 full retest) ✅
-- Unknown 2.8: Day 6 retest scope and success criteria defined ✅
+- Unknown 2.7: Regression testing plan defined (after-each-fix + Day 11 full retest) ✅
+- Unknown 2.8: Day 11 retest scope and success criteria defined ✅
 
 ---
 

@@ -440,7 +440,7 @@ done
 
 **Acceptance:** All 12 models still achieve `model_optimal` status
 
-### Day 6 Full Retest
+### Day 11 Full Retest
 
 Run complete pipeline on all 160 models:
 
