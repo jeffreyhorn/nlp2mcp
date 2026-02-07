@@ -29,9 +29,10 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 | Syntactic Validation | 10-12h | 4-5h | **-6h** |
 | emit_gams.py Fixes | 10-12h | 10-12h | 0h (rebalanced) |
 | Parse Quick Win | 2h | 2.5h | +0.5h |
-| **Core Scope** | **22-26h** | **16-20h** | **-6h saved** |
+| MCP Bug Fixes (circle, house) | 0h | 3-4h | **+3.5h** (added) |
+| **Core Scope** | **22-26h** | **19-24h** | **-2.5h net saved** |
 
-**Note:** The day-by-day schedule below totals ~24.5h because it includes buffer/contingency time, integration testing, documentation, and release prep beyond the core implementation scope. The 6 hours saved from removed items provides additional flexibility within this schedule.
+**Note:** The day-by-day schedule below totals ~27h because it includes integration testing, documentation, and release prep beyond the core implementation scope. The MCP bug fixes for circle and house were added to eliminate the `model_infeasible` category entirely.
 
 ---
 
@@ -81,6 +82,15 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 **Location:** `src/gams/gams_grammar.lark`
 **Time:** 0.5 hours (additional to put format fix)
 **ROI:** 1 model / 0.5h = **2.0 models/hour**
+
+### 4. MCP Infeasibility Bug Fixes (circle, house)
+**Source:** Task 7 found both `model_infeasible` models are MCP formulation bugs, not inherently infeasible
+**Problems:**
+- **circle**: Uses `uniform()` random data that regenerates differently in MCP context — need to capture original values
+- **house**: Likely constraint qualification failure or incorrect Lagrangian formulation
+**Location:** `src/kkt/` (investigation needed to pinpoint exact issue)
+**Time:** 3-4 hours (investigation + fix)
+**ROI:** 2 models / 3.5h = **0.6 models/hour** (lower ROI but moves models from infeasible to optimal)
 
 ---
 
@@ -178,45 +188,51 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 
 **Acceptance:** ps5_s_mn, ps10_s, ps10_s_mn, stdcge all parse successfully
 
-### Day 8: Integration Testing + Buffer (2h)
+### Day 8: MCP Infeasibility Bug Fixes (3.5h)
 
-**Focus:** Full regression testing, fix any issues
+**Focus:** Fix circle and house MCP formulation bugs
+
+| Task | Time | Deliverable |
+|------|------|-------------|
+| Investigate circle random data issue | 1h | Understand `uniform()` regeneration problem |
+| Fix circle: capture original random values | 1h | circle achieves `model_optimal` |
+| Investigate house constraint qualification | 1h | Identify Lagrangian formulation issue |
+| Fix house MCP formulation | 0.5h | house achieves `model_optimal` |
+
+**Acceptance:** Both circle and house move from `model_infeasible` to `model_optimal`
+
+### Day 9: Integration Testing + Documentation (3h)
+
+**Focus:** Full regression testing, documentation updates
 
 | Task | Time | Deliverable |
 |------|------|-------------|
 | Run full test suite (3204+ tests) | 0.5h | All tests pass |
 | Run pipeline on newly-parsing models | 1h | Check translate/solve status |
-| Fix any discovered issues | 0.5h | Buffer time |
-
-**Acceptance:** All tests pass, no new regressions
-
-### Day 9: Documentation + Checkpoint 3 (2h)
-
-**Focus:** Documentation updates, retrospective draft
-
-| Task | Time | Deliverable |
-|------|------|-------------|
 | Update GAMSLIB_STATUS.md | 0.5h | Reflect new metrics |
 | Update FAILURE_ANALYSIS.md | 0.5h | Updated error categories |
 | Draft Sprint 18 retrospective | 0.5h | Lessons learned |
-| **Checkpoint 3:** All components complete | 0.5h | Final review |
 
-**Checkpoint 3 Criteria:**
-- [ ] All Sprint 18 features merged
-- [ ] Documentation updated
-- [ ] Retrospective drafted
-- [ ] Ready for release
+**Acceptance:** All tests pass, documentation updated
 
-### Day 10: Release Prep + Final Metrics (2h)
+### Day 10: Checkpoint 3 + Release Prep (2.5h)
 
-**Focus:** Release v1.2.0 with Sprint 18 changes
+**Focus:** Final checkpoint and release
 
 | Task | Time | Deliverable |
 |------|------|-------------|
+| **Checkpoint 3:** All components complete | 0.5h | Final review |
 | Final pipeline metrics | 0.5h | Record final counts |
 | Version bump and release notes | 0.5h | v1.2.0 release |
 | Create release PR | 0.5h | PR ready for merge |
 | Sprint 18 complete | 0.5h | Tag and celebrate |
+
+**Checkpoint 3 Criteria:**
+- [ ] All Sprint 18 features merged
+- [ ] circle and house achieve `model_optimal`
+- [ ] Documentation updated
+- [ ] Retrospective drafted
+- [ ] Ready for release
 
 ---
 
@@ -228,10 +244,11 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 |--------|-------------------|-------------------|--------|
 | Parse Success | 61/160 (38.1%) | 65/160 (40.6%) | +4 models |
 | Translate Success | 42/61 (68.9%) | TBD | — |
-| Solve Success | 12/42 (28.6%) | ≥18/TBD | +6 models |
+| Solve Success | 12/42 (28.6%) | ≥20/TBD | +8 models |
 | `path_syntax_error` | 17 | ≤6 | -11 models |
+| `model_infeasible` | 2 | 0 | -2 models (fixed) |
 
-**Note:** Parse improvement is modest (+4 from put statement fix). The major gains are in solve stage from emit_gams.py fixes.
+**Note:** Parse improvement is modest (+4 from put statement fix). The major gains are in solve stage from emit_gams.py fixes and MCP bug fixes.
 
 ### Models Unblocked
 
@@ -241,8 +258,9 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 | Computed param skip | ajax, demo1, mathopt1, mexss, sample (5) |
 | Bound multiplier dimension | alkyl, bearing, + partial overlaps (3-5) |
 | Put statement format | ps5_s_mn, ps10_s, ps10_s_mn, stdcge (4) |
+| MCP infeasibility fixes | circle, house (2) |
 
-**Total potential improvement:** 14-16 models unblocked from `path_syntax_error`
+**Total potential improvement:** 16-18 models unblocked from `path_syntax_error` + 2 from `model_infeasible`
 
 ---
 
@@ -267,6 +285,11 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 **Trigger:** `:width:decimals` rule conflicts with existing grammar
 **Mitigation:** Use Lark priority rules to disambiguate
 **Impact:** +1 hour debugging grammar
+
+### Risk 5: MCP Infeasibility Fixes More Complex Than Expected
+**Trigger:** circle or house require deeper KKT investigation (>4 hours combined)
+**Mitigation:** Fix one model fully, document root cause for other, defer to Sprint 19
+**Impact:** -1 model from solve count, but documented investigation accelerates future fix
 
 ---
 
