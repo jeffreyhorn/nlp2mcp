@@ -18,6 +18,7 @@ import pytest
 from src.ir.preprocessor import (
     expand_macros,
     extract_conditional_sets,
+    join_multiline_assignments,
     join_multiline_equations,
     preprocess_gams_file,
     preprocess_text,
@@ -722,6 +723,137 @@ Model m / all /;"""
         result = join_multiline_equations(source)
         assert "eq(i)$valid(i).." in result
         assert "x(i) + y(i) =e= 0;" in result
+
+    def test_equation_with_multiplication_continuation(self):
+        """Equation continuation line starting with * (multiplication, not comment).
+
+        Issue #636: Lines starting with * in continuations should be treated as
+        multiplication, not comments.
+        """
+        source = """activity(i)..     xd(i) =e= ad(i) * prod(lc, l(i,lc)**alphl(lc,i))
+                                  * k(i)**(1 - sum(lc, alphl(lc,i)));"""
+        result = join_multiline_equations(source)
+        lines = [line for line in result.split("\n") if line.strip()]
+        assert len(lines) == 1
+        assert "activity(i).." in lines[0]
+        assert "* k(i)" in lines[0]  # The * should be preserved as multiplication
+        assert lines[0].endswith(";")
+
+
+class TestJoinMultilineAssignments:
+    """Tests for join_multiline_assignments() function (Issue #636).
+
+    GAMS allows parameter/scalar assignments to span multiple lines without
+    explicit continuation characters. This function handles cases where
+    parentheses are unbalanced at end of line.
+    """
+
+    def test_simple_assignment_unchanged(self):
+        """Single line assignment should remain unchanged."""
+        source = "x = 10;"
+        result = join_multiline_assignments(source)
+        assert result == source
+
+    def test_balanced_multiline_unchanged(self):
+        """Assignment with balanced parens on one line should remain unchanged."""
+        source = "x(i) = sum(j, a(i,j));"
+        result = join_multiline_assignments(source)
+        assert result == source
+
+    def test_unbalanced_parens_joined(self):
+        """Assignment with unbalanced parens should be joined with next line.
+
+        This is the primary case from Issue #636 (camcge.gms lines 212-213).
+        """
+        source = """at(it) = xd0(it)/(gamma(it)*e0(it)**rhot(it) + (1 - gamma(it))
+       * xxd0(it)**rhot(it))**(1/rhot(it));"""
+        result = join_multiline_assignments(source)
+        lines = [line for line in result.split("\n") if line.strip()]
+        assert len(lines) == 1
+        assert "at(it) =" in lines[0]
+        assert "* xxd0(it)" in lines[0]  # Multiplication should be preserved
+        assert lines[0].endswith(";")
+
+    def test_multiple_continuation_lines(self):
+        """Assignment spanning multiple continuation lines with unbalanced parens.
+
+        This tests a case where each line has unbalanced parentheses, requiring
+        joining until the total is balanced and a semicolon is found.
+        """
+        source = """result = ((a + b
+         + c)
+         + (d + e
+         + f));"""
+        result = join_multiline_assignments(source)
+        lines = [line for line in result.split("\n") if line.strip()]
+        assert len(lines) == 1
+        assert "result =" in lines[0]
+        assert lines[0].endswith(";")
+        assert "+ c)" in lines[0]
+        assert "+ f)" in lines[0]
+
+    def test_balanced_parens_per_line_not_joined(self):
+        """Lines with balanced parens per line should NOT be joined.
+
+        The parser already handles these via %ignore NEWLINE in the grammar.
+        The join_multiline_assignments function only needs to handle unbalanced cases.
+        """
+        source = """qd(i)  = (xllb(i,"rural")**alphl("rural",i))
+       * (xllb(i,"urban-unsk")**alphl("urban-unsk",i))
+       * (xllb(i,"urban-skil")**alphl("urban-skil",i))
+       * (k0(i)**(1 - sum(lc, alphl(lc,i))));"""
+        result = join_multiline_assignments(source)
+        # Should remain as 4 separate lines since parens are balanced per line
+        lines = [line for line in result.split("\n") if line.strip()]
+        assert len(lines) == 4
+
+    def test_comment_line_not_joined(self):
+        """Comment lines (starting with *) outside continuation should not be joined."""
+        source = """* This is a comment
+x = 10;"""
+        result = join_multiline_assignments(source)
+        lines = result.split("\n")
+        assert lines[0].strip().startswith("*")
+        assert "x = 10;" in lines[1]
+
+    def test_multiplication_in_continuation(self):
+        """Lines starting with * inside continuation are multiplication, not comments."""
+        source = """y = (a + b
+     * c);"""
+        result = join_multiline_assignments(source)
+        lines = [line for line in result.split("\n") if line.strip()]
+        assert len(lines) == 1
+        assert "* c)" in lines[0]
+
+    def test_equation_definitions_skipped(self):
+        """Lines with .. (equation definitions) should be skipped."""
+        source = """eq(i).. x(i) =e= y(i);
+param(i) = value(i);"""
+        result = join_multiline_assignments(source)
+        # Both lines should be preserved as-is
+        assert "eq(i).." in result
+        assert "param(i) = value(i);" in result
+
+    def test_empty_lines_preserved(self):
+        """Empty lines should be preserved."""
+        source = """x = 10;
+
+y = 20;"""
+        result = join_multiline_assignments(source)
+        assert result == source
+
+    def test_multiple_assignments_with_multiline(self):
+        """Multiple assignments, some with multiline continuation."""
+        source = """simple = 10;
+complex = (a + b
+         + c);
+another = 20;"""
+        result = join_multiline_assignments(source)
+        lines = [line for line in result.split("\n") if line.strip()]
+        assert len(lines) == 3
+        assert "simple = 10;" in result
+        assert "a + b + c)" in result
+        assert "another = 20;" in result
 
 
 class TestPreprocessText:
