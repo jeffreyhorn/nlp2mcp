@@ -349,7 +349,7 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 |--------|-------------------|-------------------|--------|
 | Parse Success | 61/160 (38.1%) | 65/160 (40.6%) | +4 models |
 | Translate Success | 42/61 (68.9%) | TBD | — |
-| Solve Success | 12/42 (28.6%) | ≥22/TBD | +10 models |
+| Solve Success | 12/42 (28.6%) | ≥22 models | +10 models |
 | `path_syntax_error` | 17 | ≤2 | -15 models |
 | `model_infeasible` | 2 | 0 | -2 models (fixed) |
 
@@ -368,7 +368,7 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 | Remaining path_syntax_error investigation | ~4 models |
 | MCP infeasibility fixes | circle, house (2) |
 
-**Total potential improvement:** 22-26 models unblocked from `path_syntax_error` + 2 from `model_infeasible`
+**Total potential improvement (net of overlaps):** ~15 models unblocked from `path_syntax_error` (of 17 baseline) + 2 from `model_infeasible`
 
 ### Analysis Deliverables
 

@@ -1337,9 +1337,9 @@ A complete Sprint 18 plan that:
 - [x] Schedule incorporates findings from all 9 prep tasks
 - [x] 3 checkpoints defined with clear go/no-go criteria
 - [x] Contingency plans documented for top risks
-- [x] Total estimated hours revised to 16-20h based on removed items; PROJECT_PLAN.md (currently 22-26h) identified for update in Sprint 18
+- [x] Total estimated hours reconciled with `PLAN.md` (~47h over 14 days, with 44-50h shown in the reallocation table); `PROJECT_PLAN.md` updated to reflect this scope
 - [x] References to all prep deliverables included
-- [x] Plan reviewed for feasibility within 10 working days
+- [x] Plan reviewed for feasibility within 14 working days
 
 ### Results
 
@@ -1363,7 +1363,7 @@ A complete Sprint 18 plan that:
 2. Bound multiplier dimension fix — 5 models blocked (Task 4)
 3. stdcge `put_stmt_nosemi` — different issue than `:width:decimals` (Task 6)
 
-**Time savings:** 6 hours freed up for buffer/contingency
+**Time impact:** ~6 hours of work were avoided relative to the original Sprint 18 prep scope, then reallocated to higher-ROI items; net Sprint 18 scope increased once additional work was pulled in from Sprint 19.
 
 **Deliverables:**
 - `docs/planning/EPIC_4/SPRINT_18/PLAN.md` — complete sprint plan with revised scope

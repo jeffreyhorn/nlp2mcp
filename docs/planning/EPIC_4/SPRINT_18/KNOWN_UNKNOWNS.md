@@ -1028,10 +1028,10 @@ done
 ```
 
 **Schedule integration:**
-- Day 3: Verify 12 solving models after set element quoting fix
-- Day 4: Verify 12 solving models after computed param skip fix
-- Day 5-6: Verify 12 solving models after bound multiplier fix
-- Day 6: Full pipeline retest on all 160 models
+- Day 2: Verify 12 solving models after set element quoting fix
+- Day 3: Verify 12 solving models after computed param skip fix
+- Day 4: Verify 12 solving models after bound multiplier fix
+- Day 11: Full pipeline retest on all 160 models
 
 **Regression detection response:**
 1. Immediate rollback of offending fix
