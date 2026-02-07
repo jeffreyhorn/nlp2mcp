@@ -1087,7 +1087,7 @@ pytest tests/ -v --tb=short
 
 ```bash
 # Re-run pipeline metrics
-python scripts/gamslib/run_pipeline.py
+python scripts/gamslib/run_full_test.py
 # Verify parse/translate/solve counts match v1.1.0 numbers
 ```
 
