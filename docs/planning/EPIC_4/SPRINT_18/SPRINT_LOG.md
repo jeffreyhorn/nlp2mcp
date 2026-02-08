@@ -108,7 +108,9 @@ This provides additional headroom for Sprint 18 goals.
 
 **Pipeline Status**: 50 models translate successfully; 37 fail at the solve stage overall (with a subset failing GAMS compilation due to syntax errors).
 
-#### GAMS Error Code Distribution (Solve Failures)
+#### GAMS Error Code Distribution (Compilation Failures)
+
+*Note: This table covers models that fail GAMS compilation. Runtime failures (`path_solve_terminated`, `model_infeasible`) compile successfully but fail during solver execution and are covered separately in Category 5.*
 
 | Error Code | Count | Description | Root Cause |
 |------------|-------|-------------|------------|
