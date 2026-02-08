@@ -393,16 +393,11 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     for param_name, param_def in model_ir.params.items():
         # Use ParameterDef.domain to detect scalars (Finding #3)
         if len(param_def.domain) == 0:
-            # Sprint 18 Day 2: Check if this "scalar" has indexed expressions
-            # If so, it needs to be emitted as a parameter (with no data) to allow
-            # the computed parameter assignments to work. Example: demo1's croprep
-            # is declared without domain but has expressions like croprep("revenue",c)
-            if param_def.expressions:
-                # Check if any expression key has indices
-                has_indexed_exprs = any(len(key) > 0 for key in param_def.expressions.keys())
-                if has_indexed_exprs:
-                    parameters[param_name] = param_def
-                    continue
+            # PR #658 review: Removed promotion logic for scalars with indexed expressions.
+            # These are typically post-solve report parameters (e.g., croprep("revenue",c))
+            # that depend on solution values. Since emit_computed_parameter_assignments()
+            # correctly skips them (they'd cause GAMS Error 141), promoting them here
+            # was ineffective. Keep them as scalars and let them be skipped.
             scalars[param_name] = param_def
         else:
             parameters[param_name] = param_def
@@ -426,26 +421,11 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 domain_str = ",".join(param_def.domain)
                 lines.append(f"    {param_name}({domain_str}) /{data_str}/")
             else:
-                # Parameter declared but no data
-                if param_def.domain:
-                    domain_str = ",".join(param_def.domain)
-                    lines.append(f"    {param_name}({domain_str})")
-                elif param_def.expressions:
-                    # PR #658: Infer dimensionality from expression keys
-                    # Find max key length to determine dimension count
-                    max_dims = 0
-                    for key_tuple in param_def.expressions.keys():
-                        if len(key_tuple) > max_dims:
-                            max_dims = len(key_tuple)
-                    if max_dims > 0:
-                        # Emit with wildcard domains: param_name(*,*) for 2-D
-                        wildcards = ",".join(["*"] * max_dims)
-                        lines.append(f"    {param_name}({wildcards})")
-                    else:
-                        lines.append(f"    {param_name}")
-                else:
-                    # Scalar parameter with no data
-                    lines.append(f"    {param_name}")
+                # Parameter declared but no data - must have domain since
+                # parameters dict only contains entries with non-empty domain
+                # (PR #658 review: removed scalar-with-indexed-expressions promotion)
+                domain_str = ",".join(param_def.domain)
+                lines.append(f"    {param_name}({domain_str})")
         lines.append(";")
 
     # Emit Scalars (skip predefined GAMS constants and description-only entries)

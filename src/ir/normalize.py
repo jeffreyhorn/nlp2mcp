@@ -201,11 +201,23 @@ def _sanitize_identifier(s: str) -> str:
 
     PR #658: Replace non-alphanumeric characters (except underscore) with underscores.
     This handles element labels like "q-1", "san-diego", "pulp+paper".
+
+    PR #658 review: To avoid collisions (e.g., "q-1" and "q_1" both becoming "q_1"),
+    append a short hash suffix when the string was modified by sanitization.
     """
+    import hashlib
     import re
 
     # Replace any character that's not alphanumeric or underscore with underscore
-    return re.sub(r"[^A-Za-z0-9_]", "_", s)
+    sanitized = re.sub(r"[^A-Za-z0-9_]", "_", s)
+
+    # If sanitization changed the string, append a short hash to ensure uniqueness
+    if sanitized != s:
+        # Use first 4 chars of hex hash for brevity while maintaining uniqueness
+        hash_suffix = hashlib.md5(s.encode()).hexdigest()[:4]
+        return f"{sanitized}_{hash_suffix}"
+
+    return sanitized
 
 
 def _bound_name(var: str, suffix: str, indices: tuple[str, ...]) -> str:
