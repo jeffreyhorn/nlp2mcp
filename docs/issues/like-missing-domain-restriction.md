@@ -24,10 +24,6 @@ This enforces ordering on the means `m(g)` of mixture components.
 ```gams
 comp_rank(g)$(ord(g) < card(g)).. m(g+1) - m(g) =G= 0;
 ```
-Or equivalently:
-```gams
-comp_rank(g)$(ord(g) < card(g)).. m(g+1) =G= 0;  * if m(g) term moved
-```
 
 ### Actual Output
 ```gams
