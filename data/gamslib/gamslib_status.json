@@ -42,14 +42,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:02:35.230466+00:00",
+        "translate_date": "2026-02-08T18:17:42.570186+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.1448,
+        "translate_time_seconds": 1.8996,
         "output_file": "data/gamslib/mcp/abel_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:02.406153+00:00",
+        "solve_date": "2026-02-08T18:20:05.198743+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -57,7 +57,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.3303,
+        "solve_time_seconds": 0.2807,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -155,9 +155,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:02:37.519870+00:00",
+        "translate_date": "2026-02-08T18:17:44.588216+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.2885,
+        "translate_time_seconds": 2.0168,
         "error": {
           "category": "internal_error",
           "message": "Error: Invalid model - gamma() expects 1 argument, got 2\n"
@@ -253,14 +253,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:02:39.299817+00:00",
+        "translate_date": "2026-02-08T18:17:46.260878+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.7792,
+        "translate_time_seconds": 1.672,
         "output_file": "data/gamslib/mcp/ajax_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:02.650154+00:00",
+        "solve_date": "2026-02-08T18:20:05.480902+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -268,7 +268,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2359,
+        "solve_time_seconds": 0.2722,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -344,14 +344,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:02:41.192996+00:00",
+        "translate_date": "2026-02-08T18:17:48.041017+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.8925,
+        "translate_time_seconds": 1.7792,
         "output_file": "data/gamslib/mcp/alkyl_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:02.908403+00:00",
+        "solve_date": "2026-02-08T18:20:05.772554+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -359,7 +359,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2516,
+        "solve_time_seconds": 0.2847,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -478,14 +478,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:02:43.791763+00:00",
+        "translate_date": "2026-02-08T18:17:50.394508+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.5977,
+        "translate_time_seconds": 2.3522,
         "output_file": "data/gamslib/mcp/apl1p_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:03.413432+00:00",
+        "solve_date": "2026-02-08T18:20:06.350217+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -493,7 +493,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": null,
-        "solve_time_seconds": 0.4953,
+        "solve_time_seconds": 0.5669,
         "iterations": 0,
         "outcome_category": "model_optimal"
       },
@@ -621,14 +621,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:02:46.233205+00:00",
+        "translate_date": "2026-02-08T18:17:52.483280+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.4133,
+        "translate_time_seconds": 2.0649,
         "output_file": "data/gamslib/mcp/bearing_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:03.663064+00:00",
+        "solve_date": "2026-02-08T18:20:06.634851+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -636,7 +636,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2432,
+        "solve_time_seconds": 0.2776,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -688,14 +688,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:02:47.878503+00:00",
+        "translate_date": "2026-02-08T18:17:53.986531+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.6445,
+        "translate_time_seconds": 1.5026,
         "output_file": "data/gamslib/mcp/blend_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:04.097577+00:00",
+        "solve_date": "2026-02-08T18:20:07.125975+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -703,7 +703,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": null,
-        "solve_time_seconds": 0.4035,
+        "solve_time_seconds": 0.453,
         "iterations": 20,
         "outcome_category": "model_optimal"
       },
@@ -902,9 +902,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:02:49.450814+00:00",
+        "translate_date": "2026-02-08T18:17:55.406665+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5718,
+        "translate_time_seconds": 1.4197,
         "error": {
           "category": "internal_error",
           "message": "Error: Invalid model - Unsupported unary operation 'not' for differentiation. Supported operations: +, -\n"
@@ -1166,14 +1166,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:02:51.152249+00:00",
+        "translate_date": "2026-02-08T18:17:56.902578+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.7007,
+        "translate_time_seconds": 1.4952,
         "output_file": "data/gamslib/mcp/chem_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:04.332641+00:00",
+        "solve_date": "2026-02-08T18:20:07.392931+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1181,7 +1181,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2284,
+        "solve_time_seconds": 0.2595,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -1233,14 +1233,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:02:55.022587+00:00",
+        "translate_date": "2026-02-08T18:18:00.179249+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 3.869,
+        "translate_time_seconds": 3.2756,
         "output_file": "data/gamslib/mcp/chenery_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:04.572405+00:00",
+        "solve_date": "2026-02-08T18:20:07.668449+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1248,7 +1248,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2342,
+        "solve_time_seconds": 0.268,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -1346,14 +1346,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:02:56.792340+00:00",
+        "translate_date": "2026-02-08T18:18:01.536010+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.742,
+        "translate_time_seconds": 1.3335,
         "output_file": "data/gamslib/mcp/circle_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:06.249210+00:00",
+        "solve_date": "2026-02-08T18:20:09.620323+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -1361,7 +1361,7 @@
         "model_status": 5,
         "model_status_text": "Locally Infeasible",
         "objective_value": null,
-        "solve_time_seconds": 1.6685,
+        "solve_time_seconds": 1.9424,
         "iterations": 760,
         "outcome_category": "model_infeasible",
         "error": {
@@ -1483,14 +1483,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:02:58.582492+00:00",
+        "translate_date": "2026-02-08T18:18:02.937244+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.7892,
+        "translate_time_seconds": 1.4006,
         "output_file": "data/gamslib/mcp/cpack_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:06.492926+00:00",
+        "solve_date": "2026-02-08T18:20:09.906057+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1498,7 +1498,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2359,
+        "solve_time_seconds": 0.2763,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -1596,9 +1596,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:03:00.862162+00:00",
+        "translate_date": "2026-02-08T18:18:04.785734+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.279,
+        "translate_time_seconds": 1.8481,
         "error": {
           "category": "codegen_numerical_error",
           "message": "Error: Unexpected error - Error: Numerical error in parameter 'rep[2,gap]': Invalid value (value is +Inf)\n\nSuggestion: Check your GAMS model or data file for:\n  - Uninitialized parameters\n  - Division by zero in parameter calculations\n  - Invalid mathematical operations\n  - Correct definition of parameter 'rep'\n"
@@ -1646,14 +1646,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:03.816309+00:00",
+        "translate_date": "2026-02-08T18:18:07.198830+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.9531,
+        "translate_time_seconds": 2.4124,
         "output_file": "data/gamslib/mcp/demo1_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:06.764061+00:00",
+        "solve_date": "2026-02-08T18:20:10.199665+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1661,7 +1661,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2409,
+        "solve_time_seconds": 0.2586,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -1789,14 +1789,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:05.860305+00:00",
+        "translate_date": "2026-02-08T18:18:08.848842+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.0427,
+        "translate_time_seconds": 1.6491,
         "output_file": "data/gamslib/mcp/dispatch_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:07.049419+00:00",
+        "solve_date": "2026-02-08T18:20:10.446147+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1804,7 +1804,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2793,
+        "solve_time_seconds": 0.2391,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -2075,9 +2075,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:03:10.723685+00:00",
+        "translate_date": "2026-02-08T18:18:12.838828+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 4.8349,
+        "translate_time_seconds": 3.9649,
         "error": {
           "category": "internal_error",
           "message": "Error: Invalid model - Equation 'fnewelec' uses domain set 'tfirst' which has no members\n"
@@ -2823,9 +2823,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:03:13.371963+00:00",
+        "translate_date": "2026-02-08T18:18:14.868732+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.6477,
+        "translate_time_seconds": 2.0294,
         "error": {
           "category": "unsup_expression_type",
           "message": "Error: Invalid model - Unknown expression type: Prod\n"
@@ -2879,9 +2879,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:03:14.992292+00:00",
+        "translate_date": "2026-02-08T18:18:16.180946+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.6198,
+        "translate_time_seconds": 1.3117,
         "error": {
           "category": "unsup_expression_type",
           "message": "Error: Invalid model - Unknown expression type: Prod\n"
@@ -2941,14 +2941,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:16.879400+00:00",
+        "translate_date": "2026-02-08T18:18:17.734955+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.8862,
+        "translate_time_seconds": 1.5531,
         "output_file": "data/gamslib/mcp/himmel11_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:07.592940+00:00",
+        "solve_date": "2026-02-08T18:20:11.046483+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -2956,7 +2956,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": -30665.5387,
-        "solve_time_seconds": 0.5371,
+        "solve_time_seconds": 0.5927,
         "iterations": 1377,
         "outcome_category": "model_optimal"
       },
@@ -3017,14 +3017,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:18.667037+00:00",
+        "translate_date": "2026-02-08T18:18:19.313419+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.7863,
+        "translate_time_seconds": 1.5774,
         "output_file": "data/gamslib/mcp/himmel16_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:49.790616+00:00",
+        "solve_date": "2026-02-08T18:20:11.306686+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -3032,7 +3032,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.3417,
+        "solve_time_seconds": 0.2516,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -3084,14 +3084,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:20.288445+00:00",
+        "translate_date": "2026-02-08T18:18:20.679885+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5926,
+        "translate_time_seconds": 1.3407,
         "output_file": "data/gamslib/mcp/house_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:09.071554+00:00",
+        "solve_date": "2026-02-08T18:20:12.637893+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -3099,7 +3099,7 @@
         "model_status": 5,
         "model_status_text": "Locally Infeasible",
         "objective_value": 27.7055,
-        "solve_time_seconds": 1.2252,
+        "solve_time_seconds": 1.3225,
         "iterations": 1201,
         "outcome_category": "model_infeasible",
         "error": {
@@ -3151,14 +3151,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:22.169818+00:00",
+        "translate_date": "2026-02-08T18:18:22.150176+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.8805,
+        "translate_time_seconds": 1.4696,
         "output_file": "data/gamslib/mcp/hs62_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:09.528905+00:00",
+        "solve_date": "2026-02-08T18:20:13.135256+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -3166,7 +3166,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": -26272.5145,
-        "solve_time_seconds": 0.4259,
+        "solve_time_seconds": 0.4628,
         "iterations": 27,
         "outcome_category": "model_optimal"
       },
@@ -3227,9 +3227,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:03:24.010372+00:00",
+        "translate_date": "2026-02-08T18:18:23.621233+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.8399,
+        "translate_time_seconds": 1.4706,
         "error": {
           "category": "diff_unsupported_func",
           "message": "Error: Invalid model - Differentiation not yet implemented for function 'card'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr, gamma, loggamma, smin, smax. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
@@ -3283,9 +3283,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:03:26.529795+00:00",
+        "translate_date": "2026-02-08T18:18:25.770892+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.5185,
+        "translate_time_seconds": 2.1491,
         "error": {
           "category": "codegen_numerical_error",
           "message": "Error: Unexpected error - Error: Numerical error in parameter 'bspec[aluminum,maximum]': Invalid value (value is +Inf)\n\nSuggestion: Check your GAMS model or data file for:\n  - Uninitialized parameters\n  - Division by zero in parameter calculations\n  - Invalid mathematical operations\n  - Correct definition of parameter 'bspec'\n"
@@ -3635,14 +3635,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:28.342488+00:00",
+        "translate_date": "2026-02-08T18:18:27.313150+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.8115,
+        "translate_time_seconds": 1.5411,
         "output_file": "data/gamslib/mcp/jobt_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:09.767473+00:00",
+        "solve_date": "2026-02-08T18:20:13.389919+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -3650,7 +3650,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2321,
+        "solve_time_seconds": 0.2476,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -3907,14 +3907,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:29.963778+00:00",
+        "translate_date": "2026-02-08T18:18:28.669875+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5921,
+        "translate_time_seconds": 1.332,
         "output_file": "data/gamslib/mcp/least_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:10.001034+00:00",
+        "solve_date": "2026-02-08T18:20:13.636487+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -3922,7 +3922,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2279,
+        "solve_time_seconds": 0.2404,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -3974,14 +3974,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:32.043395+00:00",
+        "translate_date": "2026-02-08T18:18:30.287161+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.0788,
+        "translate_time_seconds": 1.6165,
         "output_file": "data/gamslib/mcp/like_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:10.240630+00:00",
+        "solve_date": "2026-02-08T18:20:13.902548+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -3989,7 +3989,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2275,
+        "solve_time_seconds": 0.2485,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -4319,9 +4319,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:03:34.750861+00:00",
+        "translate_date": "2026-02-08T18:18:32.498507+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.7068,
+        "translate_time_seconds": 2.2108,
         "error": {
           "category": "diff_unsupported_func",
           "message": "Error: Invalid model - Differentiation not yet implemented for function 'ord'. Supported functions: power, exp, log, sqrt, sin, cos, tan, abs, sqr, gamma, loggamma, smin, smax. Note: abs() requires --smooth-abs flag (non-differentiable at x=0).\n"
@@ -4375,14 +4375,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:36.472568+00:00",
+        "translate_date": "2026-02-08T18:18:33.888874+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.7206,
+        "translate_time_seconds": 1.3895,
         "output_file": "data/gamslib/mcp/mathopt1_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:10.484931+00:00",
+        "solve_date": "2026-02-08T18:20:14.185573+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -4390,7 +4390,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2376,
+        "solve_time_seconds": 0.2765,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -4442,14 +4442,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:38.060027+00:00",
+        "translate_date": "2026-02-08T18:18:35.250916+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5861,
+        "translate_time_seconds": 1.361,
         "output_file": "data/gamslib/mcp/mathopt2_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:10.916247+00:00",
+        "solve_date": "2026-02-08T18:20:14.678932+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -4457,7 +4457,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": 0.0,
-        "solve_time_seconds": 0.3993,
+        "solve_time_seconds": 0.4543,
         "iterations": 0,
         "outcome_category": "model_optimal"
       },
@@ -4631,9 +4631,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:03:40.107101+00:00",
+        "translate_date": "2026-02-08T18:18:36.926827+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.0192,
+        "translate_time_seconds": 1.6509,
         "error": {
           "category": "internal_error",
           "message": "Error: Invalid model - Equation 'mindist1' uses domain set 'low' which has no members\n"
@@ -4681,14 +4681,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:42.595362+00:00",
+        "translate_date": "2026-02-08T18:18:39.118787+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.4872,
+        "translate_time_seconds": 2.1912,
         "output_file": "data/gamslib/mcp/meanvar_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:11.157322+00:00",
+        "solve_date": "2026-02-08T18:20:14.949262+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -4696,7 +4696,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2335,
+        "solve_time_seconds": 0.2619,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -4821,14 +4821,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:47.584908+00:00",
+        "translate_date": "2026-02-08T18:18:43.606381+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 4.9886,
+        "translate_time_seconds": 4.4867,
         "output_file": "data/gamslib/mcp/mexss_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:11.397138+00:00",
+        "solve_date": "2026-02-08T18:20:15.197635+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -4836,7 +4836,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2343,
+        "solve_time_seconds": 0.2419,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -4888,14 +4888,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:49.136829+00:00",
+        "translate_date": "2026-02-08T18:18:45.011184+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5511,
+        "translate_time_seconds": 1.4041,
         "output_file": "data/gamslib/mcp/mhw4d_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:11.830491+00:00",
+        "solve_date": "2026-02-08T18:20:15.682689+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -4903,7 +4903,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": null,
-        "solve_time_seconds": 0.4257,
+        "solve_time_seconds": 0.4767,
         "iterations": 17,
         "outcome_category": "model_optimal"
       },
@@ -4964,14 +4964,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:51.748561+00:00",
+        "translate_date": "2026-02-08T18:18:47.384158+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.6106,
+        "translate_time_seconds": 2.3718,
         "output_file": "data/gamslib/mcp/mhw4dx_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:12.287188+00:00",
+        "solve_date": "2026-02-08T18:20:16.229763+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -4979,7 +4979,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": null,
-        "solve_time_seconds": 0.4484,
+        "solve_time_seconds": 0.5379,
         "iterations": 17,
         "outcome_category": "model_optimal"
       },
@@ -5107,14 +5107,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:53.344557+00:00",
+        "translate_date": "2026-02-08T18:18:48.943501+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5689,
+        "translate_time_seconds": 1.534,
         "output_file": "data/gamslib/mcp/mingamma_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:12.536492+00:00",
+        "solve_date": "2026-02-08T18:20:16.503280+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -5122,7 +5122,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2194,
+        "solve_time_seconds": 0.2399,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -5537,14 +5537,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:03:57.973290+00:00",
+        "translate_date": "2026-02-08T18:18:53.259263+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 4.6279,
+        "translate_time_seconds": 4.3149,
         "output_file": "data/gamslib/mcp/orani_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:12.780990+00:00",
+        "solve_date": "2026-02-08T18:20:16.764669+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -5552,7 +5552,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2385,
+        "solve_time_seconds": 0.253,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -5650,14 +5650,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:07.769332+00:00",
+        "translate_date": "2026-02-08T18:19:03.565028+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 9.795,
+        "translate_time_seconds": 10.3047,
         "output_file": "data/gamslib/mcp/pak_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:13.030765+00:00",
+        "solve_date": "2026-02-08T18:20:17.050546+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -5665,7 +5665,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2439,
+        "solve_time_seconds": 0.2799,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -5989,14 +5989,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:10.501414+00:00",
+        "translate_date": "2026-02-08T18:19:07.099887+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 2.7312,
+        "translate_time_seconds": 3.5339,
         "output_file": "data/gamslib/mcp/pollut_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:13.257353+00:00",
+        "solve_date": "2026-02-08T18:20:17.303337+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6004,7 +6004,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.22,
+        "solve_time_seconds": 0.2455,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6144,14 +6144,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:11.955120+00:00",
+        "translate_date": "2026-02-08T18:19:08.877030+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.4526,
+        "translate_time_seconds": 1.7759,
         "output_file": "data/gamslib/mcp/port_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:13.500598+00:00",
+        "solve_date": "2026-02-08T18:20:17.574021+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6159,7 +6159,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2368,
+        "solve_time_seconds": 0.263,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6211,14 +6211,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:13.919466+00:00",
+        "translate_date": "2026-02-08T18:19:11.148981+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.9392,
+        "translate_time_seconds": 2.2368,
         "output_file": "data/gamslib/mcp/process_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:13.762288+00:00",
+        "solve_date": "2026-02-08T18:20:17.853882+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6226,7 +6226,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.232,
+        "solve_time_seconds": 0.2439,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6324,14 +6324,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:15.259610+00:00",
+        "translate_date": "2026-02-08T18:19:12.623324+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3394,
+        "translate_time_seconds": 1.4734,
         "output_file": "data/gamslib/mcp/prodmix_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:14.166798+00:00",
+        "solve_date": "2026-02-08T18:20:18.312921+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -6339,7 +6339,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": 0.0,
-        "solve_time_seconds": 0.3975,
+        "solve_time_seconds": 0.4511,
         "iterations": 0,
         "outcome_category": "model_optimal"
       },
@@ -6461,9 +6461,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:04:18.369167+00:00",
+        "translate_date": "2026-02-08T18:19:16.197206+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 3.1088,
+        "translate_time_seconds": 3.5731,
         "error": {
           "category": "internal_error",
           "message": "Error: Unexpected error - Differentiation not yet implemented for SetMembershipTest. This will be added in subsequent days of Sprint 2.\n"
@@ -6609,14 +6609,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:19.759864+00:00",
+        "translate_date": "2026-02-08T18:19:17.816210+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3897,
+        "translate_time_seconds": 1.6179,
         "output_file": "data/gamslib/mcp/ps2_f_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:14.408026+00:00",
+        "solve_date": "2026-02-08T18:20:18.568870+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6624,7 +6624,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.234,
+        "solve_time_seconds": 0.2486,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6676,14 +6676,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:21.356284+00:00",
+        "translate_date": "2026-02-08T18:19:19.554647+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5952,
+        "translate_time_seconds": 1.737,
         "output_file": "data/gamslib/mcp/ps2_f_eff_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:14.655099+00:00",
+        "solve_date": "2026-02-08T18:20:18.834503+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6691,7 +6691,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2398,
+        "solve_time_seconds": 0.2585,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6749,14 +6749,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:22.834557+00:00",
+        "translate_date": "2026-02-08T18:19:21.436069+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.453,
+        "translate_time_seconds": 1.8517,
         "output_file": "data/gamslib/mcp/ps2_f_inf_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:14.916787+00:00",
+        "solve_date": "2026-02-08T18:20:19.122343+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6764,7 +6764,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2543,
+        "solve_time_seconds": 0.2797,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6810,14 +6810,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:24.220418+00:00",
+        "translate_date": "2026-02-08T18:19:23.023069+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3851,
+        "translate_time_seconds": 1.5861,
         "output_file": "data/gamslib/mcp/ps2_f_s_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:15.166946+00:00",
+        "solve_date": "2026-02-08T18:20:19.419989+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6825,7 +6825,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2228,
+        "solve_time_seconds": 0.2586,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6877,14 +6877,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:25.576409+00:00",
+        "translate_date": "2026-02-08T18:19:24.664517+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3552,
+        "translate_time_seconds": 1.6405,
         "output_file": "data/gamslib/mcp/ps2_s_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:15.399246+00:00",
+        "solve_date": "2026-02-08T18:20:19.672546+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6892,7 +6892,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2259,
+        "solve_time_seconds": 0.2456,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -6944,14 +6944,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:26.866565+00:00",
+        "translate_date": "2026-02-08T18:19:26.197254+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.2894,
+        "translate_time_seconds": 1.5319,
         "output_file": "data/gamslib/mcp/ps3_f_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:15.634481+00:00",
+        "solve_date": "2026-02-08T18:20:19.937737+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -6959,7 +6959,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2288,
+        "solve_time_seconds": 0.2576,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -7011,14 +7011,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:28.210924+00:00",
+        "translate_date": "2026-02-08T18:19:27.796809+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3433,
+        "translate_time_seconds": 1.5982,
         "output_file": "data/gamslib/mcp/ps3_s_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:15.864278+00:00",
+        "solve_date": "2026-02-08T18:20:20.184392+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -7026,7 +7026,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2227,
+        "solve_time_seconds": 0.2394,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -7078,14 +7078,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:29.550323+00:00",
+        "translate_date": "2026-02-08T18:19:29.463144+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3149,
+        "translate_time_seconds": 1.6365,
         "output_file": "data/gamslib/mcp/ps3_s_gic_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:16.099336+00:00",
+        "solve_date": "2026-02-08T18:20:20.431013+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -7093,7 +7093,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2286,
+        "solve_time_seconds": 0.239,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -7145,14 +7145,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:31.017917+00:00",
+        "translate_date": "2026-02-08T18:19:31.223548+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.4669,
+        "translate_time_seconds": 1.7594,
         "output_file": "data/gamslib/mcp/ps3_s_mn_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:16.348812+00:00",
+        "solve_date": "2026-02-08T18:20:20.708099+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -7160,7 +7160,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2193,
+        "solve_time_seconds": 0.2422,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -7212,14 +7212,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:32.678780+00:00",
+        "translate_date": "2026-02-08T18:19:33.157792+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.6601,
+        "translate_time_seconds": 1.9334,
         "output_file": "data/gamslib/mcp/ps3_s_scp_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:16.566759+00:00",
+        "solve_date": "2026-02-08T18:20:21.046165+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -7227,7 +7227,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2108,
+        "solve_time_seconds": 0.3285,
         "iterations": null,
         "outcome_category": "path_solve_terminated",
         "error": {
@@ -7331,14 +7331,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:43.612286+00:00",
+        "translate_date": "2026-02-08T18:19:46.234246+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 10.9324,
+        "translate_time_seconds": 13.0752,
         "output_file": "data/gamslib/mcp/qabel_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:16.793535+00:00",
+        "solve_date": "2026-02-08T18:20:21.400893+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -7346,7 +7346,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2207,
+        "solve_time_seconds": 0.3483,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -7749,9 +7749,9 @@
       },
       "nlp2mcp_translate": {
         "status": "failure",
-        "translate_date": "2026-02-08T18:04:45.324242+00:00",
+        "translate_date": "2026-02-08T18:19:48.097642+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.711,
+        "translate_time_seconds": 1.8624,
         "error": {
           "category": "internal_error",
           "message": "Error: Invalid model - Equation 'tc' uses domain set 'tlast' which has no members\n"
@@ -7805,14 +7805,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:46.515568+00:00",
+        "translate_date": "2026-02-08T18:19:49.368782+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.1671,
+        "translate_time_seconds": 1.2421,
         "output_file": "data/gamslib/mcp/rbrock_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:17.219630+00:00",
+        "solve_date": "2026-02-08T18:20:21.937962+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -7820,7 +7820,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": 2.353296e-21,
-        "solve_time_seconds": 0.4185,
+        "solve_time_seconds": 0.5294,
         "iterations": 10,
         "outcome_category": "model_optimal"
       },
@@ -7881,14 +7881,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:47.964910+00:00",
+        "translate_date": "2026-02-08T18:19:50.996011+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.4485,
+        "translate_time_seconds": 1.6263,
         "output_file": "data/gamslib/mcp/robert_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:17.456067+00:00",
+        "solve_date": "2026-02-08T18:20:22.211875+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -7896,7 +7896,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.2305,
+        "solve_time_seconds": 0.2666,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -8132,14 +8132,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:49.548288+00:00",
+        "translate_date": "2026-02-08T18:19:52.774961+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5825,
+        "translate_time_seconds": 1.7781,
         "output_file": "data/gamslib/mcp/sample_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-08T18:05:17.697759+00:00",
+        "solve_date": "2026-02-08T18:20:22.486093+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -8147,7 +8147,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.21,
+        "solve_time_seconds": 0.2408,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
@@ -9240,14 +9240,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:50.784594+00:00",
+        "translate_date": "2026-02-08T18:19:54.223844+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.2354,
+        "translate_time_seconds": 1.448,
         "output_file": "data/gamslib/mcp/trig_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:18.157657+00:00",
+        "solve_date": "2026-02-08T18:20:23.015104+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -9255,7 +9255,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": -2.479,
-        "solve_time_seconds": 0.4534,
+        "solve_time_seconds": 0.5215,
         "iterations": 88,
         "outcome_category": "model_optimal"
       },
@@ -9361,14 +9361,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:52.133064+00:00",
+        "translate_date": "2026-02-08T18:19:55.733365+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.3472,
+        "translate_time_seconds": 1.5079,
         "output_file": "data/gamslib/mcp/trnsport_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:18.545281+00:00",
+        "solve_date": "2026-02-08T18:20:23.448876+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -9376,7 +9376,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": 0.0,
-        "solve_time_seconds": 0.3811,
+        "solve_time_seconds": 0.4267,
         "iterations": 0,
         "outcome_category": "model_optimal"
       },
@@ -9504,14 +9504,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:53.856967+00:00",
+        "translate_date": "2026-02-08T18:19:57.614650+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.6999,
+        "translate_time_seconds": 1.854,
         "output_file": "data/gamslib/mcp/trussm_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:18.959557+00:00",
+        "solve_date": "2026-02-08T18:20:23.960120+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -9519,7 +9519,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": null,
-        "solve_time_seconds": 0.4054,
+        "solve_time_seconds": 0.5004,
         "iterations": 2,
         "outcome_category": "model_optimal"
       },
@@ -9856,14 +9856,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:04:55.145464+00:00",
+        "translate_date": "2026-02-08T18:19:59.088501+00:00",
         "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.2877,
+        "translate_time_seconds": 1.473,
         "output_file": "data/gamslib/mcp/whouse_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-02-08T18:05:19.379678+00:00",
+        "solve_date": "2026-02-08T18:20:24.442466+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
@@ -9871,7 +9871,7 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": -500.0,
-        "solve_time_seconds": 0.4111,
+        "solve_time_seconds": 0.4733,
         "iterations": 0,
         "outcome_category": "model_optimal"
       },

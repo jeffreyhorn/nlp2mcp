@@ -386,10 +386,93 @@ All 2159 unit tests pass. Pipeline improvements:
 - Compilation failures reduced from 22 to 14 (-8)
 - 8 models now compile successfully (though solver still fails - different root cause)
 
-### Next Steps (Day 3)
-- Investigate PATH solver failures for newly-compiling models
-- Consider P2 fix (quoted lag/lead references) if time permits
-- Review P4/P5 for future sprints
+---
+
+## Day 3: P2 Fix - Lag/Lead Expression Quoting (2026-02-08)
+
+### Objectives
+- [x] Investigate P2: Quoted lag/lead references issue
+- [x] Implement P2 fix if feasible
+- [x] Run regression tests
+- [x] Update sprint log
+
+### P2 Fix: Multi-letter Lag/Lead Expression Quoting
+
+**Problem**: Lag/lead expressions with multi-letter base variables (like `tt+1`, `te+1`) were being quoted as `"tt+1"` in the emitted GAMS, which caused Error 149 "Uncontrolled set entered as constant".
+
+**Example** (robert model):
+```gams
+* Equation definition:
+sb(r,tt+1).. s(r,tt+1) =e= s(r,tt) - sum(p, a(r,p)*x(p,tt));
+
+* Before P2 fix (WRONG):
+sb(r,tt).. s(r,"tt+1") =E= s(r,tt) - ...
+
+* After P2 fix (CORRECT):
+sb(r,tt).. s(r,tt+1) =E= s(r,tt) - ...
+```
+
+**Root Cause**: The `_quote_indices()` function receives strings from `VarRef.indices_as_strings()`, which converts `IndexOffset` objects to strings like `"tt+1"`. The quoting heuristic then couldn't distinguish between:
+- Lag/lead expression `tt+1` (should NOT be quoted)
+- Hyphenated element label `route-1` (SHOULD be quoted)
+
+**Solution**: Added `_format_mixed_indices()` function that handles `IndexOffset` objects directly:
+
+1. **Type-aware index formatting** (`src/emit/expr_to_gams.py`):
+   - Added `_format_mixed_indices()` to process mixed `str | IndexOffset` tuples
+   - `IndexOffset` objects are emitted directly via `to_gams_string()` without quoting
+   - String indices continue through `_quote_indices()` for heuristic quoting
+
+2. **Refined pattern matching** (`_is_index_offset_syntax()`):
+   - Extended to support multi-letter bases for `+` (lead) and `++`/`--` (circular)
+   - Kept single-letter restriction for `-` (lag) to avoid false positives on hyphenated labels
+   - Multi-letter lag expressions come through as `IndexOffset` objects, not strings
+
+**Files Modified**:
+- `src/emit/expr_to_gams.py`: Added `_format_mixed_indices()`, updated pattern matching
+
+### Metrics (No Change)
+
+| Metric | After P1+P3 | After P2 | Change |
+|--------|-------------|----------|--------|
+| path_syntax_error | 14 | 14 | 0 |
+| path_solve_terminated | 21 | 21 | 0 |
+| model_optimal | 13 | 13 | 0 |
+
+**Note**: The P2 fix correctly emits lag/lead expressions, but the affected models (robert, pak) still have other issues (domain mismatches in KKT stationarity equations) that prevent successful compilation.
+
+### Models with Lag/Lead Expressions
+
+Models now correctly emit multi-letter lag/lead expressions:
+- `robert`: `s(r,tt+1)` instead of `s(r,"tt+1")`
+- `pak`: `c(te+1)`, `ti(te+1)`, `ks(te+1,j)` instead of quoted versions
+
+### Day 3 Summary
+
+Implemented P2 fix for multi-letter lag/lead expression quoting:
+- Added type-aware index formatting that preserves `IndexOffset` semantics
+- Correctly emits `tt+1` instead of `"tt+1"` for lead expressions
+- All 2159 unit tests pass
+
+### Sprint 18 Days 1-3 Cumulative Progress
+
+| Stage | Day 0 | Day 3 | Change |
+|-------|-------|-------|--------|
+| Parse | 62 | 62 | 0 |
+| Translate | 50 | 50 | 0 |
+| path_syntax_error | 22 | 14 | **-8** |
+| path_solve_terminated | 13 | 21 | +8 |
+| model_optimal | 13 | 13 | 0 |
+
+**Key Achievements**:
+- P1: Context-aware element literal quoting (7 models now compile)
+- P3: Valid GAMS identifiers for .fx bounds (1 model now compiles)
+- P2: Correct lag/lead expression emission (semantic fix, no metric change)
+
+### Next Steps (Day 4+)
+- Investigate remaining `path_syntax_error` failures (14 models)
+- Investigate `path_solve_terminated` failures (may be numeric/feasibility issues)
+- Consider P4 (empty dynamic subsets) and P5 (runtime solver failures)
 
 ---
 

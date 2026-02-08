@@ -160,11 +160,11 @@ stat_v(t,j).. 0 + (-1) * nu_gnpd(t) + 0 * nu_invd(t) + sum(te, 0 * nu_invt(te)) 
 
 * Inequality complementarity equations
 comp_capb(t,j).. ((-1) * v(t,j)) =G= 0;
-comp_conl(te).. c("te+1") =G= 0;
+comp_conl(te).. c(te+1) =G= 0;
 comp_fup(t).. ((-1) * f(t)) =G= 0;
 comp_impl(t).. m(t) =G= 0;
-comp_invl(te).. ti("te+1") =G= 0;
-comp_invu(te).. ((-1) * ti("te+1")) =G= 0;
+comp_invl(te).. ti(te+1) =G= 0;
+comp_invu(te).. ((-1) * ti(te+1)) =G= 0;
 comp_savl(t).. ((-1) * s(t)) =G= 0;
 
 * Original equality equations
@@ -173,7 +173,7 @@ invd(t).. ti(t) =E= s(t) + f(t);
 invt(te).. ti(te) =E= sum(j, i(te,j));
 tgap(t).. f(t) =E= m(t) - e(t) - v(t,"traded");
 incd(t).. gnp(t) =E= c(t) + ti(t) - f(t);
-kbal(te,j).. ks("te+1",j) =E= ks(te,j) + i(te,j);
+kbal(te,j).. ks(te+1,j) =E= ks(te,j) + i(te,j);
 taid.. fb =E= sum(t, delt(t) * f(t));
 wdef.. w =E= sum(t, delt(t) * c(t)) - gama * fb + d * dis * gnp("1985");
 i_fx_1962_traded.. i("1962","traded") - 0 =E= 0;

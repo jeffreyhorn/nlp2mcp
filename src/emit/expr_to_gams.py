@@ -107,31 +107,90 @@ def _is_index_offset_syntax(s: str) -> bool:
     import re
 
     # Circular operators (++ and --) are unambiguous IndexOffset syntax
-    # Pattern: single-letter base ++ or -- followed by either:
-    #   - a numeric offset (e.g., i++1, t--10), or
-    #   - an identifier offset matching the grammar's ID token
-    #     (e.g., i++shift, i++shift_1)
-    circular_pattern = r"^[a-z](\+\+|--)([0-9]+|[A-Za-z_][A-Za-z0-9_]*)$"
-    if re.match(circular_pattern, s, re.IGNORECASE):
+    # Pattern: identifier base ++ or -- followed by either:
+    #   - a numeric offset (e.g., i++1, t--10, tt++1), or
+    #   - an identifier offset (e.g., i++shift, tt++shift_1)
+    # Sprint 18 Day 3: Extended to support multi-letter bases like 'tt', 'np'
+    # Circular syntax is unambiguous since ++ and -- aren't valid in element labels
+    circular_pattern = r"^[A-Za-z_][A-Za-z0-9_]*(\+\+|--)([0-9]+|[A-Za-z_][A-Za-z0-9_]*)$"
+    if re.match(circular_pattern, s):
         return True
 
-    # Linear operators (+ and -) need stricter matching to avoid false positives
-    # like "route-1" or "item-2" which are hyphenated element labels.
-    # Only match if base is a single letter (case-insensitive, typical index variable)
-    # and offset is purely numeric.
-    linear_pattern = r"^[a-z](\+|-)[0-9]+$"  # i+1, i-3, j+10, T+5
-    if re.match(linear_pattern, s, re.IGNORECASE):
+    # Linear operators with + are unambiguous since + isn't valid in element labels
+    # Sprint 18 Day 3: Extended to support multi-letter bases (tt+1, np+j)
+    linear_lead_numeric = r"^[A-Za-z_][A-Za-z0-9_]*\+[0-9]+$"  # i+1, tt+1
+    if re.match(linear_lead_numeric, s):
         return True
 
-    # Symbolic linear offset: single-letter base (case-insensitive) followed by
-    # + or - and an identifier (letters, digits, underscores - no hyphens).
-    # e.g., i+j, i-k, i+shift, t-offset1, T+lag_var
-    # Uses re.IGNORECASE so base can be 'i' or 'I'.
-    linear_symbolic_pattern = r"^[a-z](\+|-)[A-Za-z_][A-Za-z0-9_]*$"
-    if re.match(linear_symbolic_pattern, s, re.IGNORECASE):
+    linear_lead_symbolic = r"^[A-Za-z_][A-Za-z0-9_]*\+[A-Za-z_][A-Za-z0-9_]*$"  # i+j, tt+k
+    if re.match(linear_lead_symbolic, s):
+        return True
+
+    # Linear lag with - is AMBIGUOUS: "route-1" vs "tt-1"
+    # Only match single-letter bases for lag to avoid false positives on hyphenated labels
+    # Multi-letter lag like "tt-1" should come through as IndexOffset objects, not strings
+    linear_lag_numeric = r"^[a-zA-Z]-[0-9]+$"  # i-1, t-3 (single letter only)
+    if re.match(linear_lag_numeric, s):
+        return True
+
+    linear_lag_symbolic = r"^[a-zA-Z]-[A-Za-z_][A-Za-z0-9_]*$"  # i-j, t-k (single letter only)
+    if re.match(linear_lag_symbolic, s):
         return True
 
     return False
+
+
+def _format_mixed_indices(
+    indices: tuple[str | IndexOffset, ...], domain_vars: frozenset[str] | None = None
+) -> str:
+    """Format a tuple of mixed indices (strings and IndexOffset) for GAMS syntax.
+
+    This function handles both string indices (which need quoting logic) and
+    IndexOffset objects (which are emitted directly without quoting).
+
+    Sprint 18 Day 3: Fixes P2 issue where IndexOffset expressions like tt+1 were
+    being quoted as "tt+1" because they passed through _quote_indices as strings.
+    By keeping IndexOffset objects separate, we preserve the semantic information
+    that these are lag/lead expressions, not hyphenated element labels.
+
+    Args:
+        indices: Tuple of string indices or IndexOffset objects
+        domain_vars: Set of known domain variable names (not quoted)
+
+    Returns:
+        Comma-separated string of formatted indices
+
+    Examples:
+        >>> _format_mixed_indices(("r", IndexOffset("tt", Const(1), False)))
+        'r,tt+1'
+        >>> _format_mixed_indices(("i", "j"), frozenset(["i", "j"]))
+        'i,j'
+        >>> _format_mixed_indices(("route-1",))  # Element label
+        '"route-1"'
+    """
+    if domain_vars is None:
+        domain_vars = frozenset()
+
+    result = []
+    string_indices = []
+
+    for idx in indices:
+        if isinstance(idx, IndexOffset):
+            # Flush any accumulated string indices first
+            if string_indices:
+                result.extend(_quote_indices(tuple(string_indices), domain_vars))
+                string_indices = []
+            # IndexOffset objects are emitted directly - never quoted
+            result.append(idx.to_gams_string())
+        else:
+            # Accumulate string indices for batch processing
+            string_indices.append(idx)
+
+    # Flush remaining string indices
+    if string_indices:
+        result.extend(_quote_indices(tuple(string_indices), domain_vars))
+
+    return ",".join(result)
 
 
 def _quote_indices(
@@ -292,30 +351,26 @@ def expr_to_gams(
 
         case VarRef() as var_ref:
             if var_ref.indices:
-                quoted_indices = _quote_indices(var_ref.indices_as_strings(), domain_vars)
-                indices_str = ",".join(quoted_indices)
+                indices_str = _format_mixed_indices(var_ref.indices, domain_vars)
                 return f"{var_ref.name}({indices_str})"
             return var_ref.name
 
         case ParamRef() as param_ref:
             if param_ref.indices:
-                quoted_indices = _quote_indices(param_ref.indices_as_strings(), domain_vars)
-                indices_str = ",".join(quoted_indices)
+                indices_str = _format_mixed_indices(param_ref.indices, domain_vars)
                 return f"{param_ref.name}({indices_str})"
             return param_ref.name
 
         case MultiplierRef() as mult_ref:
             if mult_ref.indices:
-                quoted_indices = _quote_indices(mult_ref.indices_as_strings(), domain_vars)
-                indices_str = ",".join(quoted_indices)
+                indices_str = _format_mixed_indices(mult_ref.indices, domain_vars)
                 return f"{mult_ref.name}({indices_str})"
             return mult_ref.name
 
         case EquationRef() as eq_ref:
             # Equation attribute access: eq.m, eq.l('1'), etc.
             if eq_ref.indices:
-                quoted_indices = _quote_indices(eq_ref.indices_as_strings(), domain_vars)
-                indices_str = ",".join(quoted_indices)
+                indices_str = _format_mixed_indices(eq_ref.indices, domain_vars)
                 return f"{eq_ref.name}.{eq_ref.attribute}({indices_str})"
             return f"{eq_ref.name}.{eq_ref.attribute}"
 

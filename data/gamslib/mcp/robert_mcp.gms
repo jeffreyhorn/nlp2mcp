@@ -25,7 +25,7 @@ Sets
 Parameters
     a(r,p) /scrap.low 5.0, scrap.high 3.0, new.low 1.0, new.high 2.0, scrap.medium 0.0, new.medium 0.0/
     c(p,t) /low.1 25.0, low.2 20.0, low.3 10.0, medium.1 50.0, medium.2 50.0, medium.3 50.0, high.1 75.0, high.2 80.0, high.3 100.0/
-    misc(*,r) /'max-stock'.new 400.0, 'storage-c'.new 0.5, 'res-value'.new 15.0, 'res-value'.scrap 0.0, 'storage-c'.scrap 0.0, 'max-stock'.scrap 0.0/
+    misc(*,r) /'max-stock'.new 400.0, 'storage-c'.new 0.5, 'res-value'.new 15.0, 'res-value'.scrap 0.0, 'max-stock'.scrap 0.0, 'storage-c'.scrap 0.0/
 ;
 
 Scalars
@@ -82,7 +82,7 @@ stat_x(p,tt).. ((-1) * (c(p,t) - sum(r, 0) + sum(r, 0))) + sum(r, a(r,p) * nu_sb
 comp_cc(t).. ((-1) * sum(p, x(p,t))) =G= 0;
 
 * Original equality equations
-sb(r,tt).. s(r,"tt+1") =E= s(r,tt) - sum(p, a(r,p) * x(p,tt));
+sb(r,tt).. s(r,tt+1) =E= s(r,tt) - sum(p, a(r,p) * x(p,tt));
 pd.. profit =E= sum(t, sum(p, c(p,t) * x(p,t)) - sum(r, misc("storage-c",r) * s(r,t))) + sum(r, misc("res-value",r) * s(r,"4"));
 
 
