@@ -23,6 +23,7 @@ from src.ir.ast import (
     IndexOffset,
     MultiplierRef,
     ParamRef,
+    Prod,
     Sum,
     VarRef,
 )
@@ -89,9 +90,9 @@ def _collect_lead_lag_restrictions(
 
     Recursively walks an expression to find IndexOffset nodes and determines
     which domain indices need restrictions based on their offset direction
-    and magnitude. Indices bound by Sum expressions are tracked and excluded
-    to avoid incorrectly restricting equation-level indices when a sum-local
-    index shadows the equation domain.
+    and magnitude. Indices bound by Sum or Prod expressions are tracked and
+    excluded to avoid incorrectly restricting equation-level indices when a
+    sum/prod-local index shadows the equation domain.
 
     For linear (non-circular) offsets:
     - Positive offset (lead, e.g., k+2): needs ord(k) <= card(k) - 2
@@ -122,10 +123,10 @@ def _collect_lead_lag_restrictions(
                 if isinstance(idx, IndexOffset):
                     _check_index_offset(idx, domain_map, lead_offsets, lag_offsets, bound_indices)
 
-        # Handle Sum expressions: track bound indices to avoid false positives
-        # when sum-local indices shadow equation domain indices
-        if isinstance(e, Sum):
-            # Add sum indices to bound set for walking the body
+        # Handle Sum and Prod expressions: track bound indices to avoid false positives
+        # when sum/prod-local indices shadow equation domain indices
+        if isinstance(e, (Sum, Prod)):
+            # Add sum/prod indices to bound set for walking the body
             new_bound = bound_indices | {idx.lower() for idx in e.index_sets}
             for child in e.children():
                 walk(child, new_bound)

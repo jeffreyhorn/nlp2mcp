@@ -14,7 +14,7 @@ from src.emit.equations import (
     emit_equation_definitions,
 )
 from src.emit.expr_to_gams import collect_index_aliases, resolve_index_conflicts
-from src.ir.ast import Binary, Const, IndexOffset, Sum, VarRef
+from src.ir.ast import Binary, Const, IndexOffset, Prod, Sum, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
@@ -608,3 +608,31 @@ class TestLeadLagDomainRestrictions:
         result, aliases = emit_equation_def("eq", eq_def)
         assert "$" not in result
         assert aliases == set()
+
+    def test_collect_lead_lag_restrictions_sum_shadows_domain(self):
+        """Test that sum-local indices don't generate restrictions.
+
+        When a sum binds an index that matches the equation domain,
+        lead/lag inside that sum should not cause equation-level restrictions.
+        """
+        # sum(i, x(i+1)) with equation domain (i,)
+        # The i inside sum is sum-local, not the equation domain i
+        expr = Sum(("i",), VarRef("x", (IndexOffset("i", Const(1), circular=False),)))
+        lead_offsets, lag_offsets = _collect_lead_lag_restrictions(expr, ("i",))
+        # Should NOT generate restrictions since i is bound by sum
+        assert lead_offsets == {}
+        assert lag_offsets == {}
+
+    def test_collect_lead_lag_restrictions_prod_shadows_domain(self):
+        """Test that prod-local indices don't generate restrictions.
+
+        When a prod binds an index that matches the equation domain,
+        lead/lag inside that prod should not cause equation-level restrictions.
+        """
+        # prod(i, x(i+1)) with equation domain (i,)
+        # The i inside prod is prod-local, not the equation domain i
+        expr = Prod(("i",), VarRef("x", (IndexOffset("i", Const(1), circular=False),)))
+        lead_offsets, lag_offsets = _collect_lead_lag_restrictions(expr, ("i",))
+        # Should NOT generate restrictions since i is bound by prod
+        assert lead_offsets == {}
+        assert lag_offsets == {}
