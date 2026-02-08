@@ -5,6 +5,10 @@ Each equation is emitted in the form: eq_name(indices).. lhs =E= rhs;
 
 Handles index aliasing to avoid GAMS Error 125 ("Set is under control already")
 when an equation's domain index is reused in a nested sum expression.
+
+Also handles automatic domain restriction inference for lead/lag expressions:
+- Lead expressions (k+1) require: $(ord(k) < card(k))
+- Lag expressions (t-1) require: $(ord(t) > 1)
 """
 
 from src.emit.expr_to_gams import (
@@ -12,9 +16,111 @@ from src.emit.expr_to_gams import (
     expr_to_gams,
     resolve_index_conflicts,
 )
+from src.ir.ast import Const, EquationRef, Expr, IndexOffset, MultiplierRef, ParamRef, VarRef
 from src.ir.normalize import NormalizedEquation
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
+
+
+def _check_index_offset(
+    idx_offset: IndexOffset, domain_set: set[str], lead_indices: set[str], lag_indices: set[str]
+) -> None:
+    """Check an IndexOffset and add to lead/lag sets if applicable.
+
+    Args:
+        idx_offset: The IndexOffset to check
+        domain_set: Set of lowercase domain indices
+        lead_indices: Set to add lead indices to
+        lag_indices: Set to add lag indices to
+    """
+    # Only consider non-circular offsets (linear lead/lag)
+    if not idx_offset.circular:
+        # Check if this base is in the equation domain
+        if idx_offset.base.lower() in domain_set:
+            # Determine offset direction
+            if isinstance(idx_offset.offset, Const):
+                if idx_offset.offset.value > 0:
+                    lead_indices.add(idx_offset.base)
+                elif idx_offset.offset.value < 0:
+                    lag_indices.add(idx_offset.base)
+
+
+def _collect_lead_lag_restrictions(
+    expr: Expr, domain: tuple[str, ...]
+) -> tuple[set[str], set[str]]:
+    """Collect domain indices that need lead or lag restrictions.
+
+    Recursively walks an expression to find IndexOffset nodes and determines
+    which domain indices need restrictions based on their offset direction.
+
+    For linear (non-circular) offsets:
+    - Positive offset (lead, e.g., k+1): needs ord(k) < card(k)
+    - Negative offset (lag, e.g., t-1): needs ord(t) > 1
+
+    Circular offsets (++/--) don't need restrictions as they wrap around.
+
+    Args:
+        expr: Expression to analyze
+        domain: Tuple of domain indices for the equation
+
+    Returns:
+        Tuple of (lead_indices, lag_indices) that need restrictions
+    """
+    lead_indices: set[str] = set()
+    lag_indices: set[str] = set()
+    domain_set = {d.lower() for d in domain}
+
+    def walk(e: Expr) -> None:
+        # Check for IndexOffset directly in expression
+        if isinstance(e, IndexOffset):
+            _check_index_offset(e, domain_set, lead_indices, lag_indices)
+
+        # Check for IndexOffset in VarRef/ParamRef/MultiplierRef/EquationRef indices
+        if isinstance(e, (VarRef, ParamRef, MultiplierRef, EquationRef)):
+            for idx in e.indices:
+                if isinstance(idx, IndexOffset):
+                    _check_index_offset(idx, domain_set, lead_indices, lag_indices)
+
+        # Recursively walk children
+        for child in e.children():
+            walk(child)
+
+    walk(expr)
+    return lead_indices, lag_indices
+
+
+def _build_domain_condition(lead_indices: set[str], lag_indices: set[str]) -> str | None:
+    """Build a GAMS domain condition string from lead/lag index sets.
+
+    Args:
+        lead_indices: Set of indices needing lead restriction (ord < card)
+        lag_indices: Set of indices needing lag restriction (ord > 1)
+
+    Returns:
+        GAMS condition string or None if no restrictions needed
+
+    Examples:
+        >>> _build_domain_condition({'k'}, set())
+        'ord(k) < card(k)'
+        >>> _build_domain_condition(set(), {'t'})
+        'ord(t) > 1'
+        >>> _build_domain_condition({'k'}, {'t'})
+        '(ord(k) < card(k)) and (ord(t) > 1)'
+    """
+    conditions = []
+
+    for idx in sorted(lead_indices):
+        conditions.append(f"ord({idx}) < card({idx})")
+
+    for idx in sorted(lag_indices):
+        conditions.append(f"ord({idx}) > 1")
+
+    if not conditions:
+        return None
+    elif len(conditions) == 1:
+        return conditions[0]
+    else:
+        return " and ".join(f"({c})" for c in conditions)
 
 
 def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]:
@@ -56,10 +162,25 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
     rel_map = {Rel.EQ: "=E=", Rel.LE: "=L=", Rel.GE: "=G="}
     rel_gams = rel_map[eq_def.relation]
 
+    # Detect lead/lag expressions and build domain conditions
+    # Issues #649, #652-656: Equations with lead (k+1) or lag (t-1) need restrictions
+    lead_indices: set[str] = set()
+    lag_indices: set[str] = set()
+    if domain:
+        lhs_lead, lhs_lag = _collect_lead_lag_restrictions(lhs, domain)
+        rhs_lead, rhs_lag = _collect_lead_lag_restrictions(rhs, domain)
+        lead_indices = lhs_lead | rhs_lead
+        lag_indices = lhs_lag | rhs_lag
+
+    condition = _build_domain_condition(lead_indices, lag_indices)
+
     # Build equation string
     if domain:
         indices_str = ",".join(domain)
-        eq_str = f"{eq_name}({indices_str}).. {lhs_gams} {rel_gams} {rhs_gams};"
+        if condition:
+            eq_str = f"{eq_name}({indices_str})$({condition}).. {lhs_gams} {rel_gams} {rhs_gams};"
+        else:
+            eq_str = f"{eq_name}({indices_str}).. {lhs_gams} {rel_gams} {rhs_gams};"
     else:
         eq_str = f"{eq_name}.. {lhs_gams} {rel_gams} {rhs_gams};"
 
