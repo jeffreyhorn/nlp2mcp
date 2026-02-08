@@ -7,8 +7,8 @@ Handles index aliasing to avoid GAMS Error 125 ("Set is under control already")
 when an equation's domain index is reused in a nested sum expression.
 
 Also handles automatic domain restriction inference for lead/lag expressions:
-- Lead expressions (k+1) require: $(ord(k) < card(k))
-- Lag expressions (t-1) require: $(ord(t) > 1)
+- Lead expressions (k + n) with maximum positive offset n require: $(ord(k) <= card(k) - n)
+- Lag expressions (t - n) with maximum negative offset magnitude n require: $(ord(t) > n)
 """
 
 from src.emit.expr_to_gams import (
@@ -24,7 +24,7 @@ from src.kkt.kkt_system import KKTSystem
 
 def _check_index_offset(
     idx_offset: IndexOffset,
-    domain_set: set[str],
+    domain_map: dict[str, str],
     lead_offsets: dict[str, int],
     lag_offsets: dict[str, int],
 ) -> None:
@@ -32,25 +32,42 @@ def _check_index_offset(
 
     Args:
         idx_offset: The IndexOffset to check
-        domain_set: Set of lowercase domain indices
-        lead_offsets: Dict mapping index to max positive offset magnitude
-        lag_offsets: Dict mapping index to max negative offset magnitude (as positive int)
+        domain_map: Map from lowercase domain index to canonical (original) name
+        lead_offsets: Dict mapping canonical index to max positive offset magnitude
+        lag_offsets: Dict mapping canonical index to max negative offset magnitude (as positive int)
     """
     # Only consider non-circular offsets (linear lead/lag)
     if not idx_offset.circular:
-        # Check if this base is in the equation domain
-        if idx_offset.base.lower() in domain_set:
+        # Check if this base is in the equation domain (case-insensitive)
+        base_lower = idx_offset.base.lower()
+        if base_lower in domain_map:
+            # Use canonical domain name for the key
+            canonical_name = domain_map[base_lower]
             # Determine offset direction and magnitude
             if isinstance(idx_offset.offset, Const):
-                offset_val = int(idx_offset.offset.value)
+                raw_val = idx_offset.offset.value
+                if isinstance(raw_val, int):
+                    offset_val = raw_val
+                elif isinstance(raw_val, float):
+                    if not raw_val.is_integer():
+                        raise ValueError(
+                            f"Non-integer index offset {raw_val!r} for base '{idx_offset.base}' "
+                            "is not supported; offsets must be integer-valued."
+                        )
+                    offset_val = int(raw_val)
+                else:
+                    raise TypeError(
+                        f"Unsupported constant type {type(raw_val)!r} for index offset on "
+                        f"base '{idx_offset.base}'. Expected int or float."
+                    )
                 if offset_val > 0:
                     # Lead: track maximum positive offset
-                    current = lead_offsets.get(idx_offset.base, 0)
-                    lead_offsets[idx_offset.base] = max(current, offset_val)
+                    current = lead_offsets.get(canonical_name, 0)
+                    lead_offsets[canonical_name] = max(current, offset_val)
                 elif offset_val < 0:
                     # Lag: track maximum negative offset magnitude
-                    current = lag_offsets.get(idx_offset.base, 0)
-                    lag_offsets[idx_offset.base] = max(current, abs(offset_val))
+                    current = lag_offsets.get(canonical_name, 0)
+                    lag_offsets[canonical_name] = max(current, abs(offset_val))
 
 
 def _collect_lead_lag_restrictions(
@@ -73,22 +90,23 @@ def _collect_lead_lag_restrictions(
         domain: Tuple of domain indices for the equation
 
     Returns:
-        Tuple of (lead_offsets, lag_offsets) dicts mapping index to max offset
+        Tuple of (lead_offsets, lag_offsets) dicts mapping canonical index to max offset
     """
     lead_offsets: dict[str, int] = {}
     lag_offsets: dict[str, int] = {}
-    domain_set = {d.lower() for d in domain}
+    # Map lowercase domain index to canonical (original) name
+    domain_map = {d.lower(): d for d in domain}
 
     def walk(e: Expr) -> None:
         # Check for IndexOffset directly in expression
         if isinstance(e, IndexOffset):
-            _check_index_offset(e, domain_set, lead_offsets, lag_offsets)
+            _check_index_offset(e, domain_map, lead_offsets, lag_offsets)
 
         # Check for IndexOffset in VarRef/ParamRef/MultiplierRef/EquationRef indices
         if isinstance(e, (VarRef, ParamRef, MultiplierRef, EquationRef)):
             for idx in e.indices:
                 if isinstance(idx, IndexOffset):
-                    _check_index_offset(idx, domain_set, lead_offsets, lag_offsets)
+                    _check_index_offset(idx, domain_map, lead_offsets, lag_offsets)
 
         # Recursively walk children
         for child in e.children():
