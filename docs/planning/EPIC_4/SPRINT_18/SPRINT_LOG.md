@@ -250,7 +250,74 @@ Completed diagnostic deep-dive on 37 solve failures:
 
 ---
 
-## Day 2: [Pending]
+## Day 2: P1 Element Literal Quoting Fix (2026-02-08)
+
+### Objectives
+- [x] Implement P1 fix: Element literal quoting
+- [ ] Implement P3 fix: Sanitize .fx bound multiplier names
+- [x] Re-run pipeline to validate fixes
+- [x] Update metrics
+
+### Work Completed
+
+#### P1 Fix: Element Literal Quoting (Multiple Components)
+
+**Problem**: Multi-character all-lowercase element literals (e.g., `cod`, `land`, `apr`, `revenue`) were being treated as domain variables and emitted without quotes, causing GAMS Error 120/340.
+
+**Root Cause Analysis**: The `_quote_indices()` heuristic in `expr_to_gams.py` couldn't distinguish between:
+- Domain variables like `i`, `j`, `crep` (should NOT be quoted)
+- Element literals like `cod`, `land`, `apr` (SHOULD be quoted)
+
+**Solution**: Multi-part fix across parser and emitter:
+
+1. **Parser Quote Preservation** (`src/ir/parser.py`):
+   - Modified `_extract_indices_with_subset()` to preserve quotes for element literals
+   - Added helper `_strip_quotes_from_indices()` to canonicalize value storage
+   - Expression indices keep quotes (for emitter), value indices strip quotes (for lookup)
+
+2. **Emitter Domain Context** (`src/emit/expr_to_gams.py`):
+   - Added `domain_vars` parameter to `expr_to_gams()` and `_quote_indices()`
+   - Domain variables from equation domains and sum expressions are tracked
+   - Only indices in `domain_vars` context are left unquoted
+   - Refined heuristic: single/two-char lowercase → unquoted; multi-char → quoted
+
+3. **Equation Emitter Integration** (`src/emit/equations.py`):
+   - Pass equation domain as `domain_vars` when emitting LHS/RHS expressions
+
+4. **Computed Parameter Emission** (`src/emit/original_symbols.py`):
+   - Pass domain indices from key_tuple as `domain_vars`
+   - Skip report parameters with indexed expressions but no values
+
+**Files Modified**:
+- `src/ir/parser.py`: Quote preservation in index extraction
+- `src/emit/expr_to_gams.py`: Context-aware quoting with `domain_vars`
+- `src/emit/equations.py`: Pass equation domain to emitter
+- `src/emit/original_symbols.py`: Pass domain context, skip report params
+
+### Metrics Update
+
+| Stage | Day 1 | Day 2 | Delta |
+|-------|-------|-------|-------|
+| Parse | 62 | 62 | 0 |
+| Translate | 50 | 50 | 0 |
+| Solve (optimal) | 13 | 13 | 0 |
+| Compile errors (`path_syntax_error`) | 22 | 15 | **-7** |
+| Runtime errors (`path_solve_terminated`) | 13 | 20 | +7 |
+
+**Key Result**: 7 models moved from compilation failures to successful compilation. While they don't solve successfully (PATH solver fails), the GAMS code is now syntactically valid.
+
+**Models Fixed** (now compile, previously had syntax errors):
+- pollut, demo1, and 5 others moved to `path_solve_terminated`
+
+### Test Updates
+- Updated `test_expr_to_gams.py`: Tests now pass domain context for multi-char indices
+- All 2566 unit tests pass
+
+### Next Steps (Day 2 continued or Day 3)
+- Implement P3 fix: Invalid .fx bound names (himmel16)
+- Investigate PATH solver failures (may be numeric issues or infeasible KKT systems)
+
+---
 
 <!-- Template for daily entries:
 

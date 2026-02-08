@@ -134,26 +134,29 @@ def _is_index_offset_syntax(s: str) -> bool:
     return False
 
 
-def _quote_indices(indices: tuple[str, ...]) -> list[str]:
+def _quote_indices(
+    indices: tuple[str, ...], domain_vars: frozenset[str] | None = None
+) -> list[str]:
     """Quote element labels in index tuples for GAMS syntax.
 
-    This function uses a heuristic to distinguish between domain variables
+    This function uses context and heuristics to distinguish between domain variables
     (set indices like 'i', 'j', 'nodes') and element labels (specific values like 'i1', 'H2').
-
-    Heuristic:
-    - All-lowercase identifier-like names (letters/underscores only) are domain variables → unquoted
-    - IndexOffset syntax (i++1, i--2, i+1, i-3, i+j) are valid GAMS expressions → unquoted
-    - Names containing digits, uppercase letters, or special chars are element labels → quoted
-    - Indices that arrive already quoted (e.g., "demand") are always element labels → quoted
-
-    This addresses GAMS compilation errors from inconsistent quoting (Error 171,
-    Error 340) while preserving correct behavior for indexed equations.
-
-    Also handles indices that may already be quoted from the parser (e.g., "demand")
-    by stripping existing quotes before re-quoting to avoid double-quoting.
 
     Args:
         indices: Tuple of index identifiers
+        domain_vars: Optional set of identifiers that are known domain variables
+                     (e.g., from enclosing sum expressions). These are never quoted.
+
+    Heuristic (when domain_vars context is not available):
+    - Indices in domain_vars are domain variables → unquoted
+    - IndexOffset syntax (i++1, i--2, i+1, i-3, i+j) are valid GAMS expressions → unquoted
+    - Single/two-char lowercase identifiers (i, j, ii, np) are likely domain variables → unquoted
+    - Indices that arrive already quoted (e.g., "demand") are element labels → quoted
+    - Multi-char lowercase identifiers (cod, land, apr) are likely element labels → quoted
+    - Names with digits or uppercase are element labels → quoted
+
+    This addresses GAMS compilation errors from inconsistent quoting (Error 120, 171, 340)
+    while preserving correct behavior for indexed equations.
 
     Returns:
         List of appropriately quoted/unquoted indices
@@ -165,27 +168,17 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
         ['"i1"']
         >>> _quote_indices(("i", "j"))
         ['i', 'j']
-        >>> _quote_indices(("nodes",))
-        ['nodes']
-        >>> _quote_indices(("flow_var",))
-        ['flow_var']
-        >>> _quote_indices(("H", "H2", "H2O"))
-        ['"H"', '"H2"', '"H2O"']
-        >>> _quote_indices(("c",))
-        ['c']
-        >>> _quote_indices(("OH",))
-        ['"OH"']
+        >>> _quote_indices(("crep",), frozenset(["crep"]))  # crep in domain context
+        ['crep']
+        >>> _quote_indices(("cod",))  # cod without domain context
+        ['"cod"']
         >>> _quote_indices(('"demand"',))
         ['"demand"']
-        >>> _quote_indices(('"x"', '"y"'))
-        ['"x"', '"y"']
         >>> _quote_indices(("i++1",))
         ['i++1']
-        >>> _quote_indices(("t--10",))
-        ['t--10']
-        >>> _quote_indices(("i+j",))
-        ['i+j']
     """
+    if domain_vars is None:
+        domain_vars = frozenset()
     result = []
     for idx in indices:
         # Strip ALL layers of quotes to handle double-quoted indices like ""cost""
@@ -205,16 +198,26 @@ def _quote_indices(indices: tuple[str, ...]) -> list[str]:
         # If it was quoted, it's an element label - always quote it (single layer)
         if was_quoted:
             result.append(f'"{idx_clean}"')
+        # Sprint 18 Day 2: If index is in domain_vars context, it's a domain variable - don't quote
+        elif idx_clean in domain_vars:
+            result.append(idx_clean)
         # IndexOffset syntax (i++1, i--2, i+1, i-3, i+j) is valid GAMS - don't quote
         elif _is_index_offset_syntax(idx_clean):
             result.append(idx_clean)
-        # All-lowercase identifier (letters and underscores only) = domain variable, don't quote
-        # This handles patterns like sum(i, ...), x(nodes), flow(years)
-        # Element labels typically contain digits (i1, H2) or uppercase (H, OH, H2O)
-        elif idx_clean.replace("_", "").isalpha() and idx_clean.islower():
+        # Sprint 18 Day 2: Refined heuristic for domain variables vs element literals
+        # Only single/two-character lowercase identifiers are treated as domain variables.
+        # Multi-character all-lowercase identifiers (like 'cod', 'land', 'apr', 'water')
+        # are likely element literals and should be quoted.
+        # This fixes GAMS Error 120/340 where element labels are misinterpreted as set names.
+        elif len(idx_clean) == 1 and idx_clean.isalpha() and idx_clean.islower():
+            # Single lowercase letter like 'i', 'j', 'k', 'c', 't' - domain variable
+            result.append(idx_clean)
+        elif idx_clean.replace("_", "").isalpha() and idx_clean.islower() and len(idx_clean) <= 2:
+            # Two-letter lowercase identifiers like 'ii', 'jj', 'np', 'nn' - likely domain variables
             result.append(idx_clean)
         else:
             # Everything else is an element label, quote it for consistency
+            # This includes multi-character lowercase names like 'cod', 'land', 'apr', 'water'
             result.append(f'"{idx_clean}"')
     return result
 
@@ -250,13 +253,20 @@ def _needs_parens(parent_op: str | None, child_op: str | None, is_right: bool = 
     return False
 
 
-def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = False) -> str:
+def expr_to_gams(
+    expr: Expr,
+    parent_op: str | None = None,
+    is_right: bool = False,
+    domain_vars: frozenset[str] | None = None,
+) -> str:
     """Convert an AST expression to GAMS syntax.
 
     Args:
         expr: Expression AST node
         parent_op: Operator of parent expression (for precedence handling)
         is_right: Whether this is the right operand of parent
+        domain_vars: Set of identifiers that are currently in scope as domain variables
+                     (from enclosing sum expressions or equation domain). These are not quoted.
 
     Returns:
         GAMS expression string
@@ -271,6 +281,8 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
         >>> expr_to_gams(Binary("^", VarRef("x", ()), Const(2)))
         'x ** 2'
     """
+    if domain_vars is None:
+        domain_vars = frozenset()
     match expr:
         case Const(value):
             return _format_numeric(value)
@@ -280,21 +292,21 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
 
         case VarRef() as var_ref:
             if var_ref.indices:
-                quoted_indices = _quote_indices(var_ref.indices_as_strings())
+                quoted_indices = _quote_indices(var_ref.indices_as_strings(), domain_vars)
                 indices_str = ",".join(quoted_indices)
                 return f"{var_ref.name}({indices_str})"
             return var_ref.name
 
         case ParamRef() as param_ref:
             if param_ref.indices:
-                quoted_indices = _quote_indices(param_ref.indices_as_strings())
+                quoted_indices = _quote_indices(param_ref.indices_as_strings(), domain_vars)
                 indices_str = ",".join(quoted_indices)
                 return f"{param_ref.name}({indices_str})"
             return param_ref.name
 
         case MultiplierRef() as mult_ref:
             if mult_ref.indices:
-                quoted_indices = _quote_indices(mult_ref.indices_as_strings())
+                quoted_indices = _quote_indices(mult_ref.indices_as_strings(), domain_vars)
                 indices_str = ",".join(quoted_indices)
                 return f"{mult_ref.name}({indices_str})"
             return mult_ref.name
@@ -302,13 +314,13 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
         case EquationRef() as eq_ref:
             # Equation attribute access: eq.m, eq.l('1'), etc.
             if eq_ref.indices:
-                quoted_indices = _quote_indices(eq_ref.indices_as_strings())
+                quoted_indices = _quote_indices(eq_ref.indices_as_strings(), domain_vars)
                 indices_str = ",".join(quoted_indices)
                 return f"{eq_ref.name}.{eq_ref.attribute}({indices_str})"
             return f"{eq_ref.name}.{eq_ref.attribute}"
 
         case Unary(op, child):
-            child_str = expr_to_gams(child, parent_op=op)
+            child_str = expr_to_gams(child, parent_op=op, domain_vars=domain_vars)
             # GAMS unary operators: +, -
             # For unary minus, ALWAYS convert to multiplication form to avoid GAMS Error 445
             # ("More than one operator in a row"). This happens when unary minus follows
@@ -331,8 +343,10 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
             # Handle both ^ and ** (term collection may generate **)
             if op in ("^", "**"):
                 # GAMS uses ** for exponentiation
-                left_str = expr_to_gams(left, parent_op=op, is_right=False)
-                right_str = expr_to_gams(right, parent_op=op, is_right=True)
+                left_str = expr_to_gams(left, parent_op=op, is_right=False, domain_vars=domain_vars)
+                right_str = expr_to_gams(
+                    right, parent_op=op, is_right=True, domain_vars=domain_vars
+                )
 
                 # Determine if we need parentheses for the whole expression
                 needs_parens = _needs_parens(parent_op, op, is_right)
@@ -342,7 +356,9 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
             # Special handling for subtraction of negative constants
             # Convert "x - (-5)" to "x + 5" to avoid double operators
             if op == "-" and isinstance(right, Const) and right.value < 0:
-                left_str = expr_to_gams(left, parent_op="+", is_right=False)
+                left_str = expr_to_gams(
+                    left, parent_op="+", is_right=False, domain_vars=domain_vars
+                )
                 # Negate the negative value to get positive
                 right_val = -right.value
                 right_str = _format_numeric(right_val)
@@ -352,8 +368,8 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
                 return f"({result})" if needs_parens else result
 
             # Other binary operators
-            left_str = expr_to_gams(left, parent_op=op, is_right=False)
-            right_str = expr_to_gams(right, parent_op=op, is_right=True)
+            left_str = expr_to_gams(left, parent_op=op, is_right=False, domain_vars=domain_vars)
+            right_str = expr_to_gams(right, parent_op=op, is_right=True, domain_vars=domain_vars)
 
             # Special handling: wrap negative constants in parentheses to avoid GAMS Error 445
             # ("More than one operator in a row").
@@ -375,7 +391,9 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
 
         case Sum(index_sets, body):
             # GAMS: sum((i,j), body) or sum(i, body)
-            body_str = expr_to_gams(body)
+            # Sprint 18 Day 2: Extend domain_vars with sum indices so they're not quoted
+            extended_domain_vars = domain_vars | frozenset(index_sets)
+            body_str = expr_to_gams(body, domain_vars=extended_domain_vars)
             if len(index_sets) == 1:
                 return f"sum({index_sets[0]}, {body_str})"
             indices_str = ",".join(index_sets)
@@ -383,14 +401,14 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
 
         case Call(func, args):
             # Function calls: exp(x), log(x), sqrt(x), etc.
-            args_str = ", ".join(expr_to_gams(arg) for arg in args)
+            args_str = ", ".join(expr_to_gams(arg, domain_vars=domain_vars) for arg in args)
             return f"{func}({args_str})"
 
         case DollarConditional(value_expr, condition):
             # Dollar conditional: value_expr$condition
             # Evaluates to value_expr if condition is non-zero, otherwise 0
-            value_str = expr_to_gams(value_expr)
-            condition_str = expr_to_gams(condition)
+            value_str = expr_to_gams(value_expr, domain_vars=domain_vars)
+            condition_str = expr_to_gams(condition, domain_vars=domain_vars)
             # Parenthesize value if it's a complex expression to avoid precedence issues
             if isinstance(value_expr, (Binary, Unary, DollarConditional)):
                 value_str = f"({value_str})"
@@ -400,7 +418,9 @@ def expr_to_gams(expr: Expr, parent_op: str | None = None, is_right: bool = Fals
             # Set membership test: set_name(indices)
             # In GAMS conditional context, tests if index combination is in set
             if indices:
-                indices_str = ",".join(expr_to_gams(idx) for idx in indices)
+                indices_str = ",".join(
+                    expr_to_gams(idx, domain_vars=domain_vars) for idx in indices
+                )
                 return f"{set_name}({indices_str})"
             return set_name
 

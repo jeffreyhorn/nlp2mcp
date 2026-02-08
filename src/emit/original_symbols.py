@@ -393,6 +393,16 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     for param_name, param_def in model_ir.params.items():
         # Use ParameterDef.domain to detect scalars (Finding #3)
         if len(param_def.domain) == 0:
+            # Sprint 18 Day 2: Check if this "scalar" has indexed expressions
+            # If so, it needs to be emitted as a parameter (with no data) to allow
+            # the computed parameter assignments to work. Example: demo1's croprep
+            # is declared without domain but has expressions like croprep("revenue",c)
+            if param_def.expressions:
+                # Check if any expression key has indices
+                has_indexed_exprs = any(len(key) > 0 for key in param_def.expressions.keys())
+                if has_indexed_exprs:
+                    parameters[param_name] = param_def
+                    continue
             scalars[param_name] = param_def
         else:
             parameters[param_name] = param_def
@@ -417,8 +427,13 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 lines.append(f"    {param_name}({domain_str}) /{data_str}/")
             else:
                 # Parameter declared but no data
-                domain_str = ",".join(param_def.domain)
-                lines.append(f"    {param_name}({domain_str})")
+                if param_def.domain:
+                    domain_str = ",".join(param_def.domain)
+                    lines.append(f"    {param_name}({domain_str})")
+                else:
+                    # Sprint 18 Day 2: Parameter with indexed expressions but no explicit domain
+                    # Emit just the name - GAMS will infer dimensions from assignments
+                    lines.append(f"    {param_name}")
         lines.append(";")
 
     # Emit Scalars (skip predefined GAMS constants and description-only entries)
@@ -495,10 +510,28 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
         if not param_def.expressions:
             continue
 
+        # Sprint 18 Day 2: Skip parameters with no values, no declared domain, but have
+        # INDEXED expressions. These are typically post-solve report parameters like
+        # croprep("revenue",c) = croprep("output",c) * price(c) where the parameter
+        # was never properly declared with a domain and its expressions depend on
+        # unassigned values (solution values). Emitting these causes GAMS Error 141.
+        # Note: Scalar expressions (empty key tuple) are allowed even without values.
+        if not param_def.values and not param_def.domain:
+            # Check if any expression has indexed keys (not scalar)
+            has_indexed_exprs = any(len(key) > 0 for key in param_def.expressions.keys())
+            if has_indexed_exprs:
+                continue
+
         # Emit each expression assignment
         for key_tuple, expr in param_def.expressions.items():
             # Convert expression to GAMS syntax
-            expr_str = expr_to_gams(expr)
+            # Sprint 18 Day 2: Pass domain indices from key_tuple as domain_vars
+            # so they're recognized as domain variables and not quoted
+            # Filter out quoted element literals (they start with ")
+            domain_vars = frozenset(
+                idx for idx in key_tuple if not idx.startswith('"') and not idx.startswith("'")
+            )
+            expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
             # Format the LHS with indices
             if key_tuple:
