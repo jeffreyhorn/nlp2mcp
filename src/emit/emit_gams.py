@@ -179,17 +179,27 @@ def emit_gams_mcp(
         # Use 1.0 instead of 1e-6 to avoid numerical issues in stationarity equations.
         # PR #658 review: Clamp to upper bound using GAMS .up attribute to respect
         # per-element bounds (up_map), not just scalar var_def.up.
+        # Issue #651: Don't read from .l when initializing - GAMS Error 141 occurs
+        # if the variable was never assigned any .l values. Instead, just set .l
+        # to min(1, upper_bound) directly.
         if var_def.kind == VarKind.POSITIVE:
-            if var_def.domain:
-                domain_str = ",".join(var_def.domain)
-                # Use max() to preserve any explicit inits while ensuring minimum of 1
-                # Clamp to GAMS .up attribute to respect per-element upper bounds
-                init_lines.append(
-                    f"{var_name}.l({domain_str}) = min(max({var_name}.l({domain_str}), 1), {var_name}.up({domain_str}));"
-                )
+            if has_init:
+                # Variable already has explicit .l values - preserve them with max()
+                if var_def.domain:
+                    domain_str = ",".join(var_def.domain)
+                    init_lines.append(
+                        f"{var_name}.l({domain_str}) = min(max({var_name}.l({domain_str}), 1), {var_name}.up({domain_str}));"
+                    )
+                else:
+                    init_lines.append(f"{var_name}.l = min(max({var_name}.l, 1), {var_name}.up);")
             else:
-                # Scalar: clamp to .up attribute
-                init_lines.append(f"{var_name}.l = min(max({var_name}.l, 1), {var_name}.up);")
+                # No explicit .l values - just set to 1 directly
+                # Don't read .up either as it may not be assigned (Error 141)
+                if var_def.domain:
+                    domain_str = ",".join(var_def.domain)
+                    init_lines.append(f"{var_name}.l({domain_str}) = 1;")
+                else:
+                    init_lines.append(f"{var_name}.l = 1;")
 
     if init_lines:
         if add_comments:
@@ -211,19 +221,13 @@ def emit_gams_mcp(
         sections.append("")
 
     # Additional initialization for smooth_abs (if enabled)
+    # Note: This is now largely redundant with Priority 3 initialization above,
+    # which already handles POSITIVE variables. Kept for explicit smooth_abs comment.
     if config and config.smooth_abs:
         if add_comments:
             sections.append("* Additional initialization for smooth abs() approximation")
+            sections.append("* (POSITIVE variables already initialized above)")
             sections.append("")
-
-        # Initialize POSITIVE primal variables to a safe non-zero value
-        # PR #658 review: Only apply to POSITIVE variables to avoid pushing
-        # NEGATIVE variables (upper bound 0) or multipliers outside their bounds.
-        for var_name, var_def in kkt.model_ir.variables.items():
-            if var_def.kind == VarKind.POSITIVE:
-                sections.append(f"{var_name}.l = min(max({var_name}.l, 1), {var_name}.up);")
-
-        sections.append("")
 
     # Equations
     if add_comments:
