@@ -197,19 +197,24 @@ def _iterate_bounds(map_bounds: dict[tuple[str, ...], float], scalar: float | No
 
 
 def _sanitize_identifier(s: str) -> str:
-    """Sanitize a string for use in a GAMS identifier.
+    """Sanitize a string for use in a GAMS identifier with collision avoidance.
 
-    PR #658: Replace non-alphanumeric characters (except underscore) with underscores.
-    This handles element labels like "q-1", "san-diego", "pulp+paper".
+    PR #658 review: Uses the shared sanitize_index_for_identifier from kkt/naming.py
+    for consistent sanitization across the pipeline. Adds a hash suffix when the
+    string was modified to avoid collisions (e.g., "q-1" and "q_1" both becoming "q_1").
 
-    PR #658 review: To avoid collisions (e.g., "q-1" and "q_1" both becoming "q_1"),
-    append a short hash suffix when the string was modified by sanitization.
+    Args:
+        s: Raw string to sanitize
+
+    Returns:
+        Sanitized string safe for use in GAMS identifiers, with hash suffix if modified
     """
     import hashlib
-    import re
 
-    # Replace any character that's not alphanumeric or underscore with underscore
-    sanitized = re.sub(r"[^A-Za-z0-9_]", "_", s)
+    from ..kkt.naming import sanitize_index_for_identifier
+
+    # Use the shared sanitizer for consistent behavior
+    sanitized = sanitize_index_for_identifier(s)
 
     # If sanitization changed the string, append a short hash to ensure uniqueness
     if sanitized != s:

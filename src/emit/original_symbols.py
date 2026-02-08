@@ -517,11 +517,16 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
         # Emit each expression assignment
         for key_tuple, expr in param_def.expressions.items():
             # Convert expression to GAMS syntax
-            # Sprint 18 Day 2: Pass domain indices from key_tuple as domain_vars
-            # so they're recognized as domain variables and not quoted
-            # Filter out quoted element literals (they start with ")
+            # PR #658 review: Derive domain_vars from model context (declared sets/aliases)
+            # rather than trusting raw key strings. This prevents unquoted element literals
+            # like "cod", "apr", "land" from being misclassified as domain variables.
+            declared_sets = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
             domain_vars = frozenset(
-                idx for idx in key_tuple if not idx.startswith('"') and not idx.startswith("'")
+                idx
+                for idx in key_tuple
+                if not idx.startswith('"')
+                and not idx.startswith("'")
+                and idx.lower() in {s.lower() for s in declared_sets}
             )
             expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 

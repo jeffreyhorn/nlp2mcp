@@ -173,14 +173,19 @@ def emit_gams_mcp(
             init_lines.append(f"{var_name}.l = {var_def.lo};")
             has_init = True
 
-        # Priority 3: Positive variables without explicit values: use reasonable default
-        # Use 1.0 instead of 1e-6 to avoid numerical issues in stationarity equations
-        if not has_init and var_def.kind == VarKind.POSITIVE:
+        # Priority 3: Positive variables: ensure all elements have non-zero values
+        # PR #658 review: Even with partial per-index inits, other elements may be 0.
+        # Always apply a blanket max() to ensure no POSITIVE variable element is 0.
+        # Use 1.0 instead of 1e-6 to avoid numerical issues in stationarity equations.
+        if var_def.kind == VarKind.POSITIVE:
             if var_def.domain:
                 domain_str = ",".join(var_def.domain)
-                init_lines.append(f"{var_name}.l({domain_str}) = 1;")
+                # Use max() to preserve any explicit inits while ensuring minimum of 1
+                init_lines.append(
+                    f"{var_name}.l({domain_str}) = max({var_name}.l({domain_str}), 1);"
+                )
             else:
-                init_lines.append(f"{var_name}.l = 1;")
+                init_lines.append(f"{var_name}.l = max({var_name}.l, 1);")
 
     if init_lines:
         if add_comments:

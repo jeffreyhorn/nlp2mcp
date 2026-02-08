@@ -15,8 +15,11 @@ Multiple models failed during GAMS model generation with "division by zero" erro
 **Fixed by P5 (commit 4e97c4a)**: Added variable initialization section in `src/emit/emit_gams.py` that:
 
 1. Initializes variables with lower bounds to their lower bound values: `var.l = var.lo`
-2. Initializes positive variables without explicit bounds to a safe non-zero value (1e-6)
+2. Initializes positive variables to ensure a minimum value of 1 using `max()`: `var.l = max(var.l, 1)`
 3. Emits initialization statements before equation definitions
+
+**Note**: The implementation uses 1.0 (not 1e-6) to avoid numerical issues in stationarity equations.
+Values that are too small can cause scaling problems in the solver.
 
 ### Implementation
 
