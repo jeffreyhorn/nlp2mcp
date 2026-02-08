@@ -80,17 +80,27 @@ def build_complementarity_pairs(
         eq_def = kkt.model_ir.equations[eq_name]
 
         # Handle both <= and >= inequalities
-        # For g(x) <= 0: negate to get -g(x) >= 0 for MCP
-        # For g(x) >= 0: use as-is for MCP
-        g_expr = eq_def.lhs_rhs[0]
+        # Convert LHS REL RHS to normalized form and then to MCP:
+        # For LHS <= RHS: normalized is (LHS - RHS) <= 0, MCP needs (RHS - LHS) >= 0
+        # For LHS >= RHS: normalized is (LHS - RHS) >= 0, MCP uses (LHS - RHS) >= 0
+        lhs_expr, rhs_expr = eq_def.lhs_rhs
+
+        # Build normalized form: LHS - RHS (handling constant RHS optimization)
+        if isinstance(rhs_expr, Const) and rhs_expr.value == 0.0:
+            # RHS is 0, so LHS - RHS = LHS
+            normalized_expr = lhs_expr
+        else:
+            # General case: LHS - RHS
+            normalized_expr = Binary("-", lhs_expr, rhs_expr)
 
         if eq_def.relation == Rel.LE:
-            # g(x) <= 0 becomes -g(x) >= 0
-            F_lam = Unary("-", g_expr)
+            # (LHS - RHS) <= 0 becomes (RHS - LHS) >= 0 for MCP
+            # i.e., -(LHS - RHS) >= 0
+            F_lam = Unary("-", normalized_expr)
             negated = True
         elif eq_def.relation == Rel.GE:
-            # g(x) >= 0 stays as g(x) >= 0
-            F_lam = g_expr
+            # (LHS - RHS) >= 0 stays as (LHS - RHS) >= 0 for MCP
+            F_lam = normalized_expr
             negated = False
         else:
             raise ValueError(f"Expected inequality (LE or GE), got {eq_def.relation}")
