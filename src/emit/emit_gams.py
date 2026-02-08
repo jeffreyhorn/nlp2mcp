@@ -177,15 +177,25 @@ def emit_gams_mcp(
         # PR #658 review: Even with partial per-index inits, other elements may be 0.
         # Always apply a blanket max() to ensure no POSITIVE variable element is 0.
         # Use 1.0 instead of 1e-6 to avoid numerical issues in stationarity equations.
+        # PR #658 review: Also clamp to upper bound to avoid initializing outside bounds.
         if var_def.kind == VarKind.POSITIVE:
             if var_def.domain:
                 domain_str = ",".join(var_def.domain)
                 # Use max() to preserve any explicit inits while ensuring minimum of 1
-                init_lines.append(
-                    f"{var_name}.l({domain_str}) = max({var_name}.l({domain_str}), 1);"
-                )
+                # Clamp to upper bound if present to avoid initializing outside bounds
+                if var_def.up is not None:
+                    init_lines.append(
+                        f"{var_name}.l({domain_str}) = min(max({var_name}.l({domain_str}), 1), {var_def.up});"
+                    )
+                else:
+                    init_lines.append(
+                        f"{var_name}.l({domain_str}) = max({var_name}.l({domain_str}), 1);"
+                    )
             else:
-                init_lines.append(f"{var_name}.l = max({var_name}.l, 1);")
+                if var_def.up is not None:
+                    init_lines.append(f"{var_name}.l = min(max({var_name}.l, 1), {var_def.up});")
+                else:
+                    init_lines.append(f"{var_name}.l = max({var_name}.l, 1);")
 
     if init_lines:
         if add_comments:
