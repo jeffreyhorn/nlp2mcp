@@ -636,3 +636,22 @@ class TestLeadLagDomainRestrictions:
         # Should NOT generate restrictions since i is bound by prod
         assert lead_offsets == {}
         assert lag_offsets == {}
+
+    def test_emit_equation_def_scalar_with_condition(self):
+        """Test that scalar equations preserve existing conditions.
+
+        Scalar equations (no domain) can still have $-conditions, and these
+        should be preserved in the emitted GAMS code.
+        """
+        # eq$(cond).. x =E= y (scalar with condition)
+        eq_def = EquationDef(
+            name="eq",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("x", ()), VarRef("y", ())),
+            condition="flag > 0",
+        )
+        result, aliases = emit_equation_def("eq", eq_def)
+        assert "$(flag > 0)" in result
+        assert "eq$(flag > 0).. x =E= y;" == result
+        assert aliases == set()

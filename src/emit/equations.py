@@ -279,7 +279,11 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
         else:
             eq_str = f"{eq_name}({indices_str}).. {lhs_gams} {rel_gams} {rhs_gams};"
     else:
-        eq_str = f"{eq_name}.. {lhs_gams} {rel_gams} {rhs_gams};"
+        # Scalar equations can also have conditions (e.g., eq$(cond)..)
+        if final_condition:
+            eq_str = f"{eq_name}$({final_condition}).. {lhs_gams} {rel_gams} {rhs_gams};"
+        else:
+            eq_str = f"{eq_name}.. {lhs_gams} {rel_gams} {rhs_gams};"
 
     return eq_str, aliases_needed
 
