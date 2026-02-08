@@ -23,39 +23,48 @@ from src.kkt.kkt_system import KKTSystem
 
 
 def _check_index_offset(
-    idx_offset: IndexOffset, domain_set: set[str], lead_indices: set[str], lag_indices: set[str]
+    idx_offset: IndexOffset,
+    domain_set: set[str],
+    lead_offsets: dict[str, int],
+    lag_offsets: dict[str, int],
 ) -> None:
-    """Check an IndexOffset and add to lead/lag sets if applicable.
+    """Check an IndexOffset and track maximum offset magnitude.
 
     Args:
         idx_offset: The IndexOffset to check
         domain_set: Set of lowercase domain indices
-        lead_indices: Set to add lead indices to
-        lag_indices: Set to add lag indices to
+        lead_offsets: Dict mapping index to max positive offset magnitude
+        lag_offsets: Dict mapping index to max negative offset magnitude (as positive int)
     """
     # Only consider non-circular offsets (linear lead/lag)
     if not idx_offset.circular:
         # Check if this base is in the equation domain
         if idx_offset.base.lower() in domain_set:
-            # Determine offset direction
+            # Determine offset direction and magnitude
             if isinstance(idx_offset.offset, Const):
-                if idx_offset.offset.value > 0:
-                    lead_indices.add(idx_offset.base)
-                elif idx_offset.offset.value < 0:
-                    lag_indices.add(idx_offset.base)
+                offset_val = int(idx_offset.offset.value)
+                if offset_val > 0:
+                    # Lead: track maximum positive offset
+                    current = lead_offsets.get(idx_offset.base, 0)
+                    lead_offsets[idx_offset.base] = max(current, offset_val)
+                elif offset_val < 0:
+                    # Lag: track maximum negative offset magnitude
+                    current = lag_offsets.get(idx_offset.base, 0)
+                    lag_offsets[idx_offset.base] = max(current, abs(offset_val))
 
 
 def _collect_lead_lag_restrictions(
     expr: Expr, domain: tuple[str, ...]
-) -> tuple[set[str], set[str]]:
-    """Collect domain indices that need lead or lag restrictions.
+) -> tuple[dict[str, int], dict[str, int]]:
+    """Collect domain indices that need lead or lag restrictions with magnitudes.
 
     Recursively walks an expression to find IndexOffset nodes and determines
-    which domain indices need restrictions based on their offset direction.
+    which domain indices need restrictions based on their offset direction
+    and magnitude.
 
     For linear (non-circular) offsets:
-    - Positive offset (lead, e.g., k+1): needs ord(k) < card(k)
-    - Negative offset (lag, e.g., t-1): needs ord(t) > 1
+    - Positive offset (lead, e.g., k+2): needs ord(k) <= card(k) - 2
+    - Negative offset (lag, e.g., t-2): needs ord(t) > 2
 
     Circular offsets (++/--) don't need restrictions as they wrap around.
 
@@ -64,56 +73,64 @@ def _collect_lead_lag_restrictions(
         domain: Tuple of domain indices for the equation
 
     Returns:
-        Tuple of (lead_indices, lag_indices) that need restrictions
+        Tuple of (lead_offsets, lag_offsets) dicts mapping index to max offset
     """
-    lead_indices: set[str] = set()
-    lag_indices: set[str] = set()
+    lead_offsets: dict[str, int] = {}
+    lag_offsets: dict[str, int] = {}
     domain_set = {d.lower() for d in domain}
 
     def walk(e: Expr) -> None:
         # Check for IndexOffset directly in expression
         if isinstance(e, IndexOffset):
-            _check_index_offset(e, domain_set, lead_indices, lag_indices)
+            _check_index_offset(e, domain_set, lead_offsets, lag_offsets)
 
         # Check for IndexOffset in VarRef/ParamRef/MultiplierRef/EquationRef indices
         if isinstance(e, (VarRef, ParamRef, MultiplierRef, EquationRef)):
             for idx in e.indices:
                 if isinstance(idx, IndexOffset):
-                    _check_index_offset(idx, domain_set, lead_indices, lag_indices)
+                    _check_index_offset(idx, domain_set, lead_offsets, lag_offsets)
 
         # Recursively walk children
         for child in e.children():
             walk(child)
 
     walk(expr)
-    return lead_indices, lag_indices
+    return lead_offsets, lag_offsets
 
 
-def _build_domain_condition(lead_indices: set[str], lag_indices: set[str]) -> str | None:
-    """Build a GAMS domain condition string from lead/lag index sets.
+def _build_domain_condition(
+    lead_offsets: dict[str, int], lag_offsets: dict[str, int]
+) -> str | None:
+    """Build a GAMS domain condition string from lead/lag offset dicts.
 
     Args:
-        lead_indices: Set of indices needing lead restriction (ord < card)
-        lag_indices: Set of indices needing lag restriction (ord > 1)
+        lead_offsets: Dict mapping index to max positive offset (e.g., {'k': 2})
+        lag_offsets: Dict mapping index to max negative offset magnitude (e.g., {'t': 2})
 
     Returns:
         GAMS condition string or None if no restrictions needed
 
     Examples:
-        >>> _build_domain_condition({'k'}, set())
-        'ord(k) < card(k)'
-        >>> _build_domain_condition(set(), {'t'})
+        >>> _build_domain_condition({'k': 1}, {})
+        'ord(k) <= card(k) - 1'
+        >>> _build_domain_condition({'k': 2}, {})
+        'ord(k) <= card(k) - 2'
+        >>> _build_domain_condition({}, {'t': 1})
         'ord(t) > 1'
-        >>> _build_domain_condition({'k'}, {'t'})
-        '(ord(k) < card(k)) and (ord(t) > 1)'
+        >>> _build_domain_condition({}, {'t': 2})
+        'ord(t) > 2'
+        >>> _build_domain_condition({'k': 1}, {'t': 1})
+        '(ord(k) <= card(k) - 1) and (ord(t) > 1)'
     """
     conditions = []
 
-    for idx in sorted(lead_indices):
-        conditions.append(f"ord({idx}) < card({idx})")
+    for idx in sorted(lead_offsets.keys()):
+        offset = lead_offsets[idx]
+        conditions.append(f"ord({idx}) <= card({idx}) - {offset}")
 
-    for idx in sorted(lag_indices):
-        conditions.append(f"ord({idx}) > 1")
+    for idx in sorted(lag_offsets.keys()):
+        offset = lag_offsets[idx]
+        conditions.append(f"ord({idx}) > {offset}")
 
     if not conditions:
         return None
@@ -164,21 +181,55 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
 
     # Detect lead/lag expressions and build domain conditions
     # Issues #649, #652-656: Equations with lead (k+1) or lag (t-1) need restrictions
-    lead_indices: set[str] = set()
-    lag_indices: set[str] = set()
+    lead_offsets: dict[str, int] = {}
+    lag_offsets: dict[str, int] = {}
     if domain:
         lhs_lead, lhs_lag = _collect_lead_lag_restrictions(lhs, domain)
         rhs_lead, rhs_lag = _collect_lead_lag_restrictions(rhs, domain)
-        lead_indices = lhs_lead | rhs_lead
-        lag_indices = lhs_lag | rhs_lag
+        # Merge dicts, keeping max offset for each index
+        for idx, offset in lhs_lead.items():
+            lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
+        for idx, offset in rhs_lead.items():
+            lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
+        for idx, offset in lhs_lag.items():
+            lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
+        for idx, offset in rhs_lag.items():
+            lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
 
-    condition = _build_domain_condition(lead_indices, lag_indices)
+    inferred_condition = _build_domain_condition(lead_offsets, lag_offsets)
+
+    # Combine inferred condition with existing equation condition (if any)
+    # PR #661 review: Preserve original equation conditions from parsing
+    all_conditions: list[str] = []
+    if eq_def.condition is not None:
+        # Convert existing condition to GAMS string
+        # Handle both Expr (from parsing) and str (from tests)
+        if isinstance(eq_def.condition, str):
+            existing_cond = eq_def.condition
+        elif isinstance(eq_def.condition, Expr):
+            existing_cond = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
+        else:
+            # Fallback: try to convert as Expr
+            existing_cond = expr_to_gams(eq_def.condition, domain_vars=domain_vars)  # type: ignore[arg-type]
+        all_conditions.append(existing_cond)
+    if inferred_condition:
+        all_conditions.append(inferred_condition)
+
+    if len(all_conditions) == 0:
+        final_condition = None
+    elif len(all_conditions) == 1:
+        final_condition = all_conditions[0]
+    else:
+        # Combine with 'and' - wrap each in parens for safety
+        final_condition = " and ".join(f"({c})" for c in all_conditions)
 
     # Build equation string
     if domain:
         indices_str = ",".join(domain)
-        if condition:
-            eq_str = f"{eq_name}({indices_str})$({condition}).. {lhs_gams} {rel_gams} {rhs_gams};"
+        if final_condition:
+            eq_str = (
+                f"{eq_name}({indices_str})$({final_condition}).. {lhs_gams} {rel_gams} {rhs_gams};"
+            )
         else:
             eq_str = f"{eq_name}({indices_str}).. {lhs_gams} {rel_gams} {rhs_gams};"
     else:

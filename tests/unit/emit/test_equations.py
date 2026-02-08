@@ -7,9 +7,14 @@ import pytest
 
 from src.ad.gradient import GradientVector
 from src.ad.jacobian import JacobianStructure
-from src.emit.equations import emit_equation_def, emit_equation_definitions
+from src.emit.equations import (
+    _build_domain_condition,
+    _collect_lead_lag_restrictions,
+    emit_equation_def,
+    emit_equation_definitions,
+)
 from src.emit.expr_to_gams import collect_index_aliases, resolve_index_conflicts
-from src.ir.ast import Binary, Const, Sum, VarRef
+from src.ir.ast import Binary, Const, IndexOffset, Sum, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
@@ -425,3 +430,181 @@ class TestIndexAliasing:
         assert "sum(g__," in result
         assert "sum(m__," in result
         assert aliases == {"g", "m"}
+
+
+@pytest.mark.unit
+class TestLeadLagDomainRestrictions:
+    """Test automatic domain restriction inference for lead/lag expressions.
+
+    When equations use lead (k+1) or lag (t-1) indexing on domain variables,
+    the equation needs domain conditions to prevent out-of-bounds access:
+    - k+1 requires ord(k) <= card(k) - 1 (or card(k) - n for k+n)
+    - t-1 requires ord(t) > 1 (or ord(t) > n for t-n)
+    """
+
+    def test_build_domain_condition_lead_offset_1(self):
+        """Test building domain condition for lead offset of 1."""
+        # k+1 needs ord(k) <= card(k) - 1
+        lead_offsets = {"k": 1}
+        lag_offsets: dict[str, int] = {}
+        result = _build_domain_condition(lead_offsets, lag_offsets)
+        assert result == "ord(k) <= card(k) - 1"
+
+    def test_build_domain_condition_lag_offset_1(self):
+        """Test building domain condition for lag offset of 1."""
+        # t-1 needs ord(t) > 1
+        lead_offsets: dict[str, int] = {}
+        lag_offsets = {"t": 1}
+        result = _build_domain_condition(lead_offsets, lag_offsets)
+        assert result == "ord(t) > 1"
+
+    def test_build_domain_condition_lead_offset_2(self):
+        """Test building domain condition for lead offset of 2."""
+        # i+2 needs ord(i) <= card(i) - 2
+        lead_offsets = {"i": 2}
+        lag_offsets: dict[str, int] = {}
+        result = _build_domain_condition(lead_offsets, lag_offsets)
+        assert result == "ord(i) <= card(i) - 2"
+
+    def test_build_domain_condition_lag_offset_2(self):
+        """Test building domain condition for lag offset of 2."""
+        # i-2 needs ord(i) > 2
+        lead_offsets: dict[str, int] = {}
+        lag_offsets = {"i": 2}
+        result = _build_domain_condition(lead_offsets, lag_offsets)
+        assert result == "ord(i) > 2"
+
+    def test_build_domain_condition_both_lead_and_lag(self):
+        """Test building domain condition with both lead and lag."""
+        # k+1 and t-1 in same equation
+        lead_offsets = {"k": 1}
+        lag_offsets = {"t": 1}
+        result = _build_domain_condition(lead_offsets, lag_offsets)
+        # Both conditions should be present with 'and'
+        assert result is not None
+        assert "ord(k) <= card(k) - 1" in result
+        assert "ord(t) > 1" in result
+        assert " and " in result
+
+    def test_build_domain_condition_empty(self):
+        """Test building domain condition with no restrictions."""
+        lead_offsets: dict[str, int] = {}
+        lag_offsets: dict[str, int] = {}
+        result = _build_domain_condition(lead_offsets, lag_offsets)
+        assert result is None
+
+    def test_collect_lead_lag_restrictions_simple_lead(self):
+        """Test collecting lead restriction from simple lead expression."""
+        # x(k+1) with domain (k,)
+        expr = VarRef("x", (IndexOffset("k", Const(1), circular=False),))
+        lead_offsets, lag_offsets = _collect_lead_lag_restrictions(expr, ("k",))
+        assert lead_offsets == {"k": 1}
+        assert lag_offsets == {}
+
+    def test_collect_lead_lag_restrictions_simple_lag(self):
+        """Test collecting lag restriction from simple lag expression."""
+        # x(t-1) with domain (t,)
+        expr = VarRef("x", (IndexOffset("t", Const(-1), circular=False),))
+        lead_offsets, lag_offsets = _collect_lead_lag_restrictions(expr, ("t",))
+        assert lead_offsets == {}
+        assert lag_offsets == {"t": 1}
+
+    def test_collect_lead_lag_restrictions_non_domain_index(self):
+        """Test that non-domain indices don't generate restrictions."""
+        # x(j+1) with domain (i,) - j is not in domain
+        expr = VarRef("x", (IndexOffset("j", Const(1), circular=False),))
+        lead_offsets, lag_offsets = _collect_lead_lag_restrictions(expr, ("i",))
+        assert lead_offsets == {}
+        assert lag_offsets == {}
+
+    def test_collect_lead_lag_restrictions_in_binary(self):
+        """Test collecting restrictions from binary expression."""
+        # x(k+1) + y(k) with domain (k,)
+        expr = Binary(
+            "+",
+            VarRef("x", (IndexOffset("k", Const(1), circular=False),)),
+            VarRef("y", ("k",)),
+        )
+        lead_offsets, lag_offsets = _collect_lead_lag_restrictions(expr, ("k",))
+        assert lead_offsets == {"k": 1}
+        assert lag_offsets == {}
+
+    def test_collect_lead_lag_restrictions_max_offset(self):
+        """Test that maximum offset is tracked when multiple offsets exist."""
+        # x(i+1) + y(i+2) - the max lead offset for i is 2
+        expr = Binary(
+            "+",
+            VarRef("x", (IndexOffset("i", Const(1), circular=False),)),
+            VarRef("y", (IndexOffset("i", Const(2), circular=False),)),
+        )
+        lead_offsets, lag_offsets = _collect_lead_lag_restrictions(expr, ("i",))
+        assert lead_offsets == {"i": 2}
+        assert lag_offsets == {}
+
+    def test_emit_equation_def_with_lead(self):
+        """Test emit_equation_def adds domain condition for lead."""
+        # eq(k).. x(k+1) =E= y(k)
+        # Should emit: eq(k)$(ord(k) <= card(k) - 1).. x(k+1) =E= y(k);
+        eq_def = EquationDef(
+            name="eq",
+            domain=("k",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("x", (IndexOffset("k", Const(1), circular=False),)),
+                VarRef("y", ("k",)),
+            ),
+        )
+        result, aliases = emit_equation_def("eq", eq_def)
+        assert "$(ord(k) <= card(k) - 1)" in result
+        assert aliases == set()
+
+    def test_emit_equation_def_with_lag(self):
+        """Test emit_equation_def adds domain condition for lag."""
+        # eq(t).. x(t-1) =E= y(t)
+        # Should emit: eq(t)$(ord(t) > 1).. x(t-1) =E= y(t);
+        eq_def = EquationDef(
+            name="eq",
+            domain=("t",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("x", (IndexOffset("t", Const(-1), circular=False),)),
+                VarRef("y", ("t",)),
+            ),
+        )
+        result, aliases = emit_equation_def("eq", eq_def)
+        assert "$(ord(t) > 1)" in result
+        assert aliases == set()
+
+    def test_emit_equation_def_combines_with_existing_condition(self):
+        """Test that inferred condition is combined with existing condition."""
+        # eq(k)$(k.val > 5).. x(k+1) =E= y(k)
+        # Should emit: eq(k)$((k.val > 5) and (ord(k) <= card(k) - 1))..
+        eq_def = EquationDef(
+            name="eq",
+            domain=("k",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("x", (IndexOffset("k", Const(1), circular=False),)),
+                VarRef("y", ("k",)),
+            ),
+            condition="k.val > 5",
+        )
+        result, aliases = emit_equation_def("eq", eq_def)
+        assert "$((" in result
+        assert "k.val > 5" in result
+        assert "ord(k) <= card(k) - 1" in result
+        assert " and " in result
+        assert aliases == set()
+
+    def test_emit_equation_def_no_restriction_for_scalar(self):
+        """Test that scalar equations don't get domain restrictions."""
+        # eq.. x =E= y (no domain)
+        eq_def = EquationDef(
+            name="eq",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("x", ()), VarRef("y", ())),
+        )
+        result, aliases = emit_equation_def("eq", eq_def)
+        assert "$" not in result
+        assert aliases == set()
