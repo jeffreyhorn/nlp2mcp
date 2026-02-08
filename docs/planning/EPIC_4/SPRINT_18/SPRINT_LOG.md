@@ -313,9 +313,83 @@ Completed diagnostic deep-dive on 37 solve failures:
 - Updated `test_expr_to_gams.py`: Tests now pass domain context for multi-char indices
 - All 2566 unit tests pass
 
-### Next Steps (Day 2 continued or Day 3)
-- Implement P3 fix: Invalid .fx bound names (himmel16)
-- Investigate PATH solver failures (may be numeric issues or infeasible KKT systems)
+---
+
+## Day 2 (continued): P3 Fix - Invalid .fx Bound Names (2026-02-08)
+
+### P3 Fix: Invalid .fx Bound Identifier Names
+
+**Problem**: Per-element `.fx` bounds like `x.fx("1") = 0` generated equation and multiplier names with parentheses (e.g., `x_fx(1)`, `nu_x_fx(1)`), which are invalid GAMS identifiers. This caused GAMS Error 185 "Set identifier or '*' expected".
+
+**Example** (himmel16):
+```gams
+* Original GAMS:
+x.fx("1") = 0;  y.fx("1") = 0;  y.fx("2") = 0;
+
+* Emitted (WRONG):
+nu_x_fx(1)(i)   * <- nested parens invalid GAMS identifier
+x_fx(1)(i)..    * <- nested parens in equation name
+
+* Emitted (CORRECT after fix):
+nu_x_fx_1       * <- valid identifier with underscores
+x_fx_1..        * <- valid equation name
+```
+
+**Root Cause**: Two issues:
+1. `_bound_name()` in `normalize.py` used `f"{var}_{suffix}({joined})"` creating names like `x_fx(1)`
+2. Per-element bounds incorrectly inherited the variable's domain, causing indexed equations for scalar constraints
+
+**Solution**: Two-part fix:
+
+1. **Fix bound name format** (`src/ir/normalize.py`):
+   - Changed `_bound_name()` to use underscores: `f"{var}_{suffix}_{joined}"`
+   - Example: `x_fx_1` instead of `x_fx(1)`
+
+2. **Fix per-element bound domain** (`src/ir/normalize.py`):
+   - Per-element bounds (with specific indices) now create scalar equations (`domain_sets=()`)
+   - Only uniform bounds (without indices, e.g., `x.lo = 0`) create indexed equations
+   - This prevents the invalid `x_fx_1(i)` syntax
+
+**Files Modified**:
+- `src/ir/normalize.py`: `_bound_name()` format, `normalize_model()` domain logic
+
+**Test Updates**:
+- `tests/unit/ir/test_normalize.py`: Updated bound name expectations (`x_lo_i1` vs `x_lo(i1)`)
+- Added docstrings explaining per-element vs uniform bound behavior
+
+### Final Day 2 Metrics
+
+| Stage | Day 1 | After P1 | After P3 | Delta |
+|-------|-------|----------|----------|-------|
+| Parse | 62 | 62 | 62 | 0 |
+| Translate | 50 | 50 | 50 | 0 |
+| Solve (optimal) | 13 | 13 | 13 | 0 |
+| Compile errors (`path_syntax_error`) | 22 | 15 | **14** | **-8** |
+| Runtime errors (`path_solve_terminated`) | 13 | 20 | **21** | +8 |
+
+**Key Result**: 
+- P1 fix: 7 models moved from compile errors to runtime (solver) errors
+- P3 fix: 1 additional model (himmel16) moved from compile errors to runtime errors
+- **Total: 8 fewer compilation failures**
+
+**Models Fixed** (now compile successfully):
+- himmel16 (P3 fix)
+- chem, chenery, dispatch, himmel11, jobt, least, like (P1 fix)
+
+### Day 2 Summary
+
+Completed two high-impact fixes:
+- **P1 (Element Literal Quoting)**: Context-aware quoting using `domain_vars` parameter
+- **P3 (Invalid .fx Bound Names)**: Underscore-based naming for valid GAMS identifiers
+
+All 2159 unit tests pass. Pipeline improvements:
+- Compilation failures reduced from 22 to 14 (-8)
+- 8 models now compile successfully (though solver still fails - different root cause)
+
+### Next Steps (Day 3)
+- Investigate PATH solver failures for newly-compiling models
+- Consider P2 fix (quoted lag/lead references) if time permits
+- Review P4/P5 for future sprints
 
 ---
 

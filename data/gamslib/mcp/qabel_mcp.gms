@@ -30,7 +30,7 @@ Alias(m, mp);
 Parameters
     a(n,np) /consumpt.consumpt 0.914, consumpt.invest -0.016, invest.consumpt 0.097, invest.invest 0.424/
     b(n,m) /consumpt.money 0.424, invest.money 1.459/
-    wk(n,np) /consumpt.consumpt 0.0625, invest.invest 1.0, consumpt.invest 0.0, invest.consumpt 0.0/
+    wk(n,np) /consumpt.consumpt 0.0625, invest.invest 1.0, invest.consumpt 0.0, consumpt.invest 0.0/
     lambda(m,mp) /'gov-expend'.money 1.0, money.money 0.444/
     c(n) /consumpt -59.4, invest -184.7/
     xinit(n) /consumpt 387.9, invest 85.3/

@@ -39,9 +39,9 @@ Variables
     totarea
     nu_areadef(i)
     nu_obj2
-    nu_x_fx(1)(i)
-    nu_y_fx(1)(i)
-    nu_y_fx(2)(i)
+    nu_x_fx_1
+    nu_y_fx_1
+    nu_y_fx_2
 ;
 
 Positive Variables
@@ -64,9 +64,9 @@ Equations
     areadef(i)
     obj1
     obj2
-    x_fx(1)(i)
-    y_fx(1)(i)
-    y_fx(2)(i)
+    x_fx_1
+    y_fx_1
+    y_fx_2
 ;
 
 * ============================================
@@ -74,9 +74,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_area(i).. 0 + 1 * nu_areadef(i) + (-1) * nu_obj2 + sum(j, 0 * lam_maxdist(i,j)) =E= 0;
-stat_x(i).. ((-1) * (0.5 * y(i))) + ((-1) * (0.5 * y(i))) * nu_areadef(i) + 0 * nu_obj2 + sum(j, 2 * (x(i) - x(i)) * lam_maxdist(i,j)) =E= 0;
-stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) + ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + 0 * nu_obj2 + sum(j, 2 * (y(i) - y(i)) * lam_maxdist(i,j)) =E= 0;
+stat_area(i).. 0 + 1 * nu_areadef(i) + (-1) * nu_obj2 + 0 * nu_x_fx_1 + 0 * nu_y_fx_1 + 0 * nu_y_fx_2 + sum(j, 0 * lam_maxdist(i,j)) =E= 0;
+stat_x(i).. ((-1) * (0.5 * y(i))) + ((-1) * (0.5 * y(i))) * nu_areadef(i) + 0 * nu_obj2 + 1 * nu_x_fx_1 + 0 * nu_y_fx_1 + 0 * nu_y_fx_2 + sum(j, 2 * (x(i) - x(i)) * lam_maxdist(i,j)) =E= 0;
+stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) + ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + 0 * nu_obj2 + 0 * nu_x_fx_1 + 1 * nu_y_fx_1 + 0 * nu_y_fx_2 + sum(j, 2 * (y(i) - y(i)) * lam_maxdist(i,j)) =E= 0;
 
 * Inequality complementarity equations
 comp_maxdist(i,j).. ((-1) * (sqr(x(i) - x(j)) + sqr(y(i) - y(j)))) =G= 0;
@@ -85,9 +85,9 @@ comp_maxdist(i,j).. ((-1) * (sqr(x(i) - x(j)) + sqr(y(i) - y(j)))) =G= 0;
 areadef(i).. area(i) =E= 0.5 * (x(i) * y(i++1) - y(i) * x(i++1));
 obj1.. totarea =E= 0.5 * sum(i, x(i) * y(i++1) - y(i) * x(i++1));
 obj2.. totarea =E= sum(i, area(i));
-x_fx(1)(i).. x("1") - 0 =E= 0;
-y_fx(1)(i).. y("1") - 0 =E= 0;
-y_fx(2)(i).. y("2") - 0 =E= 0;
+x_fx_1.. x("1") - 0 =E= 0;
+y_fx_1.. y("1") - 0 =E= 0;
+y_fx_2.. y("2") - 0 =E= 0;
 
 
 * ============================================
@@ -111,9 +111,9 @@ Model mcp_model /
     areadef.nu_areadef,
     obj1.totarea,
     obj2.nu_obj2,
-    x_fx(1).nu_x_fx(1),
-    y_fx(1).nu_y_fx(1),
-    y_fx(2).nu_y_fx(2)
+    x_fx_1.nu_x_fx_1,
+    y_fx_1.nu_y_fx_1,
+    y_fx_2.nu_y_fx_2
 /;
 
 * ============================================

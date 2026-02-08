@@ -27,16 +27,16 @@ Sets
 ;
 
 Parameters
-    a(c,p) /pellets.sponge -1.38, 'nat-gas'.sponge -0.57, sponge.sponge 1.0, 'pig-iron'.sponge 0.0, steel.sponge 0.0, electric.sponge 0.0, coke.sponge 0.0, scrap.sponge 0.0/
-    b(m,p) /'blast-furn'.sponge 1.0, 'direct-red'.sponge 1.0, openhearth.sponge 0.0, bof.sponge 0.0, 'elec-arc'.sponge 0.0/
-    k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.sicartsa 1.4, 'blast-furn'.hylsa 1.1, openhearth.ahmsa 1.5, openhearth.sicartsa 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsap 0.98, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56, openhearth.fundidora 0.0, openhearth.hylsa 0.0, openhearth.hylsap 0.0, 'blast-furn'.fundidora 0.0, 'blast-furn'.hylsap 0.0, 'direct-red'.ahmsa 0.0, 'direct-red'.fundidora 0.0, 'direct-red'.sicartsa 0.0, 'direct-red'.hylsa 0.0, bof.hylsa 0.0, bof.hylsap 0.0, 'elec-arc'.ahmsa 0.0, 'elec-arc'.fundidora 0.0, 'elec-arc'.sicartsa 0.0/
+    a(c,p) /pellets.sponge -1.38, 'nat-gas'.sponge -0.57, sponge.sponge 1.0, 'pig-iron'.sponge 0.0, coke.sponge 0.0, steel.sponge 0.0, scrap.sponge 0.0, electric.sponge 0.0/
+    b(m,p) /'blast-furn'.sponge 1.0, 'direct-red'.sponge 1.0, bof.sponge 0.0, 'elec-arc'.sponge 0.0, openhearth.sponge 0.0/
+    k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.sicartsa 1.4, 'blast-furn'.hylsa 1.1, openhearth.ahmsa 1.5, openhearth.sicartsa 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsap 0.98, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56, bof.hylsa 0.0, bof.hylsap 0.0, 'blast-furn'.fundidora 0.0, 'blast-furn'.hylsap 0.0, 'elec-arc'.ahmsa 0.0, 'elec-arc'.fundidora 0.0, 'elec-arc'.sicartsa 0.0, openhearth.fundidora 0.0, openhearth.hylsa 0.0, openhearth.hylsap 0.0, 'direct-red'.ahmsa 0.0, 'direct-red'.fundidora 0.0, 'direct-red'.sicartsa 0.0, 'direct-red'.hylsa 0.0/
     d(c,j)
     dd(j) /mexico-df 55.0, monterrey 30.0, guadalaja 15.0/
-    rd(*,*) /ahmsa.monterrey 218.0, ahmsa.guadalaja 1125.0, ahmsa.export 739.0, fundidora.guadalaja 1030.0, fundidora.export 521.0, sicartsa.monterrey 1305.0, sicartsa.guadalaja 704.0, hylsa.guadalaja 1030.0, hylsa.export 521.0, hylsap.monterrey 1085.0, hylsap.guadalaja 760.0, hylsap.export 315.0, import.monterrey 521.0, import.guadalaja 300.0, sicartsa.export 0.0, hylsa.monterrey 0.0, fundidora.monterrey 0.0, import.export 0.0/
+    rd(*,*) /ahmsa.monterrey 218.0, ahmsa.guadalaja 1125.0, ahmsa.export 739.0, fundidora.guadalaja 1030.0, fundidora.export 521.0, sicartsa.monterrey 1305.0, sicartsa.guadalaja 704.0, hylsa.guadalaja 1030.0, hylsa.export 521.0, hylsap.monterrey 1085.0, hylsap.guadalaja 760.0, hylsap.export 315.0, import.monterrey 521.0, import.guadalaja 300.0, hylsa.monterrey 0.0, sicartsa.export 0.0, import.export 0.0, fundidora.monterrey 0.0/
     muf(i,j)
     muv(j)
     mue(i)
-    prices(c,*) /pellets.domestic 18.7, coke.domestic 52.17, 'nat-gas'.import 14.0, electric.domestic 24.0, scrap.domestic 105.0, steel.import 150.0, steel.export 140.0, pellets.import 0.0, pellets.export 0.0, 'nat-gas'.domestic 0.0, 'nat-gas'.export 0.0, steel.domestic 0.0, electric.import 0.0, electric.export 0.0, coke.import 0.0, coke.export 0.0, scrap.import 0.0, scrap.export 0.0/
+    prices(c,*) /pellets.domestic 18.7, coke.domestic 52.17, 'nat-gas'.import 14.0, electric.domestic 24.0, scrap.domestic 105.0, steel.import 150.0, steel.export 140.0, coke.import 0.0, coke.export 0.0, steel.domestic 0.0, scrap.import 0.0, scrap.export 0.0, electric.import 0.0, electric.export 0.0, 'nat-gas'.domestic 0.0, 'nat-gas'.export 0.0, pellets.import 0.0, pellets.export 0.0/
     pd(c)
     pv(c)
     pe(c)

@@ -51,14 +51,15 @@ def test_normalize_includes_variable_bounds():
     assert norm_e.relation == Rel.LE
 
     # Lower bound becomes lo - x <= 0 for each index
-    lo_i1 = bounds["x_lo(i1)"]
+    # Bound names use underscores for valid GAMS identifiers: x_lo_i1, not x_lo(i1)
+    lo_i1 = bounds["x_lo_i1"]
     assert lo_i1.relation == Rel.LE
     assert isinstance(lo_i1.expr, Binary)
     assert isinstance(lo_i1.expr.left, Const) and lo_i1.expr.left.value == 1.0
     assert isinstance(lo_i1.expr.right, VarRef) and lo_i1.expr.right.indices == ("i1",)
 
     # Upper bound becomes x - up <= 0
-    up_i2 = bounds["x_up(i2)"]
+    up_i2 = bounds["x_up_i2"]
     assert up_i2.relation == Rel.LE
     assert isinstance(up_i2.expr, Binary)
     assert isinstance(up_i2.expr.left, VarRef) and up_i2.expr.left.indices == ("i2",)
@@ -190,6 +191,15 @@ def test_scalar_equation_domain_metadata():
 
 
 def test_normalized_bounds_metadata():
+    """Test metadata for bounds that expand to per-element equations.
+
+    When x.lo(i) = 0 is used, the parser expands this to per-element bounds
+    (one for each element of i). These create scalar equations (not indexed)
+    because each equation is for a specific element, not a domain variable.
+
+    This avoids invalid GAMS syntax like x_fx(1)(i) when element indices are
+    embedded in the equation name (e.g., x_fx(1).. x("1") - 0 =E= 0).
+    """
     text = dedent("""
         Sets
             i /i1, i2/ ;
@@ -203,10 +213,13 @@ def test_normalized_bounds_metadata():
         """)
     model = parser.parse_model_text(text)
     _, bounds = normalize_model(model)
+    # Per-element bounds create scalar equations (domain_sets = ())
+    # Each equation applies to a specific element, not indexed over domain
     for eq in bounds.values():
-        assert eq.domain_sets == ("i",)
-        assert eq.expr_domain == ("i",)
-        assert eq.rank == 1
+        assert eq.domain_sets == ()
+        # Expression domain also becomes scalar for per-element bounds
+        assert eq.expr_domain == ()
+        assert eq.rank == 0
 
 
 # Tests for Issue #19: Objective Expression Extraction Before Normalization

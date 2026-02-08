@@ -21,7 +21,7 @@ Sets
 ;
 
 Parameters
-    ydat(b,*) /'municip-a'.maturity 2.0, 'municip-a'.yield 9.0, 'municip-b'.maturity 5.0, 'municip-b'.yield 2.0, corporate.maturity 2.0, corporate.yield 15.0, 'us-ser-e'.maturity 1.0, 'us-ser-e'.yield 4.0, 'us-ser-f'.maturity 1.0, 'us-ser-f'.yield 3.0, 'municip-a'.rating 0.0, 'us-ser-f'.rating 0.0, 'us-ser-e'.rating 0.0, 'municip-b'.rating 0.0, corporate.rating 0.0/
+    ydat(b,*) /'municip-a'.maturity 2.0, 'municip-a'.yield 9.0, 'municip-b'.maturity 5.0, 'municip-b'.yield 2.0, corporate.maturity 2.0, corporate.yield 15.0, 'us-ser-e'.maturity 1.0, 'us-ser-e'.yield 4.0, 'us-ser-f'.maturity 1.0, 'us-ser-f'.yield 3.0, 'us-ser-e'.rating 0.0, 'municip-a'.rating 0.0, 'us-ser-f'.rating 0.0, 'municip-b'.rating 0.0, corporate.rating 0.0/
 ;
 
 * ============================================

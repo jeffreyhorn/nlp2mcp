@@ -172,13 +172,19 @@ def normalize_model(
 
         for indices, value in _iterate_bounds(var.lo_map, var.lo):
             expr = _binary("-", _const(value, var.domain), _var_ref(var_name, indices, var.domain))
-            add_bound("lo", indices, Rel.LE, expr, var.domain)
+            # Per-element bounds (indices non-empty) are scalar equations, not indexed
+            bound_domain = () if indices else var.domain
+            add_bound("lo", indices, Rel.LE, expr, bound_domain)
         for indices, value in _iterate_bounds(var.up_map, var.up):
             expr = _binary("-", _var_ref(var_name, indices, var.domain), _const(value, var.domain))
-            add_bound("up", indices, Rel.LE, expr, var.domain)
+            # Per-element bounds (indices non-empty) are scalar equations, not indexed
+            bound_domain = () if indices else var.domain
+            add_bound("up", indices, Rel.LE, expr, bound_domain)
         for indices, value in _iterate_bounds(var.fx_map, var.fx):
             expr = _binary("-", _var_ref(var_name, indices, var.domain), _const(value, var.domain))
-            add_bound("fx", indices, Rel.EQ, expr, var.domain)
+            # Per-element bounds (indices non-empty) are scalar equations, not indexed
+            bound_domain = () if indices else var.domain
+            add_bound("fx", indices, Rel.EQ, expr, bound_domain)
 
     ir.normalized_bounds = bounds
     return norm, bounds
@@ -193,8 +199,10 @@ def _iterate_bounds(map_bounds: dict[tuple[str, ...], float], scalar: float | No
 def _bound_name(var: str, suffix: str, indices: tuple[str, ...]) -> str:
     if not indices:
         return f"{var}_{suffix}"
-    joined = ",".join(indices)
-    return f"{var}_{suffix}({joined})"
+    # Use underscores instead of parentheses for valid GAMS identifiers
+    # e.g., x_fx_1 instead of x_fx(1) which is invalid GAMS syntax
+    joined = "_".join(indices)
+    return f"{var}_{suffix}_{joined}"
 
 
 def _expr_domain(expr: Expr) -> tuple[str, ...]:
