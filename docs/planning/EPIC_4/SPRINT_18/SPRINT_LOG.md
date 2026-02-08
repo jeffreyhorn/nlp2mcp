@@ -96,7 +96,159 @@ This provides additional headroom for Sprint 18 goals.
 
 ---
 
-## Day 1: [Pending]
+## Day 1: Diagnostic Deep-Dive on Top Failures (2026-02-08)
+
+### Objectives
+- [x] Identify top 10 failing models by error type
+- [x] Analyze path_syntax_error failures (root causes)
+- [x] Analyze other emission failures
+- [x] Create prioritized fix list with impact estimates
+
+### Failure Analysis Summary
+
+**Pipeline Status**: 50 models translate successfully, 37 fail at solve stage due to GAMS syntax errors.
+
+#### GAMS Error Code Distribution (Solve Failures)
+
+| Error Code | Count | Description | Root Cause |
+|------------|-------|-------------|------------|
+| 120 | 9 | Unknown identifier as set element | Unquoted element literals (e.g., `revenue` vs `"revenue"`) |
+| 352 | 2 | Set not initialized | Empty dynamic subsets (e.g., `ku(k)` declared but never populated) |
+| 69 | 2 | Dimension mismatch | Variable dimension errors in model statement |
+| 185 | 1 | Set identifier expected | Invalid nested parens from `.fx` bounds (e.g., `nu_x_fx(1)(i)`) |
+| 161 | 1 | Element not in superset | Domain violations in parameter assignments |
+| 170 | 1 | Domain violation | Set element outside allowed domain |
+| 149 | 1 | Uncontrolled set as constant | Quoted lag references (e.g., `"tt+1"` vs `tt+1`) |
+| 145 | 1 | Set identifier expected | Syntax error in equation indices |
+| 141 | 1 | Symbol not assigned | Parameter declared but not populated |
+| 140 | 1 | Unknown symbol | Reference to undefined symbol |
+| 121 | 1 | Index domain mismatch | Index domain different from reference domain |
+| 66 | 1 | Symbol not defined | Undefined symbol reference |
+
+### Root Cause Analysis
+
+#### Category 1: Element Literal Quoting (9 models)
+**Models**: demo1, mathopt1, mexss, pak, pollut, ps2_f, ps2_f_eff, ps2_f_s, ps2_s
+
+**Problem**: All-lowercase element literals like `revenue`, `total`, `cost` are emitted without quotes, but GAMS interprets them as domain variables.
+
+**Example** (demo1):
+```gams
+# Emitted (wrong):
+croprep(revenue,c) = croprep("output",c) * price(c);
+
+# Should be:
+croprep("revenue",c) = croprep("output",c) * price(c);
+```
+
+**Root Cause**: `_quote_indices()` in `expr_to_gams.py` uses a heuristic that all-lowercase identifiers are domain variables. However, element literals can also be all-lowercase when they appear in computed parameter assignments.
+
+**Fix Location**: `src/emit/expr_to_gams.py:206-215` - Need to track which identifiers are set elements vs domain variables from context.
+
+**Impact**: Fixing this would recover **9 models** (24% of solve failures).
+
+#### Category 2: Empty Dynamic Subsets (2 models)
+**Models**: abel, qabel
+
+**Problem**: Subsets declared with syntax like `ku(k)` are emitted but never populated with elements.
+
+**Example** (abel):
+```gams
+Sets
+    k /1964-i, 1964-ii, .../
+    ku(k)    * <- empty, never initialized
+    ki(k)
+    kt(k)
+;
+```
+
+**Root Cause**: The original model uses these subsets in control flow (loops, conditions) which aren't fully supported. When emitted, the subsets are empty.
+
+**Fix Location**: Parser needs to capture subset initialization from dollar conditions or explicit assignments.
+
+**Impact**: Fixing this would recover **2 models** (5% of solve failures).
+
+#### Category 3: Quoted Lag/Lead References (1 model + related)
+**Models**: robert (documented in issue #650)
+
+**Problem**: Lag/lead references emitted as quoted strings instead of GAMS syntax.
+
+**Example** (robert):
+```gams
+# Emitted (wrong):
+sb(r,tt).. s(r,"tt+1") =E= ...
+
+# Should be:
+sb(r,tt)$(ord(tt) < card(tt)).. s(r,tt+1) =E= ...
+```
+
+**Root Cause**: Parser stores `"tt+1"` as a string literal instead of recognizing lead/lag syntax.
+
+**Fix Location**: `src/ir/parser.py` - Index parsing should detect and preserve lead/lag expressions.
+
+**Impact**: This affects multiple models. Fixing would recover **1-3 models**.
+
+#### Category 4: Invalid Variable Names from .fx Bounds (1 model)
+**Models**: himmel16
+
+**Problem**: Variable `.fx` bounds generate multiplier names with embedded indices, creating invalid syntax.
+
+**Example** (himmel16):
+```gams
+# Emitted (wrong):
+nu_x_fx(1)(i)   * <- nested parens invalid
+
+# Problem source:
+x.fx("1") = 0;  * <- generates multiplier for this bound
+```
+
+**Root Cause**: Bound constraint naming doesn't sanitize index values in generated names.
+
+**Fix Location**: `src/converter/converter.py` - Bound multiplier naming logic.
+
+**Impact**: Fixing would recover **1 model** (may affect others with `.fx` bounds on indexed elements).
+
+#### Category 5: Runtime Solver Failures (13 models)
+**Status**: `path_solve_terminated` - These compile successfully but PATH solver fails.
+
+**Models**: chem, cpack, dispatch, house, jobt, like, meanvar, port, process, ps3_f, ps3_s, ps3_s_gic, ps3_s_mn
+
+**Root Cause**: Likely numerical issues, infeasible KKT systems, or incorrect constraint transformations. These require deeper investigation but are lower priority than syntax errors.
+
+### Prioritized Fix List
+
+| Priority | Issue | Models Affected | Effort | Impact |
+|----------|-------|-----------------|--------|--------|
+| **P1** | Element literal quoting heuristic | 9 | Medium | High - 24% of failures |
+| **P2** | Quoted lag/lead references | 1-3 | Medium | Medium - Known issue |
+| **P3** | Invalid .fx bound names | 1+ | Low | Low-Medium |
+| **P4** | Empty dynamic subsets | 2 | High | Low - Complex to fix |
+| **P5** | Runtime solver failures | 13 | High | Medium - Requires deep investigation |
+
+### Recommended Day 2 Focus
+
+1. **Fix P1 (Element Literal Quoting)**: Highest impact fix. Modify `_quote_indices()` to use context from the AST to distinguish element literals from domain variables. Consider tracking which indices were originally quoted in the parser.
+
+2. **Fix P3 (Invalid .fx Bound Names)**: Quick win. Sanitize generated multiplier names to avoid nested parentheses.
+
+3. **Document P2 and P4**: These are already documented in `docs/issues/`. Add implementation notes for future sprints.
+
+### Day 1 Summary
+
+Completed diagnostic deep-dive on 37 solve failures:
+- Identified 5 distinct root cause categories
+- Largest impact fix (element literal quoting) would recover 9 models
+- Created prioritized fix list for Day 2 implementation
+
+### Next Steps (Day 2)
+- Implement P1 fix: Element literal quoting context
+- Implement P3 fix: Sanitize .fx bound multiplier names
+- Re-run pipeline to validate fixes
+- Update metrics
+
+---
+
+## Day 2: [Pending]
 
 <!-- Template for daily entries:
 
