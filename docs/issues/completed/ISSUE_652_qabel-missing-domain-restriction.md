@@ -29,7 +29,7 @@ This equation defines the next state `x(n,k+1)` in terms of the current state.
 
 ### Expected Output
 ```gams
-stateq(n,k)$(ord(k) < card(k)).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + sum(m, b(n,m) * u(m,k)) + c(n);
+stateq(n,k)$(ord(k) <= card(k) - 1).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + sum(m, b(n,m) * u(m,k)) + c(n);
 ```
 
 ### Previous (Incorrect) Output
@@ -45,8 +45,8 @@ The equation was generated for ALL elements of `k`, including the last one. When
 Added automatic domain restriction inference for lead/lag expressions in `src/emit/equations.py`:
 
 1. Added `_collect_lead_lag_restrictions()` function that recursively walks expression trees to find `IndexOffset` nodes
-2. For lead expressions (positive offset like `k+1`), adds restriction `ord(k) < card(k)`
-3. For lag expressions (negative offset like `t-1`), adds restriction `ord(t) > 1`
+2. For lead expressions (positive offset like `k+n`), adds restriction `ord(k) <= card(k) - n` (e.g., for `k+1`, emits `ord(k) <= card(k) - 1`)
+3. For lag expressions (negative offset like `t-n`), adds restriction `ord(t) > n` (e.g., for `t-1`, emits `ord(t) > 1`)
 4. Modified `emit_equation_def()` to detect these patterns and emit the appropriate domain condition
 
 The fix correctly handles:
@@ -61,5 +61,5 @@ The fix correctly handles:
 >>> from src.emit.emit_gams import emit_gams_mcp
 >>> # ... assemble KKT system ...
 >>> # Now correctly emits:
->>> # stateq(n,k)$(ord(k) < card(k)).. x(n,k+1) =E= ...
+>>> # stateq(n,k)$(ord(k) <= card(k) - 1).. x(n,k+1) =E= ...
 ```

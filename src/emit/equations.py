@@ -46,12 +46,13 @@ def _check_index_offset(
         domain_map: Map from lowercase domain index to canonical (original) name
         lead_offsets: Dict mapping canonical index to max positive offset magnitude
         lag_offsets: Dict mapping canonical index to max negative offset magnitude (as positive int)
-        bound_indices: Set of lowercase indices currently bound by Sum expressions (to skip)
+        bound_indices: Set of lowercase indices currently bound by aggregation expressions
+            (e.g., Sum or Prod) to skip
     """
     # Only consider non-circular offsets (linear lead/lag)
     if not idx_offset.circular:
         # Check if this base is in the equation domain (case-insensitive)
-        # but not shadowed by a sum-local binding
+        # but not shadowed by an aggregation-local binding
         base_lower = idx_offset.base.lower()
         if base_lower in domain_map and base_lower not in bound_indices:
             # Use canonical domain name for the key
