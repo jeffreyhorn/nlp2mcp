@@ -248,7 +248,11 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
         if isinstance(eq_def.condition, str):
             existing_cond = eq_def.condition
         elif isinstance(eq_def.condition, Expr):
-            existing_cond = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
+            # Apply same alias collection and conflict resolution as LHS/RHS
+            # to avoid GAMS Error 125 if condition has Sum/Prod binding domain indices
+            aliases_needed.update(collect_index_aliases(eq_def.condition, domain))
+            resolved_cond = resolve_index_conflicts(eq_def.condition, domain)
+            existing_cond = expr_to_gams(resolved_cond, domain_vars=domain_vars)
         else:
             # Fallback: try to convert as Expr
             existing_cond = expr_to_gams(eq_def.condition, domain_vars=domain_vars)  # type: ignore[arg-type]
