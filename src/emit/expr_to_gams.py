@@ -376,7 +376,7 @@ def expr_to_gams(
 
         case Unary(op, child):
             child_str = expr_to_gams(child, parent_op=op, domain_vars=domain_vars)
-            # GAMS unary operators: +, -
+            # GAMS unary operators: +, -, not
             # For unary minus, ALWAYS convert to multiplication form to avoid GAMS Error 445
             # ("More than one operator in a row"). This happens when unary minus follows
             # other operators like ".." (equation definition), "+", "-", etc.
@@ -390,6 +390,9 @@ def expr_to_gams(
                     return f"((-1) * ({child_str}))"
                 else:
                     return f"((-1) * {child_str})"
+            # Sprint 18 Day 3: Handle 'not' operator with required space
+            if op == "not":
+                return f"not {child_str}"
             # Unary plus can be passed through directly
             return f"{op}{child_str}"
 

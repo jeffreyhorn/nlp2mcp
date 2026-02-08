@@ -49,6 +49,7 @@ from .symbols import (
     OptionStatement,
     ParameterDef,
     Rel,
+    SetAssignment,
     SetDef,
     SourceLocation,
     VariableDef,
@@ -3115,8 +3116,16 @@ class _ModelBuilder:
                 # Sprint 11 Day 2 Extended: Check if this is a set assignment
                 if symbol_name in self.model.sets:
                     # Set assignment like: low(n,nn) = ord(n) > ord(nn)
-                    # For now, parse and validate but don't store (mock/store approach)
-                    # The expression has already been validated with the correct domain context
+                    # Sprint 18 Day 3: Store set assignments for emission (P4 fix)
+                    # Dynamic subsets must be populated at runtime via these assignments
+                    location = self._extract_source_location(node)
+                    set_assignment = SetAssignment(
+                        set_name=symbol_name,
+                        indices=indices,
+                        expr=expr,
+                        location=location,
+                    )
+                    self.model.set_assignments.append(set_assignment)
                     return
 
                 # Validate parameter exists

@@ -447,12 +447,112 @@ Models now correctly emit multi-letter lag/lead expressions:
 - `robert`: `s(r,tt+1)` instead of `s(r,"tt+1")`
 - `pak`: `c(te+1)`, `ti(te+1)`, `ks(te+1,j)` instead of quoted versions
 
-### Day 3 Summary
+### Day 3 Summary (P2)
 
 Implemented P2 fix for multi-letter lag/lead expression quoting:
 - Added type-aware index formatting that preserves `IndexOffset` semantics
 - Correctly emits `tt+1` instead of `"tt+1"` for lead expressions
 - All 2159 unit tests pass
+
+---
+
+## Day 3 (continued): P4 Fix - Empty Dynamic Subsets (2026-02-08)
+
+### Objectives
+- [x] Investigate P4: Empty dynamic subsets issue
+- [x] Implement P4 fix
+- [x] Run regression tests
+- [x] Update sprint log
+
+### P4 Fix: Dynamic Subset Assignment Emission
+
+**Problem**: Dynamic subsets declared with syntax like `ku(k)` were emitted as empty sets because their initialization statements (e.g., `ku(k) = yes$(ord(k) < card(k))`) were being parsed but not stored or emitted.
+
+**Example** (abel model):
+```gams
+* Original GAMS declarations:
+Sets
+    k /1964-i, 1964-ii, .../
+    ku(k)
+    ki(k)
+    kt(k)
+;
+ku(k) = yes$(ord(k) < card(k));
+ki(k) = yes$(ord(k) = 1);
+kt(k) = not ku(k);
+
+* Before P4 fix (WRONG):
+Sets
+    ku(k)    * <- declared but empty, no initialization
+    ki(k)
+    kt(k)
+;
+* no assignment statements emitted
+
+* After P4 fix (CORRECT):
+Sets
+    ku(k)
+    ki(k)
+    kt(k)
+;
+ku(k) = 1$ord(k) < card(k);
+ki(k) = 1$ord(k) = 1;
+kt(k) = not ku(k);
+```
+
+**Root Cause**: The parser detected set assignments at lines 3115-3120 but just returned without storing them. The mock/store approach was incomplete.
+
+**Solution**: Four-part fix:
+
+1. **SetAssignment dataclass** (`src/ir/symbols.py`):
+   - Added `SetAssignment` class to store dynamic set assignment statements
+   - Fields: `set_name`, `indices`, `expr` (parsed expression), `location`
+
+2. **ModelIR storage** (`src/ir/model_ir.py`):
+   - Added `set_assignments: list[SetAssignment]` field to store assignments
+
+3. **Parser capture** (`src/ir/parser.py`):
+   - Modified set assignment handling to create and store `SetAssignment` objects
+   - Expression is already parsed and validated with correct domain context
+
+4. **Emission function** (`src/emit/original_symbols.py`):
+   - Added `emit_set_assignments()` function to emit stored assignments as GAMS
+   - Uses `expr_to_gams()` with domain context to correctly format expressions
+
+5. **Integration** (`src/emit/emit_gams.py`):
+   - Added call to `emit_set_assignments()` after computed parameter assignments
+
+6. **Bug fix - `not` operator** (`src/emit/expr_to_gams.py`):
+   - Added handling for `not` operator with required space
+   - `not ku(k)` instead of `notku(k)`
+
+**Files Modified**:
+- `src/ir/symbols.py`: Added `SetAssignment` dataclass
+- `src/ir/model_ir.py`: Added `set_assignments` field
+- `src/ir/parser.py`: Store set assignments instead of just returning
+- `src/emit/original_symbols.py`: Added `emit_set_assignments()` function
+- `src/emit/emit_gams.py`: Call `emit_set_assignments()` in pipeline
+- `src/emit/__init__.py`: Export `emit_set_assignments`
+- `src/emit/expr_to_gams.py`: Handle `not` operator with space
+
+### Test Results
+- All 2159 unit tests pass
+- All 271 integration tests pass (5 skipped)
+- All 376 gamslib tests pass
+
+### Models with Dynamic Subsets
+
+Models now correctly emit dynamic subset assignments:
+- `abel`: `ku(k)`, `ki(k)`, `kt(k)` now initialized
+- `qabel`: Same subsets now initialized
+
+### Day 3 Final Summary
+
+Implemented two fixes:
+- **P2**: Multi-letter lag/lead expression quoting (semantic correctness)
+- **P4**: Dynamic subset assignment emission (2 models affected)
+
+---
 
 ### Sprint 18 Days 1-3 Cumulative Progress
 
@@ -467,12 +567,13 @@ Implemented P2 fix for multi-letter lag/lead expression quoting:
 **Key Achievements**:
 - P1: Context-aware element literal quoting (7 models now compile)
 - P3: Valid GAMS identifiers for .fx bounds (1 model now compiles)
-- P2: Correct lag/lead expression emission (semantic fix, no metric change)
+- P2: Correct lag/lead expression emission (semantic fix)
+- P4: Dynamic subset assignment emission (2 models affected: abel, qabel)
 
 ### Next Steps (Day 4+)
 - Investigate remaining `path_syntax_error` failures (14 models)
 - Investigate `path_solve_terminated` failures (may be numeric/feasibility issues)
-- Consider P4 (empty dynamic subsets) and P5 (runtime solver failures)
+- Consider P5 (runtime solver failures)
 
 ---
 

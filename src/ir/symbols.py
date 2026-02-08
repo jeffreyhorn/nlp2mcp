@@ -184,3 +184,31 @@ class LoopStatement:
     indices: tuple[str, ...]  # Loop index variables
     body_stmts: list[object]  # Loop body statements (Trees)
     location: SourceLocation | None
+
+
+@dataclass
+class SetAssignment:
+    """Represents a GAMS dynamic set assignment statement.
+
+    Sprint 18 Day 3: Stores set assignments that populate subsets at runtime.
+
+    Examples:
+        ku(k) = yes$(ord(k) < card(k));
+        ki(k) = yes$(ord(k) = 1);
+        kt(k) = not ku(k);
+        low(n,nn) = ord(n) > ord(nn);
+
+    These assignments define subset membership dynamically and must be
+    emitted in the generated GAMS file for proper execution.
+
+    Attributes:
+        set_name: Name of the set being assigned to
+        indices: Tuple of index variable names (e.g., ('k',) or ('n', 'nn'))
+        expr: The parsed expression for the RHS (Expr AST node)
+        location: Source location of the assignment
+    """
+
+    set_name: str
+    indices: tuple[str, ...]
+    expr: Expr  # The parsed expression for the RHS
+    location: SourceLocation | None

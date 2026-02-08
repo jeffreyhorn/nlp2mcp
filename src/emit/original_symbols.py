@@ -543,3 +543,45 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
                 lines.append(f"{param_name} = {expr_str};")
 
     return "\n".join(lines)
+
+
+def emit_set_assignments(model_ir: ModelIR) -> str:
+    """Emit dynamic set assignment statements.
+
+    Sprint 18 Day 3: Emit SetAssignment objects stored in model_ir.set_assignments
+    as GAMS assignment statements. These are dynamic subset initializations like:
+        ku(k) = yes$(ord(k) < card(k));
+        ki(k) = yes$(ord(k) = 1);
+        kt(k) = not ku(k);
+        low(n,nn) = ord(n) > ord(nn);
+
+    Args:
+        model_ir: Model IR containing set assignment definitions
+
+    Returns:
+        GAMS assignment statements as string
+
+    Example output:
+        ku(k) = yes$(ord(k) < card(k));
+        low(n,nn) = ord(n) > ord(nn);
+    """
+    if not model_ir.set_assignments:
+        return ""
+
+    lines: list[str] = []
+
+    for set_assignment in model_ir.set_assignments:
+        # Convert expression to GAMS syntax
+        # Pass indices as domain_vars so they're recognized as domain variables
+        domain_vars = frozenset(set_assignment.indices)
+        expr_str = expr_to_gams(set_assignment.expr, domain_vars=domain_vars)
+
+        # Format the LHS with indices
+        if set_assignment.indices:
+            index_str = ",".join(set_assignment.indices)
+            lines.append(f"{set_assignment.set_name}({index_str}) = {expr_str};")
+        else:
+            # Scalar set assignment (rare but possible)
+            lines.append(f"{set_assignment.set_name} = {expr_str};")
+
+    return "\n".join(lines)

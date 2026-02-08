@@ -13,6 +13,7 @@ from .symbols import (
     ObjSense,
     OptionStatement,
     ParameterDef,
+    SetAssignment,
     SetDef,
     VariableDef,
 )
@@ -48,6 +49,9 @@ class ModelIR:
 
     # Loop statements (Sprint 11 Day 2 Extended: mock/store approach)
     loop_statements: list[LoopStatement] = field(default_factory=list)
+
+    # Set assignments (Sprint 18 Day 3: dynamic subset initialization)
+    set_assignments: list[SetAssignment] = field(default_factory=list)
 
     # Solve info
     declared_model: str | None = None

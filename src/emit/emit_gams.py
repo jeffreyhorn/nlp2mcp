@@ -12,6 +12,7 @@ from src.emit.original_symbols import (
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
+    emit_set_assignments,
 )
 from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
 from src.kkt.kkt_system import KKTSystem
@@ -112,6 +113,12 @@ def emit_gams_mcp(
     computed_params_code = emit_computed_parameter_assignments(kkt.model_ir)
     if computed_params_code:
         sections.append(computed_params_code)
+        sections.append("")
+
+    # Sprint 18 Day 3: Emit dynamic set assignments (P4 fix)
+    set_assignments_code = emit_set_assignments(kkt.model_ir)
+    if set_assignments_code:
+        sections.append(set_assignments_code)
         sections.append("")
 
     # Variables (primal + multipliers)
