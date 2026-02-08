@@ -60,17 +60,16 @@ wb(t)$(ord(t) > 1).. w(t) =E= w(t-1) - f(t) + h(t) + wi(t);
 
 ## Steps to Reproduce
 
-1. Parse `data/gamslib/gams/jobt.gms`
+1. Parse `data/gamslib/raw/jobt.gms` (raw GAMS models must be downloaded locally)
 2. Translate to MCP format
 3. Check scalar values and equations with lag references
 
 ```bash
 python -c "
-from src.ir.parser import Parser
+from src.ir.parser import parse_model_file
 from src.converter.converter import Converter
 
-parser = Parser()
-ir = parser.parse_file('data/gamslib/gams/jobt.gms')
+ir = parse_model_file('data/gamslib/raw/jobt.gms')
 
 # Check scalar values
 print('Scalars:')

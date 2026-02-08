@@ -63,17 +63,16 @@ The symbolic differentiation or index substitution logic is incorrectly using th
 
 ## Steps to Reproduce
 
-1. Parse `data/gamslib/gams/himmel16.gms`
+1. Parse `data/gamslib/raw/himmel16.gms` (raw GAMS models must be downloaded locally)
 2. Translate to MCP format
 3. Examine the generated `comp_maxdist` and `stat_x`/`stat_y` equations
 
 ```bash
 python -c "
-from src.ir.parser import Parser
+from src.ir.parser import parse_model_file
 from src.converter.converter import Converter
 
-parser = Parser()
-ir = parser.parse_file('data/gamslib/gams/himmel16.gms')
+ir = parse_model_file('data/gamslib/raw/himmel16.gms')
 converter = Converter(ir)
 result = converter.convert()
 print(result.output)

@@ -48,17 +48,16 @@ Two issues:
 
 ## Steps to Reproduce
 
-1. Parse `data/gamslib/gams/like.gms`
+1. Parse `data/gamslib/raw/like.gms` (raw GAMS models must be downloaded locally)
 2. Translate to MCP format
 3. Examine the `comp_rank` equation
 
 ```bash
 python -c "
-from src.ir.parser import Parser
+from src.ir.parser import parse_model_file
 from src.converter.converter import Converter
 
-parser = Parser()
-ir = parser.parse_file('data/gamslib/gams/like.gms')
+ir = parse_model_file('data/gamslib/raw/like.gms')
 
 # Check original equation
 for name, eq in ir.equations.items():

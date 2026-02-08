@@ -43,17 +43,16 @@ This likely occurs in `expr_to_gams.py` or the index serialization logic, where 
 
 ## Steps to Reproduce
 
-1. Parse `data/gamslib/gams/robert.gms`
+1. Parse `data/gamslib/raw/robert.gms` (raw GAMS models must be downloaded locally)
 2. Translate to MCP format
 3. Examine equations containing lead/lag references
 
 ```bash
 python -c "
-from src.ir.parser import Parser
+from src.ir.parser import parse_model_file
 from src.converter.converter import Converter
 
-parser = Parser()
-ir = parser.parse_file('data/gamslib/gams/robert.gms')
+ir = parse_model_file('data/gamslib/raw/robert.gms')
 converter = Converter(ir)
 result = converter.convert()
 # Search for quoted lag patterns

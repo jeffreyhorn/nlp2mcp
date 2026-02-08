@@ -42,17 +42,16 @@ The converter does not analyze lead expressions in equation bodies to infer requ
 
 ## Steps to Reproduce
 
-1. Parse `data/gamslib/gams/abel.gms`
+1. Parse `data/gamslib/raw/abel.gms` (raw GAMS models must be downloaded locally)
 2. Translate to MCP format
 3. Examine the `stateq` equation
 
 ```bash
 python -c "
-from src.ir.parser import Parser
+from src.ir.parser import parse_model_file
 from src.converter.converter import Converter
 
-parser = Parser()
-ir = parser.parse_file('data/gamslib/gams/abel.gms')
+ir = parse_model_file('data/gamslib/raw/abel.gms')
 converter = Converter(ir)
 result = converter.convert()
 

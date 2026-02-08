@@ -80,17 +80,16 @@ Same as robert.gms - the index expression emission is quoting lead/lag reference
 
 ## Steps to Reproduce
 
-1. Parse `data/gamslib/gams/pak.gms`
+1. Parse `data/gamslib/raw/pak.gms` (raw GAMS models must be downloaded locally)
 2. Translate to MCP format
 3. Check scalar values and search for quoted lag patterns
 
 ```bash
 python -c "
-from src.ir.parser import Parser
+from src.ir.parser import parse_model_file
 from src.converter.converter import Converter
 
-parser = Parser()
-ir = parser.parse_file('data/gamslib/gams/pak.gms')
+ir = parse_model_file('data/gamslib/raw/pak.gms')
 
 # Check scalar values
 for name, scalar in ir.scalars.items():

@@ -53,17 +53,16 @@ The converter does not:
 
 ## Steps to Reproduce
 
-1. Parse `data/gamslib/gams/whouse.gms`
+1. Parse `data/gamslib/raw/whouse.gms` (raw GAMS models must be downloaded locally)
 2. Translate to MCP format
 3. Examine the stock balance equation
 
 ```bash
 python -c "
-from src.ir.parser import Parser
+from src.ir.parser import parse_model_file
 from src.converter.converter import Converter
 
-parser = Parser()
-ir = parser.parse_file('data/gamslib/gams/whouse.gms')
+ir = parse_model_file('data/gamslib/raw/whouse.gms')
 converter = Converter(ir)
 result = converter.convert()
 
