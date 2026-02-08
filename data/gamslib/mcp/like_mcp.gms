@@ -60,6 +60,22 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values. Set to lower bound or small positive value.
+
+p.l("one") = 0.1;
+p.l("two") = 0.1;
+p.l("three") = 0.1;
+m.l(g) = 1;
+s.l("one") = 15.0;
+s.l("two") = 15.0;
+s.l("three") = 15.0;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -87,7 +103,7 @@ Equations
 Alias(g, g__);
 
 * Stationarity equations
-stat_m(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (-0.5) * 2 * (y(i) - m(g)) / s(g) * s(g) * (-1) / s(g) ** 2)) + 0 * nu_pdef + 1 * lam_rank(g) =E= 0;
+stat_m(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (-0.5) * 2 * (y(i) - m(g)) / s(g) * s(g) * (-1) / s(g) ** 2)) + 0 * nu_pdef + (-1) * lam_rank(g) =E= 0;
 stat_p(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * 1 / s(g) ** 1)) + 1 * nu_pdef + 0 * lam_rank(g) - piL_p(g) =E= 0;
 stat_s(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * (exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * ((-1) * p(g)) / s(g) ** 2 - p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (y(i) - m(g)) / s(g) * ((-1) * (y(i) - m(g))) / s(g) ** 2))) + 0 * nu_pdef + 0 * lam_rank(g) - piL_s(g) =E= 0;
 

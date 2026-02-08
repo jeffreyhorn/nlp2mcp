@@ -570,10 +570,121 @@ Implemented two fixes:
 - P2: Correct lag/lead expression emission (semantic fix)
 - P4: Dynamic subset assignment emission (2 models affected: abel, qabel)
 
+---
+
+## Day 3 (continued): P5 Fix - Runtime Solver Failures (2026-02-08)
+
+### Objectives
+- [x] Investigate P5: Runtime solver failures (division by zero)
+- [x] Implement P5 fix
+- [x] Run regression tests
+- [x] Update sprint log
+
+### P5 Fix: Variable Initialization to Prevent Division by Zero
+
+**Problem**: Models that compiled successfully were failing at GAMS model generation time with "division by zero (0)" errors. Variables appearing in denominators of stationarity equations (from differentiating `log(x)` or `1/x` terms) caused undefined values when initialized to default 0.
+
+**Example** (chem model):
+```
+**** Exec Error at line 106: division by zero (0)
+**** Evaluation error(s) in equation "stat_m(one)"
+        Problem in Jacobian evaluation of "p(one)"
+        Problem in Jacobian evaluation of "m(one)"
+        Problem in Jacobian evaluation of "s(one)"
+```
+
+**Root Cause**: GAMS variables default to `.l = 0`. When stationarity equations contain terms like `1/x` or derivatives of `log(x)`, evaluation at `x = 0` causes division by zero during model generation.
+
+**Solution**: Added variable initialization section to emitted GAMS code:
+
+1. **Priority 1 - Explicit level values** (`l_map`, `l`):
+   - Emit `.l` values captured from original model if present
+   - Example: `s.l("one") = 15.0;` from `s.l(g) = 15;`
+
+2. **Priority 2 - Lower bounds** (`lo_map`, `lo`):
+   - If no explicit `.l`, initialize to lower bound value
+   - Example: `p.l("one") = 0.1;` from `p.lo(g) = 0.1;`
+
+3. **Priority 3 - Positive variable default**:
+   - Positive variables without other initialization get `.l = 1`
+   - Changed from `1e-6` to `1` for numerical stability
+   - Example: `m.l(g) = 1;`
+
+**Files Modified**:
+- `src/emit/emit_gams.py`: Added variable initialization logic in `emit_gams_mcp()`
+
+### Emitted Code Example
+
+```gams
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values. Set to lower bound or small positive value.
+
+p.l("one") = 0.1;
+p.l("two") = 0.1;
+p.l("three") = 0.1;
+m.l(g) = 1;
+s.l("one") = 15.0;
+s.l("two") = 15.0;
+s.l("three") = 15.0;
+```
+
+### Test Results
+
+| Model | Before P5 | After P5 | Notes |
+|-------|-----------|----------|-------|
+| chem | division by zero | ✅ Compiles & solves | |
+| like | division by zero | Compiles, runtime error | Different issue: domain restriction (#653) |
+
+**Regression Tests**:
+- Core examples (simple_nlp, scalar_nlp, indexed_balance, positive_vars_nlp): All pass
+- Integration health check: 5/13 pass (same as before, no regressions)
+- All unit tests pass
+
+### Models Still Affected
+
+The `like` model still fails after P5 fix, but with a different error:
+```
+**** MCP pair comp_rank.lam_rank has empty equation but associated variable is NOT fixed
+```
+
+This is caused by Issue #653 (missing domain restriction for lead index), not by the P5 initialization issue. The P5 fix successfully resolved the division by zero errors.
+
+### Day 3 P5 Summary
+
+Implemented P5 fix for variable initialization:
+- Variables now initialized from `.l` values, lower bounds, or reasonable defaults
+- Division by zero errors eliminated for models with denominators containing variables
+- `chem` model now compiles and solves successfully
+- `like` model now compiles (P5 fix worked) but has separate domain restriction issue (#653)
+
+---
+
+### Sprint 18 Days 1-3 Final Cumulative Progress
+
+| Stage | Day 0 | Day 3 End | Change |
+|-------|-------|-----------|--------|
+| Parse | 62 | 62 | 0 |
+| Translate | 50 | 50 | 0 |
+| path_syntax_error | 22 | 14 | **-8** |
+| path_solve_terminated | 13 | ~20 | +7 |
+| model_optimal | 13 | 14+ | **+1+** |
+
+**Key Achievements (All Days)**:
+- **P1**: Context-aware element literal quoting (7 models now compile)
+- **P3**: Valid GAMS identifiers for .fx bounds (1 model now compiles)
+- **P2**: Correct lag/lead expression emission (semantic fix)
+- **P4**: Dynamic subset assignment emission (abel, qabel affected)
+- **P5**: Variable initialization for division by zero prevention (chem now solves)
+
 ### Next Steps (Day 4+)
 - Investigate remaining `path_syntax_error` failures (14 models)
 - Investigate `path_solve_terminated` failures (may be numeric/feasibility issues)
-- Consider P5 (runtime solver failures)
+- Address Issue #653 (like model domain restriction)
 
 ---
 

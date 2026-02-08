@@ -15,6 +15,7 @@ from src.emit.original_symbols import (
     emit_set_assignments,
 )
 from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
+from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
 
 
@@ -139,22 +140,74 @@ def emit_gams_mcp(
     sections.append(variables_code)
     sections.append("")
 
-    # Variable initialization (if smooth_abs is enabled)
-    if config and config.smooth_abs:
+    # Sprint 18 Day 3 (P5 fix): Variable initialization to avoid division by zero
+    # Variables with level values, lower bounds, or positive type need initialization
+    # to prevent division by zero during model generation when they appear in
+    # denominators of stationarity equations (e.g., from differentiating log(x) or 1/x)
+    init_lines: list[str] = []
+    for var_name, var_def in kkt.model_ir.variables.items():
+        has_init = False
+
+        # Priority 1: Check for explicit level values (l_map) - these take precedence
+        if var_def.l_map:
+            for indices, l_val in var_def.l_map.items():
+                if l_val is not None:
+                    idx_str = ",".join(f'"{i}"' for i in indices)
+                    init_lines.append(f"{var_name}.l({idx_str}) = {l_val};")
+                    has_init = True
+        elif var_def.l is not None:
+            init_lines.append(f"{var_name}.l = {var_def.l};")
+            has_init = True
+
+        # Priority 2: Check for indexed lower bounds (lo_map) if no .l was provided
+        if not has_init and var_def.lo_map:
+            for indices, lo_val in var_def.lo_map.items():
+                if lo_val is not None and lo_val > 0:
+                    idx_str = ",".join(f'"{i}"' for i in indices)
+                    init_lines.append(f"{var_name}.l({idx_str}) = {lo_val};")
+                    has_init = True
+        # Check for scalar lower bound
+        elif not has_init and var_def.lo is not None and var_def.lo > 0:
+            init_lines.append(f"{var_name}.l = {var_def.lo};")
+            has_init = True
+
+        # Priority 3: Positive variables without explicit values: use reasonable default
+        # Use 1.0 instead of 1e-6 to avoid numerical issues in stationarity equations
+        if not has_init and var_def.kind == VarKind.POSITIVE:
+            if var_def.domain:
+                domain_str = ",".join(var_def.domain)
+                init_lines.append(f"{var_name}.l({domain_str}) = 1;")
+            else:
+                init_lines.append(f"{var_name}.l = 1;")
+
+    if init_lines:
         if add_comments:
             sections.append("* ============================================")
             sections.append("* Variable Initialization")
             sections.append("* ============================================")
             sections.append("")
-            sections.append("* Initialize variables to avoid domain errors with smooth abs()")
-            sections.append("* The smooth approximation sqrt(x^2 + ε) can cause GAMS")
-            sections.append("* domain errors during model generation if variables default to")
-            sections.append("* values that make expressions negative under power operations.")
+            sections.append(
+                "* Initialize variables to avoid division by zero during model generation."
+            )
+            sections.append(
+                "* Variables appearing in denominators (from log, 1/x derivatives) need"
+            )
+            sections.append(
+                "* non-zero initial values. Set to lower bound or small positive value."
+            )
+            sections.append("")
+        sections.extend(init_lines)
+        sections.append("")
+
+    # Additional initialization for smooth_abs (if enabled)
+    if config and config.smooth_abs:
+        if add_comments:
+            sections.append("* Additional initialization for smooth abs() approximation")
             sections.append("")
 
         # Initialize all primal variables to a safe non-zero value
         for var_name in kkt.model_ir.variables:
-            sections.append(f"{var_name}.l = 1;")
+            sections.append(f"{var_name}.l = max({var_name}.l, 1);")
 
         sections.append("")
 
