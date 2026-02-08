@@ -106,7 +106,7 @@ This provides additional headroom for Sprint 18 goals.
 
 ### Failure Analysis Summary
 
-**Pipeline Status**: 50 models translate successfully, 37 fail at solve stage due to GAMS syntax errors.
+**Pipeline Status**: 50 models translate successfully; 37 fail at the solve stage overall (with a subset failing GAMS compilation due to syntax errors).
 
 #### GAMS Error Code Distribution (Solve Failures)
 
@@ -134,10 +134,10 @@ This provides additional headroom for Sprint 18 goals.
 
 **Example** (demo1):
 ```gams
-# Emitted (wrong):
+* Emitted (wrong):
 croprep(revenue,c) = croprep("output",c) * price(c);
 
-# Should be:
+* Should be:
 croprep("revenue",c) = croprep("output",c) * price(c);
 ```
 
@@ -175,10 +175,10 @@ Sets
 
 **Example** (robert):
 ```gams
-# Emitted (wrong):
+* Emitted (wrong):
 sb(r,tt).. s(r,"tt+1") =E= ...
 
-# Should be:
+* Should be:
 sb(r,tt)$(ord(tt) < card(tt)).. s(r,tt+1) =E= ...
 ```
 
@@ -195,10 +195,10 @@ sb(r,tt)$(ord(tt) < card(tt)).. s(r,tt+1) =E= ...
 
 **Example** (himmel16):
 ```gams
-# Emitted (wrong):
+* Emitted (wrong):
 nu_x_fx(1)(i)   * <- nested parens invalid
 
-# Problem source:
+* Problem source:
 x.fx("1") = 0;  * <- generates multiplier for this bound
 ```
 
@@ -220,10 +220,10 @@ x.fx("1") = 0;  * <- generates multiplier for this bound
 | Priority | Issue | Models Affected | Effort | Impact |
 |----------|-------|-----------------|--------|--------|
 | **P1** | Element literal quoting heuristic | 9 | Medium | High - 24% of failures |
-| **P2** | Quoted lag/lead references | 1-3 | Medium | Medium - Known issue |
+| **P2** | Quoted lag/lead references | 1-3 | Medium | Medium |
 | **P3** | Invalid .fx bound names | 1+ | Low | Low-Medium |
-| **P4** | Empty dynamic subsets | 2 | High | Low - Complex to fix |
-| **P5** | Runtime solver failures | 13 | High | Medium - Requires deep investigation |
+| **P4** | Empty dynamic subsets | 2 | High (complex) | Low |
+| **P5** | Runtime solver failures | 13 | High (deep investigation) | Medium |
 
 ### Recommended Day 2 Focus
 
