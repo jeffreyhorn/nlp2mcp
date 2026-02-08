@@ -1977,7 +1977,8 @@ class _ModelBuilder:
             # Get row header(s) from row_label_map (handles dotted labels and tuple labels)
             if line_num not in row_label_map:
                 # Fallback: first token should be row header
-                if line_tokens[0].type != "ID":
+                # Row labels can be ID or NUMBER tokens (e.g., "1", "2" in table rows)
+                if line_tokens[0].type not in ("ID", "NUMBER"):
                     continue
                 row_headers = [_token_text(line_tokens[0])]
             else:
