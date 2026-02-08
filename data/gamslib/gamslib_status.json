@@ -3635,10 +3635,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:18:27.313150+00:00",
-        "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5411,
-        "output_file": "data/gamslib/mcp/jobt_mcp.gms"
+        "translate_date": "2026-02-08T23:43:12.649041+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 1.2898,
+        "output_file": "data/gamslib/mcp/jobt_mcp.gms",
+        "validation": {
+          "valid": true,
+          "validation_time_seconds": 0.1864
+        }
       },
       "mcp_solve": {
         "status": "failure",
