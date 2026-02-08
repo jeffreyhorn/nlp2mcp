@@ -493,6 +493,12 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
     """
     lines: list[str] = []
 
+    # PR #658 review: Precompute declared sets (lowercase) once for efficient lookup
+    # This avoids recomputing the lowercase set inside the inner loop
+    declared_sets_lower = {s.lower() for s in model_ir.sets.keys()} | {
+        s.lower() for s in model_ir.aliases.keys()
+    }
+
     for param_name, param_def in model_ir.params.items():
         # Skip predefined constants
         if param_name in PREDEFINED_GAMS_CONSTANTS:
@@ -520,13 +526,12 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
             # PR #658 review: Derive domain_vars from model context (declared sets/aliases)
             # rather than trusting raw key strings. This prevents unquoted element literals
             # like "cod", "apr", "land" from being misclassified as domain variables.
-            declared_sets = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
             domain_vars = frozenset(
                 idx
                 for idx in key_tuple
                 if not idx.startswith('"')
                 and not idx.startswith("'")
-                and idx.lower() in {s.lower() for s in declared_sets}
+                and idx.lower() in declared_sets_lower
             )
             expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
