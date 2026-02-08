@@ -177,25 +177,19 @@ def emit_gams_mcp(
         # PR #658 review: Even with partial per-index inits, other elements may be 0.
         # Always apply a blanket max() to ensure no POSITIVE variable element is 0.
         # Use 1.0 instead of 1e-6 to avoid numerical issues in stationarity equations.
-        # PR #658 review: Also clamp to upper bound to avoid initializing outside bounds.
+        # PR #658 review: Clamp to upper bound using GAMS .up attribute to respect
+        # per-element bounds (up_map), not just scalar var_def.up.
         if var_def.kind == VarKind.POSITIVE:
             if var_def.domain:
                 domain_str = ",".join(var_def.domain)
                 # Use max() to preserve any explicit inits while ensuring minimum of 1
-                # Clamp to upper bound if present to avoid initializing outside bounds
-                if var_def.up is not None:
-                    init_lines.append(
-                        f"{var_name}.l({domain_str}) = min(max({var_name}.l({domain_str}), 1), {var_def.up});"
-                    )
-                else:
-                    init_lines.append(
-                        f"{var_name}.l({domain_str}) = max({var_name}.l({domain_str}), 1);"
-                    )
+                # Clamp to GAMS .up attribute to respect per-element upper bounds
+                init_lines.append(
+                    f"{var_name}.l({domain_str}) = min(max({var_name}.l({domain_str}), 1), {var_name}.up({domain_str}));"
+                )
             else:
-                if var_def.up is not None:
-                    init_lines.append(f"{var_name}.l = min(max({var_name}.l, 1), {var_def.up});")
-                else:
-                    init_lines.append(f"{var_name}.l = max({var_name}.l, 1);")
+                # Scalar: clamp to .up attribute
+                init_lines.append(f"{var_name}.l = min(max({var_name}.l, 1), {var_name}.up);")
 
     if init_lines:
         if add_comments:
@@ -222,9 +216,12 @@ def emit_gams_mcp(
             sections.append("* Additional initialization for smooth abs() approximation")
             sections.append("")
 
-        # Initialize all primal variables to a safe non-zero value
-        for var_name in kkt.model_ir.variables:
-            sections.append(f"{var_name}.l = max({var_name}.l, 1);")
+        # Initialize POSITIVE primal variables to a safe non-zero value
+        # PR #658 review: Only apply to POSITIVE variables to avoid pushing
+        # NEGATIVE variables (upper bound 0) or multipliers outside their bounds.
+        for var_name, var_def in kkt.model_ir.variables.items():
+            if var_def.kind == VarKind.POSITIVE:
+                sections.append(f"{var_name}.l = min(max({var_name}.l, 1), {var_name}.up);")
 
         sections.append("")
 
