@@ -201,13 +201,18 @@ def _sanitize_identifier(s: str) -> str:
 
     PR #658 review: Uses the shared sanitize_index_for_identifier from kkt/naming.py
     for consistent sanitization across the pipeline. Adds a hash suffix when the
-    string was modified to avoid collisions (e.g., "q-1" and "q_1" both becoming "q_1").
+    string was modified to reduce collision probability (e.g., "q-1" and "q_1" would
+    otherwise both become "q_1").
 
     Args:
         s: Raw string to sanitize
 
     Returns:
         Sanitized string safe for use in GAMS identifiers, with hash suffix if modified
+
+    Note:
+        The 8-character hex hash suffix provides ~4 billion unique values, making
+        collisions extremely unlikely for practical model sizes.
     """
     import hashlib
 
@@ -216,10 +221,11 @@ def _sanitize_identifier(s: str) -> str:
     # Use the shared sanitizer for consistent behavior
     sanitized = sanitize_index_for_identifier(s)
 
-    # If sanitization changed the string, append a short hash to ensure uniqueness
+    # If sanitization changed the string, append a hash to reduce collision probability
     if sanitized != s:
-        # Use first 4 chars of hex hash for brevity while maintaining uniqueness
-        hash_suffix = hashlib.md5(s.encode()).hexdigest()[:4]
+        # PR #658 review: Use 8 hex chars (32 bits) for better collision resistance
+        # than the original 4 chars. This provides ~4 billion unique values.
+        hash_suffix = hashlib.md5(s.encode()).hexdigest()[:8]
         return f"{sanitized}_{hash_suffix}"
 
     return sanitized
