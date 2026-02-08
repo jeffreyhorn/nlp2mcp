@@ -172,13 +172,19 @@ def normalize_model(
 
         for indices, value in _iterate_bounds(var.lo_map, var.lo):
             expr = _binary("-", _const(value, var.domain), _var_ref(var_name, indices, var.domain))
-            add_bound("lo", indices, Rel.LE, expr, var.domain)
+            # Per-element bounds (indices non-empty) are scalar equations, not indexed
+            bound_domain = () if indices else var.domain
+            add_bound("lo", indices, Rel.LE, expr, bound_domain)
         for indices, value in _iterate_bounds(var.up_map, var.up):
             expr = _binary("-", _var_ref(var_name, indices, var.domain), _const(value, var.domain))
-            add_bound("up", indices, Rel.LE, expr, var.domain)
+            # Per-element bounds (indices non-empty) are scalar equations, not indexed
+            bound_domain = () if indices else var.domain
+            add_bound("up", indices, Rel.LE, expr, bound_domain)
         for indices, value in _iterate_bounds(var.fx_map, var.fx):
             expr = _binary("-", _var_ref(var_name, indices, var.domain), _const(value, var.domain))
-            add_bound("fx", indices, Rel.EQ, expr, var.domain)
+            # Per-element bounds (indices non-empty) are scalar equations, not indexed
+            bound_domain = () if indices else var.domain
+            add_bound("fx", indices, Rel.EQ, expr, bound_domain)
 
     ir.normalized_bounds = bounds
     return norm, bounds
@@ -190,11 +196,52 @@ def _iterate_bounds(map_bounds: dict[tuple[str, ...], float], scalar: float | No
     yield from map_bounds.items()
 
 
+def _sanitize_identifier(s: str) -> str:
+    """Sanitize a string for use in a GAMS identifier with collision avoidance.
+
+    PR #658 review: Uses the shared sanitize_index_for_identifier from kkt/naming.py
+    for consistent sanitization across the pipeline. Adds a hash suffix when the
+    string was modified to reduce collision probability (e.g., "q-1" and "q_1" would
+    otherwise both become "q_1").
+
+    Args:
+        s: Raw string to sanitize
+
+    Returns:
+        Sanitized string safe for use in GAMS identifiers, with hash suffix if modified
+
+    Note:
+        The 8-character hex hash suffix provides ~4 billion unique values, making
+        collisions extremely unlikely for practical model sizes.
+    """
+    import hashlib
+
+    from ..kkt.naming import sanitize_index_for_identifier
+
+    # Use the shared sanitizer for consistent behavior
+    sanitized = sanitize_index_for_identifier(s)
+
+    # If sanitization changed the string, append a hash to reduce collision probability
+    if sanitized != s:
+        # PR #658 review: Use 8 hex chars (32 bits) for better collision resistance
+        # than the original 4 chars. This provides ~4 billion unique values.
+        # PR #658 review: Use SHA-256 instead of MD5 for FIPS compatibility.
+        # MD5 can be disabled in FIPS mode, causing runtime errors.
+        hash_suffix = hashlib.sha256(s.encode("utf-8")).hexdigest()[:8]
+        return f"{sanitized}_{hash_suffix}"
+
+    return sanitized
+
+
 def _bound_name(var: str, suffix: str, indices: tuple[str, ...]) -> str:
     if not indices:
         return f"{var}_{suffix}"
-    joined = ",".join(indices)
-    return f"{var}_{suffix}({joined})"
+    # Use underscores instead of parentheses for valid GAMS identifiers
+    # e.g., x_fx_1 instead of x_fx(1) which is invalid GAMS syntax
+    # PR #658: Sanitize indices to handle special characters (e.g., "q-1" -> "q_1")
+    sanitized = [_sanitize_identifier(idx) for idx in indices]
+    joined = "_".join(sanitized)
+    return f"{var}_{suffix}_{joined}"
 
 
 def _expr_domain(expr: Expr) -> tuple[str, ...]:

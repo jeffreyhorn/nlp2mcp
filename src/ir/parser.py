@@ -49,6 +49,7 @@ from .symbols import (
     OptionStatement,
     ParameterDef,
     Rel,
+    SetAssignment,
     SetDef,
     SourceLocation,
     VariableDef,
@@ -371,9 +372,14 @@ def parse_model_file(path: str | Path) -> ModelIR:
 
 
 def _token_text(token: Token) -> str:
+    """Extract text from a token, stripping quotes from STRING tokens.
+
+    PR #658: Also strips leading/trailing whitespace from string content
+    to handle cases like '"rating  "' → 'rating'.
+    """
     value = str(token)
     if token.type == "STRING" and len(value) >= 2:
-        return value[1:-1]
+        return value[1:-1].strip()
     return value
 
 
@@ -388,12 +394,39 @@ def _is_string_literal(token: Token) -> bool:
 
 
 def _strip_quotes(token: Token) -> str:
-    """Strip quotes from ID tokens (e.g., 'i1', \"cost%\" → i1, cost%)."""
+    """Strip quotes from ID tokens (e.g., 'i1', \"cost%\" → i1, cost%).
+
+    PR #658: Also strips leading/trailing whitespace from element labels
+    to handle cases like 'rating  ' → 'rating'.
+    """
     value = str(token)
     if token.type == "ID" and len(value) >= 2:
         if (value[0] == "'" and value[-1] == "'") or (value[0] == '"' and value[-1] == '"'):
-            return value[1:-1]
-    return value
+            return value[1:-1].strip()
+    return value.strip()
+
+
+def _strip_quotes_from_indices(indices: tuple[str, ...]) -> tuple[str, ...]:
+    """Strip quotes from index strings for storing in param.values.
+
+    Sprint 18 Day 2: Indices may contain quotes that were preserved for expression
+    emission (e.g., '"revenue"'). For value storage, we need canonical element
+    names without quotes.
+
+    PR #658: Also strips leading/trailing whitespace from element labels.
+    """
+    result = []
+    for idx in indices:
+        if len(idx) >= 2:
+            if (idx.startswith('"') and idx.endswith('"')) or (
+                idx.startswith("'") and idx.endswith("'")
+            ):
+                result.append(idx[1:-1].strip())
+            else:
+                result.append(idx.strip())
+        else:
+            result.append(idx.strip())
+    return tuple(result)
 
 
 def _id_list(node: Tree) -> tuple[str, ...]:
@@ -501,13 +534,19 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
 
 
 def _extract_indices(node: Tree) -> tuple[str, ...]:
-    """Extract indices from index_list, stripping quotes from escaped identifiers.
+    """Extract indices from index_list for parameter assignments.
 
     Used for indexed parameter assignments like p('i1') where 'i1' should become i1.
 
     Sprint 9 Note: Now handles index_expr nodes from index_list grammar.
     Sprint 11 Day 2: Now handles index_simple and index_subset nodes.
     Only supports plain identifiers (no IndexOffset) for parameter assignments.
+
+    Note on quoting behavior:
+    - For value storage (param.values), quotes are stripped via _strip_quotes()
+    - For emission context (index_string), quotes may be preserved as '"element"'
+      to allow the emitter to distinguish element literals from domain variables.
+      (PR #658: Updated docstring to reflect quoting behavior)
     """
     indices = []
     for child in node.children:
@@ -547,8 +586,15 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
                         break
             elif child.data == "index_string":
                 # Issue #566: index_string: STRING (quoted index like 'route-1')
-                string_token = child.children[0]
-                indices.append(_strip_quotes(string_token))
+                # Sprint 18 Day 2: Preserve quotes for element literals
+                # PR #658: Strip whitespace from inside quotes
+                text = str(child.children[0])
+                if text.startswith("'") and text.endswith("'"):
+                    indices.append(f'"{text[1:-1].strip()}"')
+                elif text.startswith('"') and text.endswith('"'):
+                    indices.append(f'"{text[1:-1].strip()}"')
+                else:
+                    indices.append(text)
             else:
                 # Old index_expr from legacy grammar
                 # Only support plain ID (no lag/lead for parameter assignments)
@@ -641,7 +687,17 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
 
     for child in node.children:
         if isinstance(child, Token):
-            indices.append(_strip_quotes(child) if child.type == "ID" else _token_text(child))
+            # Sprint 18 Day 2: Preserve quotes for element literals
+            token_text = str(child)
+            if child.type == "ID" and len(token_text) >= 2:
+                if token_text.startswith('"') and token_text.endswith('"'):
+                    indices.append(token_text)  # Already double-quoted
+                elif token_text.startswith("'") and token_text.endswith("'"):
+                    indices.append(f'"{token_text[1:-1]}"')  # Normalize to double quotes
+                else:
+                    indices.append(token_text)  # Unquoted identifier
+            else:
+                indices.append(_token_text(child))
         elif isinstance(child, Tree) and child.data in (
             "index_expr",
             "index_simple",
@@ -654,9 +710,22 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
                     raise ParserSemanticError(
                         "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
                     )
-                indices.append(
-                    _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
-                )
+                # Sprint 18 Day 2: Preserve quotes for element literals
+                # If the ID token starts/ends with quotes, it's an element literal
+                # (e.g., "revenue", 'total') - normalize to double quotes for emitter
+                token_text = str(id_token)
+                if id_token.type == "ID" and len(token_text) >= 2:
+                    if token_text.startswith('"') and token_text.endswith('"'):
+                        # Already double-quoted - preserve as-is
+                        indices.append(token_text)
+                    elif token_text.startswith("'") and token_text.endswith("'"):
+                        # Single-quoted - normalize to double quotes
+                        indices.append(f'"{token_text[1:-1]}"')
+                    else:
+                        # Unquoted identifier - use as-is (domain variable)
+                        indices.append(token_text)
+                else:
+                    indices.append(_token_text(id_token))
             elif child.data == "index_subset":
                 # index_subset: ID "(" index_list ")" lag_lead_suffix?
                 subset_name = _token_text(child.children[0])
@@ -667,8 +736,15 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
                         break
             elif child.data == "index_string":
                 # Issue #566: index_string: STRING (quoted index like 'route-1')
-                string_token = child.children[0]
-                indices.append(_strip_quotes(string_token))
+                # Sprint 18 Day 2: Preserve quotes for element literals
+                # PR #658: Strip whitespace from inside quotes
+                text = str(child.children[0])
+                if text.startswith("'") and text.endswith("'"):
+                    indices.append(f'"{text[1:-1].strip()}"')
+                elif text.startswith('"') and text.endswith('"'):
+                    indices.append(f'"{text[1:-1].strip()}"')
+                else:
+                    indices.append(text)
             else:
                 if len(child.children) == 1:
                     id_token = child.children[0]
@@ -696,9 +772,20 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
     both the subset name and the inner indices for proper bounds validation.
     """
     # Issue #566: Handle index_string: STRING (quoted index like 'route-1')
+    # Sprint 18 Day 2: Preserve quotes so emitter knows these are element literals
+    # This fixes GAMS Error 120 where unquoted element labels like 'revenue'
+    # are misinterpreted as undefined domain variables
     if index_node.data == "index_string":
         string_token = index_node.children[0]
-        return _strip_quotes(string_token)
+        # Keep quotes around element literals - emitter's _quote_indices will normalize
+        text = str(string_token)
+        # Normalize to double quotes for consistency
+        # PR #658: Strip whitespace from inside quotes (e.g., '"rating  "' → '"rating"')
+        if text.startswith("'") and text.endswith("'"):
+            return f'"{text[1:-1].strip()}"'
+        elif text.startswith('"') and text.endswith('"'):
+            return f'"{text[1:-1].strip()}"'
+        return text  # Preserve as-is
 
     # Handle index_subset: ID "(" index_list ")" lag_lead_suffix?
     if index_node.data == "index_subset":
@@ -717,7 +804,15 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
                     inner_indices.append(_token_text(child.children[0]))
                 elif child.data == "index_string":
                     # Issue #566: index_string has STRING as first child
-                    inner_indices.append(_strip_quotes(child.children[0]))
+                    # Sprint 18 Day 2: Preserve quotes for element literals
+                    # PR #658: Strip whitespace from inside quotes
+                    text = str(child.children[0])
+                    if text.startswith("'") and text.endswith("'"):
+                        inner_indices.append(f'"{text[1:-1].strip()}"')
+                    elif text.startswith('"') and text.endswith('"'):
+                        inner_indices.append(f'"{text[1:-1].strip()}"')
+                    else:
+                        inner_indices.append(text)
                 elif child.data == "index_expr":
                     # Recursively process index_expr
                     result = _process_index_expr(child)
@@ -750,7 +845,19 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
 
     # Handle index_simple: ID lag_lead_suffix?
     base_token = index_node.children[0]
-    base = _token_text(base_token)
+    token_str = str(base_token)
+
+    # PR #658: For quoted IDs (element literals), preserve quotes but strip whitespace
+    # E.g., '"rating  "' → '"rating"'
+    if base_token.type == "ID" and len(token_str) >= 2:
+        if token_str.startswith('"') and token_str.endswith('"'):
+            base = f'"{token_str[1:-1].strip()}"'
+        elif token_str.startswith("'") and token_str.endswith("'"):
+            base = f'"{token_str[1:-1].strip()}"'  # Normalize to double quotes
+        else:
+            base = _token_text(base_token)
+    else:
+        base = _token_text(base_token)
 
     # No suffix? Just return the base identifier
     if len(index_node.children) == 1:
@@ -3050,8 +3157,16 @@ class _ModelBuilder:
                 # Sprint 11 Day 2 Extended: Check if this is a set assignment
                 if symbol_name in self.model.sets:
                     # Set assignment like: low(n,nn) = ord(n) > ord(nn)
-                    # For now, parse and validate but don't store (mock/store approach)
-                    # The expression has already been validated with the correct domain context
+                    # Sprint 18 Day 3: Store set assignments for emission (P4 fix)
+                    # Dynamic subsets must be populated at runtime via these assignments
+                    location = self._extract_source_location(node)
+                    set_assignment = SetAssignment(
+                        set_name=symbol_name,
+                        indices=indices,
+                        expr=expr,
+                        location=location,
+                    )
+                    self.model.set_assignments.append(set_assignment)
                     return
 
                 # Validate parameter exists
@@ -3149,7 +3264,9 @@ class _ModelBuilder:
                                     return
                                 dim_values.append(members)
                             else:
-                                dim_values.append([idx])
+                                # Sprint 18 Day 2: Strip quotes from literal index for canonical storage
+                                stripped_idx = _strip_quotes_from_indices((idx,))[0]
+                                dim_values.append([stripped_idx])
 
                         for combo in product(*dim_values):
                             param.values[combo] = value
@@ -3157,9 +3274,11 @@ class _ModelBuilder:
 
                 # Sprint 10 Day 4: Store expression if it contains function calls, otherwise store value
                 if has_function_call:
+                    # Keep quotes in expression indices for emitter
                     param.expressions[tuple(indices)] = expr
                 elif value is not None:
-                    param.values[tuple(indices)] = value
+                    # Sprint 18 Day 2: Strip quotes from value indices for canonical storage
+                    param.values[_strip_quotes_from_indices(tuple(indices))] = value
                 return
         elif isinstance(target, Token):
             name = _token_text(target)

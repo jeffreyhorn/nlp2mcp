@@ -1,16 +1,26 @@
 # Issue: jobt Translation Bugs - Division by Zero and Missing Domain Restrictions
 
-**Status**: Open
+**Status**: PARTIALLY FIXED (Sprint 18 Day 3)
 **GitHub Issue**: #655 (https://github.com/jeffreyhorn/nlp2mcp/issues/655)
 **Model**: `jobt.gms`
 **Component**: Converter / Parameter Initialization / Equation Domain Generation
+
+## Fix Status
+
+| Bug | Status | Fixed In |
+|-----|--------|----------|
+| Division by zero in stationarity (variables) | ✅ FIXED | Commit 4e97c4a (P5 fix) |
+| Division by zero from scalars (alpha, rho) | ❌ OPEN | Scalar initialization not captured |
+| Missing domain restrictions for lag index | ❌ OPEN | Not yet addressed |
 
 ## Summary
 
 The `jobt` model translation has two categories of bugs:
 
-1. **Division by zero**: Scalars `alpha` and `rho` are initialized to 0.0 but used as divisors
+1. **Division by zero**: Scalars `alpha` and `rho` are initialized to 0.0 but used as divisors (NOT fixed by P5)
 2. **Missing domain restrictions**: Recurrence equations use `t-1` without restricting to `ord(t) > 1`
+
+**Note**: The P5 fix (commit 4e97c4a) addresses division by zero caused by **variables** in denominators (from differentiating log/power expressions), but does NOT fix division by zero from **scalar parameters** like `alpha` and `rho`.
 
 ## Bug 1: Division by Zero in Stationarity Equations
 
@@ -113,3 +123,45 @@ for line in result.output.split('\n'):
 ## Priority
 
 High - Division by zero causes runtime errors; missing restrictions cause warnings and potential semantic errors.
+
+---
+
+## Partial Resolution (Sprint 18 Day 3)
+
+### Variable Division by Zero FIXED (P5)
+
+The P5 fix in commit 4e97c4a added variable initialization in `src/emit/emit_gams.py` to prevent division by zero during model generation when **variables** appear in denominators:
+
+- Variables with lower bounds are initialized to their lower bound: `var.l = var.lo`
+- Positive variables without explicit bounds are initialized to a safe non-zero value (1e-6)
+
+This fixes division by zero from expressions like `1/x` or `log(x)` when `x` is a variable.
+
+### Scalar Division by Zero REMAINING
+
+**Problem**: Scalars `alpha` and `rho` appear in expressions like `1/alpha` and `1/rho`, but are initialized to 0.0:
+
+```gams
+Scalars
+    alpha /0.0/
+    rho /0.0/
+;
+```
+
+The P5 fix does NOT address this because these are scalar **parameters**, not variables. The fix requires:
+1. Investigating how `alpha` and `rho` are initialized in the original `jobt.gms`
+2. Ensuring the parser captures scalar initialization from all sources
+
+### Domain Restrictions REMAINING
+
+**Problem**: Recurrence equations use `t-1` without domain restrictions:
+
+```gams
+* Actual (incorrect)
+cb(t).. s(t) =E= s(t-1) + p(t) - d(t) - u(t-1) + u(t) + si(t);
+
+* Expected (correct)
+cb(t)$(ord(t) > 1).. s(t) =E= s(t-1) + p(t) - d(t) - u(t-1) + u(t) + si(t);
+```
+
+This requires separate work to detect lag expressions and add appropriate domain restrictions.

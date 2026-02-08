@@ -241,9 +241,11 @@ class Converter:
         rel_str = self._map_relation(eq_def.relation)
 
         # Convert LHS and RHS expressions to GAMS syntax
+        # PR #658 review: Pass domain_vars so multi-letter domain indices are not quoted
         lhs_expr, rhs_expr = eq_def.lhs_rhs
-        lhs_gams = expr_to_gams(lhs_expr)
-        rhs_gams = expr_to_gams(rhs_expr)
+        domain_vars = frozenset(eq_def.domain) if eq_def.domain else frozenset()
+        lhs_gams = expr_to_gams(lhs_expr, domain_vars=domain_vars)
+        rhs_gams = expr_to_gams(rhs_expr, domain_vars=domain_vars)
 
         # Generate equation definition
         if eq_def.domain:

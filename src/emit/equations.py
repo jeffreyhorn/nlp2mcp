@@ -47,8 +47,10 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
     resolved_rhs = resolve_index_conflicts(rhs, domain)
 
     # Convert to GAMS
-    lhs_gams = expr_to_gams(resolved_lhs)
-    rhs_gams = expr_to_gams(resolved_rhs)
+    # Sprint 18 Day 2: Pass equation domain as domain_vars so domain indices are not quoted
+    domain_vars = frozenset(domain) if domain else frozenset()
+    lhs_gams = expr_to_gams(resolved_lhs, domain_vars=domain_vars)
+    rhs_gams = expr_to_gams(resolved_rhs, domain_vars=domain_vars)
 
     # Determine relation
     rel_map = {Rel.EQ: "=E=", Rel.LE: "=L=", Rel.GE: "=G="}
@@ -80,8 +82,9 @@ def emit_normalized_equation_def(eq_name: str, norm_eq: NormalizedEquation) -> s
         >>> # x_fx.. x - 10.0 =E= 0;
         >>> # x_lo.. -(x - 0.0) =L= 0;
     """
-    # Convert expression to GAMS (already normalized as lhs - rhs)
-    expr_gams = expr_to_gams(norm_eq.expr)
+    # PR #658: Pass domain_vars so multi-letter domain indices aren't quoted
+    domain_vars = frozenset(norm_eq.domain_sets) if norm_eq.domain_sets else frozenset()
+    expr_gams = expr_to_gams(norm_eq.expr, domain_vars=domain_vars)
 
     # Determine relation
     rel_map = {Rel.EQ: "=E=", Rel.LE: "=L=", Rel.GE: "=G="}

@@ -1,9 +1,16 @@
 # Issue: like Translation Bug - Missing Domain Restriction for Lead Index
 
-**Status**: Open
+**Status**: PARTIALLY FIXED (Sprint 18 Day 3)
 **GitHub Issue**: #653 (https://github.com/jeffreyhorn/nlp2mcp/issues/653)
 **Model**: `like.gms`
 **Component**: Converter / Equation Domain Generation
+
+## Fix Status
+
+| Bug | Status | Fixed In |
+|-----|--------|----------|
+| Division by zero during model generation | ✅ FIXED | Commit 4e97c4a (P5 fix) |
+| Missing domain restriction for lead index | ❌ OPEN | Not yet addressed |
 
 ## Summary
 
@@ -89,3 +96,30 @@ for line in result.output.split('\n'):
 ## Priority
 
 Medium - The missing domain restriction causes GAMS warnings and potential incorrect behavior.
+
+## Partial Resolution (Sprint 18 Day 3)
+
+### Division by Zero FIXED (P5)
+
+The P5 fix in commit 4e97c4a added variable initialization in `src/emit/emit_gams.py` to prevent division by zero during model generation:
+
+- Variables with lower bounds are initialized to their lower bound: `var.l = var.lo`
+- Positive variables without explicit bounds are initialized to a safe non-zero value (1e-6)
+
+This resolved the earlier "division by zero (0)" errors that were blocking model generation for the `like` model.
+
+### Domain Restriction REMAINING
+
+**Current error**: `MCP pair comp_rank.lam_rank has empty equation but associated variable is NOT fixed`
+
+**Root cause**: `comp_rank(g)` is generated over all `g`, but for `g=three` (the last element), `m(g+1)` is undefined (empty), causing GAMS to report an empty equation paired with an unfixed variable.
+
+**Fix Approach:**
+1. During equation body analysis, detect `IndexOffset` nodes with positive offsets
+2. For lead references like `g+1`, add domain restriction `$(ord(g) < card(g))`
+3. Preserve original equation domain conditions during parsing
+
+**Affected Files:**
+- `src/converter/converter.py` - Equation generation
+- `src/emit/equations.py` - Equation emission with domain conditions
+- `src/ir/parser.py` - Equation condition extraction

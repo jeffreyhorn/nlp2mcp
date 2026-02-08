@@ -1,9 +1,10 @@
 # Issue: robert Translation Bug - Quoted Literal Instead of Lag Reference
 
-**Status**: Open
+**Status**: ✅ FIXED (Sprint 18 Day 3)
 **GitHub Issue**: #650 (https://github.com/jeffreyhorn/nlp2mcp/issues/650)
 **Model**: `robert.gms`
 **Component**: Converter / Index Expression Emission
+**Fixed In**: Commit a256657 (P2 fix: Preserve IndexOffset semantics in index emission)
 
 ## Summary
 
@@ -77,3 +78,30 @@ for line in result.output.split('\n'):
 ## Priority
 
 High - The generated GAMS code is syntactically valid but semantically incorrect, leading to silent failures.
+
+---
+
+## Resolution (Sprint 18 Day 3)
+
+### Fix Applied
+
+The P2 fix in commit a256657 added `_format_mixed_indices()` function to `src/emit/expr_to_gams.py` that handles `IndexOffset` objects directly:
+
+1. **Type-aware index formatting**: `IndexOffset` objects are emitted directly via `to_gams_string()` without quoting
+2. **String indices continue through quoting heuristic**: Only actual string indices go through `_quote_indices()`
+
+### Verification
+
+```python
+>>> from src.ir.parser import parse_model_file
+>>> from src.emit.expr_to_gams import expr_to_gams
+>>> ir = parse_model_file('data/gamslib/raw/robert.gms')
+>>> eq = ir.equations['sb']
+>>> lhs, rhs = eq.lhs_rhs
+>>> expr_to_gams(lhs, domain_vars=frozenset(eq.domain))
+'s(r,tt+1)'  # ✅ Correct - no quotes!
+```
+
+### Note
+
+The model still has a remaining issue: missing domain restriction `$(ord(tt) < card(tt))` to prevent out-of-range lead access. This is a separate issue tracked elsewhere.

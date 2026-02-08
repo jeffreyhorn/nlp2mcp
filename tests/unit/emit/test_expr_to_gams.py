@@ -96,14 +96,20 @@ class TestBasicNodes:
     def test_var_ref_multi_letter_domain(self):
         """Test variable reference with multi-letter domain names.
 
-        All-lowercase identifier names like 'nodes', 'years' are domain variables.
+        All-lowercase identifier names like 'nodes', 'years' are domain variables
+        when passed in domain_vars context. Without context, they're quoted as
+        element literals (Sprint 18 Day 2 heuristic change).
         """
-        result = expr_to_gams(VarRef("flow", ("nodes",)))
+        # With domain context, multi-letter names are not quoted
+        result = expr_to_gams(VarRef("flow", ("nodes",)), domain_vars=frozenset(["nodes"]))
         assert result == "flow(nodes)"
-        result = expr_to_gams(VarRef("x", ("years",)))
+        result = expr_to_gams(VarRef("x", ("years",)), domain_vars=frozenset(["years"]))
         assert result == "x(years)"
-        result = expr_to_gams(VarRef("y", ("flow_var",)))
+        result = expr_to_gams(VarRef("y", ("flow_var",)), domain_vars=frozenset(["flow_var"]))
         assert result == "y(flow_var)"
+        # Without context, multi-letter names are quoted as element literals
+        result = expr_to_gams(VarRef("flow", ("nodes",)))
+        assert result == 'flow("nodes")'
 
     def test_multiplier_ref_scalar(self):
         """Test scalar multiplier reference."""
@@ -429,11 +435,19 @@ class TestQuoteIndices:
         assert _quote_indices(("j",)) == ["j"]
         assert _quote_indices(("i", "j")) == ["i", "j"]
 
-    def test_multi_letter_lowercase_not_quoted(self):
-        """Multi-letter lowercase identifiers are domain variables, not quoted."""
-        assert _quote_indices(("nodes",)) == ["nodes"]
-        assert _quote_indices(("years",)) == ["years"]
-        assert _quote_indices(("flow_var",)) == ["flow_var"]
+    def test_multi_letter_lowercase_with_context(self):
+        """Multi-letter lowercase identifiers are domain variables when in domain_vars context.
+
+        Sprint 18 Day 2: Without context, multi-letter lowercase identifiers are
+        quoted as element literals to avoid GAMS Error 120/340.
+        """
+        # With domain context, not quoted
+        assert _quote_indices(("nodes",), frozenset(["nodes"])) == ["nodes"]
+        assert _quote_indices(("years",), frozenset(["years"])) == ["years"]
+        assert _quote_indices(("flow_var",), frozenset(["flow_var"])) == ["flow_var"]
+        # Without context, quoted as element literals
+        assert _quote_indices(("nodes",)) == ['"nodes"']
+        assert _quote_indices(("years",)) == ['"years"']
 
     def test_element_labels_quoted(self):
         """Element labels (containing digits or uppercase) are quoted."""
@@ -445,7 +459,8 @@ class TestQuoteIndices:
     def test_mixed_indices(self):
         """Mixed domain variables and element labels."""
         assert _quote_indices(("i", "j1")) == ["i", '"j1"']
-        assert _quote_indices(("nodes", "H2O")) == ["nodes", '"H2O"']
+        # With context for 'nodes', it's not quoted
+        assert _quote_indices(("nodes", "H2O"), frozenset(["nodes"])) == ["nodes", '"H2O"']
 
     def test_already_double_quoted_no_double_quoting(self):
         """Indices already quoted with double quotes should not be double-quoted.

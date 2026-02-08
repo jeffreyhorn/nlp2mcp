@@ -393,6 +393,11 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     for param_name, param_def in model_ir.params.items():
         # Use ParameterDef.domain to detect scalars (Finding #3)
         if len(param_def.domain) == 0:
+            # PR #658 review: Removed promotion logic for scalars with indexed expressions.
+            # These are typically post-solve report parameters (e.g., croprep("revenue",c))
+            # that depend on solution values. Since emit_computed_parameter_assignments()
+            # correctly skips them (they'd cause GAMS Error 141), promoting them here
+            # was ineffective. Keep them as scalars and let them be skipped.
             scalars[param_name] = param_def
         else:
             parameters[param_name] = param_def
@@ -416,7 +421,9 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 domain_str = ",".join(param_def.domain)
                 lines.append(f"    {param_name}({domain_str}) /{data_str}/")
             else:
-                # Parameter declared but no data
+                # Parameter declared but no data - must have domain since
+                # parameters dict only contains entries with non-empty domain
+                # (PR #658 review: removed scalar-with-indexed-expressions promotion)
                 domain_str = ",".join(param_def.domain)
                 lines.append(f"    {param_name}({domain_str})")
         lines.append(";")
@@ -486,6 +493,12 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
     """
     lines: list[str] = []
 
+    # PR #658 review: Precompute declared sets (lowercase) once for efficient lookup
+    # This avoids recomputing the lowercase set inside the inner loop
+    declared_sets_lower = {s.lower() for s in model_ir.sets.keys()} | {
+        s.lower() for s in model_ir.aliases.keys()
+    }
+
     for param_name, param_def in model_ir.params.items():
         # Skip predefined constants
         if param_name in PREDEFINED_GAMS_CONSTANTS:
@@ -495,10 +508,32 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
         if not param_def.expressions:
             continue
 
+        # Sprint 18 Day 2: Skip parameters with no values, no declared domain, but have
+        # INDEXED expressions. These are typically post-solve report parameters like
+        # croprep("revenue",c) = croprep("output",c) * price(c) where the parameter
+        # was never properly declared with a domain and its expressions depend on
+        # unassigned values (solution values). Emitting these causes GAMS Error 141.
+        # Note: Scalar expressions (empty key tuple) are allowed even without values.
+        if not param_def.values and not param_def.domain:
+            # Check if any expression has indexed keys (not scalar)
+            has_indexed_exprs = any(len(key) > 0 for key in param_def.expressions.keys())
+            if has_indexed_exprs:
+                continue
+
         # Emit each expression assignment
         for key_tuple, expr in param_def.expressions.items():
             # Convert expression to GAMS syntax
-            expr_str = expr_to_gams(expr)
+            # PR #658 review: Derive domain_vars from model context (declared sets/aliases)
+            # rather than trusting raw key strings. This prevents unquoted element literals
+            # like "cod", "apr", "land" from being misclassified as domain variables.
+            domain_vars = frozenset(
+                idx
+                for idx in key_tuple
+                if not idx.startswith('"')
+                and not idx.startswith("'")
+                and idx.lower() in declared_sets_lower
+            )
+            expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
             # Format the LHS with indices
             if key_tuple:
@@ -508,5 +543,47 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
             else:
                 # Scalar parameter: f = expr
                 lines.append(f"{param_name} = {expr_str};")
+
+    return "\n".join(lines)
+
+
+def emit_set_assignments(model_ir: ModelIR) -> str:
+    """Emit dynamic set assignment statements.
+
+    Sprint 18 Day 3: Emit SetAssignment objects stored in model_ir.set_assignments
+    as GAMS assignment statements. These are dynamic subset initializations like:
+        ku(k) = yes$(ord(k) < card(k));
+        ki(k) = yes$(ord(k) = 1);
+        kt(k) = not ku(k);
+        low(n,nn) = ord(n) > ord(nn);
+
+    Args:
+        model_ir: Model IR containing set assignment definitions
+
+    Returns:
+        GAMS assignment statements as string
+
+    Example output:
+        ku(k) = yes$(ord(k) < card(k));
+        low(n,nn) = ord(n) > ord(nn);
+    """
+    if not model_ir.set_assignments:
+        return ""
+
+    lines: list[str] = []
+
+    for set_assignment in model_ir.set_assignments:
+        # Convert expression to GAMS syntax
+        # Pass indices as domain_vars so they're recognized as domain variables
+        domain_vars = frozenset(set_assignment.indices)
+        expr_str = expr_to_gams(set_assignment.expr, domain_vars=domain_vars)
+
+        # Format the LHS with indices
+        if set_assignment.indices:
+            index_str = ",".join(set_assignment.indices)
+            lines.append(f"{set_assignment.set_name}({index_str}) = {expr_str};")
+        else:
+            # Scalar set assignment (rare but possible)
+            lines.append(f"{set_assignment.set_name} = {expr_str};")
 
     return "\n".join(lines)

@@ -1,9 +1,16 @@
 # Issue: pak Translation Bugs - Division by Zero and Quoted Lag References
 
-**Status**: Open
+**Status**: PARTIALLY FIXED (Sprint 18 Day 3)
 **GitHub Issue**: #651 (https://github.com/jeffreyhorn/nlp2mcp/issues/651)
 **Model**: `pak.gms`
 **Component**: Converter / Parameter Initialization / Index Expression Emission
+
+## Fix Status
+
+| Bug | Status | Fixed In |
+|-----|--------|----------|
+| Quoted lag references | ✅ FIXED | Commit a256657 (P2 fix) |
+| Division by zero | ❌ OPEN | Not yet addressed |
 
 ## Summary
 
@@ -110,3 +117,52 @@ print(result.output[:2000])  # Check first part for scalar values
 ## Priority
 
 High - Division by zero causes runtime errors; quoted lags cause semantic incorrectness.
+
+---
+
+## Partial Resolution (Sprint 18 Day 3)
+
+### Bug 2 FIXED: Quoted Lag References
+
+The P2 fix in commit a256657 added `_format_mixed_indices()` function to `src/emit/expr_to_gams.py` that handles `IndexOffset` objects directly. Lead/lag expressions like `te+1` are now emitted correctly without quotes.
+
+**Verification:**
+```python
+>>> from src.ir.parser import parse_model_file
+>>> from src.emit.expr_to_gams import expr_to_gams
+>>> ir = parse_model_file('data/gamslib/raw/pak.gms')
+>>> # Expressions with te+1 now emit correctly as te+1, not "te+1"
+```
+
+### Bug 1 REMAINING: Division by Zero
+
+**Problem**: Scalars `r` and `g` are initialized to 0.0, but used as divisors in computed parameter `dis`:
+```gams
+Scalars
+    r /0.0/
+    g /0.0/
+;
+dis = (1 + r) ** ((-1) * (card(t))) * (1 - alpha) * (1 + g) / (r - g);
+```
+
+**Root Cause**: The original `pak.gms` likely initializes `r` and `g` with non-zero values (e.g., `r /0.03/`, `g /0.02/`) via data statements or computed assignments that aren't being captured by the parser.
+
+**Steps to Reproduce:**
+```bash
+python -c "
+from src.ir.parser import parse_model_file
+ir = parse_model_file('data/gamslib/raw/pak.gms')
+# Check scalar values
+for name, param in ir.params.items():
+    if name.lower() in ['r', 'g']:
+        print(f'{name}: values={param.values}')
+"
+```
+
+**Fix Approach:**
+1. Investigate how `r` and `g` are initialized in the original `pak.gms`
+2. Ensure the parser captures scalar initialization from all sources (data statements, assignments)
+3. Alternative: Guard computed expressions with `$(abs(divisor) > 1e-10)`
+
+**Affected Files:**
+- `src/ir/parser.py` - Scalar value extraction logic

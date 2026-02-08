@@ -12,8 +12,10 @@ from src.emit.original_symbols import (
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
+    emit_set_assignments,
 )
 from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
+from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
 
 
@@ -108,6 +110,14 @@ def emit_gams_mcp(
         sections.append(params_code)
         sections.append("")
 
+    # PR #658: Emit dynamic set assignments BEFORE computed parameters
+    # Dynamic subsets (e.g., ku(k)) must be populated before parameter assignments
+    # like w(n,np,ku) that reference them, otherwise they produce empty data.
+    set_assignments_code = emit_set_assignments(kkt.model_ir)
+    if set_assignments_code:
+        sections.append(set_assignments_code)
+        sections.append("")
+
     # Sprint 17 Day 4: Emit computed parameter assignments
     computed_params_code = emit_computed_parameter_assignments(kkt.model_ir)
     if computed_params_code:
@@ -132,22 +142,86 @@ def emit_gams_mcp(
     sections.append(variables_code)
     sections.append("")
 
-    # Variable initialization (if smooth_abs is enabled)
-    if config and config.smooth_abs:
+    # Sprint 18 Day 3 (P5 fix): Variable initialization to avoid division by zero
+    # Variables with level values, lower bounds, or positive type need initialization
+    # to prevent division by zero during model generation when they appear in
+    # denominators of stationarity equations (e.g., from differentiating log(x) or 1/x)
+    init_lines: list[str] = []
+    for var_name, var_def in kkt.model_ir.variables.items():
+        has_init = False
+
+        # Priority 1: Check for explicit level values (l_map) - these take precedence
+        if var_def.l_map:
+            for indices, l_val in var_def.l_map.items():
+                if l_val is not None:
+                    idx_str = ",".join(f'"{i}"' for i in indices)
+                    init_lines.append(f"{var_name}.l({idx_str}) = {l_val};")
+                    has_init = True
+        elif var_def.l is not None:
+            init_lines.append(f"{var_name}.l = {var_def.l};")
+            has_init = True
+
+        # Priority 2: Check for indexed lower bounds (lo_map) if no .l was provided
+        if not has_init and var_def.lo_map:
+            for indices, lo_val in var_def.lo_map.items():
+                if lo_val is not None and lo_val > 0:
+                    idx_str = ",".join(f'"{i}"' for i in indices)
+                    init_lines.append(f"{var_name}.l({idx_str}) = {lo_val};")
+                    has_init = True
+        # Check for scalar lower bound
+        elif not has_init and var_def.lo is not None and var_def.lo > 0:
+            init_lines.append(f"{var_name}.l = {var_def.lo};")
+            has_init = True
+
+        # Priority 3: Positive variables: ensure all elements have non-zero values
+        # PR #658 review: Even with partial per-index inits, other elements may be 0.
+        # Always apply a blanket max() to ensure no POSITIVE variable element is 0.
+        # Use 1.0 instead of 1e-6 to avoid numerical issues in stationarity equations.
+        # PR #658 review: Clamp to upper bound using GAMS .up attribute to respect
+        # per-element bounds (up_map), not just scalar var_def.up.
+        if var_def.kind == VarKind.POSITIVE:
+            if var_def.domain:
+                domain_str = ",".join(var_def.domain)
+                # Use max() to preserve any explicit inits while ensuring minimum of 1
+                # Clamp to GAMS .up attribute to respect per-element upper bounds
+                init_lines.append(
+                    f"{var_name}.l({domain_str}) = min(max({var_name}.l({domain_str}), 1), {var_name}.up({domain_str}));"
+                )
+            else:
+                # Scalar: clamp to .up attribute
+                init_lines.append(f"{var_name}.l = min(max({var_name}.l, 1), {var_name}.up);")
+
+    if init_lines:
         if add_comments:
             sections.append("* ============================================")
             sections.append("* Variable Initialization")
             sections.append("* ============================================")
             sections.append("")
-            sections.append("* Initialize variables to avoid domain errors with smooth abs()")
-            sections.append("* The smooth approximation sqrt(x^2 + ε) can cause GAMS")
-            sections.append("* domain errors during model generation if variables default to")
-            sections.append("* values that make expressions negative under power operations.")
+            sections.append(
+                "* Initialize variables to avoid division by zero during model generation."
+            )
+            sections.append(
+                "* Variables appearing in denominators (from log, 1/x derivatives) need"
+            )
+            sections.append(
+                "* non-zero initial values. POSITIVE variables are set to min(max(value, 1), upper_bound)."
+            )
+            sections.append("")
+        sections.extend(init_lines)
+        sections.append("")
+
+    # Additional initialization for smooth_abs (if enabled)
+    if config and config.smooth_abs:
+        if add_comments:
+            sections.append("* Additional initialization for smooth abs() approximation")
             sections.append("")
 
-        # Initialize all primal variables to a safe non-zero value
-        for var_name in kkt.model_ir.variables:
-            sections.append(f"{var_name}.l = 1;")
+        # Initialize POSITIVE primal variables to a safe non-zero value
+        # PR #658 review: Only apply to POSITIVE variables to avoid pushing
+        # NEGATIVE variables (upper bound 0) or multipliers outside their bounds.
+        for var_name, var_def in kkt.model_ir.variables.items():
+            if var_def.kind == VarKind.POSITIVE:
+                sections.append(f"{var_name}.l = min(max({var_name}.l, 1), {var_name}.up);")
 
         sections.append("")
 
