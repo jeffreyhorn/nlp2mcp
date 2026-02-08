@@ -225,7 +225,9 @@ def _sanitize_identifier(s: str) -> str:
     if sanitized != s:
         # PR #658 review: Use 8 hex chars (32 bits) for better collision resistance
         # than the original 4 chars. This provides ~4 billion unique values.
-        hash_suffix = hashlib.md5(s.encode()).hexdigest()[:8]
+        # PR #658 review: Use SHA-256 instead of MD5 for FIPS compatibility.
+        # MD5 can be disabled in FIPS mode, causing runtime errors.
+        hash_suffix = hashlib.sha256(s.encode("utf-8")).hexdigest()[:8]
         return f"{sanitized}_{hash_suffix}"
 
     return sanitized
