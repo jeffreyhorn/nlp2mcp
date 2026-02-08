@@ -5,6 +5,10 @@ Each equation is emitted in the form: eq_name(indices).. lhs =E= rhs;
 
 Handles index aliasing to avoid GAMS Error 125 ("Set is under control already")
 when an equation's domain index is reused in a nested sum expression.
+
+Also handles automatic domain restriction inference for lead/lag expressions:
+- Lead expressions (k + n) with maximum positive offset n require: $(ord(k) <= card(k) - n)
+- Lag expressions (t - n) with maximum negative offset magnitude n require: $(ord(t) > n)
 """
 
 from src.emit.expr_to_gams import (
@@ -12,9 +16,170 @@ from src.emit.expr_to_gams import (
     expr_to_gams,
     resolve_index_conflicts,
 )
+from src.ir.ast import (
+    Const,
+    EquationRef,
+    Expr,
+    IndexOffset,
+    MultiplierRef,
+    ParamRef,
+    Prod,
+    Sum,
+    VarRef,
+)
 from src.ir.normalize import NormalizedEquation
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
+
+
+def _check_index_offset(
+    idx_offset: IndexOffset,
+    domain_map: dict[str, str],
+    lead_offsets: dict[str, int],
+    lag_offsets: dict[str, int],
+    bound_indices: set[str],
+) -> None:
+    """Check an IndexOffset and track maximum offset magnitude.
+
+    Args:
+        idx_offset: The IndexOffset to check
+        domain_map: Map from lowercase domain index to canonical (original) name
+        lead_offsets: Dict mapping canonical index to max positive offset magnitude
+        lag_offsets: Dict mapping canonical index to max negative offset magnitude (as positive int)
+        bound_indices: Set of lowercase indices currently bound by aggregation expressions
+            (e.g., Sum or Prod) to skip
+    """
+    # Only consider non-circular offsets (linear lead/lag)
+    if not idx_offset.circular:
+        # Check if this base is in the equation domain (case-insensitive)
+        # but not shadowed by an aggregation-local binding
+        base_lower = idx_offset.base.lower()
+        if base_lower in domain_map and base_lower not in bound_indices:
+            # Use canonical domain name for the key
+            canonical_name = domain_map[base_lower]
+            # Determine offset direction and magnitude
+            if isinstance(idx_offset.offset, Const):
+                raw_val = idx_offset.offset.value
+                if isinstance(raw_val, int):
+                    offset_val = raw_val
+                elif isinstance(raw_val, float):
+                    if not raw_val.is_integer():
+                        raise ValueError(
+                            f"Non-integer index offset {raw_val!r} for base '{idx_offset.base}' "
+                            "is not supported; offsets must be integer-valued."
+                        )
+                    offset_val = int(raw_val)
+                else:
+                    raise TypeError(
+                        f"Unsupported constant type {type(raw_val)!r} for index offset on "
+                        f"base '{idx_offset.base}'. Expected int or float."
+                    )
+                if offset_val > 0:
+                    # Lead: track maximum positive offset
+                    current = lead_offsets.get(canonical_name, 0)
+                    lead_offsets[canonical_name] = max(current, offset_val)
+                elif offset_val < 0:
+                    # Lag: track maximum negative offset magnitude
+                    current = lag_offsets.get(canonical_name, 0)
+                    lag_offsets[canonical_name] = max(current, abs(offset_val))
+
+
+def _collect_lead_lag_restrictions(
+    expr: Expr, domain: tuple[str, ...]
+) -> tuple[dict[str, int], dict[str, int]]:
+    """Collect domain indices that need lead or lag restrictions with magnitudes.
+
+    Recursively walks an expression to find IndexOffset nodes and determines
+    which domain indices need restrictions based on their offset direction
+    and magnitude. Indices bound by Sum or Prod expressions are tracked and
+    excluded to avoid incorrectly restricting equation-level indices when a
+    sum/prod-local index shadows the equation domain.
+
+    For linear (non-circular) offsets:
+    - Positive offset (lead, e.g., k+2): needs ord(k) <= card(k) - 2
+    - Negative offset (lag, e.g., t-2): needs ord(t) > 2
+
+    Circular offsets (++/--) don't need restrictions as they wrap around.
+
+    Args:
+        expr: Expression to analyze
+        domain: Tuple of domain indices for the equation
+
+    Returns:
+        Tuple of (lead_offsets, lag_offsets) dicts mapping canonical index to max offset
+    """
+    lead_offsets: dict[str, int] = {}
+    lag_offsets: dict[str, int] = {}
+    # Map lowercase domain index to canonical (original) name
+    domain_map = {d.lower(): d for d in domain}
+
+    def walk(e: Expr, bound_indices: set[str]) -> None:
+        # Check for IndexOffset directly in expression
+        if isinstance(e, IndexOffset):
+            _check_index_offset(e, domain_map, lead_offsets, lag_offsets, bound_indices)
+
+        # Check for IndexOffset in VarRef/ParamRef/MultiplierRef/EquationRef indices
+        if isinstance(e, (VarRef, ParamRef, MultiplierRef, EquationRef)):
+            for idx in e.indices:
+                if isinstance(idx, IndexOffset):
+                    _check_index_offset(idx, domain_map, lead_offsets, lag_offsets, bound_indices)
+
+        # Handle Sum and Prod expressions: track bound indices to avoid false positives
+        # when sum/prod-local indices shadow equation domain indices
+        if isinstance(e, (Sum, Prod)):
+            # Add sum/prod indices to bound set for walking the body
+            new_bound = bound_indices | {idx.lower() for idx in e.index_sets}
+            for child in e.children():
+                walk(child, new_bound)
+        else:
+            # Recursively walk children with current bound set
+            for child in e.children():
+                walk(child, bound_indices)
+
+    walk(expr, set())
+    return lead_offsets, lag_offsets
+
+
+def _build_domain_condition(
+    lead_offsets: dict[str, int], lag_offsets: dict[str, int]
+) -> str | None:
+    """Build a GAMS domain condition string from lead/lag offset dicts.
+
+    Args:
+        lead_offsets: Dict mapping index to max positive offset (e.g., {'k': 2})
+        lag_offsets: Dict mapping index to max negative offset magnitude (e.g., {'t': 2})
+
+    Returns:
+        GAMS condition string or None if no restrictions needed
+
+    Examples:
+        >>> _build_domain_condition({'k': 1}, {})
+        'ord(k) <= card(k) - 1'
+        >>> _build_domain_condition({'k': 2}, {})
+        'ord(k) <= card(k) - 2'
+        >>> _build_domain_condition({}, {'t': 1})
+        'ord(t) > 1'
+        >>> _build_domain_condition({}, {'t': 2})
+        'ord(t) > 2'
+        >>> _build_domain_condition({'k': 1}, {'t': 1})
+        '(ord(k) <= card(k) - 1) and (ord(t) > 1)'
+    """
+    conditions = []
+
+    for idx in sorted(lead_offsets.keys()):
+        offset = lead_offsets[idx]
+        conditions.append(f"ord({idx}) <= card({idx}) - {offset}")
+
+    for idx in sorted(lag_offsets.keys()):
+        offset = lag_offsets[idx]
+        conditions.append(f"ord({idx}) > {offset}")
+
+    if not conditions:
+        return None
+    elif len(conditions) == 1:
+        return conditions[0]
+    else:
+        return " and ".join(f"({c})" for c in conditions)
 
 
 def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]:
@@ -56,12 +221,69 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
     rel_map = {Rel.EQ: "=E=", Rel.LE: "=L=", Rel.GE: "=G="}
     rel_gams = rel_map[eq_def.relation]
 
+    # Detect lead/lag expressions and build domain conditions
+    # Issues #649, #652-656: Equations with lead (k+1) or lag (t-1) need restrictions
+    lead_offsets: dict[str, int] = {}
+    lag_offsets: dict[str, int] = {}
+    if domain:
+        lhs_lead, lhs_lag = _collect_lead_lag_restrictions(lhs, domain)
+        rhs_lead, rhs_lag = _collect_lead_lag_restrictions(rhs, domain)
+        # Merge dicts, keeping max offset for each index
+        for idx, offset in lhs_lead.items():
+            lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
+        for idx, offset in rhs_lead.items():
+            lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
+        for idx, offset in lhs_lag.items():
+            lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
+        for idx, offset in rhs_lag.items():
+            lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
+
+    inferred_condition = _build_domain_condition(lead_offsets, lag_offsets)
+
+    # Combine any parsed equation condition with inferred lead/lag domain bounds
+    # Preserve the original parsed $-condition and AND it with the inferred bounds
+    all_conditions: list[str] = []
+    if eq_def.condition is not None:
+        # Convert existing condition to GAMS string
+        # Handle both Expr (from parsing) and str (from tests)
+        if isinstance(eq_def.condition, str):
+            existing_cond = eq_def.condition
+        elif isinstance(eq_def.condition, Expr):
+            # Apply same alias collection and conflict resolution as LHS/RHS
+            # to avoid GAMS Error 125 if condition has Sum/Prod binding domain indices
+            aliases_needed.update(collect_index_aliases(eq_def.condition, domain))
+            resolved_cond = resolve_index_conflicts(eq_def.condition, domain)
+            existing_cond = expr_to_gams(resolved_cond, domain_vars=domain_vars)
+        else:
+            # Fallback: try to convert as Expr
+            existing_cond = expr_to_gams(eq_def.condition, domain_vars=domain_vars)  # type: ignore[arg-type]
+        all_conditions.append(existing_cond)
+    if inferred_condition:
+        all_conditions.append(inferred_condition)
+
+    if len(all_conditions) == 0:
+        final_condition = None
+    elif len(all_conditions) == 1:
+        final_condition = all_conditions[0]
+    else:
+        # Combine with 'and' - wrap each in parens for safety
+        final_condition = " and ".join(f"({c})" for c in all_conditions)
+
     # Build equation string
     if domain:
         indices_str = ",".join(domain)
-        eq_str = f"{eq_name}({indices_str}).. {lhs_gams} {rel_gams} {rhs_gams};"
+        if final_condition:
+            eq_str = (
+                f"{eq_name}({indices_str})$({final_condition}).. {lhs_gams} {rel_gams} {rhs_gams};"
+            )
+        else:
+            eq_str = f"{eq_name}({indices_str}).. {lhs_gams} {rel_gams} {rhs_gams};"
     else:
-        eq_str = f"{eq_name}.. {lhs_gams} {rel_gams} {rhs_gams};"
+        # Scalar equations can also have conditions (e.g., eq$(cond)..)
+        if final_condition:
+            eq_str = f"{eq_name}$({final_condition}).. {lhs_gams} {rel_gams} {rhs_gams};"
+        else:
+            eq_str = f"{eq_name}.. {lhs_gams} {rel_gams} {rhs_gams};"
 
     return eq_str, aliases_needed
 
