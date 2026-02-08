@@ -66,7 +66,7 @@ def _format_numeric(value: int | float) -> str:
     return str(value)
 
 
-def _is_index_offset_syntax(s: str) -> bool:
+def _is_index_offset_syntax(s: str, domain_vars: frozenset[str] | None = None) -> bool:
     """Check if a string looks like GAMS IndexOffset syntax (i++1, i--2, i+1, i-3, i+j).
 
     These patterns are already valid GAMS index expressions and should NOT be quoted.
@@ -74,6 +74,9 @@ def _is_index_offset_syntax(s: str) -> bool:
 
     Args:
         s: String to check
+        domain_vars: Optional set of known domain variable names. When provided,
+                     multi-letter lag expressions like "tt-1" are recognized if
+                     "tt" is in domain_vars.
 
     Returns:
         True if the string matches IndexOffset GAMS syntax patterns
@@ -95,6 +98,10 @@ def _is_index_offset_syntax(s: str) -> bool:
         True
         >>> _is_index_offset_syntax("t--lag_2")
         True
+        >>> _is_index_offset_syntax("tt+1")
+        True
+        >>> _is_index_offset_syntax("tt-1", frozenset(["tt"]))
+        True
         >>> _is_index_offset_syntax("i1")
         False
         >>> _is_index_offset_syntax("H2O")
@@ -105,6 +112,9 @@ def _is_index_offset_syntax(s: str) -> bool:
         False
     """
     import re
+
+    if domain_vars is None:
+        domain_vars = frozenset()
 
     # Circular operators (++ and --) are unambiguous IndexOffset syntax
     # Pattern: identifier base ++ or -- followed by either:
@@ -127,14 +137,20 @@ def _is_index_offset_syntax(s: str) -> bool:
         return True
 
     # Linear lag with - is AMBIGUOUS: "route-1" vs "tt-1"
-    # Only match single-letter bases for lag to avoid false positives on hyphenated labels
-    # Multi-letter lag like "tt-1" should come through as IndexOffset objects, not strings
+    # For single-letter bases, always match as IndexOffset
     linear_lag_numeric = r"^[a-zA-Z]-[0-9]+$"  # i-1, t-3 (single letter only)
     if re.match(linear_lag_numeric, s):
         return True
 
     linear_lag_symbolic = r"^[a-zA-Z]-[A-Za-z_][A-Za-z0-9_]*$"  # i-j, t-k (single letter only)
     if re.match(linear_lag_symbolic, s):
+        return True
+
+    # PR #658: For multi-letter bases, check if base is a known domain variable
+    # If "tt" is in domain_vars, then "tt-1" is IndexOffset, not "tt minus one" label
+    multi_lag_pattern = r"^([A-Za-z_][A-Za-z0-9_]*)-([0-9]+|[A-Za-z_][A-Za-z0-9_]*)$"
+    match = re.match(multi_lag_pattern, s)
+    if match and match.group(1) in domain_vars:
         return True
 
     return False
@@ -171,8 +187,8 @@ def _format_mixed_indices(
     if domain_vars is None:
         domain_vars = frozenset()
 
-    result = []
-    string_indices = []
+    result: list[str] = []
+    string_indices: list[str] = []
 
     for idx in indices:
         if isinstance(idx, IndexOffset):
@@ -261,7 +277,8 @@ def _quote_indices(
         elif idx_clean in domain_vars:
             result.append(idx_clean)
         # IndexOffset syntax (i++1, i--2, i+1, i-3, i+j) is valid GAMS - don't quote
-        elif _is_index_offset_syntax(idx_clean):
+        # PR #658: Pass domain_vars to support multi-letter lag detection (tt-1)
+        elif _is_index_offset_syntax(idx_clean, domain_vars):
             result.append(idx_clean)
         # Sprint 18 Day 2: Refined heuristic for domain variables vs element literals
         # Only single/two-character lowercase identifiers are treated as domain variables.

@@ -40,6 +40,10 @@ Parameters
     w(n,np,k)
 ;
 
+ku(k) = ord(k) < card(k);
+ki(k) = ord(k) = 1;
+kt(k) = not ku(k);
+
 xtilde(n,k) = xinit(n) * power(1.0075, ord(k) - 1);
 utilde(m,k) = uinit(m) * power(1.0075, ord(k) - 1);
 w(n,np,ku) = wk(n,np);

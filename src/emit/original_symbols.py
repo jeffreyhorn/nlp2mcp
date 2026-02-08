@@ -430,9 +430,21 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 if param_def.domain:
                     domain_str = ",".join(param_def.domain)
                     lines.append(f"    {param_name}({domain_str})")
+                elif param_def.expressions:
+                    # PR #658: Infer dimensionality from expression keys
+                    # Find max key length to determine dimension count
+                    max_dims = 0
+                    for key_tuple in param_def.expressions.keys():
+                        if len(key_tuple) > max_dims:
+                            max_dims = len(key_tuple)
+                    if max_dims > 0:
+                        # Emit with wildcard domains: param_name(*,*) for 2-D
+                        wildcards = ",".join(["*"] * max_dims)
+                        lines.append(f"    {param_name}({wildcards})")
+                    else:
+                        lines.append(f"    {param_name}")
                 else:
-                    # Sprint 18 Day 2: Parameter with indexed expressions but no explicit domain
-                    # Emit just the name - GAMS will infer dimensions from assignments
+                    # Scalar parameter with no data
                     lines.append(f"    {param_name}")
         lines.append(";")
 

@@ -196,12 +196,26 @@ def _iterate_bounds(map_bounds: dict[tuple[str, ...], float], scalar: float | No
     yield from map_bounds.items()
 
 
+def _sanitize_identifier(s: str) -> str:
+    """Sanitize a string for use in a GAMS identifier.
+
+    PR #658: Replace non-alphanumeric characters (except underscore) with underscores.
+    This handles element labels like "q-1", "san-diego", "pulp+paper".
+    """
+    import re
+
+    # Replace any character that's not alphanumeric or underscore with underscore
+    return re.sub(r"[^A-Za-z0-9_]", "_", s)
+
+
 def _bound_name(var: str, suffix: str, indices: tuple[str, ...]) -> str:
     if not indices:
         return f"{var}_{suffix}"
     # Use underscores instead of parentheses for valid GAMS identifiers
     # e.g., x_fx_1 instead of x_fx(1) which is invalid GAMS syntax
-    joined = "_".join(indices)
+    # PR #658: Sanitize indices to handle special characters (e.g., "q-1" -> "q_1")
+    sanitized = [_sanitize_identifier(idx) for idx in indices]
+    joined = "_".join(sanitized)
     return f"{var}_{suffix}_{joined}"
 
 

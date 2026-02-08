@@ -110,16 +110,18 @@ def emit_gams_mcp(
         sections.append(params_code)
         sections.append("")
 
+    # PR #658: Emit dynamic set assignments BEFORE computed parameters
+    # Dynamic subsets (e.g., ku(k)) must be populated before parameter assignments
+    # like w(n,np,ku) that reference them, otherwise they produce empty data.
+    set_assignments_code = emit_set_assignments(kkt.model_ir)
+    if set_assignments_code:
+        sections.append(set_assignments_code)
+        sections.append("")
+
     # Sprint 17 Day 4: Emit computed parameter assignments
     computed_params_code = emit_computed_parameter_assignments(kkt.model_ir)
     if computed_params_code:
         sections.append(computed_params_code)
-        sections.append("")
-
-    # Sprint 18 Day 3: Emit dynamic set assignments (P4 fix)
-    set_assignments_code = emit_set_assignments(kkt.model_ir)
-    if set_assignments_code:
-        sections.append(set_assignments_code)
         sections.append("")
 
     # Variables (primal + multipliers)
