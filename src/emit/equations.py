@@ -16,7 +16,16 @@ from src.emit.expr_to_gams import (
     expr_to_gams,
     resolve_index_conflicts,
 )
-from src.ir.ast import Const, EquationRef, Expr, IndexOffset, MultiplierRef, ParamRef, VarRef
+from src.ir.ast import (
+    Const,
+    EquationRef,
+    Expr,
+    IndexOffset,
+    MultiplierRef,
+    ParamRef,
+    Sum,
+    VarRef,
+)
 from src.ir.normalize import NormalizedEquation
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
@@ -27,6 +36,7 @@ def _check_index_offset(
     domain_map: dict[str, str],
     lead_offsets: dict[str, int],
     lag_offsets: dict[str, int],
+    bound_indices: set[str],
 ) -> None:
     """Check an IndexOffset and track maximum offset magnitude.
 
@@ -35,12 +45,14 @@ def _check_index_offset(
         domain_map: Map from lowercase domain index to canonical (original) name
         lead_offsets: Dict mapping canonical index to max positive offset magnitude
         lag_offsets: Dict mapping canonical index to max negative offset magnitude (as positive int)
+        bound_indices: Set of lowercase indices currently bound by Sum expressions (to skip)
     """
     # Only consider non-circular offsets (linear lead/lag)
     if not idx_offset.circular:
         # Check if this base is in the equation domain (case-insensitive)
+        # but not shadowed by a sum-local binding
         base_lower = idx_offset.base.lower()
-        if base_lower in domain_map:
+        if base_lower in domain_map and base_lower not in bound_indices:
             # Use canonical domain name for the key
             canonical_name = domain_map[base_lower]
             # Determine offset direction and magnitude
@@ -77,7 +89,9 @@ def _collect_lead_lag_restrictions(
 
     Recursively walks an expression to find IndexOffset nodes and determines
     which domain indices need restrictions based on their offset direction
-    and magnitude.
+    and magnitude. Indices bound by Sum expressions are tracked and excluded
+    to avoid incorrectly restricting equation-level indices when a sum-local
+    index shadows the equation domain.
 
     For linear (non-circular) offsets:
     - Positive offset (lead, e.g., k+2): needs ord(k) <= card(k) - 2
@@ -97,22 +111,30 @@ def _collect_lead_lag_restrictions(
     # Map lowercase domain index to canonical (original) name
     domain_map = {d.lower(): d for d in domain}
 
-    def walk(e: Expr) -> None:
+    def walk(e: Expr, bound_indices: set[str]) -> None:
         # Check for IndexOffset directly in expression
         if isinstance(e, IndexOffset):
-            _check_index_offset(e, domain_map, lead_offsets, lag_offsets)
+            _check_index_offset(e, domain_map, lead_offsets, lag_offsets, bound_indices)
 
         # Check for IndexOffset in VarRef/ParamRef/MultiplierRef/EquationRef indices
         if isinstance(e, (VarRef, ParamRef, MultiplierRef, EquationRef)):
             for idx in e.indices:
                 if isinstance(idx, IndexOffset):
-                    _check_index_offset(idx, domain_map, lead_offsets, lag_offsets)
+                    _check_index_offset(idx, domain_map, lead_offsets, lag_offsets, bound_indices)
 
-        # Recursively walk children
-        for child in e.children():
-            walk(child)
+        # Handle Sum expressions: track bound indices to avoid false positives
+        # when sum-local indices shadow equation domain indices
+        if isinstance(e, Sum):
+            # Add sum indices to bound set for walking the body
+            new_bound = bound_indices | {idx.lower() for idx in e.index_sets}
+            for child in e.children():
+                walk(child, new_bound)
+        else:
+            # Recursively walk children with current bound set
+            for child in e.children():
+                walk(child, bound_indices)
 
-    walk(expr)
+    walk(expr, set())
     return lead_offsets, lag_offsets
 
 
@@ -216,8 +238,8 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
 
     inferred_condition = _build_domain_condition(lead_offsets, lag_offsets)
 
-    # Combine inferred condition with existing equation condition (if any)
-    # PR #661 review: Preserve original equation conditions from parsing
+    # Combine any parsed equation condition with inferred lead/lag domain bounds
+    # Preserve the original parsed $-condition and AND it with the inferred bounds
     all_conditions: list[str] = []
     if eq_def.condition is not None:
         # Convert existing condition to GAMS string
