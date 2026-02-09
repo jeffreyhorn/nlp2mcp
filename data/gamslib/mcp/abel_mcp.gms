@@ -34,7 +34,7 @@ Parameters
     lambda(m,mp) /'gov-expend'.money 1.0, money.money 0.444/
     c(n) /consumpt -59.4, invest -184.7/
     xinit(n) /consumpt 387.9, invest 85.3/
-    uinit(m) /gov-expend 110.5, money 147.1/
+    uinit(m) /'gov-expend' 110.5, money 147.1/
     xtilde(n,k)
     utilde(m,k)
     w(n,np,k)

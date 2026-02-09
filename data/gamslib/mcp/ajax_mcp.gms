@@ -27,7 +27,7 @@ Sets
 Parameters
     prate(g,m)
     pcost(g,m)
-    dempr(g,wc_dempr_d2) /20.demand 30000.0, 20.price 77.0, 25.demand 20000.0, 25.price 81.0, 'c-bond-ext'.demand 12000.0, 'c-bond-ext'.price 99.0, 'tissue-wrp'.demand 8000.0, 'tissue-wrp'.price 105.0/
+    dempr(g,wc_dempr_d2) /'20-'.demand 30000.0, '20-'.price 77.0, '25-'.demand 20000.0, '25-'.price 81.0, 'c-bond-ext'.demand 12000.0, 'c-bond-ext'.price 99.0, 'tissue-wrp'.demand 8000.0, 'tissue-wrp'.price 105.0/
     avail(m) /'machine-1' 672.0, 'machine-2' 600.0, 'machine-3' 480.0/
     mtr(m,*)
     par(g,*)

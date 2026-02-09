@@ -778,3 +778,27 @@ class TestSetElementQuoting:
         result = emit_original_parameters(model)
         assert "'gov-expend' 110.5" in result
         assert "money 200" in result or "money 200.0" in result
+
+    def test_multidimensional_set_quotes_components_separately(self):
+        """Test that multi-dimensional set members quote each component separately.
+
+        For multi-dimensional sets like km(k,mode), members are stored as dot-separated
+        tuples like "c-cracker.ho-low-s". Each component should be quoted individually
+        to produce "'c-cracker'.'ho-low-s'" instead of incorrectly quoting the whole
+        thing as "'c-cracker.ho-low-s'".
+        """
+        model = ModelIR()
+        model.sets["k"] = SetDef(name="k", members=["pipestill", "reformer", "c-cracker"])
+        model.sets["mode"] = SetDef(name="mode", members=["ho-low-s", "ho-high-s"])
+        model.sets["km"] = SetDef(
+            name="km",
+            domain=["k", "mode"],
+            members=["c-cracker.ho-low-s", "c-cracker.ho-high-s"],
+        )
+
+        phase1, _, _ = _get_phases(emit_original_sets(model))
+        # Each component should be quoted separately
+        assert "'c-cracker'.'ho-low-s'" in phase1
+        assert "'c-cracker'.'ho-high-s'" in phase1
+        # Should NOT quote the entire tuple
+        assert "'c-cracker.ho-low-s'" not in phase1

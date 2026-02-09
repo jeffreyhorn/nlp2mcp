@@ -15,8 +15,13 @@ $offText
 * Original Model Declarations
 * ============================================
 
-Scalars
-    report /0.0/
+Sets
+    rvar /x1, x2/
+    rstat /diff, global, solver/
+;
+
+Parameter
+    report(rvar, rstat)
 ;
 
 report("x1","diff") = report("x1","global") - report("x1","solver");

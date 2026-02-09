@@ -1242,9 +1242,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-09T10:02:58.392562+00:00",
+        "translate_date": "2026-02-09T15:23:10.243532+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 3.3673,
+        "translate_time_seconds": 2.463,
         "output_file": "data/gamslib/mcp/chenery_mcp.gms"
       },
       "mcp_solve": {

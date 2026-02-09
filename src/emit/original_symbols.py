@@ -150,8 +150,27 @@ def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
     # Use SetDef.members
     # Members are stored as a list of strings in SetDef
     # Sanitize each member to prevent DSL injection attacks
+    # For multi-dimensional sets (domain has multiple elements), members are stored
+    # as dot-separated tuples (e.g., "c-cracker.ho-low-s"). We need to split on '.'
+    # and sanitize each component separately to avoid quoting the entire tuple.
     if set_def.members:
-        sanitized_members = [_sanitize_set_element(m) for m in set_def.members]
+        domain_arity = len(set_def.domain) if set_def.domain else 1
+        if domain_arity > 1:
+            # Multi-dimensional set: split members and sanitize each component
+            sanitized_members = []
+            for m in set_def.members:
+                components = m.split(".")
+                # Handle case where number of components doesn't match domain arity
+                # (shouldn't happen, but be defensive)
+                if len(components) == domain_arity:
+                    sanitized_components = [_sanitize_set_element(c) for c in components]
+                    sanitized_members.append(".".join(sanitized_components))
+                else:
+                    # Fallback: sanitize as single element
+                    sanitized_members.append(_sanitize_set_element(m))
+        else:
+            # Single-dimensional set: sanitize directly
+            sanitized_members = [_sanitize_set_element(m) for m in set_def.members]
         members = ", ".join(sanitized_members)
         return f"{set_decl} /{members}/"
     else:
