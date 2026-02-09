@@ -50,6 +50,20 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values. POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+
+x.l("eff") = 0.0001;
+x.l(i) = min(max(x.l(i), 1), x.up(i));
+b.l(i) = 1;
+c.l(i) = 1;
+
+* ============================================
 * Equations
 * ============================================
 

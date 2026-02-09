@@ -27,19 +27,45 @@ from src.ir.symbols import ParameterDef, SetDef
 # These characters cannot break out of the /.../ block - that requires / or ; which are blocked.
 _VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.+]*$")
 
+# Pattern for simple identifiers that don't need quoting
+# Only letters, digits, and underscores - no special characters
+_SIMPLE_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
+
+
+def _needs_quoting(element: str) -> bool:
+    """Determine if a set element needs quoting in GAMS.
+
+    Elements containing + or - characters need to be quoted in GAMS set
+    definitions because these characters are interpreted as operators.
+    Dots (.) are OK without quoting as they represent tuple notation.
+    Simple identifiers (letters, digits, underscores) don't need quotes.
+
+    Args:
+        element: Set element identifier
+
+    Returns:
+        True if the element needs quoting, False otherwise
+    """
+    # Elements with + or - need quoting (these are interpreted as operators)
+    if "+" in element or "-" in element:
+        return True
+    # Everything else is OK: letters, digits, underscores, and dots (tuple notation)
+    return False
+
 
 def _sanitize_set_element(element: str) -> str:
     """Sanitize a set element name for safe GAMS emission.
 
     Validates that the element contains only safe characters to prevent
     DSL injection attacks. Elements that could break out of the /.../ block
-    or inject GAMS statements are rejected.
+    or inject GAMS statements are rejected. Elements with special characters
+    (like + or -) are quoted for correct GAMS parsing.
 
     Args:
         element: Set element identifier
 
     Returns:
-        The element if valid, or a safely quoted version
+        The element (quoted if necessary) if valid
 
     Raises:
         ValueError: If the element contains characters that cannot be safely emitted
@@ -61,6 +87,10 @@ def _sanitize_set_element(element: str) -> str:
             f"Set elements must start with a letter or digit and contain only "
             f"letters, digits, underscores, hyphens, dots, and plus signs."
         )
+
+    # Quote elements with special characters for correct GAMS parsing
+    if _needs_quoting(element):
+        return f"'{element}'"
 
     return element
 
@@ -406,12 +436,12 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
 
     Example output:
         Sets
-            _wc_dat_d2 /x, y/
+            wc_dat_d2 /x, y/
         ;
 
         Parameters
             c(i,j) /i1.j1 2.5, i1.j2 3.0, i2.j1 1.8/
-            dat(i,_wc_dat_d2) /1.y 127.0, 1.x -5.0/
+            dat(i,wc_dat_d2) /1.y 127.0, 1.x -5.0/
         ;
 
         Scalars
@@ -470,7 +500,8 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 elements = inferred.get(pos, set())
                 if elements:
                     # Create anonymous set name with unique prefix to avoid collisions
-                    base_name = f"_wc_{param_name}_d{pos + 1}"
+                    # Note: GAMS identifiers cannot start with underscore, so use "wc" prefix
+                    base_name = f"wc_{param_name}_d{pos + 1}"
                     set_name = base_name
                     # Ensure uniqueness by adding suffix if needed (case-insensitive check)
                     counter = 1

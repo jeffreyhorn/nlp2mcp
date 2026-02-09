@@ -15,8 +15,8 @@ $offText
 * Original Model Declarations
 * ============================================
 
-Parameters
-    report() /x1.global 1.0, x2.global 1.0/
+Scalars
+    report /0.0/
 ;
 
 report("x1","diff") = report("x1","global") - report("x1","solver");
@@ -49,6 +49,18 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values. POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+
+x1.l = 8.0;
+x2.l = -14.0;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -77,7 +89,7 @@ stat_x1.. 40 * (sqr(x1) - x2) * x1 + 2 * (x1 - 1) + (1 - x2) * nu_eqs - 3 * lam_
 stat_x2.. 10 * 2 * (sqr(x1) - x2) * (-1) + ((-1) * x1) * nu_eqs - 4 * lam_ineqs - piL_x2 + piU_x2 =E= 0;
 
 * Inequality complementarity equations
-comp_ineqs.. ((-1) * (3 * x1 + 4 * x2)) =G= 0;
+comp_ineqs.. ((-1) * (3 * x1 + 4 * x2 - 25)) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x1.. x1 + 10 =G= 0;

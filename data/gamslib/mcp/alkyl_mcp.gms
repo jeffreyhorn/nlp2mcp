@@ -79,6 +79,31 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values. POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+
+F.l = -0.9;
+OlefinFeed.l = 1.745;
+IsobutRec.l = 1.2;
+AcidFeed.l = 1.1;
+AlkylYld.l = 3.048;
+IsobutMak.l = 1.974;
+AcidStren.l = 0.893;
+Octane.l = 0.928;
+Ratio.l = 8.0;
+AcidDilut.l = 3.6;
+F4Perf.l = 1.45;
+alkerr.l = 1.0;
+octerr.l = 1.0;
+aciderr.l = 1.0;
+F4err.l = 1.0;
+
+* ============================================
 * Equations
 * ============================================
 
