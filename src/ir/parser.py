@@ -1807,24 +1807,25 @@ class _ModelBuilder:
                 # 2. Data values (NUMBER tokens) -> merge with last line (previous data row)
                 if merged_lines:
                     # Check if continuation line looks like column headers or data
-                    # Column headers are all ID tokens (no numbers)
+                    # Column headers are ID or STRING tokens (no numbers)
                     # Data rows have NUMBER tokens
+                    # Issue #665: Quoted column headers may be STRING tokens or quoted ID tokens
                     has_number_tokens = any(
                         tok.type == "NUMBER" for tok in line_tokens if isinstance(tok, Token)
                     )
-                    all_id_tokens = all(
-                        tok.type == "ID" and not _is_string_literal(tok)
+                    all_header_tokens = all(
+                        tok.type in ("ID", "STRING")
                         for tok in line_tokens
                         if isinstance(tok, Token)
                     )
 
                     # Determine if this is a column header continuation or data continuation
                     # 1. If only one line exists (column headers), continuation must be for headers
-                    # 2. Otherwise, if all ID tokens and no numbers, it's column headers
+                    # 2. Otherwise, if all header tokens (ID/STRING) and no numbers, it's column headers
                     if len(merged_lines) == 1:
                         is_column_header_continuation = True
                     else:
-                        is_column_header_continuation = all_id_tokens and not has_number_tokens
+                        is_column_header_continuation = all_header_tokens and not has_number_tokens
 
                     if is_column_header_continuation:
                         # Merge with first line (column headers)
@@ -1997,8 +1998,9 @@ class _ModelBuilder:
             # Get row header(s) from row_label_map (handles dotted labels and tuple labels)
             if line_num not in row_label_map:
                 # Fallback: first token should be row header
-                # Row labels can be ID or NUMBER tokens (e.g., "1", "2" in table rows)
-                if line_tokens[0].type not in ("ID", "NUMBER"):
+                # Row labels can be ID, NUMBER, or STRING tokens
+                # Issue #665: Quoted row labels (e.g., '20-bond-wt') may be STRING tokens
+                if line_tokens[0].type not in ("ID", "NUMBER", "STRING"):
                     continue
                 row_headers = [_token_text(line_tokens[0])]
             else:
@@ -2067,9 +2069,10 @@ class _ModelBuilder:
             all_row_headers.add(row_header)
 
         # Also collect row headers from lines (to handle completely empty rows)
-        # Row labels can be ID or NUMBER tokens (e.g., "1", "2" in table rows)
+        # Row labels can be ID, NUMBER, or STRING tokens
+        # Issue #665: Quoted row labels (e.g., '20-bond-wt') may be STRING tokens
         for _line_num, line_tokens in sorted_lines[1:]:
-            if line_tokens and line_tokens[0].type in ("ID", "NUMBER"):
+            if line_tokens and line_tokens[0].type in ("ID", "NUMBER", "STRING"):
                 # First token is row header
                 row_header = _token_text(line_tokens[0])
                 all_row_headers.add(row_header)
