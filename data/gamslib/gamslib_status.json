@@ -6627,9 +6627,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-09T08:33:06.593879+00:00",
+        "translate_date": "2026-02-09T10:15:13.759624+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 1.3592,
+        "translate_time_seconds": 1.2551,
         "output_file": "data/gamslib/mcp/ps2_f_mcp.gms"
       },
       "mcp_solve": {
@@ -6694,9 +6694,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-09T08:33:08.468743+00:00",
+        "translate_date": "2026-02-09T10:15:01.760027+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 1.4479,
+        "translate_time_seconds": 1.3154,
         "output_file": "data/gamslib/mcp/ps2_f_eff_mcp.gms"
       },
       "mcp_solve": {
@@ -6767,9 +6767,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-09T08:33:10.394426+00:00",
+        "translate_date": "2026-02-09T10:15:07.206803+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 1.4721,
+        "translate_time_seconds": 1.3749,
         "output_file": "data/gamslib/mcp/ps2_f_inf_mcp.gms"
       },
       "mcp_solve": {
@@ -6828,9 +6828,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-09T08:33:12.256333+00:00",
+        "translate_date": "2026-02-09T10:14:45.340972+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 1.4268,
+        "translate_time_seconds": 1.3294,
         "output_file": "data/gamslib/mcp/ps2_f_s_mcp.gms"
       },
       "mcp_solve": {
@@ -6895,9 +6895,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-09T08:33:14.086340+00:00",
+        "translate_date": "2026-02-09T10:14:56.001287+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 1.4051,
+        "translate_time_seconds": 1.2305,
         "output_file": "data/gamslib/mcp/ps2_s_mcp.gms"
       },
       "mcp_solve": {
