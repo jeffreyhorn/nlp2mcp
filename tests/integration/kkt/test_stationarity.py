@@ -976,7 +976,7 @@ class TestStationarityIndexDisambiguation:
                     refs.extend(find_var_refs(left, var_name))
                     refs.extend(find_var_refs(right, var_name))
                 case Unary(_, child):
-                    refs.extend(find_var_refs(child))
+                    refs.extend(find_var_refs(child, var_name))
                 case Call(_, args):
                     for arg in args:
                         refs.extend(find_var_refs(arg, var_name))

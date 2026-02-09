@@ -77,8 +77,8 @@ def _build_constraint_element_mapping(
     base_element_to_set: dict[str, str],
     constraint_indices: tuple[str, ...],
     constraint_domain: tuple[str, ...],
-) -> dict[str, str]:
-    """Build constraint-specific element-to-set mapping.
+) -> ChainMap[str, str]:
+    """Build constraint-specific element-to-set mapping (returned as a ChainMap overlay).
     
     For maxdist(1,2) with domain (i,j):
       "1" -> "i" (position 0)
