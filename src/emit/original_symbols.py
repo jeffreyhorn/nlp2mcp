@@ -58,7 +58,8 @@ def _sanitize_set_element(element: str) -> str:
     (like + or -) are quoted for correct GAMS parsing.
 
     Handles pre-quoted elements from the parser: if the element is already
-    wrapped in single quotes, it's validated and returned as-is.
+    wrapped in single quotes, it's validated and returned as-is. Quoted
+    elements may contain spaces (e.g., 'SAE 10' from bearing.gms).
 
     Args:
         element: Set element identifier (may or may not be pre-quoted)
@@ -69,6 +70,9 @@ def _sanitize_set_element(element: str) -> str:
     Raises:
         ValueError: If the element contains characters that cannot be safely emitted
     """
+    # Strip surrounding whitespace that may come from table row labels
+    element = element.strip()
+
     # Handle pre-quoted elements from the parser
     # If element is already wrapped in single quotes, strip them for validation
     # and return with quotes preserved
@@ -76,19 +80,15 @@ def _sanitize_set_element(element: str) -> str:
     if is_prequoted:
         inner = element[1:-1]
         # Validate the inner content (should not have additional quotes or dangerous chars)
+        # Note: spaces are allowed in quoted GAMS labels (e.g., 'SAE 10')
         dangerous_chars_inner = {"/", ";", "*", "$", '"', "'", "(", ")", "[", "]", "=", "<", ">"}
         if any(c in inner for c in dangerous_chars_inner):
             raise ValueError(
                 f"Set element '{element}' contains unsafe characters that could cause "
                 f"GAMS injection. Dangerous characters: {dangerous_chars_inner & set(inner)}"
             )
-        # Validate inner content against safe pattern
-        if not _VALID_SET_ELEMENT_PATTERN.match(inner):
-            raise ValueError(
-                f"Set element '{element}' contains invalid characters. "
-                f"Set elements must start with a letter or digit and contain only "
-                f"letters, digits, underscores, hyphens, dots, and plus signs."
-            )
+        # For quoted elements, we allow spaces and other characters that GAMS permits
+        # in quoted labels. Only check for truly dangerous injection characters above.
         # Return as-is (already quoted)
         return element
 
