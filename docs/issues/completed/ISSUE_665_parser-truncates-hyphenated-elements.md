@@ -45,15 +45,17 @@ Column headers are NOT quoted because:
 
 Callers of `parse_text()` directly now get proper preprocessing.
 
-### 4. Extended `_token_text()` to strip quotes from ID tokens (`src/ir/parser.py`)
+### 4. Extended `_token_text()` to handle quoted ID tokens (`src/ir/parser.py`)
 
 ```python
 # Now handles both STRING and escaped ID tokens
+# STRING tokens still get .strip() for descriptions
+# Escaped ID tokens preserve inner whitespace (GAMS allows spaces in quoted identifiers)
 if token.type == "ID" and (
     (value[0] == "'" and value[-1] == "'")
     or (value[0] == '"' and value[-1] == '"')
 ):
-    return value[1:-1].strip()
+    return value[1:-1]  # No .strip() - preserve whitespace
 ```
 
 ### 5. Updated grammar to allow STRING in dotted_label (`src/gams/gams_grammar.lark`)
