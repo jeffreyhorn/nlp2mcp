@@ -73,7 +73,7 @@ Added `_infer_wildcard_elements()` function that examines parameter data keys to
 
 1. Detects parameters with `*` in their domain
 2. Infers actual set elements from the data keys
-3. Creates anonymous sets (e.g., `dat_dim2`) to hold the inferred elements
+3. Creates anonymous sets (e.g., `_wc_dat_d2`) to hold the inferred elements
 4. Replaces `*` with the anonymous set name in the parameter domain
 
 **Example output after fix:**
@@ -119,10 +119,10 @@ result = emit_original_parameters(ir)
 print(result)
 # Output:
 # Sets
-#     dat_dim2 /x, y/
+#     _wc_dat_d2 /x, y/
 # ;
 #
 # Parameters
-#     dat(i,dat_dim2) /1.y 127.0, 1.x -5.0, .../
+#     dat(i,_wc_dat_d2) /1.y 127.0, 1.x -5.0, .../
 # ;
 ```

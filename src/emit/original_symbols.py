@@ -406,12 +406,12 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
 
     Example output:
         Sets
-            dat_dim2 /x, y/
+            _wc_dat_d2 /x, y/
         ;
 
         Parameters
             c(i,j) /i1.j1 2.5, i1.j2 3.0, i2.j1 1.8/
-            dat(i,dat_dim2) /1.y 127.0, 1.x -5.0/
+            dat(i,_wc_dat_d2) /1.y 127.0, 1.x -5.0/
         ;
 
         Scalars
