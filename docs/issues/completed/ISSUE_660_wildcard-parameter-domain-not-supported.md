@@ -79,13 +79,17 @@ Added `_infer_wildcard_elements()` function that examines parameter data keys to
 **Example output after fix:**
 ```gams
 Sets
-    dat_dim2 /x, y/
+    _wc_dat_d2 /x, y/
 ;
 
 Parameters
-    dat(i,dat_dim2) /1.y 127.0, 1.x -5.0, 2.y 151.0, .../
+    dat(i,_wc_dat_d2) /1.y 127.0, 1.x -5.0, 2.y 151.0, .../
 ;
 ```
+
+Note: Generated set names use the pattern `_wc_<param>_d<pos>` (e.g., `_wc_dat_d2` for
+the 2nd dimension of parameter `dat`). A numeric suffix is added if needed to avoid
+collisions with existing symbols.
 
 ## Affected Models
 

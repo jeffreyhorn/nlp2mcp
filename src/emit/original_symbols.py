@@ -440,15 +440,17 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     lines = []
 
     # Collect existing symbol names to avoid collisions with generated set names
-    existing_symbols: set[str] = set()
-    existing_symbols.update(model_ir.sets.keys())
-    existing_symbols.update(model_ir.aliases.keys())
-    existing_symbols.update(model_ir.params.keys())
-    existing_symbols.update(model_ir.variables.keys())
+    # Use lowercase for case-insensitive comparison (GAMS symbols are case-insensitive)
+    existing_symbols_lower: set[str] = set()
+    existing_symbols_lower.update(k.lower() for k in model_ir.sets.keys())
+    existing_symbols_lower.update(k.lower() for k in model_ir.aliases.keys())
+    existing_symbols_lower.update(k.lower() for k in model_ir.params.keys())
+    existing_symbols_lower.update(k.lower() for k in model_ir.variables.keys())
 
     # First pass: identify parameters with wildcard domains and infer elements
     # Generate anonymous sets for wildcards
-    wildcard_sets: dict[str, tuple[str, set[str]]] = {}  # param_name -> (set_name, elements)
+    # Key format: f"{param_name}_{pos}" -> (set_name, elements)
+    wildcard_sets: dict[str, tuple[str, set[str]]] = {}
     wildcard_replacements: dict[str, list[str]] = {}  # param_name -> new domain list
     # Track exactly which domain positions were replaced with generated set names
     generated_set_positions: dict[str, set[int]] = {}  # param_name -> set of positions
@@ -470,12 +472,12 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                     # Create anonymous set name with unique prefix to avoid collisions
                     base_name = f"_wc_{param_name}_d{pos + 1}"
                     set_name = base_name
-                    # Ensure uniqueness by adding suffix if needed
+                    # Ensure uniqueness by adding suffix if needed (case-insensitive check)
                     counter = 1
-                    while set_name in existing_symbols:
+                    while set_name.lower() in existing_symbols_lower:
                         set_name = f"{base_name}_{counter}"
                         counter += 1
-                    existing_symbols.add(set_name)  # Reserve this name
+                    existing_symbols_lower.add(set_name.lower())  # Reserve this name
                     wildcard_sets[f"{param_name}_{pos}"] = (set_name, elements)
                     new_domain[pos] = set_name
                     generated_positions.add(pos)
