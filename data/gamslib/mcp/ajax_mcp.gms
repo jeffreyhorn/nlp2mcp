@@ -28,7 +28,7 @@ Parameters
     prate(g,m)
     pcost(g,m)
     dempr(g,wc_dempr_d2) /20.demand 30000.0, 20.price 77.0, 25.demand 20000.0, 25.price 81.0, 'c-bond-ext'.demand 12000.0, 'c-bond-ext'.price 99.0, 'tissue-wrp'.demand 8000.0, 'tissue-wrp'.price 105.0/
-    avail(m) /machine-1 672.0, machine-2 600.0, machine-3 480.0/
+    avail(m) /'machine-1' 672.0, 'machine-2' 600.0, 'machine-3' 480.0/
     mtr(m,*)
     par(g,*)
 ;
@@ -63,8 +63,8 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+* non-zero initial values.
+* POSITIVE variables are set to 1.
 
 outp.l(g,m) = 1;
 

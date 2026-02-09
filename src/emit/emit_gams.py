@@ -184,8 +184,9 @@ def emit_gams_mcp(
         # PR #658 review: Clamp to upper bound using GAMS .up attribute to respect
         # per-element bounds (up_map), not just scalar var_def.up.
         # Issue #651: Don't read from .l when initializing - GAMS Error 141 occurs
-        # if the variable was never assigned any .l values. Instead, just set .l
-        # to min(1, upper_bound) directly.
+        # if the variable was never assigned any .l values. For variables without
+        # explicit .l values, we set .l = 1 directly (not reading .up either to
+        # avoid Error 141 if bounds weren't assigned).
         if var_def.kind == VarKind.POSITIVE:
             if has_init:
                 has_positive_clamp = True
