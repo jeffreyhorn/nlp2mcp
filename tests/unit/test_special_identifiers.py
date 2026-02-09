@@ -203,8 +203,12 @@ def test_table_header_special_chars():
 
     Column headers are kept unquoted because:
     1. Quoting would make the first header look like a table description
-    2. The DESCRIPTION terminal matches multiple hyphenated words
-    The parser handles unquoted hyphenated headers via DESCRIPTION token parsing.
+    2. Hyphenated headers (e.g., ``light-ind``, ``heavy-ind``) are parsed via the
+       DESCRIPTION terminal in the grammar
+
+    Note: The DESCRIPTION terminal does not match ``+``, so headers containing
+    ``+`` (like ``food+agr``) have limited support and may trigger the table
+    continuation rule. Row labels with ``+`` are properly quoted and work correctly.
     """
     source = """Table aio(i,i)
        light-ind  food+agr  heavy-ind

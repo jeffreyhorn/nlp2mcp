@@ -3336,12 +3336,15 @@ class TestHyphenatedIdentifiers:
         assert model.params["prate"].values[("20-bond-wt", "machine-1")] == 53
         assert model.params["prate"].values[("c-bond-ext", "machine-2")] == 45
 
-    def test_table_column_headers_with_plus_identifiers(self):
-        """Test table with + in column headers doesn't misparse as continuation.
+    def test_table_with_plus_in_row_labels(self):
+        """Test table with + in row labels parses correctly.
 
-        Issue #665: The + in identifiers like 'food+agr' must not be interpreted
-        as a table continuation marker. This verifies the full parser pipeline
-        handles these column headers correctly.
+        Issue #665: The + in identifiers like 'food+agr' in row labels must be
+        handled correctly. Row labels are quoted by the preprocessor, so the +
+        is not misinterpreted as a table continuation marker.
+
+        Note: Column headers with + have limited support due to grammar constraints
+        (the DESCRIPTION terminal and table_row rules interact in complex ways).
         """
         text = dedent("""
             Set i 'sectors' / light-ind, food+agr, heavy-ind /;
@@ -3353,7 +3356,7 @@ class TestHyphenatedIdentifiers:
                heavy-ind   50    60;
             """)
         model = parser.parse_model_text(text)
-        # Verify column headers parsed correctly (not misinterpreted as continuation)
+        # Verify row labels with + parsed correctly
         assert "supply" in model.params
         assert ("light-ind", "steel") in model.params["supply"].values
         assert ("food+agr", "steel") in model.params["supply"].values

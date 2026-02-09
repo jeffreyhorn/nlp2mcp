@@ -1455,10 +1455,10 @@ def normalize_special_identifiers(source: str) -> str:
                 continue
 
             # First non-empty line after Table declaration is the column header
-            # Issue #665: Do NOT quote column headers. The grammar would either:
-            # 1. Treat a quoted string as a table description, or
-            # 2. DESCRIPTION terminal would match multiple hyphenated words
-            # The parser handles unquoted hyphenated column headers specially.
+            # Issue #665: Do NOT quote column headers. The grammar uses DESCRIPTION
+            # terminal for multi-word headers with hyphens (e.g., "light-ind heavy-ind").
+            # Note: Column headers with + have limited support - the + may trigger
+            # table_continuation parsing. Row labels with + are properly quoted.
             if not table_header_seen and stripped:
                 table_header_seen = True
                 result.append(line)  # Keep original header line
