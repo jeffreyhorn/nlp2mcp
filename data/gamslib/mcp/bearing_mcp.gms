@@ -15,22 +15,27 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    wc_oil_constants_d1 /'SAE 10', 'SAE 20', 'SAE 30', 'SAE 40', 'SAE 5', 'SAE 50'/
+    wc_oil_constants_d2 /C1, n/
+;
+
 Parameters
-    oil_constants(*,*) /'SAE 5'.C1 10.85, 'SAE 5'.n -3.91, 'SAE 10'.C1 10.45, 'SAE 10'.n -3.72, 'SAE 20'.C1 10.04, 'SAE 20'.n -3.55, 'SAE 30'.C1 9.88, 'SAE 30'.n -3.48, 'SAE 40'.C1 9.83, 'SAE 40'.n -3.46, 'SAE 50'.C1 9.82, 'SAE 50'.n -3.44/
+    oil_constants(wc_oil_constants_d1,wc_oil_constants_d2) /'SAE 5'.C1 10.85, 'SAE 5'.n -3.91, 'SAE 10'.C1 10.45, 'SAE 10'.n -3.72, 'SAE 20'.C1 10.04, 'SAE 20'.n -3.55, 'SAE 30'.C1 9.88, 'SAE 30'.n -3.48, 'SAE 40'.C1 9.83, 'SAE 40'.n -3.46, 'SAE 50'.C1 9.82, 'SAE 50'.n -3.44/
 ;
 
 Scalars
-    gamma /0.0/
-    C /0.0/
-    N /0.0/
-    Ws /0.0/
-    Pmax /0.0/
-    delta_t_max /0.0/
-    hmin /0.0/
-    g /0.0/
-    taf /0.0/
+    gamma /0.0307/
+    C /0.5/
+    N /750.0/
+    Ws /101000.0/
+    Pmax /1000.0/
+    delta_t_max /50.0/
+    hmin /0.001/
+    g /386.4/
+    taf /100.0/
     P1 /0.0/
-    pump_efficiency /0.0/
+    pump_efficiency /0.7/
     C1 /0.0/
     cn /0.0/
     gr /0.0/
@@ -90,14 +95,41 @@ Positive Variables
     piL_P0
     piL_Ef
     piL_Ep
+    piL_h
     piL_t
+    piL_W
     piL_tmp1
     piL_tmp2
     piU_R
     piU_R0
     piU_mu
     piU_Q
+    piU_P0
+    piU_delta_t
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values. POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
+
+R.l = 6.0;
+R0.l = 5.0;
+mu.l = 6e-06;
+Q.l = 3.0;
+P0.l = 1000.0;
+Ef.l = 16000.0;
+Ep.l = 3000.0;
+h.l = 0.001;
+delta_t.l = 50.0;
+t.l = 600.0;
+W.l = 101000.0;
+tmp1.l = 0.0001;
+tmp2.l = 0.01;
 
 * ============================================
 * Equations
@@ -130,13 +162,17 @@ Equations
     comp_lo_Q
     comp_lo_R
     comp_lo_R0
+    comp_lo_W
+    comp_lo_h
     comp_lo_mu
     comp_lo_t
     comp_lo_tmp1
     comp_lo_tmp2
+    comp_up_P0
     comp_up_Q
     comp_up_R
     comp_up_R0
+    comp_up_delta_t
     comp_up_mu
     friction
     inlet_pressure
@@ -155,10 +191,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_delta_t.. 0 + 0 * nu_pumping_energy + 0 * nu_friction + 9336 * Q * gamma * C * nu_temp_rise + 0 * nu_load_capacity + 0 * nu_inlet_pressure + 0 * nu_oil_viscosity + (-0.5) * nu_temperature + 0 * nu_temp1 + 0 * nu_temp2 + 0 * lam_radius - 0 * lam_limit1 - 0 * lam_limit2 =E= 0;
+stat_delta_t.. 0 + 0 * nu_pumping_energy + 0 * nu_friction + 9336 * Q * gamma * C * nu_temp_rise + 0 * nu_load_capacity + 0 * nu_inlet_pressure + 0 * nu_oil_viscosity + (-0.5) * nu_temperature + 0 * nu_temp1 + 0 * nu_temp2 + 0 * lam_radius - 0 * lam_limit1 - 0 * lam_limit2 + piU_delta_t =E= 0;
 stat_ef.. 0 + 0 * nu_pumping_energy + 0 * nu_friction + 0 * nu_temp_rise + 0 * nu_load_capacity + 0 * nu_inlet_pressure + 0 * nu_oil_viscosity + 0 * nu_temperature + 0 * nu_temp1 + 0 * nu_temp2 + 0 * lam_radius - 0 * lam_limit1 - 0 * lam_limit2 =E= 0;
 stat_ep.. 0 + 0 * nu_pumping_energy + 0 * nu_friction + 0 * nu_temp_rise + 0 * nu_load_capacity + 0 * nu_inlet_pressure + 0 * nu_oil_viscosity + 0 * nu_temperature + 0 * nu_temp1 + 0 * nu_temp2 + 0 * lam_radius - 0 * lam_limit1 - 0 * lam_limit2 =E= 0;
-stat_h.. 0 + 0 * nu_pumping_energy + Ef * nu_friction + 0 * nu_temp_rise + 0 * nu_load_capacity + P0 * pi * 3 * power(h, 2) * nu_inlet_pressure + 0 * nu_oil_viscosity + 0 * nu_temperature + 0 * nu_temp1 + 0 * nu_temp2 + 0 * lam_radius - ((-1) * (P0 * 0.001 * g * 2 * 2 * pi * R * h * 2 * pi * R)) * lam_limit1 - 0 * lam_limit2 =E= 0;
+stat_h.. 0 + 0 * nu_pumping_energy + Ef * nu_friction + 0 * nu_temp_rise + 0 * nu_load_capacity + P0 * pi * 3 * power(h, 2) * nu_inlet_pressure + 0 * nu_oil_viscosity + 0 * nu_temperature + 0 * nu_temp1 + 0 * nu_temp2 + 0 * lam_radius - ((-1) * (P0 * 0.001 * g * 2 * 2 * pi * R * h * 2 * pi * R)) * lam_limit1 - 0 * lam_limit2 - piL_h =E= 0;
 stat_mu.. 0 + 0 * nu_pumping_energy + ((-1) * (4 * (r ** 4 - r0 ** 4) * sqr(2 * pi * N / 60) * 2 * pi / 16)) * nu_friction + 0 * nu_temp_rise + 0 * nu_load_capacity + ((-1) * (tmp1 * Q * 6)) * nu_inlet_pressure + 1 / ((8112000 * mu + 0.8) * 2.302585092994046) * 8112000 * nu_oil_viscosity + 0 * nu_temperature + 0 * nu_temp1 + 0 * nu_temp2 + 0 * lam_radius - 0 * lam_limit1 - 0 * lam_limit2 - piL_mu + piU_mu =E= 0;
 stat_p0.. 0 + 0 * nu_pumping_energy + 0 * nu_friction + 0 * nu_temp_rise + 0 * nu_load_capacity + 0 * nu_inlet_pressure + 0 * nu_oil_viscosity + 0 * nu_temperature + 0 * nu_temp1 + 0 * nu_temp2 + 0 * lam_radius - 0 * lam_limit1 - 0 * lam_limit2 =E= 0;
 stat_q.. 0 + 0 * nu_pumping_energy + 0 * nu_friction + 0 * nu_temp_rise + 0 * nu_load_capacity + 0 * nu_inlet_pressure + 0 * nu_oil_viscosity + 0 * nu_temperature + 0 * nu_temp1 + 0 * nu_temp2 + 0 * lam_radius - 0 * lam_limit1 - 0 * lam_limit2 =E= 0;
@@ -170,9 +206,9 @@ stat_tmp2.. 0 + 0 * nu_pumping_energy + 0 * nu_friction + 0 * nu_temp_rise + ((-
 stat_w.. 0 + 0 * nu_pumping_energy + 0 * nu_friction + 0 * nu_temp_rise + 0 * nu_load_capacity + 0 * nu_inlet_pressure + 0 * nu_oil_viscosity + 0 * nu_temperature + 0 * nu_temp1 + 0 * nu_temp2 + 0 * lam_radius - 0 * lam_limit1 - 0 * lam_limit2 =E= 0;
 
 * Inequality complementarity equations
-comp_limit1.. ((-1) * (gamma * sqr(Q))) =G= 0;
-comp_limit2.. ((-1) * W) =G= 0;
-comp_radius.. R =G= 0;
+comp_limit1.. ((-1) * (gamma * sqr(Q) - 0.001 * g * sqr(2 * pi * R * h) * P0)) =G= 0;
+comp_limit2.. ((-1) * (W - 5000 * pi * tmp2)) =G= 0;
+comp_radius.. R - R0 =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_Ef.. Ef - 1 =G= 0;
@@ -181,15 +217,19 @@ comp_lo_P0.. P0 - 1 =G= 0;
 comp_lo_Q.. Q - 1 =G= 0;
 comp_lo_R.. R - 1 =G= 0;
 comp_lo_R0.. R0 - 1 =G= 0;
+comp_lo_W.. W - 101000 =G= 0;
+comp_lo_h.. h - 0.001 =G= 0;
 comp_lo_mu.. mu - 1e-06 =G= 0;
 comp_lo_t.. t - 100 =G= 0;
 comp_lo_tmp1.. tmp1 - 0.0001 =G= 0;
 comp_lo_tmp2.. tmp2 - 0.01 =G= 0;
 
 * Upper bound complementarity equations
+comp_up_P0.. 1000 - P0 =G= 0;
 comp_up_Q.. 16 - Q =G= 0;
 comp_up_R.. 16 - R =G= 0;
 comp_up_R0.. 16 - R0 =G= 0;
+comp_up_delta_t.. 50 - delta_t =G= 0;
 comp_up_mu.. 1.6e-05 - mu =G= 0;
 
 * Original equality equations
@@ -251,13 +291,17 @@ Model mcp_model /
     comp_lo_Q.piL_Q,
     comp_lo_R.piL_R,
     comp_lo_R0.piL_R0,
+    comp_lo_W.piL_W,
+    comp_lo_h.piL_h,
     comp_lo_mu.piL_mu,
     comp_lo_t.piL_t,
     comp_lo_tmp1.piL_tmp1,
     comp_lo_tmp2.piL_tmp2,
+    comp_up_P0.piU_P0,
     comp_up_Q.piU_Q,
     comp_up_R.piU_R,
     comp_up_R0.piU_R0,
+    comp_up_delta_t.piU_delta_t,
     comp_up_mu.piU_mu
 /;
 

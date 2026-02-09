@@ -620,14 +620,11 @@
         "sets": 0
       },
       "nlp2mcp_translate": {
-        "status": "failure",
-        "translate_date": "2026-02-09T08:32:15.279029+00:00",
+        "status": "success",
+        "translate_date": "2026-02-09T10:02:45.115254+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 2.4632,
-        "error": {
-          "category": "internal_error",
-          "message": "Error: Invalid model - Set element ''SAE 10'' contains unsafe characters that could cause GAMS injection. Dangerous characters: {\"'\"}\n"
-        }
+        "translate_time_seconds": 2.0396,
+        "output_file": "data/gamslib/mcp/bearing_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
@@ -1245,9 +1242,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-09T08:32:19.689401+00:00",
+        "translate_date": "2026-02-09T10:02:58.392562+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 3.9355,
+        "translate_time_seconds": 3.3673,
         "output_file": "data/gamslib/mcp/chenery_mcp.gms"
       },
       "mcp_solve": {
@@ -7901,14 +7898,11 @@
         "sets": 4
       },
       "nlp2mcp_translate": {
-        "status": "failure",
-        "translate_date": "2026-02-09T08:32:59.525729+00:00",
+        "status": "success",
+        "translate_date": "2026-02-09T10:02:50.720871+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 1.5497,
-        "error": {
-          "category": "internal_error",
-          "message": "Error: Invalid model - Set element ''max-stock'' contains unsafe characters that could cause GAMS injection. Dangerous characters: {\"'\"}\n"
-        }
+        "translate_time_seconds": 1.3724,
+        "output_file": "data/gamslib/mcp/robert_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",

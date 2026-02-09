@@ -30,11 +30,11 @@ Sets
 ;
 
 Parameters
-    aio(i,i) /'food+agr'.services 0.0, 'heavy-ind'.services 0.0, services.services 0.0/
+    aio(i,i) /services.services 0.0, 'food+agr'.services 0.0, 'heavy-ind'.services 0.0/
     pdat(lmh,wc_pdat_d2,sde,i) /low.a.distr.services 0.8, low.a.effic.services 1.8, low.b.distr.services 0.77, low.b.effic.services 1.77, medium.a.subst.services 0.05, medium.a.distr.services 0.00798, medium.a.effic.services 1.84, medium.b.subst.services 0.1, medium.b.distr.services 0.08, medium.b.effic.services 1.89, high.a.subst.services 0.2, high.a.distr.services 0.23, high.a.effic.services 1.92, high.b.subst.services 0.4, high.b.distr.services 0.344, high.b.effic.services 1.96, high.services 0.0, low.services 0.0, medium.services 0.0/
     ddat(lmh,wc_ddat_d2,i) /low.ynot.services 450.0, medium.ynot.services 450.0, high.ynot.services 450.0, medium.services -0.352, high.services -1.0, low.services 0.0/
     tdat(lmh,*,t)
-    mew(t) /light-ind 1.0, food+agr 1.0, heavy-ind 1.0/
+    mew(t) /'light-ind' 1.0, 'food+agr' 1.0, 'heavy-ind' 1.0/
     xsi(t)
     gam(t)
     alp(t)
@@ -138,36 +138,36 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values. POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
 x.l("light-ind") = 200.0;
 x.l("food+agr") = 200.0;
 x.l("heavy-ind") = 200.0;
 x.l("services") = 200.0;
-x.l(i) = min(max(x.l(i), 1), x.up(i));
+x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
 v.l(i) = 1;
 y.l("light-ind") = 250.0;
 y.l("food+agr") = 250.0;
 y.l("heavy-ind") = 250.0;
 y.l("services") = 250.0;
-y.l(i) = min(max(y.l(i), 1), y.up(i));
+y.l(i) = min(max(y.l(i), 1e-6), y.up(i));
 p.l("light-ind") = 3.0;
 p.l("food+agr") = 3.0;
 p.l("heavy-ind") = 3.0;
 p.l("services") = 3.0;
-p.l(i) = min(max(p.l(i), 1), p.up(i));
+p.l(i) = min(max(p.l(i), 1e-6), p.up(i));
 l.l(i) = 1;
 k.l(i) = 1;
 e.l("light-ind") = 0.0;
 e.l("food+agr") = 0.0;
 e.l("heavy-ind") = 0.0;
 e.l("services") = 0.0;
-e.l(i) = min(max(e.l(i), 1), e.up(i));
+e.l(i) = min(max(e.l(i), 1e-6), e.up(i));
 m.l("light-ind") = 0.0;
 m.l("food+agr") = 0.0;
 m.l("heavy-ind") = 0.0;
 m.l("services") = 0.0;
-m.l(i) = min(max(m.l(i), 1), m.up(i));
+m.l(i) = min(max(m.l(i), 1e-6), m.up(i));
 g.l(t) = 1;
 h.l(t) = 1;
 pk.l = 3.5;
