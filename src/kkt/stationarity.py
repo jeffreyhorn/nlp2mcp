@@ -19,6 +19,9 @@ Special handling:
 
 from __future__ import annotations
 
+from collections import ChainMap
+from collections.abc import Mapping
+
 from src.ir.ast import Binary, Call, Const, Expr, MultiplierRef, ParamRef, Sum, Unary, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
@@ -386,10 +389,52 @@ def _build_element_to_set_mapping(
     return element_to_set
 
 
+def _build_constraint_element_mapping(
+    base_element_to_set: dict[str, str],
+    constraint_indices: tuple[str, ...],
+    constraint_domain: tuple[str, ...],
+) -> ChainMap[str, str]:
+    """Build constraint-specific element-to-set mapping.
+
+    Issue #649: When a constraint has multiple indices from the same underlying set
+    (e.g., maxdist(i,j) where both i and j iterate over the same set), we need to
+    map element labels to their specific position in the constraint domain.
+
+    This function creates a lightweight overlay using ChainMap that checks
+    constraint-specific overrides first, then falls back to the base mapping.
+    This avoids copying the entire base mapping for each constraint.
+
+    Args:
+        base_element_to_set: Base mapping from variable instances
+        constraint_indices: Element indices for the constraint row (e.g., ("1", "2"))
+        constraint_domain: Constraint domain names (e.g., ("i", "j"))
+
+    Returns:
+        ChainMap with constraint overrides checked first, then base mapping
+
+    Example:
+        base_element_to_set = {"1": "i", "2": "i", "3": "i", ...}
+        constraint_indices = ("1", "2")
+        constraint_domain = ("i", "j")
+
+        Returns: ChainMap({"1": "i", "2": "j"}, base_element_to_set)
+        # "2" now maps to "j" because it's at position 1 in the constraint
+        # "3" still maps to "i" via fallback to base_element_to_set
+    """
+    # Build constraint-specific overrides (small dict with just the constraint indices)
+    overrides: dict[str, str] = {}
+    if len(constraint_indices) == len(constraint_domain):
+        for elem, domain_name in zip(constraint_indices, constraint_domain, strict=True):
+            overrides[elem] = domain_name
+
+    # Use ChainMap for O(1) lookup with lazy fallback to base mapping
+    return ChainMap(overrides, base_element_to_set)
+
+
 def _replace_indices_in_expr(
     expr: Expr,
     domain: tuple[str, ...],
-    element_to_set: dict[str, str] | None = None,
+    element_to_set: Mapping[str, str] | None = None,
     model_ir: ModelIR | None = None,
     equation_domain: tuple[str, ...] | None = None,
 ) -> Expr:
@@ -446,7 +491,9 @@ def _replace_indices_in_expr(
             if param_ref.indices and domain:
                 if element_to_set:
                     str_indices = param_ref.indices_as_strings()
-                    # Use parameter domain for disambiguation
+                    # Use parameter domain for disambiguation (Issue #572)
+                    # For parameters, prefer_declared_domain=True ensures the parameter's
+                    # declared domain takes precedence over constraint-specific mappings.
                     param_domain = None
                     if model_ir and param_ref.name in model_ir.params:
                         param_domain = model_ir.params[param_ref.name].domain
@@ -456,6 +503,7 @@ def _replace_indices_in_expr(
                         declared_domain=param_domain,
                         equation_domain=equation_domain,
                         model_ir=model_ir,
+                        prefer_declared_domain=True,  # Issue #572: Trust parameter domain
                     )
                     return ParamRef(param_ref.name, new_indices)
                 elif len(param_ref.indices) == len(domain):
@@ -508,10 +556,11 @@ def _replace_indices_in_expr(
 
 def _replace_matching_indices(
     indices: tuple[str, ...],
-    element_to_set: dict[str, str],
+    element_to_set: Mapping[str, str],
     declared_domain: tuple[str, ...] | None = None,
     equation_domain: tuple[str, ...] | None = None,
     model_ir: ModelIR | None = None,
+    prefer_declared_domain: bool = False,
 ) -> tuple[str, ...]:
     """Replace element labels with their corresponding set names.
 
@@ -542,6 +591,9 @@ def _replace_matching_indices(
         declared_domain: The declared domain of the symbol (for disambiguation)
         equation_domain: The domain of the stationarity equation (for subset substitution)
         model_ir: Model IR for looking up subset relationships via SetDef.domain
+        prefer_declared_domain: If True, use declared_domain over element_to_set when
+            both provide a mapping. Set to True for parameters (Issue #572), False for
+            variables (Issue #649).
 
     Returns:
         New indices with element labels replaced by set names
@@ -598,6 +650,20 @@ def _replace_matching_indices(
                         new_indices.append(superset_to_subset[idx.lower()])
                     else:
                         new_indices.append(idx)
+                elif idx in element_to_set and not prefer_declared_domain:
+                    # Issue #649: Use the element_to_set mapping for element labels.
+                    # This is critical for constraint-specific mappings where the same
+                    # element might map to different set names depending on position.
+                    # E.g., for maxdist(i,j) with instance (1,2), element "2" should
+                    # map to "j" (its constraint position), not "i" (the variable's domain).
+                    # NOTE: Only applies when prefer_declared_domain=False (for VarRef).
+                    # For ParamRef, we trust declared_domain (Issue #572).
+                    mapped_set = element_to_set[idx]
+                    # Issue #620: Check if mapped_set is a superset of equation domain
+                    if mapped_set.lower() in superset_to_subset:
+                        new_indices.append(superset_to_subset[mapped_set.lower()])
+                    else:
+                        new_indices.append(mapped_set)
                 else:
                     # Issue #620: Check if the target_set is a superset of an
                     # equation domain set. If so, use the subset index instead.
@@ -670,10 +736,26 @@ def _add_indexed_jacobian_terms(
             mult_domain = _get_constraint_domain(kkt, eq_name_base)
 
             if mult_domain:
-                # Replace indices in derivative expression using element_to_set mapping
+                # Issue #649: Build constraint-specific element-to-set mapping.
+                # When a constraint has multiple indices from the same underlying set
+                # (e.g., maxdist(i,j) where both i,j iterate over the same set), we need
+                # to map element labels to their specific position in the constraint domain.
+                # For example, for maxdist(1,2) with domain (i,j):
+                #   "1" -> "i" (position 0)
+                #   "2" -> "j" (position 1)
+                # This ensures x(1) - x(2) becomes x(i) - x(j), not x(i) - x(i).
+                constraint_element_to_set = _build_constraint_element_mapping(
+                    element_to_set, eq_indices, mult_domain
+                )
+
+                # Replace indices in derivative expression using constraint-aware mapping
                 # Issue #620: Pass var_domain as equation_domain for subset substitution
                 indexed_deriv = _replace_indices_in_expr(
-                    derivative, var_domain, element_to_set, kkt.model_ir, equation_domain=var_domain
+                    derivative,
+                    var_domain,
+                    constraint_element_to_set,
+                    kkt.model_ir,
+                    equation_domain=var_domain,
                 )
 
                 # Get base multiplier name (without element suffixes)

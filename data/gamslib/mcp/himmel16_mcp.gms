@@ -94,8 +94,8 @@ Equations
 
 * Stationarity equations
 stat_area(i).. 0 + 1 * nu_areadef(i) + (-1) * nu_obj2 + 0 * nu_x_fx_1 + 0 * nu_y_fx_1 + 0 * nu_y_fx_2 + sum(j, 0 * lam_maxdist(i,j)) =E= 0;
-stat_x(i).. ((-1) * (0.5 * y(i))) + ((-1) * (0.5 * y(i))) * nu_areadef(i) + 0 * nu_obj2 + 1 * nu_x_fx_1 + 0 * nu_y_fx_1 + 0 * nu_y_fx_2 + sum(j, 2 * (x(i) - x(i)) * lam_maxdist(i,j)) =E= 0;
-stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) + ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + 0 * nu_obj2 + 0 * nu_x_fx_1 + 1 * nu_y_fx_1 + 0 * nu_y_fx_2 + sum(j, 2 * (y(i) - y(i)) * lam_maxdist(i,j)) =E= 0;
+stat_x(i).. ((-1) * (0.5 * y(i))) + ((-1) * (0.5 * y(i))) * nu_areadef(i) + 0 * nu_obj2 + 1 * nu_x_fx_1 + 0 * nu_y_fx_1 + 0 * nu_y_fx_2 + sum(j, 2 * (x(i) - x(j)) * lam_maxdist(i,j)) =E= 0;
+stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) + ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + 0 * nu_obj2 + 0 * nu_x_fx_1 + 1 * nu_y_fx_1 + 0 * nu_y_fx_2 + sum(j, 2 * (y(i) - y(j)) * lam_maxdist(i,j)) =E= 0;
 
 * Inequality complementarity equations
 comp_maxdist(i,j)$(ord(i) < ord(j)).. ((-1) * (sqr(x(i) - x(j)) + sqr(y(i) - y(j)) - 1)) =G= 0;

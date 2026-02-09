@@ -857,6 +857,147 @@ class TestStationarityIndexDisambiguation:
                 "c",
             ), f"Expected a(i,c) but got a{indices}. Parameter domain disambiguation failed."
 
+    def test_multi_index_constraint_same_set(self, manual_index_mapping):
+        """Test constraint with multiple indices from the same set (Issue #649).
+
+        Simulates the himmel16 model case where constraint maxdist(i,j) has both
+        indices from the same underlying set. The Jacobian derivative x(1) - x(2)
+        should become x(i) - x(j), not x(i) - x(i).
+
+        This tests the constraint-specific element-to-set mapping that maps elements
+        to their position in the constraint domain, not just to the variable domain.
+        """
+        from src.ir.symbols import SetDef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        # Set with elements "1", "2", "3" (like himmel16's point indices)
+        model.sets["i"] = SetDef(name="i", members=["1", "2", "3"])
+        # Alias j for i (like himmel16's Alias(i,j))
+        model.aliases["j"] = "i"
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ("i",))),
+        )
+
+        # Constraint maxdist(i,j) similar to himmel16:
+        # maxdist(i,j).. sqr(x(i) - x(j)) =l= 1
+        model.equations["maxdist"] = EquationDef(
+            name="maxdist",
+            domain=("i", "j"),
+            relation=Rel.LE,
+            lhs_rhs=(
+                Call("sqr", (Binary("-", VarRef("x", ("i",)), VarRef("x", ("j",))),)),
+                Const(1.0),
+            ),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=("i",))
+
+        model.equalities = ["objdef"]
+        model.inequalities = ["maxdist"]
+
+        # Set up index mapping with instances for x(i) and maxdist(i,j)
+        # x(1), x(2), x(3) and maxdist(1,2), maxdist(1,3), maxdist(2,3)
+        index_mapping = manual_index_mapping(
+            [("obj", ()), ("x", ("1",)), ("x", ("2",)), ("x", ("3",))],
+            [("objdef", ())],  # Only equality constraint for J_eq
+        )
+
+        # Create separate index mapping for inequalities
+        ineq_index_mapping = manual_index_mapping(
+            [("obj", ()), ("x", ("1",)), ("x", ("2",)), ("x", ("3",))],
+            [("maxdist", ("1", "2")), ("maxdist", ("1", "3")), ("maxdist", ("2", "3"))],
+        )
+
+        gradient = GradientVector(num_cols=4, index_mapping=index_mapping)
+        gradient.set_derivative(0, Const(1.0))  # ∂obj/∂obj
+        gradient.set_derivative(1, Const(1.0))  # ∂obj/∂x(1)
+        gradient.set_derivative(2, Const(1.0))  # ∂obj/∂x(2)
+        gradient.set_derivative(3, Const(1.0))  # ∂obj/∂x(3)
+
+        J_eq = JacobianStructure(num_rows=1, num_cols=4, index_mapping=index_mapping)
+        J_eq.set_derivative(0, 0, Const(1.0))  # ∂objdef/∂obj
+
+        # J_ineq: derivatives of maxdist(i,j) w.r.t. x(k)
+        # d(sqr(x(1)-x(2)))/dx(1) = 2*(x(1)-x(2))
+        # d(sqr(x(1)-x(2)))/dx(2) = -2*(x(1)-x(2)) = 2*(x(2)-x(1))
+        J_ineq = JacobianStructure(num_rows=3, num_cols=4, index_mapping=ineq_index_mapping)
+        # maxdist(1,2) row 0: derivatives w.r.t. x(1) and x(2)
+        J_ineq.set_derivative(
+            0, 1, Binary("*", Const(2.0), Binary("-", VarRef("x", ("1",)), VarRef("x", ("2",))))
+        )
+        J_ineq.set_derivative(
+            0, 2, Binary("*", Const(2.0), Binary("-", VarRef("x", ("2",)), VarRef("x", ("1",))))
+        )
+        # maxdist(1,3) row 1
+        J_ineq.set_derivative(
+            1, 1, Binary("*", Const(2.0), Binary("-", VarRef("x", ("1",)), VarRef("x", ("3",))))
+        )
+        J_ineq.set_derivative(
+            1, 3, Binary("*", Const(2.0), Binary("-", VarRef("x", ("3",)), VarRef("x", ("1",))))
+        )
+        # maxdist(2,3) row 2
+        J_ineq.set_derivative(
+            2, 2, Binary("*", Const(2.0), Binary("-", VarRef("x", ("2",)), VarRef("x", ("3",))))
+        )
+        J_ineq.set_derivative(
+            2, 3, Binary("*", Const(2.0), Binary("-", VarRef("x", ("3",)), VarRef("x", ("2",))))
+        )
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        kkt.multipliers_ineq["lam_maxdist"] = MultiplierDef(
+            name="lam_maxdist",
+            domain=("i", "j"),
+            kind="ineq",
+            associated_constraint="maxdist",
+        )
+
+        # Build stationarity
+        stationarity = build_stationarity_equations(kkt)
+
+        assert "stat_x" in stationarity
+        stat_eq = stationarity["stat_x"]
+
+        # Find all VarRefs to x in the stationarity equation
+        def find_var_refs(expr: Expr, var_name: str) -> list[VarRef]:
+            """Recursively find all VarRef nodes for a specific variable."""
+            refs = []
+            match expr:
+                case VarRef() if expr.name == var_name:
+                    refs.append(expr)
+                case Binary(_, left, right):
+                    refs.extend(find_var_refs(left, var_name))
+                    refs.extend(find_var_refs(right, var_name))
+                case Unary(_, child):
+                    refs.extend(find_var_refs(child, var_name))
+                case Call(_, args):
+                    for arg in args:
+                        refs.extend(find_var_refs(arg, var_name))
+                case Sum(_, body):
+                    refs.extend(find_var_refs(body, var_name))
+            return refs
+
+        lhs = stat_eq.lhs_rhs[0]
+        x_refs = find_var_refs(lhs, "x")
+
+        # Check that we have VarRefs to both x(i) and x(j), not just x(i)
+        indices_found = {ref.indices_as_strings() for ref in x_refs}
+
+        # The stationarity equation should contain x(i) - x(j) terms
+        # from the Jacobian transpose, so we expect both ("i",) and ("j",)
+        assert ("i",) in indices_found, f"Expected x(i) in stationarity, found {indices_found}"
+        assert ("j",) in indices_found, (
+            f"Expected x(j) in stationarity (not x(i)-x(i)), found {indices_found}. "
+            "Issue #649: constraint-specific element mapping may be broken."
+        )
+
 
 @pytest.mark.integration
 class TestStationaritySubsetSupersetIndex:
