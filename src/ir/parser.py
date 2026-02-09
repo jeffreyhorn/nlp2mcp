@@ -2037,8 +2037,9 @@ class _ModelBuilder:
             all_row_headers.add(row_header)
 
         # Also collect row headers from lines (to handle completely empty rows)
+        # Row labels can be ID or NUMBER tokens (e.g., "1", "2" in table rows)
         for _line_num, line_tokens in sorted_lines[1:]:
-            if line_tokens and line_tokens[0].type == "ID":
+            if line_tokens and line_tokens[0].type in ("ID", "NUMBER"):
                 # First token is row header
                 row_header = _token_text(line_tokens[0])
                 all_row_headers.add(row_header)

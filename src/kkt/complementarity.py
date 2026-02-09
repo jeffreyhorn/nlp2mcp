@@ -109,9 +109,12 @@ def build_complementarity_pairs(
         lam_name = create_ineq_multiplier_name(eq_name)
 
         # Create complementarity equation
+        # Propagate original condition ($-filter) to preserve domain restrictions
+        # like $(ord(i) < ord(j)) from the original inequality
         comp_eq = EquationDef(
             name=f"comp_{eq_name}",
             domain=eq_def.domain,
+            condition=eq_def.condition,
             relation=Rel.GE,
             lhs_rhs=(F_lam, Const(0.0)),
         )

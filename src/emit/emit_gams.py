@@ -214,8 +214,9 @@ def emit_gams_mcp(
                 "* Variables appearing in denominators (from log, 1/x derivatives) need"
             )
             sections.append(
-                "* non-zero initial values. POSITIVE variables are set to min(max(value, 1), upper_bound)."
+                "* non-zero initial values. POSITIVE variables with explicit .l values are"
             )
+            sections.append("* clamped to min(max(value, 1), upper_bound). Others are set to 1.")
             sections.append("")
         sections.extend(init_lines)
         sections.append("")
