@@ -24,38 +24,37 @@ Sets
 Parameters
     k(j) /non-traded 3.0, traded 4.5/
     delt(t)
-    vb(j)
+    vb(j) /non-traded 37.38/
     e(t)
 ;
 
 Scalars
-    fbb /0.0/
-    sb /0.0/
-    tib /0.0/
-    mb /0.0/
-    eb /0.0/
-    gnpb /0.0/
-    cb /0.0/
-    rho /0.0/
-    r /0.0/
-    g /0.0/
-    gama /0.0/
-    d /0.0/
-    alpha /0.0/
-    mgnp /0.0/
-    mi /0.0/
-    p /0.0/
-    beta /0.0/
-    ee /0.0/
-    q /0.0/
-    num /0.0/
+    fbb /1.183/
+    sb /3.381/
+    tib /4.564/
+    mb /3.743/
+    eb /2.559/
+    gnpb /37.38/
+    cb /33.999/
+    rho /0.08/
+    r /0.1/
+    g /0.073/
+    gama /2.0/
+    d /1.0/
+    alpha /0.24/
+    mgnp /0.1/
+    mi /0.35/
+    p /0.025/
+    beta /0.13/
+    ee /0.049/
+    q /0.5/
+    num /4.0/
     dis /0.0/
     rep /0.0/
 ;
 
 delt(t) = (1 + rho) ** ((-1) * (ord(t)));
 dis = (1 + r) ** ((-1) * (card(t))) * (1 - alpha) * (1 + g) / (r - g);
-vb("non-traded") = gnpb;
 e(t) = eb * (1 + ee) ** ord(t);
 
 * ============================================
@@ -85,9 +84,11 @@ Variables
     nu_incd(t)
     nu_kbal(te,j)
     nu_taid
+    nu_i_fx_1962_non_traded_683f00ae
     nu_i_fx_1962_traded
-    nu_ks_fx_1962_non-traded
+    nu_ks_fx_1962_non_traded_683f00ae
     nu_ks_fx_1962_traded
+    nu_c_fx_1962
 ;
 
 Positive Variables
@@ -102,6 +103,19 @@ Positive Variables
     lam_conl(te)
     lam_fup(t)
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values. POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+
+v.l(t,j) = 1;
+i.l(te,j) = 1;
+s.l(t) = 1;
 
 * ============================================
 * Equations
@@ -129,13 +143,15 @@ Equations
     comp_invl(te)
     comp_invu(te)
     comp_savl(t)
+    c_fx_1962
     gnpd(t)
+    i_fx_1962_non_traded_683f00ae
     i_fx_1962_traded
     incd(t)
     invd(t)
     invt(te)
     kbal(te,j)
-    ks_fx_1962_non-traded
+    ks_fx_1962_non_traded_683f00ae
     ks_fx_1962_traded
     taid
     tgap(t)
@@ -147,25 +163,25 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_c(te).. ((-1) * sum(t, 0)) + sum(t, ((-1) * sum(j, 0)) * nu_gnpd(t)) + sum(t, 0 * nu_invd(t)) + ((-1) * sum(j, 0)) * nu_invt(te) + sum(t, 0 * nu_tgap(t)) + sum(t, 0 * nu_incd(t)) + sum(j, 0 * nu_kbal(te,j)) + ((-1) * sum(t, 0)) * nu_taid + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non-traded + 0 * nu_ks_fx_1962_traded + sum((t,j), 0 * lam_capb(t,j)) + sum(t, 0 * lam_savl(t)) + sum(t, 0 * lam_impl(t)) + 0 * lam_invu(te) + 0 * lam_invl(te) + (1 + p) * lam_conl(te) + sum(t, 0 * lam_fup(t)) =E= 0;
-stat_f(t).. 0 + ((-1) * sum(j, 0)) * nu_gnpd(t) + (-1) * nu_invd(t) + sum(te, ((-1) * sum(j, 0)) * nu_invt(te)) + 1 * nu_tgap(t) + 1 * nu_incd(t) + sum((te,j), 0 * nu_kbal(te,j)) + ((-1) * delt(t)) * nu_taid + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non-traded + 0 * nu_ks_fx_1962_traded + sum(j, 0 * lam_capb(t,j)) + 0 * lam_savl(t) + 0 * lam_impl(t) + sum(te, 0 * lam_invu(te)) + sum(te, 0 * lam_invl(te)) + sum(te, 0 * lam_conl(te)) + 1 * lam_fup(t) =E= 0;
-stat_fb.. ((-1) * (sum(t, 0) - gama)) + ((-1) * sum(j, 0)) * nu_gnpd("1963") + ((-1) * sum(j, 0)) * nu_gnpd("1964") + ((-1) * sum(j, 0)) * nu_gnpd("1965") + ((-1) * sum(j, 0)) * nu_gnpd("1966") + ((-1) * sum(j, 0)) * nu_gnpd("1967") + ((-1) * sum(j, 0)) * nu_gnpd("1968") + ((-1) * sum(j, 0)) * nu_gnpd("1969") + ((-1) * sum(j, 0)) * nu_gnpd("1970") + ((-1) * sum(j, 0)) * nu_gnpd("1971") + ((-1) * sum(j, 0)) * nu_gnpd("1972") + ((-1) * sum(j, 0)) * nu_gnpd("1973") + ((-1) * sum(j, 0)) * nu_gnpd("1974") + ((-1) * sum(j, 0)) * nu_gnpd("1975") + ((-1) * sum(j, 0)) * nu_gnpd("1976") + ((-1) * sum(j, 0)) * nu_gnpd("1977") + ((-1) * sum(j, 0)) * nu_gnpd("1978") + ((-1) * sum(j, 0)) * nu_gnpd("1979") + ((-1) * sum(j, 0)) * nu_gnpd("1980") + ((-1) * sum(j, 0)) * nu_gnpd("1981") + ((-1) * sum(j, 0)) * nu_gnpd("1982") + ((-1) * sum(j, 0)) * nu_gnpd("1983") + ((-1) * sum(j, 0)) * nu_gnpd("1984") + ((-1) * sum(j, 0)) * nu_gnpd("1985") + 0 * nu_invd("1963") + 0 * nu_invd("1964") + 0 * nu_invd("1965") + 0 * nu_invd("1966") + 0 * nu_invd("1967") + 0 * nu_invd("1968") + 0 * nu_invd("1969") + 0 * nu_invd("1970") + 0 * nu_invd("1971") + 0 * nu_invd("1972") + 0 * nu_invd("1973") + 0 * nu_invd("1974") + 0 * nu_invd("1975") + 0 * nu_invd("1976") + 0 * nu_invd("1977") + 0 * nu_invd("1978") + 0 * nu_invd("1979") + 0 * nu_invd("1980") + 0 * nu_invd("1981") + 0 * nu_invd("1982") + 0 * nu_invd("1983") + 0 * nu_invd("1984") + 0 * nu_invd("1985") + ((-1) * sum(j, 0)) * nu_invt("1962") + ((-1) * sum(j, 0)) * nu_invt("1963") + ((-1) * sum(j, 0)) * nu_invt("1964") + ((-1) * sum(j, 0)) * nu_invt("1965") + ((-1) * sum(j, 0)) * nu_invt("1966") + ((-1) * sum(j, 0)) * nu_invt("1967") + ((-1) * sum(j, 0)) * nu_invt("1968") + ((-1) * sum(j, 0)) * nu_invt("1969") + ((-1) * sum(j, 0)) * nu_invt("1970") + ((-1) * sum(j, 0)) * nu_invt("1971") + ((-1) * sum(j, 0)) * nu_invt("1972") + ((-1) * sum(j, 0)) * nu_invt("1973") + ((-1) * sum(j, 0)) * nu_invt("1974") + ((-1) * sum(j, 0)) * nu_invt("1975") + ((-1) * sum(j, 0)) * nu_invt("1976") + ((-1) * sum(j, 0)) * nu_invt("1977") + ((-1) * sum(j, 0)) * nu_invt("1978") + ((-1) * sum(j, 0)) * nu_invt("1979") + ((-1) * sum(j, 0)) * nu_invt("1980") + ((-1) * sum(j, 0)) * nu_invt("1981") + ((-1) * sum(j, 0)) * nu_invt("1982") + ((-1) * sum(j, 0)) * nu_invt("1983") + ((-1) * sum(j, 0)) * nu_invt("1984") + ((-1) * sum(j, 0)) * nu_invt("1985") + 0 * nu_tgap("1963") + 0 * nu_tgap("1964") + 0 * nu_tgap("1965") + 0 * nu_tgap("1966") + 0 * nu_tgap("1967") + 0 * nu_tgap("1968") + 0 * nu_tgap("1969") + 0 * nu_tgap("1970") + 0 * nu_tgap("1971") + 0 * nu_tgap("1972") + 0 * nu_tgap("1973") + 0 * nu_tgap("1974") + 0 * nu_tgap("1975") + 0 * nu_tgap("1976") + 0 * nu_tgap("1977") + 0 * nu_tgap("1978") + 0 * nu_tgap("1979") + 0 * nu_tgap("1980") + 0 * nu_tgap("1981") + 0 * nu_tgap("1982") + 0 * nu_tgap("1983") + 0 * nu_tgap("1984") + 0 * nu_tgap("1985") + 0 * nu_incd("1963") + 0 * nu_incd("1964") + 0 * nu_incd("1965") + 0 * nu_incd("1966") + 0 * nu_incd("1967") + 0 * nu_incd("1968") + 0 * nu_incd("1969") + 0 * nu_incd("1970") + 0 * nu_incd("1971") + 0 * nu_incd("1972") + 0 * nu_incd("1973") + 0 * nu_incd("1974") + 0 * nu_incd("1975") + 0 * nu_incd("1976") + 0 * nu_incd("1977") + 0 * nu_incd("1978") + 0 * nu_incd("1979") + 0 * nu_incd("1980") + 0 * nu_incd("1981") + 0 * nu_incd("1982") + 0 * nu_incd("1983") + 0 * nu_incd("1984") + 0 * nu_incd("1985") + 0 * nu_kbal("1962","non-traded") + 0 * nu_kbal("1962","traded") + 0 * nu_kbal("1963","non-traded") + 0 * nu_kbal("1963","traded") + 0 * nu_kbal("1964","non-traded") + 0 * nu_kbal("1964","traded") + 0 * nu_kbal("1965","non-traded") + 0 * nu_kbal("1965","traded") + 0 * nu_kbal("1966","non-traded") + 0 * nu_kbal("1966","traded") + 0 * nu_kbal("1967","non-traded") + 0 * nu_kbal("1967","traded") + 0 * nu_kbal("1968","non-traded") + 0 * nu_kbal("1968","traded") + 0 * nu_kbal("1969","non-traded") + 0 * nu_kbal("1969","traded") + 0 * nu_kbal("1970","non-traded") + 0 * nu_kbal("1970","traded") + 0 * nu_kbal("1971","non-traded") + 0 * nu_kbal("1971","traded") + 0 * nu_kbal("1972","non-traded") + 0 * nu_kbal("1972","traded") + 0 * nu_kbal("1973","non-traded") + 0 * nu_kbal("1973","traded") + 0 * nu_kbal("1974","non-traded") + 0 * nu_kbal("1974","traded") + 0 * nu_kbal("1975","non-traded") + 0 * nu_kbal("1975","traded") + 0 * nu_kbal("1976","non-traded") + 0 * nu_kbal("1976","traded") + 0 * nu_kbal("1977","non-traded") + 0 * nu_kbal("1977","traded") + 0 * nu_kbal("1978","non-traded") + 0 * nu_kbal("1978","traded") + 0 * nu_kbal("1979","non-traded") + 0 * nu_kbal("1979","traded") + 0 * nu_kbal("1980","non-traded") + 0 * nu_kbal("1980","traded") + 0 * nu_kbal("1981","non-traded") + 0 * nu_kbal("1981","traded") + 0 * nu_kbal("1982","non-traded") + 0 * nu_kbal("1982","traded") + 0 * nu_kbal("1983","non-traded") + 0 * nu_kbal("1983","traded") + 0 * nu_kbal("1984","non-traded") + 0 * nu_kbal("1984","traded") + 0 * nu_kbal("1985","non-traded") + 0 * nu_kbal("1985","traded") + (1 - sum(t, 0)) * nu_taid + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non-traded + 0 * nu_ks_fx_1962_traded - 0 * lam_capb("1963","non-traded") - 0 * lam_capb("1963","traded") - 0 * lam_capb("1964","non-traded") - 0 * lam_capb("1964","traded") - 0 * lam_capb("1965","non-traded") - 0 * lam_capb("1965","traded") - 0 * lam_capb("1966","non-traded") - 0 * lam_capb("1966","traded") - 0 * lam_capb("1967","non-traded") - 0 * lam_capb("1967","traded") - 0 * lam_capb("1968","non-traded") - 0 * lam_capb("1968","traded") - 0 * lam_capb("1969","non-traded") - 0 * lam_capb("1969","traded") - 0 * lam_capb("1970","non-traded") - 0 * lam_capb("1970","traded") - 0 * lam_capb("1971","non-traded") - 0 * lam_capb("1971","traded") - 0 * lam_capb("1972","non-traded") - 0 * lam_capb("1972","traded") - 0 * lam_capb("1973","non-traded") - 0 * lam_capb("1973","traded") - 0 * lam_capb("1974","non-traded") - 0 * lam_capb("1974","traded") - 0 * lam_capb("1975","non-traded") - 0 * lam_capb("1975","traded") - 0 * lam_capb("1976","non-traded") - 0 * lam_capb("1976","traded") - 0 * lam_capb("1977","non-traded") - 0 * lam_capb("1977","traded") - 0 * lam_capb("1978","non-traded") - 0 * lam_capb("1978","traded") - 0 * lam_capb("1979","non-traded") - 0 * lam_capb("1979","traded") - 0 * lam_capb("1980","non-traded") - 0 * lam_capb("1980","traded") - 0 * lam_capb("1981","non-traded") - 0 * lam_capb("1981","traded") - 0 * lam_capb("1982","non-traded") - 0 * lam_capb("1982","traded") - 0 * lam_capb("1983","non-traded") - 0 * lam_capb("1983","traded") - 0 * lam_capb("1984","non-traded") - 0 * lam_capb("1984","traded") - 0 * lam_capb("1985","non-traded") - 0 * lam_capb("1985","traded") - 0 * lam_savl("1963") - 0 * lam_savl("1964") - 0 * lam_savl("1965") - 0 * lam_savl("1966") - 0 * lam_savl("1967") - 0 * lam_savl("1968") - 0 * lam_savl("1969") - 0 * lam_savl("1970") - 0 * lam_savl("1971") - 0 * lam_savl("1972") - 0 * lam_savl("1973") - 0 * lam_savl("1974") - 0 * lam_savl("1975") - 0 * lam_savl("1976") - 0 * lam_savl("1977") - 0 * lam_savl("1978") - 0 * lam_savl("1979") - 0 * lam_savl("1980") - 0 * lam_savl("1981") - 0 * lam_savl("1982") - 0 * lam_savl("1983") - 0 * lam_savl("1984") - 0 * lam_savl("1985") + 0 * lam_impl("1963") + 0 * lam_impl("1964") + 0 * lam_impl("1965") + 0 * lam_impl("1966") + 0 * lam_impl("1967") + 0 * lam_impl("1968") + 0 * lam_impl("1969") + 0 * lam_impl("1970") + 0 * lam_impl("1971") + 0 * lam_impl("1972") + 0 * lam_impl("1973") + 0 * lam_impl("1974") + 0 * lam_impl("1975") + 0 * lam_impl("1976") + 0 * lam_impl("1977") + 0 * lam_impl("1978") + 0 * lam_impl("1979") + 0 * lam_impl("1980") + 0 * lam_impl("1981") + 0 * lam_impl("1982") + 0 * lam_impl("1983") + 0 * lam_impl("1984") + 0 * lam_impl("1985") - 0 * lam_invu("1962") - 0 * lam_invu("1963") - 0 * lam_invu("1964") - 0 * lam_invu("1965") - 0 * lam_invu("1966") - 0 * lam_invu("1967") - 0 * lam_invu("1968") - 0 * lam_invu("1969") - 0 * lam_invu("1970") - 0 * lam_invu("1971") - 0 * lam_invu("1972") - 0 * lam_invu("1973") - 0 * lam_invu("1974") - 0 * lam_invu("1975") - 0 * lam_invu("1976") - 0 * lam_invu("1977") - 0 * lam_invu("1978") - 0 * lam_invu("1979") - 0 * lam_invu("1980") - 0 * lam_invu("1981") - 0 * lam_invu("1982") - 0 * lam_invu("1983") - 0 * lam_invu("1984") - 0 * lam_invu("1985") + 0 * lam_invl("1962") + 0 * lam_invl("1963") + 0 * lam_invl("1964") + 0 * lam_invl("1965") + 0 * lam_invl("1966") + 0 * lam_invl("1967") + 0 * lam_invl("1968") + 0 * lam_invl("1969") + 0 * lam_invl("1970") + 0 * lam_invl("1971") + 0 * lam_invl("1972") + 0 * lam_invl("1973") + 0 * lam_invl("1974") + 0 * lam_invl("1975") + 0 * lam_invl("1976") + 0 * lam_invl("1977") + 0 * lam_invl("1978") + 0 * lam_invl("1979") + 0 * lam_invl("1980") + 0 * lam_invl("1981") + 0 * lam_invl("1982") + 0 * lam_invl("1983") + 0 * lam_invl("1984") + 0 * lam_invl("1985") + 0 * lam_conl("1962") + 0 * lam_conl("1963") + 0 * lam_conl("1964") + 0 * lam_conl("1965") + 0 * lam_conl("1966") + 0 * lam_conl("1967") + 0 * lam_conl("1968") + 0 * lam_conl("1969") + 0 * lam_conl("1970") + 0 * lam_conl("1971") + 0 * lam_conl("1972") + 0 * lam_conl("1973") + 0 * lam_conl("1974") + 0 * lam_conl("1975") + 0 * lam_conl("1976") + 0 * lam_conl("1977") + 0 * lam_conl("1978") + 0 * lam_conl("1979") + 0 * lam_conl("1980") + 0 * lam_conl("1981") + 0 * lam_conl("1982") + 0 * lam_conl("1983") + 0 * lam_conl("1984") + 0 * lam_conl("1985") - 0 * lam_fup("1963") - 0 * lam_fup("1964") - 0 * lam_fup("1965") - 0 * lam_fup("1966") - 0 * lam_fup("1967") - 0 * lam_fup("1968") - 0 * lam_fup("1969") - 0 * lam_fup("1970") - 0 * lam_fup("1971") - 0 * lam_fup("1972") - 0 * lam_fup("1973") - 0 * lam_fup("1974") - 0 * lam_fup("1975") - 0 * lam_fup("1976") - 0 * lam_fup("1977") - 0 * lam_fup("1978") - 0 * lam_fup("1979") - 0 * lam_fup("1980") - 0 * lam_fup("1981") - 0 * lam_fup("1982") - 0 * lam_fup("1983") - 0 * lam_fup("1984") - 0 * lam_fup("1985") =E= 0;
-stat_gnp(t).. 0 + (1 - sum(j, 0)) * nu_gnpd(t) + 0 * nu_invd(t) + sum(te, ((-1) * sum(j, 0)) * nu_invt(te)) + 0 * nu_tgap(t) + 1 * nu_incd(t) + sum((te,j), 0 * nu_kbal(te,j)) + 0 * nu_taid + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non-traded + 0 * nu_ks_fx_1962_traded + sum(j, 0 * lam_capb(t,j)) + ((-1) * alpha) * lam_savl(t) + mgnp * lam_impl(t) + sum(te, 0 * lam_invu(te)) + sum(te, 0 * lam_invl(te)) + sum(te, 0 * lam_conl(te)) + ((-1) * q) * lam_fup(t) =E= 0;
-stat_i(te,j).. ((-1) * sum(t, 0)) + sum(t, 0 * nu_gnpd(t)) + sum(t, 0 * nu_invd(t)) + (-1) * nu_invt(te) + sum(t, 0 * nu_tgap(t)) + sum(t, 0 * nu_incd(t)) + (-1) * nu_kbal(te,j) + ((-1) * sum(t, 0)) * nu_taid + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non-traded + 0 * nu_ks_fx_1962_traded + sum(t, 0 * lam_capb(t,j)) + sum(t, 0 * lam_savl(t)) + sum(t, 0 * lam_impl(t)) + 0 * lam_invu(te) + 0 * lam_invl(te) + 0 * lam_conl(te) + sum(t, 0 * lam_fup(t)) =E= 0;
-stat_ks(te,j).. ((-1) * sum(t, 0)) + sum(t, 0 * nu_gnpd(t)) + sum(t, 0 * nu_invd(t)) + 0 * nu_invt(te) + sum(t, 0 * nu_tgap(t)) + sum(t, 0 * nu_incd(t)) + (-1) * nu_kbal(te,j) + ((-1) * sum(t, 0)) * nu_taid + 0 * nu_i_fx_1962_traded + 1 * nu_ks_fx_1962_non-traded + 0 * nu_ks_fx_1962_traded + sum(t, 0 * lam_capb(t,j)) + sum(t, 0 * lam_savl(t)) + sum(t, 0 * lam_impl(t)) + 0 * lam_invu(te) + 0 * lam_invl(te) + 0 * lam_conl(te) + sum(t, 0 * lam_fup(t)) =E= 0;
-stat_m(t).. 0 + ((-1) * sum(j, 0)) * nu_gnpd(t) + 0 * nu_invd(t) + sum(te, ((-1) * sum(j, 0)) * nu_invt(te)) + (-1) * nu_tgap(t) + 0 * nu_incd(t) + sum((te,j), 0 * nu_kbal(te,j)) + 0 * nu_taid + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non-traded + 0 * nu_ks_fx_1962_traded + sum(j, 0 * lam_capb(t,j)) + 0 * lam_savl(t) + (-1) * lam_impl(t) + sum(te, 0 * lam_invu(te)) + sum(te, 0 * lam_invl(te)) + sum(te, 0 * lam_conl(te)) + 0 * lam_fup(t) =E= 0;
-stat_s(t).. 0 + ((-1) * sum(j, 0)) * nu_gnpd(t) + (-1) * nu_invd(t) + sum(te, ((-1) * sum(j, 0)) * nu_invt(te)) + 0 * nu_tgap(t) + 0 * nu_incd(t) + sum((te,j), 0 * nu_kbal(te,j)) + 0 * nu_taid + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non-traded + 0 * nu_ks_fx_1962_traded + sum(j, 0 * lam_capb(t,j)) + 1 * lam_savl(t) + 0 * lam_impl(t) + sum(te, 0 * lam_invu(te)) + sum(te, 0 * lam_invl(te)) + sum(te, 0 * lam_conl(te)) + 0 * lam_fup(t) =E= 0;
-stat_ti(te).. ((-1) * sum(t, 0)) + sum(t, ((-1) * sum(j, 0)) * nu_gnpd(t)) + sum(t, 0 * nu_invd(t)) + (1 - sum(j, 0)) * nu_invt(te) + sum(t, 0 * nu_tgap(t)) + sum(t, 0 * nu_incd(t)) + sum(j, 0 * nu_kbal(te,j)) + ((-1) * sum(t, 0)) * nu_taid + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non-traded + 0 * nu_ks_fx_1962_traded + sum((t,j), 0 * lam_capb(t,j)) + sum(t, 0 * lam_savl(t)) + sum(t, 0 * lam_impl(t)) + ((-1) * (1 + beta)) * lam_invu(te) + 1 * lam_invl(te) + 0 * lam_conl(te) + sum(t, 0 * lam_fup(t)) =E= 0;
-stat_v(t,j).. 0 + (-1) * nu_gnpd(t) + 0 * nu_invd(t) + sum(te, 0 * nu_invt(te)) + 0 * nu_tgap(t) + 0 * nu_incd(t) + sum(te, 0 * nu_kbal(te,j)) + 0 * nu_taid + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non-traded + 0 * nu_ks_fx_1962_traded + 1 * lam_capb(t,j) + 0 * lam_savl(t) + 0 * lam_impl(t) + sum(te, 0 * lam_invu(te)) + sum(te, 0 * lam_invl(te)) + sum(te, 0 * lam_conl(te)) + 0 * lam_fup(t) =E= 0;
+stat_c(te).. ((-1) * sum(t, 0)) + sum(t, ((-1) * sum(j, 0)) * nu_gnpd(t)) + sum(t, 0 * nu_invd(t)) + ((-1) * sum(j, 0)) * nu_invt(te) + sum(t, 0 * nu_tgap(t)) + sum(t, 0 * nu_incd(t)) + sum(j, 0 * nu_kbal(te,j)) + ((-1) * sum(t, 0)) * nu_taid + 0 * nu_i_fx_1962_non_traded_683f00ae + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non_traded_683f00ae + 0 * nu_ks_fx_1962_traded + 1 * nu_c_fx_1962 + sum((t,j), 0 * lam_capb(t,j)) + sum(t, 0 * lam_savl(t)) + sum(t, 0 * lam_impl(t)) + 0 * lam_invu(te) + 0 * lam_invl(te) + (1 + p) * lam_conl(te) + sum(t, 0 * lam_fup(t)) =E= 0;
+stat_f(t).. 0 + ((-1) * sum(j, 0)) * nu_gnpd(t) + (-1) * nu_invd(t) + sum(te, ((-1) * sum(j, 0)) * nu_invt(te)) + 1 * nu_tgap(t) + 1 * nu_incd(t) + sum((te,j), 0 * nu_kbal(te,j)) + ((-1) * delt(t)) * nu_taid + 0 * nu_i_fx_1962_non_traded_683f00ae + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non_traded_683f00ae + 0 * nu_ks_fx_1962_traded + 0 * nu_c_fx_1962 + sum(j, 0 * lam_capb(t,j)) + 0 * lam_savl(t) + 0 * lam_impl(t) + sum(te, 0 * lam_invu(te)) + sum(te, 0 * lam_invl(te)) + sum(te, 0 * lam_conl(te)) + 1 * lam_fup(t) =E= 0;
+stat_fb.. ((-1) * (sum(t, 0) - gama)) + ((-1) * sum(j, 0)) * nu_gnpd("1963") + ((-1) * sum(j, 0)) * nu_gnpd("1964") + ((-1) * sum(j, 0)) * nu_gnpd("1965") + ((-1) * sum(j, 0)) * nu_gnpd("1966") + ((-1) * sum(j, 0)) * nu_gnpd("1967") + ((-1) * sum(j, 0)) * nu_gnpd("1968") + ((-1) * sum(j, 0)) * nu_gnpd("1969") + ((-1) * sum(j, 0)) * nu_gnpd("1970") + ((-1) * sum(j, 0)) * nu_gnpd("1971") + ((-1) * sum(j, 0)) * nu_gnpd("1972") + ((-1) * sum(j, 0)) * nu_gnpd("1973") + ((-1) * sum(j, 0)) * nu_gnpd("1974") + ((-1) * sum(j, 0)) * nu_gnpd("1975") + ((-1) * sum(j, 0)) * nu_gnpd("1976") + ((-1) * sum(j, 0)) * nu_gnpd("1977") + ((-1) * sum(j, 0)) * nu_gnpd("1978") + ((-1) * sum(j, 0)) * nu_gnpd("1979") + ((-1) * sum(j, 0)) * nu_gnpd("1980") + ((-1) * sum(j, 0)) * nu_gnpd("1981") + ((-1) * sum(j, 0)) * nu_gnpd("1982") + ((-1) * sum(j, 0)) * nu_gnpd("1983") + ((-1) * sum(j, 0)) * nu_gnpd("1984") + ((-1) * sum(j, 0)) * nu_gnpd("1985") + 0 * nu_invd("1963") + 0 * nu_invd("1964") + 0 * nu_invd("1965") + 0 * nu_invd("1966") + 0 * nu_invd("1967") + 0 * nu_invd("1968") + 0 * nu_invd("1969") + 0 * nu_invd("1970") + 0 * nu_invd("1971") + 0 * nu_invd("1972") + 0 * nu_invd("1973") + 0 * nu_invd("1974") + 0 * nu_invd("1975") + 0 * nu_invd("1976") + 0 * nu_invd("1977") + 0 * nu_invd("1978") + 0 * nu_invd("1979") + 0 * nu_invd("1980") + 0 * nu_invd("1981") + 0 * nu_invd("1982") + 0 * nu_invd("1983") + 0 * nu_invd("1984") + 0 * nu_invd("1985") + ((-1) * sum(j, 0)) * nu_invt("1962") + ((-1) * sum(j, 0)) * nu_invt("1963") + ((-1) * sum(j, 0)) * nu_invt("1964") + ((-1) * sum(j, 0)) * nu_invt("1965") + ((-1) * sum(j, 0)) * nu_invt("1966") + ((-1) * sum(j, 0)) * nu_invt("1967") + ((-1) * sum(j, 0)) * nu_invt("1968") + ((-1) * sum(j, 0)) * nu_invt("1969") + ((-1) * sum(j, 0)) * nu_invt("1970") + ((-1) * sum(j, 0)) * nu_invt("1971") + ((-1) * sum(j, 0)) * nu_invt("1972") + ((-1) * sum(j, 0)) * nu_invt("1973") + ((-1) * sum(j, 0)) * nu_invt("1974") + ((-1) * sum(j, 0)) * nu_invt("1975") + ((-1) * sum(j, 0)) * nu_invt("1976") + ((-1) * sum(j, 0)) * nu_invt("1977") + ((-1) * sum(j, 0)) * nu_invt("1978") + ((-1) * sum(j, 0)) * nu_invt("1979") + ((-1) * sum(j, 0)) * nu_invt("1980") + ((-1) * sum(j, 0)) * nu_invt("1981") + ((-1) * sum(j, 0)) * nu_invt("1982") + ((-1) * sum(j, 0)) * nu_invt("1983") + ((-1) * sum(j, 0)) * nu_invt("1984") + ((-1) * sum(j, 0)) * nu_invt("1985") + 0 * nu_tgap("1963") + 0 * nu_tgap("1964") + 0 * nu_tgap("1965") + 0 * nu_tgap("1966") + 0 * nu_tgap("1967") + 0 * nu_tgap("1968") + 0 * nu_tgap("1969") + 0 * nu_tgap("1970") + 0 * nu_tgap("1971") + 0 * nu_tgap("1972") + 0 * nu_tgap("1973") + 0 * nu_tgap("1974") + 0 * nu_tgap("1975") + 0 * nu_tgap("1976") + 0 * nu_tgap("1977") + 0 * nu_tgap("1978") + 0 * nu_tgap("1979") + 0 * nu_tgap("1980") + 0 * nu_tgap("1981") + 0 * nu_tgap("1982") + 0 * nu_tgap("1983") + 0 * nu_tgap("1984") + 0 * nu_tgap("1985") + 0 * nu_incd("1963") + 0 * nu_incd("1964") + 0 * nu_incd("1965") + 0 * nu_incd("1966") + 0 * nu_incd("1967") + 0 * nu_incd("1968") + 0 * nu_incd("1969") + 0 * nu_incd("1970") + 0 * nu_incd("1971") + 0 * nu_incd("1972") + 0 * nu_incd("1973") + 0 * nu_incd("1974") + 0 * nu_incd("1975") + 0 * nu_incd("1976") + 0 * nu_incd("1977") + 0 * nu_incd("1978") + 0 * nu_incd("1979") + 0 * nu_incd("1980") + 0 * nu_incd("1981") + 0 * nu_incd("1982") + 0 * nu_incd("1983") + 0 * nu_incd("1984") + 0 * nu_incd("1985") + 0 * nu_kbal("1962","non-traded") + 0 * nu_kbal("1962","traded") + 0 * nu_kbal("1963","non-traded") + 0 * nu_kbal("1963","traded") + 0 * nu_kbal("1964","non-traded") + 0 * nu_kbal("1964","traded") + 0 * nu_kbal("1965","non-traded") + 0 * nu_kbal("1965","traded") + 0 * nu_kbal("1966","non-traded") + 0 * nu_kbal("1966","traded") + 0 * nu_kbal("1967","non-traded") + 0 * nu_kbal("1967","traded") + 0 * nu_kbal("1968","non-traded") + 0 * nu_kbal("1968","traded") + 0 * nu_kbal("1969","non-traded") + 0 * nu_kbal("1969","traded") + 0 * nu_kbal("1970","non-traded") + 0 * nu_kbal("1970","traded") + 0 * nu_kbal("1971","non-traded") + 0 * nu_kbal("1971","traded") + 0 * nu_kbal("1972","non-traded") + 0 * nu_kbal("1972","traded") + 0 * nu_kbal("1973","non-traded") + 0 * nu_kbal("1973","traded") + 0 * nu_kbal("1974","non-traded") + 0 * nu_kbal("1974","traded") + 0 * nu_kbal("1975","non-traded") + 0 * nu_kbal("1975","traded") + 0 * nu_kbal("1976","non-traded") + 0 * nu_kbal("1976","traded") + 0 * nu_kbal("1977","non-traded") + 0 * nu_kbal("1977","traded") + 0 * nu_kbal("1978","non-traded") + 0 * nu_kbal("1978","traded") + 0 * nu_kbal("1979","non-traded") + 0 * nu_kbal("1979","traded") + 0 * nu_kbal("1980","non-traded") + 0 * nu_kbal("1980","traded") + 0 * nu_kbal("1981","non-traded") + 0 * nu_kbal("1981","traded") + 0 * nu_kbal("1982","non-traded") + 0 * nu_kbal("1982","traded") + 0 * nu_kbal("1983","non-traded") + 0 * nu_kbal("1983","traded") + 0 * nu_kbal("1984","non-traded") + 0 * nu_kbal("1984","traded") + 0 * nu_kbal("1985","non-traded") + 0 * nu_kbal("1985","traded") + (1 - sum(t, 0)) * nu_taid + 0 * nu_i_fx_1962_non_traded_683f00ae + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non_traded_683f00ae + 0 * nu_ks_fx_1962_traded + 0 * nu_c_fx_1962 - 0 * lam_capb("1963","non-traded") - 0 * lam_capb("1963","traded") - 0 * lam_capb("1964","non-traded") - 0 * lam_capb("1964","traded") - 0 * lam_capb("1965","non-traded") - 0 * lam_capb("1965","traded") - 0 * lam_capb("1966","non-traded") - 0 * lam_capb("1966","traded") - 0 * lam_capb("1967","non-traded") - 0 * lam_capb("1967","traded") - 0 * lam_capb("1968","non-traded") - 0 * lam_capb("1968","traded") - 0 * lam_capb("1969","non-traded") - 0 * lam_capb("1969","traded") - 0 * lam_capb("1970","non-traded") - 0 * lam_capb("1970","traded") - 0 * lam_capb("1971","non-traded") - 0 * lam_capb("1971","traded") - 0 * lam_capb("1972","non-traded") - 0 * lam_capb("1972","traded") - 0 * lam_capb("1973","non-traded") - 0 * lam_capb("1973","traded") - 0 * lam_capb("1974","non-traded") - 0 * lam_capb("1974","traded") - 0 * lam_capb("1975","non-traded") - 0 * lam_capb("1975","traded") - 0 * lam_capb("1976","non-traded") - 0 * lam_capb("1976","traded") - 0 * lam_capb("1977","non-traded") - 0 * lam_capb("1977","traded") - 0 * lam_capb("1978","non-traded") - 0 * lam_capb("1978","traded") - 0 * lam_capb("1979","non-traded") - 0 * lam_capb("1979","traded") - 0 * lam_capb("1980","non-traded") - 0 * lam_capb("1980","traded") - 0 * lam_capb("1981","non-traded") - 0 * lam_capb("1981","traded") - 0 * lam_capb("1982","non-traded") - 0 * lam_capb("1982","traded") - 0 * lam_capb("1983","non-traded") - 0 * lam_capb("1983","traded") - 0 * lam_capb("1984","non-traded") - 0 * lam_capb("1984","traded") - 0 * lam_capb("1985","non-traded") - 0 * lam_capb("1985","traded") - 0 * lam_savl("1963") - 0 * lam_savl("1964") - 0 * lam_savl("1965") - 0 * lam_savl("1966") - 0 * lam_savl("1967") - 0 * lam_savl("1968") - 0 * lam_savl("1969") - 0 * lam_savl("1970") - 0 * lam_savl("1971") - 0 * lam_savl("1972") - 0 * lam_savl("1973") - 0 * lam_savl("1974") - 0 * lam_savl("1975") - 0 * lam_savl("1976") - 0 * lam_savl("1977") - 0 * lam_savl("1978") - 0 * lam_savl("1979") - 0 * lam_savl("1980") - 0 * lam_savl("1981") - 0 * lam_savl("1982") - 0 * lam_savl("1983") - 0 * lam_savl("1984") - 0 * lam_savl("1985") + 0 * lam_impl("1963") + 0 * lam_impl("1964") + 0 * lam_impl("1965") + 0 * lam_impl("1966") + 0 * lam_impl("1967") + 0 * lam_impl("1968") + 0 * lam_impl("1969") + 0 * lam_impl("1970") + 0 * lam_impl("1971") + 0 * lam_impl("1972") + 0 * lam_impl("1973") + 0 * lam_impl("1974") + 0 * lam_impl("1975") + 0 * lam_impl("1976") + 0 * lam_impl("1977") + 0 * lam_impl("1978") + 0 * lam_impl("1979") + 0 * lam_impl("1980") + 0 * lam_impl("1981") + 0 * lam_impl("1982") + 0 * lam_impl("1983") + 0 * lam_impl("1984") + 0 * lam_impl("1985") - 0 * lam_invu("1962") - 0 * lam_invu("1963") - 0 * lam_invu("1964") - 0 * lam_invu("1965") - 0 * lam_invu("1966") - 0 * lam_invu("1967") - 0 * lam_invu("1968") - 0 * lam_invu("1969") - 0 * lam_invu("1970") - 0 * lam_invu("1971") - 0 * lam_invu("1972") - 0 * lam_invu("1973") - 0 * lam_invu("1974") - 0 * lam_invu("1975") - 0 * lam_invu("1976") - 0 * lam_invu("1977") - 0 * lam_invu("1978") - 0 * lam_invu("1979") - 0 * lam_invu("1980") - 0 * lam_invu("1981") - 0 * lam_invu("1982") - 0 * lam_invu("1983") - 0 * lam_invu("1984") - 0 * lam_invu("1985") + 0 * lam_invl("1962") + 0 * lam_invl("1963") + 0 * lam_invl("1964") + 0 * lam_invl("1965") + 0 * lam_invl("1966") + 0 * lam_invl("1967") + 0 * lam_invl("1968") + 0 * lam_invl("1969") + 0 * lam_invl("1970") + 0 * lam_invl("1971") + 0 * lam_invl("1972") + 0 * lam_invl("1973") + 0 * lam_invl("1974") + 0 * lam_invl("1975") + 0 * lam_invl("1976") + 0 * lam_invl("1977") + 0 * lam_invl("1978") + 0 * lam_invl("1979") + 0 * lam_invl("1980") + 0 * lam_invl("1981") + 0 * lam_invl("1982") + 0 * lam_invl("1983") + 0 * lam_invl("1984") + 0 * lam_invl("1985") + 0 * lam_conl("1962") + 0 * lam_conl("1963") + 0 * lam_conl("1964") + 0 * lam_conl("1965") + 0 * lam_conl("1966") + 0 * lam_conl("1967") + 0 * lam_conl("1968") + 0 * lam_conl("1969") + 0 * lam_conl("1970") + 0 * lam_conl("1971") + 0 * lam_conl("1972") + 0 * lam_conl("1973") + 0 * lam_conl("1974") + 0 * lam_conl("1975") + 0 * lam_conl("1976") + 0 * lam_conl("1977") + 0 * lam_conl("1978") + 0 * lam_conl("1979") + 0 * lam_conl("1980") + 0 * lam_conl("1981") + 0 * lam_conl("1982") + 0 * lam_conl("1983") + 0 * lam_conl("1984") + 0 * lam_conl("1985") - 0 * lam_fup("1963") - 0 * lam_fup("1964") - 0 * lam_fup("1965") - 0 * lam_fup("1966") - 0 * lam_fup("1967") - 0 * lam_fup("1968") - 0 * lam_fup("1969") - 0 * lam_fup("1970") - 0 * lam_fup("1971") - 0 * lam_fup("1972") - 0 * lam_fup("1973") - 0 * lam_fup("1974") - 0 * lam_fup("1975") - 0 * lam_fup("1976") - 0 * lam_fup("1977") - 0 * lam_fup("1978") - 0 * lam_fup("1979") - 0 * lam_fup("1980") - 0 * lam_fup("1981") - 0 * lam_fup("1982") - 0 * lam_fup("1983") - 0 * lam_fup("1984") - 0 * lam_fup("1985") =E= 0;
+stat_gnp(t).. 0 + (1 - sum(j, 0)) * nu_gnpd(t) + 0 * nu_invd(t) + sum(te, ((-1) * sum(j, 0)) * nu_invt(te)) + 0 * nu_tgap(t) + 1 * nu_incd(t) + sum((te,j), 0 * nu_kbal(te,j)) + 0 * nu_taid + 0 * nu_i_fx_1962_non_traded_683f00ae + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non_traded_683f00ae + 0 * nu_ks_fx_1962_traded + 0 * nu_c_fx_1962 + sum(j, 0 * lam_capb(t,j)) + ((-1) * alpha) * lam_savl(t) + mgnp * lam_impl(t) + sum(te, 0 * lam_invu(te)) + sum(te, 0 * lam_invl(te)) + sum(te, 0 * lam_conl(te)) + ((-1) * q) * lam_fup(t) =E= 0;
+stat_i(te,j).. ((-1) * sum(t, 0)) + sum(t, 0 * nu_gnpd(t)) + sum(t, 0 * nu_invd(t)) + (-1) * nu_invt(te) + sum(t, 0 * nu_tgap(t)) + sum(t, 0 * nu_incd(t)) + (-1) * nu_kbal(te,j) + ((-1) * sum(t, 0)) * nu_taid + 1 * nu_i_fx_1962_non_traded_683f00ae + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non_traded_683f00ae + 0 * nu_ks_fx_1962_traded + 0 * nu_c_fx_1962 + sum(t, 0 * lam_capb(t,j)) + sum(t, 0 * lam_savl(t)) + sum(t, 0 * lam_impl(t)) + 0 * lam_invu(te) + 0 * lam_invl(te) + 0 * lam_conl(te) + sum(t, 0 * lam_fup(t)) =E= 0;
+stat_ks(te,j).. ((-1) * sum(t, 0)) + sum(t, 0 * nu_gnpd(t)) + sum(t, 0 * nu_invd(t)) + 0 * nu_invt(te) + sum(t, 0 * nu_tgap(t)) + sum(t, 0 * nu_incd(t)) + (-1) * nu_kbal(te,j) + ((-1) * sum(t, 0)) * nu_taid + 0 * nu_i_fx_1962_non_traded_683f00ae + 0 * nu_i_fx_1962_traded + 1 * nu_ks_fx_1962_non_traded_683f00ae + 0 * nu_ks_fx_1962_traded + 0 * nu_c_fx_1962 + sum(t, 0 * lam_capb(t,j)) + sum(t, 0 * lam_savl(t)) + sum(t, 0 * lam_impl(t)) + 0 * lam_invu(te) + 0 * lam_invl(te) + 0 * lam_conl(te) + sum(t, 0 * lam_fup(t)) =E= 0;
+stat_m(t).. 0 + ((-1) * sum(j, 0)) * nu_gnpd(t) + 0 * nu_invd(t) + sum(te, ((-1) * sum(j, 0)) * nu_invt(te)) + (-1) * nu_tgap(t) + 0 * nu_incd(t) + sum((te,j), 0 * nu_kbal(te,j)) + 0 * nu_taid + 0 * nu_i_fx_1962_non_traded_683f00ae + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non_traded_683f00ae + 0 * nu_ks_fx_1962_traded + 0 * nu_c_fx_1962 + sum(j, 0 * lam_capb(t,j)) + 0 * lam_savl(t) + (-1) * lam_impl(t) + sum(te, 0 * lam_invu(te)) + sum(te, 0 * lam_invl(te)) + sum(te, 0 * lam_conl(te)) + 0 * lam_fup(t) =E= 0;
+stat_s(t).. 0 + ((-1) * sum(j, 0)) * nu_gnpd(t) + (-1) * nu_invd(t) + sum(te, ((-1) * sum(j, 0)) * nu_invt(te)) + 0 * nu_tgap(t) + 0 * nu_incd(t) + sum((te,j), 0 * nu_kbal(te,j)) + 0 * nu_taid + 0 * nu_i_fx_1962_non_traded_683f00ae + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non_traded_683f00ae + 0 * nu_ks_fx_1962_traded + 0 * nu_c_fx_1962 + sum(j, 0 * lam_capb(t,j)) + 1 * lam_savl(t) + 0 * lam_impl(t) + sum(te, 0 * lam_invu(te)) + sum(te, 0 * lam_invl(te)) + sum(te, 0 * lam_conl(te)) + 0 * lam_fup(t) =E= 0;
+stat_ti(te).. ((-1) * sum(t, 0)) + sum(t, ((-1) * sum(j, 0)) * nu_gnpd(t)) + sum(t, 0 * nu_invd(t)) + (1 - sum(j, 0)) * nu_invt(te) + sum(t, 0 * nu_tgap(t)) + sum(t, 0 * nu_incd(t)) + sum(j, 0 * nu_kbal(te,j)) + ((-1) * sum(t, 0)) * nu_taid + 0 * nu_i_fx_1962_non_traded_683f00ae + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non_traded_683f00ae + 0 * nu_ks_fx_1962_traded + 0 * nu_c_fx_1962 + sum((t,j), 0 * lam_capb(t,j)) + sum(t, 0 * lam_savl(t)) + sum(t, 0 * lam_impl(t)) + ((-1) * (1 + beta)) * lam_invu(te) + 1 * lam_invl(te) + 0 * lam_conl(te) + sum(t, 0 * lam_fup(t)) =E= 0;
+stat_v(t,j).. 0 + (-1) * nu_gnpd(t) + 0 * nu_invd(t) + sum(te, 0 * nu_invt(te)) + 0 * nu_tgap(t) + 0 * nu_incd(t) + sum(te, 0 * nu_kbal(te,j)) + 0 * nu_taid + 0 * nu_i_fx_1962_non_traded_683f00ae + 0 * nu_i_fx_1962_traded + 0 * nu_ks_fx_1962_non_traded_683f00ae + 0 * nu_ks_fx_1962_traded + 0 * nu_c_fx_1962 + 1 * lam_capb(t,j) + 0 * lam_savl(t) + 0 * lam_impl(t) + sum(te, 0 * lam_invu(te)) + sum(te, 0 * lam_invl(te)) + sum(te, 0 * lam_conl(te)) + 0 * lam_fup(t) =E= 0;
 
 * Inequality complementarity equations
-comp_capb(t,j).. ((-1) * v(t,j)) =G= 0;
-comp_conl(te).. c(te+1) =G= 0;
-comp_fup(t).. ((-1) * f(t)) =G= 0;
-comp_impl(t).. m(t) =G= 0;
-comp_invl(te).. ti(te+1) =G= 0;
-comp_invu(te).. ((-1) * ti(te+1)) =G= 0;
-comp_savl(t).. ((-1) * s(t)) =G= 0;
+comp_capb(t,j).. ((-1) * (v(t,j) - (vb(j) + 1 / k(j) * ks(t,j)))) =G= 0;
+comp_conl(te)$(ord(te) <= card(te) - 1).. c(te+1) - (1 + p) * c(te) =G= 0;
+comp_fup(t).. ((-1) * (f(t) - q * gnp(t))) =G= 0;
+comp_impl(t).. m(t) - (mb + mgnp * (gnp(t) - gnpb) + mi * (ti(t) - tib)) =G= 0;
+comp_invl(te)$(ord(te) <= card(te) - 1).. ti(te+1) - ti(te) =G= 0;
+comp_invu(te)$(ord(te) <= card(te) - 1).. ((-1) * (ti(te+1) - (1 + beta) * ti(te))) =G= 0;
+comp_savl(t).. ((-1) * (s(t) - (sb + alpha * (gnp(t) - gnpb)))) =G= 0;
 
 * Original equality equations
 gnpd(t).. gnp(t) =E= sum(j, v(t,j));
@@ -173,12 +189,14 @@ invd(t).. ti(t) =E= s(t) + f(t);
 invt(te).. ti(te) =E= sum(j, i(te,j));
 tgap(t).. f(t) =E= m(t) - e(t) - v(t,"traded");
 incd(t).. gnp(t) =E= c(t) + ti(t) - f(t);
-kbal(te,j).. ks(te+1,j) =E= ks(te,j) + i(te,j);
+kbal(te,j)$(ord(te) <= card(te) - 1).. ks(te+1,j) =E= ks(te,j) + i(te,j);
 taid.. fb =E= sum(t, delt(t) * f(t));
 wdef.. w =E= sum(t, delt(t) * c(t)) - gama * fb + d * dis * gnp("1985");
+i_fx_1962_non_traded_683f00ae.. i("1962","non-traded") - 4.564 =E= 0;
 i_fx_1962_traded.. i("1962","traded") - 0 =E= 0;
-ks_fx_1962_non-traded.. ks("1962","non-traded") - 0 =E= 0;
+ks_fx_1962_non_traded_683f00ae.. ks("1962","non-traded") - 0 =E= 0;
 ks_fx_1962_traded.. ks("1962","traded") - 0 =E= 0;
+c_fx_1962.. c("1962") - 33.999 =E= 0;
 
 
 * ============================================
@@ -212,13 +230,15 @@ Model mcp_model /
     comp_invl.lam_invl,
     comp_invu.lam_invu,
     comp_savl.lam_savl,
+    c_fx_1962.nu_c_fx_1962,
     gnpd.nu_gnpd,
+    i_fx_1962_non_traded_683f00ae.nu_i_fx_1962_non_traded_683f00ae,
     i_fx_1962_traded.nu_i_fx_1962_traded,
     incd.nu_incd,
     invd.nu_invd,
     invt.nu_invt,
     kbal.nu_kbal,
-    ks_fx_1962_non-traded.nu_ks_fx_1962_non-traded,
+    ks_fx_1962_non_traded_683f00ae.nu_ks_fx_1962_non_traded_683f00ae,
     ks_fx_1962_traded.nu_ks_fx_1962_traded,
     taid.nu_taid,
     tgap.nu_tgap,

@@ -128,10 +128,15 @@ param_item: ID "(" id_or_wildcard_list ")" STRING? "/" param_data_items "/" para
 scalar_decl: scalar_single_item                                          -> scalar_single
            | scalar_item (","? scalar_item)+                                 -> scalar_list
 
-// For comma-separated or newline-separated lists: NO desc_text (ambiguous)
-scalar_item: ID "/" scalar_data_items "/" (ASSIGN expr)?                -> scalar_with_data
-           | ID ASSIGN expr                                             -> scalar_with_assign
-           | ID                                                         -> scalar_plain
+// For comma-separated or newline-separated lists:
+// Issue #651: Support STRING descriptions in multi-scalar declarations.
+// Use SYMBOL_NAME instead of ID to prevent quoted strings from being parsed as scalar names.
+// SYMBOL_NAME matches only unquoted identifiers, so 'quoted text' cannot start a new scalar_item.
+scalar_item: SYMBOL_NAME STRING "/" scalar_data_items "/" (ASSIGN expr)?  -> scalar_with_data
+           | SYMBOL_NAME "/" scalar_data_items "/" (ASSIGN expr)?         -> scalar_with_data
+           | SYMBOL_NAME STRING ASSIGN expr                               -> scalar_with_assign
+           | SYMBOL_NAME ASSIGN expr                                      -> scalar_with_assign
+           | SYMBOL_NAME                                                  -> scalar_plain
 
 // For single scalar declarations: allow optional description (quoted STRING or unquoted DESC_TEXT)
 // Sprint 12 Day 5 (Issue #417): Made DESC_TEXT optional with ? since terminal can't match empty

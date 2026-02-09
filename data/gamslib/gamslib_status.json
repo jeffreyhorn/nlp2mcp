@@ -3017,9 +3017,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:18:19.313419+00:00",
-        "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5774,
+        "translate_date": "2026-02-09T04:48:39.340576+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 1.0388,
         "output_file": "data/gamslib/mcp/himmel16_mcp.gms"
       },
       "mcp_solve": {
@@ -3635,9 +3635,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:18:27.313150+00:00",
-        "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 1.5411,
+        "translate_date": "2026-02-09T04:48:55.403734+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 0.9708,
         "output_file": "data/gamslib/mcp/jobt_mcp.gms"
       },
       "mcp_solve": {
@@ -5650,9 +5650,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-08T18:19:03.565028+00:00",
-        "nlp2mcp_version": "0.7.0",
-        "translate_time_seconds": 10.3047,
+        "translate_date": "2026-02-09T04:48:49.069364+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 4.9259,
         "output_file": "data/gamslib/mcp/pak_mcp.gms"
       },
       "mcp_solve": {

@@ -27,9 +27,9 @@ Parameters
 ;
 
 Scalars
-    rho /0.0/
-    alpha /0.0/
-    wage /0.0/
+    rho /8.0/
+    alpha /6.0/
+    wage /100.0/
 ;
 
 * ============================================
@@ -58,6 +58,22 @@ Positive Variables
     f(t)
     lam_wd(t)
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values. POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+
+p.l(t) = 1;
+s.l(t) = 1;
+u.l(t) = 1;
+w.l(t) = 1;
+h.l(t) = 1;
+f.l(t) = 1;
 
 * ============================================
 * Equations
@@ -93,11 +109,11 @@ stat_u(t).. 30 + (-1) * nu_cb(t) + 0 * nu_wb(t) + 0 * lam_wd(t) =E= 0;
 stat_w(t).. wage + sf(t) + 0 * nu_cb(t) + 1 * nu_wb(t) + (-1) * lam_wd(t) =E= 0;
 
 * Inequality complementarity equations
-comp_wd(t).. w(t) =G= 0;
+comp_wd(t).. w(t) - (p(t) / rho + (1 + 1 / alpha) * h(t)) =G= 0;
 
 * Original equality equations
-cb(t).. s(t) =E= s(t-1) + p(t) - d(t) - u(t-1) + u(t) + si(t);
-wb(t).. w(t) =E= w(t-1) - f(t) + h(t) + wi(t);
+cb(t)$(ord(t) > 1).. s(t) =E= s(t-1) + p(t) - d(t) - u(t-1) + u(t) + si(t);
+wb(t)$(ord(t) > 1).. w(t) =E= w(t-1) - f(t) + h(t) + wi(t);
 obj.. phi =E= sum(t, 10 * s(t) + 30 * u(t) + (wage + sf(t)) * w(t));
 
 
