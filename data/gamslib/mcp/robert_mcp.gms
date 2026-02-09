@@ -22,10 +22,14 @@ Sets
     t(tt) /1, 2, 3/
 ;
 
+Sets
+    wc_misc_d1 /'max-stock', 'res-value', 'storage-c'/
+;
+
 Parameters
     a(r,p) /scrap.low 5.0, scrap.high 3.0, new.low 1.0, new.high 2.0, scrap.medium 0.0, new.medium 0.0/
     c(p,t) /low.1 25.0, low.2 20.0, low.3 10.0, medium.1 50.0, medium.2 50.0, medium.3 50.0, high.1 75.0, high.2 80.0, high.3 100.0/
-    misc(*,r) /'max-stock'.new 400.0, 'storage-c'.new 0.5, 'res-value'.new 15.0, 'res-value'.scrap 0.0, 'storage-c'.scrap 0.0, 'max-stock'.scrap 0.0/
+    misc(wc_misc_d1,r) /'max-stock'.new 400.0, 'storage-c'.new 0.5, 'res-value'.new 15.0, 'storage-c'.scrap 0.0, 'max-stock'.scrap 0.0, 'res-value'.scrap 0.0/
 ;
 
 Scalars
@@ -60,7 +64,8 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. Set to lower bound or small positive value.
+* non-zero initial values. POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
 x.l(p,tt) = 1;
 s.l(r,tt) = 1;
@@ -90,10 +95,10 @@ stat_s(r,tt).. ((-1) * (sum(p, 0) - misc("storage-c",r))) + ((-1) * (1 - sum(p, 
 stat_x(p,tt).. ((-1) * (c(p,t) - sum(r, 0) + sum(r, 0))) + sum(r, a(r,p) * nu_sb(r,tt)) + sum(t, 1 * lam_cc(t)) =E= 0;
 
 * Inequality complementarity equations
-comp_cc(t).. ((-1) * sum(p, x(p,t))) =G= 0;
+comp_cc(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
 
 * Original equality equations
-sb(r,tt).. s(r,tt+1) =E= s(r,tt) - sum(p, a(r,p) * x(p,tt));
+sb(r,tt)$(ord(tt) <= card(tt) - 1).. s(r,tt+1) =E= s(r,tt) - sum(p, a(r,p) * x(p,tt));
 pd.. profit =E= sum(t, sum(p, c(p,t) * x(p,t)) - sum(r, misc("storage-c",r) * s(r,t))) + sum(r, misc("res-value",r) * s(r,"4"));
 
 

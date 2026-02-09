@@ -70,13 +70,20 @@ def _is_index_offset_syntax(s: str, domain_vars: frozenset[str] | None = None) -
     """Check if a string looks like GAMS IndexOffset syntax (i++1, i--2, i+1, i-3, i+j).
 
     These patterns are already valid GAMS index expressions and should NOT be quoted.
-    Must be careful not to match hyphenated element labels like "route-1" or "item-2".
+    Must be careful not to match element labels like "route-1", "item-2", or "food+agr".
+
+    GAMS allows both + and - in element labels (e.g., food+agr, light-ind from chenery.gms),
+    so we use conservative heuristics:
+    - Circular operators (++, --) are unambiguous IndexOffset syntax
+    - Numeric offsets (i+1, tt+1, i-1) are unambiguous IndexOffset syntax
+    - Symbolic offsets with single-letter base (i+j, t-k) are treated as IndexOffset
+    - Symbolic offsets with multi-letter base require domain_vars context to disambiguate
 
     Args:
         s: String to check
         domain_vars: Optional set of known domain variable names. When provided,
-                     multi-letter lag expressions like "tt-1" are recognized if
-                     "tt" is in domain_vars.
+                     multi-letter expressions like "tt-1" or "tt+j" are recognized
+                     as IndexOffset if "tt" is in domain_vars.
 
     Returns:
         True if the string matches IndexOffset GAMS syntax patterns
@@ -102,6 +109,8 @@ def _is_index_offset_syntax(s: str, domain_vars: frozenset[str] | None = None) -
         True
         >>> _is_index_offset_syntax("tt-1", frozenset(["tt"]))
         True
+        >>> _is_index_offset_syntax("tt+j", frozenset(["tt"]))
+        True
         >>> _is_index_offset_syntax("i1")
         False
         >>> _is_index_offset_syntax("H2O")
@@ -109,6 +118,8 @@ def _is_index_offset_syntax(s: str, domain_vars: frozenset[str] | None = None) -
         >>> _is_index_offset_syntax("route-1")
         False
         >>> _is_index_offset_syntax("item-2")
+        False
+        >>> _is_index_offset_syntax("food+agr")  # Element label, not IndexOffset
         False
     """
     import re
@@ -126,14 +137,24 @@ def _is_index_offset_syntax(s: str, domain_vars: frozenset[str] | None = None) -
     if re.match(circular_pattern, s):
         return True
 
-    # Linear operators with + are unambiguous since + isn't valid in element labels
-    # Sprint 18 Day 3: Extended to support multi-letter bases (tt+1, np+j)
+    # Linear lead with + and numeric offset is unambiguous (i+1, tt+1)
+    # Sprint 18 Day 3: Extended to support multi-letter bases (tt+1, np+1)
     linear_lead_numeric = r"^[A-Za-z_][A-Za-z0-9_]*\+[0-9]+$"  # i+1, tt+1
     if re.match(linear_lead_numeric, s):
         return True
 
-    linear_lead_symbolic = r"^[A-Za-z_][A-Za-z0-9_]*\+[A-Za-z_][A-Za-z0-9_]*$"  # i+j, tt+k
-    if re.match(linear_lead_symbolic, s):
+    # Linear lead with symbolic offset is AMBIGUOUS: "i+j" vs "food+agr"
+    # GAMS allows + in element labels (e.g., food+agr, pulp+paper from chenery.gms)
+    # For single-letter bases, always match as IndexOffset (i+j, t+k)
+    linear_lead_symbolic_single = r"^[a-zA-Z]\+[A-Za-z_][A-Za-z0-9_]*$"  # i+j, t+k
+    if re.match(linear_lead_symbolic_single, s):
+        return True
+
+    # For multi-letter bases with +, check if base is a known domain variable
+    # If "tt" is in domain_vars, then "tt+j" is IndexOffset, not element label
+    multi_lead_symbolic = r"^([A-Za-z_][A-Za-z0-9_]*)\+[A-Za-z_][A-Za-z0-9_]*$"
+    match = re.match(multi_lead_symbolic, s)
+    if match and match.group(1) in domain_vars:
         return True
 
     # Linear lag with - is AMBIGUOUS: "route-1" vs "tt-1"

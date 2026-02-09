@@ -19,8 +19,12 @@ Sets
     i /1, 2, 3, 4, 5, 6/
 ;
 
+Sets
+    wc_dat_d2 /x, y/
+;
+
 Parameters
-    dat(i,*)
+    dat(i,wc_dat_d2) /1.y 127.0, 1.x -5.0, 2.y 151.0, 2.x -3.0, 3.y 379.0, 3.x -1.0, 4.y 421.0, 4.x 5.0, 5.y 460.0, 5.x 3.0, 6.y 426.0, 6.x 1.0/
 ;
 
 * ============================================
@@ -48,6 +52,18 @@ Positive Variables
     piL_b3
     piU_b3
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+b1.l = 500.0;
+b2.l = -150.0;
+b3.l = -0.2;
 
 * ============================================
 * Equations

@@ -17,34 +17,40 @@ $offText
 
 Sets
     i /ahmsa, fundidora, sicartsa, hylsa, hylsap/
-    j /mexico-df, monterrey, guadalaja/
-    c /pellets, coke, nat-gas, electric, scrap, pig-iron, sponge, steel/
+    j /'mexico-df', monterrey, guadalaja/
+    c /pellets, coke, 'nat-gas', electric, scrap, 'pig-iron', sponge, steel/
     cf(c) /steel/
-    ci(c) /sponge, pig-iron/
-    cr(c) /pellets, coke, nat-gas, electric, scrap/
-    p /pig-iron, sponge, steel-oh, steel-el, steel-bof/
-    m /blast-furn, openhearth, bof, direct-red, elec-arc/
+    ci(c) /sponge, 'pig-iron'/
+    cr(c) /pellets, coke, 'nat-gas', electric, scrap/
+    p /'pig-iron', sponge, 'steel-oh', 'steel-el', 'steel-bof'/
+    m /'blast-furn', openhearth, bof, 'direct-red', 'elec-arc'/
+;
+
+Sets
+    wc_rd_d1 /ahmsa, fundidora, hylsa, hylsap, import, sicartsa/
+    wc_rd_d2 /export, guadalaja, monterrey/
+    wc_prices_d2 /domestic, export, import/
 ;
 
 Parameters
-    a(c,p) /pellets.sponge -1.38, 'nat-gas'.sponge -0.57, sponge.sponge 1.0, scrap.sponge 0.0, coke.sponge 0.0, 'pig-iron'.sponge 0.0, electric.sponge 0.0, steel.sponge 0.0/
-    b(m,p) /'blast-furn'.sponge 1.0, 'direct-red'.sponge 1.0, openhearth.sponge 0.0, bof.sponge 0.0, 'elec-arc'.sponge 0.0/
-    k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.sicartsa 1.4, 'blast-furn'.hylsa 1.1, openhearth.ahmsa 1.5, openhearth.sicartsa 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsap 0.98, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56, 'blast-furn'.fundidora 0.0, 'blast-furn'.hylsap 0.0, openhearth.fundidora 0.0, openhearth.hylsa 0.0, openhearth.hylsap 0.0, 'direct-red'.ahmsa 0.0, 'direct-red'.fundidora 0.0, 'direct-red'.sicartsa 0.0, 'direct-red'.hylsa 0.0, bof.hylsa 0.0, bof.hylsap 0.0, 'elec-arc'.ahmsa 0.0, 'elec-arc'.fundidora 0.0, 'elec-arc'.sicartsa 0.0/
+    a(c,p) /pellets.sponge -1.38, 'nat-gas'.sponge -0.57, sponge.sponge 1.0, electric.sponge 0.0, 'pig-iron'.sponge 0.0, coke.sponge 0.0, steel.sponge 0.0, scrap.sponge 0.0/
+    b(m,p) /'blast-furn'.sponge 1.0, 'direct-red'.sponge 1.0, openhearth.sponge 0.0, 'elec-arc'.sponge 0.0, bof.sponge 0.0/
+    k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.sicartsa 1.4, 'blast-furn'.hylsa 1.1, openhearth.ahmsa 1.5, openhearth.sicartsa 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsap 0.98, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56, 'direct-red'.ahmsa 0.0, 'direct-red'.fundidora 0.0, 'direct-red'.sicartsa 0.0, 'direct-red'.hylsa 0.0, openhearth.fundidora 0.0, openhearth.hylsa 0.0, openhearth.hylsap 0.0, 'elec-arc'.ahmsa 0.0, 'elec-arc'.fundidora 0.0, 'elec-arc'.sicartsa 0.0, bof.hylsa 0.0, bof.hylsap 0.0, 'blast-furn'.fundidora 0.0, 'blast-furn'.hylsap 0.0/
     d(c,j)
     dd(j) /mexico-df 55.0, monterrey 30.0, guadalaja 15.0/
-    rd(*,*) /ahmsa.monterrey 218.0, ahmsa.guadalaja 1125.0, ahmsa.export 739.0, fundidora.guadalaja 1030.0, fundidora.export 521.0, sicartsa.monterrey 1305.0, sicartsa.guadalaja 704.0, hylsa.guadalaja 1030.0, hylsa.export 521.0, hylsap.monterrey 1085.0, hylsap.guadalaja 760.0, hylsap.export 315.0, import.monterrey 521.0, import.guadalaja 300.0, sicartsa.export 0.0, import.export 0.0, hylsa.monterrey 0.0, fundidora.monterrey 0.0/
+    rd(wc_rd_d1,wc_rd_d2) /ahmsa.monterrey 218.0, ahmsa.guadalaja 1125.0, ahmsa.export 739.0, fundidora.guadalaja 1030.0, fundidora.export 521.0, sicartsa.monterrey 1305.0, sicartsa.guadalaja 704.0, hylsa.guadalaja 1030.0, hylsa.export 521.0, hylsap.monterrey 1085.0, hylsap.guadalaja 760.0, hylsap.export 315.0, import.monterrey 521.0, import.guadalaja 300.0, hylsa.monterrey 0.0, import.export 0.0, sicartsa.export 0.0, fundidora.monterrey 0.0/
     muf(i,j)
     muv(j)
     mue(i)
-    prices(c,*) /pellets.domestic 18.7, coke.domestic 52.17, 'nat-gas'.import 14.0, electric.domestic 24.0, scrap.domestic 105.0, steel.import 150.0, steel.export 140.0, scrap.import 0.0, scrap.export 0.0, 'nat-gas'.domestic 0.0, 'nat-gas'.export 0.0, coke.import 0.0, coke.export 0.0, electric.import 0.0, electric.export 0.0, pellets.import 0.0, pellets.export 0.0, steel.domestic 0.0/
+    prices(c,wc_prices_d2) /pellets.domestic 18.7, coke.domestic 52.17, 'nat-gas'.import 14.0, electric.domestic 24.0, scrap.domestic 105.0, steel.import 150.0, steel.export 140.0, electric.import 0.0, electric.export 0.0, coke.import 0.0, coke.export 0.0, 'nat-gas'.domestic 0.0, 'nat-gas'.export 0.0, pellets.import 0.0, pellets.export 0.0, steel.domestic 0.0, scrap.import 0.0, scrap.export 0.0/
     pd(c)
     pv(c)
     pe(c)
 ;
 
 Scalars
-    dt /0.0/
-    rse /0.0/
+    dt /5.209/
+    rse /40.0/
     eb /1.0/
 ;
 
@@ -92,6 +98,21 @@ Positive Variables
     lam_mr(cf,j)
     lam_me(cf)
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values. POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+
+z.l(p,i) = 1;
+x.l(c,i,j) = 1;
+u.l(c,i) = 1;
+v.l(c,j) = 1;
+e.l(c,i) = 1;
 
 * ============================================
 * Equations
@@ -145,12 +166,12 @@ stat_x(c,i,j).. 0 + 0 * nu_apsi + ((-1) * (sum((cf,i__,j__), 0) + sum((cf,j__), 
 stat_z(p,i).. 0 + ((-1) * sum((cr,i__), 0)) * nu_apsi + ((-1) * (sum((cf,i__,j), 0) + sum((cf,j), 0) + sum((cf,i__), 0))) * nu_alam + ((-1) * sum((cf,j), 0)) * nu_api + ((-1) * sum((cf,i__), 0)) * nu_aeps + sum(cf, (sum(j, 0) - a(c,p)) * lam_mbf(cf,i)) + sum(ci, ((-1) * a(c,p)) * lam_mbi(ci,i)) + sum(cr, ((-1) * a(c,p)) * lam_mbr(cr,i)) + sum(m, b(m,p) * lam_cc(m,i)) + sum((cf,j), 0 * lam_mr(cf,j)) + sum(cf, 0 * lam_me(cf)) =E= 0;
 
 * Inequality complementarity equations
-comp_cc(m,i).. ((-1) * sum(p, b(m,p) * z(p,i))) =G= 0;
-comp_mbf(cf,i).. sum(p, a(cf,p) * z(p,i)) =G= 0;
+comp_cc(m,i).. ((-1) * (sum(p, b(m,p) * z(p,i)) - k(m,i))) =G= 0;
+comp_mbf(cf,i).. sum(p, a(cf,p) * z(p,i)) - (sum(j, x(cf,i,j)) + e(cf,i)) =G= 0;
 comp_mbi(ci,i).. sum(p, a(ci,p) * z(p,i)) =G= 0;
 comp_mbr(cr,i).. sum(p, a(cr,p) * z(p,i)) + u(cr,i) =G= 0;
-comp_me(cf).. ((-1) * sum(i, e(cf,i))) =G= 0;
-comp_mr(cf,j).. sum(i, x(cf,i,j)) + v(cf,j) =G= 0;
+comp_me(cf).. ((-1) * (sum(i, e(cf,i)) - eb)) =G= 0;
+comp_mr(cf,j).. sum(i, x(cf,i,j)) + v(cf,j) - d(cf,j) =G= 0;
 
 * Original equality equations
 obj.. phi =E= phipsi + philam + phipi - phieps;

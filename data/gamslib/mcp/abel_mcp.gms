@@ -17,8 +17,8 @@ $offText
 
 Sets
     n /consumpt, invest/
-    m /gov-expend, money/
-    k /1964-i, 1964-ii, 1964-iii, 1964-iv, 1965-i, 1965-ii, 1965-iii, 1965-iv/
+    m /'gov-expend', money/
+    k /'1964-i', '1964-ii', '1964-iii', '1964-iv', '1965-i', '1965-ii', '1965-iii', '1965-iv'/
     ku(k)
     ki(k)
     kt(k)
@@ -34,11 +34,15 @@ Parameters
     lambda(m,mp) /'gov-expend'.money 1.0, money.money 0.444/
     c(n) /consumpt -59.4, invest -184.7/
     xinit(n) /consumpt 387.9, invest 85.3/
-    uinit(m) /gov-expend 110.5, money 147.1/
+    uinit(m) /'gov-expend' 110.5, money 147.1/
     xtilde(n,k)
     utilde(m,k)
     w(n,np,k)
 ;
+
+ku(k) = 1$ord(k) < card(k);
+ki(k) = 1$ord(k) = 1;
+kt(k) = not ku(k);
 
 xtilde(n,k) = xinit(n) * 1.0075 ** (ord(k) - 1);
 utilde(m,k) = uinit(m) * 1.0075 ** (ord(k) - 1);
@@ -93,7 +97,7 @@ stat_x(n,k).. 0.5 * sum(np, 0) + 0.5 * sum((ku,m,mp), 0) + ((-1) * (a(n,np) + su
 
 * Original equality equations
 criterion.. j =E= 0.5 * sum((k,n,np), (x(n,k) - xtilde(n,k)) * w(n,np,k) * (x(np,k) - xtilde(np,k))) + 0.5 * sum((ku,m,mp), (u(m,ku) - utilde(m,ku)) * lambda(m,mp) * (u(mp,ku) - utilde(mp,ku)));
-stateq(n,k).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + sum(m, b(n,m) * u(m,k)) + c(n);
+stateq(n,k)$(ord(k) <= card(k) - 1).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + sum(m, b(n,m) * u(m,k)) + c(n);
 
 
 * ============================================

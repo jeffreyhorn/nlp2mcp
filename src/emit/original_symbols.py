@@ -28,22 +28,82 @@ from src.ir.symbols import ParameterDef, SetDef
 _VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.+]*$")
 
 
-def _sanitize_set_element(element: str) -> str:
-    """Sanitize a set element name for safe GAMS emission.
+def _needs_quoting(element: str) -> bool:
+    """Determine if a set element needs quoting in GAMS.
 
-    Validates that the element contains only safe characters to prevent
-    DSL injection attacks. Elements that could break out of the /.../ block
-    or inject GAMS statements are rejected.
+    Elements containing + or - characters need to be quoted in GAMS set
+    definitions because these characters are interpreted as operators.
+    Dots (.) are OK without quoting as they represent tuple notation.
+    Simple identifiers (letters, digits, underscores) don't need quotes.
 
     Args:
         element: Set element identifier
 
     Returns:
-        The element if valid, or a safely quoted version
+        True if the element needs quoting, False otherwise
+    """
+    # Elements with + or - need quoting (these are interpreted as operators)
+    if "+" in element or "-" in element:
+        return True
+    # Everything else is OK: letters, digits, underscores, and dots (tuple notation)
+    return False
+
+
+def _sanitize_set_element(element: str) -> str:
+    """Sanitize a set element name for safe GAMS emission.
+
+    Validates that the element contains only safe characters to prevent
+    DSL injection attacks. Elements that could break out of the /.../ block
+    or inject GAMS statements are rejected. Elements with special characters
+    (like + or -) are quoted for correct GAMS parsing.
+
+    Handles pre-quoted elements from the parser: if the element is already
+    wrapped in single quotes, it's validated and returned as-is. Quoted
+    elements may contain spaces (e.g., 'SAE 10' from bearing.gms).
+
+    Args:
+        element: Set element identifier (may or may not be pre-quoted)
+
+    Returns:
+        The element (quoted if necessary) if valid
 
     Raises:
         ValueError: If the element contains characters that cannot be safely emitted
     """
+    # Strip surrounding whitespace that may come from table row labels
+    element = element.strip()
+
+    # Normalize doubled single quotes to single quotes
+    # The parser sometimes produces ''label'' instead of 'label'
+    # (e.g., ''SAE 10'', ''max-stock'' from bearing/robert models)
+    if len(element) >= 4 and element.startswith("''") and element.endswith("''"):
+        element = "'" + element[2:-2] + "'"
+
+    # Handle pre-quoted elements from the parser
+    # If element is already wrapped in single quotes, strip them for validation
+    # and return with quotes preserved
+    is_prequoted = len(element) >= 2 and element.startswith("'") and element.endswith("'")
+    if is_prequoted:
+        inner = element[1:-1]
+        # Validate the inner content (should not have additional quotes, control chars, or dangerous chars)
+        # Note: spaces are allowed in quoted GAMS labels (e.g., 'SAE 10')
+        control_chars_inner = {"\n", "\r", "\t"}
+        if any(c in inner for c in control_chars_inner):
+            raise ValueError(
+                f"Set element '{element}' contains control characters that could break GAMS syntax. "
+                f"Disallowed control characters: {control_chars_inner & set(inner)}"
+            )
+        dangerous_chars_inner = {"/", ";", "*", "$", '"', "'", "(", ")", "[", "]", "=", "<", ">"}
+        if any(c in inner for c in dangerous_chars_inner):
+            raise ValueError(
+                f"Set element '{element}' contains unsafe characters that could cause "
+                f"GAMS injection. Dangerous characters: {dangerous_chars_inner & set(inner)}"
+            )
+        # For quoted elements, we allow spaces and other characters that GAMS permits
+        # in quoted labels. Only check for truly dangerous injection characters and control chars above.
+        # Return as-is (already quoted)
+        return element
+
     # Check for obviously dangerous characters that could break GAMS syntax
     # These characters could allow escaping the /.../ block or injecting statements
     dangerous_chars = {"/", ";", "*", "$", '"', "'", "(", ")", "[", "]", "=", "<", ">"}
@@ -61,6 +121,10 @@ def _sanitize_set_element(element: str) -> str:
             f"Set elements must start with a letter or digit and contain only "
             f"letters, digits, underscores, hyphens, dots, and plus signs."
         )
+
+    # Quote elements with special characters for correct GAMS parsing
+    if _needs_quoting(element):
+        return f"'{element}'"
 
     return element
 
@@ -86,8 +150,27 @@ def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
     # Use SetDef.members
     # Members are stored as a list of strings in SetDef
     # Sanitize each member to prevent DSL injection attacks
+    # For multi-dimensional sets (domain has multiple elements), members are stored
+    # as dot-separated tuples (e.g., "c-cracker.ho-low-s"). We need to split on '.'
+    # and sanitize each component separately to avoid quoting the entire tuple.
     if set_def.members:
-        sanitized_members = [_sanitize_set_element(m) for m in set_def.members]
+        domain_arity = len(set_def.domain) if set_def.domain else 1
+        if domain_arity > 1:
+            # Multi-dimensional set: split members and sanitize each component
+            sanitized_members = []
+            for m in set_def.members:
+                components = m.split(".")
+                # Handle case where number of components doesn't match domain arity
+                # (shouldn't happen, but be defensive)
+                if len(components) == domain_arity:
+                    sanitized_components = [_sanitize_set_element(c) for c in components]
+                    sanitized_members.append(".".join(sanitized_components))
+                else:
+                    # Fallback: sanitize as single element
+                    sanitized_members.append(_sanitize_set_element(m))
+        else:
+            # Single-dimensional set: sanitize directly
+            sanitized_members = [_sanitize_set_element(m) for m in set_def.members]
         members = ", ".join(sanitized_members)
         return f"{set_decl} /{members}/"
     else:
@@ -406,12 +489,12 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
 
     Example output:
         Sets
-            _wc_dat_d2 /x, y/
+            wc_dat_d2 /x, y/
         ;
 
         Parameters
             c(i,j) /i1.j1 2.5, i1.j2 3.0, i2.j1 1.8/
-            dat(i,_wc_dat_d2) /1.y 127.0, 1.x -5.0/
+            dat(i,wc_dat_d2) /1.y 127.0, 1.x -5.0/
         ;
 
         Scalars
@@ -470,7 +553,8 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 elements = inferred.get(pos, set())
                 if elements:
                     # Create anonymous set name with unique prefix to avoid collisions
-                    base_name = f"_wc_{param_name}_d{pos + 1}"
+                    # Note: GAMS identifiers cannot start with underscore, so use "wc" prefix
+                    base_name = f"wc_{param_name}_d{pos + 1}"
                     set_name = base_name
                     # Ensure uniqueness by adding suffix if needed (case-insensitive check)
                     counter = 1
@@ -527,7 +611,10 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 data_parts = []
                 for key_tuple, value in param_def.values.items():
                     # Convert tuple to GAMS index syntax (Finding #3)
-                    key_str = ".".join(key_tuple)
+                    # Apply quoting/sanitization to each element for consistent handling
+                    # This ensures parameter data keys match set element quoting
+                    sanitized_keys = [_sanitize_set_element(k) for k in key_tuple]
+                    key_str = ".".join(sanitized_keys)
                     data_parts.append(f"{key_str} {value}")
 
                 data_str = ", ".join(data_parts)

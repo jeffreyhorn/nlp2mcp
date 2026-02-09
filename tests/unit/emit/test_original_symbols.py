@@ -11,6 +11,8 @@ Tests verify correct usage of actual IR fields (Finding #3):
 import pytest
 
 from src.emit.original_symbols import (
+    _needs_quoting,
+    _sanitize_set_element,
     emit_computed_parameter_assignments,
     emit_original_aliases,
     emit_original_parameters,
@@ -666,3 +668,137 @@ class TestEmitComputedParameterAssignments:
         # Only the expression should be emitted
         assert "y(i) =" in result
         assert "x(i) + 1" in result
+
+
+@pytest.mark.unit
+class TestSetElementQuoting:
+    """Test set element quoting and sanitization behavior.
+
+    PR #664: Tests for auto-quoting of elements with special characters,
+    preservation of pre-quoted elements, and handling of quoted elements
+    with spaces.
+    """
+
+    def test_needs_quoting_with_hyphen(self):
+        """Test that elements with hyphens need quoting."""
+        assert _needs_quoting("gov-expend") is True
+        assert _needs_quoting("machine-1") is True
+        assert _needs_quoting("1964-i") is True
+
+    def test_needs_quoting_with_plus(self):
+        """Test that elements with plus signs need quoting."""
+        assert _needs_quoting("food+agr") is True
+        assert _needs_quoting("pulp+paper") is True
+
+    def test_needs_quoting_simple_identifier(self):
+        """Test that simple identifiers don't need quoting."""
+        assert _needs_quoting("demand") is False
+        assert _needs_quoting("i1") is False
+        assert _needs_quoting("machine1") is False
+
+    def test_sanitize_auto_quotes_hyphen(self):
+        """Test that sanitizer auto-quotes elements with hyphens."""
+        assert _sanitize_set_element("gov-expend") == "'gov-expend'"
+        assert _sanitize_set_element("machine-1") == "'machine-1'"
+
+    def test_sanitize_auto_quotes_plus(self):
+        """Test that sanitizer auto-quotes elements with plus signs."""
+        assert _sanitize_set_element("food+agr") == "'food+agr'"
+        assert _sanitize_set_element("pulp+paper") == "'pulp+paper'"
+
+    def test_sanitize_preserves_simple_identifier(self):
+        """Test that sanitizer preserves simple identifiers without quoting."""
+        assert _sanitize_set_element("demand") == "demand"
+        assert _sanitize_set_element("i1") == "i1"
+
+    def test_sanitize_preserves_prequoted_element(self):
+        """Test that sanitizer preserves already-quoted elements."""
+        assert _sanitize_set_element("'c-bond-ext'") == "'c-bond-ext'"
+        assert _sanitize_set_element("'food+agr'") == "'food+agr'"
+
+    def test_sanitize_prequoted_with_spaces(self):
+        """Test that sanitizer accepts quoted elements with spaces.
+
+        GAMS allows spaces in quoted labels (e.g., 'SAE 10' from bearing.gms).
+        """
+        assert _sanitize_set_element("'SAE 10'") == "'SAE 10'"
+        assert _sanitize_set_element("'my label'") == "'my label'"
+
+    def test_sanitize_normalizes_doubled_quotes(self):
+        """Test that sanitizer normalizes doubled single quotes to single quotes.
+
+        The parser sometimes produces ''label'' instead of 'label'
+        (e.g., ''SAE 10'', ''max-stock'' from bearing/robert models).
+        """
+        assert _sanitize_set_element("''SAE 10''") == "'SAE 10'"
+        assert _sanitize_set_element("''max-stock''") == "'max-stock'"
+        assert _sanitize_set_element("''food+agr''") == "'food+agr'"
+
+    def test_sanitize_strips_whitespace(self):
+        """Test that sanitizer strips surrounding whitespace.
+
+        Table row labels may have trailing whitespace from parsing.
+        """
+        assert _sanitize_set_element("  demand  ") == "demand"
+        assert _sanitize_set_element(" 'SAE 10' ") == "'SAE 10'"
+
+    def test_sanitize_rejects_dangerous_chars(self):
+        """Test that sanitizer rejects elements with dangerous characters."""
+        with pytest.raises(ValueError, match="unsafe characters"):
+            _sanitize_set_element("bad;element")
+        with pytest.raises(ValueError, match="unsafe characters"):
+            _sanitize_set_element("bad/element")
+        with pytest.raises(ValueError, match="unsafe characters"):
+            _sanitize_set_element("bad$element")
+
+    def test_sanitize_rejects_dangerous_chars_in_quoted(self):
+        """Test that sanitizer rejects quoted elements with dangerous inner chars."""
+        with pytest.raises(ValueError, match="unsafe characters"):
+            _sanitize_set_element("'bad;element'")
+        with pytest.raises(ValueError, match="unsafe characters"):
+            _sanitize_set_element("'nested'quote'")
+
+    def test_set_emission_quotes_special_elements(self):
+        """Test that set emission properly quotes elements with special chars."""
+        model = ModelIR()
+        model.sets["m"] = SetDef(name="m", members=["gov-expend", "money", "food+agr"])
+
+        phase1, _, _ = _get_phases(emit_original_sets(model))
+        assert "m /'gov-expend', money, 'food+agr'/" in phase1
+
+    def test_parameter_data_quotes_special_keys(self):
+        """Test that parameter data properly quotes keys with special chars."""
+        model = ModelIR()
+        model.params["uinit"] = ParameterDef(
+            name="uinit",
+            domain=("m",),
+            values={("gov-expend",): 110.5, ("money",): 200.0},
+        )
+
+        result = emit_original_parameters(model)
+        assert "'gov-expend' 110.5" in result
+        assert "money 200" in result or "money 200.0" in result
+
+    def test_multidimensional_set_quotes_components_separately(self):
+        """Test that multi-dimensional set members quote each component separately.
+
+        For multi-dimensional sets like km(k,mode), members are stored as dot-separated
+        tuples like "c-cracker.ho-low-s". Each component should be quoted individually
+        to produce "'c-cracker'.'ho-low-s'" instead of incorrectly quoting the whole
+        thing as "'c-cracker.ho-low-s'".
+        """
+        model = ModelIR()
+        model.sets["k"] = SetDef(name="k", members=["pipestill", "reformer", "c-cracker"])
+        model.sets["mode"] = SetDef(name="mode", members=["ho-low-s", "ho-high-s"])
+        model.sets["km"] = SetDef(
+            name="km",
+            domain=["k", "mode"],
+            members=["c-cracker.ho-low-s", "c-cracker.ho-high-s"],
+        )
+
+        phase1, _, _ = _get_phases(emit_original_sets(model))
+        # Each component should be quoted separately
+        assert "'c-cracker'.'ho-low-s'" in phase1
+        assert "'c-cracker'.'ho-high-s'" in phase1
+        # Should NOT quote the entire tuple
+        assert "'c-cracker.ho-low-s'" not in phase1
