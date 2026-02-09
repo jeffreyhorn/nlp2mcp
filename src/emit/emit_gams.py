@@ -186,8 +186,8 @@ def emit_gams_mcp(
         # if the variable was never assigned any .l values. Instead, just set .l
         # to min(1, upper_bound) directly.
         if var_def.kind == VarKind.POSITIVE:
-            has_positive_clamp = True
             if has_init:
+                has_positive_clamp = True
                 # Variable already has explicit .l values - preserve them with max()
                 # Use 1e-6 epsilon to allow small explicit values like 0.0001
                 if var_def.domain:

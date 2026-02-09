@@ -85,8 +85,14 @@ def _sanitize_set_element(element: str) -> str:
     is_prequoted = len(element) >= 2 and element.startswith("'") and element.endswith("'")
     if is_prequoted:
         inner = element[1:-1]
-        # Validate the inner content (should not have additional quotes or dangerous chars)
+        # Validate the inner content (should not have additional quotes, control chars, or dangerous chars)
         # Note: spaces are allowed in quoted GAMS labels (e.g., 'SAE 10')
+        control_chars_inner = {"\n", "\r", "\t"}
+        if any(c in inner for c in control_chars_inner):
+            raise ValueError(
+                f"Set element '{element}' contains control characters that could break GAMS syntax. "
+                f"Disallowed control characters: {control_chars_inner & set(inner)}"
+            )
         dangerous_chars_inner = {"/", ";", "*", "$", '"', "'", "(", ")", "[", "]", "=", "<", ">"}
         if any(c in inner for c in dangerous_chars_inner):
             raise ValueError(
@@ -94,7 +100,7 @@ def _sanitize_set_element(element: str) -> str:
                 f"GAMS injection. Dangerous characters: {dangerous_chars_inner & set(inner)}"
             )
         # For quoted elements, we allow spaces and other characters that GAMS permits
-        # in quoted labels. Only check for truly dangerous injection characters above.
+        # in quoted labels. Only check for truly dangerous injection characters and control chars above.
         # Return as-is (already quoted)
         return element
 
