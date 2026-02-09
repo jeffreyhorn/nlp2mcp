@@ -62,9 +62,9 @@ def test_indexed_fixed():
     print("✓ Relation is EQ (equality constraint)")
 
     # Verify index_values
-    assert fx_bound.index_values == ("i2",), (
-        f"Expected index_values ('i2',), got {fx_bound.index_values}"
-    )
+    assert fx_bound.index_values == (
+        "i2",
+    ), f"Expected index_values ('i2',), got {fx_bound.index_values}"
 
     print(f"✓ Index values correct: {fx_bound.index_values}")
 
