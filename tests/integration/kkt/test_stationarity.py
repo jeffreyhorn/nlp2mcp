@@ -1230,3 +1230,219 @@ class TestStationaritySubsetSupersetIndex:
                 f"Expected p(k) to be preserved but got p{indices}. "
                 "Non-subset set 'k' should not be replaced."
             )
+
+
+@pytest.mark.integration
+class TestStationaritySubsetVariableDomain:
+    """Test correct index handling when variable is defined over a subset.
+
+    GitHub Issue #666: KKT generation domain mismatch when variable domain
+    differs from equation domain.
+
+    When a variable like h(t) is defined over a subset t(i), and it appears
+    in the stationarity equation stat_e(i) (where e is defined over superset i),
+    the variable reference must preserve h(t), not become h(i).
+    """
+
+    def test_subset_variable_preserved_in_stationarity(self, manual_index_mapping):
+        """Test that h(t) stays h(t) in stat_e(i) when t is a subset of i.
+
+        Simulates the chenery model case:
+        - Set i: {light-ind, food+agr, heavy-ind, services} (all sectors)
+        - Set t(i): {light-ind, food+agr, heavy-ind} (tradables, subset of i)
+        - Variable e(i): exports defined over all sectors
+        - Variable h(t): foreign exchange value, defined only over tradables
+        - Constraint tb: sum(t, g(t)*m(t) - h(t)*e(t)) =l= dbar
+
+        The stationarity for e(i) includes derivative term h(t).
+        This must remain h(t), not become h(i) which would cause GAMS Error 170.
+        """
+        from src.ir.symbols import SetDef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        # Sets: i is superset, t(i) is subset (tradables)
+        model.sets["i"] = SetDef(
+            name="i", members=["light-ind", "food+agr", "heavy-ind", "services"]
+        )
+        model.sets["t"] = SetDef(
+            name="t", members=["light-ind", "food+agr", "heavy-ind"], domain=("i",)
+        )
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("e", ("i",))),
+        )
+
+        # tb.. sum(t, h(t)*e(t)) =l= dbar (simplified - just h(t)*e(t) term)
+        model.equations["tb"] = EquationDef(
+            name="tb",
+            domain=(),
+            relation=Rel.LE,
+            lhs_rhs=(
+                Sum(("t",), Binary("*", VarRef("h", ("t",)), VarRef("e", ("t",)))),
+                Const(0.0),
+            ),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["e"] = VariableDef(name="e", domain=("i",))  # superset domain
+        model.variables["h"] = VariableDef(name="h", domain=("t",))  # subset domain
+
+        model.equalities = ["objdef"]
+        model.inequalities = ["tb"]
+
+        # Set up KKT system with e(i) instances (4 elements)
+        index_mapping = manual_index_mapping(
+            [
+                ("obj", ()),
+                ("e", ("light-ind",)),
+                ("e", ("food+agr",)),
+                ("e", ("heavy-ind",)),
+                ("e", ("services",)),
+                ("h", ("light-ind",)),
+                ("h", ("food+agr",)),
+                ("h", ("heavy-ind",)),
+            ],
+            [("objdef", ())],
+        )
+
+        # Separate mapping for inequalities
+        ineq_index_mapping = manual_index_mapping(
+            [
+                ("obj", ()),
+                ("e", ("light-ind",)),
+                ("e", ("food+agr",)),
+                ("e", ("heavy-ind",)),
+                ("e", ("services",)),
+                ("h", ("light-ind",)),
+                ("h", ("food+agr",)),
+                ("h", ("heavy-ind",)),
+            ],
+            [("tb", ())],
+        )
+
+        gradient = GradientVector(num_cols=8, index_mapping=index_mapping)
+        gradient.set_derivative(0, Const(1.0))  # ∂obj/∂obj
+        # Gradient for e instances - simplified
+        for col in range(1, 5):
+            gradient.set_derivative(col, Const(0.0))
+        # Gradient for h instances
+        for col in range(5, 8):
+            gradient.set_derivative(col, Const(0.0))
+
+        J_eq = JacobianStructure(num_rows=1, num_cols=8, index_mapping=index_mapping)
+        J_eq.set_derivative(0, 0, Const(1.0))  # ∂objdef/∂obj
+
+        # J_ineq: ∂tb/∂e(t) = h(t) for tradables only
+        # tb = sum(t, h(t)*e(t)), so ∂tb/∂e(light-ind) = h(light-ind)
+        J_ineq = JacobianStructure(num_rows=1, num_cols=8, index_mapping=ineq_index_mapping)
+        # Derivatives w.r.t. e (cols 1-4), but only tradables contribute
+        J_ineq.set_derivative(0, 1, VarRef("h", ("light-ind",)))  # ∂tb/∂e(light-ind)
+        J_ineq.set_derivative(0, 2, VarRef("h", ("food+agr",)))  # ∂tb/∂e(food+agr)
+        J_ineq.set_derivative(0, 3, VarRef("h", ("heavy-ind",)))  # ∂tb/∂e(heavy-ind)
+        # e(services) doesn't appear in tb, no derivative
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        kkt.multipliers_ineq["lam_tb"] = MultiplierDef(
+            name="lam_tb", domain=(), kind="ineq", associated_constraint="tb"
+        )
+
+        # Build stationarity
+        stationarity = build_stationarity_equations(kkt)
+
+        assert "stat_e" in stationarity
+        stat_eq = stationarity["stat_e"]
+        assert stat_eq.domain == ("i",)  # Stationarity indexed over superset
+
+        # Find all VarRefs to h in the stationarity equation
+        def find_var_refs(expr: Expr, var_name: str) -> list[VarRef]:
+            """Recursively find all VarRef nodes for a specific variable."""
+            refs = []
+            match expr:
+                case VarRef() if expr.name == var_name:
+                    refs.append(expr)
+                case Binary(_, left, right):
+                    refs.extend(find_var_refs(left, var_name))
+                    refs.extend(find_var_refs(right, var_name))
+                case Unary(_, child):
+                    refs.extend(find_var_refs(child, var_name))
+                case Call(_, args):
+                    for arg in args:
+                        refs.extend(find_var_refs(arg, var_name))
+                case Sum(_, body):
+                    refs.extend(find_var_refs(body, var_name))
+            return refs
+
+        lhs = stat_eq.lhs_rhs[0]
+        h_refs = find_var_refs(lhs, "h")
+
+        # All h references should use 't' (subset), not 'i' (superset)
+        # This is the key assertion for Issue #666
+        for ref in h_refs:
+            indices = ref.indices_as_strings()
+            assert indices == ("t",), (
+                f"Expected h(t) but got h{indices}. "
+                "Issue #666: Variable defined over subset should preserve subset index, "
+                "not be replaced with superset index. This causes GAMS Error 170."
+            )
+
+    def test_superset_variable_uses_equation_domain(self, manual_index_mapping):
+        """Test that e(i) uses i in stat_e(i) - normal case for superset variables."""
+        from src.ir.symbols import SetDef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ("i",))),
+        )
+
+        model.equations["con"] = EquationDef(
+            name="con",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(Sum(("i",), VarRef("x", ("i",))), Const(1.0)),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=("i",))
+
+        model.equalities = ["objdef", "con"]
+
+        index_mapping = manual_index_mapping(
+            [("obj", ()), ("x", ("a",)), ("x", ("b",))],
+            [("objdef", ()), ("con", ())],
+        )
+
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        gradient.set_derivative(0, Const(1.0))
+        gradient.set_derivative(1, Const(0.0))
+        gradient.set_derivative(2, Const(0.0))
+
+        J_eq = JacobianStructure(num_rows=2, num_cols=3, index_mapping=index_mapping)
+        J_eq.set_derivative(0, 0, Const(1.0))
+        J_eq.set_derivative(1, 1, Const(1.0))  # ∂con/∂x(a)
+        J_eq.set_derivative(1, 2, Const(1.0))  # ∂con/∂x(b)
+
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        kkt.multipliers_eq["nu_con"] = MultiplierDef(
+            name="nu_con", domain=(), kind="eq", associated_constraint="con"
+        )
+
+        stationarity = build_stationarity_equations(kkt)
+
+        assert "stat_x" in stationarity
+        assert stationarity["stat_x"].domain == ("i",)
