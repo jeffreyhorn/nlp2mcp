@@ -147,6 +147,7 @@ def emit_gams_mcp(
     # to prevent division by zero during model generation when they appear in
     # denominators of stationarity equations (e.g., from differentiating log(x) or 1/x)
     init_lines: list[str] = []
+    has_positive_clamp = False  # Track if any POSITIVE variable clamping is done
     for var_name, var_def in kkt.model_ir.variables.items():
         has_init = False
 
@@ -185,6 +186,7 @@ def emit_gams_mcp(
         # if the variable was never assigned any .l values. Instead, just set .l
         # to min(1, upper_bound) directly.
         if var_def.kind == VarKind.POSITIVE:
+            has_positive_clamp = True
             if has_init:
                 # Variable already has explicit .l values - preserve them with max()
                 # Use 1e-6 epsilon to allow small explicit values like 0.0001
@@ -218,10 +220,12 @@ def emit_gams_mcp(
             sections.append(
                 "* Variables appearing in denominators (from log, 1/x derivatives) need"
             )
-            sections.append(
-                "* non-zero initial values. POSITIVE variables with explicit .l values are"
-            )
-            sections.append("* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.")
+            sections.append("* non-zero initial values.")
+            if has_positive_clamp:
+                sections.append("* POSITIVE variables with explicit .l values are")
+                sections.append(
+                    "* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1."
+                )
             sections.append("")
         sections.extend(init_lines)
         sections.append("")
