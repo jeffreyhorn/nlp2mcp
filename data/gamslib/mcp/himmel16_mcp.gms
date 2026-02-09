@@ -54,7 +54,8 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. POSITIVE variables are set to min(max(value, 1), upper_bound).
+* non-zero initial values. POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1), upper_bound). Others are set to 1.
 
 x.l("2") = 0.5;
 x.l("3") = 0.5;
@@ -97,7 +98,7 @@ stat_x(i).. ((-1) * (0.5 * y(i))) + ((-1) * (0.5 * y(i))) * nu_areadef(i) + 0 * 
 stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) + ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + 0 * nu_obj2 + 0 * nu_x_fx_1 + 1 * nu_y_fx_1 + 0 * nu_y_fx_2 + sum(j, 2 * (y(i) - y(i)) * lam_maxdist(i,j)) =E= 0;
 
 * Inequality complementarity equations
-comp_maxdist(i,j).. ((-1) * (sqr(x(i) - x(j)) + sqr(y(i) - y(j)) - 1)) =G= 0;
+comp_maxdist(i,j)$(ord(i) < ord(j)).. ((-1) * (sqr(x(i) - x(j)) + sqr(y(i) - y(j)) - 1)) =G= 0;
 
 * Original equality equations
 areadef(i).. area(i) =E= 0.5 * (x(i) * y(i++1) - y(i) * x(i++1));

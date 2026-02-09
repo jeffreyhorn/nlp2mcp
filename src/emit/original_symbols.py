@@ -466,22 +466,30 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
             wildcard_replacements[param_name] = new_domain
 
     # Emit anonymous sets for wildcards if any
+    # Track which sets were successfully emitted to avoid referencing undefined sets
+    emitted_sets: set[str] = set()
     if wildcard_sets:
         lines.append("Sets")
         for _key, (set_name, elements) in wildcard_sets.items():
-            # Sanitize elements for GAMS emission
+            # Sanitize elements for GAMS emission (same strict behavior as explicit sets)
             sanitized = []
             for elem in sorted(elements):
-                try:
-                    sanitized.append(_sanitize_set_element(elem))
-                except ValueError:
-                    # Skip invalid elements
-                    continue
+                sanitized.append(_sanitize_set_element(elem))
             if sanitized:
                 elements_str = ", ".join(sanitized)
                 lines.append(f"    {set_name} /{elements_str}/")
+                emitted_sets.add(set_name)
         lines.append(";")
         lines.append("")  # Blank line before Parameters
+
+    # Update wildcard_replacements to only use sets that were successfully emitted
+    # If a set wasn't emitted, revert to original wildcard '*' to avoid undefined set errors
+    for param_name, new_domain in wildcard_replacements.items():
+        for i, domain_item in enumerate(new_domain):
+            if domain_item not in emitted_sets and domain_item != "*":
+                # Check if this was a generated set name that wasn't emitted
+                if domain_item.startswith(f"{param_name}_dim"):
+                    new_domain[i] = "*"  # Revert to wildcard
 
     # Emit Parameters
     if parameters:
