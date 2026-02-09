@@ -38,6 +38,7 @@ from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import (
     normalize_double_commas,
     normalize_multi_line_continuations,
+    normalize_special_identifiers,
     preprocess_gams_file,
 )
 from .symbols import (
@@ -262,6 +263,14 @@ def parse_text(source: str) -> Tree:
     # handling of visual-alignment double commas.
     source = normalize_double_commas(source)
 
+    # Issue #665: Quote identifiers with special characters (-, +) in data blocks.
+    # This handles identifiers like "20-bond-wt", "light-ind", "food+agr" in
+    # Set/Parameter/Table declarations and data. Without quoting, these get
+    # misinterpreted as arithmetic expressions.
+    # NOTE: Same normalization is in `preprocess_gams_file()` - duplicated here
+    # for callers that invoke `parse_text` directly.
+    source = normalize_special_identifiers(source)
+
     parser = _build_lark()
     try:
         raw = parser.parse(source)
@@ -372,14 +381,23 @@ def parse_model_file(path: str | Path) -> ModelIR:
 
 
 def _token_text(token: Token) -> str:
-    """Extract text from a token, stripping quotes from STRING tokens.
+    """Extract text from a token, stripping quotes from STRING and escaped ID tokens.
 
     PR #658: Also strips leading/trailing whitespace from string content
     to handle cases like '"rating  "' → 'rating'.
+
+    Issue #665: Also handles quoted ID tokens (escaped identifiers like '20-bond-wt')
+    which are lexed as ID tokens via the ESCAPED pattern in the grammar.
     """
     value = str(token)
-    if token.type == "STRING" and len(value) >= 2:
-        return value[1:-1].strip()
+    if len(value) >= 2:
+        if token.type == "STRING":
+            return value[1:-1].strip()
+        # ID tokens can also be quoted via ESCAPED pattern (e.g., '20-bond-wt')
+        if token.type == "ID" and (
+            (value[0] == "'" and value[-1] == "'") or (value[0] == '"' and value[-1] == '"')
+        ):
+            return value[1:-1].strip()
     return value
 
 
@@ -1590,14 +1608,13 @@ class _ModelBuilder:
                     if first_child.data == "simple_label":
                         # Simple or dotted label wrapped in simple_label
                         dotted_label_node = first_child.children[0]
-                        # Filter out string literals (table descriptions) when building label
+                        # Issue #665: Include STRING tokens as valid row labels
+                        # (preprocessor quotes hyphenated identifiers like '20-bond-wt')
                         label_tokens = [
-                            tok
-                            for tok in dotted_label_node.children
-                            if isinstance(tok, Token) and not _is_string_literal(tok)
+                            tok for tok in dotted_label_node.children if isinstance(tok, Token)
                         ]
                         if label_tokens:
-                            # Only create row label if there are non-string-literal tokens
+                            # Only create row label if there are tokens
                             label_parts = [_token_text(tok) for tok in label_tokens]
                             row_label = ".".join(label_parts)
                             # Get line number from first token
@@ -1668,12 +1685,11 @@ class _ModelBuilder:
                                 all_tokens.append(synthetic_token)
                     elif child.data == "simple_label":
                         # simple_label wraps dotted_label
+                        # Issue #665: Include STRING tokens for quoted row labels
                         dotted_label_node = child.children[0]
                         for grandchild in dotted_label_node.children:
                             if isinstance(grandchild, Token):
-                                # Skip string literals (table descriptions)
-                                if not _is_string_literal(grandchild):
-                                    all_tokens.append(grandchild)
+                                all_tokens.append(grandchild)
                     elif child.data == "tuple_label":
                         # tuple_label contains id_list and dotted_label
                         # Collect tokens from both
@@ -1952,11 +1968,9 @@ class _ModelBuilder:
         # Column headers: store name and column position
         col_headers = []  # List of (col_name, col_position) tuples
         for token in first_line_tokens:
-            # Column headers can be ID or NUMBER tokens
-            if token.type in ("ID", "NUMBER"):
-                # Skip string literals (table descriptions) that were incorrectly parsed as IDs
-                if token.type == "ID" and _is_string_literal(token):
-                    continue
+            # Column headers can be ID, NUMBER, or STRING tokens
+            # Issue #665: Quoted identifiers like 'machine-1' may be STRING tokens
+            if token.type in ("ID", "NUMBER", "STRING"):
                 col_name = _token_text(token)
                 col_pos = getattr(token, "column", 0)
                 # Apply continuation offset if this token came from a continuation line
@@ -2002,19 +2016,29 @@ class _ModelBuilder:
                 if id(token) in continuation_col_offsets:
                     token_col += continuation_col_offsets[id(token)]
 
-                # Find the closest column header at or before this position
-                # (to handle slight alignment variations)
+                # Find the column header that this value falls under
+                # Issue #665: Use range-based matching - each column "owns" the range
+                # from its position up to (but not including) the next column's position.
+                # For the last column, it owns everything to the right.
+                # This handles alignment variations in sparse tables.
                 best_match = None
-                min_dist = float("inf")
-                for col_name, col_pos in col_headers:
+                for idx, (col_name, col_pos) in enumerate(col_headers):
                     # Skip columns that have already been matched
                     if col_name in used_columns:
                         continue
-                    # Allow token to be within ~6 chars of column header position
-                    dist = abs(token_col - col_pos)
-                    if dist < min_dist and dist <= 6:
-                        min_dist = dist
+                    # Determine the range this column owns
+                    # Start: this column's position (with small left tolerance)
+                    range_start = col_pos - 3  # Allow 3 chars left tolerance
+                    # End: next column's position (or infinity for last column)
+                    if idx + 1 < len(col_headers):
+                        next_col_pos = col_headers[idx + 1][1]
+                        range_end = next_col_pos - 1
+                    else:
+                        range_end = float("inf")
+                    # Check if value falls in this column's range
+                    if range_start <= token_col <= range_end:
                         best_match = col_name
+                        break
 
                 if best_match:
                     # Parse the value

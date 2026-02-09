@@ -199,26 +199,37 @@ def test_data_block_with_descriptions():
 
 
 def test_table_header_special_chars():
-    """Test quoting special characters in table column headers."""
+    """Test that table column headers are NOT quoted (Issue #665).
+
+    Column headers are kept unquoted because:
+    1. Quoting would make the first header look like a table description
+    2. The DESCRIPTION terminal matches multiple hyphenated words
+    The parser handles unquoted hyphenated headers via DESCRIPTION token parsing.
+    """
     source = """Table aio(i,i)
        light-ind  food+agr  heavy-ind
 food+agr      .1
 heavy-ind     .2        .1;"""
+    # Column headers should NOT be quoted; only row labels are quoted
     expected = """Table aio(i,i)
-       'light-ind'  'food+agr'  'heavy-ind'
+       light-ind  food+agr  heavy-ind
 'food+agr'      .1
 'heavy-ind'     .2        .1;"""
     assert normalize_special_identifiers(source) == expected
 
 
 def test_table_row_labels_special_chars():
-    """Test quoting special characters in table row labels."""
+    """Test quoting special characters in table row labels (not headers).
+
+    Issue #665: Column headers are NOT quoted, but row labels ARE quoted.
+    """
     source = """Table data(i,j)
        col-1  col-2
 row-1    1      2
 row-2    3      4;"""
+    # Column headers (col-1, col-2) NOT quoted; row labels (row-1, row-2) ARE quoted
     expected = """Table data(i,j)
-       'col-1'  'col-2'
+       col-1  col-2
 'row-1'    1      2
 'row-2'    3      4;"""
     assert normalize_special_identifiers(source) == expected
