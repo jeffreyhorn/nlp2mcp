@@ -73,6 +73,12 @@ def _sanitize_set_element(element: str) -> str:
     # Strip surrounding whitespace that may come from table row labels
     element = element.strip()
 
+    # Normalize doubled single quotes to single quotes
+    # The parser sometimes produces ''label'' instead of 'label'
+    # (e.g., ''SAE 10'', ''max-stock'' from bearing/robert models)
+    if len(element) >= 4 and element.startswith("''") and element.endswith("''"):
+        element = "'" + element[2:-2] + "'"
+
     # Handle pre-quoted elements from the parser
     # If element is already wrapped in single quotes, strip them for validation
     # and return with quotes preserved

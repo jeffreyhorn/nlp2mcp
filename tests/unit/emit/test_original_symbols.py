@@ -724,6 +724,16 @@ class TestSetElementQuoting:
         assert _sanitize_set_element("'SAE 10'") == "'SAE 10'"
         assert _sanitize_set_element("'my label'") == "'my label'"
 
+    def test_sanitize_normalizes_doubled_quotes(self):
+        """Test that sanitizer normalizes doubled single quotes to single quotes.
+
+        The parser sometimes produces ''label'' instead of 'label'
+        (e.g., ''SAE 10'', ''max-stock'' from bearing/robert models).
+        """
+        assert _sanitize_set_element("''SAE 10''") == "'SAE 10'"
+        assert _sanitize_set_element("''max-stock''") == "'max-stock'"
+        assert _sanitize_set_element("''food+agr''") == "'food+agr'"
+
     def test_sanitize_strips_whitespace(self):
         """Test that sanitizer strips surrounding whitespace.
 
