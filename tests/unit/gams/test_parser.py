@@ -3337,11 +3337,11 @@ class TestHyphenatedIdentifiers:
         assert model.params["prate"].values[("c-bond-ext", "machine-2")] == 45
 
     def test_table_column_headers_with_plus_identifiers(self):
-        """Test table with + in column headers doesn't misparse as continuation (PR #667).
+        """Test table with + in column headers doesn't misparse as continuation.
 
-        The + in identifiers like 'food+agr' must not be interpreted as a table
-        continuation marker. This verifies the full parser pipeline handles these
-        column headers correctly.
+        Issue #665: The + in identifiers like 'food+agr' must not be interpreted
+        as a table continuation marker. This verifies the full parser pipeline
+        handles these column headers correctly.
         """
         text = dedent("""
             Set i 'sectors' / light-ind, food+agr, heavy-ind /;

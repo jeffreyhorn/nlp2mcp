@@ -1381,14 +1381,18 @@ class TestStationaritySubsetVariableDomain:
         lhs = stat_eq.lhs_rhs[0]
         h_refs = find_var_refs(lhs, "h")
 
-        # All h references should use 't' (subset), not 'i' (superset)
+        # All h references must use 't' (subset), not 'i' (superset)
         # This is the key assertion for Issue #666
+        # Note: h(i) is NOT acceptable because h is only defined over subset t.
+        # Using h(i) would cause GAMS Error 170 (domain violation) for elements
+        # like 'services' that are in i but not in t. The index t is controlled
+        # via the original sum(t, ...) in the constraint tb.
         for ref in h_refs:
             indices = ref.indices_as_strings()
             assert indices == ("t",), (
                 f"Expected h(t) but got h{indices}. "
-                "Issue #666: Variable defined over subset should preserve subset index, "
-                "not be replaced with superset index. This causes GAMS Error 170."
+                "Issue #666: Variable h is defined over subset t, so h(i) would cause "
+                "GAMS Error 170 for elements not in t. Must preserve h(t)."
             )
 
     def test_superset_variable_uses_equation_domain(self, manual_index_mapping):
