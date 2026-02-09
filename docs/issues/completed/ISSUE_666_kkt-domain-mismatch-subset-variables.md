@@ -54,6 +54,8 @@ stat_m(i).. ... + g(t) * lam_tb + ... =E= 0;
 
 The variable's subset index `t` is preserved rather than being replaced with the superset index `i`.
 
+**Note on index control:** In GAMS, when `h(t)` appears inside an equation indexed over `i` (where `t` is a subset of `i`), the term only contributes for elements where `t` is valid. This is because the original constraint `tb` uses `sum(t, ...)`, which introduces `t` as a controlled summation index. The stationarity derivative inherits this structure - the `h(t)` term originates from differentiating a `sum(t, ...)` expression, so GAMS correctly limits evaluation to valid `t` elements. Alternative formulations like `sum(t$sameas(t,i), h(t))` are semantically equivalent but add unnecessary complexity.
+
 ## GAMS Error (before fix)
 
 When compiling the generated MCP:

@@ -3336,6 +3336,32 @@ class TestHyphenatedIdentifiers:
         assert model.params["prate"].values[("20-bond-wt", "machine-1")] == 53
         assert model.params["prate"].values[("c-bond-ext", "machine-2")] == 45
 
+    def test_table_column_headers_with_plus_identifiers(self):
+        """Test table with + in column headers doesn't misparse as continuation (PR #667).
+
+        The + in identifiers like 'food+agr' must not be interpreted as a table
+        continuation marker. This verifies the full parser pipeline handles these
+        column headers correctly.
+        """
+        text = dedent("""
+            Set i 'sectors' / light-ind, food+agr, heavy-ind /;
+            Set j 'goods'   / steel, coal /;
+            Table supply(i,j) 'supply by sector'
+                        steel  coal
+               light-ind   10    20
+               food+agr    30    40
+               heavy-ind   50    60;
+            """)
+        model = parser.parse_model_text(text)
+        # Verify column headers parsed correctly (not misinterpreted as continuation)
+        assert "supply" in model.params
+        assert ("light-ind", "steel") in model.params["supply"].values
+        assert ("food+agr", "steel") in model.params["supply"].values
+        assert ("food+agr", "coal") in model.params["supply"].values
+        assert model.params["supply"].values[("light-ind", "steel")] == 10
+        assert model.params["supply"].values[("food+agr", "coal")] == 40
+        assert model.params["supply"].values[("heavy-ind", "coal")] == 60
+
     def test_parameter_data_with_number_hyphenated_indices(self):
         """Test parameter data with indices like '20-bond-wt' (Issue #665)."""
         text = dedent("""
