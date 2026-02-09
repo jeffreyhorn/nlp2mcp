@@ -439,10 +439,19 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
 
     lines = []
 
+    # Collect existing symbol names to avoid collisions with generated set names
+    existing_symbols: set[str] = set()
+    existing_symbols.update(model_ir.sets.keys())
+    existing_symbols.update(model_ir.aliases.keys())
+    existing_symbols.update(model_ir.params.keys())
+    existing_symbols.update(model_ir.variables.keys())
+
     # First pass: identify parameters with wildcard domains and infer elements
     # Generate anonymous sets for wildcards
     wildcard_sets: dict[str, tuple[str, set[str]]] = {}  # param_name -> (set_name, elements)
     wildcard_replacements: dict[str, list[str]] = {}  # param_name -> new domain list
+    # Track exactly which domain positions were replaced with generated set names
+    generated_set_positions: dict[str, set[int]] = {}  # param_name -> set of positions
 
     for param_name, param_def in parameters.items():
         if "*" in param_def.domain:
@@ -454,16 +463,26 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
 
             # Create new domain with anonymous set names replacing wildcards
             new_domain = list(param_def.domain)
+            generated_positions: set[int] = set()
             for pos in wildcard_positions:
                 elements = inferred.get(pos, set())
                 if elements:
-                    # Create anonymous set name based on parameter and dimension
-                    set_name = f"{param_name}_dim{pos + 1}"
+                    # Create anonymous set name with unique prefix to avoid collisions
+                    base_name = f"_wc_{param_name}_d{pos + 1}"
+                    set_name = base_name
+                    # Ensure uniqueness by adding suffix if needed
+                    counter = 1
+                    while set_name in existing_symbols:
+                        set_name = f"{base_name}_{counter}"
+                        counter += 1
+                    existing_symbols.add(set_name)  # Reserve this name
                     wildcard_sets[f"{param_name}_{pos}"] = (set_name, elements)
                     new_domain[pos] = set_name
+                    generated_positions.add(pos)
                 # If no elements inferred, keep wildcard (will cause GAMS error, but at least we tried)
 
             wildcard_replacements[param_name] = new_domain
+            generated_set_positions[param_name] = generated_positions
 
     # Emit anonymous sets for wildcards if any
     # Track which sets were successfully emitted to avoid referencing undefined sets
@@ -485,11 +504,10 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     # Update wildcard_replacements to only use sets that were successfully emitted
     # If a set wasn't emitted, revert to original wildcard '*' to avoid undefined set errors
     for param_name, new_domain in wildcard_replacements.items():
-        for i, domain_item in enumerate(new_domain):
-            if domain_item not in emitted_sets and domain_item != "*":
-                # Check if this was a generated set name that wasn't emitted
-                if domain_item.startswith(f"{param_name}_dim"):
-                    new_domain[i] = "*"  # Revert to wildcard
+        positions_to_check = generated_set_positions.get(param_name, set())
+        for i in positions_to_check:
+            if i < len(new_domain) and new_domain[i] not in emitted_sets:
+                new_domain[i] = "*"  # Revert to wildcard
 
     # Emit Parameters
     if parameters:
