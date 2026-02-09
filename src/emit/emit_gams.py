@@ -176,7 +176,9 @@ def emit_gams_mcp(
         # Priority 3: Positive variables: ensure all elements have non-zero values
         # PR #658 review: Even with partial per-index inits, other elements may be 0.
         # Always apply a blanket max() to ensure no POSITIVE variable element is 0.
-        # Use 1.0 instead of 1e-6 to avoid numerical issues in stationarity equations.
+        # PR #664 review: Use small epsilon (1e-6) to preserve explicit small values
+        # like 0.0001 while preventing division by zero. Previous value of 1.0 was
+        # overriding explicit initializations.
         # PR #658 review: Clamp to upper bound using GAMS .up attribute to respect
         # per-element bounds (up_map), not just scalar var_def.up.
         # Issue #651: Don't read from .l when initializing - GAMS Error 141 occurs
@@ -185,13 +187,16 @@ def emit_gams_mcp(
         if var_def.kind == VarKind.POSITIVE:
             if has_init:
                 # Variable already has explicit .l values - preserve them with max()
+                # Use 1e-6 epsilon to allow small explicit values like 0.0001
                 if var_def.domain:
                     domain_str = ",".join(var_def.domain)
                     init_lines.append(
-                        f"{var_name}.l({domain_str}) = min(max({var_name}.l({domain_str}), 1), {var_name}.up({domain_str}));"
+                        f"{var_name}.l({domain_str}) = min(max({var_name}.l({domain_str}), 1e-6), {var_name}.up({domain_str}));"
                     )
                 else:
-                    init_lines.append(f"{var_name}.l = min(max({var_name}.l, 1), {var_name}.up);")
+                    init_lines.append(
+                        f"{var_name}.l = min(max({var_name}.l, 1e-6), {var_name}.up);"
+                    )
             else:
                 # No explicit .l values - just set to 1 directly
                 # Don't read .up either as it may not be assigned (Error 141)
@@ -216,7 +221,7 @@ def emit_gams_mcp(
             sections.append(
                 "* non-zero initial values. POSITIVE variables with explicit .l values are"
             )
-            sections.append("* clamped to min(max(value, 1), upper_bound). Others are set to 1.")
+            sections.append("* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.")
             sections.append("")
         sections.extend(init_lines)
         sections.append("")

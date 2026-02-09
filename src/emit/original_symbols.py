@@ -27,10 +27,6 @@ from src.ir.symbols import ParameterDef, SetDef
 # These characters cannot break out of the /.../ block - that requires / or ; which are blocked.
 _VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.+]*$")
 
-# Pattern for simple identifiers that don't need quoting
-# Only letters, digits, and underscores - no special characters
-_SIMPLE_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
-
 
 def _needs_quoting(element: str) -> bool:
     """Determine if a set element needs quoting in GAMS.
@@ -61,8 +57,11 @@ def _sanitize_set_element(element: str) -> str:
     or inject GAMS statements are rejected. Elements with special characters
     (like + or -) are quoted for correct GAMS parsing.
 
+    Handles pre-quoted elements from the parser: if the element is already
+    wrapped in single quotes, it's validated and returned as-is.
+
     Args:
-        element: Set element identifier
+        element: Set element identifier (may or may not be pre-quoted)
 
     Returns:
         The element (quoted if necessary) if valid
@@ -70,6 +69,29 @@ def _sanitize_set_element(element: str) -> str:
     Raises:
         ValueError: If the element contains characters that cannot be safely emitted
     """
+    # Handle pre-quoted elements from the parser
+    # If element is already wrapped in single quotes, strip them for validation
+    # and return with quotes preserved
+    is_prequoted = len(element) >= 2 and element.startswith("'") and element.endswith("'")
+    if is_prequoted:
+        inner = element[1:-1]
+        # Validate the inner content (should not have additional quotes or dangerous chars)
+        dangerous_chars_inner = {"/", ";", "*", "$", '"', "'", "(", ")", "[", "]", "=", "<", ">"}
+        if any(c in inner for c in dangerous_chars_inner):
+            raise ValueError(
+                f"Set element '{element}' contains unsafe characters that could cause "
+                f"GAMS injection. Dangerous characters: {dangerous_chars_inner & set(inner)}"
+            )
+        # Validate inner content against safe pattern
+        if not _VALID_SET_ELEMENT_PATTERN.match(inner):
+            raise ValueError(
+                f"Set element '{element}' contains invalid characters. "
+                f"Set elements must start with a letter or digit and contain only "
+                f"letters, digits, underscores, hyphens, dots, and plus signs."
+            )
+        # Return as-is (already quoted)
+        return element
+
     # Check for obviously dangerous characters that could break GAMS syntax
     # These characters could allow escaping the /.../ block or injecting statements
     dangerous_chars = {"/", ";", "*", "$", '"', "'", "(", ")", "[", "]", "=", "<", ">"}
@@ -558,7 +580,10 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 data_parts = []
                 for key_tuple, value in param_def.values.items():
                     # Convert tuple to GAMS index syntax (Finding #3)
-                    key_str = ".".join(key_tuple)
+                    # Apply quoting/sanitization to each element for consistent handling
+                    # This ensures parameter data keys match set element quoting
+                    sanitized_keys = [_sanitize_set_element(k) for k in key_tuple]
+                    key_str = ".".join(sanitized_keys)
                     data_parts.append(f"{key_str} {value}")
 
                 data_str = ", ".join(data_parts)
