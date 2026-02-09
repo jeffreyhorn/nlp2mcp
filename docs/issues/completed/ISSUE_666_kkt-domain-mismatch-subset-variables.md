@@ -64,7 +64,7 @@ When compiling the generated MCP:
 
 ## Fix Details
 
-**Fixed in:** PR #667 (sprint18/day4-path-syntax-1 branch)
+**Fixed in:** [PR #667](https://github.com/jeffreyhorn/nlp2mcp/pull/667)
 **Fix date:** 2026-02-09
 
 ### Root Cause

@@ -481,7 +481,7 @@ def _replace_indices_in_expr(
                     # E.g., h(t) in stat_e(i) where t(i): keep h(t), don't make h(i).
                     if var_domain and equation_domain and model_ir:
                         preserved_indices = _preserve_subset_var_indices(
-                            str_indices, var_domain, equation_domain, model_ir
+                            var_domain, equation_domain, model_ir
                         )
                         if preserved_indices is not None:
                             return VarRef(var_ref.name, preserved_indices)
@@ -565,7 +565,6 @@ def _replace_indices_in_expr(
 
 
 def _preserve_subset_var_indices(
-    indices: tuple[str, ...],
     var_domain: tuple[str, ...],
     equation_domain: tuple[str, ...],
     model_ir: ModelIR,
@@ -579,39 +578,39 @@ def _preserve_subset_var_indices(
     This prevents GAMS domain violations like h(i) when h is only defined over t.
 
     Args:
-        indices: Current indices of the variable (may be element labels)
         var_domain: The variable's declared domain (e.g., ("t",))
         equation_domain: The stationarity equation's domain (e.g., ("i",))
         model_ir: Model IR for looking up set definitions
 
     Returns:
-        Preserved indices using subset set names if applicable, None otherwise.
+        The variable's domain if it should be preserved (i.e., if at least one
+        of its domain sets is a subset of the equation domain), None otherwise.
 
     Example:
         Variable h(t) where t(i) is a subset of i.
         In stat_e(i), the derivative includes h("light-ind").
         Instead of replacing with h(i), we preserve h(t).
     """
-    # Check if any of the variable's domain sets are subsets of the equation domain
-    # Build a mapping: superset -> subset for the variable's domain
-    subset_mapping: dict[str, str] = {}  # superset_name -> subset_name
+    # Check if any of the variable's domain sets are subsets of the equation domain.
+    # If so, preserve the variable's declared domain indices; otherwise, return None.
+    if not equation_domain:
+        return None
+
+    equation_domain_lower = {s.lower() for s in equation_domain}
 
     for var_set in var_domain:
         var_set_def = model_ir.sets.get(var_set)
-        if var_set_def and hasattr(var_set_def, "domain") and var_set_def.domain:
-            # var_set is defined as a subset of its domain sets
-            for parent_set in var_set_def.domain:
-                # Check if parent_set is in the equation domain
-                if parent_set.lower() in [s.lower() for s in equation_domain]:
-                    subset_mapping[parent_set.lower()] = var_set
+        if not var_set_def or not hasattr(var_set_def, "domain") or not var_set_def.domain:
+            continue
+        # var_set is defined as a subset of its domain sets
+        for parent_set in var_set_def.domain:
+            # Check if parent_set is in the equation domain (case-insensitive)
+            if parent_set.lower() in equation_domain_lower:
+                # At least one subset/superset relationship found: preserve var_domain
+                return var_domain
 
-    if not subset_mapping:
-        return None
-
-    # Now build the preserved indices
-    # For each position in var_domain, use the subset set name
-    new_indices = list(var_domain)
-    return tuple(new_indices)
+    # No relevant subset/superset relationship found
+    return None
 
 
 def _replace_matching_indices(

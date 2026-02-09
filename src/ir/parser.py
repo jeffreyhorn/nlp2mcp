@@ -267,8 +267,11 @@ def parse_text(source: str) -> Tree:
     # This handles identifiers like "20-bond-wt", "light-ind", "food+agr" in
     # Set/Parameter/Table declarations and data. Without quoting, these get
     # misinterpreted as arithmetic expressions.
-    # NOTE: Same normalization is in `preprocess_gams_file()` - duplicated here
-    # for callers that invoke `parse_text` directly.
+    # NOTE: This normalization is also performed in `_preprocess_content()` (called
+    # by `preprocess_gams_file()`). The duplication is intentional: file-based
+    # parsing uses `preprocess_gams_file()` → `parse_text()`, while test code and
+    # direct API users may call `parse_text()` directly with raw GAMS source.
+    # Both paths must normalize special identifiers for correct parsing.
     source = normalize_special_identifiers(source)
 
     parser = _build_lark()
@@ -388,16 +391,19 @@ def _token_text(token: Token) -> str:
 
     Issue #665: Also handles quoted ID tokens (escaped identifiers like '20-bond-wt')
     which are lexed as ID tokens via the ESCAPED pattern in the grammar.
+    For escaped identifiers, we preserve inner whitespace as part of the name
+    since GAMS quoted identifiers can legally contain spaces.
     """
     value = str(token)
     if len(value) >= 2:
         if token.type == "STRING":
             return value[1:-1].strip()
-        # ID tokens can also be quoted via ESCAPED pattern (e.g., '20-bond-wt')
+        # ID tokens can also be quoted via ESCAPED pattern (e.g., '20-bond-wt').
+        # For escaped identifiers, preserve inner whitespace as part of the name.
         if token.type == "ID" and (
             (value[0] == "'" and value[-1] == "'") or (value[0] == '"' and value[-1] == '"')
         ):
-            return value[1:-1].strip()
+            return value[1:-1]
     return value
 
 
