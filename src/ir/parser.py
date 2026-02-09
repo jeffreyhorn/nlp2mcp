@@ -1807,13 +1807,15 @@ class _ModelBuilder:
                 # 2. Data values (NUMBER tokens) -> merge with last line (previous data row)
                 if merged_lines:
                     # Check if continuation line looks like column headers or data
-                    # Column headers are ID or STRING tokens (no numbers)
-                    # Data rows have NUMBER tokens
+                    # Heuristic: continuation lines with NUMBER tokens are likely data values,
+                    # while lines with only ID/STRING tokens are likely column headers.
+                    # Note: Column headers CAN be numeric (parsed later), but a continuation
+                    # line of pure numbers is more likely data than header names.
                     # Issue #665: Quoted column headers may be STRING tokens or quoted ID tokens
                     has_number_tokens = any(
                         tok.type == "NUMBER" for tok in line_tokens if isinstance(tok, Token)
                     )
-                    all_header_tokens = all(
+                    all_identifier_tokens = all(
                         tok.type in ("ID", "STRING")
                         for tok in line_tokens
                         if isinstance(tok, Token)
@@ -1821,11 +1823,13 @@ class _ModelBuilder:
 
                     # Determine if this is a column header continuation or data continuation
                     # 1. If only one line exists (column headers), continuation must be for headers
-                    # 2. Otherwise, if all header tokens (ID/STRING) and no numbers, it's column headers
+                    # 2. Otherwise, if all identifier tokens and no numbers, it's column headers
                     if len(merged_lines) == 1:
                         is_column_header_continuation = True
                     else:
-                        is_column_header_continuation = all_header_tokens and not has_number_tokens
+                        is_column_header_continuation = (
+                            all_identifier_tokens and not has_number_tokens
+                        )
 
                     if is_column_header_continuation:
                         # Merge with first line (column headers)
