@@ -19,6 +19,9 @@ Special handling:
 
 from __future__ import annotations
 
+from collections import ChainMap
+from collections.abc import Mapping
+
 from src.ir.ast import Binary, Call, Const, Expr, MultiplierRef, ParamRef, Sum, Unary, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
@@ -390,15 +393,16 @@ def _build_constraint_element_mapping(
     base_element_to_set: dict[str, str],
     constraint_indices: tuple[str, ...],
     constraint_domain: tuple[str, ...],
-) -> dict[str, str]:
+) -> ChainMap[str, str]:
     """Build constraint-specific element-to-set mapping.
 
     Issue #649: When a constraint has multiple indices from the same underlying set
     (e.g., maxdist(i,j) where both i and j iterate over the same set), we need to
     map element labels to their specific position in the constraint domain.
 
-    This function creates a copy of the base mapping and overrides it with
-    position-specific mappings from the constraint's indices.
+    This function creates a lightweight overlay using ChainMap that checks
+    constraint-specific overrides first, then falls back to the base mapping.
+    This avoids copying the entire base mapping for each constraint.
 
     Args:
         base_element_to_set: Base mapping from variable instances
@@ -406,31 +410,31 @@ def _build_constraint_element_mapping(
         constraint_domain: Constraint domain names (e.g., ("i", "j"))
 
     Returns:
-        Updated mapping where constraint elements map to their domain position
+        ChainMap with constraint overrides checked first, then base mapping
 
     Example:
         base_element_to_set = {"1": "i", "2": "i", "3": "i", ...}
         constraint_indices = ("1", "2")
         constraint_domain = ("i", "j")
 
-        Returns: {"1": "i", "2": "j", "3": "i", ...}
+        Returns: ChainMap({"1": "i", "2": "j"}, base_element_to_set)
         # "2" now maps to "j" because it's at position 1 in the constraint
+        # "3" still maps to "i" via fallback to base_element_to_set
     """
-    # Start with a copy of the base mapping
-    result = base_element_to_set.copy()
-
-    # Override with constraint-specific mappings based on position
+    # Build constraint-specific overrides (small dict with just the constraint indices)
+    overrides: dict[str, str] = {}
     if len(constraint_indices) == len(constraint_domain):
         for elem, domain_name in zip(constraint_indices, constraint_domain, strict=True):
-            result[elem] = domain_name
+            overrides[elem] = domain_name
 
-    return result
+    # Use ChainMap for O(1) lookup with lazy fallback to base mapping
+    return ChainMap(overrides, base_element_to_set)
 
 
 def _replace_indices_in_expr(
     expr: Expr,
     domain: tuple[str, ...],
-    element_to_set: dict[str, str] | None = None,
+    element_to_set: Mapping[str, str] | None = None,
     model_ir: ModelIR | None = None,
     equation_domain: tuple[str, ...] | None = None,
 ) -> Expr:
@@ -552,7 +556,7 @@ def _replace_indices_in_expr(
 
 def _replace_matching_indices(
     indices: tuple[str, ...],
-    element_to_set: dict[str, str],
+    element_to_set: Mapping[str, str],
     declared_domain: tuple[str, ...] | None = None,
     equation_domain: tuple[str, ...] | None = None,
     model_ir: ModelIR | None = None,
