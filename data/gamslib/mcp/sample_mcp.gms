@@ -71,8 +71,7 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+* non-zero initial values.
 
 n.l("1") = 200.0;
 n.l("2") = 200.0;

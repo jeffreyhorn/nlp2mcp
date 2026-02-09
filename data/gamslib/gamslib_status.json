@@ -3916,9 +3916,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-09T08:32:21.624619+00:00",
+        "translate_date": "2026-02-09T14:06:36.725544+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 1.4829,
+        "translate_time_seconds": 1.0224,
         "output_file": "data/gamslib/mcp/least_mcp.gms"
       },
       "mcp_solve": {
@@ -8150,9 +8150,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-09T08:33:01.586813+00:00",
+        "translate_date": "2026-02-09T14:06:47.916510+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 1.6319,
+        "translate_time_seconds": 1.2072,
         "output_file": "data/gamslib/mcp/sample_mcp.gms"
       },
       "mcp_solve": {

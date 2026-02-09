@@ -148,6 +148,7 @@ def emit_gams_mcp(
     # denominators of stationarity equations (e.g., from differentiating log(x) or 1/x)
     init_lines: list[str] = []
     has_positive_clamp = False  # Track if any POSITIVE variable clamping is done
+    has_positive_init = False  # Track if any POSITIVE variable is initialized to 1
     for var_name, var_def in kkt.model_ir.variables.items():
         has_init = False
 
@@ -202,6 +203,7 @@ def emit_gams_mcp(
             else:
                 # No explicit .l values - just set to 1 directly
                 # Don't read .up either as it may not be assigned (Error 141)
+                has_positive_init = True
                 if var_def.domain:
                     domain_str = ",".join(var_def.domain)
                     init_lines.append(f"{var_name}.l({domain_str}) = 1;")
@@ -221,11 +223,16 @@ def emit_gams_mcp(
                 "* Variables appearing in denominators (from log, 1/x derivatives) need"
             )
             sections.append("* non-zero initial values.")
-            if has_positive_clamp:
+            if has_positive_clamp and has_positive_init:
                 sections.append("* POSITIVE variables with explicit .l values are")
                 sections.append(
                     "* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1."
                 )
+            elif has_positive_clamp:
+                sections.append("* POSITIVE variables with explicit .l values are")
+                sections.append("* clamped to min(max(value, 1e-6), upper_bound).")
+            elif has_positive_init:
+                sections.append("* POSITIVE variables are set to 1.")
             sections.append("")
         sections.extend(init_lines)
         sections.append("")
