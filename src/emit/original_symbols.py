@@ -69,12 +69,27 @@ def _quote_symbol(name: str) -> str:
     syntax errors. The parser strips quotes from escaped identifiers, so the
     emitter must re-quote them for valid GAMS output.
 
+    Also validates that symbol names don't contain dangerous characters that
+    could break GAMS syntax or enable injection attacks.
+
     Args:
         name: Symbol name to potentially quote
 
     Returns:
         The name quoted if necessary, otherwise unchanged
+
+    Raises:
+        ValueError: If the name contains characters that cannot be safely emitted
     """
+    # Validate: reject characters that could break GAMS syntax or enable injection
+    # Single quotes would break our quoting, semicolons/slashes could inject statements
+    dangerous_chars = {"'", '"', ";", "/", "\n", "\r", "\t"}
+    if any(c in name for c in dangerous_chars):
+        raise ValueError(
+            f"Symbol name '{name}' contains unsafe characters that could cause "
+            f"GAMS injection. Dangerous characters: {dangerous_chars & set(name)}"
+        )
+
     return f"'{name}'" if _needs_quoting(name) else name
 
 
