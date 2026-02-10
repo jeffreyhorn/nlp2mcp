@@ -199,24 +199,23 @@ def test_data_block_with_descriptions():
 
 
 def test_table_header_special_chars():
-    """Test that table column headers are NOT quoted (Issue #665).
+    """Test column header quoting behavior (Issues #665, #668).
 
-    Column headers are kept unquoted because:
-    1. Quoting would make the first header look like a table description
-    2. Hyphenated headers (e.g., ``light-ind``, ``heavy-ind``) are parsed via the
-       DESCRIPTION terminal in the grammar
+    Issue #665: Column headers with only hyphens are NOT quoted because they
+    are parsed via the DESCRIPTION terminal in the grammar.
 
-    Note: The DESCRIPTION terminal does not match ``+``, so headers containing
-    ``+`` (like ``food+agr``) have limited support and may trigger the table
-    continuation rule. Row labels with ``+`` are properly quoted and work correctly.
+    Issue #668: Column headers containing ``+`` ARE quoted because ``+`` triggers
+    the table_continuation rule. Without quoting, ``food+agr`` would be parsed
+    as ``food`` followed by a continuation ``+agr``.
     """
     source = """Table aio(i,i)
        light-ind  food+agr  heavy-ind
 food+agr      .1
 heavy-ind     .2        .1;"""
-    # Column headers should NOT be quoted; only row labels are quoted
+    # Issue #668: Column headers with + ARE quoted to prevent continuation parsing
+    # Headers with only - are NOT quoted (parsed via DESCRIPTION terminal)
     expected = """Table aio(i,i)
-       light-ind  food+agr  heavy-ind
+       'light-ind'  'food+agr'  'heavy-ind'
 'food+agr'      .1
 'heavy-ind'     .2        .1;"""
     assert normalize_special_identifiers(source) == expected
