@@ -2059,6 +2059,14 @@ class _ModelBuilder:
                         best_match = col_name
                         break
 
+                # Fallback: if no range match (e.g., value is left of first header),
+                # assign to the next unused column sequentially to avoid data loss
+                if best_match is None:
+                    for col_name, _ in col_headers:
+                        if col_name not in used_columns:
+                            best_match = col_name
+                            break
+
                 if best_match:
                     # Parse the value
                     value_text = _token_text(token)
