@@ -1445,7 +1445,7 @@ def normalize_special_identifiers(source: str) -> str:
             result.append(line)
             continue
 
-        # If in a table, process header and data rows
+        # If in a table, skip column header line but process data rows
         if in_table:
             # Table ends with a semicolon
             if stripped.endswith(";"):
