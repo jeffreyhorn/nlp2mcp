@@ -777,8 +777,11 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
             # Quote symbol names that contain special characters (Issue #665)
             if key_tuple:
                 # Indexed parameter: c(i,j) = expr
-                quoted_indices = [_quote_symbol(idx) for idx in key_tuple]
-                index_str = ",".join(quoted_indices)
+                # key_tuple indices are already normalized:
+                # - Domain variables: unquoted (e.g., i, j)
+                # - Element literals: quoted strings (e.g., "route-1", "revenue")
+                # Emit indices as-is to avoid double-quoting element literals.
+                index_str = ",".join(key_tuple)
                 lines.append(f"{_quote_symbol(param_name)}({index_str}) = {expr_str};")
             else:
                 # Scalar parameter: f = expr
@@ -821,8 +824,9 @@ def emit_set_assignments(model_ir: ModelIR) -> str:
         # Format the LHS with indices
         # Quote symbol names that contain special characters (Issue #665)
         if set_assignment.indices:
-            quoted_indices = [_quote_symbol(idx) for idx in set_assignment.indices]
-            index_str = ",".join(quoted_indices)
+            # Emit indices as-is: they may be domain variables or already-normalized
+            # literals (e.g., "route-1"). Only quote the set_name as a symbol name.
+            index_str = ",".join(set_assignment.indices)
             lines.append(f"{_quote_symbol(set_assignment.set_name)}({index_str}) = {expr_str};")
         else:
             # Scalar set assignment (rare but possible)
