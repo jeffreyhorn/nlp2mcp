@@ -72,21 +72,30 @@ Since the column header detection was applied to the wrong line (due to `+` trig
 
 ### File: `src/ir/preprocessor.py`
 
-Modified `normalize_special_identifiers()` to quote table column headers that contain `+` characters.
+Modified `normalize_special_identifiers()` to detect and quote table column headers when any identifier contains `+`.
 
 **Before:** Column headers were kept unquoted, relying on the DESCRIPTION terminal which only supports `-`.
 
-**After:** Column headers containing `+` are now quoted during preprocessing, so `food+agr` becomes `'food+agr'`, preventing the `+` from being interpreted as a continuation marker.
+**After:** When ANY column header contains `+`, the ENTIRE header line is processed and ALL special identifiers (both `+` and `-`) are quoted. This is necessary because:
+1. The `+` triggers the table_continuation rule, so we must quote it
+2. Once we quote, we can no longer rely on the DESCRIPTION terminal for any identifiers
+3. Therefore all special identifiers on the line must be quoted
+
+For example, `light-ind  food+agr  heavy-ind` becomes `'light-ind'  'food+agr'  'heavy-ind'`.
 
 ```python
 # Issue #668: Column headers with + MUST be quoted because + triggers
 # table_continuation parsing. Without quoting, "food+agr" would be parsed
-# as "food" followed by a continuation "+agr".
+# as "food" followed by a continuation "+agr". When any identifier on
+# the line contains +, we quote ALL special identifiers on that line
+# (including hyphenated ones) since we can no longer rely on DESCRIPTION.
 if not table_header_seen and stripped:
     table_header_seen = True
     # Issue #668: Quote identifiers with + in column headers
-    # Check if line contains word+word pattern (identifier with +)
-    if re.search(r"\b[a-zA-Z_][a-zA-Z0-9_]*\+[a-zA-Z0-9_]+", stripped):
+    # Check if line contains an identifier with +; identifiers may start
+    # with a letter, digit, or underscore and contain letters, digits,
+    # underscores, plus, and minus characters.
+    if re.search(r"\b[0-9A-Za-z_][0-9A-Za-z_+-]*\+[0-9A-Za-z_+-]*\b", stripped):
         processed = _quote_special_in_line(line)
         result.append(processed)
     else:
@@ -97,8 +106,13 @@ if not table_header_seen and stripped:
 ### File: `tests/unit/test_special_identifiers.py`
 
 Updated `test_table_header_special_chars()` to reflect the new behavior:
-- Column headers with `+` ARE now quoted
-- Column headers with only `-` continue to work via DESCRIPTION terminal
+- When ANY column header contains `+`, ALL special identifiers on the line are quoted
+- Column headers with only `-` (no `+` present) continue to work via DESCRIPTION terminal
+
+Added `test_table_plus_header_parsing()` as an end-to-end regression test that verifies:
+- Column headers with `+` are correctly identified (not decimal values)
+- Decimal values starting with `.` are parsed as numeric values
+- The complete table structure is correct after parsing
 
 ## Verification
 
