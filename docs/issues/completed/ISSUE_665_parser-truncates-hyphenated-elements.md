@@ -31,7 +31,7 @@ Added support for number-starting hyphenated identifiers:
 pattern = r"\b([a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+)\b"
 
 # After: Also matches number-starting identifiers like 20-bond-wt
-pattern = r"\b((?:[a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+)|(?:[0-9]+[-][a-zA-Z0-9_]+(?:[-+][a-zA-Z0-9_]+)*))\b"
+pattern = r"\b((?:[a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+)|(?:[0-9]+[-+][a-zA-Z0-9_]+(?:[-+][a-zA-Z0-9_]+)*))\b"
 ```
 
 ### 2. Table column headers kept unquoted (`src/ir/preprocessor.py`)
@@ -66,14 +66,14 @@ dotted_label: (ID | STRING) ("." (ID | STRING | range_expr))*
 
 ### 6. Improved column matching with range-based algorithm (`src/ir/parser.py`)
 
-Each column "owns" the range from its position up to the next column:
+Each column "owns" the range from its position up to (but not including) the next column:
 ```python
 range_start = col_pos - 3  # Allow 3 chars left tolerance
 if idx + 1 < len(col_headers):
-    range_end = col_headers[idx + 1][1] - 1
+    range_end = col_headers[idx + 1][1]
 else:
     range_end = float("inf")
-if range_start <= token_col <= range_end:
+if range_start <= token_col < range_end:
     best_match = col_name
 ```
 

@@ -31,12 +31,13 @@ _VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.+]*$")
 def _needs_quoting(element: str) -> bool:
     """Determine if a set element or symbol name needs quoting in GAMS.
 
-    Elements/names need quoting if they contain:
-    - '+' or '-' characters (interpreted as operators)
-    - Whitespace (not allowed in unquoted identifiers)
+    Elements/names need quoting if they:
+    - Start with a digit (valid GAMS identifiers must start with letter/underscore)
+    - Contain '+' or '-' characters (interpreted as operators)
+    - Contain whitespace (not allowed in unquoted identifiers)
 
     Dots (.) are OK without quoting as they represent tuple notation.
-    Simple identifiers (letters, digits, underscores) don't need quotes.
+    Simple identifiers (letters, digits, underscores starting with letter/_) don't need quotes.
 
     Args:
         element: Set element or symbol identifier
@@ -44,6 +45,12 @@ def _needs_quoting(element: str) -> bool:
     Returns:
         True if the element/name needs quoting, False otherwise
     """
+    # Empty strings don't need quoting (shouldn't happen, but be safe)
+    if not element:
+        return False
+    # Names starting with a digit need quoting (e.g., '20foo' from escaped identifiers)
+    if element[0].isdigit():
+        return True
     # Elements with + or - need quoting (these are interpreted as operators)
     if "+" in element or "-" in element:
         return True
