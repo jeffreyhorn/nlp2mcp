@@ -1469,7 +1469,7 @@ def normalize_special_identifiers(source: str) -> str:
                 # Check if line contains an identifier with +; identifiers may start
                 # with a letter, digit, or underscore and contain letters, digits,
                 # underscores, plus, and minus characters.
-                if re.search(r"\b[0-9A-Za-z_][0-9A-Za-z_+-]*\+[0-9A-Za-z_+-]*\b", stripped):
+                if re.search(r"\b[0-9A-Za-z_][0-9A-Za-z_+-]*\+[0-9A-Za-z_+-]+\b", stripped):
                     processed = _quote_special_in_line(line)
                     result.append(processed)
                 else:
