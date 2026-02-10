@@ -2029,26 +2029,33 @@ class _ModelBuilder:
                     token_col += continuation_col_offsets[id(token)]
 
                 # Find the column header that this value falls under
-                # Issue #665: Use range-based matching - each column "owns" the range
-                # from its position up to (but not including) the next column's position.
-                # For the last column, it owns everything to the right.
-                # This handles alignment variations in sparse tables.
+                # Issue #665: Use range-based matching where each column "owns" the range
+                # from its position (with small left tolerance) up to the next column's
+                # start position. For the last column, it owns everything to the right.
+                # The ranges are non-overlapping: each column ends where the next begins.
                 best_match = None
                 for idx, (col_name, col_pos) in enumerate(col_headers):
                     # Skip columns that have already been matched
                     if col_name in used_columns:
                         continue
                     # Determine the range this column owns
-                    # Start: this column's position (with small left tolerance)
-                    range_start = col_pos - 3  # Allow 3 chars left tolerance
-                    # End: next column's position (or infinity for last column)
+                    # Start: this column's position with small left tolerance, but
+                    # not before the previous column's position (to avoid overlap)
+                    if idx > 0:
+                        prev_col_pos = col_headers[idx - 1][1]
+                        # Start just after previous column's position
+                        range_start = prev_col_pos + 1
+                    else:
+                        # First column: allow small left tolerance
+                        range_start = col_pos - 3
+                    # End: next column's position (exclusive), or infinity for last
                     if idx + 1 < len(col_headers):
                         next_col_pos = col_headers[idx + 1][1]
-                        range_end = next_col_pos - 1
+                        range_end = next_col_pos
                     else:
                         range_end = float("inf")
                     # Check if value falls in this column's range
-                    if range_start <= token_col <= range_end:
+                    if range_start <= token_col < range_end:
                         best_match = col_name
                         break
 
