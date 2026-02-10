@@ -1664,7 +1664,9 @@ class _ModelBuilder:
 
         # Collect all tokens from table_row nodes with position info
         # Note: PLUS tokens are markers and will be skipped in line grouping
+        # Track row label tokens separately to avoid mis-parsing them as values
         all_tokens = []
+        row_label_token_ids: set[int] = set()  # Token IDs that belong to row labels
         for row in table_rows:
             for child in row.children:
                 if isinstance(child, Token):
@@ -1692,18 +1694,21 @@ class _ModelBuilder:
                     elif child.data == "simple_label":
                         # simple_label wraps dotted_label
                         # Issue #665: Include STRING tokens for quoted row labels
+                        # Track these as row label tokens to exclude from value matching
                         dotted_label_node = child.children[0]
                         for grandchild in dotted_label_node.children:
                             if isinstance(grandchild, Token):
                                 all_tokens.append(grandchild)
+                                row_label_token_ids.add(id(grandchild))
                     elif child.data == "tuple_label":
                         # tuple_label contains id_list and dotted_label
-                        # Collect tokens from both
+                        # Collect tokens from both, tracking them as row label tokens
                         for subnode in child.children:
                             if isinstance(subnode, Tree):
                                 for tok in subnode.children:
                                     if isinstance(tok, Token):
                                         all_tokens.append(tok)
+                                        row_label_token_ids.add(id(tok))
 
         # Collect PLUS tokens to identify continuation lines and extract continuation values
         plus_lines = set()  # Set of line numbers that start with +
@@ -2017,9 +2022,14 @@ class _ModelBuilder:
 
             # Match remaining tokens to columns by position
             # Collect all values for this row first
+            # Skip row label tokens to avoid mis-parsing dotted labels like "medium.alp"
+            # where "alp" would otherwise be treated as a value
             row_values = {}  # col_name -> value
             used_columns = set()  # Track which columns have been matched
             for token in line_tokens[1:]:
+                # Skip tokens that belong to row labels (dotted/tuple labels)
+                if id(token) in row_label_token_ids:
+                    continue
                 if token.type not in ("NUMBER", "ID"):
                     continue
 
