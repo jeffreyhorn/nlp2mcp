@@ -31,8 +31,10 @@ _VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.+]*$")
 def _needs_quoting(element: str) -> bool:
     """Determine if a set element or symbol name needs quoting in GAMS.
 
-    Elements/names containing + or - characters need to be quoted in GAMS
-    because these characters are interpreted as operators.
+    Elements/names need quoting if they contain:
+    - '+' or '-' characters (interpreted as operators)
+    - Whitespace (not allowed in unquoted identifiers)
+
     Dots (.) are OK without quoting as they represent tuple notation.
     Simple identifiers (letters, digits, underscores) don't need quotes.
 
@@ -44,6 +46,9 @@ def _needs_quoting(element: str) -> bool:
     """
     # Elements with + or - need quoting (these are interpreted as operators)
     if "+" in element or "-" in element:
+        return True
+    # Elements with whitespace need quoting (e.g., 'SAE 10' from bearing.gms)
+    if any(c.isspace() for c in element):
         return True
     # Everything else is OK: letters, digits, underscores, and dots (tuple notation)
     return False
@@ -131,17 +136,26 @@ def _sanitize_set_element(element: str) -> str:
             f"GAMS injection. Dangerous characters: {dangerous_chars & set(element)}"
         )
 
-    # Validate against safe pattern
+    # Check if element needs quoting (spaces, +, -)
+    # Elements with spaces (e.g., 'SAE 10' stripped to 'SAE 10') need re-quoting
+    if _needs_quoting(element):
+        # Validate that the element is safe to quote (no dangerous chars)
+        # Note: we already checked dangerous_chars above
+        # For quoted elements, we only need to ensure no control chars
+        control_chars = {"\n", "\r", "\t"}
+        if any(c in element for c in control_chars):
+            raise ValueError(
+                f"Set element '{element}' contains control characters that could break GAMS syntax."
+            )
+        return f"'{element}'"
+
+    # Validate against safe pattern for unquoted elements
     if not _VALID_SET_ELEMENT_PATTERN.match(element):
         raise ValueError(
             f"Set element '{element}' contains invalid characters. "
             f"Set elements must start with a letter or digit and contain only "
             f"letters, digits, underscores, hyphens, dots, and plus signs."
         )
-
-    # Quote elements with special characters for correct GAMS parsing
-    if _needs_quoting(element):
-        return f"'{element}'"
 
     return element
 

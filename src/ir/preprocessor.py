@@ -1400,7 +1400,7 @@ def normalize_special_identifiers(source: str) -> str:
 
     GAMS allows hyphens and plus signs in identifiers (e.g., light-ind, food+agr).
     To avoid ambiguity with arithmetic operators, we quote these identifiers when
-    they appear in /.../ data blocks or table headers.
+    they appear in /.../ data blocks or table row labels/data.
 
     Args:
         source: GAMS source code text
@@ -1415,7 +1415,8 @@ def normalize_special_identifiers(source: str) -> str:
 
     Notes:
         - Processes identifiers within /.../ data blocks
-        - Processes identifiers in table headers (after Table keyword)
+        - For tables: column headers are kept unquoted (parsed via DESCRIPTION
+          terminal), but row labels and data values are quoted if needed
         - Preserves already-quoted strings
         - Detects identifiers with - or + that aren't arithmetic operators
         - Uses context: no surrounding whitespace = identifier

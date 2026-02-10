@@ -2041,13 +2041,14 @@ class _ModelBuilder:
                     # Determine the range this column owns
                     # Start: this column's position with small left tolerance, but
                     # not before the previous column's position (to avoid overlap)
+                    left_tolerance = 3
                     if idx > 0:
                         prev_col_pos = col_headers[idx - 1][1]
-                        # Start just after previous column's position
-                        range_start = prev_col_pos + 1
+                        # Allow left tolerance but don't overlap with previous column
+                        range_start = max(prev_col_pos + 1, col_pos - left_tolerance)
                     else:
                         # First column: allow small left tolerance
-                        range_start = col_pos - 3
+                        range_start = col_pos - left_tolerance
                     # End: next column's position (exclusive), or infinity for last
                     if idx + 1 < len(col_headers):
                         next_col_pos = col_headers[idx + 1][1]
