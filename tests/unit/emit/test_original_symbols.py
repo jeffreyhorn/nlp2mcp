@@ -455,6 +455,26 @@ class TestEmitOriginalAliases:
         assert "i2" not in phase1
         assert phase3 == ""
 
+    def test_alias_with_special_characters(self):
+        """Test emission of aliases with special characters like '-'.
+
+        Issue #665: Alias names containing special characters (e.g., 'i-alias')
+        must be quoted in emitted GAMS to avoid syntax errors. The parser now
+        strips quotes from escaped identifiers, so the emitter must re-quote
+        them for valid GAMS output.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+        # Alias with hyphen in name (requires quoting)
+        model.aliases["i-alias"] = AliasDef(name="i-alias", target="i")
+
+        phase1, phase2, phase3 = _get_phases(emit_original_aliases(model))
+
+        # Alias name with '-' must be quoted
+        assert "Alias(i, 'i-alias');" in phase1
+        assert phase2 == ""
+        assert phase3 == ""
+
 
 @pytest.mark.unit
 class TestEmitOriginalParameters:

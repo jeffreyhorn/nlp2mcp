@@ -29,24 +29,41 @@ _VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.+]*$")
 
 
 def _needs_quoting(element: str) -> bool:
-    """Determine if a set element needs quoting in GAMS.
+    """Determine if a set element or symbol name needs quoting in GAMS.
 
-    Elements containing + or - characters need to be quoted in GAMS set
-    definitions because these characters are interpreted as operators.
+    Elements/names containing + or - characters need to be quoted in GAMS
+    because these characters are interpreted as operators.
     Dots (.) are OK without quoting as they represent tuple notation.
     Simple identifiers (letters, digits, underscores) don't need quotes.
 
     Args:
-        element: Set element identifier
+        element: Set element or symbol identifier
 
     Returns:
-        True if the element needs quoting, False otherwise
+        True if the element/name needs quoting, False otherwise
     """
     # Elements with + or - need quoting (these are interpreted as operators)
     if "+" in element or "-" in element:
         return True
     # Everything else is OK: letters, digits, underscores, and dots (tuple notation)
     return False
+
+
+def _quote_symbol(name: str) -> str:
+    """Quote a symbol name if it contains special characters.
+
+    Issue #665: Symbol names (sets, parameters, variables, aliases) containing
+    special characters like '-' or '+' must be quoted in emitted GAMS to avoid
+    syntax errors. The parser strips quotes from escaped identifiers, so the
+    emitter must re-quote them for valid GAMS output.
+
+    Args:
+        name: Symbol name to potentially quote
+
+    Returns:
+        The name quoted if necessary, otherwise unchanged
+    """
+    return f"'{name}'" if _needs_quoting(name) else name
 
 
 def _sanitize_set_element(element: str) -> str:
@@ -141,11 +158,14 @@ def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
     """
     # Format set declaration with optional domain (subset relationship)
     # E.g., cg(genchar) for subset cg of genchar
+    # Quote symbol names that contain special characters (Issue #665)
+    quoted_name = _quote_symbol(set_name)
     if set_def.domain:
-        domain_str = ",".join(set_def.domain)
-        set_decl = f"{set_name}({domain_str})"
+        quoted_domain = [_quote_symbol(d) for d in set_def.domain]
+        domain_str = ",".join(quoted_domain)
+        set_decl = f"{quoted_name}({domain_str})"
     else:
-        set_decl = set_name
+        set_decl = quoted_name
 
     # Use SetDef.members
     # Members are stored as a list of strings in SetDef
@@ -435,7 +455,8 @@ def emit_original_aliases(
     phase_aliases: list[list[str]] = [[] for _ in range(max_phase)]
 
     for alias_name, alias_def in model_ir.aliases.items():
-        alias_line = f"Alias({alias_def.target}, {alias_name});"
+        # Quote symbol names that contain special characters (Issue #665)
+        alias_line = f"Alias({_quote_symbol(alias_def.target)}, {_quote_symbol(alias_name)});"
         alias_name_lower = alias_name.lower()
         phase = alias_phases.get(alias_name_lower, 1)
         phase_aliases[phase - 1].append(alias_line)
@@ -618,14 +639,17 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                     data_parts.append(f"{key_str} {value}")
 
                 data_str = ", ".join(data_parts)
-                domain_str = ",".join(domain)
-                lines.append(f"    {param_name}({domain_str}) /{data_str}/")
+                # Quote symbol names that contain special characters (Issue #665)
+                quoted_domain = [_quote_symbol(d) for d in domain]
+                domain_str = ",".join(quoted_domain)
+                lines.append(f"    {_quote_symbol(param_name)}({domain_str}) /{data_str}/")
             else:
                 # Parameter declared but no data - must have domain since
                 # parameters dict only contains entries with non-empty domain
                 # (PR #658 review: removed scalar-with-indexed-expressions promotion)
-                domain_str = ",".join(domain)
-                lines.append(f"    {param_name}({domain_str})")
+                quoted_domain = [_quote_symbol(d) for d in domain]
+                domain_str = ",".join(quoted_domain)
+                lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
         lines.append(";")
 
     # Emit Scalars (skip predefined GAMS constants and description-only entries)
@@ -736,13 +760,15 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
             expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
             # Format the LHS with indices
+            # Quote symbol names that contain special characters (Issue #665)
             if key_tuple:
                 # Indexed parameter: c(i,j) = expr
-                index_str = ",".join(key_tuple)
-                lines.append(f"{param_name}({index_str}) = {expr_str};")
+                quoted_indices = [_quote_symbol(idx) for idx in key_tuple]
+                index_str = ",".join(quoted_indices)
+                lines.append(f"{_quote_symbol(param_name)}({index_str}) = {expr_str};")
             else:
                 # Scalar parameter: f = expr
-                lines.append(f"{param_name} = {expr_str};")
+                lines.append(f"{_quote_symbol(param_name)} = {expr_str};")
 
     return "\n".join(lines)
 
@@ -779,11 +805,13 @@ def emit_set_assignments(model_ir: ModelIR) -> str:
         expr_str = expr_to_gams(set_assignment.expr, domain_vars=domain_vars)
 
         # Format the LHS with indices
+        # Quote symbol names that contain special characters (Issue #665)
         if set_assignment.indices:
-            index_str = ",".join(set_assignment.indices)
-            lines.append(f"{set_assignment.set_name}({index_str}) = {expr_str};")
+            quoted_indices = [_quote_symbol(idx) for idx in set_assignment.indices]
+            index_str = ",".join(quoted_indices)
+            lines.append(f"{_quote_symbol(set_assignment.set_name)}({index_str}) = {expr_str};")
         else:
             # Scalar set assignment (rare but possible)
-            lines.append(f"{set_assignment.set_name} = {expr_str};")
+            lines.append(f"{_quote_symbol(set_assignment.set_name)} = {expr_str};")
 
     return "\n".join(lines)
