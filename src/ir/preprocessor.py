@@ -1400,7 +1400,7 @@ def normalize_special_identifiers(source: str) -> str:
 
     GAMS allows hyphens and plus signs in identifiers (e.g., light-ind, food+agr).
     To avoid ambiguity with arithmetic operators, we quote these identifiers when
-    they appear in /.../ data blocks or table headers.
+    they appear in /.../ data blocks or table row labels/data.
 
     Args:
         source: GAMS source code text
@@ -1415,7 +1415,8 @@ def normalize_special_identifiers(source: str) -> str:
 
     Notes:
         - Processes identifiers within /.../ data blocks
-        - Processes identifiers in table headers (after Table keyword)
+        - For tables: column headers are kept unquoted (parsed via DESCRIPTION
+          terminal), but row labels and data values are quoted if needed
         - Preserves already-quoted strings
         - Detects identifiers with - or + that aren't arithmetic operators
         - Uses context: no surrounding whitespace = identifier
@@ -1444,7 +1445,7 @@ def normalize_special_identifiers(source: str) -> str:
             result.append(line)
             continue
 
-        # If in a table, process header and data rows
+        # If in a table, skip column header line but process data rows
         if in_table:
             # Table ends with a semicolon
             if stripped.endswith(";"):
@@ -1454,11 +1455,14 @@ def normalize_special_identifiers(source: str) -> str:
                 result.append(processed)
                 continue
 
-            # First non-empty line after Table declaration is the header
+            # First non-empty line after Table declaration is the column header
+            # Issue #665: Do NOT quote column headers. The grammar uses DESCRIPTION
+            # terminal for multi-word headers with hyphens (e.g., "light-ind heavy-ind").
+            # Note: Column headers with + have limited support - the + may trigger
+            # table_continuation parsing. Row labels with + are properly quoted.
             if not table_header_seen and stripped:
                 table_header_seen = True
-                processed = _quote_special_in_line(line)
-                result.append(processed)
+                result.append(line)  # Keep original header line
                 continue
 
             # All table rows (data rows with row labels and values)
@@ -1524,12 +1528,18 @@ def _quote_special_in_line(line: str) -> str:
     # This distinguishes:
     #   light-ind (identifier) vs x1 - 1 (arithmetic)
     #   food+agr (identifier) vs x + y (arithmetic)
+    #   20-bond-wt (identifier starting with number)
     #
     # Match: Start of identifier, then word chars, then one or more (-/+ followed by word chars)
     # Word boundary at start to ensure we match the full identifier
     # Note: This function is only called for lines in data blocks (Set/Parameter/etc.),
     # so we don't need to worry about matching arithmetic in equations
-    pattern = r"\b([a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+)\b"
+    #
+    # Issue #665: Also match number-starting identifiers like 20-bond-wt
+    # Pattern has two alternatives:
+    # 1. Letter/underscore start: [a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+
+    # 2. Number start with hyphen or plus: [0-9]+[-+][a-zA-Z0-9_]+(?:[-+][a-zA-Z0-9_]+)*
+    pattern = r"\b((?:[a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+)|(?:[0-9]+[-+][a-zA-Z0-9_]+(?:[-+][a-zA-Z0-9_]+)*))\b"
 
     def replace_if_not_quoted(match):
         """Replace match with quoted version if not already in quotes."""

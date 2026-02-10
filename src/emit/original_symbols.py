@@ -27,26 +27,67 @@ from src.ir.symbols import ParameterDef, SetDef
 # These characters cannot break out of the /.../ block - that requires / or ; which are blocked.
 _VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.+]*$")
 
+# Valid unescaped GAMS symbol identifier: starts with letter/underscore, contains only
+# letters, digits, and underscores. Dots are allowed as they represent tuple notation.
+_VALID_UNESCAPED_SYMBOL_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$")
+
 
 def _needs_quoting(element: str) -> bool:
-    """Determine if a set element needs quoting in GAMS.
+    """Determine if a set element or symbol name needs quoting in GAMS.
 
-    Elements containing + or - characters need to be quoted in GAMS set
-    definitions because these characters are interpreted as operators.
-    Dots (.) are OK without quoting as they represent tuple notation.
-    Simple identifiers (letters, digits, underscores) don't need quotes.
+    A symbol needs quoting if it doesn't match the valid unescaped GAMS identifier
+    pattern: must start with a letter or underscore, and contain only letters,
+    digits, and underscores (dots are allowed for tuple notation like x.i).
+
+    This catches:
+    - Names starting with a digit (e.g., '20foo')
+    - Names containing '+' or '-' (interpreted as operators)
+    - Names containing whitespace
+    - Names containing other special characters (e.g., '%', '@')
 
     Args:
-        element: Set element identifier
+        element: Set element or symbol identifier
 
     Returns:
-        True if the element needs quoting, False otherwise
+        True if the element/name needs quoting, False otherwise
     """
-    # Elements with + or - need quoting (these are interpreted as operators)
-    if "+" in element or "-" in element:
-        return True
-    # Everything else is OK: letters, digits, underscores, and dots (tuple notation)
-    return False
+    # Empty strings don't need quoting (shouldn't happen, but be safe)
+    if not element:
+        return False
+    # Quote anything that doesn't match the valid unescaped identifier pattern
+    return not _VALID_UNESCAPED_SYMBOL_PATTERN.match(element)
+
+
+def _quote_symbol(name: str) -> str:
+    """Quote a symbol name if it contains special characters.
+
+    Issue #665: Symbol names (sets, parameters, variables, aliases) containing
+    special characters like '-' or '+' must be quoted in emitted GAMS to avoid
+    syntax errors. The parser strips quotes from escaped identifiers, so the
+    emitter must re-quote them for valid GAMS output.
+
+    Also validates that symbol names don't contain dangerous characters that
+    could break GAMS syntax or enable injection attacks.
+
+    Args:
+        name: Symbol name to potentially quote
+
+    Returns:
+        The name quoted if necessary, otherwise unchanged
+
+    Raises:
+        ValueError: If the name contains characters that cannot be safely emitted
+    """
+    # Validate: reject characters that could break GAMS syntax or enable injection
+    # Single quotes would break our quoting, semicolons/slashes could inject statements
+    dangerous_chars = {"'", '"', ";", "/", "\n", "\r", "\t"}
+    if any(c in name for c in dangerous_chars):
+        raise ValueError(
+            f"Symbol name '{name}' contains unsafe characters that could cause "
+            f"GAMS injection. Dangerous characters: {dangerous_chars & set(name)}"
+        )
+
+    return f"'{name}'" if _needs_quoting(name) else name
 
 
 def _sanitize_set_element(element: str) -> str:
@@ -114,17 +155,26 @@ def _sanitize_set_element(element: str) -> str:
             f"GAMS injection. Dangerous characters: {dangerous_chars & set(element)}"
         )
 
-    # Validate against safe pattern
+    # Check if element needs quoting (spaces, +, -)
+    # Elements with spaces (e.g., 'SAE 10' stripped to 'SAE 10') need re-quoting
+    if _needs_quoting(element):
+        # Validate that the element is safe to quote (no dangerous chars)
+        # Note: we already checked dangerous_chars above
+        # For quoted elements, we only need to ensure no control chars
+        control_chars = {"\n", "\r", "\t"}
+        if any(c in element for c in control_chars):
+            raise ValueError(
+                f"Set element '{element}' contains control characters that could break GAMS syntax."
+            )
+        return f"'{element}'"
+
+    # Validate against safe pattern for unquoted elements
     if not _VALID_SET_ELEMENT_PATTERN.match(element):
         raise ValueError(
             f"Set element '{element}' contains invalid characters. "
             f"Set elements must start with a letter or digit and contain only "
             f"letters, digits, underscores, hyphens, dots, and plus signs."
         )
-
-    # Quote elements with special characters for correct GAMS parsing
-    if _needs_quoting(element):
-        return f"'{element}'"
 
     return element
 
@@ -141,11 +191,14 @@ def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
     """
     # Format set declaration with optional domain (subset relationship)
     # E.g., cg(genchar) for subset cg of genchar
+    # Quote symbol names that contain special characters (Issue #665)
+    quoted_name = _quote_symbol(set_name)
     if set_def.domain:
-        domain_str = ",".join(set_def.domain)
-        set_decl = f"{set_name}({domain_str})"
+        quoted_domain = [_quote_symbol(d) for d in set_def.domain]
+        domain_str = ",".join(quoted_domain)
+        set_decl = f"{quoted_name}({domain_str})"
     else:
-        set_decl = set_name
+        set_decl = quoted_name
 
     # Use SetDef.members
     # Members are stored as a list of strings in SetDef
@@ -435,7 +488,8 @@ def emit_original_aliases(
     phase_aliases: list[list[str]] = [[] for _ in range(max_phase)]
 
     for alias_name, alias_def in model_ir.aliases.items():
-        alias_line = f"Alias({alias_def.target}, {alias_name});"
+        # Quote symbol names that contain special characters (Issue #665)
+        alias_line = f"Alias({_quote_symbol(alias_def.target)}, {_quote_symbol(alias_name)});"
         alias_name_lower = alias_name.lower()
         phase = alias_phases.get(alias_name_lower, 1)
         phase_aliases[phase - 1].append(alias_line)
@@ -618,14 +672,17 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                     data_parts.append(f"{key_str} {value}")
 
                 data_str = ", ".join(data_parts)
-                domain_str = ",".join(domain)
-                lines.append(f"    {param_name}({domain_str}) /{data_str}/")
+                # Quote symbol names that contain special characters (Issue #665)
+                quoted_domain = [_quote_symbol(d) for d in domain]
+                domain_str = ",".join(quoted_domain)
+                lines.append(f"    {_quote_symbol(param_name)}({domain_str}) /{data_str}/")
             else:
                 # Parameter declared but no data - must have domain since
                 # parameters dict only contains entries with non-empty domain
                 # (PR #658 review: removed scalar-with-indexed-expressions promotion)
-                domain_str = ",".join(domain)
-                lines.append(f"    {param_name}({domain_str})")
+                quoted_domain = [_quote_symbol(d) for d in domain]
+                domain_str = ",".join(quoted_domain)
+                lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
         lines.append(";")
 
     # Emit Scalars (skip predefined GAMS constants and description-only entries)
@@ -736,13 +793,18 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
             expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
             # Format the LHS with indices
+            # Quote symbol names that contain special characters (Issue #665)
             if key_tuple:
                 # Indexed parameter: c(i,j) = expr
+                # key_tuple indices are already normalized:
+                # - Domain variables: unquoted (e.g., i, j)
+                # - Element literals: quoted strings (e.g., "route-1", "revenue")
+                # Emit indices as-is to avoid double-quoting element literals.
                 index_str = ",".join(key_tuple)
-                lines.append(f"{param_name}({index_str}) = {expr_str};")
+                lines.append(f"{_quote_symbol(param_name)}({index_str}) = {expr_str};")
             else:
                 # Scalar parameter: f = expr
-                lines.append(f"{param_name} = {expr_str};")
+                lines.append(f"{_quote_symbol(param_name)} = {expr_str};")
 
     return "\n".join(lines)
 
@@ -779,11 +841,14 @@ def emit_set_assignments(model_ir: ModelIR) -> str:
         expr_str = expr_to_gams(set_assignment.expr, domain_vars=domain_vars)
 
         # Format the LHS with indices
+        # Quote symbol names that contain special characters (Issue #665)
         if set_assignment.indices:
+            # Emit indices as-is: they may be domain variables or already-normalized
+            # literals (e.g., "route-1"). Only quote the set_name as a symbol name.
             index_str = ",".join(set_assignment.indices)
-            lines.append(f"{set_assignment.set_name}({index_str}) = {expr_str};")
+            lines.append(f"{_quote_symbol(set_assignment.set_name)}({index_str}) = {expr_str};")
         else:
             # Scalar set assignment (rare but possible)
-            lines.append(f"{set_assignment.set_name} = {expr_str};")
+            lines.append(f"{_quote_symbol(set_assignment.set_name)} = {expr_str};")
 
     return "\n".join(lines)

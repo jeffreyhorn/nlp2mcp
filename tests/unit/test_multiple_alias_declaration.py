@@ -125,7 +125,11 @@ def test_multiple_alias_statements():
 
 
 def test_alias_with_quoted_names():
-    """Test aliases with quoted names (GAMS escaped identifiers)."""
+    """Test aliases with quoted names (GAMS escaped identifiers).
+
+    Issue #665: Quotes are now stripped from escaped identifiers,
+    so 'i-alias' is stored as i-alias.
+    """
     source = """
     Set i / a, b, c /;
     Alias (i, 'i-alias');
@@ -133,9 +137,9 @@ def test_alias_with_quoted_names():
     model = parse_model_text(source)
 
     assert "i" in model.sets
-    # Quoted identifiers are stored with quotes
-    assert "'i-alias'" in model.aliases
-    assert model.aliases["'i-alias'"].target == "i"
+    # Issue #665: Quotes are stripped from escaped identifiers
+    assert "i-alias" in model.aliases
+    assert model.aliases["i-alias"].target == "i"
 
 
 def test_multiple_aliases_of_same_set():

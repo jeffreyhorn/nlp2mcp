@@ -3311,6 +3311,72 @@ class TestHyphenatedIdentifiers:
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["light-ind", "food+agr", "heavy-ind"]
 
+    def test_number_starting_hyphenated_set_element(self):
+        """Test set elements like '20-bond-wt' that start with digits (Issue #665)."""
+        text = dedent("""
+            Set g / 20-bond-wt, 25-bond-wt, c-bond-ext, tissue-wrp /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["g"].members == ["20-bond-wt", "25-bond-wt", "c-bond-ext", "tissue-wrp"]
+
+    def test_table_row_labels_with_number_hyphenated_elements(self):
+        """Test table with hyphenated row labels starting with numbers (Issue #665)."""
+        text = dedent("""
+            Set g / 20-bond-wt, 25-bond-wt, c-bond-ext /;
+            Set m / machine-1, machine-2 /;
+            Table prate(g,m)
+                            machine-1  machine-2
+               20-bond-wt        53         52
+               25-bond-wt        51         49
+               c-bond-ext        52         45;
+            """)
+        model = parser.parse_model_text(text)
+        assert ("20-bond-wt", "machine-1") in model.params["prate"].values
+        assert ("25-bond-wt", "machine-2") in model.params["prate"].values
+        assert model.params["prate"].values[("20-bond-wt", "machine-1")] == 53
+        assert model.params["prate"].values[("c-bond-ext", "machine-2")] == 45
+
+    def test_table_with_plus_in_row_labels(self):
+        """Test table with + in row labels parses correctly.
+
+        Issue #665: The + in identifiers like 'food+agr' in row labels must be
+        handled correctly. Row labels are quoted by the preprocessor, so the +
+        is not misinterpreted as a table continuation marker.
+
+        Note: Column headers with + have limited support due to grammar constraints
+        (the DESCRIPTION terminal and table_row rules interact in complex ways).
+        """
+        text = dedent("""
+            Set i 'sectors' / light-ind, food+agr, heavy-ind /;
+            Set j 'goods'   / steel, coal /;
+            Table supply(i,j) 'supply by sector'
+                        steel  coal
+               light-ind   10    20
+               food+agr    30    40
+               heavy-ind   50    60;
+            """)
+        model = parser.parse_model_text(text)
+        # Verify row labels with + parsed correctly
+        assert "supply" in model.params
+        assert ("light-ind", "steel") in model.params["supply"].values
+        assert ("food+agr", "steel") in model.params["supply"].values
+        assert ("food+agr", "coal") in model.params["supply"].values
+        assert model.params["supply"].values[("light-ind", "steel")] == 10
+        assert model.params["supply"].values[("food+agr", "coal")] == 40
+        assert model.params["supply"].values[("heavy-ind", "coal")] == 60
+
+    def test_parameter_data_with_number_hyphenated_indices(self):
+        """Test parameter data with indices like '20-bond-wt' (Issue #665)."""
+        text = dedent("""
+            Set g / 20-bond-wt, 25-bond-wt /;
+            Parameter dempr(g,*) / 20-bond-wt.demand 30000, 20-bond-wt.price 77,
+                                   25-bond-wt.demand 20000, 25-bond-wt.price 81 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["dempr"].values[("20-bond-wt", "demand")] == 30000.0
+        assert model.params["dempr"].values[("20-bond-wt", "price")] == 77.0
+        assert model.params["dempr"].values[("25-bond-wt", "demand")] == 20000.0
+
 
 class TestAttributeAssignments:
     """Test variable/parameter/model attribute assignments (Issue #389).

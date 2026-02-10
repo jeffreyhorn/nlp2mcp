@@ -38,6 +38,7 @@ from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import (
     normalize_double_commas,
     normalize_multi_line_continuations,
+    normalize_special_identifiers,
     preprocess_gams_file,
 )
 from .symbols import (
@@ -262,6 +263,17 @@ def parse_text(source: str) -> Tree:
     # handling of visual-alignment double commas.
     source = normalize_double_commas(source)
 
+    # Issue #665: Quote identifiers with special characters (-, +) in data blocks.
+    # This handles identifiers like "20-bond-wt", "light-ind", "food+agr" in
+    # Set/Parameter/Table declarations and data. Without quoting, these get
+    # misinterpreted as arithmetic expressions.
+    # NOTE: This normalization is also performed in `_preprocess_content()` (called
+    # by `preprocess_gams_file()`). The duplication is intentional: file-based
+    # parsing uses `preprocess_gams_file()` → `parse_text()`, while test code and
+    # direct API users may call `parse_text()` directly with raw GAMS source.
+    # Both paths must normalize special identifiers for correct parsing.
+    source = normalize_special_identifiers(source)
+
     parser = _build_lark()
     try:
         raw = parser.parse(source)
@@ -372,14 +384,26 @@ def parse_model_file(path: str | Path) -> ModelIR:
 
 
 def _token_text(token: Token) -> str:
-    """Extract text from a token, stripping quotes from STRING tokens.
+    """Extract text from a token, stripping quotes from STRING and escaped ID tokens.
 
     PR #658: Also strips leading/trailing whitespace from string content
     to handle cases like '"rating  "' → 'rating'.
+
+    Issue #665: Also handles quoted ID tokens (escaped identifiers like '20-bond-wt')
+    which are lexed as ID tokens via the ESCAPED pattern in the grammar.
+    For escaped identifiers, we preserve inner whitespace as part of the name
+    since GAMS quoted identifiers can legally contain spaces.
     """
     value = str(token)
-    if token.type == "STRING" and len(value) >= 2:
-        return value[1:-1].strip()
+    if len(value) >= 2:
+        if token.type == "STRING":
+            return value[1:-1].strip()
+        # ID tokens can also be quoted via ESCAPED pattern (e.g., '20-bond-wt').
+        # For escaped identifiers, preserve inner whitespace as part of the name.
+        if token.type == "ID" and (
+            (value[0] == "'" and value[-1] == "'") or (value[0] == '"' and value[-1] == '"')
+        ):
+            return value[1:-1]
     return value
 
 
@@ -1590,14 +1614,13 @@ class _ModelBuilder:
                     if first_child.data == "simple_label":
                         # Simple or dotted label wrapped in simple_label
                         dotted_label_node = first_child.children[0]
-                        # Filter out string literals (table descriptions) when building label
+                        # Issue #665: Include STRING tokens as valid row labels
+                        # (preprocessor quotes hyphenated identifiers like '20-bond-wt')
                         label_tokens = [
-                            tok
-                            for tok in dotted_label_node.children
-                            if isinstance(tok, Token) and not _is_string_literal(tok)
+                            tok for tok in dotted_label_node.children if isinstance(tok, Token)
                         ]
                         if label_tokens:
-                            # Only create row label if there are non-string-literal tokens
+                            # Only create row label if there are tokens
                             label_parts = [_token_text(tok) for tok in label_tokens]
                             row_label = ".".join(label_parts)
                             # Get line number from first token
@@ -1641,7 +1664,9 @@ class _ModelBuilder:
 
         # Collect all tokens from table_row nodes with position info
         # Note: PLUS tokens are markers and will be skipped in line grouping
+        # Track row label tokens separately to avoid mis-parsing them as values
         all_tokens = []
+        row_label_token_ids: set[int] = set()  # Token IDs that belong to row labels
         for row in table_rows:
             for child in row.children:
                 if isinstance(child, Token):
@@ -1668,20 +1693,22 @@ class _ModelBuilder:
                                 all_tokens.append(synthetic_token)
                     elif child.data == "simple_label":
                         # simple_label wraps dotted_label
+                        # Issue #665: Include STRING tokens for quoted row labels
+                        # Track these as row label tokens to exclude from value matching
                         dotted_label_node = child.children[0]
                         for grandchild in dotted_label_node.children:
                             if isinstance(grandchild, Token):
-                                # Skip string literals (table descriptions)
-                                if not _is_string_literal(grandchild):
-                                    all_tokens.append(grandchild)
+                                all_tokens.append(grandchild)
+                                row_label_token_ids.add(id(grandchild))
                     elif child.data == "tuple_label":
                         # tuple_label contains id_list and dotted_label
-                        # Collect tokens from both
+                        # Collect tokens from both, tracking them as row label tokens
                         for subnode in child.children:
                             if isinstance(subnode, Tree):
                                 for tok in subnode.children:
                                     if isinstance(tok, Token):
                                         all_tokens.append(tok)
+                                        row_label_token_ids.add(id(tok))
 
         # Collect PLUS tokens to identify continuation lines and extract continuation values
         plus_lines = set()  # Set of line numbers that start with +
@@ -1785,24 +1812,29 @@ class _ModelBuilder:
                 # 2. Data values (NUMBER tokens) -> merge with last line (previous data row)
                 if merged_lines:
                     # Check if continuation line looks like column headers or data
-                    # Column headers are all ID tokens (no numbers)
-                    # Data rows have NUMBER tokens
+                    # Heuristic: continuation lines with NUMBER tokens are likely data values,
+                    # while lines with only ID/STRING tokens are likely column headers.
+                    # Note: Column headers CAN be numeric (parsed later), but a continuation
+                    # line of pure numbers is more likely data than header names.
+                    # Issue #665: Quoted column headers may be STRING tokens or quoted ID tokens
                     has_number_tokens = any(
                         tok.type == "NUMBER" for tok in line_tokens if isinstance(tok, Token)
                     )
-                    all_id_tokens = all(
-                        tok.type == "ID" and not _is_string_literal(tok)
+                    all_identifier_tokens = all(
+                        tok.type in ("ID", "STRING")
                         for tok in line_tokens
                         if isinstance(tok, Token)
                     )
 
                     # Determine if this is a column header continuation or data continuation
                     # 1. If only one line exists (column headers), continuation must be for headers
-                    # 2. Otherwise, if all ID tokens and no numbers, it's column headers
+                    # 2. Otherwise, if all identifier tokens and no numbers, it's column headers
                     if len(merged_lines) == 1:
                         is_column_header_continuation = True
                     else:
-                        is_column_header_continuation = all_id_tokens and not has_number_tokens
+                        is_column_header_continuation = (
+                            all_identifier_tokens and not has_number_tokens
+                        )
 
                     if is_column_header_continuation:
                         # Merge with first line (column headers)
@@ -1952,11 +1984,9 @@ class _ModelBuilder:
         # Column headers: store name and column position
         col_headers = []  # List of (col_name, col_position) tuples
         for token in first_line_tokens:
-            # Column headers can be ID or NUMBER tokens
-            if token.type in ("ID", "NUMBER"):
-                # Skip string literals (table descriptions) that were incorrectly parsed as IDs
-                if token.type == "ID" and _is_string_literal(token):
-                    continue
+            # Column headers can be ID, NUMBER, or STRING tokens
+            # Issue #665: Quoted identifiers like 'machine-1' may be STRING tokens
+            if token.type in ("ID", "NUMBER", "STRING"):
                 col_name = _token_text(token)
                 col_pos = getattr(token, "column", 0)
                 # Apply continuation offset if this token came from a continuation line
@@ -1977,8 +2007,9 @@ class _ModelBuilder:
             # Get row header(s) from row_label_map (handles dotted labels and tuple labels)
             if line_num not in row_label_map:
                 # Fallback: first token should be row header
-                # Row labels can be ID or NUMBER tokens (e.g., "1", "2" in table rows)
-                if line_tokens[0].type not in ("ID", "NUMBER"):
+                # Row labels can be ID, NUMBER, or STRING tokens
+                # Issue #665: Quoted row labels (e.g., '20-bond-wt') may be STRING tokens
+                if line_tokens[0].type not in ("ID", "NUMBER", "STRING"):
                     continue
                 row_headers = [_token_text(line_tokens[0])]
             else:
@@ -1991,9 +2022,14 @@ class _ModelBuilder:
 
             # Match remaining tokens to columns by position
             # Collect all values for this row first
+            # Skip row label tokens to avoid mis-parsing dotted labels like "medium.alp"
+            # where "alp" would otherwise be treated as a value
             row_values = {}  # col_name -> value
             used_columns = set()  # Track which columns have been matched
             for token in line_tokens[1:]:
+                # Skip tokens that belong to row labels (dotted/tuple labels)
+                if id(token) in row_label_token_ids:
+                    continue
                 if token.type not in ("NUMBER", "ID"):
                     continue
 
@@ -2002,19 +2038,45 @@ class _ModelBuilder:
                 if id(token) in continuation_col_offsets:
                     token_col += continuation_col_offsets[id(token)]
 
-                # Find the closest column header at or before this position
-                # (to handle slight alignment variations)
+                # Find the column header that this value falls under
+                # Issue #665: Use range-based matching where each column "owns" the range
+                # from its position (with small left tolerance) up to the next column's
+                # start position. For the last column, it owns everything to the right.
+                # The ranges are non-overlapping: each column ends where the next begins.
                 best_match = None
-                min_dist = float("inf")
-                for col_name, col_pos in col_headers:
+                for idx, (col_name, col_pos) in enumerate(col_headers):
                     # Skip columns that have already been matched
                     if col_name in used_columns:
                         continue
-                    # Allow token to be within ~6 chars of column header position
-                    dist = abs(token_col - col_pos)
-                    if dist < min_dist and dist <= 6:
-                        min_dist = dist
+                    # Determine the range this column owns
+                    # Start: this column's position with small left tolerance, but
+                    # not before the previous column's position (to avoid overlap)
+                    left_tolerance = 3
+                    if idx > 0:
+                        prev_col_pos = col_headers[idx - 1][1]
+                        # Allow left tolerance but don't overlap with previous column
+                        range_start = max(prev_col_pos + 1, col_pos - left_tolerance)
+                    else:
+                        # First column: allow small left tolerance
+                        range_start = col_pos - left_tolerance
+                    # End: next column's position (exclusive), or infinity for last
+                    if idx + 1 < len(col_headers):
+                        next_col_pos = col_headers[idx + 1][1]
+                        range_end = next_col_pos
+                    else:
+                        range_end = float("inf")
+                    # Check if value falls in this column's range
+                    if range_start <= token_col < range_end:
                         best_match = col_name
+                        break
+
+                # Fallback: if no range match (e.g., value is left of first header),
+                # assign to the next unused column sequentially to avoid data loss
+                if best_match is None:
+                    for col_name, _ in col_headers:
+                        if col_name not in used_columns:
+                            best_match = col_name
+                            break
 
                 if best_match:
                     # Parse the value
@@ -2037,9 +2099,10 @@ class _ModelBuilder:
             all_row_headers.add(row_header)
 
         # Also collect row headers from lines (to handle completely empty rows)
-        # Row labels can be ID or NUMBER tokens (e.g., "1", "2" in table rows)
+        # Row labels can be ID, NUMBER, or STRING tokens
+        # Issue #665: Quoted row labels (e.g., '20-bond-wt') may be STRING tokens
         for _line_num, line_tokens in sorted_lines[1:]:
-            if line_tokens and line_tokens[0].type in ("ID", "NUMBER"):
+            if line_tokens and line_tokens[0].type in ("ID", "NUMBER", "STRING"):
                 # First token is row header
                 row_header = _token_text(line_tokens[0])
                 all_row_headers.add(row_header)
