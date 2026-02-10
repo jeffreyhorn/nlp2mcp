@@ -27,17 +27,23 @@ from src.ir.symbols import ParameterDef, SetDef
 # These characters cannot break out of the /.../ block - that requires / or ; which are blocked.
 _VALID_SET_ELEMENT_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-\.+]*$")
 
+# Valid unescaped GAMS symbol identifier: starts with letter/underscore, contains only
+# letters, digits, and underscores. Dots are allowed as they represent tuple notation.
+_VALID_UNESCAPED_SYMBOL_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$")
+
 
 def _needs_quoting(element: str) -> bool:
     """Determine if a set element or symbol name needs quoting in GAMS.
 
-    Elements/names need quoting if they:
-    - Start with a digit (valid GAMS identifiers must start with letter/underscore)
-    - Contain '+' or '-' characters (interpreted as operators)
-    - Contain whitespace (not allowed in unquoted identifiers)
+    A symbol needs quoting if it doesn't match the valid unescaped GAMS identifier
+    pattern: must start with a letter or underscore, and contain only letters,
+    digits, and underscores (dots are allowed for tuple notation like x.i).
 
-    Dots (.) are OK without quoting as they represent tuple notation.
-    Simple identifiers (letters, digits, underscores starting with letter/_) don't need quotes.
+    This catches:
+    - Names starting with a digit (e.g., '20foo')
+    - Names containing '+' or '-' (interpreted as operators)
+    - Names containing whitespace
+    - Names containing other special characters (e.g., '%', '@')
 
     Args:
         element: Set element or symbol identifier
@@ -48,17 +54,8 @@ def _needs_quoting(element: str) -> bool:
     # Empty strings don't need quoting (shouldn't happen, but be safe)
     if not element:
         return False
-    # Names starting with a digit need quoting (e.g., '20foo' from escaped identifiers)
-    if element[0].isdigit():
-        return True
-    # Elements with + or - need quoting (these are interpreted as operators)
-    if "+" in element or "-" in element:
-        return True
-    # Elements with whitespace need quoting (e.g., 'SAE 10' from bearing.gms)
-    if any(c.isspace() for c in element):
-        return True
-    # Everything else is OK: letters, digits, underscores, and dots (tuple notation)
-    return False
+    # Quote anything that doesn't match the valid unescaped identifier pattern
+    return not _VALID_UNESCAPED_SYMBOL_PATTERN.match(element)
 
 
 def _quote_symbol(name: str) -> str:
