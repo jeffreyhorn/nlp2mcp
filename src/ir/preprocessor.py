@@ -1538,8 +1538,8 @@ def _quote_special_in_line(line: str) -> str:
     # Issue #665: Also match number-starting identifiers like 20-bond-wt
     # Pattern has two alternatives:
     # 1. Letter/underscore start: [a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+
-    # 2. Number start with hyphen: [0-9]+[-][a-zA-Z0-9_]+(?:[-+][a-zA-Z0-9_]+)*
-    pattern = r"\b((?:[a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+)|(?:[0-9]+[-][a-zA-Z0-9_]+(?:[-+][a-zA-Z0-9_]+)*))\b"
+    # 2. Number start with hyphen or plus: [0-9]+[-+][a-zA-Z0-9_]+(?:[-+][a-zA-Z0-9_]+)*
+    pattern = r"\b((?:[a-zA-Z_][a-zA-Z0-9_]*(?:[-+][a-zA-Z0-9_]+)+)|(?:[0-9]+[-+][a-zA-Z0-9_]+(?:[-+][a-zA-Z0-9_]+)*))\b"
 
     def replace_if_not_quoted(match):
         """Replace match with quoted version if not already in quotes."""
