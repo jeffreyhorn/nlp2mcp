@@ -60,24 +60,16 @@ mue(i)   = (2.48 + 0.0084*rd(i,"export"))$rd(i,"export");
 
 The table column `export` exists, but `"import"` in the first dimension is only used in assignments, not in the table row labels.
 
-### Generated MCP (Wrong)
+### Generated MCP
 
 ```gams
 Sets
     wc_rd_d1 /ahmsa, fundidora, hylsa, hylsap, import, sicartsa/
     wc_rd_d2 /'-df', export, guadalaja, mexico, monterrey/
 ;
-
-* But the set wc_rd_d1 doesn't include all elements used in assignments
 ```
 
-Wait, checking the MCP output shows `import` IS in `wc_rd_d1`. Let me look more carefully.
-
-```bash
-muf(i,j) = (2.48 + 0.0084 * rd(i,j))$rd(i,j);
-```
-
-Error 171 is "Domain violation for SET" - this means `i` or `j` in the expression is not a valid set reference for the `rd` parameter.
+The wildcard set includes the elements from the table data, but Error 171 ("Domain violation for SET") occurs because the assignment uses sets `i` and `j` that are not domain-compatible with the inferred wildcard sets.
 
 ---
 

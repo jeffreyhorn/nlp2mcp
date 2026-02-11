@@ -11,6 +11,7 @@ Tests verify correct usage of actual IR fields (Finding #3):
 import pytest
 
 from src.emit.original_symbols import (
+    _expand_table_key,
     _needs_quoting,
     _sanitize_set_element,
     emit_computed_parameter_assignments,
@@ -822,3 +823,79 @@ class TestSetElementQuoting:
         assert "'c-cracker'.'ho-high-s'" in phase1
         # Should NOT quote the entire tuple
         assert "'c-cracker.ho-low-s'" not in phase1
+
+
+@pytest.mark.unit
+class TestExpandTableKey:
+    """Test _expand_table_key function for handling dotted row headers.
+
+    PR #677: The table parser stores data as 2-tuples (row_header, col_header) where
+    row_header may be a dotted string representing multiple dimensions (e.g., 'low.a.distr').
+    This function expands such keys to match the full domain size.
+    """
+
+    def test_key_already_matches_domain_size(self):
+        """Test that keys already matching domain size are returned unchanged."""
+        key = ("i1", "j1")
+        result = _expand_table_key(key, 2)
+        assert result == ("i1", "j1")
+
+    def test_key_exceeds_domain_size(self):
+        """Test that keys exceeding domain size are returned unchanged."""
+        key = ("a", "b", "c")
+        result = _expand_table_key(key, 2)
+        assert result == ("a", "b", "c")
+
+    def test_expand_single_dotted_element(self):
+        """Test expanding a 2-tuple with one dotted row header to 3 dimensions."""
+        # ('low.a', 'light-ind') should expand to ('low', 'a', 'light-ind')
+        key = ("low.a", "light-ind")
+        result = _expand_table_key(key, 3)
+        assert result == ("low", "a", "light-ind")
+
+    def test_expand_multi_dotted_element(self):
+        """Test expanding a 2-tuple with multi-dotted row header to 4 dimensions."""
+        # ('low.a.distr', 'light-ind') should expand to ('low', 'a', 'distr', 'light-ind')
+        key = ("low.a.distr", "light-ind")
+        result = _expand_table_key(key, 4)
+        assert result == ("low", "a", "distr", "light-ind")
+
+    def test_expand_both_elements_dotted(self):
+        """Test expanding when both elements contain dots."""
+        # ('a.b', 'c.d') should expand to ('a', 'b', 'c', 'd')
+        key = ("a.b", "c.d")
+        result = _expand_table_key(key, 4)
+        assert result == ("a", "b", "c", "d")
+
+    def test_malformed_key_returns_none_too_few(self):
+        """Test that malformed keys with too few elements return None."""
+        # ('a', 'b') cannot expand to 4 dimensions
+        key = ("a", "b")
+        result = _expand_table_key(key, 4)
+        assert result is None
+
+    def test_malformed_key_returns_none_too_many(self):
+        """Test that keys expanding to more than domain_size return None."""
+        # ('a.b.c', 'd') expands to 4 elements but domain_size is 3
+        key = ("a.b.c", "d")
+        result = _expand_table_key(key, 3)
+        assert result is None
+
+    def test_empty_key(self):
+        """Test handling of empty key tuple."""
+        key: tuple[str, ...] = ()
+        result = _expand_table_key(key, 2)
+        assert result is None
+
+    def test_single_element_key(self):
+        """Test expanding single element with dots."""
+        key = ("a.b.c",)
+        result = _expand_table_key(key, 3)
+        assert result == ("a", "b", "c")
+
+    def test_preserves_special_characters_in_elements(self):
+        """Test that special characters within elements are preserved after split."""
+        # ('low.c-bond-ext', 'machine-1') should expand properly
+        key = ("low.c-bond-ext", "machine-1")
+        result = _expand_table_key(key, 3)
+        assert result == ("low", "c-bond-ext", "machine-1")
