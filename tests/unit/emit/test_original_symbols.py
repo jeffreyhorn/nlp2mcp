@@ -841,10 +841,10 @@ class TestExpandTableKey:
         assert result == ("i1", "j1")
 
     def test_key_exceeds_domain_size(self):
-        """Test that keys exceeding domain size are returned unchanged."""
+        """Test that keys exceeding domain size are treated as malformed and return None."""
         key = ("a", "b", "c")
         result = _expand_table_key(key, 2)
-        assert result == ("a", "b", "c")
+        assert result is None
 
     def test_expand_single_dotted_element(self):
         """Test expanding a 2-tuple with one dotted row header to 3 dimensions."""

@@ -520,8 +520,12 @@ def _expand_table_key(key_tuple: tuple[str, ...], domain_size: int) -> tuple[str
         Expanded key tuple matching domain_size, or None if the key cannot be
         expanded to match (indicating an invalid/malformed entry that should be skipped)
     """
-    if len(key_tuple) >= domain_size:
+    # If the key already has the correct arity, return it as-is.
+    if len(key_tuple) == domain_size:
         return key_tuple
+    # Keys with more elements than the domain size are malformed.
+    if len(key_tuple) > domain_size:
+        return None
 
     # Need to expand: split dotted elements until we reach domain_size
     expanded: list[str] = []
@@ -734,11 +738,16 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                     key_str = ".".join(sanitized_keys)
                     data_parts.append(f"{key_str} {value}")
 
-                data_str = ", ".join(data_parts)
                 # Quote symbol names that contain special characters (Issue #665)
                 quoted_domain = [_quote_symbol(d) for d in domain]
                 domain_str = ",".join(quoted_domain)
-                lines.append(f"    {_quote_symbol(param_name)}({domain_str}) /{data_str}/")
+                if data_parts:
+                    # Emit parameter with data
+                    data_str = ", ".join(data_parts)
+                    lines.append(f"    {_quote_symbol(param_name)}({domain_str}) /{data_str}/")
+                else:
+                    # All data entries were filtered out as malformed - emit declaration only
+                    lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
             else:
                 # Parameter declared but no data - must have domain since
                 # parameters dict only contains entries with non-empty domain
