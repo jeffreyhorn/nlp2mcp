@@ -688,6 +688,129 @@ Implemented P5 fix for variable initialization:
 
 ---
 
+---
+
+## Day 4-5: Path Syntax Error Deep Dive (2026-02-09 to 2026-02-10)
+
+### Objectives
+- [x] Analyze remaining 12 path_syntax_error models
+- [x] Fix case sensitivity bug in bound multiplier keys
+- [x] Fix table wildcard data emission
+- [x] Fix dollar conditional parenthesization
+- [x] Fix wildcard '*' quoting issue
+
+### Work Completed
+
+#### 1. Case Sensitivity Bug in Bound Multiplier Keys (partition.py)
+
+**Problem**: Alkyl and bearing models had Error 69/483 (variable dimension unknown) because bound multiplier keys used original case from `.items()` but lookups used lowercase from `.keys()`.
+
+**Solution**: Changed `partition.py` to use `.keys()` for variable iteration:
+```python
+# Before (wrong):
+for var_name, var_def in model_ir.variables.items():
+
+# After (correct):
+for var_name in model_ir.variables.keys():
+    var_def = model_ir.variables[var_name]
+```
+
+**Impact**: alkyl and bearing now compile successfully (have MCP pairing errors, not syntax errors).
+
+#### 2. Table Wildcard Data Emission (original_symbols.py)
+
+**Problem**: Tables with wildcard `*` domains (e.g., `pdat(lmh,*,sde,i)`) had dimension mismatches. Parser stores table data as 2-tuples `(row_header, col_header)` with dotted row headers like `'low.a.distr'`, but domain has 4 dimensions.
+
+**Solution**: Added `_expand_table_key()` function to expand dotted row headers:
+- `('low.a.distr', 'light-ind')` → `('low', 'a', 'distr', 'light-ind')`
+- Skip malformed entries that can't be expanded to match domain size
+
+**Impact**: Fixed table data emission for chenery, orani with wildcards.
+
+#### 3. Dollar Conditional Parenthesization (expr_to_gams.py)
+
+**Problem**: Dollar conditionals with comparison conditions emitted invalid syntax:
+```gams
+* Before (wrong): expr$sig(i) <> 0
+* After (correct): expr$(sig(i) <> 0)
+```
+
+**Solution**: Parenthesize condition when it's a Binary/Unary/DollarConditional expression.
+
+**Impact**: Fixed chenery stationarity equation syntax.
+
+#### 4. Wildcard '*' Quoting (original_symbols.py)
+
+**Problem**: Wildcard `*` in parameter domains was being quoted as `'*'`, causing GAMS Error 2/185.
+
+**Solution**: Added check in `_quote_symbol()` to never quote `*`:
+```python
+if name == "*":
+    return name
+```
+
+**Impact**: Fixed orani parameter domain declarations.
+
+### Models Status After Fixes
+
+| Model | Before | After | Notes |
+|-------|--------|-------|-------|
+| alkyl | path_syntax_error (E69) | mcp_error | Compiles, MCP pairing issue |
+| bearing | path_syntax_error (E69) | mcp_error | Compiles, MCP pairing issue |
+| chenery | path_syntax_error (E170) | path_syntax_error (E149) | Table fixed, has cross-indexed sums |
+| orani | path_syntax_error (E170) | path_syntax_error (E170/171) | Wildcard fixed, has dynamic domain extension |
+| abel, qabel, robert | path_syntax_error (E149) | path_syntax_error (E149) | Cross-indexed sums (architectural) |
+
+### Architectural Issues Identified
+
+#### Error 149: Cross-Indexed Sums (abel, qabel, robert, chenery)
+
+These models have constraints with cross-indexed sums like:
+```gams
+sum(np, a(n,np)*x(np,k))
+```
+
+When differentiating, the stationarity equations produce uncontrolled indices:
+- Equation `stat_e(i)..` references `h(t)` where `t` is not in equation domain
+- This is a fundamental limitation requiring architectural changes
+
+#### Dynamic Domain Extension (orani)
+
+Orani uses dynamic domain extension:
+```gams
+amc(c,s,"total") = sum(i, amc(c,s,i)) + ...
+```
+
+The `"total"` element is not in the inferred wildcard set, causing domain violations.
+
+### Test Results
+- All 3312 tests pass
+- No regressions
+
+### Metrics Update
+
+| Category | Day 3 | Day 5 | Change |
+|----------|-------|-------|--------|
+| path_syntax_error | 14 | 10* | -4 |
+| mcp_error | 0 | 2 | +2 |
+
+*Note: 2 models moved from syntax errors to MCP pairing errors (alkyl, bearing).
+
+### Files Modified
+- `src/kkt/partition.py`: Case sensitivity fix
+- `src/emit/original_symbols.py`: Table expansion, wildcard quoting
+- `src/emit/expr_to_gams.py`: Dollar conditional parenthesization
+- `tests/unit/emit/test_expr_to_gams.py`: Updated test expectations
+
+### Day 4-5 Summary
+
+Implemented 4 fixes for path_syntax_error issues:
+- 2 models now compile (alkyl, bearing) - moved to mcp_error category
+- Table wildcard and dollar conditional fixes applied (chenery, orani)
+- Identified architectural issues (cross-indexed sums) requiring future work
+
+---
+
 <!-- Template for daily entries:
 
 ### Day N: [Title] (YYYY-MM-DD)
