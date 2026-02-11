@@ -1,4 +1,4 @@
-n Sprint 18: GAMS Emission Fixes - Day-by-Day Execution Prompts
+# Sprint 18: GAMS Emission Fixes - Day-by-Day Execution Prompts
 
 > **Sprint Duration**: 14 working days (~56h), plus Day 0 initialization
 > **Epic**: 4 - Production Readiness
