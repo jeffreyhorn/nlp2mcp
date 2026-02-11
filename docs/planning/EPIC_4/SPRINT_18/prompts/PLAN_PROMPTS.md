@@ -738,8 +738,8 @@ Document all findings from Days 7-8 as formal issue files, categorize architectu
 
 ### Quality Checks
 ```bash
-# Verify issue files created
-ls -la docs/issues/ISSUE_68*.md
+# Verify existing issue files updated (ISSUE_670 for cross-indexed sums, ISSUE_676 for mingamma)
+ls -la docs/issues/ISSUE_67*.md
 
 # Check KNOWN_UNKNOWNS updates
 git diff docs/planning/EPIC_4/SPRINT_18/KNOWN_UNKNOWNS.md
