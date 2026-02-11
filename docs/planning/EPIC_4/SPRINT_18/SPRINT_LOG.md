@@ -1025,6 +1025,116 @@ When accessing `data("pressure",i)`, the element "pressure" has incomplete data 
 
 ---
 
+## Day 8: Domain Issue Investigation - Part 2 (2026-02-11)
+
+### Objectives
+- [x] Deep-dive on robert domain violation (E170)
+- [x] Deep-dive on mexss domain violations (E170/171)
+- [x] Deep-dive on orani dynamic domain extension
+- [x] Complete categorization of all "investigate" models
+
+### Root Cause Analysis
+
+#### robert (E170) - **ARCHITECTURAL** ❌
+
+**Error:** `Error 170: Domain violation for element` on parameter `c(p,t)`
+
+**Root Cause:** Parser incorrectly treats table descriptions as column headers (ISSUE_399). The table:
+```gams
+Table c(p,t) 'expected profits'
+          1    2    3
+low      25   20   10
+...
+```
+has the description `'expected profits'` parsed as the column header instead of `1, 2, 3`. Only 4 values are captured instead of 9.
+
+**Additional Issue:** E149 "Uncontrolled set" in stationarity equations where `c(p,t)` references `t` but equation is indexed over `tt`.
+
+**Classification:** Parser limitation (ISSUE_399). Not tractable without parser fixes.
+
+#### mexss (E170/E171 → E149) - **ARCHITECTURAL** ❌
+
+**Original Errors:** Multiple E170/E171 domain violations
+
+**After Day 7 Fix (regeneration):** The wildcard fix resolves E170/E171 errors. The regenerated file has `rd(*,*)` which allows proper indexing.
+
+**Remaining Error:** E149 "Uncontrolled set entered as constant" in stationarity equations. The equation `stat_z(p,i)` references `a(c,p)` where `c` is not a controlled index.
+
+**Classification:** Cross-indexed sums issue (ISSUE_670). The stationarity equations have cross-domain references that create uncontrolled indices. ARCHITECTURAL.
+
+#### orani (E170/E171 → E149) - **ARCHITECTURAL** ❌
+
+**Original Errors:** E170 on `"total"` element, E171 on set domain mismatches
+
+**Root Cause:** The original model dynamically extends the domain:
+```gams
+Table amc(c,s,*) 'accounting matrix'
+   ... data for agric, manuf, families, exp, duty ...
+
+amc(c,s,"total") = sum(i, amc(c,s,i)) + ...  * Creates "total" at runtime
+```
+
+**After Day 7 Fix (regeneration):** The wildcard fix preserves `amc(c,s,*)` which allows the dynamic domain extension. E170/E171 errors are resolved.
+
+**Remaining Error:** E149 "Uncontrolled set entered as constant" in stationarity equations (cross-indexed sums).
+
+**Classification:** Cross-indexed sums issue (ISSUE_670). ARCHITECTURAL.
+
+### Complete Categorization of path_syntax_error Models
+
+| Model | Error | Root Cause | Status | Issue |
+|-------|-------|------------|--------|-------|
+| abel | E149 | Cross-indexed sums (ku subset) | ❌ Architectural | ISSUE_670 |
+| blend | E171 | Wildcard domain replacement | ✅ **FIXED Day 7** | - |
+| chenery | E149 | Cross-indexed sums | ❌ Architectural | ISSUE_670 |
+| like | E170 | Table `+` continuation not parsed | ❌ Architectural | ISSUE_392 |
+| mexss | E149 | Cross-indexed sums (after regen) | ❌ Architectural | ISSUE_670 |
+| mingamma | E140 | Unknown symbol (psi function) | ❌ GAMS lacks function | - |
+| orani | E149 | Cross-indexed sums (after regen) | ❌ Architectural | ISSUE_670 |
+| qabel | E149 | Cross-indexed sums (ku subset) | ❌ Architectural | ISSUE_670 |
+| robert | E170 | Table description as header | ❌ Architectural | ISSUE_399 |
+| sample | E171 | Wildcard domain replacement | ✅ **FIXED Day 7** | - |
+
+### Summary
+
+**Day 7-8 Investigation Results:**
+- **2 models FIXED**: blend (now solves), sample (translates, numerical issue)
+- **8 models ARCHITECTURAL**: Cannot be fixed without parser/KKT generation changes
+
+**Architectural Issues Breakdown:**
+- **Cross-indexed sums (ISSUE_670)**: 6 models (abel, qabel, chenery, mexss, orani, and partial issue in robert)
+- **Table parsing limitations**: 2 models
+  - ISSUE_392 (table `+` continuation): like
+  - ISSUE_399 (table description as header): robert
+- **Missing GAMS function**: 1 model (mingamma - psi function)
+
+### Key Finding: Day 7 Fix Impact
+
+The Day 7 wildcard fix (`src/emit/original_symbols.py`) has broader impact than initially measured:
+- **Measured**: blend, sample (E171 fixed)
+- **Latent**: mexss, orani (E170/E171 fixed upon regeneration, E149 remains)
+
+The stale MCP files in `data/gamslib/mcp/` don't reflect the Day 7 fix. Regenerating would reduce E170/E171 errors but wouldn't change the solve count because E149 errors would still block these models.
+
+### Metrics Update
+
+| Stage | Day 6 | Day 7 | Day 8 | Delta |
+|-------|-------|-------|-------|-------|
+| Parse | 62 | 62 | 62 | 0 |
+| Translate | 50 | 50 | 50 | 0 |
+| Solve | 19 | 20 | 20 | 0 |
+| path_syntax_error | 10 | 8 | 8 | 0 |
+| Full Pipeline | 7 | 7 | 7 | 0 |
+
+*No additional improvement in Day 8 - remaining issues are architectural*
+
+### Next Steps (Day 9)
+- Document architectural issues in detail
+- Update issue files with findings
+- Assess priority of parser fixes (ISSUE_392, ISSUE_399) vs KKT generation fixes (ISSUE_670)
+
+---
+
 <!-- Template for daily entries:
 
 ### Day N: [Title] (YYYY-MM-DD)
