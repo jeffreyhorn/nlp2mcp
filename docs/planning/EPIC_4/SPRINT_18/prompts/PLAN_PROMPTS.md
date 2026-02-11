@@ -714,10 +714,11 @@ Document all findings from Days 7-8 as formal issue files, categorize architectu
      - Extend existing `docs/issues/ISSUE_676_mingamma-builtin-function-confusion.md` with architectural analysis
    - Include: root cause, GAMS error, why it's architectural, potential future fix approach
 
-2. **Create ISSUE_*.md for remaining domain violations** (~1.5h)
-   - Create issue files for any of the 6 investigated models that are NOT fixable
-   - Document root cause and why fix is not tractable in Sprint 18
-   - Note if these could be fixed in future sprints with more effort
+2. **Document remaining domain violations in issues** (~1.5h)
+   - For each of the 6 investigated models that is NOT fixable in Sprint 18:
+     - If an appropriate `ISSUE_*.md` already exists (e.g., ISSUE_671 for orani, ISSUE_674 for mexss/sample), extend it with per-model analysis
+     - Otherwise, create a new `ISSUE_*.md` file for that model/domain violation
+   - Document root cause, why fix is not tractable in Sprint 18, and whether it might be fixable in a future sprint with more effort
 
 3. **Update KNOWN_UNKNOWNS.md with findings** (~0.5h)
    - Mark resolved unknowns from Days 1-8

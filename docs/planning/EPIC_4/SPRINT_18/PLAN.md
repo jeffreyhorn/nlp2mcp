@@ -275,7 +275,7 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 | Task | Time | Deliverable |
 |------|------|-------------|
 | Extend existing ISSUE_*.md for architectural limitations | 1.5h | Updated ISSUE_670/676 with per-model analysis for abel, qabel, chenery, mingamma |
-| Create ISSUE_*.md for domain violations | 1.5h | Issue files for remaining unfixable models |
+| Extend/augment existing ISSUE_*.md for domain violations; create new ones only for uncaptured root causes | 1.5h | Updated/created issue files for remaining unfixable models without duplication |
 | Update KNOWN_UNKNOWNS.md with findings | 0.5h | Mark resolved/new unknowns |
 | Move completed issues to docs/issues/completed/ | 0.5h | Organized issue tracking |
 
