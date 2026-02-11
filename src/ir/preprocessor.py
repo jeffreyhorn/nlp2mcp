@@ -1455,14 +1455,26 @@ def normalize_special_identifiers(source: str) -> str:
                 result.append(processed)
                 continue
 
-            # First non-empty line after Table declaration is the column header
-            # Issue #665: Do NOT quote column headers. The grammar uses DESCRIPTION
-            # terminal for multi-word headers with hyphens (e.g., "light-ind heavy-ind").
-            # Note: Column headers with + have limited support - the + may trigger
-            # table_continuation parsing. Row labels with + are properly quoted.
+            # First non-empty line after Table declaration is the column header.
+            # Issue #665: Column headers with ONLY hyphens are NOT quoted because
+            # the grammar uses DESCRIPTION terminal for multi-word headers with
+            # hyphens (e.g., "light-ind heavy-ind").
+            # Issue #668: Column headers with + MUST be quoted because + triggers
+            # table_continuation parsing. Without quoting, "food+agr" would be parsed
+            # as "food" followed by a continuation "+agr". When any identifier on
+            # the line contains +, we quote ALL special identifiers on that line
+            # (including hyphenated ones) since we can no longer rely on DESCRIPTION.
             if not table_header_seen and stripped:
                 table_header_seen = True
-                result.append(line)  # Keep original header line
+                # Issue #668: Quote identifiers with + in column headers
+                # Check if line contains an identifier with +; identifiers may start
+                # with a letter, digit, or underscore and contain letters, digits,
+                # underscores, plus, and minus characters.
+                if re.search(r"\b[0-9A-Za-z_][0-9A-Za-z_+-]*\+[0-9A-Za-z_+-]+\b", stripped):
+                    processed = _quote_special_in_line(line)
+                    result.append(processed)
+                else:
+                    result.append(line)  # Keep original header line
                 continue
 
             # All table rows (data rows with row labels and values)

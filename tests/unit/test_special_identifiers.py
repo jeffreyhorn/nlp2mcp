@@ -199,27 +199,80 @@ def test_data_block_with_descriptions():
 
 
 def test_table_header_special_chars():
-    """Test that table column headers are NOT quoted (Issue #665).
+    """Test column header quoting behavior (Issues #665, #668).
 
-    Column headers are kept unquoted because:
-    1. Quoting would make the first header look like a table description
-    2. Hyphenated headers (e.g., ``light-ind``, ``heavy-ind``) are parsed via the
-       DESCRIPTION terminal in the grammar
+    Issue #665: Column headers with only hyphens are NOT quoted because they
+    are parsed via the DESCRIPTION terminal in the grammar.
 
-    Note: The DESCRIPTION terminal does not match ``+``, so headers containing
-    ``+`` (like ``food+agr``) have limited support and may trigger the table
-    continuation rule. Row labels with ``+`` are properly quoted and work correctly.
+    Issue #668: When ANY column header contains ``+``, the ENTIRE header line
+    is processed and ALL special identifiers (both ``+`` and ``-``) are quoted.
+    This is because:
+    1. The ``+`` triggers the table_continuation rule, so we must quote
+    2. Once we quote, we can no longer rely on the DESCRIPTION terminal
+    3. Therefore all special identifiers on the line must be quoted
+
+    Without quoting, ``food+agr`` would be parsed as ``food`` followed by
+    a continuation ``+agr``, causing decimal values to be treated as headers.
     """
     source = """Table aio(i,i)
        light-ind  food+agr  heavy-ind
 food+agr      .1
 heavy-ind     .2        .1;"""
-    # Column headers should NOT be quoted; only row labels are quoted
+    # Issue #668: When + is present in headers, ALL special identifiers are quoted
+    # (we can no longer rely on DESCRIPTION terminal for any of them)
     expected = """Table aio(i,i)
-       light-ind  food+agr  heavy-ind
+       'light-ind'  'food+agr'  'heavy-ind'
 'food+agr'      .1
 'heavy-ind'     .2        .1;"""
     assert normalize_special_identifiers(source) == expected
+
+
+def test_table_plus_header_parsing():
+    """Test that tables with + in column headers parse correctly (Issue #668).
+
+    This is the end-to-end regression test for Issue #668, verifying that:
+    1. Column headers with + are correctly identified (not decimal values)
+    2. Decimal values starting with . are parsed as numeric values
+    3. The + character doesn't trigger table continuation parsing
+
+    The core fix ensures that `food+agr` is recognized as a column header
+    identifier rather than being split into `food` + continuation `+agr`.
+    Before the fix, decimal values like `.005` would become column headers.
+    """
+    from src.ir.parser import parse_model_text
+
+    # Use a regular identifier as the first column to avoid grammar edge cases
+    # with quoted strings at line start being parsed as row labels
+    gams = """
+    Set row /a, b/;
+    Set col /col1, food+agr, heavy-ind/;
+
+    Table tdat(row,col)
+           col1  food+agr  heavy-ind
+    a      1      .005      .001
+    b      2      .0025     .0005;
+    """
+    model = parse_model_text(gams)
+    tdat = model.params["tdat"]
+
+    # Verify column headers include + identifier (not decimal values)
+    keys = list(tdat.values.keys())
+    second_dims = {k[1] for k in keys if len(k) >= 2}
+
+    # Core issue #668 fix: + identifiers parsed as headers, not decimals
+    assert "food+agr" in second_dims, "Expected 'food+agr' as column header"
+    assert "heavy-ind" in second_dims, "Expected 'heavy-ind' as column header"
+    # Decimal values should NOT appear as column headers
+    assert ".005" not in second_dims, "'.005' should be a value, not a column header"
+    assert ".001" not in second_dims, "'.001' should be a value, not a column header"
+
+    # Verify numeric values are correctly mapped to columns
+    assert tdat.values[("a", "col1")] == 1.0
+    assert tdat.values[("a", "food+agr")] == 0.005
+    assert tdat.values[("a", "heavy-ind")] == 0.001
+    assert tdat.values[("b", "col1")] == 2.0
+    assert tdat.values[("b", "food+agr")] == 0.0025
+    assert tdat.values[("b", "heavy-ind")] == 0.0005
 
 
 def test_table_row_labels_special_chars():
