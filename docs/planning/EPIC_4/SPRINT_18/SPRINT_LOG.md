@@ -859,7 +859,7 @@ Implemented 4 fixes for path_syntax_error issues:
 | abel | E149 | Cross-indexed sums (ku subset in sum) | ❌ Architectural |
 | qabel | E149 | Cross-indexed sums (ku subset in sum) | ❌ Architectural |
 | blend | E171 | Domain violation for set | ⚠️ Investigate |
-| chenery | E149 | Cross-indexed sums + table wildcard | ❌ Architectural |
+| chenery | E149 | Cross-indexed sums (table wildcard already fixed) | ❌ Architectural |
 | like | E170 | Domain violation (lead index) | ⚠️ Investigate |
 | mexss | E170/171 | Domain violations | ⚠️ Investigate |
 | mingamma | E140 | Unknown symbol (psi function) | ❌ GAMS lacks function |
@@ -900,7 +900,7 @@ Implemented 4 fixes for path_syntax_error issues:
 - Implement any quick fixes found
 
 **Day 9: Issue Documentation**
-- Create ISSUE_*.md files for all architectural limitations
+- Extend ISSUE_670/ISSUE_676 with architectural analysis; create new ISSUE_*.md files only for newly discovered unfixable domain violations
 - Update KNOWN_UNKNOWNS.md with findings
 - Move completed issues to docs/issues/completed/
 
