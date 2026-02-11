@@ -835,8 +835,15 @@ Implemented 4 fixes for path_syntax_error issues:
 |----------|-------|--------|
 | path_solve_terminated | 18 | Various numerical/feasibility issues |
 | path_syntax_error | 10 | abel, blend, chenery, like, mexss, mingamma, orani, qabel, robert, sample |
-| model_infeasible | 3 | circle, cpack, house (or similar) |
-| mismatch | 5 | Models solve but don't match original |
+| model_infeasible | 3 | circle, cpack, meanvar |
+
+### Solution Match Status (of 19 solved models)
+
+| Category | Count | Notes |
+|----------|-------|-------|
+| match | 7 | Solution matches original NLP within tolerance |
+| mismatch | 5 | Solves successfully but solution differs from original |
+| not_compared | 7 | Comparison not yet run or skipped |
 
 ### Checkpoint 2 Target Assessment
 
