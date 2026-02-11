@@ -278,13 +278,19 @@ def test_table_plus_header_parsing():
 def test_table_row_labels_special_chars():
     """Test quoting special characters in table row labels (not headers).
 
-    Issue #665: Column headers are NOT quoted, but row labels ARE quoted.
+    Issue #673: Column headers with hyphens need special handling:
+    - If the Table line has any description (STRING or unquoted text after
+      the domain), column headers with hyphens are quoted.
+    - If the Table line has NO description, column headers are NOT quoted so
+      the DESCRIPTION terminal can match them (e.g., "col-1  col-2").
+    Row labels are always quoted.
     """
     source = """Table data(i,j)
        col-1  col-2
 row-1    1      2
 row-2    3      4;"""
-    # Column headers (col-1, col-2) NOT quoted; row labels (row-1, row-2) ARE quoted
+    # Column headers (col-1, col-2) NOT quoted (no description on Table line)
+    # Row labels (row-1, row-2) ARE quoted
     expected = """Table data(i,j)
        col-1  col-2
 'row-1'    1      2
@@ -302,6 +308,42 @@ row2    3     4;"""
        col1  col2
 row1    1     2
 row2    3     4;"""
+    assert normalize_special_identifiers(source) == expected
+
+
+def test_table_with_quoted_description_and_hyphenated_headers():
+    """Test Issue #673: Table with quoted STRING description and hyphenated column headers.
+
+    When a Table declaration has a quoted description (e.g., 'production rate'),
+    hyphenated column headers like 'machine-1' MUST be quoted to prevent them
+    from being parsed as row label 'machine' + value '-1'.
+    """
+    source = """Table prate(g,m) 'production rate'
+                machine-1  machine-2
+   20-bond-wt        53         52
+   25-bond-wt        51         49;"""
+    # Column headers ARE quoted because Table has a STRING description
+    # Row labels are also quoted
+    expected = """Table prate(g,m) 'production rate'
+                'machine-1'  'machine-2'
+   '20-bond-wt'        53         52
+   '25-bond-wt'        51         49;"""
+    assert normalize_special_identifiers(source) == expected
+
+
+def test_table_with_unquoted_description_and_hyphenated_headers():
+    """Test Table with unquoted DESCRIPTION text and hyphenated column headers.
+
+    When a Table declaration has unquoted description text after the domain,
+    hyphenated column headers should also be quoted (same as quoted description).
+    """
+    source = """Table prate(g,m) production rate in tons per hour
+                machine-1  machine-2
+   20-bond-wt        53         52;"""
+    # Column headers ARE quoted because Table has description text
+    expected = """Table prate(g,m) production rate in tons per hour
+                'machine-1'  'machine-2'
+   '20-bond-wt'        53         52;"""
     assert normalize_special_identifiers(source) == expected
 
 

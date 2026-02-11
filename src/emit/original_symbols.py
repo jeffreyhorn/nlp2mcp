@@ -12,12 +12,15 @@ Key principles:
 - Emit computed parameter assignments as GAMS statements (Sprint 17 Day 4)
 """
 
+import logging
 import re
 
 from src.emit.expr_to_gams import expr_to_gams
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import ParameterDef, SetDef
+
+logger = logging.getLogger(__name__)
 
 # Regex pattern for valid GAMS set element identifiers
 # Allows: letters, digits, underscores, hyphens, dots (for tuples like a.b), plus signs
@@ -624,11 +627,29 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     for param_name, param_def in model_ir.params.items():
         # Use ParameterDef.domain to detect scalars (Finding #3)
         if len(param_def.domain) == 0:
-            # PR #658 review: Removed promotion logic for scalars with indexed expressions.
-            # These are typically post-solve report parameters (e.g., croprep("revenue",c))
-            # that depend on solution values. Since emit_computed_parameter_assignments()
-            # correctly skips them (they'd cause GAMS Error 141), promoting them here
-            # was ineffective. Keep them as scalars and let them be skipped.
+            # Issue #675: Skip parameters declared without domain but used with indices.
+            # These are "dynamically typed" report parameters like:
+            #   Parameter report;
+            #   report('x1','global') = 1;
+            #   report('x1','solver') = x1.l;
+            # GAMS allows this but emitting as scalar causes Error 148 (dimension mismatch).
+            # Check if values or expressions have indexed keys (non-empty tuples).
+            has_indexed_values = any(len(k) > 0 for k in param_def.values.keys())
+            has_indexed_exprs = param_def.expressions and any(
+                len(k) > 0 for k in param_def.expressions.keys()
+            )
+            if has_indexed_values or has_indexed_exprs:
+                # Skip this parameter entirely - it's a report parameter that can't be
+                # properly emitted without proper domain declaration.
+                # Warn in case the parameter is actually needed for optimization.
+                logger.warning(
+                    "Skipping parameter '%s': declared without domain but used with "
+                    "indexed values/expressions. If this parameter is used in the "
+                    "optimization model (not just post-solve reporting), the generated "
+                    "MCP will be invalid.",
+                    param_name,
+                )
+                continue
             scalars[param_name] = param_def
         else:
             parameters[param_name] = param_def
@@ -837,13 +858,23 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
         if not param_def.expressions:
             continue
 
-        # Sprint 18 Day 2: Skip parameters with no values, no declared domain, but have
-        # INDEXED expressions. These are typically post-solve report parameters like
-        # croprep("revenue",c) = croprep("output",c) * price(c) where the parameter
-        # was never properly declared with a domain and its expressions depend on
-        # unassigned values (solution values). Emitting these causes GAMS Error 141.
-        # Note: Scalar expressions (empty key tuple) are allowed even without values.
-        if not param_def.values and not param_def.domain:
+        # Sprint 18 Day 2: Skip parameters with no declared domain but have INDEXED
+        # expressions. These are typically post-solve report parameters like:
+        #   Parameter report;
+        #   report('x1','global') = 1;
+        #   report('x1','solver') = x1.l;  (references solution values)
+        #   report('x1','diff') = report('x1','global') - report('x1','solver');
+        #
+        # GAMS allows declaring parameters without domains and using them with any
+        # indices, but emitting them to MCP causes errors:
+        # - Error 116: Label is unknown (the indices aren't declared sets)
+        # - Error 148: Dimension mismatch (scalar declared but used with indices)
+        #
+        # Issue #675: Even if some values exist (e.g., report('x1','global') = 1),
+        # the expressions may reference other indexed assignments that depend on
+        # solution values (.l) which aren't available until after solving.
+        # Skip ALL indexed expressions for domain-less parameters.
+        if not param_def.domain:
             # Check if any expression has indexed keys (not scalar)
             has_indexed_exprs = any(len(key) > 0 for key in param_def.expressions.keys())
             if has_indexed_exprs:

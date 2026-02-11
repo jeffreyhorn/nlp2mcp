@@ -25,8 +25,8 @@ Sets
 ;
 
 Parameters
-    prate(g,m) /'20-bond-wt'.'-1' 53.0, '20-bond-wt'.'-2' 52.0, '20-bond-wt'.'-3' 49.0, '25-bond-wt'.'-1' 51.0, '25-bond-wt'.'-2' 49.0, '25-bond-wt'.'-3' 44.0, 'c-bond-ext'.'-1' 52.0, 'c-bond-ext'.'-2' 45.0, 'c-bond-ext'.'-3' 47.0, 'tissue-wrp'.'-1' 42.0, 'tissue-wrp'.'-2' 44.0, 'tissue-wrp'.'-3' 40.0, 'c-bond-ext'.machine 0.0, '20-bond-wt'.machine 0.0, 'tissue-wrp'.machine 0.0, '25-bond-wt'.machine 0.0/
-    pcost(g,m) /'20-bond-wt'.'-1' 76.0, '20-bond-wt'.'-2' 75.0, '20-bond-wt'.'-3' 73.0, '25-bond-wt'.'-1' 82.0, '25-bond-wt'.'-2' 80.0, '25-bond-wt'.'-3' 78.0, 'c-bond-ext'.'-1' 96.0, 'c-bond-ext'.'-2' 95.0, 'c-bond-ext'.'-3' 92.0, 'tissue-wrp'.'-1' 72.0, 'tissue-wrp'.'-2' 71.0, 'tissue-wrp'.'-3' 70.0, 'c-bond-ext'.machine 0.0, '20-bond-wt'.machine 0.0, 'tissue-wrp'.machine 0.0, '25-bond-wt'.machine 0.0/
+    prate(g,m) /'20-bond-wt'.'machine-1' 53.0, '20-bond-wt'.'machine-2' 52.0, '20-bond-wt'.'machine-3' 49.0, '25-bond-wt'.'machine-1' 51.0, '25-bond-wt'.'machine-2' 49.0, '25-bond-wt'.'machine-3' 44.0, 'c-bond-ext'.'machine-1' 52.0, 'c-bond-ext'.'machine-2' 45.0, 'c-bond-ext'.'machine-3' 47.0, 'tissue-wrp'.'machine-1' 42.0, 'tissue-wrp'.'machine-2' 44.0, 'tissue-wrp'.'machine-3' 40.0/
+    pcost(g,m) /'20-bond-wt'.'machine-1' 76.0, '20-bond-wt'.'machine-2' 75.0, '20-bond-wt'.'machine-3' 73.0, '25-bond-wt'.'machine-1' 82.0, '25-bond-wt'.'machine-2' 80.0, '25-bond-wt'.'machine-3' 78.0, 'c-bond-ext'.'machine-1' 96.0, 'c-bond-ext'.'machine-2' 95.0, 'c-bond-ext'.'machine-3' 92.0, 'tissue-wrp'.'machine-1' 72.0, 'tissue-wrp'.'machine-2' 71.0, 'tissue-wrp'.'machine-3' 70.0/
     dempr(g,wc_dempr_d2) /'20-bond-wt'.demand 30000.0, '20-bond-wt'.price 77.0, '25-bond-wt'.demand 20000.0, '25-bond-wt'.price 81.0, 'c-bond-ext'.demand 12000.0, 'c-bond-ext'.price 99.0, 'tissue-wrp'.demand 8000.0, 'tissue-wrp'.price 105.0/
     avail(m) /'machine-1' 672.0, 'machine-2' 600.0, 'machine-3' 480.0/
     mtr(m,*)

@@ -1442,6 +1442,19 @@ def normalize_special_identifiers(source: str) -> str:
         if re.match(r"^Table\b", stripped, re.IGNORECASE):
             in_table = True
             table_header_seen = False
+            # Detect whether the Table declaration line has a description
+            # after the domain. The grammar allows both quoted and unquoted
+            # DESCRIPTION text, for example:
+            #   Table t(i,j) 'production rate'
+            #   Table t(i,j) production rate
+            # We therefore treat any non-empty text after the closing ')'
+            # that is not just a bare semicolon as a description.
+            closing_paren_idx = stripped.find(")")
+            if closing_paren_idx != -1:
+                after_paren = stripped[closing_paren_idx + 1 :].strip()
+                table_has_description = bool(after_paren and not after_paren.startswith(";"))
+            else:
+                table_has_description = False
             result.append(line)
             continue
 
@@ -1456,25 +1469,29 @@ def normalize_special_identifiers(source: str) -> str:
                 continue
 
             # First non-empty line after Table declaration is the column header.
-            # Issue #665: Column headers with ONLY hyphens are NOT quoted because
-            # the grammar uses DESCRIPTION terminal for multi-word headers with
-            # hyphens (e.g., "light-ind heavy-ind").
-            # Issue #668: Column headers with + MUST be quoted because + triggers
-            # table_continuation parsing. Without quoting, "food+agr" would be parsed
-            # as "food" followed by a continuation "+agr". When any identifier on
-            # the line contains +, we quote ALL special identifiers on that line
-            # (including hyphenated ones) since we can no longer rely on DESCRIPTION.
+            # Issue #673: Column headers with hyphens need special handling:
+            # - If the Table declaration has a description after the domain
+            #   (either a quoted STRING, e.g., 'production rate', or unquoted
+            #   DESCRIPTION text, e.g., production rate), we MUST quote column
+            #   headers to prevent `machine-1` from being parsed as row label
+            #   `machine` + value `-1`.
+            # - If Table declaration has NO description, we must NOT quote column
+            #   headers so the DESCRIPTION terminal can match them.
+            # Issue #668: Column headers with + MUST always be quoted because + triggers
+            # table_continuation parsing.
             if not table_header_seen and stripped:
                 table_header_seen = True
-                # Issue #668: Quote identifiers with + in column headers
-                # Check if line contains an identifier with +; identifiers may start
-                # with a letter, digit, or underscore and contain letters, digits,
-                # underscores, plus, and minus characters.
-                if re.search(r"\b[0-9A-Za-z_][0-9A-Za-z_+-]*\+[0-9A-Za-z_+-]+\b", stripped):
+                # Check if line contains identifier with + (always quote these)
+                has_plus_identifier = bool(
+                    re.search(r"\b[0-9A-Za-z_][0-9A-Za-z_+-]*\+[0-9A-Za-z_+-]+\b", stripped)
+                )
+                if table_has_description or has_plus_identifier:
+                    # Quote all special identifiers in column headers
                     processed = _quote_special_in_line(line)
                     result.append(processed)
                 else:
-                    result.append(line)  # Keep original header line
+                    # Don't quote - let DESCRIPTION terminal match
+                    result.append(line)
                 continue
 
             # All table rows (data rows with row labels and values)
