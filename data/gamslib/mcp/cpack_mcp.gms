@@ -25,6 +25,8 @@ Sets
     ij(i,j)
 ;
 
+ij(i,j) = 1;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -52,6 +54,16 @@ Positive Variables
     piU_x(i)
     piU_y(i)
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+r.l = 0.05;
 
 * ============================================
 * Equations
@@ -85,8 +97,8 @@ stat_x(i).. 0 + 2 * x(i) * lam_circumscribe(i) + sum(j, 0 * lam_nooverlap(i,j)) 
 stat_y(i).. 0 + 2 * y(i) * lam_circumscribe(i) + sum(j, 0 * lam_nooverlap(i,j)) - piL_y(i) + piU_y(i) =E= 0;
 
 * Inequality complementarity equations
-comp_circumscribe(i).. sqr(1 - r) =G= 0;
-comp_nooverlap(i,j).. sqr(x(i) - x(j)) + sqr(y(i) - y(j)) =G= 0;
+comp_circumscribe(i).. sqr(1 - r) - (sqr(x(i)) + sqr(y(i))) =G= 0;
+comp_nooverlap(i,j).. sqr(x(i) - x(j)) + sqr(y(i) - y(j)) - 4 * sqr(r) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_r.. r - 0.05 =G= 0;

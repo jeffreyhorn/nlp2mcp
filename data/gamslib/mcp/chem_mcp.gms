@@ -59,7 +59,9 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. Set to lower bound or small positive value.
+* non-zero initial values.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound).
 
 x.l("H") = 0.001;
 x.l("H2") = 0.001;
@@ -71,7 +73,9 @@ x.l("NO") = 0.001;
 x.l("O") = 0.001;
 x.l("O2") = 0.001;
 x.l("OH") = 0.001;
+x.l(c) = min(max(x.l(c), 1e-6), x.up(c));
 xb.l = 0.01;
+xb.l = min(max(xb.l, 1e-6), xb.up);
 
 * ============================================
 * Equations

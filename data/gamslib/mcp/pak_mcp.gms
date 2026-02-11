@@ -16,15 +16,15 @@ $offText
 * ============================================
 
 Sets
-    te /1962, 1963, 1964, 1965, 1966, 1967, 1968, 1969, 1970, 1971, 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983, 1984, 1985/
-    t(te) /1963, 1964, 1965, 1966, 1967, 1968, 1969, 1970, 1971, 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983, 1984, 1985/
+    te /'1962', '1963', '1964', '1965', '1966', '1967', '1968', '1969', '1970', '1971', '1972', '1973', '1974', '1975', '1976', '1977', '1978', '1979', '1980', '1981', '1982', '1983', '1984', '1985'/
+    t(te) /'1963', '1964', '1965', '1966', '1967', '1968', '1969', '1970', '1971', '1972', '1973', '1974', '1975', '1976', '1977', '1978', '1979', '1980', '1981', '1982', '1983', '1984', '1985'/
     j /'non-traded', traded/
 ;
 
 Parameters
-    k(j) /non-traded 3.0, traded 4.5/
+    k(j) /'non-traded' 3.0, traded 4.5/
     delt(t)
-    vb(j) /non-traded 37.38/
+    vb(j) /'non-traded' 37.38/
     e(t)
 ;
 
@@ -110,8 +110,8 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+* non-zero initial values.
+* POSITIVE variables are set to 1.
 
 v.l(t,j) = 1;
 i.l(te,j) = 1;

@@ -16,12 +16,12 @@ $offText
 * ============================================
 
 Sets
-    i /1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31/
+    i /'1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'/
     g /one, two, three/
 ;
 
 Parameters
-    data(*,i) /pressure.1 175.0, pressure.2 180.0, pressure.3 185.0, pressure.4 190.0, pressure.5 195.0, pressure.6 200.0, pressure.7 205.0, pressure.8 210.0, pressure.9 215.0, pressure.10 220.0, pressure.11 225.0, pressure.12 230.0, pressure.13 235.0, pressure.14 240.0, pressure.15 245.0, frequency.1 8.0, frequency.2 6.0, frequency.3 6.0, frequency.4 7.0, frequency.5 4.0, frequency.6 3.0, frequency.7 3.0, frequency.8 8.0, frequency.9 1.0, frequency.10 6.0, frequency.11 0.0, frequency.12 5.0, frequency.13 1.0, frequency.14 7.0, frequency.15 1.0/
+    data(*,i) /'1'.'systolic blood pressure data' 2.0, pressure.'systolic blood pressure data' 175.0, frequency.'systolic blood pressure data' 8.0, '16'.'systolic blood pressure data' 17.0/
     y(i)
     w(i)
 ;
@@ -65,15 +65,19 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. Set to lower bound or small positive value.
+* non-zero initial values.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
 p.l("one") = 0.1;
 p.l("two") = 0.1;
 p.l("three") = 0.1;
+p.l(g) = min(max(p.l(g), 1e-6), p.up(g));
 m.l(g) = 1;
 s.l("one") = 15.0;
 s.l("two") = 15.0;
 s.l("three") = 15.0;
+s.l(g) = min(max(s.l(g), 1e-6), s.up(g));
 
 * ============================================
 * Equations
@@ -103,12 +107,12 @@ Equations
 Alias(g, g__);
 
 * Stationarity equations
-stat_m(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (-0.5) * 2 * (y(i) - m(g)) / s(g) * s(g) * (-1) / s(g) ** 2)) + 0 * nu_pdef + (-1) * lam_rank(g) =E= 0;
+stat_m(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (-0.5) * 2 * (y(i) - m(g)) / s(g) * s(g) * (-1) / s(g) ** 2)) + 0 * nu_pdef + 1 * lam_rank(g) =E= 0;
 stat_p(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * 1 / s(g) ** 1)) + 1 * nu_pdef + 0 * lam_rank(g) - piL_p(g) =E= 0;
 stat_s(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * (exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * ((-1) * p(g)) / s(g) ** 2 - p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (y(i) - m(g)) / s(g) * ((-1) * (y(i) - m(g))) / s(g) ** 2))) + 0 * nu_pdef + 0 * lam_rank(g) - piL_s(g) =E= 0;
 
 * Inequality complementarity equations
-comp_rank(g).. m(g+1) =G= 0;
+comp_rank(g)$(ord(g) <= card(g) - 1).. m(g+1) - m(g) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_p(g).. p(g) - 0.1 =G= 0;

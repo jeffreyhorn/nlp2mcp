@@ -86,7 +86,7 @@ stat_b.. 0 - 2 * (y("p1") - b) * (-1) * lam_e("p1") - 2 * (y("p10") - b) * (-1) 
 stat_r.. 1 - ((-1) * (2 * r)) * lam_e("p1") - ((-1) * (2 * r)) * lam_e("p10") - ((-1) * (2 * r)) * lam_e("p2") - ((-1) * (2 * r)) * lam_e("p3") - ((-1) * (2 * r)) * lam_e("p4") - ((-1) * (2 * r)) * lam_e("p5") - ((-1) * (2 * r)) * lam_e("p6") - ((-1) * (2 * r)) * lam_e("p7") - ((-1) * (2 * r)) * lam_e("p8") - ((-1) * (2 * r)) * lam_e("p9") - piL_r =E= 0;
 
 * Inequality complementarity equations
-comp_e(i).. ((-1) * (sqr(x(i) - a) + sqr(y(i) - b))) =G= 0;
+comp_e(i).. ((-1) * (sqr(x(i) - a) + sqr(y(i) - b) - sqr(r))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_r.. r - 0 =G= 0;

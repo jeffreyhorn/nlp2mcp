@@ -15,13 +15,8 @@ $offText
 * Original Model Declarations
 * ============================================
 
-Sets
-    wc_oil_constants_d1 /'SAE 10', 'SAE 20', 'SAE 30', 'SAE 40', 'SAE 5', 'SAE 50'/
-    wc_oil_constants_d2 /C1, n/
-;
-
 Parameters
-    oil_constants(wc_oil_constants_d1,wc_oil_constants_d2) /'SAE 5'.C1 10.85, 'SAE 5'.n -3.91, 'SAE 10'.C1 10.45, 'SAE 10'.n -3.72, 'SAE 20'.C1 10.04, 'SAE 20'.n -3.55, 'SAE 30'.C1 9.88, 'SAE 30'.n -3.48, 'SAE 40'.C1 9.83, 'SAE 40'.n -3.46, 'SAE 50'.C1 9.82, 'SAE 50'.n -3.44/
+    oil_constants(*,*) /'SAE 5'.C1 10.85, 'SAE 5'.n -3.91, 'SAE 10'.C1 10.45, 'SAE 10'.n -3.72, 'SAE 20'.C1 10.04, 'SAE 20'.n -3.55, 'SAE 30'.C1 9.88, 'SAE 30'.n -3.48, 'SAE 40'.C1 9.83, 'SAE 40'.n -3.46, 'SAE 50'.C1 9.82, 'SAE 50'.n -3.44/
 ;
 
 Scalars

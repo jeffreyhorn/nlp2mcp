@@ -47,6 +47,17 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* POSITIVE variables are set to 1.
+
+mix.l(desk) = 1;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -68,7 +79,7 @@ Equations
 stat_mix(desk).. ((-1) * price(desk)) + sum(shop, labor(shop,desk) * lam_cap(shop)) =E= 0;
 
 * Inequality complementarity equations
-comp_cap(shop).. ((-1) * sum(desk, labor(shop,desk) * mix(desk))) =G= 0;
+comp_cap(shop).. ((-1) * (sum(desk, labor(shop,desk) * mix(desk)) - caplim(shop))) =G= 0;
 
 * Original equality equations
 ap.. profit =E= sum(desk, price(desk) * mix(desk));

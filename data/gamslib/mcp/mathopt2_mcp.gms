@@ -44,6 +44,17 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+x1.l = 10.0;
+x2.l = -10.0;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -70,8 +81,8 @@ stat_x1.. 8 * (2 * sqr(x1) - x2) * x1 + 2 * (x2 - 6 * sqr(x1)) * ((-1) * (6 * 2 
 stat_x2.. (-2) * (2 * sqr(x1) - x2) + 2 * (x2 - 6 * sqr(x1)) + ((-1) * (10 + x1)) * nu_eq1 + (-3) * nu_eq2 - 1 * lam_ineq1 - 1 * lam_ineq2 =E= 0;
 
 * Inequality complementarity equations
-comp_ineq1.. ((-1) * (x2 + x1)) =G= 0;
-comp_ineq2.. ((-1) * (x2 - x1)) =G= 0;
+comp_ineq1.. ((-1) * (x2 + x1 - 1)) =G= 0;
+comp_ineq2.. ((-1) * (x2 - x1 - 2)) =G= 0;
 
 * Original equality equations
 objdef.. obj =E= sqr(2 * sqr(x1) - x2) + sqr(x2 - 6 * sqr(x1));

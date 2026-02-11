@@ -64,6 +64,22 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+g3.l = 90.0;
+g4.l = 20.0;
+x1.l = 78.62;
+x2.l = 33.44;
+x3.l = 31.07;
+x4.l = 44.18;
+x5.l = 35.22;
+
+* ============================================
 * Equations
 * ============================================
 

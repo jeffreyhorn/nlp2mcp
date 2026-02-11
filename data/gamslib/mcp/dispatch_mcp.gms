@@ -19,7 +19,7 @@ Sets
     i /p1, p2, p3/
     genchar /a, b, c, upplim, lowlim/
     cg(genchar) /a, b, c/
-    s /min-loss, s1, s2, s3, s4, min-cost/
+    s /'min-loss', s1, s2, s3, s4, 'min-cost'/
     st(s) /s1, s2, s3, s4/
 ;
 
@@ -33,8 +33,8 @@ Parameters
 ;
 
 Scalars
-    b00 /0.0/
-    demand /0.0/
+    b00 /0.040357/
+    demand /210.0/
     trace /0.0/
 ;
 
@@ -61,6 +61,17 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* POSITIVE variables are set to 1.
+
+p.l(i) = 1;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -85,7 +96,7 @@ stat_cost.. 100 * sum(i, 0) / 10000 + 100 * sum((i,j), 0) / 10000 + (1 - sum((i,
 stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * power(p(i), pexp(cg)) * pexp(cg) / p(i))) * nu_costfn + (-1) * lam_demcons =E= 0;
 
 * Inequality complementarity equations
-comp_demcons.. sum(i, p(i)) =G= 0;
+comp_demcons.. sum(i, p(i)) - (demand + loss) =G= 0;
 
 * Original equality equations
 costfn.. cost =E= sum((i,cg), gendata(i,cg) * power(p(i), pexp(cg)));
