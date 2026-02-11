@@ -864,8 +864,10 @@ Implemented 4 fixes for path_syntax_error issues:
 | mexss | E170/171 | Domain violations | ⚠️ Investigate |
 | mingamma | E140 | Unknown symbol (psi function) | ❌ GAMS lacks function |
 | orani | E170/171 | Dynamic domain extension | ⚠️ Investigate |
-| robert | E170 | Domain violation (lead index) | ⚠️ Investigate |
+| robert | E170 | Domain violation (lead index); originally E149 cross-indexed sums (see ISSUE_670) | ⚠️ Investigate |
 | sample | E171 | Domain violation for set | ⚠️ Investigate |
+
+**Note:** `robert` was initially classified under E149 cross-indexed sums (architectural; see `docs/issues/ISSUE_670_cross-indexed-sums-error-149.md`). After applying earlier sprint fixes, the remaining blocking error is E170 (lead index domain violation), which is now tractable to investigate.
 
 ### Architectural Issues Identified
 

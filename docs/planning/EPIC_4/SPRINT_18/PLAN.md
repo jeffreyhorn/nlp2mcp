@@ -226,7 +226,7 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 
 **Checkpoint 2 Criteria:**
 - [x] All emit_gams.py fixes merged (set quoting, computed params, bound multipliers, reserved words, subsets)
-- [ ] `path_syntax_error` reduced from 17 to ≤4 — **NOT MET** (10 remain, 4 architectural)
+- [ ] `path_syntax_error` reduced from v1.1.0 baseline 17 (22 in Day 0 due to higher translate coverage) to ≤4 — **NOT MET** (10 remain, 4 architectural)
 - [x] 12 original solving models still solve (no regressions) — **MET** (19 now solve)
 - [x] New metrics recorded
 

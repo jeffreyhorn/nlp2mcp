@@ -706,11 +706,12 @@ Document all findings from Days 7-8 as formal issue files, categorize architectu
 - [ ] Clear categorization: 4 architectural + 6 investigated (some may now be architectural too)
 
 ### Tasks
-1. **Create ISSUE_*.md for architectural limitations** (~1.5h)
-   - ISSUE_680_abel_cross_indexed_sums.md - Cross-indexed sums with dynamic subsets
-   - ISSUE_681_qabel_cross_indexed_sums.md - Same pattern as abel
-   - ISSUE_682_chenery_cross_indexed_sums.md - Cross-indexed sums + table wildcard
-   - ISSUE_683_mingamma_missing_psi_function.md - GAMS lacks psi/digamma function
+1. **Document architectural limitations in existing issues** (~1.5h)
+   - Cross-indexed sums (abel, qabel, chenery):
+     - Extend existing `docs/issues/ISSUE_670_cross-indexed-sums-error-149.md` with per-model analysis
+     - Add model-specific notes and conclusions for abel, qabel, chenery
+   - MINGAMMA / missing psi/digamma function:
+     - Extend existing `docs/issues/ISSUE_676_mingamma-builtin-function-confusion.md` with architectural analysis
    - Include: root cause, GAMS error, why it's architectural, potential future fix approach
 
 2. **Create ISSUE_*.md for remaining domain violations** (~1.5h)
@@ -729,8 +730,8 @@ Document all findings from Days 7-8 as formal issue files, categorize architectu
    - Ensure issue tracking is organized
 
 ### Deliverables
-- [ ] ISSUE_*.md files for all architectural limitations (4+ files)
-- [ ] ISSUE_*.md files for unfixable domain violations
+- [ ] Extended ISSUE_670 and ISSUE_676 with architectural analysis
+- [ ] ISSUE_*.md files for unfixable domain violations (if any discovered)
 - [ ] Updated KNOWN_UNKNOWNS.md
 - [ ] Organized docs/issues/ directory
 - [ ] SPRINT_LOG.md updated with Day 9 summary
@@ -912,8 +913,8 @@ cat docs/planning/EPIC_4/SPRINT_18/SPRINT_LOG.md | tail -50
 # Check FIX_ROADMAP created
 cat docs/planning/EPIC_4/SPRINT_18/FIX_ROADMAP.md
 
-# Final metrics verification
-python scripts/gamslib/run_full_test.py --dry-run
+# Final metrics verification (run full pipeline to recompute metrics)
+python scripts/gamslib/run_full_test.py
 ```
 
 ### Completion Criteria
