@@ -575,6 +575,61 @@ class TestEmitOriginalParameters:
         assert "alpha /0.1/" in result
         assert "beta /0.2/" in result
 
+    def test_skip_domainless_parameter_with_indexed_values(self, caplog):
+        """Test Issue #675: Skip parameters with empty domain but indexed values.
+
+        Parameters declared without a domain but used with indexed values (like
+        report parameters) cannot be properly emitted as scalars. They should be
+        skipped with a warning.
+        """
+        import logging
+
+        model = ModelIR()
+        # Parameter with empty domain but indexed values - should be skipped
+        model.params["report"] = ParameterDef(
+            name="report",
+            domain=(),  # Empty domain (declared as scalar)
+            values={("x1", "global"): 1.0, ("x1", "solver"): 2.0},  # But indexed values
+        )
+        # Regular scalar - should be emitted
+        model.params["discount"] = ParameterDef(name="discount", domain=(), values={(): 0.95})
+
+        with caplog.at_level(logging.WARNING):
+            result = emit_original_parameters(model)
+
+        # "report" should NOT appear in output (skipped)
+        assert "report" not in result
+        # Regular scalar should still be emitted
+        assert "discount /0.95/" in result
+        # Warning should be logged
+        assert any("report" in record.message for record in caplog.records)
+        assert any("indexed values" in record.message for record in caplog.records)
+
+    def test_skip_domainless_parameter_with_indexed_expressions(self, caplog):
+        """Test Issue #675: Skip parameters with empty domain but indexed expressions.
+
+        Parameters declared without a domain but with indexed expressions (like
+        report parameters referencing .l values) cannot be properly emitted.
+        """
+        import logging
+
+        model = ModelIR()
+        # Parameter with empty domain but indexed expressions - should be skipped
+        model.params["croprep"] = ParameterDef(
+            name="croprep",
+            domain=(),  # Empty domain
+            values={},
+            expressions={("revenue", "c"): Const(100.0)},  # Indexed expression
+        )
+
+        with caplog.at_level(logging.WARNING):
+            result = emit_original_parameters(model)
+
+        # "croprep" should NOT appear in output (skipped)
+        assert "croprep" not in result
+        # Warning should be logged
+        assert any("croprep" in record.message for record in caplog.records)
+
 
 @pytest.mark.unit
 class TestEmitComputedParameterAssignments:
