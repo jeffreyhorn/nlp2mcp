@@ -18,7 +18,7 @@ import re
 from src.emit.expr_to_gams import expr_to_gams
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import ParameterDef, SetDef
+from src.ir.symbols import SetDef
 
 logger = logging.getLogger(__name__)
 
@@ -548,45 +548,6 @@ def _expand_table_key(key_tuple: tuple[str, ...], domain_size: int) -> tuple[str
     return tuple(expanded)
 
 
-def _infer_wildcard_elements(
-    param_def: ParameterDef, wildcard_positions: list[int]
-) -> dict[int, set[str]]:
-    """Infer the actual set elements for wildcard (*) domain positions from parameter data.
-
-    When a parameter is declared with wildcard domain like dat(i,*), we need to
-    determine what elements the wildcard represents by examining the data keys.
-
-    Handles table data where keys may be stored as 2-tuples with dotted row headers
-    that need to be expanded to match the full domain size.
-
-    Args:
-        param_def: Parameter definition with values
-        wildcard_positions: List of indices in the domain that contain wildcards
-
-    Returns:
-        Dict mapping wildcard position index to set of inferred element names
-    """
-    if not param_def.values:
-        return {}
-
-    domain_size = len(param_def.domain)
-    inferred: dict[int, set[str]] = {pos: set() for pos in wildcard_positions}
-
-    for key_tuple in param_def.values.keys():
-        # Expand key to match domain size (handles table data with dotted row headers)
-        expanded_key = _expand_table_key(key_tuple, domain_size)
-
-        # Skip malformed entries (e.g., zero-fill entries with wrong dimensions)
-        if expanded_key is None:
-            continue
-
-        for pos in wildcard_positions:
-            if pos < len(expanded_key):
-                inferred[pos].add(expanded_key[pos])
-
-    return inferred
-
-
 def emit_original_parameters(model_ir: ModelIR) -> str:
     """Emit Parameters and Scalars with their data.
 
@@ -594,8 +555,10 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     Scalars have empty domain () and values[()] = value.
     Multi-dimensional keys formatted as GAMS syntax: ("i1", "j2") → "i1.j2".
 
-    Handles wildcard domains (*) by inferring actual elements from data and
-    creating anonymous sets for the wildcard positions.
+    Wildcard domains (*) are preserved as-is in the declaration. This matches
+    the original GAMS behavior and allows any set to be used for indexing.
+    (Issue #679: replacing wildcards with named sets caused E171 domain violations
+    when the original code used subset indexing.)
 
     Args:
         model_ir: Model IR containing parameter definitions
@@ -604,13 +567,9 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
         GAMS Parameters and Scalars blocks as string
 
     Example output:
-        Sets
-            wc_dat_d2 /x, y/
-        ;
-
         Parameters
             c(i,j) /i1.j1 2.5, i1.j2 3.0, i2.j1 1.8/
-            dat(i,wc_dat_d2) /1.y 127.0, 1.x -5.0/
+            dat(i,*) /1.y 127.0, 1.x -5.0/
         ;
 
         Scalars
@@ -664,70 +623,18 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     existing_symbols_lower.update(k.lower() for k in model_ir.params.keys())
     existing_symbols_lower.update(k.lower() for k in model_ir.variables.keys())
 
-    # First pass: identify parameters with wildcard domains and infer elements
-    # Generate anonymous sets for wildcards
-    # Key format: f"{param_name}_{pos}" -> (set_name, elements)
-    wildcard_sets: dict[str, tuple[str, set[str]]] = {}
-    wildcard_replacements: dict[str, list[str]] = {}  # param_name -> new domain list
-    # Track exactly which domain positions were replaced with generated set names
-    generated_set_positions: dict[str, set[int]] = {}  # param_name -> set of positions
-
-    for param_name, param_def in parameters.items():
-        if "*" in param_def.domain:
-            # Find wildcard positions
-            wildcard_positions = [i for i, d in enumerate(param_def.domain) if d == "*"]
-
-            # Infer elements for each wildcard
-            inferred = _infer_wildcard_elements(param_def, wildcard_positions)
-
-            # Create new domain with anonymous set names replacing wildcards
-            new_domain = list(param_def.domain)
-            generated_positions: set[int] = set()
-            for pos in wildcard_positions:
-                elements = inferred.get(pos, set())
-                if elements:
-                    # Create anonymous set name with unique prefix to avoid collisions
-                    # Note: GAMS identifiers cannot start with underscore, so use "wc" prefix
-                    base_name = f"wc_{param_name}_d{pos + 1}"
-                    set_name = base_name
-                    # Ensure uniqueness by adding suffix if needed (case-insensitive check)
-                    counter = 1
-                    while set_name.lower() in existing_symbols_lower:
-                        set_name = f"{base_name}_{counter}"
-                        counter += 1
-                    existing_symbols_lower.add(set_name.lower())  # Reserve this name
-                    wildcard_sets[f"{param_name}_{pos}"] = (set_name, elements)
-                    new_domain[pos] = set_name
-                    generated_positions.add(pos)
-                # If no elements inferred, keep wildcard (will cause GAMS error, but at least we tried)
-
-            wildcard_replacements[param_name] = new_domain
-            generated_set_positions[param_name] = generated_positions
-
-    # Emit anonymous sets for wildcards if any
-    # Track which sets were successfully emitted to avoid referencing undefined sets
-    emitted_sets: set[str] = set()
-    if wildcard_sets:
-        lines.append("Sets")
-        for _key, (set_name, elements) in wildcard_sets.items():
-            # Sanitize elements for GAMS emission (same strict behavior as explicit sets)
-            sanitized = []
-            for elem in sorted(elements):
-                sanitized.append(_sanitize_set_element(elem))
-            if sanitized:
-                elements_str = ", ".join(sanitized)
-                lines.append(f"    {set_name} /{elements_str}/")
-                emitted_sets.add(set_name)
-        lines.append(";")
-        lines.append("")  # Blank line before Parameters
-
-    # Update wildcard_replacements to only use sets that were successfully emitted
-    # If a set wasn't emitted, revert to original wildcard '*' to avoid undefined set errors
-    for param_name, new_domain in wildcard_replacements.items():
-        positions_to_check = generated_set_positions.get(param_name, set())
-        for i in positions_to_check:
-            if i < len(new_domain) and new_domain[i] not in emitted_sets:
-                new_domain[i] = "*"  # Revert to wildcard
+    # Issue #679: Keep wildcard domains as '*' instead of replacing with named sets
+    # Rationale: When the original GAMS code declares a parameter with wildcard domain
+    # like `Table compdat(*,alloy)`, it may index the parameter using different sets:
+    #   - compdat(elem,alloy) where elem = {lead, zinc, tin}
+    #   - compdat("price",alloy) for a specific element
+    # If we replace '*' with a generated set wc_compdat_d1 = {lead, zinc, tin, price},
+    # then indexing via `elem` causes E171 "Domain violation for set" because GAMS
+    # requires the indexing set to be compatible with (subset of or equal to) the
+    # declared domain set.
+    # Solution: Keep wildcards as '*' in the domain declaration, which allows any
+    # set or element to be used for indexing, matching the original GAMS behavior.
+    wildcard_replacements: dict[str, list[str]] = {}  # param_name -> domain (unchanged)
 
     # Emit Parameters
     if parameters:
