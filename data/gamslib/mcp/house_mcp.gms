@@ -55,6 +55,18 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+x.l = 30.0;
+b.l = 68.0;
+l.l = 56.0;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -102,10 +114,10 @@ stat_y.. 0 + ((-1) * x) * nu_defa1 + 0 * nu_defa2 + (-1) * nu_defl + (-0.5) * nu
 stat_z.. 0 + 0 * nu_defa1 + ((-1) * x) * nu_defa2 + 0 * nu_defl + 1 * nu_balk + 0 * lam_minw - 0 * lam_maxw + 0 * lam_minp + 0 * lam_prop =E= 0;
 
 * Inequality complementarity equations
-comp_maxw.. ((-1) * x) =G= 0;
-comp_minp.. y * (b - x) =G= 0;
-comp_minw.. x =G= 0;
-comp_prop.. a =G= 0;
+comp_maxw.. ((-1) * (x - b / 2)) =G= 0;
+comp_minp.. y * (b - x) - 1500 =G= 0;
+comp_minw.. x - b / 3 =G= 0;
+comp_prop.. a - y / 2 =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_b.. b - 40 =G= 0;

@@ -22,14 +22,10 @@ Sets
     t(tt) /'1', '2', '3'/
 ;
 
-Sets
-    wc_misc_d1 /'max-stock', 'res-value', 'storage-c'/
-;
-
 Parameters
     a(r,p) /scrap.low 5.0, scrap.medium 3.0, scrap.high 1.0, new.low 1.0, new.medium 2.0, new.high 3.0/
     c(p,t) /'1'.'expected profits' 2.0, low.'expected profits' 25.0, medium.'expected profits' 50.0, high.'expected profits' 75.0/
-    misc(wc_misc_d1,r) /'max-stock'.scrap 400.0, 'max-stock'.new 275.0, 'storage-c'.scrap 0.5, 'storage-c'.new 2.0, 'res-value'.scrap 15.0, 'res-value'.new 25.0/
+    misc(*,r) /'max-stock'.scrap 400.0, 'max-stock'.new 275.0, 'storage-c'.scrap 0.5, 'storage-c'.new 2.0, 'res-value'.scrap 15.0, 'res-value'.new 25.0/
 ;
 
 Scalars

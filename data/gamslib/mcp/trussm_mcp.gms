@@ -58,6 +58,19 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* POSITIVE variables are set to 1.
+
+tk.l(i,k) = 1;
+t.l(i) = 1;
+sigma.l(i,k) = 1;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -88,9 +101,9 @@ stat_t(i).. 0 + sum(k, (-1) * nu_deftk(i,k)) + sum((j,k), 0 * nu_stiffness(j,k))
 stat_tk(i,k).. 0 + 1 * nu_deftk(i,k) + sum(j, 0 * nu_stiffness(j,k)) + ((-1) * (sigma(i,k) * 2)) * lam_volumeeq(i,k) + 0 * lam_reseq(k) + 0 * lam_trusscomp =E= 0;
 
 * Inequality complementarity equations
-comp_reseq(k).. ((-1) * sum(i, sigma(i,k))) =G= 0;
-comp_trusscomp.. ((-1) * sum(i, t(i))) =G= 0;
-comp_volumeeq(i,k).. 2 * tk(i,k) * sigma(i,k) =G= 0;
+comp_reseq(k).. ((-1) * (sum(i, sigma(i,k)) - tau)) =G= 0;
+comp_trusscomp.. ((-1) * (sum(i, t(i)) - maxvolume)) =G= 0;
+comp_volumeeq(i,k).. 2 * tk(i,k) * sigma(i,k) - sqr(s(i,k)) =G= 0;
 
 * Original equality equations
 deftk(i,k).. tk(i,k) =E= t(i);

@@ -19,25 +19,23 @@ Sets
     c /wheat, clover, beans, onions, cotton, maize, tomato/
     t /jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec/
     crep /landuse, output, revenue/
-    lrep /demand, family, temporary, unused, hire-out/
+    lrep /demand, family, temporary, unused, 'hire-out'/
 ;
 
 Parameters
-    landreq(t,c) /jan.wheat 1.0, jan.clover 1.0, jan.beans 1.0, jan.onions 1.0, feb.wheat 1.0, feb.clover 1.0, feb.beans 1.0, feb.onions 1.0, mar.wheat 1.0, mar.clover 0.5, mar.beans 1.0, mar.onions 1.0, mar.cotton 0.5, apr.wheat 1.0, apr.beans 1.0, apr.onions 1.0, apr.cotton 1.0, may.wheat 1.0, may.onions 0.25, may.cotton 1.0, may.maize 0.25, jun.cotton 1.0, jun.maize 1.0, jul.cotton 1.0, jul.maize 1.0, jul.tomato 0.75, aug.cotton 1.0, aug.maize 1.0, aug.tomato 1.0, sep.cotton 1.0, sep.maize 1.0, sep.tomato 1.0, oct.cotton 1.0, oct.maize 0.5, oct.tomato 1.0, nov.wheat 0.5, nov.clover 0.25, nov.beans 0.25, nov.onions 0.5, nov.cotton 0.75, nov.tomato 0.75, dec.wheat 1.0, dec.clover 1.0, dec.beans 1.0, dec.onions 1.0, nov.maize 0.0, jun.wheat 0.0, jun.clover 0.0, jun.beans 0.0, jun.onions 0.0, jun.tomato 0.0, sep.wheat 0.0, sep.clover 0.0, sep.beans 0.0, sep.onions 0.0, mar.maize 0.0, mar.tomato 0.0, apr.clover 0.0, apr.maize 0.0, apr.tomato 0.0, dec.cotton 0.0, dec.maize 0.0, dec.tomato 0.0, feb.cotton 0.0, feb.maize 0.0, feb.tomato 0.0, oct.wheat 0.0, oct.clover 0.0, oct.beans 0.0, oct.onions 0.0, jan.cotton 0.0, jan.maize 0.0, jan.tomato 0.0, jul.wheat 0.0, jul.clover 0.0, jul.beans 0.0, jul.onions 0.0, aug.wheat 0.0, aug.clover 0.0, aug.beans 0.0, aug.onions 0.0, may.clover 0.0, may.beans 0.0, may.tomato 0.0/
-    laborreq(t,c) /jan.wheat 1.72, jan.clover 4.5, jan.beans 0.75, jan.onions 5.16, feb.wheat 0.5, feb.clover 1.0, feb.beans 0.75, feb.onions 5.0, mar.wheat 1.0, mar.clover 8.0, mar.beans 0.75, mar.onions 5.0, mar.cotton 5.0, apr.wheat 1.0, apr.beans 16.0, apr.onions 19.58, apr.cotton 5.0, may.wheat 17.16, may.onions 2.42, may.cotton 9.0, may.maize 4.3, jun.wheat 2.34, jun.cotton 2.0, jun.maize 5.04, jul.cotton 1.5, jul.maize 7.16, jul.tomato 17.0, aug.cotton 2.0, aug.maize 7.97, aug.tomato 15.0, sep.cotton 1.0, sep.maize 4.41, sep.tomato 12.0, oct.cotton 26.0, oct.maize 1.12, oct.tomato 7.0, nov.wheat 2.43, nov.clover 2.5, nov.beans 7.5, nov.onions 11.16, nov.cotton 12.0, nov.tomato 6.0, dec.wheat 1.35, dec.clover 7.5, dec.beans 0.75, dec.onions 4.68, nov.maize 0.0, jun.clover 0.0, jun.beans 0.0, jun.onions 0.0, jun.tomato 0.0, sep.wheat 0.0, sep.clover 0.0, sep.beans 0.0, sep.onions 0.0, mar.maize 0.0, mar.tomato 0.0, apr.clover 0.0, apr.maize 0.0, apr.tomato 0.0, dec.cotton 0.0, dec.maize 0.0, dec.tomato 0.0, feb.cotton 0.0, feb.maize 0.0, feb.tomato 0.0, oct.wheat 0.0, oct.clover 0.0, oct.beans 0.0, oct.onions 0.0, jan.cotton 0.0, jan.maize 0.0, jan.tomato 0.0, jul.wheat 0.0, jul.clover 0.0, jul.beans 0.0, jul.onions 0.0, aug.wheat 0.0, aug.clover 0.0, aug.beans 0.0, aug.onions 0.0, may.clover 0.0, may.beans 0.0, may.tomato 0.0/
+    landreq(t,c) /jan.wheat 1.0, jan.clover 1.0, jan.beans 1.0, jan.onions 1.0, feb.wheat 1.0, feb.clover 1.0, feb.beans 1.0, feb.onions 1.0, mar.wheat 1.0, mar.clover 0.5, mar.beans 1.0, mar.onions 1.0, mar.cotton 0.5, apr.wheat 1.0, apr.beans 1.0, apr.onions 1.0, apr.cotton 1.0, may.wheat 1.0, may.onions 0.25, may.cotton 1.0, may.maize 0.25, jun.cotton 1.0, jun.maize 1.0, jul.cotton 1.0, jul.maize 1.0, jul.tomato 0.75, aug.cotton 1.0, aug.maize 1.0, aug.tomato 1.0, sep.cotton 1.0, sep.maize 1.0, sep.tomato 1.0, oct.cotton 1.0, oct.maize 0.5, oct.tomato 1.0, nov.wheat 0.5, nov.clover 0.25, nov.beans 0.25, nov.onions 0.5, nov.cotton 0.75, nov.tomato 0.75, dec.wheat 1.0, dec.clover 1.0, dec.beans 1.0, dec.onions 1.0, sep.wheat 0.0, sep.clover 0.0, sep.beans 0.0, sep.onions 0.0, feb.cotton 0.0, feb.maize 0.0, feb.tomato 0.0, dec.cotton 0.0, dec.maize 0.0, dec.tomato 0.0, mar.maize 0.0, mar.tomato 0.0, may.clover 0.0, may.beans 0.0, may.tomato 0.0, jan.cotton 0.0, jan.maize 0.0, jan.tomato 0.0, aug.wheat 0.0, aug.clover 0.0, aug.beans 0.0, aug.onions 0.0, oct.wheat 0.0, oct.clover 0.0, oct.beans 0.0, oct.onions 0.0, apr.clover 0.0, apr.maize 0.0, apr.tomato 0.0, jul.wheat 0.0, jul.clover 0.0, jul.beans 0.0, jul.onions 0.0, jun.wheat 0.0, jun.clover 0.0, jun.beans 0.0, jun.onions 0.0, jun.tomato 0.0, nov.maize 0.0/
+    laborreq(t,c) /jan.wheat 1.72, jan.clover 4.5, jan.beans 0.75, jan.onions 5.16, feb.wheat 0.5, feb.clover 1.0, feb.beans 0.75, feb.onions 5.0, mar.wheat 1.0, mar.clover 8.0, mar.beans 0.75, mar.onions 5.0, mar.cotton 5.0, apr.wheat 1.0, apr.beans 16.0, apr.onions 19.58, apr.cotton 5.0, may.wheat 17.16, may.onions 2.42, may.cotton 9.0, may.maize 4.3, jun.wheat 2.34, jun.cotton 2.0, jun.maize 5.04, jul.cotton 1.5, jul.maize 7.16, jul.tomato 17.0, aug.cotton 2.0, aug.maize 7.97, aug.tomato 15.0, sep.cotton 1.0, sep.maize 4.41, sep.tomato 12.0, oct.cotton 26.0, oct.maize 1.12, oct.tomato 7.0, nov.wheat 2.43, nov.clover 2.5, nov.beans 7.5, nov.onions 11.16, nov.cotton 12.0, nov.tomato 6.0, dec.wheat 1.35, dec.clover 7.5, dec.beans 0.75, dec.onions 4.68, sep.wheat 0.0, sep.clover 0.0, sep.beans 0.0, sep.onions 0.0, feb.cotton 0.0, feb.maize 0.0, feb.tomato 0.0, dec.cotton 0.0, dec.maize 0.0, dec.tomato 0.0, mar.maize 0.0, mar.tomato 0.0, may.clover 0.0, may.beans 0.0, may.tomato 0.0, jan.cotton 0.0, jan.maize 0.0, jan.tomato 0.0, aug.wheat 0.0, aug.clover 0.0, aug.beans 0.0, aug.onions 0.0, oct.wheat 0.0, oct.clover 0.0, oct.beans 0.0, oct.onions 0.0, apr.clover 0.0, apr.maize 0.0, apr.tomato 0.0, jul.wheat 0.0, jul.clover 0.0, jul.beans 0.0, jul.onions 0.0, jun.clover 0.0, jun.beans 0.0, jun.onions 0.0, jun.tomato 0.0, nov.maize 0.0/
     yield(c) /wheat 1.5, clover 6.5, beans 1.0, onions 3.0, cotton 1.5, maize 2.0, tomato 3.0/
     price(c) /wheat 100.0, beans 200.0, onions 125.0, cotton 350.0, maize 70.0, tomato 120.0/
     miscost(c) /wheat 10.0, beans 5.0, onions 50.0, cotton 80.0, maize 5.0, tomato 50.0/
-    croprep
-    labrep
 ;
 
 Scalars
-    land /0.0/
-    famlab /0.0/
-    owage /0.0/
-    twage /0.0/
-    dpm /0.0/
+    land /4.0/
+    famlab /25.0/
+    owage /3.0/
+    twage /4.0/
+    dpm /25.0/
 ;
 
 * ============================================
@@ -72,6 +70,20 @@ Positive Variables
     lam_landbal(t)
     lam_laborbal(t)
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* POSITIVE variables are set to 1.
+
+xcrop.l(c) = 1;
+flab.l(t) = 1;
+fout.l(t) = 1;
+tlab.l(t) = 1;
 
 * ============================================
 * Equations
@@ -115,8 +127,8 @@ stat_tlab(t).. 0 + 0 * nu_flabor(t) + ((-1) * sum(c, 0)) * nu_arev + ((-1) * sum
 stat_xcrop(c).. 0 + sum(t, 0 * nu_flabor(t)) + ((-1) * (price(c) * yield(c))) * nu_arev + ((-1) * miscost(c)) * nu_acost + ((-1) * sum(t, 0)) * nu_alab + ((-1) * sum(t, 0)) * nu_aout + sum(t, landreq(t,c) * lam_landbal(t)) + sum(t, laborreq(t,c) * lam_laborbal(t)) =E= 0;
 
 * Inequality complementarity equations
-comp_laborbal(t).. ((-1) * sum(c, xcrop(c) * laborreq(t,c))) =G= 0;
-comp_landbal(t).. ((-1) * sum(c, xcrop(c) * landreq(t,c))) =G= 0;
+comp_laborbal(t).. ((-1) * (sum(c, xcrop(c) * laborreq(t,c)) - (flab(t) + tlab(t)))) =G= 0;
+comp_landbal(t).. ((-1) * (sum(c, xcrop(c) * landreq(t,c)) - land)) =G= 0;
 
 * Original equality equations
 flabor(t).. famlab =E= flab(t) + fout(t);

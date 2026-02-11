@@ -83,6 +83,42 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound).
+
+olefin.l = 1745.0;
+olefin.l = min(max(olefin.l, 1e-6), olefin.up);
+isor.l = 12000.0;
+isor.l = min(max(isor.l, 1e-6), isor.up);
+acid.l = 110.0;
+acid.l = min(max(acid.l, 1e-6), acid.up);
+alkylate.l = 3048.0;
+alkylate.l = min(max(alkylate.l, 1e-6), alkylate.up);
+isom.l = 1974.0;
+isom.l = min(max(isom.l, 1e-6), isom.up);
+strength.l = 89.2;
+strength.l = min(max(strength.l, 1e-6), strength.up);
+octane.l = 92.8;
+octane.l = min(max(octane.l, 1e-6), octane.up);
+ratio.l = 8.0;
+ratio.l = min(max(ratio.l, 1e-6), ratio.up);
+dilute.l = 3.6;
+dilute.l = min(max(dilute.l, 1e-6), dilute.up);
+f4.l = 145.0;
+f4.l = min(max(f4.l, 1e-6), f4.up);
+profit.l = 872.0;
+rangey.l = 1.0;
+rangem.l = 1.0;
+ranged.l = 1.0;
+rangef.l = 1.0;
+
+* ============================================
 * Equations
 * ============================================
 

@@ -16,14 +16,14 @@ $offText
 * ============================================
 
 Sets
-    i /seattle, san-diego/
-    j /new-york, chicago, topeka/
+    i /seattle, 'san-diego'/
+    j /'new-york', chicago, topeka/
 ;
 
 Parameters
-    a(i) /seattle 350.0, san-diego 600.0/
-    b(j) /new-york 325.0, chicago 300.0, topeka 275.0/
-    d(i,j) /seattle.chicago 1.7, seattle.topeka 1.8, 'san-diego'.chicago 2.5, 'san-diego'.topeka 1.8/
+    a(i) /seattle 350.0, 'san-diego' 600.0/
+    b(j) /'new-york' 325.0, chicago 300.0, topeka 275.0/
+    d(i,j) /seattle.'new-york' 2.5, seattle.chicago 1.7, seattle.topeka 1.8, 'san-diego'.'new-york' 2.5, 'san-diego'.chicago 1.8, 'san-diego'.topeka 1.4/
     c(i,j)
 ;
 
@@ -55,6 +55,17 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* POSITIVE variables are set to 1.
+
+x.l(i,j) = 1;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -77,8 +88,8 @@ Equations
 stat_x(i,j).. c(i,j) + 1 * lam_supply(i) + (-1) * lam_demand(j) =E= 0;
 
 * Inequality complementarity equations
-comp_demand(j).. sum(i, x(i,j)) =G= 0;
-comp_supply(i).. ((-1) * sum(j, x(i,j))) =G= 0;
+comp_demand(j).. sum(i, x(i,j)) - b(j) =G= 0;
+comp_supply(i).. ((-1) * (sum(j, x(i,j)) - a(i))) =G= 0;
 
 * Original equality equations
 cost.. z =E= sum((i,j), c(i,j) * x(i,j));

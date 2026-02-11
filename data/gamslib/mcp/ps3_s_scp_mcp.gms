@@ -16,14 +16,14 @@ $offText
 * ============================================
 
 Sets
-    i /0, 1, 2/
+    i /'0', '1', '2'/
 ;
 
 Alias(i, j);
 
 Parameters
-    theta(i) /0 0.1, 1 0.4, 2 0.9/
-    p(i) /0 0.2, 1 0.5, 2 0.3/
+    theta(i) /'0' 0.1, '1' 0.4, '2' 0.9/
+    p(i) /'0' 0.2, '1' 0.5, '2' 0.3/
 ;
 
 Scalars
@@ -58,6 +58,23 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
+
+x.l("0") = 0.0001;
+x.l("1") = 0.0001;
+x.l("2") = 0.0001;
+x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
+b.l(i) = 1;
+w.l(i) = 1;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -90,10 +107,10 @@ stat_w(i).. ((-1) * (p(i) * (-1))) + 0 * nu_rev(i) + (-1) * lam_pc(i) + sum(j, 0
 stat_x(i).. 0 + ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + (1 - theta(i) + sqr(theta(i))) * lam_pc(i) + sum(j, 0 * lam_ic(i,j)) + (1 - theta(i) + sqr(theta(i))) * lam_licd(i) + (1 - theta(i) + sqr(theta(i))) * lam_licu(i) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
-comp_ic(i,j).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) =G= 0;
-comp_licd(i).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) =G= 0;
-comp_licu(i).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) =G= 0;
-comp_pc(i).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) =G= 0;
+comp_ic(i,j).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) - (w(j) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(j))) =G= 0;
+comp_licd(i)$(ord(i) <= card(i) - 1).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) - (w(i+1) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i+1))) =G= 0;
+comp_licu(i)$(ord(i) > 1).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) - (w(i-1) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i-1))) =G= 0;
+comp_pc(i).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) - ru =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i).. x(i) - 0.0001 =G= 0;

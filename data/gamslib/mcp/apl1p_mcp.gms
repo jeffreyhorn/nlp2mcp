@@ -69,6 +69,19 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* POSITIVE variables are set to 1.
+
+x.l(g) = 1;
+y.l(g,dl) = 1;
+s.l(dl) = 1;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -97,10 +110,10 @@ stat_x(g).. c(g) + 2 * sum(dl, 0) + (-1) * lam_cmin(g) + 1 * lam_cmax(g) + (sum(
 stat_y(g,dl).. f(g,dl) + 0 * lam_cmin(g) + 0 * lam_cmax(g) + 1 * lam_omax(g) + (-1) * lam_demand(dl) =E= 0;
 
 * Inequality complementarity equations
-comp_cmax(g).. ((-1) * x(g)) =G= 0;
-comp_cmin(g).. x(g) =G= 0;
-comp_demand(dl).. sum(g, y(g,dl)) + s(dl) =G= 0;
-comp_omax(g).. ((-1) * sum(dl, y(g,dl))) =G= 0;
+comp_cmax(g).. ((-1) * (x(g) - ccmax(g))) =G= 0;
+comp_cmin(g).. x(g) - ccmin(g) =G= 0;
+comp_demand(dl).. sum(g, y(g,dl)) + s(dl) - d(dl) =G= 0;
+comp_omax(g).. ((-1) * (sum(dl, y(g,dl)) - alpha(g) * x(g))) =G= 0;
 
 * Original equality equations
 cost.. tcost =E= sum(g, c(g) * x(g)) + sum(g, sum(dl, f(g,dl) * y(g,dl))) + sum(dl, us(dl) * s(dl));

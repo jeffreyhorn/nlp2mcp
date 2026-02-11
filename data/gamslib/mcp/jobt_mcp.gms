@@ -16,14 +16,14 @@ $offText
 * ============================================
 
 Sets
-    t /1, 2, 3, 4, 5/
+    t /'1', '2', '3', '4', '5'/
 ;
 
 Parameters
-    si(t) /1 10.0/
-    wi(t) /1 20.0/
-    sf(t) /5 100.0/
-    d(t) /1 100.0, 2 200.0, 3 300.0, 4 400.0, 5 200.0/
+    si(t) /'1' 10.0/
+    wi(t) /'1' 20.0/
+    sf(t) /'5' 100.0/
+    d(t) /'1' 100.0, '2' 200.0, '3' 300.0, '4' 400.0, '5' 200.0/
 ;
 
 Scalars
@@ -65,8 +65,8 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+* non-zero initial values.
+* POSITIVE variables are set to 1.
 
 p.l(t) = 1;
 s.l(t) = 1;

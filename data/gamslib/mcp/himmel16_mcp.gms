@@ -16,7 +16,7 @@ $offText
 * ============================================
 
 Sets
-    i /1, 2, 3, 4, 5, 6/
+    i /'1', '2', '3', '4', '5', '6'/
 ;
 
 Alias(i, j);
@@ -54,8 +54,7 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+* non-zero initial values.
 
 x.l("2") = 0.5;
 x.l("3") = 0.5;

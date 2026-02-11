@@ -16,17 +16,17 @@ $offText
 * ============================================
 
 Sets
-    t /q-1, q-2, q-3, q-4/
+    t /'q-1', 'q-2', 'q-3', 'q-4'/
 ;
 
 Parameters
-    price(t) /q-1 10.0, q-2 12.0, q-3 8.0, q-4 9.0/
-    istock(t) /q-1 50.0/
+    price(t) /'q-1' 10.0, 'q-2' 12.0, 'q-3' 8.0, 'q-4' 9.0/
+    istock(t) /'q-1' 50.0/
 ;
 
 Scalars
-    storecost /0.0/
-    storecap /0.0/
+    storecost /1.0/
+    storecap /100.0/
 ;
 
 * ============================================
@@ -49,7 +49,21 @@ Positive Variables
     stock(t)
     sell(t)
     buy(t)
+    piU_stock(t)
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* POSITIVE variables are set to 1.
+
+stock.l(t) = 1;
+sell.l(t) = 1;
+buy.l(t) = 1;
 
 * ============================================
 * Equations
@@ -63,6 +77,7 @@ Equations
     stat_buy(t)
     stat_sell(t)
     stat_stock(t)
+    comp_up_stock(t)
     at
     sb(t)
 ;
@@ -74,10 +89,13 @@ Equations
 * Stationarity equations
 stat_buy(t).. price(t) + (-1) * nu_sb(t) =E= 0;
 stat_sell(t).. price(t) * (-1) + 1 * nu_sb(t) =E= 0;
-stat_stock(t).. storecost + 1 * nu_sb(t) =E= 0;
+stat_stock(t).. storecost + 1 * nu_sb(t) + piU_stock(t) =E= 0;
+
+* Upper bound complementarity equations
+comp_up_stock(t).. 100 - stock(t) =G= 0;
 
 * Original equality equations
-sb(t).. stock(t) =E= stock(t-1) + buy(t) - sell(t) + istock(t);
+sb(t)$(ord(t) > 1).. stock(t) =E= stock(t-1) + buy(t) - sell(t) + istock(t);
 at.. cost =E= sum(t, price(t) * (buy(t) - sell(t)) + storecost * stock(t));
 
 
@@ -99,7 +117,8 @@ Model mcp_model /
     stat_sell.sell,
     stat_stock.stock,
     at.cost,
-    sb.nu_sb
+    sb.nu_sb,
+    comp_up_stock.piU_stock
 /;
 
 * ============================================
