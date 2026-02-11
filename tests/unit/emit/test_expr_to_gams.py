@@ -569,7 +569,9 @@ class TestDollarConditional:
             Binary("<>", ParamRef("sig", ("i",)), Const(0)),
         )
         result = expr_to_gams(expr)
-        assert result == "vv(i)$sig(i) <> 0"
+        # Condition must be parenthesized when it's a complex expression
+        # GAMS requires: expr$(cond <> 0) not expr$cond <> 0
+        assert result == "vv(i)$(sig(i) <> 0)"
 
     def test_dollar_conditional_with_complex_value(self):
         """Test complex expression like ((a/b + c)**d)$cond."""
@@ -629,8 +631,9 @@ class TestDollarConditional:
         right = DollarConditional(Const(1), Binary("=", ParamRef("sig", ()), Const(0)))
         expr = Binary("+", left, right)
         result = expr_to_gams(expr)
-        assert "((a + b) ** rho)$sig <> 0" in result
-        assert "1$sig = 0" in result
+        # Conditions must be parenthesized when they're comparison expressions
+        assert "((a + b) ** rho)$(sig <> 0)" in result
+        assert "1$(sig = 0)" in result
 
 
 @pytest.mark.unit

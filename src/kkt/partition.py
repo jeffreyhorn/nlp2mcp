@@ -110,7 +110,11 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
         result.inequalities.append(name)
 
     # Bounds: iterate over ALL bound maps (Finding #2 fix)
-    for var_name, var_def in model_ir.variables.items():
+    # Use .keys() to get lowercase (canonical) variable names for consistency
+    # with index_mapping.py which also uses .keys() for variable iteration.
+    # This ensures bound multiplier keys match stationarity equation lookups.
+    for var_name in model_ir.variables.keys():
+        var_def = model_ir.variables[var_name]
         # Scalar bounds (if any)
         if var_def.lo is not None:
             if var_def.lo == float("-inf"):
