@@ -876,13 +876,11 @@ Implemented 4 fixes for path_syntax_error issues:
    - Example: `sum((ku,m__,mp), ...)` where `ku` is a dynamic subset
    - Requires KKT assembly changes to properly scope sum indices
 
-2. **Dynamic Domain Extension** (orani):
-   - Models extend sets at runtime with computed elements (e.g., `"total"`)
-   - These elements aren't in the inferred domain, causing domain violations
-
-3. **Missing GAMS Functions** (mingamma):
+2. **Missing GAMS Functions** (mingamma):
    - Uses `psi`/digamma function not available in GAMS
    - Cannot be fixed - document as architectural limitation
+
+**Note:** `orani` shows dynamic domain extension patterns but is scheduled for investigation in Days 7-8 to determine if it's architectural or tractable.
 
 ### Risk Assessment
 
