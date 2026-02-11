@@ -310,6 +310,42 @@ row2    3     4;"""
     assert normalize_special_identifiers(source) == expected
 
 
+def test_table_with_quoted_description_and_hyphenated_headers():
+    """Test Issue #673: Table with quoted STRING description and hyphenated column headers.
+
+    When a Table declaration has a quoted description (e.g., 'production rate'),
+    hyphenated column headers like 'machine-1' MUST be quoted to prevent them
+    from being parsed as row label 'machine' + value '-1'.
+    """
+    source = """Table prate(g,m) 'production rate'
+                machine-1  machine-2
+   20-bond-wt        53         52
+   25-bond-wt        51         49;"""
+    # Column headers ARE quoted because Table has a STRING description
+    # Row labels are also quoted
+    expected = """Table prate(g,m) 'production rate'
+                'machine-1'  'machine-2'
+   '20-bond-wt'        53         52
+   '25-bond-wt'        51         49;"""
+    assert normalize_special_identifiers(source) == expected
+
+
+def test_table_with_unquoted_description_and_hyphenated_headers():
+    """Test Table with unquoted DESCRIPTION text and hyphenated column headers.
+
+    When a Table declaration has unquoted description text after the domain,
+    hyphenated column headers should also be quoted (same as quoted description).
+    """
+    source = """Table prate(g,m) production rate in tons per hour
+                machine-1  machine-2
+   20-bond-wt        53         52;"""
+    # Column headers ARE quoted because Table has description text
+    expected = """Table prate(g,m) production rate in tons per hour
+                'machine-1'  'machine-2'
+   '20-bond-wt'        53         52;"""
+    assert normalize_special_identifiers(source) == expected
+
+
 def test_multi_line_set_declaration():
     """Test multi-line Set declaration with special chars (Issue #366)."""
     source = """Set

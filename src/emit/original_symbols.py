@@ -12,12 +12,15 @@ Key principles:
 - Emit computed parameter assignments as GAMS statements (Sprint 17 Day 4)
 """
 
+import logging
 import re
 
 from src.emit.expr_to_gams import expr_to_gams
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import ParameterDef, SetDef
+
+logger = logging.getLogger(__name__)
 
 # Regex pattern for valid GAMS set element identifiers
 # Allows: letters, digits, underscores, hyphens, dots (for tuples like a.b), plus signs
@@ -637,7 +640,15 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
             )
             if has_indexed_values or has_indexed_exprs:
                 # Skip this parameter entirely - it's a report parameter that can't be
-                # properly emitted without proper domain declaration
+                # properly emitted without proper domain declaration.
+                # Warn in case the parameter is actually needed for optimization.
+                logger.warning(
+                    "Skipping parameter '%s': declared without domain but used with "
+                    "indexed values/expressions. If this parameter is used in the "
+                    "optimization model (not just post-solve reporting), the generated "
+                    "MCP will be invalid.",
+                    param_name,
+                )
                 continue
             scalars[param_name] = param_def
         else:

@@ -1442,10 +1442,19 @@ def normalize_special_identifiers(source: str) -> str:
         if re.match(r"^Table\b", stripped, re.IGNORECASE):
             in_table = True
             table_header_seen = False
-            # Check if the Table declaration line has a STRING description
-            # (quoted text like 'production rate' after the domain)
-            # Pattern: Table ID(domain) 'description' or "description"
-            table_has_description = bool(re.search(r"\)\s*['\"][^'\"]*['\"]", stripped))
+            # Detect whether the Table declaration line has a description
+            # after the domain. The grammar allows both quoted and unquoted
+            # DESCRIPTION text, for example:
+            #   Table t(i,j) 'production rate'
+            #   Table t(i,j) production rate
+            # We therefore treat any non-empty text after the closing ')'
+            # that is not just a bare semicolon as a description.
+            closing_paren_idx = stripped.find(")")
+            if closing_paren_idx != -1:
+                after_paren = stripped[closing_paren_idx + 1 :].strip()
+                table_has_description = bool(after_paren and not after_paren.startswith(";"))
+            else:
+                table_has_description = False
             result.append(line)
             continue
 
