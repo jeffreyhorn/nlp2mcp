@@ -615,14 +615,6 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
 
     lines = []
 
-    # Collect existing symbol names to avoid collisions with generated set names
-    # Use lowercase for case-insensitive comparison (GAMS symbols are case-insensitive)
-    existing_symbols_lower: set[str] = set()
-    existing_symbols_lower.update(k.lower() for k in model_ir.sets.keys())
-    existing_symbols_lower.update(k.lower() for k in model_ir.aliases.keys())
-    existing_symbols_lower.update(k.lower() for k in model_ir.params.keys())
-    existing_symbols_lower.update(k.lower() for k in model_ir.variables.keys())
-
     # Issue #679: Keep wildcard domains as '*' instead of replacing with named sets
     # Rationale: When the original GAMS code declares a parameter with wildcard domain
     # like `Table compdat(*,alloy)`, it may index the parameter using different sets:
@@ -634,17 +626,12 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     # declared domain set.
     # Solution: Keep wildcards as '*' in the domain declaration, which allows any
     # set or element to be used for indexing, matching the original GAMS behavior.
-    wildcard_replacements: dict[str, list[str]] = {}  # param_name -> domain (unchanged)
 
     # Emit Parameters
     if parameters:
         lines.append("Parameters")
         for param_name, param_def in parameters.items():
-            # Use replacement domain if wildcards were resolved
-            if param_name in wildcard_replacements:
-                domain = wildcard_replacements[param_name]
-            else:
-                domain = list(param_def.domain)
+            domain = list(param_def.domain)
 
             # Use ParameterDef.values (Finding #3)
             # Format tuple keys as GAMS syntax: ("i1", "j2") → "i1.j2"
