@@ -40,7 +40,7 @@ The `(STRING | DESCRIPTION)?` is meant for table descriptions (like `'production
 
 **Previous behavior (Issue #665):** Column headers with hyphens were NOT quoted because the DESCRIPTION terminal was expected to match them (e.g., `machine-1  machine-2` as a single multi-word description).
 
-**The bug:** When a table already has a STRING description on the declaration line, the DESCRIPTION terminal isn't used for column headers. Without quoting, `machine-1` was parsed as:
+**The bug:** When a table already has a description on the declaration line (either a quoted STRING like `'production rate'` or unquoted DESCRIPTION text), the DESCRIPTION terminal isn't used for column headers. Without quoting, `machine-1` was parsed as:
 - Row label: `machine` 
 - Value: `-1` (negative number)
 
@@ -52,19 +52,28 @@ This caused all column data to be misassigned.
 
 Modified `normalize_special_identifiers()` in `src/ir/preprocessor.py` to:
 
-1. **Detect if the Table declaration line has a STRING description** (quoted text after the domain)
+1. **Detect if the Table declaration line has any description** (quoted or unquoted text after the closing `)`)
 2. **Quote column headers only when needed:**
-   - If Table HAS a STRING description: Quote column headers to prevent `machine-1` from being parsed as `machine` + `-1`
+   - If Table HAS a description (quoted STRING or unquoted text): Quote column headers to prevent `machine-1` from being parsed as `machine` + `-1`
    - If Table has NO description: Don't quote column headers so the DESCRIPTION terminal can match them
 3. **Always quote identifiers with `+`** (these trigger table continuation parsing)
 
 ### Code Changes
 
 ```python
-# Check if the Table declaration line has a STRING description
-table_has_description = bool(
-    re.search(r"\)\s*['\"][^'\"]*['\"]", stripped)
-)
+# Detect whether the Table declaration line has a description
+# after the domain. The grammar allows both quoted and unquoted
+# DESCRIPTION text, for example:
+#   Table t(i,j) 'production rate'
+#   Table t(i,j) production rate
+# We therefore treat any non-empty text after the closing ')'
+# that is not just a bare semicolon as a description.
+closing_paren_idx = stripped.find(")")
+if closing_paren_idx != -1:
+    after_paren = stripped[closing_paren_idx + 1 :].strip()
+    table_has_description = bool(after_paren and not after_paren.startswith(";"))
+else:
+    table_has_description = False
 
 # In column header handling:
 if table_has_description or has_plus_identifier:
@@ -89,5 +98,5 @@ After the fix:
 
 ## Files Modified
 
-- `src/ir/preprocessor.py`: Updated `normalize_special_identifiers()` to conditionally quote table column headers based on whether the table declaration has a STRING description
-- `tests/unit/test_special_identifiers.py`: Updated test expectations for column header quoting behavior
+- `src/ir/preprocessor.py`: Updated `normalize_special_identifiers()` to conditionally quote table column headers based on whether the table declaration has any description (quoted or unquoted)
+- `tests/unit/test_special_identifiers.py`: Updated test expectations for column header quoting behavior and added tests for both quoted and unquoted descriptions

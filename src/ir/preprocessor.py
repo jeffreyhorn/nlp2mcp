@@ -1470,11 +1470,13 @@ def normalize_special_identifiers(source: str) -> str:
 
             # First non-empty line after Table declaration is the column header.
             # Issue #673: Column headers with hyphens need special handling:
-            # - If Table declaration has a STRING description (e.g., 'production rate'),
-            #   we MUST quote column headers to prevent `machine-1` from being parsed
-            #   as row label `machine` + value `-1`.
-            # - If Table declaration has NO description, we must NOT quote column headers
-            #   so the DESCRIPTION terminal can match them (e.g., "machine-1 machine-2").
+            # - If the Table declaration has a description after the domain
+            #   (either a quoted STRING, e.g., 'production rate', or unquoted
+            #   DESCRIPTION text, e.g., production rate), we MUST quote column
+            #   headers to prevent `machine-1` from being parsed as row label
+            #   `machine` + value `-1`.
+            # - If Table declaration has NO description, we must NOT quote column
+            #   headers so the DESCRIPTION terminal can match them.
             # Issue #668: Column headers with + MUST always be quoted because + triggers
             # table_continuation parsing.
             if not table_header_seen and stripped:
