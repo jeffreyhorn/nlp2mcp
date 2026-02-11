@@ -28,21 +28,21 @@ Sets
 
 Sets
     wc_rd_d1 /ahmsa, fundidora, hylsa, hylsap, import, sicartsa/
-    wc_rd_d2 /export, guadalaja, monterrey/
+    wc_rd_d2 /'-df', export, guadalaja, mexico, monterrey/
     wc_prices_d2 /domestic, export, import/
 ;
 
 Parameters
-    a(c,p) /pellets.sponge -1.38, 'nat-gas'.sponge -0.57, sponge.sponge 1.0, electric.sponge 0.0, 'pig-iron'.sponge 0.0, coke.sponge 0.0, steel.sponge 0.0, scrap.sponge 0.0/
-    b(m,p) /'blast-furn'.sponge 1.0, 'direct-red'.sponge 1.0, openhearth.sponge 0.0, 'elec-arc'.sponge 0.0, bof.sponge 0.0/
-    k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.sicartsa 1.4, 'blast-furn'.hylsa 1.1, openhearth.ahmsa 1.5, openhearth.sicartsa 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsap 0.98, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56, 'direct-red'.ahmsa 0.0, 'direct-red'.fundidora 0.0, 'direct-red'.sicartsa 0.0, 'direct-red'.hylsa 0.0, openhearth.fundidora 0.0, openhearth.hylsa 0.0, openhearth.hylsap 0.0, 'elec-arc'.ahmsa 0.0, 'elec-arc'.fundidora 0.0, 'elec-arc'.sicartsa 0.0, bof.hylsa 0.0, bof.hylsap 0.0, 'blast-furn'.fundidora 0.0, 'blast-furn'.hylsap 0.0/
+    a(c,p) /pellets.'-iron' -1.58, pellets.sponge -1.38, coke.'-iron' -0.63, 'nat-gas'.sponge -0.57, electric.steel -0.58, scrap.steel -0.33, scrap.'-bof' -0.12, 'pig-iron'.'-iron' 1.0, 'pig-iron'.'-oh' -0.77, 'pig-iron'.'-bof' -0.95, sponge.sponge 1.0, sponge.steel -1.09, steel.steel 1.0, steel.'-el' 1.0, steel.'-bof' 1.0, steel.pig 0.0, steel.'-iron' 0.0, steel.sponge 0.0, steel.'-oh' 0.0, coke.pig 0.0, coke.sponge 0.0, coke.steel 0.0, coke.'-oh' 0.0, coke.'-el' 0.0, coke.'-bof' 0.0, pellets.pig 0.0, pellets.steel 0.0, pellets.'-oh' 0.0, pellets.'-el' 0.0, pellets.'-bof' 0.0, scrap.pig 0.0, scrap.'-iron' 0.0, scrap.sponge 0.0, scrap.'-oh' 0.0, scrap.'-el' 0.0, 'nat-gas'.pig 0.0, 'nat-gas'.'-iron' 0.0, 'nat-gas'.steel 0.0, 'nat-gas'.'-oh' 0.0, 'nat-gas'.'-el' 0.0, 'nat-gas'.'-bof' 0.0, 'pig-iron'.pig 0.0, 'pig-iron'.sponge 0.0, 'pig-iron'.steel 0.0, 'pig-iron'.'-el' 0.0, sponge.pig 0.0, sponge.'-iron' 0.0, sponge.'-oh' 0.0, sponge.'-el' 0.0, sponge.'-bof' 0.0, electric.pig 0.0, electric.'-iron' 0.0, electric.sponge 0.0, electric.'-oh' 0.0, electric.'-el' 0.0, electric.'-bof' 0.0/
+    b(m,p) /'blast-furn'.'-iron' 1.0, openhearth.'-oh' 1.0, bof.'-bof' 1.0, 'direct-red'.sponge 1.0, 'elec-arc'.'-el' 1.0, 'blast-furn'.pig 0.0, 'blast-furn'.sponge 0.0, 'blast-furn'.steel 0.0, 'blast-furn'.'-oh' 0.0, 'blast-furn'.'-el' 0.0, 'blast-furn'.'-bof' 0.0, 'direct-red'.pig 0.0, 'direct-red'.'-iron' 0.0, 'direct-red'.steel 0.0, 'direct-red'.'-oh' 0.0, 'direct-red'.'-el' 0.0, 'direct-red'.'-bof' 0.0, 'elec-arc'.pig 0.0, 'elec-arc'.'-iron' 0.0, 'elec-arc'.sponge 0.0, 'elec-arc'.steel 0.0, 'elec-arc'.'-oh' 0.0, 'elec-arc'.'-bof' 0.0, openhearth.pig 0.0, openhearth.'-iron' 0.0, openhearth.sponge 0.0, openhearth.steel 0.0, openhearth.'-el' 0.0, openhearth.'-bof' 0.0, bof.pig 0.0, bof.'-iron' 0.0, bof.sponge 0.0, bof.steel 0.0, bof.'-oh' 0.0, bof.'-el' 0.0/
+    k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.fundidora 1.4, 'blast-furn'.sicartsa 1.1, openhearth.ahmsa 1.5, openhearth.fundidora 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsa 0.98, 'direct-red'.hylsap 1.0, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56, 'blast-furn'.hylsa 0.0, 'blast-furn'.hylsap 0.0, 'direct-red'.ahmsa 0.0, 'direct-red'.fundidora 0.0, 'direct-red'.sicartsa 0.0, 'elec-arc'.ahmsa 0.0, 'elec-arc'.fundidora 0.0, 'elec-arc'.sicartsa 0.0, openhearth.sicartsa 0.0, openhearth.hylsa 0.0, openhearth.hylsap 0.0, bof.hylsa 0.0, bof.hylsap 0.0/
     d(c,j)
-    dd(j) /mexico-df 55.0, monterrey 30.0, guadalaja 15.0/
-    rd(wc_rd_d1,wc_rd_d2) /ahmsa.monterrey 218.0, ahmsa.guadalaja 1125.0, ahmsa.export 739.0, fundidora.guadalaja 1030.0, fundidora.export 521.0, sicartsa.monterrey 1305.0, sicartsa.guadalaja 704.0, hylsa.guadalaja 1030.0, hylsa.export 521.0, hylsap.monterrey 1085.0, hylsap.guadalaja 760.0, hylsap.export 315.0, import.monterrey 521.0, import.guadalaja 300.0, hylsa.monterrey 0.0, import.export 0.0, sicartsa.export 0.0, fundidora.monterrey 0.0/
+    dd(j) /'mexico-df' 55.0, monterrey 30.0, guadalaja 15.0/
+    rd(wc_rd_d1,wc_rd_d2) /ahmsa.mexico 1204.0, ahmsa.monterrey 218.0, ahmsa.guadalaja 1125.0, ahmsa.export 739.0, fundidora.mexico 1017.0, fundidora.guadalaja 1030.0, fundidora.export 521.0, sicartsa.'-df' 819.0, sicartsa.monterrey 1305.0, sicartsa.guadalaja 704.0, hylsa.mexico 1017.0, hylsa.guadalaja 1030.0, hylsa.export 521.0, hylsap.'-df' 185.0, hylsap.monterrey 1085.0, hylsap.guadalaja 760.0, hylsap.export 315.0, import.'-df' 428.0, import.monterrey 521.0, import.guadalaja 300.0, hylsap.mexico 0.0, import.mexico 0.0, import.export 0.0, ahmsa.'-df' 0.0, hylsa.'-df' 0.0, hylsa.monterrey 0.0, sicartsa.mexico 0.0, sicartsa.export 0.0, fundidora.'-df' 0.0, fundidora.monterrey 0.0/
     muf(i,j)
     muv(j)
     mue(i)
-    prices(c,wc_prices_d2) /pellets.domestic 18.7, coke.domestic 52.17, 'nat-gas'.import 14.0, electric.domestic 24.0, scrap.domestic 105.0, steel.import 150.0, steel.export 140.0, electric.import 0.0, electric.export 0.0, coke.import 0.0, coke.export 0.0, 'nat-gas'.domestic 0.0, 'nat-gas'.export 0.0, pellets.import 0.0, pellets.export 0.0, steel.domestic 0.0, scrap.import 0.0, scrap.export 0.0/
+    prices(c,wc_prices_d2) /pellets.domestic 18.7, coke.domestic 52.17, 'nat-gas'.domestic 14.0, electric.domestic 24.0, scrap.domestic 105.0, steel.import 150.0, steel.export 140.0, steel.domestic 0.0, coke.import 0.0, coke.export 0.0, pellets.import 0.0, pellets.export 0.0, scrap.import 0.0, scrap.export 0.0, 'nat-gas'.import 0.0, 'nat-gas'.export 0.0, electric.import 0.0, electric.export 0.0/
     pd(c)
     pv(c)
     pe(c)
@@ -105,8 +105,8 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+* non-zero initial values.
+* POSITIVE variables are set to 1.
 
 z.l(p,i) = 1;
 x.l(c,i,j) = 1;

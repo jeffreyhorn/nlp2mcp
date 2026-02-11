@@ -508,6 +508,10 @@ def expr_to_gams(
             # Parenthesize value if it's a complex expression to avoid precedence issues
             if isinstance(value_expr, (Binary, Unary, DollarConditional)):
                 value_str = f"({value_str})"
+            # Parenthesize condition if it's a complex expression
+            # This is required for GAMS syntax: expr$(cond <> 0) not expr$cond <> 0
+            if isinstance(condition, (Binary, Unary, DollarConditional)):
+                condition_str = f"({condition_str})"
             return f"{value_str}${condition_str}"
 
         case SetMembershipTest(set_name, indices):

@@ -52,30 +52,30 @@ Variables
 ;
 
 Positive Variables
-    piL_OlefinFeed
-    piL_IsobutRec
-    piL_AcidFeed
-    piL_AlkylYld
-    piL_IsobutMak
-    piL_AcidStren
-    piL_Octane
-    piL_Ratio
-    piL_AcidDilut
-    piL_F4Perf
+    piL_olefinfeed
+    piL_isobutrec
+    piL_acidfeed
+    piL_alkylyld
+    piL_isobutmak
+    piL_acidstren
+    piL_octane
+    piL_ratio
+    piL_aciddilut
+    piL_f4perf
     piL_alkerr
     piL_octerr
     piL_aciderr
-    piL_F4err
-    piU_OlefinFeed
-    piU_IsobutRec
-    piU_AcidFeed
-    piU_AlkylYld
-    piU_IsobutMak
-    piU_AcidStren
-    piU_Octane
-    piU_Ratio
-    piU_AcidDilut
-    piU_F4Perf
+    piL_f4err
+    piU_olefinfeed
+    piU_isobutrec
+    piU_acidfeed
+    piU_alkylyld
+    piU_isobutmak
+    piU_acidstren
+    piU_octane
+    piU_ratio
+    piU_aciddilut
+    piU_f4perf
 ;
 
 * ============================================
@@ -84,8 +84,7 @@ Positive Variables
 
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values. POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1), upper_bound). Others are set to 1.
+* non-zero initial values.
 
 F.l = -0.9;
 OlefinFeed.l = 1.745;
@@ -126,30 +125,30 @@ Equations
     stat_octerr
     stat_olefinfeed
     stat_ratio
-    comp_lo_AcidDilut
-    comp_lo_AcidFeed
-    comp_lo_AcidStren
-    comp_lo_AlkylYld
-    comp_lo_F4Perf
-    comp_lo_F4err
-    comp_lo_IsobutMak
-    comp_lo_IsobutRec
-    comp_lo_Octane
-    comp_lo_OlefinFeed
-    comp_lo_Ratio
+    comp_lo_aciddilut
     comp_lo_aciderr
+    comp_lo_acidfeed
+    comp_lo_acidstren
     comp_lo_alkerr
+    comp_lo_alkylyld
+    comp_lo_f4err
+    comp_lo_f4perf
+    comp_lo_isobutmak
+    comp_lo_isobutrec
+    comp_lo_octane
     comp_lo_octerr
-    comp_up_AcidDilut
-    comp_up_AcidFeed
-    comp_up_AcidStren
-    comp_up_AlkylYld
-    comp_up_F4Perf
-    comp_up_IsobutMak
-    comp_up_IsobutRec
-    comp_up_Octane
-    comp_up_OlefinFeed
-    comp_up_Ratio
+    comp_lo_olefinfeed
+    comp_lo_ratio
+    comp_up_aciddilut
+    comp_up_acidfeed
+    comp_up_acidstren
+    comp_up_alkylyld
+    comp_up_f4perf
+    comp_up_isobutmak
+    comp_up_isobutrec
+    comp_up_octane
+    comp_up_olefinfeed
+    comp_up_ratio
     AcidBal
     AcidDef
     AlkylDef
@@ -165,48 +164,48 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_aciddilut.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
+stat_aciddilut.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_aciddilut + piU_aciddilut =E= 0;
 stat_aciderr.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_aciderr =E= 0;
-stat_acidfeed.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
-stat_acidstren.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
+stat_acidfeed.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_acidfeed + piU_acidfeed =E= 0;
+stat_acidstren.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_acidstren + piU_acidstren =E= 0;
 stat_alkerr.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_alkerr =E= 0;
-stat_alkylyld.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
-stat_f4err.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
-stat_f4perf.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
-stat_isobutmak.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
-stat_isobutrec.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
-stat_octane.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
+stat_alkylyld.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_alkylyld + piU_alkylyld =E= 0;
+stat_f4err.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_f4err =E= 0;
+stat_f4perf.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_f4perf + piU_f4perf =E= 0;
+stat_isobutmak.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_isobutmak + piU_isobutmak =E= 0;
+stat_isobutrec.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_isobutrec + piU_isobutrec =E= 0;
+stat_octane.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_octane + piU_octane =E= 0;
 stat_octerr.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_octerr =E= 0;
-stat_olefinfeed.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
-stat_ratio.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def =E= 0;
+stat_olefinfeed.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_olefinfeed + piU_olefinfeed =E= 0;
+stat_ratio.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_ratio + piU_ratio =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_AcidDilut.. AcidDilut - 1.2 =G= 0;
-comp_lo_AcidFeed.. AcidFeed - 0 =G= 0;
-comp_lo_AcidStren.. AcidStren - 0.85 =G= 0;
-comp_lo_AlkylYld.. AlkylYld - 0 =G= 0;
-comp_lo_F4Perf.. F4Perf - 1.45 =G= 0;
-comp_lo_F4err.. F4err - 0.99 =G= 0;
-comp_lo_IsobutMak.. IsobutMak - 0 =G= 0;
-comp_lo_IsobutRec.. IsobutRec - 0 =G= 0;
-comp_lo_Octane.. Octane - 0.9 =G= 0;
-comp_lo_OlefinFeed.. OlefinFeed - 0 =G= 0;
-comp_lo_Ratio.. Ratio - 3 =G= 0;
+comp_lo_aciddilut.. aciddilut - 1.2 =G= 0;
 comp_lo_aciderr.. aciderr - 0.9 =G= 0;
+comp_lo_acidfeed.. acidfeed - 0 =G= 0;
+comp_lo_acidstren.. acidstren - 0.85 =G= 0;
 comp_lo_alkerr.. alkerr - 0.99 =G= 0;
+comp_lo_alkylyld.. alkylyld - 0 =G= 0;
+comp_lo_f4err.. f4err - 0.99 =G= 0;
+comp_lo_f4perf.. f4perf - 1.45 =G= 0;
+comp_lo_isobutmak.. isobutmak - 0 =G= 0;
+comp_lo_isobutrec.. isobutrec - 0 =G= 0;
+comp_lo_octane.. octane - 0.9 =G= 0;
 comp_lo_octerr.. octerr - 0.99 =G= 0;
+comp_lo_olefinfeed.. olefinfeed - 0 =G= 0;
+comp_lo_ratio.. ratio - 3 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_AcidDilut.. 4 - AcidDilut =G= 0;
-comp_up_AcidFeed.. 1.2 - AcidFeed =G= 0;
-comp_up_AcidStren.. 0.93 - AcidStren =G= 0;
-comp_up_AlkylYld.. 5 - AlkylYld =G= 0;
-comp_up_F4Perf.. 1.62 - F4Perf =G= 0;
-comp_up_IsobutMak.. 2 - IsobutMak =G= 0;
-comp_up_IsobutRec.. 1.6 - IsobutRec =G= 0;
-comp_up_Octane.. 0.95 - Octane =G= 0;
-comp_up_OlefinFeed.. 2 - OlefinFeed =G= 0;
-comp_up_Ratio.. 12 - Ratio =G= 0;
+comp_up_aciddilut.. 4 - aciddilut =G= 0;
+comp_up_acidfeed.. 1.2 - acidfeed =G= 0;
+comp_up_acidstren.. 0.93 - acidstren =G= 0;
+comp_up_alkylyld.. 5 - alkylyld =G= 0;
+comp_up_f4perf.. 1.62 - f4perf =G= 0;
+comp_up_isobutmak.. 2 - isobutmak =G= 0;
+comp_up_isobutrec.. 1.6 - isobutrec =G= 0;
+comp_up_octane.. 0.95 - octane =G= 0;
+comp_up_olefinfeed.. 2 - olefinfeed =G= 0;
+comp_up_ratio.. 12 - ratio =G= 0;
 
 * Original equality equations
 Objective.. F =E= ((-1) * 6.3) * AlkylYld * Octane + 5.04 * OlefinFeed + 0.35 * IsobutRec + AcidFeed + 3.36 * IsobutMak;
@@ -255,30 +254,30 @@ Model mcp_model /
     IsoButBal.nu_IsoButBal,
     Objective.f,
     OctDef.nu_OctDef,
-    comp_lo_AcidDilut.piL_AcidDilut,
-    comp_lo_AcidFeed.piL_AcidFeed,
-    comp_lo_AcidStren.piL_AcidStren,
-    comp_lo_AlkylYld.piL_AlkylYld,
-    comp_lo_F4Perf.piL_F4Perf,
-    comp_lo_F4err.piL_F4err,
-    comp_lo_IsobutMak.piL_IsobutMak,
-    comp_lo_IsobutRec.piL_IsobutRec,
-    comp_lo_Octane.piL_Octane,
-    comp_lo_OlefinFeed.piL_OlefinFeed,
-    comp_lo_Ratio.piL_Ratio,
+    comp_lo_aciddilut.piL_aciddilut,
     comp_lo_aciderr.piL_aciderr,
+    comp_lo_acidfeed.piL_acidfeed,
+    comp_lo_acidstren.piL_acidstren,
     comp_lo_alkerr.piL_alkerr,
+    comp_lo_alkylyld.piL_alkylyld,
+    comp_lo_f4err.piL_f4err,
+    comp_lo_f4perf.piL_f4perf,
+    comp_lo_isobutmak.piL_isobutmak,
+    comp_lo_isobutrec.piL_isobutrec,
+    comp_lo_octane.piL_octane,
     comp_lo_octerr.piL_octerr,
-    comp_up_AcidDilut.piU_AcidDilut,
-    comp_up_AcidFeed.piU_AcidFeed,
-    comp_up_AcidStren.piU_AcidStren,
-    comp_up_AlkylYld.piU_AlkylYld,
-    comp_up_F4Perf.piU_F4Perf,
-    comp_up_IsobutMak.piU_IsobutMak,
-    comp_up_IsobutRec.piU_IsobutRec,
-    comp_up_Octane.piU_Octane,
-    comp_up_OlefinFeed.piU_OlefinFeed,
-    comp_up_Ratio.piU_Ratio
+    comp_lo_olefinfeed.piL_olefinfeed,
+    comp_lo_ratio.piL_ratio,
+    comp_up_aciddilut.piU_aciddilut,
+    comp_up_acidfeed.piU_acidfeed,
+    comp_up_acidstren.piU_acidstren,
+    comp_up_alkylyld.piU_alkylyld,
+    comp_up_f4perf.piU_f4perf,
+    comp_up_isobutmak.piU_isobutmak,
+    comp_up_isobutrec.piU_isobutrec,
+    comp_up_octane.piU_octane,
+    comp_up_olefinfeed.piU_olefinfeed,
+    comp_up_ratio.piU_ratio
 /;
 
 * ============================================

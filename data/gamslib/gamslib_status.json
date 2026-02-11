@@ -42,9 +42,9 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-09T08:32:07.266587+00:00",
+        "translate_date": "2026-02-11T01:14:07.144038+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 2.5635,
+        "translate_time_seconds": 2.1794,
         "output_file": "data/gamslib/mcp/abel_mcp.gms"
       },
       "mcp_solve": {
@@ -343,11 +343,12 @@
         "sets": 0
       },
       "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-02-09T08:32:12.353955+00:00",
+        "status": "mcp_error",
+        "translate_date": "2026-02-11T01:22:58.102334+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 2.0761,
-        "output_file": "data/gamslib/mcp/alkyl_mcp.gms"
+        "translate_time_seconds": 2.0668,
+        "output_file": "data/gamslib/mcp/alkyl_mcp.gms",
+        "error_type": "unmatched_equations"
       },
       "mcp_solve": {
         "status": "failure",
@@ -620,11 +621,12 @@
         "sets": 0
       },
       "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-02-09T10:02:45.115254+00:00",
+        "status": "mcp_error",
+        "translate_date": "2026-02-11T01:28:08.606652+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 2.0396,
-        "output_file": "data/gamslib/mcp/bearing_mcp.gms"
+        "translate_time_seconds": 3.8775,
+        "output_file": "data/gamslib/mcp/bearing_mcp.gms",
+        "error_type": "unmatched_equations"
       },
       "mcp_solve": {
         "status": "failure",

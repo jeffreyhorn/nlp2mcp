@@ -87,6 +87,9 @@ def _quote_symbol(name: str) -> str:
             f"GAMS injection. Dangerous characters: {dangerous_chars & set(name)}"
         )
 
+    # Special case: wildcard '*' should never be quoted
+    if name == "*":
+        return name
     return f"'{name}'" if _needs_quoting(name) else name
 
 
@@ -497,6 +500,51 @@ def emit_original_aliases(
     return ["\n".join(aliases) if aliases else "" for aliases in phase_aliases]
 
 
+def _expand_table_key(key_tuple: tuple[str, ...], domain_size: int) -> tuple[str, ...] | None:
+    """Expand a table data key to match the expected domain size.
+
+    Table parser stores data as 2-tuples (row_header, col_header) where row_header
+    may be a dotted string representing multiple dimensions (e.g., 'low.a.distr').
+    This function expands such keys to match the full domain size.
+
+    For example:
+        key_tuple = ('low.a.distr', 'light-ind')
+        domain_size = 4
+        -> ('low', 'a', 'distr', 'light-ind')
+
+    Args:
+        key_tuple: Original key tuple from parameter values
+        domain_size: Expected number of dimensions from domain
+
+    Returns:
+        Expanded key tuple matching domain_size, or None if the key cannot be
+        expanded to match (indicating an invalid/malformed entry that should be skipped)
+    """
+    # If the key already has the correct arity, return it as-is.
+    if len(key_tuple) == domain_size:
+        return key_tuple
+    # Keys with more elements than the domain size are malformed.
+    if len(key_tuple) > domain_size:
+        return None
+
+    # Need to expand: split dotted elements until we reach domain_size
+    expanded: list[str] = []
+    for element in key_tuple:
+        if len(expanded) < domain_size and "." in element:
+            # Split this element on dots
+            parts = element.split(".")
+            expanded.extend(parts)
+        else:
+            expanded.append(element)
+
+    # If we don't have exactly domain_size elements, this entry is malformed
+    # (e.g., zero-fill entries from parser that don't have proper row labels)
+    if len(expanded) != domain_size:
+        return None
+
+    return tuple(expanded)
+
+
 def _infer_wildcard_elements(
     param_def: ParameterDef, wildcard_positions: list[int]
 ) -> dict[int, set[str]]:
@@ -504,6 +552,9 @@ def _infer_wildcard_elements(
 
     When a parameter is declared with wildcard domain like dat(i,*), we need to
     determine what elements the wildcard represents by examining the data keys.
+
+    Handles table data where keys may be stored as 2-tuples with dotted row headers
+    that need to be expanded to match the full domain size.
 
     Args:
         param_def: Parameter definition with values
@@ -515,12 +566,20 @@ def _infer_wildcard_elements(
     if not param_def.values:
         return {}
 
+    domain_size = len(param_def.domain)
     inferred: dict[int, set[str]] = {pos: set() for pos in wildcard_positions}
 
     for key_tuple in param_def.values.keys():
+        # Expand key to match domain size (handles table data with dotted row headers)
+        expanded_key = _expand_table_key(key_tuple, domain_size)
+
+        # Skip malformed entries (e.g., zero-fill entries with wrong dimensions)
+        if expanded_key is None:
+            continue
+
         for pos in wildcard_positions:
-            if pos < len(key_tuple):
-                inferred[pos].add(key_tuple[pos])
+            if pos < len(expanded_key):
+                inferred[pos].add(expanded_key[pos])
 
     return inferred
 
@@ -662,20 +721,33 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
             # Use ParameterDef.values (Finding #3)
             # Format tuple keys as GAMS syntax: ("i1", "j2") → "i1.j2"
             if param_def.values:
+                domain_size = len(domain)
                 data_parts = []
                 for key_tuple, value in param_def.values.items():
+                    # Expand key to match domain size (handles table data with dotted row headers)
+                    expanded_key = _expand_table_key(key_tuple, domain_size)
+
+                    # Skip malformed entries (e.g., zero-fill entries with wrong dimensions)
+                    if expanded_key is None:
+                        continue
+
                     # Convert tuple to GAMS index syntax (Finding #3)
                     # Apply quoting/sanitization to each element for consistent handling
                     # This ensures parameter data keys match set element quoting
-                    sanitized_keys = [_sanitize_set_element(k) for k in key_tuple]
+                    sanitized_keys = [_sanitize_set_element(k) for k in expanded_key]
                     key_str = ".".join(sanitized_keys)
                     data_parts.append(f"{key_str} {value}")
 
-                data_str = ", ".join(data_parts)
                 # Quote symbol names that contain special characters (Issue #665)
                 quoted_domain = [_quote_symbol(d) for d in domain]
                 domain_str = ",".join(quoted_domain)
-                lines.append(f"    {_quote_symbol(param_name)}({domain_str}) /{data_str}/")
+                if data_parts:
+                    # Emit parameter with data
+                    data_str = ", ".join(data_parts)
+                    lines.append(f"    {_quote_symbol(param_name)}({domain_str}) /{data_str}/")
+                else:
+                    # All data entries were filtered out as malformed - emit declaration only
+                    lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
             else:
                 # Parameter declared but no data - must have domain since
                 # parameters dict only contains entries with non-empty domain
