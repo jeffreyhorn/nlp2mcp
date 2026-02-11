@@ -1455,9 +1455,10 @@ def normalize_special_identifiers(source: str) -> str:
                 result.append(processed)
                 continue
 
-            # First non-empty line after Table declaration is the column header
-            # Issue #665: Do NOT quote column headers. The grammar uses DESCRIPTION
-            # terminal for multi-word headers with hyphens (e.g., "light-ind heavy-ind").
+            # First non-empty line after Table declaration is the column header.
+            # Issue #665: Column headers with ONLY hyphens are NOT quoted because
+            # the grammar uses DESCRIPTION terminal for multi-word headers with
+            # hyphens (e.g., "light-ind heavy-ind").
             # Issue #668: Column headers with + MUST be quoted because + triggers
             # table_continuation parsing. Without quoting, "food+agr" would be parsed
             # as "food" followed by a continuation "+agr". When any identifier on
