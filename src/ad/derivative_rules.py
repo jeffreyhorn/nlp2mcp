@@ -573,6 +573,9 @@ def _diff_call(
     elif func == "sqr":
         return _diff_sqr(expr, wrt_var, wrt_indices, config)
     elif func in ("gamma", "loggamma"):
+        # Check arity first for consistent error semantics with other functions
+        if len(expr.args) != 1:
+            raise ValueError(f"{func}() expects 1 argument, got {len(expr.args)}")
         # Gamma derivatives require the digamma/psi function, which GAMS doesn't have.
         # d/dx[gamma(x)] = gamma(x) * psi(x)
         # d/dx[loggamma(x)] = psi(x)
@@ -1138,15 +1141,11 @@ def _diff_abs(
 
 
 # ============================================================================
-# Sprint 17: Gamma Function Derivatives
+# Sprint 17: Smooth Min/Max Derivatives (smin, smax)
 # ============================================================================
-
-
-# NOTE: gamma() and loggamma() differentiation was removed because their
+# NOTE: gamma() and loggamma() differentiation is not supported because their
 # derivatives require the digamma/psi function, which is not available in GAMS.
-# d/dx[gamma(x)] = gamma(x) * psi(x)
-# d/dx[loggamma(x)] = psi(x)
-# Models using gamma/loggamma in objectives or constraints cannot be converted to MCP.
+# See _diff_call() for the error handling.
 
 
 def _diff_smin(

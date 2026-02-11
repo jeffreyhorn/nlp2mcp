@@ -705,17 +705,15 @@ class TestTranscendentalErrors:
     def test_gamma_wrong_arg_count(self):
         """Test gamma() with wrong number of arguments raises error"""
         # gamma(x, y) - too many args
-        # Now raises "psi not available" error before arg count check
         expr = Call("gamma", (VarRef("x"), VarRef("y")))
-        with pytest.raises(ValueError, match="digamma/psi function"):
+        with pytest.raises(ValueError, match="gamma\\(\\) expects 1 argument, got 2"):
             differentiate_expr(expr, "x")
 
     def test_loggamma_wrong_arg_count(self):
         """Test loggamma() with wrong number of arguments raises error"""
         # loggamma() - no args
-        # Now raises "psi not available" error before arg count check
         expr = Call("loggamma", ())
-        with pytest.raises(ValueError, match="digamma/psi function"):
+        with pytest.raises(ValueError, match="loggamma\\(\\) expects 1 argument, got 0"):
             differentiate_expr(expr, "x")
 
     def test_smin_wrong_arg_count(self):
