@@ -1,4 +1,4 @@
-# Sprint 18: GAMS Emission Fixes - Day-by-Day Execution Prompts
+n Sprint 18: GAMS Emission Fixes - Day-by-Day Execution Prompts
 
 > **Sprint Duration**: 14 working days (~56h), plus Day 0 initialization
 > **Epic**: 4 - Production Readiness
@@ -520,223 +520,257 @@ python scripts/gamslib/run_full_test.py --only-failing --verbose
 
 ---
 
-## Day 7: Expression Emission Fixes
+## Day 7: Domain Issue Investigation - Part 1
 
 ### Branch
 ```
-sprint18/day7-expressions
+sprint18/day7-domain-investigation-1
 ```
 
 ### Objective
-Fix expression emission issues including operator precedence, function calls, and complex expressions.
+Investigate domain violation errors (E170, E171) for the first 3 models to identify tractable fixes.
+
+**Note:** *Plan revised based on Checkpoint 2 findings. Original plan targeted MCP infeasibility bugs, but path_syntax_error target (≤4) was not met (10 remain). Prioritizing domain violation investigation for the 6 models marked "⚠️ Investigate".*
 
 ### Prerequisites
 - [ ] Day 6 checkpoint completed
-- [ ] Expression issues identified from diagnostics
-- [ ] Understanding of emit_gams.py expression handling
+- [ ] Checkpoint 2 findings documented (10 path_syntax_error, 4 architectural, 6 to investigate)
+- [ ] Understanding of GAMS Error 170 (domain violation for element) and E171 (domain violation for set)
 
 ### Tasks
-1. **Fix operator precedence** (~1.5h)
-   - Review precedence handling in emit_gams.py
-   - Add parentheses where needed
-   - Handle edge cases
+1. **Deep-dive on blend domain violation (E171)** (~1h)
+   - Run `gams data/gamslib/mcp/blend_mcp.gms lo=3` to get detailed error
+   - Examine which set/element causes domain violation
+   - Trace back to emit code that generated the invalid reference
+   - Document root cause and potential fix
 
-2. **Fix function call emission** (~1.5h)
-   - Address issues with built-in functions
-   - Fix argument emission
-   - Handle nested calls
+2. **Deep-dive on sample domain violation (E171)** (~1h)
+   - Run `gams data/gamslib/mcp/sample_mcp.gms lo=3` to get detailed error
+   - Identify domain mismatch pattern
+   - Compare with blend to see if same root cause
+   - Document findings
 
-3. **Address complex expressions** (~1.5h)
-   - Fix multi-operator expressions
-   - Handle conditional expressions
-   - Test with affected models
+3. **Deep-dive on like domain violation (E170)** (~1h)
+   - Run `gams data/gamslib/mcp/like_mcp.gms lo=3` to get detailed error
+   - E170 is element-level (vs E171 set-level) - understand difference
+   - Check if lead/lag index handling is involved
+   - Document root cause
 
-4. **Regression testing** (~0.5h)
-   - Run full suite
-   - Verify no new failures
-   - Document improvements
+4. **Implement fixes for tractable cases** (~1h)
+   - If any of the 3 models have simple fixes, implement them
+   - Add regression tests for any fixes
+   - Run pipeline to verify fixes don't cause regressions
 
 ### Deliverables
-- [ ] Expression emission fixes implemented
-- [ ] Tests for expression handling
-- [ ] Models fixed documented
-- [ ] SPRINT_LOG.md updated
+- [ ] Root cause analysis for blend, sample, like
+- [ ] Documentation of whether each is tractable or architectural
+- [ ] Fixes implemented for any tractable cases
+- [ ] SPRINT_LOG.md updated with Day 7 findings
 
 ### Quality Checks
 ```bash
 # Run full test suite
 python scripts/gamslib/run_full_test.py
 
-# Run expression-specific tests
-python -m pytest tests/ -k "expression" -v
+# Check specific models
+gams data/gamslib/mcp/blend_mcp.gms lo=3 2>&1 | tail -30
+gams data/gamslib/mcp/sample_mcp.gms lo=3 2>&1 | tail -30
+gams data/gamslib/mcp/like_mcp.gms lo=3 2>&1 | tail -30
+
+# Run unit tests
+make test
 ```
 
 ### Completion Criteria
-- [ ] Expression-related failures reduced
-- [ ] No regressions
-- [ ] New expression tests passing
+- [ ] Root causes documented for blend, sample, like
+- [ ] Each categorized as: tractable fix, architectural issue, or needs more investigation
+- [ ] Any tractable fixes implemented and tested
+- [ ] No regressions in existing solving models (19 should still solve)
 - [ ] SPRINT_LOG.md updated with:
-  - Expression fixes implemented
-  - Models fixed
-  - Metrics improvement
+  - Detailed analysis for each model
+  - Root cause categorization
+  - Fixes implemented (if any)
+  - Plan for Day 8 remaining models
 
 ### PR & Review
-- **PR Title**: `sprint18/day7-expressions: Expression emission fixes`
-- **PR Body**: Include before/after for expression-related failures
+- **PR Title**: `sprint18/day7-domain-investigation-1: Domain violation analysis part 1`
+- **PR Body**: Include root cause analysis table, categorization of each model
 - **Reviewers**: Project maintainer
-- **Labels**: `sprint-18`, `bug-fix`, `expressions`
+- **Labels**: `sprint-18`, `investigation`, `domain-violation`
 
 ### Reference Documents
-- PLAN.md: Lines 401-430 (Day 7 details)
-- src/emit/emit_gams.py: Expression emission code
+- PLAN.md: Day 7 section (Domain Issue Investigation - Part 1)
+- SPRINT_LOG.md: Day 6 Checkpoint 2 findings
+- src/emit/expr_to_gams.py: Index/domain handling code
+- src/emit/original_symbols.py: Parameter/set emission code
 
 ---
 
-## Day 8: Statement Emission Fixes
+## Day 8: Domain Issue Investigation - Part 2
 
 ### Branch
 ```
-sprint18/day8-statements
+sprint18/day8-domain-investigation-2
 ```
 
 ### Objective
-Fix statement emission issues including SET, PARAMETER, and other GAMS statement types.
+Continue domain violation investigation for the remaining 3 models (robert, mexss, orani).
 
 ### Prerequisites
 - [ ] Day 7 completed and merged
-- [ ] Statement issues identified
-- [ ] Understanding of statement emission
+- [ ] Root cause analysis for blend, sample, like documented
+- [ ] Understanding of patterns found in Day 7
 
 ### Tasks
-1. **Fix SET statement emission** (~1.5h)
-   - Address set definition issues
-   - Fix set operation emission
-   - Handle dynamic sets
+1. **Deep-dive on robert domain violation (E170)** (~1h)
+   - Run `gams data/gamslib/mcp/robert_mcp.gms lo=3` to get detailed error
+   - E170 is element-level - check if related to lead/lag index handling
+   - Compare with like model (also E170) for common patterns
+   - Document root cause and potential fix
 
-2. **Fix PARAMETER emission** (~1.5h)
-   - Address parameter declaration issues
-   - Fix data assignment emission
-   - Handle tables
+2. **Deep-dive on mexss domain violations (E170/171)** (~1h)
+   - Run `gams data/gamslib/mcp/mexss_mcp.gms lo=3` to get detailed error
+   - Has both E170 and E171 - multiple domain issues
+   - Identify each issue separately
+   - Document root causes
 
-3. **Fix other statement types** (~1.5h)
-   - Address MODEL, SOLVE statements
-   - Fix EQUATION emission
-   - Handle VARIABLE declarations
+3. **Deep-dive on orani dynamic domain extension** (~1h)
+   - Run `gams data/gamslib/mcp/orani_mcp.gms lo=3` to get detailed error
+   - Known issue: Models extend sets at runtime with computed elements (e.g., `"total"`)
+   - Determine if this is fundamentally architectural or has workaround
+   - Document findings
 
-4. **Integration testing** (~0.5h)
-   - Test statement combinations
-   - Verify model completeness
-   - Document results
+4. **Implement fixes for tractable cases** (~1h)
+   - If any of the 3 models have simple fixes, implement them
+   - Consider if patterns from Day 7 apply here
+   - Add regression tests for any fixes
 
 ### Deliverables
-- [ ] Statement emission fixes implemented
-- [ ] Tests for statement handling
-- [ ] Integration tests passing
-- [ ] SPRINT_LOG.md updated
+- [ ] Root cause analysis for robert, mexss, orani
+- [ ] Complete categorization of all 6 "investigate" models
+- [ ] Fixes implemented for any tractable cases
+- [ ] SPRINT_LOG.md updated with Day 8 findings
 
 ### Quality Checks
 ```bash
 # Run full test suite
 python scripts/gamslib/run_full_test.py
 
-# Check specific statement tests
-python -m pytest tests/ -k "statement" -v
+# Check specific models
+gams data/gamslib/mcp/robert_mcp.gms lo=3 2>&1 | tail -30
+gams data/gamslib/mcp/mexss_mcp.gms lo=3 2>&1 | tail -30
+gams data/gamslib/mcp/orani_mcp.gms lo=3 2>&1 | tail -30
+
+# Run unit tests
+make test
 ```
 
 ### Completion Criteria
-- [ ] Statement-related failures reduced
-- [ ] No regressions
-- [ ] Integration tests passing
+- [ ] Root causes documented for robert, mexss, orani
+- [ ] All 6 "investigate" models now categorized (from Days 7-8)
+- [ ] Summary table: which are fixable vs architectural
+- [ ] Any tractable fixes implemented and tested
+- [ ] No regressions in existing solving models
 - [ ] SPRINT_LOG.md updated with:
-  - Statement fixes implemented
-  - Affected models
-  - Progress toward targets
+  - Detailed analysis for each model
+  - Complete categorization summary
+  - Fixes implemented (if any)
+  - Updated path_syntax_error breakdown
 
 ### PR & Review
-- **PR Title**: `sprint18/day8-statements: Statement emission fixes`
-- **PR Body**: Include statement fix summary, affected models
+- **PR Title**: `sprint18/day8-domain-investigation-2: Domain violation analysis part 2`
+- **PR Body**: Include complete categorization table for all 10 path_syntax_error models
 - **Reviewers**: Project maintainer
-- **Labels**: `sprint-18`, `bug-fix`, `statements`
+- **Labels**: `sprint-18`, `investigation`, `domain-violation`
 
 ### Reference Documents
-- PLAN.md: Lines 431-450 (Day 8 details)
-- src/emit/emit_gams.py: Statement emission code
+- PLAN.md: Day 8 section (Domain Issue Investigation - Part 2)
+- Day 7 PR for patterns found
+- SPRINT_LOG.md: Day 6 Checkpoint 2 + Day 7 findings
 
 ---
 
-## Day 9: Edge Cases and Corner Cases
+## Day 9: Issue Documentation + Architectural Analysis
 
 ### Branch
 ```
-sprint18/day9-edge-cases
+sprint18/day9-issue-documentation
 ```
 
 ### Objective
-Address edge cases and corner cases that weren't covered in earlier fixes.
+Document all findings from Days 7-8 as formal issue files, categorize architectural limitations, and update project tracking.
 
 ### Prerequisites
 - [ ] Day 8 completed and merged
-- [ ] Edge cases identified from testing
-- [ ] Understanding of remaining failures
+- [ ] All 10 path_syntax_error models analyzed
+- [ ] Clear categorization: 4 architectural + 6 investigated (some may now be architectural too)
 
 ### Tasks
-1. **Analyze remaining failures** (~1h)
-   - Review models still failing
-   - Identify unique patterns
-   - Categorize edge cases
+1. **Create ISSUE_*.md for architectural limitations** (~1.5h)
+   - ISSUE_680_abel_cross_indexed_sums.md - Cross-indexed sums with dynamic subsets
+   - ISSUE_681_qabel_cross_indexed_sums.md - Same pattern as abel
+   - ISSUE_682_chenery_cross_indexed_sums.md - Cross-indexed sums + table wildcard
+   - ISSUE_683_mingamma_missing_psi_function.md - GAMS lacks psi/digamma function
+   - Include: root cause, GAMS error, why it's architectural, potential future fix approach
 
-2. **Fix model-specific issues** (~2h)
-   - Address individual model quirks
-   - Fix rare patterns
-   - Handle special cases
+2. **Create ISSUE_*.md for remaining domain violations** (~1.5h)
+   - Create issue files for any of the 6 investigated models that are NOT fixable
+   - Document root cause and why fix is not tractable in Sprint 18
+   - Note if these could be fixed in future sprints with more effort
 
-3. **Improve error handling** (~1h)
-   - Better error messages for unfixed cases
-   - Graceful degradation where possible
-   - Document limitations
+3. **Update KNOWN_UNKNOWNS.md with findings** (~0.5h)
+   - Mark resolved unknowns from Days 1-8
+   - Add any new unknowns discovered during investigation
+   - Update risk assessments based on findings
 
-4. **Comprehensive testing** (~1h)
-   - Full regression suite
-   - Edge case specific tests
-   - Document coverage
+4. **Move completed issues to docs/issues/completed/** (~0.5h)
+   - Move any issues that were fixed in Days 1-8
+   - Update issue status in each file
+   - Ensure issue tracking is organized
 
 ### Deliverables
-- [ ] Edge case fixes implemented
-- [ ] Improved error handling
-- [ ] Edge case documentation
-- [ ] SPRINT_LOG.md updated
+- [ ] ISSUE_*.md files for all architectural limitations (4+ files)
+- [ ] ISSUE_*.md files for unfixable domain violations
+- [ ] Updated KNOWN_UNKNOWNS.md
+- [ ] Organized docs/issues/ directory
+- [ ] SPRINT_LOG.md updated with Day 9 summary
 
 ### Quality Checks
 ```bash
-# Full pipeline test
-python scripts/gamslib/run_full_test.py
+# Verify issue files created
+ls -la docs/issues/ISSUE_68*.md
 
-# Verify solve count progress
-python scripts/gamslib/run_full_test.py | grep "Solve Results:"
+# Check KNOWN_UNKNOWNS updates
+git diff docs/planning/EPIC_4/SPRINT_18/KNOWN_UNKNOWNS.md
+
+# Verify no code regressions (documentation-only day)
+make test
 ```
 
 ### Completion Criteria
-- [ ] Known edge cases addressed
-- [ ] Error handling improved
-- [ ] No regressions
+- [ ] All architectural issues documented with clear explanations
+- [ ] Each issue file includes: root cause, GAMS error code, reproduction steps, why architectural
+- [ ] KNOWN_UNKNOWNS.md updated with checkpoint findings
+- [ ] Issue tracking organized and up-to-date
 - [ ] SPRINT_LOG.md updated with:
-  - Edge cases fixed
-  - Known limitations
-  - Progress status
+  - Issue files created
+  - KNOWN_UNKNOWNS changes
+  - Summary of architectural vs tractable issues
 
 ### PR & Review
-- **PR Title**: `sprint18/day9-edge-cases: Edge case and corner case fixes`
-- **PR Body**: Include edge case summary, limitations documented
+- **PR Title**: `sprint18/day9-issue-documentation: Document architectural limitations`
+- **PR Body**: List all issue files created, summary of findings
 - **Reviewers**: Project maintainer
-- **Labels**: `sprint-18`, `bug-fix`, `edge-cases`
+- **Labels**: `sprint-18`, `documentation`, `issue-tracking`
 
 ### Reference Documents
-- PLAN.md: Lines 451-470 (Day 9 details)
-- Previous day PRs for context
+- PLAN.md: Day 9 section (Issue Documentation + Architectural Analysis)
+- Days 7-8 PRs for root cause analysis
+- docs/issues/README.md for issue file format
 
 ---
 
-## Day 10: Final Fixes and Optimization
+## Day 10: Final Fixes & Testing
 
 ### Branch
 ```
@@ -744,72 +778,88 @@ sprint18/day10-final-fixes
 ```
 
 ### Objective
-Final implementation push - address any remaining fixable issues before final testing.
+Implement any remaining tractable fixes identified during Days 7-9, run full pipeline retest, and verify no regressions.
 
 ### Prerequisites
 - [ ] Day 9 completed and merged
-- [ ] Clear list of remaining issues
-- [ ] Understanding of what's achievable
+- [ ] Issue documentation complete
+- [ ] Clear list of which fixes are tractable vs architectural
 
 ### Tasks
-1. **Priority remaining fixes** (~2h)
+1. **Implement remaining tractable fixes** (~1.5h)
+   - Review Day 7-8 findings for any fixes that weren't implemented yet
    - Implement highest-impact remaining fixes
-   - Focus on solve count improvement
-   - Address path_syntax_error if not at target
+   - Add regression tests for each fix
 
-2. **Code cleanup** (~1h)
-   - Remove debug code
-   - Clean up temporary workarounds
-   - Ensure code quality
+2. **Full pipeline retest on all 160 models** (~1.5h)
+   - Run `python scripts/gamslib/run_full_test.py`
+   - Capture updated metrics for all stages
+   - Compare against Checkpoint 2 metrics
 
-3. **Performance check** (~0.5h)
-   - Verify no performance regression
-   - Check emission speed
-   - Document any concerns
+3. **Run full test suite** (~0.5h)
+   - Run `make test` to verify all unit/integration tests pass
+   - Run `make typecheck && make lint` for code quality
+   - Fix any issues found
 
-4. **Prepare for final testing** (~0.5h)
-   - Ensure all changes merged
-   - Clean working directory
-   - Update SPRINT_LOG.md
+4. **Verify no regressions in solving models** (~0.5h)
+   - Confirm 19+ models still solve (Checkpoint 2 had 19)
+   - Check that previously solving models didn't regress
+   - Document any changes in solve count
 
 ### Deliverables
-- [ ] Final fixes implemented
-- [ ] Code cleaned up
-- [ ] Ready for final testing
-- [ ] SPRINT_LOG.md updated
+- [ ] Remaining tractable fixes implemented
+- [ ] Full pipeline retest results
+- [ ] Updated `gamslib_status.json`
+- [ ] All tests passing
+- [ ] SPRINT_LOG.md updated with Day 10 metrics
 
 ### Quality Checks
 ```bash
 # Full pipeline test
 python scripts/gamslib/run_full_test.py
 
-# Code quality check
-python -m pytest tests/ -v
-ruff check src/
+# Full test suite
+make test
+
+# Code quality
+make typecheck && make lint
+
+# Check solve count
+python -c "
+import json
+with open('data/gamslib/gamslib_status.json') as f:
+    db = json.load(f)
+count = sum(1 for m in db['models'] 
+            if m.get('mcp_solve', {}).get('status') == 'success')
+print(f'Solve count: {count}')
+"
 ```
 
 ### Completion Criteria
-- [ ] All planned fixes implemented
-- [ ] Code quality checks passing
-- [ ] Ready for Day 11 final testing
+- [ ] All tractable fixes from Days 7-9 implemented
+- [ ] Full pipeline retest complete with metrics captured
+- [ ] Solve count ≥19 (no regression from Checkpoint 2)
+- [ ] All tests passing (unit, integration, typecheck, lint)
 - [ ] SPRINT_LOG.md updated with:
-  - Final fixes summary
-  - Pre-final-test metrics
-  - Any remaining concerns
+  - Final fixes implemented
+  - Full pipeline metrics
+  - Comparison to Checkpoint 2
+  - Ready for Checkpoint 3
 
 ### PR & Review
-- **PR Title**: `sprint18/day10-final-fixes: Final implementation fixes`
-- **PR Body**: Include final fix summary, code cleanup notes
+- **PR Title**: `sprint18/day10-final-fixes: Final fixes and pipeline retest`
+- **PR Body**: Include metrics comparison table (Day 0 → Checkpoint 2 → Day 10)
 - **Reviewers**: Project maintainer
-- **Labels**: `sprint-18`, `bug-fix`, `final`
+- **Labels**: `sprint-18`, `bug-fix`, `testing`
 
 ### Reference Documents
-- PLAN.md: Lines 471-490 (Day 10 details)
-- All previous Sprint 18 PRs
+- PLAN.md: Day 10 section (Final Fixes & Testing)
+- Days 7-9 PRs for fixes to implement
+- SPRINT_LOG.md for Checkpoint 2 metrics baseline
 
 ---
 
-## Day 11: Checkpoint 3 - Full Pipeline Retest
+## Day 11: Documentation & Checkpoint 3
 
 ### Branch
 ```
@@ -817,70 +867,78 @@ sprint18/day11-checkpoint3
 ```
 
 ### Objective
-Final checkpoint - comprehensive pipeline retest and success criteria validation.
+Final documentation updates, create FIX_ROADMAP.md for future sprints, and complete Checkpoint 3 assessment.
 
 ### Prerequisites
 - [ ] Day 10 completed and merged
-- [ ] All fixes deployed
-- [ ] Clean working directory
+- [ ] Final pipeline metrics captured
+- [ ] Issue documentation complete
 
 ### Tasks
-1. **Full pipeline retest** (~1.5h)
-   - Run complete test suite
-   - Capture all metrics
-   - Compare against targets
+1. **Update SPRINT_LOG.md with final metrics** (~1h)
+   - Add Day 11 entry with complete sprint summary
+   - Include metrics progression: Day 0 → Checkpoint 2 → Final
+   - Document all fixes implemented during sprint
+   - List all issues created/resolved
 
-2. **Success criteria validation** (~1h)
-   - Verify Solve ≥22 (target)
-   - Verify path_syntax_error ≤2 (target)
-   - Document any gaps
+2. **Update GAMSLIB_STATUS.md** (~0.5h)
+   - Reflect current pipeline metrics
+   - Update failure category breakdown
+   - Note architectural limitations discovered
 
-3. **Failure analysis** (~1h)
-   - Document remaining failures
-   - Categorize as fixable vs out-of-scope
-   - Note for future sprints
+3. **Create FIX_ROADMAP.md for Sprint 19+** (~1h)
+   - Prioritize remaining fixes by ROI (models fixed / effort)
+   - Document architectural issues that need design work
+   - Estimate effort for each category
+   - Recommend Sprint 19 focus areas
 
-4. **Final metrics report** (~0.5h)
-   - Create comprehensive report
-   - Compare baseline to final
-   - Update SPRINT_LOG.md
+4. **Checkpoint 3: Sprint review** (~1.5h)
+   - Compare final metrics to original targets
+   - Assess what was achieved vs planned
+   - Document lessons learned
+   - Go/no-go assessment for sprint completion
 
 ### Deliverables
-- [ ] Final metrics report
-- [ ] Success criteria assessment
-- [ ] Remaining failure documentation
-- [ ] SPRINT_LOG.md with final metrics
+- [ ] SPRINT_LOG.md complete with all days documented
+- [ ] GAMSLIB_STATUS.md updated
+- [ ] FIX_ROADMAP.md created with prioritized future work
+- [ ] Checkpoint 3 assessment documented
 
 ### Quality Checks
 ```bash
-# Full pipeline test - final
-python scripts/gamslib/run_full_test.py
+# Verify documentation complete
+cat docs/planning/EPIC_4/SPRINT_18/SPRINT_LOG.md | tail -50
 
-# Generate final report
-python scripts/gamslib/run_full_test.py --json
+# Check FIX_ROADMAP created
+cat docs/planning/EPIC_4/SPRINT_18/FIX_ROADMAP.md
 
-# Verify targets
-echo "Target: Solve ≥22, path_syntax_error ≤2"
+# Final metrics verification
+python scripts/gamslib/run_full_test.py --dry-run
 ```
 
 ### Completion Criteria
-- [ ] **SUCCESS**: Solve ≥22 AND path_syntax_error ≤2
-- [ ] OR documented explanation if targets not met
-- [ ] SPRINT_LOG.md updated with:
-  - Final metrics (Parse, Translate, Solve)
-  - path_syntax_error count
-  - Success/gap assessment
-  - Remaining failures documented
+**Checkpoint 3 Criteria:**
+- [ ] All tractable path_syntax_error fixes merged
+- [ ] Architectural issues documented with ISSUE_*.md files
+- [ ] Solve count maintained at ≥19 (no regressions)
+- [ ] FIX_ROADMAP.md created for future sprints
+- [ ] All tests passing
+
+**Sprint Assessment:**
+- [ ] SPRINT_LOG.md complete with all days
+- [ ] Metrics documented: final path_syntax_error count, solve count, match count
+- [ ] Clear handoff for Sprint 19 with prioritized roadmap
 
 ### PR & Review
-- **PR Title**: `sprint18/day11-checkpoint3: Final pipeline retest`
-- **PR Body**: Include final metrics table, success criteria status
+- **PR Title**: `sprint18/day11-checkpoint3: Final documentation and Checkpoint 3`
+- **PR Body**: Include sprint metrics summary, Checkpoint 3 assessment, link to FIX_ROADMAP.md
 - **Reviewers**: Project maintainer
-- **Labels**: `sprint-18`, `checkpoint`, `final-test`
+- **Labels**: `sprint-18`, `checkpoint`, `documentation`
 
 ### Reference Documents
-- PLAN.md: Lines 491-520 (Day 11 details)
-- PLAN.md: Lines 458-459 (Success criteria: Solve ≥22, path_syntax_error ≤2)
+- PLAN.md: Day 11 section (Documentation & Checkpoint 3)
+- All Sprint 18 SPRINT_LOG.md entries
+- Day 10 metrics for final numbers
 
 ---
 
