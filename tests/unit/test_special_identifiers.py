@@ -278,13 +278,18 @@ def test_table_plus_header_parsing():
 def test_table_row_labels_special_chars():
     """Test quoting special characters in table row labels (not headers).
 
-    Issue #665: Column headers are NOT quoted, but row labels ARE quoted.
+    Issue #673: Column headers with hyphens need special handling:
+    - If Table has a STRING description, column headers are quoted.
+    - If Table has NO description, column headers are NOT quoted so the
+      DESCRIPTION terminal can match them (e.g., "col-1  col-2").
+    Row labels are always quoted.
     """
     source = """Table data(i,j)
        col-1  col-2
 row-1    1      2
 row-2    3      4;"""
-    # Column headers (col-1, col-2) NOT quoted; row labels (row-1, row-2) ARE quoted
+    # Column headers (col-1, col-2) NOT quoted (no description on Table line)
+    # Row labels (row-1, row-2) ARE quoted
     expected = """Table data(i,j)
        col-1  col-2
 'row-1'    1      2
