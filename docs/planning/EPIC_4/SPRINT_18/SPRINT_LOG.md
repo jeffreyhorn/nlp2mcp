@@ -934,7 +934,7 @@ Implemented 4 fixes for path_syntax_error issues:
 
 ### Next Steps (Day 7)
 - Begin domain issue investigation for tractable fixes
-- Focus on blend, sample, like, robert (domain violations that may be fixable)
+- Focus on blend, sample, like, robert, mexss, orani (domain violations that may be fixable)
 
 ---
 
