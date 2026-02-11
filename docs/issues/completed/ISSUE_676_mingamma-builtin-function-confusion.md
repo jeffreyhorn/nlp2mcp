@@ -4,11 +4,12 @@
 
 **Issue:** The derivative rules for `gamma(x)` and `loggamma(x)` produce expressions using `psi(x)` (digamma function), but GAMS does NOT have a built-in `psi` or `digamma` function.
 
-**Status:** Cannot Fix (Architectural)  
+**Status:** ✅ RESOLVED (Option 2 implemented)  
 **Severity:** High - Model fails to compile  
 **Affected Models:** mingamma, any model using gamma/loggamma derivatives  
 **Date:** 2026-02-10  
-**Investigated:** 2026-02-11
+**Investigated:** 2026-02-11  
+**Resolved:** 2026-02-11
 
 ---
 
@@ -122,9 +123,37 @@ If implementing Option 1:
 
 ---
 
-## Workaround
+## Resolution (2026-02-11)
 
-None currently. Models using gamma/loggamma derivatives cannot be translated.
+**Option 2 was implemented:** Models using `gamma(x)` or `loggamma(x)` in expressions that require differentiation now raise a clear error message.
+
+### Changes Made
+
+1. **`src/ad/derivative_rules.py`**:
+   - Removed `_diff_gamma()` and `_diff_loggamma()` functions
+   - Added clear error when attempting to differentiate gamma/loggamma:
+     ```python
+     elif func in ("gamma", "loggamma"):
+         raise ValueError(
+             f"Differentiation of '{func}' requires the digamma/psi function, "
+             f"which is not available in GAMS. Models using {func}() in the "
+             f"objective or constraints cannot be converted to MCP."
+         )
+     ```
+
+2. **`data/gamslib/gamslib_status.json`**:
+   - Set `mingamma` model's `convexity.status` to `"excluded"`
+   - Added error message: "Gamma function is not convex on x>0. Additionally, GAMS lacks the digamma/psi function needed for derivatives."
+
+3. **`tests/unit/ad/test_transcendental.py`**:
+   - Updated gamma/loggamma tests to expect the new error message
+   - Reduced from 10 tests to 6 tests (3 for gamma, 3 for loggamma)
+
+### Rationale
+
+- The gamma function is not convex on x > 0, so mingamma is not a valid candidate for NLP-to-MCP conversion anyway
+- Very few GAMS models use gamma functions in optimization objectives
+- A clear error message is better than silently generating invalid GAMS code
 
 ---
 
