@@ -225,79 +225,92 @@ Sprint 18 scope has been **significantly adjusted** based on prep task findings.
 | **Checkpoint 2:** emit_gams.py fixes complete | 1h | Progress report with new metrics |
 
 **Checkpoint 2 Criteria:**
-- [ ] All emit_gams.py fixes merged (set quoting, computed params, bound multipliers, reserved words, subsets)
-- [ ] `path_syntax_error` reduced from 17 to ≤4
-- [ ] 12 original solving models still solve (no regressions)
-- [ ] New metrics recorded
+- [x] All emit_gams.py fixes merged (set quoting, computed params, bound multipliers, reserved words, subsets)
+- [ ] `path_syntax_error` reduced from v1.1.0 baseline 17 (22 in Day 0 due to higher translate coverage) to ≤4 — **NOT MET** (10 remain, 4 architectural)
+- [x] 12 original solving models still solve (no regressions) — **MET** (19 now solve)
+- [x] New metrics recorded
 
-### Day 7: MCP Infeasibility Bug Fixes (4h)
+**Checkpoint 2 Results (Day 6):**
+- Solve: 19/50 (target ≥17 **MET**)
+- path_syntax_error: 10 (target ≤4 **NOT MET**)
+- Architectural blockers identified: abel, qabel, chenery (cross-indexed sums), mingamma (missing GAMS function)
+- Investigate candidates: blend, sample, like, robert, mexss, orani (domain violations)
 
-**Focus:** Fix circle and house MCP formulation bugs
+### Day 7: Domain Issue Investigation - Part 1 (4h)
 
-| Task | Time | Deliverable |
-|------|------|-------------|
-| Investigate circle random data issue | 1h | Understand `uniform()` regeneration problem |
-| Fix circle: capture original random values | 1.5h | circle achieves `model_optimal` |
-| Investigate house constraint qualification | 1h | Identify Lagrangian formulation issue |
-| Fix house MCP formulation | 0.5h | house achieves `model_optimal` |
+**Focus:** Investigate domain violation errors for tractable fixes
 
-**Acceptance:** Both circle and house move from `model_infeasible` to `model_optimal`
-
-### Day 8: Remaining path_syntax_error Investigation (4h)
-
-**Focus:** Investigate and fix remaining syntax errors
+**Note:** *Plan revised based on Checkpoint 2 findings. Original plan targeted MCP infeasibility bugs, but path_syntax_error target (≤4) was not met (10 remain). Prioritizing domain violation investigation.*
 
 | Task | Time | Deliverable |
 |------|------|-------------|
-| Run pipeline and identify remaining errors | 0.5h | List of models still failing |
-| Categorize remaining `path_syntax_error` cases | 1h | Error taxonomy |
-| Fix tractable cases | 2h | Additional models unblocked |
-| Document intractable cases for future | 0.5h | Notes for future sprints |
+| Deep-dive on blend domain violation (E171) | 1h | Root cause analysis |
+| Deep-dive on sample domain violation (E171) | 1h | Root cause analysis |
+| Deep-dive on like domain violation (E170) | 1h | Root cause analysis |
+| Implement fixes for tractable cases | 1h | Quick wins if found |
 
-**Acceptance:** Remaining errors categorized, tractable cases fixed
+**Models to investigate:** blend, sample, like (domain violations that may be fixable)
 
-### Day 9: Lexer Error Deep Analysis (5.5h)
+**Acceptance:** Root causes documented, tractable fixes implemented
 
-**Focus:** Analyze 99 lexer error models for future fixes
+### Day 8: Domain Issue Investigation - Part 2 (4h)
 
-| Task | Time | Deliverable |
-|------|------|-------------|
-| Extract lexer error patterns from 99 models | 2h | Pattern frequency analysis |
-| Categorize by error type and complexity | 2h | Categories with model counts |
-| Identify quick wins vs complex fixes | 1h | Prioritized fix list |
-| Create `LEXER_ERROR_ANALYSIS.md` | 0.5h | Analysis document |
-
-**Acceptance:** Comprehensive lexer error analysis complete
-
-### Day 10: Complex Set Data Syntax + Prioritized Roadmap (4h)
-
-**Focus:** Initial complex set syntax work + planning document
+**Focus:** Continue domain violation investigation
 
 | Task | Time | Deliverable |
 |------|------|-------------|
-| Investigate complex set data syntax patterns | 1h | Pattern identification |
-| Implement simple cases in grammar | 1h | Initial grammar additions |
-| Create `FIX_ROADMAP.md` with prioritized fixes | 2h | Complete roadmap document |
+| Deep-dive on robert domain violation (E170) | 1h | Root cause analysis |
+| Deep-dive on mexss domain violations (E170/171) | 1h | Root cause analysis |
+| Deep-dive on orani dynamic domain extension | 1h | Root cause analysis |
+| Implement fixes for tractable cases | 1h | Quick wins if found |
 
-**Acceptance:** Initial complex set syntax support, roadmap complete
+**Models to investigate:** robert, mexss, orani
 
-### Day 11: Pipeline Retest + Checkpoint 3 (4h)
+**Acceptance:** All 6 "investigate" models analyzed, tractable fixes implemented
 
-**Focus:** Full pipeline retest, third checkpoint
+### Day 9: Issue Documentation + Architectural Analysis (4h)
+
+**Focus:** Document findings and create issue files
 
 | Task | Time | Deliverable |
 |------|------|-------------|
-| Run full pipeline on all 160 models | 1.5h | Updated `gamslib_status.json` |
-| Analyze results and update metrics | 1h | New baseline numbers |
-| Run full test suite (3204+ tests) | 0.5h | All tests pass |
-| **Checkpoint 3:** All implementation complete | 1h | Go/no-go for release |
+| Extend existing ISSUE_*.md for architectural limitations | 1.5h | Updated ISSUE_670/676 with per-model analysis for abel, qabel, chenery, mingamma |
+| Extend/augment existing ISSUE_*.md for domain violations; create new ones only for uncaptured root causes | 1.5h | Updated/created issue files for remaining unfixable models without duplication |
+| Update KNOWN_UNKNOWNS.md with findings | 0.5h | Mark resolved/new unknowns |
+| Move completed issues to docs/issues/completed/ | 0.5h | Organized issue tracking |
+
+**Acceptance:** All path_syntax_error models documented with root causes
+
+### Day 10: Final Fixes & Testing (4h)
+
+**Focus:** Implement remaining tractable fixes, full testing
+
+| Task | Time | Deliverable |
+|------|------|-------------|
+| Implement any remaining tractable fixes | 1.5h | Additional models unblocked |
+| Full pipeline retest on all 160 models | 1.5h | Updated `gamslib_status.json` |
+| Run full test suite | 0.5h | All tests pass |
+| Verify no regressions in solving models | 0.5h | 19+ models still solve |
+
+**Acceptance:** Pipeline retest complete, no regressions
+
+### Day 11: Documentation & Checkpoint 3 (4h)
+
+**Focus:** Final documentation, third checkpoint
+
+| Task | Time | Deliverable |
+|------|------|-------------|
+| Update SPRINT_LOG.md with final metrics | 1h | Complete sprint record |
+| Update GAMSLIB_STATUS.md | 0.5h | Reflect new metrics |
+| Create `FIX_ROADMAP.md` for Sprint 19+ | 1h | Prioritized future work |
+| **Checkpoint 3:** Sprint review | 1.5h | Go/no-go assessment |
 
 **Checkpoint 3 Criteria:**
-- [ ] All Sprint 18 features merged
-- [ ] circle and house achieve `model_optimal`
-- [ ] `path_syntax_error` minimized
-- [ ] Lexer error analysis complete
-- [ ] Fix roadmap created
+- [ ] All tractable path_syntax_error fixes merged
+- [ ] Architectural issues documented with ISSUE_*.md files
+- [ ] Solve count maintained at ≥19 (no regressions)
+- [ ] FIX_ROADMAP.md created for future sprints
+- [ ] All tests passing
 
 ### Day 12: Documentation Updates (4h)
 
