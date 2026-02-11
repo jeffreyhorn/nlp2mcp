@@ -1,149 +1,134 @@
-# Mingamma: Built-in Function Confusion
+# Mingamma: Digamma Function Not Available in GAMS
 
 **GitHub Issue:** [#676](https://github.com/jeffreyhorn/nlp2mcp/issues/676)
 
-**Issue:** The mingamma model uses GAMS built-in functions `gamma(x)` and its derivative `psi(x)`. The emitter incorrectly treats these as indexed parameters instead of function calls.
+**Issue:** The derivative rules for `gamma(x)` and `loggamma(x)` produce expressions using `psi(x)` (digamma function), but GAMS does NOT have a built-in `psi` or `digamma` function.
 
-**Status:** Open  
+**Status:** Cannot Fix (Architectural)  
 **Severity:** High - Model fails to compile  
-**Affected Models:** mingamma  
-**Date:** 2026-02-10
+**Affected Models:** mingamma, any model using gamma/loggamma derivatives  
+**Date:** 2026-02-10  
+**Investigated:** 2026-02-11
 
 ---
 
 ## Problem Summary
 
-GAMS provides built-in mathematical functions including:
-- `gamma(x)` - Gamma function Γ(x)
-- `psi(x)` - Digamma function ψ(x) = Γ'(x)/Γ(x) (derivative of log-gamma)
+When differentiating expressions containing `gamma(x)` or `loggamma(x)`, the mathematically correct derivatives are:
+- d/dx[gamma(x)] = gamma(x) * psi(x)
+- d/dx[loggamma(x)] = psi(x)
 
-When differentiating `gamma(x1)` with respect to `x1`, the derivative should be `gamma(x1) * psi(x1)`. However, the emitter produces `gamma(x1) * psi(x1)` where `gamma` and `psi` are treated as unknown symbols with `x1` as an index.
+Where `psi(x)` is the digamma function: ψ(x) = Γ'(x)/Γ(x)
 
-GAMS Errors:
-- Error 121: Set expected
-- Error 140: Unknown symbol
+**The fundamental problem:** GAMS does NOT have a built-in `psi` or `digamma` function.
 
 ---
 
-## Reproduction
+## Root Cause Analysis
 
-### Test Case: mingamma.gms
+### Derivative Rules
 
-```bash
-# Translate the model
-nlp2mcp data/gamslib/raw/mingamma.gms -o data/gamslib/mcp/mingamma_mcp.gms
+In `src/ad/derivative_rules.py`, the gamma derivative rules are:
 
-# Run GAMS
-cd data/gamslib/mcp && gams mingamma_mcp.gms lo=2
+```python
+def _diff_gamma(expr, wrt_var, wrt_indices, config):
+    # d(gamma(a))/dx = gamma(a) * psi(a) * da/dx
+    gamma_arg = Call("gamma", (arg,))
+    psi_arg = Call("psi", (arg,))  # <-- psi doesn't exist in GAMS!
+    return Binary("*", Binary("*", gamma_arg, psi_arg), darg_dx)
 
-# Check errors
-grep -E "121|140" mingamma_mcp.lst
+def _diff_loggamma(expr, wrt_var, wrt_indices, config):
+    # d(loggamma(a))/dx = psi(a) * da/dx
+    psi_arg = Call("psi", (arg,))  # <-- psi doesn't exist in GAMS!
+    return Binary("*", psi_arg, darg_dx)
 ```
 
-**Error Output:**
+The comment on line 1155 incorrectly states "GAMS uses 'psi' as the function name (added in GAMS 47.0+)".
+
+### Verification
+
+Tested with GAMS 51.3.0:
+```gams
+Scalar x /2.5/;
+Variable v;
+Equation e;
+e.. psi(x) =e= 0;  
+```
+
+Result:
 ```
 **** 121  Set expected
 **** 140  Unknown symbol
 ```
 
-### Original Model
+GAMS documentation confirms: The available gamma-related functions are:
+- `gamma(x)` - Gamma function
+- `logGamma(x)` - Log of gamma function
+- `beta(x,y)` - Beta function
+- `logBeta(x,y)` - Log of beta function
+- `betaReg(x,y,z)` - Regularized beta function
+- `gammaReg(x,a)` - Regularized gamma function
 
-```gams
-Variable y1, y2, x1, x2;
-y1def.. y1 =e= gamma(x1);
-y2def.. y2 =e= loggamma(x2);
-```
-
-### Generated Stationarity Equation (Wrong)
-
-```gams
-stat_x1.. 0 + ((-1) * (gamma(x1) * psi(x1))) * nu_y1def - piL_x1 =E= 0;
-```
-
-GAMS sees `gamma(x1)` as a parameter reference where `gamma` is undefined and `x1` is used as an index (but `x1` is a variable, not a set).
-
-### Expected Stationarity Equation (Correct)
-
-The derivative d/dx[gamma(x)] = gamma(x) * psi(x) should be emitted as function calls:
-```gams
-stat_x1.. 0 + ((-1) * (gamma(x1.l) * psi(x1.l))) * nu_y1def - piL_x1 =E= 0;
-```
-
-Or using the variable directly in functions (GAMS supports this):
-```gams
-stat_x1.. 0 + ((-1) * (gamma(x1) * psi(x1))) * nu_y1def - piL_x1 =E= 0;
-```
+**No `psi`, `digamma`, or `polygamma` function exists.**
 
 ---
 
-## Technical Details
+## Possible Solutions
 
-### Why Error 121 "Set expected"
+### Option 1: Polynomial Approximation (Complex)
 
-GAMS parses `gamma(x1)` as:
-- `gamma` - Unknown identifier (Error 140)
-- `(x1)` - Expected to be a set index, but `x1` is a variable (Error 121)
-
-### What's Actually Needed
-
-In GAMS, `gamma(x1)` where `x1` is a variable should work because:
-- `gamma` is a recognized built-in function
-- Function arguments can be variables
-
-The issue is either:
-1. The emitter is not recognizing `gamma`/`psi` as function calls
-2. Or the expression structure is incorrect
-
-### Derivative Rule for Gamma
-
-The derivative computation appears correct:
+Implement digamma using a polynomial/series approximation. The asymptotic expansion is:
 ```
-d/dx[gamma(x)] = gamma(x) * psi(x)
+psi(x) ≈ ln(x) - 1/(2x) - 1/(12x^2) + 1/(120x^4) - ...
 ```
 
-But the emission may be formatting it incorrectly.
+For x > 6, this is accurate. For smaller x, use the recurrence:
+```
+psi(x+1) = psi(x) + 1/x
+```
+
+This would require:
+- Creating a macro or inline function
+- Handling edge cases (x <= 0, small x)
+- Significant complexity
+
+### Option 2: Skip Gamma Derivative Models (Recommended)
+
+Mark models using `gamma(x)` or `loggamma(x)` in nonlinear expressions as unsupported. The original model can still use these functions, but we cannot compute derivatives for the MCP transformation.
+
+### Option 3: Numerical Differentiation
+
+Use finite differences to approximate derivatives involving gamma functions. This would add complexity and numerical error.
 
 ---
 
-## Investigation Needed
+## Recommendation
 
-1. **Check AST structure**: Is `gamma(x1)` parsed as a `Call` node or something else?
-2. **Check expr_to_gams**: How are function calls with variable arguments emitted?
-3. **Test simple case**: Does `gamma(x)` work in a simpler equation?
+**Option 2 is recommended.** The mingamma model and similar models using gamma/loggamma in expressions that require differentiation should be marked as unsupported with a clear error message.
 
-### Key Files
-
-- `src/ad/derivative_rules.py`: Derivative of gamma function
-- `src/emit/expr_to_gams.py`: Function call emission
-- `src/ir/parser.py`: Function call parsing
+This affects very few models - most GAMS models don't use gamma functions in optimization objectives.
 
 ---
 
-## Proposed Solution
+## Files Requiring Changes
 
-1. **Verify function call emission**: Ensure `Call("gamma", [VarRef("x1")])` emits correctly
-2. **Check variable in function context**: GAMS allows `gamma(x1)` where `x1` is a variable
-3. **Add gamma/psi to known functions**: May need special handling for these built-ins
+If implementing Option 2:
+- `src/ad/derivative_rules.py`: Raise an error when gamma/loggamma derivative is needed
+- Add a clear error message explaining the limitation
+
+If implementing Option 1:
+- `src/emit/expr_to_gams.py`: Add digamma approximation function
+- `src/ad/derivative_rules.py`: Use the approximation instead of `Call("psi", ...)`
 
 ---
 
 ## Workaround
 
-Currently none. The mingamma model cannot be translated correctly.
-
----
-
-## Related Functions
-
-Other GAMS special functions that may have similar issues:
-- `loggamma(x)` - Log of gamma function
-- `beta(x,y)` - Beta function
-- `binomial(n,k)` - Binomial coefficient
+None currently. Models using gamma/loggamma derivatives cannot be translated.
 
 ---
 
 ## References
 
-- GAMS Built-in Functions Documentation
-- Gamma Function: Γ(x) = ∫₀^∞ t^(x-1) * e^(-t) dt
-- Digamma Function: ψ(x) = d/dx[ln(Γ(x))] = Γ'(x)/Γ(x)
+- [Digamma function - Wikipedia](https://en.wikipedia.org/wiki/Digamma_function)
+- GAMS Built-in Functions (no psi/digamma available)
