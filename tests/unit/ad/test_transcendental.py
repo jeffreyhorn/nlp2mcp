@@ -463,102 +463,36 @@ class TestSqrtDifferentiation:
 class TestGammaDifferentiation:
     """Tests for gamma(x) differentiation.
 
-    The gamma function derivative uses the psi (digamma) function:
+    The gamma function derivative requires the psi (digamma) function:
     d(gamma(x))/dx = gamma(x) * psi(x)
+
+    However, GAMS does not have a psi/digamma function, so we cannot
+    emit valid GAMS code. Differentiation of gamma() should raise an error.
     """
 
-    def test_gamma_variable(self):
-        """Test d(gamma(x))/dx = gamma(x) * psi(x)"""
-        # gamma(x)
+    def test_gamma_raises_error(self):
+        """Test that differentiating gamma(x) raises an error."""
         expr = Call("gamma", (VarRef("x"),))
-        result = differentiate_expr(expr, "x")
+        with pytest.raises(ValueError, match="digamma/psi function"):
+            differentiate_expr(expr, "x")
 
-        # Should be: gamma(x) * psi(x) * 1
-        assert isinstance(result, Binary)
-        assert result.op == "*"
+    def test_gamma_constant_raises_error(self):
+        """Test that differentiating gamma(constant) also raises an error.
 
-        # Left should be gamma(x) * psi(x)
-        assert isinstance(result.left, Binary)
-        assert result.left.op == "*"
-
-        assert isinstance(result.left.left, Call)
-        assert result.left.left.func == "gamma"
-
-        assert isinstance(result.left.right, Call)
-        assert result.left.right.func == "psi"
-
-        # Right should be dx/dx = 1
-        assert isinstance(result.right, Const)
-        assert result.right.value == 1.0
-
-    def test_gamma_constant(self):
-        """Test d(gamma(5))/dx = 0"""
-        # gamma(5)
+        Even though d/dx[gamma(5)] = 0 mathematically, we still raise
+        an error because we want to fail fast and clearly communicate
+        that gamma models cannot be converted.
+        """
         expr = Call("gamma", (Const(5.0),))
-        result = differentiate_expr(expr, "x")
+        with pytest.raises(ValueError, match="digamma/psi function"):
+            differentiate_expr(expr, "x")
 
-        # Should be: gamma(5) * psi(5) * 0
-        assert isinstance(result, Binary)
-        assert result.op == "*"
-
-        assert isinstance(result.right, Const)
-        assert result.right.value == 0.0
-
-    def test_gamma_different_variable(self):
-        """Test d(gamma(y))/dx = 0"""
-        # gamma(y)
-        expr = Call("gamma", (VarRef("y"),))
-        result = differentiate_expr(expr, "x")
-
-        # Should be: gamma(y) * psi(y) * 0
-        assert isinstance(result, Binary)
-        assert result.op == "*"
-
-        assert isinstance(result.right, Const)
-        assert result.right.value == 0.0
-
-    def test_gamma_chain_rule(self):
-        """Test d(gamma(x^2))/dx = gamma(x^2) * psi(x^2) * 2x"""
-        # gamma(x^2)
+    def test_gamma_chain_rule_raises_error(self):
+        """Test that differentiating gamma(expr) raises an error."""
         inner = Call("power", (VarRef("x"), Const(2.0)))
         expr = Call("gamma", (inner,))
-        result = differentiate_expr(expr, "x")
-
-        # Should be: gamma(x^2) * psi(x^2) * d(x^2)/dx
-        assert isinstance(result, Binary)
-        assert result.op == "*"
-
-        # Left should be gamma(x^2) * psi(x^2)
-        assert isinstance(result.left, Binary)
-        assert result.left.op == "*"
-
-        assert isinstance(result.left.left, Call)
-        assert result.left.left.func == "gamma"
-
-        assert isinstance(result.left.right, Call)
-        assert result.left.right.func == "psi"
-
-        # Right should be d(x^2)/dx (not 0 or 1)
-        assert isinstance(result.right, Binary)
-
-    def test_gamma_nested_expression(self):
-        """Test d(gamma(2*x + 1))/dx uses chain rule correctly"""
-        # gamma(2*x + 1)
-        inner = Binary("+", Binary("*", Const(2.0), VarRef("x")), Const(1.0))
-        expr = Call("gamma", (inner,))
-        result = differentiate_expr(expr, "x")
-
-        # Should be: gamma(2*x + 1) * psi(2*x + 1) * d(2*x + 1)/dx
-        assert isinstance(result, Binary)
-        assert result.op == "*"
-
-        # Left should be gamma(...) * psi(...)
-        assert isinstance(result.left, Binary)
-        assert result.left.op == "*"
-        assert isinstance(result.left.left, Call)
-        assert result.left.left.func == "gamma"
-        assert isinstance(result.left.right, Call)
-        assert result.left.right.func == "psi"
+        with pytest.raises(ValueError, match="digamma/psi function"):
+            differentiate_expr(expr, "x")
 
 
 # ============================================================================
@@ -572,84 +506,29 @@ class TestLogGammaDifferentiation:
 
     The loggamma function is ln(gamma(x)), and its derivative is the psi function:
     d(loggamma(x))/dx = psi(x)
+
+    However, GAMS does not have a psi/digamma function, so we cannot
+    emit valid GAMS code. Differentiation of loggamma() should raise an error.
     """
 
-    def test_loggamma_variable(self):
-        """Test d(loggamma(x))/dx = psi(x)"""
-        # loggamma(x)
+    def test_loggamma_raises_error(self):
+        """Test that differentiating loggamma(x) raises an error."""
         expr = Call("loggamma", (VarRef("x"),))
-        result = differentiate_expr(expr, "x")
+        with pytest.raises(ValueError, match="digamma/psi function"):
+            differentiate_expr(expr, "x")
 
-        # Should be: psi(x) * 1
-        assert isinstance(result, Binary)
-        assert result.op == "*"
-
-        # Left should be psi(x)
-        assert isinstance(result.left, Call)
-        assert result.left.func == "psi"
-
-        # Right should be dx/dx = 1
-        assert isinstance(result.right, Const)
-        assert result.right.value == 1.0
-
-    def test_loggamma_constant(self):
-        """Test d(loggamma(5))/dx = 0"""
-        # loggamma(5)
+    def test_loggamma_constant_raises_error(self):
+        """Test that differentiating loggamma(constant) also raises an error."""
         expr = Call("loggamma", (Const(5.0),))
-        result = differentiate_expr(expr, "x")
+        with pytest.raises(ValueError, match="digamma/psi function"):
+            differentiate_expr(expr, "x")
 
-        # Should be: psi(5) * 0
-        assert isinstance(result, Binary)
-        assert result.op == "*"
-
-        assert isinstance(result.right, Const)
-        assert result.right.value == 0.0
-
-    def test_loggamma_different_variable(self):
-        """Test d(loggamma(y))/dx = 0"""
-        # loggamma(y)
-        expr = Call("loggamma", (VarRef("y"),))
-        result = differentiate_expr(expr, "x")
-
-        # Should be: psi(y) * 0
-        assert isinstance(result, Binary)
-        assert result.op == "*"
-
-        assert isinstance(result.right, Const)
-        assert result.right.value == 0.0
-
-    def test_loggamma_chain_rule(self):
-        """Test d(loggamma(x^2))/dx = psi(x^2) * 2x"""
-        # loggamma(x^2)
+    def test_loggamma_chain_rule_raises_error(self):
+        """Test that differentiating loggamma(expr) raises an error."""
         inner = Call("power", (VarRef("x"), Const(2.0)))
         expr = Call("loggamma", (inner,))
-        result = differentiate_expr(expr, "x")
-
-        # Should be: psi(x^2) * d(x^2)/dx
-        assert isinstance(result, Binary)
-        assert result.op == "*"
-
-        # Left should be psi(x^2)
-        assert isinstance(result.left, Call)
-        assert result.left.func == "psi"
-
-        # Right should be d(x^2)/dx (not 0 or 1)
-        assert isinstance(result.right, Binary)
-
-    def test_loggamma_nested_expression(self):
-        """Test d(loggamma(2*x + 1))/dx uses chain rule correctly"""
-        # loggamma(2*x + 1)
-        inner = Binary("+", Binary("*", Const(2.0), VarRef("x")), Const(1.0))
-        expr = Call("loggamma", (inner,))
-        result = differentiate_expr(expr, "x")
-
-        # Should be: psi(2*x + 1) * d(2*x + 1)/dx
-        assert isinstance(result, Binary)
-        assert result.op == "*"
-
-        # Left should be psi(2*x + 1)
-        assert isinstance(result.left, Call)
-        assert result.left.func == "psi"
+        with pytest.raises(ValueError, match="digamma/psi function"):
+            differentiate_expr(expr, "x")
 
 
 # ============================================================================
@@ -826,15 +705,17 @@ class TestTranscendentalErrors:
     def test_gamma_wrong_arg_count(self):
         """Test gamma() with wrong number of arguments raises error"""
         # gamma(x, y) - too many args
+        # Now raises "psi not available" error before arg count check
         expr = Call("gamma", (VarRef("x"), VarRef("y")))
-        with pytest.raises(ValueError, match="gamma\\(\\) expects 1 argument"):
+        with pytest.raises(ValueError, match="digamma/psi function"):
             differentiate_expr(expr, "x")
 
     def test_loggamma_wrong_arg_count(self):
         """Test loggamma() with wrong number of arguments raises error"""
         # loggamma() - no args
+        # Now raises "psi not available" error before arg count check
         expr = Call("loggamma", ())
-        with pytest.raises(ValueError, match="loggamma\\(\\) expects 1 argument"):
+        with pytest.raises(ValueError, match="digamma/psi function"):
             differentiate_expr(expr, "x")
 
     def test_smin_wrong_arg_count(self):

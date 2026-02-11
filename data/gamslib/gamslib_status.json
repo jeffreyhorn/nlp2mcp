@@ -5147,12 +5147,13 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "likely_convex",
+        "status": "excluded",
         "verification_date": "2026-01-01T14:59:28Z",
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -0.1215,
-        "solve_time_seconds": 0.482
+        "solve_time_seconds": 0.482,
+        "error": "Gamma function is not convex on x>0. Additionally, GAMS lacks the digamma/psi function needed for derivatives."
       },
       "nlp2mcp_parse": {
         "status": "success",
