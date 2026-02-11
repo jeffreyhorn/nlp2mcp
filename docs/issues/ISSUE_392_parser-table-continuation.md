@@ -2,14 +2,50 @@
 
 **GitHub Issue**: #392 - https://github.com/jeffreyhorn/nlp2mcp/issues/392  
 **Status**: Open  
-**Priority**: Low  
+**Priority**: Medium (upgraded from Low based on Sprint 18 Day 7 findings)  
 **Component**: Parser (src/ir/parser.py, src/gams/gams_grammar.lark)  
 **Effort**: 2h  
-**Impact**: Unlocks 1 Tier 2 model - 5.6% parse rate improvement
+**Impact**: Unlocks 1 Tier 2 model - 5.6% parse rate improvement  
+**Last Updated**: 2026-02-11 (Sprint 18 Day 7)
 
 ## Summary
 
 GAMS allows table data to continue across multiple lines using a plus sign (`+`) as an explicit continuation character. This is used for tables with many columns that don't fit on a single line. The parser currently does not support this continuation syntax, blocking 1 Tier 2 model from parsing.
+
+## Sprint 18 Day 7 Findings (2026-02-11)
+
+During domain violation investigation, we confirmed the impact of this parser limitation on the `like` model:
+
+**Symptom:** GAMS Error 170 "Domain violation for element" at runtime
+
+**Root Cause Analysis:**
+- The `like.gms` model has a table with 62 data values split across multiple lines using `+` continuation
+- The parser only captures the first 4 values (before the first `+` continuation line)
+- This results in **93.5% data loss** (only 4 of 62 values preserved)
+- When the model runs, it references elements that don't exist in the truncated table data
+
+**Data Loss Example:**
+```gams
+* Original table in like.gms (62 values across 31 columns):
+Table p(i,*) 'frequency of pressure'
+                 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+   pressure     95 105 110 115 120 125 130 135 140 145 150 155 160 165 170
+   frequency     1   1   4   4  15  15  15  13  21  12  17   4  20   8  17
+
+   +            16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31
+   pressure    175 180 185 190 195 200 205 210 215 220 225 230 235 240 245 260
+   frequency     8   6   6   7   4   3   3   8   1   6   0   5   1   7   1   2;
+
+* What the parser captures (only 4 values):
+Table p(i,*) 'frequency of pressure'
+                 1   2   3   4   5   ...  <- Only first 5 columns
+   pressure     95 105 110 115  ...       <- First row truncated
+   frequency     1   1   4   4   ...      <- Second row truncated
+```
+
+**Classification:** ARCHITECTURAL - Not tractable without grammar changes. This is a fundamental parser limitation that requires updates to `src/gams/gams_grammar.lark`.
+
+**Priority Update:** This should be considered **Medium** priority rather than Low, as the data loss significantly impacts model correctness and blocks the `like` model from producing valid results.
 
 ## Current Behavior
 

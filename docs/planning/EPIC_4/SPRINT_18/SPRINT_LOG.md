@@ -939,6 +939,92 @@ Implemented 4 fixes for path_syntax_error issues:
 
 ---
 
+## Day 7: Domain Issue Investigation - Part 1 (2026-02-11)
+
+### Objectives
+- [x] Deep-dive on blend domain violation (E171)
+- [x] Deep-dive on sample domain violation (E171)
+- [x] Deep-dive on like domain violation (E170)
+- [x] Implement fixes for tractable cases
+
+### Root Cause Analysis
+
+#### blend (E171) - **FIXED** ✅
+
+**Error:** `Error 171: Domain violation for set`
+
+**Root Cause:** When parameters were declared with wildcard domain `*`, the emitter replaced it with a generated named set (e.g., `wc_compdat_d1`). This caused GAMS Error 171 when the original code indexed the parameter using a different set that was a subset of the wildcarded elements.
+
+**Example from blend.gms:**
+```gams
+* Original: Table compdat(*,alloy) with rows {lead, zinc, tin, price}
+* Generated: compdat(wc_compdat_d1, alloy) where wc_compdat_d1 = {lead, zinc, tin, price}
+* Original code: sum(elem, compdat(elem,alloy)) where elem = {lead, zinc, tin}
+* GAMS rejected this because elem is not declared as compatible with wc_compdat_d1
+```
+
+**Fix:** Keep wildcard domains as `*` in the declaration, matching the original GAMS behavior. This allows any set or literal to index the parameter.
+
+**Location:** `src/emit/original_symbols.py` - removed wildcard replacement logic
+
+**Result:** blend now solves successfully
+
+#### sample (E171) - **FIXED** ✅ (same root cause)
+
+**Root Cause:** Same wildcard domain issue as blend.
+
+**Fix:** Same fix resolved this automatically.
+
+**Result:** sample now translates successfully (no longer E171). Fails at solve with `path_solve_terminated` (numerical/solver issue, not syntax).
+
+#### like (E170) - **ARCHITECTURAL** ❌
+
+**Error:** `Error 170: Domain violation for element`
+
+**Root Cause:** Parser doesn't fully support `+` table continuation syntax. The `like` model has a table with 62 values split across multiple lines using `+` continuation, but only 4 values are captured by the parser.
+
+```gams
+Table data(*,i) 'systolic blood pressure data'
+                 1   2   3   4   5   ...  15
+   pressure     95 105 110 115 120  ... 170
+   frequency     1   1   4   4  15  ...  17
+   +            16  17  18  19  20  ...  31   <- continuation not fully parsed
+   pressure    175 180 185 190 195  ... 260
+   frequency     8   6   6   7   4  ...   2;
+```
+
+When accessing `data("pressure",i)`, the element "pressure" has incomplete data (only 4 of 62 values), causing domain violations.
+
+**Classification:** Parser limitation documented in ISSUE_392. Not tractable without grammar changes.
+
+### Metrics Update
+
+| Stage | Day 6 | Day 7 | Delta |
+|-------|-------|-------|-------|
+| Parse | 62 | 62 | 0 |
+| Translate | 50 | 50 | 0 |
+| Solve | 19 | 20 | **+1** |
+| path_syntax_error | 10 | 8 | **-2** |
+| Full Pipeline | 7 | 7 | 0 |
+
+### Fix Summary
+
+| Model | Error | Status | Notes |
+|-------|-------|--------|-------|
+| blend | E171 | ✅ Fixed | Now solves |
+| sample | E171 | ✅ Fixed | Now translates, fails numerical |
+| like | E170 | ❌ Architectural | Parser limitation (ISSUE_392) |
+
+### Commit
+
+- `1b28718`: Fix E171 domain violation for wildcard parameter domains
+
+### Next Steps (Day 8)
+- Continue domain investigation for robert, mexss, orani
+- Investigate if `like` fix is tractable with grammar changes
+
+---
+
 <!-- Template for daily entries:
 
 ### Day N: [Title] (YYYY-MM-DD)

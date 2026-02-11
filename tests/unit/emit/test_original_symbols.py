@@ -630,6 +630,49 @@ class TestEmitOriginalParameters:
         # Warning should be logged
         assert any("croprep" in record.message for record in caplog.records)
 
+    def test_wildcard_domain_preserved_as_asterisk(self):
+        """Test Issue #679: Wildcard domains are preserved as '*' in emission.
+
+        When a parameter is declared with a wildcard domain like Table compdat(*,alloy),
+        the emitted GAMS should keep '*' rather than replacing it with a generated
+        named set. This prevents E171 "Domain violation for set" errors when the
+        original code indexes the parameter with different sets.
+
+        Regression test to prevent reintroducing E171 via future refactors.
+        """
+        model = ModelIR()
+        # Parameter with wildcard in first domain position
+        model.params["compdat"] = ParameterDef(
+            name="compdat",
+            domain=("*", "alloy"),
+            values={("lead", "steel"): 10.0, ("zinc", "steel"): 20.0, ("price", "steel"): 5.0},
+        )
+
+        result = emit_original_parameters(model)
+
+        # Domain should contain '*', not a generated set name like 'wc_compdat_d1'
+        assert "compdat(*,alloy)" in result
+        assert "wc_compdat" not in result
+
+    def test_multiple_wildcard_domains_preserved(self):
+        """Test Issue #679: Multiple wildcard domains are all preserved.
+
+        Parameters like Table rd(*,*) should emit with both wildcards preserved.
+        """
+        model = ModelIR()
+        # Parameter with wildcards in both domain positions
+        model.params["rd"] = ParameterDef(
+            name="rd",
+            domain=("*", "*"),
+            values={("plant1", "market1"): 100.0, ("plant2", "market2"): 200.0},
+        )
+
+        result = emit_original_parameters(model)
+
+        # Both wildcards should be preserved
+        assert "rd(*,*)" in result
+        assert "wc_rd" not in result
+
 
 @pytest.mark.unit
 class TestEmitComputedParameterAssignments:
