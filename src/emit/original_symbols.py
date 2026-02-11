@@ -524,7 +524,7 @@ def _expand_table_key(key_tuple: tuple[str, ...], domain_size: int) -> tuple[str
         return key_tuple
 
     # Need to expand: split dotted elements until we reach domain_size
-    expanded = []
+    expanded: list[str] = []
     for element in key_tuple:
         if len(expanded) < domain_size and "." in element:
             # Split this element on dots
