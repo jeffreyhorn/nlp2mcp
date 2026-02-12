@@ -152,7 +152,7 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (
 
 ## Components
 
-### Sprint 18 Deferred Items (~17-23h)
+### Sprint 18 Deferred Items (~17-21h)
 
 These items were originally planned for Sprint 18 but were deferred when architectural limitations (cross-indexed sums, table parsing) were discovered. The sprint pivoted to focus on high-ROI emission fixes instead.
 
