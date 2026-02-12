@@ -146,11 +146,46 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (
 
 # Sprint 19 (Weeks 3–4): Major Parse Push (lexer_invalid_char & internal_error)
 
-**Goal:** Major reduction in parse failures through systematic lexer and grammar fixes based on Sprint 18 analysis. Begin internal_error investigation. Design IndexOffset IR representation.
+**Goal:** Major reduction in parse failures through systematic lexer and grammar fixes based on Sprint 18 analysis. Begin internal_error investigation. Design IndexOffset IR representation. Complete deferred Sprint 18 items.
 
-**Note:** Sprint 19 now focuses on parse improvements, as emit_gams.py fixes and lexer analysis were completed in Sprint 18.
+**Note:** Sprint 19 now focuses on parse improvements, as emit_gams.py fixes and lexer analysis were completed in Sprint 18. Additionally includes items deferred from Sprint 18 due to architectural limitations discovered during that sprint.
 
 ## Components
+
+### Sprint 18 Deferred Items (~17-23h)
+
+These items were originally planned for Sprint 18 but were deferred when architectural limitations (cross-indexed sums, table parsing) were discovered. The sprint pivoted to focus on high-ROI emission fixes instead.
+
+- **MCP Infeasibility Bug Fixes (3-4h)**
+  - **circle Model Fix:** Fix `uniform()` random data regeneration issue; capture original random values for MCP context
+  - **house Model Fix:** Fix constraint qualification or Lagrangian formulation issue
+  - Target: Both models achieve `model_optimal`
+  - **Deliverable:** MCP bug fixes with tests
+
+- **Subset Relationship Preservation (4-5h)**
+  - Preserve set-subset relationships in emitted domain declarations
+  - Location: `src/emit/emit_gams.py`, `src/emit/model.py`
+  - Target: ~3 models affected
+  - **Deliverable:** Subset preservation fix with regression tests
+
+- **Reserved Word Quoting (2-3h)**
+  - Quote identifiers that are GAMS reserved words in emitted code
+  - Location: `src/emit/expr_to_gams.py`
+  - Target: ~2 models affected
+  - **Deliverable:** Reserved word quoting fix with regression tests
+
+- **Lexer Error Deep Analysis (5-6h)**
+  - Full subcategorization of remaining parse failures
+  - Run all parse-stage failure models with verbose output
+  - Group by error type and create subcategory clusters
+  - **Deliverable:** `LEXER_ERROR_ANALYSIS.md` with error categories and fix priorities
+
+- **Put Statement Format Support (2.5h)**
+  - Add support for `:width:decimals` format specifiers in put statements
+  - Grammar extension in `src/gams/gams_grammar.lark`
+  - Handle `loop(j, put j.tl)` pattern (no-semicolon variant)
+  - Target: 4 models (ps5_s_mn, ps10_s, ps10_s_mn, stdcge)
+  - **Deliverable:** Put statement format support with unit tests
 
 ### lexer_invalid_char Fixes (~14-18h)
 - **Complex Set Data Syntax (8-10h)**
@@ -202,22 +237,30 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (
 - **Deliverable:** Updated metrics; expected parse rate ≥ 55% of valid corpus
 
 ## Deliverables
-- Complex set data syntax support in grammar
-- Compile-time range constant support
-- Additional lexer fixes for high-priority subcategories
-- `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS.md`
-- Initial internal_error fixes
-- IndexOffset IR design document and parser spike
+- **Sprint 18 Deferred Items:**
+  - MCP bug fixes for circle and house models
+  - Subset relationship preservation fix
+  - Reserved word quoting fix
+  - `LEXER_ERROR_ANALYSIS.md` with error categories
+  - Put statement format support (4 models)
+- **Parse Improvements:**
+  - Complex set data syntax support in grammar
+  - Compile-time range constant support
+  - Additional lexer fixes for high-priority subcategories
+  - `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS.md`
+  - Initial internal_error fixes
+  - IndexOffset IR design document and parser spike
 - Updated pipeline metrics
 
 ## Acceptance Criteria
+- **Sprint 18 Deferred:** circle and house achieve `model_optimal`; put statement models parse
 - **lexer_invalid_char:** Count reduced from ~95 to below 50
 - **internal_error (parse):** Count reduced from 23 to below 15
 - **Parse Rate:** ≥ 55% of valid corpus
 - **IndexOffset:** IR design documented; parser spike demonstrates feasibility
 - **Quality:** All tests pass; golden file tests for solving models unchanged
 
-**Estimated Effort:** 26-32 hours
+**Estimated Effort:** 43-55 hours (original 26-32h + 17-23h deferred items)
 **Risk Level:** MEDIUM-HIGH (grammar refactoring for complex set data is the highest-risk item in Epic 4)
 
 ---
