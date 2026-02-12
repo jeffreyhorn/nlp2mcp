@@ -1251,7 +1251,7 @@ Completed comprehensive documentation of Sprint 18 findings:
 ### Objectives
 - [x] Review Day 7-9 findings for tractable fixes
 - [x] Implement any remaining tractable fixes
-- [x] Run full pipeline retest on all 160 models
+- [x] Run full pipeline retest on all eligible models (159; mingamma excluded)
 - [x] Run full test suite (make test, typecheck, lint)
 - [x] Verify no regressions in solving models (≥19)
 - [x] Update SPRINT_LOG.md with Day 10 metrics
