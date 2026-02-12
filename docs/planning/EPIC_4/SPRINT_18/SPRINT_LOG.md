@@ -1335,7 +1335,7 @@ All quality checks pass with no regressions.
 | path_solve_terminated | 13 | 18 | 20 | +7 |
 | Full Pipeline (match) | 4 | 7 | 7 | **+3** |
 
-*Note: Parse/Translate counts dropped due to mingamma exclusion (GAMS lacks psi function).*
+*Note: Parse/Translate counts exclude mingamma (GAMS lacks psi function). The path_syntax_error count of 8 includes mingamma (7 architectural + 1 excluded) for historical comparison with Day 0.*
 
 #### Fixes Implemented
 

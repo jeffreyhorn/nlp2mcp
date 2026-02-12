@@ -19,7 +19,7 @@ The nlp2mcp pipeline was tested against **159** GAMSLIB models on **2026-02-11**
 
 **Sprint 18 Improvements:**
 - Solve: 13 → 20 models (+7)
-- path_syntax_error: 22 → 8 (-14)
+- path_syntax_error: 22 → 7 (-15, excluding mingamma)
 - Full Pipeline: 4 → 7 models (+3)
 
 ---
