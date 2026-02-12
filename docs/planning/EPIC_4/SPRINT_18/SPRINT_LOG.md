@@ -1099,14 +1099,14 @@ amc(c,s,"total") = sum(i, amc(c,s,i)) + ...  * Creates "total" at runtime
 
 **Day 7-8 Investigation Results:**
 - **2 models FIXED**: blend (now solves), sample (translates, numerical issue)
-- **8 models ARCHITECTURAL**: Cannot be fixed without parser/KKT generation changes
+- **1 model EXCLUDED**: mingamma (gamma not convex, GAMS lacks psi function)
+- **7 models ARCHITECTURAL**: Cannot be fixed without parser/KKT generation changes
 
 **Architectural Issues Breakdown:**
 - **Cross-indexed sums (ISSUE_670)**: 6 models (abel, qabel, chenery, mexss, orani, and partial issue in robert)
-- **Table parsing limitations**: 2 models
+- **Table parsing limitations**: 2 models (like, robert)
   - ISSUE_392 (table `+` continuation): like
   - ISSUE_399 (table description as header): robert
-- **Missing GAMS function**: 1 model (mingamma - psi function)
 
 ### Key Finding: Day 7 Fix Impact
 
