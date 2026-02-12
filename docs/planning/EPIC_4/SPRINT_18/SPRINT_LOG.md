@@ -1572,7 +1572,7 @@ Code review and cleanup complete:
 
 **Lessons Learned:**
 1. **Emission-layer fixes have higher ROI than parser changes** for path_syntax_error reduction
-2. **Cross-indexed sums (ISSUE_670) are a significant architectural barrier** affecting 6 models; requires parser/KKT redesign
+2. **Cross-indexed sums (ISSUE_670) are a significant architectural barrier** affecting 6 models (5 primarily blocked, 1 secondary); requires parser/KKT redesign
 3. **Wildcard handling is complex** — Three separate fixes needed (domain preservation, quoting, table data)
 4. **Table parsing edge cases** need grammar-level work (continuation `+`, description-as-header)
 
@@ -1587,8 +1587,8 @@ Code review and cleanup complete:
 ### Handoff Notes for Sprint 19
 
 **Priority 1: Cross-Indexed Sums (ISSUE_670)**
-- 5 models blocked: abel, qabel, chenery, mexss, orani
-- Note: robert also has cross-indexed sum issues but is primarily blocked by ISSUE_399 (table parsing)
+- 6 models affected: abel, qabel, chenery, mexss, orani (primarily blocked), robert (secondary)
+- Note: 5 models are primarily blocked by ISSUE_670; robert is tracked under ISSUE_399 as its primary blocker but also has cross-indexed sum issues
 - Root cause: Stationarity equations contain uncontrolled indices from sums over non-domain sets
 - Requires: Parser enhancement to track sum domains + KKT generation changes
 - Estimated effort: 8-12 hours
