@@ -60,7 +60,7 @@ The nlp2mcp pipeline was tested against **159** GAMSLIB models on **2026-02-11**
 | like | E170 | Table continuation parsing | ARCHITECTURAL |
 | mingamma | E140 | GAMS lacks psi function | EXCLUDED |
 
-**Note:** All 7 remaining path_syntax_error models require architectural changes (parser or KKT generation). See [docs/issues/](docs/issues/) for details.
+**Note:** All 7 remaining path_syntax_error models require architectural changes (parser or KKT generation). See [docs/issues/](../issues/) for details.
 
 ---
 
