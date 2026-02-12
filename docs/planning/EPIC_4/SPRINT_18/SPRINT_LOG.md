@@ -1568,7 +1568,7 @@ Code review and cleanup complete:
 **What Could Improve:**
 1. **Original scope overestimated parser changes** — PLAN.md allocated significant time to parser improvements that were deprioritized; emission fixes had higher ROI
 2. **Metrics clarity** — Initial path_syntax_error counts included mingamma before exclusion decision; standardized on "excluding mingamma" mid-sprint
-3. **Day 11 vs final metrics discrepancy** — Day 11 reported 22→8, but final was 22→7; minor but required documentation fixes
+3. **Metrics documentation accuracy** — Day 11 and final both reported 22→7 for path_syntax_error; earlier draft incorrectly noted a discrepancy
 
 **Lessons Learned:**
 1. **Emission-layer fixes have higher ROI than parser changes** for path_syntax_error reduction

@@ -260,7 +260,7 @@ These items were originally planned for Sprint 18 but were deferred when archite
 - **IndexOffset:** IR design documented; parser spike demonstrates feasibility
 - **Quality:** All tests pass; golden file tests for solving models unchanged
 
-**Estimated Effort:** 43-55 hours (original 26-32h + 17-23h deferred items)
+**Estimated Effort:** 43-53 hours (original 26-32h + 17-21h deferred items)
 **Risk Level:** MEDIUM-HIGH (grammar refactoring for complex set data is the highest-risk item in Epic 4)
 
 ---
