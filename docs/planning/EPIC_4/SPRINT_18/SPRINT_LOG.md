@@ -1561,7 +1561,7 @@ Code review and cleanup complete:
 1. **Systematic error analysis** — The path_syntax_error deep dive (Days 4-5) was highly effective, categorizing all 22 errors and identifying root causes
 2. **Emission layer fixes** — High ROI from focusing on emission rather than parser changes (10 fixes, +7 models)
 3. **Checkpoint methodology** — Three checkpoints (Days 1, 6, 11) provided clear progress visibility and scope adjustment points
-4. **Issue documentation** — Architectural issues were well-documented with per-model analysis (ISSUE_670, 392, 399, 672)
+4. **Issue documentation** — Architectural issues were well-documented with per-model analysis (ISSUE_670, ISSUE_392, ISSUE_399, ISSUE_672)
 5. **Known Unknowns process** — 24 unknowns documented upfront; all critical/high items verified before implementation
 6. **Regression testing** — Zero regressions across 3294 tests throughout sprint
 
@@ -1587,7 +1587,8 @@ Code review and cleanup complete:
 ### Handoff Notes for Sprint 19
 
 **Priority 1: Cross-Indexed Sums (ISSUE_670)**
-- 6 models blocked: abel, qabel, chenery, mexss, orani, robert
+- 5 models blocked: abel, qabel, chenery, mexss, orani
+- Note: robert also has cross-indexed sum issues but is primarily blocked by ISSUE_399 (table parsing)
 - Root cause: Stationarity equations contain uncontrolled indices from sums over non-domain sets
 - Requires: Parser enhancement to track sum domains + KKT generation changes
 - Estimated effort: 8-12 hours
@@ -1599,7 +1600,7 @@ Code review and cleanup complete:
 - Estimated effort: 3-4 hours
 
 **Priority 3: Table Description as Header (ISSUE_399)**
-- 1 model blocked: robert
+- 1 model blocked: robert (primary blocker; also has secondary ISSUE_670 cross-indexed sum issues)
 - Root cause: Table descriptions incorrectly parsed as column headers
 - Requires: Parser fix to distinguish description from headers
 - Estimated effort: 2-3 hours
