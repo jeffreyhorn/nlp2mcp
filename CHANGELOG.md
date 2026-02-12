@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Prep Task 1: Create Known Unknowns List - 2026-02-12
+
+**Branch:** `planning/sprint19-prep`
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Created comprehensive Known Unknowns document for Sprint 19 with 26 unknowns across 8 categories. Updated PREP_PLAN.md with Task-to-Unknown mappings and "Unknowns Verified" metadata for all tasks.
+
+#### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_19/KNOWN_UNKNOWNS.md` - 26 unknowns documented across 8 categories
+- `docs/planning/EPIC_4/SPRINT_19/PREP_PLAN.md` - Updated with Task-to-Unknown mappings and Unknowns Verified metadata
+
+#### Known Unknowns Summary
+
+| Category | Count | Priority Distribution |
+|----------|-------|----------------------|
+| MCP Infeasibility Bug Fixes | 3 | 1 Critical, 1 High, 1 Medium |
+| Subset Relationship Preservation | 3 | 1 Critical, 1 High, 1 Medium |
+| Reserved Word Quoting | 3 | 1 High, 1 Medium, 1 Low |
+| Lexer Error Deep Analysis | 3 | 1 Critical, 1 High, 1 Medium |
+| Put Statement Format Support | 2 | 1 High, 1 Low |
+| Complex Set Data Syntax | 4 | 1 Critical, 2 High, 1 Medium |
+| internal_error & IndexOffset | 4 | 2 Critical, 1 High, 1 Medium |
+| Cross-Indexed Sums & Architectural | 4 | 1 Critical, 2 High, 1 Low |
+| **Total** | **26** | 7 Critical (27%), 10 High (38%), 6 Medium (23%), 3 Low (12%) |
+
+#### Task-to-Unknown Mapping
+
+| Prep Task | Unknowns Verified |
+|-----------|-------------------|
+| Task 2: Classify internal_error Failure Modes | 7.1, 7.2 |
+| Task 3: Catalog lexer_invalid_char Subcategories | 4.1, 4.2, 4.3, 6.1, 6.4 |
+| Task 4: Analyze Cross-Indexed Sum Patterns (ISSUE_670) | 8.1, 8.2 |
+| Task 5: Audit Sprint 18 Deferred Item Readiness | 1.1-1.3, 2.1-2.3, 3.1-3.3, 4.3, 5.1-5.2 |
+| Task 6: Research IndexOffset IR Design Options | 7.3, 7.4 |
+| Task 7: Analyze Table Parsing Issues (ISSUE_392, ISSUE_399) | 8.3 |
+| Task 8: Analyze MCP Pairing Issues (ISSUE_672) | 8.4 |
+| Task 9: Verify Sprint 19 Baseline Metrics | 4.1, 6.4 |
+| Task 10: Plan Sprint 19 Detailed Schedule | All |
+
 ## [1.2.0] - 2026-02-12
 
 ### Release v1.2.0 - Sprint 18 Complete
