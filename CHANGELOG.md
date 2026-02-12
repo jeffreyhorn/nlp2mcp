@@ -39,7 +39,7 @@ Sprint 18 focused on eliminating path_syntax_error failures in the solve stage. 
 2. **-15 syntax errors** (22 → 7, excluding mingamma)
 3. **+3 full pipeline matches** (4 → 7)
 4. **10 distinct fixes** implemented across emission, parsing, and KKT layers
-5. **7 architectural issues** documented for future sprints
+5. **5 architectural issues** documented for future sprints
 
 ---
 
@@ -153,7 +153,7 @@ See `docs/planning/EPIC_4/SPRINT_18/FIX_ROADMAP.md` for Sprint 19 prioritization
 
 #### Updated
 - `docs/testing/GAMSLIB_STATUS.md` - Sprint 18 final metrics
-- `docs/planning/EPIC_4/SPRINT_18/SPRINT_LOG.md` - Complete 11-day log
+- `docs/planning/EPIC_4/SPRINT_18/SPRINT_LOG.md` - Complete 12-day log
 - `docs/planning/EPIC_4/SPRINT_18/KNOWN_UNKNOWNS.md` - Sprint 18 findings
 
 #### Resolved Issues
