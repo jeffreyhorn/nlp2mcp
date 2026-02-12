@@ -742,7 +742,23 @@ The 23 internal_error models can be classified into 3-5 failure types: grammar a
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 2, 2026-02-12)
+
+**Actual count:** 24 models (not 23 as assumed in PROJECT_PLAN.md).
+
+**Distribution (3 categories, not 3-5):**
+- **No objective function:** 12 models (50%) — camshape, catmix, chain, danwolfe, elec, feasopt1, lnts, partssupply, polygon, robot, rocket, srpchase
+- **Circular dependency:** 9 models (37.5%) — chakra, dyncge, glider, irscge, lrgcge, moncge, quocge, splcge, twocge
+- **Parser/semantic error:** 3 models (12.5%) — gastrans (index mismatch), harker (model attribute access), mathopt4 (attr_access expression)
+
+**Key finding:** 21 of 24 models (87.5%) now parse successfully with v1.2.0 codebase. Sprint 18 fixes silently resolved these. The pipeline database (`gamslib_status.json`) is stale (v1.1.0 data). Only 3 models still fail at the parse stage.
+
+**Assumption corrections:**
+- Error types are NOT grammar ambiguity/missing production/IR crash/transformer error. They are: validation errors miscategorized as parse errors (21 models) and genuine semantic parse errors (3 models).
+- The "below 15" target is already met — only 3 genuine parse failures remain after v1.2.0.
+- The 21 now-parsing models will encounter translation-stage errors (no-objective, circular-dependency) when the pipeline is re-run.
+
+**Reference:** `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md`
 
 ---
 
@@ -775,7 +791,23 @@ Grammar and IR changes to fix internal_error models will not break the 62 curren
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 2, 2026-02-12)
+
+**Finding:** All 24 `internal_error` models can be reclassified into specific categories. The `categorize_parse_error()` function in `scripts/gamslib/error_taxonomy.py` needs 2 additional message patterns to eliminate the `internal_error` catch-all bucket:
+1. "no objective function" → `model_no_objective_def` (translation-stage category)
+2. "circular dependency" → new `validation_circular_dep` category or existing `semantic_domain_error`
+
+The 3 remaining parse failures map to existing categories:
+- gastrans (index mismatch) → `semantic_domain_error`
+- harker (undeclared model symbol) → `semantic_undefined_symbol`
+- mathopt4 (unsupported attr_access) → `parser_invalid_expression`
+
+**Regression risk assessment:** LOW. Of the 3 remaining fixes needed:
+- gastrans fix (implicit index mapping in `_handle_assign`) modifies assignment handling logic — requires careful regression testing
+- harker + mathopt4 fix (model attribute access) is additive — new expression type support, no modification to existing rules
+- 21 of 24 models already parse with v1.2.0 with zero regressions (Sprint 18 maintained 3294-test pass rate)
+
+**Reference:** `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md`
 
 ---
 
