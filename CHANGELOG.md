@@ -39,7 +39,7 @@ Sprint 18 focused on eliminating path_syntax_error failures in the solve stage. 
 2. **-15 syntax errors** (22 → 7, excluding mingamma)
 3. **+3 full pipeline matches** (4 → 7)
 4. **10 distinct fixes** implemented across emission, parsing, and KKT layers
-5. **5 architectural issues** documented for future sprints
+5. **4 architectural issues** documented for future sprints
 
 ---
 
@@ -139,7 +139,6 @@ The following issues were identified as requiring architectural changes beyond S
 | ISSUE_392: Table continuation | 1 (like) | Parser doesn't fully capture `+` continuation rows |
 | ISSUE_399: Table description as header | 1 (robert) | Table descriptions incorrectly parsed as column headers |
 | ISSUE_672: MCP pairing | 2 (alkyl, bearing) | Complementarity pair inconsistencies |
-| ISSUE_676: mingamma | 1 | GAMS lacks psi function (excluded from testing) |
 
 See `docs/planning/EPIC_4/SPRINT_18/FIX_ROADMAP.md` for Sprint 19 prioritization.
 
