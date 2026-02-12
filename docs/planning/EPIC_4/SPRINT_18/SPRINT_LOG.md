@@ -1184,7 +1184,7 @@ Confirmed `docs/issues/completed/ISSUE_676_mingamma-builtin-function-confusion.m
 Added Sprint 18 Day 9 update section with:
 - 3 new unknowns discovered during Days 7-8
 - Unknown 5.1: Cross-indexed sums (ISSUE_670) - 6 models
-- Unknown 5.2: Table parsing limitations (ISSUE_392, ISSUE_399) - 2 models
+- Unknown 5.2: Table parsing limitations (ISSUE_392, ISSUE_399) - 2 models (like, robert)
 - Unknown 5.3: GAMS lacks psi function (ISSUE_676) - RESOLVED
 
 Updated summary statistics: 27 total unknowns (24 original + 3 new)
@@ -1192,7 +1192,7 @@ Updated summary statistics: 27 total unknowns (24 original + 3 new)
 #### 5. Organized docs/issues/ Directory
 
 **Moved to completed/:**
-- `ISSUE_674_mexss-sample-wildcard-domain-missing-elements.md` (resolved by Day 7 fix)
+- `docs/issues/completed/ISSUE_674_mexss-sample-wildcard-domain-missing-elements.md` (resolved by Day 7 fix)
 
 **GitHub Issues Updated:**
 - Closed #674 with resolution comment
@@ -1200,7 +1200,7 @@ Updated summary statistics: 27 total unknowns (24 original + 3 new)
 **Active Issues (remaining in docs/issues/):**
 | Issue | Status | Reason |
 |-------|--------|--------|
-| ISSUE_392 | Open | Parser grammar change needed |
+| ISSUE_392 | Open | Parser semantic handler change needed (grammar exists) |
 | ISSUE_399 | Open | Parser handler change needed |
 | ISSUE_670 | Open | KKT architectural change needed |
 | ISSUE_671 | Partially Resolved | E170/E171 fixed, E149 remains |

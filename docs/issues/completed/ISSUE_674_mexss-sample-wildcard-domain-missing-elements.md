@@ -1,8 +1,8 @@
-# Mexss/Sample: Wildcard Domain Missing Elements
+# Mexss/Sample/Blend: Wildcard Domain Missing Elements
 
 **GitHub Issue:** [#674](https://github.com/jeffreyhorn/nlp2mcp/issues/674)
 
-**Issue:** The mexss and sample models use wildcard `*` domains in tables, but the emitter replaced them with generated named sets, causing domain violations.
+**Issue:** The mexss, sample, and blend models use wildcard `*` domains in tables, but the emitter replaced them with generated named sets, causing domain violations (E171). While the original issue was filed for mexss/sample, the same root cause affected blend.
 
 **Status:** ✅ RESOLVED  
 **Severity:** High - Models failed to compile  

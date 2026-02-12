@@ -1706,7 +1706,7 @@ During the Sprint 18 Days 7-8 domain violation investigation, the following arch
 - like: ISSUE_392 (E170 domain violation)
 - robert: ISSUE_399 (E170 domain violation) + ISSUE_670 (E149)
 
-**Resolution Path:** Requires parser grammar changes in `src/gams/gams_grammar.lark` and semantic handler updates in `src/ir/parser.py`.
+**Resolution Path:** Requires semantic handler updates in `src/ir/parser.py` (grammar already supports optional table descriptions and `+` continuation).
 
 **Estimated Effort:** Medium (2-4 hours each) - candidates for future sprint
 
@@ -1747,5 +1747,5 @@ During the Sprint 18 Days 7-8 domain violation investigation, the following arch
 
 **Net Result:**
 - 2 models fixed (blend, sample)
-- 8 models remain blocked by architectural issues
+- 7 models remain blocked by architectural issues (abel, qabel, chenery, mexss, orani, like, robert)
 - Clear documentation of root causes for future sprints

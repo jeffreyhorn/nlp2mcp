@@ -42,7 +42,7 @@ Parameters
     c(p,t) /low.1 25, low.2 20, low.3 10, medium.1 30, medium.2 27, medium.3 20, high.1 40, high.2 36, high.3 28/
 ```
 
-**Classification:** ARCHITECTURAL - Parser grammar/handler limitation.
+**Classification:** ARCHITECTURAL - Parser semantic handler bug in `_handle_table_block` (grammar already supports optional descriptions).
 
 **Note:** The `robert` model also has ISSUE_670 (cross-indexed sums) which would block it even after this fix.
 
