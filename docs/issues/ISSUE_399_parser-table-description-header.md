@@ -11,7 +11,7 @@
 
 When a GAMS table includes a description string, the parser incorrectly treats the description as a column header instead of ignoring it or storing it separately as metadata.
 
-## Sprint 18 Day 8 Findings (2026-02-11)
+## Sprint 18 Day 8-9 Findings (2026-02-11)
 
 During domain violation investigation, we confirmed this issue blocks the `robert` model:
 
@@ -21,13 +21,14 @@ During domain violation investigation, we confirmed this issue blocks the `rober
 - The `robert.gms` model has a table with description:
   ```gams
   Table c(p,t) 'expected profits'
-            1    2    3
-  low      25   20   10
-  medium   30   27   20
-  high     40   36   28;
+              1    2    3
+     low     25   20   10
+     medium  50   50   50
+     high    75   80  100;
   ```
 - The parser treats `'expected profits'` as a column header
 - Only 4 values are captured instead of 9 (3 rows × 3 columns)
+- The captured values are the first value from each row (25, 50, 75 for low, medium, high) mapped to the erroneous `'expected profits'` column
 - This causes 55% data loss
 
 **Generated MCP file shows:**
@@ -39,7 +40,7 @@ Parameters
 Instead of:
 ```gams
 Parameters
-    c(p,t) /low.1 25, low.2 20, low.3 10, medium.1 30, medium.2 27, medium.3 20, high.1 40, high.2 36, high.3 28/
+    c(p,t) /low.1 25, low.2 20, low.3 10, medium.1 50, medium.2 50, medium.3 50, high.1 75, high.2 80, high.3 100/
 ```
 
 **Classification:** ARCHITECTURAL - Parser semantic handler bug in `_handle_table_block` (grammar already supports optional descriptions).
