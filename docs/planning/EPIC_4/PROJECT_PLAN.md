@@ -148,7 +148,7 @@ This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–25 (
 
 **Goal:** Major reduction in parse failures through systematic lexer and grammar fixes based on Sprint 18 analysis. Begin internal_error investigation. Design IndexOffset IR representation. Complete deferred Sprint 18 items.
 
-**Note:** Sprint 19 now focuses on parse improvements, as emit_gams.py fixes and lexer analysis were completed in Sprint 18. Additionally includes items deferred from Sprint 18 due to architectural limitations discovered during that sprint.
+**Note:** Sprint 19 now focuses on parse improvements, building on emit_gams.py fixes and initial lexer analysis completed in Sprint 18. It also covers remaining lexer error deep-dive work and items deferred from Sprint 18 due to architectural limitations discovered during that sprint.
 
 ## Components
 

@@ -1586,7 +1586,7 @@ Code review and cleanup complete:
 
 ### Handoff Notes for Sprint 19
 
-**Priority 1: Cross-Indexed Sums (ISSUE_670)**
+**Priority 1: Cross-indexed sums (ISSUE_670)**
 - 6 models affected: abel, qabel, chenery, mexss, orani (primarily blocked), robert (secondary)
 - Note: 5 models are primarily blocked by ISSUE_670; robert is tracked under ISSUE_399 as its primary blocker but also has cross-indexed sum issues
 - Root cause: Stationarity equations contain uncontrolled indices from sums over non-domain sets
