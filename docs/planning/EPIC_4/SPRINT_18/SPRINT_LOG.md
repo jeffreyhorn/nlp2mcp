@@ -1572,7 +1572,7 @@ Code review and cleanup complete:
 
 **Lessons Learned:**
 1. **Emission-layer fixes have higher ROI than parser changes** for path_syntax_error reduction
-2. **Cross-indexed sums (ISSUE_670) is a significant architectural barrier** affecting 6 models; requires parser/KKT redesign
+2. **Cross-indexed sums (ISSUE_670) are a significant architectural barrier** affecting 6 models; requires parser/KKT redesign
 3. **Wildcard handling is complex** — Three separate fixes needed (domain preservation, quoting, table data)
 4. **Table parsing edge cases** need grammar-level work (continuation `+`, description-as-header)
 
