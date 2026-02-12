@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | path_syntax_error | 22 | 7 | **-15 errors** |
 | Full Pipeline | 4/160 (2.5%) | 7/159 (4.4%) | **+3 models** |
 
-*Note: mingamma excluded from testing (GAMS lacks psi function)
+*Note: mingamma excluded from testing (GAMS lacks psi function)*
 
 **20 Solving Models:** blend, chem, demo1, fdesign, harker, himmel11, himmel16, hs62, mathopt1, mathopt2, pak, pollut, rbrock, sample, scarfmcp, simple_nlp, transmcp, wall, wallmcp, weapons
 

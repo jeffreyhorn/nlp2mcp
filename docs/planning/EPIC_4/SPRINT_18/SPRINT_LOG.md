@@ -1407,7 +1407,7 @@ All quality checks pass with no regressions.
 
 Sprint 18 complete. Key achievements:
 - **+7 solving models** (13 → 20)
-- **-14 syntax errors** (22 → 8)
+- **-15 syntax errors** (22 → 7, excluding mingamma)
 - **+3 full pipeline matches** (4 → 7)
 - Comprehensive documentation of architectural limitations
 - FIX_ROADMAP.md created for Sprint 19 prioritization
@@ -1462,7 +1462,7 @@ Documentation complete for Sprint 18:
 | path_syntax_error | 22 | 10 | 7* | **-15** |
 | Full Pipeline | 4 | 7 | 7 | **+3** |
 
-*Excludes mingamma (GAMS lacks psi function)
+*Excludes mingamma (GAMS lacks psi function)*
 
 ### Fixes Implemented (10 total)
 
