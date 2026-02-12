@@ -43,9 +43,11 @@ The nlp2mcp pipeline was tested against **159** GAMSLIB models on **2026-02-11**
 | Category | Count | Description |
 |----------|-------|-------------|
 | path_solve_terminated | 20 | PATH solver fails (numerical/feasibility) |
-| path_syntax_error | 8 | GAMS compilation errors |
+| path_syntax_error | 7 | GAMS compilation errors (architectural) |
 
-### Path Syntax Error Details (8 models)
+*Note: mingamma is excluded from counts above (GAMS lacks psi function).*
+
+### Path Syntax Error Details (7 architectural models + 1 excluded)
 
 | Model | Error | Root Cause | Status |
 |-------|-------|------------|--------|
@@ -58,7 +60,7 @@ The nlp2mcp pipeline was tested against **159** GAMSLIB models on **2026-02-11**
 | like | E170 | Table continuation parsing | ARCHITECTURAL |
 | mingamma | E140 | GAMS lacks psi function | EXCLUDED |
 
-**Note:** All 7 remaining path_syntax_error models require architectural changes (parser or KKT generation). See `docs/issues/ISSUE_670*.md` for details.
+**Note:** All 7 remaining path_syntax_error models require architectural changes (parser or KKT generation). See [docs/issues/](docs/issues/) for details.
 
 ---
 
@@ -110,8 +112,10 @@ Models that successfully compile and solve (may have solution mismatch):
 | 1 | `lexer_invalid_char` | ~70 | parse | Unsupported GAMS syntax |
 | 2 | `internal_error` | ~20 | parse | Parser edge cases |
 | 3 | `path_solve_terminated` | 20 | solve | Numerical/feasibility issues |
-| 4 | `path_syntax_error` | 8 | solve | 7 architectural, 1 excluded |
+| 4 | `path_syntax_error` | 7 | solve | All architectural |
 | 5 | `translate_error` | 13 | translate | Various translation issues |
+
+*Parse-stage counts (`lexer_invalid_char`, `internal_error`) are approximated from Sprint 18 Day 10 pipeline logs; other counts are exact from the 159-model run.*
 
 ---
 

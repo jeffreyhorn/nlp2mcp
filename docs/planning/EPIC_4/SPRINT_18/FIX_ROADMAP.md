@@ -44,7 +44,7 @@ Modify KKT stationarity builder to:
 
 ### Implementation Tasks
 
-1. [ ] Analyze KKT stationarity equation generation in `src/kkt/kkt_builder.py`
+1. [ ] Analyze KKT stationarity equation generation in `src/kkt/stationarity.py` and related KKT assembly modules (e.g., `src/kkt/assemble.py`)
 2. [ ] Identify where cross-indexed sums create uncontrolled indices
 3. [ ] Design index scoping mechanism for stationarity equations
 4. [ ] Implement fix with comprehensive test coverage
@@ -86,7 +86,7 @@ Modify table parsing semantic handler to:
 
 ### Implementation Tasks
 
-1. [ ] Review grammar rule for table continuation in `src/ir/gams.lark`
+1. [ ] Review grammar rule for table continuation in `src/gams/gams_grammar.lark`
 2. [ ] Update semantic handler in `src/ir/parser.py` to process continuation
 3. [ ] Add unit tests for table continuation parsing
 4. [ ] Validate on `like` model
