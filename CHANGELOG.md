@@ -25,15 +25,15 @@ Created comprehensive Known Unknowns document for Sprint 19 with 26 unknowns acr
 
 | Category | Count | Priority Distribution |
 |----------|-------|----------------------|
-| MCP Infeasibility Bug Fixes | 3 | 1 Critical, 1 High, 1 Medium |
-| Subset Relationship Preservation | 3 | 1 Critical, 1 High, 1 Medium |
-| Reserved Word Quoting | 3 | 1 High, 1 Medium, 1 Low |
+| MCP Infeasibility Bug Fixes | 3 | 2 Critical, 1 Medium |
+| Subset Relationship Preservation | 3 | 2 High, 1 Medium |
+| Reserved Word Quoting | 3 | 2 High, 1 Medium |
 | Lexer Error Deep Analysis | 3 | 1 Critical, 1 High, 1 Medium |
-| Put Statement Format Support | 2 | 1 High, 1 Low |
-| Complex Set Data Syntax | 4 | 1 Critical, 2 High, 1 Medium |
-| internal_error & IndexOffset | 4 | 2 Critical, 1 High, 1 Medium |
-| Cross-Indexed Sums & Architectural | 4 | 1 Critical, 2 High, 1 Low |
-| **Total** | **26** | 7 Critical (27%), 10 High (38%), 6 Medium (23%), 3 Low (12%) |
+| Put Statement Format Support | 2 | 2 High |
+| Complex Set Data Syntax | 4 | 2 Critical, 2 High |
+| internal_error & IndexOffset | 4 | 2 Critical, 2 High |
+| Cross-Indexed Sums & Architectural | 4 | 1 Critical, 2 High, 1 Medium |
+| **Total** | **26** | 8 Critical (31%), 13 High (50%), 5 Medium (19%), 0 Low (0%) |
 
 #### Task-to-Unknown Mapping
 

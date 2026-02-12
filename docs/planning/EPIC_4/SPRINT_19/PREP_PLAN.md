@@ -96,7 +96,7 @@ Created `docs/planning/EPIC_4/SPRINT_19/KNOWN_UNKNOWNS.md` with 26 unknowns acro
 
 ### Result
 
-**26 unknowns** documented with priority distribution: 7 Critical, 10 High, 6 Medium, 3 Low. Estimated research time: 30-38 hours. Task-to-Unknown mapping table created linking each prep task (2-10) to the unknowns it verifies.
+**26 unknowns** documented with priority distribution: 8 Critical, 13 High, 5 Medium, 0 Low. Estimated research time: 30-38 hours. Task-to-Unknown mapping table created linking each prep task (2-10) to the unknowns it verifies.
 
 ### Verification
 
@@ -776,8 +776,7 @@ To be completed.
 ### Verification
 
 ```bash
-# Run test suite
-cd /Users/jeff/experiments/nlp2mcp
+# Run test suite (from the repository root)
 make test 2>&1 | tail -5
 # Expected: 3294 tests passed
 
@@ -938,7 +937,7 @@ grep -c "^### Day" docs/planning/EPIC_4/SPRINT_19/PLAN.md
 ### Success Criteria
 
 Sprint 19 prep is complete when:
-- [ ] Known Unknowns list created with 25+ unknowns across 5 categories
+- [ ] Known Unknowns list created with 26 unknowns across 8 categories
 - [ ] All 23 internal_error models classified by failure mode
 - [ ] All ~95 lexer_invalid_char models cataloged by subcategory
 - [ ] ISSUE_670 fix design documented with implementation sketch

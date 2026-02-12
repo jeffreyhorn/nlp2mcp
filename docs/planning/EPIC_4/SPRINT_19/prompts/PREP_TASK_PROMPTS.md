@@ -8,7 +8,7 @@ Copy the prompt for the task you want to execute and use it in a new Claude Code
 ## Prompt: Prep Task 2 — Classify internal_error Failure Modes
 
 ```
-You are working on the nlp2mcp project at /Users/jeff/experiments/nlp2mcp.
+You are working in the nlp2mcp project repository root. Run all commands from the repo root.
 Complete Sprint 19 Prep Task 2: Classify internal_error Failure Modes.
 
 ## Branch Setup
@@ -163,7 +163,7 @@ Then wait for reviewer comments. Use `gh pr view --comments` to check for feedba
 ## Prompt: Prep Task 3 — Catalog lexer_invalid_char Subcategories
 
 ```
-You are working on the nlp2mcp project at /Users/jeff/experiments/nlp2mcp.
+You are working in the nlp2mcp project repository root. Run all commands from the repo root.
 Complete Sprint 19 Prep Task 3: Catalog lexer_invalid_char Subcategories.
 
 ## Branch Setup
@@ -335,7 +335,7 @@ Then wait for reviewer comments. Use `gh pr view --comments` to check for feedba
 ## Prompt: Prep Task 4 — Analyze Cross-Indexed Sum Patterns (ISSUE_670)
 
 ```
-You are working on the nlp2mcp project at /Users/jeff/experiments/nlp2mcp.
+You are working in the nlp2mcp project repository root. Run all commands from the repo root.
 Complete Sprint 19 Prep Task 4: Analyze Cross-Indexed Sum Patterns (ISSUE_670).
 
 ## Branch Setup
@@ -492,7 +492,7 @@ Then wait for reviewer comments. Use `gh pr view --comments` to check for feedba
 ## Prompt: Prep Task 5 — Audit Sprint 18 Deferred Item Readiness
 
 ```
-You are working on the nlp2mcp project at /Users/jeff/experiments/nlp2mcp.
+You are working in the nlp2mcp project repository root. Run all commands from the repo root.
 Complete Sprint 19 Prep Task 5: Audit Sprint 18 Deferred Item Readiness.
 
 ## Branch Setup
@@ -686,7 +686,7 @@ Then wait for reviewer comments. Use `gh pr view --comments` to check for feedba
 ## Prompt: Prep Task 6 — Research IndexOffset IR Design Options
 
 ```
-You are working on the nlp2mcp project at /Users/jeff/experiments/nlp2mcp.
+You are working in the nlp2mcp project repository root. Run all commands from the repo root.
 Complete Sprint 19 Prep Task 6: Research IndexOffset IR Design Options.
 
 ## Branch Setup
@@ -838,7 +838,7 @@ Then wait for reviewer comments. Use `gh pr view --comments` to check for feedba
 ## Prompt: Prep Task 7 — Analyze Table Parsing Issues (ISSUE_392, ISSUE_399)
 
 ```
-You are working on the nlp2mcp project at /Users/jeff/experiments/nlp2mcp.
+You are working in the nlp2mcp project repository root. Run all commands from the repo root.
 Complete Sprint 19 Prep Task 7: Analyze Table Parsing Issues (ISSUE_392, ISSUE_399).
 
 ## Branch Setup
@@ -987,7 +987,7 @@ Then wait for reviewer comments. Use `gh pr view --comments` to check for feedba
 ## Prompt: Prep Task 8 — Analyze MCP Pairing Issues (ISSUE_672)
 
 ```
-You are working on the nlp2mcp project at /Users/jeff/experiments/nlp2mcp.
+You are working in the nlp2mcp project repository root. Run all commands from the repo root.
 Complete Sprint 19 Prep Task 8: Analyze MCP Pairing Issues (ISSUE_672).
 
 ## Branch Setup
@@ -1131,7 +1131,7 @@ Then wait for reviewer comments. Use `gh pr view --comments` to check for feedba
 ## Prompt: Prep Task 9 — Verify Sprint 19 Baseline Metrics
 
 ```
-You are working on the nlp2mcp project at /Users/jeff/experiments/nlp2mcp.
+You are working in the nlp2mcp project repository root. Run all commands from the repo root.
 Complete Sprint 19 Prep Task 9: Verify Sprint 19 Baseline Metrics.
 
 ## Branch Setup
@@ -1287,7 +1287,7 @@ Then wait for reviewer comments. Use `gh pr view --comments` to check for feedba
 ## Prompt: Prep Task 10 — Plan Sprint 19 Detailed Schedule
 
 ```
-You are working on the nlp2mcp project at /Users/jeff/experiments/nlp2mcp.
+You are working in the nlp2mcp project repository root. Run all commands from the repo root.
 Complete Sprint 19 Prep Task 10: Plan Sprint 19 Detailed Schedule.
 
 ## Branch Setup

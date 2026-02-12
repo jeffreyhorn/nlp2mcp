@@ -51,10 +51,10 @@ This document identifies all assumptions and unknowns for Sprint 19 features **b
 
 **Total Unknowns:** 26
 **By Priority:**
-- Critical: 7 (unknowns that could derail sprint)
-- High: 10 (unknowns requiring upfront research)
-- Medium: 6 (unknowns that can be resolved during implementation)
-- Low: 3 (nice-to-know, low impact)
+- Critical: 8 (unknowns that could derail sprint)
+- High: 13 (unknowns requiring upfront research)
+- Medium: 5 (unknowns that can be resolved during implementation)
+- Low: 0 (nice-to-know, low impact; none currently identified)
 
 **By Category:**
 - Category 1 (MCP Infeasibility Bug Fixes): 3 unknowns
