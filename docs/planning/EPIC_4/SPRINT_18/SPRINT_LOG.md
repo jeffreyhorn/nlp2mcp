@@ -1099,14 +1099,14 @@ amc(c,s,"total") = sum(i, amc(c,s,i)) + ...  * Creates "total" at runtime
 
 **Day 7-8 Investigation Results:**
 - **2 models FIXED**: blend (now solves), sample (translates, numerical issue)
-- **8 models ARCHITECTURAL**: Cannot be fixed without parser/KKT generation changes
+- **1 model EXCLUDED**: mingamma (gamma not convex, GAMS lacks psi function)
+- **7 models ARCHITECTURAL**: Cannot be fixed without parser/KKT generation changes
 
 **Architectural Issues Breakdown:**
 - **Cross-indexed sums (ISSUE_670)**: 6 models (abel, qabel, chenery, mexss, orani, and partial issue in robert)
-- **Table parsing limitations**: 2 models
+- **Table parsing limitations**: 2 models (like, robert)
   - ISSUE_392 (table `+` continuation): like
   - ISSUE_399 (table description as header): robert
-- **Missing GAMS function**: 1 model (mingamma - psi function)
 
 ### Key Finding: Day 7 Fix Impact
 
@@ -1132,6 +1132,117 @@ The stale MCP files in `data/gamslib/mcp/` don't reflect the Day 7 fix. Regenera
 - Document architectural issues in detail
 - Update issue files with findings
 - Assess priority of parser fixes (ISSUE_392, ISSUE_399) vs KKT generation fixes (ISSUE_670)
+
+---
+
+## Day 9: Issue Documentation + Architectural Analysis (2026-02-11)
+
+### Objectives
+- [x] Document all findings from Days 7-8 as formal issue files
+- [x] Categorize architectural limitations
+- [x] Update KNOWN_UNKNOWNS.md with Sprint 18 findings
+- [x] Organize docs/issues/ directory
+
+### Work Completed
+
+#### 1. Extended ISSUE_670 (Cross-Indexed Sums)
+
+Updated `docs/issues/ISSUE_670_cross-indexed-sums-error-149.md` with comprehensive per-model analysis:
+
+| Model | Original Error | After Day 7 Fix | Root Cause |
+|-------|----------------|-----------------|------------|
+| abel | E149 | E149 | `ku` subset in sum over `(m__,mp)` |
+| qabel | E149 | E149 | Same as abel (quadratic version) |
+| chenery | E149 | E149 | Cross-indexed sums in CES functions |
+| mexss | E170/E171 | E149 | `a(c,p)` where `c` not in equation domain |
+| orani | E170/E171 | E149 | Cross-indexed sums in stationarity equations |
+| robert | E170 | E170/E149 | Table parsing + cross-indexed sums |
+
+**Classification:** ARCHITECTURAL - Requires KKT stationarity builder changes to wrap uncontrolled indices in sums. Estimated effort: High (8-16 hours).
+
+#### 2. Verified ISSUE_676 (Gamma/Loggamma)
+
+Confirmed `docs/issues/completed/ISSUE_676_mingamma-builtin-function-confusion.md` is complete with:
+- Resolution details (gamma/loggamma differentiation removed)
+- Clear error message when attempting to differentiate gamma functions
+- mingamma excluded from test candidates
+
+#### 3. Updated Table Parsing Issues
+
+**ISSUE_392 (Table Continuation):**
+- Already comprehensive with Day 7 findings
+- Affects `like` model (93.5% data loss)
+- Classification: ARCHITECTURAL (parser semantic/edge-case handling change needed; grammar rule exists)
+
+**ISSUE_399 (Table Description as Header):**
+- Updated with Day 8 findings about `robert` model
+- Affects `robert` model (55% data loss)
+- Classification: ARCHITECTURAL (parser handler change needed)
+
+#### 4. Updated KNOWN_UNKNOWNS.md
+
+Added Sprint 18 Day 9 update section with:
+- 3 new unknowns discovered during Days 7-8
+- Unknown 5.1: Cross-indexed sums (ISSUE_670) - 6 models
+- Unknown 5.2: Table parsing limitations (ISSUE_392, ISSUE_399) - 2 models (like, robert)
+- Unknown 5.3: GAMS lacks psi function (ISSUE_676) - RESOLVED
+
+Updated summary statistics: 27 total unknowns (24 original + 3 new)
+
+#### 5. Organized docs/issues/ Directory
+
+**Moved to completed/:**
+- `docs/issues/completed/ISSUE_674_mexss-sample-wildcard-domain-missing-elements.md` (resolved by Day 7 fix)
+
+**GitHub Issues Updated:**
+- Closed #674 with resolution comment
+
+**Active Issues (remaining in docs/issues/):**
+| Issue | Status | Reason |
+|-------|--------|--------|
+| ISSUE_392 | Open | Parser semantic handler change needed (grammar exists) |
+| ISSUE_399 | Open | Parser handler change needed |
+| ISSUE_670 | Open | KKT architectural change needed |
+| ISSUE_671 | Partially Resolved | E170/E171 fixed, E149 remains |
+| ISSUE_672 | Open | MCP pairing issue (alkyl, bearing) |
+
+### Summary: Sprint 18 Path Syntax Error Final Status
+
+| Model | Error | Root Cause | Status | Issue |
+|-------|-------|------------|--------|-------|
+| abel | E149 | Cross-indexed sums | ❌ Architectural | ISSUE_670 |
+| blend | E171 | Wildcard domain | ✅ **FIXED Day 7** | - |
+| chenery | E149 | Cross-indexed sums | ❌ Architectural | ISSUE_670 |
+| like | E170 | Table continuation | ❌ Architectural | ISSUE_392 |
+| mexss | E149 | Cross-indexed sums | ❌ Architectural | ISSUE_670 |
+| mingamma | E140 | GAMS lacks psi | ✅ **Excluded** | ISSUE_676 |
+| orani | E149 | Cross-indexed sums | ❌ Architectural | ISSUE_670 |
+| qabel | E149 | Cross-indexed sums | ❌ Architectural | ISSUE_670 |
+| robert | E170 | Table description | ❌ Architectural | ISSUE_399, ISSUE_670 |
+| sample | E171 | Wildcard domain | ✅ **FIXED Day 7** | - |
+
+### Sprint 18 Days 7-9 Net Results
+
+- **2 models FIXED**: blend (now solves), sample (translates, numerical issue)
+- **1 model EXCLUDED**: mingamma (gamma not convex, GAMS lacks psi)
+- **7 models ARCHITECTURAL**: Require parser or KKT generation changes
+
+### Architectural Issue Priorities for Future Sprints
+
+| Priority | Issue | Models | Effort | ROI |
+|----------|-------|--------|--------|-----|
+| 1 | ISSUE_670 (Cross-indexed sums) | 6 | High (8-16h) | High |
+| 2 | ISSUE_392 (Table continuation) | 1 | Medium (2-4h) | Low |
+| 3 | ISSUE_399 (Table description) | 1 | Medium (2-4h) | Low |
+| 4 | ISSUE_672 (MCP pairing) | 2 | Medium (4-6h) | Medium |
+
+### Day 9 Summary
+
+Completed comprehensive documentation of Sprint 18 findings:
+- All 10 path_syntax_error models categorized and documented
+- Issue files extended with per-model analysis
+- KNOWN_UNKNOWNS.md updated with new findings
+- Clear roadmap for future sprint prioritization
 
 ---
 
