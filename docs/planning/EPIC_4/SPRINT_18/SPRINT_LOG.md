@@ -1540,6 +1540,106 @@ Code review and cleanup complete:
 
 ---
 
+## Day 14: Sprint Completion and Retrospective (2026-02-12)
+
+### Objectives
+- [x] Create release tag v1.2.0
+- [x] Write sprint retrospective
+- [x] Prepare handoff notes for Sprint 19
+- [x] Final SPRINT_LOG.md entry
+
+### Work Completed
+
+#### Release Tag Created
+- Tag: `v1.2.0` created on commit 6359dec (main)
+- Pushed to origin successfully
+- Previous release: v1.1.0
+
+#### Sprint 18 Retrospective
+
+**What Went Well:**
+1. **Systematic error analysis** — The path_syntax_error deep dive (Days 4-5) was highly effective, categorizing all 22 errors and identifying root causes
+2. **Emission layer fixes** — High ROI from focusing on emission rather than parser changes (10 fixes, +7 models)
+3. **Checkpoint methodology** — Three checkpoints (Days 1, 6, 11) provided clear progress visibility and scope adjustment points
+4. **Issue documentation** — Architectural issues were well-documented with per-model analysis (ISSUE_670, 392, 399, 672)
+5. **Known Unknowns process** — 24 unknowns documented upfront; all critical/high items verified before implementation
+6. **Regression testing** — Zero regressions across 3294 tests throughout sprint
+
+**What Could Improve:**
+1. **Original scope overestimated parser changes** — PLAN.md allocated significant time to parser improvements that were deprioritized; emission fixes had higher ROI
+2. **Metrics clarity** — Initial path_syntax_error counts included mingamma before exclusion decision; standardized on "excluding mingamma" mid-sprint
+3. **Day 11 vs final metrics discrepancy** — Day 11 reported 22→8, but final was 22→7; minor but required documentation fixes
+
+**Lessons Learned:**
+1. **Emission-layer fixes have higher ROI than parser changes** for path_syntax_error reduction
+2. **Cross-indexed sums (ISSUE_670) is a significant architectural barrier** affecting 6 models; requires parser/KKT redesign
+3. **Wildcard handling is complex** — Three separate fixes needed (domain preservation, quoting, table data)
+4. **Table parsing edge cases** need grammar-level work (continuation `+`, description-as-header)
+
+**Sprint Statistics:**
+- Total PRs merged: 6 (PRs #681-686)
+- Total commits: ~50
+- Source files modified: 16 Python files
+- Lines changed: +1,779 / -309
+- Test count: 3294 (unchanged)
+- Sprint duration: 14 days
+
+### Handoff Notes for Sprint 19
+
+**Priority 1: Cross-Indexed Sums (ISSUE_670)**
+- 6 models blocked: abel, qabel, chenery, mexss, orani, robert
+- Root cause: Stationarity equations contain uncontrolled indices from sums over non-domain sets
+- Requires: Parser enhancement to track sum domains + KKT generation changes
+- Estimated effort: 8-12 hours
+
+**Priority 2: Table Continuation (ISSUE_392)**
+- 1 model blocked: like
+- Root cause: Parser doesn't capture `+` continuation rows in tables
+- Requires: Grammar enhancement for table continuation syntax
+- Estimated effort: 3-4 hours
+
+**Priority 3: Table Description as Header (ISSUE_399)**
+- 1 model blocked: robert
+- Root cause: Table descriptions incorrectly parsed as column headers
+- Requires: Parser fix to distinguish description from headers
+- Estimated effort: 2-3 hours
+
+**Priority 4: MCP Pairing (ISSUE_672)**
+- 2 models blocked: alkyl, bearing
+- Root cause: Complementarity pair inconsistencies in KKT generation
+- Requires: Investigation and KKT fixes
+- Estimated effort: 4-6 hours
+
+**Reference Documents:**
+- `docs/planning/EPIC_4/SPRINT_18/FIX_ROADMAP.md` — Prioritized roadmap
+- `docs/issues/ISSUE_670_cross-indexed-sums-error-149.md` — Per-model analysis
+- `docs/releases/v1.2.0.md` — Release notes
+
+### Day 14 Summary
+
+Sprint 18 complete:
+- Release v1.2.0 tagged and pushed
+- Retrospective documented with lessons learned
+- Handoff notes prepared for Sprint 19
+- All deliverables achieved
+
+---
+
+## Sprint 18 Complete
+
+**Final Metrics:**
+| Metric | v1.1.0 Baseline | v1.2.0 Final | Change |
+|--------|----------------|--------------|--------|
+| Parse | 61/159 (38.4%) | 61/159 (38.4%) | — |
+| Translate | 48/61 (78.7%) | 48/61 (78.7%) | — |
+| Solve | 13/48 (27.1%) | 20/48 (41.7%) | **+7** |
+| path_syntax_error | 22 | 7 | **-15** |
+| Full Pipeline | 4/159 (2.5%) | 7/159 (4.4%) | **+3** |
+
+**Release:** v1.2.0 — 2026-02-12
+
+---
+
 <!-- Template for daily entries:
 
 ### Day N: [Title] (YYYY-MM-DD)
