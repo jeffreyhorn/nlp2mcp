@@ -33,7 +33,7 @@ During domain violation investigation, we confirmed this issue blocks the `rober
 **Generated MCP file shows:**
 ```gams
 Parameters
-    c(p,t) /low.'expected profits' 10.0, medium.'expected profits' 20.0, high.'expected profits' 28.0/
+    c(p,t) /'1'.'expected profits' 2.0, low.'expected profits' 25.0, medium.'expected profits' 50.0, high.'expected profits' 75.0/
 ```
 
 Instead of:
@@ -138,7 +138,7 @@ In `src/ir/parser.py`, the `_handle_table_block` method collects all tokens from
 - [ ] Tables with DESCRIPTION descriptions parse correctly
 - [ ] Column headers are extracted correctly (numeric and alphanumeric)
 - [ ] All values map to correct row/column combinations
-- [ ] Test case `test_large_table_like_gms_pattern` passes
+- [ ] An enabled unit test covers large GAMS-style tables with description headers and passes
 - [ ] Existing table tests continue to pass
 - [ ] robert.gms table `c(p,t)` parses all 9 values correctly
 

@@ -43,16 +43,16 @@ During Sprint 18 Days 7-8 domain investigation, we identified that **6 models** 
 
 **Constraint Pattern:**
 ```gams
-* Original constraint uses cross-indexed sum
-tb(n,k).. e(n,k) =e= ... + sum((np,ku), a(n,np)*f(np,ku,k)*g(ku)) + ...
+* Original constraint uses cross-indexed sum with dynamic subset ku
+stateq(n,k).. x(n,k+1) =e= sum(np, a(n,np)*x(np,k)) + sum(m, b(n,m)*u(m,k))
 ```
 
-**Generated Stationarity Issue:**
+**Generated Stationarity Issue (from abel_mcp.gms):**
 ```gams
-stat_e(i).. ... + ((-1) * h(t)) * lam_tb + ...
+stat_x(n,k).. 0.5 * sum(np, 0) + 0.5 * sum((ku,m,mp), 0) + ((-1) * (a(n,np) + sum(m, 0))) * nu_stateq(n,k) =E= 0;
 ```
 
-The equation `stat_e(i)` is indexed by `i`, but references `h(t)` where `t` is not in the equation domain. The `ku` dynamic subset in the sum creates uncontrolled indices.
+The equation `stat_x(n,k)` references `a(n,np)` where `np` is not a controlled index in the equation domain. The cross-indexed sum in the original constraint produces derivative terms with uncontrolled indices.
 
 **Classification:** ARCHITECTURAL - Requires KKT stationarity builder changes to wrap uncontrolled indices in sums.
 

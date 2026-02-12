@@ -1698,7 +1698,7 @@ During the Sprint 18 Days 7-8 domain violation investigation, the following arch
 
 **Finding:** Two distinct table parsing limitations were confirmed:
 
-1. **ISSUE_392 (Table Continuation Syntax):** The parser does not support `+` continuation lines in GAMS tables. Affects `like` model with 93.5% data loss.
+1. **ISSUE_392 (Table Continuation Syntax):** The parser mishandles the specific `+` continuation pattern used in the `like` GAMSLIB model (large tables with `NUMBER` column headers), causing ~93.5% data loss, even though general `+` continuation syntax is supported by the grammar and tests.
 
 2. **ISSUE_399 (Table Description as Header):** When a table has a description string, the parser incorrectly treats it as a column header. Affects `robert` model with 55% data loss.
 

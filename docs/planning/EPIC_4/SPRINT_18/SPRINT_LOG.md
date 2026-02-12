@@ -1172,7 +1172,7 @@ Confirmed `docs/issues/completed/ISSUE_676_mingamma-builtin-function-confusion.m
 **ISSUE_392 (Table Continuation):**
 - Already comprehensive with Day 7 findings
 - Affects `like` model (93.5% data loss)
-- Classification: ARCHITECTURAL (parser grammar change needed)
+- Classification: ARCHITECTURAL (parser semantic/edge-case handling change needed; grammar rule exists)
 
 **ISSUE_399 (Table Description as Header):**
 - Updated with Day 8 findings about `robert` model
