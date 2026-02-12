@@ -4,18 +4,54 @@
 
 **Issue:** The orani model uses dynamic domain extension where computed parameter assignments add new elements to wildcard domains. This is not supported by the current emission logic.
 
-**Status:** Open  
+**Status:** Partially Resolved (E170/E171 fixed, E149 remains - see ISSUE_670)  
 **Severity:** Medium - Affects 1 model  
 **Affected Models:** orani  
-**Date:** 2026-02-10
+**Date:** 2026-02-10  
+**Updated:** 2026-02-11 (Sprint 18 Day 9)
 
 ---
 
-## Problem Summary
+## Sprint 18 Day 7-8 Update
 
-The orani model declares parameters with wildcard `*` domains and then extends those domains dynamically through assignment statements. The current emission logic infers wildcard elements only from the table data, missing dynamically added elements.
+### Day 7 Fix: Wildcard Domain Preservation (PR #680)
 
-GAMS Errors:
+The Sprint 18 Day 7 fix (PR #680) preserves wildcard `*` domains in parameter declarations instead of replacing them with generated named sets. This resolves the E170/E171 domain violation errors.
+
+**Before Day 7 Fix:**
+```gams
+Sets
+    wc_amc_d3 /agric, duty, exp, families, manuf/
+;
+Parameters
+    amc(c,s,wc_amc_d3) /...data.../
+;
+amc(c,s,"total") = ...;  * ERROR: "total" not in wc_amc_d3
+```
+
+**After Day 7 Fix:**
+```gams
+Parameters
+    amc(c,s,*) /...data.../
+;
+amc(c,s,"total") = ...;  * OK: "total" allowed by wildcard
+```
+
+### Remaining Issue: E149 Cross-Indexed Sums (ISSUE_670)
+
+After the Day 7 fix resolves E170/E171 errors, the orani model still fails with E149 "Uncontrolled set entered as constant" due to cross-indexed sums in the stationarity equations. This is an architectural issue documented in ISSUE_670.
+
+**Current Status:**
+- E170/E171: ✅ FIXED (Day 7 wildcard preservation)
+- E149: ❌ ARCHITECTURAL (cross-indexed sums)
+
+---
+
+## Original Problem Summary
+
+The orani model declares parameters with wildcard `*` domains and then extends those domains dynamically through assignment statements. The original emission logic inferred wildcard elements only from the table data, missing dynamically added elements.
+
+Original GAMS Errors (before Day 7 fix):
 - Error 170: Domain violation for element
 - Error 171: Domain violation for set
 
@@ -32,14 +68,8 @@ nlp2mcp data/gamslib/raw/orani.gms -o data/gamslib/mcp/orani_mcp.gms
 # Run GAMS
 cd data/gamslib/mcp && gams orani_mcp.gms lo=2
 
-# Check errors
-grep -E "170|171" orani_mcp.lst | head -10
-```
-
-**Error Output:**
-```
-**** 170  Domain violation for element
-**** 171  Domain violation for set
+# Check errors (after Day 7 fix, expect E149 only)
+grep -E "149" orani_mcp.lst | head -10
 ```
 
 ### Root Cause Analysis
@@ -57,103 +87,27 @@ Table amc(c,s,*) 'accounting matrix for commodities'
 amc(c,s,"total") = sum(i, amc(c,s,i)) + amc(c,s,"families") + amc(c,s,"exp") + amc(c,s,"duty");
 ```
 
-The table data only contains elements: `agric`, `manuf`, `families`, `exp`, `duty`
-
-But the assignment adds `"total"` which is not in the inferred wildcard set.
-
-### Generated MCP Issue
-
-The emitter creates:
-```gams
-Sets
-    wc_amc_d3 /agric, duty, exp, families, manuf/
-;
-
-Parameters
-    amc(c,s,wc_amc_d3) /...data.../
-;
-
-amc(c,s,"total") = ...;  * ERROR: "total" not in wc_amc_d3
-```
+The Day 7 fix preserves `amc(c,s,*)` which allows the dynamic `"total"` element.
 
 ---
 
-## Technical Details
+## Resolution Summary
 
-### Current Wildcard Inference
-
-`_infer_wildcard_elements()` in `src/emit/original_symbols.py` only looks at parameter values (table data):
-
-```python
-for key_tuple in param_def.values.keys():
-    for pos in wildcard_positions:
-        if pos < len(expanded_key):
-            inferred[pos].add(expanded_key[pos])
-```
-
-This misses elements that are added via assignment statements like `amc(c,s,"total") = ...`.
-
-### What Would Be Needed
-
-1. **Scan assignment statements**: Look for parameter assignments that use indices not in the current domain
-2. **Extend wildcard sets**: Add those new elements to the inferred wildcard set
-3. **Handle computed element names**: Some assignments may compute element names dynamically
+| Error | Status | Fix |
+|-------|--------|-----|
+| E170/E171 (Domain violation) | ✅ FIXED | Day 7 wildcard preservation (PR #680) |
+| E149 (Uncontrolled set) | ❌ ARCHITECTURAL | Requires ISSUE_670 fix |
 
 ---
 
-## Proposed Solution
+## Related Issues
 
-### Option 1: Static Analysis of Assignments
-
-Before emitting wildcard sets, scan all parameter assignment statements for new elements:
-
-```python
-def _infer_wildcard_elements_from_assignments(model_ir, param_name, wildcard_positions):
-    """Also check assignment statements for additional elements."""
-    elements = set()
-    for stmt in model_ir.statements:
-        if isinstance(stmt, ParameterAssignment) and stmt.name == param_name:
-            for pos in wildcard_positions:
-                if pos < len(stmt.indices):
-                    idx = stmt.indices[pos]
-                    if isinstance(idx, str):  # Literal element
-                        elements.add(idx.strip('"').strip("'"))
-    return elements
-```
-
-### Option 2: Use Universal Wildcard
-
-Keep `*` as the domain instead of replacing with an inferred set:
-
-```gams
-Parameters
-    amc(c,s,*) /...data.../
-;
-```
-
-This allows any element but loses domain checking.
-
-### Implementation Location
-
-- `src/emit/original_symbols.py`: `_infer_wildcard_elements()` and emission logic
-
----
-
-## Workaround
-
-Currently none. The orani model cannot be translated to valid MCP format.
-
----
-
-## Additional Issues in Orani
-
-The orani model also has other emission issues:
-- `theta`, `elevel`, `mlevel` may be incorrectly classified (scalars vs sets)
-- Complex computed parameter assignments may have domain issues
+- **ISSUE_670**: Cross-indexed sums produce uncontrolled set error 149 (architectural)
+- **ISSUE_674**: mexss/sample wildcard domain (fully resolved by Day 7 fix)
 
 ---
 
 ## References
 
-- GAMS Wildcard Domain Documentation
-- Sprint 18 Day 5 analysis in SPRINT_LOG.md
+- Sprint 18 Days 5, 7-8 analysis in SPRINT_LOG.md
+- PR #680: Wildcard domain preservation fix

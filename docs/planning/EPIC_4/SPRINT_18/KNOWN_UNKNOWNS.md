@@ -1662,3 +1662,90 @@ This table shows which prep tasks (from PREP_PLAN.md) verify which unknowns:
 ## Document History
 
 - February 5, 2026: Initial creation (pre-Sprint 18, Task 1 of PREP_PLAN.md)
+- February 11, 2026: Sprint 18 Day 9 update - Added new unknowns discovered during Days 7-8
+
+---
+
+## Sprint 18 Day 9 Update: New Findings
+
+### Newly Discovered Unknowns
+
+During the Sprint 18 Days 7-8 domain violation investigation, the following architectural issues were confirmed:
+
+#### NEW Unknown 5.1: Cross-Indexed Sums in Stationarity Equations (ISSUE_670)
+
+**Priority:** Critical - Affects 6 models
+
+**Status:** ✅ CONFIRMED ARCHITECTURAL
+
+**Finding:** When constraints contain sums over indices that also appear in different positions of referenced symbols (cross-indexed sums), the KKT stationarity equations produce expressions with "uncontrolled" indices - indices that appear in the equation body but not in the equation's domain.
+
+**Affected Models:** abel, qabel, chenery, mexss, orani, robert (partial)
+
+**GAMS Error:** E149 "Uncontrolled set entered as constant"
+
+**Resolution Path:** Requires architectural changes to `src/kkt/stationarity.py` to wrap uncontrolled indices in appropriate sum aggregations.
+
+**Estimated Effort:** High (8-16 hours) - deferred to future sprint
+
+---
+
+#### NEW Unknown 5.2: Table Parsing Limitations (ISSUE_392, ISSUE_399)
+
+**Priority:** Medium - Affects 2 models
+
+**Status:** ✅ CONFIRMED ARCHITECTURAL
+
+**Finding:** Two distinct table parsing limitations were confirmed:
+
+1. **ISSUE_392 (Table Continuation Syntax):** The parser does not support `+` continuation lines in GAMS tables. Affects `like` model with 93.5% data loss.
+
+2. **ISSUE_399 (Table Description as Header):** When a table has a description string, the parser incorrectly treats it as a column header. Affects `robert` model with 55% data loss.
+
+**Affected Models:**
+- like: ISSUE_392 (E170 domain violation)
+- robert: ISSUE_399 (E170 domain violation) + ISSUE_670 (E149)
+
+**Resolution Path:** Requires parser grammar changes in `src/gams/gams_grammar.lark` and semantic handler updates in `src/ir/parser.py`.
+
+**Estimated Effort:** Medium (2-4 hours each) - candidates for future sprint
+
+---
+
+#### NEW Unknown 5.3: GAMS Lacks Digamma/Psi Function (ISSUE_676)
+
+**Priority:** Low - Affects 1 model
+
+**Status:** ✅ RESOLVED
+
+**Finding:** The derivative rules for `gamma(x)` and `loggamma(x)` require the digamma/psi function, which GAMS does not have.
+
+**Affected Model:** mingamma
+
+**Resolution:** Implemented in Sprint 18 Day 8:
+- Removed gamma/loggamma differentiation from `src/ad/derivative_rules.py`
+- Added clear error message for models that attempt to differentiate gamma functions
+- Excluded mingamma from test candidates (gamma is not convex on x>0)
+
+---
+
+### Updated Summary Statistics
+
+**Total Unknowns:** 27 (was 24)
+- Original: 24 unknowns (all resolved or verified)
+- New: 3 unknowns discovered during Sprint 18
+
+**Sprint 18 Path Syntax Error Resolution:**
+
+| Category | Models | Status |
+|----------|--------|--------|
+| FIXED (Day 7) | blend, sample | ✅ Wildcard domain preservation |
+| ARCHITECTURAL | abel, qabel, chenery, mexss, orani | Cross-indexed sums (ISSUE_670) |
+| ARCHITECTURAL | like | Table continuation (ISSUE_392) |
+| ARCHITECTURAL | robert | Table description + cross-indexed sums (ISSUE_399, ISSUE_670) |
+| RESOLVED | mingamma | Gamma differentiation removed (ISSUE_676) |
+
+**Net Result:**
+- 2 models fixed (blend, sample)
+- 8 models remain blocked by architectural issues
+- Clear documentation of root causes for future sprints
