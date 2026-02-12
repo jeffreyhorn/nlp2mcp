@@ -28,7 +28,7 @@ During domain violation investigation, we confirmed this issue blocks the `rober
   ```
 - The parser treats `'expected profits'` as a column header
 - Only 4 values are captured instead of 9 (3 rows × 3 columns)
-- The captured values are the first value from each row (25, 50, 75 for low, medium, high) mapped to the erroneous `'expected profits'` column
+- The captured entries include a spurious `'1'.'expected profits' 2.0` from parsing confusion, plus the first value from each data row (25, 50, 75 for low, medium, high) mapped to the erroneous `'expected profits'` column
 - This causes 55% data loss
 
 **Generated MCP file shows:**
@@ -64,7 +64,7 @@ Table p(i,*) 'frequency of pressure'
 **Actual behavior:**
 - Description `'frequency of pressure'` is treated as a column header
 - Only one column `'frequency of pressure'` is recognized
-- Only last value in row is stored: `pressure,'frequency of pressure' -> 105`
+- Only the last value in row is stored: `pressure,'frequency of pressure' -> 110`
 
 ## Affected Models
 

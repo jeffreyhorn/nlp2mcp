@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#671](https://github.com/jeffreyhorn/nlp2mcp/issues/671)
 
-**Issue:** The orani model uses dynamic domain extension where computed parameter assignments add new elements to wildcard domains. This is not supported by the current emission logic.
+**Issue:** The orani model uses dynamic domain extension where computed parameter assignments add new elements to wildcard domains. This was not supported by the original emission logic, but was partially resolved by PR #680 (Day 7 wildcard fix). The remaining blocker is E149 from cross-indexed sums (ISSUE_670).
 
 **Status:** Partially Resolved (E170/E171 fixed, E149 remains - see ISSUE_670)  
 **Severity:** Medium - Affects 1 model  
