@@ -31,7 +31,7 @@ The nlp2mcp pipeline was tested against **159** GAMSLIB models on **2026-02-11**
 | Parse             | 159         | 61        | 98        | 38.4%          |
 | Translate         | 61          | 48        | 13        | 78.7%          |
 | Solve             | 48          | 20        | 28        | 41.7%          |
-| Compare           | 12          | 7         | 5         | 58.3%          |
+| Compare           | 13          | 7         | 6         | 53.8%          |
 | **Full Pipeline** | **159**     | **7**     | **152**   | **4.4%**       |
 
 *Note: 1 model (mingamma) excluded from testing - GAMS lacks required psi function.*
