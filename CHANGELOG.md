@@ -7,6 +7,160 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-02-12
+
+### Release v1.2.0 - Sprint 18 Complete
+
+**Epic 4 Sprint 18** — Path Syntax Error Fixes & Emission Improvements
+
+#### Sprint 18 Final Metrics
+
+| Metric | Sprint 17 Baseline | Sprint 18 Final | Change |
+|--------|-------------------|-----------------|--------|
+| Parse Rate | 38.8% (62/160) | 38.4% (61/159*) | -1 model |
+| Translate Rate | 80.7% (50/62) | 78.7% (48/61*) | -2 models |
+| Solve Rate | 26.0% (13/50) | 41.7% (20/48) | **+7 models** |
+| path_syntax_error | 22 | 7 | **-15 errors** |
+| Full Pipeline | 4/160 (2.5%) | 7/159 (4.4%) | **+3 models** |
+
+*Note: mingamma excluded from testing (GAMS lacks psi function)*
+
+**20 Solving Models:** blend, chem, demo1, fdesign, harker, himmel11, himmel16, hs62, mathopt1, mathopt2, pak, pollut, rbrock, sample, scarfmcp, simple_nlp, transmcp, wall, wallmcp, weapons
+
+---
+
+### Sprint 18 Summary
+
+Sprint 18 focused on eliminating path_syntax_error failures in the solve stage. Through systematic analysis and targeted fixes, we reduced these errors from 22 to 7, with all remaining issues classified as architectural limitations requiring parser or KKT generation changes.
+
+#### Key Achievements
+
+1. **+7 solving models** (13 → 20)
+2. **-15 syntax errors** (22 → 7, excluding mingamma)
+3. **+3 full pipeline matches** (4 → 7)
+4. **10 distinct fixes** implemented across emission, parsing, and KKT layers
+5. **4 architectural issues** documented for future sprints
+
+---
+
+### Sprint 18 Day 2: P1 Element Literal Quoting + P3 .fx Bound Names
+
+**Branch:** `sprint18/day2-p1-p3-fixes`
+**Status:** ✅ COMPLETE
+
+#### Fixes
+
+##### P1: Element Literal Quoting (7 models)
+- **Problem:** Multi-character all-lowercase element literals (e.g., `cod`, `land`, `apr`, `revenue`) treated as domain variables and emitted without quotes, causing GAMS Error 120/340
+- **Solution:** Context-aware quoting using `domain_vars` parameter passed through emit pipeline
+- **Files:** `src/emit/expr_to_gams.py`, `src/emit/equations.py`, `src/emit/original_symbols.py`, `src/ir/parser.py`
+
+##### P3: Invalid .fx Bound Names (1 model - himmel16)
+- **Problem:** Per-element `.fx` bounds generated names with parentheses (e.g., `x_fx(1)`) causing GAMS Error 185
+- **Solution:** Underscore-based naming (`x_fx_1`) for valid GAMS identifiers
+- **Files:** `src/ir/normalize.py`
+
+---
+
+### Sprint 18 Day 3: P2 Lag/Lead Quoting + P4 Dynamic Subsets + P5 Variable Initialization
+
+**Branch:** `sprint18/day3-p2-p4-p5-fixes`
+**Status:** ✅ COMPLETE
+
+#### Fixes
+
+##### P2: Multi-letter Lag/Lead Expression Quoting (2 models - robert, pak)
+- **Problem:** Lag/lead expressions with multi-letter bases (`tt+1`, `te+1`) quoted as `"tt+1"` causing Error 149
+- **Solution:** Type-aware `_format_mixed_indices()` that handles `IndexOffset` objects directly
+- **Files:** `src/emit/expr_to_gams.py`
+
+##### P4: Dynamic Subset Assignment Emission (2 models - abel, qabel)
+- **Problem:** Dynamic subsets like `ku(k) = yes$(ord(k) < card(k))` parsed but not stored or emitted
+- **Solution:** Added `SetAssignment` dataclass and `emit_set_assignments()` function
+- **Files:** `src/ir/symbols.py`, `src/ir/model_ir.py`, `src/ir/parser.py`, `src/emit/original_symbols.py`, `src/emit/emit_gams.py`
+
+##### P5: Variable Initialization for Division by Zero (1 model - chem)
+- **Problem:** Variables in denominators (from `log(x)` or `1/x` derivatives) caused division by zero at model generation
+- **Solution:** Initialize variables from `.l` values, lower bounds, or reasonable defaults
+- **Files:** `src/emit/emit_gams.py`
+
+---
+
+### Sprint 18 Days 4-5: Path Syntax Error Deep Dive
+
+**Branch:** `sprint18/day4-path-syntax-1`
+**Status:** ✅ COMPLETE
+
+#### Fixes
+
+##### Case Sensitivity in Bound Multiplier Keys (2 models - alkyl, bearing)
+- **Problem:** Bound multiplier keys used original case from `.items()` but lookups used lowercase
+- **Solution:** Use `.keys()` for variable iteration in `partition.py`
+- **Files:** `src/kkt/partition.py`
+
+##### Table Wildcard Data Emission (2 models - chenery, orani)
+- **Problem:** Tables with wildcard `*` domains had dimension mismatches due to dotted row headers
+- **Solution:** Added `_expand_table_key()` to expand dotted headers (e.g., `'low.a.distr'` → `('low', 'a', 'distr')`)
+- **Files:** `src/emit/original_symbols.py`
+
+##### Dollar Conditional Parenthesization
+- **Problem:** Dollar conditionals with comparisons emitted `expr$sig(i) <> 0` (invalid syntax)
+- **Solution:** Parenthesize condition when it's Binary/Unary/DollarConditional expression
+- **Files:** `src/emit/expr_to_gams.py`
+
+##### Wildcard '*' Quoting
+- **Problem:** Wildcard `*` in parameter domains quoted as `'*'` causing GAMS Error 2/185
+- **Solution:** Never quote `*` in `_quote_symbol()`
+- **Files:** `src/emit/original_symbols.py`
+
+---
+
+### Sprint 18 Day 7: Wildcard Domain Fix
+
+**Branch:** `sprint18/day7-domain-investigation`
+**Status:** ✅ COMPLETE
+
+#### Fixes
+
+##### Preserve Wildcard Domains (2 models - blend, sample)
+- **Problem:** Parameters declared with wildcard `*` had it replaced with generated named sets, causing Error 171
+- **Solution:** Keep wildcard domains as `*` in declaration, matching original GAMS behavior
+- **Files:** `src/emit/original_symbols.py`
+
+---
+
+### Sprint 18 Days 7-9: Architectural Issues Identified
+
+The following issues were identified as requiring architectural changes beyond Sprint 18 scope:
+
+| Issue | Models | Root Cause |
+|-------|--------|------------|
+| ISSUE_670: Cross-indexed sums | 6 (abel, qabel, chenery, mexss, orani, robert) | Stationarity equations contain uncontrolled indices from sums over non-domain sets |
+| ISSUE_392: Table continuation | 1 (like) | Parser doesn't fully capture `+` continuation rows |
+| ISSUE_399: Table description as header | 1 (robert) | Table descriptions incorrectly parsed as column headers |
+| ISSUE_672: MCP pairing | 2 (alkyl, bearing) | Complementarity pair inconsistencies |
+
+See `docs/planning/EPIC_4/SPRINT_18/FIX_ROADMAP.md` for Sprint 19 prioritization.
+
+---
+
+### Sprint 18 Documentation
+
+#### Added
+- `docs/planning/EPIC_4/SPRINT_18/FIX_ROADMAP.md` - Prioritized roadmap for Sprint 19+
+- Extended `docs/issues/ISSUE_670_cross-indexed-sums-error-149.md` with per-model analysis
+
+#### Updated
+- `docs/testing/GAMSLIB_STATUS.md` - Sprint 18 final metrics
+- `docs/planning/EPIC_4/SPRINT_18/SPRINT_LOG.md` - Complete 12-day log
+- `docs/planning/EPIC_4/SPRINT_18/KNOWN_UNKNOWNS.md` - Sprint 18 findings
+
+#### Resolved Issues
+- ISSUE_674: Wildcard domain missing elements (fixed Day 7)
+- ISSUE_676: Gamma/loggamma differentiation (mingamma excluded)
+
+---
+
 ### Research
 - Plan Sprint 18 detailed schedule — created PLAN.md with expanded scope (~56h over 14 days): removed table data fix (not needed), added set element quoting, bound multiplier, MCP bug fixes (circle, house), and pulled in Sprint 19 items (lexer analysis, fix roadmap, subset preservation, reserved word quoting); defined 3 checkpoints, contingency plans, and regression testing strategy; verified Unknowns 2.7, 2.8 (Task 10 of Sprint 18 Prep)
 - Verify Sprint 18 baseline metrics — confirmed v1.1.0 baseline (Parse 61/160, Translate 42/61, Solve 12/42), verified GAMS 51.3.0 environment, documented baseline commit hash `aed804ae50d2296464b17dfe22b6c8e69edf236d`, verified Unknowns 4.1, 4.3, 4.4 (Task 9 of Sprint 18 Prep)
