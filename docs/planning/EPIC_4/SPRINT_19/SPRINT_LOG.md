@@ -70,21 +70,64 @@ Initialized Sprint 19 infrastructure. Verified all 10 prep task deliverables are
 
 ## Day 1 — Setup + Quick Wins + Checkpoint 0
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-13
+**Time Spent:** ~3h
 
-### PR Entries
+### Summary
 
-_(To be filled during Day 1)_
+Verified baseline, updated error taxonomy with 5 new classification patterns (eliminating all 24 `internal_error` misclassifications), implemented Subcategory G grammar fixes (NUMBER STRING set elements + Table without domain), and confirmed zero regressions.
+
+### Changes
+
+**Grammar fixes (`src/gams/gams_grammar.lark`):**
+- Added `NUMBER STRING -> set_element_with_desc` rule for numeric set elements with descriptions (ganges/gangesx/lop)
+- Added `table_block` alternative without explicit domain for `Table ID STRING table_content+ SEMI` (weapons)
+
+**Parser updates (`src/ir/parser.py`):**
+- Updated `set_element_with_desc` handler for NUMBER STRING case
+- Updated `_handle_table_block` to handle missing domain (infer wildcard `("*", "*")`)
+
+**Error taxonomy (`scripts/gamslib/error_taxonomy.py`):**
+- Added `VALIDATION_CIRCULAR_DEP` category (17th parse category)
+- Added 5 new patterns to `categorize_parse_error()`:
+  1. "has no objective function" → `model_no_objective_def` (12 models)
+  2. "circular dependency" → `validation_circular_dep` (9 models)
+  3. "expects N indices, got M" → `semantic_domain_error` (1 model)
+  4. "not declared as a variable" → `semantic_undefined_symbol` (1 model)
+  5. "unsupported expression type" → `parser_invalid_expression` (1 model)
+
+**Tests (`tests/gamslib/test_error_taxonomy.py`):**
+- Updated category count assertions (16→17, 48→49)
+- Added 5 new test cases for new patterns
+- Added `VALIDATION_CIRCULAR_DEP` import
+
+**Failure analyzer (`src/reporting/analyzers/failure_analyzer.py`):**
+- Added `validation_circular_dep` effort hours (4.0h)
+
+### Checkpoint 0 Assessment
+
+| Criterion | Target | Actual | Met? |
+|-----------|--------|--------|------|
+| All tests pass | 3294+ | 3299 | YES |
+| Pipeline matches baseline | verified | verified | YES |
+| internal_error reclassified | 24 → ≤3 | 24 → 0 | YES (exceeded) |
+| Subcategory G models parsing | 4 new | +1 new (+3 reclassified to lexer_invalid_char) | PARTIAL |
+| Regressions | 0 | 0 | YES |
 
 ### Metrics Snapshot
 
-| Metric | Baseline | Day 1 |
-|--------|----------|-------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Metric | Baseline | Day 1 | Change |
+|--------|----------|-------|--------|
+| Parse success | 61/159 | 62/160 | +1 |
+| lexer_invalid_char | 72 | 72 | 0 |
+| internal_error | 24 | 0 | -24 |
+| Translate success | 48 | 49 | +1 |
+| Solve success | 20 | 20 | 0 |
+| Test count | 3,294 | 3,299 | +5 |
+
+### Notes
+- The 4 Subcategory G models (ganges, gangesx, lop, weapons) all advance past their original set element description errors, but hit new unrelated lexer errors deeper in their files (tab characters, backslash, percent sign). The grammar fixes are working correctly.
+- All 24 former `internal_error` models are now properly classified: 12 `model_no_objective_def`, 9 `validation_circular_dep`, 3 `semantic_undefined_symbol`, 1 `semantic_domain_error`, 1 `parser_invalid_expression`. This exceeds the Day 6 target of ≤5 and the Day 14 target of ≤3.
 
 ---
 

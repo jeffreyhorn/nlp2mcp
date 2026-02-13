@@ -608,6 +608,7 @@
         "missing_include",
         "solver_error",
         "validation_error",
+        "validation_circular_dep",
         "path_solve_normal",
         "path_solve_iteration_limit",
         "path_solve_time_limit",

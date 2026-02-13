@@ -1090,9 +1090,10 @@ class _ModelBuilder:
                     # Simple element: ID or STRING
                     result.append(_token_text(child.children[0]))
                 elif child.data == "set_element_with_desc":
-                    # Element with inline description: SET_ELEMENT_ID STRING or STRING STRING
-                    # Take first token, ignore description (second token)
+                    # Element with inline description: SET_ELEMENT_ID STRING, STRING STRING,
+                    # or NUMBER STRING. Take first token, ignore description (second token).
                     # Sprint 16 Day 7: Handle STRING STRING case (preprocessor quotes hyphenated IDs)
+                    # Sprint 19 Day 1: Handle NUMBER STRING case (numeric set elements with descriptions)
                     # Note: _token_text() already strips quotes from STRING tokens
                     result.append(_token_text(child.children[0]))
                 elif child.data == "set_tuple":
@@ -1543,11 +1544,26 @@ class _ModelBuilder:
         # Extract name and domain
         name = _token_text(node.children[0])
 
-        # Handle table_domain_list which may contain wildcards
-        domain_list_node = node.children[1]
-        domain = []
+        # Sprint 19 Day 1: Handle tables with or without explicit domain
+        # With domain: children = [ID, table_domain_list, (STRING)?, table_content+]
+        # Without domain: children = [ID, (STRING)?, table_content+]
+        domain_list_node = None
+        if (
+            len(node.children) > 1
+            and isinstance(node.children[1], Tree)
+            and node.children[1].data == "table_domain_list"
+        ):
+            domain_list_node = node.children[1]
 
-        for child in domain_list_node.children:
+        domain: list[str] = []
+
+        if domain_list_node is None:
+            # No explicit domain — infer wildcard domains from table structure
+            domain = ["*", "*"]
+        else:
+            pass  # Fall through to existing domain extraction below
+
+        for child in domain_list_node.children if domain_list_node is not None else []:
             if isinstance(child, Tree):
                 if child.data == "explicit_domain":
                     domain.append(_token_text(child.children[0]))

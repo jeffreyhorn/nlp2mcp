@@ -6,7 +6,7 @@ pipeline stages. It provides categorization functions to classify error messages
 and solve outcomes into specific categories.
 
 Categories:
-- 16 parse error categories (4 lexer, 6 parser, 4 semantic, 2 include)
+- 17 parse error categories (4 lexer, 6 parser, 4 semantic, 1 validation, 2 include)
 - 13 translation error categories (3 diff, 3 model, 4 unsupported, 3 codegen)
 - 16 solve outcome categories (6 PATH status, 4 model status, 6 comparison)
 - 2 generic categories (timeout, internal_error)
@@ -31,7 +31,7 @@ from __future__ import annotations
 import re
 
 # =============================================================================
-# Parse Error Categories (16 total)
+# Parse Error Categories (17 total)
 # =============================================================================
 
 # Lexer errors (tokenization)
@@ -53,6 +53,9 @@ SEMANTIC_UNDEFINED_SYMBOL = "semantic_undefined_symbol"
 SEMANTIC_TYPE_MISMATCH = "semantic_type_mismatch"
 SEMANTIC_DOMAIN_ERROR = "semantic_domain_error"
 SEMANTIC_DUPLICATE_DEF = "semantic_duplicate_def"
+
+# Validation errors (post-parse)
+VALIDATION_CIRCULAR_DEP = "validation_circular_dep"
 
 # Include/file errors
 INCLUDE_FILE_NOT_FOUND = "include_file_not_found"
@@ -138,6 +141,7 @@ PARSE_ERROR_CATEGORIES = [
     SEMANTIC_DUPLICATE_DEF,
     INCLUDE_FILE_NOT_FOUND,
     INCLUDE_CIRCULAR,
+    VALIDATION_CIRCULAR_DEP,
 ]
 
 TRANSLATE_ERROR_CATEGORIES = [
@@ -214,7 +218,7 @@ def categorize_parse_error(error_message: str) -> str:
     """Categorize a parse error into the refined taxonomy.
 
     This function analyzes the error message to determine the specific
-    error category from the 16 parse error categories.
+    error category from the 17 parse error categories.
 
     Args:
         error_message: The error message string from the parser
@@ -283,6 +287,19 @@ def categorize_parse_error(error_message: str) -> str:
     # Timeout
     if "timeout" in msg_lower:
         return TIMEOUT
+
+    # Sprint 19 Day 1: Additional patterns to reduce internal_error misclassification
+    # These catch validation/post-parse errors that were falling through to internal_error
+    if "has no objective function" in msg_lower:
+        return MODEL_NO_OBJECTIVE_DEF
+    if "circular dependency" in msg_lower:
+        return VALIDATION_CIRCULAR_DEP
+    if re.search(r"expects \d+ indices, got \d+", msg_lower):
+        return SEMANTIC_DOMAIN_ERROR
+    if "not declared as a variable" in msg_lower:
+        return SEMANTIC_UNDEFINED_SYMBOL
+    if "unsupported expression type" in msg_lower:
+        return PARSER_INVALID_EXPRESSION
 
     # Fallback for generic syntax/parse errors that don't match specific patterns
     # These should be categorized as internal_error since they don't fit the schema categories
