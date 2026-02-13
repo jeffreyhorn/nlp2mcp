@@ -15,11 +15,11 @@
 **Subcategories identified:** 11 (A through K)
 
 **Grammar-fixable assessment:**
-- **~43–45 models** directly fixable with grammar/parser changes
-- **~15–22 models** cascading failures (will resolve when root cause in another model's subcategory is fixed)
-- **Remaining models (~7)** miscellaneous/complex (require deeper investigation; exact count depends on final classification)
+- **43 models** directly fixable with grammar/parser changes
+- **15 models** cascading failures (will resolve when root cause in another model's subcategory is fixed; see Subcategory B for the definitive list)
+- **Remaining 14 models:** 4 preprocessor-required, 10 needing investigation (includes 7 miscellaneous + 3 special values)
 
-**Sprint 19 target validation:** The PROJECT_PLAN.md target of "~95 → below 50" needs recalibration. Actual baseline is 72 (not ~95). With an estimated 43–45 directly fixable + 15–22 cascading (~58–67 addressable), the revised target should be "72 → below 30" or equivalently "fix ~60+ models."
+**Sprint 19 target validation:** The PROJECT_PLAN.md target of "~95 → below 50" needs recalibration. Actual baseline is 72 (not ~95). With 43 directly fixable + 15 cascading (58 addressable), the revised target should be "72 → below 30" or equivalently "fix ~58 models."
 
 ---
 
@@ -51,14 +51,14 @@
 | B | Cascading Parse Failures | 15 | Indirect (fix root cause) | P2 — Depends on others | 0h (resolved by other fixes) |
 | C | Put Statement Format | 6 | Yes (grammar) | P1 — Known design | 2-3h |
 | D | Lead/Lag Indexing | 4 | Yes (grammar + IR) | P2 — Needs IndexOffset | 3-4h |
-| E | Special Values and Inline Data | 7 | Yes (grammar) | P1 — Quick wins | 2-3h |
-| F | Declaration/Syntax Gaps | 7 | Yes (grammar) | P1 — Moderate | 4-5h |
+| E | Special Values and Inline Data | 7 | Partial (1 preprocessor, 3 investigate) | P1 — Mixed | 2-3h |
+| F | Declaration/Syntax Gaps | 7 | Partial (1 preprocessor) | P1 — Moderate | 4-5h |
 | G | Set Element Descriptions | 4 | Yes (grammar) | P1 — Quick win | 1-2h |
 | H | Control Flow | 2 | Yes (grammar) | P2 — Moderate | 2-3h |
 | I | Model/Solve Statement Issues | 5 | Yes (grammar) | P1 — Moderate | 3-4h |
 | J | Bracket/Brace Syntax | 3 | Partial (2 preprocessor, 1 grammar) | P2 — Mixed | 2-3h |
 | K | Miscellaneous | 7 | Varies | P3 — Investigation needed | 4-6h |
-| | **Total** | **72** | | | **~30-41h** |
+| | **Total** | **72** | | | **~29-41h** |
 
 ---
 
@@ -260,7 +260,7 @@ Mixed approach needed:
 2-3 hours for the grammar-fixable subset; some models may require preprocessor support
 
 ### Sprint 19 ROI
-**Medium** — Mixed fixability. 4-5 models likely addressable with grammar changes.
+**Medium** — Mixed fixability. 3 models likely addressable with grammar changes; 3 need individual investigation.
 
 ---
 
@@ -470,58 +470,58 @@ All 72 models were checked for preprocessor directives. Results:
 | B: Cascading Failures | — | 15 | — | — |
 | C: Put Statement Format | 6 | — | — | — |
 | D: Lead/Lag Indexing | 4 | — | — | — |
-| E: Special Values/Inline | 4-5 | — | 1 (cesam2) | 1-2 |
-| F: Declaration/Syntax Gaps | 5-6 | — | 1 (uimp) | — |
+| E: Special Values/Inline | 3 | — | 1 (cesam2) | 3 |
+| F: Declaration/Syntax Gaps | 6 | — | 1 (uimp) | — |
 | G: Set Element Descriptions | 4 | — | — | — |
 | H: Control Flow | 2 | — | — | — |
 | I: Model/Solve Issues | 5 | — | — | — |
 | J: Bracket/Brace | 1 | — | 2 (clearlak, springchain) | — |
 | K: Miscellaneous | — | — | — | 7 |
-| **Total** | **43-45** | **15** (up to 22) | **4** | **8-9** |
+| **Total** | **43** | **15** | **4** | **10** |
 
 ### Optimistic vs Conservative Estimates
 
 | Scenario | Models Fixed | Remaining | Notes |
 |----------|-------------|-----------|-------|
-| **Optimistic** (all grammar + cascading resolve) | 65 | 7 | All cascading models resolve; misc investigated |
-| **Realistic** (grammar fixes + most cascading) | 55-58 | 14-17 | ~80% of cascading resolve; some misc deferred |
-| **Conservative** (grammar only, no cascading) | 43-45 | 27-29 | Only directly fixable models; cascading TBD |
+| **Optimistic** (all grammar + cascading resolve) | 58 | 14 | All 15 cascading models resolve; misc investigated |
+| **Realistic** (grammar fixes + most cascading) | 55 | 17 | ~80% of cascading resolve; some misc deferred |
+| **Conservative** (grammar only, no cascading) | 43 | 29 | Only directly fixable models; cascading TBD |
 
 ---
 
 ## Recommended Sprint 19 Implementation Order
 
-### Phase 1: Quick Wins (P1, ~6-8h, ~22 models)
+### Phase 1: Quick Wins (P1, ~6-8h, ~13 models)
 
 | Priority | Subcategory | Models | Effort | Cumulative |
 |----------|-------------|--------|--------|------------|
 | 1 | G: Set Element Descriptions | 4 | 1-2h | 4 |
 | 2 | C: Put Statement Format | 6 | 2-3h | 10 |
-| 3 | E: Special Values (grammar subset) | 4-5 | 2-3h | 14-15 |
+| 3 | E: Special Values (grammar subset) | 3 | 2-3h | 13 |
 
 ### Phase 2: Core Grammar Work (P1, ~10-13h, ~19+ models)
 
 | Priority | Subcategory | Models | Effort | Cumulative |
 |----------|-------------|--------|--------|------------|
-| 4 | A: Tuple/Compound Set Data | 12 | 6-8h | 26-27 |
-| 5 | I: Model/Solve Issues | 5 | 3-4h | 31-32 |
-| 6 | Re-test cascading (B) | ~10-12 | 0h (verify) | 41-44 |
+| 4 | A: Tuple/Compound Set Data | 12 | 6-8h | 25 |
+| 5 | I: Model/Solve Issues | 5 | 3-4h | 30 |
+| 6 | Re-test cascading (B) | ~10-12 | 0h (verify) | 40-42 |
 
 ### Phase 3: Advanced Grammar (P2, ~8-10h, ~8+ models)
 
 | Priority | Subcategory | Models | Effort | Cumulative |
 |----------|-------------|--------|--------|------------|
-| 7 | F: Declaration/Syntax Gaps | 5-6 | 4-5h | 46-50 |
-| 8 | D: Lead/Lag Indexing | 4+2 cascading | 3-4h | 50-56 |
-| 9 | Re-test cascading (B) | ~3-5 | 0h (verify) | 53-61 |
+| 7 | F: Declaration/Syntax Gaps | 6 | 4-5h | 46-48 |
+| 8 | D: Lead/Lag Indexing | 4+2 cascading | 3-4h | 50-52 |
+| 9 | Re-test cascading (B) | ~3-5 | 0h (verify) | 53-57 |
 
 ### Phase 4: If Time Permits (P3, ~8-12h, ~9+ models)
 
 | Priority | Subcategory | Models | Effort | Cumulative |
 |----------|-------------|--------|--------|------------|
-| 10 | H: Control Flow | 2 | 2-3h | 55-63 |
-| 11 | J: Bracket/Brace (mathopt3) | 1 | 1h | 56-64 |
-| 12 | K: Miscellaneous | 0-7 | 4-6h | 56-71 |
+| 10 | H: Control Flow | 2 | 2-3h | 55-59 |
+| 11 | J: Bracket/Brace (mathopt3) | 1 | 1h | 56-60 |
+| 12 | K: Miscellaneous | 0-7 | 4-6h | 56-67 |
 
 ### Out of Sprint 19 Scope
 
@@ -543,7 +543,7 @@ All 72 models were checked for preprocessor directives. Results:
 | **4.2** (Preprocessor directives) | Only 3 of 72 models (4%) require preprocessor support. 69 models (96%) addressable with grammar-only changes. | ✅ VERIFIED |
 | **4.3** (Overlap with deferred analysis) | This catalog fully subsumes the deferred "Lexer Error Deep Analysis" item scope. The 5-6h budget can be reallocated to implementation. | ✅ VERIFIED |
 | **6.1** (Specific syntax constructs) | 11 subcategories identified with specific GAMS syntax patterns. Top patterns: compound set data (12), put format (6), declaration gaps (7), special values (7). | ✅ VERIFIED |
-| **6.4** (Addressable with grammar-only) | 43-45 models directly fixable + up to 22 cascading = 65 addressable. "Below 50" target from PROJECT_PLAN.md needs recalibration to "below 30" (since baseline is 72, not ~95). | ✅ VERIFIED |
+| **6.4** (Addressable with grammar-only) | 43 models directly fixable + 15 cascading = 58 addressable. "Below 50" target from PROJECT_PLAN.md needs recalibration to "below 30" (since baseline is 72, not ~95). | ✅ VERIFIED |
 
 ### Related Documents
 
@@ -624,7 +624,7 @@ All 72 models were checked for preprocessor directives. Results:
 | 52 | sarf | A (Tuple/Compound) | `.` | Yes |
 | 53 | senstran | K (Miscellaneous) | `(` | Investigate |
 | 54 | shale | A (Tuple/Compound) | `.` | Yes |
-| 55 | ship | E (Special Values) | `:` | Yes |
+| 55 | ship | E (Special Values) | `:` | Investigate |
 | 56 | solveopt | F (Declaration Gaps) | `.` | Yes |
 | 57 | sparta | D (Lead/Lag) | `-` | Yes |
 | 58 | spatequ | K (Miscellaneous) | `.` | Investigate |
@@ -633,9 +633,9 @@ All 72 models were checked for preprocessor directives. Results:
 | 61 | stdcge | C (Put Format) | `:` | Yes |
 | 62 | tabora | D (Lead/Lag) | `+` | Yes |
 | 63 | tfordy | A (Tuple/Compound) | `.` | Yes |
-| 64 | tforss | E (Special Values) | `.` | Yes |
+| 64 | tforss | E (Special Values) | `.` | Investigate |
 | 65 | tricp | F (Declaration Gaps) | `(` | Yes |
-| 66 | trnspwl | E (Special Values) | `#` | Yes |
+| 66 | trnspwl | E (Special Values) | `#` | Investigate |
 | 67 | turkey | A (Tuple/Compound) | `.` | Yes |
 | 68 | turkpow | K (Miscellaneous) | `(` | Investigate |
 | 69 | uimp | F (Declaration Gaps) | `%` | No (preprocessor) |
