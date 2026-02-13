@@ -25,6 +25,26 @@ This document identifies all assumptions and unknowns for Sprint 19 features **b
 
 ---
 
+## Verification Progress Summary (Prep Task 10, 2026-02-13)
+
+**Total: 26 unknowns | ✅ 22 Verified | ❌ 2 Wrong | 🔍 2 Incomplete**
+
+All **Critical** and **High** priority unknowns have been verified or corrected. The 2 remaining incomplete unknowns (6.2, 6.3) are **Medium** priority and scheduled for monitoring during Sprint 19 implementation.
+
+| Status | Count | Details |
+|--------|-------|---------|
+| ✅ Verified | 22 | All assumptions confirmed or clarified with evidence |
+| ❌ Wrong | 2 | 2.1 (subset already implemented), 8.4 (case sensitivity, not bounds) |
+| 🔍 Incomplete | 2 | 6.2 (grammar ambiguities — monitor Days 8-9), 6.3 (compile-time constants — defer if encountered) |
+
+**Key corrections from prep research:**
+- Baseline corrected: lexer_invalid_char is 72 (not ~95), internal_error is 24 (not 23)
+- IndexOffset IR already exists — only AD integration remains
+- ISSUE_672 root cause is case sensitivity mismatch (not bound configurations)
+- 21/24 internal_error models already parse with v1.2.0
+
+---
+
 ## How to Use This Document
 
 ### Before Sprint 19 Day 1
