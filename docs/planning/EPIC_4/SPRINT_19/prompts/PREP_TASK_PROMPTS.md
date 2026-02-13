@@ -13,7 +13,7 @@ Complete Sprint 19 Prep Task 2: Classify internal_error Failure Modes.
 
 ## Branch Setup
 
-1. Start from the `planning/sprint19-prep` branch (checkout and pull latest)
+1. Start from the `main` branch (checkout and pull latest)
 2. Create a new branch: `planning/sprint19-task2`
 
 ## Objective
@@ -130,7 +130,7 @@ git push origin planning/sprint19-task2
 
 ```bash
 gh pr create \
-  --base planning/sprint19-prep \
+  --base main \
   --title "Sprint 19 Prep Task 2: Classify internal_error Failure Modes" \
   --body "## Summary
 Completes Prep Task 2: Classify internal_error Failure Modes.
@@ -168,7 +168,7 @@ Complete Sprint 19 Prep Task 3: Catalog lexer_invalid_char Subcategories.
 
 ## Branch Setup
 
-1. Start from the `planning/sprint19-prep` branch (checkout and pull latest)
+1. Start from the `main` branch (checkout and pull latest)
 2. Create a new branch: `planning/sprint19-task3`
 
 ## Objective
@@ -299,7 +299,7 @@ git push origin planning/sprint19-task3
 
 ```bash
 gh pr create \
-  --base planning/sprint19-prep \
+  --base main \
   --title "Sprint 19 Prep Task 3: Catalog lexer_invalid_char Subcategories" \
   --body "## Summary
 Completes Prep Task 3: Catalog lexer_invalid_char Subcategories.
@@ -340,7 +340,7 @@ Complete Sprint 19 Prep Task 4: Analyze Cross-Indexed Sum Patterns (ISSUE_670).
 
 ## Branch Setup
 
-1. Start from the `planning/sprint19-prep` branch (checkout and pull latest)
+1. Start from the `main` branch (checkout and pull latest)
 2. Create a new branch: `planning/sprint19-task4`
 
 ## Objective
@@ -458,7 +458,7 @@ git push origin planning/sprint19-task4
 
 ```bash
 gh pr create \
-  --base planning/sprint19-prep \
+  --base main \
   --title "Sprint 19 Prep Task 4: Analyze Cross-Indexed Sum Patterns (ISSUE_670)" \
   --body "## Summary
 Completes Prep Task 4: Analyze Cross-Indexed Sum Patterns (ISSUE_670).
@@ -497,7 +497,7 @@ Complete Sprint 19 Prep Task 5: Audit Sprint 18 Deferred Item Readiness.
 
 ## Branch Setup
 
-1. Start from the `planning/sprint19-prep` branch (checkout and pull latest)
+1. Start from the `main` branch (checkout and pull latest)
 2. Create a new branch: `planning/sprint19-task5`
 
 ## Objective
@@ -650,7 +650,7 @@ git push origin planning/sprint19-task5
 
 ```bash
 gh pr create \
-  --base planning/sprint19-prep \
+  --base main \
   --title "Sprint 19 Prep Task 5: Audit Sprint 18 Deferred Item Readiness" \
   --body "## Summary
 Completes Prep Task 5: Audit Sprint 18 Deferred Item Readiness.
@@ -691,7 +691,7 @@ Complete Sprint 19 Prep Task 6: Research IndexOffset IR Design Options.
 
 ## Branch Setup
 
-1. Start from the `planning/sprint19-prep` branch (checkout and pull latest)
+1. Start from the `main` branch (checkout and pull latest)
 2. Create a new branch: `planning/sprint19-task6`
 
 ## Objective
@@ -804,7 +804,7 @@ git push origin planning/sprint19-task6
 
 ```bash
 gh pr create \
-  --base planning/sprint19-prep \
+  --base main \
   --title "Sprint 19 Prep Task 6: Research IndexOffset IR Design Options" \
   --body "## Summary
 Completes Prep Task 6: Research IndexOffset IR Design Options.
@@ -843,7 +843,7 @@ Complete Sprint 19 Prep Task 7: Analyze Table Parsing Issues (ISSUE_392, ISSUE_3
 
 ## Branch Setup
 
-1. Start from the `planning/sprint19-prep` branch (checkout and pull latest)
+1. Start from the `main` branch (checkout and pull latest)
 2. Create a new branch: `planning/sprint19-task7`
 
 ## Objective
@@ -955,7 +955,7 @@ git push origin planning/sprint19-task7
 
 ```bash
 gh pr create \
-  --base planning/sprint19-prep \
+  --base main \
   --title "Sprint 19 Prep Task 7: Analyze Table Parsing Issues (ISSUE_392, ISSUE_399)" \
   --body "## Summary
 Completes Prep Task 7: Analyze Table Parsing Issues (ISSUE_392, ISSUE_399).
@@ -992,7 +992,7 @@ Complete Sprint 19 Prep Task 8: Analyze MCP Pairing Issues (ISSUE_672).
 
 ## Branch Setup
 
-1. Start from the `planning/sprint19-prep` branch (checkout and pull latest)
+1. Start from the `main` branch (checkout and pull latest)
 2. Create a new branch: `planning/sprint19-task8`
 
 ## Objective
@@ -1100,7 +1100,7 @@ git push origin planning/sprint19-task8
 
 ```bash
 gh pr create \
-  --base planning/sprint19-prep \
+  --base main \
   --title "Sprint 19 Prep Task 8: Analyze MCP Pairing Issues (ISSUE_672)" \
   --body "## Summary
 Completes Prep Task 8: Analyze MCP Pairing Issues (ISSUE_672).
@@ -1136,7 +1136,7 @@ Complete Sprint 19 Prep Task 9: Verify Sprint 19 Baseline Metrics.
 
 ## Branch Setup
 
-1. Start from the `planning/sprint19-prep` branch (checkout and pull latest)
+1. Start from the `main` branch (checkout and pull latest)
 2. Create a new branch: `planning/sprint19-task9`
 
 ## Objective
@@ -1255,7 +1255,7 @@ git push origin planning/sprint19-task9
 
 ```bash
 gh pr create \
-  --base planning/sprint19-prep \
+  --base main \
   --title "Sprint 19 Prep Task 9: Verify Sprint 19 Baseline Metrics" \
   --body "## Summary
 Completes Prep Task 9: Verify Sprint 19 Baseline Metrics.
@@ -1292,7 +1292,7 @@ Complete Sprint 19 Prep Task 10: Plan Sprint 19 Detailed Schedule.
 
 ## Branch Setup
 
-1. Start from the `planning/sprint19-prep` branch (checkout and pull latest — ensure all prior task PRs have been merged first)
+1. Start from the `main` branch (checkout and pull latest — ensure all prior task PRs have been merged first)
 2. Create a new branch: `planning/sprint19-task10`
 
 ## Objective
@@ -1424,7 +1424,7 @@ git push origin planning/sprint19-task10
 
 ```bash
 gh pr create \
-  --base planning/sprint19-prep \
+  --base main \
   --title "Sprint 19 Prep Task 10: Plan Sprint 19 Detailed Schedule [PREP COMPLETE]" \
   --body "## Summary
 Completes Prep Task 10: Plan Sprint 19 Detailed Schedule. **All 10 prep tasks are now complete.**
