@@ -69,6 +69,52 @@ Analyzed the cross-indexed sum problem causing GAMS Error 149 across 6 models (a
 | 8.1 | Verified | Issue originates in `stationarity.py`; fix localized to stationarity builder (no AD/parser/emit changes). Two sub-problems: wrong index replacement and missing free index detection |
 | 8.2 | Verified | All 6 models share same pattern (constraint sum producing uncontrolled derivative index). Variations (multi-index, subset, superset) all handled by one fix |
 
+### Sprint 19 Prep Task 3: Catalog lexer_invalid_char Subcategories - 2026-02-12
+
+**Branch:** `planning/sprint19-task3`
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Cataloged all 72 `lexer_invalid_char` models (corrected from ~95 in PROJECT_PLAN.md) into 11 subcategories. All 72 were re-parsed with v1.2.0 — all still fail (zero silent fixes). Identified 43 models directly fixable with grammar changes, plus 15 cascading models that resolve when root causes are fixed. Only 4 models require preprocessor involvement (3 directive-processing + 1 compile-time variable expansion).
+
+#### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` — Full subcategorization of all 72 models
+- `docs/planning/EPIC_4/SPRINT_19/KNOWN_UNKNOWNS.md` — Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified
+
+#### Subcategory Distribution
+
+| Subcategory | Count | Grammar-Fixable? | Priority |
+|-------------|-------|------------------|----------|
+| A: Tuple/Compound Set Data | 12 | Yes | P1 |
+| B: Cascading Parse Failures | 15 | Indirect (fix root cause) | P2 |
+| C: Put Statement Format | 6 | Yes | P1 |
+| D: Lead/Lag Indexing | 4 | Yes (+ IR) | P2 |
+| E: Special Values/Inline Data | 7 | Mostly (1 preprocessor) | P1 |
+| F: Declaration/Syntax Gaps | 7 | Mostly (1 preprocessor) | P1 |
+| G: Set Element Descriptions | 4 | Yes | P1 |
+| H: Control Flow | 2 | Yes | P2 |
+| I: Model/Solve Issues | 5 | Yes | P1 |
+| J: Bracket/Brace Syntax | 3 | Partial (2 preprocessor) | P2 |
+| K: Miscellaneous | 7 | Investigate | P3 |
+| **Total** | **72** | **43 direct + 15 cascading** | |
+
+#### Key Findings
+
+- **Baseline correction:** 72 models (not ~95). Sprint 19 target recalibrated from "~95 → below 50" to "72 → below 30"
+- **Preprocessor involved:** Only 4 models (3 directive-processing: clearlak, cesam2, springchain; 1 compile-time variable: uimp) — 94% addressable with grammar-only changes
+- **Cascading failures:** 15 models fail due to earlier unresolvable constructs; fixing root causes in other subcategories will resolve them
+- **Deferred analysis subsumed:** The catalog fully covers the deferred "Lexer Error Deep Analysis" item — 5-6h budget can be reallocated to implementation
+
+#### Unknowns Verified
+
+- **4.1 (count):** ✅ VERIFIED — 72 models, not ~95 or 74
+- **4.2 (preprocessor):** ✅ VERIFIED — Only 3 models (4%) require directive-processing preprocessor support; 1 additional model needs compile-time variable expansion (4 total preprocessor-involved)
+- **4.3 (overlap):** ✅ VERIFIED — Catalog fully subsumes deferred analysis item
+- **6.1 (syntax constructs):** ✅ VERIFIED — 11 subcategories with specific patterns identified
+- **6.4 (addressable count):** ✅ VERIFIED — 43-58 addressable; "below 30" target achievable
+
 ### Sprint 19 Prep Task 2: Classify internal_error Failure Modes - 2026-02-12
 
 **Branch:** `planning/sprint19-task2`
