@@ -116,7 +116,13 @@ The circle model's MCP infeasibility is caused by `uniform()` regenerating diffe
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption is correct — `uniform()` regenerates different random data in the MCP context. The generated MCP file (`data/gamslib/mcp/circle_mcp.gms`) retains `x(i) = uniform(1, 10)` and `y(i) = uniform(1, 10)` calls rather than hardcoded values. Each MCP execution produces different parameter values, making the KKT conditions inconsistent.
+
+**Fix approach confirmed:** Capture computed parameter values and emit as constants. Alternative worth testing: `execseed` (GAMS random seed) to make random values deterministic. The fix is localized to `src/emit/original_symbols.py` parameter emission — no runtime GAMS execution integration needed if `execseed` works.
+
+**Impact on Sprint 19:** Fix approach is well-scoped (1.5-2h). No change to sprint plan.
 
 ---
 
@@ -151,7 +157,17 @@ The house model's MCP infeasibility is caused by a constraint qualification fail
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption is partially correct — the house model's MCP infeasibility appears to involve constraint qualification issues, not just data. Analysis of `house_mcp.gms` listing shows contradictory complementarity conditions (e.g., `comp_maxw` requires `-x >= 0` while `comp_minw` requires `x >= 0`) and multiple uninitialized variables. The original NLP solves successfully (obj=4500 with CONOPT).
+
+**Root cause narrowed to two possibilities:**
+1. KKT complementarity pairing produces contradictory conditions for the inequality constraints
+2. Variable initialization at zero creates an infeasible starting point that PATH cannot recover from
+
+**Next step:** Extract the KKT point from the original NLP solution and verify against the MCP system. If the KKT point does satisfy the MCP, the issue is initialization; if not, the issue is in KKT formulation.
+
+**Impact on Sprint 19:** House fix may require 2-4h (more than the 1.5h originally budgeted within the 3-4h total). Overall item effort revised to 3.5-6h.
 
 ---
 
@@ -183,7 +199,13 @@ Fixes for circle and house are isolated to those models' specific issues (random
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption is correct — fixes for circle and house are isolated. Circle's fix (parameter value capture) only affects models with stochastic functions (`uniform`, `normal`). House's fix (KKT formulation or initialization) targets specific constraint/bound configurations. Neither fix modifies shared code paths used by the 20 currently-solving models.
+
+**Regression mitigation:** Full regression test on all 20 solving models after each fix. The existing 3294-test suite provides additional safety.
+
+**Impact on Sprint 19:** Low regression risk confirmed. No change to sprint plan.
 
 ---
 
@@ -220,7 +242,13 @@ Approximately 3 models fail because `src/emit/emit_gams.py` does not preserve se
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+❌ Status: WRONG (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption that ~3 models fail due to missing subset declarations is **unconfirmed**. No specific failing models have been identified in any documentation. The Sprint 18 Day 1 Error 352 models (abel, qabel) were fixed by the P4 dynamic subset assignment fix, which is a different issue. Subset relationship preservation was already implemented in Sprint 17 Day 5 (`emit_original_sets()` in `src/emit/original_symbols.py:384-450`), with `SetDef.domain` properly emitting parent set syntax like `cg(genchar)`.
+
+**Correction:** The ~3 models estimate may be stale. The actual count of models failing due to missing subset relationships could be 0 (already fixed) or unknown (needs runtime verification). Unit tests in `tests/unit/emit/test_original_symbols.py` confirm subset emission works correctly.
+
+**Impact on Sprint 19:** Sprint 19 should start with a 1h verification pass to identify any actually-affected models before allocating the full 4-5h budget. If no models fail due to missing subsets, this item can be marked complete with minimal effort.
 
 ---
 
@@ -254,7 +282,11 @@ The IR stores set definitions with their domain information (parent set), and th
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption is correct — the IR stores set definitions with their domain information. `SetDef.domain` in `src/ir/symbols.py:31-36` stores parent set names as a tuple (e.g., `domain=('genchar',)` for subset `cg` of `genchar`). The emitter uses this in `_format_set_declaration()` at `src/emit/original_symbols.py:188-237` to emit `cg(genchar) /a, b, c/`. The fix is emitter-only; no parser changes are needed for the basic subset declaration case.
+
+**Impact on Sprint 19:** If any models do fail due to subset issues, the fix is localized to the emission layer. No parser changes needed.
 
 ---
 
@@ -286,7 +318,11 @@ The subset preservation fix and the Sprint 18 element literal quoting fix operat
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption is correct — subset preservation and element literal quoting operate on different code paths and do not conflict. Subset domain names are quoted via `_quote_symbol()` at `src/emit/original_symbols.py:203-204`, which is independent of the `_quote_indices()` function in `expr_to_gams.py` that handles element literal quoting. Sprint 18's quoting fixes (P1, P2) did not modify subset-related code paths.
+
+**Impact on Sprint 19:** No interaction risk. Both fixes can be implemented independently.
 
 ---
 
@@ -323,7 +359,11 @@ A small set of GAMS reserved words (e.g., `set`, `model`, `solve`, `variable`, `
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption is correct — a small set of GAMS reserved constants appear as identifiers. The primary affected models are the ps2_f family (ps2_f, ps2_f_eff, ps2_f_inf, ps2_f_s, ps2_s) which use `inf` and `eff` as set element indices, producing GAMS Errors 120, 145, 149, 340. No `GAMS_RESERVED_WORDS` constant exists in the codebase. The GAMS reserved constants needing quoting are: `inf`, `na`, `eps`, `undf`, `yes`, `no`. Reserved keywords (`set`, `model`, `solve`, etc.) and built-in function names (`abs`, `log`, etc.) from `gams_grammar.lark` also need checking.
+
+**Impact on Sprint 19:** Fix is well-scoped. Create `GAMS_RESERVED_CONSTANTS` set in `expr_to_gams.py` and add check in `_quote_indices()`. Effort confirmed at 2-3h.
 
 ---
 
@@ -356,7 +396,16 @@ Adding reserved word quoting to `src/emit/expr_to_gams.py` is sufficient because
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption is mostly correct but incomplete. All identifier emission flows through `expr_to_gams()` for expressions, but set element emission in `src/emit/original_symbols.py` uses separate functions (`_sanitize_set_element()`, `_quote_symbol()`) that do not check reserved words. Other emission points checked:
+- `src/emit/equations.py` — delegates to `expr_to_gams()` (covered)
+- `src/emit/model.py` — emits equation-variable pairs without index quoting (not affected — uses equation/variable names, not element labels)
+- `src/emit/templates.py` — emits variable/equation declarations without index quoting (not affected)
+
+**Correction:** The fix needs two locations: (1) `_quote_indices()` in `expr_to_gams.py` for expression contexts, and (2) `_sanitize_set_element()` in `original_symbols.py` for set data contexts. Both are in the emit layer.
+
+**Impact on Sprint 19:** Slightly broader scope (two files instead of one), but still within the 2-3h budget.
 
 ---
 
@@ -393,7 +442,11 @@ GAMS correctly distinguishes between quoted identifiers (e.g., `'set'`) and keyw
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption is correct — GAMS correctly distinguishes quoted identifiers from keywords. GAMS uses context-sensitive keyword recognition: `Set` as a declaration keyword is recognized by position (start of statement), while `"set"` as a quoted string is always treated as a data element. The quoting mechanism is well-defined in GAMS: single quotes, double quotes, and unquoted identifiers are all handled distinctly. This was also confirmed by Sprint 18's element literal quoting fix (P1), which quotes multi-char lowercase names without breaking GAMS keyword recognition.
+
+**Impact on Sprint 19:** No risk of keyword confusion from quoting. Low risk confirmed.
 
 ---
 
@@ -575,7 +628,11 @@ The grammar design from Sprint 18 Unknown 3.3 (verified: `put_format: ":" PUT_AL
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption is correct — the Sprint 18 grammar design still applies. The current put grammar rules in `src/gams/gams_grammar.lark:493-500` are unchanged from Sprint 18. The verified design from Sprint 18 Unknown 3.3 (`put_format: ":" PUT_ALIGN? NUMBER (":" NUMBER)?`) is directly implementable. The `loop(j, put j.tl)` pattern (needed for stdcge) requires an additional `put_stmt_nosemi` variant, which was identified in Sprint 18 Unknown 3.2 verification. No Sprint 18 grammar changes affect put statement rules.
+
+**Impact on Sprint 19:** Grammar work can reuse Sprint 18 research directly. No rework needed.
 
 ---
 
@@ -607,7 +664,17 @@ Sprint 18 Unknown 3.2 verified that 3 of 4 models (ps5_s_mn, ps10_s, ps10_s_mn) 
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+
+**Finding:** The assumption from Sprint 18 Unknown 3.2 is confirmed and still accurate. 3 of 4 models (ps5_s_mn, ps10_s, ps10_s_mn) are blocked **only** by `:width:decimals` format specifiers — no secondary issues found. stdcge is blocked by a **different** issue: `loop(j, put j.tl);` requires a `put_stmt_nosemi` grammar variant, not `:width:decimals`. stdcge does not use format specifiers at all.
+
+**Per-model verification:**
+- ps5_s_mn: Lines 151-152 use `pt(i,t):10:5` — blocked by `:width:decimals` only
+- ps10_s: Line 63 uses `x.l(i):20:10` etc. — blocked by `:width:decimals` only
+- ps10_s_mn: Line 147 uses `pt(i,t):10:5` — blocked by `:width:decimals` only
+- stdcge: Lines 385, 397 use `put j.tl` in loop without semicolon — different issue
+
+**Impact on Sprint 19:** `:width:decimals` fix unblocks 3 models. stdcge needs separate `put_stmt_nosemi` fix (+0.5h). Total effort confirmed at 2-2.5h for all 4 models.
 
 ---
 

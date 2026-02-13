@@ -49,6 +49,36 @@ Created comprehensive Known Unknowns document for Sprint 19 with 26 unknowns acr
 | Task 9: Verify Sprint 19 Baseline Metrics | 4.1, 6.4 |
 | Task 10: Plan Sprint 19 Detailed Schedule | All |
 
+### Sprint 19 Prep Task 5: Audit Sprint 18 Deferred Item Readiness - 2026-02-13
+
+**Branch:** `planning/sprint19-task5`
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Audited all 5 Sprint 18 deferred items for Sprint 19 readiness. All items have sufficient context for implementation. Key findings: subset preservation may already be complete (Sprint 17 implementation), lexer analysis overlaps with Prep Task 3 (budget reallocatable to grammar fixes), house model MCP infeasibility may need more investigation than budgeted. No blockers found. Overall effort estimate: 15-20h expected (original 17-21h).
+
+#### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_19/DEFERRED_ITEMS_AUDIT.md` - Per-item readiness assessment with code pointers, affected models, effort estimates, and Sprint 18 impact analysis
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 1.1 | Verified | Circle `uniform()` regenerates random data; fix via parameter value capture or `execseed` |
+| 1.2 | Verified | House has contradictory complementarity conditions; needs KKT formulation investigation |
+| 1.3 | Verified | Fixes are isolated; low regression risk for 20 solving models |
+| 2.1 | Wrong | ~3 affected models unidentified; subset emission already implemented in Sprint 17 |
+| 2.2 | Verified | IR preserves subset metadata via `SetDef.domain`; emitter-only fix if needed |
+| 2.3 | Verified | No interaction between subset preservation and element literal quoting |
+| 3.1 | Verified | GAMS reserved constants (`inf`, `na`, `eps`, `undf`) used as identifiers in ps2_f family |
+| 3.2 | Verified | Fix needs two locations: `expr_to_gams.py` and `original_symbols.py` |
+| 3.3 | Verified | GAMS distinguishes quoted identifiers from keywords; no conflict risk |
+| 4.3 | Verified | Prep Task 3 output satisfies analysis deliverable; reallocate budget to grammar fixes |
+| 5.1 | Verified | Sprint 18 grammar design still applies; no rework needed |
+| 5.2 | Verified | 3 models blocked by `:width:decimals` only; stdcge needs separate `put_stmt_nosemi` fix |
+
 ### Sprint 19 Prep Task 4: Analyze Cross-Indexed Sum Patterns (ISSUE_670) - 2026-02-13
 
 **Branch:** `planning/sprint19-task4`
