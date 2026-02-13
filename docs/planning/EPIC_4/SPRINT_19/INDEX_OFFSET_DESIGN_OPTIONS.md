@@ -326,21 +326,21 @@ Stationarity equations enumerate variable instances by iterating over set member
 
 The following 8 models are blocked by `unsup_index_offset` at the translate stage:
 
-### Direct Lead/Lag Parse Failures (Subcategory D)
+### Direct Lead/Lag Translate Failures (Subcategory D)
 
-| # | Model | Failing Syntax | Pattern |
-|---|-------|---------------|---------|
+| # | Model | Lead/Lag Syntax | Pattern |
+|---|-------|----------------|---------|
 | 1 | **launch** | `+` in index | `x(t+1)` — Launch vehicle optimization |
 | 2 | **mine** | `+` in index | `x(t+1)` — Mine scheduling |
 | 3 | **sparta** | `-` in index | `x(t-1)` — Spatial equilibrium |
 | 4 | **tabora** | `+` in index | `x(t+1)` — Dynamic model |
 
-### Cascading Failures from Lead/Lag (Subcategory B)
+### Cascading Translate/Pipeline Failures from Lead/Lag (Subcategory B)
 
 | # | Model | Root Cause | Notes |
 |---|-------|-----------|-------|
-| 5 | **ampl** | `x(t+1)` | Cascading parse failure from lead/lag |
-| 6 | **otpop** | `x(t+1)` | Cascading parse failure from lead/lag |
+| 5 | **ampl** | `x(t+1)` | Cascading translate-stage failure from lead/lag |
+| 6 | **otpop** | `x(t+1)` | Cascading translate-stage failure from lead/lag |
 
 ### Pipeline-Stage Failures Involving Lead/Lag
 
