@@ -989,7 +989,11 @@ IndexOffset nodes (representing `x(t+1)`, `x(t-1)`) can be treated as independen
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 6, 2026-02-13)
+
+**Finding:** The core assumption about differentiation is correct: `x(t+1)` and `x(t)` are treated as independent variables during differentiation. The AD system's `_diff_varref()` function (`src/ad/derivative_rules.py:201-275`) uses exact tuple equality: `expr.indices == wrt_indices`. Since `IndexOffset` is a frozen dataclass, `IndexOffset("t", Const(1), False) != "t"`, so `d/dx(t) [x(t+1)] = 0` automatically. Similarly, `IndexOffset("t", Const(1), False) == IndexOffset("t", Const(1), False)`, so `d/dx(t+1) [x(t+1)] = 1`. However, AD's sum-collapse/index-substitution logic (`_apply_index_substitution` in `src/ad/derivative_rules.py:1788`) still has an explicit limitation ("IndexOffset not supported in AD yet"), so full IndexOffset support in AD is **not** complete and additional work remains in that area.
+
+**Impact on Sprint 19:** No additional work is needed to change `_diff_varref()` itself; the verified tuple-equality behavior can be reused as-is. The remaining AD effort for IndexOffset is confined to the index-substitution / sum-collapse path (extending `_apply_index_substitution` to handle `IndexOffset` correctly, ~4h). The ~14-16h PROJECT_PLAN.md estimate can be reduced to ~8h.
 
 ---
 
@@ -1024,7 +1028,13 @@ GAMS lead/lag syntax (`x(t+1)`, `x(t-1)`, `x(t++1)`, `x(t--1)`) can be parsed by
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 6, 2026-02-13)
+
+**Finding:** The assumption is partially correct but the grammar changes are **already done**. The `lag_lead_suffix` rule in `src/gams/gams_grammar.lark:330-344` already supports all four forms: `CIRCULAR_LEAD` (`++`), `CIRCULAR_LAG` (`--`), `PLUS` (linear lead), `MINUS` (linear lag), each followed by `offset_expr` (NUMBER or ID). The `++` and `--` tokens are unambiguous. For `+` and `-`, the grammar resolves ambiguity by context: within `index_expr`, `+`/`-` followed by `offset_expr` is lead/lag, not arithmetic. In addition, the parser semantic code (`src/ir/parser.py:786-933`) already processes `lag_lead_suffix` into `IndexOffset` IR nodes.
+
+**Correction:** No grammar file changes are needed, and no additional work is required in the parser semantic handler — `_process_index_expr()` already constructs `IndexOffset` nodes. The remaining work is to identify and fix the **downstream** handling of `IndexOffset` that still produces `unsup_index_offset` failures (specifically `_apply_index_substitution` in the AD module and end-to-end pipeline tracing).
+
+**Impact on Sprint 19:** The 2h "parser spike" allocation should be spent on end-to-end IndexOffset pipeline tracing and downstream fixes (AD index substitution), not on grammar or parser work.
 
 ---
 

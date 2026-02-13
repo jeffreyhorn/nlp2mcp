@@ -49,6 +49,26 @@ Created comprehensive Known Unknowns document for Sprint 19 with 26 unknowns acr
 | Task 9: Verify Sprint 19 Baseline Metrics | 4.1, 6.4 |
 | Task 10: Plan Sprint 19 Detailed Schedule | All |
 
+### Sprint 19 Prep Task 6: Research IndexOffset IR Design Options - 2026-02-13
+
+**Branch:** `planning/sprint19-task6`
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Evaluated 4 design options for IndexOffset IR support. Key discovery: the IndexOffset IR node already exists (`src/ir/ast.py`, Sprint 9 Day 3), the grammar already parses all lead/lag forms (`src/gams/gams_grammar.lark:330-344`), the parser semantic handler already constructs IndexOffset nodes (`src/ir/parser.py:786-933`), and the emit layer already handles IndexOffset (`_format_mixed_indices()`, Sprint 18 Day 3). The existing Option B design (standalone IR node in index tuples) is confirmed as the correct approach. AD differentiation matching works via frozen dataclass equality, but `_apply_index_substitution` needs extension for IndexOffset during sum-collapse. Remaining work: ~8h (AD index substitution + pipeline tracing + testing), down from ~14-16h originally estimated in PROJECT_PLAN.md.
+
+#### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_19/INDEX_OFFSET_DESIGN_OPTIONS.md` — 4 design options evaluated with per-stage impact assessment, recommended Option B with rationale, AD remaining work identified, 8 blocked models listed
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 7.3 | Verified | `x(t+1)` and `x(t)` are independent variables during differentiation via tuple equality. AD's `_apply_index_substitution` still needs extension for IndexOffset (~4h) |
+| 7.4 | Verified | Grammar and parser semantic handler both already complete. Remaining work is downstream AD/pipeline fixes, not parser work |
+
 ### Sprint 19 Prep Task 5: Audit Sprint 18 Deferred Item Readiness - 2026-02-13
 
 **Branch:** `planning/sprint19-task5`
