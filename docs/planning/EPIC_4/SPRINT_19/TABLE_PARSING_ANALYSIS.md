@@ -8,11 +8,11 @@
 
 ## Executive Summary
 
-Both ISSUE_392 (table continuation in `like`) and ISSUE_399 (table description as header in `robert`) share a **common root cause**: the grammar's optional description `(STRING | DESCRIPTION)?` in the `table_block` rule is not being matched by the Lark parser. Instead, the STRING description token is consumed as a `table_row`'s row label via the `dotted_label: (ID | STRING)` path.
+Both ISSUE_392 (table continuation in `like`) and ISSUE_399 (table description as header in `robert`) share a **common root cause**: the grammar's optional description `(STRING | DESCRIPTION)?` in the `table_block` rule is not being matched as intended by the Lark parser. Instead, the STRING description token is parsed as a `table_row`'s row label via the `dotted_label: (ID | STRING)` path.
 
-This causes the entire table (all column headers and data rows) to collapse into a single `table_row` node with the description as its row label and all other tokens as values. The continuation handling code in the semantic handler is structurally sound but never exercises correctly because the grammar doesn't produce the expected parse tree.
+This causes the entire table (all column headers and data rows) to collapse into a single `table_row` node with the description as its row label and all other tokens as values. The continuation handling code in the semantic handler is structurally sound but never exercises correctly because the parse tree does not distinguish the optional description from the first `table_row`.
 
-**Key finding:** Both issues require a **grammar fix** — the `(STRING | DESCRIPTION)?` optional must be consumed before `table_content+` matching begins. The semantic handler's continuation logic and column-matching code are correct in principle and need only minor adjustments after the grammar fix.
+**Key finding:** Both issues can be resolved via **semantic disambiguation with no grammar changes** — the handler must detect when the first `table_row`'s label is a STRING token in the description position and reinterpret it accordingly. The semantic handler's continuation logic and column-matching code are correct in principle and need only minor adjustments to apply this disambiguation.
 
 **Revised effort estimate:** 3-5h total for both fixes combined (shared root cause), down from 4-8h estimated separately.
 
@@ -123,13 +123,13 @@ else:
     )
 ```
 
-For the `like` table, once the primary grammar fix is applied, the table will be correctly parsed with separate column header and data rows. The `+` continuation introduces a new set of column headers (`16 17 18 ... 31`). When the continuation is processed, the `len(merged_lines) == 1` branch may apply if the continuation is treated as a fresh section, which would correctly classify it as a column header continuation (the `len == 1` case always returns `True`). However, this depends on how the continuation merging interacts with the corrected parse tree structure and needs verification during implementation.
+For the `like` table, once the primary semantic handler fix is applied, the table will be correctly reparsed with separate column header and data rows. The `+` continuation introduces a new set of column headers (`16 17 18 ... 31`). When the continuation is processed, the `len(merged_lines) == 1` branch may apply if the continuation is treated as a fresh section, which would correctly classify it as a column header continuation (the `len == 1` case always returns `True`). However, this depends on how the continuation merging interacts with the corrected parse tree structure and needs verification during implementation.
 
-**Note:** This secondary concern cannot be fully evaluated until the primary grammar fix is in place, since the current grammar produces a malformed parse tree. The `len(merged_lines) == 1` branch may handle this case correctly.
+**Note:** This secondary concern cannot be fully evaluated until the primary semantic handler fix is in place, since the current parse tree is malformed. The `len(merged_lines) == 1` branch may handle this case correctly.
 
 ### Fix Plan
 
-1. **Grammar fix** (shared with ISSUE_399): Ensure `(STRING | DESCRIPTION)?` is consumed before `table_content+`
+1. **Semantic handler fix** (shared with ISSUE_399): Detect description misparse in `_handle_table_block()` — when the first `table_row`'s label is a STRING token, extract it as the description and reparse remaining tokens as column headers and data rows (Option 3, no grammar changes)
 2. **Heuristic fix:** Improve the continuation classification logic:
    - Option A: If the continuation appears after a blank line (or after data rows have been seen), treat it as a new column header section regardless of token types
    - Option B: Check if the PLUS token is the first token on a line that doesn't have a preceding row label — if so, it's a column header continuation
@@ -178,11 +178,11 @@ Table c(p,t) 'expected profits'
 
 Primary: Grammar ambiguity (shared root cause — see above). Identical to ISSUE_392.
 
-There is no secondary issue for ISSUE_399. Once the grammar correctly consumes the description, the table will parse as 4 rows: column headers (`1 2 3`) followed by 3 data rows (`low`, `medium`, `high`). The existing semantic handler's column-position matching should handle this correctly.
+There is no secondary issue for ISSUE_399. Once the semantic handler correctly identifies and extracts the description (via the Option 3 disambiguation), the table will be reparsed as 4 rows: column headers (`1 2 3`) followed by 3 data rows (`low`, `medium`, `high`). The existing semantic handler's column-position matching should handle this correctly.
 
 ### Fix Plan
 
-1. **Grammar fix** (shared with ISSUE_392): Same fix resolves both issues
+1. **Semantic handler fix** (shared with ISSUE_392): Same Option 3 disambiguation resolves both issues — detect STRING label in first `table_row`, extract as description, reparse remaining tokens
 2. **No additional handler changes needed** for this issue
 3. **Test strategy:** Unit test with `robert` table; validate 9 values captured correctly
 
@@ -198,9 +198,9 @@ There is no secondary issue for ISSUE_399. Once the grammar correctly consumes t
 
 ---
 
-## Proposed Grammar Fix
+## Proposed Fix Options
 
-### Option 1: Dedicated Description Terminal (Recommended)
+### Option 1: Dedicated Description Terminal
 
 Add a higher-priority terminal specifically for table descriptions that matches quoted strings after the closing parenthesis:
 
@@ -323,7 +323,7 @@ After the grammar/semantic fix, verify the continuation handling for the `like` 
 | Task | Estimated Time | Notes |
 |------|---------------|-------|
 | Semantic handler fix (description misparse detection + reparse) | 2-3h | Core fix for both issues |
-| Continuation heuristic verification/fix | 1-2h | May be unnecessary if current code works after grammar fix |
+| Continuation heuristic verification/fix | 1-2h | May be unnecessary if current code works after semantic handler fix |
 | Unit tests + model validation | 1h | 4+ test cases |
 | **Total** | **3-5h** | Down from 4-8h (2-4h each) due to shared root cause |
 

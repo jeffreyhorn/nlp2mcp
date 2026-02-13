@@ -610,7 +610,7 @@ grep -c "^### Option" docs/planning/EPIC_4/SPRINT_19/INDEX_OFFSET_DESIGN_OPTIONS
 
 ## Task 7: Analyze Table Parsing Issues (ISSUE_392, ISSUE_399)
 
-**Status:** ✅ COMPLETED
+**Status:** ✅ **COMPLETED** (February 13, 2026)
 **Priority:** High
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 19 Day 1
@@ -654,11 +654,16 @@ ISSUE_392 (table continuation) blocks the `like` model; ISSUE_399 (table descrip
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANALYSIS.md` with comprehensive analysis of both table parsing issues. Key findings:
+- Both ISSUE_392 and ISSUE_399 share a **common root cause**: grammar ambiguity where `(STRING | DESCRIPTION)?` in `table_block` is not matched — the STRING is parsed as the first `table_row`'s label via `dotted_label`
+- Parse tree evidence: `robert` table collapses to single `table_row` with 16 children; `like` table collapses to single `table_row` with 48 children
+- Evaluated 4 fix options; recommended **Option 3: semantic disambiguation** in `_handle_table_block()` — zero grammar changes, zero regression risk
+- Revised effort estimate from 4-8h (separately) to 3-5h (combined, shared root cause)
+- Updated Unknown 8.3 in KNOWN_UNKNOWNS.md with verification results
 
 ### Result
 
-To be completed.
+**Both issues share a common root cause and can be fixed with semantic disambiguation in the handler (no grammar changes needed).** The grammar's optional `(STRING | DESCRIPTION)?` is never matched because Lark's Earley parser parses the STRING token as part of the first `table_row`'s `dotted_label`. The recommended fix (Option 3) detects this misparse by checking if the first `table_row`'s label is a STRING token, extracts it as the description, and reparses the remaining tokens into proper column headers and data rows. Estimated 3-5h combined effort, down from 4-8h estimated separately in the FIX_ROADMAP.
 
 ### Verification
 
