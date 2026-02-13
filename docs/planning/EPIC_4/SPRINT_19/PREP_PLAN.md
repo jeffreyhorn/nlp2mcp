@@ -610,7 +610,7 @@ grep -c "^### Option" docs/planning/EPIC_4/SPRINT_19/INDEX_OFFSET_DESIGN_OPTIONS
 
 ## Task 7: Analyze Table Parsing Issues (ISSUE_392, ISSUE_399)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETED** (February 13, 2026)
 **Priority:** High
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 19 Day 1
@@ -654,11 +654,16 @@ ISSUE_392 (table continuation) blocks the `like` model; ISSUE_399 (table descrip
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANALYSIS.md` with comprehensive analysis of both table parsing issues. Key findings:
+- Both ISSUE_392 and ISSUE_399 share a **common root cause**: grammar ambiguity where `(STRING | DESCRIPTION)?` in `table_block` is not matched — the STRING is parsed as the first `table_row`'s label via `dotted_label`
+- Parse tree evidence: `robert` table collapses to single `table_row` with 16 children; `like` table collapses to single `table_row` with 48 children
+- Evaluated 4 fix options; recommended **Option 3: semantic disambiguation** in `_handle_table_block()` — zero grammar changes, zero regression risk
+- Revised effort estimate from 4-8h (separately) to 3-5h (combined, shared root cause)
+- Updated Unknown 8.3 in KNOWN_UNKNOWNS.md with verification results
 
 ### Result
 
-To be completed.
+**Both issues share a common root cause and can be fixed with semantic disambiguation in the handler (no grammar changes needed).** When the optional description is a quoted `STRING`, it is effectively never matched as the description because Lark's Earley parser parses the STRING token as part of the first `table_row`'s `dotted_label` instead. (`DESCRIPTION` tokens, which don't overlap with `dotted_label`, still match the optional description position unambiguously.) The recommended fix (Option 3) detects this misparse by checking if the first `table_row`'s label is a STRING token, extracts it as the description, and reparses the remaining tokens into proper column headers and data rows. Estimated 3-5h combined effort, down from 4-8h estimated separately in the FIX_ROADMAP.
 
 ### Verification
 
@@ -673,21 +678,21 @@ grep -c "ISSUE_392\|ISSUE_399" docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANAL
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANALYSIS.md` with per-issue analysis
-- Grammar change proposals for each issue
-- Fix implementation plans with test strategies
-- Confirmed or updated effort estimates (FIX_ROADMAP says 2-4h each)
-- Unknown 8.3 verified with findings documented
+- ✅ `docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANALYSIS.md` with per-issue analysis and parse tree evidence
+- ✅ Fix approach: semantic disambiguation in handler (Option 3) — no grammar changes needed
+- ✅ Fix implementation plans with test strategies for both issues
+- ✅ Effort estimates revised: 3-5h combined (down from FIX_ROADMAP's 2-4h each / 4-8h total)
+- ✅ Unknown 8.3 verified with findings documented in KNOWN_UNKNOWNS.md
 
 ### Acceptance Criteria
 
-- [ ] `like` model table block analyzed for ISSUE_392
-- [ ] `robert` model table block analyzed for ISSUE_399
-- [ ] Current grammar rule and semantic handler reviewed
-- [ ] Root cause identified for each issue (grammar gap vs. handler bug)
-- [ ] Fix approach documented for each issue
-- [ ] Test strategy defined (unit tests + model validation)
-- [ ] Unknown 8.3 verified and documented in KNOWN_UNKNOWNS.md
+- [x] `like` model table block analyzed for ISSUE_392
+- [x] `robert` model table block analyzed for ISSUE_399
+- [x] Current grammar rule and semantic handler reviewed
+- [x] Root cause identified for each issue (shared grammar ambiguity — STRING matched by `dotted_label` instead of optional description)
+- [x] Fix approach documented for each issue (Option 3: semantic disambiguation in `_handle_table_block()`)
+- [x] Test strategy defined (unit tests + model validation)
+- [x] Unknown 8.3 verified and documented in KNOWN_UNKNOWNS.md
 
 ---
 
