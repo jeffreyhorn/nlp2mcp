@@ -41,23 +41,25 @@ The `dotted_label` rule accepts `STRING` tokens. When Lark's Earley parser encou
 1. **Intended:** Match as `(STRING)?` (the optional table description)
 2. **Actual:** Match as `table_content -> table_row -> simple_label -> dotted_label -> STRING`
 
-The parser chooses path 2 because `table_content+` requires at least one match, and the STRING token satisfies the `dotted_label` rule. Since `table_content` is greedy (`+`), it consumes everything including the description.
+Both paths are grammatically valid. Lark's Earley parser can represent this as an ambiguous parse, but with the default settings (without `ambiguity="explicit"`), it returns a single tree chosen according to internal rule-order and longest-match heuristics, which in this case results in the `STRING` being matched as part of `table_content` (path 2) rather than as the optional description.
 
 ### Parse Tree Evidence
 
 **robert model** (`Table c(p,t) 'expected profits'`):
 ```
-table_block:
+table_block (7 children):
   [0] Token(TABLE): 'Table'
   [1] Token(ID): 'c'
+  [2] Token(LPAR): '('
   [3] Tree: table_domain_list (p, t)
+  [4] Token(RPAR): ')'
   [5] table_content -> table_row (16 children)
         row_label: "'expected profits'" (STRING)
         table_value: 1, 2, 3, low, 25, 20, 10, medium, 50, 50, 50, high, 75, 80, 100
   [6] Token(SEMI): ';'
 ```
 
-All 4 rows (column headers + 3 data rows) collapse into a single `table_row` with the description as row label.
+Note: There is no STRING or DESCRIPTION child at the `table_block` level — the grammar's optional `(STRING | DESCRIPTION)?` is not matched at all. Instead, the STRING token is embedded inside the first `table_content -> table_row` structure as its row label. All 4 rows (column headers + 3 data rows) collapse into a single `table_row` with the description as row label.
 
 **like model** (`Table data(*,i) 'systolic blood pressure data'`):
 ```
@@ -110,7 +112,7 @@ Table data(*,i) 'systolic blood pressure data'
 
 Primary: Grammar ambiguity (shared root cause — see above). The STRING description is consumed as the row label instead of the optional description.
 
-Secondary: Even after fixing the grammar, the continuation handling heuristic at `src/ir/parser.py:1832-1837` has a potential issue with numeric column headers:
+Secondary: The continuation handling heuristic at `src/ir/parser.py:1832-1837` may need verification for numeric column headers:
 
 ```python
 if len(merged_lines) == 1:
@@ -121,9 +123,9 @@ else:
     )
 ```
 
-For the `like` table, the continuation line `+ 16 17 18 ... 31` contains only NUMBER tokens. With 3+ merged lines already present (header + pressure + frequency), the heuristic would classify this as data continuation rather than column header continuation since `has_number_tokens = True`. This would merge the continuation tokens with the last data row (frequency) instead of the header row.
+For the `like` table, once the primary grammar fix is applied, the table will be correctly parsed with separate column header and data rows. The `+` continuation introduces a new set of column headers (`16 17 18 ... 31`). When the continuation is processed, the `len(merged_lines) == 1` branch may apply if the continuation is treated as a fresh section, which would correctly classify it as a column header continuation (the `len == 1` case always returns `True`). However, this depends on how the continuation merging interacts with the corrected parse tree structure and needs verification during implementation.
 
-**Note:** This secondary issue cannot be tested until the primary grammar fix is in place, since the current grammar produces a malformed parse tree.
+**Note:** This secondary concern cannot be fully evaluated until the primary grammar fix is in place, since the current grammar produces a malformed parse tree. The `len(merged_lines) == 1` branch may handle this case correctly.
 
 ### Fix Plan
 
@@ -220,45 +222,32 @@ table_row_label: dotted_label -> simple_label
 dotted_label: ID ("." (ID | STRING | range_expr))*  // Remove STRING from first position
 ```
 
-But this would break Issue #665 (quoted row labels like `'20-bond-wt'`).
+But this would break Issue #665, our open bug about supporting quoted row labels like `'20-bond-wt'` in `table_row_label` parsing (see `docs/issues/` for full context).
 
 ### Option 3: Use Semantic Disambiguation in the Handler (Recommended)
 
-Keep the grammar as-is but add logic at the start of `_handle_table_block` to detect and skip the description:
+Keep the grammar as-is but add logic at the start of `_handle_table_block` to detect and correct the description misparse. Since the grammar ambiguity causes the STRING to be consumed as part of the first `table_row` (not as a direct child of `table_block`), the fix must check the first `table_row`'s row label:
 
 ```python
-# After extracting name and domain from node.children[0] and [1]:
-# Check if there's a STRING/DESCRIPTION token before the first table_content
+# After extracting table_contents (list of table_row and table_continuation nodes):
+# Check if the first table_row's row label is a STRING — if so, it's a
+# misparse of the description (the grammar's (STRING|DESCRIPTION)? was not matched)
 description = None
-child_idx = 2  # Start after name and domain_list
-while child_idx < len(node.children):
-    child = node.children[child_idx]
-    if isinstance(child, Token) and child.type in ("STRING", "DESCRIPTION"):
-        description = _token_text(child)
-        child_idx += 1
-        break
-    elif isinstance(child, Token) and child.type in ("LPAR", "RPAR", "TABLE"):
-        child_idx += 1  # Skip structural tokens
-        continue
-    else:
-        break  # Reached table_content
-
-# If no explicit description token found, check if the first table_row's
-# row label is a STRING — if so, it's likely a misparse of the description
-table_contents = [...]  # existing extraction
-if description is None and table_rows:
+if table_rows:
     first_row = table_rows[0]
     first_label = first_row.children[0]
     if (isinstance(first_label, Tree) and first_label.data == "simple_label"):
         dotted = first_label.children[0]
         first_tok = dotted.children[0]
         if isinstance(first_tok, Token) and first_tok.type == "STRING":
-            # This is likely a description misparse — extract as description
+            # This is a description misparse — extract as description
             # and reinterpret remaining table_values as column headers + data
             description = _token_text(first_tok)
             # Reparse: the table_values of this row ARE the actual column
             # headers and data rows (grouped by line number)
 ```
+
+Note: There is no need to check for a STRING/DESCRIPTION token as a direct child of `table_block` — as demonstrated in the parse tree evidence above, the grammar ambiguity means the STRING is always consumed inside the first `table_row`, never as a standalone child at the `table_block` level.
 
 ### Option 4: Grammar Priority Annotation
 
@@ -270,7 +259,7 @@ table_block.1: "Table"i ID "(" table_domain_list ")" DESCRIPTION table_content+ 
 table_block.0: "Table"i ID "(" table_domain_list ")" table_content+ SEMI
 ```
 
-This splits the rule into three priority-ordered alternatives, ensuring the parser prefers consuming STRING/DESCRIPTION as the description.
+This splits the rule into three priority-ordered alternatives. However, this approach has a fundamental limitation: the ambiguity occurs *within* the expansion of `table_content` (specifically, whether `STRING` is matched by `dotted_label` inside `table_row`), not *between* different `table_block` alternatives. Rule-level priorities choose between alternative expansions of the same rule, but they don't resolve ambiguities that arise within a shared sub-rule. This option would need to be restructured to actually prevent the `dotted_label` path from capturing the STRING when a description is present — which brings us back to the grammar restructuring challenges of Option 2.
 
 ### Recommendation
 
@@ -293,11 +282,13 @@ This splits the rule into three priority-ordered alternatives, ensuring the pars
    - Check if the first `table_row`'s row label is a STRING token
    - If so, extract it as the description and reparse the remaining `table_value` tokens by line number to reconstruct the actual column headers and data rows
 
-2. **Reparse logic:**
-   - Group the `table_value` tokens from the misparse row by `token.line`
+2. **Reparse logic (with line info verification):**
+   - First, **verify** that the `table_value` tokens (or their underlying Lark `Token` objects) retain a valid `line` attribute at this stage of parsing — Lark Token objects typically preserve line/column metadata, but this should be confirmed during implementation
+   - If `token.line` is available, group the `table_value` tokens from the misparse row by `token.line`
    - The first distinct line of tokens becomes the column headers
    - Subsequent lines become data rows, with the first ID token on each line as the row label
-   - This effectively reconstructs the correct parse structure from the flat token list
+   - This effectively reconstructs the correct parse structure from the flat token list when line information is preserved
+   - **Fallback if line info is not available:** use alternative positional metadata from Lark (e.g., `column`, `end_line`) or preserve raw row segmentation earlier in the parse pipeline
 
 3. **Handle continuation after reparse:**
    - If `table_continuation` nodes exist, process them normally using the existing continuation merging code

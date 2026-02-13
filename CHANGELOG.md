@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Status:** ✅ COMPLETE
 
 #### Summary
-Analyzed ISSUE_392 (table continuation, `like` model) and ISSUE_399 (table description as header, `robert` model). Key discovery: both issues share a common root cause — a grammar ambiguity where the optional `(STRING | DESCRIPTION)?` in `table_block` is never matched because Lark's Earley parser consumes the STRING token via `dotted_label` in the `table_row` path instead. This collapses the entire table into a single malformed `table_row`. Recommended fix: semantic disambiguation in `_handle_table_block()` (zero grammar changes, zero regression risk). Effort revised from 4-8h to 3-5h combined.
+Analyzed ISSUE_392 (table continuation, `like` model) and ISSUE_399 (table description as header, `robert` model). Key discovery: both issues share a common root cause — a grammar ambiguity where the optional `(STRING | DESCRIPTION)?` in `table_block` is never matched because Lark's Earley parser matches the STRING token as part of the `dotted_label` rule in the `table_row` path instead. This collapses the entire table into a single malformed `table_row`. Recommended fix: semantic disambiguation in `_handle_table_block()` (zero grammar changes, zero regression risk). Effort revised from 4-8h to 3-5h combined.
 
 #### Deliverables
 - `docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANALYSIS.md` - Comprehensive analysis with parse tree evidence, 4 fix options evaluated, implementation plan
