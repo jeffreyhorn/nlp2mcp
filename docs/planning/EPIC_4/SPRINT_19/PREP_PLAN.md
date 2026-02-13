@@ -698,7 +698,7 @@ grep -c "ISSUE_392\|ISSUE_399" docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANAL
 
 ## Task 8: Analyze MCP Pairing Issues (ISSUE_672)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETED** (February 13, 2026)
 **Priority:** Medium
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 19 Day 1
@@ -737,11 +737,24 @@ ISSUE_672 blocks 2 models (alkyl, bearing) with "MCP pair has empty equation but
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_19/ISSUE_672_ANALYSIS.md` with comprehensive root cause analysis. Key changes:
+- Reproduced exact errors: alkyl (7 "unmatched equation" errors), bearing (2 errors)
+- Traced the full code path from `CaseInsensitiveDict.keys()` through Jacobian computation to `differentiate_expr()`
+- Discovered the root cause is NOT bound configurations — it is a **case sensitivity mismatch** in the AD differentiation pipeline
+- Analyzed both models with per-variable evidence showing which derivatives succeed (lowercase names) vs fail (mixed-case names)
+- Confirmed diagnosis with all-lowercase models (process, himmel16, blend) that produce correct stationarity equations
+- Designed fix approach: normalize `VarRef` names to lowercase at parse time in `src/ir/parser.py`
+- Updated Unknown 8.4 in `KNOWN_UNKNOWNS.md` with verification results (status: ❌ WRONG)
 
 ### Result
 
-To be completed.
+**Root cause identified: case sensitivity mismatch, NOT bound configurations.** `CaseInsensitiveDict.keys()` returns lowercase variable names (e.g., `acidfeed`), but equation AST `VarRef` nodes store original-case names from the GAMS source (e.g., `VarRef("AcidFeed")`). The `differentiate_expr()` function in `src/ad/derivative_rules.py` uses case-sensitive comparison (`expr.name != wrt_var`), producing `Const(0.0)` for every mixed-case variable. This zeroes out all Jacobian and gradient entries, causing stationarity equations with only bound multiplier terms, which GAMS reports as "unmatched equation" errors.
+
+**alkyl:** ALL 14 stationarity equations have zero Jacobian entries (complete failure) because all GAMS source variable names use mixed case.
+
+**bearing:** 11 of 13 stationarity equations have some non-zero entries (partial success) because the GAMS source inconsistently uses lowercase in some equation bodies (`r`, `r0`, `mu`, `h`) but mixed case in others (`Ep`, `Q`, `P0`). Only 2 constraints fail — those whose variables are exclusively referenced in mixed case.
+
+**Unknown 8.4 is WRONG:** The original assumption about bound configurations was incorrect. The MCP pairing logic in `src/kkt/partition.py` is correct. The fix is a localized parser normalization (2-4h), not a pairing logic rework (4-6h).
 
 ### Verification
 
@@ -756,20 +769,20 @@ grep -c "alkyl\|bearing" docs/planning/EPIC_4/SPRINT_19/ISSUE_672_ANALYSIS.md
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_19/ISSUE_672_ANALYSIS.md` with per-model analysis
-- Identified bound configurations causing empty equations
-- Fix approach with implementation plan
-- Confirmed or updated effort estimate (FIX_ROADMAP says 4-6h)
-- Unknown 8.4 verified with findings documented
+- ✅ `docs/planning/EPIC_4/SPRINT_19/ISSUE_672_ANALYSIS.md` with per-model analysis and code path trace
+- ✅ Root cause identified: case sensitivity mismatch in AD pipeline (NOT bound configurations as originally assumed)
+- ✅ Fix approach: normalize `VarRef` names to lowercase at parse time in `src/ir/parser.py`
+- ✅ Effort estimate updated: 2-4h (down from FIX_ROADMAP's 4-6h)
+- ✅ Unknown 8.4 verified (status: ❌ WRONG) with findings documented in KNOWN_UNKNOWNS.md
 
 ### Acceptance Criteria
 
-- [ ] Both alkyl and bearing models analyzed with exact error reproduced
-- [ ] Bound configurations causing the issue documented
-- [ ] MCP pairing logic traced and failure point identified
-- [ ] Fix approach designed with test strategy
-- [ ] Effort estimate confirmed or updated
-- [ ] Unknown 8.4 verified and documented in KNOWN_UNKNOWNS.md
+- [x] Both alkyl and bearing models analyzed with exact error reproduced
+- [x] Root cause identified and documented (case sensitivity mismatch between `CaseInsensitiveDict.keys()` and equation AST `VarRef` names)
+- [x] AD differentiation pipeline traced and failure point identified (`_diff_varref` case-sensitive comparison at `src/ad/derivative_rules.py:226`)
+- [x] Fix approach designed with test strategy (VarRef normalization + unit tests + integration tests + regression)
+- [x] Effort estimate updated (4-6h → 2-4h)
+- [x] Unknown 8.4 verified and documented in KNOWN_UNKNOWNS.md
 
 ---
 

@@ -1230,7 +1230,25 @@ The empty MCP equation issue is caused by specific bound configurations (e.g., v
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+❌ Status: WRONG (Prep Task 8, 2026-02-13)
+
+**Finding:** The assumption is **wrong**. The issue has nothing to do with bound configurations or MCP pairing logic in `src/kkt/partition.py`. The root cause is a **case sensitivity mismatch** in the AD differentiation pipeline:
+
+- `CaseInsensitiveDict.keys()` returns lowercase variable names (e.g., `acidfeed`)
+- Equation AST `VarRef` nodes store original-case names from the GAMS source (e.g., `VarRef("AcidFeed")`)
+- `differentiate_expr()` in `src/ad/derivative_rules.py:226` uses case-sensitive comparison: `expr.name != wrt_var` → `"AcidFeed" != "acidfeed"` → `True` → returns `Const(0.0)`
+- Result: ALL derivatives are zero for mixed-case variable names, producing stationarity equations where every constraint multiplier coefficient is `0`
+
+**Evidence:**
+- alkyl (all mixed-case variable names): ALL 14 stationarity equations have `0 * nu_*` for every constraint — complete Jacobian failure (7 errors)
+- bearing (mixture of cases): equations using lowercase variable names in their bodies produce correct non-zero derivatives (`stat_h`, `stat_mu`, `stat_r` for `nu_friction`), while equations using mixed-case names produce zeros (`stat_ep` for `nu_pumping_energy`, `comp_radius` for `lam_radius`) — partial failure (2 errors)
+- All-lowercase models (process, himmel16, blend) produce correct stationarity equations — confirming the differentiation engine itself is correct
+
+**Correction:** The MCP pairing logic is correct. The "unmatched equation" error is a downstream symptom of zero derivatives, not a pairing defect. Fix is to normalize `VarRef` names to lowercase at parse time in `src/ir/parser.py`.
+
+**Impact on Sprint 19:** Effort reduced from 4-6h (FIX_ROADMAP estimate for bound edge case analysis) to 2-4h (localized parser normalization fix). May unblock additional models beyond alkyl/bearing if they use mixed-case variable names.
+
+**Reference:** See `docs/planning/EPIC_4/SPRINT_19/ISSUE_672_ANALYSIS.md` for full analysis with code path trace and per-model evidence.
 
 ---
 

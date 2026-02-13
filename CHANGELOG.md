@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Prep Task 8: Analyze MCP Pairing Issues (ISSUE_672) - 2026-02-13
+
+**Branch:** `planning/sprint19-task8`
+**Status:** ✅ COMPLETE
+
+#### Summary
+Analyzed ISSUE_672 (MCP pairing failures in alkyl and bearing models). Key discovery: the root cause is NOT bound configurations as assumed in Unknown 8.4 and FIX_ROADMAP — it is a **case sensitivity mismatch** in the AD differentiation pipeline. `CaseInsensitiveDict.keys()` returns lowercase variable names (e.g., `acidfeed`), but equation AST `VarRef` nodes store original-case names from the GAMS source (e.g., `VarRef("AcidFeed")`). The `differentiate_expr()` function uses case-sensitive comparison, producing zero derivatives for all mixed-case variable names. This zeroes out Jacobian/gradient entries, causing "unmatched equation" errors. alkyl fails completely (7 errors, all mixed-case variables); bearing fails partially (2 errors, only constraints using mixed-case variable references). Fix: normalize VarRef names to lowercase at parse time. Effort revised from 4-6h to 2-4h.
+
+#### Deliverables
+- `docs/planning/EPIC_4/SPRINT_19/ISSUE_672_ANALYSIS.md` - Per-model analysis with full code path trace, root cause evidence, and fix design
+
+#### Unknowns Verified
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 8.4 | Wrong | Issue is NOT bound configurations — it is case sensitivity mismatch between `CaseInsensitiveDict.keys()` (lowercase) and equation AST `VarRef` names (original case). MCP pairing logic is correct; "unmatched equation" is a downstream symptom of zero derivatives |
+
 ### Sprint 19 Prep Task 7: Analyze Table Parsing Issues (ISSUE_392, ISSUE_399) - 2026-02-13
 
 **Branch:** `planning/sprint19-task7`
