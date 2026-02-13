@@ -523,6 +523,8 @@ All 72 models were checked for preprocessor directives. Results:
 | 11 | J: Bracket/Brace (mathopt3) | 1 | 1h | 56-60 |
 | 12 | K: Miscellaneous | 0-7 | 4-6h | 56-67 |
 
+_Note: The "Models" counts for "Re-test cascading (B)" in Phases 2 and 3 are approximate per-phase subsets of the **15** cascading models listed for Subcategory B (see "Grammar-fixable assessment" and Subcategory B). These are expected-resolved estimates, not new models — cascading models are re-tested after their root-cause subcategory is fixed._
+
 ### Out of Sprint 19 Scope
 
 | Item | Models | Reason |
