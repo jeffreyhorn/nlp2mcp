@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Prep Task 9: Verify Sprint 19 Baseline Metrics - 2026-02-13
+
+**Branch:** `planning/sprint19-task9`
+**Status:** ✅ COMPLETE
+
+#### Summary
+Verified v1.2.0 baseline metrics with independent full pipeline run on main. All 3,294 tests pass. Pipeline metrics confirmed: Parse 61/159 (38.4%), Translate 48, Solve 20, Full Pipeline 7. Minor discrepancies from Sprint 18 Day 14 numbers explained (corpus reduced from 160→159 due to `mingamma` exclusion; path_syntax_error 7→6). Sprint 19 targets recalibrated: lexer_invalid_char 72→below 30, internal_error 24→below 15, parse rate 38.4%→≥55%. All targets confirmed achievable.
+
+#### Deliverables
+- `docs/planning/EPIC_4/SPRINT_19/BASELINE_METRICS.md` - Complete verified metrics with error breakdowns, discrepancy analysis, and target calibration
+
+#### Unknowns Verified
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 4.1 | Verified | lexer_invalid_char count is 72, confirmed by independent pipeline run (matches Task 3) |
+| 6.4 | Verified | 43 directly grammar-fixable + 15 cascading = 58 addressable; "72 → below 30" target achievable |
+
 ### Sprint 19 Prep Task 8: Analyze MCP Pairing Issues (ISSUE_672) - 2026-02-13
 
 **Branch:** `planning/sprint19-task8`

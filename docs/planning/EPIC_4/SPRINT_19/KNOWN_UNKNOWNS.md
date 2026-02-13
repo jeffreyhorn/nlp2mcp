@@ -499,6 +499,8 @@ Development team
 
 **Reference:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md`
 
+**Task 9 confirmation (2026-02-13):** Independent full pipeline run on v1.2.0 main confirms 72 `lexer_invalid_char` models. No change since Task 3 verification. See `BASELINE_METRICS.md`.
+
 ---
 
 ## Unknown 4.2: Are there preprocessor directives (`$if`, `$include`, `$setglobal`) in lexer_invalid_char models that require preprocessor support rather than grammar fixes?
@@ -853,6 +855,8 @@ Development team
 **Easy wins identified:** Set element descriptions (4 models, 1-2h), put format (6 models, 2-3h), special values subset (3 models, 2-3h) = ~13 models in ~6-8h
 
 **Reference:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` (Grammar-Fixable Assessment section)
+
+**Task 9 confirmation (2026-02-13):** Independent full pipeline run on v1.2.0 main confirms 72 `lexer_invalid_char` baseline and 24 `internal_error` models. Combined with Task 3 catalog data, the "72 → below 30" target remains achievable (43 directly grammar-fixable + 15 cascading). See `BASELINE_METRICS.md`.
 
 ---
 

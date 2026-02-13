@@ -788,7 +788,7 @@ grep -c "alkyl\|bearing" docs/planning/EPIC_4/SPRINT_19/ISSUE_672_ANALYSIS.md
 
 ## Task 9: Verify Sprint 19 Baseline Metrics
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETED** (February 13, 2026)
 **Priority:** High
 **Estimated Time:** 1-2 hours
 **Deadline:** Before Sprint 19 Day 1
@@ -834,40 +834,53 @@ Sprint 19 acceptance criteria are defined relative to baseline numbers (e.g., "l
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_19/BASELINE_METRICS.md` with verified v1.2.0 numbers
+- Updated KNOWN_UNKNOWNS.md Unknowns 4.1, 6.4 with Task 9 confirmation notes
+- Updated CHANGELOG.md with Task 9 entry
 
 ### Result
 
-To be completed.
+**Metrics confirmed with minor discrepancies explained.** Full pipeline run on v1.2.0 main (159 candidate models) produced:
+- Parse: 61/159 (38.4%) — down 1 from Day 14's 62/160 due to `mingamma` exclusion
+- Translate: 48 ✅ Match
+- Solve: 20 ✅ Match
+- Full pipeline (objective match): 7 ✅ Match
+- path_syntax_error: 6 (was 7) — 1 model reclassified
+- lexer_invalid_char: 72 ✅ Confirmed (matches Task 3)
+- internal_error (parse): 24 (not 23 as in PROJECT_PLAN.md targets)
+- Test count: 3,294 ✅ Match
+
+**Sprint 19 targets recalibrated:**
+- lexer_invalid_char: 72 → below 30 (was "~95 → below 50")
+- internal_error: 24 → below 15 (was "23 → below 15", off by 1)
+- Parse rate: 38.4% → ≥55% (achievable — fixing 43+ lexer models reaches 65%+)
 
 ### Verification
 
 ```bash
-# Run test suite (from the repository root)
-make test 2>&1 | tail -5
-# Expected: 3294 tests passed
+# Test suite
+make test  # → 3294 passed, 10 skipped, 1 xfailed (42.43s)
 
-# Run pipeline metrics (project-specific command)
-# python -m src.cli.pipeline_report --all
-# Compare output to Sprint 18 Day 14 numbers
+# Full pipeline
+.venv/bin/python scripts/gamslib/run_full_test.py  # → 159 models processed
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_19/BASELINE_METRICS.md` with verified numbers
-- Error category breakdown (counts per category)
-- Confirmation that Sprint 19 targets are correctly calibrated
-- Any discrepancies documented with explanation
-- Unknowns 4.1, 6.4 verified with findings documented
+- ✅ `docs/planning/EPIC_4/SPRINT_19/BASELINE_METRICS.md` — Full metrics with error breakdowns and target calibration
+- ✅ Error category breakdown (lexer_invalid_char: 72, internal_error: 24, semantic_undefined_symbol: 2)
+- ✅ Sprint 19 targets confirmed achievable with recalibrated baselines
+- ✅ Discrepancies documented (corpus size 160→159, parse 62→61, path_syntax_error 7→6)
+- ✅ Unknowns 4.1, 6.4 confirmed with Task 9 notes in KNOWN_UNKNOWNS.md
 
 ### Acceptance Criteria
 
-- [ ] Full test suite passes (3294 tests, zero failures)
-- [ ] Pipeline metrics verified against Sprint 18 Day 14 numbers
-- [ ] Error category breakdown captured (lexer_invalid_char, internal_error counts)
-- [ ] Sprint 19 acceptance criteria targets validated
-- [ ] Any discrepancies documented and explained
-- [ ] Unknowns 4.1, 6.4 verified and documented in KNOWN_UNKNOWNS.md
+- [x] Full test suite passes (3294 tests, zero failures)
+- [x] Pipeline metrics verified against Sprint 18 Day 14 numbers
+- [x] Error category breakdown captured (lexer_invalid_char, internal_error counts)
+- [x] Sprint 19 acceptance criteria targets validated
+- [x] Any discrepancies documented and explained
+- [x] Unknowns 4.1, 6.4 verified and documented in KNOWN_UNKNOWNS.md
 
 ---
 
