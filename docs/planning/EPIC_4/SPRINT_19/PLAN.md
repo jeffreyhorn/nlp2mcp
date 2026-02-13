@@ -34,7 +34,7 @@ These refinements reduce total expected effort and increase confidence in target
 | Put statement format support | 2-2.5h | High | Task 5 |
 | Lexer error quick wins (Phase 1) | 6-8h | High | Task 3 |
 
-### WS2: FIX_ROADMAP Issues (18-27h)
+### WS2: FIX_ROADMAP Issues (15-23h)
 
 | Item | Effort | Priority | Prep Task |
 |------|--------|----------|-----------|
@@ -418,7 +418,7 @@ If total effort exceeds 53h, cut in this order (last item cut first):
 |--------|----------|-------------|--------------|--------------|
 | Parse success | 61/159 (38.4%) | 75/159 (47.2%) | 87/159 (54.7%) | ≥87/159 (≥55%) |
 | lexer_invalid_char | 72 | ≤59 | ≤30 | <30 |
-| internal_error (pipeline) | 24 | ≤5 | ≤3 | <15 (target) |
+| internal_error (pipeline) | 24 | ≤5 | ≤3 | ≤3 |
 | Translate success | 48 | 52+ | 55+ | 55+ |
 | Solve success | 20 | 23+ | 25+ | 25+ |
 | Full pipeline match | 7 | 9+ | 10+ | 10+ |
@@ -465,7 +465,7 @@ Key dependencies:
 
 ## Known Unknowns Integration
 
-### Verified (24 of 26) — No Action Needed
+### Verified (22 of 26) — No Action Needed
 All Critical and High unknowns are verified. Findings integrated into schedule above.
 
 ### Wrong (2 of 26) — Findings Incorporated
