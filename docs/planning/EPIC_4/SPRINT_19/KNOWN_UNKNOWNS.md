@@ -434,7 +434,7 @@ Development team
 
 **Actual count:** 72 models (not ~95 as in PROJECT_PLAN.md, not 74 as in GOALS.md).
 
-**Source of truth:** `gamslib_status.json` contains v1.1.0 pipeline data with exactly 72 `lexer_invalid_char` models.
+**Source of truth:** `data/gamslib/gamslib_status.json` contains v1.1.0 pipeline data with exactly 72 `lexer_invalid_char` models.
 
 **Discrepancy explanation:**
 - PROJECT_PLAN.md "~95" was based on older v1.0.0 data before Sprint 17 grammar fixes resolved ~25 lexer errors

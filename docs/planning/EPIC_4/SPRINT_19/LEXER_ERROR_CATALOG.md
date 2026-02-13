@@ -29,9 +29,9 @@
 |--------|---------------|--------------|-------|
 | PROJECT_PLAN.md | ~95 | 72 | Significantly overstated; based on older v1.0.0 data |
 | GOALS.md | 74 | 72 | Close but still 2 off; may include 2 models reclassified in Sprint 17 |
-| gamslib_status.json (v1.1.0) | 72 | 72 | Accurate — this is the source of truth |
+| data/gamslib/gamslib_status.json (v1.1.0) | 72 | 72 | Accurate — this is the source of truth |
 
-**Pipeline status distribution (219 total models in gamslib_status.json):**
+**Pipeline status distribution (219 total models in data/gamslib/gamslib_status.json):**
 
 | Status | Count |
 |--------|-------|
