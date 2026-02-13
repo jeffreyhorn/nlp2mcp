@@ -1707,6 +1707,21 @@ class _ModelBuilder:
                                     column=getattr(sign_token, "column", None),
                                 )
                                 all_tokens.append(synthetic_token)
+                            elif (
+                                isinstance(grandchild, Tree)
+                                and grandchild.data == "negative_number"
+                            ):
+                                # Issue #704: Handle "- 0.0013" (MINUS NUMBER with space)
+                                sign_token = grandchild.children[0]  # MINUS
+                                num_token = grandchild.children[1]  # NUMBER
+                                combined_value = _token_text(sign_token) + _token_text(num_token)
+                                synthetic_token = Token(
+                                    "NUMBER",
+                                    combined_value,
+                                    line=getattr(sign_token, "line", None),
+                                    column=getattr(sign_token, "column", None),
+                                )
+                                all_tokens.append(synthetic_token)
                     elif child.data == "simple_label":
                         # simple_label wraps dotted_label
                         # Issue #665: Include STRING tokens for quoted row labels
@@ -1758,6 +1773,23 @@ class _ModelBuilder:
                                         )
                                         synthetic_token = Token(
                                             "ID",
+                                            combined_value,
+                                            line=getattr(sign_token, "line", None),
+                                            column=getattr(sign_token, "column", None),
+                                        )
+                                        all_tokens.append(synthetic_token)
+                                    elif (
+                                        isinstance(val_token, Tree)
+                                        and val_token.data == "negative_number"
+                                    ):
+                                        # Issue #704: Handle "- 0.0013" in continuations
+                                        sign_token = val_token.children[0]
+                                        num_token = val_token.children[1]
+                                        combined_value = _token_text(sign_token) + _token_text(
+                                            num_token
+                                        )
+                                        synthetic_token = Token(
+                                            "NUMBER",
                                             combined_value,
                                             line=getattr(sign_token, "line", None),
                                             column=getattr(sign_token, "column", None),
@@ -2554,8 +2586,9 @@ class _ModelBuilder:
         )
         condition_expr = None
         if condition_node:
-            # condition node: DOLLAR "(" expr ")" -> children are [DOLLAR_token, expr_tree]
             domain = self._equation_domains.get(name.lower(), ())  # Issue #373: case-insensitive
+            # condition children: [DOLLAR_token, expr_or_ref_or_ID]
+            # Works for all variants: $(expr), $[expr], $ref_bound, $ref_indexed, $ID
             condition_expr = self._expr_with_context(
                 condition_node.children[1], f"equation '{name}' condition", domain
             )
@@ -2601,7 +2634,8 @@ class _ModelBuilder:
         )
         condition_expr = None
         if condition_node:
-            # condition node: DOLLAR "(" expr ")" -> children are [DOLLAR_token, expr_tree]
+            # condition children: [DOLLAR_token, expr_or_ref_or_ID]
+            # Works for all variants: $(expr), $[expr], $ref_bound, $ref_indexed, $ID
             condition_expr = self._expr_with_context(
                 condition_node.children[1], f"equation '{name}' condition", domain
             )
@@ -3386,65 +3420,46 @@ class _ModelBuilder:
             suggestion="Assignment targets must be scalars, parameters, or variable attributes (e.g., x.l, x.lo, x.up)",
         )
 
-    def _handle_conditional_assign(self, node: Tree) -> None:
-        """Handle conditional assignments: lhs$(condition) = rhs;
+    def _handle_conditional_assign_general(self, node: Tree) -> None:
+        """Handle conditional assignments: lhs$condition = rhs; (Issue #705)
 
-        This transforms the conditional assignment into an if statement:
-        lhs$(condition) = rhs  =>  if(condition, lhs = rhs;)
+        Uses the condition rule which supports all dollar conditional forms:
+        $(expr), $[expr], $ref_indexed, $ref_bound, $ID
 
-        Expected structure: lvalue, DOLLAR, "(", expr (condition), ")", ASSIGN, expr (rhs)
+        Expected structure: lvalue, condition, ASSIGN, expr (rhs)
         """
-        if len(node.children) < 4:
+        if len(node.children) < 3:
             raise self._error("Malformed conditional assignment statement", node)
 
-        # Extract components: lvalue, condition expr, rhs expr
+        # Extract components
         lvalue_tree = node.children[0]
         if not isinstance(lvalue_tree, Tree) or lvalue_tree.data != "lvalue":
             raise self._error("Malformed assignment target", lvalue_tree)
 
-        # Find the condition expression (after DOLLAR and before ASSIGN)
-        # Find the rhs expression (after ASSIGN)
-        condition_expr = None
+        # Find condition node and rhs expression
+        condition_node = None
         rhs_expr = None
-        found_dollar = False
-        found_assign = False
-
         for child in node.children[1:]:
-            if isinstance(child, Token):
-                if child.type == "DOLLAR":
-                    found_dollar = True
-                elif child.type == "ASSIGN":
-                    found_assign = True
-            elif isinstance(child, Tree):
-                if found_dollar and not found_assign:
-                    # This is the condition expression
-                    condition_expr = child
-                elif found_assign:
-                    # This is the RHS expression
+            if isinstance(child, Tree):
+                if child.data == "condition":
+                    condition_node = child
+                else:
                     rhs_expr = child
 
-        if condition_expr is None:
+        if condition_node is None:
             raise self._error("Missing condition in conditional assignment", node)
         if rhs_expr is None:
             raise self._error("Missing right-hand side in conditional assignment", node)
 
-        # Transform to if statement: create an if node and handle it
-        # We create a synthetic Tree node for the if statement
-        # Structure: if_stmt with condition and a body containing the assignment
-
         # Create a synthetic assignment node (without the condition)
         assign_node = Tree("assign", [lvalue_tree, Token("ASSIGN", ":="), rhs_expr])
-
-        # Now create the if statement node
-        # The if_stmt grammar expects: IF_K "(" expr "," exec_stmt+ elseif_clause* else_clause? ")" SEMI
-        # We'll create a simpler conditional statement and store it
 
         # Extract indices from lvalue for domain context (same as in _handle_assign)
         target = next(
             (child for child in lvalue_tree.children if isinstance(child, (Tree, Token))),
             None,
         )
-        domain_context = ()
+        domain_context: tuple[str, ...] = ()
         if isinstance(target, Tree):
             if target.data == "symbol_indexed" and len(target.children) > 1:
                 try:
@@ -3461,15 +3476,16 @@ class _ModelBuilder:
                     domain_context = ()
 
         # Evaluate the condition expression with domain context
+        # condition children: [DOLLAR_token, expr_or_ref_or_ID]
         condition = self._expr_with_context(
-            condition_expr, "conditional assignment", domain_context
+            condition_node.children[1], "conditional assignment", domain_context
         )
 
         # Create a ConditionalStatement and store it
         location = self._extract_source_location(node)
         cond_stmt = ConditionalStatement(
             condition=condition,
-            then_stmts=[assign_node],  # Store the assignment node to be processed
+            then_stmts=[assign_node],
             elseif_clauses=[],
             else_stmts=[],
             location=location,
@@ -3479,7 +3495,6 @@ class _ModelBuilder:
         self.model.conditional_statements.append(cond_stmt)
 
         # Also process the assignment itself so variables/parameters are updated
-        # This handles the actual data assignment in the "then" branch
         self._handle_assign(assign_node)
 
     def _handle_aggregation(

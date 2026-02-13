@@ -4,7 +4,7 @@
 
 **Issue:** The parser cannot handle assignment statements where a dollar conditional references a variable with a GAMS suffix (`.l`, `.m`, `.lo`, `.up`), e.g., `deltas(i)$ls.l(i) = ...`. The `.l` suffix accesses the level value of variable `ls`.
 
-**Status:** Open
+**Status:** Fixed
 **Severity:** Medium — `.l` suffix access is widespread in GAMS models (30+ models use `.l(`)
 **Discovered:** 2026-02-13 (Sprint 19 Day 1, after Subcategory G grammar fix advanced gangesx past its original set element description error)
 **Affected Models:** gangesx (confirmed at line 784)
@@ -83,6 +83,28 @@ The `.l(` suffix pattern appears in 30+ gamslib models. Not all will fail on thi
 ## Context
 
 This issue was exposed by the Sprint 19 Day 1 grammar fix that added `NUMBER STRING -> set_element_with_desc` support. The gangesx model previously failed at its set element description. With that fix, it now parses 783 lines before hitting this assignment dollar conditional with suffix issue.
+
+## Fix Details
+
+**Fixed in:** Sprint 19 (branch `sprint19-fix-issues-703-706`)
+
+Refactored assignment conditional grammar to use the `condition` rule (shared with equation definitions from Issue #703):
+
+```lark
+assignment_stmt: lvalue ASSIGN expr SEMI              -> assign
+               | lvalue condition ASSIGN expr SEMI    -> conditional_assign_general
+
+assignment_nosemi: lvalue ASSIGN expr                   -> assign
+                 | lvalue condition ASSIGN expr         -> conditional_assign_general
+```
+
+This replaced the previous `conditional_assign` (with explicit `DOLLAR "(" expr ")"` / `DOLLAR "[" expr "]"`) and `conditional_assign_simple` (with `DOLLAR ref_indexed`) alternatives. Using the shared `condition` rule avoids grammar ambiguity that caused Earley parser performance degradation with direct `ref_bound`/`ID` alternatives.
+
+Added `_handle_conditional_assign_general` handler in `src/ir/parser.py` which extracts the condition from `condition_node.children[1]` and evaluates it via `_expr_with_context`.
+
+**Verification:** `gangesx.gms` now parses past line 784 (hits a new unrelated error at line 1368). `ganges.gms` also parses past line 599 with the combined #704 + #705 fixes.
+
+---
 
 ## Related Issues
 

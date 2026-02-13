@@ -9858,12 +9858,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-13T21:01:19.563072+00:00",
+        "parse_date": "2026-02-13T21:27:34.021080+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.1379,
+        "parse_time_seconds": 0.155,
         "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 63, column 1: Unexpected character: 'p'\n  probe(t)..      prob(t) =e= 1 - prod(w$td(w,t), (1-td(w,t))**x(w,t));\n  ^\n\nSuggestion: This character is not valid in this context"
+          "category": "internal_error",
+          "message": "No module named 'lark'"
         }
       },
       "nlp2mcp_translate": {
