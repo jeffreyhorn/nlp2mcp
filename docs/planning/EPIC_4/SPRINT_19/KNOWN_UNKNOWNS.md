@@ -1185,7 +1185,7 @@ Development team
 
 **Finding:** The assumption is **partially correct**. Both ISSUE_392 and ISSUE_399 can be fixed without IR changes, but they require semantic handler updates, not grammar-only changes.
 
-**Shared Root Cause:** The grammar rule `table_block: "Table"i ID "(" table_domain_list ")" (STRING | DESCRIPTION)? table_content+ SEMI` has an ambiguity — the optional `(STRING | DESCRIPTION)?` is never matched by Lark's Earley parser because `dotted_label: (ID | STRING)` in the `table_row` path also accepts STRING tokens. The parser matches the quoted description as the first row's label via `dotted_label`, collapsing the entire table into a single malformed `table_row`.
+**Shared Root Cause:** The grammar rule `table_block: "Table"i ID "(" table_domain_list ")" (STRING | DESCRIPTION)? table_content+ SEMI` has an ambiguity — when the optional description is provided as a quoted `STRING`, it is effectively never matched as the description by Lark's Earley parser because `dotted_label: (ID | STRING)` in the `table_row` path also accepts `STRING` tokens. The parser matches the quoted description as the first row's label via `dotted_label`, collapsing the entire table into a single malformed `table_row`. `DESCRIPTION` tokens, which do not overlap with `dotted_label`, still match the optional description position unambiguously.
 
 **Evidence:**
 - `robert` model: `'expected profits'` becomes `simple_label` of a single `table_row` with 16 children (all data as `table_value` nodes)

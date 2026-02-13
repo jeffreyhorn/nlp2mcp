@@ -110,7 +110,7 @@ Table data(*,i) 'systolic blood pressure data'
 
 ### Root Cause
 
-Primary: Grammar ambiguity (shared root cause — see above). The STRING description is consumed as the row label instead of the optional description.
+Primary: Grammar ambiguity (shared root cause — see above). The STRING description is parsed as the row label instead of being treated as the optional description.
 
 Secondary: The continuation handling heuristic at `src/ir/parser.py:1832-1837` may need verification for numeric column headers:
 
@@ -226,7 +226,7 @@ But this would break Issue #665, our open bug about supporting quoted row labels
 
 ### Option 3: Use Semantic Disambiguation in the Handler (Recommended)
 
-Keep the grammar as-is but add logic at the start of `_handle_table_block` to detect and correct the description misparse. Since the grammar ambiguity causes the STRING to be consumed as part of the first `table_row` (not as a direct child of `table_block`), the fix must check the first `table_row`'s row label:
+Keep the grammar as-is but add logic at the start of `_handle_table_block` to detect and correct the description misparse. Since the grammar ambiguity causes the STRING to be parsed as part of the first `table_row` (not as a direct child of `table_block`), the fix must check the first `table_row`'s row label:
 
 ```python
 # After extracting table_contents (list of table_row and table_continuation nodes):
@@ -247,7 +247,7 @@ if table_rows:
             # headers and data rows (grouped by line number)
 ```
 
-Note: There is no need to check for a STRING/DESCRIPTION token as a direct child of `table_block` — as demonstrated in the parse tree evidence above, the grammar ambiguity means the STRING is always consumed inside the first `table_row`, never as a standalone child at the `table_block` level.
+Note: There is no need to check for a STRING/DESCRIPTION token as a direct child of `table_block` — as demonstrated in the parse tree evidence above, the grammar ambiguity means the STRING is always parsed inside the first `table_row`, never as a standalone child at the `table_block` level.
 
 ### Option 4: Grammar Priority Annotation
 

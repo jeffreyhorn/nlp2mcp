@@ -663,7 +663,7 @@ Created `docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANALYSIS.md` with comprehe
 
 ### Result
 
-**Both issues share a common root cause and can be fixed with semantic disambiguation in the handler (no grammar changes needed).** The grammar's optional `(STRING | DESCRIPTION)?` is never matched because Lark's Earley parser parses the STRING token as part of the first `table_row`'s `dotted_label`. The recommended fix (Option 3) detects this misparse by checking if the first `table_row`'s label is a STRING token, extracts it as the description, and reparses the remaining tokens into proper column headers and data rows. Estimated 3-5h combined effort, down from 4-8h estimated separately in the FIX_ROADMAP.
+**Both issues share a common root cause and can be fixed with semantic disambiguation in the handler (no grammar changes needed).** When the optional description is a quoted `STRING`, it is effectively never matched as the description because Lark's Earley parser parses the STRING token as part of the first `table_row`'s `dotted_label` instead. (`DESCRIPTION` tokens, which don't overlap with `dotted_label`, still match the optional description position unambiguously.) The recommended fix (Option 3) detects this misparse by checking if the first `table_row`'s label is a STRING token, extracts it as the description, and reparses the remaining tokens into proper column headers and data rows. Estimated 3-5h combined effort, down from 4-8h estimated separately in the FIX_ROADMAP.
 
 ### Verification
 
