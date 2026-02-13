@@ -29,7 +29,7 @@ This prep plan focuses on research, analysis, and setup tasks that must be compl
 |---|------|----------|-----------|--------------|-------------------|-------------------------------|
 | 1 | ✅ Create Sprint 19 Known Unknowns List | Critical | 3-4h | None | — | All components — proactive unknown identification |
 | 2 | ✅ Classify internal_error Failure Modes | Critical | 3-4h | None | 7.1, 7.2 | internal_error Investigation — scope before implementing |
-| 3 | Catalog lexer_invalid_char Subcategories | Critical | 3-4h | None | 4.1, 4.2, 4.3, 6.1, 6.4 | lexer_invalid_char Fixes — prioritize grammar work |
+| 3 | ✅ Catalog lexer_invalid_char Subcategories | Critical | 3-4h | None | 4.1, 4.2, 4.3, 6.1, 6.4 | lexer_invalid_char Fixes — prioritize grammar work |
 | 4 | Analyze Cross-Indexed Sum Patterns (ISSUE_670) | Critical | 3-4h | None | 8.1, 8.2 | FIX_ROADMAP P1 — design stationarity fix |
 | 5 | Audit Sprint 18 Deferred Item Readiness | High | 2-3h | None | 1.1-1.3, 2.1-2.3, 3.1-3.3, 4.3, 5.1-5.2 | Sprint 18 Deferred Items — verify prerequisites |
 | 6 | Research IndexOffset IR Design Options | High | 2-3h | None | 7.3, 7.4 | IndexOffset IR Design — evaluate approaches |
@@ -214,7 +214,7 @@ grep -cE "^\| (camshape|catmix|chain|chakra|danwolfe|dyncge|elec|feasopt1|gastra
 
 ## Task 3: Catalog lexer_invalid_char Subcategories
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETED** (February 12, 2026)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 19 Day 1
@@ -257,11 +257,23 @@ Sprint 19 targets reducing lexer_invalid_char from ~95 to below 50. The PROJECT_
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with complete subcategorization of all 72 `lexer_invalid_char` models. Key changes:
+- Ran all 72 models with v1.2.0 parser to confirm all still fail (zero silent fixes)
+- Extracted failing character and line context for every model
+- Analyzed preprocessor directives across all 72 models
+- Classified all 72 into 11 subcategories (A-K) with root cause analysis
+- Performed cascading failure root cause analysis for 15 models in subcategory B
+- Created grammar-fixable assessment with optimistic/realistic/conservative scenarios
+- Designed 4-phase implementation order with effort estimates
+- Updated Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 in `KNOWN_UNKNOWNS.md` with verification results
 
 ### Result
 
-To be completed.
+**72 models** cataloged (corrected from ~95 in PROJECT_PLAN.md). Distribution across 11 subcategories: Tuple/Compound Set Data (12), Cascading Parse Failures (15), Put Statement Format (6), Lead/Lag Indexing (4), Special Values/Inline Data (7), Declaration/Syntax Gaps (7), Set Element Descriptions (4), Control Flow (2), Model/Solve Issues (5), Bracket/Brace Syntax (3), Miscellaneous (7).
+
+**Grammar-fixable:** 43-45 models directly fixable + up to 22 cascading = 65 potentially addressable. Only 4 models require preprocessor support (clearlak, cesam2, springchain, uimp). The "~95 → below 50" target needs recalibration to "72 → below 30" based on corrected baseline.
+
+**Key finding:** The deferred "Lexer Error Deep Analysis" item (5-6h budget) is fully subsumed by this catalog — that budget should be reallocated to grammar implementation.
 
 ### Verification
 
@@ -269,28 +281,28 @@ To be completed.
 # Verify catalog document exists
 test -f docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md && echo "EXISTS" || echo "MISSING"
 
-# Verify model count matches expected
-grep -c "lexer_invalid_char" docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md
-# Should be ~95 or current count
+# Verify all 72 models are in the appendix
+grep -cE "^\| [0-9]+ \|" docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md
+# Should show 72
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with full subcategorization
-- Model count per subcategory (validated against PROJECT_PLAN.md estimates)
-- Grammar-change-feasibility assessment per subcategory
-- Recommended implementation order for Sprint 19
-- Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified with findings documented
+- ✅ `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with full subcategorization of all 72 models
+- ✅ Model count per subcategory (validated: 72 total, not ~95 — PROJECT_PLAN.md corrected)
+- ✅ Grammar-change-feasibility assessment per subcategory (43-45 direct, 15-22 cascading, 4 preprocessor, 7-9 investigate)
+- ✅ Recommended 4-phase implementation order for Sprint 19
+- ✅ Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified with findings documented in KNOWN_UNKNOWNS.md
 
 ### Acceptance Criteria
 
-- [ ] All lexer_invalid_char models cataloged with exact error location
-- [ ] Models grouped into 5+ subcategories with counts
-- [ ] PROJECT_PLAN.md estimates validated or corrected
-- [ ] Grammar-only vs. preprocessor-required distinction made
-- [ ] Implementation order recommended (highest ROI first)
-- [ ] Total addressable count estimated (to validate <50 target)
-- [ ] Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified and documented in KNOWN_UNKNOWNS.md
+- [x] All lexer_invalid_char models cataloged with exact error location (72 models, each with failing character and context)
+- [x] Models grouped into 5+ subcategories with counts (11 subcategories A-K)
+- [x] PROJECT_PLAN.md estimates validated or corrected (corrected: 72 not ~95; 12 compound set data not 14+)
+- [x] Grammar-only vs. preprocessor-required distinction made (69 grammar-fixable, 3 preprocessor-required, 1 compile-time variable)
+- [x] Implementation order recommended (highest ROI first: Phase 1 quick wins → Phase 2 core grammar → Phase 3 advanced → Phase 4 if-time-permits)
+- [x] Total addressable count estimated (43-65 depending on scenario; "below 30" target achievable)
+- [x] Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified and documented in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -946,7 +958,7 @@ grep -c "^### Day" docs/planning/EPIC_4/SPRINT_19/PLAN.md
 Sprint 19 prep is complete when:
 - [x] Known Unknowns list created with 26 unknowns across 8 categories
 - [x] All 24 internal_error models classified by failure mode (corrected from 23)
-- [ ] All ~95 lexer_invalid_char models cataloged by subcategory
+- [x] All 72 lexer_invalid_char models cataloged by subcategory (corrected from ~95)
 - [ ] ISSUE_670 fix design documented with implementation sketch
 - [ ] All 5 Sprint 18 deferred items audited for readiness
 - [ ] IndexOffset IR design options evaluated
