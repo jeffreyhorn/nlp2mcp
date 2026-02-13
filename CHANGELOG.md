@@ -49,6 +49,26 @@ Created comprehensive Known Unknowns document for Sprint 19 with 26 unknowns acr
 | Task 9: Verify Sprint 19 Baseline Metrics | 4.1, 6.4 |
 | Task 10: Plan Sprint 19 Detailed Schedule | All |
 
+### Sprint 19 Prep Task 4: Analyze Cross-Indexed Sum Patterns (ISSUE_670) - 2026-02-13
+
+**Branch:** `planning/sprint19-task4`
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Analyzed the cross-indexed sum problem causing GAMS Error 149 across 6 models (abel, qabel, chenery, mexss, orani, robert). All 6 share the same fundamental pattern: constraint sums over indices that produce uncontrolled references in stationarity equations. Root cause traced to `_add_indexed_jacobian_terms()` in `stationarity.py` which only checks multiplier domain vs. variable domain, missing free indices in derivative expressions. Recommended fix: add `_collect_free_indices()` utility + sum wrapping. Effort refined from 8-16h to 10-14h.
+
+#### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_19/ISSUE_670_DESIGN.md` - Complete fix design with per-model analysis, 3 options evaluated, Option A recommended with implementation sketch and test strategy
+
+#### Unknowns Verified
+
+| Unknown | Status | Finding |
+|---------|--------|---------|
+| 8.1 | Verified | Issue originates in `stationarity.py`; fix localized to stationarity builder (no AD/parser/emit changes). Two sub-problems: wrong index replacement and missing free index detection |
+| 8.2 | Verified | All 6 models share same pattern (constraint sum producing uncontrolled derivative index). Variations (multi-index, subset, superset) all handled by one fix |
+
 ### Sprint 19 Prep Task 3: Catalog lexer_invalid_char Subcategories - 2026-02-12
 
 **Branch:** `planning/sprint19-task3`
