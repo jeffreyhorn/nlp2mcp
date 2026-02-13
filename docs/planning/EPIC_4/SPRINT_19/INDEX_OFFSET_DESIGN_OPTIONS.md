@@ -11,12 +11,12 @@
 The IndexOffset IR node type **already exists** in `src/ir/ast.py` (implemented Sprint 9 Day 3) and is already integrated into the grammar and emit layer. This document evaluates the existing design against alternatives, confirms it is the correct approach, and identifies the remaining work needed in the AD and KKT pipeline stages to fully support the 8 blocked models.
 
 **Key finding:** The existing Option B design (IndexOffset as a standalone IR node used within VarRef/ParamRef index tuples) is the correct approach. No IR redesign is needed. The remaining work is:
-1. Parser semantic handler to construct IndexOffset nodes from parse trees (~2h)
-2. AD system already handles IndexOffset via tuple equality — no changes needed
-3. KKT stationarity already works with IndexOffset indices — no changes needed
+1. Parser semantic handler already constructs IndexOffset nodes from parse trees (`src/ir/parser.py:786-933`) — no additional parser work needed
+2. AD: implement IndexOffset-aware index substitution/mapping when collapsing sums (extend `_apply_index_substitution` in `src/ad/derivative_rules.py` so lead/lag indices are substituted correctly) (~4h)
+3. KKT stationarity: structurally compatible with IndexOffset indices, but end-to-end correctness depends on the AD changes above — no additional KKT-specific work anticipated
 4. Emit layer already handles IndexOffset via `_format_mixed_indices()` — no changes needed
 
-**Effort estimate:** 4h total (2h parser handlers + 2h testing/integration), down from 14-16h originally estimated in GOALS.md.
+**Effort estimate:** 8h total (4h AD index-substitution work + 2h end-to-end pipeline tracing + 2h testing/integration), down from 14-16h originally estimated in GOALS.md.
 
 ---
 
@@ -72,7 +72,7 @@ The `indices` tuple accepts both plain string indices (`"i"`, `"t"`) and `IndexO
 
 ### Existing IndexOffset Node
 
-**Location:** `src/ir/ast.py:348-464`
+**Location:** `src/ir/ast.py:256-370`
 
 ```python
 @dataclass(frozen=True)
@@ -155,18 +155,19 @@ class VarRef(Expr):
 
 | Stage | Impact | Notes |
 |-------|--------|-------|
-| Parser | Low | Grammar already has `lag_lead_suffix` rules; semantic handler creates IndexOffset |
-| AD | None | Tuple equality matching works: `IndexOffset(...)` == `IndexOffset(...)` by dataclass `eq` |
-| KKT | None | Stationarity enumeration already iterates over all index combinations |
+| Parser | None | Grammar and semantic handler both already implemented (`src/ir/parser.py:786-933`) |
+| AD | Low | `_diff_varref()` tuple equality works; but `_apply_index_substitution` needs extension for IndexOffset |
+| KKT | None | Stationarity enumeration already iterates over all index combinations; depends on AD fix |
 | Emit | None | `_format_mixed_indices()` already handles IndexOffset via `to_gams_string()` |
 
 **Pros:**
 - Already implemented and tested (Sprint 9 Day 3, Sprint 18 Day 3)
 - Clean composition — IndexOffset is just another Expr in the index tuple
 - Supports arbitrary offset expressions (Const, SymbolRef, Binary, etc.)
-- AD system works automatically via frozen dataclass equality
-- Emit layer already handles it (`_format_mixed_indices()` at `expr_to_gams.py:156-207`)
+- AD differentiation matching works via frozen dataclass equality (`_diff_varref()`)
+- Emit layer already handles it (`_format_mixed_indices()` at `src/emit/expr_to_gams.py:180`)
 - Grammar already has lead/lag rules (`gams_grammar.lark:310-340`)
+- Parser semantic handler already constructs IndexOffset (`src/ir/parser.py:786-933`)
 - All four reference nodes share the same `tuple[str | IndexOffset, ...]` pattern
 
 **Cons:**
@@ -257,8 +258,8 @@ class LeadLag(Expr):
 | Criterion | Option A (Attribute) | Option B (Standalone Node) | Option C (String) | Option D (Wrapper) |
 |-----------|---------------------|---------------------------|-------------------|-------------------|
 | Already implemented | No | **Yes** | No | No |
-| Parser impact | Medium | **Low** | Low | Medium |
-| AD impact | Medium | **None** | Low | High |
+| Parser impact | Medium | **None** | Low | Medium |
+| AD impact | Medium | **Low** | Low | High |
 | KKT impact | Medium | **None** | Low | High |
 | Emit impact | Medium | **None** | High | Medium |
 | Symbolic offsets | Limited | **Full** | No | Full |
@@ -273,76 +274,51 @@ Option B is the clear winner — it's already implemented, tested, and integrate
 
 ### Remaining Work
 
-#### 1. Parser Semantic Handler (~2h)
+#### 1. Parser: Already Complete (0h)
 
-The grammar already parses lead/lag syntax into tree nodes. The semantic handler (transformer) needs to construct `IndexOffset` objects from the parse tree. Current grammar rules:
+The grammar already parses lead/lag syntax into tree nodes (`gams_grammar.lark:310-340`), and the semantic handler in `src/ir/parser.py` already constructs `IndexOffset` objects from the parse tree. The `_process_index_expr()` function (`src/ir/parser.py:786-933`) handles all four forms:
+- `circular_lead` → `IndexOffset(base, offset, circular=True)`
+- `circular_lag` → `IndexOffset(base, Const(-offset), circular=True)`
+- `linear_lead` → `IndexOffset(base, offset, circular=False)`
+- `linear_lag` → `IndexOffset(base, Const(-offset), circular=False)`
 
-```lark
-lag_lead_suffix: CIRCULAR_LEAD offset_expr   -> circular_lead
-               | CIRCULAR_LAG offset_expr    -> circular_lag
-               | PLUS offset_expr            -> linear_lead
-               | MINUS offset_expr           -> linear_lag
+No additional parser work is needed.
 
-offset_expr: NUMBER -> offset_number
-           | ID     -> offset_variable
-```
+#### 2. AD: Index Substitution Extension (~4h)
 
-The transformer needs methods:
-
-```python
-def circular_lead(self, items):
-    return ("lead", True, items[0])
-
-def circular_lag(self, items):
-    return ("lag", True, items[0])
-
-def linear_lead(self, items):
-    return ("lead", False, items[0])
-
-def linear_lag(self, items):
-    return ("lag", False, items[0])
-
-def index_simple(self, items):
-    name = str(items[0])
-    if len(items) > 1 and items[1] is not None:
-        direction, circular, offset = items[1]
-        if direction == "lag":
-            offset = Unary("-", offset) if not isinstance(offset, Const) else Const(-offset.value)
-        return IndexOffset(base=name, offset=offset, circular=circular)
-    return name
-```
-
-#### 2. Testing and Integration (~2h)
-
-- Test parsing of all 4 syntax forms: `t+1`, `t-1`, `t++1`, `t--1`
-- Test multi-period offsets: `t+2`, `t-3`
-- Test symbolic offsets: `t+j`
-- Integration test with himmel16.gms (circular lead)
-- Test the 8 blocked models for parse success
-
-#### 3. No AD Changes Needed
-
-The AD system uses frozen dataclass equality for index matching:
-
-```python
-# In _diff_varref():
-if expr.indices == wrt_indices:
-    return Const(1.0)
-```
-
-Since `IndexOffset` is a frozen dataclass, Python's `==` operator compares all fields:
+The AD system's `_diff_varref()` function uses frozen dataclass equality for index matching, which handles IndexOffset correctly:
 - `IndexOffset("t", Const(1), False) == IndexOffset("t", Const(1), False)` → `True`
-- `IndexOffset("t", Const(1), False) == IndexOffset("t", Const(-1), False)` → `False` (different offset)
+- `IndexOffset("t", Const(1), False) != "t"` → correct independent variable treatment
 
-This means `d/dx(t+1) [x(t+1)] = 1` and `d/dx(t) [x(t+1)] = 0` **automatically** — exactly the correct behavior for treating lead/lag references as independent variables.
+However, the AD sum-collapse/index-substitution logic has an explicit limitation. In `_apply_index_substitution` (`src/ad/derivative_rules.py:1788`), the code currently skips IndexOffset objects when substituting indices:
 
-#### 4. No KKT Changes Needed
+```python
+# For now, only substitute string indices (IndexOffset not supported in AD yet)
+new_indices = tuple(
+    substitution.get(idx, idx) if isinstance(idx, str) else idx for idx in expr.indices
+)
+```
 
-Stationarity equations enumerate variable instances by iterating over set members. IndexOffset indices are carried through the enumeration as-is. The KKT builder generates one stationarity equation per variable instance, and the index matching ensures correct gradient computation.
+This means that when the AD system collapses sum expressions and substitutes concrete indices for symbolic ones, IndexOffset objects are passed through unchanged. For full IndexOffset support, `_apply_index_substitution` needs to be extended to:
+1. Detect when an IndexOffset's `base` matches a substitution key
+2. Create a new IndexOffset with the substituted base (e.g., `IndexOffset("i", Const(1), False)` with substitution `{"i": "i1"}` → `IndexOffset("i1", Const(1), False)`)
 
-#### 5. No Emit Changes Needed
+This is a localized change (~50 lines) but requires careful testing.
 
-`_format_mixed_indices()` in `expr_to_gams.py:156-207` already detects `IndexOffset` objects and emits them via `to_gams_string()`. The Sprint 18 Day 3 fix specifically addressed the quoting issue where IndexOffset expressions were being treated as strings.
+#### 3. KKT: No Direct Changes Needed (0h)
+
+Stationarity equations enumerate variable instances by iterating over set members. IndexOffset indices are carried through the enumeration as-is. The KKT builder generates one stationarity equation per variable instance, and the index matching ensures correct gradient computation. End-to-end correctness depends on the AD index-substitution fix above.
+
+#### 4. Emit: Already Complete (0h)
+
+`_format_mixed_indices()` in `src/emit/expr_to_gams.py:180` already detects `IndexOffset` objects and emits them via `to_gams_string()`. The Sprint 18 Day 3 fix specifically addressed the quoting issue where IndexOffset expressions were being treated as strings. `_is_index_offset_syntax()` at `src/emit/expr_to_gams.py:69` provides heuristic detection for mixed string inputs.
+
+#### 5. End-to-End Pipeline Tracing and Testing (~4h)
+
+- Trace the `unsup_index_offset` error classification to understand where models are currently rejected
+- Test the 8 blocked models end-to-end after AD fix
+- Verify correct MCP output for models with lead/lag expressions
+- Integration test with himmel16.gms (circular lead, already parses)
 
 ---
 
@@ -377,9 +353,9 @@ The following 8 models are blocked by `unsup_index_offset` at the translate stag
 
 ---
 
-## Grammar Change Sketch
+## Grammar and Parser Status
 
-The grammar already has lead/lag rules. The remaining work is in the **semantic handler** (Lark transformer), not the grammar itself.
+Both the grammar and semantic handler are **already fully implemented**. No changes are needed.
 
 ### Existing Grammar Rules (`gams_grammar.lark:310-340`)
 
@@ -403,55 +379,11 @@ CIRCULAR_LEAD: "++"
 CIRCULAR_LAG: "--"
 ```
 
-### Semantic Handler Changes Needed
+### Existing Semantic Handler (`src/ir/parser.py:786-933`)
 
-The Lark transformer class needs these methods to convert parse tree nodes into IndexOffset IR objects:
+The `_process_index_expr()` function already constructs IndexOffset IR objects from parse tree nodes. It handles all four lag/lead forms, supports numeric and symbolic offsets, and correctly negates lag offsets. The function is called from `_process_index_list()` which is used throughout the parser for all index contexts (variable references, parameter assignments, equation definitions, etc.).
 
-```python
-# In the transformer class:
-
-def offset_number(self, items):
-    """Convert offset number to Const."""
-    return Const(float(items[0]))
-
-def offset_variable(self, items):
-    """Convert offset variable to SymbolRef."""
-    return SymbolRef(str(items[0]))
-
-def circular_lead(self, items):
-    """Handle i++n syntax."""
-    return ("lead", True, items[0])
-
-def circular_lag(self, items):
-    """Handle i--n syntax."""
-    return ("lag", True, items[0])
-
-def linear_lead(self, items):
-    """Handle i+n syntax."""
-    return ("lead", False, items[0])
-
-def linear_lag(self, items):
-    """Handle i-n syntax."""
-    return ("lag", False, items[0])
-
-def index_simple(self, items):
-    """Handle simple index with optional lead/lag suffix."""
-    name = str(items[0])
-    if len(items) > 1 and items[1] is not None:
-        direction, circular, offset_expr = items[1]
-        if direction == "lag":
-            # Negate offset for lag
-            if isinstance(offset_expr, Const):
-                offset_expr = Const(-offset_expr.value)
-            else:
-                offset_expr = Unary("-", offset_expr)
-        return IndexOffset(base=name, offset=offset_expr, circular=circular)
-    return name
-```
-
-### No Grammar File Changes Needed
-
-The grammar already supports all four lead/lag forms. Only the transformer (semantic handler) needs implementation to produce IndexOffset IR nodes from the parse tree.
+No grammar or parser changes are needed.
 
 ---
 
@@ -460,14 +392,14 @@ The grammar already supports all four lead/lag forms. Only the transformer (sema
 | Pipeline Stage | Component | Status | Remaining Work |
 |---------------|-----------|--------|----------------|
 | **Parser** | Grammar rules | ✅ Done | None |
-| **Parser** | Semantic handler | ❌ Missing | ~2h — transformer methods for IndexOffset construction |
+| **Parser** | Semantic handler | ✅ Done | None — `_process_index_expr()` in `src/ir/parser.py:786-933` |
 | **AD** | `_diff_varref()` | ✅ Works | None — frozen dataclass equality handles IndexOffset |
-| **AD** | Index enumeration | ✅ Works | None — IndexOffset carried through |
-| **KKT** | Stationarity builder | ✅ Works | None — index-aware enumeration handles IndexOffset |
+| **AD** | `_apply_index_substitution()` | ⚠️ Partial | ~4h — IndexOffset skipped during sum-collapse substitution (`src/ad/derivative_rules.py:1806`) |
+| **KKT** | Stationarity builder | ✅ Works | None — depends on AD fix for end-to-end correctness |
 | **KKT** | Multiplier generation | ✅ Works | None — indices propagated as-is |
-| **Emit** | `_format_mixed_indices()` | ✅ Done | None — Sprint 18 Day 3 fix |
-| **Emit** | `to_gams_string()` | ✅ Done | None — handles all GAMS syntax forms |
-| **Emit** | `_is_index_offset_syntax()` | ✅ Done | None — heuristic detection for mixed inputs |
+| **Emit** | `_format_mixed_indices()` | ✅ Done | None — Sprint 18 Day 3 fix (`src/emit/expr_to_gams.py:180`) |
+| **Emit** | `to_gams_string()` | ✅ Done | None — handles all GAMS syntax forms (`src/ir/ast.py:256`) |
+| **Emit** | `_is_index_offset_syntax()` | ✅ Done | None — heuristic detection (`src/emit/expr_to_gams.py:69`) |
 
 ---
 
@@ -477,26 +409,27 @@ The grammar already supports all four lead/lag forms. Only the transformer (sema
 
 **Status:** ✅ VERIFIED
 
-**Finding:** The assumption is correct. `x(t+1)` and `x(t)` are treated as independent variables during differentiation. The AD system's `_diff_varref()` function (at `src/ad/derivative_rules.py:201-275`) uses exact tuple equality: `expr.indices == wrt_indices`. Since `IndexOffset` is a frozen dataclass, `IndexOffset("t", Const(1), False) != "t"`, so `d/dx(t) [x(t+1)] = 0` automatically. Similarly, `IndexOffset("t", Const(1), False) == IndexOffset("t", Const(1), False)`, so `d/dx(t+1) [x(t+1)] = 1`. No AD changes are needed.
+**Finding:** The core assumption about differentiation is correct: `x(t+1)` and `x(t)` are treated as independent variables during differentiation. The AD system's `_diff_varref()` function (at `src/ad/derivative_rules.py:201-275`) uses exact tuple equality: `expr.indices == wrt_indices`. Since `IndexOffset` is a frozen dataclass, `IndexOffset("t", Const(1), False) != "t"`, so `d/dx(t) [x(t+1)] = 0` automatically. Similarly, `IndexOffset("t", Const(1), False) == IndexOffset("t", Const(1), False)`, so `d/dx(t+1) [x(t+1)] = 1`. However, AD's sum-collapse/index-substitution logic (`_apply_index_substitution` in `src/ad/derivative_rules.py:1788`) still has an explicit limitation ("IndexOffset not supported in AD yet"), so full IndexOffset support in AD is **not** complete and additional work remains in that area.
 
-**Impact on Sprint 19:** Saves ~4h of estimated AD work. The 14-16h GOALS.md estimate can be reduced to ~4h.
+**Impact on Sprint 19:** No additional work is needed to change `_diff_varref()` itself; the verified tuple-equality behavior can be reused as-is. The remaining AD effort for IndexOffset is confined to the index-substitution / sum-collapse path (extending `_apply_index_substitution` to handle `IndexOffset` correctly, ~4h). The 14-16h GOALS.md estimate can be reduced to ~8h.
 
 ### Unknown 7.4: Grammar Changes for Lead/Lag Syntax
 
 **Status:** ✅ VERIFIED
 
-**Finding:** The assumption is partially correct. The grammar **already supports** lead/lag syntax — the `lag_lead_suffix` rule with `CIRCULAR_LEAD`, `CIRCULAR_LAG`, `PLUS`, and `MINUS` alternatives is implemented in `gams_grammar.lark:310-340`. The `++` and `--` tokens are unambiguous (GAMS uses these exclusively for circular lead/lag). For `+` and `-`, the grammar resolves ambiguity by context: within `index_expr`, `+`/`-` followed by `offset_expr` (NUMBER or ID) is lead/lag, not arithmetic.
+**Finding:** The assumption is partially correct. The grammar **already supports** lead/lag syntax — the `lag_lead_suffix` rule with `CIRCULAR_LEAD`, `CIRCULAR_LAG`, `PLUS`, and `MINUS` alternatives is implemented in `gams_grammar.lark:310-340`. The `++` and `--` tokens are unambiguous (GAMS uses these exclusively for circular lead/lag). For `+` and `-`, the grammar resolves ambiguity by context: within `index_expr`, `+`/`-` followed by `offset_expr` (NUMBER or ID) is lead/lag, not arithmetic. In addition, the parser semantic code (`src/ir/parser.py:786-933`) already processes `lag_lead_suffix` into `IndexOffset` IR nodes.
 
-**Correction:** No grammar changes are needed. The remaining work is only in the **semantic handler** (Lark transformer) to construct IndexOffset IR nodes from the parse tree (~2h).
+**Correction:** No grammar file changes are needed, and no additional work is required in the parser semantic handler — `_process_index_expr()` already constructs `IndexOffset` nodes. The remaining work is to identify and fix the **downstream** handling of `IndexOffset` that still produces `unsup_index_offset` failures (specifically `_apply_index_substitution` in the AD module and end-to-end pipeline tracing).
 
-**Impact on Sprint 19:** The 2h "parser spike" can be spent entirely on semantic handler implementation and testing, not grammar design.
+**Impact on Sprint 19:** The 2h "parser spike" allocation should be spent on end-to-end IndexOffset pipeline tracing and downstream fixes (AD index substitution), not on grammar or parser work.
 
 ---
 
 ## Recommendations for Sprint 19
 
 1. **Do not redesign the IR.** The existing IndexOffset node is correct and well-integrated.
-2. **Implement semantic handler methods** (~2h) to construct IndexOffset from parse tree nodes.
-3. **Test with blocked models** (~2h) — parse all 8 blocked models and verify correct IR construction.
-4. **Revise effort estimate** from 14-16h (GOALS.md) to ~4h for Sprint 19, with remaining translation work (if any) deferred to Sprint 20-21.
-5. **Consider extending `to_gams_string()`** to handle complex offset expressions (currently raises `NotImplementedError` for non-trivial cases) if any of the 8 blocked models require it.
+2. **Extend `_apply_index_substitution`** (~4h) to handle IndexOffset objects during AD sum-collapse, substituting the `base` field when it matches a substitution key.
+3. **Trace `unsup_index_offset` classification** (~2h) to understand where the 8 blocked models are currently rejected and map the downstream fixes needed.
+4. **Test with blocked models** (~2h) — run all 8 blocked models end-to-end after AD fix and verify correct MCP output.
+5. **Revise effort estimate** from 14-16h (GOALS.md) to ~8h for Sprint 19.
+6. **Consider extending `to_gams_string()`** to handle complex offset expressions (currently raises `NotImplementedError` for non-trivial cases) if any of the 8 blocked models require it.

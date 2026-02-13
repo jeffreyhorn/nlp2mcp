@@ -560,19 +560,20 @@ IndexOffset support is needed for 8 models blocked at the translate stage. The I
 Created `docs/planning/EPIC_4/SPRINT_19/INDEX_OFFSET_DESIGN_OPTIONS.md` with comprehensive evaluation of 4 design options for IndexOffset IR support. Key findings:
 - Discovered that IndexOffset IR node **already exists** in `src/ir/ast.py` (Sprint 9 Day 3) with full implementation
 - Grammar already supports all 4 lead/lag forms (`+`, `-`, `++`, `--`) in `gams_grammar.lark:310-340`
+- Parser semantic handler already constructs IndexOffset from parse trees (`src/ir/parser.py:786-933`)
 - Emit layer already handles IndexOffset via `_format_mixed_indices()` (Sprint 18 Day 3 fix)
-- AD system automatically handles IndexOffset via frozen dataclass equality — no changes needed
+- AD differentiation matching works via frozen dataclass equality, but `_apply_index_substitution` needs extension for IndexOffset
 - Evaluated 4 options: A (attribute), B (standalone node — existing), C (string encoding), D (wrapper node)
 - Identified all 8 blocked models: launch, mine, sparta, tabora, ampl, otpop, robert, pak
 - Updated Unknowns 7.3, 7.4 in KNOWN_UNKNOWNS.md with verification results
 
 ### Result
 
-**The existing Option B design (IndexOffset as standalone IR node in index tuples) is the correct approach.** No IR redesign is needed. The IndexOffset node is already implemented, the grammar already parses lead/lag syntax, the emit layer already handles output, and the AD system works automatically via frozen dataclass equality.
+**The existing Option B design (IndexOffset as standalone IR node in index tuples) is the correct approach.** No IR redesign is needed. The IndexOffset node is already implemented, the grammar already parses lead/lag syntax, the parser semantic handler already constructs IndexOffset nodes, and the emit layer already handles output.
 
-**Remaining work is minimal:** Only the parser semantic handler (Lark transformer) needs implementation to construct IndexOffset IR nodes from the parse tree (~2h), plus testing/integration (~2h). Total: ~4h, down from the 14-16h originally estimated in GOALS.md.
+**Remaining work is minimal:** IndexOffset construction is already implemented in `src/ir/parser.py`; what remains is wiring this through translation/AD index substitution (extending `_apply_index_substitution` in `src/ad/derivative_rules.py`, ~4h) and end-to-end pipeline tracing/testing (~4h). Total: ~8h, down from the 14-16h originally estimated in GOALS.md.
 
-**Key insight for AD:** `x(t)` and `x(t+1)` are independent variables. `_diff_varref()` uses `expr.indices == wrt_indices` (tuple equality), so `IndexOffset("t", Const(1), False) != "t"` → `d/dx(t) [x(t+1)] = 0` automatically.
+**Key insight for AD:** `x(t)` and `x(t+1)` are independent variables. `_diff_varref()` uses `expr.indices == wrt_indices` (tuple equality), so `IndexOffset("t", Const(1), False) != "t"` → `d/dx(t) [x(t+1)] = 0` automatically. However, `_apply_index_substitution` currently skips IndexOffset during sum-collapse, which needs to be fixed.
 
 ### Verification
 
@@ -589,8 +590,8 @@ grep -c "^### Option" docs/planning/EPIC_4/SPRINT_19/INDEX_OFFSET_DESIGN_OPTIONS
 
 - ✅ `docs/planning/EPIC_4/SPRINT_19/INDEX_OFFSET_DESIGN_OPTIONS.md` with 4 design options evaluated
 - ✅ Recommended IR design: Option B (existing IndexOffset node) with rationale
-- ✅ Grammar change sketch: no grammar changes needed; semantic handler implementation sketched
-- ✅ Impact assessment across all 4 pipeline stages (parser: 2h remaining; AD, KKT, emit: no changes)
+- ✅ Grammar and parser status: both already complete; no changes needed
+- ✅ Impact assessment across all 4 pipeline stages (parser: done; AD: ~4h for index substitution; KKT, emit: no changes)
 - ✅ 8 blocked models identified: launch, mine, sparta, tabora, ampl, otpop, robert, pak
 - ✅ Unknowns 7.3, 7.4 verified with findings documented in KNOWN_UNKNOWNS.md
 
@@ -601,7 +602,7 @@ grep -c "^### Option" docs/planning/EPIC_4/SPRINT_19/INDEX_OFFSET_DESIGN_OPTIONS
 - [x] At least 3 design options evaluated with pros/cons (4 options evaluated)
 - [x] Each option assessed against all 4 pipeline stages
 - [x] Preferred design recommended with rationale
-- [x] Grammar change sketch provided (finding: no grammar changes needed; semantic handler sketch provided)
+- [x] Grammar change sketch provided (finding: grammar and semantic handler both already complete)
 - [x] 8 blocked models identified by name
 - [x] Unknowns 7.3, 7.4 verified and documented in KNOWN_UNKNOWNS.md
 
