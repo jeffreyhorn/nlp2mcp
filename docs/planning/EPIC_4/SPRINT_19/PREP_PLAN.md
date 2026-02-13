@@ -344,7 +344,7 @@ Created `docs/planning/EPIC_4/SPRINT_19/ISSUE_670_DESIGN.md` with complete fix d
 
 ### Result
 
-**All 6 models share the same fundamental pattern:** a constraint `eq(d)` containing `sum(s, f(d,s)*x(s,v))` produces a derivative `f(d,v)` where `d` is uncontrolled in the stationarity equation `stat_x(v)`.
+**All 6 models share the same fundamental pattern:** a constraint `eq(d)` containing `sum(s, f(d,s)*x(s,v))` produces a derivative term where indices in `var_domain ∪ mult_domain` (often including `d`) are controlled, but the derivative can introduce additional indices not in either domain (typically the original summation index or a mismatched subset/superset index) that remain uncontrolled in `stat_x(v)`.
 
 **Root cause:** `_add_indexed_jacobian_terms()` in `stationarity.py` wraps terms in sums based only on multiplier domain vs. variable domain. It does not analyze free indices in the derivative expression itself.
 

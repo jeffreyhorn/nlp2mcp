@@ -199,34 +199,12 @@ Even if index replacement is correct, the sum wrapping logic doesn't analyze the
 
 **Implementation:**
 
-1. Add `collect_free_indices(expr: Expr) -> set[str]` utility that walks the expression tree:
-   ```python
-   def collect_free_indices(expr: Expr) -> set[str]:
-       """Collect all free (unbound) set indices in an expression.
-       
-       Walks the expression tree, collecting indices from VarRef, ParamRef,
-       and MultiplierRef nodes. Indices bound by Sum nodes are excluded.
-       """
-       match expr:
-           case VarRef(_, indices) | ParamRef(_, indices) | MultiplierRef(_, indices):
-               return {idx for idx in (indices or ()) if isinstance(idx, str) and _is_set_index(idx)}
-           case Sum(index_sets, body):
-               bound = set(index_sets)
-               return collect_free_indices(body) - bound
-           case Binary(_, left, right):
-               return collect_free_indices(left) | collect_free_indices(right)
-           case Unary(_, child):
-               return collect_free_indices(child)
-           case Call(_, args):
-               return set().union(*(collect_free_indices(a) for a in args))
-           case _:
-               return set()
-   ```
+1. Add `_collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]` as a private helper in `stationarity.py`. This function walks the expression tree, uses `model_ir.sets` and `model_ir.aliases` to distinguish set indices from element labels, and respects Sum-bound indices. (See full implementation in the "Implementation Sketch" section below.)
 
-2. In `_add_indexed_jacobian_terms()`, after building the term (line ~835), add:
+2. In `_add_indexed_jacobian_terms()`, after building the term, add:
    ```python
    # Detect uncontrolled indices in derivative expression
-   free_indices = collect_free_indices(indexed_deriv)
+   free_indices = _collect_free_indices(indexed_deriv, kkt.model_ir)
    controlled = var_domain_set | mult_domain_set
    uncontrolled = free_indices - controlled
    
@@ -235,8 +213,6 @@ Even if index replacement is correct, the sum wrapping logic doesn't analyze the
        term = Sum(tuple(sorted(uncontrolled)), term)
    ```
 
-3. Add `_is_set_index(idx: str) -> bool` heuristic to distinguish set indices from literal strings (e.g., `"domestic"`, `"storage-c"` are literals, not set indices). Can leverage `model_ir.sets` for this.
-
 **Pros:**
 - Localized to `stationarity.py` — no changes to AD, parser, or emit modules
 - Works regardless of whether index replacement is perfect (catches any escaping index)
@@ -244,11 +220,10 @@ Even if index replacement is correct, the sum wrapping logic doesn't analyze the
 - Low regression risk — only adds wrapping, never removes existing behavior
 
 **Cons:**
-- Heuristic for `_is_set_index()` may need refinement for edge cases (quoted string literals vs. set names)
-- Doesn't fix Sub-problem A (wrong index replacement) — but the sum wrapping makes it harmless
+- Doesn't fix Sub-problem A (wrong index replacement) — the sum wrapping only guarantees syntactic control (avoids GAMS Error 149); numeric correctness still depends on index replacement mapping to the intended set (or on an additional mapping step that rewrites indices back to the correct subset)
 
 **Estimated effort:** 10-14 hours
-- 3-4h: Implement `collect_free_indices()` and `_is_set_index()` with unit tests
+- 3-4h: Implement `_collect_free_indices()` with unit tests
 - 2-3h: Integrate into `_add_indexed_jacobian_terms()` sum wrapping logic
 - 2-3h: Also handle the scalar stationarity path (`_add_jacobian_transpose_terms_scalar`)
 - 3-4h: Validate all 6 models, fix edge cases

@@ -937,7 +937,7 @@ Development team
 
 **Finding:** The assumption is correct — all 6 models share the same fundamental pattern. One fix (free index detection + sum wrapping) covers all variations.
 
-**Common pattern:** A constraint `eq(d)` contains `sum(s, f(d,s)*x(s,v))`. When differentiated w.r.t. `x(v)`, the derivative `f(d,v)` retains the constraint's domain index `d`, which is uncontrolled in `stat_x(v)`.
+**Common pattern:** A constraint `eq(d)` contains `sum(s, f(d,s)*x(s,v))`. When forming the stationarity condition for `x(v)`, the derivative contributes a term like `f(d,v)` multiplied by the multiplier over `d`. Indices in `var_domain ∪ mult_domain` (often including `d`) are therefore controlled; the cross-index bug arises when the derivative introduces an *additional* index not in `var_domain ∪ mult_domain` (typically the original summation index or a mismatched subset/superset index), which then remains free/uncontrolled in `stat_x(v)`.
 
 **Per-model patterns:**
 
