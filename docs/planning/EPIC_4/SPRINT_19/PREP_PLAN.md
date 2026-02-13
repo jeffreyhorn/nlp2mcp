@@ -14,7 +14,7 @@ Sprint 19 is the largest sprint in Epic 4, combining four major workstreams tota
 
 1. **Sprint 18 Deferred Items (~17-21h):** MCP infeasibility bug fixes, subset relationship preservation, reserved word quoting, lexer error deep analysis, put statement format support
 2. **lexer_invalid_char Fixes (~14-18h):** Complex set data syntax, compile-time constants in ranges, remaining high-priority clusters
-3. **internal_error Investigation (~6-8h):** Error classification and initial fixes for 23 internal_error models
+3. **internal_error Investigation (~6-8h):** Error classification and initial fixes for 24 internal_error models
 4. **IndexOffset IR Design (~4h):** Design and prototype lead/lag indexing support
 
 Additionally, the FIX_ROADMAP.md from Sprint 18 Day 11 identifies four architectural issues (ISSUE_670 cross-indexed sums, ISSUE_392 table continuation, ISSUE_399 table description, ISSUE_672 MCP pairing) that block 10 models. These overlap with several Sprint 19 components and must be integrated into planning.
@@ -139,22 +139,22 @@ grep -c "^## Unknown" docs/planning/EPIC_4/SPRINT_19/KNOWN_UNKNOWNS.md
 
 ### Objective
 
-Run all 23 `internal_error` models with debug parser output to classify failure modes before Sprint 19 implementation. This directly feeds the "internal_error Investigation" component (6-8h in sprint).
+Run all 24 `internal_error` models with debug parser output to classify failure modes before Sprint 19 implementation. This directly feeds the "internal_error Investigation" component (6-8h in sprint).
 
 ### Why This Matters
 
-Sprint 19 targets reducing internal_error from 23 to below 15. Without upfront classification, the sprint would spend 4-5 hours on Day 1 just understanding the problem space, leaving insufficient time for fixes. Pre-classifying failures allows Sprint 19 to jump straight into implementation.
+Sprint 19 targets reducing internal_error from 24 to below 15. Without upfront classification, the sprint would spend 4-5 hours on Day 1 just understanding the problem space, leaving insufficient time for fixes. Pre-classifying failures allows Sprint 19 to jump straight into implementation.
 
 ### Background
 
-- internal_error models: 23 models fail during parsing with internal errors
+- internal_error models: 24 models fail during parsing with internal errors
 - Per PROJECT_PLAN.md, these need classification into: grammar ambiguity, missing production, IR construction crash, transformer error
 - Sprint 18 focused on emission-layer fixes and deferred all parser work
 - Research context: `docs/research/gamslib_parse_errors.md` (Sprint 6 parse error analysis), `docs/research/preprocessor_directives.md` (GAMS preprocessor handling)
 
 ### What Needs to Be Done
 
-1. Identify all 23 internal_error models from pipeline results database
+1. Identify all 24 internal_error models from pipeline results database
 2. Run each model with verbose/debug parser output
 3. Capture and categorize each error:
    - **Grammar ambiguity:** Multiple parse paths, unexpected token resolution
@@ -187,8 +187,9 @@ Created `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md` with co
 test -f docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md && echo "EXISTS" || echo "MISSING"
 
 # Verify all 24 models were analyzed (corrected from 23)
-grep -c "^|" docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md
-# Should show 24+ rows (header + models)
+# Count unique model rows in the three classification tables
+grep -cE "^\| (camshape|catmix|chain|chakra|danwolfe|dyncge|elec|feasopt1|gastrans|glider|harker|irscge|lnts|lrgcge|mathopt4|moncge|partssupply|polygon|quocge|robot|rocket|splcge|srpchase|twocge)" docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md
+# Should show 24
 ```
 
 ### Deliverables

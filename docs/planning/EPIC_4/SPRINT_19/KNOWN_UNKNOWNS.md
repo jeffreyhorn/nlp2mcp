@@ -793,14 +793,14 @@ Development team
 ### Verification Results
 ✅ Status: VERIFIED (Prep Task 2, 2026-02-12)
 
-**Finding:** All 24 `internal_error` models can be reclassified into specific categories. The `categorize_parse_error()` function in `scripts/gamslib/error_taxonomy.py` needs 2 additional message patterns to eliminate the `internal_error` catch-all bucket:
+**Finding:** All 24 `internal_error` models can be reclassified into specific categories. The `categorize_parse_error()` function in `scripts/gamslib/error_taxonomy.py` needs 2 additional message patterns to reclassify the 21 validation-error models; the remaining 3 parse failures will still fall through to the `internal_error` catch-all until further patterns are added:
 1. "no objective function" → `model_no_objective_def` (translation-stage category)
 2. "circular dependency" → new `validation_circular_dep` category or existing `semantic_domain_error`
 
-The 3 remaining parse failures map to existing categories:
-- gastrans (index mismatch) → `semantic_domain_error`
-- harker (undeclared model symbol) → `semantic_undefined_symbol`
-- mathopt4 (unsupported attr_access) → `parser_invalid_expression`
+The 3 remaining parse failures are parser-stage and map logically to existing categories, but their current messages do not yet match any `categorize_parse_error()` patterns and therefore still land in `internal_error`:
+- gastrans (index mismatch, "expects ... got ...") → `semantic_domain_error`
+- harker (undeclared model symbol, "not declared ...") → `semantic_undefined_symbol`
+- mathopt4 (unsupported attr_access, "Unsupported expression type ...") → `parser_invalid_expression`
 
 **Regression risk assessment:** LOW. Of the 3 remaining fixes needed:
 - gastrans fix (implicit index mapping in `_handle_assign`) modifies assignment handling logic — requires careful regression testing

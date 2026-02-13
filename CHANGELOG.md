@@ -83,7 +83,7 @@ Classified all 24 `internal_error` models (corrected from assumed 23) from the v
 #### Unknowns Verified
 
 - **7.1 (internal_error distribution):** ✅ VERIFIED — 3 categories (not 3-5 as assumed); "below 15" target already met
-- **7.2 (reclassification feasibility):** ✅ VERIFIED — All 24 errors reclassifiable; 2 new patterns needed in `categorize_parse_error()`
+- **7.2 (reclassification feasibility):** ✅ VERIFIED — All 24 errors reclassifiable; 2 patterns needed for 21 validation errors, 3 more for remaining parse failures (5 total in `categorize_parse_error()`)
 
 ## [1.2.0] - 2026-02-12
 

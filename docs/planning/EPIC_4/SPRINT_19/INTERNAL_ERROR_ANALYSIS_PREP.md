@@ -24,7 +24,7 @@ The `internal_error` classification was a catch-all bucket in `categorize_parse_
 
 ### Category 1: No Objective Function (12 models)
 
-These models parsed but failed `validate_model_structure()` in `src/validation/model.py:56` because they lack a standard objective function definition. The error was categorized as `internal_error` because `categorize_parse_error()` has no pattern for "no objective function" — this is actually a `model_no_objective_def` translation-stage category.
+These models parsed but failed post-parse objective validation in `validate_objective_defined()` (`src/validation/model.py`) because they lack a standard objective function definition. The error was categorized as `internal_error` because `categorize_parse_error()` has no pattern for "no objective function" — this is actually a `model_no_objective_def` translation-stage category.
 
 **All 12 now parse successfully with v1.2.0:**
 
@@ -53,7 +53,7 @@ These models parsed but failed `validate_model_structure()` in `src/validation/m
 
 ### Category 2: Circular Dependency (9 models)
 
-These models parsed but failed `validate_circular_dependencies()` in `src/validation/model.py:212` because they have equations where variables define each other (e.g., `x = f(y), y = g(x)`). The error was categorized as `internal_error` because `categorize_parse_error()` has no pattern for "circular dependency".
+These models parsed but failed `validate_no_circular_definitions()` in `src/validation/model.py:212` because they have equations where variables define each other (e.g., `x = f(y), y = g(x)`). The error was categorized as `internal_error` because `categorize_parse_error()` has no pattern for "circular dependency".
 
 **All 9 now parse successfully with v1.2.0:**
 
@@ -110,17 +110,17 @@ These 3 models genuinely fail at the parse stage with v1.2.0. Each has a distinc
 
 ## Error Taxonomy Gap Analysis
 
-The `categorize_parse_error()` function in `scripts/gamslib/error_taxonomy.py` has a classification gap: any error message that doesn't match a specific pattern falls through to `internal_error`. The 24 models expose two missing patterns:
+The `categorize_parse_error()` function in `scripts/gamslib/error_taxonomy.py` has a classification gap: any error message that doesn't match a specific pattern falls through to `internal_error`. The 24 models expose five missing patterns — 2 for validation-stage errors (21 models) and 3 for parse-stage errors (3 models):
 
-| Error Pattern | Current Category | Correct Category | Correct Stage |
-|---|---|---|---|
-| "no objective function" | `internal_error` (parse) | `model_no_objective_def` | translate |
-| "circular dependency" | `internal_error` (parse) | New: `validation_circular_dep` | validate |
-| Index count mismatch | `internal_error` (parse) | `semantic_domain_error` | parse |
-| Undeclared model symbol | `internal_error` (parse) | `semantic_undefined_symbol` | parse |
-| Unsupported attr_access | `internal_error` (parse) | `parser_invalid_expression` | parse |
+| Error Pattern | Current Category | Correct Category | Correct Stage | Models Affected |
+|---|---|---|---|---|
+| "no objective function" | `internal_error` (parse) | `model_no_objective_def` | translate | 12 |
+| "circular dependency" | `internal_error` (parse) | New: `validation_circular_dep` | validate | 9 |
+| "expects N indices, got M" | `internal_error` (parse) | `semantic_domain_error` | parse | 1 (gastrans) |
+| "not declared as a variable" | `internal_error` (parse) | `semantic_undefined_symbol` | parse | 1 (harker) |
+| "Unsupported expression type" | `internal_error` (parse) | `parser_invalid_expression` | parse | 1 (mathopt4) |
 
-**Recommendation:** Update `categorize_parse_error()` to detect "no objective function" and "circular dependency" patterns, mapping them to appropriate categories. This would eliminate most of the `internal_error` bucket.
+**Recommendation:** Update `categorize_parse_error()` to add all 5 patterns. The first 2 patterns alone would reclassify 21 of 24 models out of `internal_error`. Adding the remaining 3 patterns would eliminate the `internal_error` bucket entirely for this model set.
 
 ## Summary Statistics
 
@@ -140,7 +140,7 @@ The `categorize_parse_error()` function in `scripts/gamslib/error_taxonomy.py` h
 
 ## Actionable Recommendations for Sprint 19
 
-1. **Re-run pipeline** with v1.2.0 to update `gamslib_status.json` — this will move 21 models out of `internal_error` and reveal their true translation-stage blockers
+1. **Re-run pipeline** with v1.2.0 to update `gamslib_status.json` — after updating error taxonomy/stage classification (adding 5 patterns to `categorize_parse_error()`), this will move 21 models out of `internal_error` and reveal their true translation-stage blockers
 2. **Fix model attribute access** (harker + mathopt4) — medium effort, resolves 2 of 3 remaining parse failures
 3. **Fix implicit index mapping** (gastrans) — medium effort, resolves 1 remaining parse failure
 4. **Update error taxonomy** — add patterns for "no objective function" and "circular dependency" to prevent future `internal_error` misclassification
