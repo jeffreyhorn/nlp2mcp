@@ -289,7 +289,7 @@ grep -c "lexer_invalid_char" docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.
 
 ## Task 4: Analyze Cross-Indexed Sum Patterns (ISSUE_670)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETED** (February 13, 2026)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 19 Day 1
@@ -334,11 +334,23 @@ ISSUE_670 blocks 6 models (abel, qabel, chenery, mexss, orani, robert-secondary)
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_19/ISSUE_670_DESIGN.md` with complete fix design for the cross-indexed sum problem. Key changes:
+- Analyzed all 6 affected models with specific constraint patterns and uncontrolled indices documented
+- Traced the exact code path in `src/kkt/stationarity.py` that produces uncontrolled indices
+- Identified two sub-problems: wrong index replacement in `_replace_matching_indices()` and missing free index detection in `_add_indexed_jacobian_terms()`
+- Evaluated 3 fix options (A: post-replacement free index analysis, B: fix index replacement, C: post-process at emission)
+- Recommended Option A with implementation sketch and test strategy
+- Updated Unknowns 8.1, 8.2 in `KNOWN_UNKNOWNS.md` with verification results
 
 ### Result
 
-To be completed.
+**All 6 models share the same fundamental pattern:** a constraint `eq(d)` containing `sum(s, f(d,s)*x(s,v))` produces a derivative term where indices in `var_domain ∪ mult_domain` (often including `d`) are controlled, but the derivative can introduce additional indices not in either domain (typically the original summation index or a mismatched subset/superset index) that remain uncontrolled in `stat_x(v)`.
+
+**Root cause:** `_add_indexed_jacobian_terms()` in `stationarity.py` wraps terms in sums based only on multiplier domain vs. variable domain. It does not analyze free indices in the derivative expression itself.
+
+**Recommended fix (Option A):** Add `_collect_free_indices()` utility that walks the derivative expression tree, then wrap any indices not in `var_domain | mult_domain` in appropriate sums. Localized to `stationarity.py`, compatible with existing `expr_to_gams.py` index aliasing, low regression risk.
+
+**Effort estimate refined:** 10-14 hours (from 8-16h). Single-module fix, no AD/parser/emit changes needed.
 
 ### Verification
 
@@ -353,23 +365,23 @@ grep -c "abel\|qabel\|chenery\|mexss\|orani\|robert" docs/planning/EPIC_4/SPRINT
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_19/ISSUE_670_DESIGN.md` with fix design
-- Per-model analysis of the cross-indexed sum pattern
-- Recommended fix approach with implementation sketch
-- Test strategy document
-- Effort estimate refinement (narrow from 8-16h)
-- Unknowns 8.1, 8.2 verified with findings documented
+- ✅ `docs/planning/EPIC_4/SPRINT_19/ISSUE_670_DESIGN.md` with fix design (3 options evaluated, Option A recommended)
+- ✅ Per-model analysis of the cross-indexed sum pattern (all 6 models with constraint excerpts, uncontrolled indices)
+- ✅ Recommended fix approach with implementation sketch (`_collect_free_indices()` + sum wrapping)
+- ✅ Test strategy (unit tests for `_collect_free_indices()`, integration tests for 6 models, regression suite)
+- ✅ Effort estimate refined from 8-16h to 10-14h
+- ✅ Unknowns 8.1, 8.2 verified with findings documented in KNOWN_UNKNOWNS.md
 
 ### Acceptance Criteria
 
-- [ ] All 6 affected models analyzed with specific constraint patterns documented
-- [ ] Common cross-indexed sum pattern identified and described
-- [ ] At least 2 fix approaches evaluated with pros/cons
-- [ ] Preferred approach recommended with implementation sketch
-- [ ] Compatibility with existing expr_to_gams.py index aliasing assessed
-- [ ] Test strategy defined (unit tests + 6-model validation)
-- [ ] Effort estimate refined from 8-16h range
-- [ ] Unknowns 8.1, 8.2 verified and documented in KNOWN_UNKNOWNS.md
+- [x] All 6 affected models analyzed with specific constraint patterns documented
+- [x] Common cross-indexed sum pattern identified and described
+- [x] At least 2 fix approaches evaluated with pros/cons
+- [x] Preferred approach recommended with implementation sketch
+- [x] Compatibility with existing expr_to_gams.py index aliasing assessed
+- [x] Test strategy defined (unit tests + 6-model validation)
+- [x] Effort estimate refined from 8-16h range
+- [x] Unknowns 8.1, 8.2 verified and documented in KNOWN_UNKNOWNS.md
 
 ---
 

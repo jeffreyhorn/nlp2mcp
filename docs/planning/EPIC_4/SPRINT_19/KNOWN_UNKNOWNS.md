@@ -882,7 +882,24 @@ The uncontrolled index issue occurs during stationarity equation generation in `
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 4, 2026-02-13)
+
+**Finding:** The assumption is correct — the issue originates in `src/kkt/stationarity.py` and the fix is localized to the stationarity builder. No AD module changes are needed.
+
+**Exact code path:**
+
+1. `build_stationarity_equations()` creates stationarity equations with `domain = var_def.domain`
+2. `_add_indexed_jacobian_terms()` processes each constraint's Jacobian entry
+3. `_replace_indices_in_expr()` converts concrete element labels to symbolic set names. For parameters with `prefer_declared_domain=True`, it can map a variable-domain index to the wrong set name (e.g., mapping `"p1"` to `"np"` from the parameter's declared domain instead of `"p"` from the variable domain)
+4. The sum wrapping logic in the stationarity builder only compares `mult_domain_set` vs `var_domain_set`. It does **not** check whether the derivative expression itself contains additional free indices outside both domains
+
+**Two sub-problems identified:**
+- **Sub-problem A:** Index replacement in `_replace_matching_indices()` can produce wrong symbolic names when parameter declared domain differs from the stationarity context
+- **Sub-problem B:** No detection of uncontrolled indices within the derivative expression itself
+
+**Fix scope:** Localized to `stationarity.py` — add a `_collect_free_indices()` utility to detect uncontrolled indices and wrap them in sums. No changes needed to AD, parser, or emit modules.
+
+**Impact on Sprint 19:** Effort estimate narrowed from 8-16h to 10-14h. Single-module fix with low regression risk.
 
 ---
 
@@ -916,7 +933,31 @@ All 6 models (abel, qabel, chenery, mexss, orani, robert-secondary) have the sam
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 4, 2026-02-13)
+
+**Finding:** The assumption is correct — all 6 models share the same fundamental pattern. One fix (free index detection + sum wrapping) covers all variations.
+
+**Common pattern:** A constraint `eq(d)` contains `sum(s, f(d,s)*x(s,v))`. When forming the stationarity condition for `x(v)`, the derivative contributes a term like `f(d,v)` multiplied by the multiplier over `d`. Indices in `var_domain ∪ mult_domain` (often including `d`) are therefore controlled; the cross-index bug arises when the derivative introduces an *additional* index not in `var_domain ∪ mult_domain` (typically the original summation index or a mismatched subset/superset index), which then remains free/uncontrolled in `stat_x(v)`.
+
+**Per-model patterns:**
+
+| Model | Constraint | Cross-Index Expression | Uncontrolled Index |
+|-------|-----------|----------------------|-------------------|
+| abel | criterion | `sum((k,n,np), ... w(n,np,k)*x(np,k))` | `np` |
+| qabel | criterion | Same as abel | `np` |
+| chenery | sup(i) | `sum(j, aio(j,i)*p(j))` | `j` (potential — current AD produces diagonal `aio(i,i)`) |
+| mexss | mbf, mbi, mbr, cc | `sum(cf, ... - a(c,p) ...)` | `c` (superset of `cf`/`ci`/`cr`/`m`) |
+| orani | indc, pric | `sum(sp, alpha(c,sp,i)*p(c,sp))` | `sp` |
+| robert | sb, pd | `sum(p, a(r,p)*x(p,tt))` + `c(p,t)` subset mismatch | `t` (subset of `tt`) |
+
+**Variations identified (all handled by one fix):**
+- **Simple cross-index:** chenery (single sum, single cross-index)
+- **Multi-index sum:** abel/qabel (sum over multiple indices with matrix)
+- **Subset indexing:** mexss (parameter indexed by subset `cf` of set `c`)
+- **Multi-level cross-indexing:** orani (nested cross-references)
+- **Subset/superset mismatch:** robert (`t` is subset of `tt`)
+
+**Impact on Sprint 19:** One fix approach covers all 6 models. No need for multiple fix strategies.
 
 ---
 
