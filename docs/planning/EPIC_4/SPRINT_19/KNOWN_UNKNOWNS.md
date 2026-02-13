@@ -945,8 +945,8 @@ Development team
 |-------|-----------|----------------------|-------------------|
 | abel | criterion | `sum((k,n,np), ... w(n,np,k)*x(np,k))` | `np` |
 | qabel | criterion | Same as abel | `np` |
-| chenery | sup(i) | `sum(j, aio(j,i)*p(j))` | `j` |
-| mexss | mbf, mbi, mbr, cc | `sum(p, a(cf,p)*z(p,i))` | `cf`/`ci`/`cr`/`m` (subsets) |
+| chenery | sup(i) | `sum(j, aio(j,i)*p(j))` | `j` (potential — current AD produces diagonal `aio(i,i)`) |
+| mexss | mbf, mbi, mbr, cc | `sum(cf, ... - a(c,p) ...)` | `c` (superset of `cf`/`ci`/`cr`/`m`) |
 | orani | indc, pric | `sum(sp, alpha(c,sp,i)*p(c,sp))` | `sp` |
 | robert | sb, pd | `sum(p, a(r,p)*x(p,tt))` + `c(p,t)` subset mismatch | `t` (subset of `tt`) |
 

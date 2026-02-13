@@ -70,9 +70,11 @@ sup(i).. p(i) =e= sum(j, aio(j,i)*p(j)) + v(i);
 ```
 
 **Stationarity equation for p(i):**
-Differentiating `sup(i)` w.r.t. `p(i)` gives `1 - aio(i,i)` for the diagonal term, but differentiating w.r.t. `p(j)` gives `aio(j,i)` where `j` must be summed over in the stationarity equation for `p`. The derivative term `aio(j,i) * nu_sup(i)` contains `j` outside `stat_p`'s domain.
+Differentiating `sup(i)` w.r.t. `p(i)` collapses the sum to the diagonal: the current generated output shows `(1 - aio(i,i)) * nu_sup(i)` in `stat_p(i)` with no free `j`. The scalar stationarity equations (`stat_pd`, etc.) show `(-1) * sum(j, 0) * nu_sup(...)` — the cross-derivative simplifies to zero.
 
-**Uncontrolled index:** `j` — from `sum(j, aio(j,i)*p(j))`.
+**Current status:** The generated `data/gamslib/mcp/chenery_mcp.gms` does not exhibit an uncontrolled index in `stat_p(i)` because the AD system produces a diagonal result. However, chenery is included because (a) the `sup(i)` constraint has the cross-indexed sum pattern, and (b) a more complete AD (producing non-zero off-diagonal derivatives) would expose the uncontrolled `j` index. The proposed `_collect_free_indices()` fix would handle this case if the AD output changes.
+
+**Potential uncontrolled index:** `j` — from `sum(j, aio(j,i)*p(j))`, if the AD produces non-zero off-diagonal terms.
 
 ---
 
@@ -89,7 +91,7 @@ cc(m,i)..   sum(p, b(m,p)*z(p,i))  =l= k(m,i);
 ```
 
 **Stationarity equation for z(p,i):**
-The derivative of `mbf(cf,i)` w.r.t. `z(p,i)` gives `a(cf,p)`. In `stat_z(p,i)`, the index `cf` is uncontrolled. Similarly `ci` from `mbi`, `cr` from `mbr`, and `m` from `cc`.
+Differentiating these constraints w.r.t. `z(p,i)` yields terms in `a(c,p)` after index aliasing. In the generated `stat_z(p,i)` equations, the subset indices `cf`, `ci`, `cr`, and `m` are all correctly bound by the outer `sum(cf, ...)`, `sum(ci, ...)`, etc.; the actual uncontrolled index is `c` inside `a(c,p)`, which is not in the stationarity equation's domain.
 
 **Generated output (from `data/gamslib/mcp/mexss_mcp.gms`):**
 ```gams
@@ -299,7 +301,7 @@ Add a pass in the equation emitter that:
 2. **Localized change:** Only `stationarity.py` needs modification (plus a small utility function)
 3. **Robust:** Catches uncontrolled indices regardless of their source (wrong replacement, sum collapse, subset mismatch)
 4. **Low regression risk:** Adds wrapping without changing existing replacement logic
-5. **Compatible:** The `expr_to_gams.py` index aliasing handles Sum nodes correctly (extends `domain_vars` with sum indices per line 458), so new Sum wrappers integrate seamlessly
+5. **Compatible:** The `expr_to_gams.py` index aliasing already extends `domain_vars` with indices introduced by `Sum` nodes (via its Sum-handling / `resolve_index_conflicts()` logic), so new Sum wrappers integrate seamlessly
 
 ### Implementation Sketch
 
@@ -360,13 +362,13 @@ if uncontrolled:
 
 ### Handling the Scalar Stationarity Path
 
-The function `_add_jacobian_transpose_terms_scalar()` (line ~871) handles per-instance stationarity equations. This path also needs the same fix — after building the `Binary("*", derivative, mult_ref)` term, check for free indices not in the equation's implicit domain and wrap them. Since scalar stationarity equations have no domain (they are element-specific), any free set index in the derivative is potentially uncontrolled and needs wrapping.
+The function `_add_jacobian_transpose_terms_scalar()` handles per-instance stationarity equations. This path also needs the same fix — after building the `Binary("*", derivative, mult_ref)` term, check for free indices not in the equation's implicit domain and wrap them. Since scalar stationarity equations have no domain (they are element-specific), any free set index in the derivative is potentially uncontrolled and needs wrapping.
 
 ### Edge Cases
 
 1. **Indices that are element labels, not set names:** The `_collect_free_indices()` function uses `model_ir.sets` to distinguish set names from element labels. Strings like `"domestic"` or `"storage-c"` are not in `model_ir.sets` and will be correctly excluded.
 
-2. **Indices already wrapped in sums by the existing logic:** The `collect_free_indices` function respects Sum boundaries — an index bound by an enclosing Sum is not counted as free. So there's no double-wrapping.
+2. **Indices already wrapped in sums by the existing logic:** The `_collect_free_indices` function respects Sum boundaries — an index bound by an enclosing Sum is not counted as free. So there's no double-wrapping.
 
 3. **IndexOffset objects (lead/lag):** These are not string indices and will be naturally excluded from the free index set.
 
