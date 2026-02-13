@@ -49,6 +49,42 @@ Created comprehensive Known Unknowns document for Sprint 19 with 26 unknowns acr
 | Task 9: Verify Sprint 19 Baseline Metrics | 4.1, 6.4 |
 | Task 10: Plan Sprint 19 Detailed Schedule | All |
 
+### Sprint 19 Prep Task 2: Classify internal_error Failure Modes - 2026-02-12
+
+**Branch:** `planning/sprint19-task2`
+**Status:** ✅ COMPLETE
+
+#### Summary
+
+Classified all 24 `internal_error` models (corrected from assumed 23) from the v1.1.0 pipeline data. Major finding: 21 of 24 models (87.5%) now parse successfully with the v1.2.0 codebase — Sprint 18 fixes silently resolved them. Only 3 models still fail at the parse stage. The `internal_error` classification was a catch-all bucket in the error taxonomy.
+
+#### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md` — Full classification of all 24 models
+- `docs/planning/EPIC_4/SPRINT_19/KNOWN_UNKNOWNS.md` — Unknowns 7.1, 7.2 verified
+
+#### Classification Results
+
+| Category | Count | v1.2.0 Parse Status | Root Cause |
+|----------|-------|---------------------|------------|
+| No objective function | 12 (50%) | All 12 PASS | Post-parse validation, not a parse failure |
+| Circular dependency | 9 (37.5%) | All 9 PASS | Post-parse validation, not a parse failure |
+| Parser/semantic error | 3 (12.5%) | All 3 FAIL | Genuine parse-stage failures |
+| **Total** | **24** | **21 pass, 3 fail** | |
+
+#### Remaining 3 Parse Failures
+
+| Model | Error Type | Root Cause | Fix Complexity |
+|-------|-----------|------------|----------------|
+| gastrans | ParseError | Parameter index count mismatch (implicit index mapping) | Medium |
+| harker | ParserSemanticError | Model object attribute access (`.objVal`) | Low-Medium |
+| mathopt4 | ParserSemanticError | Unsupported `attr_access` expression type (`.modelStat`) | Low-Medium |
+
+#### Unknowns Verified
+
+- **7.1 (internal_error distribution):** ✅ VERIFIED — 3 categories (not 3-5 as assumed); "below 15" target already met
+- **7.2 (reclassification feasibility):** ✅ VERIFIED — All 24 errors reclassifiable; 2 patterns needed for 21 validation errors, 3 more for remaining parse failures (5 total in `categorize_parse_error()`)
+
 ## [1.2.0] - 2026-02-12
 
 ### Release v1.2.0 - Sprint 18 Complete
