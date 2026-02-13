@@ -58,7 +58,7 @@ The bug involves three components interacting:
 
 #### 1. `CaseInsensitiveDict.keys()` returns LOWERCASE keys
 
-**File:** `src/utils/case_insensitive_dict.py:87-89`
+**File:** `src/utils/case_insensitive_dict.py:81-83`
 
 ```python
 def keys(self):  # type: ignore[override]
@@ -101,7 +101,7 @@ The parser checks `name in self.model.variables` (which succeeds due to case-ins
 
 #### 4. The differentiation code does a case-SENSITIVE string comparison
 
-**File:** `src/ad/derivative_rules.py:226` (in `_diff_varref`):
+**File:** `src/ad/derivative_rules.py:258` (in `_diff_varref`):
 ```python
 if expr.name != wrt_var:
     return Const(0.0)
@@ -126,9 +126,9 @@ Every call site that iterates `model_ir.variables.keys()` and passes the key to 
 
 | File | Line | Function |
 |------|------|----------|
-| `src/ad/constraint_jacobian.py` | 248 | `_compute_equality_jacobian` |
-| `src/ad/constraint_jacobian.py` | 334 | `_compute_inequality_jacobian` |
-| `src/ad/constraint_jacobian.py` | 394 | `_compute_bound_jacobian` |
+| `src/ad/constraint_jacobian.py` | 348 | `_compute_equality_jacobian` |
+| `src/ad/constraint_jacobian.py` | 434 | `_compute_inequality_jacobian` |
+| `src/ad/constraint_jacobian.py` | 494 | `_compute_bound_jacobian` |
 | `src/ad/gradient.py` | 248 | `compute_gradient` |
 | `src/ad/index_mapping.py` | ~415 | `build_index_mapping` (stores lowercase in `col_to_var`) |
 
@@ -201,13 +201,11 @@ This confirms that the differentiation engine is correct; the only issue is the 
 expr = VarRef(name, idx_tuple)
 
 # After (fix):
-canonical_name = self.model.variables.get_original_name(name)
-# Or simply:
 canonical_name = name.lower()
 expr = VarRef(canonical_name, idx_tuple)
 ```
 
-Using `name.lower()` is simplest and consistent with how `CaseInsensitiveDict.keys()` stores keys.
+Using `name.lower()` is consistent with how `CaseInsensitiveDict.keys()` stores keys internally. Note: `get_original_name()` is NOT suitable here — it returns the original casing (e.g., `"AcidFeed"`), not the lowercase canonical form needed for matching.
 
 ### Why This Approach
 
@@ -274,4 +272,4 @@ The MCP pairing in `src/kkt/partition.py` is correct. The "unmatched equation" e
 
 - **Effort reduced:** 4-6h (FIX_ROADMAP) → 2-4h (localized parser fix)
 - **May unblock additional models:** Any model with mixed-case GAMS variable names that currently produces incorrect MCP output would be fixed
-- **Regression risk:** Low — normalization only affects the internal name stored in VarRef, not user-facing output (emit layer uses `get_original_name()` for display)
+- **Regression risk:** Low-to-moderate — normalization will also cause emitted MCP variable names to be lowercased (since the emit layer in `src/emit/expr_to_gams.py:394` uses `var_ref.name` directly, not `get_original_name()`), which is functionally correct (GAMS is case-insensitive) but may affect code readability; this tradeoff should be explicitly addressed during implementation, either by accepting lowercase output or by updating the emit layer to use `get_original_name()` to preserve original casing

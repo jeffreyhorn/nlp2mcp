@@ -1236,7 +1236,7 @@ Development team
 
 - `CaseInsensitiveDict.keys()` returns lowercase variable names (e.g., `acidfeed`)
 - Equation AST `VarRef` nodes store original-case names from the GAMS source (e.g., `VarRef("AcidFeed")`)
-- `differentiate_expr()` in `src/ad/derivative_rules.py:226` uses case-sensitive comparison: `expr.name != wrt_var` → `"AcidFeed" != "acidfeed"` → `True` → returns `Const(0.0)`
+- `differentiate_expr()` in `src/ad/derivative_rules.py:258` uses case-sensitive comparison: `expr.name != wrt_var` → `"AcidFeed" != "acidfeed"` → `True` → returns `Const(0.0)`
 - Result: ALL derivatives are zero for mixed-case variable names, producing stationarity equations where every constraint multiplier coefficient is `0`
 
 **Evidence:**

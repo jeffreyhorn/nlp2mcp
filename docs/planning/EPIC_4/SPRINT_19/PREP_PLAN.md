@@ -779,7 +779,7 @@ grep -c "alkyl\|bearing" docs/planning/EPIC_4/SPRINT_19/ISSUE_672_ANALYSIS.md
 
 - [x] Both alkyl and bearing models analyzed with exact error reproduced
 - [x] Root cause identified and documented (case sensitivity mismatch between `CaseInsensitiveDict.keys()` and equation AST `VarRef` names)
-- [x] AD differentiation pipeline traced and failure point identified (`_diff_varref` case-sensitive comparison at `src/ad/derivative_rules.py:226`)
+- [x] AD differentiation pipeline traced and failure point identified (`_diff_varref` case-sensitive comparison at `src/ad/derivative_rules.py:258`)
 - [x] Fix approach designed with test strategy (VarRef normalization + unit tests + integration tests + regression)
 - [x] Effort estimate updated (4-6h → 2-4h)
 - [x] Unknown 8.4 verified and documented in KNOWN_UNKNOWNS.md
