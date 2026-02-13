@@ -14,7 +14,7 @@ Sprint 19 is the largest sprint in Epic 4, combining four major workstreams tota
 
 1. **Sprint 18 Deferred Items (~17-21h):** MCP infeasibility bug fixes, subset relationship preservation, reserved word quoting, lexer error deep analysis, put statement format support
 2. **lexer_invalid_char Fixes (~14-18h):** Complex set data syntax, compile-time constants in ranges, remaining high-priority clusters
-3. **internal_error Investigation (~6-8h):** Error classification and initial fixes for 23 internal_error models
+3. **internal_error Investigation (~6-8h):** Error classification and initial fixes for 24 internal_error models
 4. **IndexOffset IR Design (~4h):** Design and prototype lead/lag indexing support
 
 Additionally, the FIX_ROADMAP.md from Sprint 18 Day 11 identifies four architectural issues (ISSUE_670 cross-indexed sums, ISSUE_392 table continuation, ISSUE_399 table description, ISSUE_672 MCP pairing) that block 10 models. These overlap with several Sprint 19 components and must be integrated into planning.
@@ -27,9 +27,9 @@ This prep plan focuses on research, analysis, and setup tasks that must be compl
 
 | # | Task | Priority | Est. Time | Dependencies | Unknowns Verified | Sprint 19 Component Addressed |
 |---|------|----------|-----------|--------------|-------------------|-------------------------------|
-| 1 | Create Sprint 19 Known Unknowns List | Critical | 3-4h | None | — | All components — proactive unknown identification |
-| 2 | Classify internal_error Failure Modes | Critical | 3-4h | None | 7.1, 7.2 | internal_error Investigation — scope before implementing |
-| 3 | Catalog lexer_invalid_char Subcategories | Critical | 3-4h | None | 4.1, 4.2, 4.3, 6.1, 6.4 | lexer_invalid_char Fixes — prioritize grammar work |
+| 1 | ✅ Create Sprint 19 Known Unknowns List | Critical | 3-4h | None | — | All components — proactive unknown identification |
+| 2 | ✅ Classify internal_error Failure Modes | Critical | 3-4h | None | 7.1, 7.2 | internal_error Investigation — scope before implementing |
+| 3 | ✅ Catalog lexer_invalid_char Subcategories | Critical | 3-4h | None | 4.1, 4.2, 4.3, 6.1, 6.4 | lexer_invalid_char Fixes — prioritize grammar work |
 | 4 | Analyze Cross-Indexed Sum Patterns (ISSUE_670) | Critical | 3-4h | None | 8.1, 8.2 | FIX_ROADMAP P1 — design stationarity fix |
 | 5 | Audit Sprint 18 Deferred Item Readiness | High | 2-3h | None | 1.1-1.3, 2.1-2.3, 3.1-3.3, 4.3, 5.1-5.2 | Sprint 18 Deferred Items — verify prerequisites |
 | 6 | Research IndexOffset IR Design Options | High | 2-3h | None | 7.3, 7.4 | IndexOffset IR Design — evaluate approaches |
@@ -129,7 +129,7 @@ grep -c "^## Unknown" docs/planning/EPIC_4/SPRINT_19/KNOWN_UNKNOWNS.md
 
 ## Task 2: Classify internal_error Failure Modes
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETED** (February 12, 2026)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 19 Day 1
@@ -139,22 +139,22 @@ grep -c "^## Unknown" docs/planning/EPIC_4/SPRINT_19/KNOWN_UNKNOWNS.md
 
 ### Objective
 
-Run all 23 `internal_error` models with debug parser output to classify failure modes before Sprint 19 implementation. This directly feeds the "internal_error Investigation" component (6-8h in sprint).
+Run all 24 `internal_error` models with debug parser output to classify failure modes before Sprint 19 implementation. This directly feeds the "internal_error Investigation" component (6-8h in sprint).
 
 ### Why This Matters
 
-Sprint 19 targets reducing internal_error from 23 to below 15. Without upfront classification, the sprint would spend 4-5 hours on Day 1 just understanding the problem space, leaving insufficient time for fixes. Pre-classifying failures allows Sprint 19 to jump straight into implementation.
+Sprint 19 targets reducing internal_error from 24 to below 15. Without upfront classification, the sprint would spend 4-5 hours on Day 1 just understanding the problem space, leaving insufficient time for fixes. Pre-classifying failures allows Sprint 19 to jump straight into implementation.
 
 ### Background
 
-- internal_error models: 23 models fail during parsing with internal errors
+- internal_error models: 24 models fail during parsing with internal errors
 - Per PROJECT_PLAN.md, these need classification into: grammar ambiguity, missing production, IR construction crash, transformer error
 - Sprint 18 focused on emission-layer fixes and deferred all parser work
 - Research context: `docs/research/gamslib_parse_errors.md` (Sprint 6 parse error analysis), `docs/research/preprocessor_directives.md` (GAMS preprocessor handling)
 
 ### What Needs to Be Done
 
-1. Identify all 23 internal_error models from pipeline results database
+1. Identify all 24 internal_error models from pipeline results database
 2. Run each model with verbose/debug parser output
 3. Capture and categorize each error:
    - **Grammar ambiguity:** Multiple parse paths, unexpected token resolution
@@ -168,11 +168,17 @@ Sprint 19 targets reducing internal_error from 23 to below 15. Without upfront c
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md` with complete classification of all 24 `internal_error` models (corrected from assumed 23). Key changes:
+- Ran all 24 models with v1.2.0 parser (`parse_model_file()`) to determine current parse status
+- Classified original v1.1.0 errors into 3 categories: no objective function (12), circular dependency (9), parser/semantic error (3)
+- Discovered that 21 of 24 models now parse successfully with v1.2.0 — Sprint 18 fixes silently resolved these
+- Identified the `internal_error` classification as a catch-all in `categorize_parse_error()` (`scripts/gamslib/error_taxonomy.py`)
+- Documented all 3 remaining parse failures with root cause, source location, and fix complexity
+- Updated Unknowns 7.1 and 7.2 in `KNOWN_UNKNOWNS.md` with verification results
 
 ### Result
 
-To be completed.
+**24 models** classified (not 23 as assumed). Distribution: 12 no-objective (50%), 9 circular-dependency (37.5%), 3 parser/semantic (12.5%). **21 of 24 (87.5%) already parse with v1.2.0** — pipeline database is stale. Only 3 genuine parse failures remain: gastrans (index mismatch), harker (model attribute access), mathopt4 (attr_access expression). The "below 15" target is already met at the parse stage. The `internal_error` bucket was primarily a categorization artifact — errors fell through `categorize_parse_error()` to the `INTERNAL_ERROR` default.
 
 ### Verification
 
@@ -180,34 +186,35 @@ To be completed.
 # Verify analysis document exists
 test -f docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md && echo "EXISTS" || echo "MISSING"
 
-# Verify all 23 models were analyzed
-grep -c "^|" docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md
-# Should show 23+ rows (header + models)
+# Verify all 24 models were analyzed (corrected from 23)
+# Count unique model rows in the three classification tables
+grep -cE "^\| (camshape|catmix|chain|chakra|danwolfe|dyncge|elec|feasopt1|gastrans|glider|harker|irscge|lnts|lrgcge|mathopt4|moncge|partssupply|polygon|quocge|robot|rocket|splcge|srpchase|twocge)" docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md
+# Should show 24
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md` with classification of all 23 models
-- Error category distribution (count per category)
-- Recommended fix order (easiest/highest-ROI first)
-- Effort estimates per category
-- Unknowns 7.1, 7.2 verified with findings documented
+- ✅ `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md` with classification of all 24 models
+- ✅ Error category distribution: 12 no-objective, 9 circular-dependency, 3 parser/semantic
+- ✅ Recommended fix order: model attribute access (harker + mathopt4, 2 models, shared root cause) → implicit index mapping (gastrans, 1 model)
+- ✅ Effort estimates: model attribute access (low-medium), implicit index mapping (medium)
+- ✅ Unknowns 7.1, 7.2 verified with findings documented in KNOWN_UNKNOWNS.md
 
 ### Acceptance Criteria
 
-- [ ] All 23 internal_error models run with debug output
-- [ ] Each model classified into one of: grammar ambiguity, missing production, IR crash, transformer error
-- [ ] Models grouped by root cause pattern
-- [ ] Fix priority order defined (ROI-based)
-- [ ] Effort estimates per pattern group documented
-- [ ] Top 8+ "quickest to fix" models identified (to hit <15 target)
-- [ ] Unknowns 7.1, 7.2 verified and documented in KNOWN_UNKNOWNS.md
+- [x] All 24 internal_error models run with debug output (corrected from 23)
+- [x] Each model classified by root cause: no-objective (12), circular-dependency (9), parser/semantic (3)
+- [x] Models grouped by root cause pattern (3 categories)
+- [x] Fix priority order defined: model attribute access first (2 models, shared fix), then index mapping (1 model)
+- [x] Effort estimates per pattern group documented (low-medium to medium)
+- [x] "Below 15" target already met — only 3 genuine parse failures remain with v1.2.0
+- [x] Unknowns 7.1, 7.2 verified and documented in KNOWN_UNKNOWNS.md
 
 ---
 
 ## Task 3: Catalog lexer_invalid_char Subcategories
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETED** (February 12, 2026)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 19 Day 1
@@ -217,11 +224,11 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md
 
 ### Objective
 
-Fully subcategorize the ~95 lexer_invalid_char failures to prioritize grammar work for Sprint 19. This feeds the "lexer_invalid_char Fixes" component (14-18h in sprint) and the deferred "Lexer Error Deep Analysis" item (5-6h).
+Fully subcategorize all lexer_invalid_char failures to prioritize grammar work for Sprint 19. This feeds the "lexer_invalid_char Fixes" component (14-18h in sprint) and the deferred "Lexer Error Deep Analysis" item (5-6h). (Note: original estimate was ~95 models; actual count is 72 — see Result section.)
 
 ### Why This Matters
 
-Sprint 19 targets reducing lexer_invalid_char from ~95 to below 50. The PROJECT_PLAN.md identifies three subcategories (complex set data, compile-time constants, remaining clusters), but Sprint 18 only performed initial analysis. A complete subcategorization is needed to correctly scope grammar changes and avoid wasted effort on low-ROI fixes.
+Sprint 19 targets reducing lexer_invalid_char to below 30 (recalibrated from the original "~95 → below 50" after discovering the actual count is 72). The PROJECT_PLAN.md identifies three subcategories (complex set data, compile-time constants, remaining clusters), but Sprint 18 only performed initial analysis. A complete subcategorization is needed to correctly scope grammar changes and avoid wasted effort on low-ROI fixes.
 
 ### Background
 
@@ -250,11 +257,23 @@ Sprint 19 targets reducing lexer_invalid_char from ~95 to below 50. The PROJECT_
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with complete subcategorization of all 72 `lexer_invalid_char` models. Key changes:
+- Ran all 72 models with v1.2.0 parser to confirm all still fail (zero silent fixes)
+- Extracted failing character and line context for every model
+- Analyzed preprocessor directives across all 72 models
+- Classified all 72 into 11 subcategories (A-K) with root cause analysis
+- Performed cascading failure root cause analysis for 15 models in subcategory B
+- Created grammar-fixable assessment with optimistic/realistic/conservative scenarios
+- Designed 4-phase implementation order with effort estimates
+- Updated Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 in `KNOWN_UNKNOWNS.md` with verification results
 
 ### Result
 
-To be completed.
+**72 models** cataloged (corrected from ~95 in PROJECT_PLAN.md). Distribution across 11 subcategories: Tuple/Compound Set Data (12), Cascading Parse Failures (15), Put Statement Format (6), Lead/Lag Indexing (4), Special Values/Inline Data (7), Declaration/Syntax Gaps (7), Set Element Descriptions (4), Control Flow (2), Model/Solve Issues (5), Bracket/Brace Syntax (3), Miscellaneous (7).
+
+**Grammar-fixable:** 43 models directly fixable + 15 cascading = 58 potentially addressable. Only 4 models require preprocessor involvement (3 directive-processing: clearlak, cesam2, springchain; 1 compile-time variable: uimp). Target is now "72 → below 30" based on the corrected baseline; any prior "~95 → below 50" framing should be treated as obsolete.
+
+**Key finding:** The deferred "Lexer Error Deep Analysis" item (5-6h budget) is fully subsumed by this catalog — that budget should be reallocated to grammar implementation.
 
 ### Verification
 
@@ -262,28 +281,28 @@ To be completed.
 # Verify catalog document exists
 test -f docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md && echo "EXISTS" || echo "MISSING"
 
-# Verify model count matches expected
-grep -c "lexer_invalid_char" docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md
-# Should be ~95 or current count
+# Verify all 72 models are in the appendix
+sed -n '/^## Appendix: Complete Model List/,/^## /p' docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md | grep -cE "^\| [0-9]+ \|"
+# Should show 72
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with full subcategorization
-- Model count per subcategory (validated against PROJECT_PLAN.md estimates)
-- Grammar-change-feasibility assessment per subcategory
-- Recommended implementation order for Sprint 19
-- Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified with findings documented
+- ✅ `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with full subcategorization of all 72 models
+- ✅ Model count per subcategory (validated: 72 total, not ~95 — PROJECT_PLAN.md estimate identified as incorrect)
+- ✅ Grammar-change-feasibility assessment per subcategory (43 direct, 15 cascading, 4 preprocessor, 10 investigate)
+- ✅ Recommended 4-phase implementation order for Sprint 19
+- ✅ Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified with findings documented in KNOWN_UNKNOWNS.md
 
 ### Acceptance Criteria
 
-- [ ] All lexer_invalid_char models cataloged with exact error location
-- [ ] Models grouped into 5+ subcategories with counts
-- [ ] PROJECT_PLAN.md estimates validated or corrected
-- [ ] Grammar-only vs. preprocessor-required distinction made
-- [ ] Implementation order recommended (highest ROI first)
-- [ ] Total addressable count estimated (to validate <50 target)
-- [ ] Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified and documented in KNOWN_UNKNOWNS.md
+- [x] All lexer_invalid_char models cataloged with exact error location (72 models, each with failing character and context)
+- [x] Models grouped into 5+ subcategories with counts (11 subcategories A-K)
+- [x] PROJECT_PLAN.md estimates validated or corrected (corrected: 72 not ~95; 12 compound set data not 14+)
+- [x] Grammar-only vs. preprocessor-required distinction made (68 grammar-fixable, 4 preprocessor-required including 1 compile-time-variable `uimp` model)
+- [x] Implementation order recommended (highest ROI first: Phase 1 quick wins → Phase 2 core grammar → Phase 3 advanced → Phase 4 if-time-permits)
+- [x] Total addressable count estimated (43-58 depending on scenario; "below 30" target achievable)
+- [x] Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified and documented in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -954,9 +973,9 @@ grep -c "^### Day" docs/planning/EPIC_4/SPRINT_19/PLAN.md
 ### Success Criteria
 
 Sprint 19 prep is complete when:
-- [ ] Known Unknowns list created with 26 unknowns across 8 categories
-- [ ] All 23 internal_error models classified by failure mode
-- [ ] All ~95 lexer_invalid_char models cataloged by subcategory
+- [x] Known Unknowns list created with 26 unknowns across 8 categories
+- [x] All 24 internal_error models classified by failure mode (corrected from 23)
+- [x] All 72 lexer_invalid_char models cataloged by subcategory (corrected from ~95)
 - [ ] ISSUE_670 fix design documented with implementation sketch
 - [ ] All 5 Sprint 18 deferred items audited for readiness
 - [ ] IndexOffset IR design options evaluated

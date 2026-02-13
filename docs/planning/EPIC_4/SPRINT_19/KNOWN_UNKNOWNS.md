@@ -483,7 +483,21 @@ There are approximately 95 models with `lexer_invalid_char` errors, as reported 
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 3, 2026-02-12)
+
+**Actual count:** 72 models (not ~95 as in PROJECT_PLAN.md, not 74 as in GOALS.md).
+
+**Source of truth:** `data/gamslib/gamslib_status.json` contains v1.1.0 pipeline data with exactly 72 `lexer_invalid_char` models.
+
+**Discrepancy explanation:**
+- PROJECT_PLAN.md "~95" was based on older v1.0.0 data before Sprint 17 grammar fixes resolved ~25 lexer errors
+- GOALS.md "74" was close but off by 2 — likely included 2 models that were reclassified during Sprint 17
+
+**v1.2.0 re-parse:** All 72 models were re-run with the v1.2.0 parser. All 72 still fail — zero silent fixes (unlike internal_error where 21/24 were silently resolved). Sprint 18's emission-layer fixes did not affect lexer-stage parsing.
+
+**Sprint 19 target recalibration:** "~95 → below 50" should be revised to "72 → below 30" (or equivalently "fix 43+ models") based on the corrected baseline.
+
+**Reference:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md`
 
 ---
 
@@ -518,7 +532,23 @@ Most lexer_invalid_char failures are caused by unsupported GAMS syntax that can 
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 3, 2026-02-12)
+
+**Finding:** Of 72 models, **3 (4%)** require **directive-processing preprocessor support** as their root cause, and **1 additional model (1%)** requires only **compile-time variable expansion**. The remaining **68 models (94%)** are addressable with grammar-only changes.
+
+**Directive-processing preprocessor models (3):**
+- `clearlak`: Uses `$goto`, `$label`, `$if`, `$libinclude` — the `$` directives ARE the parse failure cause
+- `cesam2`: Uses `$ifthen`/`$else`/`$endif` conditionals in data blocks
+- `springchain`: Uses `$eval`, `$if`, `$set` for compile-time computation
+
+**Variable-expansion-only preprocessor model (1):**
+- `uimp`: Uses `%gams.scrdir%` compile-time variable expansion; this is preprocessor-adjacent and distinct from directive processing but still requires preprocessor involvement. In later verification (for example, Unknown 6.4), all **4** of these models are counted together as the "preprocessor-involved" set.
+
+**Standard directives already handled:** `$offtext/$ontext/$title` are present in most models and already stripped by the existing preprocessor in `src/ir/preprocessor.py`. These are NOT parse blockers.
+
+**Key conclusion:** The "below 50" target (recalibrated to "below 30") does NOT require new preprocessor implementation. Grammar-only changes can address 68 of 72 models; the remaining 4 require some level of preprocessor involvement (3 directive-processing, 1 variable-expansion-only).
+
+**Reference:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` (Preprocessor Directive Analysis section)
 
 ---
 
@@ -550,17 +580,19 @@ Prep Task 3 (Catalog lexer_invalid_char Subcategories) will produce the subcateg
 Development team
 
 ### Verification Results
-✅ Status: VERIFIED (Prep Task 5, 2026-02-13)
+✅ Status: VERIFIED (Prep Task 3, 2026-02-12)
 
-**Finding:** The assumption is correct — Prep Task 3 will produce the subcategorization catalog, and the deferred item builds on it. Comparing deliverable specs:
-- Prep Task 3: `LEXER_ERROR_CATALOG.md` with full subcategorization, model counts per category, grammar feasibility assessment
-- Deferred item: `LEXER_ERROR_ANALYSIS.md` with error categories and fix priorities
+**Finding:** The `LEXER_ERROR_CATALOG.md` produced by Prep Task 3 **fully subsumes** the deferred "Lexer Error Deep Analysis" item scope. The catalog includes:
+- Complete subcategorization of all 72 models into 11 categories (A-K)
+- Per-model failure character and root pattern identification
+- Grammar-fixable vs preprocessor-required classification
+- Cascading failure root cause analysis
+- Recommended implementation order with effort estimates
+- Preprocessor directive analysis
 
-These are substantially the same deliverable. Prep Task 3 output satisfies the analysis portion of the deferred item. The remaining 2-3h from the deferred item budget should be reallocated to initial quick-win grammar fixes identified by the catalog.
+**Recommendation:** The 5-6h budget for the deferred "Lexer Error Deep Analysis" item should be **reallocated to implementation** (grammar fixes). No additional analysis is needed — the catalog provides everything required to begin implementation on Sprint 19 Day 1.
 
-**Recommendation:** Merge deliverables — treat Prep Task 3's `LEXER_ERROR_CATALOG.md` as the analysis deliverable. Reallocate 3-4h of the 5-6h deferred item budget to implementing the highest-ROI grammar fixes.
-
-**Impact on Sprint 19:** Eliminates duplicate analysis work. Net 3-4h freed for implementation.
+**Reference:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md`
 
 ---
 
@@ -680,7 +712,21 @@ The complex set data subcategory includes multi-dimensional set assignments, com
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 3, 2026-02-12)
+
+**Finding:** 11 distinct subcategories identified across all 72 `lexer_invalid_char` models (not just the complex set data subset). The top syntax patterns causing failures:
+
+1. **Compound set data (`.` separator):** 12 models — dot-separated compound keys like `coal.east.rail` in set/parameter data blocks
+2. **Put statement format (`:` specifier):** 6 models — `:width:decimals` format specifiers
+3. **Declaration/syntax gaps (mixed):** 7 models — `not` operator, `prod()` function contexts, model attributes, compile-time variables
+4. **Special values and inline data:** 7 models — `na`/`inf` in data, table continuation `+`, preprocessor conditionals
+5. **Lead/lag indexing (`+`/`-`):** 4 models — `x(t+1)` dynamic indexing syntax
+
+**Assumption correction:** The "complex set data" subcategory contains 12 models (not 14+ as assumed in PROJECT_PLAN.md). The remaining models originally grouped under "complex set data" actually belong to other subcategories (cascading failures, special values, declaration gaps).
+
+**Incremental grammar approach:** Yes, all grammar-fixable subcategories can be implemented incrementally. No restructuring of existing grammar rules is needed — all changes are additive (new rules or rule alternatives).
+
+**Reference:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md`
 
 ---
 
@@ -782,7 +828,31 @@ At least 45 of the ~95 models can be fixed with grammar-only changes (no preproc
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 3, 2026-02-12)
+
+**Finding:** With a corrected baseline of 72 (not ~95), the addressable model counts are:
+
+| Category | Count | Notes |
+|----------|-------|-------|
+| Directly grammar-fixable | 43 | Subcategories A, C, D, E (partial), F (partial), G, H, I, J (partial) |
+| Cascading (resolve when root cause fixed) | 15 | Subcategory B — no direct work needed |
+| Preprocessor-required (directive) | 3 | clearlak, cesam2, springchain |
+| Compile-time expansion only | 1 | uimp (%var% expansion; grouped with preprocessor in totals) |
+| Needs investigation | 10 | Subcategory K (7 miscellaneous) + Subcategory E (3: ship, tforss, trnspwl) |
+
+**Scenario estimates:**
+- **Optimistic:** 58 fixed → 14 remaining (all grammar + cascading resolve)
+- **Realistic:** 55 fixed → 17 remaining (~80% cascading resolve)
+- **Conservative:** 43 fixed → 29 remaining (grammar only, no cascading)
+
+**Target recalibration:** PROJECT_PLAN.md target "~95 → below 50" must be revised. Since baseline is 72:
+- Original intent (fix ~45 models) maps to "72 → below 30"
+- Even the conservative estimate (43 fixed) achieves this
+- The target is achievable and likely exceeded
+
+**Easy wins identified:** Set element descriptions (4 models, 1-2h), put format (6 models, 2-3h), special values subset (3 models, 2-3h) = ~13 models in ~6-8h
+
+**Reference:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` (Grammar-Fixable Assessment section)
 
 ---
 
@@ -819,7 +889,23 @@ The 23 internal_error models can be classified into 3-5 failure types: grammar a
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 2, 2026-02-12)
+
+**Actual count:** 24 models (not 23 as assumed in PROJECT_PLAN.md).
+
+**Distribution (3 categories, not 3-5):**
+- **No objective function:** 12 models (50%) — camshape, catmix, chain, danwolfe, elec, feasopt1, lnts, partssupply, polygon, robot, rocket, srpchase
+- **Circular dependency:** 9 models (37.5%) — chakra, dyncge, glider, irscge, lrgcge, moncge, quocge, splcge, twocge
+- **Parser/semantic error:** 3 models (12.5%) — gastrans (index mismatch), harker (model attribute access), mathopt4 (attr_access expression)
+
+**Key finding:** 21 of 24 models (87.5%) now parse successfully with v1.2.0 codebase. Sprint 18 fixes silently resolved these. The pipeline database (`gamslib_status.json`) is stale (v1.1.0 data). Only 3 models still fail at the parse stage.
+
+**Assumption corrections:**
+- Error types are NOT grammar ambiguity/missing production/IR crash/transformer error. They are: validation errors miscategorized as parse errors (21 models) and genuine semantic parse errors (3 models).
+- The "below 15" target is already met — only 3 genuine parse failures remain after v1.2.0.
+- The 21 now-parsing models will encounter translation-stage errors (no-objective, circular-dependency) when the pipeline is re-run.
+
+**Reference:** `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md`
 
 ---
 
@@ -852,7 +938,23 @@ Grammar and IR changes to fix internal_error models will not break the 62 curren
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 2, 2026-02-12)
+
+**Finding:** All 24 `internal_error` models can be reclassified into specific categories. The `categorize_parse_error()` function in `scripts/gamslib/error_taxonomy.py` needs 2 additional message patterns to reclassify the 21 validation-error models; the remaining 3 parse failures will still fall through to the `internal_error` catch-all until further patterns are added:
+1. "no objective function" → `model_no_objective_def` (translation-stage category)
+2. "circular dependency" → new `validation_circular_dep` category or existing `semantic_domain_error`
+
+The 3 remaining parse failures are parser-stage and map logically to existing categories, but their current messages do not yet match any `categorize_parse_error()` patterns and therefore still land in `internal_error`:
+- gastrans (index mismatch, "expects ... got ...") → `semantic_domain_error`
+- harker (undeclared model symbol, "not declared ...") → `semantic_undefined_symbol`
+- mathopt4 (unsupported attr_access, "Unsupported expression type ...") → `parser_invalid_expression`
+
+**Regression risk assessment:** LOW. Of the 3 remaining fixes needed:
+- gastrans fix (implicit index mapping in `_handle_assign`) modifies assignment handling logic — requires careful regression testing
+- harker + mathopt4 fix (model attribute access) is additive — new expression type support, no modification to existing rules
+- 21 of 24 models already parse with v1.2.0 with zero regressions (Sprint 18 maintained 3294-test pass rate)
+
+**Reference:** `docs/planning/EPIC_4/SPRINT_19/INTERNAL_ERROR_ANALYSIS_PREP.md`
 
 ---
 
