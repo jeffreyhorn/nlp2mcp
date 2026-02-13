@@ -888,10 +888,10 @@ Development team
 
 **Exact code path:**
 
-1. `build_stationarity_equations()` (line 78) creates stationarity equations with `domain = var_def.domain`
-2. `_add_indexed_jacobian_terms()` (line 744) processes each constraint's Jacobian entry
-3. `_replace_indices_in_expr()` (line 434) converts concrete element labels to symbolic set names. For parameters with `prefer_declared_domain=True`, it can map a variable-domain index to the wrong set name (e.g., mapping `"p1"` to `"np"` from the parameter's declared domain instead of `"p"` from the variable domain)
-4. The sum wrapping decision (lines 841-862) only compares `mult_domain_set` vs `var_domain_set`. It does **not** check whether the derivative expression itself contains additional free indices outside both domains
+1. `build_stationarity_equations()` creates stationarity equations with `domain = var_def.domain`
+2. `_add_indexed_jacobian_terms()` processes each constraint's Jacobian entry
+3. `_replace_indices_in_expr()` converts concrete element labels to symbolic set names. For parameters with `prefer_declared_domain=True`, it can map a variable-domain index to the wrong set name (e.g., mapping `"p1"` to `"np"` from the parameter's declared domain instead of `"p"` from the variable domain)
+4. The sum wrapping logic in the stationarity builder only compares `mult_domain_set` vs `var_domain_set`. It does **not** check whether the derivative expression itself contains additional free indices outside both domains
 
 **Two sub-problems identified:**
 - **Sub-problem A:** Index replacement in `_replace_matching_indices()` can produce wrong symbolic names when parameter declared domain differs from the stationarity context

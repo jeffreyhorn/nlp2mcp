@@ -146,11 +146,11 @@ Differentiating `pd` w.r.t. `x(p,t)` gives `c(p,t)` where `t` is a subset of `tt
 All 6 models share the same fundamental pattern:
 
 1. **Constraint** `eq(d1, d2, ...)` contains an expression `sum(s, f(d1, s) * x(s, d2))` where `s` is the sum index
-2. **Differentiation** w.r.t. variable `x(v1, v2)` produces a derivative `f(d1, v1)` where:
+2. **Differentiation** w.r.t. variable `x(v1, v2)` should, mathematically, yield a derivative term `f(d1, v1)` where:
    - `v1` comes from the variable's domain (correctly controlled)
    - `d1` comes from the constraint's domain (controlled via the multiplier's domain)
-   - But the derivative expression also contains indices from `s` that were consumed by the sum collapse — and the index replacement step may map them to the wrong symbolic name
-3. **Result:** The stationarity equation `stat_x(v1, v2)` has an uncontrolled index from the derivative expression
+   - However, in the current implementation the index-replacement / expression-building step can incorrectly reintroduce a symbolic index derived from `s` (or map it to the wrong symbolic name or set)
+3. **Result:** The generated stationarity equation `stat_x(v1, v2)` can contain an apparently free index whose symbol comes from the original sum index `s`, so it is not controlled by the equation's declared domain and GAMS reports it as Error 149
 
 **Variations:**
 - **abel/qabel:** Multi-index sum `sum((k,n,np), ...)` with cross-referenced matrix `w(n,np,k)`
@@ -167,13 +167,13 @@ Despite these variations, all are addressable by the same fix: detect uncontroll
 
 ### Exact Code Path
 
-1. **Entry:** `build_stationarity_equations()` in `stationarity.py:78` creates stationarity equations with `domain = var_def.domain`
+1. **Entry:** `build_stationarity_equations()` in `stationarity.py` creates stationarity equations with `domain = var_def.domain`
 
-2. **Jacobian term addition:** `_add_indexed_jacobian_terms()` in `stationarity.py:744` processes each constraint's Jacobian entry
+2. **Jacobian term addition:** `_add_indexed_jacobian_terms()` in `stationarity.py` processes each constraint's Jacobian entry
 
-3. **Index replacement:** `_replace_indices_in_expr()` in `stationarity.py:434` converts concrete element labels to symbolic set names. For parameters, it uses the parameter's declared domain (`prefer_declared_domain=True`) which can map a variable-domain index to the wrong set name (e.g., `"p1"` mapped to `"np"` instead of `"p"`)
+3. **Index replacement:** `_replace_indices_in_expr()` in `stationarity.py` converts concrete element labels to symbolic set names. For parameters, it uses the parameter's declared domain (`prefer_declared_domain=True`) which can map a variable-domain index to the wrong set name (e.g., `"p1"` mapped to `"np"` instead of `"p"`)
 
-4. **Sum wrapping decision:** Lines 841-862 compare `mult_domain_set` vs `var_domain_set`:
+4. **Sum wrapping decision:** Within `_add_indexed_jacobian_terms()`, the logic compares `mult_domain_set` vs `var_domain_set`:
    - Exact match → no sum
    - Subset → no sum
    - Disjoint → wrap in `Sum(mult_domain, ...)`
@@ -442,7 +442,7 @@ For each of the 6 affected models, run the full pipeline and verify:
 
 ```bash
 # For each model: abel, qabel, chenery, mexss, orani, robert
-python -m src.main data/gamslib/raw/{model}.gms -o output/{model}_mcp.gms
+python -m src.cli data/gamslib/raw/{model}.gms -o output/{model}_mcp.gms
 gams output/{model}_mcp.gms
 # Verify: no Error 149
 ```
@@ -463,8 +463,8 @@ make test  # All 3294 tests must pass
 
 Run the 62 currently-passing gamslib models to verify no regressions:
 ```bash
-python -m src.batch data/gamslib/raw/ -o output/gamslib/ --filter success
-# All 62 models must still pass
+python scripts/gamslib/run_full_test.py
+# All 62 models must still pass (see scripts/gamslib/ for options)
 ```
 
 ---
