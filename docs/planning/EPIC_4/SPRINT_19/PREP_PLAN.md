@@ -678,21 +678,21 @@ grep -c "ISSUE_392\|ISSUE_399" docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANAL
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANALYSIS.md` with per-issue analysis
-- Grammar change proposals for each issue
-- Fix implementation plans with test strategies
-- Confirmed or updated effort estimates (FIX_ROADMAP says 2-4h each)
-- Unknown 8.3 verified with findings documented
+- ✅ `docs/planning/EPIC_4/SPRINT_19/TABLE_PARSING_ANALYSIS.md` with per-issue analysis and parse tree evidence
+- ✅ Fix approach: semantic disambiguation in handler (Option 3) — no grammar changes needed
+- ✅ Fix implementation plans with test strategies for both issues
+- ✅ Effort estimates revised: 3-5h combined (down from FIX_ROADMAP's 2-4h each / 4-8h total)
+- ✅ Unknown 8.3 verified with findings documented in KNOWN_UNKNOWNS.md
 
 ### Acceptance Criteria
 
-- [ ] `like` model table block analyzed for ISSUE_392
-- [ ] `robert` model table block analyzed for ISSUE_399
-- [ ] Current grammar rule and semantic handler reviewed
-- [ ] Root cause identified for each issue (grammar gap vs. handler bug)
-- [ ] Fix approach documented for each issue
-- [ ] Test strategy defined (unit tests + model validation)
-- [ ] Unknown 8.3 verified and documented in KNOWN_UNKNOWNS.md
+- [x] `like` model table block analyzed for ISSUE_392
+- [x] `robert` model table block analyzed for ISSUE_399
+- [x] Current grammar rule and semantic handler reviewed
+- [x] Root cause identified for each issue (shared grammar ambiguity — STRING matched by `dotted_label` instead of optional description)
+- [x] Fix approach documented for each issue (Option 3: semantic disambiguation in `_handle_table_block()`)
+- [x] Test strategy defined (unit tests + model validation)
+- [x] Unknown 8.3 verified and documented in KNOWN_UNKNOWNS.md
 
 ---
 
