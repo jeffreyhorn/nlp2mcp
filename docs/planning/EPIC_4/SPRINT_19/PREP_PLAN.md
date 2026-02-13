@@ -559,7 +559,7 @@ IndexOffset support is needed for 8 models blocked at the translate stage. The I
 
 Created `docs/planning/EPIC_4/SPRINT_19/INDEX_OFFSET_DESIGN_OPTIONS.md` with comprehensive evaluation of 4 design options for IndexOffset IR support. Key findings:
 - Discovered that IndexOffset IR node **already exists** in `src/ir/ast.py` (Sprint 9 Day 3) with full implementation
-- Grammar already supports all 4 lead/lag forms (`+`, `-`, `++`, `--`) in `gams_grammar.lark:310-340`
+- Grammar already supports all 4 lead/lag forms (`+`, `-`, `++`, `--`) in `src/gams/gams_grammar.lark:330-344`
 - Parser semantic handler already constructs IndexOffset from parse trees (`src/ir/parser.py:786-933`)
 - Emit layer already handles IndexOffset via `_format_mixed_indices()` (Sprint 18 Day 3 fix)
 - AD differentiation matching works via frozen dataclass equality, but `_apply_index_substitution` needs extension for IndexOffset

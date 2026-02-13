@@ -166,7 +166,7 @@ class VarRef(Expr):
 - Supports arbitrary offset expressions (Const, SymbolRef, Binary, etc.)
 - AD differentiation matching works via frozen dataclass equality (`_diff_varref()`)
 - Emit layer already handles it (`_format_mixed_indices()` at `src/emit/expr_to_gams.py:180`)
-- Grammar already has lead/lag rules (`gams_grammar.lark:310-340`)
+- Grammar already has lead/lag rules (`src/gams/gams_grammar.lark:330-344`)
 - Parser semantic handler already constructs IndexOffset (`src/ir/parser.py:786-933`)
 - All four reference nodes share the same `tuple[str | IndexOffset, ...]` pattern
 
@@ -276,7 +276,7 @@ Option B is the clear winner — it's already implemented, tested, and integrate
 
 #### 1. Parser: Already Complete (0h)
 
-The grammar already parses lead/lag syntax into tree nodes (`gams_grammar.lark:310-340`), and the semantic handler in `src/ir/parser.py` already constructs `IndexOffset` objects from the parse tree. The `_process_index_expr()` function (`src/ir/parser.py:786-933`) handles all four forms:
+The grammar already parses lead/lag syntax into tree nodes (`src/gams/gams_grammar.lark:330-344`), and the semantic handler in `src/ir/parser.py` already constructs `IndexOffset` objects from the parse tree. The `_process_index_expr()` function (`src/ir/parser.py:786-933`) handles all four forms:
 - `circular_lead` → `IndexOffset(base, offset, circular=True)`
 - `circular_lag` → `IndexOffset(base, Const(-offset), circular=True)`
 - `linear_lead` → `IndexOffset(base, offset, circular=False)`
@@ -357,7 +357,7 @@ The following 8 models are blocked by `unsup_index_offset` at the translate stag
 
 Both the grammar and semantic handler are **already fully implemented**. No changes are needed.
 
-### Existing Grammar Rules (`gams_grammar.lark:310-340`)
+### Existing Grammar Rules (`src/gams/gams_grammar.lark:330-344`)
 
 ```lark
 index_list: index_expr ("," index_expr)*
@@ -417,7 +417,7 @@ No grammar or parser changes are needed.
 
 **Status:** ✅ VERIFIED
 
-**Finding:** The assumption is partially correct. The grammar **already supports** lead/lag syntax — the `lag_lead_suffix` rule with `CIRCULAR_LEAD`, `CIRCULAR_LAG`, `PLUS`, and `MINUS` alternatives is implemented in `gams_grammar.lark:310-340`. The `++` and `--` tokens are unambiguous (GAMS uses these exclusively for circular lead/lag). For `+` and `-`, the grammar resolves ambiguity by context: within `index_expr`, `+`/`-` followed by `offset_expr` (NUMBER or ID) is lead/lag, not arithmetic. In addition, the parser semantic code (`src/ir/parser.py:786-933`) already processes `lag_lead_suffix` into `IndexOffset` IR nodes.
+**Finding:** The assumption is partially correct. The grammar **already supports** lead/lag syntax — the `lag_lead_suffix` rule with `CIRCULAR_LEAD`, `CIRCULAR_LAG`, `PLUS`, and `MINUS` alternatives is implemented in `src/gams/gams_grammar.lark:330-344`. The `++` and `--` tokens are unambiguous (GAMS uses these exclusively for circular lead/lag). For `+` and `-`, the grammar resolves ambiguity by context: within `index_expr`, `+`/`-` followed by `offset_expr` (NUMBER or ID) is lead/lag, not arithmetic. In addition, the parser semantic code (`src/ir/parser.py:786-933`) already processes `lag_lead_suffix` into `IndexOffset` IR nodes.
 
 **Correction:** No grammar file changes are needed, and no additional work is required in the parser semantic handler — `_process_index_expr()` already constructs `IndexOffset` nodes. The remaining work is to identify and fix the **downstream** handling of `IndexOffset` that still produces `unsup_index_offset` failures (specifically `_apply_index_substitution` in the AD module and end-to-end pipeline tracing).
 
