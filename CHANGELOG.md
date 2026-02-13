@@ -56,7 +56,7 @@ Created comprehensive Known Unknowns document for Sprint 19 with 26 unknowns acr
 
 #### Summary
 
-Cataloged all 72 `lexer_invalid_char` models (corrected from ~95 in PROJECT_PLAN.md) into 11 subcategories. All 72 were re-parsed with v1.2.0 — all still fail (zero silent fixes). Identified 43-45 models directly fixable with grammar changes, plus 15-22 cascading models that resolve when root causes are fixed. Only 4 models require preprocessor support.
+Cataloged all 72 `lexer_invalid_char` models (corrected from ~95 in PROJECT_PLAN.md) into 11 subcategories. All 72 were re-parsed with v1.2.0 — all still fail (zero silent fixes). Identified 43-45 models directly fixable with grammar changes, plus 15-22 cascading models that resolve when root causes are fixed. Only 4 models require preprocessor involvement (3 directive-processing + 1 compile-time variable expansion).
 
 #### Deliverables
 
@@ -83,14 +83,14 @@ Cataloged all 72 `lexer_invalid_char` models (corrected from ~95 in PROJECT_PLAN
 #### Key Findings
 
 - **Baseline correction:** 72 models (not ~95). Sprint 19 target recalibrated from "~95 → below 50" to "72 → below 30"
-- **Preprocessor required:** Only 4 models (clearlak, cesam2, springchain, uimp) — 96% addressable with grammar-only changes
+- **Preprocessor involved:** Only 4 models (3 directive-processing: clearlak, cesam2, springchain; 1 compile-time variable: uimp) — 94% addressable with grammar-only changes
 - **Cascading failures:** 15 models fail due to earlier unresolvable constructs; fixing root causes in other subcategories will resolve them
 - **Deferred analysis subsumed:** The catalog fully covers the deferred "Lexer Error Deep Analysis" item — 5-6h budget can be reallocated to implementation
 
 #### Unknowns Verified
 
 - **4.1 (count):** ✅ VERIFIED — 72 models, not ~95 or 74
-- **4.2 (preprocessor):** ✅ VERIFIED — Only 3 models (4%) require preprocessor support
+- **4.2 (preprocessor):** ✅ VERIFIED — Only 3 models (4%) require directive-processing preprocessor support; 1 additional model needs compile-time variable expansion (4 total preprocessor-involved)
 - **4.3 (overlap):** ✅ VERIFIED — Catalog fully subsumes deferred analysis item
 - **6.1 (syntax constructs):** ✅ VERIFIED — 11 subcategories with specific patterns identified
 - **6.4 (addressable count):** ✅ VERIFIED — 43-65 addressable; "below 30" target achievable

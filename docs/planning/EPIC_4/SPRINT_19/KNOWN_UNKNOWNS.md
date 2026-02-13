@@ -481,18 +481,19 @@ Development team
 ### Verification Results
 ✅ Status: VERIFIED (Prep Task 3, 2026-02-12)
 
-**Finding:** Only **3 of 72 models** (4%) require preprocessor support as their root cause. The remaining **69 models (96%)** are addressable with grammar-only changes.
+**Finding:** Of 72 models, **3 (4%)** require **directive-processing preprocessor support** as their root cause, and **1 additional model (1%)** requires only **compile-time variable expansion**. The remaining **68 models (94%)** are addressable with grammar-only changes.
 
-**Preprocessor-required models:**
+**Directive-processing preprocessor models (3):**
 - `clearlak`: Uses `$goto`, `$label`, `$if`, `$libinclude` — the `$` directives ARE the parse failure cause
 - `cesam2`: Uses `$ifthen`/`$else`/`$endif` conditionals in data blocks
 - `springchain`: Uses `$eval`, `$if`, `$set` for compile-time computation
 
-**Additional note:** 1 model (`uimp`) uses `%gams.scrdir%` compile-time variable expansion, which is a preprocessor-adjacent feature but distinct from directive processing.
+**Variable-expansion-only preprocessor model (1):**
+- `uimp`: Uses `%gams.scrdir%` compile-time variable expansion; this is preprocessor-adjacent and distinct from directive processing but still requires preprocessor involvement. In later verification (for example, Unknown 6.4), all **4** of these models are counted together as the "preprocessor-involved" set.
 
 **Standard directives already handled:** `$offtext/$ontext/$title` are present in most models and already stripped by the existing preprocessor in `src/ir/preprocessor.py`. These are NOT parse blockers.
 
-**Key conclusion:** The "below 50" target (recalibrated to "below 30") does NOT require preprocessor implementation. Grammar-only changes can address 69 of 72 models.
+**Key conclusion:** The "below 50" target (recalibrated to "below 30") does NOT require new preprocessor implementation. Grammar-only changes can address 68 of 72 models; the remaining 4 require some level of preprocessor involvement (3 directive-processing, 1 variable-expansion-only).
 
 **Reference:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` (Preprocessor Directive Analysis section)
 
@@ -768,7 +769,8 @@ Development team
 |----------|-------|-------|
 | Directly grammar-fixable | 43-45 | Subcategories A, C, D, E (partial), F (partial), G, H, I, J (partial) |
 | Cascading (resolve when root cause fixed) | 15 (up to 22) | Subcategory B — no direct work needed |
-| Preprocessor-required | 4 | clearlak, cesam2, springchain, uimp |
+| Preprocessor-required (directive) | 3 | clearlak, cesam2, springchain |
+| Compile-time expansion only | 1 | uimp (%var% expansion; grouped with preprocessor in totals) |
 | Needs investigation | 7-9 | Subcategory K (miscellaneous) + some E/F models |
 
 **Scenario estimates:**

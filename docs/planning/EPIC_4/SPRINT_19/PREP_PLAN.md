@@ -224,11 +224,11 @@ grep -cE "^\| (camshape|catmix|chain|chakra|danwolfe|dyncge|elec|feasopt1|gastra
 
 ### Objective
 
-Fully subcategorize the ~95 lexer_invalid_char failures to prioritize grammar work for Sprint 19. This feeds the "lexer_invalid_char Fixes" component (14-18h in sprint) and the deferred "Lexer Error Deep Analysis" item (5-6h).
+Fully subcategorize all lexer_invalid_char failures to prioritize grammar work for Sprint 19. This feeds the "lexer_invalid_char Fixes" component (14-18h in sprint) and the deferred "Lexer Error Deep Analysis" item (5-6h). (Note: original estimate was ~95 models; actual count is 72 — see Result section.)
 
 ### Why This Matters
 
-Sprint 19 targets reducing lexer_invalid_char from ~95 to below 50. The PROJECT_PLAN.md identifies three subcategories (complex set data, compile-time constants, remaining clusters), but Sprint 18 only performed initial analysis. A complete subcategorization is needed to correctly scope grammar changes and avoid wasted effort on low-ROI fixes.
+Sprint 19 targets reducing lexer_invalid_char to below 30 (recalibrated from the original "~95 → below 50" after discovering the actual count is 72). The PROJECT_PLAN.md identifies three subcategories (complex set data, compile-time constants, remaining clusters), but Sprint 18 only performed initial analysis. A complete subcategorization is needed to correctly scope grammar changes and avoid wasted effort on low-ROI fixes.
 
 ### Background
 
@@ -271,7 +271,7 @@ Created `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with complete su
 
 **72 models** cataloged (corrected from ~95 in PROJECT_PLAN.md). Distribution across 11 subcategories: Tuple/Compound Set Data (12), Cascading Parse Failures (15), Put Statement Format (6), Lead/Lag Indexing (4), Special Values/Inline Data (7), Declaration/Syntax Gaps (7), Set Element Descriptions (4), Control Flow (2), Model/Solve Issues (5), Bracket/Brace Syntax (3), Miscellaneous (7).
 
-**Grammar-fixable:** 43-45 models directly fixable + up to 22 cascading = 65 potentially addressable. Only 4 models require preprocessor support (clearlak, cesam2, springchain, uimp). The "~95 → below 50" target needs recalibration to "72 → below 30" based on corrected baseline.
+**Grammar-fixable:** 43-45 models directly fixable + up to 22 cascading = 65 potentially addressable. Only 4 models require preprocessor involvement (3 directive-processing: clearlak, cesam2, springchain; 1 compile-time variable: uimp). Target is now "72 → below 30" based on the corrected baseline; any prior "~95 → below 50" framing should be treated as obsolete.
 
 **Key finding:** The deferred "Lexer Error Deep Analysis" item (5-6h budget) is fully subsumed by this catalog — that budget should be reallocated to grammar implementation.
 
@@ -282,14 +282,14 @@ Created `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with complete su
 test -f docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md && echo "EXISTS" || echo "MISSING"
 
 # Verify all 72 models are in the appendix
-grep -cE "^\| [0-9]+ \|" docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md
+sed -n '/^## Appendix: Complete Model List/,/^## /p' docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md | grep -cE "^\| [0-9]+ \|"
 # Should show 72
 ```
 
 ### Deliverables
 
 - ✅ `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with full subcategorization of all 72 models
-- ✅ Model count per subcategory (validated: 72 total, not ~95 — PROJECT_PLAN.md corrected)
+- ✅ Model count per subcategory (validated: 72 total, not ~95 — PROJECT_PLAN.md estimate identified as incorrect)
 - ✅ Grammar-change-feasibility assessment per subcategory (43-45 direct, 15-22 cascading, 4 preprocessor, 7-9 investigate)
 - ✅ Recommended 4-phase implementation order for Sprint 19
 - ✅ Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified with findings documented in KNOWN_UNKNOWNS.md
@@ -299,7 +299,7 @@ grep -cE "^\| [0-9]+ \|" docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md
 - [x] All lexer_invalid_char models cataloged with exact error location (72 models, each with failing character and context)
 - [x] Models grouped into 5+ subcategories with counts (11 subcategories A-K)
 - [x] PROJECT_PLAN.md estimates validated or corrected (corrected: 72 not ~95; 12 compound set data not 14+)
-- [x] Grammar-only vs. preprocessor-required distinction made (69 grammar-fixable, 3 preprocessor-required, 1 compile-time variable)
+- [x] Grammar-only vs. preprocessor-required distinction made (68 grammar-fixable, 4 preprocessor-required including 1 compile-time-variable `uimp` model)
 - [x] Implementation order recommended (highest ROI first: Phase 1 quick wins → Phase 2 core grammar → Phase 3 advanced → Phase 4 if-time-permits)
 - [x] Total addressable count estimated (43-65 depending on scenario; "below 30" target achievable)
 - [x] Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified and documented in KNOWN_UNKNOWNS.md

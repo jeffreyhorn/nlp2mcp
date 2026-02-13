@@ -15,11 +15,11 @@
 **Subcategories identified:** 11 (A through K)
 
 **Grammar-fixable assessment:**
-- **43 models** directly fixable with grammar/parser changes
-- **22 models** cascading failures (will resolve when root cause in another model's subcategory is fixed)
-- **7 models** miscellaneous/complex (require deeper investigation)
+- **~43–45 models** directly fixable with grammar/parser changes
+- **~15–22 models** cascading failures (will resolve when root cause in another model's subcategory is fixed)
+- **Remaining models (~7)** miscellaneous/complex (require deeper investigation; exact count depends on final classification)
 
-**Sprint 19 target validation:** The PROJECT_PLAN.md target of "~95 → below 50" needs recalibration. Actual baseline is 72 (not ~95). With 43 directly fixable + 22 cascading = up to 65 addressable, the revised target should be "72 → below 30" or equivalently "fix 43+ models."
+**Sprint 19 target validation:** The PROJECT_PLAN.md target of "~95 → below 50" needs recalibration. Actual baseline is 72 (not ~95). With an estimated 43–45 directly fixable + 15–22 cascading (~58–67 addressable), the revised target should be "72 → below 30" or equivalently "fix ~60+ models."
 
 ---
 
@@ -56,7 +56,7 @@
 | G | Set Element Descriptions | 4 | Yes (grammar) | P1 — Quick win | 1-2h |
 | H | Control Flow | 2 | Yes (grammar) | P2 — Moderate | 2-3h |
 | I | Model/Solve Statement Issues | 5 | Yes (grammar) | P1 — Moderate | 3-4h |
-| J | Bracket/Brace Syntax | 3 | Partial (1 preprocessor) | P2 — Mixed | 2-3h |
+| J | Bracket/Brace Syntax | 3 | Partial (2 preprocessor, 1 grammar) | P2 — Mixed | 2-3h |
 | K | Miscellaneous | 7 | Varies | P3 — Investigation needed | 4-6h |
 | | **Total** | **72** | | | **~30-41h** |
 
@@ -456,7 +456,7 @@ All 72 models were checked for preprocessor directives. Results:
 | `$ifthen/$else/$endif` | cesam2 | Yes |
 | `$eval`, `$set` | springchain | Yes |
 
-**Key finding:** Only **3 models** (clearlak, cesam2, springchain) out of 72 require preprocessor support as their root cause. The remaining **69 models** (96%) are addressable with grammar-only changes.
+**Key finding:** **4 models** out of 72 require some form of preprocessor support as their root cause: **3** with advanced directive processing (clearlak, cesam2, springchain, as listed above) and **1** (`uimp`) that only needs simple `%var%` expansion. The remaining **68 models** (94%) are addressable with grammar-only changes.
 
 ---
 
