@@ -989,7 +989,11 @@ IndexOffset nodes (representing `x(t+1)`, `x(t-1)`) can be treated as independen
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 6, 2026-02-13)
+
+**Finding:** The assumption is correct. `x(t+1)` and `x(t)` are treated as independent variables during differentiation. The AD system's `_diff_varref()` function (`src/ad/derivative_rules.py:201-275`) uses exact tuple equality: `expr.indices == wrt_indices`. Since `IndexOffset` is a frozen dataclass, `IndexOffset("t", Const(1), False) != "t"`, so `d/dx(t) [x(t+1)] = 0` automatically. Similarly, `IndexOffset("t", Const(1), False) == IndexOffset("t", Const(1), False)`, so `d/dx(t+1) [x(t+1)] = 1`. No AD changes are needed.
+
+**Impact on Sprint 19:** Saves ~4h of estimated AD work. The 14-16h GOALS.md estimate for full IndexOffset support can be reduced to ~4h (parser semantic handler + testing only).
 
 ---
 
@@ -1024,7 +1028,13 @@ GAMS lead/lag syntax (`x(t+1)`, `x(t-1)`, `x(t++1)`, `x(t--1)`) can be parsed by
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (Prep Task 6, 2026-02-13)
+
+**Finding:** The assumption is partially correct but the grammar changes are **already done**. The `lag_lead_suffix` rule in `gams_grammar.lark:310-340` already supports all four forms: `CIRCULAR_LEAD` (`++`), `CIRCULAR_LAG` (`--`), `PLUS` (linear lead), `MINUS` (linear lag), each followed by `offset_expr` (NUMBER or ID). The `++` and `--` tokens are unambiguous. For `+` and `-`, the grammar resolves ambiguity by context: within `index_expr`, `+`/`-` followed by `offset_expr` is lead/lag, not arithmetic.
+
+**Correction:** No grammar file changes are needed. The remaining work is only in the **semantic handler** (Lark transformer) to construct `IndexOffset` IR nodes from the parse tree (~2h). The grammar rules are already complete and tested (Sprint 9 Day 3).
+
+**Impact on Sprint 19:** The 2h "parser spike" allocation is correct but should be spent on semantic handler implementation and testing, not grammar design.
 
 ---
 
