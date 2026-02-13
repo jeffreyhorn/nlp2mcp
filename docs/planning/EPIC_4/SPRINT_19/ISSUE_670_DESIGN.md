@@ -14,7 +14,7 @@ When a constraint contains a sum over an index that also appears in a cross-refe
 
 **Root cause:** The stationarity builder in `src/kkt/stationarity.py` wraps terms in sums based only on the constraint multiplier's domain vs. the variable's domain. It does not analyze which indices actually appear in the derivative expression itself. When the derivative contains indices from the original constraint's sum that are outside both domains, those indices go uncontrolled.
 
-**Recommended fix:** Option A — Add a `collect_free_indices()` utility that walks the derivative expression tree, then wrap any indices not in the stationarity equation's domain in appropriate sums. This is localized to `stationarity.py` (plus a small helper) and compatible with existing `expr_to_gams.py` index aliasing.
+**Recommended fix:** Option A — Add a `_collect_free_indices()` utility that walks the derivative expression tree, then wrap any indices not in the stationarity equation's domain in appropriate sums. This is localized to `stationarity.py` (plus a small helper) and compatible with existing `expr_to_gams.py` index aliasing.
 
 **Refined effort estimate:** 10-14 hours (narrowed from 8-16h).
 
@@ -438,10 +438,10 @@ Run the full test suite to ensure no existing models break:
 make test  # All 3294 tests must pass
 ```
 
-Run the 62 currently-passing gamslib models to verify no regressions:
+Run the 61 currently-passing gamslib models to verify no regressions:
 ```bash
 python scripts/gamslib/run_full_test.py
-# All 62 models must still pass (see scripts/gamslib/ for options)
+# All 61 models must still pass (see scripts/gamslib/ for options)
 ```
 
 ---
@@ -458,10 +458,10 @@ python scripts/gamslib/run_full_test.py
 | Test with abel/qabel (simplest) | 1h | First validation |
 | Test with chenery, mexss, orani | 2-3h | More complex patterns |
 | Test robert (needs ISSUE_399 too) | 1h | Verify ISSUE_670 portion |
-| Regression testing | 1-2h | Full suite + 62 gamslib models |
+| Regression testing | 1-2h | Full suite + 61 gamslib models |
 
 **Risk factors that could push toward 14h:**
-- Edge cases in `_is_set_index()` / `_collect_free_indices()` for models with unusual naming
+- Edge cases in `_collect_free_indices()` for models with unusual naming
 - Interaction with subset/superset logic in `_replace_matching_indices()` (Issue #620)
 - robert requiring coordination with ISSUE_399 fix
 
