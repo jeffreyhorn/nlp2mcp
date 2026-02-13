@@ -29,6 +29,7 @@ DEFAULT_EFFORT_HOURS: dict[str, float] = {
     "semantic_duplicate_def": 2.0,
     "include_file_not_found": 1.0,
     "include_circular": 2.0,
+    "validation_circular_dep": 4.0,
     "internal_error": 12.0,
     # Translation errors
     "diff_unsupported_func": 6.0,

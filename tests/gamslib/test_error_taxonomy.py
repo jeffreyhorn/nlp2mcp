@@ -1,7 +1,7 @@
 """Unit tests for error_taxonomy module.
 
 Tests the categorization functions for parse, translate, and solve outcomes.
-Covers all 47 outcome categories with 96 test cases including variants and edge cases.
+Covers all 49 outcome categories with 101 test cases including variants and edge cases.
 """
 
 from __future__ import annotations
@@ -63,6 +63,7 @@ from scripts.gamslib.error_taxonomy import (
     UNSUP_EXPRESSION_TYPE,
     UNSUP_INDEX_OFFSET,
     UNSUP_SPECIAL_ORDERED,
+    VALIDATION_CIRCULAR_DEP,
     categorize_model_status,
     # Functions
     categorize_parse_error,
@@ -241,6 +242,33 @@ class TestCategorizeParseError:
         """Test detection of circular include errors."""
         msg = "Circular include detected: a.gms -> b.gms -> a.gms"
         assert categorize_parse_error(msg) == INCLUDE_CIRCULAR
+
+    # Sprint 19 Day 1: Patterns to reduce internal_error misclassification
+
+    def test_no_objective_function(self) -> None:
+        """Test detection of missing objective function."""
+        msg = "Model 'transport' has no objective function defined"
+        assert categorize_parse_error(msg) == MODEL_NO_OBJECTIVE_DEF
+
+    def test_circular_dependency(self) -> None:
+        """Test detection of circular dependency errors."""
+        msg = "Circular dependency detected in equation definitions"
+        assert categorize_parse_error(msg) == VALIDATION_CIRCULAR_DEP
+
+    def test_index_count_mismatch(self) -> None:
+        """Test detection of index count mismatch errors."""
+        msg = "Symbol 'x' expects 2 indices, got 3"
+        assert categorize_parse_error(msg) == SEMANTIC_DOMAIN_ERROR
+
+    def test_not_declared_as_variable(self) -> None:
+        """Test detection of undeclared variable errors."""
+        msg = "Symbol 'z' not declared as a variable"
+        assert categorize_parse_error(msg) == SEMANTIC_UNDEFINED_SYMBOL
+
+    def test_unsupported_expression_type(self) -> None:
+        """Test detection of unsupported expression type errors."""
+        msg = "Unsupported expression type in equation 'supply'"
+        assert categorize_parse_error(msg) == PARSER_INVALID_EXPRESSION
 
     # Edge cases
     def test_timeout(self) -> None:
@@ -577,8 +605,8 @@ class TestCategoryLists:
     """Tests for category list constants."""
 
     def test_parse_category_count(self) -> None:
-        """Test that there are 16 parse error categories."""
-        assert len(PARSE_ERROR_CATEGORIES) == 16
+        """Test that there are 17 parse error categories."""
+        assert len(PARSE_ERROR_CATEGORIES) == 17
 
     def test_translate_category_count(self) -> None:
         """Test that there are 13 translate error categories."""
@@ -590,9 +618,9 @@ class TestCategoryLists:
         assert len(SOLVE_OUTCOME_CATEGORIES) == 17
 
     def test_all_categories_count(self) -> None:
-        """Test that there are 46 + 2 (timeout, internal_error) = 48 total categories."""
-        # 16 parse + 13 translate + 17 solve + 2 generic = 48
-        assert len(ALL_CATEGORIES) == 48
+        """Test that there are 47 + 2 (timeout, internal_error) = 49 total categories."""
+        # 17 parse + 13 translate + 17 solve + 2 generic = 49
+        assert len(ALL_CATEGORIES) == 49
 
     def test_no_duplicate_categories(self) -> None:
         """Test that there are no duplicate category names."""

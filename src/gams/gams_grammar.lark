@@ -51,7 +51,9 @@ params_block: ("Parameters"i | "Parameter"i) param_decl_list SEMI?
 
 param_decl_list: param_decl (NEWLINE param_decl)*
 
+// Sprint 19 Day 1: Added alternative without explicit domain for tables like "Table td 'desc'"
 table_block: "Table"i ID "(" table_domain_list ")" (STRING | DESCRIPTION)? table_content+ SEMI
+           | "Table"i ID (STRING | DESCRIPTION)? table_content+ SEMI
 
 table_content: table_row | table_continuation
 
@@ -247,6 +249,7 @@ set_members: set_member ("," set_member)*
            | STRING "." STRING                   -> set_tuple
            | SET_ELEMENT_ID STRING               -> set_element_with_desc
            | STRING STRING                       -> set_element_with_desc
+           | NUMBER STRING                       -> set_element_with_desc
            | NUMBER                              -> set_element
            | SET_ELEMENT_ID                      -> set_element
            | STRING                              -> set_element
