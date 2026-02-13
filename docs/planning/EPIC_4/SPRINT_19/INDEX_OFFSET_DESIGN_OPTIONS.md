@@ -16,7 +16,7 @@ The IndexOffset IR node type **already exists** in `src/ir/ast.py` (implemented 
 3. KKT stationarity: structurally compatible with IndexOffset indices, but end-to-end correctness depends on the AD changes above — no additional KKT-specific work anticipated
 4. Emit layer already handles IndexOffset via `_format_mixed_indices()` — no changes needed
 
-**Effort estimate:** 8h total (4h AD index-substitution work + 2h end-to-end pipeline tracing + 2h testing/integration), down from 14-16h originally estimated in GOALS.md.
+**Effort estimate:** 8h total (4h AD index-substitution work + 2h end-to-end pipeline tracing + 2h testing/integration), down from ~14-16h originally estimated in PROJECT_PLAN.md.
 
 ---
 
@@ -349,7 +349,7 @@ The following 8 models are blocked by `unsup_index_offset` at the translate stag
 | 7 | **robert** | `path_syntax_error` (E170) | Lead index domain violation after parsing |
 | 8 | **pak** | `path_solve_terminated` | Lead/lag expressions quoted as strings (Sprint 18 Day 3) |
 
-**Source:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` (Subcategory D), GOALS.md line 159.
+**Source:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` (Subcategory D), 8 blocked models count from GOALS.md line 159.
 
 ---
 
@@ -411,7 +411,7 @@ No grammar or parser changes are needed.
 
 **Finding:** The core assumption about differentiation is correct: `x(t+1)` and `x(t)` are treated as independent variables during differentiation. The AD system's `_diff_varref()` function (at `src/ad/derivative_rules.py:201-275`) uses exact tuple equality: `expr.indices == wrt_indices`. Since `IndexOffset` is a frozen dataclass, `IndexOffset("t", Const(1), False) != "t"`, so `d/dx(t) [x(t+1)] = 0` automatically. Similarly, `IndexOffset("t", Const(1), False) == IndexOffset("t", Const(1), False)`, so `d/dx(t+1) [x(t+1)] = 1`. However, AD's sum-collapse/index-substitution logic (`_apply_index_substitution` in `src/ad/derivative_rules.py:1788`) still has an explicit limitation ("IndexOffset not supported in AD yet"), so full IndexOffset support in AD is **not** complete and additional work remains in that area.
 
-**Impact on Sprint 19:** No additional work is needed to change `_diff_varref()` itself; the verified tuple-equality behavior can be reused as-is. The remaining AD effort for IndexOffset is confined to the index-substitution / sum-collapse path (extending `_apply_index_substitution` to handle `IndexOffset` correctly, ~4h). The 14-16h GOALS.md estimate can be reduced to ~8h.
+**Impact on Sprint 19:** No additional work is needed to change `_diff_varref()` itself; the verified tuple-equality behavior can be reused as-is. The remaining AD effort for IndexOffset is confined to the index-substitution / sum-collapse path (extending `_apply_index_substitution` to handle `IndexOffset` correctly, ~4h). The ~14-16h PROJECT_PLAN.md estimate can be reduced to ~8h.
 
 ### Unknown 7.4: Grammar Changes for Lead/Lag Syntax
 
@@ -431,5 +431,5 @@ No grammar or parser changes are needed.
 2. **Extend `_apply_index_substitution`** (~4h) to handle IndexOffset objects during AD sum-collapse, substituting the `base` field when it matches a substitution key.
 3. **Trace `unsup_index_offset` classification** (~2h) to understand where the 8 blocked models are currently rejected and map the downstream fixes needed.
 4. **Test with blocked models** (~2h) — run all 8 blocked models end-to-end after AD fix and verify correct MCP output.
-5. **Revise effort estimate** from 14-16h (GOALS.md) to ~8h for Sprint 19.
+5. **Revise effort estimate** from ~14-16h (PROJECT_PLAN.md) to ~8h for Sprint 19.
 6. **Consider extending `to_gams_string()`** to handle complex offset expressions (currently raises `NotImplementedError` for non-trivial cases) if any of the 8 blocked models require it.

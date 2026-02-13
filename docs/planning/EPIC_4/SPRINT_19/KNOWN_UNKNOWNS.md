@@ -993,7 +993,7 @@ Development team
 
 **Finding:** The core assumption about differentiation is correct: `x(t+1)` and `x(t)` are treated as independent variables during differentiation. The AD system's `_diff_varref()` function (`src/ad/derivative_rules.py:201-275`) uses exact tuple equality: `expr.indices == wrt_indices`. Since `IndexOffset` is a frozen dataclass, `IndexOffset("t", Const(1), False) != "t"`, so `d/dx(t) [x(t+1)] = 0` automatically. Similarly, `IndexOffset("t", Const(1), False) == IndexOffset("t", Const(1), False)`, so `d/dx(t+1) [x(t+1)] = 1`. However, AD's sum-collapse/index-substitution logic (`_apply_index_substitution` in `src/ad/derivative_rules.py:1788`) still has an explicit limitation ("IndexOffset not supported in AD yet"), so full IndexOffset support in AD is **not** complete and additional work remains in that area.
 
-**Impact on Sprint 19:** No additional work is needed to change `_diff_varref()` itself; the verified tuple-equality behavior can be reused as-is. The remaining AD effort for IndexOffset is confined to the index-substitution / sum-collapse path (extending `_apply_index_substitution` to handle `IndexOffset` correctly, ~4h). The 14-16h GOALS.md estimate can be reduced to ~8h.
+**Impact on Sprint 19:** No additional work is needed to change `_diff_varref()` itself; the verified tuple-equality behavior can be reused as-is. The remaining AD effort for IndexOffset is confined to the index-substitution / sum-collapse path (extending `_apply_index_substitution` to handle `IndexOffset` correctly, ~4h). The ~14-16h PROJECT_PLAN.md estimate can be reduced to ~8h.
 
 ---
 

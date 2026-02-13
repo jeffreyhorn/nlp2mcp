@@ -571,7 +571,7 @@ Created `docs/planning/EPIC_4/SPRINT_19/INDEX_OFFSET_DESIGN_OPTIONS.md` with com
 
 **The existing Option B design (IndexOffset as standalone IR node in index tuples) is the correct approach.** No IR redesign is needed. The IndexOffset node is already implemented, the grammar already parses lead/lag syntax, the parser semantic handler already constructs IndexOffset nodes, and the emit layer already handles output.
 
-**Remaining work is minimal:** IndexOffset construction is already implemented in `src/ir/parser.py`; what remains is wiring this through translation/AD index substitution (extending `_apply_index_substitution` in `src/ad/derivative_rules.py`, ~4h) and end-to-end pipeline tracing/testing (~4h). Total: ~8h, down from the 14-16h originally estimated in GOALS.md.
+**Remaining work is minimal:** IndexOffset construction is already implemented in `src/ir/parser.py`; what remains is wiring this through translation/AD index substitution (extending `_apply_index_substitution` in `src/ad/derivative_rules.py`, ~4h) and end-to-end pipeline tracing/testing (~4h). Total: ~8h, down from the ~14-16h originally estimated in PROJECT_PLAN.md.
 
 **Key insight for AD:** `x(t)` and `x(t+1)` are independent variables. `_diff_varref()` uses `expr.indices == wrt_indices` (tuple equality), so `IndexOffset("t", Const(1), False) != "t"` → `d/dx(t) [x(t+1)] = 0` automatically. However, `_apply_index_substitution` currently skips IndexOffset during sum-collapse, which needs to be fixed.
 

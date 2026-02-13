@@ -56,7 +56,7 @@ Created comprehensive Known Unknowns document for Sprint 19 with 26 unknowns acr
 
 #### Summary
 
-Evaluated 4 design options for IndexOffset IR support. Key discovery: the IndexOffset IR node already exists (`src/ir/ast.py`, Sprint 9 Day 3), the grammar already parses all lead/lag forms (`src/gams/gams_grammar.lark:330-344`), the parser semantic handler already constructs IndexOffset nodes (`src/ir/parser.py:786-933`), and the emit layer already handles IndexOffset (`_format_mixed_indices()`, Sprint 18 Day 3). The existing Option B design (standalone IR node in index tuples) is confirmed as the correct approach. AD differentiation matching works via frozen dataclass equality, but `_apply_index_substitution` needs extension for IndexOffset during sum-collapse. Remaining work: ~8h (AD index substitution + pipeline tracing + testing), down from 14-16h originally estimated.
+Evaluated 4 design options for IndexOffset IR support. Key discovery: the IndexOffset IR node already exists (`src/ir/ast.py`, Sprint 9 Day 3), the grammar already parses all lead/lag forms (`src/gams/gams_grammar.lark:330-344`), the parser semantic handler already constructs IndexOffset nodes (`src/ir/parser.py:786-933`), and the emit layer already handles IndexOffset (`_format_mixed_indices()`, Sprint 18 Day 3). The existing Option B design (standalone IR node in index tuples) is confirmed as the correct approach. AD differentiation matching works via frozen dataclass equality, but `_apply_index_substitution` needs extension for IndexOffset during sum-collapse. Remaining work: ~8h (AD index substitution + pipeline tracing + testing), down from ~14-16h originally estimated in PROJECT_PLAN.md.
 
 #### Deliverables
 
