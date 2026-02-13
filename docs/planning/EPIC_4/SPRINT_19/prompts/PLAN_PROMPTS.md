@@ -55,7 +55,8 @@ This file contains comprehensive prompts for each day of Sprint 19 (Days 0-14). 
 - Test suite confirmed green (3294 tests)
 
 **Quality Checks:**
-You do NOT need to run quality checks for this day — all changes are documentation files only.
+- You may skip linting, type-checking, and formatting checks for this day because all changes are documentation-only.
+- You MUST still run `make test` and confirm all 3294 tests pass as part of baseline verification.
 
 **Completion Criteria:**
 - [ ] All 10 prep task deliverables exist on `main`
@@ -124,12 +125,12 @@ After committing and pushing all changes:
 
 4. **Pipeline retest** (0.5h)
    - Run pipeline on affected models
-   - Update gamslib_status.json
+   - Update `data/gamslib/gamslib_status.json`
    - Record new metrics in SPRINT_LOG.md
 
 **Deliverables:**
 - Updated error taxonomy with 5 new patterns
-- gamslib_status.json with 21 models reclassified from internal_error
+- `data/gamslib/gamslib_status.json` with 21 models reclassified from internal_error
 - Grammar updated for set element descriptions — 4 models newly parsing
 - Metrics recorded in SPRINT_LOG.md
 
@@ -1183,7 +1184,7 @@ After committing and pushing all changes:
 
 1. **Full pipeline retest** (1h)
    - Run `.venv/bin/python scripts/gamslib/run_full_test.py` on all 159 models
-   - Capture final gamslib_status.json
+   - Capture final `data/gamslib/gamslib_status.json`
    - Extract complete metrics: parse, translate, solve, full pipeline, error categories
 
 2. **Compare final vs baseline metrics** (0.5h)
@@ -1214,7 +1215,7 @@ After committing and pushing all changes:
    - Update CHANGELOG.md with release entry
 
 **Deliverables:**
-- Final gamslib_status.json with complete pipeline results
+- Final `data/gamslib/gamslib_status.json` with complete pipeline results
 - Sprint 19 achievement summary (baseline → final comparison)
 - SPRINT_LOG.md Day 14 complete with retrospective
 - Sprint 20 carryover list
