@@ -771,7 +771,7 @@ Development team
 | Cascading (resolve when root cause fixed) | 15 | Subcategory B — no direct work needed |
 | Preprocessor-required (directive) | 3 | clearlak, cesam2, springchain |
 | Compile-time expansion only | 1 | uimp (%var% expansion; grouped with preprocessor in totals) |
-| Needs investigation | 7-9 | Subcategory K (miscellaneous) + some E/F models |
+| Needs investigation | 10 | Subcategory K (7 miscellaneous) + Subcategory E (3: ship, tforss, trnspwl) |
 
 **Scenario estimates:**
 - **Optimistic:** 58 fixed → 14 remaining (all grammar + cascading resolve)
