@@ -540,7 +540,7 @@ All 72 models were checked for preprocessor directives. Results:
 | Unknown | Finding | Status |
 |---------|---------|--------|
 | **4.1** (Current count) | 72 models (not ~95 or 74). Pipeline data is v1.1.0 baseline. All 72 still fail with v1.2.0. | ✅ VERIFIED |
-| **4.2** (Preprocessor directives) | Only 3 of 72 models (4%) require preprocessor support. 69 models (96%) addressable with grammar-only changes. | ✅ VERIFIED |
+| **4.2** (Preprocessor directives) | 4 of 72 models (6%) require preprocessor involvement (3 directive-processing + 1 compile-time variable). 68 models (94%) addressable with grammar-only changes. | ✅ VERIFIED |
 | **4.3** (Overlap with deferred analysis) | This catalog fully subsumes the deferred "Lexer Error Deep Analysis" item scope. The 5-6h budget can be reallocated to implementation. | ✅ VERIFIED |
 | **6.1** (Specific syntax constructs) | 11 subcategories identified with specific GAMS syntax patterns. Top patterns: compound set data (12), put format (6), declaration gaps (7), special values (7). | ✅ VERIFIED |
 | **6.4** (Addressable with grammar-only) | 43 models directly fixable + 15 cascading = 58 addressable. "Below 50" target from PROJECT_PLAN.md needs recalibration to "below 30" (since baseline is 72, not ~95). | ✅ VERIFIED |

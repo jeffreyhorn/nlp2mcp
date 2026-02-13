@@ -271,7 +271,7 @@ Created `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with complete su
 
 **72 models** cataloged (corrected from ~95 in PROJECT_PLAN.md). Distribution across 11 subcategories: Tuple/Compound Set Data (12), Cascading Parse Failures (15), Put Statement Format (6), Lead/Lag Indexing (4), Special Values/Inline Data (7), Declaration/Syntax Gaps (7), Set Element Descriptions (4), Control Flow (2), Model/Solve Issues (5), Bracket/Brace Syntax (3), Miscellaneous (7).
 
-**Grammar-fixable:** 43-45 models directly fixable + up to 22 cascading = 65 potentially addressable. Only 4 models require preprocessor involvement (3 directive-processing: clearlak, cesam2, springchain; 1 compile-time variable: uimp). Target is now "72 → below 30" based on the corrected baseline; any prior "~95 → below 50" framing should be treated as obsolete.
+**Grammar-fixable:** 43 models directly fixable + 15 cascading = 58 potentially addressable. Only 4 models require preprocessor involvement (3 directive-processing: clearlak, cesam2, springchain; 1 compile-time variable: uimp). Target is now "72 → below 30" based on the corrected baseline; any prior "~95 → below 50" framing should be treated as obsolete.
 
 **Key finding:** The deferred "Lexer Error Deep Analysis" item (5-6h budget) is fully subsumed by this catalog — that budget should be reallocated to grammar implementation.
 
@@ -290,7 +290,7 @@ sed -n '/^## Appendix: Complete Model List/,/^## /p' docs/planning/EPIC_4/SPRINT
 
 - ✅ `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` with full subcategorization of all 72 models
 - ✅ Model count per subcategory (validated: 72 total, not ~95 — PROJECT_PLAN.md estimate identified as incorrect)
-- ✅ Grammar-change-feasibility assessment per subcategory (43-45 direct, 15-22 cascading, 4 preprocessor, 7-9 investigate)
+- ✅ Grammar-change-feasibility assessment per subcategory (43 direct, 15 cascading, 4 preprocessor, 10 investigate)
 - ✅ Recommended 4-phase implementation order for Sprint 19
 - ✅ Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified with findings documented in KNOWN_UNKNOWNS.md
 
@@ -301,7 +301,7 @@ sed -n '/^## Appendix: Complete Model List/,/^## /p' docs/planning/EPIC_4/SPRINT
 - [x] PROJECT_PLAN.md estimates validated or corrected (corrected: 72 not ~95; 12 compound set data not 14+)
 - [x] Grammar-only vs. preprocessor-required distinction made (68 grammar-fixable, 4 preprocessor-required including 1 compile-time-variable `uimp` model)
 - [x] Implementation order recommended (highest ROI first: Phase 1 quick wins → Phase 2 core grammar → Phase 3 advanced → Phase 4 if-time-permits)
-- [x] Total addressable count estimated (43-65 depending on scenario; "below 30" target achievable)
+- [x] Total addressable count estimated (43-58 depending on scenario; "below 30" target achievable)
 - [x] Unknowns 4.1, 4.2, 4.3, 6.1, 6.4 verified and documented in KNOWN_UNKNOWNS.md
 
 ---

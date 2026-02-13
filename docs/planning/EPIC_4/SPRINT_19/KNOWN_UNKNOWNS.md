@@ -767,23 +767,23 @@ Development team
 
 | Category | Count | Notes |
 |----------|-------|-------|
-| Directly grammar-fixable | 43-45 | Subcategories A, C, D, E (partial), F (partial), G, H, I, J (partial) |
-| Cascading (resolve when root cause fixed) | 15 (up to 22) | Subcategory B — no direct work needed |
+| Directly grammar-fixable | 43 | Subcategories A, C, D, E (partial), F (partial), G, H, I, J (partial) |
+| Cascading (resolve when root cause fixed) | 15 | Subcategory B — no direct work needed |
 | Preprocessor-required (directive) | 3 | clearlak, cesam2, springchain |
 | Compile-time expansion only | 1 | uimp (%var% expansion; grouped with preprocessor in totals) |
 | Needs investigation | 7-9 | Subcategory K (miscellaneous) + some E/F models |
 
 **Scenario estimates:**
-- **Optimistic:** 65 fixed → 7 remaining (all grammar + cascading resolve)
-- **Realistic:** 55-58 fixed → 14-17 remaining (~80% cascading resolve)
-- **Conservative:** 43-45 fixed → 27-29 remaining (grammar only, no cascading)
+- **Optimistic:** 58 fixed → 14 remaining (all grammar + cascading resolve)
+- **Realistic:** 55 fixed → 17 remaining (~80% cascading resolve)
+- **Conservative:** 43 fixed → 29 remaining (grammar only, no cascading)
 
 **Target recalibration:** PROJECT_PLAN.md target "~95 → below 50" must be revised. Since baseline is 72:
 - Original intent (fix ~45 models) maps to "72 → below 30"
 - Even the conservative estimate (43 fixed) achieves this
 - The target is achievable and likely exceeded
 
-**Easy wins identified:** Set element descriptions (4 models, 1-2h), put format (6 models, 2-3h), special values subset (4-5 models, 2-3h) = ~15 models in ~6-8h
+**Easy wins identified:** Set element descriptions (4 models, 1-2h), put format (6 models, 2-3h), special values subset (3 models, 2-3h) = ~13 models in ~6-8h
 
 **Reference:** `docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md` (Grammar-Fixable Assessment section)
 
