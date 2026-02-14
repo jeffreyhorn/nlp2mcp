@@ -4,7 +4,7 @@
 
 **Issue:** The grammar's `condition` rule for equation definitions requires dollar conditionals to be wrapped in parentheses `$(expr)` or brackets `$[expr]`, but GAMS allows bare dollar conditionals like `$identifier(args)` without enclosing delimiters. This causes parse failures on equations like `minw(t)$tm(t)..`.
 
-**Status:** Open
+**Status:** Fixed
 **Severity:** High — Affects up to 23 models in the active corpus
 **Discovered:** 2026-02-13 (Sprint 19 Day 1, investigating weapons model)
 **Affected Models:** weapons (confirmed), plus 22 other models with the same pattern (see below)
@@ -150,7 +150,27 @@ Fixing this grammar gap would potentially unblock a significant portion of the `
 
 ---
 
+## Fix Details
+
+**Fixed in:** Sprint 19 (branch `sprint19-fix-issues-703-706`)
+
+Extended the `condition` rule in `src/gams/gams_grammar.lark` to support bare dollar conditionals:
+
+```lark
+condition: DOLLAR "(" expr ")"
+         | DOLLAR "[" expr "]"
+         | DOLLAR ref_bound       // e.g., $ls.l(i)
+         | DOLLAR ref_indexed     // e.g., $tm(t)
+         | DOLLAR ID              // e.g., $flag
+```
+
+The parser (`src/ir/parser.py`) already handles all these node types in `_expr()`, so `_expr_with_context(condition_node.children[1], ...)` works for all variants without needing a separate helper method. Updated comments in both `_handle_eqn_def_scalar` and `_handle_eqn_def_domain` handlers.
+
+**Verification:** `weapons.gms` now parses successfully.
+
+---
+
 ## Related Issues
 
 - This is distinct from dollar conditionals within sum/prod index specs (`sum(w$td(w,t), ...)`) which are already supported via the `index_spec` rule.
-- This is distinct from dollar conditionals in assignments (`x(i)$cond(i) = ...`) which may use a separate grammar path.
+- Issue #705 applies the same pattern to assignment dollar conditionals.

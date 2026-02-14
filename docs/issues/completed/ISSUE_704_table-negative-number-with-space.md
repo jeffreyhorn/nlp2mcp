@@ -4,7 +4,7 @@
 
 **Issue:** The table data parser cannot handle negative numbers where a space separates the minus sign from the digits, e.g., `- 0.0013`. This is valid GAMS table data syntax.
 
-**Status:** Open
+**Status:** Fixed
 **Severity:** Low — Confirmed in 1 model (ganges), may affect others
 **Discovered:** 2026-02-13 (Sprint 19 Day 1, after Subcategory G grammar fix advanced ganges past its original set element description error)
 **Affected Models:** ganges (confirmed)
@@ -67,6 +67,17 @@ table_value: NUMBER
 ```
 
 Alternatively, handle this in the table data preprocessor or lexer by collapsing `- NUMBER` sequences in table context.
+
+---
+
+## Fix Details
+
+**Fixed in:** Sprint 19 (branch `sprint19-fix-issues-703-706`)
+
+1. Added `negative_number: MINUS NUMBER` rule to `src/gams/gams_grammar.lark` as a new `table_value` alternative.
+2. Updated `src/ir/parser.py` `_handle_table_block` to combine `MINUS` + `NUMBER` tokens from `negative_number` nodes into a single synthetic `NUMBER` token (e.g., `-0.0013`), mirroring the existing `negative_special` handling for `-inf`/`-eps`. Updated both the initial table row handling and the continuation handling paths.
+
+**Verification:** `ganges.gms` now parses past line 152 (hits a new unrelated error at line 1082).
 
 ---
 

@@ -280,25 +280,25 @@ dotted_label: (ID | STRING) ("." (ID | STRING | range_expr))*
 // table_value: NUMBER handles signed numbers like -5, 3.14
 // ID handles special values like inf, eps, na
 // negative_special handles -inf, -eps, etc. (MINUS only, not PLUS since + means continuation)
-table_value: NUMBER | ID | range_expr | negative_special
+// negative_number handles space-separated negatives like "- 0.0013" (Issue #704)
+table_value: NUMBER | ID | range_expr | negative_special | negative_number
 negative_special: MINUS ID
+negative_number: MINUS NUMBER
 
 // ---------------------------
 // Assignments & Bounds
 // ---------------------------
 
 // Sprint 17 Day 7: Added square bracket conditional variants
+// Sprint 19: Use condition rule for all dollar conditional forms (Issue #705)
 assignment_stmt: lvalue ASSIGN expr SEMI                    -> assign
-               | lvalue DOLLAR "(" expr ")" ASSIGN expr SEMI  -> conditional_assign
-               | lvalue DOLLAR "[" expr "]" ASSIGN expr SEMI  -> conditional_assign
-               | lvalue DOLLAR ref_indexed ASSIGN expr SEMI   -> conditional_assign_simple
+               | lvalue condition ASSIGN expr SEMI          -> conditional_assign_general
 
 // Assignment without semicolon - for use as final statement in loop/if blocks
 // Sprint 17 Day 7: Added square bracket conditional variants
+// Sprint 19: Use condition rule for all dollar conditional forms (Issue #705)
 assignment_nosemi: lvalue ASSIGN expr                         -> assign
-                 | lvalue DOLLAR "(" expr ")" ASSIGN expr     -> conditional_assign
-                 | lvalue DOLLAR "[" expr "]" ASSIGN expr     -> conditional_assign
-                 | lvalue DOLLAR ref_indexed ASSIGN expr      -> conditional_assign_simple
+                 | lvalue condition ASSIGN expr               -> conditional_assign_general
 
 // lvalue supports: x.lo(i), x.up(i), x.fx(i), parameter(i), scalar
 lvalue: ref_bound | ref_indexed | ID
@@ -362,8 +362,18 @@ domain_element: ID ("(" index_list ")" | "[" index_list "]")?
               | ID lag_lead_suffix
 
 // Sprint 17 Day 7: Support square bracket conditionals (e.g., $[cond] in addition to $(cond))
+// Sprint 19: Added bare dollar conditionals (e.g., $tm(t), $ls.l(i), $flag) for equation definitions (Issue #703)
 condition: DOLLAR "(" expr ")"
          | DOLLAR "[" expr "]"
+         | DOLLAR cond_bound
+         | DOLLAR ref_indexed
+         | DOLLAR ID
+
+// Bare dollar conditional bound access — restricted to BOUND_K attributes (.lo, .up, .fx, .l, .m)
+// that _expr() supports. Excludes attr_access/attr_access_indexed (e.g., .scale, .stage).
+cond_bound: ID "." BOUND_K "(" index_list ")"   -> bound_indexed
+          | ID "." BOUND_K "[" index_list "]"   -> bound_indexed
+          | ID "." BOUND_K                      -> bound_scalar
 
 REL_K: /=e=|=l=|=g=/i
 
@@ -375,9 +385,11 @@ solve_stmt: "Solve"i ID obj_sense ID "using"i solver_type SEMI     -> solve
           | "Solve"i ID "using"i solver_type obj_sense ID SEMI     -> solve
 obj_sense: MINIMIZING_K | MAXIMIZING_K
 solver_type: /(?i:nlp|dnlp|minlp|mip|lp|mcp|cns|qcp|rmip|rminlp)\b/  // Sprint 11 Day 2: Support more solvers
-// Sprint 17 Day 7: Added minimize/maximize variants (without -ing suffix)
-MINIMIZING_K: /(?i:minimizing|minimize|min)\b/
-MAXIMIZING_K: /(?i:maximizing|maximize|max)\b/
+// GAMS accepts any word starting with "min" or "max" as the solve direction
+// (e.g., min, minimize, minimizing, minimzing, minfoo all work)
+// Issue #706: Matches GAMS's tolerant keyword matching behavior
+MINIMIZING_K: /(?i:min)\w*\b/
+MAXIMIZING_K: /(?i:max)\w*\b/
 
 model_stmt: ("Models"i | "Model"i) ID STRING? "/" "all"i "/" SEMI       -> model_all
           | ("Models"i | "Model"i) ID STRING? "/" model_ref_list "/" SEMI  -> model_with_list

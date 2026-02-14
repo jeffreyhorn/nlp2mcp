@@ -4,7 +4,7 @@
 
 **Issue:** The `lop` gamslib model contains a typo on line 149: `minimzing` instead of `minimizing` in a solve statement. The parser correctly rejects this as an unrecognized keyword. This is a source data issue, not a parser bug.
 
-**Status:** Open
+**Status:** Fixed
 **Severity:** Low — Source data typo in a single model; requires a workaround or source correction
 **Discovered:** 2026-02-13 (Sprint 19 Day 1, after Subcategory G grammar fix advanced lop past its original set element description error)
 **Affected Models:** lop
@@ -79,3 +79,18 @@ Add a preprocessing pass that corrects known typos in gamslib models before pars
 This issue was exposed by the Sprint 19 Day 1 grammar fix that added `NUMBER STRING -> set_element_with_desc` support. The lop model previously failed at its set element description (`1 'every 60 minutes'`). With that fix, it now parses 148 lines before hitting this typo in the solve statement.
 
 The lop model also contains a second solve statement later in the file (`solve minlop ...`) which may have additional issues.
+
+---
+
+## Fix Details
+
+**Fixed in:** Sprint 19 (branch `sprint19-fix-issues-703-706`)
+
+Used Option B (typo tolerance) after testing GAMS's actual keyword matching behavior. GAMS 51.3.0 accepts any word starting with `min` (at least 3 chars) as a minimize directive, and any word starting with `max` as maximize. For example: `min`, `minimize`, `minimizing`, `minimzing`, `minfoo` all work. Updated `MINIMIZING_K` and `MAXIMIZING_K` terminals in `src/gams/gams_grammar.lark` to match this behavior:
+
+```lark
+MINIMIZING_K: /(?i:min)\w*/
+MAXIMIZING_K: /(?i:max)\w*/
+```
+
+**Verification:** `lop.gms` now parses past line 149 (hits a new unrelated error at line 176 — dollar conditional in loop domain).
