@@ -562,7 +562,7 @@ abort_base: "abort"i DOLLAR "[" expr "]" STRING ("," display_item)*  -> abort_co
 // Without delimiters, the condition must be a single atom so the parser knows
 // where the condition ends and display items begin.
 abort_cond_atom: func_call
-              | ID "(" id_list ")"
+              | ref_indexed
               | ID
 
 // Top-level statements (with SEMI)

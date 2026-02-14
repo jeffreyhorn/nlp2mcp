@@ -2734,8 +2734,11 @@ class _ModelBuilder:
         # Issue #714: Find the model_ref_list Tree child dynamically —
         # a STRING description may appear between the model name and the list.
         ref_list = next(
-            c for c in node.children if isinstance(c, Tree) and c.data == "model_ref_list"
+            (c for c in node.children if isinstance(c, Tree) and c.data == "model_ref_list"),
+            None,
         )
+        if ref_list is None:
+            raise self._error(f"Missing model_ref_list in model_with_list for '{name}'", node)
         refs = [
             _token_text(tok)
             for tok in ref_list.children
