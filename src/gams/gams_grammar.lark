@@ -457,6 +457,8 @@ loop_body: exec_stmt* exec_stmt_final
           | put_stmt             // Sprint 12: Support put inside if/loop
           | putclose_stmt        // Sprint 12: Support putclose inside if/loop
           | execute_stmt         // Sprint 12: Support execute inside if/loop
+          | loop_stmt            // Sprint 19: Support nested loops
+          | if_stmt              // Sprint 19: Support nested if statements
           | assignment_stmt
           | SEMI
 
@@ -471,6 +473,8 @@ loop_body: exec_stmt* exec_stmt_final
                 | put_stmt
                 | putclose_stmt
                 | execute_stmt
+                | loop_stmt      // Sprint 19: Support nested loops
+                | if_stmt        // Sprint 19: Support nested if statements
                 | SEMI
 
 // ---------------------------
