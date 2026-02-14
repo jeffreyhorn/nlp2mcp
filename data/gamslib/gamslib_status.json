@@ -2412,12 +2412,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-13T21:00:54.872268+00:00",
+        "parse_date": "2026-02-14T01:02:23.095552+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.6248,
+        "parse_time_seconds": 21.864,
         "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 152, column 18: Unexpected character: '0'\n  'taxrfd-dom'   - 0.0013     0.32      0.40      0.40\n                   ^\n\nSuggestion: This character is not valid in this context"
+          "category": "internal_error",
+          "message": "Conflicting level bound for variable 'tw' at indices ('agricult',) [context: expression] (line 704, column 1)"
         }
       },
       "nlp2mcp_translate": {

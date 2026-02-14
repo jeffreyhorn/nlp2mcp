@@ -399,7 +399,7 @@ model_stmt: ("Models"i | "Model"i) ID STRING? "/" "all"i "/" SEMI       -> model
 model_decl_item: ID STRING? "/" model_ref_list "/"
                | ID STRING? "/" "all"i "/"
 
-model_ref_list: ID ("," ID)*
+model_ref_list: ID (","? ID)*
 
 // ---------------------------
 // Option Statement (Sprint 8)
