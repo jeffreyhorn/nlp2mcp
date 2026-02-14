@@ -651,6 +651,8 @@ prod_expr: PROD_K "(" sum_domain "," expr ")"   -> prod
 
 sum_domain: index_spec
           | "(" index_spec ")"  -> tuple_domain
+          | "(" index_spec ")" DOLLAR expr           -> tuple_domain_cond
+          | "(" index_spec ")" DOLLAR "[" expr "]"   -> tuple_domain_cond
 
 // Sprint 17 Day 7: Support square bracket conditionals in sum/prod index specs
 index_spec: index_list (DOLLAR expr)?
