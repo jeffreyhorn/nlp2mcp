@@ -187,7 +187,9 @@ def _collect_variables(expr: Expr, variables: set[str]) -> None:
             _collect_variables(arg, variables)
 
     elif isinstance(expr, Sum):
-        # Sum aggregation: recurse on body
+        # Sum aggregation: recurse on condition and body
+        if expr.condition is not None:
+            _collect_variables(expr.condition, variables)
         _collect_variables(expr.body, variables)
 
     else:

@@ -617,7 +617,12 @@ def _substitute_indices(expr, symbolic_indices: tuple[str, ...], concrete_indice
         )
         if free_symbolic:
             new_body = _substitute_indices(expr.body, free_symbolic, free_concrete)
-            return Sum(expr.index_sets, new_body)
+            new_cond = (
+                _substitute_indices(expr.condition, free_symbolic, free_concrete)
+                if expr.condition is not None
+                else None
+            )
+            return Sum(expr.index_sets, new_body, new_cond)
         else:
             return expr
 

@@ -552,13 +552,20 @@ def _replace_indices_in_expr(
                 for arg in args
             )
             return Call(func, new_args)
-        case Sum(index_sets, body):
-            # Recursively process body to replace any element-specific indices
+        case Sum(index_sets, body, condition):
+            # Recursively process body and condition to replace element-specific indices
             new_body = _replace_indices_in_expr(
                 body, domain, element_to_set, model_ir, equation_domain
             )
-            if new_body is not body:
-                return Sum(index_sets, new_body)
+            new_condition = (
+                _replace_indices_in_expr(
+                    condition, domain, element_to_set, model_ir, equation_domain
+                )
+                if condition is not None
+                else None
+            )
+            if new_body is not body or new_condition is not condition:
+                return Sum(index_sets, new_body, new_condition)
             return expr
         case _:
             return expr

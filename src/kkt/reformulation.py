@@ -896,7 +896,12 @@ def _replace_min_max_call(expr: Expr, call: MinMaxCall, replacement: Expr) -> Ex
 
     elif isinstance(expr, Sum):
         new_body = _replace_min_max_call(expr.body, call, replacement)
-        return Sum(expr.index_sets, new_body)
+        new_cond = (
+            _replace_min_max_call(expr.condition, call, replacement)
+            if expr.condition is not None
+            else None
+        )
+        return Sum(expr.index_sets, new_body, new_cond)
 
     # Base case: no replacement needed (Const, VarRef, ParamRef, etc.)
     return expr

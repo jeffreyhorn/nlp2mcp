@@ -253,7 +253,8 @@ def _expression_key(expr: Expr) -> str:
         return f"Unary({expr.op},{child_key})"
     elif isinstance(expr, Sum):
         body_key = _expression_key(expr.body)
-        return f"Sum({expr.index_sets},{body_key})"
+        cond_key = _expression_key(expr.condition) if expr.condition is not None else "None"
+        return f"Sum({expr.index_sets},{body_key},{cond_key})"
     else:
         return f"{type(expr).__name__}({id(expr)})"
 
@@ -386,8 +387,13 @@ def _replace_subexpression(expr: Expr, target: Expr, replacement: Expr) -> Expr:
             return Unary(expr.op, new_child)
     elif isinstance(expr, Sum):
         new_body = _replace_subexpression(expr.body, target, replacement)
-        if new_body != expr.body:
-            return Sum(expr.index_sets, new_body)
+        new_cond = (
+            _replace_subexpression(expr.condition, target, replacement)
+            if expr.condition is not None
+            else None
+        )
+        if new_body != expr.body or new_cond != expr.condition:
+            return Sum(expr.index_sets, new_body, new_cond)
 
     return expr
 

@@ -272,10 +272,11 @@ def simplify(expr: Expr) -> Expr:
             simplified_args = tuple(simplify(arg) for arg in args)
             return Call(func, simplified_args)
 
-        # Sum: recursively simplify body
-        case Sum(index_sets, body):
+        # Sum: recursively simplify body and condition
+        case Sum(index_sets, body, condition):
             simplified_body = simplify(body)
-            return Sum(index_sets, simplified_body)
+            simplified_cond = simplify(condition) if condition is not None else None
+            return Sum(index_sets, simplified_body, simplified_cond)
 
         case _:
             # Unknown expression type - return as-is
@@ -396,11 +397,12 @@ def simplify_advanced(expr: Expr) -> Expr:
                 return Call(func, simplified_args)
             return basic_simplified
 
-        case Sum(index_sets, body):
-            # Recursively process body
+        case Sum(index_sets, body, condition):
+            # Recursively process body and condition
             simplified_body = simplify_advanced(body)
-            if simplified_body != body:
-                return Sum(index_sets, simplified_body)
+            simplified_cond = simplify_advanced(condition) if condition is not None else None
+            if simplified_body != body or simplified_cond != condition:
+                return Sum(index_sets, simplified_body, simplified_cond)
             return basic_simplified
 
         case _:

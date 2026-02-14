@@ -97,17 +97,17 @@ Equations
 Alias(w, w__);
 
 * Stationarity equations
-stat_prob(t).. ((-1) * mv(t)) + (1 - ((-1) * (prod(w, td(w,t) * (1 - td(w,t)) ** x(w,t)) * sum(w, 0)))) * nu_probe(t) + ((-1) * (mv(t) * ((-1) * (prod(w, td(w,"1") * (1 - td(w,"1")) ** x(w,"1")) * sum(w, 0))))) * nu_etd + sum(w, 0 * lam_maxw(w)) =E= 0;
-stat_x(w,t).. 0 + prod(w__, td(w__,t) * (1 - td(w__,t)) ** x(w__,t)) * sum(w__, 0) * nu_probe(t) + ((-1) * (mv(t) * ((-1) * (prod(w__, td(w__,"1") * (1 - td(w__,"1")) ** x(w__,"1")) * sum(w__, 0))))) * nu_etd + td(w,t) * lam_maxw(w) =E= 0;
+stat_prob(t).. ((-1) * mv(t)) + (1 - ((-1) * (prod(w$td(w,t), (1 - td(w,t)) ** x(w,t)) * sum(w$td(w,t), 0)))) * nu_probe(t) + ((-1) * (mv(t) * ((-1) * (prod(w$td(w,"1"), (1 - td(w,"1")) ** x(w,"1")) * sum(w$td(w,t), 0))))) * nu_etd + sum(w, 0 * lam_maxw(w)) =E= 0;
+stat_x(w,t).. 0 + prod(w__$td(w__,t), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$td(w__,t), 0) * nu_probe(t) + ((-1) * (mv(t) * ((-1) * (prod(w__$td(w__,"1"), (1 - td(w__,"1")) ** x(w__,"1")) * sum(w__$td(w__,t), 0))))) * nu_etd + 1 * lam_maxw(w) =E= 0;
 
 * Inequality complementarity equations
-comp_maxw(w).. ((-1) * (sum(t, td(w,t) * x(w,t)) - wa(w))) =G= 0;
-comp_minw(t)$(tm(t)).. sum(w, td(w,t) * x(w,t)) - tm(t) =G= 0;
+comp_maxw(w).. ((-1) * (sum(t$td(w,t), x(w,t)) - wa(w))) =G= 0;
+comp_minw(t)$(tm(t)).. sum(w$td(w,t), x(w,t)) - tm(t) =G= 0;
 
 * Original equality equations
-probe(t).. prob(t) =E= 1 - prod(w, td(w,t) * (1 - td(w,t)) ** x(w,t));
+probe(t).. prob(t) =E= 1 - prod(w$td(w,t), (1 - td(w,t)) ** x(w,t));
 etdp.. tetd =E= sum(t, mv(t) * prob(t));
-etd.. tetd =E= sum(t, mv(t) * (1 - prod(w, td(w,t) * (1 - td(w,t)) ** x(w,t))));
+etd.. tetd =E= sum(t, mv(t) * (1 - prod(w$td(w,t), (1 - td(w,t)) ** x(w,t))));
 
 
 * ============================================

@@ -157,34 +157,54 @@ class Binary(Expr):
 
 @dataclass(frozen=True)
 class Sum(Expr):
-    """sum(i,j, body) — indices are symbolic set names."""
+    """sum(i,j, body) or sum(i$cond, body) — indices are symbolic set names.
+
+    The optional condition field stores the dollar-filter expression.
+    For sum, folding the condition as multiplication (sum(i, cond*body)) is
+    mathematically equivalent, but the condition is preserved for fidelity.
+    """
 
     index_sets: tuple[str, ...]
     body: Expr
+    condition: Expr | None = None
 
     def children(self) -> Iterable[Expr]:
+        if self.condition is not None:
+            yield self.condition
         yield self.body
 
     def __repr__(self) -> str:
         idx = ",".join(self.index_sets)
+        if self.condition is not None:
+            return f"Sum(({idx})${self.condition!r}, {self.body!r})"
         return f"Sum(({idx}), {self.body!r})"
 
 
 @dataclass(frozen=True)
 class Prod(Expr):
-    """prod(i,j, body) — product over indices (like sum but multiplicative).
+    """prod(i,j, body) or prod(i$cond, body) — product over indices.
 
     Sprint 17 Day 6: Added for GAMS prod() aggregation function support.
+
+    The optional condition field stores the dollar-filter expression.
+    For prod, this MUST be stored separately (not folded as multiplication)
+    because prod(i$cond, body) excludes filtered elements (contributing 1),
+    while prod(i, cond*body) would contribute 0 and zero the entire product.
     """
 
     index_sets: tuple[str, ...]  # Symbolic set names to iterate over (e.g., ("i", "j"))
     body: Expr
+    condition: Expr | None = None
 
     def children(self) -> Iterable[Expr]:
+        if self.condition is not None:
+            yield self.condition
         yield self.body
 
     def __repr__(self) -> str:
         idx = ",".join(self.index_sets)
+        if self.condition is not None:
+            return f"Prod(({idx})${self.condition!r}, {self.body!r})"
         return f"Prod(({idx}), {self.body!r})"
 
 

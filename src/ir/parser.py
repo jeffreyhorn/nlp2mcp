@@ -3611,13 +3611,11 @@ class _ModelBuilder:
 
         body = self._expr(node.children[2], body_domain)
 
-        # Apply condition by multiplying: sum(i$cond, expr) => sum(i, cond * expr)
-        if condition_expr is not None:
-            body = Binary("*", condition_expr, body)
-
-        # Note: this assumes all aggregation classes (Sum, Prod) share the same
-        # constructor signature: (index_sets, body). Keep constructors aligned.
-        expr = aggregation_class(indices, body)
+        # Store condition separately in the aggregation node.
+        # Previously the condition was folded as multiplication (cond * body),
+        # which is correct for Sum but wrong for Prod (where excluded elements
+        # should contribute 1, not 0). See Issue #716.
+        expr = aggregation_class(indices, body, condition_expr)
 
         return self._attach_domain(expr, remaining_domain)
 
@@ -4478,7 +4476,9 @@ class _ModelBuilder:
                 if self._contains_function_call(child):
                     return True
         if isinstance(expr, Sum):
-            # Check the summation body
+            # Check the summation condition and body
+            if expr.condition is not None and self._contains_function_call(expr.condition):
+                return True
             if self._contains_function_call(expr.body):
                 return True
         if isinstance(expr, IndexOffset):
@@ -4521,7 +4521,9 @@ class _ModelBuilder:
                 if self._contains_variable_reference(child):
                     return True
         if isinstance(expr, Sum):
-            # Check the summation body
+            # Check the summation condition and body
+            if expr.condition is not None and self._contains_variable_reference(expr.condition):
+                return True
             if self._contains_variable_reference(expr.body):
                 return True
         if isinstance(expr, IndexOffset):
