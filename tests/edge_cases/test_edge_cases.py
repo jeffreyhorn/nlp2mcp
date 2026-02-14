@@ -6,8 +6,6 @@ Tests are organized by category: Constraint Types, Bounds, Indexing, Expressions
 and Special Structures.
 """
 
-import pytest
-
 from src.ir.parser import parse_model_text
 
 
