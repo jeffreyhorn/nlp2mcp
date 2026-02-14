@@ -45,6 +45,6 @@ Updated tests:
 ## Verification
 
 - ganges: Parses successfully. `declared_model=ganges`, 67 model equations.
-- gangesx: Parses successfully. `declared_model=ganges`, 67 model equations.
+- gangesx: Parses successfully. `declared_model=ganges` (gangesx internally declares its model as "ganges"), 67 model equations.
 - Both models now advance to a circular dependency detection stage (separate issue, not related to #714).
 - Quality gate: 3312 tests pass, typecheck/lint/format all clean.

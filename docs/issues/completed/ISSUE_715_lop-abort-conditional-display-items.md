@@ -25,11 +25,11 @@ The `abort_base` rule in `src/gams/gams_grammar.lark` had no variant for `abort$
 
 Grammar changes in `src/gams/gams_grammar.lark`:
 
-1. **Added `abort_cond_plain_display` variant**: `"abort"i DOLLAR abort_cond_atom display_item (","? display_item)*` — handles `abort$cond items` where the condition is a single atom (function call, indexed reference, or bare identifier).
+1. **Added `abort_cond_plain_display` variant**: `"abort"i DOLLAR abort_cond_atom expr (","? display_item)*` — handles `abort$cond items` where the condition is a single atom (function call, indexed reference, or bare identifier). Uses `expr` (not `display_item`) for the first item to avoid ambiguity with the `*_msg` variants that expect `STRING`.
 
-2. **Added `abort_cond_atom` rule**: A restricted condition expression (`func_call | ID "(" id_list ")" | ID`) that prevents the Earley parser from greedily consuming display items as part of the condition expression. Without delimiters (`()` or `[]`), the condition must be a single atom so the parser knows where it ends.
+2. **Added `abort_cond_atom` rule**: A restricted condition expression (`func_call | ref_indexed | ID`) that prevents the Earley parser from greedily consuming display items as part of the condition expression. Without delimiters (`()` or `[]`), the condition must be a single atom so the parser knows where it ends.
 
-3. **Added `abort_cond_paren_display` and `abort_cond_square_display` variants**: For completeness, also support `abort$(expr) display_items` and `abort$[expr] display_items` without a STRING message.
+3. **Added `abort_cond_paren_display` and `abort_cond_square_display` variants**: For completeness, also support `abort$(expr) display_items` and `abort$[expr] display_items` without a STRING message. These also use `expr` for the first display item to disambiguate from `*_msg` variants.
 
 No parser.py changes needed — abort statements are execution statements that the model builder silently skips.
 

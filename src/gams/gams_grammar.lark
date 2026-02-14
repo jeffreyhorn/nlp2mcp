@@ -547,13 +547,13 @@ acronym_stmt: "Acronym"i id_list SEMI
 // Abort statement base rule (no SEMI)
 // Sprint 16 Day 6: Extended to support display list after message (e.g., abort$(cond) 'msg', var1, var2)
 abort_base: "abort"i DOLLAR "[" expr "]" STRING ("," display_item)*  -> abort_cond_square_msg
-          | "abort"i DOLLAR "[" expr "]" display_item (","? display_item)*  -> abort_cond_square_display
+          | "abort"i DOLLAR "[" expr "]" expr (","? display_item)*    -> abort_cond_square_display
           | "abort"i DOLLAR "[" expr "]"                              -> abort_cond_square
           | "abort"i DOLLAR "(" expr ")" STRING ("," display_item)*   -> abort_cond_paren_msg
-          | "abort"i DOLLAR "(" expr ")" display_item (","? display_item)*  -> abort_cond_paren_display
+          | "abort"i DOLLAR "(" expr ")" expr (","? display_item)*    -> abort_cond_paren_display
           | "abort"i DOLLAR "(" expr ")"                              -> abort_cond_paren
           | "abort"i DOLLAR expr STRING ("," display_item)*           -> abort_cond_plain_msg
-          | "abort"i DOLLAR abort_cond_atom display_item (","? display_item)*  -> abort_cond_plain_display
+          | "abort"i DOLLAR abort_cond_atom expr (","? display_item)* -> abort_cond_plain_display
           | "abort"i DOLLAR expr                                      -> abort_cond_plain
           | "abort"i STRING ("," display_item)*                       -> abort_msg
           | "abort"i                                                  -> abort_plain
