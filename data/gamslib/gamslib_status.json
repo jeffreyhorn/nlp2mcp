@@ -9857,18 +9857,22 @@
         "solve_time_seconds": 0.341
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-02-13T21:27:34.021080+00:00",
+        "status": "success",
+        "parse_date": "2026-02-14T00:23:13.108673+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.155,
-        "error": {
-          "category": "internal_error",
-          "message": "No module named 'lark'"
-        }
+        "parse_time_seconds": 1.245,
+        "variables_count": 3,
+        "equations_count": 5
       },
       "nlp2mcp_translate": {
-        "status": "not_tested",
-        "translate_date": "2026-02-12T04:37:29.823735+00:00"
+        "status": "failure",
+        "translate_date": "2026-02-14T00:23:47.471126+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 2.7748,
+        "error": {
+          "category": "unsup_expression_type",
+          "message": "Error: Invalid model - Unknown expression type: Prod\n"
+        }
       },
       "mcp_solve": {
         "status": "not_tested",
@@ -9878,6 +9882,12 @@
         "comparison_status": "not_tested",
         "comparison_date": "2026-02-12T04:37:29.823735+00:00",
         "notes": "Skipped due to parse failure"
+      },
+      "model_statistics": {
+        "variables": 3,
+        "equations": 5,
+        "parameters": 0,
+        "sets": 2
       }
     },
     {
