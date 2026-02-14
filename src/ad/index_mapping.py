@@ -28,6 +28,7 @@ allowing sparse storage of derivatives as J[row_id][col_id] = derivative_expr.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -35,6 +36,8 @@ if TYPE_CHECKING:
     from ..ir.model_ir import ModelIR
 
 from ..ir.symbols import AliasDef, VariableDef
+
+logger = logging.getLogger("nlp2mcp")
 
 
 @dataclass
@@ -153,6 +156,24 @@ def resolve_set_members(set_or_alias_name: str, model_ir: ModelIR) -> tuple[list
         # Handle both SetDef objects and plain lists (for test compatibility)
         if isinstance(set_def, (list, tuple, set, frozenset)):
             return (list(set_def), set_or_alias_name)
+        if set_def.members:
+            return (set_def.members, set_or_alias_name)
+        # Issue #723: Dynamic subset with no members — fall back to parent set.
+        # GAMS populates dynamic subsets at execution time (e.g., ie(i) = yes$cond).
+        # The set assignment is emitted in the generated code so GAMS will filter
+        # correctly at runtime. We use the parent set's members for instantiation.
+        if not set_def.members and set_def.domain:
+            for parent_name in set_def.domain:
+                parent_members, _ = resolve_set_members(parent_name, model_ir)
+                if parent_members:
+                    logger.warning(
+                        "Dynamic subset '%s' has no static members; "
+                        "falling back to parent set '%s' (%d members)",
+                        set_or_alias_name,
+                        parent_name,
+                        len(parent_members),
+                    )
+                    return (parent_members, set_or_alias_name)
         return (set_def.members, set_or_alias_name)
 
     raise ValueError(
