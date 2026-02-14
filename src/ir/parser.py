@@ -2021,8 +2021,29 @@ class _ModelBuilder:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
             return
 
-        # First line should be column headers
+        # Issue #713: Skip description string line if it was parsed as a table_row.
+        # When a table has no explicit domain (e.g., "Table td 'target data'"),
+        # the Earley parser may consume the description STRING as a row label
+        # in the first table_row. Detect this: if the first line is on the same
+        # line as the table name and has a single quoted-string token, it's the
+        # description, not column headers — skip it.
+        table_name_line = getattr(node.children[0], "line", None)
         first_line_num, first_line_tokens = sorted_lines[0]
+        if (
+            table_name_line is not None
+            and first_line_num == table_name_line
+            and len(first_line_tokens) == 1
+            and first_line_tokens[0].type in ("STRING", "ID")
+            and str(first_line_tokens[0])[0] in ("'", '"')
+        ):
+            # This is a description string, not column headers — skip it
+            if first_line_num in row_label_map:
+                del row_label_map[first_line_num]
+            sorted_lines = sorted_lines[1:]
+            if not sorted_lines:
+                self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
+                return
+            first_line_num, first_line_tokens = sorted_lines[0]
 
         # Remove column header line from row_label_map if it was added
         # (column headers are parsed as a table_row, so they might have been extracted as a row label)
@@ -2710,9 +2731,17 @@ class _ModelBuilder:
 
     def _handle_model_with_list(self, node: Tree) -> None:
         name = _token_text(node.children[0])
+        # Issue #714: Find the model_ref_list Tree child dynamically —
+        # a STRING description may appear between the model name and the list.
+        ref_list = next(
+            (c for c in node.children if isinstance(c, Tree) and c.data == "model_ref_list"),
+            None,
+        )
+        if ref_list is None:
+            raise self._error(f"Missing model_ref_list in model_with_list for '{name}'", node)
         refs = [
             _token_text(tok)
-            for tok in node.children[1].children
+            for tok in ref_list.children
             if isinstance(tok, Token) and tok.type == "ID"
         ]
         if self.model.declared_model is None:
@@ -4642,12 +4671,8 @@ class _ModelBuilder:
         # Additional GAMS attributes exist (e.g., ".prior", ".scale") but are not yet
         # implemented in the grammar or parser. This implementation focuses on the most
         # commonly used attributes needed to unblock GAMSLib models.
-        label_map = {"lo": "lower", "up": "upper", "fx": "fixed", "l": "level", "m": "marginal"}
         map_attrs = {"lo": "lo_map", "up": "up_map", "fx": "fx_map", "l": "l_map", "m": "m_map"}
         scalar_attrs = {"lo": "lo", "up": "up", "fx": "fx", "l": "l", "m": "m"}
-        label = label_map.get(bound_kind, bound_kind)
-        index_hint = f" at indices {key}" if key else ""
-
         if math.isinf(value):
             if bound_kind == "lo" and value < 0:
                 return
@@ -4678,21 +4703,15 @@ class _ModelBuilder:
 
         if key:
             storage = getattr(var, map_attrs[bound_kind])
-            existing = storage.get(key)
-            if existing is not None and existing != value:
-                raise self._error(
-                    f"Conflicting {label} bound for variable '{var_name}'{index_hint}",
-                    node,
-                )
+            # Issue #714: Allow repeated assignments (last-write-wins).
+            # GAMS permits multiple conditional assignments to the same variable
+            # attribute (e.g., tw.l(sa)=0; tw.l(i)$(not sa(i))=0.045;) where
+            # the parser cannot statically resolve which indices each condition
+            # covers. Accept the overwrite silently, matching GAMS semantics.
             storage[key] = value
         else:
             scalar_attr = scalar_attrs[bound_kind]
-            existing = getattr(var, scalar_attr)
-            if existing is not None and existing != value:
-                raise self._error(
-                    f"Conflicting {label} bound for variable '{var_name}'",
-                    node,
-                )
+            # Issue #714: Allow repeated scalar assignments (last-write-wins).
             setattr(var, scalar_attr, value)
 
     def _extract_operator(self, node: Tree | Token) -> str:

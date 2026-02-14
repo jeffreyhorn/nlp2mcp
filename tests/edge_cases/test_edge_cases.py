@@ -6,8 +6,6 @@ Tests are organized by category: Constraint Types, Bounds, Indexing, Expressions
 and Special Structures.
 """
 
-import pytest
-
 from src.ir.parser import parse_model_text
 
 
@@ -318,7 +316,7 @@ Model test /all/ ;
         )
 
     def test_duplicate_bounds(self):
-        """EC-2.5: Bounds set multiple times cause error (parser rejects conflicting bounds)."""
+        """EC-2.5: Bounds set multiple times use last-write-wins (GAMS semantics)."""
         gams_code = """
 Variables
     x
@@ -337,11 +335,11 @@ objective..
 
 Model test /all/ ;
 """
-        # Parser correctly rejects conflicting bounds
-        from src.ir.parser import ParserSemanticError
-
-        with pytest.raises(ParserSemanticError):
-            parse_model_text(gams_code)
+        # Issue #714: GAMS allows repeated bound assignments; last value wins.
+        ir = parse_model_text(gams_code)
+        var = ir.variables["x"]
+        assert var.lo == 1
+        assert var.up == 5
 
 
 class TestIndexingComplexity:

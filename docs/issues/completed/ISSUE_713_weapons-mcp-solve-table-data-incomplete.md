@@ -1,7 +1,7 @@
 # Translation: Table Parameter Data Incomplete in MCP Output (weapons)
 
 **GitHub Issue:** [#713](https://github.com/jeffreyhorn/nlp2mcp/issues/713)
-**Status:** Open
+**Status:** Fixed
 **Severity:** High — MCP output has compilation errors, solve fails
 **Discovered:** 2026-02-13 (Sprint 19, after Issue #709 fix enabled weapons translation)
 **Affected Models:** weapons
@@ -79,3 +79,19 @@ Investigate how `table_block` data is stored in the IR (`ModelIR`) and how `expr
 ## Context
 
 This issue was exposed by the Issue #709 fix (Prod expression support) which enabled weapons to translate successfully for the first time. The translation succeeds but the emitted GAMS code is incorrect.
+
+---
+
+## Fix Applied
+
+**Root Cause:** When a table has no explicit domain (e.g., `Table td 'target data'`), the Earley parser consumes the description STRING `'target data'` as a row label in the first `table_row`, rather than recognizing it as the optional table description. This causes `_handle_table_block` to treat the description string as the only column header, mapping all data values to that single column key.
+
+**Fix:** Added detection in `_handle_table_block` (around line 2024 in `src/ir/parser.py`) to skip the description string line when it appears on the same line as the table name and consists of a single quoted-string token. The actual column headers on the next line are then correctly used.
+
+**Verification:**
+- `td` parameter now stores 147 values with correct 2D keys (e.g., `("icbm", "avail") -> 200.0`)
+- MCP output emits full sparse table data with proper `row.col` syntax
+- Original GAMS Error 116 ("Label is unknown") is eliminated
+- Quality gate: typecheck ✓, lint ✓, format ✓, 3312 tests pass ✓
+
+**Note:** The weapons model now fails at solve with a different error (Error 483: MCP multiplier `lam_minw` not properly linked). This is a separate KKT system formulation issue, not related to table data emission.

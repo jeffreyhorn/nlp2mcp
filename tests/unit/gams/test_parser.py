@@ -436,7 +436,8 @@ def test_non_constant_bound_expression_rejected():
     assert "x" in model.variables
 
 
-def test_conflicting_bounds_raise_error():
+def test_repeated_bounds_last_write_wins():
+    """Issue #714: GAMS allows repeated bound assignments; last value wins."""
     text = dedent("""
         Sets
             i /i1/ ;
@@ -449,9 +450,9 @@ def test_conflicting_bounds_raise_error():
         x.lo(i) = 2;
         """)
 
-    with pytest.raises(parser.ParserSemanticError, match="Conflicting lower bound") as excinfo:
-        parser.parse_model_text(text)
-    assert excinfo.value.line is not None
+    ir = parser.parse_model_text(text)
+    var = ir.variables["x"]
+    assert var.lo_map[("i1",)] == 2
 
 
 def test_alias_cycle_detected():
@@ -5107,6 +5108,24 @@ class TestSprint16GrammarFeatures:
             """)
         tree = parser.parse_text(text)
         assert tree.data == "program"
+
+    def test_abort_cond_display_items_no_string(self):
+        """Issue #715: abort$cond display_items without a STRING message.
+
+        Syntax: abort$card(error02) error02;
+        The condition is a function call and the display item is an identifier,
+        with no string message between them.
+        """
+        text = dedent("""
+            Set s /s1*s5/;
+            Parameter error02(s);
+
+            abort$card(error02) error02;
+            """)
+        tree = parser.parse_text(text)
+        assert tree.data == "program"
+        abort_nodes = [n for n in tree.iter_subtrees() if n.data == "abort_cond_plain_display"]
+        assert len(abort_nodes) == 1
 
     def test_file_path_unquoted(self):
         """Test FILE_PATH_UNQUOTED terminal for unquoted file paths (Issue #556).
