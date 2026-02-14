@@ -2021,8 +2021,29 @@ class _ModelBuilder:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
             return
 
-        # First line should be column headers
+        # Issue #713: Skip description string line if it was parsed as a table_row.
+        # When a table has no explicit domain (e.g., "Table td 'target data'"),
+        # the Earley parser may consume the description STRING as a row label
+        # in the first table_row. Detect this: if the first line is on the same
+        # line as the table name and has a single quoted-string token, it's the
+        # description, not column headers — skip it.
+        table_name_line = getattr(node.children[0], "line", None)
         first_line_num, first_line_tokens = sorted_lines[0]
+        if (
+            table_name_line is not None
+            and first_line_num == table_name_line
+            and len(first_line_tokens) == 1
+            and first_line_tokens[0].type in ("STRING", "ID")
+            and str(first_line_tokens[0]).startswith("'")
+        ):
+            # This is a description string, not column headers — skip it
+            if first_line_num in row_label_map:
+                del row_label_map[first_line_num]
+            sorted_lines = sorted_lines[1:]
+            if not sorted_lines:
+                self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
+                return
+            first_line_num, first_line_tokens = sorted_lines[0]
 
         # Remove column header line from row_label_map if it was added
         # (column headers are parsed as a table_row, so they might have been extracted as a row label)
