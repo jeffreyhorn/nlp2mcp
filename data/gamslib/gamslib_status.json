@@ -2412,9 +2412,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-14T01:02:23.095552+00:00",
+        "parse_date": "2026-02-14T01:15:56.963262+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 21.864,
+        "parse_time_seconds": 15.2708,
         "error": {
           "category": "internal_error",
           "message": "Conflicting level bound for variable 'tw' at indices ('agricult',) [context: expression] (line 704, column 1)"
@@ -2458,12 +2458,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-13T21:01:12.423672+00:00",
+        "parse_date": "2026-02-14T01:16:19.258517+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 11.3454,
+        "parse_time_seconds": 16.6793,
         "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 784, column 1: Unexpected character: 'd'\n  deltas(i)$ls.l(i)       = deltas(i)/(1 + deltas(i));\n  ^\n\nSuggestion: This character is not valid in this context"
+          "category": "internal_error",
+          "message": "Conflicting level bound for variable 'tw' at indices ('agricult',) [context: expression] (line 887, column 1)"
         }
       },
       "nlp2mcp_translate": {
@@ -4221,12 +4221,12 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-13T21:01:17.732805+00:00",
+        "parse_date": "2026-02-14T01:16:27.570682+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.1992,
+        "parse_time_seconds": 3.6507,
         "error": {
           "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 149, column 10: Unexpected character: 'm'\n  solve sp minimzing spobj using lp;\n           ^\n\nSuggestion: This character is not valid in this context"
+          "message": "Error: Parse error at line 208, column 1: Parse error at line 208, column 1: Unexpected character: 'S'\n  Set ll(s,s) 'station pair represening a line';\n  ^\n  Set ll(s,s) 'station pair represening a line';\n  ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 207. Add ';' after: * Lines are symetric, so delete one half of them"
         }
       },
       "nlp2mcp_translate": {
@@ -9858,22 +9858,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-14T00:32:44.122076+00:00",
+        "parse_date": "2026-02-14T01:15:28.635445+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.2144,
+        "parse_time_seconds": 0.7881,
         "variables_count": 3,
         "equations_count": 5
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-14T00:56:44.235551+00:00",
+        "translate_date": "2026-02-14T01:15:34.083925+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 3.3426,
+        "translate_time_seconds": 1.9778,
         "output_file": "data/gamslib/mcp/weapons_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-14T00:56:51.495689+00:00",
+        "solve_date": "2026-02-14T01:16:38.800725+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -9881,7 +9881,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.4677,
+        "solve_time_seconds": 0.2514,
         "iterations": null,
         "outcome_category": "path_syntax_error",
         "error": {
