@@ -203,6 +203,25 @@ class TestTableWithDescriptiveText:
         model = parse_model_text(gams)
         assert model.params["data"].values[("i1", "j1")] == 99.0
 
+    def test_table_no_domain_with_description_string(self):
+        """Issue #713: Table without explicit domain but with description string.
+
+        The description string on the same line as the table name should be
+        skipped and not consumed as a row label or column header.
+        """
+        gams = """
+        Table td 'target data'
+                  1     2     3
+        icbm   0.05  0.00  0.00
+        mrbm   0.16  0.17  0.15;
+        """
+        model = parse_model_text(gams)
+        table = model.params["td"]
+        assert table.domain == ("*", "*")
+        assert table.values[("icbm", "1")] == 0.05
+        assert table.values[("mrbm", "2")] == 0.17
+        assert ("target data", "1") not in table.values
+
 
 class TestMultiDimensionalKeys:
     """Test that multi-dimensional keys are formatted correctly as tuples."""
