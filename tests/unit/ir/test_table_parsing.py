@@ -222,6 +222,20 @@ class TestTableWithDescriptiveText:
         assert table.values[("mrbm", "2")] == 0.17
         assert ("target data", "1") not in table.values
 
+    def test_table_no_domain_with_double_quoted_description(self):
+        """Issue #713: Same as above but with double-quoted description string."""
+        gams = """
+        Table td "target data"
+                  1     2
+        icbm   0.05  0.00
+        mrbm   0.16  0.17;
+        """
+        model = parse_model_text(gams)
+        table = model.params["td"]
+        assert table.domain == ("*", "*")
+        assert table.values[("icbm", "1")] == 0.05
+        assert ("target data", "1") not in table.values
+
 
 class TestMultiDimensionalKeys:
     """Test that multi-dimensional keys are formatted correctly as tuples."""

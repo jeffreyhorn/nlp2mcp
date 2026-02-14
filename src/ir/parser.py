@@ -2034,7 +2034,7 @@ class _ModelBuilder:
             and first_line_num == table_name_line
             and len(first_line_tokens) == 1
             and first_line_tokens[0].type in ("STRING", "ID")
-            and str(first_line_tokens[0]).startswith("'")
+            and str(first_line_tokens[0])[0] in ("'", '"')
         ):
             # This is a description string, not column headers — skip it
             if first_line_num in row_label_map:
