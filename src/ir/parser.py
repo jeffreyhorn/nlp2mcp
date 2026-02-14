@@ -3551,18 +3551,25 @@ class _ModelBuilder:
         # Extract base identifiers from sum_domain (shared grammar rule for sum/prod)
         sum_domain_node = node.children[1]
 
-        # Handle sum_domain which can be index_spec or tuple_domain
+        # Handle sum_domain which can be index_spec, tuple_domain, or tuple_domain_cond
         condition_expr = None
+        condition_node = None  # Track source node for re-evaluation in body_domain
         if sum_domain_node.data == "tuple_domain":
             index_spec_node = sum_domain_node.children[0]
+        elif sum_domain_node.data == "tuple_domain_cond":
+            # Issue #718: (index_spec)$expr — dollar condition outside tuple parens
+            index_spec_node = sum_domain_node.children[0]
+            condition_node = sum_domain_node.children[2]
+            condition_expr = self._expr(condition_node, free_domain)
         else:
             index_spec_node = sum_domain_node.children[0]
 
         index_list_node = index_spec_node.children[0]
 
-        # Check if there's a conditional (DOLLAR expr) - initially parse with free_domain
-        if len(index_spec_node.children) > 1:
-            condition_expr = self._expr(index_spec_node.children[2], free_domain)
+        # Check if there's a conditional (DOLLAR expr) inside index_spec
+        if condition_expr is None and len(index_spec_node.children) > 1:
+            condition_node = index_spec_node.children[2]
+            condition_expr = self._expr(condition_node, free_domain)
 
         if index_list_node.data == "id_list":
             indices = _id_list(index_list_node)
@@ -3635,8 +3642,8 @@ class _ModelBuilder:
         )
 
         # Re-evaluate condition in body_domain if present
-        if condition_expr is not None:
-            condition_expr = self._expr(index_spec_node.children[2], body_domain)
+        if condition_expr is not None and condition_node is not None:
+            condition_expr = self._expr(condition_node, body_domain)
 
         body = self._expr(node.children[2], body_domain)
 

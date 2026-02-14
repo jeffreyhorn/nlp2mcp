@@ -111,8 +111,18 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         concrete_indices: tuple[str, ...] = tuple(concrete_indices_list)
 
         # Look up parameter value
-        value = param.values.get(concrete_indices, 0.0)
-        return value
+        if concrete_indices in param.values:
+            return param.values[concrete_indices]
+        # Issue #720: If the parameter has expression-based values (not statically
+        # resolved), we cannot evaluate at compile time. Raise an error so callers
+        # can decide how to handle it (e.g., include the instance by default).
+        if param.expressions:
+            raise ConditionEvaluationError(
+                f"Parameter '{param_name}' has expression-based values that "
+                f"cannot be evaluated statically for indices {concrete_indices}"
+            )
+        # Default to 0 for parameters with no values and no expressions
+        return 0.0
 
     if isinstance(expr, Binary):
         left = _eval_expr(expr.left, index_map, model_ir)

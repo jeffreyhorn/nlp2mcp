@@ -22,7 +22,19 @@ from __future__ import annotations
 from collections import ChainMap
 from collections.abc import Mapping
 
-from src.ir.ast import Binary, Call, Const, Expr, MultiplierRef, ParamRef, Prod, Sum, Unary, VarRef
+from src.ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    Expr,
+    MultiplierRef,
+    ParamRef,
+    Prod,
+    Sum,
+    Unary,
+    VarRef,
+)
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
@@ -566,6 +578,17 @@ def _replace_indices_in_expr(
             )
             if new_body is not body or new_condition is not condition:
                 return type(expr)(index_sets, new_body, new_condition)
+            return expr
+        case DollarConditional(value_expr, condition):
+            # Issue #720: Handle DollarConditional from collapsed conditional sums
+            new_value = _replace_indices_in_expr(
+                value_expr, domain, element_to_set, model_ir, equation_domain
+            )
+            new_cond = _replace_indices_in_expr(
+                condition, domain, element_to_set, model_ir, equation_domain
+            )
+            if new_value is not value_expr or new_cond is not condition:
+                return DollarConditional(value_expr=new_value, condition=new_cond)
             return expr
         case _:
             return expr

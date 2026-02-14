@@ -159,20 +159,16 @@ def validate_no_circular_definitions(model_ir: ModelIR) -> None:
     """
     Check for circular variable definitions in equality constraints.
 
-    This is a simplified check that looks for direct cycles like:
-      x = y
-      y = x
+    Logs cross-equation cycles as debug info (these are valid in simultaneous
+    NLP systems). Only warns about multiple definitions of the same variable.
 
     Args:
         model_ir: The model to validate
-
-    Raises:
-        ModelError: If circular definitions are detected
-
-    Note:
-        This is a heuristic check and may not catch all circular dependencies.
-        More sophisticated cycle detection could be added in the future.
     """
+    import logging
+
+    logger = logging.getLogger("nlp2mcp")
+
     # Build a simple dependency graph: var -> defining equation
     var_definitions: dict[str, tuple[str, set[str]]] = {}
 
@@ -187,10 +183,6 @@ def validate_no_circular_definitions(model_ir: ModelIR) -> None:
                 rhs_vars = _extract_variables(rhs) if rhs else set()
 
                 if defined_var in var_definitions:
-                    # Multiple definitions - not necessarily circular, but suspicious
-                    import logging
-
-                    logger = logging.getLogger("nlp2mcp")
                     logger.warning(
                         f"Variable '{defined_var}' has multiple defining equations: "
                         f"{var_definitions[defined_var]} and {eq_name}"
@@ -199,23 +191,19 @@ def validate_no_circular_definitions(model_ir: ModelIR) -> None:
                 var_definitions[defined_var] = (eq_name, rhs_vars)
 
     # Check for simple cycles: x = f(y), y = g(x)
-    # Note: Self-references (x = f(x)) are valid fixed-point equations, not circular
+    # Cross-equation cycles are valid in simultaneous NLP systems.
+    # Log as debug info only. (Issue #719)
     for var1, (eq1, deps1) in var_definitions.items():
         for var2 in deps1:
-            # Skip self-references (x = x + 1 is valid)
             if var2 == var1:
                 continue
             if var2 in var_definitions:
                 eq2, deps2 = var_definitions[var2]
                 if var1 in deps2:
-                    raise ModelError(
-                        f"Circular dependency detected: '{var1}' and '{var2}' define each other",
-                        suggestion=(
-                            f"Equations '{eq1}' and '{eq2}' create a circular definition:\n"
-                            f"  {eq1}: {var1} depends on {var2}\n"
-                            f"  {eq2}: {var2} depends on {var1}\n"
-                            "\nReformulate your model to break the cycle."
-                        ),
+                    logger.debug(
+                        f"Cross-equation dependency: '{var1}' and '{var2}' "
+                        f"depend on each other via equations '{eq1}' and '{eq2}'. "
+                        f"This is valid in simultaneous equation systems."
                     )
 
 
