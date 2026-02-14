@@ -23,7 +23,7 @@ The weapons model generated MCP code with multiplier `lam_minw` declared and map
 
 ### 1. AD: Preserve dollar condition on sum collapse (`src/ad/derivative_rules.py`)
 
-When a conditioned sum collapses (the summation index is matched and eliminated), wrap the result in a `DollarConditional` with the substituted condition. Fixed in three code paths:
+When a conditioned sum collapses (the summation index is matched and eliminated), multiply the derivative result by the substituted condition (via `Binary("*", result, subst_cond)`) instead of wrapping it in a `DollarConditional`, to avoid GAMS structural exclusion issues. Fixed in three code paths:
 
 - **`_sum_should_collapse` path**: Full collapse (sum indices == wrt_indices)
 - **`_partial_index_match` path**: Partial match (wrt_indices has more indices than sum)
@@ -39,6 +39,6 @@ Added `DollarConditional` case to `_replace_indices_in_expr` match statement so 
 
 ### Results
 
-- `lam_minw(t)` now appears in stationarity equations with coefficient `1$td(w,t)`
-- Generated stat_x: `... + 1$td(w,t) * lam_maxw(w) + ((-1) * 1$td(w,t)) * lam_minw(t) =E= 0`
+- `lam_minw(t)` now appears in stationarity equations multiplied by condition `td(w,t)`
+- Generated stat_x: `... + td(w,t) * lam_maxw(w) + ((-1) * td(w,t)) * lam_minw(t) =E= 0`
 - All quality gates pass (typecheck, lint, format, 3315 tests)
