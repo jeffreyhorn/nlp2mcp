@@ -436,7 +436,8 @@ def test_non_constant_bound_expression_rejected():
     assert "x" in model.variables
 
 
-def test_conflicting_bounds_raise_error():
+def test_repeated_bounds_last_write_wins():
+    """Issue #714: GAMS allows repeated bound assignments; last value wins."""
     text = dedent("""
         Sets
             i /i1/ ;
@@ -449,9 +450,9 @@ def test_conflicting_bounds_raise_error():
         x.lo(i) = 2;
         """)
 
-    with pytest.raises(parser.ParserSemanticError, match="Conflicting lower bound") as excinfo:
-        parser.parse_model_text(text)
-    assert excinfo.value.line is not None
+    ir = parser.parse_model_text(text)
+    var = ir.variables["x"]
+    assert var.lo_map[("i1",)] == 2
 
 
 def test_alias_cycle_detected():
