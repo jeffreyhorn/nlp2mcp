@@ -365,9 +365,15 @@ domain_element: ID ("(" index_list ")" | "[" index_list "]")?
 // Sprint 19: Added bare dollar conditionals (e.g., $tm(t), $ls.l(i), $flag) for equation definitions (Issue #703)
 condition: DOLLAR "(" expr ")"
          | DOLLAR "[" expr "]"
-         | DOLLAR ref_bound
+         | DOLLAR cond_bound
          | DOLLAR ref_indexed
          | DOLLAR ID
+
+// Bare dollar conditional bound access — restricted to BOUND_K attributes (.lo, .up, .fx, .l, .m)
+// that _expr() supports. Excludes attr_access/attr_access_indexed (e.g., .scale, .stage).
+cond_bound: ID "." BOUND_K "(" index_list ")"   -> bound_indexed
+          | ID "." BOUND_K "[" index_list "]"   -> bound_indexed
+          | ID "." BOUND_K                      -> bound_scalar
 
 REL_K: /=e=|=l=|=g=/i
 
