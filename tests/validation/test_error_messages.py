@@ -154,8 +154,12 @@ Solve test using NLP minimizing obj;
         # Should explain why this is invalid
         assert len(error_msg) > 100  # Substantial explanation
 
-    def test_circular_dependency_message(self):
-        """Verify circular dependency errors show both equations involved."""
+    def test_circular_dependency_allowed(self):
+        """Verify cross-equation cycles are allowed (Issue #719).
+
+        NLP models are solved simultaneously, so mutual dependencies between
+        variables across equations are valid and should not raise errors.
+        """
         gams_code = """
 Variables
     x
@@ -180,18 +184,8 @@ Model test /all/ ;
 Solve test using NLP minimizing obj;
 """
         model = parse_model_text(gams_code)
-        with pytest.raises(ModelError) as exc_info:
-            validate_model_structure(model)
-
-        error_msg = str(exc_info.value)
-        # Should mention circular/cycle
-        assert "circular" in error_msg.lower() or "cycle" in error_msg.lower()
-        # Should mention both variables involved
-        assert "x" in error_msg and "y" in error_msg
-        # Should mention both equations
-        assert "eq1" in error_msg and "eq2" in error_msg
-        # Should have suggestion for fixing
-        assert "suggestion" in error_msg.lower() or "reformulate" in error_msg.lower()
+        # Should not raise — cross-equation cycles are valid in NLP
+        validate_model_structure(model)
 
 
 class TestEdgeCaseErrorMessages:
@@ -340,22 +334,18 @@ Solve test using NLP minimizing obj;
 
     def test_maximum_message_readability(self):
         """Error messages should be concise enough to read quickly."""
+        # Use a constant equation error (no variables referenced)
         gams_code = """
 Variables
     x
-    y
     obj ;
 
 Equations
-    eq1
-    eq2
+    const_eq
     objective ;
 
-eq1..
-    x =e= y;
-
-eq2..
-    y =e= x;
+const_eq..
+    5 =e= 5;
 
 objective..
     obj =e= x;

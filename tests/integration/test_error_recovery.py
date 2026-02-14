@@ -190,8 +190,12 @@ def test_equation_with_no_variables():
     assert "Constant equations" in str(exc_info.value)
 
 
-def test_circular_dependency_detected():
-    """Test that circular variable definitions are caught."""
+def test_circular_dependency_not_raised():
+    """Test that cross-equation cycles are allowed (valid in simultaneous NLP systems).
+
+    Issue #719: Cross-equation mutual dependencies like x=f(y), y=g(x) are valid
+    in NLP models solved simultaneously. The validator should not raise an error.
+    """
     model = ModelIR()
 
     # x = y
@@ -202,7 +206,7 @@ def test_circular_dependency_detected():
         relation=Rel.EQ,
     )
 
-    # y = x (circular!)
+    # y = x (cross-equation cycle, valid in NLP)
     model.equations["eq2"] = EquationDef(
         name="eq2",
         domain=(),
@@ -210,11 +214,8 @@ def test_circular_dependency_detected():
         relation=Rel.EQ,
     )
 
-    with pytest.raises(ModelError) as exc_info:
-        validate_no_circular_definitions(model)
-
-    assert "Circular dependency" in str(exc_info.value)
-    assert "eq1" in str(exc_info.value) or "eq2" in str(exc_info.value)
+    # Should not raise — cross-equation cycles are valid
+    validate_no_circular_definitions(model)
 
 
 def test_valid_model_passes_structure_validation():
