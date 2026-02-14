@@ -382,8 +382,8 @@ solver_type: /(?i:nlp|dnlp|minlp|mip|lp|mcp|cns|qcp|rmip|rminlp)\b/  // Sprint 1
 // GAMS accepts any word starting with "min" or "max" as the solve direction
 // (e.g., min, minimize, minimizing, minimzing, minfoo all work)
 // Issue #706: Matches GAMS's tolerant keyword matching behavior
-MINIMIZING_K: /(?i:min)\w*/
-MAXIMIZING_K: /(?i:max)\w*/
+MINIMIZING_K: /(?i:min)\w*\b/
+MAXIMIZING_K: /(?i:max)\w*\b/
 
 model_stmt: ("Models"i | "Model"i) ID STRING? "/" "all"i "/" SEMI       -> model_all
           | ("Models"i | "Model"i) ID STRING? "/" model_ref_list "/" SEMI  -> model_with_list
