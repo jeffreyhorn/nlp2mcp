@@ -502,6 +502,24 @@ def expr_to_gams(
 
         case Call(func, args):
             # Function calls: exp(x), log(x), sqrt(x), etc.
+            # Issue #724: GAMS power(base, exp) requires exp to be constant.
+            # When the exponent contains a variable, emit as base ** exp instead.
+            if func == "power" and len(args) == 2:
+                from src.ir.ast import Const as _Const
+                from src.ir.ast import ParamRef as _ParamRef
+
+                exponent = args[1]
+                if not isinstance(exponent, (_Const, _ParamRef)):
+                    base_str = expr_to_gams(
+                        args[0], parent_op="**", is_right=False, domain_vars=domain_vars
+                    )
+                    exp_str = expr_to_gams(
+                        args[1], parent_op="**", is_right=True, domain_vars=domain_vars
+                    )
+                    result = f"{base_str} ** {exp_str}"
+                    if _needs_parens(parent_op, "**", is_right):
+                        return f"({result})"
+                    return result
             args_str = ", ".join(expr_to_gams(arg, domain_vars=domain_vars) for arg in args)
             return f"{func}({args_str})"
 

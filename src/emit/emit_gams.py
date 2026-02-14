@@ -285,6 +285,49 @@ def emit_gams_mcp(
     sections.append(eq_defs_code)
     sections.append("")
 
+    # Issue #724: Fix variables whose paired MCP equation has a dollar condition.
+    # When an MCP equation is conditioned (e.g., stat_x(w,t)$(td(w,t)) or
+    # comp_minw(t)$(tm(t))), the paired variable must be fixed for excluded
+    # instances so GAMS MCP doesn't report unmatched pairs.
+    fx_lines: list[str] = []
+    if True:
+        from src.emit.expr_to_gams import expr_to_gams
+
+        # 1. Fix primal variables with conditioned stationarity equations
+        for var_name, cond_expr in sorted(kkt.stationarity_conditions.items()):
+            var_def = kkt.model_ir.variables.get(var_name)
+            if var_def and var_def.domain:
+                domain_str = ",".join(var_def.domain)
+                domain_vars = frozenset(var_def.domain)
+                cond_gams = expr_to_gams(cond_expr, domain_vars=domain_vars)
+                lo_val = var_def.lo if var_def.lo is not None else 0
+                fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {lo_val};")
+
+        # 2. Fix multipliers whose complementarity equation has a condition
+        for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
+            eq_def = comp_pair.equation
+            if eq_def.condition is not None and eq_def.domain:
+                from src.ir.ast import Expr as _Expr
+
+                mult_name = comp_pair.variable
+                domain_str = ",".join(eq_def.domain)
+                domain_vars = frozenset(eq_def.domain)
+                assert isinstance(eq_def.condition, _Expr)
+                cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
+                fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+
+    if fx_lines:
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* Fix inactive variable instances")
+            sections.append("* ============================================")
+            sections.append("")
+            sections.append("* Variables whose paired MCP equation is conditioned must be")
+            sections.append("* fixed for excluded instances to satisfy MCP matching.")
+            sections.append("")
+        sections.extend(fx_lines)
+        sections.append("")
+
     # Model MCP
     if add_comments:
         sections.append("* ============================================")

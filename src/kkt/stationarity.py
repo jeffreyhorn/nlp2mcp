@@ -46,6 +46,147 @@ from src.kkt.naming import (
 from src.kkt.objective import extract_objective_info
 
 
+def _find_variable_access_condition(
+    var_name: str,
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> Expr | None:
+    """Detect the common dollar condition under which a variable is accessed.
+
+    Walks all equations in the model to find where VarRef(var_name, ...) appears.
+    If the variable is consistently accessed inside Sum/Prod nodes whose bound
+    indices overlap with the variable's domain AND those Sum/Prod nodes carry a
+    dollar condition, that condition is extracted and returned.
+
+    This handles the common GAMS pattern where a variable appears only inside
+    conditioned aggregations like::
+
+        sum(w$(td(w,t)), x(w,t))   →  condition td(w,t)
+        prod(w$(td(w,t)), f(x))    →  condition td(w,t)
+
+    When ALL appearances of the variable across ALL equations share a common
+    condition (structurally identical AST), that condition is returned.
+
+    Args:
+        var_name: Name of the variable to check (e.g., "x")
+        var_domain: Variable's domain indices (e.g., ("w", "t"))
+        model_ir: Model IR with equation definitions
+
+    Returns:
+        The common access condition (Expr), or None if no common condition exists.
+    """
+    if not var_domain:
+        return None
+
+    var_domain_set = set(var_domain)
+    collected_conditions: list[Expr] = []
+    found_unconditioned = False
+
+    for _eq_name, eq_def in model_ir.equations.items():
+        lhs, rhs = eq_def.lhs_rhs
+        # Check both sides of the equation
+        for side_expr in (lhs, rhs):
+            conditions = _collect_access_conditions(side_expr, var_name, var_domain_set, set())
+            if conditions is None:
+                # Variable not found in this expression — skip
+                continue
+            if not conditions:
+                # Variable found with no enclosing condition — no common condition possible
+                found_unconditioned = True
+            else:
+                collected_conditions.extend(conditions)
+
+    if found_unconditioned or not collected_conditions:
+        return None
+
+    # Check if all conditions are structurally identical
+    first = collected_conditions[0]
+    if all(repr(c) == repr(first) for c in collected_conditions):
+        return first
+
+    return None
+
+
+def _collect_access_conditions(
+    expr: Expr,
+    var_name: str,
+    var_domain_set: set[str],
+    enclosing_conditions: set[str],
+) -> list[Expr] | None:
+    """Recursively collect conditions that guard access to a variable.
+
+    Returns a list of condition Exprs for each access point, or None if the
+    variable is not found in this expression subtree.
+
+    Args:
+        expr: Expression to walk
+        var_name: Variable name to search for
+        var_domain_set: Set of the variable's domain index names
+        enclosing_conditions: Set of repr() strings for conditions already in scope
+    """
+    if isinstance(expr, VarRef):
+        if expr.name == var_name:
+            # Found the variable — return current enclosing conditions
+            if enclosing_conditions:
+                return []  # Will be filled by caller from Sum/Prod condition
+            return []  # Empty list = found, no condition
+        return None
+
+    if isinstance(expr, (Sum, Prod)):
+        # Check if this Sum/Prod binds indices that overlap with the variable's domain
+        bound_set = set(expr.index_sets)
+        overlaps = bool(bound_set & var_domain_set)
+
+        if overlaps and expr.condition is not None:
+            # This Sum/Prod has a condition and binds a relevant index
+            # Walk children with this condition added
+            new_conditions = enclosing_conditions | {repr(expr.condition)}
+            results: list[Expr] = []
+            for child in expr.children():
+                child_result = _collect_access_conditions(
+                    child, var_name, var_domain_set, new_conditions
+                )
+                if child_result is not None:
+                    if not child_result:
+                        # Found variable in child with no extra conditions from further nesting
+                        # The condition for this access is the current Sum/Prod condition
+                        results.append(expr.condition)
+                    else:
+                        results.extend(child_result)
+            return results if results else None
+        else:
+            # Walk children without adding a condition
+            results = []
+            for child in expr.children():
+                child_result = _collect_access_conditions(
+                    child, var_name, var_domain_set, enclosing_conditions
+                )
+                if child_result is not None:
+                    if not child_result and not enclosing_conditions:
+                        # Found variable with no condition at all
+                        return []
+                    results.extend(child_result)
+            return results if results else None
+
+    # For all other expression types, walk children
+    other_results: list[Expr] = []
+    found_any = False
+    for child in expr.children():
+        child_result = _collect_access_conditions(
+            child, var_name, var_domain_set, enclosing_conditions
+        )
+        if child_result is not None:
+            found_any = True
+            if not child_result and not enclosing_conditions:
+                # Found variable with no condition
+                return []
+            other_results.extend(child_result)
+
+    if found_any:
+        return other_results
+    return None
+
+
 def _has_nonuniform_bounds(kkt: KKTSystem, var_name: str) -> bool:
     """Check if a variable has non-uniform bounds (per-instance multipliers).
 
@@ -158,12 +299,28 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
                 stat_expr = _build_indexed_stationarity_expr(
                     kkt, var_name, var_def.domain, instances, skip_eq
                 )
+
+                # Issue #724: Detect if the variable is only accessed under a
+                # common dollar condition (e.g., td(w,t)).  If so, add that
+                # condition to the stationarity equation to prevent GAMS from
+                # generating empty equation instances, and record that the
+                # excluded variable instances need to be fixed.
+                access_cond = _find_variable_access_condition(
+                    var_name, var_def.domain, kkt.model_ir
+                )
+
                 stationarity[stat_name] = EquationDef(
                     name=stat_name,
                     domain=var_def.domain,  # Use same domain as variable
                     relation=Rel.EQ,
+                    condition=access_cond,
                     lhs_rhs=(stat_expr, Const(0.0)),
                 )
+
+                # Store the condition on the KKT system for the emitter to use
+                # when generating .fx statements for excluded variable instances
+                if access_cond is not None:
+                    kkt.stationarity_conditions[var_name] = access_cond
         else:
             # Scalar variable: generate scalar stationarity equation
             if len(instances) != 1:

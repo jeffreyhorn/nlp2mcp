@@ -195,13 +195,13 @@ def _evaluate_binary(
         result = left / right
         return _check_numeric(result, f"division ({left} / {right})")
 
-    elif op == "^":
-        # Power operation (will be more fully implemented in Day 3)
+    elif op in ("^", "**"):
+        # Power operation: both ^ and ** are equivalent
         try:
             result = left**right
-            return _check_numeric(result, f"power ({left} ^ {right})")
+            return _check_numeric(result, f"power ({left} {op} {right})")
         except (ValueError, OverflowError) as e:
-            raise EvaluationError(f"Power operation failed: {left} ^ {right}. Error: {e}") from e
+            raise EvaluationError(f"Power operation failed: {left} {op} {right}. Error: {e}") from e
 
     else:
         raise ValueError(f"Unsupported binary operation: {op}")
