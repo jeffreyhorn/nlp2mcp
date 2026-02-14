@@ -18,6 +18,7 @@ from src.ir.ast import (
     IndexOffset,
     MultiplierRef,
     ParamRef,
+    Prod,
     SetMembershipTest,
     Sum,
     SymbolRef,
@@ -495,6 +496,15 @@ def expr_to_gams(
             indices_str = ",".join(index_sets)
             return f"sum(({indices_str}), {body_str})"
 
+        case Prod(index_sets, body):
+            # GAMS: prod((i,j), body) or prod(i, body) — Issue #709
+            extended_domain_vars = domain_vars | frozenset(index_sets)
+            body_str = expr_to_gams(body, domain_vars=extended_domain_vars)
+            if len(index_sets) == 1:
+                return f"prod({index_sets[0]}, {body_str})"
+            indices_str = ",".join(index_sets)
+            return f"prod(({indices_str}), {body_str})"
+
         case Call(func, args):
             # Function calls: exp(x), log(x), sqrt(x), etc.
             args_str = ", ".join(expr_to_gams(arg, domain_vars=domain_vars) for arg in args)
@@ -579,7 +589,7 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
 
     def _collect(e: Expr) -> None:
         match e:
-            case Sum(index_sets, body):
+            case Sum(index_sets, body) | Prod(index_sets, body):
                 # Check for conflicts
                 for idx in index_sets:
                     if idx in domain_set:
@@ -647,23 +657,24 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
     def _resolve(e: Expr, active_aliases: dict[str, str]) -> Expr:
         """Recursively resolve conflicts, tracking active alias substitutions."""
         match e:
-            case Sum(index_sets, body):
+            case Sum(index_sets, body) | Prod(index_sets, body):
                 # Check which indices conflict and need aliasing
-                sum_indices: list[str] = []
+                agg_indices: list[str] = []
                 new_aliases = dict(active_aliases)  # Copy current aliases
 
                 for idx in index_sets:
                     if idx in domain_set:
                         # This index conflicts - use alias
                         alias = _make_alias_name(idx)
-                        sum_indices.append(alias)
+                        agg_indices.append(alias)
                         new_aliases[idx] = alias
                     else:
-                        sum_indices.append(idx)
+                        agg_indices.append(idx)
 
                 # Recurse into body with updated aliases
                 new_body = _resolve(body, new_aliases)
-                return Sum(tuple(sum_indices), new_body)
+                agg_class = type(e)  # Sum or Prod
+                return agg_class(tuple(agg_indices), new_body)
 
             case Binary(op, left, right):
                 new_left = _resolve(left, active_aliases)

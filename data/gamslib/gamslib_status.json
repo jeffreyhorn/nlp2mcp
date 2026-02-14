@@ -9865,18 +9865,29 @@
         "equations_count": 5
       },
       "nlp2mcp_translate": {
-        "status": "failure",
-        "translate_date": "2026-02-14T00:23:47.471126+00:00",
+        "status": "success",
+        "translate_date": "2026-02-14T00:56:44.235551+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 2.7748,
-        "error": {
-          "category": "unsup_expression_type",
-          "message": "Error: Invalid model - Unknown expression type: Prod\n"
-        }
+        "translate_time_seconds": 3.3426,
+        "output_file": "data/gamslib/mcp/weapons_mcp.gms"
       },
       "mcp_solve": {
-        "status": "not_tested",
-        "solve_date": "2026-02-12T04:37:29.823735+00:00"
+        "status": "failure",
+        "solve_date": "2026-02-14T00:56:51.495689+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.4677,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
