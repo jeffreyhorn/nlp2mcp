@@ -570,7 +570,7 @@ def _substitute_indices(expr, symbolic_indices: tuple[str, ...], concrete_indice
         >>> # For instance balance(i1), substitute i → i1:
         >>> # VarRef('x', ('i',)) → VarRef('x', ('i1',))
     """
-    from ..ir.ast import Binary, Call, ParamRef, Sum, Unary, VarRef
+    from ..ir.ast import Binary, Call, ParamRef, Prod, Sum, Unary, VarRef
 
     if isinstance(expr, VarRef):
         # Substitute indices in VarRef
@@ -606,8 +606,8 @@ def _substitute_indices(expr, symbolic_indices: tuple[str, ...], concrete_indice
         )
         return Call(expr.func, new_args)
 
-    elif isinstance(expr, Sum):
-        # Don't substitute indices that are bound by the sum
+    elif isinstance(expr, (Sum, Prod)):
+        # Don't substitute indices that are bound by the aggregation
         # Only substitute free indices
         free_symbolic = tuple(idx for idx in symbolic_indices if idx not in expr.index_sets)
         free_concrete = tuple(
@@ -622,7 +622,7 @@ def _substitute_indices(expr, symbolic_indices: tuple[str, ...], concrete_indice
                 if expr.condition is not None
                 else None
             )
-            return Sum(expr.index_sets, new_body, new_cond)
+            return type(expr)(expr.index_sets, new_body, new_cond)
         else:
             return expr
 

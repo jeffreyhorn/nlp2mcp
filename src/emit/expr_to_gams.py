@@ -546,7 +546,7 @@ def _agg_domain_str(
         idx_str = "(" + ",".join(index_sets) + ")"
     if condition is not None:
         cond_str = expr_to_gams(condition, domain_vars=domain_vars)
-        return f"{idx_str}${cond_str}"
+        return f"{idx_str}$({cond_str})"
     return idx_str
 
 

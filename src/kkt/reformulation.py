@@ -868,7 +868,7 @@ def _replace_min_max_call(expr: Expr, call: MinMaxCall, replacement: Expr) -> Ex
     Returns:
         New expression with replacements made
     """
-    from ..ir.ast import Binary, Sum, Unary
+    from ..ir.ast import Binary, Prod, Sum, Unary
     from ..ir.ast import Call as ASTCall
 
     # Check if this expression is the call we're looking for
@@ -894,14 +894,14 @@ def _replace_min_max_call(expr: Expr, call: MinMaxCall, replacement: Expr) -> Ex
         new_args = tuple(_replace_min_max_call(arg, call, replacement) for arg in expr.args)
         return ASTCall(expr.func, new_args)
 
-    elif isinstance(expr, Sum):
+    elif isinstance(expr, (Sum, Prod)):
         new_body = _replace_min_max_call(expr.body, call, replacement)
         new_cond = (
             _replace_min_max_call(expr.condition, call, replacement)
             if expr.condition is not None
             else None
         )
-        return Sum(expr.index_sets, new_body, new_cond)
+        return type(expr)(expr.index_sets, new_body, new_cond)
 
     # Base case: no replacement needed (Const, VarRef, ParamRef, etc.)
     return expr

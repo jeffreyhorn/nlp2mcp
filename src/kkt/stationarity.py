@@ -22,7 +22,7 @@ from __future__ import annotations
 from collections import ChainMap
 from collections.abc import Mapping
 
-from src.ir.ast import Binary, Call, Const, Expr, MultiplierRef, ParamRef, Sum, Unary, VarRef
+from src.ir.ast import Binary, Call, Const, Expr, MultiplierRef, ParamRef, Prod, Sum, Unary, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
@@ -552,7 +552,7 @@ def _replace_indices_in_expr(
                 for arg in args
             )
             return Call(func, new_args)
-        case Sum(index_sets, body, condition):
+        case Sum(index_sets, body, condition) | Prod(index_sets, body, condition):
             # Recursively process body and condition to replace element-specific indices
             new_body = _replace_indices_in_expr(
                 body, domain, element_to_set, model_ir, equation_domain
@@ -565,7 +565,7 @@ def _replace_indices_in_expr(
                 else None
             )
             if new_body is not body or new_condition is not condition:
-                return Sum(index_sets, new_body, new_condition)
+                return type(expr)(index_sets, new_body, new_condition)
             return expr
         case _:
             return expr

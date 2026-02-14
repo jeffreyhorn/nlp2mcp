@@ -399,6 +399,39 @@ class TestProdExpression:
         result = expr_to_gams(outer)
         assert result == "sum(t, prod(w, x(w,t)))"
 
+    def test_prod_single_index_with_condition(self):
+        """Test prod with a single index and condition emits dollar-filter."""
+        body = VarRef("x", ("i",))
+        cond = Const(1)
+        result = expr_to_gams(Prod(("i",), body, condition=cond))
+        assert result == "prod(i$(1), x(i))"
+
+    def test_prod_multiple_indices_with_condition(self):
+        """Test prod with multiple indices and condition emits dollar-filter."""
+        body = VarRef("x", ("i", "j"))
+        cond = Const(1)
+        result = expr_to_gams(Prod(("i", "j"), body, condition=cond))
+        assert result == "prod((i,j)$(1), x(i,j))"
+
+
+@pytest.mark.unit
+class TestSumConditionExpression:
+    """Test sum expression conversion with domain conditions."""
+
+    def test_sum_single_index_with_condition(self):
+        """Test sum with a single index and condition emits dollar-filter."""
+        body = VarRef("x", ("i",))
+        cond = Const(1)
+        result = expr_to_gams(Sum(("i",), body, condition=cond))
+        assert result == "sum(i$(1), x(i))"
+
+    def test_sum_multiple_indices_with_condition(self):
+        """Test sum with multiple indices and condition emits dollar-filter."""
+        body = VarRef("x", ("i", "j"))
+        cond = Const(1)
+        result = expr_to_gams(Sum(("i", "j"), body, condition=cond))
+        assert result == "sum((i,j)$(1), x(i,j))"
+
 
 @pytest.mark.unit
 class TestComplexExpressions:

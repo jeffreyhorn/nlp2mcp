@@ -124,7 +124,18 @@ def simplify(expr: Expr) -> Expr:
         Simplification is applied recursively bottom-up through the expression tree.
         The function is safe to call multiple times (idempotent for fully simplified expressions).
     """
-    from ..ir.ast import Binary, Call, Const, MultiplierRef, ParamRef, Sum, SymbolRef, Unary, VarRef
+    from ..ir.ast import (
+        Binary,
+        Call,
+        Const,
+        MultiplierRef,
+        ParamRef,
+        Prod,
+        Sum,
+        SymbolRef,
+        Unary,
+        VarRef,
+    )
 
     match expr:
         # Base cases: already simple
@@ -272,11 +283,11 @@ def simplify(expr: Expr) -> Expr:
             simplified_args = tuple(simplify(arg) for arg in args)
             return Call(func, simplified_args)
 
-        # Sum: recursively simplify body and condition
-        case Sum(index_sets, body, condition):
+        # Sum/Prod: recursively simplify body and condition
+        case Sum(index_sets, body, condition) | Prod(index_sets, body, condition):
             simplified_body = simplify(body)
             simplified_cond = simplify(condition) if condition is not None else None
-            return Sum(index_sets, simplified_body, simplified_cond)
+            return type(expr)(index_sets, simplified_body, simplified_cond)
 
         case _:
             # Unknown expression type - return as-is
@@ -307,7 +318,7 @@ def simplify_advanced(expr: Expr) -> Expr:
         >>> result = simplify_advanced(expr)
         >>> # Result: Binary("+", VarRef("x", ()), Const(2)) or Const(2) + VarRef("x")
     """
-    from ..ir.ast import Binary, Call, Sum, Unary
+    from ..ir.ast import Binary, Call, Prod, Sum, Unary
 
     # Step 1: Apply basic simplification rules
     basic_simplified = simplify(expr)
@@ -397,12 +408,12 @@ def simplify_advanced(expr: Expr) -> Expr:
                 return Call(func, simplified_args)
             return basic_simplified
 
-        case Sum(index_sets, body, condition):
+        case Sum(index_sets, body, condition) | Prod(index_sets, body, condition):
             # Recursively process body and condition
             simplified_body = simplify_advanced(body)
             simplified_cond = simplify_advanced(condition) if condition is not None else None
             if simplified_body != body or simplified_cond != condition:
-                return Sum(index_sets, simplified_body, simplified_cond)
+                return type(basic_simplified)(index_sets, simplified_body, simplified_cond)
             return basic_simplified
 
         case _:

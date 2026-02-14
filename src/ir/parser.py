@@ -4475,8 +4475,8 @@ class _ModelBuilder:
             for child in expr.children():
                 if self._contains_function_call(child):
                     return True
-        if isinstance(expr, Sum):
-            # Check the summation condition and body
+        if isinstance(expr, (Sum, Prod)):
+            # Check the aggregation condition and body
             if expr.condition is not None and self._contains_function_call(expr.condition):
                 return True
             if self._contains_function_call(expr.body):
@@ -4520,8 +4520,8 @@ class _ModelBuilder:
             for child in expr.children():
                 if self._contains_variable_reference(child):
                     return True
-        if isinstance(expr, Sum):
-            # Check the summation condition and body
+        if isinstance(expr, (Sum, Prod)):
+            # Check the aggregation condition and body
             if expr.condition is not None and self._contains_variable_reference(expr.condition):
                 return True
             if self._contains_variable_reference(expr.body):
