@@ -1416,7 +1416,16 @@ def _diff_sum(
         # This makes x(i) match when we differentiate w.r.t. x with indices ("i",)
         body_derivative = differentiate_expr(expr.body, wrt_var, expr.index_sets, config)
         # Substitute sum indices with concrete indices in result
-        return _substitute_sum_indices(body_derivative, expr.index_sets, wrt_indices)
+        result = _substitute_sum_indices(body_derivative, expr.index_sets, wrt_indices)
+        # Issue #720: Preserve dollar condition when sum collapses.
+        # sum(i$cond(i), f(i)) collapsing at i=i1 → f(i1) * cond(i1)
+        # We multiply by the condition rather than using DollarConditional ($)
+        # because GAMS treats $ as structural exclusion, which would prevent
+        # multiplier variables from being recognized in the MCP model.
+        if expr.condition is not None:
+            subst_cond = _substitute_sum_indices(expr.condition, expr.index_sets, wrt_indices)
+            result = Binary("*", result, subst_cond)
+        return result
 
     # Check for partial index match (nested sum case or mixed concrete/symbolic case)
     # For sum(g, sum(dl, y(g,dl))) w.r.t. y(g1,h):
@@ -1446,6 +1455,13 @@ def _diff_sum(
             result_body = _substitute_sum_indices(
                 body_derivative, matched_indices, matched_concrete
             )
+            # Issue #720: Preserve dollar condition when sum collapses via partial match.
+            # Multiply by condition rather than using DollarConditional (see above).
+            if expr.condition is not None:
+                subst_cond = _substitute_sum_indices(
+                    expr.condition, matched_indices, matched_concrete
+                )
+                result_body = Binary("*", result_body, subst_cond)
             return result_body
 
     # Check for partial collapse (sum has more indices than wrt_indices)
@@ -1456,9 +1472,9 @@ def _diff_sum(
     # - Differentiate body using symbolic "i" for matched dimension
     # - Result: sum(cg, y(cg) * 1) with i->p1 substituted
     if wrt_indices is not None and len(wrt_indices) < len(expr.index_sets):
-        result = _partial_collapse_sum(expr, wrt_var, wrt_indices, config)
-        if result is not None:
-            return result
+        partial_result = _partial_collapse_sum(expr, wrt_var, wrt_indices, config)
+        if partial_result is not None:
+            return partial_result
 
     # Normal case: differentiate the body expression, passing wrt_indices through
     body_derivative = differentiate_expr(expr.body, wrt_var, wrt_indices, config)
@@ -1639,6 +1655,13 @@ def _partial_collapse_sum(
     if remaining_sum_indices:
         return Sum(tuple(remaining_sum_indices), result_body, expr.condition)
     else:
+        # Issue #720: Preserve dollar condition when sum fully collapses.
+        # Multiply by condition rather than using DollarConditional.
+        if expr.condition is not None:
+            subst_cond = _substitute_sum_indices(
+                expr.condition, tuple(matched_sum_indices), tuple(matched_concrete)
+            )
+            result_body = Binary("*", result_body, subst_cond)
         return result_body
 
 
