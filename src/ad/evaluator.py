@@ -31,7 +31,18 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..ir.ast import Expr
 
-from ..ir.ast import Binary, Call, Const, DollarConditional, ParamRef, Sum, SymbolRef, Unary, VarRef
+from ..ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    ParamRef,
+    Prod,
+    Sum,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 
 
 class EvaluationError(Exception):
@@ -141,11 +152,11 @@ def _evaluate_expr(
         else:
             return 0.0
 
-    elif isinstance(expr, Sum):
-        # Sum evaluation requires knowing the set members
+    elif isinstance(expr, (Sum, Prod)):
+        # Sum/Prod evaluation requires knowing the set members
         # For now, raise an error - will be implemented when needed
         raise NotImplementedError(
-            "Sum evaluation requires set member information. "
+            "Sum/Prod evaluation requires set member information. "
             "This will be implemented in Days 5-6 when index mapping is complete."
         )
 

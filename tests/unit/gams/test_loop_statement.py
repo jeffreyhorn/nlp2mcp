@@ -182,5 +182,87 @@ class TestLoopStatement:
         assert loop.indices == ("i", "j", "k")
 
 
+class TestNestedLoopStatement:
+    """Test nested loop and if statements inside loop bodies (Issue #711)."""
+
+    def test_nested_loop(self):
+        """Test loop containing another loop."""
+        code = """
+        Set i /i1*i3/;
+        Set j /j1*j2/;
+        Parameter p;
+
+        loop(i,
+           p = 0;
+           loop(j,
+              p = p + 1;
+           );
+        );
+
+        Model m /all/;
+        """
+        model = parse_model_text(code)
+        assert len(model.loop_statements) >= 1
+
+    def test_nested_loop_with_dollar_filter(self):
+        """Test nested loop with dollar-filtered domain (lop pattern)."""
+        code = """
+        Set s /s1*s5/;
+        Set r /r1*r5/;
+        Set unvisit(s);
+        Parameter p;
+
+        loop(s,
+           p = 0;
+           loop(r$(ord(r) > 1 and card(unvisit)),
+              p = p + 1;
+           );
+        );
+
+        Model m /all/;
+        """
+        model = parse_model_text(code)
+        assert len(model.loop_statements) >= 1
+
+    def test_triple_nested_loop(self):
+        """Test three levels of nested loops."""
+        code = """
+        Set i /i1*i3/;
+        Set j /j1*j2/;
+        Set k /k1*k2/;
+        Parameter p;
+
+        loop(i,
+           loop(j,
+              loop(k,
+                 p = p + 1;
+              );
+           );
+        );
+
+        Model m /all/;
+        """
+        model = parse_model_text(code)
+        assert len(model.loop_statements) >= 1
+
+    def test_if_inside_loop(self):
+        """Test if statement nested inside loop body."""
+        code = """
+        Set i /i1*i3/;
+        Parameter p;
+        Scalar flag /1/;
+
+        loop(i,
+           if(flag > 0,
+              p = 1;
+           );
+        );
+
+        Model m /all/;
+        """
+        model = parse_model_text(code)
+        assert len(model.loop_statements) >= 1
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

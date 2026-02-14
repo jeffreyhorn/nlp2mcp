@@ -175,6 +175,7 @@ class SimplificationPipeline:
             IndexOffset,
             MultiplierRef,
             ParamRef,
+            Prod,
             Sum,
             SymbolRef,
             Unary,
@@ -196,9 +197,10 @@ class SimplificationPipeline:
         # Function calls - 1 + sum of argument sizes
         elif isinstance(expr, Call):
             return 1 + sum(self._expression_size(arg) for arg in expr.args)
-        # Sum expression - 1 + body size
-        elif isinstance(expr, Sum):
-            return 1 + self._expression_size(expr.body)
+        # Sum/Prod expression - 1 + body size + optional condition size
+        elif isinstance(expr, (Sum, Prod)):
+            cond_size = self._expression_size(expr.condition) if expr.condition is not None else 0
+            return 1 + self._expression_size(expr.body) + cond_size
         # Index offset - 1 + offset size
         elif isinstance(expr, IndexOffset):
             return 1 + self._expression_size(expr.offset)

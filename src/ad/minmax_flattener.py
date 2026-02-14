@@ -460,11 +460,12 @@ class MinMaxFlattener:
         """
         from ..ir.ast import Sum
 
-        # Transform body (post-order traversal)
+        # Transform body and condition (post-order traversal)
         transformed_body = self.visit(node.body)
+        transformed_cond = self.visit(node.condition) if node.condition is not None else None
 
         # Return new Sum node with transformed body
-        return Sum(index_sets=node.index_sets, body=transformed_body)
+        return Sum(index_sets=node.index_sets, body=transformed_body, condition=transformed_cond)
 
 
 # ---------- High-Level API ----------

@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..ir.ast import Expr
 
-from ..ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, Unary, VarRef
+from ..ir.ast import Binary, Call, Const, ParamRef, Prod, Sum, SymbolRef, Unary, VarRef
 
 
 @dataclass
@@ -186,8 +186,10 @@ def _collect_variables(expr: Expr, variables: set[str]) -> None:
         for arg in expr.args:
             _collect_variables(arg, variables)
 
-    elif isinstance(expr, Sum):
-        # Sum aggregation: recurse on body
+    elif isinstance(expr, (Sum, Prod)):
+        # Sum/Prod aggregation: recurse on condition and body
+        if expr.condition is not None:
+            _collect_variables(expr.condition, variables)
         _collect_variables(expr.body, variables)
 
     else:

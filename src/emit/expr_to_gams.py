@@ -18,6 +18,7 @@ from src.ir.ast import (
     IndexOffset,
     MultiplierRef,
     ParamRef,
+    Prod,
     SetMembershipTest,
     Sum,
     SymbolRef,
@@ -485,15 +486,19 @@ def expr_to_gams(
             result = f"{left_str} {op} {right_str}"
             return f"({result})" if needs_parens else result
 
-        case Sum(index_sets, body):
-            # GAMS: sum((i,j), body) or sum(i, body)
-            # Sprint 18 Day 2: Extend domain_vars with sum indices so they're not quoted
+        case Sum(index_sets, body, condition):
+            # GAMS: sum(i$cond, body) or sum((i,j), body)
             extended_domain_vars = domain_vars | frozenset(index_sets)
             body_str = expr_to_gams(body, domain_vars=extended_domain_vars)
-            if len(index_sets) == 1:
-                return f"sum({index_sets[0]}, {body_str})"
-            indices_str = ",".join(index_sets)
-            return f"sum(({indices_str}), {body_str})"
+            domain_str = _agg_domain_str(index_sets, condition, extended_domain_vars)
+            return f"sum({domain_str}, {body_str})"
+
+        case Prod(index_sets, body, condition):
+            # GAMS: prod(i$cond, body) or prod((i,j), body) — Issue #709
+            extended_domain_vars = domain_vars | frozenset(index_sets)
+            body_str = expr_to_gams(body, domain_vars=extended_domain_vars)
+            domain_str = _agg_domain_str(index_sets, condition, extended_domain_vars)
+            return f"prod({domain_str}, {body_str})"
 
         case Call(func, args):
             # Function calls: exp(x), log(x), sqrt(x), etc.
@@ -527,6 +532,22 @@ def expr_to_gams(
         case _:
             # Fallback for unknown node types
             raise ValueError(f"Unknown expression type: {type(expr).__name__}")
+
+
+def _agg_domain_str(
+    index_sets: tuple[str, ...],
+    condition: Expr | None,
+    domain_vars: frozenset[str],
+) -> str:
+    """Format the domain part of sum/prod: 'i', '(i,j)', 'i$cond', '(i,j)$cond'."""
+    if len(index_sets) == 1:
+        idx_str = index_sets[0]
+    else:
+        idx_str = "(" + ",".join(index_sets) + ")"
+    if condition is not None:
+        cond_str = expr_to_gams(condition, domain_vars=domain_vars)
+        return f"{idx_str}$({cond_str})"
+    return idx_str
 
 
 def _make_alias_name(index: str) -> str:
@@ -579,12 +600,14 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
 
     def _collect(e: Expr) -> None:
         match e:
-            case Sum(index_sets, body):
+            case Sum(index_sets, body, condition) | Prod(index_sets, body, condition):
                 # Check for conflicts
                 for idx in index_sets:
                     if idx in domain_set:
                         aliases_needed.add(idx)
-                # Recurse into body
+                # Recurse into condition and body
+                if condition is not None:
+                    _collect(condition)
                 _collect(body)
 
             case Binary(_, left, right):
@@ -647,23 +670,25 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
     def _resolve(e: Expr, active_aliases: dict[str, str]) -> Expr:
         """Recursively resolve conflicts, tracking active alias substitutions."""
         match e:
-            case Sum(index_sets, body):
+            case Sum(index_sets, body, condition) | Prod(index_sets, body, condition):
                 # Check which indices conflict and need aliasing
-                sum_indices: list[str] = []
+                agg_indices: list[str] = []
                 new_aliases = dict(active_aliases)  # Copy current aliases
 
                 for idx in index_sets:
                     if idx in domain_set:
                         # This index conflicts - use alias
                         alias = _make_alias_name(idx)
-                        sum_indices.append(alias)
+                        agg_indices.append(alias)
                         new_aliases[idx] = alias
                     else:
-                        sum_indices.append(idx)
+                        agg_indices.append(idx)
 
-                # Recurse into body with updated aliases
+                # Recurse into condition and body with updated aliases
+                new_condition = _resolve(condition, new_aliases) if condition is not None else None
                 new_body = _resolve(body, new_aliases)
-                return Sum(tuple(sum_indices), new_body)
+                agg_class = type(e)  # Sum or Prod
+                return agg_class(tuple(agg_indices), new_body, new_condition)
 
             case Binary(op, left, right):
                 new_left = _resolve(left, active_aliases)

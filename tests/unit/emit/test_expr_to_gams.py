@@ -15,6 +15,7 @@ from src.ir.ast import (
     IndexOffset,
     MultiplierRef,
     ParamRef,
+    Prod,
     SetMembershipTest,
     Sum,
     SymbolRef,
@@ -367,6 +368,69 @@ class TestSumExpression:
         )
         result = expr_to_gams(Sum(("i",), body))
         assert result == "sum(i, a(i) * x(i) + b(i) * y(i))"
+
+
+@pytest.mark.unit
+class TestProdExpression:
+    """Test prod expression conversion (Issue #709)."""
+
+    def test_prod_single_index(self):
+        """Test prod with single index set."""
+        body = Binary("*", ParamRef("a", ("i",)), VarRef("x", ("i",)))
+        result = expr_to_gams(Prod(("i",), body))
+        assert result == "prod(i, a(i) * x(i))"
+
+    def test_prod_multiple_indices(self):
+        """Test prod with multiple index sets."""
+        body = VarRef("x", ("i", "j"))
+        result = expr_to_gams(Prod(("i", "j"), body))
+        assert result == "prod((i,j), x(i,j))"
+
+    def test_prod_with_domain_vars(self):
+        """Test prod extends domain_vars so index sets are not quoted."""
+        body = Binary("**", ParamRef("a", ("w",)), VarRef("x", ("w",)))
+        result = expr_to_gams(Prod(("w",), body), domain_vars=frozenset({"t"}))
+        assert result == "prod(w, a(w) ** x(w))"
+
+    def test_prod_nested_in_sum(self):
+        """Test prod nested inside sum: sum(t, prod(w, expr))."""
+        inner = Prod(("w",), VarRef("x", ("w", "t")))
+        outer = Sum(("t",), inner)
+        result = expr_to_gams(outer)
+        assert result == "sum(t, prod(w, x(w,t)))"
+
+    def test_prod_single_index_with_condition(self):
+        """Test prod with a single index and condition emits dollar-filter."""
+        body = VarRef("x", ("i",))
+        cond = Const(1)
+        result = expr_to_gams(Prod(("i",), body, condition=cond))
+        assert result == "prod(i$(1), x(i))"
+
+    def test_prod_multiple_indices_with_condition(self):
+        """Test prod with multiple indices and condition emits dollar-filter."""
+        body = VarRef("x", ("i", "j"))
+        cond = Const(1)
+        result = expr_to_gams(Prod(("i", "j"), body, condition=cond))
+        assert result == "prod((i,j)$(1), x(i,j))"
+
+
+@pytest.mark.unit
+class TestSumConditionExpression:
+    """Test sum expression conversion with domain conditions."""
+
+    def test_sum_single_index_with_condition(self):
+        """Test sum with a single index and condition emits dollar-filter."""
+        body = VarRef("x", ("i",))
+        cond = Const(1)
+        result = expr_to_gams(Sum(("i",), body, condition=cond))
+        assert result == "sum(i$(1), x(i))"
+
+    def test_sum_multiple_indices_with_condition(self):
+        """Test sum with multiple indices and condition emits dollar-filter."""
+        body = VarRef("x", ("i", "j"))
+        cond = Const(1)
+        result = expr_to_gams(Sum(("i", "j"), body, condition=cond))
+        assert result == "sum((i,j)$(1), x(i,j))"
 
 
 @pytest.mark.unit

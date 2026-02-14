@@ -29,7 +29,7 @@ expression structure significantly. They should only be applied when:
 
 from collections import defaultdict
 
-from src.ir.ast import Binary, Call, Const, Expr, Sum, SymbolRef, Unary, VarRef
+from src.ir.ast import Binary, Call, Const, Expr, Prod, Sum, SymbolRef, Unary, VarRef
 
 
 def nested_cse(expr: Expr, min_occurrences: int = 3) -> tuple[Expr, dict[str, Expr]]:
@@ -192,7 +192,9 @@ def _collect_subexpressions(expr: Expr, counts: dict[str, tuple[Expr, int]]) -> 
             _collect_subexpressions(arg, counts)
     elif isinstance(expr, Unary):
         _collect_subexpressions(expr.child, counts)
-    elif isinstance(expr, Sum):
+    elif isinstance(expr, (Sum, Prod)):
+        if expr.condition is not None:
+            _collect_subexpressions(expr.condition, counts)
         _collect_subexpressions(expr.body, counts)
 
 
@@ -220,7 +222,9 @@ def _collect_multiplicative_subexpressions(expr: Expr, counts: dict[str, tuple[E
             _collect_multiplicative_subexpressions(arg, counts)
     elif isinstance(expr, Unary):
         _collect_multiplicative_subexpressions(expr.child, counts)
-    elif isinstance(expr, Sum):
+    elif isinstance(expr, (Sum, Prod)):
+        if expr.condition is not None:
+            _collect_multiplicative_subexpressions(expr.condition, counts)
         _collect_multiplicative_subexpressions(expr.body, counts)
 
 
@@ -253,7 +257,12 @@ def _expression_key(expr: Expr) -> str:
         return f"Unary({expr.op},{child_key})"
     elif isinstance(expr, Sum):
         body_key = _expression_key(expr.body)
-        return f"Sum({expr.index_sets},{body_key})"
+        cond_key = _expression_key(expr.condition) if expr.condition is not None else "None"
+        return f"Sum({expr.index_sets},{body_key},{cond_key})"
+    elif isinstance(expr, Prod):
+        body_key = _expression_key(expr.body)
+        cond_key = _expression_key(expr.condition) if expr.condition is not None else "None"
+        return f"Prod({expr.index_sets},{body_key},{cond_key})"
     else:
         return f"{type(expr).__name__}({id(expr)})"
 
@@ -349,7 +358,9 @@ def _contains_subexpression(container: Expr, target: Expr) -> bool:
         return any(_contains_subexpression(arg, target) for arg in container.args)
     elif isinstance(container, Unary):
         return _contains_subexpression(container.child, target)
-    elif isinstance(container, Sum):
+    elif isinstance(container, (Sum, Prod)):
+        if container.condition is not None and _contains_subexpression(container.condition, target):
+            return True
         return _contains_subexpression(container.body, target)
 
     return False
@@ -384,10 +395,15 @@ def _replace_subexpression(expr: Expr, target: Expr, replacement: Expr) -> Expr:
         new_child = _replace_subexpression(expr.child, target, replacement)
         if new_child != expr.child:
             return Unary(expr.op, new_child)
-    elif isinstance(expr, Sum):
+    elif isinstance(expr, (Sum, Prod)):
         new_body = _replace_subexpression(expr.body, target, replacement)
-        if new_body != expr.body:
-            return Sum(expr.index_sets, new_body)
+        new_cond = (
+            _replace_subexpression(expr.condition, target, replacement)
+            if expr.condition is not None
+            else None
+        )
+        if new_body != expr.body or new_cond != expr.condition:
+            return type(expr)(expr.index_sets, new_body, new_cond)
 
     return expr
 

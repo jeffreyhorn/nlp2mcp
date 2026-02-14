@@ -119,6 +119,32 @@ eq3.. x('3') =e= 3;
         assert model.declared_model == "mymodel"
         assert model.model_equations == ["eq1", "eq2", "eq3"]
 
+    def test_model_whitespace_separated_equations(self):
+        """Test model with whitespace-separated equation list (Issue #710).
+
+        GAMS allows equation names in model lists to be separated by
+        whitespace (newlines) without commas.
+        """
+        source = """
+Set i / 1*3 /;
+Variable x(i);
+Variable obj;
+Equation eq1, eq2, eq3, objdef;
+
+eq1.. x('1') =e= 1;
+eq2.. x('2') =e= 2;
+eq3.. x('3') =e= 3;
+objdef.. obj =e= sum(i, x(i));
+
+Model mymodel / eq1, eq2
+                eq3
+                objdef /;
+"""
+        model = parse_model_text(source)
+        assert model.declared_model == "mymodel"
+        assert model.model_uses_all is False
+        assert model.model_equations == ["eq1", "eq2", "eq3", "objdef"]
+
 
 class TestModelDeclaration:
     """Test Model name; syntax (declaration only)."""

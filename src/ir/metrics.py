@@ -28,6 +28,7 @@ from src.ir.ast import (
     IndexOffset,
     MultiplierRef,
     ParamRef,
+    Prod,
     Sum,
     SymbolRef,
     Unary,
@@ -84,8 +85,9 @@ def count_operations(expr: Expr) -> int:
         return 1 + count_operations(expr.child)
     elif isinstance(expr, Call):
         return 1 + sum(count_operations(arg) for arg in expr.args)
-    elif isinstance(expr, Sum):
-        return 1 + count_operations(expr.body)
+    elif isinstance(expr, (Sum, Prod)):
+        cond_ops = count_operations(expr.condition) if expr.condition is not None else 0
+        return 1 + count_operations(expr.body) + cond_ops
     elif isinstance(expr, IndexOffset):
         return 1 + count_operations(expr.offset)
     else:

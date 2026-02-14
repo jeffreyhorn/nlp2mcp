@@ -1463,8 +1463,8 @@ def _diff_sum(
     # Normal case: differentiate the body expression, passing wrt_indices through
     body_derivative = differentiate_expr(expr.body, wrt_var, wrt_indices, config)
 
-    # Return a new Sum with the same index sets and the differentiated body
-    return Sum(expr.index_sets, body_derivative)
+    # Return a new Sum with the same index sets, differentiated body, and condition
+    return Sum(expr.index_sets, body_derivative, expr.condition)
 
 
 def _partial_index_match(
@@ -1635,9 +1635,9 @@ def _partial_collapse_sum(
         body_derivative, tuple(matched_sum_indices), tuple(matched_concrete)
     )
 
-    # If there are remaining sum indices, wrap in a Sum
+    # If there are remaining sum indices, wrap in a Sum (preserving condition)
     if remaining_sum_indices:
-        return Sum(tuple(remaining_sum_indices), result_body)
+        return Sum(tuple(remaining_sum_indices), result_body, expr.condition)
     else:
         return result_body
 
@@ -1836,11 +1836,12 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         # substitution map.
         filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
         new_body = _apply_index_substitution(expr.body, filtered_sub)
-        # Reconstruct the same aggregation type (Sum or Prod). This works because both
-        # Sum and Prod currently have identical constructors of the form
-        # (index_sets, body); if their constructors change or diverge, this code must
-        # be updated accordingly.
-        return type(expr)(expr.index_sets, new_body)
+        new_condition = (
+            _apply_index_substitution(expr.condition, filtered_sub)
+            if expr.condition is not None
+            else None
+        )
+        return type(expr)(expr.index_sets, new_body, new_condition)
     else:
         # Unknown expression type, return as-is
         return expr
@@ -1904,10 +1905,10 @@ def _diff_prod(
     if isinstance(body_derivative, Const) and body_derivative.value == 0.0:
         return Const(0.0)
 
-    # Build the logarithmic derivative: sum(i, df(i)/dx / f(i))
-    # This is: sum(index_sets, body_derivative / body)
+    # Build the logarithmic derivative: sum(i$cond, df(i)/dx / f(i))
+    # This is: sum(index_sets, body_derivative / body) with same condition as prod
     log_derivative_body = Binary("/", body_derivative, expr.body)
-    log_derivative = Sum(expr.index_sets, log_derivative_body)
+    log_derivative = Sum(expr.index_sets, log_derivative_body, expr.condition)
 
     # Result: prod(i, f(i)) * sum(i, df(i)/dx / f(i))
     # Which is: expr * log_derivative
