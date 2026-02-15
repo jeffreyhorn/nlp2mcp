@@ -502,10 +502,9 @@ def reformulate_min(
     # Issue #732: propagate equation domain to aux VarRef and constraints
     constraints = []
     aux_var_ref = VarRef(aux_var_name, eq_domain)
-    if eq_domain:
-        object.__setattr__(aux_var_ref, "domain", eq_domain)
-        object.__setattr__(aux_var_ref, "free_domain", eq_domain)
-        object.__setattr__(aux_var_ref, "rank", len(eq_domain))
+    object.__setattr__(aux_var_ref, "domain", eq_domain)
+    object.__setattr__(aux_var_ref, "free_domain", eq_domain)
+    object.__setattr__(aux_var_ref, "rank", len(eq_domain))
 
     for i, arg_expr in enumerate(min_call.args):
         # Constraint: For min(x,y), we want x >= aux_min and y >= aux_min
@@ -614,10 +613,9 @@ def reformulate_max(
     # Issue #732: propagate equation domain to aux VarRef and constraints
     constraints = []
     aux_var_ref = VarRef(aux_var_name, eq_domain)
-    if eq_domain:
-        object.__setattr__(aux_var_ref, "domain", eq_domain)
-        object.__setattr__(aux_var_ref, "free_domain", eq_domain)
-        object.__setattr__(aux_var_ref, "rank", len(eq_domain))
+    object.__setattr__(aux_var_ref, "domain", eq_domain)
+    object.__setattr__(aux_var_ref, "free_domain", eq_domain)
+    object.__setattr__(aux_var_ref, "rank", len(eq_domain))
 
     for i, arg_expr in enumerate(max_call.args):
         # Constraint: arg - aux_var <= 0  (equivalent to aux_var >= arg)
@@ -737,7 +735,7 @@ def apply_strategy1_objective_substitution(
                 lhs, rhs = eq_def.lhs_rhs
                 # Check if RHS references the intermediate variable
                 if isinstance(rhs, VarRef) and rhs.name == intermediate_var:
-                    aux_ref = VarRef(new_objvar, eq_def.domain)
+                    aux_ref = VarRef(new_objvar, rhs.indices)
                     _copy_domain_attrs(rhs, aux_ref)
                     # Update RHS to reference auxiliary variable instead
                     model.equations[eq_name] = EquationDef(
