@@ -349,8 +349,11 @@ Model m1 / eq1 /;
 Model m2 / eq2 /;
 """
         model = parse_model_text(source)
-        # Only first model is stored (current limitation)
+        # declared_model property returns the first model name
         assert model.declared_model == "m1"
+        # Issue #729: all model names are tracked
+        assert "m1" in model.declared_models
+        assert "m2" in model.declared_models
 
 
 class TestModelCaseSensitivity:
@@ -386,8 +389,8 @@ Model mymodel / {all_kw} /;
             model = parse_model_text(source)
             assert model.model_uses_all is True
 
-    def test_model_name_case_sensitive(self):
-        """Test model names are case-sensitive."""
+    def test_model_name_case_insensitive(self):
+        """Test model names are case-insensitive (Issue #729, consistent with GAMS)."""
         source = """
 Set i / 1*3 /;
 Variable x(i);
@@ -398,6 +401,52 @@ eq1(i).. x(i) =e= 1;
 Model MyModel / all /;
 """
         model = parse_model_text(source)
-        assert model.declared_model == "MyModel"
-        # Model name should preserve case
-        assert model.declared_model != "mymodel"
+        assert model.declared_model == "mymodel"
+        # Model names stored lowercase (GAMS is case-insensitive)
+        assert "mymodel" in model.declared_models
+
+
+class TestMultiModelAttributeAccess:
+    """Issue #729: attribute assignments on non-first models must not error."""
+
+    def test_attr_on_second_model(self):
+        """ilp.optCr = 0 must parse when ilp is not the first Model."""
+        gams = """
+Set i / a, b /;
+Variable x(i);
+Variable obj;
+Equation eq1(i);
+Equation eq2(i);
+Equation objdef;
+objdef.. obj =e= sum(i, x(i));
+eq1(i).. x(i) =g= 0;
+eq2(i).. x(i) =l= 10;
+
+Model sp / eq1 /;
+Model ilp / eq2 /;
+
+ilp.optCr  = 0;
+ilp.resLim = 100;
+"""
+        model = parse_model_text(source=gams)
+        assert "sp" in model.declared_models
+        assert "ilp" in model.declared_models
+
+    def test_attr_case_insensitive_model(self):
+        """Model declared as ILP, accessed as ilp."""
+        gams = """
+Set i / a, b /;
+Variable x(i);
+Variable obj;
+Equation eq1(i);
+Equation objdef;
+objdef.. obj =e= sum(i, x(i));
+eq1(i).. x(i) =g= 0;
+
+Model sp / eq1 /;
+Model ILP / objdef /;
+
+ilp.optCr = 0;
+"""
+        model = parse_model_text(source=gams)
+        assert "ilp" in model.declared_models

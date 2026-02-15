@@ -2724,8 +2724,7 @@ class _ModelBuilder:
 
     def _handle_model_all(self, node: Tree) -> None:
         name = _token_text(node.children[0])
-        if self.model.declared_model is None:
-            self.model.declared_model = name
+        self.model.declared_model = name
         self.model.model_equations = []
         self.model.model_uses_all = True
 
@@ -2744,15 +2743,13 @@ class _ModelBuilder:
             for tok in ref_list.children
             if isinstance(tok, Token) and tok.type == "ID"
         ]
-        if self.model.declared_model is None:
-            self.model.declared_model = name
+        self.model.declared_model = name
         self.model.model_equations = refs
         self.model.model_uses_all = False
 
     def _handle_model_decl(self, node: Tree) -> None:
         name = _token_text(node.children[0])
-        if self.model.declared_model is None:
-            self.model.declared_model = name
+        self.model.declared_model = name
         self.model.model_equations = []
         self.model.model_uses_all = False
 
@@ -2769,7 +2766,8 @@ class _ModelBuilder:
                m  / objdef, eq1  /
                mx / objdef, eq1x /;
 
-        Note: Only the first model is stored in ModelIR (current limitation).
+        Issue #729: All model names are now tracked in ``declared_models``.
+        Only the *first* model's equation list / all flag is stored (unchanged).
         """
         # Extract all model_decl_item nodes
         model_items = [
@@ -2781,12 +2779,12 @@ class _ModelBuilder:
         if not model_items:
             raise self._error("Multi-model declaration has no model items", node)
 
-        # Process the first model only (store in ModelIR)
-        first_item = model_items[0]
-        name = _token_text(first_item.children[0])
+        # Register every model name (Issue #729)
+        for item in model_items:
+            self.model.declared_model = _token_text(item.children[0])
 
-        if self.model.declared_model is None:
-            self.model.declared_model = name
+        # Store equation list / all flag from the first model only
+        first_item = model_items[0]
 
         # Check if this model uses "all" or has an equation list
         if len(first_item.children) > 1:
@@ -3263,7 +3261,7 @@ class _ModelBuilder:
                     base_name not in self.model.variables
                     and base_name not in self.model.params
                     and base_name not in self.model.equations
-                    and base_name != self.model.declared_model
+                    and base_name.lower() not in self.model.declared_models
                 ):
                     raise self._error(
                         f"Symbol '{base_name}' not declared as a variable, parameter, equation, or model",
@@ -3280,7 +3278,7 @@ class _ModelBuilder:
                     base_name not in self.model.variables
                     and base_name not in self.model.params
                     and base_name not in self.model.equations
-                    and base_name != self.model.declared_model
+                    and base_name.lower() not in self.model.declared_models
                 ):
                     raise self._error(
                         f"Symbol '{base_name}' not declared as a variable, parameter, equation, or model",
