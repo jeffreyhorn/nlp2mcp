@@ -3,7 +3,7 @@
 **GitHub Issue:** [#733](https://github.com/jeffreyhorn/nlp2mcp/issues/733)
 **Status:** Open
 **Severity:** Medium -- Blocks MCP translation of lop model (after Issue #732 fix)
-**Discovered:** 2026-02-13 (Sprint 19, after Issue #732 fixed domain mismatch)
+**Discovered:** 2026-02-15 (Sprint 19, after Issue #732 fixed domain mismatch)
 **Affected Models:** lop, and potentially asyncloop, cesam, circpack, gqapsdp, popdynm, sddp, sroute (8 gamslib models use `sameas`)
 
 ---
