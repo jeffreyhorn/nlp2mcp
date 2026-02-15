@@ -550,6 +550,16 @@ def _diff_call(
     """
     func = expr.func
 
+    # Issue #727: Check if the Call node is actually a parameter reference, not a
+    # built-in function call.  In GAMS, parameter references like gamma(i,r) share
+    # the same Call AST node type as function calls like gamma(x).  Consult the
+    # model's symbol table to disambiguate.  Parameters are constants w.r.t.
+    # variables, so their derivative is always 0.
+    if config is not None and config.model_ir is not None:
+        model_params = getattr(config.model_ir, "params", None)
+        if model_params is not None and func in model_params:
+            return Const(0.0)
+
     if func == "power":
         return _diff_power(expr, wrt_var, wrt_indices, config)
     elif func == "exp":

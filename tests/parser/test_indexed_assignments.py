@@ -138,6 +138,57 @@ class TestIndexedAssignmentValidation:
             parse_model_text(gams)
 
 
+class TestMultiDimSetIndexExpansion:
+    """Issue #726: multi-dimensional set used as a compact index."""
+
+    def test_2d_set_as_single_index_in_assignment(self):
+        """rp(ll,s) where ll(s,s) is 2-D and rp(s,s,s) is 3-D."""
+        gams = """
+        Set s / a, b, c /;
+        Set ll(s,s) 'line pairs';
+        Parameter rp(s,s,s) 'rank';
+        rp(ll,s) = 1;
+        """
+        model = parse_model_text(gams)
+        assert "rp" in model.params
+
+    def test_2d_set_as_single_index_fills_two_dims(self):
+        """lastrp(ll) where ll(s,s) is 2-D and lastrp(s,s) is 2-D."""
+        gams = """
+        Set s / a, b, c /;
+        Set ll(s,s) 'line pairs';
+        Parameter lastrp(s,s) 'last rank';
+        lastrp(ll) = 0;
+        """
+        model = parse_model_text(gams)
+        assert "lastrp" in model.params
+
+    def test_2d_set_index_in_expression(self):
+        """Multi-dim set index used in an equation expression (exercises _make_symbol)."""
+        gams = """
+        Set s / a, b, c /;
+        Set ll(s,s) 'line pairs';
+        Parameter rp(s,s,s) 'rank';
+        Variable z;
+        Equation e;
+        e.. z =e= sum(ll, rp(ll,s));
+        """
+        model = parse_model_text(gams)
+        assert "e" in model.equations
+
+    def test_effective_count_still_rejects_true_mismatch(self):
+        """Even with multi-dim expansion, wrong effective count is rejected."""
+        gams = """
+        Set s / a, b /;
+        Set ll(s,s);
+        Parameter p(s,s,s,s) '4-D param';
+        p(ll,s) = 1;
+        """
+        # ll is 2-D → effective=3, p expects 4 → error
+        with pytest.raises(Exception, match=r"expects 4 indices, got 2 \(effective 3\)"):
+            parse_model_text(gams)
+
+
 class TestMathopt1Pattern:
     """Test the exact pattern from mathopt1.gms (line 45)."""
 
