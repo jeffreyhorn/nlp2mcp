@@ -505,11 +505,8 @@ def expr_to_gams(
             # Issue #724: GAMS power(base, exp) requires exp to be constant.
             # When the exponent contains a variable, emit as base ** exp instead.
             if func == "power" and len(args) == 2:
-                from src.ir.ast import Const as _Const
-                from src.ir.ast import ParamRef as _ParamRef
-
                 exponent = args[1]
-                if not isinstance(exponent, (_Const, _ParamRef)):
+                if not isinstance(exponent, (Const, ParamRef)):
                     base_str = expr_to_gams(
                         args[0], parent_op="**", is_right=False, domain_vars=domain_vars
                     )

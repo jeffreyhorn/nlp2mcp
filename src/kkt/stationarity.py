@@ -138,34 +138,35 @@ def _collect_access_conditions(
         overlaps = bool(bound_set & var_domain_set)
 
         if overlaps and expr.condition is not None:
-            # This Sum/Prod has a condition and binds a relevant index
-            # Walk children with this condition added
+            # This Sum/Prod has a condition and binds a relevant index.
+            # Only walk the body — the condition expression itself is not a
+            # variable-access context and must not be searched (Sum.children()
+            # yields [condition, body], so we use expr.body directly).
             new_conditions = enclosing_conditions | {repr(expr.condition)}
             results: list[Expr] = []
-            for child in expr.children():
-                child_result = _collect_access_conditions(
-                    child, var_name, var_domain_set, new_conditions
-                )
-                if child_result is not None:
-                    if not child_result:
-                        # Found variable in child with no extra conditions from further nesting
-                        # The condition for this access is the current Sum/Prod condition
-                        results.append(expr.condition)
-                    else:
-                        results.extend(child_result)
+            child_result = _collect_access_conditions(
+                expr.body, var_name, var_domain_set, new_conditions
+            )
+            if child_result is not None:
+                if not child_result:
+                    # Found variable in body with no extra conditions from further nesting
+                    # The condition for this access is the current Sum/Prod condition
+                    results.append(expr.condition)
+                else:
+                    results.extend(child_result)
             return results if results else None
         else:
-            # Walk children without adding a condition
+            # No relevant condition — walk only the body (skip condition child
+            # to avoid false positives from variables appearing in conditions).
             results = []
-            for child in expr.children():
-                child_result = _collect_access_conditions(
-                    child, var_name, var_domain_set, enclosing_conditions
-                )
-                if child_result is not None:
-                    if not child_result and not enclosing_conditions:
-                        # Found variable with no condition at all
-                        return []
-                    results.extend(child_result)
+            child_result = _collect_access_conditions(
+                expr.body, var_name, var_domain_set, enclosing_conditions
+            )
+            if child_result is not None:
+                if not child_result and not enclosing_conditions:
+                    # Found variable with no condition at all
+                    return []
+                results.extend(child_result)
             return results if results else None
 
     # For all other expression types, walk children

@@ -181,6 +181,13 @@ def resolve_set_members(
                         len(parent_members),
                     )
                     return (parent_members, set_or_alias_name)
+            # All parents tried but none had members
+            logger.warning(
+                "Dynamic subset '%s' has no static members and no parent set "
+                "with members (tried: %s). Returning empty member list.",
+                set_or_alias_name,
+                ", ".join(set_def.domain),
+            )
         return (set_def.members, set_or_alias_name)
 
     raise ValueError(
