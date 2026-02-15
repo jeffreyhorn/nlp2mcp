@@ -174,16 +174,17 @@ def _collect_access_conditions(
         else:
             # No relevant condition — walk only the body (skip condition child
             # to avoid false positives from variables appearing in conditions).
-            results = []
             child_result = _collect_access_conditions(
                 expr.body, var_name, var_domain_set, has_enclosing_condition
             )
-            if child_result is not None:
-                if not child_result and not has_enclosing_condition:
-                    # Found variable with no condition at all
-                    return []
-                results.extend(child_result)
-            return results if results else None
+            if child_result is None:
+                return None  # variable not found
+            if not child_result:
+                # Variable found with no additional guarding condition from
+                # this Sum/Prod context; propagate upward so callers know the
+                # variable was found (they will supply the enclosing condition).
+                return []
+            return child_result
 
     # For all other expression types, walk children
     other_results: list[Expr] = []
