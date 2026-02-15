@@ -862,3 +862,180 @@ class TestAcceptanceCriteria:
             name for name in model.complementarity_multipliers if name.startswith("lam_minmax_min")
         ]
         assert len(multipliers) == 3
+
+
+# =============================================================================
+# Issue #732: Indexed Domain Propagation Tests
+# =============================================================================
+
+
+class TestIndexedDomainPropagation:
+    """Test that indexed equations propagate domain to aux variables and constraints."""
+
+    def test_reformulate_min_indexed_aux_var_domain(self):
+        """Auxiliary variable inherits domain from indexed equation."""
+        from src.kkt.reformulation import reformulate_min
+
+        min_call = MinMaxCall(
+            func_type="min",
+            args=[VarRef("x", ("i",)), VarRef("y", ("i",))],
+            context="eq1",
+            index=0,
+        )
+
+        manager = AuxiliaryVariableManager()
+        result = reformulate_min(min_call, manager, eq_domain=("i",))
+
+        # Replacement VarRef should have the equation domain as indices
+        assert isinstance(result.replacement_expr, VarRef)
+        assert result.replacement_expr.indices == ("i",)
+
+    def test_reformulate_min_indexed_domain_attrs(self):
+        """VarRef domain attributes are set even for scalar (empty) domain."""
+        from src.kkt.reformulation import reformulate_min
+
+        # Scalar case: domain attrs should still be set
+        min_call = MinMaxCall(
+            func_type="min",
+            args=[VarRef("x", ()), VarRef("y", ())],
+            context="eq1",
+            index=0,
+        )
+
+        manager = AuxiliaryVariableManager()
+        result = reformulate_min(min_call, manager, eq_domain=())
+
+        aux_ref = result.replacement_expr
+        assert getattr(aux_ref, "domain", None) == ()
+        assert getattr(aux_ref, "free_domain", None) == ()
+        assert getattr(aux_ref, "rank", None) == 0
+
+    def test_reformulate_min_indexed_constraint_domain(self):
+        """Complementarity constraints inherit domain from indexed equation."""
+        from src.kkt.reformulation import reformulate_min
+
+        min_call = MinMaxCall(
+            func_type="min",
+            args=[VarRef("x", ("s1", "s2")), VarRef("y", ("s1", "s2"))],
+            context="dtlimit",
+            index=0,
+        )
+
+        manager = AuxiliaryVariableManager()
+        result = reformulate_min(min_call, manager, eq_domain=("s1", "s2"))
+
+        # All constraints should have the equation domain
+        for _, eq_def in result.constraints:
+            assert eq_def.domain == ("s1", "s2")
+
+    def test_reformulate_max_indexed_domain(self):
+        """reformulate_max propagates domain the same way as reformulate_min."""
+        from src.kkt.reformulation import reformulate_max
+
+        max_call = MinMaxCall(
+            func_type="max",
+            args=[VarRef("a", ("i", "j")), VarRef("b", ("i", "j"))],
+            context="eq2",
+            index=0,
+        )
+
+        manager = AuxiliaryVariableManager()
+        result = reformulate_max(max_call, manager, eq_domain=("i", "j"))
+
+        # Replacement VarRef
+        assert result.replacement_expr.indices == ("i", "j")
+        assert result.replacement_expr.domain == ("i", "j")  # type: ignore[attr-defined]
+        assert result.replacement_expr.rank == 2  # type: ignore[attr-defined]
+
+        # Constraints
+        for _, eq_def in result.constraints:
+            assert eq_def.domain == ("i", "j")
+
+    def test_reformulate_model_indexed_equation(self):
+        """End-to-end: reformulate_model propagates domain for indexed equations."""
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import EquationDef, Rel, VariableDef, VarKind
+        from src.kkt.reformulation import reformulate_model
+
+        model = ModelIR()
+
+        model.add_var(VariableDef("x", ("i",), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("y", ("i",), VarKind.CONTINUOUS))
+        model.add_var(VariableDef("z", ("i",), VarKind.CONTINUOUS))
+
+        eq = EquationDef(
+            name="eqdef",
+            domain=("i",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("z", ("i",)),
+                Call("min", (VarRef("x", ("i",)), VarRef("y", ("i",)))),
+            ),
+        )
+        model.add_equation(eq)
+
+        reformulate_model(model)
+
+        # Auxiliary variable should have the equation domain
+        aux_var = model.variables["aux_min_eqdef_0"]
+        assert aux_var.domain == ("i",)
+
+        # Complementarity constraints should have the equation domain
+        for eq_name in ["minmax_min_eqdef_0_arg0", "minmax_min_eqdef_0_arg1"]:
+            assert model.equations[eq_name].domain == ("i",)
+
+    def test_copy_domain_attrs_preserves_attributes(self):
+        """_copy_domain_attrs copies domain, free_domain, rank from src to dst."""
+        from src.kkt.reformulation import _copy_domain_attrs
+
+        src = VarRef("x", ("i", "j"))
+        object.__setattr__(src, "domain", ("i", "j"))
+        object.__setattr__(src, "free_domain", ("i",))
+        object.__setattr__(src, "rank", 2)
+
+        dst = VarRef("y", ())
+        _copy_domain_attrs(src, dst)
+
+        assert dst.domain == ("i", "j")  # type: ignore[attr-defined]
+        assert dst.free_domain == ("i",)  # type: ignore[attr-defined]
+        assert dst.rank == 2  # type: ignore[attr-defined]
+
+    def test_copy_domain_attrs_skips_missing(self):
+        """_copy_domain_attrs skips attributes not present on source."""
+        from src.kkt.reformulation import _copy_domain_attrs
+
+        src = VarRef("x", ())
+        # No domain attrs set on src
+        dst = VarRef("y", ())
+
+        _copy_domain_attrs(src, dst)
+
+        # dst should not have domain attrs either
+        assert not hasattr(dst, "domain")
+        assert not hasattr(dst, "free_domain")
+        assert not hasattr(dst, "rank")
+
+    def test_replace_min_max_call_preserves_domain_attrs(self):
+        """_replace_min_max_call preserves domain attrs on reconstructed nodes."""
+        from src.kkt.reformulation import _replace_min_max_call
+
+        # Build: min(x, y) + z  with domain attrs on the Binary node
+        min_call_ast = Call("min", (VarRef("x", ()), VarRef("y", ())))
+        z_ref = VarRef("z", ())
+        expr = Binary("+", min_call_ast, z_ref)
+        object.__setattr__(expr, "domain", ("i",))
+        object.__setattr__(expr, "free_domain", ("i",))
+        object.__setattr__(expr, "rank", 1)
+
+        replacement = VarRef("aux_min_0", ())
+        call = MinMaxCall(
+            func_type="min", args=[VarRef("x", ()), VarRef("y", ())], context="eq1", index=0
+        )
+
+        result = _replace_min_max_call(expr, call, replacement)
+
+        # The new Binary node should have domain attrs copied from original
+        assert isinstance(result, Binary)
+        assert result.domain == ("i",)  # type: ignore[attr-defined]
+        assert result.free_domain == ("i",)  # type: ignore[attr-defined]
+        assert result.rank == 1  # type: ignore[attr-defined]

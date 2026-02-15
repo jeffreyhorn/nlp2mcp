@@ -431,7 +431,11 @@ class ReformulationResult:
     context: str = ""
 
 
-def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> ReformulationResult:
+def reformulate_min(
+    min_call: MinMaxCall,
+    aux_mgr: AuxiliaryVariableManager,
+    eq_domain: tuple[str, ...] = (),
+) -> ReformulationResult:
     """
     Reformulate min(x₁, x₂, ..., xₙ) into MCP complementarity form.
 
@@ -495,8 +499,12 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
         multiplier_names.append(mult_name)
 
     # Create complementarity constraints: xᵢ - z_min >= 0
+    # Issue #732: propagate equation domain to aux VarRef and constraints
     constraints = []
-    aux_var_ref = VarRef(aux_var_name, ())
+    aux_var_ref = VarRef(aux_var_name, eq_domain)
+    object.__setattr__(aux_var_ref, "domain", eq_domain)
+    object.__setattr__(aux_var_ref, "free_domain", eq_domain)
+    object.__setattr__(aux_var_ref, "rank", len(eq_domain))
 
     for i, arg_expr in enumerate(min_call.args):
         # Constraint: For min(x,y), we want x >= aux_min and y >= aux_min
@@ -513,7 +521,7 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
 
         constraint = EquationDef(
             name=constraint_name,
-            domain=(),  # Scalar for now; indexed handling in future
+            domain=eq_domain,
             relation=Rel.LE,  # <= 0
             lhs_rhs=(lhs, rhs),
         )
@@ -530,7 +538,11 @@ def reformulate_min(min_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
     )
 
 
-def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> ReformulationResult:
+def reformulate_max(
+    max_call: MinMaxCall,
+    aux_mgr: AuxiliaryVariableManager,
+    eq_domain: tuple[str, ...] = (),
+) -> ReformulationResult:
     """
     Reformulate max(x₁, x₂, ..., xₙ) into MCP complementarity form.
 
@@ -598,8 +610,12 @@ def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
         multiplier_names.append(mult_name)
 
     # Create complementarity constraints: w_max - xᵢ >= 0
+    # Issue #732: propagate equation domain to aux VarRef and constraints
     constraints = []
-    aux_var_ref = VarRef(aux_var_name, ())
+    aux_var_ref = VarRef(aux_var_name, eq_domain)
+    object.__setattr__(aux_var_ref, "domain", eq_domain)
+    object.__setattr__(aux_var_ref, "free_domain", eq_domain)
+    object.__setattr__(aux_var_ref, "rank", len(eq_domain))
 
     for i, arg_expr in enumerate(max_call.args):
         # Constraint: arg - aux_var <= 0  (equivalent to aux_var >= arg)
@@ -617,7 +633,7 @@ def reformulate_max(max_call: MinMaxCall, aux_mgr: AuxiliaryVariableManager) -> 
 
         constraint = EquationDef(
             name=constraint_name,
-            domain=(),  # Scalar for now; indexed handling in future
+            domain=eq_domain,
             relation=Rel.LE,  # <= 0
             lhs_rhs=(lhs, rhs),
         )
@@ -659,15 +675,29 @@ def apply_strategy1_objective_substitution(
         reformulation_results: Results from min/max reformulation
     """
     from ..ir.ast import VarRef
-    from ..ir.minmax_detection import trace_objective_chain
+    from ..ir.minmax_detection import (
+        _build_variable_definitions,
+        trace_objective_chain,
+    )
     from ..ir.model_ir import ObjectiveIR
-    from ..ir.symbols import EquationDef
+    from ..ir.symbols import EquationDef, Rel
 
     if not model.objective:
         return
 
     # Detect objective chain
     obj_chain = trace_objective_chain(model)
+
+    # Build set of equality equations that define objective-chain variables.
+    # Only these equations should have intermediate vars substituted.
+    # Filter to Rel.EQ to exclude inequalities (=l=, =g=) whose LHS happens
+    # to be a VarRef but which are constraints, not variable definitions.
+    var_defs = _build_variable_definitions(model)
+    obj_chain_eqs = {
+        var_defs[var]
+        for var in obj_chain
+        if var in var_defs and model.equations[var_defs[var]].relation == Rel.EQ
+    }
 
     # Find reformulation results for variables in objective chain
     for result in reformulation_results:
@@ -696,18 +726,23 @@ def apply_strategy1_objective_substitution(
             # Step 2: Find and update objective-defining equations
             # Replace intermediate variable references with auxiliary variable
             # Example: obj = z becomes obj = aux_min
+            # Only substitute in equations that define objective-chain variables,
+            # not in unrelated constraints that happen to reference the same var.
             intermediate_var = result.original_lhs_var
 
-            for eq_name, eq_def in model.equations.items():
+            for eq_name in obj_chain_eqs:
+                eq_def = model.equations[eq_name]
                 lhs, rhs = eq_def.lhs_rhs
                 # Check if RHS references the intermediate variable
                 if isinstance(rhs, VarRef) and rhs.name == intermediate_var:
+                    aux_ref = VarRef(new_objvar, rhs.indices)
+                    _copy_domain_attrs(rhs, aux_ref)
                     # Update RHS to reference auxiliary variable instead
                     model.equations[eq_name] = EquationDef(
                         name=eq_def.name,
                         domain=eq_def.domain,
                         relation=eq_def.relation,
-                        lhs_rhs=(lhs, VarRef(new_objvar, ())),
+                        lhs_rhs=(lhs, aux_ref),
                     )
 
             # Only apply Strategy 1 once (first match in objective chain)
@@ -788,10 +823,11 @@ def reformulate_model(model: ModelIR) -> None:
 
             for call in min_max_calls:
                 # Reformulate based on type
+                # Issue #732: pass equation domain so aux vars are indexed
                 if call.func_type == "min":
-                    result = reformulate_min(call, aux_mgr)
+                    result = reformulate_min(call, aux_mgr, eq_domain=eq_def.domain)
                 elif call.func_type == "max":
-                    result = reformulate_max(call, aux_mgr)
+                    result = reformulate_max(call, aux_mgr, eq_domain=eq_def.domain)
                 else:
                     raise ValueError(f"Unknown func_type: {call.func_type}")
 
@@ -808,9 +844,11 @@ def reformulate_model(model: ModelIR) -> None:
     # Apply reformulations
     for eq_name, min_max_call, result in reformulations:
         # 1. Add auxiliary variable to model
+        # Issue #732: use equation domain so indexed min/max get indexed aux vars
+        eq_def = model.equations[eq_name]
         aux_var = VariableDef(
             name=result.aux_var_name,
-            domain=(),
+            domain=eq_def.domain,
             kind=VarKind.CONTINUOUS,
             lo=None,  # Unbounded
             up=None,
@@ -853,6 +891,14 @@ def reformulate_model(model: ModelIR) -> None:
     apply_strategy1_objective_substitution(model, all_results)
 
 
+def _copy_domain_attrs(src: Expr, dst: Expr) -> None:
+    """Copy domain, free_domain, and rank attributes from src to dst."""
+    for attr in ("domain", "free_domain", "rank"):
+        val = getattr(src, attr, None)
+        if val is not None:
+            object.__setattr__(dst, attr, val)
+
+
 def _replace_min_max_call(expr: Expr, call: MinMaxCall, replacement: Expr) -> Expr:
     """
     Recursively replace a min/max call with a replacement expression.
@@ -881,18 +927,25 @@ def _replace_min_max_call(expr: Expr, call: MinMaxCall, replacement: Expr) -> Ex
                 return replacement
 
     # Recursively replace in children
+    new_node: Expr
     if isinstance(expr, Binary):
         new_left = _replace_min_max_call(expr.left, call, replacement)
         new_right = _replace_min_max_call(expr.right, call, replacement)
-        return Binary(expr.op, new_left, new_right)
+        new_node = Binary(expr.op, new_left, new_right)
+        _copy_domain_attrs(expr, new_node)
+        return new_node
 
     elif isinstance(expr, Unary):
         new_child = _replace_min_max_call(expr.child, call, replacement)
-        return Unary(expr.op, new_child)
+        new_node = Unary(expr.op, new_child)
+        _copy_domain_attrs(expr, new_node)
+        return new_node
 
     elif isinstance(expr, ASTCall):
         new_args = tuple(_replace_min_max_call(arg, call, replacement) for arg in expr.args)
-        return ASTCall(expr.func, new_args)
+        new_node = ASTCall(expr.func, new_args)
+        _copy_domain_attrs(expr, new_node)
+        return new_node
 
     elif isinstance(expr, (Sum, Prod)):
         new_body = _replace_min_max_call(expr.body, call, replacement)
@@ -901,7 +954,9 @@ def _replace_min_max_call(expr: Expr, call: MinMaxCall, replacement: Expr) -> Ex
             if expr.condition is not None
             else None
         )
-        return type(expr)(expr.index_sets, new_body, new_cond)
+        new_node = type(expr)(expr.index_sets, new_body, new_cond)
+        _copy_domain_attrs(expr, new_node)
+        return new_node
 
     # Base case: no replacement needed (Const, VarRef, ParamRef, etc.)
     return expr
