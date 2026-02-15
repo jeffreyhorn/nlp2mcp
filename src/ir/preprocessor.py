@@ -1648,11 +1648,26 @@ def strip_eol_comments(source: str) -> str:
         found_at = -1
         while i <= len(line) - marker_len:
             ch = line[i]
+            # Handle single quotes, including GAMS-style escaped quotes ('')
             if ch == "'" and not in_double_quote:
+                if in_single_quote and i + 1 < len(line) and line[i + 1] == "'":
+                    # Escaped single quote inside single-quoted string
+                    i += 2
+                    continue
                 in_single_quote = not in_single_quote
-            elif ch == '"' and not in_single_quote:
+                i += 1
+                continue
+            # Handle double quotes, including GAMS-style escaped quotes ("")
+            if ch == '"' and not in_single_quote:
+                if in_double_quote and i + 1 < len(line) and line[i + 1] == '"':
+                    # Escaped double quote inside double-quoted string
+                    i += 2
+                    continue
                 in_double_quote = not in_double_quote
-            elif not in_single_quote and not in_double_quote:
+                i += 1
+                continue
+            # Only look for the marker when not inside any quoted string
+            if not in_single_quote and not in_double_quote:
                 if line[i : i + marker_len] == eol_marker:
                     found_at = i
                     break

@@ -112,7 +112,9 @@ class IndexMapping:
         return self.row_to_eq.get(row_id)
 
 
-def resolve_set_members(set_or_alias_name: str, model_ir: ModelIR) -> tuple[list[str], str]:
+def resolve_set_members(
+    set_or_alias_name: str, model_ir: ModelIR, _visited: set[str] | None = None
+) -> tuple[list[str], str]:
     """
     Resolve a set or alias name to its concrete members.
 
@@ -163,8 +165,13 @@ def resolve_set_members(set_or_alias_name: str, model_ir: ModelIR) -> tuple[list
         # The set assignment is emitted in the generated code so GAMS will filter
         # correctly at runtime. We use the parent set's members for instantiation.
         if not set_def.members and set_def.domain:
+            if _visited is None:
+                _visited = set()
+            _visited.add(set_or_alias_name)
             for parent_name in set_def.domain:
-                parent_members, _ = resolve_set_members(parent_name, model_ir)
+                if parent_name in _visited:
+                    continue  # skip circular parent reference
+                parent_members, _ = resolve_set_members(parent_name, model_ir, _visited)
                 if parent_members:
                     logger.warning(
                         "Dynamic subset '%s' has no static members; "

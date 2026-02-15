@@ -5,6 +5,7 @@ GAMS MCP file from a KKT system.
 """
 
 from src.config import Config
+from src.emit.expr_to_gams import expr_to_gams
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
     _compute_set_alias_phases,
@@ -15,6 +16,7 @@ from src.emit.original_symbols import (
     emit_set_assignments,
 )
 from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
+from src.ir.ast import Expr
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
 
@@ -290,31 +292,27 @@ def emit_gams_mcp(
     # comp_minw(t)$(tm(t))), the paired variable must be fixed for excluded
     # instances so GAMS MCP doesn't report unmatched pairs.
     fx_lines: list[str] = []
-    if True:
-        from src.emit.expr_to_gams import expr_to_gams
 
-        # 1. Fix primal variables with conditioned stationarity equations
-        for var_name, cond_expr in sorted(kkt.stationarity_conditions.items()):
-            var_def = kkt.model_ir.variables.get(var_name)
-            if var_def and var_def.domain:
-                domain_str = ",".join(var_def.domain)
-                domain_vars = frozenset(var_def.domain)
-                cond_gams = expr_to_gams(cond_expr, domain_vars=domain_vars)
-                lo_val = var_def.lo if var_def.lo is not None else 0
-                fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {lo_val};")
+    # 1. Fix primal variables with conditioned stationarity equations
+    for var_name, cond_expr in sorted(kkt.stationarity_conditions.items()):
+        var_def = kkt.model_ir.variables.get(var_name)
+        if var_def and var_def.domain:
+            domain_str = ",".join(var_def.domain)
+            domain_vars = frozenset(var_def.domain)
+            cond_gams = expr_to_gams(cond_expr, domain_vars=domain_vars)
+            lo_val = var_def.lo if var_def.lo is not None else 0
+            fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {lo_val};")
 
-        # 2. Fix multipliers whose complementarity equation has a condition
-        for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
-            eq_def = comp_pair.equation
-            if eq_def.condition is not None and eq_def.domain:
-                from src.ir.ast import Expr as _Expr
-
-                mult_name = comp_pair.variable
-                domain_str = ",".join(eq_def.domain)
-                domain_vars = frozenset(eq_def.domain)
-                assert isinstance(eq_def.condition, _Expr)
-                cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
-                fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+    # 2. Fix multipliers whose complementarity equation has a condition
+    for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
+        eq_def = comp_pair.equation
+        if eq_def.condition is not None and eq_def.domain:
+            mult_name = comp_pair.variable
+            domain_str = ",".join(eq_def.domain)
+            domain_vars = frozenset(eq_def.domain)
+            assert isinstance(eq_def.condition, Expr)
+            cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
+            fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 
     if fx_lines:
         if add_comments:
