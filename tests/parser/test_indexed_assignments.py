@@ -163,6 +163,19 @@ class TestMultiDimSetIndexExpansion:
         model = parse_model_text(gams)
         assert "lastrp" in model.params
 
+    def test_2d_set_index_in_expression(self):
+        """Multi-dim set index used in an equation expression (exercises _make_symbol)."""
+        gams = """
+        Set s / a, b, c /;
+        Set ll(s,s) 'line pairs';
+        Parameter rp(s,s,s) 'rank';
+        Variable z;
+        Equation e;
+        e.. z =e= sum(ll, rp(ll,s));
+        """
+        model = parse_model_text(gams)
+        assert "e" in model.equations
+
     def test_effective_count_still_rejects_true_mismatch(self):
         """Even with multi-dim expansion, wrong effective count is rejected."""
         gams = """
@@ -172,7 +185,7 @@ class TestMultiDimSetIndexExpansion:
         p(ll,s) = 1;
         """
         # ll is 2-D → effective=3, p expects 4 → error
-        with pytest.raises(Exception, match="expects 4 indices, got 2"):
+        with pytest.raises(Exception, match=r"expects 4 indices, got 2 \(effective 3\)"):
             parse_model_text(gams)
 
 

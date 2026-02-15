@@ -69,7 +69,7 @@ Added a symbol table check at the top of `_diff_call()`: before matching against
    - Uses `config.model_ir.params` (CaseInsensitiveDict) for lookup
    - Gracefully handles missing config or model_ir (falls through to existing behavior)
 
-2. **`tests/unit/ad/test_transcendental.py`**:
+2. **`tests/unit/ad/test_ad_core.py`**:
    - Added `TestParameterFunctionDisambiguation` test class with 4 tests:
      - `test_gamma_param_returns_zero`: gamma(i,r) as param returns Const(0)
      - `test_gamma_builtin_still_errors_without_model_ir`: no config preserves existing behavior

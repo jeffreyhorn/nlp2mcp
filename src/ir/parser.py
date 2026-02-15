@@ -3361,12 +3361,16 @@ class _ModelBuilder:
                 # set's dimensions. Compute effective index count by summing each
                 # index's dimensionality.
                 if len(param.domain) > 0 and len(indices) != len(param.domain):
-                    if self._effective_index_count(indices) != len(param.domain):
+                    effective_count = self._effective_index_count(indices)
+                    if effective_count != len(param.domain):
                         index_word = "index" if len(param.domain) == 1 else "indices"
                         raise self._parse_error(
-                            f"Parameter '{symbol_name}' expects {len(param.domain)} {index_word}, got {len(indices)}",
+                            f"Parameter '{symbol_name}' expects {len(param.domain)} {index_word}, got {len(indices)} (effective {effective_count})",
                             target,
-                            suggestion=f"Provide exactly {len(param.domain)} {index_word} to match the parameter declaration",
+                            suggestion=(
+                                f"Provide exactly {len(param.domain)} {index_word} to match the parameter "
+                                f"declaration (current indices have effective dimension {effective_count})"
+                            ),
                         )
 
                 # Issue #622: Handle domain-over assignments like f(j,"k2") = 0 where
@@ -3421,8 +3425,14 @@ class _ModelBuilder:
                             param.values[combo] = value
                         return
 
+                # Issue #726: When compact multi-dim set indices are used (literal count
+                # != domain length but effective count matches), store as expression
+                # so the assignment is emitted as a GAMS statement rather than stored
+                # as param data (which would have mismatched key arity).
+                is_compact_index = len(param.domain) > 0 and len(indices) != len(param.domain)
+
                 # Sprint 10 Day 4: Store expression if it contains function calls, otherwise store value
-                if has_function_call:
+                if has_function_call or is_compact_index:
                     # Keep quotes in expression indices for emitter
                     param.expressions[tuple(indices)] = expr
                 elif value is not None:
@@ -4134,10 +4144,11 @@ class _ModelBuilder:
             expected = self.model.variables[name].domain
             # Issue #726: allow multi-dimensional sets as compact indices
             if len(expected) != len(idx_tuple):
-                if self._effective_index_count(idx_tuple) != len(expected):
+                effective_count = self._effective_index_count(idx_tuple)
+                if effective_count != len(expected):
                     index_word = "index" if len(expected) == 1 else "indices"
                     raise self._error(
-                        f"Variable '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)}",
+                        f"Variable '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)} (effective {effective_count})",
                         node,
                     )
             expr = VarRef(name, idx_tuple)
@@ -4151,10 +4162,11 @@ class _ModelBuilder:
             # explicit domain, the number of indices must match the domain length.
             # Issue #726: allow multi-dimensional sets as compact indices
             if len(expected) > 0 and len(expected) != len(idx_tuple):
-                if self._effective_index_count(idx_tuple) != len(expected):
+                effective_count = self._effective_index_count(idx_tuple)
+                if effective_count != len(expected):
                     index_word = "index" if len(expected) == 1 else "indices"
                     raise self._error(
-                        f"Parameter '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)}",
+                        f"Parameter '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)} (effective {effective_count})",
                         node,
                     )
             expr = ParamRef(name, idx_tuple)
@@ -4802,15 +4814,22 @@ class _ModelBuilder:
             return self._resolve_set_def(alias.target, seen, node)
         return None
 
-    def _effective_index_count(self, indices: list[str] | tuple[str, ...]) -> int:
+    def _effective_index_count(
+        self, indices: list[str] | tuple[str, ...] | tuple[object, ...]
+    ) -> int:
         """Compute effective index count, expanding multi-dimensional sets.
 
         In GAMS, a multi-dimensional set used as a single index position
         implicitly expands to fill multiple positions.  E.g., rp(ll, s)
         where ll(s,s) is 2-D effectively supplies 3 indices.
+
+        Non-string entries (e.g. IndexOffset objects) are counted as 1.
         """
         count = 0
         for idx in indices:
+            if not isinstance(idx, str):
+                count += 1
+                continue
             set_def = self.model.sets.get(idx)
             if set_def is not None and len(set_def.domain) > 1:
                 count += len(set_def.domain)
