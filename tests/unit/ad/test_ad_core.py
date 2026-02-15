@@ -16,7 +16,9 @@ Test Coverage:
 import pytest
 
 from src.ad import differentiate
-from src.ir.ast import Const, ParamRef, SymbolRef, VarRef
+from src.ad.derivative_rules import differentiate_expr
+from src.config import Config
+from src.ir.ast import Call, Const, ParamRef, SymbolRef, VarRef
 
 pytestmark = pytest.mark.unit
 
@@ -187,3 +189,61 @@ class TestDifferentiationInvariance:
 
         assert expr.name == original_name
         assert expr.indices == original_indices
+
+
+# ============================================================================
+# Issue #727: Parameter vs Built-in Function Name Disambiguation
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestParameterFunctionDisambiguation:
+    """Issue #727: parameter names colliding with built-in function names.
+
+    When a model declares a parameter named 'gamma' (or any other built-in
+    function name), the derivative engine should treat Call("gamma", (i, r))
+    as a constant parameter reference (derivative = 0), not as a built-in
+    function call.
+    """
+
+    @staticmethod
+    def _make_config_with_param(param_name: str) -> Config:
+        """Create a Config with a mock model_ir that has the given parameter."""
+        from unittest.mock import MagicMock
+
+        from src.utils.case_insensitive_dict import CaseInsensitiveDict
+
+        model_ir = MagicMock()
+        params = CaseInsensitiveDict()
+        params[param_name] = MagicMock()  # ParameterDef mock
+        model_ir.params = params
+        return Config(model_ir=model_ir)
+
+    def test_gamma_param_returns_zero(self):
+        """gamma(i,r) as parameter reference should differentiate to 0."""
+        config = self._make_config_with_param("gamma")
+        expr = Call("gamma", (SymbolRef("i"), SymbolRef("r")))
+        result = differentiate_expr(expr, "x", config=config)
+        assert isinstance(result, Const)
+        assert result.value == 0.0
+
+    def test_gamma_builtin_still_errors_without_model_ir(self):
+        """Without model_ir, gamma(x,y) should still trigger arity error."""
+        expr = Call("gamma", (VarRef("x"), VarRef("y")))
+        with pytest.raises(ValueError, match="gamma\\(\\) expects 1 argument, got 2"):
+            differentiate_expr(expr, "x")
+
+    def test_gamma_builtin_still_errors_when_not_a_param(self):
+        """With model_ir but no 'gamma' param, gamma(x,y) errors normally."""
+        config = self._make_config_with_param("beta_param")  # not 'gamma'
+        expr = Call("gamma", (VarRef("x"), VarRef("y")))
+        with pytest.raises(ValueError, match="gamma\\(\\) expects 1 argument, got 2"):
+            differentiate_expr(expr, "x", config=config)
+
+    def test_case_insensitive_param_lookup(self):
+        """Parameter lookup should be case-insensitive (GAMS is case-insensitive)."""
+        config = self._make_config_with_param("Gamma")
+        expr = Call("gamma", (SymbolRef("i"), SymbolRef("r")))
+        result = differentiate_expr(expr, "x", config=config)
+        assert isinstance(result, Const)
+        assert result.value == 0.0
