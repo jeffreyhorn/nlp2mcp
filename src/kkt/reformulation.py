@@ -682,7 +682,7 @@ def apply_strategy1_objective_substitution(
         trace_objective_chain,
     )
     from ..ir.model_ir import ObjectiveIR
-    from ..ir.symbols import EquationDef
+    from ..ir.symbols import EquationDef, Rel
 
     if not model.objective:
         return
@@ -690,10 +690,16 @@ def apply_strategy1_objective_substitution(
     # Detect objective chain
     obj_chain = trace_objective_chain(model)
 
-    # Build set of equations that define objective-chain variables
-    # Only these equations should have intermediate vars substituted
+    # Build set of equality equations that define objective-chain variables.
+    # Only these equations should have intermediate vars substituted.
+    # Filter to Rel.EQ to exclude inequalities (=l=, =g=) whose LHS happens
+    # to be a VarRef but which are constraints, not variable definitions.
     var_defs = _build_variable_definitions(model)
-    obj_chain_eqs = {var_defs[var] for var in obj_chain if var in var_defs}
+    obj_chain_eqs = {
+        var_defs[var]
+        for var in obj_chain
+        if var in var_defs and model.equations[var_defs[var]].relation == Rel.EQ
+    }
 
     # Find reformulation results for variables in objective chain
     for result in reformulation_results:

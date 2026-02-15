@@ -4,7 +4,7 @@
 **Status:** Fixed
 **Severity:** High -- Blocks MCP translation of lop model
 **Discovered:** 2026-02-15 (Sprint 19, after Issue #729 fixed multi-model attribute assignment)
-**Fixed:** 2026-02-13 (Sprint 19)
+**Fixed:** 2026-02-15 (Sprint 19)
 **Affected Models:** lop (and any model using `min()` or `max()` inside indexed equations)
 
 ---
