@@ -1598,6 +1598,89 @@ def _quote_special_in_line(line: str) -> str:
     return processed
 
 
+def strip_eol_comments(source: str) -> str:
+    """Strip end-of-line comments defined by $eolCom directive.
+
+    GAMS supports user-defined end-of-line comment markers via the $eolCom
+    directive. For example, ``$eolCom //`` makes ``//`` an end-of-line comment
+    marker, so everything from ``//`` to end of line is a comment.
+
+    This must run BEFORE multiline joining (join_multiline_equations) because
+    the joiner concatenates continuation lines into a single line, which would
+    embed the comment text into the middle of an expression where the grammar's
+    end-of-line ignore pattern cannot match it.
+
+    The function respects quoted strings — comment markers inside single or
+    double quotes are not treated as comments.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with end-of-line comments stripped
+    """
+    lines = source.split("\n")
+    eol_marker: str | None = None
+    result: list[str] = []
+
+    for line in lines:
+        stripped_lower = line.strip().lower()
+
+        # Detect $eolCom directive and extract the marker
+        if stripped_lower.startswith("$eolcom"):
+            parts = line.strip().split(None, 1)
+            if len(parts) >= 2:
+                eol_marker = parts[1].strip()
+            result.append(line)
+            continue
+
+        # If no eol marker defined yet, pass through
+        if eol_marker is None:
+            result.append(line)
+            continue
+
+        # Strip eol comment, respecting quoted strings
+        # Walk character by character to find the marker outside quotes
+        in_single_quote = False
+        in_double_quote = False
+        marker_len = len(eol_marker)
+        i = 0
+        found_at = -1
+        while i <= len(line) - marker_len:
+            ch = line[i]
+            # Handle single quotes, including GAMS-style escaped quotes ('')
+            if ch == "'" and not in_double_quote:
+                if in_single_quote and i + 1 < len(line) and line[i + 1] == "'":
+                    # Escaped single quote inside single-quoted string
+                    i += 2
+                    continue
+                in_single_quote = not in_single_quote
+                i += 1
+                continue
+            # Handle double quotes, including GAMS-style escaped quotes ("")
+            if ch == '"' and not in_single_quote:
+                if in_double_quote and i + 1 < len(line) and line[i + 1] == '"':
+                    # Escaped double quote inside double-quoted string
+                    i += 2
+                    continue
+                in_double_quote = not in_double_quote
+                i += 1
+                continue
+            # Only look for the marker when not inside any quoted string
+            if not in_single_quote and not in_double_quote:
+                if line[i : i + marker_len] == eol_marker:
+                    found_at = i
+                    break
+            i += 1
+
+        if found_at >= 0:
+            result.append(line[:found_at].rstrip())
+        else:
+            result.append(line)
+
+    return "\n".join(result)
+
+
 def join_multiline_equations(source: str) -> str:
     """Join multi-line equation definitions into single logical lines.
 
@@ -2171,6 +2254,12 @@ def _preprocess_content(content: str) -> str:
 
     # Step 9: Strip $macro directives (replaced with comments)
     content = strip_macro_directives(content)
+
+    # Step 9b: Strip end-of-line comments defined by $eolCom directive (Issue #722)
+    # This must happen BEFORE strip_unsupported_directives (which strips the
+    # $eolCom directive itself) and BEFORE multiline joining (which would embed
+    # comment text into the middle of joined expressions).
+    content = strip_eol_comments(content)
 
     # Step 10: Strip other unsupported directives ($title, $ontext, etc.)
     content = strip_unsupported_directives(content)

@@ -654,8 +654,10 @@ def _diff_power(
         da_dx = differentiate_expr(base, wrt_var, wrt_indices, config)
         db_dx = differentiate_expr(exponent, wrt_var, wrt_indices, config)
 
-        # a^b
-        a_pow_b = Call("power", (base, exponent))
+        # a^b — use Binary("**") instead of Call("power") because the exponent
+        # may be a variable, and GAMS power() requires a constant exponent.
+        # Binary("**") emits as "base ** exp" which works with variable exponents.
+        a_pow_b = Binary("**", base, exponent)
 
         # b/a
         b_over_a = Binary("/", exponent, base)
@@ -1921,8 +1923,32 @@ def _diff_prod(
         - Uses logarithmic derivative for numerical stability
         - Result is: prod(i, f(i)) * sum(i, df(i)/dx / f(i))
     """
-    # Differentiate the body expression
-    body_derivative = differentiate_expr(expr.body, wrt_var, wrt_indices, config)
+    # Issue #724: When wrt_indices contains concrete instances of the prod's
+    # bound variables (e.g., differentiating prod(w, f(w,t)) w.r.t. x('ICBM','1')
+    # where w binds 'ICBM'), we must replace the concrete indices with symbolic
+    # prod indices before differentiating the body.  Otherwise the body
+    # differentiation sees x(w,t) vs x('ICBM','1'), treats w != 'ICBM' as a
+    # mismatch, and incorrectly returns 0.
+    #
+    # The logarithmic derivative sum(w, df/dx / f) then uses the symbolic body
+    # derivative and remains a proper indexed sum over w.
+    effective_wrt = wrt_indices
+    if wrt_indices is not None:
+        # Check for exact match: prod binds same number of indices as wrt_indices
+        if _sum_should_collapse(expr.index_sets, wrt_indices, config):
+            # Replace all concrete indices with symbolic prod indices
+            effective_wrt = expr.index_sets
+        elif len(wrt_indices) > len(expr.index_sets):
+            # Partial match: prod binds fewer indices than wrt_indices
+            # E.g., prod(w, f(w,t)) w.r.t. x('ICBM','1') — w binds 'ICBM', '1' is free
+            matched, _matched_concrete, _remaining, symbolic_wrt = _partial_index_match(
+                expr.index_sets, wrt_indices, config
+            )
+            if matched and symbolic_wrt is not None:
+                effective_wrt = symbolic_wrt
+
+    # Differentiate the body expression using effective (possibly symbolic) indices
+    body_derivative = differentiate_expr(expr.body, wrt_var, effective_wrt, config)
 
     # If body derivative is zero, the whole product derivative is zero
     if isinstance(body_derivative, Const) and body_derivative.value == 0.0:

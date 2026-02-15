@@ -16,6 +16,7 @@ from typing import Literal
 
 from src.ad.gradient import GradientVector
 from src.ad.jacobian import JacobianStructure
+from src.ir.ast import Expr
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef
 
@@ -126,6 +127,12 @@ class KKTSystem:
     # Metadata
     skipped_infinite_bounds: list[tuple[str, tuple, str]] = field(default_factory=list)
     duplicate_bounds_excluded: list[str] = field(default_factory=list)
+
+    # Issue #724: Variable access conditions for stationarity equations.
+    # Maps var_name -> condition Expr for variables whose stationarity equation
+    # has a dollar condition (variable is only active under that condition).
+    # Used by the emitter to generate .fx statements for excluded instances.
+    stationarity_conditions: dict[str, Expr] = field(default_factory=dict)
 
     # Scaling factors (optional, computed when --scale is used)
     scaling_row_factors: list[float] | None = None

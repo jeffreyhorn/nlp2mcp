@@ -365,9 +365,13 @@ Variables x;   // Another comment""")
 
         # $eolCom directive should be stripped
         assert "* [Stripped: $eolCom //]" in result
-        # Comments should remain (handled by grammar)
-        assert "// This is a comment" in result
-        assert "// Another comment" in result
+        # Issue #722: End-of-line comments are now stripped by preprocessor
+        # (before multiline joining) so they don't get embedded in joined lines
+        assert "// This is a comment" not in result
+        assert "// Another comment" not in result
+        # The code before the comment should be preserved
+        assert "Set i /1*10/;" in result
+        assert "Variables x;" in result
 
     def test_preprocessing_with_multiple_macros(self, tmp_path: Path):
         """Test preprocessing with multiple macro definitions."""
@@ -473,7 +477,7 @@ Variables x;""")
         assert "* [Stripped: $ontext]" in result
         assert "* [Stripped: $offtext]" in result
         assert "* Documentation block" in result
-        assert "// Index set" in result  # Comments preserved
+        assert "// Index set" not in result  # Issue #722: eol comments stripped
         assert "Variables x;" in result
 
     def test_accepts_path_or_string(self, tmp_path: Path):

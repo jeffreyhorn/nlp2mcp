@@ -63,9 +63,9 @@ class TestPowerDifferentiation:
         assert isinstance(result, Binary)
         assert result.op == "*"
 
-        # Left should be x^y
-        assert isinstance(result.left, Call)
-        assert result.left.func == "power"
+        # Left should be x^y (Binary("**", ...) for variable exponents)
+        assert isinstance(result.left, Binary)
+        assert result.left.op == "**"
 
     def test_power_negative_exponent(self):
         """Test d(x^-1)/dx = -1 * x^-2"""
