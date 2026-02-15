@@ -53,8 +53,9 @@ class ModelIR:
     # Set assignments (Sprint 18 Day 3: dynamic subset initialization)
     set_assignments: list[SetAssignment] = field(default_factory=list)
 
-    # Solve info
-    declared_model: str | None = None
+    # Solve info  (Issue #729: track *all* declared model names, lowercase)
+    declared_models: set[str] = field(default_factory=set)
+    _first_declared_model: str | None = field(default=None, repr=False)
     model_equations: list[str] = field(default_factory=list)
     model_uses_all: bool = False
     model_name: str | None = None
@@ -72,6 +73,19 @@ class ModelIR:
     complementarity_multipliers: dict[str, str] = field(
         default_factory=dict
     )  # mult_name -> constraint_name
+
+    # Backward-compatible property: returns first declared model name (or None)
+    @property
+    def declared_model(self) -> str | None:
+        return self._first_declared_model
+
+    @declared_model.setter
+    def declared_model(self, value: str | None) -> None:
+        if value is not None:
+            lv = value.lower()
+            self.declared_models.add(lv)
+            if self._first_declared_model is None:
+                self._first_declared_model = lv
 
     def add_set(self, s: SetDef) -> None:
         self.sets[s.name] = s
