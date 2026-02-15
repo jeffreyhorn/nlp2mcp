@@ -3356,13 +3356,18 @@ class _ModelBuilder:
                 # Only validate index count if the parameter has an explicit domain declaration.
                 # For parameters without an explicit domain, index count is not validated.
                 # (e.g., mathopt1.gms: Parameter report; report('x1','global') = 1;)
+                # Issue #726: When a multi-dimensional set is used as a single index
+                # (e.g., rp(ll,s) where ll(s,s) is 2D), GAMS implicitly expands the
+                # set's dimensions. Compute effective index count by summing each
+                # index's dimensionality.
                 if len(param.domain) > 0 and len(indices) != len(param.domain):
-                    index_word = "index" if len(param.domain) == 1 else "indices"
-                    raise self._parse_error(
-                        f"Parameter '{symbol_name}' expects {len(param.domain)} {index_word}, got {len(indices)}",
-                        target,
-                        suggestion=f"Provide exactly {len(param.domain)} {index_word} to match the parameter declaration",
-                    )
+                    if self._effective_index_count(indices) != len(param.domain):
+                        index_word = "index" if len(param.domain) == 1 else "indices"
+                        raise self._parse_error(
+                            f"Parameter '{symbol_name}' expects {len(param.domain)} {index_word}, got {len(indices)}",
+                            target,
+                            suggestion=f"Provide exactly {len(param.domain)} {index_word} to match the parameter declaration",
+                        )
 
                 # Issue #622: Handle domain-over assignments like f(j,"k2") = 0 where
                 # some indices are domain set names that should be expanded over all
@@ -4127,12 +4132,14 @@ class _ModelBuilder:
         idx_tuple = tuple(expanded_indices)
         if name in self.model.variables:
             expected = self.model.variables[name].domain
+            # Issue #726: allow multi-dimensional sets as compact indices
             if len(expected) != len(idx_tuple):
-                index_word = "index" if len(expected) == 1 else "indices"
-                raise self._error(
-                    f"Variable '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)}",
-                    node,
-                )
+                if self._effective_index_count(idx_tuple) != len(expected):
+                    index_word = "index" if len(expected) == 1 else "indices"
+                    raise self._error(
+                        f"Variable '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)}",
+                        node,
+                    )
             expr = VarRef(name, idx_tuple)
             object.__setattr__(expr, "symbol_domain", expected)
             object.__setattr__(expr, "index_values", idx_tuple)
@@ -4142,12 +4149,14 @@ class _ModelBuilder:
             # In GAMS, validation is skipped only for parameters with empty domains (true scalars),
             # allowing them to be implicitly expanded when used with indices. For parameters with an
             # explicit domain, the number of indices must match the domain length.
+            # Issue #726: allow multi-dimensional sets as compact indices
             if len(expected) > 0 and len(expected) != len(idx_tuple):
-                index_word = "index" if len(expected) == 1 else "indices"
-                raise self._error(
-                    f"Parameter '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)}",
-                    node,
-                )
+                if self._effective_index_count(idx_tuple) != len(expected):
+                    index_word = "index" if len(expected) == 1 else "indices"
+                    raise self._error(
+                        f"Parameter '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)}",
+                        node,
+                    )
             expr = ParamRef(name, idx_tuple)
             object.__setattr__(expr, "symbol_domain", expected)
             object.__setattr__(expr, "index_values", idx_tuple)
@@ -4792,6 +4801,22 @@ class _ModelBuilder:
             seen.add(name)
             return self._resolve_set_def(alias.target, seen, node)
         return None
+
+    def _effective_index_count(self, indices: list[str] | tuple[str, ...]) -> int:
+        """Compute effective index count, expanding multi-dimensional sets.
+
+        In GAMS, a multi-dimensional set used as a single index position
+        implicitly expands to fill multiple positions.  E.g., rp(ll, s)
+        where ll(s,s) is 2-D effectively supplies 3 indices.
+        """
+        count = 0
+        for idx in indices:
+            set_def = self.model.sets.get(idx)
+            if set_def is not None and len(set_def.domain) > 1:
+                count += len(set_def.domain)
+            else:
+                count += 1
+        return count
 
     def _verify_member_in_domain(
         self,
