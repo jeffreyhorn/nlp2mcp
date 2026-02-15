@@ -4,6 +4,8 @@ This module orchestrates all emission components to generate a complete
 GAMS MCP file from a KKT system.
 """
 
+import math
+
 from src.config import Config
 from src.emit.expr_to_gams import expr_to_gams
 from src.emit.model import emit_model_mcp, emit_solve
@@ -300,8 +302,18 @@ def emit_gams_mcp(
             domain_str = ",".join(var_def.domain)
             domain_vars = frozenset(var_def.domain)
             cond_gams = expr_to_gams(cond_expr, domain_vars=domain_vars)
-            lo_val = var_def.lo if var_def.lo is not None else 0
-            fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {lo_val};")
+            # Choose a finite fixing value: prefer fx, then lo (if finite),
+            # then up (if finite), else 0.  Infinite bounds (-inf/+inf or None)
+            # cannot be emitted as GAMS .fx values.
+            if var_def.fx is not None and math.isfinite(var_def.fx):
+                fix_val = var_def.fx
+            elif var_def.lo is not None and math.isfinite(var_def.lo):
+                fix_val = var_def.lo
+            elif var_def.up is not None and math.isfinite(var_def.up):
+                fix_val = var_def.up
+            else:
+                fix_val = 0
+            fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {fix_val};")
 
     # 2. Fix multipliers whose complementarity equation has a condition
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):

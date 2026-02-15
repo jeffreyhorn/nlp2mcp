@@ -86,7 +86,9 @@ def _find_variable_access_condition(
         lhs, rhs = eq_def.lhs_rhs
         # Check both sides of the equation
         for side_expr in (lhs, rhs):
-            conditions = _collect_access_conditions(side_expr, var_name, var_domain_set, set())
+            conditions = _collect_access_conditions(
+                side_expr, var_name, var_domain_set, has_enclosing_condition=False
+            )
             if conditions is None:
                 # Variable not found in this expression — skip
                 continue
@@ -111,25 +113,40 @@ def _collect_access_conditions(
     expr: Expr,
     var_name: str,
     var_domain_set: set[str],
-    enclosing_conditions: set[str],
+    has_enclosing_condition: bool,
 ) -> list[Expr] | None:
-    """Recursively collect conditions that guard access to a variable.
+    """Recursively collect the nearest guarding condition for each variable access.
 
-    Returns a list of condition Exprs for each access point, or None if the
-    variable is not found in this expression subtree.
+    Walks the expression tree looking for VarRef nodes matching *var_name*.
+    When a variable access is found inside a conditioned Sum/Prod whose bound
+    indices overlap the variable's domain, the **nearest** (innermost) such
+    condition is returned.
+
+    Note: only the single nearest condition is captured per access point.
+    If a variable is nested inside multiple conditioned aggregations
+    (e.g., ``sum(i$c1, sum(j$c2, x(i,j)))``), only the innermost
+    condition (``c2``) is returned.  The caller in
+    ``_find_variable_access_condition`` then checks whether all collected
+    conditions are structurally identical before using one as the equation's
+    dollar condition.  This is sufficient for the common GAMS pattern where
+    a single condition guards all accesses to a variable.
+
+    Returns:
+        A list of condition Exprs (one per access point found), or ``None``
+        if the variable is not found in this subtree.  An empty list ``[]``
+        means the variable was found with no guarding condition.
 
     Args:
         expr: Expression to walk
         var_name: Variable name to search for
         var_domain_set: Set of the variable's domain index names
-        enclosing_conditions: Set of repr() strings for conditions already in scope
+        has_enclosing_condition: Whether we are already inside a conditioned
+            Sum/Prod that binds a relevant index
     """
     if isinstance(expr, VarRef):
         if expr.name == var_name:
-            # Found the variable — return current enclosing conditions
-            if enclosing_conditions:
-                return []  # Will be filled by caller from Sum/Prod condition
-            return []  # Empty list = found, no condition
+            # Found the variable — empty list signals "found, caller supplies condition"
+            return []
         return None
 
     if isinstance(expr, (Sum, Prod)):
@@ -142,10 +159,9 @@ def _collect_access_conditions(
             # Only walk the body — the condition expression itself is not a
             # variable-access context and must not be searched (Sum.children()
             # yields [condition, body], so we use expr.body directly).
-            new_conditions = enclosing_conditions | {repr(expr.condition)}
             results: list[Expr] = []
             child_result = _collect_access_conditions(
-                expr.body, var_name, var_domain_set, new_conditions
+                expr.body, var_name, var_domain_set, has_enclosing_condition=True
             )
             if child_result is not None:
                 if not child_result:
@@ -160,10 +176,10 @@ def _collect_access_conditions(
             # to avoid false positives from variables appearing in conditions).
             results = []
             child_result = _collect_access_conditions(
-                expr.body, var_name, var_domain_set, enclosing_conditions
+                expr.body, var_name, var_domain_set, has_enclosing_condition
             )
             if child_result is not None:
-                if not child_result and not enclosing_conditions:
+                if not child_result and not has_enclosing_condition:
                     # Found variable with no condition at all
                     return []
                 results.extend(child_result)
@@ -174,11 +190,11 @@ def _collect_access_conditions(
     found_any = False
     for child in expr.children():
         child_result = _collect_access_conditions(
-            child, var_name, var_domain_set, enclosing_conditions
+            child, var_name, var_domain_set, has_enclosing_condition
         )
         if child_result is not None:
             found_any = True
-            if not child_result and not enclosing_conditions:
+            if not child_result and not has_enclosing_condition:
                 # Found variable with no condition
                 return []
             other_results.extend(child_result)
