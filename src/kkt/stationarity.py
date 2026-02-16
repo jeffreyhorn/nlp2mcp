@@ -1267,13 +1267,17 @@ def _add_jacobian_transpose_terms_scalar(
                 constraint_element_to_set = _build_constraint_element_mapping(
                     element_to_set, eq_indices, mult_domain
                 )
-                # Replace concrete indices with symbolic set names
+                # Replace concrete indices with symbolic set names.
+                # Issue #730 review: pass mult_domain (not empty tuple) so
+                # _replace_indices_in_expr's `if indices and domain:` guards
+                # are satisfied and VarRef/ParamRef indices are lifted from
+                # concrete elements to symbolic set names before Sum wrapping.
                 indexed_deriv = _replace_indices_in_expr(
                     derivative,
-                    (),  # scalar variable has no domain
+                    mult_domain,
                     constraint_element_to_set,
                     kkt.model_ir,
-                    equation_domain=(),
+                    equation_domain=mult_domain,
                 )
                 mult_ref = MultiplierRef(mult_name, mult_domain)
                 term: Expr = Binary("*", indexed_deriv, mult_ref)
