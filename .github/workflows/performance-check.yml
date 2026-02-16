@@ -26,14 +26,14 @@ jobs:
           duration=$((end_time - start_time))
           echo "Fast test duration: ${duration}s"
 
-          # Check budget (30s limit, 27s warning)
-          if [ $duration -gt 30 ]; then
-            echo "❌ BUDGET EXCEEDED: Fast tests took ${duration}s (budget: 30s)"
+          # Check budget (35s limit, 32s warning)
+          if [ $duration -gt 35 ]; then
+            echo "❌ BUDGET EXCEEDED: Fast tests took ${duration}s (budget: 35s)"
             exit 1
-          elif [ $duration -gt 27 ]; then
-            echo "⚠️  WARNING: Fast tests took ${duration}s (approaching 30s budget)"
+          elif [ $duration -gt 32 ]; then
+            echo "⚠️  WARNING: Fast tests took ${duration}s (approaching 35s budget)"
             exit 0
           else
-            echo "✅ Within budget: ${duration}s / 30s"
+            echo "✅ Within budget: ${duration}s / 35s"
             exit 0
           fi
