@@ -53,12 +53,36 @@ if TYPE_CHECKING:
     from ..config import Config
     from ..ir.model_ir import ModelIR
 
+from ..ir.ast import Const
 from ..ir.normalize import NormalizedEquation
 from ..ir.symbols import EquationDef
 from .ad_core import apply_simplification, get_simplification_mode
 from .derivative_rules import differentiate_expr
 from .index_mapping import build_index_mapping, enumerate_variable_instances
 from .jacobian import JacobianStructure
+from .sparsity import find_variables_in_expr
+
+
+def _precompute_variable_instances(
+    model_ir: ModelIR,
+) -> list[tuple[str, list[tuple[str, ...]]]]:
+    """Precompute all variable instances once, avoiding repeated enumeration.
+
+    Returns:
+        List of (var_name, var_instances) tuples, sorted by variable name.
+        Each var_instances is a list of index tuples for that variable.
+    """
+    result = []
+    for var_name in sorted(model_ir.variables.keys()):
+        var_def = model_ir.variables[var_name]
+        var_instances = enumerate_variable_instances(var_def, model_ir)
+        result.append((var_name, var_instances))
+    return result
+
+
+def _is_zero_const(expr) -> bool:
+    """Check if an expression is a zero constant."""
+    return isinstance(expr, Const) and expr.value == 0
 
 
 def compute_constraint_jacobian(
@@ -144,16 +168,23 @@ def compute_constraint_jacobian(
         num_cols=base_index_mapping.num_vars,
     )
 
+    # Precompute variable instances once (avoids re-enumerating per constraint)
+    var_instances_cache = _precompute_variable_instances(model_ir)
+
     # Process equality constraints
-    _compute_equality_jacobian(model_ir, eq_index_mapping, J_h, normalized_eqs, config)
+    _compute_equality_jacobian(
+        model_ir, eq_index_mapping, J_h, normalized_eqs, config, var_instances_cache
+    )
 
     # Process inequality constraints
-    _compute_inequality_jacobian(model_ir, ineq_index_mapping, J_g, normalized_eqs, config)
+    _compute_inequality_jacobian(
+        model_ir, ineq_index_mapping, J_g, normalized_eqs, config, var_instances_cache
+    )
 
     # Process bounds from normalized_bounds
     # Note: If bounds are also in model.inequalities, they're already processed above
     # This handles cases where tests manually add to normalized_bounds without updating inequalities
-    _compute_bound_jacobian(model_ir, ineq_index_mapping, J_g, config)
+    _compute_bound_jacobian(model_ir, ineq_index_mapping, J_g, config, var_instances_cache)
 
     return J_h, J_g
 
@@ -284,12 +315,16 @@ def _compute_equality_jacobian(
     J_h: JacobianStructure,
     normalized_eqs: dict[str, NormalizedEquation] | None = None,
     config: Config | None = None,
+    var_instances_cache: list[tuple[str, list[tuple[str, ...]]]] | None = None,
 ) -> None:
     """
     Compute Jacobian for equality constraints: J_h[i,j] = ∂h_i/∂x_j.
 
     Processes all equations in ModelIR.equalities. Each equation is in normalized
     form (lhs - rhs), and represents h_i(x) = 0.
+
+    Uses sparsity pre-check to skip differentiation for variables that don't
+    appear in the constraint expression, and skips storing zero derivatives.
 
     Note: Equality constraints can come from two sources:
     - model.equations: User-defined equations with Rel.EQ
@@ -299,8 +334,17 @@ def _compute_equality_jacobian(
         model_ir: Model IR with equality constraints
         index_mapping: Index mapping for variables and equations
         J_h: Jacobian structure to populate (modified in place)
+        normalized_eqs: Optional normalized equations
+        config: Configuration for differentiation
+        var_instances_cache: Precomputed variable instances (avoids re-enumeration)
     """
     from .index_mapping import enumerate_equation_instances
+
+    # Precompute variable instances if not provided
+    if var_instances_cache is None:
+        var_instances_cache = _precompute_variable_instances(model_ir)
+
+    simp_mode = get_simplification_mode(config)
 
     for eq_name in model_ir.equalities:
         # Prefer normalized equations if provided, otherwise fall back to original
@@ -321,35 +365,35 @@ def _compute_equality_jacobian(
         eq_condition = eq_def.condition if hasattr(eq_def, "condition") else None
         eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir, eq_condition)
 
+        # Get equation expression template (before index substitution)
+        from ..ir.ast import Binary, Expr
+
+        base_expr: Expr
+        if isinstance(eq_def, EquationDef):
+            lhs, rhs = eq_def.lhs_rhs
+            base_expr = Binary("-", lhs, rhs)
+        else:
+            base_expr = eq_def.expr
+
+        # Sparsity pre-check: find which variables appear in this equation
+        referenced_vars = find_variables_in_expr(base_expr)
+
         for eq_indices in eq_instances:
             # Get row ID for this equation instance
             row_id = index_mapping.get_row_id(eq_name, eq_indices)
             if row_id is None:
                 continue
 
-            # Get equation expression (normalized form: lhs - rhs)
-            # For user-defined equations, we need to construct lhs - rhs
-            # For normalized bounds, the expression is already in the correct form
-            from ..ir.ast import Binary, Expr
-
-            constraint_expr: Expr
-            if isinstance(eq_def, EquationDef):
-                lhs, rhs = eq_def.lhs_rhs
-                constraint_expr = Binary("-", lhs, rhs)
-            else:
-                # This is a NormalizedEquation - expression is already constructed
-                constraint_expr = eq_def.expr
-
             # Substitute symbolic indices with concrete indices for this instance
+            constraint_expr = base_expr
             if eq_domain:
                 constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
 
-            # Differentiate w.r.t. each variable
-            for var_name in sorted(model_ir.variables.keys()):
-                var_def = model_ir.variables[var_name]
-
-                # Enumerate all instances of this variable
-                var_instances = enumerate_variable_instances(var_def, model_ir)
+            # Differentiate w.r.t. each variable (only those referenced)
+            for var_name, var_instances in var_instances_cache:
+                # Sparsity check: skip variables not referenced in this equation
+                if var_name not in referenced_vars:
+                    continue
 
                 for var_indices in var_instances:
                     col_id = index_mapping.get_col_id(var_name, var_indices)
@@ -357,15 +401,14 @@ def _compute_equality_jacobian(
                         continue
 
                     # Differentiate constraint w.r.t. this specific variable instance
-                    # Use index-aware differentiation
                     derivative = differentiate_expr(constraint_expr, var_name, var_indices, config)
 
                     # Simplify derivative expression based on config
-                    mode = get_simplification_mode(config)
-                    derivative = apply_simplification(derivative, mode)
+                    derivative = apply_simplification(derivative, simp_mode)
 
-                    # Store in Jacobian (only if non-zero - sparsity optimization happens in simplification)
-                    J_h.set_derivative(row_id, col_id, derivative)
+                    # Store in Jacobian only if non-zero
+                    if not _is_zero_const(derivative):
+                        J_h.set_derivative(row_id, col_id, derivative)
 
 
 def _compute_inequality_jacobian(
@@ -374,12 +417,16 @@ def _compute_inequality_jacobian(
     J_g: JacobianStructure,
     normalized_eqs: dict[str, NormalizedEquation] | None = None,
     config: Config | None = None,
+    var_instances_cache: list[tuple[str, list[tuple[str, ...]]]] | None = None,
 ) -> None:
     """
     Compute Jacobian for inequality constraints: J_g[i,j] = ∂g_i/∂x_j.
 
     Processes all equations in ModelIR.inequalities. Each equation is in normalized
     form (lhs - rhs ≤ 0), representing g_i(x) ≤ 0.
+
+    Uses sparsity pre-check to skip differentiation for variables that don't
+    appear in the constraint expression, and skips storing zero derivatives.
 
     Note: This now includes bounds from normalized_bounds, which are also in
     model.inequalities.
@@ -388,8 +435,17 @@ def _compute_inequality_jacobian(
         model_ir: Model IR with inequality constraints
         index_mapping: Index mapping for variables and equations
         J_g: Jacobian structure to populate (modified in place)
+        normalized_eqs: Optional normalized equations
+        config: Configuration for differentiation
+        var_instances_cache: Precomputed variable instances (avoids re-enumeration)
     """
     from .index_mapping import enumerate_equation_instances
+
+    # Precompute variable instances if not provided
+    if var_instances_cache is None:
+        var_instances_cache = _precompute_variable_instances(model_ir)
+
+    simp_mode = get_simplification_mode(config)
 
     for eq_name in model_ir.inequalities:
         # Prefer normalized equation if provided, otherwise fall back to original
@@ -408,34 +464,35 @@ def _compute_inequality_jacobian(
         eq_condition = eq_def.condition if hasattr(eq_def, "condition") else None
         eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir, eq_condition)
 
+        # Get equation expression template (before index substitution)
+        from ..ir.ast import Binary, Expr
+
+        base_expr: Expr
+        if isinstance(eq_def, EquationDef):
+            lhs, rhs = eq_def.lhs_rhs
+            base_expr = Binary("-", lhs, rhs)
+        else:
+            base_expr = eq_def.expr
+
+        # Sparsity pre-check: find which variables appear in this equation
+        referenced_vars = find_variables_in_expr(base_expr)
+
         for eq_indices in eq_instances:
             # Get row ID for this equation instance
             row_id = index_mapping.get_row_id(eq_name, eq_indices)
             if row_id is None:
                 continue
 
-            # Get equation expression (normalized form)
-            from ..ir.ast import Binary, Expr
-
-            constraint_expr: Expr
-            if isinstance(eq_def, EquationDef):
-                # Original equation - build normalized form
-                lhs, rhs = eq_def.lhs_rhs
-                constraint_expr = Binary("-", lhs, rhs)
-            else:
-                # NormalizedEquation - expression already in correct form
-                constraint_expr = eq_def.expr
-
             # Substitute symbolic indices with concrete indices for this instance
+            constraint_expr = base_expr
             if eq_domain:
                 constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
 
-            # Differentiate w.r.t. each variable
-            for var_name in sorted(model_ir.variables.keys()):
-                var_def = model_ir.variables[var_name]
-
-                # Enumerate all instances of this variable
-                var_instances = enumerate_variable_instances(var_def, model_ir)
+            # Differentiate w.r.t. each variable (only those referenced)
+            for var_name, var_instances in var_instances_cache:
+                # Sparsity check: skip variables not referenced in this equation
+                if var_name not in referenced_vars:
+                    continue
 
                 for var_indices in var_instances:
                     col_id = index_mapping.get_col_id(var_name, var_indices)
@@ -446,15 +503,19 @@ def _compute_inequality_jacobian(
                     derivative = differentiate_expr(constraint_expr, var_name, var_indices, config)
 
                     # Simplify derivative expression based on config
-                    mode = get_simplification_mode(config)
-                    derivative = apply_simplification(derivative, mode)
+                    derivative = apply_simplification(derivative, simp_mode)
 
-                    # Store in Jacobian
-                    J_g.set_derivative(row_id, col_id, derivative)
+                    # Store in Jacobian only if non-zero
+                    if not _is_zero_const(derivative):
+                        J_g.set_derivative(row_id, col_id, derivative)
 
 
 def _compute_bound_jacobian(
-    model_ir: ModelIR, index_mapping, J_g: JacobianStructure, config: Config | None = None
+    model_ir: ModelIR,
+    index_mapping,
+    J_g: JacobianStructure,
+    config: Config | None = None,
+    var_instances_cache: list[tuple[str, list[tuple[str, ...]]]] | None = None,
 ) -> None:
     """
     Compute Jacobian rows for bound-derived inequality constraints.
@@ -467,6 +528,9 @@ def _compute_bound_jacobian(
     - d(x(i) - lo(i))/dx(i) = 1, all other derivatives = 0
     - d(x(i) - up(i))/dx(i) = 1, all other derivatives = 0
 
+    Uses sparsity pre-check to skip differentiation for variables that don't
+    appear in the bound expression, and skips storing zero derivatives.
+
     Note: If bounds are also in model.inequalities, they're already processed by
     _compute_inequality_jacobian(), so we skip them here to avoid duplication.
 
@@ -474,7 +538,15 @@ def _compute_bound_jacobian(
         model_ir: Model IR with normalized bounds
         index_mapping: Index mapping for variables and equations
         J_g: Jacobian structure to populate (modified in place)
+        config: Configuration for differentiation
+        var_instances_cache: Precomputed variable instances (avoids re-enumeration)
     """
+    # Precompute variable instances if not provided
+    if var_instances_cache is None:
+        var_instances_cache = _precompute_variable_instances(model_ir)
+
+    simp_mode = get_simplification_mode(config)
+
     for bound_name, norm_eq in sorted(model_ir.normalized_bounds.items()):
         # Skip if this bound is already in inequalities (processed by _compute_inequality_jacobian)
         if bound_name in model_ir.inequalities:
@@ -490,12 +562,14 @@ def _compute_bound_jacobian(
         # Get bound expression (already normalized)
         bound_expr = norm_eq.expr
 
-        # Differentiate w.r.t. each variable
-        for var_name in sorted(model_ir.variables.keys()):
-            var_def = model_ir.variables[var_name]
+        # Sparsity pre-check: find which variables appear in this bound expression
+        referenced_vars = find_variables_in_expr(bound_expr)
 
-            # Enumerate all instances of this variable
-            var_instances = enumerate_variable_instances(var_def, model_ir)
+        # Differentiate w.r.t. each variable (only those referenced)
+        for var_name, var_instances in var_instances_cache:
+            # Sparsity check: skip variables not referenced in this bound
+            if var_name not in referenced_vars:
+                continue
 
             for var_indices in var_instances:
                 col_id = index_mapping.get_col_id(var_name, var_indices)
@@ -506,11 +580,11 @@ def _compute_bound_jacobian(
                 derivative = differentiate_expr(bound_expr, var_name, var_indices, config)
 
                 # Simplify derivative expression based on config
-                mode = get_simplification_mode(config)
-                derivative = apply_simplification(derivative, mode)
+                derivative = apply_simplification(derivative, simp_mode)
 
-                # Store in Jacobian
-                J_g.set_derivative(row_id, col_id, derivative)
+                # Store in Jacobian only if non-zero
+                if not _is_zero_const(derivative):
+                    J_g.set_derivative(row_id, col_id, derivative)
 
 
 def _count_equation_instances(model_ir: ModelIR, equation_names: list[str]) -> int:
