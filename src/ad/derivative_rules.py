@@ -599,11 +599,19 @@ def _diff_call(
         return _diff_smin(expr, wrt_var, wrt_indices, config)
     elif func == "smax":
         return _diff_smax(expr, wrt_var, wrt_indices, config)
+    elif func in ("sameas", "card", "ord"):
+        # GAMS set operations: constant with respect to decision variables.
+        # sameas(a,b) = Kronecker delta (0 or 1 based on set element identity)
+        # card(s) = cardinality of set s
+        # ord(s) = ordinal position of set element
+        # Derivative is always 0.
+        return Const(0.0)
     else:
         # Future: Other functions
         raise ValueError(
             f"Differentiation not yet implemented for function '{func}'. "
-            f"Supported functions: power, exp, log, log10, log2, sqrt, sin, cos, tan, abs, sqr, smin, smax. "
+            f"Supported functions: power, exp, log, log10, log2, sqrt, sin, cos, tan, "
+            f"abs, sqr, smin, smax, sameas, card, ord. "
             f"Note: abs() requires --smooth-abs flag (non-differentiable at x=0)."
         )
 
