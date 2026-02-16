@@ -738,3 +738,61 @@ class TestTranscendentalErrors:
             ValueError, match="Differentiation not yet implemented for function 'asin'"
         ):
             differentiate_expr(expr, "x")
+
+
+# ============================================================================
+# GAMS Set Operation Tests (sameas, card, ord)
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestSetOperationDifferentiation:
+    """Tests for GAMS set operations that are constant w.r.t. decision variables."""
+
+    def test_sameas_derivative_is_zero(self):
+        """sameas(a,b) is constant w.r.t. variables, derivative is 0."""
+        from src.ir.ast import SymbolRef
+
+        expr = Call("sameas", (SymbolRef("s"), SymbolRef("s1")))
+        result = differentiate_expr(expr, "x")
+        assert isinstance(result, Const) and result.value == 0.0
+
+    def test_card_derivative_is_zero(self):
+        """card(s) is constant w.r.t. variables, derivative is 0."""
+        from src.ir.ast import SymbolRef
+
+        expr = Call("card", (SymbolRef("s"),))
+        result = differentiate_expr(expr, "x")
+        assert isinstance(result, Const) and result.value == 0.0
+
+    def test_ord_derivative_is_zero(self):
+        """ord(s) is constant w.r.t. variables, derivative is 0."""
+        from src.ir.ast import SymbolRef
+
+        expr = Call("ord", (SymbolRef("s"),))
+        result = differentiate_expr(expr, "x")
+        assert isinstance(result, Const) and result.value == 0.0
+
+    def test_sameas_wrong_arity(self):
+        """sameas with wrong number of arguments raises ValueError."""
+        from src.ir.ast import SymbolRef
+
+        expr = Call("sameas", (SymbolRef("s"),))
+        with pytest.raises(ValueError, match="sameas\\(\\) expects 2 arguments, got 1"):
+            differentiate_expr(expr, "x")
+
+    def test_card_wrong_arity(self):
+        """card with wrong number of arguments raises ValueError."""
+        from src.ir.ast import SymbolRef
+
+        expr = Call("card", (SymbolRef("s"), SymbolRef("s1")))
+        with pytest.raises(ValueError, match="card\\(\\) expects 1 argument, got 2"):
+            differentiate_expr(expr, "x")
+
+    def test_ord_wrong_arity(self):
+        """ord with wrong number of arguments raises ValueError."""
+        from src.ir.ast import SymbolRef
+
+        expr = Call("ord", (SymbolRef("s"), SymbolRef("s1")))
+        with pytest.raises(ValueError, match="ord\\(\\) expects 1 argument, got 2"):
+            differentiate_expr(expr, "x")

@@ -604,6 +604,10 @@ def _diff_call(
         # sameas(a,b) = Kronecker delta (0 or 1 based on set element identity)
         # card(s) = cardinality of set s
         # ord(s) = ordinal position of set element
+        expected_arity = 2 if func == "sameas" else 1
+        if len(expr.args) != expected_arity:
+            arg_word = "argument" if expected_arity == 1 else "arguments"
+            raise ValueError(f"{func}() expects {expected_arity} {arg_word}, got {len(expr.args)}")
         # Derivative is always 0.
         return Const(0.0)
     else:
