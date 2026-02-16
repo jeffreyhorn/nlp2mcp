@@ -134,6 +134,12 @@ class KKTSystem:
     # Used by the emitter to generate .fx statements for excluded instances.
     stationarity_conditions: dict[str, Expr] = field(default_factory=dict)
 
+    # Issue #742: Variables actually referenced in equations/objective.
+    # Populated by build_stationarity_equations() so the emitter can exclude
+    # unreferenced variables (e.g., dumshr, dumtg) from declarations and MCP pairs.
+    # None means no filtering was performed (backwards compatible).
+    referenced_variables: set[str] | None = None
+
     # Scaling factors (optional, computed when --scale is used)
     scaling_row_factors: list[float] | None = None
     scaling_col_factors: list[float] | None = None

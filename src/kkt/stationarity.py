@@ -357,6 +357,8 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
     if kkt.model_ir.equations:
         referenced_vars = _collect_referenced_variable_names(kkt.model_ir)
         var_groups = {name: insts for name, insts in var_groups.items() if name in referenced_vars}
+        # Store on KKT system so the emitter can also filter variable declarations
+        kkt.referenced_variables = referenced_vars
 
     # For each variable, generate either indexed or scalar stationarity equation
     for var_name, instances in var_groups.items():

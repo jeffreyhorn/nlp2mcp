@@ -96,8 +96,11 @@ def emit_variables(kkt: KKTSystem) -> str:
         VarKind.INTEGER: [],
     }
 
-    # Group primal variables by kind
+    # Group primal variables by kind, excluding unreferenced variables
     for var_name, var_def in kkt.model_ir.variables.items():
+        # Issue #742: Skip variables not referenced in any equation/objective
+        if kkt.referenced_variables is not None and var_name not in kkt.referenced_variables:
+            continue
         var_groups[var_def.kind].append((var_name, var_def.domain))
 
     # Add multipliers to appropriate groups

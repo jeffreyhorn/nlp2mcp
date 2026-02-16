@@ -123,7 +123,12 @@ def emit_gams_mcp(
         sections.append("")
 
     # Sprint 17 Day 4: Emit computed parameter assignments
-    computed_params_code = emit_computed_parameter_assignments(kkt.model_ir)
+    # Split into two passes: regular assignments go here (before Variables),
+    # while .l-referencing calibration assignments are deferred until after
+    # Variables are declared (GAMS requires variable declaration before .l access).
+    computed_params_code = emit_computed_parameter_assignments(
+        kkt.model_ir, varref_filter="no_varref_attr"
+    )
     if computed_params_code:
         sections.append(computed_params_code)
         sections.append("")
@@ -154,6 +159,9 @@ def emit_gams_mcp(
     has_positive_clamp = False  # Track if any POSITIVE variable clamping is done
     has_positive_init = False  # Track if any POSITIVE variable is initialized to 1
     for var_name, var_def in kkt.model_ir.variables.items():
+        # Issue #742: Skip unreferenced variables (not declared, so no init needed)
+        if kkt.referenced_variables is not None and var_name not in kkt.referenced_variables:
+            continue
         has_init = False
 
         # Priority 1: Check for explicit level values (l_map) - these take precedence
@@ -250,6 +258,24 @@ def emit_gams_mcp(
             sections.append("* Additional initialization for smooth abs() approximation")
             sections.append("* (POSITIVE variables already initialized above)")
             sections.append("")
+
+    # Deferred .l-referencing calibration assignments (second pass).
+    # These must come after Variables are declared so GAMS recognizes var.l syntax.
+    # $onImplicitAssign suppresses GAMS Error 141 when reading .l from variables
+    # that have been declared and initialized but not explicitly data-assigned.
+    calibration_code = emit_computed_parameter_assignments(
+        kkt.model_ir, varref_filter="only_varref_attr"
+    )
+    if calibration_code:
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* Post-solve Calibration (variable .l references)")
+            sections.append("* ============================================")
+            sections.append("")
+        sections.append("$onImplicitAssign")
+        sections.append(calibration_code)
+        sections.append("$offImplicitAssign")
+        sections.append("")
 
     # Equations
     if add_comments:

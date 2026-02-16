@@ -16,7 +16,7 @@ import logging
 import re
 
 from src.emit.expr_to_gams import expr_to_gams
-from src.ir.ast import Expr, ParamRef
+from src.ir.ast import Expr, ParamRef, VarRef
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
@@ -737,7 +737,18 @@ def _expr_references_param(expr: Expr, param_name: str) -> bool:
     return any(_expr_references_param(child, param_name) for child in expr.children())
 
 
-def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
+def _expr_contains_varref_attribute(expr: Expr) -> bool:
+    """Check whether an expression tree contains a VarRef with an attribute.
+
+    Used to detect `.l`-referencing calibration assignments (e.g., ``x.l(i)``)
+    that must be emitted after the Variables declaration in GAMS.
+    """
+    if isinstance(expr, VarRef) and expr.attribute:
+        return True
+    return any(_expr_contains_varref_attribute(child) for child in expr.children())
+
+
+def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str = "all") -> str:
     """Emit computed parameter assignment statements.
 
     Sprint 17 Day 4: Emit expressions stored in ParameterDef.expressions as
@@ -747,6 +758,11 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
 
     Args:
         model_ir: Model IR containing parameter definitions with expressions
+        varref_filter: Controls which expressions are emitted based on whether
+            they contain attributed VarRef nodes (e.g., ``x.l(i)``):
+            - ``"all"``: Emit all expressions (default, backward compatible)
+            - ``"no_varref_attr"``: Skip expressions containing VarRef with attribute
+            - ``"only_varref_attr"``: Only emit expressions containing VarRef with attribute
 
     Returns:
         GAMS assignment statements as string
@@ -793,6 +809,17 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
             has_indexed_exprs = any(len(key) > 0 for key, _expr in param_def.expressions)
             if has_indexed_exprs:
                 continue
+
+        # Check if ANY expression for this parameter contains a VarRef attribute.
+        # If so, the entire parameter block (including multi-step follow-ups like
+        # self-referencing normalization) belongs together in the same emission pass.
+        param_has_varref_attr = any(
+            _expr_contains_varref_attribute(ex) for _, ex in param_def.expressions
+        )
+        if varref_filter == "no_varref_attr" and param_has_varref_attr:
+            continue
+        if varref_filter == "only_varref_attr" and not param_has_varref_attr:
+            continue
 
         # Emit each expression assignment (list preserves sequential ordering)
         # Track whether we've emitted any expression for this parameter so far,
