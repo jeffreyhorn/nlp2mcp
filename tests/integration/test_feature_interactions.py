@@ -87,8 +87,8 @@ result = sqrt(sum(i, data(i)));
 
             # Verify Call node exists
             param = model.params["result"]
-            assert () in param.expressions
-            expr = param.expressions[()]
+            assert any(k == () for k, _ in param.expressions)
+            expr = next(expr for k, expr in param.expressions if k == ())
             assert isinstance(expr, Call)
             assert expr.func == "sqrt"
 
@@ -168,7 +168,11 @@ result = sqrt(2*x + 2*y);
 
             # Verify Call node exists (parse-only in Sprint 10)
             assert "result" in model.params
-            expr = model.params["result"].expressions[()]
+            scalar_exprs = [e for k, e in model.params["result"].expressions if k == ()]
+            assert (
+                scalar_exprs
+            ), "Expected a scalar expression for 'result' with key (), but none was found."
+            expr = scalar_exprs[0]
             assert isinstance(expr, Call)
             assert expr.func == "sqrt"
 

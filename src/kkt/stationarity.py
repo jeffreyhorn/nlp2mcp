@@ -22,6 +22,8 @@ from __future__ import annotations
 from collections import ChainMap
 from collections.abc import Mapping
 
+from src.ad.ad_core import apply_simplification, get_simplification_mode
+from src.config import Config
 from src.ir.ast import (
     Binary,
     Call,
@@ -46,6 +48,60 @@ from src.kkt.naming import (
     sanitize_index_for_identifier,
 )
 from src.kkt.objective import extract_objective_info
+
+
+def _collect_referenced_variable_names(model_ir: ModelIR) -> set[str]:
+    """Collect names of all variables referenced in equation bodies or the objective.
+
+    Issue #742: Variables declared but never referenced in any equation body
+    or objective (like dummy/reporting variables) should be excluded from KKT
+    stationarity equation generation. This function walks all equation LHS/RHS
+    expressions and the objective to build a set of actually-referenced variable
+    names.
+
+    All names are lowercased to match the canonical form used by
+    CaseInsensitiveDict keys, ensuring case-insensitive comparison.
+
+    Args:
+        model_ir: Model IR containing equation definitions and objective
+
+    Returns:
+        Set of variable names (lowercase canonical form) that appear in at
+        least one equation or the objective
+    """
+    referenced: set[str] = set()
+
+    def _walk(expr: Expr) -> None:
+        # Record variable references by name (case-insensitive)
+        if isinstance(expr, VarRef):
+            referenced.add(expr.name.lower())
+
+        # Explicitly traverse any index expressions on reference-like nodes.
+        # VarRef.children() (and similar) do not include indices, so we must
+        # walk them here to catch variable references used in IndexOffset etc.
+        if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
+            for idx in expr.indices:
+                if isinstance(idx, Expr):
+                    _walk(idx)
+
+        for child in expr.children():
+            _walk(child)
+
+    for eq_def in model_ir.equations.values():
+        lhs, rhs = eq_def.lhs_rhs
+        _walk(lhs)
+        _walk(rhs)
+        if eq_def.condition is not None:
+            _walk(eq_def.condition)
+
+    # Include the objective variable (e.g., 'minimize r' references 'r')
+    if model_ir.objective and model_ir.objective.objvar:
+        referenced.add(model_ir.objective.objvar.lower())
+    # Walk objective expression if present
+    if model_ir.objective and model_ir.objective.expr:
+        _walk(model_ir.objective.expr)
+
+    return referenced
 
 
 def _collect_symbolref_names(expr: Expr) -> set[str]:
@@ -273,11 +329,17 @@ def _has_nonuniform_bounds(kkt: KKTSystem, var_name: str) -> bool:
     return nonuniform_lo or nonuniform_up
 
 
-def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
+def build_stationarity_equations(
+    kkt: KKTSystem, config: Config | None = None
+) -> dict[str, EquationDef]:
     """Build stationarity equations for all variable instances except objvar.
 
     For indexed variables, generates indexed equations with domains.
     For scalar variables, generates scalar equations.
+
+    After assembly, each stationarity expression is simplified using the
+    configured simplification mode (default: "advanced").  This eliminates
+    trivial terms such as ``0 * multiplier``, ``sum(i, 0)``, etc.
 
     Stationarity condition for variable x(i):
         ∂f/∂x(i) + Σ_j [∂h_j/∂x(i) · ν_j] + Σ_k [∂g_k/∂x(i) · λ_k]
@@ -285,6 +347,7 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
 
     Args:
         kkt: KKT system with gradient, Jacobians, and multipliers
+        config: Optional configuration (controls simplification level)
 
     Returns:
         Dictionary mapping stationarity equation names to EquationDef objects
@@ -308,6 +371,21 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
     should_skip_objvar = not kkt.model_ir.strategy1_applied and not obj_info.needs_stationarity
     objvar_to_skip = obj_info.objvar if should_skip_objvar else None
     var_groups = _group_variables_by_name(kkt, objvar_to_skip)
+
+    # Issue #742: Filter out variables that don't appear in any equation body
+    # or the objective. Unreferenced variables (e.g., dummy/reporting variables
+    # like dumshr, dumtg) produce trivial 0=0 stationarity equations that cause
+    # GAMS Error 69/483. Apply when there are equations or an objective to reference.
+    if kkt.model_ir.equations or kkt.model_ir.objective:
+        referenced_vars = _collect_referenced_variable_names(kkt.model_ir)
+        var_groups = {
+            name: insts for name, insts in var_groups.items() if name.lower() in referenced_vars
+        }
+        # Store on KKT system so the emitter can also filter variable declarations
+        kkt.referenced_variables = referenced_vars
+
+    # Resolve simplification mode once for all equations
+    simp_mode = get_simplification_mode(config)
 
     # For each variable, generate either indexed or scalar stationarity equation
     for var_name, instances in var_groups.items():
@@ -337,6 +415,7 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
                     stat_expr = _build_stationarity_expr(
                         kkt, col_id, var_name, var_indices, skip_eq
                     )
+                    stat_expr = apply_simplification(stat_expr, simp_mode)
                     stationarity[stat_name] = EquationDef(
                         name=stat_name,
                         domain=(),  # Scalar equation for this specific instance
@@ -349,6 +428,7 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
                 stat_expr = _build_indexed_stationarity_expr(
                     kkt, var_name, var_def.domain, instances, skip_eq
                 )
+                stat_expr = apply_simplification(stat_expr, simp_mode)
 
                 # Issue #724: Detect if the variable is only accessed under a
                 # common dollar condition (e.g., td(w,t)).  If so, add that
@@ -379,6 +459,7 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
             col_id, var_indices = instances[0]
             stat_name = f"stat_{var_name}"
             stat_expr = _build_stationarity_expr(kkt, col_id, var_name, var_indices, skip_eq)
+            stat_expr = apply_simplification(stat_expr, simp_mode)
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
                 domain=(),  # Empty domain for scalar
@@ -386,7 +467,30 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
                 lhs_rhs=(stat_expr, Const(0.0)),
             )
 
+    # Collect multiplier names that actually appear in simplified stationarity equations.
+    # After simplification, terms like 0 * nu_foo are eliminated, so those multipliers
+    # no longer appear. The emitter uses this set to skip unreferenced multipliers.
+    referenced_mults: set[str] = set()
+    for eq_def in stationarity.values():
+        lhs, _ = eq_def.lhs_rhs
+        _collect_multiplier_refs(lhs, referenced_mults)
+    kkt.referenced_multipliers = referenced_mults
+
     return stationarity
+
+
+def _collect_multiplier_refs(expr: Expr, result: set[str]) -> None:
+    """Walk an expression tree and collect all MultiplierRef names."""
+    if isinstance(expr, MultiplierRef):
+        result.add(expr.name)
+        # Explicitly traverse index expressions (MultiplierRef.children()
+        # does not yield indices). Mirrors the fix in
+        # _collect_referenced_variable_names for consistency.
+        for idx in expr.indices:
+            if isinstance(idx, Expr):
+                _collect_multiplier_refs(idx, result)
+    for child in expr.children():
+        _collect_multiplier_refs(child, result)
 
 
 def _group_variables_by_name(

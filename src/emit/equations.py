@@ -365,11 +365,18 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
             all_aliases.update(aliases)
         lines.append("")
 
+    # Skip complementarity equations whose multiplier was simplified away
+    # Also skip bound complementarity for unreferenced primal variables
+    ref_mults = kkt.referenced_multipliers
+    ref_vars = kkt.referenced_variables
+
     # Inequality complementarity equations (includes min/max complementarity)
     if kkt.complementarity_ineq:
         lines.append("* Inequality complementarity equations")
         for eq_name in sorted(kkt.complementarity_ineq.keys()):
             comp_pair = kkt.complementarity_ineq[eq_name]
+            if ref_mults is not None and comp_pair.variable not in ref_mults:
+                continue
             eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
             lines.append(eq_str)
             all_aliases.update(aliases)
@@ -380,6 +387,10 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
         lines.append("* Lower bound complementarity equations")
         for key in sorted(kkt.complementarity_bounds_lo.keys()):
             comp_pair = kkt.complementarity_bounds_lo[key]
+            if ref_mults is not None and comp_pair.variable not in ref_mults:
+                continue
+            if ref_vars is not None and key[0].lower() not in ref_vars:
+                continue
             eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
             lines.append(eq_str)
             all_aliases.update(aliases)
@@ -390,6 +401,10 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
         lines.append("* Upper bound complementarity equations")
         for key in sorted(kkt.complementarity_bounds_up.keys()):
             comp_pair = kkt.complementarity_bounds_up[key]
+            if ref_mults is not None and comp_pair.variable not in ref_mults:
+                continue
+            if ref_vars is not None and key[0].lower() not in ref_vars:
+                continue
             eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
             lines.append(eq_str)
             all_aliases.update(aliases)
@@ -399,8 +414,24 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
     # These include the objective defining equation and fixed variable equalities
     # Note: Equalities can be in either equations dict or normalized_bounds dict
     if kkt.model_ir.equalities:
+        from src.kkt.naming import create_eq_multiplier_name
+        from src.kkt.objective import extract_objective_info
+
+        try:
+            obj_info = extract_objective_info(kkt.model_ir)
+            objdef_eq = obj_info.defining_equation
+        except ValueError:
+            objdef_eq = None
+
         lines.append("* Original equality equations")
         for eq_name in kkt.model_ir.equalities:
+            # Skip equations whose multiplier was simplified away,
+            # but always keep the objective-defining equation (paired with objvar)
+            is_objdef = eq_name == objdef_eq and not kkt.model_ir.strategy1_applied
+            if not is_objdef and ref_mults is not None:
+                mult_name = create_eq_multiplier_name(eq_name)
+                if mult_name not in ref_mults:
+                    continue
             # Check both equations dict and normalized_bounds dict
             # Fixed variables (.fx) create equalities stored in normalized_bounds
             if eq_name in kkt.model_ir.equations:

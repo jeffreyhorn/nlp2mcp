@@ -66,9 +66,13 @@ class ParameterDef:
     name: str
     domain: tuple[str, ...] = ()  # e.g., ("i","j")
     values: dict[tuple[str, ...], float] = field(default_factory=dict)
-    expressions: dict[tuple[str, ...], Expr] = field(
-        default_factory=dict
-    )  # Sprint 10 Day 4: Store function calls as expressions
+    expressions: list[tuple[tuple[str, ...], Expr]] = field(
+        default_factory=list
+    )  # Sprint 10 Day 4: Store function calls/computed assignments as ordered list
+    # Issue #741: Changed from dict to list to preserve sequential assignment order
+    # for multi-step calibration patterns like:
+    #   deltaq(sc) = f(x.l, m.l, ...)     <- Step 1
+    #   deltaq(sc) = deltaq(sc)/(1+deltaq(sc))  <- Step 2 (same key)
 
 
 @dataclass

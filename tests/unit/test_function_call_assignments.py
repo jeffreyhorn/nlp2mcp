@@ -37,8 +37,8 @@ minval = min(a, b);
     param = model.params["minval"]
 
     # Verify expression is stored (not evaluated)
-    assert () in param.expressions
-    expr = param.expressions[()]
+    assert any(k == () for k, _ in param.expressions)
+    expr = next(expr for k, expr in param.expressions if k == ())
     assert isinstance(expr, Call)
     assert expr.func == "min"
     assert len(expr.args) == 2
@@ -62,8 +62,8 @@ maxval = max(a, max(b, c));
     assert "maxval" in model.params
     param = model.params["maxval"]
 
-    assert () in param.expressions
-    expr = param.expressions[()]
+    assert any(k == () for k, _ in param.expressions)
+    expr = next(expr for k, expr in param.expressions if k == ())
     assert isinstance(expr, Call)
     assert expr.func == "max"
 
@@ -89,8 +89,8 @@ c = sqrt(sqr(a) + sqr(b));
     assert "c" in model.params
     param = model.params["c"]
 
-    assert () in param.expressions
-    expr = param.expressions[()]
+    assert any(k == () for k, _ in param.expressions)
+    expr = next(expr for k, expr in param.expressions if k == ())
     assert isinstance(expr, Call)
     assert expr.func == "sqrt"
 
@@ -112,8 +112,8 @@ result = log(exp(sqrt(x)));
     assert "result" in model.params
     param = model.params["result"]
 
-    assert () in param.expressions
-    expr = param.expressions[()]
+    assert any(k == () for k, _ in param.expressions)
+    expr = next(expr for k, expr in param.expressions if k == ())
     # Top-level should be log()
     assert isinstance(expr, Call)
     assert expr.func == "log"
@@ -162,8 +162,8 @@ y2opt = log(y1opt);
     assert "y2opt" in model.params
     param = model.params["y2opt"]
 
-    assert () in param.expressions
-    expr = param.expressions[()]
+    assert any(k == () for k, _ in param.expressions)
+    expr = next(expr for k, expr in param.expressions if k == ())
     assert isinstance(expr, Call)
     assert expr.func == "log"
 
@@ -182,15 +182,15 @@ p3 = -3.14;
     # Verify all parameters are stored as values (not expressions)
     assert "p1" in model.params
     assert model.params["p1"].values[()] == 5
-    assert () not in model.params["p1"].expressions
+    assert not any(k == () for k, _ in model.params["p1"].expressions)
 
     assert "p2" in model.params
     assert model.params["p2"].values[()] == 10.5
-    assert () not in model.params["p2"].expressions
+    assert not any(k == () for k, _ in model.params["p2"].expressions)
 
     assert "p3" in model.params
     assert model.params["p3"].values[()] == -3.14
-    assert () not in model.params["p3"].expressions
+    assert not any(k == () for k, _ in model.params["p3"].expressions)
 
 
 def test_mixed_assignments(tmp_path):
@@ -209,18 +209,18 @@ maxval = max(a, max(b, c));
 
     # Verify function call assignments
     assert "minval" in model.params
-    assert () in model.params["minval"].expressions
-    assert isinstance(model.params["minval"].expressions[()], Call)
+    assert any(k == () for k, _ in model.params["minval"].expressions)
+    assert isinstance(next(expr for k, expr in model.params["minval"].expressions if k == ()), Call)
 
     # Verify simple assignment
     assert "constant" in model.params
     assert model.params["constant"].values[()] == 42
-    assert () not in model.params["constant"].expressions
+    assert not any(k == () for k, _ in model.params["constant"].expressions)
 
     # Verify another function call
     assert "maxval" in model.params
-    assert () in model.params["maxval"].expressions
-    assert isinstance(model.params["maxval"].expressions[()], Call)
+    assert any(k == () for k, _ in model.params["maxval"].expressions)
+    assert isinstance(next(expr for k, expr in model.params["maxval"].expressions if k == ()), Call)
 
 
 def test_power_function(tmp_path):
@@ -237,8 +237,8 @@ result = power(base, exponent);
     assert "result" in model.params
     param = model.params["result"]
 
-    assert () in param.expressions
-    expr = param.expressions[()]
+    assert any(k == () for k, _ in param.expressions)
+    expr = next(expr for k, expr in param.expressions if k == ())
     assert isinstance(expr, Call)
     assert expr.func == "power"
     assert len(expr.args) == 2
@@ -258,18 +258,22 @@ ceiling = ceil(p);
 
     # Verify round function
     assert "rounded" in model.params
-    assert () in model.params["rounded"].expressions
-    assert isinstance(model.params["rounded"].expressions[()], Call)
-    assert model.params["rounded"].expressions[()].func == "round"
+    assert any(k == () for k, _ in model.params["rounded"].expressions)
+    assert isinstance(
+        next(expr for k, expr in model.params["rounded"].expressions if k == ()), Call
+    )
+    assert next(expr for k, expr in model.params["rounded"].expressions if k == ()).func == "round"
 
     # Verify mod function
     assert "modulo" in model.params
-    assert () in model.params["modulo"].expressions
-    assert isinstance(model.params["modulo"].expressions[()], Call)
-    assert model.params["modulo"].expressions[()].func == "mod"
+    assert any(k == () for k, _ in model.params["modulo"].expressions)
+    assert isinstance(next(expr for k, expr in model.params["modulo"].expressions if k == ()), Call)
+    assert next(expr for k, expr in model.params["modulo"].expressions if k == ()).func == "mod"
 
     # Verify ceil function
     assert "ceiling" in model.params
-    assert () in model.params["ceiling"].expressions
-    assert isinstance(model.params["ceiling"].expressions[()], Call)
-    assert model.params["ceiling"].expressions[()].func == "ceil"
+    assert any(k == () for k, _ in model.params["ceiling"].expressions)
+    assert isinstance(
+        next(expr for k, expr in model.params["ceiling"].expressions if k == ()), Call
+    )
+    assert next(expr for k, expr in model.params["ceiling"].expressions if k == ()).func == "ceil"

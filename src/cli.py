@@ -332,7 +332,7 @@ def main(
                         col_scales = C_ineq.tolist()
 
                 # Assemble KKT
-                kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+                kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq, config)
                 if config.scale != "none":
                     kkt.scaling_row_factors = row_scales
                     kkt.scaling_col_factors = col_scales
@@ -391,7 +391,7 @@ def main(
             if verbose:
                 click.echo("Assembling KKT system...")
 
-            kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+            kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq, config)
 
             # Store scaling factors in KKT system
             if config.scale != "none":

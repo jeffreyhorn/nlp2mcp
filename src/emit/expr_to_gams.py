@@ -389,10 +389,12 @@ def expr_to_gams(
             return name
 
         case VarRef() as var_ref:
+            # Issue #741: Support variable attribute access (e.g., x.l, v.m)
+            attr_suffix = f".{var_ref.attribute}" if var_ref.attribute else ""
             if var_ref.indices:
                 indices_str = _format_mixed_indices(var_ref.indices, domain_vars)
-                return f"{var_ref.name}({indices_str})"
-            return var_ref.name
+                return f"{var_ref.name}{attr_suffix}({indices_str})"
+            return f"{var_ref.name}{attr_suffix}"
 
         case ParamRef() as param_ref:
             if param_ref.indices:

@@ -151,10 +151,14 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                     pairs.append(f"    {eq_name}.{var_name}")
 
     # 2. Inequality complementarities (includes min/max complementarity)
+    # Skip pairs whose multiplier was simplified away from stationarity equations
+    ref_mults = kkt.referenced_multipliers
     if kkt.complementarity_ineq:
         pairs.append("")
         pairs.append("    * Inequality complementarities")
         for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
+            if ref_mults is not None and comp_pair.variable not in ref_mults:
+                continue
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
             # GAMS MCP syntax: list without indices - indexing is implicit
@@ -178,6 +182,9 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                 # (or objdef after Strategy 1)
                 # Find the multiplier name for this equation
                 mult_name = create_eq_multiplier_name(eq_name)
+                # Skip if multiplier was simplified away
+                if ref_mults is not None and mult_name not in ref_mults:
+                    continue
                 # GAMS MCP syntax: list without indices - indexing is implicit
                 pairs.append(f"    {eq_name}.{mult_name}")
 
@@ -186,10 +193,16 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
     #   comp_lo_x.piL_x (GAMS matches indices automatically)
     # For non-uniform bounds: scalar equation paired with scalar multiplier
     #   comp_lo_x_i1.piL_x_i1 (both are scalar, no indices needed)
+    # Also skip bounds for unreferenced primal variables (defense-in-depth)
+    ref_vars = kkt.referenced_variables
     if kkt.complementarity_bounds_lo:
         pairs.append("")
         pairs.append("    * Lower bound complementarities")
-        for _key, comp_pair in sorted(kkt.complementarity_bounds_lo.items()):
+        for key, comp_pair in sorted(kkt.complementarity_bounds_lo.items()):
+            if ref_mults is not None and comp_pair.variable not in ref_mults:
+                continue
+            if ref_vars is not None and key[0].lower() not in ref_vars:
+                continue
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
             # Both uniform (indexed) and non-uniform (scalar) cases use simple pairing
@@ -201,7 +214,11 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
     if kkt.complementarity_bounds_up:
         pairs.append("")
         pairs.append("    * Upper bound complementarities")
-        for _key, comp_pair in sorted(kkt.complementarity_bounds_up.items()):
+        for key, comp_pair in sorted(kkt.complementarity_bounds_up.items()):
+            if ref_mults is not None and comp_pair.variable not in ref_mults:
+                continue
+            if ref_vars is not None and key[0].lower() not in ref_vars:
+                continue
             eq_def = comp_pair.equation
             var_name = comp_pair.variable
             # Both uniform (indexed) and non-uniform (scalar) cases use simple pairing

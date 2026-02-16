@@ -37,10 +37,20 @@ class SymbolRef(Expr):
 
 @dataclass(frozen=True)
 class VarRef(Expr):
-    """Reference to a variable; indices are symbolic (strings or IndexOffset)."""
+    """Reference to a variable; indices are symbolic (strings or IndexOffset).
+
+    The optional ``attribute`` field captures GAMS variable attribute access
+    (e.g., ``.l``, ``.m``, ``.lo``, ``.up``).  When non-empty the emitter
+    renders ``name.attribute(indices)`` instead of ``name(indices)``.
+
+    Issue #741: Preserving the attribute allows calibration assignments that
+    reference ``.l`` values to be emitted as valid GAMS syntax rather than
+    being dropped by the parser's variable-reference filter.
+    """
 
     name: str
     indices: tuple[str | IndexOffset, ...] = ()
+    attribute: str = ""  # e.g. "l", "m", "lo", "up"; empty means bare variable ref
 
     def indices_as_strings(self) -> tuple[str, ...]:
         """Convert indices to strings, including IndexOffset in GAMS syntax."""
@@ -54,7 +64,9 @@ class VarRef(Expr):
 
     def __repr__(self) -> str:
         idx = ",".join(str(i) if isinstance(i, IndexOffset) else i for i in self.indices)
-        return f"VarRef({self.name}({idx}))" if idx else f"VarRef({self.name})"
+        attr = f".{self.attribute}" if self.attribute else ""
+        base = f"{self.name}{attr}"
+        return f"VarRef({base}({idx}))" if idx else f"VarRef({base})"
 
 
 @dataclass(frozen=True)

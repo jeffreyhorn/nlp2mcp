@@ -1,7 +1,7 @@
 # KKT Assembly: Unreferenced Variables Get Stationarity Equations (GAMS Error 69/483)
 
 **GitHub Issue:** [#742](https://github.com/jeffreyhorn/nlp2mcp/issues/742)
-**Status:** Open
+**Status:** Fixed
 **Severity:** Medium -- Generates invalid MCP pairs for unused variables
 **Discovered:** 2026-02-16 (Sprint 19, after fixing Issues #738 and #739)
 **Affected Models:** ganges, gangesx (and any model declaring variables not used in equations)
@@ -151,9 +151,27 @@ Note: Other models may have different unreferenced variables. The fix should be 
 
 ---
 
+## Fix Details
+
+**Approach:** Option A — Filter unreferenced variables from KKT system before stationarity equation generation.
+
+**Implementation:** In `build_stationarity_equations()` in `src/kkt/stationarity.py`:
+
+1. Added helper `_collect_referenced_variable_names(model_ir)` that walks all equation bodies (LHS, RHS, and conditions) plus the objective variable name and objective expression. Collects all `VarRef` names into a set.
+
+2. In `build_stationarity_equations()`, after grouping variable instances into `var_groups`, filter out any variable whose name is not in the referenced set. The filter only applies when `kkt.model_ir.equations` is non-empty (models with no equations, such as simple variable-objective tests, skip the filter to avoid incorrectly removing the objective variable).
+
+3. This eliminates stationarity equations, bound multipliers, and MCP pairings for unreferenced variables like `dumshr` and `dumtg`.
+
+**Result:** All instances of GAMS Error 69 and Error 483 eliminated for ganges/gangesx. Unreferenced variables no longer produce trivial `0 = 0` stationarity equations or invalid MCP pairings.
+
+**Quality Gate:** All checks pass (typecheck, lint, format, 3369 tests passed, 10 skipped, 1 xfailed).
+
+---
+
 ## Relevant Files
 
-- `src/kkt/stationarity.py` — `build_stationarity_equations()` (line ~276) — iterates all variables
+- `src/kkt/stationarity.py` — Fix location: `_collect_referenced_variable_names()` helper and filter in `build_stationarity_equations()`
 - `src/kkt/assemble.py` — `assemble_kkt_system()` — orchestrates KKT assembly
 - `src/emit/templates.py` — `emit_variables()`, `emit_equations()` — emits declarations
 - `src/emit/model.py` — `emit_model_mcp()` — emits MCP model pairs

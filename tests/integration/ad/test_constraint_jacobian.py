@@ -239,10 +239,8 @@ class TestIndexedConstraints:
         assert eval_derivative(deriv_x_i1) == 1.0
         assert eval_derivative(deriv_x_i2) == 1.0
         # d(-total)/d(total) = -1 (from lhs-rhs normalization)
-        # The derivative contains a sum which evaluator can't handle yet
-        # Just verify it exists and is a Binary expression
         assert deriv_total is not None
-        assert isinstance(deriv_total, Binary)
+        assert eval_derivative(deriv_total) == -1.0
 
     def test_indexed_constraint_instances(self):
         """Test: balance(i): x(i) + y(i) = demand(i) expands to multiple rows"""

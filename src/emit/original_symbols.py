@@ -16,7 +16,7 @@ import logging
 import re
 
 from src.emit.expr_to_gams import expr_to_gams
-from src.ir.ast import Expr, ParamRef
+from src.ir.ast import Expr, MultiplierRef, ParamRef, VarRef
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
@@ -596,7 +596,7 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
             # Check if values or expressions have indexed keys (non-empty tuples).
             has_indexed_values = any(len(k) > 0 for k in param_def.values.keys())
             has_indexed_exprs = param_def.expressions and any(
-                len(k) > 0 for k in param_def.expressions.keys()
+                len(k) > 0 for k, _expr in param_def.expressions
             )
             if has_indexed_values or has_indexed_exprs:
                 # Skip this parameter entirely - it's a report parameter that can't be
@@ -737,7 +737,25 @@ def _expr_references_param(expr: Expr, param_name: str) -> bool:
     return any(_expr_references_param(child, param_name) for child in expr.children())
 
 
-def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
+def _expr_contains_varref_attribute(expr: Expr) -> bool:
+    """Check whether an expression tree contains a VarRef with an attribute.
+
+    Used to detect `.l`-referencing calibration assignments (e.g., ``x.l(i)``)
+    that must be emitted after the Variables declaration in GAMS.
+    """
+    if isinstance(expr, VarRef) and expr.attribute:
+        return True
+    # Explicitly traverse index expressions on reference-like nodes.
+    # VarRef/ParamRef/MultiplierRef.children() do not yield indices,
+    # so an attributed VarRef inside an IndexOffset would be missed.
+    if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
+        for idx in expr.indices:
+            if isinstance(idx, Expr) and _expr_contains_varref_attribute(idx):
+                return True
+    return any(_expr_contains_varref_attribute(child) for child in expr.children())
+
+
+def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str = "all") -> str:
     """Emit computed parameter assignment statements.
 
     Sprint 17 Day 4: Emit expressions stored in ParameterDef.expressions as
@@ -747,6 +765,11 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
 
     Args:
         model_ir: Model IR containing parameter definitions with expressions
+        varref_filter: Controls which expressions are emitted based on whether
+            they contain attributed VarRef nodes (e.g., ``x.l(i)``):
+            - ``"all"``: Emit all expressions (default, backward compatible)
+            - ``"no_varref_attr"``: Skip expressions containing VarRef with attribute
+            - ``"only_varref_attr"``: Only emit expressions containing VarRef with attribute
 
     Returns:
         GAMS assignment statements as string
@@ -755,6 +778,13 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
         c(i,j) = f * d(i,j) / 1000;
         gplus(c) = gibbs(c) + log(750 * 0.07031);
     """
+    _VALID_VARREF_FILTERS = {"all", "no_varref_attr", "only_varref_attr"}
+    if varref_filter not in _VALID_VARREF_FILTERS:
+        raise ValueError(
+            f"Invalid varref_filter={varref_filter!r}. "
+            f"Allowed values: {sorted(_VALID_VARREF_FILTERS)}"
+        )
+
     lines: list[str] = []
 
     # PR #658 review: Precompute declared sets (lowercase) once for efficient lookup
@@ -790,20 +820,32 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
         # Skip ALL indexed expressions for domain-less parameters.
         if not param_def.domain:
             # Check if any expression has indexed keys (not scalar)
-            has_indexed_exprs = any(len(key) > 0 for key in param_def.expressions.keys())
+            has_indexed_exprs = any(len(key) > 0 for key, _expr in param_def.expressions)
             if has_indexed_exprs:
                 continue
 
-        # Emit each expression assignment
-        for key_tuple, expr in param_def.expressions.items():
+        # Check if ANY expression for this parameter contains a VarRef attribute.
+        # If so, the entire parameter block (including multi-step follow-ups like
+        # self-referencing normalization) belongs together in the same emission pass.
+        param_has_varref_attr = any(
+            _expr_contains_varref_attribute(ex) for _, ex in param_def.expressions
+        )
+        if varref_filter == "no_varref_attr" and param_has_varref_attr:
+            continue
+        if varref_filter == "only_varref_attr" and not param_has_varref_attr:
+            continue
+
+        # Emit each expression assignment (list preserves sequential ordering)
+        # Track whether we've emitted any expression for this parameter so far,
+        # used to detect self-referencing expressions that lack prior assignments.
+        has_prior_assignment = bool(param_def.values)
+        for key_tuple, expr in param_def.expressions:
             # Issue #738: Skip self-referencing expressions when the parameter has no
-            # prior values. This occurs with post-solve calibration patterns like:
-            #   deltaq(sc) = (x.l(sc)/m.l(sc))**(1/sigmaq(sc))*...  <- Step 1 (dropped: .l refs)
-            #   deltaq(sc) = deltaq(sc)/(1 + deltaq(sc))             <- Step 2 (self-ref)
-            # The parser drops Step 1 (contains VarRef/.l) but keeps Step 2 (pure ParamRef).
-            # Emitting Step 2 alone causes GAMS Error 141 because the parameter was never
-            # assigned. Skip such expressions to avoid the compilation error.
-            if _expr_references_param(expr, param_name) and not param_def.values:
+            # prior values or prior emitted expressions. This occurs when the parser
+            # drops the initial .l-based assignment but keeps the self-referencing
+            # follow-up. If a prior expression was already emitted (or static values
+            # exist), the self-reference is valid.
+            if _expr_references_param(expr, param_name) and not has_prior_assignment:
                 logger.info(
                     "Skipping self-referencing expression for parameter '%s' "
                     "(no prior values — likely depends on dropped .l calibration)",
@@ -837,6 +879,7 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
             else:
                 # Scalar parameter: f = expr
                 lines.append(f"{_quote_symbol(param_name)} = {expr_str};")
+            has_prior_assignment = True
 
     return "\n".join(lines)
 
