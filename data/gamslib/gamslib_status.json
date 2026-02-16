@@ -4212,12 +4212,13 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "verified_convex",
+        "status": "excluded",
         "verification_date": "2026-01-01T14:59:20Z",
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 20244.0,
-        "solve_time_seconds": 11.461
+        "solve_time_seconds": 11.461,
+        "error": "Model uses MIP solve statements (not NLP). Additionally, dynamic subset fallback causes combinatorial explosion in constraint count (546 inequalities, 529 bounds), making Jacobian computation infeasible."
       },
       "nlp2mcp_parse": {
         "status": "failure",
