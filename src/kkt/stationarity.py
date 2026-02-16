@@ -1000,7 +1000,7 @@ def _replace_matching_indices(
                             equation_domain
                             and idx in element_to_set
                             and element_to_set[idx] in equation_domain
-                            and target_set not in (equation_domain or ())
+                            and target_set not in equation_domain
                         ):
                             new_indices.append(element_to_set[idx])
                         else:
