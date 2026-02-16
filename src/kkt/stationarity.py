@@ -22,6 +22,8 @@ from __future__ import annotations
 from collections import ChainMap
 from collections.abc import Mapping
 
+from src.ad.ad_core import apply_simplification, get_simplification_mode
+from src.config import Config
 from src.ir.ast import (
     Binary,
     Call,
@@ -314,11 +316,17 @@ def _has_nonuniform_bounds(kkt: KKTSystem, var_name: str) -> bool:
     return nonuniform_lo or nonuniform_up
 
 
-def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
+def build_stationarity_equations(
+    kkt: KKTSystem, config: Config | None = None
+) -> dict[str, EquationDef]:
     """Build stationarity equations for all variable instances except objvar.
 
     For indexed variables, generates indexed equations with domains.
     For scalar variables, generates scalar equations.
+
+    After assembly, each stationarity expression is simplified using the
+    configured simplification mode (default: "advanced").  This eliminates
+    trivial terms such as ``0 * multiplier``, ``sum(i, 0)``, etc.
 
     Stationarity condition for variable x(i):
         ∂f/∂x(i) + Σ_j [∂h_j/∂x(i) · ν_j] + Σ_k [∂g_k/∂x(i) · λ_k]
@@ -326,6 +334,7 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
 
     Args:
         kkt: KKT system with gradient, Jacobians, and multipliers
+        config: Optional configuration (controls simplification level)
 
     Returns:
         Dictionary mapping stationarity equation names to EquationDef objects
@@ -360,6 +369,9 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
         # Store on KKT system so the emitter can also filter variable declarations
         kkt.referenced_variables = referenced_vars
 
+    # Resolve simplification mode once for all equations
+    simp_mode = get_simplification_mode(config)
+
     # For each variable, generate either indexed or scalar stationarity equation
     for var_name, instances in var_groups.items():
         # Get variable definition to determine domain
@@ -388,6 +400,7 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
                     stat_expr = _build_stationarity_expr(
                         kkt, col_id, var_name, var_indices, skip_eq
                     )
+                    stat_expr = apply_simplification(stat_expr, simp_mode)
                     stationarity[stat_name] = EquationDef(
                         name=stat_name,
                         domain=(),  # Scalar equation for this specific instance
@@ -400,6 +413,7 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
                 stat_expr = _build_indexed_stationarity_expr(
                     kkt, var_name, var_def.domain, instances, skip_eq
                 )
+                stat_expr = apply_simplification(stat_expr, simp_mode)
 
                 # Issue #724: Detect if the variable is only accessed under a
                 # common dollar condition (e.g., td(w,t)).  If so, add that
@@ -430,6 +444,7 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
             col_id, var_indices = instances[0]
             stat_name = f"stat_{var_name}"
             stat_expr = _build_stationarity_expr(kkt, col_id, var_name, var_indices, skip_eq)
+            stat_expr = apply_simplification(stat_expr, simp_mode)
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
                 domain=(),  # Empty domain for scalar
@@ -437,7 +452,24 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
                 lhs_rhs=(stat_expr, Const(0.0)),
             )
 
+    # Collect multiplier names that actually appear in simplified stationarity equations.
+    # After simplification, terms like 0 * nu_foo are eliminated, so those multipliers
+    # no longer appear. The emitter uses this set to skip unreferenced multipliers.
+    referenced_mults: set[str] = set()
+    for eq_def in stationarity.values():
+        lhs, _ = eq_def.lhs_rhs
+        _collect_multiplier_refs(lhs, referenced_mults)
+    kkt.referenced_multipliers = referenced_mults
+
     return stationarity
+
+
+def _collect_multiplier_refs(expr: Expr, result: set[str]) -> None:
+    """Walk an expression tree and collect all MultiplierRef names."""
+    if isinstance(expr, MultiplierRef):
+        result.add(expr.name)
+    for child in expr.children():
+        _collect_multiplier_refs(child, result)
 
 
 def _group_variables_by_name(

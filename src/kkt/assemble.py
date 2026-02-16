@@ -18,6 +18,7 @@ import logging
 from src.ad.gradient import GradientVector
 from src.ad.index_mapping import enumerate_variable_instances
 from src.ad.jacobian import JacobianStructure
+from src.config import Config
 from src.ir.model_ir import ModelIR
 from src.kkt.complementarity import build_complementarity_pairs
 from src.kkt.kkt_system import KKTSystem, MultiplierDef
@@ -41,6 +42,7 @@ def assemble_kkt_system(
     gradient: GradientVector,
     J_eq: JacobianStructure,
     J_ineq: JacobianStructure,
+    config: Config | None = None,
 ) -> KKTSystem:
     """Assemble complete KKT system from NLP model and derivatives.
 
@@ -56,6 +58,7 @@ def assemble_kkt_system(
         gradient: Objective gradient ∇f
         J_eq: Jacobian of equality constraints
         J_ineq: Jacobian of inequality constraints
+        config: Optional configuration (controls stationarity simplification level)
 
     Returns:
         Complete KKT system ready for MCP emission
@@ -173,7 +176,7 @@ def assemble_kkt_system(
     # Step 6: Build stationarity equations (skips objvar, handles indexed bounds)
     # Now has access to complementarity_ineq for negation checking
     logger.info("Building stationarity equations...")
-    kkt.stationarity = build_stationarity_equations(kkt)
+    kkt.stationarity = build_stationarity_equations(kkt, config)
     logger.info(f"Built {len(kkt.stationarity)} stationarity equations")
 
     # Store equality equations (these are h(x) = 0 without complementarity)

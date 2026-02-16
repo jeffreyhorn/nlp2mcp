@@ -128,6 +128,7 @@ def simplify(expr: Expr) -> Expr:
         Binary,
         Call,
         Const,
+        DollarConditional,
         MultiplierRef,
         ParamRef,
         Prod,
@@ -283,10 +284,41 @@ def simplify(expr: Expr) -> Expr:
             simplified_args = tuple(simplify(arg) for arg in args)
             return Call(func, simplified_args)
 
+        # DollarConditional: value$condition — simplify value, 0$cond → 0
+        case DollarConditional(value_expr, condition):
+            simplified_value = simplify(value_expr)
+            if isinstance(simplified_value, Const) and simplified_value.value == 0:
+                return Const(0)
+            simplified_cond = simplify(condition)
+            if simplified_value is not value_expr or simplified_cond is not condition:
+                return DollarConditional(simplified_value, simplified_cond)
+            return expr
+
         # Sum/Prod: recursively simplify body and condition
         case Sum(index_sets, body, condition) | Prod(index_sets, body, condition):
             simplified_body = simplify(body)
             simplified_cond = simplify(condition) if condition is not None else None
+            # sum(set, 0) → 0 (zero summed over any index is still zero)
+            if (
+                isinstance(expr, Sum)
+                and isinstance(simplified_body, Const)
+                and simplified_body.value == 0
+            ):
+                return Const(0)
+            # prod(set, 0) → 0
+            if (
+                isinstance(expr, Prod)
+                and isinstance(simplified_body, Const)
+                and simplified_body.value == 0
+            ):
+                return Const(0)
+            # prod(set, 1) → 1
+            if (
+                isinstance(expr, Prod)
+                and isinstance(simplified_body, Const)
+                and simplified_body.value == 1
+            ):
+                return Const(1)
             return type(expr)(index_sets, simplified_body, simplified_cond)
 
         case _:
@@ -413,7 +445,10 @@ def simplify_advanced(expr: Expr) -> Expr:
             simplified_body = simplify_advanced(body)
             simplified_cond = simplify_advanced(condition) if condition is not None else None
             if simplified_body != body or simplified_cond != condition:
-                return type(basic_simplified)(index_sets, simplified_body, simplified_cond)
+                # Re-apply basic simplify to catch sum(set, 0) → 0 etc.
+                return simplify(
+                    type(basic_simplified)(index_sets, simplified_body, simplified_cond)
+                )
             return basic_simplified
 
         case _:

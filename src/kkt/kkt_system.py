@@ -140,6 +140,13 @@ class KKTSystem:
     # None means no filtering was performed (backwards compatible).
     referenced_variables: set[str] | None = None
 
+    # Multiplier names that actually appear in simplified stationarity equations.
+    # After simplification, some multipliers may vanish (e.g., 0 * nu_foo → 0).
+    # Populated by build_stationarity_equations() so the emitter can exclude
+    # unreferenced multipliers from declarations and complementarity pairs.
+    # None means no filtering was performed (backwards compatible).
+    referenced_multipliers: set[str] | None = None
+
     # Scaling factors (optional, computed when --scale is used)
     scaling_row_factors: list[float] | None = None
     scaling_col_factors: list[float] | None = None

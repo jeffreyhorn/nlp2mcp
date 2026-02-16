@@ -55,7 +55,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x.. 1 + 1 * nu_stationarity =E= 0;
+stat_x.. 1 + nu_stationarity =E= 0;
 
 * Original equality equations
 objective.. obj =E= x;

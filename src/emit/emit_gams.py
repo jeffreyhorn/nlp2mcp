@@ -342,7 +342,10 @@ def emit_gams_mcp(
             fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {fix_val};")
 
     # 2. Fix multipliers whose complementarity equation has a condition
+    ref_mults = kkt.referenced_multipliers
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
+        if ref_mults is not None and comp_pair.variable not in ref_mults:
+            continue
         eq_def = comp_pair.equation
         if eq_def.condition is not None and eq_def.domain:
             mult_name = comp_pair.variable

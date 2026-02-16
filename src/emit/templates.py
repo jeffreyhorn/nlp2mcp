@@ -104,12 +104,19 @@ def emit_variables(kkt: KKTSystem) -> str:
         var_groups[var_def.kind].append((var_name, var_def.domain))
 
     # Add multipliers to appropriate groups
+    # Skip multipliers that were simplified away from stationarity equations
+    ref_mults = kkt.referenced_multipliers
+
     # Free multipliers (ν for equalities) → CONTINUOUS
     for mult_name, mult_def in kkt.multipliers_eq.items():
+        if ref_mults is not None and mult_name not in ref_mults:
+            continue
         var_groups[VarKind.CONTINUOUS].append((mult_name, mult_def.domain))
 
     # Positive multipliers (λ, π^L, π^U) → POSITIVE
     for mult_name, mult_def in kkt.multipliers_ineq.items():
+        if ref_mults is not None and mult_name not in ref_mults:
+            continue
         var_groups[VarKind.POSITIVE].append((mult_name, mult_def.domain))
 
     # Bound multipliers use tuple keys (var_name, indices)
@@ -118,12 +125,16 @@ def emit_variables(kkt: KKTSystem) -> str:
     seen_bound_multipliers: set[tuple[str, tuple[str, ...]]] = set()
 
     for (_var_name, _indices), mult_def in kkt.multipliers_bounds_lo.items():
+        if ref_mults is not None and mult_def.name not in ref_mults:
+            continue
         key = (mult_def.name, mult_def.domain)
         if key not in seen_bound_multipliers:
             seen_bound_multipliers.add(key)
             var_groups[VarKind.POSITIVE].append(key)
 
     for (_var_name, _indices), mult_def in kkt.multipliers_bounds_up.items():
+        if ref_mults is not None and mult_def.name not in ref_mults:
+            continue
         key = (mult_def.name, mult_def.domain)
         if key not in seen_bound_multipliers:
             seen_bound_multipliers.add(key)
@@ -224,8 +235,12 @@ def emit_equations(kkt: KKTSystem) -> str:
             lines.append(f"    {eq_name}")
 
     # Inequality complementarity equations (includes min/max complementarity)
+    # Skip equations whose multiplier was simplified away
+    ref_mults = kkt.referenced_multipliers
     for eq_name in sorted(kkt.complementarity_ineq.keys()):
         comp_pair = kkt.complementarity_ineq[eq_name]
+        if ref_mults is not None and comp_pair.variable not in ref_mults:
+            continue
         eq_def = comp_pair.equation
         # Include domain if present
         if eq_def.domain:
@@ -236,6 +251,8 @@ def emit_equations(kkt: KKTSystem) -> str:
     # Bound complementarity equations
     for key in sorted(kkt.complementarity_bounds_lo.keys()):
         comp_pair = kkt.complementarity_bounds_lo[key]
+        if ref_mults is not None and comp_pair.variable not in ref_mults:
+            continue
         eq_def = comp_pair.equation
         # Include domain if present
         if eq_def.domain:
@@ -245,6 +262,8 @@ def emit_equations(kkt: KKTSystem) -> str:
 
     for key in sorted(kkt.complementarity_bounds_up.keys()):
         comp_pair = kkt.complementarity_bounds_up[key]
+        if ref_mults is not None and comp_pair.variable not in ref_mults:
+            continue
         eq_def = comp_pair.equation
         # Include domain if present
         if eq_def.domain:
@@ -256,8 +275,23 @@ def emit_equations(kkt: KKTSystem) -> str:
     # Note: Equalities can be in either equations dict or normalized_bounds dict
     from ..ir.normalize import NormalizedEquation
     from ..ir.symbols import EquationDef
+    from ..kkt.naming import create_eq_multiplier_name
+    from ..kkt.objective import extract_objective_info
+
+    try:
+        obj_info = extract_objective_info(kkt.model_ir)
+        objdef_eq = obj_info.defining_equation
+    except ValueError:
+        objdef_eq = None
 
     for eq_name in sorted(kkt.model_ir.equalities):
+        # Skip equations whose multiplier was simplified away,
+        # but always keep the objective-defining equation (paired with objvar)
+        is_objdef = eq_name == objdef_eq and not kkt.model_ir.strategy1_applied
+        if not is_objdef and ref_mults is not None:
+            mult_name = create_eq_multiplier_name(eq_name)
+            if mult_name not in ref_mults:
+                continue
         # Check both equations dict and normalized_bounds dict
         # Fixed variables (.fx) create equalities stored in normalized_bounds
         eq_domain: tuple[str, ...]
