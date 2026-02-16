@@ -162,21 +162,41 @@ Verified baseline, updated error taxonomy with 5 new classification patterns (el
 
 ## Day 3 — Special Values + Circle Model Fix
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-16
+**Time Spent:** ~3h
+
+### Summary
+
+Extended grammar to support GAMS special values (`na`, `inf`, `eps`, `undf`) in scalar data blocks and indexed parameter data. This unblocked 4 models: ship, tforss, ferts (all blocked on `na` in scalar data), and lands (blocked on `na` in indexed parameter data). Added deterministic random seed injection (`execseed`) for MCP files containing stochastic function calls (`uniform`, `normal`), fixing the non-deterministic behavior of the circle model MCP. The circle MCP is now deterministic but remains locally infeasible due to a deeper KKT formulation issue (separate from the randomness fix).
+
+### Changes
+
+- **Grammar:** Extended `scalar_data_item` rule to accept `SPECIAL_VALUE | MINUS SPECIAL_VALUE | PLUS SPECIAL_VALUE` (was `NUMBER` only)
+- **Grammar:** Changed `param_data_scalar` rule from `data_indices NUMBER` to `data_indices param_data_value` for special value support
+- **Parser:** Updated `_process_scalar_item()` to walk `scalar_data_item` children and handle SPECIAL_VALUE tokens via `_parse_table_value()`
+- **Parser:** Updated `param_data_scalar` handler to use `_parse_param_data_value()` for Tree nodes
+- **Emit:** Added `STOCHASTIC_FUNCTIONS` set, `_expr_contains_stochastic()`, and `has_stochastic_parameters()` in `original_symbols.py`
+- **Emit:** Added `execseed = 12345;` injection in `emit_gams.py` before stochastic parameter assignments
+- **Tests:** 18 new tests (8 scalar/param special values + 10 stochastic detection/execseed)
+
+### Decisions
+
+- Used `execseed = 12345;` (GAMS execution-time statement) rather than `option seed = 12345;` (option statement) for random seed control
+- Circle MCP infeasibility is a KKT formulation issue, not a randomness issue — the execseed fix makes it deterministic but doesn't resolve the infeasibility. Deeper KKT fix deferred.
+- Catalog said 3 grammar-fixable models (ferts, gussrisk, lands), but actual diagnostics revealed 4 models blocked on special values (ship, tforss, ferts, lands) while gussrisk is blocked on GUSS syntax (compound set data + scenario solve extension)
 
 ### PR Entries
 
-_(To be filled during Day 3)_
+- PR: Sprint 19 Day 3: Special Values Grammar + Circle Model Deterministic Fix
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 3 |
 |--------|----------|-------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 | 65/159 (+4: ship, tforss, ferts, lands past grammar stage) |
+| lexer_invalid_char | 72 | 68 (-4) |
+| internal_error | 24 | 24 |
+| Test count | 3,294 | 3,413 (+119 cumulative from Day 0) |
 
 ---
 

@@ -157,7 +157,8 @@ scalar_single_item: ID (STRING | DESC_TEXT)? "/" scalar_data_items "/" (ASSIGN e
 desc_text: DESC_TEXT
 
 scalar_data_items: scalar_data_item ("," scalar_data_item)*
-scalar_data_item: NUMBER
+// Issue #564 follow-up: Support special values (na, inf, eps, undf) in scalar data
+scalar_data_item: NUMBER | SPECIAL_VALUE | MINUS SPECIAL_VALUE | PLUS SPECIAL_VALUE
 
 param_default: ASSIGN expr
 param_data_items: param_data_item ("," param_data_item)*
@@ -168,7 +169,7 @@ param_data_items: param_data_item ("," param_data_item)*
 param_data_item: data_matrix_row                              -> param_data_matrix_row
                  | "(" range_expr ")" param_data_value        -> param_data_range_expansion
                  | "(" set_element_id_list ")" param_data_value -> param_data_tuple_expansion
-                 | data_indices NUMBER                        -> param_data_scalar
+                 | data_indices param_data_value              -> param_data_scalar
 
 // Issue #564: Parameter data values can be numbers or special GAMS values (na, inf, eps, undf)
 // Also handles signed special values like -inf and +inf
