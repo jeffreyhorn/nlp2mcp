@@ -12,6 +12,7 @@ import pytest
 
 from src.emit.original_symbols import (
     _expand_table_key,
+    _expr_references_param,
     _needs_quoting,
     _sanitize_set_element,
     emit_computed_parameter_assignments,
@@ -997,3 +998,165 @@ class TestExpandTableKey:
         key = ("low.c-bond-ext", "machine-1")
         result = _expand_table_key(key, 3)
         assert result == ("low", "c-bond-ext", "machine-1")
+
+
+@pytest.mark.unit
+class TestExprReferencesParam:
+    """Test _expr_references_param for detecting self-referencing parameter expressions.
+
+    Issue #738: Used to detect patterns like deltaq(sc) = deltaq(sc)/(1 + deltaq(sc))
+    where the RHS references the parameter being assigned.
+    """
+
+    def test_direct_param_ref_match(self):
+        """Test detection of a direct ParamRef matching the parameter name."""
+        expr = ParamRef("deltaq", ("sc",))
+        assert _expr_references_param(expr, "deltaq") is True
+
+    def test_direct_param_ref_no_match(self):
+        """Test that a ParamRef with a different name returns False."""
+        expr = ParamRef("sigmaq", ("sc",))
+        assert _expr_references_param(expr, "deltaq") is False
+
+    def test_case_insensitive_match(self):
+        """Test that matching is case-insensitive (GAMS is case-insensitive)."""
+        expr = ParamRef("DeltaQ", ("sc",))
+        assert _expr_references_param(expr, "deltaq") is True
+        assert _expr_references_param(expr, "DELTAQ") is True
+
+    def test_nested_in_binary_left(self):
+        """Test detection of ParamRef nested in left branch of Binary expression."""
+        # deltaq(sc) / (1 + deltaq(sc))
+        expr = Binary("/", ParamRef("deltaq", ("sc",)), Const(2.0))
+        assert _expr_references_param(expr, "deltaq") is True
+
+    def test_nested_in_binary_right(self):
+        """Test detection of ParamRef nested in right branch of Binary expression."""
+        expr = Binary("/", Const(1.0), ParamRef("deltaq", ("sc",)))
+        assert _expr_references_param(expr, "deltaq") is True
+
+    def test_deeply_nested(self):
+        """Test detection of ParamRef deeply nested in expression tree.
+
+        Simulates: deltaq(sc) / (1 + deltaq(sc))
+        """
+        inner = Binary("+", Const(1.0), ParamRef("deltaq", ("sc",)))
+        expr = Binary("/", ParamRef("deltaq", ("sc",)), inner)
+        assert _expr_references_param(expr, "deltaq") is True
+
+    def test_const_only_expression(self):
+        """Test that a Const-only expression returns False."""
+        expr = Const(42.0)
+        assert _expr_references_param(expr, "deltaq") is False
+
+    def test_other_param_refs_only(self):
+        """Test that expression with only other ParamRefs returns False."""
+        expr = Binary("*", ParamRef("alpha", ("i",)), ParamRef("beta", ("j",)))
+        assert _expr_references_param(expr, "deltaq") is False
+
+    def test_scalar_param_ref(self):
+        """Test detection of scalar (no-index) ParamRef."""
+        expr = Binary("*", Const(2.0), ParamRef("f", ()))
+        assert _expr_references_param(expr, "f") is True
+
+    def test_function_call_wrapping_param_ref(self):
+        """Test detection of ParamRef inside a function call."""
+        # log(deltaq(sc))
+        expr = Call("log", (ParamRef("deltaq", ("sc",)),))
+        assert _expr_references_param(expr, "deltaq") is True
+
+
+@pytest.mark.unit
+class TestSelfReferencingExpressionSkipping:
+    """Test that emit_computed_parameter_assignments skips self-referencing expressions
+    when the parameter has no prior values.
+
+    Issue #738: Post-solve calibration patterns like:
+      deltaq(sc) = (x.l(sc)/m.l(sc))**(1/sigmaq(sc))*...  <- Step 1 (dropped: .l refs)
+      deltaq(sc) = deltaq(sc)/(1 + deltaq(sc))             <- Step 2 (self-ref, kept)
+    The parser drops Step 1. Emitting Step 2 alone causes GAMS Error 141.
+    """
+
+    def test_self_ref_no_values_skipped(self):
+        """Test that self-referencing expression is skipped when no values exist."""
+        model = ModelIR()
+        # Self-referencing expression: deltaq(sc) = deltaq(sc) / (1 + deltaq(sc))
+        inner = Binary("+", Const(1.0), ParamRef("deltaq", ("sc",)))
+        expr = Binary("/", ParamRef("deltaq", ("sc",)), inner)
+        model.params["deltaq"] = ParameterDef(
+            name="deltaq",
+            domain=("sc",),
+            values={},  # No values — Step 1 was dropped
+            expressions={("sc",): expr},
+        )
+        # Need to declare 'sc' as a set so it's recognized as a domain variable
+        model.sets["sc"] = SetDef(name="sc", members=["sc1"])
+
+        result = emit_computed_parameter_assignments(model)
+        # Expression should be skipped entirely
+        assert result == ""
+
+    def test_self_ref_with_values_not_skipped(self):
+        """Test that self-referencing expression is emitted when prior values exist."""
+        model = ModelIR()
+        # Self-referencing expression with prior values (Step 1 was NOT dropped)
+        inner = Binary("+", Const(1.0), ParamRef("deltas", ("i",)))
+        expr = Binary("/", ParamRef("deltas", ("i",)), inner)
+        model.params["deltas"] = ParameterDef(
+            name="deltas",
+            domain=("i",),
+            values={("i1",): 1.0},  # Has prior values
+            expressions={("i",): expr},
+        )
+        model.sets["i"] = SetDef(name="i", members=["i1"])
+
+        result = emit_computed_parameter_assignments(model)
+        # Expression should be emitted because values exist
+        assert "deltas(i) =" in result
+
+    def test_non_self_ref_no_values_emitted(self):
+        """Test that non-self-referencing expression is emitted even without values."""
+        model = ModelIR()
+        # Non-self-referencing: c(i) = a(i) + 1
+        expr = Binary("+", ParamRef("a", ("i",)), Const(1.0))
+        model.params["c"] = ParameterDef(
+            name="c",
+            domain=("i",),
+            values={},  # No values, but NOT self-referencing
+            expressions={("i",): expr},
+        )
+        model.sets["i"] = SetDef(name="i", members=["i1"])
+
+        result = emit_computed_parameter_assignments(model)
+        # Expression should be emitted (not self-referencing)
+        assert "c(i) =" in result
+        assert "a(i) + 1" in result
+
+    def test_multiple_params_mixed_self_ref(self):
+        """Test that only self-referencing params without values are skipped."""
+        model = ModelIR()
+        model.sets["sc"] = SetDef(name="sc", members=["sc1"])
+
+        # Param 1: self-ref, no values → should be skipped
+        inner1 = Binary("+", Const(1.0), ParamRef("deltaq", ("sc",)))
+        expr1 = Binary("/", ParamRef("deltaq", ("sc",)), inner1)
+        model.params["deltaq"] = ParameterDef(
+            name="deltaq",
+            domain=("sc",),
+            values={},
+            expressions={("sc",): expr1},
+        )
+
+        # Param 2: not self-ref, no values → should be emitted
+        expr2 = Binary("*", ParamRef("alpha", ("sc",)), Const(2.0))
+        model.params["beta"] = ParameterDef(
+            name="beta",
+            domain=("sc",),
+            values={},
+            expressions={("sc",): expr2},
+        )
+
+        result = emit_computed_parameter_assignments(model)
+        # deltaq should be skipped, beta should be emitted
+        assert "deltaq" not in result
+        assert "beta(sc) =" in result

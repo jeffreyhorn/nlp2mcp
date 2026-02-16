@@ -6,17 +6,22 @@ Tests GAMS template emission functions, especially:
 - emit_equations() placeholder
 """
 
+import pytest
+
 from src.ad.gradient import GradientVector
 from src.ad.jacobian import JacobianStructure
 from src.emit.templates import (
+    _build_dynamic_subset_map,
+    _remap_domain,
     emit_equations,
     emit_kkt_sets,
     emit_model,
     emit_solve,
     emit_variables,
 )
+from src.ir.ast import Const
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import SetDef, VariableDef, VarKind
+from src.ir.symbols import SetAssignment, SetDef, VariableDef, VarKind
 from src.kkt.kkt_system import KKTSystem, MultiplierDef
 
 
@@ -254,3 +259,160 @@ class TestEmitSolve:
         kkt = _create_minimal_kkt(model_ir)
         result = emit_solve(kkt)
         assert result == ""
+
+
+@pytest.mark.unit
+class TestBuildDynamicSubsetMap:
+    """Test _build_dynamic_subset_map() for Issue #739."""
+
+    def test_empty_model(self):
+        """No sets or assignments yields empty map."""
+        model_ir = ModelIR()
+        assert _build_dynamic_subset_map(model_ir) == {}
+
+    def test_static_set_not_included(self):
+        """Sets with static members are not considered dynamic."""
+        model_ir = ModelIR()
+        model_ir.sets["im"] = SetDef(name="im", members=["a", "b"], domain=("i",))
+        # No set_assignments — even though it has a domain, it's static
+        assert _build_dynamic_subset_map(model_ir) == {}
+
+    def test_dynamic_subset_detected(self):
+        """Dynamic subset with assignment and no static members is detected."""
+        model_ir = ModelIR()
+        model_ir.sets["i"] = SetDef(name="i", members=["a", "b", "c"])
+        model_ir.sets["im"] = SetDef(name="im", members=[], domain=("i",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="im", indices=("i",), expr=Const(1.0), location=None)
+        )
+        result = _build_dynamic_subset_map(model_ir)
+        assert result == {"im": "i"}
+
+    def test_multiple_dynamic_subsets(self):
+        """Multiple dynamic subsets mapping to same or different parents."""
+        model_ir = ModelIR()
+        model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model_ir.sets["im"] = SetDef(name="im", members=[], domain=("i",))
+        model_ir.sets["ie"] = SetDef(name="ie", members=[], domain=("i",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="im", indices=("i",), expr=Const(1.0), location=None)
+        )
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="ie", indices=("i",), expr=Const(1.0), location=None)
+        )
+        result = _build_dynamic_subset_map(model_ir)
+        assert result == {"im": "i", "ie": "i"}
+
+    def test_set_with_members_excluded(self):
+        """Dynamic set assignment exists but set has static members — not remapped."""
+        model_ir = ModelIR()
+        model_ir.sets["k"] = SetDef(name="k", members=["k1"], domain=("j",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="k", indices=("j",), expr=Const(1.0), location=None)
+        )
+        # Has static members, so excluded
+        assert _build_dynamic_subset_map(model_ir) == {}
+
+    def test_multi_dimensional_domain_excluded(self):
+        """Sets with multi-dimensional domain are excluded."""
+        model_ir = ModelIR()
+        model_ir.sets["ij"] = SetDef(name="ij", members=[], domain=("i", "j"))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="ij", indices=("i", "j"), expr=Const(1.0), location=None)
+        )
+        assert _build_dynamic_subset_map(model_ir) == {}
+
+    def test_case_insensitive_matching(self):
+        """Set name matching is case-insensitive."""
+        model_ir = ModelIR()
+        model_ir.sets["IM"] = SetDef(name="IM", members=[], domain=("i",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="im", indices=("i",), expr=Const(1.0), location=None)
+        )
+        result = _build_dynamic_subset_map(model_ir)
+        assert result == {"im": "i"}
+
+
+@pytest.mark.unit
+class TestRemapDomain:
+    """Test _remap_domain() for Issue #739."""
+
+    def test_empty_domain(self):
+        """Empty domain returns empty tuple."""
+        assert _remap_domain((), {"im": "i"}) == ()
+
+    def test_no_remapping_needed(self):
+        """Domain with no dynamic subsets is unchanged."""
+        assert _remap_domain(("i", "j"), {"im": "i"}) == ("i", "j")
+
+    def test_single_remapping(self):
+        """Single dynamic subset is remapped."""
+        assert _remap_domain(("im",), {"im": "i"}) == ("i",)
+
+    def test_multiple_remappings(self):
+        """Multiple dynamic subsets in same domain are remapped."""
+        assert _remap_domain(("im", "ie"), {"im": "i", "ie": "i"}) == ("i", "i")
+
+    def test_mixed_remapping(self):
+        """Mix of dynamic and static indices."""
+        assert _remap_domain(("im", "j"), {"im": "i"}) == ("i", "j")
+
+    def test_case_insensitive(self):
+        """Remapping is case-insensitive."""
+        assert _remap_domain(("IM",), {"im": "i"}) == ("i",)
+
+    def test_empty_map(self):
+        """Empty dynamic map leaves domain unchanged."""
+        assert _remap_domain(("im", "j"), {}) == ("im", "j")
+
+
+@pytest.mark.unit
+class TestEmitVariablesDynamicSubsets:
+    """Test emit_variables() with dynamic subset domain remapping (Issue #739)."""
+
+    def test_dynamic_subset_domain_remapped_in_declaration(self):
+        """Variable with dynamic subset domain emits parent set in declaration."""
+        model_ir = ModelIR()
+        model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model_ir.sets["im"] = SetDef(name="im", members=[], domain=("i",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="im", indices=("i",), expr=Const(1.0), location=None)
+        )
+        model_ir.variables["x"] = VariableDef(name="x", domain=("im",), kind=VarKind.CONTINUOUS)
+        kkt = _create_minimal_kkt(model_ir)
+        result = emit_variables(kkt)
+
+        # Declaration should use parent set "i", not dynamic subset "im"
+        assert "x(i)" in result
+        assert "x(im)" not in result
+
+
+@pytest.mark.unit
+class TestEmitEquationsDynamicSubsets:
+    """Test emit_equations() with dynamic subset domain remapping (Issue #739)."""
+
+    def test_dynamic_subset_domain_remapped_in_equation_declaration(self):
+        """Equation with dynamic subset domain emits parent set in declaration."""
+        from src.ir.symbols import EquationDef, Rel
+
+        model_ir = ModelIR()
+        model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model_ir.sets["im"] = SetDef(name="im", members=[], domain=("i",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="im", indices=("i",), expr=Const(1.0), location=None)
+        )
+        # Add an equality equation with dynamic subset domain
+        model_ir.equations["pmdef"] = EquationDef(
+            name="pmdef",
+            domain=("im",),
+            relation=Rel.EQ,
+            lhs_rhs=(Const(1.0), Const(0.0)),
+        )
+        model_ir.equalities.append("pmdef")
+
+        kkt = _create_minimal_kkt(model_ir)
+        result = emit_equations(kkt)
+
+        # Declaration should use parent set "i", not dynamic subset "im"
+        assert "pmdef(i)" in result
+        assert "pmdef(im)" not in result
