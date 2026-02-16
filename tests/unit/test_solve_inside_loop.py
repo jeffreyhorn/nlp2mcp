@@ -7,6 +7,7 @@ Tests cover:
 """
 
 from src.ir.parser import parse_model_text
+from src.ir.symbols import ObjSense
 
 
 class TestSolveInsideLoop:
@@ -35,7 +36,7 @@ loop(t,
         model = parse_model_text(source)
         assert model.objective is not None
         assert model.objective.objvar == "Util"
-        assert model.objective.sense.name == "MAX"
+        assert model.objective.sense == ObjSense.MAX
 
     def test_solve_inside_loop_sets_model_name(self):
         """Solve inside loop sets model_name."""
@@ -75,7 +76,7 @@ Solve m using NLP minimizing z;
         model = parse_model_text(source)
         assert model.objective is not None
         assert model.objective.objvar == "z"
-        assert model.objective.sense.name == "MIN"
+        assert model.objective.sense == ObjSense.MIN
 
     def test_solve_inside_loop_multi_model(self):
         """Solve inside loop with multi-model declaration."""

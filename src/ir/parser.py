@@ -2819,7 +2819,7 @@ class _ModelBuilder:
         the name and discard everything else.
         """
         file_name = _token_text(node.children[0])
-        self.model.declared_files.add(file_name)
+        self.model.declared_files.add(file_name.lower())
 
     def _handle_option_stmt(self, node: Tree) -> None:
         """Handle option statement (Sprint 8: mock/store approach).
@@ -3284,10 +3284,10 @@ class _ModelBuilder:
                     and base_name not in self.model.params
                     and base_name not in self.model.equations
                     and base_name.lower() not in self.model.declared_models
-                    and base_name not in self.model.declared_files
+                    and base_name.lower() not in self.model.declared_files
                 ):
                     raise self._error(
-                        f"Symbol '{base_name}' not declared as a variable, parameter, equation, or model",
+                        f"Symbol '{base_name}' not declared as a variable, parameter, equation, model, or file",
                         target,
                     )
                 return
@@ -3303,10 +3303,10 @@ class _ModelBuilder:
                     and base_name not in self.model.params
                     and base_name not in self.model.equations
                     and base_name.lower() not in self.model.declared_models
-                    and base_name not in self.model.declared_files
+                    and base_name.lower() not in self.model.declared_files
                 ):
                     raise self._error(
-                        f"Symbol '{base_name}' not declared as a variable, parameter, equation, or model",
+                        f"Symbol '{base_name}' not declared as a variable, parameter, equation, model, or file",
                         target,
                     )
                 return
