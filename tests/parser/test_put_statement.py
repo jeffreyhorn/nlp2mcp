@@ -245,3 +245,124 @@ PUTCLOSE f;
 """
         model = parse_model_text(source)
         assert model is not None
+
+
+class TestPutFormat:
+    """Test put statement :width:decimals format specifiers (Sprint 19 Day 2)."""
+
+    def test_put_format_width_decimals(self):
+        """Test put with :width:decimals format: put x:8:2;"""
+        source = """
+scalar x / 1.5 /;
+put x:8:2;
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_put_format_width_only(self):
+        """Test put with :width format (no decimals): put 'text':20;"""
+        source = """
+put 'Hello':20;
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_put_format_string_with_format(self):
+        """Test string item with format: put "RHS demand ",dl.tl:1;"""
+        source = """
+set dl / a, b /;
+put "RHS demand ", dl.tl:1;
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_put_format_multiple_items(self):
+        """Test multiple items with format specifiers."""
+        source = """
+set i / i1, i2 /;
+scalar x / 1.0 /;
+parameter w(i) / i1 2.0, i2 3.0 /;
+put x:20:10 w('i1'):20:10;
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_put_format_in_loop(self):
+        """Test put with format inside loop: loop(i, put pt(i):10:5;);"""
+        source = """
+set i / i1, i2 /;
+parameter pt(i) / i1 1.0, i2 2.0 /;
+loop(i, put pt(i):10:5;);
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_put_format_expression_with_format(self):
+        """Test parenthesized expression with format: put (1/card(s)):8:6;"""
+        source = """
+set s / s1, s2 /;
+put (1/card(s)):8:6;
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_put_format_with_newline(self):
+        """Test put with format and trailing newline /."""
+        source = """
+scalar x / 1.0 /;
+put x:12:4/;
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_put_format_mixed_items(self):
+        """Test mix of formatted and unformatted items."""
+        source = """
+set i / i1 /;
+scalar x / 1.0 /;
+put 'label' x:20:10 /;
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+
+class TestPutNoSemicolon:
+    """Test put statement without semicolon as final statement in loop/if (Sprint 19 Day 2)."""
+
+    def test_put_nosemi_in_loop(self):
+        """Test put without semicolon as final loop statement: loop(j, put j.tl);"""
+        source = """
+set j / j1, j2 /;
+loop(j, put j.tl);
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_put_nosemi_in_loop_with_newline(self):
+        """Test put without semicolon with trailing newline: loop(i, put i.tl /);"""
+        source = """
+set i / i1, i2 /;
+loop(i, put i.tl /);
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_put_nosemi_multiple_items(self):
+        """Test put without semicolon with multiple items."""
+        source = """
+set j / j1 /;
+parameter beta(j) / j1 0.5 /;
+loop(j, put j.tl beta(j));
+"""
+        model = parse_model_text(source)
+        assert model is not None
+
+    def test_put_nosemi_with_format(self):
+        """Test put without semicolon with format specifiers."""
+        source = """
+set i / i1 /;
+parameter pt(i) / i1 1.0 /;
+loop(i, put pt(i):10:5);
+"""
+        model = parse_model_text(source)
+        assert model is not None

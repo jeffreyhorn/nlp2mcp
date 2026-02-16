@@ -133,21 +133,30 @@ Verified baseline, updated error taxonomy with 5 new classification patterns (el
 
 ## Day 2 — Put Statement Format + Reserved Word Quoting
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-16
+**Time Spent:** ~3h
 
 ### PR Entries
 
-_(To be filled during Day 2)_
+- **PR #XXX** — Sprint 19 Day 2: Put Statement Format + Reserved Word Quoting
+  - Grammar: Added `put_format` rule (`:width:decimals` specifiers) and `put_stmt_nosemi` variant
+  - Emit: Added `GAMS_RESERVED_CONSTANTS` set; reserved words (inf, na, eps, etc.) quoted in `_quote_indices()` and `_sanitize_set_element()`
+  - 6 models get past put format parse errors (apl1pca, prodsp2, ps5_s_mn, ps10_s, ps10_s_mn, stdcge)
+  - ps2_f family (5 models) now emit correctly quoted reserved constants
+
+### Decisions
+
+- Reserved constant check takes priority over domain_vars context in `_quote_indices()` — a domain variable should never be named `inf`, `na`, etc.
+- `eff` is NOT a GAMS reserved constant; it's a regular identifier that is correctly handled by existing heuristics
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 2 |
 |--------|----------|-------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 | 63/159 (database, pre-reparse) |
+| lexer_invalid_char | 72 | 69 (database, pre-reparse) |
+| internal_error | 24 | 2 |
+| Test count | 3,294 | 3,386 |
 
 ---
 

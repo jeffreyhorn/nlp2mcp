@@ -880,6 +880,21 @@ class TestSetElementQuoting:
         with pytest.raises(ValueError, match="unsafe characters"):
             _sanitize_set_element("'nested'quote'")
 
+    def test_sanitize_quotes_reserved_constants(self):
+        """Sprint 19 Day 2: Reserved GAMS constants must be quoted as set elements."""
+        assert _sanitize_set_element("inf") == "'inf'"
+        assert _sanitize_set_element("na") == "'na'"
+        assert _sanitize_set_element("eps") == "'eps'"
+        assert _sanitize_set_element("no") == "'no'"
+        assert _sanitize_set_element("yes") == "'yes'"
+        assert _sanitize_set_element("undf") == "'undf'"
+
+    def test_sanitize_preserves_non_reserved_identifiers(self):
+        """Non-reserved identifiers should not be affected by reserved word check."""
+        assert _sanitize_set_element("eff") == "eff"
+        assert _sanitize_set_element("money") == "money"
+        assert _sanitize_set_element("gov") == "gov"
+
     def test_set_emission_quotes_special_elements(self):
         """Test that set emission properly quotes elements with special chars."""
         model = ModelIR()

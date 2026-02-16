@@ -17,7 +17,7 @@ import re
 
 from src.emit.expr_to_gams import expr_to_gams
 from src.ir.ast import Expr, MultiplierRef, ParamRef, VarRef
-from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
+from src.ir.constants import GAMS_RESERVED_CONSTANTS, PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
 
@@ -182,6 +182,11 @@ def _sanitize_set_element(element: str) -> str:
             f"Set elements must start with a letter or digit and contain only "
             f"letters, digits, underscores, hyphens, dots, and plus signs."
         )
+
+    # Sprint 19 Day 2: GAMS reserved constants (inf, na, eps, etc.) must be quoted
+    # when used as set elements, otherwise GAMS interprets them as special values.
+    if element.lower() in GAMS_RESERVED_CONSTANTS:
+        return f"'{element}'"
 
     return element
 
