@@ -1,7 +1,7 @@
 # Jacobian Computation Timeout for lop Model
 
 **GitHub Issue:** [#736](https://github.com/jeffreyhorn/nlp2mcp/issues/736)
-**Status:** Open
+**Status:** Fixed
 **Severity:** Medium -- lop model cannot complete MCP translation due to performance
 **Discovered:** 2026-02-15 (Sprint 19, after Issues #732 and #733 fixed)
 **Affected Models:** lop (and potentially other models with many indexed inequalities)
@@ -82,9 +82,26 @@ Add a configurable timeout for Jacobian computation so the user gets a clear err
 
 ---
 
+## Fix Applied
+
+**Approach:** Option B — Performance optimization of Jacobian computation
+**Commit:** e635b7e
+**Files changed:** `src/ad/constraint_jacobian.py`, `tests/integration/ad/test_bound_jacobian.py`, `tests/integration/ad/test_constraint_jacobian.py`
+
+Three optimizations were applied to `_compute_equality_jacobian()`, `_compute_inequality_jacobian()`, and `_compute_bound_jacobian()`:
+
+1. **Sparsity pre-check**: Before differentiating a constraint with respect to a variable, `find_variables_in_expr()` (from `src/ad/sparsity.py`) is called on the equation template to determine which variables are actually referenced. If the variable is not referenced, differentiation is skipped entirely. For the lop model with 546 inequalities × 15 variables = 8,190 potential derivatives, the majority are zero because each inequality typically references only 1–3 of the 15 variables.
+
+2. **Variable instance caching**: `enumerate_variable_instances()` is now called once per variable via `_precompute_variable_instances()` and shared across all three Jacobian sub-functions, instead of being recomputed per-constraint.
+
+3. **Sparse zero storage**: Derivatives that evaluate to `Const(0)` are no longer stored in the Jacobian structure. Consumers already handle `None` returns from `get_derivative()` as zero.
+
+---
+
 ## Additional Context
 
 - The gradient computation (15 variables, 1 objective) completes in ~8s, suggesting per-derivative cost is ~0.5s
 - At ~0.5s per derivative, 8,190 Jacobian entries would take ~68 minutes
+- The sparsity pre-check eliminates the vast majority of these derivatives, reducing computation to only the nonzero entries
 - The dynamic subset fallback warnings suggest the system is doing redundant work expanding set membership for each derivative
 - The lop model is a Line Optimization Problem with 4 sub-models; only the NLP-relevant equations need KKT transformation
