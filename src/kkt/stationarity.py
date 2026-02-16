@@ -125,7 +125,15 @@ def _find_variable_access_condition(
         # cannot be used — it would produce bare/uncontrolled indices in GAMS.
         # Example: pls(r) accessed in sum(r$(ri(r,i)), pls(r)) produces
         # condition ri(r,i), but 'i' is not in pls's domain (r,).
-        cond_indices = _collect_symbolref_names(first)
+        #
+        # Issue #730 review: Only consider SymbolRef names that are actual
+        # set/alias index variables, not literal element labels.  The parser
+        # wraps both free indices and literal elements as SymbolRef, so
+        # conditions like arc('a',i) would be incorrectly rejected if 'a'
+        # (a constant element) were treated as a free index.
+        all_symbolrefs = _collect_symbolref_names(first)
+        known_indices = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
+        cond_indices = all_symbolrefs & known_indices
         if cond_indices - var_domain_set:
             return None
         return first
@@ -1279,11 +1287,29 @@ def _add_jacobian_transpose_terms_scalar(
                     kkt.model_ir,
                     equation_domain=mult_domain,
                 )
+                # Issue #730 review: carry the equation's own $-condition into
+                # the Sum so that only indices for which a Jacobian row exists
+                # contribute.  Without this, summing over the full mult_domain
+                # re-introduces contributions for indices excluded by the
+                # condition (e.g., taumdet(im)$(not sc(im))).
+                eq_def = kkt.model_ir.equations.get(eq_name_base)
+                indexed_condition: Expr | None = None
+                if eq_def is not None and eq_def.condition is not None:
+                    indexed_condition = _replace_indices_in_expr(
+                        eq_def.condition,
+                        mult_domain,
+                        constraint_element_to_set,
+                        kkt.model_ir,
+                        equation_domain=mult_domain,
+                    )
                 mult_ref = MultiplierRef(mult_name, mult_domain)
                 term: Expr = Binary("*", indexed_deriv, mult_ref)
                 # Wrap in Sum over all constraint indices (scalar stationarity
                 # has no own domain, so all constraint indices must be summed)
-                term = Sum(mult_domain, term)
+                if indexed_condition is not None:
+                    term = Sum(mult_domain, term, condition=indexed_condition)
+                else:
+                    term = Sum(mult_domain, term)
             else:
                 # Fallback: no domain info, use per-instance (shouldn't happen)
                 mult_ref = MultiplierRef(mult_name, eq_indices)
