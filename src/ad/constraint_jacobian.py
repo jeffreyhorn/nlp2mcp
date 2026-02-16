@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from ..config import Config
     from ..ir.model_ir import ModelIR
 
-from ..ir.ast import Const
+from ..ir.ast import Const, Expr
 from ..ir.normalize import NormalizedEquation
 from ..ir.symbols import EquationDef
 from .ad_core import apply_simplification, get_simplification_mode
@@ -80,7 +80,7 @@ def _precompute_variable_instances(
     return result
 
 
-def _is_zero_const(expr) -> bool:
+def _is_zero_const(expr: Expr | None) -> bool:
     """Check if an expression is a zero constant."""
     return isinstance(expr, Const) and expr.value == 0
 
@@ -366,7 +366,7 @@ def _compute_equality_jacobian(
         eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir, eq_condition)
 
         # Get equation expression template (before index substitution)
-        from ..ir.ast import Binary, Expr
+        from ..ir.ast import Binary
 
         base_expr: Expr
         if isinstance(eq_def, EquationDef):
@@ -465,7 +465,7 @@ def _compute_inequality_jacobian(
         eq_instances = enumerate_equation_instances(eq_name, eq_domain, model_ir, eq_condition)
 
         # Get equation expression template (before index substitution)
-        from ..ir.ast import Binary, Expr
+        from ..ir.ast import Binary
 
         base_expr: Expr
         if isinstance(eq_def, EquationDef):
