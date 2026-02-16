@@ -297,7 +297,7 @@ def simplify(expr: Expr) -> Expr:
         # Sum/Prod: recursively simplify body and condition
         case Sum(index_sets, body, condition) | Prod(index_sets, body, condition):
             simplified_body = simplify(body)
-            simplified_cond = simplify(condition) if condition is not None else None
+            simp_cond: Expr | None = simplify(condition) if condition is not None else None
             # sum(set, 0) → 0 (zero summed over any index is still zero)
             if (
                 isinstance(expr, Sum)
@@ -319,7 +319,7 @@ def simplify(expr: Expr) -> Expr:
                 and simplified_body.value == 1
             ):
                 return Const(1)
-            return type(expr)(index_sets, simplified_body, simplified_cond)
+            return type(expr)(index_sets, simplified_body, simp_cond)
 
         case _:
             # Unknown expression type - return as-is
