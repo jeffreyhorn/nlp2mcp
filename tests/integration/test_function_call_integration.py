@@ -44,10 +44,10 @@ r = sqrt(sqr(a - xmin) + sqr(b - ymin));
         assert "r" in model.params
         param = model.params["r"]
 
-        assert () in param.expressions
+        assert any(k == () for k, _ in param.expressions)
         assert () not in param.values
 
-        expr = param.expressions[()]
+        expr = next(expr for k, expr in param.expressions if k == ())
         assert isinstance(expr, Call)
         assert expr.func == "sqrt"
         # The argument is a Binary expression (sqr(...) + sqr(...))
@@ -66,8 +66,8 @@ result = log(exp(sqrt(x)));
         assert "result" in model.params
         param = model.params["result"]
 
-        assert () in param.expressions
-        expr = param.expressions[()]
+        assert any(k == () for k, _ in param.expressions)
+        expr = next(expr for k, expr in param.expressions if k == ())
 
         # Top-level function should be log
         assert isinstance(expr, Call)
@@ -88,8 +88,8 @@ result = power(base, exponent);
         assert "result" in model.params
         param = model.params["result"]
 
-        assert () in param.expressions
-        expr = param.expressions[()]
+        assert any(k == () for k, _ in param.expressions)
+        expr = next(expr for k, expr in param.expressions if k == ())
         assert isinstance(expr, Call)
         assert expr.func == "power"
         assert len(expr.args) == 2
@@ -113,17 +113,17 @@ d = log(b);
         # Simple assignments should be in values
         assert model.params["a"].values[()] == 10
         assert model.params["b"].values[()] == 20
-        assert () not in model.params["a"].expressions
-        assert () not in model.params["b"].expressions
+        assert not any(k == () for k, _ in model.params["a"].expressions)
+        assert not any(k == () for k, _ in model.params["b"].expressions)
 
         # Function calls should be in expressions
-        assert () in model.params["c"].expressions
+        assert any(k == () for k, _ in model.params["c"].expressions)
         assert () not in model.params["c"].values
-        assert model.params["c"].expressions[()].func == "sqrt"
+        assert next(expr for k, expr in model.params["c"].expressions if k == ()).func == "sqrt"
 
-        assert () in model.params["d"].expressions
+        assert any(k == () for k, _ in model.params["d"].expressions)
         assert () not in model.params["d"].values
-        assert model.params["d"].expressions[()].func == "log"
+        assert next(expr for k, expr in model.params["d"].expressions if k == ()).func == "log"
 
     def test_function_call_with_simple_expression(self, tmp_path):
         """Test function calls mixed with arithmetic expressions."""
@@ -139,8 +139,8 @@ c = sqrt(a + b);
         assert "c" in model.params
         param = model.params["c"]
 
-        assert () in param.expressions
-        expr = param.expressions[()]
+        assert any(k == () for k, _ in param.expressions)
+        expr = next(expr for k, expr in param.expressions if k == ())
         assert isinstance(expr, Call)
         assert expr.func == "sqrt"
         # Argument is a binary expression (a + b)
@@ -163,8 +163,8 @@ rounded = round(x);
         assert "rounded" in model.params
         param = model.params["rounded"]
 
-        assert () in param.expressions
-        expr = param.expressions[()]
+        assert any(k == () for k, _ in param.expressions)
+        expr = next(expr for k, expr in param.expressions if k == ())
         assert isinstance(expr, Call)
         assert expr.func == "round"
 
@@ -182,8 +182,8 @@ remainder = mod(a, b);
         assert "remainder" in model.params
         param = model.params["remainder"]
 
-        assert () in param.expressions
-        expr = param.expressions[()]
+        assert any(k == () for k, _ in param.expressions)
+        expr = next(expr for k, expr in param.expressions if k == ())
         assert isinstance(expr, Call)
         assert expr.func == "mod"
         assert len(expr.args) == 2
@@ -201,8 +201,8 @@ ceiling = ceil(x);
         assert "ceiling" in model.params
         param = model.params["ceiling"]
 
-        assert () in param.expressions
-        expr = param.expressions[()]
+        assert any(k == () for k, _ in param.expressions)
+        expr = next(expr for k, expr in param.expressions if k == ())
         assert isinstance(expr, Call)
         assert expr.func == "ceil"
 
@@ -229,7 +229,7 @@ d = 40;
 
         # None should have expressions
         for param_name in ["a", "b", "c", "d"]:
-            assert () not in model.params[param_name].expressions
+            assert not any(k == () for k, _ in model.params[param_name].expressions)
 
     def test_indexed_parameter_simple_values(self, tmp_path):
         """Verify indexed parameters with simple values work correctly."""

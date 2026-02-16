@@ -51,7 +51,7 @@ x = not 0;
 
     # Scalar assignment with expression goes to expressions dict
     if x.expressions:
-        expr = x.expressions[()]
+        expr = next(expr for k, expr in x.expressions if k == ())
         assert isinstance(expr, Unary)
         assert expr.op.lower() == "not"
         assert isinstance(expr.child, Const)
@@ -70,7 +70,7 @@ x = not not y;
     x = model.params["x"]
 
     if x.expressions:
-        expr = x.expressions[()]
+        expr = next(expr for k, expr in x.expressions if k == ())
         assert isinstance(expr, Unary)
         assert expr.op.lower() == "not"
         assert isinstance(expr.child, Unary)
@@ -91,7 +91,7 @@ x = (not a) and b;
     x = model.params["x"]
 
     if x.expressions:
-        expr = x.expressions[()]
+        expr = next(expr for k, expr in x.expressions if k == ())
         # Should be Binary(and, Unary(not, a), b)
         assert isinstance(expr, Binary)
         assert expr.op.lower() == "and"
@@ -113,7 +113,7 @@ x = not a or b;
     x = model.params["x"]
 
     if x.expressions:
-        expr = x.expressions[()]
+        expr = next(expr for k, expr in x.expressions if k == ())
         # not has higher precedence than or, so: (not a) or b = Binary(or, Unary(not, a), b)
         assert isinstance(expr, Binary)
         assert expr.op.lower() == "or"

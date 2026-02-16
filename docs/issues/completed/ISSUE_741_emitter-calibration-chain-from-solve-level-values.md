@@ -1,7 +1,7 @@
 # MCP Emission: Calibration Parameters Depending on Solve-Level Values (GAMS Error 66)
 
 **GitHub Issue:** [#741](https://github.com/jeffreyhorn/nlp2mcp/issues/741)
-**Status:** Open
+**Status:** Fixed
 **Severity:** High -- Blocks ganges/gangesx MCP from compiling; affects any model with post-solve calibration
 **Discovered:** 2026-02-16 (Sprint 19, after fixing Issues #738 and #739)
 **Affected Models:** ganges, gangesx (and likely other CGE models with calibration blocks)
@@ -168,11 +168,38 @@ Option B is the most general and maintainable solution. It preserves the origina
 
 ---
 
+## Fix Details
+
+**Approach:** Option B — Emit `.l` references as `variable.l` in GAMS, preserving the original calibration logic.
+
+**Implementation:** Multi-part change across 5 source files:
+
+1. **`src/ir/ast.py`** — Added `attribute: str = ""` field to `VarRef` dataclass. When set (e.g., `"l"`, `"m"`, `"lo"`, `"up"`), it represents GAMS variable attribute access like `x.l(i)`. Updated `__repr__` to display the attribute.
+
+2. **`src/ir/parser.py`** — Three changes:
+   - Updated `bound_scalar` and `bound_indexed` handlers to preserve the `.l`/`.m` attribute on `VarRef` nodes after `_make_symbol()` creates the base reference.
+   - Modified `_contains_variable_reference()` to return `False` for attributed `VarRef` nodes (e.g., `x.l(i)` is safe to keep since it references a known level value, not a bare variable). Bare `VarRef` nodes still block the assignment.
+   - Changed `ParameterDef.expressions` storage from dict assignment (`param.expressions[key] = expr`) to list append (`param.expressions.append((key, expr))`) at 3 locations, to preserve sequential ordering of multi-step calibration patterns.
+
+3. **`src/ir/symbols.py`** — Changed `ParameterDef.expressions` type from `dict[tuple[str, ...], Expr]` to `list[tuple[tuple[str, ...], Expr]]`. This preserves the ordering of multi-step calibration assignments (e.g., Step 1: `deltaq(sc) = f(x.l, m.l)`, Step 2: `deltaq(sc) = deltaq(sc)/(1+deltaq(sc))`).
+
+4. **`src/emit/expr_to_gams.py`** — Updated `VarRef` case to emit `name.attribute(indices)` syntax when attribute is present (e.g., `x.l(i)`).
+
+5. **`src/emit/original_symbols.py`** — Updated `emit_computed_parameter_assignments()` to iterate the list-based expressions. Added `has_prior_assignment` tracking so self-referencing expressions (Step 2) are only skipped when no prior assignment exists (either from `.values` or a preceding list entry). Updated `emit_original_parameters()` indexed expression check for list syntax.
+
+**Test changes:** Updated 5 test files to use list-compatible access patterns for `ParameterDef.expressions` (replacing `key in param.expressions` with `any(k == key for k, _ in param.expressions)` and `param.expressions[key]` with `next(expr for k, expr in param.expressions if k == key)`).
+
+**Result:** All 17 calibration parameters in ganges now have their expressions preserved, including multi-step patterns. The emitted GAMS correctly outputs `p(i) = x.l(i)` syntax. All 15+ instances of GAMS Error 66 eliminated.
+
+**Quality Gate:** All checks pass (typecheck, lint, format, 3369 tests passed, 10 skipped, 1 xfailed).
+
+---
+
 ## Relevant Files
 
-- `src/ir/parser.py` — `_handle_assign()` (line ~3230), `_contains_variable_reference()` (line ~4556)
-- `src/emit/original_symbols.py` — `emit_computed_parameter_assignments()`
-- `src/emit/expr_to_gams.py` — Would need extension for `.l` attribute emission
-- `src/ir/ast.py` — `VarRef` class (currently has no `.l` attribute field)
-- `src/ir/symbols.py` — `VariableDef` (has `l`, `l_map` for initial level values)
+- `src/ir/ast.py` — Fix location: `VarRef.attribute` field
+- `src/ir/parser.py` — Fix location: `bound_scalar`/`bound_indexed` attribute preservation, `_contains_variable_reference()` attributed VarRef handling, expression list storage
+- `src/ir/symbols.py` — Fix location: `ParameterDef.expressions` type change from dict to list
+- `src/emit/expr_to_gams.py` — Fix location: `VarRef` case with attribute emission
+- `src/emit/original_symbols.py` — Fix location: list iteration in `emit_computed_parameter_assignments()`, `has_prior_assignment` logic
 - `data/gamslib/raw/ganges.gms` — Original model (lines 597-750 for calibration block)

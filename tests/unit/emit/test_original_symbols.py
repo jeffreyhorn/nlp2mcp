@@ -620,7 +620,7 @@ class TestEmitOriginalParameters:
             name="croprep",
             domain=(),  # Empty domain
             values={},
-            expressions={("revenue", "c"): Const(100.0)},  # Indexed expression
+            expressions=[(("revenue", "c"), Const(100.0))],  # Indexed expression
         )
 
         with caplog.at_level(logging.WARNING):
@@ -706,7 +706,7 @@ class TestEmitComputedParameterAssignments:
             Const(1000.0),
         )
         model.params["c"] = ParameterDef(
-            name="c", domain=("i", "j"), expressions={("i", "j"): expr}
+            name="c", domain=("i", "j"), expressions=[(("i", "j"), expr)]
         )
 
         result = emit_computed_parameter_assignments(model)
@@ -724,7 +724,7 @@ class TestEmitComputedParameterAssignments:
             Call("log", (Binary("*", Const(750.0), Const(0.07031)),)),
         )
         model.params["gplus"] = ParameterDef(
-            name="gplus", domain=("c",), expressions={("c",): expr}
+            name="gplus", domain=("c",), expressions=[(("c",), expr)]
         )
 
         result = emit_computed_parameter_assignments(model)
@@ -738,7 +738,7 @@ class TestEmitComputedParameterAssignments:
         model = ModelIR()
         # Create expression: 2 * pi
         expr = Binary("*", Const(2.0), ParamRef("pi", ()))
-        model.params["two_pi"] = ParameterDef(name="two_pi", domain=(), expressions={(): expr})
+        model.params["two_pi"] = ParameterDef(name="two_pi", domain=(), expressions=[((), expr)])
 
         result = emit_computed_parameter_assignments(model)
         assert "two_pi =" in result
@@ -750,11 +750,13 @@ class TestEmitComputedParameterAssignments:
         model = ModelIR()
         # First parameter
         expr1 = Binary("*", ParamRef("a", ()), Const(2.0))
-        model.params["double_a"] = ParameterDef(name="double_a", domain=(), expressions={(): expr1})
+        model.params["double_a"] = ParameterDef(
+            name="double_a", domain=(), expressions=[((), expr1)]
+        )
         # Second parameter
         expr2 = Binary("+", ParamRef("b", ("i",)), Const(1.0))
         model.params["b_plus_one"] = ParameterDef(
-            name="b_plus_one", domain=("i",), expressions={("i",): expr2}
+            name="b_plus_one", domain=("i",), expressions=[(("i",), expr2)]
         )
 
         result = emit_computed_parameter_assignments(model)
@@ -768,7 +770,7 @@ class TestEmitComputedParameterAssignments:
         model = ModelIR()
         # This shouldn't be emitted since 'pi' is a predefined constant
         expr = Binary("*", Const(2.0), Const(3.14159))
-        model.params["pi"] = ParameterDef(name="pi", domain=(), expressions={(): expr})
+        model.params["pi"] = ParameterDef(name="pi", domain=(), expressions=[((), expr)])
 
         result = emit_computed_parameter_assignments(model)
         assert result == ""
@@ -781,7 +783,7 @@ class TestEmitComputedParameterAssignments:
             name="y",
             domain=("i",),
             values={("a",): 5.0},  # Static value
-            expressions={("i",): expr},  # Computed expression
+            expressions=[(("i",), expr)],  # Computed expression
         )
 
         result = emit_computed_parameter_assignments(model)
@@ -1087,7 +1089,7 @@ class TestSelfReferencingExpressionSkipping:
             name="deltaq",
             domain=("sc",),
             values={},  # No values — Step 1 was dropped
-            expressions={("sc",): expr},
+            expressions=[(("sc",), expr)],
         )
         # Need to declare 'sc' as a set so it's recognized as a domain variable
         model.sets["sc"] = SetDef(name="sc", members=["sc1"])
@@ -1106,7 +1108,7 @@ class TestSelfReferencingExpressionSkipping:
             name="deltas",
             domain=("i",),
             values={("i1",): 1.0},  # Has prior values
-            expressions={("i",): expr},
+            expressions=[(("i",), expr)],
         )
         model.sets["i"] = SetDef(name="i", members=["i1"])
 
@@ -1123,7 +1125,7 @@ class TestSelfReferencingExpressionSkipping:
             name="c",
             domain=("i",),
             values={},  # No values, but NOT self-referencing
-            expressions={("i",): expr},
+            expressions=[(("i",), expr)],
         )
         model.sets["i"] = SetDef(name="i", members=["i1"])
 
@@ -1144,7 +1146,7 @@ class TestSelfReferencingExpressionSkipping:
             name="deltaq",
             domain=("sc",),
             values={},
-            expressions={("sc",): expr1},
+            expressions=[(("sc",), expr1)],
         )
 
         # Param 2: not self-ref, no values → should be emitted
@@ -1153,7 +1155,7 @@ class TestSelfReferencingExpressionSkipping:
             name="beta",
             domain=("sc",),
             values={},
-            expressions={("sc",): expr2},
+            expressions=[(("sc",), expr2)],
         )
 
         result = emit_computed_parameter_assignments(model)

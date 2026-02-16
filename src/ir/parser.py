@@ -3137,7 +3137,7 @@ class _ModelBuilder:
                 key = (member,)
 
             if has_function_call:
-                param.expressions[key] = expr
+                param.expressions.append((key, expr))
             elif value is not None:
                 param.values[key] = value
 
@@ -3432,7 +3432,7 @@ class _ModelBuilder:
                 # Sprint 10 Day 4: Store expression if it contains function calls, otherwise store value
                 if has_function_call or is_compact_index:
                     # Keep quotes in expression indices for emitter
-                    param.expressions[tuple(indices)] = expr
+                    param.expressions.append((tuple(indices), expr))
                 elif value is not None:
                     # Sprint 18 Day 2: Strip quotes from value indices for canonical storage
                     param.values[_strip_quotes_from_indices(tuple(indices))] = value
@@ -3448,7 +3448,7 @@ class _ModelBuilder:
                     )
                 # Sprint 10 Day 4: Store expression if it contains function calls, otherwise store value
                 if has_function_call:
-                    param.expressions[()] = expr
+                    param.expressions.append(((), expr))
                 elif value is not None:
                     param.values[()] = value
                 return
@@ -3859,7 +3859,13 @@ class _ModelBuilder:
                 return self._attach_domain(expr, free_domain)
 
             # Otherwise, treat as variable reference (Sprint 8 behavior)
-            return self._make_symbol(name, (), free_domain, node)
+            # Issue #741: Preserve the attribute (.l, .m, etc.) on VarRef so the
+            # emitter can render calibration assignments referencing .l values.
+            expr = self._make_symbol(name, (), free_domain, node)
+            if isinstance(expr, VarRef) and attribute:
+                expr = VarRef(name=expr.name, indices=expr.indices, attribute=attribute)
+                return self._attach_domain(expr, free_domain)
+            return expr
 
         if node.data == "bound_indexed":
             name = _token_text(node.children[0])
@@ -3877,7 +3883,12 @@ class _ModelBuilder:
                 return self._attach_domain(expr, free_domain)
 
             # Otherwise, treat as variable reference (Sprint 8 behavior)
-            return self._make_symbol(name, indices, free_domain, node)
+            # Issue #741: Preserve the attribute (.l, .m, etc.) on VarRef.
+            expr = self._make_symbol(name, indices, free_domain, node)
+            if isinstance(expr, VarRef) and attribute:
+                expr = VarRef(name=expr.name, indices=expr.indices, attribute=attribute)
+                return self._attach_domain(expr, free_domain)
+            return expr
 
         # Support compile-time constants: %identifier% or %path.to.value%
         if node.data == "compile_const":
@@ -4554,18 +4565,32 @@ class _ModelBuilder:
         return False
 
     def _contains_variable_reference(self, expr: Expr) -> bool:
-        """Check if an expression contains any variable references (recursively).
+        """Check if an expression contains any *bare* variable references (recursively).
 
         Sprint 17 Day 4: Used to detect when parameter assignments contain variable
-        references (like x.l or x(i)) which are runtime values that cannot be stored
+        references (like x(i)) which are runtime values that cannot be stored
         as computed parameter expressions.
 
-        Expressions that only contain parameter references (like f*d(i,j)/1000) can be
-        stored and emitted as GAMS assignment statements.
+        Issue #741: VarRef nodes with an attribute (e.g., x.l, v.m) are *not*
+        treated as blocking references because they can be emitted as valid GAMS
+        ``x.l(i)`` syntax for calibration assignments.  Only bare VarRef
+        (no attribute) blocks storage.
+
+        Expressions that only contain parameter references (like f*d(i,j)/1000)
+        or variable attribute references (like x.l(i)) can be stored and emitted
+        as GAMS assignment statements.
         """
         if isinstance(expr, VarRef):
-            # VarRef itself is a variable reference. Also check if its indices contain
-            # variable references inside IndexOffset expressions (e.g., x(i + y.l)).
+            # Issue #741: VarRef with an attribute (.l, .m, .lo, .up) represents
+            # a GAMS variable attribute access that can be emitted as-is.
+            # Only bare VarRef (no attribute) is a blocking variable reference.
+            if expr.attribute:
+                # Still check if indices contain bare variable references
+                for idx in expr.indices:
+                    if isinstance(idx, IndexOffset) and self._contains_variable_reference(idx):
+                        return True
+                return False  # Attributed VarRef is OK to keep
+            # Bare VarRef — this is a blocking variable reference
             for idx in expr.indices:
                 if isinstance(idx, IndexOffset) and self._contains_variable_reference(idx):
                     return True

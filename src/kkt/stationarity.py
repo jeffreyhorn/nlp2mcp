@@ -48,6 +48,47 @@ from src.kkt.naming import (
 from src.kkt.objective import extract_objective_info
 
 
+def _collect_referenced_variable_names(model_ir: ModelIR) -> set[str]:
+    """Collect names of all variables referenced in equation bodies or the objective.
+
+    Issue #742: Variables declared but never referenced in any equation body
+    or objective (like dummy/reporting variables) should be excluded from KKT
+    stationarity equation generation. This function walks all equation LHS/RHS
+    expressions and the objective to build a set of actually-referenced variable
+    names.
+
+    Args:
+        model_ir: Model IR containing equation definitions and objective
+
+    Returns:
+        Set of variable names (original case) that appear in at least one
+        equation or the objective
+    """
+    referenced: set[str] = set()
+
+    def _walk(expr: Expr) -> None:
+        if isinstance(expr, VarRef):
+            referenced.add(expr.name)
+        for child in expr.children():
+            _walk(child)
+
+    for eq_def in model_ir.equations.values():
+        lhs, rhs = eq_def.lhs_rhs
+        _walk(lhs)
+        _walk(rhs)
+        if eq_def.condition is not None:
+            _walk(eq_def.condition)
+
+    # Include the objective variable (e.g., 'minimize r' references 'r')
+    if model_ir.objective and model_ir.objective.objvar:
+        referenced.add(model_ir.objective.objvar)
+    # Walk objective expression if present
+    if model_ir.objective and model_ir.objective.expr:
+        _walk(model_ir.objective.expr)
+
+    return referenced
+
+
 def _collect_symbolref_names(expr: Expr) -> set[str]:
     """Collect all SymbolRef names in an expression tree.
 
@@ -308,6 +349,14 @@ def build_stationarity_equations(kkt: KKTSystem) -> dict[str, EquationDef]:
     should_skip_objvar = not kkt.model_ir.strategy1_applied and not obj_info.needs_stationarity
     objvar_to_skip = obj_info.objvar if should_skip_objvar else None
     var_groups = _group_variables_by_name(kkt, objvar_to_skip)
+
+    # Issue #742: Filter out variables that don't appear in any equation body
+    # or the objective. Unreferenced variables (e.g., dummy/reporting variables
+    # like dumshr, dumtg) produce trivial 0=0 stationarity equations that cause
+    # GAMS Error 69/483. Only apply when there are equations to reference.
+    if kkt.model_ir.equations:
+        referenced_vars = _collect_referenced_variable_names(kkt.model_ir)
+        var_groups = {name: insts for name, insts in var_groups.items() if name in referenced_vars}
 
     # For each variable, generate either indexed or scalar stationarity equation
     for var_name, instances in var_groups.items():
