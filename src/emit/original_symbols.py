@@ -16,6 +16,7 @@ import logging
 import re
 
 from src.emit.expr_to_gams import expr_to_gams
+from src.ir.ast import Expr, ParamRef
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
@@ -717,6 +718,25 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     return "\n".join(lines)
 
 
+def _expr_references_param(expr: Expr, param_name: str) -> bool:
+    """Check if an expression tree contains a ParamRef to the given parameter.
+
+    Issue #738: Used to detect self-referencing parameter assignments like
+    ``deltaq(sc) = deltaq(sc) / (1 + deltaq(sc))`` where the RHS references the
+    parameter being assigned.
+
+    Args:
+        expr: Expression tree to search
+        param_name: Parameter name to look for (case-insensitive)
+
+    Returns:
+        True if the expression contains a ParamRef with the given name
+    """
+    if isinstance(expr, ParamRef) and expr.name.lower() == param_name.lower():
+        return True
+    return any(_expr_references_param(child, param_name) for child in expr.children())
+
+
 def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
     """Emit computed parameter assignment statements.
 
@@ -776,6 +796,21 @@ def emit_computed_parameter_assignments(model_ir: ModelIR) -> str:
 
         # Emit each expression assignment
         for key_tuple, expr in param_def.expressions.items():
+            # Issue #738: Skip self-referencing expressions when the parameter has no
+            # prior values. This occurs with post-solve calibration patterns like:
+            #   deltaq(sc) = (x.l(sc)/m.l(sc))**(1/sigmaq(sc))*...  <- Step 1 (dropped: .l refs)
+            #   deltaq(sc) = deltaq(sc)/(1 + deltaq(sc))             <- Step 2 (self-ref)
+            # The parser drops Step 1 (contains VarRef/.l) but keeps Step 2 (pure ParamRef).
+            # Emitting Step 2 alone causes GAMS Error 141 because the parameter was never
+            # assigned. Skip such expressions to avoid the compilation error.
+            if _expr_references_param(expr, param_name) and not param_def.values:
+                logger.info(
+                    "Skipping self-referencing expression for parameter '%s' "
+                    "(no prior values — likely depends on dropped .l calibration)",
+                    param_name,
+                )
+                continue
+
             # Convert expression to GAMS syntax
             # PR #658 review: Derive domain_vars from model context (declared sets/aliases)
             # rather than trusting raw key strings. This prevents unquoted element literals

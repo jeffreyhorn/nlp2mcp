@@ -1,7 +1,7 @@
 # MCP Emission: Unassigned Parameters from Solve-Level Calibration (GAMS Error 141)
 
 **GitHub Issue:** [#738](https://github.com/jeffreyhorn/nlp2mcp/issues/738)
-**Status:** Open
+**Status:** Fixed
 **Severity:** Medium -- Generated MCP files fail GAMS compilation for affected models
 **Discovered:** 2026-02-15 (Sprint 19, during Issue #730 investigation)
 **Affected Models:** ganges, gangesx (and likely other models with post-solve calibration)
@@ -118,10 +118,25 @@ Option A is mathematically correct if variable starting values are available in 
 
 ---
 
+## Fix Details
+
+**Approach:** Option B — Skip self-referencing expressions when no prior values exist.
+
+**Implementation:** In `emit_computed_parameter_assignments()` in `src/emit/original_symbols.py`:
+
+1. Added helper `_expr_references_param(expr, param_name)` that walks an expression AST tree and returns `True` if it contains a `ParamRef` to the given parameter name (case-insensitive).
+
+2. Before emitting each expression, check: if the expression self-references the parameter AND the parameter has no `values` data (i.e., Step 1 was dropped because it contained `.l` references), skip emitting the expression with an info log message.
+
+3. `deltas(i)` is correctly NOT skipped because it has prior values from `deltas(i)$(not ls.l(i)) = 1;` — the parser stores these as `ParameterDef.values`.
+
+**Result:** All 5 instances of GAMS Error 141 eliminated for ganges/gangesx. The affected parameters (`deltaq`, `deltax`, `deltaz`, `deltan`, `deltav`) retain their default value (0) which causes downstream Error 66 ("symbol has no values assigned") for computed parameters that depend on them (e.g., `aq`, `az`, `as`, `av`). These are separate pre-existing issues related to the calibration chain depending on `.l` values.
+
+**Quality Gate:** All checks pass (typecheck, lint, format, 3339 tests).
+
 ## Relevant Files
 
-- `src/emit/emit_gams.py` — GAMS code emission (where assignments are emitted)
-- `src/emit/model.py` — Model-level emission logic
-- `src/ir/model_ir.py` — IR representation (check if `.l` assignments are captured)
+- `src/emit/original_symbols.py` — Fix location: `_expr_references_param()` helper and skip logic in `emit_computed_parameter_assignments()`
+- `src/ir/ast.py` — `ParamRef` class used for self-reference detection
 - `data/gamslib/raw/ganges.gms` — Original model (lines 597-686 for calibration block)
 - `data/gamslib/raw/gangesx.gms` — Same structure as ganges
