@@ -25,6 +25,7 @@ from src.ir.ast import (
     Unary,
     VarRef,
 )
+from src.ir.constants import GAMS_RESERVED_CONSTANTS
 
 # Operator precedence levels (higher = tighter binding)
 PRECEDENCE = {
@@ -294,6 +295,10 @@ def _quote_indices(
 
         # If it was quoted, it's an element label - always quote it (single layer)
         if was_quoted:
+            result.append(f'"{idx_clean}"')
+        # Sprint 19 Day 2: GAMS reserved constants (inf, na, eps, etc.) must always be quoted
+        # when used as set element indices, even in domain_vars context.
+        elif idx_clean.lower() in GAMS_RESERVED_CONSTANTS:
             result.append(f'"{idx_clean}"')
         # Sprint 18 Day 2: If index is in domain_vars context, it's a domain variable - don't quote
         elif idx_clean in domain_vars:

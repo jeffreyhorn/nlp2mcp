@@ -471,6 +471,7 @@ loop_body: exec_stmt* exec_stmt_final
                 | option_stmt
                 | solve_stmt
                 | put_stmt
+                | put_stmt_nosemi
                 | putclose_stmt
                 | execute_stmt
                 | loop_stmt      // Sprint 19: Support nested loops
@@ -512,11 +513,21 @@ FILE_PATH_UNQUOTED: /[a-zA-Z0-9_][a-zA-Z0-9_.\-]*/
 put_stmt: "put"i put_items? SEMI
         | "put"i put_items "/" SEMI
 
+// Sprint 19 Day 2: No-semicolon variant for put as final statement in loop/if body
+put_stmt_nosemi: "put"i put_items?
+               | "put"i put_items "/"
+
 put_items: put_item (","? put_item)*
 
-put_item: STRING
+put_item: STRING put_format?
         | "/" -> put_newline
-        | expr
+        | expr put_format?
+
+// Sprint 19 Day 2: Format specifiers for put items — :width or :width:decimals
+// Optional alignment prefix: <, >, <>
+// Examples: put x:8:2; put "text":20; put @10 y:12:4;
+put_format: ":" PUT_ALIGN? NUMBER (":" NUMBER)?
+PUT_ALIGN: "<>" | "<" | ">"
 
 // Putclose statement closes a file after writing
 putclose_stmt: "putclose"i ID? SEMI

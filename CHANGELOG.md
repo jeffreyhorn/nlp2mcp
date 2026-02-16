@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 2: Put Statement Format + Reserved Word Quoting - 2026-02-16
+
+**Branch:** `sprint19-day2-put-format-reserved-words`
+**Status:** COMPLETE
+
+#### Summary
+Implemented put statement `:width:decimals` format specifiers and `put_stmt_nosemi` variant (6 models past parse stage). Added GAMS reserved constant quoting in emit layer for set elements and expression indices (ps2_f family models emit correctly quoted `inf`, `na`, etc.). 17 new tests (3,386 total), zero regressions.
+
+#### Changes
+- Grammar: Added `put_format` rule for `:width:decimals` and optional alignment prefix (`<`, `>`, `<>`)
+- Grammar: Added `put_stmt_nosemi` variant for put as final statement in loop/if body
+- Grammar: Added `put_stmt_nosemi` to `exec_stmt_final` rule
+- Emit: Added `GAMS_RESERVED_CONSTANTS` set (`inf`, `na`, `eps`, `undf`, `yes`, `no`) in `src/ir/constants.py`
+- Emit: `_quote_indices()` in `expr_to_gams.py` now quotes reserved constants before domain_vars heuristic
+- Emit: `_sanitize_set_element()` in `original_symbols.py` now quotes reserved constants in set data
+- Tests: 12 new put format/nosemi tests, 5 new reserved word quoting tests
+
+#### Metrics
+- 6 models past put format parse errors: apl1pca, prodsp2, ps5_s_mn, ps10_s, ps10_s_mn, stdcge
+- ps2_f family (5 models) emit correctly quoted reserved constants
+- Tests: 3,386 (was 3,369) — +17
+
 ### Sprint 19 Day 1: Setup + Quick Wins + Checkpoint 0 - 2026-02-13
 
 **Branch:** `sprint19-day1-setup-quick-wins`

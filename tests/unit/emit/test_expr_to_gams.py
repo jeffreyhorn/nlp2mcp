@@ -590,6 +590,33 @@ class TestQuoteIndices:
         assert result == 'dat(i,"y")'
         assert '""' not in result
 
+    def test_reserved_constants_always_quoted(self):
+        """Sprint 19 Day 2: GAMS reserved constants must be quoted as indices.
+
+        Reserved constants like inf, na, eps would be misinterpreted by GAMS
+        if used unquoted as set element indices.
+        """
+        assert _quote_indices(("inf",)) == ['"inf"']
+        assert _quote_indices(("na",)) == ['"na"']
+        assert _quote_indices(("no",)) == ['"no"']
+        assert _quote_indices(("eps",)) == ['"eps"']
+        assert _quote_indices(("undf",)) == ['"undf"']
+        assert _quote_indices(("yes",)) == ['"yes"']
+
+    def test_reserved_constants_quoted_even_with_domain_context(self):
+        """Reserved constants are quoted even when they appear in domain_vars.
+
+        This shouldn't normally happen, but if it does, safety wins.
+        """
+        assert _quote_indices(("inf",), frozenset(["inf"])) == ['"inf"']
+        assert _quote_indices(("na",), frozenset(["na"])) == ['"na"']
+
+    def test_non_reserved_short_identifiers_not_quoted(self):
+        """Two-letter identifiers that are NOT reserved constants stay unquoted."""
+        assert _quote_indices(("ii",)) == ["ii"]
+        assert _quote_indices(("np",)) == ["np"]
+        assert _quote_indices(("nn",)) == ["nn"]
+
 
 @pytest.mark.unit
 class TestDollarConditional:
