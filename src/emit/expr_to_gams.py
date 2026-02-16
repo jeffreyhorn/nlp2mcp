@@ -430,8 +430,11 @@ def expr_to_gams(
                 else:
                     return f"((-1) * {child_str})"
             # Sprint 18 Day 3: Handle 'not' operator with required space
+            # Issue #730: Always parenthesize 'not' expressions to avoid GAMS Error 445
+            # ("More than one operator in a row") when 'not' follows another operator,
+            # e.g., ((-1) * not sa(i)) must become ((-1) * (not sa(i))).
             if op == "not":
-                return f"not {child_str}"
+                return f"(not {child_str})"
             # Unary plus can be passed through directly
             return f"{op}{child_str}"
 

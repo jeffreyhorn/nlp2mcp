@@ -627,5 +627,28 @@ def _substitute_indices(expr, symbolic_indices: tuple[str, ...], concrete_indice
             return expr
 
     else:
-        # Const, SymbolRef, etc. - no indices to substitute
+        # Issue #730: Handle SymbolRef, SetMembershipTest, DollarConditional.
+        from ..ir.ast import DollarConditional, SetMembershipTest, SymbolRef
+
+        # SymbolRef – bare index references like SymbolRef("r") that appear as
+        # arguments in Call nodes (e.g., gamma(j, r) parsed as
+        # Call("gamma", (SymbolRef("j"), SymbolRef("r")))).
+        if isinstance(expr, SymbolRef) and expr.name in symbolic_indices:
+            concrete = concrete_indices[symbolic_indices.index(expr.name)]
+            return SymbolRef(concrete)
+
+        # SetMembershipTest – e.g., im(i) or ri(r,i) in dollar conditions.
+        # The indices are Expr nodes (typically SymbolRef) that need substitution.
+        if isinstance(expr, SetMembershipTest):
+            new_idx = tuple(
+                _substitute_indices(idx, symbolic_indices, concrete_indices) for idx in expr.indices
+            )
+            return SetMembershipTest(expr.set_name, new_idx)
+
+        # DollarConditional – e.g., expr$condition
+        if isinstance(expr, DollarConditional):
+            new_val = _substitute_indices(expr.value_expr, symbolic_indices, concrete_indices)
+            new_cond = _substitute_indices(expr.condition, symbolic_indices, concrete_indices)
+            return DollarConditional(value_expr=new_val, condition=new_cond)
+
         return expr

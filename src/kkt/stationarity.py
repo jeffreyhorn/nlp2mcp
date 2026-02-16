@@ -31,7 +31,9 @@ from src.ir.ast import (
     MultiplierRef,
     ParamRef,
     Prod,
+    SetMembershipTest,
     Sum,
+    SymbolRef,
     Unary,
     VarRef,
 )
@@ -44,6 +46,19 @@ from src.kkt.naming import (
     sanitize_index_for_identifier,
 )
 from src.kkt.objective import extract_objective_info
+
+
+def _collect_symbolref_names(expr: Expr) -> set[str]:
+    """Collect all SymbolRef names in an expression tree.
+
+    Used to determine which free index names appear in a condition expression.
+    """
+    result: set[str] = set()
+    if isinstance(expr, SymbolRef):
+        result.add(expr.name)
+    for child in expr.children():
+        result.update(_collect_symbolref_names(child))
+    return result
 
 
 def _find_variable_access_condition(
@@ -104,6 +119,15 @@ def _find_variable_access_condition(
     # Check if all conditions are structurally identical
     first = collected_conditions[0]
     if all(repr(c) == repr(first) for c in collected_conditions):
+        # Issue #730: Validate that all free indices in the condition are within
+        # the variable's domain.  If the condition references indices from the
+        # equation domain that are NOT in the variable domain, the condition
+        # cannot be used — it would produce bare/uncontrolled indices in GAMS.
+        # Example: pls(r) accessed in sum(r$(ri(r,i)), pls(r)) produces
+        # condition ri(r,i), but 'i' is not in pls's domain (r,).
+        cond_indices = _collect_symbolref_names(first)
+        if cond_indices - var_domain_set:
+            return None
         return first
 
     return None
@@ -765,6 +789,27 @@ def _replace_indices_in_expr(
             if new_value is not value_expr or new_cond is not condition:
                 return DollarConditional(value_expr=new_value, condition=new_cond)
             return expr
+        case SymbolRef() as sym_ref:
+            # Issue #730: Handle bare symbol references (e.g., SymbolRef("rural"))
+            # that appear as arguments in Call nodes like gamma(j, r).
+            # After _substitute_indices converts SymbolRef("r") → SymbolRef("rural"),
+            # we need to convert back: SymbolRef("rural") → SymbolRef("r").
+            if element_to_set and sym_ref.name in element_to_set:
+                mapped = element_to_set[sym_ref.name]
+                if mapped != sym_ref.name:
+                    return SymbolRef(mapped)
+            return expr
+        case SetMembershipTest() as smt:
+            # Issue #730: Handle set membership tests like im(i) or ri(r,i).
+            # The indices are Expr nodes that may contain SymbolRef with concrete
+            # element values needing replacement.
+            new_idx = tuple(
+                _replace_indices_in_expr(idx, domain, element_to_set, model_ir, equation_domain)
+                for idx in smt.indices
+            )
+            if new_idx != smt.indices:
+                return SetMembershipTest(smt.set_name, new_idx)
+            return expr
         case _:
             return expr
 
@@ -936,7 +981,22 @@ def _replace_matching_indices(
                     if target_set.lower() in superset_to_subset:
                         new_indices.append(superset_to_subset[target_set.lower()])
                     else:
-                        new_indices.append(target_set)
+                        # Issue #730: When the declared domain target is an alias
+                        # or a set not in the equation domain, prefer the
+                        # element_to_set mapping if it maps to a set that IS in the
+                        # equation domain.  This fixes the case where a sum over an
+                        # alias (e.g., j aliasing i) collapses and both positions of
+                        # a parameter like a("agricult","agricult") should map to the
+                        # same equation-domain index "i", not to the alias "j".
+                        if (
+                            equation_domain
+                            and idx in element_to_set
+                            and element_to_set[idx] in equation_domain
+                            and target_set not in (equation_domain or ())
+                        ):
+                            new_indices.append(element_to_set[idx])
+                        else:
+                            new_indices.append(target_set)
         elif idx in element_to_set:
             # Replace element with its set name
             new_indices.append(element_to_set[idx])
@@ -1148,8 +1208,15 @@ def _add_jacobian_transpose_terms_scalar(
 ) -> Expr:
     """Add J^T multiplier terms to the stationarity expression (scalar version).
 
-    For each row in the Jacobian that has a nonzero entry at col_id,
-    add: ∂constraint/∂x · multiplier
+    Issue #730: For scalar stationarity equations, indexed constraint contributions
+    must be wrapped in Sum() over the constraint domain to avoid uncontrolled set
+    indices.  Derivatives are converted from per-instance concrete indices to
+    symbolic indices using the same element-to-set replacement logic as the
+    indexed stationarity path.
+
+    For each constraint that has a nonzero Jacobian entry at col_id:
+    - Scalar constraints: add  derivative * multiplier
+    - Indexed constraints: add  sum(domain, derivative * multiplier)
 
     For negated constraints (LE inequalities that complementarity negates),
     negate the Jacobian term to account for the negation.
@@ -1157,48 +1224,73 @@ def _add_jacobian_transpose_terms_scalar(
     if jacobian.index_mapping is None:
         return expr
 
-    # Iterate over all rows in the Jacobian
+    # Group Jacobian entries by constraint name (mirrors _add_indexed_jacobian_terms)
+    constraint_entries: dict[str, list[tuple[int, int]]] = {}
     for row_id in range(jacobian.num_rows):
-        # Check if this column appears in this row
         derivative = jacobian.get_derivative(row_id, col_id)
         if derivative is None:
             continue
 
-        # Get constraint name and indices for this row
-        eq_name, eq_indices = jacobian.index_mapping.row_to_eq[row_id]
+        eq_name, _ = jacobian.index_mapping.row_to_eq[row_id]
 
-        # Skip objective defining equation (not included in stationarity)
         if skip_eq and eq_name == skip_eq:
             continue
 
-        # Get multiplier name for this constraint
-        mult_name = name_func(eq_name)
+        if eq_name not in constraint_entries:
+            constraint_entries[eq_name] = []
+        constraint_entries[eq_name].append((row_id, col_id))
 
-        # Check if multiplier exists (it should if we built multipliers correctly)
+    # Build element-to-set mapping for index replacement (same as indexed path)
+    # For scalar variables, domain is empty but we still need set membership info
+    element_to_set = _build_element_to_set_mapping(kkt.model_ir, (), [(col_id, ())])
+
+    for eq_name_base, entries in constraint_entries.items():
+        mult_name = name_func(eq_name_base)
         if mult_name not in multipliers:
-            # This shouldn't happen if multiplier generation is correct
             continue
 
-        # Add term: derivative * multiplier
-        mult_ref = MultiplierRef(mult_name, eq_indices)
-        term = Binary("*", derivative, mult_ref)
+        row_id, _ = entries[0]
+        derivative = jacobian.get_derivative(row_id, col_id)
+        _, eq_indices = jacobian.index_mapping.row_to_eq[row_id]
 
-        # Check if this constraint was negated by complementarity
-        # For negated constraints, subtract the term instead of adding it
-        # EXCEPTION: Max constraints use arg - aux_max formulation, which already has
-        # the correct sign, so negation is not needed. Max constraints should be added, not subtracted.
-        #
-        # Note: This function is called for both equality (J_eq) and inequality (J_ineq) Jacobians.
-        # - Equality constraints: Won't be in complementarity_ineq, so fall through to else (add term)
-        # - Inequality constraints: Should be in complementarity_ineq (registered during assembly)
-        #   If an inequality is not found, it's added normally (else branch). This is safe because
-        #   non-negated inequalities should be added, and any missing registration is a bug elsewhere.
-        if eq_name in kkt.complementarity_ineq:
-            comp_pair = kkt.complementarity_ineq[eq_name]
-            if comp_pair.negated and not comp_pair.is_max_constraint:
-                expr = Binary("-", expr, term)
+        # Determine negation for this constraint
+        negate = False
+        if eq_name_base in kkt.complementarity_ineq:
+            comp_pair = kkt.complementarity_ineq[eq_name_base]
+            negate = comp_pair.negated and not comp_pair.is_max_constraint
+
+        if eq_indices:
+            # Indexed constraint: use symbolic indices with Sum() wrapping
+            mult_domain = _get_constraint_domain(kkt, eq_name_base)
+            if mult_domain:
+                # Build constraint-specific element mapping
+                constraint_element_to_set = _build_constraint_element_mapping(
+                    element_to_set, eq_indices, mult_domain
+                )
+                # Replace concrete indices with symbolic set names
+                indexed_deriv = _replace_indices_in_expr(
+                    derivative,
+                    (),  # scalar variable has no domain
+                    constraint_element_to_set,
+                    kkt.model_ir,
+                    equation_domain=(),
+                )
+                mult_ref = MultiplierRef(mult_name, mult_domain)
+                term: Expr = Binary("*", indexed_deriv, mult_ref)
+                # Wrap in Sum over all constraint indices (scalar stationarity
+                # has no own domain, so all constraint indices must be summed)
+                term = Sum(mult_domain, term)
             else:
-                expr = Binary("+", expr, term)
+                # Fallback: no domain info, use per-instance (shouldn't happen)
+                mult_ref = MultiplierRef(mult_name, eq_indices)
+                term = Binary("*", derivative, mult_ref)
+        else:
+            # Scalar constraint: direct term, no sum needed
+            mult_ref = MultiplierRef(mult_name, ())
+            term = Binary("*", derivative, mult_ref)
+
+        if negate:
+            expr = Binary("-", expr, term)
         else:
             expr = Binary("+", expr, term)
 

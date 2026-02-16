@@ -56,6 +56,7 @@ from ..ir.ast import (
     DollarConditional,
     ParamRef,
     Prod,
+    SetMembershipTest,
     Sum,
     SymbolRef,
     Unary,
@@ -1375,6 +1376,21 @@ def _diff_dollar_conditional(
     return DollarConditional(dvalue_dx, expr.condition)
 
 
+def _ensure_numeric_condition(cond: Expr) -> Expr:
+    """Convert a set membership test to a numeric expression for use as a factor.
+
+    Issue #730: When a sum with a dollar condition collapses during
+    differentiation, the condition becomes a multiplicative factor.
+    SetMembershipTest nodes (e.g., ri(r,i)) are boolean in GAMS and cannot
+    be used as numeric values directly (GAMS Error 130: "Division not defined
+    for a set").  Wrapping as DollarConditional(1, cond) emits ``1$ri(r,i)``
+    which is a valid numeric 0/1 indicator in GAMS.
+    """
+    if isinstance(cond, SetMembershipTest):
+        return DollarConditional(Const(1.0), cond)
+    return cond
+
+
 def _diff_sum(
     expr: Sum,
     wrt_var: str,
@@ -1448,7 +1464,7 @@ def _diff_sum(
         # multiplier variables from being recognized in the MCP model.
         if expr.condition is not None:
             subst_cond = _substitute_sum_indices(expr.condition, expr.index_sets, wrt_indices)
-            result = Binary("*", result, subst_cond)
+            result = Binary("*", result, _ensure_numeric_condition(subst_cond))
         return result
 
     # Check for partial index match (nested sum case or mixed concrete/symbolic case)
@@ -1485,7 +1501,7 @@ def _diff_sum(
                 subst_cond = _substitute_sum_indices(
                     expr.condition, matched_indices, matched_concrete
                 )
-                result_body = Binary("*", result_body, subst_cond)
+                result_body = Binary("*", result_body, _ensure_numeric_condition(subst_cond))
             return result_body
 
     # Check for partial collapse (sum has more indices than wrt_indices)
@@ -1685,7 +1701,7 @@ def _partial_collapse_sum(
             subst_cond = _substitute_sum_indices(
                 expr.condition, tuple(matched_sum_indices), tuple(matched_concrete)
             )
-            result_body = Binary("*", result_body, subst_cond)
+            result_body = Binary("*", result_body, _ensure_numeric_condition(subst_cond))
         return result_body
 
 
