@@ -16,7 +16,7 @@ import logging
 import re
 
 from src.emit.expr_to_gams import expr_to_gams
-from src.ir.ast import Expr, ParamRef, VarRef
+from src.ir.ast import Expr, MultiplierRef, ParamRef, VarRef
 from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
@@ -745,6 +745,13 @@ def _expr_contains_varref_attribute(expr: Expr) -> bool:
     """
     if isinstance(expr, VarRef) and expr.attribute:
         return True
+    # Explicitly traverse index expressions on reference-like nodes.
+    # VarRef/ParamRef/MultiplierRef.children() do not yield indices,
+    # so an attributed VarRef inside an IndexOffset would be missed.
+    if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
+        for idx in expr.indices:
+            if isinstance(idx, Expr) and _expr_contains_varref_attribute(idx):
+                return True
     return any(_expr_contains_varref_attribute(child) for child in expr.children())
 
 
