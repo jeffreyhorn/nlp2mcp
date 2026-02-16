@@ -236,16 +236,15 @@ class TestBoundJacobianIndexed:
         # Compute Jacobian
         J_h, J_g = compute_constraint_jacobian(model_ir)
 
-        # J_g should have 1 row with 2 entries (one for each variable)
-        # ∂(x(i1) - lo(i1))/∂x(i1) = 1
-        # ∂(x(i1) - lo(i1))/∂x(i2) = 0
+        # J_g should have 1 row with 1 nonzero entry (zero derivatives not stored)
+        # ∂(x(i1) - lo(i1))/∂x(i1) = 1 (stored)
+        # ∂(x(i1) - lo(i1))/∂x(i2) = 0 (not stored)
         assert (
             J_g.num_nonzeros() == 1
         )  # Only x(i1) has nonzero derivative; x(i2) is zero (not stored)
 
         row_entries = list(J_g.get_row(0).items())
-        # Should have entry for x(i1) = 1, and entry for x(i2) = 0
-        # Actually, we only store the nonzero, so let's check differently
+        # Only the nonzero entry x(i1) = 1 is stored
 
         # The bound constraint derivative w.r.t. its own variable should be 1
         # We need to know which column corresponds to x(i1)
