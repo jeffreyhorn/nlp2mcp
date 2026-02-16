@@ -3075,6 +3075,14 @@ class _ModelBuilder:
         # Sprint 11: Mock/store approach - just store, don't execute
         self.model.loop_statements.append(loop_stmt)
 
+        # Issue #749: Extract solve info from loop body so the objective
+        # is recorded even when the Solve statement is inside a loop.
+        if self.model.objective is None:
+            for stmt in body_stmts:
+                if isinstance(stmt, Tree) and stmt.data == "solve":
+                    self._handle_solve(stmt)
+                    break
+
     def _handle_loop_stmt_paren(self, node: Tree) -> None:
         """Handle loop statement with double parentheses: loop((indices), ...)."""
         # Same as _handle_loop_stmt - the grammar handles the extra parens

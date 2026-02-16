@@ -1,7 +1,7 @@
 # Solve Statement Inside Loop Not Extracted — Model Has No Objective Function
 
 **GitHub Issue:** [#749](https://github.com/jeffreyhorn/nlp2mcp/issues/749)
-**Status:** Open
+**Status:** Fixed
 **Severity:** Medium — Blocks full pipeline for 2 NLP models
 **Discovered:** 2026-02-13 (Sprint 19, after fixing Issues #746/#747)
 **Affected Models:** ps5_s_mn, ps10_s_mn
@@ -145,3 +145,21 @@ The `model_uses_all: False` flag means the pipeline uses the explicit equation l
 - `src/validation/model.py:44–56` — `validate_objective_defined()` (checks `objective is None`)
 - `data/gamslib/raw/ps5_s_mn.gms:79–106` — Model/Solve declarations
 - `data/gamslib/raw/ps10_s_mn.gms:79–106` — Model/Solve declarations (identical structure)
+
+---
+
+## Fix Details
+
+**Approach:** Option A — Extract solve info from loop body statements.
+
+**Changes:**
+
+1. **`src/ir/parser.py`** — Added 5 lines at the end of `_handle_loop_stmt()`: after storing the `LoopStatement`, if `self.model.objective is None`, scan `body_stmts` for the first `solve` tree node and call `self._handle_solve(stmt)` on it. The `if self.model.objective is None` guard ensures that a top-level solve (if present) takes priority and that only the first loop solve is processed.
+
+2. **`tests/unit/test_solve_inside_loop.py`** — Added 4 unit tests:
+   - `test_solve_inside_loop_extracts_objective` — objective variable and sense extracted
+   - `test_solve_inside_loop_sets_model_name` — model name set from nested solve
+   - `test_toplevel_solve_still_works` — regression test for top-level solve
+   - `test_solve_inside_loop_multi_model` — works with multi-model declarations
+
+**Result:** Both ps5_s_mn and ps10_s_mn now complete the full MCP pipeline successfully (~3.5s and ~4s respectively). Quality gate: 3394 tests passed, 0 failures.
