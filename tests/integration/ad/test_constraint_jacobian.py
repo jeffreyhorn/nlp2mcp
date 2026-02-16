@@ -25,9 +25,12 @@ pytestmark = pytest.mark.integration
 
 
 def eval_derivative(deriv):
-    """Evaluate a derivative expression (assuming no variables/params needed)."""
+    """Evaluate a derivative expression (assuming no variables/params needed).
+
+    Returns 0.0 for None (sparse Jacobian: missing entry means zero derivative).
+    """
     if deriv is None:
-        return None
+        return 0.0
     return evaluate(deriv, {}, {})
 
 

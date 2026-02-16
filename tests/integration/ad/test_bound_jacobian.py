@@ -25,9 +25,12 @@ pytestmark = pytest.mark.integration
 
 
 def eval_derivative(deriv):
-    """Evaluate a derivative expression (assuming no variables/params needed)."""
+    """Evaluate a derivative expression (assuming no variables/params needed).
+
+    Returns 0.0 for None (sparse Jacobian: missing entry means zero derivative).
+    """
     if deriv is None:
-        return None
+        return 0.0
     return evaluate(deriv, {}, {})
 
 
@@ -192,19 +195,18 @@ class TestBoundJacobianIndexed:
         # Compute Jacobian
         J_h, J_g = compute_constraint_jacobian(model_ir)
 
-        # J_g should have entries for 2 bounds × 2 variables
-        # All derivatives (including zeros) are stored symbolically; not sparsity-optimized.
-        # x(i1) bound: ∂(x(i1)-0)/∂x(i1) = 1, ∂/∂x(i2) = 0
-        # x(i2) bound: ∂(x(i2)-0)/∂x(i1) = 0, ∂/∂x(i2) = 1
-        assert J_g.num_nonzeros() == 4  # All derivatives stored (including zeros)
+        # J_g should have 2 nonzero entries (zero derivatives are not stored)
+        # x(i1) bound: ∂(x(i1)-0)/∂x(i1) = 1 (only nonzero)
+        # x(i2) bound: ∂(x(i2)-0)/∂x(i2) = 1 (only nonzero)
+        assert J_g.num_nonzeros() == 2
 
         # Check diagonal structure (each bound only depends on its own variable)
         row0_entries = list(J_g.get_row(0).items())
         row1_entries = list(J_g.get_row(1).items())
 
-        # Each row should have 2 entries (one for each variable)
-        assert len(row0_entries) == 2
-        assert len(row1_entries) == 2
+        # Each row should have 1 nonzero entry (sparsity-optimized)
+        assert len(row0_entries) == 1
+        assert len(row1_entries) == 1
 
     def test_indexed_variable_parametric_bounds(self):
         """Test: x(i) >= lo(i) where lo is a parameter"""
@@ -234,14 +236,15 @@ class TestBoundJacobianIndexed:
         # Compute Jacobian
         J_h, J_g = compute_constraint_jacobian(model_ir)
 
-        # J_g should have 1 row with 2 entries (one for each variable)
-        # ∂(x(i1) - lo(i1))/∂x(i1) = 1
-        # ∂(x(i1) - lo(i1))/∂x(i2) = 0
-        assert J_g.num_nonzeros() == 2  # One for x(i1) and one for x(i2); both entries are stored
+        # J_g should have 1 row with 1 nonzero entry (zero derivatives not stored)
+        # ∂(x(i1) - lo(i1))/∂x(i1) = 1 (stored)
+        # ∂(x(i1) - lo(i1))/∂x(i2) = 0 (not stored)
+        assert (
+            J_g.num_nonzeros() == 1
+        )  # Only x(i1) has nonzero derivative; x(i2) is zero (not stored)
 
         row_entries = list(J_g.get_row(0).items())
-        # Should have entry for x(i1) = 1, and entry for x(i2) = 0
-        # Actually, we only store the nonzero, so let's check differently
+        # Only the nonzero entry x(i1) = 1 is stored
 
         # The bound constraint derivative w.r.t. its own variable should be 1
         # We need to know which column corresponds to x(i1)
@@ -386,11 +389,10 @@ class TestBoundJacobianWithConstraints:
         # x_up: ∂(x-10)/∂x=1, ∂/∂y=0
         # y_lo: ∂(y-0)/∂x=0, ∂/∂y=1
         # y_up: ∂(y-20)/∂x=0, ∂/∂y=1
-        assert J_g.num_nonzeros() == 8  # 4 rows × 2 variables (some zeros)
+        assert J_g.num_nonzeros() == 4  # 4 rows × 1 nonzero each (zeros not stored)
 
         # Each row should have exactly 1 nonzero (diagonal structure for simple bounds)
         for row_id in range(4):
             row_entries = list(J_g.get_row(row_id).items())
-            # Count nonzeros by evaluating derivatives (exclude zeros)
-            nonzero_count = sum(1 for _col, deriv in row_entries if eval_derivative(deriv) != 0.0)
-            assert nonzero_count == 1
+            assert len(row_entries) == 1
+            assert eval_derivative(row_entries[0][1]) != 0.0
