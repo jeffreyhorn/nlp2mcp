@@ -483,6 +483,12 @@ def _collect_multiplier_refs(expr: Expr, result: set[str]) -> None:
     """Walk an expression tree and collect all MultiplierRef names."""
     if isinstance(expr, MultiplierRef):
         result.add(expr.name)
+        # Explicitly traverse index expressions (MultiplierRef.children()
+        # does not yield indices). Mirrors the fix in
+        # _collect_referenced_variable_names for consistency.
+        for idx in expr.indices:
+            if isinstance(idx, Expr):
+                _collect_multiplier_refs(idx, result)
     for child in expr.children():
         _collect_multiplier_refs(child, result)
 
