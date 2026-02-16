@@ -160,7 +160,10 @@ def emit_gams_mcp(
     has_positive_init = False  # Track if any POSITIVE variable is initialized to 1
     for var_name, var_def in kkt.model_ir.variables.items():
         # Issue #742: Skip unreferenced variables (not declared, so no init needed)
-        if kkt.referenced_variables is not None and var_name not in kkt.referenced_variables:
+        if (
+            kkt.referenced_variables is not None
+            and var_name.lower() not in kkt.referenced_variables
+        ):
             continue
         has_init = False
 

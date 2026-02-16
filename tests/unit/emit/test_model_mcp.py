@@ -42,6 +42,19 @@ class TestMCPPairingSimpleVariableObjective:
         model.variables["a"] = VariableDef(name="a", domain=())
         model.variables["b"] = VariableDef(name="b", domain=())
 
+        # Add a constraint that references a, b, and r
+        # Use a + b - r =L= 0 so that r is NOT a bare VarRef on either side
+        # (otherwise extract_objective_info would treat this as objdef for r)
+        model.equations["circle"] = EquationDef(
+            name="circle",
+            domain=(),
+            relation=Rel.LE,
+            lhs_rhs=(
+                Binary("-", Binary("+", VarRef("a", ()), VarRef("b", ())), VarRef("r", ())),
+                Const(0.0),
+            ),
+        )
+        model.inequalities = ["circle"]
         model.equalities = []
 
         # Set up KKT system

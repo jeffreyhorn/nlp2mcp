@@ -366,7 +366,9 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
         lines.append("")
 
     # Skip complementarity equations whose multiplier was simplified away
+    # Also skip bound complementarity for unreferenced primal variables
     ref_mults = kkt.referenced_multipliers
+    ref_vars = kkt.referenced_variables
 
     # Inequality complementarity equations (includes min/max complementarity)
     if kkt.complementarity_ineq:
@@ -387,6 +389,8 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
             comp_pair = kkt.complementarity_bounds_lo[key]
             if ref_mults is not None and comp_pair.variable not in ref_mults:
                 continue
+            if ref_vars is not None and key[0].lower() not in ref_vars:
+                continue
             eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
             lines.append(eq_str)
             all_aliases.update(aliases)
@@ -398,6 +402,8 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
         for key in sorted(kkt.complementarity_bounds_up.keys()):
             comp_pair = kkt.complementarity_bounds_up[key]
             if ref_mults is not None and comp_pair.variable not in ref_mults:
+                continue
+            if ref_vars is not None and key[0].lower() not in ref_vars:
                 continue
             eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
             lines.append(eq_str)

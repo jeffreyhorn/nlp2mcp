@@ -59,18 +59,21 @@ def _collect_referenced_variable_names(model_ir: ModelIR) -> set[str]:
     expressions and the objective to build a set of actually-referenced variable
     names.
 
+    All names are lowercased to match the canonical form used by
+    CaseInsensitiveDict keys, ensuring case-insensitive comparison.
+
     Args:
         model_ir: Model IR containing equation definitions and objective
 
     Returns:
-        Set of variable names (original case) that appear in at least one
-        equation or the objective
+        Set of variable names (lowercase canonical form) that appear in at
+        least one equation or the objective
     """
     referenced: set[str] = set()
 
     def _walk(expr: Expr) -> None:
         if isinstance(expr, VarRef):
-            referenced.add(expr.name)
+            referenced.add(expr.name.lower())
         for child in expr.children():
             _walk(child)
 
@@ -83,7 +86,7 @@ def _collect_referenced_variable_names(model_ir: ModelIR) -> set[str]:
 
     # Include the objective variable (e.g., 'minimize r' references 'r')
     if model_ir.objective and model_ir.objective.objvar:
-        referenced.add(model_ir.objective.objvar)
+        referenced.add(model_ir.objective.objvar.lower())
     # Walk objective expression if present
     if model_ir.objective and model_ir.objective.expr:
         _walk(model_ir.objective.expr)
@@ -362,8 +365,8 @@ def build_stationarity_equations(
     # Issue #742: Filter out variables that don't appear in any equation body
     # or the objective. Unreferenced variables (e.g., dummy/reporting variables
     # like dumshr, dumtg) produce trivial 0=0 stationarity equations that cause
-    # GAMS Error 69/483. Only apply when there are equations to reference.
-    if kkt.model_ir.equations:
+    # GAMS Error 69/483. Apply when there are equations or an objective to reference.
+    if kkt.model_ir.equations or kkt.model_ir.objective:
         referenced_vars = _collect_referenced_variable_names(kkt.model_ir)
         var_groups = {name: insts for name, insts in var_groups.items() if name in referenced_vars}
         # Store on KKT system so the emitter can also filter variable declarations

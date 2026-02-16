@@ -99,7 +99,10 @@ def emit_variables(kkt: KKTSystem) -> str:
     # Group primal variables by kind, excluding unreferenced variables
     for var_name, var_def in kkt.model_ir.variables.items():
         # Issue #742: Skip variables not referenced in any equation/objective
-        if kkt.referenced_variables is not None and var_name not in kkt.referenced_variables:
+        if (
+            kkt.referenced_variables is not None
+            and var_name.lower() not in kkt.referenced_variables
+        ):
             continue
         var_groups[var_def.kind].append((var_name, var_def.domain))
 
@@ -123,17 +126,24 @@ def emit_variables(kkt: KKTSystem) -> str:
     # Deduplicate by collecting unique (name, domain) pairs to avoid
     # emitting the same indexed variable declaration multiple times
     seen_bound_multipliers: set[tuple[str, tuple[str, ...]]] = set()
+    ref_vars = kkt.referenced_variables
 
-    for (_var_name, _indices), mult_def in kkt.multipliers_bounds_lo.items():
+    for (bound_var_name, _indices), mult_def in kkt.multipliers_bounds_lo.items():
         if ref_mults is not None and mult_def.name not in ref_mults:
+            continue
+        # Skip bound multipliers for unreferenced primal variables
+        if ref_vars is not None and bound_var_name.lower() not in ref_vars:
             continue
         key = (mult_def.name, mult_def.domain)
         if key not in seen_bound_multipliers:
             seen_bound_multipliers.add(key)
             var_groups[VarKind.POSITIVE].append(key)
 
-    for (_var_name, _indices), mult_def in kkt.multipliers_bounds_up.items():
+    for (bound_var_name, _indices), mult_def in kkt.multipliers_bounds_up.items():
         if ref_mults is not None and mult_def.name not in ref_mults:
+            continue
+        # Skip bound multipliers for unreferenced primal variables
+        if ref_vars is not None and bound_var_name.lower() not in ref_vars:
             continue
         key = (mult_def.name, mult_def.domain)
         if key not in seen_bound_multipliers:
@@ -249,9 +259,13 @@ def emit_equations(kkt: KKTSystem) -> str:
             lines.append(f"    {eq_def.name}")
 
     # Bound complementarity equations
+    # Also skip bounds for unreferenced primal variables (defense-in-depth)
+    ref_vars = kkt.referenced_variables
     for key in sorted(kkt.complementarity_bounds_lo.keys()):
         comp_pair = kkt.complementarity_bounds_lo[key]
         if ref_mults is not None and comp_pair.variable not in ref_mults:
+            continue
+        if ref_vars is not None and key[0].lower() not in ref_vars:
             continue
         eq_def = comp_pair.equation
         # Include domain if present
@@ -263,6 +277,8 @@ def emit_equations(kkt: KKTSystem) -> str:
     for key in sorted(kkt.complementarity_bounds_up.keys()):
         comp_pair = kkt.complementarity_bounds_up[key]
         if ref_mults is not None and comp_pair.variable not in ref_mults:
+            continue
+        if ref_vars is not None and key[0].lower() not in ref_vars:
             continue
         eq_def = comp_pair.equation
         # Include domain if present
