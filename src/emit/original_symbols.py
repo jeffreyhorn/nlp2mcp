@@ -27,7 +27,23 @@ logger = logging.getLogger(__name__)
 # When these appear in parameter assignments within MCP files, the model
 # becomes non-deterministic — each solve produces different data, making
 # the KKT conditions inconsistent.
-STOCHASTIC_FUNCTIONS: frozenset[str] = frozenset({"uniform", "normal"})
+STOCHASTIC_FUNCTIONS: frozenset[str] = frozenset(
+    {
+        "uniform",
+        "normal",
+        "uniformint",
+        "triangular",
+        "binomial",
+        "beta",
+        "gamma",
+        "lognormal",
+        "negbinomial",
+        "poisson",
+        "rand",
+        "randsign",
+        "heaprandom",
+    }
+)
 
 
 def _expr_contains_stochastic(expr: Expr) -> bool:
