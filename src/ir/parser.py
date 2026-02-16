@@ -2808,6 +2808,19 @@ class _ModelBuilder:
             self.model.model_equations = []
             self.model.model_uses_all = False
 
+    def _handle_file_stmt(self, node: Tree) -> None:
+        """Handle File declaration (Issue #746/#747).
+
+        Grammar: file_stmt: "file"i ID "/" file_path "/" SEMI
+
+        Registers the file handle name so that subsequent attribute
+        assignments (e.g. ``sol.pc = 5;``) pass validation.  File I/O
+        is irrelevant to the NLP->MCP transformation, so we only track
+        the name and discard everything else.
+        """
+        file_name = _token_text(node.children[0])
+        self.model.declared_files.add(file_name)
+
     def _handle_option_stmt(self, node: Tree) -> None:
         """Handle option statement (Sprint 8: mock/store approach).
 
@@ -3254,14 +3267,16 @@ class _ModelBuilder:
                 # For now, we parse and validate but don't store attribute values
                 # (mock/store approach - similar to how we handle variable bounds with expressions)
                 # Common attributes: scale, prior, stage, scaleOpt
-                # Validate that the base object exists (variable, parameter, equation, or model)
+                # Validate that the base object exists (variable, parameter, equation, model, or file)
                 # Issue #558: Equations can also have attributes like .stage in stochastic programming
+                # Issue #746/#747: File handles (sol.pc, listA1out.pc) are also valid targets
                 base_name = _token_text(target.children[0])
                 if (
                     base_name not in self.model.variables
                     and base_name not in self.model.params
                     and base_name not in self.model.equations
                     and base_name.lower() not in self.model.declared_models
+                    and base_name not in self.model.declared_files
                 ):
                     raise self._error(
                         f"Symbol '{base_name}' not declared as a variable, parameter, equation, or model",
@@ -3271,14 +3286,16 @@ class _ModelBuilder:
             if target.data == "attr_access_indexed":
                 # Handle indexed attribute access: x.stage(g), var.scale(i), etc.
                 # Issue #554: Parse but don't process - stochastic programming not modeled
-                # Validate that the base object exists (variable, parameter, equation, or model)
+                # Validate that the base object exists (variable, parameter, equation, model, or file)
                 # Issue #558: Equations can also have attributes like .stage in stochastic programming
+                # Issue #746/#747: File handles are also valid targets
                 base_name = _token_text(target.children[0])
                 if (
                     base_name not in self.model.variables
                     and base_name not in self.model.params
                     and base_name not in self.model.equations
                     and base_name.lower() not in self.model.declared_models
+                    and base_name not in self.model.declared_files
                 ):
                     raise self._error(
                         f"Symbol '{base_name}' not declared as a variable, parameter, equation, or model",

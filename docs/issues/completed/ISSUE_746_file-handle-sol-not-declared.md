@@ -1,7 +1,7 @@
 # File Handle 'sol' Not Declared — Attribute Access Validation Fails for GAMS File Symbols
 
 **GitHub Issue:** [#746](https://github.com/jeffreyhorn/nlp2mcp/issues/746)
-**Status:** Open
+**Status:** Fixed
 **Severity:** Medium — Blocks full pipeline for 3 NLP models with post-solve CSV output
 **Discovered:** 2026-02-13 (Sprint 19 Day 2, after put format fix in PR #745)
 **Affected Models:** ps5_s_mn, ps10_s, ps10_s_mn
@@ -130,6 +130,28 @@ Option A is simpler and more robust. The `File` declaration is the canonical sig
 
 ---
 
+## Fix Details
+
+**Approach:** Option A — Track file handles in `declared_files` set.
+
+**Changes:**
+
+1. **`src/ir/model_ir.py`** — Added `declared_files: set[str] = field(default_factory=set)` field to `ModelIR` dataclass, right after `declared_models`.
+
+2. **`src/ir/parser.py`** — Added `_handle_file_stmt()` method that extracts the file handle name from the `file_stmt` tree node and registers it in `self.model.declared_files`.
+
+3. **`src/ir/parser.py`** — Updated both `attr_access` and `attr_access_indexed` validation blocks to also check `base_name not in self.model.declared_files`, so that file handle attribute assignments like `sol.pc = 5;` pass validation.
+
+4. **`tests/unit/test_file_handle.py`** — Added 4 unit tests:
+   - `test_file_handle_registered` — File handle name appears in `model.declared_files`
+   - `test_file_handle_attr_access` — `sol.pc = 5;` does not raise
+   - `test_file_handle_multiple` — Multiple file handles tracked
+   - `test_undeclared_attr_still_raises` — Undeclared symbols still rejected
+
+**Result:** All three models (ps5_s_mn, ps10_s, ps10_s_mn) now pass through the full pipeline without errors. Quality gate: 3390 tests passed, 0 failures.
+
+---
+
 ## Related Issues
 
-- [#747](https://github.com/jeffreyhorn/nlp2mcp/issues/747) — stdcge `listA1out` file handle issue (same root cause, different file handle name)
+- [#747](https://github.com/jeffreyhorn/nlp2mcp/issues/747) — stdcge `listA1out` file handle issue (same root cause, fixed by same change)

@@ -1,7 +1,7 @@
 # File Handle 'listA1out' Not Declared — Attribute Access Validation Fails for GAMS File Symbols
 
 **GitHub Issue:** [#747](https://github.com/jeffreyhorn/nlp2mcp/issues/747)
-**Status:** Open
+**Status:** Fixed
 **Severity:** Medium — Blocks full pipeline for 1 NLP model (stdcge) with post-solve CSV output
 **Discovered:** 2026-02-13 (Sprint 19 Day 2, after put format fix in PR #745)
 **Affected Models:** stdcge
@@ -97,6 +97,14 @@ See the companion issue (file-handle-sol-not-declared.md) for detailed fix optio
 
 ---
 
+## Fix Details
+
+Fixed by the same change as #746. The `declared_files` set in `ModelIR` and the `_handle_file_stmt()` handler in the IR parser now register all GAMS `File` handle names, including `listA1out`. The attribute access validation checks `declared_files` so `listA1out.pc=5;` passes validation.
+
+**Result:** stdcge now passes through the full pipeline without the `listA1out` validation error. Quality gate: 3390 tests passed, 0 failures.
+
+---
+
 ## Related Issues
 
-- [#746](https://github.com/jeffreyhorn/nlp2mcp/issues/746) — ps5_s_mn, ps10_s, ps10_s_mn `sol` file handle issue (same root cause)
+- [#746](https://github.com/jeffreyhorn/nlp2mcp/issues/746) — ps5_s_mn, ps10_s, ps10_s_mn `sol` file handle issue (same root cause, same fix)
