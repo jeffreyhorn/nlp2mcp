@@ -4,8 +4,52 @@ This module provides template functions for emitting GAMS code from KKT systems,
 with variable kind preservation (Finding #4 from final review).
 """
 
+from src.ir.model_ir import ModelIR
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
+
+
+def _build_dynamic_subset_map(model_ir: ModelIR) -> dict[str, str]:
+    """Build a mapping from dynamically assigned subset names to their parent sets.
+
+    Issue #739: GAMS forbids dynamically assigned sets (populated via assignment
+    statements like ``im(i) = yes$dat("cons-imp",i)``) from being used as
+    declaration domains for variables and equations. This function identifies
+    such sets so the emitter can replace them with their parent sets in
+    declarations.
+
+    A set qualifies as a dynamic subset if:
+    1. It appears in ``model_ir.set_assignments`` (has a runtime assignment), AND
+    2. It has no static members (``SetDef.members`` is empty), AND
+    3. It has a single-element domain (subset of exactly one parent set)
+
+    Args:
+        model_ir: Model IR containing set definitions and assignments
+
+    Returns:
+        Dict mapping lowercase dynamic subset name to parent set name
+        (e.g., ``{"im": "i", "ie": "i"}``)
+    """
+    dynamic_set_names = {sa.set_name.lower() for sa in model_ir.set_assignments}
+    result: dict[str, str] = {}
+    for set_name, set_def in model_ir.sets.items():
+        name_lower = set_name.lower()
+        if name_lower in dynamic_set_names and not set_def.members and len(set_def.domain) == 1:
+            result[name_lower] = set_def.domain[0]
+    return result
+
+
+def _remap_domain(domain: tuple[str, ...], dynamic_map: dict[str, str]) -> tuple[str, ...]:
+    """Replace dynamic subset names in a domain tuple with their parent sets.
+
+    Args:
+        domain: Original domain tuple (e.g., ``("im",)``)
+        dynamic_map: Mapping from dynamic subset name (lowercase) to parent set
+
+    Returns:
+        Remapped domain tuple (e.g., ``("i",)``)
+    """
+    return tuple(dynamic_map.get(d.lower(), d) for d in domain)
 
 
 def emit_variables(kkt: KKTSystem) -> str:
@@ -40,6 +84,9 @@ def emit_variables(kkt: KKTSystem) -> str:
             y             "Binary decision variable"
         ;
     """
+    # Issue #739: Build dynamic subset → parent set mapping for declarations
+    dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
+
     # Group variables by kind (Finding #4)
     var_groups: dict[VarKind, list[tuple[str, tuple[str, ...]]]] = {
         VarKind.CONTINUOUS: [],
@@ -100,7 +147,9 @@ def emit_variables(kkt: KKTSystem) -> str:
             lines.append(block_name)
             for var_name, domain in var_groups[kind]:
                 if domain:
-                    domain_indices = ",".join(domain)
+                    # Issue #739: Replace dynamic subsets with parent sets in declarations
+                    decl_domain = _remap_domain(domain, dynamic_map)
+                    domain_indices = ",".join(decl_domain)
                     lines.append(f"    {var_name}({domain_indices})")
                 else:
                     lines.append(f"    {var_name}")
@@ -153,14 +202,21 @@ def emit_equations(kkt: KKTSystem) -> str:
             eq_balance(i)
         ;
     """
+    # Issue #739: Build dynamic subset → parent set mapping for declarations
+    dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
+
+    def _decl_domain_str(domain: tuple[str, ...]) -> str:
+        """Format a domain tuple for declaration, remapping dynamic subsets."""
+        remapped = _remap_domain(domain, dynamic_map)
+        return ",".join(remapped)
+
     lines = ["Equations"]
 
     # Stationarity equations
     for eq_name, eq_def in sorted(kkt.stationarity.items()):
         # Include domain if present
         if eq_def.domain:
-            domain_indices = ",".join(eq_def.domain)
-            lines.append(f"    {eq_name}({domain_indices})")
+            lines.append(f"    {eq_name}({_decl_domain_str(eq_def.domain)})")
         else:
             lines.append(f"    {eq_name}")
 
@@ -170,8 +226,7 @@ def emit_equations(kkt: KKTSystem) -> str:
         eq_def = comp_pair.equation
         # Include domain if present
         if eq_def.domain:
-            domain_indices = ",".join(eq_def.domain)
-            lines.append(f"    {eq_def.name}({domain_indices})")
+            lines.append(f"    {eq_def.name}({_decl_domain_str(eq_def.domain)})")
         else:
             lines.append(f"    {eq_def.name}")
 
@@ -181,8 +236,7 @@ def emit_equations(kkt: KKTSystem) -> str:
         eq_def = comp_pair.equation
         # Include domain if present
         if eq_def.domain:
-            domain_indices = ",".join(eq_def.domain)
-            lines.append(f"    {eq_def.name}({domain_indices})")
+            lines.append(f"    {eq_def.name}({_decl_domain_str(eq_def.domain)})")
         else:
             lines.append(f"    {eq_def.name}")
 
@@ -191,8 +245,7 @@ def emit_equations(kkt: KKTSystem) -> str:
         eq_def = comp_pair.equation
         # Include domain if present
         if eq_def.domain:
-            domain_indices = ",".join(eq_def.domain)
-            lines.append(f"    {eq_def.name}({domain_indices})")
+            lines.append(f"    {eq_def.name}({_decl_domain_str(eq_def.domain)})")
         else:
             lines.append(f"    {eq_def.name}")
 
@@ -221,8 +274,7 @@ def emit_equations(kkt: KKTSystem) -> str:
 
         # Check if it has domain (indexed)
         if eq_domain:
-            domain_indices = ",".join(eq_domain)
-            lines.append(f"    {eq_name}({domain_indices})")
+            lines.append(f"    {eq_name}({_decl_domain_str(eq_domain)})")
         else:
             lines.append(f"    {eq_name}")
 

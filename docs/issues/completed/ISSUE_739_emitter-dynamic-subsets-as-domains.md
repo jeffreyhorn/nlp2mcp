@@ -1,7 +1,7 @@
 # MCP Emission: Dynamic/Assigned Subsets Used as Declaration Domains (GAMS Error 187)
 
 **GitHub Issue:** [#739](https://github.com/jeffreyhorn/nlp2mcp/issues/739)
-**Status:** Open
+**Status:** Fixed
 **Severity:** Medium -- Generated MCP files fail GAMS compilation for affected models
 **Discovered:** 2026-02-15 (Sprint 19, during Issue #730 investigation)
 **Affected Models:** ganges, gangesx (and likely other models with dynamically assigned subsets)
@@ -162,13 +162,39 @@ Option A is the cleanest and most general solution. It requires:
 
 ---
 
+## Fix Details
+
+**Approach:** Modified variant of Option A — Replace dynamic subset names with parent set names in *declarations only*, leave equation definitions unchanged.
+
+**Key insight:** GAMS allows the equation *declaration* to use the parent set while the equation *definition* uses the dynamic subset as the controlling index:
+```gams
+Equation pmdef(i);              * Declaration uses parent set i
+pmdef(im).. pm(im) =e= ...;    * Definition uses subset im as controlling index
+```
+This is valid GAMS — the equation is only generated for elements in `im`, and the parent set `i` in the declaration is compatible.
+
+**Implementation:** In `src/emit/templates.py`:
+
+1. Added `_build_dynamic_subset_map(model_ir)` — builds a mapping from dynamically assigned subset names (lowercase) to their parent set names. A set qualifies if it: (a) has entries in `model_ir.set_assignments`, (b) has no static members, and (c) has a single-element domain.
+
+2. Added `_remap_domain(domain, dynamic_map)` — replaces dynamic subset names in a domain tuple with their parent sets.
+
+3. Modified `emit_variables()` — applies `_remap_domain` to all variable domain tuples in declarations.
+
+4. Modified `emit_equations()` — applies `_remap_domain` to all equation domain tuples in declarations.
+
+5. Equation definitions (`emit_equation_def` in `equations.py`) are NOT modified — they continue to use the original subset names as controlling indices, which is valid.
+
+**Result:** All 6 instances of GAMS Error 187 eliminated for ganges/gangesx. Both original equations (`export(ie)`, `pmdef(im)`, `taumdet(im)`) and KKT multiplier variables (`nu_export(ie)`, `nu_pmdef(im)`, `nu_taumdet(im)`) now use parent set `i` in their declarations.
+
+**Quality Gate:** All checks pass (typecheck, lint, format, 3339 tests).
+
+---
+
 ## Relevant Files
 
-- `src/emit/emit_gams.py` — GAMS code emission (equation/variable declarations)
-- `src/emit/equations.py` — Equation emission logic
-- `src/emit/model.py` — Model-level emission
-- `src/kkt/naming.py` — KKT multiplier naming and domain assignment
-- `src/kkt/complementarity.py` — Complementarity pair generation
-- `src/ir/model_ir.py` — IR representation (set definitions, dynamic vs static)
+- `src/emit/templates.py` — Fix location: `_build_dynamic_subset_map()`, `_remap_domain()`, and their use in `emit_variables()` and `emit_equations()`
+- `src/ir/symbols.py` — `SetDef.domain` and `SetAssignment` used for detection
+- `src/ir/model_ir.py` — `model_ir.set_assignments` lists dynamic set assignments
 - `data/gamslib/raw/ganges.gms` — Original model (lines 27-28, 143-144 for set defs; 932, 936, 1036 for equations)
 - `data/gamslib/raw/gangesx.gms` — Same structure as ganges
