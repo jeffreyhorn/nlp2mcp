@@ -771,6 +771,13 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
         c(i,j) = f * d(i,j) / 1000;
         gplus(c) = gibbs(c) + log(750 * 0.07031);
     """
+    _VALID_VARREF_FILTERS = {"all", "no_varref_attr", "only_varref_attr"}
+    if varref_filter not in _VALID_VARREF_FILTERS:
+        raise ValueError(
+            f"Invalid varref_filter={varref_filter!r}. "
+            f"Allowed values: {sorted(_VALID_VARREF_FILTERS)}"
+        )
+
     lines: list[str] = []
 
     # PR #658 review: Precompute declared sets (lowercase) once for efficient lookup

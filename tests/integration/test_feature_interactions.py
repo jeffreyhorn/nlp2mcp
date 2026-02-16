@@ -168,7 +168,11 @@ result = sqrt(2*x + 2*y);
 
             # Verify Call node exists (parse-only in Sprint 10)
             assert "result" in model.params
-            expr = next(e for k, e in model.params["result"].expressions if k == ())
+            scalar_exprs = [e for k, e in model.params["result"].expressions if k == ()]
+            assert (
+                scalar_exprs
+            ), "Expected a scalar expression for 'result' with key (), but none was found."
+            expr = scalar_exprs[0]
             assert isinstance(expr, Call)
             assert expr.func == "sqrt"
 

@@ -72,8 +72,18 @@ def _collect_referenced_variable_names(model_ir: ModelIR) -> set[str]:
     referenced: set[str] = set()
 
     def _walk(expr: Expr) -> None:
+        # Record variable references by name (case-insensitive)
         if isinstance(expr, VarRef):
             referenced.add(expr.name.lower())
+
+        # Explicitly traverse any index expressions on reference-like nodes.
+        # VarRef.children() (and similar) do not include indices, so we must
+        # walk them here to catch variable references used in IndexOffset etc.
+        if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
+            for idx in expr.indices:
+                if isinstance(idx, Expr):
+                    _walk(idx)
+
         for child in expr.children():
             _walk(child)
 
@@ -368,7 +378,9 @@ def build_stationarity_equations(
     # GAMS Error 69/483. Apply when there are equations or an objective to reference.
     if kkt.model_ir.equations or kkt.model_ir.objective:
         referenced_vars = _collect_referenced_variable_names(kkt.model_ir)
-        var_groups = {name: insts for name, insts in var_groups.items() if name in referenced_vars}
+        var_groups = {
+            name: insts for name, insts in var_groups.items() if name.lower() in referenced_vars
+        }
         # Store on KKT system so the emitter can also filter variable declarations
         kkt.referenced_variables = referenced_vars
 
