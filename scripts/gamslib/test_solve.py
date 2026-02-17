@@ -261,7 +261,7 @@ def extract_objective_from_variables(lst_content: str) -> float | None:
     """Extract objective value from variable section of .lst file.
 
     MCP models may not have an explicit OBJECTIVE VALUE line.
-    Checks first for the fixed-name sentinel scalar 'nlp_obj_val' emitted by
+    Checks first for the fixed-name sentinel scalar 'nlp2mcp_obj_val' emitted by
     the nlp2mcp emitter after the Solve statement (preferred), then falls back
     to a heuristic scan of common objective variable names.
 
