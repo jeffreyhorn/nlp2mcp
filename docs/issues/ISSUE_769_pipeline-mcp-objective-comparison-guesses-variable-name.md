@@ -87,10 +87,10 @@ nlp_obj_val = ta;
 Display nlp_obj_val;
 ```
 
-This produces a `---- VAR nlp_obj_val` line in the listing (not `**** OBJECTIVE VALUE`).
+This produces a `---- PARAMETER nlp_obj_val` line in the listing (not `**** OBJECTIVE VALUE`).
 The pipeline's `extract_objective_from_variables()` should be updated to include
 `nlp_obj_val` in its search list, or better, the `objective_pattern` regex should be
-extended to also match `---- PARAMETER nlp_obj_val` / `---- VAR nlp_obj_val` output.
+extended to also match `---- PARAMETER nlp_obj_val` output.
 
 **Option B: Store objective variable name during NLP solve**
 
