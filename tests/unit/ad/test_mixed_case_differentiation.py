@@ -72,9 +72,9 @@ Solve m using nlp minimizing obj;
         lhs, rhs = eq.lhs_rhs
         names = _collect_varref_names(lhs) + _collect_varref_names(rhs)
         for name in names:
-            assert name == name.lower(), (
-                f"VarRef name '{name}' is not lowercase — parser did not normalize it"
-            )
+            assert (
+                name == name.lower()
+            ), f"VarRef name '{name}' is not lowercase — parser did not normalize it"
 
     def test_product_rule_with_lowercase_vars(self):
         """d/dx(x * y) is non-zero when both vars are lowercase (post-fix behavior)."""
