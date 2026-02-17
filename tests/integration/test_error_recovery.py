@@ -31,7 +31,7 @@ from src.validation.numerical import (
 # =============================================================================
 
 
-def test_nan_parameter_detected():
+def test_nan_parameter_allowed():
     """Test that NaN in parameter values is ALLOWED (represents GAMS 'na').
 
     Sprint 19 Day 3 added support for GAMS special values including 'na'
@@ -69,10 +69,11 @@ def test_negative_inf_parameter_detected():
     assert "-Inf" in str(exc_info.value)
 
 
-def test_multiple_parameters_first_nan_reported():
-    """Test that NaN parameters are allowed (multiple parameters with NaN).
+def test_multiple_nan_parameters_allowed():
+    """Test that multiple NaN parameters are all allowed.
 
     NaN values represent GAMS 'na' placeholders and are legitimate.
+    Mixed models with finite and NaN values should pass without error.
     """
     model = ModelIR()
     model.params["p1"] = ParameterDef(name="p1", domain=(), values={(): 1.0})
@@ -471,6 +472,6 @@ def test_recovery_test_count():
     # Exclude this meta-test itself
     test_functions = [name for name in test_functions if name != "test_recovery_test_count"]
 
-    assert len(test_functions) >= 20, (
-        f"Day 4 requires ≥20 recovery tests, found {len(test_functions)}"
-    )
+    assert (
+        len(test_functions) >= 20
+    ), f"Day 4 requires ≥20 recovery tests, found {len(test_functions)}"
