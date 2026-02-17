@@ -1,7 +1,7 @@
 # Pipeline: MCP Objective Comparison Guesses Variable Name Instead of Using NLP Objective Variable
 
 **GitHub Issue:** [#769](https://github.com/jeffreyhorn/nlp2mcp/issues/769)
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** Medium — causes false `compare_objective_mismatch` results for models whose NLP objective variable is not in the hardcoded guess list; also may produce false matches if an unrelated variable happens to match a guessed name
 **Date:** 2026-02-17
 **Affected Models:** house (confirmed); any model whose NLP objective variable is not in the guess list
@@ -87,7 +87,7 @@ nlp_obj_val = ta;
 Display nlp_obj_val;
 ```
 
-This produces a `---- PARAMETER nlp_obj_val` line in the listing (not `**** OBJECTIVE VALUE`).
+This produces a `----    NNN PARAMETER nlp_obj_val          =     4500.000` line in the listing (not `**** OBJECTIVE VALUE`).
 The pipeline's `extract_objective_from_variables()` should be updated to include
 `nlp_obj_val` in its search list, or better, the `objective_pattern` regex should be
 extended to also match `---- PARAMETER nlp_obj_val` output.
@@ -139,6 +139,40 @@ for m in models:
 | `scripts/gamslib/verify_convexity.py` | NLP solve — could capture objective variable name here |
 | `src/emit/emit_gams.py` | MCP emitter — could add `Display <obj_var>;` or scalar assignment |
 | `data/gamslib/gamslib_status.json` | Pipeline database — `house` entry shows false mismatch |
+
+---
+
+## Fix Applied
+
+**Implemented Option A** — emitter + pipeline sentinel approach.
+
+### `src/emit/emit_gams.py`
+After the `Solve mcp_model using MCP;` statement, emit a fixed-name sentinel scalar
+using the NLP objective variable name from `obj_info.objvar`:
+
+```gams
+Scalar nlp_obj_val;
+nlp_obj_val = ta.l;
+Display nlp_obj_val;
+```
+
+GAMS produces `----    NNN PARAMETER nlp_obj_val          =     4500.000` in the listing.
+
+### `scripts/gamslib/test_solve.py`
+Updated `extract_objective_from_variables()` to check for the sentinel **first** before
+falling back to the heuristic variable-name scan. Added primary regex:
+
+```python
+r"----\s+\d*\s*PARAMETER\s+nlp_obj_val\s+=\s+([-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
+```
+
+### Golden files updated
+`tests/golden/simple_nlp_mcp.gms`, `indexed_balance_mcp.gms`, `scalar_nlp_mcp.gms`
+all updated to include the new sentinel block.
+
+### Verification
+- house model: pipeline now extracts `nlp_obj_val = 4500.0` (was incorrectly 45.5305)
+- 3475 tests pass, zero regressions
 
 ---
 

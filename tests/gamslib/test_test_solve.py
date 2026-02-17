@@ -198,6 +198,32 @@ class TestExtractObjectiveFromVariables:
         result = extract_objective_from_variables(lst_content)
         assert result is None
 
+    def test_sentinel_nlp2mcp_obj_val(self):
+        """Test that the nlp2mcp sentinel scalar is preferred over heuristic names."""
+        lst_content = """
+----    185 PARAMETER nlp2mcp_obj_val          =     4500.000
+"""
+        result = extract_objective_from_variables(lst_content)
+        assert result == pytest.approx(4500.0)
+
+    def test_sentinel_takes_priority_over_heuristic(self):
+        """Sentinel match wins even when a heuristic name is also present."""
+        lst_content = """
+---- VAR obj               -INF         100.000        +INF             .
+----    185 PARAMETER nlp2mcp_obj_val          =     4500.000
+"""
+        result = extract_objective_from_variables(lst_content)
+        assert result == pytest.approx(4500.0)
+
+    def test_sentinel_last_occurrence_used(self):
+        """With multiple solve runs in one .lst, the last sentinel value is used."""
+        lst_content = """
+----    100 PARAMETER nlp2mcp_obj_val          =     1000.000
+----    200 PARAMETER nlp2mcp_obj_val          =     4500.000
+"""
+        result = extract_objective_from_variables(lst_content)
+        assert result == pytest.approx(4500.0)
+
 
 class TestExtractPathVersion:
     """Tests for extract_path_version function."""
