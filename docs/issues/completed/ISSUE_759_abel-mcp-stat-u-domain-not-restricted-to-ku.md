@@ -1,7 +1,7 @@
 # Abel MCP: stat_u Generated Over Full Domain But u Only Active at ku Subset
 
 **GitHub Issue:** [#759](https://github.com/jeffreyhorn/nlp2mcp/issues/759)
-**Status:** OPEN
+**Status:** FIXED (sprint19-day6-issue759-760-abel-domain-fix)
 **Severity:** High — MCP generates but GAMS aborts with EXECERROR = 3
 **Date:** 2026-02-16
 **Affected Models:** abel, qabel (same structure)
@@ -51,6 +51,18 @@ that reference `u(m,1965-iv)`, so the Jacobian contribution at the terminal peri
 The stationarity equation `stat_u(m,1965-iv)` then has only zeros in it — but the MCP still
 tries to pair it with `u(m,1965-iv)`, which GAMS rejects because there's no matching equation.
 
+The specific challenges:
+1. `u(m,ku)` appears directly in `criterion` with the subset index `ku`.
+2. `u(m,k)` also appears in `stateq(n,k+1)` with the plain declared index `k` — but `stateq`
+   itself only generates rows for `k ∈ ku` due to the lead `k+1` restriction.
+3. An alias `mp` (alias for `m`) is used in `criterion` as `u(mp,ku)`.
+
+The original `_find_variable_subset_condition` function:
+- Didn't resolve aliases (`mp` treated differently from `m`)
+- Didn't detect that `u(m,k)` in `stateq` is implicitly restricted to `ku` (via the lead `k+1`)
+- Didn't traverse VarRef indices when collecting lead/lag restrictions (since `VarRef.children()`
+  doesn't yield indices)
+
 ---
 
 ## Reproduction
@@ -72,46 +84,52 @@ gams /tmp/abel_mcp.gms lo=2
 
 ---
 
-## Generated MCP (Relevant Sections)
+## Fix
+
+**File:** `src/kkt/stationarity.py`
+
+Added `_find_variable_subset_condition()` and integrated it as a fallback after
+`_find_variable_access_condition()` returns `None`.
+
+Key changes:
+1. **Alias resolution**: Built an `alias_to_canonical` map from `model_ir.aliases` and resolve
+   both actual and declared indices through it before comparing. This treats `u(mp,ku)` as
+   equivalent to `u(m,ku)`.
+
+2. **Lead/lag restriction detection**: Before walking each equation's expressions, collect the
+   domain indices that appear inside `IndexOffset` nodes (e.g., `k` in `x(n,k+1)`). These are
+   stored in `restricted_by_eq`. The key fix: `VarRef.children()` does NOT yield indices, so
+   the collection function explicitly iterates `VarRef.indices`.
+
+3. **Skip declared-index accesses in restricted equations**: When `_walk_expr` encounters
+   `u(m,k)` and `k` is in `restricted_by_eq`, the plain declared-index access is treated as
+   "not evidence that the full domain is needed" rather than setting `pos_subsets[pos] = None`.
+
+4. **`_walk_expr` signature**: Updated to accept `skip_declared_at: frozenset[str]` and pass
+   it through recursive calls.
+
+### Result
 
 ```gams
-* Equation declared over full domain:
-Equations
-    stat_u(m,k)      -- should be stat_u(m,ku) to match u's effective domain
-
-* stat_u equation body (zero at terminal period):
+* Before fix:
 stat_u(m,k).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k)) =E= 0;
 
-* MCP model pairing:
-Model mcp_model /
-    stat_u.u,       -- stat_u(m,k) paired with u(m,k): terminal k unmatched
-/;
+* After fix:
+stat_u(m,k)$(ku(k)).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k)) =E= 0;
+u.fx(m,k)$(not (ku(k))) = 0;
 ```
 
 ---
 
-## Suggested Fix
-
-In `src/kkt/stationarity.py`, detect variable instances with zero Jacobian contributions (i.e.,
-no constraints reference those instances). Add a conditional to restrict the stationarity equation
-to the effective domain:
+## Generated MCP (Fixed)
 
 ```gams
-stat_u(m,k)$(ku(k)).. sum(n, ...) =E= 0;
+* Stationarity restricted to ku:
+stat_u(m,k)$(ku(k)).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k)) =E= 0;
+
+* Terminal-period u instances fixed to zero:
+u.fx(m,k)$(not (ku(k))) = 0;
 ```
-
-Or restrict the `stat_u` equation domain at generation time by examining which variable instances
-actually appear in constraints (examining the Jacobian contributions built by
-`_add_indexed_jacobian_terms()`).
-
----
-
-## Files to Investigate
-
-| File | Relevance |
-|------|-----------|
-| `src/kkt/stationarity.py` | `build_stationarity_equations()` — stationarity domain generation; `_add_indexed_jacobian_terms()` — detect zero-Jacobian instances |
-| `data/gamslib/raw/abel.gms` | Original model with `ku(k)` subset |
 
 ---
 
@@ -119,4 +137,5 @@ actually appear in constraints (examining the Jacobian contributions built by
 
 - **ISSUE_670**: Cross-indexed sums (Error 149) — prior blocker now fixed
 - **ISSUE_760**: Companion issue — `nu_stateq` domain not restricted to match `stateq` conditional
-- `qabel.gms` has the same structure and will have the same issue
+  (fixed in same branch)
+- `qabel.gms` has the same structure and will benefit from the same fix

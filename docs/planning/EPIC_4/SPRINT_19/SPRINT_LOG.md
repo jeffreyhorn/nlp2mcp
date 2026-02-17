@@ -262,7 +262,50 @@ abel model now generates without Error 149 — GAMS parsing succeeds.
 
 ---
 
-## Day 6 — ISSUE_670: Cross-Indexed Sums (Part 2) + Checkpoint 1
+## Day 6 — ISSUE_759 + ISSUE_760: Abel Domain Restriction Fixes
+
+**Date:** 2026-02-16
+**Time Spent:** ~2h
+
+### Summary
+Fixed two companion issues that prevented the abel model from solving after MCP generation.
+Abel now reaches SOLVER STATUS 1 Normal Completion, MODEL STATUS 1 Optimal.
+
+**ISSUE_759** (`stat_u` domain not restricted to `ku`): Extended `_find_variable_subset_condition()`
+in `stationarity.py` with:
+- Alias resolution (e.g., `mp → m`) so aliased indices are treated as equivalent to their
+  canonical target when comparing against declared domain indices
+- Explicit VarRef index traversal in lead/lag restriction detection (since `VarRef.children()`
+  does not yield indices)
+- `skip_declared_at` parameter on `_walk_expr()` so plain declared-index accesses in equations
+  that already have a lead/lag restriction are not counted as evidence the full domain is needed
+
+**ISSUE_760** (`nu_stateq` domain not restricted): Added block 3 in `emit_gams.py` that detects
+lead/lag restrictions on equality equations and emits `.fx` statements to fix terminal-period
+multiplier instances to zero (`nu_stateq.fx(n,k)$(not (ord(k) <= card(k) - 1)) = 0;`).
+
+### Changes
+- `src/kkt/stationarity.py`: Extended `_find_variable_subset_condition()` with alias resolution,
+  VarRef index traversal, and `skip_declared_at` parameter for `_walk_expr()`
+- `src/emit/emit_gams.py`: Added block 3 for equality multiplier `.fx` statements
+
+### PR Entries
+
+- Sprint 19 Day 6: ISSUE_759 + ISSUE_760 — Abel Domain Restriction Fixes (PR #TBD)
+
+### Metrics Snapshot
+
+| Metric | Baseline | Day 6 |
+|--------|----------|-------|
+| Parse success | 61/159 | 61/159 (unchanged) |
+| lexer_invalid_char | 72 | 72 (unchanged) |
+| internal_error | 24 | 24 (unchanged) |
+| Solve success | 20 | 21 (abel now solves) |
+| Test count | 3,294 | 3,516 (unchanged — no new tests) |
+
+---
+
+## Day 6 (original plan) — ISSUE_670: Cross-Indexed Sums (Part 2) + Checkpoint 1
 
 **Date:**
 **Time Spent:**
@@ -278,7 +321,7 @@ _(To be filled during Day 6)_
 | New models parsing | >=13 | | |
 | internal_error reclassified | 24 -> 3 | | |
 | ISSUE_672 fixed | alkyl/bearing | | |
-| ISSUE_670 on abel | validated | | |
+| ISSUE_670 on abel | validated | ✓ | |
 | circle model | model_optimal | | |
 | path_syntax_error | <=2 | | |
 | Regressions | 0 | | |

@@ -198,6 +198,156 @@ def _find_variable_access_condition(
     return None
 
 
+def _find_variable_subset_condition(
+    var_name: str,
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> Expr | None:
+    """Detect when a variable is consistently accessed via a named subset index.
+
+    Issue #759: A variable declared over domain (m, k) may only be referenced
+    inside equations with a subset index like ``u(m, ku)`` where ``ku(k)`` is a
+    dynamic subset of ``k``.  In this case GAMS will generate a stationarity
+    equation for the terminal ``k`` instance (not in ``ku``), but the Jacobian is
+    zero there — creating an unmatched MCP equation.
+
+    This function walks all equations, finds VarRef nodes for *var_name*, and
+    checks whether ALL occurrences replace a declared domain index with a
+    consistent named subset of that domain index.  When all occurrences agree on
+    the same subset for the same domain position, return
+    ``SetMembershipTest(subset, (SymbolRef(domain_idx),))`` as the condition.
+
+    Args:
+        var_name: Variable name (e.g., "u")
+        var_domain: Variable's declared domain (e.g., ("m", "k"))
+        model_ir: Model IR
+
+    Returns:
+        A SetMembershipTest condition Expr, or None if no consistent subset pattern.
+    """
+    if not var_domain:
+        return None
+
+    # Build a reverse map: parent_set_name → list of subset names
+    # A subset qualifies if it has domain=(parent,) and is dynamically assigned.
+    parent_to_subsets: dict[str, list[str]] = {}
+    dynamic_set_names = {sa.set_name.lower() for sa in model_ir.set_assignments}
+    for set_name, set_def in model_ir.sets.items():
+        name_lower = set_name.lower()
+        if name_lower in dynamic_set_names and not set_def.members and len(set_def.domain) == 1:
+            parent = set_def.domain[0].lower()
+            parent_to_subsets.setdefault(parent, []).append(name_lower)
+
+    # Build alias → canonical target map (e.g., mp → m).
+    # Used to treat alias indices as equivalent to their target when comparing
+    # against a variable's declared domain indices.
+    # model_ir.aliases values may be AliasDef objects or plain strings (in tests).
+    alias_to_canonical: dict[str, str] = {}
+    for a, a_val in model_ir.aliases.items():
+        target = a_val.target if hasattr(a_val, "target") else str(a_val)
+        alias_to_canonical[a.lower()] = target.lower()
+
+    def _resolve(name: str) -> str:
+        """Resolve an alias to its canonical set name (idempotent)."""
+        return alias_to_canonical.get(name, name)
+
+    # Which domain positions could be replaced by a subset?
+    # Map: position index → set of subset names seen across all VarRef occurrences
+    # None means "seen the declared domain index (no substitution)"
+    pos_subsets: dict[int, set[str] | None] = {}
+
+    def _walk_expr(expr: Expr, skip_declared_at: frozenset[str] = frozenset()) -> bool:
+        """Walk expr; return True if var_name found at least once."""
+        found = False
+        if isinstance(expr, VarRef) and expr.name.lower() == var_name.lower():
+            found = True
+            indices = expr.indices or ()
+            for pos, (decl_idx, actual_idx) in enumerate(zip(var_domain, indices, strict=False)):
+                if not isinstance(actual_idx, str):
+                    continue  # IndexOffset — skip
+                # Resolve aliases so that 'mp' is treated the same as 'm'
+                actual_lower = _resolve(actual_idx.lower())
+                decl_lower = _resolve(decl_idx.lower())
+                if actual_lower == decl_lower:
+                    if decl_lower in skip_declared_at:
+                        # This equation already has a lead/lag restriction on this
+                        # index, so a plain declared-index access here is NOT
+                        # evidence that the full domain is needed.
+                        pass
+                    else:
+                        # Used with the declared index — no substitution at this position
+                        pos_subsets[pos] = None
+                elif actual_lower in (parent_to_subsets.get(decl_lower) or []):
+                    # Used with a subset index
+                    if pos not in pos_subsets:
+                        pos_subsets[pos] = {actual_lower}
+                    elif pos_subsets[pos] is not None:
+                        pos_subsets[pos].add(actual_lower)  # type: ignore[union-attr]
+                    # If pos_subsets[pos] is already None (declared idx seen), leave as None
+        for child in expr.children():
+            if _walk_expr(child, skip_declared_at):
+                found = True
+        return found
+
+    found_any = False
+    for eq_def in model_ir.equations.values():
+        # Determine which domain indices of the variable are already restricted
+        # by this equation's own lead/lag pattern (e.g. stateq(n,k+1) restricts
+        # k to ku implicitly).  Accesses in such equations with the plain declared
+        # index are NOT evidence that the full domain is needed.
+        restricted_by_eq: set[str] = set()
+        if eq_def.domain:
+            from src.ir.ast import IndexOffset as _IO
+
+            def _collect_leads(e: Expr, domain_lower: frozenset[str]) -> None:
+                if isinstance(e, _IO) and not e.circular:
+                    canonical = e.base.lower()
+                    if canonical in domain_lower:
+                        restricted_by_eq.add(canonical)
+                # VarRef.children() does NOT yield indices — check them explicitly
+                if isinstance(e, VarRef):
+                    for idx in e.indices or ():
+                        if isinstance(idx, Expr):
+                            _collect_leads(idx, domain_lower)
+                for c in e.children():
+                    _collect_leads(c, domain_lower)
+
+            domain_lower = frozenset(d.lower() for d in eq_def.domain)
+            for side in eq_def.lhs_rhs:
+                _collect_leads(side, domain_lower)
+            if eq_def.condition is not None:
+                _collect_leads(eq_def.condition, domain_lower)
+        skip = frozenset(restricted_by_eq)
+        for side in eq_def.lhs_rhs:
+            if _walk_expr(side, skip):
+                found_any = True
+        if eq_def.condition is not None:
+            _walk_expr(eq_def.condition, skip)
+
+    if not found_any:
+        return None
+
+    # Find positions where ALL accesses use a single consistent subset
+    # (i.e., the declared index was NEVER used, and exactly one subset appears)
+    conditions: list[Expr] = []
+    for pos, subsets in pos_subsets.items():
+        if subsets is None or len(subsets) != 1:
+            continue  # Declared index seen, or multiple subsets — no clean restriction
+        (subset_name,) = subsets
+        decl_idx = var_domain[pos]
+        conditions.append(SetMembershipTest(subset_name, (SymbolRef(decl_idx),)))
+
+    if len(conditions) == 1:
+        return conditions[0]
+    # Multiple independent conditions — combine with Binary "and"
+    if len(conditions) > 1:
+        result: Expr = conditions[0]
+        for cond in conditions[1:]:
+            result = Binary("and", result, cond)
+        return result
+    return None
+
+
 def _collect_access_conditions(
     expr: Expr,
     var_name: str,
@@ -439,6 +589,17 @@ def build_stationarity_equations(
                 access_cond = _find_variable_access_condition(
                     var_name, var_def.domain, kkt.model_ir
                 )
+
+                # Issue #759: If no dollar-condition was found, check whether the
+                # variable is consistently accessed with a named subset index in
+                # place of one of its declared domain indices (e.g., u(m,ku) where
+                # the declared domain is (m,k)).  Use the subset membership as the
+                # stationarity equation condition so the terminal-period instances
+                # are excluded from the MCP pairing.
+                if access_cond is None:
+                    access_cond = _find_variable_subset_condition(
+                        var_name, var_def.domain, kkt.model_ir
+                    )
 
                 stationarity[stat_name] = EquationDef(
                     name=stat_name,
