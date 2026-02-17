@@ -24,7 +24,11 @@ class TestNumericalErrorMessages:
     """Test numerical error message quality."""
 
     def test_nan_parameter_message(self):
-        """Verify NaN parameter errors have clear messages."""
+        """Verify that NaN parameter values are allowed (represents GAMS 'na').
+
+        Sprint 19 Day 3 added support for GAMS special value 'na', which maps to NaN.
+        This test verifies that NaN values no longer raise errors.
+        """
         # Create a model with NaN parameter directly
         gams_code = """
 Parameters
@@ -46,19 +50,11 @@ Model test /all/ ;
 Solve test using NLP minimizing obj;
 """
         model = parse_model_text(gams_code)
-        # Manually inject NaN to test error message
+        # Manually inject NaN to simulate GAMS 'na' value
         model.params["p"].values[()] = float("nan")
 
-        with pytest.raises(NumericalError) as exc_info:
-            validate_parameter_values(model)
-
-        error_msg = str(exc_info.value)
-        # Check error message has key components
-        assert "parameter" in error_msg.lower()
-        assert "p" in error_msg
-        # Should provide context
-        assert len(error_msg) > 50  # Non-trivial message
-        assert "nan" in error_msg.lower()
+        # Should NOT raise - NaN values (from 'na') are allowed
+        validate_parameter_values(model)
 
     def test_invalid_bounds_message(self):
         """Verify invalid bounds errors have clear messages with suggestions."""
@@ -295,9 +291,9 @@ Solve test using NLP minimizing obj;
             except NumericalError as e:
                 error_msg = str(e).lower()
                 for keyword in expected_keywords:
-                    assert (
-                        keyword.lower() in error_msg
-                    ), f"Expected '{keyword}' in error message, got: {error_msg}"
+                    assert keyword.lower() in error_msg, (
+                        f"Expected '{keyword}' in error message, got: {error_msg}"
+                    )
 
 
 class TestErrorMessageLength:

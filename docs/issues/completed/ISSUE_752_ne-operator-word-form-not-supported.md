@@ -1,9 +1,10 @@
 # Word-Form Comparison Operator `ne` Not Supported in Grammar
 
 **GitHub Issue:** [#752](https://github.com/jeffreyhorn/nlp2mcp/issues/752)
-**Status:** Open
+**Status:** RESOLVED
 **Severity:** Medium - Blocks 1 GAMSLib model (ferts)
 **Date:** 2026-02-13
+**Resolved:** 2026-02-16
 
 ---
 
@@ -149,3 +150,41 @@ display y;
 ```
 
 Expected: `y('a') = 1`, `y('b') = 0`.
+
+---
+
+## Fix Applied
+
+**Status:** This issue was already fixed in Sprint 19 Day 3 (PR #750) and further refined in PR #754.
+
+**Grammar changes** (`src/gams/gams_grammar.lark`):
+- Added word-form terminals to comparison operators using case-insensitive regex:
+  ```lark
+  NE: "<>" | /(?i:ne)\b/
+  LE: "<=" | /(?i:le)\b/
+  GE: ">=" | /(?i:ge)\b/
+  LT: "<"  | /(?i:lt)\b/
+  GT: ">"  | /(?i:gt)\b/
+  ```
+- Note: `eq` is handled contextually as it conflicts with equation syntax `=e=`
+
+**Parser changes** (`src/ir/parser.py`):
+- Added `_WORD_FORM_OPS` mapping dictionary to normalize word-form operators to their
+  symbolic equivalents in the `_extract_operator()` method:
+  ```python
+  _WORD_FORM_OPS: ClassVar[dict[str, str]] = {
+      "ne": "<>", "le": "<=", "ge": ">=",
+      "lt": "<",  "gt": ">",  "eq": "="
+  }
+  ```
+- This ensures downstream code sees consistent operator strings.
+
+**Tests added** (`tests/unit/test_gams_word_form_operators.py`):
+- Comprehensive test suite for all word-form operators (ne, eq, lt, gt, le, ge)
+- Tests verify case-insensitivity
+- Tests verify symbolic operators still work
+
+**Verification:**
+```bash
+python -m src.cli /tmp/test_ne.gms --diagnostics   # ✓ SUCCESS
+```

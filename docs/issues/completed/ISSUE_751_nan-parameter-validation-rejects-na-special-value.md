@@ -1,9 +1,10 @@
 # NaN Parameter Validation Rejects `na` Special Value in Parsed Data
 
 **GitHub Issue:** [#751](https://github.com/jeffreyhorn/nlp2mcp/issues/751)
-**Status:** Open
+**Status:** RESOLVED
 **Severity:** Medium - Blocks 2 GAMSLib models (tforss, lands)
 **Date:** 2026-02-13
+**Resolved:** 2026-02-16
 
 ---
 
@@ -113,3 +114,33 @@ Skip validation for parameters that have computed expressions (since those expre
 | `src/validation/numerical.py` | Update `validate_parameter_values()` to allow NaN from explicit `na` |
 | `src/ir/parser.py` | Possibly add provenance tracking for `na` values |
 | `tests/unit/test_numerical_validation.py` | Add tests for `na` parameter handling |
+
+---
+
+## Fix Applied
+
+**Approach:** Option C (relaxed validation for NaN) combined with Option B insights.
+
+The fix was simpler than the suggested options required: `validate_parameter_values()` in
+`src/validation/numerical.py` was updated to allow NaN values unconditionally. The key insight
+is that GAMS's `na` (Not Available) is a first-class special value — not a sign of bad arithmetic
+— and the grammar already maps it to `float('nan')` correctly. Inf values (from `inf` special
+values or genuine overflow) are still caught as errors.
+
+The earlier code already skipped parameters with computed `expressions`, but this didn't help
+for `rho` in tforss because its assignment (`rho = rhoval(rhoset)`) happens inside a loop and
+is not tracked as a parameter expression in the IR.
+
+**Files changed:**
+- `src/validation/numerical.py`: Split `not math.isfinite()` check — NaN is now silently
+  allowed, only `math.isinf()` raises `NumericalError`.
+- `tests/integration/test_error_recovery.py`: Updated 3 tests to reflect the new policy
+  (NaN allowed, Inf still rejected).
+- `tests/validation/test_error_messages.py`: Updated `test_nan_parameter_message` to verify
+  NaN no longer raises.
+
+**Verification:**
+```bash
+python -m src.cli data/gamslib/raw/tforss.gms --diagnostics   # ✓ SUCCESS
+python -m src.cli data/gamslib/raw/lands.gms  --diagnostics   # ✓ SUCCESS
+```

@@ -32,16 +32,17 @@ from src.validation.numerical import (
 
 
 def test_nan_parameter_detected():
-    """Test that NaN in parameter values is caught with helpful message."""
+    """Test that NaN in parameter values is ALLOWED (represents GAMS 'na').
+
+    Sprint 19 Day 3 added support for GAMS special values including 'na'
+    (Not Available), which maps to NaN. These are legitimate placeholder
+    values that will be computed later, so validation allows them.
+    """
     model = ModelIR()
     model.params["p"] = ParameterDef(name="p", domain=(), values={("1",): float("nan")})
 
-    with pytest.raises(NumericalError) as exc_info:
-        validate_parameter_values(model)
-
-    assert "parameter 'p[1]'" in str(exc_info.value)
-    assert "NaN" in str(exc_info.value)
-    assert "Uninitialized parameters" in str(exc_info.value)
+    # Should NOT raise - NaN values (from 'na') are allowed
+    validate_parameter_values(model)
 
 
 def test_inf_parameter_detected():
@@ -69,17 +70,17 @@ def test_negative_inf_parameter_detected():
 
 
 def test_multiple_parameters_first_nan_reported():
-    """Test that first NaN parameter is reported when multiple exist."""
+    """Test that NaN parameters are allowed (multiple parameters with NaN).
+
+    NaN values represent GAMS 'na' placeholders and are legitimate.
+    """
     model = ModelIR()
     model.params["p1"] = ParameterDef(name="p1", domain=(), values={(): 1.0})
     model.params["p2"] = ParameterDef(name="p2", domain=(), values={(): float("nan")})
     model.params["p3"] = ParameterDef(name="p3", domain=(), values={(): float("nan")})
 
-    with pytest.raises(NumericalError) as exc_info:
-        validate_parameter_values(model)
-
-    # Should report one of the NaN parameters
-    assert "NaN" in str(exc_info.value)
+    # Should NOT raise - NaN values are allowed
+    validate_parameter_values(model)
 
 
 def test_nan_parameter_with_expressions_passes():
@@ -97,13 +98,17 @@ def test_nan_parameter_with_expressions_passes():
     validate_parameter_values(model)
 
 
-def test_nan_parameter_without_expressions_still_rejected():
-    """Test that NaN in parameter values is still rejected when no expressions exist."""
+def test_nan_parameter_without_expressions_allowed():
+    """Test that NaN in parameter values is allowed even when no expressions exist.
+
+    This handles cases where 'na' is used as a placeholder and the actual
+    assignment happens in a loop or conditional block (not tracked as expressions).
+    """
     model = ModelIR()
     model.params["p"] = ParameterDef(name="p", domain=(), values={(): float("nan")})
 
-    with pytest.raises(NumericalError):
-        validate_parameter_values(model)
+    # Should NOT raise - NaN values (from 'na') are allowed
+    validate_parameter_values(model)
 
 
 def test_expression_value_nan_detected():
@@ -466,6 +471,6 @@ def test_recovery_test_count():
     # Exclude this meta-test itself
     test_functions = [name for name in test_functions if name != "test_recovery_test_count"]
 
-    assert (
-        len(test_functions) >= 20
-    ), f"Day 4 requires ≥20 recovery tests, found {len(test_functions)}"
+    assert len(test_functions) >= 20, (
+        f"Day 4 requires ≥20 recovery tests, found {len(test_functions)}"
+    )
