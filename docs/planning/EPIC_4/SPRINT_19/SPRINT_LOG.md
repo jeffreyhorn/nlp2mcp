@@ -423,7 +423,7 @@ All 6 models:
 
 ### PR Entries
 
-- Sprint 19 Day 7: ISSUE_670 Wrap-up + House Model Investigation (PR #770)
+- Sprint 19 Day 7: ISSUE_670 Wrap-up + House Model Investigation ([PR #770](https://github.com/jeffreyhorn/nlp2mcp/pull/770))
 
 ### Metrics Snapshot
 
