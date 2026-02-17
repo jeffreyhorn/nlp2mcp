@@ -39,7 +39,7 @@ def test_nan_parameter_allowed():
     values that will be computed later, so validation allows them.
     """
     model = ModelIR()
-    model.params["p"] = ParameterDef(name="p", domain=(), values={("1",): float("nan")})
+    model.params["p"] = ParameterDef(name="p", domain=(), values={(): float("nan")})
 
     # Should NOT raise - NaN values (from 'na') are allowed
     validate_parameter_values(model)

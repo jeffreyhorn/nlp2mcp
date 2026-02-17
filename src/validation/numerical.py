@@ -23,16 +23,25 @@ from ..utils.errors import NumericalError
 
 def validate_parameter_values(model_ir: ModelIR) -> None:
     """
-    Check for NaN/Inf in parameter values.
+    Check for Inf in parameter values. NaN values are allowed.
+
+    GAMS's ``na`` (Not Available) special value maps to ``float('nan')`` and is a
+    legitimate placeholder used when the actual value will be computed later via
+    assignment statements (including inside loops). NaN is therefore silently permitted.
+
+    ``±Inf`` values indicate real numerical problems (overflow, division by zero) and
+    are always rejected, even for parameters that have computed expressions.
 
     Raises:
-        NumericalError: If any parameter has NaN or Inf value
+        NumericalError: If any parameter value is ±Inf
 
     Examples:
         >>> model_ir = ModelIR(...)
-        >>> model_ir.params['p'].values[('1',)] = float('nan')
+        >>> model_ir.params['p'].values[()] = float('nan')
+        >>> validate_parameter_values(model_ir)  # does NOT raise - 'na' is allowed
+        >>> model_ir.params['p'].values[()] = float('inf')
         >>> validate_parameter_values(model_ir)  # doctest: +SKIP
-        NumericalError: Numerical error in parameter 'p[1]': Invalid value (value is NaN)
+        NumericalError: Numerical error in parameter 'p': Invalid value (Inf)
     """
     for param_name, param_def in model_ir.params.items():
         # Skip validation for predefined constants
