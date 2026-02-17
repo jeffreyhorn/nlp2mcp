@@ -1127,8 +1127,9 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
     Sum or Prod node.
 
     Only names that are known set or alias names (from model_ir) are considered
-    indices. Literal strings (e.g. "domestic", "storage-c") and IndexOffset
-    objects are excluded.
+    indices. Literal strings (e.g. "domestic", "storage-c") are ignored.
+    IndexOffset objects are traversed: their ``base`` is treated as a potential
+    set index and their ``offset`` expression is walked for nested indices.
 
     Issue #670: Used to detect uncontrolled indices in stationarity derivative
     expressions that need to be wrapped in Sum nodes.
