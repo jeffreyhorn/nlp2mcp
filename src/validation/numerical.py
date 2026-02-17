@@ -41,7 +41,7 @@ def validate_parameter_values(model_ir: ModelIR) -> None:
         >>> validate_parameter_values(model_ir)  # does NOT raise - 'na' is allowed
         >>> model_ir.params['p'].values[()] = float('inf')
         >>> validate_parameter_values(model_ir)  # doctest: +SKIP
-        NumericalError: Numerical error in parameter 'p': Invalid value (Inf)
+        NumericalError: Numerical error in parameter 'p': Invalid parameter value (value is +Inf)
     """
     for param_name, param_def in model_ir.params.items():
         # Skip validation for predefined constants
@@ -63,7 +63,7 @@ def validate_parameter_values(model_ir: ModelIR) -> None:
                 location = f"parameter '{param_name}'"
 
             raise NumericalError(
-                "Invalid value (Inf)",
+                "Invalid parameter value",
                 location=location,
                 value=value,
                 suggestion=(
