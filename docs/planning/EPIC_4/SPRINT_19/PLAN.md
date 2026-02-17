@@ -154,7 +154,7 @@ Note: Many items overlap across workstreams (e.g., put format is both WS1 and WS
 | Implement VarRef lowercase normalization in parser.py | 1h | VarRef nodes consistently lowercase ✅ |
 | Unit tests for mixed-case differentiation | 0.5h | AD tests pass with normalized names ✅ (13 tests) |
 | Regenerate alkyl/bearing MCP files | 0.5h | Correct stationarity equations ✅ |
-| Run full regression suite | 0.5h | Zero regressions ✅ (3438 passed) |
+| Run full regression suite | 0.5h | Zero regressions ✅ (3479 collected, 13 new) |
 | Validate alkyl + bearing solve | 1h | Stationarity equations non-zero ✅ |
 
 **Risks:** Emitted GAMS variables will be lowercase — verify readability acceptable

@@ -24,7 +24,7 @@ Fix: normalize VarRef names to lowercase at parse time in 3 locations in `parser
 - `tests/unit/ad/test_mixed_case_differentiation.py`: 13 new unit + integration tests covering AD correctness and parser normalization
 
 #### Metrics
-- Tests: 3,438 (was 3,413) — +25
+- Tests: 3,479 (was 3,466) — +13 new test methods
 - Zero regressions
 
 ---

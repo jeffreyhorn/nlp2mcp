@@ -226,7 +226,7 @@ to return zero for mixed-case models (alkyl, bearing).
 | Parse success | 61/159 | 61/159 (unchanged) |
 | lexer_invalid_char | 72 | 72 (unchanged) |
 | internal_error | 24 | 24 (unchanged) |
-| Test count | 3,294 | 3,438 (+144) |
+| Test count | 3,294 | 3,479 (+185 cumulative from Day 0; +13 this day) |
 
 ---
 
