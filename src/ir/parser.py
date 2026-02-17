@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from itertools import product
 from pathlib import Path
+from typing import ClassVar
 
 from lark import Lark, Token, Tree
 from lark.exceptions import UnexpectedCharacters, UnexpectedEOF, UnexpectedToken
@@ -4807,8 +4808,24 @@ class _ModelBuilder:
             # Issue #714: Allow repeated scalar assignments (last-write-wins).
             setattr(var, scalar_attr, value)
 
+    # Map GAMS word-form comparison operators to their symbolic equivalents.
+    # This ensures downstream code (condition_eval, expr_to_gams) sees consistent
+    # operator strings regardless of whether the model uses "ne" or "<>".
+    # Note: Use ClassVar to avoid dataclass mutable default error
+    _WORD_FORM_OPS: ClassVar[dict[str, str]] = {
+        "ne": "<>",
+        "le": "<=",
+        "ge": ">=",
+        "lt": "<",
+        "gt": ">",
+        "eq": "=",
+    }
+
     def _extract_operator(self, node: Tree | Token) -> str:
         if isinstance(node, Token):
+            normalized = self._WORD_FORM_OPS.get(node.value.lower())
+            if normalized:
+                return normalized
             return node.value
         if isinstance(node, Tree):
             if node.children:

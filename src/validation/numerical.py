@@ -39,6 +39,13 @@ def validate_parameter_values(model_ir: ModelIR) -> None:
         if param_name in PREDEFINED_GAMS_CONSTANTS:
             continue
 
+        # Skip validation for parameters with computed expressions.
+        # GAMS models commonly use `na` as a placeholder in data declarations
+        # when the actual value will be computed later via assignment statements.
+        # The expressions will overwrite the data values at runtime.
+        if param_def.expressions:
+            continue
+
         for indices, value in param_def.values.items():
             if not math.isfinite(value):
                 # Format indices for display
