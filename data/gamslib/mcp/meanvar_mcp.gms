@@ -27,7 +27,7 @@ Alias(i, j);
 
 Parameters
     mu(s) /cn 0.1287, fr 0.1096, gr 0.0501, jp 0.1524, sw 0.0763, uk 0.1854, us 0.062, wr 0.0916/
-    q(i,j) /cn.cn 42.18, fr.cn 20.18, fr.fr 70.89, gr.cn 10.88, gr.fr 21.58, gr.gr 25.51, jp.cn 5.3, jp.fr 15.41, jp.gr 9.6, jp.jp 22.33, sw.cn 12.32, sw.fr 23.24, sw.gr 22.63, sw.jp 10.32, sw.sw 30.01, uk.cn 23.84, uk.fr 23.8, uk.gr 13.22, uk.jp 10.46, uk.sw 16.36, uk.uk 42.23, us.cn 17.41, us.fr 12.62, us.gr 4.7, us.jp 1.0, us.sw 7.2, us.uk 9.9, us.us 16.42, gr.jp 0.0, gr.sw 0.0, gr.uk 0.0, gr.us 0.0, sw.uk 0.0, sw.us 0.0, jp.sw 0.0, jp.uk 0.0, jp.us 0.0, fr.gr 0.0, fr.jp 0.0, fr.sw 0.0, fr.uk 0.0, fr.us 0.0, cn.fr 0.0, cn.gr 0.0, cn.jp 0.0, cn.sw 0.0, cn.uk 0.0, cn.us 0.0, uk.us 0.0/
+    q(i,j) /cn.cn 42.18, fr.cn 20.18, fr.fr 70.89, gr.cn 10.88, gr.fr 21.58, gr.gr 25.51, jp.cn 5.3, jp.fr 15.41, jp.gr 9.6, jp.jp 22.33, sw.cn 12.32, sw.fr 23.24, sw.gr 22.63, sw.jp 10.32, sw.sw 30.01, uk.cn 23.84, uk.fr 23.8, uk.gr 13.22, uk.jp 10.46, uk.sw 16.36, uk.uk 42.23, us.cn 17.41, us.fr 12.62, us.gr 4.7, us.jp 1.0, us.sw 7.2, us.uk 9.9, us.us 16.42, sw.uk 0.0, sw.us 0.0, cn.fr 0.0, cn.gr 0.0, cn.jp 0.0, cn.sw 0.0, cn.uk 0.0, cn.us 0.0, fr.gr 0.0, fr.jp 0.0, fr.sw 0.0, fr.uk 0.0, fr.us 0.0, gr.jp 0.0, gr.sw 0.0, gr.uk 0.0, gr.us 0.0, jp.sw 0.0, jp.uk 0.0, jp.us 0.0, uk.us 0.0/
     xres(*,p)
 ;
 
@@ -113,9 +113,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_m.. ((-1) * (1 / sqrt(v) ** 1)) + ((-1) * sum((i,j), 0)) * nu_vbal + (1 - sum(i, 0)) * nu_mbal + sum(i, 0) * nu_budget + sum(i, 0) * nu_riskless + (sum(i, x(i) * sf * sum(h, 0)) - 1) * nu_meanbal + 1 * nu_m_fx - piL_m =E= 0;
-stat_v.. ((-1) * (((-1) * (m * 1 / (2 * sqrt(v)))) / sqrt(v) ** 2)) + (1 - sum((i,j), 0)) * nu_vbal + ((-1) * sum(i, 0)) * nu_mbal + sum(i, 0) * nu_budget + sum(i, 0) * nu_riskless + sum(i, x(i) * sf * sum(h, 0)) * nu_meanbal + 0 * nu_m_fx - piL_v =E= 0;
-stat_x(i).. 0 + ((-1) * sum(j, x(j) * q(i,j))) * nu_vbal + ((-1) * mu(i)) * nu_mbal + 1 * nu_budget + (mu(i) - r) * nu_riskless + (sf * sum(h, mu(h)) + (1 - sf) * mu(i) + x(i) * sf * sum(h, 0)) * nu_meanbal + 0 * nu_m_fx + piU_x(i) =E= 0;
+stat_m.. ((-1) * (1 / sqrt(v) ** 1)) + nu_mbal - nu_meanbal + nu_m_fx - piL_m =E= 0;
+stat_v.. ((-1) * (((-1) * (m * 1 / (2 * sqrt(v)))) / sqrt(v) ** 2)) + nu_vbal - piL_v =E= 0;
+stat_x(i).. ((-1) * sum(j, x(j) * q(i,j))) * nu_vbal + ((-1) * mu(i)) * nu_mbal + nu_budget + (mu(i) - r) * nu_riskless + (sf * sum(h, mu(h)) + (1 - sf) * mu(i)) * nu_meanbal + piU_x(i) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_m.. m - 0 =G= 0;

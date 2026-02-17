@@ -35,7 +35,6 @@ Parameters
 Scalars
     b00 /0.040357/
     demand /210.0/
-    trace /0.0/
 ;
 
 * ============================================
@@ -92,8 +91,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. 100 * sum(i, 0) / 10000 + 100 * sum((i,j), 0) / 10000 + (1 - sum((i,cg), 0)) * nu_costfn + ((-1) * sum(i, 0)) * lam_demcons =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * power(p(i), pexp(cg)) * pexp(cg) / p(i))) * nu_costfn + (-1) * lam_demcons =E= 0;
+stat_cost.. nu_costfn =E= 0;
+stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons =E= 0;
 
 * Inequality complementarity equations
 comp_demcons.. sum(i, p(i)) - (demand + loss) =G= 0;

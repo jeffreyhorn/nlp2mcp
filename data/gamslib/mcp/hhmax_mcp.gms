@@ -16,11 +16,15 @@ $offText
 * ============================================
 
 Sets
-    i /'1', '2', '3', '4', '5', '6'/
+    i /BRD, MLK/
+    h /CAP, LAB/
 ;
 
 Parameters
-    dat(i,*) /'1'.y 127.0, '1'.x -5.0, '2'.y 151.0, '2'.x -3.0, '3'.y 379.0, '3'.x -1.0, '4'.y 421.0, '4'.x 5.0, '5'.y 460.0, '5'.x 3.0, '6'.y 426.0, '6'.x 1.0/
+    alpha(i) /BRD 0.2, MLK 0.8/
+    px(i) /BRD 1.0, MLK 2.0/
+    pf(h) /CAP 2.0, LAB 1.0/
+    FF(h) /CAP 10.0, LAB 20.0/
 ;
 
 * ============================================
@@ -35,18 +39,13 @@ Parameters
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    ols
-    dev(i)
-    b1
-    b2
-    b3
-    nu_ddev(i)
-    nu_sequ
+    UU
+    nu_eqX(i)
 ;
 
 Positive Variables
-    piL_b3
-    piU_b3
+    X(i)
+    piL_x(i)
 ;
 
 * ============================================
@@ -56,10 +55,12 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound).
 
-b1.l = 500.0;
-b2.l = -150.0;
-b3.l = -0.2;
+X.l("BRD") = 0.001;
+X.l("MLK") = 0.001;
+X.l(i) = min(max(X.l(i), 1e-6), X.up(i));
 
 * ============================================
 * Equations
@@ -70,37 +71,31 @@ b3.l = -0.2;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_b1
-    stat_b2
-    stat_b3
-    stat_dev(i)
-    comp_lo_b3
-    comp_up_b3
-    ddev(i)
-    dols
-    sequ
+    stat_uu
+    stat_x(i)
+    comp_lo_x(i)
+    eqX(i)
+    obj
 ;
 
 * ============================================
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(i, i__);
+
 * Stationarity equations
-stat_b1.. sum(i, (-1) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * (-1))) * nu_sequ =E= 0;
-stat_b2.. sum(i, ((-1) * (exp(b3 * dat(i,"x")))) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * ((-1) * (exp(b3 * dat(i,"x")))))) * nu_sequ =E= 0;
-stat_b3.. sum(i, ((-1) * (b2 * exp(b3 * dat(i,"x")) * dat(i,"x"))) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * ((-1) * (b2 * exp(b3 * dat(i,"x")) * dat(i,"x"))))) * nu_sequ - piL_b3 + piU_b3 =E= 0;
-stat_dev(i).. 2 * dev(i) - nu_ddev(i) =E= 0;
+stat_uu.. 0 =E= 0;
+stat_x(i).. ((-1) * (prod(i__, x(i__) ** alpha(i__)) * sum(i__, x(i__) ** alpha(i__) * alpha(i__) / x(i__) / x(i__) ** alpha(i__)))) + nu_eqX(i) - piL_x(i) =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_b3.. b3 + 5 =G= 0;
-
-* Upper bound complementarity equations
-comp_up_b3.. 5 - b3 =G= 0;
+comp_lo_x(i).. x(i) - 0.001 =G= 0;
 
 * Original equality equations
-dols.. ols =E= sum(i, sqr(dev(i)));
-ddev(i).. dat(i,"y") =E= b1 + b2 * exp(b3 * dat(i,"x")) + dev(i);
-sequ.. ols =E= sum(i, sqr(dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))));
+eqX(i).. x(i) =E= alpha(i) * sum(h, pf(h) * FF(h)) / px(i);
+obj.. uu =E= prod(i, x(i) ** alpha(i));
 
 
 * ============================================
@@ -117,15 +112,11 @@ sequ.. ols =E= sum(i, sqr(dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_b1.b1,
-    stat_b2.b2,
-    stat_b3.b3,
-    stat_dev.dev,
-    ddev.nu_ddev,
-    dols.ols,
-    sequ.nu_sequ,
-    comp_lo_b3.piL_b3,
-    comp_up_b3.piU_b3
+    stat_uu.uu,
+    stat_x.x,
+    eqX.nu_eqX,
+    obj.UU,
+    comp_lo_x.piL_x
 /;
 
 * ============================================

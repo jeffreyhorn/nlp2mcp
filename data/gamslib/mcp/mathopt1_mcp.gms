@@ -78,7 +78,7 @@ Equations
 
 * Stationarity equations
 stat_x1.. 40 * (sqr(x1) - x2) * x1 + 2 * (x1 - 1) + (1 - x2) * nu_eqs - 3 * lam_ineqs - piL_x1 + piU_x1 =E= 0;
-stat_x2.. 10 * 2 * (sqr(x1) - x2) * (-1) + ((-1) * x1) * nu_eqs - 4 * lam_ineqs - piL_x2 + piU_x2 =E= 0;
+stat_x2.. (-20) * (sqr(x1) - x2) + ((-1) * x1) * nu_eqs - 4 * lam_ineqs - piL_x2 + piU_x2 =E= 0;
 
 * Inequality complementarity equations
 comp_ineqs.. ((-1) * (3 * x1 + 4 * x2 - 25)) =G= 0;

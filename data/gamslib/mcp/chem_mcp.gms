@@ -16,14 +16,14 @@ $offText
 * ============================================
 
 Sets
-    c /H, H2, H2O, N, N2, NH, NO, O, O2, OH/
+    c /H, H2, H2O, N, N2, NH, 'NO', O, O2, OH/
     i /H, N, O/
 ;
 
 Parameters
-    a(i,c) /H.H 1.0, H.H2 2.0, H.H2O 2.0, H.NH 1.0, H.OH 1.0, N.N 1.0, N.N2 2.0, N.NH 1.0, N.NO 1.0, O.H2O 1.0, O.NO 1.0, O.O 1.0, O.O2 2.0, O.OH 1.0, H.N 0.0, H.N2 0.0, H.NO 0.0, H.O 0.0, H.O2 0.0, N.H 0.0, N.H2 0.0, N.H2O 0.0, N.O 0.0, N.O2 0.0, N.OH 0.0, O.H 0.0, O.H2 0.0, O.N 0.0, O.N2 0.0, O.NH 0.0/
+    a(i,c) /H.H 1.0, H.H2 2.0, H.H2O 2.0, H.NH 1.0, H.OH 1.0, N.N 1.0, N.N2 2.0, N.NH 1.0, N.'NO' 1.0, O.H2O 1.0, O.'NO' 1.0, O.O 1.0, O.O2 2.0, O.OH 1.0, N.H 0.0, N.H2 0.0, N.H2O 0.0, N.O 0.0, N.O2 0.0, N.OH 0.0, H.N 0.0, H.N2 0.0, H.'NO' 0.0, H.O 0.0, H.O2 0.0, O.H 0.0, O.H2 0.0, O.N 0.0, O.N2 0.0, O.NH 0.0/
     mix(i) /h 2.0, n 1.0, o 1.0/
-    gibbs(c) /H -10.021, H2 -21.096, H2O -37.986, N -9.846, N2 -28.653, NH -18.918, NO -28.032, O -14.64, o2 -30.594, OH -26.11/
+    gibbs(c) /H -10.021, H2 -21.096, H2O -37.986, N -9.846, N2 -28.653, NH -18.918, 'NO' -28.032, O -14.64, o2 -30.594, OH -26.11/
     gplus(c)
 ;
 
@@ -100,8 +100,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(c).. gplus(c) + log(x(c) / xb) + x(c) * 1 / (x(c) / xb) * 1 / xb ** 1 + sum(i, a(i,c) * nu_cdef(i)) + (-1) * nu_xdef - piL_x(c) =E= 0;
-stat_xb.. sum(c, x(c) * 1 / (x(c) / xb) * ((-1) * x(c)) / xb ** 2) + sum(c, 0) * nu_cdef("H") + sum(c, 0) * nu_cdef("N") + sum(c, 0) * nu_cdef("O") + (1 - sum(c, 0)) * nu_xdef - piL_xb =E= 0;
+stat_x(c).. gplus(c) + log(x(c) / xb) + x(c) * 1 / (x(c) / xb) * 1 / xb ** 1 + sum(i, a(i,c) * nu_cdef(i)) - nu_xdef - piL_x(c) =E= 0;
+stat_xb.. sum(c, x(c) * 1 / (x(c) / xb) * ((-1) * x(c)) / xb ** 2) + nu_xdef - piL_xb =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(c).. x(c) - 0.001 =G= 0;

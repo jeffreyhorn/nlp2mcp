@@ -31,6 +31,9 @@ Scalars
     ymax /0.0/
 ;
 
+* Fix random seed for deterministic MCP evaluation
+execseed = 12345;
+
 x(i) = uniform(1, 10);
 y(i) = uniform(1, 10);
 xmin = smin(i, x(i));
@@ -81,9 +84,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a.. 0 - 2 * (x("p1") - a) * (-1) * lam_e("p1") - 2 * (x("p10") - a) * (-1) * lam_e("p10") - 2 * (x("p2") - a) * (-1) * lam_e("p2") - 2 * (x("p3") - a) * (-1) * lam_e("p3") - 2 * (x("p4") - a) * (-1) * lam_e("p4") - 2 * (x("p5") - a) * (-1) * lam_e("p5") - 2 * (x("p6") - a) * (-1) * lam_e("p6") - 2 * (x("p7") - a) * (-1) * lam_e("p7") - 2 * (x("p8") - a) * (-1) * lam_e("p8") - 2 * (x("p9") - a) * (-1) * lam_e("p9") =E= 0;
-stat_b.. 0 - 2 * (y("p1") - b) * (-1) * lam_e("p1") - 2 * (y("p10") - b) * (-1) * lam_e("p10") - 2 * (y("p2") - b) * (-1) * lam_e("p2") - 2 * (y("p3") - b) * (-1) * lam_e("p3") - 2 * (y("p4") - b) * (-1) * lam_e("p4") - 2 * (y("p5") - b) * (-1) * lam_e("p5") - 2 * (y("p6") - b) * (-1) * lam_e("p6") - 2 * (y("p7") - b) * (-1) * lam_e("p7") - 2 * (y("p8") - b) * (-1) * lam_e("p8") - 2 * (y("p9") - b) * (-1) * lam_e("p9") =E= 0;
-stat_r.. 1 - ((-1) * (2 * r)) * lam_e("p1") - ((-1) * (2 * r)) * lam_e("p10") - ((-1) * (2 * r)) * lam_e("p2") - ((-1) * (2 * r)) * lam_e("p3") - ((-1) * (2 * r)) * lam_e("p4") - ((-1) * (2 * r)) * lam_e("p5") - ((-1) * (2 * r)) * lam_e("p6") - ((-1) * (2 * r)) * lam_e("p7") - ((-1) * (2 * r)) * lam_e("p8") - ((-1) * (2 * r)) * lam_e("p9") - piL_r =E= 0;
+stat_a.. ((-1) * sum(i, 2 * (x(i) - a) * (-1) * lam_e(i))) =E= 0;
+stat_b.. ((-1) * sum(i, 2 * (y(i) - b) * (-1) * lam_e(i))) =E= 0;
+stat_r.. 1 - sum(i, ((-1) * (2 * r)) * lam_e(i)) - piL_r =E= 0;
 
 * Inequality complementarity equations
 comp_e(i).. ((-1) * (sqr(x(i) - a) + sqr(y(i) - b) - sqr(r))) =G= 0;

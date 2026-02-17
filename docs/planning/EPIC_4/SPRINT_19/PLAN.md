@@ -7,6 +7,10 @@
 **Day 0 Status:** COMPLETE (2026-02-13) — All 10 prep deliverables verified, 3,294 tests pass, SPRINT_LOG.md created
 **Day 1 Status:** COMPLETE (2026-02-13) — Error taxonomy updated (24→0 internal_error), Subcategory G grammar fixes (+1 parse), 3,299 tests pass
 **Day 2 Status:** COMPLETE (2026-02-16) — Put format specifiers (:width:decimals) + put_stmt_nosemi (6 models past parse), reserved word quoting in emit layer (ps2_f family inf/na quoted), 3,386 tests pass
+**Day 3 Status:** COMPLETE (2026-02-16) — Special values grammar (na/inf/eps/undf), circle deterministic fix (execseed), 3,474 tests pass
+**Day 4 Status:** COMPLETE (2026-02-16) — ISSUE_672 case sensitivity fix (CaseInsensitiveDict), 3,474 tests pass
+**Day 5 Status:** COMPLETE (2026-02-17) — ISSUE_670 Part 1 (_collect_free_indices + indexed path), 3,516 tests pass (PR #758)
+**Day 6 Status:** COMPLETE (2026-02-16) — ISSUE_759+760 (abel domain fixes, PR #761); ISSUE_670 Part 2 (scalar path + static subsets, Checkpoint 1 GO); 3,475 tests pass
 
 ---
 

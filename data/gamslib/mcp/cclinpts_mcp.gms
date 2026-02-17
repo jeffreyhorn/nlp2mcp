@@ -16,12 +16,21 @@ $offText
 * ============================================
 
 Sets
-    i /'1', '2', '3', '4', '5', '6'/
+    j /s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s27, s28, s29, s30/
+    first(j)
+    last(j)
 ;
 
-Parameters
-    dat(i,*) /'1'.y 127.0, '1'.x -5.0, '2'.y 151.0, '2'.x -3.0, '3'.y 379.0, '3'.x -1.0, '4'.y 421.0, '4'.x 5.0, '5'.y 460.0, '5'.x 3.0, '6'.y 426.0, '6'.x 1.0/
+Alias(j, jj);
+
+Scalars
+    gamma /2.0/
+    b0 /5.0/
+    bm /100.0/
 ;
+
+first("s1") = 1;
+last("s30") = 1;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -35,18 +44,17 @@ Parameters
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    ols
-    dev(i)
-    b1
-    b2
-    b3
-    nu_ddev(i)
-    nu_sequ
+    ObjV
+    b(j)
+    fb(j)
+    nu_FBCalc(j)
+    nu_b_fx_s1
+    nu_b_fx_s30
 ;
 
 Positive Variables
-    piL_b3
-    piU_b3
+    piL_b(j)
+    piU_b(j)
 ;
 
 * ============================================
@@ -57,9 +65,36 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-b1.l = 500.0;
-b2.l = -150.0;
-b3.l = -0.2;
+b.l("s1") = 5.0;
+b.l("s2") = 5.0;
+b.l("s3") = 5.0;
+b.l("s4") = 5.0;
+b.l("s5") = 5.0;
+b.l("s6") = 5.0;
+b.l("s7") = 5.0;
+b.l("s8") = 5.0;
+b.l("s9") = 5.0;
+b.l("s10") = 5.0;
+b.l("s11") = 5.0;
+b.l("s12") = 5.0;
+b.l("s13") = 5.0;
+b.l("s14") = 5.0;
+b.l("s15") = 5.0;
+b.l("s16") = 5.0;
+b.l("s17") = 5.0;
+b.l("s18") = 5.0;
+b.l("s19") = 5.0;
+b.l("s20") = 5.0;
+b.l("s21") = 5.0;
+b.l("s22") = 5.0;
+b.l("s23") = 5.0;
+b.l("s24") = 5.0;
+b.l("s25") = 5.0;
+b.l("s26") = 5.0;
+b.l("s27") = 5.0;
+b.l("s28") = 5.0;
+b.l("s29") = 5.0;
+b.l("s30") = 5.0;
 
 * ============================================
 * Equations
@@ -70,15 +105,15 @@ b3.l = -0.2;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_b1
-    stat_b2
-    stat_b3
-    stat_dev(i)
-    comp_lo_b3
-    comp_up_b3
-    ddev(i)
-    dols
-    sequ
+    stat_b(j)
+    stat_fb(j)
+    stat_objv
+    comp_lo_b(j)
+    comp_up_b(j)
+    FBCalc(j)
+    b_fx_s1
+    b_fx_s30
+    object
 ;
 
 * ============================================
@@ -86,21 +121,21 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b1.. sum(i, (-1) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * (-1))) * nu_sequ =E= 0;
-stat_b2.. sum(i, ((-1) * (exp(b3 * dat(i,"x")))) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * ((-1) * (exp(b3 * dat(i,"x")))))) * nu_sequ =E= 0;
-stat_b3.. sum(i, ((-1) * (b2 * exp(b3 * dat(i,"x")) * dat(i,"x"))) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * ((-1) * (b2 * exp(b3 * dat(i,"x")) * dat(i,"x"))))) * nu_sequ - piL_b3 + piU_b3 =E= 0;
-stat_dev(i).. 2 * dev(i) - nu_ddev(i) =E= 0;
+stat_b(j).. ((-1) * ((1 - gamma) * b(j) ** (1 - gamma) * (1 - gamma) / b(j) / (1 - gamma) ** 2)) * nu_FBCalc(j) + nu_b_fx_s1 + nu_b_fx_s30 - piL_b(j) + piU_b(j) =E= 0;
+stat_fb(j).. nu_FBCalc(j) =E= 0;
+stat_objv.. 0 =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_b3.. b3 + 5 =G= 0;
+comp_lo_b(j).. b(j) - 5 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_b3.. 5 - b3 =G= 0;
+comp_up_b(j).. 100 - b(j) =G= 0;
 
 * Original equality equations
-dols.. ols =E= sum(i, sqr(dev(i)));
-ddev(i).. dat(i,"y") =E= b1 + b2 * exp(b3 * dat(i,"x")) + dev(i);
-sequ.. ols =E= sum(i, sqr(dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))));
+object.. objv =E= sum(j$((not last(j))), (b("s30") - b(j)) * (fb(j) - fb(j-1))) + 0.5 * sum(j$((not first(j))), (b(j) - b(j-1)) * (fb(j) - fb(j-1)));
+FBCalc(j).. fb(j) =E= b(j) ** (1 - gamma) / (1 - gamma);
+b_fx_s1.. b("s1") - 5 =E= 0;
+b_fx_s30.. b("s30") - 100 =E= 0;
 
 
 * ============================================
@@ -117,15 +152,15 @@ sequ.. ols =E= sum(i, sqr(dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_b1.b1,
-    stat_b2.b2,
-    stat_b3.b3,
-    stat_dev.dev,
-    ddev.nu_ddev,
-    dols.ols,
-    sequ.nu_sequ,
-    comp_lo_b3.piL_b3,
-    comp_up_b3.piU_b3
+    stat_b.b,
+    stat_fb.fb,
+    stat_objv.objv,
+    FBCalc.nu_FBCalc,
+    b_fx_s1.nu_b_fx_s1,
+    b_fx_s30.nu_b_fx_s30,
+    object.ObjV,
+    comp_lo_b.piL_b,
+    comp_up_b.piU_b
 /;
 
 * ============================================
