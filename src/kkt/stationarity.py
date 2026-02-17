@@ -1504,7 +1504,9 @@ def _add_indexed_jacobian_terms(
                 # index in the derivative that is not in var_domain is uncontrolled.
                 # Wrap such indices in a Sum to avoid GAMS Error 149.
                 free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
-                uncontrolled = free_in_deriv - set(var_domain)
+                # Use lowercase comparison to match _collect_free_indices output,
+                # consistent with the indexed-constraint branch above.
+                uncontrolled = free_in_deriv - {d.lower() for d in var_domain}
                 if uncontrolled:
                     sum_indices = tuple(sorted(uncontrolled))
                     term = Sum(sum_indices, term)

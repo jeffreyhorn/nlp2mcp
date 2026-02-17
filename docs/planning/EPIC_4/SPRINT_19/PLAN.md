@@ -10,7 +10,7 @@
 **Day 3 Status:** COMPLETE (2026-02-16) — Special values grammar (na/inf/eps/undf), circle deterministic fix (execseed), 3,474 tests pass
 **Day 4 Status:** COMPLETE (2026-02-16) — ISSUE_672 case sensitivity fix (CaseInsensitiveDict), 3,474 tests pass
 **Day 5 Status:** COMPLETE (2026-02-17) — ISSUE_670 Part 1 (_collect_free_indices + indexed path), 3,516 tests pass (PR #758)
-**Day 6 Status:** COMPLETE (2026-02-16) — ISSUE_759+760 (abel domain fixes, PR #761); ISSUE_670 Part 2 (scalar path + static subsets, Checkpoint 1 GO); 3,475 tests pass
+**Day 6 Status:** COMPLETE (2026-02-17) — ISSUE_759+760 (abel domain fixes, PR #761); ISSUE_670 Part 2 (scalar path + static subsets, Checkpoint 1 GO); 3,475 tests pass
 
 ---
 

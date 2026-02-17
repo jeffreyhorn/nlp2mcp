@@ -351,7 +351,7 @@ the earlier Day 6 branch). Two additional fixes were required beyond the Day 5 i
 |-----------|--------|--------|------|
 | New models parsing | >=13 | ~4 new (Days 1-3 grammar) | ✗ Partial — grammar work ongoing |
 | internal_error reclassified | 24 -> 3 | 0 (all 24 reclassified Day 1) | ✓ |
-| ISSUE_672 fixed | alkyl/bearing | Fixed (PR #758) | ✓ |
+| ISSUE_672 fixed | alkyl/bearing | Fixed (PR #756) | ✓ |
 | ISSUE_670 on abel | validated | ✓ Optimal | ✓ |
 | circle model | model_optimal | Locally Infeasible (KKT issue) | ✗ Deferred |
 | path_syntax_error | <=2 | ~2 (estimated from prior runs) | ~ |
