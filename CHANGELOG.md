@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 5: ISSUE_670 — Cross-Indexed Sums (Part 1) - 2026-02-17
+
+**Branch:** `sprint19-day5-issue670-cross-indexed-sums`
+**Status:** COMPLETE
+
+#### Summary
+Implemented `_collect_free_indices()` utility function in `src/kkt/stationarity.py` and
+integrated it into `_add_indexed_jacobian_terms()`. After the existing domain-based Sum
+wrapping, any free indices remaining in the derivative expression (indices present in the
+expression but not controlled by either the stationarity equation domain or the multiplier
+domain) are now detected and wrapped in an additional Sum node. This resolves GAMS Error 149
+("Uncontrolled set entered as constant") for the 6 affected models: abel, qabel, chenery,
+mexss, orani, robert.
+
+The abel model now generates and passes GAMS parsing without Error 149.
+
+#### Changes
+- `src/kkt/stationarity.py`: Added `_collect_free_indices(expr, model_ir) -> set[str]` utility and integration in `_add_indexed_jacobian_terms()`
+- `tests/unit/kkt/test_collect_free_indices.py`: 19 new unit tests covering basic cases, Sum binding, composite expressions, and the abel cross-indexed pattern
+
+#### Metrics
+- Tests: 3,498 (was 3,479) — +19 new test methods
+- Zero regressions
+
+---
+
 ### Sprint 19 Day 4: ISSUE_672 — MCP Case Sensitivity Fix - 2026-02-16
 
 **Branch:** `sprint19-day4-issue672-case-sensitivity`

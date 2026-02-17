@@ -1118,6 +1118,52 @@ def _replace_matching_indices(
     return tuple(new_indices)
 
 
+def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
+    """Collect all free (unbound) symbolic set indices in an expression.
+
+    Walks the expression tree and returns the set of index names that appear
+    in VarRef/ParamRef/MultiplierRef indices but are NOT bound by any enclosing
+    Sum node.
+
+    Only names that are known set or alias names (from model_ir) are considered
+    indices. Literal strings (e.g. "domestic", "storage-c") and IndexOffset
+    objects are excluded.
+
+    Issue #670: Used to detect uncontrolled indices in stationarity derivative
+    expressions that need to be wrapped in Sum nodes.
+    """
+    known_sets: set[str] = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
+
+    def _walk(e: Expr, bound: frozenset[str]) -> set[str]:
+        if isinstance(e, (VarRef, ParamRef, MultiplierRef)):
+            free: set[str] = set()
+            for idx in e.indices or ():
+                if isinstance(idx, str) and idx in known_sets and idx not in bound:
+                    free.add(idx)
+            return free
+        if isinstance(e, (Sum, Prod)):
+            new_bound = bound | frozenset(e.index_sets)
+            result = _walk(e.body, new_bound)
+            if e.condition is not None:
+                result |= _walk(e.condition, new_bound)
+            return result
+        if isinstance(e, Binary):
+            return _walk(e.left, bound) | _walk(e.right, bound)
+        if isinstance(e, Unary):
+            return _walk(e.child, bound)
+        if isinstance(e, Call):
+            free = set()
+            for arg in e.args:
+                free |= _walk(arg, bound)
+            return free
+        if isinstance(e, DollarConditional):
+            return _walk(e.condition, bound) | _walk(e.value_expr, bound)
+        # Const, SymbolRef, IndexOffset, SetMembershipTest, etc. — no indices
+        return set()
+
+    return _walk(expr, frozenset())
+
+
 def _add_indexed_jacobian_terms(
     expr: Expr,
     kkt: KKTSystem,
@@ -1234,6 +1280,19 @@ def _add_indexed_jacobian_terms(
                     sum_indices = tuple(idx for idx in mult_domain if idx in extra_mult_indices)
                     if sum_indices:
                         term = Sum(sum_indices, term)
+
+                # Issue #670: After domain-based sum wrapping, detect any remaining
+                # free indices in the derivative expression that are not controlled by
+                # either the stationarity equation domain or the multiplier domain.
+                # These arise when the derivative contains indices from the original
+                # constraint's inner sum that are outside both domains (cross-indexed
+                # sum pattern). Wrap them in an additional Sum to avoid GAMS Error 149.
+                controlled = var_domain_set | mult_domain_set
+                free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
+                uncontrolled = free_in_deriv - controlled
+                if uncontrolled:
+                    sum_indices = tuple(sorted(uncontrolled))
+                    term = Sum(sum_indices, term)
 
                 expr = Binary("+", expr, term)
         else:

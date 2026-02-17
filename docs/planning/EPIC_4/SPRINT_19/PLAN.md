@@ -162,14 +162,14 @@ Note: Many items overlap across workstreams (e.g., put format is both WS1 and WS
 
 ---
 
-#### Day 5 — ISSUE_670: Cross-Indexed Sums (Part 1)
+#### Day 5 — ISSUE_670: Cross-Indexed Sums (Part 1) ✅ COMPLETE
 **Theme:** Start highest-ROI fix — analysis + implementation
 **Effort:** 4-5h
 
 | Task | Effort | Deliverable |
 |------|--------|-------------|
-| Implement `_collect_free_indices()` utility function | 3-4h | Function with unit tests |
-| Begin integration into `_add_indexed_jacobian_terms()` | 1-2h | Initial integration |
+| Implement `_collect_free_indices()` utility function | 3-4h | Function with unit tests ✅ (19 tests) |
+| Begin integration into `_add_indexed_jacobian_terms()` | 1-2h | Initial integration ✅ |
 
 **Risks:** Edge cases in free index collection with aliased indices
 **Unknowns:** 8.1, 8.2 (VERIFIED — all 6 models share cross-indexed sum pattern)
