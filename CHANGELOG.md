@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 6: ISSUE_759 + ISSUE_760 — Abel Domain Restriction Fixes - 2026-02-16
+
+**Branch:** `sprint19-day6-issue759-760-abel-domain-fix`
+**Status:** COMPLETE
+
+#### Summary
+Fixed two companion issues that prevented the abel model from solving after MCP generation:
+
+**ISSUE_759** (`stat_u` domain): The stationarity equation `stat_u(m,k)` was generated over
+the full `(m,k)` domain, but `u` is only active at `k ∈ ku`. Extended
+`_find_variable_subset_condition()` in `stationarity.py` to:
+- Resolve aliases (e.g., `mp → m`) before comparing VarRef indices to declared domain indices
+- Explicitly traverse VarRef indices when collecting lead/lag restrictions (since
+  `VarRef.children()` does not yield indices)
+- Skip plain declared-index accesses in equations that already have a lead/lag restriction on
+  that index (e.g., `u(m,k)` in `stateq(n,k+1)` is implicitly restricted to `ku`)
+
+**ISSUE_760** (`nu_stateq` domain): The equality multiplier `nu_stateq(n,k)` was declared over
+the full `(n,k)` domain, but `stateq(n,k+1)` only generates rows for `k ∈ ku`. Added a new
+block in `emit_gams.py` that detects lead/lag restrictions on equality equations and emits
+`.fx` statements to fix terminal-period multiplier instances to zero.
+
+Abel now solves: SOLVER STATUS 1 Normal Completion, MODEL STATUS 1 Optimal.
+
+#### Changes
+- `src/kkt/stationarity.py`: Extended `_find_variable_subset_condition()` with alias resolution,
+  explicit VarRef index traversal in lead/lag detection, and `skip_declared_at` parameter for
+  `_walk_expr()`
+- `src/emit/emit_gams.py`: Added block 3 to emit `.fx` statements for equality multipliers
+  whose equation has lead/lag restrictions
+
+#### Metrics
+- Tests: 3,475 passed (unchanged — no new tests needed, existing suite covers all paths)
+- Zero regressions
+
+---
+
 ### Sprint 19 Day 5: ISSUE_670 — Cross-Indexed Sums (Part 1) - 2026-02-17
 
 **Branch:** `sprint19-day5-issue670-cross-indexed-sums`

@@ -168,7 +168,7 @@ Note: Many items overlap across workstreams (e.g., put format is both WS1 and WS
 
 | Task | Effort | Deliverable |
 |------|--------|-------------|
-| Implement `_collect_free_indices()` utility function | 3-4h | Function with unit tests ✅ (19 tests) |
+| Implement `_collect_free_indices()` utility function | 3-4h | Function with unit tests ✅ (37 tests) |
 | Begin integration into `_add_indexed_jacobian_terms()` | 1-2h | Initial integration ✅ |
 
 **Risks:** Edge cases in free index collection with aliased indices

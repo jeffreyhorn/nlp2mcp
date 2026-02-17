@@ -7,6 +7,7 @@ GAMS MCP file from a KKT system.
 import math
 
 from src.config import Config
+from src.emit.equations import _build_domain_condition, _collect_lead_lag_restrictions
 from src.emit.expr_to_gams import expr_to_gams
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
@@ -22,6 +23,7 @@ from src.emit.templates import emit_equation_definitions, emit_equations, emit_v
 from src.ir.ast import Expr
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
+from src.kkt.naming import create_eq_multiplier_name
 
 
 def emit_gams_mcp(
@@ -364,6 +366,38 @@ def emit_gams_mcp(
             domain_str = ",".join(eq_def.domain)
             domain_vars = frozenset(eq_def.domain)
             assert isinstance(eq_def.condition, Expr)
+            cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
+            fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+
+    # 3. Fix equality multipliers (nu_*) whose equation has lead/lag restrictions.
+    # Issue #760: stateq(n,k+1) generates rows only for k in ku (ord(k)<=card(k)-1),
+    # but nu_stateq(n,k) is declared over the full (n,k) domain.  Fix the terminal
+    # instances to 0 so GAMS MCP matching sees no unmatched free variable.
+    for eq_name in sorted(kkt.model_ir.equalities):
+        if eq_name not in kkt.model_ir.equations:
+            continue
+        eq_def = kkt.model_ir.equations[eq_name]
+        if not eq_def.domain:
+            continue
+        lhs, rhs = eq_def.lhs_rhs
+        lead_l, lag_l = _collect_lead_lag_restrictions(lhs, eq_def.domain)
+        lead_r, lag_r = _collect_lead_lag_restrictions(rhs, eq_def.domain)
+        lead_offsets = {
+            k: max(lead_l.get(k, 0), lead_r.get(k, 0)) for k in set(lead_l) | set(lead_r)
+        }
+        lag_offsets = {k: max(lag_l.get(k, 0), lag_r.get(k, 0)) for k in set(lag_l) | set(lag_r)}
+        # Also incorporate any explicit condition already on the equation
+        inferred_cond = _build_domain_condition(lead_offsets, lag_offsets)
+        if inferred_cond is None and eq_def.condition is None:
+            continue
+        mult_name = create_eq_multiplier_name(eq_name)
+        if ref_mults is not None and mult_name not in ref_mults:
+            continue
+        domain_str = ",".join(eq_def.domain)
+        if inferred_cond is not None:
+            fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
+        elif eq_def.condition is not None and isinstance(eq_def.condition, Expr):
+            domain_vars = frozenset(eq_def.domain)
             cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
             fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 

@@ -1,7 +1,7 @@
 # Abel MCP: nu_stateq Declared Over Full (n,k) Domain Despite stateq Conditional Restricting to ku
 
 **GitHub Issue:** [#760](https://github.com/jeffreyhorn/nlp2mcp/issues/760)
-**Status:** OPEN
+**Status:** FIXED (sprint19-day6-issue759-760-abel-domain-fix)
 **Severity:** High — MCP generates but GAMS aborts with EXECERROR = 3
 **Date:** 2026-02-16
 **Affected Models:** abel, qabel (same structure)
@@ -67,46 +67,60 @@ gams /tmp/abel_mcp.gms lo=2
 
 ---
 
-## Generated MCP (Relevant Sections)
+## Fix
+
+**File:** `src/emit/emit_gams.py`
+
+Added a new block (block 3) after the existing inequality multiplier `.fx` section that handles
+equality multipliers whose equation has lead/lag restrictions.
+
+The fix detects lead/lag `IndexOffset` nodes in the equation body using
+`_collect_lead_lag_restrictions()` (imported from `src.emit.equations`), infers the active
+domain condition via `_build_domain_condition()`, and emits a `.fx` statement to fix the
+out-of-domain multiplier instances to zero.
+
+```python
+# 3. Fix equality multipliers (nu_*) whose equation has lead/lag restrictions.
+for eq_name in sorted(kkt.model_ir.equalities):
+    ...
+    inferred_cond = _build_domain_condition(lead_offsets, lag_offsets)
+    ...
+    fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
+```
+
+### Result
 
 ```gams
-* Multiplier declared over full domain:
-Variable nu_stateq(n,k)   -- should be nu_stateq(n,ku) to match stateq conditional
+* Before fix:
+Variable nu_stateq(n,k)   -- declared over full (n,k), terminal k unmatched
 
-* Equation with conditional (restricts to ku):
-stateq(n,k)$(ord(k) <= card(k) - 1).. x(n,k+1) =E= sum(np, a(n,np)*x(np,k))
-    + sum(m, b(n,m)*u(m,k)) + c(n);
+* After fix:
+nu_stateq.fx(n,k)$(not (ord(k) <= card(k) - 1)) = 0;
+```
 
-* MCP model pairing (mismatch):
-Model mcp_model /
-    stateq.nu_stateq  -- stateq over ku, nu_stateq over full k: terminal k unmatched
-/;
+This fixes the terminal-period `nu_stateq` instances to zero, eliminating the unmatched free
+variable error.
+
+---
+
+## Generated MCP (Fixed)
+
+```gams
+* Multiplier still declared over full domain (avoids subset remapping issues):
+Variable nu_stateq(n,k)
+
+* Terminal-period multiplier instances fixed to zero:
+nu_stateq.fx(n,k)$(not (ord(k) <= card(k) - 1)) = 0;
 ```
 
 ---
 
-## Suggested Fix
+## Solve Result (After Both Fixes)
 
-When a constraint is conditionally defined (e.g., `stateq(n,k)$(ord(k) <= card(k) - 1)`),
-the corresponding multiplier should be declared with the same conditional domain restriction.
-
-Options:
-- Declare `nu_stateq(n,ku)` using the named subset `ku` (if the conditional maps to a known subset); or
-- Apply the same `$(ord(k) <= card(k) - 1)` conditional when declaring the multiplier and in
-  the MCP model statement pairing.
-
-The subset `ku(k)` is already defined in the original model and represents `ord(k) <= card(k) - 1`.
-
----
-
-## Files to Investigate
-
-| File | Relevance |
-|------|-----------|
-| `src/kkt/stationarity.py` or `src/kkt/complementarity.py` | Multiplier declaration domain generation |
-| `src/emit/model.py` | MCP model statement emission |
-| `src/emit/emit_gams.py` | Variable declaration emission |
-| `data/gamslib/raw/abel.gms` | Original model with `ku(k)` subset and `stateq` conditional |
+```
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+```
 
 ---
 
@@ -114,4 +128,5 @@ The subset `ku(k)` is already defined in the original model and represents `ord(
 
 - **ISSUE_670**: Cross-indexed sums (Error 149) — prior blocker now fixed
 - **ISSUE_759**: Companion issue — `stat_u` domain not restricted to match `u`'s effective domain
-- `qabel.gms` has the same structure and will have the same issue
+  (fixed in same branch)
+- `qabel.gms` has the same structure and will benefit from the same fix
