@@ -6,7 +6,18 @@ expressions that need to be wrapped in Sum nodes to avoid GAMS Error 149.
 
 import pytest
 
-from src.ir.ast import Binary, Call, Const, DollarConditional, ParamRef, Prod, Sum, Unary, VarRef
+from src.ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    MultiplierRef,
+    ParamRef,
+    Prod,
+    Sum,
+    Unary,
+    VarRef,
+)
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
 from src.kkt.stationarity import _collect_free_indices
@@ -59,6 +70,25 @@ class TestCollectFreeIndicesBasic:
         model = _make_model("n", aliases={"np": "n"})
         expr = ParamRef("w", ("n", "np"))
         assert _collect_free_indices(expr, model) == {"n", "np"}
+
+    def test_multiplierref_with_known_index(self):
+        """MultiplierRef indices are walked the same as VarRef/ParamRef."""
+        model = _make_model("n", "k")
+        expr = MultiplierRef("nu_eq", ("n", "k"))
+        assert _collect_free_indices(expr, model) == {"n", "k"}
+
+    def test_multiplierref_partial_known_indices(self):
+        """MultiplierRef with one known set index and one literal label."""
+        model = _make_model("k")
+        expr = MultiplierRef("nu_eq", ("k", "domestic"))
+        assert _collect_free_indices(expr, model) == {"k"}
+
+    def test_multiplierref_bound_by_sum(self):
+        """MultiplierRef index bound by enclosing Sum is not free."""
+        model = _make_model("n", "k")
+        inner = MultiplierRef("nu_eq", ("n", "k"))
+        expr = Sum(("k",), inner)
+        assert _collect_free_indices(expr, model) == {"n"}
 
 
 class TestCollectFreeIndicesWithSums:
@@ -148,8 +178,9 @@ class TestCollectFreeIndicesAbelPattern:
 
         The derivative expression looks like: a(n, np) — where 'np' comes from the
         original sum(np, w(n,np,k)*x(np,k)) after differentiation collapses x(np,k)
-        to a(n,np) (symbolically). 'np' is not in var_domain=(n,k) nor mult_domain=(k,n,np)
-        ... but when checking after domain-based wrapping, it should be detected.
+        to a(n,np) (symbolically). 'np' is not in var_domain=(n,k) nor in the multiplier
+        domain (e.g. mult_domain=(k,n)) used for the criterion, but when checking after
+        domain-based wrapping, it should be detected.
         """
         model = _make_model("n", "k", aliases={"np": "n"})
         # Simulate the derivative expression: a(n, np) * nu_criterion
