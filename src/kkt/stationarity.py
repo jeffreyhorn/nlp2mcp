@@ -30,6 +30,7 @@ from src.ir.ast import (
     Const,
     DollarConditional,
     Expr,
+    IndexOffset,
     MultiplierRef,
     ParamRef,
     Prod,
@@ -1118,6 +1119,79 @@ def _replace_matching_indices(
     return tuple(new_indices)
 
 
+def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
+    """Collect all free (unbound) symbolic set indices in an expression.
+
+    Walks the expression tree and returns the set of index names that appear
+    in VarRef/ParamRef/MultiplierRef indices but are NOT bound by any enclosing
+    Sum or Prod node.
+
+    Only names that are known set or alias names (from model_ir) are considered
+    indices. Literal strings (e.g. "domestic", "storage-c") are ignored.
+    IndexOffset objects are traversed: their ``base`` is treated as a potential
+    set index and their ``offset`` expression is walked for nested indices.
+
+    Issue #670: Used to detect uncontrolled indices in stationarity derivative
+    expressions that need to be wrapped in Sum nodes.
+    """
+
+    def _is_known_set(name: str) -> bool:
+        # model_ir.sets and model_ir.aliases are CaseInsensitiveDicts whose
+        # __contains__ already lowercases the key, so this is case-safe.
+        return name in model_ir.sets or name in model_ir.aliases
+
+    def _walk(e: Expr, bound: frozenset[str]) -> set[str]:
+        # bound contains lowercase-normalized names; all returned names are also lowercase
+        # so that set arithmetic with IR-derived domains (also lowercase) is correct.
+        if isinstance(e, (VarRef, ParamRef, MultiplierRef)):
+            free: set[str] = set()
+            for idx in e.indices or ():
+                if isinstance(idx, str) and _is_known_set(idx) and idx.lower() not in bound:
+                    free.add(idx.lower())
+                elif isinstance(idx, IndexOffset):
+                    free |= _walk(idx, bound)
+            return free
+        if isinstance(e, (Sum, Prod)):
+            new_bound = bound | frozenset(s.lower() for s in e.index_sets)
+            result = _walk(e.body, new_bound)
+            if e.condition is not None:
+                result |= _walk(e.condition, new_bound)
+            return result
+        if isinstance(e, Binary):
+            return _walk(e.left, bound) | _walk(e.right, bound)
+        if isinstance(e, Unary):
+            return _walk(e.child, bound)
+        if isinstance(e, Call):
+            free = set()
+            for arg in e.args:
+                free |= _walk(arg, bound)
+            return free
+        if isinstance(e, DollarConditional):
+            return _walk(e.condition, bound) | _walk(e.value_expr, bound)
+        if isinstance(e, SetMembershipTest):
+            # Walk the index expressions inside the membership test (e.g. rn(i) → walk i)
+            free = set()
+            for child_expr in e.indices:
+                free |= _walk(child_expr, bound)
+            return free
+        if isinstance(e, SymbolRef):
+            # A bare symbol reference used as an index (e.g. SymbolRef('i'))
+            if _is_known_set(e.name) and e.name.lower() not in bound:
+                return {e.name.lower()}
+            return set()
+        if isinstance(e, IndexOffset):
+            # Lead/lag expression: base is a set index; offset may contain SymbolRef
+            free = set()
+            if _is_known_set(e.base) and e.base.lower() not in bound:
+                free.add(e.base.lower())
+            free |= _walk(e.offset, bound)
+            return free
+        # Const, etc. — no indices
+        return set()
+
+    return _walk(expr, frozenset())
+
+
 def _add_indexed_jacobian_terms(
     expr: Expr,
     kkt: KKTSystem,
@@ -1234,6 +1308,19 @@ def _add_indexed_jacobian_terms(
                     sum_indices = tuple(idx for idx in mult_domain if idx in extra_mult_indices)
                     if sum_indices:
                         term = Sum(sum_indices, term)
+
+                # Issue #670: After domain-based sum wrapping, detect any remaining
+                # free indices in the derivative expression that are not controlled by
+                # either the stationarity equation domain or the multiplier domain.
+                # These arise when the derivative contains indices from the original
+                # constraint's inner sum that are outside both domains (cross-indexed
+                # sum pattern). Wrap them in an additional Sum to avoid GAMS Error 149.
+                controlled = var_domain_set | mult_domain_set
+                free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
+                uncontrolled = free_in_deriv - controlled
+                if uncontrolled:
+                    sum_indices = tuple(sorted(uncontrolled))
+                    term = Sum(sum_indices, term)
 
                 expr = Binary("+", expr, term)
         else:

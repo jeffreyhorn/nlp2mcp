@@ -217,7 +217,7 @@ to return zero for mixed-case models (alkyl, bearing).
 
 ### PR Entries
 
-- Sprint 19 Day 4: ISSUE_672 — MCP Case Sensitivity Fix (PR #TBD)
+- Sprint 19 Day 4: ISSUE_672 — MCP Case Sensitivity Fix (PR #756)
 
 ### Metrics Snapshot
 
@@ -232,21 +232,33 @@ to return zero for mixed-case models (alkyl, bearing).
 
 ## Day 5 — ISSUE_670: Cross-Indexed Sums (Part 1)
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-17
+**Time Spent:** ~3h
+
+### Summary
+Implemented `_collect_free_indices()` utility in `src/kkt/stationarity.py` and integrated
+it into `_add_indexed_jacobian_terms()`. After the existing domain-based sum wrapping,
+any remaining free indices in the derivative expression (not in var_domain ∪ mult_domain)
+are now wrapped in a Sum node, avoiding GAMS Error 149 ("Uncontrolled set entered as constant").
+
+abel model now generates without Error 149 — GAMS parsing succeeds.
+
+### Changes
+- `src/kkt/stationarity.py`: Added `_collect_free_indices()` + integration in `_add_indexed_jacobian_terms()`
+- `tests/unit/kkt/test_collect_free_indices.py`: 37 unit tests (initial 19 + 18 added during PR review rounds covering MultiplierRef, SetMembershipTest/SymbolRef, mixed-case binding, and IndexOffset lead/lag expressions)
 
 ### PR Entries
 
-_(To be filled during Day 5)_
+- Sprint 19 Day 5: ISSUE_670 — Cross-Indexed Sums Part 1 (PR #758)
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 5 |
 |--------|----------|-------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 | 61/159 (unchanged) |
+| lexer_invalid_char | 72 | 72 (unchanged) |
+| internal_error | 24 | 24 (unchanged) |
+| Test count | 3,294 | 3,516 (+222 cumulative; +37 this day) |
 
 ---
 
