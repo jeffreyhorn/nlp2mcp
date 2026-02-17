@@ -24,6 +24,7 @@ from src.ir.ast import Expr
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import create_eq_multiplier_name
+from src.kkt.objective import extract_objective_info
 
 
 def emit_gams_mcp(
@@ -442,5 +443,16 @@ def emit_gams_mcp(
 
     solve_code = emit_solve(model_name)
     sections.append(solve_code)
+
+    # Emit NLP objective value capture for pipeline comparison.
+    # MCP listings have no "OBJECTIVE VALUE" line, so we assign the NLP objective
+    # variable to a fixed-name scalar after the solve. The pipeline's
+    # extract_objective_from_variables() matches "---- PARAMETER nlp_obj_val".
+    obj_info = extract_objective_info(kkt.model_ir)
+    if obj_info.objvar:
+        sections.append("")
+        sections.append("Scalar nlp_obj_val;")
+        sections.append(f"nlp_obj_val = {obj_info.objvar}.l;")
+        sections.append("Display nlp_obj_val;")
 
     return "\n".join(sections)

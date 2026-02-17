@@ -261,7 +261,9 @@ def extract_objective_from_variables(lst_content: str) -> float | None:
     """Extract objective value from variable section of .lst file.
 
     MCP models may not have an explicit OBJECTIVE VALUE line.
-    This attempts to extract it from a variable named 'obj' or similar.
+    Checks first for the fixed-name sentinel scalar 'nlp_obj_val' emitted by
+    the nlp2mcp emitter after the Solve statement (preferred), then falls back
+    to a heuristic scan of common objective variable names.
 
     Args:
         lst_content: Contents of the .lst file
@@ -269,9 +271,23 @@ def extract_objective_from_variables(lst_content: str) -> float | None:
     Returns:
         Objective value if found, None otherwise
     """
-    # Look for ---- VAR obj or similar patterns
+    # Primary: look for the fixed-name sentinel emitted by nlp2mcp:
+    #   Scalar nlp_obj_val; nlp_obj_val = <objvar>; Display nlp_obj_val;
+    # GAMS Display of a Scalar produces:
+    #   ----    NNN PARAMETER nlp_obj_val          =     <value>
+    sentinel_pattern = re.compile(
+        r"----\s+\d*\s*PARAMETER\s+nlp_obj_val\s+=\s+([-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)",
+        re.IGNORECASE,
+    )
+    sentinel_match = sentinel_pattern.search(lst_content)
+    if sentinel_match:
+        try:
+            return float(sentinel_match.group(1))
+        except ValueError:
+            pass
+
+    # Fallback: heuristic scan of common objective variable names.
     # Format: ---- VAR varname    LOWER     LEVEL     UPPER    MARGINAL
-    # Common objective variable names in GAMS models
     obj_var_names = [
         "obj",
         "z",
@@ -286,7 +302,6 @@ def extract_objective_from_variables(lst_content: str) -> float | None:
     ]
 
     for var_name in obj_var_names:
-        # Match the variable name (case-insensitive) with the standard GAMS output format
         pattern = (
             rf"---- VAR {var_name}\s+"
             r"([\-+\.\dEeINF]+)\s+"  # LOWER

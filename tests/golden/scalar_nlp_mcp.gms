@@ -86,3 +86,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp_obj_val;
+nlp_obj_val = obj.l;
+Display nlp_obj_val;
