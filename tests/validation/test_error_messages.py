@@ -11,7 +11,9 @@ Sprint 5 Day 6: Task 6.3 - Message Validation
 
 import pytest
 
+from src.ir.model_ir import ModelIR
 from src.ir.parser import parse_model_text
+from src.ir.symbols import ParameterDef
 from src.utils.errors import ModelError, NumericalError
 from src.validation.model import validate_model_structure
 from src.validation.numerical import (
@@ -23,42 +25,23 @@ from src.validation.numerical import (
 class TestNumericalErrorMessages:
     """Test numerical error message quality."""
 
-    def test_nan_parameter_message(self):
-        """Verify NaN parameter errors have clear messages."""
-        # Create a model with NaN parameter directly
-        gams_code = """
-Parameters
-    p ;
+    def test_inf_parameter_message(self):
+        """Verify Inf parameter errors have clear, actionable error messages.
 
-p = 1.0;
-
-Variables
-    x
-    obj ;
-
-Equations
-    objective ;
-
-objective..
-    obj =e= p * x;
-
-Model test /all/ ;
-Solve test using NLP minimizing obj;
-"""
-        model = parse_model_text(gams_code)
-        # Manually inject NaN to test error message
-        model.params["p"].values[()] = float("nan")
+        Inf values (from division by zero or genuine overflow) are still rejected.
+        This test checks that the error message is informative.
+        """
+        model = ModelIR()
+        model.params["p"] = ParameterDef(name="p", domain=("i",), values={("1",): float("inf")})
 
         with pytest.raises(NumericalError) as exc_info:
             validate_parameter_values(model)
 
         error_msg = str(exc_info.value)
-        # Check error message has key components
         assert "parameter" in error_msg.lower()
         assert "p" in error_msg
-        # Should provide context
-        assert len(error_msg) > 50  # Non-trivial message
-        assert "nan" in error_msg.lower()
+        assert "Inf" in error_msg
+        assert len(error_msg) > 50  # Non-trivial message with actionable content
 
     def test_invalid_bounds_message(self):
         """Verify invalid bounds errors have clear messages with suggestions."""

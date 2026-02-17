@@ -1,9 +1,10 @@
 # Circle Model MCP is Locally Infeasible (PATH Solver Model Status 5)
 
 **GitHub Issue:** [#753](https://github.com/jeffreyhorn/nlp2mcp/issues/753)
-**Status:** Open
+**Status:** PARTIALLY RESOLVED - MCP generates; solver infeasibility remains
 **Severity:** High - MCP generation completes but produced MCP does not solve
 **Date:** 2026-02-13
+**Investigated:** 2026-02-16
 
 ---
 
@@ -153,3 +154,37 @@ Add `.l` values to the generated MCP and test if PATH converges. If it does, the
 | `src/emit/emit_gams.py` | Variable `.l` value emission |
 | `src/emit/original_symbols.py` | Parameter and computed expression emission |
 | `data/gamslib/mcp/circle_mcp.gms` | Generated MCP file to inspect |
+
+---
+
+## Investigation Results (2026-02-16)
+
+The `execseed = 12345;` fix from PR #750 is confirmed present in the generated MCP. However,
+the root cause of the infeasibility is the **missing variable `.l` initialization**.
+
+The original circle model sets starting points after computing bounding box parameters:
+```gams
+a.l = (xmin + xmax)/2;
+b.l = (ymin + ymax)/2;
+r.l = sqrt(sqr(a.l - xmin) + sqr(b.l - ymin));
+```
+
+Inspection of `data/gamslib/mcp/circle_mcp.gms` confirms these `.l` assignments are **not
+emitted**. The emitter (`src/emit/emit_gams.py`) only emits `.l` values from `var_def.l` and
+`var_def.l_map` (i.e., scalar and indexed values parsed at declaration time). Computed
+assignments like `a.l = expr;` that appear in the model body are not tracked in the IR.
+
+## What Must Be Done Before Re-attempting Fix
+
+The IR currently does not represent variable attribute assignments (`var.l = expr;`) that appear
+in the model body. To fix this issue, the following work is required:
+
+1. **Grammar / parser:** Detect and parse `var.l = expr;` assignments in the model body
+   (these are currently parsed as `ref_bound` lvalues but the resulting expression is not
+   stored anywhere useful for the emitter).
+2. **IR representation:** Add a structure to `VariableDef` (or `ModelIR`) to store post-
+   declaration `.l` assignment expressions, analogous to `ParameterDef.expressions`.
+3. **Emitter:** In `src/emit/emit_gams.py`, emit these computed `.l` assignments after
+   variable declarations and before the MCP model block.
+4. **Test:** Add a test that the circle model MCP file contains the three `.l` initialization
+   lines and that PATH solves it successfully.

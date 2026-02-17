@@ -23,50 +23,56 @@ from ..utils.errors import NumericalError
 
 def validate_parameter_values(model_ir: ModelIR) -> None:
     """
-    Check for NaN/Inf in parameter values.
+    Check for Inf in parameter values. NaN values are allowed.
+
+    GAMS's ``na`` (Not Available) special value maps to ``float('nan')`` and is a
+    legitimate placeholder used when the actual value will be computed later via
+    assignment statements (including inside loops). NaN is therefore silently permitted.
+
+    ``±Inf`` values indicate real numerical problems (overflow, division by zero) and
+    are always rejected, even for parameters that have computed expressions.
 
     Raises:
-        NumericalError: If any parameter has NaN or Inf value
+        NumericalError: If any parameter value is ±Inf
 
     Examples:
         >>> model_ir = ModelIR(...)
-        >>> model_ir.params['p'].values[('1',)] = float('nan')
+        >>> model_ir.params['p'].values[()] = float('nan')
+        >>> validate_parameter_values(model_ir)  # does NOT raise - 'na' is allowed
+        >>> model_ir.params['p'].values[()] = float('inf')
         >>> validate_parameter_values(model_ir)  # doctest: +SKIP
-        NumericalError: Numerical error in parameter 'p[1]': Invalid value (value is NaN)
+        NumericalError: Numerical error in parameter 'p': Invalid parameter value (value is +Inf)
     """
     for param_name, param_def in model_ir.params.items():
         # Skip validation for predefined constants
         if param_name in PREDEFINED_GAMS_CONSTANTS:
             continue
 
-        # Skip validation for parameters with computed expressions.
-        # GAMS models commonly use `na` as a placeholder in data declarations
-        # when the actual value will be computed later via assignment statements.
-        # The expressions will overwrite the data values at runtime.
-        if param_def.expressions:
-            continue
-
         for indices, value in param_def.values.items():
-            if not math.isfinite(value):
-                # Format indices for display
-                if indices:
-                    index_str = ",".join(str(i) for i in indices)
-                    location = f"parameter '{param_name}[{index_str}]'"
-                else:
-                    location = f"parameter '{param_name}'"
+            # NaN represents GAMS 'na' (Not Available) - a legitimate placeholder value
+            # used when the actual value will be computed later via assignment statements.
+            # Allow NaN; only Inf indicates actual numerical issues (overflow, div-by-zero).
+            if not math.isinf(value):
+                continue
 
-                raise NumericalError(
-                    "Invalid value",
-                    location=location,
-                    value=value,
-                    suggestion=(
-                        "Check your GAMS model or data file for:\n"
-                        "  - Uninitialized parameters\n"
-                        "  - Division by zero in parameter calculations\n"
-                        "  - Invalid mathematical operations\n"
-                        f"  - Correct definition of parameter '{param_name}'"
-                    ),
-                )
+            # Format indices for display
+            if indices:
+                index_str = ",".join(str(i) for i in indices)
+                location = f"parameter '{param_name}[{index_str}]'"
+            else:
+                location = f"parameter '{param_name}'"
+
+            raise NumericalError(
+                "Invalid parameter value",
+                location=location,
+                value=value,
+                suggestion=(
+                    "Check your GAMS model or data file for:\n"
+                    "  - Division by zero in parameter calculations\n"
+                    "  - Overflow from very large intermediate values\n"
+                    f"  - Correct definition of parameter '{param_name}'"
+                ),
+            )
 
 
 def validate_expression_value(
