@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 4: ISSUE_672 — MCP Case Sensitivity Fix - 2026-02-16
+
+**Branch:** `sprint19-day4-issue672-case-sensitivity`
+**Status:** COMPLETE
+
+#### Summary
+Fixed ISSUE_672: VarRef names were stored with original case from GAMS source, but
+`CaseInsensitiveDict.keys()` returns lowercase. This caused `_diff_varref()` to return
+`Const(0.0)` for all mixed-case variable derivatives (case-sensitive `!=` comparison
+always failed), producing zero stationarity equations for models like alkyl and bearing.
+Fix: normalize VarRef names to lowercase at parse time in 3 locations in `parser.py`.
+
+#### Changes
+- `src/ir/parser.py`: Added `.lower()` at 3 VarRef creation points (scalar bound refs ×2, main creation point ×1)
+- `tests/unit/ad/test_mixed_case_differentiation.py`: 13 new unit + integration tests covering AD correctness and parser normalization
+
+#### Metrics
+- Tests: 3,479 (was 3,466) — +13 new test methods
+- Zero regressions
+
+---
+
 ### Sprint 19 Day 3: Special Values Grammar + Circle Model Deterministic Fix - 2026-02-16
 
 **Branch:** `sprint19-day3-special-values-circle-fix`
