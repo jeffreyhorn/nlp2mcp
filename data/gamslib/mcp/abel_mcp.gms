@@ -31,7 +31,7 @@ Parameters
     a(n,np) /consumpt.consumpt 0.914, consumpt.invest -0.016, invest.consumpt 0.097, invest.invest 0.424/
     b(n,m) /consumpt.'gov-expend' 0.305, consumpt.money 0.424, invest.'gov-expend' -0.101, invest.money 1.459/
     wk(n,np) /consumpt.consumpt 0.0625, invest.invest 1.0, invest.consumpt 0.0, consumpt.invest 0.0/
-    lambda(m,mp) /'gov-expend'.'gov-expend' 1.0, money.'gov-expend' 0.444, 'gov-expend'.money 0.0, money.money 0.0/
+    lambda(m,mp) /'gov-expend'.'gov-expend' 1.0, money.'gov-expend' 0.444, money.money 0.0, 'gov-expend'.money 0.0/
     c(n) /consumpt -59.4, invest -184.7/
     xinit(n) /consumpt 387.9, invest 85.3/
     uinit(m) /'gov-expend' 110.5, money 147.1/
@@ -42,7 +42,7 @@ Parameters
 
 ku(k) = 1$(ord(k) < card(k));
 ki(k) = 1$(ord(k) = 1);
-kt(k) = not ku(k);
+kt(k) = (not ku(k));
 
 xtilde(n,k) = xinit(n) * 1.0075 ** (ord(k) - 1);
 utilde(m,k) = uinit(m) * 1.0075 ** (ord(k) - 1);
@@ -86,19 +86,24 @@ Equations
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(k, k__);
-Alias(m, m__);
-
 * Stationarity equations
-stat_u(m,k).. 0.5 * sum((k__,n,np), 0) + 0.5 * sum((ku,m__,mp), 0) + sum(n, ((-1) * (sum(np, 0) + b(n,m))) * nu_stateq(n,k)) =E= 0;
-stat_x(n,k).. 0.5 * sum(np, 0) + 0.5 * sum((ku,m,mp), 0) + ((-1) * (a(n,np) + sum(m, 0))) * nu_stateq(n,k) =E= 0;
+stat_u(m,k)$(ku(k)).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k)) =E= 0;
+stat_x(n,k).. ((-1) * a(n,n)) * nu_stateq(n,k) =E= 0;
 
 * Original equality equations
 criterion.. j =E= 0.5 * sum((k,n,np), (x(n,k) - xtilde(n,k)) * w(n,np,k) * (x(np,k) - xtilde(np,k))) + 0.5 * sum((ku,m,mp), (u(m,ku) - utilde(m,ku)) * lambda(m,mp) * (u(mp,ku) - utilde(mp,ku)));
 stateq(n,k)$(ord(k) <= card(k) - 1).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + sum(m, b(n,m) * u(m,k)) + c(n);
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+u.fx(m,k)$(not (ku(k))) = 0;
+nu_stateq.fx(n,k)$(not (ord(k) <= card(k) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

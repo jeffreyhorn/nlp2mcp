@@ -16,10 +16,35 @@ $offText
 * ============================================
 
 Sets
-    i /'1', '2', '3', '4', '5', '6'/
+    t /'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'/
+    tb(t)
+    tt(t)
 ;
 
-Alias(i, j);
+Parameters
+    dis(t)
+    alpha(t)
+;
+
+Scalars
+    delt /0.05/
+    beta /0.75/
+    a /0.0/
+    r /0.025/
+    eta /0.0/
+    elasticity /0.9/
+    z /0.01/
+    rho /0.0/
+    y0 /4.275/
+    k0 /0.0/
+;
+
+tb(t) = 1$(ord(t) = 1);
+tt(t) = 1$(ord(t) = card(t));
+
+a = y0 / k0 ** beta;
+dis(t) = (1 + rho) ** (1 - ord(t)) / (1 - eta);
+alpha(t) = a * (1 + r * (1 - beta) + z) ** (ord(t) - 1);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -33,19 +58,18 @@ Alias(i, j);
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    x(i)
-    y(i)
-    area(i)
-    totarea
-    nu_areadef(i)
-    nu_obj2
-    nu_x_fx_1
-    nu_y_fx_1
-    nu_y_fx_2
+    c(t)
+    y(t)
+    k(t)
+    j
+    nu_yd(t)
+    nu_kb(t)
 ;
 
 Positive Variables
-    lam_maxdist(i,j)
+    piL_c(t)
+    piL_y(t)
+    piL_k(t)
 ;
 
 * ============================================
@@ -56,15 +80,69 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-x.l("2") = 0.5;
-x.l("3") = 0.5;
-x.l("4") = 0.5;
-x.l("5") = 0.0;
-x.l("6") = 0.0;
-y.l("3") = 0.4;
-y.l("4") = 0.8;
-y.l("5") = 0.8;
-y.l("6") = 0.4;
+c.l("0") = 1.0;
+c.l("1") = 1.0;
+c.l("2") = 1.0;
+c.l("3") = 1.0;
+c.l("4") = 1.0;
+c.l("5") = 1.0;
+c.l("6") = 1.0;
+c.l("7") = 1.0;
+c.l("8") = 1.0;
+c.l("9") = 1.0;
+c.l("10") = 1.0;
+c.l("11") = 1.0;
+c.l("12") = 1.0;
+c.l("13") = 1.0;
+c.l("14") = 1.0;
+c.l("15") = 1.0;
+c.l("16") = 1.0;
+c.l("17") = 1.0;
+c.l("18") = 1.0;
+c.l("19") = 1.0;
+c.l("20") = 1.0;
+y.l("0") = 1.0;
+y.l("1") = 1.0;
+y.l("2") = 1.0;
+y.l("3") = 1.0;
+y.l("4") = 1.0;
+y.l("5") = 1.0;
+y.l("6") = 1.0;
+y.l("7") = 1.0;
+y.l("8") = 1.0;
+y.l("9") = 1.0;
+y.l("10") = 1.0;
+y.l("11") = 1.0;
+y.l("12") = 1.0;
+y.l("13") = 1.0;
+y.l("14") = 1.0;
+y.l("15") = 1.0;
+y.l("16") = 1.0;
+y.l("17") = 1.0;
+y.l("18") = 1.0;
+y.l("19") = 1.0;
+y.l("20") = 1.0;
+k.l("0") = 1.0;
+k.l("1") = 1.0;
+k.l("2") = 1.0;
+k.l("3") = 1.0;
+k.l("4") = 1.0;
+k.l("5") = 1.0;
+k.l("6") = 1.0;
+k.l("7") = 1.0;
+k.l("8") = 1.0;
+k.l("9") = 1.0;
+k.l("10") = 1.0;
+k.l("11") = 1.0;
+k.l("12") = 1.0;
+k.l("13") = 1.0;
+k.l("14") = 1.0;
+k.l("15") = 1.0;
+k.l("16") = 1.0;
+k.l("17") = 1.0;
+k.l("18") = 1.0;
+k.l("19") = 1.0;
+k.l("20") = 1.0;
 
 * ============================================
 * Equations
@@ -75,16 +153,15 @@ y.l("6") = 0.4;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_area(i)
-    stat_x(i)
-    stat_y(i)
-    comp_maxdist(i,j)
-    areadef(i)
-    obj1
-    obj2
-    x_fx_1
-    y_fx_1
-    y_fx_2
+    stat_c(t)
+    stat_k(t)
+    stat_y(t)
+    comp_lo_c(t)
+    comp_lo_k(t)
+    comp_lo_y(t)
+    jd
+    kb(t)
+    yd(t)
 ;
 
 * ============================================
@@ -92,20 +169,19 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_area(i).. nu_areadef(i) - nu_obj2 =E= 0;
-stat_x(i).. ((-1) * (0.5 * y(i))) + ((-1) * (0.5 * y(i))) * nu_areadef(i) + nu_x_fx_1 + sum(j, 2 * (x(i) - x(j)) * lam_maxdist(i,j)) =E= 0;
-stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) + ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + nu_y_fx_1 + nu_y_fx_2 + sum(j, 2 * (y(i) - y(j)) * lam_maxdist(i,j)) =E= 0;
+stat_c(t).. nu_kb(t) - piL_c(t) =E= 0;
+stat_k(t).. ((-1) * (alpha(t) * k(t) ** beta * beta / k(t))) * nu_yd(t) + ((-1) * (1 - delt)) * nu_kb(t) - piL_k(t) =E= 0;
+stat_y(t).. nu_yd(t) - nu_kb(t) - piL_y(t) =E= 0;
 
-* Inequality complementarity equations
-comp_maxdist(i,j)$(ord(i) < ord(j)).. ((-1) * (sqr(x(i) - x(j)) + sqr(y(i) - y(j)) - 1)) =G= 0;
+* Lower bound complementarity equations
+comp_lo_c(t).. c(t) - 1 =G= 0;
+comp_lo_k(t).. k(t) - 1 =G= 0;
+comp_lo_y(t).. y(t) - 1 =G= 0;
 
 * Original equality equations
-areadef(i).. area(i) =E= 0.5 * (x(i) * y(i++1) - y(i) * x(i++1));
-obj1.. totarea =E= 0.5 * sum(i, x(i) * y(i++1) - y(i) * x(i++1));
-obj2.. totarea =E= sum(i, area(i));
-x_fx_1.. x("1") - 0 =E= 0;
-y_fx_1.. y("1") - 0 =E= 0;
-y_fx_2.. y("2") - 0 =E= 0;
+jd.. j =E= sum(t, dis(t-1) * c(t-1) ** (1 - eta));
+yd(t).. y(t) =E= alpha(t) * k(t) ** beta;
+kb(t)$(ord(t) <= card(t) - 1).. k(t+1) =E= y(t) - c(t) + (1 - delt) * k(t);
 
 
 * ============================================
@@ -115,7 +191,7 @@ y_fx_2.. y("2") - 0 =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-lam_maxdist.fx(i,j)$(not (ord(i) < ord(j))) = 0;
+nu_kb.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -131,16 +207,15 @@ lam_maxdist.fx(i,j)$(not (ord(i) < ord(j))) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_area.area,
-    stat_x.x,
+    stat_c.c,
+    stat_k.k,
     stat_y.y,
-    comp_maxdist.lam_maxdist,
-    areadef.nu_areadef,
-    obj1.totarea,
-    obj2.nu_obj2,
-    x_fx_1.nu_x_fx_1,
-    y_fx_1.nu_y_fx_1,
-    y_fx_2.nu_y_fx_2
+    jd.j,
+    kb.nu_kb,
+    yd.nu_yd,
+    comp_lo_c.piL_c,
+    comp_lo_k.piL_k,
+    comp_lo_y.piL_y
 /;
 
 * ============================================

@@ -228,13 +228,17 @@ def _find_variable_subset_condition(
     if not var_domain:
         return None
 
-    # Build a reverse map: parent_set_name → list of subset names
-    # A subset qualifies if it has domain=(parent,) and is dynamically assigned.
+    # Build a reverse map: parent_set_name → list of subset names.
+    # A subset qualifies if it has domain=(parent,) — either a static subset
+    # (declared with explicit members, e.g. cf(c) / steel /) or a dynamic
+    # subset (assigned via set assignment, e.g. ku(k) = yes$(ord(k)<=...)).
     parent_to_subsets: dict[str, list[str]] = {}
-    dynamic_set_names = {sa.set_name.lower() for sa in model_ir.set_assignments}
     for set_name, set_def in model_ir.sets.items():
-        name_lower = set_name.lower()
-        if name_lower in dynamic_set_names and not set_def.members and len(set_def.domain) == 1:
+        # Guard against test fixtures that store plain lists instead of SetDef objects
+        if not hasattr(set_def, "domain"):
+            continue
+        if len(set_def.domain) == 1:
+            name_lower = set_name.lower()
             parent = set_def.domain[0].lower()
             parent_to_subsets.setdefault(parent, []).append(name_lower)
 
@@ -1496,6 +1500,16 @@ def _add_indexed_jacobian_terms(
                     derivative, var_domain, element_to_set, kkt.model_ir, equation_domain=var_domain
                 )
                 term = Binary("*", indexed_deriv, mult_ref)
+                # Issue #670: scalar constraints have no multiplier domain, so any
+                # index in the derivative that is not in var_domain is uncontrolled.
+                # Wrap such indices in a Sum to avoid GAMS Error 149.
+                free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
+                # Use lowercase comparison to match _collect_free_indices output,
+                # consistent with the indexed-constraint branch above.
+                uncontrolled = free_in_deriv - {d.lower() for d in var_domain}
+                if uncontrolled:
+                    sum_indices = tuple(sorted(uncontrolled))
+                    term = Sum(sum_indices, term)
                 expr = Binary("+", expr, term)
 
     return expr

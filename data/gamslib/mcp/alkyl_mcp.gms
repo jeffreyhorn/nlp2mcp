@@ -164,20 +164,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_aciddilut.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_aciddilut + piU_aciddilut =E= 0;
-stat_aciderr.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_aciderr =E= 0;
-stat_acidfeed.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_acidfeed + piU_acidfeed =E= 0;
-stat_acidstren.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_acidstren + piU_acidstren =E= 0;
-stat_alkerr.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_alkerr =E= 0;
-stat_alkylyld.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_alkylyld + piU_alkylyld =E= 0;
-stat_f4err.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_f4err =E= 0;
-stat_f4perf.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_f4perf + piU_f4perf =E= 0;
-stat_isobutmak.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_isobutmak + piU_isobutmak =E= 0;
-stat_isobutrec.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_isobutrec + piU_isobutrec =E= 0;
-stat_octane.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_octane + piU_octane =E= 0;
-stat_octerr.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_octerr =E= 0;
-stat_olefinfeed.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_olefinfeed + piU_olefinfeed =E= 0;
-stat_ratio.. 0 + 0 * nu_AlkylShrnk + 0 * nu_AcidBal + 0 * nu_IsoButBal + 0 * nu_AlkylDef + 0 * nu_OctDef + 0 * nu_AcidDef + 0 * nu_F4Def - piL_ratio + piU_ratio =E= 0;
+stat_aciddilut.. ((-1) * (acidstren * 100 * alkylyld / 10000)) * nu_AcidBal + aciderr * nu_AcidDef - piL_aciddilut + piU_aciddilut =E= 0;
+stat_aciderr.. aciddilut * nu_AcidDef - piL_aciderr =E= 0;
+stat_acidfeed.. 1 + (0.98 - acidstren) * nu_AcidBal - piL_acidfeed + piU_acidfeed =E= 0;
+stat_acidstren.. ((-1) * (alkylyld * aciddilut / 100 + acidfeed)) * nu_AcidBal + (-0.325) * nu_OctDef - piL_acidstren + piU_acidstren =E= 0;
+stat_alkerr.. alkylyld * nu_AlkylDef - piL_alkerr =E= 0;
+stat_alkylyld.. (-6.3) * octane + nu_AlkylShrnk + ((-1) * (acidstren * 100 * aciddilut / 10000)) * nu_AcidBal + alkerr * nu_AlkylDef - piL_alkylyld + piU_alkylyld =E= 0;
+stat_f4err.. f4perf * nu_F4Def - piL_f4err =E= 0;
+stat_f4perf.. 22.2 * nu_AcidDef + f4err * nu_F4Def - piL_f4perf + piU_f4perf =E= 0;
+stat_isobutmak.. 3.36 + (-0.819672131147541) * nu_AlkylShrnk + nu_IsoButBal - piL_isobutmak + piU_isobutmak =E= 0;
+stat_isobutrec.. 0.35 + 10 * nu_IsoButBal - piL_isobutrec + piU_isobutrec =E= 0;
+stat_octane.. (-6.3) * alkylyld + octerr * nu_OctDef + (-3) * nu_F4Def - piL_octane + piU_octane =E= 0;
+stat_octerr.. octane * nu_OctDef - piL_octerr =E= 0;
+stat_olefinfeed.. 5.04 + (-0.819672131147541) * nu_AlkylShrnk + ((-1) * ratio) * nu_IsoButBal + ((-1) * (1.12 + 0.13167 * ratio - 0.0067 * ratio * ratio)) * nu_AlkylDef - piL_olefinfeed + piU_olefinfeed =E= 0;
+stat_ratio.. ((-1) * olefinfeed) * nu_IsoButBal + ((-1) * (olefinfeed * (0.13167 - 0.0134 * ratio))) * nu_AlkylDef + ((-1) * (100 * (1.098 - 0.076 * ratio) / 10000)) * nu_OctDef - piL_ratio + piU_ratio =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_aciddilut.. aciddilut - 1.2 =G= 0;
@@ -208,14 +208,14 @@ comp_up_olefinfeed.. 2 - olefinfeed =G= 0;
 comp_up_ratio.. 12 - ratio =G= 0;
 
 * Original equality equations
-Objective.. F =E= ((-1) * 6.3) * AlkylYld * Octane + 5.04 * OlefinFeed + 0.35 * IsobutRec + AcidFeed + 3.36 * IsobutMak;
-AlkylShrnk.. AlkylYld =E= (OlefinFeed + IsobutMak) / 1.22;
-AcidBal.. 0.98 * AcidFeed =E= AcidStren * (AlkylYld * AcidDilut / 100 + AcidFeed);
-IsoButBal.. 10 * IsobutRec + IsobutMak =E= OlefinFeed * Ratio;
-AlkylDef.. AlkylYld * AlkErr =E= OlefinFeed * (1.12 + 0.13167 * Ratio - 0.0067 * Ratio * Ratio);
-OctDef.. Octane * OctErr =E= 0.8635 + (1.098 * Ratio - 0.038 * Ratio * Ratio) / 100 + 0.325 * (AcidStren - 0.89);
-AcidDef.. AcidDilut * AcidErr =E= 35.82 - 22.2 * F4Perf;
-F4Def.. F4Perf * F4Err =E= -1.33 + 3 * Octane;
+Objective.. f =E= ((-1) * 6.3) * alkylyld * octane + 5.04 * olefinfeed + 0.35 * isobutrec + acidfeed + 3.36 * isobutmak;
+AlkylShrnk.. alkylyld =E= (olefinfeed + isobutmak) / 1.22;
+AcidBal.. 0.98 * acidfeed =E= acidstren * (alkylyld * aciddilut / 100 + acidfeed);
+IsoButBal.. 10 * isobutrec + isobutmak =E= olefinfeed * ratio;
+AlkylDef.. alkylyld * alkerr =E= olefinfeed * (1.12 + 0.13167 * ratio - 0.0067 * ratio * ratio);
+OctDef.. octane * octerr =E= 0.8635 + (1.098 * ratio - 0.038 * ratio * ratio) / 100 + 0.325 * (acidstren - 0.89);
+AcidDef.. aciddilut * aciderr =E= 35.82 - 22.2 * f4perf;
+F4Def.. f4perf * f4err =E= -1.33 + 3 * octane;
 
 
 * ============================================

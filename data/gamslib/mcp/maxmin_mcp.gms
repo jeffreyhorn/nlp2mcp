@@ -16,12 +16,21 @@ $offText
 * ============================================
 
 Sets
-    i /'1', '2', '3', '4', '5', '6'/
+    d /x, y/
+    n /p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13/
+    low(n,n)
 ;
 
-Parameters
-    dat(i,*) /'1'.y 127.0, '1'.x -5.0, '2'.y 151.0, '2'.x -3.0, '3'.y 379.0, '3'.x -1.0, '4'.y 421.0, '4'.x 5.0, '5'.y 460.0, '5'.x 3.0, '6'.y 426.0, '6'.x 1.0/
+Alias(n, nn);
+
+Scalars
+    p /0.0/
+    bnd /0.0/
 ;
+
+low(n,nn) = ord(n) > ord(nn);
+
+bnd = 1 / max(ceil(sqrt(card(n))) - 1, 1);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -35,31 +44,19 @@ Parameters
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    ols
-    dev(i)
-    b1
-    b2
-    b3
-    nu_ddev(i)
-    nu_sequ
+    point(n,d)
+    dist(n,n)
+    mindist
+    nu_defdist(n,nn)
+    nu_point_fx_p1_x
+    nu_point_fx_p1_y
 ;
 
 Positive Variables
-    piL_b3
-    piU_b3
+    lam_mindist1a(n,nn)
+    piL_point(n,d)
+    piU_point(n,d)
 ;
-
-* ============================================
-* Variable Initialization
-* ============================================
-
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-
-b1.l = 500.0;
-b2.l = -150.0;
-b3.l = -0.2;
 
 * ============================================
 * Equations
@@ -70,37 +67,41 @@ b3.l = -0.2;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_b1
-    stat_b2
-    stat_b3
-    stat_dev(i)
-    comp_lo_b3
-    comp_up_b3
-    ddev(i)
-    dols
-    sequ
+    stat_dist(n,n)
+    stat_point(n,d)
+    comp_mindist1a(n,nn)
+    comp_lo_point(n,d)
+    comp_up_point(n,d)
+    defdist(n,nn)
+    point_fx_p1_x
+    point_fx_p1_y
 ;
 
 * ============================================
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(d, d__);
+
 * Stationarity equations
-stat_b1.. sum(i, (-1) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * (-1))) * nu_sequ =E= 0;
-stat_b2.. sum(i, ((-1) * (exp(b3 * dat(i,"x")))) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * ((-1) * (exp(b3 * dat(i,"x")))))) * nu_sequ =E= 0;
-stat_b3.. sum(i, ((-1) * (b2 * exp(b3 * dat(i,"x")) * dat(i,"x"))) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * ((-1) * (b2 * exp(b3 * dat(i,"x")) * dat(i,"x"))))) * nu_sequ - piL_b3 + piU_b3 =E= 0;
-stat_dev(i).. 2 * dev(i) - nu_ddev(i) =E= 0;
+stat_dist(n,n).. sum(nn, nu_defdist(n,nn)) =E= 0;
+stat_point(n,d).. sum(nn, ((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)))) * nu_defdist(n,nn)) + nu_point_fx_p1_x + nu_point_fx_p1_y + sum(nn, ((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)))) * lam_mindist1a(n,nn)) - piL_point(n,d) + piU_point(n,d) =E= 0;
+
+* Inequality complementarity equations
+comp_mindist1a(n,nn).. ((-1) * (mindist - sqrt(sum(d, sqr(point(n,d) - point(nn,d)))))) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_b3.. b3 + 5 =G= 0;
+comp_lo_point(n,d).. point(n,d) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_b3.. 5 - b3 =G= 0;
+comp_up_point(n,d).. 1 - point(n,d) =G= 0;
 
 * Original equality equations
-dols.. ols =E= sum(i, sqr(dev(i)));
-ddev(i).. dat(i,"y") =E= b1 + b2 * exp(b3 * dat(i,"x")) + dev(i);
-sequ.. ols =E= sum(i, sqr(dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))));
+defdist(n,nn).. dist(n,nn) =E= sqrt(sum(d, sqr(point(n,d) - point(nn,d))));
+point_fx_p1_x.. point("p1",x) - 0 =E= 0;
+point_fx_p1_y.. point("p1",y) - 0 =E= 0;
 
 
 * ============================================
@@ -117,15 +118,14 @@ sequ.. ols =E= sum(i, sqr(dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_b1.b1,
-    stat_b2.b2,
-    stat_b3.b3,
-    stat_dev.dev,
-    ddev.nu_ddev,
-    dols.ols,
-    sequ.nu_sequ,
-    comp_lo_b3.piL_b3,
-    comp_up_b3.piU_b3
+    stat_dist.dist,
+    stat_point.point,
+    comp_mindist1a.lam_mindist1a,
+    defdist.nu_defdist,
+    point_fx_p1_x.nu_point_fx_p1_x,
+    point_fx_p1_y.nu_point_fx_p1_y,
+    comp_lo_point.piL_point,
+    comp_up_point.piU_point
 /;
 
 * ============================================

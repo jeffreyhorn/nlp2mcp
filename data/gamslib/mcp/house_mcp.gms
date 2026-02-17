@@ -104,14 +104,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a.. 0 + ((-1) * b) * nu_defa1 + 0 * nu_defa2 + (-1) * nu_defl + (-1) * nu_balk + 0 * lam_minw - 0 * lam_maxw + 0 * lam_minp + (-1) * lam_prop =E= 0;
-stat_a1.. -1 + 1 * nu_defa1 + 0 * nu_defa2 + 0 * nu_defl + 0 * nu_balk + 0 * lam_minw - 0 * lam_maxw + 0 * lam_minp + 0 * lam_prop + piU_a1 =E= 0;
-stat_a2.. -1 + 0 * nu_defa1 + 1 * nu_defa2 + 0 * nu_defl + 0 * nu_balk + 0 * lam_minw - 0 * lam_maxw + 0 * lam_minp + 0 * lam_prop =E= 0;
-stat_b.. 0 + ((-1) * a) * nu_defa1 + 0 * nu_defa2 + 0 * nu_defl + 0 * nu_balk + 0.3333333333333333 * lam_minw - (-0.5) * lam_maxw + ((-1) * y) * lam_minp + 0 * lam_prop - piL_b + piU_b =E= 0;
-stat_l.. 0 + 0 * nu_defa1 + 0 * nu_defa2 + 1 * nu_defl + 0 * nu_balk + 0 * lam_minw - 0 * lam_maxw + 0 * lam_minp + 0 * lam_prop - piL_l + piU_l =E= 0;
-stat_x.. 0 + ((-1) * y) * nu_defa1 + ((-1) * z) * nu_defa2 + 0 * nu_defl + 0 * nu_balk + (-1) * lam_minw - 1 * lam_maxw + ((-1) * (y * (-1))) * lam_minp + 0 * lam_prop =E= 0;
-stat_y.. 0 + ((-1) * x) * nu_defa1 + 0 * nu_defa2 + (-1) * nu_defl + (-0.5) * nu_balk + 0 * lam_minw - 0 * lam_maxw + ((-1) * (b - x)) * lam_minp + 0.5 * lam_prop =E= 0;
-stat_z.. 0 + 0 * nu_defa1 + ((-1) * x) * nu_defa2 + 0 * nu_defl + 1 * nu_balk + 0 * lam_minw - 0 * lam_maxw + 0 * lam_minp + 0 * lam_prop =E= 0;
+stat_a.. ((-1) * b) * nu_defa1 - nu_defl - nu_balk - lam_prop =E= 0;
+stat_a1.. -1 + nu_defa1 + piU_a1 =E= 0;
+stat_a2.. -1 + nu_defa2 =E= 0;
+stat_b.. ((-1) * a) * nu_defa1 + 0.3333333333333333 * lam_minw - (-0.5) * lam_maxw + ((-1) * y) * lam_minp - piL_b + piU_b =E= 0;
+stat_l.. nu_defl - piL_l + piU_l =E= 0;
+stat_x.. ((-1) * y) * nu_defa1 + ((-1) * z) * nu_defa2 - lam_minw - lam_maxw + ((-1) * (y * (-1))) * lam_minp =E= 0;
+stat_y.. ((-1) * x) * nu_defa1 - nu_defl + (-0.5) * nu_balk + ((-1) * (b - x)) * lam_minp + 0.5 * lam_prop =E= 0;
+stat_z.. ((-1) * x) * nu_defa2 + nu_balk =E= 0;
 
 * Inequality complementarity equations
 comp_maxw.. ((-1) * (x - b / 2)) =G= 0;

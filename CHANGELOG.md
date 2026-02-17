@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 6 (Part 2): ISSUE_670 Complete + Checkpoint 1 - 2026-02-16
+
+**Branch:** `sprint19-day6-issue670-checkpoint1`
+**Status:** COMPLETE
+
+#### Summary
+Completed ISSUE_670 validation on all 6 affected models, requiring two additional fixes:
+
+**Scalar constraint path** (`src/kkt/stationarity.py`): The `_collect_free_indices` + sum-wrapping
+logic was only applied to indexed constraint multipliers. Scalar constraints (e.g., `tb` in
+chenery) also produce uncontrolled free indices when differentiated w.r.t. an indexed variable.
+Added the same fix to the scalar multiplier branch — resolves Error 149 in chenery.
+
+**Static subset detection** (`src/kkt/stationarity.py`): `_find_variable_subset_condition` only
+recognized dynamically-assigned subsets (from `model_ir.set_assignments`). Mexss uses static
+subsets like `cf(c) / steel /`. Broadened to detect any set with `domain=(parent,)`, regardless
+of static vs dynamic assignment — resolves unmatched equation in mexss.
+
+#### Results on All 6 ISSUE_670 Models
+- abel, qabel: SOLVER STATUS 1 Normal Completion, MODEL STATUS 1 Optimal
+- chenery, mexss, orani: No Error 149, no unmatched equations (runtime infeasibility is model property)
+- robert: Blocked by ISSUE_399 (table parsing), separate sprint item
+
+#### Changes
+- `src/kkt/stationarity.py`: Scalar multiplier branch now calls `_collect_free_indices`; static
+  subset detection in `_find_variable_subset_condition`
+
+#### Metrics
+- Tests: 3,475 passed (unchanged — no new tests added)
+- Zero regressions
+
+---
+
 ### Sprint 19 Day 6: ISSUE_759 + ISSUE_760 — Abel Domain Restriction Fixes - 2026-02-16
 
 **Branch:** `sprint19-day6-issue759-760-abel-domain-fix`

@@ -21,7 +21,7 @@ Sets
 ;
 
 Parameters
-    data(*,i) /'1'.'systolic blood pressure data' 2.0, pressure.'systolic blood pressure data' 175.0, frequency.'systolic blood pressure data' 8.0, '16'.'systolic blood pressure data' 17.0/
+    data(*,i) /pressure.'1' 175.0, pressure.'2' 180.0, pressure.'3' 185.0, pressure.'4' 190.0, pressure.'5' 195.0, pressure.'6' 200.0, pressure.'7' 205.0, pressure.'8' 210.0, pressure.'9' 215.0, pressure.'10' 220.0, pressure.'11' 225.0, pressure.'12' 230.0, pressure.'13' 235.0, pressure.'14' 240.0, pressure.'15' 245.0, frequency.'1' 8.0, frequency.'2' 6.0, frequency.'3' 6.0, frequency.'4' 7.0, frequency.'5' 4.0, frequency.'6' 3.0, frequency.'7' 3.0, frequency.'8' 8.0, frequency.'9' 1.0, frequency.'10' 6.0, frequency.'11' 0.0, frequency.'12' 5.0, frequency.'13' 1.0, frequency.'14' 7.0, frequency.'15' 1.0, '16'.'1' 17.0, '16'.'2' 18.0, '16'.'3' 19.0, '16'.'4' 20.0, '16'.'5' 21.0, '16'.'6' 22.0, '16'.'7' 23.0, '16'.'8' 24.0, '16'.'10' 25.0, '16'.'11' 26.0, '16'.'12' 27.0, '16'.'13' 28.0, '16'.'14' 29.0, '16'.'15' 30.0, '16'.'9' 31.0/
     y(i)
     w(i)
 ;
@@ -107,9 +107,9 @@ Equations
 Alias(g, g__);
 
 * Stationarity equations
-stat_m(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (-0.5) * 2 * (y(i) - m(g)) / s(g) * s(g) * (-1) / s(g) ** 2)) + 0 * nu_pdef + 1 * lam_rank(g) =E= 0;
-stat_p(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * 1 / s(g) ** 1)) + 1 * nu_pdef + 0 * lam_rank(g) - piL_p(g) =E= 0;
-stat_s(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * (exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * ((-1) * p(g)) / s(g) ** 2 - p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (y(i) - m(g)) / s(g) * ((-1) * (y(i) - m(g))) / s(g) ** 2))) + 0 * nu_pdef + 0 * lam_rank(g) - piL_s(g) =E= 0;
+stat_m(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (-0.5) * 2 * (y(i) - m(g)) / s(g) * s(g) * (-1) / s(g) ** 2)) + lam_rank(g) =E= 0;
+stat_p(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * 1 / s(g) ** 1)) + nu_pdef - piL_p(g) =E= 0;
+stat_s(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * (exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * ((-1) * p(g)) / s(g) ** 2 - p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (y(i) - m(g)) / s(g) * ((-1) * (y(i) - m(g))) / s(g) ** 2))) - piL_s(g) =E= 0;
 
 * Inequality complementarity equations
 comp_rank(g)$(ord(g) <= card(g) - 1).. m(g+1) - m(g) =G= 0;

@@ -81,11 +81,11 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 2 * (x1 - 1) + 2 * (x1 - x2) + 1 * nu_eq1 + 0 * nu_eq2 + x5 * nu_eq3 =E= 0;
-stat_x2.. (-2) * (x1 - x2) + 3 * power(x2 - x3, 2) + 2 * x2 * nu_eq1 + 1 * nu_eq2 + 0 * nu_eq3 =E= 0;
-stat_x3.. (-3) * power(x2 - x3, 2) + 4 * power(x3 - x4, 3) + 3 * power(x3, 2) * nu_eq1 + ((-1) * (2 * x3)) * nu_eq2 + 0 * nu_eq3 =E= 0;
-stat_x4.. (-4) * power(x3 - x4, 3) + 4 * power(x4 - x5, 3) + 0 * nu_eq1 + 1 * nu_eq2 + 0 * nu_eq3 =E= 0;
-stat_x5.. 4 * power(x4 - x5, 3) * (-1) + 0 * nu_eq1 + 0 * nu_eq2 + x1 * nu_eq3 =E= 0;
+stat_x1.. 2 * (x1 - 1) + 2 * (x1 - x2) + nu_eq1 + x5 * nu_eq3 =E= 0;
+stat_x2.. (-2) * (x1 - x2) + 3 * power(x2 - x3, 2) + 2 * x2 * nu_eq1 + nu_eq2 =E= 0;
+stat_x3.. (-3) * power(x2 - x3, 2) + 4 * power(x3 - x4, 3) + 3 * power(x3, 2) * nu_eq1 + ((-1) * (2 * x3)) * nu_eq2 =E= 0;
+stat_x4.. (-4) * power(x3 - x4, 3) + 4 * power(x4 - x5, 3) + nu_eq2 =E= 0;
+stat_x5.. (-4) * power(x4 - x5, 3) + x1 * nu_eq3 =E= 0;
 
 * Original equality equations
 funct.. m =E= sqr(x1 - 1) + sqr(x1 - x2) + power(x2 - x3, 3) + power(x3 - x4, 4) + power(x4 - x5, 4);
