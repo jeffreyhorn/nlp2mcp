@@ -1123,7 +1123,7 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
 
     Walks the expression tree and returns the set of index names that appear
     in VarRef/ParamRef/MultiplierRef indices but are NOT bound by any enclosing
-    Sum node.
+    Sum or Prod node.
 
     Only names that are known set or alias names (from model_ir) are considered
     indices. Literal strings (e.g. "domestic", "storage-c") and IndexOffset
@@ -1132,13 +1132,17 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
     Issue #670: Used to detect uncontrolled indices in stationarity derivative
     expressions that need to be wrapped in Sum nodes.
     """
-    known_sets: set[str] = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
+
+    def _is_known_set(name: str) -> bool:
+        # model_ir.sets and model_ir.aliases are CaseInsensitiveDicts whose
+        # __contains__ already lowercases the key, so this is case-safe.
+        return name in model_ir.sets or name in model_ir.aliases
 
     def _walk(e: Expr, bound: frozenset[str]) -> set[str]:
         if isinstance(e, (VarRef, ParamRef, MultiplierRef)):
             free: set[str] = set()
             for idx in e.indices or ():
-                if isinstance(idx, str) and idx in known_sets and idx not in bound:
+                if isinstance(idx, str) and _is_known_set(idx) and idx not in bound:
                     free.add(idx)
             return free
         if isinstance(e, (Sum, Prod)):
@@ -1158,7 +1162,18 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
             return free
         if isinstance(e, DollarConditional):
             return _walk(e.condition, bound) | _walk(e.value_expr, bound)
-        # Const, SymbolRef, IndexOffset, SetMembershipTest, etc. — no indices
+        if isinstance(e, SetMembershipTest):
+            # Walk the index expressions inside the membership test (e.g. rn(i) → walk i)
+            free = set()
+            for child_expr in e.indices:
+                free |= _walk(child_expr, bound)
+            return free
+        if isinstance(e, SymbolRef):
+            # A bare symbol reference used as an index (e.g. SymbolRef('i'))
+            if _is_known_set(e.name) and e.name not in bound:
+                return {e.name}
+            return set()
+        # Const, IndexOffset, etc. — no indices
         return set()
 
     return _walk(expr, frozenset())

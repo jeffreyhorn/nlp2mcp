@@ -14,7 +14,9 @@ from src.ir.ast import (
     MultiplierRef,
     ParamRef,
     Prod,
+    SetMembershipTest,
     Sum,
+    SymbolRef,
     Unary,
     VarRef,
 )
@@ -203,3 +205,60 @@ class TestCollectFreeIndicesAbelPattern:
         # computes uncontrolled = free - controlled, so this is the right result from
         # _collect_free_indices alone (caller subtracts controlled)
         assert _collect_free_indices(deriv, model) == {"n", "k"}
+
+
+class TestCollectFreeIndicesSetMembershipAndSymbolRef:
+    """SetMembershipTest, SymbolRef, and case-insensitive index handling."""
+
+    def test_symbolref_known_set_is_free(self):
+        """A bare SymbolRef whose name is a known set is treated as a free index."""
+        model = _make_model("i")
+        expr = SymbolRef("i")
+        assert _collect_free_indices(expr, model) == {"i"}
+
+    def test_symbolref_unknown_name_excluded(self):
+        """SymbolRef whose name is not a known set is ignored."""
+        model = _make_model("i")
+        expr = SymbolRef("j")
+        assert _collect_free_indices(expr, model) == set()
+
+    def test_symbolref_bound_by_sum_excluded(self):
+        """SymbolRef bound by an enclosing Sum is not free."""
+        model = _make_model("i")
+        expr = Sum(("i",), SymbolRef("i"))
+        assert _collect_free_indices(expr, model) == set()
+
+    def test_set_membership_test_walks_indices(self):
+        """SetMembershipTest index expressions (e.g. rn(i)) expose free index i."""
+        model = _make_model("i", "j")
+        # rn(i, j) — both i and j are free
+        expr = SetMembershipTest("rn", (SymbolRef("i"), SymbolRef("j")))
+        assert _collect_free_indices(expr, model) == {"i", "j"}
+
+    def test_set_membership_test_bound_index_excluded(self):
+        """Index inside SetMembershipTest that is bound by enclosing Sum is not free."""
+        model = _make_model("i", "j")
+        inner = SetMembershipTest("rn", (SymbolRef("i"), SymbolRef("j")))
+        expr = Sum(("i",), inner)
+        assert _collect_free_indices(expr, model) == {"j"}
+
+    def test_dollar_conditional_with_set_membership(self):
+        """DollarConditional whose condition is a SetMembershipTest exposes indices."""
+        model = _make_model("i", "j")
+        value_expr = ParamRef("a", ("i",))
+        cond = SetMembershipTest("rn", (SymbolRef("j"),))
+        expr = DollarConditional(value_expr=value_expr, condition=cond)
+        assert _collect_free_indices(expr, model) == {"i", "j"}
+
+    def test_mixed_case_index_name_recognised(self):
+        """Mixed-case index names are matched case-insensitively via CaseInsensitiveDict."""
+        model = _make_model("n", "k")
+        # VarRef index 'N' should match set 'n' via case-insensitive lookup
+        expr = VarRef("x", ("N", "K"))
+        assert _collect_free_indices(expr, model) == {"N", "K"}
+
+    def test_mixed_case_alias_recognised(self):
+        """Alias lookup is case-insensitive; mixed-case alias names are found."""
+        model = _make_model("n", aliases={"NP": "n"})
+        expr = ParamRef("a", ("NP",))
+        assert _collect_free_indices(expr, model) == {"NP"}
