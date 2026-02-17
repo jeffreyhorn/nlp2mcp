@@ -3901,7 +3901,8 @@ class _ModelBuilder:
             # emitter can render calibration assignments referencing .l values.
             expr = self._make_symbol(name, (), free_domain, node)
             if isinstance(expr, VarRef) and attribute:
-                expr = VarRef(name=expr.name, indices=expr.indices, attribute=attribute)
+                # Issue #672: normalize name to lowercase to match CaseInsensitiveDict keys
+                expr = VarRef(name=expr.name.lower(), indices=expr.indices, attribute=attribute)
                 return self._attach_domain(expr, free_domain)
             return expr
 
@@ -3924,7 +3925,8 @@ class _ModelBuilder:
             # Issue #741: Preserve the attribute (.l, .m, etc.) on VarRef.
             expr = self._make_symbol(name, indices, free_domain, node)
             if isinstance(expr, VarRef) and attribute:
-                expr = VarRef(name=expr.name, indices=expr.indices, attribute=attribute)
+                # Issue #672: normalize name to lowercase to match CaseInsensitiveDict keys
+                expr = VarRef(name=expr.name.lower(), indices=expr.indices, attribute=attribute)
                 return self._attach_domain(expr, free_domain)
             return expr
 
@@ -4198,7 +4200,9 @@ class _ModelBuilder:
                         f"Variable '{name}' expects {len(expected)} {index_word} but received {len(idx_tuple)} (effective {effective_count})",
                         node,
                     )
-            expr = VarRef(name, idx_tuple)
+            # Issue #672: normalize name to lowercase to match CaseInsensitiveDict.keys()
+            # which returns lowercase. This ensures AD differentiation matches correctly.
+            expr = VarRef(name.lower(), idx_tuple)
             object.__setattr__(expr, "symbol_domain", expected)
             object.__setattr__(expr, "index_values", idx_tuple)
             return self._attach_domain(expr, free_domain)

@@ -202,21 +202,31 @@ Extended grammar to support GAMS special values (`na`, `inf`, `eps`, `undf`) in 
 
 ## Day 4 — ISSUE_672: MCP Case Sensitivity Fix
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-16
+**Time Spent:** ~2h
+
+### Summary
+Fixed ISSUE_672: VarRef names normalized to lowercase at parse time in `src/ir/parser.py`
+(3 locations). Resolves case sensitivity mismatch between `CaseInsensitiveDict.keys()`
+(lowercase) and VarRef node names (original case), which caused all stationarity derivatives
+to return zero for mixed-case models (alkyl, bearing).
+
+### Changes
+- `src/ir/parser.py`: Added `.lower()` normalization at all 3 VarRef creation points
+- `tests/unit/ad/test_mixed_case_differentiation.py`: 13 new unit + integration tests
 
 ### PR Entries
 
-_(To be filled during Day 4)_
+- Sprint 19 Day 4: ISSUE_672 — MCP Case Sensitivity Fix (PR #TBD)
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 4 |
 |--------|----------|-------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 | 61/159 (unchanged) |
+| lexer_invalid_char | 72 | 72 (unchanged) |
+| internal_error | 24 | 24 (unchanged) |
+| Test count | 3,294 | 3,438 (+144) |
 
 ---
 
