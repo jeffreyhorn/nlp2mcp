@@ -251,14 +251,29 @@ class TestCollectFreeIndicesSetMembershipAndSymbolRef:
         assert _collect_free_indices(expr, model) == {"i", "j"}
 
     def test_mixed_case_index_name_recognised(self):
-        """Mixed-case index names are matched case-insensitively via CaseInsensitiveDict."""
+        """Mixed-case index names are matched and returned as lowercase."""
         model = _make_model("n", "k")
-        # VarRef index 'N' should match set 'n' via case-insensitive lookup
+        # VarRef index 'N' matches set 'n'; returned normalized to lowercase
         expr = VarRef("x", ("N", "K"))
-        assert _collect_free_indices(expr, model) == {"N", "K"}
+        assert _collect_free_indices(expr, model) == {"n", "k"}
 
     def test_mixed_case_alias_recognised(self):
-        """Alias lookup is case-insensitive; mixed-case alias names are found."""
+        """Alias lookup is case-insensitive; returned name is lowercase."""
         model = _make_model("n", aliases={"NP": "n"})
         expr = ParamRef("a", ("NP",))
-        assert _collect_free_indices(expr, model) == {"NP"}
+        assert _collect_free_indices(expr, model) == {"np"}
+
+    def test_mixed_case_bound_index_excluded(self):
+        """Sum binding 'i' (lowercase) also suppresses uppercase 'I' in the body."""
+        model = _make_model("i")
+        # Sum binds ('i',); body uses 'I' — case-insensitive binding must suppress it
+        inner = ParamRef("a", ("I",))
+        expr = Sum(("i",), inner)
+        assert _collect_free_indices(expr, model) == set()
+
+    def test_mixed_case_bound_index_uppercase_binder(self):
+        """Sum binding 'I' (uppercase) also suppresses lowercase 'i' in the body."""
+        model = _make_model("i")
+        inner = ParamRef("a", ("i",))
+        expr = Sum(("I",), inner)
+        assert _collect_free_indices(expr, model) == set()

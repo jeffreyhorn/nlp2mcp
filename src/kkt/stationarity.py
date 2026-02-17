@@ -1139,14 +1139,16 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
         return name in model_ir.sets or name in model_ir.aliases
 
     def _walk(e: Expr, bound: frozenset[str]) -> set[str]:
+        # bound contains lowercase-normalized names; all returned names are also lowercase
+        # so that set arithmetic with IR-derived domains (also lowercase) is correct.
         if isinstance(e, (VarRef, ParamRef, MultiplierRef)):
             free: set[str] = set()
             for idx in e.indices or ():
-                if isinstance(idx, str) and _is_known_set(idx) and idx not in bound:
-                    free.add(idx)
+                if isinstance(idx, str) and _is_known_set(idx) and idx.lower() not in bound:
+                    free.add(idx.lower())
             return free
         if isinstance(e, (Sum, Prod)):
-            new_bound = bound | frozenset(e.index_sets)
+            new_bound = bound | frozenset(s.lower() for s in e.index_sets)
             result = _walk(e.body, new_bound)
             if e.condition is not None:
                 result |= _walk(e.condition, new_bound)
@@ -1170,8 +1172,8 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
             return free
         if isinstance(e, SymbolRef):
             # A bare symbol reference used as an index (e.g. SymbolRef('i'))
-            if _is_known_set(e.name) and e.name not in bound:
-                return {e.name}
+            if _is_known_set(e.name) and e.name.lower() not in bound:
+                return {e.name.lower()}
             return set()
         # Const, IndexOffset, etc. — no indices
         return set()
