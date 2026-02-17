@@ -50,18 +50,31 @@ class TestMixedCaseDifferentiation:
         assert isinstance(result, Const)
         assert result.value == 1.0
 
-    def test_uppercase_source_name_mismatch_documents_bug(self):
-        """Documents the pre-fix broken behavior that motivated the parser fix.
+    def test_parser_normalizes_varref_names_to_lowercase(self):
+        """The parser fix (Issue #672) ensures VarRef names are always lowercase.
 
-        If a VarRef('AcidFeed') is compared to 'acidfeed' (CaseInsensitiveDict key),
-        the case-sensitive comparison returns 0 -- the bug this fix addresses.
+        The desired invariant: after parse time, no VarRef should have a mixed-case
+        name, so differentiate_expr will always receive lowercase names matching
+        CaseInsensitiveDict keys. This test asserts that invariant on the parser output
+        rather than encoding the pre-fix broken behavior of differentiate_expr itself.
         """
-        expr = VarRef("AcidFeed")  # old behavior: mixed case preserved
-        result = differentiate_expr(expr, "acidfeed")  # lowercase key from CaseInsensitiveDict
-        # This IS the old broken behavior: returns 0 due to case mismatch.
-        # Documents WHY the parser-level fix is necessary.
-        assert isinstance(result, Const)
-        assert result.value == 0.0
+        from src.ir.parser import parse_model_text
+
+        source = """
+Variable AcidFeed, obj;
+Equation eq1;
+eq1.. obj =e= AcidFeed * 2;
+Model m / all /;
+Solve m using nlp minimizing obj;
+"""
+        model = parse_model_text(source)
+        eq = model.equations["eq1"]
+        lhs, rhs = eq.lhs_rhs
+        names = _collect_varref_names(lhs) + _collect_varref_names(rhs)
+        for name in names:
+            assert name == name.lower(), (
+                f"VarRef name '{name}' is not lowercase — parser did not normalize it"
+            )
 
     def test_product_rule_with_lowercase_vars(self):
         """d/dx(x * y) is non-zero when both vars are lowercase (post-fix behavior)."""

@@ -3901,8 +3901,11 @@ class _ModelBuilder:
             # emitter can render calibration assignments referencing .l values.
             expr = self._make_symbol(name, (), free_domain, node)
             if isinstance(expr, VarRef) and attribute:
-                # Issue #672: normalize name to lowercase to match CaseInsensitiveDict keys
-                expr = VarRef(name=expr.name.lower(), indices=expr.indices, attribute=attribute)
+                # Issue #672: normalize name to lowercase to match CaseInsensitiveDict keys.
+                # Mutate via object.__setattr__ to preserve metadata (symbol_domain,
+                # index_values) attached by _make_symbol rather than reconstructing.
+                object.__setattr__(expr, "name", expr.name.lower())
+                object.__setattr__(expr, "attribute", attribute)
                 return self._attach_domain(expr, free_domain)
             return expr
 
@@ -3925,8 +3928,11 @@ class _ModelBuilder:
             # Issue #741: Preserve the attribute (.l, .m, etc.) on VarRef.
             expr = self._make_symbol(name, indices, free_domain, node)
             if isinstance(expr, VarRef) and attribute:
-                # Issue #672: normalize name to lowercase to match CaseInsensitiveDict keys
-                expr = VarRef(name=expr.name.lower(), indices=expr.indices, attribute=attribute)
+                # Issue #672: normalize name to lowercase to match CaseInsensitiveDict keys.
+                # Mutate via object.__setattr__ to preserve metadata (symbol_domain,
+                # index_values) attached by _make_symbol rather than reconstructing.
+                object.__setattr__(expr, "name", expr.name.lower())
+                object.__setattr__(expr, "attribute", attribute)
                 return self._attach_domain(expr, free_domain)
             return expr
 
