@@ -30,6 +30,7 @@ from src.ir.ast import (
     Const,
     DollarConditional,
     Expr,
+    IndexOffset,
     MultiplierRef,
     ParamRef,
     Prod,
@@ -1146,6 +1147,8 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
             for idx in e.indices or ():
                 if isinstance(idx, str) and _is_known_set(idx) and idx.lower() not in bound:
                     free.add(idx.lower())
+                elif isinstance(idx, IndexOffset):
+                    free |= _walk(idx, bound)
             return free
         if isinstance(e, (Sum, Prod)):
             new_bound = bound | frozenset(s.lower() for s in e.index_sets)
@@ -1175,7 +1178,14 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
             if _is_known_set(e.name) and e.name.lower() not in bound:
                 return {e.name.lower()}
             return set()
-        # Const, IndexOffset, etc. — no indices
+        if isinstance(e, IndexOffset):
+            # Lead/lag expression: base is a set index; offset may contain SymbolRef
+            free = set()
+            if _is_known_set(e.base) and e.base.lower() not in bound:
+                free.add(e.base.lower())
+            free |= _walk(e.offset, bound)
+            return free
+        # Const, etc. — no indices
         return set()
 
     return _walk(expr, frozenset())

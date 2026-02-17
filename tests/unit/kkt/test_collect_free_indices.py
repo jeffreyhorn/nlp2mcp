@@ -11,6 +11,7 @@ from src.ir.ast import (
     Call,
     Const,
     DollarConditional,
+    IndexOffset,
     MultiplierRef,
     ParamRef,
     Prod,
@@ -21,7 +22,7 @@ from src.ir.ast import (
     VarRef,
 )
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import SetDef
+from src.ir.symbols import AliasDef, SetDef
 from src.kkt.stationarity import _collect_free_indices
 
 pytestmark = pytest.mark.unit
@@ -31,10 +32,10 @@ def _make_model(*set_names: str, aliases: dict[str, str] | None = None) -> Model
     """Build a minimal ModelIR with the given set names registered."""
     model = ModelIR()
     for name in set_names:
-        model.sets[name] = SetDef(name=name, domain=(), members=None)
+        model.add_set(SetDef(name=name))
     if aliases:
         for alias, original in aliases.items():
-            model.aliases[alias] = original
+            model.add_alias(AliasDef(name=alias, target=original))
     return model
 
 
@@ -276,4 +277,48 @@ class TestCollectFreeIndicesSetMembershipAndSymbolRef:
         model = _make_model("i")
         inner = ParamRef("a", ("i",))
         expr = Sum(("I",), inner)
+        assert _collect_free_indices(expr, model) == set()
+
+
+class TestCollectFreeIndicesIndexOffset:
+    """IndexOffset (lead/lag) expressions expose base and offset as free indices."""
+
+    def test_index_offset_base_is_free(self):
+        """IndexOffset base is a known set — reported as free."""
+        model = _make_model("k")
+        # VarRef with lead index k+1: IndexOffset(base='k', offset=Const(1))
+        offset = IndexOffset(base="k", offset=Const(1), circular=False)
+        expr = VarRef("x", (offset,))
+        assert _collect_free_indices(expr, model) == {"k"}
+
+    def test_index_offset_base_bound_by_sum(self):
+        """IndexOffset base bound by enclosing Sum is not free."""
+        model = _make_model("k")
+        offset = IndexOffset(base="k", offset=Const(1), circular=False)
+        inner = VarRef("x", (offset,))
+        expr = Sum(("k",), inner)
+        assert _collect_free_indices(expr, model) == set()
+
+    def test_index_offset_symbolic_offset_is_free(self):
+        """IndexOffset with symbolic offset (i+j) exposes both base and offset as free."""
+        model = _make_model("i", "j")
+        # i+j: IndexOffset(base='i', offset=SymbolRef('j'))
+        offset = IndexOffset(base="i", offset=SymbolRef("j"), circular=False)
+        expr = VarRef("x", (offset,))
+        assert _collect_free_indices(expr, model) == {"i", "j"}
+
+    def test_index_offset_symbolic_offset_bound(self):
+        """Symbolic offset index bound by Sum is not free."""
+        model = _make_model("i", "j")
+        offset = IndexOffset(base="i", offset=SymbolRef("j"), circular=False)
+        inner = VarRef("x", (offset,))
+        expr = Sum(("j",), inner)
+        # i is still free; j is bound by the sum
+        assert _collect_free_indices(expr, model) == {"i"}
+
+    def test_index_offset_unknown_base_excluded(self):
+        """IndexOffset base that is not a known set is excluded."""
+        model = _make_model("i")
+        offset = IndexOffset(base="xyz", offset=Const(1), circular=False)
+        expr = VarRef("x", (offset,))
         assert _collect_free_indices(expr, model) == set()
