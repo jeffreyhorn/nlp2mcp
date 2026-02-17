@@ -82,6 +82,30 @@ def test_multiple_parameters_first_nan_reported():
     assert "NaN" in str(exc_info.value)
 
 
+def test_nan_parameter_with_expressions_passes():
+    """Test that NaN in parameter values is allowed when expressions exist.
+
+    GAMS models commonly use `na` as a placeholder in data declarations
+    when the actual value will be computed later via assignment statements.
+    """
+    model = ModelIR()
+    p = ParameterDef(name="rho", domain=(), values={(): float("nan")})
+    p.expressions.append(((), Binary("*", Const(0.05), Const(1.0))))
+    model.params["rho"] = p
+
+    # Should NOT raise — expressions will overwrite the na placeholder
+    validate_parameter_values(model)
+
+
+def test_nan_parameter_without_expressions_still_rejected():
+    """Test that NaN in parameter values is still rejected when no expressions exist."""
+    model = ModelIR()
+    model.params["p"] = ParameterDef(name="p", domain=(), values={(): float("nan")})
+
+    with pytest.raises(NumericalError):
+        validate_parameter_values(model)
+
+
 def test_expression_value_nan_detected():
     """Test that NaN expression values are caught."""
     with pytest.raises(NumericalError) as exc_info:
