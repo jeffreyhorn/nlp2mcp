@@ -245,11 +245,11 @@ abel model now generates without Error 149 — GAMS parsing succeeds.
 
 ### Changes
 - `src/kkt/stationarity.py`: Added `_collect_free_indices()` + integration in `_add_indexed_jacobian_terms()`
-- `tests/unit/kkt/test_collect_free_indices.py`: 19 new unit tests
+- `tests/unit/kkt/test_collect_free_indices.py`: 37 unit tests (initial 19 + 18 added during PR review rounds covering MultiplierRef, SetMembershipTest/SymbolRef, mixed-case binding, and IndexOffset lead/lag expressions)
 
 ### PR Entries
 
-- Sprint 19 Day 5: ISSUE_670 — Cross-Indexed Sums Part 1 (PR #TBD)
+- Sprint 19 Day 5: ISSUE_670 — Cross-Indexed Sums Part 1 (PR #758)
 
 ### Metrics Snapshot
 
@@ -258,7 +258,7 @@ abel model now generates without Error 149 — GAMS parsing succeeds.
 | Parse success | 61/159 | 61/159 (unchanged) |
 | lexer_invalid_char | 72 | 72 (unchanged) |
 | internal_error | 24 | 24 (unchanged) |
-| Test count | 3,294 | 3,498 (+204 cumulative; +19 this day) |
+| Test count | 3,294 | 3,516 (+222 cumulative; +37 this day) |
 
 ---
 
