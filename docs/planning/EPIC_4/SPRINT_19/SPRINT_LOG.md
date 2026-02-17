@@ -400,7 +400,7 @@ the pipeline to report a false `compare_objective_mismatch`. Filed as ISSUE_769.
 All 6 models:
 | Model | Translate | Solve |
 |-------|-----------|-------|
-| abel | ✓ Clean | ✓ Optimal (ta matches) |
+| abel | ✓ Clean | ✓ Optimal (objective matches reference) |
 | qabel | ✓ Clean | ✓ Optimal |
 | chenery | ✓ Clean | ✗ ISSUE_763 (division by zero in stat_pi) |
 | mexss | ✓ Clean | ✗ ISSUE_764 (accounting variable stationarity) |
@@ -433,7 +433,7 @@ All 6 models:
 | lexer_invalid_char | 72 | ~72 (unchanged) |
 | internal_error | 24 | 0 (reclassified Day 1) |
 | Solve success | 20 | 22 (abel + qabel; house was already solving) |
-| Test count | 3,294 | 3,475 (unchanged — no new code changes)
+| Test count | 3,294 | 3,475 (unchanged from Day 6 — no new code changes)
 
 ---
 
