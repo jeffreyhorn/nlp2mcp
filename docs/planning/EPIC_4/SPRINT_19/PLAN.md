@@ -130,17 +130,18 @@ Note: Many items overlap across workstreams (e.g., put format is both WS1 and WS
 
 ---
 
-#### Day 3 — Special Values + Circle Model Fix
+#### Day 3 — Special Values + Circle Model Fix ✅ COMPLETE
 **Theme:** More quick wins + first MCP fix
-**Effort:** 3-4h
+**Effort:** 3-4h (actual: ~3h)
 
 | Task | Effort | Deliverable |
 |------|--------|-------------|
-| Implement special values grammar subset (Subcategory E partial) | 2-3h | 3 models newly parsing |
-| Circle model MCP fix (capture uniform() values as parameters) | 1.5-2h | circle achieves model_optimal |
+| Implement special values grammar subset (Subcategory E partial) | 2-3h | 4 models newly parsing (ship, tforss, ferts, lands) |
+| Circle model MCP fix (execseed for deterministic evaluation) | 1-1.5h | circle MCP deterministic (infeasibility is KKT formulation issue, not randomness) |
 
 **Risks:** Circle fix requires understanding of stochastic function handling
 **Unknowns:** 1.1 (circle model — VERIFIED, approach confirmed)
+**Outcome:** Grammar extended for special values in scalar data and indexed parameter data. Circle MCP now deterministic via execseed injection. 3413 tests, zero regressions.
 
 ---
 

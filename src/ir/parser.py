@@ -2483,12 +2483,24 @@ class _ModelBuilder:
 
             if data_idx < len(child.children):
                 data_node = child.children[data_idx]
-                values = [
-                    float(_token_text(tok))
-                    for tok in data_node.scan_values(
-                        lambda v: isinstance(v, Token) and v.type == "NUMBER"
-                    )
-                ]
+                # Issue #564 follow-up: scalar_data_item can now be NUMBER,
+                # SPECIAL_VALUE, or MINUS/PLUS SPECIAL_VALUE.  Walk each
+                # scalar_data_item child and parse its tokens.
+                values: list[float] = []
+                for sdi in data_node.children:
+                    if isinstance(sdi, Tree) and sdi.data == "scalar_data_item":
+                        tokens = [c for c in sdi.children if isinstance(c, Token)]
+                        if len(tokens) == 1:
+                            values.append(self._parse_table_value(_token_text(tokens[0])))
+                        elif len(tokens) == 2:
+                            # MINUS/PLUS + SPECIAL_VALUE (e.g., -inf, +inf)
+                            values.append(
+                                self._parse_table_value(
+                                    _token_text(tokens[0]) + _token_text(tokens[1])
+                                )
+                            )
+                    elif isinstance(sdi, Token) and sdi.type in ("NUMBER", "SPECIAL_VALUE"):
+                        values.append(self._parse_table_value(_token_text(sdi)))
                 if values:
                     param.values[()] = values[-1]
                 # Check for optional assignment after the data
@@ -4357,8 +4369,13 @@ class _ModelBuilder:
                     values[key_tuple] = value
             elif child.data == "param_data_scalar":
                 key = self._parse_data_indices(child.children[0])
-                value_token = child.children[-1]
-                value = float(_token_text(value_token))
+                # Issue #564 follow-up: value can now be a param_data_value
+                # Tree (for special values like na, inf) or a plain NUMBER Token.
+                value_node = child.children[-1]
+                if isinstance(value_node, Tree) and value_node.data == "param_data_value":
+                    value = self._parse_param_data_value(value_node)
+                else:
+                    value = float(_token_text(value_node))
 
                 # Check if this is a range expression (e.g., 'a*c 10')
                 if len(key) == 3 and key[0] == "__range__":

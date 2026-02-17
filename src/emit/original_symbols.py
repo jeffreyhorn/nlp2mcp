@@ -16,12 +16,53 @@ import logging
 import re
 
 from src.emit.expr_to_gams import expr_to_gams
-from src.ir.ast import Expr, MultiplierRef, ParamRef, VarRef
+from src.ir.ast import Call, Expr, MultiplierRef, ParamRef, VarRef
 from src.ir.constants import GAMS_RESERVED_CONSTANTS, PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
 
 logger = logging.getLogger(__name__)
+
+# GAMS functions that produce stochastic (non-deterministic) output.
+# When these appear in parameter assignments within MCP files, the model
+# becomes non-deterministic — each solve produces different data, making
+# the KKT conditions inconsistent.
+STOCHASTIC_FUNCTIONS: frozenset[str] = frozenset(
+    {
+        "uniform",
+        "normal",
+        "uniformint",
+        "triangular",
+        "binomial",
+        "beta",
+        "gamma",
+        "lognormal",
+        "negbinomial",
+        "poisson",
+        "rand",
+        "randsign",
+        "heaprandom",
+    }
+)
+
+
+def _expr_contains_stochastic(expr: Expr) -> bool:
+    """Return True if *expr* contains a call to a stochastic function."""
+    if isinstance(expr, Call) and expr.func.lower() in STOCHASTIC_FUNCTIONS:
+        return True
+    return any(_expr_contains_stochastic(c) for c in expr.children())
+
+
+def has_stochastic_parameters(model_ir: ModelIR) -> bool:
+    """Return True if any computed parameter contains a stochastic function call."""
+    for param_name, param_def in model_ir.params.items():
+        if param_name in PREDEFINED_GAMS_CONSTANTS:
+            continue
+        for _key, expr in param_def.expressions:
+            if _expr_contains_stochastic(expr):
+                return True
+    return False
+
 
 # Regex pattern for valid GAMS set element identifiers
 # Allows: letters, digits, underscores, hyphens, dots (for tuples like a.b), plus signs

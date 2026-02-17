@@ -16,6 +16,7 @@ from src.emit.original_symbols import (
     emit_original_parameters,
     emit_original_sets,
     emit_set_assignments,
+    has_stochastic_parameters,
 )
 from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
 from src.ir.ast import Expr
@@ -130,6 +131,14 @@ def emit_gams_mcp(
         kkt.model_ir, varref_filter="no_varref_attr"
     )
     if computed_params_code:
+        # Sprint 19 Day 3: If any computed parameter contains stochastic
+        # functions (uniform, normal), fix the random seed so the MCP
+        # produces deterministic results across solver invocations.
+        if has_stochastic_parameters(kkt.model_ir):
+            if add_comments:
+                sections.append("* Fix random seed for deterministic MCP evaluation")
+            sections.append("execseed = 12345;")
+            sections.append("")
         sections.append(computed_params_code)
         sections.append("")
 

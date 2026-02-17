@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 3: Special Values Grammar + Circle Model Deterministic Fix - 2026-02-16
+
+**Branch:** `sprint19-day3-special-values-circle-fix`
+**Status:** COMPLETE
+
+#### Summary
+Extended grammar to support GAMS special values (`na`, `inf`, `eps`, `undf`) in scalar data blocks and indexed parameter data, unblocking 4 models (ship, tforss, ferts, lands). Added deterministic random seed injection (`execseed`) for MCP files with stochastic function calls, fixing circle model non-determinism. 18 new tests (3,413 total), zero regressions.
+
+#### Changes
+- Grammar: Extended `scalar_data_item` to accept `SPECIAL_VALUE` (was `NUMBER` only)
+- Grammar: Changed `param_data_scalar` from `data_indices NUMBER` to `data_indices param_data_value`
+- Parser: Updated scalar data and param_data_scalar handlers for special values
+- Emit: Added stochastic function detection (`_expr_contains_stochastic`, `has_stochastic_parameters`)
+- Emit: Added `execseed = 12345;` injection before stochastic parameter assignments in MCP output
+- Tests: 8 scalar/param special value tests, 10 stochastic detection/execseed tests
+
+#### Metrics
+- 4 models past grammar stage: ship, tforss, ferts, lands
+- Circle MCP now deterministic (still locally infeasible — KKT formulation issue, separate fix)
+- Tests: 3,413 (was 3,395) — +18
+
 ### Sprint 19 Day 2: Put Statement Format + Reserved Word Quoting - 2026-02-16
 
 **Branch:** `sprint19-day2-put-format-reserved-words`
