@@ -272,17 +272,18 @@ def extract_objective_from_variables(lst_content: str) -> float | None:
         Objective value if found, None otherwise
     """
     # Primary: look for the fixed-name sentinel emitted by nlp2mcp:
-    #   Scalar nlp_obj_val; nlp_obj_val = <objvar>; Display nlp_obj_val;
+    #   Scalar nlp2mcp_obj_val; nlp2mcp_obj_val = <objvar>.l; Display nlp2mcp_obj_val;
     # GAMS Display of a Scalar produces:
-    #   ----    NNN PARAMETER nlp_obj_val          =     <value>
+    #   ----    NNN PARAMETER nlp2mcp_obj_val          =     <value>
+    # Use the last match in case a .lst file contains multiple solve runs.
     sentinel_pattern = re.compile(
-        r"----\s+\d*\s*PARAMETER\s+nlp_obj_val\s+=\s+([-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)",
+        r"----\s+\d*\s*PARAMETER\s+nlp2mcp_obj_val\s+=\s+([-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)",
         re.IGNORECASE,
     )
-    sentinel_match = sentinel_pattern.search(lst_content)
-    if sentinel_match:
+    sentinel_matches = list(sentinel_pattern.finditer(lst_content))
+    if sentinel_matches:
         try:
-            return float(sentinel_match.group(1))
+            return float(sentinel_matches[-1].group(1))
         except ValueError:
             pass
 

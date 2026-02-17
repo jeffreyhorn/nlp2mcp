@@ -91,6 +91,6 @@ Model mcp_model /
 
 Solve mcp_model using MCP;
 
-Scalar nlp_obj_val;
-nlp_obj_val = obj.l;
-Display nlp_obj_val;
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = obj.l;
+Display nlp2mcp_obj_val;

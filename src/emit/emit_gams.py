@@ -446,13 +446,14 @@ def emit_gams_mcp(
 
     # Emit NLP objective value capture for pipeline comparison.
     # MCP listings have no "OBJECTIVE VALUE" line, so we assign the NLP objective
-    # variable to a fixed-name scalar after the solve. The pipeline's
-    # extract_objective_from_variables() matches "---- PARAMETER nlp_obj_val".
+    # variable to a fixed-name sentinel scalar after the solve. The pipeline's
+    # extract_objective_from_variables() matches "---- PARAMETER nlp2mcp_obj_val".
+    # The nlp2mcp_ prefix reduces collision risk with user-defined symbols.
     obj_info = extract_objective_info(kkt.model_ir)
     if obj_info.objvar:
         sections.append("")
-        sections.append("Scalar nlp_obj_val;")
-        sections.append(f"nlp_obj_val = {obj_info.objvar}.l;")
-        sections.append("Display nlp_obj_val;")
+        sections.append("Scalar nlp2mcp_obj_val;")
+        sections.append(f"nlp2mcp_obj_val = {obj_info.objvar}.l;")
+        sections.append("Display nlp2mcp_obj_val;")
 
     return "\n".join(sections)
