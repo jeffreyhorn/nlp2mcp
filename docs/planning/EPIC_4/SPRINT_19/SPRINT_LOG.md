@@ -379,21 +379,61 @@ does NOT apply since ISSUE_670 IS working. Proceed as planned.
 
 ## Day 7 — ISSUE_670 Wrap-up + House Model Investigation
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-17
+**Time Spent:** ~2h
+
+### Summary
+
+ISSUE_670 wrap-up confirmed all 6 models translate cleanly with no Error 149. House model
+investigation found it **already solves correctly** — Solver Status 1, Model Status 1
+Optimal, ta=4500 (matches NLP optimum exactly). The "infeasibility" from the sprint audit
+was resolved by earlier variable initialization fixes (Sprint 19 Day 3/5). No code changes
+needed for house.
+
+During investigation, discovered a pipeline bug: `extract_objective_from_variables()` in
+`test_solve.py` guesses the MCP objective by trying a hardcoded list of common variable
+names. For `house`, the NLP objective variable is `ta` (not in the guess list), causing
+the pipeline to report a false `compare_objective_mismatch`. Filed as ISSUE_769.
+
+### ISSUE_670 Final Status
+
+All 6 models:
+| Model | Translate | Solve |
+|-------|-----------|-------|
+| abel | ✓ Clean | ✓ Optimal (ta matches) |
+| qabel | ✓ Clean | ✓ Optimal |
+| chenery | ✓ Clean | ✗ ISSUE_763 (division by zero in stat_pi) |
+| mexss | ✓ Clean | ✗ ISSUE_764 (accounting variable stationarity) |
+| orani | ✓ Clean | ✗ ISSUE_765 (exogenous fixed variables) |
+| robert | ✗ ISSUE_766 (Error 171 subset/superset index mismatch) | — |
+
+### House Model Investigation
+
+- **Status:** Solves correctly — no fix needed
+- **PATH result:** EXIT solution found, residual 2.84e-08
+- **Solution:** ta=4500.0, matches NLP optimum
+- **Root cause of prior infeasibility:** Variable initialization (x.l=30, b.l=68, l.l=56)
+  added in earlier sprint work was sufficient to guide PATH to the correct KKT point
+- **Pipeline false mismatch:** ISSUE_769 filed — `extract_objective_from_variables()`
+  does not know the NLP objective variable name (`ta`) so reports wrong objective value
+
+### New Issues Filed
+
+- **ISSUE_769** — Pipeline: MCP objective comparison guesses variable name (#769)
 
 ### PR Entries
 
-_(To be filled during Day 7)_
+- Sprint 19 Day 7: ISSUE_670 Wrap-up + House Model Investigation (PR #770)
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 7 |
 |--------|----------|-------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 | ~65/159 (unchanged — no grammar changes) |
+| lexer_invalid_char | 72 | ~72 (unchanged) |
+| internal_error | 24 | 0 (reclassified Day 1) |
+| Solve success | 20 | 22 (abel + qabel; house was already solving) |
+| Test count | 3,294 | 3,475 (unchanged — no new code changes)
 
 ---
 

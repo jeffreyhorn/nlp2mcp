@@ -11,6 +11,7 @@
 **Day 4 Status:** COMPLETE (2026-02-16) — ISSUE_672 case sensitivity fix (CaseInsensitiveDict), 3,474 tests pass
 **Day 5 Status:** COMPLETE (2026-02-17) — ISSUE_670 Part 1 (_collect_free_indices + indexed path), 3,516 tests pass (PR #758)
 **Day 6 Status:** COMPLETE (2026-02-17) — ISSUE_759+760 (abel domain fixes, PR #761); ISSUE_670 Part 2 (scalar path + static subsets, Checkpoint 1 GO); 3,475 tests pass
+**Day 7 Status:** COMPLETE (2026-02-17) — ISSUE_670 wrap-up (all 6 models translate cleanly, abel/qabel optimal); house model investigation (already solves, ta=4500; ISSUE_769 filed for pipeline false-mismatch bug)
 
 ---
 
