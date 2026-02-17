@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 7: ISSUE_670 Wrap-up + House Model Investigation - 2026-02-17
+
+**Branch:** `sprint19-day7-issue670-wrapup-house`
+**Status:** COMPLETE
+
+#### Summary
+
+ISSUE_670 wrap-up confirmed all 6 affected models translate cleanly (no Error 149).
+Abel and qabel solve optimally. Chenery/mexss/orani have separate tracked blocking
+issues (#763–765). Robert is blocked by ISSUE_766.
+
+House model investigation found it already solves correctly with Solver Status 1,
+Model Status 1 Optimal, ta=4500 (matching the NLP optimum). The prior "infeasibility"
+was resolved by variable initialization added in earlier sprint work. No code changes
+were needed.
+
+Discovered a pipeline bug: the MCP objective comparison falls back to guessing the NLP
+objective variable by name from a hardcoded list, causing false mismatches for models
+like `house` whose objective variable (`ta`) is not in the list. Filed as ISSUE_769.
+
+#### New Issue Docs
+- `docs/issues/ISSUE_769_pipeline-mcp-objective-comparison-guesses-variable-name.md`
+
+#### Metrics
+- Tests: 3,475 passed (unchanged — no code changes)
+- Zero regressions
+
+---
+
 ### Sprint 19 Day 6 (Part 2): ISSUE_670 Complete + Checkpoint 1 - 2026-02-16
 
 **Branch:** `sprint19-day6-issue670-checkpoint1`
