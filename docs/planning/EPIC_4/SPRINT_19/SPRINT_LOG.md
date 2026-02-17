@@ -384,7 +384,9 @@ does NOT apply since ISSUE_670 IS working. Proceed as planned.
 
 ### Summary
 
-ISSUE_670 wrap-up confirmed all 6 models translate cleanly with no Error 149. House model
+ISSUE_670 wrap-up confirmed all 6 models are free of Error 149. Five translate cleanly;
+robert is still blocked by ISSUE_766 (Error 171 subset/superset index mismatch) which is
+a separate issue unrelated to ISSUE_670. House model
 investigation found it **already solves correctly** — Solver Status 1, Model Status 1
 Optimal, ta=4500 (matches NLP optimum exactly). The "infeasibility" from the sprint audit
 was resolved by earlier variable initialization fixes (Sprint 19 Day 3/5). No code changes
@@ -429,7 +431,7 @@ All 6 models:
 
 | Metric | Baseline | Day 7 |
 |--------|----------|-------|
-| Parse success | 61/159 | ~65/159 (unchanged — no grammar changes) |
+| Parse success | 61/159 | ~65/159 (up from 61/159 baseline; unchanged from Day 6 — no grammar changes) |
 | lexer_invalid_char | 72 | ~72 (unchanged) |
 | internal_error | 24 | 0 (reclassified Day 1) |
 | Solve success | 20 | 22 (abel + qabel; house was already solving) |
