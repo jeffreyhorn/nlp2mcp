@@ -2188,6 +2188,310 @@ def expand_tuple_only_table_rows(source: str) -> str:
     return "\n".join(result)
 
 
+def _expand_gams_range(start: str, end: str) -> list[str]:
+    """Expand a GAMS range like 'sch-1'*'sch-4' or n1*n4 to a list of elements.
+
+    Finds the common alphabetic prefix and numeric suffix, then generates
+    all elements with integer suffixes from start to end (inclusive).
+    Returns ["start*end"] (a single token preserving the range expression) if
+    the range cannot be expanded.
+    """
+
+    # Strip surrounding quotes for processing
+    def strip_q(s: str) -> str:
+        return s.strip("'\"")
+
+    s, e = strip_q(start), strip_q(end)
+    # Find longest common prefix (alphabetic + hyphen)
+    m_s = re.match(r"^([A-Za-z_][A-Za-z_\-]*)(\d+)$", s)
+    m_e = re.match(r"^([A-Za-z_][A-Za-z_\-]*)(\d+)$", e)
+    if m_s and m_e and m_s.group(1) == m_e.group(1):
+        prefix = m_s.group(1)
+        lo, hi = int(m_s.group(2)), int(m_e.group(2))
+        # Do not expand descending ranges — semantics are ambiguous
+        if hi < lo:
+            return [f"{start}*{end}"]
+        # Preserve original quoting style if elements had quotes
+        quoted = start.strip().startswith("'")
+        elems = []
+        for n in range(lo, hi + 1):
+            elem = f"{prefix}{n}"
+            elems.append(f"'{elem}'" if quoted else elem)
+        return elems
+    # Pure numeric range
+    m_ns = re.match(r"^(\d+)$", s)
+    m_ne = re.match(r"^(\d+)$", e)
+    if m_ns and m_ne:
+        lo, hi = int(s), int(e)
+        # Do not expand descending ranges — semantics are ambiguous
+        if hi < lo:
+            return [f"{start}*{end}"]
+        return [str(n) for n in range(lo, hi + 1)]
+    # Cannot expand — return as a single token so it remains parseable by grammar
+    return [f"{start}*{end}"]
+
+
+def _parse_label_group(group_str: str) -> list[str]:
+    """Parse a parenthesized group like (a,b,c) or (1*3) into a list of elements.
+
+    Handles:
+    - Comma-separated lists: (a, b, c) -> ['a', 'b', 'c']
+    - Numeric / numeric-suffix range expressions: (1*3) -> ['1', '2', '3']
+      and ('sch-1'*'sch-4') -> ["'sch-1'", "'sch-2'", "'sch-3'", "'sch-4'"]
+    - Mixed: (a, 1*3) -> ['a', '1', '2', '3']
+    - Pure alphabetic ranges (e.g. a*d) are NOT expanded — they are kept as
+      a single token (a*d) so the grammar's range_expr rule can handle them.
+    """
+    inner = group_str.strip()
+    if inner.startswith("(") and inner.endswith(")"):
+        inner = inner[1:-1].strip()
+
+    # Tokenize quote-aware: yield quoted strings and bare non-comma chunks.
+    # Ranges like 'sch-1'*'sch-4' tokenize differently depending on spacing:
+    #   with spaces:    "'sch-1'", "*", "'sch-4'"  (3 tokens)
+    #   without spaces: "'sch-1'", "*'sch-4'"      (2 tokens, second starts with *)
+    # We normalize all of these into "lhs*rhs" merged tokens before expanding.
+    _TOK = re.compile(r"'(?:[^']|'')*'|[^,\s]+")
+    raw_tokens = [m.group(0) for m in _TOK.finditer(inner)]
+    raw_tokens = [t for t in raw_tokens if t.strip()]
+
+    # Merge range tokens: handle 'a'*'b', a*b, 'a' * 'b' (spaced)
+    merged: list[str] = []
+    i = 0
+    while i < len(raw_tokens):
+        t = raw_tokens[i]
+        # Case 1: next token is bare "*" — merge prev, *, next
+        if i + 2 < len(raw_tokens) and raw_tokens[i + 1].strip() == "*":
+            merged.append(t + "*" + raw_tokens[i + 2])
+            i += 3
+        # Case 2: current token ends with "*" — merge with next
+        elif t.endswith("*") and i + 1 < len(raw_tokens):
+            merged.append(t + raw_tokens[i + 1])
+            i += 2
+        # Case 3: next token starts with "*" (no space: 'a'*'b' → "'a'", "*'b'")
+        elif i + 1 < len(raw_tokens) and raw_tokens[i + 1].startswith("*"):
+            merged.append(t + raw_tokens[i + 1])
+            i += 2
+        else:
+            merged.append(t)
+            i += 1
+
+    elements = []
+    for token in merged:
+        if "*" in token:
+            # Range: split on * (may be 'a'*'b' or a*b)
+            star_pos = token.index("*")
+            lhs = token[:star_pos].strip()
+            rhs = token[star_pos + 1 :].strip()
+            elements.extend(_expand_gams_range(lhs, rhs))
+        else:
+            elements.append(token)
+    return elements
+
+
+def _split_dotted_label_segments(label: str) -> list[list[str]]:
+    """Split a dotted row label into segments, expanding tuple groups.
+
+    Each segment is a list of alternative values. Plain elements yield
+    a single-element list; parenthesized groups yield multiple alternatives.
+
+    Example:
+        'a.(b,c).d'   -> [['a'], ['b', 'c'], ['d']]
+        'a.(1*3).d'   -> [['a'], ['1', '2', '3'], ['d']]
+        'a.b.c'       -> [['a'], ['b'], ['c']]
+    """
+    segments: list[list[str]] = []
+    i = 0
+    n = len(label)
+    while i < n:
+        if label[i] == "(":
+            # Find matching close paren (not nested in GAMS label context)
+            depth = 0
+            j = i
+            while j < n:
+                if label[j] == "(":
+                    depth += 1
+                elif label[j] == ")":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j += 1
+            if depth != 0:
+                # No matching ')' found — malformed label, treat rest as plain atom
+                segments.append([label[i:]])
+                break
+            group = label[i : j + 1]
+            segments.append(_parse_label_group(group))
+            i = j + 1
+            # Skip following dot if present
+            if i < n and label[i] == ".":
+                i += 1
+        elif label[i] == ".":
+            i += 1
+        else:
+            # Read until next dot or open-paren (quote-aware)
+            j = i
+            if label[j] == "'":
+                # Quoted string — find matching close quote (GAMS '' escape)
+                j += 1
+                while j < n:
+                    if label[j] == "'":
+                        if j + 1 < n and label[j + 1] == "'":
+                            j += 2  # escaped quote
+                            continue
+                        j += 1
+                        break
+                    j += 1
+            else:
+                while j < n and label[j] not in (".", "("):
+                    j += 1
+            segments.append([label[i:j]])
+            i = j
+            if i < n and label[i] == ".":
+                i += 1
+    return segments
+
+
+def _needs_multi_segment_expansion(label: str) -> bool:
+    """Return True if label requires preprocessor expansion (not handled by grammar alone).
+
+    The grammar's tuple_suffix_expansion_label already handles plain elem.(a,b) suffixes
+    (comma lists at the end of a dotted path). Step 15c only needs to expand:
+      1. Mid-path tuples: a.(b,c).d  — has ').' after the group
+      2. Multiple groups:  a.(b,c).(d,e) — has both '.(' and ').'
+      3. Range expressions inside a suffix group: a.(b*d) — grammar doesn't expand ranges
+
+    Cases NOT requiring Step 15c (grammar handles them):
+      - elem.(a,b)   — suffix-only plain tuple list (no ').' after the group)
+    """
+    if ")." in label:
+        # Mid-path or multiple groups — always needs expansion
+        return True
+    if ".(" in label:
+        # Suffix group — only needs expansion if it contains a range expression
+        # Find the '(' and check if there's a '*' inside the group (not outside it)
+        idx = label.index(".(")
+        rest = label[idx + 1 :]  # from '(' onward (rest[0] == '(')
+        # Find the matching close paren
+        depth = 0
+        close_paren_idx = None
+        for i, ch in enumerate(rest):
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    close_paren_idx = i
+                    break
+        if close_paren_idx is not None:
+            # Only check content up to and including the matching ')'
+            group_content = rest[: close_paren_idx + 1]
+        else:
+            # No matching ')' — be conservative and check the whole rest
+            group_content = rest
+        if "*" in group_content:
+            return True
+    return False
+
+
+def expand_multi_segment_tuple_row_labels(source: str) -> str:
+    """Expand table row labels with tuple groups at any dot-segment position.
+
+    Handles patterns like:
+      a.(b,c).d         -> a.b.d / a.c.d
+      a.(b,c).(d,e)     -> a.b.d / a.b.e / a.c.d / a.c.e
+      a.b.(c*e)         -> a.b.c / a.b.d / a.b.e
+      a.(b,c).(d*f).g   -> full cross-product
+
+    This step runs after expand_tuple_only_table_rows (which handles leading
+    tuple-only labels like (a,b,c) without dot segments) and after
+    normalize_special_identifiers (which quotes hyphenated identifiers).
+
+    Only operates inside Table blocks. Row labels that don't contain
+    tuple groups (no '(.*)' in dot-path position) are passed through unchanged.
+    """
+    lines = source.split("\n")
+    result = []
+    in_table = False
+    table_header_seen = False
+    is_first_line_after_decl = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        if re.match(r"^Table\b", stripped, re.IGNORECASE):
+            in_table = True
+            table_header_seen = False
+            is_first_line_after_decl = True
+            result.append(line)
+            continue
+
+        if in_table:
+            if is_first_line_after_decl:
+                if stripped:
+                    is_first_line_after_decl = False
+                    table_header_seen = True
+                result.append(line)
+                continue
+
+            # Terminate on block keyword without semicolon
+            if stripped and re.match(
+                r"^(?:" + "|".join(BLOCK_KEYWORDS) + r")\b", stripped, re.IGNORECASE
+            ):
+                in_table = False
+                result.append(line)
+                continue
+
+            # Handle last line: attempt expansion BEFORE terminating, mirroring
+            # expand_tuple_only_table_rows so the final row (which ends with ';')
+            # can still be expanded.
+            is_last_line = _has_statement_ending_semicolon(line)
+            if is_last_line:
+                in_table = False
+                semi_pos = _find_statement_semicolon_pos(line)
+                line_no_semi = line[:semi_pos] if semi_pos >= 0 else line
+                stripped_no_semi = line_no_semi.strip()
+            else:
+                line_no_semi = line
+                stripped_no_semi = stripped
+
+            if table_header_seen and stripped_no_semi and not stripped_no_semi.startswith("*"):
+                # Extract the row label — everything before the first run of whitespace+number
+                # The label is the leading non-space part, values follow whitespace
+                # Match: optional indent, then the label (up to first whitespace-number sequence)
+                m = re.match(r"^(\s*)(\S+)(.*)", line_no_semi)
+                if m:
+                    indent = m.group(1)
+                    label = m.group(2)
+                    rest = m.group(3)  # whitespace + values
+
+                    if _needs_multi_segment_expansion(label):
+                        segments = _split_dotted_label_segments(label)
+                        if any(len(s) > 1 for s in segments):
+                            # Compute cross-product
+                            expanded: list[str] = [""]
+                            for seg in segments:
+                                expanded = [
+                                    (prev + "." if prev else "") + opt
+                                    for prev in expanded
+                                    for opt in seg
+                                ]
+                            for i_exp, exp_label in enumerate(expanded):
+                                # Append ';' only to the last row if this was the last line
+                                suffix = (
+                                    ";" if (is_last_line and i_exp == len(expanded) - 1) else ""
+                                )
+                                result.append(f"{indent}{exp_label}{rest}{suffix}")
+                            continue
+
+            result.append(line)
+            continue
+
+        result.append(line)
+
+    return "\n".join(result)
+
+
 def normalize_double_commas(source: str) -> str:
     """Replace double commas with single commas in data blocks.
 
@@ -2377,6 +2681,7 @@ def _preprocess_content(content: str) -> str:
     14. Insert missing semicolons before block keywords
     15. Quote identifiers with special characters (-, +) in data blocks
     15b. Expand tuple-only table rows: (a,b,c) vals → individual rows
+    15c. Expand multi-segment tuple row labels: a.(b,c).d, a.b.(c*e), etc.
     16. Normalize double commas to single commas
 
     Args:
@@ -2457,6 +2762,10 @@ def _preprocess_content(content: str) -> str:
     # Step 15b: Expand (a,b,c) tuple-only row labels in tables
     # Must run after normalize_special_identifiers (which quotes hyphenated IDs)
     content = expand_tuple_only_table_rows(content)
+
+    # Step 15c: Expand multi-segment tuple row labels: a.(b,c).d, a.b.(c*e), etc.
+    # Must run after 15b (tuple-only labels already handled, this handles the rest)
+    content = expand_multi_segment_tuple_row_labels(content)
 
     # Step 16: Normalize double commas to single commas (Issue #565)
     # This must happen after all other data normalization

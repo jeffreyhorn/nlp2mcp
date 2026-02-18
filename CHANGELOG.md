@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 9: Compound Set Data Complete + Model/Solve Issues - 2026-02-18
+
+**Branch:** `sprint19-day9-compound-set-model-solve`
+**Status:** COMPLETE
+
+#### Summary
+
+Completed compound set data grammar (Subcategory A Part 2): all 12 targeted models now
+pass the full pipeline. Confirmed all 15 Subcategory B cascading models already resolved
+by Day 8 root cause fixes. Subcategory I models all pass (mlbeta/mlgamma parse OK;
+loggamma differentiation is a mathematical limitation outside sprint scope).
+
+#### Preprocessor Changes (`src/ir/preprocessor.py`)
+
+- New `expand_multi_segment_tuple_row_labels()` (Step 15c): Expands table row labels
+  where parenthesized tuple/range groups appear at any position in a dot-separated path.
+  Handles patterns: `a.(b,c).d` → cross-product expansion; `a.b.(c*e)` → range
+  expansion in last segment; `a.(b,c).(d*f)` → nested cross-product with ranges.
+  Table-aware state machine (same pattern as Step 15b). Quote-aware tokenization with
+  3-case range-merge logic to correctly parse `'sch-1'*'sch-4'` adjacent quoted tokens.
+- Helper `_expand_gams_range(start, end)`: Expands `'sch-1'*'sch-4'` to
+  `['sch-1', 'sch-2', 'sch-3', 'sch-4']` via common-prefix + numeric-suffix detection.
+- Helper `_parse_label_group(group_str)`: Parses `(a,b,c)` or `(a*b)` groups;
+  handles ranges within groups.
+- Helper `_split_dotted_label_segments(label)`: Splits `a.(b,c).d` into
+  `[['a'], ['b','c'], ['d']]` with quote-aware paren/atom parsing.
+- Helper `_needs_multi_segment_expansion(label)`: Returns True if `.(` or `).` present.
+
+#### Models Newly Passing (Day 9)
+
+- `indus`: `cotton.(bullock,'semi-mech').standard.standard` multi-segment tuple labels
+- `sarf`: `alfalfa.(fertilize,spray).('sch-1'*'sch-4')` range in last tuple segment
+- `turkey`: table row label tuple expansion resolved the blocking parse error
+- `egypt`: outer-paren set members (grammar fix from Day 8 cascaded)
+- `srkandw`: range expression in set element (grammar fix from Day 8 cascaded)
+- `dinam`: resolved via cascading fixes
+- `tfordy`: resolved via cascading fixes
+- `sambal`: semantic error resolved
+- `mlbeta`, `mlgamma`: parse successfully (loggamma differentiation blocked — tracked)
+- All 15 Subcategory B cascading models: already resolved by Day 8
+
 ### Sprint 19 Day 8: Compound Set Data Grammar (Subcategory A, Part 1) - 2026-02-16
 
 **Branch:** `sprint19-day8-compound-set-data`

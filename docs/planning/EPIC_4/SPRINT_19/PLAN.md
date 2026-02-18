@@ -13,6 +13,7 @@
 **Day 6 Status:** COMPLETE (2026-02-17) — ISSUE_759+760 (abel domain fixes, PR #761); ISSUE_670 Part 2 (scalar path + static subsets, Checkpoint 1 GO); 3,475 tests pass
 **Day 7 Status:** COMPLETE (2026-02-17) — ISSUE_670 wrap-up (all 6 models translate cleanly, abel/qabel optimal); house model investigation (already solves, ta=4500; ISSUE_769 filed for pipeline false-mismatch bug)
 **Day 8 Status:** COMPLETE (2026-02-16) — Compound set data grammar (Subcategory A Part 1): 5/12 models now parsing (kand, paklive, marco, china, shale); grammar additions: range_expr in set_element_id_list, set_tuple_cross_expansion, set_members outer parens, tuple_cross_label + tuple_suffix_expansion_label in table_row_label; preprocessor: expand_tuple_only_table_rows, fix comment-skipping in normalize_multi_line_continuations look-ahead; 3,478 tests pass
+**Day 9 Status:** COMPLETE (2026-02-18) — Compound set data grammar (Subcategory A Part 2): all 12 Subcategory A models now pass pipeline; all 15 Subcategory B cascading models pass; Subcategory I: pdi, qsambal, mlbeta, mlgamma, sambal all pass (loggamma differentiation blocked but parse OK); preprocessor: expand_multi_segment_tuple_row_labels (Step 15c) handles a.(b,c).d / a.b.(c*e) patterns; 3,504 tests pass
 
 ---
 
