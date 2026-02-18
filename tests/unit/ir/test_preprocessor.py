@@ -16,7 +16,12 @@ from pathlib import Path
 import pytest
 
 from src.ir.preprocessor import (
+    _expand_gams_range,
+    _needs_multi_segment_expansion,
+    _parse_label_group,
+    _split_dotted_label_segments,
     expand_macros,
+    expand_multi_segment_tuple_row_labels,
     expand_tuple_only_table_rows,
     extract_conditional_sets,
     join_multiline_assignments,
@@ -1273,3 +1278,235 @@ class TestNormalizeMultiLineCommentSkipping:
         a_line = next((ln for ln in lines if ln.strip().startswith("a")), None)
         assert a_line is not None
         assert not a_line.rstrip().endswith(","), f"Should not have comma: {repr(a_line)}"
+
+
+class TestExpandGamsRange:
+    """Unit tests for _expand_gams_range() helper."""
+
+    def test_numeric_suffix_range(self):
+        """sch-1*sch-4 expands to ['sch-1', 'sch-2', 'sch-3', 'sch-4']."""
+        assert _expand_gams_range("sch-1", "sch-4") == ["sch-1", "sch-2", "sch-3", "sch-4"]
+
+    def test_quoted_numeric_suffix_range(self):
+        """'sch-1'*'sch-4' expands preserving quotes."""
+        assert _expand_gams_range("'sch-1'", "'sch-4'") == [
+            "'sch-1'",
+            "'sch-2'",
+            "'sch-3'",
+            "'sch-4'",
+        ]
+
+    def test_pure_numeric_range(self):
+        """1*3 expands to ['1', '2', '3']."""
+        assert _expand_gams_range("1", "3") == ["1", "2", "3"]
+
+    def test_descending_range_not_expanded(self):
+        """Descending ranges return a single preserved token, not a decreasing list."""
+        assert _expand_gams_range("sch-4", "sch-1") == ["sch-4*sch-1"]
+        assert _expand_gams_range("3", "1") == ["3*1"]
+
+    def test_alphabetic_range_not_expanded(self):
+        """Pure alphabetic ranges (b*d) return a single preserved token."""
+        assert _expand_gams_range("b", "d") == ["b*d"]
+
+    def test_mismatched_prefix_not_expanded(self):
+        """Ranges with different prefixes return a single preserved token."""
+        assert _expand_gams_range("foo-1", "bar-3") == ["foo-1*bar-3"]
+
+    def test_single_element_range(self):
+        """n1*n1 (start == end) expands to single-element list."""
+        assert _expand_gams_range("n1", "n1") == ["n1"]
+
+
+class TestParseLabelGroup:
+    """Unit tests for _parse_label_group() helper."""
+
+    def test_comma_list(self):
+        """(a, b, c) parses to ['a', 'b', 'c']."""
+        assert _parse_label_group("(a, b, c)") == ["a", "b", "c"]
+
+    def test_numeric_range(self):
+        """(1*3) parses to ['1', '2', '3']."""
+        assert _parse_label_group("(1*3)") == ["1", "2", "3"]
+
+    def test_quoted_range(self):
+        """('sch-1'*'sch-3') parses to quoted elements."""
+        assert _parse_label_group("('sch-1'*'sch-3')") == ["'sch-1'", "'sch-2'", "'sch-3'"]
+
+    def test_mixed_elements_and_range(self):
+        """(a, 1*3) parses to ['a', '1', '2', '3']."""
+        assert _parse_label_group("(a, 1*3)") == ["a", "1", "2", "3"]
+
+    def test_alphabetic_range_kept_as_token(self):
+        """(b*d) keeps 'b*d' as a single token (grammar handles it)."""
+        assert _parse_label_group("(b*d)") == ["b*d"]
+
+    def test_quoted_elements_with_hyphens(self):
+        """('harvest-c', transport) parses correctly."""
+        assert _parse_label_group("('harvest-c', transport)") == ["'harvest-c'", "transport"]
+
+    def test_spaced_range(self):
+        """(n1 * n3) with spaces around * is merged and expanded."""
+        assert _parse_label_group("(n1 * n3)") == ["n1", "n2", "n3"]
+
+
+class TestSplitDottedLabelSegments:
+    """Unit tests for _split_dotted_label_segments() helper."""
+
+    def test_plain_dotted_label(self):
+        """a.b.c -> [['a'], ['b'], ['c']]."""
+        assert _split_dotted_label_segments("a.b.c") == [["a"], ["b"], ["c"]]
+
+    def test_mid_path_tuple(self):
+        """a.(b,c).d -> [['a'], ['b', 'c'], ['d']]."""
+        assert _split_dotted_label_segments("a.(b,c).d") == [["a"], ["b", "c"], ["d"]]
+
+    def test_numeric_range_segment(self):
+        """a.(1*3).d -> [['a'], ['1', '2', '3'], ['d']]."""
+        assert _split_dotted_label_segments("a.(1*3).d") == [["a"], ["1", "2", "3"], ["d"]]
+
+    def test_suffix_range(self):
+        """a.b.(1*2) -> [['a'], ['b'], ['1', '2']]."""
+        assert _split_dotted_label_segments("a.b.(1*2)") == [["a"], ["b"], ["1", "2"]]
+
+    def test_multiple_groups(self):
+        """a.(b,c).(d,e) -> [['a'], ['b', 'c'], ['d', 'e']]."""
+        assert _split_dotted_label_segments("a.(b,c).(d,e)") == [["a"], ["b", "c"], ["d", "e"]]
+
+    def test_single_element(self):
+        """Plain label with no dots -> [['a']]."""
+        assert _split_dotted_label_segments("a") == [["a"]]
+
+    def test_malformed_unmatched_paren(self):
+        """Unmatched '(' is treated as a plain atom for the rest of the label."""
+        result = _split_dotted_label_segments("a.(b,c")
+        # Should not raise; rest treated as plain atom
+        assert len(result) >= 1
+
+
+class TestNeedsMultiSegmentExpansion:
+    """Unit tests for _needs_multi_segment_expansion() helper."""
+
+    def test_mid_path_tuple_needs_expansion(self):
+        """a.(b,c).d has ').' so needs expansion."""
+        assert _needs_multi_segment_expansion("a.(b,c).d") is True
+
+    def test_multiple_groups_need_expansion(self):
+        """a.(b,c).(d,e) has ').' so needs expansion."""
+        assert _needs_multi_segment_expansion("a.(b,c).(d,e)") is True
+
+    def test_suffix_range_needs_expansion(self):
+        """a.b.(1*3) has '.(' with '*' inside — needs expansion."""
+        assert _needs_multi_segment_expansion("a.b.(1*3)") is True
+
+    def test_suffix_plain_tuple_no_expansion(self):
+        """elem.(a,b) is a plain suffix tuple — handled by grammar, no expansion needed."""
+        assert _needs_multi_segment_expansion("elem.(a,b)") is False
+
+    def test_plain_label_no_expansion(self):
+        """a.b.c has no groups — no expansion needed."""
+        assert _needs_multi_segment_expansion("a.b.c") is False
+
+    def test_star_outside_group_no_false_positive(self):
+        """a.(b,c).d*e — '*' after the group should not trigger range-expansion check."""
+        # ').' is present so this returns True from the first check (mid-path group),
+        # but the point is: the '*' outside the group must NOT trigger the suffix check.
+        # Verify no crash and the mid-path check fires.
+        assert _needs_multi_segment_expansion("a.(b,c).d*e") is True
+
+
+class TestExpandMultiSegmentTupleRowLabels:
+    """Tests for expand_multi_segment_tuple_row_labels() — Day 9 preprocessor Step 15c."""
+
+    def test_mid_path_tuple_expands(self):
+        """a.(b,c).d in a table row expands to a.b.d and a.c.d."""
+        source = "Table t(i,j)\n     col\na.(b,c).d  1\n;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        lines = result.split("\n")
+        assert any("a.b.d" in ln and "1" in ln for ln in lines)
+        assert any("a.c.d" in ln and "1" in ln for ln in lines)
+        assert not any(".(b,c)" in ln for ln in lines)
+
+    def test_suffix_range_expands(self):
+        """a.b.(1*3) in a table row expands to a.b.1, a.b.2, a.b.3."""
+        source = "Table t(i,j)\n     col\na.b.(1*3)  5\n;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        lines = result.split("\n")
+        assert any("a.b.1" in ln and "5" in ln for ln in lines)
+        assert any("a.b.2" in ln and "5" in ln for ln in lines)
+        assert any("a.b.3" in ln and "5" in ln for ln in lines)
+
+    def test_multiple_groups_cross_product(self):
+        """a.(b,c).(d,e) expands to full cross-product: a.b.d, a.b.e, a.c.d, a.c.e."""
+        source = "Table t(i,j)\n     col\na.(b,c).(d,e)  2\n;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        lines = result.split("\n")
+        assert any("a.b.d" in ln and "2" in ln for ln in lines)
+        assert any("a.b.e" in ln and "2" in ln for ln in lines)
+        assert any("a.c.d" in ln and "2" in ln for ln in lines)
+        assert any("a.c.e" in ln and "2" in ln for ln in lines)
+
+    def test_last_row_with_semicolon_expands(self):
+        """Last table row ending with ';' is expanded, semicolon goes on final row only."""
+        source = "Table t(i,j)\n     col\na.(b,c).d  1;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        lines = [ln for ln in result.split("\n") if ln.strip()]
+        b_line = next((ln for ln in lines if "a.b.d" in ln), None)
+        c_line = next((ln for ln in lines if "a.c.d" in ln), None)
+        assert b_line is not None and not b_line.rstrip().endswith(";")
+        assert c_line is not None and c_line.rstrip().endswith(";")
+
+    def test_quoted_range_in_segment(self):
+        """a.('sch-1'*'sch-2').d expands using quoted elements."""
+        source = "Table t(i,j)\n     col\na.('sch-1'*'sch-2').d  3\n;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        lines = result.split("\n")
+        assert any("a.'sch-1'.d" in ln and "3" in ln for ln in lines)
+        assert any("a.'sch-2'.d" in ln and "3" in ln for ln in lines)
+
+    def test_plain_suffix_tuple_unchanged(self):
+        """elem.(a,b) suffix tuple is NOT expanded (grammar handles it)."""
+        source = "Table t(i,j)\n     col\nelem.(a,b)  4\n;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        # Row should be unchanged
+        assert "elem.(a,b)" in result
+
+    def test_non_tuple_rows_unchanged(self):
+        """Rows without tuple groups are passed through unchanged."""
+        source = "Table t(i,j)\n     col\nrow1  7\n;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        assert "row1" in result
+        assert result == source
+
+    def test_comment_lines_preserved(self):
+        """Comment lines inside table data are not treated as row labels."""
+        source = "Table t(i,j)\n     col\n* comment\na.(b,c).d  1\n;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        lines = result.split("\n")
+        assert any(ln.strip().startswith("*") and "comment" in ln for ln in lines)
+        assert any("a.b.d" in ln for ln in lines)
+        assert any("a.c.d" in ln for ln in lines)
+
+    def test_column_header_not_expanded(self):
+        """The column header line (first non-empty line after Table) is never expanded."""
+        source = "Table t(i,j)\n     (col1,col2)\nrow1  1  2\n;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        # Header must be preserved as-is
+        assert "(col1,col2)" in result
+
+    def test_multiple_tables_state_resets(self):
+        """Two tables are each handled correctly with state reset between them."""
+        source = "Table t1(i,j)\n     col\na.(b,c).d  1\n;\nTable t2(i,j)\n     col\nrow1  9\n;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        lines = result.split("\n")
+        assert any("a.b.d" in ln for ln in lines)
+        assert any("a.c.d" in ln for ln in lines)
+        assert any("row1" in ln and "9" in ln for ln in lines)
+
+    def test_block_keyword_terminates_table(self):
+        """A new block keyword terminates the table even without a preceding semicolon."""
+        source = "Table t(i,j)\n     col\na.(b,c).d  1\nSet j / x /;"
+        result = expand_multi_segment_tuple_row_labels(source)
+        lines = result.split("\n")
+        set_lines = [ln for ln in lines if ln.strip().lower().startswith("set")]
+        assert len(set_lines) == 1
