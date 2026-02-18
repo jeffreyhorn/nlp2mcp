@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import re
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from itertools import product
@@ -794,7 +794,10 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
     return tuple(indices), subset_name
 
 
-def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
+def _process_index_expr(
+    index_node: Tree,
+    expr_fn: Callable[[Tree], Expr] | None = None,
+) -> str | IndexOffset | SubsetIndex:
     """Process a single index_expr from grammar (Sprint 9 Day 3, Sprint 11 Day 2 Extended).
 
     Returns:
@@ -918,6 +921,29 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
     elif offset_node.data == "offset_variable":
         offset_name = _token_text(offset_node.children[0])
         offset_expr = SymbolRef(offset_name)
+    elif offset_node.data == "offset_func":
+        # Function call offset: t-ord(l), t+card(s), etc.
+        # Grammar: offset_func: func_call — the child is the func_call tree.
+        # _expr() handles "funccall" nodes whose child[0] is the func_call tree,
+        # so wrap the func_call in a synthetic funccall tree for _expr.
+        if expr_fn is None:
+            raise ParserSemanticError(
+                "offset_func requires an expr_fn to evaluate the function call; "
+                "call _process_index_expr with expr_fn=lambda n: self._expr(n, domain)"
+            )
+        func_call_node = offset_node.children[0]
+        funccall_node = Tree("funccall", [func_call_node])
+        offset_expr = expr_fn(funccall_node)
+    elif offset_node.data == "offset_paren":
+        # Parenthesized arithmetic offset: t-(ord(l)-1), t+(n-1), etc.
+        # Grammar: offset_paren: "(" expr ")" — inner child is the expr tree
+        if expr_fn is None:
+            raise ParserSemanticError(
+                "offset_paren requires an expr_fn to evaluate the inner expression; "
+                "call _process_index_expr with expr_fn=lambda n: self._expr(n, domain)"
+            )
+        inner_expr_node = offset_node.children[0]
+        offset_expr = expr_fn(inner_expr_node)
     else:
         raise ParserSemanticError(f"Unknown offset_expr type: {offset_node.data}")
 
@@ -944,10 +970,19 @@ def _process_index_expr(index_node: Tree) -> str | IndexOffset | SubsetIndex:
         raise ParserSemanticError(f"Unknown lag_lead_suffix type: {suffix_node.data}")
 
 
-def _process_index_list(node: Tree) -> tuple[str | IndexOffset | SubsetIndex, ...]:
+def _process_index_list(
+    node: Tree,
+    expr_fn: Callable[[Tree], Expr] | None = None,
+) -> tuple[str | IndexOffset | SubsetIndex, ...]:
     """Process index_list from grammar (Sprint 9 Day 3, Sprint 12 Issue #455).
 
     Handles plain identifiers, lag/lead indexed expressions, and subset indexing.
+
+    Args:
+        node: The index_list parse tree node.
+        expr_fn: Optional callable for evaluating arithmetic offset expressions
+            (offset_paren). Pass ``lambda n: self._expr(n, domain)`` from an
+            IRBuilder context to support offsets like ``t-(ord(l)-1)``.
 
     Returns tuple of str (plain ID), IndexOffset, or SubsetIndex objects.
     """
@@ -965,7 +1000,7 @@ def _process_index_list(node: Tree) -> tuple[str | IndexOffset | SubsetIndex, ..
             # New-style: index_expr tree (from index_list in references)
             # Sprint 11 Day 2: Grammar now produces index_simple and index_subset
             # Issue #566: Grammar now also produces index_string for quoted indices
-            indices.append(_process_index_expr(child))
+            indices.append(_process_index_expr(child, expr_fn))
         else:
             # Fallback for unknown nodes
             raise ParserSemanticError(f"Unknown index_list child: {child}")
@@ -4040,9 +4075,11 @@ class _ModelBuilder:
         if node.data == "symbol_indexed":
             name = _token_text(node.children[0])
             indices_node = node.children[1]
+            # Sprint 19 Day 13: pass expr_fn so offset_paren (t-(ord(l)-1)) is supported
+            _ef = lambda n: self._expr(n, free_domain)  # noqa: E731
             if name in self.model.variables or name in self.model.params:
                 # Use _process_index_list to handle i++1, i--2, etc. (Sprint 9)
-                indices = _process_index_list(indices_node)
+                indices = _process_index_list(indices_node, _ef)
                 return self._make_symbol(name, indices, free_domain, node)
             if name.lower() in _FUNCTION_NAMES:
                 args: list[Expr] = []
@@ -4054,7 +4091,7 @@ class _ModelBuilder:
                 expr = Call(name.lower(), tuple(args))
                 return self._attach_domain(expr, self._merge_domains(args, node))
             # Fallback for unknown symbols (use _process_index_list for i++1 support)
-            indices = _process_index_list(indices_node)
+            indices = _process_index_list(indices_node, _ef)
             return self._make_symbol(name, indices, free_domain, node)
 
         if node.data == "number":

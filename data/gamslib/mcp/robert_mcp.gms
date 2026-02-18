@@ -24,7 +24,7 @@ Sets
 
 Parameters
     a(r,p) /scrap.low 5.0, scrap.medium 3.0, scrap.high 1.0, new.low 1.0, new.medium 2.0, new.high 3.0/
-    c(p,t) /'1'.'expected profits' 2.0, low.'expected profits' 25.0, medium.'expected profits' 50.0, high.'expected profits' 75.0/
+    c(p,t) /low.'1' 25.0, low.'2' 20.0, low.'3' 10.0, medium.'1' 50.0, medium.'2' 50.0, medium.'3' 50.0, high.'1' 75.0, high.'2' 80.0, high.'3' 100.0/
     misc(*,r) /'max-stock'.scrap 400.0, 'max-stock'.new 275.0, 'storage-c'.scrap 0.5, 'storage-c'.new 2.0, 'res-value'.scrap 15.0, 'res-value'.new 25.0/
 ;
 
@@ -87,8 +87,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_s(r,tt).. ((-1) * (sum(p, 0) - misc("storage-c",r))) + ((-1) * (1 - sum(p, 0))) * nu_sb(r,tt) + sum(t, sum(p, 0) * lam_cc(t)) =E= 0;
-stat_x(p,tt).. ((-1) * (c(p,t) - sum(r, 0) + sum(r, 0))) + sum(r, a(r,p) * nu_sb(r,tt)) + sum(t, 1 * lam_cc(t)) =E= 0;
+stat_s(r,tt)$(t(tt)).. misc("storage-c",r) - nu_sb(r,tt) =E= 0;
+stat_x(p,tt)$(t(tt)).. ((-1) * c(p,tt)) + sum(r, a(r,p) * nu_sb(r,tt)) + sum(t, lam_cc(t)) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
@@ -97,6 +97,17 @@ comp_cc(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
 sb(r,tt)$(ord(tt) <= card(tt) - 1).. s(r,tt+1) =E= s(r,tt) - sum(p, a(r,p) * x(p,tt));
 pd.. profit =E= sum(t, sum(p, c(p,t) * x(p,t)) - sum(r, misc("storage-c",r) * s(r,t))) + sum(r, misc("res-value",r) * s(r,"4"));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+s.fx(r,tt)$(not (t(tt))) = 0;
+x.fx(p,tt)$(not (t(tt))) = 0;
+nu_sb.fx(r,tt)$(not (ord(tt) <= card(tt) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -124,3 +135,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = profit.l;
+Display nlp2mcp_obj_val;
