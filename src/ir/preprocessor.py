@@ -2333,6 +2333,7 @@ def _preprocess_content(content: str) -> str:
     13. Normalize multi-line continuations (add missing commas)
     14. Insert missing semicolons before block keywords
     15. Quote identifiers with special characters (-, +) in data blocks
+    15b. Expand tuple-only table rows: (a,b,c) vals → individual rows
     16. Normalize double commas to single commas
 
     Args:

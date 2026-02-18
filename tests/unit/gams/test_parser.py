@@ -6029,3 +6029,160 @@ class TestDoubleCommaSyntax:
             """)
         model = parser.parse_model_text(text)
         assert model.sets["i"].members == ["a", "b", "c"]
+
+
+class TestTupleSuffixExpansionLabel:
+    """Tests for tuple_suffix_expansion_label in table row labels (Issue #773)."""
+
+    def test_simple_suffix_expansion_label(self):
+        """Test table row label with dot-suffix expansion: elem.(a,b)."""
+        text = dedent("""
+            Set i / crop1, crop2 /;
+            Set j / tech1, tech2 /;
+            Parameter p(i,j)
+            / crop1.tech1 10
+              crop1.tech2 20
+              crop2.tech1 30
+              crop2.tech2 40 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("crop1", "tech1")] == 10.0
+        assert model.params["p"].values[("crop1", "tech2")] == 20.0
+        assert model.params["p"].values[("crop2", "tech1")] == 30.0
+        assert model.params["p"].values[("crop2", "tech2")] == 40.0
+
+    def test_table_tuple_suffix_expansion_label(self):
+        """Test table with dot-suffix expansion row label: elem.(a,b) (marco.gms pattern).
+
+        The label sorghum.(bullock,semi-mech) expands to two replicated rows
+        sorghum.bullock and sorghum.semi-mech, each with the same column values.
+        """
+        text = dedent("""
+            Set i / sorghum /;
+            Set j / bullock, semi-mech /;
+            Table t(i,j)
+                         col1   col2
+            sorghum.(bullock,semi-mech)
+            +               100         200
+            ;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["t"].values[("sorghum.bullock", "col1")] == 100.0
+        assert model.params["t"].values[("sorghum.bullock", "col2")] == 200.0
+        assert model.params["t"].values[("sorghum.semi-mech", "col1")] == 100.0
+        assert model.params["t"].values[("sorghum.semi-mech", "col2")] == 200.0
+
+    def test_suffix_expansion_with_quoted_elements(self):
+        """Test dot-suffix expansion with quoted hyphenated set elements."""
+        text = dedent("""
+            Set i / item1 /;
+            Set j / 'a-1', 'b-2' /;
+            Parameter p(i,j)
+            / item1.'a-1' 5
+              item1.'b-2' 6 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("item1", "a-1")] == 5.0
+        assert model.params["p"].values[("item1", "b-2")] == 6.0
+
+
+class TestSetTupleCrossExpansion:
+    """Tests for set_tuple_cross_expansion in set member parsing (Issue #773)."""
+
+    def test_cross_product_set_members(self):
+        """Test (a,b).(c,d) cross-product expansion in set data."""
+        text = dedent("""
+            Set s / (a,b).(c,d) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert set(model.sets["s"].members) == {"a.c", "a.d", "b.c", "b.d"}
+
+    def test_cross_product_with_three_left(self):
+        """Test cross-product with three elements on left side."""
+        text = dedent("""
+            Set s / (x,y,z).(p,q) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert set(model.sets["s"].members) == {"x.p", "x.q", "y.p", "y.q", "z.p", "z.q"}
+
+    def test_cross_product_mixed_with_plain_members(self):
+        """Test cross-product expansion mixed with plain set members."""
+        text = dedent("""
+            Set s / a.b, (c,d).(e,f) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "a.b" in model.sets["s"].members
+        assert "c.e" in model.sets["s"].members
+        assert "c.f" in model.sets["s"].members
+        assert "d.e" in model.sets["s"].members
+        assert "d.f" in model.sets["s"].members
+
+
+class TestParseSetElementIdListRangeAndNumber:
+    """Tests for _parse_set_element_id_list with range_expr and NUMBER (Issue #773)."""
+
+    def test_range_expr_in_tuple_expansion(self):
+        """Test range_expr inside tuple expansion list: (n-1*n-3)."""
+        text = dedent("""
+            Set n / n-1, n-2, n-3, n-4 /;
+            Parameter p(n) / (n-1*n-3) 7 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("n-1",)] == 7.0
+        assert model.params["p"].values[("n-2",)] == 7.0
+        assert model.params["p"].values[("n-3",)] == 7.0
+        assert ("n-4",) not in model.params["p"].values
+
+    def test_number_elements_in_tuple_expansion(self):
+        """Test NUMBER elements in tuple expansion list: (1971,1974)."""
+        text = dedent("""
+            Set yr / 1970, 1971, 1972, 1973, 1974 /;
+            Parameter p(yr) / (1971,1974) 99 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("1971",)] == 99.0
+        assert model.params["p"].values[("1974",)] == 99.0
+        assert ("1970",) not in model.params["p"].values
+        assert ("1972",) not in model.params["p"].values
+
+    def test_mixed_range_and_number_in_tuple(self):
+        """Test range_expr mixed with plain elements in tuple expansion."""
+        text = dedent("""
+            Set n / n-1, n-2, n-3, n-4, n-5 /;
+            Parameter p(n) / (n-1, n-3*n-5) 3 /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["p"].values[("n-1",)] == 3.0
+        assert model.params["p"].values[("n-3",)] == 3.0
+        assert model.params["p"].values[("n-4",)] == 3.0
+        assert model.params["p"].values[("n-5",)] == 3.0
+        assert ("n-2",) not in model.params["p"].values
+
+
+class TestOuterParenSetMembers:
+    """Tests for outer-paren set_members wrapping (Issue #773)."""
+
+    def test_outer_paren_set_members(self):
+        """Test set data wrapped in outer parens: Set s / (a, b, c) /."""
+        text = dedent("""
+            Set s / (a, b, c) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["s"].members == ["a", "b", "c"]
+
+    def test_outer_paren_with_descriptions(self):
+        """Test outer-paren set members with element descriptions."""
+        text = dedent("""
+            Set s / (a 'first', b 'second') /;
+            """)
+        model = parser.parse_model_text(text)
+        assert "a" in model.sets["s"].members
+        assert "b" in model.sets["s"].members
+
+    def test_outer_paren_single_member(self):
+        """Test outer-paren wrapping a single set member."""
+        text = dedent("""
+            Set s / (a) /;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.sets["s"].members == ["a"]
