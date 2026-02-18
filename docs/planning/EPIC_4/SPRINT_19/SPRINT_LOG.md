@@ -619,21 +619,32 @@ Subcategory A models newly parsing: indus, sarf, turkey, egypt, srkandw, dinam, 
 
 ## Day 12 — IndexOffset AD Integration (Part 1)
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-18
+**Time Spent:** ~2h
 
 ### PR Entries
 
-_(To be filled during Day 12)_
+- **PR #XXX** — Sprint 19 Day 12: IndexOffset AD Integration (Part 1)
+  - AD: Added `IndexOffset` to imports in `src/ad/derivative_rules.py`
+  - AD: Added `_substitute_index()` helper to substitute `str | IndexOffset` entries in index tuples
+  - AD: Extended `_apply_index_substitution()` — VarRef/ParamRef now correctly substitute `IndexOffset` bases during sum-collapse; added `DollarConditional` branch (was previously a fall-through)
+  - Tests: 23 new unit tests in `tests/unit/ad/test_index_offset_ad.py` (22 pass, 1 xfail for sum-collapse-with-IndexOffset-wrt — Day 13 work)
+  - No parse rate change (AD-only fix); 3,576 tests pass
+
+### Decisions
+
+- Sum collapse with `IndexOffset` in `wrt_indices` requires extending `_is_concrete_instance_of()` to accept `IndexOffset` — deferred to Day 13 (tracked via `xfail` test)
+- `DollarConditional` was a silent fall-through in `_apply_index_substitution`; fixed as part of this work
+- `_substitute_index()` only substitutes the `base` field of `IndexOffset`; the `offset` (e.g., `Const(1)`) is a numeric displacement, not a sum index
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 12 |
 |--------|----------|--------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 | 105/158 (unchanged) |
+| lexer_invalid_char | 72 | 27 (unchanged) |
+| internal_error | 24 | 6 (unchanged) |
+| Test count | 3,294 | **3,576** |
 
 ---
 
