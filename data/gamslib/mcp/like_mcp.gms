@@ -21,7 +21,7 @@ Sets
 ;
 
 Parameters
-    data(*,i) /pressure.'1' 175.0, pressure.'2' 180.0, pressure.'3' 185.0, pressure.'4' 190.0, pressure.'5' 195.0, pressure.'6' 200.0, pressure.'7' 205.0, pressure.'8' 210.0, pressure.'9' 215.0, pressure.'10' 220.0, pressure.'11' 225.0, pressure.'12' 230.0, pressure.'13' 235.0, pressure.'14' 240.0, pressure.'15' 245.0, frequency.'1' 8.0, frequency.'2' 6.0, frequency.'3' 6.0, frequency.'4' 7.0, frequency.'5' 4.0, frequency.'6' 3.0, frequency.'7' 3.0, frequency.'8' 8.0, frequency.'9' 1.0, frequency.'10' 6.0, frequency.'11' 0.0, frequency.'12' 5.0, frequency.'13' 1.0, frequency.'14' 7.0, frequency.'15' 1.0, '16'.'1' 17.0, '16'.'2' 18.0, '16'.'3' 19.0, '16'.'4' 20.0, '16'.'5' 21.0, '16'.'6' 22.0, '16'.'7' 23.0, '16'.'8' 24.0, '16'.'10' 25.0, '16'.'11' 26.0, '16'.'12' 27.0, '16'.'13' 28.0, '16'.'14' 29.0, '16'.'15' 30.0, '16'.'9' 31.0/
+    data(*,i) /pressure.'1' 95.0, pressure.'2' 105.0, pressure.'3' 110.0, pressure.'4' 115.0, pressure.'5' 120.0, pressure.'6' 125.0, pressure.'7' 130.0, pressure.'8' 135.0, pressure.'9' 140.0, pressure.'10' 145.0, pressure.'11' 150.0, pressure.'12' 155.0, pressure.'13' 160.0, pressure.'14' 165.0, pressure.'15' 170.0, frequency.'1' 1.0, frequency.'2' 1.0, frequency.'3' 4.0, frequency.'4' 4.0, frequency.'5' 15.0, frequency.'6' 15.0, frequency.'7' 15.0, frequency.'8' 13.0, frequency.'9' 21.0, frequency.'10' 12.0, frequency.'11' 17.0, frequency.'12' 4.0, frequency.'13' 20.0, frequency.'14' 8.0, frequency.'15' 17.0, pressure.'16' 175.0, pressure.'17' 180.0, pressure.'18' 185.0, pressure.'19' 190.0, pressure.'20' 195.0, pressure.'21' 200.0, pressure.'22' 205.0, pressure.'23' 210.0, pressure.'24' 215.0, pressure.'25' 220.0, pressure.'26' 225.0, pressure.'27' 230.0, pressure.'28' 235.0, pressure.'29' 240.0, pressure.'30' 245.0, pressure.'31' 260.0, frequency.'16' 8.0, frequency.'17' 6.0, frequency.'18' 6.0, frequency.'19' 7.0, frequency.'20' 4.0, frequency.'21' 3.0, frequency.'22' 3.0, frequency.'23' 8.0, frequency.'24' 1.0, frequency.'25' 6.0, frequency.'26' 0.0, frequency.'27' 5.0, frequency.'28' 1.0, frequency.'29' 7.0, frequency.'30' 1.0, frequency.'31' 2.0/
     y(i)
     w(i)
 ;
@@ -152,3 +152,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = mlf.l;
+Display nlp2mcp_obj_val;

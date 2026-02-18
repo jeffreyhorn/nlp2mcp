@@ -84,7 +84,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_outp(g,m).. pcost(g,m) + 1 * nu_dem(g) + 1 / prate(g,m) ** 1 * lam_cap(m) =E= 0;
+stat_outp(g,m).. pcost(g,m) + nu_dem(g) + 1 / prate(g,m) ** 1 * lam_cap(m) =E= 0;
 
 * Inequality complementarity equations
 comp_cap(m).. ((-1) * (sum(g, outp(g,m) / prate(g,m)) - avail(m))) =G= 0;
@@ -119,3 +119,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = profit.l;
+Display nlp2mcp_obj_val;

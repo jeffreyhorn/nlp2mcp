@@ -138,6 +138,7 @@ scalar_item: SYMBOL_NAME STRING "/" scalar_data_items "/" (ASSIGN expr)?  -> sca
            | SYMBOL_NAME "/" scalar_data_items "/" (ASSIGN expr)?         -> scalar_with_data
            | SYMBOL_NAME STRING ASSIGN expr                               -> scalar_with_assign
            | SYMBOL_NAME ASSIGN expr                                      -> scalar_with_assign
+           | SYMBOL_NAME STRING                                           -> scalar_plain
            | SYMBOL_NAME                                                  -> scalar_plain
 
 // For single scalar declarations: allow optional description (quoted STRING or unquoted DESC_TEXT)
@@ -207,22 +208,29 @@ var_single_item: var_kind? ID "(" id_list ")" (STRING | desc_text)? -> var_item_
 var_item: var_kind? ID "(" id_list ")" STRING?               -> var_item_indexed
         | var_kind? ID STRING?                               -> var_item_scalar
 
-var_kind: POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K | FREE_K
+var_kind: POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K | FREE_K | NONNEGATIVE_K
 
-POSITIVE_K: /(?i:positive)\b/
-NEGATIVE_K: /(?i:negative)\b/
-BINARY_K  : /(?i:binary)\b/
-INTEGER_K : /(?i:integer)\b/
-FREE_K    : /(?i:free)\b/
+POSITIVE_K   : /(?i:positive)\b/
+NEGATIVE_K   : /(?i:negative)\b/
+BINARY_K     : /(?i:binary)\b/
+INTEGER_K    : /(?i:integer)\b/
+FREE_K       : /(?i:free)\b/
+NONNEGATIVE_K: /(?i:nonnegative)\b/
 
 // NOTE: eqn_head_domain_list allows comma-separated equation names with domains,
 // e.g., "Equations eq1, eq2(i,j);". This is NOT valid GAMS syntax according to
 // the official specification, but we handle it gracefully to support user error recovery.
 // Updated for Sprint 11 Day 1: Support nested/subset indexing like defdist(low(n,nn))
-eqn_head_decl: id_list "(" domain_list ")" (STRING | DESCRIPTION)?  -> eqn_head_domain_list
-             | ID "(" domain_list ")" (STRING | DESCRIPTION)?       -> eqn_head_domain
-             | id_list (STRING | DESCRIPTION)?                      -> eqn_head_list
-             | ID (STRING | DESCRIPTION)?                           -> eqn_head_scalar
+// Sprint 19 Day 11: Added mixed_eqn_list for equations with individual domains per name,
+// e.g., "Equation lpcons(i), defdual(j);" — each name can have its own domain.
+eqn_head_item: ID "(" domain_list ")"   -> eqn_head_item_domain
+             | ID                       -> eqn_head_item_scalar
+
+eqn_head_decl: eqn_head_item ("," eqn_head_item)+ (STRING | DESCRIPTION)?  -> eqn_head_mixed_list
+             | id_list "(" domain_list ")" (STRING | DESCRIPTION)?          -> eqn_head_domain_list
+             | ID "(" domain_list ")" (STRING | DESCRIPTION)?               -> eqn_head_domain
+             | id_list (STRING | DESCRIPTION)?                              -> eqn_head_list
+             | ID (STRING | DESCRIPTION)?                                   -> eqn_head_scalar
 
 alias_opt : "(" id_list ")"                                  -> alias_domain
 id_list: ID ("," ID)*
@@ -355,8 +363,12 @@ lag_lead_suffix: CIRCULAR_LEAD offset_expr   -> circular_lead
                | PLUS offset_expr            -> linear_lead
                | MINUS offset_expr           -> linear_lag
 
+// Sprint 19 Day 11: Added func_call and paren_expr to support arithmetic in index offsets
+// e.g., w(m+floor((ord(n)-1)/k), n) where floor(...) is the offset expression
 offset_expr: NUMBER                          -> offset_number
            | ID                              -> offset_variable
+           | func_call                       -> offset_func
+           | "(" expr ")"                   -> offset_paren
 
 CIRCULAR_LEAD: "++"
 CIRCULAR_LAG: "--"
@@ -382,6 +394,7 @@ condition: DOLLAR "(" expr ")"
          | DOLLAR "[" expr "]"
          | DOLLAR cond_bound
          | DOLLAR ref_indexed
+         | DOLLAR NUMBER
          | DOLLAR ID
 
 // Bare dollar conditional bound access — restricted to BOUND_K attributes (.lo, .up, .fx, .l, .m)
@@ -656,6 +669,8 @@ symbol_plain: ID
      | func_call                          -> funccall
      | sum_expr
      | prod_expr
+     | smax_expr
+     | smin_expr
      | compile_time_const                 -> compile_const
      | ref_bound
      | ref_indexed
@@ -675,6 +690,14 @@ sum_expr: SUM_K "(" sum_domain "," expr ")"   -> sum
 prod_expr: PROD_K "(" sum_domain "," expr ")"   -> prod
          | PROD_K "{" sum_domain "," expr "}"   -> prod
 
+// Sprint 19 Day 11: smax/smin as aggregation functions with index domain support
+// Handles both smax(i, expr) [simple domain] and smax((i,j), expr) [tuple domain]
+smax_expr: SMAX_K "(" sum_domain "," expr ")"   -> smax
+         | SMAX_K "{" sum_domain "," expr "}"   -> smax
+
+smin_expr: SMIN_K "(" sum_domain "," expr ")"   -> smin
+         | SMIN_K "{" sum_domain "," expr "}"   -> smin
+
 sum_domain: index_spec
           | "(" index_spec ")"  -> tuple_domain
           | "(" index_spec ")" DOLLAR expr           -> tuple_domain_cond
@@ -691,7 +714,10 @@ arg_list: expr ("," expr)*
 // Tokens & basics
 // ---------------------------
 
-FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|smin|smax|power|signpower|sqr|ord|card|uniform|normal|gamma|loggamma|psi|round|mod|ceil|floor|sameas)\b/
+FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|power|signpower|sqr|ord|card|uniform|normal|gamma|loggamma|psi|round|mod|ceil|floor|sameas)\b/
+// Sprint 19 Day 11: smax/smin moved out of FUNCNAME to support aggregation index domain syntax
+SMAX_K: /(?i:smax)\b/
+SMIN_K: /(?i:smin)\b/
 IF_K: /(?i:if)\b/
 ELSEIF_K: /(?i:elseif)\b/
 ELSE_K: /(?i:else)\b/

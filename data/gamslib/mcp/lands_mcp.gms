@@ -16,26 +16,27 @@ $offText
 * ============================================
 
 Sets
-    i /p1, p2, p3/
-    genchar /a, b, c, upplim, lowlim/
-    cg(genchar) /a, b, c/
-    s /'min-loss', s1, s2, s3, s4, 'min-cost'/
-    st(s) /s1, s2, s3, s4/
+    i /'plant-1', 'plant-2', 'plant-3', 'plant-4'/
+    j /'mode-1', 'mode-2', 'mode-3'/
+    s /'s-1', 's-2', 's-3'/
 ;
 
-Alias(i, j);
-
 Parameters
-    gendata(i,genchar) /p1.a 213.1, p1.b 11.669, p1.c 0.00533, p1.upplim 200.0, p1.lowlim 50.0, p2.a 200.0, p2.b 10.333, p2.c 0.00889, p2.upplim 150.0, p2.lowlim 37.5, p3.a 240.0, p3.b 10.833, p3.c 0.00741, p3.upplim 180.0, p3.lowlim 45.0/
-    pexp(cg) /a 0.0, b 1.0, c 2.0/
-    b(i,j) /p1.p1 0.0676, p1.p2 0.00953, p1.p3 -0.00507, p2.p1 0.00953, p2.p2 0.0521, p2.p3 0.00901, p3.p1 -0.00507, p3.p2 0.00901, p3.p3 0.0294/
-    b0(i) /p1 -0.0766, p2 -0.00342, p3 0.0189/
+    c(i) /'plant-1' 10.0, 'plant-2' 7.0, 'plant-3' 16.0, 'plant-4' 6.0/
+    d(j) /'mode-1' nan, 'mode-2' 3.0, 'mode-3' 2.0/
+    f(i,j) /'plant-1'.'mode-1' 40.0, 'plant-1'.'mode-2' 24.0, 'plant-1'.'mode-3' 4.0, 'plant-2'.'mode-1' 45.0, 'plant-2'.'mode-2' 27.0, 'plant-2'.'mode-3' 4.5, 'plant-3'.'mode-1' 32.0, 'plant-3'.'mode-2' 19.2, 'plant-3'.'mode-3' 3.2, 'plant-4'.'mode-1' 55.0, 'plant-4'.'mode-2' 33.0, 'plant-4'.'mode-3' 5.5/
+    dvar(s) /'s-1' 3.0, 's-2' 5.0, 's-3' 7.0/
+    prob(s) /'s-1' 0.3, 's-2' 0.4, 's-3' 0.3/
+    ds(j,s)
 ;
 
 Scalars
-    b00 /0.040357/
-    demand /210.0/
+    m /12.0/
+    b /120.0/
 ;
+
+ds(j,s) = d(j);
+ds("mode-1",s) = dvar(s);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -49,14 +50,19 @@ Scalars
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    loss
     cost
-    nu_costfn
+    nu_defcosts
 ;
 
 Positive Variables
-    p(i)
-    lam_demcons
+    x(i)
+    y(i,j)
+    ys(i,j,s)
+    lam_mincap
+    lam_powbal(i)
+    lam_dembal(j)
+    lam_powbals(i,s)
+    lam_dembals(j,s)
 ;
 
 * ============================================
@@ -68,7 +74,9 @@ Positive Variables
 * non-zero initial values.
 * POSITIVE variables are set to 1.
 
-p.l(i) = 1;
+x.l(i) = 1;
+y.l(i,j) = 1;
+ys.l(i,j,s) = 1;
 
 * ============================================
 * Equations
@@ -79,11 +87,16 @@ p.l(i) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_cost
-    stat_p(i)
-    comp_demcons
-    costfn
-    lossfn
+    stat_x(i)
+    stat_y(i,j)
+    stat_ys(i,j,s)
+    comp_dembal(j)
+    comp_dembals(j,s)
+    comp_mincap
+    comp_powbal(i)
+    comp_powbals(i,s)
+    defcost
+    defcosts
 ;
 
 * ============================================
@@ -91,15 +104,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. nu_costfn =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons =E= 0;
+stat_x(i).. c(i) + ((-1) * c(i)) * nu_defcosts - lam_mincap - lam_powbal(i) + sum(s, (-1) * lam_powbals(i,s)) =E= 0;
+stat_y(i,j).. f(i,j) + lam_powbal(i) - lam_dembal(j) =E= 0;
+stat_ys(i,j,s).. ((-1) * (prob(s) * f(i,j))) * nu_defcosts + lam_powbals(i,s) - lam_dembals(j,s) =E= 0;
 
 * Inequality complementarity equations
-comp_demcons.. sum(i, p(i)) - (demand + loss) =G= 0;
+comp_dembal(j).. sum(i, y(i,j)) - d(j) =G= 0;
+comp_dembals(j,s).. sum(i, ys(i,j,s)) - ds(j,s) =G= 0;
+comp_mincap.. sum(i, x(i)) - m =G= 0;
+comp_powbal(i).. ((-1) * (sum(j, y(i,j)) - x(i))) =G= 0;
+comp_powbals(i,s).. ((-1) * (sum(j, ys(i,j,s)) - x(i))) =G= 0;
 
 * Original equality equations
-costfn.. cost =E= sum((i,cg), gendata(i,cg) * power(p(i), pexp(cg)));
-lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * p(j)) / 100;
+defcost.. cost =E= sum(i, c(i) * x(i)) + sum((i,j), f(i,j) * y(i,j));
+defcosts.. cost =E= sum(i, c(i) * x(i)) + sum((i,j,s), prob(s) * f(i,j) * ys(i,j,s));
 
 
 * ============================================
@@ -116,11 +134,16 @@ lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * 
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_cost.cost,
-    stat_p.p,
-    comp_demcons.lam_demcons,
-    costfn.nu_costfn,
-    lossfn.loss
+    stat_x.x,
+    stat_y.y,
+    stat_ys.ys,
+    comp_dembal.lam_dembal,
+    comp_dembals.lam_dembals,
+    comp_mincap.lam_mincap,
+    comp_powbal.lam_powbal,
+    comp_powbals.lam_powbals,
+    defcost.cost,
+    defcosts.nu_defcosts
 /;
 
 * ============================================
@@ -130,5 +153,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = loss.l;
+nlp2mcp_obj_val = cost.l;
 Display nlp2mcp_obj_val;

@@ -62,6 +62,15 @@ Positive Variables
 v.l(alloy) = 1;
 
 * ============================================
+* Post-solve Calibration (variable .l references)
+* ============================================
+
+$onImplicitAssign
+report(alloy,"blend-1") = v.l(alloy);
+report(alloy,"blend-2") = v.l(alloy);
+$offImplicitAssign
+
+* ============================================
 * Equations
 * ============================================
 
@@ -81,7 +90,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_v(alloy).. compdat("price",alloy) + sum(elem, compdat(elem,alloy) * nu_pc(elem)) + 1 * nu_mb =E= 0;
+stat_v(alloy).. compdat("price",alloy) + sum(elem, compdat(elem,alloy) * nu_pc(elem)) + nu_mb =E= 0;
 
 * Original equality equations
 pc(elem).. sum(alloy, compdat(elem,alloy) * v(alloy)) =E= rb(elem);
@@ -114,3 +123,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = phi.l;
+Display nlp2mcp_obj_val;

@@ -7,6 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 11: Declaration/Syntax Gaps (Subcategory F) + Checkpoint 2 - 2026-02-18
+
+**Branch:** `sprint19-day11-declaration-gaps-checkpoint2`
+**Status:** COMPLETE — Checkpoint 2: GO (66.5% parse rate)
+
+#### Summary
+
+Fixed 6 grammar/preprocessor gaps in Subcategory F (imsl, qdemo7, robustlp, solveopt, tricp,
+wall). qdemo7 was already parsing (recursion-limit-only issue). The remaining 5 models needed
+a combination of grammar additions, preprocessor fixes, and a recursion limit increase.
+
+Parse rate jumped from ~60% (Day 10 estimate) to **66.5%** (105/158), exceeding the Day 11
+target of 55%. All Checkpoint 2 criteria satisfied.
+
+#### Grammar Changes (`src/gams/gams_grammar.lark`)
+
+- **`NONNEGATIVE_K` terminal**: Added `nonnegative` as a valid `var_kind` modifier, enabling
+  `Nonnegative Variables so4, baoh, ...;` declarations. Fixes wall.gms.
+
+- **`eqn_head_mixed_list`**: New `eqn_head_item` rule and `eqn_head_mixed_list` alternative
+  in `eqn_head_decl` supports equations where each name carries its own domain, e.g.,
+  `Equation lpcons(i), defdual(j);`. Fixes robustlp.gms, solveopt.gms.
+
+- **`smax_expr`/`smin_expr`**: Moved `smax`/`smin` out of `FUNCNAME` into dedicated
+  aggregation grammar rules using `sum_domain`. This supports tuple index domains as first
+  argument: `smax((i,kp), fx(i,kp))`. Fixes tricp.gms.
+
+- **`DOLLAR NUMBER` condition**: Added `DOLLAR NUMBER` alternative to the `condition` rule
+  for equation definitions, supporting patterns like `e3(i)$0 ..`. Fixes solveopt.gms.
+
+- **`offset_expr` extended**: Added `func_call` and `"(" expr ")"` alternatives to
+  `offset_expr` so arithmetic expressions work as index offsets, e.g.,
+  `w(m+floor((ord(n)-1)/k), n)`. Fixes imsl.gms.
+
+- **`scalar_item` description**: Added `SYMBOL_NAME STRING -> scalar_plain` to allow
+  descriptions in multi-scalar list items, e.g., `k 'n / m',`. Fixes imsl.gms.
+
+#### IR Builder Changes (`src/ir/parser.py`)
+
+- **`eqn_head_mixed_list` handler**: Added handling for new `eqn_head_mixed_list`,
+  `eqn_head_item_domain`, and `eqn_head_item_scalar` tree nodes in `_handle_equations()`.
+
+- **`_handle_smin_smax()` method**: New method to handle `smin`/`smax` tree nodes produced
+  by the new dedicated grammar rules. Extracts domain from `sum_domain` node and produces
+  a `Call` node for IR fidelity.
+
+#### Preprocessor Changes (`src/ir/preprocessor.py`)
+
+- **`$onEchoV`/`$offEcho` block stripping**: Added to `strip_unsupported_directives()`.
+  Content between these directives is non-GAMS data (raw PostScript etc.) and must be
+  stripped entirely. Also handles `$onEcho` variant. Fixes tricp.gms.
+
+- **`$onEps`/`$offEps` directive stripping**: Strip the directive lines only — content
+  between them is normal GAMS code (just changes epsilon display mode). Fixes tricp.gms.
+
+- **Slash-in-quoted-string fix**: `normalize_special_identifiers()` now counts only
+  unquoted slashes (`re.sub(r"'[^']*'|\"[^\"]*\"", "", line)`) when deciding whether a
+  line opens/closes a data block. Previously, `'n / m'` in a scalar description falsely
+  opened a data block, causing subsequent lines to be incorrectly quoted. Fixes imsl.gms.
+
+#### CLI Changes (`src/cli.py`)
+
+- **Recursion limit 10000→50000**: Increased `required_limit` for models with deeply
+  nested expression trees. imsl.gms requires >10000 recursion depth. Fixes imsl.gms.
+
+#### Results
+
+- **wall.gms**: ✅ SUCCESS (Nonnegative Variables)
+- **robustlp.gms**: ✅ SUCCESS (per-equation domains)
+- **solveopt.gms**: ✅ SUCCESS (per-equation domains + $0 condition)
+- **tricp.gms**: ✅ SUCCESS (smax tuple domain + $onEchoV stripping)
+- **imsl.gms**: ✅ SUCCESS (scalar desc + slash fix + offset_expr + recursion limit)
+- **qdemo7.gms**: ✅ SUCCESS (already passing — no changes needed)
+- Full pipeline: 105/158 parse (66.5%) — up from ~99/158 estimated at Day 10
+- Test suite: 3,553 passed, 10 skipped, 1 xfailed (zero regressions)
+
+---
+
 ### Sprint 19 Day 10: Table Parsing Fix (ISSUE_392/399) + Subset Verification - 2026-02-16
 
 **Branch:** `sprint19-day10-table-parsing-subset`

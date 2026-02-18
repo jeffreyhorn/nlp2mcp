@@ -16,25 +16,31 @@ $offText
 * ============================================
 
 Sets
-    i /p1, p2, p3/
-    genchar /a, b, c, upplim, lowlim/
-    cg(genchar) /a, b, c/
-    s /'min-loss', s1, s2, s3, s4, 'min-cost'/
-    st(s) /s1, s2, s3, s4/
+    g /g1, g2/
+    dl /h, m, l/
+    stoch /out, pro/
+    omega1 /o11, o12/
+    omega2 /o21, o22/
 ;
 
-Alias(i, j);
-
 Parameters
-    gendata(i,genchar) /p1.a 213.1, p1.b 11.669, p1.c 0.00533, p1.upplim 200.0, p1.lowlim 50.0, p2.a 200.0, p2.b 10.333, p2.c 0.00889, p2.upplim 150.0, p2.lowlim 37.5, p3.a 240.0, p3.b 10.833, p3.c 0.00741, p3.upplim 180.0, p3.lowlim 45.0/
-    pexp(cg) /a 0.0, b 1.0, c 2.0/
-    b(i,j) /p1.p1 0.0676, p1.p2 0.00953, p1.p3 -0.00507, p2.p1 0.00953, p2.p2 0.0521, p2.p3 0.00901, p3.p1 -0.00507, p3.p2 0.00901, p3.p3 0.0294/
-    b0(i) /p1 -0.0766, p2 -0.00342, p3 0.0189/
+    alpha(g) /g1 0.68, g2 0.64/
+    ccmin(g) /g1 1000.0, g2 1000.0/
+    ccmax(g) /g1 10000.0, g2 10000.0/
+    c(g) /g1 4.0, g2 2.5/
+    f(g,dl) /g1.h 4.3, g1.m 2.0, g1.l 0.5, g2.h 8.7, g2.m 4.0, g2.l 1.0/
+    d(dl) /h 1040.0, m 1040.0, l 1040.0/
+    us(dl) /h 10.0, m 10.0, l 10.0/
+    v1(stoch,omega1) /out.o11 2.1, out.o12 1.0, pro.o11 0.5, pro.o12 0.5/
+    v2(stoch,omega2) /out.o21 2.0, out.o22 1.0, pro.o21 0.2, pro.o22 0.8/
+    hm1(dl) /h 300.0, m 400.0, l 200.0/
+    hm2(dl) /h 100.0, m 150.0, l 300.0/
 ;
 
 Scalars
-    b00 /0.040357/
-    demand /210.0/
+    h1 /0.0/
+    ccost /0.0/
+    ocost /0.0/
 ;
 
 * ============================================
@@ -49,14 +55,17 @@ Scalars
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    loss
-    cost
-    nu_costfn
+    tcost
 ;
 
 Positive Variables
-    p(i)
-    lam_demcons
+    x(g)
+    y(g,dl)
+    s(dl)
+    lam_cmin(g)
+    lam_cmax(g)
+    lam_omax(g)
+    lam_demand(dl)
 ;
 
 * ============================================
@@ -68,7 +77,18 @@ Positive Variables
 * non-zero initial values.
 * POSITIVE variables are set to 1.
 
-p.l(i) = 1;
+x.l(g) = 1;
+y.l(g,dl) = 1;
+s.l(dl) = 1;
+
+* ============================================
+* Post-solve Calibration (variable .l references)
+* ============================================
+
+$onImplicitAssign
+ccost = sum(g, c(g) * x.l(g));
+ocost = tcost.l - ccost;
+$offImplicitAssign
 
 * ============================================
 * Equations
@@ -79,11 +99,14 @@ p.l(i) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_cost
-    stat_p(i)
-    comp_demcons
-    costfn
-    lossfn
+    stat_s(dl)
+    stat_x(g)
+    stat_y(g,dl)
+    comp_cmax(g)
+    comp_cmin(g)
+    comp_demand(dl)
+    comp_omax(g)
+    cost
 ;
 
 * ============================================
@@ -91,15 +114,18 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. nu_costfn =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons =E= 0;
+stat_s(dl).. us(dl) - lam_demand(dl) =E= 0;
+stat_x(g).. c(g) - lam_cmin(g) + lam_cmax(g) + ((-1) * alpha(g)) * lam_omax(g) =E= 0;
+stat_y(g,dl).. f(g,dl) + lam_omax(g) - lam_demand(dl) =E= 0;
 
 * Inequality complementarity equations
-comp_demcons.. sum(i, p(i)) - (demand + loss) =G= 0;
+comp_cmax(g).. ((-1) * (x(g) - ccmax(g))) =G= 0;
+comp_cmin(g).. x(g) - ccmin(g) =G= 0;
+comp_demand(dl).. sum(g, y(g,dl)) + s(dl) - d(dl) =G= 0;
+comp_omax(g).. ((-1) * (sum(dl, y(g,dl)) - alpha(g) * x(g))) =G= 0;
 
 * Original equality equations
-costfn.. cost =E= sum((i,cg), gendata(i,cg) * power(p(i), pexp(cg)));
-lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * p(j)) / 100;
+cost.. tcost =E= sum(g, c(g) * x(g)) + sum(g, sum(dl, f(g,dl) * y(g,dl))) + sum(dl, us(dl) * s(dl));
 
 
 * ============================================
@@ -116,11 +142,14 @@ lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * 
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_cost.cost,
-    stat_p.p,
-    comp_demcons.lam_demcons,
-    costfn.nu_costfn,
-    lossfn.loss
+    stat_s.s,
+    stat_x.x,
+    stat_y.y,
+    comp_cmax.lam_cmax,
+    comp_cmin.lam_cmin,
+    comp_demand.lam_demand,
+    comp_omax.lam_omax,
+    cost.tcost
 /;
 
 * ============================================
@@ -130,5 +159,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = loss.l;
+nlp2mcp_obj_val = tcost.l;
 Display nlp2mcp_obj_val;

@@ -60,7 +60,7 @@ Scalars
     aconst /0.0/
     bconst /0.0/
     ninit /0.0/
-    tol /0.0/
+    tol /0.3/
 ;
 
 bsyr(inityrs) = 1$(ord(inityrs) = 1);
@@ -325,3 +325,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = utility.l;
+Display nlp2mcp_obj_val;

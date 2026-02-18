@@ -161,7 +161,9 @@ def main(
     # WARNING: sys.setrecursionlimit() affects the entire Python process globally,
     # not just this function. This could impact multi-threaded applications.
     original_limit = sys.getrecursionlimit()
-    required_limit = 10000
+    # Sprint 19 Day 11: Increased from 10000 to 50000 to handle deeply nested models
+    # (e.g., imsl.gms with complex nested expressions requires >10000)
+    required_limit = 50000
     if required_limit > original_limit:
         sys.setrecursionlimit(required_limit)
 

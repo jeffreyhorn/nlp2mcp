@@ -82,6 +82,15 @@ y.l(g,dl) = 1;
 s.l(dl) = 1;
 
 * ============================================
+* Post-solve Calibration (variable .l references)
+* ============================================
+
+$onImplicitAssign
+ccost = sum(g, c(g) * x.l(g));
+ocost = tcost.l - ccost;
+$offImplicitAssign
+
+* ============================================
 * Equations
 * ============================================
 
@@ -105,9 +114,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_s(dl).. 2 * sum(g, 0) + us(dl) + sum(g, 0 * lam_cmin(g)) + sum(g, 0 * lam_cmax(g)) + sum(g, 0 * lam_omax(g)) + ((-1) * (sum(g, 0) + 1)) * lam_demand(dl) =E= 0;
-stat_x(g).. c(g) + 2 * sum(dl, 0) + (-1) * lam_cmin(g) + 1 * lam_cmax(g) + (sum(dl, 0) - alpha(g)) * lam_omax(g) + sum(dl, 0 * lam_demand(dl)) =E= 0;
-stat_y(g,dl).. f(g,dl) + 0 * lam_cmin(g) + 0 * lam_cmax(g) + 1 * lam_omax(g) + (-1) * lam_demand(dl) =E= 0;
+stat_s(dl).. us(dl) - lam_demand(dl) =E= 0;
+stat_x(g).. c(g) - lam_cmin(g) + lam_cmax(g) + ((-1) * alpha(g)) * lam_omax(g) =E= 0;
+stat_y(g,dl).. f(g,dl) + lam_omax(g) - lam_demand(dl) =E= 0;
 
 * Inequality complementarity equations
 comp_cmax(g).. ((-1) * (x(g) - ccmax(g))) =G= 0;
@@ -148,3 +157,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = tcost.l;
+Display nlp2mcp_obj_val;
