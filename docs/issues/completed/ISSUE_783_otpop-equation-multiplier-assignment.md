@@ -1,6 +1,9 @@
 # Parser: Equation Multiplier Assignment (eqname.m = value) Not Supported
 
-**Status:** OPEN
+**Status:** FIXED (2026-02-18)
+**Fixed In:** `sprint19-day14-fix-issues-780-784`
+**Fix:** Added early-return in `_apply_variable_bound()` (`src/ir/parser.py`) when the identifier is a known equation name (`self._declared_equations`). Equation attribute assignments (`.m`, `.l`) are post-solve bookkeeping irrelevant to MCP formulation.
+**Verified:** `otpop.gms` now parses successfully (10 equations). All 3,579 tests pass.
 **Severity:** Low — blocks parse of otpop.gms; `eqname.m` assignments appear post-solve in reporting code and do not affect the optimization model
 **Date:** 2026-02-18
 **Affected Models:** otpop.gms

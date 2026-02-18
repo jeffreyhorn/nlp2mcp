@@ -922,18 +922,24 @@ def _process_index_expr(
         offset_name = _token_text(offset_node.children[0])
         offset_expr = SymbolRef(offset_name)
     elif offset_node.data == "offset_func":
-        # Function call offset: t-ord(l), t+card(s), etc.
-        # Grammar: offset_func: func_call — the child is the func_call tree.
-        # _expr() handles "funccall" nodes whose child[0] is the func_call tree,
-        # so wrap the func_call in a synthetic funccall tree for _expr.
+        # Function call or indexed parameter offset: t-ord(l), t+li(k), etc.
+        # Grammar: offset_func maps from either func_call or ref_indexed.
+        # - func_call: wrap in synthetic funccall node for _expr() dispatch
+        # - symbol_indexed (ref_indexed): pass directly to _expr()
         if expr_fn is None:
             raise ParserSemanticError(
                 "offset_func requires an expr_fn to evaluate the function call; "
                 "call _process_index_expr with expr_fn=lambda n: self._expr(n, domain)"
             )
-        func_call_node = offset_node.children[0]
-        funccall_node = Tree("funccall", [func_call_node])
-        offset_expr = expr_fn(funccall_node)
+        inner_node = offset_node.children[0]
+        if inner_node.data == "symbol_indexed":
+            # Issue #780: ref_indexed (e.g., li(k)) maps to symbol_indexed —
+            # pass directly to _expr() since it handles symbol_indexed natively
+            offset_expr = expr_fn(inner_node)
+        else:
+            # func_call: _expr() handles "funccall" whose child[0] is func_call
+            funccall_node = Tree("funccall", [inner_node])
+            offset_expr = expr_fn(funccall_node)
     elif offset_node.data == "offset_paren":
         # Parenthesized arithmetic offset: t-(ord(l)-1), t+(n-1), etc.
         # Grammar: offset_paren: "(" expr ")" — inner child is the expr tree
@@ -1302,10 +1308,12 @@ class _ModelBuilder:
             )
 
         base_start = match_start.group(1)
-        num_start = int(match_start.group(2))
+        num_str_start = match_start.group(2)
+        num_start = int(num_str_start)
 
         base_end = match_end.group(1)
-        num_end = int(match_end.group(2))
+        num_str_end = match_end.group(2)
+        num_end = int(num_str_end)
 
         # Validate same base prefix
         if base_start != base_end:
@@ -1321,7 +1329,13 @@ class _ModelBuilder:
                 f"Invalid range: start index {num_start} is greater than end index {num_end}", node
             )
 
+        # Issue #782: Preserve leading-zero width from the start bound.
+        # e.g. a01*a24 → a01, a02, ..., a24 (not a1, a2, ..., a24)
+        width = len(num_str_start) if num_str_start.startswith("0") else 0
+
         # Generate symbolic range
+        if width:
+            return [f"{base_start}{i:0{width}d}" for i in range(num_start, num_end + 1)]
         return [f"{base_start}{i}" for i in range(num_start, num_end + 1)]
 
     def _process_alias_pair(self, pair_node: Tree) -> None:
@@ -3886,23 +3900,24 @@ class _ModelBuilder:
 
         # Handle sum_domain which can be index_spec, tuple_domain, or tuple_domain_cond
         condition_expr = None
-        condition_node = None  # Track source node for re-evaluation in body_domain
+        condition_node = None  # Track source node for deferred evaluation in body_domain
         if sum_domain_node.data == "tuple_domain":
             index_spec_node = sum_domain_node.children[0]
         elif sum_domain_node.data == "tuple_domain_cond":
-            # Issue #718: (index_spec)$expr — dollar condition outside tuple parens
+            # Issue #718 / #784: (index_spec)$expr — dollar condition outside tuple parens.
+            # Do NOT evaluate condition here with free_domain — all sum indices (which are
+            # not yet in free_domain) must be in scope for the condition. Defer evaluation
+            # to after body_domain is computed below.
             index_spec_node = sum_domain_node.children[0]
             condition_node = sum_domain_node.children[2]
-            condition_expr = self._expr(condition_node, free_domain)
         else:
             index_spec_node = sum_domain_node.children[0]
 
         index_list_node = index_spec_node.children[0]
 
         # Check if there's a conditional (DOLLAR expr) inside index_spec
-        if condition_expr is None and len(index_spec_node.children) > 1:
+        if condition_node is None and len(index_spec_node.children) > 1:
             condition_node = index_spec_node.children[2]
-            condition_expr = self._expr(condition_node, free_domain)
 
         if index_list_node.data == "id_list":
             indices = _id_list(index_list_node)
@@ -3974,8 +3989,10 @@ class _ModelBuilder:
             if not (x in seen or seen.add(x))  # type: ignore[func-returns-value]
         )
 
-        # Re-evaluate condition in body_domain if present
-        if condition_expr is not None and condition_node is not None:
+        # Evaluate condition in body_domain (all sum indices in scope).
+        # condition_node is set but condition_expr intentionally left None until now
+        # so that deferred evaluation (Issue #784) uses the fully-expanded body_domain.
+        if condition_node is not None:
             condition_expr = self._expr(condition_node, body_domain)
 
         body = self._expr(node.children[2], body_domain)
@@ -4271,6 +4288,30 @@ class _ModelBuilder:
                 object.__setattr__(expr, "attribute", attribute)
                 return self._attach_domain(expr, free_domain)
             return expr
+
+        # Issue #781: Set ordinal attribute accessors (set.first, set.last, set.pos, set.ord)
+        # tl.first  → ord(tl) == 1          (boolean: 1 when tl is first element)
+        # tl.last   → ord(tl) == card(tl)   (boolean: 1 when tl is last element)
+        # tl.ord    → ord(tl)               (same as ord(tl))
+        # tl.pos    → ord(tl)               (same as ord(tl), GAMS synonym)
+        _SET_ORDINAL_ATTRS = {"first", "last", "pos", "ord"}
+        if node.data == "set_attr" or (
+            node.data == "attr_access"
+            and len(node.children) == 2
+            and _token_text(node.children[1]).lower() in _SET_ORDINAL_ATTRS
+        ):
+            set_name = _token_text(node.children[0])
+            attr = _token_text(node.children[1]).lower()
+            ord_call = Call("ord", (SymbolRef(set_name),))
+            if attr == "first":
+                expr = Binary("==", ord_call, Const(1.0))
+            elif attr == "last":
+                card_call = Call("card", (SymbolRef(set_name),))
+                expr = Binary("==", ord_call, card_call)
+            else:
+                # .ord and .pos are synonyms for ord(set)
+                expr = ord_call
+            return self._attach_domain(expr, free_domain)
 
         # Support compile-time constants: %identifier% or %path.to.value%
         if node.data == "compile_const":
@@ -5069,6 +5110,10 @@ class _ModelBuilder:
         value: float,
         node: Tree | Token,
     ) -> None:
+        if name.lower() in self._declared_equations:
+            # Issue #783: equation attribute assignments (.m, .l) are post-solve
+            # bookkeeping (marginal/level initial values) — no-op for MCP purposes
+            return
         if name not in self.model.variables:
             raise self._error(
                 f"Bounds reference unknown variable '{name}'",

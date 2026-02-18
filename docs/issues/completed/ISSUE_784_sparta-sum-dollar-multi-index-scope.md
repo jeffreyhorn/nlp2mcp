@@ -1,6 +1,9 @@
 # Parser: Multi-Index Sum Dollar Condition Scope (sum((i,j)$cond, ...) — Index Not In Scope
 
-**Status:** OPEN
+**Status:** FIXED (2026-02-18)
+**Fixed In:** `sprint19-day14-fix-issues-780-784`
+**Fix:** In `_handle_aggregation()` (`src/ir/parser.py`), the `tuple_domain_cond` branch previously evaluated the dollar condition immediately with `free_domain` (before sum indices were in scope). Changed to defer condition evaluation: save `condition_node` without evaluating, then let the existing re-evaluation at the bottom of the method use `body_domain` (which includes all sum indices). Also unified the `index_spec` internal dollar condition to the same deferred pattern.
+**Verified:** `sparta.gms` now parses successfully (5 equations). All 3,579 tests pass.
 **Severity:** Medium — blocks parse of sparta.gms; same pattern may affect other models with multi-variable sum dollar conditions
 **Date:** 2026-02-18
 **Affected Models:** sparta.gms

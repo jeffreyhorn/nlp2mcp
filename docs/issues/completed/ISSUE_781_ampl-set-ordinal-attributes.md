@@ -1,6 +1,9 @@
 # Parser: Set Ordinal Attribute Syntax (set.first, set.last) Not Supported
 
-**Status:** OPEN
+**Status:** FIXED (2026-02-18)
+**Fixed In:** `sprint19-day14-fix-issues-780-784`
+**Fix:** Added `SET_ATTR_K` terminal (`/first|last|pos|ord/i`) and `set_attr: ID "." SET_ATTR_K` grammar rule to `gams_grammar.lark`. Added `set_attr` to both `atom` (for expression contexts) and `condition` (for `$set.attr` dollar conditions). In `_expr()` (`src/ir/parser.py`), added handler for `set_attr` node: `first` → `ord(set)==1`, `last` → `ord(set)==card(set)`, `pos`/`ord` → `ord(set)`. Also handles `attr_access` nodes where attribute is a set ordinal keyword (grammar sometimes resolves `tl.last` as `attr_access` via `ref_bound`).
+**Verified:** `ampl.gms` now parses successfully (3 equations). All 3,579 tests pass.
 **Severity:** Medium — blocks parse of ampl.gms; same pattern may affect other models using GAMS set attribute accessors
 **Date:** 2026-02-18
 **Affected Models:** ampl.gms
