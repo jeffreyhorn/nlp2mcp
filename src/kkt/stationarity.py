@@ -1266,8 +1266,24 @@ def _replace_matching_indices(
                         # alias (e.g., j aliasing i) collapses and both positions of
                         # a parameter like a("agricult","agricult") should map to the
                         # same equation-domain index "i", not to the alias "j".
+                        # Issue #766: Do NOT apply this override when target_set is a
+                        # subset of a set in the equation domain — in that case the
+                        # narrower declared domain is intentional (e.g. c(p,t) declared
+                        # over t which is a subset of tt in stat_x(p,tt)).
+                        target_is_subset_of_eq_domain = False
+                        if equation_domain and model_ir and target_set not in equation_domain:
+                            target_set_def = model_ir.sets.get(target_set)
+                            if (
+                                target_set_def
+                                and hasattr(target_set_def, "domain")
+                                and target_set_def.domain
+                            ):
+                                eq_domain_lower = {s.lower() for s in equation_domain}
+                                if any(p.lower() in eq_domain_lower for p in target_set_def.domain):
+                                    target_is_subset_of_eq_domain = True
                         if (
-                            equation_domain
+                            not target_is_subset_of_eq_domain
+                            and equation_domain
                             and idx in element_to_set
                             and element_to_set[idx] in equation_domain
                             and target_set not in equation_domain

@@ -1,7 +1,7 @@
 # Robert MCP: GAMS Error 171 — Subset/Superset Index Mismatch in stat_x
 
 **GitHub Issue:** [#766](https://github.com/jeffreyhorn/nlp2mcp/issues/766)
-**Status:** OPEN
+**Status:** FIXED (Sprint 19 Day 14)
 **Severity:** High — MCP generates but GAMS reports Error 171 (domain violation), aborting solve
 **Date:** 2026-02-16
 **Affected Models:** robert
@@ -153,3 +153,50 @@ domain `t` instead of `tt`. Then `c(p,t)` and `sum(t, lam_cc(t))` are both valid
 - **ISSUE_759**: stat_u domain restriction — similar subset detection mechanism
 - The fix for this issue may generalize to other models where parameter domains use
   subset indices while variable domains use the superset
+
+---
+
+## Fix Applied (Sprint 19 Day 14)
+
+**Root Cause:** In `_replace_matching_indices()` (`src/kkt/stationarity.py`), the Issue #730
+override was incorrectly applying when `target_set` (from the parameter's declared domain) is a
+**subset** of a set in the equation domain. The condition checked:
+
+```python
+if (equation_domain and idx in element_to_set
+    and element_to_set[idx] in equation_domain
+    and target_set not in equation_domain):
+    new_indices.append(element_to_set[idx])   # Wrong: substitutes superset tt for t
+```
+
+For `c(p,t)` with declared domain `('p','t')` in `stat_x(p,tt)`:
+- `target_set = 't'` (declared domain at position 1)
+- `element_to_set[idx] = 'tt'` (from x's instances over `tt`)
+- `'tt' in ('p','tt')` → True, `'t' not in ('p','tt')` → True
+- So `'tt'` was substituted → `c(p,tt)` — GAMS Error 171 domain violation
+
+The Issue #730 logic was designed for alias sets (where the declared domain name is an alias
+of an equation-domain set). It should NOT apply when `target_set` is a proper subset of an
+equation-domain set, since the parameter is intentionally declared over the narrower set.
+
+**Fix:** Added a guard that checks if `target_set` is a subset of any set in the equation domain.
+If so, skip the #730 override and keep `target_set`:
+
+```python
+# Issue #766: Do NOT apply this override when target_set is a subset of a set
+# in the equation domain — the narrower declared domain is intentional.
+target_is_subset_of_eq_domain = False
+if equation_domain and model_ir and target_set not in equation_domain:
+    target_set_def = model_ir.sets.get(target_set)
+    if target_set_def and hasattr(target_set_def, "domain") and target_set_def.domain:
+        eq_domain_lower = {s.lower() for s in equation_domain}
+        if any(p.lower() in eq_domain_lower for p in target_set_def.domain):
+            target_is_subset_of_eq_domain = True
+if not target_is_subset_of_eq_domain and ...:
+    new_indices.append(element_to_set[idx])
+else:
+    new_indices.append(target_set)
+```
+
+**Result:** `stat_x(p,tt)$(t(tt))..` now correctly references `c(p,t)` instead of `c(p,tt)`.
+Robert model generates a valid MCP file without GAMS Error 171.

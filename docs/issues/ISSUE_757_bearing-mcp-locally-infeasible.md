@@ -1,7 +1,7 @@
 # Bearing Model MCP is Locally Infeasible (PATH Solver Model Status 5)
 
 **GitHub Issue:** [#757](https://github.com/jeffreyhorn/nlp2mcp/issues/757)
-**Status:** OPEN
+**Status:** OPEN — Not fixable in Sprint 19 (requires .scale emission support; non-convex solver issue)
 **Severity:** Medium — MCP generates correctly; solver cannot find KKT solution due to non-convexity
 **Date:** 2026-02-16
 

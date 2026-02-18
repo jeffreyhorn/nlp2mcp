@@ -1,7 +1,7 @@
 # Mexss MCP: Locally Infeasible Due to Inconsistent Stationarity Equations for Accounting Variables
 
 **GitHub Issue:** [#764](https://github.com/jeffreyhorn/nlp2mcp/issues/764)
-**Status:** OPEN
+**Status:** OPEN — Not fixable in Sprint 19 (requires KKT architectural changes for accounting/auxiliary variables)
 **Severity:** High — MCP generates and compiles, but PATH solver reports locally infeasible
 **Date:** 2026-02-16
 **Affected Models:** mexss
