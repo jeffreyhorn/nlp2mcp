@@ -39,7 +39,7 @@ loggamma differentiation is a mathematical limitation outside sprint scope).
 
 - `indus`: `cotton.(bullock,'semi-mech').standard.standard` multi-segment tuple labels
 - `sarf`: `alfalfa.(fertilize,spray).('sch-1'*'sch-4')` range in last tuple segment
-- `turkey`: table column header tuple group resolved by Step 15c expansion
+- `turkey`: table row label tuple expansion resolved the blocking parse error
 - `egypt`: outer-paren set members (grammar fix from Day 8 cascaded)
 - `srkandw`: range expression in set element (grammar fix from Day 8 cascaded)
 - `dinam`: resolved via cascading fixes

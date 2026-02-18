@@ -37,6 +37,7 @@ from .ast import (
 )
 from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import (
+    expand_multi_segment_tuple_row_labels,
     expand_tuple_only_table_rows,
     normalize_double_commas,
     normalize_multi_line_continuations,
@@ -279,6 +280,10 @@ def parse_text(source: str) -> Tree:
     # Day 8: Expand (a,b,c) tuple-only row labels in tables to individual rows.
     # Must run after normalize_special_identifiers.
     source = expand_tuple_only_table_rows(source)
+
+    # Day 9: Expand multi-segment tuple/range row labels: a.(b,c).d, a.b.(c*e), etc.
+    # Must run after expand_tuple_only_table_rows (Step 15b).
+    source = expand_multi_segment_tuple_row_labels(source)
 
     parser = _build_lark()
     try:

@@ -2209,11 +2209,13 @@ def _expand_gams_range(start: str, end: str) -> list[str]:
     if m_s and m_e and m_s.group(1) == m_e.group(1):
         prefix = m_s.group(1)
         lo, hi = int(m_s.group(2)), int(m_e.group(2))
-        step = 1 if hi >= lo else -1
+        # Do not expand descending ranges — semantics are ambiguous
+        if hi < lo:
+            return [f"{start}*{end}"]
         # Preserve original quoting style if elements had quotes
         quoted = start.strip().startswith("'")
         elems = []
-        for n in range(lo, hi + step, step):
+        for n in range(lo, hi + 1):
             elem = f"{prefix}{n}"
             elems.append(f"'{elem}'" if quoted else elem)
         return elems
@@ -2222,20 +2224,24 @@ def _expand_gams_range(start: str, end: str) -> list[str]:
     m_ne = _re.match(r"^(\d+)$", e)
     if m_ns and m_ne:
         lo, hi = int(s), int(e)
-        step = 1 if hi >= lo else -1
-        return [str(n) for n in range(lo, hi + step, step)]
-    return [start, end]
+        # Do not expand descending ranges — semantics are ambiguous
+        if hi < lo:
+            return [f"{start}*{end}"]
+        return [str(n) for n in range(lo, hi + 1)]
+    # Cannot expand — return as a single token so it remains parseable by grammar
+    return [f"{start}*{end}"]
 
 
 def _parse_label_group(group_str: str) -> list[str]:
-    """Parse a parenthesized group like (a,b,c) or (a*b) into a list of elements.
+    """Parse a parenthesized group like (a,b,c) or (1*3) into a list of elements.
 
     Handles:
     - Comma-separated lists: (a, b, c) -> ['a', 'b', 'c']
-    - Range expressions: (a*b) -> expanded range elements
-    - Mixed: (a, b*c) -> ['a', ...expanded b*c...]
-    - Quoted ranges: ('sch-1'*'sch-4') -> ["'sch-1'", "'sch-2'", "'sch-3'", "'sch-4'"]
-    - Quoted strings: ('sch-1', 'sch-2') -> ["'sch-1'", "'sch-2'"]
+    - Numeric / numeric-suffix range expressions: (1*3) -> ['1', '2', '3']
+      and ('sch-1'*'sch-4') -> ["'sch-1'", "'sch-2'", "'sch-3'", "'sch-4'"]
+    - Mixed: (a, 1*3) -> ['a', '1', '2', '3']
+    - Pure alphabetic ranges (e.g. a*d) are NOT expanded — they are kept as
+      a single token (a*d) so the grammar's range_expr rule can handle them.
     """
     inner = group_str.strip()
     if inner.startswith("(") and inner.endswith(")"):
@@ -2291,9 +2297,9 @@ def _split_dotted_label_segments(label: str) -> list[list[str]]:
     a single-element list; parenthesized groups yield multiple alternatives.
 
     Example:
-        'a.(b,c).d' -> [['a'], ['b', 'c'], ['d']]
-        'a.(b*d).e' -> [['a'], ['b', 'c', 'd'], ['e']]
-        'a.b.c'     -> [['a'], ['b'], ['c']]
+        'a.(b,c).d'   -> [['a'], ['b', 'c'], ['d']]
+        'a.(1*3).d'   -> [['a'], ['1', '2', '3'], ['d']]
+        'a.b.c'       -> [['a'], ['b'], ['c']]
     """
     segments: list[list[str]] = []
     i = 0
@@ -2344,13 +2350,37 @@ def _split_dotted_label_segments(label: str) -> list[list[str]]:
 
 
 def _needs_multi_segment_expansion(label: str) -> bool:
-    """Return True if label contains a parenthesized tuple/range in non-final or any position."""
-    # Has a '(' anywhere that's not at the very start of the string
-    # (pure tuple-only labels starting with '(' are handled by expand_tuple_only_table_rows)
-    # We want: any label where a '.' is followed by a '(' (mid or end position tuple)
-    # or a '(' is followed by a '.' (leading tuple with more segments after)
-    if ".(" in label or ")." in label:
+    """Return True if label requires preprocessor expansion (not handled by grammar alone).
+
+    The grammar's tuple_suffix_expansion_label already handles plain elem.(a,b) suffixes
+    (comma lists at the end of a dotted path). Step 15c only needs to expand:
+      1. Mid-path tuples: a.(b,c).d  — has ').' after the group
+      2. Multiple groups:  a.(b,c).(d,e) — has both '.(' and ').'
+      3. Range expressions inside a suffix group: a.(b*d) — grammar doesn't expand ranges
+
+    Cases NOT requiring Step 15c (grammar handles them):
+      - elem.(a,b)   — suffix-only plain tuple list (no ').' after the group)
+    """
+    if ")." in label:
+        # Mid-path or multiple groups — always needs expansion
         return True
+    if ".(" in label:
+        # Suffix group — only needs expansion if it contains a range expression
+        # Find the '(' and check if there's a '*' inside the group
+        idx = label.index(".(")
+        rest = label[idx + 1 :]  # from '(' onward
+        # Find the matching close paren
+        depth = 0
+        for ch in rest:
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+        group_content = rest  # may not find close paren, conservative
+        if "*" in group_content:
+            return True
     return False
 
 
@@ -2402,17 +2432,24 @@ def expand_multi_segment_tuple_row_labels(source: str) -> str:
                 result.append(line)
                 continue
 
-            # Terminate on semicolon
-            if _has_statement_ending_semicolon(line):
+            # Handle last line: attempt expansion BEFORE terminating, mirroring
+            # expand_tuple_only_table_rows so the final row (which ends with ';')
+            # can still be expanded.
+            is_last_line = _has_statement_ending_semicolon(line)
+            if is_last_line:
                 in_table = False
-                result.append(line)
-                continue
+                semi_pos = _find_statement_semicolon_pos(line)
+                line_no_semi = line[:semi_pos] if semi_pos >= 0 else line
+                stripped_no_semi = line_no_semi.strip()
+            else:
+                line_no_semi = line
+                stripped_no_semi = stripped
 
-            if table_header_seen and stripped and not stripped.startswith("*"):
+            if table_header_seen and stripped_no_semi and not stripped_no_semi.startswith("*"):
                 # Extract the row label — everything before the first run of whitespace+number
                 # The label is the leading non-space part, values follow whitespace
                 # Match: optional indent, then the label (up to first whitespace-number sequence)
-                m = re.match(r"^(\s*)(\S+)(.*)", line)
+                m = re.match(r"^(\s*)(\S+)(.*)", line_no_semi)
                 if m:
                     indent = m.group(1)
                     label = m.group(2)
@@ -2429,8 +2466,12 @@ def expand_multi_segment_tuple_row_labels(source: str) -> str:
                                     for prev in expanded
                                     for opt in seg
                                 ]
-                            for exp_label in expanded:
-                                result.append(f"{indent}{exp_label}{rest}")
+                            for i_exp, exp_label in enumerate(expanded):
+                                # Append ';' only to the last row if this was the last line
+                                suffix = (
+                                    ";" if (is_last_line and i_exp == len(expanded) - 1) else ""
+                                )
+                                result.append(f"{indent}{exp_label}{rest}{suffix}")
                             continue
 
             result.append(line)
