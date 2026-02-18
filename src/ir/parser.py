@@ -3989,8 +3989,10 @@ class _ModelBuilder:
             if not (x in seen or seen.add(x))  # type: ignore[func-returns-value]
         )
 
-        # Re-evaluate condition in body_domain if present
-        if condition_expr is not None and condition_node is not None:
+        # Evaluate condition in body_domain (all sum indices in scope).
+        # condition_node is set but condition_expr intentionally left None until now
+        # so that deferred evaluation (Issue #784) uses the fully-expanded body_domain.
+        if condition_node is not None:
             condition_expr = self._expr(condition_node, body_domain)
 
         body = self._expr(node.children[2], body_domain)
@@ -5108,7 +5110,7 @@ class _ModelBuilder:
         value: float,
         node: Tree | Token,
     ) -> None:
-        if name in self._declared_equations:
+        if name.lower() in self._declared_equations:
             # Issue #783: equation attribute assignments (.m, .l) are post-solve
             # bookkeeping (marginal/level initial values) — no-op for MCP purposes
             return
