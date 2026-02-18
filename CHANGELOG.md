@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 8: Compound Set Data Grammar (Subcategory A, Part 1) - 2026-02-16
+
+**Branch:** `sprint19-day8-compound-set-data`
+**Status:** COMPLETE
+
+#### Summary
+
+Implemented dot-separated compound key syntax (Subcategory A) for GAMS models using
+tuple/cross-product set element notation. 5 of 12 targeted models now parse (kand,
+paklive, marco, china, shale). Remaining 7 deferred to Day 9.
+
+**Key finding:** `tuple_only_label` `(a,b)` as grammar rule for table row labels causes
+fatal ambiguity with `Table data(i,j)` domain declarations. Solved via preprocessor
+expansion instead.
+
+#### Grammar Changes (`src/gams/gams_grammar.lark`)
+
+- `set_element_id_or_string`: Added `range_expr | NUMBER` support, enabling `(n-1*n-3)` in tuple expansion (srkandw/kand)
+- `set_member`: Added `set_tuple_cross_expansion` — `(a,b).(c,d)` cross-product in set data (marco)
+- `set_members`: Added outer-paren wrapping alternative `"(" set_member+ ")"` for `/(...)/` style (egypt)
+- `table_row_label`: Added `tuple_cross_label` — `(a,b).(c,d)` cross-product row labels (paklive)
+- `table_row_label`: Added `tuple_suffix_expansion_label` — `elem.(a,b)` suffix-expansion row labels
+
+#### Preprocessor Changes (`src/ir/preprocessor.py`)
+
+- New `expand_tuple_only_table_rows()` (Step 15b): Expands `(a,b,c) vals` table rows to individual rows before grammar parsing. Handles `;`-terminated last rows. (china, shale/tfordy partial)
+- Fixed `normalize_multi_line_continuations` look-ahead: Changed `lines[i+1]` checks to loop skipping comment lines (`* ...`) between parameter data entries (shale param data)
+
+#### Parser Changes (`src/ir/parser.py`)
+
+- Added `tuple_cross_label` handler in table row label map building + token collection
+- Added `tuple_suffix_expansion_label` handler in table row label map building + token collection
+- Added `expand_tuple_only_table_rows` to inline `parse_text` normalization pipeline
+- Updated `_parse_set_element_id_list` to handle `range_expr` expansion and `NUMBER` tokens
+
+#### Models Newly Parsing
+
+- `kand`: `time-1.(n-1*n-3)` set member range expansion
+- `paklive`: `tdn.(kharif,rabi)` table row suffix expansion
+- `marco`: `(premium,regular).(butane,sr-gas,...)` set cross-product
+- `china`: `('c-straw','c-gm','c-hyacinth') 10 76...` tuple-only table row
+- `shale`: `('ret-25','ret-30','ret-35') 2.7` param data tuple + comment between entries
+
 ### Sprint 19 Day 7: ISSUE_670 Wrap-up + House Model Investigation - 2026-02-17
 
 **Branch:** `sprint19-day7-issue670-wrapup-house`

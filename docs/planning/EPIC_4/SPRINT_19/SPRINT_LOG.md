@@ -441,21 +441,53 @@ All 6 models:
 
 ## Day 8 — Tuple/Compound Set Data Grammar (Part 1)
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-16
+**Time Spent:** ~4h
+
+### Work Completed
+
+**Subcategory A: Dot-separated compound key syntax (12 models targeted)**
+
+Grammar changes (`src/gams/gams_grammar.lark`):
+1. **range_expr in set_element_id_list**: Added `range_expr | NUMBER` to `set_element_id_or_string`, enabling `(n-1*n-3)` in tuple expansion. Fixes: srkandw (grammar), kand.
+2. **set_tuple_cross_expansion**: Added `"(" set_element_id_list ")" "." "(" set_element_id_list ")"` in `set_member`. Fixes: marco, dinam partial.
+3. **set_members outer parens**: Added alternative `"(" set_member ("," set_member)* ")"` to handle `/(maize.(n-maize,s-maize)...)/`. Fixes: egypt cnc set.
+4. **tuple_cross_label in table_row_label**: `(a,b).(c,d)` row labels. Fixes: paklive.
+5. **tuple_suffix_expansion_label in table_row_label**: `elem.(a,b)` row labels. Fixes: paklive additional patterns.
+
+Preprocessor changes (`src/ir/preprocessor.py`):
+6. **expand_tuple_only_table_rows()**: New Step 15b — expands `(a,b,c) vals` rows in tables to individual rows. Handles `;`-terminated last rows. Fixes: china, tfordy (partial), shale (partial).
+7. **Comment-skipping look-ahead in normalize_multi_line_continuations**: Fixed `for j in range(i+1, ...)` with comment skip so parameter data entries separated by `* comments` get correct commas. Fixes: shale (param data block).
+
+Parser changes (`src/ir/parser.py`):
+8. **tuple_cross_label handler**: Cross-product expansion in table row label map + token collection.
+9. **tuple_suffix_expansion_label handler**: Suffix expansion in table row label map + token collection.
+10. **expand_tuple_only_table_rows import**: Added to inline `parse_text` normalization pipeline.
+
+**Results (Subcategory A, 12 models):**
+- ✅ Now parsing: kand, paklive, marco, china, shale (5/12)
+- ❌ Remaining failures (deferred to Day 9):
+  - `srkandw`: semantic error (time-2 not in set domain — set inference issue)
+  - `dinam`: unquoted multi-word table description `Table t1968(tm,tm) independently estimated...`
+  - `egypt`: semantic error in `sum(cn, cnc(cn,c))` — 3-index sum
+  - `indus`/`sarf`: multi-segment wrapping labels (`cotton.(bullock,semi-mech).standard.` spans 2 lines)
+  - `tfordy`: fails at `loop(at, ...)` statement — different issue
+  - `turkey`: `(chickpea,drybean,lentil)` as column header group — out of scope
+
+**Key finding:** `tuple_only_label` in grammar causes fatal ambiguity — `Table data(i,j)` domain is consumed as row label. Solved via preprocessor expansion instead.
 
 ### PR Entries
 
-_(To be filled during Day 8)_
+- Sprint 19 Day 8: Compound Set Data Grammar Part 1 (PR TBD)
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 8 |
 |--------|----------|-------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 | ~66/159 (+5 Subcat A) |
+| lexer_invalid_char | 72 | ~67 |
+| internal_error | 24 | 24 |
+| Test count | 3,294 | 3,478 |
 
 ---
 

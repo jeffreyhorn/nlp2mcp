@@ -178,8 +178,9 @@ SPECIAL_VALUE: /(?i:na|inf|eps|undf)\b/
 
 // Set element ID list for tuple expansion - comma-separated list of SET_ELEMENT_IDs or quoted strings
 // Note: Preprocessor quotes hyphenated identifiers like route-1 to 'route-1', so we must accept STRING
+// Day 8: Also support range_expr (e.g., n-1*n-3) and NUMBER (e.g., 1971) inside tuple expansion lists
 set_element_id_list: set_element_id_or_string ("," set_element_id_or_string)*
-set_element_id_or_string: SET_ELEMENT_ID | STRING
+set_element_id_or_string: range_expr | SET_ELEMENT_ID | STRING | NUMBER
 
 // data_indices can be numeric (e.g., parameter tau(nm) / 1 0.000, 2 0.025 /)
 // Also allows hyphenated identifiers (e.g., parameter cost(i) / light-ind 100 /)
@@ -230,13 +231,17 @@ id_or_wildcard_list: id_or_wildcard ("," id_or_wildcard)*
 id_or_wildcard: ID | WILDCARD
 WILDCARD: "*"
 
-set_members: set_member ("," set_member)*
+// Day 8: Support optional outer parens wrapping entire member list (GAMS visual grouping)
+// e.g., /(maize.(n-maize, s-maize), potato.(s-potato, n-potato))/
+set_members: "(" set_member ("," set_member)* ")"
+           | set_member ("," set_member)*
 // Sprint 16 Day 7: Added STRING STRING for quoted elements with descriptions (P-5)
 // Preprocessor quotes hyphenated IDs, so 'cotton-h' 'cotton-herbaceo' is STRING STRING
 // Issue #562: Added set_tuple_prefix_expansion for (a,b).c syntax
 // Issue #567: Support quoted strings in tuple dot notation (e.g., upper.'u-egypt')
 // Issue #568: Support hyphenated (quoted) prefix and suffixes in tuple expansion
 ?set_member: range_expr                          -> set_range
+           | "(" set_element_id_list ")" "." "(" set_element_id_list ")"  -> set_tuple_cross_expansion
            | "(" set_element_id_list ")" "." SET_ELEMENT_ID  -> set_tuple_prefix_expansion
            | SET_ELEMENT_ID "." "(" set_element_id_list ")"  -> set_tuple_expansion
            | STRING "." "(" set_element_id_list ")"          -> set_tuple_expansion
@@ -273,8 +278,17 @@ range_bound: NUMBER | SET_ELEMENT_ID | STRING | ID
 //   - nested dot notation: "low.a.subst"
 //   - tuple notation: "(low,medium,high).ynot" expands to multiple rows
 table_row: table_row_label table_value*
-table_row_label: dotted_label                    -> simple_label
+// Day 8: Extended table_row_label to support:
+//   - (a,b).(c,d) cross-product row labels (indus, paklive, sarf)
+//   - elem.(a,b) suffix-expansion row labels (indus: sorghum.(bullock,'semi-mech'))
+//   - (a,b).dotted_label existing form (unchanged)
+//   - dotted_label simple form (unchanged)
+// Note: tuple-only (a,b) without dot suffix is NOT supported as row label
+// because it creates ambiguity with assignment index expressions.
+table_row_label: "(" set_element_id_list ")" "." "(" set_element_id_list ")"  -> tuple_cross_label
+               | set_element_id_or_string "." "(" set_element_id_list ")"     -> tuple_suffix_expansion_label
                | "(" id_list ")" "." dotted_label  -> tuple_label
+               | dotted_label                       -> simple_label
 
 // Issue #665: Allow STRING tokens for quoted row labels (e.g., '20-bond-wt')
 dotted_label: (ID | STRING) ("." (ID | STRING | range_expr))*

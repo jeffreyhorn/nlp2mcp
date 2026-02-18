@@ -37,6 +37,7 @@ from .ast import (
 )
 from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import (
+    expand_tuple_only_table_rows,
     normalize_double_commas,
     normalize_multi_line_continuations,
     normalize_special_identifiers,
@@ -274,6 +275,10 @@ def parse_text(source: str) -> Tree:
     # direct API users may call `parse_text()` directly with raw GAMS source.
     # Both paths must normalize special identifiers for correct parsing.
     source = normalize_special_identifiers(source)
+
+    # Day 8: Expand (a,b,c) tuple-only row labels in tables to individual rows.
+    # Must run after normalize_special_identifiers.
+    source = expand_tuple_only_table_rows(source)
 
     parser = _build_lark()
     try:
@@ -1122,6 +1127,14 @@ class _ModelBuilder:
                     suffixes = self._parse_set_element_id_list(id_list_node)
                     for suffix in suffixes:
                         result.append(f"{prefix}.{suffix}")
+                elif child.data == "set_tuple_cross_expansion":
+                    # Day 8: Cross-product expansion: (a,b).(c,d) → a.c, a.d, b.c, b.d
+                    # e.g., (1971,1974).(eng,tech,admin) or (premium,regular).(butane,sr-gas)
+                    prefixes = self._parse_set_element_id_list(child.children[0])
+                    suffixes = self._parse_set_element_id_list(child.children[1])
+                    for prefix in prefixes:
+                        for suffix in suffixes:
+                            result.append(f"{prefix}.{suffix}")
                 elif child.data == "set_tuple_prefix_expansion":
                     # Issue #562: Tuple prefix expansion: (id1,id2).suffix (e.g., (jan,feb).wet)
                     # Expands to: jan.wet, feb.wet
@@ -1162,7 +1175,8 @@ class _ModelBuilder:
                     raise self._error(
                         f"Unexpected set member node type: '{child.data}'. "
                         f"Expected 'set_element', 'set_element_with_desc', 'set_tuple', "
-                        f"'set_tuple_with_desc', 'set_tuple_expansion', 'set_tuple_prefix_expansion', or 'set_range'.",
+                        f"'set_tuple_with_desc', 'set_tuple_expansion', 'set_tuple_prefix_expansion', "
+                        f"'set_tuple_cross_expansion', or 'set_range'.",
                         child,
                     )
         return result
@@ -1673,6 +1687,61 @@ class _ModelBuilder:
                         if hasattr(first_token, "line"):
                             # Store as list to indicate this row should be replicated
                             row_label_map[first_token.line] = expanded_labels
+                    elif first_child.data == "tuple_cross_label":
+                        # Day 8: Cross-product label like "(basmati,irri).(bullock,semi-mech)"
+                        # Structure: tuple_cross_label -> set_element_id_list, set_element_id_list
+                        prefixes = self._parse_set_element_id_list(first_child.children[0])
+                        suffixes = self._parse_set_element_id_list(first_child.children[1])
+                        expanded_labels = [f"{p}.{s}" for p in prefixes for s in suffixes]
+
+                        # Get line number from first token in first set_element_id_list
+                        first_list = first_child.children[0]
+                        if first_list.children:
+                            first_eid = first_list.children[0]
+                            if isinstance(first_eid, Tree) and first_eid.children:
+                                first_token = first_eid.children[0]
+                            elif isinstance(first_eid, Token):
+                                first_token = first_eid
+                            else:
+                                first_token = None
+                            if first_token is not None and hasattr(first_token, "line"):
+                                row_label_map[first_token.line] = expanded_labels
+                    elif first_child.data == "tuple_suffix_expansion_label":
+                        # Day 8: Suffix-expansion label like "sorghum.(bullock,'semi-mech')"
+                        # Structure: tuple_suffix_expansion_label -> set_element_id_or_string, set_element_id_list
+                        prefix_node = first_child.children[0]  # set_element_id_or_string
+                        suffix_list_node = first_child.children[1]  # set_element_id_list
+                        # Extract the prefix (single element)
+                        if (
+                            isinstance(prefix_node, Tree)
+                            and prefix_node.data == "set_element_id_or_string"
+                        ):
+                            inner = prefix_node.children[0]
+                            if isinstance(inner, Token):
+                                prefix = _token_text(inner)
+                            elif isinstance(inner, Tree):
+                                # range_expr — expand; use first element
+                                prefix = _token_text(inner.children[0]) if inner.children else ""
+                            else:
+                                prefix = ""
+                        elif isinstance(prefix_node, Token):
+                            prefix = _token_text(prefix_node)
+                        else:
+                            prefix = ""
+                        suffixes = self._parse_set_element_id_list(suffix_list_node)
+                        expanded_labels = [f"{prefix}.{s}" for s in suffixes]
+
+                        # Get line number from prefix token
+                        if isinstance(prefix_node, Tree) and prefix_node.children:
+                            first_token = prefix_node.children[0]
+                            if isinstance(first_token, Tree) and first_token.children:
+                                first_token = first_token.children[0]
+                        elif isinstance(prefix_node, Token):
+                            first_token = prefix_node
+                        else:
+                            first_token = None
+                        if first_token is not None and hasattr(first_token, "line"):
+                            row_label_map[first_token.line] = expanded_labels
                 elif isinstance(first_child, Token):
                     # Simple ID label (legacy, shouldn't happen with new grammar)
                     row_label = _token_text(first_child)
@@ -1741,6 +1810,37 @@ class _ModelBuilder:
                                     if isinstance(tok, Token):
                                         all_tokens.append(tok)
                                         row_label_token_ids.add(id(tok))
+                    elif child.data == "tuple_cross_label":
+                        # Day 8: tuple_cross_label contains two set_element_id_list nodes
+                        # Collect all tokens, tracking them as row label tokens
+                        for subnode in child.children:
+                            if isinstance(subnode, Tree):
+                                for eid_node in subnode.children:
+                                    if isinstance(eid_node, Tree):
+                                        for tok in eid_node.children:
+                                            if isinstance(tok, Token):
+                                                all_tokens.append(tok)
+                                                row_label_token_ids.add(id(tok))
+                                    elif isinstance(eid_node, Token):
+                                        all_tokens.append(eid_node)
+                                        row_label_token_ids.add(id(eid_node))
+                    elif child.data == "tuple_suffix_expansion_label":
+                        # Day 8: tuple_suffix_expansion_label: set_element_id_or_string, set_element_id_list
+                        # Collect all tokens as row label tokens
+                        for subnode in child.children:
+                            if isinstance(subnode, Tree):
+                                for eid_node in subnode.children:
+                                    if isinstance(eid_node, Tree):
+                                        for tok in eid_node.children:
+                                            if isinstance(tok, Token):
+                                                all_tokens.append(tok)
+                                                row_label_token_ids.add(id(tok))
+                                    elif isinstance(eid_node, Token):
+                                        all_tokens.append(eid_node)
+                                        row_label_token_ids.add(id(eid_node))
+                            elif isinstance(subnode, Token):
+                                all_tokens.append(subnode)
+                                row_label_token_ids.add(id(subnode))
 
         # Collect PLUS tokens to identify continuation lines and extract continuation values
         plus_lines = set()  # Set of line numbers that start with +
@@ -4459,17 +4559,30 @@ class _ModelBuilder:
 
         Sprint 16 Day 7: Added for parsing (elem1,elem2) syntax in param data.
         Returns list of element identifiers from the comma-separated list.
-        Handles both SET_ELEMENT_ID and STRING tokens (preprocessor quotes hyphenated IDs).
+        Handles SET_ELEMENT_ID, STRING, NUMBER, and range_expr tokens.
+        Day 8: Added range_expr and NUMBER support for patterns like (n-1*n-3) and (1971,1974).
         Note: _token_text() already strips quotes from STRING tokens.
         """
         elements = []
         for child in node.children:
             if isinstance(child, Tree) and child.data == "set_element_id_or_string":
-                # Extract the token from the wrapper node
-                for token in child.children:
-                    if isinstance(token, Token):
-                        elements.append(_token_text(token))
-            elif isinstance(child, Token) and child.type in ("SET_ELEMENT_ID", "STRING"):
+                # Extract the token or sub-tree from the wrapper node
+                inner = child.children[0]
+                if isinstance(inner, Token):
+                    elements.append(_token_text(inner))
+                elif isinstance(inner, Tree) and inner.data == "range_expr":
+                    # range_expr inside list: expand it (e.g., n-1*n-3)
+                    bounds = [
+                        _token_text(b.children[0])
+                        for b in inner.children
+                        if isinstance(b, Tree) and b.data == "range_bound"
+                    ]
+                    if len(bounds) == 2:
+                        expanded = self._expand_range(bounds[0], bounds[1], inner)
+                        elements.extend(expanded)
+                    else:
+                        elements.append("*".join(bounds))
+            elif isinstance(child, Token) and child.type in ("SET_ELEMENT_ID", "STRING", "NUMBER"):
                 elements.append(_token_text(child))
         return elements
 
