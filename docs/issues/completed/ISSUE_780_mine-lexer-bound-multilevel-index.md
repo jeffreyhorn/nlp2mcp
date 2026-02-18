@@ -1,6 +1,11 @@
 # Parser: Variable Bound Assignment with Multi-Level Compound Index
 
-**Status:** OPEN
+**Status:** FIXED (2026-02-18)
+**Fixed In:** `sprint19-day14-fix-issues-780-784`
+**Fix:** Two changes:
+1. **Grammar** (`src/gams/gams_grammar.lark`): Added `ref_indexed -> offset_func` alternative to `offset_expr`, allowing indexed parameter references like `li(k)` as index offsets (previously only `func_call` was supported).
+2. **Parser** (`src/ir/parser.py`): Updated `offset_func` handler in `_process_index_expr()` to detect whether the inner node is `symbol_indexed` (from `ref_indexed`) and pass it directly to `expr_fn`, vs. a `func_call` node (wrapped in synthetic `funccall` tree). The equation head `pr(k,l+1,i,j)` grammar was already handled by the existing `domain_element: ID lag_lead_suffix` rule — the actual blocker was `x(l,i+li(k),j+lj(k))` using `li(k)` as an offset.
+**Verified:** `mine.gms` now parses successfully (2 equations). `ampl.gms` also fixed (equation head `balance(r,tl+1)..` already worked via existing grammar). All 3,579 tests pass.
 **Severity:** Medium — blocks parse of mine.gms; same pattern affects any model using `x.up(i,j,k) = val` after equation with `pr(k,l+1,i,j)` compound equation head index
 **Date:** 2026-02-18
 **Affected Models:** mine.gms

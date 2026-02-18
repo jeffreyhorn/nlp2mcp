@@ -338,6 +338,10 @@ ref_bound: ID "." BOUND_K "(" index_list ")"   -> bound_indexed
 // in the ModelIR builder. The IR builder ignores these assignments (Issue #554).
 BOUND_K: /(lo|up|fx|l|m)/i
 
+// Issue #781: Set ordinal attribute accessors (set.first, set.last, set.pos, set.ord)
+SET_ATTR_K: /first|last|pos|ord/i
+set_attr: ID "." SET_ATTR_K   -> set_attr
+
 ref_indexed.2: ID "(" index_list ")"             -> symbol_indexed
              | ID "[" index_list "]"             -> symbol_indexed
 
@@ -365,9 +369,12 @@ lag_lead_suffix: CIRCULAR_LEAD offset_expr   -> circular_lead
 
 // Sprint 19 Day 11: Added func_call and paren_expr to support arithmetic in index offsets
 // e.g., w(m+floor((ord(n)-1)/k), n) where floor(...) is the offset expression
+// Issue #780: Added ref_indexed to support parameter references like li(k) as offsets
+// e.g., x(i+li(k), j+lj(k)) where li and lj are parameters indexed by k
 offset_expr: NUMBER                          -> offset_number
            | ID                              -> offset_variable
            | func_call                       -> offset_func
+           | ref_indexed                     -> offset_func
            | "(" expr ")"                   -> offset_paren
 
 CIRCULAR_LEAD: "++"
@@ -393,6 +400,7 @@ domain_element: ID ("(" index_list ")" | "[" index_list "]")?
 condition: DOLLAR "(" expr ")"
          | DOLLAR "[" expr "]"
          | DOLLAR cond_bound
+         | DOLLAR set_attr
          | DOLLAR ref_indexed
          | DOLLAR NUMBER
          | DOLLAR ID
@@ -673,6 +681,7 @@ symbol_plain: ID
      | smin_expr
      | compile_time_const                 -> compile_const
      | ref_bound
+     | set_attr
      | ref_indexed
      | symbol_plain
      | "(" expr ")"

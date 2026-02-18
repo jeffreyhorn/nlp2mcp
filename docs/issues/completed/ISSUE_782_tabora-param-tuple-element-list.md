@@ -1,6 +1,9 @@
 # Parser: Parameter Initialization with Tuple Element List (a08,a16,a24) Not Supported
 
-**Status:** OPEN
+**Status:** FIXED (2026-02-18)
+**Fixed In:** `sprint19-day14-fix-issues-780-784`
+**Fix:** The root cause was not missing tuple expansion (already implemented as `param_data_tuple_expansion`) but rather **leading-zero stripping in `_expand_range()`**. Set `a` declared as `/ a01*a24 /` was expanded to `['a1', 'a2', ..., 'a24']` (dropping leading zeros), but the parameter data referenced `a08` (with leading zero). Fixed `_expand_range()` to detect leading-zero width from the start bound's numeric suffix and zero-pad output accordingly: `a01*a24` → `['a01', 'a02', ..., 'a24']`.
+**Verified:** `tabora.gms` now parses successfully (11 equations). All 3,579 tests pass.
 **Severity:** Low-Medium — blocks parse of tabora.gms; same pattern (Subcategory A) affects other models using grouped parameter data
 **Date:** 2026-02-18
 **Affected Models:** tabora.gms
