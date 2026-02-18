@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from src.ir.parser import parse_model_text
+from src.ir.parser import parse_model_file, parse_model_text
+
+_GAMSLIB = Path(__file__).parents[3] / "data" / "gamslib" / "raw"
 
 
 class TestSimpleTableParsing:
@@ -459,3 +463,81 @@ class TestTableIntegration:
         assert table.domain == ("plants", "markets")
         assert table.values[("p1", "m2")] == 200.0
         assert table.values[("p2", "m3")] == 250.0
+
+
+class TestTableContinuationParsing:
+    """Tests for ISSUE_392: tables with '+' continuation blocks.
+
+    The GAMS preprocessor (remove_table_continuation_markers) replaces '+' at the start
+    of a continuation line with a space, so the entire table collapses into one table_row
+    node in the parse tree.  The section-based fix in _handle_table_block() reconstructs
+    the original structure from the token line numbers that are still preserved.
+
+    These tests parse the actual GAMSlib source files (like.gms, robert.gms) so that the
+    full preprocessor pipeline runs, which is the only way to trigger the continuation
+    replacement that the fix addresses.
+    """
+
+    @pytest.fixture
+    def like_table(self):
+        """Parse like.gms and return the 'data' parameter."""
+        model = parse_model_file(_GAMSLIB / "like.gms")
+        return model.params["data"]
+
+    @pytest.fixture
+    def robert_table(self):
+        """Parse robert.gms and return the 'c' parameter."""
+        model = parse_model_file(_GAMSLIB / "robert.gms")
+        return model.params["c"]
+
+    def test_like_table_correct_value_count(self, like_table):
+        """ISSUE_392: like.gms table data(*,i) parses all 62 values (2 rows x 31 cols)."""
+        assert len(like_table.values) == 62
+
+    def test_like_table_section1_first_value(self, like_table):
+        """ISSUE_392: First value in section 1 (pressure at col 1) is 95."""
+        assert like_table.values[("pressure", "1")] == 95.0
+
+    def test_like_table_section1_last_value(self, like_table):
+        """ISSUE_392: Last value in section 1 (pressure at col 15) is 170."""
+        assert like_table.values[("pressure", "15")] == 170.0
+
+    def test_like_table_section1_middle_value(self, like_table):
+        """ISSUE_392: Middle value in section 1 (pressure col 9) is 140."""
+        assert like_table.values[("pressure", "9")] == 140.0
+
+    def test_like_table_section2_first_value(self, like_table):
+        """ISSUE_392: First value in section 2 (pressure at col 16) is 175."""
+        assert like_table.values[("pressure", "16")] == 175.0
+
+    def test_like_table_section2_last_value(self, like_table):
+        """ISSUE_392: Last value in section 2 (frequency at col 31) is 2."""
+        assert like_table.values[("frequency", "31")] == 2.0
+
+    def test_like_table_frequency_row_complete(self, like_table):
+        """ISSUE_392: frequency row has all 31 values with no gaps."""
+        missing = [c for c in range(1, 32) if ("frequency", str(c)) not in like_table.values]
+        assert missing == [], f"frequency row missing columns: {missing}"
+
+    def test_like_table_pressure_row_complete(self, like_table):
+        """ISSUE_392: pressure row has all 31 values with no gaps."""
+        missing = [c for c in range(1, 32) if ("pressure", str(c)) not in like_table.values]
+        assert missing == [], f"pressure row missing columns: {missing}"
+
+    def test_robert_table_correct_value_count(self, robert_table):
+        """ISSUE_399: robert.gms table c(p,t) parses all 9 values (3 rows x 3 cols)."""
+        assert len(robert_table.values) == 9
+
+    def test_robert_table_spot_checks(self, robert_table):
+        """ISSUE_399: robert.gms table values match GAMS source."""
+        assert robert_table.values[("low", "1")] == 25.0
+        assert robert_table.values[("low", "3")] == 10.0
+        assert robert_table.values[("medium", "2")] == 50.0
+        assert robert_table.values[("high", "1")] == 75.0
+        assert robert_table.values[("high", "3")] == 100.0
+
+    def test_robert_table_description_not_in_values(self, robert_table):
+        """ISSUE_399: Description string 'expected profits' must not appear as a row label."""
+        row_labels = {k[0] for k in robert_table.values}
+        assert "expected profits" not in row_labels
+        assert "'expected profits'" not in row_labels
