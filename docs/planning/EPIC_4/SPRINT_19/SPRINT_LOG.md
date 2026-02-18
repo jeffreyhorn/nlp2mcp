@@ -734,7 +734,7 @@ Subcategory A models newly parsing: indus, sarf, turkey, egypt, srkandw, dinam, 
 | Criterion | Target | Actual | Met? |
 |-----------|--------|--------|------|
 | lexer_invalid_char | <30 | 27 | ✅ |
-| internal_error (parse) | <15 | 6 | ✅ |
+| internal_error (pipeline) | <15 | 6 | ✅ |
 | Parse rate | >=55% | 66.9% (107/160 tested) | ✅ |
 | IndexOffset AD | complete | complete | ✅ |
 | FIX_ROADMAP P1-P3 | resolved | resolved | ✅ |
@@ -755,4 +755,4 @@ Subcategory A models newly parsing: indus, sarf, turkey, egypt, srkandw, dinam, 
 
 ## Sprint Summary
 
-Sprint 19 delivered all planned P1–P3 items: compound set data grammar (Subcategory A/B/F/I), ISSUE_670 cross-indexed sum fix, IndexOffset AD integration, and resolution of all 10 blocked models identified in Day 13 validation. Parse success improved from 61/159 (38.4%) to 107/160 (66.9%) of tested models (+46 models), lexer_invalid_char dropped from 72 to 27 (target: <30 ✅), internal_error from 24 to 6, translate success +25, solve success +5. Test count grew from 3,294 to 3,579 (+285) with zero regressions.
+Sprint 19 delivered all planned P1–P3 items: compound set data grammar (Subcategory A/B/F/I), ISSUE_670 cross-indexed sum fix, IndexOffset AD integration, and resolution of all 5 blocked models identified in Day 13 validation (plus 2 additional fixes in #774/#766). Parse success improved from 61/159 (38.4%) to 107/160 (66.9%) of tested models (+46 models), lexer_invalid_char dropped from 72 to 27 (target: <30 ✅), internal_error from 24 to 6, translate success +25, solve success +5. Test count grew from 3,294 to 3,579 (+285) with zero regressions.

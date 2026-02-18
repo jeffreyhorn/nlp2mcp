@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Sprint 19 Day 14: Fix #780-#784, #774, #766, Close #671 — Sprint Close - 2026-02-18
+### Sprint 19 Day 14: Fix #780-#784, #774, #766, Close #671 - 2026-02-18
 
 **Branches:** `sprint19-day14-fix-issues-780-784` (PR #786), `sprint19-day14-fix-open-issues` (PR #787)
 
