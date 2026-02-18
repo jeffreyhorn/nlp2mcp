@@ -6034,8 +6034,8 @@ class TestDoubleCommaSyntax:
 class TestTupleSuffixExpansionLabel:
     """Tests for tuple_suffix_expansion_label in table row labels (Issue #773)."""
 
-    def test_simple_suffix_expansion_label(self):
-        """Test table row label with dot-suffix expansion: elem.(a,b)."""
+    def test_dotted_parameter_indices(self):
+        """Test standard dotted parameter data indices: elem.elem (simple_label path)."""
         text = dedent("""
             Set i / crop1, crop2 /;
             Set j / tech1, tech2 /;
@@ -6050,6 +6050,26 @@ class TestTupleSuffixExpansionLabel:
         assert model.params["p"].values[("crop1", "tech2")] == 20.0
         assert model.params["p"].values[("crop2", "tech1")] == 30.0
         assert model.params["p"].values[("crop2", "tech2")] == 40.0
+
+    def test_suffix_expansion_label_in_table(self):
+        """Test tuple_suffix_expansion_label: elem.(a,b) as table row label.
+
+        The grammar rule tuple_suffix_expansion_label applies to table row labels.
+        sorghum.(bullock,semi-mech) expands to two replicated rows: sorghum.bullock
+        and sorghum.semi-mech, each receiving the same column values via +.
+        """
+        text = dedent("""
+            Set i / sorghum /;
+            Set j / col1 /;
+            Table t(i,j)
+                         col1
+            sorghum.(bullock,semi-mech)
+            +                42
+            ;
+            """)
+        model = parser.parse_model_text(text)
+        assert model.params["t"].values[("sorghum.bullock", "col1")] == 42.0
+        assert model.params["t"].values[("sorghum.semi-mech", "col1")] == 42.0
 
     def test_table_tuple_suffix_expansion_label(self):
         """Test table with dot-suffix expansion row label: elem.(a,b) (marco.gms pattern).

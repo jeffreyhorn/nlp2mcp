@@ -643,6 +643,38 @@ def _has_statement_ending_semicolon(line: str) -> bool:
     return False
 
 
+def _find_statement_semicolon_pos(line: str) -> int:
+    """Return the index of the first statement-ending semicolon in line, or -1.
+
+    Ignores semicolons inside single- or double-quoted strings (same logic as
+    _has_statement_ending_semicolon). Used to strip trailing content (including
+    inline comments) after the semicolon when checking for tuple row expansion.
+    """
+    in_string = None
+    i = 0
+    while i < len(line):
+        c = line[i]
+        if in_string:
+            if c == in_string:
+                backslash_count = 0
+                j = i - 1
+                while j >= 0 and line[j] == "\\":
+                    backslash_count += 1
+                    j -= 1
+                if backslash_count % 2 == 0:
+                    in_string = None
+            i += 1
+            continue
+        if c in ('"', "'"):
+            in_string = c
+            i += 1
+            continue
+        if c == ";":
+            return i
+        i += 1
+    return -1
+
+
 def strip_unsupported_directives(source: str) -> str:
     """Remove unsupported GAMS compiler directives from source text.
 
@@ -2114,14 +2146,16 @@ def expand_tuple_only_table_rows(source: str) -> str:
                 result.append(line)
                 continue
 
-            # Handle table termination: check for tuple expansion BEFORE ending
-            is_last_line = stripped.endswith(";")
+            # Handle table termination: check for tuple expansion BEFORE ending.
+            # Use _has_statement_ending_semicolon so semicolons inside quoted
+            # strings (or trailing inline comments like "; * note") are ignored.
+            is_last_line = _has_statement_ending_semicolon(line)
             if is_last_line:
                 in_table = False
-                # Strip the trailing semicolon for tuple expansion check
-                line_no_semi = line.rstrip()
-                if line_no_semi.endswith(";"):
-                    line_no_semi = line_no_semi[:-1]
+                # Strip content from the first statement-ending semicolon onward
+                # so the tuple expansion check sees only the row label and values.
+                semi_pos = _find_statement_semicolon_pos(line)
+                line_no_semi = line[:semi_pos] if semi_pos >= 0 else line
                 stripped_no_semi = line_no_semi.strip()
             else:
                 line_no_semi = line
