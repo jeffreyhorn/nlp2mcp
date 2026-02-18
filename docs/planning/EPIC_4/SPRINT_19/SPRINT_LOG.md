@@ -719,7 +719,7 @@ Subcategory A models newly parsing: indus, sarf, turkey, egypt, srkandw, dinam, 
 
 | Metric | Baseline | Final | Change |
 |--------|----------|-------|--------|
-| Parse success | 61/159 (38.4%) | 107/160 (66.9%) | +46 models |
+| Parse success | 61/160 (38.1%) | 107/160 (66.9%) | +46 models |
 | lexer_invalid_char | 72 | 27 | -45 |
 | internal_error (pipeline) | 24 | 6 | -18 |
 | Translate success | 48 | 73 | +25 |

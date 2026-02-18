@@ -1,7 +1,7 @@
 # Sprint 19 Retrospective
 
 **Created:** February 18, 2026
-**Duration:** 14 working days (February 13 – February 18, 2026)
+**Duration:** 14 sprint days (Day 0 – Day 14, February 2026)
 **Sprint Goal:** Parse Rate ≥55%, lexer_invalid_char <30, IndexOffset AD Integration, ISSUE_670 cross-indexed sums
 
 ---
@@ -286,7 +286,7 @@ The sprint baseline was recorded as "61/159" but the actual tested count was 160
 | 13 | #785 | IndexOffset validation + offset_paren fix | ✅ Merged |
 | 14 | #786 | Fix issues #780–#784 | ✅ Merged |
 | 14 | #787 | Fix #774, #766, close #671 | ✅ Merged |
-| 14 | #788 | Sprint close: CHANGELOG, PLAN, SPRINT_LOG | ✅ Merged |
+| 14 | #788 | Sprint close: CHANGELOG, PLAN, SPRINT_LOG | In Review |
 
 **Total: ~39 PRs merged in Sprint 19** (including prep planning PRs)
 
