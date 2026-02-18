@@ -1,7 +1,7 @@
 # Emitter: Per-Instance Bound Multipliers Not Index-Guarded in Stationarity Equations
 
 **GitHub Issue:** [#767](https://github.com/jeffreyhorn/nlp2mcp/issues/767)
-**Status:** OPEN
+**Status:** FIXED — PR #772
 **Severity:** Medium — MCP is syntactically valid and may solve, but stationarity equations are mathematically wrong (multipliers active for wrong index values)
 **Date:** 2026-02-17
 **Affected Models:** cclinpts, maxmin, hydro

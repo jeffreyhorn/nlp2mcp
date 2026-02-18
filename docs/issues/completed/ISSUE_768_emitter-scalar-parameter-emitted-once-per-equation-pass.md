@@ -1,7 +1,7 @@
 # Emitter: Scalar Parameter Emitted Once Per Equation Pass (Triplication)
 
 **GitHub Issue:** [#768](https://github.com/jeffreyhorn/nlp2mcp/issues/768)
-**Status:** OPEN
+**Status:** FIXED — PR #772
 **Severity:** Low — MCP is still syntactically valid and solves correctly; duplicate assignments are redundant but not harmful
 **Date:** 2026-02-17
 **Affected Models:** harker

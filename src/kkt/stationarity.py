@@ -1510,6 +1510,35 @@ def _add_indexed_jacobian_terms(
                 if uncontrolled:
                     sum_indices = tuple(sorted(uncontrolled))
                     term = Sum(sum_indices, term)
+
+                # Issue #767: Guard per-instance fx multipliers with $(sameas(...))
+                # when only a subset of the indexed variable's instances have a
+                # nonzero Jacobian entry.  For example, if b_fx_s1 is a scalar
+                # equality that fixes b("s1"), only the column corresponding to
+                # b("s1") is nonzero.  Without a guard, nu_b_fx_s1 appears in
+                # every row of stat_b(j), making the KKT condition incorrect for
+                # j ≠ 's1'.  Build one $(sameas(j,'s1')) factor per domain index.
+                if var_domain and len(entries) < len(instances):
+                    # Look up the variable indices for the first (and typically only)
+                    # nonzero entry to find which instance this scalar constraint fixes.
+                    entry_col_id = entries[0][1]
+                    _var_name_check, fixed_indices = kkt.gradient.index_mapping.col_to_var[
+                        entry_col_id
+                    ]
+                    if fixed_indices and len(fixed_indices) == len(var_domain):
+                        # Build sameas condition: sameas(d0,'v0') and sameas(d1,'v1') ...
+                        guard: Expr | None = None
+                        for dom_idx, fixed_val in zip(var_domain, fixed_indices):
+                            sameas_call: Expr = Call(
+                                "sameas",
+                                (SymbolRef(dom_idx), SymbolRef(f"'{fixed_val}'")),
+                            )
+                            guard = (
+                                sameas_call if guard is None else Binary("and", guard, sameas_call)
+                            )
+                        if guard is not None:
+                            term = DollarConditional(value_expr=term, condition=guard)
+
                 expr = Binary("+", expr, term)
 
     return expr
