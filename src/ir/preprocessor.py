@@ -2193,7 +2193,8 @@ def _expand_gams_range(start: str, end: str) -> list[str]:
 
     Finds the common alphabetic prefix and numeric suffix, then generates
     all elements with integer suffixes from start to end (inclusive).
-    Returns [start, end] if the range cannot be expanded.
+    Returns ["start*end"] (a single token preserving the range expression) if
+    the range cannot be expanded.
     """
 
     # Strip surrounding quotes for processing
@@ -2202,10 +2203,8 @@ def _expand_gams_range(start: str, end: str) -> list[str]:
 
     s, e = strip_q(start), strip_q(end)
     # Find longest common prefix (alphabetic + hyphen)
-    import re as _re
-
-    m_s = _re.match(r"^([A-Za-z_][A-Za-z_\-]*)(\d+)$", s)
-    m_e = _re.match(r"^([A-Za-z_][A-Za-z_\-]*)(\d+)$", e)
+    m_s = re.match(r"^([A-Za-z_][A-Za-z_\-]*)(\d+)$", s)
+    m_e = re.match(r"^([A-Za-z_][A-Za-z_\-]*)(\d+)$", e)
     if m_s and m_e and m_s.group(1) == m_e.group(1):
         prefix = m_s.group(1)
         lo, hi = int(m_s.group(2)), int(m_e.group(2))
@@ -2220,8 +2219,8 @@ def _expand_gams_range(start: str, end: str) -> list[str]:
             elems.append(f"'{elem}'" if quoted else elem)
         return elems
     # Pure numeric range
-    m_ns = _re.match(r"^(\d+)$", s)
-    m_ne = _re.match(r"^(\d+)$", e)
+    m_ns = re.match(r"^(\d+)$", s)
+    m_ne = re.match(r"^(\d+)$", e)
     if m_ns and m_ne:
         lo, hi = int(s), int(e)
         # Do not expand descending ranges — semantics are ambiguous
@@ -2251,7 +2250,7 @@ def _parse_label_group(group_str: str) -> list[str]:
     # Ranges like 'sch-1'*'sch-4' tokenize differently depending on spacing:
     #   with spaces:    "'sch-1'", "*", "'sch-4'"  (3 tokens)
     #   without spaces: "'sch-1'", "*'sch-4'"      (2 tokens, second starts with *)
-    # We normalise all of these into "lhs*rhs" merged tokens before expanding.
+    # We normalize all of these into "lhs*rhs" merged tokens before expanding.
     _TOK = re.compile(r"'(?:[^']|'')*'|[^,\s]+")
     raw_tokens = [m.group(0) for m in _TOK.finditer(inner)]
     raw_tokens = [t for t in raw_tokens if t.strip()]
@@ -2317,6 +2316,10 @@ def _split_dotted_label_segments(label: str) -> list[list[str]]:
                     if depth == 0:
                         break
                 j += 1
+            if depth != 0:
+                # No matching ')' found — malformed label, treat rest as plain atom
+                segments.append([label[i:]])
+                break
             group = label[i : j + 1]
             segments.append(_parse_label_group(group))
             i = j + 1
@@ -2366,19 +2369,26 @@ def _needs_multi_segment_expansion(label: str) -> bool:
         return True
     if ".(" in label:
         # Suffix group — only needs expansion if it contains a range expression
-        # Find the '(' and check if there's a '*' inside the group
+        # Find the '(' and check if there's a '*' inside the group (not outside it)
         idx = label.index(".(")
-        rest = label[idx + 1 :]  # from '(' onward
+        rest = label[idx + 1 :]  # from '(' onward (rest[0] == '(')
         # Find the matching close paren
         depth = 0
-        for ch in rest:
+        close_paren_idx = None
+        for i, ch in enumerate(rest):
             if ch == "(":
                 depth += 1
             elif ch == ")":
                 depth -= 1
                 if depth == 0:
+                    close_paren_idx = i
                     break
-        group_content = rest  # may not find close paren, conservative
+        if close_paren_idx is not None:
+            # Only check content up to and including the matching ')'
+            group_content = rest[: close_paren_idx + 1]
+        else:
+            # No matching ')' — be conservative and check the whole rest
+            group_content = rest
         if "*" in group_content:
             return True
     return False
