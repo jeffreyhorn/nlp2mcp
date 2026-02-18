@@ -1,7 +1,7 @@
 # Chenery MCP: Division By Zero in stat_pi Due to del(i) in Denominator
 
 **GitHub Issue:** [#763](https://github.com/jeffreyhorn/nlp2mcp/issues/763)
-**Status:** OPEN
+**Status:** OPEN — Not fixable in Sprint 19 (requires AD condition propagation to guard denominator expressions)
 **Severity:** High — MCP generates but GAMS aborts with EXECERROR = 1 (division by zero)
 **Date:** 2026-02-16
 **Affected Models:** chenery

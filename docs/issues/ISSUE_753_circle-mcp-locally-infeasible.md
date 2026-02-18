@@ -1,7 +1,7 @@
 # Circle Model MCP is Locally Infeasible (PATH Solver Model Status 5)
 
 **GitHub Issue:** [#753](https://github.com/jeffreyhorn/nlp2mcp/issues/753)
-**Status:** PARTIALLY RESOLVED - MCP generates; solver infeasibility remains
+**Status:** PARTIALLY RESOLVED - MCP generates; solver infeasibility remains — Not fixable in Sprint 19 (requires IR+emitter support for .l level initialization)
 **Severity:** High - MCP generation completes but produced MCP does not solve
 **Date:** 2026-02-13
 **Investigated:** 2026-02-16

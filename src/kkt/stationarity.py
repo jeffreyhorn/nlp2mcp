@@ -1266,11 +1266,33 @@ def _replace_matching_indices(
                         # alias (e.g., j aliasing i) collapses and both positions of
                         # a parameter like a("agricult","agricult") should map to the
                         # same equation-domain index "i", not to the alias "j".
+                        # Issue #766: Do NOT apply this override when target_set is a
+                        # subset of a set in the equation domain — in that case the
+                        # narrower declared domain is intentional (e.g. c(p,t) declared
+                        # over t which is a subset of tt in stat_x(p,tt)).
+                        target_is_subset_of_eq_domain = False
+                        eq_domain_lower = (
+                            {s.lower() for s in equation_domain} if equation_domain else set()
+                        )
                         if (
                             equation_domain
+                            and model_ir
+                            and target_set.lower() not in eq_domain_lower
+                        ):
+                            target_set_def = model_ir.sets.get(target_set)
+                            if (
+                                target_set_def
+                                and hasattr(target_set_def, "domain")
+                                and target_set_def.domain
+                            ):
+                                if any(p.lower() in eq_domain_lower for p in target_set_def.domain):
+                                    target_is_subset_of_eq_domain = True
+                        if (
+                            not target_is_subset_of_eq_domain
+                            and equation_domain
                             and idx in element_to_set
-                            and element_to_set[idx] in equation_domain
-                            and target_set not in equation_domain
+                            and element_to_set[idx].lower() in eq_domain_lower
+                            and target_set.lower() not in eq_domain_lower
                         ):
                             new_indices.append(element_to_set[idx])
                         else:

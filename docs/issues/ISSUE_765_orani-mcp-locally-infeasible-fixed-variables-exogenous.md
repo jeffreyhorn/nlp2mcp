@@ -1,7 +1,7 @@
 # Orani MCP: Locally Infeasible Due to Fixed Exogenous Variables in Percentage-Change Model
 
 **GitHub Issue:** [#765](https://github.com/jeffreyhorn/nlp2mcp/issues/765)
-**Status:** OPEN
+**Status:** OPEN — Not fixable in Sprint 19 (requires architectural support for fixed/exogenous variables in linearized CGE models)
 **Severity:** High — MCP generates and compiles, but PATH solver reports locally infeasible
 **Date:** 2026-02-16
 **Affected Models:** orani

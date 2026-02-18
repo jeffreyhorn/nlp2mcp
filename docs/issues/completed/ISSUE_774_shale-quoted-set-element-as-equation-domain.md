@@ -1,7 +1,7 @@
 # Parser: Quoted/Hyphenated Set Element Used as Equation Domain Not Resolved
 
 **GitHub Issue:** [#774](https://github.com/jeffreyhorn/nlp2mcp/issues/774)
-**Status:** OPEN
+**Status:** FIXED (Sprint 19 Day 14)
 **Severity:** Medium — blocks translation of shale.gms; same class of issue may affect other models with hyphenated time-period set elements used as singleton equation indices
 **Date:** 2026-02-18
 **Affected Models:** shale.gms
@@ -136,3 +136,36 @@ constraint("period-2").. x =l= 150;
 python -m src.cli data/gamslib/raw/shale.gms -o /tmp/shale_mcp.gms
 # Error: Invalid model - Unknown set or alias '2000-04' referenced in equation 'mmr3' domain
 ```
+
+---
+
+## Fix Applied (Sprint 19 Day 14)
+
+**Root Cause:** In `_handle_eqn_def_domain()`, the `_domain_list()` function extracts
+token text from `domain_element` children. For quoted tokens like `Token('ID', '"2000-04"')`,
+`_token_text()` strips the quotes, returning `'2000-04'`. This was then passed to
+`_ensure_sets()` which failed because `'2000-04'` is not a known set name.
+
+**Fix:** Before calling `_ensure_sets()`, check if all domain elements in the raw
+`domain_list` node are quoted tokens (start with `"` or `'`). If so, this is a singleton
+equation instantiation — replace `domain` with the declared domain from
+`_equation_domains` (which may be empty for a scalar declaration) and proceed.
+
+**Code change:** `src/ir/parser.py`, `_handle_eqn_def_domain()`:
+```python
+# Issue #774: singleton equation with quoted string literal as domain element
+# e.g. mmr3("2000-04").. — treat as scalar, use declared domain instead.
+# _domain_list strips quotes, so check raw tokens in the domain_list node.
+domain_list_node = node.children[1]
+raw_tokens = [
+    c.children[0]
+    for c in domain_list_node.children
+    if isinstance(c, Tree) and c.data == "domain_element" and c.children
+]
+if raw_tokens and all(
+    isinstance(t, Token) and str(t)[0] in ('"', "'") for t in raw_tokens
+):
+    domain = self._equation_domains.get(name.lower(), ())
+```
+
+**Result:** `shale.gms` now translates successfully.

@@ -4,7 +4,7 @@
 
 **Issue:** The orani model uses dynamic domain extension where computed parameter assignments add new elements to wildcard domains. This was not supported by the original emission logic, but was partially resolved by PR #680 (Day 7 wildcard fix). The remaining blocker is E149 from cross-indexed sums (ISSUE_670).
 
-**Status:** Partially Resolved (E170/E171 fixed, E149 remains - see ISSUE_670)  
+**Status:** FULLY RESOLVED — E170/E171 fixed (Sprint 18 Day 7 PR #680), E149 fixed (Sprint 19 via ISSUE_670 fix). Orani now translates successfully.  
 **Severity:** Medium - Affects 1 model  
 **Affected Models:** orani  
 **Date:** 2026-02-10  

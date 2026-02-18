@@ -28,9 +28,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:19:39.694057+00:00",
+        "parse_date": "2026-02-18T21:03:10.028463+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.5347,
+        "parse_time_seconds": 1.1397,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -69,8 +69,8 @@
         "absolute_difference": 1013466.4794,
         "relative_difference": 0.9997778470458266,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -104,9 +104,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:19:43.630607+00:00",
+        "parse_date": "2026-02-18T21:03:13.040801+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.8462,
+        "parse_time_seconds": 2.9449,
         "error": {
           "category": "semantic_undefined_symbol",
           "message": "Error: Parse error at line 211, column 6: Undefined symbol 'sum' with indices ('s', 'p', 'cotton-h', 's') referenced [context: conditional assignment] [domain: ('p',)]\n  a(p)$sum(s, yield(p,\"cotton-h\",s)) = 0;\n       ^\n\nSuggestion: Declare 'sum' as a variable, parameter, or set before using it"
@@ -123,7 +123,7 @@
       "solution_comparison": {
         "comparison_status": "not_tested",
         "comparison_date": "2026-02-18T15:08:34.757176+00:00",
-        "notes": "Skipped due to parse failure"
+        "notes": "Skipped because translate/solve not run"
       }
     },
     {
@@ -150,9 +150,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:19:44.913900+00:00",
+        "parse_date": "2026-02-18T21:03:13.855008+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.28,
+        "parse_time_seconds": 0.8119,
         "variables_count": 6,
         "equations_count": 8
       },
@@ -191,8 +191,8 @@
         "absolute_difference": 5766.4578,
         "relative_difference": 0.7864245209682919,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 1,
         "mcp_solver_status": 1,
@@ -268,9 +268,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:19:45.537469+00:00",
+        "parse_date": "2026-02-18T21:03:14.516152+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6208,
+        "parse_time_seconds": 0.6588,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -309,8 +309,8 @@
         "absolute_difference": 0.0003000000142492354,
         "relative_difference": 6.802665952080401e-10,
         "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 1,
         "mcp_solver_status": 1,
@@ -368,9 +368,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:19:46.447728+00:00",
+        "parse_date": "2026-02-18T21:03:15.167088+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9072,
+        "parse_time_seconds": 0.6485,
         "variables_count": 15,
         "equations_count": 8
       },
@@ -409,8 +409,8 @@
         "absolute_difference": 0.129,
         "relative_difference": 0.06810982048574446,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -443,14 +443,12 @@
         "solve_time_seconds": 0.319
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-02-18T15:19:46.847574+00:00",
+        "status": "success",
+        "parse_date": "2026-02-18T21:03:15.483519+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3964,
-        "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 57, column 1: Unexpected character: 'M'\n  Model ampl 'maximum revenue production problem' / all /;\n  ^\n\nSuggestion: This character is not valid in this context"
-        }
+        "parse_time_seconds": 0.3141,
+        "variables_count": 3,
+        "equations_count": 3
       },
       "nlp2mcp_translate": {
         "status": "not_tested",
@@ -463,7 +461,13 @@
       "solution_comparison": {
         "comparison_status": "not_tested",
         "comparison_date": "2026-02-18T15:08:47.716292+00:00",
-        "notes": "Skipped due to parse failure"
+        "notes": "Skipped because translate/solve not run"
+      },
+      "model_statistics": {
+        "variables": 3,
+        "equations": 3,
+        "parameters": 0,
+        "sets": 4
       }
     },
     {
@@ -511,9 +515,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:19:48.529872+00:00",
+        "parse_date": "2026-02-18T21:03:16.775577+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.6793,
+        "parse_time_seconds": 1.2897,
         "variables_count": 4,
         "equations_count": 5
       },
@@ -552,8 +556,8 @@
         "absolute_difference": 815.5012999999999,
         "relative_difference": 0.03326452109365592,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 1,
         "mcp_solver_status": 1,
@@ -587,9 +591,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:19:49.859633+00:00",
+        "parse_date": "2026-02-18T21:03:17.789730+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.3268,
+        "parse_time_seconds": 1.0119,
         "variables_count": 4,
         "equations_count": 5
       },
@@ -622,8 +626,8 @@
         "absolute_difference": 7797.653400000001,
         "relative_difference": 0.3290128706796629,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 1,
         "mcp_solver_status": 1,
@@ -684,9 +688,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:19:51.126597+00:00",
+        "parse_date": "2026-02-18T21:03:18.751839+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.2634,
+        "parse_time_seconds": 0.9598,
         "variables_count": 14,
         "equations_count": 13
       },
@@ -751,9 +755,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:19:51.706608+00:00",
+        "parse_date": "2026-02-18T21:03:19.198010+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5765,
+        "parse_time_seconds": 0.4439,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -792,8 +796,8 @@
         "absolute_difference": 0.0,
         "relative_difference": 0.0,
         "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 1,
         "mcp_solver_status": 1,
@@ -827,9 +831,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:19:57.612057+00:00",
+        "parse_date": "2026-02-18T21:03:23.837089+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.8731,
+        "parse_time_seconds": 4.6156,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 421, column 40: Unexpected character: '-'\n  Model camcge 'square base model' / all - caeq /;\n                                         ^\n\nSuggestion: This character is not valid in this context"
@@ -873,9 +877,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:19:58.674959+00:00",
+        "parse_date": "2026-02-18T21:03:24.508911+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0602,
+        "parse_time_seconds": 0.6695,
         "error": {
           "category": "model_no_objective_def",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -919,9 +923,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:19:58.747925+00:00",
+        "parse_date": "2026-02-18T21:03:24.564623+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.07,
+        "parse_time_seconds": 0.0534,
         "error": {
           "category": "model_no_objective_def",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -965,9 +969,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:19:59.264363+00:00",
+        "parse_date": "2026-02-18T21:03:25.244176+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5134,
+        "parse_time_seconds": 0.677,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -1032,9 +1036,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:04.079940+00:00",
+        "parse_date": "2026-02-18T21:03:29.391283+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.8123,
+        "parse_time_seconds": 4.144,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 514, column 24: Parse error at line 514, column 24: Unexpected character: '.'\n  Model m_SAMENTROP / d_A.A, d_TSAM.TSAM\n                         ^\n  Model m_SAMENTROP / d_A.A, d_TSAM.TSAM\n                         ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 513. Add ';' after: * defined over the same sets."
@@ -1078,9 +1082,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:04.378762+00:00",
+        "parse_date": "2026-02-18T21:03:29.637432+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.2961,
+        "parse_time_seconds": 0.2434,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 108, column 67: Unexpected character: '/'\n  stderr1  'standard error of measurement for column sums'   / .05  /\n                                                                    ^\n\nSuggestion: This character is not valid in this context"
@@ -1124,9 +1128,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:04.948805+00:00",
+        "parse_date": "2026-02-18T21:03:30.093103+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5668,
+        "parse_time_seconds": 0.4532,
         "error": {
           "category": "model_no_objective_def",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -1170,9 +1174,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:06.140039+00:00",
+        "parse_date": "2026-02-18T21:03:31.018539+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.1877,
+        "parse_time_seconds": 0.9227,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -1205,8 +1209,8 @@
         "absolute_difference": 25.8956,
         "relative_difference": 0.14456026116820073,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -1270,9 +1274,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:06.609742+00:00",
+        "parse_date": "2026-02-18T21:03:31.379758+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4667,
+        "parse_time_seconds": 0.3588,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1309,10 +1313,10 @@
         "nlp_objective": -47.7065,
         "mcp_objective": -47.707,
         "absolute_difference": 0.0005000000000023874,
-        "relative_difference": 1.0480642253807354e-05,
+        "relative_difference": 1.0480642253807354e-5,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -1346,9 +1350,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:09.278914+00:00",
+        "parse_date": "2026-02-18T21:03:33.398936+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.6663,
+        "parse_time_seconds": 2.0165,
         "variables_count": 15,
         "equations_count": 14
       },
@@ -1413,9 +1417,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:14.689831+00:00",
+        "parse_date": "2026-02-18T21:03:37.714147+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.3778,
+        "parse_time_seconds": 4.2893,
         "variables_count": 10,
         "equations_count": 10
       },
@@ -1480,9 +1484,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:15.393068+00:00",
+        "parse_date": "2026-02-18T21:03:38.058927+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7003,
+        "parse_time_seconds": 0.3423,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -1571,9 +1575,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:16.541802+00:00",
+        "parse_date": "2026-02-18T21:03:38.952603+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.145,
+        "parse_time_seconds": 0.8913,
         "error": {
           "category": "model_no_objective_def",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -1617,9 +1621,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:16.920072+00:00",
+        "parse_date": "2026-02-18T21:03:39.544659+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3756,
+        "parse_time_seconds": 0.5896,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -1684,9 +1688,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:17.231490+00:00",
+        "parse_date": "2026-02-18T21:03:39.724958+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3088,
+        "parse_time_seconds": 0.1775,
         "error": {
           "category": "model_no_objective_def",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -1730,9 +1734,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:18.227831+00:00",
+        "parse_date": "2026-02-18T21:03:40.521537+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9935,
+        "parse_time_seconds": 0.7942,
         "variables_count": 6,
         "equations_count": 8
       },
@@ -1786,9 +1790,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:19.851048+00:00",
+        "parse_date": "2026-02-18T21:03:41.770848+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.6198,
+        "parse_time_seconds": 1.247,
         "variables_count": 9,
         "equations_count": 8
       },
@@ -1821,8 +1825,8 @@
         "absolute_difference": 0.0,
         "relative_difference": 0.0,
         "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 1,
         "mcp_solver_status": 1,
@@ -1886,9 +1890,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:24.359091+00:00",
+        "parse_date": "2026-02-18T21:03:45.260706+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.5043,
+        "parse_time_seconds": 3.4873,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 181, column 68: Unexpected character: 'o'\n  Table t1968(tm,tm) independently estimated data for 1968 (billions of 1960 pesos)\n                                                                     ^\n\nSuggestion: This character is not valid in this context"
@@ -1932,9 +1936,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:25.080426+00:00",
+        "parse_date": "2026-02-18T21:03:46.060019+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7185,
+        "parse_time_seconds": 0.7968,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1971,10 +1975,10 @@
         "nlp_objective": 7.9546,
         "mcp_objective": 7.955,
         "absolute_difference": 0.00039999999999995595,
-        "relative_difference": 5.028284098050986e-05,
+        "relative_difference": 5.028284098050986e-5,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -2029,9 +2033,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:33.200238+00:00",
+        "parse_date": "2026-02-18T21:03:52.099728+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 8.1157,
+        "parse_time_seconds": 6.0367,
         "variables_count": 31,
         "equations_count": 29
       },
@@ -2096,9 +2100,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:47.797798+00:00",
+        "parse_date": "2026-02-18T21:01:00.085640+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 14.5504,
+        "parse_time_seconds": 11.3239,
         "error": {
           "category": "semantic_undefined_symbol",
           "message": "Error: Parse error at line 707, column 12: Undefined symbol 'sum' with indices ('cn', 'cn', 'c') referenced [context: conditional assignment] [domain: ('c', 'c', 'r')]\n  yld(c,c,r)$sum(cn,cnc(cn,c) ) = 0.0;\n             ^\n\nSuggestion: Declare 'sum' as a variable, parameter, or set before using it"
@@ -2142,9 +2146,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:47.869630+00:00",
+        "parse_date": "2026-02-18T21:01:00.143986+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.0692,
+        "parse_time_seconds": 0.0554,
         "error": {
           "category": "model_no_objective_def",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -2254,9 +2258,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:51.335232+00:00",
+        "parse_date": "2026-02-18T21:01:03.676454+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.4626,
+        "parse_time_seconds": 3.5298,
         "variables_count": 12,
         "equations_count": 13
       },
@@ -2321,9 +2325,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:20:54.476061+00:00",
+        "parse_date": "2026-02-18T21:01:06.269768+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.1364,
+        "parse_time_seconds": 2.5905,
         "variables_count": 15,
         "equations_count": 10
       },
@@ -2388,9 +2392,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:55.120967+00:00",
+        "parse_date": "2026-02-18T21:01:06.974775+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6416,
+        "parse_time_seconds": 0.7023,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 90, column 36: Unexpected character: ')'\n  if(t.l > 0, minimax = 20*log10(t.l));\n                                     ^\n\nSuggestion: This character is not valid in this context"
@@ -2434,9 +2438,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:55.276931+00:00",
+        "parse_date": "2026-02-18T21:01:07.105284+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.1527,
+        "parse_time_seconds": 0.1278,
         "error": {
           "category": "model_no_objective_def",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -2480,9 +2484,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:20:59.895077+00:00",
+        "parse_date": "2026-02-18T21:01:10.935854+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.6126,
+        "parse_time_seconds": 3.8242,
         "error": {
           "category": "semantic_undefined_symbol",
           "message": "Error: Parse error at line 277, column 21: Undefined symbol 'sign' with indices ('hllo',) referenced [context: assignment] [domain: ('i',)]\n  hl.lo(i) = (1 - 0.5*sign(hllo))*hllo/ hscale;\n                      ^\n\nSuggestion: Declare 'sign' as a variable, parameter, or set before using it"
@@ -2526,9 +2530,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:21:04.446658+00:00",
+        "parse_date": "2026-02-18T21:01:14.671970+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.5488,
+        "parse_time_seconds": 3.7336,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 365, column 13: Unexpected character: '-'\n  stat2 / all - mbd /\n              ^\n\nSuggestion: This character is not valid in this context"
@@ -2595,9 +2599,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:21:26.966385+00:00",
+        "parse_date": "2026-02-18T21:01:34.255178+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 22.5137,
+        "parse_time_seconds": 19.5797,
         "variables_count": 74,
         "equations_count": 68
       },
@@ -2662,9 +2666,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:21:49.626666+00:00",
+        "parse_date": "2026-02-18T21:01:54.057078+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 22.6556,
+        "parse_time_seconds": 19.7978,
         "variables_count": 74,
         "equations_count": 68
       },
@@ -2750,9 +2754,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:21:53.349447+00:00",
+        "parse_date": "2026-02-18T21:01:57.383251+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.691,
+        "parse_time_seconds": 3.2985,
         "variables_count": 7,
         "equations_count": 11
       },
@@ -2806,9 +2810,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:21:55.002023+00:00",
+        "parse_date": "2026-02-18T21:01:58.797007+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.6495,
+        "parse_time_seconds": 1.4113,
         "variables_count": 13,
         "equations_count": 12
       },
@@ -2894,9 +2898,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:21:58.045786+00:00",
+        "parse_date": "2026-02-18T21:02:01.310937+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.0407,
+        "parse_time_seconds": 2.5101,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -3019,9 +3023,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:21:58.124305+00:00",
+        "parse_date": "2026-02-18T21:02:01.378003+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.0748,
+        "parse_time_seconds": 0.0639,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 21, column 38: Unexpected character: '/'\n  funds 'total investable funds' / 500 /;\n                                       ^\n\nSuggestion: This character is not valid in this context"
@@ -3065,9 +3069,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:21:59.785475+00:00",
+        "parse_date": "2026-02-18T21:02:02.759788+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.6576,
+        "parse_time_seconds": 1.3792,
         "variables_count": 5,
         "equations_count": 7
       },
@@ -3132,9 +3136,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:00.736257+00:00",
+        "parse_date": "2026-02-18T21:02:03.549614+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9475,
+        "parse_time_seconds": 0.7868,
         "variables_count": 10,
         "equations_count": 10
       },
@@ -3199,9 +3203,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:01.030400+00:00",
+        "parse_date": "2026-02-18T21:02:03.787877+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.29,
+        "parse_time_seconds": 0.2348,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -3232,10 +3236,10 @@
         "nlp_objective": 13.9288,
         "mcp_objective": 13.929,
         "absolute_difference": 0.00019999999999953388,
-        "relative_difference": 1.435853255793911e-05,
+        "relative_difference": 1.435853255793911e-5,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 1,
         "mcp_solver_status": 1,
@@ -3275,9 +3279,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:01.494842+00:00",
+        "parse_date": "2026-02-18T21:02:04.173475+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4614,
+        "parse_time_seconds": 0.3827,
         "variables_count": 10,
         "equations_count": 5
       },
@@ -3314,10 +3318,10 @@
         "nlp_objective": -30665.5387,
         "mcp_objective": -30665.539,
         "absolute_difference": 0.00029999999969732016,
-        "relative_difference": 9.782968422544934e-09,
+        "relative_difference": 9.782968422544934e-9,
         "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -3351,9 +3355,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:01.973299+00:00",
+        "parse_date": "2026-02-18T21:02:04.530821+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.475,
+        "parse_time_seconds": 0.355,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -3392,8 +3396,8 @@
         "absolute_difference": 0.6750000000001659,
         "relative_difference": 1.0000000000002458,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -3427,9 +3431,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:02.345078+00:00",
+        "parse_date": "2026-02-18T21:02:04.876180+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3688,
+        "parse_time_seconds": 0.3423,
         "variables_count": 9,
         "equations_count": 9
       },
@@ -3468,8 +3472,8 @@
         "absolute_difference": 0.0,
         "relative_difference": 0.0,
         "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -3503,9 +3507,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:02.706191+00:00",
+        "parse_date": "2026-02-18T21:02:05.180034+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3274,
+        "parse_time_seconds": 0.2767,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -3570,9 +3574,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:03.201685+00:00",
+        "parse_date": "2026-02-18T21:02:05.608373+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4928,
+        "parse_time_seconds": 0.4256,
         "variables_count": 6,
         "equations_count": 5
       },
@@ -3637,9 +3641,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:04.359898+00:00",
+        "parse_date": "2026-02-18T21:02:06.580029+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.1543,
+        "parse_time_seconds": 0.9688,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -3717,9 +3721,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:22:05.774656+00:00",
+        "parse_date": "2026-02-18T21:02:07.789055+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.4115,
+        "parse_time_seconds": 1.2063,
         "error": {
           "category": "internal_error",
           "message": "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
@@ -3763,9 +3767,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:22:06.633199+00:00",
+        "parse_date": "2026-02-18T21:02:08.497021+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.8551,
+        "parse_time_seconds": 0.7051,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 93, column 24: Unexpected character: '('\n  wheat.bullock.standard.(standard,light,\n                         ^\n\nSuggestion: This character is not valid in this context"
@@ -3830,9 +3834,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:22:06.993039+00:00",
+        "parse_date": "2026-02-18T21:02:08.783857+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3568,
+        "parse_time_seconds": 0.2842,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 58, column 1: Unexpected character: 'o'\n  oldr(i)  = r(i);\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -3876,9 +3880,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:12.811207+00:00",
+        "parse_date": "2026-02-18T21:02:13.659978+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.8129,
+        "parse_time_seconds": 4.8728,
         "variables_count": 25,
         "equations_count": 25
       },
@@ -3943,9 +3947,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:22.576179+00:00",
+        "parse_date": "2026-02-18T21:02:21.702122+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 9.7618,
+        "parse_time_seconds": 8.0388,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -4020,9 +4024,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:22.970507+00:00",
+        "parse_date": "2026-02-18T21:02:22.024428+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3915,
+        "parse_time_seconds": 0.3199,
         "variables_count": 7,
         "equations_count": 4
       },
@@ -4087,9 +4091,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:23.719572+00:00",
+        "parse_date": "2026-02-18T21:02:23.056207+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7453,
+        "parse_time_seconds": 1.0283,
         "variables_count": 3,
         "equations_count": 4
       },
@@ -4154,9 +4158,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:29.037655+00:00",
+        "parse_date": "2026-02-18T21:02:27.072679+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.2863,
+        "parse_time_seconds": 3.99,
         "variables_count": 44,
         "equations_count": 38
       },
@@ -4242,9 +4246,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:30.085564+00:00",
+        "parse_date": "2026-02-18T21:02:27.897685+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0438,
+        "parse_time_seconds": 0.8223,
         "variables_count": 4,
         "equations_count": 8
       },
@@ -4309,9 +4313,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:31.943838+00:00",
+        "parse_date": "2026-02-18T21:02:29.410770+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.8545,
+        "parse_time_seconds": 1.5097,
         "variables_count": 15,
         "equations_count": 11
       },
@@ -4376,9 +4380,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:32.616411+00:00",
+        "parse_date": "2026-02-18T21:02:29.680335+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6691,
+        "parse_time_seconds": 0.2668,
         "variables_count": 5,
         "equations_count": 3
       },
@@ -4443,9 +4447,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:33.453557+00:00",
+        "parse_date": "2026-02-18T21:02:30.254120+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.8327,
+        "parse_time_seconds": 0.571,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -4534,9 +4538,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:22:34.406534+00:00",
+        "parse_date": "2026-02-18T21:02:31.016173+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.949,
+        "parse_time_seconds": 0.7596,
         "error": {
           "category": "model_no_objective_def",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -4604,9 +4608,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:22:34.920668+00:00",
+        "parse_date": "2026-02-18T21:02:31.389173+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5112,
+        "parse_time_seconds": 0.3691,
         "error": {
           "category": "model_no_objective_def",
           "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
@@ -4697,9 +4701,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:40.786925+00:00",
+        "parse_date": "2026-02-18T21:02:36.072779+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.8627,
+        "parse_time_seconds": 4.6811,
         "variables_count": 27,
         "equations_count": 27
       },
@@ -4764,9 +4768,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:42.702548+00:00",
+        "parse_date": "2026-02-18T21:02:37.595437+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.9114,
+        "parse_time_seconds": 1.5201,
         "variables_count": 9,
         "equations_count": 11
       },
@@ -4831,9 +4835,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:43.475285+00:00",
+        "parse_date": "2026-02-18T21:02:38.128168+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7696,
+        "parse_time_seconds": 0.5301,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -4898,9 +4902,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:43.790315+00:00",
+        "parse_date": "2026-02-18T21:02:38.496052+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.2845,
+        "parse_time_seconds": 0.3433,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -4939,8 +4943,8 @@
         "absolute_difference": 1.0,
         "relative_difference": 1.0,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -4974,9 +4978,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:44.065285+00:00",
+        "parse_date": "2026-02-18T21:02:38.741076+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.2725,
+        "parse_time_seconds": 0.2424,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -5015,8 +5019,8 @@
         "absolute_difference": 0.0,
         "relative_difference": 0.0,
         "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -5050,9 +5054,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:22:44.208618+00:00",
+        "parse_date": "2026-02-18T21:02:38.864642+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.14,
+        "parse_time_seconds": 0.1201,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 25, column 131: Unexpected character: '+'\n  defobj.. obj =e= sqr(x1 + x2) + sqr(x3 - x5) + sqr(x6 - x4) +  2*sqr(x1 + x3 - x4) + sqr(x2 - x1 + x3 - x4) +  10*sqr(sin[x5 - x6 + x1]);\n                                                                                                                                    ^\n\nSuggestion: This character is not valid in this context"
@@ -5096,9 +5100,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:22:44.892744+00:00",
+        "parse_date": "2026-02-18T21:02:39.410526+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6811,
+        "parse_time_seconds": 0.5426,
         "error": {
           "category": "parser_invalid_expression",
           "message": "Unsupported expression type: attr_access. This may be a parser bug or unsupported GAMS syntax. Supported: variables, parameters, numbers, operators (+, -, *, /, ^), functions (sqrt, exp, log, etc.), sum(). [context: assignment] [domain: ('one', 'modelstat')] (line 49, column 29)"
@@ -5163,9 +5167,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:45.634705+00:00",
+        "parse_date": "2026-02-18T21:02:39.992520+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.738,
+        "parse_time_seconds": 0.5793,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -5219,9 +5223,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:46.767900+00:00",
+        "parse_date": "2026-02-18T21:02:40.949696+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.1294,
+        "parse_time_seconds": 0.9545,
         "variables_count": 4,
         "equations_count": 6
       },
@@ -5307,9 +5311,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-02-18T15:22:47.209297+00:00",
+        "parse_date": "2026-02-18T21:02:41.304815+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4377,
+        "parse_time_seconds": 0.3522,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 198, column 6: Unexpected character: 'r'\n  wire rod     'rolling of wire rod',\n       ^\n\nSuggestion: This character is not valid in this context"
@@ -5353,9 +5357,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:48.795585+00:00",
+        "parse_date": "2026-02-18T21:02:42.587670+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.5832,
+        "parse_time_seconds": 1.2806,
         "variables_count": 10,
         "equations_count": 11
       },
@@ -5420,9 +5424,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:49.221894+00:00",
+        "parse_date": "2026-02-18T21:02:42.937011+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4227,
+        "parse_time_seconds": 0.347,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -5458,11 +5462,11 @@
         "comparison_date": "2026-02-18T15:17:06.885263+00:00",
         "nlp_objective": 27.8719,
         "mcp_objective": 27.872,
-        "absolute_difference": 9.999999999976694e-05,
-        "relative_difference": 3.587830080359032e-06,
+        "absolute_difference": 9.999999999976694e-5,
+        "relative_difference": 3.587830080359032e-6,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -5496,9 +5500,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-18T15:22:50.884001+00:00",
+        "parse_date": "2026-02-18T21:02:44.290163+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.6594,
+        "parse_time_seconds": 1.3508,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -5534,11 +5538,11 @@
         "comparison_date": "2026-02-18T15:17:12.321074+00:00",
         "nlp_objective": 27.8719,
         "mcp_objective": 27.872,
-        "absolute_difference": 9.999999999976694e-05,
-        "relative_difference": 3.587830080359032e-06,
+        "absolute_difference": 9.999999999976694e-5,
+        "relative_difference": 3.587830080359032e-6,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -6737,8 +6741,8 @@
         "absolute_difference": null,
         "relative_difference": null,
         "objective_match": null,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 1,
         "mcp_solver_status": 1,
@@ -6813,8 +6817,8 @@
         "absolute_difference": 1249.4917,
         "relative_difference": 0.5182831560422615,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -6935,8 +6939,8 @@
         "absolute_difference": 0.0,
         "relative_difference": 0.0,
         "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 1,
         "mcp_solver_status": 1,
@@ -8444,8 +8448,8 @@
         "absolute_difference": 3.432646e-20,
         "relative_difference": 3.432646e-10,
         "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -9911,8 +9915,8 @@
         "absolute_difference": 1.93,
         "relative_difference": 1.0,
         "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
@@ -10032,8 +10036,8 @@
         "absolute_difference": 0.0,
         "relative_difference": 0.0,
         "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 1e-06,
+        "tolerance_absolute": 1e-8,
+        "tolerance_relative": 1e-6,
         "nlp_solver_status": 1,
         "nlp_model_status": 1,
         "mcp_solver_status": 1,

@@ -2952,6 +2952,20 @@ class _ModelBuilder:
                 node,
                 suggestion=f"Add a declaration like 'Equation {name}({','.join(domain)});' before defining it",
             )
+
+        # Issue #774: singleton equation instantiation with quoted string literal as domain element.
+        # e.g. mmr3("2000-04").. — the quoted token is a set element, not a set name.
+        # Skip set-validation for the literal tokens and use the equation's declared domain instead.
+        # _domain_list strips quotes so we check raw tokens in the domain_list node.
+        domain_list_node = node.children[1]
+        raw_tokens = [
+            c.children[0]
+            for c in domain_list_node.children
+            if isinstance(c, Tree) and c.data == "domain_element" and c.children
+        ]
+        if raw_tokens and all(isinstance(t, Token) and _is_string_literal(t) for t in raw_tokens):
+            domain = self._equation_domains.get(name.lower(), ())
+
         self._ensure_sets(domain, f"equation '{name}' domain", node)
 
         # Extract source location from equation definition node
