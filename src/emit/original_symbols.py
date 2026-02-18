@@ -885,6 +885,7 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
         # Track whether we've emitted any expression for this parameter so far,
         # used to detect self-referencing expressions that lack prior assignments.
         has_prior_assignment = bool(param_def.values)
+        seen_assignment_lines: set[str] = set()  # Issue #768: deduplicate repeated assignments
         for key_tuple, expr in param_def.expressions:
             # Issue #738: Skip self-referencing expressions when the parameter has no
             # prior values or prior emitted expressions. This occurs when the parser
@@ -921,10 +922,15 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
                 # - Element literals: quoted strings (e.g., "route-1", "revenue")
                 # Emit indices as-is to avoid double-quoting element literals.
                 index_str = ",".join(key_tuple)
-                lines.append(f"{_quote_symbol(param_name)}({index_str}) = {expr_str};")
+                assignment_line = f"{_quote_symbol(param_name)}({index_str}) = {expr_str};"
             else:
                 # Scalar parameter: f = expr
-                lines.append(f"{_quote_symbol(param_name)} = {expr_str};")
+                assignment_line = f"{_quote_symbol(param_name)} = {expr_str};"
+            # Issue #768: Skip duplicate assignments (e.g., scalar reassignments
+            # collected once per equation pass during KKT construction).
+            if assignment_line not in seen_assignment_lines:
+                seen_assignment_lines.add(assignment_line)
+                lines.append(assignment_line)
             has_prior_assignment = True
 
     return "\n".join(lines)
