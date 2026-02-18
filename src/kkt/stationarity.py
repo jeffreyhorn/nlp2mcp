@@ -1271,22 +1271,28 @@ def _replace_matching_indices(
                         # narrower declared domain is intentional (e.g. c(p,t) declared
                         # over t which is a subset of tt in stat_x(p,tt)).
                         target_is_subset_of_eq_domain = False
-                        if equation_domain and model_ir and target_set not in equation_domain:
+                        eq_domain_lower = (
+                            {s.lower() for s in equation_domain} if equation_domain else set()
+                        )
+                        if (
+                            equation_domain
+                            and model_ir
+                            and target_set.lower() not in eq_domain_lower
+                        ):
                             target_set_def = model_ir.sets.get(target_set)
                             if (
                                 target_set_def
                                 and hasattr(target_set_def, "domain")
                                 and target_set_def.domain
                             ):
-                                eq_domain_lower = {s.lower() for s in equation_domain}
                                 if any(p.lower() in eq_domain_lower for p in target_set_def.domain):
                                     target_is_subset_of_eq_domain = True
                         if (
                             not target_is_subset_of_eq_domain
                             and equation_domain
                             and idx in element_to_set
-                            and element_to_set[idx] in equation_domain
-                            and target_set not in equation_domain
+                            and element_to_set[idx].lower() in eq_domain_lower
+                            and target_set.lower() not in eq_domain_lower
                         ):
                             new_indices.append(element_to_set[idx])
                         else:

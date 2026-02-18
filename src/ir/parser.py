@@ -2963,7 +2963,7 @@ class _ModelBuilder:
             for c in domain_list_node.children
             if isinstance(c, Tree) and c.data == "domain_element" and c.children
         ]
-        if raw_tokens and all(isinstance(t, Token) and str(t)[0] in ('"', "'") for t in raw_tokens):
+        if raw_tokens and all(isinstance(t, Token) and _is_string_literal(t) for t in raw_tokens):
             domain = self._equation_domains.get(name.lower(), ())
 
         self._ensure_sets(domain, f"equation '{name}' domain", node)
