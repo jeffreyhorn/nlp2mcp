@@ -43,7 +43,7 @@ This prep plan produces the research, catalogs, baselines, and design artifacts 
 
 ## Task 1: Create Sprint 20 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 20 Day 1
@@ -88,11 +88,11 @@ Previous research documents:
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`
 
 ### Result
 
-*To be completed*
+26 unknowns documented across 8 categories (6 Critical, 11 High, 7 Medium, 2 Low). Task-to-Unknown mapping appendix links each prep task (2–10) to its verified unknowns. All four Sprint 20 workstreams covered.
 
 ### Verification
 
@@ -103,15 +103,15 @@ wc -l docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md` with 15–25 unknowns across 5 categories
+- ✅ `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md` with 26 unknowns across 8 categories
 
 ### Acceptance Criteria
 
-- [ ] Document created with 15+ unknowns across at least 5 categories
-- [ ] All unknowns have: assumption, verification method, priority
-- [ ] All Critical/High unknowns have a verification plan
-- [ ] Unknowns cover all four Sprint 20 workstreams
-- [ ] At least 3 unknowns identified as resolvable during prep phase
+- [x] Document created with 15+ unknowns across at least 5 categories (26 unknowns, 8 categories)
+- [x] All unknowns have: assumption, verification method, priority
+- [x] All Critical/High unknowns have a verification plan
+- [x] Unknowns cover all four Sprint 20 workstreams
+- [x] At least 3 unknowns identified as resolvable during prep phase (Unknowns 1.4, 4.2, 5.4, 6.3, 7.2 are quick/30-min items)
 
 ---
 
@@ -123,6 +123,7 @@ wc -l docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md
 **Deadline:** Before Sprint 20 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 6.1, 6.2, 6.3
 
 ### Objective
 
@@ -180,6 +181,7 @@ grep -c "| " docs/planning/EPIC_4/SPRINT_20/INDEXOFFSET_AUDIT.md
 
 - `docs/planning/EPIC_4/SPRINT_20/INDEXOFFSET_AUDIT.md` — per-model status table with current failure stage and remaining work
 - Updated effort estimate for Sprint 20 IndexOffset workstream
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2, 6.3
 
 ### Acceptance Criteria
 
@@ -187,6 +189,7 @@ grep -c "| " docs/planning/EPIC_4/SPRINT_20/INDEXOFFSET_AUDIT.md
 - [ ] Each model has: current failure stage, specific error, remaining work estimate
 - [ ] Sprint 20 IndexOffset effort estimate revised based on findings
 - [ ] The xfail test (sum-collapse-with-IndexOffset-wrt) assessed for scope
+- [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -198,6 +201,7 @@ grep -c "| " docs/planning/EPIC_4/SPRINT_20/INDEXOFFSET_AUDIT.md
 **Deadline:** Before Sprint 20 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 4.1, 4.2, 4.3, 4.4
 
 ### Objective
 
@@ -256,6 +260,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/LEXER_ERROR_CATALOG_UPDATE.md
 
 - `docs/planning/EPIC_4/SPRINT_20/LEXER_ERROR_CATALOG_UPDATE.md` — updated catalog of 27 remaining models with subcategory, token, and fix estimate
 - Prioritized list of subcategories for Sprint 20 grammar work
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2, 4.3, 4.4
 
 ### Acceptance Criteria
 
@@ -264,6 +269,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/LEXER_ERROR_CATALOG_UPDATE.md
 - [ ] Subcategory counts sum to 27
 - [ ] Top 3 highest-ROI subcategories identified with effort estimates
 - [ ] At least 2 "quick win" grammar fixes identified (≤2h each, ≥2 models unblocked)
+- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -275,6 +281,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/LEXER_ERROR_CATALOG_UPDATE.md
 **Deadline:** Before Sprint 20 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 1.1, 1.2, 1.3, 1.4
 
 ### Objective
 
@@ -342,6 +349,7 @@ grep "Fix Location" docs/planning/EPIC_4/SPRINT_20/L_INIT_EMISSION_DESIGN.md
 
 - `docs/planning/EPIC_4/SPRINT_20/L_INIT_EMISSION_DESIGN.md` — design document for `.l` emission fix with code locations, fix strategy, and expected impact on circle/bearing
 - Revised effort estimate for Sprint 20 Priority 1
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 1.4
 
 ### Acceptance Criteria
 
@@ -351,6 +359,7 @@ grep "Fix Location" docs/planning/EPIC_4/SPRINT_20/L_INIT_EMISSION_DESIGN.md
 - [ ] Confirmed whether fix resolves circle infeasibility (or exposes deeper issue)
 - [ ] Bearing assessment: does same fix apply, or is `.scale` the primary blocker?
 - [ ] Effort estimate refined to ±1h
+- [ ] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -362,6 +371,7 @@ grep "Fix Location" docs/planning/EPIC_4/SPRINT_20/L_INIT_EMISSION_DESIGN.md
 **Deadline:** Before Sprint 20 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 7.1, 7.2, 8.1
 
 ### Objective
 
@@ -416,6 +426,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md
 
 - `docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md` — per-model root cause table for all translate internal errors
 - Count of Sprint-20-addressable vs. deferred models
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 7.1, 7.2, 8.1
 
 ### Acceptance Criteria
 
@@ -424,6 +435,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md
 - [ ] IndexOffset-related errors separated from non-IndexOffset errors
 - [ ] Sprint 20 addressable count confirmed (PROJECT_PLAN.md says 5; verify or correct)
 - [ ] At least one fixable model has a specific code pointer (file, function, line) for the fix
+- [ ] Unknowns 7.1, 7.2, 8.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -435,6 +447,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md
 **Deadline:** Before Sprint 20 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 5.1, 5.2, 5.3, 5.4
 
 ### Objective
 
@@ -501,6 +514,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/PIPELINE_MATCH_ANALYSIS.md
 
 - `docs/planning/EPIC_4/SPRINT_20/PIPELINE_MATCH_ANALYSIS.md` — per-model divergence classification for all 16 non-matching models
 - Predicted pipeline match count if `.l` emission is fixed
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3, 5.4
 
 ### Acceptance Criteria
 
@@ -509,6 +523,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/PIPELINE_MATCH_ANALYSIS.md
 - [ ] At least 3 models identified as resolvable in Sprint 20
 - [ ] Predicted new pipeline match count after `.l` emission fix documented
 - [ ] Any models with suspiciously large gaps (>100%) flagged for KKT review
+- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -520,6 +535,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/PIPELINE_MATCH_ANALYSIS.md
 **Deadline:** Before Sprint 20 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 5
+**Unknowns Verified:** 2.1, 2.2, 2.3, 2.4
 
 ### Objective
 
@@ -577,6 +593,7 @@ grep "Algorithm\|False Positive\|Criterion" docs/planning/EPIC_4/SPRINT_20/ACCOU
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_20/ACCOUNTING_VAR_DETECTION_DESIGN.md` — algorithm design, false positive risk assessment, and recommended implementation location
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4
 
 ### Acceptance Criteria
 
@@ -586,6 +603,7 @@ grep "Algorithm\|False Positive\|Criterion" docs/planning/EPIC_4/SPRINT_20/ACCOU
 - [ ] Implementation location identified (file + function)
 - [ ] Conservative vs. aggressive heuristic recommendation made
 - [ ] Expected impact confirmed: mexss unblocked, no currently-solving models broken
+- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -597,6 +615,7 @@ grep "Algorithm\|False Positive\|Criterion" docs/planning/EPIC_4/SPRINT_20/ACCOU
 **Deadline:** Before Sprint 20 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** 3.1, 3.2 (partial)
 
 ### Objective
 
@@ -648,6 +667,7 @@ grep -l "smoke.test\|denominator\|validation.*Day 10\|ε.*reference" docs/planni
 
 - Action items from Sprint 19 retrospective captured in Sprint 20 planning documents
 - Any new KNOWN_UNKNOWNS entries created for unresolved retrospective items
+- Updated KNOWN_UNKNOWNS.md with partial verification of Unknowns 3.1, 3.2 (chenery AD condition pattern)
 
 ### Acceptance Criteria
 
@@ -655,6 +675,7 @@ grep -l "smoke.test\|denominator\|validation.*Day 10\|ε.*reference" docs/planni
 - [ ] Each item has a concrete action assigned (not just acknowledged)
 - [ ] At least 3 actions incorporated into Sprint 20 PLAN.md or this PREP_PLAN
 - [ ] Smoke-test checklist created or referenced for "not fixable" declarations
+- [ ] Unknowns 3.1, 3.2 partially verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -666,6 +687,7 @@ grep -l "smoke.test\|denominator\|validation.*Day 10\|ε.*reference" docs/planni
 **Deadline:** Before Sprint 20 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** 4.2 (confirms 27 count)
 
 ### Objective
 
@@ -728,6 +750,7 @@ grep "Parse\|Translate\|Solve\|Test count\|Baseline date" docs/planning/EPIC_4/S
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_20/BASELINE_METRICS.md` — timestamped snapshot of all pipeline metrics with explicit denominator documentation
+- Updated KNOWN_UNKNOWNS.md Unknown 4.2 verified (confirms 27 lexer_invalid_char count)
 
 ### Acceptance Criteria
 
@@ -736,6 +759,7 @@ grep "Parse\|Translate\|Solve\|Test count\|Baseline date" docs/planning/EPIC_4/S
 - [ ] Denominator explicitly documented (tested count and excluded count, with reasons)
 - [ ] Metrics match Sprint 19 final state (or discrepancy explained)
 - [ ] All excluded models listed individually with exclusion reason
+- [ ] Unknown 4.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -747,6 +771,7 @@ grep "Parse\|Translate\|Solve\|Test count\|Baseline date" docs/planning/EPIC_4/S
 **Deadline:** Before Sprint 20 Day 1
 **Owner:** Development team
 **Dependencies:** All other tasks
+**Unknowns Verified:** Integrates all verified unknowns from Tasks 2–9
 
 ### Objective
 
@@ -810,6 +835,7 @@ grep "Checkpoint" docs/planning/EPIC_4/SPRINT_20/PLAN.md | wc -l
 
 - `docs/planning/EPIC_4/SPRINT_20/PLAN.md` — complete day-by-day Sprint 20 plan with checkpoints, acceptance criteria, and contingencies
 - Revised effort estimate for each workstream based on prep task findings
+- KNOWN_UNKNOWNS.md verification status reviewed and any remaining INCOMPLETE items flagged
 
 ### Acceptance Criteria
 
@@ -819,6 +845,7 @@ grep "Checkpoint" docs/planning/EPIC_4/SPRINT_20/PLAN.md | wc -l
 - [ ] Effort estimates revised from PROJECT_PLAN.md based on Tasks 2–7 findings
 - [ ] At least 2 contingency plans documented (scope reduction if behind schedule)
 - [ ] Sprint 19 retrospective process improvements incorporated
+- [ ] All KNOWN_UNKNOWNS verified/flagged — no INCOMPLETE unknowns remain unaddressed
 
 ---
 
