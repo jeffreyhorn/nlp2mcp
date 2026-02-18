@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 12: IndexOffset AD Integration (Part 1) - 2026-02-18
+
+**Branch:** `sprint19-day12-indexoffset-ad`
+
+#### Summary
+
+Extended the AD layer to correctly handle `IndexOffset` nodes (lead/lag indexing like `x(t+1)`,
+`x(t++1)`) during sum-collapse differentiation. Previously, `_apply_index_substitution()`
+silently skipped `IndexOffset` entries in `VarRef`/`ParamRef` index tuples, leaving the base
+identifier unsubstituted when collapsing sums.
+
+#### AD Changes (`src/ad/derivative_rules.py`)
+
+- Added `IndexOffset` to imports from `src.ir.ast`
+- Added `_substitute_index(idx, substitution)` helper: handles both `str` and `IndexOffset`
+  cases — for `IndexOffset`, substitutes the `base` field while preserving `offset` and
+  `circular` intact
+- Extended `_apply_index_substitution()`:
+  - `VarRef`/`ParamRef`: now uses `_substitute_index()` instead of inline `isinstance(idx, str)`
+    guard — lead/lag bases are now correctly substituted
+  - `DollarConditional`: added explicit branch (was previously a silent fall-through to
+    `return expr`); recursively substitutes both `value_expr` and `condition`
+  - `else` clause comment updated to clarify what still falls through
+
+#### Tests (`tests/unit/ad/test_index_offset_ad.py`)
+
+- 23 new unit tests across 3 classes:
+  - `TestSubstituteIndex`: 9 tests for `_substitute_index()` helper
+  - `TestApplyIndexSubstitutionWithIndexOffset`: 6 tests for `_apply_index_substitution()`
+    with `IndexOffset` in index tuples (VarRef, ParamRef, DollarConditional)
+  - `TestDifferentiateWithIndexOffset`: 8 tests for full differentiation semantics
+    (d/dx(t)[x(t+1)]=0, d/dx(t+1)[x(t+1)]=1, circular vs linear, binary with mixed indices)
+- 1 `xfail` test documents Day 13 work: sum-collapse with `IndexOffset` in `wrt_indices`
+  requires `_is_concrete_instance_of()` to accept `IndexOffset`
+
 ### Sprint 19 Day 11: Declaration/Syntax Gaps (Subcategory F) + Checkpoint 2 - 2026-02-18
 
 **Branch:** `sprint19-day11-declaration-gaps-checkpoint2`

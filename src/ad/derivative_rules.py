@@ -54,6 +54,7 @@ from ..ir.ast import (
     Call,
     Const,
     DollarConditional,
+    IndexOffset,
     ParamRef,
     Prod,
     SetMembershipTest,
@@ -1865,18 +1866,12 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         # SymbolRef represents scalar symbols without indices, no substitution needed
         return expr
     elif isinstance(expr, VarRef):
-        # Substitute indices in VarRef
-        # For now, only substitute string indices (IndexOffset not supported in AD yet)
-        new_indices = tuple(
-            substitution.get(idx, idx) if isinstance(idx, str) else idx for idx in expr.indices
-        )
+        # Substitute indices in VarRef, including IndexOffset bases
+        new_indices = tuple(_substitute_index(idx, substitution) for idx in expr.indices)
         return VarRef(expr.name, new_indices)
     elif isinstance(expr, ParamRef):
-        # Substitute indices in ParamRef
-        # For now, only substitute string indices (IndexOffset not supported in AD yet)
-        new_indices = tuple(
-            substitution.get(idx, idx) if isinstance(idx, str) else idx for idx in expr.indices
-        )
+        # Substitute indices in ParamRef, including IndexOffset bases
+        new_indices = tuple(_substitute_index(idx, substitution) for idx in expr.indices)
         return ParamRef(expr.name, new_indices)
     elif isinstance(expr, Binary):
         # Recursively substitute in both operands
@@ -1905,9 +1900,43 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
             else None
         )
         return type(expr)(expr.index_sets, new_body, new_condition)
+    elif isinstance(expr, DollarConditional):
+        # Substitute in both value_expr and condition
+        new_value = _apply_index_substitution(expr.value_expr, substitution)
+        new_cond = _apply_index_substitution(expr.condition, substitution)
+        return DollarConditional(new_value, new_cond)
     else:
-        # Unknown expression type, return as-is
+        # IndexOffset, SetMembershipTest, CompileTimeConstant etc. — pass through unchanged
         return expr
+
+
+def _substitute_index(
+    idx: str | IndexOffset,
+    substitution: dict[str, str],
+) -> str | IndexOffset:
+    """Substitute a single index entry (string or IndexOffset) using the given mapping.
+
+    For plain string indices, looks up the substitution directly.
+    For IndexOffset nodes, substitutes the base identifier while preserving
+    the offset expression and circular flag intact — the offset itself
+    (e.g., Const(1) in ``t+1``) is not subject to index substitution.
+
+    Sprint 19 Day 12: Extended _apply_index_substitution to support IndexOffset.
+
+    Examples:
+        >>> _substitute_index("i", {"i": "i1"})
+        'i1'
+        >>> _substitute_index(IndexOffset("t", Const(1), False), {"t": "t1"})
+        IndexOffset(base='t1', offset=Const(1.0), circular=False)
+        >>> _substitute_index(IndexOffset("t", Const(1), False), {"s": "s1"})
+        IndexOffset(base='t', offset=Const(1.0), circular=False)  # unchanged
+    """
+    if isinstance(idx, str):
+        return substitution.get(idx, idx)
+    else:
+        # idx is an IndexOffset — substitute the base, keep offset and circular flag
+        new_base = substitution.get(idx.base, idx.base)
+        return IndexOffset(new_base, idx.offset, idx.circular)
 
 
 # ============================================================================
