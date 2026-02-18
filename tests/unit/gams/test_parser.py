@@ -6059,7 +6059,7 @@ class TestTupleSuffixExpansionLabel:
         """
         text = dedent("""
             Set i / sorghum /;
-            Set j / bullock, semi-mech /;
+            Set j / col1, col2 /;
             Table t(i,j)
                          col1   col2
             sorghum.(bullock,semi-mech)
