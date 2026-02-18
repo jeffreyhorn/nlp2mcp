@@ -481,13 +481,19 @@ class TestTableContinuationParsing:
     @pytest.fixture
     def like_table(self):
         """Parse like.gms and return the 'data' parameter."""
-        model = parse_model_file(_GAMSLIB / "like.gms")
+        path = _GAMSLIB / "like.gms"
+        if not path.exists():
+            pytest.skip(f"GAMSlib raw file not available in this environment: {path}")
+        model = parse_model_file(path)
         return model.params["data"]
 
     @pytest.fixture
     def robert_table(self):
         """Parse robert.gms and return the 'c' parameter."""
-        model = parse_model_file(_GAMSLIB / "robert.gms")
+        path = _GAMSLIB / "robert.gms"
+        if not path.exists():
+            pytest.skip(f"GAMSlib raw file not available in this environment: {path}")
+        model = parse_model_file(path)
         return model.params["c"]
 
     def test_like_table_correct_value_count(self, like_table):
