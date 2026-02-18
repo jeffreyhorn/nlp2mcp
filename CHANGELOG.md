@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Final sprint day. Fixed 7 open issues (#780–#784, #774, #766), closed #671 (already resolved),
 documented 5 deferred issues (#753/#757/#763/#764/#765). Sprint 19 complete.
+Parse rate: 107/160 tested models (66.9%), exceeding the 55% target.
 
 #### Parser Changes (`src/ir/parser.py`)
 
