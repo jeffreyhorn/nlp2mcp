@@ -267,9 +267,50 @@ These items were originally planned for Sprint 18 but were deferred when archite
 
 # Sprint 20 (Weeks 5–6): IndexOffset Implementation & Translation Improvements
 
-**Goal:** Complete IndexOffset (lead/lag) support end-to-end based on Sprint 19 design. Address translation internal errors and objective extraction. Handle emerging translation blockers from improved parse rates.
+**Goal:** Complete end-to-end IndexOffset (lead/lag) support (parser → IR → AD → emit), building on the Sprint 19 design and existing partial implementation. Address translation internal errors and objective extraction. Handle emerging translation blockers from improved parse rates. Address deferred Sprint 19 solver blockers (#753, #757, #763, #764, #765).
 
-**Note:** IndexOffset design from Sprint 19; implementation now in Sprint 20.
+**Note:** IndexOffset design and initial AD integration landed in Sprint 19; Sprint 20 focuses on wiring it through the full pipeline (emit support, remaining parser/IR gaps), closing end-to-end test coverage, and adding regression tests.
+
+## Sprint 19 Deferred Items
+
+*These items were identified during Sprint 19 as the highest-leverage remaining solver blockers but require architectural work beyond that sprint's scope.*
+
+### Priority 1: Variable Initialization Emission — `.l` assignments (~4-6h)
+- **Target:** circle (#753), bearing (#757), and other models that solve but produce PATH model status 5 (locally infeasible).
+- **Root Cause:** MCP translator doesn't emit variable level initializations from `.l` assignments in the original model. PATH is highly sensitive to starting points.
+- **Fix:** Emit `.l` initialization statements from the IR in the prolog of the generated MCP file. The IR already parses these assignments; it's primarily an emitter gap.
+- **Expected Impact:** +2–4 models solving. Low-to-medium effort.
+- **Deliverable:** `.l` initialization emission with regression tests
+
+### Priority 2: Accounting Variable Detection (#764 mexss) (~6-8h)
+- **Target:** mexss and similar models with auxiliary/identity variables.
+- **Root Cause:** Accounting variables (e.g., `xmarket = sum(p, x(p))`) should not get stationarity equations — they are definitional identities. Generating stationarity for them produces an over-constrained MCP.
+- **Fix:** Detect variables that appear only on the LHS of equality constraints with no objective contribution (pure identities) and exclude them from the stationarity system.
+- **Expected Impact:** +1–3 models solving. Medium effort, requires design work first.
+- **Deliverable:** Accounting variable detection with tests
+
+### Priority 3: AD Condition Propagation (#763 chenery) (~6-8h)
+- **Target:** chenery and models with conditional denominators.
+- **Root Cause:** The chenery model uses `$` conditions to guard denominators in equations (e.g., `x / del(i)` where `del(i) = 0` for some `i`). The AD system produces derivatives without these guards, causing GAMS EXECERROR = 1 (division by zero).
+- **Fix:** Propagate the enclosing `$` condition through derivative expressions, or detect division-by-parameter patterns and add guards automatically.
+- **Expected Impact:** +1 model solving. Medium-to-high effort (AD condition propagation is architectural).
+- **Deliverable:** AD condition propagation design + initial implementation
+
+### Priority 4: Remaining lexer_invalid_char Models (~4-6h)
+- **Target:** Further reduce from 27 toward 0.
+- **Background:** With Subcategories A/B/F/I addressed in Sprint 19, the remaining 27 lexer failures likely fall into new subcategories. A fresh taxonomy pass should identify the next highest-leverage grammar additions.
+- **Expected Impact:** +10–15 models parsing. Medium effort.
+- **Deliverable:** Updated lexer error taxonomy; grammar fixes for highest-priority subcategories
+
+### Priority 5: Full Pipeline Match Rate (~4-6h)
+- **Target:** 10+ full pipeline matches (Sprint 19 final: 9).
+- **Background:** The gap between solve success (25) and full pipeline match (9) suggests many solved models produce different objective values than the reference. Investigate whether `.l` initialization, scaling, or other initialization issues are the cause, and whether solution comparison tolerances need adjustment.
+- **Deliverable:** Root cause analysis; tolerance or initialization fixes for divergent models
+
+### Process: Pipeline Smoke Test Before Declaring Issues "Not Fixable"
+- Before closing any issue as "not fixable in sprint," run a 30-second CLI smoke test to confirm current status.
+- This prevents false negatives (e.g., #671 in Sprint 19 was already resolved but incorrectly assessed as blocked).
+- **Deliverable:** Checklist item in sprint close process
 
 ## Components
 
@@ -853,4 +894,5 @@ These items were originally planned for Sprint 18 but were deferred when archite
   - Content cascaded forward: S19←S20, S20←S21, S21←S22, S22←S23, S23←S24, S24←S25
   - Sprint 25 now includes Epic 5 planning as new content
   - Updated KPIs to reflect accelerated progress in Sprint 18
+- **2026-02-18:** Added Sprint 19 deferred items to Sprint 20 (Priorities 1–5 from Sprint 19 retrospective: `.l` initialization emission, accounting variable detection, AD condition propagation, remaining lexer_invalid_char taxonomy, full pipeline match rate, plus smoke-test process recommendation)
 - **2026-02-05:** Initial EPIC_4 project plan created

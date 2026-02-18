@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 14: Fix #780-#784, #774, #766, Close #671 - 2026-02-18
+
+**Branches:** `sprint19-day14-fix-issues-780-784` (PR #786), `sprint19-day14-fix-open-issues` (PR #787)
+
+#### Summary
+
+Final sprint day. Fixed 7 open issues (#780–#784, #774, #766), closed #671 (already resolved),
+documented 5 deferred issues (#753/#757/#763/#764/#765). Sprint 19 complete.
+Parse rate: 107/160 tested models (66.9%), exceeding the 55% target.
+
+#### Parser Changes (`src/ir/parser.py`)
+
+- **#774 (shale):** Singleton equation instantiation with quoted literal domain (e.g. `mmr3("2000-04")..`).
+  In `_handle_eqn_def_domain()`, detect when all domain elements are quoted string literals via
+  `_is_string_literal()` on raw tokens; use declared domain from `_equation_domains` instead of
+  failing set lookup.
+- **#781 (ampl):** Set ordinal attribute syntax (`tl.first`, `tl.last`, `tl.ord`, `tl.pos`).
+  Added `SET_ATTR_K` terminal and `set_attr` grammar rule; handles both `set_attr` and `attr_access`
+  nodes with ordinal attributes in `_expr()`. `first`→`ord==1`, `last`→`ord==card`, `pos`/`ord`→`ord`.
+- **#782 (tabora):** Leading-zero range expansion (`a01*a24` → `['a01'..'a24']`). Fixed
+  `_expand_range()` to detect leading-zero prefix and use `f"{base}{i:0{width}d}"` format.
+- **#783 (otpop):** Equation attribute assignment (`kdef.m = 1`). Added early-return in
+  `_apply_variable_bound()` when `name.lower() in self._declared_equations`.
+- **#784 (sparta):** Sum multi-index dollar scope. Fixed `_handle_aggregation()` to defer condition
+  evaluation until after `body_domain` is computed; changed guard to `if condition_node is not None`.
+- **#780 (mine):** ref_indexed as equation offset (`i+li(k)` where `li` is a parameter). Added
+  `ref_indexed -> offset_func` to `offset_expr` grammar rule; updated `offset_func` handler to
+  detect `symbol_indexed` inner node vs `func_call`.
+
+#### KKT/Stationarity Changes (`src/kkt/stationarity.py`)
+
+- **#766 (robert):** `stat_x(p,tt)` generated `c(p,tt)` violating declared domain `(p,t)`.
+  In `_replace_matching_indices()`, the Issue #730 override was incorrectly replacing subset index
+  `t` with superset `tt`. Added case-insensitive subset guard: if `target_set` is a subset of any
+  equation-domain set, skip the #730 override and keep the narrower declared domain.
+
+#### Issue Closures
+
+- **#671 (orani):** Fully resolved — E149 cross-indexed sum fix from ISSUE_670 sprint work
+  already resolved the remaining blocker. Orani now translates cleanly.
+- **#780, #781, #782, #783, #784:** All fixed (see parser changes above).
+- **#774, #766:** Fixed (see above).
+
+#### Deferred Issues
+
+- **#753** (circle): Requires IR+emitter support for `.l` level initialization
+- **#757** (bearing): Requires `.scale` emission support
+- **#763** (chenery): Requires AD condition propagation to guard denominators
+- **#764** (mexss): Requires KKT architectural changes for accounting variables
+- **#765** (orani): Requires architectural support for fixed/exogenous variables in CGE models
+
 ### Sprint 19 Day 13: IndexOffset Validation + offset_paren/offset_func Fix - 2026-02-18
 
 **Branch:** `sprint19-day13-indexoffset-validation`
