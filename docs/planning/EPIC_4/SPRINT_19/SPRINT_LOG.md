@@ -493,21 +493,36 @@ Parser changes (`src/ir/parser.py`):
 
 ## Day 9 — Tuple/Compound Set Data (Part 2) + Model/Solve Issues
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-18
+**Time Spent:** ~4h
+
+### Summary
+
+Completed compound set data grammar (Subcategory A): all 12 targeted models now pass
+the full pipeline. Confirmed all 15 Subcategory B cascading models already resolved by
+Day 8 root cause fixes. Subcategory I models: pdi, qsambal, mlbeta, mlgamma, and sambal
+all pass (mlbeta/mlgamma parse OK; loggamma differentiation is a mathematical
+limitation, not fixable in this sprint).
+
+Key implementation: preprocessor **Step 15c** — `expand_multi_segment_tuple_row_labels()`
+handles row labels where parenthesized tuple/range groups appear at any position in a
+dot-separated path, e.g. `a.(b,c).d`, `a.b.(c*e)`, `a.(b,c).(d*f)`.
+
+Subcategory A models newly parsing: indus, sarf, turkey, egypt, srkandw, dinam, tfordy
+(7 remaining from Day 8, all now resolved).
 
 ### PR Entries
 
-_(To be filled during Day 9)_
+- Sprint 19 Day 9: Compound Set Data Complete + Model/Solve Issues (PR #774)
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 9 |
 |--------|----------|-------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 | ~73/159 (+7 Subcat A, all 12 now done) |
+| lexer_invalid_char | 72 | reduced (Subcat A/B/I resolved) |
+| internal_error | 24 | reduced |
+| Test count | 3,294 | 3,504 |
 
 ---
 
