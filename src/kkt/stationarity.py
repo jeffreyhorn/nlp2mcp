@@ -1522,13 +1522,14 @@ def _add_indexed_jacobian_terms(
                     # Look up the variable indices for the first (and typically only)
                     # nonzero entry to find which instance this scalar constraint fixes.
                     entry_col_id = entries[0][1]
+                    assert kkt.gradient.index_mapping is not None  # checked at function entry
                     _var_name_check, fixed_indices = kkt.gradient.index_mapping.col_to_var[
                         entry_col_id
                     ]
                     if fixed_indices and len(fixed_indices) == len(var_domain):
                         # Build sameas condition: sameas(d0,'v0') and sameas(d1,'v1') ...
                         guard: Expr | None = None
-                        for dom_idx, fixed_val in zip(var_domain, fixed_indices):
+                        for dom_idx, fixed_val in zip(var_domain, fixed_indices, strict=True):
                             sameas_call: Expr = Call(
                                 "sameas",
                                 (SymbolRef(dom_idx), SymbolRef(f"'{fixed_val}'")),
