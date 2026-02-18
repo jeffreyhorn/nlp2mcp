@@ -2953,9 +2953,10 @@ class _ModelBuilder:
                 suggestion=f"Add a declaration like 'Equation {name}({','.join(domain)});' before defining it",
             )
 
-        # Issue #774: singleton equation with quoted string literal as domain element
-        # e.g. mmr3("2000-04").. — treat as scalar, use declared domain instead.
-        # _domain_list strips quotes, so check raw tokens in the domain_list node.
+        # Issue #774: singleton equation instantiation with quoted string literal as domain element.
+        # e.g. mmr3("2000-04").. — the quoted token is a set element, not a set name.
+        # Skip set-validation for the literal tokens and use the equation's declared domain instead.
+        # _domain_list strips quotes so we check raw tokens in the domain_list node.
         domain_list_node = node.children[1]
         raw_tokens = [
             c.children[0]
