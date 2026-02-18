@@ -26,7 +26,7 @@ expansion instead.
 
 - `set_element_id_or_string`: Added `range_expr | NUMBER` support, enabling `(n-1*n-3)` in tuple expansion (srkandw/kand)
 - `set_member`: Added `set_tuple_cross_expansion` — `(a,b).(c,d)` cross-product in set data (marco)
-- `set_members`: Added outer-paren wrapping alternative `"(" set_member+ ")"` for `/(...)/` style (egypt)
+- `set_members`: Added outer-paren wrapping alternative (comma-separated list of set members wrapped in parens) for `/(...)/` style (egypt)
 - `table_row_label`: Added `tuple_cross_label` — `(a,b).(c,d)` cross-product row labels (paklive)
 - `table_row_label`: Added `tuple_suffix_expansion_label` — `elem.(a,b)` suffix-expansion row labels
 

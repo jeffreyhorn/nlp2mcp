@@ -2047,8 +2047,11 @@ def expand_tuple_only_table_rows(source: str) -> str:
     the grammar cannot distinguish (i,j) in "Table t(i,j)" from (i,j) as a
     row label without line-position context.
 
-    Note: This handles simple tuple-only labels (no dot-suffix). Dot-separated
-    compound labels like (a,b).(c,d) are handled directly in the grammar.
+    Note: The regex group 3 captures all trailing content after the closing ')',
+    including any dot-suffix (e.g. '(a,b).c  1 2' → 'a.c  1 2' and 'b.c  1 2').
+    This means the preprocessor also expands dot-suffixed tuple labels — functionally
+    equivalent to the grammar's tuple_label rule, and avoids the grammar ambiguity
+    with Table domain declarations like 'Table t(i,j)'.
     """
     # Pattern: optional whitespace, then ( elem1, elem2, ... ), then rest of line
     # elem can be SET_ELEMENT_ID (alphanumeric + hyphens) or GAMS STRING ('...' with '' escapes)
