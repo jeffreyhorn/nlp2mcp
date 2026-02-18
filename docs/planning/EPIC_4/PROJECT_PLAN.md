@@ -267,9 +267,9 @@ These items were originally planned for Sprint 18 but were deferred when archite
 
 # Sprint 20 (Weeks 5–6): IndexOffset Implementation & Translation Improvements
 
-**Goal:** Complete IndexOffset (lead/lag) support end-to-end based on Sprint 19 design. Address translation internal errors and objective extraction. Handle emerging translation blockers from improved parse rates. Address deferred Sprint 19 solver blockers (#753, #757, #763, #764, #765).
+**Goal:** Complete end-to-end IndexOffset (lead/lag) support (parser → IR → AD → emit), building on the Sprint 19 design and existing partial implementation. Address translation internal errors and objective extraction. Handle emerging translation blockers from improved parse rates. Address deferred Sprint 19 solver blockers (#753, #757, #763, #764, #765).
 
-**Note:** IndexOffset design from Sprint 19; implementation now in Sprint 20.
+**Note:** IndexOffset design and initial AD integration landed in Sprint 19; Sprint 20 focuses on wiring it through the full pipeline (emit support, remaining parser/IR gaps), closing end-to-end test coverage, and adding regression tests.
 
 ## Sprint 19 Deferred Items
 

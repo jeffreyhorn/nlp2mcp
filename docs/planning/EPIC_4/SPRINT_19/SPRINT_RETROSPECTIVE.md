@@ -1,7 +1,7 @@
 # Sprint 19 Retrospective
 
 **Created:** February 18, 2026
-**Duration:** 14 sprint days (Day 0 – Day 14, February 2026)
+**Duration:** 15 sprint days (Day 0 – Day 14, February 2026)
 **Sprint Goal:** Parse Rate ≥55%, lexer_invalid_char <30, IndexOffset AD Integration, ISSUE_670 cross-indexed sums
 
 ---
