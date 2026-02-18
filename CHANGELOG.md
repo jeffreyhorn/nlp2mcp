@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 10: Table Parsing Fix (ISSUE_392/399) + Subset Verification - 2026-02-16
+
+**Branch:** `sprint19-day10-table-parsing-subset`
+**Status:** COMPLETE
+
+#### Summary
+
+Fixed GAMS table parsing for tables with `+` continuation blocks (ISSUE_392) and tables
+with description strings (ISSUE_399). Confirmed subset relationship preservation is already
+implemented (Sprint 17 Day 5, Unknown 2.1 verified resolved).
+
+#### Parser Changes (`src/ir/parser.py`)
+
+- **Section-based table continuation processing** (`_handle_table_block()`): Detects
+  all-NUMBER non-header lines as secondary column headers (created when preprocessor
+  replaces `+` with space in continuation lines). Splits `sorted_lines` into independent
+  sections — each with its own column header and data rows — then processes each section
+  independently, accumulating into a single `values` dict. Prevents cross-section column
+  interference that caused wrong value-to-column mapping.
+
+- **Proximity-based column matching with tiebreaker**: For each value token, finds the
+  closest column header by column position. On equidistant ties, prefers the header with
+  the larger column position (to the right). Matches GAMS right-aligned number layout where
+  a 3-digit value starts 1-2 columns left of its column header marker.
+
+- **Broadened Issue #713 description-skip**: Previously skipped the first `sorted_lines`
+  entry only when it contained a single quoted-string token. Now skips any entry whose
+  line number equals `table_name_line`, regardless of token count. Handles tables where
+  name, domain, and description all appear on the same line (e.g.,
+  `Table data(*,i) 'systolic blood pressure data'`).
+
+#### Results
+
+- **like model**: 62/62 table values now correct (was 45/62; sections 1 and 2 now both parsed)
+- **robert model**: 9/9 values correct, no regression (existing Issue #713 code handles it)
+- **Subset preservation (Unknown 2.1)**: Confirmed already working via `SetDef.domain` and
+  `emit_original_sets()` in `src/emit/original_symbols.py`. 83 unit tests passing.
+- Full test suite: 3,572 passed, 10 skipped, 1 xfailed
+
+---
+
 ### Sprint 19 Day 9: Compound Set Data Complete + Model/Solve Issues - 2026-02-18
 
 **Branch:** `sprint19-day9-compound-set-model-solve`

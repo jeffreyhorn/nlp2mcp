@@ -254,14 +254,21 @@ Note: Many items overlap across workstreams (e.g., put format is both WS1 and WS
 
 ---
 
-#### Day 10 — Table Parsing (ISSUE_392 + ISSUE_399) + Subset Verification
+#### Day 10 — Table Parsing (ISSUE_392 + ISSUE_399) + Subset Verification ✅
 **Theme:** Deferred FIX_ROADMAP items
 **Effort:** 3-4h
+**Status:** COMPLETE
 
 | Task | Effort | Deliverable |
 |------|--------|-------------|
-| Table parsing semantic disambiguation (ISSUE_392 + ISSUE_399) | 3-4h | like model data correct; robert table parsed |
-| Subset relationship verification (1h check) | 0.5-1h | Confirm subset declarations preserved or implement fix |
+| Table parsing semantic disambiguation (ISSUE_392 + ISSUE_399) | 3-4h | like model: 62/62 values ✅; robert: 9/9 values ✅ |
+| Subset relationship verification (1h check) | 0.5-1h | Confirmed: subset emission already working (Sprint 17 Day 5, 83 tests pass) ✅ |
+
+**Approach (ISSUE_392):** Section-based processing — detect all-NUMBER non-header lines as
+continuation column headers, split table into independent sections each with own header+data,
+process each section with proximity-based column matching (tiebreaker: prefer right-side header
+on equidistant ties). Also broadened Issue #713 description-skip to handle multi-token
+declaration lines (table name + domain + description on same line).
 
 **Risks:** robert depends on both ISSUE_399 AND ISSUE_670 for full pipeline
 **Unknowns:** 8.3 (VERIFIED — semantic fix, no grammar changes needed)
