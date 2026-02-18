@@ -643,6 +643,38 @@ def _has_statement_ending_semicolon(line: str) -> bool:
     return False
 
 
+def _find_statement_semicolon_pos(line: str) -> int:
+    """Return the index of the first statement-ending semicolon in line, or -1.
+
+    Ignores semicolons inside single- or double-quoted strings (same logic as
+    _has_statement_ending_semicolon). Used to strip trailing content (including
+    inline comments) after the semicolon when checking for tuple row expansion.
+    """
+    in_string = None
+    i = 0
+    while i < len(line):
+        c = line[i]
+        if in_string:
+            if c == in_string:
+                backslash_count = 0
+                j = i - 1
+                while j >= 0 and line[j] == "\\":
+                    backslash_count += 1
+                    j -= 1
+                if backslash_count % 2 == 0:
+                    in_string = None
+            i += 1
+            continue
+        if c in ('"', "'"):
+            in_string = c
+            i += 1
+            continue
+        if c == ";":
+            return i
+        i += 1
+    return -1
+
+
 def strip_unsupported_directives(source: str) -> str:
     """Remove unsupported GAMS compiler directives from source text.
 
@@ -1312,22 +1344,24 @@ def normalize_multi_line_continuations(source: str) -> str:
                 # Need to check if this needs a comma (if more data follows)
                 in_data_block = True
 
-                # Look ahead to see if next line has more data
+                # Look ahead (skipping comment lines) to see if next data line has more
                 needs_comma = False
-                if i + 1 < len(lines):
-                    next_stripped = lines[i + 1].strip()
-                    # If next line has data (not just closing /), we need comma
-                    if next_stripped and not next_stripped.startswith("*"):
-                        if "/" in next_stripped:
-                            # Check if there's data before the /
-                            next_slash_idx = next_stripped.find("/")
-                            before_slash = next_stripped[:next_slash_idx].strip()
-                            if before_slash:
-                                # Next line has data before /, so current line needs comma
-                                needs_comma = True
-                        else:
-                            # Next line has data without /, so current line needs comma
+                for j in range(i + 1, len(lines)):
+                    next_stripped = lines[j].strip()
+                    if not next_stripped or next_stripped.startswith("*"):
+                        continue  # skip empty lines and comments
+                    # If next data line has data (not just closing /), we need comma
+                    if "/" in next_stripped:
+                        # Check if there's data before the /
+                        next_slash_idx = next_stripped.find("/")
+                        before_slash = next_stripped[:next_slash_idx].strip()
+                        if before_slash:
+                            # Next line has data before /, so current line needs comma
                             needs_comma = True
+                    else:
+                        # Next line has data without /, so current line needs comma
+                        needs_comma = True
+                    break
 
                 # Issue #618: Make idempotent - don't add comma if line already ends with one
                 if needs_comma and not after_slash.endswith(","):
@@ -1364,10 +1398,13 @@ def normalize_multi_line_continuations(source: str) -> str:
                 continue
 
             # Check if next line closes the block or has more data
+            # Skip comment lines in look-ahead (comments between data items are valid GAMS)
             needs_comma = True
-            if i + 1 < len(lines):
-                next_stripped = lines[i + 1].strip()
-                # If next line starts with / or only contains /, this is last element
+            for j in range(i + 1, len(lines)):
+                next_stripped = lines[j].strip()
+                if not next_stripped or next_stripped.startswith("*"):
+                    continue  # skip empty lines and comments
+                # If next data line starts with / or only contains /, this is last element
                 if next_stripped == "/" or next_stripped.startswith("/;"):
                     needs_comma = False
                 # If next line has data followed by /, this is not the last element
@@ -1380,6 +1417,7 @@ def normalize_multi_line_continuations(source: str) -> str:
                     else:
                         # Next line is just /, current line is last element
                         needs_comma = False
+                break
 
             if needs_comma:
                 result.append(line + ",")
@@ -2025,6 +2063,131 @@ def insert_missing_semicolons(source: str) -> str:
     return "\n".join(result)
 
 
+def expand_tuple_only_table_rows(source: str) -> str:
+    """Expand (a,b,c) tuple-only row labels in tables to individual rows.
+
+    GAMS allows a parenthesized list as a table row label when multiple
+    elements share the same row values. For example:
+
+        Table t(i,j)
+                  c1  c2
+        (a,b,c)    1   2
+
+    expands to three rows: a 1 2 / b 1 2 / c 1 2.
+
+    This preprocessor step rewrites such rows before grammar parsing, since
+    the grammar cannot distinguish (i,j) in "Table t(i,j)" from (i,j) as a
+    row label without line-position context.
+
+    Note: The regex group 3 captures all trailing content after the closing ')',
+    including any dot-suffix (e.g. '(a,b).c  1 2' → 'a.c  1 2' and 'b.c  1 2').
+    This means the preprocessor also expands dot-suffixed tuple labels — functionally
+    equivalent to the grammar's tuple_label rule, and avoids the grammar ambiguity
+    with Table domain declarations like 'Table t(i,j)'.
+    """
+    # Pattern: optional whitespace, then ( elem1, elem2, ... ), then rest of line
+    # elem can be SET_ELEMENT_ID (alphanumeric + hyphens) or GAMS STRING ('...' with '' escapes)
+    # GAMS uses '' (double single-quote) as the escape for a literal single-quote inside strings.
+    _ELEM = r"(?:'(?:[^']|'')*'|[A-Za-z0-9_][A-Za-z0-9_\-]*)"
+    _TUPLE_ROW = re.compile(
+        r"^(\s*)"  # group 1: leading indent
+        r"\(("  # literal ( then group 2: element list
+        + _ELEM
+        + r"(?:\s*,\s*"
+        + _ELEM
+        + r")*"
+        + r")\)"  # end group 2 and )
+        r"(\s*.*)$",  # group 3: rest of line (values)
+        re.IGNORECASE,
+    )
+    # Quote-aware element splitter: splits on commas outside of single-quoted strings
+    _SPLIT_ELEM = re.compile(r"'(?:[^']|'')*'|[^,]+")
+
+    def _split_elements(elem_list_str: str) -> list[str]:
+        """Split a comma-separated element list, respecting GAMS quoted strings."""
+        parts = []
+        for m in _SPLIT_ELEM.finditer(elem_list_str):
+            token = m.group(0).strip()
+            if token and token != ",":
+                parts.append(token)
+        return parts
+
+    lines = source.split("\n")
+    result = []
+    in_table = False
+    table_header_seen = False
+    is_first_line_after_decl = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        if re.match(r"^Table\b", stripped, re.IGNORECASE):
+            in_table = True
+            table_header_seen = False
+            is_first_line_after_decl = True
+            result.append(line)
+            continue
+
+        if in_table:
+            # Skip column header line (first non-empty line after Table decl)
+            if is_first_line_after_decl:
+                if stripped:
+                    is_first_line_after_decl = False
+                    table_header_seen = True
+                result.append(line)
+                continue
+
+            # If a new block keyword starts without a semicolon, terminate the table.
+            # This prevents subsequent declaration lines from being misread as table rows.
+            if stripped and re.match(
+                r"^(?:" + "|".join(BLOCK_KEYWORDS) + r")\b", stripped, re.IGNORECASE
+            ):
+                in_table = False
+                result.append(line)
+                continue
+
+            # Handle table termination: check for tuple expansion BEFORE ending.
+            # Use _has_statement_ending_semicolon so semicolons inside quoted
+            # strings (or trailing inline comments like "; * note") are ignored.
+            is_last_line = _has_statement_ending_semicolon(line)
+            if is_last_line:
+                in_table = False
+                # Strip content from the first statement-ending semicolon onward
+                # so the tuple expansion check sees only the row label and values.
+                semi_pos = _find_statement_semicolon_pos(line)
+                line_no_semi = line[:semi_pos] if semi_pos >= 0 else line
+                stripped_no_semi = line_no_semi.strip()
+            else:
+                line_no_semi = line
+                stripped_no_semi = stripped
+
+            if table_header_seen and stripped_no_semi:
+                m = _TUPLE_ROW.match(line_no_semi)
+                if m:
+                    indent = m.group(1)
+                    elem_list_str = m.group(2)
+                    rest = m.group(3)
+                    # Parse elements: use quote-aware splitter to handle 'a,b' strings
+                    raw_elems = _split_elements(elem_list_str)
+                    for i_elem, elem in enumerate(raw_elems):
+                        # Only append semicolon to the last expanded row if this was last line
+                        if is_last_line and i_elem == len(raw_elems) - 1:
+                            result.append(f"{indent}{elem}{rest};")
+                        else:
+                            result.append(f"{indent}{elem}{rest}")
+                    continue
+
+            if is_last_line and not (
+                table_header_seen and stripped_no_semi and _TUPLE_ROW.match(line_no_semi)
+            ):
+                result.append(line)
+                continue
+
+        result.append(line)
+
+    return "\n".join(result)
+
+
 def normalize_double_commas(source: str) -> str:
     """Replace double commas with single commas in data blocks.
 
@@ -2213,6 +2376,7 @@ def _preprocess_content(content: str) -> str:
     13. Normalize multi-line continuations (add missing commas)
     14. Insert missing semicolons before block keywords
     15. Quote identifiers with special characters (-, +) in data blocks
+    15b. Expand tuple-only table rows: (a,b,c) vals → individual rows
     16. Normalize double commas to single commas
 
     Args:
@@ -2289,6 +2453,10 @@ def _preprocess_content(content: str) -> str:
 
     # Step 15: Quote identifiers with special characters (-, +) in data blocks
     content = normalize_special_identifiers(content)
+
+    # Step 15b: Expand (a,b,c) tuple-only row labels in tables
+    # Must run after normalize_special_identifiers (which quotes hyphenated IDs)
+    content = expand_tuple_only_table_rows(content)
 
     # Step 16: Normalize double commas to single commas (Issue #565)
     # This must happen after all other data normalization

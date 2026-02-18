@@ -17,9 +17,11 @@ import pytest
 
 from src.ir.preprocessor import (
     expand_macros,
+    expand_tuple_only_table_rows,
     extract_conditional_sets,
     join_multiline_assignments,
     join_multiline_equations,
+    normalize_multi_line_continuations,
     preprocess_gams_file,
     preprocess_text,
     strip_conditional_directives,
@@ -1137,3 +1139,137 @@ Parameter p / 1 /;"""
         # Should NOT be stripped - the $include is in a comment after ;
         assert "Set i" in result
         assert not result.strip().startswith("* [Stripped:")
+
+
+class TestExpandTupleOnlyTableRows:
+    """Tests for expand_tuple_only_table_rows() — Day 8 preprocessor step."""
+
+    def test_basic_tuple_row_expands_to_individual_rows(self):
+        """A (a,b,c) row label expands to three separate rows with same values."""
+        source = "Table t(i,j)\n        c1  c2\n(a,b,c)  1   2\n;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        assert any(ln.strip().startswith("a") and "1" in ln for ln in lines)
+        assert any(ln.strip().startswith("b") and "1" in ln for ln in lines)
+        assert any(ln.strip().startswith("c") and "1" in ln for ln in lines)
+        # Original tuple line should be gone
+        assert not any("(a,b,c)" in ln for ln in lines)
+
+    def test_last_row_with_semicolon_expands_correctly(self):
+        """A (a,b) row on the last line (with ;) expands and semicolon goes on last element."""
+        source = "Table t(i,j)\n        c1\n(x,y)  5;"
+        result = expand_tuple_only_table_rows(source)
+        lines = [ln for ln in result.split("\n") if ln.strip()]
+        # x row should not have semicolon, y row should
+        x_line = next((ln for ln in lines if ln.strip().startswith("x")), None)
+        y_line = next((ln for ln in lines if ln.strip().startswith("y")), None)
+        assert x_line is not None and not x_line.rstrip().endswith(";")
+        assert y_line is not None and y_line.rstrip().endswith(";")
+
+    def test_quoted_elements_with_hyphens(self):
+        """Quoted elements like 'a-10','a-20' are split correctly."""
+        source = "Table t(at,s)\n             c1\n('a-10','a-20')   0.2\n;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        assert any("'a-10'" in ln and "0.2" in ln for ln in lines)
+        assert any("'a-20'" in ln and "0.2" in ln for ln in lines)
+
+    def test_quoted_element_with_embedded_comma_not_split(self):
+        """A GAMS string with an embedded comma is not split at the comma."""
+        # GAMS strings use '' to escape single quotes; comma inside quotes is literal
+        source = "Table t(i,j)\n        c1\n('a,b',c)  3\n;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        # 'a,b' must remain as a single element
+        assert any("'a,b'" in ln and "3" in ln for ln in lines)
+        assert any(ln.strip().startswith("c") and "3" in ln for ln in lines)
+
+    def test_non_tuple_rows_unchanged(self):
+        """Normal (non-tuple) rows are passed through unchanged."""
+        source = "Table t(i,j)\n     c1  c2\nrow1  1   2\nrow2  3   4\n;"
+        result = expand_tuple_only_table_rows(source)
+        assert result == source
+
+    def test_table_declaration_not_affected(self):
+        """The Table declaration's (i,j) domain is never mistaken for a tuple row."""
+        source = "Table data(i,j)\n       j1  j2\ni1     1   2\ni2     3   4;"
+        result = expand_tuple_only_table_rows(source)
+        assert "data(i,j)" in result
+        assert "(i,j)" in result  # domain preserved
+
+    def test_multiple_tables_in_sequence_state_resets(self):
+        """Two tables in sequence are both handled correctly with state reset."""
+        source = "Table t1(i,j)\n    c1\n(i1,i2)   1\n;\nTable t2(k,j)\n    c2\nk1   2\n;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        assert any("Table t1" in ln for ln in lines)
+        assert any("Table t2" in ln for ln in lines)
+        # Tuple in first table expanded
+        assert any(ln.strip().startswith("i1") and "1" in ln for ln in lines)
+        assert any(ln.strip().startswith("i2") and "1" in ln for ln in lines)
+        # Normal row in second table unchanged
+        assert any(ln.strip().startswith("k1") and "2" in ln for ln in lines)
+
+    def test_table_followed_by_statement_without_semicolon(self):
+        """A new block keyword terminates the table even without a preceding semicolon."""
+        source = "Table t(i,j)\n    c1\n(i1,i2)   1\nSet j / a, b /;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        # Set declaration must be preserved exactly once
+        set_lines = [ln for ln in lines if ln.strip().lower().startswith("set")]
+        assert len(set_lines) == 1
+        assert "Set j" in set_lines[0]
+
+    def test_empty_lines_within_table_preserved(self):
+        """Empty lines inside a table body do not break tuple expansion."""
+        source = "Table t(i,j)\n    c1\n\n(i1,i2)   1\n;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        assert any(ln.strip() == "" for ln in lines)
+        assert any(ln.strip().startswith("i1") and "1" in ln for ln in lines)
+        assert any(ln.strip().startswith("i2") and "1" in ln for ln in lines)
+
+    def test_comment_lines_within_table_data_preserved(self):
+        """Comment lines inside table data are preserved and not mis-parsed."""
+        source = "Table t(i,j)\n    c1\ni1   1\n* intermediate comment\n(i2,i3)   2\n;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        comment_lines = [ln for ln in lines if "intermediate comment" in ln]
+        assert comment_lines and comment_lines[0].lstrip().startswith("*")
+        assert any(ln.strip().startswith("i1") and "1" in ln for ln in lines)
+        assert any(ln.strip().startswith("i2") and "2" in ln for ln in lines)
+        assert any(ln.strip().startswith("i3") and "2" in ln for ln in lines)
+
+
+class TestNormalizeMultiLineCommentSkipping:
+    """Tests for comment-skipping look-ahead in normalize_multi_line_continuations."""
+
+    def test_comment_between_data_items_gets_comma(self):
+        """Data item followed by * comment then more data still gets trailing comma."""
+        source = "Parameter p /\n    a  1\n* this is a comment\n    b  2\n/;"
+        result = normalize_multi_line_continuations(source)
+        lines = result.split("\n")
+        a_line = next((ln for ln in lines if ln.strip().startswith("a")), None)
+        assert a_line is not None
+        assert a_line.rstrip().endswith(","), f"Expected trailing comma: {repr(a_line)}"
+
+    def test_comment_between_inline_open_slash_and_data(self):
+        """Inline open-slash data followed by * comment then more data gets comma."""
+        source = "Parameter p / a 1\n* compare with baseline\n    b  2\n/;"
+        result = normalize_multi_line_continuations(source)
+        lines = result.split("\n")
+        # Line with open-slash and data should end with comma
+        open_slash_line = next((ln for ln in lines if "/" in ln and "a 1" in ln), None)
+        assert open_slash_line is not None
+        assert open_slash_line.rstrip().endswith(
+            ","
+        ), f"Expected trailing comma after inline /: {repr(open_slash_line)}"
+
+    def test_last_item_before_close_slash_no_comma(self):
+        """Item immediately before closing / does not get a comma even with comment."""
+        source = "Parameter p /\n    a  1\n* note\n/;"
+        result = normalize_multi_line_continuations(source)
+        lines = result.split("\n")
+        a_line = next((ln for ln in lines if ln.strip().startswith("a")), None)
+        assert a_line is not None
+        assert not a_line.rstrip().endswith(","), f"Should not have comma: {repr(a_line)}"
